@@ -27,7 +27,7 @@ import Flowbox.Prelude                             hiding (lift, (!!), (?), (<*)
 
 
 
-data BSplineNode a = BSplineNode { node      :: Point2 a
+data BSplineNode a = BSplineNode { node      :: Point2 a -- all those coordinates are global
                                  , handleIn  :: Point2 a
                                  , handleOut :: Point2 a
                                  } deriving (Eq, Ord, Show,Typeable)
@@ -44,24 +44,24 @@ instance Applicative BSplineNode where
 
 valueAt :: forall a. (Elt a, IsFloating a) => Acc (BSpline a) -> Exp a -> Exp a
 valueAt spline x = cond (sLength <* 1) 0
-    $ cond (x <* xA) (lineA x) $ cond (x >* xB) (lineB x)
-        $ snd $ while (\(fst -> v) -> fst v <* sLength - 1 &&* snd v <* x) (lift1 step) $ lift (lift (0 :: Exp Int, xA) :: Exp (Int, a), yA :: Exp a)
-    where (unlift -> BSplineNode (Point2 xA yA) (Point2 xHiA yHiA) _) = spline !! 0
-          (unlift -> BSplineNode (Point2 xB yB) _ (Point2 xHoB yHoB)) = spline !! (sLength - 1)
+    $ cond (x <* xL) lineA $ cond (x >* xR) lineB
+        $ snd $ while (\(fst -> v) -> fst v <* sLength - 1 &&* snd v <* x) (lift1 step) $ lift (lift (0 :: Exp Int, xL) :: Exp (Int, a), yL :: Exp a)
+    where (unlift -> BSplineNode (Point2 xL yL) (Point2 xHiL yHiL) _) = spline !! 0
+          (unlift -> BSplineNode (Point2 xR yR) _ (Point2 xHoR yHoR)) = spline !! (sLength - 1)
           step :: (Exp (Int, a), Exp a) -> (Exp (Int, a), Exp a)
           step (unlift -> (i :: Exp Int, _ :: Exp a), _) = let
                             (unlift -> BSplineNode nodeA _ handleOutA) = spline !! i
-                            (unlift -> BSplineNode nodeB@(Point2 xB' _) handleInB _) = spline !! (i + 1)
-                        in (lift (i+1, xB'), valueAtX 20 0.000001 (lift $ CubicBezier nodeA handleOutA handleInB nodeB) x)
-          -- INFO: if the left handle of the first node is vertical then the function from -Inf to the first node is treaded as a constant function
+                            (unlift -> BSplineNode nodeB@(Point2 xR' _) handleInB _) = spline !! (i + 1)
+                        in (lift (i+1, xR'), valueAtX 10 0.0001 (lift $ CubicBezier nodeA handleOutA handleInB nodeB) x)
+          -- INFO: if the left handle of the first node is `vertical / of length equal to 0` then the function from -Inf to the first node is treaded as a constant function
           --       the similar rule applies to the right handle of the last node and range from the last node to Inf
-          sLength  = A.size spline
-          lineA x' = xA ==* xHiA ? (yA, aA * x' + bA)
-          aA       = (yHiA - yA) / (xHiA - xA)
-          bA       = yA - aA * xA
-          lineB x' = xB ==* xHoB ? (yB, aB * x' + bB)
-          aB       = (yHoB - yB) / (xHoB - xB)
-          bB       = yB - aB * xB
+          sLength = A.size spline
+          lineA   = lineValue xL yL xHiL yHiL
+          lineB   = lineValue xR yR xHoR yHoR
+          lineValue xA yA xB yB = let
+                  a = (yB - yA) / (xB - xA)
+                  b = yA - a * xA
+              in xA ==* xB ? (yA, a * x + b)
 
 ----------------------------------------------------------------------------------
 ---- BSplineNode accelerate tuple instances # straight to the tuple with no intermediate (un)lifting

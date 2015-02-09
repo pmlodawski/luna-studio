@@ -10,10 +10,11 @@
 module Luna.Interpreter.Session.Cache.Value where
 
 import           Control.Exception.Base (throw)
+import           Control.Monad          (foldM)
 import qualified Control.Monad.Catch    as Catch
 import qualified Control.Monad.Ghc      as MGHC
+import qualified Data.Map               as Map
 import qualified Data.MultiSet          as MultiSet
-import qualified GHC
 
 import           Flowbox.Control.Error
 import qualified Flowbox.Data.Error                           as ValueError
@@ -21,9 +22,12 @@ import qualified Flowbox.Data.Serialization                   as Serialization
 import           Flowbox.Prelude
 import           Flowbox.Source.Location                      (loc)
 import           Flowbox.System.Log.Logger                    as L
+import           Generated.Proto.Data.Value                   (Value)
+import           Generated.Proto.Mode.Mode                    (Mode)
 import           Generated.Proto.Mode.ModeValue               (ModeValue (ModeValue))
 import qualified Luna.Graph.Flags                             as Flags
 import qualified Luna.Interpreter.Session.Cache.Cache         as Cache
+import           Luna.Interpreter.Session.Cache.Info          (CompValueMap)
 import qualified Luna.Interpreter.Session.Cache.Info          as CacheInfo
 import qualified Luna.Interpreter.Session.Cache.Status        as Status
 import           Luna.Interpreter.Session.Data.AbortException (AbortException (AbortException))
@@ -35,8 +39,6 @@ import qualified Luna.Interpreter.Session.Env                 as Env
 import qualified Luna.Interpreter.Session.Error               as Error
 import qualified Luna.Interpreter.Session.Hint.Eval           as HEval
 import           Luna.Interpreter.Session.Session             (Session)
-import qualified Luna.Interpreter.Session.Session             as Session
-import qualified Luna.Interpreter.Session.TargetHS.Bindings   as Bindings
 
 
 
@@ -102,31 +104,40 @@ get varName callPointPath = do
     if MultiSet.null modes
         then logger debug "No serialization modes set" >> return []
         else do
-            let tmpName = "_tmp"
-                toValueExpr = "toValue " ++ tmpName
-                computeExpr = concat [tmpName, " <- return $ compute ", VarName.toString varName, " def"]
-
-                excHandler :: Catch.SomeException -> MGHC.Ghc [ModeValue]
-                excHandler exc = case Catch.fromException exc of
-                    Just AbortException -> throw AbortException
-                    Nothing -> do
-                        logger L.error $ show exc
-                        val <- liftIO (Serialization.toValue (ValueError.Error $ show exc) def)
-                        return $ map (`ModeValue` val) $ MultiSet.distinctElems modes
+            cinfo <- Env.cachedLookup callPointPath <??&> Error.OtherError $(loc) "Internal error"
+            let distinctModes = MultiSet.distinctElems modes
+                valCache = cinfo ^. CacheInfo.values
+            (modValues, valCache') <- foldM (computeLookupValue varName) ([], valCache) distinctModes
+            Env.cachedInsert callPointPath $ CacheInfo.values .~ valCache' $ cinfo
+            return modValues
 
 
-            Session.withImports [ "Flowbox.Data.Serialization"
-                                , "Flowbox.Data.Mode"
-                                , "Flowbox.Graphics.Serialization"
-                                , "Prelude"
-                                , "Generated.Proto.Data.Value" ]
-                                $ lift2 $ flip Catch.catch excHandler $ do
-                logger trace computeExpr
-                Bindings.remove tmpName
-                _      <- GHC.runStmt computeExpr GHC.RunToCompletion
-                action <- HEval.interpret toValueExpr
-                Bindings.remove tmpName
-                liftIO $ mapM (\mode -> ModeValue mode <$> action mode) $ MultiSet.distinctElems modes
+computeLookupValue :: VarName -> ([ModeValue], CompValueMap) -> Mode -> Session mm ([ModeValue], CompValueMap)
+computeLookupValue varName (modValues, compValMap) mode = do
+    logger trace $ "Cached values count: " ++ show (Map.size compValMap)
+    case Map.lookup (varName, mode) compValMap of
+        Nothing -> do logger debug "Computing value"
+                      val <- computeValue varName mode
+                      return (ModeValue mode (Just val):modValues, Map.insert (varName, mode) val compValMap)
+        justVal -> do logger debug "Cached value"
+                      return (ModeValue mode justVal:modValues, compValMap)
+
+
+computeValue :: VarName -> Mode -> Session mm Value
+computeValue varName mode = lift2 $ flip Catch.catch excHandler $ do
+    logger trace toValueExpr
+    action <- HEval.interpret'' toValueExpr "Mode -> IO (Maybe SValue)"
+    liftIO $ action mode <??&.> "Internal error"
+    where
+        toValueExpr = "computeValue " ++ VarName.toString varName
+
+        excHandler :: Catch.SomeException -> MGHC.Ghc Value
+        excHandler exc = case Catch.fromException exc of
+            Just AbortException -> throw AbortException
+            Nothing -> do
+                logger L.error $ show exc
+                liftIO (Serialization.toValue (ValueError.Error $ show exc) def) <??&.> "Internal error"
+
 
 
 foldedReRoute :: CallPointPath -> Session mm VarName

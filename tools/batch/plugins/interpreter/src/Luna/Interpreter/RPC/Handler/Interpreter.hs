@@ -25,6 +25,8 @@ import           Flowbox.ProjectManager.Context                                 
 import           Flowbox.System.Log.Logger                                                   hiding (error)
 import qualified Generated.Proto.Interpreter.Interpreter.Abort.Request                       as Abort
 import qualified Generated.Proto.Interpreter.Interpreter.Abort.Status                        as Abort
+import qualified Generated.Proto.Interpreter.Interpreter.Exit.Request                        as Exit
+import qualified Generated.Proto.Interpreter.Interpreter.Exit.Update                         as Exit
 import qualified Generated.Proto.Interpreter.Interpreter.GetMainPtr.Request                  as GetMainPtr
 import qualified Generated.Proto.Interpreter.Interpreter.GetMainPtr.Status                   as GetMainPtr
 import qualified Generated.Proto.Interpreter.Interpreter.GetProjectID.Request                as GetProjectID
@@ -68,7 +70,6 @@ import qualified Luna.Interpreter.RPC.Handler.Sync                              
 import           Luna.Interpreter.RPC.QueueInfo                                              (QueueInfo)
 import qualified Luna.Interpreter.RPC.QueueInfo                                              as QueueInfo
 import qualified Luna.Interpreter.Session.AST.Executor                                       as Executor
-import qualified Luna.Interpreter.Session.Cache.Invalidate                                   as Invalidate
 import qualified Luna.Interpreter.Session.Env                                                as Env
 import qualified Luna.Interpreter.Session.Error                                              as Error
 import qualified Luna.Interpreter.Session.Memory                                             as Memory
@@ -115,7 +116,8 @@ setMainPtr request@(SetMainPtr.Request tmainPtr) = do
 
 run :: MemoryManager mm
     => QueueInfo -> Message.CorrelationID -> Run.Request -> RPC Context (SessionST mm) Run.Update
-run queueInfo crl request = do
+run queueInfo crl request@(Run.Request mtime) = do
+    Maybe.maybe (return ()) Cache.setTimeVar mtime
     r <- lift $ bracket_ (liftIO $ QueueInfo.enterRun queueInfo crl)
             (liftIO $ QueueInfo.quitRun queueInfo) $
             liftSession' $ do Manager.cleanIfNeeded
@@ -124,6 +126,7 @@ run queueInfo crl request = do
     profileInfo <- hoistEither $ fmapL Error.format r
     let tprofileInfo = encodeP $ map (_1 %~ (projectID, )) $ MapForest.toList profileInfo
     return $ Run.Update request tprofileInfo
+
 
 
 watchPointAdd :: WatchPointAdd.Request -> RPC Context (SessionST mm) WatchPointAdd.Update
@@ -161,8 +164,7 @@ abort = return . Abort.Status
 
 varTimeSet :: VarTimeSet.Request -> RPC Context (SessionST mm) VarTimeSet.Update
 varTimeSet request@(VarTimeSet.Request time) = do
-    liftSession $ do Env.setTimeVar time
-                     Invalidate.modifyTimeRefs
+    Cache.setTimeVar time
     return $ VarTimeSet.Update request
 
 
@@ -213,3 +215,9 @@ setMemoryLimits :: MemorySetLimits.Request -> RPC Context (SessionST mm) MemoryS
 setMemoryLimits request@(MemorySetLimits.Request upper lower) = do
     liftSession $ Env.setMemoryConfig $ Memory.Config upper lower
     return $ MemorySetLimits.Update request
+
+
+exit :: Exit.Request -> RPC Context (SessionST mm) Exit.Update
+exit request = do
+    logger info "Exit requested"
+    return $ Exit.Update request

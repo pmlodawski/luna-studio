@@ -139,13 +139,13 @@ const std::string methodDefinition = R"(
 		return ret;
 	};
 
-	SharedCondVariable<bool> isDone;
+	auto isDone = make_shared<SharedCondVariable<bool>>();
 	std::string errorMessage;
 
 	// Because we are synchronous, we can use [&] -- we won't leave block until everything is done
-	auto callback = [&](Conversation &c)
+	auto callback = [&, isDone](Conversation &c)
 	{
-		FINALIZE{ isDone.set(true); };
+		FINALIZE{ isDone->set(true); };
 		//logDebug("Project create call has been finished!");
 		if(c.ontopicReplies.empty())
 		{
@@ -203,18 +203,18 @@ const std::string methodDefinition = R"(
 		FINALIZE{ bh->setTimeout(timeoutBefore); };
 		bh->setTimeout(timeout);
 
-		while(!isDone.get())
+		while(!isDone->get())
 		{
 			bh->processMessageFor(correlation);
 		}
 	}
 	if(timeout)
 	{
-		isDone.waitWhileEqualsTimeout(false, boost::chrono::milliseconds(timeout->count()));
+		isDone->waitWhileEqualsTimeout(false, boost::chrono::milliseconds(timeout->count()));
 	}
 	else
 	{
-		isDone.waitWhileEquals(false);
+		isDone->waitWhileEquals(false);
 	}
 
 	if(errorMessage.size())
@@ -222,7 +222,7 @@ const std::string methodDefinition = R"(
 		THROW("Request %s failed: %s", topic, errorMessage);
 	}
 
-	if(!isDone.get())
+	if(!isDone->get())
 	{
 		bh->removeCallback(correlation);
 		THROW("Did not received answer %s. Request timed-out! Is the bus plugin for this call active?", topic);
@@ -272,8 +272,8 @@ struct ArgWrapper
 			return "long long";
 		case FieldDescriptor::TYPE_DOUBLE:
 			return "double";
-                case FieldDescriptor::TYPE_FLOAT:
-                        return "float";
+		case FieldDescriptor::TYPE_FLOAT:
+			return "float";
 		case FieldDescriptor::TYPE_BOOL:
 			return "bool";
 		case FieldDescriptor::TYPE_INT32:
@@ -879,11 +879,11 @@ void MessageDispatcher::dispatch(const BusMessage &message, IDispatchee &dispatc
 	{
 		if(auto error = std::dynamic_pointer_cast<const generated::proto::rpc::Exception>(message.msg))
 		{ 
-			logWarning("Not dispatching message %s with error %s.", message.topic, error->message());
+			logTrace("Not dispatching message %s with error %s.", message.topic, error->message());
 		}
 		else
 		{
-			logWarning("Not dispatching message %s.", message.topic);;
+			logTrace("Not dispatching message %s.", message.topic);;
 		}
 	}
 }

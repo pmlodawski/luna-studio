@@ -122,3 +122,16 @@ draw = unlines . map (unlines . drawTree) . Map.toList where
         "|" : shift "`- " "   " (drawTree t)
     drawSubTrees (t:ts) =
         "|" : shift "+- " "|  " (drawTree t) ++ drawSubTrees ts
+
+
+drawKeys :: Show k => MapForest k v -> String
+drawKeys = unlines . map (unlines . drawTree) . Map.toList where
+    shift first other = zipWith (++) (first : repeat other)
+
+    drawTree (k, level) = show k : drawSubTrees (Map.toList $ level ^. subForest)
+
+    drawSubTrees [] = []
+    drawSubTrees [t] =
+        "|" : shift "`- " "   " (drawTree t)
+    drawSubTrees (t:ts) =
+        "|" : shift "+- " "|  " (drawTree t) ++ drawSubTrees ts

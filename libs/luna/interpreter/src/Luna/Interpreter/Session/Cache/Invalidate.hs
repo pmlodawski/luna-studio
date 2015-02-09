@@ -62,7 +62,7 @@ modifyLibrary libraryID = do
 modifyTimeRefs :: Session mm ()
 modifyTimeRefs = do
     timeRefs <- Set.toList <$> Env.getTimeRefs
-    mapM_ modifyCallPoint timeRefs
+    mapM_ modifyCallPoint' timeRefs
 
 
 --modifyDef :: Library.ID -> AST.ID -> Session mm ()
@@ -100,12 +100,21 @@ modifyCallPoint :: CallPoint -> Session mm ()
 modifyCallPoint (CallPoint libraryID nodeID) = modifyNode libraryID nodeID
 
 
+modifyCallPoint' :: CallPoint -> Session mm ()
+modifyCallPoint' (CallPoint libraryID nodeID) = modifyNode' libraryID nodeID
+
+
 modifyNode :: Library.ID -> Node.ID -> Session mm ()
 modifyNode libraryID nodeID = do
+    modifyNode' libraryID nodeID
+    Env.addReload libraryID Reload.ReloadFunctions
+
+
+modifyNode' :: Library.ID -> Node.ID -> Session mm ()
+modifyNode' libraryID nodeID = do
     let matchNode k _ = last k == CallPoint libraryID nodeID
     logger info $ "Mark modified: node " ++ show (libraryID, nodeID)
     modifyMatching matchNode
-    Env.addReload libraryID Reload.ReloadFunctions
 
 
 modifyNodeSuccessors :: Library.ID -> Breadcrumbs -> Node.ID -> Session mm ()
@@ -118,9 +127,13 @@ modifyNodeSuccessors libraryID bc nodeID = do
 
 
 modifyMatching :: (CallPointPath -> CacheInfo -> Bool) -> Session mm ()
-modifyMatching predicate = do
+modifyMatching = markMatching CacheStatus.Modified
+
+
+markMatching :: CacheStatus -> (CallPointPath -> CacheInfo -> Bool) -> Session mm ()
+markMatching status predicate = do
     matching <- MapForest.find predicate <$> Env.getCached
-    mapM_ (setParentsStatus CacheStatus.Modified . fst) matching
+    mapM_ (setParentsStatus status . fst) matching
     Env.setAllReady False
 
 
