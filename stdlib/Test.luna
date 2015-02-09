@@ -10,6 +10,8 @@ class Vector a:
 
     def asTuple: (x,y,z)
 
+alias V a = Vector a
+
 foreign haskell class Bool:
     True
     False
@@ -19,11 +21,11 @@ def foo a b: (a,b)
 class Foo
 
 def main:
-    v = Vector y=1 2 3
+    v = Vector y=1 2 3 :: V Int
     print $ v.asTuple
     f = @foo 1
     print $ f 2
     print (True,True)
     print $ 2.+ 4
-    
+
 foreign haskell class Int

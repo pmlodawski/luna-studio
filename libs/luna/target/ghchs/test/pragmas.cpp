@@ -1,5 +1,5 @@
 #define _typedArg(a,t) let {_ = a `ofType` (anyType :: m t);};
-#define typed(a,t)    ((a) `ofType` (anyType :: m t))
+#define _typed(a,t)    ((a) `ofType` (anyType :: m (t)))
 #define _name(n)       (Proxy :: Proxy n)
 #define _member(n)     member _name(n)
 #define _nuSigArg(n)   nuSigArg (Proxy::Proxy n)

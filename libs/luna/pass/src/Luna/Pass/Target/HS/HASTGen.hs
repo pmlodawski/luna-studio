@@ -125,7 +125,9 @@ genUnit (Unit m) = genModule m
 
 
 
-
+genNonEmptySec header lst f = do
+    State.addComment header
+    when (not $ null lst) $ f lst
 
 genModule :: Ctx m a v => LModule a (LExpr a v) -> PassResult m HE
 genModule (Label lab (Module path body)) = withCtx (fromText $ view Path.name path) $ do
@@ -147,27 +149,24 @@ genModule (Label lab (Module path body)) = withCtx (fromText $ view Path.name pa
                   , HExt.DysfunctionalDependencies
                   , HExt.ExtendedDefaultRules
                   ]
-        modBaseName     = view Path.name path
-        modPath         = view Path.path path
-        modConName      = Naming.mkModCons (hash modBaseName)
-        modData         = Label (0::Int) (Decl.singleData $ fromText $ hash modBaseName)
-        (datas, decls) = extractDataDecls body
+        modBaseName      = view Path.name path
+        modPath          = view Path.path path
+        modConName       = Naming.mkModCons (hash modBaseName)
+        modData          = Label (0::Int) (Decl.singleData $ fromText $ hash modBaseName)
+        (fdatas, decls1) = extractDataDecls body
+        (tAls , decls)   = extractTypeAls decls1
+        datas            = fmap snd fdatas
+
 
     State.setModule mod
 
     State.regPragma (HE.Pragma $ HE.Include "pragmas.cpp")
     genDecl modData
 
-    --mapM_ genDecl body
-
-    State.addComment $ H1 "Data headers"
-    mapM_ (uncurry genDataDeclHeaders) datas
-
-    State.addComment $ H1 "Data declarations"
-    mapM_ genDataDeclDefs $ fmap snd datas
-
-    State.addComment $ H1 "Module declarations"
-    mapM_ genDecl decls
+    genNonEmptySec (H1 "Data headers")        fdatas $ mapM_ (uncurry genDataDeclHeaders)
+    genNonEmptySec (H1 "Type Aliases")        tAls   $ mapM_ genDecl
+    genNonEmptySec (H1 "Data declarations")   datas  $ mapM_ genDataDeclDefs
+    genNonEmptySec (H1 "Module declarations") decls  $ mapM_ genDecl
 
     when (path == "Main") $ do
         State.addComment $ H1 "Main module wrappers"
@@ -180,6 +179,11 @@ extractDataDecls = foldl go ([],[]) where
         Decl.Data d                             -> ((False,d):datas, decls)
         Decl.Foreign (Foreign _ (Decl.FData d)) -> ((True,d):datas, decls)
         _           -> (datas, ld:decls)
+
+extractTypeAls = foldl go ([],[]) where
+    go (a,as) ld@(Label lab decl) = case decl of
+        Decl.TpAls {} -> (ld:a, as   )
+        _             -> (a   , ld:as)
 
 mainf modname = HE.val "main" $ HE.AppE (HE.VarE "mainMaker") (HE.VarE modname)
 
@@ -281,12 +285,13 @@ dotname names = mjoin "." names
 convVar :: (Wrapper t, Hashable a Text) => t a -> Text
 convVar = hash . unwrap
 
-genDecl :: (Monad m, Enumerated lab, Num lab) => LDecl lab (LExpr lab ())-> PassResult m ()
+genDecl :: (Monad m, Enumerated lab, Num lab) => LDecl lab (LExpr lab ()) -> PassResult m ()
 genDecl ast@(Label lab decl) = case decl of
     Decl.Func    funcDecl -> genStdFunc funcDecl
     Decl.Foreign fdecl    -> genForeign fdecl
     Decl.Data    ddecl    -> genDataDecl False ddecl
     Decl.Pragma  {}       -> return ()
+    Decl.TpAls   dst src  -> State.regDecl =<< (HE.TypeD <$> genType dst <*> genType src)
 
 
 
@@ -478,7 +483,7 @@ genExpr (Label lab expr) = case expr of
     Expr.Var (Expr.Variable name _)          -> pure . HE.Var $ Naming.mkVar $ hash name
     Expr.Cons  name                          -> pure $ HE.Var $ Naming.mkCons $ hash name
     Expr.Accessor     acc src                -> HE.AppE <$> (pure $ mkMemberGetter $ hash acc) <*> genExpr src --(get0 <$> genExpr src))
-    Expr.Typed       cls expr                -> (\e t -> HE.MacroE "typed" [e,t]) <$> genExpr expr <*> genType cls
+    Expr.Typed       cls expr                -> (\e t -> HE.MacroE "_typed" [e,t]) <$> genExpr expr <*> genType cls
     Expr.Case  expr match -> mkFlattenCtx <$> (HE.AppE <$> lamFunc <*> genExpr expr)
         where passVar = HE.VarE "a"
               caseE   = HE.CaseE passVar <$> body'

@@ -25,6 +25,7 @@ data Expr = DataD        { _name      :: Text     , _params    :: [Text]      , 
           | TySynD       { _name      :: Text     , _paramsE   :: [Expr]      , _dstType :: Expr                                                             } -- FIXME: paramsE -> params
           | Function     { _name      :: Text     , _pats      :: [Expr]      , _expr    :: Expr                                                             }
           | NewTypeD     { _name      :: Text     , _paramsE   :: [Expr]      , _con     :: Expr                                                             } -- FIXME: paramsE -> params
+          | TypeD        { _src       :: Expr     , _dst       :: Expr                                                                                       }
           | CondE        { _cond      :: Expr     , _success   :: [Expr]      , _failure :: [Expr]                                                           }
           | RecUpdE      { _expr      :: Expr     , _name      :: Text        , _value   :: Expr                                                             }
           | Import       { _qualified :: Bool     , _segments  :: [Text]      , _rename  :: Maybe Text                                                       }
