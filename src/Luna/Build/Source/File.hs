@@ -31,8 +31,8 @@ import Luna.Syntax.Name.Path (QualPath(QualPath))
 
 
 path2module :: UniPath -> QualPath
-path2module path = QualPath t h where
-    h:t = map Text.pack $ UniPath.toList $ UniPath.dropExtension path
+path2module upath = QualPath (init path) (last path) where
+    path = map Text.pack $ UniPath.toList $ UniPath.dropExtension upath
 
 
 getSource :: MonadIO m => UniPath -> UniPath -> m (Source File)
