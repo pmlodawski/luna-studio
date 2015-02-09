@@ -104,6 +104,7 @@ instance Generator HExpr where
         HExpr.InstanceD tp decs               -> simple  $ "instance " <> generate tp <> " where { " <> mjoin "; " (genmap decs) <> " }"
         HExpr.TypeInstance tp expr            -> simple  $ "type instance " <> generate tp <> " = " <> generate expr
         HExpr.NewTypeD name params con        -> simple  $ "newtype " <> convert name <> " " <> (spaceJoin . sgenmap) params <> " = " <> generate con
+        HExpr.TypeD    dst src                -> simple  $ "type " <> generate dst <> " = " <> generate src
         HExpr.Con      name fields            -> simple  $ convert name <> spaceJoin ("" : sgenmap fields)
         HExpr.CondE    cond sucess failure    -> complex $ "ifThenElse' " <> sgenerate cond <> (simplify.buildDoBlock) sucess <> (simplify.buildDoBlock) failure
         HExpr.RecUpdE  expr name val          -> complex $ sgenerate expr <> " { " <> convert name <> " = " <> generate val <> "}"
