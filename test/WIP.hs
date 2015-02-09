@@ -41,6 +41,14 @@ $(registerMethod ''Cls_Main "Main")
 
 -- ------ Main members ------ --
 
+-- ====== Int type ====== --
+-- datatype provided externally
+data Cls_Int  = Cls_Int deriving (Show, Eq, Ord, Generic, Typeable)
+$(registerType ''Cls_Int)
+$(registerType ''Int)
+
+-- ------ Int members ------ --
+
 -- ====== Method: Main.print ====== --
 memSig_Main_print = _rtup2(_nuSigArg("self"), _npSigArg("s", val ("" :: String)))
 memDef_Main_print self s = do 
@@ -50,6 +58,16 @@ memDef_Main_print self s = do
 
 memFnc_Main_print = (memSig_Main_print, memDef_Main_print)
 $(registerMethod ''Main "print")
+
+-- ====== Method: Int._plus ====== --
+memSig_Int__plus = _rtup2(_nuSigArg("self"), _nuSigArg("a"))
+memDef_Int__plus self a = do 
+     
+    liftF2 (+) self a
+     
+
+memFnc_Int__plus = (memSig_Int__plus, memDef_Int__plus)
+$(registerMethod ''Int "_plus")
 
 -- ====== Vector type ====== --
 data Vector a = Vector a a a deriving (Show, Eq, Ord, Generic, Typeable)
@@ -116,6 +134,23 @@ memDef_Main_foo _self _a _b = do
 memFnc_Main_foo = (memSig_Main_foo, memDef_Main_foo)
 $(registerMethod ''Main "foo")
 
+-- ====== Foo type ====== --
+data Foo  = Foo deriving (Show, Eq, Ord, Generic, Typeable)
+data Cls_Foo  = Cls_Foo deriving (Show, Eq, Ord, Generic, Typeable)
+$(registerType ''Cls_Foo)
+$(registerType ''Foo)
+
+-- ------ Foo.Foo constructor ------ --
+cons_Foo = _member("Foo") (val Cls_Foo)
+memDef_Cls_Foo_Foo = liftCons0 Foo
+
+-- ====== Method: Cls_Foo.Foo ====== --
+memSig_Cls_Foo_Foo = _rtup1(_nuSigArg("self"))
+memFnc_Cls_Foo_Foo = (memSig_Cls_Foo_Foo, memDef_Cls_Foo_Foo)
+$(registerMethod ''Cls_Foo "Foo")
+
+-- ------ Foo members ------ --
+
 -- ====== Method: Main.main ====== --
 memSig_Main_main = _rtup1(_nuSigArg("self"))
 memDef_Main_main _self = do 
@@ -124,6 +159,7 @@ memDef_Main_main _self = do
      _f <- appNext (val (1 :: Int)) (_member("foo") _self)
      _call(6) (appNext (_call(7) (appNext (val (2 :: Int)) _f)) (_member("print") _self))
      _call(8) (appNext (val (_call(9) cons_True, _call(10) cons_True)) (_member("print") _self))
+     _call(11) (appNext (_call(12) (appNext (val (4 :: Int)) (_member("_plus") (val (2 :: Int))))) (_member("print") _self))
      
 
 memFnc_Main_main = (memSig_Main_main, memDef_Main_main)
