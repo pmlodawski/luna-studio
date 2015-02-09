@@ -11,7 +11,6 @@ import Flowbox.Graphics.Image.Image
 import qualified Flowbox.Math.Matrix as M
 import Flowbox.Graphics.Mockup as Mock
 import Data.Array.Accelerate.CUDA as AC
-import System.IO.Unsafe
 import Flowbox.Graphics.Composition.Merge
 
 shouldBeCloseTo :: (Show a, Comparable a b) => String -> b -> a -> a -> Expectation
@@ -108,7 +107,7 @@ instance Comparable Image ImageMetric where
             
 
 
-    diffMsg name metric actualImage expectedImage  = case metric of
+    diffMsg path metric actualImage expectedImage  = case metric of
         PixelWise ->    let (r1,g1,b1,a1) = Mock.unsafeGetChannels actualImage
                             (r2,g2,b2,a2) = Mock.unsafeGetChannels expectedImage
                           --(r,g,b,a) = Mock.unsafeGetChannels $ diff
@@ -122,8 +121,8 @@ instance Comparable Image ImageMetric where
                             maxDif = M.zipWith4 (\r g b a -> maximum [r,g,b,a]) (M.maximum r) (M.maximum g) (M.maximum b) (M.maximum a)--maximum dif
 
 
-                            resultPath = name++"Test/test_result.png"
-                            diffPath = name++"Test/test_diff.png"
+                            resultPath = path++"Test/test_result.png"
+                            diffPath = path++"Test/test_diff.png"
                             [maxDiff] = M.toList AC.run maxDif
 
 
@@ -189,9 +188,9 @@ instance Comparable Image ImageMetric where
                         --s  = sum $ P.map abs dif
 
 
-imgAsList img = 
-    let (r,g,b,a) = Mock.unsafeGetChannels img
-    in  (M.toList AC.run r) ++ (M.toList AC.run g) ++ (M.toList AC.run b) ++(M.toList AC.run a)
+--imgAsList img = 
+--    let (r,g,b,a) = Mock.unsafeGetChannels img
+--    in  (M.toList AC.run r) ++ (M.toList AC.run g) ++ (M.toList AC.run b) ++(M.toList AC.run a)
 
 getDefaultTestPic specPath testName = 
     loadImageLuna $ specPath++testName++"Test/"++testName++"_expected.png"
