@@ -7,7 +7,7 @@
 
 module Luna.Target.HS.AST.Deriving where
 
-import           Prelude (String)
+import           Prelude (String, show)
 import qualified Prelude as P
 
 data Deriving = Eq

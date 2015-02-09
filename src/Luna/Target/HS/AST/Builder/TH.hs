@@ -4,12 +4,13 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE OverloadedStrings #-}
 
-module Luna.Data.HAST.Builder.TH where
+module Luna.Target.HS.AST.Builder.TH where
 
-import Flowbox.Prelude
-import qualified Luna.Data.HAST.Expr as Expr
-import qualified Luna.Data.HAST.Lit  as Lit
+import Data.Monoid
+import qualified Luna.Target.HS.AST.Expr as Expr
+import qualified Luna.Target.HS.AST.Lit  as Lit
 
 mkMethod tpName funcName = Expr.THE $ Expr.app (Expr.Var "registerMethod")
                          [ Expr.Var $ typeNameRef tpName

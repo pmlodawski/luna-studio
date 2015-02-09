@@ -5,13 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Luna.Data.HAST.Extension (
-    Extension(..),
-    genCode
-)where
-
-import Data.String.Utils (join)
-import Flowbox.Prelude
+module Luna.Target.HS.AST.Extension where
 
 data Extension = AllowAmbiguousTypes
                | AlternativeLayoutRule
@@ -213,18 +207,3 @@ data Extension = AllowAmbiguousTypes
                | Unsafe
                | ViewPatterns
                deriving (Show)
-
-
-genCode :: [Extension] -> String
-genCode exts = case exts of
-        [] -> ""
-        _  -> "{-# LANGUAGE " ++ join ", " (map show exts) ++ " #-}\n\n"
-
-
-
-
-
-
-
-
-

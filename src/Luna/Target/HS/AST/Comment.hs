@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Luna.Data.HAST.Comment where
+module Luna.Target.HS.AST.Comment where
 
 import Flowbox.Prelude
 

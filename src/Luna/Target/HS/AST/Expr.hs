@@ -5,13 +5,16 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Luna.Data.HAST.Expr where
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE OverloadedStrings #-}
+
+module Luna.Target.HS.AST.Expr where
 
 import           Flowbox.Prelude
-import           Luna.Data.HAST.Comment   (Comment)
-import           Luna.Data.HAST.Deriving  (Deriving)
-import           Luna.Data.HAST.Extension (Extension)
-import qualified Luna.Data.HAST.Lit       as Lit
+import           Luna.Target.HS.AST.Comment   (Comment)
+import           Luna.Target.HS.AST.Deriving  (Deriving)
+import           Luna.Target.HS.AST.Extension (Extension)
+import qualified Luna.Target.HS.AST.Lit       as Lit
 import           Data.Text.Lazy (Text)
 
 
