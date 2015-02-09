@@ -100,13 +100,12 @@ arg e = Arg <$> argPattern
 
 argS1 = arg stage1DefArg
 
-foreign p = Foreign <$ Tok.kwForeign <*> foreignTarget <*> p 
+foreign p = Decl.Foreign <$> (Foreign <$ Tok.kwForeign <*> foreignTarget <*> p)
 
 foreignTarget =   Foreign.Haskell <$ Tok.kwFHaskell
               <|> Foreign.CPP     <$ Tok.kwFCPP
 
-func =   Decl.Foreign <$> foreign (Decl.FFunc <$> funcDecl (fromString . concat <$> stage1Block stage1Body2))
-     <|> Decl.Func    <$> funcDecl (stage1Block stage1Body2)
+func = Decl.Func    <$> funcDecl (stage1Block stage1Body2)
 
 stage1Block p = (char ':' *> p) <|> pure []
 
@@ -118,6 +117,9 @@ funcDecl body = Decl.FuncDecl <$  Tok.kwDef
     where extPath = ((qualifiedPath Tok.typeIdent <?> "extension path") <* Tok.accessor) <|> pure []
           outType = (Just <$> try (Tok.arrow *> typic)) <|> pure Nothing
 
+
+foreigns =  foreign $   (Decl.FFunc <$> funcDecl (fromString . concat <$> stage1Block stage1Body2))
+                   <|> (Decl.FData <$> dataDecl)
 
 ----- classes -----
 
@@ -141,7 +143,7 @@ dataDecl = do
             defConsList  n = ((:[]) <$> labeled (defCons $ convert n))
             constructors n =   blockBody' (labeled cons) <|> defConsList n
             bodyBlock      = blockBodyOpt $ labeled clsBody 
-            clsBody        = choice [ func, cls, typeAlias, typeWrapper ] <?> "class body"
+            clsBody        = choice [ func, cls, typeAlias, typeWrapper, foreigns ] <?> "class body"
 
 
 cons         = Decl.Cons <$> Tok.conIdent 

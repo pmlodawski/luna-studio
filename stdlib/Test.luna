@@ -6,6 +6,10 @@ class Vector a:
 
     def asTuple: (x,y,z)
 
+foreign haskell class Bool:
+    True
+    False
+
 def foo a b: (a,b)
 
 def main:
@@ -13,3 +17,4 @@ def main:
     print $ v.asTuple
     f = @foo 1
     print $ f 2
+    print (True,True)
