@@ -1,15 +1,28 @@
+foreign haskell class Int
+
 foreign haskell def print s="":
     polyJoin . liftF1 (Value . fmap Safe . print) $ s
+
+foreign haskell def Int.+ a:
+    liftF2 (+) self a
 
 class Vector a:
     x,y,z :: a
 
     def asTuple: (x,y,z)
 
+foreign haskell class Bool:
+    True
+    False
+
 def foo a b: (a,b)
+
+class Foo
 
 def main:
     v = Vector y=1 2 3
     print $ v.asTuple
     f = @foo 1
     print $ f 2
+    print (True,True)
+    print $ 2.+ 4

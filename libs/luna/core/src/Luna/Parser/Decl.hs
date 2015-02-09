@@ -100,13 +100,12 @@ arg e = Arg <$> argPattern
 
 argS1 = arg stage1DefArg
 
-foreign p = Foreign <$ Tok.kwForeign <*> foreignTarget <*> p 
+foreign p = Decl.Foreign <$> (Foreign <$ Tok.kwForeign <*> foreignTarget <*> p)
 
 foreignTarget =   Foreign.Haskell <$ Tok.kwFHaskell
               <|> Foreign.CPP     <$ Tok.kwFCPP
 
-func =   Decl.Foreign <$> foreign (Decl.FFunc <$> funcDecl (fromString . concat <$> stage1Block stage1Body2))
-     <|> Decl.Func    <$> funcDecl (stage1Block stage1Body2)
+func = Decl.Func    <$> funcDecl (stage1Block stage1Body2)
 
 stage1Block p = (char ':' *> p) <|> pure []
 
@@ -119,29 +118,34 @@ funcDecl body = Decl.FuncDecl <$  Tok.kwDef
           outType = (Just <$> try (Tok.arrow *> typic)) <|> pure Nothing
 
 
+foreigns =  foreign $   (Decl.FFunc <$> funcDecl (fromString . concat <$> stage1Block stage1Body2))
+                   <|> (Decl.FData <$> dataDecl False)
+
 ----- classes -----
 
-cls = Decl.Data <$> dataDecl
+cls = Decl.Data <$> dataDecl True
 
 withBlock p = blockStart *> p <* blockEnd
 
 rapp1 a f = f a
 rapp2 a b f = f a b
 
-dataDecl = do
+dataDecl genDefaultCons = do
     name <- Tok.kwClass *> (Tok.typeIdent <?> "class name")
     Decl.DataDecl <$> pure name 
                   <*> params
                   <**> ( try (withBlock ((rapp2) <$> constructors name <*> bodyBlock))
-                         <|> ((rapp2) <$> defConsList name <*> pure [])
+                         <|> defConsBuilder name
                        )
             <?> "class definition"
-      where params         = many (tvname <$> Tok.typeVarIdent <?> "class parameter")
-            defCons      n = Decl.Cons n <$> (concat <$> many fields)
-            defConsList  n = ((:[]) <$> labeled (defCons $ convert n))
-            constructors n =   blockBody' (labeled cons) <|> defConsList n
-            bodyBlock      = blockBodyOpt $ labeled clsBody 
-            clsBody        = choice [ func, cls, typeAlias, typeWrapper ] <?> "class body"
+      where params           = many (tvname <$> Tok.typeVarIdent <?> "class parameter")
+            defCons        n = Decl.Cons n <$> (concat <$> many fields)
+            defConsList    n = ((:[]) <$> labeled (defCons $ convert n))
+            constructors   n =   blockBody' (labeled cons) <|> defConsList n
+            bodyBlock        = blockBodyOpt $ labeled clsBody 
+            clsBody          = choice [ func, cls, typeAlias, typeWrapper, foreigns ] <?> "class body"
+            defConsBuilder n = if genDefaultCons then (rapp2) <$> defConsList n <*> pure []
+                                                 else pure $ (rapp2 [] [])
 
 
 cons         = Decl.Cons <$> Tok.conIdent 

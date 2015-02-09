@@ -71,7 +71,12 @@ pushNewScope id ns@(Namespace st inf) = ns
 
 -- FIXME[wd]: dodac asserty!
 pushScope :: ID -> Namespace -> Namespace
-pushScope = pushID
+pushScope id ns = case view (info . StructInfo.scope . at id) ns of
+    Just _  -> pushExistingScope id ns
+    Nothing -> pushNewScope id ns
+
+pushExistingScope :: ID -> Namespace -> Namespace
+pushExistingScope = pushID
 
 popScope :: Namespace -> Namespace
 popScope = snd . popID
