@@ -170,7 +170,7 @@ mainf modname = HE.val "main" $ HE.AppE (HE.VarE "mainMaker") (HE.VarE modname)
 
 --genCons :: (Monad m, Applicative m, MonadState State.GenState m)
 --        => Text -> [Text] -> [Decl.LCons a e] -> [Deriving] -> Bool -> m ()
-genCons name params cons derivings makeDataType = do
+genCons name params cons derivings isNative = do
     let conDecls   = fmap (view Label.element) cons
         clsConName = Naming.mkCls name
         clsConName' = Naming.mkCls' name
@@ -209,7 +209,7 @@ genCons name params cons derivings makeDataType = do
 
     addComment . H2 $ name <> " type"
     consE <- mapM genData conDecls
-    if makeDataType then State.addDataType $ HE.DataD name params consE derivings
+    if not isNative then State.addDataType $ HE.DataD name params consE derivings
                     else State.addComment  $ H5 "datatype provided externally"
     addClsDataType clsConName derivings
     regTHExpr $ TH.mkRegType clsConName
@@ -247,15 +247,17 @@ convVar = hash . unwrap
 
 genDecl :: (Monad m, Enumerated lab, Num lab) => LDecl lab (LExpr lab ())-> PassResult m ()
 genDecl ast@(Label lab decl) = case decl of
-    Decl.Data (Decl.DataDecl (convVar -> name) params cons defs) -> withCtx (fromText name) $ do
-        genCons name (fmap convVar params) cons stdDerivings True
-        addComment $ H3 $ name <> " members"
-        mapM_ genDecl defs
-    
-    Decl.Func funcDecl -> genStdFunc funcDecl
-    Decl.Foreign fdecl -> genForeign fdecl
-    Decl.Pragma     {} -> return ()
-    Decl.Imp        {} -> return () --FIXME[pm->wd] 
+    Decl.Imp     {}       -> return () --FIXME[pm->wd] 
+    Decl.Func    funcDecl -> genStdFunc funcDecl
+    Decl.Foreign fdecl    -> genForeign fdecl
+    Decl.Data    ddecl    -> genDataDecl False ddecl
+    Decl.Pragma  {}       -> return ()
+
+genDataDecl :: (Monad m, Enumerated lab, Num lab) => Bool -> Decl.DataDecl lab (LExpr lab ()) -> PassResult m ()
+genDataDecl isNative (Decl.DataDecl (convVar -> name) params cons defs) = withCtx (fromText name) $ do
+    genCons name (fmap convVar params) cons stdDerivings isNative
+    addComment $ H3 $ name <> " members"
+    mapM_ genDecl defs
 
 genStdFunc f = genFunc f (Just genFuncBody) True
 
@@ -341,7 +343,8 @@ genForeign :: (Monad m, Enumerated a, Num a) => Foreign (Decl.ForeignDecl a (LEx
 genForeign (Foreign target a) = case target of
     Foreign.CPP     -> Pass.fail "C++ foreign interface is not supported yet."
     Foreign.Haskell -> case a of
-        Decl.FFunc funcDecl -> genFunc funcDecl (Just genFFuncBody) False
+        Decl.FFunc decl -> genFunc decl (Just genFFuncBody) False
+        Decl.FData decl -> genDataDecl True decl
 
 genFFuncBody :: Monad m => Text -> a -> PassResult m [HE]
 genFFuncBody txt _ = pure $ [HE.Native txt]

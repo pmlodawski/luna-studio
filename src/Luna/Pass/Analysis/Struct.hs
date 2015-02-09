@@ -48,7 +48,7 @@ import           Luna.Data.Namespace          (Namespace)
 import           Luna.Data.StructInfo         (StructInfo, OriginInfo(OriginInfo))
 
 import qualified Luna.Data.Namespace.State    as State 
-import           Luna.Data.Namespace.State    (regAlias, regParent, regVarName, regNamePatDesc, regTypeName, withNewScope, withScope)
+import           Luna.Data.Namespace.State    (regAlias, regParent, regVarName, regNamePatDesc, regTypeName, withScope)
 import qualified Luna.Parser.State            as ParserState
 --import qualified Luna.Syntax.Name.Pattern     as NamePattern
 import qualified Luna.Syntax.Name.Pattern     as NamePattern
@@ -88,7 +88,7 @@ aaUnit :: SADefaultTraversal m a => a -> SAPass m StructInfo
 aaUnit ast = defaultTraverseM ast *> (view Namespace.info <$> get)
 
 aaMod :: SACtx lab m a => LModule lab a -> SAPass m (LModule lab a)
-aaMod mod@(Label lab (Module _ body)) = withNewScope id continue
+aaMod mod@(Label lab (Module _ body)) = withScope id continue
     where continue =  registerDecls body
                    *> defaultTraverseM mod
           id       = Enum.id lab
@@ -103,10 +103,7 @@ aaPat p@(Label lab pat) = case pat of
           continue = defaultTraverseM p 
 
 aaDecl :: SACtx lab m a => (LDecl lab a) -> SAPass m (LDecl lab a)
-aaDecl d@(Label lab decl) = case decl of
-    Decl.Func {} -> withNewScope id $ defaultTraverseM d
-    Decl.Data {} -> withScope id continue
-    _            -> continue
+aaDecl d@(Label lab decl) = withScope id continue
     where id       = Enum.id lab
           continue = defaultTraverseM d
 
@@ -133,7 +130,7 @@ registerDecls decls =  mapM_ registerHeaders  decls
 
 registerDataDecl :: SACtx lab m a => LDecl lab a -> SAPass m ()
 registerDataDecl (Label lab decl) = case decl of
-    Decl.Data (Decl.DataDecl name _ cons defs) -> withNewScope id $ do
+    Decl.Data (Decl.DataDecl name _ cons defs) -> withScope id $ do
         mapM_ registerCons cons
         registerDecls defs
         pure ()
