@@ -49,8 +49,8 @@ import qualified Luna.Interpreter.Session.TargetHS.Bindings as Bindings
 import qualified Luna.Interpreter.Session.TargetHS.TargetHS as TargetHS
 import qualified Luna.Interpreter.Session.Var               as Var
 import qualified Luna.Pass.CodeGen.HSC.HSC                  as HSC
-import qualified Luna.Pass.Transform.HAST.HASTGen.HASTGen   as HASTGen
 import qualified Luna.Pass.Transform.AST.Hash.Hash          as Hash
+import qualified Luna.Pass.Transform.HAST.HASTGen.HASTGen   as HASTGen
 
 
 
@@ -194,8 +194,9 @@ varType (NodeExpr.StringExpr (StringExpr.Expr   name@(h:_)))
     | Char.isUpper h                                     = return $ Con name
     | otherwise                                          = return $ Var name
 varType (NodeExpr.ASTExpr expr) = do
+    expr' <- Var.replaceTimeRefs expr
     -- TODO[PM] : replaceTimeVars
-    hast <- hoistEitherWith (Error.OtherError $(loc)) =<< HASTGen.runExpr expr
+    hast <- hoistEitherWith (Error.OtherError $(loc)) =<< HASTGen.runExpr expr'
     return $ Expression $ HSC.genExpr hast
 
 
