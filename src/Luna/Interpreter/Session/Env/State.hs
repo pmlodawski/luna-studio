@@ -355,7 +355,7 @@ getGraph defPoint = do
         ast         = library ^. Library.ast
     expr  <- getFunction defPoint
     aa    <- runPass $(loc) $ Alias.run ast
-    graph <- fst <$> runPass $(loc) (GraphBuilder.run aa propertyMap False expr)
+    graph <- fst <$> runPass $(loc) (GraphBuilder.run aa propertyMap True expr)
     return (graph, expr ^. Expr.id)
 
 
