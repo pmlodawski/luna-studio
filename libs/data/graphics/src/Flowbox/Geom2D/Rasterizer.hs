@@ -14,7 +14,7 @@ module Flowbox.Geom2D.Rasterizer (
     Point2(..)
 ) where
 
-import           Data.Array.Accelerate           ((&&*), (==*), (>*), (||*))
+import           Data.Array.Accelerate           ((&&*), (==*), (>*), (<*), (||*))
 import qualified Data.Array.Accelerate           as A
 import           Data.Array.Accelerate.IO
 import           Data.Bits                       ((.&.))
@@ -22,7 +22,7 @@ import           Data.Maybe
 import           Data.VectorSpace
 import           Diagrams.Backend.Cairo
 import           Diagrams.Backend.Cairo.Internal
-import           Diagrams.Prelude                hiding (Path)
+import           Diagrams.Prelude                hiding (Path, (<*))
 import           Diagrams.Segment
 import           Graphics.Rendering.Cairo        hiding (Path, translate)
 import           System.IO.Unsafe
@@ -42,7 +42,7 @@ import qualified Flowbox.Graphics.Image.View                     as View
 import qualified Flowbox.Graphics.Utils.Utils                    as U
 import           Flowbox.Math.Matrix                             ((:.) (..), DIM2, Matrix (..), Matrix2, Z (..))
 import qualified Flowbox.Math.Matrix                             as M
-import           Flowbox.Prelude                                 hiding (use, ( # ))
+import           Flowbox.Prelude                                 hiding (use, ( # ), (<*))
 import           Math.Coordinate.Cartesian                       (Point2 (..))
 
 
@@ -162,7 +162,47 @@ pathToMatrix w h path = extractArr $ pathToRGBA32 w h path
           extractVal rgba = (A.fromIntegral $ (rgba `div` 0x1000000) .&. 0xFF) / 255
 
 rasterizeMask :: (Real a, Fractional a) => Int -> Int -> Mask a -> Matrix2 Double
-rasterizeMask w h (Mask path' feather') = path
+rasterizeMask w h (Mask path' feather') = 
+    case feather' of
+        Nothing -> path
+        Just feather -> checkEqual feather path'
+    where ptm = pathToMatrix w h
+          path = ptm path'
+          distance p (A.unlift . A.unindex2 -> (A.fromIntegral -> y, A.fromIntegral -> x) :: (A.Exp Int, A.Exp Int)) = let
+                  h' = A.fromIntegral $ A.lift h
+                  d = distanceFromQuadratics' (A.lift $ Point2 x ((y - (h'/2))*(-1) + (h'/2)))
+                  dp = d p
+              in dp
+          combine p f dp df = let
+                  f0 = f <* 0.01 :: M.Exp Bool
+                  f1 = f >* 0.99 :: M.Exp Bool
+                  p0 = p <* 0.01 :: M.Exp Bool
+                  p1 = p >* 0.99 :: M.Exp Bool
+                  p01 = (A.not p1) &&* (A.not p0)
+                  cond1 = (p0 &&* (A.not f1)) ||* (p1 &&* f1) ||* (p01 &&* f0)
+                  cond2 = (p0 &&* f1) ||* (p1 &&* f0)
+                  --c1 = A.fromIntegral $ A.boolToInt cond1
+                  c2 = A.fromIntegral $ A.boolToInt cond2
+                  --nc1 = A.fromIntegral $ A.boolToInt $ A.not cond1
+                  nc2 = A.fromIntegral $ A.boolToInt $ A.not cond2
+                  x' = (dp*p + df*f)/(dp+df)
+              --in dp --c1*p*f + nc1 * (c2*x' + nc2*(max p f))
+              in A.cond (cond1)
+                  (p*f)
+                  (c2*x' + nc2*(max p f))
+          checkEqual fea pat
+              | fea == pat = path
+              | otherwise  = let
+                      feather = ptm fea
+                      convert p = let
+                              a = makeCubics p
+                              quads = convertCubicsToQuadratics 5 0.001 $ (fmap.fmap) f2d a
+                          in A.use $ A.fromList (Z :. length quads) quads
+                      cA = convert path'
+                      cB = convert fea
+                      dP = M.generate (A.index2 (U.variable h) (U.variable w)) $ distance cA
+                      dF = M.generate (A.index2 (U.variable h) (U.variable w)) $ distance cB
+                  in M.zipWith4 (\p f dp df -> (combine p f dp df)) path feather dP dF
     --case feather' of
     --    Nothing -> path
     --    Just feather' -> let
@@ -174,16 +214,16 @@ rasterizeMask w h (Mask path' feather') = path
     --            cA = convert path'
     --            cB = convert feather'
     --        in M.generate (A.index2 (U.variable h) (U.variable w)) $ combine feather cA cB
-    where ptm  = pathToMatrix w h
-          path = ptm path'
-          combine :: Matrix2 Double -> A.Acc (A.Vector (QuadraticBezier Double)) -> A.Acc (A.Vector (QuadraticBezier Double)) -> A.Exp A.DIM2 -> A.Exp Double
-          combine feather pQ fQ idx@(A.unlift . A.unindex2 -> (A.fromIntegral -> y, A.fromIntegral -> x) :: (A.Exp Int, A.Exp Int)) = let
-                  p  = path M.! idx
-                  f  = feather M.! idx
-                  d  = distanceFromQuadratics (A.lift $ Point2 x y)
-                  dp = d pQ
-                  df = d fQ
-              in A.cond ((p >* 0 &&* f >* 0) ||* (p ==* 0 &&* f ==* 0)) p (dp / (dp+df) * p)
+    --where ptm  = pathToMatrix w h
+    --      path = ptm path'
+    --      combine :: Matrix2 Double -> A.Acc (A.Vector (QuadraticBezier Double)) -> A.Acc (A.Vector (QuadraticBezier Double)) -> A.Exp A.DIM2 -> A.Exp Double
+    --      combine feather pQ fQ idx@(A.unlift . A.unindex2 -> (A.fromIntegral -> y, A.fromIntegral -> x) :: (A.Exp Int, A.Exp Int)) = let
+    --              p  = path M.! idx
+    --              f  = feather M.! idx
+    --              d  = distanceFromQuadratics (A.lift $ Point2 x y)
+    --              dp = d pQ
+    --              df = d fQ
+    --          in A.cond ((p >* 0 &&* f >* 0) ||* (p ==* 0 &&* f ==* 0)) p (dp / (dp+df) * p)
 
 matrixToImage :: Matrix2 Double -> Image
 matrixToImage a = Image.singleton view
