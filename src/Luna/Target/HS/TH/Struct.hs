@@ -89,6 +89,7 @@ con2TypeName conName = do
 appEs :: Exp -> [Exp] -> Exp
 appEs = foldl AppE
 
+
 --generateFieldAccessors (nameBase -> typeName) fieldDescs = return $ accessors ++ sigs 
 --                                                                              ++ getterDefs 
 --                                                                              ++ setterDefs 
@@ -134,33 +135,26 @@ appEs = foldl AppE
 --    sigs       = getterSigs ++ setterSigs
 
 --    --defs
---    getDefNames = fmap (mkGetterDef typeName) fieldNames
---    setDefNames = fmap (mkSetterDef typeName) fieldNames
-
---    getterDefs = fmap getGetter getDefNames
---        where getGetter (fieldName, accName) = mkSimpleMemDef 1 typeName fieldName accName
-
---    setterDefs = fmap getSetter setDefNames
---        where getSetter (fieldName, accName) = mkSimpleMemDef 2 typeName fieldName accName
+--    getterDefs = fmap (mkGetterDef typeName) fieldNames
+--    setterDefs = fmap (mkSetterDef typeName) fieldNames
 --    --fncDefs    = fmap (mkFncDef typeName) fieldNames
 
---    mkGetterDef typeName fieldName = (fieldName, accName) where
+--    mkGetterDef typeName fieldName = mkSimpleMemDef 1 typeName fieldName accName where
 --        accName    = mkName $ Naming.mkFieldGetter typeName fieldName
 
---    mkSetterDef typeName fieldName = (setFieldName, accName) where
---        setFieldName = Naming.setter fieldName
---        accName      = mkName $ Naming.mkFieldSetter typeName fieldName
+--    mkSetterDef typeName fieldName = mkSimpleMemDef 2 typeName setterName accName where
+--        setterName = Naming.setter fieldName
+--        accName    = mkName $ Naming.mkFieldSetter typeName fieldName
 
-
-    --dokonczyc!!!
-
-    --mkFncDef typeName fieldName = TupE (VarE ) where
-    --    getterName = mkName $ Naming.mkFieldGetter typeName fieldName
-    --    setterName = mkName $ Naming.mkFieldGetter typeName fieldName
+{-# INLINE uncurry3 #-}
+uncurry3 :: (a -> b -> c -> d) -> ((a, b, c) -> d)
+uncurry3 f ~(a,b,c) = f a b c
 
 generateFieldAccessors (nameBase -> typeName) fieldDescs = return $ accessors ++ sigs 
                                                                               ++ getterDefs 
                                                                               ++ setterDefs 
+                                                                              ++ getterFncs
+                                                                              ++ setterFncs
                                                                               -- ++ fncDefs 
     where
     unit = mkName "x"
@@ -198,6 +192,21 @@ generateFieldAccessors (nameBase -> typeName) fieldDescs = return $ accessors ++
     accessors = concat $ fmap (uncurry mkAccessor) $ Map.assocs consPatMap
 
     -- sigs
+    getterSigNames = fmap (mkName . Naming.mkMemSig typeName) fieldNames
+    getterDefNames = fmap (mkName . Naming.mkMemDef typeName) fieldNames
+    getterFncNames = fmap (mkName . Naming.mkMemFnc typeName) fieldNames
+
+    setterFieldNames = fmap Naming.setter fieldNames
+    setterSigNames = fmap (mkName . Naming.mkMemSig typeName) setterFieldNames
+    setterDefNames = fmap (mkName . Naming.mkMemDef typeName) setterFieldNames
+    setterFncNames = fmap (mkName . Naming.mkMemFnc typeName) setterFieldNames
+
+    mkMemFnc fname sigName defName = FunD fname [Clause [] (NormalB (TupE [VarE sigName, VarE defName])) []] where
+
+    getterFncs = fmap (uncurry3 $ mkMemFnc) $ zip3 getterFncNames getterSigNames getterDefNames
+    setterFncs = fmap (uncurry3 $ mkMemFnc) $ zip3 setterFncNames setterSigNames setterDefNames
+    --mem
+
     getterSigs = fmap (mkSimpleMemSig0 typeName) fieldNames
     setterSigs = fmap (mkSimpleMemSig1 typeName) setterNames
     sigs       = getterSigs ++ setterSigs
@@ -254,14 +263,13 @@ mkSimpleMemSig pNum typeName fieldName = FunD fname [Clause [] (NormalB (VarE si
 mkSimpleMemSig0 = mkSimpleMemSig 0
 mkSimpleMemSig1 = mkSimpleMemSig 1
 
-
 mkSimpleMemDef pNum typeName fieldName defname = FunD fname [Clause [] (NormalB body) []] where
     fname = mkName $ Naming.mkMemDef typeName fieldName
-    body  = mkLiftFR pNum defname
+    body  = mkLiftF pNum defname
 
 
-mkLiftFR pNum base = AppE (VarE fname) (VarE base) where
-    fname = mkName $ "liftFR" ++ show pNum
+mkLiftF pNum base = AppE (VarE fname) (VarE base) where
+    fname = mkName $ "liftF" ++ show pNum
 
 
 --registerMethodSignature typeName methodName (Naming.toName -> funcName) = do
@@ -309,6 +317,15 @@ mkLiftFR pNum base = AppE (VarE fname) (VarE base) where
 --        inst       = InstanceD ctx nt funcs
 --    return $ [inst]
 
+registerType :: Name -> Q [Dec]
+registerType tpName = do
+    TyConI (DataD _ _ bndrs _ _) <- reify tpName
+    let params     = fmap getTyVarBndrName bndrs
+        normalName = mkName $ Naming.mkTypePtr (nameBase tpName)
+        decl = DataD [] normalName [] [NormalC normalName []] []
+        tfam = TySynInstD (mkName "ProxyType") (TySynEqn [foldl AppT (ConT tpName) (fmap VarT params)] (ConT normalName))
+    return [decl, tfam]
+
 registerMethod :: Name -> String -> Q [Dec]
 registerMethod typeName methodName = do
     let typeNameBase = nameBase typeName
@@ -324,7 +341,9 @@ registerMethodDefinition typeName methodName (Naming.toName -> funcName) = do
     resultT    <- VarT <$> newName "result"
     let
         dataVars   = map VarT $ getDecVarNames dataDec
-        baseT      = ConT typeName
+        baseT      = ConT (mkName $ Naming.mkTypePtr $ nameBase typeName)
+        --baseT      = ConT (mkName $ nameBase typeName ++ "_T")
+
         prectx     = getContext funcT
         sig        = getSignature funcT
         resultC    = equalT resultT sig

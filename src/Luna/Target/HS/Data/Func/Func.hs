@@ -6,7 +6,6 @@
 ---------------------------------------------------------------------------
 
 {-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE PolyKinds #-}
 
 module Luna.Target.HS.Data.Func.Func where
 
@@ -20,6 +19,6 @@ import Luna.Target.HS.Data.Struct
 --    getFunc :: Mem base name -> args -> (args -> out)
 
 
-class FuncProvider (base :: k) name func where
+class FuncProvider base name func where
     getFunc2 :: Mem base name -> (func -> out) -> func
 
