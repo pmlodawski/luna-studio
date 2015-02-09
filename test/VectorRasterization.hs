@@ -9,6 +9,7 @@
 
 module Main where
 
+
 import Data.Array.Accelerate hiding (fromIntegral)
 import Data.Array.Accelerate as A
 import Data.Array.Accelerate.IO
@@ -76,6 +77,7 @@ helper w h pointPath featherPath = do
                 Delayed m -> let calcu = run m in seq calcu ()
     t2 <- getCurrentTime
     print $ diffUTCTime t2 t1
+
 
     return ()
 

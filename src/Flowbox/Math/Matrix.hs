@@ -60,7 +60,6 @@ import Flowbox.Math.Index
 import Flowbox.Prelude    as P hiding (ix, map, pred, set, use, zipWith, (++), (<*), (?))
 
 
-
 data Matrix ix a = Raw (A.Array ix a)
                  | Delayed (A.Acc (A.Array ix a))
                  deriving (Show)
@@ -144,6 +143,9 @@ slice mat fragments = Delayed $ A.slice (accMatrix mat) fragments
 
 take :: (A.Elt e) => A.Exp Int -> Vector e -> Vector e
 take elems mat = Delayed $ A.take elems (accMatrix mat)
+
+drop :: (A.Elt e) => A.Exp Int -> Vector e -> Vector e
+drop elems mat = Delayed $ A.drop elems (accMatrix mat)
 
 -- == Construction ==
 

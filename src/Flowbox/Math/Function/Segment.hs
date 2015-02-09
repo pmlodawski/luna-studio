@@ -14,36 +14,36 @@ import Flowbox.Prelude
 
 
 
-isValidIndex :: Function x y -> Int -> Bool
-isValidIndex (Function segs) idx = idx >= 0 && idx < Map.size segs
+isValidIndex :: FunctionModel x y -> Int -> Bool
+isValidIndex (FunctionModel segs) idx = idx >= 0 && idx < Map.size segs
 
-size :: Function x y -> Int
-size (Function segs) = Map.size segs
+size :: FunctionModel x y -> Int
+size (FunctionModel segs) = Map.size segs
 
-insertSegmentAt :: Ord x => Function x y -> x -> Segment x y -> Function x y
+insertSegmentAt :: Ord x => FunctionModel x y -> x -> FunctionSegment x y -> FunctionModel x y
 insertSegmentAt fun x seg = fun & segments %~ Map.insert x (Just seg)
 
-getSegmentAt :: Ord x => Function x y -> x -> Maybe (Segment x y)
-getSegmentAt (Function segs) x = join . fmap snd $ Map.lookupLE x segs
+getSegmentAt :: Ord x => FunctionModel x y -> x -> Maybe (FunctionSegment x y)
+getSegmentAt (FunctionModel segs) x = join . fmap snd $ Map.lookupLE x segs
 
---(x, Maybe (Segment x y))
+--(x, Maybe (FunctionSegment x y))
 
-getSegmentIdAt :: Ord x => Function x y -> x -> Maybe Int
-getSegmentIdAt (Function segs) x =
+getSegmentIdAt :: Ord x => FunctionModel x y -> x -> Maybe Int
+getSegmentIdAt (FunctionModel segs) x =
     let getIdx = flip Map.findIndex segs . fst
     in fmap getIdx $ Map.lookupLE x segs
 
-getNthSegment :: Ord x => Function x y -> Int -> Maybe (Segment x y)
-getNthSegment fun@(Function segs) idx = case idx of
+getNthSegment :: Ord x => FunctionModel x y -> Int -> Maybe (FunctionSegment x y)
+getNthSegment fun@(FunctionModel segs) idx = case idx of
     i | isValidIndex fun i -> snd $ Map.elemAt idx segs
     _                      -> Nothing
 
-replaceSegment :: Ord x => Function x y -> Int -> Segment x y -> Function x y
-replaceSegment fun@(Function segs) idx seg
-    | isValidIndex fun idx = Function $ Map.updateAt (const . const . pure . pure $ seg) idx segs
+replaceSegment :: Ord x => FunctionModel x y -> Int -> FunctionSegment x y -> FunctionModel x y
+replaceSegment fun@(FunctionModel segs) idx seg
+    | isValidIndex fun idx = FunctionModel $ Map.updateAt (const . const . pure . pure $ seg) idx segs
     | otherwise            = fun
 
-modifySegment :: Ord x => Function x y -> Int -> (Segment x y -> Segment x y) -> Function x y
+modifySegment :: Ord x => FunctionModel x y -> Int -> (FunctionSegment x y -> FunctionSegment x y) -> FunctionModel x y
 modifySegment fun idx f =
     let updatedSegment = f <$> getNthSegment fun idx
     in maybe fun (replaceSegment fun idx) updatedSegment
