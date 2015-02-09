@@ -144,7 +144,7 @@ saveImageJuicy file matrix = do
 
 -- == HELPERS
 onEach :: (A.Exp Double -> A.Exp Double) -> Image -> Image
-onEach f = Image.map (View.map $ Channel.unsafeMap (Channel.FunDouble f)) 
+onEach f = Image.map (View.map $ Channel.unsafeMap (Channel.FunDouble f))
 
 onEachRGBA :: (A.Exp Double -> A.Exp Double)
            -> (A.Exp Double -> A.Exp Double)
@@ -272,14 +272,14 @@ vectorMatteLuna :: Mask2 Double -> Maybe (Matte.Matte Double)
 vectorMatteLuna mask = Just $ Matte.VectorMatte $ convertMask mask
 
 unpackAcc :: (A.Exp Int,A.Exp Int) -> (Int,Int)
-unpackAcc (x,y) = 
+unpackAcc (x,y) =
   let
     pair = A.lift (x,y) :: A.Exp (Int,Int)
     scalarPair = A.unit pair :: A.Acc (A.Scalar (Int,Int))
     l = temporaryBackend $ scalarPair :: A.Scalar (Int,Int)
     sh' = A.toList l :: [(Int,Int)]
     x' = fst $ head sh'
-    y' = snd $ head sh'   
+    y' = snd $ head sh'
   in
     (x',y')
 
@@ -318,7 +318,7 @@ applyMatteFloat f m (ChannelFloat name (ContinuousData shader)) = ChannelFloat n
     matte = Matte.matteToContinuous h w m
     shader' = applyToShader f matte shader
 
--- looks strange, but is necessary because of the weird accelerate behaviour 
+-- looks strange, but is necessary because of the weird accelerate behaviour
 maskedApp :: (IsNum a, A.Elt a) => (A.Exp a -> A.Exp a) -> A.Exp a -> A.Exp a -> A.Exp a
 maskedApp f a b = (a A.==* 0) A.? (b,b + a*(delta f b))
 -- won't work, no idea what is the reason of that
@@ -334,7 +334,7 @@ applyToMatrix :: (IsNum a, A.Elt a) => (A.Exp a -> A.Exp a) -> Matrix2 a -> Matr
 applyToMatrix f matte mat = (M.zipWith (\x -> \y -> (maskedApp f x y)) matte) mat
 
 offsetMatteLuna :: Color.RGBA Double -> Maybe (Matte.Matte Double) -> Image -> Image
-offsetMatteLuna x@(fmap variable -> Color.RGBA r g b a) matte img = 
+offsetMatteLuna x@(fmap variable -> Color.RGBA r g b a) matte img =
   case matte of
     Nothing -> onEachRGBA (offset r) (offset g) (offset b) (offset a) img
     Just m ->
@@ -344,7 +344,7 @@ offsetMatteLuna x@(fmap variable -> Color.RGBA r g b a) matte img =
                            (applyMatteFloat (offset a) m) img
 
 contrastMatteLuna :: Color.RGBA Double -> Maybe (Matte.Matte Double) -> Image -> Image
-contrastMatteLuna x@(fmap variable -> Color.RGBA r g b a) matte img = 
+contrastMatteLuna x@(fmap variable -> Color.RGBA r g b a) matte img =
   case matte of
     Nothing -> onEachRGBA (contrast r) (contrast g) (contrast b) (contrast a) img
     Just m ->
@@ -352,7 +352,7 @@ contrastMatteLuna x@(fmap variable -> Color.RGBA r g b a) matte img =
                            (applyMatteFloat (contrast g) m)
                            (applyMatteFloat (contrast b) m)
                            (applyMatteFloat (contrast a) m) img
-                           
+
 exposureMatteLuna :: Color.RGBA Double -> Color.RGBA Double -> Maybe (Matte.Matte Double) -> Image -> Image
 exposureMatteLuna x@(fmap variable -> Color.RGBA blackpointR blackpointG blackpointB blackpointA)
                   y@(fmap variable -> Color.RGBA exR exG exB exA) matte img =
@@ -392,10 +392,10 @@ gradeLunaColorMatte (VPS (fmap variable -> Color.RGBA blackpointR blackpointG bl
                                                      (applyMatteFloat (grade blackpointA whitepointA liftA gainA multiplyA offsetA gammaA) m) img
 
 offsetLuna :: Color.RGBA Double -> Image -> Image
-offsetLuna (fmap variable -> Color.RGBA r g b a) = onEachRGBA (offset r) (offset g) (offset b) id -- (offset a)
+offsetLuna (fmap variable -> Color.RGBA r g b a) = onEachRGBA (offset r) (offset g) (offset b) (offset a)
 
 contrastLuna :: Color.RGBA Double -> Image -> Image
-contrastLuna (fmap variable -> Color.RGBA r g b a) = onEachRGBA (contrast r) (contrast g) (contrast b) id -- (contrast a)
+contrastLuna (fmap variable -> Color.RGBA r g b a) = onEachRGBA (contrast r) (contrast g) (contrast b) (contrast a)
 
 exposureLuna :: Color.RGBA Double -> Color.RGBA Double -> Image -> Image
 exposureLuna (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB blackpointA)
@@ -403,7 +403,7 @@ exposureLuna (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB bl
                  onEachRGBA (exposure blackpointR exR)
                             (exposure blackpointG exG)
                             (exposure blackpointB exB)
-                            id -- (exposure blackpointA exA)
+                            (exposure blackpointA exA)
 
 gradeLuna :: VPS Double -> VPS Double -> VPS Double -> Double -> Double -> Double -> Double -> Image -> Image
 gradeLuna (VPS (variable -> blackpoint))
@@ -926,10 +926,10 @@ clampLuna (VPS (variable -> thLo), VPS (variable -> thHi)) clamps =
         _                               -> onEach $ clamp (Range thLo thHi) Nothing
 
 multiplyLuna :: Color.RGBA Double -> Image -> Image
-multiplyLuna (fmap variable -> Color.RGBA r g b a) = onEachRGBA (*r) (*g) (*b) id -- (*a)
+multiplyLuna (fmap variable -> Color.RGBA r g b a) = onEachRGBA (*r) (*g) (*b) (*a)
 
 gammaLuna :: Color.RGBA Double -> Image -> Image
-gammaLuna (fmap variable -> Color.RGBA r g b a) = onEachRGBA (gamma r) (gamma g) (gamma b) id -- (gamma a)
+gammaLuna (fmap variable -> Color.RGBA r g b a) = onEachRGBA (gamma r) (gamma g) (gamma b) (gamma a)
 
 fromPolarMapping :: (Elt a, IsFloating a, Elt e) => CartesianShader (Exp a) (Exp e) -> CartesianShader (Exp a) (Exp e)
 fromPolarMapping (Shader cnv gen) = Shader cnv $ \(Point2 x y) ->
