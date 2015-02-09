@@ -21,6 +21,7 @@ import           Data.Maybe
 import           Language.Haskell.TH
 import qualified Luna.Target.HS.Host.Naming2 as Naming
 import           Luna.Target.HS.TH.Utils
+import           Luna.Target.HS.AST.Deriving (stdDerivings)
 import           Data.Maybe                  (mapMaybe)
 import           Data.Map                    (Map)
 import qualified Data.Map                    as Map
@@ -320,11 +321,18 @@ mkLiftF pNum base = AppE (VarE fname) (VarE base) where
 registerType :: Name -> Q [Dec]
 registerType tpName = do
     TyConI (DataD _ _ bndrs _ _) <- reify tpName
-    let params     = fmap getTyVarBndrName bndrs
-        normalName = mkName $ Naming.mkTypePtr (nameBase tpName)
-        decl = DataD [] normalName [] [NormalC normalName []] []
-        tfam = TySynInstD (mkName "ProxyType") (TySynEqn [foldl AppT (ConT tpName) (fmap VarT params)] (ConT normalName))
-    return [decl, tfam]
+    let treg   = registerType' tpName bndrs
+        clsreg = registerType' clsName []
+        clsdef = DataD [] clsName [] [NormalC clsName []] (fmap (mkName.show) stdDerivings)
+    return $ clsdef : (treg ++ clsreg)
+    where clsName = mkName $ Naming.mkCls (nameBase tpName)
+
+registerType' :: Name -> [TyVarBndr] -> [Dec]
+registerType' tpName bndrs = [decl, tfam] where
+    params     = fmap getTyVarBndrName bndrs
+    normalName = mkName $ Naming.mkTypePtr (nameBase tpName)
+    decl = DataD [] normalName [] [NormalC normalName []] []
+    tfam = TySynInstD (mkName "ProxyType") (TySynEqn [foldl AppT (ConT tpName) (fmap VarT params)] (ConT normalName))
 
 registerMethod :: Name -> String -> Q [Dec]
 registerMethod typeName methodName = do
