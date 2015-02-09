@@ -738,11 +738,11 @@ channelDimAcc (ChannelFloat _ (DiscreteData shader)) = (h,w)
     Shader (Grid h w) _ = shader
 
 
-changeCoordinateSystem :: Channel -> (A.Exp Double, A.Exp Double) -> (A.Exp Double, A.Exp Double)
-changeCoordinateSystem chan (x', y') = (h - y', x')
+changeCoordinateSystem :: Channel -> Point2 (Exp Double) -> Point2 (Exp Double)
+changeCoordinateSystem chan (Point2 x' y') = Point2 x' (h - y')
   where
     (h', _) = channelDimAcc chan
-    h = A.fromIntegral h' :: A.Exp Double
+    h = A.fromIntegral h' :: Exp Double
 
 processSkew :: Exp Double -> Exp Double -> SkewOrder -> Point2 (Exp Double) -> Point2 (Exp Double)
 processSkew k k' order = case order of
@@ -756,114 +756,92 @@ strengthShader matte chan = case matte of
                                             Shader _ matteShader = Matte.matteToContinuous h w m
                                         in (\x -> (matteShader x))
 
+rotateChannelAt :: Point2 Double -> Double -> Maybe (Matte.Matte Double) -> Channel -> Channel
+rotateChannelAt (fmap variable -> (Point2 x y)) (variable -> phi) matte chan = (rotate chan)
+    where
+      vBefore = V2 (-x) (-y)
+      vAfter  = V2 x y
+
+      rotate = \case
+          (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+          (Channel.asContinuous -> ChannelInt name zeData) -> ChannelInt name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+
+      strength = strengthShader matte chan
+
+      transformation :: Point2 (Exp Double) -> Point2 (Exp Double)
+      transformation pt = (changeCoordinateSystem chan) $ Transform.translate vBefore $ Transform.rotate ((-phi)*(strength pt)) $ Transform.translate vAfter $ (changeCoordinateSystem chan) pt
+
+scaleChannelAt :: Point2 Double -> V2 Double -> Maybe (Matte.Matte Double) -> Channel -> Channel
+scaleChannelAt (fmap variable -> (Point2 x y)) (fmap variable -> v) matte chan = (scale chan)
+    where
+      vBefore = V2 (-x) (-y)
+      vAfter  = V2 x y
+
+      scale = \case
+        (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+        (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+
+      strength = strengthShader matte chan
+
+      transformation :: Point2 (Exp Double) -> Point2 (Exp Double)
+      transformation pt = (changeCoordinateSystem chan) $ Transform.translate vBefore $ Transform.scale (fmap (* (strength pt)) v) $ Transform.translate vAfter $ (changeCoordinateSystem chan) pt
+
+translateChannel :: V2 Double -> Maybe (Matte.Matte Double) -> Channel -> Channel
+translateChannel (fmap variable -> V2 x y) matte chan = (translate chan)
+  where
+    t = V2 x (-y)
+
+    translate = \case
+        (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+        (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+
+    strength = strengthShader matte chan
+
+    transformation :: Point2 (Exp Double) -> Point2 (Exp Double)
+    transformation pt = Transform.translate (fmap (*(strength pt)) t) pt
+
+skewChannelAt :: Point2 Double -> Skew Double -> Maybe (Matte.Matte Double) -> Channel -> Channel
+skewChannelAt (fmap variable -> p) (Skew (fmap variable -> V2 k k') order) matte chan = (skew chan)
+  where
+    Point2 x y = changeCoordinateSystem chan p
+    vBefore = V2 (-x) (-y)
+    vAfter  = V2 x y
+
+    skew = \case
+      (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+      (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+
+    strength = strengthShader matte chan
+
+    transformation :: Point2 (Exp Double) -> Point2 (Exp Double)
+    transformation pt = Transform.translate vBefore $ (processSkew (str * k) (str * k') order) $ Transform.translate vAfter pt
+      where
+        str = strength pt
+
 -- temporary name
 rotateAtMatteLuna :: Point2 Double -> Double -> Maybe (Matte.Matte Double) -> Image -> Image
 rotateAtMatteLuna p ang matte = onEachChannel (rotateChannelAt p ang matte)
-    where 
-      rotateChannelAt :: Point2 Double -> Double -> Maybe (Matte.Matte Double) -> Channel -> Channel
-      rotateChannelAt (fmap variable -> (Point2 x' y')) (variable -> phi) matte chan = (rotate chan)
-          where
-            (x, y) = changeCoordinateSystem chan (x', y')
-
-            vBefore = V2 (-x) (-y)
-            vAfter  = V2 x y
-
-            rotate = \case
-                (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-                (Channel.asContinuous -> ChannelInt name zeData) -> ChannelInt name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-
-            strength = strengthShader matte chan
-
-            transformation :: Point2 (Exp Double) -> Point2 (Exp Double)
-            transformation pt = Transform.translate vBefore $ Transform.rotate (phi*(strength pt)) $ Transform.translate vAfter pt
 
 -- temporary name
 scaleAtMatteLuna :: Point2 Double -> V2 Double -> Maybe (Matte.Matte Double) -> Image -> Image
 scaleAtMatteLuna p v matte = onEachChannel (scaleChannelAt p v matte)
-    where 
-      scaleChannelAt :: Point2 Double -> V2 Double -> Maybe (Matte.Matte Double) -> Channel -> Channel
-      scaleChannelAt (fmap variable -> (Point2 x' y')) (fmap variable -> v) matte chan = (scale chan)
-          where
-            (x, y) = changeCoordinateSystem chan (x', y')
 
-            vBefore = V2 (-x) (-y)
-            vAfter  = V2 x y
-
-            scale = \case
-              (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-              (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-      
-            strength = strengthShader matte chan
-
-            transformation :: Point2 (Exp Double) -> Point2 (Exp Double)
-            transformation pt = Transform.translate vBefore $ Transform.scale (fmap (* (strength pt)) v) $ Transform.translate vAfter pt
- 
 -- temporary name
 translateMatteLuna :: V2 Double -> Maybe (Matte.Matte Double) -> Image -> Image
 translateMatteLuna tr matte = onEachChannel (translateChannel tr matte)
-    where
-      translateChannel :: V2 Double -> Maybe (Matte.Matte Double) -> Channel -> Channel
-      translateChannel (fmap variable -> V2 x y) matte chan = (translate chan)
-        where
-          t = V2 y (-x)
-
-          translate = \case
-              (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-              (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-
-          strength = strengthShader matte chan
-
-          transformation :: Point2 (Exp Double) -> Point2 (Exp Double)
-          transformation pt = Transform.translate (fmap (*(strength pt)) t) pt
 
 -- temporary name
 skewAtMatteLuna :: Point2 Double -> Skew Double -> Maybe (Matte.Matte Double) -> Image -> Image
 skewAtMatteLuna p skew matte = onEachChannel (skewChannelAt p skew matte)
-  where
-    skewChannelAt :: Point2 Double -> Skew Double -> Maybe (Matte.Matte Double) -> Channel -> Channel
-    skewChannelAt (fmap variable -> Point2 x' y') (Skew (fmap variable -> V2 k k') order) matte chan = (skew chan)
-      where
-        (x, y) = changeCoordinateSystem chan (x', y')
-
-        vBefore = V2 (-x) (-y)
-        vAfter  = V2 x y
-
-        skew = \case
-          (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-          (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-
-        strength = strengthShader matte chan
-
-        transformation :: Point2 (Exp Double) -> Point2 (Exp Double)
-        transformation pt = Transform.translate vBefore $ (processSkew (str * k) (str * k') order) $ Transform.translate vAfter pt
-          where
-            str = strength pt
 
 transformLuna :: Transform Double -> Maybe (Matte.Matte Double) -> Image -> Image
 transformLuna tr matte = onEachChannel (transformChannel tr matte)
     where 
       transformChannel :: Transform Double -> Maybe (Matte.Matte Double) -> Channel -> Channel
-      transformChannel (Transform tr (variable -> phi) (fmap variable -> sc) (Skew (fmap variable -> (V2 k k')) order) ce) matte chan = (transform chan)
+      transformChannel (Transform tr phi sc skew ce) matte chan = (transformation chan)
         where
-          V2 translateX translateY = fmap variable tr
-          Point2 x y = (fmap variable) ce
-          (cX, cY) = changeCoordinateSystem chan (x,y)
-          center = V2 cX cY
-
-          vBefore = (-1) * center
-          vAfter = center
-
-          transform = \case
-              (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-              (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-
-          strength = strengthShader matte chan
-
-          transformation :: Point2 (Exp Double) -> Point2 (Exp Double)
-          transformation pt = Transform.translate vBefore $ Transform.scale (fmap (* str) sc) $ (processSkew (str * k) (str * k') order) $ Transform.rotate (phi * str) $ Transform.translate vAfter $ Transform.translate (V2 translateY (-translateX)) pt
-            where
-              str = strength pt
-
+          transformation :: Channel -> Channel
+          transformation = (translateChannel tr matte) . (rotateChannelAt ce phi matte) . (skewChannelAt ce skew matte) . (scaleChannelAt ce sc matte)
 
 cropLuna :: Rectangle Int -> Image -> Image
 cropLuna rect = onEachChannel cropChannel
