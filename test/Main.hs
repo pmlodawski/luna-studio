@@ -58,7 +58,7 @@ main = do
     when (length args < 2) $ fail "provide input and output path!"
     let path = args !! 0
         out  = args !! 1
-        src  = Source (QualPath ["Std"] "Main") (File $ fromString path)
+        src  = Source (QualPath [] "Main") (File $ fromString path)
 
     Session.runT $ do
 
@@ -110,7 +110,6 @@ main = do
             printHeader "HSC"
             hsc            <- Pass.run1_ HSC.pass hast
             putStrLn (hsShow $ unpack hsc)
-            
             liftIO $ writeFile out (hsShow $ unpack hsc)
 
 
