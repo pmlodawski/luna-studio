@@ -22,7 +22,23 @@ import qualified Flowbox.Graphics.Utils.Utils   as Utils
 import qualified Flowbox.Math.Matrix            as Matrix
 import           Flowbox.Prelude
 
-
+data Format = PCVideo
+            | NTSC
+            | PAL
+            | HD
+            | NTSC169
+            | PAL169
+            | K1Super35
+            | K1Cinemascope
+            | K2Super35
+            | K2Cinemascope
+            | K4Super35
+            | K4Cinemascope
+            | Square256
+            | Square512
+            | Square1K
+            | Square2K
+            | CustomFormat Int Int
 
 constant :: Exp A.DIM2 -> [(Channel.Name, Exp Double)] -> Image
 constant sh = Image.singleton . foldr appendChannel (View.emptyDefault)

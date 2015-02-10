@@ -547,14 +547,33 @@ blurLuna (variable -> kernelSize) = onEachChannel blurChannel
 --          flt = laplacian crossVal sideVal $ pure kernSize
 --          p = pipe A.Clamp
 
-constantLuna :: Int -> Int -> Color.RGBA Double -> Image
-constantLuna (variable -> width) (variable -> height) (fmap variable -> Color.RGBA r g b a) =
-    Raster.constant (A.index2 height width) chans
-    where chans = [ ("rgba.r", r)
-                  , ("rgba.g", g)
-                  , ("rgba.b", b)
-                  , ("rgba.a", a)
-                  ]
+constantLuna :: Raster.Format -> Color.RGBA Double -> Image
+constantLuna format {-- (variable -> width) (variable -> height) --} (fmap variable -> Color.RGBA r g b a) =
+    case format of
+        Raster.PCVideo       -> makeConst 640 480
+        Raster.NTSC          -> makeConst 720 486
+        Raster.PAL           -> makeConst 720 576
+        Raster.HD            -> makeConst 1920 1080
+        Raster.NTSC169       -> makeConst 720 486
+        Raster.PAL169        -> makeConst 720 576
+        Raster.K1Super35     -> makeConst 1024 778
+        Raster.K1Cinemascope -> makeConst 914 778
+        Raster.K2Super35     -> makeConst 2048 1556
+        Raster.K2Cinemascope -> makeConst 1828 1556
+        Raster.K4Super35     -> makeConst 4096 3112
+        Raster.K4Cinemascope -> makeConst 3656 3112
+        Raster.Square256     -> makeConst 256 256
+        Raster.Square512     -> makeConst 512 512
+        Raster.Square1K      -> makeConst 1024 1024
+        Raster.Square2K      -> makeConst 2048 2048
+        Raster.CustomFormat width height -> makeConst width height
+        where   makeConst (variable -> width) (variable -> height) = 
+                    Raster.constant (A.index2 width height) chans
+                chans = [ ("rgba.r", r)
+                      , ("rgba.g", g)
+                      , ("rgba.b", b)
+                      , ("rgba.a", a)
+                      ]
 
 --TODO[KM]: port checkerboard to luna
 --type CheckerboardColorsLuna = (VPS ColorD, VPS ColorD, VPS ColorD, VPS ColorD)
@@ -1595,4 +1614,4 @@ realReadLuna path            = loadImageLuna path
 
 testColorCC :: Color5 -> Image
 testColorCC (VPS (ColorD r _ _ _), VPS (ColorD _ g _ _), VPS (ColorD _ _ b _), VPS (ColorD _ _ _ a), VPS (ColorD _ _ _ x)) =
-    constantLuna 512 512 $ Color.RGBA (r*x) (g*x) (b*x) (a*x)
+    constantLuna (Raster.CustomFormat 512 512) $ Color.RGBA (r*x) (g*x) (b*x) (a*x)
