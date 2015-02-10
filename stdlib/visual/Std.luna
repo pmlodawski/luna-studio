@@ -324,8 +324,8 @@ def Image.scale self::Image vec::(V2 Float) -> Image:
 def Image.scaleAt self::Image point::(Point2 Float) vec::(V2 Float) -> Image:
     ```liftF3 scaleAtLuna #{point} #{vec} #{self}```
 
-def Image.transform self::Image trans::(Transform Float) -> Image:
-    ```liftF2 transformLuna #{trans} #{self}```
+# def Image.transform self::Image trans::(Transform Float) -> Image:
+#     ```liftF2 transformLuna #{trans} #{self}```
 
 def Image.crop self::Image rect::(Rectangle Int) -> Image:
     ```liftF2 cropLuna #{rect} #{self}```
@@ -414,6 +414,15 @@ def Image.exposureMatte self::Image blackpoint::Color ex::Color matte::(Maybe (M
 
 def Image.gradeMatte self::Image blackpoint::Color whitepoint::Color lift::Color gain::Color multiply::Color offset::Color gamma::Color matte::(Maybe (Matte Float)) -> Image:
     ```liftF5 (gradeLunaColorMatte #{blackpoint} #{whitepoint} #{lift} #{gain}) #{multiply} #{offset} #{gamma} #{matte} #{self}```
+
+def Image.rotateAtMatte self::Image point::(Point2 Float) phi::Float matte::(Maybe (Matte Float)) -> Image:
+    ```liftF4 rotateAtMatteLuna #{point} #{phi} #{matte} #{self}```
+
+def Image.translateMatte vec::(V2 Float) matte::(Maybe (Matte Float)) -> Image:
+    ```liftF3 translateMatteLuna #{vec} #{matte} #{self}```
+
+def Image.scaleAtMatte self::Image point::(Point2 Float) vec::(V2 Float) matte::(Maybe (Matte Float)) -> Image:
+    ```liftF4 scaleAtMatteLuna #{point} #{vec} #{matte} #{self}```
 
 alias Mask = (Path Float, Maybe (Path Float))
 
