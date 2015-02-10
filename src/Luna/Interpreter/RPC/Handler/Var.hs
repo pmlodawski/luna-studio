@@ -30,8 +30,14 @@ import qualified Luna.Interpreter.Session.Var            as Var
 
 insertTimeRef :: Lib.ID -> Node.ID -> Node.ID
               -> NodeExpr -> RPC Context (SessionST mm) ()
-insertTimeRef libraryID nodeID defID defExpr = liftSession $ do
-    Env.insertDependentNode (CallPoint libraryID nodeID) defID
+insertTimeRef libraryID nodeID defID defExpr = do
+    liftSession $ Env.insertDependentNode (CallPoint libraryID nodeID) defID
+    insertTimeRef' libraryID defID defExpr
+
+
+insertTimeRef' :: Lib.ID -> Node.ID
+               -> NodeExpr -> RPC Context (SessionST mm) ()
+insertTimeRef' libraryID defID defExpr = liftSession $ do
     when (Var.containsTimeRefs defExpr) $
         Env.insertTimeRef (CallPoint libraryID defID)
 
@@ -51,8 +57,9 @@ rebuildTimeRefs = do
     activeProjectID <- liftSession Env.getProjectID
     libManager      <- Batch.getLibManager activeProjectID
     let libraries = LibManager.labNodes libManager
-        procLibs (libraryID, library) = mapM (procDM libraryID) $ PropertyMap.getDefaultsMaps $ library ^. Lib.propertyMap
-        procDM libraryID (nodeID, defaultsMap) = mapM_ (process libraryID nodeID) $ DefaultsMap.elems defaultsMap
+        procPropertyMap (libraryID, library) = mapM (procDefaultMap libraryID) $ PropertyMap.getDefaultsMaps $ library ^. Lib.propertyMap
+        procDefaultMap libraryID (nodeID, defaultsMap) = mapM_ (process libraryID nodeID) $ DefaultsMap.elems defaultsMap
         process libraryID nodeID (defID, defExpr) = insertTimeRef libraryID nodeID defID defExpr
     liftSession Env.cleanTimeRefs
-    mapM_ procLibs libraries
+    mapM_ procPropertyMap libraries
+    --TODO[PM] rebuild also all nodes
