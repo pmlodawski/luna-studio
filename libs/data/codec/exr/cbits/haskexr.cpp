@@ -1,3 +1,5 @@
+#include "haskexr.h"
+
 #include "ImfMultiPartInputFile.h"
 #include "ImfDeepScanLineInputPart.h"
 #include "ImfChannelList.h"
@@ -17,7 +19,6 @@
 namespace IMF = OPENEXR_IMF_NAMESPACE;
 
 
-extern "C" {
 
 void* openFile(const char* filename) {
     try {
@@ -423,5 +424,3 @@ void dumpImageInfo(void* fileHandle) {
     }
     printf("======== DONE =========\n");
 }
-
-} //extern "C"
