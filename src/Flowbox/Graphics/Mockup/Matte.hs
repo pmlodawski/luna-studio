@@ -9,6 +9,7 @@
 {-# LANGUAGE ViewPatterns  #-}
 
 module Flowbox.Graphics.Mockup.Matte (
+    Matte,
     applyMatteFloat,
     imageMatteLuna,
     rasterizeMaskLuna,
@@ -27,6 +28,7 @@ import           Flowbox.Geom2D.Rasterizer
 import qualified Flowbox.Geom2D.Shape           as GShape
 import           Flowbox.Graphics.Image.Channel (Channel (..), ChannelData (..))
 import           Flowbox.Graphics.Image.Image   (Image)
+import           Flowbox.Graphics.Image.Matte   (Matte)
 import qualified Flowbox.Graphics.Image.Matte   as Matte
 import           Flowbox.Graphics.Shader.Shader (CartesianShader, Shader (..))
 import qualified Flowbox.Graphics.Shader.Shader as Shader
@@ -68,7 +70,7 @@ convertMask (unpackLunaVar -> a, unpackLunaVar -> b) = Mask.Mask (convertPath a)
 rasterizeMaskLuna :: (Real a, Fractional a, a ~ Float) => Int -> Int -> Mask2 a -> Image
 rasterizeMaskLuna w h (convertMask -> m) = matrixToImage $ rasterizeMask w h m
 
-imageMatteLuna :: FilePath -> String -> IO (Maybe (Matte.Matte Float))
+imageMatteLuna :: FilePath -> String -> IO (Maybe (Matte Float))
 imageMatteLuna path channelName = do
   img <- realReadLuna path
   let channel = getChannelFromPrimaryLuna channelName img
@@ -76,7 +78,7 @@ imageMatteLuna path channelName = do
     Right (Just channel) -> return $ Just $ Matte.imageMatteFloat channel
     _ -> return Nothing
 
-vectorMatteLuna :: Mask2 Float -> Maybe (Matte.Matte Float)
+vectorMatteLuna :: Mask2 Float -> Maybe (Matte Float)
 vectorMatteLuna mask = Just $ Matte.VectorMatte $ convertMask mask
 
 adjustMatte :: Matrix2 Float -> Matrix2 Float -> Matrix2 Float
@@ -91,7 +93,7 @@ adjustMatte mat matte = matte'
       in
         (x A.<* h A.&&* y A.<* w) A.? (matte M.! sh, 0.0))
 
-applyMatteFloat :: (A.Exp Float -> A.Exp Float) -> Matte.Matte Float -> Channel -> Channel
+applyMatteFloat :: (A.Exp Float -> A.Exp Float) -> Matte Float -> Channel -> Channel
 applyMatteFloat f m (ChannelFloat name (MatrixData mat)) = ChannelFloat name (MatrixData mat')
   where
     sh = M.shape mat

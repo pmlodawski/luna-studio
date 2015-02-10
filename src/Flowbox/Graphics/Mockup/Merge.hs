@@ -5,6 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 module Flowbox.Graphics.Mockup.Merge (
+  AlphaBlend(..),
   MergeMode(..),
   mergeLuna,
 ) where

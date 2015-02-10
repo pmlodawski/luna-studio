@@ -12,7 +12,7 @@ module Flowbox.Graphics.Mockup (
     -- Linear
     V2(..),
     ---- Math.Coordinate.Cartesian
-    --Point2(..),
+    Point2(..),
     -- Math.Metric
     Chebyshev(..),
     Euclidean(..),
@@ -36,7 +36,7 @@ module Flowbox.Graphics.Mockup (
 
 --import Data.Array.Accelerate     (Boundary(..))
 import Linear                    (V2 (..))
---import Math.Coordinate.Cartesian (Point2 (..))
+import Math.Coordinate.Cartesian (Point2 (..))
 import Math.Metric               (Chebyshev(..), Euclidean(..), Minkowski(..), Taxicab(..))
 
 --import Flowbox.Geom2D.Rectangle (Rectangle(..))
