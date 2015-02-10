@@ -46,12 +46,12 @@ spec = do
 
 
 testSaveEdgeBlur kernelSize edgeMultiplier channel = do
-    img <- loadImageLuna "./libs/data/graphics/test/samples/lena.png"
+    img <- loadImageLuna "./test/samples/lena.png"
     let a = edgeBlur channel EB.GaussBlur kernelSize edgeMultiplier img
     saveImageLuna "./libs/data/graphics/test/samples/x_result.png" a
 
 testEdgeBlur kernelSize edgeMultiplier channel = do
-    img <- loadImageLuna "/home/chris/flowbox/flowbox/libs/data/graphics/test/samples/lena.png"
+    img <- loadImageLuna "./test/samples/lena.png"
     let a = edgeBlur channel EB.GaussBlur kernelSize edgeMultiplier img
     return a
 

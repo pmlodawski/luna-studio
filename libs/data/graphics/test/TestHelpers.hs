@@ -14,13 +14,13 @@ import Data.Array.Accelerate.CUDA as AC
 import Flowbox.Graphics.Composition.Merge
 
 shouldBeCloseTo :: (Show a, Comparable a b) => String -> b -> a -> a -> Expectation
-shouldBeCloseTo name metric a b = assertAlmostEqual name "" metric b a
+shouldBeCloseTo name metric actual expected = assertAlmostEqual name "" metric expected actual
 
 
-returnShouldBeCloseTo testPath metric action expected = do
-    action' <- action
+returnShouldBeCloseTo testPath metric actual expected = do
+    actual' <- actual
     expected' <- expected
-    shouldBeCloseTo testPath metric expected' action'
+    shouldBeCloseTo testPath metric actual' expected'
 
 
 
@@ -44,9 +44,11 @@ assertAlmostEqual :: (Comparable a b, Show a) => String -- ^ The message prefix
                               -> a      -- ^ The actual value
                               -> Assertion
 assertAlmostEqual name preface metric expected actual = do
-    ioMsg <- diffMsg name metric actual expected
-    let msg = (if null preface then "" else preface ++ "\n") ++ ioMsg
-        in unless (closeEnough metric actual expected) (assertFailure msg)
+    
+    let ret = do
+          ioMsg <- diffMsg name metric actual expected
+          assertFailure $ (if null preface then "" else preface ++ "\n") ++ ioMsg
+        in unless (closeEnough metric actual expected) ret
         --where msg = (if null preface then "" else preface ++ "\n") ++ ioMsg
 
 
