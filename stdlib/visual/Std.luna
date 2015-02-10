@@ -192,8 +192,13 @@ class ```KeyerMode```:
     Max
     Min
 
-def Image.key self::Image mode::KeyerMode a::Float b::Float c::Float d::Float -> Image:
-    ```liftF6 keyerLuna #{mode} #{a} #{b} #{c} #{d} #{self}```
+class ```KeyerThresholds``` a:
+    min, minRolloff, max, maxRolloff :: a
+
+alias KeyerThresholdsF = KeyerThresholds Float
+
+def Image.key self::Image mode::KeyerMode thresholds::KeyerThresholdsF:
+    ```liftF3 keyerLuna #{mode} #{thresholds} #{self}```
 
 def Image.differenceKey self::Image offset::Float gain::Float background::Image -> Image:
     ```liftF4 differenceKeyerLuna #{offset} #{gain} #{background} #{self}```

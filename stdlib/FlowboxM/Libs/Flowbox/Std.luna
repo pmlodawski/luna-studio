@@ -704,8 +704,11 @@ class ```KeyerMode```:
     Max
     Min
 
-def Image.key mode a b c d:
-    ```liftF6 keyerLuna #{mode} #{a} #{b} #{c} #{d} #{self}```
+class ```KeyerThresholds``` a:
+    min, minRolloff, max, maxRolloff :: a
+
+def Image.key mode thresholds:
+    ```liftF3 keyerLuna #{mode} #{thresholds} #{self}```
 
 def Image.differenceKey offset gain background:
     ```liftF4 differenceKeyerLuna #{offset} #{gain} #{background} #{self}```
