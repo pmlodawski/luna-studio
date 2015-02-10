@@ -104,8 +104,8 @@ atop overlay alphaOverlay background alphaBackground = overlay * alphaBackground
 --atop overlay alphaOverlay background alphaBackground = background * alphaOverlay + overlay * U.invert alphaBackground
 
 -- | (A+B)/2
-average :: (A.Elt a, A.IsFloating a) => BlendMode a
-average overlay background = (overlay + background) / 2
+average :: (A.Elt a, A.IsFloating a) => ComplicatedBlendMode a
+average overlay _ background _ = (overlay + background) / 2
 
 -- | 1 - min (1, (1-B)/A), 0 if A = 0
 -- Imagemagick says: 1 - ((1-B) / A)
