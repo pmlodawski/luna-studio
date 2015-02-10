@@ -12,6 +12,7 @@ import           Control.Monad.State        hiding (mapM, mapM_)
 import           Control.Monad.Trans.Either
 import qualified Data.Char                  as Char
 import qualified Data.Maybe                 as Maybe
+import qualified Data.Text.Lazy             as Text
 import qualified Text.Read                  as Read
 
 import           Flowbox.Control.Error                      (catchEither, hoistEitherWith)
@@ -20,12 +21,11 @@ import           Flowbox.Data.MapForest                     (MapForest)
 import           Flowbox.Prelude                            as Prelude hiding (children, inside)
 import           Flowbox.Source.Location                    (loc)
 import           Flowbox.System.Log.Logger
+import           Luna.DEP.AST.ASTConvertion                 (convertAST)
 import qualified Luna.DEP.Graph.Node                        as Node
-import qualified Luna.DEP.Graph.Node.Expr                   as NodeExpr
 import           Luna.DEP.Graph.Node.Expr                   (NodeExpr)
-import           Luna.DEP.Graph.Node.StringExpr             (StringExpr)
+import qualified Luna.DEP.Graph.Node.Expr                   as NodeExpr
 import qualified Luna.DEP.Graph.Node.StringExpr             as StringExpr
-import qualified Luna.DEP.Pass.Transform.AST.Hash.Hash      as Hash
 import qualified Luna.Interpreter.Session.AST.Traverse      as Traverse
 import qualified Luna.Interpreter.Session.Cache.Cache       as Cache
 import qualified Luna.Interpreter.Session.Cache.Free        as Free
@@ -40,6 +40,7 @@ import           Luna.Interpreter.Session.Data.VarName      (VarName (VarName))
 import qualified Luna.Interpreter.Session.Data.VarName      as VarName
 import qualified Luna.Interpreter.Session.Debug             as Debug
 import qualified Luna.Interpreter.Session.Env               as Env
+import           Luna.Interpreter.Session.Error             (mapError)
 import qualified Luna.Interpreter.Session.Error             as Error
 import qualified Luna.Interpreter.Session.Hash              as Hash
 import           Luna.Interpreter.Session.Memory.Manager    (MemoryManager)
@@ -50,9 +51,16 @@ import qualified Luna.Interpreter.Session.Session           as Session
 import qualified Luna.Interpreter.Session.TargetHS.Bindings as Bindings
 import qualified Luna.Interpreter.Session.TargetHS.TargetHS as TargetHS
 import qualified Luna.Interpreter.Session.Var               as Var
-import qualified Luna.DEP.Pass.CodeGen.HSC.HSC                  as HSC
-import qualified Luna.DEP.Pass.Transform.AST.Hash.Hash          as Hash
-import qualified Luna.DEP.Pass.Transform.HAST.HASTGen.HASTGen   as HASTGen
+import qualified Luna.Parser.Parser                         as Parser
+import qualified Luna.Parser.Pragma                         as Pragma
+import qualified Luna.Pass                                  as Pass
+import qualified Luna.Pass.Target.HS.HASTGen                as HASTGen
+import qualified Luna.Pass.Target.HS.HSC                    as HSC
+import           Luna.Syntax.Enum                           (IDTag)
+import           Luna.Syntax.Expr                           (LExpr)
+import qualified Luna.Syntax.Name.Hash                      as Hash
+import qualified Luna.System.Pragma.Store                   as Pragma
+import           Luna.System.Session                        as Session
 
 
 
@@ -195,15 +203,23 @@ varType (NodeExpr.StringExpr (StringExpr.Expr   name@(h:_)))
     | name == Var.timeRef                                = return   TimeVar
     | Char.isUpper h                                     = return $ Con name
     | otherwise                                          = return $ Var name
-varType (NodeExpr.ASTExpr expr) = do
-    expr' <- Var.replaceTimeRefs expr
-    -- TODO[PM] : replaceTimeVars
-    hast <- hoistEitherWith (Error.OtherError $(loc)) =<< HASTGen.runExpr expr'
-    return $ Expression $ HSC.genExpr hast
+varType (NodeExpr.ASTExpr oldExpr) = do
+    oldExpr' <- Var.replaceTimeRefs oldExpr
+    expr     <- mapError $(loc) (convertAST oldExpr')
+    result <- Session.runT $ do
+        void   Parser.init
+        void $ Pragma.enable (Pragma.orphanNames)
+        void $ Pragma.pop    (Pragma.orphanNames)
+        runEitherT $ do
+            hexpr <- Pass.run1_ HASTGen.passExpr (expr :: LExpr IDTag ())
+            Pass.run1_ HSC.pass hexpr
+    hsc <- hoistEitherWith (Error.OtherError $(loc) . show) $ fst result
+    return $ Expression $ Text.unpack hsc
+
 
 
 nameHash :: String -> String
-nameHash name = if name == "Point2" then "Point2" else Hash.hashStr name
+nameHash name = if name == "Point2" then "Point2" else Hash.hash name
 
 
 evalFunction :: MemoryManager mm
@@ -211,9 +227,9 @@ evalFunction :: MemoryManager mm
 evalFunction nodeExpr callDataPath varNames = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
         tmpVarName    = "_tmp"
-        mkArg arg = "(Value (Pure "  ++ VarName.toString arg ++ "))"
+        mkArg arg = "(Value (Pure " <> VarName.toString arg <> "))"
         args      = map mkArg varNames
-        appArgs a = if null a then "" else " $ appNext " ++ List.intercalate " $ appNext " (reverse a)
+        appArgs a = if null a then "" else " $ appNext " <> List.intercalate " $ appNext " (reverse a)
         genNative = List.replaceByMany "#{}" args . List.stripIdx 3 3
 
         self      = head varNames
@@ -228,7 +244,7 @@ evalFunction nodeExpr callDataPath varNames = do
                                                                                   then " :: Int)"
                                                                                   else ")"
         Tuple       -> return $ "toIOEnv $ fromValue $ val (" <> List.intercalate "," args <> ")"
-        TimeVar     -> (++) "toIOEnv $ fromValue $ val $ " . show <$> Env.getTimeVar
+        TimeVar     -> (<>) "toIOEnv $ fromValue $ val $ " . show <$> Env.getTimeVar
         Expression  name -> return $ "toIOEnv $ fromValue $ " <> name
     catchEither (left . Error.RunError $(loc) callPointPath) $ do
         Session.runAssignment' tmpVarName operation
