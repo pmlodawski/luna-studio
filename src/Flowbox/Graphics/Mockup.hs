@@ -93,18 +93,18 @@ import Control.PolyApplicative ((<<*>>))
 temporaryBackend :: M.Backend
 temporaryBackend = CUDA.run
 
-data SkewOrder = SkewXY | SkewYX
+data SkewOrder = SkewXY | SkewYX deriving (Show)
 
 data Skew a = Skew { _skewValue :: V2 a
                    , _skewOrder :: SkewOrder
-                   }
+                   } deriving (Show)
 
 data Transform a = Transform { _translate :: V2 a
                              , _rotate    :: a
                              , _scale     :: V2 a
                              , _skew      :: Skew a
                              , _center    :: Point2 a
-                             }
+                             } deriving (Show)
 
 pattern VPS x = Value (Pure (Safe x))
 type VPS x = Value Pure Safe x
