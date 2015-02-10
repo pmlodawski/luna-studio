@@ -8,13 +8,16 @@
 
 module Luna.Interpreter.Session.AST.Executor where
 
-import           Control.Monad.State        hiding (mapM, mapM_)
+import           Control.Monad.State         hiding (mapM, mapM_)
 import           Control.Monad.Trans.Either
-import qualified Data.Char                  as Char
-import qualified Data.Maybe                 as Maybe
-import qualified Data.Text.Lazy             as Text
-import qualified Text.Read                  as Read
+import qualified Data.Char                   as Char
+import qualified Data.Maybe                  as Maybe
+import qualified Data.Text.Lazy              as Text
+import qualified Data.Text.Lazy.Builder      as TextBuilder
+import qualified Language.Preprocessor.Cpphs as Cpphs
+import qualified Text.Read                   as Read
 
+import qualified Data.Text.CodeBuilder                      as CodeBuilder
 import           Flowbox.Control.Error                      (catchEither, hoistEitherWith)
 import qualified Flowbox.Data.List                          as List
 import           Flowbox.Data.MapForest                     (MapForest)
@@ -55,7 +58,6 @@ import qualified Luna.Parser.Parser                         as Parser
 import qualified Luna.Parser.Pragma                         as Pragma
 import qualified Luna.Pass                                  as Pass
 import qualified Luna.Pass.Target.HS.HASTGen                as HASTGen
-import qualified Luna.Pass.Target.HS.HSC                    as HSC
 import           Luna.Syntax.Enum                           (IDTag)
 import           Luna.Syntax.Expr                           (LExpr)
 import qualified Luna.Syntax.Name.Hash                      as Hash
@@ -81,8 +83,6 @@ processMain_ = do
     mapM_ processNodeIfNeeded children
     Env.setAllReady True
     Debug.dumpBindings
-    --Cache.dumpAll
-    --Cache.performGC
 
 
 processNodeIfNeeded :: MemoryManager mm => CallDataPath -> Session mm ()
@@ -97,7 +97,6 @@ processNode callDataPath = Env.profile (CallDataPath.toCallPointPath callDataPat
     let callData  = last callDataPath
         node      = callData ^. CallData.node
     varNames <- mapM (Cache.recentVarName . CallDataPath.toCallPointPath) arguments
-
     children <- Traverse.into callDataPath
     if null children
         then case node of
@@ -210,11 +209,10 @@ varType (NodeExpr.ASTExpr oldExpr) = do
         void   Parser.init
         void $ Pragma.enable (Pragma.orphanNames)
         void $ Pragma.pop    (Pragma.orphanNames)
-        runEitherT $ do
-            hexpr <- Pass.run1_ HASTGen.passExpr (expr :: LExpr IDTag ())
-            Pass.run1_ HSC.pass hexpr
-    hsc <- hoistEitherWith (Error.OtherError $(loc) . show) $ fst result
-    return $ Expression $ Text.unpack hsc
+        runEitherT $ Pass.run1_ HASTGen.passExpr (expr :: LExpr IDTag ())
+    cpphsOptions <- Env.getCpphsOptions
+    hexpr <- hoistEitherWith (Error.OtherError $(loc) . show) $ fst result
+    Expression <$> liftIO (Cpphs.runCpphs cpphsOptions "" $ Text.unpack $ TextBuilder.toLazyText $ CodeBuilder.simple $ CodeBuilder.generate hexpr)
 
 
 
@@ -231,7 +229,6 @@ evalFunction nodeExpr callDataPath varNames = do
         args      = map mkArg varNames
         appArgs a = if null a then "" else " $ appNext " <> List.intercalate " $ appNext " (reverse a)
         genNative = List.replaceByMany "#{}" args . List.stripIdx 3 3
-
         self      = head varNames
     vt <- varType nodeExpr
     operation <- case vt of
