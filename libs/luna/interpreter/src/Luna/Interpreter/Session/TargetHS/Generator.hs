@@ -33,7 +33,6 @@ import qualified Luna.Parser.Pragma                     as Pragma
 import qualified Luna.Pass                              as Pass
 import qualified Luna.Pass.Target.HS.HASTGen            as HASTGen
 import qualified Luna.Pass.Target.HS.HSC                as HSC
-import qualified Luna.Pass.Transform.SSA                as SSA
 import           Luna.Syntax.Enum                       (IDTag)
 import           Luna.Syntax.Expr                       (LExpr)
 import           Luna.Syntax.Module                     (LModule)
@@ -67,18 +66,11 @@ genClass defPoint = do
 
 genFunctions :: Session mm String
 genFunctions = do
-    --expr <- Session.getFunction defPoint
-    --let ast = emptyModule & Module.methods .~ [expr]
     mainPtr <- Env.getMainPtr
     ast     <- Env.getModule $ (DefPoint.breadcrumbs %~ init) mainPtr
     genCode ( List.filter (not . (\a -> List.isPrefixOf "data " a || List.isPrefixOf "$(generateFieldAccessors" a))
              . tail . tail . dropWhile   (not . (== "-- body --"))
-            --dropWhile   (not . (== "-- ====== Method: Vector.test ====== --"))
-
             ) ast
-
-
-type NewAST = Unit (LModule IDTag (LExpr IDTag ()))
 
 
 genCode :: ([String] -> [String]) -> Module -> Session mm String
@@ -89,8 +81,7 @@ genCode selector oldAst = do
         void $ Pragma.enable (Pragma.orphanNames)
         void $ Pragma.pop    (Pragma.orphanNames)
         runEitherT $ do
-            ast  <- Pass.run1_ SSA.pass     (ast :: NewAST)
-            hast <- Pass.run1_ HASTGen.pass (ast :: NewAST)
+            hast <- Pass.run1_ HASTGen.pass (ast :: Unit (LModule IDTag (LExpr IDTag ())))
             Pass.run1_ HSC.pass hast
     cpphsOptions <- Env.getCpphsOptions
     hsc <- hoistEitherWith (Error.OtherError $(loc) . show) $ fst result
