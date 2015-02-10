@@ -1,0 +1,47 @@
+#
+#                IMAGE - MERGE
+#
+
+import ```Flowbox.Graphics.Mockup.Merge```
+
+class ```MergeMode```:
+    Atop
+    Average
+    ColorBurn
+    ColorDodge
+    ConjointOver
+    Copy
+    Difference
+    DisjointOver
+    DivideBySource
+    DivideByDestination
+    Exclusion
+    From
+    Geometric
+    HardLight
+    Hypot
+    In
+    Mask
+    Matte
+    # Max
+    # Min
+    Minus
+    Multiply
+    Out
+    Over
+    Overlay
+    Plus
+    Screen
+    SoftLight
+    SoftLightPegtop
+    SoftLightIllusions
+    Stencil
+    Under
+    XOR
+
+class ```AlphaBlend```:
+    Adobe
+    Custom
+
+def Image.merge mode alphaBlendMode img:
+    ```liftF4 mergeLuna #{mode} #{alphaBlendMode} #{self} #{img}```

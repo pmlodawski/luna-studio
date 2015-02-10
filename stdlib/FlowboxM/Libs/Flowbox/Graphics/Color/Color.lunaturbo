@@ -1,0 +1,38 @@
+#
+#                COLOR
+#
+
+import ```Flowbox.Graphics.Color.Color as Color```
+import ```Flowbox.Graphics.Color.Companding.AlexaV3LogC```
+import ```Flowbox.Graphics.Color.Companding.Cineon```
+import ```Flowbox.Graphics.Color.Companding.Gamma```
+import ```Flowbox.Graphics.Color.Companding.LStar```
+import ```Flowbox.Graphics.Color.Companding.Panalog```
+import ```Flowbox.Graphics.Color.Companding.PLogLin```
+import ```Flowbox.Graphics.Color.Companding.Rec709```
+import ```Flowbox.Graphics.Color.Companding.REDLog```
+import ```Flowbox.Graphics.Color.Companding.SLog```
+import ```Flowbox.Graphics.Color.Companding.SRGB```
+import ```Flowbox.Graphics.Color.Companding.ViperLog```
+
+class ```RGBA``` a:
+    rgbaR, rgbaG, rgbaB, rgbaA :: a
+
+alias Color = RGBA Float
+alias ColorBlack = RGBA Float
+alias ColorWhite = RGBA Float
+
+alias ColorCC = (Color, Color, Color, Color, Color)
+
+class ```Gamma```:
+    AlexaV3LogC
+    Cineon
+    Gamma: a :: Float
+    LStar
+    Panalog
+    PLogLin
+    Rec709
+    REDLog
+    SLog
+    SRGBGamma
+    ViperLog

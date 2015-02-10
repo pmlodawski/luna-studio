@@ -1,0 +1,82 @@
+#
+#                IMAGE - COLOR CORRECTION
+#
+
+import ```Flowbox.Graphics.Mockup.ColorCorrect```
+
+def Image.gammaToLinear gamma:
+    # realGamma = ```val $ Gamma (2.2 :: A.Exp Float)```
+    ```liftF2 gammaToLinearLuna #{gamma} #{self}```
+
+def Image.gammaFromLinear gamma:
+    # realGamma = ```val $ Gamma (2.2 :: A.Exp Float)```
+    ```liftF2 gammaFromLinearLuna #{gamma} #{self}```
+
+def Image.clamp thresholds clamps:
+    ```liftF3 clampLuna #{thresholds} #{clamps} #{self}```
+
+def Image.offset value:
+    ```liftF2 offsetLuna #{value} #{self}```
+
+def Image.contrast value:
+    ```liftF2 contrastLuna #{value} #{self}```
+
+def Image.exposure blackpoint ex:
+    ```liftF3 exposureLuna #{blackpoint} #{ex} #{self}```
+
+def Image.saturate saturation:
+    ```liftF2 saturateLuna #{saturation} #{self}```
+
+# def Image.hsvTool hueRange hueRotation hueRolloff
+#             saturationRange saturationAdjustment saturationRolloff
+#             brightnessRange brightnessAdjustment brightnessRolloff:
+#     hueRangeStart = hueRange.lo
+#     hueRangeEnd   = hueRange.hi
+#     saturationRangeStart = saturationRange.lo
+#     saturationRangeEnd   = saturationRange.hi
+#     brightnessRangeStart = brightnessRange.lo
+#     brightnessRangeEnd   = brightnessRange.hi
+
+#     # ```liftF1 (onEachRGB $ hsvToolLuna #{hueRangeStart} #{hueRangeEnd} #{hueRotation} #{hueRolloff}
+#     #                        #{saturationRangeStart} #{saturationRangeEnd} #{saturationAdjustment} #{saturationRolloff}
+#     #                        #{brightnessRangeStart} #{brightnessRangeEnd} #{brightnessAdjustment} #{brightnessRolloff}) #{self}```
+#     ```hsvToolLuna'' #{hueRangeStart} #{hueRangeEnd} #{hueRotation} #{hueRolloff}
+#               #{saturationRangeStart} #{saturationRangeEnd} #{saturationAdjustment} #{saturationRolloff}
+#               #{brightnessRangeStart} #{brightnessRangeEnd} #{brightnessAdjustment} #{brightnessRolloff} #{self}```
+
+def Image.multiply val:
+    ```liftF2 multiplyLuna #{val} #{self}```
+
+def Image.gamma val:
+    ```liftF2 gammaLuna #{val} #{self}```
+
+def Image.grade blackpoint whitepoint lift gain multiply offset gamma:
+    ```liftF5 (gradeLunaColor #{blackpoint} #{whitepoint} #{lift}) #{gain} #{multiply} #{offset} #{gamma} #{self}```
+
+alias ColorCorrectGUI = (CurveGUI, CurveGUI)
+alias Color5 = (Color, Color, Color, Color ,Color)
+
+def Image.colorCorrect master #masterSaturation masterContrast masterGamma masterGain masterOffset
+                       shadows #shadowsSaturation shadowsContrast shadowsGamma shadowsGain shadowsOffset
+                       midtones #midtonesSaturation midtonesContrast midtonesGamma midtonesGain midtonesOffset
+                       highlights: #highlightsSaturation highlightsContrast highlightsGamma highlightsGain highlightsOffset:
+    ```liftF5 colorCorrectLuna' #{master} #{shadows} #{midtones} #{highlights} #{self}```
+
+def Image.colorCorrectCurves curves
+                       master #masterSaturation masterContrast masterGamma masterGain masterOffset
+                       shadows #shadowsSaturation shadowsContrast shadowsGamma shadowsGain shadowsOffset
+                       midtones #midtonesSaturation midtonesContrast midtonesGamma midtonesGain midtonesOffset
+                       highlights: #highlightsSaturation highlightsContrast highlightsGamma highlightsGain highlightsOffset:
+    ```liftF5 (colorCorrectLunaCurves #{curves}) #{master} #{shadows} #{midtones} #{highlights} #{self}```
+
+def Image.premultiply:
+    ```liftF1 premultiplyLuna #{self}```
+
+def Image.unpremultiply:
+    ```liftF1 unpremultiplyLuna #{self}```
+
+def Image.invert:
+    ```liftF1 invertLuna #{self}```
+
+def Image.histEq bins:
+    ```liftF2 histEqLuna #{bins} #{self}```
