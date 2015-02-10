@@ -328,7 +328,13 @@ def Image.translateMatte vec matte:
 
 def Image.scaleAtMatte point vec matte:
     ```liftF4 scaleAtMatteLuna #{point} #{vec} #{matte} #{self}```
-    
+
+def Image.skewAtMatte point skew matte:
+    ```liftF4 skewAtMatteLuna #{point} #{skew} #{matte} #{self}```
+
+def Image.transformMatte trans matte:
+    ```liftF3 transformLuna #{trans} #{matte} #{self}```
+
 #
 #                IMAGE
 #

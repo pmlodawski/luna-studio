@@ -415,7 +415,7 @@ def Image.exposureMatte self::Image blackpoint::Color ex::Color matte::(Maybe (M
 def Image.gradeMatte self::Image blackpoint::Color whitepoint::Color lift::Color gain::Color multiply::Color offset::Color gamma::Color matte::(Maybe (Matte Float)) -> Image:
     ```liftF5 (gradeLunaColorMatte #{blackpoint} #{whitepoint} #{lift} #{gain}) #{multiply} #{offset} #{gamma} #{matte} #{self}```
 
-def Image.rotateAtMatte self::Image point::(Point2 Float) phi:;Float matte::(Maybe (Matte Float)) -> Image:
+def Image.rotateAtMatte self::Image point::(Point2 Float) phi::Float matte::(Maybe (Matte Float)) -> Image:
     ```liftF4 rotateAtMatteLuna #{point} #{phi} #{matte} #{self}```
 
 def Image.translateMatte vec::(V2 Float) matte::(Maybe (Matte Float)) -> Image:
@@ -423,6 +423,12 @@ def Image.translateMatte vec::(V2 Float) matte::(Maybe (Matte Float)) -> Image:
 
 def Image.scaleAtMatte self::Image point::(Point2 Float) vec::(V2 Float) matte::(Maybe (Matte Float)) -> Image:
     ```liftF4 scaleAtMatteLuna #{point} #{vec} #{matte} #{self}```
+
+def Image.skewAtMatte self::Image point::(Point2 Float) skew::(Skew Float) matte::(Maybe (Matte Float)) -> Image:
+    ```liftF4 skewAtMatteLuna #{point} #{skew} #{matte} #{self}```
+
+def Image.transformMatte self::Image trans::TransformF matte::(Maybe (Matte Float)) -> Image:
+    ```liftF3 transformLuna #{trans} #{matte} #{self}```
 
 alias Mask = (Path Float, Maybe (Path Float))
 
