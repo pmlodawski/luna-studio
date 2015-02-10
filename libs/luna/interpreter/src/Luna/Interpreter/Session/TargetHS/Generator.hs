@@ -14,7 +14,7 @@ import qualified Data.List                   as List
 import qualified Data.Text.Lazy              as Text
 import qualified Language.Preprocessor.Cpphs as Cpphs
 
-import           Flowbox.Control.Error                  (hoistEitherWith, lmapEitherT)
+import           Flowbox.Control.Error                  (hoistEitherWith)
 import           Flowbox.Prelude
 import           Flowbox.Source.Location                (loc)
 import           Flowbox.System.Log.Logger
@@ -25,6 +25,7 @@ import qualified Luna.DEP.AST.Type                      as Type
 import           Luna.Interpreter.Session.Data.DefPoint (DefPoint)
 import qualified Luna.Interpreter.Session.Data.DefPoint as DefPoint
 import qualified Luna.Interpreter.Session.Env           as Env
+import           Luna.Interpreter.Session.Error         (mapError)
 import qualified Luna.Interpreter.Session.Error         as Error
 import           Luna.Interpreter.Session.Session       (Session)
 import qualified Luna.Parser.Parser                     as Parser
@@ -76,15 +77,13 @@ genFunctions = do
 
             ) ast
 
-runP :: (Functor m, Show e) => EitherT e m b -> EitherT Error.Error m b
-runP = lmapEitherT (Error.OtherError $(loc) . show)
 
 type NewAST = Unit (LModule IDTag (LExpr IDTag ()))
 
 
 genCode :: ([String] -> [String]) -> Module -> Session mm String
 genCode selector oldAst = do
-    ast <- Unit <$> runP (convertAST oldAst)
+    ast <- Unit <$> mapError $(loc) (convertAST oldAst)
     result <- Session.runT $ do
         void   Parser.init
         void $ Pragma.enable (Pragma.orphanNames)

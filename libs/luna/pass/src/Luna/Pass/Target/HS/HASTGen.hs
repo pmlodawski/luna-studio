@@ -120,6 +120,9 @@ mkVal    = HE.AppE (HE.Var "val")
 pass :: Ctx m a v => Pass State.GenState (Unit (LModule a (LExpr a v)) -> PassResult m HE)
 pass = Pass "HASTGen" "Haskell AST generator" def genUnit
 
+passExpr :: Ctx m a v => Pass State.GenState (LExpr a v -> PassResult m HE)
+passExpr = Pass "HASTGen" "Haskell AST generator" def genExpr
+
 genUnit (Unit m) = genModule m
 
 

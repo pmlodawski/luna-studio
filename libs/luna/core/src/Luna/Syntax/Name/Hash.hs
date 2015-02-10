@@ -12,9 +12,10 @@
 
 module Luna.Syntax.Name.Hash where
 
+import           Data.Char      (ord)
+import qualified Data.Text.Lazy as Text
+
 import Flowbox.Prelude
-import Data.Char           (ord)
-import Data.Text.Lazy as Text
 
 ----------------------------------------------------------------------
 -- Type classes
@@ -80,4 +81,5 @@ instance Hashable Char String where
 instance Hashable Text Text where
     hash t = Text.fromChunks . fmap (fromString . hash) $ Text.unpack t
 
-
+instance Hashable String String where
+    hash = concat . fmap hash
