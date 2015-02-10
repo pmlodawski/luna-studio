@@ -16,10 +16,10 @@
 module Luna.Pass.Target.HS.HSC where
 
 import           Flowbox.Prelude          hiding (cons, simple)
-import qualified Luna.Data.HAST.Comment   as HComment
-import qualified Luna.Data.HAST.Expr      as HExpr
-import           Luna.Data.HAST.Extension (Extension)
-import qualified Luna.Data.HAST.Lit       as HLit
+import qualified Luna.Target.HS.AST.Comment   as HComment
+import qualified Luna.Target.HS.AST.Expr      as HExpr
+import           Luna.Target.HS.AST.Extension (Extension)
+import qualified Luna.Target.HS.AST.Lit       as HLit
 import           Luna.Data.Source         (Source (Source))
 import           Luna.Pass.Pass           (Pass)
 import qualified Luna.Pass.Pass           as Pass
@@ -104,6 +104,7 @@ instance Generator HExpr where
         HExpr.InstanceD tp decs               -> simple  $ "instance " <> generate tp <> " where { " <> mjoin "; " (genmap decs) <> " }"
         HExpr.TypeInstance tp expr            -> simple  $ "type instance " <> generate tp <> " = " <> generate expr
         HExpr.NewTypeD name params con        -> simple  $ "newtype " <> convert name <> " " <> (spaceJoin . sgenmap) params <> " = " <> generate con
+        HExpr.TypeD    dst src                -> simple  $ "type " <> generate dst <> " = " <> generate src
         HExpr.Con      name fields            -> simple  $ convert name <> spaceJoin ("" : sgenmap fields)
         HExpr.CondE    cond sucess failure    -> complex $ "ifThenElse' " <> sgenerate cond <> (simplify.buildDoBlock) sucess <> (simplify.buildDoBlock) failure
         HExpr.RecUpdE  expr name val          -> complex $ sgenerate expr <> " { " <> convert name <> " = " <> generate val <> "}"

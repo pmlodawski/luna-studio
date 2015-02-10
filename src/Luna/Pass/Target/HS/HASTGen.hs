@@ -38,15 +38,15 @@ import           Luna.Syntax.Lit              (Lit, LLit)
 --import qualified Luna.Syntax.Native           as Native
 import qualified Luna.Syntax.Name             as Name
 --import           Luna.Syntax.Name             (TName(TName), TVName(TVName))
-import qualified Luna.Data.HAST.Expr                         as HE
-import qualified Luna.Data.HAST.Lit                          as HLit
-import qualified Luna.Data.HAST.Module                       as HModule
-import qualified Luna.Data.HAST.Extension                    as HExt
---import qualified Luna.Data.HAST.Comment                      as HComment
-import           Luna.Data.HAST.Comment (Comment(H1, H2, H3, H4, H5))
+import qualified Luna.Target.HS.AST.Expr                         as HE
+import qualified Luna.Target.HS.AST.Lit                          as HLit
+import qualified Luna.Target.HS.AST.Module                       as HModule
+import qualified Luna.Target.HS.AST.Extension                    as HExt
+--import qualified Luna.Target.HS.AST.Comment                      as HComment
+import           Luna.Target.HS.AST.Comment (Comment(H1, H2, H3, H4, H5))
 
-import qualified Luna.Data.HAST.Deriving                     as Deriving
-import           Luna.Data.HAST.Deriving                     (Deriving)
+import qualified Luna.Target.HS.AST.Deriving                     as Deriving
+import           Luna.Target.HS.AST.Deriving                     (Deriving)
 
 import           Luna.Pass                    (Pass(Pass), PassMonad)
 import qualified Luna.Pass                    as Pass
@@ -68,8 +68,8 @@ import           Luna.Pass.Target.HS.HASTGen.State (addComment, setModule, getMo
 import           Luna.Syntax.Name.Hash              (Hashable, hash)
 --import qualified Luna.Target.HS.Host.NamingOld                          as Naming
 import qualified Luna.Target.HS.Host.Naming2 as Naming
-import qualified Luna.Data.HAST.Builder.TH    as TH
-import qualified Luna.Data.HAST.Builder.Utils as HUtils
+import qualified Luna.Target.HS.AST.Builder.TH    as TH
+import qualified Luna.Target.HS.AST.Builder.Utils as HUtils
 import qualified Luna.Syntax.Name.Pattern as NamePat
 import           Luna.Syntax.Name.Pattern (NamePat)
 import           Data.Maybe (isNothing)
@@ -124,11 +124,10 @@ genUnit (Unit m) = genModule m
 
 
 
-stdDerivings :: [Deriving]
-stdDerivings = [ Deriving.Show, Deriving.Eq, Deriving.Ord
-               , Deriving.Generic, Deriving.Typeable
-               ]
 
+genNonEmptySec header lst f = do
+    State.addComment header
+    when (not $ null lst) $ f lst
 
 genModule :: Ctx m a v => LModule a (LExpr a v) -> PassResult m HE
 genModule (Label lab (Module path body)) = withCtx (fromText $ view Path.name path) $ do
@@ -150,40 +149,94 @@ genModule (Label lab (Module path body)) = withCtx (fromText $ view Path.name pa
                   , HExt.DysfunctionalDependencies
                   , HExt.ExtendedDefaultRules
                   ]
-        modBaseName = view Path.name path
-        modPath     = view Path.path path
-        modConName = Naming.mkModCons (hash modBaseName)
-        modData = Label (0::Int) (Decl.singleData $ fromText $ hash modBaseName)
+        modBaseName      = view Path.name path
+        modPath          = view Path.path path
+        modConName       = Naming.mkModCons (hash modBaseName)
+        modData          = Label (0::Int) (Decl.singleData $ fromText $ hash modBaseName)
+        (fdatas, decls1) = extractDataDecls body
+        (tAls , decls)   = extractTypeAls decls1
+        datas            = fmap snd fdatas
+
 
     State.setModule mod
 
     State.regPragma (HE.Pragma $ HE.Include "pragmas.h")
     genDecl modData
-    mapM_ genDecl body
+
+    genNonEmptySec (H1 "Data headers")        fdatas $ mapM_ (uncurry genDataDeclHeaders)
+    genNonEmptySec (H1 "Type Aliases")        tAls   $ mapM_ genDecl
+    genNonEmptySec (H1 "Data declarations")   datas  $ mapM_ genDataDeclDefs
+    genNonEmptySec (H1 "Module declarations") decls  $ mapM_ genDecl
 
     when (path == "Main") $ do
         State.addComment $ H1 "Main module wrappers"
         regFunc $ mainf modConName
+
     State.getModule
+
+extractDataDecls = foldl go ([],[]) where
+    go (datas, decls) ld@(Label lab decl) = case decl of
+        Decl.Data d                             -> ((False,d):datas, decls)
+        Decl.Foreign (Foreign _ (Decl.FData d)) -> ((True,d):datas, decls)
+        _           -> (datas, ld:decls)
+
+extractTypeAls = foldl go ([],[]) where
+    go (a,as) ld@(Label lab decl) = case decl of
+        Decl.TpAls {} -> (ld:a, as   )
+        _             -> (a   , ld:as)
 
 mainf modname = HE.val "main" $ HE.AppE (HE.VarE "mainMaker") (HE.VarE modname)
 
+genDataDeclHeaders :: (Monad m, Enumerated lab, Num lab) => Bool -> Decl.DataDecl lab (LExpr lab ()) -> PassResult m ()
+genDataDeclHeaders isNative (Decl.DataDecl (convVar -> name) params cons defs) = withCtx (fromText name) $ do
+    addComment . H2 $ name <> " type"
+    consE <- mapM genData conDecls
+    if not isNative then State.addDataType $ HE.DataD name paramsTxt consE derivings
+                    else State.addComment  $ H5 "datatype provided externally"
+    regTHExpr $ TH.mkRegType name
+    when (not $ null fieldNames) $ do
+        State.addComment . H3 $ name <> " accessors"
+        regTHExpr $ TH.mkFieldAccessors2 name conDescs
+        regTHExpr $ TH.mkRegFieldAccessors name fieldNames
+    mapM_ (genCon name paramsTxt derivings isNative) cons
+
+    where derivings  = Deriving.stdDerivings
+          paramsTxt  = fmap convVar params
+          conDecls   = fmap (view Label.element) cons
+          getConDesc (Decl.Cons (convVar -> conName) fields) = (conName, fmap getLFieldName fields)
+          genField (Label _ (Decl.Field tp name val)) = genType tp
+          genData (Decl.Cons conName fields) =   HE.Con (fromString $ toString conName) 
+                                             <$> mapM genField fields
+          conDescs   = fmap getConDesc conDecls
+          fieldNames = Set.toList . Set.fromList . catMaybes . concat $ fmap snd conDescs :: [Text]
+
+genDataDeclDefs :: (Monad m, Enumerated lab, Num lab) => Decl.DataDecl lab (LExpr lab ()) -> PassResult m ()
+genDataDeclDefs (Decl.DataDecl (convVar -> name) params cons defs) = withCtx (fromText name) $ do
+    mapM_ genDecl defs
+
+genDataDecl :: (Monad m, Enumerated lab, Num lab) => Bool -> Decl.DataDecl lab (LExpr lab ()) -> PassResult m ()
+genDataDecl isNative d = do
+    genDataDeclHeaders isNative d
+    genDataDeclDefs d
+
 --genCons :: (Monad m, Applicative m, MonadState State.GenState m)
 --        => Text -> [Text] -> [Decl.LCons a e] -> [Deriving] -> Bool -> m ()
-genCons name params cons derivings isNative = do
-    let conDecls   = fmap (view Label.element) cons
-        clsConName = Naming.mkCls name
+
+getLFieldName (Label _ (Decl.Field _ mname _)) = fmap convVar mname
+
+genCon name params derivings isNative cons = do
+    let conDecls    = view Label.element cons
+        clsConName  = Naming.mkCls name
         clsConName' = Naming.mkCls' name
         genData (Decl.Cons conName fields) = HE.Con (fromString $ toString conName) 
                                            <$> mapM genField fields
     
-        getName (Label _ (Decl.Field _ mname _)) = fmap convVar mname
 
         genConData (Decl.Cons (convVar -> conName) fields) = do
             let fieldNum   = length fields
-                fieldNames = fmap getName fields
+                fieldNames = fmap getLFieldName fields
                 conDefName = Naming.mkMemDef clsConName conName
-                cons       = HE.val (Naming.mkCons conName)
+                hcons      = HE.val (Naming.mkCons conName)
                            $ HE.app (mkMemberGetter conName) 
                                        [HE.AppE HUtils.val (HE.VarE clsConName)]
                 consDef    = HE.val conDefName
@@ -198,28 +251,17 @@ genCons name params cons derivings isNative = do
                     Nothing -> error "TODO!"
                             
             addComment . H3 $ dotname [name, conName] <> " constructor"
-            mapM regFunc [cons, consDef]
+            mapM regFunc [hcons, consDef]
             genFuncNoBody func
             --regTHExpr $ TH.mkMethod clsConName conName
 
-        getConDesc (Decl.Cons (convVar -> conName) fields) = (conName, fmap getName fields)
-        conDescs   = fmap getConDesc conDecls
-        fieldNames = Set.toList . Set.fromList . catMaybes . concat $ fmap snd conDescs :: [Text]
+        getConDesc (Decl.Cons (convVar -> conName) fields) = (conName, fmap getLFieldName fields)
+        conDesc    = getConDesc conDecls
+        fieldNames = Set.toList . Set.fromList . catMaybes $ snd conDesc :: [Text]
         genField (Label _ (Decl.Field tp name val)) = genType tp
-
-    addComment . H2 $ name <> " type"
-    consE <- mapM genData conDecls
-    if not isNative then State.addDataType $ HE.DataD name params consE derivings
-                    else State.addComment  $ H5 "datatype provided externally"
-    addClsDataType clsConName derivings
-    regTHExpr $ TH.mkRegType clsConName
-    regTHExpr $ TH.mkRegType name
-    mapM_ genConData conDecls
-
-    when (not $ null fieldNames) $ do
-        State.addComment . H3 $ name <> " accessors"
-        regTHExpr $ TH.mkFieldAccessors2 name conDescs
-        regTHExpr $ TH.mkRegFieldAccessors name fieldNames
+    
+    genConData conDecls
+    
 
 
 
@@ -243,21 +285,16 @@ dotname names = mjoin "." names
 convVar :: (Wrapper t, Hashable a Text) => t a -> Text
 convVar = hash . unwrap
 
-
-
-genDecl :: (Monad m, Enumerated lab, Num lab) => LDecl lab (LExpr lab ())-> PassResult m ()
+genDecl :: (Monad m, Enumerated lab, Num lab) => LDecl lab (LExpr lab ()) -> PassResult m ()
 genDecl ast@(Label lab decl) = case decl of
     Decl.Imp     {}       -> return () --FIXME[pm->wd] 
     Decl.Func    funcDecl -> genStdFunc funcDecl
     Decl.Foreign fdecl    -> genForeign fdecl
     Decl.Data    ddecl    -> genDataDecl False ddecl
     Decl.Pragma  {}       -> return ()
+    Decl.TpAls   dst src  -> State.regDecl =<< (HE.TypeD <$> genType dst <*> genType src)
 
-genDataDecl :: (Monad m, Enumerated lab, Num lab) => Bool -> Decl.DataDecl lab (LExpr lab ()) -> PassResult m ()
-genDataDecl isNative (Decl.DataDecl (convVar -> name) params cons defs) = withCtx (fromText name) $ do
-    genCons name (fmap convVar params) cons stdDerivings isNative
-    addComment $ H3 $ name <> " members"
-    mapM_ genDecl defs
+
 
 genStdFunc f = genFunc f (Just genFuncBody) True
 
@@ -307,8 +344,8 @@ genFunc (Decl.FuncDecl (fmap convVar -> path) sig output body) bodyBuilder mkVar
             funcDef <- HE.Function memDefName sigHPats <$> (HE.DoBlock <$> builder body output)
             regFunc funcDef
 
-    regFunc funcFck
-    regFunc funcReg
+    regFunc   funcFck
+    regTHExpr funcReg
 
 genFuncPats sigArgs mkVarNames = do
     let sigPats        = fmap (view Arg.pat) sigArgs
@@ -447,7 +484,7 @@ genExpr (Label lab expr) = case expr of
     Expr.Var (Expr.Variable name _)          -> pure . HE.Var $ Naming.mkVar $ hash name
     Expr.Cons  name                          -> pure $ HE.Var $ Naming.mkCons $ hash name
     Expr.Accessor     acc src                -> HE.AppE <$> (pure $ mkMemberGetter $ hash acc) <*> genExpr src --(get0 <$> genExpr src))
-    Expr.Typed       cls expr                -> (\e t -> HE.MacroE "typed" [e,t]) <$> genExpr expr <*> genType cls
+    Expr.Typed       cls expr                -> (\e t -> HE.MacroE "_typed" [e,t]) <$> genExpr expr <*> genType cls
     Expr.Case  expr match -> mkFlattenCtx <$> (HE.AppE <$> lamFunc <*> genExpr expr)
         where passVar = HE.VarE "a"
               caseE   = HE.CaseE passVar <$> body'
