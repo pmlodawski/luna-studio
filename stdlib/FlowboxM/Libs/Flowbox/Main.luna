@@ -194,9 +194,9 @@ class ```Skew``` a:
     order :: SkewOrder
 
 class ```Transform``` a:
-    translate :: Point2 a
+    translate :: V2 a
     rotate    :: a
-    scale     :: Point2 a
+    scale     :: V2 a
     skew      :: Skew a
     center    :: Point2 a
 
@@ -519,8 +519,8 @@ def Image.scale vec:
 def Image.scaleAt point vec:
     ```liftF3 scaleAtLuna #{point} #{vec} #{self}```
 
-def Image.transform trans:
-    ```liftF2 transformLuna #{trans} #{self}```
+# def Image.transform trans:
+#     ```liftF2 transformLuna #{trans} #{self}```
 
 def Image.crop rect:
     ```liftF2 cropLuna #{rect} #{self}```
@@ -716,6 +716,21 @@ def Image.exposureMatte blackpoint ex matte:
 def Image.gradeMatte blackpoint whitepoint lift gain multiply offset gamma matte:
     ```liftF5 (gradeLunaColorMatte #{blackpoint} #{whitepoint} #{lift} #{gain}) #{multiply} #{offset} #{gamma} #{matte} #{self}```
 
+def Image.rotateAtMatte point phi matte:
+    ```liftF4 rotateAtMatteLuna #{point} #{phi} #{matte} #{self}```
+
+def Image.translateMatte vec matte:
+    ```liftF3 translateMatteLuna #{vec} #{matte} #{self}```
+
+def Image.scaleAtMatte point vec matte:
+    ```liftF4 scaleAtMatteLuna #{point} #{vec} #{matte} #{self}```
+
+def Image.skewAtMatte point skew matte:
+    ```liftF4 skewAtMatteLuna #{point} #{skew} #{matte} #{self}```
+
+def Image.transformMatte trans matte:
+    ```liftF3 transformLuna #{trans} #{matte} #{self}```
+
 #
 #                VIEW
 #
@@ -805,10 +820,28 @@ def main:
     xxx = lena.offsetMatte randomColor (matte)
     xxx.save "./xxx.png"
 
-    # scaled = lena.scale (V2 0.5 2.0)
-    # scaledAt = lena.scaleAt (Point2 256.0 256.0) (V2 0.5 2.0)
-    # scaled.save "./out.png"
-    # scaledAt.save "./out2.png"
+    # transformations test
+
+    scaledAtMatte = lena.scaleAtMatte (Point2 256.0 256.0) (V2 0.5 2.0) (Nothing)
+    scaledAtMatte.save "./tr1.png"
+
+    rotatedAtMatte = lena.rotateAtMatte (Point2 100.0 200.0) (1.04179) (Nothing)
+    rotatedAtMatte.save "./tr2.png"
+
+    translatedMatte = lena.translateMatte (V2 100.0 200.0) (Nothing)
+    translatedMatte.save "./tr3.png"
+
+    sk = Skew (V2 1.0 2.0) SkewXY
+    print sk
+
+    skewedAtMatte = lena.skewAtMatte (Point2 100.0 200.0) sk (Nothing)
+    skewedAtMatte.save "./tr4.png"
+
+    tr = Transform (V2 100.0 200.0) (1.04719755) (V2 1.0 2.0) sk (Point2 200.0 100.0)
+    print tr
+
+    transformedMatte = lena.transformMatte tr (Nothing)
+    transformedMatte.save "./tr5.png"
 
     # lena = lena.hueCorrect c c c c c c2 c c
 

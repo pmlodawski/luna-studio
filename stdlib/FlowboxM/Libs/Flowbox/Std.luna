@@ -320,6 +320,21 @@ def Image.exposureMatte blackpoint ex matte:
 def Image.gradeMatte blackpoint whitepoint lift gain multiply offset gamma matte:
     ```liftF5 (gradeLunaColorMatte #{blackpoint} #{whitepoint} #{lift} #{gain}) #{multiply} #{offset} #{gamma} #{matte} #{self}```
 
+def Image.rotateAtMatte point phi matte:
+    ```liftF4 rotateAtMatteLuna #{point} #{phi} #{matte} #{self}```
+
+def Image.translateMatte vec matte:
+    ```liftF3 translateMatteLuna #{vec} #{matte} #{self}```
+
+def Image.scaleAtMatte point vec matte:
+    ```liftF4 scaleAtMatteLuna #{point} #{vec} #{matte} #{self}```
+
+def Image.skewAtMatte point skew matte:
+    ```liftF4 skewAtMatteLuna #{point} #{skew} #{matte} #{self}```
+
+def Image.transformMatte trans matte:
+    ```liftF3 transformLuna #{trans} #{matte} #{self}```
+
 #
 #                IMAGE
 #
@@ -530,8 +545,8 @@ def Image.scale vec:
 def Image.scaleAt point vec:
     ```liftF3 scaleAtLuna #{point} #{vec} #{self}```
 
-def Image.transform trans:
-    ```liftF2 transformLuna #{trans} #{self}```
+# def Image.transform trans:
+#     ```liftF2 transformLuna #{trans} #{self}```
 
 def Image.crop rect:
     ```liftF2 cropLuna #{rect} #{self}```
