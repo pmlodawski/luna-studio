@@ -1,3 +1,7 @@
+#include "ImfInputFile.h"
+#include <stdint.h>
+
+extern "C" {
 
 void* openFile(const char* filename);
 void closeFile(void* fileHandle);
@@ -26,3 +30,5 @@ float getScreenWindowWidth(void* fileHandle, int part);
 void  getScreenWindowCenter(void* fileHandle, int part, float* x, float* y);
 
 void dumpImageInfo(void* fileHandle);
+
+}
