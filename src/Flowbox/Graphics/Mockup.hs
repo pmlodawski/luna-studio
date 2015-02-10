@@ -489,9 +489,9 @@ unsafeGetChannels img = (r, g, b, a)
           Right (Just (ChannelFloat _ (asMatrixData -> MatrixData b))) = View.get view "rgba.b"
           Right (Just (ChannelFloat _ (asMatrixData -> MatrixData a))) = View.get view "rgba.a"
 
-keyerLuna :: KeyerMode -> Double -> Double -> Double -> Double -> Image -> Image
-keyerLuna mode (variable -> a) (variable -> b) (variable -> c) (variable -> d) img =
-    keyer' (keyer mode (A.lift $ (a, b, c, d))) img
+keyerLuna :: KeyerMode -> KeyerThresholds Double -> Image -> Image
+keyerLuna mode (fmap variable -> KeyerThresholds a b c d) img =
+    keyer' (keyer mode (A.lift (a, b, c, d))) img
 
 differenceKeyer' :: (A.Exp (Color.RGB Double) -> A.Exp (Color.RGB Double) -> A.Exp Double) -> Image -> Image -> Image
 differenceKeyer' f background foreground = img'
