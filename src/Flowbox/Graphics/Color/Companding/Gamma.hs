@@ -6,18 +6,22 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeFamilies          #-}
 
 module Flowbox.Graphics.Color.Companding.Gamma where
 
+import qualified Data.Array.Accelerate as A
+
 import Flowbox.Graphics.Color.Companding
+import Flowbox.Graphics.Utils.Utils      (variable)
 import Flowbox.Prelude
 
 
 
-newtype Gamma a = Gamma a
-                deriving Show
+data Gamma a = Gamma a
+			 deriving Show
 
-instance (Num a, Floating a) => Companding (Gamma a) a where
-    toLinear   (Gamma g) v = v ** g
+instance (Num a, Floating a, a ~ A.Exp t, A.IsFloating t, A.Elt t) => Companding (Gamma a) (A.Exp t) where
+    toLinear   (Gamma g) v = v ** (variable g)
 
-    fromLinear (Gamma g) v = v ** (1 / g)
+    fromLinear (Gamma g) v = v ** (1 / (variable g))

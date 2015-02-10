@@ -1431,10 +1431,10 @@ edgeDetectLuna edgeOperator img = img'
           img' = Image.insertPrimary (insertChannelFloats view [("rgba.a", alphaSum)]) img
 
 gammaToLinearLuna :: Gamma.Companding a (A.Exp Double) => a -> Image -> Image
-gammaToLinearLuna companding = onEach $ (Gamma.toLinear companding :: A.Exp Double -> A.Exp Double)
+gammaToLinearLuna companding = onEach $ (Gamma.toLinear companding)
 
 gammaFromLinearLuna :: Gamma.Companding a (A.Exp Double) => a -> Image -> Image
-gammaFromLinearLuna companding = onEach $ Gamma.fromLinear companding
+gammaFromLinearLuna companding = onEach (Gamma.fromLinear companding)
 
 medianLuna :: Int -> Image -> Image
 medianLuna size img = undefined
