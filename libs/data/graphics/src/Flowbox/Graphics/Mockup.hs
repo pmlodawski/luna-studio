@@ -93,18 +93,18 @@ import Control.PolyApplicative ((<<*>>))
 temporaryBackend :: M.Backend
 temporaryBackend = CUDA.run
 
-data SkewOrder = SkewXY | SkewYX
+data SkewOrder = SkewXY | SkewYX deriving (Show)
 
 data Skew a = Skew { _skewValue :: V2 a
                    , _skewOrder :: SkewOrder
-                   }
+                   } deriving (Show)
 
 data Transform a = Transform { _translate :: V2 a
                              , _rotate    :: a
                              , _scale     :: V2 a
                              , _skew      :: Skew a
                              , _center    :: Point2 a
-                             }
+                             } deriving (Show)
 
 pattern VPS x = Value (Pure (Safe x))
 type VPS x = Value Pure Safe x
@@ -489,9 +489,9 @@ unsafeGetChannels img = (r, g, b, a)
           Right (Just (ChannelFloat _ (asMatrixData -> MatrixData b))) = View.get view "rgba.b"
           Right (Just (ChannelFloat _ (asMatrixData -> MatrixData a))) = View.get view "rgba.a"
 
-keyerLuna :: KeyerMode -> Double -> Double -> Double -> Double -> Image -> Image
-keyerLuna mode (variable -> a) (variable -> b) (variable -> c) (variable -> d) img =
-    keyer' (keyer mode (A.lift $ (a, b, c, d))) img
+keyerLuna :: KeyerMode -> KeyerThresholds Double -> Image -> Image
+keyerLuna mode (fmap variable -> KeyerThresholds a b c d) img =
+    keyer' (keyer mode (A.lift (a, b, c, d))) img
 
 differenceKeyer' :: (A.Exp (Color.RGB Double) -> A.Exp (Color.RGB Double) -> A.Exp Double) -> Image -> Image -> Image
 differenceKeyer' f background foreground = img'

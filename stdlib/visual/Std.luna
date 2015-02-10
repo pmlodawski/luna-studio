@@ -192,8 +192,13 @@ class ```KeyerMode```:
     Max
     Min
 
-def Image.key self::Image mode::KeyerMode a::Float b::Float c::Float d::Float -> Image:
-    ```liftF6 keyerLuna #{mode} #{a} #{b} #{c} #{d} #{self}```
+class ```KeyerThresholds``` a:
+    min, minRolloff, max, maxRolloff :: a
+
+alias KeyerThresholdsF = KeyerThresholds Float
+
+def Image.key self::Image mode::KeyerMode thresholds::KeyerThresholdsF:
+    ```liftF3 keyerLuna #{mode} #{thresholds} #{self}```
 
 def Image.differenceKey self::Image offset::Float gain::Float background::Image -> Image:
     ```liftF4 differenceKeyerLuna #{offset} #{gain} #{background} #{self}```
@@ -423,6 +428,12 @@ def Image.translateMatte vec::(V2 Float) matte::(Maybe (Matte Float)) -> Image:
 
 def Image.scaleAtMatte self::Image point::(Point2 Float) vec::(V2 Float) matte::(Maybe (Matte Float)) -> Image:
     ```liftF4 scaleAtMatteLuna #{point} #{vec} #{matte} #{self}```
+
+def Image.skewAtMatte self::Image point::(Point2 Float) skew::(Skew Float) matte::(Maybe (Matte Float)) -> Image:
+    ```liftF4 skewAtMatteLuna #{point} #{skew} #{matte} #{self}```
+
+def Image.transformMatte self::Image trans::TransformF matte::(Maybe (Matte Float)) -> Image:
+    ```liftF3 transformLuna #{trans} #{matte} #{self}```
 
 alias Mask = (Path Float, Maybe (Path Float))
 

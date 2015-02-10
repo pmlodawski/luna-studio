@@ -328,7 +328,13 @@ def Image.translateMatte vec matte:
 
 def Image.scaleAtMatte point vec matte:
     ```liftF4 scaleAtMatteLuna #{point} #{vec} #{matte} #{self}```
-    
+
+def Image.skewAtMatte point skew matte:
+    ```liftF4 skewAtMatteLuna #{point} #{skew} #{matte} #{self}```
+
+def Image.transformMatte trans matte:
+    ```liftF3 transformLuna #{trans} #{matte} #{self}```
+
 #
 #                IMAGE
 #
@@ -698,8 +704,11 @@ class ```KeyerMode```:
     Max
     Min
 
-def Image.key mode a b c d:
-    ```liftF6 keyerLuna #{mode} #{a} #{b} #{c} #{d} #{self}```
+class ```KeyerThresholds``` a:
+    min, minRolloff, max, maxRolloff :: a
+
+def Image.key mode thresholds:
+    ```liftF3 keyerLuna #{mode} #{thresholds} #{self}```
 
 def Image.differenceKey offset gain background:
     ```liftF4 differenceKeyerLuna #{offset} #{gain} #{background} #{self}```

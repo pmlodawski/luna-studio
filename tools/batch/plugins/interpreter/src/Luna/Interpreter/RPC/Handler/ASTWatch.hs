@@ -305,6 +305,9 @@ graphNodeAdd (GraphNodeAdd.Update request node updateNo) = do
     let projectID = GraphNodeAdd.projectID request
         libraryID = GraphNodeAdd.libraryID request
     nodeID <- Gen.Node.id node <??> "ASTWatch.graphNodeAdd : 'nodeID' field is missing"
+    tNodeExpr <- Gen.Node.expr node <??> "ASTWatch.graphNodeAdd : 'expr' field is missing"
+    nodeExpr <- decodeE tNodeExpr
+    Var.insertTimeRef' (decodeP libraryID) (decodeP nodeID) nodeExpr --TODO[PM] : remove old refs if were present
     CacheWrapper.modifyNode projectID libraryID nodeID
 
 
@@ -317,6 +320,7 @@ graphNodeRemove (GraphNodeRemove.Update request updateNo) = do
     mapM_ (CacheWrapper.modifyNodeSuccessors projectID libraryID bc) nodeIDs
     mapM_ (CacheWrapper.deleteNode projectID libraryID) nodeIDs
     sync updateNo $ GraphHandler.nodeRemove request
+    --TODO[PM] : remove old time refs if were present
 
 
 graphNodeModify :: GraphNodeModify.Update -> RPC Context (SessionST mm) ()
@@ -324,7 +328,10 @@ graphNodeModify (GraphNodeModify.Update request node updateNo) = do
     sync updateNo $ GraphHandler.nodeModify request
     let projectID = GraphNodeModify.projectID request
         libraryID = GraphNodeModify.libraryID request
-    nodeID <- Gen.Node.id node <??> "ASTWatch.graphNodeModify : 'nodeID' field is missing"
+    nodeID    <- Gen.Node.id node <??> "ASTWatch.graphNodeModify : 'nodeID' field is missing"
+    tNodeExpr <- Gen.Node.expr node <??> "ASTWatch.graphNodeAdd : 'expr' field is missing"
+    nodeExpr  <- decodeE tNodeExpr
+    Var.insertTimeRef' (decodeP libraryID) (decodeP nodeID) nodeExpr --TODO[PM] : remove old refs if were present
     CacheWrapper.modifyNode projectID libraryID nodeID
 
 
@@ -333,7 +340,11 @@ graphNodeModifyInPlace (GraphNodeModifyInPlace.Update request updateNo) = do
     sync updateNo $ GraphHandler.nodeModifyInPlace request
     let projectID = GraphNodeModifyInPlace.projectID request
         libraryID = GraphNodeModifyInPlace.libraryID request
-    nodeID <- Gen.Node.id (GraphNodeModifyInPlace.node request) <??> "ASTWatch.graphNodeModify : 'nodeID' field is missing"
+        node      = GraphNodeModifyInPlace.node request
+    nodeID    <- Gen.Node.id node <??> "ASTWatch.graphNodeModify : 'nodeID' field is missing"
+    tNodeExpr <- Gen.Node.expr node <??> "ASTWatch.graphNodeAdd : 'expr' field is missing"
+    nodeExpr  <- decodeE tNodeExpr
+    Var.insertTimeRef' (decodeP libraryID) (decodeP nodeID) nodeExpr --TODO[PM] : remove old refs if were present
     CacheWrapper.modifyNode projectID libraryID nodeID
 
 
