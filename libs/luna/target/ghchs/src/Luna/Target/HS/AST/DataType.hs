@@ -4,16 +4,15 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE OverloadedStrings #-}
 
-module Luna.Data.HAST.Comment where
+module Luna.Target.HS.AST.DataType (
+        module Luna.Target.HS.AST.DataType,
+        module Luna.Target.HS.AST.Expr
+)where
 
-import Flowbox.Prelude
+import Luna.Target.HS.AST.Expr
 
-data Comment = H1 { text :: Text }
-             | H2 { text :: Text }
-             | H3 { text :: Text }
-             | H4 { text :: Text }
-             | H5 { text :: Text }
-             deriving (Show)
-
+empty :: Expr
+empty = DataD "" [] [] []
 

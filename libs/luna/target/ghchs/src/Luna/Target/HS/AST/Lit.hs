@@ -5,10 +5,15 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Luna.Data.HAST.Builder.Utils where
+module Luna.Target.HS.AST.Lit where
 
-import Flowbox.Prelude
-import Luna.Data.HAST.Expr as Expr
-import Luna.Data.HAST.Lit  as Lit
+import           Flowbox.Prelude hiding (Char, Integer, String)
+import qualified Flowbox.Prelude as Prelude
 
-val = Expr.VarE "val"
+data Lit = Char    Prelude.Char
+         | String  Text
+         | Int     Text
+         | Integer Text
+         | Float   Text
+         deriving (Show, Eq)
+

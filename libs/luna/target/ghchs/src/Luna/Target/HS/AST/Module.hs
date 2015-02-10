@@ -4,15 +4,16 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE OverloadedStrings #-}
 
-module Luna.Data.HAST.Module (
-        module Luna.Data.HAST.Module,
-        module Luna.Data.HAST.Expr
+module Luna.Target.HS.AST.Module (
+        module Luna.Target.HS.AST.Module,
+        module Luna.Target.HS.AST.Expr
 )where
 
 import Flowbox.Prelude
-import Luna.Data.HAST.Expr
-import Luna.Data.HAST.Extension (Extension)
+import Luna.Target.HS.AST.Expr
+import Luna.Target.HS.AST.Extension (Extension)
 import           Data.Text.Lazy (Text)
 
 

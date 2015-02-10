@@ -5,13 +5,16 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Luna.Data.HAST.Expr where
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE OverloadedStrings #-}
+
+module Luna.Target.HS.AST.Expr where
 
 import           Flowbox.Prelude
-import           Luna.Data.HAST.Comment   (Comment)
-import           Luna.Data.HAST.Deriving  (Deriving)
-import           Luna.Data.HAST.Extension (Extension)
-import qualified Luna.Data.HAST.Lit       as Lit
+import           Luna.Target.HS.AST.Comment   (Comment)
+import           Luna.Target.HS.AST.Deriving  (Deriving)
+import           Luna.Target.HS.AST.Extension (Extension)
+import qualified Luna.Target.HS.AST.Lit       as Lit
 import           Data.Text.Lazy (Text)
 
 
@@ -22,8 +25,9 @@ data Expr = DataD        { _name      :: Text     , _params    :: [Text]      , 
           | TySynD       { _name      :: Text     , _paramsE   :: [Expr]      , _dstType :: Expr                                                             } -- FIXME: paramsE -> params
           | Function     { _name      :: Text     , _pats      :: [Expr]      , _expr    :: Expr                                                             }
           | NewTypeD     { _name      :: Text     , _paramsE   :: [Expr]      , _con     :: Expr                                                             } -- FIXME: paramsE -> params
+          | TypeD        { _src       :: Expr     , _dst       :: Expr                                                                                       }
           | CondE        { _cond      :: Expr     , _success   :: [Expr]      , _failure :: [Expr]                                                           }
-          | RecUpdE      { _expr      :: Expr     , _name      :: Text        , _val     :: Expr                                                             }
+          | RecUpdE      { _expr      :: Expr     , _name      :: Text        , _value   :: Expr                                                             }
           | Import       { _qualified :: Bool     , _segments  :: [Text]      , _rename  :: Maybe Text                                                       }
           | OperatorE    { _name      :: Text     , _src       :: Expr        , _dst     :: Expr                                                             }
           | Infix        { _name      :: Text     , _src       :: Expr        , _dst     :: Expr                                                             }
@@ -73,6 +77,8 @@ data Expr = DataD        { _name      :: Text     , _params    :: [Text]      , 
           deriving (Show)
 
 data Pragma = Include String deriving (Show)
+
+makeLenses ''Expr
 
 proxy name = TypedE (ConE ["Proxy"]) (AppT (ConT "Proxy") (LitT $ Lit.String name))
 app        = foldl AppE 

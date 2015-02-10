@@ -5,13 +5,10 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Luna.Data.HAST.Deriving (
-    Deriving(..),
-    genCode
-)where
+module Luna.Target.HS.AST.Deriving where
 
-import Data.String.Utils (join)
-import Flowbox.Prelude
+import           Prelude (String, show)
+import qualified Prelude as P
 
 data Deriving = Eq
               | Ord
@@ -23,15 +20,14 @@ data Deriving = Eq
               | Generic
               | Typeable
               | GenNewtype String
-              deriving (Show)
+              deriving (P.Show)
 
-
-genCode :: [Deriving] -> Text
-genCode d = case d of
-        [] -> ""
-        _  -> " deriving (" <> mjoin ", " (map (fromString . showDeriving) d) <> ")"
 
 showDeriving :: Deriving -> String
 showDeriving = \case
     GenNewtype s -> s
     a            -> show a
+
+
+stdDerivings :: [Deriving]
+stdDerivings = [ Show, Eq, Ord, Generic, Typeable ]

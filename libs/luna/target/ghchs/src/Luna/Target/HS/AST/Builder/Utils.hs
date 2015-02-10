@@ -4,16 +4,12 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE OverloadedStrings #-}
 
-module Luna.Data.HAST.Lit where
+module Luna.Target.HS.AST.Builder.Utils where
 
-import           Flowbox.Prelude hiding (Char, Integer, String)
-import qualified Flowbox.Prelude as Prelude
+import Flowbox.Prelude
+import Luna.Target.HS.AST.Expr as Expr
+import Luna.Target.HS.AST.Lit  as Lit
 
-data Lit = Char    Prelude.Char
-         | String  Text
-         | Int     Text
-         | Integer Text
-         | Float   Text
-         deriving (Show, Eq)
-
+val = Expr.VarE "val"

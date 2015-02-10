@@ -16,8 +16,8 @@ import Control.Monad.State
 import           Flowbox.Prelude       hiding (mod)
 import qualified Luna.DEP.AST.Expr         as LExpr
 import qualified Luna.DEP.AST.Type         as LType
-import qualified Luna.Data.HAST.Expr   as HExpr
-import qualified Luna.Data.HAST.Module as Module
+import qualified Luna.Target.HS.AST.Expr   as HExpr
+import qualified Luna.Target.HS.AST.Module as Module
 
 import Flowbox.System.Log.Logger
 

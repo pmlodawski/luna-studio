@@ -36,8 +36,8 @@ import qualified Luna.DEP.AST.Control.Zipper                                    
 import qualified Luna.DEP.AST.Expr                                                 as LExpr
 import qualified Luna.DEP.AST.Module                                               as FModule
 import qualified Luna.Data.AliasInfo                                           as AliasInfo
-import qualified Luna.Data.HAST.Expr                                           as HExpr
-import qualified Luna.Data.HAST.Module                                         as Module
+import qualified Luna.Target.HS.AST.Expr                                           as HExpr
+import qualified Luna.Target.HS.AST.Module                                         as Module
 import           Luna.Data.Source                                              (Source)
 import qualified Luna.Data.Source                                              as Source
 import qualified Luna.Distribution.Cabal.Config                                as Config

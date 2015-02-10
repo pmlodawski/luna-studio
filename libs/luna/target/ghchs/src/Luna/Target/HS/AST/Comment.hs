@@ -5,13 +5,15 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Luna.Data.HAST.DataType (
-        module Luna.Data.HAST.DataType,
-        module Luna.Data.HAST.Expr
-)where
+module Luna.Target.HS.AST.Comment where
 
-import Luna.Data.HAST.Expr
+import Flowbox.Prelude
 
-empty :: Expr
-empty = DataD "" [] [] []
+data Comment = H1 { text :: Text }
+             | H2 { text :: Text }
+             | H3 { text :: Text }
+             | H4 { text :: Text }
+             | H5 { text :: Text }
+             deriving (Show)
+
 
