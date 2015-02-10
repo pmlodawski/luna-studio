@@ -187,6 +187,7 @@ rasterizeMask w h (Mask path' feather') =
                   nc2 = A.fromIntegral $ A.boolToInt $ A.not cond2
                   x' = (dp*p + df*f)/(dp+df)
               --in dp --c1*p*f + nc1 * (c2*x' + nc2*(max p f))
+              --in df/80
               in A.cond (cond1)
                   (p*f)
                   (c2*x' + nc2*(max p f))

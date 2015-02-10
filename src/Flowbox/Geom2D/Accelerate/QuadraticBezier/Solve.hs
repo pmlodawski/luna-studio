@@ -16,8 +16,8 @@ import           Flowbox.Geom2D.Accelerate.QuadraticBezier ()
 import           Flowbox.Geom2D.QuadraticBezier
 import           Flowbox.Graphics.Utils.Utils              hiding (sign)
 import qualified Flowbox.Graphics.Utils.Accelerate as A
-import           Flowbox.Prelude
-import qualified Flowbox.Prelude                                as P
+import           Flowbox.Prelude                                hiding ((<*))
+import qualified Flowbox.Prelude                                as P hiding ((<*))
 
 import qualified Flowbox.Math.Matrix                            as M
 
@@ -46,7 +46,7 @@ solveCubic a b c = A.cond (d >=* 0) opt1 opt3
           w = (-sqrt ((-27) / p3) * q / 2) / 3
 
 distanceFromQuadratic :: Exp (Point2 Double) -> Exp (QuadraticBezier Double) -> Exp Double
-distanceFromQuadratic (A.unlift -> p) (A.unlift -> QuadraticBezier p0 p1 p2) = A.cond ((dot sc sc) <=* 0.001) 
+distanceFromQuadratic (A.unlift -> p) (A.unlift -> QuadraticBezier p0 p1 p2) = A.cond cond1 --((abs (w2 - w1)) <* 1) --((dot sc sc) <=* 0.001) 
     l
     (A.cond (n A.>* 1)
         (min (getLength res0) $ min (getLength res1) (getLength res2))
@@ -90,6 +90,17 @@ distanceFromQuadratic (A.unlift -> p) (A.unlift -> QuadraticBezier p0 p1 p2) = A
           pp1 = len2 p p0
           l   = A.cond ((u >* 0) &&* (1 >* u)) pp3 (min pp1 pp2)
           len2 (Point2 x1 y1) (Point2 x2 y2) = sqrt((x1-x2)^2 + (y1-y2)^2)
+          --
+          cond1 = A.cond ((y3 ==* y1) &&* (y2 ==* y1)) (A.lift True) cond2
+             
+          cond2 = (abs(fi1 - fi2)) <* 5
+          fi1   = atan ((x3-x1)/(y3-y1))
+          fi2   = atan ((x2-x1)/(y2-y1))
+
+          Point2 x3 y3 = p1
+
+          --w1 = (x3 - x1)/(y3 - y1)
+          --w2 = (x2 - x1)/(y2 - y1)
 
 distanceFromQuadratic' :: Exp (Point2 Double) -> Exp (QuadraticBezier Double) -> Exp Double
 distanceFromQuadratic' _ _ = 1 --(dot sc sc) <=* 0.001) 
