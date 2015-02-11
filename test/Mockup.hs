@@ -32,13 +32,13 @@ main = do
     --saveImageLuna output1 out1
 
     image <- loadImageLuna $ "samples/" P.++ input
-    let neutralSCGG = VPS $ RGBA 1 1 1 1 :: VPS (RGBA Double)
-    let neutralOff  = VPS $ RGBA 0 0 0 0 :: VPS (RGBA Double)
-    --let gamma1      = RGBA 2 2 2 2 :: RGBA Double
-    --let gain1       = RGBA 2 2 2 2 :: RGBA Double
-    --let sat1        = RGBA 2 2 2 2 :: RGBA Double
-    --let contrast1   = RGBA 1.2 1.2 1.2 1.2 :: RGBA Double
-    let offset1     = VPS $ RGBA 0.5 0.5 0.5 0.5 :: VPS (RGBA Double)
+    let neutralSCGG = VPS $ RGBA 1 1 1 1 :: VPS (RGBA Float)
+    let neutralOff  = VPS $ RGBA 0 0 0 0 :: VPS (RGBA Float)
+    --let gamma1      = RGBA 2 2 2 2 :: RGBA Float
+    --let gain1       = RGBA 2 2 2 2 :: RGBA Float
+    --let sat1        = RGBA 2 2 2 2 :: RGBA Float
+    --let contrast1   = RGBA 1.2 1.2 1.2 1.2 :: RGBA Float
+    let offset1     = VPS $ RGBA 0.5 0.5 0.5 0.5 :: VPS (RGBA Float)
     let out = colorCorrectLuna'
 
                 {- master -}     (neutralSCGG, neutralSCGG, neutralSCGG, neutralSCGG, neutralOff)
@@ -49,37 +49,37 @@ main = do
                 image
 
     --let out2 = colorCorrectLuna'
-    --            (RGBA 1.2 1.2 1.2 1.2 :: RGBA Double)
-    --            (RGBA 0.8 0.8 0.8 0.8 :: RGBA Double)
-    --            (RGBA 1.2 1.2 1.2 1.2 :: RGBA Double)
-    --            (RGBA 1 1 1 1 :: RGBA Double)
-    --            (RGBA 0.07 0.07 0.07 0.07  :: RGBA Double)
+    --            (RGBA 1.2 1.2 1.2 1.2 :: RGBA Float)
+    --            (RGBA 0.8 0.8 0.8 0.8 :: RGBA Float)
+    --            (RGBA 1.2 1.2 1.2 1.2 :: RGBA Float)
+    --            (RGBA 1 1 1 1 :: RGBA Float)
+    --            (RGBA 0.07 0.07 0.07 0.07  :: RGBA Float)
 
-    --            (RGBA 1.7 1.7 1.7 1.7 :: RGBA Double)
-    --            (RGBA 0.56 0.56 0.56 0.56 :: RGBA Double)
-    --            (RGBA 1.25 1.25 1.25 1.25 :: RGBA Double)
-    --            (RGBA 0.62 0.62 0.62 0.62 :: RGBA Double)
-    --            (RGBA 0.02 0.02 0.02 0.02 :: RGBA Double)
+    --            (RGBA 1.7 1.7 1.7 1.7 :: RGBA Float)
+    --            (RGBA 0.56 0.56 0.56 0.56 :: RGBA Float)
+    --            (RGBA 1.25 1.25 1.25 1.25 :: RGBA Float)
+    --            (RGBA 0.62 0.62 0.62 0.62 :: RGBA Float)
+    --            (RGBA 0.02 0.02 0.02 0.02 :: RGBA Float)
 
-    --            (RGBA 0.56 0.56 0.56 0.56 :: RGBA Double)
-    --            (RGBA 1.1 1.1 1.1 1.1 :: RGBA Double)
-    --            (RGBA 1.35 1.35 1.35 1.35 :: RGBA Double)
-    --            (RGBA 0.5 0.5 0.5 0.5 :: RGBA Double)
-    --            (RGBA 0.015 0.015 0.015 0.015 :: RGBA Double)
+    --            (RGBA 0.56 0.56 0.56 0.56 :: RGBA Float)
+    --            (RGBA 1.1 1.1 1.1 1.1 :: RGBA Float)
+    --            (RGBA 1.35 1.35 1.35 1.35 :: RGBA Float)
+    --            (RGBA 0.5 0.5 0.5 0.5 :: RGBA Float)
+    --            (RGBA 0.015 0.015 0.015 0.015 :: RGBA Float)
 
-    --            (RGBA 0.58 0.58 0.58 0.58 :: RGBA Double)
-    --            (RGBA 1.45 1.45 1.45 1.45 :: RGBA Double)
-    --            (RGBA 0.76 0.76 0.76 0.76 :: RGBA Double)
-    --            (RGBA 1.45 1.45 1.45 1.45 :: RGBA Double)
-    --            (RGBA 0.07 0.07 0.07 0.07  :: RGBA Double)
+    --            (RGBA 0.58 0.58 0.58 0.58 :: RGBA Float)
+    --            (RGBA 1.45 1.45 1.45 1.45 :: RGBA Float)
+    --            (RGBA 0.76 0.76 0.76 0.76 :: RGBA Float)
+    --            (RGBA 1.45 1.45 1.45 1.45 :: RGBA Float)
+    --            (RGBA 0.07 0.07 0.07 0.07  :: RGBA Float)
     --            image
 
     --let out3 = colorCorrectLuna'
-    --            (RGBA 2 2 2 2 :: RGBA Double)
-    --            (RGBA 0.5 0.5 0.5 0.5 :: RGBA Double)
-    --            (RGBA 2 2 2 2 :: RGBA Double)
-    --            (RGBA 0.2 0.2 0.2 0.2 :: RGBA Double)
-    --            (RGBA 0 0 0 0 :: RGBA Double)
+    --            (RGBA 2 2 2 2 :: RGBA Float)
+    --            (RGBA 0.5 0.5 0.5 0.5 :: RGBA Float)
+    --            (RGBA 2 2 2 2 :: RGBA Float)
+    --            (RGBA 0.2 0.2 0.2 0.2 :: RGBA Float)
+    --            (RGBA 0 0 0 0 :: RGBA Float)
 
     --            neutralSCGG
     --            neutralSCGG
@@ -107,23 +107,23 @@ main = do
     --            neutralSCGG
     --            neutralOff
 
-    --            (RGBA 1.2 1.2 1.2 1.2 :: RGBA Double)
-    --            (RGBA 0.8 0.8 0.8 0.8 :: RGBA Double)
-    --            (RGBA 1.2 1.2 1.2 1.2 :: RGBA Double)
-    --            (RGBA 1 1 1 1 :: RGBA Double)
-    --            (RGBA 0.07 0.07 0.07 0.07  :: RGBA Double)
+    --            (RGBA 1.2 1.2 1.2 1.2 :: RGBA Float)
+    --            (RGBA 0.8 0.8 0.8 0.8 :: RGBA Float)
+    --            (RGBA 1.2 1.2 1.2 1.2 :: RGBA Float)
+    --            (RGBA 1 1 1 1 :: RGBA Float)
+    --            (RGBA 0.07 0.07 0.07 0.07  :: RGBA Float)
 
-    --            (RGBA 1.2 1.2 1.2 1.2 :: RGBA Double)
-    --            (RGBA 0.8 0.8 0.8 0.8 :: RGBA Double)
-    --            (RGBA 1.2 1.2 1.2 1.2 :: RGBA Double)
-    --            (RGBA 1 1 1 1 :: RGBA Double)
-    --            (RGBA 0.07 0.07 0.07 0.07  :: RGBA Double)
+    --            (RGBA 1.2 1.2 1.2 1.2 :: RGBA Float)
+    --            (RGBA 0.8 0.8 0.8 0.8 :: RGBA Float)
+    --            (RGBA 1.2 1.2 1.2 1.2 :: RGBA Float)
+    --            (RGBA 1 1 1 1 :: RGBA Float)
+    --            (RGBA 0.07 0.07 0.07 0.07  :: RGBA Float)
 
-    --            (RGBA 1.2 1.2 1.2 1.2 :: RGBA Double)
-    --            (RGBA 0.8 0.8 0.8 0.8 :: RGBA Double)
-    --            (RGBA 1.2 1.2 1.2 1.2 :: RGBA Double)
-    --            (RGBA 1 1 1 1 :: RGBA Double)
-    --            (RGBA 0.07 0.07 0.07 0.07  :: RGBA Double)
+    --            (RGBA 1.2 1.2 1.2 1.2 :: RGBA Float)
+    --            (RGBA 0.8 0.8 0.8 0.8 :: RGBA Float)
+    --            (RGBA 1.2 1.2 1.2 1.2 :: RGBA Float)
+    --            (RGBA 1 1 1 1 :: RGBA Float)
+    --            (RGBA 0.07 0.07 0.07 0.07  :: RGBA Float)
     --            image
 
     --saveImageLuna "master.png" out3

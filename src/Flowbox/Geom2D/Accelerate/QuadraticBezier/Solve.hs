@@ -23,14 +23,14 @@ import qualified Flowbox.Math.Matrix                            as M
 
 
 
-cuberoot :: Exp Double -> Exp Double
+cuberoot :: Exp Float -> Exp Float
 cuberoot x = signum x * pow (abs x)
     where pow = flip (**) (1/3)
 
-solveCubic :: Exp Double -> Exp Double -> Exp Double -> Exp (Int, (Double, Double, Double))
+solveCubic :: Exp Float -> Exp Float -> Exp Float -> Exp (Int, (Float, Float, Float))
 solveCubic a b c = A.cond (d >=* 0) opt1 opt3
-    where opt1 = A.lift ( 1::Int, (offset + u + v, 0::Double, 0::Double) )
-          opt3 = A.lift ( 3::Int, (offset + u' * (m + m), offset - u' * (n + m), offset + u' * (n - m)))
+    where opt1 = A.lift ( 1::Int, (offset + u + v, 0::Float, 0::Float) )
+          opt3 = A.lift ( 3::Int, (offset + u' * (m + m), offset - u' * (n + m), offset + u' * (n - m)) )
           d = q*q + 4*p3 / 27
           q = a * (2*a*a - 9*b) / 27 + c
           p3 = p*p*p
@@ -45,14 +45,14 @@ solveCubic a b c = A.cond (d >=* 0) opt1 opt3
           v' = acos w --TODO rozwin w szereg fouriera
           w = (-sqrt ((-27) / p3) * q / 2) / 3
 
-distanceFromQuadratic :: Exp (Point2 Double) -> Exp (QuadraticBezier Double) -> Exp Double
-distanceFromQuadratic (A.unlift -> p) (A.unlift -> QuadraticBezier p0 p1 p2) = A.cond cond1 --((abs (w2 - w1)) <* 1) --((dot sc sc) <=* 0.001) 
+distanceFromQuadratic :: Exp (Point2 Float) -> Exp (QuadraticBezier Float) -> Exp Float
+distanceFromQuadratic (A.unlift -> p) (A.unlift -> QuadraticBezier p0 p1 p2) = A.cond cond1 --((abs (w2 - w1)) <* 1) --((dot sc sc) <=* 0.001)
     l
     (A.cond (n A.>* 1)
         (min (getLength res0) $ min (getLength res1) (getLength res2))
         (getLength res0))
-    where (n :: Exp Int, res :: Exp (Double, Double, Double)) = A.unlift res'
-          (res0, res1, res2) = A.unlift res :: (Exp Double, Exp Double, Exp Double)
+    where (n :: Exp Int, res :: Exp (Float, Float, Float)) = A.unlift res'
+          (res0, res1, res2) = A.unlift res :: (Exp Float, Exp Float, Exp Float)
           res' = solveCubic (b*a) (c*a) (d*a)
           --
           a = sA
@@ -92,7 +92,7 @@ distanceFromQuadratic (A.unlift -> p) (A.unlift -> QuadraticBezier p0 p1 p2) = A
           len2 (Point2 x1 y1) (Point2 x2 y2) = sqrt((x1-x2)^2 + (y1-y2)^2)
           --
           cond1 = A.cond ((y3 ==* y1) &&* (y2 ==* y1)) (A.lift True) cond2
-             
+
           cond2 = (abs(fi1 - fi2)) <* 5
           fi1   = atan ((x3-x1)/(y3-y1))
           fi2   = atan ((x2-x1)/(y2-y1))
@@ -103,7 +103,7 @@ distanceFromQuadratic (A.unlift -> p) (A.unlift -> QuadraticBezier p0 p1 p2) = A
           --w2 = (x2 - x1)/(y2 - y1)
 
 distanceFromQuadratic' :: Exp (Point2 Double) -> Exp (QuadraticBezier Double) -> Exp Double
-distanceFromQuadratic' _ _ = 1 --(dot sc sc) <=* 0.001) 
+distanceFromQuadratic' _ _ = 1 --(dot sc sc) <=* 0.001)
     --0
     --1 --(getLength res0))
     --where dot (Point2 ox oy) (Point2 qx qy) = ox * qx + oy * qy
@@ -122,7 +122,7 @@ distanceFromQuadratic' _ _ = 1 --(dot sc sc) <=* 0.001)
           --        pos = p0 + ((sb + (sc `mult` t)) `mult` t)
           --    in len $ pos - p
           --len o = sqrt $ dot o o
-          --clamp'' low high num = min high (max low num) 
+          --clamp'' low high num = min high (max low num)
           --
           --sA = 1 / dot sc sc
           --sB = 3 * dot sd sc
@@ -145,10 +145,10 @@ distanceFromQuadratic' _ _ = 1 --(dot sc sc) <=* 0.001)
           --len2 (Point2 x1 y1) (Point2 x2 y2) = sqrt((x1-x2)^2 + (y1-y2)^2)
 
 -- TODO: [KM] make a version of this working on CubicBezier (and doing the conversion to a list of Quadratics inside it)
---distanceFromQuadratics :: Exp (Point2 Double) -> Acc (Vector (QuadraticBezier Double)) -> Exp Double
+--distanceFromQuadratics :: Exp (Point2 Float) -> Acc (Vector (QuadraticBezier Float)) -> Exp Float
 --distanceFromQuadratics p = A.sfoldl getMin 1e20 A.index0 -- FIXME[KM]: FIX THIS SHIET!
 --    where getMin acc curve = min acc $ distanceFromQuadratic p curve
 
-distanceFromQuadratics' :: Exp (Point2 Double) -> Acc(Vector (QuadraticBezier Double)) -> Exp Double
+distanceFromQuadratics' :: Exp (Point2 Float) -> Acc(Vector (QuadraticBezier Float)) -> Exp Float
 distanceFromQuadratics' p = A.sfoldl getMin 1e20 A.index0
     where getMin acc curve = min acc $ distanceFromQuadratic p curve
