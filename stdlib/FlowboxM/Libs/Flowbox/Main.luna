@@ -698,8 +698,8 @@ def Image.differenceKey offset gain background:
 #                MATTES
 #
 
-def imageMatte path channelName:
-     ```autoLift2 imageMatteLuna #{path} #{channelName}```
+def imageMatte image channelName:
+     ```liftF2 imageMatteLuna #{image} #{channelName}```
 
 def vectorMatte mask:
     ```liftF1 vectorMatteLuna #{mask}```
@@ -819,7 +819,8 @@ def main:
     contrastLenaMasked = lena.contrastMatte randomColor (vectorMatte m)
     contrastLenaMasked.save "./contrastLenaMasked.png"
 
-    matte = imageMatte "./test.png" "rgba.a"
+    mask = load "./test.png"
+    matte = imageMatte mask "rgba.a"
     xxx = lena.offsetMatte randomColor (matte)
     xxx.save "./xxx.png"
 

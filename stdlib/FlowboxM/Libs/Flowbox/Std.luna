@@ -299,8 +299,8 @@ class ```Gamma```:
 #                MATTES
 #
 
-def imageMatte path channelName:
-     ```autoLift2 imageMatteLuna #{path} #{channelName}```
+def imageMatte image channelName:
+     ```liftF2 imageMatteLuna #{image} #{channelName}```
 
 def vectorMatte mask:
     ```liftF1 vectorMatteLuna #{mask}```
@@ -478,6 +478,9 @@ def Image.colorCorrectCurves curves
                        midtones #midtonesSaturation midtonesContrast midtonesGamma midtonesGain midtonesOffset
                        highlights: #highlightsSaturation highlightsContrast highlightsGamma highlightsGain highlightsOffset:
     ```liftF5 (colorCorrectLunaCurves #{curves}) #{master} #{shadows} #{midtones} #{highlights} #{self}```
+
+def Image.hueCorrect sat lum r g b rSup gSup bSup:
+    ```liftF4 (hueCorrectLuna #{sat} #{lum} #{r} #{g} #{b}) #{rSup} #{gSup} #{bSup} #{self}```
 
 def Image.premultiply:
     ```liftF1 premultiplyLuna #{self}```
