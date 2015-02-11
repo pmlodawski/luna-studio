@@ -299,8 +299,8 @@ class ```Gamma```:
 #                MATTES
 #
 
-def imageMatte path channelName:
-     ```autoLift2 imageMatteLuna #{path} #{channelName}```
+def imageMatte image channelName:
+     ```liftF2 imageMatteLuna #{image} #{channelName}```
 
 def vectorMatte mask:
     ```liftF1 vectorMatteLuna #{mask}```
@@ -319,6 +319,21 @@ def Image.exposureMatte blackpoint ex matte:
 
 def Image.gradeMatte blackpoint whitepoint lift gain multiply offset gamma matte:
     ```liftF5 (gradeLunaColorMatte #{blackpoint} #{whitepoint} #{lift} #{gain}) #{multiply} #{offset} #{gamma} #{matte} #{self}```
+
+def Image.rotateAtMatte point phi matte:
+    ```liftF4 rotateAtMatteLuna #{point} #{phi} #{matte} #{self}```
+
+def Image.translateMatte vec matte:
+    ```liftF3 translateMatteLuna #{vec} #{matte} #{self}```
+
+def Image.scaleAtMatte point vec matte:
+    ```liftF4 scaleAtMatteLuna #{point} #{vec} #{matte} #{self}```
+
+def Image.skewAtMatte point skew matte:
+    ```liftF4 skewAtMatteLuna #{point} #{skew} #{matte} #{self}```
+
+def Image.transformMatte trans matte:
+    ```liftF3 transformLuna #{trans} #{matte} #{self}```
 
 #
 #                IMAGE
@@ -464,6 +479,9 @@ def Image.colorCorrectCurves curves
                        highlights: #highlightsSaturation highlightsContrast highlightsGamma highlightsGain highlightsOffset:
     ```liftF5 (colorCorrectLunaCurves #{curves}) #{master} #{shadows} #{midtones} #{highlights} #{self}```
 
+def Image.hueCorrect sat lum r g b rSup gSup bSup:
+    ```liftF4 (hueCorrectLuna #{sat} #{lum} #{r} #{g} #{b}) #{rSup} #{gSup} #{bSup} #{self}```
+
 def Image.premultiply:
     ```liftF1 premultiplyLuna #{self}```
 
@@ -530,8 +548,8 @@ def Image.scale vec:
 def Image.scaleAt point vec:
     ```liftF3 scaleAtLuna #{point} #{vec} #{self}```
 
-def Image.transform trans:
-    ```liftF2 transformLuna #{trans} #{self}```
+# def Image.transform trans:
+#     ```liftF2 transformLuna #{trans} #{self}```
 
 def Image.crop rect:
     ```liftF2 cropLuna #{rect} #{self}```
@@ -689,8 +707,11 @@ class ```KeyerMode```:
     Max
     Min
 
-def Image.key mode a b c d:
-    ```liftF6 keyerLuna #{mode} #{a} #{b} #{c} #{d} #{self}```
+class ```KeyerThresholds``` a:
+    min, minRolloff, max, maxRolloff :: a
+
+def Image.key mode thresholds:
+    ```liftF3 keyerLuna #{mode} #{thresholds} #{self}```
 
 def Image.differenceKey offset gain background:
     ```liftF4 differenceKeyerLuna #{offset} #{gain} #{background} #{self}```
