@@ -18,6 +18,7 @@ import Utils
 
 input, output :: String
 input = "lena.png"
+--input = "test_grad.png"
 output = "out.png"
 output1 = "out1.png"
 
@@ -27,43 +28,25 @@ main = do
     putStrLn "Mockup test"
     --image <- loadImageLuna $ "samples/" P.++ input
     --let out1 = onEach (+0.1) (+0.1) (+0.1) id image
-    
+
     --saveImageLuna output1 out1
 
-    --image <- loadImageLuna $ "samples/" P.++ input
-    --let neutralSCGG = RGBA 1 1 1 0 :: RGBA Double
-    --let neutralOff  = RGBA 0 0 0 0 :: RGBA Double
+    image <- loadImageLuna $ "samples/" P.++ input
+    let neutralSCGG = VPS $ RGBA 1 1 1 1 :: VPS (RGBA Double)
+    let neutralOff  = VPS $ RGBA 0 0 0 0 :: VPS (RGBA Double)
     --let gamma1      = RGBA 2 2 2 2 :: RGBA Double
     --let gain1       = RGBA 2 2 2 2 :: RGBA Double
     --let sat1        = RGBA 2 2 2 2 :: RGBA Double
     --let contrast1   = RGBA 1.2 1.2 1.2 1.2 :: RGBA Double
-    --let offset1     = RGBA 0.1 0.1 0.1 0.1 :: RGBA Double
-    --let out = colorCorrectLuna' 
-    --            neutralSCGG
-    --            neutralSCGG
-    --            neutralSCGG
-    --            neutralSCGG
-    --            offset1
+    let offset1     = VPS $ RGBA 0.5 0.5 0.5 0.5 :: VPS (RGBA Double)
+    let out = colorCorrectLuna'
 
-    --            neutralSCGG 
-    --            neutralSCGG 
-    --            neutralSCGG 
-    --            neutralSCGG 
-    --            neutralOff 
+                {- master -}     (neutralSCGG, neutralSCGG, neutralSCGG, neutralSCGG, neutralOff)
+                {- shadows -}    (neutralSCGG, neutralSCGG, neutralSCGG, neutralSCGG, neutralOff)
+                {- midtones -}   (neutralSCGG, neutralSCGG, neutralSCGG, neutralSCGG, neutralOff)
+                {- highlights -} (neutralSCGG, neutralSCGG, neutralSCGG, neutralSCGG, neutralSCGG)
 
-    --            neutralSCGG 
-    --            neutralSCGG 
-    --            neutralSCGG 
-    --            neutralSCGG 
-    --            neutralOff 
-
-    --            neutralSCGG 
-    --            neutralSCGG 
-    --            neutralSCGG 
-    --            neutralSCGG 
-    --            neutralOff 
-
-    --            image
+                image
 
     --let out2 = colorCorrectLuna'
     --            (RGBA 1.2 1.2 1.2 1.2 :: RGBA Double)
@@ -98,30 +81,30 @@ main = do
     --            (RGBA 0.2 0.2 0.2 0.2 :: RGBA Double)
     --            (RGBA 0 0 0 0 :: RGBA Double)
 
-    --            neutralSCGG 
-    --            neutralSCGG 
-    --            neutralSCGG 
-    --            neutralSCGG 
-    --            neutralOff 
+    --            neutralSCGG
+    --            neutralSCGG
+    --            neutralSCGG
+    --            neutralSCGG
+    --            neutralOff
 
-    --            neutralSCGG 
-    --            neutralSCGG 
-    --            neutralSCGG 
-    --            neutralSCGG 
-    --            neutralOff 
+    --            neutralSCGG
+    --            neutralSCGG
+    --            neutralSCGG
+    --            neutralSCGG
+    --            neutralOff
 
-    --            neutralSCGG 
-    --            neutralSCGG 
-    --            neutralSCGG 
-    --            neutralSCGG 
-    --            neutralOff 
+    --            neutralSCGG
+    --            neutralSCGG
+    --            neutralSCGG
+    --            neutralSCGG
+    --            neutralOff
     --            image
 
     --let out4 = colorCorrectLuna'
-    --            neutralSCGG 
-    --            neutralSCGG 
-    --            neutralSCGG 
-    --            neutralSCGG 
+    --            neutralSCGG
+    --            neutralSCGG
+    --            neutralSCGG
+    --            neutralSCGG
     --            neutralOff
 
     --            (RGBA 1.2 1.2 1.2 1.2 :: RGBA Double)
@@ -146,5 +129,5 @@ main = do
     --saveImageLuna "master.png" out3
     --saveImageLuna "hms.png" out4
 
-    --saveImageLuna output out3
-    --putStrLn "Done"
+    saveImageLuna output out
+    putStrLn "Done"
