@@ -649,7 +649,7 @@ translateLuna (fmap variable -> V2 x y) = onEachChannel translateChannel
               --    in (fmap (mult pt) v)
 
 --adjustCoordinates :: Point2 (A.Exp Double) -> A.Exp Double -> Point2 (A.Exp Double)
---adjustCoordinates (Point2 x y) = Point2 ((A.intToFloat h) - x) y
+--adjustCoordinates (Point2 x y) = Point2 ((A.intToFloat h) - x) y 
 
 rotateLuna :: Double -> Image -> Image
 rotateLuna (variable -> phi) = onEachChannel rotateChannel
@@ -728,7 +728,7 @@ channelDimAcc :: Channel -> (A.Exp Int, A.Exp Int)
 channelDimAcc (ChannelFloat _ (MatrixData mat)) = (h,w)
   where
     sh = M.shape mat
-    A.Z A.:. h A.:. w = A.unlift sh :: A.Z A.:. (A.Exp Int) A.:. (A.Exp Int)
+    A.Z A.:. h A.:. w = A.unlift sh :: A.Z A.:. (A.Exp Int) A.:. (A.Exp Int)          
 
 channelDimAcc (ChannelFloat _ (ContinuousData shader)) = (h,w)
   where
@@ -837,7 +837,7 @@ skewAtMatteLuna p skew matte = onEachChannel (skewChannelAt p skew matte)
 
 transformLuna :: Transform Double -> Maybe (Matte.Matte Double) -> Image -> Image
 transformLuna tr matte = onEachChannel (transformChannel tr matte)
-    where
+    where 
       transformChannel :: Transform Double -> Maybe (Matte.Matte Double) -> Channel -> Channel
       transformChannel (Transform tr phi sc skew ce) matte chan = (transformation chan)
         where
@@ -925,7 +925,7 @@ data MergeMode = Atop
 mergeLuna :: MergeMode -> Merge.AlphaBlend -> Image -> Image -> Image
 mergeLuna mode alphaBlend img1 img2 = case mode of
     Atop                -> processMerge $ Merge.threeWayMerge             Merge.atop
-    Average             -> processMerge $ Merge.threeWayMerge             Merge.average
+    Average             -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.average
     ColorBurn           -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.colorBurn
     ColorDodge          -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.colorDodge
     ConjointOver        -> processMerge $ Merge.threeWayMerge             Merge.conjointOver
