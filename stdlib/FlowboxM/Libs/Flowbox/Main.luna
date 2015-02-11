@@ -425,6 +425,7 @@ def Image.grade blackpoint whitepoint lift gain multiply offset gamma:
     ```liftF5 (gradeLunaColor #{blackpoint} #{whitepoint} #{lift}) #{gain} #{multiply} #{offset} #{gamma} #{self}```
 
 alias ColorCorrectGUI = (CurveGUI, CurveGUI)
+alias HueCorrectGUI = (CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI)
 alias Color5 = (Color, Color, Color, Color ,Color)
 
 def Image.colorCorrect master #masterSaturation masterContrast masterGamma masterGain masterOffset
@@ -440,8 +441,8 @@ def Image.colorCorrectCurves curves
                        highlights: #highlightsSaturation highlightsContrast highlightsGamma highlightsGain highlightsOffset:
     ```liftF5 (colorCorrectLunaCurves #{curves}) #{master} #{shadows} #{midtones} #{highlights} #{self}```
 
-def Image.hueCorrect sat lum r g b rSup gSup bSup:
-    ```liftF4 (hueCorrectLuna #{sat} #{lum} #{r} #{g} #{b}) #{rSup} #{gSup} #{bSup} #{self}```
+def Image.hueCorrect curves:
+    ```liftF2 hueCorrectLuna #{curves} #{self}```
 
 def Image.premultiply:
     ```liftF1 premultiplyLuna #{self}```
@@ -781,7 +782,7 @@ def main:
     white = RGBA 1.0 1.0 1.0 1.0
     # gray  = RGBA 0.5 0.5 0.5 1.0
     # lena = constant 640 480 gray
-    lena = load "./lena_alpha.png"
+    lena = load "./lena2.png"
 
     randomColor = RGBA 0.2 0.5 0.1 0.0
     anotherRandomColor = RGBA 0.4 0.2 0.12 0.34

@@ -1117,6 +1117,15 @@ ditherLuna (fmap constantBoundaryWrapper -> boundary) bits table img = do
 constantBoundaryWrapper :: a -> MValue a
 constantBoundaryWrapper v = MValue (return v) (const $ return ())
 
+type HueCorrect a = (VPS (LunaCurveGUI a),
+                     VPS (LunaCurveGUI a),
+                     VPS (LunaCurveGUI a),
+                     VPS (LunaCurveGUI a),
+                     VPS (LunaCurveGUI a),
+                     VPS (LunaCurveGUI a),
+                     VPS (LunaCurveGUI a),
+                     VPS (LunaCurveGUI a))
+
 type LunaHandleGUI = (VPS Int, VPS Double, VPS Double)
 type LunaControlPointGUI a = (VPS (Point2 a), VPS LunaHandleGUI, VPS LunaHandleGUI)
 type LunaCurveGUI a = [VPS (LunaControlPointGUI a)]
@@ -1138,16 +1147,14 @@ convertControlPointGUI (unpackLunaVar -> p, unpackLunaVar -> hIn, unpackLunaVar 
 convertCurveGUI :: LunaCurveGUI a -> CurveGUI.Curve a
 convertCurveGUI (unpackLunaList -> c) = CurveGUI.BezierCurve (fmap convertControlPointGUI c)
 
-hueCorrectLuna :: VPS (LunaCurveGUI Double) -> VPS (LunaCurveGUI Double) ->
-                  VPS (LunaCurveGUI Double) -> VPS (LunaCurveGUI Double) -> VPS (LunaCurveGUI Double) ->
-                  LunaCurveGUI Double -> LunaCurveGUI Double -> LunaCurveGUI Double ->
+hueCorrectLuna :: HueCorrect Double ->
                   -- GUICurve Double -> sat_thrsh will be added later
                   -- sat_thrsh affects only r,g,b and lum parameters
                   Image -> Image
-hueCorrectLuna (VPS (convertCurveGUI-> lum)) (VPS (convertCurveGUI -> sat))
-               (VPS (convertCurveGUI -> r)) (VPS (convertCurveGUI-> g))
-               (VPS (convertCurveGUI -> b)) (convertCurveGUI -> rSup)
-               (convertCurveGUI -> gSup) (convertCurveGUI-> bSup) img
+hueCorrectLuna (VPS (convertCurveGUI-> lum), VPS (convertCurveGUI -> sat),
+                VPS (convertCurveGUI -> r), VPS (convertCurveGUI-> g),
+                VPS (convertCurveGUI -> b), VPS (convertCurveGUI -> rSup),
+                VPS (convertCurveGUI -> gSup), VPS (convertCurveGUI-> bSup)) img
                     = onEachColorRGB (hueCorrect (CurveGUI.convertToBSpline lum)
                                                  (CurveGUI.convertToBSpline sat)
                                                  (CurveGUI.convertToBSpline r)
