@@ -34,6 +34,7 @@ import qualified Data.Array.Accelerate.IO          as A
 import           Data.Bool
 import           Data.Char                         (toLower)
 import           Data.Maybe
+import           Data.Proxy
 import qualified Data.Vector.Storable              as SV
 import           Math.Coordinate.Cartesian
 import           Math.Space.Space
@@ -886,11 +887,11 @@ transformLuna tr matte = onEachChannel (transformChannel tr matte)
           transformation :: Channel -> Channel
           transformation = (translateChannel tr matte) . (rotateChannelAt ce phi matte) . (skewChannelAt ce skew matte) . (scaleChannelAt ce sc matte)
 
-cropLuna :: Rectangle Int -> Image -> Image
-cropLuna rect = onEachChannel cropChannel
+cropLuna :: Rectangle Int -> Bool -> Bool -> Image -> Image
+cropLuna rect reformat defaultOutside = onEachChannel cropChannel
     where cropChannel = \case
-              ChannelFloat name zeData -> ChannelFloat name $ Transform.crop rect zeData
-              ChannelInt   name zeData -> ChannelInt   name $ Transform.crop rect zeData
+              ChannelFloat name zeData -> ChannelFloat name $ Transform.crop rect reformat defaultOutside (0.0 :: Exp Float) zeData
+              ChannelInt name zeData -> ChannelInt name $ Transform.crop rect reformat defaultOutside (0 :: Exp Int) zeData
 
 hsvToolLuna :: VPS Float -> VPS Float -> VPS Float -> VPS Float
             -> VPS Float -> VPS Float -> VPS Float -> VPS Float
@@ -1474,10 +1475,12 @@ edgeDetectLuna edgeOperator img = img'
           img' = Image.insertPrimary (insertChannelFloats view [("rgba.a", alphaSum)]) img
 
 gammaToLinearLuna :: Gamma.Companding a (A.Exp Float) => a -> Image -> Image
-gammaToLinearLuna companding = onEach $ (Gamma.toLinear companding :: A.Exp Float -> A.Exp Float)
+gammaToLinearLuna companding = onEach $ Gamma.toLinear companding
+--gammaToLinearLuna companding = onEach $ (Gamma.toLinear companding :: A.Exp Float -> A.Exp Float)
 
 gammaFromLinearLuna :: Gamma.Companding a (A.Exp Float) => a -> Image -> Image
 gammaFromLinearLuna companding = onEach $ Gamma.fromLinear companding
+
 
 medianLuna :: Int -> Image -> Image
 medianLuna size img = undefined
