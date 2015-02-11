@@ -337,11 +337,8 @@ def Image.scale self::Image vec::(V2 Float) -> Image:
 def Image.scaleAt self::Image point::(Point2 Float) vec::(V2 Float) -> Image:
     ```liftF3 scaleAtLuna #{point} #{vec} #{self}```
 
-# def Image.transform self::Image trans::(Transform Float) -> Image:
-#     ```liftF2 transformLuna #{trans} #{self}```
-
-def Image.crop self::Image rect::(Rectangle Int) -> Image:
-    ```liftF2 cropLuna #{rect} #{self}```
+def Image.crop self::Image rect::(Rectangle Int) reformat::Bool defaultOutside::Bool -> Image:
+    ```liftF4 cropLuna #{rect} #{reformat} #{defaultOutside} #{self}```
 
 # VIEW
 

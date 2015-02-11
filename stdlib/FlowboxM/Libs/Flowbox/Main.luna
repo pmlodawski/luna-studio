@@ -509,11 +509,8 @@ def Image.scale vec:
 def Image.scaleAt point vec:
     ```liftF3 scaleAtLuna #{point} #{vec} #{self}```
 
-# def Image.transform trans:
-#     ```liftF2 transformLuna #{trans} #{self}```
-
-def Image.crop rect:
-    ```liftF2 cropLuna #{rect} #{self}```
+def Image.crop rect reformat defaultOutside:
+    ```liftF4 cropLuna #{rect} #{reformat} #{defaultOutside} #{self}```
 
 def Image.erode size:
     ```liftF2 erodeLuna #{size} #{self}```
@@ -813,6 +810,16 @@ def main:
     matte = imageMatte mask "rgba.a"
     xxx = lena.offsetMatte randomColor (matte)
     xxx.save "./xxx.png"
+
+    r = Rectangle (Point2 100 100) (Point2 200 200)
+    cropedLena = lena.crop r False False
+    cropedLena.save "./croped.png"
+
+    cropedLena2 = lena.crop r True False
+    cropedLena2.save "./croped2.png"
+
+    cropedLena3 = lena.crop r False True
+    cropedLena3.save "./croped3.png"
 
     # transformations test
 
