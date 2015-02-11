@@ -168,6 +168,9 @@ def Image.colorCorrectCurves self::Image
                        -> Image:
     ```liftF5 (colorCorrectLunaCurves curves) #{master} #{shadows} #{midtones} #{highlights} #{self}```
 
+def Image.hueCorrect self::Image sat::CurveGUI lum::CurveGUI r::CurveGUI g::CurveGUI b::CurveGUI rSup::CurveGUI gSup::CurveGUI bSup::CurveGUI:
+    ```liftF4 (hueCorrectLuna #{sat} #{lum} #{r} #{g} #{b}) #{rSup} #{gSup} #{bSup} #{self}```
+
 def Image.saturate self::Image saturation::Color -> Image:
     ```liftF2 saturateLuna #{saturation} #{self}```
 
@@ -401,8 +404,8 @@ alias Shape        = [Path Float]
 
 class Matte a
 
-def imageMatte self::Std path::FilePath channelName::String -> (Maybe (Matte Float)):
-     ```autoLift2 imageMatteLuna #{path} #{channelName}```
+def imageMatte self::Std image::Image channelName::String -> (Maybe (Matte Float)):
+     ```lift2 imageMatteLuna #{image} #{channelName}```
 
 def vectorMatte self::Std mask::Mask -> (Maybe (Matte Float)):
     ```liftF1 vectorMatteLuna #{mask}```
