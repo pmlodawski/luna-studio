@@ -396,8 +396,8 @@ alias TransformD = Transform Double
 #     feather :: Maybe (Path a)
 
 alias ControlPoint = (Point2 Float, Maybe (Point2 Float), Maybe (Point2 Float))
-alias Path         = (Bool, [ControlPoint Float])
-alias Shape        = [Path Float]
+alias Path         = (Bool, [ControlPoint])
+alias Shape        = [Path]
 
 def imageMatte self::Std path::FilePath channelName::String -> (Maybe (Matte Float)):
      ```autoLift2 imageMatteLuna #{path} #{channelName}```
@@ -435,7 +435,7 @@ def Image.skewAtMatte self::Image point::(Point2 Float) skew::(Skew Float) matte
 def Image.transformMatte self::Image trans::TransformF matte::(Maybe (Matte Float)) -> Image:
     ```liftF3 transformLuna #{trans} #{matte} #{self}```
 
-alias Mask = (Path Float, Maybe (Path Float))
+alias Mask = (Path, Maybe (Path))
 
 def point self::Std x y:
     Point2 x y
