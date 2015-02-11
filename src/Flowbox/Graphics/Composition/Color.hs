@@ -8,6 +8,7 @@
 {-# LANGUAGE TypeFamilies        #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ViewPatterns        #-}
+{-# LANGUAGE ConstraintKinds      #-}
 
 module Flowbox.Graphics.Composition.Color (
     module Flowbox.Graphics.Composition.Color,
@@ -28,8 +29,8 @@ import           Data.Array.Accelerate.Tuple (IsTuple, TupleRepr, fromTuple, toT
 import           Flowbox.Graphics.Color.Color
 import           Flowbox.Graphics.Shader.Shader
 import qualified Flowbox.Graphics.Utils.Utils   as U
+import           Flowbox.Graphics.Prelude
 import           Flowbox.Math.Matrix            as M
-import           Flowbox.Prelude                as P hiding (lift)
 import           Flowbox.Math.Function.Accelerate.BSpline           as BSpline
 
 offset :: (Num a) => a -> a -> a
@@ -38,8 +39,8 @@ offset v = (+v)
 multiply :: (Num a) => a -> a -> a
 multiply v = (*v)
 
-contrast :: (Num a, Fractional a, Floating a) => a -> a -> a
-contrast v x = ((x/0.18) ** v) * 0.18
+contrast :: (Num a, Fractional a, Floating a, Condition a, Ord a) => a -> a -> a
+contrast v x = if' (v >= 0.0) (((x/0.18) ** v) * 0.18) ((0.18 ** v) * 0.18)
 -- [NOTE] Changed so that it works just like in Nuke
 --        Look here:
 --        https://compositormathematic.wordpress.com/2013/07/06/gamma-contrast/

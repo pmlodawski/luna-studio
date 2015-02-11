@@ -67,7 +67,7 @@ import           Flowbox.Graphics.Shader.Sampler                      as Shader
 import           Flowbox.Graphics.Composition.Generator.Shape
 import           Flowbox.Graphics.Shader.Stencil                      as Stencil
 import           Flowbox.Graphics.Shader.Shader                       as Shader
-import           Flowbox.Graphics.Composition.Transform               as Transform
+import qualified Flowbox.Graphics.Composition.Transform               as Transform
 import           Flowbox.Graphics.Composition.Histogram
 import qualified Flowbox.Graphics.Composition.Generator.Raster        as Raster
 import           Flowbox.Graphics.Image.Channel                       as Channel
@@ -90,22 +90,25 @@ import qualified Flowbox.Math.Function.CurveGUI                       as CurveGU
 import Luna.Target.HS (Pure (..), Safe (..), Value (..), autoLift, autoLift1, fromValue, val)
 import Control.PolyApplicative ((<<*>>))
 
+--import Data.List (intercalate)
+--import Debug.Trace (trace)
+
 -- something should be done with this
 temporaryBackend :: M.Backend
 temporaryBackend = CUDA.run
 
-data SkewOrder = SkewXY | SkewYX
+data SkewOrder = SkewXY | SkewYX deriving (Show)
 
-data Skew a = Skew { _skewPoint :: V2 a
+data Skew a = Skew { _skewValue :: V2 a
                    , _skewOrder :: SkewOrder
-                   }
+                   } deriving (Show)
 
 data Transform a = Transform { _translate :: V2 a
                              , _rotate    :: a
                              , _scale     :: V2 a
                              , _skew      :: Skew a
                              , _center    :: Point2 a
-                             }
+                             } deriving (Show)
 
 pattern VPS x = Value (Pure (Safe x))
 type VPS x = Value Pure Safe x
@@ -280,13 +283,13 @@ edgeBlur channelName blurType kernelSize edgeMultiplier image =
 --          domain center neighbour = apply (gauss $ variable csigma) (abs $ neighbour - center)
 --          process = rasterizer . (id `p` bilateralStencil (+) spatial domain (+) 0 `p` id) . fromMatrix A.Clamp
 
-imageMatteLuna :: FilePath -> String -> IO (Maybe (Matte.Matte Float))
-imageMatteLuna path channelName = do
-  img <- realReadLuna path
+imageMatteLuna :: Image -> String -> Maybe (Matte.Matte Float)
+imageMatteLuna img channelName =
   let channel = getChannelFromPrimaryLuna channelName img
-  case channel of
-    Right (Just channel) -> return $ Just $ Matte.imageMatteFloat channel
-    _ -> return Nothing
+  in
+    case channel of
+      Right (Just channel) -> Just $ Matte.imageMatteFloat channel
+      _ -> Nothing
 
 vectorMatteLuna :: Mask2 Float -> Maybe (Matte.Matte Float)
 vectorMatteLuna mask = Just $ Matte.VectorMatte $ convertMask mask
@@ -342,7 +345,7 @@ applyMatteFloat f m (ChannelFloat name (ContinuousData shader)) = ChannelFloat n
 maskedApp :: (IsNum a, A.Elt a) => (A.Exp a -> A.Exp a) -> A.Exp a -> A.Exp a -> A.Exp a
 maskedApp f a b = (a A.==* 0) A.? (b,b + a*(delta f b))
 -- won't work, no idea what is the reason of that
---aux a b f = b + a*(delta f b)
+--maskedApp f a b = b + a*(delta f b)
   where
     delta :: (IsNum a, A.Elt a) => (A.Exp a -> A.Exp a) -> (A.Exp a) -> (A.Exp a)
     delta f x = (f x) - x
@@ -412,10 +415,10 @@ gradeLunaColorMatte (VPS (fmap variable -> Color.RGBA blackpointR blackpointG bl
                                                      (applyMatteFloat (grade blackpointA whitepointA liftA gainA multiplyA offsetA gammaA) m) img
 
 offsetLuna :: Color.RGBA Float -> Image -> Image
-offsetLuna (fmap variable -> Color.RGBA r g b a) = onEachRGBA (offset r) (offset g) (offset b) id -- (offset a)
+offsetLuna (fmap variable -> Color.RGBA r g b a) = onEachRGBA (offset r) (offset g) (offset b) (offset a)
 
 contrastLuna :: Color.RGBA Float -> Image -> Image
-contrastLuna (fmap variable -> Color.RGBA r g b a) = onEachRGBA (contrast r) (contrast g) (contrast b) id -- (contrast a)
+contrastLuna (fmap variable -> Color.RGBA r g b a) = onEachRGBA (contrast r) (contrast g) (contrast b) (contrast a)
 
 exposureLuna :: Color.RGBA Float -> Color.RGBA Float -> Image -> Image
 exposureLuna (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB blackpointA)
@@ -423,7 +426,7 @@ exposureLuna (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB bl
                  onEachRGBA (exposure blackpointR exR)
                             (exposure blackpointG exG)
                             (exposure blackpointB exB)
-                            id -- (exposure blackpointA exA)
+                            (exposure blackpointA exA)
 
 gradeLuna :: VPS Float -> VPS Float -> VPS Float -> Float -> Float -> Float -> Float -> Image -> Image
 gradeLuna (VPS (variable -> blackpoint))
@@ -509,8 +512,8 @@ unsafeGetChannels img = (r, g, b, a)
           Right (Just (ChannelFloat _ (asMatrixData -> MatrixData b))) = View.get view "rgba.b"
           Right (Just (ChannelFloat _ (asMatrixData -> MatrixData a))) = View.get view "rgba.a"
 
-keyerLuna :: KeyerMode -> Float -> Float -> Float -> Float -> Image -> Image
-keyerLuna mode (variable -> a) (variable -> b) (variable -> c) (variable -> d) img =
+keyerLuna :: KeyerMode -> KeyerThresholds Float -> Image -> Image
+keyerLuna mode (fmap variable -> KeyerThresholds a b c d) img =
     keyer' (keyer mode (A.lift (a, b, c, d))) img
 
 differenceKeyer' :: (A.Exp (Color.RGB Float) -> A.Exp (Color.RGB Float) -> A.Exp Float) -> Image -> Image -> Image
@@ -609,7 +612,7 @@ gradientLuna :: forall e.
 gradientLuna gradient (variable -> width) (variable -> height) = channelToImageRGBA grad
     where grad = rasterizer $ monosampler $ gradientShader
 
-          gradientShader = scale (Grid width height) $ Transform.translate (V2 0.5 0.5) $ mapper gray gradient
+          gradientShader = Transform.scale (Grid width height) $ Transform.translate (V2 0.5 0.5) $ mapper gray gradient
           gray   = [Tick 0.0 0.0 1.0, Tick 1.0 1.0 1.0] :: [Tick Float Float Float]
 
           weightFun tickPos val1 weight1 val2 weight2 = mix tickPos val1 val2
@@ -641,7 +644,7 @@ noiseLuna :: forall e a.
 noiseLuna noise (variable -> width) (variable -> height) = channelToImageRGBA noise'
     where noise' = rasterizer $ monosampler $ noiseShader
 
-          noiseShader = scale (Grid width height) noise
+          noiseShader = Transform.scale (Grid width height) noise
 
 translateLuna :: V2 Float -> Image -> Image
 translateLuna (fmap variable -> V2 x y) = onEachChannel translateChannel
@@ -713,8 +716,8 @@ scaleLuna (fmap variable -> v) = onEachChannel scaleChannel
 
 scaleAtLuna :: Point2 Float -> V2 Float -> Image -> Image
 scaleAtLuna (fmap variable -> (Point2 x y)) (fmap variable -> v) = onEachChannel scaleChannel
-    where vBefore = V2 (-x) y
-          vAfter  = V2 x (-y)
+    where vBefore = V2 x y
+          vAfter  = V2 (-x) (-y)
           mask    = Nothing
           scaleChannel = \case
               (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
@@ -732,8 +735,8 @@ scaleAtLuna (fmap variable -> (Point2 x y)) (fmap variable -> v) = onEachChannel
 --    where foo :: Matrix2 Double -> ContinuousShader (A.Exp Double)
 --          foo = scale (Grid x y) . nearest . fromMatrix boundary
 
-transformLuna :: Transform Float -> Image -> Image
-transformLuna _ img = img
+--transformLuna :: Transform Float -> Image -> Image
+--transformLuna _ img = img
 --transformLuna (Transform tr (variable -> phi) (fmap variable -> sc) _ ce) = onEachChannel transformChannel
 --    where V2     translateX translateY = fmap variable tr
 --          Point2 centerX    centerY    = fmap variable ce
@@ -760,6 +763,128 @@ transformLuna _ img = img
 --              Nothing -> v
 --              --TODO[KM]: handle the mask properly
 --              _       -> v
+channelDim :: Channel -> (Int,Int)
+channelDim = unpackAcc . channelDimAcc
+
+channelDimAcc :: Channel -> (A.Exp Int, A.Exp Int)
+channelDimAcc (ChannelFloat _ (MatrixData mat)) = (h,w)
+  where
+    sh = M.shape mat
+    A.Z A.:. h A.:. w = A.unlift sh :: A.Z A.:. (A.Exp Int) A.:. (A.Exp Int)
+
+channelDimAcc (ChannelFloat _ (ContinuousData shader)) = (h,w)
+  where
+    Shader (Grid h w) _ = shader
+
+channelDimAcc (ChannelFloat _ (DiscreteData shader)) = (h,w)
+  where
+    Shader (Grid h w) _ = shader
+
+
+changeCoordinateSystem :: Channel -> Point2 (Exp Float) -> Point2 (Exp Float)
+changeCoordinateSystem chan (Point2 x' y') = Point2 x' (h - y')
+  where
+    (h', _) = channelDimAcc chan
+    h = A.fromIntegral h' :: Exp Float
+
+processSkew :: Exp Float -> Exp Float -> SkewOrder -> Point2 (Exp Float) -> Point2 (Exp Float)
+processSkew k k' order = case order of
+                      SkewXY -> (Transform.verticalSkew k') . (Transform.horizontalSkew k)
+                      SkewYX -> (Transform.horizontalSkew k) . (Transform.verticalSkew k')
+
+strengthShader :: Maybe (Matte.Matte Float) -> Channel -> Point2 (Exp Float) -> Exp Float
+strengthShader matte chan = case matte of
+                              Nothing -> (\x -> 1)
+                              Just m -> let (h,w) = channelDim chan
+                                            Shader _ matteShader = Matte.matteToContinuous h w m
+                                        in (\x -> (matteShader x))
+
+rotateChannelAt :: Point2 Float -> Float -> Maybe (Matte.Matte Float) -> Channel -> Channel
+rotateChannelAt (fmap variable -> (Point2 x y)) (variable -> phi) matte chan = (rotate chan)
+    where
+      vBefore = V2 (-x) (-y)
+      vAfter  = V2 x y
+
+      rotate = \case
+          (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+          (Channel.asContinuous -> ChannelInt name zeData) -> ChannelInt name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+
+      strength = strengthShader matte chan
+
+      transformation :: Point2 (Exp Float) -> Point2 (Exp Float)
+      transformation pt = (changeCoordinateSystem chan) $ Transform.translate vBefore $ Transform.rotate ((-phi)*(strength pt)) $ Transform.translate vAfter $ (changeCoordinateSystem chan) pt
+
+scaleChannelAt :: Point2 Float -> V2 Float -> Maybe (Matte.Matte Float) -> Channel -> Channel
+scaleChannelAt (fmap variable -> (Point2 x y)) (fmap variable -> v) matte chan = (scale chan)
+    where
+      vBefore = V2 (-x) (-y)
+      vAfter  = V2 x y
+
+      scale = \case
+        (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+        (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+
+      strength = strengthShader matte chan
+
+      transformation :: Point2 (Exp Float) -> Point2 (Exp Float)
+      transformation pt = (changeCoordinateSystem chan) $ Transform.translate vBefore $ Transform.scale (fmap (* (strength pt)) v) $ Transform.translate vAfter $ (changeCoordinateSystem chan) pt
+
+translateChannel :: V2 Float -> Maybe (Matte.Matte Float) -> Channel -> Channel
+translateChannel (fmap variable -> V2 x y) matte chan = (translate chan)
+  where
+    t = V2 x (-y)
+
+    translate = \case
+        (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+        (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+
+    strength = strengthShader matte chan
+
+    transformation :: Point2 (Exp Float) -> Point2 (Exp Float)
+    transformation pt = Transform.translate (fmap (*(strength pt)) t) pt
+
+skewChannelAt :: Point2 Float -> Skew Float -> Maybe (Matte.Matte Float) -> Channel -> Channel
+skewChannelAt (fmap variable -> p) (Skew (fmap variable -> V2 k k') order) matte chan = (skew chan)
+  where
+    Point2 x y = changeCoordinateSystem chan p
+    vBefore = V2 (-x) (-y)
+    vAfter  = V2 x y
+
+    skew = \case
+      (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+      (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+
+    strength = strengthShader matte chan
+
+    transformation :: Point2 (Exp Float) -> Point2 (Exp Float)
+    transformation pt = Transform.translate vBefore $ (processSkew (str * k) (str * k') order) $ Transform.translate vAfter pt
+      where
+        str = strength pt
+
+-- temporary name
+rotateAtMatteLuna :: Point2 Float -> Float -> Maybe (Matte.Matte Float) -> Image -> Image
+rotateAtMatteLuna p ang matte = onEachChannel (rotateChannelAt p ang matte)
+
+-- temporary name
+scaleAtMatteLuna :: Point2 Float -> V2 Float -> Maybe (Matte.Matte Float) -> Image -> Image
+scaleAtMatteLuna p v matte = onEachChannel (scaleChannelAt p v matte)
+
+-- temporary name
+translateMatteLuna :: V2 Float -> Maybe (Matte.Matte Float) -> Image -> Image
+translateMatteLuna tr matte = onEachChannel (translateChannel tr matte)
+
+-- temporary name
+skewAtMatteLuna :: Point2 Float -> Skew Float -> Maybe (Matte.Matte Float) -> Image -> Image
+skewAtMatteLuna p skew matte = onEachChannel (skewChannelAt p skew matte)
+
+transformLuna :: Transform Float -> Maybe (Matte.Matte Float) -> Image -> Image
+transformLuna tr matte = onEachChannel (transformChannel tr matte)
+    where
+      transformChannel :: Transform Float -> Maybe (Matte.Matte Float) -> Channel -> Channel
+      transformChannel (Transform tr phi sc skew ce) matte chan = (transformation chan)
+        where
+          transformation :: Channel -> Channel
+          transformation = (translateChannel tr matte) . (rotateChannelAt ce phi matte) . (skewChannelAt ce skew matte) . (scaleChannelAt ce sc matte)
 
 cropLuna :: Rectangle Int -> Image -> Image
 cropLuna rect = onEachChannel cropChannel
@@ -946,10 +1071,10 @@ clampLuna (VPS (variable -> thLo), VPS (variable -> thHi)) clamps =
         _                               -> onEach $ clamp (Range thLo thHi) Nothing
 
 multiplyLuna :: Color.RGBA Float -> Image -> Image
-multiplyLuna (fmap variable -> Color.RGBA r g b a) = onEachRGBA (*r) (*g) (*b) id -- (*a)
+multiplyLuna (fmap variable -> Color.RGBA r g b a) = onEachRGBA (*r) (*g) (*b) (*a)
 
 gammaLuna :: Color.RGBA Float -> Image -> Image
-gammaLuna (fmap variable -> Color.RGBA r g b a) = onEachRGBA (gamma r) (gamma g) (gamma b) id -- (gamma a)
+gammaLuna (fmap variable -> Color.RGBA r g b a) = onEachRGBA (gamma r) (gamma g) (gamma b) (gamma a)
 
 fromPolarMapping :: (Elt a, IsFloating a, Elt e) => CartesianShader (Exp a) (Exp e) -> CartesianShader (Exp a) (Exp e)
 fromPolarMapping (Shader cnv gen) = Shader cnv $ \(Point2 x y) ->
@@ -1167,23 +1292,23 @@ colorCorrectLunaBase (curveShadows, curveHighlights)
           correctMasterG = colorCorrect masterContrastG masterGammaG masterGainG masterOffsetG
           correctMasterB = colorCorrect masterContrastB masterGammaB masterGainB masterOffsetB
 
-          correctShadowsR = colorCorrect (shadowsContrastR-1) (shadowsGammaR-1) (shadowsGainR-1) shadowsOffsetR
-          correctShadowsG = colorCorrect (shadowsContrastG-1) (shadowsGammaG-1) (shadowsGainG-1) shadowsOffsetG
-          correctShadowsB = colorCorrect (shadowsContrastB-1) (shadowsGammaB-1) (shadowsGainB-1) shadowsOffsetB
+          correctShadowsR = colorCorrect shadowsContrastR shadowsGammaR shadowsGainR shadowsOffsetR
+          correctShadowsG = colorCorrect shadowsContrastG shadowsGammaG shadowsGainG shadowsOffsetG
+          correctShadowsB = colorCorrect shadowsContrastB shadowsGammaB shadowsGainB shadowsOffsetB
 
-          correctMidtonesR = colorCorrect (midtonesContrastR-1) (midtonesGammaR-1) (midtonesGainR-1) midtonesOffsetR
-          correctMidtonesG = colorCorrect (midtonesContrastG-1) (midtonesGammaG-1) (midtonesGainG-1) midtonesOffsetG
-          correctMidtonesB = colorCorrect (midtonesContrastB-1) (midtonesGammaB-1) (midtonesGainB-1) midtonesOffsetB
+          correctMidtonesR = colorCorrect midtonesContrastR midtonesGammaR midtonesGainR midtonesOffsetR
+          correctMidtonesG = colorCorrect midtonesContrastG midtonesGammaG midtonesGainG midtonesOffsetG
+          correctMidtonesB = colorCorrect midtonesContrastB midtonesGammaB midtonesGainB midtonesOffsetB
 
-          correctHighlightsR = colorCorrect (highlightsContrastR-1) (highlightsGammaR-1) (highlightsGainR-1) highlightsOffsetR
-          correctHighlightsG = colorCorrect (highlightsContrastG-1) (highlightsGammaG-1) (highlightsGainG-1) highlightsOffsetG
-          correctHighlightsB = colorCorrect (highlightsContrastB-1) (highlightsGammaB-1) (highlightsGainB-1) highlightsOffsetB
+          correctHighlightsR = colorCorrect highlightsContrastR highlightsGammaR highlightsGainR highlightsOffsetR
+          correctHighlightsG = colorCorrect highlightsContrastG highlightsGammaG highlightsGainG highlightsOffsetG
+          correctHighlightsB = colorCorrect highlightsContrastB highlightsGammaB highlightsGainB highlightsOffsetB
 
-          correct' master shadows midtones highlights x = correct'' shadows midtones highlights (master x)
+          correct' master shadows midtones highlights x = correct'' shadows midtones highlights (master x) x -- FIXME[KM]: the last x should be a lightness value from HSL
 
-          correct'' shadows midtones highlights x = let
-                  coeffShadows    = strShadows x
-                  coeffHighlights = strHighlights x
+          correct'' shadows midtones highlights x l = let
+                  coeffShadows    = strShadows l    -- FIXME[KM]: this should be calculated based on lightness from HSL
+                  coeffHighlights = strHighlights l -- FIXME[KM]: this should be calculated based on lightness from HSL
                   coeffMidtones   = 1 - coeffShadows - coeffHighlights
               in coeffShadows * shadows x + coeffMidtones * midtones x + coeffHighlights * highlights x
 
