@@ -4,17 +4,7 @@ import ```Data.Maybe (fromJust)```
 import ```qualified Data.Array.Accelerate as A```
 
 import ```Flowbox.Graphics.Color.Color as Color```
-import ```Flowbox.Graphics.Color.Companding.AlexaV3LogC```
-import ```Flowbox.Graphics.Color.Companding.Cineon```
-import ```Flowbox.Graphics.Color.Companding.Gamma```
-import ```Flowbox.Graphics.Color.Companding.LStar```
-import ```Flowbox.Graphics.Color.Companding.Panalog```
-import ```Flowbox.Graphics.Color.Companding.PLogLin```
-import ```Flowbox.Graphics.Color.Companding.Rec709```
-import ```Flowbox.Graphics.Color.Companding.REDLog```
-import ```Flowbox.Graphics.Color.Companding.SLog```
-import ```Flowbox.Graphics.Color.Companding.SRGB```
-import ```Flowbox.Graphics.Color.Companding.ViperLog```
+import ```Flowbox.Graphics.Color.Companding```
 import ```Flowbox.Graphics.Composition.Dither```
 import ```Flowbox.Graphics.Mockup```
 import ```Flowbox.Graphics.Image.Image as Image```
@@ -548,11 +538,8 @@ def Image.scale vec:
 def Image.scaleAt point vec:
     ```liftF3 scaleAtLuna #{point} #{vec} #{self}```
 
-# def Image.transform trans:
-#     ```liftF2 transformLuna #{trans} #{self}```
-
-def Image.crop rect:
-    ```liftF2 cropLuna #{rect} #{self}```
+def Image.crop rect reformat defaultOutside:
+    ```liftF4 cropLuna #{rect} #{reformat} #{defaultOutside} #{self}```
 
 def Image.erode size:
     ```liftF2 erodeLuna #{size} #{self}```
