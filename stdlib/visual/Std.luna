@@ -395,9 +395,9 @@ alias TransformD = Transform Double
 #     path    :: Path a
 #     feather :: Maybe (Path a)
 
-# alias ControlPoint a = (Point2 a, Maybe (Point2 a), Maybe (Point2 a))
-# alias Path a         = (Bool, [ControlPoint a])
-# alias Shape a        = [Path a]
+alias ControlPoint = (Point2 Float, Maybe (Point2 Float), Maybe (Point2 Float))
+alias Path         = (Bool, [ControlPoint Float])
+alias Shape        = [Path Float]
 
 def imageMatte self::Std path::FilePath channelName::String -> (Maybe (Matte Float)):
      ```autoLift2 imageMatteLuna #{path} #{channelName}```
