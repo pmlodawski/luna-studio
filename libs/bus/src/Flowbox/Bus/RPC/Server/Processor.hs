@@ -37,6 +37,12 @@ singleResult :: MonadIO m => (a -> m b) -> a -> m [b]
 singleResult f a = liftM mkList $ f a
 
 
+doubleResult :: MonadIO m => (a -> m (b, b)) -> a -> m [b]
+doubleResult f a = do
+    (x1, x2) <- f a
+    return (x1:[x2])
+
+
 noResult :: MonadIO m => (a -> m ()) -> a -> m [Response]
 noResult f a = f a >> return []
 
@@ -54,7 +60,7 @@ process handlerMap msg = HandlerMap.lookupAndCall handlerMap call topic where
         Right args -> do results <- RPC.run $ method args
                          return $ case results of
                             Left err -> Message.mkError topic err
-                            Right ok -> map (respond mkTopic) ok
+                            Right ok-> map (respond mkTopic) ok
 
     topic = msg ^. Message.topic
 

@@ -101,7 +101,7 @@ nodeModify request@(NodeModify.Request tnode tbc tlibID tprojectID _) = do
     return $ NodeModify.Update request (encode (newNodeID, node)) updateNo
 
 
-nodeModifyInPlace :: NodeModifyInPlace.Request -> RPC Context IO NodeModifyInPlace.Update
+nodeModifyInPlace :: NodeModifyInPlace.Request -> RPC Context IO (NodeModifyInPlace.Update, NodeModifyInPlace.Request)
 nodeModifyInPlace request@(NodeModifyInPlace.Request tnode tbc tlibID tprojectID _) = do
     bc <- decodeE tbc
     nodeWithId <- decodeE tnode
@@ -109,7 +109,11 @@ nodeModifyInPlace request@(NodeModifyInPlace.Request tnode tbc tlibID tprojectID
         projectID = decodeP tprojectID
     BatchG.updateNodeInPlace nodeWithId bc libID projectID
     updateNo <- Batch.getUpdateNo
-    return $ NodeModifyInPlace.Update request updateNo
+    
+    node <- BatchG.nodeByID (fst nodeWithId) bc libID projectID
+    let oldNode   = encode (fst nodeWithId, node)
+
+    return $ (NodeModifyInPlace.Update request updateNo,  NodeModifyInPlace.Request oldNode tbc tlibID tprojectID 0)
 
 
 nodeRemove :: NodeRemove.Request -> RPC Context IO NodeRemove.Update
