@@ -89,6 +89,9 @@ import qualified Flowbox.Math.Function.CurveGUI                       as CurveGU
 import Luna.Target.HS (Pure (..), Safe (..), Value (..), autoLift, autoLift1, fromValue, val)
 import Control.PolyApplicative ((<<*>>))
 
+--import Data.List (intercalate)
+--import Debug.Trace (trace)
+
 -- something should be done with this
 temporaryBackend :: M.Backend
 temporaryBackend = CUDA.run
@@ -648,7 +651,7 @@ translateLuna (fmap variable -> V2 x y) = onEachChannel translateChannel
               --    in (fmap (mult pt) v)
 
 --adjustCoordinates :: Point2 (A.Exp Double) -> A.Exp Double -> Point2 (A.Exp Double)
---adjustCoordinates (Point2 x y) = Point2 ((A.intToFloat h) - x) y 
+--adjustCoordinates (Point2 x y) = Point2 ((A.intToFloat h) - x) y
 
 rotateLuna :: Double -> Image -> Image
 rotateLuna (variable -> phi) = onEachChannel rotateChannel
@@ -727,7 +730,7 @@ channelDimAcc :: Channel -> (A.Exp Int, A.Exp Int)
 channelDimAcc (ChannelFloat _ (MatrixData mat)) = (h,w)
   where
     sh = M.shape mat
-    A.Z A.:. h A.:. w = A.unlift sh :: A.Z A.:. (A.Exp Int) A.:. (A.Exp Int)          
+    A.Z A.:. h A.:. w = A.unlift sh :: A.Z A.:. (A.Exp Int) A.:. (A.Exp Int)
 
 channelDimAcc (ChannelFloat _ (ContinuousData shader)) = (h,w)
   where
@@ -836,7 +839,7 @@ skewAtMatteLuna p skew matte = onEachChannel (skewChannelAt p skew matte)
 
 transformLuna :: Transform Double -> Maybe (Matte.Matte Double) -> Image -> Image
 transformLuna tr matte = onEachChannel (transformChannel tr matte)
-    where 
+    where
       transformChannel :: Transform Double -> Maybe (Matte.Matte Double) -> Channel -> Channel
       transformChannel (Transform tr phi sc skew ce) matte chan = (transformation chan)
         where
@@ -1249,23 +1252,23 @@ colorCorrectLunaBase (curveShadows, curveHighlights)
           correctMasterG = colorCorrect masterContrastG masterGammaG masterGainG masterOffsetG
           correctMasterB = colorCorrect masterContrastB masterGammaB masterGainB masterOffsetB
 
-          correctShadowsR = colorCorrect (shadowsContrastR-1) (shadowsGammaR-1) (shadowsGainR-1) shadowsOffsetR
-          correctShadowsG = colorCorrect (shadowsContrastG-1) (shadowsGammaG-1) (shadowsGainG-1) shadowsOffsetG
-          correctShadowsB = colorCorrect (shadowsContrastB-1) (shadowsGammaB-1) (shadowsGainB-1) shadowsOffsetB
+          correctShadowsR = colorCorrect shadowsContrastR shadowsGammaR shadowsGainR shadowsOffsetR
+          correctShadowsG = colorCorrect shadowsContrastG shadowsGammaG shadowsGainG shadowsOffsetG
+          correctShadowsB = colorCorrect shadowsContrastB shadowsGammaB shadowsGainB shadowsOffsetB
 
-          correctMidtonesR = colorCorrect (midtonesContrastR-1) (midtonesGammaR-1) (midtonesGainR-1) midtonesOffsetR
-          correctMidtonesG = colorCorrect (midtonesContrastG-1) (midtonesGammaG-1) (midtonesGainG-1) midtonesOffsetG
-          correctMidtonesB = colorCorrect (midtonesContrastB-1) (midtonesGammaB-1) (midtonesGainB-1) midtonesOffsetB
+          correctMidtonesR = colorCorrect midtonesContrastR midtonesGammaR midtonesGainR midtonesOffsetR
+          correctMidtonesG = colorCorrect midtonesContrastG midtonesGammaG midtonesGainG midtonesOffsetG
+          correctMidtonesB = colorCorrect midtonesContrastB midtonesGammaB midtonesGainB midtonesOffsetB
 
-          correctHighlightsR = colorCorrect (highlightsContrastR-1) (highlightsGammaR-1) (highlightsGainR-1) highlightsOffsetR
-          correctHighlightsG = colorCorrect (highlightsContrastG-1) (highlightsGammaG-1) (highlightsGainG-1) highlightsOffsetG
-          correctHighlightsB = colorCorrect (highlightsContrastB-1) (highlightsGammaB-1) (highlightsGainB-1) highlightsOffsetB
+          correctHighlightsR = colorCorrect highlightsContrastR highlightsGammaR highlightsGainR highlightsOffsetR
+          correctHighlightsG = colorCorrect highlightsContrastG highlightsGammaG highlightsGainG highlightsOffsetG
+          correctHighlightsB = colorCorrect highlightsContrastB highlightsGammaB highlightsGainB highlightsOffsetB
 
-          correct' master shadows midtones highlights x = correct'' shadows midtones highlights (master x)
+          correct' master shadows midtones highlights x = correct'' shadows midtones highlights (master x) x -- FIXME[KM]: the last x should be a lightness value from HSL
 
-          correct'' shadows midtones highlights x = let
-                  coeffShadows    = strShadows x
-                  coeffHighlights = strHighlights x
+          correct'' shadows midtones highlights x l = let
+                  coeffShadows    = strShadows l    -- FIXME[KM]: this should be calculated based on lightness from HSL
+                  coeffHighlights = strHighlights l -- FIXME[KM]: this should be calculated based on lightness from HSL
                   coeffMidtones   = 1 - coeffShadows - coeffHighlights
               in coeffShadows * shadows x + coeffMidtones * midtones x + coeffHighlights * highlights x
 
