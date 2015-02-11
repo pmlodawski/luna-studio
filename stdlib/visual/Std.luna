@@ -62,7 +62,7 @@ def Int.>= self::Int a::Int -> Bool:
 #     self.sub 1
 
 def Int.fromIntegral self::Int -> Float:
-    ```liftF1 fromIntegral #{self} :: Value Pure Safe Double```
+    ```liftF1 fromIntegral #{self} :: Value Pure Safe Float```
 
 def Int.toString self::Int -> String:
     ```liftF1 show #{self}```
@@ -149,6 +149,7 @@ def Image.grade self::Image blackpoint::ColorBlack whitepoint::ColorWhite lift::
     ```liftF5 (gradeLunaColor #{blackpoint} #{whitepoint} #{lift}) #{gain} #{multiply} #{offset} #{gamma} #{self}```
 
 alias ColorCorrectGUI = (CurveGUI, CurveGUI)
+alias HueCorrectGUI = (CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI)
 alias Color5 = (Color, Color, Color, Color ,Color)
 
 def Image.colorCorrect self::Image
@@ -168,8 +169,8 @@ def Image.colorCorrectCurves self::Image
                        -> Image:
     ```liftF5 (colorCorrectLunaCurves curves) #{master} #{shadows} #{midtones} #{highlights} #{self}```
 
-def Image.hueCorrect self::Image sat::CurveGUI lum::CurveGUI r::CurveGUI g::CurveGUI b::CurveGUI rSup::CurveGUI gSup::CurveGUI bSup::CurveGUI:
-    ```liftF4 (hueCorrectLuna #{sat} #{lum} #{r} #{g} #{b}) #{rSup} #{gSup} #{bSup} #{self}```
+def Image.hueCorrect self::Image curves::HueCorrectGUI -> Image:
+    ```liftF2 hueCorrectLuna #{curves} #{self}```
 
 def Image.saturate self::Image saturation::Color -> Image:
     ```liftF2 saturateLuna #{saturation} #{self}```
@@ -337,11 +338,8 @@ def Image.scale self::Image vec::(V2 Float) -> Image:
 def Image.scaleAt self::Image point::(Point2 Float) vec::(V2 Float) -> Image:
     ```liftF3 scaleAtLuna #{point} #{vec} #{self}```
 
-# def Image.transform self::Image trans::(Transform Float) -> Image:
-#     ```liftF2 transformLuna #{trans} #{self}```
-
-def Image.crop self::Image rect::(Rectangle Int) -> Image:
-    ```liftF2 cropLuna #{rect} #{self}```
+def Image.crop self::Image rect::(Rectangle Int) reformat::Bool defaultOutside::Bool -> Image:
+    ```liftF4 cropLuna #{rect} #{reformat} #{defaultOutside} #{self}```
 
 # VIEW
 
@@ -381,11 +379,9 @@ class ```Transform``` a:
     center    :: Point2 a
 
 alias RectangleF = Rectangle Float
-alias RectangleD = Rectangle Double
 alias RectangleI = Rectangle Int
 
 alias TransformF = Transform Float
-alias TransformD = Transform Double
 
 # class ```ControlPoint``` a:
 # class ControlPoint a:
@@ -416,7 +412,7 @@ def vectorMatte self::Std mask::Mask -> (Maybe (Matte Float)):
     ```liftF1 vectorMatteLuna #{mask}```
 
 def noMatte self::Std -> (Maybe (Matte Float)):
-    ```val (Nothing :: Maybe (Matte Double))```
+    ```val (Nothing :: Maybe (Matte Float))```
 
 def Image.offsetMatte self::Image value::Color matte::(Maybe (Matte Float)) -> Image:
     ```liftF3 offsetMatteLuna #{value} #{matte} #{self}```
@@ -451,7 +447,7 @@ def point self::Std x y:
     Point2 x y
 
 def nopoint self::Std:
-    ```val (Nothing :: Maybe (Point2 Double))```
+    ```val (Nothing :: Maybe (Point2 Float))```
 
 def controlPoint point handleIn handleOut:
     (point, handleIn, handleOut)

@@ -40,13 +40,13 @@ import qualified Flowbox.Graphics.Mockup as Mockup
 import           Flowbox.Math.Function.Accelerate.BSpline as BSpline
 import           Flowbox.Math.Function.CurveGUI as CurveGUI
 
-generateConstantCurve :: Double -> [Point2 Double]
+generateConstantCurve :: Float -> [Point2 Float]
 generateConstantCurve n = P.map (\x -> Point2 x n) (P.take 6 $ iterate (+1) 0.0)
 
 -- for the testing purpoese only
-hueCorrectLuna' :: BSpline.BSpline Double -> BSpline.BSpline Double ->
-                   BSpline.BSpline Double -> BSpline.BSpline Double -> BSpline.BSpline Double ->
-                   BSpline.BSpline Double -> BSpline.BSpline Double-> BSpline.BSpline Double ->
+hueCorrectLuna' :: BSpline.BSpline Float -> BSpline.BSpline Float ->
+                   BSpline.BSpline Float -> BSpline.BSpline Float -> BSpline.BSpline Float ->
+                   BSpline.BSpline Float -> BSpline.BSpline Float-> BSpline.BSpline Float ->
                    Image -> Image
 hueCorrectLuna' lum sat r g b rSup gSup bSup img = Mockup.onEachColorRGB (Color.hueCorrect lum sat r g b rSup gSup bSup) img
 
@@ -136,11 +136,11 @@ main = do
     let c4 = P.map (\x -> BSplineNode x x x) $ generateConstantCurve 0.0
     let c5 = P.map (\x -> BSplineNode (x+0.5) x (x-0.5)) $ generateConstantCurve 1.5006
 
-    let spline1 = A.fromList (A.Z A.:. 6) c1 :: A.Vector (BSplineNode Double)
-    let spline2 = A.fromList (A.Z A.:. 6) c2 :: A.Vector (BSplineNode Double)
-    let spline3 = A.fromList (A.Z A.:. 6) c3 :: A.Vector (BSplineNode Double)
-    let spline4 = A.fromList (A.Z A.:. 6) c4 :: A.Vector (BSplineNode Double)
-    let spline5 = A.fromList (A.Z A.:. 6) c5 :: A.Vector (BSplineNode Double)
+    let spline1 = A.fromList (A.Z A.:. 6) c1 :: A.Vector (BSplineNode Float)
+    let spline2 = A.fromList (A.Z A.:. 6) c2 :: A.Vector (BSplineNode Float)
+    let spline3 = A.fromList (A.Z A.:. 6) c3 :: A.Vector (BSplineNode Float)
+    let spline4 = A.fromList (A.Z A.:. 6) c4 :: A.Vector (BSplineNode Float)
+    let spline5 = A.fromList (A.Z A.:. 6) c5 :: A.Vector (BSplineNode Float)
 
     print "tranformed image"
     let img2 = hueCorrectLuna' spline1 spline2 spline2 spline2 spline2 spline2 spline2 spline2 img

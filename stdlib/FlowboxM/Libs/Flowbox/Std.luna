@@ -4,17 +4,7 @@ import ```Data.Maybe (fromJust)```
 import ```qualified Data.Array.Accelerate as A```
 
 import ```Flowbox.Graphics.Color.Color as Color```
-import ```Flowbox.Graphics.Color.Companding.AlexaV3LogC```
-import ```Flowbox.Graphics.Color.Companding.Cineon```
-import ```Flowbox.Graphics.Color.Companding.Gamma```
-import ```Flowbox.Graphics.Color.Companding.LStar```
-import ```Flowbox.Graphics.Color.Companding.Panalog```
-import ```Flowbox.Graphics.Color.Companding.PLogLin```
-import ```Flowbox.Graphics.Color.Companding.Rec709```
-import ```Flowbox.Graphics.Color.Companding.REDLog```
-import ```Flowbox.Graphics.Color.Companding.SLog```
-import ```Flowbox.Graphics.Color.Companding.SRGB```
-import ```Flowbox.Graphics.Color.Companding.ViperLog```
+import ```Flowbox.Graphics.Color.Companding```
 import ```Flowbox.Graphics.Composition.Dither```
 import ```Flowbox.Graphics.Mockup```
 import ```Flowbox.Graphics.Image.Image as Image```
@@ -49,21 +39,21 @@ def Either.unwrap:
     ```liftF1 (either (error "unwrap called on Left") id) #{self}```
 
 class Range:
-    lo, hi :: Double
+    lo, hi :: Float
 
 alias FilePath = String
 
 class ```Metric```:
     Chebyshev
     Euclidean
-    Minkowski: p :: Double
+    Minkowski: p :: Float
     Taxicab
 
 class ```Boundary```:
     Clamp
     # Mirror # WARN: does not work yet
     Wrap
-    Constant: a :: Double
+    Constant: a :: Float
 
 def null a:
     a
@@ -112,56 +102,56 @@ def Int.dec:
     self - 1
 
 def Int.fromIntegral:
-    ```liftF1 fromIntegral #{self} :: Value Pure Safe Double```
+    ```liftF1 fromIntegral #{self} :: Value Pure Safe Float```
 
 def Int.toString:
     ```liftF1 show #{self}```
 
 # DOUBLE
 
-def Double.acc:
+def Float.acc:
     ```liftF1 variable #{self}```
 
-def Double.truncate:
+def Float.truncate:
     ```liftF1 truncate #{self} :: Value Pure Safe Int```
 
-def Double.round:
+def Float.round:
     ```liftF1 round #{self} :: Value Pure Safe Int```
 
-def Double.floor:
+def Float.floor:
     ```liftF1 floor #{self} :: Value Pure Safe Int```
 
-def Double.ceiling:
+def Float.ceiling:
     ```liftF1 ceiling #{self} :: Value Pure Safe Int```
 
-def Double.+ a:
+def Float.+ a:
     ```liftF2 (+) #{self} #{a}```
 
-def Double.- a:
+def Float.- a:
     ```liftF2 (-) #{self} #{a}```
 
-def Double.* a:
+def Float.* a:
     ```liftF2 (*) #{self} #{a}```
 
-def Double./ a:
+def Float./ a:
     ```liftF2 (/) #{self} #{a}```
 
-def Double.> a:
+def Float.> a:
     ```liftF2 (>) #{self} #{a}```
 
-def Double.== a:
+def Float.== a:
     ```liftF2 (==) #{self} #{a}```
 
-def Double.< a:
+def Float.< a:
     ```liftF2 (<) #{self} #{a}```
 
-def Double.<= a:
+def Float.<= a:
     ```liftF2 (<=) #{self} #{a}```
 
-def Double.>= a:
+def Float.>= a:
     ```liftF2 (>=) #{self} #{a}```
 
-def Double.toString:
+def Float.toString:
     ```liftF1 show #{self}```
 
 # def Float.floor:
@@ -202,7 +192,7 @@ def point x y:
     Point2 x y
 
 def nopoint:
-    ```val (Nothing :: Maybe (Point2 Double))```
+    ```val (Nothing :: Maybe (Point2 Float))```
 
 # class ```ControlPoint``` a:
 # class ControlPoint a:
@@ -244,9 +234,9 @@ def rasterizeMask w h m:
 #                MATH and such
 #
 
-alias Point2D = Point2 Double
-alias HandleGUI = (Int, Double, Double)
-alias ControlPointGUI = (Point2D, HandleGUI, HandleGUI)
+alias Point2F = Point2 Float
+alias HandleGUI = (Int, Float, Float)
+alias ControlPointGUI = (Point2F, HandleGUI, HandleGUI)
 alias CurveGUI = [ControlPointGUI]
 
 def curveGUI vertices:
@@ -276,16 +266,16 @@ def getValueAtCurve curve x:
 class ```RGBA``` a:
     rgbaR, rgbaG, rgbaB, rgbaA :: a
 
-alias Color = RGBA Double
-alias ColorBlack = RGBA Double
-alias ColorWhite = RGBA Double
+alias Color = RGBA Float
+alias ColorBlack = RGBA Float
+alias ColorWhite = RGBA Float
 
 alias ColorCC = (Color, Color, Color, Color, Color)
 
 class ```Gamma```:
     AlexaV3LogC
     Cineon
-    Gamma: a :: Double
+    Gamma: a :: Float
     LStar
     Panalog
     PLogLin
@@ -306,8 +296,8 @@ def vectorMatte mask:
     ```liftF1 vectorMatteLuna #{mask}```
 
 def noMatte:
-    ```val (Nothing :: Maybe (Matte Double))```
-    
+    ```val (Nothing :: Maybe (Matte Float))```
+
 def Image.offsetMatte value matte:
     ```liftF3 offsetMatteLuna #{value} #{matte} #{self}```
 
@@ -415,11 +405,11 @@ def square side:
 #
 
 def Image.gammaToLinear gamma:
-    # realGamma = ```val $ Gamma (2.2 :: A.Exp Double)```
+    # realGamma = ```val $ Gamma (2.2 :: A.Exp Float)```
     ```liftF2 gammaToLinearLuna #{gamma} #{self}```
 
 def Image.gammaFromLinear gamma:
-    # realGamma = ```val $ Gamma (2.2 :: A.Exp Double)```
+    # realGamma = ```val $ Gamma (2.2 :: A.Exp Float)```
     ```liftF2 gammaFromLinearLuna #{gamma} #{self}```
 
 def Image.clamp thresholds clamps:
@@ -464,6 +454,7 @@ def Image.grade blackpoint whitepoint lift gain multiply offset gamma:
     ```liftF5 (gradeLunaColor #{blackpoint} #{whitepoint} #{lift}) #{gain} #{multiply} #{offset} #{gamma} #{self}```
 
 alias ColorCorrectGUI = (CurveGUI, CurveGUI)
+alias HueCorrectGUI = (CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI)
 alias Color5 = (Color, Color, Color, Color ,Color)
 
 def Image.colorCorrect master #masterSaturation masterContrast masterGamma masterGain masterOffset
@@ -479,8 +470,8 @@ def Image.colorCorrectCurves curves
                        highlights: #highlightsSaturation highlightsContrast highlightsGamma highlightsGain highlightsOffset:
     ```liftF5 (colorCorrectLunaCurves #{curves}) #{master} #{shadows} #{midtones} #{highlights} #{self}```
 
-def Image.hueCorrect sat lum r g b rSup gSup bSup:
-    ```liftF4 (hueCorrectLuna #{sat} #{lum} #{r} #{g} #{b}) #{rSup} #{gSup} #{bSup} #{self}```
+def Image.hueCorrect curves:
+    ```liftF2 hueCorrectLuna #{curves} #{self}```
 
 def Image.premultiply:
     ```liftF1 premultiplyLuna #{self}```
@@ -548,11 +539,8 @@ def Image.scale vec:
 def Image.scaleAt point vec:
     ```liftF3 scaleAtLuna #{point} #{vec} #{self}```
 
-# def Image.transform trans:
-#     ```liftF2 transformLuna #{trans} #{self}```
-
-def Image.crop rect:
-    ```liftF2 cropLuna #{rect} #{self}```
+def Image.crop rect reformat defaultOutside:
+    ```liftF4 cropLuna #{rect} #{reformat} #{defaultOutside} #{self}```
 
 def Image.erode size:
     ```liftF2 erodeLuna #{size} #{self}```
@@ -579,12 +567,12 @@ class ```InterpolationFilter```:
     Triangle
     Bell
     BSpline
-    Lanczos: a :: Double
-    Polynomial: a, b :: Double
+    Lanczos: a :: Float
+    Polynomial: a, b :: Float
     Mitchell
     CatmullRom
-    Gauss: a :: Double
-    Dirac: a :: Double
+    Gauss: a :: Float
+    Dirac: a :: Float
 
 # def Image.interpolate boundary filter:
 #     ```liftF3 interpolateChannelsLuna #{boundary} #{filter} #{self}```
@@ -747,7 +735,7 @@ def View.map f:
 def testCC a:
     ```liftF1 testColorCC #{a}```
 
-alias Time=Double
+alias Time=Float
 
 def time:
     0.0

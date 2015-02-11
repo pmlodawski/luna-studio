@@ -7,6 +7,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
 {-# LANGUAGE TypeOperators             #-}
+-- {-# LANGUAGE TypeFamilies              #-}
 {-# LANGUAGE ViewPatterns              #-}
 
 module Flowbox.Geom2D.Rasterizer (
@@ -50,6 +51,9 @@ import           Math.Coordinate.Cartesian                       (Point2 (..))
 -- intended to be hidden from this package
 f2d :: Real a => a -> Double
 f2d = fromRational . toRational
+
+f2f :: Real a => a -> Float
+f2f = fromRational . toRational
 
 -- TODO[1]: revert to this version when the wrapping model for handling GUI's use-case gets implemented
 --unpackP :: Num a => Maybe (Point2 a) -> Point2 a
@@ -147,22 +151,22 @@ pathToRGBA32 w h (Path closed points) = unsafePerformIO rasterize
           rasterize = do
               let path = fromSegments $ makeSegments closed points
                   diagram = case closed of
-                      False -> path                        # translate (r2 (ox,oy)) # scaleY (-1) # translateY h' # lc white # lw (Output 1)
-                      True  -> (strokeLoop.closeLine) path # translate (r2 (ox,oy)) # scaleY (-1) # translateY h' # fc white # lw (Output 0)
+                      False -> path                        # translate (r2 (ox,oy)) # scaleY (-1) # translateY h' # lc white # lw (Output 1) :: Diagram Cairo R2
+                      True  -> (strokeLoop.closeLine) path # translate (r2 (ox,oy)) # scaleY (-1) # translateY h' # fc white # lw (Output 0) :: Diagram Cairo R2
                   (_, r) = renderDia Cairo (CairoOptions "" (Dims (fromIntegral w) (fromIntegral h)) RenderOnly True) (diagram :: Diagram Cairo R2)
               surface <- createImageSurface FormatARGB32 w h
               renderWith surface r
               bs <- imageSurfaceGetData surface
               fromByteString (Z:.h:.w) ((), bs)
 
-pathToMatrix :: (Real a, Fractional a) => Int -> Int -> Path a -> Matrix2 Double
+pathToMatrix :: (Real a, Fractional a) => Int -> Int -> Path a -> Matrix2 Float
 pathToMatrix w h path = extractArr $ pathToRGBA32 w h path
     where extractArr arr = Delayed $ A.map extractVal $ A.use arr
-          extractVal :: M.Exp RGBA32 -> M.Exp Double
+          extractVal :: M.Exp RGBA32 -> M.Exp Float
           extractVal rgba = (A.fromIntegral $ (rgba `div` 0x1000000) .&. 0xFF) / 255
 
-rasterizeMask :: (Real a, Fractional a) => Int -> Int -> Mask a -> Matrix2 Double
-rasterizeMask w h (Mask path' feather') = 
+rasterizeMask :: (Real a, Fractional a) => Int -> Int -> Mask a -> Matrix2 Float
+rasterizeMask w h (Mask path' feather') =
     case feather' of
         Nothing -> path
         Just feather -> checkEqual feather path'
@@ -197,7 +201,7 @@ rasterizeMask w h (Mask path' feather') =
                       feather = ptm fea
                       convert p = let
                               a = makeCubics p
-                              quads = convertCubicsToQuadratics 5 0.001 $ (fmap.fmap) f2d a
+                              quads = convertCubicsToQuadratics 5 0.001 $ (fmap.fmap) f2f a
                           in A.use $ A.fromList (Z :. length quads) quads
                       cA = convert path'
                       cB = convert fea
@@ -226,7 +230,7 @@ rasterizeMask w h (Mask path' feather') =
     --              df = d fQ
     --          in A.cond ((p >* 0 &&* f >* 0) ||* (p ==* 0 &&* f ==* 0)) p (dp / (dp+df) * p)
 
-matrixToImage :: Matrix2 Double -> Image
+matrixToImage :: Matrix2 Float -> Image
 matrixToImage a = Image.singleton view
     where view = View.append (Channel.ChannelFloat "rgba.r" $ Channel.MatrixData w)
                $ View.append (Channel.ChannelFloat "rgba.g" $ Channel.MatrixData w)

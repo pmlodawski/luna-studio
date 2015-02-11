@@ -32,7 +32,7 @@ data Shader a b = Shader { canvas    :: Grid (Exp Int)
 
 type CartesianShader a = Shader (Cartesian.Point2 a)
 type DiscreteShader    = CartesianShader (Exp Int)
-type ContinuousShader  = CartesianShader (Exp Double)
+type ContinuousShader  = CartesianShader (Exp Float)
 
 unitShader :: (a -> b) -> Shader a b
 unitShader = Shader 1

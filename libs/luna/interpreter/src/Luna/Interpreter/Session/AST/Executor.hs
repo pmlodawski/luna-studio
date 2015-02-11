@@ -167,10 +167,12 @@ execute callDataPath nodeExpr varNames = do
         CacheStatus.Ready        -> left $ Error.OtherError $(loc) "something went wrong : status = Ready"
 
 
-data VarType = Lit    String
-             | Con    String
-             | Var    String
-             | Native String
+data VarType = Lit      String
+             | LitInt   String
+             | LitFloat String
+             | Con      String
+             | Var      String
+             | Native   String
              | Tuple
              | List
              | TimeVar
@@ -186,13 +188,13 @@ varType (NodeExpr.StringExpr  StringExpr.List              ) = return   List
 varType (NodeExpr.StringExpr (StringExpr.Native name      )) = return $ Native name
 varType (NodeExpr.StringExpr (StringExpr.Expr   []        )) = return $ Prelude.error "varType : empty expression"
 varType (NodeExpr.StringExpr (StringExpr.Expr   name@(h:_)))
-    | Maybe.isJust (Read.readMaybe name :: Maybe Char)   = return $ Lit name
-    | Maybe.isJust (Read.readMaybe name :: Maybe Int)    = return $ Lit name
-    | Maybe.isJust (Read.readMaybe name :: Maybe Double) = return $ Lit name
-    | Maybe.isJust (Read.readMaybe name :: Maybe String) = return $ Lit name
+    | Maybe.isJust (Read.readMaybe name :: Maybe Char)   = return $ Lit      name
+    | Maybe.isJust (Read.readMaybe name :: Maybe Int)    = return $ LitInt   name
+    | Maybe.isJust (Read.readMaybe name :: Maybe Float)  = return $ LitFloat name
+    | Maybe.isJust (Read.readMaybe name :: Maybe String) = return $ Lit      name
     | name == Var.timeRef                                = return   TimeVar
-    | Char.isUpper h                                     = return $ Con name
-    | otherwise                                          = return $ Var name
+    | Char.isUpper h                                     = return $ Con      name
+    | otherwise                                          = return $ Var      name
 varType (NodeExpr.ASTExpr expr) = do
     expr' <- Var.replaceTimeRefs expr
     -- TODO[PM] : replaceTimeVars
@@ -222,9 +224,9 @@ evalFunction nodeExpr callDataPath varNames = do
         Native name -> return $ "toIOEnv $ fromValue $ " ++ genNative name
         Con    name -> return $ "toIOEnv $ fromValue $ call" ++ appArgs args ++ " $ cons_" ++ nameHash name
         Var    name -> return $ "toIOEnv $ fromValue $ call" ++ appArgs (tail args) ++ " $ member (Proxy::Proxy " ++ show (nameHash name) ++ ") " ++ mkArg self
-        Lit    name -> return $ "toIOEnv $ fromValue $ val (" ++ name ++ if Maybe.isJust (Read.readMaybe name :: Maybe Int)
-                                                                                  then " :: Int)"
-                                                                                  else ")"
+        LitInt   name -> return $ "toIOEnv $ fromValue $ val (" ++ name ++ " :: Int)"
+        LitFloat name -> return $ "toIOEnv $ fromValue $ val (" ++ name ++ " :: Float)"
+        Lit      name -> return $ "toIOEnv $ fromValue $ val (" ++ name ++ ")"
         Tuple       -> return $ "toIOEnv $ fromValue $ val (" ++ List.intercalate "," args ++ ")"
         TimeVar     -> (++) "toIOEnv $ fromValue $ val $ " . show <$> Env.getTimeVar
         Expression  name -> return $ "toIOEnv $ fromValue $ " ++ name

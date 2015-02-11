@@ -4,6 +4,10 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeFamilies        #-}
+
 module Flowbox.Graphics.Composition.Generator.Noise.Perlin where
 
 import qualified Data.Array.Accelerate     as A
@@ -16,18 +20,19 @@ import Flowbox.Prelude
 
 
 
-perlinNoise :: A.Exp Double -> ContinuousShader (A.Exp Double)
+perlinNoise :: (A.Elt a, A.IsFloating a, a ~ A.Plain a, A.Lift A.Exp a) => A.Exp a -> CartesianShader (A.Exp a) (A.Exp a)
 perlinNoise z = unitShader $ runShader $ perlinGen Standard 1.0 2.0 6 0.5 0 z
 
-perlinGen :: Quality -> A.Exp Double -> A.Exp Double ->
-             A.Exp Int -> A.Exp Double -> A.Exp Int ->
-             A.Exp Double ->
-             ContinuousShader (A.Exp Double)
+perlinGen :: forall a. (A.Elt a, A.IsFloating a, a ~ A.Plain a, A.Lift A.Exp a) =>
+             Quality -> A.Exp a -> A.Exp a ->
+             A.Exp Int -> A.Exp a -> A.Exp Int ->
+             A.Exp a ->
+             CartesianShader (A.Exp a) (A.Exp a)
 perlinGen quality freq lac octaveCount persistence seed z = unitShader $ \point ->
-    value $ A.iterate octaveCount octaveFunc (A.lift (0.0 :: Double, 1.0 :: Double, point * pure freq, z*freq, 0 :: Int))
+    value $ A.iterate octaveCount octaveFunc (A.lift (0.0 :: a, 1.0 :: a, point * pure freq, z*freq, 0 :: Int))
     where value args = val
               where (val, _, _, _, _) =
-                        A.unlift args :: (A.Exp Double, A.Exp Double, A.Exp (Cartesian.Point2 Double), A.Exp Double, A.Exp Int)
+                        A.unlift args :: (A.Exp a, A.Exp a, A.Exp (Cartesian.Point2 a), A.Exp a, A.Exp Int)
 
           signal (Cartesian.Point2 sx sy) sz octv = gradientCoherentNoise quality newSeed sx sy sz
               where newSeed = (seed + octv) .&. 0xffffffff
@@ -40,5 +45,5 @@ perlinGen quality freq lac octaveCount persistence seed z = unitShader $ \point 
                 , oz * lac
                 , curOctave + 1)
               where (val, curPersistence, point', oz, curOctave) =
-                        A.unlift args :: (A.Exp Double, A.Exp Double, A.Exp (Cartesian.Point2 Double), A.Exp Double, A.Exp Int)
-                    unliftedPoint' = A.unlift point' :: Cartesian.Point2 (A.Exp Double)
+                        A.unlift args :: (A.Exp a, A.Exp a, A.Exp (Cartesian.Point2 a), A.Exp a, A.Exp Int)
+                    unliftedPoint' = A.unlift point' :: Cartesian.Point2 (A.Exp a)
