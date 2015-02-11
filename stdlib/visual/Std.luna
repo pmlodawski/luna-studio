@@ -399,6 +399,8 @@ alias ControlPoint = (Point2 Float, Maybe (Point2 Float), Maybe (Point2 Float))
 alias Path         = (Bool, [ControlPoint Float])
 alias Shape        = [Path Float]
 
+class Matte a
+
 def imageMatte self::Std path::FilePath channelName::String -> (Maybe (Matte Float)):
      ```autoLift2 imageMatteLuna #{path} #{channelName}```
 
