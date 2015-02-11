@@ -454,6 +454,7 @@ def Image.grade blackpoint whitepoint lift gain multiply offset gamma:
     ```liftF5 (gradeLunaColor #{blackpoint} #{whitepoint} #{lift}) #{gain} #{multiply} #{offset} #{gamma} #{self}```
 
 alias ColorCorrectGUI = (CurveGUI, CurveGUI)
+alias HueCorrectGUI = (CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI)
 alias Color5 = (Color, Color, Color, Color ,Color)
 
 def Image.colorCorrect master #masterSaturation masterContrast masterGamma masterGain masterOffset
@@ -469,8 +470,8 @@ def Image.colorCorrectCurves curves
                        highlights: #highlightsSaturation highlightsContrast highlightsGamma highlightsGain highlightsOffset:
     ```liftF5 (colorCorrectLunaCurves #{curves}) #{master} #{shadows} #{midtones} #{highlights} #{self}```
 
-def Image.hueCorrect sat lum r g b rSup gSup bSup:
-    ```liftF4 (hueCorrectLuna #{sat} #{lum} #{r} #{g} #{b}) #{rSup} #{gSup} #{bSup} #{self}```
+def Image.hueCorrect curves:
+    ```liftF2 hueCorrectLuna #{curves} #{self}```
 
 def Image.premultiply:
     ```liftF1 premultiplyLuna #{self}```
