@@ -39,7 +39,8 @@ merge' file mode = do
 
 simpleMerges :: [BlendMode Float]
 simpleMerges = [
-      colorDodge
+      average
+    , colorDodge
     , colorBurn
     , copy
     , difference
@@ -65,7 +66,8 @@ simpleMerges = [
 
 simpleMergesNames :: [String]
 simpleMergesNames = [
-      "colorDodge"
+      "average"
+    , "colorDodge"
     , "colorBurn"
     , "copy"
     , "difference"
@@ -91,7 +93,6 @@ simpleMergesNames = [
 advancedMerges :: [ComplicatedBlendMode Float]
 advancedMerges = [
       atop
-    , average
     , conjointOver
     , disjointOver
     , inBlend
@@ -107,7 +108,6 @@ advancedMerges = [
 advancedMergesNames :: [String]
 advancedMergesNames = [
       "atop"
-    , "average"
     , "conjointOver"
     , "disjointOver"
     , "inBlend"
