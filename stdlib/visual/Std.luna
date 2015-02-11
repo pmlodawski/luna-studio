@@ -306,6 +306,11 @@ class ```AlphaBlend```:
 def Image.merge self::Image mode::MergeMode alphaBlendMode::AlphaBlend img::Image -> Image:
     ```liftF4 mergeLuna #{mode} #{alphaBlendMode} #{self} #{img}```
 
+def perlin self::Image z::Float width::Int height::Int 
+    ```liftF3 perlinLuna #{z} #{width} #{height}```
+
+def billow self::Image z::Float width::Int height::Int 
+    ```liftF3 billowLuna #{z} #{width} #{height}```
 
 # TRANSFORMATIONS
 
