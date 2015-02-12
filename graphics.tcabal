@@ -30,8 +30,11 @@ Library
                   algebraic       > 0.1            ,
                   bmp                              ,
                   bytestring                       ,
+                  cairo                            ,
                   containers                       ,
                   cubicbezier                      ,
+                  diagrams-cairo                   ,
+                  diagrams-lib                     ,
                   distributive                     ,
                   either                           ,
                   errors                           ,
@@ -54,11 +57,11 @@ Library
                   split                            ,
                   system-filepath                  ,
                   template-haskell                 ,
+                  thyme                            ,
                   transformers                     ,
                   vector                           ,
                   vector-space                     ,
-                  luna-target-ghchs                ,
-                  Rasterific
+                  luna-target-ghchs                
 
 -- == test generator ==
 
@@ -298,6 +301,7 @@ Executable test_vector_rasterization
                   lens                     ,
                   QuickCheck               ,
                   split                    ,
+                  thyme                    ,
                   vector
 
 -- == test mockup ==

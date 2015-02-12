@@ -42,7 +42,7 @@ multiply v = (*v)
 contrast :: (Num a, Fractional a, Floating a, Condition a, Ord a) => a -> a -> a
 contrast v x = if' (v >= 0.0) (((x/0.18) ** v) * 0.18) ((0.18 ** v) * 0.18)
 -- [NOTE] Changed so that it works just like in Nuke
---        Look here: 
+--        Look here:
 --        https://compositormathematic.wordpress.com/2013/07/06/gamma-contrast/
 --        old version:
 --        contrast v x = (x - 0.5) * v + 0.5 -- that's not how they do it in Nuke
@@ -74,13 +74,13 @@ grade :: (Num a, Floating a) => a -> a -> a -> a -> a -> a -> a -> a -> a
 grade blackpoint whitepoint lift gain multiply' offset' gamma =
 	U.gamma gamma . offset offset' . multiply multiply' . inversePointsConvert lift gain . pointsConvert blackpoint whitepoint
 
-hueCorrect :: BSpline.BSpline Double -> BSpline.BSpline Double ->
-              BSpline.BSpline Double -> BSpline.BSpline Double -> BSpline.BSpline Double -> 
-              BSpline.BSpline Double -> BSpline.BSpline Double -> BSpline.BSpline Double ->
-              A.Exp (RGB Double) -> A.Exp (RGB Double)
+hueCorrect :: BSpline.BSpline Float -> BSpline.BSpline Float ->
+              BSpline.BSpline Float -> BSpline.BSpline Float -> BSpline.BSpline Float ->
+              BSpline.BSpline Float -> BSpline.BSpline Float -> BSpline.BSpline Float ->
+              A.Exp (RGB Float) -> A.Exp (RGB Float)
 hueCorrect lum sat r g b rSup gSup bSup rgb = A.lift $ RGB r' g' b'
   where
-    RGB pr pg pb = A.unlift rgb :: RGB (A.Exp Double)
+    RGB pr pg pb = A.unlift rgb :: RGB (A.Exp Float)
     minOfRGB = (pr A.<* pg) A.? ((pb A.<* pr) A.? (pb,pr), (pb A.<* pg) A.? (pb,pg))
     HSV hue _ _ = toHSV (RGB pr pg pb)
 
@@ -90,11 +90,11 @@ hueCorrect lum sat r g b rSup gSup bSup rgb = A.lift $ RGB r' g' b'
     r' = ((process r hue) . (process lum hue) . (processSup rSup hue minOfRGB)) pr
     g' = ((process g hue) . (process lum hue) . (processSup gSup hue minOfRGB)) pg
     b' = ((process b hue) . (process lum hue) . (processSup bSup hue minOfRGB)) pb
-  
-    process :: BSpline.BSpline Double -> A.Exp Double -> A.Exp Double -> A.Exp Double
+
+    process :: BSpline.BSpline Float -> A.Exp Float -> A.Exp Float -> A.Exp Float
     process spline hue v = v * (BSpline.valueAt (A.use spline) hue)
 
-    processSup :: BSpline.BSpline Double -> A.Exp Double -> A.Exp Double -> A.Exp Double -> A.Exp Double
+    processSup :: BSpline.BSpline Float -> A.Exp Float -> A.Exp Float -> A.Exp Float -> A.Exp Float
     processSup spline hue w v = w + (v - w)*(BSpline.valueAt (A.use spline) hue)
 
 
