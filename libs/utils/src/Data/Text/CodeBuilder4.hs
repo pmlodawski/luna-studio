@@ -5,9 +5,10 @@
 ---- Flowbox Team <contact@flowbox.io>, 2014
 -----------------------------------------------------------------------------
 
---{-# LANGUAGE TemplateHaskell           #-}
+{-# LANGUAGE TemplateHaskell           #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings         #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 module Data.Text.CodeBuilder4 where
 
@@ -21,6 +22,7 @@ import           Data.Text.Lazy.Builder   (toLazyText, fromLazyText)
 --import           Data.Text.Builder.Poly   (ToTextBuilder, toTextBuilder)
 
 import Control.Monad.Identity (runIdentity)
+import Control.Monad.State    hiding (mapM)
 
 ------------------------------------------------------------------------
 ---- Data types
@@ -114,7 +116,7 @@ import Control.Monad.Identity (runIdentity)
 
 
 
---simple <> block 
+--simple <> Seq 
 --term s
 
 
@@ -124,85 +126,114 @@ import Control.Monad.Identity (runIdentity)
 
 
 --data Layout a = Single a 
---              | Block a 
+--              | Seq a 
 
 
 --data Code = Txt     Text.Builder
 --          | Simple  Code
 --          | Complex Code
---          | Block   [Code]
+--          | Seq   [Code]
 --          | Expr    [Code]
 --          deriving (Show, Eq, Generic)
 
 
---type Prec = Int
---type Name = Text.Builder 
+type Prec = Int
+type Name = Text.Builder 
 
-----data Fixity = Prefix
-----            | Postfix
-----            | Infix Assoc
-----            deriving (Show, Eq, Generic)
-
---data Assoc = ALeft
---           | ARight
---           deriving (Show, Eq, Generic)
-
---data Code = Tok   Name
---          | SBox  Code
---          | Block [Code]
---          | App   Op
---          deriving (Show, Eq, Generic)
-
-
---data Fixity = Prefix        Code
---            | Postfix       Code
---            | Infix   Assoc Code Code
+--data Fixity = Prefix
+--            | Postfix
+--            | Infix Assoc
 --            deriving (Show, Eq, Generic)
 
---data Op = Op Prec Code Fixity
---        deriving (Show, Eq, Generic)
+data Assoc = ALeft
+           | ARight
+           deriving (Show, Eq, Generic)
+
+data Code = Tok  Name
+          | SBox Code
+          | Seq  [Code]
+          | App  Op
+          deriving (Show, Eq, Generic)
 
 
---instance IsString Code where
---    fromString = Tok . fromString
+data Fixity = Prefix        Code
+            | Postfix       Code
+            | Infix   Assoc Code Code
+            deriving (Show, Eq, Generic)
+
+data Op = Op Prec Code Fixity
+        deriving (Show, Eq, Generic)
 
 
---app n c = App $ Op 10 n $ Prefix c
-----app2 n c = App $ Op 11 n $ Prefix c
+instance IsString Code where
+    fromString = Tok . fromString
 
 
---test = app "foo" $ app "bar" "x"   -- foo (bar x)
---test2 = app (app "foo" "bar") "x"  -- (foo bar) x
-----test = app (Tok "foo") $ app (Tok "bar") (Tok "x")
+app n c = App $ Op 10 n $ Prefix c
+apps = foldl app
+--app2 n c = App $ Op 11 n $ Prefix c
 
---data HSCompact = HSCompact deriving (Show)
 
---main = do
---    print test
---    print $ runIdentity $ render HSCompact test
---    print $ runIdentity $ render HSCompact test2
---    return ()
+test = app "foo" $ app "bar" "x"   -- foo (bar x)
+test2 = app (app "foo" "bar") "x"  -- (foo bar) x
 
---class Render style m where
---    render :: (Monad m, Applicative m) => style -> Code -> m Text.Builder
+test3 = h_func "foo" ["a", "b", "c"] "5"
 
---between l r t = l <> t <> r
+h_func name args body = apps (apps name args) ["=", Seq [test2, test2]]
+--test = app (Tok "foo") $ app (Tok "bar") (Tok "x")
 
---instance Render HSCompact m where
---    render style = \case
---        Tok n -> return n
---        App (Op prec name f) -> case f of
---            Prefix code -> (\n c -> n <> conv c) <$> render style name <*> render style code
---                where conv = if prec >= getPrec code then between "(" ")"
---                                                     else (" " <>)
---        where getPrec = \case
---                  App (Op p _ _) -> p
---                  _     -> 100
+data HSCompact = HSCompact deriving (Show)
 
-------foo bar x
+data IndentState = IndentState { _indent :: Int }
+                 deriving (Show)
 
-----foo (bar x)
-----(foo bar) x
+makeLenses ''IndentState
 
-----foo 1 2 
-----(foo 1) 2
+class Render style m where
+    render :: (Monad m, Applicative m) => style -> Code -> m Text.Builder
+
+between l r t = l <> t <> r
+
+instance MonadState IndentState m => Render HSCompact m where
+    render style = \case
+        Tok n -> return n
+        App (Op prec name f) -> case f of
+            Prefix code -> (\n c -> n <> conv c) <$> render style name <*> render style code
+                where conv = if prec >= getPrec code then between "(" ")"
+                                                     else (" " <>)
+        Seq cs -> indented $ do
+            ind <- getIndentTxt
+            let indent = "\r\n" <> ind
+            ("do " <>) . (indent <>) . mjoin indent <$> mapM (render style) cs
+        SBox c -> render style c
+        where getPrec = \case
+                  App (Op p _ _) -> p
+                  _     -> 100
+
+
+
+
+getIndentTxt = (\i -> fromString $ replicate (4*i) ' ') <$> getIndent
+getIndent = view indent <$> get
+setIndent ind = do
+    s <- get
+    put $ s & indent .~ ind
+
+indented p = do
+    s <- get
+    put $ s & indent %~ (+1)
+    ret <- p
+    put s
+    return ret
+
+instance Default IndentState where
+    def = IndentState def
+
+pText = putStrLn . Text.unpack . toLazyText 
+
+main = do
+    --print test
+    --print $ runIdentity $ render HSCompact test
+    --print $ runIdentity $ render HSCompact test2
+    pText $ flip evalState (def :: IndentState) $ render HSCompact test3
+    return ()

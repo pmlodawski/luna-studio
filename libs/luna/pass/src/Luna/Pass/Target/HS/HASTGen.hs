@@ -95,7 +95,7 @@ type PassCtx          lab m a = (Enumerated lab, Traversal m a)
 type Traversal            m a = (Pass.PassCtx m, AST.Traversal        HASTGen (PassResult m) a a)
 type DefaultTraversal     m a = (Pass.PassCtx m, AST.DefaultTraversal HASTGen (PassResult m) a a)
 
-type Ctx m a v = (Enumerated a, Monad m, Monoid v, Num a, v~())
+type Ctx m a v = (Enumerated a, Monad m, Monoid v, Num a, v~(), Show a)
 
 type HE = HE.Expr
 
@@ -188,13 +188,14 @@ extractTypeAls = foldl go ([],[]) where
 
 mainf modname = HE.val "main" $ HE.AppE (HE.VarE "mainMaker") (HE.VarE modname)
 
-genDataDeclHeaders :: (Monad m, Enumerated lab, Num lab) => Bool -> Decl.DataDecl lab (LExpr lab ()) -> PassResult m ()
+genDataDeclHeaders :: (Monad m, Enumerated lab, Num lab, Show lab) => Bool -> Decl.DataDecl lab (LExpr lab ()) -> PassResult m ()
 genDataDeclHeaders isNative (Decl.DataDecl (convVar -> name) params cons defs) = withCtx (fromText name) $ do
     addComment . H2 $ name <> " type"
     consE <- mapM genData conDecls
     if not isNative then State.addDataType $ HE.DataD name paramsTxt consE derivings
                     else State.addComment  $ H5 "datatype provided externally"
     regTHExpr $ TH.mkRegType name
+
     when (not $ null fieldNames) $ do
         State.addComment . H3 $ name <> " accessors"
         regTHExpr $ TH.mkFieldAccessors2 name conDescs
@@ -206,16 +207,16 @@ genDataDeclHeaders isNative (Decl.DataDecl (convVar -> name) params cons defs) =
           conDecls   = fmap (view Label.element) cons
           getConDesc (Decl.Cons (convVar -> conName) fields) = (conName, fmap getLFieldName fields)
           genField (Label _ (Decl.Field tp name val)) = genType tp
-          genData (Decl.Cons conName fields) =   HE.Con (fromString $ toString conName) 
+          genData (Decl.Cons conName fields) =   HE.Con (hash conName) 
                                              <$> mapM genField fields
           conDescs   = fmap getConDesc conDecls
           fieldNames = Set.toList . Set.fromList . catMaybes . concat $ fmap snd conDescs :: [Text]
 
-genDataDeclDefs :: (Monad m, Enumerated lab, Num lab) => Decl.DataDecl lab (LExpr lab ()) -> PassResult m ()
+genDataDeclDefs :: (Monad m, Enumerated lab, Num lab, Show lab) => Decl.DataDecl lab (LExpr lab ()) -> PassResult m ()
 genDataDeclDefs (Decl.DataDecl (convVar -> name) params cons defs) = withCtx (fromText name) $ do
     mapM_ genDecl defs
 
-genDataDecl :: (Monad m, Enumerated lab, Num lab) => Bool -> Decl.DataDecl lab (LExpr lab ()) -> PassResult m ()
+genDataDecl :: (Monad m, Enumerated lab, Num lab, Show lab) => Bool -> Decl.DataDecl lab (LExpr lab ()) -> PassResult m ()
 genDataDecl isNative d = do
     genDataDeclHeaders isNative d
     genDataDeclDefs d
@@ -229,10 +230,6 @@ genCon name params derivings isNative cons = do
     let conDecls    = view Label.element cons
         clsConName  = Naming.mkCls name
         clsConName' = Naming.mkCls' name
-        genData (Decl.Cons conName fields) = HE.Con (fromString $ toString conName) 
-                                           <$> mapM genField fields
-    
-
         genConData (Decl.Cons (convVar -> conName) fields) = do
             let fieldNum   = length fields
                 fieldNames = fmap getLFieldName fields
@@ -244,8 +241,9 @@ genCon name params derivings isNative cons = do
                            $ HE.AppE (HE.VarE $ liftCons fieldNum)
                                      (HE.VarE conName)
                 args       = fmap mkArgFromName fieldNames
-                func       = Decl.FuncDecl [fromText clsConName'] 
-                            (NamePat Nothing (Segment conName (selfArg : args)) []) 
+                -- FIXME[wd]: '@' is ugly hack for names double-hashing
+                func       = Decl.FuncDecl [fromString . ("@" ++) . fromText $ clsConName'] 
+                            (NamePat Nothing (Segment ("@" <> conName) (selfArg : args)) []) 
                             Nothing []
                 mkArgFromName name = case name of
                     Just n -> Arg (Label (0::Int) $ Pat.Var $ fromText n) Nothing
@@ -253,6 +251,7 @@ genCon name params derivings isNative cons = do
                             
             addComment . H3 $ dotname [name, conName] <> " constructor"
             mapM regFunc [hcons, consDef]
+            addComment . H2 . fromString $ "---------------" -- ++ show func -- ++ show cons
             genFuncNoBody func
             --regTHExpr $ TH.mkMethod clsConName conName
 
@@ -264,6 +263,11 @@ genCon name params derivings isNative cons = do
     genConData conDecls
     
 
+--underscoreToHash = \case
+--  [] -> []
+--  (a:as) -> (a':underscoreToHash as)
+--    where a' = if a == '_' then '#'
+--                           else a
 
 
 addClsDataType clsConName derivings = do
@@ -286,7 +290,7 @@ dotname names = mjoin "." names
 convVar :: (Wrapper t, Hashable a Text) => t a -> Text
 convVar = hash . unwrap
 
-genDecl :: (Monad m, Enumerated lab, Num lab) => LDecl lab (LExpr lab ()) -> PassResult m ()
+genDecl :: (Monad m, Enumerated lab, Num lab, Show lab) => LDecl lab (LExpr lab ()) -> PassResult m ()
 genDecl ast@(Label lab decl) = case decl of
     Decl.Func    funcDecl -> genStdFunc funcDecl
     Decl.Foreign fdecl    -> genForeign fdecl
@@ -298,12 +302,12 @@ genDecl ast@(Label lab decl) = case decl of
 
 genStdFunc f = genFunc f (Just genFuncBody) True
 
-genFuncNoBody :: (Monad m, Enumerated lab, Num lab)
+genFuncNoBody :: (Monad m, Enumerated lab, Num lab, Show lab)
               => Decl.FuncDecl lab (LExpr lab ()) body -> PassResult m ()
 genFuncNoBody f = genFunc f Nothing True
 
 
-genFunc :: (Monad m, Enumerated lab, Num lab)
+genFunc :: (Monad m, Enumerated lab, Num lab, Show lab)
         => Decl.FuncDecl lab (LExpr lab ()) body -> Maybe (body -> Decl.FuncOutput lab -> PassResult m [HE]) -> Bool -> PassResult m ()
 genFunc (Decl.FuncDecl (fmap convVar -> path) sig output body) bodyBuilder mkVarNames = do
     when (length path > 1) $ Pass.fail "Complex method extension paths are not supported yet."
@@ -317,7 +321,7 @@ genFunc (Decl.FuncDecl (fmap convVar -> path) sig output body) bodyBuilder mkVar
                        -- in case of defining extensionmethod inside of a class
                        -- maybe it should have limited scope to all classes inside that one?
         argNum     = length (NamePat.segments sig)
-        name       = hash sig
+        name       = hash sig -- fromString $ ">>" ++ show sig ++ "<<"
         memDefName = Naming.mkMemDef tpName name
         memSigName = Naming.mkMemSig tpName name
         memFncName = Naming.mkMemFnc tpName name
@@ -354,7 +358,7 @@ genFuncPats sigArgs mkVarNames = do
     if mkVarNames then mapM genPat sigPatsUntyped
                   else mapM genPatNoVarnames sigPatsUntyped
     
-genFuncSig :: (Monad m, Enumerated lab, Num lab) => [Arg a (LExpr lab ())] -> PassResult m HE
+genFuncSig :: (Monad m, Enumerated lab, Num lab, Show lab) => [Arg a (LExpr lab ())] -> PassResult m HE
 genFuncSig sigArgs = do
     let sigPats    = fmap (view Arg.pat) sigArgs
         sigVals    = fmap (view Arg.val) sigArgs
@@ -376,7 +380,7 @@ getSigName (unwrap -> p) = case p of
     Pat.Var name -> Just (toText . unwrap $ name)
     _            -> Nothing
 
-genForeign :: (Monad m, Enumerated a, Num a) => Foreign (Decl.ForeignDecl a (LExpr a ())) -> PassResult m ()
+genForeign :: (Monad m, Enumerated a, Num a, Show a) => Foreign (Decl.ForeignDecl a (LExpr a ())) -> PassResult m ()
 genForeign (Foreign target a) = case target of
     Foreign.CPP     -> Pass.fail "C++ foreign interface is not supported yet."
     Foreign.Haskell -> case a of
@@ -488,7 +492,7 @@ genBody = \case
     [b] -> b
     b   -> HE.DoBlock b
 
-genExpr :: (Monad m, Enumerated a, Num a) => LExpr a () -> PassResult m HE
+genExpr :: (Monad m, Enumerated a, Num a, Show a) => LExpr a () -> PassResult m HE
 genExpr (Label lab expr) = case expr of
     Expr.Curry e                             -> genExpr e
     Expr.Grouped expr                        -> genExpr expr
