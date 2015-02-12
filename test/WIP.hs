@@ -19,6 +19,7 @@
 module Main where
 
 -- imports --
+import qualified Foo
 import Luna.Target.HS
 
 -- body --
