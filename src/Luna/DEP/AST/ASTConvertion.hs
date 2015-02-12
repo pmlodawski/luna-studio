@@ -128,11 +128,11 @@ instance (Monad m, Applicative m) => ASTConvertion DExpr.Expr m (LDecl IDTag (LE
 
 convertExpr2Decl :: (Monad m, Applicative m) => DExpr.Expr -> EitherT Error m (LDecl IDTag (LExpr IDTag ()))
 convertExpr2Decl = \case
-        DExpr.Import id path tgt rename -> l id . Decl.Imp (fmap fromString path) Nothing . pure <$> convertTgt tgt rename where
-            convertTgt tgt rename = case tgt of
-                DExpr.Var _ n -> right $ Decl.ImpVar (fromString n) (fmap fromString rename)
-                DExpr.Con _ n -> right $ Decl.ImpVar (fromString n) (fmap fromString rename)
-                _             -> left $ IllegalConversion "Import with non-variable base"
+        --DExpr.Import id path tgt rename -> l id . Decl.Imp (fmap fromString path) Nothing . pure <$> convertTgt tgt rename where
+        --    convertTgt tgt rename = case tgt of
+        --        DExpr.Var _ n -> right $ Decl.ImpVar (fromString n) (fmap fromString rename)
+        --        DExpr.Con _ n -> right $ Decl.ImpVar (fromString n) (fmap fromString rename)
+        --        _             -> left $ IllegalConversion "Import with non-variable base"
         DExpr.ImportNative {} -> left $ UnsupportedConversion "Expr.ImportNative"
         DExpr.TypeAlias id src dst -> l id <$> (Decl.TpAls <$> convertAST src <*> convertAST dst)
         DExpr.TypeDef   id src dst -> l id <$> (Decl.TpWrp <$> convertAST src <*> convertAST dst)
