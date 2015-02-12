@@ -19,8 +19,7 @@
 module Main where
 
 -- imports --
-import Dupa6 (du7)
-import qualified Dupa5
+import duasfo[sd kgisdj fiosdjfio ]
 import Luna.Target.HS
 
 -- body --
