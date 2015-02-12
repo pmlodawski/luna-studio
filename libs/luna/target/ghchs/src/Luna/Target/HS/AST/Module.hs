@@ -23,8 +23,8 @@ empty = Module "Unnamed" [] [] [] []
 mk :: Text -> [Text] -> Expr
 mk name path' = Module name path' [] [] []
 
-addImport :: [Text] -> Expr -> Expr
-addImport path' mod' = mod' { _imports = Import False path' Nothing : _imports mod' }
+addImport :: Expr -> Expr -> Expr
+addImport imp mod' = mod' { _imports = imp : _imports mod' }
 
 addExt :: Extension -> Expr -> Expr
 addExt ext' mod' = mod' { _ext = ext' : _ext mod' }

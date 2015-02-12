@@ -161,18 +161,18 @@ instance ( Traversal base m (LDecl a e)          (LDecl a' e')
          , Traversal base m (LCons a e)          (LCons a' e')
          , Traversal base m (Arg  a e)           (Arg   a' e')
          , Traversal base m (LType a)            (LType a'   )
-         , Traversal base m ImpTgt               ImpTgt
          , Traversal base m (Decl.FuncSig a e)   (Decl.FuncSig a' e')
          , Traversal base m e e'
          , Traversal base m (Decl.DataDecl a e) (Decl.DataDecl a' e')
          , Traversal base m (Decl.FuncDecl a e [e]) (Decl.FuncDecl a' e' [e'])
          , Traversal base m (Foreign (Decl.ForeignDecl a e)) (Foreign (Decl.ForeignDecl a' e'))
          , Traversal base m Pragma Pragma
+         , Traversal base m Decl.Imp Decl.Imp
          ) => DefaultTraversal base m (Decl a e) (Decl a' e') where
     defaultTraverseM b = \case
         Decl.Data        ddecl                 -> Decl.Data        <$> traverseM b ddecl
         Decl.Func        fdecl                 -> Decl.Func        <$> traverseM b fdecl
-        Decl.Imp         path rename targets   -> Decl.Imp         <$> traverseM b path <*> traverseM b rename <*> traverseM b targets
+        Decl.Imp         imp                   -> Decl.Imp         <$> traverseM b imp
         Decl.TpAls       dst src               -> Decl.TpAls       <$> traverseM b dst  <*> traverseM b src
         Decl.TpWrp       dst src               -> Decl.TpWrp       <$> traverseM b dst  <*> traverseM b src
         Decl.Foreign     fdecl                 -> Decl.Foreign     <$> traverseM b fdecl
@@ -201,16 +201,23 @@ instance ( Traversal base m (Decl.FuncSig a e) (Decl.FuncSig a' e')
     defaultTraverseM b (Decl.FuncDecl path sig output body) = Decl.FuncDecl <$> traverseM b path <*> traverseM b sig <*> traverseM b output <*> traverseM b body
 
 
-instance DefaultTraversal base m Decl.ImpTgt Decl.ImpTgt where
+instance Traversal base m ImpTgt ImpTgt => DefaultTraversal base m Decl.Imp Decl.Imp where
+    defaultTraverseM b = \case
+        Decl.ModImp  path rename -> Decl.ModImp  <$> traverseM b path <*> traverseM b rename
+        Decl.DeclImp path tgts   -> Decl.DeclImp <$> traverseM b path <*> traverseM b tgts
+
+instance DefaultTraversal base m ImpTgt ImpTgt where
     defaultTraverseM _ = pure
 
 
 instance ( Traversal base m (Decl.DataDecl a e) (Decl.DataDecl a' e')
          , Traversal base m (Decl.FuncDecl a e Decl.ForeignCode) (Decl.FuncDecl a' e' Decl.ForeignCode)
+         , Traversal base m Decl.Imp Decl.Imp
          ) => DefaultTraversal base m (Decl.ForeignDecl a e) (Decl.ForeignDecl a' e') where
     defaultTraverseM b = \case
         Decl.FData ddecl -> Decl.FData <$> traverseM b ddecl
         Decl.FFunc fdecl -> Decl.FFunc <$> traverseM b fdecl
+        Decl.FImp  fimp  -> Decl.FImp  <$> traverseM b fimp
 
 -- ----- Pragma -----
 

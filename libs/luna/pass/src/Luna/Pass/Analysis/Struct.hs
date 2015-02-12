@@ -147,12 +147,13 @@ registerHeaders (Label lab decl) = case decl of
     Decl.Func    fdecl -> regFuncDecl id fdecl
     Decl.Data    ddecl -> regDataDecl id ddecl
     Decl.Foreign fdecl -> regForeignDecl id fdecl
-    _               -> pure ()
+    _                  -> pure ()
     where id = Enum.id lab
           
 regForeignDecl id (Foreign tgt fdecl) = case fdecl of
     Decl.FData ddecl -> regDataDecl id ddecl
     Decl.FFunc fdecl -> regFuncDecl id fdecl
+    _                -> pure ()
 
 regFuncDecl id (Decl.FuncDecl _ sig _ _) =  regVarName (OriginInfo "dupa" id) (NamePattern.toNamePath sig)
                                          <* regNamePatDesc id (NamePattern.toDesc sig)

@@ -135,12 +135,11 @@ instance Generator HExpr where
         HExpr.CaseE    expr matches           -> complex $ "case " <> generate expr <> " of {" <> buildBody matches <> "}"
         HExpr.Match    pat matchBody          -> complex $ generate pat <> " -> " <> generate matchBody
         HExpr.ViewP    expr dst               -> simple  $ "(" <> generate expr <> " -> " <> generate dst <> ")"
-        HExpr.Import   q segments rename      -> simple  $ "import "
-                                                         <> if q then "qualified " else ""
+        HExpr.Import   q segments rename tgts -> simple  $ "import "
+                                                         <> (if q then "qualified " else "")
                                                          <> mjoin "." (fmap convert segments)
-                                                         <> case rename of
-                                                                 Just name -> " as " <> (convert name)
-                                                                 Nothing   -> ""
+                                                         <> maybe "" (\name -> " as " <> convert name) rename
+                                                         <> maybe "" (\lst  -> " (" <> sepjoin (fmap convert lst) <> ")") tgts
         HExpr.DataD    name params cons ders  -> simple  $ "data " <> convert name <> " " <> spaceJoin (fmap convert params) <> " = " <> cons' <> convert ders'
                                                          where cons'   = mjoin " | " (genmap cons)
                                                                ders'   = if null ders then "" else " deriving (" <> sepjoin (map show ders) <> ")"

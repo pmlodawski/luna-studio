@@ -1,3 +1,4 @@
+foreign haskell import Foo
 
 foreign haskell def print s="":
     polyJoin . liftF1 (Value . fmap Safe . print) $ s
@@ -29,3 +30,5 @@ def main:
     print $ 2.+ 4
 
 foreign haskell class Int
+
+
