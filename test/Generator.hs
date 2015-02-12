@@ -53,7 +53,14 @@ import Utils
 forAllChannels :: String -> (Matrix2 Float -> Matrix2 Float) -> IO ()
 forAllChannels image process = do
     (r, g, b, a) <- testLoadRGBA' $ "samples/" P.++ image
+    --(r, g, b, a) <- testLoadRGBA' image
     testSaveRGBA' "out.png" (process r) (process g) (process b) (process a)
+
+forAllChannels' :: Int -> String -> (Matrix2 Float -> Matrix2 Float) -> IO ()
+forAllChannels' idx image process = do
+    (r, g, b, a) <- testLoadRGBA' $ "samples/" P.++ image
+    --(r, g, b, a) <- testLoadRGBA' image
+    testSaveRGBA' ("out/out" P.++ show idx P.++ ".png") (process r) (process g) (process b) (process a)
 
 
 --
@@ -156,17 +163,18 @@ laplacianTest kernSize crossVal sideVal = do
 -- Applies morphological operators to Lena image
 -- (Morphology test)
 --
---morphologyTest :: Exp Int -> IO ()
---morphologyTest size = do
---    let l c = fromMatrix A.Clamp c
---    let v = pure $ variable size
---    let morph1 c = nearest $ closing v $ l c -- Bottom left
---    let morph2 c = nearest $ opening v $ l c -- Bottom right
---    let morph3 c = nearest $ dilate  v $ l c -- Top left
---    let morph4 c = nearest $ erode   v $ l c -- Top right
+morphologyTest :: Int -> IO ()
+morphologyTest size = do
+    let l c = fromMatrix A.Clamp c
+    let v = pure $ variable size
+    let morph1 c = nearest $ closing v $ l c -- Bottom left
+    let morph2 c = nearest $ opening v $ l c -- Bottom right
+    let morph3 c = nearest $ dilate  v $ l c -- Top left
+    let morph4 c = nearest $ erode   v $ l c -- Top right
 
---    let process chan = gridRasterizer 512 (Grid 2 2) (monosampler :: ContinuousShader (Exp Float) -> DiscreteShader (Exp Float)) [morph1 chan, morph2 chan, morph3 chan, morph4 chan]
---    forAllChannels "lena.bmp" process
+    --let process chan = gridRasterizer 512 (Grid 2 2) (monosampler :: ContinuousShader (Exp Float) -> DiscreteShader (Exp Float)) [morph1 chan, morph2 chan, morph3 chan, morph4 chan]
+    let process chan = rasterizer $ (monosampler :: ContinuousShader (Exp Float) -> DiscreteShader (Exp Float)) $ morph4 chan
+    forAllChannels' size "lena.bmp" process
 
 
 --
@@ -390,6 +398,7 @@ maskedTransformationsTest = do
 main :: IO ()
 main = do
     print "Szatan"
-    maskedTransformationsTest
+    --maskedTransformationsTest
     --gradientsTest
+    --P.mapM morphologyTest [1..100]
     print "szatan"
