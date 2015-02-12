@@ -45,8 +45,8 @@ instance Default Reload where
     def = NoReload
 
 
-makeLenses(''Reload)
-makeLenses(''ReloadClass)
+makeLenses ''Reload
+makeLenses ''ReloadClass
 
 
 mkReloadClasses :: Breadcrumbs -> Reload
