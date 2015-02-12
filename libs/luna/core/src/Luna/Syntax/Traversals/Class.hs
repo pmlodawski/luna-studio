@@ -212,12 +212,11 @@ instance DefaultTraversal base m ImpTgt ImpTgt where
 
 instance ( Traversal base m (Decl.DataDecl a e) (Decl.DataDecl a' e')
          , Traversal base m (Decl.FuncDecl a e Decl.ForeignCode) (Decl.FuncDecl a' e' Decl.ForeignCode)
-         , Traversal base m Decl.Imp Decl.Imp
          ) => DefaultTraversal base m (Decl.ForeignDecl a e) (Decl.ForeignDecl a' e') where
     defaultTraverseM b = \case
         Decl.FData ddecl -> Decl.FData <$> traverseM b ddecl
         Decl.FFunc fdecl -> Decl.FFunc <$> traverseM b fdecl
-        Decl.FImp  fimp  -> Decl.FImp  <$> traverseM b fimp
+        Decl.FImp  fimp  -> pure $ Decl.FImp fimp
 
 -- ----- Pragma -----
 

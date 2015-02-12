@@ -382,7 +382,7 @@ genForeign (Foreign target a) = case target of
     Foreign.Haskell -> case a of
         Decl.FFunc decl -> genFunc decl (Just genFFuncBody) False
         Decl.FData decl -> genDataDecl True decl
-        Decl.FImp  imp  -> genImp imp
+        Decl.FImp  imp  -> addImport $ HE.Var imp
         where genImp = \case
                   -- genImp uses 'toText' in order not to mangle the names for foreigns
                   Decl.ModImp  path rename -> addImport $ HE.Import True  (fmap toText path) (fmap toText rename) Nothing
