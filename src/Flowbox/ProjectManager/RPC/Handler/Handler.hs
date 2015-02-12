@@ -113,7 +113,7 @@ handlerMap callback = HandlerMap.fromList
         call2 t fun = do
             msg1 <- callback (/+ t) $ \a -> do (r1, r2) <- fun a
                                                --return ([r1, r2] :: forall result. Proto.Serializable result => [result])
-                                               return [r1]--([r1], [r2])
+                                               return ([r1], [r2])
 --            msg2 <- callback (/+ t) (\a -> do (_, r2) <- fun a
 --                                              return r2)
             return $ msg1 -- ++ msg2
