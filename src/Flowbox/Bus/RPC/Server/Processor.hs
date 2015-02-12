@@ -33,8 +33,10 @@ logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
 
 
-singleResult :: MonadIO m => (a -> m b) -> a -> m [b]
-singleResult f a = liftM mkList $ f a
+singleResult :: MonadIO m => (a -> m b) -> a -> m ([b], [Response])
+singleResult f a = do 
+    b <- f a
+    return (mkList b, [])
 
 
 doubleResult :: MonadIO m => (a -> m (b, b)) -> a -> m [b]
@@ -60,7 +62,7 @@ process handlerMap msg = HandlerMap.lookupAndCall handlerMap call topic where
         Right args -> do results <- RPC.run $ method args
                          return $ case results of
                             Left err -> Message.mkError topic err
-                            Right ok-> map (respond mkTopic) ok
+                            Right (ok, undos) -> map (respond mkTopic) ok ++ ( map (respond $ mkTopic {-++ ".undo.register"-}) undos)
 
     topic = msg ^. Message.topic
 
