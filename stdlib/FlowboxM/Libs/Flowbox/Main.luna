@@ -6,17 +6,7 @@ import ```Data.Maybe (fromJust)```
 import ```qualified Data.Array.Accelerate as A```
 
 import ```Flowbox.Graphics.Color.Color as Color```
-import ```Flowbox.Graphics.Color.Companding.AlexaV3LogC```
-import ```Flowbox.Graphics.Color.Companding.Cineon```
-import ```Flowbox.Graphics.Color.Companding.Gamma```
-import ```Flowbox.Graphics.Color.Companding.LStar```
-import ```Flowbox.Graphics.Color.Companding.Panalog```
-import ```Flowbox.Graphics.Color.Companding.PLogLin```
-import ```Flowbox.Graphics.Color.Companding.Rec709```
-import ```Flowbox.Graphics.Color.Companding.REDLog```
-import ```Flowbox.Graphics.Color.Companding.SLog```
-import ```Flowbox.Graphics.Color.Companding.SRGB```
-import ```Flowbox.Graphics.Color.Companding.ViperLog```
+import ```Flowbox.Graphics.Color.Companding```
 import ```Flowbox.Graphics.Composition.Dither```
 import ```Flowbox.Graphics.Mockup```
 import ```Flowbox.Graphics.Image.Image as Image```
@@ -52,21 +42,21 @@ def Either.unwrap:
     ```liftF1 (either (error "unwrap called on Left") id) #{self}```
 
 class Range:
-    lo, hi :: Double
+    lo, hi :: Float
 
 alias FilePath = String
 
 class ```Metric```:
     Chebyshev
     Euclidean
-    Minkowski: p :: Double
+    Minkowski: p :: Float
     Taxicab
 
 class ```Boundary```:
     Clamp
     # Mirror # WARN: does not work yet
     Wrap
-    Constant: a :: Double
+    Constant: a :: Float
 
 def null a:
     a
@@ -115,56 +105,56 @@ def Int.dec:
     self - 1
 
 def Int.fromIntegral:
-    ```liftF1 fromIntegral #{self} :: Value Pure Safe Double```
+    ```liftF1 fromIntegral #{self} :: Value Pure Safe Float```
 
 def Int.toString:
     ```liftF1 show #{self}```
 
-# DOUBLE
+# FLOAT
 
-def Double.acc:
+def Float.acc:
     ```liftF1 variable #{self}```
 
-def Double.truncate:
+def Float.truncate:
     ```liftF1 truncate #{self} :: Value Pure Safe Int```
 
-def Double.round:
+def Float.round:
     ```liftF1 round #{self} :: Value Pure Safe Int```
 
-def Double.floor:
+def Float.floor:
     ```liftF1 floor #{self} :: Value Pure Safe Int```
 
-def Double.ceiling:
+def Float.ceiling:
     ```liftF1 ceiling #{self} :: Value Pure Safe Int```
 
-def Double.+ a:
+def Float.+ a:
     ```liftF2 (+) #{self} #{a}```
 
-def Double.- a:
+def Float.- a:
     ```liftF2 (-) #{self} #{a}```
 
-def Double.* a:
+def Float.* a:
     ```liftF2 (*) #{self} #{a}```
 
-def Double./ a:
+def Float./ a:
     ```liftF2 (/) #{self} #{a}```
 
-def Double.> a:
+def Float.> a:
     ```liftF2 (>) #{self} #{a}```
 
-def Double.== a:
+def Float.== a:
     ```liftF2 (==) #{self} #{a}```
 
-def Double.< a:
+def Float.< a:
     ```liftF2 (<) #{self} #{a}```
 
-def Double.<= a:
+def Float.<= a:
     ```liftF2 (<=) #{self} #{a}```
 
-def Double.>= a:
+def Float.>= a:
     ```liftF2 (>=) #{self} #{a}```
 
-def Double.toString:
+def Float.toString:
     ```liftF1 show #{self}```
 
 # def Float.floor:
@@ -204,7 +194,7 @@ def point x y:
     Point2 x y
 
 def nopoint:
-    ```val (Nothing :: Maybe (Point2 Double))```
+    ```val (Nothing :: Maybe (Point2 Float))```
 
 # class ```ControlPoint``` a:
 # class ControlPoint a:
@@ -282,16 +272,16 @@ def getValueAtCurve curve x:
 class ```RGBA``` a:
     rgbaR, rgbaG, rgbaB, rgbaA :: a
 
-alias Color = RGBA Double
-alias ColorBlack = RGBA Double
-alias ColorWhite = RGBA Double
+alias Color = RGBA Float
+alias ColorBlack = RGBA Float
+alias ColorWhite = RGBA Float
 
 alias ColorCC = (Color, Color, Color, Color, Color)
 
 class ```Gamma```:
     AlexaV3LogC
     Cineon
-    Gamma: a :: Double
+    Gamma: a :: Float
     LStar
     Panalog
     PLogLin
@@ -407,7 +397,7 @@ def Image.exposure blackpoint ex:
 
 def Image.saturate saturation:
     ```liftF2 saturateLuna #{saturation} #{self}```
-    
+
 def Image.hsvTool hueRange hueRotation hueRolloff
             saturationRange saturationAdjustment saturationRolloff
             brightnessRange brightnessAdjustment brightnessRolloff:
@@ -435,6 +425,7 @@ def Image.grade blackpoint whitepoint lift gain multiply offset gamma:
     ```liftF5 (gradeLunaColor #{blackpoint} #{whitepoint} #{lift}) #{gain} #{multiply} #{offset} #{gamma} #{self}```
 
 alias ColorCorrectGUI = (CurveGUI, CurveGUI)
+alias HueCorrectGUI = (CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI)
 alias Color5 = (Color, Color, Color, Color ,Color)
 
 def Image.colorCorrect master #masterSaturation masterContrast masterGamma masterGain masterOffset
@@ -450,8 +441,8 @@ def Image.colorCorrectCurves curves
                        highlights: #highlightsSaturation highlightsContrast highlightsGamma highlightsGain highlightsOffset:
     ```liftF5 (colorCorrectLunaCurves #{curves}) #{master} #{shadows} #{midtones} #{highlights} #{self}```
 
-def Image.hueCorrect sat lum r g b rSup gSup bSup:
-    ```liftF4 (hueCorrectLuna #{sat} #{lum} #{r} #{g} #{b}) #{rSup} #{gSup} #{bSup} #{self}```
+def Image.hueCorrect curves:
+    ```liftF2 hueCorrectLuna #{curves} #{self}```
 
 def Image.premultiply:
     ```liftF1 premultiplyLuna #{self}```
@@ -519,11 +510,8 @@ def Image.scale vec:
 def Image.scaleAt point vec:
     ```liftF3 scaleAtLuna #{point} #{vec} #{self}```
 
-# def Image.transform trans:
-#     ```liftF2 transformLuna #{trans} #{self}```
-
-def Image.crop rect:
-    ```liftF2 cropLuna #{rect} #{self}```
+def Image.crop rect reformat defaultOutside:
+    ```liftF4 cropLuna #{rect} #{reformat} #{defaultOutside} #{self}```
 
 def Image.erode size:
     ```liftF2 erodeLuna #{size} #{self}```
@@ -558,12 +546,12 @@ class ```InterpolationFilter```:
     Triangle
     Bell
     BSpline
-    Lanczos: a :: Double
-    Polynomial: a, b :: Double
+    Lanczos: a :: Float
+    Polynomial: a, b :: Float
     Mitchell
     CatmullRom
-    Gauss: a :: Double
-    Dirac: a :: Double
+    Gauss: a :: Float
+    Dirac: a :: Float
 
 # def Image.interpolate boundary filter:
 #     ```liftF3 interpolateChannelsLuna #{boundary} #{filter} #{self}```
@@ -698,15 +686,15 @@ def Image.differenceKey offset gain background:
 #                MATTES
 #
 
-def imageMatte path channelName:
-     ```autoLift2 imageMatteLuna #{path} #{channelName}```
+def imageMatte image channelName:
+     ```liftF2 imageMatteLuna #{image} #{channelName}```
 
 def vectorMatte mask:
     ```liftF1 vectorMatteLuna #{mask}```
 
 def noMatte:
     ```val (Nothing :: Maybe (Matte Double))```
-    
+
 def Image.offsetMatte value matte:
     ```liftF3 offsetMatteLuna #{value} #{matte} #{self}```
 
@@ -795,56 +783,67 @@ def main:
     # gray  = RGBA 0.5 0.5 0.5 1.0
     # lena = constant 640 480 gray
     lena = load "./lena.png"
-    
+
     randomColor = RGBA 0.2 0.5 0.1 0.0
     anotherRandomColor = RGBA 0.4 0.2 0.12 0.34
 
   #  print (vectorMatte m)
 
-    offsetLena = lena.offsetMatte randomColor (Nothing)
-    offsetLena.save "./offsetLena.png"
+    # offsetLena = lena.offsetMatte randomColor (Nothing)
+    # offsetLena.save "./offsetLena.png"
 
-    offsetLenaMasked = lena.offsetMatte randomColor (vectorMatte m)
-    offsetLenaMasked.save "./offsetLenaMasked.png"
+    # offsetLenaMasked = lena.offsetMatte randomColor (vectorMatte m)
+    # offsetLenaMasked.save "./offsetLenaMasked.png"
 
-    exposureLena = lena.exposureMatte randomColor anotherRandomColor (Nothing)
-    exposureLena.save "./exposureLena.png"
+    # exposureLena = lena.exposureMatte randomColor anotherRandomColor (Nothing)
+    # exposureLena.save "./exposureLena.png"
 
-    exposureLenaMasked = lena.exposureMatte randomColor anotherRandomColor (vectorMatte m)
-    exposureLenaMasked.save "./exposureLenaMasked.png"
+    # exposureLenaMasked = lena.exposureMatte randomColor anotherRandomColor (vectorMatte m)
+    # exposureLenaMasked.save "./exposureLenaMasked.png"
 
-    contrastLena = lena.contrastMatte randomColor (Nothing)
-    contrastLena.save "./contrastLena.png"
+    # contrastLena = lena.contrastMatte randomColor (Nothing)
+    # contrastLena.save "./contrastLena.png"
 
-    contrastLenaMasked = lena.contrastMatte randomColor (vectorMatte m)
-    contrastLenaMasked.save "./contrastLenaMasked.png"
+    # contrastLenaMasked = lena.contrastMatte randomColor (vectorMatte m)
+    # contrastLenaMasked.save "./contrastLenaMasked.png"
 
-    matte = imageMatte "./test.png" "rgba.a"
+    mask = load "./test.png"
+    matte = imageMatte mask "rgba.a"
     xxx = lena.offsetMatte randomColor (matte)
     xxx.save "./xxx.png"
 
+    r = Rectangle (Point2 100 100) (Point2 200 200)
+    cropedLena = lena.crop r False False
+    cropedLena.save "./croped.png"
+
+    cropedLena2 = lena.crop r True False
+    cropedLena2.save "./croped2.png"
+
+    cropedLena3 = lena.crop r False True
+    cropedLena3.save "./croped3.png"
+
     # transformations test
 
-    scaledAtMatte = lena.scaleAtMatte (Point2 256.0 256.0) (V2 0.5 2.0) (Nothing)
-    scaledAtMatte.save "./tr1.png"
+    # scaledAtMatte = lena.scaleAtMatte (Point2 256.0 256.0) (V2 0.5 2.0) (Nothing)
+    # scaledAtMatte.save "./tr1.png"
 
-    rotatedAtMatte = lena.rotateAtMatte (Point2 100.0 200.0) (1.04179) (Nothing)
-    rotatedAtMatte.save "./tr2.png"
+    # rotatedAtMatte = lena.rotateAtMatte (Point2 100.0 200.0) (1.04179) (Nothing)
+    # rotatedAtMatte.save "./tr2.png"
 
-    translatedMatte = lena.translateMatte (V2 100.0 200.0) (Nothing)
-    translatedMatte.save "./tr3.png"
+    # translatedMatte = lena.translateMatte (V2 100.0 200.0) (Nothing)
+    # translatedMatte.save "./tr3.png"
 
-    sk = Skew (V2 1.0 2.0) SkewXY
-    print sk
+    # sk = Skew (V2 1.0 2.0) SkewXY
+    # print sk
 
-    skewedAtMatte = lena.skewAtMatte (Point2 100.0 200.0) sk (Nothing)
-    skewedAtMatte.save "./tr4.png"
+    # skewedAtMatte = lena.skewAtMatte (Point2 100.0 200.0) sk (Nothing)
+    # skewedAtMatte.save "./tr4.png"
 
-    tr = Transform (V2 100.0 200.0) (1.04719755) (V2 1.0 2.0) sk (Point2 200.0 100.0)
-    print tr
+    # tr = Transform (V2 100.0 200.0) (1.04719755) (V2 1.0 2.0) sk (Point2 200.0 100.0)
+    # print tr
 
-    transformedMatte = lena.transformMatte tr (Nothing)
-    transformedMatte.save "./tr5.png"
+    # transformedMatte = lena.transformMatte tr (Nothing)
+    # transformedMatte.save "./tr5.png"
 
     # lena = lena.hueCorrect c c c c c c2 c c
 

@@ -33,19 +33,19 @@ import qualified Generated.Proto.Data.VertexData  as VertexData
 
 
 instance (Real x, Real y) => Serializable (FunctionPoint x y) PointData where
-    serialize (FunctionPoint (realToFrac -> x :: Double) (realToFrac -> y :: Double)) _ =
-        return . Just $ PointData (Just x) (Just y)
+    serialize (FunctionPoint x y) _ =
+        return . Just $ PointData (Just . realToFrac $ x) (Just . realToFrac $ y)
     toValue a mode = liftM (mkValue PointData.data' Value.Point) $ serialize a mode
 
 instance Serializable (Maybe FunctionHandle) TangentData where
-    serialize mh _ = return . Just $ TangentData w' a' b'
+    serialize mh _ = return . Just $ TangentData (realToFrac <$> w') (realToFrac <$> a') b'
         where (w', a', b') = case mh of
-                                 Nothing             -> (Just 0, Just 0, Just True)
+                                 Nothing                     -> (Just 0, Just 0, Just True)
                                  (Just (FunctionHandle w a)) -> (Just w, Just a, Just False)
     toValue a mode = liftM (mkValue TangentData.data' Value.Tangent) $ serialize a mode
 
 instance (Real x, Real y) => Serializable (x, FunctionControlPoint y) VertexData where
-    serialize (realToFrac -> x :: Double, FunctionControlPoint (realToFrac -> y :: Double) hIn hOut) mode = do
+    serialize (realToFrac -> x :: Float, FunctionControlPoint (realToFrac -> y :: Float) hIn hOut) mode = do
         p     <- serialize (FunctionPoint x y) mode
         hIn'  <- serialize hIn         mode
         hOut' <- serialize hOut        mode
@@ -58,5 +58,5 @@ instance (Real x, Real y) =>  Serializable (FunctionSegment x y) CurveData where
     serialize (ContinuousHybrid nodes) mode = do
         nodes' <- sequence $ flip serialize mode <$> toAscList nodes
         return . Just . CurveData . fromList $ fromMaybe err $ sequence nodes'
-        where err = error "Something went terribly wrong! Probably serialization of one of th evertices failed!"
+        where err = error "Something went terribly wrong! Probably serialization of one of the vertices failed!"
     toValue a mode = liftM (mkValue CurveData.data' Value.Curve) $ serialize a mode
