@@ -26,6 +26,3 @@ def main:
     print $ 2.+ 4
 
 foreign haskell class Int
-
-foreign haskell class Test a:
-    point :: Point2 a

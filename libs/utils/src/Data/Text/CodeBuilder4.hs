@@ -6,6 +6,7 @@
 -----------------------------------------------------------------------------
 
 --{-# LANGUAGE TemplateHaskell           #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 
 module Data.Text.CodeBuilder4 where
 
@@ -17,6 +18,8 @@ import           Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy.Builder as Text
 import           Data.Text.Lazy.Builder   (toLazyText, fromLazyText)
 --import           Data.Text.Builder.Poly   (ToTextBuilder, toTextBuilder)
+
+import Control.Monad.Identity (runIdentity)
 
 ------------------------------------------------------------------------
 ---- Data types
@@ -132,32 +135,55 @@ import           Data.Text.Lazy.Builder   (toLazyText, fromLazyText)
 
 
 --type Prec = Int
---data Fixity = Prefix
---            | Postfix
---            | Infix Assoc
---            deriving (Show, Eq, Generic)
+--type Name = Text.Builder 
+
+----data Fixity = Prefix
+----            | Postfix
+----            | Infix Assoc
+----            deriving (Show, Eq, Generic)
 
 --data Assoc = ALeft
 --           | ARight
 --           deriving (Show, Eq, Generic)
 
---data Code = Tok Prec Text.Builder 
---          | Term [Code]
---          | SBox Code
+--data Code = Tok   Name
+--          | SBox  Code
+--          | Block [Code]
+--          | Op    Op
 --          deriving (Show, Eq, Generic)
 
 
---data Tok = Prefix  Code
---         | Postfix Code
---         | Infix   Assoc Code Code
+--data Op = Prefix  Prec       Name Code
+--        | Postfix Prec       Name Code
+--        | Infix   Prec Assoc Name Code Code
+--        deriving (Show, Eq, Generic)
 
---funcTok = Tok 10 Prefix
+--funcTok n c = Op $ Prefix 10 n c
 
---test = Term $ [funcTok "foo", funcTok "bar"]
+--test = funcTok "foo" $ funcTok "bar" (Tok "x")
+
+--data HSCompact = HSCompact deriving (Show)
+
+--main = do
+--    print test
+--    print $ runIdentity $ render HSCompact test
+--    return ()
+
+--class Render style m where
+--    render :: (Monad m, Applicative m) => style -> Code -> m Text.Builder
 
 
+--instance Render HSCompact m where
+--    render style = \case
+--        Tok n -> return n
+--        Op op -> case op of
+--            Prefix prec name code -> (\c -> name <> "(" <> c <> ")") <$> render style code
+--        where getPrec = \case
+--            Op op -> case op of
+--                Prefix p _ _ -> p
+--            _     -> 0
 
---foo bar x
+----foo bar x
 
---foo (bar x)
---(foo bar) x
+----foo (bar x)
+----(foo bar) x
