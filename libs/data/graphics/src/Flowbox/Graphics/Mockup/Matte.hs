@@ -70,13 +70,13 @@ convertMask (unpackLunaVar -> a, unpackLunaVar -> b) = Mask.Mask (convertPath a)
 rasterizeMaskLuna :: (Real a, Fractional a, a ~ Float) => Int -> Int -> Mask2 a -> Image
 rasterizeMaskLuna w h (convertMask -> m) = matrixToImage $ rasterizeMask w h m
 
-imageMatteLuna :: FilePath -> String -> IO (Maybe (Matte Float))
-imageMatteLuna path channelName = do
-  img <- realReadLuna path
+imageMatteLuna :: Image -> String -> Maybe (Matte Float)
+imageMatteLuna img channelName =
   let channel = getChannelFromPrimaryLuna channelName img
-  case channel of
-    Right (Just channel) -> return $ Just $ Matte.imageMatteFloat channel
-    _ -> return Nothing
+  in
+    case channel of
+      Right (Just channel) -> Just $ Matte.imageMatteFloat channel
+      _ -> Nothing
 
 vectorMatteLuna :: Mask2 Float -> Maybe (Matte Float)
 vectorMatteLuna mask = Just $ Matte.VectorMatte $ convertMask mask

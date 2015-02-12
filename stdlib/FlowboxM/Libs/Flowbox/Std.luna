@@ -190,9 +190,9 @@ class ```Skew``` a:
     order :: SkewOrder
 
 class ```Transform``` a:
-    translate :: Point2 a
+    translate :: V2 a
     rotate    :: a
-    scale     :: Point2 a
+    scale     :: V2 a
     skew      :: Skew a
     center    :: Point2 a
 
@@ -278,17 +278,7 @@ def getValueAtCurve curve x:
 #
 
 import ```Flowbox.Graphics.Color.Color as Color```
-import ```Flowbox.Graphics.Color.Companding.AlexaV3LogC```
-import ```Flowbox.Graphics.Color.Companding.Cineon```
-import ```Flowbox.Graphics.Color.Companding.Gamma```
-import ```Flowbox.Graphics.Color.Companding.LStar```
-import ```Flowbox.Graphics.Color.Companding.Panalog```
-import ```Flowbox.Graphics.Color.Companding.PLogLin```
-import ```Flowbox.Graphics.Color.Companding.Rec709```
-import ```Flowbox.Graphics.Color.Companding.REDLog```
-import ```Flowbox.Graphics.Color.Companding.SLog```
-import ```Flowbox.Graphics.Color.Companding.SRGB```
-import ```Flowbox.Graphics.Color.Companding.ViperLog```
+import ```Flowbox.Graphics.Color.Companding```
 
 class ```RGBA``` a:
     rgbaR, rgbaG, rgbaB, rgbaA :: a

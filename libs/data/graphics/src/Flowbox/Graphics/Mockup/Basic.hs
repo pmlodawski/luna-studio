@@ -21,7 +21,6 @@ module Flowbox.Graphics.Mockup.Basic (
     getChannelFromPrimaryLuna,
     getChannelLuna,
     insertChannelFloats,
-    liftF6,
     loadImageLuna,
     multisampleChannelsLuna,
     onEach,
@@ -339,32 +338,6 @@ getChannelFromPrimaryLuna channelName img = case Image.lookupPrimary img of
 
 
 -- == OTHER SHIT
-
-liftF6 f t1 t2 t3 t4 t5 t6 = do
-    t1' <- t1
-    t2' <- t2
-    t3' <- t3
-    t4' <- t4
-    t5' <- t5
-    t6' <- t6
-    val f <<*>> t1' <<*>> t2' <<*>> t3' <<*>> t4' <<*>> t5' <<*>> t6'
-
-liftF13 fun a b c d e f g h i j k l m = do
-    a' <- a
-    b' <- b
-    c' <- c
-    d' <- d
-    e' <- e
-    f' <- f
-    g' <- g
-    h' <- h
-    i' <- i
-    j' <- j
-    k' <- k
-    l' <- l
-    m' <- m
-    val fun <<*>> a' <<*>> b' <<*>> c' <<*>> d' <<*>> e' <<*>> f'
-            <<*>> g' <<*>> h' <<*>> i' <<*>> j' <<*>> k' <<*>> l' <<*>> m'
 
 fromPolarMapping :: (Elt a, IsFloating a, Elt e) => CartesianShader (Exp a) (Exp e) -> CartesianShader (Exp a) (Exp e)
 fromPolarMapping (Shader cnv gen) = Shader cnv $ \(Point2 x y) ->

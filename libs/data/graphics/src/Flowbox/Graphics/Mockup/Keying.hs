@@ -14,7 +14,7 @@ module Flowbox.Graphics.Mockup.Keying (
 import qualified Data.Array.Accelerate as A
 
 import qualified Flowbox.Graphics.Color.Color        as Color
-import           Flowbox.Graphics.Composition.Keying (KeyerMode)
+import           Flowbox.Graphics.Composition.Keying (KeyerMode, KeyerThresholds(..))
 import qualified Flowbox.Graphics.Composition.Keying as Keying
 import           Flowbox.Graphics.Image.Image        (Image)
 import qualified Flowbox.Graphics.Image.Image        as Image
@@ -34,8 +34,8 @@ keyer' f img = img'
 
           img' = Image.insertPrimary view' img
 
-keyerLuna :: KeyerMode -> Float -> Float -> Float -> Float -> Image -> Image
-keyerLuna mode (variable -> a) (variable -> b) (variable -> c) (variable -> d) img =
+keyerLuna :: KeyerMode -> KeyerThresholds Float -> Image -> Image
+keyerLuna mode (fmap variable -> KeyerThresholds a b c d) img =
     keyer' (Keying.keyer mode (A.lift (a, b, c, d))) img
 
 differenceKeyer' :: (A.Exp (Color.RGB Float) -> A.Exp (Color.RGB Float) -> A.Exp Float) -> Image -> Image -> Image

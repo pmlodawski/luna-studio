@@ -44,9 +44,14 @@ class Rotate t a | t -> a where
 class Scale s t where
     scale :: s -> t -> t
 
+class HorizontalSkew s t where
+    horizontalSkew :: s -> t -> t
+
+class VerticalSkew s t where
+    verticalSkew :: s -> t -> t
+
 class CornerPin t a | t -> a where
     cornerPin :: (Point2 a, Point2 a, Point2 a, Point2 a) -> t -> t
-
 
 -- == Instances for Point2 ==
 instance Num a => Translate (Point2 a) a where
@@ -57,9 +62,19 @@ instance Floating a => Rotate (Point2 a) a where
         where x' = cos phi * x - sin phi * y
               y' = sin phi * x + cos phi * y
 
-instance Fractional a => Scale (V2 a) (Point2 a) where
-     scale (V2 sx sy) (Point2 x y) = Point2 (x / sx) (y / sy)
+--instance  Rotate (Point2 (A.Exp Double)) (A.Exp Double) where
+--    rotate phi (Point2 x y) = Point2 x' y'
+--        where x' = cos phi * x - sin phi * y
+--              y' = sin phi * x + cos phi * y
 
+instance Fractional a => Scale (V2 a) (Point2 a) where
+    scale (V2 sx sy) (Point2 x y) = Point2 (x / sx) (y / sy)
+
+instance Fractional a => HorizontalSkew a (Point2 a) where
+    horizontalSkew k (Point2 x y) = Point2 (x+k*y) y
+
+instance Fractional a => VerticalSkew a (Point2 a) where
+    verticalSkew k (Point2 x y) = Point2 x (y+x*k)
 
 -- == Instances for CartesianShader ==
 instance Num a => Translate (CartesianShader a b) a where
@@ -144,13 +159,35 @@ cornerPin' (Grid width height) (Point2 x1 y1, Point2 x2 y2, Point2 x3 y3, Point2
           matC = matA !*! unsafeInv33 matB
 
 -- TODO[KM]: handle shaders by translating them and changing the canvas size
-crop :: Elt a => Rectangle Int -> ChannelData a -> ChannelData a
-crop (fmap variable . properRect -> Rect xA yA xB yB) (Channel.asMatrixData -> MatrixData matrix) = MatrixData matrix'
-    where matrix' = M.generate newShape gen
-          gen (A.unlift -> (Z :. y :. x)) = matrix M.! A.index2 (heightDifference - yA + y) (xA + x)
-          heightDifference = imageHeight - (yB - yA)
+crop :: Elt a => Rectangle Int -> Bool -> Bool -> Exp a -> ChannelData a -> ChannelData a
+crop (fmap variable . properRect -> Rect xA yA xB yB)
+      (variable -> reformat) (variable -> defaultOutside) defaultValue (Channel.asMatrixData -> MatrixData matrix) = MatrixData matrix'
+        where matrix' = M.generate newShape gen
+              gen (A.unlift -> (Z :. y :. x)) = A.cond reformat (matrix M.! A.index2 (heightDifference - yA + y) (xA + x)) (value y x)
 
-          newShape       = A.intersect rectangleShape imageShape
-          rectangleShape = A.index2 (yB - yA) (xB - xA)
-          imageShape     = M.shape matrix
-          A.Z A.:. imageHeight A.:. _ = A.unlift imageShape :: M.EDIM2
+              value y x = A.cond (inside y x) (matrix M.! A.index2 y x) (A.cond defaultOutside defaultValue (processCornerCase y x))
+                where
+                  inside y x = (A.not (left y x)) A.&&* (A.not (right y x)) A.&&* (A.not (up y x)) A.&&* (A.not (down y x))
+
+                  -- that makes me feel bad
+                  processCornerCase y x = A.cond ((left y x) A.&&* (up y x)) (matrix M.! A.index2 (h - yB) xA) $
+                                          A.cond ((left y x) A.&&* (down y x)) (matrix M.! A.index2 (h - yA) xA) $
+                                          A.cond ((right y x) A.&&* (up y x)) (matrix M.! A.index2 (h - yB) xB) $
+                                          A.cond ((right y x) A.&&* (down y x)) (matrix M.! A.index2 (h - yA) xB) $
+                                          A.cond ((left y x) A.&&* (A.not (up y x)) A.&&* (A.not (down y x))) (matrix M.! A.index2 y xA) $
+                                          A.cond ((right y x) A.&&* (A.not (up y x)) A.&&* (A.not (down y x))) (matrix M.! A.index2 y xB) $
+                                          A.cond ((up y x) A.&&* (A.not (left y x)) A.&&* (A.not (right y x))) (matrix M.! A.index2 (h-yB) x) $
+                                          A.cond ((down y x) A.&&* (A.not (left y x)) A.&&* (A.not (right y x))) (matrix M.! A.index2 (h-yA) x)
+                                          defaultValue
+
+                  left _ x = x A.<* xA
+                  right _ x = x A.>* xB
+                  up y _ = (h - yB) A.>* y
+                  down y _ = (h - yA) A.<* y
+
+              heightDifference = h - (yB - yA)
+              newShape       = A.cond reformat (A.intersect rectangleShape imageShape) imageShape
+              rectangleShape = A.index2 (yB - yA) (xB - xA)
+              imageShape     = M.shape matrix
+              A.Z A.:. h A.:. _ = A.unlift imageShape :: M.EDIM2
+              
