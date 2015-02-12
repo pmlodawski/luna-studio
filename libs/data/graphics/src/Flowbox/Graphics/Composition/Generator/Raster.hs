@@ -12,6 +12,7 @@ module Flowbox.Graphics.Composition.Generator.Raster where
 
 import           Data.Array.Accelerate (Exp)
 import qualified Data.Array.Accelerate as A
+import qualified Data.Map              as Map
 
 import qualified Flowbox.Graphics.Color.Color   as Color
 import qualified Flowbox.Graphics.Image.Channel as Channel
@@ -38,7 +39,27 @@ data Format = PCVideo
             | Square512
             | Square1K
             | Square2K
-            | CustomFormat Int Int
+            | CustomFormat Int Int deriving(Eq, Ord)
+
+--instance Eq Format whe
+formatMap = Map.fromList ([(PCVideo, (640, 480))
+                         ,(NTSC, (720, 486))
+                         ,(PAL, (720, 576))
+                         ,(HD, (1920, 1080))
+                         ,(NTSC169, (720, 486))
+                         ,(PAL169, (720, 576))
+                         ,(K1Super35, (1024, 778))
+                         ,(K1Cinemascope, (914, 778))
+                         ,(K2Super35, (2048, 1556))
+                         ,(K2Cinemascope, (1828, 1556))
+                         ,(K4Super35, (4096, 3112))
+                         ,(K4Cinemascope, (3656, 3112))
+                         ,(Square256, (256, 256))
+                         ,(Square512, (512, 512))
+                         ,(Square1K, (1024, 1024))
+                         ,(Square2K, (2048, 2048))
+                         --,(CustomFormat x y, ( x, y))
+                         ] :: [(Format,(Int,Int))] )
 
 constant :: Exp A.DIM2 -> [(Channel.Name, Exp Double)] -> Image
 constant sh = Image.singleton . foldr appendChannel (View.emptyDefault)
