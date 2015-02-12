@@ -64,7 +64,7 @@ import           Luna.Syntax.Name.Pattern     (NamePat(NamePat), Segment(Segment
 import qualified Luna.Syntax.Name.Pattern     as NamePat
 
 import qualified Luna.Pass.Target.HS.HASTGen.State as State
-import           Luna.Pass.Target.HS.HASTGen.State (addComment, setModule, getModule, regFunc, regTHExpr, pushCtx, popCtx, getCtx, withCtx, regDecl, genCallID)
+import           Luna.Pass.Target.HS.HASTGen.State (addComment, setModule, getModule, regFunc, regTHExpr, pushCtx, popCtx, getCtx, withCtx, regDecl, genCallID, addImport)
 import           Luna.Syntax.Name.Hash              (Hashable, hash)
 --import qualified Luna.Target.HS.Host.NamingOld                          as Naming
 import qualified Luna.Target.HS.Host.Naming2 as Naming
@@ -128,13 +128,14 @@ genUnit (Unit m) = genModule m
 
 
 
-genNonEmptySec header lst f = do
+genNonEmptySec header lst f = when (not $ null lst) $ do
     State.addComment header
-    when (not $ null lst) $ f lst
+    f lst
+
 
 genModule :: Ctx m a v => LModule a (LExpr a v) -> PassResult m HE
 genModule (Label lab (Module path body)) = withCtx (fromText $ view Path.name path) $ do
-    let mod     = HModule.addImport ["Luna", "Target", "HS"]
+    let mod     = HModule.addImport (HE.Import False ["Luna", "Target", "HS"] Nothing Nothing)
                 $ foldr HModule.addExt (HModule.mk modBaseName modPath)
                 $ [ HExt.DataKinds
                   , HExt.DeriveDataTypeable
@@ -385,6 +386,30 @@ genForeign (Foreign target a) = case target of
     Foreign.Haskell -> case a of
         Decl.FFunc decl -> genFunc decl (Just genFFuncBody) False
         Decl.FData decl -> genDataDecl True decl
+        Decl.FImp  imp  -> genImp imp
+
+genImp = \case
+    Decl.ModImp  path rename -> addImport $ HE.Import True  (fmap convVar path) (fmap convVar rename) Nothing
+    Decl.DeclImp path tgts   -> addImport $ HE.Import False (fmap convVar path) Nothing htgts where
+        htgts = case sequence $ fmap genTgt tgts of
+            Right lst -> Just lst
+            Left  _   -> Nothing
+
+        genTgt = \case
+            Decl.ImpVar   name rename -> Right $ convVar name
+            Decl.ImpType  name rename -> Right $ convVar name
+            Decl.Wildcard hiding      -> Left "TODO"
+
+
+--data Imp = ModImp  { _modPath :: Path , _modRename :: Maybe TNameP }
+--         | DeclImp { _modPath :: Path , _targets   :: [ImpTgt]     }
+--         deriving (Show, Generic, Eq, Read)
+
+--data ImpTgt = ImpVar   { _vName  :: VNameP   , _vRename :: Maybe VNameP }
+--            | ImpType  { _tName  :: TNameP   , _tRename :: Maybe TNameP }
+--            | Wildcard { _hiding :: [NameBaseP]                         }
+--            deriving (Show, Generic, Eq, Read)
+
 
 genFFuncBody :: Monad m => Text -> a -> PassResult m [HE]
 genFFuncBody txt _ = pure $ [HE.Native txt]
