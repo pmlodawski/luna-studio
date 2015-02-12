@@ -7,6 +7,7 @@
 
 --{-# LANGUAGE TemplateHaskell           #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Data.Text.CodeBuilder4 where
 
@@ -149,41 +150,59 @@ import Control.Monad.Identity (runIdentity)
 --data Code = Tok   Name
 --          | SBox  Code
 --          | Block [Code]
---          | Op    Op
+--          | App   Op
 --          deriving (Show, Eq, Generic)
 
 
---data Op = Prefix  Prec       Name Code
---        | Postfix Prec       Name Code
---        | Infix   Prec Assoc Name Code Code
+--data Fixity = Prefix        Code
+--            | Postfix       Code
+--            | Infix   Assoc Code Code
+--            deriving (Show, Eq, Generic)
+
+--data Op = Op Prec Code Fixity
 --        deriving (Show, Eq, Generic)
 
---funcTok n c = Op $ Prefix 10 n c
 
---test = funcTok "foo" $ funcTok "bar" (Tok "x")
+--instance IsString Code where
+--    fromString = Tok . fromString
+
+
+--app n c = App $ Op 10 n $ Prefix c
+----app2 n c = App $ Op 11 n $ Prefix c
+
+
+--test = app "foo" $ app "bar" "x"   -- foo (bar x)
+--test2 = app (app "foo" "bar") "x"  -- (foo bar) x
+----test = app (Tok "foo") $ app (Tok "bar") (Tok "x")
 
 --data HSCompact = HSCompact deriving (Show)
 
 --main = do
 --    print test
 --    print $ runIdentity $ render HSCompact test
+--    print $ runIdentity $ render HSCompact test2
 --    return ()
 
 --class Render style m where
 --    render :: (Monad m, Applicative m) => style -> Code -> m Text.Builder
 
+--between l r t = l <> t <> r
 
 --instance Render HSCompact m where
 --    render style = \case
 --        Tok n -> return n
---        Op op -> case op of
---            Prefix prec name code -> (\c -> name <> "(" <> c <> ")") <$> render style code
+--        App (Op prec name f) -> case f of
+--            Prefix code -> (\n c -> n <> conv c) <$> render style name <*> render style code
+--                where conv = if prec >= getPrec code then between "(" ")"
+--                                                     else (" " <>)
 --        where getPrec = \case
---            Op op -> case op of
---                Prefix p _ _ -> p
---            _     -> 0
+--                  App (Op p _ _) -> p
+--                  _     -> 100
 
-----foo bar x
+------foo bar x
 
 ----foo (bar x)
 ----(foo bar) x
+
+----foo 1 2 
+----(foo 1) 2
