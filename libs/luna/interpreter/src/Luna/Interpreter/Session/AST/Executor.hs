@@ -65,14 +65,12 @@ processMain = processMain_ >> Env.getProfileInfos
 processMain_ :: MemoryManager mm => Session mm ()
 processMain_ = do
     Env.cleanProfileInfos
-    TargetHS.reload
+    --TargetHS.reload
     mainPtr  <- Env.getMainPtr
     children <- CallDataPath.addLevel [] mainPtr
     mapM_ processNodeIfNeeded children
     Env.setAllReady True
     Debug.dumpBindings
-    --Cache.dumpAll
-    --Cache.performGC
 
 
 processNodeIfNeeded :: MemoryManager mm => CallDataPath -> Session mm ()
