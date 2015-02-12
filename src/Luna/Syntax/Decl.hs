@@ -68,7 +68,7 @@ data DataDecl a e      = DataDecl { _dataDeclName   :: TNameP
 data ForeignDecl a e
     = FData (DataDecl a e)
     | FFunc (FuncDecl a e ForeignCode)
-    | FImp  Imp
+    | FImp  Text
     deriving (Show, Generic, Eq, Read)
 
 

@@ -132,7 +132,7 @@ funcDecl body = Decl.FuncDecl <$  Tok.kwDef
 
 foreigns =  foreign $  (Decl.FFunc <$> funcDecl (fromString . concat <$> stage1Block stage1Body2))
                    <|> (Decl.FData <$> dataDecl False)
-                   <|> (Decl.FImp  <$> impDecl)
+                   <|> (Decl.FImp . fromString <$> (many (noneOf "\r\n")))
 
 ----- classes -----
 
