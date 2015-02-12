@@ -8,7 +8,7 @@ import           Text.Parser.Combinators
 import qualified Luna.Parser.Token        as Tok
 import qualified Luna.Syntax.Decl         as Decl
 import qualified Luna.Parser.Indent       as Indent
-import           Luna.Parser.Combinators  (many1, maybe)
+import           Luna.Parser.Combinators  (many1, maybe, applyAll)
 import           Luna.Parser.Builder      (labeled)
 import qualified Luna.Parser.Type         as Type
 import           Luna.Parser.Type         (typic)
@@ -143,22 +143,49 @@ withBlock p = blockStart *> p <* blockEnd
 rapp1 a f = f a
 rapp2 a b f = f a b
 
-dataDecl genDefaultCons = do
+--dataDecl genDefaultCons = do
+--    name <- Tok.kwClass *> (Tok.typeIdent <?> "class name")
+--    Decl.DataDecl <$> pure name 
+--                  <*> params
+--                  <*  blockBegin (Decl.addDecl <$> labeled (choice [ func, cls, typeAlias, typeWrapper, foreigns ]) <?> "class body")
+--                  <*> pure []
+--                  <*> pure []
+--            <?> "class definition"
+--      where params           = many (tvname <$> Tok.typeVarIdent <?> "class parameter")
+--      --      defCons        n = Decl.Cons n <$> (concat <$> many fields)
+--      --      defConsList    n = ((:[]) <$> labeled (defCons $ convert n))
+--      --      constructors   n =   blockBody' (labeled cons) <|> defConsList n
+--      --      bodyBlock        = blockBodyOpt $ labeled clsBody 
+--      --      clsBody          = choice [ func, cls, typeAlias, typeWrapper, foreigns ] <?> "class body"
+--      --      defConsBuilder n = if genDefaultCons then (rapp2) <$> defConsList n <*> pure []
+--      --                                           else pure $ (rapp2 [] [])
+
+dataDecl genDefCons = do
     name <- Tok.kwClass *> (Tok.typeIdent <?> "class name")
-    Decl.DataDecl <$> pure name 
-                  <*> params
-                  <**> ( try (withBlock ((rapp2) <$> constructors name <*> bodyBlock))
-                         <|> defConsBuilder name
-                       )
-            <?> "class definition"
+    bldr <- Decl.dataBuilder <$>  pure name 
+                             <*>  params
+                             <**> bodyBuilder (convert name)
+                             <?>  "class definition"
+    build genDefCons (convert name) bldr
       where params           = many (tvname <$> Tok.typeVarIdent <?> "class parameter")
-            defCons        n = Decl.Cons n <$> (concat <$> many fields)
-            defConsList    n = ((:[]) <$> labeled (defCons $ convert n))
-            constructors   n =   blockBody' (labeled cons) <|> defConsList n
-            bodyBlock        = blockBodyOpt $ labeled clsBody 
-            clsBody          = choice [ func, cls, typeAlias, typeWrapper, foreigns ] <?> "class body"
-            defConsBuilder n = if genDefaultCons then (rapp2) <$> defConsList n <*> pure []
-                                                 else pure $ (rapp2 [] [])
+            dataDecls        = choice [ func, cls, typeAlias, typeWrapper, foreigns ]
+            bodyDecls        =   (Decl.addDecl   <$> labeled dataDecls <?> "class body")
+                             <|> (Decl.addCons   <$> labeled cons)
+                             <|> (Decl.addFields <$> fields)
+            bodyBuilder    n = (flip applyAll <$> blockBegin bodyDecls) <|> defConsBuilder n
+            defConsBuilder n = if genDefCons 
+                                   then Decl.addCons <$> labeled (pure $ Decl.Cons n [])
+                                   else pure id
+
+
+
+
+build genDefCons name (Decl.DataBuilder decl fields) = 
+    if not (null fields) && genDefCons
+        then do
+            defcons <- labeled . pure $ Decl.Cons name fields
+            return $ decl & Decl.dataDeclCons %~ (++ [defcons])
+        else return decl
 
 
 cons         = Decl.Cons <$> Tok.conIdent 
@@ -167,8 +194,8 @@ cons         = Decl.Cons <$> Tok.conIdent
 
 
 fields = do
-         (names, cls) <- try ((,) <$> fieldList      <*> typed)
-                         <|> ((,) <$> pure [Nothing] <*> Type.term)
+         (names, cls) <- {- try -} ((,) <$> fieldList      <*> typed)
+                         -- <|> ((,) <$> pure [Nothing] <*> Type.term)
          
          sequence $ fmap (labeled.pure) 
                   $ zipWith3 Decl.Field (repeat cls) names (repeat Nothing)
@@ -178,7 +205,7 @@ fields = do
 
 
 
-typed = Tok.typeDecl *> Type.term
+typed = Tok.typeDecl *> Type.typic
 
 
 

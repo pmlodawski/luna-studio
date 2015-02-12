@@ -64,6 +64,7 @@ data DataDecl a e      = DataDecl { _dataDeclName   :: TNameP
                                   , _dataDeclDecls  :: [LDecl a e]
                                   } deriving (Show, Generic, Eq, Read)
 
+
 data ForeignDecl a e
     = FData (DataDecl a e)
     | FFunc (FuncDecl a e ForeignCode)
@@ -73,6 +74,9 @@ data ForeignDecl a e
 
 data Cons  a e = Cons   { _consName :: CNameP  , _fields :: [LField a e]                   } deriving (Show, Generic, Eq, Read)
 data Field a e = Field  { _fType    :: LType a , _fName  :: Maybe VNameP, _fVal :: Maybe e } deriving (Show, Generic, Eq, Read)
+
+singleData name = Data (DataDecl name noParams [Label 0 modCons] noBody)
+    where modCons = Cons (convert name) noFields
 
 -- === Imports ===
 
@@ -95,8 +99,18 @@ makeLenses ''Decl
 makeLenses ''DataDecl
 makeLenses ''FuncDecl
 
+-- === DataBuilder ===
+
+data DataBuilder a e = DataBuilder { _decl    :: DataDecl a e 
+                                   , _dfields :: [LField a e]
+                                   } deriving (Show, Generic, Eq, Read)
+makeLenses ''DataBuilder
+
+dataBuilder name params = DataBuilder (DataDecl name params [] []) []
+
+addCons   c = (decl . dataDeclCons ) %~ (++ [c])
+addDecl   d = (decl . dataDeclDecls) %~ (++ [d])
+addField  f = dfields %~ (++ [f])
+addFields f = dfields %~ (++ f)
 
 
-
-singleData name = Data (DataDecl name noParams [Label 0 modCons] noBody)
-    where modCons = Cons (convert name) noFields
