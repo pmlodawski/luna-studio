@@ -72,45 +72,45 @@ main = do
             (ast, astinfo) <- Pass.run1_ Stage1.pass src
             ppPrint ast
 
-            --printHeader "SA"
-            --sa             <- Pass.run1_ SA.pass ast
-            --ppPrint sa
+            printHeader "SA"
+            sa             <- Pass.run1_ SA.pass ast
+            ppPrint sa
 
-            --printHeader "Stage2"
-            --(ast, astinfo) <- Pass.run3_ Stage2.pass (Namespace [] sa) astinfo ast
-            --ppPrint ast
+            printHeader "Stage2"
+            (ast, astinfo) <- Pass.run3_ Stage2.pass (Namespace [] sa) astinfo ast
+            ppPrint ast
 
-            --printHeader "ImplSelf"
-            --(ast, astinfo) <- Pass.run2_ ImplSelf.pass astinfo ast
-            --ppPrint ast
+            printHeader "ImplSelf"
+            (ast, astinfo) <- Pass.run2_ ImplSelf.pass astinfo ast
+            ppPrint ast
 
-            --printHeader "SA"
-            --sa             <- Pass.run1_ SA.pass ast
-            --ppPrint sa
+            printHeader "SA"
+            sa             <- Pass.run1_ SA.pass ast
+            ppPrint sa
 
-            --printHeader "ImplScopes"
-            --(ast, astinfo) <- Pass.run3_ ImplScopes.pass astinfo sa ast
-            --ppPrint ast
+            printHeader "ImplScopes"
+            (ast, astinfo) <- Pass.run3_ ImplScopes.pass astinfo sa ast
+            ppPrint ast
 
-            --printHeader "ImplCalls"
-            --(ast, astinfo) <- Pass.run2_ ImplCalls.pass astinfo ast
-            --ppPrint ast
+            printHeader "ImplCalls"
+            (ast, astinfo) <- Pass.run2_ ImplCalls.pass astinfo ast
+            ppPrint ast
 
-            ----printHeader "Hash"
-            ----ast             <- Pass.run1_ Hash.pass ast
+            --printHeader "Hash"
+            --ast             <- Pass.run1_ Hash.pass ast
 
-            --printHeader "SSA"
-            --ast            <- Pass.run1_ SSA.pass ast
-            --ppPrint ast
+            printHeader "SSA"
+            ast            <- Pass.run1_ SSA.pass ast
+            ppPrint ast
 
-            --printHeader "HAST"
-            --hast           <- Pass.run1_ HASTGen.pass ast
-            --ppPrint hast
+            printHeader "HAST"
+            hast           <- Pass.run1_ HASTGen.pass ast
+            ppPrint hast
 
-            --printHeader "HSC"
-            --hsc            <- Pass.run1_ HSC.pass hast
-            --putStrLn (hsShow $ unpack hsc)
-            --liftIO $ writeFile out (hsShow $ unpack hsc)
+            printHeader "HSC"
+            hsc            <- Pass.run1_ HSC.pass hast
+            putStrLn (hsShow $ unpack hsc)
+            liftIO $ writeFile out (hsShow $ unpack hsc)
 
 
         case result of
