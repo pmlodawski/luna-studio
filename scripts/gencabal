@@ -72,7 +72,7 @@ def fields(l):
 def findmodules(basepath, regex=r'.*', exclude=r'_^'):
     paths        = find_regex(basepath, regex, exclude)
     # paths.sort()
-    paths = filter(lambda x: not x.endswith('swp'), paths)
+    paths = filter(lambda x: x.endswith('hs'), paths)
     module_files = [dropext(path) for path in paths]
     modules      = [name.replace('/','.') for name in module_files]
 

@@ -35,8 +35,8 @@ logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
 
 
-type Callback s m = (Proto.Serializable args, Proto.Serializable result)
-                  => (Topic -> Topic) -> (args -> RPC s m [result]) -> StateT s m [Message]
+type Callback s m = (Proto.Serializable args, Proto.Serializable result, Proto.Serializable undoes)
+                  => (Topic -> Topic) -> (args -> RPC s m ([result], [undoes])) -> StateT s m [Message]
 
 
 type HandlerMap s m = Callback s m -> Map Topic (StateT s m [Message])
