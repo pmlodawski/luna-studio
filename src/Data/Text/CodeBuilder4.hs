@@ -16,7 +16,7 @@ import qualified Data.Text.Lazy as Text
 import           Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy.Builder as Text
 import           Data.Text.Lazy.Builder   (toLazyText, fromLazyText)
-import           Data.Text.Builder.Poly   (ToTextBuilder, toTextBuilder)
+--import           Data.Text.Builder.Poly   (ToTextBuilder, toTextBuilder)
 
 ------------------------------------------------------------------------
 ---- Data types
@@ -123,10 +123,41 @@ import           Data.Text.Builder.Poly   (ToTextBuilder, toTextBuilder)
 --              | Block a 
 
 
-data Struct = Code    Text.Builder
-            | Simple  Struct
-            | Complex Struct
-            | Block   [Struct]
-            deriving (Show, Eq, Generic)
+--data Code = Txt     Text.Builder
+--          | Simple  Code
+--          | Complex Code
+--          | Block   [Code]
+--          | Expr    [Code]
+--          deriving (Show, Eq, Generic)
 
 
+--type Prec = Int
+--data Fixity = Prefix
+--            | Postfix
+--            | Infix Assoc
+--            deriving (Show, Eq, Generic)
+
+--data Assoc = ALeft
+--           | ARight
+--           deriving (Show, Eq, Generic)
+
+--data Code = Tok Prec Text.Builder 
+--          | Term [Code]
+--          | SBox Code
+--          deriving (Show, Eq, Generic)
+
+
+--data Tok = Prefix  Code
+--         | Postfix Code
+--         | Infix   Assoc Code Code
+
+--funcTok = Tok 10 Prefix
+
+--test = Term $ [funcTok "foo", funcTok "bar"]
+
+
+
+--foo bar x
+
+--foo (bar x)
+--(foo bar) x
