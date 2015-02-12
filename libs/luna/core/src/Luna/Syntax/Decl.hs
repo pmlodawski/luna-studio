@@ -15,7 +15,7 @@ import Flowbox.Prelude hiding (Cons, traverse)
 
 import GHC.Generics             (Generic)
 import Luna.Syntax.Type         (LType)
-import Luna.Syntax.Name         (VNameP, TNameP, CNameP, TVNameP)
+import Luna.Syntax.Name         (VNameP, TNameP, CNameP, TVNameP, NameBaseP)
 import Luna.Syntax.Native       (Native)
 import Luna.Syntax.Label        (Label)
 import Luna.Syntax.Pat          (LPat)
@@ -39,14 +39,18 @@ noBody   = []
 noFields = []
 
 data Decl a e
-    = Data      { _dataDecl :: DataDecl a e }
-    | Func      { _funcDecl :: FuncDecl a e [e] }
-    | Imp       { _modPath :: Path    , _rename   :: Maybe TNameP , _targets :: [ImpTgt]                                 }
-    | TpAls     { _dstType :: LType a , _srcType  :: LType a                                                             }
-    | TpWrp     { _dstType :: LType a , _srcType  :: LType a                                                             }
+    = Data      { _dataDecl :: DataDecl a e                  }
+    | Func      { _funcDecl :: FuncDecl a e [e]              }
+    | TpAls     { _dstType :: LType a , _srcType  :: LType a }
+    | TpWrp     { _dstType :: LType a , _srcType  :: LType a }
     | Foreign   (Foreign (ForeignDecl a e))
+    | Imp       Imp
     | Pragma    Pragma
     deriving (Show, Generic, Eq, Read)
+
+
+data ProxyName a = ProxyName a (Maybe Text)
+
 
 
 data FuncDecl a e body = FuncDecl { _funcDeclPath   :: Path
@@ -63,28 +67,23 @@ data DataDecl a e      = DataDecl { _dataDeclName   :: TNameP
 data ForeignDecl a e
     = FData (DataDecl a e)
     | FFunc (FuncDecl a e ForeignCode)
+    | FImp  Imp
     deriving (Show, Generic, Eq, Read)
 
 
-
-
--- !!!
--- jezeli bedziemy mieli TemplateLuna to chcemy znac kolejnosc deklaracji
--- bo mozemy chciec dzielic plik po sparsowaniu
-
-
-
--- ???
--- moze pozwolic na
--- import Math: sin :: Double -> Double
-
-
-data Cons  a e = Cons   { _consName :: CNameP   , _fields :: [LField a e]                  } deriving (Show, Generic, Eq, Read)
+data Cons  a e = Cons   { _consName :: CNameP  , _fields :: [LField a e]                   } deriving (Show, Generic, Eq, Read)
 data Field a e = Field  { _fType    :: LType a , _fName  :: Maybe VNameP, _fVal :: Maybe e } deriving (Show, Generic, Eq, Read)
--- FIXME[wd]: przeniesc w inne miejsce
-data ImpTgt    = ImpVar  { _vName  :: VNameP   , _vRename :: Maybe VNameP }
-               | ImpType { _tName  :: TNameP   , _tRename :: Maybe TNameP }
-               | Wildcard deriving (Show, Generic, Eq, Read)
+
+-- === Imports ===
+
+data Imp = ModImp  { _modPath :: Path , _modRename :: Maybe TNameP }
+         | DeclImp { _modPath :: Path , _targets   :: [ImpTgt]     }
+         deriving (Show, Generic, Eq, Read)
+
+data ImpTgt = ImpVar   { _vName  :: VNameP   , _vRename :: Maybe VNameP }
+            | ImpType  { _tName  :: TNameP   , _tRename :: Maybe TNameP }
+            | Wildcard { _hiding :: [NameBaseP]                         }
+            deriving (Show, Generic, Eq, Read)
 
 type Path       = [TNameP]
 type LCons  a e = Label a (Cons a e)

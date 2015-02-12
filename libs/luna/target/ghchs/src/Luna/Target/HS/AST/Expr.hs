@@ -28,7 +28,7 @@ data Expr = DataD        { _name      :: Text     , _params    :: [Text]      , 
           | TypeD        { _src       :: Expr     , _dst       :: Expr                                                                                       }
           | CondE        { _cond      :: Expr     , _success   :: [Expr]      , _failure :: [Expr]                                                           }
           | RecUpdE      { _expr      :: Expr     , _name      :: Text        , _value   :: Expr                                                             }
-          | Import       { _qualified :: Bool     , _segments  :: [Text]      , _rename  :: Maybe Text                                                       }
+          | Import       { _qualified :: Bool     , _segments  :: [Text]      , _rename  :: Maybe Text , _targets :: Maybe [Text]                            }
           | OperatorE    { _name      :: Text     , _src       :: Expr        , _dst     :: Expr                                                             }
           | Infix        { _name      :: Text     , _src       :: Expr        , _dst     :: Expr                                                             }
           | Assignment   { _src       :: Expr     , _dst       :: Expr                                                                                       }
