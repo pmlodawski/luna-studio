@@ -200,11 +200,11 @@ profile callPointPath action = do
 
 ---- Env.timeVar ----------------------------------------------------------
 
-getTimeVar :: Session mm Double
+getTimeVar :: Session mm Env.TimeVar
 getTimeVar = gets $ view Env.timeVar
 
 
-setTimeVar :: Double -> Session mm ()
+setTimeVar :: Env.TimeVar -> Session mm ()
 setTimeVar = modify . set Env.timeVar
 
 ---- Env.timeRefs ---------------------------------------------------------
