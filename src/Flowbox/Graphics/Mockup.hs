@@ -33,6 +33,7 @@ import qualified Data.Array.Accelerate.IO          as A
 import           Data.Bool
 import           Data.Char                         (toLower)
 import           Data.Maybe
+import qualified Data.Map                          as Map
 import qualified Data.Vector.Storable              as SV
 import           Math.Coordinate.Cartesian
 import           Math.Space.Space
@@ -550,24 +551,27 @@ blurLuna (variable -> kernelSize) = onEachChannel blurChannel
 constantLuna :: Raster.Format -> Color.RGBA Double -> Image
 constantLuna format {-- (variable -> width) (variable -> height) --} (fmap variable -> Color.RGBA r g b a) =
     case format of
-        Raster.PCVideo       -> makeConst 640 480
-        Raster.NTSC          -> makeConst 720 486
-        Raster.PAL           -> makeConst 720 576
-        Raster.HD            -> makeConst 1920 1080
-        Raster.NTSC169       -> makeConst 720 486
-        Raster.PAL169        -> makeConst 720 576
-        Raster.K1Super35     -> makeConst 1024 778
-        Raster.K1Cinemascope -> makeConst 914 778
-        Raster.K2Super35     -> makeConst 2048 1556
-        Raster.K2Cinemascope -> makeConst 1828 1556
-        Raster.K4Super35     -> makeConst 4096 3112
-        Raster.K4Cinemascope -> makeConst 3656 3112
-        Raster.Square256     -> makeConst 256 256
-        Raster.Square512     -> makeConst 512 512
-        Raster.Square1K      -> makeConst 1024 1024
-        Raster.Square2K      -> makeConst 2048 2048
         Raster.CustomFormat width height -> makeConst width height
-        where   makeConst (variable -> width) (variable -> height) = 
+        _ -> makeConst' $ Raster.formatMap Map.! format
+        --Raster.PCVideo       -> makeConst 640 480
+        --Raster.NTSC          -> makeConst 720 486
+        --Raster.PAL           -> makeConst 720 576
+        --Raster.HD            -> makeConst 1920 1080
+        --Raster.NTSC169       -> makeConst 720 486
+        --Raster.PAL169        -> makeConst 720 576
+        --Raster.K1Super35     -> makeConst 1024 778
+        --Raster.K1Cinemascope -> makeConst 914 778
+        --Raster.K2Super35     -> makeConst 2048 1556
+        --Raster.K2Cinemascope -> makeConst 1828 1556
+        --Raster.K4Super35     -> makeConst 4096 3112
+        --Raster.K4Cinemascope -> makeConst 3656 3112
+        --Raster.Square256     -> makeConst 256 256
+        --Raster.Square512     -> makeConst 512 512
+        --Raster.Square1K      -> makeConst 1024 1024
+        --Raster.Square2K      -> makeConst 2048 2048
+        
+        where   makeConst' = P.uncurry makeConst
+                makeConst (variable -> width) (variable -> height) = 
                     Raster.constant (A.index2 width height) chans
                 chans = [ ("rgba.r", r)
                       , ("rgba.g", g)
