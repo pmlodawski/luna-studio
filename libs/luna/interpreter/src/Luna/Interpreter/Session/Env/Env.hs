@@ -34,6 +34,7 @@ import           Luna.Lib.Manager                            (LibManager)
 
 type ResultCallBack = Project.ID -> CallPointPath -> [ModeValue] -> IO ()
 type FragileMVar    = MVar ()
+type TimeVar        = Float
 
 data Env memoryManager = Env { _cached             :: MapForest CallPoint CacheInfo
                              , _watchPoints        :: SetForest CallPoint
@@ -43,7 +44,7 @@ data Env memoryManager = Env { _cached             :: MapForest CallPoint CacheI
                              , _dependentNodes     :: Map CallPoint IntSet
                              , _profileInfos       :: MapForest CallPoint ProfileInfo
 
-                             , _timeVar            :: Double
+                             , _timeVar            :: TimeVar
                              , _timeRefs           :: Set CallPoint
 
                              , _serializationModes :: MapForest CallPoint (MultiSet Mode)
