@@ -31,14 +31,23 @@ import           Text.Parser.Char (char, alphaNum, spaces, noneOf)
 
 ----- Imports -----
 
-imp = Decl.Imp <$  Tok.kwImport
-               <*> (qualifiedPath Tok.typeIdent <?> "import path")
-               <*> ((Just <$ Tok.kwAs <*> Tok.typeIdent) <|> pure Nothing)
-               <*> (blockBegin importTarget <|> pure [])
-               <?> "import declaration"
+imp = Decl.Imp <$> impDecl
+               
+impDecl = Tok.kwImport *> choice [try declImp, modImp] <?> "import declaration"
+
+impPath = qualifiedPath Tok.typeIdent <?> "import path"
+
+modImp = Decl.ModImp <$> impPath
+                     <*> ((Just <$ Tok.kwAs <*> Tok.typeIdent) <|> pure Nothing <?> "module renaming")
+                     <?> "module import"
+
+declImp = Decl.DeclImp <$> impPath
+                       <*> blockBegin importTarget
+                       <?> "declaration import"
 
 importTarget =   body Decl.ImpVar Tok.varOp 
              <|> body Decl.ImpType Tok.typeIdent
+             <?> "import declaration"
              where body c p = c <$> p <*> ((Just <$ Tok.kwAs <*> p) <|> pure Nothing)
 
 
@@ -118,8 +127,12 @@ funcDecl body = Decl.FuncDecl <$  Tok.kwDef
           outType = (Just <$> try (Tok.arrow *> typic)) <|> pure Nothing
 
 
-foreigns =  foreign $   (Decl.FFunc <$> funcDecl (fromString . concat <$> stage1Block stage1Body2))
+----- foreigns -----
+
+
+foreigns =  foreign $  (Decl.FFunc <$> funcDecl (fromString . concat <$> stage1Block stage1Body2))
                    <|> (Decl.FData <$> dataDecl False)
+                   <|> (Decl.FImp  <$> impDecl)
 
 ----- classes -----
 
