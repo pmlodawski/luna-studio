@@ -387,28 +387,18 @@ genForeign (Foreign target a) = case target of
         Decl.FFunc decl -> genFunc decl (Just genFFuncBody) False
         Decl.FData decl -> genDataDecl True decl
         Decl.FImp  imp  -> genImp imp
+        where genImp = \case
+                  -- genImp uses 'toText' in order not to mangle the names for foreigns
+                  Decl.ModImp  path rename -> addImport $ HE.Import True  (fmap toText path) (fmap toText rename) Nothing
+                  Decl.DeclImp path tgts   -> addImport $ HE.Import False (fmap toText path) Nothing htgts where
+                      htgts = case sequence $ fmap genTgt tgts of
+                          Right lst -> Just lst
+                          Left  _   -> Nothing
 
-genImp = \case
-    Decl.ModImp  path rename -> addImport $ HE.Import True  (fmap convVar path) (fmap convVar rename) Nothing
-    Decl.DeclImp path tgts   -> addImport $ HE.Import False (fmap convVar path) Nothing htgts where
-        htgts = case sequence $ fmap genTgt tgts of
-            Right lst -> Just lst
-            Left  _   -> Nothing
-
-        genTgt = \case
-            Decl.ImpVar   name rename -> Right $ convVar name
-            Decl.ImpType  name rename -> Right $ convVar name
-            Decl.Wildcard hiding      -> Left "TODO"
-
-
---data Imp = ModImp  { _modPath :: Path , _modRename :: Maybe TNameP }
---         | DeclImp { _modPath :: Path , _targets   :: [ImpTgt]     }
---         deriving (Show, Generic, Eq, Read)
-
---data ImpTgt = ImpVar   { _vName  :: VNameP   , _vRename :: Maybe VNameP }
---            | ImpType  { _tName  :: TNameP   , _tRename :: Maybe TNameP }
---            | Wildcard { _hiding :: [NameBaseP]                         }
---            deriving (Show, Generic, Eq, Read)
+                      genTgt = \case
+                          Decl.ImpVar   name rename -> Right $ toText name
+                          Decl.ImpType  name rename -> Right $ toText name
+                          Decl.Wildcard hiding      -> Left "TODO"
 
 
 genFFuncBody :: Monad m => Text -> a -> PassResult m [HE]
