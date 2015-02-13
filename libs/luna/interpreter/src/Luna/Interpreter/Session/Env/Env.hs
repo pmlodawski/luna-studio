@@ -76,7 +76,7 @@ mkCpphsOptions config = Cpphs.CpphsOptions [] [] [] []
 
 mk :: Config -> memoryManager -> LibManager -> Maybe Project.ID -> Maybe DefPoint
    -> ResultCallBack -> IO (Env memoryManager)
-mk memoryManager' libManager' projectID' mainPtr' resultCallBack' = do
+mk config memoryManager' libManager' projectID' mainPtr' resultCallBack' = do
     fo <- MVar.newMVar ()
     return $ Env { _cached           = def
                  , _watchPoints      = def
