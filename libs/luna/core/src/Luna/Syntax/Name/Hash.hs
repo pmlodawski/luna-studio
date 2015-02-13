@@ -79,7 +79,18 @@ instance Hashable Char String where
 
 
 instance Hashable Text Text where
-    hash t = Text.fromChunks . fmap (fromString . hash) $ Text.unpack t
+    hash t = if c == '@' then fromString (hashToUnderscore cc) -- FIXME [wd]: just a dirty fix for hast gen
+                         else Text.fromChunks . fmap (fromString . hash) $ Text.unpack t
+        where str@(c:cc) = Text.unpack t
+        
 
 instance Hashable String String where
-    hash = concat . fmap hash
+    hash ('@':t) = hashToUnderscore t
+    hash  val    = concat $ fmap hash val
+
+
+hashToUnderscore = \case
+    [] -> []
+    (s:ss) -> s' : hashToUnderscore ss where
+        s' = if s == '#' then '_'
+                         else s

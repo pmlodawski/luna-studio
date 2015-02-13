@@ -19,7 +19,6 @@
 module Main where
 
 -- imports --
-import duasfo[sd kgisdj fiosdjfio ]
 import Luna.Target.HS
 
 -- body --
@@ -32,6 +31,8 @@ $(registerType ''Main)
 -- ------ Main.Main constructor ------ --
 cons_Main = _member("Main") (val Cls_Main)
 memDef_Cls_Main_Main = liftCons0 Main
+
+-- ====== --------------- ====== --
 
 -- ====== Method: Cls_Main.Main ====== --
 memSig_Cls_Main_Main = _rtup1(_nuSigArg("self"))
@@ -55,6 +56,8 @@ $(registerType ''Bool)
 cons_True = _member("True") (val Cls_Bool)
 memDef_Cls_Bool_True = liftCons0 True
 
+-- ====== --------------- ====== --
+
 -- ====== Method: Cls_Bool.True ====== --
 memSig_Cls_Bool_True = _rtup1(_nuSigArg("self"))
 memFnc_Cls_Bool_True = (memSig_Cls_Bool_True, memDef_Cls_Bool_True)
@@ -63,6 +66,8 @@ $(registerMethod ''Cls_Bool "True")
 -- ------ Bool.False constructor ------ --
 cons_False = _member("False") (val Cls_Bool)
 memDef_Cls_Bool_False = liftCons0 False
+
+-- ====== --------------- ====== --
 
 -- ====== Method: Cls_Bool.False ====== --
 memSig_Cls_Bool_False = _rtup1(_nuSigArg("self"))
@@ -80,6 +85,8 @@ $(registerFieldAccessors ''Vector ["x", "y", "z"])
 -- ------ Vector.Vector constructor ------ --
 cons_Vector = _member("Vector") (val Cls_Vector)
 memDef_Cls_Vector_Vector = liftCons3 Vector
+
+-- ====== --------------- ====== --
 
 -- ====== Method: Cls_Vector.Vector ====== --
 memSig_Cls_Vector_Vector = _rtup4(_nuSigArg("self"), _nuSigArg("x"), _nuSigArg("y"), _nuSigArg("z"))
