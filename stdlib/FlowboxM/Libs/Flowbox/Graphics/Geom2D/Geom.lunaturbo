@@ -2,27 +2,27 @@
 #                GEOM
 #
 
-import ```Flowbox.Geom2D.Rectangle```
+foreign haskell import Flowbox.Geom2D.Rectangle
 
 # TODO: convert cornerPin to use Point2
 class Point a:
     x,y :: a
 
-class ```Point2``` a:
-    x,y :: a
+foreign haskell class Point2 a:
+    Point2: x,y :: a
 
-class ```Rectangle``` a:
+foreign haskell class Rectangle a:
     pA,pB :: Point2 a
 
-class ```SkewOrder```:
+foreign haskell class SkewOrder:
     SkewXY
     SkewYX
 
-class ```Skew``` a:
+foreign haskell class Skew a:
     point :: Point2 a
     order :: SkewOrder
 
-class ```Transform``` a:
+foreign haskell class Transform a:
     translate :: Point2 a
     rotate    :: a
     scale     :: Point2 a
@@ -32,22 +32,22 @@ class ```Transform``` a:
 def point x y:
     Point2 x y
 
-def nopoint:
-    ```val (Nothing :: Maybe (Point2 Float))```
+foreign haskell def nopoint:
+    val (Nothing :: Maybe (Point2 Float))
 
-# class ```ControlPoint``` a:
+# foreign haskell class ControlPoint a:
 # class ControlPoint a:
 #     point               :: Point2 a
 #     handleIn, handleOut :: Maybe (Point2 a)
 
-# class ```Path``` a:
+# foreign haskell class Path a:
 #     closed   :: Bool
 #     vertices :: [ControlPoint a]
 
-# class ```Shape``` a:
+# foreign haskell class Shape a:
 #     paths :: [Path a]
 
-# class ```Mask``` a:
+# foreign haskell class Mask a:
 #     path    :: Path a
 #     feather :: Maybe (Path a)
 
@@ -68,5 +68,5 @@ def shape paths:
 def mask path feather:
     (path, feather)
 
-def rasterizeMask w h m:
-    ```liftF3 rasterizeMaskLuna #{w} #{h} #{m}```
+foreign haskell def rasterizeMask w h m:
+    liftF3 rasterizeMaskLuna w h m
