@@ -4,17 +4,19 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE LambdaCase      #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Luna.Interpreter.Session.Env.State where
 
-import qualified Control.Concurrent.MVar     as MVar
+import qualified Control.Concurrent.MVar    as MVar
+import           Control.Monad.Catch        (bracket_)
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
-import           Data.IntSet                 (IntSet)
-import qualified Data.IntSet                 as IntSet
-import           Data.Map                    (Map)
-import qualified Data.Map                    as Map
+import           Data.IntSet                (IntSet)
+import qualified Data.IntSet                as IntSet
+import           Data.Map                   (Map)
+import qualified Data.Map                   as Map
 import qualified Data.Maybe                  as Maybe
 import           Data.MultiSet               (MultiSet)
 import qualified Data.MultiSet               as MultiSet
@@ -22,14 +24,14 @@ import           Data.Set                    (Set)
 import qualified Data.Set                    as Set
 import qualified Language.Preprocessor.Cpphs as Cpphs
 
-import           Control.Monad.Catch                           (bracket_)
 import qualified Flowbox.Batch.Project.Project                 as Project
-import           Flowbox.Control.Error
+import           Flowbox.Control.Error                       hiding (err)
 import           Flowbox.Data.MapForest                        (MapForest)
-import qualified Flowbox.Data.MapForest                        as MapForest
-import           Flowbox.Data.Mode                             (Mode)
-import           Flowbox.Data.SetForest                        (SetForest)
-import qualified Flowbox.Data.SetForest                        as SetForest
+import qualified Flowbox.Data.MapForest                      as MapForest
+import qualified Flowbox.Batch.Project.Project               as Project
+import           Flowbox.Data.Mode                           (Mode)
+import           Flowbox.Data.SetForest                      (SetForest)
+import qualified Flowbox.Data.SetForest                      as SetForest
 import           Flowbox.Prelude
 import           Flowbox.Source.Location                       (Location, loc)
 import qualified Luna.DEP.AST.AST                              as AST
@@ -177,6 +179,11 @@ deleteDependentNode callPoint nodeID =
 cleanDependentNodes :: Session mm ()
 cleanDependentNodes = modify (Env.dependentNodes .~ def)
 
+---- Env.cpphsOptions -----------------------------------------------------
+
+getCpphsOptions :: Session mm Cpphs.CpphsOptions
+getCpphsOptions = gets $ view Env.cpphsOptions
+
 ---- Env.profileInfos -----------------------------------------------------
 
 cleanProfileInfos :: Session mm ()
@@ -198,10 +205,32 @@ profile callPointPath action = do
     whenVisible callPointPath $ insertProfileInfo callPointPath info
     return r
 
----- Env.cpphsOptions -----------------------------------------------------
+---- Env.compileErrors ----------------------------------------------------
 
-getCpphsOptions :: Session mm Cpphs.CpphsOptions
-getCpphsOptions = gets $ view Env.cpphsOptions
+cleanCompileErrors :: Session mm ()
+cleanCompileErrors = modify $ Env.compileErrors .~ def
+
+
+getCompileErrors :: Session mm (MapForest CallPoint Error)
+getCompileErrors = gets $ view Env.compileErrors
+
+
+insertCompileError :: CallPointPath -> Error -> Session mm ()
+insertCompileError callPointPath err =
+    modify (Env.compileErrors %~ MapForest.insert callPointPath err)
+
+
+reportCompileErrors :: CallPointPath -> Session mm () -> Session mm ()
+reportCompileErrors callPointPath action = do
+    lift (runEitherT action) >>= \case
+        Left err -> insertCompileError callPointPath err
+        Right () -> return ()
+
+
+debugNode :: CallPointPath -> Session mm () -> Session mm ()
+debugNode callPointPath action =
+    reportCompileErrors callPointPath $
+                profile callPointPath action
 
 ---- Env.timeVar ----------------------------------------------------------
 
@@ -429,5 +458,6 @@ cleanEnv = cleanWatchPoints
         >> cleanTimeRefs
         >> cleanDependentNodes
         >> cleanProfileInfos
+        >> cleanCompileErrors
         >> cleanSerializationModes
 
