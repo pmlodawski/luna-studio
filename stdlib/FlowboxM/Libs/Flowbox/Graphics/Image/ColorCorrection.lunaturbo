@@ -61,7 +61,7 @@ def Image.colorCorrect master #masterSaturation masterContrast masterGamma maste
                        shadows #shadowsSaturation shadowsContrast shadowsGamma shadowsGain shadowsOffset
                        midtones #midtonesSaturation midtonesContrast midtonesGamma midtonesGain midtonesOffset
                        highlights: #highlightsSaturation highlightsContrast highlightsGamma highlightsGain highlightsOffset:
-    ```liftF5 colorCorrectLuna' #{master} #{shadows} #{midtones} #{highlights} #{self}```
+    ```liftF5 colorCorrectLuna #{master} #{shadows} #{midtones} #{highlights} #{self}```
 
 def Image.colorCorrectCurves curves
                        master #masterSaturation masterContrast masterGamma masterGain masterOffset
