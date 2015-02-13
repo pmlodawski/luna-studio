@@ -12,7 +12,7 @@ foreign haskell class Point2 a:
     Point2: x,y :: a
 
 foreign haskell class Rectangle a:
-    pA,pB :: Point2 a
+    Rectangle: pA,pB :: Point2 a
 
 foreign haskell class SkewOrder:
     SkewXY
