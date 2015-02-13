@@ -4,6 +4,7 @@
 
 import ```Flowbox.Graphics.Mockup.Filter```
 import ```Flowbox.Graphics.Mockup.Transform```
+import ```Flowbox.Math.Matrix (Matrix2, transpose)```
 
 def Image.posterize colors:
     ```liftF2 posterizeLuna #{colors} #{self}```
@@ -88,6 +89,23 @@ def Image.close size:
 
 # def Image.radialBlur size angle:
 #     ```liftF3 radialBlurLuna #{size} #{angle} #{self}```
+
+def laplace kernelSize crossValue sideValue:
+    ```liftF3 laplacianOperator #{kernelSize} #{crossValue} #{sideValue}```
+
+def scharr:
+    ```liftF0 laplacianOperator```
+
+def sobel:
+    ```liftF0 sobelOperator```
+
+def prewitt:
+    ```liftF0 prewittOperator```
+
+alias EdgeOperator = Matrix2 Float
+
+def EdgeOperator.transpose:
+    ```liftF1 transpose #{self}```
 
 def Image.edgeDetect edgeOperator:
     ```liftF2 edgeDetectLuna #{edgeOperator} #{self}```

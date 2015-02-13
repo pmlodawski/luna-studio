@@ -240,7 +240,24 @@ def Image.close self::Image size::Int -> Image:
 # def Image.radialBlur self::Image size::Int angle::Float:
 #     ```liftF3 radialBlurLuna #{size} #{angle} #{self}```
 
-def Image.edgeDetect self::Image edgeOperator -> Image:
+alias EdgeOperator = Matrix2 Float
+
+def laplace self::Std kernelSize::Int crossValue::Float sideValue::Float -> EdgeOperator:
+    ```liftF3 laplacianOperator #{kernelSize} #{crossValue} #{sideValue}```
+
+def scharr self::Std -> EdgeOperator:
+    ```liftF0 laplacianOperator```
+
+def sobel self::Std -> EdgeOperator:
+    ```liftF0 sobelOperator```
+
+def prewitt self::Std -> EdgeOperator:
+    ```liftF0 prewittOperator```
+
+def EdgeOperator.transpose self::EdgeOperator -> EdgeOperator:
+    ```liftF1 transpose #{self}```
+
+def Image.edgeDetect self::Image edgeOperator::EdgeOperator -> Image:
     ```liftF2 edgeDetectLuna #{edgeOperator} #{self}```
 
 # def Image.bayer self::Image bits::Int:
