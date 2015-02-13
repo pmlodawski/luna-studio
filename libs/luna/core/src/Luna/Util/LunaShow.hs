@@ -12,7 +12,7 @@ module Luna.Util.LunaShow where
 import qualified Data.List  as List
 import qualified Data.Maybe as Maybe
 
-import           Flowbox.Prelude hiding (simple)
+import           Flowbox.Prelude     hiding (simple)
 import           Luna.AST.Arg        (Arg)
 import qualified Luna.AST.Arg        as Arg
 import           Luna.AST.Expr       (Expr)
@@ -74,7 +74,7 @@ instance LunaShow Expr where
         Expr.List         _ items         -> simple  ["[", List.intercalate ", " $ map (csLunaShow context) items, "]"]
         Expr.Lit          _ lvalue        -> simple  [csLunaShow context lvalue]
         Expr.Tuple        _ items         -> complex [List.intercalate ", " $ map (csLunaShow context) items]
-        --Expr.Typed        _ cls      expr
+        Expr.Typed        _ cls     expr' -> complex [csLunaShow context expr', " :: ", csLunaShow context cls]
         Expr.Var          _ name          -> simple  [name]
         Expr.Wildcard     _               -> simple  ["_"]
         Expr.RangeFromTo  _ start    end  -> simple  [csLunaShow context start, "..", csLunaShow context end]
@@ -82,7 +82,7 @@ instance LunaShow Expr where
         --Expr.Field        _ name     cls       value
         Expr.Arg          _ pat value     -> simple  [csLunaShow context pat, Maybe.maybe "" (\e -> '=':csLunaShow context e) value]
         Expr.Native       _ segments      -> simple  ["```", concatMap (csLunaShow context) segments, "```"]
-        Expr.NativeCode   _ code          -> simple  [code]
+        Expr.NativeCode   _ code'         -> simple  [code']
         Expr.NativeVar    _ name          -> simple  ["#{", name, "}"]
         --Expr.Case         _ expr     match
         --Expr.Match        _ pat      body
@@ -99,7 +99,7 @@ instance LunaShow (Arg Expr) where
 
 
 instance LunaShow Name where
-    lunaShowC context name = pure $ name ^. Name.base
+    lunaShowC _ name = pure $ name ^. Name.base
 
 
 instance LunaShow Lit where

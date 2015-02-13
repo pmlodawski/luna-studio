@@ -51,6 +51,7 @@ get request@(GetGraph.Request tbc tlibID tprojectID _)  = do
         projectID = decodeP tprojectID
 
     graph <- BatchG.nodesGraph bc libID projectID
+    seq graph $ return ()
     return $ GetGraph.Status request (encode graph)
 
 
