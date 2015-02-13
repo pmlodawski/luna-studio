@@ -121,7 +121,7 @@ computeLookupValue varName (modValues, compValMap) mode = do
                       let newMap = if null $ varName ^. VarName.hash
                             then compValMap
                             else Map.insert (varName, mode) val compValMap
-                      return (ModeValue mode (Just val):modValues, newMap)
+                      return (ModeValue mode (Just val):modValues, compValMap) --newMap) --FIXME[PM] : temporarily disabled
         justVal -> do logger debug "Cached value"
                       return (ModeValue mode justVal:modValues, compValMap)
 

@@ -52,7 +52,6 @@ import           Luna.Interpreter.Session.ProfileInfo       (ProfileInfo)
 import           Luna.Interpreter.Session.Session           (Session)
 import qualified Luna.Interpreter.Session.Session           as Session
 import qualified Luna.Interpreter.Session.TargetHS.Bindings as Bindings
-import qualified Luna.Interpreter.Session.TargetHS.TargetHS as TargetHS
 import qualified Luna.Interpreter.Session.Var               as Var
 import qualified Luna.Parser.Parser                         as Parser
 import qualified Luna.Parser.Pragma                         as Pragma
@@ -77,7 +76,7 @@ processMain = processMain_ >> Env.getProfileInfos
 processMain_ :: MemoryManager mm => Session mm ()
 processMain_ = do
     Env.cleanProfileInfos
-    TargetHS.reload
+    --TargetHS.reload
     mainPtr  <- Env.getMainPtr
     children <- CallDataPath.addLevel [] mainPtr
     mapM_ processNodeIfNeeded children
@@ -242,7 +241,8 @@ evalFunction nodeExpr callDataPath varNames = do
         LitFloat name -> return $ "toIOEnv $ fromValue $ val (" <> name <> " :: Float)"
         Lit      name -> return $ "toIOEnv $ fromValue $ val (" <> name <> ")"
         Tuple       -> return $ "toIOEnv $ fromValue $ val (" <> List.intercalate "," args <> ")"
-        TimeVar     -> (<>) "toIOEnv $ fromValue $ val $ " . show <$> Env.getTimeVar
+        TimeVar     -> do time <- Env.getTimeVar
+                          return $ "toIOEnv $ fromValue $ val (" <> show time <> " :: Float)"
         Expression  name -> return $ "toIOEnv $ fromValue $ " <> name
     catchEither (left . Error.RunError $(loc) callPointPath) $ do
         Session.runAssignment' tmpVarName operation

@@ -37,6 +37,7 @@ import           Luna.Interpreter.Session.TargetHS.Reload    (ReloadMap)
 
 type ResultCallBack = Project.ID -> CallPointPath -> [ModeValue] -> IO ()
 type FragileMVar    = MVar ()
+type TimeVar        = Float
 
 data Env memoryManager = Env { _cached             :: MapForest CallPoint CacheInfo
                              , _watchPoints        :: SetForest CallPoint
@@ -47,7 +48,7 @@ data Env memoryManager = Env { _cached             :: MapForest CallPoint CacheI
                              , _profileInfos       :: MapForest CallPoint ProfileInfo
                              , _cpphsOptions       :: Cpphs.CpphsOptions
 
-                             , _timeVar            :: Double
+                             , _timeVar            :: TimeVar
                              , _timeRefs           :: Set CallPoint
 
                              , _serializationModes :: MapForest CallPoint (MultiSet Mode)

@@ -201,7 +201,7 @@ class ```KeyerThresholds``` a:
 
 alias KeyerThresholdsF = KeyerThresholds Float
 
-def Image.key self::Image mode::KeyerMode thresholds::KeyerThresholdsF:
+def Image.key self::Image mode::KeyerMode thresholds::KeyerThresholdsF -> Image:
     ```liftF3 keyerLuna #{mode} #{thresholds} #{self}```
 
 def Image.differenceKey self::Image offset::Float gain::Float background::Image -> Image:
