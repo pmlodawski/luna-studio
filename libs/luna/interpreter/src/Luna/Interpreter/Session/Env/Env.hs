@@ -29,6 +29,7 @@ import           Luna.Interpreter.Session.Cache.Info         (CacheInfo)
 import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint)
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import           Luna.Interpreter.Session.Data.DefPoint      (DefPoint)
+import           Luna.Interpreter.Session.Error              (Error)
 import qualified Luna.Interpreter.Session.Memory.Config      as Memory
 import           Luna.Interpreter.Session.ProfileInfo        (ProfileInfo)
 import           Luna.Interpreter.Session.TargetHS.Reload    (ReloadMap)
@@ -39,14 +40,16 @@ type ResultCallBack = Project.ID -> CallPointPath -> [ModeValue] -> IO ()
 type FragileMVar    = MVar ()
 type TimeVar        = Float
 
+
 data Env memoryManager = Env { _cached             :: MapForest CallPoint CacheInfo
                              , _watchPoints        :: SetForest CallPoint
                              , _reloadMap          :: ReloadMap
                              , _allReady           :: Bool
                              , _fragileOperation   :: FragileMVar
                              , _dependentNodes     :: Map CallPoint IntSet
-                             , _profileInfos       :: MapForest CallPoint ProfileInfo
                              , _cpphsOptions       :: Cpphs.CpphsOptions
+                             , _profileInfos       :: MapForest CallPoint ProfileInfo
+                             , _compileErrors      :: MapForest CallPoint Error
 
                              , _timeVar            :: TimeVar
                              , _timeRefs           :: Set CallPoint
@@ -73,13 +76,36 @@ mkCpphsOptions config = Cpphs.CpphsOptions [] [] [] []
 
 mk :: Config -> memoryManager -> LibManager -> Maybe Project.ID -> Maybe DefPoint
    -> ResultCallBack -> IO (Env memoryManager)
-mk config memoryManager'  libManager' projectID' mainPtr' resultCallBack' = do
+mk memoryManager' libManager' projectID' mainPtr' resultCallBack' = do
     fo <- MVar.newMVar ()
-    return $ Env def def def False fo def def (mkCpphsOptions config)
-                 def def
-                 def def memoryManager'
-                 libManager' projectID' mainPtr' resultCallBack'
+    return $ Env { _cached           = def
+                 , _watchPoints      = def
+                 , _reloadMap        = def
+                 , _allReady         = False
+                 , _fragileOperation = fo
+                 , _dependentNodes   = def
+                 , _cpphsOptions     = mkCpphsOptions config
+                 , _profileInfos     = def
+                 , _compileErrors    = def
+
+                 , _timeVar          = def
+                 , _timeRefs         = def
+
+                 , _serializationModes = def
+                 , _memoryConfig       = def
+                 , _memoryManager      = memoryManager'
+
+                 , _libManager     = libManager'
+                 , _projectID      = projectID'
+                 , _mainPtr        = mainPtr'
+                 , _resultCallBack = resultCallBack'
+                 }
 
 
 mkDef :: Config -> memoryManager -> IO (Env memoryManager)
-mkDef config memoryManager' = mk config memoryManager' def def def (const (const (void . return)))
+mkDef config memoryManager' = mk config
+            {- memoryManager  -} memoryManager'
+            {- libManager     -} def
+            {- projectID      -} def
+            {- mainPtr        -} def
+            {- resultCallBack -} (const (const (void . return)))

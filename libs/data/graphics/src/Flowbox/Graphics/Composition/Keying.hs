@@ -11,7 +11,7 @@
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE UndecidableInstances  #-}
 
-module Flowbox.Graphics.Composition.Keyer where
+module Flowbox.Graphics.Composition.Keying where
 
 import qualified Data.Array.Accelerate as A
 import           Data.Typeable         (Typeable)

@@ -35,6 +35,11 @@ message ProfileInfo {
     required int64         realTime      = 3;
 }
 
+message CompileError {
+    required CallPointPath callPointPath = 1;
+    required string        errorMessage  = 2;
+}
+
 enum Status {
     Ready        = 1;
     Modified     = 2;
@@ -160,8 +165,9 @@ message Interpreter {
             optional float timeValue = 1;
         }
         message Update  { 
-            required Request     request      = 1;
-            repeated ProfileInfo profileInfos = 2;
+            required Request      request       = 1;
+            repeated ProfileInfo  profileInfos  = 2;
+            repeated CompileError compileErrors = 3;
         }
     }
     message Value {

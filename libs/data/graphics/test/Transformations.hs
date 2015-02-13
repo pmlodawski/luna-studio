@@ -8,7 +8,9 @@
 
 module Main where
 
-import           Flowbox.Graphics.Mockup as Mockup
+import           Flowbox.Graphics.Mockup
+import           Flowbox.Graphics.Mockup.Basic as Mockup
+import           Flowbox.Graphics.Mockup.Transform
 import qualified Flowbox.Math.Matrix as M
 import           Data.Array.Accelerate as A hiding (fromIntegral)
 import           Data.Array.Accelerate.IO

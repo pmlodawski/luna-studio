@@ -1,12 +1,7 @@
----------------------------------------------------------------------------
--- Copyright (C) Flowbox, Inc - All Rights Reserved
--- Unauthorized copying of this file, via any medium is strictly prohibited
--- Proprietary and confidential
--- Flowbox Team <contact@flowbox.io>, 2014
----------------------------------------------------------------------------
 module Main where
 
-import Flowbox.Graphics.Mockup
+import Flowbox.Graphics.Mockup.Basic
+import Flowbox.Graphics.Mockup.ColorCorrect
 import Flowbox.Prelude as P
 --import Flowbox.Graphics.Utils
 import Flowbox.Graphics.Color.RGBA
@@ -39,7 +34,7 @@ main = do
     --let sat1        = RGBA 2 2 2 2 :: RGBA Float
     --let contrast1   = RGBA 1.2 1.2 1.2 1.2 :: RGBA Float
     let offset1     = VPS $ RGBA 0.5 0.5 0.5 0.5 :: VPS (RGBA Float)
-    let out = colorCorrectLuna'
+    let out = colorCorrectLuna
 
                 {- master -}     (neutralSCGG, neutralSCGG, neutralSCGG, neutralSCGG, neutralOff)
                 {- shadows -}    (neutralSCGG, neutralSCGG, neutralSCGG, neutralSCGG, neutralOff)
@@ -48,7 +43,7 @@ main = do
 
                 image
 
-    --let out2 = colorCorrectLuna'
+    --let out2 = colorCorrectLuna
     --            (RGBA 1.2 1.2 1.2 1.2 :: RGBA Float)
     --            (RGBA 0.8 0.8 0.8 0.8 :: RGBA Float)
     --            (RGBA 1.2 1.2 1.2 1.2 :: RGBA Float)
@@ -70,11 +65,12 @@ main = do
     --            (RGBA 0.58 0.58 0.58 0.58 :: RGBA Float)
     --            (RGBA 1.45 1.45 1.45 1.45 :: RGBA Float)
     --            (RGBA 0.76 0.76 0.76 0.76 :: RGBA Float)
+    --            (RGBA 0.76 0.76 0.76 0.76 :: RGBA Float)
     --            (RGBA 1.45 1.45 1.45 1.45 :: RGBA Float)
     --            (RGBA 0.07 0.07 0.07 0.07  :: RGBA Float)
     --            image
 
-    --let out3 = colorCorrectLuna'
+    --let out3 = colorCorrectLuna
     --            (RGBA 2 2 2 2 :: RGBA Float)
     --            (RGBA 0.5 0.5 0.5 0.5 :: RGBA Float)
     --            (RGBA 2 2 2 2 :: RGBA Float)
@@ -100,7 +96,7 @@ main = do
     --            neutralOff
     --            image
 
-    --let out4 = colorCorrectLuna'
+    --let out4 = colorCorrectLuna
     --            neutralSCGG
     --            neutralSCGG
     --            neutralSCGG

@@ -5,6 +5,7 @@
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TupleSections   #-}
 
 module Luna.Interpreter.Session.AST.Executor where
 
@@ -43,7 +44,7 @@ import           Luna.Interpreter.Session.Data.VarName      (VarName (VarName))
 import qualified Luna.Interpreter.Session.Data.VarName      as VarName
 import qualified Luna.Interpreter.Session.Debug             as Debug
 import qualified Luna.Interpreter.Session.Env               as Env
-import           Luna.Interpreter.Session.Error             (mapError)
+import           Luna.Interpreter.Session.Error             (mapError, Error)
 import qualified Luna.Interpreter.Session.Error             as Error
 import qualified Luna.Interpreter.Session.Hash              as Hash
 import           Luna.Interpreter.Session.Memory.Manager    (MemoryManager)
@@ -69,13 +70,14 @@ logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
 
 
-processMain :: MemoryManager mm => Session mm (MapForest CallPoint ProfileInfo)
-processMain = processMain_ >> Env.getProfileInfos
+processMain :: MemoryManager mm => Session mm (MapForest CallPoint ProfileInfo, MapForest CallPoint Error)
+processMain = processMain_ >> (,) <$> Env.getProfileInfos <*> Env.getCompileErrors
 
 
 processMain_ :: MemoryManager mm => Session mm ()
 processMain_ = do
     Env.cleanProfileInfos
+    Env.cleanCompileErrors
     --TargetHS.reload
     mainPtr  <- Env.getMainPtr
     children <- CallDataPath.addLevel [] mainPtr
@@ -91,7 +93,7 @@ processNodeIfNeeded callDataPath =
 
 
 processNode :: MemoryManager mm => CallDataPath -> Session mm ()
-processNode callDataPath = Env.profile (CallDataPath.toCallPointPath callDataPath) $ do
+processNode callDataPath = Env.debugNode (CallDataPath.toCallPointPath callDataPath) $ do
     arguments <- Traverse.arguments callDataPath
     let callData  = last callDataPath
         node      = callData ^. CallData.node
@@ -236,7 +238,9 @@ evalFunction nodeExpr callDataPath varNames = do
         Id          -> return $ "toIOEnv $ fromValue $ " <> mkArg self
         Native name -> return $ "toIOEnv $ fromValue $ " <> genNative name
         Con    name -> return $ "toIOEnv $ fromValue $ call" <> appArgs args <> " $ cons_" <> nameHash name
-        Var    name -> return $ "toIOEnv $ fromValue $ call" <> appArgs (tail args) <> " $ member (Proxy::Proxy " <> show (nameHash name) <> ") " <> mkArg self
+        Var    name -> if null args
+            then left $ Error.OtherError $(loc) "unsupported node type"
+            else return $ "toIOEnv $ fromValue $ call" <> appArgs (tail args) <> " $ member (Proxy::Proxy " <> show (nameHash name) <> ") " <> mkArg self
         LitInt   name -> return $ "toIOEnv $ fromValue $ val (" <> name <> " :: Int)"
         LitFloat name -> return $ "toIOEnv $ fromValue $ val (" <> name <> " :: Float)"
         Lit      name -> return $ "toIOEnv $ fromValue $ val (" <> name <> ")"
