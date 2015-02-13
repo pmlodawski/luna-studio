@@ -190,9 +190,9 @@ class ```Skew``` a:
     order :: SkewOrder
 
 class ```Transform``` a:
-    translate :: V2 a
+    translate :: Point2 a
     rotate    :: a
-    scale     :: V2 a
+    scale     :: Point2 a
     skew      :: Skew a
     center    :: Point2 a
 
@@ -477,22 +477,22 @@ def Image.exposure blackpoint ex:
 def Image.saturate saturation:
     ```liftF2 saturateLuna #{saturation} #{self}```
 
-# def Image.hsvTool hueRange hueRotation hueRolloff
-#             saturationRange saturationAdjustment saturationRolloff
-#             brightnessRange brightnessAdjustment brightnessRolloff:
-#     hueRangeStart = hueRange.lo
-#     hueRangeEnd   = hueRange.hi
-#     saturationRangeStart = saturationRange.lo
-#     saturationRangeEnd   = saturationRange.hi
-#     brightnessRangeStart = brightnessRange.lo
-#     brightnessRangeEnd   = brightnessRange.hi
+def Image.hsvTool hueRange hueRotation hueRolloff
+            saturationRange saturationAdjustment saturationRolloff
+            brightnessRange brightnessAdjustment brightnessRolloff:
+    hueRangeStart = hueRange.lo
+    hueRangeEnd   = hueRange.hi
+    saturationRangeStart = saturationRange.lo
+    saturationRangeEnd   = saturationRange.hi
+    brightnessRangeStart = brightnessRange.lo
+    brightnessRangeEnd   = brightnessRange.hi
 
-#     # ```liftF1 (onEachRGB $ hsvToolLuna #{hueRangeStart} #{hueRangeEnd} #{hueRotation} #{hueRolloff}
-#     #                        #{saturationRangeStart} #{saturationRangeEnd} #{saturationAdjustment} #{saturationRolloff}
-#     #                        #{brightnessRangeStart} #{brightnessRangeEnd} #{brightnessAdjustment} #{brightnessRolloff}) #{self}```
-#     ```hsvToolLuna'' #{hueRangeStart} #{hueRangeEnd} #{hueRotation} #{hueRolloff}
-#               #{saturationRangeStart} #{saturationRangeEnd} #{saturationAdjustment} #{saturationRolloff}
-#               #{brightnessRangeStart} #{brightnessRangeEnd} #{brightnessAdjustment} #{brightnessRolloff} #{self}```
+    # ```liftF1 (onEachRGB $ hsvToolLuna #{hueRangeStart} #{hueRangeEnd} #{hueRotation} #{hueRolloff}
+    #                        #{saturationRangeStart} #{saturationRangeEnd} #{saturationAdjustment} #{saturationRolloff}
+    #                        #{brightnessRangeStart} #{brightnessRangeEnd} #{brightnessAdjustment} #{brightnessRolloff}) #{self}```
+    ```hsvToolLuna #{hueRangeStart} #{hueRangeEnd} #{hueRotation} #{hueRolloff}
+              #{saturationRangeStart} #{saturationRangeEnd} #{saturationAdjustment} #{saturationRolloff}
+              #{brightnessRangeStart} #{brightnessRangeEnd} #{brightnessAdjustment} #{brightnessRolloff} #{self}```
 
 def Image.multiply val:
     ```liftF2 multiplyLuna #{val} #{self}```
@@ -504,6 +504,7 @@ def Image.grade blackpoint whitepoint lift gain multiply offset gamma:
     ```liftF5 (gradeLunaColor #{blackpoint} #{whitepoint} #{lift}) #{gain} #{multiply} #{offset} #{gamma} #{self}```
 
 alias ColorCorrectGUI = (CurveGUI, CurveGUI)
+alias HueCorrectGUI = (CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI)
 alias Color5 = (Color, Color, Color, Color ,Color)
 
 def Image.colorCorrect master #masterSaturation masterContrast masterGamma masterGain masterOffset
@@ -518,6 +519,9 @@ def Image.colorCorrectCurves curves
                        midtones #midtonesSaturation midtonesContrast midtonesGamma midtonesGain midtonesOffset
                        highlights: #highlightsSaturation highlightsContrast highlightsGamma highlightsGain highlightsOffset:
     ```liftF5 (colorCorrectLunaCurves #{curves}) #{master} #{shadows} #{midtones} #{highlights} #{self}```
+
+def Image.hueCorrect curves:
+    ```liftF2 hueCorrectLuna #{curves} #{self}```
 
 def Image.premultiply:
     ```liftF1 premultiplyLuna #{self}```
@@ -590,11 +594,26 @@ def Image.scale vec:
 def Image.scaleAt point vec:
     ```liftF3 scaleAtLuna #{point} #{vec} #{self}```
 
+def Image.translateMatte vec matte:
+    ```liftF3 translateMatteLuna #{vec} #{matte} #{self}```
+
+def Image.rotateAtMatte point phi matte:
+    ```liftF4 rotateAtMatteLuna #{point} #{phi} #{matte} #{self}```
+
+def Image.scaleAtMatte point vec matte:
+    ```liftF4 scaleAtMatteLuna #{point} #{vec} #{matte} #{self}```
+
+def Image.skewAtMatte point skew matte:
+    ```liftF4 skewAtMatteLuna #{point} #{skew} #{matte} #{self}```
+
+def Image.transformMatte trans matte:
+    ```liftF3 transformLuna #{trans} #{matte} #{self}```
+
 def Image.transform trans:
     ```liftF2 transformLuna #{trans} #{self}```
 
-def Image.crop rect:
-    ```liftF2 cropLuna #{rect} #{self}```
+def Image.crop rect reformat defaultOutside:
+    ```liftF4 cropLuna #{rect} #{reformat} #{defaultOutside} #{self}```
 
 def Image.erode size:
     ```liftF2 erodeLuna #{size} #{self}```
@@ -767,8 +786,11 @@ class ```KeyerMode```:
     Max
     Min
 
-def Image.key mode a b c d:
-    ```liftF6 keyerLuna #{mode} #{a} #{b} #{c} #{d} #{self}```
+class ```KeyerThresholds``` a:
+    min, minRolloff, max, maxRolloff :: a
+
+def Image.key mode thresholds:
+    ```liftF3 keyerLuna #{mode} #{thresholds} #{self}```
 
 def Image.differenceKey offset gain background:
     ```liftF4 differenceKeyerLuna #{offset} #{gain} #{background} #{self}```

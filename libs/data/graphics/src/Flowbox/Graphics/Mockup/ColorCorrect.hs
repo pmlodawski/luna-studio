@@ -21,6 +21,8 @@ module Flowbox.Graphics.Mockup.ColorCorrect (
     gammaToLinearLuna,
     gradeLunaColor,
     gradeLunaColorMatte,
+    hsvToolLuna,
+    hueCorrectLuna,
     invertLuna,
     multiplyLuna,
     offsetLuna,
@@ -163,41 +165,38 @@ saturateLuna (fmap variable -> Color.RGBA saturationR saturationG saturationB sa
 
           saturated = Image.insertPrimary view' img
 
+--hsvToolLuna :: VPS Float -> VPS Float -> VPS Float -> VPS Float
+--            -> VPS Float -> VPS Float -> VPS Float -> VPS Float
+--            -> VPS Float -> VPS Float -> VPS Float -> VPS Float
+--            -> A.Exp (Color.RGB Float)
+--            -> A.Exp (Color.RGB Float)
+--hsvToolLuna (VPS (variable -> hueRangeStart)) (VPS (variable -> hueRangeEnd))
+--            (VPS (variable -> hueRotation)) (VPS (variable -> hueRolloff))
+--            (VPS (variable -> saturationRangeStart)) (VPS (variable -> saturationRangeEnd))
+--            (VPS (variable -> saturationAdjustment)) (VPS (variable -> saturationRolloff))
+--            (VPS (variable -> brightnessRangeStart)) (VPS (variable -> brightnessRangeEnd))
+--            (VPS (variable -> brightnessAdjustment)) (VPS (variable -> brightnessRolloff)) =
+--    A.lift1 (CC.hsvTool (A.lift $ CC.Range hueRangeStart hueRangeEnd) hueRotation hueRolloff
+--                        (A.lift $ CC.Range saturationRangeStart saturationRangeEnd) saturationAdjustment saturationRolloff
+--                        (A.lift $ CC.Range brightnessRangeStart brightnessRangeEnd) brightnessAdjustment brightnessRolloff :: Color.RGB (A.Exp Float) -> Color.RGB (A.Exp Float))
+
 hsvToolLuna :: VPS Float -> VPS Float -> VPS Float -> VPS Float
             -> VPS Float -> VPS Float -> VPS Float -> VPS Float
             -> VPS Float -> VPS Float -> VPS Float -> VPS Float
-            -> A.Exp (Color.RGB Float)
-            -> A.Exp (Color.RGB Float)
+            -> VPS Image
+            -> VPS Image
 hsvToolLuna (VPS (variable -> hueRangeStart)) (VPS (variable -> hueRangeEnd))
             (VPS (variable -> hueRotation)) (VPS (variable -> hueRolloff))
             (VPS (variable -> saturationRangeStart)) (VPS (variable -> saturationRangeEnd))
             (VPS (variable -> saturationAdjustment)) (VPS (variable -> saturationRolloff))
             (VPS (variable -> brightnessRangeStart)) (VPS (variable -> brightnessRangeEnd))
-            (VPS (variable -> brightnessAdjustment)) (VPS (variable -> brightnessRolloff)) =
-    A.lift1 (CC.hsvTool (A.lift $ CC.Range hueRangeStart hueRangeEnd) hueRotation hueRolloff
-                        (A.lift $ CC.Range saturationRangeStart saturationRangeEnd) saturationAdjustment saturationRolloff
-                        (A.lift $ CC.Range brightnessRangeStart brightnessRangeEnd) brightnessAdjustment brightnessRolloff :: Color.RGB (A.Exp Float) -> Color.RGB (A.Exp Float))
+            (VPS (variable -> brightnessAdjustment)) (VPS (variable -> brightnessRolloff))
+            (VPS image) =
+    VPS $ onEachColorRGB (A.lift1 (CC.hsvTool ( A.lift $ CC.Range hueRangeStart hueRangeEnd ) hueRotation hueRolloff
+                                              ( A.lift $ CC.Range saturationRangeStart saturationRangeEnd ) saturationAdjustment saturationRolloff
+                                              ( A.lift $ CC.Range brightnessRangeStart brightnessRangeEnd ) brightnessAdjustment brightnessRolloff :: Color.RGB (A.Exp Float) -> Color.RGB (A.Exp Float)
+                                  )) image
 
-hsvToolLuna' :: Float -> Float -> Float -> Float
-             -> Float -> Float -> Float -> Float
-             -> Float -> Float -> Float -> Float
-             -> Image
-             -> Image
-hsvToolLuna' (variable -> hueRangeStart) (variable -> hueRangeEnd)
-             (variable -> hueRotation) (variable -> hueRolloff)
-             (variable -> saturationRangeStart) (variable -> saturationRangeEnd)
-             (variable -> saturationAdjustment) (variable -> saturationRolloff)
-             (variable -> brightnessRangeStart) (variable -> brightnessRangeEnd)
-             (variable -> brightnessAdjustment) (variable -> brightnessRolloff) =
-    onEachColorRGB $ A.lift1 (CC.hsvTool (A.lift $ CC.Range hueRangeStart hueRangeEnd) hueRotation hueRolloff
-                    (A.lift $ CC.Range saturationRangeStart saturationRangeEnd) saturationAdjustment saturationRolloff
-                    (A.lift $ CC.Range brightnessRangeStart brightnessRangeEnd) brightnessAdjustment brightnessRolloff :: Color.RGB (A.Exp Float) -> Color.RGB (A.Exp Float))
-
--- hsvToolLuna'' :: VPS Double -> VPS Double -> VPS Double -> VPS Double
---      -> VPS Double -> VPS Double -> VPS Double -> VPS Double
---      -> VPS Double -> VPS Double -> VPS Double -> VPS Double
---      -> VPS (Image) -> VPS (Image)
---hsvToolLuna'' = liftF13 hsvToolLuna'
 
 clampLuna :: (VPS Float, VPS Float) -> Maybe (VPS Float, VPS Float) -> Image -> Image
 clampLuna (VPS (variable -> thLo), VPS (variable -> thHi)) clamps =

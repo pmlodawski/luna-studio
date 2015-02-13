@@ -21,6 +21,7 @@ module Flowbox.Graphics.Mockup.Basic (
     getChannelFromPrimaryLuna,
     getChannelLuna,
     insertChannelFloats,
+    liftF13,
     loadImageLuna,
     multisampleChannelsLuna,
     onEach,
@@ -430,3 +431,21 @@ multisampleChannelsLuna (fmap variable -> grid) (toMultisampler grid . fmap vari
 --insertChannelLuna :: String -> Channel -> Image -> Image
 --insertChannelLuna viewName chan = Image.update f viewName
 --    where f = Just . View.append chan
+
+liftF13 fun a b c d e f g h i j k l m = do
+    a' <- a
+    b' <- b
+    c' <- c
+    d' <- d
+    e' <- e
+    f' <- f
+    g' <- g
+    h' <- h
+    i' <- i
+    j' <- j
+    k' <- k
+    l' <- l
+    m' <- m
+    val fun <<*>> a' <<*>> b' <<*>> c' <<*>> d' <<*>> e' <<*>> f'
+            <<*>> g' <<*>> h' <<*>> i' <<*>> j' <<*>> k' <<*>> l' <<*>> m'
+

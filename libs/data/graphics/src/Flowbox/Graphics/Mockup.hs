@@ -9,6 +9,8 @@ module Flowbox.Graphics.Mockup (
 
     -- Linear
     V2(..),
+    -- Math.Coordinate.Cartesian
+    Point2(..),
     -- Math.Metric
     Chebyshev(..),
     Euclidean(..),
@@ -17,4 +19,5 @@ module Flowbox.Graphics.Mockup (
 ) where
 
 import Linear                    (V2 (..))
+import Math.Coordinate.Cartesian (Point2 (..))
 import Math.Metric               (Chebyshev(..), Euclidean(..), Minkowski(..), Taxicab(..))
