@@ -63,6 +63,30 @@ Library
                   vector-space                     ,
                   luna-target-ghchs                
 
+-- == test non numeric animation ==
+
+Executable test_non_numeric
+
+  Main-Is:        NonNumericAnimation.hs
+  Hs-Source-Dirs: test
+
+  Ghc-options:          -O2 -Wall -threaded -fno-full-laziness
+  Ghc-prof-options:     -auto-all
+
+  Default-Extensions:     NoImplicitPrelude,
+                          DoAndIfThenElse,
+                          TemplateHaskell
+  Default-Language:       Haskell2010
+
+
+  Build-Depends:  base           == 4.7.*  ,
+                  assert                   ,
+                  linear                   ,
+                  algebraic                ,
+                  flowbox-utils            ,
+                  flowbox-graphics         ,
+                  lens                     
+
 -- == test generator ==
 
 Executable test_generator

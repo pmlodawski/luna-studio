@@ -65,14 +65,12 @@ processMain = processMain_ >> Env.getProfileInfos
 processMain_ :: MemoryManager mm => Session mm ()
 processMain_ = do
     Env.cleanProfileInfos
-    TargetHS.reload
+    --TargetHS.reload
     mainPtr  <- Env.getMainPtr
     children <- CallDataPath.addLevel [] mainPtr
     mapM_ processNodeIfNeeded children
     Env.setAllReady True
     Debug.dumpBindings
-    --Cache.dumpAll
-    --Cache.performGC
 
 
 processNodeIfNeeded :: MemoryManager mm => CallDataPath -> Session mm ()
@@ -228,7 +226,8 @@ evalFunction nodeExpr callDataPath varNames = do
         LitFloat name -> return $ "toIOEnv $ fromValue $ val (" ++ name ++ " :: Float)"
         Lit      name -> return $ "toIOEnv $ fromValue $ val (" ++ name ++ ")"
         Tuple       -> return $ "toIOEnv $ fromValue $ val (" ++ List.intercalate "," args ++ ")"
-        TimeVar     -> (++) "toIOEnv $ fromValue $ val $ " . show <$> Env.getTimeVar
+        TimeVar     -> do time <- Env.getTimeVar
+                          return $ "toIOEnv $ fromValue $ val (" ++ show time ++ " :: Float)"
         Expression  name -> return $ "toIOEnv $ fromValue $ " ++ name
     catchEither (left . Error.RunError $(loc) callPointPath) $ do
         Session.runAssignment' tmpVarName operation
