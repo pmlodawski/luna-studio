@@ -24,119 +24,6 @@ import           Data.Text.Lazy.Builder   (toLazyText, fromLazyText)
 import Control.Monad.Identity (runIdentity)
 import Control.Monad.State    hiding (mapM)
 
-------------------------------------------------------------------------
----- Data types
-------------------------------------------------------------------------
-
---data CodeType a = Simple  { _code :: a }
---                | Complex { _code :: a }
---                deriving (Show, Eq, Generic, Read, Functor)
-
---makeLenses ''CodeType
-
-------------------------------------------------------------------------
----- Type classes
-------------------------------------------------------------------------
-
---class CodeBuilder c where
---    simple   :: Text.Builder -> c
---    complex  :: Text.Builder -> c
-
---class Generator g where
---    generate :: CodeBuilder a => g -> a
-
-
-------------------------------------------------------------------------
----- Utils
-------------------------------------------------------------------------
-
---simplify :: CodeBuilder a => (CodeType Text.Builder) -> a
---simplify = simplifyWith (\c -> "(" <> c <> ")")
-
---simplifyWith :: CodeBuilder a => (Text.Builder -> Text.Builder) -> (CodeType Text.Builder) -> a
---simplifyWith f = \case
---    Simple  c -> simple c
---    Complex c -> simple $ f c
-
---simple' :: (ToTextBuilder a, CodeBuilder c) => a -> c
---simple'  = simple.toTextBuilder
-
---complex' :: (ToTextBuilder a, CodeBuilder c) => a -> c
---complex' = complex.toTextBuilder
-
---genmap :: (Generator g, CodeBuilder a) => [g] -> [a]
---genmap = map generate
-
---sgenmap :: (Generator g, CodeBuilder a) => [g] -> [a]
---sgenmap = map sgenerate
-
---sgenerate :: (Generator g, CodeBuilder a) => g -> a
---sgenerate = simplify.generate
-
-
-------------------------------------------------------------------------
----- Instances
-------------------------------------------------------------------------
-
----- basic
-
---instance Applicative CodeType where
---    pure = Simple
---    l <*> r = case l of
---        Simple f -> case r of
---            Simple  v -> Simple  $ f v
---            Complex v -> Complex $ f v
---        Complex f -> Complex $ f (r ^. code)
-
-
----- CodeBuilder
-
---instance CodeBuilder (CodeType Text.Builder) where
---    simple  = Simple
---    complex = Complex
-
---instance CodeBuilder Text.Builder where
---    simple   = id
---    complex  = id
-
-
----- Convertible
-
-----instance Convertible Text Text.Builder where
-----    convert = fromLazyText
-
-----instance Convertible String Text.Builder where
-----    convert = fromString
-
-----instance Convertible Text.Builder Text.Builder where
-----    convert = id
-
-----instance Convertible a b => Convertible [a] [b] where
-----    convert = fmap convert
-
-
-
---simple <> Seq 
---term s
-
-
---data CodeType a = Simple  { _code :: a }
---                | Complex { _code :: a }
---                deriving (Show, Eq, Generic, Read, Functor)
-
-
---data Layout a = Single a 
---              | Seq a 
-
-
---data Code = Txt     Text.Builder
---          | Simple  Code
---          | Complex Code
---          | Seq   [Code]
---          | Expr    [Code]
---          deriving (Show, Eq, Generic)
-
-
 type Prec = Int
 type Name = Text.Builder 
 
@@ -193,14 +80,16 @@ class Render style m where
     render :: (Monad m, Applicative m) => style -> Code -> m Text.Builder
 
 between l r t = l <> t <> r
+parensed = between "(" ")"
+spaced = (" " <>)
 
 instance MonadState IndentState m => Render HSCompact m where
     render style = \case
         Tok n -> return n
         App (Op prec name f) -> case f of
             Prefix code -> (\n c -> n <> conv c) <$> render style name <*> render style code
-                where conv = if prec >= getPrec code then between "(" ")"
-                                                     else (" " <>)
+                where conv = if prec >= getPrec code then parensed
+                                                     else spaced
         Seq cs -> indented $ do
             ind <- getIndentTxt
             let indent = "\r\n" <> ind
@@ -209,6 +98,7 @@ instance MonadState IndentState m => Render HSCompact m where
         where getPrec = \case
                   App (Op p _ _) -> p
                   _     -> 100
+
 
 
 
@@ -230,6 +120,8 @@ instance Default IndentState where
     def = IndentState def
 
 pText = putStrLn . Text.unpack . toLazyText 
+
+runMe = flip evalState (def :: IndentState) . render HSCompact
 
 main = do
     --print test
