@@ -100,7 +100,7 @@ deleteNode projectID libraryID nodeID =
         GPUMemory.performGC
 
 
-setTimeVar :: Double -> RPC Context (SessionST mm) ()
+setTimeVar :: Env.TimeVar -> RPC Context (SessionST mm) ()
 setTimeVar time = liftSession $ do
     Env.setTimeVar time
     Invalidate.modifyTimeRefs
