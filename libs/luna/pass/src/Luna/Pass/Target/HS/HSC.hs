@@ -31,7 +31,8 @@ import qualified Data.Text.Lazy.Builder as Text
 import           Data.Text.Lazy.Builder   (toLazyText, fromLazyText)
 
 import           Data.Text.CodeBuilder    (Generator, CodeType, CodeBuilder, generate, sgenerate, simple, complex, genmap, sgenmap, simplify)
-
+import qualified Data.Text.CodeBuilder4 as CB
+import           Data.Text.CodeBuilder4 (app, apps)
 ----------------------------------------------------------------------
 -- Basic types
 ----------------------------------------------------------------------
@@ -56,6 +57,7 @@ genModule (HExpr.Module name path ext imports body) = toLazyText modcode where
             <> sectionHeader "module"         <> header
             <> genSection    "imports"        generate imports
             <> genSection    "body"           generate body
+            -- <> genSection    "body"           generate2' body
     header = "module " <> fromLazyText name <> mjoin "." (mempty : fmap fromLazyText path) <> " where" <> eol <> eol
 
 genExt :: Extension -> Text.Builder
@@ -77,8 +79,8 @@ eol = "\n"
 sectionHeader :: Text.Builder -> Text.Builder
 sectionHeader name = "-- " <> name <> " --\n"
 
-app :: CodeBuilder a => Text.Builder -> CodeType Text.Builder -> a
-app a b = complex (a <> " " <> simplify b)
+app2 :: CodeBuilder a => Text.Builder -> CodeType Text.Builder -> a
+app2 a b = complex (a <> " " <> simplify b)
 
 spaceJoin :: (Monoid a, IsString a) => [a] -> a
 spaceJoin = mjoin " "
@@ -88,6 +90,62 @@ buildDoBlock exprs = complex $ "do { " <> buildBody exprs <> " }"
 
 buildBody :: (IsString a, CodeBuilder a, Monoid a) => [HExpr] -> a
 buildBody exprs = if null exprs then "" else mjoin "; " (genmap exprs) <> ";"
+
+generate2' a = CB.runMe $ generate2 a
+
+class Generator2 a where
+    generate2 :: a -> CB.Code
+
+instance Convertible Text CB.Code where
+    safeConvert = Right . CB.Tok . fromLazyText
+
+instance FromText CB.Code where
+    fromText = CB.Tok . fromLazyText
+
+dataDecl name params cons = apps (apps name params) ("=" : cons)
+
+func name args body = apps (apps name args) ["=", body]
+
+
+instance Generator2 HExpr where
+    generate2 = \case
+        HExpr.Pragma   p                      -> generate2 p
+        HExpr.Comment  comment                -> generate2 comment
+        HExpr.DataD    name params cons ders  -> dataDecl "data" (convert name : fmap convert params) (fmap generate2 cons) -- END ME -- seq generators?
+        HExpr.Con      name fields            -> apps (convert name) (fmap generate2 fields)
+        HExpr.THE      expr                   -> apps "$(" [CB.SBox $ generate2 expr, ")"] -- no spaces?
+        HExpr.AppE     src dst                -> app (generate2 src) (generate2 dst)
+        HExpr.Var      name                   -> fromText name
+        HExpr.Function name signature expr    -> func (convert name) (fmap generate2 signature) (generate2 expr)
+        --HExpr.MacroE   name items             -> simple $ appPragma (fromString name) where
+        --HExpr.MacroE   name items             -> simple $ appPragma (fromString name) where
+        --                                             appPragma = if length items == 0 then id
+        --                                                                              else (<> ("(" <> sepjoin (map generate items) <> ")"))        
+
+
+
+
+
+        --HExpr.DataD    name params cons ders  -> simple  $ "data " <> convert name <> " " <> spaceJoin (fmap convert params) <> " = " <> cons' <> convert ders'
+        --                                                 where cons'   = mjoin " | " (genmap cons)
+        --                                                       ders'   = if null ders then "" else " deriving (" <> sepjoin (map show ders) <> ")"
+        
+        s -> CB.Tok $ fromString $ "unknown :" ++ show s
+
+instance Generator2 HPragma where
+    generate2 = \case
+        HExpr.Include name -> app "#include" (fromString $ "\"" <> name <> "\"")
+        --s -> fromString $ "unknown :" ++ show s
+
+instance Generator2 HComment where
+    generate2 c = CB.Tok $ case c of
+        HComment.H1 str -> mkSpace 2 <> "-- " <> convert (replicate 67 '=') <> "\n-- " <> convert str <> "\n" <> "-- " <> convert (replicate 67 '=')
+        HComment.H2 str -> mkSpace 1 <> "-- ====== " <> convert str <> " ====== --"
+        HComment.H3 str -> mkSpace 1 <> "-- ------ " <> convert str <> " ------ --"
+        HComment.H4 str -> "-- --- " <> convert str <> " --- --"
+        HComment.H5 str -> "-- " <> convert str
+        where mkSpace n = convert $ replicate n '\n'
+
 
 ------------------------------------------------------------------------
 -- Instances
@@ -145,13 +203,13 @@ instance Generator HExpr where
                                                                ders'   = if null ders then "" else " deriving (" <> sepjoin (map show ders) <> ")"
         HExpr.Comment  comment                -> generate comment
         HExpr.DoBlock  exprs                  -> buildDoBlock exprs
-        HExpr.AppT     src dst                -> app (generate src) (generate dst) --"(" <> generate src <> " (" <> generate dst <> ")" <> ")" -- for literals, e.g. simple (1 :: Int)
-        HExpr.AppE     src dst                -> app (generate src) (generate dst) --"(" <> generate src <> " " <> generate dst <> ")"
-        HExpr.AppP     src dst                -> app (generate src) (generate dst)
+        HExpr.AppT     src dst                -> app2 (generate src) (generate dst) --"(" <> generate src <> " (" <> generate dst <> ")" <> ")" -- for literals, e.g. simple (1 :: Int)
+        HExpr.AppE     src dst                -> app2 (generate src) (generate dst) --"(" <> generate src <> " " <> generate dst <> ")"
+        HExpr.AppP     src dst                -> app2 (generate src) (generate dst)
         HExpr.MacroE   name items             -> simple $ appPragma (fromString name) where
                                                      appPragma = if length items == 0 then id
                                                                                       else (<> ("(" <> sepjoin (map generate items) <> ")"))
-        HExpr.Tuple    items                  -> if length items == 1 then app (simple "OneTuple") (generate $ head items)
+        HExpr.Tuple    items                  -> if length items == 1 then app2 (simple "OneTuple") (generate $ head items)
                                                                       else simple $ "(" <> sepjoin (map generate items) <> ")"
         HExpr.Pragma   p                      -> generate p
         HExpr.DataKindT e                     -> simple $ "'" <> generate e
