@@ -307,11 +307,27 @@ class ```AlphaBlend```:
 def Image.merge self::Image mode::MergeMode alphaBlendMode::AlphaBlend img::Image -> Image:
     ```liftF4 mergeLuna #{mode} #{alphaBlendMode} #{self} #{img}```
 
-def perlin self::Std z::Float width::Int height::Int -> Image:
-    ```liftF3 perlinLuna #{z} #{width} #{height}```
+class ```Quality```:
+    Fast
+    Standard
+    Best
 
-def billow self::Std z::Float width::Int height::Int -> Image:
-    ```liftF3 billowLuna #{z} #{width} #{height}```
+class ```NoiseParams```:
+    Perlin:
+        quality :: Quality
+        frequency, lacunarity, persistence, z :: Float
+        octaves, seed :: Int
+    Billow:
+        quality :: Quality
+        frequency, lacunarity, persistence, z :: Float
+        octaves, seed :: Int
+    RidgedMulti:
+        quality :: Quality
+        frequency, lacunarity, exponent, offset, gain, z :: Float
+        octaves, maxOctave, seed :: Int
+
+def noise self::Std params::NoiseParams width::Int height::Int -> Image:
+    ```liftF3 noiseLuna #{params} #{width} #{height}```
 
 # TRANSFORMATIONS
 

@@ -4,8 +4,24 @@
 
 import ```Flowbox.Graphics.Mockup.Noise```
 
-def perlin z width height:
-    ```liftF3 perlinLuna #{z} #{width} #{height}```
+class ```Quality```:
+    Fast
+    Standard
+    Best
 
-def billow z width height:
-    ```liftF3 billowLuna #{z} #{width} #{height}```
+class ```NoiseParams```:
+    Perlin:
+        quality :: Quality
+        frequency, lacunarity, persistence, z :: Float
+        octaves, seed :: Int
+    Billow:
+        quality :: Quality
+        frequency, lacunarity, persistence, z :: Float
+        octaves, seed :: Int
+    RidgedMulti:
+        quality :: Quality
+        frequency, lacunarity, exponent, offset, gain, z :: Float
+        octaves, maxOctave, seed :: Int
+
+def noise params width height:
+    ```liftF3 noiseLuna #{params} #{width} #{height}```
