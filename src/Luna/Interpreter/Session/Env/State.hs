@@ -4,11 +4,13 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE LambdaCase      #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Luna.Interpreter.Session.Env.State where
 
 import qualified Control.Concurrent.MVar    as MVar
+import           Control.Monad.Catch        (bracket_)
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
 import           Data.IntSet                (IntSet)
@@ -22,9 +24,8 @@ import qualified Data.MultiSet              as MultiSet
 import           Data.Set                   (Set)
 import qualified Data.Set                   as Set
 
-import           Control.Monad.Catch                         (bracket_)
 import qualified Flowbox.Batch.Project.Project               as Project
-import           Flowbox.Control.Error
+import           Flowbox.Control.Error                       hiding (err)
 import           Flowbox.Data.MapForest                      (MapForest)
 import qualified Flowbox.Data.MapForest                      as MapForest
 import           Flowbox.Data.Mode                           (Mode)
@@ -197,6 +198,33 @@ profile callPointPath action = do
     (r, info) <- ProfileInfo.profile action
     whenVisible callPointPath $ insertProfileInfo callPointPath info
     return r
+
+---- Env.compileErrors ----------------------------------------------------
+
+cleanCompileErrors :: Session mm ()
+cleanCompileErrors = modify $ Env.compileErrors .~ def
+
+
+getCompileErrors :: Session mm (MapForest CallPoint Error)
+getCompileErrors = gets $ view Env.compileErrors
+
+
+insertCompileError :: CallPointPath -> Error -> Session mm ()
+insertCompileError callPointPath err =
+    modify (Env.compileErrors %~ MapForest.insert callPointPath err)
+
+
+reportCompileErrors :: CallPointPath -> Session mm () -> Session mm ()
+reportCompileErrors callPointPath action = do
+    lift (runEitherT action) >>= \case
+        Left err -> insertCompileError callPointPath err
+        Right () -> return ()
+
+
+debugNode :: CallPointPath -> Session mm () -> Session mm ()
+debugNode callPointPath action =
+    reportCompileErrors callPointPath $
+                profile callPointPath action
 
 ---- Env.timeVar ----------------------------------------------------------
 
@@ -424,5 +452,6 @@ cleanEnv = cleanWatchPoints
         >> cleanTimeRefs
         >> cleanDependentNodes
         >> cleanProfileInfos
+        >> cleanCompileErrors
         >> cleanSerializationModes
 
