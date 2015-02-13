@@ -12,11 +12,11 @@ module Flowbox.Serialization (
     SValue
 ) where
 
-import qualified Flowbox.Data.Serialization     as Serialization
-import qualified Flowbox.Graphics.Serialization as Serialization
-import           Flowbox.Prelude
-import           Generated.Proto.Data.Value     (Value)
-import           Generated.Proto.Mode.Mode      (Mode)
+import qualified Flowbox.Data.Serialization as Serialization
+--import qualified Flowbox.Graphics.Serialization as Serialization
+import Flowbox.Prelude
+import Generated.Proto.Data.Value (Value)
+import Generated.Proto.Mode.Mode  (Mode)
 
 
 type SValue = Value

@@ -1,0 +1,21 @@
+#
+#                VIEW
+#
+
+import ```Flowbox.Graphics.Image.View as View```
+
+def View.channel name:
+    ```liftF2 View.get #{self} #{name}```
+
+def View.append channel:
+    ```liftF2 View.append #{channel} #{self}```
+
+def View.remove name:
+    ```liftF2 View.remove #{name} #{self}```
+
+def View.map f:
+    ```liftF2 View.map #{f} #{self}```
+
+# TODO: fix the bug with this
+# def View.whitelistMap f nameSet:
+#     ```liftF3 View.mapWithWhitelist #{f} #{nameSet} #{self}```

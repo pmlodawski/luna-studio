@@ -5,32 +5,33 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeFamilies              #-}
 
 module Main where
 
-
-import Data.Array.Accelerate hiding (fromIntegral)
-import Data.Array.Accelerate as A
+import Data.Array.Accelerate    hiding (fromIntegral)
+import Data.Array.Accelerate    as A
 import Data.Array.Accelerate.IO
-import Data.ByteString hiding (head)
-import Data.VectorSpace
+import Data.ByteString          hiding (head)
 import Data.Thyme.Clock
 import Data.Thyme.Time
+import Data.VectorSpace
+
+import Flowbox.Geom2D.Accelerate.QuadraticBezier.Solve
 import Flowbox.Geom2D.ControlPoint
-import Flowbox.Geom2D.Path
 import Flowbox.Geom2D.Mask
-import Flowbox.Geom2D.Rasterizer hiding (makePoints, makeSegments)
+import Flowbox.Geom2D.Path
 import Flowbox.Geom2D.QuadraticBezier
 import Flowbox.Geom2D.QuadraticBezier.Conversion
-import Flowbox.Geom2D.Accelerate.QuadraticBezier.Solve
+import Flowbox.Geom2D.Rasterizer                       hiding (makePoints, makeSegments)
 import Flowbox.Graphics.Image.IO.BMP
-import Flowbox.Graphics.Mockup (saveImageLuna)
-import Flowbox.Prelude as P hiding ((#))
+import Flowbox.Graphics.Mockup.Basic                   (saveImageLuna)
 import Flowbox.Math.Matrix
+import Flowbox.Prelude                                 as P hiding (( # ))
+
 import Math.Coordinate.Cartesian (Point2 (..))
+
 import Data.Array.Accelerate.CUDA
-import Debug.Trace (trace)
 
 
 
@@ -41,7 +42,7 @@ pointsStraightSmall   = [ ControlPoint (Point2 136.668065 58.260504)  Nothing No
 feathersStraightSmall = [ ControlPoint (Point2 75.995120 28.297279)   Nothing Nothing
                         , ControlPoint (Point2 293.366284 233.596489) Nothing Nothing
                         , ControlPoint (Point2 434.615106 44.870165)  Nothing Nothing
-                        ]      
+                        ]
 pointsCurvedSmall   = [ ControlPoint (Point2 136.668065 58.260504)  (Just (Point2 293.366284 233.596489)) (Just (Point2 444.615106 24.870165))
                       , ControlPoint (Point2 286.668065 206.260504) (Just (Point2 193.366284 233.596489)) (Just (Point2 134.615106 14.870165))
                       , ControlPoint (Point2 374.668065 76.260504)  (Just (Point2 93.362284  233.596489)) (Just (Point2 134.615106 34.870165))
@@ -81,7 +82,7 @@ helper w h pointPath featherPath = do
 
     return ()
 
-profile = do 
+profile = do
     let closed = True
         (wSmall,  hSmall ) = (480,  240 ) :: (Int, Int)
         (wMedium, hMedium) = (1920, 1080) :: (Int, Int)
@@ -94,7 +95,7 @@ profile = do
     P.putStrLn "--------------------------  Profiling VectorRasterization !! "
 
     P.putStrLn "----------------------  Small Image, Small Straight Path: "
-    helper wSmall hSmall pointPathStraightSmall featherPathStraightSmall 
+    helper wSmall hSmall pointPathStraightSmall featherPathStraightSmall
 
     P.putStrLn "----------------------  Medium Image, Small Straight Path: "
     helper wMedium hMedium pointPathStraightSmall featherPathStraightSmall
@@ -103,7 +104,7 @@ profile = do
     helper wBig hBig pointPathStraightSmall featherPathStraightSmall
 
     P.putStrLn "----------------------  Small Image, Small Curved Path: "
-    helper wSmall hSmall pointPathCurvedSmall featherPathCurvedSmall 
+    helper wSmall hSmall pointPathCurvedSmall featherPathCurvedSmall
 
     P.putStrLn "----------------------  Medium Image, Small Curved Path: "
     helper wMedium hMedium pointPathCurvedSmall featherPathCurvedSmall
@@ -211,7 +212,7 @@ main = do
 
     P.putStrLn "Test rasterizeMask GUI example --> fooD3.png"
 
-    let patGUI = Path True pointsGUI 
+    let patGUI = Path True pointsGUI
         feaGUI = Path True featherGUI
         arrGUI = rasterizeMask w h (Mask patGUI (Just feaGUI))
         imgGUI = matrixToImage arrGUI
@@ -220,7 +221,7 @@ main = do
 
     P.putStrLn "Test rasterizeMask GUI2 example --> fooD4.png"
 
-    let patGUI = Path True pointGUI2 
+    let patGUI = Path True pointGUI2
         feaGUI = Path True featherGUI2
         arrGUI = rasterizeMask 1920 1080 (Mask patGUI (Just feaGUI))
         imgGUI = matrixToImage arrGUI

@@ -20,7 +20,7 @@ import Math.Coordinate.Cartesian             (Point2 (..))
 
 
 
-valueAtX :: forall a. (Elt a, IsFloating a) => Exp Int -> Exp a -> Exp (CubicBezier a) -> Exp a -> Exp a
+valueAtX :: forall a b. (Elt a, IsFloating a, Integral b) => Exp Int -> Exp a -> Exp (CubicBezier a) -> Exp a -> Exp a
 valueAtX limit eps (unlift -> curve) x = solvey
     $ cond (x <=* x1 ||* err x1 <=* eps) 0
         $ cond (x >=* x4 ||* err x4 <=* eps) 1
@@ -34,5 +34,5 @@ valueAtX limit eps (unlift -> curve) x = solvey
           mid (A.unlift -> (a, b)) = (a + b) / 2
           err x'   = abs $ x - x'
           startAt  = A.constant (0, 1)
-          solvex t = (1-t)^3 * x1 + 3*(1-t)^2*t * x2 + 3*(1-t)*t^2 * x3 + t^3 * x4
-          solvey t = (1-t)^3 * y1 + 3*(1-t)^2*t * y2 + 3*(1-t)*t^2 * y3 + t^3 * y4
+          solvex t = (1-t)^(3::b) * x1 + 3*(1-t)^(2::b)*t * x2 + 3*(1-t)*t^(2::b) * x3 + t^(3::b) * x4
+          solvey t = (1-t)^(3::b) * y1 + 3*(1-t)^(2::b)*t * y2 + 3*(1-t)*t^(2::b) * y3 + t^(3::b) * y4

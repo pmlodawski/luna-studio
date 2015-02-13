@@ -40,7 +40,7 @@ import           Flowbox.Graphics.Image.Image                    (Image)
 import qualified Flowbox.Graphics.Image.Image                    as Image
 import           Flowbox.Graphics.Image.IO.BMP
 import qualified Flowbox.Graphics.Image.View                     as View
-import qualified Flowbox.Graphics.Utils.Utils                    as U
+import           Flowbox.Graphics.Utils.Accelerate               (variable)
 import           Flowbox.Math.Matrix                             ((:.) (..), DIM2, Matrix (..), Matrix2, Z (..))
 import qualified Flowbox.Math.Matrix                             as M
 import           Flowbox.Prelude                                 hiding (use, ( # ), (<*))
@@ -205,8 +205,8 @@ rasterizeMask w h (Mask path' feather') =
                           in A.use $ A.fromList (Z :. length quads) quads
                       cA = convert path'
                       cB = convert fea
-                      dP = M.generate (A.index2 (U.variable h) (U.variable w)) $ distance cA
-                      dF = M.generate (A.index2 (U.variable h) (U.variable w)) $ distance cB
+                      dP = M.generate (A.index2 (variable h) (variable w)) $ distance cA
+                      dF = M.generate (A.index2 (variable h) (variable w)) $ distance cB
                   in M.zipWith4 (\p f dp df -> (combine p f dp df)) path feather dP dF
     --case feather' of
     --    Nothing -> path
@@ -218,7 +218,7 @@ rasterizeMask w h (Mask path' feather') =
     --                in A.use $ A.fromList (Z :. length a) $ convertCubicsToQuadratics 5 0.001 $ (fmap.fmap) f2d a
     --            cA = convert path'
     --            cB = convert feather'
-    --        in M.generate (A.index2 (U.variable h) (U.variable w)) $ combine feather cA cB
+    --        in M.generate (A.index2 (variable h) (variable w)) $ combine feather cA cB
     --where ptm  = pathToMatrix w h
     --      path = ptm path'
     --      combine :: Matrix2 Double -> A.Acc (A.Vector (QuadraticBezier Double)) -> A.Acc (A.Vector (QuadraticBezier Double)) -> A.Exp A.DIM2 -> A.Exp Double

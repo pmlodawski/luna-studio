@@ -5,8 +5,8 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE FlexibleContexts    #-}
-{-# LANGUAGE TypeFamilies        #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeFamilies        #-}
 {-# LANGUAGE ViewPatterns        #-}
 {-# LANGUAGE ConstraintKinds      #-}
 
@@ -28,10 +28,11 @@ import           Data.Array.Accelerate.Tuple (IsTuple, TupleRepr, fromTuple, toT
 
 import           Flowbox.Graphics.Color.Color
 import           Flowbox.Graphics.Shader.Shader
-import qualified Flowbox.Graphics.Utils.Utils   as U
-import           Flowbox.Graphics.Prelude
-import           Flowbox.Math.Matrix            as M
-import           Flowbox.Math.Function.Accelerate.BSpline           as BSpline
+import           Flowbox.Graphics.Utils.Accelerate        (variable)
+import qualified Flowbox.Graphics.Utils.Utils             as U
+import           Flowbox.Math.Function.Accelerate.BSpline as BSpline
+import           Flowbox.Math.Matrix                      as M
+import           Flowbox.Graphics.Prelude                 as P
 
 offset :: (Num a) => a -> a -> a
 offset v = (+v)
@@ -72,7 +73,7 @@ inversePointsConvert lift gain pix = (gain - lift) * pix + lift
 
 grade :: (Num a, Floating a) => a -> a -> a -> a -> a -> a -> a -> a -> a
 grade blackpoint whitepoint lift gain multiply' offset' gamma =
-	U.gamma gamma . offset offset' . multiply multiply' . inversePointsConvert lift gain . pointsConvert blackpoint whitepoint
+    U.gamma gamma . offset offset' . multiply multiply' . inversePointsConvert lift gain . pointsConvert blackpoint whitepoint
 
 hueCorrect :: BSpline.BSpline Float -> BSpline.BSpline Float ->
               BSpline.BSpline Float -> BSpline.BSpline Float -> BSpline.BSpline Float ->
@@ -120,9 +121,9 @@ hsvTool :: forall a t. (Elt t, IsFloating t, ColorConvert a HSV, ColorConvert HS
         -> Exp (U.Range t) -> Exp t -> Exp t
         -> a (Exp t)
         -> a (Exp t)
-hsvTool (A.unlift . U.variable -> hueRange) (U.variable -> hueRotation) (U.variable -> hueRolloff)
-        (A.unlift . U.variable -> saturationRange) (U.variable -> saturationAdjustment) (U.variable -> saturationRolloff)
-        (A.unlift . U.variable -> brightnessRange) (U.variable -> brightnessAdjustment) (U.variable -> brightnessRolloff) pix =
+hsvTool (A.unlift . variable -> hueRange) (variable -> hueRotation) (variable -> hueRolloff)
+        (A.unlift . variable -> saturationRange) (variable -> saturationAdjustment) (variable -> saturationRolloff)
+        (A.unlift . variable -> brightnessRange) (variable -> brightnessAdjustment) (variable -> brightnessRolloff) pix =
     A.unlift (conditionsFulfilled A.? (
         A.lift (HSV (rotation (hueRotation * cyclicPower hueRange hueRolloff h) h)
                     (s + saturationAdjustment * power saturationRange saturationRolloff s)
@@ -141,8 +142,8 @@ hsvTool (A.unlift . U.variable -> hueRange) (U.variable -> hueRotation) (U.varia
 
 power :: forall a. (Elt a, IsFloating a) => U.Range (Exp a) -> Exp a -> Exp a -> Exp a
 power range@(U.Range a' b') rolloff x =
-    let a = U.variable a'
-        b = U.variable b'
+    let a = variable a'
+        b = variable b'
 
         rLeft  = U.Range (a - rolloff) a
         rRight = U.Range b (b + rolloff)
@@ -165,10 +166,10 @@ inRange val (U.Range a b) = val A.>=* a A.&&* val A.<=* b
 --   of 360 degrees in both directions.
 cyclicPower :: forall a. (Elt a, IsFloating a) => U.Range (Exp a) -> Exp a -> Exp a -> Exp a
 cyclicPower (U.Range a' b') rolloff x =
-    let a = U.variable a'
-        b = U.variable b'
+    let a = variable a'
+        b = variable b'
         (correct, pp') = intersection a b rolloff :: (Exp Bool, Exp a)
-        pp = U.variable pp'
+        pp = variable pp'
         (rLeft, rRight) = A.unlift (correct A.? (A.lift ((pp-1,a), (b,pp))
                                      , A.lift ((a-rolloff, a), (b, b+rolloff)))) :: (A.Exp (a, a), A.Exp (a, a))
         rLeftEquation val = A.cond (frL A./=* 0) (fxL val / frL) 1

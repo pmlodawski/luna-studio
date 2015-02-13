@@ -28,7 +28,7 @@ module Flowbox.Graphics.Color.Companding (
 
 import qualified Data.Array.Accelerate as A
 
-import Flowbox.Graphics.Utils.Utils hiding (negate)
+import Flowbox.Graphics.Utils.Accelerate (variable)
 import Flowbox.Prelude
 
 

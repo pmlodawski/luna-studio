@@ -372,9 +372,9 @@ class ```Skew``` a:
     order :: SkewOrder
 
 class ```Transform``` a:
-    translate :: Point2 a
+    translate :: V2 a
     rotate    :: a
-    scale     :: Point2 a
+    scale     :: V2 a
     skew      :: Skew a
     center    :: Point2 a
 
@@ -493,9 +493,6 @@ def Image.gammaToLinear self::Image gamma::(Gamma Float) -> Image:
 
 def Image.gammaFromLinear self::Image gamma::(Gamma Float) -> Image:
     ```liftF2 gammaFromLinearLuna #{gamma} #{self}```
-
-def testCC self::Std a::ColorCC:
-    ```liftF1 testColorCC #{a}```
 
 def time self::Std:
     0.0

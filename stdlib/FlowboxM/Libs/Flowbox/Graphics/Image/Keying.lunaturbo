@@ -1,0 +1,28 @@
+#
+#                IMAGE - KEYING
+#
+
+import ```Flowbox.Graphics.Composition.Keying```
+
+import ```Flowbox.Graphics.Mockup.Keying```
+
+class ```KeyerMode```:
+    Red
+    Green
+    Blue
+    Redscreen
+    Greenscreen
+    Bluescreen
+    Saturation
+    Luminance
+    Max
+    Min
+
+class ```KeyerThresholds``` a:
+    min, minRolloff, max, maxRolloff :: a
+
+def Image.key mode thresholds:
+    ```liftF3 keyerLuna #{mode} #{thresholds} #{self}```
+
+def Image.differenceKey offset gain background:
+    ```liftF4 differenceKeyerLuna #{offset} #{gain} #{background} #{self}```

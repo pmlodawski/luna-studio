@@ -1,12 +1,7 @@
----------------------------------------------------------------------------
--- Copyright (C) Flowbox, Inc - All Rights Reserved
--- Unauthorized copying of this file, via any medium is strictly prohibited
--- Proprietary and confidential
--- Flowbox Team <contact@flowbox.io>, 2014
----------------------------------------------------------------------------
 module Main where
 
-import Flowbox.Graphics.Mockup
+import Flowbox.Graphics.Mockup.Basic
+import Flowbox.Graphics.Mockup.ColorCorrect
 import Flowbox.Prelude as P
 --import Flowbox.Graphics.Utils
 import Flowbox.Graphics.Color.RGBA
@@ -69,6 +64,7 @@ main = do
 
     --            (RGBA 0.58 0.58 0.58 0.58 :: RGBA Float)
     --            (RGBA 1.45 1.45 1.45 1.45 :: RGBA Float)
+    --            (RGBA 0.76 0.76 0.76 0.76 :: RGBA Float)
     --            (RGBA 0.76 0.76 0.76 0.76 :: RGBA Float)
     --            (RGBA 1.45 1.45 1.45 1.45 :: RGBA Float)
     --            (RGBA 0.07 0.07 0.07 0.07  :: RGBA Float)
