@@ -33,6 +33,7 @@ toHSV = convertColor
 instance ColorConvert HSV HSV where
     convertColor = id
 
+-- http://www.rapidtables.com/convert/color/rgb-to-hsv.htm
 instance ColorConvert RGB HSV where
     convertColor (RGB r' g' b') = HSV h'' s' v'
         where h'' = (h' >=* 0 A.? (h' , h' + 6)) / 6
@@ -40,10 +41,10 @@ instance ColorConvert RGB HSV where
                  $ cond (r' ==* maxRGB) (((g' - b') / delta) `nonIntRem` 6)
                  $ cond (g' ==* maxRGB) ((b' - r') / delta + 2)
                  $ (r'-g') / delta + 4
-              s' = delta ==* 0 A.? (0, delta / maxRGB)
+              s' = maxRGB ==* 0 A.? (0, delta / maxRGB)
               v' = maxRGB
-              minRGB = min r' $ min g' b'
-              maxRGB = max r' $ max g' b'
+              minRGB = min r' $ min g' b' --Cmin
+              maxRGB = max r' $ max g' b' --Cmax
               delta = maxRGB - minRGB
 
 instance ColorConvert RGBA HSV where
