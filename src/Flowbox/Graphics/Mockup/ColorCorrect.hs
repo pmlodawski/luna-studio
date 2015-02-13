@@ -10,7 +10,7 @@
 
 module Flowbox.Graphics.Mockup.ColorCorrect (
     clampLuna,
-    colorCorrectLuna',
+    colorCorrectLuna,
     colorCorrectLunaCurves,
     contrastLuna,
     contrastMatteLuna,
@@ -282,13 +282,13 @@ colorCorrectLunaCurves :: VPS (ColorCorrect Float)
 colorCorrectLunaCurves (VPS (ColorCorrect curveShadows curveHighlights)) = colorCorrectLunaBase (prepare curveShadows, prepare curveHighlights)
     where prepare (convertCurveGUI -> CurveGUI.BezierCurve nodes) = let nodes' = CurveGUI.convertToNodeList nodes in A.fromList (Z :. length nodes') nodes'
 
-colorCorrectLuna' :: Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
-                  -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
-                  -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
-                  -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
-                  -> Image
-                  -> Image
-colorCorrectLuna' = colorCorrectLunaBase (curveShadows, curveHighlights)
+colorCorrectLuna :: Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
+                 -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
+                 -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
+                 -> Color5 -- Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double -> Color.RGBA Double
+                 -> Image
+                 -> Image
+colorCorrectLuna = colorCorrectLunaBase (curveShadows, curveHighlights)
     where curveShadows    = makeSpline [BSplineNode (Point2 0 1) (Point2 (-1) 1) (Point2 0.03 1), BSplineNode (Point2 0.09 0) (Point2 0.06 0) (Point2 1.09 0)]
           curveHighlights = makeSpline [BSplineNode (Point2 0.5 0) (Point2 (-0.5) 0) (Point2 (2/3) 0), BSplineNode (Point2 1 1) (Point2 (5/6) 1) (Point2 2 1)]
           makeSpline      = A.fromList (Z :. 2)
@@ -343,17 +343,17 @@ colorCorrectLunaBase (curveShadows, curveHighlights)
           correctMasterG = CC.colorCorrect masterContrastG masterGammaG masterGainG masterOffsetG
           correctMasterB = CC.colorCorrect masterContrastB masterGammaB masterGainB masterOffsetB
 
-          correctShadowsR = CC.colorCorrect (shadowsContrastR-1) (shadowsGammaR-1) (shadowsGainR-1) shadowsOffsetR
-          correctShadowsG = CC.colorCorrect (shadowsContrastG-1) (shadowsGammaG-1) (shadowsGainG-1) shadowsOffsetG
-          correctShadowsB = CC.colorCorrect (shadowsContrastB-1) (shadowsGammaB-1) (shadowsGainB-1) shadowsOffsetB
+          correctShadowsR = CC.colorCorrect shadowsContrastR shadowsGammaR shadowsGainR shadowsOffsetR
+          correctShadowsG = CC.colorCorrect shadowsContrastG shadowsGammaG shadowsGainG shadowsOffsetG
+          correctShadowsB = CC.colorCorrect shadowsContrastB shadowsGammaB shadowsGainB shadowsOffsetB
 
-          correctMidtonesR = CC.colorCorrect (midtonesContrastR-1) (midtonesGammaR-1) (midtonesGainR-1) midtonesOffsetR
-          correctMidtonesG = CC.colorCorrect (midtonesContrastG-1) (midtonesGammaG-1) (midtonesGainG-1) midtonesOffsetG
-          correctMidtonesB = CC.colorCorrect (midtonesContrastB-1) (midtonesGammaB-1) (midtonesGainB-1) midtonesOffsetB
+          correctMidtonesR = CC.colorCorrect midtonesContrastR midtonesGammaR midtonesGainR midtonesOffsetR
+          correctMidtonesG = CC.colorCorrect midtonesContrastG midtonesGammaG midtonesGainG midtonesOffsetG
+          correctMidtonesB = CC.colorCorrect midtonesContrastB midtonesGammaB midtonesGainB midtonesOffsetB
 
-          correctHighlightsR = CC.colorCorrect (highlightsContrastR-1) (highlightsGammaR-1) (highlightsGainR-1) highlightsOffsetR
-          correctHighlightsG = CC.colorCorrect (highlightsContrastG-1) (highlightsGammaG-1) (highlightsGainG-1) highlightsOffsetG
-          correctHighlightsB = CC.colorCorrect (highlightsContrastB-1) (highlightsGammaB-1) (highlightsGainB-1) highlightsOffsetB
+          correctHighlightsR = CC.colorCorrect highlightsContrastR highlightsGammaR highlightsGainR highlightsOffsetR
+          correctHighlightsG = CC.colorCorrect highlightsContrastG highlightsGammaG highlightsGainG highlightsOffsetG
+          correctHighlightsB = CC.colorCorrect highlightsContrastB highlightsGammaB highlightsGainB highlightsOffsetB
 
           correct' master shadows midtones highlights x = correct'' shadows midtones highlights (master x)
 
