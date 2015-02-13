@@ -20,9 +20,9 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Gra
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Default.Remove.Update  as NodeDefaultRemove
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Default.Set.Request    as NodeDefaultSet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Default.Set.Update     as NodeDefaultSet
-import           Luna.Data.Serialize.Proto.Conversion.Crumb                                                    ()
-import           Luna.Data.Serialize.Proto.Conversion.Graph                                                    ()
-import           Luna.Data.Serialize.Proto.Conversion.NodeDefault                                              ()
+import           Luna.DEP.Data.Serialize.Proto.Conversion.Crumb                                                ()
+import           Luna.DEP.Data.Serialize.Proto.Conversion.Graph                                                ()
+import           Luna.DEP.Data.Serialize.Proto.Conversion.NodeDefault                                          ()
 
 
 

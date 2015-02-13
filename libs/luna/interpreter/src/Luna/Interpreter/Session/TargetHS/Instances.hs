@@ -32,8 +32,11 @@ type FamInstSelector = GHC.DynFlags -> FamInstEnv.FamInst -> Bool
 
 cleanFunctions :: Session mm ()
 cleanFunctions = clean clsInstFilter famInstFilter where
-    clsInstFilter dflags inst = dshow dflags (InstEnv.is_cls_nm inst) /= "Luna.Target.HS.Data.Func.Func.Func"
-                             && dshow dflags (InstEnv.is_cls_nm inst) /= "Luna.Target.HS.Data.Struct.Mem.HasMem"
+    clsInstFilter dflags inst = dshow dflags (InstEnv.is_cls_nm inst) /= "Luna.Target.HS.Data.Func.Args9.Arg"
+                             && dshow dflags (InstEnv.is_cls_nm inst) /= "Type.BaseType.BaseType"
+                             && dshow dflags (InstEnv.is_cls_nm inst) /= "Luna.Target.HS.Data.Struct.Mem.MemberProvider"
+                            -- && dshow dflags (InstEnv.is_cls_nm inst) /= "Luna.Target.HS.Data.Struct.Mem.HasMem"
+                            -- && dshow dflags (InstEnv.is_cls_nm inst) /= "Luna.Target.HS.Data.Func.Func.Func"
     famInstFilter = const $ const True
 
 
@@ -45,7 +48,6 @@ cleanAll = clean true true where
 clean :: ClsInstSelector -> FamInstSelector -> Session mm ()
 clean clsInstFilter famInstFilter = lift2 $ do
     dflags <- GHC.getSessionDynFlags
-
     -- FIXME [PM] : Code below remove all declared instances. It may be
     --              dangerous and needs to be deeply tested or removed.
     GhcMonad.modifySession $ \hscEnv -> let
@@ -53,7 +55,6 @@ clean clsInstFilter famInstFilter = lift2 $ do
         (clsInst, famInst) = HscTypes.ic_instances hsc_IC
         clsInst'           = filter (clsInstFilter dflags) clsInst
         famInst'           = filter (famInstFilter dflags) famInst
-
         hsc_IC'            = hsc_IC {HscTypes.ic_instances = (clsInst', famInst')}
         in hscEnv { HscTypes.hsc_IC = hsc_IC'}
 

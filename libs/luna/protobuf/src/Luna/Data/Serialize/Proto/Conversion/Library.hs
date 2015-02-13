@@ -23,13 +23,13 @@ import           Flowbox.Prelude
 import qualified Generated.Proto.Library.Library                      as Gen
 import qualified Generated.Proto.Library.Library.PropertyMap          as Gen
 import qualified Generated.Proto.Library.Library.PropertyMap.KeyValue as Gen
-import qualified Luna.AST.Common                                      as AST
 import           Luna.Data.Serialize.Proto.Conversion.Attributes      ()
 import           Luna.Data.Serialize.Proto.Conversion.Module          ()
 import           Luna.Data.Serialize.Proto.Conversion.Version         ()
-import           Luna.Graph.Properties                                (Properties)
 import           Luna.Lib.Lib                                         (Library (Library))
 import qualified Luna.Lib.Lib                                         as Library
+import qualified Luna.Syntax.AST                                      as AST
+import           Luna.Syntax.Graph.Properties                         (Properties)
 
 
 

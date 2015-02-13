@@ -8,18 +8,20 @@
 module Luna.Interpreter.Session.Var where
 
 import           Control.Monad.State
-import qualified Data.Maybe                       as Maybe
+import qualified Data.Maybe          as Maybe
+
 import           Flowbox.Prelude
-import qualified Luna.AST.Common                  as AST
-import           Luna.AST.Expr                    (Expr)
-import qualified Luna.AST.Expr                    as Expr
-import qualified Luna.AST.Lit                     as Lit
-import qualified Luna.AST.Lit.Number              as Number
-import           Luna.Graph.Node.Expr             (NodeExpr)
-import qualified Luna.Graph.Node.Expr             as NodeExpr
+import qualified Luna.DEP.AST.Common              as AST
+import           Luna.DEP.AST.Expr                (Expr)
+import qualified Luna.DEP.AST.Expr                as Expr
+import qualified Luna.DEP.AST.Expr                as Expr
+import qualified Luna.DEP.AST.Lit                 as Lit
+import qualified Luna.DEP.AST.Lit.Number          as Number
+import           Luna.DEP.Graph.Node.Expr         (NodeExpr)
+import qualified Luna.DEP.Graph.Node.Expr         as NodeExpr
+import qualified Luna.DEP.Graph.Node.StringExpr   as StringExpr
 import qualified Luna.Interpreter.Session.Env     as Env
 import           Luna.Interpreter.Session.Session (Session)
-import qualified Luna.Graph.Node.StringExpr as StringExpr
 
 
 

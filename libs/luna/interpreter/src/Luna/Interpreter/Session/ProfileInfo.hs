@@ -12,7 +12,6 @@ module Luna.Interpreter.Session.ProfileInfo where
 import qualified Data.Time.Clock as Clock
 import qualified System.CPUTime  as CPU
 
-import Flowbox.Control.Error (MonadIO, liftIO)
 import Flowbox.Prelude
 
 

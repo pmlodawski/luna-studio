@@ -13,8 +13,8 @@ import Data.Map (Map)
 import           Flowbox.Prelude
 import           Generated.Proto.Data.Value            (Value)
 import           Generated.Proto.Mode.Mode             (Mode)
-import qualified Luna.AST.Common                       as AST
-import           Luna.AST.Control.Crumb                (Breadcrumbs)
+import qualified Luna.DEP.AST.AST                      as AST
+import           Luna.DEP.AST.Control.Crumb            (Breadcrumbs)
 import           Luna.Interpreter.Session.Cache.Status (CacheStatus)
 import           Luna.Interpreter.Session.Data.VarName (VarName)
 

@@ -9,17 +9,18 @@ import sys
 from utils.colors import print_error
 
 
+class FlowboxError(Exception):
+  pass
+
 
 def fatal():
-    print_error ("ERROR")
-    sys.exit(1)
+    raise FlowboxError("Error!")
 
 
 def handle_out(code):
     if code:
-        print_error("ERROR")
-        sys.exit(code)
+        raise FlowboxError("Execution error (handle_out)! Return code {code} != 0".format(**locals()))
 
 def handle_err(code):
     if code:
-        sys.exit(code)
+        raise FlowboxError("Execution error (handle_err)! Return code {code} != 0".format(**locals()))

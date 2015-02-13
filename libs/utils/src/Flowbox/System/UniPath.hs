@@ -12,7 +12,7 @@
 
 module Flowbox.System.UniPath where
 
-import           Control.Monad.IO.Class             (MonadIO, liftIO)
+import           Control.Monad                      ((>=>))
 import qualified Data.List                          as List
 import qualified Data.String.Utils                  as StringUtils
 import qualified Flowbox.System.Directory.Locations as Directory
@@ -20,13 +20,13 @@ import qualified System.Directory                   as Directory
 import qualified System.Environment                 as Environment
 import qualified System.FilePath                    as FilePath
 
-import Flowbox.Prelude hiding (empty)
+import Flowbox.Prelude hiding (empty, fromList, toList)
 
 
 
 data PathItem = Node String
               | Root String
-              | Var String
+              | Var  String
               | Up
               | Current
               | Empty deriving (Eq, Ord, Show, Read)
@@ -34,7 +34,7 @@ data PathItem = Node String
 type UniPath = [PathItem]
 
 
-fromUnixString :: String -> UniPath
+fromUnixString :: FilePath -> UniPath
 fromUnixString []           = def
 fromUnixString spath@(x:xs) = let
     split a = StringUtils.split "/" $ StringUtils.replace "\\" "/" a
@@ -51,13 +51,17 @@ fromUnixString spath@(x:xs) = let
         _   -> fromList $ split spath
 
 
-toUnixString :: UniPath -> String
+toUnixString :: UniPath -> FilePath
 toUnixString []   = ""
 toUnixString path = case head l of
         "/" -> "/" ++ join (tail l)
         _   -> join l
     where l    = toList path
           join = StringUtils.join "/"
+
+
+toUnixString' :: MonadIO m => UniPath -> m FilePath
+toUnixString' = expand >=> return . toUnixString
 
 
 expand :: MonadIO m => UniPath -> m UniPath
@@ -90,6 +94,18 @@ toList = fmap str where
             Empty    -> ""
             Var v    -> v
 
+-- FIXME[wd]: poprawic caly UniPath !!! kawalek refactoru:
+--instance IsList UniPath where
+--    type (Item UniPath) = String
+--    fromList  = foldr prepend def
+--    toList    = fmap str where
+--        str item = case item of
+--                Node txt -> txt
+--                Root txt -> txt
+--                Up       -> ".."
+--                Current  -> "."
+--                Empty    -> ""
+--                Var v    -> v
 
 append :: String -> UniPath -> UniPath
 append snode path = path ++ [toPathItem snode]
@@ -133,7 +149,7 @@ normaliseR path undo = case path of
                                         else x:normaliseR xs undo
 
 
-fileName :: UniPath -> String
+fileName :: UniPath -> FilePath
 fileName path = case last $ normalise path of
                   Node fname -> List.intercalate "." $ StringUtils.split "." fname
                   _          -> error "something is wrong with the path " ++ toUnixString path
@@ -145,7 +161,7 @@ basePath path = normalise $ case last $ normalise path of
                               _      -> path
 
 
-extension :: UniPath -> String
+extension :: UniPath -> FilePath
 extension = FilePath.takeExtension . toUnixString
 
 

@@ -8,7 +8,7 @@
 
 module Flowbox.Batch.Handler.Project where
 
-import           Flowbox.Batch.Batch                         (Batch, liftIO)
+import           Flowbox.Batch.Batch                         (Batch)
 import qualified Flowbox.Batch.Handler.Common                as Batch
 import           Flowbox.Batch.Project.Project               (Project)
 import qualified Flowbox.Batch.Project.Project               as Project
@@ -17,7 +17,7 @@ import qualified Flowbox.Batch.Tools.Serialize.Proto.Project as ProjectSerializa
 import           Flowbox.Prelude
 import           Flowbox.System.UniPath                      (UniPath)
 import qualified Flowbox.System.UniPath                      as UniPath
-import           Luna.Graph.Attributes                       (Attributes)
+import           Luna.DEP.Graph.Attributes                   (Attributes)
 
 
 

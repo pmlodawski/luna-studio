@@ -2,9 +2,9 @@
 #                IMAGE - MERGE
 #
 
-import ```Flowbox.Graphics.Mockup.Merge```
+foreign haskell import Flowbox.Graphics.Mockup.Merge
 
-class ```MergeMode```:
+foreign haskell class MergeMode:
     Atop
     Average
     ColorBurn
@@ -39,9 +39,9 @@ class ```MergeMode```:
     Under
     XOR
 
-class ```AlphaBlend```:
+foreign haskell class AlphaBlend:
     Adobe
     Custom
 
-def Image.merge mode alphaBlendMode img:
-    ```liftF4 mergeLuna #{mode} #{alphaBlendMode} #{self} #{img}```
+foreign haskell def Image.merge mode alphaBlendMode img:
+    liftF4 mergeLuna mode alphaBlendMode self img

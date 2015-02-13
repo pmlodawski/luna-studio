@@ -7,29 +7,37 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module Flowbox.Prelude(
     module Flowbox.Prelude,
     module Prelude,
-    module X,
-    void,
-    when,
-    unless,
-    lift
+    module X
 ) where
 
 import           Control.Applicative       as X
 import           Control.Lens              as X
-import           Control.Monad             (unless, void, when)
-import           Control.Monad.IO.Class    (MonadIO, liftIO)
-import           Control.Monad.Trans       (lift)
-import           Control.Monad.Trans.Class (MonadTrans)
 import           Data.Default              as X
+import           GHC.Generics              as X (Generic)
+import           Data.String.Repr          as X (StrRepr, strRepr)
+import           Control.Monad.IO.Class    as X (MonadIO, liftIO)
+import           Data.String.Class         as X (ToString(toString), IsString(fromString))
+import           Data.Monoid               as X (Monoid, mempty, mappend, mconcat, (<>))
+import           GHC.Exts                  as X (IsList, Item, fromList, fromListN, toList)
+import           Data.Wrapper              as X (Wrap(wrap), Unwrap(unwrap), WrapT(wrapT), UnwrapT(unwrapT), Wrapper, WrapperT, rewrap)
+import           Data.Convertible          as X (Convertible(safeConvert), convert)
+import           Data.Text.Class           as X (ToText(toText), FromText(fromText), IsText)
+import           Data.Text.Lazy            as X (Text)
+import           Data.Foldable             as X (Foldable, traverse_)
+import           Data.Typeable             as X (Typeable)
+import           Control.Monad             as X (MonadPlus, mplus, mzero, unless, void, when)
+import           Control.Monad.Trans       as X (MonadTrans, lift)
+import           Data.Convertible.Instances.Missing as X
+import           Data.Default.Instances.Missing ()
 import           Data.Foldable             (forM_)
-import           Data.Monoid               as X (Monoid, mappend, mempty)
 import qualified Data.Traversable          as Traversable
 import           Text.Show.Pretty          (ppShow)
-
+import           Data.List                 (intersperse)
 import           Prelude hiding (mapM, mapM_, print, putStr, putStrLn, (++), (.))
 import qualified Prelude
 
@@ -84,8 +92,6 @@ mapM_ f as = do
     _ <- mapM f as
     return ()
 
-mkList :: a -> [a]
-mkList a = [a]
 
 isLeft :: Either a b -> Bool
 isLeft (Left _) = True
@@ -166,3 +172,12 @@ unlessM :: Monad m => m Bool -> m () -> m ()
 unlessM predicate a = do
     bool <- predicate
     unless bool a
+
+
+mjoin :: Monoid a => a -> [a] -> a
+mjoin delim l = mconcat (intersperse delim l)
+
+
+show' :: (Show a, IsString s) => a -> s
+show' = fromString . Prelude.show
+
