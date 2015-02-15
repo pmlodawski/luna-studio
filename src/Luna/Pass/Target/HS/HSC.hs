@@ -12,6 +12,7 @@
 {-# LANGUAGE TemplateHaskell           #-}
 {-# LANGUAGE TupleSections             #-}
 {-# LANGUAGE OverloadedStrings         #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 module Luna.Pass.Target.HS.HSC where
 
@@ -31,8 +32,11 @@ import qualified Data.Text.Lazy.Builder as Text
 import           Data.Text.Lazy.Builder   (toLazyText, fromLazyText)
 
 import           Data.Text.CodeBuilder    (Generator, CodeType, CodeBuilder, generate, sgenerate, simple, complex, genmap, sgenmap, simplify)
-import qualified Data.Text.CodeBuilder4 as CB
-import           Data.Text.CodeBuilder4 (app, apps)
+import qualified Data.Text.CodeBuilder5 as CB
+import           Data.Text.CodeBuilder5 (app, apps, IndentState, Code(..))
+import Control.Monad.State    hiding (mapM)
+import Data.List (intersperse)
+
 ----------------------------------------------------------------------
 -- Basic types
 ----------------------------------------------------------------------
@@ -91,33 +95,54 @@ buildDoBlock exprs = complex $ "do { " <> buildBody exprs <> " }"
 buildBody :: (IsString a, CodeBuilder a, Monoid a) => [HExpr] -> a
 buildBody exprs = if null exprs then "" else mjoin "; " (genmap exprs) <> ";"
 
-generate2' a = CB.runMe $ generate2 a
+generate2' a = CB.runMeI $ generate2 a
 
-class Generator2 a where
-    generate2 :: a -> CB.Code
+class Generator2 a m where
+    generate2 :: (Monad m, Applicative m) => a -> m CB.Code
 
 instance Convertible Text CB.Code where
     safeConvert = Right . CB.Tok . fromLazyText
 
-instance FromText CB.Code where
-    fromText = CB.Tok . fromLazyText
 
-dataDecl name params cons = apps (apps name params) ("=" : cons)
+dataDecl name params cons = app (apps "data" $ name : params) cons
 
-func name args body = apps (apps name args) ["=", body]
+func name args body = apps (apps name args) ["=", SBox body]
+
+--doBlock = app "do" . CB.Seq
+macroApps base args = SBox $ CB.pfxApps 11 base ("(" : intersperse "," args ++ [")"])
+
+tuple items = SBox $ CB.pfxApps 11 "(" (intersperse "," items ++ [")"])
+
+dataDeclBlock mterms ders = CB.indented $ do
+    (t:ts) <- mterms
+    ind    <- CB.getIndentTxt
+    let indent = fromText $ "\n" <> ind
+        piped  = fromText $ indent <> "| "
+        ts' = fmap (CB.pfxApp 1 piped) ts
+        der = (CB.pfxApp 1 indent) (app "deriving" $ tuple ders)
+    return $ SBox $ app "=" $ SBox $ CB.pfxApps 0 t (ts' ++ [der])
 
 
-instance Generator2 HExpr where
+instance (MonadState IndentState m, CB.MonadRenderStyle s m, CB.BlockRenderer s m) => Generator2 HExpr m where
     generate2 = \case
         HExpr.Pragma   p                      -> generate2 p
         HExpr.Comment  comment                -> generate2 comment
-        HExpr.DataD    name params cons ders  -> dataDecl "data" (convert name : fmap convert params) (fmap generate2 cons) -- END ME -- seq generators?
-        HExpr.Con      name fields            -> apps (convert name) (fmap generate2 fields)
-        HExpr.THE      expr                   -> apps "$(" [CB.SBox $ generate2 expr, ")"] -- no spaces?
-        HExpr.AppE     src dst                -> app (generate2 src) (generate2 dst)
-        HExpr.Var      name                   -> fromText name
-        HExpr.Function name signature expr    -> func (convert name) (fmap generate2 signature) (generate2 expr)
-        --HExpr.MacroE   name items             -> simple $ appPragma (fromString name) where
+        HExpr.DataD    name params cons ders  -> dataDecl (convert name) (fmap convert params) <$> dataDeclBlock (mapM generate2 cons) (fmap (fromString . show) ders)
+        HExpr.Con      name fields            -> apps (convert name) <$> mapM generate2 fields
+        HExpr.THE      expr                   -> between "$(" ")" . SBox <$> generate2 expr
+        HExpr.AppE     src dst                -> app <$> generate2 src <*> generate2 dst
+        HExpr.Var      name                   -> pure $ fromText name
+        HExpr.Function name signature expr    -> func (convert name) <$> mapM generate2 signature <*> generate2 expr
+        HExpr.MacroE   name items             -> macroApps (fromString name) <$> mapM generate2 items
+        HExpr.Lit      val                    -> generate2 val
+        HExpr.LitT     val                    -> generate2 val
+        HExpr.VarE     name                   -> pure $ fromText name
+        HExpr.Tuple    items                  -> tuple <$> mapM generate2 items
+        HExpr.DoBlock  exprs                  -> CB.doBlock $ mapM generate2 exprs
+        HExpr.TypedE   expr cls               -> apps <$> generate2 expr <*> ((\s -> ["::",s]) <$> generate2 cls)
+        HExpr.ConT     name                   -> pure $ fromText name
+
+
         --HExpr.MacroE   name items             -> simple $ appPragma (fromString name) where
         --                                             appPragma = if length items == 0 then id
         --                                                                              else (<> ("(" <> sepjoin (map generate items) <> ")"))        
@@ -130,21 +155,35 @@ instance Generator2 HExpr where
         --                                                 where cons'   = mjoin " | " (genmap cons)
         --                                                       ders'   = if null ders then "" else " deriving (" <> sepjoin (map show ders) <> ")"
         
-        s -> CB.Tok $ fromString $ "unknown :" ++ show s
+        s -> pure $ CB.Tok $ fromString $ "unknown :" ++ show s
 
-instance Generator2 HPragma where
+instance Generator2 HPragma m where
     generate2 = \case
-        HExpr.Include name -> app "#include" (fromString $ "\"" <> name <> "\"")
+        HExpr.Include name -> pure $ app "#include" (fromString $ "\"" <> name <> "\"")
         --s -> fromString $ "unknown :" ++ show s
 
-instance Generator2 HComment where
-    generate2 c = CB.Tok $ case c of
+instance Generator2 HComment m where
+    generate2 c = pure . CB.Tok $ case c of
         HComment.H1 str -> mkSpace 2 <> "-- " <> convert (replicate 67 '=') <> "\n-- " <> convert str <> "\n" <> "-- " <> convert (replicate 67 '=')
         HComment.H2 str -> mkSpace 1 <> "-- ====== " <> convert str <> " ====== --"
         HComment.H3 str -> mkSpace 1 <> "-- ------ " <> convert str <> " ------ --"
         HComment.H4 str -> "-- --- " <> convert str <> " --- --"
         HComment.H5 str -> "-- " <> convert str
         where mkSpace n = convert $ replicate n '\n'
+
+----str a = CB.pfxApps 99 "\"" [a,"\""]
+
+between l r a = CB.pfxApps 99 l [a,r]
+
+instance Generator2 HLit.Lit m where
+    generate2 lit = pure $ case lit of
+        HLit.Integer val -> fromString $ escapeNegative (toList val)
+        HLit.Int     val -> fromString $ escapeNegative (toList val)
+        HLit.Float   val -> fromString $ escapeNegative (toList val)
+        HLit.String  val -> between "\"" "\"" (fromText val)
+        HLit.Char    val -> between "'" "'" $ fromString [val]
+        where escapeNegative num@('-':_) = "(" <> num <> ")"
+              escapeNegative num         = num
 
 
 ------------------------------------------------------------------------
