@@ -23,6 +23,7 @@ import           Data.Text.Lazy.Builder   (toLazyText, fromLazyText)
 
 import Control.Monad.Identity (runIdentity)
 import Control.Monad.State    hiding (mapM)
+import Data.List (intersperse)
 
 type Prec = Int
 type Name = Text.Builder 
@@ -56,17 +57,27 @@ instance IsString Code where
     fromString = Tok . fromString
 
 
-app n c = App $ Op 10 n $ Prefix c
+pfxApp p a b = App $ Op p a $ Prefix b
+pfxApps p = foldl (pfxApp p)
+
+app n c = pfxApp 11 (spaced2 n) c
+
 apps = foldl app
---app2 n c = App $ Op 11 n $ Prefix c
+
+macroApps base args = SBox $ pfxApps 11 base ("(" : intersperse "," args ++ [")"])
+tuple items = SBox $ pfxApps 11 "(" (intersperse "," items ++ [")"])
+
+spaced2 n = App $ Op 10 n $ Prefix " "
+
 
 
 test = app "foo" $ app "bar" "x"   -- foo (bar x)
 test2 = app (app "foo" "bar") "x"  -- (foo bar) x
+test3 = macroApps (app "foo" "bar") ["x", "y", "z"]  -- (foo bar) x
 
-test3 = h_func "foo" ["a", "b", "c"] "5"
+--test3 = h_func "foo" ["a", "b", "c"] "5"
 
-h_func name args body = apps (apps name args) ["=", Seq [test2, test2]]
+h_func name args body = apps (apps name args) ["=", Seq [test, test2]]
 --test = app (Tok "foo") $ app (Tok "bar") (Tok "x")
 
 data HSCompact = HSCompact deriving (Show)
@@ -89,11 +100,11 @@ instance MonadState IndentState m => Render HSCompact m where
         App (Op prec name f) -> case f of
             Prefix code -> (\n c -> n <> conv c) <$> render style name <*> render style code
                 where conv = if prec >= getPrec code then parensed
-                                                     else spaced
+                                                     else id
         Seq cs -> indented $ do
             ind <- getIndentTxt
             let indent = "\r\n" <> ind
-            ("do " <>) . (indent <>) . mjoin indent <$> mapM (render style) cs
+            (indent <>) . mjoin indent <$> mapM (render style) cs
         SBox c -> render style c
         where getPrec = \case
                   App (Op p _ _) -> p
