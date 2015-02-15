@@ -56,8 +56,8 @@ genModule (HExpr.Module name path ext imports body) = toLazyText modcode where
     modcode =  genSection    "extensions"     genExt  ext
             <> sectionHeader "module"         <> header
             <> genSection    "imports"        generate imports
-            <> genSection    "body"           generate body
-            -- <> genSection    "body"           generate2' body
+            -- <> genSection    "body"           generate body
+            <> genSection    "body"           generate2' body
     header = "module " <> fromLazyText name <> mjoin "." (mempty : fmap fromLazyText path) <> " where" <> eol <> eol
 
 genExt :: Extension -> Text.Builder
