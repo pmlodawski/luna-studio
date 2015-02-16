@@ -27,7 +27,7 @@ import Flowbox.Prelude
 type Name = String
 type Select = Set Name
 
-data Channel = ChannelFloat     Name (ChannelData Double) -- TODO[KM]: add a ChannelDouble constructor
+data Channel = ChannelFloat     Name (ChannelData Float) -- TODO[KM]: add a ChannelDouble constructor
              | ChannelInt       Name (ChannelData Int)
 
 data ChannelData a = MatrixData     (Matrix2 a)
@@ -105,8 +105,8 @@ mapOverData f chanData = case chanData of
     ContinuousData shader -> ContinuousData $ fmap f shader
 
 unsafeMap :: Fun -> Channel -> Channel
-unsafeMap (FunFloat f) _ = undefined -- TODO[KM]: add support for functions working on Floats after migrating to Floats and Doubles
-unsafeMap (FunDouble f) (ChannelFloat n zeData) = ChannelFloat n (mapOverData f zeData)
+unsafeMap (FunDouble f) _ = undefined -- TODO[KM]: add support for functions working on Floats after migrating to Floats and Doubles
+unsafeMap (FunFloat f)  (ChannelFloat n zeData) = ChannelFloat n (mapOverData f zeData)
 unsafeMap (FunInt f)    (ChannelInt n zeData)   = ChannelInt   n (mapOverData f zeData)
 unsafeMap _ _ = error "Flowbox.Graphics.Image.Channel.unsafeMap - error: mismatching function type and Channel type"
 

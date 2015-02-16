@@ -4,20 +4,13 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE FlexibleInstances     #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
+module Flowbox.Animation.Model where
 
-module Flowbox.Graphics.Color.Companding.Gamma where
+import Data.Map
 
-import Flowbox.Graphics.Color.Companding
 import Flowbox.Prelude
 
+data NonNumericModel x y = NonNumericModel { _segments :: Map x (Maybe y) }
 
+makeLenses ''NonNumericModel
 
-newtype Gamma a = Gamma a
-                deriving Show
-
-instance (Num a, Floating a) => Companding (Gamma a) a where
-    toLinear   (Gamma g) v = v ** g
-
-    fromLinear (Gamma g) v = v ** (1 / g)

@@ -20,7 +20,7 @@ import Flowbox.Graphics.Composition.Filter
 import Flowbox.Graphics.Composition.Filter             as Conv
 import Flowbox.Graphics.Composition.Generator.Gradient
 import Flowbox.Graphics.Composition.Generator.Shape
-import Flowbox.Graphics.Composition.Keyer
+import Flowbox.Graphics.Composition.Keying
 import Flowbox.Graphics.Composition.Transform
 import Flowbox.Graphics.Prelude                        as P
 import Flowbox.Graphics.Shader.Matrix
@@ -30,7 +30,8 @@ import Flowbox.Graphics.Shader.Sampler
 import Flowbox.Graphics.Shader.Shader                  as S
 import Flowbox.Graphics.Shader.Stencil                 as Stencil
 
-import Flowbox.Graphics.Utils.Utils
+import Flowbox.Graphics.Utils.Accelerate   (asFloating, variable)
+import Flowbox.Graphics.Utils.Utils        (mix)
 import Flowbox.Math.BitonicSorterGenerator
 import Flowbox.Math.Matrix                 as M
 

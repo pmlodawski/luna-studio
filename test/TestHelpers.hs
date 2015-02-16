@@ -9,7 +9,8 @@ import Test.QuickCheck
 import Flowbox.Prelude as P
 import Flowbox.Graphics.Image.Image
 import qualified Flowbox.Math.Matrix as M
-import Flowbox.Graphics.Mockup as Mock
+import Flowbox.Graphics.Mockup.Basic as Mock
+import Flowbox.Graphics.Mockup.Merge
 import Data.Array.Accelerate.CUDA as AC
 import Flowbox.Graphics.Composition.Merge
 
