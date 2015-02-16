@@ -5,6 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE DeriveFunctor       #-}
+{-# LANGUAGE PatternSynonyms     #-}
 {-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ViewPatterns        #-}
@@ -12,7 +13,6 @@
 module Flowbox.Graphics.Image.Channel where
 
 import Data.Array.Accelerate (Boundary(..), constant)
-import Data.Set
 import Data.Typeable
 
 import Flowbox.Graphics.Shader.Matrix
@@ -25,7 +25,7 @@ import Flowbox.Prelude
 
 
 type Name = String
-type Select = Set Name
+type Select = [Name]
 
 data Channel = ChannelFloat     Name (ChannelData Float) -- TODO[KM]: add a ChannelDouble constructor
              | ChannelInt       Name (ChannelData Int)
