@@ -57,7 +57,7 @@ import Data.Vector.Storable.Mutable hiding (set)
 import Foreign.Ptr
 
 import Flowbox.Math.Index
-import Flowbox.Prelude    as P hiding (ix, map, pred, set, use, zipWith, (++), (<*), (?))
+import Flowbox.Prelude    as P hiding (fromList, ix, map, pred, set, use, zipWith, (++), (<*), (?))
 
 
 data Matrix ix a = Raw (A.Array ix a)
