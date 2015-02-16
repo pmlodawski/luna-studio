@@ -304,6 +304,8 @@ genDecl ast@(Label lab decl) = case decl of
 
 
 
+genStdFunc :: (Monad m, Enumerated lab, Num lab, Show lab)
+           => Decl.FuncDecl lab (LExpr lab ()) [LExpr lab ()] -> PassResult m ()
 genStdFunc f = genFunc f (Just genFuncBody) True
 
 genFuncNoBody :: (Monad m, Enumerated lab, Num lab, Show lab)
