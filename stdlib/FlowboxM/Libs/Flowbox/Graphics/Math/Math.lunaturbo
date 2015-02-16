@@ -22,5 +22,5 @@ def verticalHandleGUI length:
 def linearHandleGUI:
     (2, 0.0, 0.0)
 
-def getValueAtCurve curve x:
-    ```liftF2 getValueAtCurveGUI #{curve} #{x}```
+foreign haskell def getValueAtCurve curve x:
+    liftF2 getValueAtCurveGUI curve x

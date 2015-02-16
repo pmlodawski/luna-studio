@@ -7,7 +7,7 @@
 
 package generated.proto.project;
 
-import "attributes.proto";
+import "dep/attributes.proto";
 
 
 
@@ -15,6 +15,6 @@ message Project {
     optional string name     = 1;
     optional string path     = 2;
     repeated string libPaths = 3;
-    optional generated.proto.attributes.Attributes attributes = 4;
+    optional generated.proto.dep.attributes.Attributes attributes = 4;
     optional int32  id       = 5;
 }

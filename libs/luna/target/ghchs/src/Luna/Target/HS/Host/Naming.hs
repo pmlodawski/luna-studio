@@ -8,8 +8,13 @@
 {-# LANGUAGE FlexibleInstances         #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE TemplateHaskell           #-}
+{-# LANGUAGE NoImplicitPrelude         #-}
+{-# LANGUAGE OverloadedStrings         #-}
+
 
 module Luna.Target.HS.Host.Naming where
+
+import Flowbox.Prelude
 
 import Language.Haskell.TH
 
@@ -29,10 +34,11 @@ instance NameCls Name where
     toStr      = nameBase
     toName     = id
 
-mkFieldAccessor accName typeName conName memName = mkName $ "field" ++ accName ++ "_"
-                                                           ++ toStr typeName  ++ "_"
-                                                           ++ toStr conName   ++ "_"
-                                                           ++ toStr memName
+    
+mkFieldAccessor accName typeName memName = mkName $ "field" ++ accName ++ "_"
+                                                            ++ toStr typeName  ++ "_"
+                                                            -- ++ toStr conName   ++ "_"
+                                                            ++ toStr memName
 
 mkFieldGetter = mkFieldAccessor "Getter"
 mkFieldSetter = mkFieldAccessor "Setter"

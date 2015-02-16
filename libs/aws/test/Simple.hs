@@ -20,7 +20,7 @@ import qualified Flowbox.AWS.EC2.Instance.Request        as Request
 import           Flowbox.AWS.Region                      (Region)
 import qualified Flowbox.AWS.Region                      as Region
 import qualified Flowbox.AWS.User.User                   as User
-import           Flowbox.Prelude
+import           Flowbox.Prelude                         hiding (Text)
 
 
 

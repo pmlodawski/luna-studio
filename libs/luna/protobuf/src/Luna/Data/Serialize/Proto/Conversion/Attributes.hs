@@ -28,11 +28,11 @@ import qualified Generated.Proto.Attributes.Flags                     as Gen
 import qualified Generated.Proto.Attributes.FoldInfo                  as Gen
 import qualified Generated.Proto.Attributes.Properties                as Gen
 import           Luna.Data.Serialize.Proto.Conversion.NodeDefault     ()
-import           Luna.Graph.Attributes                                (Attributes)
-import qualified Luna.Graph.Attributes                                as Attributes
-import           Luna.Graph.Flags                                     (Flags (Flags))
-import qualified Luna.Graph.Flags                                     as Flags
-import           Luna.Graph.Properties                                (Properties (Properties))
+import           Luna.Syntax.Graph.Attributes                         (Attributes)
+import qualified Luna.Syntax.Graph.Attributes                         as Attributes
+import           Luna.Syntax.Graph.Flags                              (Flags (Flags))
+import qualified Luna.Syntax.Graph.Flags                              as Flags
+import           Luna.Syntax.Graph.Properties                         (Properties (Properties))
 
 
 

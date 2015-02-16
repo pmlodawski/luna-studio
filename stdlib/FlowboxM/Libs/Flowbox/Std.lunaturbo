@@ -1,9 +1,9 @@
-@AllowOrphans
+#@AllowOrphans
 
-import ```Data.Array.Accelerate (Boundary(..))```
-import ```qualified Data.Array.Accelerate as A```
+foreign haskell import Data.Array.Accelerate (Boundary(..))
+foreign haskell import qualified Data.Array.Accelerate as A
 
-import ```Flowbox.Graphics.Utils.Accelerate (variable)```
+foreign haskell import Flowbox.Graphics.Utils.Accelerate (variable)
 
 #include Prelude.lunaturbo
 #include Graphics/Geom2D/Geom.lunaturbo

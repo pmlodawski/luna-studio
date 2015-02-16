@@ -167,19 +167,17 @@ def createSandbox(path='.'):
 
 
 def main():
-    if os.path.exists(distPath):
-        if ask("It seems that sandbox is already initialized. Do you want to clean it before reinitializing?", SILENTINSTALL):
-            shutil.rmtree(distPath)
-            removeIfExists("cabal.sandbox.config")
-
-
+    global SILENTINSTALL
 
     parser = argparse.ArgumentParser(description='Flowbox Development Environment Initializer')
     parser.add_argument('-y', dest='SILENTINSTALL', action='store_true' , help = 'Install all needed stuff without asking, SILENTINSTALL')
     args = parser.parse_args()
-
-    global SILENTINSTALL
     SILENTINSTALL = args.SILENTINSTALL
+
+    if os.path.exists(distPath):
+        if ask("It seems that sandbox is already initialized. Do you want to clean it before reinitializing?", SILENTINSTALL):
+            shutil.rmtree(distPath)
+            removeIfExists("cabal.sandbox.config")
 
     print_info ("Updating git submodules")
     try_call ('git submodule init')
@@ -195,7 +193,7 @@ def main():
     try_call('cd && cabal update')
 
     # we need to be sure that cabal supports sandboxes
-    checkInstall("cabal", installUsing="cabal install cabal-install && rm ~/.ghc -r", chckf=checkCabalVersion)
+    checkInstall("cabal", installUsing="cabal install cabal-install", chckf=checkCabalVersion)
 
     ### sandbox related stuff
 

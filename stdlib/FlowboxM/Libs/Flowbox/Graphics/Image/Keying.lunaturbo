@@ -2,11 +2,11 @@
 #                IMAGE - KEYING
 #
 
-import ```Flowbox.Graphics.Composition.Keying```
+foreign haskell import Flowbox.Graphics.Composition.Keying
 
-import ```Flowbox.Graphics.Mockup.Keying```
+foreign haskell import Flowbox.Graphics.Mockup.Keying
 
-class ```KeyerMode```:
+foreign haskell class KeyerMode:
     Red
     Green
     Blue
@@ -18,11 +18,11 @@ class ```KeyerMode```:
     Max
     Min
 
-class ```KeyerThresholds``` a:
+foreign haskell class KeyerThresholds a:
     min, minRolloff, max, maxRolloff :: a
 
-def Image.key mode thresholds:
-    ```liftF3 keyerLuna #{mode} #{thresholds} #{self}```
+foreign haskell def Image.key mode thresholds:
+    liftF3 keyerLuna mode thresholds self
 
-def Image.differenceKey offset gain background:
-    ```liftF4 differenceKeyerLuna #{offset} #{gain} #{background} #{self}```
+foreign haskell def Image.differenceKey offset gain background:
+    liftF4 differenceKeyerLuna offset gain background self

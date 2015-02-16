@@ -34,8 +34,8 @@ import qualified Generated.Proto.ProjectManager.Project.Open.Request    as Open
 import qualified Generated.Proto.ProjectManager.Project.Open.Update     as Open
 import qualified Generated.Proto.ProjectManager.Project.Store.Request   as Store
 import qualified Generated.Proto.ProjectManager.Project.Store.Status    as Store
-import           Luna.Data.Serialize.Proto.Conversion.Attributes        ()
-import           Luna.Lib.Manager                                       (LibManager)
+import           Luna.DEP.Data.Serialize.Proto.Conversion.Attributes    ()
+import           Luna.DEP.Lib.Manager                                   (LibManager)
 
 
 

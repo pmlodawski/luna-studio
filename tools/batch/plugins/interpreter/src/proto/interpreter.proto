@@ -7,7 +7,7 @@
 
 package generated.proto.interpreter;
 
-import "crumb.proto";
+import "dep/crumb.proto";
 import "data.proto";
 import "mode.proto";
 
@@ -26,13 +26,18 @@ message CallPointPath {
 message DefPoint {
     required int32 projectID = 1;
     required int32 libraryID = 2;
-    required generated.proto.crumb.Breadcrumbs breadcrumbs = 3;
+    required generated.proto.dep.crumb.Breadcrumbs breadcrumbs = 3;
 }
 
 message ProfileInfo {
     required CallPointPath callPointPath = 1;
     required double        cpuTime       = 2;
     required int64         realTime      = 3;
+}
+
+message CompileError {
+    required CallPointPath callPointPath = 1;
+    required string        errorMessage  = 2;
 }
 
 enum Status {
@@ -160,8 +165,9 @@ message Interpreter {
             optional float timeValue = 1;
         }
         message Update  { 
-            required Request     request      = 1;
-            repeated ProfileInfo profileInfos = 2;
+            required Request      request       = 1;
+            repeated ProfileInfo  profileInfos  = 2;
+            repeated CompileError compileErrors = 3;
         }
     }
     message Value {

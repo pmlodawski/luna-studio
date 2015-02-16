@@ -20,9 +20,9 @@ import           Flowbox.Prelude
 import qualified Generated.Proto.Graphview.EdgeView         as Gen
 import qualified Generated.Proto.Graphview.GraphView        as Gen
 import           Luna.Data.Serialize.Proto.Conversion.Graph ()
-import           Luna.Graph.View.EdgeView                   (EdgeView (EdgeView))
-import           Luna.Graph.View.GraphView                  (GraphView)
-import qualified Luna.Graph.View.GraphView                  as GraphView
+import           Luna.Syntax.Graph.View.EdgeView            (EdgeView (EdgeView))
+import           Luna.Syntax.Graph.View.GraphView           (GraphView)
+import qualified Luna.Syntax.Graph.View.GraphView           as GraphView
 
 
 

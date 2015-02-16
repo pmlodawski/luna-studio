@@ -14,7 +14,9 @@ import Flowbox.Bus.Bus (Bus)
 import Flowbox.Prelude
 
 
-
+--FIXME[PM] : rename to BusWrapper
+-- and implement as: newtype BusT a = BusT { runBusT :: Bus a} deriving (Monad, MonadIO)
+-- and in other file
 newtype BusT a = BusT { runBusT :: Bus a}
 
 

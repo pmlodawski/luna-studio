@@ -26,7 +26,7 @@ import Data.Array.Accelerate.Interpreter (run)
 import           Flowbox.Graphics.Composition.Histogram
 import           Flowbox.Graphics.Utils.Accelerate
 import qualified Flowbox.Math.Numeric                   as Num
-import           Flowbox.Prelude
+import           Flowbox.Prelude hiding (convert)
 
 
 

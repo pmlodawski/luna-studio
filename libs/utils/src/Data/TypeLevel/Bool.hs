@@ -32,7 +32,14 @@ instance Bool True where
 instance Bool False where
   toBool _ = P.False
 
+type family Eq a b where
+    Eq a a = True
+    Eq a b = False
 
 type family And a b where
   And True True = True
   And a    b    = False
+
+type family If cond a b where
+  If True  a b = a
+  If False a b = b
