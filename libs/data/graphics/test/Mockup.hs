@@ -36,7 +36,7 @@ main = do
     let offset1     = VPS $ RGBA 0.5 0.5 0.5 0.5 :: VPS (RGBA Float)
     let out = colorCorrectLuna
 
-                {- master -}     (neutralSCGG, neutralSCGG, neutralSCGG, neutralSCGG, neutralOff)
+                {- master -}     (neutralSCGG, neutralSCGG, neutralSCGG, neutralOff, neutralOff)
                 {- shadows -}    (neutralSCGG, neutralSCGG, neutralSCGG, neutralSCGG, neutralOff)
                 {- midtones -}   (neutralSCGG, neutralSCGG, neutralSCGG, neutralSCGG, neutralOff)
                 {- highlights -} (neutralSCGG, neutralSCGG, neutralSCGG, neutralSCGG, neutralSCGG)

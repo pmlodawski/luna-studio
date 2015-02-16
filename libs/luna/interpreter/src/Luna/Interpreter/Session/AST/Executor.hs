@@ -219,7 +219,7 @@ varType (NodeExpr.ASTExpr oldExpr) = do
 
 
 nameHash :: String -> String
-nameHash name = if name == "Point2" then "Point2" else Hash.hash name
+nameHash = Hash.hash
 
 
 evalFunction :: MemoryManager mm
