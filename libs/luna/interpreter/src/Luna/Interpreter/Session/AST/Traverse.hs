@@ -23,11 +23,11 @@ import qualified GHC.Exts            as Exts
 import           Flowbox.Control.Error
 import           Flowbox.Prelude                            hiding (inside, matching, succ)
 import           Flowbox.Source.Location                    (loc)
-import           Luna.Graph.Edge                            (Edge)
-import qualified Luna.Graph.Edge                            as Edge
-import qualified Luna.Graph.Graph                           as Graph
-import           Luna.Graph.Node                            (Node)
-import qualified Luna.Graph.Node                            as Node
+import           Luna.DEP.Graph.Edge                        (Edge)
+import qualified Luna.DEP.Graph.Edge                        as Edge
+import qualified Luna.DEP.Graph.Graph                       as Graph
+import           Luna.DEP.Graph.Node                        (Node)
+import qualified Luna.DEP.Graph.Node                        as Node
 import qualified Luna.Interpreter.Session.AST.Inspect       as Inspect
 import qualified Luna.Interpreter.Session.Data.CallData     as CallData
 import           Luna.Interpreter.Session.Data.CallDataPath (CallDataPath)

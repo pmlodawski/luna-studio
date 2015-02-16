@@ -9,10 +9,11 @@
 
 module Luna.Interpreter.Session.Error where
 
-import           Control.Exception.Base (SomeException)
-import           Control.Monad.IO.Class (MonadIO)
+import           Control.Exception.Base     (SomeException)
+import           Control.Monad.Trans.Either
 import qualified HscTypes
 
+import           Flowbox.Control.Error                       (lmapEitherT)
 import           Flowbox.Prelude                             hiding (error)
 import           Flowbox.Source.Location                     (Location)
 import qualified Flowbox.Source.Location                     as Location
@@ -37,6 +38,10 @@ data Error = RunError          { _location :: Location, _callPointPath :: CallPo
            deriving (Show)
 
 makeLenses ''Error
+
+
+mapError :: (Functor m, Show e) => Location -> EitherT e m b -> EitherT Error m b
+mapError l = lmapEitherT (OtherError l . show)
 
 
 format :: Error -> String

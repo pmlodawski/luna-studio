@@ -29,18 +29,20 @@ logger = getLoggerIO $(moduleName)
 
 
 enabledFlags :: [GHC.ExtensionFlag]
-enabledFlags = [ GHC.Opt_DataKinds
+enabledFlags = [ GHC.Opt_Cpp
+               , GHC.Opt_DataKinds
                , GHC.Opt_DeriveDataTypeable
                , GHC.Opt_DeriveGeneric
                , GHC.Opt_DysfunctionalDependencies
+               , GHC.Opt_ExtendedDefaultRules
                , GHC.Opt_FlexibleContexts
                , GHC.Opt_FlexibleInstances
-               , GHC.Opt_GADTs
+               , GHC.Opt_MultiParamTypeClasses
                , GHC.Opt_RebindableSyntax
                , GHC.Opt_TemplateHaskell
+               , GHC.Opt_TypeFamilies
                , GHC.Opt_UndecidableInstances
-
-               , GHC.Opt_MultiParamTypeClasses
+               , GHC.Opt_ViewPatterns
                ]
 
 
@@ -48,8 +50,8 @@ disabledFlags :: [GHC.ExtensionFlag]
 disabledFlags = [GHC.Opt_MonomorphismRestriction]
 
 
-runDecls :: [String] -> Session mm ()
-runDecls = Session.withExtensionFlags enabledFlags disabledFlags . mapM_ Session.runDecls
+runDecls :: String -> Session mm ()
+runDecls = Session.withExtensionFlags enabledFlags disabledFlags . Session.runDecls
 
 
 reloadAll :: Session mm ()

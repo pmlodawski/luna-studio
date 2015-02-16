@@ -4,68 +4,70 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE LambdaCase      #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Luna.Interpreter.Session.Env.State where
 
 import qualified Control.Concurrent.MVar    as MVar
+import           Control.Monad.Catch        (bracket_)
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
 import           Data.IntSet                (IntSet)
 import qualified Data.IntSet                as IntSet
 import           Data.Map                   (Map)
 import qualified Data.Map                   as Map
-import qualified Data.Maybe                 as Maybe
-import           Data.Monoid                ((<>))
-import           Data.MultiSet              (MultiSet)
-import qualified Data.MultiSet              as MultiSet
-import           Data.Set                   (Set)
-import qualified Data.Set                   as Set
+import qualified Data.Maybe                  as Maybe
+import           Data.MultiSet               (MultiSet)
+import qualified Data.MultiSet               as MultiSet
+import           Data.Set                    (Set)
+import qualified Data.Set                    as Set
+import qualified Language.Preprocessor.Cpphs as Cpphs
 
-import           Control.Monad.Catch                         (bracket_)
-import qualified Flowbox.Batch.Project.Project               as Project
-import           Flowbox.Control.Error
-import           Flowbox.Data.MapForest                      (MapForest)
+import qualified Flowbox.Batch.Project.Project                 as Project
+import           Flowbox.Control.Error                       hiding (err)
+import           Flowbox.Data.MapForest                        (MapForest)
 import qualified Flowbox.Data.MapForest                      as MapForest
+import qualified Flowbox.Batch.Project.Project               as Project
 import           Flowbox.Data.Mode                           (Mode)
 import           Flowbox.Data.SetForest                      (SetForest)
 import qualified Flowbox.Data.SetForest                      as SetForest
 import           Flowbox.Prelude
-import           Flowbox.Source.Location                     (Location, loc)
-import qualified Luna.AST.Common                             as AST
-import           Luna.AST.Control.Focus                      (Focus)
-import qualified Luna.AST.Control.Focus                      as Focus
-import qualified Luna.AST.Control.Zipper                     as Zipper
-import           Luna.AST.Expr                               (Expr)
-import qualified Luna.AST.Expr                               as Expr
-import           Luna.AST.Module                             (Module)
-import           Luna.Graph.Flags                            (Flags)
-import qualified Luna.Graph.Flags                            as Flags
-import           Luna.Graph.Graph                            (Graph)
-import qualified Luna.Graph.Node                             as Node
-import           Luna.Graph.PropertyMap                      (PropertyMap)
-import qualified Luna.Graph.PropertyMap                      as PropertyMap
-import           Luna.Graph.View.Default.DefaultsMap         (DefaultsMap)
-import           Luna.Interpreter.Session.Cache.Info         (CacheInfo)
-import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint)
-import qualified Luna.Interpreter.Session.Data.CallPoint     as CallPoint
-import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
-import           Luna.Interpreter.Session.Data.DefPoint      (DefPoint (DefPoint))
-import qualified Luna.Interpreter.Session.Data.DefPoint      as DefPoint
-import qualified Luna.Interpreter.Session.Env.Env            as Env
-import           Luna.Interpreter.Session.Env.Session        (Session)
-import           Luna.Interpreter.Session.Error              (Error)
-import qualified Luna.Interpreter.Session.Error              as Error
-import qualified Luna.Interpreter.Session.Memory.Config      as Memory
-import           Luna.Interpreter.Session.ProfileInfo        (ProfileInfo)
-import qualified Luna.Interpreter.Session.ProfileInfo        as ProfileInfo
-import           Luna.Interpreter.Session.TargetHS.Reload    (Reload, ReloadMap)
-import           Luna.Lib.Lib                                (Library)
-import qualified Luna.Lib.Lib                                as Library
-import           Luna.Lib.Manager                            (LibManager)
-import qualified Luna.Lib.Manager                            as LibManager
-import qualified Luna.Pass.Analysis.Alias.Alias              as Alias
-import qualified Luna.Pass.Transform.Graph.Builder.Builder   as GraphBuilder
+import           Flowbox.Source.Location                       (Location, loc)
+import qualified Luna.DEP.AST.AST                              as AST
+import           Luna.DEP.AST.Control.Focus                    (Focus)
+import qualified Luna.DEP.AST.Control.Focus                    as Focus
+import qualified Luna.DEP.AST.Control.Zipper                   as Zipper
+import           Luna.DEP.AST.Expr                             (Expr)
+import qualified Luna.DEP.AST.Expr                             as Expr
+import           Luna.DEP.AST.Module                           (Module)
+import           Luna.DEP.Graph.Flags                          (Flags)
+import qualified Luna.DEP.Graph.Flags                          as Flags
+import           Luna.DEP.Graph.Graph                          (Graph)
+import qualified Luna.DEP.Graph.Node                           as Node
+import           Luna.DEP.Graph.PropertyMap                    (PropertyMap)
+import qualified Luna.DEP.Graph.PropertyMap                    as PropertyMap
+import           Luna.DEP.Graph.View.Default.DefaultsMap       (DefaultsMap)
+import           Luna.DEP.Lib.Lib                              (Library)
+import qualified Luna.DEP.Lib.Lib                              as Library
+import           Luna.DEP.Lib.Manager                          (LibManager)
+import qualified Luna.DEP.Lib.Manager                          as LibManager
+import qualified Luna.DEP.Pass.Analysis.Alias.Alias            as Alias
+import qualified Luna.DEP.Pass.Transform.Graph.Builder.Builder as GraphBuilder
+import           Luna.Interpreter.Session.Cache.Info           (CacheInfo)
+import           Luna.Interpreter.Session.Data.CallPoint       (CallPoint)
+import qualified Luna.Interpreter.Session.Data.CallPoint       as CallPoint
+import           Luna.Interpreter.Session.Data.CallPointPath   (CallPointPath)
+import           Luna.Interpreter.Session.Data.DefPoint        (DefPoint (DefPoint))
+import qualified Luna.Interpreter.Session.Data.DefPoint        as DefPoint
+import qualified Luna.Interpreter.Session.Env.Env              as Env
+import           Luna.Interpreter.Session.Env.Session          (Session)
+import           Luna.Interpreter.Session.Error                (Error)
+import qualified Luna.Interpreter.Session.Error                as Error
+import qualified Luna.Interpreter.Session.Memory.Config        as Memory
+import           Luna.Interpreter.Session.ProfileInfo          (ProfileInfo)
+import qualified Luna.Interpreter.Session.ProfileInfo          as ProfileInfo
+import           Luna.Interpreter.Session.TargetHS.Reload      (Reload, ReloadMap)
 
 
 
@@ -177,6 +179,11 @@ deleteDependentNode callPoint nodeID =
 cleanDependentNodes :: Session mm ()
 cleanDependentNodes = modify (Env.dependentNodes .~ def)
 
+---- Env.cpphsOptions -----------------------------------------------------
+
+getCpphsOptions :: Session mm Cpphs.CpphsOptions
+getCpphsOptions = gets $ view Env.cpphsOptions
+
 ---- Env.profileInfos -----------------------------------------------------
 
 cleanProfileInfos :: Session mm ()
@@ -198,13 +205,40 @@ profile callPointPath action = do
     whenVisible callPointPath $ insertProfileInfo callPointPath info
     return r
 
+---- Env.compileErrors ----------------------------------------------------
+
+cleanCompileErrors :: Session mm ()
+cleanCompileErrors = modify $ Env.compileErrors .~ def
+
+
+getCompileErrors :: Session mm (MapForest CallPoint Error)
+getCompileErrors = gets $ view Env.compileErrors
+
+
+insertCompileError :: CallPointPath -> Error -> Session mm ()
+insertCompileError callPointPath err =
+    modify (Env.compileErrors %~ MapForest.insert callPointPath err)
+
+
+reportCompileErrors :: CallPointPath -> Session mm () -> Session mm ()
+reportCompileErrors callPointPath action = do
+    lift (runEitherT action) >>= \case
+        Left err -> insertCompileError callPointPath err
+        Right () -> return ()
+
+
+debugNode :: CallPointPath -> Session mm () -> Session mm ()
+debugNode callPointPath action =
+    reportCompileErrors callPointPath $
+                profile callPointPath action
+
 ---- Env.timeVar ----------------------------------------------------------
 
-getTimeVar :: Session mm Double
+getTimeVar :: Session mm Env.TimeVar
 getTimeVar = gets $ view Env.timeVar
 
 
-setTimeVar :: Double -> Session mm ()
+setTimeVar :: Env.TimeVar -> Session mm ()
 setTimeVar = modify . set Env.timeVar
 
 ---- Env.timeRefs ---------------------------------------------------------
@@ -350,7 +384,7 @@ getGraph defPoint = do
         ast         = library ^. Library.ast
     expr  <- getFunction defPoint
     aa    <- runPass $(loc) $ Alias.run ast
-    graph <- fst <$> runPass $(loc) (GraphBuilder.run aa propertyMap False expr)
+    graph <- fst <$> runPass $(loc) (GraphBuilder.run aa propertyMap True expr)
     return (graph, expr ^. Expr.id)
 
 
@@ -424,5 +458,6 @@ cleanEnv = cleanWatchPoints
         >> cleanTimeRefs
         >> cleanDependentNodes
         >> cleanProfileInfos
+        >> cleanCompileErrors
         >> cleanSerializationModes
 

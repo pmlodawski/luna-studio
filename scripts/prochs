@@ -15,6 +15,7 @@ import sys
 import os
 from utils.path import write_if_changed
 import argparse
+import pyre
 
 def fatal():
     print_error ("ERROR")
@@ -90,27 +91,45 @@ def replaceModName(s, newname):
         return match.group('head') + newname + match.group('exportlist') + match.group('tail')
     return pat.sub(process, s)
 
+# def modrename(args):
+#     path_prefixes = ['src', 'test']
+#     paths = getTrackedFiles()
+#     # paths = ['libs/luna/core/src/Luna/Data/AST/AST.hs']
+#     total = len(paths)
+#     print_info ("Checking %s file(s)" % total)
+#     for path in paths:
+#         namePath = path.split(os.path.sep)
+#         namePath = dropUnless (namePath, lambda x: x in path_prefixes) [1:]
+#         if not len(namePath) > 1: continue
+#         if namePath[-1][-2:] != 'hs': continue
+#         name = namePath[:-1] + [removeExt(namePath[-1])]
+#         name = '.'.join(name)
+
+#         with open(path, 'r') as file:
+#             txt = file.read()
+#         newtxt = replaceModName(txt, name)
+#         if txt != newtxt:
+#             print_info ("Updating file %s" % path)
+#             with open(path, 'w+') as file:
+#                 file.write(newtxt)
+
 def modrename(args):
-    path_prefixes = ['src', 'test']
-    paths = getTrackedFiles()
-    # paths = ['libs/luna/core/src/Luna/Data/AST/AST.hs']
+    oldPath = args.OLDPATH
+    newPath = args.NEWPATH
+    paths = glob("./**/*.hs")
     total = len(paths)
     print_info ("Checking %s file(s)" % total)
     for path in paths:
-        namePath = path.split(os.path.sep)
-        namePath = dropUnless (namePath, lambda x: x in path_prefixes) [1:]
-        if not len(namePath) > 1: continue
-        if namePath[-1][-2:] != 'hs': continue
-        name = namePath[:-1] + [removeExt(namePath[-1])]
-        name = '.'.join(name)
-
         with open(path, 'r') as file:
             txt = file.read()
-        newtxt = replaceModName(txt, name)
+        newtxt = pyre.run(oldPath, newPath, txt)
         if txt != newtxt:
-            print_info ("Updating file %s" % path)
-            with open(path, 'w+') as file:
-                file.write(newtxt)
+            if args.pretend:
+                print_info ("Obsolete file %s" % path)
+            else:
+                print_info ("Updating file %s" % path)
+                with open(path, 'w+') as file:
+                    file.write(newtxt)
 
 def removeExt(name): 
     return os.path.splitext(name)[0]
@@ -132,6 +151,9 @@ def main():
     parser_style.add_argument('-a', '--all', dest='STYLE_ALL', action='store_true' , help = 'Style all files, not only new git tracked ones')
     parser_style.set_defaults(func=style)
     parser_modrename = subparsers.add_parser('modrename')
+    parser_modrename.add_argument('OLDPATH')
+    parser_modrename.add_argument('NEWPATH')
+    parser_modrename.add_argument('-p', '--pretend', action='store_true')
     parser_modrename.set_defaults(func=modrename)
     args = parser.parse_args()
     args.func(args)

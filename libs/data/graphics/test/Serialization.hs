@@ -22,7 +22,7 @@ import           Flowbox.Graphics.Composition.Generator.Shape
 import           Flowbox.Graphics.Shader.Matrix
 import           Flowbox.Graphics.Shader.Rasterizer
 import           Flowbox.Graphics.Shader.Stencil              as Stencil
-import           Flowbox.Graphics.Utils.Utils
+import           Flowbox.Graphics.Utils.Accelerate            (variable)
 import           Text.ProtocolBuffers.WireMessage
 
 import Utils

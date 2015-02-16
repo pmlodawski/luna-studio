@@ -1,0 +1,152 @@
+#
+#                STD
+#
+
+foreign haskell import Data.Maybe (fromJust)
+
+foreign haskell import Flowbox.Graphics.Mockup
+foreign haskell import Flowbox.Graphics.Mockup.Basic
+
+
+
+foreign haskell class Char
+foreign haskell class Float
+foreign haskell class Int
+
+foreign haskell class Bool:
+    True
+    False
+
+foreign haskell def Bool.toString:
+    liftF1 show self
+
+foreign haskell class Maybe a:
+    Just:
+        unwrap :: a
+    Nothing
+
+foreign haskell class Either a b:
+    Left: l :: a
+    Right: r :: b
+
+foreign haskell def Either.unwrap:
+    liftF1 (either (error "unwrap called on Left") id) self
+
+class Range:
+    lo, hi :: Float
+
+alias FilePath = String
+
+# foreign haskell class Metric:
+#     Chebyshev
+#     Euclidean
+#     Minkowski: p :: Float
+#     Taxicab
+
+foreign haskell class Boundary:
+    Clamp
+    # Mirror # WARN: does not work yet
+    Wrap
+    Constant: a :: Float
+
+def null a:
+    a
+
+foreign haskell def print msg:
+    autoLift1 print msg
+
+# CHAR
+
+foreign haskell def Char.toString:
+    liftF2 (:) self (val ([] :: String))
+
+# INT
+
+foreign haskell def Int.+ a:
+    liftF2 (+) self a
+
+foreign haskell def Int.- a:
+    liftF2 (-) self a
+
+foreign haskell def Int.* a:
+    liftF2 (*) self a
+
+foreign haskell def Int./ a:
+    liftF2 (/) self a
+
+foreign haskell def Int.> a:
+    liftF2 (>) self a
+
+foreign haskell def Int.== a:
+    liftF2 (==) self a
+
+foreign haskell def Int.< a:
+    liftF2 (<) self a
+
+foreign haskell def Int.<= a:
+    liftF2 (<=) self a
+
+foreign haskell def Int.>= a:
+    liftF2 (>=) self a
+
+def Int.inc:
+    self + 1
+
+def Int.dec:
+    self - 1
+
+foreign haskell def Int.fromIntegral:
+    liftF1 fromIntegral self :: Value Pure Safe Float
+
+foreign haskell def Int.toString:
+    liftF1 show self
+
+# DOUBLE
+
+foreign haskell def Float.acc:
+    liftF1 variable self
+
+foreign haskell def Float.truncate:
+    liftF1 truncate self :: Value Pure Safe Int
+
+foreign haskell def Float.round:
+    liftF1 round self :: Value Pure Safe Int
+
+foreign haskell def Float.floor:
+    liftF1 floor self :: Value Pure Safe Int
+
+foreign haskell def Float.ceiling:
+    liftF1 ceiling self :: Value Pure Safe Int
+
+foreign haskell def Float.+ a:
+    liftF2 (+) self a
+
+foreign haskell def Float.- a:
+    liftF2 (-) self a
+
+foreign haskell def Float.* a:
+    liftF2 (*) self a
+
+foreign haskell def Float./ a:
+    liftF2 (/) self a
+
+foreign haskell def Float.> a:
+    liftF2 (>) self a
+
+foreign haskell def Float.== a:
+    liftF2 (==) self a
+
+foreign haskell def Float.< a:
+    liftF2 (<) self a
+
+foreign haskell def Float.<= a:
+    liftF2 (<=) self a
+
+foreign haskell def Float.>= a:
+    liftF2 (>=) self a
+
+foreign haskell def Float.toString:
+    liftF1 show self
+
+# foreign haskell def Float.floor:
+#     liftF1 floor self

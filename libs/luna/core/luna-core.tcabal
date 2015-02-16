@@ -22,11 +22,25 @@ Library
                   NoImplicitPrelude,
                   TemplateHaskell,
                   OverloadedStrings,
-                  DeriveGeneric
+                  DeriveGeneric,
+                  StandaloneDeriving,
+                  FlexibleContexts,
+                  MultiParamTypeClasses,
+                  DefaultSignatures,
+                  DeriveFunctor,
+                  DeriveTraversable,
+                  DeriveFoldable,
+                  FlexibleInstances,
+                  LambdaCase,
+                  ConstraintKinds,
+                  GeneralizedNewtypeDeriving,
+                  DeriveDataTypeable,
+                  EmptyDataDecls
 
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
   Build-Depends:  base,
+                  blaze-markup >= 0.6.3,
                   containers,
                   data-default,
                   fgl,
@@ -35,4 +49,21 @@ Library
                   MissingH,
                   parsers,
                   transformers,
-                  mtl
+                  mtl,
+                  assert,
+                  HMap,
+                  either,
+                  bytestring,
+                  utf8-string,
+                  text,
+                  trifecta >= 1.5.1.1,
+                  charset,
+                  unordered-containers,
+                  ansi-wl-pprint,
+                  raw-strings-qq,
+                  phonetic-code,
+                  edit-distance,
+                  tuple,
+                  optparse-applicative >= 0.11,
+                  zippers
+--[PM] : blaze-markup is a temporary dependency until https://github.com/ekmett/trifecta/issues/42 is resolved

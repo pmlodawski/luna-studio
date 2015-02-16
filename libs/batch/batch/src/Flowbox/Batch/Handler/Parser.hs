@@ -8,23 +8,23 @@
 
 module Flowbox.Batch.Handler.Parser where
 
-import           Flowbox.Batch.Batch   (Error)
+import           Flowbox.Batch.Batch    (Error)
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
-import           Luna.AST.Expr         (Expr)
-import qualified Luna.AST.Expr         as Expr
-import           Luna.AST.Pat          (Pat)
-import           Luna.AST.Type         (Type)
-import qualified Luna.Data.ASTInfo     as ASTInfo
-import qualified Luna.Data.Config      as Config
-import qualified Luna.Parser.Parser    as Parser
-import qualified Luna.Parser.Token     as Tok
+import           Luna.DEP.AST.Expr      (Expr)
+import qualified Luna.DEP.AST.Expr      as Expr
+import           Luna.DEP.AST.Pat       (Pat)
+import           Luna.DEP.AST.Type      (Type)
+import qualified Luna.DEP.Data.ASTInfo  as ASTInfo
+import qualified Luna.DEP.Data.Config   as Config
+import qualified Luna.DEP.Parser.Parser as Parser
+import qualified Luna.DEP.Parser.Token  as Tok
 
 --FIXME[wd]: following imports should be removed after moving to plugin based structure
 --           including all use cases. Nothing should modify Parser.State explicitly!
-import qualified Luna.Parser.Pragma as Pragma
-import qualified Luna.Parser.State  as ParserState
-import           Luna.Pragma.Pragma (Pragma)
+import qualified Luna.DEP.Parser.Pragma as Pragma
+import qualified Luna.DEP.Parser.State  as ParserState
+import           Luna.DEP.Pragma.Pragma (Pragma)
 
 
 

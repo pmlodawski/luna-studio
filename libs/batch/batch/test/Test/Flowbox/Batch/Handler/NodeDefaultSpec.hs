@@ -11,34 +11,34 @@ module Test.Flowbox.Batch.Handler.NodeDefaultSpec where
 import Data.List  ((\\))
 import Test.Hspec
 
-import qualified Flowbox.Batch.Batch                       as Batch
-import qualified Flowbox.Batch.Handler.AST                 as Batch
-import qualified Flowbox.Batch.Handler.Common              as Batch
-import qualified Flowbox.Batch.Handler.Graph               as Batch
-import qualified Flowbox.Batch.Handler.Library             as Batch
-import qualified Flowbox.Batch.Handler.NodeDefault         as Batch
-import qualified Flowbox.Batch.Handler.Project             as Batch
-import qualified Flowbox.Config.Config                     as Config
+import qualified Flowbox.Batch.Batch                           as Batch
+import qualified Flowbox.Batch.Handler.AST                     as Batch
+import qualified Flowbox.Batch.Handler.Common                  as Batch
+import qualified Flowbox.Batch.Handler.Graph                   as Batch
+import qualified Flowbox.Batch.Handler.Library                 as Batch
+import qualified Flowbox.Batch.Handler.NodeDefault             as Batch
+import qualified Flowbox.Batch.Handler.Project                 as Batch
+import qualified Flowbox.Config.Config                         as Config
 import           Flowbox.Control.Error
-import qualified Flowbox.Data.Graph                        as Graph
-import           Flowbox.Data.Version                      ()
+import qualified Flowbox.Data.Graph                            as Graph
+import           Flowbox.Data.Version                          ()
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.System.UniPath                    as UniPath
-import qualified Luna.AST.Arg                              as Arg
-import qualified Luna.AST.Control.Crumb                    as Crumb
-import qualified Luna.AST.Expr                             as Expr
-import qualified Luna.AST.Lit                              as Lit
-import qualified Luna.AST.Name                             as Name
-import qualified Luna.AST.Type                             as Type
-import qualified Luna.Graph.Flags                          as Flags
-import           Luna.Graph.Node                           (Node)
-import qualified Luna.Graph.Node                           as Node
-import qualified Luna.Graph.Node.Expr                      as NodeExpr
-import qualified Luna.Graph.Node.StringExpr                as StringExpr
-import qualified Luna.Graph.PropertyMap                    as PropertyMap
-import qualified Luna.Pass.Analysis.Alias.Alias            as Alias
-import qualified Luna.Pass.Transform.Graph.Builder.Builder as GraphBuilder
+import qualified Flowbox.System.UniPath                        as UniPath
+import qualified Luna.DEP.AST.Arg                              as Arg
+import qualified Luna.DEP.AST.Control.Crumb                    as Crumb
+import qualified Luna.DEP.AST.Expr                             as Expr
+import qualified Luna.DEP.AST.Lit                              as Lit
+import qualified Luna.DEP.AST.Name                             as Name
+import qualified Luna.DEP.AST.Type                             as Type
+import qualified Luna.DEP.Graph.Flags                          as Flags
+import           Luna.DEP.Graph.Node                           (Node)
+import qualified Luna.DEP.Graph.Node                           as Node
+import qualified Luna.DEP.Graph.Node.Expr                      as NodeExpr
+import qualified Luna.DEP.Graph.Node.StringExpr                as StringExpr
+import qualified Luna.DEP.Graph.PropertyMap                    as PropertyMap
+import qualified Luna.DEP.Pass.Analysis.Alias.Alias            as Alias
+import qualified Luna.DEP.Pass.Transform.Graph.Builder.Builder as GraphBuilder
 
 
 

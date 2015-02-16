@@ -12,6 +12,7 @@ import Test.Hspec
 
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
+import qualified Luna.DEP.Lib.Lib                                  as Library
 import qualified Luna.Interpreter.Session.AST.Executor             as Executor
 import qualified Luna.Interpreter.Session.AST.Traverse             as Traverse
 import qualified Luna.Interpreter.Session.Data.CallDataPath        as CallDataPath
@@ -20,7 +21,6 @@ import           Luna.Interpreter.Session.Data.CallPointPath       (CallPointPat
 import qualified Luna.Interpreter.Session.Env                      as Env
 import           Luna.Interpreter.Session.Memory.Manager.NoManager (NoManager (NoManager))
 import           Luna.Interpreter.Session.Session                  (Session)
-import qualified Luna.Lib.Lib                                      as Library
 import qualified Test.Luna.Interpreter.Common                      as Common
 import qualified Test.Luna.Interpreter.SampleCodes                 as SampleCodes
 
@@ -62,7 +62,7 @@ spec = do
     let mm = NoManager
     describe "AST traverse" $ do
         it "finds function arguments" $ do
-            --rootLogger setIntLevel 5
+            rootLogger setIntLevel 5
             Common.runSession mm SampleCodes.traverseExample $ do
                 let lib1      = Library.ID 1
                     var_a     = [CallPoint lib1 22]

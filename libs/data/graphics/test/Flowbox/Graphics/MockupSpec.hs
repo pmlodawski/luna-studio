@@ -2,7 +2,8 @@ module Flowbox.Graphics.MockupSpec where
 
 import Test.Hspec
 import Test.QuickCheck
-import Flowbox.Graphics.Mockup as M
+import Flowbox.Graphics.Mockup.Basic as M
+import Flowbox.Graphics.Mockup.Filter as M
 import Flowbox.Graphics.Composition.EdgeBlur as EB
 import qualified Flowbox.Math.Matrix as M
 
