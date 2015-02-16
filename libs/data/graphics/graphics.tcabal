@@ -58,11 +58,13 @@ Library
                   system-filepath                  ,
                   template-haskell                 ,
                   thyme                            ,
-                  transformers                     ,
+                  transformers     == 0.3.0.0      ,
+                  transformers-compat < 0.4        ,
                   vector                           ,
-                  vector-space                     ,
+                  vector-space     < 0.9           ,
                   luna-target-ghchs                
-
+        -- vector-space < 0.9 is a temporal constrain until https://github.com/diagrams/active/issues/13 is resolved
+        
 -- == test non numeric animation ==
 
 Executable test_non_numeric
