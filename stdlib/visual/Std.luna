@@ -429,7 +429,7 @@ def Image.gradeMatte self::Image blackpoint::Color whitepoint::Color lift::Color
 def Image.rotateAtMatte self::Image point::(Point2 Float) phi::Float matte::(Maybe (Matte Float)) -> Image:
     ```liftF4 rotateAtMatteLuna #{point} #{phi} #{matte} #{self}```
 
-def Image.translateMatte vec::(V2 Float) matte::(Maybe (Matte Float)) -> Image:
+def Image.translateMatte self::Image vec::(V2 Float) matte::(Maybe (Matte Float)) -> Image:
     ```liftF3 translateMatteLuna #{vec} #{matte} #{self}```
 
 def Image.scaleAtMatte self::Image point::(Point2 Float) vec::(V2 Float) matte::(Maybe (Matte Float)) -> Image:

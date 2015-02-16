@@ -50,7 +50,7 @@ import Flowbox.Graphics.Mockup.Basic
 
 data SkewOrder = SkewXY | SkewYX
 
-data Skew a = Skew { _skewPoint :: V2 a
+data Skew a = Skew { _skewValue :: V2 a
                    , _skewOrder :: SkewOrder
                    }
 
