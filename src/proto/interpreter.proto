@@ -218,24 +218,3 @@ message Interpreter {
         }
     }
 }
-
-message Renderer {
-    message FrameRange {
-        required float begin = 1;
-        required float end   = 2;
-    }
-
-    message Render {
-        message Request {
-            repeated FrameRange ranges = 1;
-            required string     filePattern = 2;
-        }
-        message Update {
-            required Request request = 1;
-        }
-        message Progress {
-            required int32 current = 1;
-            required int32 total   = 2;
-        }
-    }
-}

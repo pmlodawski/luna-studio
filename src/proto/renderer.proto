@@ -1,0 +1,32 @@
+///////////////////////////////////////////////////////////////////////////
+// Copyright (C) Flowbox, Inc / All Rights Reserved
+// Unauthorized copying of this file, via any medium is strictly prohibited
+// Proprietary and confidential
+// Flowbox Team <contact@flowbox.io>, 2015
+///////////////////////////////////////////////////////////////////////////
+
+package generated.proto.renderer;
+
+
+
+message FrameRange {
+    required float begin = 1;
+    required float end   = 2;
+}
+
+message Renderer {
+    message Render {
+        message Request {
+            repeated FrameRange ranges      = 1;
+            required string     filePattern = 2;
+            repeated string     adresses    = 3;
+        }
+        message Update {
+            required Request request = 1;
+        }
+        message Progress {
+            required int32 current = 1;
+            required int32 total   = 2;
+        }
+    }
+}
