@@ -13,6 +13,7 @@ import           Control.Monad.State         hiding (mapM, mapM_)
 import           Control.Monad.Trans.Either
 import qualified Data.Char                   as Char
 import qualified Data.Maybe                  as Maybe
+import qualified Data.String.Utils           as Utils
 import qualified Data.Text.Lazy              as Text
 import qualified Data.Text.Lazy.Builder      as TextBuilder
 import qualified Language.Preprocessor.Cpphs as Cpphs
@@ -44,7 +45,7 @@ import           Luna.Interpreter.Session.Data.VarName      (VarName (VarName))
 import qualified Luna.Interpreter.Session.Data.VarName      as VarName
 import qualified Luna.Interpreter.Session.Debug             as Debug
 import qualified Luna.Interpreter.Session.Env               as Env
-import           Luna.Interpreter.Session.Error             (mapError, Error)
+import           Luna.Interpreter.Session.Error             (Error, mapError)
 import qualified Luna.Interpreter.Session.Error             as Error
 import qualified Luna.Interpreter.Session.Hash              as Hash
 import           Luna.Interpreter.Session.Memory.Manager    (MemoryManager)
@@ -233,7 +234,7 @@ evalFunction nodeExpr callDataPath varNames = do
         genNative = List.replaceByMany "#{}" args . List.stripIdx 3 3
         self      = head varNames
     vt <- varType nodeExpr
-    operation <- case vt of
+    operation <- Utils.replace "\\" "\\\\" <$> case vt of
         List        -> return $ "toIOEnv $ fromValue $ val [" <> List.intercalate "," args <> "]"
         Id          -> return $ "toIOEnv $ fromValue $ " <> mkArg self
         Native name -> return $ "toIOEnv $ fromValue $ " <> genNative name
