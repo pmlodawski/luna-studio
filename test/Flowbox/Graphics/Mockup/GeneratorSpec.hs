@@ -18,14 +18,18 @@ spec = do
 	let specPath = "./test/Flowbox/Graphics/Mockup/"
 		in do 
 		  	let testName = "constantLuna"
-			  	--testPath = specPath++testName
+			let testPath = specPath++testName
 
 			describe testName $ do
 				describe "should match reference image" $ do
 					let actualImage = constantLuna PCVideo (RGBA 0.3 0.4 0.5 0.6)
-						--expectedImage = getDefaultTestPic specPath testName
+					let	expectedImage = getDefaultTestPic specPath testName
 					it "in pixel-wise metric" $ do
-						 shouldBeCloseTo (specPath++testName) PixelWise actualImage (unsafePerformIO $ getDefaultTestPic specPath testName)
+						 shouldBeCloseTo testPath PixelWise actualImage (unsafePerformIO expectedImage)
+					it "in image-wise metric" $ do
+						 shouldBeCloseTo testPath ImageWise actualImage (unsafePerformIO expectedImage)
+					it "in size-wise metric" $ do
+						 shouldBeCloseTo testPath SizeWise actualImage (unsafePerformIO expectedImage)
 
 
 
