@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Luna.Data.HAST.Deriving (
+module Luna.DEP.Data.HAST.Deriving (
     Deriving(..),
     genCode
 )where
@@ -21,17 +21,19 @@ data Deriving = Eq
               | Read
               | Show
               | Generic
-              | Typeable
-              | GenNewtype String
               deriving (Show)
 
 
-genCode :: [Deriving] -> Text
+genCode :: [Deriving] -> String
 genCode d = case d of
         [] -> ""
-        _  -> " deriving (" <> mjoin ", " (map (fromString . showDeriving) d) <> ")"
+        _  -> " deriving (" ++ join ", " (map show d) ++ ")"
 
-showDeriving :: Deriving -> String
-showDeriving = \case
-    GenNewtype s -> s
-    a            -> show a
+
+
+
+
+
+
+
+

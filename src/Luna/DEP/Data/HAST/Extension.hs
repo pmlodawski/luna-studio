@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Luna.Data.HAST.Extension (
+module Luna.DEP.Data.HAST.Extension (
     Extension(..),
     genCode
 )where

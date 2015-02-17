@@ -5,15 +5,9 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Luna.Data.HAST.Lit where
+module Luna.DEP.AST.Common where
 
-import           Flowbox.Prelude hiding (Char, Integer, String)
-import qualified Flowbox.Prelude as Prelude
+import Flowbox.Prelude
 
-data Lit = Char    Prelude.Char
-         | String  Text
-         | Int     Text
-         | Integer Text
-         | Float   Text
-         deriving (Show, Eq)
 
+type ID = Int

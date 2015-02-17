@@ -16,6 +16,7 @@ import           Data.Text.Lazy.Encoding (encodeUtf8)
 import           Data.ByteString.Lazy (toStrict)
 import           Data.Text.Lazy.IO (readFile)
 import qualified Data.Text.Lazy as T
+import           Luna.Syntax.Name.Path (QualPath(QualPath))
 
 
 ----------------------------------------------------------------------
@@ -30,7 +31,7 @@ class SourceReader m a where
 -- Data types
 ----------------------------------------------------------------------
 
-data Source a = Source { _modName :: T.Text, _src :: a} deriving (Show, Functor)
+data Source a = Source { _modName :: QualPath, _src :: a} deriving (Show, Functor)
 
 newtype File = File { _path :: T.Text } deriving (Show)
 newtype Text = Text { _txt  :: T.Text } deriving (Show)

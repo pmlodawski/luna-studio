@@ -5,25 +5,24 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Luna.Data.HAST.Module (
-        module Luna.Data.HAST.Module,
-        module Luna.Data.HAST.Expr
+module Luna.DEP.Data.HAST.Module (
+        module Luna.DEP.Data.HAST.Module,
+        module Luna.DEP.Data.HAST.Expr
 )where
 
 import Flowbox.Prelude
-import Luna.Data.HAST.Expr
-import Luna.Data.HAST.Extension (Extension)
-import           Data.Text.Lazy (Text)
+import Luna.DEP.Data.HAST.Expr
+import Luna.DEP.Data.HAST.Extension (Extension)
 
 
 empty :: Expr
 empty = Module [] [] [] []
 
-mk :: [Text] -> Expr
+mk :: [String] -> Expr
 mk path' = Module path' [] [] []
 
-addImport :: [Text] -> Expr -> Expr
-addImport path' mod' = mod' { _imports = Import False path' Nothing : _imports mod' }
+addImport :: [String] -> Expr -> Expr
+addImport path' mod' = mod' { imports = Import False path' Nothing : imports mod' }
 
 addExt :: Extension -> Expr -> Expr
-addExt ext' mod' = mod' { _ext = ext' : _ext mod' }
+addExt ext' mod' = mod' { ext = ext' : ext mod' }

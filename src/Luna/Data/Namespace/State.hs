@@ -132,6 +132,7 @@ regVarName :: NamespaceState m => OriginInfo -> NamePath -> m ()
 regVarName = regName StructInfo.varnames
 
 
+
 regNamePatDesc :: NamespaceState m => ID -> NamePatDesc -> m ()
 regNamePatDesc id argPat = modifyStructInfo (StructInfo.argPats %~ IntMap.insert id argPat)
 

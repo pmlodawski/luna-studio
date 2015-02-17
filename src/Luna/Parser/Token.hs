@@ -59,17 +59,17 @@ tokenBlock p = p <* (try (spaces *> Indent.checkIndented) <|> pure ())
 
 spaces     = concat <$> many tokBase <?> ""
 
-lineCom   = lineComStart *> manyTill anyChar (eol <|> eof)
+lineCom   = (:) <$> lineComStart <*> manyTill anyChar (eol <|> eof)
 --lineCom   = State.registerComment <=< lineComStart *> manyTill anyChar (eol <|> eof)
 
 
 
 betweenNative p = between nativeSym nativeSym p
 
-mlineCom = try mlineComStart *> mlineComBody
+mlineCom = (++) <$> try mlineComStart <*> mlineComBody
 --mlineCom = State.registerComment <=< try mlineComStart *> mlineComBody
 
-mlineComBody = try mlineComEnd *> return ""
+mlineComBody = try mlineComEnd
                  <|> ((++) <$> mlineCom                <*> mlineComBody)
                  <|> ((++) <$> many1 (noneOf startEnd) <*> mlineComBody)
                  <|> oneOf startEnd                     *> mlineComBody

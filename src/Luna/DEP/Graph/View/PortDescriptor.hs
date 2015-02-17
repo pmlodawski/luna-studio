@@ -5,15 +5,10 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Luna.Data.HAST.Comment where
+module Luna.DEP.Graph.View.PortDescriptor where
 
 import Flowbox.Prelude
 
-data Comment = H1 { text :: Text }
-             | H2 { text :: Text }
-             | H3 { text :: Text }
-             | H4 { text :: Text }
-             | H5 { text :: Text }
-             deriving (Show)
 
 
+type PortDescriptor = [Int]

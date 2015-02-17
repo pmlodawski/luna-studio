@@ -7,7 +7,7 @@
 {-# LANGUAGE ConstraintKinds           #-}
 {-# LANGUAGE FlexibleContexts          #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE Rank2Types                #-}
+--{-# LANGUAGE Rank2Types                #-}
 {-# LANGUAGE TemplateHaskell           #-}
 {-# LANGUAGE TupleSections             #-}
 
@@ -39,7 +39,8 @@ type PassT state result m = RWSTE Info [String] state PassError m result
 
 type PassMonad state m = RWSTE Info [String] state PassError m
 
-type Result m result = (PassCtx m) => m (Either PassError result)
+--type Result m result = (PassCtx m) => m (Either PassError result)
+type Result2 m result = m (Either PassError result)
 
 type ResultT m = EitherT PassError m
 

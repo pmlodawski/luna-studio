@@ -5,12 +5,12 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Luna.Data.HAST.DataType (
-        module Luna.Data.HAST.DataType,
-        module Luna.Data.HAST.Expr
+module Luna.DEP.Data.HAST.DataType (
+        module Luna.DEP.Data.HAST.DataType,
+        module Luna.DEP.Data.HAST.Expr
 )where
 
-import Luna.Data.HAST.Expr
+import Luna.DEP.Data.HAST.Expr
 
 empty :: Expr
 empty = DataD "" [] [] []

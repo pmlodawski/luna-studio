@@ -12,9 +12,10 @@
 
 module Luna.Syntax.Name.Hash where
 
+import           Data.Char      (ord)
+import qualified Data.Text.Lazy as Text
+
 import Flowbox.Prelude
-import Data.Char           (ord)
-import Data.Text.Lazy as Text
 
 ----------------------------------------------------------------------
 -- Type classes
@@ -72,12 +73,25 @@ hashReadableChar = \case
 instance Hashable Char String where
     hash c
        | (c >= 'a' && c <='z') || (c >= 'A' && c <='Z') = [c]
+       | (c >= '0' && c <='9')                          = [c]
        | c == '_'                                       = "__"
        | c == '#'                                       = "_" -- FIXME [wd]: just a dirty fix for hast gen
        | otherwise                                      = "_" ++ hashReadableChar c
 
 
 instance Hashable Text Text where
-    hash t = Text.fromChunks . fmap (fromString . hash) $ Text.unpack t
+    hash t = if c == '@' then fromString (hashToUnderscore cc) -- FIXME [wd]: just a dirty fix for hast gen
+                         else Text.fromChunks . fmap (fromString . hash) $ Text.unpack t
+        where str@(c:cc) = Text.unpack t
+        
+
+instance Hashable String String where
+    hash ('@':t) = hashToUnderscore t
+    hash  val    = concat $ fmap hash val
 
 
+hashToUnderscore = \case
+    [] -> []
+    (s:ss) -> s' : hashToUnderscore ss where
+        s' = if s == '#' then '_'
+                         else s
