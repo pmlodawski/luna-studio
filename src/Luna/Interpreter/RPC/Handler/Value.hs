@@ -43,10 +43,10 @@ logger = getLoggerIO $(moduleName)
 
 
 get :: Value.Request -> RPC Context (SessionST mm) Value.Update
-get (Value.Request tcallPointPath) = do
+get (Value.Request tcallPointPath time) = do
     let (projectID, callPointPath) = decodeP tcallPointPath
     Sync.testProjectID projectID
-    (status, bytes) <- liftSession $ Value.getWithStatus callPointPath
+    (status, bytes) <- liftSession $ Value.getWithStatus callPointPath time
     return $ Value.Update tcallPointPath (encodeP status) $ Sequence.fromList bytes
 
 

@@ -15,7 +15,7 @@ module Luna.Interpreter.RPC.Handler.Handler where
 import           Control.Monad.Trans.State
 import           Data.IORef                (IORef)
 import qualified Data.IORef                as IORef
-import           Pipes                     (liftIO, (>->))
+import           Pipes                     ((>->))
 import qualified Pipes
 import qualified Pipes.Concurrent          as Pipes
 import qualified Pipes.Safe                as Pipes

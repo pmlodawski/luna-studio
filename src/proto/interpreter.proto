@@ -173,6 +173,7 @@ message Interpreter {
     message Value {
         message Request {
             required CallPointPath callPointPath = 1;
+            required float         timeValue     = 2;
         }
         message Update {
             required CallPointPath                  callPointPath = 1;

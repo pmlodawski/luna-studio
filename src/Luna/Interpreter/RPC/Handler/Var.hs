@@ -17,7 +17,6 @@ import qualified Luna.DEP.Graph.PropertyMap              as PropertyMap
 import qualified Luna.DEP.Graph.View.Default.DefaultsMap as DefaultsMap
 import qualified Luna.DEP.Lib.Lib                        as Lib
 import qualified Luna.DEP.Lib.Manager                    as LibManager
-import qualified Luna.DEP.Pass.Analysis.ID.ExtractIDs    as ExtractIDs
 import           Luna.Interpreter.RPC.Handler.Lift
 import qualified Luna.Interpreter.Session.Cache.Cache    as Cache
 import           Luna.Interpreter.Session.Data.CallPoint (CallPoint (CallPoint))
