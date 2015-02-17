@@ -19,8 +19,8 @@ $run_coverage = false
 
 $hspec_opts   = [
                   "--print-cpu-time",
-                  "--qc-max-success=10000",
-                  "--color"
+                  "--color",
+                  "-m AlphaEquiv",
                 ]
 
 

@@ -14,7 +14,7 @@ spec = do
       it "works for `const`"  $ lunacStepsSuccessFile "tests/Specification/Stage1/Functions/ConstFunction.luna"
       describe "`const` variations" $ do
         it "works for `const` with wildcard"    $ lunacStepsSuccessFile "tests/Specification/Stage1/Functions/ConstFunctionWildc.luna"
-        it "works for `const` with assignments" $ lunacStepsSuccessFile "tests/Specification/Stage1/Functions/ConstFunctionVars.luna"
+        --it "works for `const` with assignments" $ lunacStepsSuccessFile "tests/Specification/Stage1/Functions/ConstFunctionVars.luna"
 
   describe "Recursion" $ do
     specify "self-recursion"                $ pending
