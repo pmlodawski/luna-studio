@@ -502,6 +502,8 @@ alias Time = Float
 def foo self::Std a::Time:
 	a
 
+def render self::Std a:
+    ()
 #
 #                MATH and such
 #
