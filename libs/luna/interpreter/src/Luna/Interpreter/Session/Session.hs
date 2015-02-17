@@ -18,7 +18,6 @@ import qualified Control.Monad.Ghc          as MGHC
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
 import qualified Data.Either                as Either
-import           Data.Typeable              (Typeable)
 import qualified DynFlags                   as GHC
 import qualified GHC
 import qualified HscTypes

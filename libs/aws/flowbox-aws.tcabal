@@ -26,6 +26,7 @@ Library
     Build-Depends:  aws     == 0.11.1,
                     aws-sdk >= 0.12.4,
                     base,
+                    blaze-builder < 0.4,
                     bytestring,
                     containers,
                     conduit >= 1.1.0,
@@ -51,9 +52,10 @@ Library
                     SHA,
                     text,
                     time,
-                    transformers >= 0.4
+                    transformers
 
 -- [PM] monad-control < 1.0.0.0 and aws == 0.11.1 is added until https://github.com/worksap-ate/aws-sdk/issues/183 is resolved
+-- [PM] blaze-builder < 0.4 is a temporary dependency utnil https://github.com/aristidb/http-types/issues/49 is fixed
 
 Executable aws-test-dbpool
     Main-Is:        DBPool.hs

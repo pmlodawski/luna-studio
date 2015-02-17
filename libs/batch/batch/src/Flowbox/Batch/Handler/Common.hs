@@ -13,48 +13,48 @@ import Control.Monad.RWS
 import Data.Int          (Int32)
 import Text.Show.Pretty
 
-import           Flowbox.Batch.Batch                                         (Batch)
-import qualified Flowbox.Batch.Batch                                         as Batch
-import           Flowbox.Batch.Project.Project                               (Project)
-import qualified Flowbox.Batch.Project.Project                               as Project
-import           Flowbox.Batch.Project.ProjectManager                        (ProjectManager)
-import qualified Flowbox.Batch.Project.ProjectManager                        as ProjectManager
+import           Flowbox.Batch.Batch                                             (Batch)
+import qualified Flowbox.Batch.Batch                                             as Batch
+import           Flowbox.Batch.Project.Project                                   (Project)
+import qualified Flowbox.Batch.Project.Project                                   as Project
+import           Flowbox.Batch.Project.ProjectManager                            (ProjectManager)
+import qualified Flowbox.Batch.Project.ProjectManager                            as ProjectManager
 import           Flowbox.Control.Error
-import           Flowbox.Prelude                                             hiding (error)
+import           Flowbox.Prelude                                                 hiding (error)
 import           Flowbox.System.Log.Logger
-import           Luna.AST.Module                                             (Module)
-import           Luna.Lib.Lib                                                (Library)
-import qualified Luna.Lib.Lib                                                as Library
-import           Luna.Lib.Manager                                            (LibManager)
-import qualified Luna.Lib.Manager                                            as LibManager
-import qualified Luna.Pass.Analysis.Alias.Alias                              as Alias
-import qualified Luna.Pass.Analysis.ID.MaxID                                 as MaxID
-import qualified Luna.Pass.Transform.AST.IDFixer.IDFixer                     as IDFixer
-import qualified Luna.Pass.Transform.Graph.Builder.Builder                   as GraphBuilder
-import qualified Luna.Pass.Transform.Graph.GCNodeProperties.GCNodeProperties as GCNodeProperties
-import qualified Luna.Pass.Transform.Graph.Parser.Parser                     as GraphParser
-import qualified Luna.Pass.Transform.GraphView.Defaults                      as Defaults
-import qualified Luna.Pass.Transform.SimpleText.Builder.Builder              as STBuilder
-import qualified Luna.Pass.Transform.SimpleText.Parser.Parser                as STParser
-import qualified Luna.Syntax.AST                                             as AST
-import           Luna.Syntax.Control.Crumb                                   (Breadcrumbs)
-import           Luna.Syntax.Control.Focus                                   (Focus)
-import qualified Luna.Syntax.Control.Focus                                   as Focus
-import qualified Luna.Syntax.Control.Zipper                                  as Zipper
-import           Luna.Syntax.Expr                                            (Expr)
-import qualified Luna.Syntax.Expr                                            as Expr
-import           Luna.Syntax.Graph.Graph                                     (Graph)
-import qualified Luna.Syntax.Graph.Graph                                     as Graph
-import           Luna.Syntax.Graph.Node                                      (Node)
-import qualified Luna.Syntax.Graph.Node                                      as Node
-import           Luna.Syntax.Graph.Node.Expr                                 (NodeExpr)
-import           Luna.Syntax.Graph.PropertyMap                               (PropertyMap)
-import qualified Luna.Syntax.Graph.PropertyMap                               as PropertyMap
-import           Luna.Syntax.Graph.View.Default.DefaultsMap                  (DefaultsMap)
-import qualified Luna.Syntax.Graph.View.Default.DefaultsMap                  as DefaultsMap
-import           Luna.Syntax.Graph.View.GraphView                            (GraphView)
-import qualified Luna.Syntax.Graph.View.GraphView                            as GraphView
-import           Luna.Syntax.Graph.View.PortDescriptor                       (PortDescriptor)
+import qualified Luna.DEP.AST.AST                                                as AST
+import           Luna.DEP.AST.Control.Crumb                                      (Breadcrumbs)
+import           Luna.DEP.AST.Control.Focus                                      (Focus)
+import qualified Luna.DEP.AST.Control.Focus                                      as Focus
+import qualified Luna.DEP.AST.Control.Zipper                                     as Zipper
+import           Luna.DEP.AST.Expr                                               (Expr)
+import qualified Luna.DEP.AST.Expr                                               as Expr
+import           Luna.DEP.AST.Module                                             (Module)
+import           Luna.DEP.Graph.Graph                                            (Graph)
+import qualified Luna.DEP.Graph.Graph                                            as Graph
+import           Luna.DEP.Graph.Node                                             (Node)
+import qualified Luna.DEP.Graph.Node                                             as Node
+import           Luna.DEP.Graph.Node.Expr                                        (NodeExpr)
+import           Luna.DEP.Graph.PropertyMap                                      (PropertyMap)
+import qualified Luna.DEP.Graph.PropertyMap                                      as PropertyMap
+import           Luna.DEP.Graph.View.Default.DefaultsMap                         (DefaultsMap)
+import qualified Luna.DEP.Graph.View.Default.DefaultsMap                         as DefaultsMap
+import           Luna.DEP.Graph.View.GraphView                                   (GraphView)
+import qualified Luna.DEP.Graph.View.GraphView                                   as GraphView
+import           Luna.DEP.Graph.View.PortDescriptor                              (PortDescriptor)
+import           Luna.DEP.Lib.Lib                                                (Library)
+import qualified Luna.DEP.Lib.Lib                                                as Library
+import           Luna.DEP.Lib.Manager                                            (LibManager)
+import qualified Luna.DEP.Lib.Manager                                            as LibManager
+import qualified Luna.DEP.Pass.Analysis.Alias.Alias                              as Alias
+import qualified Luna.DEP.Pass.Analysis.ID.MaxID                                 as MaxID
+import qualified Luna.DEP.Pass.Transform.AST.IDFixer.IDFixer                     as IDFixer
+import qualified Luna.DEP.Pass.Transform.Graph.Builder.Builder                   as GraphBuilder
+import qualified Luna.DEP.Pass.Transform.Graph.GCNodeProperties.GCNodeProperties as GCNodeProperties
+import qualified Luna.DEP.Pass.Transform.Graph.Parser.Parser                     as GraphParser
+import qualified Luna.DEP.Pass.Transform.GraphView.Defaults                      as Defaults
+import qualified Luna.DEP.Pass.Transform.SimpleText.Builder.Builder              as STBuilder
+import qualified Luna.DEP.Pass.Transform.SimpleText.Parser.Parser                as STParser
 
 
 

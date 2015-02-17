@@ -23,7 +23,7 @@ import qualified Luna.Data.Namespace  as Namespace
 import           Luna.Data.Namespace  (Namespace, NamespaceMonad)
 import qualified Data.List            as List
 import qualified Data.Maps            as Map
---import           Luna.AST.Comment     (Comment(..))
+--import           Luna.DEP.AST.Comment     (Comment(..))
 import           Flowbox.Control.Monad.State (mapStateVal, get, put, StateT)
 import qualified Flowbox.Control.Monad.State as State
 import qualified Luna.Data.StructInfo        as StructInfo
@@ -54,6 +54,8 @@ lastID            = view (info . ASTInfo.lastID)
 --addComment cmt s  = s & comments %~ Map.insertWith (++) (lastID s) [cmt]
 
 --registerComment = mapStateVal . addComment . Comment
+
+
 
 regParent id pid = mapStateVal $ namespace %~ Namespace.regParent id pid
 

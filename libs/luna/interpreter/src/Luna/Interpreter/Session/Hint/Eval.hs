@@ -9,7 +9,6 @@
 
 module Luna.Interpreter.Session.Hint.Eval where
 
-import           Data.Typeable (Typeable)
 import qualified Data.Typeable as Typeable
 import qualified GHC
 import qualified GHC.Exts      as Exts

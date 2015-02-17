@@ -100,11 +100,11 @@ traverseDecl e@(Label lab decl) = fmap (Label lab) $ case decl of
                                      -> Decl.Data <$> (Decl.DataDecl name params <$> defaultTraverseM cons 
                                                                                  <*> defaultTraverseM defs
                                                       )
-    Decl.Imp   path rename targets   -> return $ Decl.Imp   path rename targets
-    Decl.TpAls dst src               -> return $ Decl.TpAls dst src
-    Decl.TpWrp dst src               -> return $ Decl.TpWrp dst src
+    Decl.Imp     imp                 -> return $ Decl.Imp     imp
+    Decl.TpAls   dst src             -> return $ Decl.TpAls   dst src
+    Decl.TpWrp   dst src             -> return $ Decl.TpWrp   dst src
+    Decl.Pragma  p                   -> return $ Decl.Pragma  p
     Decl.Foreign fdecl               -> Decl.Foreign <$> mapM (traverseFDecl id) fdecl
-    Decl.Pragma p                    -> return $ Decl.Pragma p
     where id       = Enum.id lab
           --continue = defaultTraverseM e 
           subparse expr = do
@@ -134,8 +134,9 @@ traverseFDecl id = \case
                                            return . Decl.FFunc $ Decl.FuncDecl path sig' output body
     Decl.FData (Decl.DataDecl name params cons defs)
                                      -> Decl.FData <$> (Decl.DataDecl name params <$> defaultTraverseM cons 
-                                                                                 <*> defaultTraverseM defs
+                                                                                  <*> defaultTraverseM defs
                                                       )
+    Decl.FImp imp -> return $ Decl.FImp imp
 
 
 traverseField :: Stage2Ctx lab m => LField lab String -> Stage2Pass m (LField lab ResultExpr)

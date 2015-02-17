@@ -1,0 +1,113 @@
+#
+#                IMAGE - FILTERS & TRANSFORMATIONS
+#
+
+foreign haskell import Flowbox.Graphics.Mockup.Filter
+foreign haskell import Flowbox.Graphics.Mockup.Transform
+
+foreign haskell def Image.posterize colors:
+    liftF2 posterizeLuna colors self
+
+# foreign haskell def Image.defocus radius:
+#     liftF2 defocus radius self
+
+# foreign haskell def Image.motionBlur size angle:
+#     liftF3 motionBlur size angle self
+
+# foreign haskell def Image.bilateral psigma csigma size:
+#     liftF4 bilateral psigma csigma size self
+
+# def Image.cornerPin p1 p2 p3 p4:
+#     p1x = p1.x
+#     p1y = p1.y
+#     p2x = p2.x
+#     p2y = p2.y
+#     p3x = p3.x
+#     p3y = p3.y
+#     p4x = p4.x
+#     p4y = p4.y
+foreign haskell 
+#     liftF9 cornerPinLuna p1x p1y p2x p2y p3x p3y p4x p4y self
+
+foreign haskell def Image.blur kernelSize:
+    liftF2 blurLuna kernelSize self
+
+# foreign haskell def Image.laplacian kernelSize centerVal sideVal:
+#     liftF4 laplacianLuna kernelSize centerVal sideVal self
+
+foreign haskell class V2 a:
+    V2 : x, y :: a
+
+foreign haskell def Image.translate vec:
+    liftF2 translateLuna vec self
+
+foreign haskell def Image.rotate phi:
+    liftF2 rotateLuna phi self
+
+foreign haskell def Image.rotateAt point phi:
+    liftF3 rotateAtLuna point phi self
+
+foreign haskell def Image.scale vec:
+    liftF2 scaleLuna vec self
+
+foreign haskell def Image.scaleAt point vec:
+    liftF3 scaleAtLuna point vec self
+
+foreign haskell def Image.translateMatte vec matte:
+    liftF3 translateMatteLuna vec matte self
+
+foreign haskell def Image.rotateAtMatte point phi matte:
+    liftF4 rotateAtMatteLuna point phi matte self
+
+foreign haskell def Image.scaleAtMatte point vec matte:
+    liftF4 scaleAtMatteLuna point vec matte self
+
+foreign haskell def Image.skewAtMatte point skew matte:
+    liftF4 skewAtMatteLuna point skew matte self
+
+foreign haskell def Image.transformMatte trans matte:
+    liftF3 transformLuna trans matte self
+
+foreign haskell def Image.transform trans:
+    liftF2 transformLuna trans self
+
+foreign haskell def Image.crop rect reformat defaultOutside:
+    liftF4 cropLuna rect reformat defaultOutside self
+
+foreign haskell def Image.erode size:
+    liftF2 erodeLuna size self
+
+foreign haskell def Image.dilate size:
+    liftF2 dilateLuna size self
+
+foreign haskell def Image.open size:
+    liftF2 openLuna size self
+
+foreign haskell def Image.close size:
+    liftF2 closeLuna size self
+
+# foreign haskell def Image.radialBlur size angle:
+#     liftF3 radialBlurLuna size angle self
+
+foreign haskell def Image.edgeDetect edgeOperator:
+    liftF2 edgeDetectLuna edgeOperator self
+
+foreign haskell class InterpolationFilter:
+    NearestNeighbour
+    Box
+    Basic
+    Triangle
+    Bell
+    BSpline
+    Lanczos: a :: Float
+    Polynomial: a, b :: Float
+    Mitchell
+    CatmullRom
+    Gauss: a :: Float
+    Dirac: a :: Float
+
+# foreign haskell def Image.interpolate boundary filter:
+#     liftF3 interpolateChannelsLuna boundary filter self
+
+foreign haskell def Image.multisample grid filter:
+    liftF3 multisampleChannelsLuna grid filter self

@@ -1,0 +1,26 @@
+#
+#                IMAGE - CONSTANTS
+#
+
+foreign haskell import Flowbox.Graphics.Mockup.Generator
+
+foreign haskell def constant width height color:
+    liftF3 constantLuna width height color
+
+foreign haskell def circular width height:
+    liftF2 circularLuna width height
+
+foreign haskell def conical width height:
+    liftF2 conicalLuna width height
+
+foreign haskell def diamond width height:
+    liftF2 diamondLuna width height
+
+foreign haskell def radial metric width height:
+    liftF3 radialShapeLuna metric width height
+
+foreign haskell def linear width height:
+    liftF2 linearShapeLuna width height
+
+foreign haskell def square side:
+    liftF1 squareLuna side

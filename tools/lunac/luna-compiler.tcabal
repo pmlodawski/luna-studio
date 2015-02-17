@@ -24,19 +24,17 @@ Executable luna
   Extensions:     DoAndIfThenElse
                   NoImplicitPrelude
   Build-Depends:  base,
-                  -- constraint on blaze-markup is a temporary fix for trifectasdbnboflus
-                  blaze-markup < 0.6.3,
                   containers,
                   flowbox-config,
                   flowbox-utils,
+                  luna-build,
                   luna-core,
                   luna-pass,
                   luna-distribution,
                   luna-initializer,
                   MissingH,
-                  optparse-applicative < 0.10, 
+                  optparse-applicative,
                   timeit
--- FIXME: update optparse-applicative to newer version
 
 
 Test-Suite tests
@@ -49,6 +47,7 @@ Test-Suite tests
                   flowbox-config,
                   flowbox-utils,
                   hspec,
+                  luna-build,
                   luna-core,
                   luna-initializer,
                   luna-pass,

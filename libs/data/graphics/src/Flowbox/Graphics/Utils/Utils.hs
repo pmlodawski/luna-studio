@@ -9,17 +9,17 @@
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE UndecidableInstances  #-}
-{-# LANGUAGE TemplateHaskell       #-}
 
 module Flowbox.Graphics.Utils.Utils where
 
 import Data.Array.Accelerate as A
 import Data.Typeable
 
-import Flowbox.Prelude as P
 import Flowbox.Graphics.Utils.Accelerate
+import Flowbox.Prelude                   as P
 
 
 
@@ -108,11 +108,3 @@ trdQuad e = let (_:: Exp a, _:: Exp b, x, _:: Exp d) = A.unlift e in x
 
 frthQuad :: forall a b c d. (Elt a, Elt b, Elt c, Elt d) => Exp (a, b, c, d) -> Exp d
 frthQuad e = let (_:: Exp a, _:: Exp b, _:: Exp c, x) = A.unlift e in x
-
--- = Accelerate utils
-
-variable :: (Lift Exp e, Elt (Plain e)) => e -> Exp (Plain e)
-variable a = the $ unit $ A.lift a
-
-asFloating :: (Elt a, Elt b, Functor f, IsIntegral a, IsNum b) => f (Exp a) -> f (Exp b)
-asFloating = fmap A.fromIntegral

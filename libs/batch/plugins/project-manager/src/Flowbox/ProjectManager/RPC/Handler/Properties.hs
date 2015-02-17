@@ -22,8 +22,8 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Properties.G
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Properties.Get.Status                      as GetASTProperties
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Properties.Set.Request                     as SetASTProperties
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Properties.Set.Update                      as SetASTProperties
-import           Luna.Data.Serialize.Proto.Conversion.Attributes                                               ()
-import           Luna.Data.Serialize.Proto.Conversion.Library                                                  ()
+import           Luna.DEP.Data.Serialize.Proto.Conversion.Attributes                                           ()
+import           Luna.DEP.Data.Serialize.Proto.Conversion.Library                                              ()
 
 
 

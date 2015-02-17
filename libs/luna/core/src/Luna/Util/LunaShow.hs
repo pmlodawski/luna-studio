@@ -17,16 +17,16 @@ import Flowbox.Prelude hiding (simple)
 --import qualified Luna.AST.Arg        as Arg
 --import           Luna.Syntax.Expr       (Expr)
 --import qualified Luna.Syntax.Expr       as Expr
---import           Luna.AST.Lit        (Lit)
---import qualified Luna.AST.Lit        as Lit
---import           Luna.AST.Lit.Number (Number (Number))
---import qualified Luna.AST.Lit.Number as Number
---import           Luna.AST.Name       (Name)
---import qualified Luna.AST.Name       as Name
---import           Luna.AST.Pat        (Pat)
---import qualified Luna.AST.Pat        as Pat
---import           Luna.AST.Type       (Type)
---import qualified Luna.AST.Type       as Type
+--import           Luna.DEP.AST.Lit        (Lit)
+--import qualified Luna.DEP.AST.Lit        as Lit
+--import           Luna.DEP.AST.Lit.Number (Number (Number))
+--import qualified Luna.DEP.AST.Lit.Number as Number
+--import           Luna.DEP.AST.Name       (Name)
+--import qualified Luna.DEP.AST.Name       as Name
+--import           Luna.DEP.AST.Pat        (Pat)
+--import qualified Luna.DEP.AST.Pat        as Pat
+--import           Luna.DEP.AST.Type       (Type)
+--import qualified Luna.DEP.AST.Type       as Type
 
 
 data ShowContext = ShowContext { _accessorContent :: Bool }

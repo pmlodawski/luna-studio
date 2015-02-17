@@ -22,37 +22,57 @@ module Main where
 import Luna.Target.HS
 
 -- body --
-#include "pragmas.cpp"
+#include "pragmas.h"
 
 -- ====== Main type ====== --
 data Main  = Main deriving (Show, Eq, Ord, Generic, Typeable)
-data Cls_Main  = Cls_Main deriving (Show, Eq, Ord, Generic, Typeable)
+$(registerType ''Main)
 
 -- ------ Main.Main constructor ------ --
 cons_Main = _member("Main") (val Cls_Main)
 memDef_Cls_Main_Main = liftCons0 Main
+
+-- ====== --------------- ====== --
 
 -- ====== Method: Cls_Main.Main ====== --
 memSig_Cls_Main_Main = _rtup1(_nuSigArg("self"))
 memFnc_Cls_Main_Main = (memSig_Cls_Main_Main, memDef_Cls_Main_Main)
 $(registerMethod ''Cls_Main "Main")
 
--- ------ Main methods ------ --
 
--- ====== Method: Main.print ====== --
-memSig_Main_print = _rtup2(_nuSigArg("self"), _npSigArg("s", val ("" :: String)))
-memDef_Main_print self s = do 
-     
-    polyJoin . liftF1 (Value . fmap Safe . print) $ s
-     
+-- ===================================================================
+-- Data headers
+-- ===================================================================
 
-memFnc_Main_print = (memSig_Main_print, memDef_Main_print)
-$(registerMethod ''Main "print")
+-- ====== Ala7 type ====== --
+data Ala7  = Ola4 deriving (Show, Eq, Ord, Generic, Typeable)
+$(registerType ''Ala7)
+
+-- ------ Ala7.Ola4 constructor ------ --
+cons_Ola4 = _member("Ola4") (val Cls_Ala7)
+memDef_Cls_Ala7_Ola4 = liftCons0 Ola4
+
+-- ====== --------------- ====== --
+
+-- ====== Method: Cls_Ala7.Ola4 ====== --
+memSig_Cls_Ala7_Ola4 = _rtup1(_nuSigArg("self"))
+memFnc_Cls_Ala7_Ola4 = (memSig_Cls_Ala7_Ola4, memDef_Cls_Ala7_Ola4)
+$(registerMethod ''Cls_Ala7 "Ola4")
+
+
+-- ===================================================================
+-- Data declarations
+-- ===================================================================
+
+
+-- ===================================================================
+-- Module declarations
+-- ===================================================================
 
 -- ====== Method: Main.main ====== --
 memSig_Main_main = _rtup1(_nuSigArg("self"))
 memDef_Main_main _self = do 
-     _call(6) (appNext (_call(997) (_member("x") _self)) (_member("print") _self))
+     _call(0) cons_Ola4
      
 
 memFnc_Main_main = (memSig_Main_main, memDef_Main_main)

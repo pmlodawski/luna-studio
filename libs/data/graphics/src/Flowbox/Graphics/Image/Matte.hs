@@ -12,30 +12,30 @@ import Flowbox.Graphics.Shader.Shader
 data Matte a = ImageMatte Channel
              | VectorMatte (Mask a) deriving(Show)
 
-imageMatteDouble :: Channel -> Matte Double
-imageMatteDouble chan@(ChannelFloat _ _) = ImageMatte chan
-imageMatteDouble _ = error "Wrong arguemnt type - int given, float expected."
+imageMatteFloat :: Channel -> Matte Float
+imageMatteFloat chan@(ChannelFloat _ _) = ImageMatte chan
+imageMatteFloat _ = error "Wrong arguemnt type - int given, float expected."
 
 imageMatteInt :: Channel -> Matte Int
 imageMatteInt chan@(ChannelInt _ _) = ImageMatte chan
 imageMatteInt _ = error "Wrong argument type - float given, int expected."
 
-matteToMatrix :: Int -> Int -> Matte Double -> Matrix2 Double
+matteToMatrix :: Int -> Int -> Matte Float -> Matrix2 Float
 matteToMatrix _ _ (ImageMatte d) = matte
   where (ChannelFloat _ (MatrixData matte)) = asMatrix d
 
 matteToMatrix h w (VectorMatte d) = matte
-  where 
+  where
     matte = rasterizeMask w h d
 
-matteToDiscrete :: Int -> Int -> Matte Double -> DiscreteShader (A.Exp Double)
+matteToDiscrete :: Int -> Int -> Matte Float -> DiscreteShader (A.Exp Float)
 matteToDiscrete _ _ (ImageMatte d) = matte
   where (ChannelFloat _ (DiscreteData matte)) = asDiscrete d
 
-matteToDiscreteShader h w m@(VectorMatte d) = matte
+matteToDiscrete h w m@(VectorMatte d) = matte
   where DiscreteData matte = asDiscreteData (A.constant 0) (MatrixData (matteToMatrix h w m))
 
-matteToContinuous :: Int -> Int -> Matte Double -> ContinuousShader (A.Exp Double)
+matteToContinuous :: Int -> Int -> Matte Float -> ContinuousShader (A.Exp Float)
 matteToContinuous _ _ (ImageMatte d) = matte
   where (ChannelFloat _ (ContinuousData matte)) = asContinuous d
 

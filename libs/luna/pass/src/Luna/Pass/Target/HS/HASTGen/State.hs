@@ -11,12 +11,12 @@
 
 module Luna.Pass.Target.HS.HASTGen.State where
 
-import Control.Monad.State
+import Control.Monad.State hiding (withState)
 
 import           Flowbox.Prelude       hiding (mod)
-import qualified Luna.Data.HAST.Expr   as HExpr
-import qualified Luna.Data.HAST.Module as Module
-import           Luna.Data.HAST.Comment (Comment)
+import qualified Luna.Target.HS.AST.Expr   as HExpr
+import qualified Luna.Target.HS.AST.Module as Module
+import           Luna.Target.HS.AST.Comment (Comment)
 import           Luna.Syntax.Name.Path  (QualPath)
 
 import Flowbox.System.Log.Logger
@@ -29,8 +29,9 @@ logger = getLogger $(moduleName)
 
 type HExpr = HExpr.Expr
 
-data GenState = GenState { _mod :: HExpr
-                         , _ctx :: [QualPath]
+data GenState = GenState { _mod    :: HExpr
+                         , _ctx    :: [QualPath]
+                         , _callID :: Int
                          }
 
 makeLenses ''GenState
@@ -43,6 +44,16 @@ type GenStateM m = (Applicative m, MonadState GenState m, Functor m)
 
 popList []     = Nothing
 poplist (x:xs) = Just (x,xs)
+
+genCallID = do
+    s <- get
+    let cid = view callID s
+    put $ s & callID .~ cid + 1
+    return cid
+
+withState f = do
+    s <- get
+    put $ f s
 
 pushCtx :: GenStateM m => QualPath -> m()
 pushCtx c = modify (ctx %~ (c:))
@@ -122,4 +133,4 @@ regTHExpr = appendModuleBody
 
 
 instance Default GenState where
-    def = GenState HExpr.Undefined def
+    def = GenState HExpr.Undefined def 0
