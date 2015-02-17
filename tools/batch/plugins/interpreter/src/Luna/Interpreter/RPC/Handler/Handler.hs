@@ -59,7 +59,7 @@ import qualified Luna.Interpreter.Session.Session            as Session
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 topics :: Prefix -> [Topic]
