@@ -1,4 +1,4 @@
----------------------------------------------------------------------------
+ ---------------------------------------------------------------------------
 -- Copyright (C) Flowbox, Inc - All Rights Reserved
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 -- Proprietary and confidential
@@ -8,10 +8,10 @@ module Flowbox.Math.Function.Solve where
 
 import Data.Map
 
-import Math.Coordinate.Cartesian         (Point2(..))
+import Math.Coordinate.Cartesian        (Point2(..))
 import Flowbox.Geom2D.CubicBezier
 import Flowbox.Geom2D.CubicBezier.Solve
-import Flowbox.Math.Function.Model             hiding (Point)
+import Flowbox.Math.Function.Model      hiding (Point)
 import Flowbox.Prelude
 
 
@@ -20,7 +20,7 @@ import Flowbox.Prelude
 --valueAt fun x = valueAtSegment (getSegmentAt fun x) x
 
 -- INFO: this is set to Double because of line 37, where the types must match for the calculations to work
-valueAtSegment :: FunctionSegment Double Double -> Double -> Maybe Double
+valueAtSegment :: FunctionSegment Float Float -> Float -> Maybe Float
 valueAtSegment (ContinuousHybrid nodes) x = result
     where startNode = x `lookupLE` nodes
           endNode   = x `lookupGT` nodes

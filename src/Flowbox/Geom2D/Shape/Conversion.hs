@@ -21,7 +21,7 @@ import Math.Coordinate.Cartesian (Point2(..))
 
 
 
-toQuadratics :: Shape Double -> [QuadraticPath Double]
+toQuadratics :: Shape Float -> [QuadraticPath Float]
 toQuadratics (Shape paths) = fmap makeQuadratics paths
     where makeQuadratics (Path closed points) = (closed, convertCubicsToQuadratics 10 0.001 $ makeCubics points closed)
           makeCubics points closed = foldr appendCubic (ifClosed points closed) $ segments points
