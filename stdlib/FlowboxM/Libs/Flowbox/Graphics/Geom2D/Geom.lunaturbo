@@ -1,0 +1,74 @@
+#
+#                GEOM
+#
+
+foreign haskell import Flowbox.Geom2D.Rectangle
+
+# TODO: convert cornerPin to use Point2
+class Point a:
+    x,y :: a
+
+foreign haskell class Point2 a:
+    Point2: x,y :: a
+
+foreign haskell class Rectangle a:
+    Rectangle: pA,pB :: Point2 a
+
+foreign haskell class SkewOrder:
+    SkewXY
+    SkewYX
+
+foreign haskell class Skew a:
+    Skew:
+        point :: V2 a
+        order :: SkewOrder
+
+foreign haskell class Transform a:
+    Transform:
+        translate :: V2 a
+        rotate    :: a
+        scale     :: V2 a
+        skew      :: Skew a
+        center    :: Point2 a
+
+def point x y:
+    Point2 x y
+
+foreign haskell def nopoint:
+    val (Nothing :: Maybe (Point2 Float))
+
+# foreign haskell class ControlPoint a:
+# class ControlPoint a:
+#     point               :: Point2 a
+#     handleIn, handleOut :: Maybe (Point2 a)
+
+# foreign haskell class Path a:
+#     closed   :: Bool
+#     vertices :: [ControlPoint a]
+
+# foreign haskell class Shape a:
+#     paths :: [Path a]
+
+# foreign haskell class Mask a:
+#     path    :: Path a
+#     feather :: Maybe (Path a)
+
+# alias ControlPoint a = (Point2 a, Maybe (Point2 a), Maybe (Point2 a))
+# alias Path a         = (Bool, [ControlPoint a])
+# alias Shape a        = [Path a]
+# alias Mask a         = (Path a, Maybe (Path a))
+
+def controlPoint point handleIn handleOut:
+    (point, handleIn, handleOut)
+
+def path closed vertices:
+    (closed, vertices)
+
+def shape paths:
+    paths
+
+def mask path feather:
+    (path, feather)
+
+foreign haskell def rasterizeMask w h m:
+    liftF3 rasterizeMaskLuna w h m

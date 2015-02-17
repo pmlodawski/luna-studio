@@ -5,6 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE DeriveFunctor       #-}
+{-# LANGUAGE PatternSynonyms     #-}
 {-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ViewPatterns        #-}
@@ -12,7 +13,6 @@
 module Flowbox.Graphics.Image.Channel where
 
 import Data.Array.Accelerate (Boundary(..), constant)
-import Data.Set
 import Data.Typeable
 
 import Flowbox.Graphics.Shader.Matrix
@@ -25,9 +25,9 @@ import Flowbox.Prelude
 
 
 type Name = String
-type Select = Set Name
+type Select = [Name]
 
-data Channel = ChannelFloat     Name (ChannelData Double) -- TODO[KM]: add a ChannelDouble constructor
+data Channel = ChannelFloat     Name (ChannelData Float) -- TODO[KM]: add a ChannelDouble constructor
              | ChannelInt       Name (ChannelData Int)
 
 data ChannelData a = MatrixData     (Matrix2 a)
@@ -74,9 +74,6 @@ asDiscrete :: Channel -> Channel
 asDiscrete chan = case chan of
     (ChannelFloat name zeData) -> ChannelFloat name $ asDiscreteData (constant 0) zeData
     (ChannelInt   name zeData) -> ChannelInt   name $ asDiscreteData (constant 0) zeData
-    where asDiscreteData _ zeData@DiscreteData{}   = zeData
-          asDiscreteData v (MatrixData zeData)     = DiscreteData $ fromMatrix (Constant v) zeData
-          asDiscreteData _ (ContinuousData zeData) = DiscreteData $ monosampler zeData
 
 asDiscreteClamp :: Channel -> Channel
 asDiscreteClamp chan = case chan of
@@ -90,9 +87,16 @@ asContinuous :: Channel -> Channel
 asContinuous chan = case chan of
     (ChannelFloat name zeData) -> ChannelFloat name $ asContinuousData (constant 0) zeData
     (ChannelInt   name zeData) -> ChannelInt   name $ asContinuousData (constant 0) zeData
-    where asContinuousData _ zeData@ContinuousData{} = zeData
-          asContinuousData v (MatrixData zeData)     = ContinuousData $ (nearest . fromMatrix (Constant v)) zeData
-          asContinuousData _ (DiscreteData zeData)   = ContinuousData $ nearest zeData
+
+asDiscreteData :: Elt e => Exp e -> ChannelData e -> ChannelData e
+asDiscreteData _ zeData@DiscreteData{}   = zeData
+asDiscreteData v (MatrixData zeData)     = DiscreteData $ fromMatrix (Constant v) zeData
+asDiscreteData _ (ContinuousData zeData) = DiscreteData $ monosampler zeData
+
+asContinuousData :: Elt e => Exp e -> ChannelData e -> ChannelData e
+asContinuousData _ zeData@ContinuousData{} = zeData
+asContinuousData v (MatrixData zeData)     = ContinuousData $ (nearest . fromMatrix (Constant v)) zeData
+asContinuousData _ (DiscreteData zeData)   = ContinuousData $ nearest zeData
 
 mapOverData :: Elt a => (Exp a -> Exp a) -> ChannelData a -> ChannelData a
 mapOverData f chanData = case chanData of
@@ -101,8 +105,8 @@ mapOverData f chanData = case chanData of
     ContinuousData shader -> ContinuousData $ fmap f shader
 
 unsafeMap :: Fun -> Channel -> Channel
-unsafeMap (FunFloat f) _ = undefined -- TODO[KM]: add support for functions working on Floats after migrating to Floats and Doubles
-unsafeMap (FunDouble f) (ChannelFloat n zeData) = ChannelFloat n (mapOverData f zeData)
+unsafeMap (FunDouble f) _ = undefined -- TODO[KM]: add support for functions working on Floats after migrating to Floats and Doubles
+unsafeMap (FunFloat f)  (ChannelFloat n zeData) = ChannelFloat n (mapOverData f zeData)
 unsafeMap (FunInt f)    (ChannelInt n zeData)   = ChannelInt   n (mapOverData f zeData)
 unsafeMap _ _ = error "Flowbox.Graphics.Image.Channel.unsafeMap - error: mismatching function type and Channel type"
 

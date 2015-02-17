@@ -9,8 +9,8 @@
 module Luna.Interpreter.Session.Data.CallPoint where
 
 import           Flowbox.Prelude
-import qualified Luna.Graph.Node as Node
-import qualified Luna.Lib.Lib    as Library
+import qualified Luna.DEP.Graph.Node as Node
+import qualified Luna.DEP.Lib.Lib    as Library
 
 
 

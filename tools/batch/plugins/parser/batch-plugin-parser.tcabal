@@ -22,8 +22,6 @@ Executable parser
     Extensions:     NoImplicitPrelude
 
     Build-Depends:  base,
-                    -- constraint on blaze-markup is a temporary fix for trifectasdbnboflus
-                    blaze-markup < 0.6.3,
                     bytestring,
                     containers,
                     either,
@@ -32,8 +30,8 @@ Executable parser
                     flowbox-bus,
                     flowbox-config,
                     luna-core,
-                    luna-parser,
-                    luna-protobuf,
+                    luna-parser2-old,
+                    luna-protobuf-old,
                     flowbox-utils,
                     MissingH,
                     mtl,

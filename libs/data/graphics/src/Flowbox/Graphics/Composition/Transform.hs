@@ -19,13 +19,14 @@
 module Flowbox.Graphics.Composition.Transform where
 
 import           Flowbox.Geom2D.Rectangle
-import           Flowbox.Graphics.Image.Channel (ChannelData(..))
-import qualified Flowbox.Graphics.Image.Channel as Channel
-import           Flowbox.Graphics.Prelude       as P hiding (lifted, transform)
+import           Flowbox.Graphics.Image.Channel    (ChannelData (..))
+import qualified Flowbox.Graphics.Image.Channel    as Channel
+import           Flowbox.Graphics.Prelude          as P hiding (lifted, transform)
 import           Flowbox.Graphics.Shader.Shader
+import           Flowbox.Graphics.Utils.Accelerate
 import           Flowbox.Graphics.Utils.Linear
-import           Flowbox.Graphics.Utils.Utils
-import           Flowbox.Math.Matrix            as M
+import           Flowbox.Math.Matrix               as M
+import           Flowbox.Graphics.Composition.Generator.Shape as S
 
 import qualified Data.Array.Accelerate     as A
 import           Linear                    hiding (inv33, normalize, rotate)
@@ -44,9 +45,14 @@ class Rotate t a | t -> a where
 class Scale s t where
     scale :: s -> t -> t
 
+class HorizontalSkew s t where
+    horizontalSkew :: s -> t -> t
+
+class VerticalSkew s t where
+    verticalSkew :: s -> t -> t
+
 class CornerPin t a | t -> a where
     cornerPin :: (Point2 a, Point2 a, Point2 a, Point2 a) -> t -> t
-
 
 -- == Instances for Point2 ==
 instance Num a => Translate (Point2 a) a where
@@ -57,9 +63,19 @@ instance Floating a => Rotate (Point2 a) a where
         where x' = cos phi * x - sin phi * y
               y' = sin phi * x + cos phi * y
 
-instance Fractional a => Scale (V2 a) (Point2 a) where
-     scale (V2 sx sy) (Point2 x y) = Point2 (x / sx) (y / sy)
+--instance  Rotate (Point2 (A.Exp Double)) (A.Exp Double) where
+--    rotate phi (Point2 x y) = Point2 x' y'
+--        where x' = cos phi * x - sin phi * y
+--              y' = sin phi * x + cos phi * y
 
+instance Fractional a => Scale (V2 a) (Point2 a) where
+    scale (V2 sx sy) (Point2 x y) = Point2 (x / sx) (y / sy)
+
+instance Fractional a => HorizontalSkew a (Point2 a) where
+    horizontalSkew k (Point2 x y) = Point2 (x+k*y) y
+
+instance Fractional a => VerticalSkew a (Point2 a) where
+    verticalSkew k (Point2 x y) = Point2 x (y+x*k)
 
 -- == Instances for CartesianShader ==
 instance Num a => Translate (CartesianShader a b) a where
@@ -143,14 +159,31 @@ cornerPin' (Grid width height) (Point2 x1 y1, Point2 x2 y2, Point2 x3 y3, Point2
 
           matC = matA !*! unsafeInv33 matB
 
--- TODO[KM]: handle shaders by translating them and changing the canvas size
-crop :: Elt a => Rectangle Int -> ChannelData a -> ChannelData a
-crop (fmap variable . properRect -> Rect xA yA xB yB) (Channel.asMatrixData -> MatrixData matrix) = MatrixData matrix'
-    where matrix' = M.generate newShape gen
-          gen (A.unlift -> (Z :. y :. x)) = matrix M.! A.index2 (heightDifference - yA + y) (xA + x)
-          heightDifference = imageHeight - (yB - yA)
+crop :: Elt a => Rectangle Int -> Bool -> Bool -> Exp a -> ChannelData a -> ChannelData a
+crop (fmap variable . properRect -> Rect xA yA xB yB)
+      reformat defaultOutside (defaultValue) chanData =
+        case reformat of
+          True -> processReformat
+          False -> processStandard
+        where
+          processReformat = DiscreteData $ translate (V2 (-xA) (yB - h)) (Shader (Grid (xB - xA) (yB - yA)) s)
+            where
+              DiscreteData shader = Channel.asDiscreteData defaultValue chanData
+              Shader (Grid w h) s = if defaultOutside then (S.bound (A.Constant defaultValue) shader) else (S.bound A.Clamp shader)
 
-          newShape       = A.intersect rectangleShape imageShape
-          rectangleShape = A.index2 (yB - yA) (xB - xA)
-          imageShape     = M.shape matrix
-          A.Z A.:. imageHeight A.:. _ = A.unlift imageShape :: M.EDIM2
+          processStandard = MatrixData $ 
+            case defaultOutside of
+              True -> M.generate newShape genConstOutside
+              False -> M.generate newShape genClampedOutside
+            where
+              MatrixData matrix = Channel.asMatrixData chanData
+              newShape = M.shape matrix
+              clamp (y,x) = ((y `max` (h - yB)) `min` (h - yA), (x `max` xA) `min` xB)
+              inside y x = (x A.>=* xA) A.&&* (x A.<=* xB) A.&&* (h - yB A.<=* y) A.&&* (h - yA A.>=* y)
+              A.Z A.:. h A.:. _ = A.unlift newShape :: M.EDIM2
+
+              genConstOutside (A.unlift -> (Z :. y :. x)) = A.cond (inside y x) (matrix M.! A.index2 y x) defaultValue
+              genClampedOutside (A.unlift -> (Z :. y :. x)) = A.cond (inside y x) (matrix M.! A.index2 y x) (proc (y,x))
+                where
+                  proc (y, x) = matrix M.! A.index2 y' x'
+                  (y',x') = clamp (y,x)

@@ -30,8 +30,11 @@ Library
                   algebraic       > 0.1            ,
                   bmp                              ,
                   bytestring                       ,
+                  cairo                            ,
                   containers                       ,
                   cubicbezier                      ,
+                  diagrams-cairo                   ,
+                  diagrams-lib  >= 1.2.0.8         ,
                   distributive                     ,
                   either                           ,
                   errors                           ,
@@ -54,11 +57,76 @@ Library
                   split                            ,
                   system-filepath                  ,
                   template-haskell                 ,
-                  transformers                     ,
+                  thyme                            ,
+                  transformers        == 0.3.0.0   ,
+                  transformers-compat  < 0.4       ,
                   vector                           ,
-                  vector-space                     ,
-                  luna-target-ghchs                ,
-                  Rasterific
+                  vector-space     < 0.9           ,
+                  luna-target-ghchs                
+        -- vector-space < 0.9 is a temporal constrain until https://github.com/diagrams/active/issues/13 is resolved
+
+-- == test non numeric animation ==
+
+Executable test_non_numeric
+
+  Main-Is:        NonNumericAnimation.hs
+  Hs-Source-Dirs: test
+
+  Ghc-options:          -O2 -Wall -threaded -fno-full-laziness
+  Ghc-prof-options:     -auto-all
+
+  Default-Extensions:     NoImplicitPrelude,
+                          DoAndIfThenElse,
+                          TemplateHaskell
+  Default-Language:       Haskell2010
+
+
+  Build-Depends:  base           == 4.7.*  ,
+                  assert                   ,
+                  linear                   ,
+                  algebraic                ,
+                  flowbox-utils            ,
+                  flowbox-graphics         ,
+                  lens                     
+
+-- == HSpec tests ==
+
+Test-suite hspec_tests
+  type: exitcode-stdio-1.0
+  
+  if !flag(cuda)
+    buildable: False
+
+  Main-Is:        tests.hs
+  Hs-Source-Dirs: test
+
+  Ghc-options:          -O2 -Wall -threaded -fno-full-laziness
+  Ghc-prof-options:     -auto-all
+
+  Default-Extensions:     NoImplicitPrelude,
+                          DoAndIfThenElse,
+                          TemplateHaskell
+  Default-Language:       Haskell2010
+
+  if flag(cuda)
+    CPP-options:        -DACCELERATE_CUDA_BACKEND
+    Build-Depends:      accelerate-cuda  == 0.16.*
+
+  Build-Depends:  base           == 4.7.*  ,
+                  linear                   ,
+                  accelerate               ,
+                  accelerate-io            ,
+                  accelerate-fft           ,
+                  algebraic                ,
+                  flowbox-utils            ,
+                  flowbox-graphics         ,
+                  JuicyPixels              ,
+                  lens                     ,
+                  split                    ,
+                  vector                   ,
+                  hspec                    ,
+                  HUnit                    ,
+                  QuickCheck
 
 -- == test generator ==
 
@@ -291,7 +359,6 @@ Executable test_vector_rasterization
                   accelerate-io            ,
                   algebraic                ,
                   bytestring               ,
-                  cairo                    ,
                   vector-space             ,
                   flowbox-utils            ,
                   flowbox-graphics         ,
@@ -299,6 +366,7 @@ Executable test_vector_rasterization
                   lens                     ,
                   QuickCheck               ,
                   split                    ,
+                  thyme                    ,
                   vector
 
 -- == test mockup ==
@@ -326,7 +394,6 @@ Executable mockup
                   accelerate-io            ,
                   algebraic                ,
                   bytestring               ,
-                  cairo                    ,
                   vector-space             ,
                   flowbox-utils            ,
                   flowbox-graphics         ,
@@ -361,7 +428,6 @@ Executable test_hue_correct
                   accelerate-io            ,
                   algebraic                ,
                   bytestring               ,
-                  cairo                    ,
                   vector-space             ,
                   flowbox-utils            ,
                   flowbox-graphics         ,
@@ -370,3 +436,38 @@ Executable test_hue_correct
                   QuickCheck               ,
                   split                    ,
                   vector
+
+-- == test transformations  ==
+
+Executable test_transformations
+  if !flag(cuda)
+    buildable: False
+
+  Main-Is:        Transformations.hs
+  Hs-Source-Dirs: test
+
+  Ghc-options:          -O2 -Wall -threaded -rtsopts -eventlog
+  Ghc-prof-options:     -auto-all
+
+  Default-Extensions:     NoImplicitPrelude
+  Default-Language:       Haskell2010
+
+  if flag(cuda)
+    CPP-options:        -DACCELERATE_CUDA_BACKEND
+    Build-Depends:      accelerate-cuda  == 0.16.*
+
+  Build-Depends:  base           == 4.7.*  ,
+                  linear                   ,
+                  accelerate               ,
+                  accelerate-io            ,
+                  algebraic                ,
+                  bytestring               ,
+                  vector-space             ,
+                  flowbox-utils            ,
+                  flowbox-graphics         ,
+                  JuicyPixels              ,
+                  lens                     ,
+                  QuickCheck               ,
+                  split                    ,
+                  vector
+                  

@@ -38,8 +38,8 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Gra
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Request        as NodeRemove
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Update         as NodeRemove
 import qualified Generated.Proto.Urm.URM.Undo.Register.Request                                                as Register
-import           Luna.Data.Serialize.Proto.Conversion.Crumb                                                   ()
-import           Luna.Data.Serialize.Proto.Conversion.GraphView                                               ()
+import           Luna.DEP.Data.Serialize.Proto.Conversion.Crumb                                               ()
+import           Luna.DEP.Data.Serialize.Proto.Conversion.GraphView                                           ()
 
 
 
@@ -54,6 +54,7 @@ get request@(GetGraph.Request tbc tlibID tprojectID _)  = do
         projectID = decodeP tprojectID
 
     graph <- BatchG.nodesGraph bc libID projectID
+    seq graph $ return ()
     return $ GetGraph.Status request (encode graph)
 
 

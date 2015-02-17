@@ -19,7 +19,7 @@ import qualified Flowbox.AWS.S3.File                as File
 import           Flowbox.AWS.S3.S3                  (S3)
 import qualified Flowbox.AWS.S3.S3                  as S3
 import qualified Flowbox.AWS.S3.Utils               as Utils
-import           Flowbox.Prelude
+import           Flowbox.Prelude                    hiding (Text)
 import qualified Flowbox.System.Directory.Directory as FDirectory
 
 

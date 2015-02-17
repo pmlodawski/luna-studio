@@ -11,10 +11,11 @@ module Luna.Data.SourceMap (
 )where
 
 import Data.Map
+import Flowbox.Prelude
 
-import Luna.AST.Common     (ID)
 import Luna.Data.SourcePos (SourceRange)
 
+type ID = Int
 
 type SourceMap = Map ID SourceRange
 

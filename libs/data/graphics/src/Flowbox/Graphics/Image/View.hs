@@ -113,7 +113,7 @@ gotoChannel name' view = result
 
 mapWithWhitelist :: (Channel -> Channel) -> Channel.Select -> View -> View
 mapWithWhitelist f whitelist = map lambda
-    where lambda chan = if Channel.name chan `member` whitelist
+    where lambda chan = if Channel.name chan `elem` whitelist
                             then f chan
                             else chan
 

@@ -91,7 +91,10 @@ def main():
 
         instPath = os.path.join(dist_dir, 'bin', pkg.binpath)
         ret = call('%s install --reinstall --bindir=%s %s %s' % (cabalExec, instPath, pkg.name, ' '.join(args + pkg.flags.get())), shell=True)
-        errors.handle_err(ret)
+        try:
+            errors.handle_err(ret)
+        except errors.FlowboxError, e:
+            sys.exit(1)
 
 
 main()

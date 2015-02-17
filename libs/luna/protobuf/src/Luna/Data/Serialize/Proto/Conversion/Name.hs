@@ -17,8 +17,8 @@ import           Flowbox.Prelude
 import qualified Generated.Proto.Name.Name        as Gen
 import qualified Generated.Proto.Name.Segment     as Gen
 import qualified Generated.Proto.Name.Segment.Cls as Gen
-import           Luna.AST.Name                    (Name (Name))
-import qualified Luna.AST.Name                    as Name
+import           Luna.DEP.AST.Name                    (Name (Name))
+import qualified Luna.DEP.AST.Name                    as Name
 
 
 

@@ -8,21 +8,21 @@
 
 module Flowbox.Batch.Handler.NodeDefault where
 
-import           Flowbox.Batch.Batch                     (Batch)
-import qualified Flowbox.Batch.Handler.Common            as Batch
-import qualified Flowbox.Batch.Project.Project           as Project
+import           Flowbox.Batch.Batch                         (Batch)
+import qualified Flowbox.Batch.Handler.Common                as Batch
+import qualified Flowbox.Batch.Project.Project               as Project
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
-import           Luna.AST.Control.Crumb                  (Breadcrumbs)
-import qualified Luna.Graph.Flags                        as Flags
-import qualified Luna.Graph.Node                         as Node
-import           Luna.Graph.Node.Expr                    (NodeExpr)
-import qualified Luna.Graph.PropertyMap                  as PropertyMap
-import           Luna.Graph.View.Default.DefaultsMap     (DefaultsMap)
-import qualified Luna.Graph.View.Default.DefaultsMap     as DefaultsMap
-import           Luna.Graph.View.PortDescriptor          (PortDescriptor)
-import qualified Luna.Lib.Lib                            as Library
-import qualified Luna.Pass.Transform.AST.IDFixer.IDFixer as IDFixer
+import           Luna.DEP.AST.Control.Crumb                  (Breadcrumbs)
+import qualified Luna.DEP.Graph.Flags                        as Flags
+import qualified Luna.DEP.Graph.Node                         as Node
+import           Luna.DEP.Graph.Node.Expr                    (NodeExpr)
+import qualified Luna.DEP.Graph.PropertyMap                  as PropertyMap
+import           Luna.DEP.Graph.View.Default.DefaultsMap     (DefaultsMap)
+import qualified Luna.DEP.Graph.View.Default.DefaultsMap     as DefaultsMap
+import           Luna.DEP.Graph.View.PortDescriptor          (PortDescriptor)
+import qualified Luna.DEP.Lib.Lib                            as Library
+import qualified Luna.DEP.Pass.Transform.AST.IDFixer.IDFixer as IDFixer
 
 
 

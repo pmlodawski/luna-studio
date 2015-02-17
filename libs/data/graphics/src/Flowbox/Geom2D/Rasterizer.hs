@@ -7,6 +7,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
 {-# LANGUAGE TypeOperators             #-}
+-- {-# LANGUAGE TypeFamilies              #-}
 {-# LANGUAGE ViewPatterns              #-}
 
 module Flowbox.Geom2D.Rasterizer (
@@ -14,23 +15,17 @@ module Flowbox.Geom2D.Rasterizer (
     Point2(..)
 ) where
 
-import           Codec.Picture                                  ( PixelRGBA8( .. ))
-import qualified Codec.Picture                                  as Juicy
-import qualified Codec.Picture.Types                            as JuicyTypes
-import           Control.Parallel.Strategies
-import           Data.Array.Accelerate                          ((&&*), (==*), (>*), (||*))
-import qualified Data.Array.Accelerate                          as A
+import           Data.Array.Accelerate           ((&&*), (==*), (>*), (<*), (||*))
+import qualified Data.Array.Accelerate           as A
 import           Data.Array.Accelerate.IO
-import           Data.Bits                                      ((.&.))
+import           Data.Bits                       ((.&.))
 import           Data.Maybe
 import           Data.VectorSpace
-import           Data.Vector.Storable                           ( unsafeCast )
-import qualified Data.Vector.Storable                           as S
-import           Debug.Trace
-
-
-import qualified Graphics.Rasterific                            as Rasta
-import qualified Graphics.Rasterific.Texture                    as RastaTex
+import           Diagrams.Backend.Cairo
+import           Diagrams.Backend.Cairo.Internal
+import           Diagrams.Prelude                hiding (Path, (<*))
+import           Diagrams.Segment
+import           Graphics.Rendering.Cairo        hiding (Path, translate)
 import           System.IO.Unsafe
 
 import           Flowbox.Geom2D.Accelerate.QuadraticBezier.Solve
@@ -45,15 +40,15 @@ import           Flowbox.Graphics.Image.Image                    (Image)
 import qualified Flowbox.Graphics.Image.Image                    as Image
 import           Flowbox.Graphics.Image.IO.BMP
 import qualified Flowbox.Graphics.Image.View                     as View
-import qualified Flowbox.Graphics.Utils.Utils                    as U
+import           Flowbox.Graphics.Utils.Accelerate               (variable)
 import           Flowbox.Math.Matrix                             ((:.) (..), DIM2, Matrix (..), Matrix2, Z (..))
 import qualified Flowbox.Math.Matrix                             as M
-import           Flowbox.Prelude                                 hiding (use, ( # ))
-import qualified Flowbox.Prelude                                 as P
+import           Flowbox.Prelude                                 hiding (use, ( # ), (<*))
 import           Math.Coordinate.Cartesian                       (Point2 (..))
 
 
 
+-- intended to be hidden from this package
 f2d :: Real a => a -> Double
 f2d = fromRational . toRational
 
@@ -63,42 +58,74 @@ f2f = fromRational . toRational
 -- TODO[1]: revert to this version when the wrapping model for handling GUI's use-case gets implemented
 --unpackP :: Num a => Maybe (Point2 a) -> Point2 a
 --unpackP = fromMaybe (Point2 0 0)
---unpackP :: Fractional a => Point2 a -> Point2 a -> Maybe (Point2 a) -> Point2 a
---unpackP a b = fromMaybe ((b - a)/3)
+unpackP :: Fractional a => Point2 a -> Point2 a -> Maybe (Point2 a) -> Point2 a
+unpackP a b = fromMaybe ((b - a)/3)
 
-unpackP :: Fractional a => Point2 a -> Point2 a -> Maybe(Point2 a) -> Point2 a
-unpackP a b c = fromMaybeNoDia ((b - a)/3 + a) a c
-
-fromMaybeNoDia :: Fractional a => Point2 a -> Point2 a -> Maybe(Point2 a) -> Point2 a
-fromMaybeNoDia def _ Nothing = def
-fromMaybeNoDia _ a (Just b)  = a + b
-
-makeSegments :: (Real a, Fractional a) => Bool -> [ControlPoint a] -> [Rasta.CubicBezier]
+-- TODO[1]
+--makeSegments :: Real a => Bool -> [ControlPoint a] -> [Segment Closed R2]
+--makeSegments closed points = combine points
+--    where combine []  = []
+--          combine [a'] = if not closed then [] else let
+--                  ControlPoint (Point2 ax ay) _ b' = f2d' a'
+--                  ControlPoint (Point2 dx dy) c' _ = f2d' $ head points
+--                  Point2 bx by = unpackP b'
+--                  Point2 cx cy = unpackP c'
+--                  a = r2 (ax , ay)
+--                  b = r2 (bx , by)
+--                  c = r2 (cx , cy)
+--                  d = r2 (dx , dy)
+--              in [bezier3 b (d ^+^ c ^-^ a) (d ^-^ a)]
+--          combine (a':d':xs) = let
+--                  ControlPoint (Point2 ax ay) _ b' = f2d' a'
+--                  ControlPoint (Point2 dx dy) c' _ = f2d' d'
+--                  Point2 bx by = unpackP b'
+--                  Point2 cx cy = unpackP c'
+--                  a = r2 (ax , ay)
+--                  b = r2 (bx , by)
+--                  c = r2 (cx , cy)
+--                  d = r2 (dx , dy)
+--              in bezier3 b (d ^+^ c ^-^ a) (d ^-^ a) : combine (d':xs)
+--          combine _ = error "Flowbox.Geom2D.Rasterizer.makeSegments: unsupported ammount of points"
+--          f2d' = fmap f2d
+makeSegments :: (Real a, Fractional a) => Bool -> [ControlPoint a] -> [Segment Closed R2]
 makeSegments closed points = combine points
-    where combine []   = []
+    where combine []  = []
           combine [a'] = if not closed then [] else let
-                  ControlPoint pa@(Point2 ax ay) _ b' = f2f' a'
-                  ControlPoint pd@(Point2 dx dy) c' _ = f2f' $ head points
+                  ControlPoint pa@(Point2 ax ay) _ b' = f2d' a'
+                  ControlPoint pd@(Point2 dx dy) c' _ = f2d' $ head points
                   Point2 bx by = unpackP pa pd b'
                   Point2 cx cy = unpackP pd pa c'
-                  a = Rasta.V2 ax ay
-                  b = Rasta.V2 bx by
-                  c = Rasta.V2 cx cy
-                  d = Rasta.V2 dx dy
-              in [Rasta.CubicBezier a b c d]
+                  a = r2 (ax , ay)
+                  b = r2 (bx , by)
+                  c = r2 (cx , cy)
+                  d = r2 (dx , dy)
+              in [bezier3 b (d ^+^ c ^-^ a) (d ^-^ a)]
           combine (a':d':xs) = let
-                  ControlPoint pa@(Point2 ax ay) _ b' = f2f' a'
-                  ControlPoint pd@(Point2 dx dy) c' _ = f2f' d'
+                  ControlPoint pa@(Point2 ax ay) _ b' = f2d' a'
+                  ControlPoint pd@(Point2 dx dy) c' _ = f2d' d'
                   Point2 bx by = unpackP pa pd b'
                   Point2 cx cy = unpackP pd pa c'
-                  a = Rasta.V2 ax ay
-                  b = Rasta.V2 bx by
-                  c = Rasta.V2 cx cy
-                  d = Rasta.V2 dx dy
-              in Rasta.CubicBezier a b c d : combine (d':xs)
+                  a = r2 (ax , ay)
+                  b = r2 (bx , by)
+                  c = r2 (cx , cy)
+                  d = r2 (dx , dy)
+              in bezier3 b (d ^+^ c ^-^ a) (d ^-^ a) : combine (d':xs)
           combine _ = error "Flowbox.Geom2D.Rasterizer.makeSegments: unsupported ammount of points"
-          f2f' = fmap f2f
+          f2d' = fmap f2d
 
+-- TODO[1]
+--makeCubics :: Real a => Path a -> [CubicBezier a]
+--makeCubics (Path closed points) = combine points
+--    where combine [] = []
+--          combine [a'] = if not closed then [] else let
+--                  ControlPoint a _ (unpackP -> b) = a'
+--                  ControlPoint d (unpackP -> c) _ = head points
+--              in [CubicBezier a (a+b) (d+c) d]
+--          combine (a':d':xs) = let
+--                  ControlPoint a _ (unpackP -> b) = a'
+--                  ControlPoint d (unpackP -> c) _ = d'
+--              in CubicBezier a (a+b) (d+c) d : combine (d':xs)
+--          combine _ = error "Flowbox.Geom2D.Rasterizer.makeCubics: unsupported ammount of points"
 makeCubics :: (Real a, Fractional a) => Path a -> [CubicBezier a]
 makeCubics (Path closed points) = combine points
     where combine [] = []
@@ -107,91 +134,107 @@ makeCubics (Path closed points) = combine points
                   ControlPoint d c' _ = head points
                   b = unpackP a d b'
                   c = unpackP d a c'
-              in [CubicBezier a b c d]
+              in [CubicBezier a (a+b) (d+c) d]
           combine (a':d':xs) = let
                   ControlPoint a _ b' = a'
                   ControlPoint d c' _ = d'
                   b = unpackP a d b'
                   c = unpackP d a c'
-              in CubicBezier a b c d : combine (d':xs)
+              in CubicBezier a (a+b) (d+c) d : combine (d':xs)
           combine _ = error "Flowbox.Geom2D.Rasterizer.makeCubics: unsupported ammount of points"
 
-pathToRGBA32 :: (Real a, Fractional a) => Int -> Int -> Path a -> A.Acc (A.Array DIM2 RGBA32)
-pathToRGBA32 w h (Path closed points) = imgToRGBA32 rasterize
-    where rasterize :: JuicyTypes.Image PixelRGBA8
-          rasterize = Rasta.renderDrawing w h (PixelRGBA8 0 0 0 0) $
-                          Rasta.withTexture (RastaTex.uniformTexture (PixelRGBA8 255 255 255 255)) $ do
-                              let cubics = makeSegments closed points
-                              case closed of
-                                  False -> Rasta.stroke
-                                              4 Rasta.JoinRound (Rasta.CapRound, Rasta.CapRound) $
-                                                  fmap (Rasta.transform trans) $ fmap Rasta.CubicBezierPrim cubics
-                                  True  -> Rasta.fill $
-                                              fmap (Rasta.transform trans) $ fmap Rasta.CubicBezierPrim cubics
-          imgToRGBA32 :: JuicyTypes.Image PixelRGBA8 -> A.Acc (A.Array DIM2 RGBA32)
-          imgToRGBA32 (Juicy.Image width height vec) = A.use $ fromVectors (Z:.h:.w) ((), (unsafeCast vec))
-          trans :: Rasta.Point -> Rasta.Point
-          trans (Rasta.V2 x y) = Rasta.V2 x ((y-((fromIntegral h)/2))*(-1)+((fromIntegral h)/2))
 
-pathToMatrix :: (Real a, Fractional a) => Int -> Int -> Path a -> Matrix2 Double
+pathToRGBA32 :: (Real a, Fractional a) => Int -> Int -> Path a -> A.Array DIM2 RGBA32
+pathToRGBA32 w h (Path closed points) = unsafePerformIO rasterize
+    where ControlPoint (Point2 ox oy) _ _ = fmap f2d $ head points
+          h' = fromIntegral h
+          rasterize = do
+              let path = fromSegments $ makeSegments closed points
+                  diagram = case closed of
+                      False -> path                        # translate (r2 (ox,oy)) # scaleY (-1) # translateY h' # lc white # lw (Output 1) :: Diagram Cairo R2
+                      True  -> (strokeLoop.closeLine) path # translate (r2 (ox,oy)) # scaleY (-1) # translateY h' # fc white # lw (Output 0) :: Diagram Cairo R2
+                  (_, r) = renderDia Cairo (CairoOptions "" (Dims (fromIntegral w) (fromIntegral h)) RenderOnly True) (diagram :: Diagram Cairo R2)
+              surface <- createImageSurface FormatARGB32 w h
+              renderWith surface r
+              bs <- imageSurfaceGetData surface
+              fromByteString (Z:.h:.w) ((), bs)
+
+pathToMatrix :: (Real a, Fractional a) => Int -> Int -> Path a -> Matrix2 Float
 pathToMatrix w h path = extractArr $ pathToRGBA32 w h path
-    where extractArr :: A.Acc (A.Array DIM2 RGBA32) -> Matrix2 Double
-          extractArr arr = Delayed $ A.map extractVal $ arr
-          extractVal :: M.Exp RGBA32 -> M.Exp Double
+    where extractArr arr = Delayed $ A.map extractVal $ A.use arr
+          extractVal :: M.Exp RGBA32 -> M.Exp Float
           extractVal rgba = (A.fromIntegral $ (rgba `div` 0x1000000) .&. 0xFF) / 255
 
-
-rasterizeMask :: forall a. (Real a, Fractional a) => Int -> Int -> Mask a -> Matrix2 Double
-rasterizeMask w h (Mask path' feather') = -- path
+rasterizeMask :: (Real a, Fractional a) => Int -> Int -> Mask a -> Matrix2 Float
+rasterizeMask w h (Mask path' feather') =
     case feather' of
         Nothing -> path
-        Just feather' -> let
-                feather = ptm feather'
-                convert :: Path a -> A.Acc (A.Vector (QuadraticBezier Double))
-                convert p = let
-                        a = {-trace ("running makeCubics with p = " ++ show p) $-} makeCubics p
-                        quads = {-trace ("running convertCubicsToQuadratics with a = " ++ show ((fmap.fmap) f2d a)) $-} convertCubicsToQuadratics 5 0.001 $ (fmap.fmap) f2d a
-                    in {-trace ("running use with quads = " ++ show quads) $-} A.use $ A.fromList (Z :. length quads) quads
-                cA = convert path'
-                cB = convert feather'
-            in M.generate (A.index2 (U.variable h) (U.variable w)) $ combine feather cA cB
-    where ptm  = pathToMatrix w h
+        Just feather -> checkEqual feather path'
+    where ptm = pathToMatrix w h
           path = ptm path'
-          combine :: Matrix2 Double -> A.Acc (A.Vector (QuadraticBezier Double)) -> A.Acc (A.Vector (QuadraticBezier Double)) -> A.Exp A.DIM2 -> A.Exp Double
-          combine feather pQ fQ idx@(A.unlift . A.unindex2 -> (A.fromIntegral -> y, A.fromIntegral -> x) :: (A.Exp Int, A.Exp Int)) =
-              let
-                  p  = path M.! idx
-                  f  = feather M.! idx
+          distance p (A.unlift . A.unindex2 -> (A.fromIntegral -> y, A.fromIntegral -> x) :: (A.Exp Int, A.Exp Int)) = let
                   h' = A.fromIntegral $ A.lift h
-                  d  = distanceFromQuadratics (A.lift $ Point2 x ((y - (h'/2))*(-1) + (h'/2)))
-                  dp = d pQ
-                  df = d fQ
-              --in (1 / (dp/5)) + (1 / (df/5))
-              in A.cond (p >* 0.99) 
-                      (
-                        A.cond (0.01 >* f) (dp / (dp+df)) 1
-                      ) 
-                      (
-                        A.cond (0.01 >* p)
-                                (
-                                  A.cond (f >* 0.99) (df / (dp+df)) 0
-                                )
-                                (
-                                  A.cond (0.01 >* f)
-                                          0
-                                          (
-                                            A.cond (f >* 0.99) 1 p
-                                          )
-                                )
-                      )
-              --in A.cond ((p >* 0.99 &&* f >* 0) ||* (p ==* 0 &&* f ==* 0)) p $ A.cond (p >* 0) (dp / (dp+df)) (df / (dp+df))
+                  d = distanceFromQuadratics' (A.lift $ Point2 x ((y - (h'/2))*(-1) + (h'/2)))
+                  dp = d p
+              in dp
+          combine p f dp df = let
+                  f0 = f <* 0.01 :: M.Exp Bool
+                  f1 = f >* 0.99 :: M.Exp Bool
+                  p0 = p <* 0.01 :: M.Exp Bool
+                  p1 = p >* 0.99 :: M.Exp Bool
+                  p01 = (A.not p1) &&* (A.not p0)
+                  cond1 = (p0 &&* (A.not f1)) ||* (p1 &&* f1) ||* (p01 &&* f0)
+                  cond2 = (p0 &&* f1) ||* (p1 &&* f0)
+                  --c1 = A.fromIntegral $ A.boolToInt cond1
+                  c2 = A.fromIntegral $ A.boolToInt cond2
+                  --nc1 = A.fromIntegral $ A.boolToInt $ A.not cond1
+                  nc2 = A.fromIntegral $ A.boolToInt $ A.not cond2
+                  x' = (dp*p + df*f)/(dp+df)
+              --in dp --c1*p*f + nc1 * (c2*x' + nc2*(max p f))
+              --in df/80
+              in A.cond (cond1)
+                  (p*f)
+                  (c2*x' + nc2*(max p f))
+          checkEqual fea pat
+              | fea == pat = path
+              | otherwise  = let
+                      feather = ptm fea
+                      convert p = let
+                              a = makeCubics p
+                              quads = convertCubicsToQuadratics 5 0.001 $ (fmap.fmap) f2f a
+                          in A.use $ A.fromList (Z :. length quads) quads
+                      cA = convert path'
+                      cB = convert fea
+                      dP = M.generate (A.index2 (variable h) (variable w)) $ distance cA
+                      dF = M.generate (A.index2 (variable h) (variable w)) $ distance cB
+                  in M.zipWith4 (\p f dp df -> (combine p f dp df)) path feather dP dF
+    --case feather' of
+    --    Nothing -> path
+    --    Just feather' -> let
+    --            feather = ptm feather'
+    --            convert :: Real a => Path a -> A.Acc (A.Vector (QuadraticBezier Double))
+    --            convert p = let
+    --                    a = makeCubics p
+    --                in A.use $ A.fromList (Z :. length a) $ convertCubicsToQuadratics 5 0.001 $ (fmap.fmap) f2d a
+    --            cA = convert path'
+    --            cB = convert feather'
+    --        in M.generate (A.index2 (variable h) (variable w)) $ combine feather cA cB
+    --where ptm  = pathToMatrix w h
+    --      path = ptm path'
+    --      combine :: Matrix2 Double -> A.Acc (A.Vector (QuadraticBezier Double)) -> A.Acc (A.Vector (QuadraticBezier Double)) -> A.Exp A.DIM2 -> A.Exp Double
+    --      combine feather pQ fQ idx@(A.unlift . A.unindex2 -> (A.fromIntegral -> y, A.fromIntegral -> x) :: (A.Exp Int, A.Exp Int)) = let
+    --              p  = path M.! idx
+    --              f  = feather M.! idx
+    --              d  = distanceFromQuadratics (A.lift $ Point2 x y)
+    --              dp = d pQ
+    --              df = d fQ
+    --          in A.cond ((p >* 0 &&* f >* 0) ||* (p ==* 0 &&* f ==* 0)) p (dp / (dp+df) * p)
 
-matrixToImage :: Matrix2 Double -> Image
+matrixToImage :: Matrix2 Float -> Image
 matrixToImage a = Image.singleton view
     where view = View.append (Channel.ChannelFloat "rgba.r" $ Channel.MatrixData w)
                $ View.append (Channel.ChannelFloat "rgba.g" $ Channel.MatrixData w)
                $ View.append (Channel.ChannelFloat "rgba.b" $ Channel.MatrixData w)
                $ View.append (Channel.ChannelFloat "rgba.a" $ Channel.MatrixData a)
-               $ View.emptyDefault
+               $ View.empty "rgba"
           w = M.map (\_ -> 1) a
-
