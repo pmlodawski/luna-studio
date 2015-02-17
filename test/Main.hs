@@ -110,9 +110,7 @@ main = do
             printHeader "HSC"
             hsc            <- Pass.run1_ HSC.pass hast
             putStrLn (unpack hsc)
-            --putStrLn (hsShow $ unpack hsc)
             liftIO $ writeFile out (unpack hsc)
-            --liftIO $ writeFile out (hsShow $ unpack hsc)
 
 
         case result of
