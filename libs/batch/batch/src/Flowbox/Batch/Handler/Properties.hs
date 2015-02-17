@@ -13,10 +13,10 @@ import           Flowbox.Batch.Handler.Common  (astOp)
 import qualified Flowbox.Batch.Handler.Common  as Batch
 import qualified Flowbox.Batch.Project.Project as Project
 import           Flowbox.Prelude
-import qualified Luna.AST.Common               as AST
-import           Luna.Graph.Properties         (Properties)
-import qualified Luna.Graph.PropertyMap        as PropertyMap
-import qualified Luna.Lib.Lib                  as Library
+import qualified Luna.DEP.AST.AST              as AST
+import           Luna.DEP.Graph.Properties     (Properties)
+import qualified Luna.DEP.Graph.PropertyMap    as PropertyMap
+import qualified Luna.DEP.Lib.Lib              as Library
 
 
 

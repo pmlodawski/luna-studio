@@ -5,25 +5,31 @@
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TupleSections   #-}
 
 module Luna.Interpreter.Session.AST.Executor where
 
-import           Control.Monad.State        hiding (mapM, mapM_)
+import           Control.Monad.State         hiding (mapM, mapM_)
 import           Control.Monad.Trans.Either
-import qualified Data.Char                  as Char
-import qualified Data.Maybe                 as Maybe
-import qualified Text.Read                  as Read
+import qualified Data.Char                   as Char
+import qualified Data.Maybe                  as Maybe
+import qualified Data.Text.Lazy              as Text
+import qualified Data.Text.Lazy.Builder      as TextBuilder
+import qualified Language.Preprocessor.Cpphs as Cpphs
+import qualified Text.Read                   as Read
 
+import qualified Data.Text.CodeBuilder                      as CodeBuilder
 import           Flowbox.Control.Error                      (catchEither, hoistEitherWith)
 import qualified Flowbox.Data.List                          as List
 import           Flowbox.Data.MapForest                     (MapForest)
 import           Flowbox.Prelude                            as Prelude hiding (children, inside)
 import           Flowbox.Source.Location                    (loc)
 import           Flowbox.System.Log.Logger
-import qualified Luna.Graph.Node                            as Node
-import           Luna.Graph.Node.Expr                       (NodeExpr)
-import qualified Luna.Graph.Node.Expr                       as NodeExpr
-import qualified Luna.Graph.Node.StringExpr                 as StringExpr
+import           Luna.DEP.AST.ASTConvertion                 (convertAST)
+import qualified Luna.DEP.Graph.Node                        as Node
+import           Luna.DEP.Graph.Node.Expr                   (NodeExpr)
+import qualified Luna.DEP.Graph.Node.Expr                   as NodeExpr
+import qualified Luna.DEP.Graph.Node.StringExpr             as StringExpr
 import qualified Luna.Interpreter.Session.AST.Traverse      as Traverse
 import qualified Luna.Interpreter.Session.Cache.Cache       as Cache
 import qualified Luna.Interpreter.Session.Cache.Free        as Free
@@ -38,6 +44,7 @@ import           Luna.Interpreter.Session.Data.VarName      (VarName (VarName))
 import qualified Luna.Interpreter.Session.Data.VarName      as VarName
 import qualified Luna.Interpreter.Session.Debug             as Debug
 import qualified Luna.Interpreter.Session.Env               as Env
+import           Luna.Interpreter.Session.Error             (mapError, Error)
 import qualified Luna.Interpreter.Session.Error             as Error
 import qualified Luna.Interpreter.Session.Hash              as Hash
 import           Luna.Interpreter.Session.Memory.Manager    (MemoryManager)
@@ -46,11 +53,16 @@ import           Luna.Interpreter.Session.ProfileInfo       (ProfileInfo)
 import           Luna.Interpreter.Session.Session           (Session)
 import qualified Luna.Interpreter.Session.Session           as Session
 import qualified Luna.Interpreter.Session.TargetHS.Bindings as Bindings
-import qualified Luna.Interpreter.Session.TargetHS.TargetHS as TargetHS
 import qualified Luna.Interpreter.Session.Var               as Var
-import qualified Luna.Pass.CodeGen.HSC.HSC                  as HSC
-import qualified Luna.Pass.Transform.AST.Hash.Hash          as Hash
-import qualified Luna.Pass.Transform.HAST.HASTGen.HASTGen   as HASTGen
+import qualified Luna.Parser.Parser                         as Parser
+import qualified Luna.Parser.Pragma                         as Pragma
+import qualified Luna.Pass                                  as Pass
+import qualified Luna.Pass.Target.HS.HASTGen                as HASTGen
+import           Luna.Syntax.Enum                           (IDTag)
+import           Luna.Syntax.Expr                           (LExpr)
+import qualified Luna.Syntax.Name.Hash                      as Hash
+import qualified Luna.System.Pragma.Store                   as Pragma
+import           Luna.System.Session                        as Session
 
 
 
@@ -58,21 +70,20 @@ logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
 
 
-processMain :: MemoryManager mm => Session mm (MapForest CallPoint ProfileInfo)
-processMain = processMain_ >> Env.getProfileInfos
+processMain :: MemoryManager mm => Session mm (MapForest CallPoint ProfileInfo, MapForest CallPoint Error)
+processMain = processMain_ >> (,) <$> Env.getProfileInfos <*> Env.getCompileErrors
 
 
 processMain_ :: MemoryManager mm => Session mm ()
 processMain_ = do
     Env.cleanProfileInfos
-    TargetHS.reload
+    Env.cleanCompileErrors
+    --TargetHS.reload
     mainPtr  <- Env.getMainPtr
     children <- CallDataPath.addLevel [] mainPtr
     mapM_ processNodeIfNeeded children
     Env.setAllReady True
     Debug.dumpBindings
-    --Cache.dumpAll
-    --Cache.performGC
 
 
 processNodeIfNeeded :: MemoryManager mm => CallDataPath -> Session mm ()
@@ -82,12 +93,11 @@ processNodeIfNeeded callDataPath =
 
 
 processNode :: MemoryManager mm => CallDataPath -> Session mm ()
-processNode callDataPath = Env.profile (CallDataPath.toCallPointPath callDataPath) $ do
+processNode callDataPath = Env.debugNode (CallDataPath.toCallPointPath callDataPath) $ do
     arguments <- Traverse.arguments callDataPath
     let callData  = last callDataPath
         node      = callData ^. CallData.node
     varNames <- mapM (Cache.recentVarName . CallDataPath.toCallPointPath) arguments
-
     children <- Traverse.into callDataPath
     if null children
         then case node of
@@ -167,10 +177,12 @@ execute callDataPath nodeExpr varNames = do
         CacheStatus.Ready        -> left $ Error.OtherError $(loc) "something went wrong : status = Ready"
 
 
-data VarType = Lit    String
-             | Con    String
-             | Var    String
-             | Native String
+data VarType = Lit      String
+             | LitInt   String
+             | LitFloat String
+             | Con      String
+             | Var      String
+             | Native   String
              | Tuple
              | List
              | TimeVar
@@ -186,22 +198,28 @@ varType (NodeExpr.StringExpr  StringExpr.List              ) = return   List
 varType (NodeExpr.StringExpr (StringExpr.Native name      )) = return $ Native name
 varType (NodeExpr.StringExpr (StringExpr.Expr   []        )) = return $ Prelude.error "varType : empty expression"
 varType (NodeExpr.StringExpr (StringExpr.Expr   name@(h:_)))
-    | Maybe.isJust (Read.readMaybe name :: Maybe Char)   = return $ Lit name
-    | Maybe.isJust (Read.readMaybe name :: Maybe Int)    = return $ Lit name
-    | Maybe.isJust (Read.readMaybe name :: Maybe Double) = return $ Lit name
-    | Maybe.isJust (Read.readMaybe name :: Maybe String) = return $ Lit name
+    | Maybe.isJust (Read.readMaybe name :: Maybe Char)   = return $ Lit      name
+    | Maybe.isJust (Read.readMaybe name :: Maybe Int)    = return $ LitInt   name
+    | Maybe.isJust (Read.readMaybe name :: Maybe Float)  = return $ LitFloat name
+    | Maybe.isJust (Read.readMaybe name :: Maybe String) = return $ Lit      name
     | name == Var.timeRef                                = return   TimeVar
     | Char.isUpper h                                     = return $ Con name
     | otherwise                                          = return $ Var name
-varType (NodeExpr.ASTExpr expr) = do
-    expr' <- Var.replaceTimeRefs expr
-    -- TODO[PM] : replaceTimeVars
-    hast <- hoistEitherWith (Error.OtherError $(loc)) =<< HASTGen.runExpr expr'
-    return $ Expression $ HSC.genExpr hast
+varType (NodeExpr.ASTExpr oldExpr) = do
+    oldExpr' <- Var.replaceTimeRefs oldExpr
+    expr     <- mapError $(loc) (convertAST oldExpr')
+    result <- Session.runT $ do
+        void   Parser.init
+        void $ Pragma.enable (Pragma.orphanNames)
+        void $ Pragma.pop    (Pragma.orphanNames)
+        runEitherT $ Pass.run1_ HASTGen.passExpr (expr :: LExpr IDTag ())
+    cpphsOptions <- Env.getCpphsOptions
+    hexpr <- hoistEitherWith (Error.OtherError $(loc) . show) $ fst result
+    Expression <$> liftIO (Cpphs.runCpphs cpphsOptions "" $ Text.unpack $ TextBuilder.toLazyText $ CodeBuilder.simple $ CodeBuilder.generate hexpr)
 
 
 nameHash :: String -> String
-nameHash name = if name == "Point2" then "Point2" else Hash.hashStr name
+nameHash = Hash.hash
 
 
 evalFunction :: MemoryManager mm
@@ -209,25 +227,27 @@ evalFunction :: MemoryManager mm
 evalFunction nodeExpr callDataPath varNames = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
         tmpVarName    = "_tmp"
-        mkArg arg = "(Value (Pure "  ++ VarName.toString arg ++ "))"
+        mkArg arg = "(Value (Pure " <> VarName.toString arg <> "))"
         args      = map mkArg varNames
-        appArgs a = if null a then "" else " $ appNext " ++ List.intercalate " $ appNext " (reverse a)
+        appArgs a = if null a then "" else " $ appNext " <> List.intercalate " $ appNext " (reverse a)
         genNative = List.replaceByMany "#{}" args . List.stripIdx 3 3
-
         self      = head varNames
     vt <- varType nodeExpr
     operation <- case vt of
-        List        -> return $ "toIOEnv $ fromValue $ val [" ++ List.intercalate "," args ++ "]"
-        Id          -> return $ "toIOEnv $ fromValue $ " ++ mkArg self
-        Native name -> return $ "toIOEnv $ fromValue $ " ++ genNative name
-        Con    name -> return $ "toIOEnv $ fromValue $ call" ++ appArgs args ++ " $ cons_" ++ nameHash name
-        Var    name -> return $ "toIOEnv $ fromValue $ call" ++ appArgs (tail args) ++ " $ member (Proxy::Proxy " ++ show (nameHash name) ++ ") " ++ mkArg self
-        Lit    name -> return $ "toIOEnv $ fromValue $ val (" ++ name ++ if Maybe.isJust (Read.readMaybe name :: Maybe Int)
-                                                                                  then " :: Int)"
-                                                                                  else ")"
-        Tuple       -> return $ "toIOEnv $ fromValue $ val (" ++ List.intercalate "," args ++ ")"
-        TimeVar     -> (++) "toIOEnv $ fromValue $ val $ " . show <$> Env.getTimeVar
-        Expression  name -> return $ "toIOEnv $ fromValue $ " ++ name
+        List        -> return $ "toIOEnv $ fromValue $ val [" <> List.intercalate "," args <> "]"
+        Id          -> return $ "toIOEnv $ fromValue $ " <> mkArg self
+        Native name -> return $ "toIOEnv $ fromValue $ " <> genNative name
+        Con    name -> return $ "toIOEnv $ fromValue $ call" <> appArgs args <> " $ cons_" <> nameHash name
+        Var    name -> if null args
+            then left $ Error.OtherError $(loc) "unsupported node type"
+            else return $ "toIOEnv $ fromValue $ call" <> appArgs (tail args) <> " $ member (Proxy::Proxy " <> show (nameHash name) <> ") " <> mkArg self
+        LitInt   name -> return $ "toIOEnv $ fromValue $ val (" <> name <> " :: Int)"
+        LitFloat name -> return $ "toIOEnv $ fromValue $ val (" <> name <> " :: Float)"
+        Lit      name -> return $ "toIOEnv $ fromValue $ val (" <> name <> ")"
+        Tuple       -> return $ "toIOEnv $ fromValue $ val (" <> List.intercalate "," args <> ")"
+        TimeVar     -> do time <- Env.getTimeVar
+                          return $ "toIOEnv $ fromValue $ val (" <> show time <> " :: Float)"
+        Expression  name -> return $ "toIOEnv $ fromValue $ " <> name
     catchEither (left . Error.RunError $(loc) callPointPath) $ do
         Session.runAssignment' tmpVarName operation
         hash <- Hash.computeInherit tmpVarName varNames

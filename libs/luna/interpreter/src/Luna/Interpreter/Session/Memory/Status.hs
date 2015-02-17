@@ -8,9 +8,8 @@
 
 module Luna.Interpreter.Session.Memory.Status where
 
-import           Data.Int   (Int64)
-import qualified GHC.Stats  as Stats
-import qualified System.Mem as Mem
+import           Data.Int  (Int64)
+import qualified GHC.Stats as Stats
 
 import           Flowbox.Control.Error                       (safeLiftIO')
 import           Flowbox.Prelude
@@ -52,9 +51,7 @@ isLowerLimitExceeded' = isLowerLimitExceeded <$> status
 
 
 currentBytesUsed :: IO Int64
-currentBytesUsed = do
-    --Mem.performGC
-    Stats.currentBytesUsed <$> Stats.getGCStats
+currentBytesUsed = Stats.currentBytesUsed <$> Stats.getGCStats
 
 
 status :: Session mm Status

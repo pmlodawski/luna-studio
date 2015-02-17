@@ -1,0 +1,11 @@
+#
+#                IMAGE - NOISE
+#
+
+foreign haskell import Flowbox.Graphics.Mockup.Noise
+
+foreign haskell def perlin z width height:
+    liftF3 perlinLuna z width height
+
+foreign haskell def billow z width height:
+    liftF3 billowLuna z width height

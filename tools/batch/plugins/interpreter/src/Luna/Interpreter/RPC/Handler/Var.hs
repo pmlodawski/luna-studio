@@ -11,10 +11,13 @@ import qualified Flowbox.Batch.Handler.Common            as Batch
 import           Flowbox.Bus.RPC.RPC                     (RPC)
 import           Flowbox.Prelude                         hiding (Context)
 import           Flowbox.ProjectManager.Context          (Context)
-import qualified Luna.Graph.Node                         as Node
-import           Luna.Graph.Node.Expr                    (NodeExpr)
-import qualified Luna.Graph.PropertyMap                  as PropertyMap
-import qualified Luna.Graph.View.Default.DefaultsMap     as DefaultsMap
+import qualified Luna.DEP.Graph.Node                     as Node
+import           Luna.DEP.Graph.Node.Expr                (NodeExpr)
+import qualified Luna.DEP.Graph.PropertyMap              as PropertyMap
+import qualified Luna.DEP.Graph.View.Default.DefaultsMap as DefaultsMap
+import qualified Luna.DEP.Lib.Lib                        as Lib
+import qualified Luna.DEP.Lib.Manager                    as LibManager
+import qualified Luna.DEP.Pass.Analysis.ID.ExtractIDs    as ExtractIDs
 import           Luna.Interpreter.RPC.Handler.Lift
 import qualified Luna.Interpreter.Session.Cache.Cache    as Cache
 import           Luna.Interpreter.Session.Data.CallPoint (CallPoint (CallPoint))
@@ -22,15 +25,19 @@ import qualified Luna.Interpreter.Session.Env            as Env
 import           Luna.Interpreter.Session.Memory.Manager (MemoryManager)
 import           Luna.Interpreter.Session.Session        (SessionST)
 import qualified Luna.Interpreter.Session.Var            as Var
-import qualified Luna.Lib.Lib                            as Lib
-import qualified Luna.Lib.Manager                        as LibManager
 
 
 
 insertTimeRef :: Lib.ID -> Node.ID -> Node.ID
               -> NodeExpr -> RPC Context (SessionST mm) ()
-insertTimeRef libraryID nodeID defID defExpr = liftSession $ do
-    Env.insertDependentNode (CallPoint libraryID nodeID) defID
+insertTimeRef libraryID nodeID defID defExpr = do
+    liftSession $ Env.insertDependentNode (CallPoint libraryID nodeID) defID
+    insertTimeRef' libraryID defID defExpr
+
+
+insertTimeRef' :: Lib.ID -> Node.ID
+               -> NodeExpr -> RPC Context (SessionST mm) ()
+insertTimeRef' libraryID defID defExpr = liftSession $ do
     when (Var.containsTimeRefs defExpr) $
         Env.insertTimeRef (CallPoint libraryID defID)
 
@@ -50,8 +57,9 @@ rebuildTimeRefs = do
     activeProjectID <- liftSession Env.getProjectID
     libManager      <- Batch.getLibManager activeProjectID
     let libraries = LibManager.labNodes libManager
-        procLibs (libraryID, library) = mapM (procDM libraryID) $ PropertyMap.getDefaultsMaps $ library ^. Lib.propertyMap
-        procDM libraryID (nodeID, defaultsMap) = mapM_ (process libraryID nodeID) $ DefaultsMap.elems defaultsMap
+        procPropertyMap (libraryID, library) = mapM (procDefaultMap libraryID) $ PropertyMap.getDefaultsMaps $ library ^. Lib.propertyMap
+        procDefaultMap libraryID (nodeID, defaultsMap) = mapM_ (process libraryID nodeID) $ DefaultsMap.elems defaultsMap
         process libraryID nodeID (defID, defExpr) = insertTimeRef libraryID nodeID defID defExpr
     liftSession Env.cleanTimeRefs
-    mapM_ procLibs libraries
+    mapM_ procPropertyMap libraries
+    --TODO[PM] rebuild also all nodes

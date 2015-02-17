@@ -20,10 +20,10 @@ import           Flowbox.Prelude
 import qualified Generated.Proto.Nodedefault.DefaultsMap       as Gen
 import qualified Generated.Proto.Nodedefault.DefaultsMap.Entry as Gen
 import           Luna.Data.Serialize.Proto.Conversion.Graph    ()
-import qualified Luna.Graph.Node                               as Node
-import           Luna.Graph.Node.Expr                          (NodeExpr)
-import           Luna.Graph.View.Default.DefaultsMap           (DefaultsMap)
-import           Luna.Graph.View.PortDescriptor                (PortDescriptor)
+import qualified Luna.Syntax.Graph.Node                        as Node
+import           Luna.Syntax.Graph.Node.Expr                   (NodeExpr)
+import           Luna.Syntax.Graph.View.Default.DefaultsMap    (DefaultsMap)
+import           Luna.Syntax.Graph.View.PortDescriptor         (PortDescriptor)
 
 
 

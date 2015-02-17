@@ -54,7 +54,7 @@ type family MatchConstraint c set where
 
 type family MatchConstraints cs set where
     MatchConstraints ()     set = True
-    MatchConstraints (c,cs) set = IfThenElse (MatchConstraint c set) (MatchConstraints cs set) False
+    MatchConstraints (c,cs) set = If (MatchConstraint c set) (MatchConstraints cs set) False
 
 
 --type AssertTrue val = (val ~ True)

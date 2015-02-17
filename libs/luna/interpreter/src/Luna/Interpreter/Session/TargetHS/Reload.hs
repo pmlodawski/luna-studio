@@ -12,8 +12,8 @@ import           Data.Set (Set)
 import qualified Data.Set as Set
 
 import           Flowbox.Prelude
-import           Luna.AST.Control.Crumb (Breadcrumbs)
-import qualified Luna.Lib.Lib           as Library
+import           Luna.DEP.AST.Control.Crumb (Breadcrumbs)
+import qualified Luna.DEP.Lib.Lib           as Library
 
 
 
@@ -45,8 +45,8 @@ instance Default Reload where
     def = NoReload
 
 
-makeLenses(''Reload)
-makeLenses(''ReloadClass)
+makeLenses ''Reload
+makeLenses ''ReloadClass
 
 
 mkReloadClasses :: Breadcrumbs -> Reload

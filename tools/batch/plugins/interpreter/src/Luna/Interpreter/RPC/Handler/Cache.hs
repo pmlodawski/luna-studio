@@ -16,9 +16,9 @@ import           Flowbox.Data.Convert
 import           Flowbox.Prelude                                        hiding (Context, error, op)
 import           Flowbox.ProjectManager.Context                         (Context)
 import           Flowbox.System.Log.Logger
-import qualified Generated.Proto.Crumb.Breadcrumbs                      as Gen
-import           Luna.Data.Serialize.Proto.Conversion.Crumb             ()
-import           Luna.Data.Serialize.Proto.Conversion.Library           ()
+import qualified Generated.Proto.Dep.Crumb.Breadcrumbs                  as Gen
+import           Luna.DEP.Data.Serialize.Proto.Conversion.Crumb         ()
+import           Luna.DEP.Data.Serialize.Proto.Conversion.Library       ()
 import           Luna.Interpreter.RPC.Handler.Lift
 import qualified Luna.Interpreter.Session.Cache.Cache                   as Cache
 import qualified Luna.Interpreter.Session.Cache.Invalidate              as Invalidate
@@ -100,7 +100,7 @@ deleteNode projectID libraryID nodeID =
         GPUMemory.performGC
 
 
-setTimeVar :: Double -> RPC Context (SessionST mm) ()
+setTimeVar :: Env.TimeVar -> RPC Context (SessionST mm) ()
 setTimeVar time = liftSession $ do
     Env.setTimeVar time
     Invalidate.modifyTimeRefs

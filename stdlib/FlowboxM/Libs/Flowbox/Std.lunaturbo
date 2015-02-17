@@ -1,0 +1,34 @@
+#@AllowOrphans
+
+foreign haskell import Data.Array.Accelerate (Boundary(..))
+foreign haskell import qualified Data.Array.Accelerate as A
+
+foreign haskell import Flowbox.Graphics.Utils.Accelerate (variable)
+
+#include Prelude.lunaturbo
+#include Graphics/Geom2D/Geom.lunaturbo
+#include Graphics/Math/Math.lunaturbo
+#include Graphics/Color/Color.lunaturbo
+#include Graphics/Matte/Matte.lunaturbo
+
+#include Graphics/Image/Image.lunaturbo
+#include Graphics/Image/View.lunaturbo
+#include Graphics/Image/Constants.lunaturbo
+#include Graphics/Image/ColorCorrection.lunaturbo
+#include Graphics/Image/FilterTransform.lunaturbo
+#include Graphics/Image/Merge.lunaturbo
+#include Graphics/Image/Noise.lunaturbo
+#include Graphics/Image/Dithering.lunaturbo
+#include Graphics/Image/Keying.lunaturbo
+
+#
+#                OTHER
+#
+
+alias Time=Float
+
+def time:
+    0.0
+
+def foo a:
+	a
