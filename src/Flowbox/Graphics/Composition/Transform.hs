@@ -26,6 +26,7 @@ import           Flowbox.Graphics.Shader.Shader
 import           Flowbox.Graphics.Utils.Accelerate
 import           Flowbox.Graphics.Utils.Linear
 import           Flowbox.Math.Matrix               as M
+import           Flowbox.Graphics.Composition.Generator.Shape as S
 
 import qualified Data.Array.Accelerate     as A
 import           Linear                    hiding (inv33, normalize, rotate)
@@ -158,36 +159,31 @@ cornerPin' (Grid width height) (Point2 x1 y1, Point2 x2 y2, Point2 x3 y3, Point2
 
           matC = matA !*! unsafeInv33 matB
 
--- TODO[KM]: handle shaders by translating them and changing the canvas size
 crop :: Elt a => Rectangle Int -> Bool -> Bool -> Exp a -> ChannelData a -> ChannelData a
 crop (fmap variable . properRect -> Rect xA yA xB yB)
-      (variable -> reformat) (variable -> defaultOutside) defaultValue (Channel.asMatrixData -> MatrixData matrix) = MatrixData matrix'
-        where matrix' = M.generate newShape gen
-              gen (A.unlift -> (Z :. y :. x)) = A.cond reformat (matrix M.! A.index2 (heightDifference - yA + y) (xA + x)) (value y x)
+      reformat defaultOutside (defaultValue) chanData =
+        case reformat of
+          True -> processReformat
+          False -> processStandard
+        where
+          processReformat = DiscreteData $ translate (V2 (-xA) (yB - h)) (Shader (Grid (xB - xA) (yB - yA)) s)
+            where
+              DiscreteData shader = Channel.asDiscreteData defaultValue chanData
+              Shader (Grid w h) s = if defaultOutside then (S.bound (A.Constant defaultValue) shader) else (S.bound A.Clamp shader)
 
-              value y x = A.cond (inside y x) (matrix M.! A.index2 y x) (A.cond defaultOutside defaultValue (processCornerCase y x))
+          processStandard = MatrixData $ 
+            case defaultOutside of
+              True -> M.generate newShape genConstOutside
+              False -> M.generate newShape genClampedOutside
+            where
+              MatrixData matrix = Channel.asMatrixData chanData
+              newShape = M.shape matrix
+              clamp (y,x) = ((y `max` (h - yB)) `min` (h - yA), (x `max` xA) `min` xB)
+              inside y x = (x A.>=* xA) A.&&* (x A.<=* xB) A.&&* (h - yB A.<=* y) A.&&* (h - yA A.>=* y)
+              A.Z A.:. h A.:. _ = A.unlift newShape :: M.EDIM2
+
+              genConstOutside (A.unlift -> (Z :. y :. x)) = A.cond (inside y x) (matrix M.! A.index2 y x) defaultValue
+              genClampedOutside (A.unlift -> (Z :. y :. x)) = A.cond (inside y x) (matrix M.! A.index2 y x) (proc (y,x))
                 where
-                  inside y x = (A.not (left y x)) A.&&* (A.not (right y x)) A.&&* (A.not (up y x)) A.&&* (A.not (down y x))
-
-                  -- that makes me feel bad
-                  processCornerCase y x = A.cond ((left y x) A.&&* (up y x)) (matrix M.! A.index2 (h - yB) xA) $
-                                          A.cond ((left y x) A.&&* (down y x)) (matrix M.! A.index2 (h - yA) xA) $
-                                          A.cond ((right y x) A.&&* (up y x)) (matrix M.! A.index2 (h - yB) xB) $
-                                          A.cond ((right y x) A.&&* (down y x)) (matrix M.! A.index2 (h - yA) xB) $
-                                          A.cond ((left y x) A.&&* (A.not (up y x)) A.&&* (A.not (down y x))) (matrix M.! A.index2 y xA) $
-                                          A.cond ((right y x) A.&&* (A.not (up y x)) A.&&* (A.not (down y x))) (matrix M.! A.index2 y xB) $
-                                          A.cond ((up y x) A.&&* (A.not (left y x)) A.&&* (A.not (right y x))) (matrix M.! A.index2 (h-yB) x) $
-                                          A.cond ((down y x) A.&&* (A.not (left y x)) A.&&* (A.not (right y x))) (matrix M.! A.index2 (h-yA) x)
-                                          defaultValue
-
-                  left _ x = x A.<* xA
-                  right _ x = x A.>* xB
-                  up y _ = (h - yB) A.>* y
-                  down y _ = (h - yA) A.<* y
-
-              heightDifference = h - (yB - yA)
-              newShape       = A.cond reformat (A.intersect rectangleShape imageShape) imageShape
-              rectangleShape = A.index2 (yB - yA) (xB - xA)
-              imageShape     = M.shape matrix
-              A.Z A.:. h A.:. _ = A.unlift imageShape :: M.EDIM2
-              
+                  proc (y, x) = matrix M.! A.index2 y' x'
+                  (y',x') = clamp (y,x)
