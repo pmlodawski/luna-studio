@@ -146,6 +146,9 @@ spec = do
         specify "mixed records & functions 2" $
                             ((TV$TVar 8) `Fun` (Record [("a",((TV$TVar 8) `Fun` (TV$TVar 9))), ("b",TV$TVar 1), ("c",TV$TVar 2)]) `Fun` (TV$TVar 9))
             `isEquivOf`     ((TV$TVar 1) `Fun` (Record [("x",((TV$TVar 1) `Fun` (TV$TVar 0))), ("y",TV$TVar 8), ("z",TV$TVar 9)]) `Fun` (TV$TVar 0))
+        specify "mixed records & functions 2 reorder" $
+                            ((TV$TVar 8) `Fun` (Record [("a",((TV$TVar 8) `Fun` (TV$TVar 9))), ("b",TV$TVar 1), ("c",TV$TVar 2)]) `Fun` (TV$TVar 9))
+            `isEquivOf`     ((TV$TVar 1) `Fun` (Record [("z",TV$TVar 9), ("y",TV$TVar 8), ("x",((TV$TVar 1) `Fun` (TV$TVar 0)))]) `Fun` (TV$TVar 0))
         specify "mixed records & functions 3" $
                             (Record [("a",((TV$TVar 8) `Fun` (TV$TVar 9))), ("b",TV$TVar 1), ("c",TV$TVar 8)])
             `isNotEquivOf`  (Record [("x",((TV$TVar 1) `Fun` (TV$TVar 0))), ("y",TV$TVar 8), ("z",TV$TVar 9)])
@@ -155,6 +158,9 @@ spec = do
         specify "mixed records & functions 5" $
                             ((TV$TVar 8) `Fun` (Record [("a",((TV$TVar 1) `Fun` (TV$TVar 9))), ("b",TV$TVar 1), ("c",TV$TVar 2)]) `Fun` (TV$TVar 9))
             `isNotEquivOf`  ((TV$TVar 1) `Fun` (Record [("x",((TV$TVar 1) `Fun` (TV$TVar 0))), ("y",TV$TVar 8), ("z",TV$TVar 9)]) `Fun` (TV$TVar 0))
+        specify "mixed records & functions 5 reorder" $
+                            ((TV$TVar 8) `Fun` (Record [("a",((TV$TVar 1) `Fun` (TV$TVar 9))), ("b",TV$TVar 1), ("c",TV$TVar 2)]) `Fun` (TV$TVar 9))
+            `isNotEquivOf`  ((TV$TVar 1) `Fun` (Record [("y",TV$TVar 8), ("x",((TV$TVar 1) `Fun` (TV$TVar 0))), ("z",TV$TVar 9)]) `Fun` (TV$TVar 0))
         specify "mixed records & functions 6" $
                             ((TV$TVar 0) `Fun` (Record [("foo", (TV$TVar 0) `Fun` (TV$TVar 1))]) `Fun` (TV$TVar 1))
             `isEquivOf`     ((TV$TVar 0) `Fun` (Record [("foo", (TV$TVar 0) `Fun` (TV$TVar 1))]) `Fun` (TV$TVar 1))
