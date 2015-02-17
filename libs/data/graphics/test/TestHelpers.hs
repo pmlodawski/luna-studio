@@ -13,6 +13,7 @@ import Flowbox.Graphics.Mockup.Basic as Mock
 import Flowbox.Graphics.Mockup.Merge
 import Data.Array.Accelerate.CUDA as AC
 import Flowbox.Graphics.Composition.Merge
+import qualified Data.Array.Accelerate as A
 
 shouldBeCloseTo :: (Show a, Comparable a b) => String -> b -> a -> a -> Expectation
 shouldBeCloseTo name metric actual expected = assertAlmostEqual name "" metric expected actual
@@ -82,7 +83,7 @@ instance (Show a, Ord a, Floating a) => Comparable (Maybe a) (FloatMetric a) whe
     diffMsg _ _ _ _ = return "Nothing with Just"
 
 
-data ImageMetric = PixelWise | TileWise | ImageWise deriving (Bounded, Enum)
+data ImageMetric = PixelWise | TileWise | ImageWise | SizeWise deriving (Bounded, Enum)
 
 instance Arbitrary ImageMetric where
     arbitrary = arbitraryBoundedEnum
@@ -91,7 +92,9 @@ instance Comparable Image ImageMetric where
     closeEnough metric actualImage expectedImage = (case metric of
         PixelWise -> maxDiff < 0.01 --imgAsList actualImage == imgAsList expectedImage
         TileWise  -> True
+        SizeWise  -> eqSize
         ImageWise -> sC/sRefC < 0.01) where
+            [eqSize] = M.toList AC.run eqSizeAc
             [maxDiff] = M.toList AC.run maxDif
             [sC] = M.toList AC.run s
             [sRefC] = M.toList AC.run sRef
@@ -104,7 +107,7 @@ instance Comparable Image ImageMetric where
             g = M.map abs $ M.zipWith (-) g1 g2
             b = M.map abs $ M.zipWith (-) b1 b2
             a = M.map abs $ M.zipWith (-) a1 a2
-
+            eqSizeAc = M.unit $ (M.size r1) A.==* (M.size r2)
             (r1,g1,b1,a1) = Mock.unsafeGetChannels actualImage
             (r2,g2,b2,a2) = Mock.unsafeGetChannels expectedImage
             
@@ -164,6 +167,7 @@ instance Comparable Image ImageMetric where
                      --   dif= zipWith (-) l1 l2
                      --   maxDif = maximum $ P.map abs dif
         TileWise  -> return "tile-wise difference"
+        SizeWise  -> return "images of different size"
         ImageWise -> return $ "actualImage sum: " ++ (show $ s1out) ++
                          "\nexpectedImage sum: " ++ (show $ s2out) ++
                          "\nimage-wise difference: " ++ (show $ sdout) where
