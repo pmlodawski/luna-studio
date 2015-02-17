@@ -36,7 +36,7 @@ foreign haskell def Image.blur kernelSize:
 #     liftF4 laplacianLuna kernelSize centerVal sideVal self
 
 foreign haskell class V2 a:
-    x, y :: a
+    V2 : x, y :: a
 
 foreign haskell def Image.translate vec:
     liftF2 translateLuna vec self

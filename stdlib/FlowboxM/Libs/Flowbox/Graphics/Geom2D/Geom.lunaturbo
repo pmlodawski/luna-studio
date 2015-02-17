@@ -19,15 +19,17 @@ foreign haskell class SkewOrder:
     SkewYX
 
 foreign haskell class Skew a:
-    point :: Point2 a
-    order :: SkewOrder
+    Skew:
+        point :: V2 a
+        order :: SkewOrder
 
 foreign haskell class Transform a:
-    translate :: Point2 a
-    rotate    :: a
-    scale     :: Point2 a
-    skew      :: Skew a
-    center    :: Point2 a
+    Transform:
+        translate :: V2 a
+        rotate    :: a
+        scale     :: V2 a
+        skew      :: Skew a
+        center    :: Point2 a
 
 def point x y:
     Point2 x y
