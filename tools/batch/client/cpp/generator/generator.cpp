@@ -5,6 +5,7 @@
 #include "../generated/parser.pb.h"
 #include "../generated/plugin-manager.pb.h"
 #include "../generated/interpreter.pb.h"
+#include "../generated/urm.pb.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
@@ -706,6 +707,7 @@ std::vector<MethodWrapper> prepareMethodWrappers(bool finalLeaves = false)
 	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::parser::Parse::descriptor());
 	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::parser::MkText::descriptor());
 	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::parser::Parser::descriptor());
+	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::urm::URM::descriptor());
 	return methods;
 }
 

@@ -12,6 +12,8 @@ import qualified Data.Either as Either
 
 import qualified Flowbox.Batch.Handler.Common                                                                 as Batch
 import qualified Flowbox.Batch.Handler.Graph                                                                  as BatchG
+import           Flowbox.Bus.Data.Message                                                                     as Message
+import           Flowbox.Bus.Data.Serialize.Proto.Conversion.Message                                          ()
 import           Flowbox.Bus.RPC.RPC                                                                          (RPC)
 import           Flowbox.Data.Convert
 import           Flowbox.Prelude                                                                              hiding (Context)
@@ -35,6 +37,7 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Gra
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.ModifyInPlace.Update  as NodeModifyInPlace
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Request        as NodeRemove
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Update         as NodeRemove
+import qualified Generated.Proto.Urm.URM.Undo.Register.Request                                                as Register
 import           Luna.Data.Serialize.Proto.Conversion.Crumb                                                   ()
 import           Luna.Data.Serialize.Proto.Conversion.GraphView                                               ()
 
@@ -101,7 +104,7 @@ nodeModify request@(NodeModify.Request tnode tbc tlibID tprojectID _) = do
     return $ NodeModify.Update request (encode (newNodeID, node)) updateNo
 
 
-nodeModifyInPlace :: NodeModifyInPlace.Request -> RPC Context IO (NodeModifyInPlace.Update, NodeModifyInPlace.Request)
+nodeModifyInPlace :: NodeModifyInPlace.Request -> RPC Context IO (NodeModifyInPlace.Update, Register.Request)
 nodeModifyInPlace request@(NodeModifyInPlace.Request tnode tbc tlibID tprojectID _) = do
     bc <- decodeE tbc
     nodeWithId <- decodeE tnode
@@ -113,7 +116,7 @@ nodeModifyInPlace request@(NodeModifyInPlace.Request tnode tbc tlibID tprojectID
     node <- BatchG.nodeByID (fst nodeWithId) bc libID projectID
     let oldNode   = encode (fst nodeWithId, node)
 
-    return $ (NodeModifyInPlace.Update request updateNo,  NodeModifyInPlace.Request oldNode tbc tlibID tprojectID 0)
+    return $ (NodeModifyInPlace.Update request updateNo,  Register.Request $ encodeP $ Message.mk "urm.register" $ NodeModifyInPlace.Request oldNode tbc tlibID tprojectID 0)
 
 
 nodeRemove :: NodeRemove.Request -> RPC Context IO NodeRemove.Update

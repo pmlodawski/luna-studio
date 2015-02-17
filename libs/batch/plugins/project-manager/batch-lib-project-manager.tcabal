@@ -24,6 +24,7 @@ Library
                      `findmodules('src', '.*\.hs')`
 
     Build-Depends:  base,
+                    batch-plugin-ur-manager,
                     bytestring,
                     containers,
                     either,
