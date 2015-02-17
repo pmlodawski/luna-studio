@@ -31,11 +31,23 @@ spec = do
 					it "in size-wise metric" $ do
 						 shouldBeCloseTo testPath SizeWise actualImage (unsafePerformIO expectedImage)
 
+			do
+				let testName = "conicalLuna"
+				let testPath = specPath++testName
+
+				describe testName $ do
+					let actualImage = conicalLuna 100 120
+					let	expectedImage = getDefaultTestPic specPath testName
+					--it "should save img" $ do
+					--	testSave actualImage `shouldReturn` ()
+					describe "should match reference image" $ do
+						it "in pixel-wise metric" $ do
+							shouldBeCloseTo testPath PixelWise actualImage (unsafePerformIO expectedImage)
+						
 
 
 
 
-
-testSaveConstant image = do
+testSave image = do
     saveImageLuna "./test/samples/x_result.png" image
     return ()
