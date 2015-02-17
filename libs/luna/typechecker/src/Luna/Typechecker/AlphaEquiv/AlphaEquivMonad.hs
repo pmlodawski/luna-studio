@@ -1,67 +1,126 @@
+{-# LANGUAGE KindSignatures #-}
+
 module Luna.Typechecker.AlphaEquiv.AlphaEquivMonad (
       AlphaEquivMonad(..),
-      ttInsert, ttLookup, ffInsert, ffLookup
+      notAlphaEquivalent, cantAlphaTranslate,
+      ttInsert, ttDelete,
+      ttEquiv,
+      ttTranslate, ttBtoA,
+      fork, ttWithInserted
   ) where
 
 
 import            Flowbox.Prelude
+import            Control.Monad               (ap)
 import            Data.Map.Strict             (Map)
 import qualified  Data.Map.Strict             as M
+import Data.List                        (sort,nub,sortBy,intercalate)
+import Data.Ord                         (comparing)
+import Data.Tuple                       (swap)
+import Debug.Trace
+import Data.Maybe
 
 import            Luna.Typechecker.Data.TVar
 
 
 
 type TypesTranslate  = Map TVar TVar
-type FieldsTranslate = Map String String
 
-type Quadruple a b c = b -> b -> c -> c -> (a, b, b, c, c)
-
-
-newtype AlphaEquivMonad a = AlphaEquivMonad { runAlphaEq  :: Quadruple (Maybe a) FieldsTranslate TypesTranslate }
+newtype AlphaEquivMonad a
+  = AlphaEquivMonad { runAlphaEq  :: TypesTranslate
+                                  -> TypesTranslate
+                                  -> [ (a, TypesTranslate, TypesTranslate) ] }
 
 
 instance Monad AlphaEquivMonad where
     fail _ = AlphaEquivMonad aux
-      where aux fmab fmba ttab ttba = (Nothing,fmab,fmba,ttab,ttba)
+      where aux ttab ttba = []
 
     return x = AlphaEquivMonad aux
-      where aux fmab fmba ttab ttba = (Just x,fmab,fmba,ttab,ttba)
+      where aux ttab ttba = [(x,ttab,ttba)]
 
     m >>= ak = AlphaEquivMonad aux
-      where aux fmab fmba ttab ttba =
-                case runAlphaEq m fmab fmba ttab ttba of
-                    (Nothing,fmab1,fmba1,ttab1,ttba1) -> (Nothing,fmab1,fmba1,ttab1,ttba1)
-                    (Just a, fmab1,fmba1,ttab1,ttba1) -> runAlphaEq (ak a) fmab1 fmba1 ttab1 ttba1
+      where aux ttab ttba = go `concatMap` runAlphaEq m ttab ttba
+            go (x, ttab, ttba) = runAlphaEq (ak x) ttab ttba
+
+instance Functor AlphaEquivMonad where
+    fmap f m = AlphaEquivMonad aux
+      where aux ttab ttba = go <$> runAlphaEq m ttab ttba
+            go (x, ttab, ttba) = (f x, ttab, ttba)
+instance Applicative AlphaEquivMonad where
+    pure = return
+    (<*>) = ap
+
+
+notAlphaEquivalent :: AlphaEquivMonad a
+notAlphaEquivalent = fail "not ⍺-equivalent"
+
+cantAlphaTranslate :: AlphaEquivMonad a
+cantAlphaTranslate = fail "can't ⍺-translate (B to A)"
+
+
+-- this shall *never* happen, as they shall be equivalent
+-- by `fromList . map swap . toList`.
+-- In other words, we maintain a bijection. This indicates
+-- that it's not. And it's bad.
+errorInvalidAlphaInvariant :: AlphaEquivMonad a
+errorInvalidAlphaInvariant = fail "internal ⍺-equivalent invariant is dissatisfied"
+
+
+bittMap :: (TypesTranslate -> TypesTranslate) -> (TypesTranslate -> TypesTranslate) -> AlphaEquivMonad ()
+bittMap fl fr = AlphaEquivMonad aux
+  where aux ttab ttba = [((), fl ttab, fr ttba)]
 
 
 -- Type operations
 
-
 ttInsert :: TVar -> TVar -> AlphaEquivMonad ()
-ttInsert a b = AlphaEquivMonad aux 
-  where aux fmab fmba ttab ttba = (Just (), fmab, fmba, M.insert a b ttab, M.insert b a ttba)
+ttInsert a b = bittMap (M.insert a b) (M.insert b a)
+
+ttDelete :: TVar -> TVar -> AlphaEquivMonad ()
+ttDelete a b = bittMap (M.delete a) (M.delete b)
 
 
-ttLookup :: TVar -> TVar -> AlphaEquivMonad Bool
-ttLookup a b = AlphaEquivMonad aux
-  where aux fmab fmba ttab ttba
-          | M.lookup a ttab == Just b  && M.lookup b ttba == Just a = (Just True, fmab,fmba,ttab,ttba)
-          | M.notMember a ttab         && M.notMember b ttba        = (Just False,fmab,fmba,ttab,ttba)
-          | otherwise                                               = (Nothing,   fmab,fmba,ttab,ttba)
+ttLookup = ttEquiv
+
+ttEquiv :: TVar -> TVar -> AlphaEquivMonad Bool
+ttEquiv a b = AlphaEquivMonad aux
+  where aux ttab ttba
+          | M.lookup a ttab == Just b  && M.lookup b ttba == Just a = [(True,  ttab,ttba)]
+          | M.notMember a ttab         && M.notMember b ttba        = [(False, ttab,ttba)]
+          | otherwise                                               = []
 
 
--- Field labels operations
+ttTranslate :: TVar -> TVar -> AlphaEquivMonad (Maybe TVar, Maybe TVar)
+ttTranslate a b = AlphaEquivMonad aux
+  where aux ttab ttba = [((M.lookup a ttab, M.lookup b ttba), ttab, ttba)]
+
+ttBtoA :: TVar -> AlphaEquivMonad TVar
+ttBtoA a = maybe cantAlphaTranslate return =<< (fst <$> ttTranslate a undefined)
 
 
-ffInsert :: String -> String -> AlphaEquivMonad ()
-ffInsert a b = AlphaEquivMonad aux 
-  where aux fmab fmba ttab ttba = (Just (), M.insert a b fmab, M.insert b a fmba, ttab, ttba)
+fork :: [AlphaEquivMonad a] -> AlphaEquivMonad a
+fork fs = AlphaEquivMonad aux
+  where aux ttab ttba = concat [runAlphaEq f ttab ttab | f <- fs]
 
+aroundAction :: (Monad m) => m b -> (b -> m ()) -> m a -> m a
+aroundAction preAct postAct act = do
+    tmp <- preAct
+    res <- act
+    postAct tmp
+    return res
 
-ffLookup :: String -> String -> AlphaEquivMonad Bool
-ffLookup a b = AlphaEquivMonad aux
-  where aux fmab fmba ttab ttba
-          | M.lookup a fmab == Just b && M.lookup b fmba == Just a  = (Just True, fmab,fmba,ttab,ttba)
-          | M.notMember a fmab        && M.notMember b fmba         = (Just False,fmab,fmba,ttab,ttba)
-          | otherwise                                               = (Nothing,   fmab,fmba,ttab,ttba)
+ttWithInserted :: [TVar] -> [TVar] -> AlphaEquivMonad a -> AlphaEquivMonad a
+ttWithInserted lsta lstb = aroundAction poll pushOld
+  where
+    -- store old values (if they existed)
+    poll = AlphaEquivMonad $ \ttab ttba ->
+            let savettAB = map (\k -> (k, M.lookup k ttab)) lsta
+                savettBA = map (\k -> (k, M.lookup k ttba)) lstb
+             in [((savettAB, savettBA), ttab, ttba)]
+    -- restore old values. If the key didn't exist, remove the entry.
+    pushOld = mapM_ (uncurry updateOrDelete) . uncurry zip
+    
+    updateOrDelete (tvA, Nothing)   (tvB, Nothing)                                = ttDelete tvA tvB
+    updateOrDelete (tvA, Just tvAB) (tvB, Just tvBA) | tvAB == tvB && tvBA == tvA = ttInsert tvA tvB
+    updateOrDelete _ _                                                            = errorInvalidAlphaInvariant
