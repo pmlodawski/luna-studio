@@ -64,7 +64,7 @@ import           Luna.Syntax.Expr                           (LExpr)
 import qualified Luna.Syntax.Name.Hash                      as Hash
 import qualified Luna.System.Pragma.Store                   as Pragma
 import           Luna.System.Session                        as Session
-
+import           Luna.Pass.Target.HS.HSC                    ()
 
 
 logger :: LoggerIO
