@@ -142,7 +142,6 @@ computeValue varName mode = lift2 $ flip Catch.catch excHandler $ do
                 liftIO (Serialization.toValue (ValueError.Error $ show exc) def) <??&.> "Internal error"
 
 
-
 foldedReRoute :: CallPointPath -> Session mm VarName
 foldedReRoute callPointPath = do
     let callPointLast = last callPointPath

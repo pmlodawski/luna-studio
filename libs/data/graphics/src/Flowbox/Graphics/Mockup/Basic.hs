@@ -27,6 +27,7 @@ module Flowbox.Graphics.Mockup.Basic (
     onEach,
     onEachChannel,
     onEachColorRGB,
+    onEachColorRGBA,
     onEachRGBA,
     onEachRGBAChannels,
     onShader,
@@ -108,6 +109,9 @@ unpackAccDims (x,y) =
   in
     (x',y')
 
+unsafeFromMaybe :: Maybe a -> a
+unsafeFromMaybe (Just a) = a
+
 
 -- == LOAD / SAVE
 
@@ -170,31 +174,13 @@ realReadLuna path            = loadImageLuna path
 onEach :: (A.Exp Float -> A.Exp Float) -> Image -> Image
 onEach f = Image.map (View.map $ Channel.unsafeMap (Channel.FunFloat f))
 
--- onEachRGBA :: forall a. (A.Elt a, A.IsFloating a)
---            => (A.Exp a -> A.Exp a)
---            -> (A.Exp a -> A.Exp a)
---            -> (A.Exp a -> A.Exp a)
---            -> (A.Exp a -> A.Exp a)
---            -> Image
---            -> Image
--- onEachRGBA fr fg fb fa img = Image.appendMultiToPrimary [r,g,b,a] img
---     where r = updateChan fr "rgba.r"
---           g = updateChan fg "rgba.g"
---           b = updateChan fb "rgba.b"
---           a = updateChan fa "rgba.a"
---           updateChan f = case (A.floatingType :: A.FloatingType a) of
---                              A.TypeFloat{}  -> Channel.unsafeMap (Channel.FunFloat f) . getChan
---                              A.TypeDouble{} -> Channel.unsafeMap (Channel.FunDouble f) . getChan
---                              _              -> error "onEachRGBA: invalid type of floating point value"
---           getChan chanName = let Right (Just chan) = Image.getFromPrimary chanName img in chan
-
 onEachRGBA :: (A.Exp Float -> A.Exp Float)
            -> (A.Exp Float -> A.Exp Float)
            -> (A.Exp Float -> A.Exp Float)
            -> (A.Exp Float -> A.Exp Float)
            -> Image
            -> Image
-onEachRGBA fr fg fb fa img = Image.appendMultiToPrimary [r,g,b,a] img
+onEachRGBA fr fg fb fa img = Image.appendMultiToPrimary [r, g, b, a] img
     where r = updateChan fr "rgba.r"
           g = updateChan fg "rgba.g"
           b = updateChan fb "rgba.b"
@@ -218,6 +204,18 @@ onEachColorRGB f img = img'
                   ]
 
           img' = Image.insertPrimary view' img
+
+onEachColorRGBA :: (A.Exp (Color.RGBA Float) -> A.Exp (Color.RGBA Float)) -> Image -> Image
+onEachColorRGBA f img = Image.appendMultiToPrimary (P.zipWith makeChan channels [r',g',b',a']) img
+    where makeChan name mat  = ChannelFloat name $ MatrixData mat
+          (r', g', b', a')   = unzipRGBA rgba'
+          unzipRGBA          = M.unzip4 . M.map (\(A.unlift -> Color.RGBA a b c d) -> A.lift (a, b, c, d))
+          rgba'              = M.map f rgba
+          rgba               = M.zipWith4 (\a b c d -> A.lift $ Color.RGBA a b c d) r g b a
+          Right [r, g, b, a] = (fmap.fmap) (unsafeGetMat . Channel.asMatrix . unsafeFromMaybe)
+                             $ Image.getChannelsFromPrimary channels img
+          unsafeGetMat (ChannelFloat _ (MatrixData mat)) = mat
+          channels           = fmap ((P.++) "rgba.") ["r", "g", "b", "a"]
 
 onEachRGBAChannels :: (Channel -> Channel)
                    -> (Channel -> Channel)

@@ -1,6 +1,6 @@
 
 module Flowbox.Graphics.Composition.EdgeBlur (
-    BlurType(..) , edges, maskBlur
+    BlurType(..) , edges, maskBlur, eee, mixImages
 ) where
 
 import Data.Array.Accelerate               as A hiding (constant, filter, scatter, size, stencil)
@@ -13,10 +13,13 @@ import Flowbox.Math.Matrix                 as M
 import Math.Space.Space
 
 
+eee x = x+1
+
+
 applyKernel :: (IsNum a, Elt a) => Matrix2 a -> DiscreteShader (Exp a) -> DiscreteShader (Exp a)
 applyKernel kernel img = process img where
     kernelN = id M.>-> id $ kernel
-    p = pipe A.Clamp
+    p = pipe (A.Constant 0)
     process x = id `p` F.filter 1 kernelN `p` id $ x
 
   --convolve mode kernel
@@ -25,10 +28,16 @@ applyKernel kernel img = process img where
 
 -- bluredImg = blur n sigma testShader
 
-mixImages :: (Applicative f, Num a) => f a -> f a -> f a -> f a
-mixImages edgesMask first second = (+) <$>
-                               ( (*) <$> first <*> edgesMask )
-                               <*>
+
+mixImages :: (Applicative f, Floating a) => f a -> f a -> f a -> f a
+mixImages edgesMask first second = (+) <$> 
+                               ( (*) <$> first <*> edgesMask ) 
+                               <*> 
+
+--mixImages :: (Applicative f, Num a) => f a -> f a -> f a -> f a
+--mixImages edgesMask first second = (+) <$>
+--                               ( (*) <$> first <*> edgesMask )
+--                               <*>
                                ( (*) <$> second <*> (fmap ((-) 1) edgesMask) )
 
 detectEdges :: (Elt a, IsFloating a) => Exp a -> DiscreteShader (Exp a) -> DiscreteShader (Exp a)
