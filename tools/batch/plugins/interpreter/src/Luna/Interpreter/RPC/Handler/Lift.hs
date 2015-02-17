@@ -7,8 +7,6 @@
 
 module Luna.Interpreter.RPC.Handler.Lift where
 
-import Control.Monad.Trans.Class (MonadTrans)
-
 import           Flowbox.Bus.RPC.RPC              (RPC)
 import           Flowbox.Control.Error
 import           Flowbox.Prelude                  hiding (Context)

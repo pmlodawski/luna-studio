@@ -221,7 +221,7 @@ varType (NodeExpr.ASTExpr oldExpr') = do
              $ TextBuilder.toLazyText
              $ CodeBuilder.simple
              $ CodeBuilder.generate hexpr
-    Expression . Utils.replace "_time" "(val _time)" <$> liftIO (Cpphs.runCpphs cpphsOptions "" code)
+    Expression . Utils.replace "_time" "(val _time)" . last . lines <$> liftIO (Cpphs.runCpphs cpphsOptions "" code)
 
 
 nameHash :: String -> String

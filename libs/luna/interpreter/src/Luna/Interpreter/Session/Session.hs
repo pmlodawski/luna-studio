@@ -187,7 +187,7 @@ runDecls decls = do
 runAssignment :: String -> String -> Session mm ()
 runAssignment asigned asignee = do
     lift2 $ Bindings.remove asigned
-    runStmt $ asigned ++ " <- return $ " ++ asignee
+    runDecls $ asigned <> " = " <> asignee
 
 
 runAssignment' :: String -> String -> Session mm ()
