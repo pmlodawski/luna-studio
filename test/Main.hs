@@ -22,7 +22,7 @@ test = do
 --    Bus.send Flag.Enable $ Message.Message "urm.undo.request" (123 :: Int)
 --    Bus.send Flag.Enable $ Message.Message "urm.undo.request" $ messagePut' (678910 :: Int)
     Bus.reply (Message.CorrelationID clientID 0) Flag.Enable
-              (Message.Message "pluginmanager.urm.undo" (Char8.pack "nos"))
+              (Message.Message "urm.undo.perform.request" (Char8.pack ""))
     putStrLn "sent"
     _ <- Bus.receive
     putStrLn "received"
