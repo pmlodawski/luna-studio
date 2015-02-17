@@ -173,7 +173,7 @@ main1 = do
     result <- Session.run cfg env [] $ do
         Env.addReload libID Reload.ReloadLibrary
         Executor.processMain_
-        print =<< Value.getIfReady [CallPoint libID 92]
+        print =<< Value.getIfReady [CallPoint libID 92] 0.0
         putStrLn "--------- 1"
         Executor.processMain_
         putStrLn "========= 1"
@@ -201,7 +201,7 @@ main1 = do
         putStrLn "========= finished =======4="
         Cache.dumpAll
 
-        print =<< Value.getIfReady [CallPoint libID 92]
+        print =<< Value.getIfReady [CallPoint libID 92] 0.0
     eitherStringToM $ fmapL Error.format result
 
 
