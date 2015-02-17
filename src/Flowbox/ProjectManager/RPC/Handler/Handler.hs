@@ -15,6 +15,7 @@ import           Control.Monad             (liftM)
 import Control.Monad.Trans.State
 
 import           Flowbox.Bus.Data.Message                       (Message)
+import qualified Flowbox.Bus.Data.Message                       as Message
 import           Flowbox.Bus.Data.Topic                         ((/+))
 import qualified Flowbox.Bus.Data.Topic                         as Topic
 import           Flowbox.Bus.RPC.HandlerMap                     (HandlerMap)
@@ -34,7 +35,9 @@ import qualified Flowbox.ProjectManager.RPC.Handler.Sync        as SyncHandler
 import qualified Flowbox.ProjectManager.RPC.Topic               as Topic
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.Text.ProtocolBuffers                   as Proto
-import Flowbox.Text.ProtocolBuffers                   (Serializable)
+import qualified Generated.Proto.Urm.URM.Undo.Register.Request  as Register
+import qualified Generated.Proto.Urm.URM.Undo.Register.Status   as Undo
+import           Flowbox.Text.ProtocolBuffers                   (Serializable)
 
 
 
@@ -102,23 +105,7 @@ handlerMap callback = HandlerMap.fromList
         call :: (Proto.Serializable args, Proto.Serializable result)
              => String -> (args -> RPC Context IO result) -> StateT Context IO [Message]
         call type_ = callback (/+ type_) . Processor.singleResult
-        call2 :: (Proto.Serializable args, Proto.Serializable result, Proto.Serializable result2)
-             => String -> (args -> RPC Context IO (result, result2)) -> StateT Context IO [Message]
---        call2 type_ = callback (/+ (type_ ++ ".urm.register")) . 
---            (\args -> do
---                r1 <- Processor.singleResult a
---                r2 <- Processor.singleResult b
---                return $ r1 : r2)
---        Processor.doubleResult
-        call2 t fun = do
-            msg1 <- callback (/+ t) $ \a -> do (r1, r2) <- fun a
-                                               --return ([r1, r2] :: forall result. Proto.Serializable result => [result])
-                                               return ([r1], [r2])
---            msg2 <- callback (/+ t) (\a -> do (_, r2) <- fun a
---                                              return r2)
-            return $ msg1 -- ++ msg2
-
-data A = A (forall a. Proto.Serializable a => a) 
-
-instance Proto.ReflectDescriptor A
-instance Proto.Wire A
+        call2 :: (Proto.Serializable args, Proto.Serializable result)
+             => String -> (args -> RPC Context IO (result, Register.Request)) -> StateT Context IO [Message]
+        call2 t fun = callback (/+ t) $ \a -> do (r1, r2) <- fun a
+                                                 return ([r1], [Message.mk "urm.undo.register.request" r2])
