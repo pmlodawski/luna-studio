@@ -22,7 +22,7 @@ spec = do
               testPath = specPath++testName
                 in describe testName $ do 
                     describe "should match previously computed picture on rgba.r channel with edge multiplier 5 and kernel size 5" $ do
-                        let actualImage = testEdgeBlur 15 5 "rgba.r"
+                        let actualImage = testEdgeBlur 5 5 "rgba.r"
                             expectedImage = getDefaultTestPic specPath testName
                         it "in pixel-wise metric" $ do
                             returnShouldBeCloseTo testPath PixelWise actualImage expectedImage 
