@@ -36,6 +36,7 @@ import           Luna.Interpreter.Session.Data.CallPointPath  (CallPointPath)
 import           Luna.Interpreter.Session.Data.VarName        (VarName)
 import qualified Luna.Interpreter.Session.Data.VarName        as VarName
 import qualified Luna.Interpreter.Session.Env                 as Env
+import           Luna.Interpreter.Session.Env.Env             (TimeVar)
 import qualified Luna.Interpreter.Session.Error               as Error
 import qualified Luna.Interpreter.Session.Hint.Eval           as HEval
 import           Luna.Interpreter.Session.Session             (Session)
@@ -46,13 +47,13 @@ logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
 
 
-getIfReady :: CallPointPath -> Session mm [ModeValue]
-getIfReady callPointPath = do
+getIfReady :: CallPointPath -> TimeVar -> Session mm [ModeValue]
+getIfReady callPointPath time = do
     varName   <- foldedReRoute callPointPath
     cacheInfo <- Cache.getCacheInfo callPointPath
     let status = cacheInfo ^. CacheInfo.status
     assertE (status == Status.Ready) $ Error.CacheError $(loc) $ concat ["Object ", show callPointPath, " is not computed yet."]
-    get varName callPointPath
+    get varName time callPointPath
 
 
 data Status = Ready
@@ -63,15 +64,15 @@ data Status = Ready
             deriving (Show, Eq)
 
 
-getWithStatus :: CallPointPath -> Session mm (Status, [ModeValue])
-getWithStatus callPointPath = do
+getWithStatus :: CallPointPath -> TimeVar -> Session mm (Status, [ModeValue])
+getWithStatus callPointPath time = do
     varName <- foldedReRoute callPointPath
     Env.cachedLookup callPointPath >>= \case
         Nothing        -> return (NotInCache, [])
         Just cacheInfo -> do
             allReady <- Env.getAllReady
             let returnBytes status = do
-                    value <- get varName callPointPath
+                    value <- get varName time callPointPath
                     return (status, value)
                 returnNothing status = return (status, [])
 
@@ -93,13 +94,14 @@ report :: CallPointPath -> VarName -> Session mm ()
 report callPointPath varName = do
     resultCB  <- Env.getResultCallBack
     projectID <- Env.getProjectID
-    results   <- get varName callPointPath
+    time      <- Env.getTimeVar
+    results   <- get varName time callPointPath
     safeLiftIO' (Error.CallbackError $(loc)) $
         resultCB projectID callPointPath results
 
 
-get :: VarName -> CallPointPath -> Session mm [ModeValue]
-get varName callPointPath = do
+get :: VarName -> TimeVar -> CallPointPath -> Session mm [ModeValue]
+get varName time callPointPath = do
     modes <- Env.getSerializationModes callPointPath
     if MultiSet.null modes
         then logger debug "No serialization modes set" >> return []
@@ -107,17 +109,18 @@ get varName callPointPath = do
             cinfo <- Env.cachedLookup callPointPath <??&> Error.OtherError $(loc) "Internal error"
             let distinctModes = MultiSet.distinctElems modes
                 valCache = cinfo ^. CacheInfo.values
-            (modValues, valCache') <- foldM (computeLookupValue varName) ([], valCache) distinctModes
+            (modValues, valCache') <- foldM (computeLookupValue varName time) ([], valCache) distinctModes
             Env.cachedInsert callPointPath $ CacheInfo.values .~ valCache' $ cinfo
             return modValues
 
 
-computeLookupValue :: VarName -> ([ModeValue], CompValueMap) -> Mode -> Session mm ([ModeValue], CompValueMap)
-computeLookupValue varName (modValues, compValMap) mode = do
+computeLookupValue :: VarName -> TimeVar -> ([ModeValue], CompValueMap)
+                   -> Mode -> Session mm ([ModeValue], CompValueMap)
+computeLookupValue varName time (modValues, compValMap) mode = do
     logger trace $ "Cached values count: " ++ show (Map.size compValMap)
     case Map.lookup (varName, mode) compValMap of
         Nothing -> do logger debug "Computing value"
-                      val <- computeValue varName mode
+                      val <- computeValue varName time mode
                       let newMap = if null $ varName ^. VarName.hash
                             then compValMap
                             else Map.insert (varName, mode) val compValMap
@@ -126,14 +129,14 @@ computeLookupValue varName (modValues, compValMap) mode = do
                       return (ModeValue mode justVal:modValues, compValMap)
 
 
-computeValue :: VarName -> Mode -> Session mm Value
-computeValue varName mode = lift2 $ flip Catch.catch excHandler $ do
-    logger trace toValueExpr
-    action <- HEval.interpret'' toValueExpr "Mode -> IO (Maybe SValue)"
-    liftIO $ action mode <??&.> "Internal error"
+computeValue :: VarName -> TimeVar -> Mode -> Session mm Value
+computeValue varName time mode = do
+    lift2 $ flip Catch.catch excHandler $ do
+        let toValueExpr = "\\m -> flip computeValue m =<< toIOEnv (fromValue (" <> VarName.toString varName <> " " <> show time <> "))"
+        logger trace toValueExpr
+        action <- HEval.interpret'' toValueExpr "Mode -> IO (Maybe SValue)"
+        liftIO $ action mode <??&.> "Internal error"
     where
-        toValueExpr = "computeValue " ++ VarName.toString varName
-
         excHandler :: Catch.SomeException -> MGHC.Ghc Value
         excHandler exc = case Catch.fromException exc of
             Just AbortException -> throw AbortException

@@ -202,7 +202,9 @@ interpret = interceptErrors $(loc) . HEval.interpret
 
 setHardcodedExtensions :: Session mm ()
 setHardcodedExtensions =
-    setFlags [ GHC.Opt_DataKinds ]
+    setFlags [ GHC.Opt_DataKinds
+             , GHC.Opt_ScopedTypeVariables
+             ]
 
 
 --reifySession :: (GHC.Session -> Env -> IO a) -> Session mm a
