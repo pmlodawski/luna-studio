@@ -12,7 +12,7 @@ import           Data.Map   (Map)
 import qualified Data.Map   as Map
 import qualified Data.Maybe as Maybe
 
-import Flowbox.Prelude hiding (lookup, children, toList)
+import Flowbox.Prelude hiding (children, lookup, toList)
 
 
 
@@ -30,6 +30,10 @@ makeLenses ''Node
 
 empty :: MapForest k v
 empty = Map.empty
+
+
+null :: MapForest k v -> Bool
+null = Map.null
 
 -- FIXME [pm]: wd: this implementation looks like an inefficient one
 toList :: MapForest k v -> [(Path k, v)]
