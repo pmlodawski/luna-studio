@@ -11,6 +11,9 @@ import           Math.Coordinate.Cartesian
 import           Data.IntMap                            as I
 import           Data.Vector                            as V
 import           Data.Maybe
+import           Control.Monad.ST
+import           Control.Monad
+import           Data.STRef
 
 type Rank      = Int
 type Angles a  = (a, a)
@@ -33,10 +36,6 @@ data OrdinaryControlPoint a = OrdinaryControlPoint { controlPoint :: Point2 a
                                    , handleOut    :: Maybe (Point2 a)
                                    } deriving (Eq, Ord, Show)
 
-convert :: [ControlPoint a] -> [OrdinaryControlPoint a] -> [OrdinaryControlPoint a]
-convert [] acc = P.reverse acc
-convert _ acc = acc
-
 type Parents   = (Maybe Int, Maybe Int)
 
 extract :: ControlPoint a -> Int
@@ -49,6 +48,19 @@ helper :: [ControlPoint a] -> IntMap Parents
 helper points = makeTree ranks
     where
         ranks = P.map extract points
+
+convert :: [ControlPoint a] -> [OrdinaryControlPoint a] -> [OrdinaryControlPoint a]
+convert [] acc = P.reverse acc
+
+walk :: (Fractional a, Floating a) => [ControlPoint a] -> IntMap (Point2 a)
+walk l = 
+  let
+    go [] m = readSTRef m
+    go _ m  = readSTRef m
+  in
+    runST $ do
+      m <- newSTRef (I.empty :: IntMap (Point2 a))
+      go l m
 
 computeCoords :: (Fractional a, Floating a) => Point2 a -> Point2 a -> Angles a -> Point2 a
 computeCoords p1@(Point2 x1 y1) p2@(Point2 x2 y2) (ang1, ang2) = Transform.rotate ang1 (movePoint p1 p2 ratio)
