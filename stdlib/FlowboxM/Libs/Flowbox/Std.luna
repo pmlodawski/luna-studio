@@ -1,0 +1,842 @@
+
+# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+#
+#   THIS IS A GENERATED FILE ! ! !   WOULD BE BETTER NOT TO MODIFY IT ! ! !
+#
+# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+
+#@AllowOrphans
+
+foreign haskell import Data.Array.Accelerate (Boundary(..))
+foreign haskell import qualified Data.Array.Accelerate as A
+
+foreign haskell import Flowbox.Graphics.Utils.Accelerate (variable)
+
+
+# = = = include : Prelude.lunaturbo
+#
+#                STD
+#
+
+foreign haskell import Data.Maybe (fromJust)
+
+foreign haskell import Flowbox.Graphics.Mockup
+foreign haskell import Flowbox.Graphics.Mockup.Basic
+
+
+
+foreign haskell class Char
+foreign haskell class Float
+foreign haskell class Int
+
+foreign haskell class Bool:
+    True
+    False
+
+foreign haskell def Bool.toString:
+    liftF1 show self
+
+foreign haskell class Maybe a:
+    Just:
+        unwrap :: a
+    Nothing
+
+foreign haskell class Either a b:
+    Left: l :: a
+    Right: r :: b
+
+foreign haskell def Either.unwrap:
+    liftF1 (either (error "unwrap called on Left") id) self
+
+class Range:
+    lo, hi :: Float
+
+alias FilePath = String
+
+# foreign haskell class Metric:
+#     Chebyshev
+#     Euclidean
+#     Minkowski: p :: Float
+#     Taxicab
+
+foreign haskell class Boundary:
+    Clamp
+    # Mirror # WARN: does not work yet
+    Wrap
+    Constant: a :: Float
+
+def null a:
+    a
+
+foreign haskell def print msg:
+    autoLift1 print msg
+
+# CHAR
+
+foreign haskell def Char.toString:
+    liftF2 (:) self (val ([] :: String))
+
+# INT
+
+foreign haskell def Int.+ a:
+    liftF2 (+) self a
+
+foreign haskell def Int.- a:
+    liftF2 (-) self a
+
+foreign haskell def Int.* a:
+    liftF2 (*) self a
+
+foreign haskell def Int./ a:
+    liftF2 (/) self a
+
+foreign haskell def Int.> a:
+    liftF2 (>) self a
+
+foreign haskell def Int.== a:
+    liftF2 (==) self a
+
+foreign haskell def Int.< a:
+    liftF2 (<) self a
+
+foreign haskell def Int.<= a:
+    liftF2 (<=) self a
+
+foreign haskell def Int.>= a:
+    liftF2 (>=) self a
+
+def Int.inc:
+    self + 1
+
+def Int.dec:
+    self - 1
+
+foreign haskell def Int.fromIntegral:
+    liftF1 fromIntegral self :: Value Pure Safe Float
+
+foreign haskell def Int.toString:
+    liftF1 show self
+
+# DOUBLE
+
+foreign haskell def Float.acc:
+    liftF1 variable self
+
+foreign haskell def Float.truncate:
+    liftF1 truncate self :: Value Pure Safe Int
+
+foreign haskell def Float.round:
+    liftF1 round self :: Value Pure Safe Int
+
+foreign haskell def Float.floor:
+    liftF1 floor self :: Value Pure Safe Int
+
+foreign haskell def Float.ceiling:
+    liftF1 ceiling self :: Value Pure Safe Int
+
+foreign haskell def Float.+ a:
+    liftF2 (+) self a
+
+foreign haskell def Float.- a:
+    liftF2 (-) self a
+
+foreign haskell def Float.* a:
+    liftF2 (*) self a
+
+foreign haskell def Float./ a:
+    liftF2 (/) self a
+
+foreign haskell def Float.> a:
+    liftF2 (>) self a
+
+foreign haskell def Float.== a:
+    liftF2 (==) self a
+
+foreign haskell def Float.< a:
+    liftF2 (<) self a
+
+foreign haskell def Float.<= a:
+    liftF2 (<=) self a
+
+foreign haskell def Float.>= a:
+    liftF2 (>=) self a
+
+foreign haskell def Float.toString:
+    liftF1 show self
+
+# foreign haskell def Float.floor:
+#     liftF1 floor self
+
+# = = = end include : Prelude.lunaturbo
+
+
+# = = = include : Graphics/Geom2D/Geom.lunaturbo
+#
+#                GEOM
+#
+
+foreign haskell import Flowbox.Geom2D.Rectangle
+
+# TODO: convert cornerPin to use Point2
+class Point a:
+    x,y :: a
+
+foreign haskell class Point2 a:
+    Point2: x,y :: a
+
+foreign haskell class Rectangle a:
+    Rectangle: pA,pB :: Point2 a
+
+foreign haskell class SkewOrder:
+    SkewXY
+    SkewYX
+
+foreign haskell class Skew a:
+    Skew:
+        point :: V2 a
+        order :: SkewOrder
+
+foreign haskell class Transform a:
+    Transform:
+        translate :: V2 a
+        rotate    :: a
+        scale     :: V2 a
+        skew      :: Skew a
+        center    :: Point2 a
+
+def point x y:
+    Point2 x y
+
+foreign haskell def nopoint:
+    val (Nothing :: Maybe (Point2 Float))
+
+# foreign haskell class ControlPoint a:
+# class ControlPoint a:
+#     point               :: Point2 a
+#     handleIn, handleOut :: Maybe (Point2 a)
+
+# foreign haskell class Path a:
+#     closed   :: Bool
+#     vertices :: [ControlPoint a]
+
+# foreign haskell class Shape a:
+#     paths :: [Path a]
+
+# foreign haskell class Mask a:
+#     path    :: Path a
+#     feather :: Maybe (Path a)
+
+# alias ControlPoint a = (Point2 a, Maybe (Point2 a), Maybe (Point2 a))
+# alias Path a         = (Bool, [ControlPoint a])
+# alias Shape a        = [Path a]
+# alias Mask a         = (Path a, Maybe (Path a))
+
+def controlPoint point handleIn handleOut:
+    (point, handleIn, handleOut)
+
+def path closed vertices:
+    (closed, vertices)
+
+def shape paths:
+    paths
+
+def mask path feather:
+    (path, feather)
+
+foreign haskell def rasterizeMask w h m:
+    liftF3 rasterizeMaskLuna w h m
+
+# = = = end include : Graphics/Geom2D/Geom.lunaturbo
+
+
+# = = = include : Graphics/Math/Math.lunaturbo
+#
+#                MATH and such
+#
+
+alias Point2F = Point2 Float
+alias HandleGUI = (Int, Float, Float)
+alias ControlPointGUI = (Point2F, HandleGUI, HandleGUI)
+alias CurveGUI = [ControlPointGUI]
+
+def curveGUI vertices:
+    vertices
+
+def controlPointGUI point handleIn handleOut:
+    (point, handleIn, handleOut)
+
+def nonLinearHandleGUI weight angle:
+    (0, weight, angle)
+
+def verticalHandleGUI length:
+    (1, length, 0.0)
+
+def linearHandleGUI:
+    (2, 0.0, 0.0)
+
+foreign haskell def getValueAtCurve curve x:
+    liftF2 getValueAtCurveGUI curve x
+
+# = = = end include : Graphics/Math/Math.lunaturbo
+
+
+# = = = include : Graphics/Color/Color.lunaturbo
+#
+#                COLOR
+#
+
+foreign haskell import Flowbox.Graphics.Color.Color as Color
+foreign haskell import Flowbox.Graphics.Color.Companding
+
+foreign haskell class RGBA a:
+    RGBA: rgbaR, rgbaG, rgbaB, rgbaA :: a
+
+alias Color = RGBA Float
+alias ColorBlack = RGBA Float
+alias ColorWhite = RGBA Float
+
+alias ColorCC = (Color, Color, Color, Color, Color)
+
+foreign haskell class Gamma:
+    AlexaV3LogC
+    Cineon
+    Gamma: a :: Float
+    LStar
+    Panalog
+    PLogLin
+    Rec709
+    REDLog
+    SLog
+    SRGBGamma
+    ViperLog
+
+# = = = end include : Graphics/Color/Color.lunaturbo
+
+
+# = = = include : Graphics/Matte/Matte.lunaturbo
+#
+#                MATTES
+#
+
+foreign haskell import Flowbox.Graphics.Mockup.Curves
+foreign haskell import Flowbox.Graphics.Mockup.Matte
+
+foreign haskell def imageMatte path channelName:
+    autoLift2 imageMatteLuna path channelName
+
+foreign haskell def vectorMatte mask:
+    liftF1 vectorMatteLuna mask
+
+foreign haskell def noMatte:
+    val (Nothing :: Maybe (Matte Float))
+
+foreign haskell def Image.offsetMatte value matte:
+    liftF3 offsetMatteLuna value matte self
+
+foreign haskell def Image.contrastMatte value matte:
+    liftF3 contrastMatteLuna value matte self
+
+foreign haskell def Image.exposureMatte blackpoint ex matte:
+    liftF4 exposureMatteLuna blackpoint ex matte self
+
+foreign haskell def Image.gradeMatte blackpoint whitepoint lift gain multiply offset gamma matte:
+    liftF5 (gradeLunaColorMatte blackpoint whitepoint lift gain) multiply offset gamma matte self
+
+# = = = end include : Graphics/Matte/Matte.lunaturbo
+
+
+
+# = = = include : Graphics/Image/Image.lunaturbo
+#
+#                IMAGE
+#
+
+foreign haskell import Flowbox.Graphics.Image.Image as Image
+
+foreign haskell class Image
+
+foreign haskell def emptyImage:
+    liftF0 Image.empty
+
+foreign haskell def load path:
+    autoLift1 realReadLuna path
+
+foreign haskell def Image.save path:
+    autoLift2 saveImageLuna path self
+
+foreign haskell def Image.view name:
+    liftF2 Image.lookup name self
+
+# can't use this because of no matrix support in Luna?
+# foreign haskell def Image.colorMatrix matrix:
+#     liftF2 colorMatrixLuna matrix self
+
+# foreign haskell def Image.removeChannel viewName channelName:
+#     liftF3 removeChannelLuna viewName channelName self
+
+foreign haskell def Image.getChannel viewName channelName:
+    liftF3 getChannelLuna viewName channelName self
+
+# foreign haskell def Image.insertChannel viewName channel:
+#     liftF3 insertChannelLuna viewName channel self
+
+foreign haskell def Image.deleteView name:
+    liftF2 Image.delete name self
+
+foreign haskell def Image.map f:
+    liftF2 Image.map f self
+
+# foreign haskell def Image.updateView f viewName:
+#     liftF3 Image.update f viewName self
+
+foreign haskell def Image.insertView view:
+    liftF2 Image.insert view self
+
+foreign haskell def imageSingleton view:
+    liftF1 Image.singleton view
+
+# = = = end include : Graphics/Image/Image.lunaturbo
+
+
+# = = = include : Graphics/Image/View.lunaturbo
+#
+#                VIEW
+#
+
+foreign haskell import Flowbox.Graphics.Image.View as View
+
+
+
+foreign haskell class View
+
+foreign haskell def View.channel name:
+    liftF2 View.get self name
+
+foreign haskell def View.append channel:
+    liftF2 View.append channel self
+
+foreign haskell def View.remove name:
+    liftF2 View.remove name self
+
+foreign haskell def View.map f:
+    liftF2 View.map f self
+
+# TODO: fix the bug with this
+# foreign haskell def View.whitelistMap f nameSet:
+#     liftF3 View.mapWithWhitelist f nameSet self
+
+# = = = end include : Graphics/Image/View.lunaturbo
+
+
+# = = = include : Graphics/Image/Constants.lunaturbo
+#
+#                IMAGE - CONSTANTS
+#
+
+foreign haskell import Flowbox.Graphics.Mockup.Generator
+
+foreign haskell class Format:
+    PCVideo
+    NTSC
+    PAL
+    HD
+    NTSC169
+    PAL169
+    K1Super35
+    K1Cinemascope
+    K2Super35
+    K2Cinemascope
+    K4Super35
+    K4Cinemascope
+    Square256
+    Square512
+    Square1K
+    Square2K
+    CustomFormat: width, height :: Int
+
+foreign haskell def constant format color:
+    liftF2 constantLuna format color
+
+foreign haskell def circular width height:
+    liftF2 circularLuna width height
+
+foreign haskell def conical width height:
+    liftF2 conicalLuna width height
+
+foreign haskell def diamond width height:
+    liftF2 diamondLuna width height
+
+foreign haskell def radial metric width height:
+    liftF3 radialShapeLuna metric width height
+
+foreign haskell def linear width height:
+    liftF2 linearShapeLuna width height
+
+foreign haskell def square side:
+    liftF1 squareLuna side
+
+# = = = end include : Graphics/Image/Constants.lunaturbo
+
+
+# = = = include : Graphics/Image/ColorCorrection.lunaturbo
+#
+#                IMAGE - COLOR CORRECTION
+#
+
+foreign haskell import Flowbox.Graphics.Mockup.ColorCorrect
+
+foreign haskell def Image.gammaToLinear gamma:
+    -- realGamma = ```val $ Gamma (2.2 :: A.Exp Float)```
+    liftF2 gammaToLinearLuna gamma self
+
+foreign haskell def Image.gammaFromLinear gamma:
+    -- realGamma = ```val $ Gamma (2.2 :: A.Exp Float)```
+    liftF2 gammaFromLinearLuna gamma self
+
+foreign haskell def Image.clamp thresholds clamps:
+    liftF3 clampLuna thresholds clamps self
+
+foreign haskell def Image.offset value:
+    liftF2 offsetLuna value self
+
+foreign haskell def Image.contrast value:
+    liftF2 contrastLuna value self
+
+foreign haskell def Image.exposure blackpoint ex:
+    liftF3 exposureLuna blackpoint ex self
+
+foreign haskell def Image.saturate saturation:
+    liftF2 saturateLuna saturation self
+
+# foreign haskell def Image.hsvTool hueRange hueRotation hueRolloff
+#             saturationRange saturationAdjustment saturationRolloff
+#             brightnessRange brightnessAdjustment brightnessRolloff:
+#     hueRangeStart = hueRange.lo
+#     hueRangeEnd   = hueRange.hi
+#     saturationRangeStart = saturationRange.lo
+#     saturationRangeEnd   = saturationRange.hi
+#     brightnessRangeStart = brightnessRange.lo
+#     brightnessRangeEnd   = brightnessRange.hi
+# 
+#     # ```liftF1 (onEachRGB $ hsvToolLuna hueRangeStart hueRangeEnd hueRotation hueRolloff
+#     #                        saturationRangeStart saturationRangeEnd saturationAdjustment saturationRolloff
+#     #                        brightnessRangeStart brightnessRangeEnd brightnessAdjustment brightnessRolloff) self```
+#     ```hsvToolLuna hueRangeStart hueRangeEnd hueRotation hueRolloff
+#               saturationRangeStart saturationRangeEnd saturationAdjustment saturationRolloff
+#               brightnessRangeStart brightnessRangeEnd brightnessAdjustment brightnessRolloff self```
+
+foreign haskell def Image.multiply val:
+    liftF2 multiplyLuna val self
+
+foreign haskell def Image.gamma val:
+    liftF2 gammaLuna val self
+
+foreign haskell def Image.grade blackpoint whitepoint lift gain multiply offset gamma:
+    liftF5 (gradeLunaColor blackpoint whitepoint lift) gain multiply offset gamma self
+
+alias ColorCorrectGUI = (CurveGUI, CurveGUI)
+alias HueCorrectGUI = (CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI)
+alias Color5 = (Color, Color, Color, Color ,Color)
+
+foreign haskell def Image.colorCorrect master #masterSaturation masterContrast masterGamma masterGain masterOffset
+                       shadows #shadowsSaturation shadowsContrast shadowsGamma shadowsGain shadowsOffset
+                       midtones #midtonesSaturation midtonesContrast midtonesGamma midtonesGain midtonesOffset
+                       highlights: --highlightsSaturation highlightsContrast highlightsGamma highlightsGain highlightsOffset:
+    liftF5 colorCorrectLuna master shadows midtones highlights self
+
+foreign haskell def Image.colorCorrectCurves curves
+                       master #masterSaturation masterContrast masterGamma masterGain masterOffset
+                       shadows #shadowsSaturation shadowsContrast shadowsGamma shadowsGain shadowsOffset
+                       midtones #midtonesSaturation midtonesContrast midtonesGamma midtonesGain midtonesOffset
+                       highlights: --highlightsSaturation highlightsContrast highlightsGamma highlightsGain highlightsOffset:
+    liftF5 (colorCorrectLunaCurves curves) master shadows midtones highlights self
+
+foreign haskell def Image.hueCorrect curves:
+    liftF2 hueCorrectLuna curves self
+
+foreign haskell def Image.premultiply:
+    liftF1 premultiplyLuna self
+
+foreign haskell def Image.unpremultiply:
+    liftF1 unpremultiplyLuna self
+
+foreign haskell def Image.invert:
+    liftF1 invertLuna self
+
+foreign haskell def Image.histEq bins:
+    liftF2 histEqLuna bins self
+
+# = = = end include : Graphics/Image/ColorCorrection.lunaturbo
+
+
+# = = = include : Graphics/Image/FilterTransform.lunaturbo
+#
+#                IMAGE - FILTERS & TRANSFORMATIONS
+#
+
+foreign haskell import Flowbox.Graphics.Mockup.Filter
+foreign haskell import Flowbox.Graphics.Mockup.Transform
+
+foreign haskell def Image.posterize colors:
+    liftF2 posterizeLuna colors self
+
+# foreign haskell def Image.defocus radius:
+#     liftF2 defocus radius self
+
+# foreign haskell def Image.motionBlur size angle:
+#     liftF3 motionBlur size angle self
+
+# foreign haskell def Image.bilateral psigma csigma size:
+#     liftF4 bilateral psigma csigma size self
+
+# def Image.cornerPin p1 p2 p3 p4:
+#     p1x = p1.x
+#     p1y = p1.y
+#     p2x = p2.x
+#     p2y = p2.y
+#     p3x = p3.x
+#     p3y = p3.y
+#     p4x = p4.x
+#     p4y = p4.y
+foreign haskell 
+#     liftF9 cornerPinLuna p1x p1y p2x p2y p3x p3y p4x p4y self
+
+foreign haskell def Image.blur kernelSize:
+    liftF2 blurLuna kernelSize self
+
+# foreign haskell def Image.laplacian kernelSize centerVal sideVal:
+#     liftF4 laplacianLuna kernelSize centerVal sideVal self
+
+foreign haskell class V2 a:
+    V2 : x, y :: a
+
+foreign haskell def Image.translate vec:
+    liftF2 translateLuna vec self
+
+foreign haskell def Image.rotate phi:
+    liftF2 rotateLuna phi self
+
+foreign haskell def Image.rotateAt point phi:
+    liftF3 rotateAtLuna point phi self
+
+foreign haskell def Image.scale vec:
+    liftF2 scaleLuna vec self
+
+foreign haskell def Image.scaleAt point vec:
+    liftF3 scaleAtLuna point vec self
+
+foreign haskell def Image.translateMatte vec matte:
+    liftF3 translateMatteLuna vec matte self
+
+foreign haskell def Image.rotateAtMatte point phi matte:
+    liftF4 rotateAtMatteLuna point phi matte self
+
+foreign haskell def Image.scaleAtMatte point vec matte:
+    liftF4 scaleAtMatteLuna point vec matte self
+
+foreign haskell def Image.skewAtMatte point skew matte:
+    liftF4 skewAtMatteLuna point skew matte self
+
+foreign haskell def Image.transformMatte trans matte:
+    liftF3 transformLuna trans matte self
+
+foreign haskell def Image.transform trans:
+    liftF2 transformLuna trans self
+
+foreign haskell def Image.crop rect reformat defaultOutside:
+    liftF4 cropLuna rect reformat defaultOutside self
+
+foreign haskell def Image.erode size:
+    liftF2 erodeLuna size self
+
+foreign haskell def Image.dilate size:
+    liftF2 dilateLuna size self
+
+foreign haskell def Image.open size:
+    liftF2 openLuna size self
+
+foreign haskell def Image.close size:
+    liftF2 closeLuna size self
+
+# foreign haskell def Image.radialBlur size angle:
+#     liftF3 radialBlurLuna size angle self
+
+foreign haskell def Image.edgeDetect edgeOperator:
+    liftF2 edgeDetectLuna edgeOperator self
+
+foreign haskell class InterpolationFilter:
+    NearestNeighbour
+    Box
+    Basic
+    Triangle
+    Bell
+    BSpline
+    Lanczos: a :: Float
+    Polynomial: a, b :: Float
+    Mitchell
+    CatmullRom
+    Gauss: a :: Float
+    Dirac: a :: Float
+
+# foreign haskell def Image.interpolate boundary filter:
+#     liftF3 interpolateChannelsLuna boundary filter self
+
+foreign haskell def Image.multisample grid filter:
+    liftF3 multisampleChannelsLuna grid filter self
+
+# = = = end include : Graphics/Image/FilterTransform.lunaturbo
+
+
+# = = = include : Graphics/Image/Merge.lunaturbo
+#
+#                IMAGE - MERGE
+#
+
+foreign haskell import Flowbox.Graphics.Mockup.Merge
+
+foreign haskell class MergeMode:
+    Atop
+    Average
+    ColorBurn
+    ColorDodge
+    ConjointOver
+    Copy
+    Difference
+    DisjointOver
+    DivideBySource
+    DivideByDestination
+    Exclusion
+    From
+    Geometric
+    HardLight
+    Hypot
+    In
+    Mask
+    Matte
+    # Max
+    # Min
+    Minus
+    Multiply
+    Out
+    Over
+    Overlay
+    Plus
+    Screen
+    SoftLight
+    SoftLightPegtop
+    SoftLightIllusions
+    Stencil
+    Under
+    XOR
+
+foreign haskell class AlphaBlend:
+    Adobe
+    Custom
+
+foreign haskell def Image.merge mode alphaBlendMode img:
+    liftF4 mergeLuna mode alphaBlendMode self img
+
+# = = = end include : Graphics/Image/Merge.lunaturbo
+
+
+# = = = include : Graphics/Image/Noise.lunaturbo
+#
+#                IMAGE - NOISE
+#
+
+foreign haskell import Flowbox.Graphics.Mockup.Noise
+
+foreign haskell def perlin z width height:
+    liftF3 perlinLuna z width height
+
+foreign haskell def billow z width height:
+    liftF3 billowLuna z width height
+
+# = = = end include : Graphics/Image/Noise.lunaturbo
+
+
+# = = = include : Graphics/Image/Dithering.lunaturbo
+#
+#                IMAGE - DITHERING
+#
+
+foreign haskell import Flowbox.Graphics.Composition.Dither
+
+class Dithering:
+    FloydSteinberg
+    Brukes
+    Fan
+    JarvisJudiceNinke
+    Stucki
+    Sierra2
+    Sierra3
+    Atkinson
+    ShiauFan4
+    ShiauFan5
+
+# TODO: apply some pattern matching in haskell to work around the problem of passing luna functions into haskell
+foreign haskell def Image.dither bound diffusionMethod bits:
+    -- diffusionTable = case diffusionMethod:
+    --     FloydSteinberg:    ```val floydSteinberg```
+    --     Brukes:            ```val brukes```
+    --     Fan:               ```val fan```
+    --     JarvisJudiceNinke: ```val jarvisJudiceNinke```
+    --     Stucki:            ```val stucki```
+    --     Sierra2:           ```val sierra2```
+    --     Sierra3:           ```val sierra3```
+    --     Atkinson:          ```val atkinson```
+    --     ShiauFan4:         ```val shiauFan4```
+    --     ShiauFan5:         ```val shiauFan5```
+    -- ```autoLift4 ditherLuna #{bound} #{bits} #{diffusionTable} #{self}```
+    autoLift4 ditherLuna bound bits (val floydSteinberg) self
+
+# def Image.bayer bits:
+#     ```liftF2 orderedDitherLuna #{bits} #{self}```
+
+# = = = end include : Graphics/Image/Dithering.lunaturbo
+
+
+# = = = include : Graphics/Image/Keying.lunaturbo
+#
+#                IMAGE - KEYING
+#
+
+foreign haskell import Flowbox.Graphics.Composition.Keying
+
+foreign haskell import Flowbox.Graphics.Mockup.Keying
+
+foreign haskell class KeyerMode:
+    Red
+    Green
+    Blue
+    Redscreen
+    Greenscreen
+    Bluescreen
+    Saturation
+    Luminance
+    Max
+    Min
+
+foreign haskell class KeyerThresholds a:
+    min, minRolloff, max, maxRolloff :: a
+
+foreign haskell def Image.key mode thresholds:
+    liftF3 keyerLuna mode thresholds self
+
+foreign haskell def Image.differenceKey offset gain background:
+    liftF4 differenceKeyerLuna offset gain background self
+
+# = = = end include : Graphics/Image/Keying.lunaturbo
+
+
+#
+#                OTHER
+#
+
+alias Time=Float
+
+def time:
+    0.0
+
+def foo a:
+	a
