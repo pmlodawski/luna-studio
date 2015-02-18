@@ -8,7 +8,6 @@ import Flowbox.Graphics.Mockup.Generator
 import Flowbox.Graphics.Mockup.Basic
 import Flowbox.Prelude
 import Flowbox.Graphics.Color.Color
-import Flowbox.Graphics.Composition.Generator.Raster
 
 import TestHelpers
 
