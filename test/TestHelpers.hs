@@ -24,7 +24,10 @@ returnShouldBeCloseTo testPath metric actual expected = do
     expected' <- expected
     shouldBeCloseTo testPath metric actual' expected'
 
-
+rightReturnShouldBeCloseTo testPath metric actual expected = do
+    expected' <- expected
+    shouldBeCloseTo testPath metric actual expected'
+    -- expected >>= (shouldBeCloseTo testPath metric actual)
 
 --assertAlmostEqual :: (Comparable a b, Show a) => String -- ^ The message prefix 
 --                              -> String --test name
