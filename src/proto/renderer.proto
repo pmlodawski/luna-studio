@@ -18,7 +18,6 @@ message Renderer {
     message Render {
         message Request {
             repeated FrameRange ranges      = 1;
-            required string     filePattern = 2;
             repeated string     adresses    = 3;
         }
         message Update {
