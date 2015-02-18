@@ -109,7 +109,7 @@ pkgDb = dict(corePkgDb, **{
          '@all'                                : AllProject ('@all', deps = [])
        , '@core'                               : CoreLunaPlatform ('@core', deps = [])
        , 'libs/aws'                            : HProject   ('flowbox-aws'                  , os.path.join ('libs' , 'aws')                                 , 'libs'    , ['libs/rpc', 'libs/utils'])
-       , 'libs/batch/plugins/project-manager'  : HProject   ('batch-lib-project-manager'    , os.path.join ('libs' , 'batch', 'plugins', 'project-manager') , 'libs'    , ['libs/batch/batch', 'libs/bus', 'libs/config', 'libs/luna/core', 'libs/rpc', 'libs/utils'])
+       , 'libs/batch/plugins/project-manager'  : HProject   ('batch-lib-project-manager'    , os.path.join ('libs' , 'batch', 'plugins', 'project-manager') , 'libs'    , ['libs/batch/batch', 'libs/bus', 'libs/config', 'libs/luna/core', 'libs/rpc', 'libs/utils', 'tools/batch/plugins/ur-manager'])
        , 'libs/batch/plugins/file-manager'     : HProject   ('batch-lib-file-manager'       , os.path.join ('libs' , 'batch', 'plugins', 'file-manager')    , 'libs'    , ['libs/bus', 'libs/config', 'libs/rpc', 'libs/utils'])
        , 'libs/bus'                            : HProject   ('flowbox-bus'                  , os.path.join ('libs' , 'bus')                                 , 'libs'    , ['libs/config', 'libs/rpc', 'libs/utils'])
        , 'libs/config'                         : HProject   ('flowbox-config'               , os.path.join ('libs' , 'config')                              , 'libs'    , ['libs/utils'])
