@@ -12,7 +12,6 @@ module Flowbox.Graphics.Composition.Generator.Raster where
 
 import           Data.Array.Accelerate (Exp)
 import qualified Data.Array.Accelerate as A
-import qualified Data.Map              as Map
 
 import qualified Flowbox.Graphics.Color.Color   as Color
 import qualified Flowbox.Graphics.Image.Channel as Channel
