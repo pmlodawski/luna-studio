@@ -28,7 +28,7 @@ logger = getLoggerIO $moduleName
 
 render :: MemoryManager mm
        => Render.Request -> RPC Context (SessionST mm) Render.Update
-render request@(Render.Request ranges filePattern _) = do
-    liftSession $ Renderer.render (decodeP ranges) (decodeP filePattern)
+render request@(Render.Request ranges _) = do
+    liftSession $ Renderer.render (decodeP ranges)
     logger info "Render not implemented"
     return $ Render.Update request
