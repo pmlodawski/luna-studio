@@ -18,15 +18,14 @@ import qualified Luna.Interpreter.Session.Env              as Env
 import           Luna.Interpreter.Session.Error            (Error)
 import           Luna.Interpreter.Session.Memory.Manager   (MemoryManager)
 import           Luna.Interpreter.Session.Session          (Session)
-import           Luna.Renderer.Data.FileNamePattern        (FileNamePattern)
 import           Luna.Renderer.Data.FrameRange             (FrameRanges)
 import qualified Luna.Renderer.Data.FrameRange             as FrameRange
 
 
 
 render :: MemoryManager mm
-       => FrameRanges -> FileNamePattern -> Session mm [(Int, MapForest CallPoint Error)]
-render frameRanges fileNamePattern = do
+       => FrameRanges -> Session mm [(Int, MapForest CallPoint Error)]
+render frameRanges = do
     let frames = IntSet.toList $ FrameRange.frames frameRanges
     forM frames $ \frame -> do
         Env.setTimeVar $ fromIntegral frame
