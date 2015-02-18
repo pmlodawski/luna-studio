@@ -60,6 +60,7 @@ import qualified Luna.Parser.Parser                         as Parser
 import qualified Luna.Parser.Pragma                         as Pragma
 import qualified Luna.Pass                                  as Pass
 import qualified Luna.Pass.Target.HS.HASTGen                as HASTGen
+import qualified Luna.Pass.Target.HS.HSC                    as HSC
 import           Luna.Syntax.Enum                           (IDTag)
 import           Luna.Syntax.Expr                           (LExpr)
 import qualified Luna.Syntax.Name.Hash                      as Hash
@@ -217,10 +218,7 @@ varType (NodeExpr.ASTExpr oldExpr') = do
         runEitherT $ Pass.run1_ HASTGen.passExpr (expr :: LExpr IDTag ())
     cpphsOptions <- Env.getCpphsOptions
     hexpr <- hoistEitherWith (Error.OtherError $(loc) . show) $ fst result
-    let code = Text.unpack
-             $ TextBuilder.toLazyText
-             $ CodeBuilder.simple
-             $ CodeBuilder.generate hexpr
+    let code = Text.unpack $ HSC.genExpr hexpr
     Expression . Utils.replace "_time" "(val _time)" . last . lines <$> liftIO (Cpphs.runCpphs cpphsOptions "" code)
 
 
@@ -239,20 +237,20 @@ evalFunction nodeExpr callDataPath varNames = do
         genNative = List.replaceByMany "#{}" args . List.stripIdx 3 3
         self      = head varNames
     vt <- varType nodeExpr
-    operation <- case vt of
-        List        -> return ("\\(_time :: Float) -> val [" <> List.intercalate "," args <> "]")
-        Id          -> return ("\\(_time :: Float) -> " <> mkArg self)
-        Native name -> return ("\\(_time :: Float) -> " <> genNative name)
-        Con    name -> return ("\\(_time :: Float) -> call" <> appArgs args <> " $ cons_" <> nameHash name)
+    operation <- ("\\(_time :: Float) -> " <>) . Utils.replace "\\" "\\\\" <$> case vt of
+        List        -> return $ "val [" <> List.intercalate "," args <> "]"
+        Id          -> return $ mkArg self
+        Native name -> return $ genNative name
+        Con    name -> return $ "call" <> appArgs args <> " $ cons_" <> nameHash name
         Var    name -> if null args
             then left $ Error.OtherError $(loc) "unsupported node type"
-            else return $ "\\(_time :: Float) -> call" <> appArgs (tail args) <> " $ member (Proxy::Proxy " <> show (nameHash name) <> ") " <> mkArg self
-        LitInt   name    -> return ("\\(_time :: Float) -> val (" <> name <> " :: Int)")
-        LitFloat name    -> return ("\\(_time :: Float) -> val (" <> name <> " :: Float)")
-        Lit      name    -> return ("\\(_time :: Float) -> val  " <> name)
-        Tuple            -> return ("\\(_time :: Float) -> val (" <> List.intercalate "," args <> ")")
-        TimeVar          -> return ("\\(_time :: Float) -> val _time")
-        Expression  name -> return ("\\(_time :: Float) -> " <> name)
+            else return $ "call" <> appArgs (tail args) <> " $ member (Proxy::Proxy " <> show (nameHash name) <> ") " <> mkArg self
+        LitInt   name    -> return $ "val (" <> name <> " :: Int)"
+        LitFloat name    -> return $ "val (" <> name <> " :: Float)"
+        Lit      name    -> return $ "val  " <> name
+        Tuple            -> return $ "val (" <> List.intercalate "," args <> ")"
+        TimeVar          -> return   "val _time"
+        Expression  name -> return   name
     catchEither (left . Error.RunError $(loc) callPointPath) $ do
         Session.runAssignment tmpVarName operation
         hash <- Hash.computeInherit tmpVarName varNames

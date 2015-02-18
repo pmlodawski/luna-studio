@@ -178,12 +178,13 @@ crop (fmap variable . properRect -> Rect xA yA xB yB)
             where
               MatrixData matrix = Channel.asMatrixData chanData
               newShape = M.shape matrix
-              clamp (y,x) = ((y `max` (h - yB)) `min` (h - yA), (x `max` xA) `min` xB)
-              inside y x = (x A.>=* xA) A.&&* (x A.<=* xB) A.&&* (h - yB A.<=* y) A.&&* (h - yA A.>=* y)
-              A.Z A.:. h A.:. _ = A.unlift newShape :: M.EDIM2
+              clamp (y,x) = ((y `min` (h - yA - 1)) `max` (h - yB), (x `min` (xB - 1)) `max` xA)
+              inside y x = (x A.>=* xA) A.&&* (x A.<* xB) A.&&* (h - yB A.<=* y) A.&&* (h - yA A.>* y)
+              disjoint = A.not $ xA A.<* h A.&&* xB A.>* 0 A.&&* yA A.<* w A.&&* yB A.>* 0
+              A.Z A.:. h A.:. w = A.unlift newShape :: M.EDIM2
 
               genConstOutside (A.unlift -> (Z :. y :. x)) = A.cond (inside y x) (matrix M.! A.index2 y x) defaultValue
-              genClampedOutside (A.unlift -> (Z :. y :. x)) = A.cond (inside y x) (matrix M.! A.index2 y x) (proc (y,x))
+              genClampedOutside (A.unlift -> (Z :. y :. x)) = A.cond (inside y x) (matrix M.! A.index2 y x) (A.cond disjoint defaultValue (proc (y,x)))
                 where
                   proc (y, x) = matrix M.! A.index2 y' x'
                   (y',x') = clamp (y,x)

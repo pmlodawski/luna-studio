@@ -181,3 +181,7 @@ mjoin delim l = mconcat (intersperse delim l)
 show' :: (Show a, IsString s) => a -> s
 show' = fromString . Prelude.show
 
+foldlDef :: (a -> a -> a) -> a -> [a] -> a
+foldlDef f d = \case
+    []     -> d
+    (x:xs) -> foldl f x xs
