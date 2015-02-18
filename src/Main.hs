@@ -14,7 +14,6 @@ import           Flowbox.UR.Manager.Cmd      (Cmd)
 import qualified Flowbox.UR.Manager.Cmd      as Cmd
 import qualified Flowbox.UR.Manager.Context  as Context
 import qualified Flowbox.UR.Manager.RPC.Handler.Handler as Handler
-import qualified Flowbox.UR.Manager.Manager  as Manager
 import qualified Flowbox.UR.Manager.Version  as Version
 import qualified Flowbox.Config.Config       as Config
 import           Flowbox.Control.Error
