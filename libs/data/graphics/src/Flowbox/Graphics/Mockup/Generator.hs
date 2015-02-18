@@ -107,7 +107,7 @@ constantLuna format {-- (variable -> width) (variable -> height) --} (fmap varia
         
         where   makeConst' = P.uncurry makeConst
                 makeConst (variable -> width) (variable -> height) = 
-                    Raster.constant (A.index2 width height) chans
+                    Raster.constant (A.index2 height width) chans
                 chans = [ ("rgba.r", r)
                       , ("rgba.g", g)
                       , ("rgba.b", b)
