@@ -59,6 +59,7 @@ import qualified Luna.Parser.Parser                         as Parser
 import qualified Luna.Parser.Pragma                         as Pragma
 import qualified Luna.Pass                                  as Pass
 import qualified Luna.Pass.Target.HS.HASTGen                as HASTGen
+import qualified Luna.Pass.Target.HS.HSC                    as HSC
 import           Luna.Syntax.Enum                           (IDTag)
 import           Luna.Syntax.Expr                           (LExpr)
 import qualified Luna.Syntax.Name.Hash                      as Hash
@@ -216,7 +217,7 @@ varType (NodeExpr.ASTExpr oldExpr) = do
         runEitherT $ Pass.run1_ HASTGen.passExpr (expr :: LExpr IDTag ())
     cpphsOptions <- Env.getCpphsOptions
     hexpr <- hoistEitherWith (Error.OtherError $(loc) . show) $ fst result
-    Expression <$> liftIO (Cpphs.runCpphs cpphsOptions "" $ Text.unpack $ TextBuilder.toLazyText $ CodeBuilder.simple $ CodeBuilder.generate hexpr)
+    Expression <$> liftIO (Cpphs.runCpphs cpphsOptions "" $ Text.unpack $ HSC.genExpr hexpr)
 
 
 nameHash :: String -> String
