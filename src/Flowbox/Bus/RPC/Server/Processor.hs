@@ -40,12 +40,14 @@ singleResult f a = do
     return (return b, [])
 
 
-noResult :: MonadIO m => (a -> m ()) -> a -> m [Response]
-noResult f a = f a >> return []
+noResult :: MonadIO m => (a -> m ()) -> a -> m ([Response], [Message])
+noResult f a = f a >> return ([], [])
 
 
-optResult :: MonadIO m => (a -> m (Maybe b)) -> a -> m [b]
-optResult f a = liftM Maybe.maybeToList $ f a
+optResult :: MonadIO m => (a -> m (Maybe b)) -> a -> m ([b], [Message])
+optResult f a = do
+    arr <- liftM Maybe.maybeToList $ f a
+    return (arr, [])
 
 
 process :: (Catch.MonadCatch m, MonadIO m, Functor m)
