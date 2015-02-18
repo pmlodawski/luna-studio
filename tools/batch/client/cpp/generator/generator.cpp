@@ -1,10 +1,13 @@
 #include <iostream>
 
+#include "../generated/dep/expr.pb.h"
 #include "../generated/project-manager.pb.h"
 #include "../generated/file-manager.pb.h"
 #include "../generated/parser.pb.h"
 #include "../generated/plugin-manager.pb.h"
 #include "../generated/interpreter.pb.h"
+#include "../generated/dep/type.pb.h"
+#include "../generated/urm.pb.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
@@ -16,7 +19,8 @@
 
 
 using namespace boost::filesystem;
-using namespace generated::proto::type;
+using namespace generated::proto::dep::type;
+using namespace generated::proto::dep;
 using namespace google::protobuf;
 
 const path outputDirectory = path("..") / "generated";
