@@ -117,7 +117,7 @@ nodeModifyInPlace request@(NodeModifyInPlace.Request tnode tbc tlibID tprojectID
     node <- BatchG.nodeByID (fst nodeWithId) bc libID projectID
     let oldNode   = encode (fst nodeWithId, node)
 
-    return $ (NodeModifyInPlace.Update request updateNo,  Register.Request $ encodeP $ Message.mk "urm.register" $ NodeModifyInPlace.Request oldNode tbc tlibID tprojectID 0)
+    return $ (NodeModifyInPlace.Update request updateNo,  Register.Request $ encodeP $ Message.mk "project.library.ast.function.graph.node.modifyinplace.request" $ NodeModifyInPlace.Request oldNode tbc tlibID tprojectID 0)
 
 
 nodeRemove :: NodeRemove.Request -> RPC Context IO NodeRemove.Update
