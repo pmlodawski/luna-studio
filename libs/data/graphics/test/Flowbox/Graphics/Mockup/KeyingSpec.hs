@@ -25,6 +25,7 @@ spec = do
 					let actualImage = differenceKeyerLuna 0.2 2.5  (constantLuna HD (RGBA 0.9 0.4 0.5 0.9)) (conicalLuna 200 400)
 					let	expectedImage = undefined --getDefaultTestPic specPath testName
 					it "to samles/x_result" $ do
+						pending
 						testSave actualImage `shouldReturn` ()
 						--shouldBeCloseTo testPath PixelWise actualImage (unsafePerformIO expectedImage)
 					it "in image-wise metric" $ do
