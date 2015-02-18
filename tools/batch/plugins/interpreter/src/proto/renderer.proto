@@ -17,8 +17,8 @@ message FrameRange {
 message Renderer {
     message Render {
         message Request {
-            repeated FrameRange ranges      = 1;
-            repeated string     adresses    = 3;
+            repeated FrameRange ranges   = 1;
+            repeated string     adresses = 2;
         }
         message Update {
             required Request request = 1;
