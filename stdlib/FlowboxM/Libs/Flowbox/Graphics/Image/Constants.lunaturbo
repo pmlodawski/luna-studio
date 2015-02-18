@@ -4,6 +4,25 @@
 
 foreign haskell import Flowbox.Graphics.Mockup.Generator
 
+foreign haskell class Format:
+    PCVideo
+    NTSC
+    PAL
+    HD
+    NTSC169
+    PAL169
+    K1Super35
+    K1Cinemascope
+    K2Super35
+    K2Cinemascope
+    K4Super35
+    K4Cinemascope
+    Square256
+    Square512
+    Square1K
+    Square2K
+    CustomFormat: width, height :: Int
+
 foreign haskell def constant format color:
     liftF2 constantLuna format color
 

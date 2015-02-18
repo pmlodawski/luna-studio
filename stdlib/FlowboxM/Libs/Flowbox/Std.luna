@@ -192,15 +192,17 @@ foreign haskell class SkewOrder:
     SkewYX
 
 foreign haskell class Skew a:
-    point :: Point2 a
-    order :: SkewOrder
+    Skew:
+        point :: V2 a
+        order :: SkewOrder
 
 foreign haskell class Transform a:
-    translate :: Point2 a
-    rotate    :: a
-    scale     :: Point2 a
-    skew      :: Skew a
-    center    :: Point2 a
+    Transform:
+        translate :: V2 a
+        rotate    :: a
+        scale     :: V2 a
+        skew      :: Skew a
+        center    :: Point2 a
 
 def point x y:
     Point2 x y
@@ -287,7 +289,7 @@ foreign haskell import Flowbox.Graphics.Color.Color as Color
 foreign haskell import Flowbox.Graphics.Color.Companding
 
 foreign haskell class RGBA a:
-    rgbaR, rgbaG, rgbaB, rgbaA :: a
+    RGBA: rgbaR, rgbaG, rgbaB, rgbaA :: a
 
 alias Color = RGBA Float
 alias ColorBlack = RGBA Float
@@ -432,6 +434,25 @@ foreign haskell def View.map f:
 #
 
 foreign haskell import Flowbox.Graphics.Mockup.Generator
+
+foreign haskell class Format:
+    PCVideo
+    NTSC
+    PAL
+    HD
+    NTSC169
+    PAL169
+    K1Super35
+    K1Cinemascope
+    K2Super35
+    K2Cinemascope
+    K4Super35
+    K4Cinemascope
+    Square256
+    Square512
+    Square1K
+    Square2K
+    CustomFormat: width, height :: Int
 
 foreign haskell def constant format color:
     liftF2 constantLuna format color
@@ -587,7 +608,7 @@ foreign haskell def Image.blur kernelSize:
 #     liftF4 laplacianLuna kernelSize centerVal sideVal self
 
 foreign haskell class V2 a:
-    x, y :: a
+    V2 : x, y :: a
 
 foreign haskell def Image.translate vec:
     liftF2 translateLuna vec self
