@@ -20,7 +20,7 @@ spec = do
 			let testPath = specPath++testName
 
 			describe testName $ do
-				describe "should match reference image" $ do
+				describe "Should match reference image" $ do
 					let actualImage = constantLuna PCVideo (RGBA 0.3 0.4 0.5 0.6)
 					let	expectedImage = getDefaultTestPic specPath testName
 					it "in pixel-wise metric" $ do
