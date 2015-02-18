@@ -178,7 +178,7 @@ crop (fmap variable . properRect -> Rect xA yA xB yB)
             where
               MatrixData matrix = Channel.asMatrixData chanData
               newShape = M.shape matrix
-              clamp (y,x) = ((y `max` (h - yA - 1)) `min` (h - yB), (x `min` (xB - 1)) `max` xA)
+              clamp (y,x) = ((y `min` (h - yA - 1)) `max` (h - yB), (x `min` (xB - 1)) `max` xA)
               inside y x = (x A.>=* xA) A.&&* (x A.<* xB) A.&&* (h - yB A.<=* y) A.&&* (h - yA A.>* y)
               A.Z A.:. h A.:. _ = A.unlift newShape :: M.EDIM2
 
