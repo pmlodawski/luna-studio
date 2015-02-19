@@ -11,6 +11,7 @@
 module Flowbox.UR.Manager.RPC.Handler.Handler where
 
 import Control.Monad.Trans.State
+import           Data.Maybe      (maybeToList)
 
 import           Flowbox.Bus.Data.Message                   (Message)
 import           Flowbox.Bus.Data.Topic                     (status, (/+))
@@ -35,7 +36,7 @@ handlerMap callback = HandlerMap.fromList
                 => String -> (args -> RPC Context IO result) -> StateT Context IO [Message]
         respond type_ = callback (/+ type_) . Processor.singleResult
         respond2 :: (Proto.Serializable args, Proto.Serializable result)
-                 => String -> (args -> RPC Context IO (result, Message)) -> StateT Context IO [Message]
+                 => String -> (args -> RPC Context IO (result, Maybe Message)) -> StateT Context IO [Message]
         respond2 type_ fun = callback (/+ type_) (\a -> do
                                                           (b, c) <- fun a
-                                                          return ([b], [c]))
+                                                          return ([b], maybeToList c))
