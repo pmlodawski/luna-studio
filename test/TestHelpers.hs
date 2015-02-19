@@ -105,7 +105,7 @@ instance Comparable Image ImageMetric where
             sRef = M.zipWith4 (\r g b a -> r+g+b+a) (M.sum r2) (M.sum g2) (M.sum b2) (M.sum a2)
 
             --(r,g,b,a) = Mock.unsafeGetChannels $ mergeLuna Difference Adobe actualImage expectedImage
-            maxDif = M.zipWith4 (\r g b a -> maximum [r,g,b,a]) (M.maximum r) (M.maximum g) (M.maximum b) (M.maximum a)--maximum dif
+            maxDif = M.zipWith4 (\rm gm bm am -> maximum [rm,gm,bm,am]) (M.maximum r) (M.maximum g) (M.maximum b) (M.maximum a)--maximum dif
             r = M.map abs $ M.zipWith (-) r1 r2
             g = M.map abs $ M.zipWith (-) g1 g2
             b = M.map abs $ M.zipWith (-) b1 b2
@@ -204,3 +204,7 @@ instance Comparable Image ImageMetric where
 
 getDefaultTestPic specPath testName = 
     loadImageLuna $ specPath++testName++"Test/"++testName++"_expected.png"
+
+testSave image = do
+    saveImageLuna "./test/samples/x_result.png" image
+    return ()
