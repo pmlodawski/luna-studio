@@ -71,10 +71,10 @@ public:
 	std::function<void(const std::string&)> error;
 	std::function<void(const std::string&)> after;
 
-	std::function<generated::proto::crumb::Breadcrumbs(DefinitionId defID)> crumbifyMethod;
+	std::function<generated::proto::dep::crumb::Breadcrumbs(DefinitionId defID)> crumbifyMethod;
 
 
-	generated::proto::crumb::Breadcrumbs crumbify(DefinitionId defID);
+	generated::proto::dep::crumb::Breadcrumbs crumbify(DefinitionId defID);
 
 	%wrapper_name%(shared_ptr<BusHandler> bh) : bh(bh) {}
 	%method_decls%
@@ -97,7 +97,7 @@ CorrelationId %wrapper_name%::sendRequest(std::string baseTopic, std::string req
 	return bh->request(std::move(baseTopic), std::move(requestTopic), msg.SerializeAsString(), callback);
 }
 
-generated::proto::crumb::Breadcrumbs %wrapper_name%::crumbify(DefinitionId defID)
+generated::proto::dep::crumb::Breadcrumbs %wrapper_name%::crumbify(DefinitionId defID)
 {
 	try
 	{
@@ -255,9 +255,9 @@ CorrelationId %wrapper_name%::%method%_Async(%args_list_comma% ConversationDoneC
 )";
 
 const std::string clsGetterMethod = R"(
-inline generated::proto::%fname%::%msg%_Cls getCls(const generated::proto::%fname%::%ext% *arg)
+inline %namespace%::%msg%_Cls getCls(const %namespace%::%ext% *arg)
 {
-	return generated::proto::%fname%::%msg%_Cls_%ext%;
+	return %namespace%::%msg%_Cls_%ext%;
 }
 )";
 
@@ -640,11 +640,14 @@ std::string extToClsCovnersions()
 		for(int k = 0; k < e->value_count(); k++)
 		{
 			auto enumVal = e->value(k);
-
 			auto hlp = clsGetterMethod;
 
+			auto packageName = e->file()->package();
+			boost::replace_all(packageName, ".", "::");
+
 			std::cout << "\t\t" << enumVal->name() << std::endl;
-			boost::replace_all(hlp, "%fname%", fname);
+			boost::replace_all(hlp, "%namespace%", packageName);
+			//boost::replace_all(hlp, "%fname%", fname);
 			boost::replace_all(hlp, "%msg%", e->containing_type()->name());
 			boost::replace_all(hlp, "%ext%", enumVal->name());
 			ret += hlp;
