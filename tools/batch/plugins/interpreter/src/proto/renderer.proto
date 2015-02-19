@@ -7,11 +7,18 @@
 
 package generated.proto.renderer;
 
+import "interpreter.proto";
+
 
 
 message FrameRange {
     required float begin = 1;
     required float end   = 2;
+}
+
+message FrameCompileError {
+    required int32                                    frame        = 1;
+    repeated generated.proto.interpreter.CompileError compileError = 2;
 }
 
 message Renderer {
@@ -21,7 +28,8 @@ message Renderer {
             repeated string     adresses = 2;
         }
         message Update {
-            required Request request = 1;
+            required Request           request = 1;
+            repeated FrameCompileError errors  = 2;
         }
         message Progress {
             required int32 current = 1;

@@ -63,14 +63,15 @@ logger = getLoggerIO $moduleName
 
 
 topics :: Prefix -> [Topic]
-topics prefix = HandlerMap.topics $ handlerMap prefix undefined undefined
+topics prefix = HandlerMap.topics $ handlerMap prefix undefined undefined undefined
 
 
 type MM = LRU
 
 
-handlerMap :: Prefix -> QueueInfo -> Message.CorrelationID -> HandlerMap Context (SessionST MM)
-handlerMap prefix queueInfo crl callback = HandlerMap.fromList $ Prefix.prefixifyTopics prefix
+handlerMap :: Prefix -> QueueInfo -> Message.CorrelationID
+           -> Pipes.Output (Message, Message.CorrelationID, Flag) -> HandlerMap Context (SessionST MM)
+handlerMap prefix queueInfo crl output callback = HandlerMap.fromList $ Prefix.prefixifyTopics prefix
     [ (Topic.interpreterSetProjectIDRequest                , respond update   Interpreter.setProjectID     )
     , (Topic.interpreterGetProjectIDRequest                , respond status   Interpreter.getProjectID     )
     , (Topic.interpreterSetMainPtrRequest                  , respond update   Interpreter.setMainPtr       )
@@ -92,7 +93,7 @@ handlerMap prefix queueInfo crl callback = HandlerMap.fromList $ Prefix.prefixif
     , (Topic.interpreterMemorySetLimitsRequest             , respond update   Interpreter.setMemoryLimits)
     , (Topic.interpreterExitRequest                        , respond update   Interpreter.exit)
 
-    , (Topic.rendererRenderRequest , respond update Renderer.render)
+    , (Topic.rendererRenderRequest , respond update $ Renderer.render $ Renderer.reportProgress crl output)
 
     , (Topic.projectmanagerSyncGetRequest                           /+ status, call0 Sync.projectmanagerSyncGet)
 
@@ -154,15 +155,16 @@ extraImports = ["FlowboxM.Libs.Flowbox.Std"]
 interpret :: MemoryManager MM
           => Prefix -> QueueInfo
           -> IORef Message.CorrelationID
+          -> Pipes.Output (Message, Message.CorrelationID, Flag)
           -> Pipes.Pipe (Message, Message.CorrelationID)
                         (Message, Message.CorrelationID, Flag)
                         (Pipes.SafeT (StateT Context (SessionST MM))) ()
-interpret prefix queueInfo crlRef = untilTrue $ do
+interpret prefix queueInfo crlRef output = untilTrue $ do
     (message, crl) <- Pipes.await
     let topic = message ^. Message.topic
     logger trace $ "Received message " ++ topic
     liftIO $ IORef.writeIORef crlRef crl
-    results <- lift2 $ Processor.process (handlerMap prefix queueInfo crl) message
+    results <- lift2 $ Processor.process (handlerMap prefix queueInfo crl output) message
     logger trace $ "Sending " ++ show (length results) ++ " result"
     let send []    = return ()
         send [r]   = Pipes.yield (r, crl, Flag.Enable)
@@ -188,6 +190,6 @@ run cfg prefix ctx (input, output) = do
     Session.run cfg env extraImports $ lift $ flip evalStateT ctx $
         Pipes.runSafeT $ Pipes.runEffect $ Abort.handleAbort $
                 Pipes.fromInput input1
-            >-> interpret prefix queueInfo crlRef
+            >-> interpret prefix queueInfo crlRef output
             >-> Pipes.toOutput output
 
