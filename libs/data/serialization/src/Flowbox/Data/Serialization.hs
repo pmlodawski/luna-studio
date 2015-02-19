@@ -47,55 +47,55 @@ import qualified Luna.Target.HS.Control.Error.Data   as Data
 
 
 class Serializable a b | a -> b where
-    serialize :: a -> Mode -> IO b
+    serialize :: a -> Mode -> IO (Maybe b)
     data' :: a -> Key Maybe Value b
     val   :: a -> Value.Type
 
-    toValue :: a -> Mode -> IO Value
+    toValue :: a -> Mode -> IO (Maybe Value)
     toValue a mode = mkValue (data' a) (val a) <$> serialize a mode
 
 
-mkValue :: Key Maybe Value a -> Value.Type -> a -> Value
-mkValue key keytype extension = putExt key (Just extension) $ Value keytype defaultValue
+mkValue :: Key Maybe Value a -> Value.Type -> Maybe a -> Maybe Value
+mkValue key keytype = liftM $ \extension -> putExt key (Just extension) $ Value keytype defaultValue
 
 
 instance Serializable Error ErrorData where
-    serialize (Error msg) _ = return . ErrorData $ fromString msg
+    serialize (Error msg) _ = return . Just . ErrorData $ fromString msg
     data' _ = ErrorData.data'
     val   _ = Value.Error
 
 instance Serializable () EmptyTupleData where
-    serialize _  _ = return  EmptyTupleData
+    serialize _  _ = return . Just $ EmptyTupleData
     data' _ = EmptyTupleData.data'
     val   _ = Value.EmptyTuple
 
 instance Serializable Int IntData where
-    serialize a  _ = return . IntData . fromIntegral $ a
+    serialize a  _ = return . Just . IntData . fromIntegral $ a
     data' _ = IntData.data'
     val   _ = Value.Int
 
 instance Serializable Char CharData where
-    serialize a  _ = return . CharData . fromIntegral . ord $ a
+    serialize a  _ = return . Just . CharData . fromIntegral . ord $ a
     data' _ = CharData.data'
     val   _ = Value.Char
 
 instance Serializable Bool BoolData where
-    serialize a  _ = return . BoolData $ a
+    serialize a  _ = return . Just . BoolData $ a
     data' _ = BoolData.data'
     val   _ = Value.Bool
 
 instance Serializable String StringData where
-    serialize a  _ = return . StringData $ fromString a
+    serialize a  _ = return . Just . StringData $ fromString a
     data' _ = StringData.data'
     val   _ = Value.String
 
 instance Serializable Float FloatData where
-    serialize a  _ = return . FloatData $ a
+    serialize a  _ = return . Just . FloatData $ a
     data' _ = FloatData.data'
     val   _ = Value.Float
 
 instance Serializable Double DoubleData.DoubleData where
-    serialize a  _ = return . DoubleData $ a
+    serialize a  _ = return . Just . DoubleData $ a
     data' _ = DoubleData.data'
     val   _ = Value.Double
 

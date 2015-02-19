@@ -12,6 +12,7 @@
 module Flowbox.Math.Function.Model where
 
 import Data.Map      (Map, toAscList)
+import Data.Maybe    (fromMaybe)
 import Data.Sequence (fromList)
 
 import           Flowbox.Data.Serialization       (Serializable(..))
@@ -69,12 +70,12 @@ hardJoint y = FunctionControlPoint y Nothing Nothing
 
 instance (Real x, Real y) => Serializable (FunctionPoint x y) PointData where
     serialize (FunctionPoint (realToFrac -> x :: Double) (realToFrac -> y :: Double)) _ =
-        return $ PointData (Just x) (Just y)
+        return . Just $ PointData (Just x) (Just y)
     data' _ = PointData.data'
     val   _ = Value.Point
 
 instance Serializable (Maybe FunctionHandle) TangentData where
-    serialize mh _ = return $ TangentData w' a' b'
+    serialize mh _ = return . Just $ TangentData w' a' b'
         where (w', a', b') = case mh of
                                  Just (FunctionHandle w a) -> (Just w, Just a, Just False)
                                  Nothing                   -> (Just 0, Just 0, Just True)
@@ -86,7 +87,7 @@ instance (Real x, Real y) => Serializable (x, FunctionControlPoint y) VertexData
         p     <- serialize (FunctionPoint x y) mode
         hIn'  <- serialize hIn         mode
         hOut' <- serialize hOut        mode
-        return $ VertexData (Just p) (Just hIn') (Just hOut')
+        return . Just $ VertexData p hIn' hOut'
     data' _ = VertexData.data'
     val   _ = Value.Vertex
 
@@ -95,6 +96,7 @@ instance (Real x, Real y) =>  Serializable (FunctionSegment x y) CurveData where
     serialize Repeater{} _= error "Serializing the Repeater segment is not yet supported!"
     serialize (ContinuousHybrid nodes) mode = do
         nodes' <- sequence $ flip serialize mode <$> toAscList nodes
-        return . CurveData . fromList $ nodes'
+        return . Just . CurveData . fromList $ fromMaybe err $ sequence nodes'
+        where err = error "Something went terribly wrong! Probably serialization of one of the vertices failed!"
     data' _ = CurveData.data'
     val   _ = Value.Curve

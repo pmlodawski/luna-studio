@@ -193,7 +193,7 @@ batchCompute (ChanF n x : xs) = chan n (M.compute serializationBackend x) : batc
 batchCompute [] = []
 
 instance Serializable Img.Image ChanData.ChannelData where
-    serialize (Img.ForceView view) mode = ChanData.ChannelData <$> serialize0 Seq.empty view mode
+    serialize (Img.ForceView view) mode = (Just . ChanData.ChannelData) <$> serialize0 Seq.empty view mode
         where serialize0 :: Seq ProtoChan.Channel -> V.View -> Mode.Mode -> IO (Seq ProtoChan.Channel)
               serialize0 acc _ EmptyMode = return acc
               serialize0 acc v (Mode (ChanDesc.ChannelDescription _type chanID name) as) =
@@ -207,6 +207,8 @@ instance Serializable Img.Image ChanData.ChannelData where
                                     serialized <- mapM (serializeMatrix BSMode . unpackMatrix) computed
                                     return $ Seq.fromList $ zipWith ProtoChan.Channel chandescs serialized
                                 _      -> error "channels not found"
+
+    serialize _ _ = return Nothing
 
     data' _ = ChanData.data'
     val   _ = Value.ChannelData
