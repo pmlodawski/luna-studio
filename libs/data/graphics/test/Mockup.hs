@@ -34,9 +34,9 @@ main = do
     let neutralSCGG = VPS $ RGBA 1 1 1 1 :: VPS (RGBA Float)
         neutralOff  = VPS $ RGBA 0 0 0 0 :: VPS (RGBA Float)
 
-    let curveShadows    = makeSpline [BSplineNode (Point2 0 1) (Point2 (-1) 1) (Point2 0.03 1), BSplineNode (Point2 0.09 0) (Point2 0.06 0) (Point2 1.09 0)]
+    let curveShadows    = makeSpline [BSplineNode (Point2 0 1) (Point2 (-1) 1) (Point2 0.03 1), BSplineNode (Point2 0.09 0) (Point2 0.06 0) (Point2 1.09 0)] :: BSpline Float
         --curveHighlights = makeSpline [BSplineNode (Point2 0.5 0) (Point2 (-0.5) 0) (Point2 (2/3) 0), BSplineNode (Point2 1 1) (Point2 (5/6) 1) (Point2 2 1)]
-        curveHighlights = makeSpline [BSplineNode (Point2 0 0) (Point2 (-1) 0) (Point2 (1/3) 0), BSplineNode (Point2 1 1) (Point2 (2/3) 1) (Point2 2 1)]
+        curveHighlights = makeSpline [BSplineNode (Point2 0 0) (Point2 (-1) 0) (Point2 (1/3) 0), BSplineNode (Point2 1 1) (Point2 (2/3) 1) (Point2 2 1)] :: BSpline Float
         --curveHighlights = makeSpline [BSplineNode (Point2 0 1) (Point2 (-1) 1) (Point2 (1/3) 1), BSplineNode (Point2 1 1) (Point2 (2/3) 1) (Point2 2 1)]
         makeSpline      = A.fromList (Z :. 2)
 
