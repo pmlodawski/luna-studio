@@ -16,7 +16,7 @@ module Flowbox.Graphics.Composition.Generator.Gradient where
 
 import Flowbox.Graphics.Utils.Accelerate hiding (head, last)
 import Flowbox.Graphics.Shader.Shader
-import Flowbox.Prelude                   as P hiding ((?)) -- unfortunately required for the tick sorting
+import Flowbox.Prelude                   as P hiding ((?), fromList) -- unfortunately required for the tick sorting
 
 
 --import Data.Profunctor                   (Profunctor(..))
