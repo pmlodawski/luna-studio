@@ -20,7 +20,15 @@ import qualified Flowbox.Graphics.Shader.Matrix     as Shader
 import qualified Flowbox.Graphics.Shader.Rasterizer as Shader
 import           Flowbox.Prelude                    as P hiding (lookup)
 
-import Flowbox.Graphics.Mockup.Basic
+import           Flowbox.Graphics.Mockup.Basic
+import           Flowbox.Graphics.Mockup.Transform
+
+import           Data.Array.Accelerate     (Exp, Z(..), (:.)(..))
+import qualified Data.Array.Accelerate     as A
+import           Linear                    (V2 (..))
+import           Math.Coordinate.Cartesian (Point2 (..))
+import           Math.Space.Space          (Grid (..))
+import           Flowbox.Graphics.Shader.Shader as Shader
 
 data MergeMode = Atop
            | Average
@@ -104,5 +112,11 @@ mergeLuna mode alphaBlend img1 img2 = case mode of
                             ]
                     img' = Image.insertPrimary view' img1
           Right view = Image.lookupPrimary img1
+          Grid width1 height1 = canvas r1
+          Grid width2 height2 = canvas r2
           (r1, g1, b1, a1) = unsafeGetChannels img1 & over each (Shader.fromMatrix (A.Constant 0))
-          (r2, g2, b2, a2) = unsafeGetChannels img2 & over each (Shader.fromMatrix (A.Constant 0))
+          (r2, g2, b2, a2) = unsafeGetChannels img2 & over each (Shader.transform transformation . Shader.fromMatrix (A.Constant 0))
+          transformation :: Point2 (Exp Int) -> Point2 (Exp Int)
+          transformation pt = case pt of
+                                    Point2 x y -> Point2 x (y-height1+height2)
+
