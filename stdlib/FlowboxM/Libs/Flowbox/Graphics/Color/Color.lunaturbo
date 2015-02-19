@@ -2,11 +2,11 @@
 #                COLOR
 #
 
-import ```Flowbox.Graphics.Color.Color as Color```
-import ```Flowbox.Graphics.Color.Companding```
+foreign haskell import Flowbox.Graphics.Color.Color as Color
+foreign haskell import Flowbox.Graphics.Color.Companding
 
-class ```RGBA``` a:
-    rgbaR, rgbaG, rgbaB, rgbaA :: a
+foreign haskell class RGBA a:
+    RGBA: rgbaR, rgbaG, rgbaB, rgbaA :: a
 
 alias Color = RGBA Float
 alias ColorBlack = RGBA Float
@@ -14,7 +14,7 @@ alias ColorWhite = RGBA Float
 
 alias ColorCC = (Color, Color, Color, Color, Color)
 
-class ```Gamma```:
+foreign haskell class Gamma:
     AlexaV3LogC
     Cineon
     Gamma: a :: Float

@@ -25,7 +25,7 @@ import           Flowbox.System.Log.Logger                    as L
 import           Generated.Proto.Data.Value                   (Value)
 import           Generated.Proto.Mode.Mode                    (Mode)
 import           Generated.Proto.Mode.ModeValue               (ModeValue (ModeValue))
-import qualified Luna.Graph.Flags                             as Flags
+import qualified Luna.DEP.Graph.Flags                         as Flags
 import qualified Luna.Interpreter.Session.Cache.Cache         as Cache
 import           Luna.Interpreter.Session.Cache.Info          (CompValueMap)
 import qualified Luna.Interpreter.Session.Cache.Info          as CacheInfo
@@ -140,7 +140,6 @@ computeValue varName mode = lift2 $ flip Catch.catch excHandler $ do
             Nothing -> do
                 logger L.error $ show exc
                 liftIO (Serialization.toValue (ValueError.Error $ show exc) def) <??&.> "Internal error"
-
 
 
 foldedReRoute :: CallPointPath -> Session mm VarName

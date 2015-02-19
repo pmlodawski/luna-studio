@@ -21,7 +21,7 @@ module Flowbox.Data.Path (
     --toString,
 ) where
 
-import           Flowbox.Prelude hiding (empty, head, init, last, tail)
+import           Flowbox.Prelude hiding (empty, head, init, last, tail, fromList, toList)
 import qualified Flowbox.Prelude as Prelude
 
 

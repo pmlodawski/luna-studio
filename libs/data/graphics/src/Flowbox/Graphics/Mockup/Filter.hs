@@ -19,6 +19,7 @@ module Flowbox.Graphics.Mockup.Filter (
     histEqLuna,
     openLuna,
     posterizeLuna,
+    edgeBlur
 ) where
 
 import qualified Data.Array.Accelerate as A

@@ -11,10 +11,12 @@ import qualified Flowbox.Batch.Handler.Common            as Batch
 import           Flowbox.Bus.RPC.RPC                     (RPC)
 import           Flowbox.Prelude                         hiding (Context)
 import           Flowbox.ProjectManager.Context          (Context)
-import qualified Luna.Graph.Node                         as Node
-import           Luna.Graph.Node.Expr                    (NodeExpr)
-import qualified Luna.Graph.PropertyMap                  as PropertyMap
-import qualified Luna.Graph.View.Default.DefaultsMap     as DefaultsMap
+import qualified Luna.DEP.Graph.Node                     as Node
+import           Luna.DEP.Graph.Node.Expr                (NodeExpr)
+import qualified Luna.DEP.Graph.PropertyMap              as PropertyMap
+import qualified Luna.DEP.Graph.View.Default.DefaultsMap as DefaultsMap
+import qualified Luna.DEP.Lib.Lib                        as Lib
+import qualified Luna.DEP.Lib.Manager                    as LibManager
 import           Luna.Interpreter.RPC.Handler.Lift
 import qualified Luna.Interpreter.Session.Cache.Cache    as Cache
 import           Luna.Interpreter.Session.Data.CallPoint (CallPoint (CallPoint))
@@ -22,8 +24,6 @@ import qualified Luna.Interpreter.Session.Env            as Env
 import           Luna.Interpreter.Session.Memory.Manager (MemoryManager)
 import           Luna.Interpreter.Session.Session        (SessionST)
 import qualified Luna.Interpreter.Session.Var            as Var
-import qualified Luna.Lib.Lib                            as Lib
-import qualified Luna.Lib.Manager                        as LibManager
 
 
 

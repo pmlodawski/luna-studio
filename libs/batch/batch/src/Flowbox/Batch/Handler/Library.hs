@@ -11,27 +11,27 @@ module Flowbox.Batch.Handler.Library where
 import           Data.Version   (Version (Version))
 import qualified System.Process as Process
 
-import           Flowbox.Batch.Batch               (Batch, gets)
-import qualified Flowbox.Batch.Batch               as Batch
-import           Flowbox.Batch.Handler.Common      (libManagerOp, libraryOp)
-import qualified Flowbox.Batch.Handler.Common      as Batch
-import qualified Flowbox.Batch.Project.Project     as Project
+import           Flowbox.Batch.Batch                   (Batch, gets)
+import qualified Flowbox.Batch.Batch                   as Batch
+import           Flowbox.Batch.Handler.Common          (libManagerOp, libraryOp)
+import qualified Flowbox.Batch.Handler.Common          as Batch
+import qualified Flowbox.Batch.Project.Project         as Project
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.System.Platform           as Platform
-import           Flowbox.System.UniPath            (UniPath)
-import qualified Flowbox.System.UniPath            as UniPath
-import qualified Luna.Data.ASTInfo                 as ASTInfo
-import qualified Luna.Data.Serialize.Proto.Library as LibSerialization
-import           Luna.Lib.Lib                      (Library)
-import qualified Luna.Lib.Lib                      as Library
-import qualified Luna.Lib.Loader                   as LibLoader
-import qualified Luna.Lib.Manager                  as LibManager
-import qualified Luna.Pass.Build.Build             as Build
-import           Luna.Pass.Build.BuildConfig       (BuildConfig (BuildConfig))
-import qualified Luna.Pass.Build.BuildConfig       as BuildConfig
-import qualified Luna.Pass.Build.Diagnostics       as Diagnostics
+import qualified Flowbox.System.Platform               as Platform
+import           Flowbox.System.UniPath                (UniPath)
+import qualified Flowbox.System.UniPath                as UniPath
+import qualified Luna.DEP.Data.ASTInfo                 as ASTInfo
+import qualified Luna.DEP.Data.Serialize.Proto.Library as LibSerialization
+import           Luna.DEP.Lib.Lib                      (Library)
+import qualified Luna.DEP.Lib.Lib                      as Library
+import qualified Luna.DEP.Lib.Loader                   as LibLoader
+import qualified Luna.DEP.Lib.Manager                  as LibManager
+import qualified Luna.DEP.Pass.Build.Build             as Build
+import           Luna.DEP.Pass.Build.BuildConfig       (BuildConfig (BuildConfig))
+import qualified Luna.DEP.Pass.Build.BuildConfig       as BuildConfig
+import qualified Luna.DEP.Pass.Build.Diagnostics       as Diagnostics
 
 
 

@@ -91,12 +91,43 @@ liftF5 f t1 t2 t3 t4 t5 = do
     val f <<*>> t1' <<*>> t2' <<*>> t3' <<*>> t4' <<*>> t5'
 
 
-liftCons0 = curryTuple1 . const . liftF0
-liftCons1 = curryTuple2 . const . liftF1
-liftCons2 = curryTuple3 . const . liftF2
-liftCons3 = curryTuple4 . const . liftF3
-liftCons4 = curryTuple5 . const . liftF4
-liftCons5 = curryTuple6 . const . liftF5
+
+
+
+liftFR0 = curryTuple0 . liftF0 -- :: a                     -> ()                           -> Value Pure Safe a
+liftFR1 = curryTuple1 . liftF1 -- :: (a1 -> c)             -> (m1 a, ())                   -> XOut m1 m2 c
+liftFR2 = curryTuple2 . liftF2 -- :: (a3 -> a2 -> c)       -> (m1 a, (m2 a1, ()))          -> XOut m1 (XOut m2 m3) c
+liftFR3 = curryTuple3 . liftF3 -- :: (a5 -> a4 -> a3 -> c) -> (m1 a, (m2 a1, (m3 a2, ()))) -> XOut m1 (XOut m2 (XOut m3 m4)) c
+liftFR4 = curryTuple4 . liftF4 
+liftFR5 = curryTuple5 . liftF5
+
+
+--liftCons0 f = liftFR0 f . snd -- :: a                     -> (_,())                           -> Value Pure Safe a
+--liftCons1 f = liftFR1 f . snd -- :: (a1 -> c)             -> (_,(m1 a, ()))                   -> XOut m1 m2 c
+--liftCons2 f = liftFR2 f . snd -- :: (a3 -> a2 -> c)       -> (_,(m1 a, (m2 a1, ())))          -> XOut m1 (XOut m2 m3) c
+--liftCons3 f = liftFR3 f . snd -- :: (a5 -> a4 -> a3 -> c) -> (_,(m1 a, (m2 a1, (m3 a2, ())))) -> XOut m1 (XOut m2 (XOut m3 m4)) c
+--liftCons4 f = liftFR4 f . snd
+--liftCons5 f = liftFR5 f . snd
+
+liftCons0 v _ = liftF0 v
+liftCons1 v _ = liftF1 v
+liftCons2 v _ = liftF2 v
+liftCons3 v _ = liftF3 v
+liftCons4 v _ = liftF4 v
+liftCons5 v _ = liftF5 v
+
+
+--liftCons0 = curryTuple1 . const . liftF0
+--liftCons1 = curryTuple2 . const . liftF1
+--liftCons2 = curryTuple3 . const . liftF2
+--liftCons3 = curryTuple4 . const . liftF3
+--liftCons4 = curryTuple5 . const . liftF4
+--liftCons5 = curryTuple6 . const . liftF5
+
+--liftCons2' = curryTuple3 . liftF2
+--liftCons3' = curryTuple4 . liftF3
+--liftCons4' = curryTuple5 . liftF4
+--liftCons5' = curryTuple6 . liftF5
 
 --liftEnv0 = Value . Pure
 --liftEnv1 = app1 . Value . Pure

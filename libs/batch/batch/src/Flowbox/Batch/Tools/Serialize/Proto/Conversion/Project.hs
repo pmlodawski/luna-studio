@@ -14,14 +14,14 @@ module Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project where
 
 import Data.Int (Int32)
 
-import           Flowbox.Batch.Project.Project                   (Project (Project))
-import qualified Flowbox.Batch.Project.Project                   as Project
+import           Flowbox.Batch.Project.Project                       (Project (Project))
+import qualified Flowbox.Batch.Project.Project                       as Project
 import           Flowbox.Control.Error
 import           Flowbox.Data.Convert
 import           Flowbox.Prelude
-import qualified Generated.Proto.Project.Project                 as Gen
-import qualified Luna.Data.Serialize.Proto.Conversion.Attributes ()
-import           Luna.Lib.Manager                                (LibManager)
+import qualified Generated.Proto.Project.Project                     as Gen
+import qualified Luna.DEP.Data.Serialize.Proto.Conversion.Attributes ()
+import           Luna.DEP.Lib.Manager                                (LibManager)
 
 
 

@@ -10,7 +10,7 @@ module Flowbox.AWS.S3.Utils where
 import           Data.Text (Text)
 import qualified Data.Text as Text
 
-import           Flowbox.Prelude
+import           Flowbox.Prelude         hiding (Text)
 import qualified Flowbox.System.FilePath as FilePath
 
 
@@ -25,7 +25,6 @@ dirMarker = "/"
 
 normaliseDir :: FilePath -> FilePath
 normaliseDir dirPath = FilePath.normalise' dirPath ++ dirMarker
-
 
 
 directoryPrefix :: FilePath -> Maybe Text

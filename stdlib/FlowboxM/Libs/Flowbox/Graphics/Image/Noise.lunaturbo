@@ -2,14 +2,15 @@
 #                IMAGE - NOISE
 #
 
-import ```Flowbox.Graphics.Mockup.Noise```
+foreign haskell import Flowbox.Graphics.Mockup.Noise
 
-class ```Quality```:
+<<<<<<< HEAD
+foreign haskell class Quality:
     Fast
     Standard
     Best
 
-class ```NoiseParams```:
+foreign haskell class NoiseParams:
     Perlin:
         quality :: Quality
         frequency, lacunarity, persistence, z :: Float
@@ -23,5 +24,5 @@ class ```NoiseParams```:
         frequency, lacunarity, exponent, offset, gain, z :: Float
         octaves, maxOctave, seed :: Int
 
-def noise params width height:
-    ```liftF3 noiseLuna #{params} #{width} #{height}```
+foreign haskell def noise params width height:
+    liftF3 noiseLuna params width height

@@ -34,7 +34,7 @@ Library
                   containers                       ,
                   cubicbezier                      ,
                   diagrams-cairo                   ,
-                  diagrams-lib                     ,
+                  diagrams-lib  >= 1.2.0.8         ,
                   distributive                     ,
                   either                           ,
                   errors                           ,
@@ -58,10 +58,12 @@ Library
                   system-filepath                  ,
                   template-haskell                 ,
                   thyme                            ,
-                  transformers                     ,
+                  transformers        == 0.3.0.0   ,
+                  transformers-compat  < 0.4       ,
                   vector                           ,
-                  vector-space                     ,
+                  vector-space     < 0.9           ,
                   luna-target-ghchs                
+        -- vector-space < 0.9 is a temporal constrain until https://github.com/diagrams/active/issues/13 is resolved
 
 -- == test non numeric animation ==
 
@@ -86,6 +88,45 @@ Executable test_non_numeric
                   flowbox-utils            ,
                   flowbox-graphics         ,
                   lens                     
+
+-- == HSpec tests ==
+
+Test-suite hspec_tests
+  type: exitcode-stdio-1.0
+  
+  if !flag(cuda)
+    buildable: False
+
+  Main-Is:        tests.hs
+  Hs-Source-Dirs: test
+
+  Ghc-options:          -O2 -Wall -threaded -fno-full-laziness
+  Ghc-prof-options:     -auto-all
+
+  Default-Extensions:     NoImplicitPrelude,
+                          DoAndIfThenElse,
+                          TemplateHaskell
+  Default-Language:       Haskell2010
+
+  if flag(cuda)
+    CPP-options:        -DACCELERATE_CUDA_BACKEND
+    Build-Depends:      accelerate-cuda  == 0.16.*
+
+  Build-Depends:  base           == 4.7.*  ,
+                  linear                   ,
+                  accelerate               ,
+                  accelerate-io            ,
+                  accelerate-fft           ,
+                  algebraic                ,
+                  flowbox-utils            ,
+                  flowbox-graphics         ,
+                  JuicyPixels              ,
+                  lens                     ,
+                  split                    ,
+                  vector                   ,
+                  hspec                    ,
+                  HUnit                    ,
+                  QuickCheck
 
 -- == test generator ==
 

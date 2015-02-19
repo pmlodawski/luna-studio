@@ -384,7 +384,7 @@ class ```SkewOrder```:
     SkewYX
 
 class ```Skew``` a:
-    point :: Point2 a
+    point :: V2 a
     order :: SkewOrder
 
 class ```Transform``` a:
@@ -445,7 +445,7 @@ def Image.gradeMatte self::Image blackpoint::Color whitepoint::Color lift::Color
 def Image.rotateAtMatte self::Image point::(Point2 Float) phi::Float matte::(Maybe (Matte Float)) -> Image:
     ```liftF4 rotateAtMatteLuna #{point} #{phi} #{matte} #{self}```
 
-def Image.translateMatte vec::(V2 Float) matte::(Maybe (Matte Float)) -> Image:
+def Image.translateMatte self::Image vec::(V2 Float) matte::(Maybe (Matte Float)) -> Image:
     ```liftF3 translateMatteLuna #{vec} #{matte} #{self}```
 
 def Image.scaleAtMatte self::Image point::(Point2 Float) vec::(V2 Float) matte::(Maybe (Matte Float)) -> Image:
@@ -491,8 +491,27 @@ alias ColorWhite = RGBA Float
 
 alias ColorCC = (Color, Color, Color, Color, Color)
 
-def constant self::Std width::Int height::Int color::Color -> Image:
-    ```liftF3 constantLuna #{width} #{height} #{color}```
+class ```Format```:
+    PCVideo
+    NTSC
+    PAL
+    HD
+    NTSC169
+    PAL169
+    K1Super35
+    K1Cinemascope
+    K2Super35
+    K2Cinemascope
+    K4Super35
+    K4Cinemascope
+    Square256
+    Square512
+    Square1K
+    Square2K
+    CustomFormat: width, height :: Int
+
+def constant self::Std format::Format color::Color -> Image:
+    ```liftF2 constantLuna #{format} #{color}```
 
 class ```Gamma``` a:
     Gamma: a :: Float
@@ -518,6 +537,8 @@ alias Time = Float
 def foo self::Std a::Time:
 	a
 
+def render self::Std a path::FilePath t::Time:
+    ()
 #
 #                MATH and such
 #

@@ -23,7 +23,7 @@ import Text.ProtocolBuffers.Identifiers
 
 import           Flowbox.Data.Error                  (Error (Error))
 import           Flowbox.Data.Mode                   (Mode)
-import           Flowbox.Prelude
+import           Flowbox.Prelude                     hiding (fromString)
 import           Generated.Proto.Data.BoolData       (BoolData (BoolData))
 import qualified Generated.Proto.Data.BoolData       as BoolData
 import           Generated.Proto.Data.CharData       (CharData (CharData))

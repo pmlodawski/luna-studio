@@ -50,6 +50,7 @@ base :: Topic -> Topic
 base = List.intercalate separator . init . Utils.split separator
 
 
+-- | Replace last part of topic
 (/+) :: Topic -> Topic -> Topic
 topic /+ type_ = respond topic type_
 

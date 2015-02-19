@@ -2,25 +2,44 @@
 #                IMAGE - CONSTANTS
 #
 
-import ```Flowbox.Graphics.Mockup.Generator```
+foreign haskell import Flowbox.Graphics.Mockup.Generator
 
-def constant width height color:
-    ```liftF3 constantLuna #{width} #{height} #{color}```
+foreign haskell class Format:
+    PCVideo
+    NTSC
+    PAL
+    HD
+    NTSC169
+    PAL169
+    K1Super35
+    K1Cinemascope
+    K2Super35
+    K2Cinemascope
+    K4Super35
+    K4Cinemascope
+    Square256
+    Square512
+    Square1K
+    Square2K
+    CustomFormat: width, height :: Int
 
-def circular width height:
-    ```liftF2 circularLuna #{width} #{height}```
+foreign haskell def constant format color:
+    liftF2 constantLuna format color
 
-def conical width height:
-    ```liftF2 conicalLuna #{width} #{height}```
+foreign haskell def circular width height:
+    liftF2 circularLuna width height
 
-def diamond width height:
-    ```liftF2 diamondLuna #{width} #{height}```
+foreign haskell def conical width height:
+    liftF2 conicalLuna width height
 
-def radial metric width height:
-    ```liftF3 radialShapeLuna #{metric} #{width} #{height}```
+foreign haskell def diamond width height:
+    liftF2 diamondLuna width height
 
-def linear width height:
-    ```liftF2 linearShapeLuna #{width} #{height}```
+foreign haskell def radial metric width height:
+    liftF3 radialShapeLuna metric width height
 
-def square side:
-    ```liftF1 squareLuna #{side}```
+foreign haskell def linear width height:
+    liftF2 linearShapeLuna width height
+
+foreign haskell def square side:
+    liftF1 squareLuna side

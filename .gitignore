@@ -3,12 +3,20 @@
 *.chi
 *.chs.h
 .virthualenv
+*.tix
 *~
 *.swp
 *.imports
 *.dll
 out
 a.out
+
+# tags file
+tags
+TAGS
+
+# haskell coverage reports
+.hpc
 
 #generated files
 gen

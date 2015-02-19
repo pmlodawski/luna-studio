@@ -14,7 +14,7 @@ import           Flowbox.Data.Convert
 import           Flowbox.Prelude                                               hiding (Context)
 import           Flowbox.ProjectManager.Context                                (Context)
 import           Flowbox.System.Log.Logger
-import qualified Generated.Proto.Library.Library                               as Gen
+import qualified Generated.Proto.Dep.Library.Library                           as Gen
 import qualified Generated.Proto.ProjectManager.Project.Library.Create.Request as Create
 import qualified Generated.Proto.ProjectManager.Project.Library.Create.Update  as Create
 import qualified Generated.Proto.ProjectManager.Project.Library.List.Request   as List
@@ -29,7 +29,7 @@ import qualified Generated.Proto.ProjectManager.Project.Library.Store.Request  a
 import qualified Generated.Proto.ProjectManager.Project.Library.Store.Status   as Store
 import qualified Generated.Proto.ProjectManager.Project.Library.Unload.Request as Unload
 import qualified Generated.Proto.ProjectManager.Project.Library.Unload.Update  as Unload
-import           Luna.Data.Serialize.Proto.Conversion.Library                  ()
+import           Luna.DEP.Data.Serialize.Proto.Conversion.Library              ()
 
 
 
