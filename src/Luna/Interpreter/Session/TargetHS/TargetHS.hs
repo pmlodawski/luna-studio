@@ -61,9 +61,10 @@ reloadAll = Session.atomically $ Instances.cleanAll
 
 
 reloadFunctions :: Session mm ()
-reloadFunctions = Session.atomically $ Instances.cleanFunctions
-                                   >>  Generator.genFunctions
-                                   >>= runDecls
+reloadFunctions = return ()
+                  --Session.atomically $ Instances.cleanFunctions
+                  --                 >>  Generator.genFunctions
+                  --                 >>= runDecls
 
 
 reloadClass :: DefPoint -> Session m ()
