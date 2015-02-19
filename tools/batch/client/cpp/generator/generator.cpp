@@ -1,10 +1,12 @@
 #include <iostream>
 
+#include "../generated/dep/expr.pb.h"
 #include "../generated/project-manager.pb.h"
 #include "../generated/file-manager.pb.h"
 #include "../generated/parser.pb.h"
 #include "../generated/plugin-manager.pb.h"
 #include "../generated/interpreter.pb.h"
+#include "../generated/dep/type.pb.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
@@ -16,7 +18,8 @@
 
 
 using namespace boost::filesystem;
-using namespace generated::proto::type;
+using namespace generated::proto::dep::type;
+using namespace generated::proto::dep;
 using namespace google::protobuf;
 
 const path outputDirectory = path("..") / "generated";
@@ -251,7 +254,7 @@ CorrelationId %wrapper_name%::%method%_Async(%args_list_comma% ConversationDoneC
 )";
 
 const std::string clsGetterMethod = R"(
-inline generated::proto::%fname%::%msg%_Cls getCls(const generated::proto::%fname%::%ext% *arg)
+inline %namespace%::%msg%_Cls getCls(const %namespace%::%ext% *arg)
 {
 	return generated::proto::%fname%::%msg%_Cls_%ext%;
 }
@@ -636,11 +639,13 @@ std::string extToClsCovnersions()
 		for(int k = 0; k < e->value_count(); k++)
 		{
 			auto enumVal = e->value(k);
-
 			auto hlp = clsGetterMethod;
 
+			auto packageName = e->file()->package();
+			boost::replace_all(packageName, ".", "::");
+
 			std::cout << "\t\t" << enumVal->name() << std::endl;
-			boost::replace_all(hlp, "%fname%", fname);
+			boost::replace_all(hlp, "%namespace%", packageName);
 			boost::replace_all(hlp, "%msg%", e->containing_type()->name());
 			boost::replace_all(hlp, "%ext%", enumVal->name());
 			ret += hlp;
