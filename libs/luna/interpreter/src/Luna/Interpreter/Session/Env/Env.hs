@@ -29,6 +29,7 @@ import           Luna.Interpreter.Session.Cache.Info         (CacheInfo)
 import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint)
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import           Luna.Interpreter.Session.Data.DefPoint      (DefPoint)
+import           Luna.Interpreter.Session.Data.Time          (Time)
 import           Luna.Interpreter.Session.Error              (Error)
 import qualified Luna.Interpreter.Session.Memory.Config      as Memory
 import           Luna.Interpreter.Session.ProfileInfo        (ProfileInfo)
@@ -38,7 +39,6 @@ import           Luna.Interpreter.Session.TargetHS.Reload    (ReloadMap)
 
 type ResultCallBack = Project.ID -> CallPointPath -> [ModeValue] -> IO ()
 type FragileMVar    = MVar ()
-type TimeVar        = Float
 
 
 data Env memoryManager = Env { _cached             :: MapForest CallPoint CacheInfo
@@ -51,7 +51,7 @@ data Env memoryManager = Env { _cached             :: MapForest CallPoint CacheI
                              , _profileInfos       :: MapForest CallPoint ProfileInfo
                              , _compileErrors      :: MapForest CallPoint Error
 
-                             , _timeVar            :: TimeVar
+                             , _timeVar            :: Time
                              , _timeRefs           :: Set CallPoint
 
                              , _serializationModes :: MapForest CallPoint (MultiSet Mode)

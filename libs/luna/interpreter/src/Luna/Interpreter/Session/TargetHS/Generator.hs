@@ -53,15 +53,22 @@ emptyModule = Module.mk def $ Type.Module def "Main" []
 genAll :: Session mm String
 genAll = do
     mainPtr <- Env.getMainPtr
-    ast     <- Env.getModule $ (DefPoint.breadcrumbs %~ init) mainPtr
-    genCode (tail . tail . dropWhile (not . (== "-- body --"))) ast
+    ast'     <- Env.getModule $ (DefPoint.breadcrumbs %~ init) mainPtr
+    let ast = emptyModule & Module.classes .~ (ast' ^. Module.classes)
+    genCode (takeWhile (not . (== "-- Main module wrappers")) . tail . tail . dropWhile (not . (== "-- body --"))) ast
+    --mainPtr <- Env.getMainPtr
+    --ast     <- Env.getModule $ (DefPoint.breadcrumbs %~ init) mainPtr
+    --genCode (tail . tail . dropWhile (not . (== "-- body --"))) ast
 
 
 genClass :: DefPoint -> Session mm String
 genClass defPoint = do
     expr <- Env.getClass defPoint
     let ast = emptyModule & Module.classes .~ [expr]
-    genCode (tail . tail . dropWhile (not . (== "-- body --"))) ast
+    genCode (takeWhile (not . (== "-- Main module wrappers")) . tail . tail . dropWhile (not . (== "-- body --"))) ast
+    --expr <- Env.getClass defPoint
+    --let ast = emptyModule & Module.classes .~ [expr]
+    --genCode (tail . tail . dropWhile (not . (== "-- body --"))) ast
 
 
 genFunctions :: Session mm String
@@ -69,7 +76,7 @@ genFunctions = do
     mainPtr <- Env.getMainPtr
     ast     <- Env.getModule $ (DefPoint.breadcrumbs %~ init) mainPtr
     genCode ( List.filter (not . (\a -> List.isPrefixOf "data " a || List.isPrefixOf "$(generateFieldAccessors" a))
-             . tail . tail . dropWhile   (not . (== "-- body --"))
+            . tail . tail . dropWhile   (not . (== "-- body --"))
             ) ast
 
 

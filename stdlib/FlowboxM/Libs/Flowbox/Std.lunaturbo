@@ -30,5 +30,8 @@ alias Time=Float
 def time:
     0.0
 
+def render a path time:
+    a.save path #FIXME: add time to path, e.g when path is "test$F4.png" and frame is 17 save to path "test0017.png"
+
 def foo a:
 	a

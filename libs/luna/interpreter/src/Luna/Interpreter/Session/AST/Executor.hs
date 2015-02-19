@@ -16,11 +16,9 @@ import qualified Data.Char                   as Char
 import qualified Data.Maybe                  as Maybe
 import qualified Data.String.Utils           as Utils
 import qualified Data.Text.Lazy              as Text
-import qualified Data.Text.Lazy.Builder      as TextBuilder
 import qualified Language.Preprocessor.Cpphs as Cpphs
 import qualified Text.Read                   as Read
 
-import qualified Data.Text.CodeBuilder                      as CodeBuilder
 import           Flowbox.Control.Error                      (catchEither, hoistEitherWith)
 import qualified Flowbox.Data.List                          as List
 import           Flowbox.Data.MapForest                     (MapForest)
@@ -55,6 +53,7 @@ import           Luna.Interpreter.Session.ProfileInfo       (ProfileInfo)
 import           Luna.Interpreter.Session.Session           (Session)
 import qualified Luna.Interpreter.Session.Session           as Session
 import qualified Luna.Interpreter.Session.TargetHS.Bindings as Bindings
+import qualified Luna.Interpreter.Session.TargetHS.TargetHS as TargetHS
 import qualified Luna.Interpreter.Session.Var               as Var
 import qualified Luna.Parser.Parser                         as Parser
 import qualified Luna.Parser.Pragma                         as Pragma
@@ -81,7 +80,7 @@ processMain_ :: MemoryManager mm => Session mm ()
 processMain_ = do
     Env.cleanProfileInfos
     Env.cleanCompileErrors
-    --TargetHS.reload
+    TargetHS.reload
     mainPtr  <- Env.getMainPtr
     children <- CallDataPath.addLevel [] mainPtr
     mapM_ processNodeIfNeeded children
