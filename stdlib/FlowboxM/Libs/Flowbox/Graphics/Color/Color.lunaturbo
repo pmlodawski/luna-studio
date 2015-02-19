@@ -7,12 +7,24 @@ foreign haskell import Flowbox.Graphics.Color.Companding
 
 foreign haskell class RGBA a:
     RGBA: rgbaR, rgbaG, rgbaB, rgbaA :: a
+    def toRGBA: self
 
-alias Color = RGBA Float
-alias ColorBlack = RGBA Float
-alias ColorWhite = RGBA Float
+class ColorMult color:
+    color      :: color
+    multiplier :: Float
+    def toRGBA:
+        r = color.r
+        g = color.g
+        b = color.b
+        a = color.a
+        RGBA (r.* multiplier) (g.* multiplier) (b.* multiplier) (a.* multiplier)
 
-alias ColorCC = (Color, Color, Color, Color, Color)
+alias Color = ColorMult (RGBA Float)
+
+# alias ColorCC = (Color, Color, Color, Color, Color)
+
+class ColorCC:
+    saturation, contrast, gamma, gain, offset :: ColorMult (RGBA Float) # TODO: change to Color alias later on
 
 foreign haskell class Gamma:
     AlexaV3LogC

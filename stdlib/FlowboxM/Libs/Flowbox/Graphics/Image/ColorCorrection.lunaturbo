@@ -15,17 +15,25 @@ foreign haskell def Image.gammaFromLinear gamma:
 foreign haskell def Image.clamp thresholds clamps:
     liftF3 clampLuna thresholds clamps self
 
-foreign haskell def Image.offset value:
+foreign haskell def Image.offsetRaw value:
     liftF2 offsetLuna value self
+def Image.offset value:
+    self.offsetRaw value.toRGBA
 
-foreign haskell def Image.contrast value:
+foreign haskell def Image.contrastRaw value:
     liftF2 contrastLuna value self
+def Image.contrast value:
+    self.contrastRaw value.toRGBA
 
-foreign haskell def Image.exposure blackpoint ex:
+foreign haskell def Image.exposureRaw blackpoint ex:
     liftF3 exposureLuna blackpoint ex self
+def Image.exposure blackpoint ex:
+    self.exposure blackpoint.toRGBA ex.toRGBA
 
-foreign haskell def Image.saturate saturation:
+foreign haskell def Image.saturateRaw saturation:
     liftF2 saturateLuna saturation self
+def Image.saturate saturation:
+    self.saturateRaw saturation.toRGBA
 
 # foreign haskell def Image.hsvTool hueRange hueRotation hueRolloff
 #             saturationRange saturationAdjustment saturationRolloff
@@ -36,7 +44,7 @@ foreign haskell def Image.saturate saturation:
 #     saturationRangeEnd   = saturationRange.hi
 #     brightnessRangeStart = brightnessRange.lo
 #     brightnessRangeEnd   = brightnessRange.hi
-# 
+#
 #     # ```liftF1 (onEachRGB $ hsvToolLuna hueRangeStart hueRangeEnd hueRotation hueRolloff
 #     #                        saturationRangeStart saturationRangeEnd saturationAdjustment saturationRolloff
 #     #                        brightnessRangeStart brightnessRangeEnd brightnessAdjustment brightnessRolloff) self```
@@ -44,30 +52,30 @@ foreign haskell def Image.saturate saturation:
 #               saturationRangeStart saturationRangeEnd saturationAdjustment saturationRolloff
 #               brightnessRangeStart brightnessRangeEnd brightnessAdjustment brightnessRolloff self```
 
-foreign haskell def Image.multiply val:
+foreign haskell def Image.multiplyRaw val:
     liftF2 multiplyLuna val self
+def Image.multiply val:
+    self.multiplyRaw val.toRGBA
 
-foreign haskell def Image.gamma val:
+foreign haskell def Image.gammaRaw val:
     liftF2 gammaLuna val self
+def Image.gamma val:
+    self.gammaRaw val.toRGBA
 
-foreign haskell def Image.grade blackpoint whitepoint lift gain multiply offset gamma:
+foreign haskell def Image.gradeRaw blackpoint whitepoint lift gain multiply offset gamma:
     liftF5 (gradeLunaColor blackpoint whitepoint lift) gain multiply offset gamma self
+def Image.grade blackpoint whitepoint lift gain multiply offset gamma:
+    self.gradeRaw blackpoint.toRGBA whitepoint.toRGBA lift.toRGBA gain.toRGBA multiply.toRGBA offset.toRGBA gamma.toRGBA
 
 alias ColorCorrectGUI = (CurveGUI, CurveGUI)
-alias HueCorrectGUI = (CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI)
-alias Color5 = (Color, Color, Color, Color ,Color)
+alias HueCorrectGUI   = (CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI)
 
-foreign haskell def Image.colorCorrect master #masterSaturation masterContrast masterGamma masterGain masterOffset
-                       shadows #shadowsSaturation shadowsContrast shadowsGamma shadowsGain shadowsOffset
-                       midtones #midtonesSaturation midtonesContrast midtonesGamma midtonesGain midtonesOffset
-                       highlights: --highlightsSaturation highlightsContrast highlightsGamma highlightsGain highlightsOffset:
+foreign haskell def Image.colorCorrectRaw master shadows midtones highlights:
     liftF5 colorCorrectLuna master shadows midtones highlights self
+# def Image.colorCorrect master shadows midtones highlights:
+#     self.colorCorrectRaw
 
-foreign haskell def Image.colorCorrectCurves curves
-                       master #masterSaturation masterContrast masterGamma masterGain masterOffset
-                       shadows #shadowsSaturation shadowsContrast shadowsGamma shadowsGain shadowsOffset
-                       midtones #midtonesSaturation midtonesContrast midtonesGamma midtonesGain midtonesOffset
-                       highlights: --highlightsSaturation highlightsContrast highlightsGamma highlightsGain highlightsOffset:
+foreign haskell def Image.colorCorrectCurves curves master shadows midtones highlights:
     liftF5 (colorCorrectLunaCurves curves) master shadows midtones highlights self
 
 foreign haskell def Image.hueCorrect curves:

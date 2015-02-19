@@ -145,27 +145,26 @@ def Image.contrast self::Image value::Color -> Image:
 def Image.exposure self::Image blackpoint::Color ex::Color -> Image:
     ```liftF3 exposureLuna #{blackpoint} #{ex} #{self}```
 
-def Image.grade self::Image blackpoint::ColorBlack whitepoint::ColorWhite lift::ColorBlack gain::ColorWhite multiply::ColorWhite offset::ColorBlack gamma::ColorWhite -> Image:
+def Image.grade self::Image blackpoint::Color whitepoint::Color lift::Color gain::Color multiply::Color offset::Color gamma::Color -> Image:
     ```liftF5 (gradeLunaColor #{blackpoint} #{whitepoint} #{lift}) #{gain} #{multiply} #{offset} #{gamma} #{self}```
 
 alias ColorCorrectGUI = (CurveGUI, CurveGUI)
 alias HueCorrectGUI = (CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI)
-alias Color5 = (Color, Color, Color, Color ,Color)
 
 def Image.colorCorrect self::Image
-                       master::Color5 #masterSaturation masterContrast masterGamma masterGain masterOffset
-                       shadows::Color5 #shadowsSaturation shadowsContrast shadowsGamma shadowsGain shadowsOffset
-                       midtones::Color5 #midtonesSaturation midtonesContrast midtonesGamma midtonesGain midtonesOffset
-                       highlights::Color5 #highlightsSaturation highlightsContrast highlightsGamma highlightsGain highlightsOffset:
+                       master::ColorCC
+                       shadows::ColorCC
+                       midtones::ColorCC
+                       highlights::ColorCC
                        -> Image:
     ```liftF5 colorCorrectLuna' #{master} #{shadows} #{midtones} #{highlights} #{self}```
 
 def Image.colorCorrectCurves self::Image
                        curves::ColorCorrectGUI
-                       master::Color5 #masterSaturation masterContrast masterGamma masterGain masterOffset
-                       shadows::Color5 #shadowsSaturation shadowsContrast shadowsGamma shadowsGain shadowsOffset
-                       midtones::Color5 #midtonesSaturation midtonesContrast midtonesGamma midtonesGain midtonesOffset
-                       highlights::Color5 #highlightsSaturation highlightsContrast highlightsGamma highlightsGain highlightsOffset:
+                       master::ColorCC
+                       shadows::ColorCC
+                       midtones::ColorCC
+                       highlights::ColorCC
                        -> Image:
     ```liftF5 (colorCorrectLunaCurves curves) #{master} #{shadows} #{midtones} #{highlights} #{self}```
 
@@ -469,11 +468,12 @@ def rasterizeMask self::Std w::Int h::Int m::Mask -> Image:
 class ```RGBA``` a:
     rgbaR, rgbaG, rgbaB, rgbaA :: a
 
-alias Color = RGBA Float
-alias ColorBlack = RGBA Float
-alias ColorWhite = RGBA Float
+alias Color = ColorMult (RGBA Float)
 
-alias ColorCC = (Color, Color, Color, Color, Color)
+# alias ColorCC = (Color, Color, Color, Color, Color)
+
+class ColorCC:
+    saturation, contrast, gamma, gain, offset :: Color
 
 def constant self::Std width::Int height::Int color::Color -> Image:
     ```liftF3 constantLuna #{width} #{height} #{color}```

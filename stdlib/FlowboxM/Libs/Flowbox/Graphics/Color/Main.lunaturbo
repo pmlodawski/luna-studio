@@ -1,0 +1,34 @@
+foreign haskell def print msg:
+    autoLift1 print msg
+
+foreign haskell class Float:
+    def foo: self
+
+# foreign haskell def Float.* a:
+#     liftF2 (*) self a
+
+# class RGB:
+#     r, g, b :: Float
+#     def toRGB: self
+
+# class Mult a:
+#     data :: a
+#     mult :: Float
+#     def toRGB:
+#         r = data.r
+#         g = data.g
+#         b = data.b
+#         RGB (r.* mult) (g.* mult) (b.* mult)
+
+# def main:
+#     print "color test"
+
+#     rgb = RGB 1.0 2.0 3.0
+#     mult = Mult rgb 0.5
+
+#     print rgb.toRGB
+#     print mult.toRGB
+
+def main:
+    print "test"
+    print 4.0.foo
