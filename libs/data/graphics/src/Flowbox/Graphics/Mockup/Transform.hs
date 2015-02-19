@@ -9,6 +9,8 @@
 {-# LANGUAGE ViewPatterns  #-}
 
 module Flowbox.Graphics.Mockup.Transform (
+    CropConstantOutside,
+    CropReformat,
     Skew(..),
     SkewOrder(..),
     Transform(..),
@@ -32,6 +34,7 @@ import           Math.Coordinate.Cartesian (Point2 (..))
 import           Math.Space.Space          (Grid (..))
 
 import           Flowbox.Geom2D.Rectangle               (Rectangle)
+import           Flowbox.Graphics.Composition.Transform (CropConstantOutside, CropReformat)
 import qualified Flowbox.Graphics.Composition.Transform as Transform
 import           Flowbox.Graphics.Image.Channel         (Channel (..), ChannelData (..))
 import qualified Flowbox.Graphics.Image.Channel         as Channel
@@ -78,11 +81,11 @@ data Transform a = Transform { _translate :: V2 a
 --          p3 = Point2 p3x p3y
 --          p4 = Point2 p4x p4y
 
-cropLuna :: Rectangle Int -> Bool -> Bool -> Image -> Image
-cropLuna rect reformat defaultOutside = onEachChannel cropChannel
+cropLuna :: Rectangle Int -> CropReformat -> Bool -> Image -> Image
+cropLuna rect reformat constantOutside = onEachChannel cropChannel
     where cropChannel = \case
-              ChannelFloat name zeData -> ChannelFloat name $ Transform.crop rect reformat defaultOutside (0 :: Exp Float) zeData
-              ChannelInt   name zeData -> ChannelInt   name $ Transform.crop rect reformat defaultOutside (0 :: Exp Int)   zeData
+              ChannelFloat name zeData -> ChannelFloat name $ Transform.crop' rect reformat (if constantOutside then Just (0 :: Exp Float) else Nothing) zeData
+              ChannelInt   name zeData -> ChannelInt   name $ Transform.crop' rect reformat (if constantOutside then Just (0 :: Exp Int)   else Nothing) zeData
 
 translateLuna :: V2 Float -> Image -> Image
 translateLuna (fmap variable -> V2 x y) = onEachChannel translateChannel
