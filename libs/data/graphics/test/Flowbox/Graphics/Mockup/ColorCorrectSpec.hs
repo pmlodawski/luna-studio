@@ -21,5 +21,6 @@ spec = do
                     let actualImage = gammaToLinearLuna REDLog (conicalLuna 1000 1200)
                     -- let  expectedImage = getDefaultTestPic specPath testName
                     it "in test" $ do
+                        pending
                         testSave actualImage `shouldReturn` ()
                         -- rightReturnShouldBeCloseTo testPath PixelWise actualImage expectedImage
