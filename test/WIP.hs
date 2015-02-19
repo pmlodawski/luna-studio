@@ -14,6 +14,7 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE DysfunctionalDependencies #-}
 {-# LANGUAGE ExtendedDefaultRules #-}
+{-# LANGUAGE FunctionalDependencies #-}
 
 -- module --
 module Main where
@@ -46,34 +47,33 @@ $(registerMethod ''Cls_Main "Main")
 -- Data headers
 -- ===================================================================
 
--- ====== Ala7 type ====== --
-data Ala7 
-    = Ola3
-    | Ola4
+class DataTuple d t | d -> t where
+	dataTuple :: d -> t
+
+-- ====== Vector type ====== --
+data Vector 
+    = Vector Int Int Int
+    | Scalar Int
     deriving (Show,Eq,Ord,Generic,Typeable)
-$(registerType ''Ala7)
+$(registerType ''Vector)
 
--- ------ Ala7.Ola3 constructor ------ --
-cons_Ola3 = _member ("Ola3") (val Cls_Ala7)
-memDef_Cls_Ala7_Ola3 = liftCons0 Ola3
+instance DataTuple Vector (Int, Int, Int) where
+	dataTuple = dataTuple_Vector
 
--- ====== --------------- ====== --
+-- ------ Vector accessors ------ --
+$(generateFieldAccessors ''Vector [('Vector, [Just "x", Just "y", Just "z"])])
+$(registerFieldAccessors ''Vector ["x", "y", "z"])
 
--- ====== Method: Cls_Ala7.Ola3 ====== --
-memSig_Cls_Ala7_Ola3 = _rtup1 (_nuSigArg ("self"))
-memFnc_Cls_Ala7_Ola3 = (memSig_Cls_Ala7_Ola3, memDef_Cls_Ala7_Ola3)
-$(registerMethod ''Cls_Ala7 "Ola3")
-
--- ------ Ala7.Ola4 constructor ------ --
-cons_Ola4 = _member ("Ola4") (val Cls_Ala7)
-memDef_Cls_Ala7_Ola4 = liftCons0 Ola4
+-- ------ Vector.Vector constructor ------ --
+cons_Vector = _member ("Vector") (val Cls_Vector)
+memDef_Cls_Vector_Vector = liftCons3 Vector
 
 -- ====== --------------- ====== --
 
--- ====== Method: Cls_Ala7.Ola4 ====== --
-memSig_Cls_Ala7_Ola4 = _rtup1 (_nuSigArg ("self"))
-memFnc_Cls_Ala7_Ola4 = (memSig_Cls_Ala7_Ola4, memDef_Cls_Ala7_Ola4)
-$(registerMethod ''Cls_Ala7 "Ola4")
+-- ====== Method: Cls_Vector.Vector ====== --
+memSig_Cls_Vector_Vector = _rtup4 (_nuSigArg ("self"), _nuSigArg ("x"), _nuSigArg ("y"), _nuSigArg ("z"))
+memFnc_Cls_Vector_Vector = (memSig_Cls_Vector_Vector, memDef_Cls_Vector_Vector)
+$(registerMethod ''Cls_Vector "Vector")
 
 
 -- ===================================================================
@@ -85,9 +85,16 @@ $(registerMethod ''Cls_Ala7 "Ola4")
 -- Module declarations
 -- ===================================================================
 
+-- ====== Method: Main.print ====== --
+memSig_Main_print = _rtup2 (_nuSigArg ("self"), _npSigArg ("s", val ("" :: String)))
+memDef_Main_print self s = 
+    polyJoin . liftF1 (Value . fmap Safe . print) $ s
+memFnc_Main_print = (memSig_Main_print, memDef_Main_print)
+$(registerMethod ''Main "print")
+
 -- ====== Method: Main.main ====== --
 memSig_Main_main = _rtup1 (_nuSigArg ("self"))
-memDef_Main_main _self = val (5 :: Int)
+memDef_Main_main _self = _call (0) (appNext (val (1 :: Int)) (_member ("print") _self))
 memFnc_Main_main = (memSig_Main_main, memDef_Main_main)
 $(registerMethod ''Main "main")
 

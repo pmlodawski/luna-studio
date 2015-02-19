@@ -10,6 +10,8 @@
 
 module Luna.Target.HS.AST.Expr where
 
+import           Prelude ()
+
 import           Flowbox.Prelude
 import           Luna.Target.HS.AST.Comment   (Comment)
 import           Luna.Target.HS.AST.Deriving  (Deriving)
@@ -92,3 +94,5 @@ val = flip Function mempty
 
 
 
+instance IsString Expr where
+     fromString = Var . fromString
