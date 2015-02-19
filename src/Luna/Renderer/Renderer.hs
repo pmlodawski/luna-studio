@@ -23,12 +23,19 @@ import qualified Luna.Renderer.Data.FrameRange             as FrameRange
 
 
 
+type ProgressReporter = Int -> Int -> IO ()
+
+
 render :: MemoryManager mm
-       => FrameRanges -> Session mm [(Int, MapForest CallPoint Error)]
-render frameRanges = do
-    let frames = IntSet.toList $ FrameRange.frames frameRanges
-    forM frames $ \frame -> do
+       => FrameRanges -> ProgressReporter -> Session mm [(Int, MapForest CallPoint Error)]
+render frameRanges progressReporter = do
+    let frames     = IntSet.toList $ FrameRange.frames frameRanges
+        iFrames    = zip [0..] frames
+        progress i = liftIO $ progressReporter i $ length frames
+    progress 0
+    forM iFrames $ \(i, frame) -> do
         Env.setTimeVar $ fromIntegral frame
         Invalidate.modifyTimeRefs
         errors <- snd <$> Executor.processMain
+        progress i
         return (frame, errors)
