@@ -1,6 +1,10 @@
-class Ala7:
-    Ola3
-    Ola4
+foreign haskell def print s="":
+    polyJoin . liftF1 (Value . fmap Safe . print) $ s
+
+class Vector:
+    x,y,z :: Int
 
 def main:
-    5
+    print 1
+    # case (1,2):
+    #     (x,y): print x
