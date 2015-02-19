@@ -59,6 +59,7 @@ import qualified Luna.Interpreter.Session.Data.CallPoint       as CallPoint
 import           Luna.Interpreter.Session.Data.CallPointPath   (CallPointPath)
 import           Luna.Interpreter.Session.Data.DefPoint        (DefPoint (DefPoint))
 import qualified Luna.Interpreter.Session.Data.DefPoint        as DefPoint
+import           Luna.Interpreter.Session.Data.Time            (Time)
 import qualified Luna.Interpreter.Session.Env.Env              as Env
 import           Luna.Interpreter.Session.Env.Session          (Session)
 import           Luna.Interpreter.Session.Error                (Error)
@@ -233,11 +234,11 @@ debugNode callPointPath action =
 
 ---- Env.timeVar ----------------------------------------------------------
 
-getTimeVar :: Session mm Env.TimeVar
+getTimeVar :: Session mm Time
 getTimeVar = gets $ view Env.timeVar
 
 
-setTimeVar :: Env.TimeVar -> Session mm ()
+setTimeVar :: Time -> Session mm ()
 setTimeVar = modify . set Env.timeVar
 
 ---- Env.timeRefs ---------------------------------------------------------
