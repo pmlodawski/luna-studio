@@ -344,7 +344,7 @@ registerType tpName = do
     let treg   = registerType' tpName bndrs
         clsreg = registerType' clsName []
         clsdef = DataD [] clsName [] [NormalC clsName []] (fmap (mkName.show) stdDerivings)
-    return $ clsdef : (treg ++ clsreg ++ dataTuples)
+    return $ clsdef : (treg ++ clsreg)
     where clsName = mkName $ Naming.mkCls (nameBase tpName)
 
 registerType' :: Name -> [TyVarBndr] -> [Dec]
