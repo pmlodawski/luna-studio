@@ -33,10 +33,10 @@ import qualified Luna.Interpreter.Session.Cache.Status        as Status
 import           Luna.Interpreter.Session.Data.AbortException (AbortException (AbortException))
 import qualified Luna.Interpreter.Session.Data.CallPoint      as CallPoint
 import           Luna.Interpreter.Session.Data.CallPointPath  (CallPointPath)
+import           Luna.Interpreter.Session.Data.Time           (Time)
 import           Luna.Interpreter.Session.Data.VarName        (VarName)
 import qualified Luna.Interpreter.Session.Data.VarName        as VarName
 import qualified Luna.Interpreter.Session.Env                 as Env
-import           Luna.Interpreter.Session.Env.Env             (TimeVar)
 import qualified Luna.Interpreter.Session.Error               as Error
 import qualified Luna.Interpreter.Session.Hint.Eval           as HEval
 import           Luna.Interpreter.Session.Session             (Session)
@@ -44,10 +44,10 @@ import           Luna.Interpreter.Session.Session             (Session)
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
-getIfReady :: CallPointPath -> TimeVar -> Session mm [ModeValue]
+getIfReady :: CallPointPath -> Time -> Session mm [ModeValue]
 getIfReady callPointPath time = do
     varName   <- foldedReRoute callPointPath
     cacheInfo <- Cache.getCacheInfo callPointPath
@@ -64,7 +64,7 @@ data Status = Ready
             deriving (Show, Eq)
 
 
-getWithStatus :: CallPointPath -> TimeVar -> Session mm (Status, [ModeValue])
+getWithStatus :: CallPointPath -> Time -> Session mm (Status, [ModeValue])
 getWithStatus callPointPath time = do
     varName <- foldedReRoute callPointPath
     Env.cachedLookup callPointPath >>= \case
@@ -100,7 +100,7 @@ report callPointPath varName = do
         resultCB projectID callPointPath results
 
 
-get :: VarName -> TimeVar -> CallPointPath -> Session mm [ModeValue]
+get :: VarName -> Time -> CallPointPath -> Session mm [ModeValue]
 get varName time callPointPath = do
     modes <- Env.getSerializationModes callPointPath
     if MultiSet.null modes
@@ -114,7 +114,7 @@ get varName time callPointPath = do
             return modValues
 
 
-computeLookupValue :: VarName -> TimeVar -> ([ModeValue], CompValueMap)
+computeLookupValue :: VarName -> Time -> ([ModeValue], CompValueMap)
                    -> Mode -> Session mm ([ModeValue], CompValueMap)
 computeLookupValue varName time (modValues, compValMap) mode = do
     logger trace $ "Cached values count: " ++ show (Map.size compValMap)
@@ -129,7 +129,7 @@ computeLookupValue varName time (modValues, compValMap) mode = do
                       return (ModeValue mode justVal:modValues, compValMap)
 
 
-computeValue :: VarName -> TimeVar -> Mode -> Session mm Value
+computeValue :: VarName -> Time -> Mode -> Session mm Value
 computeValue varName time mode = do
     lift2 $ flip Catch.catch excHandler $ do
         let toValueExpr = "\\m -> flip computeValue m =<< toIOEnv (fromValue (" <> VarName.toString varName <> " " <> show time <> "))"
