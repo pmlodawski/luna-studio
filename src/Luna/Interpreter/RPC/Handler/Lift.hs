@@ -7,14 +7,13 @@
 
 module Luna.Interpreter.RPC.Handler.Lift where
 
-import Control.Monad.Trans.Class (MonadTrans)
-
 import           Flowbox.Bus.RPC.RPC              (RPC)
 import           Flowbox.Control.Error
 import           Flowbox.Prelude                  hiding (Context)
 import           Flowbox.ProjectManager.Context   (Context)
 import qualified Luna.Interpreter.Session.Error   as Error
 import           Luna.Interpreter.Session.Session (Session, SessionST)
+
 
 
 liftSession :: Session mm a -> RPC Context (SessionST mm) a

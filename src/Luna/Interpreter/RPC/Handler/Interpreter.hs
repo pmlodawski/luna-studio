@@ -66,7 +66,7 @@ import           Luna.Interpreter.Proto.CompileError                            
 import           Luna.Interpreter.Proto.DefPoint                                             ()
 import           Luna.Interpreter.Proto.ProfileInfo                                          ()
 import qualified Luna.Interpreter.RPC.Handler.Cache                                          as Cache
-import           Luna.Interpreter.RPC.Handler.Lift
+import           Luna.Interpreter.RPC.Handler.Lift                                           (liftSession, liftSession')
 import qualified Luna.Interpreter.RPC.Handler.Sync                                           as Sync
 import           Luna.Interpreter.RPC.QueueInfo                                              (QueueInfo)
 import qualified Luna.Interpreter.RPC.QueueInfo                                              as QueueInfo
