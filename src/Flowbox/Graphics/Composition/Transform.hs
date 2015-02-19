@@ -22,11 +22,13 @@ import           Flowbox.Geom2D.Rectangle
 import           Flowbox.Graphics.Image.Channel    (ChannelData (..))
 import qualified Flowbox.Graphics.Image.Channel    as Channel
 import           Flowbox.Graphics.Prelude          as P hiding (lifted, transform)
-import           Flowbox.Graphics.Shader.Shader
+import qualified Flowbox.Graphics.Shader.Matrix    as Shader
+import           Flowbox.Graphics.Shader.Sampler   as Sampler
+import           Flowbox.Graphics.Shader.Shader    (CartesianShader, Shader(..))
+import qualified Flowbox.Graphics.Shader.Shader    as Shader
 import           Flowbox.Graphics.Utils.Accelerate
 import           Flowbox.Graphics.Utils.Linear
 import           Flowbox.Math.Matrix               as M
-import           Flowbox.Graphics.Composition.Generator.Shape as S
 
 import qualified Data.Array.Accelerate     as A
 import           Linear                    hiding (inv33, normalize, rotate)
@@ -79,21 +81,21 @@ instance Fractional a => VerticalSkew a (Point2 a) where
 
 -- == Instances for CartesianShader ==
 instance Num a => Translate (CartesianShader a b) a where
-    translate = transform . translate
+    translate = Shader.transform . translate
 
 instance Floating a => Rotate (CartesianShader a b) a where
-    rotate = transform . rotate
+    rotate = Shader.transform . rotate
 
 instance (Fractional a, a ~ a0) => Scale (V2 a0) (CartesianShader a b) where
-    scale = transform . scale
+    scale = Shader.transform . scale
 
 instance (Elt a, IsFloating a, c ~ Exp Int) => Scale (Grid c) (CartesianShader (Exp a) b) where
-    scale newCnv gen@(Shader oldCnv _) = resize newCnv $ scale (V2 (nw / ow) (nh / oh)) gen
+    scale newCnv gen@(Shader oldCnv _) = Shader.resize newCnv $ scale (V2 (nw / ow) (nh / oh)) gen
         where Grid nw nh = fmap A.fromIntegral newCnv :: Grid (Exp a)
               Grid ow oh = fmap A.fromIntegral oldCnv :: Grid (Exp a)
 
 instance (Elt a, IsFloating a, AccEpsilon a) => CornerPin (CartesianShader (Exp a) b) (Exp a) where
-    cornerPin points gen@(Shader (asFloating -> cnv) _) = transform (cornerPin' cnv points) gen
+    cornerPin points gen@(Shader (asFloating -> cnv) _) = Shader.transform (cornerPin' cnv points) gen
 
 
 -- == Instances for Grid (Exp Int) ==
@@ -169,9 +171,9 @@ crop (fmap variable . properRect -> Rect xA yA xB yB)
           processReformat = DiscreteData $ translate (V2 (-xA) (yB - h)) (Shader (Grid (xB - xA) (yB - yA)) s)
             where
               DiscreteData shader = Channel.asDiscreteData defaultValue chanData
-              Shader (Grid w h) s = if defaultOutside then (S.bound (A.Constant defaultValue) shader) else (S.bound A.Clamp shader)
+              Shader (Grid w h) s = if defaultOutside then (Shader.bound (A.Constant defaultValue) shader) else (Shader.bound A.Clamp shader)
 
-          processStandard = MatrixData $ 
+          processStandard = MatrixData $
             case defaultOutside of
               True -> M.generate newShape genConstOutside
               False -> M.generate newShape genClampedOutside
@@ -188,3 +190,35 @@ crop (fmap variable . properRect -> Rect xA yA xB yB)
                 where
                   proc (y, x) = matrix M.! A.index2 y' x'
                   (y',x') = clamp (y,x)
+
+type CropReformat          = Bool
+type CropConstantOutside a = Maybe (Exp a)
+
+-- TODO[KM]: boundary, since it's a result of a case, might cause the kernel to recompile, check this and pack it in a variable if necessary
+--           and the same MIGHT happen when handling the reformat (necessary values should be put inside a variable)
+crop' :: Elt a => Rectangle Int -> CropReformat -> CropConstantOutside a -> ChannelData a -> ChannelData a
+crop' (fmap variable . properRect -> Rect xA yA xB yB) reformat constantOutside chanData = DiscreteData $ Shader.fixY out
+    where boundary = case constantOutside of
+              Nothing  -> A.Clamp
+              Just val -> A.Constant val
+
+          -- Shorter, but ugiler
+          --DiscreteData discrete = Channel.asDiscreteData anyDummyValue chanData
+          --Shader gridIn@(Grid inW inH) boundRun = Shader.fixY $ Shader.bound boundary discrete
+          Shader gridIn@(Grid inW inH) boundRun = Shader.fixY $ case chanData of
+              MatrixData m     -> Shader.fromMatrix boundary m
+              DiscreteData d   -> Shader.bound boundary d
+              ContinuousData d -> Shader.bound boundary $ Sampler.monosampler d
+
+          Shader _ intersectedRun = let
+                  interW    = (min inW xB - max 0 xA) `max` 1
+                  interH    = (min inH yB - max 0 yA) `max` 1
+                  interGrid = Grid interW interH
+                  adjust    = V2 (min (-xA) 0) (min (-yA) 0)
+              in Shader.bound boundary $ translate adjust $ Shader interGrid boundRun
+
+          out = let
+                  adjust x y = V2 (max x 0) (max y 0)
+              in if reformat
+                  then translate (adjust (-xA) (-yA)) $ Shader (Grid (xB - xA) (yB - yA)) intersectedRun
+                  else translate (adjust   xA    yA)  $ Shader gridIn intersectedRun
