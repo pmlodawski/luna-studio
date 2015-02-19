@@ -216,7 +216,8 @@ instance (Render s ConsBlock, Render s Block) => Generator2 HExpr s where
                                                          <> mjoin "." (fmap convert segments)
                                                          <> maybe "" (\name -> " as " <> convert name) rename
                                                          <> maybe "" (\lst  -> " (" <> sepjoin (fmap convert lst) <> ")") tgts
-        HExpr.CaseE    expr matches           -> "case " <> gen expr <> " of {" <> buildBody2 matches <> "}"
+        --HExpr.CaseE    expr matches           -> "case " <> gen expr <> " of {" <> buildBody2 matches <> "}"
+        HExpr.CaseE    expr matches           -> apps "case" [gen expr, "of", block $ gen matches] -- " of {" <> buildBody2 matches <> "}"
         --HExpr.CondE    cond sucess failure    -> complex $ "ifThenElse' " <> gen cond <> (simplify.buildDoBlock) sucess <> (simplify.buildDoBlock) failure
         
         s -> tok 10 $ fromString $ "unknown: " ++ show s

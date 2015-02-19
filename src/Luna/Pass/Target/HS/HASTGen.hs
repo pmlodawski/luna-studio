@@ -114,7 +114,7 @@ defaultTraverseM = AST.defaultTraverseM HASTGen
 ---- Pass functions
 ------------------------------------------------------------------------
 
-mkVal    = HE.AppE (HE.Var "val")
+mkVal    = HE.AppE "val"
 
 
 pass :: Ctx m a v => Pass State.GenState (Unit (LModule a (LExpr a v)) -> PassResult m HE)
@@ -186,7 +186,7 @@ extractTypeAls = foldl go ([],[]) where
         Decl.TpAls {} -> (ld:a, as   )
         _             -> (a   , ld:as)
 
-mainf modname = HE.val "main" $ HE.AppE (HE.VarE "mainMaker") (HE.VarE modname)
+mainf modname = HE.val "main" $ HE.AppE "mainMaker" (HE.VarE modname)
 
 genDataDeclHeaders :: (Monad m, Enumerated lab, Num lab, Show lab) => Bool -> Decl.DataDecl lab (LExpr lab ()) -> PassResult m ()
 genDataDeclHeaders isNative (Decl.DataDecl (convVar -> name) params cons defs) = withCtx (fromText name) $ do
@@ -276,7 +276,7 @@ addClsDataType clsConName derivings = do
 
 
 liftCons num = "liftCons" <> fromString (show num)
-mkArg    = HE.Var "mkArg"
+mkArg    = "mkArg"
 --paramSig = HE.TypedE mkArg (HE.VarT "Param")
 paramSig    = HE.MacroE "param" []
 nparamSig n = HE.AppT (HE.ConT "Named") (HE.Lit $ HLit.String n)
@@ -405,7 +405,7 @@ genFFuncBody :: Monad m => Text -> a -> PassResult m [HE]
 genFFuncBody txt _ = pure $ [HE.Native txt]
 
 genFuncBody :: Ctx m a v => [LExpr a v] -> Maybe (LType a) -> PassResult m [HE]
-genFuncBody exprs output = case exprs of
+genFuncBody (transAssigExprs -> exprs) output = case exprs of
     []   -> (:[]) <$> pure (mkVal $ HE.Tuple [])
     x:[] -> (:) <$> genExpr x
                 <*> case unwrap x of
@@ -433,10 +433,15 @@ splitPatTypes (Label lab pat) = case pat of
 
 genPat = genPatGen genPat
 
-genPatNoVarnames = genRec
-    where genRec ast@(Label lab pat) = case pat of
-           Pat.Var name -> pure $ HE.Var (convVar name)
-           _            -> genPatGen genRec ast
+genPatNoVarnames = genRec where
+    genRec ast@(Label lab pat) = case pat of
+        Pat.Var name -> pure $ HE.Var (convVar name)
+        _            -> genPatGen genRec ast
+
+genPatMatch = genRec where
+    genRec ast@(Label lab pat) = case pat of
+        Pat.Var name -> pure $ HE.ViewP "val" $ HE.Var (Naming.mkVar $ convVar name)
+        _            -> genPatGen genRec ast
 
 genPatGen genRec (Label lab pat) = case pat of
     Pat.App         src args -> HE.appP <$> genRec src <*> mapM genRec args
@@ -479,8 +484,8 @@ genType (Label lab t) = case t of
 
 
 
-mkFlattenCtx = HE.AppE (HE.Var "polyJoin")
-mkLiftf1     = HE.AppE (HE.Var "liftF1")
+mkFlattenCtx = HE.AppE "polyJoin"
+mkLiftf1     = HE.AppE "liftF1"
 
 
 ofType :: a -> a -> a
@@ -492,11 +497,44 @@ genBody = \case
     [b] -> b
     b   -> HE.DoBlock b
 
+
+--regExpr e = do
+--    s <- get
+--    put $ s ++ [e]
+
+----genExpr2 [] = pure ()
+
+--genExpr2s exprs = put (exprs, [])
+
+--genStateExpr e = do
+--    (exprs, done) <- get
+--    case exprs of
+--        (a:as) -> do put (es, done ++ [e])
+--                     genExpr2 genStateExpr a
+--        _      -> pure ()
+
+--genExpr2 f (Label lab expr) = f $ case expr of
+--    Expr.Curry e                             -> genExpr2 id e
+--    Expr.Grouped e                           -> genExpr2 id e
+
+transAssigExprs [] = []
+transAssigExprs (Label lab e:es) = case e of
+    Expr.Assignment dst src -> case unwrap dst of
+        Pat.Var   {} -> continue
+        Pat.Tuple {} -> continue
+        _          -> [Label lab $ Expr.Case src [Label 0 $ Expr.Match dst $ transAssigExprs es]]
+    _ -> continue
+    where continue = Label lab e : transAssigExprs es
+
+
 genExpr :: (Monad m, Enumerated a, Num a, Show a) => LExpr a () -> PassResult m HE
 genExpr (Label lab expr) = case expr of
     Expr.Curry e                             -> genExpr e
     Expr.Grouped expr                        -> genExpr expr
     Expr.Assignment   dst src                -> HE.Arrow <$> genPat dst <*> genExpr src
+    --Expr.Assignment   dst src                -> case dst of
+    --    Pat.Var {} -> HE.Arrow <$> genPat dst <*> genExpr src
+    --    _          -> Expr.Case src [Label 0 $ Expr.Match ]
     Expr.Lit          value                  -> mkVal <$> genLit value
     Expr.Tuple        items                  -> mkVal . HE.Tuple <$> mapM genExpr items
     Expr.Var (Expr.Variable name _)          -> pure . HE.Var $ Naming.mkVar $ hash name
@@ -504,14 +542,13 @@ genExpr (Label lab expr) = case expr of
     Expr.Accessor     acc src                -> HE.AppE <$> (pure $ mkMemberGetter $ hash acc) <*> genExpr src --(get0 <$> genExpr src))
     Expr.Typed       cls expr                -> (\e t -> HE.MacroE "_typed" [e,t]) <$> genExpr expr <*> genType cls
     Expr.Case  expr match -> mkFlattenCtx <$> (HE.AppE <$> lamFunc <*> genExpr expr)
-        where passVar = HE.VarE "a"
+        where passVar = "a"
               caseE   = HE.CaseE passVar <$> body'
               body    = mapM genMatch match
               lam     = HE.Lambda [passVar] <$> caseE
               lamFunc = mkLiftf1 <$> lam
-              body'   = (\a -> a ++ [HE.Match HE.WildP (HE.AppE (HE.VarE "error") (HE.Lit $ HLit.String "TODO (!!!) Main.luna: path/Main.luna:(...,...)-(...,...): Non-exhaustive patterns in case"))]) <$> body
-              genMatch (unwrap -> Expr.Match pat body) = HE.Match <$> genPat pat <*> (HE.DoBlock <$> mapM genExpr body)
-
+              body'   = (\a -> a ++ [HE.Match HE.WildP (HE.AppE "error" (HE.Lit $ HLit.String "Non-exhaustive patterns in case"))]) <$> body
+              genMatch (unwrap -> Expr.Match pat body) = HE.Match <$> genPatMatch pat <*> (HE.DoBlock <$> mapM genExpr body)
     Expr.Lambda inputs output body -> do
         lid <- genCallID
         ctx <- getCtx
@@ -544,8 +581,8 @@ genExpr (Label lab expr) = case expr of
       where argGens = fmap genArg $ NamePat.args npat
             genArg (Expr.AppArg mname expr) = nameMod mname <$> genExpr expr
             nameMod mname = case mname of
-                Nothing -> HE.AppE (HE.VarE "appNext")
-                Just n  -> HE.AppE $ HE.AppE (HE.VarE "appByName") (HE.MacroE "_name" [HE.Lit $ HLit.String n])
+                Nothing -> HE.AppE "appNext"
+                Just n  -> HE.AppE $ HE.AppE "appByName" (HE.MacroE "_name" [HE.Lit $ HLit.String n])
             segBase = NamePat.segBase base
             mod = case (unwrap segBase) of
                 Expr.Curry {} -> pure $ id
