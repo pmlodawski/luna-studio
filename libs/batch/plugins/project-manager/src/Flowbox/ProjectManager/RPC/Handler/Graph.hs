@@ -16,7 +16,7 @@ import           Flowbox.Bus.Data.Message                                       
 import           Flowbox.Bus.Data.Serialize.Proto.Conversion.Message                                          ()
 import           Flowbox.Bus.RPC.RPC                                                                          (RPC)
 import           Flowbox.Data.Convert
-import           Flowbox.Prelude                                                                              hiding (Context)
+import           Flowbox.Prelude                                                                              hiding (Context, error)
 import           Flowbox.ProjectManager.Context                                                               (Context)
 import           Flowbox.System.Log.Logger
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Connect.Request            as Connect
@@ -37,7 +37,7 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Gra
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.ModifyInPlace.Update  as NodeModifyInPlace
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Request        as NodeRemove
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Update         as NodeRemove
-import qualified Generated.Proto.Urm.URM.Undo.Register.Request                                                as Register
+import qualified Generated.Proto.Urm.URM.Register.Request                                                     as Register
 import           Luna.DEP.Data.Serialize.Proto.Conversion.Crumb                                               ()
 import           Luna.DEP.Data.Serialize.Proto.Conversion.GraphView                                           ()
 
@@ -107,16 +107,21 @@ nodeModify request@(NodeModify.Request tnode tbc tlibID tprojectID _) = do
 
 nodeModifyInPlace :: NodeModifyInPlace.Request -> RPC Context IO (NodeModifyInPlace.Update, Register.Request)
 nodeModifyInPlace request@(NodeModifyInPlace.Request tnode tbc tlibID tprojectID _) = do
+    logger error $ "robie sobie"
     bc <- decodeE tbc
     nodeWithId <- decodeE tnode
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    BatchG.updateNodeInPlace nodeWithId bc libID projectID
-    updateNo <- Batch.getUpdateNo
     
     node <- BatchG.nodeByID (fst nodeWithId) bc libID projectID
     let oldNode   = encode (fst nodeWithId, node)
 
+    BatchG.updateNodeInPlace nodeWithId bc libID projectID
+    updateNo <- Batch.getUpdateNo
+
+    logger error $ "zrobilem se"
+    logger error $ show node
+    logger error $ show $ snd nodeWithId
     return $ (NodeModifyInPlace.Update request updateNo,  Register.Request $ encodeP $ Message.mk "project.library.ast.function.graph.node.modifyinplace.request" $ NodeModifyInPlace.Request oldNode tbc tlibID tprojectID 0)
 
 

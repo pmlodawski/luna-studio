@@ -21,14 +21,14 @@ import           Control.Monad.Trans.State
 import           Data.Map                  as X
 import qualified Data.Map                  as Map
 
-import           Flowbox.Bus.Data.Message                      (Message)
-import qualified Flowbox.Bus.Data.Message                      as Message
-import           Flowbox.Bus.Data.Topic                        (Topic)
-import           Flowbox.Bus.RPC.RPC                           (RPC)
-import           Flowbox.Prelude                               hiding (error)
+import           Flowbox.Bus.Data.Message                 (Message)
+import qualified Flowbox.Bus.Data.Message                 as Message
+import           Flowbox.Bus.Data.Topic                   (Topic)
+import           Flowbox.Bus.RPC.RPC                      (RPC)
+import           Flowbox.Prelude                          hiding (error)
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.Text.ProtocolBuffers                  as Proto
-import qualified Generated.Proto.Urm.URM.Undo.Register.Request as Register
+import qualified Flowbox.Text.ProtocolBuffers             as Proto
+import qualified Generated.Proto.Urm.URM.Register.Request as Register
 
 
 

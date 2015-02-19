@@ -10,6 +10,7 @@
 module Flowbox.UR.Manager.RPC.Handler.URM where
 
 import qualified Data.ByteString.Char8 as Char8
+import           Data.Maybe                      (listToMaybe)
 import           Control.Monad.Trans.State.Lazy
 
 import           Flowbox.Bus.Data.Message                            (Message)
@@ -20,36 +21,36 @@ import           Flowbox.Data.Convert
 import           Flowbox.Prelude                                     hiding (Context, error)
 import           Flowbox.System.Log.Logger
 import           Flowbox.UR.Manager.Context                          as Context
-import qualified Generated.Proto.Urm.URM.Undo.Register.Request       as Register
-import qualified Generated.Proto.Urm.URM.Undo.Register.Status        as Register
-import qualified Generated.Proto.Urm.URM.Undo.Perform.Request        as Undo
-import qualified Generated.Proto.Urm.URM.Undo.Perform.Status         as Undo
+import           Flowbox.UR.Manager.Context                          (Context)
+import qualified Generated.Proto.Urm.URM.Register.Request            as Register
+import qualified Generated.Proto.Urm.URM.Register.Status             as Register
+import qualified Generated.Proto.Urm.URM.Undo.Request                as Undo
+import qualified Generated.Proto.Urm.URM.Undo.Status                 as Undo
+
 
 logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
 
-undo2 :: Undo.Request -> RPC Context IO Undo.Status
-undo2 request = do
---    assert False 'a'
---    let str = decodeP tstr
-    logger info "Odpaliło!"
-    return $ Undo.Status request
 
 register :: Register.Request -> RPC Context IO Register.Status
 register request@(Register.Request undoAction) = do
-    logger info $ "zaladowalem " ++ (show request)
-    asd <- lift get
-    let message = decodeP undoAction
-    lift $ put $ message : asd
-    return $ Register.Status request
+    Context undo redo <- lift get
+    case listToMaybe redo of
+        Just undone -> 
+            return $ Register.Status request False
+        _           -> do
+            let h = Context (decodeP undoAction : undo) []
+            lift $ put h
+            return $ Register.Status request True
 
-undo :: Undo.Request -> RPC Context IO (Undo.Status, Message)
+
+undo :: Undo.Request -> RPC Context IO (Undo.Status, Maybe Message)
 undo request = do
-    logger info $ "cofam " ++ (show request)
-    asd <- lift get
---    case (asd ^. Env.times) of
-    case asd of
-        []            -> return $ (Undo.Status request, (Message.Message "urm.undo.perform.request" (Char8.pack "")))
+    Context undo redo <- lift get
+    case undo of
+        []            -> do
+            return $ (Undo.Status request False, Nothing)
         action : rest -> do
-            lift $ put rest
-            return $ (Undo.Status request, action)
+            lift $ put $ Context rest $ action : redo
+            return $ (Undo.Status request True, Just action)
+

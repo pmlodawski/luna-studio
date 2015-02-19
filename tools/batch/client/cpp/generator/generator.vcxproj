@@ -41,12 +41,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IntDir>$(ProjectName)$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)$(ProjectName)$(Configuration)\</OutDir>
-    <IncludePath>C:\flowbox\nowy4\flowbox\tools\batch\client\cpp\generated;$(IncludePath)</IncludePath>
+    <IncludePath>..\generated;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IntDir>$(ProjectName)$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)$(ProjectName)$(Configuration)\</OutDir>
-    <IncludePath>C:\flowbox\nowy4\flowbox\tools\batch\client\cpp\generated;$(IncludePath)</IncludePath>
+    <IncludePath>..\generated;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>

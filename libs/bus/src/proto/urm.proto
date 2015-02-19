@@ -10,21 +10,29 @@ package generated.proto.urm;
 import "message.proto";
 
 message URM {
-    message Undo {
-        message Register {
-            message Request {
-                required generated.proto.bus.Message undoAction = 1;
-            }
-            message Status {
-                required Request request = 1;
-            }
+    message Register {
+        message Request {
+            required generated.proto.bus.Message undoAction = 1;
         }
+        message Status {
+            required Request request = 1;
+            required bool    success = 2;
+        }
+    }
+    
+    message Undo {
+        message Request { }
+        message Status {
+            required Request request = 1;
+            required bool    success = 2;
+        }
+    }
 
-        message Perform {
-            message Request { }
-            message Status {
-                required Request request = 1;
-            }
+    message Redo {
+        message Request { }
+        message Status {
+            required Request request = 1;
+            required bool    success = 2;
         }
     }
 
