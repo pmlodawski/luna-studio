@@ -11,6 +11,10 @@
 out
 a.out
 
+# profiling results
+*.hp
+*.prof
+
 # tags file
 tags
 TAGS

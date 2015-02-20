@@ -22,5 +22,5 @@ spec = do
                     -- let  expectedImage = getDefaultTestPic specPath testName
                     it "in test" $ do
                         pending
-                        testSave actualImage `shouldReturn` ()
+                        --testSave actualImage `shouldReturn` ()
                         -- rightReturnShouldBeCloseTo testPath PixelWise actualImage expectedImage

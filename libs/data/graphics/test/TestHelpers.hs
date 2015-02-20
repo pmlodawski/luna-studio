@@ -104,7 +104,7 @@ instance Comparable Image ImageMetric where
             s = M.zipWith4 (\r g b a -> r+g+b+a) (M.sum r) (M.sum g) (M.sum b) (M.sum a)
             sRef = M.zipWith4 (\r g b a -> r+g+b+a) (M.sum r2) (M.sum g2) (M.sum b2) (M.sum a2)
 
-            --(r,g,b,a) = Mock.unsafeGetChannels $ mergeLuna Difference Adobe actualImage expectedImage
+            --(r,g,b,a) = Mock.unsafeGetChannels $ mergeLuna (Difference Adobe) actualImage expectedImage
             maxDif = M.zipWith4 (\rm gm bm am -> maximum [rm,gm,bm,am]) (M.maximum r) (M.maximum g) (M.maximum b) (M.maximum a)--maximum dif
             r = M.map abs $ M.zipWith (-) r1 r2
             g = M.map abs $ M.zipWith (-) g1 g2
@@ -135,7 +135,7 @@ instance Comparable Image ImageMetric where
                             [maxDiff] = M.toList AC.run maxDif
 
 
-                            diff = mergeLuna Difference Adobe actualImage expectedImage
+                            diff = mergeLuna (Difference Adobe) actualImage expectedImage
 
 
                             finMsg = "wrong result saved to"++resultPath++"\ndiff image saved to "++diffPath ++ "\nmax pixel-wise difference: " ++ (show $ maxDiff)   
