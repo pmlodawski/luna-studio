@@ -1,9 +1,8 @@
 {-# LANGUAGE TemplateHaskell #-}
+
 module Flowbox.Geom2D.HierarchicalPath where
 
-import qualified Flowbox.Geom2D.ControlPoint            as C
-import qualified Flowbox.Geom2D.Path                    as P
-import qualified Flowbox.Geom2D.Mask                    as M
+import           Flowbox.Geom2D.ControlPoint            as C
 import           Flowbox.Prelude                        as P
 import qualified Flowbox.Graphics.Composition.Transform as Transform
 
@@ -11,39 +10,29 @@ import           Linear                                 (V2 (..))
 import           Math.Coordinate.Cartesian
 import           Data.IntMap                            as I
 import           Data.Vector                            as V
-import           Data.Vector.Mutable                    as MV
 import           Data.Maybe
 import           Control.Monad.ST
 import           Control.Monad                          as C
-import           Data.STRef
 import           Data.List                              as L
 
 type Rank      = Int
 type Angles a  = (a, a)
 type Handles a = (V2 a, V2 a)
 
-data ControlPoint a = BasePoint      { _coords  :: Point2 a
-                                     , _handles :: Handles a
-                                     }
-                    | DependentPoint { _rank    :: Rank
-                                     , _angles  :: Angles a
-                                     , _handles :: Handles a
-                                     } deriving (Eq, Ord, Show)
+data HierarchicalControlPoint a = BasePoint      { _coords  :: Point2 a
+                                                 , _handles :: Handles a
+                                                 }
+                                | DependentPoint { _rank    :: Rank
+                                                 , _angles  :: Angles a
+                                                 , _handles :: Handles a
+                                                 } deriving (Eq, Ord, Show)
 
-makeLenses ''ControlPoint
-
-data Path a = Path { isClosed      :: Bool
-                   , controlPoints :: [ControlPoint a]
-                   } deriving (Eq, Ord, Show)
-
-data OrdinaryControlPoint a = OrdinaryControlPoint { controlPoint :: Point2 a
-                                   , handleIn     :: Maybe (Point2 a)
-                                   , handleOut    :: Maybe (Point2 a)
-                                   } deriving (Eq, Ord, Show)
+makeLenses ''HierarchicalControlPoint
 
 type Parents = (Maybe Int, Maybe Int)
 
-convert :: (Fractional a, Floating a) => [ControlPoint a] -> [OrdinaryControlPoint a]
+-- function to convert a hierarchical control point to an ordinary one
+convert :: (Floating a) => [HierarchicalControlPoint a] -> [ControlPoint a]
 convert points = P.map convertEl $ P.zip coords points
   where
     ranks   = P.map extract points
@@ -51,21 +40,21 @@ convert points = P.map convertEl $ P.zip coords points
     order   = P.map (\(_,y) -> y) $ L.sort $ P.zip ranks [0..]
     coords  = walk (V.fromList points) parents order
 
-    convertEl :: (Fractional a, Floating a) => (Point2 a, ControlPoint a) -> OrdinaryControlPoint a
+    convertEl :: (Floating a) => (Point2 a, HierarchicalControlPoint a) -> ControlPoint a
     convertEl (center, cPoint) = absCoords center cPoint
       where
-        absCoords :: (Fractional a, Floating a) => Point2 a -> ControlPoint a -> OrdinaryControlPoint a
-        absCoords center p = OrdinaryControlPoint center (Just (Transform.translate h1 center)) (Just (Transform.translate h2 center))
+        absCoords :: (Floating a) => Point2 a -> HierarchicalControlPoint a -> ControlPoint a
+        absCoords center p = ControlPoint center (Just (Transform.translate h1 center)) (Just (Transform.translate h2 center))
           where
             (h1, h2) = p ^. handles
 
-    extract :: ControlPoint a -> Int
+    extract :: HierarchicalControlPoint a -> Int
     extract x = 
       case x of
         BasePoint _ _ -> 0
         DependentPoint r _ _ -> r
 
-walk :: (Fractional a, Floating a) => Vector (ControlPoint a) -> IntMap Parents -> [Int] -> [Point2 a]
+walk :: (Floating a) => Vector (HierarchicalControlPoint a) -> IntMap Parents -> [Int] -> [Point2 a]
 walk points parents order = P.map (\(_,y) -> y) $ I.toList $ aux order coords
   where
     coords = I.empty :: IntMap (Point2 a)
@@ -80,7 +69,7 @@ walk points parents order = P.map (\(_,y) -> y) $ I.toList $ aux order coords
       where
         p = points V.! idx
 
-computeCoords :: (Fractional a, Floating a) => Point2 a -> Point2 a -> Angles a -> Point2 a
+computeCoords :: (Floating a) => Point2 a -> Point2 a -> Angles a -> Point2 a
 computeCoords p1@(Point2 x1 y1) p2@(Point2 x2 y2) (ang1, ang2) = Transform.rotate ang1 (movePoint p1 p2 ratio)
   where
     ang = pi - ang1 - ang2
@@ -88,18 +77,18 @@ computeCoords p1@(Point2 x1 y1) p2@(Point2 x2 y2) (ang1, ang2) = Transform.rotat
     b = c * (sin ang2) / (sin ang)
     ratio = b / c
 
-    segLength :: (Fractional a, Floating a) => Point2 a -> Point2 a -> a
+    segLength :: (Floating a) => Point2 a -> Point2 a -> a
     segLength (Point2 x1 y1) (Point2 x2 y2) = sqrt(l)
       where
         l = (x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2)
 
-    movePoint :: (Fractional a, Floating a) => Point2 a -> Point2 a -> a -> Point2 a
+    movePoint :: (Floating a) => Point2 a -> Point2 a -> a -> Point2 a
     movePoint (Point2 x1 y1) (Point2 x2 y2) t = (Point2 (x1 - (x1 - x2) * t) (y1 - (y1 - y2) * t))
 
-makeTree :: [Int] -> IntMap Parents
+makeTree :: [Rank] -> IntMap Parents
 makeTree ranks = aux 0 (ranks P.++ ranks) stacks pred (I.fromList $ genList (Nothing, Nothing) len)
     where
-        aux :: Int -> [Int] -> IntMap [Int] -> IntMap (Maybe Int) -> IntMap Parents -> IntMap Parents
+        aux :: Int -> [Rank] -> IntMap [Int] -> IntMap (Maybe Int) -> IntMap Parents -> IntMap Parents
         aux idx [] stacks pred acc = acc
         aux idx (rank:l) stacks pred acc =
             case rank of
