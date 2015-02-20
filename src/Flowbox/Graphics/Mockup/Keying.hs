@@ -11,8 +11,11 @@ module Flowbox.Graphics.Mockup.Keying (
     keyerLuna,
 ) where
 
-import qualified Data.Array.Accelerate as A
+import           Data.Array.Accelerate     ((:.)(..), Exp, Z(..))
+import qualified Data.Array.Accelerate     as A
+import           Math.Coordinate.Cartesian (Point2 (..))
 
+import           Flowbox.Geom2D.Rectangle            (Rectangle(..))
 import qualified Flowbox.Graphics.Color.Color        as Color
 import           Flowbox.Graphics.Composition.Keying (KeyerMode, KeyerThresholds(..))
 import qualified Flowbox.Graphics.Composition.Keying as Keying
@@ -23,6 +26,7 @@ import qualified Flowbox.Math.Matrix                 as M
 import           Flowbox.Prelude                     as P hiding (lookup)
 
 import Flowbox.Graphics.Mockup.Basic
+import Flowbox.Graphics.Mockup.Transform
 
 keyer' :: (A.Exp (Color.RGB Float) -> A.Exp Float) -> Image -> Image
 keyer' f img = img'
@@ -38,10 +42,11 @@ keyerLuna :: KeyerMode -> KeyerThresholds Float -> Image -> Image
 keyerLuna mode (fmap variable -> KeyerThresholds a b c d) img =
     keyer' (Keying.keyer mode (A.lift (a, b, c, d))) img
 
-differenceKeyer' :: (A.Exp (Color.RGB Float) -> A.Exp (Color.RGB Float) -> A.Exp Float) -> Image -> Image -> Image
-differenceKeyer' f background foreground = img'
-    where backgroundRGB = unsafeGetRGB background
+differenceKeyer' :: (A.Exp (Color.RGB Float) -> A.Exp (Color.RGB Float) -> A.Exp Float) -> Bool -> Image -> Image -> Image
+differenceKeyer' f constantOutside background foreground = img'
+    where backgroundRGB = unsafeGetRGB $ cropLuna (Rectangle (Point2 0 0) (Point2 w h)) True constantOutside background
           foregroundRGB = unsafeGetRGB foreground
+          Z :. h :. w   = A.unlift $ M.shape foregroundRGB
 
           alpha = M.map (A.uncurry f) $ M.zip backgroundRGB foregroundRGB
 
@@ -50,7 +55,7 @@ differenceKeyer' f background foreground = img'
 
           img' = Image.insertPrimary view' foreground
 
-differenceKeyerLuna :: Float -> Float -> Image -> Image -> Image
-differenceKeyerLuna (variable -> offset) (variable -> gain) background foreground = img'
+differenceKeyerLuna :: Float -> Float -> Bool -> Image -> Image -> Image
+differenceKeyerLuna (variable -> offset) (variable -> gain) constantOutside background foreground = img'
     where diff = Keying.differenceKeyer offset gain
-          img' = differenceKeyer' diff background foreground
+          img' = differenceKeyer' diff constantOutside background foreground
