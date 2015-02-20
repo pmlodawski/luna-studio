@@ -19,6 +19,7 @@ type Rank      = Int
 type Angles a  = (a, a)
 type Handles a = (V2 a, V2 a)
 
+-- temporary name - will be change to ControlPoint when the current ControlPoint type starts to be deprecated
 data HierarchicalControlPoint a = BasePoint      { _coords  :: Point2 a
                                                  , _handles :: Handles a
                                                  }
@@ -69,6 +70,7 @@ walk points parents order = P.map (\(_,y) -> y) $ I.toList $ aux order coords
       where
         p = points V.! idx
 
+-- function assumes that arguments are consistent, otherwise it will fail (anyhow the position of the third point is undefined then)
 computeCoords :: (Floating a) => Point2 a -> Point2 a -> Angles a -> Point2 a
 computeCoords p1@(Point2 x1 y1) p2@(Point2 x2 y2) (ang1, ang2) = Transform.rotate ang1 (movePoint p1 p2 ratio)
   where
