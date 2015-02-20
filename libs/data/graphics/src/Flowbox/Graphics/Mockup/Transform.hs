@@ -81,7 +81,7 @@ data Transform a = Transform { _translate :: V2 a
 --          p3 = Point2 p3x p3y
 --          p4 = Point2 p4x p4y
 
-cropLuna :: Rectangle Int -> CropReformat -> Bool -> Image -> Image
+cropLuna :: Rectangle (Exp Int) -> CropReformat -> Bool -> Image -> Image
 cropLuna rect reformat constantOutside = onEachChannel cropChannel
     where cropChannel = \case
               ChannelFloat name zeData -> ChannelFloat name $ Transform.crop' rect reformat (if constantOutside then Just (0 :: Exp Float) else Nothing) zeData

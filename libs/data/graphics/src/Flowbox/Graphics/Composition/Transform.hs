@@ -196,8 +196,8 @@ type CropConstantOutside a = Maybe (Exp a)
 
 -- TODO[KM]: boundary, since it's a result of a case, might cause the kernel to recompile, check this and pack it in a variable if necessary
 --           and the same MIGHT happen when handling the reformat (necessary values should be put inside a variable)
-crop' :: Elt a => Rectangle Int -> CropReformat -> CropConstantOutside a -> ChannelData a -> ChannelData a
-crop' (fmap variable . properRect -> Rect xA yA xB yB) reformat constantOutside chanData = DiscreteData $ Shader.fixY out
+crop' :: Elt a => Rectangle (Exp Int) -> CropReformat -> CropConstantOutside a -> ChannelData a -> ChannelData a
+crop' (properRect -> Rect xA yA xB yB) reformat constantOutside chanData = DiscreteData $ Shader.fixY out
     where boundary = case constantOutside of
               Nothing  -> A.Clamp
               Just val -> A.Constant val
