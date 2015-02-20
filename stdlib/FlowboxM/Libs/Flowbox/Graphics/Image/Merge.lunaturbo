@@ -44,5 +44,5 @@ foreign haskell class AlphaBlend:
     Adobe
     Custom
 
-foreign haskell def Image.merge mode alphaBlendMode img:
+foreign haskell def Image.merge mode img:
     liftF3 mergeLuna mode self img
