@@ -72,7 +72,7 @@ rootLogger = getLogger ""
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 code :: Source
@@ -167,7 +167,7 @@ main1 = do
 
     env <- Env.mk cfg NoManager libManager (Just $ Project.ID 0)
                 (Just $ DefPoint libID [Crumb.Module "Main", Crumb.Function (Name.single "main") []])
-                (curry $ curry print)
+                (curry $ curry $ curry print)
 
     putStrLn $ ppShow $ LibManager.lab libManager libID
     result <- Session.run cfg env [] $ do
@@ -242,7 +242,7 @@ main3 = do
 
     env <- Env.mk cfg NoManager libManager (Just $ Project.ID 0)
                 (Just $ DefPoint libID [Crumb.Module "Main", Crumb.Function (Name "main" []) []])
-                (curry $ curry print)
+                (curry $ curry $ curry print)
 
     result <- Session.run cfg env [] $ do
         Session.setImports ["Foreign.Ptr", "Foreign.ForeignPtr", "System.Mem"]
@@ -265,7 +265,7 @@ main4 = do
 
     env <- Env.mk cfg NoManager libManager (Just $ Project.ID 0)
                 (Just $ DefPoint libID [Crumb.Module "Main", Crumb.Function (Name "main" []) []])
-                (curry $ curry print)
+                (curry $ curry $ curry print)
 
     result <- Session.run cfg env [] $ do
         Session.setImports ["Prelude"]
