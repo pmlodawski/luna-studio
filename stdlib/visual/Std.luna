@@ -204,8 +204,8 @@ alias KeyerThresholdsF = KeyerThresholds Float
 def Image.key self::Image mode::KeyerMode thresholds::KeyerThresholdsF -> Image:
     ```liftF3 keyerLuna #{mode} #{thresholds} #{self}```
 
-def Image.differenceKey self::Image offset::Float gain::Float background::Image -> Image:
-    ```liftF4 differenceKeyerLuna #{offset} #{gain} #{background} #{self}```
+def Image.differenceKey self::Image offset::Float gain::Float constantOutside::Bool background::Image -> Image:
+    ```liftF4 differenceKeyerLuna #{offset} #{gain} #{constantOutside} #{background} #{self}```
 
 def Image.premultiply self::Image -> Image:
     ```liftF1 premultiplyLuna #{self}```
@@ -339,7 +339,7 @@ def Image.scaleAt self::Image point::(Point2 Float) vec::(V2 Float) -> Image:
     ```liftF3 scaleAtLuna #{point} #{vec} #{self}```
 
 def Image.crop self::Image rect::(Rectangle Int) reformat::Bool defaultOutside::Bool -> Image:
-    ```liftF4 cropLuna #{rect} #{reformat} #{defaultOutside} #{self}```
+    ```liftF4 cropLuna (fmap variable -> #{rect}) #{reformat} #{defaultOutside} #{self}```
 
 # VIEW
 

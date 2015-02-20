@@ -25,7 +25,6 @@ import qualified Data.Set                    as Set
 import qualified Language.Preprocessor.Cpphs as Cpphs
 
 import qualified Flowbox.Batch.Project.Project                 as Project
-import qualified Flowbox.Batch.Project.Project                 as Project
 import           Flowbox.Control.Error                         hiding (err)
 import           Flowbox.Data.MapForest                        (MapForest)
 import qualified Flowbox.Data.MapForest                        as MapForest
