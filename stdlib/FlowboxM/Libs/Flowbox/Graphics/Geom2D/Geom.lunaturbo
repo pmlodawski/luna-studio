@@ -2,6 +2,7 @@
 #                GEOM
 #
 
+foreign haskell import Math.Coordinate.Cartesian (Point2 (..))
 foreign haskell import Flowbox.Geom2D.Rectangle
 
 # TODO: convert cornerPin to use Point2
@@ -69,6 +70,3 @@ def shape paths:
 
 def mask path feather:
     (path, feather)
-
-foreign haskell def rasterizeMask w h m:
-    liftF3 rasterizeMaskLuna w h m

@@ -1,0 +1,441 @@
+
+# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+#
+#   THIS IS A GENERATED FILE ! ! !   WOULD BE BETTER NOT TO MODIFY IT ! ! !
+#
+# = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = = =
+
+
+# = = = include : ../../../Prelude.lunaturbo
+#
+#                STD
+#
+
+foreign haskell import Data.Array.Accelerate (Boundary(..))
+foreign haskell import Data.Maybe (fromJust)
+
+foreign haskell import Flowbox.Graphics.Utils.Accelerate (variable)
+
+foreign haskell import Flowbox.Graphics.Mockup
+foreign haskell import Flowbox.Graphics.Mockup.Basic
+
+
+
+foreign haskell class Char
+foreign haskell class Float
+foreign haskell class Int
+
+foreign haskell class Bool:
+    True
+    False
+
+foreign haskell def Bool.toString:
+    liftF1 show self
+
+foreign haskell class Maybe a:
+    Just:
+        unwrap :: a
+    Nothing
+
+foreign haskell class Either a b:
+    Left: l :: a
+    Right: r :: b
+
+foreign haskell def Either.unwrap:
+    liftF1 (either (error "unwrap called on Left") id) self
+
+class Range:
+    lo, hi :: Float
+
+alias FilePath = String
+
+# foreign haskell class Metric:
+#     Chebyshev
+#     Euclidean
+#     Minkowski: p :: Float
+#     Taxicab
+
+foreign haskell class Boundary:
+    Clamp
+    # Mirror # WARN: does not work yet
+    Wrap
+    Constant: a :: Float
+
+def null a:
+    a
+
+foreign haskell def print msg:
+    autoLift1 print msg
+
+# CHAR
+
+foreign haskell def Char.toString:
+    liftF2 (:) self (val ([] :: String))
+
+# INT
+
+foreign haskell def Int.+ a:
+    liftF2 (+) self a
+
+foreign haskell def Int.- a:
+    liftF2 (-) self a
+
+foreign haskell def Int.* a:
+    liftF2 (*) self a
+
+foreign haskell def Int./ a:
+    liftF2 (/) self a
+
+foreign haskell def Int.> a:
+    liftF2 (>) self a
+
+foreign haskell def Int.== a:
+    liftF2 (==) self a
+
+foreign haskell def Int.< a:
+    liftF2 (<) self a
+
+foreign haskell def Int.<= a:
+    liftF2 (<=) self a
+
+foreign haskell def Int.>= a:
+    liftF2 (>=) self a
+
+def Int.inc:
+    self + 1
+
+def Int.dec:
+    self - 1
+
+foreign haskell def Int.fromIntegral:
+    liftF1 fromIntegral self :: Value Pure Safe Float
+
+foreign haskell def Int.toString:
+    liftF1 show self
+
+# DOUBLE
+
+foreign haskell def Float.acc:
+    liftF1 variable self
+
+foreign haskell def Float.truncate:
+    liftF1 truncate self :: Value Pure Safe Int
+
+foreign haskell def Float.round:
+    liftF1 round self :: Value Pure Safe Int
+
+foreign haskell def Float.floor:
+    liftF1 floor self :: Value Pure Safe Int
+
+foreign haskell def Float.ceiling:
+    liftF1 ceiling self :: Value Pure Safe Int
+
+foreign haskell def Float.+ a:
+    liftF2 (+) self a
+
+foreign haskell def Float.- a:
+    liftF2 (-) self a
+
+foreign haskell def Float.* a:
+    liftF2 (*) self a
+
+foreign haskell def Float./ a:
+    liftF2 (/) self a
+
+foreign haskell def Float.> a:
+    liftF2 (>) self a
+
+foreign haskell def Float.== a:
+    liftF2 (==) self a
+
+foreign haskell def Float.< a:
+    liftF2 (<) self a
+
+foreign haskell def Float.<= a:
+    liftF2 (<=) self a
+
+foreign haskell def Float.>= a:
+    liftF2 (>=) self a
+
+foreign haskell def Float.toString:
+    liftF1 show self
+
+# foreign haskell def Float.floor:
+#     liftF1 floor self
+
+# = = = end include : ../../../Prelude.lunaturbo
+
+
+# = = = include : ../../Image/Image.lunaturbo
+#
+#                IMAGE
+#
+
+foreign haskell import Flowbox.Graphics.Image.Image as Image
+
+foreign haskell class Image
+
+foreign haskell def emptyImage:
+    liftF0 Image.empty
+
+foreign haskell def load path:
+    autoLift1 realReadLuna path
+
+foreign haskell def Image.save path:
+    autoLift2 saveImageLuna path self
+
+foreign haskell def Image.view name:
+    liftF2 Image.lookup name self
+
+# can't use this because of no matrix support in Luna?
+# foreign haskell def Image.colorMatrix matrix:
+#     liftF2 colorMatrixLuna matrix self
+
+# foreign haskell def Image.removeChannel viewName channelName:
+#     liftF3 removeChannelLuna viewName channelName self
+
+foreign haskell def Image.getChannel viewName channelName:
+    liftF3 getChannelLuna viewName channelName self
+
+# foreign haskell def Image.insertChannel viewName channel:
+#     liftF3 insertChannelLuna viewName channel self
+
+foreign haskell def Image.deleteView name:
+    liftF2 Image.delete name self
+
+foreign haskell def Image.map f:
+    liftF2 Image.map f self
+
+# foreign haskell def Image.updateView f viewName:
+#     liftF3 Image.update f viewName self
+
+foreign haskell def Image.insertView view:
+    liftF2 Image.insert view self
+
+foreign haskell def imageSingleton view:
+    liftF1 Image.singleton view
+
+# = = = end include : ../../Image/Image.lunaturbo
+
+
+# = = = include : ../../Geom2D/Geom.lunaturbo
+#
+#                GEOM
+#
+
+foreign haskell import Math.Coordinate.Cartesian (Point2 (..))
+foreign haskell import Flowbox.Geom2D.Rectangle
+
+# TODO: convert cornerPin to use Point2
+class Point a:
+    x,y :: a
+
+foreign haskell class Point2 a:
+    Point2: x,y :: a
+
+foreign haskell class Rectangle a:
+    Rectangle: pA,pB :: Point2 a
+
+foreign haskell class SkewOrder:
+    SkewXY
+    SkewYX
+
+foreign haskell class Skew a:
+    Skew:
+        point :: V2 a
+        order :: SkewOrder
+
+foreign haskell class Transform a:
+    Transform:
+        translate :: V2 a
+        rotate    :: a
+        scale     :: V2 a
+        skew      :: Skew a
+        center    :: Point2 a
+
+def point x y:
+    Point2 x y
+
+foreign haskell def nopoint:
+    val (Nothing :: Maybe (Point2 Float))
+
+# foreign haskell class ControlPoint a:
+# class ControlPoint a:
+#     point               :: Point2 a
+#     handleIn, handleOut :: Maybe (Point2 a)
+
+# foreign haskell class Path a:
+#     closed   :: Bool
+#     vertices :: [ControlPoint a]
+
+# foreign haskell class Shape a:
+#     paths :: [Path a]
+
+# foreign haskell class Mask a:
+#     path    :: Path a
+#     feather :: Maybe (Path a)
+
+# alias ControlPoint a = (Point2 a, Maybe (Point2 a), Maybe (Point2 a))
+# alias Path a         = (Bool, [ControlPoint a])
+# alias Shape a        = [Path a]
+# alias Mask a         = (Path a, Maybe (Path a))
+
+def controlPoint point handleIn handleOut:
+    (point, handleIn, handleOut)
+
+def path closed vertices:
+    (closed, vertices)
+
+def shape paths:
+    paths
+
+def mask path feather:
+    (path, feather)
+
+# = = = end include : ../../Geom2D/Geom.lunaturbo
+
+
+# = = = include : FilterTransform.lunaturbo
+#
+#                IMAGE - FILTERS & TRANSFORMATIONS
+#
+
+foreign haskell import Flowbox.Graphics.Mockup.Filter
+foreign haskell import Flowbox.Graphics.Mockup.Transform
+
+foreign haskell def Image.posterize colors:
+    liftF2 posterizeLuna colors self
+
+# foreign haskell def Image.defocus radius:
+#     liftF2 defocus radius self
+
+# foreign haskell def Image.motionBlur size angle:
+#     liftF3 motionBlur size angle self
+
+# foreign haskell def Image.bilateral psigma csigma size:
+#     liftF4 bilateral psigma csigma size self
+
+# def Image.cornerPin p1 p2 p3 p4:
+#     p1x = p1.x
+#     p1y = p1.y
+#     p2x = p2.x
+#     p2y = p2.y
+#     p3x = p3.x
+#     p3y = p3.y
+#     p4x = p4.x
+#     p4y = p4.y
+foreign haskell
+#     liftF9 cornerPinLuna p1x p1y p2x p2y p3x p3y p4x p4y self
+
+foreign haskell def Image.blur kernelSize:
+    liftF2 blurLuna kernelSize self
+
+# foreign haskell def Image.laplacian kernelSize centerVal sideVal:
+#     liftF4 laplacianLuna kernelSize centerVal sideVal self
+
+foreign haskell class V2 a:
+    V2 : x, y :: a
+
+foreign haskell def Image.translate vec:
+    liftF2 translateLuna vec self
+
+foreign haskell def Image.rotate phi:
+    liftF2 rotateLuna phi self
+
+foreign haskell def Image.rotateAt point phi:
+    liftF3 rotateAtLuna point phi self
+
+foreign haskell def Image.scale vec:
+    liftF2 scaleLuna vec self
+
+foreign haskell def Image.scaleAt point vec:
+    liftF3 scaleAtLuna point vec self
+
+foreign haskell def Image.translateMatte vec matte:
+    liftF3 translateMatteLuna vec matte self
+
+foreign haskell def Image.rotateAtMatte point phi matte:
+    liftF4 rotateAtMatteLuna point phi matte self
+
+foreign haskell def Image.scaleAtMatte point vec matte:
+    liftF4 scaleAtMatteLuna point vec matte self
+
+foreign haskell def Image.skewAtMatte point skew matte:
+    liftF4 skewAtMatteLuna point skew matte self
+
+foreign haskell def Image.transformMatte trans matte:
+    liftF3 transformLuna trans matte self
+
+foreign haskell def Image.transform trans:
+    liftF2 transformLuna trans self
+
+foreign haskell def Image.crop rect reformat defaultOutside:
+    liftF4 cropLuna ((fmap.fmap) variable $ rect) reformat defaultOutside self
+
+foreign haskell def Image.erode size:
+    liftF2 erodeLuna size self
+
+foreign haskell def Image.dilate size:
+    liftF2 dilateLuna size self
+
+foreign haskell def Image.open size:
+    liftF2 openLuna size self
+
+foreign haskell def Image.close size:
+    liftF2 closeLuna size self
+
+# foreign haskell def Image.radialBlur size angle:
+#     liftF3 radialBlurLuna size angle self
+
+foreign haskell def Image.edgeDetect edgeOperator:
+    liftF2 edgeDetectLuna edgeOperator self
+
+foreign haskell class InterpolationFilter:
+    NearestNeighbour
+    Box
+    Basic
+    Triangle
+    Bell
+    BSpline
+    Lanczos: a :: Float
+    Polynomial: a, b :: Float
+    Mitchell
+    CatmullRom
+    Gauss: a :: Float
+    Dirac: a :: Float
+
+# foreign haskell def Image.interpolate boundary filter:
+#     liftF3 interpolateChannelsLuna boundary filter self
+
+foreign haskell def Image.multisample grid filter:
+    liftF3 multisampleChannelsLuna grid filter self
+
+# = = = end include : FilterTransform.lunaturbo
+
+
+# foreign haskell def Image.crop rect reformat defaultOutside:
+#     liftF4 cropLuna (fmap variable $ rect) reformat defaultOutside self
+
+# foreign haskell def print msg:
+#     autoLift1 print msg
+
+# foreign haskell import Flowbox.Geom2D.Rectangle
+
+# foreign haskell class Point2 a:
+#     Point2: x,y :: a
+
+# foreign haskell class Rectangle a:
+#     Rectangle: pA,pB :: Point2 a
+
+def main:
+    print "FilterTransform test"
+
+    lena = load "./lena.png"
+
+    rectangle = Rectangle (Point2 0 0) (Point2 100 100)
+
+    print rectangle
+
+    cropped = lena.crop rectangle True False
+    cropped.save "./croped.png"
+
