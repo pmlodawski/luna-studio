@@ -47,16 +47,16 @@ get (Value.Request tcallPointPath time) = do
     let (projectID, callPointPath) = decodeP tcallPointPath
     Sync.testProjectID projectID
     (status, bytes) <- liftSession $ Value.getWithStatus callPointPath time
-    return $ Value.Update tcallPointPath (encodeP status) $ Sequence.fromList bytes
+    return $ Value.Update tcallPointPath (encodeP status) (Sequence.fromList bytes) time
 
 
 reportOutputValue :: IORef Message.CorrelationID
                   -> Pipes.Output (Message, Message.CorrelationID, Flag)
                   -> ResultCallBack
-reportOutputValue crlRef output projectID callPointPath values = do
+reportOutputValue crlRef output projectID callPointPath values time = do
     crl <- IORef.readIORef crlRef
     let tcallPointPath = encodeP (projectID, callPointPath)
-        response = Value.Update tcallPointPath (encodeP Value.Ready) $ Sequence.fromList values
+        response = Value.Update tcallPointPath (encodeP Value.Ready) (Sequence.fromList values) time
         topic    = Topic.interpreterValueRequest /+ update
         msg      = Message topic $ Proto.messagePut' response
         packet   = (msg, crl, Flag.Disable)
