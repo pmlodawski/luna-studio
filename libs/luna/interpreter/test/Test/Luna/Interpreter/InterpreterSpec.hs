@@ -10,8 +10,10 @@ module Test.Luna.Interpreter.InterpreterSpec where
 import Control.Monad.State hiding (mapM, mapM_)
 import Test.Hspec
 
+import qualified Flowbox.Data.MapForest                            as MapForest
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
+import           Flowbox.Test.Hspec.Lifted
 import qualified Luna.DEP.Lib.Lib                                  as Library
 import qualified Luna.Interpreter.Session.AST.Executor             as Executor
 import qualified Luna.Interpreter.Session.AST.Traverse             as Traverse
@@ -19,10 +21,12 @@ import qualified Luna.Interpreter.Session.Data.CallDataPath        as CallDataPa
 import           Luna.Interpreter.Session.Data.CallPoint           (CallPoint (CallPoint))
 import           Luna.Interpreter.Session.Data.CallPointPath       (CallPointPath)
 import qualified Luna.Interpreter.Session.Env                      as Env
+import           Luna.Interpreter.Session.Memory.Manager           (MemoryManager)
 import           Luna.Interpreter.Session.Memory.Manager.NoManager (NoManager (NoManager))
 import           Luna.Interpreter.Session.Session                  (Session)
 import qualified Test.Luna.Interpreter.Common                      as Common
 import qualified Test.Luna.Interpreter.SampleCodes                 as SampleCodes
+
 
 
 rootLogger :: Logger
@@ -46,15 +50,7 @@ getSuccessors callPointPath = do
 
 
 main :: IO ()
-main = do rootLogger setIntLevel 5
-          hspec spec
-
-
-shouldBe' :: (Show a, Eq a, MonadIO m) => a -> a -> m ()
-shouldBe' = liftIO .: shouldBe
-
-shouldMatchList' :: (Show a, Eq a, MonadIO m) => [a] -> [a] -> m ()
-shouldMatchList' = liftIO .: shouldMatchList
+main = rootLogger setIntLevel 5 >> hspec spec
 
 
 spec :: Spec
@@ -126,8 +122,14 @@ spec = do
     describe "interpreter" $ do
         mapM_ (\(name, code) -> it ("executes example - " ++ name) $ do
             --rootLogger setIntLevel 5
-            Common.runSession mm code Executor.processMain_) SampleCodes.sampleCodes
+            Common.runSession mm code testProcessMain) SampleCodes.sampleCodes
 
         mapM_ (\(name, code) -> it ("executes example 5 times - " ++ name) $ do
             --rootLogger setIntLevel 5
-            Common.runSession mm code $ replicateM_ 5 Executor.processMain_) $ SampleCodes.sampleCodes
+            Common.runSession mm code $ replicateM_ 5 testProcessMain) $ SampleCodes.sampleCodes
+
+testProcessMain :: MemoryManager mm => Session mm ()
+testProcessMain = do
+    Executor.processMain_
+    errors <- Env.getCompileErrors
+    errors `shouldSatisfy'` MapForest.null

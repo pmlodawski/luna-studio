@@ -6,7 +6,7 @@ foreign haskell import Flowbox.Graphics.Color.Color as Color
 foreign haskell import Flowbox.Graphics.Color.Companding
 
 foreign haskell class RGBA a:
-    rgbaR, rgbaG, rgbaB, rgbaA :: a
+    RGBA: rgbaR, rgbaG, rgbaB, rgbaA :: a
 
 alias Color = RGBA Float
 alias ColorBlack = RGBA Float
