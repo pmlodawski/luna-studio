@@ -31,77 +31,77 @@ import           Math.Space.Space          (Grid (..))
 import           Flowbox.Graphics.Shader.Shader as Shader
 
 data MergeMode = Atop
-           | Average
-           | ColorBurn
-           | ColorDodge
+           | Average AlphaBlend
+           | ColorBurn AlphaBlend
+           | ColorDodge AlphaBlend
            | ConjointOver
-           | Copy
-           | Difference
+           | Copy AlphaBlend
+           | Difference AlphaBlend
            | DisjointOver
-           | DivideBySource
-           | DivideByDestination
-           | Exclusion
-           | From
-           | Geometric
-           | HardLight
-           | Hypot
+           | DivideBySource AlphaBlend
+           | DivideByDestination AlphaBlend
+           | Exclusion AlphaBlend
+           | From AlphaBlend
+           | Geometric AlphaBlend
+           | HardLight AlphaBlend
+           | Hypot AlphaBlend
            | In
            | Mask
            | Matte
            -- | Max
            -- | Min
-           | Minus
-           | Multiply
+           | Minus AlphaBlend
+           | Multiply AlphaBlend
            | Out
            | Over
-           | Overlay
-           | Plus
-           | Screen
-           | SoftLight
-           | SoftLightPegtop
-           | SoftLightIllusions
-           | SoftLightPhotoshop
+           | Overlay AlphaBlend
+           | Plus AlphaBlend
+           | Screen AlphaBlend
+           | SoftLight AlphaBlend
+           | SoftLightPegtop AlphaBlend
+           | SoftLightIllusions AlphaBlend
+           | SoftLightPhotoshop AlphaBlend
            | Stencil
            | Under
            | XOR
            deriving (Show)
 
-mergeLuna :: MergeMode -> AlphaBlend -> Image -> Image -> Image
-mergeLuna mode alphaBlend img1 img2 = case mode of
-    Atop                -> processMerge $ Merge.threeWayMerge             Merge.atop
-    Average             -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.average
-    ColorBurn           -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.colorBurn
-    ColorDodge          -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.colorDodge
-    ConjointOver        -> processMerge $ Merge.threeWayMerge             Merge.conjointOver
-    Copy                -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.copy
-    Difference          -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.difference
-    DisjointOver        -> processMerge $ Merge.threeWayMerge             Merge.disjointOver
-    DivideBySource      -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.divideBySrc
-    DivideByDestination -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.divideByDst
-    Exclusion           -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.exclusion
-    From                -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.from
-    Geometric           -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.geometric
-    HardLight           -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.hardLight
-    Hypot               -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.hypot
-    In                  -> processMerge $ Merge.threeWayMerge             Merge.inBlend
-    Mask                -> processMerge $ Merge.threeWayMerge             Merge.withMask
-    Matte               -> processMerge $ Merge.threeWayMerge             Merge.matte
-    -- Max                 -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.max
-    -- Min                 -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.min
-    Minus               -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.minus
-    Multiply            -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.multiply
-    Out                 -> processMerge $ Merge.threeWayMerge             Merge.out
-    Over                -> processMerge $ Merge.threeWayMerge             Merge.over
-    Overlay             -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.overlayFun
-    Plus                -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.plus
-    Screen              -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.screen
-    SoftLight           -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.softLight
-    SoftLightPegtop     -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.softLightPegtop
-    SoftLightIllusions  -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.softLightIllusions
-    SoftLightPhotoshop  -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.softLightPhotoshop
-    Stencil             -> processMerge $ Merge.threeWayMerge             Merge.stencil
-    Under               -> processMerge $ Merge.threeWayMerge             Merge.under
-    XOR                 -> processMerge $ Merge.threeWayMerge             Merge.xor
+mergeLuna :: MergeMode -> Image -> Image -> Image
+mergeLuna mode img1 img2 = case mode of
+    Atop                           -> processMerge $ Merge.threeWayMerge             Merge.atop
+    Average alphaBlend             -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.average
+    ColorBurn alphaBlend           -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.colorBurn
+    ColorDodge alphaBlend          -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.colorDodge
+    ConjointOver                   -> processMerge $ Merge.threeWayMerge             Merge.conjointOver
+    Copy alphaBlend                -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.copy
+    Difference alphaBlend          -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.difference
+    DisjointOver                   -> processMerge $ Merge.threeWayMerge             Merge.disjointOver
+    DivideBySource alphaBlend      -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.divideBySrc
+    DivideByDestination alphaBlend -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.divideByDst
+    Exclusion alphaBlend           -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.exclusion
+    From alphaBlend                -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.from
+    Geometric alphaBlend           -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.geometric
+    HardLight alphaBlend           -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.hardLight
+    Hypot alphaBlend               -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.hypot
+    In                             -> processMerge $ Merge.threeWayMerge             Merge.inBlend
+    Mask                           -> processMerge $ Merge.threeWayMerge             Merge.withMask
+    Matte                          -> processMerge $ Merge.threeWayMerge             Merge.matte
+    -- Max                         -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.max
+    -- Min                         -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.min
+    Minus alphaBlend               -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.minus
+    Multiply alphaBlend            -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.multiply
+    Out                            -> processMerge $ Merge.threeWayMerge             Merge.out
+    Over                           -> processMerge $ Merge.threeWayMerge             Merge.over
+    Overlay alphaBlend             -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.overlayFun
+    Plus alphaBlend                -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.plus
+    Screen alphaBlend              -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.screen
+    SoftLight alphaBlend           -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.softLight
+    SoftLightPegtop alphaBlend     -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.softLightPegtop
+    SoftLightIllusions alphaBlend  -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.softLightIllusions
+    SoftLightPhotoshop alphaBlend  -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.softLightPhotoshop
+    Stencil                        -> processMerge $ Merge.threeWayMerge             Merge.stencil
+    Under                          -> processMerge $ Merge.threeWayMerge             Merge.under
+    XOR                            -> processMerge $ Merge.threeWayMerge             Merge.xor
     where processMerge f = img'
               where (r, g, b, a) = f r1 g1 b1 r2 g2 b2 a1 a2
                     view' = insertChannelFloats view [
