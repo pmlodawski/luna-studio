@@ -22,7 +22,7 @@ spec = do
 
             describe testName $ do
                 describe "should save proper image" $ do
-                    let actualImage = differenceKeyerLuna 0.2 2.5  (constantLuna HD (RGBA 0.9 0.4 0.5 0.9)) (conicalLuna 200 400)
+                    let actualImage = differenceKeyerLuna 0.2 2.5 True (constantLuna HD (RGBA 0.9 0.4 0.5 0.9)) (conicalLuna 200 400)
                     let expectedImage = undefined --getDefaultTestPic specPath testName
                     it "to samles/x_result" $ do
                         pending
