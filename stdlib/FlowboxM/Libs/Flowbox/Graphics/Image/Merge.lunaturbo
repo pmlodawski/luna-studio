@@ -6,35 +6,36 @@ foreign haskell import Flowbox.Graphics.Mockup.Merge
 
 foreign haskell class MergeMode:
     Atop
-    Average
-    ColorBurn
-    ColorDodge
+    Average: ab :: AlphaBlend
+    ColorBurn: ab :: AlphaBlend
+    ColorDodge: ab :: AlphaBlend
     ConjointOver
-    Copy
-    Difference
+    Copy: ab :: AlphaBlend
+    Difference: ab :: AlphaBlend
     DisjointOver
-    DivideBySource
-    DivideByDestination
-    Exclusion
-    From
-    Geometric
-    HardLight
-    Hypot
+    DivideBySource: ab :: AlphaBlend
+    DivideByDestination: ab :: AlphaBlend
+    Exclusion: ab :: AlphaBlend
+    From: ab :: AlphaBlend
+    Geometric: ab :: AlphaBlend
+    HardLight: ab :: AlphaBlend
+    Hypot: ab :: AlphaBlend
     In
     Mask
     Matte
     # Max
     # Min
-    Minus
-    Multiply
+    Minus: ab :: AlphaBlend
+    Multiply: ab :: AlphaBlend
     Out
     Over
-    Overlay
-    Plus
-    Screen
-    SoftLight
-    SoftLightPegtop
-    SoftLightIllusions
+    Overlay: ab :: AlphaBlend
+    Plus: ab :: AlphaBlend
+    Screen: ab :: AlphaBlend
+    SoftLight: ab :: AlphaBlend
+    SoftLightPegtop: ab :: AlphaBlend
+    SoftLightIllusions: ab :: AlphaBlend
+    SoftLightPhotoshop: ab :: AlphaBlend
     Stencil
     Under
     XOR
@@ -44,4 +45,4 @@ foreign haskell class AlphaBlend:
     Custom
 
 foreign haskell def Image.merge mode alphaBlendMode img:
-    liftF4 mergeLuna mode alphaBlendMode self img
+    liftF3 mergeLuna mode self img
