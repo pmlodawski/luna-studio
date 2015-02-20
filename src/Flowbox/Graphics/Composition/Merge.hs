@@ -26,6 +26,7 @@ type ComplicatedBlendMode a = Overlay a -> OverlayAlpha a -> Background a -> Bac
 
 data AlphaBlend = Adobe
                 | Custom
+                deriving (Show)
 
 union :: Num a => a -> a -> a
 union a b = a + b - (a * b)
