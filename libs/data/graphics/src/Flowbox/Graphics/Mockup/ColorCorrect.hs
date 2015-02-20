@@ -330,12 +330,8 @@ colorCorrectLunaBase (curveShadows, curveHighlights)
                   )
                   = onEachColorRGBA correct
     where
-          strShadows x    = A.cond (x A.<=* 0) 1
-                          $ A.cond (x A.>=* 0.09) 0
-                          $ BSpline.valueAt (A.use curveShadows :: A.Acc (BSpline Float)) x
-          strHighlights x = A.cond (x A.<=* 0.5) 0
-                          $ A.cond (x A.>=* 1) 1
-                          $ BSpline.valueAt (A.use curveHighlights :: A.Acc (BSpline Float)) x
+          strShadows x    = BSpline.valueAt (A.use curveShadows :: A.Acc (BSpline Float)) x
+          strHighlights x = BSpline.valueAt (A.use curveHighlights :: A.Acc (BSpline Float)) x
 
           correctMasterR = CC.colorCorrect masterContrastR masterGammaR masterGainR masterOffsetR
           correctMasterG = CC.colorCorrect masterContrastG masterGammaG masterGainG masterOffsetG
