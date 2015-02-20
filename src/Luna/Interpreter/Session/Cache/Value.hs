@@ -97,7 +97,7 @@ report callPointPath varName = do
     time      <- Env.getTimeVar
     results   <- get varName time callPointPath
     safeLiftIO' (Error.CallbackError $(loc)) $
-        resultCB projectID callPointPath results
+        resultCB projectID callPointPath results time
 
 
 get :: VarName -> Time -> CallPointPath -> Session mm [ModeValue]
