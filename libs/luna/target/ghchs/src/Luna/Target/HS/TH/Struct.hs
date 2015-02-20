@@ -147,6 +147,25 @@ appEs = foldl AppE
 --        setterName = Naming.setter fieldName
 --        accName    = mkName $ Naming.mkFieldSetter typeName fieldName
 
+genDataTuple tpName = do
+    TyConI (DataD _ _ _ cons _) <- reify tpName
+    mapM consTuple cons
+
+    where consTuple c = do
+              let name = getConName c
+              vars <- mapM (\i -> newName $ "t" ++ show i) [1..consParams c]
+              return $ FunD (mkName $ "dataTuple_" ++ nameBase tpName) 
+                     $ [Clause [ConP name $ fmap VarP vars] (NormalB (TupE $ fmap VarE vars)) []]
+          consParams = \case
+              NormalC _ l   -> length l
+              RecC    _ l   -> length l
+              InfixC  {}    -> 2
+              ForallC l _ _ -> length l
+
+
+--genDataTuple = [FunD (mkName $ "mkgenDataTuple") [Clause [ConP Ghci1.Vector [VarP t1_1,VarP t2_2,VarP t3_3]] (NormalB (TupE [VarE t1_1,VarE t2_2,VarE t3_3])) []]]
+
+
 {-# INLINE uncurry3 #-}
 uncurry3 :: (a -> b -> c -> d) -> ((a, b, c) -> d)
 uncurry3 f ~(a,b,c) = f a b c
@@ -321,6 +340,7 @@ mkLiftF pNum base = AppE (VarE fname) (VarE base) where
 registerType :: Name -> Q [Dec]
 registerType tpName = do
     TyConI (DataD _ _ bndrs _ _) <- reify tpName
+    dataTuples <- genDataTuple tpName
     let treg   = registerType' tpName bndrs
         clsreg = registerType' clsName []
         clsdef = DataD [] clsName [] [NormalC clsName []] (fmap (mkName.show) stdDerivings)

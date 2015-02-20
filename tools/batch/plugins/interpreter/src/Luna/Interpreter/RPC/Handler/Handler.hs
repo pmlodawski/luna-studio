@@ -15,7 +15,7 @@ module Luna.Interpreter.RPC.Handler.Handler where
 import           Control.Monad.Trans.State
 import           Data.IORef                (IORef)
 import qualified Data.IORef                as IORef
-import           Pipes                     (liftIO, (>->))
+import           Pipes                     ((>->))
 import qualified Pipes
 import qualified Pipes.Concurrent          as Pipes
 import qualified Pipes.Safe                as Pipes
@@ -27,7 +27,6 @@ import qualified Flowbox.Bus.Data.Message                    as Message
 import           Flowbox.Bus.Data.Prefix                     (Prefix)
 import qualified Flowbox.Bus.Data.Prefix                     as Prefix
 import           Flowbox.Bus.Data.Topic                      (Topic, status, update, (/+))
-import qualified Flowbox.Bus.Data.Topic                      as Topic
 import           Flowbox.Bus.RPC.HandlerMap                  (HandlerMap)
 import qualified Flowbox.Bus.RPC.HandlerMap                  as HandlerMap
 import           Flowbox.Bus.RPC.RPC                         (RPC)
@@ -44,6 +43,7 @@ import qualified Luna.Interpreter.RPC.Handler.Abort          as Abort
 import qualified Luna.Interpreter.RPC.Handler.ASTWatch       as ASTWatch
 import qualified Luna.Interpreter.RPC.Handler.Interpreter    as Interpreter
 import qualified Luna.Interpreter.RPC.Handler.Preprocess     as Preprocess
+import qualified Luna.Interpreter.RPC.Handler.Renderer       as Renderer
 import qualified Luna.Interpreter.RPC.Handler.Sync           as Sync
 import qualified Luna.Interpreter.RPC.Handler.Value          as Value
 import           Luna.Interpreter.RPC.QueueInfo              (QueueInfo)
@@ -59,38 +59,41 @@ import qualified Luna.Interpreter.Session.Session            as Session
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 topics :: Prefix -> [Topic]
-topics prefix = HandlerMap.topics $ handlerMap prefix undefined undefined
+topics prefix = HandlerMap.topics $ handlerMap prefix undefined undefined undefined
 
 
 type MM = LRU
 
 
-handlerMap :: Prefix -> QueueInfo -> Message.CorrelationID -> HandlerMap Context (SessionST MM)
-handlerMap prefix queueInfo crl callback = HandlerMap.fromList $ Prefix.prefixifyTopics prefix
-    [ (Topic.interpreterSetProjectIDRequest                , respond Topic.update   Interpreter.setProjectID     )
-    , (Topic.interpreterGetProjectIDRequest                , respond Topic.status   Interpreter.getProjectID     )
-    , (Topic.interpreterSetMainPtrRequest                  , respond Topic.update   Interpreter.setMainPtr       )
-    , (Topic.interpreterGetMainPtrRequest                  , respond Topic.status   Interpreter.getMainPtr       )
-    , (Topic.interpreterRunRequest                         , respond Topic.update $ Interpreter.run queueInfo crl)
-    , (Topic.interpreterWatchPointAddRequest               , respond Topic.update   Interpreter.watchPointAdd    )
-    , (Topic.interpreterWatchPointRemoveRequest            , respond Topic.update   Interpreter.watchPointRemove )
-    , (Topic.interpreterWatchPointListRequest              , respond Topic.status   Interpreter.watchPointList   )
-    , (Topic.interpreterValueRequest                       , respond Topic.update   Value.get                    )
-    , (Topic.interpreterPingRequest                        , respond Topic.status   Interpreter.ping             )
-    , (Topic.interpreterAbortRequest                       , respond Topic.status   Interpreter.abort            )
-    , (Topic.interpreterVarTimeGetRequest                  , respond Topic.status   Interpreter.varTimeGet       )
-    , (Topic.interpreterVarTimeSetRequest                  , respond Topic.update   Interpreter.varTimeSet       )
-    , (Topic.interpreterSerializationModeGetRequest        , respond Topic.status   Interpreter.getSerializationMode       )
-    , (Topic.interpreterSerializationModeInsertRequest     , respond Topic.update   Interpreter.insertSerializationMode    )
-    , (Topic.interpreterSerializationModeDeleteRequest     , respond Topic.update   Interpreter.deleteSerializationMode    )
-    , (Topic.interpreterSerializationModeDeleteAllRequest  , respond Topic.update   Interpreter.deleteAllSerializationMode )
-    , (Topic.interpreterMemoryGetLimitsRequest             , respond Topic.status   Interpreter.getMemoryLimits)
-    , (Topic.interpreterMemorySetLimitsRequest             , respond Topic.update   Interpreter.setMemoryLimits)
-    , (Topic.interpreterExitRequest                        , respond Topic.update   Interpreter.exit)
+handlerMap :: Prefix -> QueueInfo -> Message.CorrelationID
+           -> Pipes.Output (Message, Message.CorrelationID, Flag) -> HandlerMap Context (SessionST MM)
+handlerMap prefix queueInfo crl output callback = HandlerMap.fromList $ Prefix.prefixifyTopics prefix
+    [ (Topic.interpreterSetProjectIDRequest                , respond update   Interpreter.setProjectID     )
+    , (Topic.interpreterGetProjectIDRequest                , respond status   Interpreter.getProjectID     )
+    , (Topic.interpreterSetMainPtrRequest                  , respond update   Interpreter.setMainPtr       )
+    , (Topic.interpreterGetMainPtrRequest                  , respond status   Interpreter.getMainPtr       )
+    , (Topic.interpreterRunRequest                         , respond update $ Interpreter.run queueInfo crl)
+    , (Topic.interpreterWatchPointAddRequest               , respond update   Interpreter.watchPointAdd    )
+    , (Topic.interpreterWatchPointRemoveRequest            , respond update   Interpreter.watchPointRemove )
+    , (Topic.interpreterWatchPointListRequest              , respond status   Interpreter.watchPointList   )
+    , (Topic.interpreterValueRequest                       , respond update   Value.get                    )
+    , (Topic.interpreterPingRequest                        , respond status   Interpreter.ping             )
+    , (Topic.interpreterAbortRequest                       , respond status   Interpreter.abort            )
+    , (Topic.interpreterVarTimeGetRequest                  , respond status   Interpreter.varTimeGet       )
+    , (Topic.interpreterVarTimeSetRequest                  , respond update   Interpreter.varTimeSet       )
+    , (Topic.interpreterSerializationModeGetRequest        , respond status   Interpreter.getSerializationMode       )
+    , (Topic.interpreterSerializationModeInsertRequest     , respond update   Interpreter.insertSerializationMode    )
+    , (Topic.interpreterSerializationModeDeleteRequest     , respond update   Interpreter.deleteSerializationMode    )
+    , (Topic.interpreterSerializationModeDeleteAllRequest  , respond update   Interpreter.deleteAllSerializationMode )
+    , (Topic.interpreterMemoryGetLimitsRequest             , respond status   Interpreter.getMemoryLimits)
+    , (Topic.interpreterMemorySetLimitsRequest             , respond update   Interpreter.setMemoryLimits)
+    , (Topic.interpreterExitRequest                        , respond update   Interpreter.exit)
+
+    , (Topic.rendererRenderRequest , respond update $ Renderer.render $ Renderer.reportProgress crl output)
 
     , (Topic.projectmanagerSyncGetRequest                           /+ status, call0 Sync.projectmanagerSyncGet)
 
@@ -152,15 +155,16 @@ extraImports = ["FlowboxM.Libs.Flowbox.Std"]
 interpret :: MemoryManager MM
           => Prefix -> QueueInfo
           -> IORef Message.CorrelationID
+          -> Pipes.Output (Message, Message.CorrelationID, Flag)
           -> Pipes.Pipe (Message, Message.CorrelationID)
                         (Message, Message.CorrelationID, Flag)
                         (Pipes.SafeT (StateT Context (SessionST MM))) ()
-interpret prefix queueInfo crlRef = untilTrue $ do
+interpret prefix queueInfo crlRef output = untilTrue $ do
     (message, crl) <- Pipes.await
     let topic = message ^. Message.topic
     logger trace $ "Received message " ++ topic
     liftIO $ IORef.writeIORef crlRef crl
-    results <- lift2 $ Processor.process (handlerMap prefix queueInfo crl) message
+    results <- lift2 $ Processor.process (handlerMap prefix queueInfo crl output) message
     logger trace $ "Sending " ++ show (length results) ++ " result"
     let send []    = return ()
         send [r]   = Pipes.yield (r, crl, Flag.Enable)
@@ -186,6 +190,6 @@ run cfg prefix ctx (input, output) = do
     Session.run cfg env extraImports $ lift $ flip evalStateT ctx $
         Pipes.runSafeT $ Pipes.runEffect $ Abort.handleAbort $
                 Pipes.fromInput input1
-            >-> interpret prefix queueInfo crlRef
+            >-> interpret prefix queueInfo crlRef output
             >-> Pipes.toOutput output
 

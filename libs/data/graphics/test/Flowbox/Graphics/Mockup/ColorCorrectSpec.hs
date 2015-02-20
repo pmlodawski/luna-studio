@@ -1,11 +1,11 @@
-module Flowbox.Graphics.Mockup.MergeSpec where
+module Flowbox.Graphics.Mockup.ColorCorrectSpec where
 
 import Test.Hspec
 import Test.QuickCheck
 
-import Flowbox.Graphics.Mockup.Merge
+import Flowbox.Graphics.Mockup.ColorCorrect
 import Flowbox.Graphics.Mockup.Generator
-import Flowbox.Graphics.Color.Color
+import Flowbox.Graphics.Color.Companding
 import Flowbox.Prelude
 import TestHelpers
 
@@ -13,15 +13,14 @@ spec :: Spec
 spec = do
     let specPath = "./test/Flowbox/Graphics/Mockup/"
         in do 
-            let testName = "mergeLuna"
+            let testName = "gammaToLinearLuna"
             let testPath = specPath++testName
 
             describe testName $ do
                 describe "Should save ok image" $ do
-
-                    let actualImage = mergeLuna Over (conicalLuna 1000 1200) (constantLuna PCVideo (RGBA 0.3 0.4 0.5 0.6)) 
+                    let actualImage = gammaToLinearLuna REDLog (conicalLuna 1000 1200)
                     -- let  expectedImage = getDefaultTestPic specPath testName
                     it "in test" $ do
                         pending
-                        testSave actualImage `shouldReturn` ()
+                        --testSave actualImage `shouldReturn` ()
                         -- rightReturnShouldBeCloseTo testPath PixelWise actualImage expectedImage

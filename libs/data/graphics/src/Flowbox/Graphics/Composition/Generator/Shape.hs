@@ -32,6 +32,3 @@ ellipse cnv@(Grid w h) interior exterior = Shader cnv $ \(Point2 x y) ->
         x2 = (x - rx) * (x - rx)
         y2 = (y - ry) * (y - ry)
     in A.cond ((x2 * ry2 + y2 * rx2) A.<=* (rx2 * ry2)) interior exterior
-
-bound :: Elt t => Boundary (Exp t) -> DiscreteShader (Exp t) -> DiscreteShader (Exp t)
-bound b gen = Shader (canvas gen) (boundedIndex2D b gen)

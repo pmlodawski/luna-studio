@@ -15,7 +15,6 @@ import           Control.Monad (forever)
 import           Data.Map      (Map)
 import qualified Data.Map      as Map
 import           Data.Maybe    (fromMaybe)
-import           Pipes         (liftIO)
 import qualified Pipes
 
 import           Flowbox.Bus.Data.Message           (Message)

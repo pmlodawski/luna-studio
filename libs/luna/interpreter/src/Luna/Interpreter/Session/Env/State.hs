@@ -9,14 +9,14 @@
 
 module Luna.Interpreter.Session.Env.State where
 
-import qualified Control.Concurrent.MVar    as MVar
-import           Control.Monad.Catch        (bracket_)
+import qualified Control.Concurrent.MVar     as MVar
+import           Control.Monad.Catch         (bracket_)
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
-import           Data.IntSet                (IntSet)
-import qualified Data.IntSet                as IntSet
-import           Data.Map                   (Map)
-import qualified Data.Map                   as Map
+import           Data.IntSet                 (IntSet)
+import qualified Data.IntSet                 as IntSet
+import           Data.Map                    (Map)
+import qualified Data.Map                    as Map
 import qualified Data.Maybe                  as Maybe
 import           Data.MultiSet               (MultiSet)
 import qualified Data.MultiSet               as MultiSet
@@ -25,13 +25,12 @@ import qualified Data.Set                    as Set
 import qualified Language.Preprocessor.Cpphs as Cpphs
 
 import qualified Flowbox.Batch.Project.Project                 as Project
-import           Flowbox.Control.Error                       hiding (err)
+import           Flowbox.Control.Error                         hiding (err)
 import           Flowbox.Data.MapForest                        (MapForest)
-import qualified Flowbox.Data.MapForest                      as MapForest
-import qualified Flowbox.Batch.Project.Project               as Project
-import           Flowbox.Data.Mode                           (Mode)
-import           Flowbox.Data.SetForest                      (SetForest)
-import qualified Flowbox.Data.SetForest                      as SetForest
+import qualified Flowbox.Data.MapForest                        as MapForest
+import           Flowbox.Data.Mode                             (Mode)
+import           Flowbox.Data.SetForest                        (SetForest)
+import qualified Flowbox.Data.SetForest                        as SetForest
 import           Flowbox.Prelude
 import           Flowbox.Source.Location                       (Location, loc)
 import qualified Luna.DEP.AST.AST                              as AST
@@ -60,6 +59,7 @@ import qualified Luna.Interpreter.Session.Data.CallPoint       as CallPoint
 import           Luna.Interpreter.Session.Data.CallPointPath   (CallPointPath)
 import           Luna.Interpreter.Session.Data.DefPoint        (DefPoint (DefPoint))
 import qualified Luna.Interpreter.Session.Data.DefPoint        as DefPoint
+import           Luna.Interpreter.Session.Data.Time            (Time)
 import qualified Luna.Interpreter.Session.Env.Env              as Env
 import           Luna.Interpreter.Session.Env.Session          (Session)
 import           Luna.Interpreter.Session.Error                (Error)
@@ -234,11 +234,11 @@ debugNode callPointPath action =
 
 ---- Env.timeVar ----------------------------------------------------------
 
-getTimeVar :: Session mm Env.TimeVar
+getTimeVar :: Session mm Time
 getTimeVar = gets $ view Env.timeVar
 
 
-setTimeVar :: Env.TimeVar -> Session mm ()
+setTimeVar :: Time -> Session mm ()
 setTimeVar = modify . set Env.timeVar
 
 ---- Env.timeRefs ---------------------------------------------------------

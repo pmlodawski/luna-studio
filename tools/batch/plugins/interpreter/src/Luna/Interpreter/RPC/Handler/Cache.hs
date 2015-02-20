@@ -22,6 +22,7 @@ import           Luna.DEP.Data.Serialize.Proto.Conversion.Library       ()
 import           Luna.Interpreter.RPC.Handler.Lift
 import qualified Luna.Interpreter.Session.Cache.Cache                   as Cache
 import qualified Luna.Interpreter.Session.Cache.Invalidate              as Invalidate
+import           Luna.Interpreter.Session.Data.Time                     (Time)
 import qualified Luna.Interpreter.Session.Env                           as Env
 import qualified Luna.Interpreter.Session.Memory.GPU                    as GPUMemory
 import           Luna.Interpreter.Session.Memory.Manager                (MemoryManager)
@@ -100,7 +101,7 @@ deleteNode projectID libraryID nodeID =
         GPUMemory.performGC
 
 
-setTimeVar :: Env.TimeVar -> RPC Context (SessionST mm) ()
+setTimeVar :: Time -> RPC Context (SessionST mm) ()
 setTimeVar time = liftSession $ do
     Env.setTimeVar time
     Invalidate.modifyTimeRefs

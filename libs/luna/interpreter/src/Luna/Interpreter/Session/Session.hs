@@ -187,7 +187,7 @@ runDecls decls = do
 runAssignment :: String -> String -> Session mm ()
 runAssignment asigned asignee = do
     lift2 $ Bindings.remove asigned
-    runStmt $ asigned ++ " <- return $ " ++ asignee
+    runDecls $ asigned <> " = " <> asignee
 
 
 runAssignment' :: String -> String -> Session mm ()
@@ -202,7 +202,9 @@ interpret = interceptErrors $(loc) . HEval.interpret
 
 setHardcodedExtensions :: Session mm ()
 setHardcodedExtensions =
-    setFlags [ GHC.Opt_DataKinds ]
+    setFlags [ GHC.Opt_DataKinds
+             , GHC.Opt_ScopedTypeVariables
+             ]
 
 
 --reifySession :: (GHC.Session -> Env -> IO a) -> Session mm a
