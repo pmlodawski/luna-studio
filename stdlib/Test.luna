@@ -1,10 +1,10 @@
 foreign haskell def print s="":
     polyJoin . liftF1 (Value . fmap Safe . print) $ s
 
-class Vector:
-    x,y,z :: Int
+foreign haskell class Bool:
+    True
+    False
+
 
 def main:
-    print 1
-    # case (1,2):
-    #     (x,y): print x
+    b = True

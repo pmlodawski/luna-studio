@@ -14,7 +14,6 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE DysfunctionalDependencies #-}
 {-# LANGUAGE ExtendedDefaultRules #-}
-{-# LANGUAGE FunctionalDependencies #-}
 
 -- module --
 module Main where
@@ -23,19 +22,17 @@ module Main where
 import Luna.Target.HS
 
 -- body --
-#include "pragmas.h"
+#include "pragmas.cpp"
 
 -- ====== Main type ====== --
 data Main 
-    = Main
+    = Main _rtupX0 ()
     deriving (Show,Eq,Ord,Generic,Typeable)
 $(registerType ''Main)
 
 -- ------ Main.Main constructor ------ --
 cons_Main = _member ("Main") (val Cls_Main)
 memDef_Cls_Main_Main = liftCons0 Main
-
--- ====== --------------- ====== --
 
 -- ====== Method: Cls_Main.Main ====== --
 memSig_Cls_Main_Main = _rtup1 (_nuSigArg ("self"))
@@ -47,33 +44,27 @@ $(registerMethod ''Cls_Main "Main")
 -- Data headers
 -- ===================================================================
 
-class DataTuple d t | d -> t where
-	dataTuple :: d -> t
+-- ====== Bool type ====== --
+-- datatype provided externally
+$(registerType ''Bool)
 
--- ====== Vector type ====== --
-data Vector 
-    = Vector Int Int Int
-    | Scalar Int
-    deriving (Show,Eq,Ord,Generic,Typeable)
-$(registerType ''Vector)
+-- ------ Bool.True constructor ------ --
+cons_True = _member ("True") (val Cls_Bool)
+memDef_Cls_Bool_True = liftCons0 (\(RTuple ()) -> True)
 
-instance DataTuple Vector (Int, Int, Int) where
-	dataTuple = dataTuple_Vector
+-- ====== Method: Cls_Bool.True ====== --
+memSig_Cls_Bool_True = _rtup1 (_nuSigArg ("self"))
+memFnc_Cls_Bool_True = (memSig_Cls_Bool_True, memDef_Cls_Bool_True)
+$(registerMethod ''Cls_Bool "True")
 
--- ------ Vector accessors ------ --
-$(generateFieldAccessors ''Vector [('Vector, [Just "x", Just "y", Just "z"])])
-$(registerFieldAccessors ''Vector ["x", "y", "z"])
+-- ------ Bool.False constructor ------ --
+cons_False = _member ("False") (val Cls_Bool)
+memDef_Cls_Bool_False = liftCons0 False
 
--- ------ Vector.Vector constructor ------ --
-cons_Vector = _member ("Vector") (val Cls_Vector)
-memDef_Cls_Vector_Vector = liftCons3 Vector
-
--- ====== --------------- ====== --
-
--- ====== Method: Cls_Vector.Vector ====== --
-memSig_Cls_Vector_Vector = _rtup4 (_nuSigArg ("self"), _nuSigArg ("x"), _nuSigArg ("y"), _nuSigArg ("z"))
-memFnc_Cls_Vector_Vector = (memSig_Cls_Vector_Vector, memDef_Cls_Vector_Vector)
-$(registerMethod ''Cls_Vector "Vector")
+-- ====== Method: Cls_Bool.False ====== --
+memSig_Cls_Bool_False = _rtup1 (_nuSigArg ("self"))
+memFnc_Cls_Bool_False = (memSig_Cls_Bool_False, memDef_Cls_Bool_False)
+$(registerMethod ''Cls_Bool "False")
 
 
 -- ===================================================================
@@ -87,14 +78,15 @@ $(registerMethod ''Cls_Vector "Vector")
 
 -- ====== Method: Main.print ====== --
 memSig_Main_print = _rtup2 (_nuSigArg ("self"), _npSigArg ("s", val ("" :: String)))
-memDef_Main_print self s = 
-    polyJoin . liftF1 (Value . fmap Safe . print) $ s
+memDef_Main_print self s = polyJoin . liftF1 (Value . fmap Safe . print) $ s
 memFnc_Main_print = (memSig_Main_print, memDef_Main_print)
 $(registerMethod ''Main "print")
 
 -- ====== Method: Main.main ====== --
 memSig_Main_main = _rtup1 (_nuSigArg ("self"))
-memDef_Main_main _self = _call (0) (appNext (val (1 :: Int)) (_member ("print") _self))
+memDef_Main_main _self = do 
+    _b <- _call (0) cons_True
+    val ()
 memFnc_Main_main = (memSig_Main_main, memDef_Main_main)
 $(registerMethod ''Main "main")
 

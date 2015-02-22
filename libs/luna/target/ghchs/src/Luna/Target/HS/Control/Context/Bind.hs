@@ -266,3 +266,20 @@ instance PolyMonadCtx (MonadCtx env1 set1 m1 s1) (CtxWrapper (ValCtx m2' s2') (M
 instance PolyMonadCtx (CtxWrapper (ValCtx m1' s1') (MonadCtx env1 set1 m1 s1)) (MonadCtx env2 set2 m2 s2) <= (m1~m2, MonadSafety m2 s1 s2) where
     a >>>~ f = (unpackCtxWrapper a) >>>~ f
 
+
+
+
+----------------------
+
+
+instance MonadSafety (Value Pure) s1 s2 <= PolyMonad s1 s2 (MatchSafety s1 s2) where
+    bindSafety m f = tst where
+        f' = fromPure . fromValue . f -- :: a -> (s2 b)
+        m' = fromPure $ fromValue m   -- :: (s1 a)
+        tst = Value $ Pure $ m' >>>= f'
+        -- PureS $ fromPureS m >>>= (fromPureS . f)
+
+instance MonadSafety (Value IO) Safe s where
+    bindSafety m f = Value $ do
+        Safe a <- fromValue m
+        fromValue $ f a

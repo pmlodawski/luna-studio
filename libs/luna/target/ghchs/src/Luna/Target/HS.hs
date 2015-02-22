@@ -9,6 +9,8 @@ module Luna.Target.HS (module X) where
 
 import Control.PolyMonad               as X
 import Data.TupleList                  as X ((//))
+import Data.RTuple                     as X (RTuple(RTuple))
+import Data.Wrapper                    as X
 import Data.Typeable                   as X (Proxy (..), Typeable)
 import GHC.Generics                    as X
 import Luna.Target.HS.Control          as X

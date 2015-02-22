@@ -65,7 +65,7 @@ genModule (HExpr.Module name path ext imports body) = toLazyText modcode where
             <> sectionHeader "module"         <> header
             <> genSection    "imports"        generate2' imports
             <> genSection    "body"           generate2' body
-    header = "module " <> mjoin "." (fmap fromLazyText (path <> [name])) <> " where" <> eol <> eol
+    header = "module " <> fromLazyText name <> mjoin "." (mempty : fmap fromLazyText path) <> " where" <> eol <> eol
 
 genExt :: Extension -> Text.Builder
 genExt ext = "{-# LANGUAGE " <> show' ext <> " #-}"
@@ -87,8 +87,8 @@ runMeI = renderCode HSIndent
 runMeC = renderCode HSCompact
 
 
-genExpr :: HExpr -> Text
-genExpr = toLazyText . generate2'
+
+
 
 
 
@@ -144,7 +144,7 @@ func name args body = apps' name args `assign` sbox body
 app' a b = app (convert a) (convert b)
 apps' base = foldl app' (convert base)
 
-macroApps name items = app' name $ tuple items
+macroApps name items = sbox $ app' name $ tuple items
 
 buildBody2 exprs = if null exprs then "" else mjoin "; " (gen exprs) <> ";"
 
@@ -156,10 +156,21 @@ doBlock = \case
     (x:[]) -> x
     items  -> app "do" . block $ items
 
+lineBlock = \case
+    []     -> error "empty line-block!"
+    (x:[]) -> x
+    items  -> block $ items
+
 typed base t = apps' base ["::", t]
 
 assign a b = apps' a ["=", b]
 arrow a b = apps' a ["->", b]
+
+removeEmptyBegining = \case
+    [] -> []
+    (x:xs) -> case x of
+        "" -> removeEmptyBegining xs
+        _  -> (x:xs)
 
 instance (Render s ConsBlock, Render s Block) => Generator2 HExpr s where
     generate2 = \case
@@ -171,7 +182,11 @@ instance (Render s ConsBlock, Render s Block) => Generator2 HExpr s where
         HExpr.VarT     name                   -> convert name
         HExpr.ConT     name                   -> convert name
         HExpr.ConP     name                   -> convert name
-        HExpr.Native   natCode                -> convert natCode
+        HExpr.Native   natCode                -> lineBlock lines where
+                                                 lines = fmap fromString 
+                                                       $ removeEmptyBegining 
+                                                       $ fmap (fromText . Text.strip)
+                                                       $ Text.lines natCode
         HExpr.Pragma   p                      -> gen p
         HExpr.Lit      val                    -> gen val
         HExpr.LitT     val                    -> gen val
@@ -181,13 +196,13 @@ instance (Render s ConsBlock, Render s Block) => Generator2 HExpr s where
         HExpr.AppP     src dst                -> app' (gen src) (gen dst)
         HExpr.AppT     src dst                -> app' (gen src) (gen dst)
         HExpr.AppE     src dst                -> app' (gen src) $ gen dst
-        HExpr.RecUpdE  expr name val          -> app' (gen expr) $ braced $ apps' name ["=", gen val]
+        HExpr.RecUpdE  expr name val          -> app' (gen expr) $ braced $ name `assign` gen val
         HExpr.InstanceD tp decs               -> "instance " <> gen tp <> " where { " <> mjoin "; " (gen decs) <> " }"
-        HExpr.TypeInstance tp expr            -> "type instance " <> gen tp <> " = " <> gen expr
-        HExpr.NewTypeD name params con        -> "newtype " <> convert name <> " " <> (spaceJoin . gen) params <> " = " <> gen con
-        HExpr.TypeD    dst src                -> apps' ("type" :: String) [gen dst, " = ", gen src]
-        HExpr.Con      name fields            -> apps' name $ gen fields
+        HExpr.TypeInstance tp expr            -> app' ("type instance" :: String) (gen tp) `assign` (gen expr)
+        HExpr.NewTypeD name params con  ders  -> apps' ("newtype" :: String) (name : params) `app'` (consBlock [gen con] $ fmap (fromString . show) ders)
         HExpr.DataD    name params cons ders  -> dataDecl name params $ consBlock (gen cons) (fmap (fromString . show) ders)
+        HExpr.TypeD    dst src                -> app' ("type" :: String) (gen dst) `assign` gen src
+        HExpr.Con      name fields            -> apps' name $ gen fields
         HExpr.THE      expr                   -> thed $ gen expr
         HExpr.Function name signature expr    -> func name (gen signature) $ gen expr
         HExpr.MacroE   name items             -> macroApps name $ gen items
@@ -200,7 +215,7 @@ instance (Render s ConsBlock, Render s Block) => Generator2 HExpr s where
         HExpr.Lambda   signature expr         -> "(\\" <> spaceJoin (gen signature) <> " -> " <> gen expr <> ")"
         HExpr.LetBlock exprs result           -> "let { " <> mjoin "; " (gen exprs) <> " } in " <> gen result
         HExpr.LetExpr  expr                   -> "let " <> gen expr
-        HExpr.OperatorE name src dst          -> gen src  <> " " <> convert name <> " " <> gen dst
+        HExpr.OperatorE name src dst          -> gen src `app'` name `app'` gen dst
         HExpr.Infix     name src dst          -> gen src  <> " `" <> convert name <> "` " <> gen dst
         HExpr.Assignment src dst              -> gen src `assign` gen dst
         HExpr.Arrow      src dst              -> gen src <> " <- " <> gen dst
@@ -218,6 +233,7 @@ instance (Render s ConsBlock, Render s Block) => Generator2 HExpr s where
                                                          <> maybe "" (\lst  -> " (" <> sepjoin (fmap convert lst) <> ")") tgts
         --HExpr.CaseE    expr matches           -> "case " <> gen expr <> " of {" <> buildBody2 matches <> "}"
         HExpr.CaseE    expr matches           -> apps "case" [gen expr, "of", block $ gen matches] -- " of {" <> buildBody2 matches <> "}"
+        HExpr.LambdaCase matches              -> app "\\case" (block $ gen matches)
         --HExpr.CondE    cond sucess failure    -> complex $ "ifThenElse' " <> gen cond <> (simplify.buildDoBlock) sucess <> (simplify.buildDoBlock) failure
         
         s -> tok 10 $ fromString $ "unknown: " ++ show s
@@ -281,12 +297,14 @@ instance Render HSCompact Block where
 
 
 instance Render HSIndent ConsBlock where
-    render _ (ConsBlock ders items) = Tok Top $ nested (derMod cons)
+    render _ (ConsBlock ders items) = Tok Top $ nested (genDeriving ders cons)
         where cons = foldl concat mempty
                    . zip ("= " : repeat "| ")
                    $ fmap (view Tok.doc) items
-              derMod = case ders of
-                  [] -> id
-                  _  -> (<> (line <> "deriving " 
-                                  <> Doc.parensed (mjoin "," $ fmap fromText ders)))
               concat a (sep,b) = a <> line <> sep <> b
+
+
+genDeriving ders = case ders of
+    [] -> id
+    _  -> (<> (line <> "deriving " 
+                    <> Doc.parensed (mjoin "," $ fmap fromText ders)))
