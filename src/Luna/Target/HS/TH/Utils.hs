@@ -33,6 +33,12 @@ getTyVarBndrName t = case t of
     KindedTV name _ -> name
 
 
+rTupE items = foldr tup2 (TupE []) items where
+    tup2 a b = TupE [a,b]
+
+rTupP items = foldr tup2 (TupP []) items where
+    tup2 a b = TupP [a,b]
+
 getDecVarNames :: Dec -> [Name]
 getDecVarNames dec = map getTyVarBndrName vars where
     vars = case dec of

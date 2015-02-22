@@ -25,6 +25,7 @@ import           Luna.Target.HS.AST.Deriving (stdDerivings)
 import           Data.Maybe                  (mapMaybe)
 import           Data.Map                    (Map)
 import qualified Data.Map                    as Map
+import           Data.Monoid
 
 con2TypeName conName = do
     DataConI _ _ typeName _ <- reify conName
@@ -194,19 +195,23 @@ generateFieldAccessors (nameBase -> typeName) fieldDescs = return $ accessors ++
     mkGetter :: String -> [(Name, PatCons)] -> Dec
     mkGetter fieldName descs = FunD accName [Clause [VarP obj] (NormalB $ CaseE (VarE obj) cases) []] where
         accName  = mkName $ Naming.mkFieldGetter typeName fieldName
-        cases    = fmap (uncurry $ mkCase fieldName) descs
-        mkCase fieldName = mkAccCase (VarE unit) unit
+        cases    = fmap (uncurry mkCase) descs
+        mkCase   = mkAccCase (VarE unit) unit
 
     mkSetter :: String -> [(Name, PatCons)] -> Dec
     mkSetter fieldName descs = FunD accName [Clause [VarP obj, VarP unit] (NormalB $ CaseE (VarE obj) cases) []] where
         accName  = mkName $ Naming.mkFieldSetter typeName fieldName
-        cases    = fmap (uncurry $ mkCase fieldName) descs
-        mkCase fieldName conName fieldGen = mkAccCase cons (mkName "_") conName fieldGen where
-            cons = appEs (ConE conName) (fmap VarE $ runPatCons fieldGen unit)
+        cases    = fmap (uncurry mkCase) descs
+        mkCase conName fieldGen = mkAccCase cons (mkName "_") conName fieldGen where
+            structName = mkName $ "RTuple"
+            cons       = AppE (ConE conName) 
+                       $ AppE (ConE structName)
+                       $ rTupE . fmap VarE $ runPatCons fieldGen unit
 
     mkAccessor fieldName descs = [mkGetter fieldName descs, mkSetter fieldName descs]
 
-    mkAccCase result fieldName conName fieldGen = Match (ConP conName conPats) (NormalB result) [] where
+    mkAccCase result fieldName conName fieldGen = Match (ConP conName [ConP structName $ [rTupP conPats]]) (NormalB result) [] where
+        structName = mkName $ "RTuple"
         conPats = fmap VarP $ runPatCons fieldGen fieldName
 
     accessors = concat $ fmap (uncurry mkAccessor) $ Map.assocs consPatMap

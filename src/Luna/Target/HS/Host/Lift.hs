@@ -14,7 +14,7 @@
 {-# LANGUAGE RebindableSyntax #-}
 --{-# LANGUAGE IncoherentInstances #-}
 {-# LANGUAGE GADTs #-}
---{-# LANGUAGE DysfunctionalDependencies #-}
+{-# LANGUAGE DysfunctionalDependencies #-}
 !{-# LANGUAGE RightSideContexts #-}
 
 
@@ -26,10 +26,11 @@ import Luna.Target.HS.Control.Context
 import Luna.Target.HS.Control.Error.Data
 import Control.Monad.Shuffle
 import Control.Category.Dot
-import Data.TupleList
 import Luna.Target.HS.Control.Flow.Env
 import Luna.Target.HS.Host.Rebindable
 import Control.PolyMonad
+import Data.TupleList hiding (uncurryTuple)
+import Data.RTuple           (RTuple(RTuple), fromRTuple, uncurryTuple)
 
 ------------------------------------------------------------------------
 -- Type classes
@@ -109,12 +110,12 @@ liftFR5 = curryTuple5 . liftF5
 --liftCons4 f = liftFR4 f . snd
 --liftCons5 f = liftFR5 f . snd
 
-liftCons0 v _ = liftF0 v
-liftCons1 v _ = liftF1 v
-liftCons2 v _ = liftF2 v
-liftCons3 v _ = liftF3 v
-liftCons4 v _ = liftF4 v
-liftCons5 v _ = liftF5 v
+liftCons0 v _ = flatF0 $ liftF0 $ uncurryTuple v
+liftCons1 v _ = flatF1 $ liftF1 $ uncurryTuple v
+liftCons2 v _ = flatF2 $ liftF2 $ uncurryTuple v
+liftCons3 v _ = flatF3 $ liftF3 $ uncurryTuple v
+liftCons4 v _ = flatF4 $ liftF4 $ uncurryTuple v
+liftCons5 v _ = flatF5 $ liftF5 $ uncurryTuple v
 
 
 --liftCons0 = curryTuple1 . const . liftF0
@@ -281,3 +282,84 @@ instance AutoLift (UnsafeBase base err a) (Value Pure (UnsafeBase base err) a) w
 --    autoEnvLift = Value . Pure . autoErrLift
 
 
+
+
+
+------------------------------------------------------
+
+
+----------------------------------------------------------------------
+-- Flattening
+-- It is used to flatten all env data (IO/Pure + Safe/Unsafe) in order to store the data in datatypes
+-- Currently datatypes cannot store env-tagged data, althought tuples are able to.
+--
+-- Example:
+-- (1,2) is in reality val (val 1, val 2)
+-- where Foo (1,2) is in reality val (Foo (1,2))
+----------------------------------------------------------------------
+
+flatF0 f                = f
+flatF1 f                = flatF0 f             . flattenEnv
+flatF2 f t1             = flatF1 f t1          . flattenEnv
+flatF3 f t1 t2          = flatF2 f t1 t2       . flattenEnv
+flatF4 f t1 t2 t3       = flatF3 f t1 t2 t3    . flattenEnv
+flatF5 f t1 t2 t3 t4    = flatF4 f t1 t2 t3 t4 . flattenEnv
+
+class FlattenEnv ma a mb b | ma a -> mb b where
+    flattenEnv :: ma a -> mb b
+
+instance (ma~mb, a~b) => FlattenEnv ma a mb b where
+    flattenEnv = id
+
+instance (Functor ma, Functor m, FlattenEl a m b, PolyMonad ma m mb) => FlattenEnv ma (RTuple a) mb (RTuple b) where
+    flattenEnv = polyJoin . fmap flattenEl
+
+
+class FlattenEl a m b | a -> m b where
+    flattenEl :: a -> m b
+
+instance FlattenEl () (Value Pure Safe) () where
+    flattenEl = val
+
+instance (Functor mt, FlattenEl ts m20 ts', PolyApplicative mt m20 m) => FlattenEl (mt t, ts) m (t, ts') where
+    flattenEl (mt, ts) = fmap (,) mt <<*>> flattenEl ts
+
+instance (Functor m, FlattenEl a m b) => FlattenEl (RTuple a) m (RTuple b) where
+    flattenEl (RTuple a) = fmap RTuple $ flattenEl a
+
+
+
+expandEnv = val . expandEl
+
+
+class ExpandEl a b | a -> b where
+    expandEl :: a -> b
+
+instance (a~b) => ExpandEl a b where
+    expandEl = id
+
+instance ExpandEl (RTuple ()) (RTuple ()) where
+    expandEl = id
+
+instance (ExpandEl a b, ExpandEl (RTuple as) (RTuple bs)) => ExpandEl (RTuple (a,as)) (RTuple (Value Pure Safe b,bs)) where
+    expandEl (RTuple (a,as)) = RTuple (expandEnv a, fromRTuple . expandEl $ RTuple as)
+
+--main = print $ expandEnv $ RTuple(1::Int,(RTuple(2::Int,()),()))
+
+
+
+--main = print $ flattenEnv $ val $ RTuple (val(1::Int),(val(2::Int),()))
+--main = print $ polyJoin $ val $ val (1::Int) 
+--zaczelo dzialac bo do binda przenioslem instancje monadSafety z BaseMonads!!!
+
+--instance FlattenEnv ma (RTuple (mt t, ts)) ma (RTuple (t, ts')) where
+--    flattenEnv mrt = polyJoin $ fmap (fst . fromRTuple) mrt
+        --RTuple (mt, ts) <- mrt
+        --t <- mt
+        --ts' <- flattenEnv ts
+        --return (t, ts')
+
+        --JAK ZROBIC POPRAWNIE FLATTENENV?
+
+--flattenEnv2 :: a
+--flattenEnv2 (a,as) = fmap (,) a <<*>> as
