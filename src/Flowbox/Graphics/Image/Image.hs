@@ -9,7 +9,7 @@
 
 module Flowbox.Graphics.Image.Image (
     Image,
-    pattern DefaultView,
+    pattern PrimaryView,
     pattern ForceView,
     empty,
     singleton,
@@ -51,8 +51,8 @@ data Image = Image { _arbitraryViews :: Set View
                    , _primaryView    :: Maybe View
                    } deriving (Show)
 
-pattern DefaultView view <- Image _ view
-pattern ForceView view <- Image _ (fromMaybe (error "view not found") -> view)
+pattern PrimaryView view <- Image _ view
+pattern ForceView view <- Image _ (fromMaybe (error "ForceView: primary view not found") -> view)
 
 makeLenses ''Image
 
