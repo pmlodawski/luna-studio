@@ -177,8 +177,8 @@ genModule (Label lab (Module path body)) = withCtx (fromText $ view Path.name pa
 
 extractDataDecls = foldl go ([],[]) where
     go (datas, decls) ld@(Label lab decl) = case decl of
-        Decl.Data d                             -> ((False,d):datas, decls)
-        Decl.Foreign (Foreign _ (Decl.FData d)) -> ((True,d):datas, decls)
+        Decl.Data d                             -> (datas ++ [(False,d)], decls)
+        Decl.Foreign (Foreign _ (Decl.FData d)) -> (datas ++ [(True,d)], decls)
         _           -> (datas, ld:decls)
 
 extractTypeAls = foldl go ([],[]) where
