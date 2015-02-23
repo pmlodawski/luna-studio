@@ -4,19 +4,35 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE DeriveDataTypeable    #-}
+{-# LANGUAGE DeriveFunctor         #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE TypeFamilies          #-}
+{-# LANGUAGE UndecidableInstances  #-}
 
-module Flowbox.Graphics.Composition.Keyer where
+module Flowbox.Graphics.Composition.Keying where
 
 import qualified Data.Array.Accelerate as A
+import           Data.Typeable         (Typeable)
 
 import Flowbox.Graphics.Color.Color
-import Flowbox.Graphics.Utils.Utils (clamp')
+import Flowbox.Graphics.Utils.Accelerate
+import Flowbox.Graphics.Utils.Utils      (clamp')
 import Flowbox.Prelude
 
 
 
 type KeyerLine a = A.Exp (a, a, a, a)
+
+data KeyerThresholds a = KeyerThresholds { _kta :: a
+                                         , _ktb :: a
+                                         , _ktc :: a
+                                         , _ktd :: a
+                                         }
+                       deriving (Show, Functor, Typeable)
+
+deriveAccelerate ''KeyerThresholds
 
 data KeyerMode = Red
                | Green

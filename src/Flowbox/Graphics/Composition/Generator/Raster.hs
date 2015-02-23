@@ -23,17 +23,16 @@ import qualified Flowbox.Math.Matrix            as Matrix
 import           Flowbox.Prelude
 
 
-
-constant :: Exp A.DIM2 -> [(Channel.Name, Exp Double)] -> Image
+constant :: Exp A.DIM2 -> [(Channel.Name, Exp Float)] -> Image
 constant sh = Image.singleton . foldr appendChannel (View.emptyDefault)
     where appendChannel (name, value) = View.append (Channel.ChannelFloat name . Channel.MatrixData $ Matrix.fill sh value)
 
 type CheckerboardColors f a = (f a, f a, f a, f a)
-type CheckerboardLine f a = (f a, Exp Double)
+type CheckerboardLine f a = (f a, Exp Float)
 
 checkerboard :: (Color.ColorConvert c Color.RGB)
-             => Exp A.DIM2 -> Exp Double -> CheckerboardColors c (Exp Double)
-             -> CheckerboardLine c (Exp Double) -> CheckerboardLine c (Exp Double)
+             => Exp A.DIM2 -> Exp Float -> CheckerboardColors c (Exp Float)
+             -> CheckerboardLine c (Exp Float) -> CheckerboardLine c (Exp Float)
              -> Image
 checkerboard sh size (color1, color2, color3, color4) (lineColor, lineWidth) (lineColorCenter, lineWidthCenter) =
     Image.singleton $ foldr appendChannel (View.emptyDefault) ["rgba.r", "rgba.g", "rgba.b", "rgba.a"]
