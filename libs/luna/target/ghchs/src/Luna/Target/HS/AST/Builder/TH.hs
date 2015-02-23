@@ -53,3 +53,8 @@ mkRegFieldAccessors typeName fieldNames = Expr.THE $ Expr.app (Expr.Var "registe
 
 
 mkRegType typeName = Expr.THE $ Expr.app (Expr.Var "registerType") [Expr.Var $ typeNameRef typeName]
+mkRegCons typeName conNames = Expr.THE $ Expr.app (Expr.Var "registerCons") [ Expr.Var $ typeNameRef typeName
+                                                                            , Expr.ListE $ fmap (Expr.Lit . Lit.String) conNames
+                                                                            ]
+
+
