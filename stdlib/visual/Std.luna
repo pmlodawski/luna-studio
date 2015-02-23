@@ -205,7 +205,7 @@ def Image.key self::Image mode::KeyerMode thresholds::KeyerThresholdsF -> Image:
     ```liftF3 keyerLuna #{mode} #{thresholds} #{self}```
 
 def Image.differenceKey self::Image offset::Float gain::Float constantOutside::Bool background::Image -> Image:
-    ```liftF4 differenceKeyerLuna #{offset} #{gain} #{constantOutside} #{background} #{self}```
+    ```liftF5 differenceKeyerLuna #{offset} #{gain} #{constantOutside} #{background} #{self}```
 
 def Image.premultiply self::Image -> Image:
     ```liftF1 premultiplyLuna #{self}```
@@ -327,7 +327,7 @@ class ```V2``` a:
     x, y :: a
 
 def Image.crop self::Image rect::(Rectangle Int) reformat::Bool defaultOutside::Bool -> Image:
-    ```liftF4 cropLuna (fmap variable -> #{rect}) #{reformat} #{defaultOutside} #{self}```
+    ```liftF4 cropLuna ((fmap.fmap) variable -> #{rect}) #{reformat} #{defaultOutside} #{self}```
 
 # VIEW
 

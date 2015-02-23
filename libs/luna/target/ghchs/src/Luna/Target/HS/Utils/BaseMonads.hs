@@ -250,26 +250,6 @@ instance Monad3R (Value m) s <= Monad m where
 
 --- ===
 
-instance MonadSafety (Value Pure) s1 s2 <= PolyMonad s1 s2 (MatchSafety s1 s2) where
-    bindSafety m f = tst where
-        f' = fromPure . fromValue . f -- :: a -> (s2 b)
-        m' = fromPure $ fromValue m   -- :: (s1 a)
-        tst = Value $ Pure $ m' >>>= f'
-        -- PureS $ fromPureS m >>>= (fromPureS . f)
-
-instance MonadSafety (Value IO) Safe s where
-    bindSafety m f = Value $ do
-        Safe a <- fromValue m
-        fromValue $ f a
-
---instance MonadSafety PureS Safe s where
---    bindSafety m f = PureS $ do
---        Safe a <- fromPureS m
---        fromPureS $ f a
-
-
---instance MonadSafety PureS (UnsafeBase base err) Safe where
---    bindSafety m f = fromPureS m
 
 
 

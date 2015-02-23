@@ -54,7 +54,7 @@ foreign haskell def Image.transform trans matte:
     liftF2 transformLuna trans self
 
 foreign haskell def Image.crop rect reformat defaultOutside:
-    liftF4 cropLuna (fmap variable $ rect) reformat defaultOutside self
+    liftF4 cropLuna ((fmap.fmap) variable $ rect) reformat defaultOutside self
 
 foreign haskell def Image.erode size:
     liftF2 erodeLuna size self
