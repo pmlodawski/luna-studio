@@ -111,54 +111,11 @@ serializeMatrix PtrMode (M.Raw arr) = do
                                   MatrixData.POINTER
 serializeMatrix _ _ = error "channel wasn't computed"
 
--- serializeChanFromView :: V.View -> String -> Mode.Mode -> IO (Maybe MatrixData.MatrixData)
--- serializeChanFromView v x mode = case join . hush . V.get v $ x of
---     Just c -> serializeChan c mode
---     Nothing -> return Nothing
---     where serializeChan chan m = case chan of
---               Chan.ChannelFloat     _ (Chan.asMatrixData -> Chan.MatrixData mat) -> serialize mat m
---               Chan.ChannelInt       _ (Chan.asMatrixData -> Chan.MatrixData mat) -> serialize mat m
-
 pattern Mode a as <- Mode.Mode (Seq.viewl -> a :< (Mode.Mode -> as))
 pattern EmptyMode <- Mode.Mode (Seq.viewl -> EmptyL)
 
--- batchCompute' :: [Chan.Channel] -> Maybe (M.Matrix2 (Double, Double, Double, Double))
--- batchCompute' [ChanF nr r, ChanF ng g, ChanF nb b, ChanF na a] = Just $ M.compute serializationBackend $ M.zip4 r g b a
--- batchCompute' _ = Nothing
-
--- serialize' :: forall a. (A.Elt (a, a, a, a)
---            , ByteStrings (A.EltRepr (a, a, a, a)) ~ (((((), S.ByteString), S.ByteString), S.ByteString), S.ByteString)
---            , MatType a)
---            => M.Matrix2 (a, a, a, a) -> Mode.Mode -> IO (Maybe ViewData.ViewData)
--- serialize' (M.Raw arr) _ = do
---     (((((), r), g), b), a) <- toByteString arr
---     let M.Z M.:. h M.:. w = A.arrayShape arr
---         toData x = MatrixData.MatrixData (fromStrict x) (fromIntegral w) (fromIntegral h) (getMatType (undefined :: a))
-
---     return . Just $ ViewData.ViewData (toData r) (toData g) (toData b) (Just $ toData a)
-
--- instance Serializable V.View ViewData.ViewData where
---     serialize v mode = do
---         let channels = fromMaybe (error "Not found channels in image") $ get ["rgba.r", "rgba.g", "rgba.b", "rgba.a"] v
---         case batchCompute' channels of
---             Just mat -> undefined
---             _        -> do
---                 red   <- serializeChanFromView v "rgba.r" mode
---                 green <- serializeChanFromView v "rgba.g" mode
---                 blue  <- serializeChanFromView v "rgba.b" mode
---                 alpha <- serializeChanFromView v "rgba.a" mode
---                 return $ liftM4 ViewData.ViewData red green blue (Just alpha)
-
---     data' _ = ViewData.data'
---     val   _ = Value.View
-
 get :: [String] -> V.View -> Maybe [Chan.Channel]
 get names view = mapM (join . hush . V.get view) names
-
--- compute' :: ChanDesc.ChannelDescription -> V.View -> V.View
--- compute' (ChanDesc.ChannelDescription _type chanID name) v = case channels chanID name v of
---     Just cs -> foldr V.append v $ batchCompute cs
---     _       -> V.map (Chan.compute serializationBackend) v
 
 -- channels ::
 channels chanID name v = case chanID of
