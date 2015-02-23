@@ -26,6 +26,7 @@ type ComplicatedBlendMode a = Overlay a -> OverlayAlpha a -> Background a -> Bac
 
 data AlphaBlend = Adobe
                 | Custom
+                deriving (Show)
 
 union :: Num a => a -> a -> a
 union a b = a + b - (a * b)
@@ -60,7 +61,7 @@ threeWayMerge :: (A.Elt a, A.IsFloating a)
               -> Shader x (A.Exp a) -- ^ B.A
               -> (Shader x (A.Exp a), Shader x (A.Exp a), Shader x (A.Exp a), Shader x (A.Exp a))
 threeWayMerge blend ar ag ab br bg bb aa ba =
-    (merge ar aa br ba, merge ag aa bg ba, merge ab aa bb ba, ba)
+    (merge ar aa br ba, merge ag aa bg ba, merge ab aa bb ba, aa)
     where merge ov aov bgnd abgnd = complicatedColorCompositingFormula ov aov bgnd abgnd blend
 
 -- FIXME [KL]: Bounding box now is taken from the aa' generator

@@ -19,22 +19,23 @@ data Quality = Fast | Standard | Best
 
 
 
-scurve3 :: A.Exp Double -> A.Exp Double
+scurve3 :: (Num a, Fractional a) => a -> a
 scurve3 a = a * a * (3.0 - 2.0 * a)
 
-scurve5 :: A.Exp Double -> A.Exp Double
+scurve5 :: (Num a, Fractional a) => a -> a
 scurve5 a = (6.0 * a5) - (15.0 * a4) + (10.0 * a3)
   where
     a3 = a * a * a
     a4 = a3 * a
     a5 = a4 * a
 
-linear :: A.Exp Double -> A.Exp Double -> A.Exp Double -> A.Exp Double
+linear :: (Num a, Fractional a) => a -> a -> a -> a
 linear n0 n1 a = ((1.0 - a) * n0) + (a * n1)
 
-gradientNoise3D :: A.Exp Double -> A.Exp Double -> A.Exp Double ->
+gradientNoise3D :: (A.Elt a, A.IsFloating a) =>
+                   A.Exp a -> A.Exp a -> A.Exp a ->
                    A.Exp Int -> A.Exp Int -> A.Exp Int ->
-                   A.Exp Int -> A.Exp Double
+                   A.Exp Int -> A.Exp a
 gradientNoise3D fx fy fz ix iy iz seed = ((xvGrad * xvPoint) + (yvGrad * yvPoint) + (zvGrad * zvPoint)) * 2.12
   where
     xvPoint = fx - A.fromIntegral ix
@@ -50,7 +51,8 @@ gradientNoise3D fx fy fz ix iy iz seed = ((xvGrad * xvPoint) + (yvGrad * yvPoint
     vectorIndex = vectorIndex' .&. 0xff
     index = vectorIndex `A.shiftL` 2
 
-gradientCoherentNoise :: Quality -> A.Exp Int -> A.Exp Double -> A.Exp Double -> A.Exp Double -> A.Exp Double
+gradientCoherentNoise :: (A.Elt a, A.IsFloating a) =>
+                         Quality -> A.Exp Int -> A.Exp a -> A.Exp a -> A.Exp a -> A.Exp a
 gradientCoherentNoise quality seed x y z = linear iy0 iy1 zs
   where
     x0 :: A.Exp Int
@@ -98,7 +100,7 @@ zNoiseGen = 6971
 seedNoiseGen = 1013
 shiftNoiseGen = 8
 
-staticTable :: A.Acc (A.Array A.DIM1 Double)
+staticTable :: (A.Elt a, A.IsFloating a) => A.Acc (A.Array A.DIM1 a)
 staticTable = A.use $ A.fromList (A.Z A.:. 1024) [
     -0.763874, -0.596439, -0.246489, 0.0,
     0.396055, 0.904518, -0.158073, 0.0,
