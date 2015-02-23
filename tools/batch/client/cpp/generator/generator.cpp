@@ -7,6 +7,7 @@
 #include "../generated/plugin-manager.pb.h"
 #include "../generated/interpreter.pb.h"
 #include "../generated/dep/type.pb.h"
+#include "../generated/renderer.pb.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
@@ -712,6 +713,7 @@ std::vector<MethodWrapper> prepareMethodWrappers(bool finalLeaves = false)
 	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::parser::Parse::descriptor());
 	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::parser::MkText::descriptor());
 	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::parser::Parser::descriptor());
+        prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::renderer::Renderer::descriptor());
 	return methods;
 }
 

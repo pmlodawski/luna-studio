@@ -141,7 +141,7 @@ data REDLog = REDLog
             deriving Show
 
 instance (Num a, Floating a, a ~ A.Exp t, A.Elt t, A.IsFloating t) => Companding REDLog a where
-    toLinear   _ v = ((10 ** (1023 * v - 1023) / 511) - redBlackOffset) / (1 - redBlackOffset)
+    toLinear   _ v = ((10 ** ((1023 * v - 1023) / 511)) - redBlackOffset) / (1 - redBlackOffset)
 
     fromLinear _ v = (1023 + 511 * logBase 10 (v * (1 - redBlackOffset) + redBlackOffset)) / 1023
 

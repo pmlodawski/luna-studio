@@ -65,7 +65,7 @@ genModule (HExpr.Module name path ext imports body) = toLazyText modcode where
             <> sectionHeader "module"         <> header
             <> genSection    "imports"        generate2' imports
             <> genSection    "body"           generate2' body
-    header = "module " <> fromLazyText name <> mjoin "." (mempty : fmap fromLazyText path) <> " where" <> eol <> eol
+    header = "module " <> mjoin "." (fmap fromLazyText (path <> [name])) <> " where" <> eol <> eol
 
 genExt :: Extension -> Text.Builder
 genExt ext = "{-# LANGUAGE " <> show' ext <> " #-}"
@@ -86,7 +86,8 @@ thed = fmap $ Tok Top . between "$(" ")" .view Tok.doc
 runMeI = renderCode HSIndent
 runMeC = renderCode HSCompact
 
-
+genExpr :: HExpr -> Text
+genExpr = toLazyText . generate2'
 
 
 

@@ -120,6 +120,9 @@ mkVal    = HE.AppE "val"
 pass :: Ctx m a v => Pass State.GenState (Unit (LModule a (LExpr a v)) -> PassResult m HE)
 pass = Pass "HASTGen" "Haskell AST generator" def genUnit
 
+passExpr :: Ctx m a v => Pass State.GenState (LExpr a v -> PassResult m HE)
+passExpr = Pass "HASTGen" "Haskell AST generator" def genExpr
+
 genUnit (Unit m) = genModule m
 
 
@@ -161,7 +164,7 @@ genModule (Label lab (Module path body)) = withCtx (fromText $ view Path.name pa
 
     State.setModule mod
 
-    State.regPragma (HE.Pragma $ HE.Include "pragmas.cpp")
+    State.regPragma (HE.Pragma $ HE.Include "pragmas.h")
     genDecl modData
 
     genNonEmptySec (H1 "Data headers")        fdatas $ mapM_ (uncurry genDataDeclHeaders)

@@ -24,5 +24,5 @@ foreign haskell class KeyerThresholds a:
 foreign haskell def Image.key mode thresholds:
     liftF3 keyerLuna mode thresholds self
 
-foreign haskell def Image.differenceKey offset gain background:
-    liftF4 differenceKeyerLuna offset gain background self
+foreign haskell def Image.differenceKey offset gain constantOutside background:
+    liftF5 differenceKeyerLuna offset gain constantOutside background self

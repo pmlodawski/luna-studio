@@ -22,7 +22,7 @@ module Main where
 import Luna.Target.HS
 
 -- body --
-#include "pragmas.cpp"
+#include "pragmas.h"
 
 -- ====== Main type ====== --
 data Main 
