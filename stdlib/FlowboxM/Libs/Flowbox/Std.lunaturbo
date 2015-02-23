@@ -16,9 +16,9 @@ foreign haskell import qualified Data.Array.Accelerate as A
 #include Graphics/Image/Merge.lunaturbo
 #include Graphics/Image/Noise.lunaturbo
 #include Graphics/Image/Dithering.lunaturbo
-#include Graphics/Image/Keying.lunaturbo
 
 #include Graphics/Compo/FilterTransform/FilterTransform.lunaturbo
+#include Graphics/Compo/Keying/Keying.lunaturbo
 
 #
 #                OTHER

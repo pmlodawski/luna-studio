@@ -205,7 +205,7 @@ def Image.key self::Image mode::KeyerMode thresholds::KeyerThresholdsF -> Image:
     ```liftF3 keyerLuna #{mode} #{thresholds} #{self}```
 
 def Image.differenceKey self::Image offset::Float gain::Float constantOutside::Bool background::Image -> Image:
-    ```liftF4 differenceKeyerLuna #{offset} #{gain} #{constantOutside} #{background} #{self}```
+    ```liftF5 differenceKeyerLuna #{offset} #{gain} #{constantOutside} #{background} #{self}```
 
 def Image.premultiply self::Image -> Image:
     ```liftF1 premultiplyLuna #{self}```
