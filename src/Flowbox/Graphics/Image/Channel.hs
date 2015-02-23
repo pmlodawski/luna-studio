@@ -52,18 +52,18 @@ name :: Channel -> Name
 name (ChannelFloat     n _) = n
 name (ChannelInt       n _) = n
 
-compute :: Backend -> Channel -> Channel
+compute :: Backend -> Sampler Double -> Channel -> Channel
 
-compute b (ChannelFloat     n d) = ChannelFloat n . computeData b $ d
-compute b (ChannelInt       n d) = ChannelInt   n . computeData b $ d
+compute b _ (ChannelFloat     n d) = ChannelFloat n . computeData b $ d
+compute b _ (ChannelInt       n d) = ChannelInt   n . computeData b $ d
 
 computeData :: (Elt e) => Backend -> ChannelData e -> ChannelData e
 computeData b (asMatrixData -> MatrixData matrix) = MatrixData $ M.compute b matrix
 
 asMatrix :: Channel -> Channel
 asMatrix chan = case chan of
-    ChannelFloat name zeData -> ChannelFloat name $ asMatrixData zeData
-    ChannelInt   name zeData -> ChannelInt   name $ asMatrixData zeData
+    (ChannelFloat name zeData) -> ChannelFloat name $ asMatrixData zeData
+    (ChannelInt   name zeData) -> ChannelInt   name $ asMatrixData zeData
 
 asMatrixData :: Elt e => ChannelData e -> ChannelData e
 asMatrixData zeData@MatrixData{}     = zeData
@@ -72,21 +72,21 @@ asMatrixData (ContinuousData zeData) = MatrixData $ (rasterizer . monosampler) z
 
 asDiscrete :: Channel -> Channel
 asDiscrete chan = case chan of
-    ChannelFloat name zeData -> ChannelFloat name $ asDiscreteData (constant 0) zeData
-    ChannelInt   name zeData -> ChannelInt   name $ asDiscreteData (constant 0) zeData
+    (ChannelFloat name zeData) -> ChannelFloat name $ asDiscreteData (constant 0) zeData
+    (ChannelInt   name zeData) -> ChannelInt   name $ asDiscreteData (constant 0) zeData
 
 asDiscreteClamp :: Channel -> Channel
 asDiscreteClamp chan = case chan of
-    ChannelFloat name zeData -> ChannelFloat name $ asDiscreteData zeData
-    ChannelInt   name zeData -> ChannelInt   name $ asDiscreteData zeData
+    (ChannelFloat name zeData) -> ChannelFloat name $ asDiscreteData zeData
+    (ChannelInt   name zeData) -> ChannelInt   name $ asDiscreteData zeData
     where asDiscreteData zeData@DiscreteData{}   = zeData
           asDiscreteData (MatrixData zeData)     = DiscreteData $ fromMatrix Clamp zeData
           asDiscreteData (ContinuousData zeData) = DiscreteData $ monosampler zeData
 
 asContinuous :: Channel -> Channel
 asContinuous chan = case chan of
-    ChannelFloat name zeData -> ChannelFloat name $ asContinuousData (constant 0) zeData
-    ChannelInt   name zeData -> ChannelInt   name $ asContinuousData (constant 0) zeData
+    (ChannelFloat name zeData) -> ChannelFloat name $ asContinuousData (constant 0) zeData
+    (ChannelInt   name zeData) -> ChannelInt   name $ asContinuousData (constant 0) zeData
 
 asDiscreteData :: Elt e => Exp e -> ChannelData e -> ChannelData e
 asDiscreteData _ zeData@DiscreteData{}   = zeData
@@ -105,8 +105,8 @@ mapOverData f chanData = case chanData of
     ContinuousData shader -> ContinuousData $ fmap f shader
 
 unsafeMap :: Fun -> Channel -> Channel
-unsafeMap (FunFloat f) _ = undefined -- TODO[KM]: add support for functions working on Floats after migrating to Floats and Doubles
-unsafeMap (FunDouble f) (ChannelFloat n zeData) = ChannelFloat n $ mapOverData f zeData
-unsafeMap (FunInt f)    (ChannelInt n zeData)   = ChannelInt   n $ mapOverData f zeData
+unsafeMap (FunDouble f) _ = undefined -- TODO[KM]: add support for functions working on Floats after migrating to Floats and Doubles
+unsafeMap (FunFloat f)  (ChannelFloat n zeData) = ChannelFloat n (mapOverData f zeData)
+unsafeMap (FunInt f)    (ChannelInt n zeData)   = ChannelInt   n (mapOverData f zeData)
 unsafeMap _ _ = error "Flowbox.Graphics.Image.Channel.unsafeMap - error: mismatching function type and Channel type"
 
