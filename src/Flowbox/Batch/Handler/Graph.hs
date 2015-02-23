@@ -58,7 +58,7 @@ addNode node bc libID projectID = do
 
 updateNode :: (Node.ID, Node) -> Breadcrumbs -> Library.ID -> Project.ID -> Batch Node.ID
 updateNode (nodeID, newNode) bc libID projectID = do
-    (nodeID >= 0) `assertE` "Cannot update, wrong node id"
+    (nodeID >= 0 || not (Node.isExpr newNode)) `assertE` "Cannot update, wrong node id"
     (graph, propertyMap) <- Batch.getGraphView bc libID projectID
     maxID                <- Batch.getMaxID libID projectID
     let newID     = maxID + 1
@@ -71,7 +71,7 @@ updateNode (nodeID, newNode) bc libID projectID = do
 
 updateNodeInPlace :: (Node.ID, Node) -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
 updateNodeInPlace (nodeID, newNode) bc libID projectID = Batch.graphViewOp bc libID projectID $ \graph propertyMap -> do
-    (nodeID >= 0) `assertE` "Cannot update, wrong node id"
+    (nodeID >= 0 || not (Node.isExpr newNode)) `assertE` "Cannot update, wrong node id"
     let fixedNode = OutputName.fixEmpty newNode nodeID
         newGraph  = GraphView.updateNode (nodeID, fixedNode) graph
     return ((newGraph, propertyMap), ())
