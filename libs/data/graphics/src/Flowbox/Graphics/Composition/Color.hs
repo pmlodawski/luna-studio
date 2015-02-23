@@ -114,6 +114,21 @@ colorCorrect contrast' gamma' gain' offset' = offset offset' . gain'' gain' . U.
 saturate :: (Elt t, IsFloating t, ColorConvert a HSL, ColorConvert HSL a) => Exp t -> a (Exp t) -> a (Exp t)
 saturate saturation pix = toHSL pix & (\(HSL h s l) -> HSL h (s * saturation) l) & convertColor
 
+saturateRGB :: Exp Float -> Exp Float -> Exp Float -> M.Matrix2 (RGB Float) -> (M.Matrix2 Float,M.Matrix2 Float,M.Matrix2 Float)
+saturateRGB rs gs bs rgb = (rSaturated, gSaturated, bSaturated) where
+
+    rgbRsaturated = M.map (A.lift1 ((saturate :: Exp Float -> RGB (Exp Float) -> RGB (Exp Float)) rs)) rgb
+    rgbGsaturated = M.map (A.lift1 ((saturate :: Exp Float -> RGB (Exp Float) -> RGB (Exp Float)) gs)) rgb
+    rgbBsaturated = M.map (A.lift1 ((saturate :: Exp Float -> RGB (Exp Float) -> RGB (Exp Float)) bs)) rgb
+
+    saturateOnHSV :: Exp Float -> RGB (Exp Float) -> RGB (Exp Float)
+    saturateOnHSV sat pix = toHSL pix & (\(HSL h s l) -> HSL h (s * sat) l) & toRGB
+
+    rSaturated = M.map (\(A.unlift -> RGB r _ _) -> r) rgbRsaturated
+    gSaturated = M.map (\(A.unlift -> RGB _ g _) -> g) rgbGsaturated
+    bSaturated = M.map (\(A.unlift -> RGB _ _ b) -> b) rgbBsaturated
+
+
 hsvTool :: forall a t. (Elt t, IsFloating t, ColorConvert a HSV, ColorConvert HSV a,
                         A.Lift Exp (a (Exp t)), A.Unlift Exp (a (Exp t)), Elt (A.Plain (a (Exp t))))
         => Exp (U.Range t) -> Exp t -> Exp t
