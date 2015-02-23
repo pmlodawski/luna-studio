@@ -38,37 +38,19 @@ foreign haskell def Image.blur kernelSize:
 foreign haskell class V2 a:
     V2 : x, y :: a
 
-foreign haskell def Image.translate vec:
-    liftF2 translateLuna vec self
+foreign haskell def Image.translate vec matte:
+    liftF3 translateLuna vec matte self
 
-foreign haskell def Image.rotate phi:
-    liftF2 rotateLuna phi self
+foreign haskell def Image.rotateAt point phi matte:
+    liftF4 rotateAtLuna point phi matte self
 
-foreign haskell def Image.rotateAt point phi:
-    liftF3 rotateAtLuna point phi self
+foreign haskell def Image.scaleAt point vec matte:
+    liftF4 scaleAtLuna point vec matte self
 
-foreign haskell def Image.scale vec:
-    liftF2 scaleLuna vec self
+foreign haskell def Image.skewAt point skew matte:
+    liftF4 skewAtLuna point skew matte self
 
-foreign haskell def Image.scaleAt point vec:
-    liftF3 scaleAtLuna point vec self
-
-foreign haskell def Image.translateMatte vec matte:
-    liftF3 translateMatteLuna vec matte self
-
-foreign haskell def Image.rotateAtMatte point phi matte:
-    liftF4 rotateAtMatteLuna point phi matte self
-
-foreign haskell def Image.scaleAtMatte point vec matte:
-    liftF4 scaleAtMatteLuna point vec matte self
-
-foreign haskell def Image.skewAtMatte point skew matte:
-    liftF4 skewAtMatteLuna point skew matte self
-
-foreign haskell def Image.transformMatte trans matte:
-    liftF3 transformLuna trans matte self
-
-foreign haskell def Image.transform trans:
+foreign haskell def Image.transform trans matte:
     liftF2 transformLuna trans self
 
 foreign haskell def Image.crop rect reformat defaultOutside:
