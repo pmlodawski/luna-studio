@@ -356,7 +356,7 @@ class ```SkewOrder```:
     SkewYX
 
 class ```Skew``` a:
-    point :: V2 a
+    value :: V2 a
     order :: SkewOrder
 
 class ```Transform``` a:

@@ -22,7 +22,7 @@ foreign haskell class SkewOrder:
 
 foreign haskell class Skew a:
     Skew:
-        point :: V2 a
+        value :: V2 a
         order :: SkewOrder
 
 foreign haskell class Transform a:
