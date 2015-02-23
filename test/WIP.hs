@@ -152,6 +152,10 @@ memDef_Main_main _self = do
     _call (6) (appNext (_call (7) (appNext (val (2 :: Int)) _f)) (_member ("print") _self))
     _call (8) (appNext (val _rtupX2 (_call (9) cons_True, _call (10) cons_True)) (_member ("print") _self))
     _call (11) (appNext (_call (12) (appNext (val (4 :: Int)) (_member ("_plus") (val (2 :: Int))))) (_member ("print") _self))
+    (extractRTuple -> _rtupX3 (_x, _y, _z)) <- polyJoin (liftF1 (\pat_base -> case pat_base of 
+        Vector {} -> let { _rtupX3 (_x, _y, _z) = (expandEl (layout_Vector pat_base)) } in val _rtupX3 (_x, _y, _z)
+        _ -> (error "Non-exhaustive patterns in case")) _v)
+    _call (13) (appNext _z (_member ("print") _self))
 memFnc_Main_main = (memSig_Main_main, memDef_Main_main)
 $(registerMethod ''Main "main")
 
