@@ -343,16 +343,21 @@ mkLiftF pNum base = AppE (VarE fname) (VarE base) where
 
 registerType :: Name -> Q [Dec]
 registerType tpName = do
-    TyConI (DataD _ _ bndrs cons _) <- reify tpName
+    TyConI (DataD _ _ bndrs _ _) <- reify tpName
     dataTuples <- genDataTuple tpName
     let treg   = registerType' tpName bndrs
         clsreg = registerType' clsName []
         clsdef = DataD [] clsName [] [NormalC clsName []] (fmap (mkName.show) stdDerivings)
-        conNames   = fmap getConName cons
-        conMakers  = fmap (genConMaker tpName) conNames
-        conLayouts = fmap (genConLayout tpName) cons
-    return $ clsdef : (treg ++ clsreg ++ conMakers ++ conLayouts)
+    return $ clsdef : (treg ++ clsreg)
     where clsName = mkName $ Naming.mkCls (nameBase tpName)
+
+registerCons :: Name -> [String] -> Q [Dec]
+registerCons tpName (fmap mkName -> selNames) = do
+    TyConI (DataD _ _ _ cons _) <- reify tpName
+    let selCons    = filter (\c -> getConName c `elem` selNames) cons
+        conMakers  = fmap (genConMaker tpName) selNames
+        conLayouts = fmap (genConLayout tpName) selCons
+    return $ conMakers ++ conLayouts
 
 registerType' :: Name -> [TyVarBndr] -> [Dec]
 registerType' tpName bndrs = [decl, tfam] where

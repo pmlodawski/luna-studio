@@ -194,6 +194,7 @@ genDataDeclHeaders isNative (Decl.DataDecl (convVar -> name) params cons defs) =
     if not isNative then State.addDataType =<< consDecl
                     else State.addComment  $ H5 "datatype provided externally"
     regTHExpr $ TH.mkRegType name
+    when (length cons > 0) $ regTHExpr $ TH.mkRegCons name conNames
 
     when (not $ null fieldNames) $ do
         State.addComment . H3 $ name <> " accessors"
@@ -211,7 +212,10 @@ genDataDeclHeaders isNative (Decl.DataDecl (convVar -> name) params cons defs) =
           getConDesc (Decl.Cons (convVar -> conName) fields) = (conName, fmap getLFieldName fields)
           genField   (Label _ (Decl.Field tp name val))      = genType tp
           genData    (Decl.Cons conName fields)              = HE.Con (hash conName) <$> mapM genField fields
+          getConName con = hash $ Decl._consName $ unwrap con
+          conNames   = fmap getConName cons
 
+--data Cons  a e = Cons   { _consName :: CNameP  , _fields :: [LField a e]                   } deriving (Show, Generic, Eq, Read)
 
 genDataDeclDefs :: (Monad m, Enumerated lab, Num lab, Show lab) => Decl.DataDecl lab (LExpr lab ()) -> PassResult m ()
 genDataDeclDefs (Decl.DataDecl (convVar -> name) params cons defs) = withCtx (fromText name) $ do

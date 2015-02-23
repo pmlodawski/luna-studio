@@ -1,22 +1,30 @@
 foreign haskell def print s="":
     polyJoin . liftF1 (Value . fmap Safe . print) $ s
 
+foreign haskell def Int.+ a:
+    liftF2 (+) self a
+
 class Vector a:
-    Vector: x,y,z :: a
-    Scalar: x :: a
+    x,y,z :: a
+
+    def asTuple: (x,y,z)
+
+alias V a = Vector a
 
 foreign haskell class Bool:
     True
     False
 
+def foo a b: (a,b)
+
+class Foo
+
 def main:
-    print (Vector 1 2 3)
+    v = Vector y=1 2 3 :: V Int
+    print $ v.asTuple
+    f = @foo 1
+    print $ f 2
+    print (True,True)
+    print $ 2.+ 4
 
-    case (Vector 1 2 3):
-        (Vector x y z): print x
-
-    Vector x y z = Vector 1 2 3
-    print z
-
-    a = True
-    print a
+foreign haskell class Int
