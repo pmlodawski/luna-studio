@@ -80,15 +80,6 @@ instance MatType Bool where
     getMatType _ = MatrixData.BOOL
 
 
-data BinaryMatrix = BinaryMatrix { container :: BinaryData
-                                 , width     :: Int
-                                 , height    :: Int
-                                 , matType   :: MatrixData.Type
-                                 }
-
-data BinaryData = BS L.ByteString
-                | Pointer A.Word64
-
 data MatrixMode = PtrMode | BSMode
 
 
