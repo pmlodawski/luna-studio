@@ -352,10 +352,10 @@ registerType tpName = do
     where clsName = mkName $ Naming.mkCls (nameBase tpName)
 
 registerCons :: Name -> [String] -> Q [Dec]
-registerCons tpName (fmap mkName -> selNames) = do
+registerCons tpName selNames = do
     TyConI (DataD _ _ _ cons _) <- reify tpName
-    let selCons    = filter (\c -> getConName c `elem` selNames) cons
-        conMakers  = fmap (genConMaker tpName) selNames
+    let selCons    = filter (\c -> nameBase (getConName c) `elem` selNames) cons
+        conMakers  = fmap (genConMaker tpName) (fmap mkName selNames)
         conLayouts = fmap (genConLayout tpName) selCons
     return $ conMakers ++ conLayouts
 

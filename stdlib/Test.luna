@@ -27,4 +27,7 @@ def main:
     print (True,True)
     print $ 2.+ 4
 
+    Vector x y z = v
+    print z
+
 foreign haskell class Int
