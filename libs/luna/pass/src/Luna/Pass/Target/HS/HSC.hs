@@ -86,7 +86,8 @@ thed = fmap $ Tok Top . between "$(" ")" .view Tok.doc
 runMeI = renderCode HSIndent
 runMeC = renderCode HSCompact
 
-
+genExpr :: HExpr -> Text
+genExpr = toLazyText . generate2'
 
 
 
