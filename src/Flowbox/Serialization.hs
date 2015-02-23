@@ -24,4 +24,4 @@ type SValue = Value
 
 
 computeValue :: Serialization.Serializable a b => a -> Mode -> IO (Maybe SValue)
-computeValue var mode = Serialization.toValue (Serialization.compute var mode) mode
+computeValue var mode = Serialization.toValue var mode
