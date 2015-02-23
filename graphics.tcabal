@@ -126,7 +126,10 @@ Test-suite hspec_tests
                   vector                   ,
                   hspec                    ,
                   HUnit                    ,
-                  QuickCheck
+                  QuickCheck               ,
+                  directory                ,
+                  download-curl            ,
+                  bytestring
 
 -- == test generator ==
 
