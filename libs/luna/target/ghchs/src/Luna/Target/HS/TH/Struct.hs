@@ -203,15 +203,12 @@ generateFieldAccessors (nameBase -> typeName) fieldDescs = return $ accessors ++
         accName  = mkName $ Naming.mkFieldSetter typeName fieldName
         cases    = fmap (uncurry mkCase) descs
         mkCase conName fieldGen = mkAccCase cons (mkName "_") conName fieldGen where
-            structName = mkName $ "RTuple"
-            cons       = AppE (ConE conName) 
-                       $ AppE (ConE structName)
-                       $ rTupE . fmap VarE $ runPatCons fieldGen unit
+            cons       = appEs (ConE conName) 
+                       $ fmap VarE $ runPatCons fieldGen unit
 
     mkAccessor fieldName descs = [mkGetter fieldName descs, mkSetter fieldName descs]
 
-    mkAccCase result fieldName conName fieldGen = Match (ConP conName [ConP structName $ [rTupP conPats]]) (NormalB result) [] where
-        structName = mkName $ "RTuple"
+    mkAccCase result fieldName conName fieldGen = Match (ConP conName conPats) (NormalB result) [] where
         conPats = fmap VarP $ runPatCons fieldGen fieldName
 
     accessors = concat $ fmap (uncurry mkAccessor) $ Map.assocs consPatMap
@@ -342,14 +339,19 @@ mkLiftF pNum base = AppE (VarE fname) (VarE base) where
 --        inst       = InstanceD ctx nt funcs
 --    return $ [inst]
 
+
+
 registerType :: Name -> Q [Dec]
 registerType tpName = do
-    TyConI (DataD _ _ bndrs _ _) <- reify tpName
+    TyConI (DataD _ _ bndrs cons _) <- reify tpName
     dataTuples <- genDataTuple tpName
     let treg   = registerType' tpName bndrs
         clsreg = registerType' clsName []
         clsdef = DataD [] clsName [] [NormalC clsName []] (fmap (mkName.show) stdDerivings)
-    return $ clsdef : (treg ++ clsreg)
+        conNames   = fmap getConName cons
+        conMakers  = fmap (genConMaker tpName) conNames
+        conLayouts = fmap (genConLayout tpName) cons
+    return $ clsdef : (treg ++ clsreg ++ conMakers ++ conLayouts)
     where clsName = mkName $ Naming.mkCls (nameBase tpName)
 
 registerType' :: Name -> [TyVarBndr] -> [Dec]
@@ -358,6 +360,21 @@ registerType' tpName bndrs = [decl, tfam] where
     normalName = mkName $ Naming.mkTypePtr (nameBase tpName)
     decl = DataD [] normalName [] [NormalC normalName []] []
     tfam = TySynInstD (mkName "ProxyType") (TySynEqn [foldl AppT (ConT tpName) (fmap VarT params)] (ConT normalName))
+
+genConMaker :: Name -> Name -> Dec
+genConMaker tpName name = ValD (VarP . mkName $ "cons_" <> nameStr) (NormalB expr) [] where
+    nameStr = nameBase name
+    expr = appEs (VarE $ mkName "member")
+         [ proxyE $ LitT (StrTyLit nameStr)
+         , valE . ConE . mkName $ Naming.mkCls (nameBase tpName)
+         ]
+
+genConLayout :: Name -> Con -> Dec
+genConLayout tpName con = FunD fname [Clause [ConP conName (fmap VarP fields)] (NormalB (rTupE (fmap VarE fields))) []] where
+    fieldNum = getConFieldNumber con
+    fields   = fmap (mkName.("t"<>).show) [1..fieldNum]
+    conName  = getConName con
+    fname    = mkName . Naming.mkLayout $ nameBase conName
 
 registerMethod :: Name -> String -> Q [Dec]
 registerMethod typeName methodName = do

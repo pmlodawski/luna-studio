@@ -33,11 +33,18 @@ getTyVarBndrName t = case t of
     KindedTV name _ -> name
 
 
-rTupE items = foldr tup2 (TupE []) items where
-    tup2 a b = TupE [a,b]
+tup2E a b = TupE [a,b]
+tup2P a b = TupP [a,b]
 
-rTupP items = foldr tup2 (TupP []) items where
-    tup2 a b = TupP [a,b]
+rTupName = mkName "RTuple"
+
+rTupE = AppE (ConE rTupName)
+      . foldr tup2E (TupE [])
+
+proxyE t = SigE (ConE name) (AppT (ConT name) t) where
+    name = mkName "Proxy"
+
+valE = AppE (VarE $ mkName "val")
 
 getDecVarNames :: Dec -> [Name]
 getDecVarNames dec = map getTyVarBndrName vars where
@@ -87,6 +94,13 @@ getConFieldNames :: Con -> [Name]
 getConFieldNames con = case con of
     RecC _ vars -> fmap (\(name,_,_) -> name) vars
     _           -> [] --error "Cannot get names from not RecC constructor."
+
+getConFieldNumber :: Con -> Int
+getConFieldNumber = \case
+    NormalC _ f   -> length f
+    RecC    _ f   -> length f
+    InfixC  _ _ _ -> 2   
+    ForallC f _ _ -> length f
 
 
 getConName :: Con -> Name

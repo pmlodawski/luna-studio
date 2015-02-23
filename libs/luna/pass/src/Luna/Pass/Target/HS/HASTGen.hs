@@ -210,8 +210,7 @@ genDataDeclHeaders isNative (Decl.DataDecl (convVar -> name) params cons defs) =
           consDecl   = HE.DataD name paramsTxt <$> consE <*> pure derivings
           getConDesc (Decl.Cons (convVar -> conName) fields) = (conName, fmap getLFieldName fields)
           genField   (Label _ (Decl.Field tp name val))      = genType tp
-          genData    (Decl.Cons conName fields)              = HE.Con (hash conName)
-                                                             <$> ((:[]) . HE.rTupleX <$> mapM genField fields)
+          genData    (Decl.Cons conName fields)              = HE.Con (hash conName) <$> mapM genField fields
 
 
 genDataDeclDefs :: (Monad m, Enumerated lab, Num lab, Show lab) => Decl.DataDecl lab (LExpr lab ()) -> PassResult m ()
@@ -236,9 +235,6 @@ genCon name params derivings isNative cons = do
             let fieldNum   = length fields
                 fieldNames = fmap getLFieldName fields
                 conDefName = Naming.mkMemDef clsConName conName
-                hcons      = HE.val (Naming.mkCons conName)
-                           $ HE.app (mkMemberGetter conName) 
-                                       [HE.AppE HUtils.val (HE.VarE clsConName)]
                 consDef    = HE.val conDefName
                            $ HE.AppE (HE.VarE $ liftCons fieldNum)
                                      (HE.VarE conName)
@@ -252,7 +248,7 @@ genCon name params derivings isNative cons = do
                     Nothing -> error "TODO!"
                             
             addComment . H3 $ dotname [name, conName] <> " constructor"
-            mapM regFunc [hcons, consDef]
+            regFunc consDef
             genFuncNoBody func
             --regTHExpr $ TH.mkMethod clsConName conName
 
@@ -547,16 +543,21 @@ extractPatVars pat = go pat [] where
 --        --Pat.Var name -> pure $ HE.ViewP "val" $ HE.Var (Naming.mkVar $ convVar name)
 --        _            -> genPatGen genRec ast
 
-
-genPatMatch (Label lab pat) = case pat of
-    Pat.Grouped     p        -> genPatMatch p
+genPatMatch patBase (Label lab pat) expr = case pat of
+    Pat.Grouped     p        -> genPatMatch patBase p expr
     Pat.App         src args -> case unwrap src of
-                                    Pat.Con name -> return $ HE.AppP (HE.ConP $ convVar name) . HE.ViewP "expandEl" . HE.rTupleX $ fmap genVars args
+                                    Pat.Con name -> return $ HE.Match hpat $ HE.LetBlock [recExp] expr where
+                                        recTup = HE.rTupleX $ fmap genVars args
+                                        recLayout = HE.AppE "expandEl" (HE.AppE (HE.VarE $ "layout_" <> conName) $ HE.VarE patBase)
+                                        recExp = HE.Assignment recTup recLayout
+                                        hpat = HE.AppP (HE.ConP $ conName) HE.RecWildP
+                                        conName = convVar name
+                                    -- . HE.ViewP "expandEl" . HE.rTupleX $ fmap genVars args 
                                     _ -> error "Non constructor based pattern application is not supported yet."
-    Pat.Tuple       args    -> return $ HE.rTupleX $ fmap genVars args
-    Pat.Wildcard            -> return $ HE.WildP
-    Pat.Lit         lit     -> genLit lit
-    Pat.Var         name    -> pure $ HE.ViewP "val" $ HE.Var (Naming.mkVar $ convVar name)
+    --Pat.Tuple       args    -> return $ HE.rTupleX $ fmap genVars args
+    --Pat.Wildcard            -> return $ HE.WildP
+    --Pat.Lit         lit     -> genLit lit
+    --Pat.Var         name    -> pure $ HE.ViewP "val" $ HE.Var (Naming.mkVar $ convVar name)
     a                       -> error $ "Pattern match not supported: " ++ show a
 
     where genVars (Label lab' pat') = case pat' of
@@ -600,13 +601,13 @@ genExpr (Label lab expr) = case expr of
     Expr.Accessor     acc src                -> HE.AppE <$> (pure $ mkMemberGetter $ hash acc) <*> genExpr src --(get0 <$> genExpr src))
     Expr.Typed       cls expr                -> (\e t -> HE.MacroE "_typed" [e,t]) <$> genExpr expr <*> genType cls
     Expr.Case  expr match -> mkFlattenCtx <$> (HE.AppE <$> lamFunc <*> genExpr expr)
-        where passVar = "a"
-              --caseE   = HE.CaseE passVar <$> body'
+        where passVar = "pat_base"
+              caseE   = HE.CaseE passVar <$> body'
               body    = mapM genMatch match
-              lam     = HE.LambdaCase <$> body'
+              lam     = HE.Lambda [passVar] <$> caseE
               lamFunc = mkLiftf1 <$> lam
               body'   = (\a -> a ++ [HE.Match HE.WildP (HE.AppE "error" (HE.Lit $ HLit.String "Non-exhaustive patterns in case"))]) <$> body
-              genMatch (unwrap -> Expr.Match pat body) = HE.Match <$> genPatMatch pat <*> (HE.DoBlock <$> mapM genExpr body)
+              genMatch (unwrap -> Expr.Match pat body) = genPatMatch passVar pat =<< (HE.DoBlock <$> mapM genExpr body)
     Expr.Lambda inputs output body -> do
         lid <- genCallID
         ctx <- getCtx
