@@ -48,11 +48,9 @@ import qualified Luna.Target.HS.Control.Error.Data   as Data
 
 class Serializable a b | a -> b where
     serialize :: a -> Mode -> IO (Maybe b)
-    data' :: a -> Key Maybe Value b
-    val   :: a -> Value.Type
-
     toValue :: a -> Mode -> IO (Maybe Value)
-    toValue a mode = mkValue (data' a) (val a) <$> serialize a mode
+    compute :: a -> Mode -> a
+    compute = const
 
 
 mkValue :: Key Maybe Value a -> Value.Type -> Maybe a -> Maybe Value
@@ -60,51 +58,43 @@ mkValue key keytype = liftM $ \extension -> putExt key (Just extension) $ Value 
 
 
 instance Serializable Error ErrorData where
-    serialize (Error msg) _ = return . Just . ErrorData $ fromString msg
-    data' _ = ErrorData.data'
-    val   _ = Value.Error
+    serialize (Error msg) _ = return . Just $ ErrorData $ fromString msg
+    toValue a mode = liftM (mkValue ErrorData.data' Value.Error) $ serialize a mode
 
 instance Serializable () EmptyTupleData where
     serialize _  _ = return . Just $ EmptyTupleData
-    data' _ = EmptyTupleData.data'
-    val   _ = Value.EmptyTuple
+    toValue a mode = liftM (mkValue EmptyTupleData.data' Value.EmptyTuple) $ serialize a mode
 
 instance Serializable Int IntData where
     serialize a  _ = return . Just . IntData . fromIntegral $ a
-    data' _ = IntData.data'
-    val   _ = Value.Int
+    toValue a mode = liftM (mkValue IntData.data' Value.Int) $ serialize a mode
 
 instance Serializable Char CharData where
     serialize a  _ = return . Just . CharData . fromIntegral . ord $ a
-    data' _ = CharData.data'
-    val   _ = Value.Char
+    toValue a mode = liftM (mkValue CharData.data' Value.Char) $ serialize a mode
 
 instance Serializable Bool BoolData where
     serialize a  _ = return . Just . BoolData $ a
-    data' _ = BoolData.data'
-    val   _ = Value.Bool
+    toValue a mode = liftM (mkValue BoolData.data' Value.Bool) $ serialize a mode
 
 instance Serializable String StringData where
     serialize a  _ = return . Just . StringData $ fromString a
-    data' _ = StringData.data'
-    val   _ = Value.String
+    toValue a mode = liftM (mkValue StringData.data' Value.String) $ serialize a mode
 
 instance Serializable Float FloatData where
     serialize a  _ = return . Just . FloatData $ a
-    data' _ = FloatData.data'
-    val   _ = Value.Float
+    toValue a mode = liftM (mkValue FloatData.data' Value.Float) $ serialize a mode
 
 instance Serializable Double DoubleData.DoubleData where
     serialize a  _ = return . Just . DoubleData $ a
-    data' _ = DoubleData.data'
-    val   _ = Value.Double
+    toValue a mode = liftM (mkValue DoubleData.data' Value.Double) $ serialize a mode
 
 
 -- [PM] : instance below requires UndecidableInstances enabled
 instance Serializable a b => Serializable (Data.Safe a) b where
     serialize (Data.Safe a) mode = serialize a mode
-    data'     _ = data' (undefined :: a)
-    val       _ = val (undefined :: a)
+    toValue   (Data.Safe a) mode = toValue   a mode
+    compute   (Data.Safe a) mode = Data.Safe $ compute a mode
 
 -- TODO [PM] Instance for unsafe
 --instance Serializable a b => Serializable (Data.Unsafe a) b where
