@@ -4,8 +4,9 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TupleSections   #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE TupleSections     #-}
 
 module Luna.Interpreter.Session.AST.Executor where
 
@@ -206,9 +207,9 @@ varType (NodeExpr.StringExpr (StringExpr.Expr   name@(h:_)))
     | name == Var.timeRef                                = return   TimeVar
     | Char.isUpper h                                     = return $ Con name
     | otherwise                                          = return $ Var name
-varType (NodeExpr.ASTExpr oldExpr) = do
-    oldExpr' <- Var.replaceTimeRefs oldExpr
-    expr     <- mapError $(loc) (convertAST oldExpr')
+varType (NodeExpr.ASTExpr oldExpr') = do
+    oldExpr  <- Var.replaceTimeRefs oldExpr'
+    expr     <- mapError $(loc) (convertAST oldExpr)
     result <- Session.runT $ do
         void   Parser.init
         void $ Pragma.enable (Pragma.orphanNames)
@@ -216,7 +217,8 @@ varType (NodeExpr.ASTExpr oldExpr) = do
         runEitherT $ Pass.run1_ HASTGen.passExpr (expr :: LExpr IDTag ())
     cpphsOptions <- Env.getCpphsOptions
     hexpr <- hoistEitherWith (Error.OtherError $(loc) . show) $ fst result
-    Expression <$> liftIO (Cpphs.runCpphs cpphsOptions "" $ Text.unpack $ HSC.genExpr hexpr)
+    let code = Text.unpack $ HSC.genExpr hexpr
+    Expression . Utils.replace "_time" "(val _time)" . last . lines <$> liftIO (Cpphs.runCpphs cpphsOptions "" code)
 
 
 nameHash :: String -> String
@@ -228,29 +230,28 @@ evalFunction :: MemoryManager mm
 evalFunction nodeExpr callDataPath varNames = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
         tmpVarName    = "_tmp"
-        mkArg arg = "(Value (Pure " <> VarName.toString arg <> "))"
+        mkArg arg = "(" <> VarName.toString arg <> " _time)"
         args      = map mkArg varNames
         appArgs a = if null a then "" else " $ appNext " <> List.intercalate " $ appNext " (reverse a)
         genNative = List.replaceByMany "#{}" args . List.stripIdx 3 3
         self      = head varNames
     vt <- varType nodeExpr
-    operation <- Utils.replace "\\" "\\\\" <$> case vt of
-        List        -> return $ "toIOEnv $ fromValue $ val [" <> List.intercalate "," args <> "]"
-        Id          -> return $ "toIOEnv $ fromValue $ " <> mkArg self
-        Native name -> return $ "toIOEnv $ fromValue $ " <> genNative name
-        Con    name -> return $ "toIOEnv $ fromValue $ call" <> appArgs args <> " $ cons_" <> nameHash name
+    operation <- ("\\(_time :: Float) -> " <>) . Utils.replace "\\" "\\\\" <$> case vt of
+        List        -> return $ "val [" <> List.intercalate "," args <> "]"
+        Id          -> return $ mkArg self
+        Native name -> return $ genNative name
+        Con    name -> return $ "call" <> appArgs args <> " $ cons_" <> nameHash name
         Var    name -> if null args
             then left $ Error.OtherError $(loc) "unsupported node type"
-            else return $ "toIOEnv $ fromValue $ call" <> appArgs (tail args) <> " $ member (Proxy::Proxy " <> show (nameHash name) <> ") " <> mkArg self
-        LitInt   name -> return $ "toIOEnv $ fromValue $ val (" <> name <> " :: Int)"
-        LitFloat name -> return $ "toIOEnv $ fromValue $ val (" <> name <> " :: Float)"
-        Lit      name -> return $ "toIOEnv $ fromValue $ val (" <> name <> ")"
-        Tuple       -> return $ "toIOEnv $ fromValue $ val (" <> List.intercalate "," args <> ")"
-        TimeVar     -> do time <- Env.getTimeVar
-                          return $ "toIOEnv $ fromValue $ val (" <> show time <> " :: Float)"
-        Expression  name -> return $ "toIOEnv $ fromValue $ " <> name
+            else return $ "call" <> appArgs (tail args) <> " $ member (Proxy::Proxy " <> show (nameHash name) <> ") " <> mkArg self
+        LitInt   name    -> return $ "val (" <> name <> " :: Int)"
+        LitFloat name    -> return $ "val (" <> name <> " :: Float)"
+        Lit      name    -> return $ "val  " <> name
+        Tuple            -> return $ "val (" <> List.intercalate "," args <> ")"
+        TimeVar          -> return   "val _time"
+        Expression  name -> return   name
     catchEither (left . Error.RunError $(loc) callPointPath) $ do
-        Session.runAssignment' tmpVarName operation
+        Session.runAssignment tmpVarName operation
         hash <- Hash.computeInherit tmpVarName varNames
         let varName = VarName callPointPath hash
         Session.runAssignment (VarName.toString varName) tmpVarName

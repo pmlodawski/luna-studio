@@ -37,7 +37,7 @@ import           Luna.Interpreter.Session.TargetHS.Reload    (ReloadMap)
 
 
 
-type ResultCallBack = Project.ID -> CallPointPath -> [ModeValue] -> IO ()
+type ResultCallBack = Project.ID -> CallPointPath -> [ModeValue] -> Time -> IO ()
 type FragileMVar    = MVar ()
 
 
@@ -108,4 +108,4 @@ mkDef config memoryManager' = mk config
             {- libManager     -} def
             {- projectID      -} def
             {- mainPtr        -} def
-            {- resultCallBack -} (const (const (void . return)))
+            {- resultCallBack -} (const (const (const (void . return))))

@@ -257,6 +257,13 @@ unsafeGetRGB img = rgb
 
           rgb = M.zipWith3 (\x y z -> A.lift $ Color.RGB x y z) r g b
 
+unsafeGetRGBA :: Image -> M.Matrix2 (Color.RGBA Float)
+unsafeGetRGBA img = M.zipWith4 (\v x y z -> A.lift $ Color.RGBA v x y z) r g b a
+    where Right [r,g,b,a] = (fmap.fmap) (unsafeGetMat . Channel.asMatrix . unsafeFromMaybe)
+                          $ Image.getChannelsFromPrimary channels img
+          unsafeGetMat (ChannelFloat _ (MatrixData mat)) = mat
+          channels        = fmap ((P.++) "rgba.") ["r", "g", "b", "a"]
+
 unsafeGetChannels :: Image -> (M.Matrix2 Float, M.Matrix2 Float, M.Matrix2 Float, M.Matrix2 Float)
 unsafeGetChannels img = (r, g, b, a)
     where Right view = Image.lookupPrimary img
