@@ -21,7 +21,12 @@ Library
   Extensions:     DoAndIfThenElse,
                   NoImplicitPrelude,
                   TemplateHaskell,
-                  OverloadedStrings
+                  TupleSections,
+                  ConstraintKinds,
+                  FlexibleInstances,
+                  MultiParamTypeClasses,
+                  FlexibleContexts,
+                  LambdaCase
 
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
@@ -29,8 +34,6 @@ Library
                   containers,
                   either,
                   luna-core,
-                  luna-distribution,
-                  luna-parser,
                   luna-target-ghchs,
                   flowbox-config,
                   flowbox-utils,
@@ -38,7 +41,9 @@ Library
                   MissingH,
                   split,
                   transformers,
-                  ansi-wl-pprint
+                  ansi-wl-pprint,
+                  bytestring,
+                  text
 
 
 Executable luna-pass-test
@@ -52,20 +57,28 @@ Executable luna-pass-test
   Extensions:     DoAndIfThenElse
                   MultiParamTypeClasses
                   NoImplicitPrelude
-                  OverloadedStrings
+                  OverloadedStrings,
+                  TupleSections
 
   Build-Depends:  base,
                   luna-pass,
                   luna-core,
-                  luna-distribution,
-                  luna-parser,
                   flowbox-utils,
                   mtl,
                   either,
                   dlist,
                   MissingH,
                   transformers,
-                  timeit
+                  timeit,
+                  HList,
+                  containers,
+                  errors,
+                  fgl,
+                  ansi-wl-pprint,
+                  data-default,
+                  pretty-show,
+                  bytestring,
+                  text
 
 
 Test-Suite tests
@@ -79,6 +92,7 @@ Test-Suite tests
                   luna-pass,
                   flowbox-utils,
                   hspec,
+                  MissingH,
                   pretty-show,
                   raw-strings-qq,
-                  MissingH
+                  zippers

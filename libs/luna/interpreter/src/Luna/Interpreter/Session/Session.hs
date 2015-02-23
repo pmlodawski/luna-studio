@@ -18,7 +18,6 @@ import qualified Control.Monad.Ghc          as MGHC
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
 import qualified Data.Either                as Either
-import           Data.Typeable              (Typeable)
 import qualified DynFlags                   as GHC
 import qualified GHC
 import qualified HscTypes
@@ -188,7 +187,7 @@ runDecls decls = do
 runAssignment :: String -> String -> Session mm ()
 runAssignment asigned asignee = do
     lift2 $ Bindings.remove asigned
-    runStmt $ asigned ++ " <- return $ " ++ asignee
+    runDecls $ asigned <> " = " <> asignee
 
 
 runAssignment' :: String -> String -> Session mm ()
@@ -203,7 +202,9 @@ interpret = interceptErrors $(loc) . HEval.interpret
 
 setHardcodedExtensions :: Session mm ()
 setHardcodedExtensions =
-    setFlags [ GHC.Opt_DataKinds ]
+    setFlags [ GHC.Opt_DataKinds
+             , GHC.Opt_ScopedTypeVariables
+             ]
 
 
 --reifySession :: (GHC.Session -> Env -> IO a) -> Session mm a

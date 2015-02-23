@@ -12,12 +12,24 @@ Library
 
     GHC-Options:    -Wall -O2
 
-    Extensions:     DoAndIfThenElse,
-                    NoImplicitPrelude,
-                    OverloadedStrings,
-                    TypeSynonymInstances
+    Extensions:   DoAndIfThenElse,
+                  NoImplicitPrelude,
+                  TemplateHaskell,
+                  OverloadedStrings,
+                  DeriveGeneric,
+                  StandaloneDeriving,
+                  FlexibleContexts,
+                  MultiParamTypeClasses,
+                  DefaultSignatures,
+                  DeriveFunctor,
+                  DeriveTraversable,
+                  DeriveFoldable,
+                  FlexibleInstances,
+                  LambdaCase,
+                  ConstraintKinds,
+                  GeneralizedNewtypeDeriving
 
-    Exposed-modules: `findmodules('src', '.*\.hs')`
+    Exposed-modules: `findmodules('src', '.*\.hs', exclude='System.Logging')`
 
     Build-Depends:  aeson >= 0.7.0.5,
                     base,
@@ -46,11 +58,15 @@ Library
                     protocol-buffers,
                     split,
                     template-haskell,
-                    text,
+                    text >= 1.2,
                     time,
                     transformers,
                     template-haskell,
-                    QuickCheck
+                    QuickCheck,
+                    unordered-containers,
+                    convertible,
+                    hashable
+
   if os(windows)
     Build-Depends:  Win32
 

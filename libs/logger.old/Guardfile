@@ -1,0 +1,16 @@
+require 'colorize'  # What a travesty, indeed. This shall be spelled 'colourise'
+
+guard :shell, :version => 2, :cli => "--color" do
+  watch(%r{^(test|src)/.+\.l?hs$}) do |m|
+    puts "\n\n\n--------------------------------------------------------------------------------".light_magenta
+    puts "trigger: #{m}"
+
+    # building
+    puts "--------------------------------------------------------------------------------".light_magenta
+    puts "              ____  _  _  __  __    ____  __  __ _   ___\n             (  _ \\/ )( \\(  )(  )  (    \\(  )(  ( \\ / __)\n              ) _ () \\/ ( )( / (_/\\ ) D ( )( /    /( (_ \\ _  _  _\n             (____/\\____/(__)\\____/(____/(__)\\_)__) \\___/(_)(_)(_)".cyan
+    puts "--------------------------------------------------------------------------------".cyan
+
+    # if system("(cd /Users/konrad/flowbox.io/flowbox/dist/libs/luna/typechecker && exec cabal install -j --reinstall --disable-documentation --bindir=/Users/konrad/flowbox.io/flowbox/dist/bin/libs flowbox-luna-typechecker)")
+    system("~/flowbox.io/flowbox/scripts/compile")
+  end
+end 

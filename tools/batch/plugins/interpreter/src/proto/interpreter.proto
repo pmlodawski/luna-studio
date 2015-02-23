@@ -7,7 +7,7 @@
 
 package generated.proto.interpreter;
 
-import "crumb.proto";
+import "dep/crumb.proto";
 import "data.proto";
 import "mode.proto";
 
@@ -26,13 +26,18 @@ message CallPointPath {
 message DefPoint {
     required int32 projectID = 1;
     required int32 libraryID = 2;
-    required generated.proto.crumb.Breadcrumbs breadcrumbs = 3;
+    required generated.proto.dep.crumb.Breadcrumbs breadcrumbs = 3;
 }
 
 message ProfileInfo {
     required CallPointPath callPointPath = 1;
     required double        cpuTime       = 2;
     required int64         realTime      = 3;
+}
+
+message CompileError {
+    required CallPointPath callPointPath = 1;
+    required string        errorMessage  = 2;
 }
 
 enum Status {
@@ -73,7 +78,7 @@ message Interpreter {
         message Time {
             message Set {
                 message Request {
-                    required double value = 1;
+                    required float value = 1;
                 }
                 message Update {
                     required Request request = 1;
@@ -83,7 +88,7 @@ message Interpreter {
                 message Request { }
                 message Status {
                     required Request request = 1;
-                    required double  value   = 2;
+                    required float   value   = 2;
                 }
             }
         }
@@ -157,21 +162,24 @@ message Interpreter {
     }
     message Run {
         message Request {
-            optional double timeValue = 1;
+            optional float timeValue = 1;
         }
         message Update  { 
-            required Request     request      = 1;
-            repeated ProfileInfo profileInfos = 2;
+            required Request      request       = 1;
+            repeated ProfileInfo  profileInfos  = 2;
+            repeated CompileError compileErrors = 3;
         }
     }
     message Value {
         message Request {
             required CallPointPath callPointPath = 1;
+            required float         timeValue     = 2;
         }
         message Update {
             required CallPointPath                  callPointPath = 1;
             required Status                         status        = 2;
             repeated generated.proto.mode.ModeValue modeValue     = 3;
+            required float                          timeValue     = 4;
         }
     }
     message Abort {

@@ -19,28 +19,28 @@ import qualified Luna.Lib.Lib                      as Library
 
 
 
-type LibManager = Graph Library Edge
+type LibManager a e v = Graph (Library a e v) Edge
 
 
-lab :: LibManager -> Library.ID -> Maybe Library
+lab :: LibManager a e v -> Library.ID -> Maybe (Library a e v)
 lab lm = Graph.lab lm . Library.toInt
 
 
-labNodes :: LibManager -> [(Library.ID, Library)]
+labNodes :: LibManager a e v -> [(Library.ID, Library a e v)]
 labNodes = over (mapped . _1) Library.ID . Graph.labNodes
 
 
-nodes :: LibManager -> [Library.ID]
+nodes :: LibManager a e v -> [Library.ID]
 nodes = map Library.ID . Graph.nodes
 
 
-updateNode :: (Library.ID, Library) -> LibManager -> LibManager
+updateNode :: (Library.ID, Library a e v) -> LibManager a e v -> LibManager a e v
 updateNode lib = Graph.updateNode (_1 %~ Library.toInt $ lib)
 
 
-insNewNode :: Library -> LibManager -> (LibManager, Library.ID)
+insNewNode :: Library a e v -> LibManager a e v -> (LibManager a e v, Library.ID)
 insNewNode lib lm = _2 %~ Library.ID $ Graph.insNewNode lib lm
 
 
-delNode :: Library.ID -> LibManager -> LibManager
+delNode :: Library.ID -> LibManager a e v -> LibManager a e v
 delNode libraryID = Graph.delNode $ Library.toInt libraryID

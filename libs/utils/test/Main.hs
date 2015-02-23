@@ -15,7 +15,7 @@ module Main where
 import Flowbox.Generics.Deriving.FShow
 import Flowbox.System.Log.Logger       as Logger
 import GHC.Generics
-import Prelude                         hiding (error)
+import Flowbox.Prelude hiding (error)
 
 import           Flowbox.Source.Location
 import qualified Flowbox.System.Console.StyledText.StyledText as Text
@@ -59,6 +59,6 @@ main = do
         txt = x ++ y ++ x
     Text.print txt
     Text.print $ Text.clearFormatting txt
-    print $ Text.toText txt
+    print $ toText txt
 
     return ()

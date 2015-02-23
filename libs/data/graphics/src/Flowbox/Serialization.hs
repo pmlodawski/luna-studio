@@ -13,13 +13,15 @@ module Flowbox.Serialization (
 ) where
 
 import qualified Flowbox.Data.Serialization     as Serialization
-import qualified Flowbox.Graphics.Serialization as Serialization
+import           Flowbox.Graphics.Serialization ()
 import           Flowbox.Prelude
 import           Generated.Proto.Data.Value     (Value)
 import           Generated.Proto.Mode.Mode      (Mode)
 
 
+
 type SValue = Value
+
 
 computeValue :: Serialization.Serializable a b => a -> Mode -> IO (Maybe SValue)
 computeValue var mode = Serialization.toValue var mode

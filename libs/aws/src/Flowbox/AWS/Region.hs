@@ -11,7 +11,7 @@ module Flowbox.AWS.Region where
 import           Data.Text (Text)
 import qualified Data.Text as Text
 
-import Flowbox.Prelude
+import Flowbox.Prelude hiding (Text, fromText, toText)
 
 
 

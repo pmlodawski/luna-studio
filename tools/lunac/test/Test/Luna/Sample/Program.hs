@@ -39,8 +39,8 @@ def main:
 
     Program "hello world" [r|
 
-def putStrLn msg:
-    ```autoLift1 putStrLn #{msg}```
+foreign haskell def putStrLn msg:
+    autoLift1 putStrLn msg
 
 def main:
     putStrLn "Hello World!"
@@ -55,25 +55,25 @@ class Vector a:
     def test a b:
         a,b
 
-def print msg:
-    ```autoLift1 print #{msg}```
+foreign haskell def print msg:
+    autoLift1 print msg
 
 def main:
     v = Vector 1 2 3
-    print $ v
+    print v
 |] [r|Vector 1 2 3
 |],
 
     Program "Int.>" [r|
 
-def print msg:
-    ```autoLift1 print #{msg}```
+foreign haskell def print msg:
+    autoLift1 print msg
 
 def > a b:
     a.> b
 
-def Int.> a:
-    ```liftF2 (>) #{self} #{a}```
+foreign haskell def Int.> a:
+    liftF2 (>) self a
 
 def main:
     print $ 1 > 2
@@ -87,11 +87,11 @@ class Vector a:
     def test a b:
         a,b
 
-def print msg:
-    ```autoLift1 print #{msg}```
+foreign haskell def print msg:
+    autoLift1 print msg
 
-def Int.+ a:
-    ```liftF2 (+) #{self} #{a}```
+foreign haskell def Int.+ a:
+    liftF2 (+) self a
 
 def + a b:
     a.+ b
@@ -99,17 +99,17 @@ def + a b:
 def > a b:
     a.> b
 
-def Int.> a:
-    ```liftF2 (>) #{self} #{a}```
+foreign haskell def Int.> a:
+    liftF2 (>) self a
 
 def Int.inc:
     self + 1
 
 def main:
-    print $ 2 + 2.inc.inc
-    print $ 1 > 2
+    print (2 + 2.inc.inc)
+    print (1 > 2)
     v = Vector 1 2 3
-    print $ v
+    print v
 |] [r|6
 False
 Vector 1 2 3

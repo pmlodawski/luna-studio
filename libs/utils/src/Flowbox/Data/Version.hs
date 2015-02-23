@@ -25,7 +25,7 @@ import Flowbox.Prelude
 
 
 
-newtype Name = Name { toString :: String }
+newtype Name = Name String
 
 
 data Versioned el = Versioned { base    :: el
@@ -47,6 +47,9 @@ readVersionMaybe s = case [ x | (x,"") <- ReadP.readP_to_S parseVersion $ s] of
 ------------------------------------------------------------------------
 
 deriving instance Generic Version
+
+instance ToString Name where
+  toString (Name name) = name
 
 instance Show Name where
     show = toString

@@ -17,8 +17,8 @@ import           Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project ()
 import           Flowbox.Data.Convert
 import           Flowbox.Prelude
 import qualified Generated.Proto.Interpreter.DefPoint                   as Gen
-import           Luna.Data.Serialize.Proto.Conversion.Crumb             ()
-import           Luna.Data.Serialize.Proto.Conversion.Library           ()
+import           Luna.DEP.Data.Serialize.Proto.Conversion.Crumb         ()
+import           Luna.DEP.Data.Serialize.Proto.Conversion.Library       ()
 import           Luna.Interpreter.Session.Data.DefPoint                 (DefPoint (DefPoint))
 
 

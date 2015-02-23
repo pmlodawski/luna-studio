@@ -16,54 +16,54 @@ import           Data.List          (intercalate)
 import           Text.RawString.QQ
 import           Text.Show.Pretty
 
-import qualified Flowbox.Batch.Project.Project                                 as Project
-import qualified Flowbox.Config.Config                                         as Config
+import qualified Flowbox.Batch.Project.Project                                     as Project
+import qualified Flowbox.Config.Config                                             as Config
 import           Flowbox.Control.Error
-import           Flowbox.Data.Version                                          ()
-import           Flowbox.Debug                                                 (timeit)
+import           Flowbox.Data.Version                                              ()
+import           Flowbox.Debug                                                     (timeit)
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.System.UniPath                                        as UniPath
-import           Flowbox.Text.Show.Hs                                          (hsShow)
-import qualified Luna.AST.Control.Crumb                                        as Crumb
-import qualified Luna.AST.Control.Focus                                        as Focus
-import qualified Luna.AST.Control.Zipper                                       as Zipper
-import           Luna.AST.Module                                               (Module)
-import qualified Luna.AST.Module                                               as Module
-import           Luna.AST.Name                                                 (Name (Name))
-import qualified Luna.AST.Name                                                 as Name
-import qualified Luna.AST.Type                                                 as Type
-import           Luna.Data.Source                                              (Source (Source))
-import qualified Luna.Data.Source                                              as Source
-import qualified Luna.Graph.PropertyMap                                        as PropertyMap
-import qualified Luna.Interpreter.Session.AST.Executor                         as Executor
-import qualified Luna.Interpreter.Session.Cache.Cache                          as Cache
-import qualified Luna.Interpreter.Session.Cache.Invalidate                     as Invalidate
-import qualified Luna.Interpreter.Session.Cache.Value                          as Value
-import           Luna.Interpreter.Session.Data.CallPoint                       (CallPoint (CallPoint))
-import           Luna.Interpreter.Session.Data.DefPoint                        (DefPoint (DefPoint))
-import qualified Luna.Interpreter.Session.Env                                  as Env
-import qualified Luna.Interpreter.Session.Error                                as Error
-import           Luna.Interpreter.Session.Memory.Manager.NoManager             (NoManager (NoManager))
-import qualified Luna.Interpreter.Session.Session                              as Session
-import qualified Luna.Interpreter.Session.TargetHS.Bindings                    as Bindings
-import qualified Luna.Interpreter.Session.TargetHS.Reload                      as Reload
-import           Luna.Lib.Lib                                                  (Library (Library))
-import qualified Luna.Lib.Lib                                                  as Library
-import           Luna.Lib.Manager                                              (LibManager)
-import qualified Luna.Lib.Manager                                              as LibManager
-import qualified Luna.Pass.Analysis.Alias.Alias                                as Analysis.Alias
-import qualified Luna.Pass.Analysis.CallGraph.CallGraph                        as Analysis.CallGraph
-import qualified Luna.Pass.CodeGen.HSC.HSC                                     as HSC
-import qualified Luna.Pass.Transform.AST.DepSort.DepSort                       as Transform.DepSort
-import qualified Luna.Pass.Transform.AST.Desugar.ImplicitCalls.ImplicitCalls   as Desugar.ImplicitCalls
-import qualified Luna.Pass.Transform.AST.Desugar.ImplicitScopes.ImplicitScopes as Desugar.ImplicitScopes
-import qualified Luna.Pass.Transform.AST.Desugar.ImplicitSelf.ImplicitSelf     as Desugar.ImplicitSelf
-import qualified Luna.Pass.Transform.AST.Desugar.TLRecUpdt.TLRecUpdt           as Desugar.TLRecUpdt
-import qualified Luna.Pass.Transform.AST.Hash.Hash                             as Hash
-import qualified Luna.Pass.Transform.AST.SSA.SSA                               as SSA
-import qualified Luna.Pass.Transform.AST.TxtParser.TxtParser                   as TxtParser
-import qualified Luna.Pass.Transform.HAST.HASTGen.HASTGen                      as HASTGen
+import qualified Flowbox.System.UniPath                                            as UniPath
+import           Flowbox.Text.Show.Hs                                              (hsShow)
+import qualified Luna.DEP.AST.Control.Crumb                                        as Crumb
+import qualified Luna.DEP.AST.Control.Focus                                        as Focus
+import qualified Luna.DEP.AST.Control.Zipper                                       as Zipper
+import           Luna.DEP.AST.Module                                               (Module)
+import qualified Luna.DEP.AST.Module                                               as Module
+import           Luna.DEP.AST.Name                                                 (Name (Name))
+import qualified Luna.DEP.AST.Name                                                 as Name
+import qualified Luna.DEP.AST.Type                                                 as Type
+import           Luna.DEP.Data.Source                                              (Source (Source))
+import qualified Luna.DEP.Data.Source                                              as Source
+import qualified Luna.DEP.Graph.PropertyMap                                        as PropertyMap
+import           Luna.DEP.Lib.Lib                                                  (Library (Library))
+import qualified Luna.DEP.Lib.Lib                                                  as Library
+import           Luna.DEP.Lib.Manager                                              (LibManager)
+import qualified Luna.DEP.Lib.Manager                                              as LibManager
+import qualified Luna.DEP.Pass.Analysis.Alias.Alias                                as Analysis.Alias
+import qualified Luna.DEP.Pass.Analysis.CallGraph.CallGraph                        as Analysis.CallGraph
+import qualified Luna.DEP.Pass.CodeGen.HSC.HSC                                     as HSC
+import qualified Luna.DEP.Pass.Transform.AST.DepSort.DepSort                       as Transform.DepSort
+import qualified Luna.DEP.Pass.Transform.AST.Desugar.ImplicitCalls.ImplicitCalls   as Desugar.ImplicitCalls
+import qualified Luna.DEP.Pass.Transform.AST.Desugar.ImplicitScopes.ImplicitScopes as Desugar.ImplicitScopes
+import qualified Luna.DEP.Pass.Transform.AST.Desugar.ImplicitSelf.ImplicitSelf     as Desugar.ImplicitSelf
+import qualified Luna.DEP.Pass.Transform.AST.Desugar.TLRecUpdt.TLRecUpdt           as Desugar.TLRecUpdt
+import qualified Luna.DEP.Pass.Transform.AST.Hash.Hash                             as Hash
+import qualified Luna.DEP.Pass.Transform.AST.SSA.SSA                               as SSA
+import qualified Luna.DEP.Pass.Transform.AST.TxtParser.TxtParser                   as TxtParser
+import qualified Luna.DEP.Pass.Transform.HAST.HASTGen.HASTGen                      as HASTGen
+import qualified Luna.Interpreter.Session.AST.Executor                             as Executor
+import qualified Luna.Interpreter.Session.Cache.Cache                              as Cache
+import qualified Luna.Interpreter.Session.Cache.Invalidate                         as Invalidate
+import qualified Luna.Interpreter.Session.Cache.Value                              as Value
+import           Luna.Interpreter.Session.Data.CallPoint                           (CallPoint (CallPoint))
+import           Luna.Interpreter.Session.Data.DefPoint                            (DefPoint (DefPoint))
+import qualified Luna.Interpreter.Session.Env                                      as Env
+import qualified Luna.Interpreter.Session.Error                                    as Error
+import           Luna.Interpreter.Session.Memory.Manager.NoManager                 (NoManager (NoManager))
+import qualified Luna.Interpreter.Session.Session                                  as Session
+import qualified Luna.Interpreter.Session.TargetHS.Bindings                        as Bindings
+import qualified Luna.Interpreter.Session.TargetHS.Reload                          as Reload
 
 
 
@@ -72,7 +72,7 @@ rootLogger = getLogger ""
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 code :: Source
@@ -106,6 +106,7 @@ def main:
     v = Vector 1 2 3
     print $ v
 |]
+
 
 code2 :: Source
 code2 = Source ["Main"] $ [r|
@@ -164,15 +165,15 @@ main1 = do
     (libManager , libID) <- readSource code
     (libManager2, _    ) <- readSource code2
 
-    env <- Env.mk NoManager libManager (Just $ Project.ID 0)
+    env <- Env.mk cfg NoManager libManager (Just $ Project.ID 0)
                 (Just $ DefPoint libID [Crumb.Module "Main", Crumb.Function (Name.single "main") []])
-                (curry $ curry print)
+                (curry $ curry $ curry print)
 
     putStrLn $ ppShow $ LibManager.lab libManager libID
     result <- Session.run cfg env [] $ do
         Env.addReload libID Reload.ReloadLibrary
         Executor.processMain_
-        print =<< Value.getIfReady [CallPoint libID 92]
+        print =<< Value.getIfReady [CallPoint libID 92] 0.0
         putStrLn "--------- 1"
         Executor.processMain_
         putStrLn "========= 1"
@@ -200,7 +201,7 @@ main1 = do
         putStrLn "========= finished =======4="
         Cache.dumpAll
 
-        print =<< Value.getIfReady [CallPoint libID 92]
+        print =<< Value.getIfReady [CallPoint libID 92] 0.0
     eitherStringToM $ fmapL Error.format result
 
 
@@ -239,9 +240,9 @@ main3 = do
 
     (libManager , libID) <- readSource code
 
-    env <- Env.mk NoManager libManager (Just $ Project.ID 0)
+    env <- Env.mk cfg NoManager libManager (Just $ Project.ID 0)
                 (Just $ DefPoint libID [Crumb.Module "Main", Crumb.Function (Name "main" []) []])
-                (curry $ curry print)
+                (curry $ curry $ curry print)
 
     result <- Session.run cfg env [] $ do
         Session.setImports ["Foreign.Ptr", "Foreign.ForeignPtr", "System.Mem"]
@@ -262,9 +263,9 @@ main4 = do
 
     (libManager , libID) <- readSource code
 
-    env <- Env.mk NoManager libManager (Just $ Project.ID 0)
+    env <- Env.mk cfg NoManager libManager (Just $ Project.ID 0)
                 (Just $ DefPoint libID [Crumb.Module "Main", Crumb.Function (Name "main" []) []])
-                (curry $ curry print)
+                (curry $ curry $ curry print)
 
     result <- Session.run cfg env [] $ do
         Session.setImports ["Prelude"]

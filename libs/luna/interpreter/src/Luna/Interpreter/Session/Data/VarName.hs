@@ -10,10 +10,10 @@ module Luna.Interpreter.Session.Data.VarName where
 import qualified Data.List as List
 
 import           Flowbox.Prelude
+import qualified Luna.DEP.Lib.Lib                            as Library
 import qualified Luna.Interpreter.Session.Data.CallPoint     as CallPoint
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import           Luna.Interpreter.Session.Data.Hash          (Hash)
-import qualified Luna.Lib.Lib                                as Library
 
 
 
