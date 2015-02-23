@@ -1,10 +1,13 @@
 #include <iostream>
 
+#include "../generated/dep/expr.pb.h"
 #include "../generated/project-manager.pb.h"
 #include "../generated/file-manager.pb.h"
 #include "../generated/parser.pb.h"
 #include "../generated/plugin-manager.pb.h"
 #include "../generated/interpreter.pb.h"
+#include "../generated/dep/type.pb.h"
+#include "../generated/renderer.pb.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/filesystem.hpp>
@@ -16,7 +19,8 @@
 
 
 using namespace boost::filesystem;
-using namespace generated::proto::type;
+using namespace generated::proto::dep::type;
+using namespace generated::proto::dep;
 using namespace google::protobuf;
 
 const path outputDirectory = path("..") / "generated";
@@ -67,10 +71,10 @@ public:
 	std::function<void(const std::string&)> error;
 	std::function<void(const std::string&)> after;
 
-	std::function<generated::proto::crumb::Breadcrumbs(DefinitionId defID)> crumbifyMethod;
+	std::function<generated::proto::dep::crumb::Breadcrumbs(DefinitionId defID)> crumbifyMethod;
 
 
-	generated::proto::crumb::Breadcrumbs crumbify(DefinitionId defID);
+	generated::proto::dep::crumb::Breadcrumbs crumbify(DefinitionId defID);
 
 	%wrapper_name%(shared_ptr<BusHandler> bh) : bh(bh) {}
 	%method_decls%
@@ -93,7 +97,7 @@ CorrelationId %wrapper_name%::sendRequest(std::string baseTopic, std::string req
 	return bh->request(std::move(baseTopic), std::move(requestTopic), msg.SerializeAsString(), callback);
 }
 
-generated::proto::crumb::Breadcrumbs %wrapper_name%::crumbify(DefinitionId defID)
+generated::proto::dep::crumb::Breadcrumbs %wrapper_name%::crumbify(DefinitionId defID)
 {
 	try
 	{
@@ -251,9 +255,9 @@ CorrelationId %wrapper_name%::%method%_Async(%args_list_comma% ConversationDoneC
 )";
 
 const std::string clsGetterMethod = R"(
-inline generated::proto::%fname%::%msg%_Cls getCls(const generated::proto::%fname%::%ext% *arg)
+inline %namespace%::%msg%_Cls getCls(const %namespace%::%ext% *arg)
 {
-	return generated::proto::%fname%::%msg%_Cls_%ext%;
+	return %namespace%::%msg%_Cls_%ext%;
 }
 )";
 
@@ -636,11 +640,14 @@ std::string extToClsCovnersions()
 		for(int k = 0; k < e->value_count(); k++)
 		{
 			auto enumVal = e->value(k);
-
 			auto hlp = clsGetterMethod;
 
+			auto packageName = e->file()->package();
+			boost::replace_all(packageName, ".", "::");
+
 			std::cout << "\t\t" << enumVal->name() << std::endl;
-			boost::replace_all(hlp, "%fname%", fname);
+			boost::replace_all(hlp, "%namespace%", packageName);
+			//boost::replace_all(hlp, "%fname%", fname);
 			boost::replace_all(hlp, "%msg%", e->containing_type()->name());
 			boost::replace_all(hlp, "%ext%", enumVal->name());
 			ret += hlp;
@@ -706,6 +713,7 @@ std::vector<MethodWrapper> prepareMethodWrappers(bool finalLeaves = false)
 	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::parser::Parse::descriptor());
 	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::parser::MkText::descriptor());
 	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::parser::Parser::descriptor());
+        prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::renderer::Renderer::descriptor());
 	return methods;
 }
 

@@ -8,18 +8,12 @@
 import sys
 
 from colors import print_error
+from errors import handle_out
 from subprocess import call
 from utils.colors      import print_error, formatQuestion
 
-
-def handle_out(code):
-    if code != 0 and code != "":
-        print_error("ERROR")
-        sys.exit(code)
-
-def autocall(args):
-    handle_out(call(args))
-
+def autocall(cmd_argv):
+    handle_out(call(cmd_argv))
 
 def ask(question, silent=False):
     if silent:

@@ -30,8 +30,8 @@ import qualified Generated.Proto.Data.VertexData  as VertexData
 
 
 -- | Helper types
-type Weight      = Double
-type Angle       = Double
+type Weight      = Float
+type Angle       = Float
 type Range x     = (x, x)
 
 data FunctionModel x y = FunctionModel { _segments :: Map x (Maybe (FunctionSegment x y)) }

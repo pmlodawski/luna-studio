@@ -4,26 +4,32 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE TupleSections     #-}
 
 module Luna.Interpreter.Session.AST.Executor where
 
-import           Control.Monad.State        hiding (mapM, mapM_)
+import           Control.Monad.State         hiding (mapM, mapM_)
 import           Control.Monad.Trans.Either
-import qualified Data.Char                  as Char
-import qualified Data.Maybe                 as Maybe
-import qualified Text.Read                  as Read
+import qualified Data.Char                   as Char
+import qualified Data.Maybe                  as Maybe
+import qualified Data.String.Utils           as Utils
+import qualified Data.Text.Lazy              as Text
+import qualified Language.Preprocessor.Cpphs as Cpphs
+import qualified Text.Read                   as Read
 
-import           Flowbox.Control.Error                      (catchEither)
+import           Flowbox.Control.Error                      (catchEither, hoistEitherWith)
 import qualified Flowbox.Data.List                          as List
 import           Flowbox.Data.MapForest                     (MapForest)
 import           Flowbox.Prelude                            as Prelude hiding (children, inside)
 import           Flowbox.Source.Location                    (loc)
 import           Flowbox.System.Log.Logger
-import qualified Luna.Graph.Node                            as Node
-import qualified Luna.Graph.Node.Expr                       as NodeExpr
-import           Luna.Graph.Node.StringExpr                 (StringExpr)
-import qualified Luna.Graph.Node.StringExpr                 as StringExpr
+import           Luna.DEP.AST.ASTConvertion                 (convertAST)
+import qualified Luna.DEP.Graph.Node                        as Node
+import           Luna.DEP.Graph.Node.Expr                   (NodeExpr)
+import qualified Luna.DEP.Graph.Node.Expr                   as NodeExpr
+import qualified Luna.DEP.Graph.Node.StringExpr             as StringExpr
 import qualified Luna.Interpreter.Session.AST.Traverse      as Traverse
 import qualified Luna.Interpreter.Session.Cache.Cache       as Cache
 import qualified Luna.Interpreter.Session.Cache.Free        as Free
@@ -38,6 +44,7 @@ import           Luna.Interpreter.Session.Data.VarName      (VarName (VarName))
 import qualified Luna.Interpreter.Session.Data.VarName      as VarName
 import qualified Luna.Interpreter.Session.Debug             as Debug
 import qualified Luna.Interpreter.Session.Env               as Env
+import           Luna.Interpreter.Session.Error             (Error, mapError)
 import qualified Luna.Interpreter.Session.Error             as Error
 import qualified Luna.Interpreter.Session.Hash              as Hash
 import           Luna.Interpreter.Session.Memory.Manager    (MemoryManager)
@@ -48,29 +55,37 @@ import qualified Luna.Interpreter.Session.Session           as Session
 import qualified Luna.Interpreter.Session.TargetHS.Bindings as Bindings
 import qualified Luna.Interpreter.Session.TargetHS.TargetHS as TargetHS
 import qualified Luna.Interpreter.Session.Var               as Var
-import qualified Luna.Pass.Transform.AST.Hash.Hash          as Hash
+import qualified Luna.Parser.Parser                         as Parser
+import qualified Luna.Parser.Pragma                         as Pragma
+import qualified Luna.Pass                                  as Pass
+import qualified Luna.Pass.Target.HS.HASTGen                as HASTGen
+import qualified Luna.Pass.Target.HS.HSC                    as HSC
+import           Luna.Syntax.Enum                           (IDTag)
+import           Luna.Syntax.Expr                           (LExpr)
+import qualified Luna.Syntax.Name.Hash                      as Hash
+import qualified Luna.System.Pragma.Store                   as Pragma
+import           Luna.System.Session                        as Session
 
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
-processMain :: MemoryManager mm => Session mm (MapForest CallPoint ProfileInfo)
-processMain = processMain_ >> Env.getProfileInfos
+processMain :: MemoryManager mm => Session mm (MapForest CallPoint ProfileInfo, MapForest CallPoint Error)
+processMain = processMain_ >> (,) <$> Env.getProfileInfos <*> Env.getCompileErrors
 
 
 processMain_ :: MemoryManager mm => Session mm ()
 processMain_ = do
     Env.cleanProfileInfos
+    Env.cleanCompileErrors
     TargetHS.reload
     mainPtr  <- Env.getMainPtr
     children <- CallDataPath.addLevel [] mainPtr
     mapM_ processNodeIfNeeded children
     Env.setAllReady True
     Debug.dumpBindings
-    --Cache.dumpAll
-    --Cache.performGC
 
 
 processNodeIfNeeded :: MemoryManager mm => CallDataPath -> Session mm ()
@@ -80,12 +95,11 @@ processNodeIfNeeded callDataPath =
 
 
 processNode :: MemoryManager mm => CallDataPath -> Session mm ()
-processNode callDataPath = Env.profile (CallDataPath.toCallPointPath callDataPath) $ do
+processNode callDataPath = Env.debugNode (CallDataPath.toCallPointPath callDataPath) $ do
     arguments <- Traverse.arguments callDataPath
     let callData  = last callDataPath
         node      = callData ^. CallData.node
     varNames <- mapM (Cache.recentVarName . CallDataPath.toCallPointPath) arguments
-
     children <- Traverse.into callDataPath
     if null children
         then case node of
@@ -104,38 +118,33 @@ executeOutputs :: MemoryManager mm
                => CallDataPath -> [VarName] -> Session mm ()
 executeOutputs callDataPath varNames = do
     let argsCount  = length $ Traverse.inDataConnections callDataPath
-        stringExpr = if argsCount == 1 then StringExpr.Id else StringExpr.Tuple
+        nodeExpr = NodeExpr.StringExpr $ if argsCount == 1 then StringExpr.Id else StringExpr.Tuple
     when (length callDataPath > 1) $
-        execute (init callDataPath) stringExpr varNames
+        execute (init callDataPath) nodeExpr varNames
 
 
 executeNode :: MemoryManager mm
             => CallDataPath -> [VarName] -> Session mm ()
 executeNode callDataPath varNames = do
     let node       = last callDataPath ^. CallData.node
-
-    stringExpr <- case node of
-        Node.Expr (NodeExpr.StringExpr stringExpr) _ _ ->
-            return stringExpr
-        _                                              ->
-            left $ Error.GraphError $(loc) "Wrong node type"
-    execute callDataPath stringExpr varNames
+    case node of
+        Node.Expr nodeExpr _ _ -> execute callDataPath nodeExpr varNames
 
 
 executeAssignment :: MemoryManager mm
                   => CallDataPath -> [VarName] -> Session mm ()
 executeAssignment callDataPath [varName] =
-    execute callDataPath StringExpr.Id [varName] -- TODO [PM] : handle Luna's pattern matching
+    execute callDataPath (NodeExpr.StringExpr StringExpr.Id) [varName] -- TODO [PM] : handle Luna's pattern matching
 
 
 execute :: MemoryManager mm
-        => CallDataPath -> StringExpr -> [VarName] -> Session mm ()
-execute callDataPath stringExpr varNames = do
+        => CallDataPath -> NodeExpr -> [VarName] -> Session mm ()
+execute callDataPath nodeExpr varNames = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
     status       <- Cache.status        callPointPath
     prevVarName  <- Cache.recentVarName callPointPath
     boundVarName <- Cache.dependency varNames callPointPath
-    let execFunction = evalFunction stringExpr callDataPath varNames
+    let execFunction = evalFunction nodeExpr callDataPath varNames
 
         executeModified = do
             varName <- execFunction
@@ -170,61 +179,79 @@ execute callDataPath stringExpr varNames = do
         CacheStatus.Ready        -> left $ Error.OtherError $(loc) "something went wrong : status = Ready"
 
 
-data VarType = Lit    String
-             | Con    String
-             | Var    String
-             | Native String
+data VarType = Lit      String
+             | LitInt   String
+             | LitFloat String
+             | Con      String
+             | Var      String
+             | Native   String
              | Tuple
              | List
              | TimeVar
              | Id
+             | Expression String
              deriving Show
 
 
-varType :: StringExpr -> VarType
-varType  StringExpr.Id                 = Id
-varType  StringExpr.Tuple              = Tuple
-varType  StringExpr.List               = List
-varType (StringExpr.Native name      ) = Native name
-varType (StringExpr.Expr   []        ) = Prelude.error "varType : empty expression"
-varType (StringExpr.Expr   name@(h:_))
-    | Maybe.isJust (Read.readMaybe name :: Maybe Char)   = Lit name
-    | Maybe.isJust (Read.readMaybe name :: Maybe Int)    = Lit name
-    | Maybe.isJust (Read.readMaybe name :: Maybe Double) = Lit name
-    | Maybe.isJust (Read.readMaybe name :: Maybe String) = Lit name
-    | name == Var.timeRef                                = TimeVar
-    | Char.isUpper h                                     = Con name
-    | otherwise                                          = Var name
-varType other = Prelude.error $ show other
+varType :: NodeExpr -> Session mm VarType
+varType (NodeExpr.StringExpr  StringExpr.Id                ) = return   Id
+varType (NodeExpr.StringExpr  StringExpr.Tuple             ) = return   Tuple
+varType (NodeExpr.StringExpr  StringExpr.List              ) = return   List
+varType (NodeExpr.StringExpr (StringExpr.Native name      )) = return $ Native name
+varType (NodeExpr.StringExpr (StringExpr.Expr   []        )) = return $ Prelude.error "varType : empty expression"
+varType (NodeExpr.StringExpr (StringExpr.Expr   name@(h:_)))
+    | Maybe.isJust (Read.readMaybe name :: Maybe Char)   = return $ Lit      name
+    | Maybe.isJust (Read.readMaybe name :: Maybe Int)    = return $ LitInt   name
+    | Maybe.isJust (Read.readMaybe name :: Maybe Float)  = return $ LitFloat name
+    | Maybe.isJust (Read.readMaybe name :: Maybe String) = return $ Lit      name
+    | name == Var.timeRef                                = return   TimeVar
+    | Char.isUpper h                                     = return $ Con name
+    | otherwise                                          = return $ Var name
+varType (NodeExpr.ASTExpr oldExpr') = do
+    oldExpr  <- Var.replaceTimeRefs oldExpr'
+    expr     <- mapError $(loc) (convertAST oldExpr)
+    result <- Session.runT $ do
+        void   Parser.init
+        void $ Pragma.enable (Pragma.orphanNames)
+        void $ Pragma.pop    (Pragma.orphanNames)
+        runEitherT $ Pass.run1_ HASTGen.passExpr (expr :: LExpr IDTag ())
+    cpphsOptions <- Env.getCpphsOptions
+    hexpr <- hoistEitherWith (Error.OtherError $(loc) . show) $ fst result
+    let code = Text.unpack $ HSC.genExpr hexpr
+    Expression . Utils.replace "_time" "(val _time)" . last . lines <$> liftIO (Cpphs.runCpphs cpphsOptions "" code)
+
+
+nameHash :: String -> String
+nameHash = Hash.hash
 
 
 evalFunction :: MemoryManager mm
-             => StringExpr -> CallDataPath -> [VarName] -> Session mm VarName
-evalFunction stringExpr callDataPath varNames = do
+             => NodeExpr -> CallDataPath -> [VarName] -> Session mm VarName
+evalFunction nodeExpr callDataPath varNames = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
         tmpVarName    = "_tmp"
-        nameStr       = StringExpr.toString stringExpr
-        nameHash      = if nameStr == "Point2" then "Point2" else Hash.hashStr $ StringExpr.toString stringExpr
-
-        mkArg arg = "(Value (Pure "  ++ VarName.toString arg ++ "))"
+        mkArg arg = "(" <> VarName.toString arg <> " _time)"
         args      = map mkArg varNames
-        appArgs a = if null a then "" else " $ appNext " ++ List.intercalate " $ appNext " (reverse a)
+        appArgs a = if null a then "" else " $ appNext " <> List.intercalate " $ appNext " (reverse a)
         genNative = List.replaceByMany "#{}" args . List.stripIdx 3 3
-
         self      = head varNames
-    operation <- case varType stringExpr of
-        List        -> return $ "toIOEnv $ fromValue $ val [" ++ List.intercalate "," args ++ "]"
-        Id          -> return $ "toIOEnv $ fromValue $ " ++ mkArg self
-        Native name -> return $ "toIOEnv $ fromValue $ " ++ genNative name
-        Con    _    -> return $ "toIOEnv $ fromValue $ call" ++ appArgs args ++ " $ cons_" ++ nameHash
-        Var    _    -> return $ "toIOEnv $ fromValue $ call" ++ appArgs (tail args) ++ " $ member (Proxy::Proxy " ++ show nameHash ++ ") " ++ mkArg self
-        Lit    name -> return $ "toIOEnv $ fromValue $ val (" ++ name ++ if Maybe.isJust (Read.readMaybe name :: Maybe Int)
-                                                                                  then " :: Int)"
-                                                                                  else ")"
-        Tuple       -> return $ "toIOEnv $ fromValue $ val (" ++ List.intercalate "," args ++ ")"
-        TimeVar     -> (++) "toIOEnv $ fromValue $ val $ " . show <$> Env.getTimeVar
+    vt <- varType nodeExpr
+    operation <- ("\\(_time :: Float) -> " <>) . Utils.replace "\\" "\\\\" <$> case vt of
+        List        -> return $ "val [" <> List.intercalate "," args <> "]"
+        Id          -> return $ mkArg self
+        Native name -> return $ genNative name
+        Con    name -> return $ "call" <> appArgs args <> " $ cons_" <> nameHash name
+        Var    name -> if null args
+            then left $ Error.OtherError $(loc) "unsupported node type"
+            else return $ "call" <> appArgs (tail args) <> " $ member (Proxy::Proxy " <> show (nameHash name) <> ") " <> mkArg self
+        LitInt   name    -> return $ "val (" <> name <> " :: Int)"
+        LitFloat name    -> return $ "val (" <> name <> " :: Float)"
+        Lit      name    -> return $ "val  " <> name
+        Tuple            -> return $ "val (" <> List.intercalate "," args <> ")"
+        TimeVar          -> return   "val _time"
+        Expression  name -> return   name
     catchEither (left . Error.RunError $(loc) callPointPath) $ do
-        Session.runAssignment' tmpVarName operation
+        Session.runAssignment tmpVarName operation
         hash <- Hash.computeInherit tmpVarName varNames
         let varName = VarName callPointPath hash
         Session.runAssignment (VarName.toString varName) tmpVarName

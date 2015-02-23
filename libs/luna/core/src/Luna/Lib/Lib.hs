@@ -12,21 +12,19 @@ module Luna.Lib.Lib where
 import Data.Version (Version)
 
 import           Flowbox.Prelude
-import           Flowbox.System.UniPath (UniPath)
-import           Luna.AST.Module        (Module)
-import qualified Luna.AST.Module        as Module
-import qualified Luna.AST.Type          as Type
-import           Luna.Graph.PropertyMap (PropertyMap)
-import qualified Luna.Graph.PropertyMap as PropertyMap
+import           Flowbox.System.UniPath        (UniPath)
+import           Luna.Syntax.Graph.PropertyMap (PropertyMap)
+import           Luna.Syntax.Module            (Module (Module))
+import           Luna.Syntax.Name.Path         (QualPath)
 
 
 
-data Library = Library { _name        :: String
-                       , _version     :: Version
-                       , _path        :: UniPath
-                       , _ast         :: Module
-                       , _propertyMap :: PropertyMap
-                       } deriving (Show, Read, Eq)
+data Library a e v = Library { _name        :: String
+                             , _version     :: Version
+                             , _path        :: UniPath
+                             , _ast         :: Module a e
+                             , _propertyMap :: PropertyMap a v
+                             } deriving (Show, Read, Eq)
 
 makeLenses ''Library
 
@@ -34,7 +32,7 @@ newtype ID = ID { toInt :: Int }
            deriving (Show, Ord, Eq)
 
 
-make :: String -> Version -> UniPath -> [String] -> Library
-make name' version' path' modulePath = Library name' version' path' emptyModule PropertyMap.empty where
-    emptyModule = Module.mk 0 $ Type.mkModule 1 modulePath
+make :: String -> Version -> UniPath -> QualPath -> Library a e v
+make name' version' path' mpath = Library name' version' path' emptyModule def where
+    emptyModule = Module mpath []
 

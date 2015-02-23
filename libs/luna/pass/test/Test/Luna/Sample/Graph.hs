@@ -8,15 +8,15 @@
 module Test.Luna.Sample.Graph where
 
 import           Flowbox.Prelude
-import qualified Luna.Graph.Edge                       as Edge
-import           Luna.Graph.Graph                      (Graph)
-import qualified Luna.Graph.Graph                      as Graph
-import qualified Luna.Graph.Node                       as Node
-import           Luna.Graph.Node.Expr                  (NodeExpr)
-import qualified Luna.Graph.Node.Expr                  as NodeExpr
-import           Luna.Graph.Node.OutputName            (fixEmpty')
-import qualified Luna.Graph.Node.StringExpr            as StringExpr
-import qualified Luna.Graph.Port                       as Port
+import qualified Luna.Syntax.Graph.Edge                as Edge
+import           Luna.Syntax.Graph.Graph               (Graph)
+import qualified Luna.Syntax.Graph.Graph               as Graph
+import qualified Luna.Syntax.Graph.Node                as Node
+import           Luna.Syntax.Graph.Node.Expr           (NodeExpr)
+import qualified Luna.Syntax.Graph.Node.Expr           as NodeExpr
+import           Luna.Syntax.Graph.Node.OutputName     (fixEmpty')
+import qualified Luna.Syntax.Graph.Node.StringExpr     as StringExpr
+import qualified Luna.Syntax.Graph.Port                as Port
 import           Test.Luna.Pass.Transform.Graph.Common (named)
 
 

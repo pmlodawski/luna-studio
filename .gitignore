@@ -3,12 +3,24 @@
 *.chi
 *.chs.h
 .virthualenv
+*.tix
 *~
 *.swp
 *.imports
 *.dll
 out
 a.out
+
+# profiling results
+*.hp
+*.prof
+
+# tags file
+tags
+TAGS
+
+# haskell coverage reports
+.hpc
 
 #generated files
 gen
@@ -59,6 +71,8 @@ cabal.sandbox.config
 # aws credentials
 aws.config
 
+# generated Std.luna
+stdlib/FlowboxM/Libs/Flowbox/Std.luna
 
 ### DEPRECATED ###
 # cabal-dev

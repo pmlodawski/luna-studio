@@ -62,10 +62,11 @@ import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.List.Status 
 import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.Remove.Request           as WatchPointRemove
 import qualified Generated.Proto.Interpreter.Interpreter.WatchPoint.Remove.Update            as WatchPointRemove
 import           Luna.Interpreter.Proto.CallPointPath                                        ()
+import           Luna.Interpreter.Proto.CompileError                                         ()
 import           Luna.Interpreter.Proto.DefPoint                                             ()
 import           Luna.Interpreter.Proto.ProfileInfo                                          ()
 import qualified Luna.Interpreter.RPC.Handler.Cache                                          as Cache
-import           Luna.Interpreter.RPC.Handler.Lift
+import           Luna.Interpreter.RPC.Handler.Lift                                           (liftSession, liftSession')
 import qualified Luna.Interpreter.RPC.Handler.Sync                                           as Sync
 import           Luna.Interpreter.RPC.QueueInfo                                              (QueueInfo)
 import qualified Luna.Interpreter.RPC.QueueInfo                                              as QueueInfo
@@ -118,14 +119,15 @@ run :: MemoryManager mm
     => QueueInfo -> Message.CorrelationID -> Run.Request -> RPC Context (SessionST mm) Run.Update
 run queueInfo crl request@(Run.Request mtime) = do
     Maybe.maybe (return ()) Cache.setTimeVar mtime
-    r <- lift $ bracket_ (liftIO $ QueueInfo.enterRun queueInfo crl)
-            (liftIO $ QueueInfo.quitRun queueInfo) $
-            liftSession' $ do Manager.cleanIfNeeded
-                              Executor.processMain
+    result <- lift $ bracket_ (liftIO $ QueueInfo.enterRun queueInfo crl)
+                              (liftIO $ QueueInfo.quitRun queueInfo) $
+                              liftSession' $ do Manager.cleanIfNeeded
+                                                Executor.processMain
     projectID <- liftSession Env.getProjectID
-    profileInfo <- hoistEither $ fmapL Error.format r
-    let tprofileInfo = encodeP $ map (_1 %~ (projectID, )) $ MapForest.toList profileInfo
-    return $ Run.Update request tprofileInfo
+    (profileInfos, compileErrors) <- hoistEither $ fmapL Error.format result
+    let tprofileInfos  = encodeP $ map (_1 %~ (projectID, )) $ MapForest.toList profileInfos
+        tcompileErrors = encodeP $ map (_1 %~ (projectID, )) $ MapForest.toList compileErrors
+    return $ Run.Update request tprofileInfos tcompileErrors
 
 
 

@@ -14,11 +14,14 @@
 module Flowbox.Graphics.Shader.Shader where
 
 import           Flowbox.Graphics.Prelude hiding (transform)
-import qualified Flowbox.Math.Index       as I
+import           Flowbox.Math.Index       (Boundable)
+import qualified Flowbox.Math.Index       as Index
 
-import Control.Monad         (ap)
-import Data.Array.Accelerate
+import           Control.Monad         (ap)
+import           Data.Array.Accelerate (Boundary, Elt, Exp, IsNum)
+import qualified Data.Array.Accelerate as A
 
+import           Math.Coordinate.Cartesian (Point2(..))
 import qualified Math.Coordinate.Cartesian as Cartesian
 import           Math.Space.Space
 
@@ -30,17 +33,17 @@ data Shader a b = Shader { canvas    :: Grid (Exp Int)
                          , runShader :: a -> b
                          } deriving Functor
 
-type CartesianShader a = Shader (Cartesian.Point2 a)
+type CartesianShader a = Shader (Point2 a)
 type DiscreteShader    = CartesianShader (Exp Int)
-type ContinuousShader  = CartesianShader (Exp Double)
+type ContinuousShader  = CartesianShader (Exp Float)
 
 unitShader :: (a -> b) -> Shader a b
 unitShader = Shader 1
 
 instance Applicative (Shader a) where
     pure a = Shader 1 $ const a
-    Shader (Grid h1 w1) f <*> Shader (Grid h2 w2) gen =
-        Shader (Grid (h1 `max` h2) (w1 `max` w2)) $ ap f gen
+    Shader (Grid w1 h1) f <*> Shader (Grid w2 h2) gen =
+        Shader (Grid (w1 `max` w2) (h1 `max` h2)) $ ap f gen
 
 instance Profunctor Shader where
     lmap f (Shader cnv gen) = Shader cnv $ gen . f
@@ -55,10 +58,18 @@ resize cnv (Shader _ gen) = Shader cnv gen
 canvasT :: (Grid (Exp Int) -> Grid (Exp Int)) -> Shader a b -> Shader a b
 canvasT f (Shader cnv gen) = Shader (f cnv) gen
 
-combineWith :: (Elt b) => (Exp b -> Exp b -> Exp b) -> Shader a (Exp b) -> Shader a (Exp b) -> Shader a (Exp b)
-combineWith f (Shader (Grid h1 w1) g) (Shader (Grid h2 w2) h) =
-	Shader (Grid (h1 `max` h2) (w1 `max` w2)) (\p -> f (g p) (h p))
+combineWith :: (b -> c -> d) -> Shader a b -> Shader a c -> Shader a d
+combineWith f (Shader (Grid w1 h1) g) (Shader (Grid w2 h2) h) =
+	Shader (Grid (w1 `max` w2) (h1 `max` h2)) (\p -> f (g p) (h p))
 
-instance I.Boundable (DiscreteShader b) (Exp Int) b where
+instance Boundable (DiscreteShader b) (Exp Int) b where
     unsafeIndex2D = runShader
     boundary      = canvas
+
+bound :: Elt t => Boundary (Exp t) -> DiscreteShader (Exp t) -> DiscreteShader (Exp t)
+bound b gen = Shader (canvas gen) (Index.boundedIndex2D b gen)
+
+--TODO[KM]: use with caution - consecutive applications cause the y axs to invert yet again so it might have to be done after reading the image and before saving it
+--          on the other hand this might cause inconsistencies between the way we store data in a matrix and in a shader (inside an image)
+fixY :: (Elt a, IsNum a) => CartesianShader (Exp a) b -> CartesianShader (Exp a) b
+fixY (Shader grid@(Grid _ h) f) = Shader grid $ \(Point2 x y) -> f $ Point2 x (A.fromIntegral h - y)

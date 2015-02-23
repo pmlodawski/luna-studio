@@ -125,12 +125,12 @@ getFromPrimary chanName img = case img ^. primaryView of
 getChannels :: Channel.Select -> View.Name -> Image ->  Result ([Maybe Channel])
 getChannels chans viewName img = do
     view     <- lookup viewName img
-    sequence $ fmap (View.get view) $ Set.toList chans
+    sequence $ fmap (View.get view) chans
 
 getChannelsFromPrimary :: Channel.Select -> Image ->  Result ([Maybe Channel])
 getChannelsFromPrimary chans img = case img ^. primaryView of
     Nothing -> Left $ ViewLookupError primaryViewTag
-    Just v  -> sequence $ fmap (View.get v) $ Set.toList chans
+    Just v  -> sequence $ fmap (View.get v) chans
 
 append :: Channel -> View.Name -> Image -> Image
 append chan viewName img = insert (View.append chan view) img

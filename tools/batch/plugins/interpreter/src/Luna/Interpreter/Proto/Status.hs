@@ -13,10 +13,10 @@
 module Luna.Interpreter.Proto.Status where
 
 import           Flowbox.Data.Convert
-import qualified Generated.Proto.Interpreter.Status         as Gen
-import           Luna.Data.Serialize.Proto.Conversion.Crumb ()
-import           Luna.Interpreter.Session.Cache.Value       (Status)
-import qualified Luna.Interpreter.Session.Cache.Value       as Value
+import qualified Generated.Proto.Interpreter.Status             as Gen
+import           Luna.DEP.Data.Serialize.Proto.Conversion.Crumb ()
+import           Luna.Interpreter.Session.Cache.Value           (Status)
+import qualified Luna.Interpreter.Session.Cache.Value           as Value
 
 
 

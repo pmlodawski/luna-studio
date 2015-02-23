@@ -1,0 +1,30 @@
+#
+#                MATTES
+#
+
+foreign haskell import Flowbox.Graphics.Mockup.Curves
+foreign haskell import Flowbox.Graphics.Mockup.Matte
+
+foreign haskell def rasterizeMask w h m:
+    liftF3 rasterizeMaskLuna w h m
+
+foreign haskell def imageMatte path channelName:
+    autoLift2 imageMatteLuna path channelName
+
+foreign haskell def vectorMatte mask:
+    liftF1 vectorMatteLuna mask
+
+foreign haskell def noMatte:
+    val (Nothing :: Maybe (Matte Float))
+
+foreign haskell def Image.offsetMatte value matte:
+    liftF3 offsetMatteLuna value matte self
+
+foreign haskell def Image.contrastMatte value matte:
+    liftF3 contrastMatteLuna value matte self
+
+foreign haskell def Image.exposureMatte blackpoint ex matte:
+    liftF4 exposureMatteLuna blackpoint ex matte self
+
+foreign haskell def Image.gradeMatte blackpoint whitepoint lift gain multiply offset gamma matte:
+    liftF5 (gradeLunaColorMatte blackpoint whitepoint lift gain) multiply offset gamma matte self

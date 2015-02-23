@@ -1,0 +1,119 @@
+Name:           task-queue
+Version:        0.1
+Cabal-Version:  >= 1.8
+--License-file:   LICENSE
+Author:         Flowbox <contact@flowbox.io>
+Maintainer:     Flowbox <contact@flowbox.io>
+Build-Type:     Simple
+
+Flag Debug
+  Description: Enable debug support
+  Default:     False
+
+
+Library
+  Hs-Source-Dirs: src
+  Other-Modules:  Paths_task_queue
+  if flag(debug)
+    GHC-Options:  -csacc
+  GHC-Options:    -Wall -O2 -threaded
+                  -- -F -pgmF ./util/preprocessors/imports.py
+  Extensions:     DoAndIfThenElse,
+                  NoImplicitPrelude,
+                  TemplateHaskell,
+                  OverloadedStrings,
+                  DeriveGeneric,
+                  StandaloneDeriving,
+                  FlexibleContexts,
+                  MultiParamTypeClasses,
+                  DefaultSignatures,
+                  DeriveFunctor,
+                  DeriveTraversable,
+                  DeriveFoldable,
+                  FlexibleInstances,
+                  LambdaCase,
+                  ConstraintKinds,
+                  GeneralizedNewtypeDeriving,
+                  DeriveDataTypeable,
+                  EmptyDataDecls
+
+  Exposed-modules: `findmodules('src/Flowbox', '.*\.hs')`
+
+  Build-Depends:  base,
+                  binary,
+                  flowbox-utils,
+                  zeromq4-haskell,
+                  psqueues,
+                  bytestring
+
+
+
+
+Executable tqueue
+  Main-Is:        TQueue.hs
+  Hs-Source-Dirs: exe
+
+  if flag(debug)
+    GHC-Options:  -csacc
+  GHC-Options:    -Wall -O2
+
+  Extensions:     DoAndIfThenElse,
+                  NoImplicitPrelude,
+                  TemplateHaskell,
+                  OverloadedStrings,
+                  DeriveGeneric,
+                  StandaloneDeriving,
+                  FlexibleContexts,
+                  MultiParamTypeClasses,
+                  DefaultSignatures,
+                  DeriveFunctor,
+                  DeriveTraversable,
+                  DeriveFoldable,
+                  FlexibleInstances,
+                  LambdaCase,
+                  ConstraintKinds,
+                  GeneralizedNewtypeDeriving,
+                  DeriveDataTypeable,
+                  EmptyDataDecls
+
+  Build-Depends:  base,
+                  binary,
+                  flowbox-utils,
+                  zeromq4-haskell,
+                  psqueues,
+                  bytestring
+
+
+Executable tqueue-slave
+  Main-Is:        Slave.hs
+  Hs-Source-Dirs: exe
+
+  if flag(debug)
+    GHC-Options:  -csacc
+  GHC-Options:    -Wall -O2
+
+  Extensions:     DoAndIfThenElse,
+                  NoImplicitPrelude,
+                  TemplateHaskell,
+                  OverloadedStrings,
+                  DeriveGeneric,
+                  StandaloneDeriving,
+                  FlexibleContexts,
+                  MultiParamTypeClasses,
+                  DefaultSignatures,
+                  DeriveFunctor,
+                  DeriveTraversable,
+                  DeriveFoldable,
+                  FlexibleInstances,
+                  LambdaCase,
+                  ConstraintKinds,
+                  GeneralizedNewtypeDeriving,
+                  DeriveDataTypeable,
+                  EmptyDataDecls
+
+  Build-Depends:  base,
+                  binary,
+                  flowbox-utils,
+                  zeromq4-haskell,
+                  psqueues,
+                  bytestring

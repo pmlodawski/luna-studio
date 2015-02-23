@@ -45,6 +45,27 @@ topState = do
     (s:_) <- get
     return s
 
+--_hsShow :: (Applicative m, MonadState [St] m) => Int -> String -> m String
+--_hsShow i s = case s of
+--    []     -> pure []
+--    (x:xs) -> if (take 3 s == "{-#") || (take 3 s == "#-}") 
+--                  then (take 3 s ++) <$> _hsShow i (drop 3 s)
+--                  else case x of
+--                      '(' -> do pushState Paren
+--                                (x :) <$> _hsShow i xs
+--                      ')' -> do popState
+--                                (x :) <$> _hsShow i xs
+--                      '{' -> do pushState Struct
+--                                ((x : newline (i+1)) ++) <$> _hsShow (i+1) xs
+--                      ';' -> ((x : newline i) ++) <$> _hsShow i xs
+--                      ',' -> do st <- topState
+--                                if st == Struct then ((x : newline i) ++) <$> _hsShow i xs
+--                                                else (x:) <$> _hsShow i xs
+--                      '}' -> do popState
+--                                (newline (i-1) ++) <$> ((x:) <$> _hsShow (i-1) xs) -- fixme st
+--                      _   -> (x:) <$> _hsShow i xs
+
+
 _hsShow :: (Applicative m, MonadState [St] m) => Int -> String -> m String
 _hsShow i s = case s of
     []     -> pure []
@@ -56,11 +77,11 @@ _hsShow i s = case s of
                       ')' -> do popState
                                 (x :) <$> _hsShow i xs
                       '{' -> do pushState Struct
-                                ((x : newline (i+1)) ++) <$> _hsShow (i+1) xs
-                      ';' -> ((x : newline i) ++) <$> _hsShow i xs
+                                ((newline (i+1)) ++) <$> _hsShow (i+1) xs
+                      ';' -> ((newline i) ++) <$> _hsShow i xs
                       ',' -> do st <- topState
                                 if st == Struct then ((x : newline i) ++) <$> _hsShow i xs
                                                 else (x:) <$> _hsShow i xs
                       '}' -> do popState
-                                (newline (i-1) ++) <$> ((x:) <$> _hsShow (i-1) xs) -- fixme st
+                                (newline (i-1) ++) <$> (_hsShow (i-1) xs) -- fixme st
                       _   -> (x:) <$> _hsShow i xs
