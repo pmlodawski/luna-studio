@@ -682,8 +682,8 @@ genLit (Label lab lit) = case lit of
                         Number.Positive -> ""
                         Number.Negative -> "-"
         case repr of
-            Number.Float   int frac -> mkLit "Double" (HLit.Float   $ sign' <> fromString int <> "." <> fromString frac)
-            Number.Decimal int      -> mkLit "Int"    (HLit.Integer $ sign' <> fromString int)
+            Number.Float   int frac -> mkLit "Float" (HLit.Float   $ sign' <> fromString int <> "." <> fromString frac)
+            Number.Decimal int      -> mkLit "Int"   (HLit.Integer $ sign' <> fromString int)
 
     --Lit.Integer _ str      -> mkLit "Int"    (HLit.Integer str)
     --Lit.Float   _ str      -> mkLit "Double" (HLit.Float   str)
