@@ -1,30 +1,7 @@
-foreign haskell def print msg:
-    autoLift1 print msg
+# foreign haskell def print msg:
+#     autoLift1 print msg
 
-foreign haskell class Float
-
-foreign haskell def Float.* a:
-    liftF2 (*) self a
-
-class RGB:
-    r, g, b :: Float
-    def toRGB: self
-
-class Mult a:
-    data :: a
-    mult :: Float
-    def toRGB:
-        r = data.r
-        g = data.g
-        b = data.b
-        RGB (mult.* r) g b # this does not compile
-        RGB (r.* mult) g b # this does even tho both variables are Floats
+def foo a b: 1
 
 def main:
-    print "color test"
-
-    rgb = RGB 1.0 2.0 3.0
-    mult = Mult rgb 0.5
-
-    print rgb.toRGB
-    print mult.toRGB
+    foo 2 3
