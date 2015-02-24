@@ -129,7 +129,8 @@ Test-suite hspec_tests
                   QuickCheck               ,
                   directory                ,
                   download-curl            ,
-                  bytestring
+                  bytestring               ,
+                  aeson
 
 -- == test generator ==
 

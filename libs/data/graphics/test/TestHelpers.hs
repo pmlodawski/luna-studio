@@ -17,6 +17,7 @@ import qualified Data.Array.Accelerate as A
 import System.Directory
 import Network.Curl.Download
 import qualified Data.ByteString as B
+import TestConfigParser
 
 shouldBeCloseTo :: (Show a, Comparable a b) => String -> b -> a -> a -> Expectation
 shouldBeCloseTo name metric actual expected = assertAlmostEqual name "" metric expected actual
@@ -217,7 +218,9 @@ getDefaultTestPic specPath testName = do
         else tryDownloading specPath testName
 
 tryDownloading specPath testName = do
-    site <- openURI $ "http://192.168.1.143/ftp/virtual/libs/"++specPath++testName++"Test/"++testName++"_expected.png"
+    conf <- getDefaultTestConfig
+    print $ getRemotePath conf
+    site <- openURI $ (getRemotePath conf) ++specPath++testName++"Test/"++testName++"_expected.png"
     case site of
         Left err -> error "no file"
         Right img -> do
@@ -225,4 +228,3 @@ tryDownloading specPath testName = do
             B.writeFile (specPath++testName++"Test/"++testName++"_expected.png") img
             loadImageLuna $ specPath++testName++"Test/"++testName++"_expected.png"
     
-func x = openURI x
