@@ -41,8 +41,8 @@ instance AlphaEquiv Constraint where
       | S.size free1 /= S.size free2 = notAlphaEquivalent
       | otherwise                    = nonDeterministicEquiv (S.toList free1) (S.toList free2)
       where
-        free1 = freevars preds1
-        free2 = freevars preds2
+        free1 = freevars $ filter (not.isTrivial) preds1
+        free2 = freevars $ filter (not.isTrivial) preds2
 
     equiv (C p) b = equiv (Proj [] p) b
     equiv a (C p) = equiv a (Proj [] p)
@@ -54,15 +54,15 @@ instance AlphaEquiv Constraint where
         nonDeterministicEquiv (S.toList free1)  (S.toList free2)
         nonDeterministicEquiv (S.toList quant1) (S.toList quant2)
       where tvars_tvs1 = S.fromList tvs1
-            free1      = freevars ps1 `S.difference`   tvars_tvs1
-            quant1     = freevars ps1 `S.intersection` tvars_tvs1
+            free1      = freevars ps1C `S.difference`   tvars_tvs1
+            quant1     = freevars ps1C `S.intersection` tvars_tvs1
 
             tvars_tvs2 = S.fromList tvs2
-            free2      = freevars ps2 `S.difference`   tvars_tvs2
-            quant2     = freevars ps2 `S.intersection` tvars_tvs2
+            free2      = freevars ps2C `S.difference`   tvars_tvs2
+            quant2     = freevars ps2C `S.intersection` tvars_tvs2
 
-            ps1C = filter (not.trivial) ps1
-            ps2C = filter (not.trivial) ps2
+            ps1C = filter (not.isTrivial) ps1
+            ps2C = filter (not.isTrivial) ps2
 
     translateBtoA (C        ps) = C    <$>                     mapM translateBtoA ps
     translateBtoA (Proj tvs ps) = Proj <$> mapM ttBtoA tvs <*> mapM translateBtoA ps
