@@ -75,6 +75,7 @@ Executable luna-typechecker-tests
                       StandaloneDeriving,
                       TemplateHaskell
   Build-Depends:      base
+                    , containers
                     , hspec
                     , luna-typechecker
                     , flowbox-utils

@@ -17,7 +17,6 @@ import qualified  Data.Map.Strict             as M
 import Data.List                        (sort,nub,sortBy,intercalate)
 import Data.Ord                         (comparing)
 import Data.Tuple                       (swap)
-import Debug.Trace
 import Data.Maybe
 
 import            Luna.Typechecker.Data.TVar
@@ -99,9 +98,9 @@ ttBtoA :: TVar -> AlphaEquivMonad TVar
 ttBtoA a = maybe cantAlphaTranslate return =<< (fst <$> ttTranslate a undefined)
 
 
-fork :: [AlphaEquivMonad a] -> AlphaEquivMonad a
+fork :: [AlphaEquivMonad ()] -> AlphaEquivMonad ()
 fork fs = AlphaEquivMonad aux
-  where aux ttab ttba = concat [runAlphaEq f ttab ttab | f <- fs]
+  where aux ttab ttba = concat [runAlphaEq f ttab ttba | f <- fs]
 
 aroundAction :: (Monad m) => m b -> (b -> m ()) -> m a -> m a
 aroundAction preAct postAct act = do

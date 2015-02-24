@@ -11,6 +11,9 @@ import Data.Ord
 import Luna.Typechecker.AlphaEquiv
 import Luna.Typechecker.Data.TVar
 
+import Data.Map.IntConvertibleSet (IntConvertibleSet)
+import qualified Data.Map.IntConvertibleSet as S
+
 
 
 type Fieldlabel = String
@@ -39,3 +42,7 @@ instance AlphaEquiv Type where
     translateBtoA (p `Fun` q)  = Fun    <$> translateBtoA p <*> translateBtoA q
     translateBtoA (Record fls) = Record <$> mapM aux fls
       where aux (lab,ty) = translateBtoA ty >>= return . (lab,)
+
+    freevars (TV a) = freevars a
+    freevars (p `Fun` q) = freevars p <> freevars q
+    freevars (Record flds) = mconcat (freevars.snd <$> flds)
