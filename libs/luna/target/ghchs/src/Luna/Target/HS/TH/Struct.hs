@@ -345,9 +345,9 @@ mkLiftFlatF pNum base = AppE (VarE fname) (VarE base) where
 
 registerType :: Name -> Q [Dec]
 registerType tpName = do
-    TyConI (DataD _ _ bndrs _ _) <- reify tpName
-    dataTuples <- genDataTuple tpName
-    let treg   = registerType' tpName bndrs
+    TyConI dec <- reify tpName
+    let bndrs  = getDecBinders dec
+        treg   = registerType' tpName bndrs
         clsreg = registerType' clsName []
         clsdef = DataD [] clsName [] [NormalC clsName []] (fmap (mkName.show) stdDerivings)
     return $ clsdef : (treg ++ clsreg)
