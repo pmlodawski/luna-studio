@@ -110,12 +110,19 @@ liftFR5 = curryTuple5 . liftF5
 --liftCons4 f = liftFR4 f . snd
 --liftCons5 f = liftFR5 f . snd
 
-liftCons0 v _ = flatF0 $ liftF0 v
-liftCons1 v _ = flatF1 $ liftF1 v
-liftCons2 v _ = flatF2 $ liftF2 v
-liftCons3 v _ = flatF3 $ liftF3 v
-liftCons4 v _ = flatF4 $ liftF4 v
-liftCons5 v _ = flatF5 $ liftF5 v
+liftCons0 v _ = liftFlatF0 v
+liftCons1 v _ = liftFlatF1 v
+liftCons2 v _ = liftFlatF2 v
+liftCons3 v _ = liftFlatF3 v
+liftCons4 v _ = liftFlatF4 v
+liftCons5 v _ = liftFlatF5 v
+
+liftFlatF0 = flatF0 . liftF0
+liftFlatF1 = flatF1 . liftF1
+liftFlatF2 = flatF2 . liftF2
+liftFlatF3 = flatF3 . liftF3
+liftFlatF4 = flatF4 . liftF4
+liftFlatF5 = flatF5 . liftF5
 
 
 --liftCons0 = curryTuple1 . const . liftF0
