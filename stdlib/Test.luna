@@ -1,19 +1,14 @@
 foreign haskell def print msg:
     autoLift1 print msg
 
-class Foo a:
-    x :: a    
+foreign haskell def whatis a:
+    autoLift1 print (val a)
 
-def * a b:
-    a.* b
+foreign haskell class List   
 
-def foo a b:
-    a.* b
+foreign haskell def List.at idx:
+    liftF2 (!!) self idx
 
 def main:
-    v = Foo (1,2)
-    print v
-    print (1,2)
-    print (v.x)
-    v.x = (1,2)
-    print v
+    a = [1,2,3]
+    print (a.at 0)

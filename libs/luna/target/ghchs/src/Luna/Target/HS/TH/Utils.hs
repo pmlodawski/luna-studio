@@ -46,6 +46,12 @@ proxyE t = SigE (ConE name) (AppT (ConT name) t) where
 
 valE = AppE (VarE $ mkName "val")
 
+getDecBinders :: Dec -> [TyVarBndr]
+getDecBinders = \case
+    DataD     _ _ b _ _ -> b
+    NewtypeD  _ _ b _ _ -> b
+    TySynD    _ b _     -> b
+
 getDecVarNames :: Dec -> [Name]
 getDecVarNames dec = map getTyVarBndrName vars where
     vars = case dec of
