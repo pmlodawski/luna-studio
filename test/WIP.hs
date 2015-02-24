@@ -44,9 +44,24 @@ $(registerMethod ''Cls_Main "Main")
 -- Data headers
 -- ===================================================================
 
--- ====== Float type ====== --
--- datatype provided externally
-$(registerType ''Float)
+-- ====== Foo type ====== --
+data Foo a 
+    = Foo a
+    deriving (Show,Eq,Ord,Generic,Typeable)
+$(registerType ''Foo)
+$(registerCons ''Foo ["Foo"])
+
+-- ------ Foo accessors ------ --
+$(generateFieldAccessors ''Foo [('Foo, [Just "x"])])
+$(registerFieldAccessors ''Foo ["x"])
+
+-- ------ Foo.Foo constructor ------ --
+memDef_Cls_Foo_Foo = liftCons1 Foo
+
+-- ====== Method: Cls_Foo.Foo ====== --
+memSig_Cls_Foo_Foo = _rtup2 (_nuSigArg ("self"), _nuSigArg ("x"))
+memFnc_Cls_Foo_Foo = (memSig_Cls_Foo_Foo, memDef_Cls_Foo_Foo)
+$(registerMethod ''Cls_Foo "Foo")
 
 
 -- ===================================================================
@@ -64,12 +79,6 @@ memDef_Main_print self msg = autoLift1 print msg
 memFnc_Main_print = (memSig_Main_print, memDef_Main_print)
 $(registerMethod ''Main "print")
 
--- ====== Method: Float._star ====== --
-memSig_Float__star = _rtup2 (_nuSigArg ("self"), _nuSigArg ("a"))
-memDef_Float__star self a = liftF2 (*) self a
-memFnc_Float__star = (memSig_Float__star, memDef_Float__star)
-$(registerMethod ''Float "_star")
-
 -- ====== Method: Main._star ====== --
 memSig_Main__star = _rtup3 (_nuSigArg ("self"), _nuSigArg ("a"), _nuSigArg ("b"))
 memDef_Main__star _self _a _b = _call (0) (appNext _b (_member ("_star") _a))
@@ -85,8 +94,12 @@ $(registerMethod ''Main "foo")
 -- ====== Method: Main.main ====== --
 memSig_Main_main = _rtup1 (_nuSigArg ("self"))
 memDef_Main_main _self = do 
-    _call (2) (appNext (_call (3) (appNext (val (2.0 :: Float)) (appNext (val (1.0 :: Float)) (_member ("_star") _self)))) (_member ("print") _self))
-    _call (4) (appNext (_call (5) (appNext (val (4.0 :: Float)) (appNext (val (3.0 :: Float)) (_member ("foo") _self)))) (_member ("print") _self))
+    _v <- _call (2) (appNext (val _rtupX2 (val (1 :: Int), val (2 :: Int))) cons_Foo)
+    _call (3) (appNext _v (_member ("print") _self))
+    _call (4) (appNext (val _rtupX2 (val (1 :: Int), val (2 :: Int))) (_member ("print") _self))
+    _call (5) (appNext (_call (6) (_member ("x") _v)) (_member ("print") _self))
+    _v <- _call (7) (appNext (val _rtupX2 (val (1 :: Int), val (2 :: Int))) (_member ("set_x") _v))
+    _call (8) (appNext _v (_member ("print") _self))
 memFnc_Main_main = (memSig_Main_main, memDef_Main_main)
 $(registerMethod ''Main "main")
 
