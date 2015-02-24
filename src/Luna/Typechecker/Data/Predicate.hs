@@ -16,7 +16,8 @@ data Predicate  = TRUE
 
 
 instance AlphaEquiv Predicate where
-    equiv a b | trivial a && trivial b        = return ()
+    equiv a b
+      | isTrivial a && isTrivial b            = return ()
     equiv (p1 `Subsume` q1) (p2 `Subsume` q2) = equiv p1 p2 >> equiv q1 q2
     equiv _ _ = notAlphaEquivalent
 
@@ -27,7 +28,7 @@ instance AlphaEquiv Predicate where
     freevars (p `Subsume` q) = freevars p <> freevars q
 
 
-trivial :: Predicate -> Bool
-trivial TRUE                     = True
-trivial (x `Subsume` y) | x == y = True
-trivial _                        = False
+isTrivial :: Predicate -> Bool
+isTrivial TRUE                     = True
+isTrivial (x `Subsume` y) | x == y = True
+isTrivial _                        = False
