@@ -35,8 +35,8 @@ import qualified Flowbox.ProjectManager.RPC.Handler.Sync        as SyncHandler
 import qualified Flowbox.ProjectManager.RPC.Topic               as Topic
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.Text.ProtocolBuffers                   as Proto
-import qualified Generated.Proto.Urm.URM.Undo.Register.Request  as Register
-import qualified Generated.Proto.Urm.URM.Undo.Register.Status   as Undo
+import qualified Generated.Proto.Urm.URM.Register.Request       as Register
+import qualified Generated.Proto.Urm.URM.Undo.Request           as Undo
 import           Flowbox.Text.ProtocolBuffers                   (Serializable)
 
 
