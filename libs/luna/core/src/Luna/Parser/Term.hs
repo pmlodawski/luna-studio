@@ -99,7 +99,7 @@ tlExprExtHead =   try tlExprPat
 tlExprBasicHead =  try tlExprPatVar
                <|> try tlRecUpd
 
-tlExprParser head base =   (labeled $ head <*> tlExprBasic base)
+tlExprParser head base =   try (labeled $ head <*> tlExprBasic base)
                        <|> opTupleTE base
 
 tlExpr      = tlExprParser tlExprExtHead
