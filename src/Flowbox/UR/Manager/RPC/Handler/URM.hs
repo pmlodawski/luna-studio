@@ -22,6 +22,8 @@ import           Flowbox.Prelude                                     hiding (Con
 import           Flowbox.System.Log.Logger
 import           Flowbox.UR.Manager.Context                          as Context
 import           Flowbox.UR.Manager.Context                          (Context)
+import qualified Generated.Proto.Urm.URM.Redo.Request                as Redo
+import qualified Generated.Proto.Urm.URM.Redo.Status                 as Redo
 import qualified Generated.Proto.Urm.URM.Register.Request            as Register
 import qualified Generated.Proto.Urm.URM.Register.Status             as Register
 import qualified Generated.Proto.Urm.URM.Undo.Request                as Undo
@@ -35,6 +37,7 @@ logger = getLoggerIO $(moduleName)
 register :: Register.Request -> RPC Context IO Register.Status
 register request@(Register.Request undoAction) = do
     Context undo redo <- lift get
+    logger info $ show redo
     case listToMaybe redo of
         Just undone -> 
             return $ Register.Status request False
@@ -47,6 +50,7 @@ register request@(Register.Request undoAction) = do
 undo :: Undo.Request -> RPC Context IO (Undo.Status, Maybe Message)
 undo request = do
     Context undo redo <- lift get
+    logger info $ show undo
     case undo of
         []            -> do
             return $ (Undo.Status request False, Nothing)
@@ -54,3 +58,13 @@ undo request = do
             lift $ put $ Context rest $ action : redo
             return $ (Undo.Status request True, Just action)
 
+redo :: Redo.Request -> RPC Context IO (Redo.Status, Maybe Message)
+redo request = do
+    Context undo redo <- lift get
+    logger info $ show undo
+    case redo of
+        []               -> do
+            return (Redo.Status request False, Nothing)
+        action : rest -> do
+            lift $ put $ Context undo rest
+            return $ (Redo.Status request True, Just action)

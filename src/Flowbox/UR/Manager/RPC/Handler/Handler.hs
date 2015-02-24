@@ -21,15 +21,16 @@ import           Flowbox.Bus.RPC.RPC                        (RPC)
 import qualified Flowbox.Bus.RPC.Server.Processor           as Processor
 import qualified Flowbox.UR.Manager.RPC.Handler.Maintenance as Maintenance
 import qualified Flowbox.UR.Manager.RPC.Handler.URM         as URMHandler
+import           Flowbox.UR.Manager.RPC.Topic               as Topic
 import           Flowbox.UR.Manager.Context                 as Context
 import           Flowbox.Prelude                            hiding (error, Context)
 import qualified Flowbox.Text.ProtocolBuffers               as Proto
 
 handlerMap :: HandlerMap Context IO
 handlerMap callback = HandlerMap.fromList
-    [ ("urm.undo.register.request", respond status URMHandler.register)
-    , ("urm.undo.perform.request" , respond2 status URMHandler.undo)
-    , ("urm.ping.request"         , respond status Maintenance.ping) 
+    [ (Topic.urmUndoRegisterRequest, respond status URMHandler.register)
+    , (Topic.urmUndoPerformRequest , respond2 status URMHandler.undo)
+    , (Topic.urmPingRequest        , respond status Maintenance.ping) 
     ]
     where
         respond :: (Proto.Serializable args, Proto.Serializable result)
