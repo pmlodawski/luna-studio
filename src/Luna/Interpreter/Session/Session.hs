@@ -65,6 +65,7 @@ initialize config imports = do
                 { GHC.extraPkgConfs = extraPkgConfs
                 , GHC.hscTarget = GHC.HscInterpreted
                 , GHC.ghcLink   = GHC.LinkInMemory
+                , GHC.ctxtStkDepth = 1000
                 --, GHC.verbosity = 4
                 }
     setHardcodedExtensions
