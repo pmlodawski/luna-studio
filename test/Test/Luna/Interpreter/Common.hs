@@ -60,7 +60,7 @@ mkEnv config mm code = do
     (libManager, libID) <- readCode code
     --putStrLn $ ppShow libManager
     let defPoint = (DefPoint libID [Crumb.Module "Main", Crumb.Function (Name.single "main") []])
-    env <- Env.mk config mm libManager (Just $ Project.ID 0) (Just defPoint) $ const $ const (void . return)-- curry print
+    env <- Env.mk config mm libManager (Just $ Project.ID 0) (Just defPoint) $ const $ const $ const (void . return)-- curry print
     return (env, libID)
 
 
