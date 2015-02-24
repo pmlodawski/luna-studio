@@ -30,7 +30,7 @@ render :: MemoryManager mm
        => FrameRanges -> ProgressReporter -> Session mm [(Int, MapForest CallPoint Error)]
 render frameRanges progressReporter = do
     let frames     = IntSet.toList $ FrameRange.frames frameRanges
-        iFrames    = zip [0..] frames
+        iFrames    = zip [1..] frames
         progress i = liftIO $ progressReporter i $ length frames
     progress 0
     forM iFrames $ \(i, frame) -> do
