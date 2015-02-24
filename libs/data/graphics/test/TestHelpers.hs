@@ -217,9 +217,9 @@ getDefaultTestPic specPath testName = do
         else tryDownloading specPath testName
 
 tryDownloading specPath testName = do
-    site <- openURI "http://upload.wikimedia.org/wikipedia/commons/7/70/Example.png" -- TODO: add ftp adresses
+    site <- openURI $ "http://192.168.1.143/ftp/virtual/libs/"++specPath++testName++"Test/"++testName++"_expected.png"
     case site of
-        Left err -> error "no file"  --return $ error "error!!!!!!!!!!!!!!!!!!!!!!! Left!!!!!!!!!!!!!!!!!!!!!!!!"
+        Left err -> error "no file"
         Right img -> do
             createDirectory $ specPath++testName++"Test/"
             B.writeFile (specPath++testName++"Test/"++testName++"_expected.png") img
