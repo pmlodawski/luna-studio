@@ -37,6 +37,7 @@ Library
                     luna-distribution-old,
                     luna-pass-old,
                     luna-pass,
+                    MissingH,
                     mtl,
                     multiset,
                     pretty-show,

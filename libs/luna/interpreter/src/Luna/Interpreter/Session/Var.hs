@@ -4,7 +4,9 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
+{-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+
 module Luna.Interpreter.Session.Var where
 
 import           Control.Monad.State
@@ -14,13 +16,9 @@ import           Flowbox.Prelude
 import qualified Luna.DEP.AST.Common              as AST
 import           Luna.DEP.AST.Expr                (Expr)
 import qualified Luna.DEP.AST.Expr                as Expr
-import qualified Luna.DEP.AST.Expr                as Expr
-import qualified Luna.DEP.AST.Lit                 as Lit
-import qualified Luna.DEP.AST.Lit.Number          as Number
 import           Luna.DEP.Graph.Node.Expr         (NodeExpr)
 import qualified Luna.DEP.Graph.Node.Expr         as NodeExpr
 import qualified Luna.DEP.Graph.Node.StringExpr   as StringExpr
-import qualified Luna.Interpreter.Session.Env     as Env
 import           Luna.Interpreter.Session.Session (Session)
 
 
@@ -51,9 +49,7 @@ replaceTimeRefs :: Expr -> Session mm Expr
 replaceTimeRefs = Expr.traverseMR replace return return return return where
     replace e = case matchesTimeRef e of
         Nothing -> return e
-        Just i  -> do
-            (int :: Int, frac) <- properFraction <$> Env.getTimeVar
-            return $ Expr.Lit i $ Lit.Number i $ Number.decimal (Number.Float (show int) (tail $ tail $ show frac)) Nothing Number.Positive
+        Just i  -> return $ Expr.Var i "time"
 
 
 matchesTimeRef :: Expr -> Maybe AST.ID

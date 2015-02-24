@@ -3,9 +3,10 @@
 
 module Luna.DEP.AST.ASTConvertion where
 
-import qualified Data.Text.Lazy as Text
-
 import           Control.Monad.Trans.Either
+import qualified Data.Maybe                 as Maybe
+import qualified Data.Text.Lazy             as Text
+
 import           Flowbox.Prelude
 import           Luna.DEP.AST.Arg           as DArg
 import qualified Luna.DEP.AST.Expr          as DExpr
@@ -128,6 +129,13 @@ instance (Monad m, Applicative m) => ASTConvertion DExpr.Expr m (LDecl IDTag (LE
 
 convertExpr2Decl :: (Monad m, Applicative m) => DExpr.Expr -> EitherT Error m (LDecl IDTag (LExpr IDTag ()))
 convertExpr2Decl = \case
+        DExpr.Import id path tgt rename -> l id . Decl.Imp <$> convertImp where
+            convertImp = if Maybe.isJust rename
+                then right $ Decl.ModImp modPath (fmap fromString rename)
+                else Decl.DeclImp modPath <$> case tgt of
+                    DExpr.Var _ n -> right [Decl.ImpVar  (fromString n) Nothing]
+                    DExpr.Con _ n -> right [Decl.ImpType (fromString n) Nothing]
+            modPath = fmap fromString path
         --DExpr.Import id path tgt rename -> l id . Decl.Imp (fmap fromString path) Nothing . pure <$> convertTgt tgt rename where
         --    convertTgt tgt rename = case tgt of
         --        DExpr.Var _ n -> right $ Decl.ImpVar (fromString n) (fmap fromString rename)

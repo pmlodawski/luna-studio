@@ -83,6 +83,13 @@ getConFieldNames con = case con of
     _           -> [] --error "Cannot get names from not RecC constructor."
 
 
+getConName :: Con -> Name
+getConName = \case
+    NormalC n _   -> n
+    RecC    n _   -> n
+    InfixC  _ n _ -> n
+    ForallC _ _ c -> getConName c
+
 getDec :: Name -> Q Dec
 getDec name = do
     reified <- reify name
