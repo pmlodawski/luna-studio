@@ -8,7 +8,7 @@
 module Flowbox.Batch.Handler.Maintenance where
 
 
-import           Flowbox.Batch.Batch             (Batch, get, liftIO)
+import           Flowbox.Batch.Batch             (Batch, get)
 import qualified Flowbox.Batch.Batch             as Batch
 import qualified Flowbox.Initializer.Initializer as Initializer
 import           Flowbox.Prelude

@@ -59,8 +59,8 @@ tokenBlock p = p <* (try (spaces *> Indent.checkIndented) <|> pure ())
 
 spaces     = concat <$> many tokBase <?> ""
 
-lineCom   = (:) <$> lineComStart <*> manyTill anyChar (eol <|> eof)
---lineCom   = State.registerComment <=< lineComStart *> manyTill anyChar (eol <|> eof)
+
+lineCom   = (\a b -> a : (b ++ "\n")) <$> lineComStart <*> manyTill anyChar (eol <|> eof)
 
 
 

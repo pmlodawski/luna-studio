@@ -243,7 +243,8 @@ mkFuncParser baseVar (id, mpatt) = case mpatt of
                                                    $ labeled $ Expr.App <$> pattParser
         where NamePat.SegmentDesc baseName baseDefs = base
               segParser (NamePat.SegmentDesc name defs) = NamePat.Segment <$> Tok.symbol name <*> defsParser defs
-              argExpr         = appArg (opTE pEntBaseSimpleE)
+              argExpr         = appArg pEntBaseSimpleE
+              --argExpr         = appArg (opTE pEntBaseSimpleE) -- enable for multi-names!
               segNames        = NamePat.segmentNames patt
               pattParser      = NamePat Nothing <$> baseParser   <*> mapM segParser segs
               baseParser      = NamePat.Segment <$> baseMultiVar <*> defsParser baseDefs
@@ -266,6 +267,7 @@ varE   = do
     name <- try $ notReserved Tok.varIdent
     ast  <- lookupAST name
     case ast of
+        --Just possibleDescs -> fail $ show possibleDescs
         Just possibleDescs -> mkFuncParsers possibleDescs (labeled . pure $ Expr.Var $ Expr.Variable (vname $ NamePath.single name) ())
         Nothing            -> withLabeled $ \id -> do
                                   let np = NamePath.single name

@@ -1,10 +1,17 @@
-foreign haskell def print s="":
-    polyJoin . liftF1 (Value . fmap Safe . print) $ s
+foreign haskell def print msg:
+    autoLift1 print msg
 
-class Vector:
-    x,y,z :: Int
+foreign haskell class Float
+
+foreign haskell def Float.* a:
+    liftF2 (*) self a
+
+def * a b:
+    a.* b
+
+def foo a b:
+    a.* b
 
 def main:
-    print 1
-    # case (1,2):
-    #     (x,y): print x
+    print (1.0 * 2.0)
+    print (foo 3.0 4.0)

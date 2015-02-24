@@ -5,6 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.Batch.Handler.Library where
 
@@ -36,7 +37,7 @@ import qualified Luna.DEP.Pass.Build.Diagnostics       as Diagnostics
 
 
 loggerIO :: LoggerIO
-loggerIO = getLoggerIO "Flowbox.Batch.Handler.Library"
+loggerIO = getLoggerIO $moduleName
 
 
 libraries :: Project.ID -> Batch [(Library.ID, Library)]

@@ -25,6 +25,7 @@ import           Luna.Target.HS.AST.Deriving (stdDerivings)
 import           Data.Maybe                  (mapMaybe)
 import           Data.Map                    (Map)
 import qualified Data.Map                    as Map
+import           Data.Monoid
 
 con2TypeName conName = do
     DataConI _ _ typeName _ <- reify conName
@@ -194,15 +195,16 @@ generateFieldAccessors (nameBase -> typeName) fieldDescs = return $ accessors ++
     mkGetter :: String -> [(Name, PatCons)] -> Dec
     mkGetter fieldName descs = FunD accName [Clause [VarP obj] (NormalB $ CaseE (VarE obj) cases) []] where
         accName  = mkName $ Naming.mkFieldGetter typeName fieldName
-        cases    = fmap (uncurry $ mkCase fieldName) descs
-        mkCase fieldName = mkAccCase (VarE unit) unit
+        cases    = fmap (uncurry mkCase) descs
+        mkCase   = mkAccCase (VarE unit) unit
 
     mkSetter :: String -> [(Name, PatCons)] -> Dec
     mkSetter fieldName descs = FunD accName [Clause [VarP obj, VarP unit] (NormalB $ CaseE (VarE obj) cases) []] where
         accName  = mkName $ Naming.mkFieldSetter typeName fieldName
-        cases    = fmap (uncurry $ mkCase fieldName) descs
-        mkCase fieldName conName fieldGen = mkAccCase cons (mkName "_") conName fieldGen where
-            cons = appEs (ConE conName) (fmap VarE $ runPatCons fieldGen unit)
+        cases    = fmap (uncurry mkCase) descs
+        mkCase conName fieldGen = mkAccCase cons (mkName "_") conName fieldGen where
+            cons       = appEs (ConE conName) 
+                       $ fmap VarE $ runPatCons fieldGen unit
 
     mkAccessor fieldName descs = [mkGetter fieldName descs, mkSetter fieldName descs]
 
@@ -337,6 +339,8 @@ mkLiftF pNum base = AppE (VarE fname) (VarE base) where
 --        inst       = InstanceD ctx nt funcs
 --    return $ [inst]
 
+
+
 registerType :: Name -> Q [Dec]
 registerType tpName = do
     TyConI (DataD _ _ bndrs _ _) <- reify tpName
@@ -347,12 +351,35 @@ registerType tpName = do
     return $ clsdef : (treg ++ clsreg)
     where clsName = mkName $ Naming.mkCls (nameBase tpName)
 
+registerCons :: Name -> [String] -> Q [Dec]
+registerCons tpName selNames = do
+    TyConI (DataD _ _ _ cons _) <- reify tpName
+    let selCons    = filter (\c -> nameBase (getConName c) `elem` selNames) cons
+        conMakers  = fmap (genConMaker tpName) (fmap mkName selNames)
+        conLayouts = fmap (genConLayout tpName) selCons
+    return $ conMakers ++ conLayouts
+
 registerType' :: Name -> [TyVarBndr] -> [Dec]
 registerType' tpName bndrs = [decl, tfam] where
     params     = fmap getTyVarBndrName bndrs
     normalName = mkName $ Naming.mkTypePtr (nameBase tpName)
     decl = DataD [] normalName [] [NormalC normalName []] []
     tfam = TySynInstD (mkName "ProxyType") (TySynEqn [foldl AppT (ConT tpName) (fmap VarT params)] (ConT normalName))
+
+genConMaker :: Name -> Name -> Dec
+genConMaker tpName name = ValD (VarP . mkName $ "cons_" <> nameStr) (NormalB expr) [] where
+    nameStr = nameBase name
+    expr = appEs (VarE $ mkName "member")
+         [ proxyE $ LitT (StrTyLit nameStr)
+         , valE . ConE . mkName $ Naming.mkCls (nameBase tpName)
+         ]
+
+genConLayout :: Name -> Con -> Dec
+genConLayout tpName con = FunD fname [Clause [ConP conName (fmap VarP fields)] (NormalB (rTupE (fmap VarE fields))) []] where
+    fieldNum = getConFieldNumber con
+    fields   = fmap (mkName.("t"<>).show) [1..fieldNum]
+    conName  = getConName con
+    fname    = mkName . Naming.mkLayout $ nameBase conName
 
 registerMethod :: Name -> String -> Q [Dec]
 registerMethod typeName methodName = do

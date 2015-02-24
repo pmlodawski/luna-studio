@@ -682,7 +682,7 @@ void prepareMethodWrappersHelper(bool finalLeaves, std::vector<MethodWrapper> &m
 
 		if(finalLeaves)
 		{
-			if(d->name() == "Request" || d->name() == "Status" || d->name() == "Update")
+                        if(d->name() == "Request" || d->name() == "Status" || d->name() == "Update" || d->name() == "Progress")
 				methods.emplace_back(topicSoFar, nameSoFar, fileDescriptor, d, agent);
 		}
 		else
@@ -937,8 +937,8 @@ struct IBusMessagesReceiver : IBusListener, IDispatchee
 	std::string entries;
 	std::string dispatchee = "class IDispatchee \n{\n public:\n";
 	for(auto &method : prepareMethodWrappers(true))
-{	
-		if(!boost::ends_with(method.topic, "update")  &&  !boost::ends_with(method.topic, "status"))
+        {
+                if(!boost::ends_with(method.topic, "update")  &&  !boost::ends_with(method.topic, "status")  &&  !boost::ends_with(method.topic, "progress"))
 			continue;
 
 		std::string hlp = entry;

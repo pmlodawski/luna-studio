@@ -83,6 +83,9 @@ mkModCons = mkCons
 mkCons :: (Monoid a, IsString a) => a -> a
 mkCons = ("cons_" <>)
 
+mkLayout :: (Monoid a, IsString a) => a -> a
+mkLayout = ("layout_" <>)
+
 mkModName :: (Monoid a, IsString a) => a -> a
 mkModName = ("Module" <>)
 
