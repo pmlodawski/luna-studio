@@ -108,6 +108,9 @@ instance MonadTokBuilder s (Builder s) where
 instance IsString a => IsString (Builder s a) where
     fromString = pure . fromString
 
+instance FromText a => FromText (Builder s a) where
+    fromText = pure . fromText
+
 instance Monoid a => Monoid (Builder s a) where
     mempty        = return mempty
     a `mappend` b = do

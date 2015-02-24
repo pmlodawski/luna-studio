@@ -35,6 +35,19 @@ foreign haskell def Image.saturateRaw saturation:
 def Image.saturate saturation:
     self.saturateRaw saturation.toRGBA
 
+foreign haskell def Image.offsetMatte value matte:
+    liftF3 offsetMatteLuna value matte self
+
+foreign haskell def Image.contrastMatte value matte:
+    liftF3 contrastMatteLuna value matte self
+
+foreign haskell def Image.exposureMatte blackpoint ex matte:
+    liftF4 exposureMatteLuna blackpoint ex matte self
+
+foreign haskell def Image.gradeMatte blackpoint whitepoint lift gain multiply offset gamma matte:
+    liftF5 (gradeLunaColorMatte blackpoint whitepoint lift gain) multiply offset gamma matte self
+
+
 # foreign haskell def Image.hsvTool hueRange hueRotation hueRolloff
 #             saturationRange saturationAdjustment saturationRolloff
 #             brightnessRange brightnessAdjustment brightnessRolloff:
