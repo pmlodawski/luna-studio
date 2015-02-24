@@ -22,6 +22,9 @@ import Unsafe.Coerce (unsafeCoerce)
 
 data RTuple a = RTuple { fromRTuple :: a } deriving (Eq, Ord)
 
+infixr 0 //
+(//) = (,)
+
 -- === Wrapper ===
 
 instance Wrap RTuple where
