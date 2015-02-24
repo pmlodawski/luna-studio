@@ -92,8 +92,9 @@ appT       = foldl AppT
 dot        = OperatorE "."
 
 rTuple items = MacroE  ("_rtup" <> show (length items)) items
-rTupleX items = MacroE  ("_rtupX" <> show (length items)) items
+rTupleX items = AppE (ConE ["RTuple"]) $ foldr tup2 (Tuple []) items
 
+tup2 a b = Tuple [a,b]
 
 val = flip Function mempty
 
