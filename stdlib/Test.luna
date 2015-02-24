@@ -1,7 +1,12 @@
-# foreign haskell def print msg:
-#     autoLift1 print msg
+foreign haskell import Data.Maybe (fromJust)
 
-def foo a b: 1
+foreign haskell def print s="":
+    polyJoin . liftF1 (Value . fmap Safe . print) $ s
+
+# foreign haskell def Int.+ a:
+#     liftF2 (+) self a
+
+def foo a b: a
 
 def main:
     foo 2 3

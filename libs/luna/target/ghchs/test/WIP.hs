@@ -19,6 +19,7 @@
 module Main where
 
 -- imports --
+import Data.Maybe (fromJust)
 import Luna.Target.HS
 
 -- body --
@@ -44,9 +45,15 @@ $(registerMethod ''Cls_Main "Main")
 -- Module declarations
 -- ===================================================================
 
+-- ====== Method: Main.print ====== --
+memSig_Main_print = _rtup2 (_nuSigArg ("self"), _npSigArg ("s", val ("" :: String)))
+memDef_Main_print self s = polyJoin . liftF1 (Value . fmap Safe . print) $ s
+memFnc_Main_print = (memSig_Main_print, memDef_Main_print)
+$(registerMethod ''Main "print")
+
 -- ====== Method: Main.foo ====== --
 memSig_Main_foo = _rtup3 (_nuSigArg ("self"), _nuSigArg ("a"), _nuSigArg ("b"))
-memDef_Main_foo _self _a _b = val (1 :: Int)
+memDef_Main_foo _self _a _b = _a
 memFnc_Main_foo = (memSig_Main_foo, memDef_Main_foo)
 $(registerMethod ''Main "foo")
 
