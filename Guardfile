@@ -20,13 +20,13 @@ $run_coverage = false
 $hspec_opts   = [
                   "--print-cpu-time",
                   "--color",
-                  "-m AlphaEquiv",
+                  # '-m "∀-quant. reorder DEBUG 3a aaa"',
                 ]
 
 
 #* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
 # WATCHED FILES  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
-#* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+#* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *  
 
 guard :shell, :version => 2, :cli => "--color" do
   watch(%r{^(src|tests|tests-lib|tests-pipeline)/.+\.l?hs$}) do |m|
