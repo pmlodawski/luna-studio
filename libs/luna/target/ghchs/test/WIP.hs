@@ -14,7 +14,6 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE DysfunctionalDependencies #-}
 {-# LANGUAGE ExtendedDefaultRules #-}
-{-# LANGUAGE FunctionalDependencies #-}
 
 -- module --
 module Main where
@@ -30,12 +29,10 @@ data Main
     = Main
     deriving (Show,Eq,Ord,Generic,Typeable)
 $(registerType ''Main)
+$(registerCons ''Main ["Main"])
 
 -- ------ Main.Main constructor ------ --
-cons_Main = _member ("Main") (val Cls_Main)
 memDef_Cls_Main_Main = liftCons0 Main
-
--- ====== --------------- ====== --
 
 -- ====== Method: Cls_Main.Main ====== --
 memSig_Cls_Main_Main = _rtup1 (_nuSigArg ("self"))
@@ -47,33 +44,9 @@ $(registerMethod ''Cls_Main "Main")
 -- Data headers
 -- ===================================================================
 
-class DataTuple d t | d -> t where
-	dataTuple :: d -> t
-
--- ====== Vector type ====== --
-data Vector 
-    = Vector Int Int Int
-    | Scalar Int
-    deriving (Show,Eq,Ord,Generic,Typeable)
-$(registerType ''Vector)
-
-instance DataTuple Vector (Int, Int, Int) where
-	dataTuple = dataTuple_Vector
-
--- ------ Vector accessors ------ --
-$(generateFieldAccessors ''Vector [('Vector, [Just "x", Just "y", Just "z"])])
-$(registerFieldAccessors ''Vector ["x", "y", "z"])
-
--- ------ Vector.Vector constructor ------ --
-cons_Vector = _member ("Vector") (val Cls_Vector)
-memDef_Cls_Vector_Vector = liftCons3 Vector
-
--- ====== --------------- ====== --
-
--- ====== Method: Cls_Vector.Vector ====== --
-memSig_Cls_Vector_Vector = _rtup4 (_nuSigArg ("self"), _nuSigArg ("x"), _nuSigArg ("y"), _nuSigArg ("z"))
-memFnc_Cls_Vector_Vector = (memSig_Cls_Vector_Vector, memDef_Cls_Vector_Vector)
-$(registerMethod ''Cls_Vector "Vector")
+-- ====== Float type ====== --
+-- datatype provided externally
+$(registerType ''Float)
 
 
 -- ===================================================================
@@ -86,15 +59,34 @@ $(registerMethod ''Cls_Vector "Vector")
 -- ===================================================================
 
 -- ====== Method: Main.print ====== --
-memSig_Main_print = _rtup2 (_nuSigArg ("self"), _npSigArg ("s", val ("" :: String)))
-memDef_Main_print self s = 
-    polyJoin . liftF1 (Value . fmap Safe . print) $ s
+memSig_Main_print = _rtup2 (_nuSigArg ("self"), _nuSigArg ("msg"))
+memDef_Main_print self msg = autoLift1 print msg
 memFnc_Main_print = (memSig_Main_print, memDef_Main_print)
 $(registerMethod ''Main "print")
 
+-- ====== Method: Float._star ====== --
+memSig_Float__star = _rtup2 (_nuSigArg ("self"), _nuSigArg ("a"))
+memDef_Float__star self a = liftF2 (*) self a
+memFnc_Float__star = (memSig_Float__star, memDef_Float__star)
+$(registerMethod ''Float "_star")
+
+-- ====== Method: Main._star ====== --
+memSig_Main__star = _rtup3 (_nuSigArg ("self"), _nuSigArg ("a"), _nuSigArg ("b"))
+memDef_Main__star _self _a _b = _call (0) (appNext _b (_member ("_star") _a))
+memFnc_Main__star = (memSig_Main__star, memDef_Main__star)
+$(registerMethod ''Main "_star")
+
+-- ====== Method: Main.foo ====== --
+memSig_Main_foo = _rtup3 (_nuSigArg ("self"), _nuSigArg ("a"), _nuSigArg ("b"))
+memDef_Main_foo _self _a _b = _call (1) (appNext _b (_member ("_star") _a))
+memFnc_Main_foo = (memSig_Main_foo, memDef_Main_foo)
+$(registerMethod ''Main "foo")
+
 -- ====== Method: Main.main ====== --
 memSig_Main_main = _rtup1 (_nuSigArg ("self"))
-memDef_Main_main _self = _call (0) (appNext (val (1 :: Int)) (_member ("print") _self))
+memDef_Main_main _self = do 
+    _call (2) (appNext (_call (3) (appNext (val (2.0 :: Float)) (appNext (val (1.0 :: Float)) (_member ("_star") _self)))) (_member ("print") _self))
+    _call (4) (appNext (_call (5) (appNext (val (4.0 :: Float)) (appNext (val (3.0 :: Float)) (_member ("foo") _self)))) (_member ("print") _self))
 memFnc_Main_main = (memSig_Main_main, memDef_Main_main)
 $(registerMethod ''Main "main")
 

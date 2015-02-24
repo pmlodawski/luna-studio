@@ -2,7 +2,10 @@
 #                STD
 #
 
+foreign haskell import Data.Array.Accelerate (Boundary(..))
 foreign haskell import Data.Maybe (fromJust)
+
+foreign haskell import Flowbox.Graphics.Utils.Accelerate (variable)
 
 foreign haskell import Flowbox.Graphics.Mockup
 foreign haskell import Flowbox.Graphics.Mockup.Basic

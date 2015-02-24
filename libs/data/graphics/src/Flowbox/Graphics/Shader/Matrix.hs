@@ -7,7 +7,6 @@
 
 module Flowbox.Graphics.Shader.Matrix where
 
-import Flowbox.Graphics.Composition.Generator.Shape
 import Flowbox.Graphics.Shader.Shader
 import Flowbox.Math.Matrix                          as M
 import Flowbox.Prelude

@@ -7,6 +7,7 @@
 #include "../generated/plugin-manager.pb.h"
 #include "../generated/interpreter.pb.h"
 #include "../generated/dep/type.pb.h"
+#include "../generated/renderer.pb.h"
 #include "../generated/urm.pb.h"
 
 #include <boost/algorithm/string.hpp>
@@ -682,7 +683,7 @@ void prepareMethodWrappersHelper(bool finalLeaves, std::vector<MethodWrapper> &m
 
 		if(finalLeaves)
 		{
-			if(d->name() == "Request" || d->name() == "Status" || d->name() == "Update")
+                        if(d->name() == "Request" || d->name() == "Status" || d->name() == "Update" || d->name() == "Progress")
 				methods.emplace_back(topicSoFar, nameSoFar, fileDescriptor, d, agent);
 		}
 		else
@@ -713,6 +714,7 @@ std::vector<MethodWrapper> prepareMethodWrappers(bool finalLeaves = false)
 	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::parser::Parse::descriptor());
 	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::parser::MkText::descriptor());
 	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::parser::Parser::descriptor());
+        prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::renderer::Renderer::descriptor());
 	prepareMethodWrappersHelper(finalLeaves, methods, generated::proto::urm::URM::descriptor());
 	return methods;
 }
@@ -937,8 +939,8 @@ struct IBusMessagesReceiver : IBusListener, IDispatchee
 	std::string entries;
 	std::string dispatchee = "class IDispatchee \n{\n public:\n";
 	for(auto &method : prepareMethodWrappers(true))
-{	
-		if(!boost::ends_with(method.topic, "update")  &&  !boost::ends_with(method.topic, "status"))
+        {
+                if(!boost::ends_with(method.topic, "update")  &&  !boost::ends_with(method.topic, "status")  &&  !boost::ends_with(method.topic, "progress"))
 			continue;
 
 		std::string hlp = entry;

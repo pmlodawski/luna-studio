@@ -11,6 +11,10 @@
 out
 a.out
 
+# profiling results
+*.hp
+*.prof
+
 # tags file
 tags
 TAGS
@@ -67,7 +71,7 @@ cabal.sandbox.config
 # aws credentials
 aws.config
 
-# generated Std.luna file
+# generated Std.luna
 stdlib/FlowboxM/Libs/Flowbox/Std.luna
 
 ### DEPRECATED ###
