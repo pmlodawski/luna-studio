@@ -32,7 +32,7 @@ import           Luna.Interpreter.Session.Session                       (Session
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 --- helpers ---------------------------------------------------------------
 
@@ -98,7 +98,6 @@ deleteNode projectID libraryID nodeID =
     interpreterDo projectID $ do
         Cache.deleteNode (decodeP libraryID) (decodeP nodeID)
         Manager.cleanIfNeeded
-        GPUMemory.performGC
 
 
 setTimeVar :: Time -> RPC Context (SessionST mm) ()
