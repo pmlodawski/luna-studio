@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Flowbox.Batch.Tools.Serialize.Proto.Project (
+module Flowbox.Batch.Project.Serialize (
     storeProject,
     restoreProject,
 ) where
@@ -16,17 +16,16 @@ import qualified Data.Maybe           as Maybe
 import           System.IO
 import qualified Text.ProtocolBuffers as Proto
 
-import           Flowbox.Batch.Project.Project                          (Project)
-import qualified Flowbox.Batch.Project.Project                          as Project
-import qualified Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project ()
+import           Flowbox.Batch.Project.Project   (Project)
+import qualified Flowbox.Batch.Project.Project   as Project
 import           Flowbox.Control.Error
 import           Flowbox.Data.Convert
 import           Flowbox.Prelude
-import           Flowbox.System.IO.Serializer                           (Deserializable (..), Serializable (..))
-import qualified Flowbox.System.IO.Serializer                           as Serializer
-import           Flowbox.System.UniPath                                 (UniPath)
-import qualified Generated.Proto.Project.Project                        as Gen
-import           Luna.DEP.Lib.Manager                                   (LibManager)
+import           Flowbox.System.IO.Serializer    (Deserializable (..), Serializable (..))
+import qualified Flowbox.System.IO.Serializer    as Serializer
+import           Flowbox.System.UniPath          (UniPath)
+import qualified Generated.Proto.Project.Project as Gen
+import           Luna.DEP.Lib.Manager            (LibManager)
 
 
 
