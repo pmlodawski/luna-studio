@@ -108,13 +108,11 @@ exprScopes ast@(Label lab e) = case e of
     Expr.Accessor {} -> Label 997 <$> (Expr.app <$> continue <*> pure [])
                 -- TODO [wd]: ^-- a magic constants :)
     Expr.Curry (Label lab' acc@(Expr.Accessor {})) -> Label lab . Expr.Curry <$> (Label lab' <$> defaultTraverseOmitM (Proxy::Proxy 1) acc)
-    Expr.App (NamePat pfx (Segment base args) segs) -> 
+    Expr.App (NamePat pfx (Segment base args) []) -> 
         (Label lab . Expr.App) <$> (NamePat <$> defaultTraverseM pfx 
                                             <*> (Segment <$> defaultTraverseOmitM (Proxy::Proxy 1) base 
-                                                         <*> defaultTraverseM allArgs)
+                                                         <*> defaultTraverseM args)
                                             <*> pure [])
-        where getSegArgs (Segment _ args) = args
-              allArgs = args ++ concat (fmap getSegArgs segs)
     _                -> continue
     where continue = defaultTraverseM ast
           id       = Enum.id lab

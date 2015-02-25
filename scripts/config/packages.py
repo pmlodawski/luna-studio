@@ -11,7 +11,7 @@ from utils.colors import print_error
 from utils.errors import fatal
 from utils.system import system, systems
 import sys
-import config.sandbox as sbox
+
 
 
 rootPath = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
@@ -40,14 +40,15 @@ class Flags(object):
         return fs
 
 
+
 class Project(object):
-    def __init__(self, sbox, name='', path='', binpath='', deps=None, flags=None):
-        self.sbox    = sbox(rootPath, path)
+    def __init__(self, name='', path='', binpath='', deps=None, flags=None):
         if deps  == None: deps = []
         if flags == None: flags = Flags()
         self.name    = name
         self.path    = path
         self.binpath = binpath
+        self.sbox    = os.path.join(rootPath, 'dist', self.path)
         self.deps    = set(deps)
         self.flags   = flags
 
@@ -98,10 +99,10 @@ class CoreLunaPlatform(Project):
         return [project for project in corePkgDb.values() if project.path]
 
 corePkgDb = \
-       { 'libs/batch/batch'                    : HProject   (sbox.glob, 'flowbox-batch'                , os.path.join ('libs' , 'batch', 'batch')                      , 'libs'    , ['libs/config', 'libs/luna/core', 'libs/luna/distribution-old', 'libs/luna/initializer', 'libs/luna/pass-old', 'libs/luna/protobuf-old', 'libs/utils'])
-       , 'libs/luna/core'                      : HProject   (sbox.glob, 'luna-core'                    , os.path.join ('libs' , 'luna', 'core')                        , 'libs'    , ['libs/utils'])
-       , 'libs/utils'                          : HProject   (sbox.glob, 'flowbox-utils'                , os.path.join ('libs' , 'utils')                               , 'libs'    , [])
-       , 'libs/luna/typechecker'               : HProject   (sbox.glob, 'luna-typechecker'             , os.path.join ('libs' , 'luna', 'typechecker')                 , 'libs'    , ['libs/utils', 'libs/luna/core', 'libs/luna/pass'])
+       { 'libs/batch/batch'                    : HProject   ('flowbox-batch'                , os.path.join ('libs' , 'batch', 'batch')                      , 'libs'    , ['libs/config', 'libs/luna/core', 'libs/luna/distribution-old', 'libs/luna/initializer', 'libs/luna/pass-old', 'libs/luna/protobuf-old', 'libs/utils'])
+       , 'libs/luna/core'                      : HProject   ('luna-core'                    , os.path.join ('libs' , 'luna', 'core')                        , 'libs'    , ['libs/utils'])
+       , 'libs/utils'                          : HProject   ('flowbox-utils'                , os.path.join ('libs' , 'utils')                               , 'libs'    , [])
+       , 'libs/luna/typechecker'               : HProject   ('luna-typechecker'             , os.path.join ('libs' , 'luna', 'typechecker')                 , 'libs'    , ['libs/utils', 'libs/luna/core', 'libs/luna/pass'])
        }
 
 pkgDb = dict(corePkgDb, **{
