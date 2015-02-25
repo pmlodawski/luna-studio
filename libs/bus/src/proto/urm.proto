@@ -13,6 +13,7 @@ message URM {
     message Register {
         message Request {
             required generated.proto.bus.Message undoAction = 1;
+            required generated.proto.bus.Message redoAction = 2;
         }
         message Status {
             required Request request = 1;

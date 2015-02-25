@@ -28,9 +28,10 @@ import qualified Flowbox.Text.ProtocolBuffers               as Proto
 
 handlerMap :: HandlerMap Context IO
 handlerMap callback = HandlerMap.fromList
-    [ (Topic.urmUndoRegisterRequest, respond status URMHandler.register)
-    , (Topic.urmUndoPerformRequest , respond2 status URMHandler.undo)
-    , (Topic.urmPingRequest        , respond status Maintenance.ping) 
+    [ (Topic.urmRegisterRequest, respond status URMHandler.register)
+    , (Topic.urmUndoRequest    , respond2 status URMHandler.undo)
+    , (Topic.urmRedoRequest    , respond2 status URMHandler.redo)
+    , (Topic.urmPingRequest    , respond status Maintenance.ping) 
     ]
     where
         respond :: (Proto.Serializable args, Proto.Serializable result)

@@ -35,6 +35,7 @@ import qualified Flowbox.ProjectManager.RPC.Handler.Sync        as SyncHandler
 import qualified Flowbox.ProjectManager.RPC.Topic               as Topic
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.Text.ProtocolBuffers                   as Proto
+import qualified Flowbox.UR.Manager.RPC.Topic                   as Topic
 import qualified Generated.Proto.Urm.URM.Register.Request       as Register
 import qualified Generated.Proto.Urm.URM.Undo.Request           as Undo
 import           Flowbox.Text.ProtocolBuffers                   (Serializable)
@@ -89,6 +90,7 @@ handlerMap callback = HandlerMap.fromList
     , (Topic.projectLibraryAstFunctionGraphNodeRemoveRequest        , call Topic.update GraphHandler.nodeRemove)
     , (Topic.projectLibraryAstFunctionGraphNodeModifyRequest        , call Topic.update GraphHandler.nodeModify)
     , (Topic.projectLibraryAstFunctionGraphNodeModifyinplaceRequest , call2 Topic.update GraphHandler.nodeModifyInPlace)
+    , ("project.library.ast.function.graph.node.mip.request" , call3 "project.library.ast.function.graph.node.modifyinplace.update"  GraphHandler.nodeMIP)
     , (Topic.projectLibraryAstFunctionGraphNodeDefaultGetRequest    , call Topic.status NodeDefaultHandler.get)
     , (Topic.projectLibraryAstFunctionGraphNodeDefaultRemoveRequest , call Topic.update NodeDefaultHandler.remove)
     , (Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest    , call Topic.update NodeDefaultHandler.set)
@@ -108,4 +110,7 @@ handlerMap callback = HandlerMap.fromList
         call2 :: (Proto.Serializable args, Proto.Serializable result)
              => String -> (args -> RPC Context IO (result, Register.Request)) -> StateT Context IO [Message]
         call2 t fun = callback (/+ t) $ \a -> do (r1, r2) <- fun a
-                                                 return ([r1], [Message.mk "urm.undo.register.request" r2])
+                                                 return ([r1], [Message.mk Topic.urmRegisterRequest r2])
+        call3 :: (Proto.Serializable args, Proto.Serializable result)
+             => String -> (args -> RPC Context IO result) -> StateT Context IO [Message]
+        call3 type_ = callback (\_ -> type_) . Processor.singleResult

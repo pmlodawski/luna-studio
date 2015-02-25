@@ -8,6 +8,7 @@
 {-# LANGUAGE TemplateHaskell     #-}
 module Flowbox.ProjectManager.RPC.Handler.Graph where
 
+import           Control.Monad
 import qualified Data.Either as Either
 
 import qualified Flowbox.Batch.Handler.Common                                                                 as Batch
@@ -93,6 +94,19 @@ nodeAdd request@(NodeAdd.Request tnode tbc tlibID tprojectID _) = do
     updateNo <- Batch.getUpdateNo
     return $ NodeAdd.Update request (encode (newNodeID, node)) updateNo
 
+--nodeAdd2 :: NodeAdd.Request -> RPC Context IO (NodeAdd.Update, Register.Request)
+--nodeAdd2 request@(NodeAdd.Request tnode tbc tlibID tprojectID astID) = do
+--    bc <- decodeE tbc
+--    (_ :: Int, node) <- decodeE tnode
+--    let libID     = decodeP tlibID
+--        projectID = decodeP tprojectID
+--    newNodeID <- BatchG.addNode node bc libID projectID
+--    updateNo <- Batch.getUpdateNo
+--    return $ ( NodeAdd.Update request (encode (newNodeID, node)) updateNo
+--             , Register.Request
+--                (encodeP $ Message.mk "project.library.ast.function.graph.node.rm.request" $ NodeRemove.Request (encode newNodeID) tbc tlibID tprojectID astID)
+--                (encodeP $ Message.mk "project.library.ast.function.graph.node.add.request" $ request)
+--             )
 
 nodeModify :: NodeModify.Request -> RPC Context IO NodeModify.Update
 nodeModify request@(NodeModify.Request tnode tbc tlibID tprojectID _) = do
@@ -104,10 +118,11 @@ nodeModify request@(NodeModify.Request tnode tbc tlibID tprojectID _) = do
     updateNo <- Batch.getUpdateNo
     return $ NodeModify.Update request (encode (newNodeID, node)) updateNo
 
+nodeMIP :: NodeModifyInPlace.Request -> RPC Context IO (NodeModifyInPlace.Update)
+nodeMIP = liftM fst . nodeModifyInPlace
 
 nodeModifyInPlace :: NodeModifyInPlace.Request -> RPC Context IO (NodeModifyInPlace.Update, Register.Request)
-nodeModifyInPlace request@(NodeModifyInPlace.Request tnode tbc tlibID tprojectID _) = do
-    logger error $ "robie sobie"
+nodeModifyInPlace request@(NodeModifyInPlace.Request tnode tbc tlibID tprojectID astID) = do
     bc <- decodeE tbc
     nodeWithId <- decodeE tnode
     let libID     = decodeP tlibID
@@ -119,11 +134,14 @@ nodeModifyInPlace request@(NodeModifyInPlace.Request tnode tbc tlibID tprojectID
     BatchG.updateNodeInPlace nodeWithId bc libID projectID
     updateNo <- Batch.getUpdateNo
 
-    logger error $ "zrobilem se"
-    logger error $ show node
-    logger error $ show $ snd nodeWithId
-    return $ (NodeModifyInPlace.Update request updateNo,  Register.Request $ encodeP $ Message.mk "project.library.ast.function.graph.node.modifyinplace.request" $ NodeModifyInPlace.Request oldNode tbc tlibID tprojectID 0)
+    logger error $ show oldNode ++ " " ++ (show tnode)
+    return $ ( NodeModifyInPlace.Update request updateNo
+             , Register.Request 
+                (encodeP $ Message.mk "project.library.ast.function.graph.node.mip.request" $ NodeModifyInPlace.Request oldNode tbc tlibID tprojectID astID)
+                (encodeP $ Message.mk "project.library.ast.function.graph.node.mip.request" $ request)
+             )
 
+--nodeRm :: NodeRemove.Request -> RPC Context IO NodeRemove.Update
 
 nodeRemove :: NodeRemove.Request -> RPC Context IO NodeRemove.Update
 nodeRemove request@(NodeRemove.Request tnodeIDs tbc tlibID tprojectID _) = do
