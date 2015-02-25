@@ -1,11 +1,5 @@
-foreign haskell def print msg:
-    autoLift1 print msg
-
-foreign haskell class Float:
-    def foo: self
-
-# foreign haskell def Float.* a:
-#     liftF2 (*) self a
+#include ../../Prelude.lunaturbo
+#include Color.lunaturbo
 
 # class RGB:
 #     r, g, b :: Float
@@ -14,21 +8,18 @@ foreign haskell class Float:
 # class Mult a:
 #     data :: a
 #     mult :: Float
-#     def toRGB:
+#     def toRGBA:
 #         r = data.r
 #         g = data.g
 #         b = data.b
-#         RGB (r.* mult) (g.* mult) (b.* mult)
-
-# def main:
-#     print "color test"
-
-#     rgb = RGB 1.0 2.0 3.0
-#     mult = Mult rgb 0.5
-
-#     print rgb.toRGB
-#     print mult.toRGB
+#         a = data.a
+#         RGBA (r.* mult) (g.* mult) (b.* mult) (a.* mult)
 
 def main:
-    print "test"
-    print 4.0.foo
+    print "color test"
+
+    rgba = RGBA 1.0 2.0 3.0 4.0
+    mult = ColorMult rgba 0.5
+
+    print rgba.toRGBA
+    print mult.toRGBA
