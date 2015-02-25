@@ -34,7 +34,7 @@ import           Luna.Interpreter.Session.Session                               
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 --- helpers ---------------------------------------------------------------
 
@@ -72,6 +72,7 @@ sync updateNo syncOp = do
     hoistSessionST $ void syncOp
     testUpdateNo updateNo
     syncLibManager
+
 
 --- handlers --------------------------------------------------------------
 
