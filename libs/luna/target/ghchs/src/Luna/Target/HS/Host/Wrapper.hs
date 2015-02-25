@@ -39,3 +39,13 @@ concatPure = (fmap.fmap) val . fmap concat . sequence
 ifThenElse cond a b = if cond then a else b
 
 ifThenElse' cond a b = polyJoin $ (fmap) (\x -> ifThenElse x a b) cond
+
+
+
+lstCons = liftF2 (\a lst -> a : lst)
+
+
+--main = do
+--    print $ lstCons (val 4) $ lstCons (val 5) (val [])
+
+type List a = [a]

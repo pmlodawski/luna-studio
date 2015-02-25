@@ -3,6 +3,7 @@
 #
 
 foreign haskell import Flowbox.Geom2D.Rectangle
+foreign haskell import Flowbox.Graphics.Mockup.Transform
 
 foreign haskell import Flowbox.Graphics.Mockup (Point2 (..))
 

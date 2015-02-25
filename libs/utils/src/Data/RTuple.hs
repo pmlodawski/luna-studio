@@ -22,6 +22,9 @@ import Unsafe.Coerce (unsafeCoerce)
 
 data RTuple a = RTuple { fromRTuple :: a } deriving (Eq, Ord)
 
+infixr 0 //
+(//) = (,)
+
 -- === Wrapper ===
 
 instance Wrap RTuple where
@@ -99,3 +102,18 @@ instance UncurryTuple (RTuple () -> a) a where
 
 instance UncurryTuple (RTuple xs -> f) fout => UncurryTuple (RTuple (x,xs) -> f) (x -> fout) where
     uncurryTuple f = (\x -> uncurryTuple $ f . RTuple . (x,) . fromRTuple)
+
+
+-- === ToList ===
+
+class ToTuple a lst | a -> lst where
+    toTuple :: a -> lst
+
+instance ToTuple (RTuple ()) () where toTuple _ = ()
+instance ToTuple (RTuple (t1,())) t1 where toTuple (RTuple (t1,())) = t1
+instance ToTuple (RTuple (t1,(t2,()))) (t1,t2) where toTuple (RTuple (t1,(t2,()))) = (t1,t2)
+instance ToTuple (RTuple (t1,(t2,(t3,())))) (t1,t2,t3) where toTuple (RTuple (t1,(t2,(t3,())))) = (t1,t2,t3)
+instance ToTuple (RTuple (t1,(t2,(t3,(t4,()))))) (t1,t2,t3,t4) where toTuple (RTuple (t1,(t2,(t3,(t4,()))))) = (t1,t2,t3,t4)
+instance ToTuple (RTuple (t1,(t2,(t3,(t4,(t5,())))))) (t1,t2,t3,t4,t5) where toTuple (RTuple (t1,(t2,(t3,(t4,(t5,())))))) = (t1,t2,t3,t4,t5)
+
+

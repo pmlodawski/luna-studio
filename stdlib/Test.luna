@@ -1,14 +1,14 @@
-foreign haskell def print s="":
-    polyJoin . liftF1 (Value . fmap Safe . print) $ s
+foreign haskell def print msg:
+    autoLift1 print msg
 
-# foreign haskell def Int.+ a:
-#     liftF2 (+) self a
+foreign haskell def whatis a:
+    autoLift1 print (val a)
 
-class Foo
+foreign haskell class List   
 
-class Test:
-    test :: Foo
+foreign haskell def List.at idx:
+    liftF2 (!!) self idx
 
 def main:
-    # a = Test
-    print 1
+    a = [1,2,3]
+    print (a.at 0)

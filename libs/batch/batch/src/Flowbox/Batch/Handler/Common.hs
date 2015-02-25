@@ -59,7 +59,7 @@ import qualified Luna.DEP.Pass.Transform.SimpleText.Parser.Parser               
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 increaseUpdateNo :: Batch ()

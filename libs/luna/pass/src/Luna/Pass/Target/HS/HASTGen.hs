@@ -296,6 +296,7 @@ convVar = hash . unwrap
 
 genDecl :: (Monad m, Enumerated lab, Num lab, Show lab) => LDecl lab (LExpr lab ()) -> PassResult m ()
 genDecl ast@(Label lab decl) = case decl of
+    Decl.Imp     {}       -> return () -- FIXME[PM->WD]
     Decl.Func    funcDecl -> genStdFunc funcDecl
     Decl.Foreign fdecl    -> genForeign fdecl
     Decl.Data    ddecl    -> genDataDecl False ddecl
@@ -656,7 +657,8 @@ genExpr (Label lab expr) = case expr of
                 _             -> (\cid -> HE.AppE (HE.MacroE "_call" [HE.Lit . HLit.Int . fromString $ show cid])) <$> genCallID
 
     Expr.List lst -> case lst of
-        Expr.SeqList items -> mkVal . HE.ListE <$> mapM genExpr items
+        Expr.SeqList items -> foldr (\a b -> HE.app "lstCons" [a,b]) (mkVal $ HE.ListE []) <$> mapM genExpr items
+        --Expr.SeqList items -> mkVal . HE.ListE <$> mapM genExpr items
         Expr.RangeList {}  -> Pass.fail "Range lists are not supported yet"
 
     Expr.Meta meta -> case unwrap meta of
@@ -684,7 +686,7 @@ genLit (Label lab lit) = case lit of
                         Number.Negative -> "-"
         case repr of
             Number.Float   int frac -> mkLit "Float" (HLit.Float   $ sign' <> fromString int <> "." <> fromString frac)
-            Number.Decimal int      -> mkLit "Int"    (HLit.Integer $ sign' <> fromString int)
+            Number.Decimal int      -> mkLit "Int"   (HLit.Integer $ sign' <> fromString int)
 
     --Lit.Integer _ str      -> mkLit "Int"    (HLit.Integer str)
     --Lit.Float   _ str      -> mkLit "Float" (HLit.Float   str)
