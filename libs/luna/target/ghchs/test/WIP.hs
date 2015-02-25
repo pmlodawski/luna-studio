@@ -44,39 +44,9 @@ $(registerMethod ''Cls_Main "Main")
 -- Data headers
 -- ===================================================================
 
--- ====== Foo type ====== --
-data Foo 
-    = Foo
-    deriving (Show,Eq,Ord,Generic,Typeable)
-$(registerType ''Foo)
-$(registerCons ''Foo ["Foo"])
-
--- ------ Foo.Foo constructor ------ --
-memDef_Cls_Foo_Foo = liftCons0 Foo
-
--- ====== Method: Cls_Foo.Foo ====== --
-memSig_Cls_Foo_Foo = _rtup1 (_nuSigArg ("self"))
-memFnc_Cls_Foo_Foo = (memSig_Cls_Foo_Foo, memDef_Cls_Foo_Foo)
-$(registerMethod ''Cls_Foo "Foo")
-
--- ====== Test type ====== --
-data Test 
-    = Test Foo
-    deriving (Show,Eq,Ord,Generic,Typeable)
-$(registerType ''Test)
-$(registerCons ''Test ["Test"])
-
--- ------ Test accessors ------ --
-$(generateFieldAccessors ''Test [('Test, [Just "test"])])
-$(registerFieldAccessors ''Test ["test"])
-
--- ------ Test.Test constructor ------ --
-memDef_Cls_Test_Test = liftCons1 Test
-
--- ====== Method: Cls_Test.Test ====== --
-memSig_Cls_Test_Test = _rtup2 (_nuSigArg ("self"), _nuSigArg ("test"))
-memFnc_Cls_Test_Test = (memSig_Cls_Test_Test, memDef_Cls_Test_Test)
-$(registerMethod ''Cls_Test "Test")
+-- ====== List type ====== --
+-- datatype provided externally
+$(registerType ''List)
 
 
 -- ===================================================================
@@ -88,17 +58,17 @@ $(registerMethod ''Cls_Test "Test")
 -- Module declarations
 -- ===================================================================
 
--- ====== Method: Main.print ====== --
-memSig_Main_print = _rtup2 (_nuSigArg ("self"), _npSigArg ("s", val ("" :: String)))
-memDef_Main_print self s = polyJoin . liftF1 (Value . fmap Safe . print) $ s
-memFnc_Main_print = (memSig_Main_print, memDef_Main_print)
-$(registerMethod ''Main "print")
+-- ====== Method: Main.foo ====== --
+memSig_Main_foo = _rtup1 (_nuSigArg ("self"))
+memDef_Main_foo _self = val (1 :: Int)
+memFnc_Main_foo = (memSig_Main_foo, memDef_Main_foo)
+$(registerMethod ''Main "foo")
 
--- ====== Method: Main.main ====== --
-memSig_Main_main = _rtup1 (_nuSigArg ("self"))
-memDef_Main_main _self = val ()
-memFnc_Main_main = (memSig_Main_main, memDef_Main_main)
-$(registerMethod ''Main "main")
+-- ====== Method: List.bar ====== --
+memSig_List_bar = _rtup1 (_nuSigArg ("self"))
+memDef_List_bar _self = _call (0) (_member ("foo") _self)
+memFnc_List_bar = (memSig_List_bar, memDef_List_bar)
+$(registerMethod ''List "bar")
 
 
 -- ===================================================================

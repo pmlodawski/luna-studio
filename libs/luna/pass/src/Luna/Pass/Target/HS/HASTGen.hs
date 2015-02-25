@@ -296,6 +296,7 @@ convVar = hash . unwrap
 
 genDecl :: (Monad m, Enumerated lab, Num lab, Show lab) => LDecl lab (LExpr lab ()) -> PassResult m ()
 genDecl ast@(Label lab decl) = case decl of
+    Decl.Imp     {}       -> return () -- FIXME[PM->WD]
     Decl.Func    funcDecl -> genStdFunc funcDecl
     Decl.Foreign fdecl    -> genForeign fdecl
     Decl.Data    ddecl    -> genDataDecl False ddecl
@@ -303,7 +304,8 @@ genDecl ast@(Label lab decl) = case decl of
     Decl.TpAls   dst src  -> State.regDecl =<< (HE.TypeD <$> genType dst <*> genType src)
 
 
-
+genStdFunc :: (Monad m, Enumerated lab, Num lab, Show lab)
+           => Decl.FuncDecl lab (LExpr lab ()) [LExpr lab ()] -> PassResult m ()
 genStdFunc f = genFunc f (Just genFuncBody) True
 
 genFuncNoBody :: (Monad m, Enumerated lab, Num lab, Show lab)
@@ -565,6 +567,7 @@ genPatMatch patBase (Label lab pat) expr = case pat of
     --Pat.Wildcard            -> return $ HE.WildP
     --Pat.Lit         lit     -> genLit lit
     --Pat.Var         name    -> pure $ HE.ViewP "val" $ HE.Var (Naming.mkVar $ convVar name)
+    Pat.Con name            -> return $ HE.Match (HE.ConP $ convVar name) expr
     a                       -> error $ "Pattern match not supported: " ++ show a
 
     where genVars (Label lab' pat') = case pat' of
@@ -655,7 +658,8 @@ genExpr (Label lab expr) = case expr of
                 _             -> (\cid -> HE.AppE (HE.MacroE "_call" [HE.Lit . HLit.Int . fromString $ show cid])) <$> genCallID
 
     Expr.List lst -> case lst of
-        Expr.SeqList items -> mkVal . HE.ListE <$> mapM genExpr items
+        Expr.SeqList items -> foldr (\a b -> HE.app "lstCons" [a,b]) (mkVal $ HE.ListE []) <$> mapM genExpr items
+        --Expr.SeqList items -> mkVal . HE.ListE <$> mapM genExpr items
         Expr.RangeList {}  -> Pass.fail "Range lists are not supported yet"
 
     Expr.Meta meta -> case unwrap meta of
@@ -682,11 +686,11 @@ genLit (Label lab lit) = case lit of
                         Number.Positive -> ""
                         Number.Negative -> "-"
         case repr of
-            Number.Float   int frac -> mkLit "Double" (HLit.Float   $ sign' <> fromString int <> "." <> fromString frac)
-            Number.Decimal int      -> mkLit "Int"    (HLit.Integer $ sign' <> fromString int)
+            Number.Float   int frac -> mkLit "Float" (HLit.Float   $ sign' <> fromString int <> "." <> fromString frac)
+            Number.Decimal int      -> mkLit "Int"   (HLit.Integer $ sign' <> fromString int)
 
     --Lit.Integer _ str      -> mkLit "Int"    (HLit.Integer str)
-    --Lit.Float   _ str      -> mkLit "Double" (HLit.Float   str)
+    --Lit.Float   _ str      -> mkLit "Float" (HLit.Float   str)
     Lit.String str      -> mkLit "String" (HLit.String  $ fromString str)
     Lit.Char   char     -> mkLit "Char"   (HLit.Char    char)
     --_ -> fail $ show lit
