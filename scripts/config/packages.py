@@ -101,7 +101,7 @@ corePkgDb = \
        { 'libs/batch/batch'                    : HProject   (sbox.glob, 'flowbox-batch'                , os.path.join ('libs' , 'batch', 'batch')                      , 'libs'    , ['libs/config', 'libs/luna/core', 'libs/luna/distribution-old', 'libs/luna/initializer', 'libs/luna/pass-old', 'libs/luna/protobuf-old', 'libs/utils'])
        , 'libs/luna/core'                      : HProject   (sbox.glob, 'luna-core'                    , os.path.join ('libs' , 'luna', 'core')                        , 'libs'    , ['libs/utils'])
        , 'libs/utils'                          : HProject   (sbox.glob, 'flowbox-utils'                , os.path.join ('libs' , 'utils')                               , 'libs'    , [])
-       # , 'libs/luna/typechecker'               : HProject   ('luna-typechecker'             , os.path.join ('libs' , 'luna', 'typechecker')                 , 'libs'    , ['libs/logger', 'libs/luna/core', 'libs/luna/parser3', 'libs/luna/pass2'])
+       , 'libs/luna/typechecker'               : HProject   (sbox.glob, 'luna-typechecker'             , os.path.join ('libs' , 'luna', 'typechecker')                 , 'libs'    , ['libs/utils', 'libs/luna/core', 'libs/luna/pass'])
        }
 
 pkgDb = dict(corePkgDb, **{

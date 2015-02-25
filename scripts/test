@@ -23,7 +23,7 @@ def main():
     sboxEnv   = "FDEV_TARGETS"
     os.chdir(rootPath)
 
-    cabalExec = "python " + os.path.join(rootPath, "third-party/HaskellBooster/python/cabal!")
+    cabalExec = os.path.join(rootPath, "third-party/HaskellBooster/shell/cabal!")
 
     pkgNames = []
     args = [] #["--show-details=streaming"]

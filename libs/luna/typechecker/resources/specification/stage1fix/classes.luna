@@ -1,0 +1,70 @@
+class List a:
+  Cons:
+    head :: a
+    tail :: List a
+
+    def map f:
+      Cons (f head) (tail.map f)
+
+  Nil:
+
+    def map f a:
+      Nil
+
+
+class Maybe a:
+  Just:
+    val :: a
+
+    def map f:
+      Just (f val)
+
+  Nothing:
+
+    def map f:
+      Nothing
+
+
+
+class Identity a:
+  val :: a
+
+  def map f:
+    Identity (f val)
+
+
+
+class BoxedInt:
+  val :: Int
+
+  def map f:
+    BoxedInt (f val)
+
+  def + x:
+    BoxedInt (val + x)
+
+# nie rozumiem ponizszych przykladow.
+# v.nonExistingMember zawsze failuje bo go nie ma przeciez!
+
+
+def foo1:
+  v = Nil
+  v.nonExistentMember # works. Haskell: let x = 123; y = head x          in 789
+                      #            ale: let x = 123; (y :: Int) = head x in 789 -- error!
+  123
+
+def foo2:
+  v = Nil
+  v.nonExistentMember # error. Haskell: let x = 123; y = head x in const 789 y
+  const 123 v
+
+def foo3:
+  v = Nil
+  v.nonExistentMember # works. Haskell: let x = 123; y = head x; z = const 789 y in 456
+  const 123 v
+  456
+
+def bar:
+  v = Nil
+  v.nonExistentMember # error. Haskell: let x = 123; y = head x; z = const 789 y in y
+  v

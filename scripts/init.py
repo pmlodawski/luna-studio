@@ -225,6 +225,7 @@ def main():
 
     try:
         checkPythonPkg("psutil")
+        checkPythonPkg("docopt")
     except:
         if not ask ("Unable to check for installed package, continue?"):
             raise 
