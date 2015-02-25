@@ -47,6 +47,9 @@ class LunaShow ast where
 
 instance LunaShow Expr where
     lunaShowC context expr =  case expr of
+        Expr.Accessor     _ acc      dst  -> case acc of
+            Expr.ConAccessor accName -> simple  [accName, " ", csLunaShow (context & accessorContent .~ True) dst]
+            Expr.VarAccessor accName -> simple  [csLunaShow (context & accessorContent .~ True) dst, ".", accName]
         Expr.Accessor     _ acc      dst  -> simple  [csLunaShow (context & accessorContent .~ True) dst, ".", view Expr.accName acc]
         Expr.App          _ src      args -> app $ csLunaShow context src : if f
                                                 then ["(", List.intercalate ", " $ map (csLunaShow $ accessorContent .~ False $ context) args, ")"]
