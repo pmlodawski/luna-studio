@@ -83,10 +83,9 @@ def main():
     for pkg in pkgs:
         print_info ("Compiling %s" % pkg.name)
 
-        os.chdir(pkg.sbox)
-
+        dstConfigCopy = pkg.sbox.path()
+        os.chdir(dstConfigCopy)
         cabalConfigSrc = os.path.join(rootPath, cabalConf)
-        dstConfigCopy = pkg.sbox
         shutil.copy(cabalConfigSrc, dstConfigCopy)
 
         instPath = os.path.join(dist_dir, 'bin', pkg.binpath)
