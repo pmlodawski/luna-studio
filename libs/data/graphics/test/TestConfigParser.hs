@@ -8,7 +8,6 @@ import qualified Data.ByteString.Lazy.Char8 as BS
 import Flowbox.Prelude
 import System.Directory
 
-
 data TestConfig a = 
     TestConfig     { host     :: a
                    , port     :: a
@@ -17,39 +16,36 @@ data TestConfig a =
                    , password :: a
                     } deriving (Show, Generic, Functor)
 
-
 instance FromJSON a => FromJSON (TestConfig a)
 instance ToJSON a => ToJSON (TestConfig a)
 
-
-getDefaultTestConfig = do
-    jsonDefault <- BS.readFile "./test/default.config"
+getTestConfig path = do
+    jsonDefault <- BS.readFile path
     let eDefConf = (eitherDecode jsonDefault) :: (Either String (TestConfig (Maybe String)))
     case eDefConf of 
         Left  _    -> error "no config"
         Right conf -> return $ fmap stringize conf
 
+--getTestConfig = do
+--    let def = "./default.config"
+--        cus = "./custom.config"
 
-getTestConfig = do
-    let def = "./default.config"
-        cus = "./custom.config"
+--    defaultExists <- doesFileExist $ def
+--    customExists  <- doesFileExist $ cus
+--    --if defaultExists
+--    jsonDefault <- BS.readFile "./default.config"
+--    jsonCustom  <- BS.readFile "./customm.config"
+--    --print ((eitherDecode json) :: (Either String TestConfig))
+--    let eDefConf = (eitherDecode jsonDefault) :: (Either String (TestConfig (Maybe String)))
+--        --eCusConf = (eitherDecode jsonCustom)  :: (Either String (TestConfig (Maybe String)))
+--    --print $ eDefConf
+--    --print $ eCusConf
+--        mergedConf = mergeConfs eDefConf eDefConf
 
-    defaultExists <- doesFileExist $ def
-    customExists  <- doesFileExist $ cus
-    --if defaultExists
-    jsonDefault <- BS.readFile "./default.config"
-    jsonCustom  <- BS.readFile "./customm.config"
-    --print ((eitherDecode json) :: (Either String TestConfig))
-    let eDefConf = (eitherDecode jsonDefault) :: (Either String (TestConfig (Maybe String)))
-        --eCusConf = (eitherDecode jsonCustom)  :: (Either String (TestConfig (Maybe String)))
-    --print $ eDefConf
-    --print $ eCusConf
-        mergedConf = mergeConfs eDefConf eDefConf
-
-    return mergedConf
-    --case eDefConf of 
-    --    Left  _    -> error "no config"
-    --    Right conf -> return conf
+--    return mergedConf
+--    --case eDefConf of 
+--    --    Left  _    -> error "no config"
+--    --    Right conf -> return conf
 
 getRemotePath conf = (host conf) ++ (port conf) ++ (rootDir conf)
 
@@ -62,7 +58,6 @@ mergeConfs (Right def) (Right cus)  = TestConfig h p r u pa where
     defList       = map ($ def) fields
     cusList       = map ($ cus) fields 
     fields        = [host, port, rootDir, user, password]
-
 
 stringize :: Maybe String -> String
 stringize Nothing  = ""
