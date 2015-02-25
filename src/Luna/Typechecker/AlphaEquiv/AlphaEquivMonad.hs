@@ -11,13 +11,9 @@ module Luna.Typechecker.AlphaEquiv.AlphaEquivMonad (
 
 
 import            Flowbox.Prelude
-import            Control.Monad               (ap)
-import            Data.Map.Strict             (Map)
-import qualified  Data.Map.Strict             as M
-import Data.List                        (sort,nub,sortBy,intercalate)
-import Data.Ord                         (comparing)
-import Data.Tuple                       (swap)
-import Data.Maybe
+import            Control.Monad     (ap)
+import            Data.Map.Strict   (Map)
+import qualified  Data.Map.Strict   as M
 
 import            Luna.Typechecker.Data.TVar
 
@@ -79,7 +75,7 @@ ttInsert a b = bittMap (M.insert a b) (M.insert b a)
 ttDelete :: TVar -> TVar -> AlphaEquivMonad ()
 ttDelete a b = bittMap (M.delete a) (M.delete b)
 
-
+ttLookup :: TVar -> TVar -> AlphaEquivMonad Bool
 ttLookup = ttEquiv
 
 ttEquiv :: TVar -> TVar -> AlphaEquivMonad Bool

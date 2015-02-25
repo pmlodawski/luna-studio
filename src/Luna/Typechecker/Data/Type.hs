@@ -2,17 +2,14 @@
 
 module Luna.Typechecker.Data.Type where
 
+
 import Flowbox.Prelude
-import Control.Monad hiding (mapM)
-import Data.Function (on)
+import Control.Monad    hiding (mapM)
 import Data.List
 import Data.Ord
 
 import Luna.Typechecker.AlphaEquiv
 import Luna.Typechecker.Data.TVar
-
-import Data.Map.IntConvertibleSet (IntConvertibleSet)
-import qualified Data.Map.IntConvertibleSet as S
 
 
 

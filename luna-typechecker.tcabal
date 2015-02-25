@@ -8,7 +8,7 @@ Build-Type:     Simple
 
 
 Library
-  GHC-Options:        -Wall -fno-warn-unused-do-bind -fno-warn-unused-binds -fno-warn-unused-matches -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction
+  GHC-Options:        -Wall -Werror -fno-warn-unused-do-bind -fno-warn-unused-binds -fno-warn-unused-matches -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction
   Default-Language:   Haskell2010
   Hs-Source-Dirs:     src
                     , tests-lib
@@ -52,7 +52,7 @@ Library
 
 
 Executable luna-typechecker-tests
-  GHC-Options:        -Wall -fno-warn-unused-do-bind -fno-warn-unused-binds -fno-warn-unused-matches -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction
+  GHC-Options:        -Wall -Werror -fno-warn-unused-do-bind -fno-warn-unused-binds -fno-warn-unused-matches -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction
   Hs-Source-Dirs:     tests
   Main-Is:            Main.hs
   Extensions:         ConstraintKinds,
@@ -82,7 +82,7 @@ Executable luna-typechecker-tests
 
 
 Executable luna-typechecker-pipeline
-  GHC-Options:        -Wall -fno-warn-unused-do-bind -fno-warn-unused-binds -fno-warn-unused-matches -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction
+  GHC-Options:        -Wall -Werror -fno-warn-unused-do-bind -fno-warn-unused-binds -fno-warn-unused-matches -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction
   Hs-Source-Dirs:     tests-pipeline
   Main-Is:            Main.hs
   Extensions:         ConstraintKinds,

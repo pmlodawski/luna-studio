@@ -6,13 +6,12 @@ module Luna.Typechecker.AlphaEquiv (
 
 
 import            Flowbox.Prelude
-import qualified  Data.Map.Strict                             as M
-import            Data.Maybe
-import Control.Monad (forM,zipWithM_)
-import Data.List (permutations)
+import            Control.Monad     (zipWithM_)
+import            Data.List         (permutations)
+import qualified  Data.Map.Strict   as M
 
-import Data.Map.IntConvertibleSet (IntConvertibleSet)
-import qualified Data.Map.IntConvertibleSet as S
+import            Data.IntConvertibleSet  (IntConvertibleSet)
+import qualified  Data.IntConvertibleSet  as S
 
 import            Luna.Typechecker.Data.TVar
 import            Luna.Typechecker.AlphaEquiv.AlphaEquivMonad
