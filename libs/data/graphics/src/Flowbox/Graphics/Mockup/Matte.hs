@@ -37,7 +37,8 @@ import qualified Flowbox.Graphics.Shader.Shader as Shader
 import           Flowbox.Math.Matrix            (Matrix2)
 import qualified Flowbox.Math.Matrix            as M
 import           Flowbox.Prelude                as P
-import Luna.Target.HS.Host.Lift (expandEl)
+import           Luna.Target.HS.Host.Lift       (expandEl)
+
 
 
 type ControlPoint2 a = RTuple (  VPS (Point2 a)
