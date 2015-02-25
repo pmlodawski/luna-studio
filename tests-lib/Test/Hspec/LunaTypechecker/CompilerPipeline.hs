@@ -36,6 +36,8 @@ import qualified  Luna.Pass.Transform.Parse.Stage1            as Stage1
 import qualified  Luna.Pass.Transform.Parse.Stage2            as Stage2
 import qualified  Luna.Pass.Transform.SSA                     as SSA
 
+import            Luna.Syntax.Name.Path (QualPath(QualPath))
+
 import qualified  Luna.Typechecker.Inference                  as PTyChk
 
 import qualified  Luna.System.Session                         as Session
@@ -67,7 +69,7 @@ lunacSteps fileName fileContents = do
     return $ CompilerPipelineResult res
 
   where
-    src = Src.Source fileName (Src.Text fileContents)
+    src = Src.Source (QualPath [] fileName) (Src.Text fileContents)
     procedure = do
         (ast1, astinfo1)                <- Pass.run1_ Stage1.pass src
         a_parsestage1_ast               .= Just ast1
