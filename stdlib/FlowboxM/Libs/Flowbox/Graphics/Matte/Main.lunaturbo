@@ -1,27 +1,18 @@
-# include ../../Prelude.lunaturbo
-# include ../Geom2D/Geom.lunaturbo
-# include Matte.lunaturbo
-
-foreign haskell def print msg:
-    autoLift1 print msg
-
-def foo a b:
-    print a
-    print b
+#include ../../Prelude.lunaturbo
+#include ../Geom2D/Geom.lunaturbo
+#include Matte.lunaturbo
 
 def main:
     # Std.rasterizeMask 43 113 ((True, [((Point2 286.000000 398.000000), Std.nopoint, Std.nopoint)]), (Just (True, [((Point2 286.000000 398.000000), Std.nopoint, Std.nopoint)])))
 
-    # point = Point2 286.000000 398.000000
+    point = Point2 286.000000 398.000000
 
-    # control = self.controlPoint point Nothing Nothing # (point, Nothing, Nothing)
+    control = self.controlPoint point Nothing Nothing # (point, Nothing, Nothing)
 
-    foo 1 2
+    zePath = self.path True [control] # (True, [control])
 
-    # zePath = self.path True [control] # (True, [control])
+    matte = self.mask zePath Nothing # (mask, Nothing)
 
-    # matte = self.mask zePath Nothing # (mask, Nothing)
-
-    # self.rasterizeMask 43 113 matte
+    img = self.rasterizeMask 43 113 matte
 
     ()
