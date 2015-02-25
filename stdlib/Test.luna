@@ -1,14 +1,6 @@
-foreign haskell def print msg:
-    autoLift1 print msg
-
-foreign haskell def whatis a:
-    autoLift1 print (val a)
-
 foreign haskell class List   
 
-foreign haskell def List.at idx:
-    liftF2 (!!) self idx
+def foo: 1
 
-def main:
-    a = [1,2,3]
-    print (a.at 0)
+def List.bar:
+    foo

@@ -49,3 +49,11 @@ lstCons = liftF2 (\a lst -> a : lst)
 --    print $ lstCons (val 4) $ lstCons (val 5) (val [])
 
 type List a = [a]
+
+
+
+--raiseVP :: Value m s a -> 
+
+data ETest = ETest deriving (Show)
+
+raiseVP = withValue (fmap (raise ETest))

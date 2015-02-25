@@ -10,13 +10,13 @@ module Flowbox.Batch.Project.ProjectManager (
     module Flowbox.Batch.Project.ProjectManager,
 ) where
 
-import           Flowbox.Batch.Project.Project               (Project)
-import qualified Flowbox.Batch.Project.Project               as Project
-import qualified Flowbox.Batch.Tools.Serialize.Proto.Project as ProjectSerialization
-import           Flowbox.Data.Graph                          hiding (Edge, delNode, insNewNode, lab, labNodes, nodes, updateNode)
-import qualified Flowbox.Data.Graph                          as Graph
+import           Flowbox.Batch.Project.Project   (Project)
+import qualified Flowbox.Batch.Project.Project   as Project
+import qualified Flowbox.Batch.Project.Serialize as Serialize
+import           Flowbox.Data.Graph              hiding (Edge, delNode, insNewNode, lab, labNodes, nodes, updateNode)
+import qualified Flowbox.Data.Graph              as Graph
 import           Flowbox.Prelude
-import           Flowbox.System.UniPath                      (UniPath)
+import           Flowbox.System.UniPath          (UniPath)
 
 
 
@@ -25,7 +25,7 @@ type ProjectManager = Graph Project ()
 
 openProject :: ProjectManager -> UniPath -> IO (ProjectManager, (Project.ID, Project))
 openProject projectManager ppath = do
-    project <- ProjectSerialization.restoreProject ppath
+    project <- Serialize.restoreProject ppath
     let (newProjectManager, projectID) = insNewNode project projectManager
     return (newProjectManager, (projectID, project))
 

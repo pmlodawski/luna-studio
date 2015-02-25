@@ -79,7 +79,7 @@ zdotdir = None  # see notes for system.DARWIN in workon(name) below (grep for OS
 
 def workon(name):
     if not checkAndHandleInitialized('dist'):
-        print_info ("It seems that sandbox is not initialized. Running scripts/init first.")
+        print_info ("It seems that flowbox-dev environment is not initialized. Running scripts/init first.")
         if SILENTINSTALL:
             try_call('python2.7 scripts/init -y')
         else:
@@ -92,12 +92,9 @@ def workon(name):
     project   = pkgDb[name]
     pkgs      = project.targets()
     for pkg in pkgs:
-
-        print_info("Setting environment for '%s' development, under path %s" % (pkg.name, pkg.path))
-
-
+        sbox = pkg.sbox.path()
+        print_info("Setting environment for '%s' development, under path %s" % (pkg.name, sbox))
         targets.append(pkg.path)
-        sbox = os.path.join(rootPath, 'dist', pkg.path)
         if not checkAndHandleInitialized(sbox):
             os.makedirs(sbox)
             os.chdir(sbox)
