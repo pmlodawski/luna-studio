@@ -11,7 +11,7 @@ foreign haskell class RGBA a:
 foreign haskell class RGB a:
     RGB: rgbR, rgbG, rgbB :: a
 
-alias ColorRGBA = RGBA Float
+alias Color = RGBA Float
 alias ColorRGB = RGB Float
 alias ColorBlack = RGBA Float
 alias ColorWhite = RGBA Float
