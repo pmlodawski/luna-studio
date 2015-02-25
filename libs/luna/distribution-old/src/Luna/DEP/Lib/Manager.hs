@@ -10,7 +10,7 @@ module Luna.DEP.Lib.Manager (
     module Luna.DEP.Lib.Manager,
 ) where
 
-import           Flowbox.Data.Graph hiding (Edge, delNode, empty, insNewNode, lab, labNodes, nodes, updateNode)
+import           Flowbox.Data.Graph hiding (Edge, delNode, empty, insNewNode, lab, labNodes, labVtx, labVtxs, nodes, updateNode)
 import qualified Flowbox.Data.Graph as Graph
 import           Flowbox.Prelude
 import           Luna.DEP.Lib.Edge  (Edge)
@@ -22,8 +22,20 @@ import qualified Luna.DEP.Lib.Lib   as Library
 type LibManager = Graph Library Edge
 
 
+mk :: [(Library.ID, Library)] -> [LEdge Edge] -> LibManager
+mk l e = Graph.mkGraph (map (_1 %~ Library.toInt) l) e
+
+
 lab :: LibManager -> Library.ID -> Maybe Library
 lab lm = Graph.lab lm . Library.toInt
+
+
+labVtx :: LibManager -> Library.ID -> Maybe (Library.ID, Library)
+labVtx lm i = (,) i <$> lab lm i
+
+
+labVtxs :: LibManager -> [Library.ID] -> Maybe [(Library.ID, Library)]
+labVtxs lm = mapM (labVtx lm)
 
 
 labNodes :: LibManager -> [(Library.ID, Library)]
