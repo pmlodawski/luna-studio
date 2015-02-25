@@ -1,17 +1,14 @@
 foreign haskell def print msg:
     autoLift1 print msg
 
-foreign haskell class Float
+foreign haskell def whatis a:
+    autoLift1 print (val a)
 
-foreign haskell def Float.* a:
-    liftF2 (*) self a
+foreign haskell class List   
 
-def * a b:
-    a.* b
-
-def foo a b:
-    a.* b
+foreign haskell def List.at idx:
+    liftF2 (!!) self idx
 
 def main:
-    print (1.0 * 2.0)
-    print (foo 3.0 4.0)
+    a = [1,2,3]
+    print (a.at 0)
