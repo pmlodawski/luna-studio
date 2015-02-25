@@ -1,22 +1,14 @@
 module Luna.Typechecker.Data.Constraint where
 
 
-import Flowbox.Prelude
-import Data.List                        (sort,nub,sortBy,intercalate,permutations)
-import Data.Ord                         (comparing)
-import Data.Function                    (on)
-import Data.Maybe                    (isNothing,isJust,fromJust)
-import Control.Monad                    (zipWithM_)
-import            Control.Monad               (ap, forM)
-import Data.Ord                         (comparing)
-import qualified  Data.Map.Strict             as M
+import            Flowbox.Prelude
 
-import Data.Map.IntConvertibleSet (IntConvertibleSet)
-import qualified Data.Map.IntConvertibleSet as S
+import qualified  Data.IntConvertibleSet as S
 
-import Luna.Typechecker.AlphaEquiv
-import Luna.Typechecker.Data.TVar
-import Luna.Typechecker.Data.Predicate
+import            Luna.Typechecker.AlphaEquiv
+import            Luna.Typechecker.Data.TVar
+import            Luna.Typechecker.Data.Predicate
+
 
 
 data Constraint = C [Predicate]

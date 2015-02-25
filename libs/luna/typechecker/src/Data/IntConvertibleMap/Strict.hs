@@ -1,6 +1,6 @@
 {-# LANGUAGE GADTs #-}
 
-module Data.Map.IntConvertibleMap (
+module Data.IntConvertibleMap.Strict (
     IntConvertibleMap,
     toList, fromList,
     empty, null, size,
@@ -12,18 +12,13 @@ module Data.Map.IntConvertibleMap (
 
 
 import            Flowbox.Prelude     (Maybe(..), Int, Bool, ($), (.), fmap)
-
 import            Data.Function       (on)
+import            Data.Proxy
 
 import            Data.IntMap.Strict  (IntMap)
 import qualified  Data.IntMap.Strict  as IntMap
-
 import qualified  Data.Maps           as GM
-
-import            Data.Proxy
-
 import            Data.Packable
-
 
 
 

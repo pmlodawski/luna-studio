@@ -1,13 +1,13 @@
 module Luna.Typechecker.Data.Predicate where
 
 
-import Flowbox.Prelude
+import            Flowbox.Prelude
 
-import Luna.Typechecker.AlphaEquiv
-import Luna.Typechecker.Data.Type
+import qualified  Data.IntConvertibleSet as S
 
-import Data.Map.IntConvertibleSet (IntConvertibleSet)
-import qualified Data.Map.IntConvertibleSet as S
+import            Luna.Typechecker.AlphaEquiv
+import            Luna.Typechecker.Data.Type
+
 
 
 data Predicate  = TRUE

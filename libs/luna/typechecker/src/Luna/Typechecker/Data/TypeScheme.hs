@@ -4,22 +4,15 @@
 module Luna.Typechecker.Data.TypeScheme where
 
 
-import Flowbox.Prelude
-import Data.List                        (sort,nub,sortBy,intercalate,permutations)
-import Control.Monad                    (zipWithM_)
-import Control.Monad                    (filterM,forM)
-import Data.List                        (sortBy, nub)
-import Data.Ord                         (comparing)
-import qualified  Data.Map.Strict             as M
-import Data.Maybe
+import            Flowbox.Prelude
 
-import Data.Map.IntConvertibleSet (IntConvertibleSet)
-import qualified Data.Map.IntConvertibleSet as S
+import qualified  Data.IntConvertibleSet as S
 
-import Luna.Typechecker.AlphaEquiv
-import Luna.Typechecker.Data.Constraint
-import Luna.Typechecker.Data.Type
-import Luna.Typechecker.Data.TVar
+import            Luna.Typechecker.AlphaEquiv
+import            Luna.Typechecker.Data.Constraint
+import            Luna.Typechecker.Data.Predicate
+import            Luna.Typechecker.Data.Type
+import            Luna.Typechecker.Data.TVar
 
 
 
@@ -29,7 +22,9 @@ data TypeScheme = Mono Type
 
 
 instance AlphaEquiv TypeScheme where
-    equiv    (Mono a)              (Mono b)           = equiv a b
+    equiv    (Mono a)              (Mono b)  = equiv a b
+    equiv    (Mono ty)             y         = equiv (Poly [] (C [TRUE]) ty) y
+    equiv    x                     (Mono ty) = equiv x (Poly [] (C [TRUE]) ty)
     equiv p1@(Poly tvs1 c1 ty1) p2@(Poly tvs2 c2 ty2)
       | S.size free1  /= S.size free2  = notAlphaEquivalent
       | S.size quant1 /= S.size quant2 = notAlphaEquivalent
@@ -45,6 +40,7 @@ instance AlphaEquiv TypeScheme where
             tvars_tvs2 = S.fromList tvs2
             free2      = (freevars c2 <> freevars ty2) `S.difference` tvars_tvs2
             quant2     = tvars_tvs2 `S.intersection` (freevars c2 <> freevars ty2)
+
 
         -- PERFORMANCE [kgdk] 23 lut 2015:
         -- currently: O(n*n!)
