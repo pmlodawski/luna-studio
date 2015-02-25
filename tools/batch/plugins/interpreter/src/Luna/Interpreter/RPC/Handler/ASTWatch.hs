@@ -10,7 +10,6 @@
 module Luna.Interpreter.RPC.Handler.ASTWatch where
 
 import qualified Flowbox.Batch.Handler.Common                                                                  as Batch
-import           Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project                                        ()
 import           Flowbox.Bus.RPC.RPC                                                                           (RPC)
 import           Flowbox.Control.Error                                                                         hiding (err)
 import           Flowbox.Data.Convert
