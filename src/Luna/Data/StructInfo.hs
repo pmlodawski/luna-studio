@@ -13,8 +13,6 @@ import Flowbox.Prelude
 
 import GHC.Generics        (Generic)
 
-import Data.Maybe (fromJust)
-
 
 import           Data.IntMap  (IntMap)
 import           Data.Map     (Map)
@@ -99,14 +97,12 @@ scopeLookup pid info = case Map.lookup pid (_scope info) of
         Nothing          -> (mempty, mempty)
         Just (Scope v t) -> (v,t)
 
-
 regAlias :: ID -> NamePath -> ScopeID -> StructInfo -> StructInfo
 regAlias id name scopeID structInfo = case mvid of
     Just vid -> structInfo & alias   . at id ?~ vid
     Nothing  -> structInfo & orphans . at id ?~ name
     where vnames = structInfo ^? scope . ix scopeID . varnames
           mvid   = join $ fmap (MapForest.lookup $ NamePath.toList name) vnames
-
 
 ------------------------------------------------------------------------
 -- Instances
