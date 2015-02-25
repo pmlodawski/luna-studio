@@ -15,14 +15,14 @@ foreign haskell def Image.gammaFromLinear gamma:
 foreign haskell def Image.clamp thresholds clamps:
     liftF3 clampLuna thresholds clamps self
 
-foreign haskell def Image.offset value:
-    liftF2 offsetLuna value self
+foreign haskell def Image.offset value matte:
+    liftF3 offsetLuna value matte self
 
-foreign haskell def Image.contrast value:
-    liftF2 contrastLuna value self
+foreign haskell def Image.contrast value matte:
+    liftF3 contrastLuna value matte self
 
-foreign haskell def Image.exposure blackpoint ex:
-    liftF3 exposureLuna blackpoint ex self
+foreign haskell def Image.exposure blackpoint ex matte:
+    liftF4 exposureLuna blackpoint ex matte self
 
 foreign haskell def Image.saturate saturation:
     liftF2 saturateLuna saturation self
@@ -44,14 +44,14 @@ foreign haskell def Image.saturate saturation:
 #               saturationRangeStart saturationRangeEnd saturationAdjustment saturationRolloff
 #               brightnessRangeStart brightnessRangeEnd brightnessAdjustment brightnessRolloff self```
 
-foreign haskell def Image.multiply val:
-    liftF2 multiplyLuna val self
+foreign haskell def Image.multiply val matte:
+    liftF2 multiplyLuna val matte self
 
-foreign haskell def Image.gamma val:
-    liftF2 gammaLuna val self
+foreign haskell def Image.gamma val matte:
+    liftF2 gammaLuna val matte self
 
-foreign haskell def Image.grade blackpoint whitepoint lift gain multiply offset gamma:
-    liftF5 (gradeLunaColor blackpoint whitepoint lift) gain multiply offset gamma self
+foreign haskell def Image.grade blackpoint whitepoint lift gain multiply offset gamma matte:
+    liftF5 (gradeLunaColor blackpoint whitepoint lift gain) multiply offset gamma matte self
 
 alias ColorCorrectGUI = (CurveGUI, CurveGUI)
 alias HueCorrectGUI = (CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI)
