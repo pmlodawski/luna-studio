@@ -89,6 +89,7 @@ import           Luna.Interpreter.Proto.CallPointPath                           
 import qualified Luna.Interpreter.RPC.Handler.Cache                                                            as CacheWrapper
 import           Luna.Interpreter.RPC.Handler.Sync                                                             (sync)
 import qualified Luna.Interpreter.RPC.Handler.Var                                                              as Var
+import qualified Luna.Interpreter.Session.Memory.GPU                                                           as GPUMemory
 import           Luna.Interpreter.Session.Memory.Manager                                                       (MemoryManager)
 import           Luna.Interpreter.Session.Session                                                              (SessionST)
 
@@ -319,6 +320,7 @@ graphNodeRemove (GraphNodeRemove.Update request updateNo) = do
         nodeIDs   = GraphNodeRemove.nodeIDs request
     mapM_ (CacheWrapper.modifyNodeSuccessors projectID libraryID bc) nodeIDs
     mapM_ (CacheWrapper.deleteNode projectID libraryID) nodeIDs
+    CacheWrapper.interpreterDo projectID GPUMemory.performGC
     sync updateNo $ GraphHandler.nodeRemove request
     --TODO[PM] : remove old time refs if were present
 
