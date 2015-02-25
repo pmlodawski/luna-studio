@@ -9,7 +9,8 @@
 module Flowbox.ProjectManager.RPC.Handler.Graph where
 
 import           Control.Monad
-import qualified Data.Either as Either
+import qualified Data.Either   as Either
+import qualified Data.Sequence as Sequence
 
 import qualified Flowbox.Batch.Handler.Common                                                                 as Batch
 import qualified Flowbox.Batch.Handler.Graph                                                                  as BatchG
@@ -83,30 +84,22 @@ lookupMany request@(LookupMany.Request tnodeIDs tbc tlibID tprojectID _) = do
         notFound = Either.lefts items
     return $ LookupMany.Status request (encode found) (encodeP notFound)
 
+nodeAddUndo :: NodeAdd.Request -> RPC Context IO NodeAdd.Update
+nodeAddUndo = liftM fst . nodeAdd
 
-nodeAdd :: NodeAdd.Request -> RPC Context IO NodeAdd.Update
-nodeAdd request@(NodeAdd.Request tnode tbc tlibID tprojectID _) = do
+nodeAdd :: NodeAdd.Request -> RPC Context IO (NodeAdd.Update, Register.Request)
+nodeAdd request@(NodeAdd.Request tnode tbc tlibID tprojectID astID) = do
     bc <- decodeE tbc
     (_ :: Int, node) <- decodeE tnode
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     newNodeID <- BatchG.addNode node bc libID projectID
     updateNo <- Batch.getUpdateNo
-    return $ NodeAdd.Update request (encode (newNodeID, node)) updateNo
-
---nodeAdd2 :: NodeAdd.Request -> RPC Context IO (NodeAdd.Update, Register.Request)
---nodeAdd2 request@(NodeAdd.Request tnode tbc tlibID tprojectID astID) = do
---    bc <- decodeE tbc
---    (_ :: Int, node) <- decodeE tnode
---    let libID     = decodeP tlibID
---        projectID = decodeP tprojectID
---    newNodeID <- BatchG.addNode node bc libID projectID
---    updateNo <- Batch.getUpdateNo
---    return $ ( NodeAdd.Update request (encode (newNodeID, node)) updateNo
---             , Register.Request
---                (encodeP $ Message.mk "project.library.ast.function.graph.node.rm.request" $ NodeRemove.Request (encode newNodeID) tbc tlibID tprojectID astID)
---                (encodeP $ Message.mk "project.library.ast.function.graph.node.add.request" $ request)
---             )
+    return $ ( NodeAdd.Update request (encode (newNodeID, node)) updateNo
+             , Register.Request
+                (encodeP $ Message.mk "project.library.ast.function.graph.node.remove.request" $ NodeRemove.Request (Sequence.singleton $ encodeP newNodeID) tbc tlibID tprojectID astID)
+                (encodeP $ Message.mk "project.library.ast.function.graph.node.addundone.request" $ request)
+             )
 
 nodeModify :: NodeModify.Request -> RPC Context IO NodeModify.Update
 nodeModify request@(NodeModify.Request tnode tbc tlibID tprojectID _) = do
