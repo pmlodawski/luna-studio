@@ -91,7 +91,7 @@ insert k m = IntConvertibleSet Proxy $ IntSet.insert (unpack k) (toIntSet m)
 delete :: (Unpack k Int) => k -> IntConvertibleSet k -> IntConvertibleSet k
 delete k m = IntConvertibleSet Proxy $ IntSet.delete (unpack k) (toIntSet m)
 
-empty :: IntConvertibleSet k
+empty :: (Unpack k Int) => IntConvertibleSet k
 empty = IntConvertibleSet Proxy $ IntSet.empty
 
 union :: IntConvertibleSet k -> IntConvertibleSet k -> IntConvertibleSet k
