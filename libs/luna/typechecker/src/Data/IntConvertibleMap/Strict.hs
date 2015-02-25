@@ -1,5 +1,3 @@
-{-# LANGUAGE GADTs #-}
-
 module Data.IntConvertibleMap.Strict (
     IntConvertibleMap,
     toList, fromList,
@@ -22,7 +20,7 @@ import            Data.Packable
 
 
 
-data IntConvertibleMap k v where IntConvertibleMap :: (Unpack k Int) => Proxy k -> IntMap v -> IntConvertibleMap k v
+data IntConvertibleMap k v = IntConvertibleMap { proxy :: (Proxy k), toIntMap :: (IntMap v) }
 
 
 instance (Packable k Int) => GM.GenMap (IntConvertibleMap k v) k v where
@@ -41,13 +39,8 @@ instance (Packable k Int) => GM.GenMap (IntConvertibleMap k v) k v where
     findWithDefault = findWithDefault
 
 
-toIntMap :: IntConvertibleMap k v -> IntMap v
-toIntMap (IntConvertibleMap _ mp) = mp
 
-
-
-
-toList :: (Packable k Int) => IntConvertibleMap k v -> [(k, v)]
+toList :: (Pack Int k) => IntConvertibleMap k v -> [(k, v)]
 toList = fmap packKey . IntMap.toList . toIntMap
   where packKey (k,v) = (pack k, v)
 
