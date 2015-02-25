@@ -16,7 +16,6 @@ module Flowbox.Bus.RPC.HandlerMap (
     lookupAndCall,
 ) where
 
-import           Control.Monad.IO.Class    (MonadIO)
 import           Control.Monad.Trans.State
 import           Data.Map                  as X
 import qualified Data.Map                  as Map
@@ -28,7 +27,6 @@ import           Flowbox.Bus.RPC.RPC                      (RPC)
 import           Flowbox.Prelude                          hiding (error)
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.Text.ProtocolBuffers             as Proto
-import qualified Generated.Proto.Urm.URM.Register.Request as Register
 
 
 
