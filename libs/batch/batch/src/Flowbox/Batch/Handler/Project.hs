@@ -8,16 +8,16 @@
 
 module Flowbox.Batch.Handler.Project where
 
-import           Flowbox.Batch.Batch                         (Batch)
-import qualified Flowbox.Batch.Handler.Common                as Batch
-import           Flowbox.Batch.Project.Project               (Project)
-import qualified Flowbox.Batch.Project.Project               as Project
-import qualified Flowbox.Batch.Project.ProjectManager        as ProjectManager
-import qualified Flowbox.Batch.Tools.Serialize.Proto.Project as ProjectSerialization
+import           Flowbox.Batch.Batch                  (Batch)
+import qualified Flowbox.Batch.Handler.Common         as Batch
+import           Flowbox.Batch.Project.Project        (Project)
+import qualified Flowbox.Batch.Project.Project        as Project
+import qualified Flowbox.Batch.Project.ProjectManager as ProjectManager
+import qualified Flowbox.Batch.Project.Serialize      as Serialize
 import           Flowbox.Prelude
-import           Flowbox.System.UniPath                      (UniPath)
-import qualified Flowbox.System.UniPath                      as UniPath
-import           Luna.DEP.Graph.Attributes                   (Attributes)
+import           Flowbox.System.UniPath               (UniPath)
+import qualified Flowbox.System.UniPath               as UniPath
+import           Luna.DEP.Graph.Attributes            (Attributes)
 
 
 
@@ -58,4 +58,4 @@ closeProject projectID = Batch.projectManagerOp (\projectManager ->
 storeProject :: Project.ID -> Maybe UniPath -> Batch ()
 storeProject projectID mpath = do
     project <- Batch.getProject projectID
-    liftIO $ ProjectSerialization.storeProject project mpath
+    liftIO $ Serialize.storeProject project mpath

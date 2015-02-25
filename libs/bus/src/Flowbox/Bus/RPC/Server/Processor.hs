@@ -12,7 +12,6 @@ module Flowbox.Bus.RPC.Server.Processor where
 
 import           Control.Monad             (liftM)
 import qualified Control.Monad.Catch       as Catch
-import           Control.Monad.IO.Class    (MonadIO)
 import           Control.Monad.Trans.State
 import qualified Data.Maybe                as Maybe
 
@@ -30,7 +29,7 @@ import           Generated.Proto.Rpc.Response (Response)
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 singleResult :: MonadIO m => (a -> m b) -> a -> m [b]

@@ -13,7 +13,6 @@
 module Luna.Interpreter.Proto.CallPointPath where
 
 import qualified Flowbox.Batch.Project.Project                          as Project
-import           Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project ()
 import           Flowbox.Data.Convert
 import qualified Generated.Proto.Interpreter.CallPointPath              as Gen
 import           Luna.Interpreter.Proto.CallPoint                       ()
