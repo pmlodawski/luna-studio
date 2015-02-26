@@ -7,32 +7,105 @@ Build-Type:     Simple
 
 
 
-Executable luna-typechecker
-  GHC-Options:        -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind
+Library
+  GHC-Options:        -Wall -Werror -fno-warn-unused-do-bind -fno-warn-unused-binds -fno-warn-unused-matches -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction
+  Default-Language:   Haskell2010
   Hs-Source-Dirs:     src
-  Main-Is:            Main.hs
+                    , tests-lib
+  Exposed-modules:    `findmodules('src', '.*\.hs')`
+                    , `findmodules('tests-lib', '.*\.hs')`
+  Extensions:         ConstraintKinds,
+                      DefaultSignatures,
+                      DeriveDataTypeable,
+                      DeriveFoldable,
+                      DeriveFunctor,
+                      DeriveGeneric,
+                      DeriveTraversable,
+                      DoAndIfThenElse,
+                      EmptyDataDecls,
+                      FlexibleContexts,
+                      FlexibleInstances,
+                      GeneralizedNewtypeDeriving,
+                      LambdaCase,
+                      MultiParamTypeClasses,
+                      MultiWayIf,
+                      NoImplicitPrelude,
+                      OverloadedStrings,
+                      StandaloneDeriving,
+                      TemplateHaskell
   Build-Depends:      base
+                    , containers
+                    , data-default
                     , either
+                    , hspec
+                    , hspec-expectations
+                    , HUnit
                     , lens
                     , luna-core
-                    , luna-logger
-                    , luna-parser
                     , luna-pass
+                    , flowbox-utils
                     , mtl
+                    , pretty
+                    , pretty-show
+                    , text
                     , transformers
 
 
 Executable luna-typechecker-tests
-  GHC-Options:        -Wall -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction -fwarn-unused-do-bind
-  Hs-Source-Dirs:     test
+  GHC-Options:        -Wall -Werror -fno-warn-unused-do-bind -fno-warn-unused-binds -fno-warn-unused-matches -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction
+  Hs-Source-Dirs:     tests
   Main-Is:            Main.hs
+  Extensions:         ConstraintKinds,
+                      DefaultSignatures,
+                      DeriveDataTypeable,
+                      DeriveFoldable,
+                      DeriveFunctor,
+                      DeriveGeneric,
+                      DeriveTraversable,
+                      DoAndIfThenElse,
+                      EmptyDataDecls,
+                      FlexibleContexts,
+                      FlexibleInstances,
+                      GeneralizedNewtypeDeriving,
+                      LambdaCase,
+                      MultiParamTypeClasses,
+                      MultiWayIf,
+                      --NoImplicitPrelude,
+                      OverloadedStrings,
+                      StandaloneDeriving,
+                      TemplateHaskell
   Build-Depends:      base
-                    , either
+                    , containers
                     , hspec
-                    , lens
-                    , luna-core
-                    , luna-logger
-                    , luna-parser
-                    , luna-pass
-                    , mtl
-                    , transformers
+                    , luna-typechecker
+                    , flowbox-utils
+
+
+Executable luna-typechecker-pipeline
+  GHC-Options:        -Wall -Werror -fno-warn-unused-do-bind -fno-warn-unused-binds -fno-warn-unused-matches -fwarn-tabs -fwarn-incomplete-record-updates -fwarn-monomorphism-restriction
+  Hs-Source-Dirs:     tests-pipeline
+  Main-Is:            Main.hs
+  Extensions:         ConstraintKinds,
+                      DefaultSignatures,
+                      DeriveDataTypeable,
+                      DeriveFoldable,
+                      DeriveFunctor,
+                      DeriveGeneric,
+                      DeriveTraversable,
+                      DoAndIfThenElse,
+                      EmptyDataDecls,
+                      FlexibleContexts,
+                      FlexibleInstances,
+                      GeneralizedNewtypeDeriving,
+                      LambdaCase,
+                      MultiParamTypeClasses,
+                      MultiWayIf,
+                      NoImplicitPrelude,
+                      OverloadedStrings,
+                      StandaloneDeriving,
+                      TemplateHaskell
+  Build-Depends:      base
+                    , luna-typechecker
+                    , pretty
+                    , flowbox-utils
+

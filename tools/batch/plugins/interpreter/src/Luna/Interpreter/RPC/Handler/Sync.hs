@@ -15,7 +15,6 @@ import qualified Flowbox.Batch.Handler.Common                                   
 import qualified Flowbox.Batch.Project.Project                                  as Project
 import           Flowbox.Batch.Project.ProjectManager                           (ProjectManager)
 import qualified Flowbox.Batch.Project.ProjectManager                           as ProjectManager
-import           Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project         ()
 import           Flowbox.Bus.RPC.RPC                                            (RPC)
 import           Flowbox.Control.Error                                          hiding (err)
 import           Flowbox.Control.Monad.Morph
@@ -34,7 +33,7 @@ import           Luna.Interpreter.Session.Session                               
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 --- helpers ---------------------------------------------------------------
 
@@ -72,6 +71,7 @@ sync updateNo syncOp = do
     hoistSessionST $ void syncOp
     testUpdateNo updateNo
     syncLibManager
+
 
 --- handlers --------------------------------------------------------------
 
