@@ -93,3 +93,6 @@ foreign haskell class InterpolationFilter:
 
 foreign haskell def Image.multisample grid filter:
     liftF3 multisampleChannelsLuna grid filter self
+
+foreign haskell def Image.histEq bins:
+    liftF2 histEqLuna bins self

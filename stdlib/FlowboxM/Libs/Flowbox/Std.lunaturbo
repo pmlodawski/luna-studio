@@ -12,11 +12,11 @@ foreign haskell import qualified Data.Array.Accelerate as A
 #include Graphics/Image/View.lunaturbo
 
 #include Graphics/Image/Constants.lunaturbo
-#include Graphics/Image/ColorCorrection.lunaturbo
 #include Graphics/Image/Merge.lunaturbo
 #include Graphics/Image/Noise.lunaturbo
 #include Graphics/Image/Dithering.lunaturbo
 
+#include Graphics/Compo/ColorCorrect/ColorCorrection.lunaturbo
 #include Graphics/Compo/FilterTransform/FilterTransform.lunaturbo
 #include Graphics/Compo/Keying/Keying.lunaturbo
 

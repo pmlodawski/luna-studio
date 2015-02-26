@@ -2,7 +2,11 @@
 #                GEOM
 #
 
+foreign haskell import Flowbox.Geom2D.ControlPoint
+foreign haskell import Flowbox.Geom2D.Mask
+foreign haskell import Flowbox.Geom2D.Path
 foreign haskell import Flowbox.Geom2D.Rectangle
+foreign haskell import Flowbox.Geom2D.Shape
 foreign haskell import Flowbox.Graphics.Mockup.Transform
 
 foreign haskell import Flowbox.Graphics.Mockup (Point2 (..))
@@ -40,35 +44,21 @@ def point x y:
 foreign haskell def nopoint:
     val (Nothing :: Maybe (Point2 Float))
 
-# foreign haskell class ControlPoint a:
-# class ControlPoint a:
-#     point               :: Point2 a
-#     handleIn, handleOut :: Maybe (Point2 a)
+foreign haskell class ControlPoint a:
+    ControlPoint:
+        point               :: Point2 a
+        handleIn, handleOut :: Maybe (Point2 a)
 
-# foreign haskell class Path a:
-#     closed   :: Bool
-#     vertices :: [ControlPoint a]
+foreign haskell class Path a:
+    Path:
+        closed   :: Bool
+        vertices :: [ControlPoint a]
 
-# foreign haskell class Shape a:
-#     paths :: [Path a]
+foreign haskell class Shape a:
+    Shape:
+        paths :: [Path a]
 
-# foreign haskell class Mask a:
-#     path    :: Path a
-#     feather :: Maybe (Path a)
-
-# alias ControlPoint a = (Point2 a, Maybe (Point2 a), Maybe (Point2 a))
-# alias Path a         = (Bool, [ControlPoint a])
-# alias Shape a        = [Path a]
-# alias Mask a         = (Path a, Maybe (Path a))
-
-def controlPoint point handleIn handleOut:
-    (point, handleIn, handleOut)
-
-def path closed vertices:
-    (closed, vertices)
-
-def shape paths:
-    paths
-
-def mask path feather:
-    (path, feather)
+foreign haskell class Mask a:
+    Mask:
+        path    :: Path a
+        feather :: Maybe (Path a)
