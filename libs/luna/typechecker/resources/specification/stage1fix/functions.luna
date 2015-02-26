@@ -1,0 +1,10 @@
+def id x: x
+
+def const x _: x
+
+def flip f x y: f y x
+
+def foo:
+  x = 123
+  x = "ala"
+  x = 456.0
