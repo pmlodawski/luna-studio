@@ -242,26 +242,23 @@ mkFuncParser baseVar (id, mpatt) = case mpatt of
     Just patt@(NamePat.NamePatDesc pfx base segs) -> ParserState.withReserved (tail segNames) 
                                                    $ labeled $ Expr.App <$> pattParser
         where NamePat.SegmentDesc baseName baseDefs = base
-              baseParser                                = NamePat.Segment <$> baseMultiVar <*> baseArgParser baseDefs
-              segParser (NamePat.SegmentDesc name defs) = NamePat.Segment <$> Tok.symbol name <*> segArgParser defs
-              baseArgParser        = if null segs then simpleArgParser
-                                                  else cmplexArgParser
-              segArgParser    defs = fmap takeJustArgs $ parseSegArgs defs
-              cmplexArgParser defs = fmap takeJustArgs $ parseCmplexArgs defs
-              simpleArgParser defs = fmap takeJustArgs $ parseSimpleArgs defs
-              takeJustArgs         = fmap fromJust . filter isJust 
-              argSimpleExpr        = appArg pEntBaseSimpleE
-              argCmplexExpr        = appArg (opTE pEntBaseSimpleE)
-              segNames             = NamePat.segmentNames patt
-              pattParser           = NamePat Nothing <$> baseParser   <*> mapM segParser segs
-              baseMultiVar         = labeled . pure $ Expr.Var $ Expr.Variable (vname $ NamePat.toNamePath patt) ()
-              condParser p req     = if req then just  p
-                                            else maybe p
-              parseCmplexArgs args   = mapM (condParser argCmplexExpr) args
-              parseSimpleArgs args   = mapM (condParser argSimpleExpr) args
-              parseSegArgs []      = pure []
-              parseSegArgs (a:[])  = (:[]) <$> condParser argSimpleExpr a
-              parseSegArgs (a:as)  = (:) <$> condParser argCmplexExpr a <*> parseSegArgs as
+              baseParser                                = NamePat.Segment <$> baseMultiVar <*> defBaseParser baseDefs
+              segParser (NamePat.SegmentDesc name defs) = NamePat.Segment <$> Tok.symbol name <*> defSegParser defs
+
+              defSegParser defs  = fmap takeJustArgs $ parseSegArgs defs
+              defBaseParser defs = fmap takeJustArgs $ parseBaseArgs defs
+              takeJustArgs       = fmap fromJust . filter isJust 
+              argSimpleExpr      = appArg pEntBaseSimpleE
+              argCmplexExpr      = appArg (opTE pEntBaseSimpleE)
+              segNames           = NamePat.segmentNames patt
+              pattParser         = NamePat Nothing <$> baseParser   <*> mapM segParser segs
+              baseMultiVar       = labeled . pure $ Expr.Var $ Expr.Variable (vname $ NamePat.toNamePath patt) ()
+              condParser p req   = if req then just  p
+                                          else maybe p
+              parseBaseArgs args  = mapM (condParser argCmplexExpr) args
+              parseSegArgs []     = pure []
+              parseSegArgs (a:[]) = (:[]) <$> condParser argSimpleExpr a
+              parseSegArgs (a:as) = (:) <$> condParser argCmplexExpr a <*> parseSegArgs as
 
 
 notReserved p = do
