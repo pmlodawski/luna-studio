@@ -19,7 +19,12 @@ def main:
     print "color test"
 
     rgba = RGBA 1.0 2.0 3.0 4.0
+    RGBA r g b a = rgba
     mult = ColorMult rgba 0.5
 
     print rgba.toRGBA
     print mult.toRGBA
+    print r
+    print g
+    print b
+    print a

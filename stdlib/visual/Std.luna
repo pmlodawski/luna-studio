@@ -152,19 +152,19 @@ alias ColorCorrectGUI = (CurveGUI, CurveGUI)
 alias HueCorrectGUI = (CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI)
 
 def Image.colorCorrect self::Image
-                       master::ColorCC
-                       shadows::ColorCC
-                       midtones::ColorCC
-                       highlights::ColorCC
+                       master::ColorCC Color
+                       shadows::ColorCC Color
+                       midtones::ColorCC Color
+                       highlights::ColorCC Color
                        -> Image:
     ```liftF5 colorCorrectLuna' #{master} #{shadows} #{midtones} #{highlights} #{self}```
 
 def Image.colorCorrectCurves self::Image
                        curves::ColorCorrectGUI
-                       master::ColorCC
-                       shadows::ColorCC
-                       midtones::ColorCC
-                       highlights::ColorCC
+                       master::ColorCC Color
+                       shadows::ColorCC Color
+                       midtones::ColorCC Color
+                       highlights::ColorCC Color
                        -> Image:
     ```liftF5 (colorCorrectLunaCurves curves) #{master} #{shadows} #{midtones} #{highlights} #{self}```
 
@@ -473,10 +473,8 @@ class ```RGBA``` a:
 
 alias Color = ColorMult (RGBA Float)
 
-# alias ColorCC = (Color, Color, Color, Color, Color)
-
-class ColorCC:
-    saturation, contrast, gamma, gain, offset :: Color
+class ColorCC color:
+    saturation, contrast, gamma, gain, offset :: color
 
 class ```Format```:
     PCVideo

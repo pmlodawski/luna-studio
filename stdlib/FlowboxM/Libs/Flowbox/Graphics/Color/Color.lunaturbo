@@ -10,23 +10,19 @@ foreign haskell class RGBA a:
 
 def RGBA.toRGBA: self
 
-class ColorCC:
-    saturation, contrast, gamma, gain, offset :: ColorMult (RGBA Float) # TODO: change to Color alias later on
+class ColorCC color:
+    saturation, contrast, gamma, gain, offset :: color
+    def toRGBA:
+        ColorCC saturation.toRGBA contrast.toRGBA gamma.toRGBA gain.toRGBA offset.toRGBA
 
 class ColorMult color:
     color      :: color
     multiplier :: Float
     def toRGBA:
-        tmp = color.toRGBA
-        r = tmp.rgbaR
-        g = tmp.rgbaG
-        b = tmp.rgbaB
-        a = tmp.rgbaA
+        RGBA r g b a = color.toRGBA
         RGBA (r.* multiplier) (g.* multiplier) (b.* multiplier) (a.* multiplier)
 
 alias Color = ColorMult (RGBA Float)
-
-# alias ColorCC = (Color, Color, Color, Color, Color)
 
 foreign haskell class Gamma:
     AlexaV3LogC

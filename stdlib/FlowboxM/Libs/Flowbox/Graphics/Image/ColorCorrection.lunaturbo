@@ -86,11 +86,12 @@ alias HueCorrectGUI   = (CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, Curve
 foreign haskell def Image.colorCorrectRaw master shadows midtones highlights:
     liftF5 colorCorrectLuna master shadows midtones highlights self
 def Image.colorCorrect master shadows midtones highlights:
-    masterRGBA = ...
-    self.colorCorrectRaw
+    self.colorCorrectRaw master.toRGBA shadows.toRGBA midtones.toRGBA highlights.toRGBA
 
-foreign haskell def Image.colorCorrectCurves curves master shadows midtones highlights:
+foreign haskell def Image.colorCorrectCurvesRaw curves master shadows midtones highlights:
     liftF5 (colorCorrectLunaCurves curves) master shadows midtones highlights self
+def Image.colorCorrectCurves curves master shadows midtones highlights:
+    self.colorCorrectLunaCurves curves master.toRGBA shadows.toRGBA midtones.toRGBA highlights.toRGBA
 
 foreign haskell def Image.hueCorrect curves:
     liftF2 hueCorrectLuna curves self
