@@ -3,6 +3,9 @@
 #
 
 foreign haskell import Flowbox.Geom2D.Rectangle
+foreign haskell import Flowbox.Graphics.Mockup.Transform
+
+foreign haskell import Flowbox.Graphics.Mockup (Point2 (..))
 
 # TODO: convert cornerPin to use Point2
 class Point a:
@@ -69,6 +72,3 @@ def shape paths:
 
 def mask path feather:
     (path, feather)
-
-foreign haskell def rasterizeMask w h m:
-    liftF3 rasterizeMaskLuna w h m

@@ -149,7 +149,7 @@ def Image.grade self::Image blackpoint::ColorBlack whitepoint::ColorWhite lift::
     ```liftF5 (gradeLunaColor #{blackpoint} #{whitepoint} #{lift}) #{gain} #{multiply} #{offset} #{gamma} #{self}```
 
 alias ColorCorrectGUI = (CurveGUI, CurveGUI)
-alias HueCorrectGUI = (CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI)
+alias HueCorrectGUI = (CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI)
 alias Color5 = (Color, Color, Color, Color ,Color)
 
 def Image.colorCorrect self::Image
@@ -204,8 +204,8 @@ alias KeyerThresholdsF = KeyerThresholds Float
 def Image.key self::Image mode::KeyerMode thresholds::KeyerThresholdsF -> Image:
     ```liftF3 keyerLuna #{mode} #{thresholds} #{self}```
 
-def Image.differenceKey self::Image offset::Float gain::Float background::Image -> Image:
-    ```liftF4 differenceKeyerLuna #{offset} #{gain} #{background} #{self}```
+def Image.differenceKey self::Image offset::Float gain::Float constantOutside::Bool background::Image -> Image:
+    ```liftF5 differenceKeyerLuna #{offset} #{gain} #{constantOutside} #{background} #{self}```
 
 def Image.premultiply self::Image -> Image:
     ```liftF1 premultiplyLuna #{self}```
@@ -269,33 +269,36 @@ def Image.blur self::Image kernelSize::Int -> Image:
 
 class ```MergeMode```:
     Atop
-    Average
-    ColorBurn
-    ColorDodge
+    Average: ab :: AlphaBlend
+    ColorBurn: ab :: AlphaBlend
+    ColorDodge: ab :: AlphaBlend
     ConjointOver
-    Copy
-    Difference
+    Copy: ab :: AlphaBlend
+    Difference: ab :: AlphaBlend
     DisjointOver
-    DivideBySource
-    DivideByDestination
-    Exclusion
-    From
-    Geometric
-    HardLight
-    Hypot
+    DivideBySource: ab :: AlphaBlend
+    DivideByDestination: ab :: AlphaBlend
+    Exclusion: ab :: AlphaBlend
+    From: ab :: AlphaBlend
+    Geometric: ab :: AlphaBlend
+    HardLight: ab :: AlphaBlend
+    Hypot: ab :: AlphaBlend
     In
     Mask
     Matte
-    Minus
-    Multiply
+    # Max
+    # Min
+    Minus: ab :: AlphaBlend
+    Multiply: ab :: AlphaBlend
     Out
     Over
-    Overlay
-    Plus
-    Screen
-    SoftLight
-    SoftLightPegtop
-    SoftLightIllusions
+    Overlay: ab :: AlphaBlend
+    Plus: ab :: AlphaBlend
+    Screen: ab :: AlphaBlend
+    SoftLight: ab :: AlphaBlend
+    SoftLightPegtop: ab :: AlphaBlend
+    SoftLightIllusions: ab :: AlphaBlend
+    SoftLightPhotoshop: ab :: AlphaBlend
     Stencil
     Under
     XOR
@@ -304,8 +307,8 @@ class ```AlphaBlend```:
     Adobe
     Custom
 
-def Image.merge self::Image mode::MergeMode alphaBlendMode::AlphaBlend img::Image -> Image:
-    ```liftF4 mergeLuna #{mode} #{alphaBlendMode} #{self} #{img}```
+def Image.merge self::Image mode::MergeMode img::Image -> Image:
+    ```liftF3 mergeLuna #{mode} #{self} #{img}```
 
 def perlin self::Std z::Float width::Int height::Int -> Image:
     ```liftF3 perlinLuna #{z} #{width} #{height}```
@@ -339,7 +342,7 @@ def Image.scaleAt self::Image point::(Point2 Float) vec::(V2 Float) -> Image:
     ```liftF3 scaleAtLuna #{point} #{vec} #{self}```
 
 def Image.crop self::Image rect::(Rectangle Int) reformat::Bool defaultOutside::Bool -> Image:
-    ```liftF4 cropLuna #{rect} #{reformat} #{defaultOutside} #{self}```
+    ```liftF4 cropLuna ((fmap.fmap) variable -> #{rect}) #{reformat} #{defaultOutside} #{self}```
 
 # VIEW
 
@@ -475,8 +478,27 @@ alias ColorWhite = RGBA Float
 
 alias ColorCC = (Color, Color, Color, Color, Color)
 
-def constant self::Std width::Int height::Int color::Color -> Image:
-    ```liftF3 constantLuna #{width} #{height} #{color}```
+class ```Format```:
+    PCVideo
+    NTSC
+    PAL
+    HD
+    NTSC169
+    PAL169
+    K1Super35
+    K1Cinemascope
+    K2Super35
+    K2Cinemascope
+    K4Super35
+    K4Cinemascope
+    Square256
+    Square512
+    Square1K
+    Square2K
+    CustomFormat: width, height :: Int
+
+def constant self::Std format::Format color::Color -> Image:
+    ```liftF2 constantLuna #{format} #{color}```
 
 class ```Gamma``` a:
     Gamma: a :: Float
@@ -502,6 +524,8 @@ alias Time = Float
 def foo self::Std a::Time:
 	a
 
+def Image.render self::Image path::FilePath t::Time:
+    ()
 #
 #                MATH and such
 #

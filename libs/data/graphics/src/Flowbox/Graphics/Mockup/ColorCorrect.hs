@@ -141,27 +141,29 @@ gradeLuna (VPS (variable -> blackpoint))
           (variable -> gamma') =
             onEach $ CC.grade blackpoint whitepoint lift gain multiply' offset' gamma'
 
-saturateLuna :: Color.RGBA Float -> Image -> Image
-saturateLuna (fmap variable -> Color.RGBA saturationR saturationG saturationB saturationA) img = saturated
+saturateLuna :: Color.RGB Float -> Image -> Image
+saturateLuna (fmap variable -> Color.RGB saturationR saturationG saturationB) img = saturated
     where rgb = unsafeGetRGB img
 
-          rgbRsaturated = M.map (A.lift1 (saturateOnHSV saturationR)) rgb
-          rgbGsaturated = M.map (A.lift1 (saturateOnHSV saturationG)) rgb
-          rgbBsaturated = M.map (A.lift1 (saturateOnHSV saturationB)) rgb
+          (rSaturated, gSaturated, bSaturated) = CC.saturateRGB saturationR saturationG saturationB rgb
+          
+          --rgbRsaturated = M.map (A.lift1 (saturateOnHSV saturationR)) rgb
+          --rgbGsaturated = M.map (A.lift1 (saturateOnHSV saturationG)) rgb
+          --rgbBsaturated = M.map (A.lift1 (saturateOnHSV saturationB)) rgb
 
-          saturateOnHSV :: Exp Float -> Color.RGB (Exp Float) -> Color.RGB (Exp Float)
-          saturateOnHSV sat pix = Color.toHSL pix & (\(Color.HSL h s l) -> Color.HSL h (s * sat) l) & Color.toRGB
+          --saturateOnHSV :: Exp Float -> Color.RGB (Exp Float) -> Color.RGB (Exp Float)
+          --saturateOnHSV sat pix = Color.toHSL pix & (\(Color.HSL h s l) -> Color.HSL h (s * sat) l) & Color.toRGB
 
-          rSaturated = M.map (\(A.unlift -> Color.RGB r _ _) -> r) rgbRsaturated
-          gSaturated = M.map (\(A.unlift -> Color.RGB _ g _) -> g) rgbGsaturated
-          bSaturated = M.map (\(A.unlift -> Color.RGB _ _ b) -> b) rgbBsaturated
+          --rSaturated = M.map (\(A.unlift -> Color.RGB r _ _) -> r) rgbRsaturated
+          --gSaturated = M.map (\(A.unlift -> Color.RGB _ g _) -> g) rgbGsaturated
+          --bSaturated = M.map (\(A.unlift -> Color.RGB _ _ b) -> b) rgbBsaturated
 
           Right view = Image.lookupPrimary img
 
           view' = insertChannelFloats view [
-                    ("rgba.r", rSaturated)
-                  , ("rgba.g", gSaturated)
-                  , ("rgba.b", bSaturated)
+                   ("rgba.r", rSaturated)
+                  ,("rgba.g", gSaturated)
+                  ,("rgba.b", bSaturated)
                   ]
 
           saturated = Image.insertPrimary view' img
@@ -330,12 +332,8 @@ colorCorrectLunaBase (curveShadows, curveHighlights)
                   )
                   = onEachColorRGBA correct
     where
-          strShadows x    = A.cond (x A.<=* 0) 1
-                          $ A.cond (x A.>=* 0.09) 0
-                          $ BSpline.valueAt (A.use curveShadows :: A.Acc (BSpline Float)) x
-          strHighlights x = A.cond (x A.<=* 0.5) 0
-                          $ A.cond (x A.>=* 1) 1
-                          $ BSpline.valueAt (A.use curveHighlights :: A.Acc (BSpline Float)) x
+          strShadows x    = BSpline.valueAt (A.use curveShadows :: A.Acc (BSpline Float)) x
+          strHighlights x = BSpline.valueAt (A.use curveHighlights :: A.Acc (BSpline Float)) x
 
           correctMasterR = CC.colorCorrect masterContrastR masterGammaR masterGainR masterOffsetR
           correctMasterG = CC.colorCorrect masterContrastG masterGammaG masterGainG masterOffsetG

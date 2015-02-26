@@ -30,3 +30,5 @@ interpreterValueRequest                       = "interpreter.value.request"
 interpreterMemoryGetLimitsRequest             = "interpreter.memory.getlimits.request"
 interpreterMemorySetLimitsRequest             = "interpreter.memory.setlimits.request"
 interpreterExitRequest                        = "interpreter.exit.request"
+
+rendererRenderRequest = "renderer.render.request"

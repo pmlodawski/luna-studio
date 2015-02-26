@@ -13,6 +13,11 @@ import Flowbox.Graphics.Mockup.Basic as Mock
 import Flowbox.Graphics.Mockup.Merge
 import Data.Array.Accelerate.CUDA as AC
 import Flowbox.Graphics.Composition.Merge
+import qualified Data.Array.Accelerate as A
+import System.Directory
+import Network.Curl.Download
+import qualified Data.ByteString as B
+import TestConfigParser
 
 shouldBeCloseTo :: (Show a, Comparable a b) => String -> b -> a -> a -> Expectation
 shouldBeCloseTo name metric actual expected = assertAlmostEqual name "" metric expected actual
@@ -23,7 +28,10 @@ returnShouldBeCloseTo testPath metric actual expected = do
     expected' <- expected
     shouldBeCloseTo testPath metric actual' expected'
 
-
+rightReturnShouldBeCloseTo testPath metric actual expected = do
+    expected' <- expected
+    shouldBeCloseTo testPath metric actual expected'
+    -- expected >>= (shouldBeCloseTo testPath metric actual)
 
 --assertAlmostEqual :: (Comparable a b, Show a) => String -- ^ The message prefix 
 --                              -> String --test name
@@ -82,7 +90,7 @@ instance (Show a, Ord a, Floating a) => Comparable (Maybe a) (FloatMetric a) whe
     diffMsg _ _ _ _ = return "Nothing with Just"
 
 
-data ImageMetric = PixelWise | TileWise | ImageWise deriving (Bounded, Enum)
+data ImageMetric = PixelWise | TileWise | ImageWise | SizeWise deriving (Bounded, Enum)
 
 instance Arbitrary ImageMetric where
     arbitrary = arbitraryBoundedEnum
@@ -91,20 +99,22 @@ instance Comparable Image ImageMetric where
     closeEnough metric actualImage expectedImage = (case metric of
         PixelWise -> maxDiff < 0.01 --imgAsList actualImage == imgAsList expectedImage
         TileWise  -> True
+        SizeWise  -> eqSize
         ImageWise -> sC/sRefC < 0.01) where
+            [eqSize] = M.toList AC.run eqSizeAc
             [maxDiff] = M.toList AC.run maxDif
             [sC] = M.toList AC.run s
             [sRefC] = M.toList AC.run sRef
             s = M.zipWith4 (\r g b a -> r+g+b+a) (M.sum r) (M.sum g) (M.sum b) (M.sum a)
             sRef = M.zipWith4 (\r g b a -> r+g+b+a) (M.sum r2) (M.sum g2) (M.sum b2) (M.sum a2)
 
-            --(r,g,b,a) = Mock.unsafeGetChannels $ mergeLuna Difference Adobe actualImage expectedImage
-            maxDif = M.zipWith4 (\r g b a -> maximum [r,g,b,a]) (M.maximum r) (M.maximum g) (M.maximum b) (M.maximum a)--maximum dif
+            --(r,g,b,a) = Mock.unsafeGetChannels $ mergeLuna (Difference Adobe) actualImage expectedImage
+            maxDif = M.zipWith4 (\rm gm bm am -> maximum [rm,gm,bm,am]) (M.maximum r) (M.maximum g) (M.maximum b) (M.maximum a)--maximum dif
             r = M.map abs $ M.zipWith (-) r1 r2
             g = M.map abs $ M.zipWith (-) g1 g2
             b = M.map abs $ M.zipWith (-) b1 b2
             a = M.map abs $ M.zipWith (-) a1 a2
-
+            eqSizeAc = M.unit $ (M.size r1) A.==* (M.size r2)
             (r1,g1,b1,a1) = Mock.unsafeGetChannels actualImage
             (r2,g2,b2,a2) = Mock.unsafeGetChannels expectedImage
             
@@ -129,7 +139,7 @@ instance Comparable Image ImageMetric where
                             [maxDiff] = M.toList AC.run maxDif
 
 
-                            diff = mergeLuna Difference Adobe actualImage expectedImage
+                            diff = mergeLuna (Difference Adobe) actualImage expectedImage
 
 
                             finMsg = "wrong result saved to"++resultPath++"\ndiff image saved to "++diffPath ++ "\nmax pixel-wise difference: " ++ (show $ maxDiff)   
@@ -164,6 +174,7 @@ instance Comparable Image ImageMetric where
                      --   dif= zipWith (-) l1 l2
                      --   maxDif = maximum $ P.map abs dif
         TileWise  -> return "tile-wise difference"
+        SizeWise  -> return "images of different size"
         ImageWise -> return $ "actualImage sum: " ++ (show $ s1out) ++
                          "\nexpectedImage sum: " ++ (show $ s2out) ++
                          "\nimage-wise difference: " ++ (show $ sdout) where
@@ -195,5 +206,53 @@ instance Comparable Image ImageMetric where
 --    let (r,g,b,a) = Mock.unsafeGetChannels img
 --    in  (M.toList AC.run r) ++ (M.toList AC.run g) ++ (M.toList AC.run b) ++(M.toList AC.run a)
 
-getDefaultTestPic specPath testName = 
-    loadImageLuna $ specPath++testName++"Test/"++testName++"_expected.png"
+testSave image = do
+    saveImageLuna "./test/samples/x_result.png" image
+    return ()
+
+getDefaultTestPic :: String -> String -> IO Image
+getDefaultTestPic specPath testName = do
+    directoryExists <- doesDirectoryExist $ specPath++testName++"Test/"
+    if directoryExists
+        then loadImageLuna $ specPath++testName++"Test/"++testName++"_expected.png"
+        else tryDownloading specPath testName
+
+tryDownloading specPath testName = do
+    customExists  <- doesFileExist "./test/custom.config"
+    defaultExists <- doesFileExist "./test/default.config"
+    if customExists 
+        then do
+            conf <- getTestConfig "./test/custom.config"
+            print $ getRemotePath conf
+            site <- openURI $ (getRemotePath conf) ++specPath++testName++"Test/"++testName++"_expected.png"
+            trySaveSite site specPath testName
+        else do
+            if defaultExists
+                then do
+                    altConf <- getTestConfig "./test/default.config"
+                    print $ getRemotePath altConf
+                    site <- openURI $ (getRemotePath altConf) ++specPath++testName++"Test/"++testName++"_expected.png"
+                    trySaveSite site specPath testName
+                else error "No config files. You need custom.config or default.config file in test directory."
+
+        --case site of
+        --    Left err -> do
+        --        altConf <- getTestConfig "./test/default.config"
+        --        altSite <- openURI $ (getRemotePath altConf) ++specPath++testName++"Test/"++testName++"_expected.png"
+        --        case altSite of
+        --            Left err -> error "no image"               
+        --            Right img -> do
+        --                createDirectory $ specPath++testName++"Test/"
+        --                B.writeFile (specPath++testName++"Test/"++testName++"_expected.png") img
+        --                loadImageLuna $ specPath++testName++"Test/"++testName++"_expected.png"
+        --Right img -> do
+        --    createDirectory $ specPath++testName++"Test/"
+        --    B.writeFile (specPath++testName++"Test/"++testName++"_expected.png") img
+        --    loadImageLuna $ specPath++testName++"Test/"++testName++"_expected.png"
+    
+trySaveSite site specPath testName = case site of
+    Left err -> error "no image"               
+    Right img -> do
+        createDirectory $ specPath++testName++"Test/"
+        B.writeFile (specPath++testName++"Test/"++testName++"_expected.png") img
+        loadImageLuna $ specPath++testName++"Test/"++testName++"_expected.png"

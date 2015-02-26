@@ -23,7 +23,6 @@ import qualified Flowbox.Math.Matrix            as Matrix
 import           Flowbox.Prelude
 
 
-
 constant :: Exp A.DIM2 -> [(Channel.Name, Exp Float)] -> Image
 constant sh = Image.singleton . foldr appendChannel (View.emptyDefault)
     where appendChannel (name, value) = View.append (Channel.ChannelFloat name . Channel.MatrixData $ Matrix.fill sh value)

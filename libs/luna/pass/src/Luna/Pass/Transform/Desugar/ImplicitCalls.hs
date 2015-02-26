@@ -106,11 +106,13 @@ exprScopes :: (ISCtx lab m 1 a) => LExpr lab a -> ISPass m (LExpr lab a)
 exprScopes ast@(Label lab e) = case e of
     Expr.Cons     {} -> Label 998 <$> (Expr.app <$> continue <*> pure [])
     Expr.Accessor {} -> Label 997 <$> (Expr.app <$> continue <*> pure [])
+                -- TODO [wd]: ^-- a magic constants :)
     Expr.Curry (Label lab' acc@(Expr.Accessor {})) -> Label lab . Expr.Curry <$> (Label lab' <$> defaultTraverseOmitM (Proxy::Proxy 1) acc)
-    Expr.App (NamePat Nothing (Segment base args) []) -> 
-        (Label lab . Expr.App) <$> (NamePat Nothing <$> (Segment <$> defaultTraverseOmitM (Proxy::Proxy 1) base 
-                                                                 <*> defaultTraverseM args)
-                                                    <*> pure [])
+    Expr.App (NamePat pfx (Segment base args) []) -> 
+        (Label lab . Expr.App) <$> (NamePat <$> defaultTraverseM pfx 
+                                            <*> (Segment <$> defaultTraverseOmitM (Proxy::Proxy 1) base 
+                                                         <*> defaultTraverseM args)
+                                            <*> pure [])
     _                -> continue
     where continue = defaultTraverseM ast
           id       = Enum.id lab

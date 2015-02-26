@@ -5,6 +5,11 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE OverlappingInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE GADTs #-}
+
 module Luna.Target.HS.Control.Flow.Env (
     module Luna.Target.HS.Control.Flow.Env,
     module X
