@@ -2,14 +2,17 @@
 #include ../Geom2D/Geom.lunaturbo
 #include Matte.lunaturbo
 
-
 def main:
-	# Std.rasterizeMask 43 113 ((True, [((Point2 286.000000 398.000000), Std.nopoint, Std.nopoint)]), (Just (True, [((Point2 286.000000 398.000000), Std.nopoint, Std.nopoint)])))
+    # Std.rasterizeMask 43 113 ((True, [((Point2 286.000000 398.000000), Std.nopoint, Std.nopoint)]), (Just (True, [((Point2 286.000000 398.000000), Std.nopoint, Std.nopoint)])))
 
-	point = Point2 286.000000 398.000000
-	control = (point, Nothing, Nothing)
-	mask = (True, [control])
-	matte = (mask, Nothing)
-	rasterizeMask 43 113 matte
+    point = Point2 286.000000 398.000000
 
-	()
+    control = self.controlPoint point Nothing Nothing # (point, Nothing, Nothing)
+
+    zePath = self.path True [control] # (True, [control])
+
+    matte = self.mask zePath Nothing # (mask, Nothing)
+
+    img = self.rasterizeMask 43 113 matte
+
+    ()

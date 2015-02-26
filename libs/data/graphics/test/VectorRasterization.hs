@@ -165,6 +165,15 @@ main = do
                       , ControlPoint (Point2 1046.300413 866.547248) Nothing Nothing
                       , ControlPoint (Point2 1025.632820 793.611354) (Just (Point2 (-1.636959) 2.455438)) (Just (Point2 1.636959 (-2.455438)))
                       ]
+    P.putStrLn "Test rasterizeMask empty list --> fooD.png "
+
+    let patd = Path True []
+        fead = Path True []
+
+    let arrD = rasterizeMask w h $ (Mask patd (Just fead))
+        imgD = matrixToImage arrD
+
+    saveImageLuna "fooD.png" imgD
 
     P.putStrLn "Test rasterizeMask one line, no handles --> foo.png"
 
