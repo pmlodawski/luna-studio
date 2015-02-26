@@ -89,6 +89,7 @@ defaultTraverseM = AST.defaultTraverseM ImplScopes
 
 pass :: ISDefaultTraversal m a => Pass PassState (ASTInfo -> StructInfo -> a -> ISPass m (a, ASTInfo))
 pass = Pass "Implicit self" "Desugars AST by adding implicit self function parameters" undefined passRunner
+-- TODO [wd]: ^----------------^-- add more detailed description, so the difference b/w this and ImplicitSelf would be clear
 
 passRunner ai si ast = do
     put $ PassState ai si
@@ -112,6 +113,7 @@ fmake ast@(Label lab e) f = case e of
 
         if pid == tgtPid then return ast
                          else return $ Label (-888) $ Expr.Accessor (convert name) (f $ Label lab $ Expr.Var $ Expr.Variable "self" v)
+                         -- TODO [kgdk -> wd]: ^-- a magic constant :)
     where id = Enum.id lab
 ----------------------------------------------------------------------
 -- Instances

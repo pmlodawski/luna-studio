@@ -16,7 +16,6 @@ module Flowbox.Bus.RPC.HandlerMap (
     lookupAndCall,
 ) where
 
-import           Control.Monad.IO.Class    (MonadIO)
 import           Control.Monad.Trans.State
 import           Data.Map                  as X
 import qualified Data.Map                  as Map
@@ -32,7 +31,7 @@ import qualified Flowbox.Text.ProtocolBuffers as Proto
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 type Callback s m = (Proto.Serializable args, Proto.Serializable result)
