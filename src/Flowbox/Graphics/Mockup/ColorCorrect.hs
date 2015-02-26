@@ -72,7 +72,7 @@ contrastLuna x@(fmap variable -> Color.RGB r g b) matte img =
     Just m ->
         onEachRGBAChannels (applyMatteFloat (CC.contrast r) m)
                            (applyMatteFloat (CC.contrast g) m)
-                           (applyMatteFloat (CC.contrast b) m) 
+                           (applyMatteFloat (CC.contrast b) m)
                            id img
 
 exposureLuna :: Color.RGB Float -> Color.RGB Float -> Maybe (Matte.Matte Float) -> Image -> Image
@@ -120,17 +120,17 @@ multiplyLuna (fmap variable -> Color.RGBA r g b a) matte img =
     Just m ->
         onEachRGBAChannels (applyMatteFloat (*r) m)
                            (applyMatteFloat (*g) m)
-                           (applyMatteFloat (*b) m) 
+                           (applyMatteFloat (*b) m)
                            (applyMatteFloat (*a) m) img
 
 gammaLuna :: Color.RGBA Float -> Maybe (Matte.Matte Float) -> Image -> Image
-gammaLuna (fmap variable -> Color.RGBA r g b a) matte img = 
+gammaLuna (fmap variable -> Color.RGBA r g b a) matte img =
   case matte of
     Nothing -> onEachRGBA (CC.gamma r) (CC.gamma g) (CC.gamma b) (CC.gamma a) img
     Just m ->
         onEachRGBAChannels (applyMatteFloat (CC.gamma r) m)
                            (applyMatteFloat (CC.gamma g) m)
-                           (applyMatteFloat (CC.gamma b) m) 
+                           (applyMatteFloat (CC.gamma b) m)
                            (applyMatteFloat (CC.gamma a) m) img
 
 -- [TODO] - zamaskować saturate
@@ -139,7 +139,7 @@ saturateLuna (fmap variable -> Color.RGB saturationR saturationG saturationB) im
     where rgb = unsafeGetRGB img
 
           (rSaturated, gSaturated, bSaturated) = CC.saturateRGB saturationR saturationG saturationB rgb
-          
+
           --rgbRsaturated = M.map (A.lift1 (saturateOnHSV saturationR)) rgb
           --rgbGsaturated = M.map (A.lift1 (saturateOnHSV saturationG)) rgb
           --rgbBsaturated = M.map (A.lift1 (saturateOnHSV saturationB)) rgb
@@ -160,17 +160,6 @@ saturateLuna (fmap variable -> Color.RGB saturationR saturationG saturationB) im
                   ]
 
           saturated = Image.insertPrimary view' img
-
-gradeLuna :: VPS Float -> VPS Float -> VPS Float -> Float -> Float -> Float -> Float -> Image -> Image
-gradeLuna (VPS (variable -> blackpoint))
-          (VPS (variable -> whitepoint))
-          (VPS (variable -> lift))
-          (variable -> gain)
-          (variable -> multiply')
-          (variable -> offset')
-          (variable -> gamma') =
-            onEach $ CC.grade blackpoint whitepoint lift gain multiply' offset' gamma'
-
 
 --hsvToolLuna :: VPS Float -> VPS Float -> VPS Float -> VPS Float
 --            -> VPS Float -> VPS Float -> VPS Float -> VPS Float
@@ -248,27 +237,6 @@ hueCorrectLuna ( VPS (convertCurveGUI-> lum), VPS (convertCurveGUI -> sat)
                                                      (CurveGUI.convertToBSpline gSup)
                                                      (CurveGUI.convertToBSpline bSup)
                                       ) img
-
-gradeLuna' :: VPS (Color.RGBA Float)
-           -> VPS (Color.RGBA Float)
-           -> VPS (Color.RGBA Float)
-           -> Color.RGBA Float
-           -> Color.RGBA Float
-           -> Color.RGBA Float
-           -> Color.RGBA Float
-           -> Image
-           -> Image
-gradeLuna' (VPS (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB blackpointA))
-           (VPS (fmap variable -> Color.RGBA whitepointR whitepointG whitepointB whitepointA))
-           (VPS (fmap variable -> Color.RGBA liftR liftG liftB liftA))
-           (fmap variable -> Color.RGBA gainR gainG gainB gainA)
-           (fmap variable -> Color.RGBA multiplyR multiplyG multiplyB multiplyA)
-           (fmap variable -> Color.RGBA offsetR offsetG offsetB offsetA)
-           (fmap variable -> Color.RGBA gammaR gammaG gammaB gammaA) =
-             onEachRGBA (CC.grade blackpointR whitepointR liftR gainR multiplyR offsetR gammaR)
-                        (CC.grade blackpointG whitepointG liftG gainG multiplyG offsetG gammaG)
-                        (CC.grade blackpointB whitepointB liftB gainB multiplyB offsetB gammaB)
-                        id -- (CC.grade blackpointA whitepointA liftA gainA multiplyA offsetA gammaA)
 
 type ColorCorrect a = (VPS (LunaCurveGUI a), VPS (LunaCurveGUI a))
 pattern ColorCorrect a b = (VPS a, VPS b)
