@@ -20,6 +20,17 @@ message URM {
             required bool    success = 2;
         }
     }
+
+    message RegisterMultiple {
+        message Request {
+            repeated generated.proto.bus.Message undoActions = 1;
+            required generated.proto.bus.Message redoActions = 2;
+        }
+        message Status {
+            required Request request = 1;
+            required bool    success = 2;
+        }
+    }
     
     message Undo {
         message Request { }
