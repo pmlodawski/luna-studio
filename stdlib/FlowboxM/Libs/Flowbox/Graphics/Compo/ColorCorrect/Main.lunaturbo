@@ -1,47 +1,47 @@
-#include ../../../Prelude.lunaturbo
-#include ../../Image/Image.lunaturbo
-#include ../../Math/Math.lunaturbo
-#include ../../Matte/Matte.lunaturbo
-#include ../../Color/Color.lunaturbo
-#include ../../Geom2D/Geom.lunaturbo
-#include ColorCorrection.lunaturbo
+# include ../../../Prelude.lunaturbo
+# include ../../Image/Image.lunaturbo
+# include ../../Math/Math.lunaturbo
+# include ../../Matte/Matte.lunaturbo
+# include ../../Color/Color.lunaturbo
+# include ../../Geom2D/Geom.lunaturbo
+# include ColorCorrection.lunaturbo
 
 # foreign haskell import Flowbox.Geom2D.ControlPoint
 # foreign haskell import Flowbox.Geom2D.Path
 
-# foreign haskell def print msg:
-#     autoLift1 print msg
+foreign haskell def print msg:
+    autoLift1 print msg
 
-# class Path a:
-#     Path:
-#         closed   :: Bool
-#         vertices :: [ControlPoint a]
+class Path a:
+    Path:
+        closed   :: Bool
+        vertices :: [ControlPoint a]
 
-# class ControlPoint a:
-#     ControlPoint:
-#         point               :: Point2 a
-#         handleIn, handleOut :: Maybe (Point2 a)
+class ControlPoint a:
+    ControlPoint:
+        point               :: Point2 a
+        handleIn, handleOut :: Maybe (Point2 a)
 
-# class Point2 a:
-#     Point2:
-#         x,y :: a
+class Point2 a:
+    Point2:
+        x,y :: a
 
-# foreign haskell class Maybe a:
-#     Just:
-#         unwrap :: a
-#     Nothing
+foreign haskell class Maybe a:
+    Just:
+        unwrap :: a
+    Nothing
 
-# foreign haskell class Bool:
-#     True
-#     False
+foreign haskell class Bool:
+    True
+    False
 
 def main:
     print "color correct test"
 
-    input = load "moonbow.jpg"
-    grad  = load "grad.png"
+    # input = load "moonbow.jpg"
+    # grad  = load "grad.png"
 
-    imgMatte = self.imageMatte grad "rgba.r"
+    # imgMatte = self.imageMatte grad "rgba.r"
 
     vertices = [ ControlPoint (Point2 100.0 100.0) Nothing Nothing ]
     #            # , ControlPoint (Point2 100.0 100.0) Nothing Nothing
@@ -54,9 +54,9 @@ def main:
     # print path
 
 
-    offValue = RGBA 0.5 0.5 0.5 0.5
+    # offValue = RGBA 0.5 0.5 0.5 0.5
 
-    offseted = input.offset offValue Nothing
-    offseted.save "offseted.png"
+    # offseted = input.offset offValue Nothing
+    # offseted.save "offseted.png"
 
     ()
