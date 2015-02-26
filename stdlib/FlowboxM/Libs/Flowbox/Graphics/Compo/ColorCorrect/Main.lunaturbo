@@ -43,13 +43,13 @@ def main:
 
     imgMatte = self.imageMatte grad "rgba.r"
 
-    # vertices = [ ControlPoint (Point2 100.0 100.0) Nothing Nothing ]
+    vertices = [ ControlPoint (Point2 100.0 100.0) Nothing Nothing ]
     #            # , ControlPoint (Point2 100.0 100.0) Nothing Nothing
     #            # , ControlPoint (Point2 100.0 100.0) Nothing Nothing
     #            # , ControlPoint (Point2 100.0 100.0) Nothing Nothing
     #            # ]
 
-    # path = Path True vertices
+    path = Path True vertices
 
     # print path
 
