@@ -145,6 +145,7 @@ makeCubics (Path closed points) = combine points
 
 
 pathToRGBA32 :: (Real a, Fractional a) => Int -> Int -> Path a -> A.Array DIM2 RGBA32
+pathToRGBA32 w h (Path _ []) = A.fromList (Z:.h:.w) [0..]
 pathToRGBA32 w h (Path closed points) = unsafePerformIO rasterize
     where ControlPoint (Point2 ox oy) _ _ = fmap f2d $ head points
           h' = fromIntegral h
