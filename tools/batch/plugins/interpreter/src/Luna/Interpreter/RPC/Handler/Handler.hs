@@ -30,6 +30,7 @@ import           Flowbox.Bus.Data.Topic                      (Topic, status, upd
 import           Flowbox.Bus.RPC.HandlerMap                  (HandlerMap)
 import qualified Flowbox.Bus.RPC.HandlerMap                  as HandlerMap
 import           Flowbox.Bus.RPC.RPC                         (RPC)
+import qualified Flowbox.Bus.RPC.RPC                         as RPC
 import qualified Flowbox.Bus.RPC.Server.Processor            as Processor
 import           Flowbox.Config.Config                       (Config)
 import qualified Flowbox.Control.Concurrent                  as Concurrent
@@ -145,7 +146,7 @@ handlerMap prefix queueInfo crl output callback = HandlerMap.fromList $ Prefix.p
 
         requiredSync :: Proto.Serializable a
                      => (a -> RPC Context (SessionST MM) ()) -> StateT Context (SessionST MM) [Message]
-        requiredSync fun = callback (const Topic.projectmanagerSyncGetRequest) $ Processor.singleResult (\args -> fun args >> Sync.syncRequest)
+        requiredSync fun = callback (const Topic.projectmanagerSyncGetRequest) $ Processor.singleResult (\args -> RPC.interceptErrors (fun args) >> Sync.syncRequest)
 
 
 extraImports :: [Session.Import]
