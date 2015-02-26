@@ -1,62 +1,64 @@
-# include ../../../Prelude.lunaturbo
-# include ../../Image/Image.lunaturbo
-# include ../../Math/Math.lunaturbo
-# include ../../Matte/Matte.lunaturbo
-# include ../../Color/Color.lunaturbo
-# include ../../Geom2D/Geom.lunaturbo
-# include ColorCorrection.lunaturbo
+#include ../../../Prelude.lunaturbo
+#include ../../Image/Image.lunaturbo
+#include ../../Math/Math.lunaturbo
+#include ../../Matte/Matte.lunaturbo
+#include ../../Color/Color.lunaturbo
+#include ../../Geom2D/Geom.lunaturbo
+#include ColorCorrection.lunaturbo
 
+# foreign haskell import Flowbox.Graphics.Mockup (Point2 (..))
 # foreign haskell import Flowbox.Geom2D.ControlPoint
 # foreign haskell import Flowbox.Geom2D.Path
 
-foreign haskell def print msg:
-    autoLift1 print msg
+# foreign haskell def print msg:
+#     autoLift1 print msg
 
-class Path a:
-    Path:
-        closed   :: Bool
-        vertices :: [ControlPoint a]
+# foreign haskell class Bool:
+#     True
+#     False
 
-class ControlPoint a:
-    ControlPoint:
-        point               :: Point2 a
-        handleIn, handleOut :: Maybe (Point2 a)
+# foreign haskell class Maybe a:
+#     Just:
+#         unwrap :: a
+#     Nothing
 
-class Point2 a:
-    Point2:
-        x,y :: a
+# foreign haskell class Point2 a:
+#     Point2:
+#         x,y :: a
 
-foreign haskell class Maybe a:
-    Just:
-        unwrap :: a
-    Nothing
+# foreign haskell class ControlPoint a:
+#     ControlPoint:
+#         point               :: Point2 a
+#         handleIn, handleOut :: Maybe (Point2 a)
 
-foreign haskell class Bool:
-    True
-    False
+# foreign haskell class Path a:
+#     Path:
+#         closed   :: Bool
+#         vertices :: [ControlPoint a]
 
 def main:
     print "color correct test"
 
-    # input = load "moonbow.jpg"
-    # grad  = load "grad.png"
+    input = load "moonbow.jpg"
+    grad  = load "grad.png"
 
-    # imgMatte = self.imageMatte grad "rgba.r"
+    imgMatte = self.imageMatte grad "rgba.r"
 
-    vertices = [ ControlPoint (Point2 100.0 100.0) Nothing Nothing ]
-    #            # , ControlPoint (Point2 100.0 100.0) Nothing Nothing
-    #            # , ControlPoint (Point2 100.0 100.0) Nothing Nothing
-    #            # , ControlPoint (Point2 100.0 100.0) Nothing Nothing
-    #            # ]
+    vertices = [ ControlPoint (Point2 100.0 100.0) Nothing Nothing
+               , ControlPoint (Point2 100.0 200.0) Nothing Nothing
+               , ControlPoint (Point2 200.0 200.0) Nothing Nothing
+               , ControlPoint (Point2 200.0 100.0) Nothing Nothing
+               ]
 
-    path = Path True vertices
+    path  = Path True vertices
+    shape = Shape [path]
+    mask  = Mask path Nothing
 
-    # print path
+    vectMatte = self.vectorMatte mask
 
+    offValue = RGBA 0.5 0.5 0.5 0.5
 
-    # offValue = RGBA 0.5 0.5 0.5 0.5
-
-    # offseted = input.offset offValue Nothing
-    # offseted.save "offseted.png"
+    offseted = input.offset offValue vectMatte
+    offseted.save "offseted.png"
 
     ()

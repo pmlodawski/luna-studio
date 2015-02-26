@@ -23,13 +23,14 @@ import           Math.Space.Space          (Grid (..))
 import qualified System.FilePath           as FilePath
 
 import           Flowbox.Geom2D.ControlPoint
+import           Flowbox.Geom2D.Mask            (Mask(..))
 import qualified Flowbox.Geom2D.Mask            as Mask
 import           Flowbox.Geom2D.Path
 import           Flowbox.Geom2D.Rasterizer
 import qualified Flowbox.Geom2D.Shape           as GShape
 import           Flowbox.Graphics.Image.Channel (Channel (..), ChannelData (..))
 import           Flowbox.Graphics.Image.Image   (Image)
-import           Flowbox.Graphics.Image.Matte   (Matte)
+import           Flowbox.Graphics.Image.Matte   (Matte(..))
 import qualified Flowbox.Graphics.Image.Matte   as Matte
 import           Flowbox.Graphics.Mockup.Basic
 import           Flowbox.Graphics.Shader.Shader (CartesianShader, Shader (..))
@@ -41,39 +42,8 @@ import           Luna.Target.HS.Host.Lift       (expandEl)
 
 
 
-type ControlPoint2 a = RTuple (  VPS (Point2 a)
-                              , (VPS (Maybe (Point2 a))
-                              , (VPS (Maybe (Point2 a))
-                              , ())))
-
-type Path2 a = RTuple (  VPS Bool
-                      , (VPS [VPS (ControlPoint2 a)]
-                      , ()))
-
-type Path2x a = RTuple ( Bool
-                      , ([VPS (ControlPoint2 a)]
-                      , ()))
-
-type Shape2 a = [VPS (Path2 a)]
-
-type Mask2 a = RTuple (  VPS (Path2 a)
-                      , (VPS (Maybe (Path2x a))
-                      , ()))
-
-convertControlPoint :: ControlPoint2 a -> ControlPoint a
-convertControlPoint (toTuple -> (unpackLunaVar -> a, unpackLunaVar -> b, unpackLunaVar -> c)) = ControlPoint a b c
-
-convertPath :: Path2 a -> Path a
-convertPath (toTuple -> (unpackLunaVar -> a, unpackLunaList.unpackLunaVar -> b)) = Path a (fmap convertControlPoint b)
-
-convertShape :: Shape2 a -> GShape.Shape a
-convertShape (unpackLunaList -> a) = GShape.Shape (fmap convertPath a)
-
-convertMask :: Mask2 a -> Mask.Mask a
-convertMask (toTuple -> (unpackLunaVar -> a, unpackLunaVar -> (fmap expandEl) -> b)) = Mask.Mask (convertPath a) (fmap convertPath b)
-
-rasterizeMaskLuna :: (Real a, Fractional a, a ~ Float) => Int -> Int -> Mask2 a -> Image
-rasterizeMaskLuna w h (convertMask -> m) = matrixToImage $ rasterizeMask w h m
+rasterizeMaskLuna :: (Real a, Fractional a, a ~ Float) => Int -> Int -> Mask a -> Image
+rasterizeMaskLuna w h m = matrixToImage $ rasterizeMask w h m
 
 imageMatteLuna :: Image -> String -> Maybe (Matte Float)
 imageMatteLuna img channelName =
@@ -83,8 +53,8 @@ imageMatteLuna img channelName =
       Right (Just channel) -> Just $ Matte.imageMatteFloat channel
       _ -> Nothing
 
-vectorMatteLuna :: Mask2 Float -> Maybe (Matte Float)
-vectorMatteLuna mask = Just $ Matte.VectorMatte $ convertMask mask
+vectorMatteLuna :: Mask Float -> Maybe (Matte Float)
+vectorMatteLuna mask = Just $ VectorMatte mask
 
 adjustMatte :: Matrix2 Float -> Matrix2 Float -> Matrix2 Float
 adjustMatte mat matte = matte'
