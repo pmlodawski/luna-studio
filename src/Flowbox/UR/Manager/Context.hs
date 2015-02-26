@@ -13,7 +13,10 @@ import           Flowbox.Bus.Data.Message           (Message)
 import           Flowbox.Prelude                    hiding (Context)
 
 
-data Context = Context { _undo :: [(Message, Message)], _redo :: [(Message, Message)] }
+type Stack = [([Message], Message)]
+
+
+data Context = Context { _undo :: Stack, _redo :: Stack }
                        deriving (Show)
 
 makeLenses ''Context
