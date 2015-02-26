@@ -50,7 +50,7 @@ foreign haskell def Image.scaleAt point vec matte:
 foreign haskell def Image.skewAt point skew matte:
     liftF4 skewAtLuna point skew matte self
 
-foreign haskell def Image.transform trans matte:
+foreign haskell def Image.transform trans:
     liftF2 transformLuna trans self
 
 foreign haskell def Image.crop rect reformat defaultOutside:
