@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE LambdaCase      #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 import Control.Monad.RWS          hiding (join)
@@ -11,7 +12,7 @@ import Control.Monad.Trans.Either
 import System.TimeIt
 
 import           Flowbox.Data.Version                  ()
-import           Flowbox.Prelude
+import           Flowbox.Prelude                       hiding (error)
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.Log.Logger             as Logger
 import qualified Flowbox.System.UniPath                as UniPath
@@ -24,16 +25,15 @@ import qualified Luna.DEP.Pass.General.Luna.Luna       as Luna
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 main :: IO ()
 main = do
-    Logger.setLevel DEBUG "Flowbox"
-    out <- timeIt main_inner
-    case out of
+    Logger.setLevel DEBUG ""
+    timeIt main_inner >>= \case
         Right _ -> return ()
-        Left  e -> putStrLn e
+        Left  e -> logger error e
 
 
 
@@ -44,7 +44,11 @@ main_inner = Luna.run $ do
     (ast, _, _) <- hoistEither =<< Build.parseFile (UniPath.fromUnixString rootPath)
                                                    (UniPath.fromUnixString filePath)
     let name = "Std"
-        path = UniPath.fromUnixString "~/.flowbox/visual/stdlib.lunalib"
+        path = UniPath.fromUnixString "$LUNAROOT/global/visual/stdlib.lunalib"
         library = Library name def path ast PropertyMap.empty
     liftIO $ LibSerialization.storeLibrary library Nothing
-    return ()
+
+    --FIXME[PM] : Below code only for compatibility, remove it later.
+    let path = UniPath.fromUnixString "~/.flowbox/visual/stdlib.lunalib"
+        library = Library name def path ast PropertyMap.empty
+    liftIO $ LibSerialization.storeLibrary library Nothing
