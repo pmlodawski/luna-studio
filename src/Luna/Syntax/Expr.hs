@@ -76,6 +76,8 @@ type ExprApp a v = NamePat (LExpr a v) (AppArg (LExpr a v))
 app src args          = App $ NamePat Nothing    (Segment src args) []
 appInfix src pfx args = App $ NamePat (Just pfx) (Segment src args) []
 
+var n v = Var $ Variable n v
+
 unnamed = AppArg Nothing
 
 
@@ -95,4 +97,5 @@ data Sequence a = Linear    a   (Maybe a)
                 deriving (Show, Generic, Read, Eq)
 
 makeLenses ''Expr
+
 

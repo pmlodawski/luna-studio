@@ -33,4 +33,3 @@ data Pat a
     | Wildcard 
     | RecWildcard
     deriving (Show, Generic, Eq, Read)
-

@@ -44,15 +44,18 @@ class SegName s n | s -> n where
 -- Data types
 ----------------------------------------------------------------------
 
-data NamePat base arg = NamePat { _namePatPrefix   :: Maybe arg
-                                , _namePatBase     :: Segment base arg
-                                , _namePatSegments :: [Segment SegmentName arg]
+data NamePat base arg = NamePat { _prefix   :: Maybe arg
+                                , _base     :: Segment base arg
+                                , _segmentList :: [Segment SegmentName arg]
+            -- FIXME [kgdk -> wd]: ^-- better name for this. Was '_segments', but this name conflicts
+            -- with method in NamePatternClass
                                 } deriving (Show, Eq, Generic, Read, Ord, Functor, Traversable, Foldable)
 
-data Segment base arg = Segment { _segmentBase :: base 
+data Segment base arg = Segment { _segmentBase :: base
                                 , _segmentArgs :: [arg]
+            -- FIXME [kgdk -> wd]: ^-- better name for this (more conflicts). Long-term solution:
+            -- refactor to separate file
                                 } deriving (Show, Eq, Generic, Read, Ord, Functor, Traversable, Foldable)
-
 type ArgPat  a v      = NamePat     SegmentName (Arg a v)
 data NamePatDesc      = NamePatDesc  Bool SegmentDesc [SegmentDesc] deriving (Show, Eq, Generic, Read, Ord)
 data SegmentDesc      = SegmentDesc SegmentName [Bool]             deriving (Show, Eq, Generic, Read, Ord)
