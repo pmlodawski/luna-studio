@@ -162,7 +162,7 @@ buildNode astFolded monadicBind outName lexpr = case unwrap lexpr of
     _                                    -> showAndAddNode
     where
         nodeID = getID lexpr where
-            getID (Label l (Expr.App exprApp)) = getID $ exprApp ^. Pattern.namePatBase . Pattern.segmentBase
+            getID (Label l (Expr.App exprApp)) = getID $ exprApp ^. Pattern.base . Pattern.segmentBase
             getID (Label l _                 ) = Enum.id l
 
         --buildAssignment pat dst = do

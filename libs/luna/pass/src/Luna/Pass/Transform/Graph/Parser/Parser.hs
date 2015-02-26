@@ -213,13 +213,13 @@ parseAppNode nodeID app = do
 
 
 exprToNodeID :: Enum.Enumerated a => LExpr a v -> Node.ID
-exprToNodeID (Label _ (Expr.App exprApp)) = exprToNodeID $ exprApp ^. Pattern.namePatBase . Pattern.segmentBase
+exprToNodeID (Label _ (Expr.App exprApp)) = exprToNodeID $ exprApp ^. Pattern.base . Pattern.segmentBase
 exprToNodeID lexpr                        = Enum.id $ lexpr ^. Label.label
 
 
 setNodeID :: Enum.Enumerated a => Node.ID -> LExpr a v -> LExpr a v
 setNodeID nodeID lexpr@(Label _ (Expr.App _)) = lexpr & Label.element . Expr.exprApp
-                                                      . Pattern.namePatBase . Pattern.segmentBase
+                                                      . Pattern.base . Pattern.segmentBase
                                                       %~ setNodeID nodeID
 setNodeID nodeID lexpr                        = lexpr & Label.label              .~ Enum.tag  nodeID
 
