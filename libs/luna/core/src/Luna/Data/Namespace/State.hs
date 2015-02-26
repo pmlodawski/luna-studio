@@ -39,6 +39,7 @@ import           Luna.Syntax.Name.Path     (NamePath)
 import qualified Luna.Syntax.Name.Path     as NamePath
 import           Luna.Syntax.Name.Pattern  (NamePatDesc)
 
+
 logger :: LoggerIO
 logger = getLoggerIO $(moduleName)
 

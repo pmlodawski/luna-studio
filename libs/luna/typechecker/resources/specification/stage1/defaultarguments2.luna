@@ -1,0 +1,141 @@
+#   foo :: λ(a=10, b   , c=30):   λ(d=40, e   , f=60):  a +  b +  c +  d +  e +  f
+def foo  a=10  b  c=30:
+  d=40 e f=60: (a + b + c + d + e + f)
+
+# RULE: domyślnie funkcje nie mają curryingu
+# RULE: jeśli podamy wszystkie argumenty funkcji i więcej, to dodatkowe zostają przekazane do funkcji zwracanej
+# RULE: nawiasy dookoła powodują ewaluację
+# RULE: nie istnieje pusta tupla, więc () oznacza ewaluację
+# RULE: f()    <=> (f)   <=> f ()
+# RULE: @ wraz z podanymi wszystkimi argumentami do funkcji zwraca funkcję bezargumentową
+# RULE: @ to currying bez defaultingu - zwraca funkcję (nowa funkcja zachowuje wartości domyślne dla argumentów)
+# RULE: nawias „nie przepuszcza” curryingu: na zewnątrz i wewnątrz osobne „środowiska”
+
+# 0
+    foo                               # error - nie podano b
+   @foo                               # λ(a=10, b   , c=30):   λ(d=40, e   , f=60):  a +  b +  c +  d +  e +  f
+ 
+# 1
+    foo   1                           # error - nie podano b
+   (foo)  1                           # error - nie podano b (wewn. nawiasu)
+   @foo   1                           # λ(      b   , c=30):   λ(d=40, e   , f=60):  1 +  b +  c +  d +  e +  f
+  (@foo)  1                           # error - nie podano b
+ 
+# 2  
+    foo   1   2                       #                        λ(d=40, e   , f=60):  1 +  2 + 30 +  d +  e +  f
+   (foo)  1   2                       # error - nie podano b (wewn. nawiasu)
+   (foo   1)  2                       # error - nie podano b (wewn. nawiasu)
+   @foo   1   2                       # λ(            c=30):   λ(d=40, e   , f=60):  1 +  2 +  c +  d +  e +  f
+  (@foo)  1   2                       #                        λ(d=40, e   , f=60):  1 +  2 + 30 +  d +  e +  f
+  (@foo   1)  2                       #                        λ(d=40, e   , f=60):  1 +  2 + 30 +  d +  e +  f
+ @(@foo)  1   2                       # λ(            c=30):   λ(d=40, e   , f=60):  1 +  2 +  c +  d +  e +  f
+ @(@foo   1)  2                       # λ(            c=30):   λ(d=40, e   , f=60):  1 +  2 +  c +  d +  e +  f
+ 
+# 2+
+(  @foo   1   2)                      #                        λ(d=40, e   , f=60):  1 +  2 + 30 +  d +  e +  f
+(@(@foo)  1   2)                      #                        λ(d=40, e   , f=60):  1 +  2 + 30 +  d +  e +  f
+(@(@foo   1)  2)                      #                        λ(d=40, e   , f=60):  1 +  2 + 30 +  d +  e +  f
+ 
+# 3
+    foo   1   2   3                   #                        λ(d=40, e   , f=60):  1 +  2 +  3 +  d +  e +  f
+   (foo)  1   2   3                   # error - nie podano b (wewn. nawiasu)
+   (foo   1)  2   3                   # error - nie podano b (wewn. nawiasu)
+   (foo   1   2)      4               # error - nie podano e
+   @foo   1   2   3                   # λ                  :   λ(d=40, e   , f=60):  1 +  2 +  3 +  d +  e +  f
+  (@foo)  1   2   3                   #                        λ(d=40, e   , f=60):  1 +  2 +  3 +  d +  e +  f
+  (@foo   1)  2   3                   #                        λ(d=40, e   , f=60):  1 +  2 +  3 +  d +  e +  f
+  (@foo   1   2)  3                   #                        λ(d=40, e   , f=60):  1 +  2 +  3 +  d +  e +  f
+ @(@foo)  1   2   3                   # λ                  :   λ(d=40, e   , f=60):  1 +  2 +  3 +  d +  e +  f
+ @(@foo   1)  2   3                   # λ                  :   λ(d=40, e   , f=60):  1 +  2 +  3 +  d +  e +  f
+ @(@foo   1   2)  3                   # λ                  :   λ(d=40, e   , f=60):  1 +  2 +  3 +  d +  e +  f
+ 
+# 3+
+(  @foo   1   2   3)                  #                        λ(d=40, e   , f=60):  1 +  2 +  3 +  d +  e +  f
+(@(@foo)  1   2   3)                  #                        λ(d=40, e   , f=60):  1 +  2 +  3 +  d +  e +  f
+(@(@foo   1)  2   3)                  #                        λ(d=40, e   , f=60):  1 +  2 +  3 +  d +  e +  f
+(@(@foo   1   2)  3)                  #                        λ(d=40, e   , f=60):  1 +  2 +  3 +  d +  e +  f
+ 
+# 4
+    foo   1   2   3   4               # error
+   (foo)  1   2   3   4               # error - nie podano b (wewn. nawiasu)
+   (foo   1)  2   3   4               # error - nie podano b (wewn. nawiasu)
+   (foo   1   2)      4   5           #                        λ(            f=60):  1 +  2 + 30 +  4 +  5 +  f
+   (foo   1   2   3)  4               # error - nie podano e
+   @foo   1   2   3   4               #                        λ(      e   , f=60):  1 +  2 +  3 +  4 +  e +  f
+  (@foo)  1   2   3   4               # error - nie podano e
+  (@foo   1)  2   3   4               # error - nie podano e
+  (@foo   1   2)  3   4               # error - nie podano e
+  (@foo   1   2   3)  4               # error - nie podano e
+ @(@foo)  1   2   3   4               #                        λ(      e   , f=60):  1 +  2 +  3 +  4 +  e +  f
+ @(@foo   1)  2   3   4               #                        λ(      e   , f=60):  1 +  2 +  3 +  4 +  e +  f
+ @(@foo   1   2)  3   4               #                        λ(      e   , f=60):  1 +  2 +  3 +  4 +  e +  f
+ @(@foo   1   2   3)  4               #                        λ(      e   , f=60):  1 +  2 +  3 +  4 +  e +  f
+
+# 4+
+(  (foo   1   2)      4   5)          #                                              1 +  2 + 30 +  4 +  5 + 60
+
+# 5
+    foo   1   2   3   4   5           #                        λ(            f=60):  1 +  2 +  3 +  4 +  5 +  f
+   (foo)  1   2   3   4   5           # error - nie podano b (wewn. nawiasu)
+   (foo   1)  2   3   4   5           # error - nie podano b (wewn. nawiasu)
+   (foo   1   2)      4   5   6       #                                              1 +  2 + 30 +  4 +  5 +  6 
+   (foo   1   2   3)  4   5           #                                              1 +  2 +  3 +  4 +  5 + 60
+   (foo   1   2   3   4)  5           # error - nie podano e (wewn. nawiasu)
+   @foo   1   2   3   4   5           #                        λ(            f=60):  1 +  2 +  3 +  4 +  5 +  f
+  (@foo)  1   2   3   4   5           #                        λ(            f=60):  1 +  2 +  3 +  4 +  5 +  f
+  (@foo   1)  2   3   4   5           #                        λ(            f=60):  1 +  2 +  3 +  4 +  5 +  f
+  (@foo   1   2)  3   4   5           #                        λ(            f=60):  1 +  2 +  3 +  4 +  5 +  f
+  (@foo   1   2   3)  4   5           #                        λ(            f=60):  1 +  2 +  3 +  4 +  5 +  f
+  (@foo   1   2   3   4)  5           #                        λ(            f=60):  1 +  2 +  3 +  4 +  5 +  f
+ @(@foo)  1   2   3   4   5           #                        λ(            f=60):  1 +  2 +  3 +  4 +  5 +  f
+ @(@foo   1)  2   3   4   5           #                        λ(            f=60):  1 +  2 +  3 +  4 +  5 +  f
+ @(@foo   1   2)  3   4   5           #                        λ(            f=60):  1 +  2 +  3 +  4 +  5 +  f
+ @(@foo   1   2   3)  4   5           #                        λ(            f=60):  1 +  2 +  3 +  4 +  5 +  f
+ @(@foo   1   2   3   4)  5           #                        λ(            f=60):  1 +  2 +  3 +  4 +  5 +  f
+ 
+# 5+
+(   foo   1   2   3   4   5)          #                                              1 +  2 +  3 +  4 +  5 + 60
+(  @foo   1   2   3   4   5)          #                                              1 +  2 +  3 +  4 +  5 + 60
+( (@foo)  1   2   3   4   5)          #                                              1 +  2 +  3 +  4 +  5 + 60
+( (@foo   1)  2   3   4   5)          #                                              1 +  2 +  3 +  4 +  5 + 60
+( (@foo   1   2)  3   4   5)          #                                              1 +  2 +  3 +  4 +  5 + 60
+( (@foo   1   2   3)  4   5)          #                                              1 +  2 +  3 +  4 +  5 + 60
+( (@foo   1   2   3   4)  5)          #                                              1 +  2 +  3 +  4 +  5 + 60
+(@(@foo)  1   2   3   4   5)          #                                              1 +  2 +  3 +  4 +  5 + 60
+(@(@foo   1)  2   3   4   5)          #                                              1 +  2 +  3 +  4 +  5 + 60
+(@(@foo   1   2)  3   4   5)          #                                              1 +  2 +  3 +  4 +  5 + 60
+(@(@foo   1   2   3)  4   5)          #                                              1 +  2 +  3 +  4 +  5 + 60
+(@(@foo   1   2   3   4)  5)          #                                              1 +  2 +  3 +  4 +  5 + 60
+ 
+# 6
+    foo   1   2   3   4   5   6       #                                              1 +  2 +  3 +  4 +  5 +  6
+   (foo)  1   2   3   4   5   6       # error - nie podano b (wewn. nawiasu)
+   (foo   1)  2   3   4   5   6       # error - nie podano b (wewn. nawiasu)
+   (foo   1   2)      4   5   6   7   # error
+   (foo   1   2   3)  4   5   6       #                                              1 +  2 +  3 +  4 +  5 +  6
+   (foo   1   2   3   4)  5   6       # error - nie podano e (wewn. nawiasu)
+   (foo   1   2   3   4   5)  6       # error - za dużo argumentów
+   @foo   1   2   3   4   5   6       #                        λ                  :  1 +  2 +  3 +  4 +  5 +  6
+  (@foo)  1   2   3   4   5   6       #                                              1 +  2 +  3 +  4 +  5 +  6
+  (@foo   1)  2   3   4   5   6       #                                              1 +  2 +  3 +  4 +  5 +  6
+  (@foo   1   2)  3   4   5   6       #                                              1 +  2 +  3 +  4 +  5 +  6
+  (@foo   1   2   3)  4   5   6       #                                              1 +  2 +  3 +  4 +  5 +  6
+  (@foo   1   2   3   4)  5   6       #                                              1 +  2 +  3 +  4 +  5 +  6
+  (@foo   1   2   3   4   5)  6       #                                              1 +  2 +  3 +  4 +  5 +  6
+ @(@foo)  1   2   3   4   5   6       #                        λ                  :  1 +  2 +  3 +  4 +  5 +  6
+ @(@foo   1)  2   3   4   5   6       #                        λ                  :  1 +  2 +  3 +  4 +  5 +  6
+ @(@foo   1   2)  3   4   5   6       #                        λ                  :  1 +  2 +  3 +  4 +  5 +  6
+ @(@foo   1   2   3)  4   5   6       #                        λ                  :  1 +  2 +  3 +  4 +  5 +  6
+ @(@foo   1   2   3   4)  5   6       #                        λ                  :  1 +  2 +  3 +  4 +  5 +  6
+ @(@foo   1   2   3   4   5)  6       #                        λ                  :  1 +  2 +  3 +  4 +  5 +  6
+ 
+
+# 6+
+
+(  @foo   1   2   3   4   5   6)      #                                              1 +  2 +  3 +  4 +  5 +  6
+(@(@foo)  1   2   3   4   5   6)      #                                              1 +  2 +  3 +  4 +  5 +  6
+(@(@foo   1)  2   3   4   5   6)      #                                              1 +  2 +  3 +  4 +  5 +  6
+(@(@foo   1   2)  3   4   5   6)      #                                              1 +  2 +  3 +  4 +  5 +  6
+(@(@foo   1   2   3)  4   5   6)      #                                              1 +  2 +  3 +  4 +  5 +  6
+(@(@foo   1   2   3   4)  5   6)      #                                              1 +  2 +  3 +  4 +  5 +  6
+(@(@foo   1   2   3   4   5)  6)      #                                              1 +  2 +  3 +  4 +  5 +  6

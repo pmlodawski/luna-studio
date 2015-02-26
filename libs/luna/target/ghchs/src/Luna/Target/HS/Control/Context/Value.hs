@@ -40,6 +40,8 @@ newtype Value m s v = Value (m (s v)) deriving (Typeable, Functor)
 
 fromValue (Value a) = a
 
+withValue f (Value a) = Value $ f a
+
 --------------------------------------------------------------------------------
 -- Type classes
 --------------------------------------------------------------------------------

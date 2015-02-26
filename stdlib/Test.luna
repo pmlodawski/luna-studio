@@ -1,3 +1,7 @@
+foreign haskell class Bool:
+    True
+    False
+
 foreign haskell def print msg:
     autoLift1 print msg
 
@@ -9,6 +13,47 @@ foreign haskell class List
 foreign haskell def List.at idx:
     liftF2 (!!) self idx
 
+foreign haskell def List.empty:
+    liftF1 null self
+
+def List.bool:
+    Main.not self.empty
+
+foreign haskell def Bool.== a:
+    liftF2 (==) self a
+
+=======
+foreign haskell def List.empty:
+    liftF1 null self
+
+def List.bool:
+    Main.not self.empty
+
+foreign haskell def Bool.== a:
+    liftF2 (==) self a
+
+def Bool.bool: self
+
+def not a:
+    case (a.bool):
+        True : False
+        False: True
+
+foreign haskell def foo a b:
+    liftF2 (==) a b
+
+def == a b:
+    a.== b
+
 def main:
-    a = [1,2,3]
-    print (a.at 0)
+    a = []
+    print if not a then 1 else 2 
+
+=======
+    a = []
+    print if not a then 1 else 2 
+
+def `if` base `then` ok `else` fail:
+    case (base.bool):
+        True : ok
+        False: fail
