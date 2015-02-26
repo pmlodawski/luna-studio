@@ -8,8 +8,8 @@ foreign haskell import Flowbox.Graphics.Mockup.Matte
 foreign haskell def rasterizeMask w h m:
     liftF3 rasterizeMaskLuna w h m
 
-foreign haskell def imageMatte path channelName:
-    autoLift2 imageMatteLuna path channelName
+foreign haskell def imageMatte img channelName:
+    liftF2 imageMatteLuna img channelName
 
 foreign haskell def vectorMatte mask:
     liftF1 vectorMatteLuna mask
