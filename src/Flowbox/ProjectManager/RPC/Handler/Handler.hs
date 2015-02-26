@@ -14,31 +14,32 @@ module Flowbox.ProjectManager.RPC.Handler.Handler where
 import           Control.Monad             (liftM)
 import Control.Monad.Trans.State
 
-import           Flowbox.Bus.Data.Message                       (Message)
-import qualified Flowbox.Bus.Data.Message                       as Message
-import           Flowbox.Bus.Data.Topic                         ((/+))
-import qualified Flowbox.Bus.Data.Topic                         as Topic
-import           Flowbox.Bus.RPC.HandlerMap                     (HandlerMap)
-import qualified Flowbox.Bus.RPC.HandlerMap                     as HandlerMap
-import           Flowbox.Bus.RPC.RPC                            (RPC)
-import qualified Flowbox.Bus.RPC.Server.Processor               as Processor
-import           Flowbox.Prelude                                hiding (Context, error)
-import           Flowbox.ProjectManager.Context                 (Context)
-import qualified Flowbox.ProjectManager.RPC.Handler.AST         as ASTHandler
-import qualified Flowbox.ProjectManager.RPC.Handler.Graph       as GraphHandler
-import qualified Flowbox.ProjectManager.RPC.Handler.Library     as LibraryHandler
-import qualified Flowbox.ProjectManager.RPC.Handler.Maintenance as MaintenanceHandler
-import qualified Flowbox.ProjectManager.RPC.Handler.NodeDefault as NodeDefaultHandler
-import qualified Flowbox.ProjectManager.RPC.Handler.Project     as ProjectHandler
-import qualified Flowbox.ProjectManager.RPC.Handler.Properties  as PropertiesHandler
-import qualified Flowbox.ProjectManager.RPC.Handler.Sync        as SyncHandler
-import qualified Flowbox.ProjectManager.RPC.Topic               as Topic
+import           Flowbox.Bus.Data.Message                         (Message)
+import qualified Flowbox.Bus.Data.Message                         as Message
+import           Flowbox.Bus.Data.Topic                           ((/+))
+import qualified Flowbox.Bus.Data.Topic                           as Topic
+import           Flowbox.Bus.RPC.HandlerMap                       (HandlerMap)
+import qualified Flowbox.Bus.RPC.HandlerMap                       as HandlerMap
+import           Flowbox.Bus.RPC.RPC                              (RPC)
+import qualified Flowbox.Bus.RPC.Server.Processor                 as Processor
+import           Flowbox.Prelude                                  hiding (Context, error)
+import           Flowbox.ProjectManager.Context                   (Context)
+import qualified Flowbox.ProjectManager.RPC.Handler.AST           as ASTHandler
+import qualified Flowbox.ProjectManager.RPC.Handler.Graph         as GraphHandler
+import qualified Flowbox.ProjectManager.RPC.Handler.Library       as LibraryHandler
+import qualified Flowbox.ProjectManager.RPC.Handler.Maintenance   as MaintenanceHandler
+import qualified Flowbox.ProjectManager.RPC.Handler.NodeDefault   as NodeDefaultHandler
+import qualified Flowbox.ProjectManager.RPC.Handler.Project       as ProjectHandler
+import qualified Flowbox.ProjectManager.RPC.Handler.Properties    as PropertiesHandler
+import qualified Flowbox.ProjectManager.RPC.Handler.Sync          as SyncHandler
+import qualified Flowbox.ProjectManager.RPC.Topic                 as Topic
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.Text.ProtocolBuffers                   as Proto
-import qualified Flowbox.UR.Manager.RPC.Topic                   as Topic
-import qualified Generated.Proto.Urm.URM.Register.Request       as Register
-import qualified Generated.Proto.Urm.URM.Undo.Request           as Undo
-import           Flowbox.Text.ProtocolBuffers                   (Serializable)
+import qualified Flowbox.Text.ProtocolBuffers                     as Proto
+import qualified Flowbox.UR.Manager.RPC.Topic                     as Topic
+import qualified Generated.Proto.Urm.URM.Register.Request         as Register
+import qualified Generated.Proto.Urm.URM.RegisterMultiple.Request as RegisterMultiple
+import qualified Generated.Proto.Urm.URM.Undo.Request             as Undo
+import           Flowbox.Text.ProtocolBuffers                     (Serializable)
 
 
 
@@ -82,16 +83,19 @@ handlerMap callback = HandlerMap.fromList
     , (Topic.projectLibraryAstFunctionModifyOutputRequest           , call Topic.update ASTHandler.functionOutputModify)
     , (Topic.projectLibraryAstFunctionModifyPathRequest             , call Topic.update ASTHandler.functionPathModify)
     , (Topic.projectLibraryAstFunctionGraphGetRequest               , call Topic.status GraphHandler.get)
-    , (Topic.projectLibraryAstFunctionGraphConnectRequest           , call Topic.update GraphHandler.connect)
-    , (Topic.projectLibraryAstFunctionGraphDisconnectRequest        , call Topic.update GraphHandler.disconnect)
+    , (Topic.projectLibraryAstFunctionGraphConnectRequest           , call2 Topic.update GraphHandler.connect)
+    , ("undone." ++ Topic.projectLibraryAstFunctionGraphConnectRequest , call3 "project.library.ast.function.graph.connect.update" GraphHandler.connect)
+    , (Topic.projectLibraryAstFunctionGraphDisconnectRequest        , call2 Topic.update GraphHandler.disconnect)
+    , ("undone." ++ Topic.projectLibraryAstFunctionGraphDisconnectRequest , call3 "project.library.ast.function.graph.disconnect.update" GraphHandler.disconnect)
     , (Topic.projectLibraryAstFunctionGraphLookupRequest            , call Topic.status GraphHandler.lookup)
     , (Topic.projectLibraryAstFunctionGraphLookupManyRequest        , call Topic.status GraphHandler.lookupMany)
     , (Topic.projectLibraryAstFunctionGraphNodeAddRequest           , call2 Topic.update GraphHandler.nodeAdd)
-    , ("project.library.ast.function.graph.node.addundone.request" , call3 "project.library.ast.function.graph.node.modifyinplace.update"  GraphHandler.nodeMIP)
-    , (Topic.projectLibraryAstFunctionGraphNodeRemoveRequest        , call Topic.update GraphHandler.nodeRemove)
+    , ("undone." ++ Topic.projectLibraryAstFunctionGraphNodeAddRequest , call3 "project.library.ast.function.graph.node.add.update" GraphHandler.nodeAdd)
+    , (Topic.projectLibraryAstFunctionGraphNodeRemoveRequest        , call4 Topic.update GraphHandler.nodeRemove)
+    , ("undone." ++ Topic.projectLibraryAstFunctionGraphNodeRemoveRequest , call5 "project.library.ast.function.graph.node.remove.update" GraphHandler.nodeRemove)
     , (Topic.projectLibraryAstFunctionGraphNodeModifyRequest        , call Topic.update GraphHandler.nodeModify)
     , (Topic.projectLibraryAstFunctionGraphNodeModifyinplaceRequest , call2 Topic.update GraphHandler.nodeModifyInPlace)
-    , ("project.library.ast.function.graph.node.mip.request" , call3 "project.library.ast.function.graph.node.modifyinplace.update"  GraphHandler.nodeMIP)
+    , ("undone." ++ Topic.projectLibraryAstFunctionGraphNodeModifyinplaceRequest , call3 "project.library.ast.function.graph.node.modifyinplace.update" GraphHandler.nodeModifyInPlace)
     , (Topic.projectLibraryAstFunctionGraphNodeDefaultGetRequest    , call Topic.status NodeDefaultHandler.get)
     , (Topic.projectLibraryAstFunctionGraphNodeDefaultRemoveRequest , call Topic.update NodeDefaultHandler.remove)
     , (Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest    , call Topic.update NodeDefaultHandler.set)
@@ -113,5 +117,14 @@ handlerMap callback = HandlerMap.fromList
         call2 t fun = callback (/+ t) $ \a -> do (r1, r2) <- fun a
                                                  return ([r1], [Message.mk Topic.urmRegisterRequest r2])
         call3 :: (Proto.Serializable args, Proto.Serializable result)
-             => String -> (args -> RPC Context IO result) -> StateT Context IO [Message]
-        call3 type_ = callback (\_ -> type_) . Processor.singleResult
+              => String -> (args -> RPC Context IO (result, Register.Request)) -> StateT Context IO [Message]
+        call3 type_ fun = callback (\_ -> type_) $ \a -> do r1 <- liftM fst $ fun a
+                                                            return ([r1], [])
+        call4 :: (Proto.Serializable args, Proto.Serializable result)
+              => String -> (args -> RPC Context IO (result, RegisterMultiple.Request)) -> StateT Context IO [Message]
+        call4 t fun = callback (/+ t) $ \a -> do (r1, r2) <- fun a
+                                                 return ([r1], [Message.mk Topic.urmRegisterMultipleRequest r2])
+        call5 :: (Proto.Serializable args, Proto.Serializable result)
+              => String -> (args -> RPC Context IO (result, RegisterMultiple.Request)) -> StateT Context IO [Message]
+        call5 type_ fun = callback (\_ -> type_) $ \a -> do r1 <- liftM fst $ fun a
+                                                            return ([r1], [])
