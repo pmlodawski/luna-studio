@@ -4,23 +4,28 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell     #-}
 module Flowbox.ProjectManager.RPC.Handler.Graph where
 
-import           Control.Monad
 import qualified Data.Either   as Either
+import qualified Data.List     as List
 import qualified Data.Sequence as Sequence
 
 import qualified Flowbox.Batch.Handler.Common                                                                 as Batch
 import qualified Flowbox.Batch.Handler.Graph                                                                  as BatchG
 import           Flowbox.Bus.Data.Message                                                                     as Message
+import           Flowbox.Bus.Data.Topic                                                                       (Topic)
 import           Flowbox.Bus.Data.Serialize.Proto.Conversion.Message                                          ()
 import           Flowbox.Bus.RPC.RPC                                                                          (RPC)
 import           Flowbox.Data.Convert
 import           Flowbox.Prelude                                                                              hiding (Context, error)
 import           Flowbox.ProjectManager.Context                                                               (Context)
+import qualified Flowbox.ProjectManager.RPC.Topic                                                             as Topic
 import           Flowbox.System.Log.Logger
+import qualified Flowbox.Text.ProtocolBuffers                                                                 as Proto
+import qualified Generated.Proto.Bus.Message                                                                  as Bus
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Connect.Request            as Connect
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Connect.Update             as Connect
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Disconnect.Request         as Disconnect
@@ -40,6 +45,7 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Gra
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Request        as NodeRemove
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Update         as NodeRemove
 import qualified Generated.Proto.Urm.URM.Register.Request                                                     as Register
+import qualified Generated.Proto.Urm.URM.RegisterMultiple.Request                                             as RegisterMultiple
 import           Luna.DEP.Data.Serialize.Proto.Conversion.Crumb                                               ()
 import           Luna.DEP.Data.Serialize.Proto.Conversion.GraphView                                           ()
 
@@ -84,21 +90,18 @@ lookupMany request@(LookupMany.Request tnodeIDs tbc tlibID tprojectID _) = do
         notFound = Either.lefts items
     return $ LookupMany.Status request (encode found) (encodeP notFound)
 
-nodeAddUndo :: NodeAdd.Request -> RPC Context IO NodeAdd.Update
-nodeAddUndo = liftM fst . nodeAdd
-
 nodeAdd :: NodeAdd.Request -> RPC Context IO (NodeAdd.Update, Register.Request)
 nodeAdd request@(NodeAdd.Request tnode tbc tlibID tprojectID astID) = do
     bc <- decodeE tbc
-    (_ :: Int, node) <- decodeE tnode
+    (oldNodeId :: Int, node) <- decodeE tnode
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     newNodeID <- BatchG.addNode node bc libID projectID
     updateNo <- Batch.getUpdateNo
     return $ ( NodeAdd.Update request (encode (newNodeID, node)) updateNo
              , Register.Request
-                (encodeP $ Message.mk "project.library.ast.function.graph.node.remove.request" $ NodeRemove.Request (Sequence.singleton $ encodeP newNodeID) tbc tlibID tprojectID astID)
-                (encodeP $ Message.mk "project.library.ast.function.graph.node.addundone.request" $ request)
+                (fun Topic.projectLibraryAstFunctionGraphNodeRemoveRequest $ NodeRemove.Request (Sequence.singleton $ encodeP newNodeID) tbc tlibID tprojectID astID)
+                (fun Topic.projectLibraryAstFunctionGraphNodeAddRequest request)
              )
 
 nodeModify :: NodeModify.Request -> RPC Context IO NodeModify.Update
@@ -111,18 +114,15 @@ nodeModify request@(NodeModify.Request tnode tbc tlibID tprojectID _) = do
     updateNo <- Batch.getUpdateNo
     return $ NodeModify.Update request (encode (newNodeID, node)) updateNo
 
-nodeMIP :: NodeModifyInPlace.Request -> RPC Context IO (NodeModifyInPlace.Update)
-nodeMIP = liftM fst . nodeModifyInPlace
-
 nodeModifyInPlace :: NodeModifyInPlace.Request -> RPC Context IO (NodeModifyInPlace.Update, Register.Request)
 nodeModifyInPlace request@(NodeModifyInPlace.Request tnode tbc tlibID tprojectID astID) = do
     bc <- decodeE tbc
-    nodeWithId <- decodeE tnode
+    nodeWithId@(nid, _) <- decodeE tnode
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     
-    node <- BatchG.nodeByID (fst nodeWithId) bc libID projectID
-    let oldNode   = encode (fst nodeWithId, node)
+    node <- BatchG.nodeByID nid bc libID projectID
+    let oldNode   = encode (nid, node)
 
     BatchG.updateNodeInPlace nodeWithId bc libID projectID
     updateNo <- Batch.getUpdateNo
@@ -130,25 +130,31 @@ nodeModifyInPlace request@(NodeModifyInPlace.Request tnode tbc tlibID tprojectID
     logger error $ show oldNode ++ " " ++ (show tnode)
     return $ ( NodeModifyInPlace.Update request updateNo
              , Register.Request 
-                (encodeP $ Message.mk "project.library.ast.function.graph.node.mip.request" $ NodeModifyInPlace.Request oldNode tbc tlibID tprojectID astID)
-                (encodeP $ Message.mk "project.library.ast.function.graph.node.mip.request" $ request)
+                (fun Topic.projectLibraryAstFunctionGraphNodeModifyinplaceRequest $ NodeModifyInPlace.Request oldNode tbc tlibID tprojectID astID)
+                (fun Topic.projectLibraryAstFunctionGraphNodeModifyinplaceRequest request)
              )
 
---nodeRm :: NodeRemove.Request -> RPC Context IO NodeRemove.Update
 
-nodeRemove :: NodeRemove.Request -> RPC Context IO NodeRemove.Update
-nodeRemove request@(NodeRemove.Request tnodeIDs tbc tlibID tprojectID _) = do
+nodeRemove :: NodeRemove.Request -> RPC Context IO (NodeRemove.Update, RegisterMultiple.Request)
+nodeRemove request@(NodeRemove.Request tnodeIDs tbc tlibID tprojectID astID) = do
     bc <- decodeE tbc
     let nodeIDs   = decodeP tnodeIDs
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
+    oldNodes <- mapM (\nid -> do node <- BatchG.nodeByID nid bc libID projectID
+                                 return $ encode (nid, node))
+                     $ List.sort nodeIDs
     BatchG.removeNodes nodeIDs bc libID projectID
     updateNo <- Batch.getUpdateNo
-    return $ NodeRemove.Update request updateNo
+    return $ ( NodeRemove.Update request updateNo
+             , RegisterMultiple.Request
+                (Sequence.fromList $ map (\node -> fun Topic.projectLibraryAstFunctionGraphNodeAddRequest $ NodeAdd.Request node tbc tlibID tprojectID astID) oldNodes)
+                (fun Topic.projectLibraryAstFunctionGraphNodeRemoveRequest request)
+             )
 
 
-connect :: Connect.Request -> RPC Context IO Connect.Update
-connect request@(Connect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibID tprojectID _) = do
+connect :: Connect.Request -> RPC Context IO (Connect.Update, Register.Request)
+connect request@(Connect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibID tprojectID astID) = do
     bc <- decodeE tbc
     let srcNodeID = decodeP tsrcNodeID
         srcPort   = decodeP tsrcPort
@@ -158,11 +164,17 @@ connect request@(Connect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tli
         projectID = decodeP tprojectID
     BatchG.connect srcNodeID srcPort dstNodeID dstPort bc libID projectID
     updateNo <- Batch.getUpdateNo
-    return $ Connect.Update request updateNo
+    return $ ( Connect.Update request updateNo
+             , Register.Request
+                (fun Topic.projectLibraryAstFunctionGraphDisconnectRequest $ Disconnect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibID tprojectID astID)
+                (fun Topic.projectLibraryAstFunctionGraphConnectRequest request)
+             )
 
+fun :: Proto.Serializable message => Topic -> message -> Bus.Message
+fun = (encodeP .) . Message.mk . ("undone." ++)
 
-disconnect :: Disconnect.Request -> RPC Context IO Disconnect.Update
-disconnect request@(Disconnect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibID tprojectID _) = do
+disconnect :: Disconnect.Request -> RPC Context IO (Disconnect.Update, Register.Request)
+disconnect request@(Disconnect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibID tprojectID astID) = do
     bc <- decodeE tbc
     let srcNodeID = decodeP tsrcNodeID
         srcPort   = decodeP tsrcPort
@@ -172,4 +184,8 @@ disconnect request@(Disconnect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort t
         projectID = decodeP tprojectID
     BatchG.disconnect srcNodeID srcPort dstNodeID dstPort bc libID projectID
     updateNo <- Batch.getUpdateNo
-    return $ Disconnect.Update request updateNo
+    return $ ( Disconnect.Update request updateNo
+             , Register.Request
+                (fun Topic.projectLibraryAstFunctionGraphConnectRequest $ Connect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibID tprojectID astID)
+                (fun Topic.projectLibraryAstFunctionGraphDisconnectRequest request)
+             )

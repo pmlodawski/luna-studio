@@ -28,17 +28,18 @@ import qualified Flowbox.Text.ProtocolBuffers               as Proto
 
 handlerMap :: HandlerMap Context IO
 handlerMap callback = HandlerMap.fromList
-    [ (Topic.urmRegisterRequest, respond status URMHandler.register)
-    , (Topic.urmUndoRequest    , respond2 status URMHandler.undo)
-    , (Topic.urmRedoRequest    , respond2 status URMHandler.redo)
-    , (Topic.urmPingRequest    , respond status Maintenance.ping) 
+    [ (Topic.urmRegisterRequest         , respond status URMHandler.register)
+    , (Topic.urmRegisterMultipleRequest , respond status URMHandler.registerMultiple)
+    , (Topic.urmRedoRequest             , respond2 status URMHandler.redo)
+    , (Topic.urmPingRequest             , respond status Maintenance.ping) 
+    , (Topic.urmUndoRequest             , respond2 status URMHandler.undo)
     ]
     where
         respond :: (Proto.Serializable args, Proto.Serializable result)
                 => String -> (args -> RPC Context IO result) -> StateT Context IO [Message]
         respond type_ = callback (/+ type_) . Processor.singleResult
         respond2 :: (Proto.Serializable args, Proto.Serializable result)
-                 => String -> (args -> RPC Context IO (result, Maybe Message)) -> StateT Context IO [Message]
+                 => String -> (args -> RPC Context IO (result, Maybe [Message])) -> StateT Context IO [Message]
         respond2 type_ fun = callback (/+ type_) (\a -> do
                                                           (b, c) <- fun a
-                                                          return ([b], maybeToList c))
+                                                          return ([b], concat $ maybeToList c))
