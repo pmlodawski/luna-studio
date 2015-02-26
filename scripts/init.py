@@ -113,7 +113,8 @@ def checkPythonPkg(package, version=None):
     except CalledProcessError, e:
         retcode = e.returncode
         print_error("Sorry, but `pip freeze` returned code {retcode}".format(**locals()))
-        fatal()
+        if not ask ("Continue?"):
+            fatal()
 
 def try_call(cmd):
     print_info ("Running '%s'" % cmd)

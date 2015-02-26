@@ -22,16 +22,6 @@ def List.bool:
 foreign haskell def Bool.== a:
     liftF2 (==) self a
 
-=======
-foreign haskell def List.empty:
-    liftF1 null self
-
-def List.bool:
-    Main.not self.empty
-
-foreign haskell def Bool.== a:
-    liftF2 (==) self a
-
 def Bool.bool: self
 
 def not a:
@@ -46,10 +36,6 @@ def == a b:
     a.== b
 
 def main:
-    a = []
-    print if not a then 1 else 2 
-
-=======
     a = []
     print if not a then 1 else 2 
 
