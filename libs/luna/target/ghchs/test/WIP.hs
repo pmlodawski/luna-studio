@@ -44,27 +44,6 @@ $(registerMethod ''Cls_Main "Main")
 -- Data headers
 -- ===================================================================
 
--- ====== Bool type ====== --
--- datatype provided externally
-$(registerType ''Bool)
-$(registerCons ''Bool ["True", "False"])
-
--- ------ Bool.True constructor ------ --
-memDef_Cls_Bool_True = liftCons0 True
-
--- ====== Method: Cls_Bool.True ====== --
-memSig_Cls_Bool_True = _rtup1 (_nuSigArg ("self"))
-memFnc_Cls_Bool_True = (memSig_Cls_Bool_True, memDef_Cls_Bool_True)
-$(registerMethod ''Cls_Bool "True")
-
--- ------ Bool.False constructor ------ --
-memDef_Cls_Bool_False = liftCons0 False
-
--- ====== Method: Cls_Bool.False ====== --
-memSig_Cls_Bool_False = _rtup1 (_nuSigArg ("self"))
-memFnc_Cls_Bool_False = (memSig_Cls_Bool_False, memDef_Cls_Bool_False)
-$(registerMethod ''Cls_Bool "False")
-
 -- ====== List type ====== --
 -- datatype provided externally
 $(registerType ''List)
