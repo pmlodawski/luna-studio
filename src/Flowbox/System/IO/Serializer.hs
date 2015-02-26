@@ -4,18 +4,13 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-module Flowbox.System.IO.Serializer(
-    Serializable(..),
-    Deserializable(..),
+{-# LANGUAGE TemplateHaskell #-}
 
-    serializeMany,
-    serialize,
-    deserialize
-) where
+module Flowbox.System.IO.Serializer where
 
 import           Control.Applicative
-import           System.Directory    as Dir
-import qualified System.IO           as IO
+import qualified Flowbox.System.Directory.Directory as Dir
+import qualified System.IO                          as IO
 
 import           Flowbox.Prelude
 import           Flowbox.System.UniPath (UniPath)
@@ -23,27 +18,35 @@ import qualified Flowbox.System.UniPath as UniPath
 
 
 
-data Serializable = Serializable UniPath (IO.Handle -> IO())
+data Serializable = Serializable { _dstPath :: UniPath
+                                 , _save    :: IO.Handle -> IO ()
+                                 }
 
-data Deserializable a = Deserializable UniPath (IO.Handle -> IO a)
+data Deserializable a = Deserializable { _srcPath :: UniPath
+                                       , _load    :: IO.Handle -> IO a
+                                       }
+
+makeLenses ''Serializable
+makeLenses ''Deserializable
 
 
-serializeMany :: [Serializable] -> IO()
-serializeMany serializables = do
-    mapM_ serialize serializables
-    return ()
+serialize :: Serializable -> IO ()
+serialize serializable = do
+    let swpPath = UniPath.addExtension ".swp" $ serializable ^. dstPath
+    serializeNonAtomic $ dstPath .~ swpPath $ serializable
+    Dir.renameFile swpPath $ serializable ^. dstPath
 
 
-serialize :: Serializable -> IO()
-serialize (Serializable upath save) = do
+serializeNonAtomic :: Serializable -> IO ()
+serializeNonAtomic (Serializable upath save') = do
     apath <- UniPath.expand upath
-    let foldername = UniPath.toUnixString $ init apath
+    let foldername = UniPath.basePath apath
         filename   = UniPath.toUnixString apath
     Dir.createDirectoryIfMissing True foldername
-    IO.withFile filename IO.WriteMode save
+    IO.withFile filename IO.WriteMode save'
 
 
 deserialize :: Deserializable a -> IO a
-deserialize (Deserializable upath load) = do
+deserialize (Deserializable upath load') = do
     filename <- UniPath.toUnixString <$> UniPath.expand upath
-    IO.withFile filename IO.ReadMode load
+    IO.withFile filename IO.ReadMode load'
