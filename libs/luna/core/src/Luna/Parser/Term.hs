@@ -99,7 +99,7 @@ tlExprExtHead =   try tlExprPat
 tlExprBasicHead =  try tlExprPatVar
                <|> try tlRecUpd
 
-tlExprParser head base =   (labeled $ head <*> tlExprBasic base)
+tlExprParser head base =   try (labeled $ head <*> tlExprBasic base)
                        <|> opTupleTE base
 
 tlExpr      = tlExprParser tlExprExtHead
@@ -242,17 +242,23 @@ mkFuncParser baseVar (id, mpatt) = case mpatt of
     Just patt@(NamePat.NamePatDesc pfx base segs) -> ParserState.withReserved (tail segNames) 
                                                    $ labeled $ Expr.App <$> pattParser
         where NamePat.SegmentDesc baseName baseDefs = base
-              segParser (NamePat.SegmentDesc name defs) = NamePat.Segment <$> Tok.symbol name <*> defsParser defs
-              argExpr         = appArg pEntBaseSimpleE
-              --argExpr         = appArg (opTE pEntBaseSimpleE) -- enable for multi-names!
-              segNames        = NamePat.segmentNames patt
-              pattParser      = NamePat Nothing <$> baseParser   <*> mapM segParser segs
-              baseParser      = NamePat.Segment <$> baseMultiVar <*> defsParser baseDefs
-              baseMultiVar    = labeled . pure $ Expr.Var $ Expr.Variable (vname $ NamePat.toNamePath patt) ()
-              defsParser defs = fmap takeJustArgs $ mapM argParser defs
-              takeJustArgs    = fmap fromJust . filter isJust 
-              argParser req   = if req then just  argExpr
-                                       else maybe argExpr
+              baseParser                                = NamePat.Segment <$> baseMultiVar <*> defBaseParser baseDefs
+              segParser (NamePat.SegmentDesc name defs) = NamePat.Segment <$> Tok.symbol name <*> defSegParser defs
+
+              defSegParser defs  = fmap takeJustArgs $ parseSegArgs defs
+              defBaseParser defs = fmap takeJustArgs $ parseBaseArgs defs
+              takeJustArgs       = fmap fromJust . filter isJust 
+              argSimpleExpr      = appArg pEntBaseSimpleE
+              argCmplexExpr      = appArg (opTE pEntBaseSimpleE)
+              segNames           = NamePat.segmentNames patt
+              pattParser         = NamePat Nothing <$> baseParser   <*> mapM segParser segs
+              baseMultiVar       = labeled . pure $ Expr.Var $ Expr.Variable (vname $ NamePat.toNamePath patt) ()
+              condParser p req   = if req then just  p
+                                          else maybe p
+              parseBaseArgs args  = mapM (condParser argCmplexExpr) args
+              parseSegArgs []     = pure []
+              parseSegArgs (a:[]) = (:[]) <$> condParser argSimpleExpr a
+              parseSegArgs (a:as) = (:) <$> condParser argCmplexExpr a <*> parseSegArgs as
 
 
 notReserved p = do
@@ -266,6 +272,7 @@ notReserved p = do
 varE   = do
     name <- try $ notReserved Tok.varIdent
     ast  <- lookupAST name
+
     case ast of
         --Just possibleDescs -> fail $ show possibleDescs
         Just possibleDescs -> mkFuncParsers possibleDescs (labeled . pure $ Expr.Var $ Expr.Variable (vname $ NamePath.single name) ())

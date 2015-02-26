@@ -218,13 +218,41 @@ getDefaultTestPic specPath testName = do
         else tryDownloading specPath testName
 
 tryDownloading specPath testName = do
-    conf <- getDefaultTestConfig
-    print $ getRemotePath conf
-    site <- openURI $ (getRemotePath conf) ++specPath++testName++"Test/"++testName++"_expected.png"
-    case site of
-        Left err -> error "no file"
-        Right img -> do
-            createDirectory $ specPath++testName++"Test/"
-            B.writeFile (specPath++testName++"Test/"++testName++"_expected.png") img
-            loadImageLuna $ specPath++testName++"Test/"++testName++"_expected.png"
+    customExists  <- doesFileExist "./test/custom.config"
+    defaultExists <- doesFileExist "./test/default.config"
+    if customExists 
+        then do
+            conf <- getTestConfig "./test/custom.config"
+            print $ getRemotePath conf
+            site <- openURI $ (getRemotePath conf) ++specPath++testName++"Test/"++testName++"_expected.png"
+            trySaveSite site specPath testName
+        else do
+            if defaultExists
+                then do
+                    altConf <- getTestConfig "./test/default.config"
+                    print $ getRemotePath altConf
+                    site <- openURI $ (getRemotePath altConf) ++specPath++testName++"Test/"++testName++"_expected.png"
+                    trySaveSite site specPath testName
+                else error "No config files. You need custom.config or default.config file in test directory."
+
+        --case site of
+        --    Left err -> do
+        --        altConf <- getTestConfig "./test/default.config"
+        --        altSite <- openURI $ (getRemotePath altConf) ++specPath++testName++"Test/"++testName++"_expected.png"
+        --        case altSite of
+        --            Left err -> error "no image"               
+        --            Right img -> do
+        --                createDirectory $ specPath++testName++"Test/"
+        --                B.writeFile (specPath++testName++"Test/"++testName++"_expected.png") img
+        --                loadImageLuna $ specPath++testName++"Test/"++testName++"_expected.png"
+        --Right img -> do
+        --    createDirectory $ specPath++testName++"Test/"
+        --    B.writeFile (specPath++testName++"Test/"++testName++"_expected.png") img
+        --    loadImageLuna $ specPath++testName++"Test/"++testName++"_expected.png"
     
+trySaveSite site specPath testName = case site of
+    Left err -> error "no image"               
+    Right img -> do
+        createDirectory $ specPath++testName++"Test/"
+        B.writeFile (specPath++testName++"Test/"++testName++"_expected.png") img
+        loadImageLuna $ specPath++testName++"Test/"++testName++"_expected.png"
