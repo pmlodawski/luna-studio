@@ -10,6 +10,8 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Flowbox.Graphics.Mockup.ColorCorrect (
+    ColorCorrectCurves(..),
+    ColorCC(..),
     clampLuna,
     colorCorrectLuna,
     colorCorrectLunaCurves,
@@ -53,7 +55,6 @@ import Flowbox.Graphics.Mockup.Matte
 
 type ColorD = Color.RGBA Float
 pattern ColorD r g b a = Color.RGBA r g b a
-type Color5 = (VPS ColorD, VPS ColorD, VPS ColorD, VPS ColorD, VPS ColorD)
 
 offsetLuna :: Color.RGBA Float -> Maybe (Matte.Matte Float) -> Image -> Image
 offsetLuna x@(fmap variable -> Color.RGBA r g b a) matte img =
@@ -238,23 +239,31 @@ hueCorrectLuna ( VPS lum, VPS sat
                                                      (CurveGUI.convertToBSpline bSup)
                                       ) img
 
-type ColorCorrect a = (VPS (CurveGUI a), VPS (CurveGUI a))
-pattern ColorCorrect a b = (VPS a, VPS b)
+data ColorCorrectCurves a = ColorCorrectCurves { _shadows    :: CurveGUI a
+                                               , _highlights :: CurveGUI a
+                                               }
 
-colorCorrectLunaCurves :: VPS (ColorCorrect Float)
-                       -> Color5
-                       -> Color5
-                       -> Color5
-                       -> Color5
+data ColorCC a = ColorCC { _saturation :: ColorD
+                         , _contrast   :: ColorD
+                         , _gamma      :: ColorD
+                         , _gain       :: ColorD
+                         , _offset     :: ColorD
+                         }
+
+colorCorrectLunaCurves :: VPS (ColorCorrectCurves Float)
+                       -> ColorCC Float
+                       -> ColorCC Float
+                       -> ColorCC Float
+                       -> ColorCC Float
                        -> Image
                        -> Image
-colorCorrectLunaCurves (VPS (ColorCorrect curveShadows curveHighlights)) = colorCorrectLunaBase (prepare curveShadows, prepare curveHighlights)
+colorCorrectLunaCurves (VPS (ColorCorrectCurves curveShadows curveHighlights)) = colorCorrectLunaBase (prepare curveShadows, prepare curveHighlights)
     where prepare (BezierCurveGUI nodes) = let nodes' = CurveGUI.convertToNodeList nodes in A.fromList (Z :. length nodes') nodes'
 
-colorCorrectLuna :: Color5
-                 -> Color5
-                 -> Color5
-                 -> Color5
+colorCorrectLuna :: ColorCC Float
+                 -> ColorCC Float
+                 -> ColorCC Float
+                 -> ColorCC Float
                  -> Image
                  -> Image
 colorCorrectLuna = colorCorrectLunaBase (curveShadows, curveHighlights)
@@ -262,41 +271,45 @@ colorCorrectLuna = colorCorrectLunaBase (curveShadows, curveHighlights)
           curveHighlights = makeSpline [BSplineNode (Point2 0.5 0) (Point2 (-0.5) 0) (Point2 (2/3) 0), BSplineNode (Point2 1 1) (Point2 (5/6) 1) (Point2 2 1)]
           makeSpline      = A.fromList (Z :. 2)
 
-pattern ColorDCC a b c d <- VPS (fmap variable -> ColorD a b c d)
+pattern ColorCCV r g b a <- (fmap variable -> ColorD r g b a)
 
 colorCorrectLunaBase :: (BSpline Float, BSpline Float)
-                     -> Color5
-                     -> Color5
-                     -> Color5
-                     -> Color5
+                     -> ColorCC Float
+                     -> ColorCC Float
+                     -> ColorCC Float
+                     -> ColorCC Float
                      -> Image
                      -> Image
 colorCorrectLunaBase (curveShadows, curveHighlights)
-                  ( ColorDCC masterSaturationR masterSaturationG masterSaturationB masterSaturationA
-                  , ColorDCC masterContrastR masterContrastG masterContrastB masterContrastA
-                  , ColorDCC masterGammaR masterGammaG masterGammaB masterGammaA
-                  , ColorDCC masterGainR masterGainG masterGainB masterGainA
-                  , ColorDCC masterOffsetR masterOffsetG masterOffsetB masterOffsetA
+                  ( ColorCC
+                  ( ColorCCV masterSaturationR masterSaturationG masterSaturationB masterSaturationA )
+                  ( ColorCCV masterContrastR masterContrastG masterContrastB masterContrastA )
+                  ( ColorCCV masterGammaR masterGammaG masterGammaB masterGammaA )
+                  ( ColorCCV masterGainR masterGainG masterGainB masterGainA )
+                  ( ColorCCV masterOffsetR masterOffsetG masterOffsetB masterOffsetA )
                   )
-                  ( ColorDCC shadowsSaturationR shadowsSaturationG shadowsSaturationB shadowsSaturationA
-                  , ColorDCC shadowsContrastR shadowsContrastG shadowsContrastB shadowsContrastA
-                  , ColorDCC shadowsGammaR shadowsGammaG shadowsGammaB shadowsGammaA
-                  , ColorDCC shadowsGainR shadowsGainG shadowsGainB shadowsGainA
-                  , ColorDCC shadowsOffsetR shadowsOffsetG shadowsOffsetB shadowsOffsetA
+                  ( ColorCC
+                  ( ColorCCV shadowsSaturationR shadowsSaturationG shadowsSaturationB shadowsSaturationA )
+                  ( ColorCCV shadowsContrastR shadowsContrastG shadowsContrastB shadowsContrastA )
+                  ( ColorCCV shadowsGammaR shadowsGammaG shadowsGammaB shadowsGammaA )
+                  ( ColorCCV shadowsGainR shadowsGainG shadowsGainB shadowsGainA )
+                  ( ColorCCV shadowsOffsetR shadowsOffsetG shadowsOffsetB shadowsOffsetA )
                   )
-                  ( ColorDCC midtonesSaturationR midtonesSaturationG midtonesSaturationB midtonesSaturationA
-                  , ColorDCC midtonesContrastR midtonesContrastG midtonesContrastB midtonesContrastA
-                  , ColorDCC midtonesGammaR midtonesGammaG midtonesGammaB midtonesGammaA
-                  , ColorDCC midtonesGainR midtonesGainG midtonesGainB midtonesGainA
-                  , ColorDCC midtonesOffsetR midtonesOffsetG midtonesOffsetB midtonesOffsetA
+                  ( ColorCC
+                  ( ColorCCV midtonesSaturationR midtonesSaturationG midtonesSaturationB midtonesSaturationA )
+                  ( ColorCCV midtonesContrastR midtonesContrastG midtonesContrastB midtonesContrastA )
+                  ( ColorCCV midtonesGammaR midtonesGammaG midtonesGammaB midtonesGammaA )
+                  ( ColorCCV midtonesGainR midtonesGainG midtonesGainB midtonesGainA )
+                  ( ColorCCV midtonesOffsetR midtonesOffsetG midtonesOffsetB midtonesOffsetA )
                   )
-                  ( ColorDCC highlightsSaturationR highlightsSaturationG highlightsSaturationB highlightsSaturationA
-                  , ColorDCC highlightsContrastR highlightsContrastG highlightsContrastB highlightsContrastA
-                  , ColorDCC highlightsGammaR highlightsGammaG highlightsGammaB highlightsGammaA
-                  , ColorDCC highlightsGainR highlightsGainG highlightsGainB highlightsGainA
-                  , ColorDCC highlightsOffsetR highlightsOffsetG highlightsOffsetB highlightsOffsetA
+                  ( ColorCC
+                  ( ColorCCV highlightsSaturationR highlightsSaturationG highlightsSaturationB highlightsSaturationA )
+                  ( ColorCCV highlightsContrastR highlightsContrastG highlightsContrastB highlightsContrastA )
+                  ( ColorCCV highlightsGammaR highlightsGammaG highlightsGammaB highlightsGammaA )
+                  ( ColorCCV highlightsGainR highlightsGainG highlightsGainB highlightsGainA )
+                  ( ColorCCV highlightsOffsetR highlightsOffsetG highlightsOffsetB highlightsOffsetA )
                   )
-                  = onEachColorRGBA correct
+                  = undefined -- onEachColorRGBA correct
     where
           strShadows x    = BSpline.valueAt (A.use curveShadows :: A.Acc (BSpline Float)) x
           strHighlights x = BSpline.valueAt (A.use curveHighlights :: A.Acc (BSpline Float)) x
