@@ -212,22 +212,22 @@ invertLuna = onEachRGBA CC.invert CC.invert CC.invert id
 colorMatrixLuna :: ColorMatrix Color.RGB Float -> Image -> Image
 colorMatrixLuna matrix = onEachColorRGB (A.lift1 $ (CC.colorMatrix :: ColorMatrix Color.RGB Float -> Color.RGB (Exp Float) -> Color.RGB (Exp Float)) matrix)
 
-type HueCorrect a = (VPS (LunaCurveGUI a),
-                     VPS (LunaCurveGUI a),
-                     VPS (LunaCurveGUI a),
-                     VPS (LunaCurveGUI a),
-                     VPS (LunaCurveGUI a),
-                     VPS (LunaCurveGUI a),
-                     VPS (LunaCurveGUI a),
-                     VPS (LunaCurveGUI a))
+type HueCorrect a = (VPS (CurveGUI a),
+                     VPS (CurveGUI a),
+                     VPS (CurveGUI a),
+                     VPS (CurveGUI a),
+                     VPS (CurveGUI a),
+                     VPS (CurveGUI a),
+                     VPS (CurveGUI a),
+                     VPS (CurveGUI a))
 
 hueCorrectLuna :: HueCorrect Float ->
                   -- GUICurve Double -> sat_thrsh will be added later
                   -- sat_thrsh affects only r,g,b and lum parameters
                   Image -> Image
-hueCorrectLuna ( VPS (convertCurveGUI-> lum), VPS (convertCurveGUI -> sat)
-               , VPS (convertCurveGUI -> r), VPS (convertCurveGUI-> g), VPS (convertCurveGUI -> b)
-               , VPS (convertCurveGUI -> rSup), VPS (convertCurveGUI -> gSup), VPS (convertCurveGUI-> bSup)
+hueCorrectLuna ( VPS lum, VPS sat
+               , VPS r, VPS g, VPS b
+               , VPS rSup, VPS gSup, VPS bSup
                ) img = onEachColorRGB (CC.hueCorrect (CurveGUI.convertToBSpline lum)
                                                      (CurveGUI.convertToBSpline sat)
                                                      (CurveGUI.convertToBSpline r)
@@ -238,7 +238,7 @@ hueCorrectLuna ( VPS (convertCurveGUI-> lum), VPS (convertCurveGUI -> sat)
                                                      (CurveGUI.convertToBSpline bSup)
                                       ) img
 
-type ColorCorrect a = (VPS (LunaCurveGUI a), VPS (LunaCurveGUI a))
+type ColorCorrect a = (VPS (CurveGUI a), VPS (CurveGUI a))
 pattern ColorCorrect a b = (VPS a, VPS b)
 
 colorCorrectLunaCurves :: VPS (ColorCorrect Float)
@@ -249,7 +249,7 @@ colorCorrectLunaCurves :: VPS (ColorCorrect Float)
                        -> Image
                        -> Image
 colorCorrectLunaCurves (VPS (ColorCorrect curveShadows curveHighlights)) = colorCorrectLunaBase (prepare curveShadows, prepare curveHighlights)
-    where prepare (convertCurveGUI -> CurveGUI.BezierCurve nodes) = let nodes' = CurveGUI.convertToNodeList nodes in A.fromList (Z :. length nodes') nodes'
+    where prepare (BezierCurveGUI nodes) = let nodes' = CurveGUI.convertToNodeList nodes in A.fromList (Z :. length nodes') nodes'
 
 colorCorrectLuna :: Color5
                  -> Color5

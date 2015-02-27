@@ -148,8 +148,8 @@ def Image.exposure self::Image blackpoint::ColorRGB ex::ColorRGB matte::(Maybe (
 def Image.grade self::Image blackpoint::ColorBlack whitepoint::ColorWhite lift::ColorBlack gain::ColorWhite multiply::ColorWhite offset::ColorBlack gamma::ColorWhite matte::(Maybe (Matte Float)) -> Image:
     ```liftF5 (gradeLunaColor #{blackpoint} #{whitepoint} #{lift} #{gain}) #{multiply} #{offset} #{gamma} #{matte} #{self}```
 
-alias ColorCorrectGUI = (CurveGUI, CurveGUI)
-alias HueCorrectGUI = (CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI)
+alias ColorCorrectGUI = (CurveGUI Float, CurveGUI Float)
+alias HueCorrectGUI = (CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float)
 alias Color5 = (Color, Color, Color, Color ,Color)
 
 def Image.colorCorrect self::Image
@@ -386,25 +386,20 @@ def Image.skewAt self::Image point::(Point2 Float) skew::(Skew Float) matte::(Ma
 def Image.transform self::Image trans::TransformF -> Image:
     ```liftF2 transformLuna #{trans} #{self}```
 
-# class ```ControlPoint``` a:
-# class ControlPoint a:
-#     point               :: Point2 a
-#     handleIn, handleOut :: Maybe (Point2 a)
+class ```ControlPoint``` a:
+    point               :: Point2 a
+    handleIn, handleOut :: Maybe (Point2 a)
 
-# class ```Path``` a:
-#     closed   :: Bool
-#     vertices :: [ControlPoint a]
+class ```Path``` a:
+    closed   :: Bool
+    vertices :: [ControlPoint a]
 
-# class ```Shape``` a:
-#     paths :: [Path a]
+class ```Shape``` a:
+    paths :: [Path a]
 
-# class ```Mask``` a:
-#     path    :: Path a
-#     feather :: Maybe (Path a)
-
-alias ControlPoint = (Point2 Float, Maybe (Point2 Float), Maybe (Point2 Float))
-alias Path         = (Bool, [ControlPoint])
-alias Shape        = [Path]
+class ```Mask``` a:
+    path    :: Path a
+    feather :: Maybe (Path a)
 
 class Matte a
 
@@ -417,25 +412,11 @@ def vectorMatte self::Std mask::Mask -> (Maybe (Matte Float)):
 def noMatte self::Std -> (Maybe (Matte Float)):
     ```val (Nothing :: Maybe (Matte Float))```
 
-alias Mask = (Path, Maybe (Path))
-
 def point self::Std x y:
     Point2 x y
 
 def nopoint self::Std:
     ```val (Nothing :: Maybe (Point2 Float))```
-
-def controlPoint point handleIn handleOut:
-    (point, handleIn, handleOut)
-
-def path closed vertices:
-    (closed, vertices)
-
-def shape paths:
-    paths
-
-def mask path feather:
-    (path, feather)
 
 def rasterizeMask self::Std w::Int h::Int m::Mask -> Image:
     ```liftF3 rasterizeMaskLuna #{w} #{h} #{m}```
@@ -507,25 +488,21 @@ def Image.render self::Image path::FilePath t::Time:
 #                MATH and such
 #
 
-alias Point2F = Point2 Float
-alias CurveGUI = [ControlPointGUI]
-alias ControlPointGUI = (Point2F, HandleGUI, HandleGUI)
-alias HandleGUI = (Int, Float, Float)
+class ```HandleGUI```:
+    NonLinearGUI:
+        weight, angle :: Float
+    VerticalGUI:
+        length :: Float
+    LinearGUI
 
-def curveGUI self::Std vertices::CurveGUI -> CurveGUI:
-    vertices
+class ```ControlPointGUI``` x:
+    ControlPointGUI:
+        point :: Point2 x
+        handleIn, handleOut :: HandleGUI
 
-def controlPointGUI self::Std point::Point2F handleIn::HandleGUI handleOut::HandleGUI -> ControlPointGUI:
-    (point, handleIn, handleOut)
+class ```CurveGUI``` x:
+    BezierCurveGUI:
+        vertices :: [ControlPointGUI x]
 
-def nonLinearHandleGUI self::Std weight::Float angle::Float -> HandleGUI:
-    (0, weight, angle)
-
-def verticalHandleGUI self::Std length::Float -> HandleGUI:
-    (1, length, 0.0)
-
-def linearHandleGUI self::Std -> HandleGUI:
-    (2, 0.0, 0.0)
-
-def getValueAtCurve self::Std curve::curveGUI x::Time -> Float:
+def getValueAtCurve self::Std curve::(CurveGUI Float) x::Time -> Float:
     ```liftF2 getValueAtCurveGUI #{curve} #{x}```

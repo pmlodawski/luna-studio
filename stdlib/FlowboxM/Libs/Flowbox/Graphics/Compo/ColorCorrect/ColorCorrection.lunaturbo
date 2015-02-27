@@ -53,8 +53,8 @@ foreign haskell def Image.gamma val matte:
 foreign haskell def Image.grade blackpoint whitepoint lift gain multiply offset gamma matte:
     liftF5 (gradeLunaColor blackpoint whitepoint lift gain) multiply offset gamma matte self
 
-alias ColorCorrectGUI = (CurveGUI, CurveGUI)
-alias HueCorrectGUI = (CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI)
+alias ColorCorrectGUI = (CurveGUI Float, CurveGUI Float)
+alias HueCorrectGUI = (CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float)
 alias Color5 = (Color, Color, Color, Color ,Color)
 
 foreign haskell def Image.colorCorrect master #masterSaturation masterContrast masterGamma masterGain masterOffset

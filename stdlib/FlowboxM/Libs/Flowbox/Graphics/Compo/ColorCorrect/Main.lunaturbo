@@ -6,36 +6,6 @@
 #include ../../Geom2D/Geom.lunaturbo
 #include ColorCorrection.lunaturbo
 
-# foreign haskell import Flowbox.Graphics.Mockup (Point2 (..))
-# foreign haskell import Flowbox.Geom2D.ControlPoint
-# foreign haskell import Flowbox.Geom2D.Path
-
-# foreign haskell def print msg:
-#     autoLift1 print msg
-
-# foreign haskell class Bool:
-#     True
-#     False
-
-# foreign haskell class Maybe a:
-#     Just:
-#         unwrap :: a
-#     Nothing
-
-# foreign haskell class Point2 a:
-#     Point2:
-#         x,y :: a
-
-# foreign haskell class ControlPoint a:
-#     ControlPoint:
-#         point               :: Point2 a
-#         handleIn, handleOut :: Maybe (Point2 a)
-
-# foreign haskell class Path a:
-#     Path:
-#         closed   :: Bool
-#         vertices :: [ControlPoint a]
-
 def main:
     print "color correct test"
 
@@ -58,7 +28,7 @@ def main:
 
     offValue = RGBA 0.5 0.5 0.5 0.5
 
-    offseted = input.offset offValue vectMatte
+    offseted = input.offset offValue Nothing
     offseted.save "offseted.png"
 
     ()
