@@ -10,7 +10,6 @@
 module Flowbox.UR.Manager.RPC.Handler.URM where
 
 import           Control.Monad.Trans.State.Lazy
-import qualified Data.Foldable                  as Data
 
 import           Flowbox.Bus.Data.Message                            (Message)
 import           Flowbox.Bus.Data.Serialize.Proto.Conversion.Message ()
