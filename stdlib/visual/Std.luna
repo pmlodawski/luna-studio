@@ -431,6 +431,10 @@ def rasterizeMask self::Std w::Int h::Int m::(Mask Float) -> Image:
 class ```RGBA``` a:
     rgbaR, rgbaG, rgbaB, rgbaA :: a
 
+class ```ColorMult``` a:
+    mult :: Float
+    color :: a
+
 alias Color = ColorMult (RGBA Float)
 
 class ```Format```:
