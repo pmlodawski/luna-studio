@@ -11,15 +11,17 @@ module Luna.Lib.Lib where
 
 import Data.Version (Version)
 
-import           Flowbox.Prelude
-import           Flowbox.System.UniPath        (UniPath)
-import           Luna.Syntax.Graph.PropertyMap (PropertyMap)
-import           Luna.Syntax.Module            (Module (Module))
-import           Luna.Syntax.Name.Path         (QualPath)
+import Flowbox.Prelude
+import Flowbox.System.UniPath        (UniPath)
+import Luna.Syntax.Graph.PropertyMap (PropertyMap)
+import Luna.Syntax.Module            (Module (Module))
+import Luna.Syntax.Name.Path         (QualPath)
 
 
 
-data Library a e v = Library { _name        :: String
+type Name = String
+
+data Library a e v = Library { _name        :: Name
                              , _version     :: Version
                              , _path        :: UniPath
                              , _ast         :: Module a e
@@ -32,7 +34,7 @@ newtype ID = ID { toInt :: Int }
            deriving (Show, Ord, Eq)
 
 
-make :: String -> Version -> UniPath -> QualPath -> Library a e v
+make :: Name -> Version -> UniPath -> QualPath -> Library a e v
 make name' version' path' mpath = Library name' version' path' emptyModule def where
     emptyModule = Module mpath []
 

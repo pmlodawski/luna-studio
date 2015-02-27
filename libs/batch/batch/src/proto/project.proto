@@ -8,13 +8,14 @@
 package generated.proto.project;
 
 import "dep/attributes.proto";
-
+import "dep/library.proto";
 
 
 message Project {
     optional string name     = 1;
-    optional string path     = 2;
+    required string path     = 2;
     repeated string libPaths = 3;
-    optional generated.proto.dep.attributes.Attributes attributes = 4;
-    optional int32  id       = 5;
+    required generated.proto.dep.library.LibManager    libManager = 6;
+    required generated.proto.dep.attributes.Attributes attributes = 4;
+    required int32  id       = 5;
 }
