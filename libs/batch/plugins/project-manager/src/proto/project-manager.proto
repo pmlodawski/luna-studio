@@ -83,7 +83,8 @@ message Project {
     message Store {
         message Request {
             required int32 projectID = 1;
-            optional string path     = 2;
+            repeated int32 libIDs    = 2;
+            optional string path     = 3;
         }
         message Status {
             required Request request = 1;
