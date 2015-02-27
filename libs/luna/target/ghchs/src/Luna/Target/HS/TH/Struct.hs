@@ -196,7 +196,7 @@ generateFieldAccessors (nameBase -> typeName) fieldDescs = return $ accessors ++
     mkGetter fieldName descs = FunD accName [Clause [VarP obj] (NormalB $ CaseE (VarE obj) cases) []] where
         accName  = mkName $ Naming.mkFieldGetter typeName fieldName
         cases    = fmap (uncurry mkCase) descs
-        mkCase   = mkAccCase (VarE unit) unit
+        mkCase   = mkAccCase (AppE (VarE $ mkName "expandEl") $ VarE unit) unit
 
     mkSetter :: String -> [(Name, PatCons)] -> Dec
     mkSetter fieldName descs = FunD accName [Clause [VarP obj, VarP unit] (NormalB $ CaseE (VarE obj) cases) []] where
@@ -238,10 +238,10 @@ generateFieldAccessors (nameBase -> typeName) fieldDescs = return $ accessors ++
     setterDefs = fmap (mkSetterDef typeName) fieldNames
     --fncDefs    = fmap (mkFncDef typeName) fieldNames
 
-    mkGetterDef typeName fieldName = mkSimpleMemDef 1 typeName fieldName accName where
+    mkGetterDef typeName fieldName = mkSimpleMemDef typeName fieldName (mkLiftF 1 accName) where
         accName    = mkName $ Naming.mkFieldGetter typeName fieldName
 
-    mkSetterDef typeName fieldName = mkSimpleMemDef 2 typeName setterName accName where
+    mkSetterDef typeName fieldName = mkSimpleMemDef typeName setterName (mkLiftFlatF 2 accName) where
         setterName = Naming.setter fieldName
         accName    = mkName $ Naming.mkFieldSetter typeName fieldName
 
@@ -285,13 +285,15 @@ mkSimpleMemSig pNum typeName fieldName = FunD fname [Clause [] (NormalB (VarE si
 mkSimpleMemSig0 = mkSimpleMemSig 0
 mkSimpleMemSig1 = mkSimpleMemSig 1
 
-mkSimpleMemDef pNum typeName fieldName defname = FunD fname [Clause [] (NormalB body) []] where
+mkSimpleMemDef typeName fieldName body = FunD fname [Clause [] (NormalB body) []] where
     fname = mkName $ Naming.mkMemDef typeName fieldName
-    body  = mkLiftF pNum defname
 
 
 mkLiftF pNum base = AppE (VarE fname) (VarE base) where
     fname = mkName $ "liftF" ++ show pNum
+
+mkLiftFlatF pNum base = AppE (VarE fname) (VarE base) where
+    fname = mkName $ "liftFlatF" ++ show pNum
 
 
 --registerMethodSignature typeName methodName (Naming.toName -> funcName) = do
@@ -343,9 +345,9 @@ mkLiftF pNum base = AppE (VarE fname) (VarE base) where
 
 registerType :: Name -> Q [Dec]
 registerType tpName = do
-    TyConI (DataD _ _ bndrs _ _) <- reify tpName
-    dataTuples <- genDataTuple tpName
-    let treg   = registerType' tpName bndrs
+    TyConI dec <- reify tpName
+    let bndrs  = getDecBinders dec
+        treg   = registerType' tpName bndrs
         clsreg = registerType' clsName []
         clsdef = DataD [] clsName [] [NormalC clsName []] (fmap (mkName.show) stdDerivings)
     return $ clsdef : (treg ++ clsreg)

@@ -14,12 +14,12 @@ import "dep/version.proto";
 
 
 message Library {
-    optional int32                           id          = 1;
-    optional string                          name        = 2;
+    optional int32                               id          = 1;
+    optional string                              name        = 2;
     optional generated.proto.dep.version.Version version     = 6;
-    optional string                          path        = 3;
+    optional string                              path        = 3;
     optional generated.proto.dep.module.Module   ast         = 4;
-    optional PropertyMap                     propertyMap = 5;
+    optional PropertyMap                         propertyMap = 5;
 
     message PropertyMap {
     	repeated KeyValue items = 1;
@@ -29,4 +29,9 @@ message Library {
     		required generated.proto.dep.attributes.Properties properties = 2;
     	}
     }
+}
+
+
+message LibManager {
+    repeated Library libraries = 1;
 }

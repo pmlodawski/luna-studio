@@ -82,6 +82,8 @@ def main:
 
     Program "Vector, Int.+ and Int.>" [r|
 
+foreign haskell class Int
+
 class Vector a:
     x,y,z :: a
     def test a b:

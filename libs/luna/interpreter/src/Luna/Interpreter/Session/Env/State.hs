@@ -223,7 +223,7 @@ insertCompileError callPointPath err =
 reportCompileErrors :: CallPointPath -> Session mm () -> Session mm ()
 reportCompileErrors callPointPath action = do
     lift (runEitherT action) >>= \case
-        Left err -> insertCompileError callPointPath err
+        Left err -> whenVisible callPointPath $ insertCompileError callPointPath err
         Right () -> return ()
 
 

@@ -10,7 +10,6 @@
 module Luna.Interpreter.RPC.Handler.ASTWatch where
 
 import qualified Flowbox.Batch.Handler.Common                                                                  as Batch
-import           Flowbox.Batch.Tools.Serialize.Proto.Conversion.Project                                        ()
 import           Flowbox.Bus.RPC.RPC                                                                           (RPC)
 import           Flowbox.Control.Error                                                                         hiding (err)
 import           Flowbox.Data.Convert
@@ -89,6 +88,7 @@ import           Luna.Interpreter.Proto.CallPointPath                           
 import qualified Luna.Interpreter.RPC.Handler.Cache                                                            as CacheWrapper
 import           Luna.Interpreter.RPC.Handler.Sync                                                             (sync)
 import qualified Luna.Interpreter.RPC.Handler.Var                                                              as Var
+import qualified Luna.Interpreter.Session.Memory.GPU                                                           as GPUMemory
 import           Luna.Interpreter.Session.Memory.Manager                                                       (MemoryManager)
 import           Luna.Interpreter.Session.Session                                                              (SessionST)
 
@@ -103,13 +103,13 @@ logger = getLoggerIO $(moduleName)
 projectCreate :: MemoryManager mm => ProjectCreate.Update -> RPC Context (SessionST mm) ()
 projectCreate (ProjectCreate.Update request project updateNo) = do
     sync updateNo $ ProjectHandler.create request
-    projectID <- Gen.Project.id project <??> "ASTWatch.projectCreate : 'projectID' field is missing"
+    let projectID = Gen.Project.id project
     CacheWrapper.modifyAll projectID
 
 
 projectOpen :: MemoryManager mm => ProjectOpen.Update -> RPC Context (SessionST mm) ()
 projectOpen (ProjectOpen.Update _ project _) = do
-    projectID <- Gen.Project.id project <??> "ASTWatch.projectOpen : 'projectID' field is missing"
+    let projectID = Gen.Project.id project
     CacheWrapper.modifyAll projectID
 
 
@@ -319,6 +319,7 @@ graphNodeRemove (GraphNodeRemove.Update request updateNo) = do
         nodeIDs   = GraphNodeRemove.nodeIDs request
     mapM_ (CacheWrapper.modifyNodeSuccessors projectID libraryID bc) nodeIDs
     mapM_ (CacheWrapper.deleteNode projectID libraryID) nodeIDs
+    CacheWrapper.interpreterDo projectID GPUMemory.performGC
     sync updateNo $ GraphHandler.nodeRemove request
     --TODO[PM] : remove old time refs if were present
 

@@ -20,6 +20,7 @@ import qualified Data.IntMap         as IntMap
 import           Flowbox.Control.Error
 import           Flowbox.Data.Convert
 import           Flowbox.Prelude
+import qualified Generated.Proto.Dep.Library.LibManager                   as Gen
 import qualified Generated.Proto.Dep.Library.Library                      as Gen
 import qualified Generated.Proto.Dep.Library.Library.PropertyMap          as Gen
 import qualified Generated.Proto.Dep.Library.Library.PropertyMap.KeyValue as Gen
@@ -30,6 +31,8 @@ import           Luna.DEP.Data.Serialize.Proto.Conversion.Version         ()
 import           Luna.DEP.Graph.Properties                                (Properties)
 import           Luna.DEP.Lib.Lib                                         (Library (Library))
 import qualified Luna.DEP.Lib.Lib                                         as Library
+import           Luna.DEP.Lib.Manager                                     (LibManager)
+import qualified Luna.DEP.Lib.Manager                                     as LibManager
 
 
 
@@ -62,3 +65,7 @@ instance Convert (AST.ID, Properties) Gen.KeyValue where
     encode (i, p) = Gen.KeyValue (encodeP i) (encode p)
     decode (Gen.KeyValue ti tp) = do p <- decode tp
                                      return (decodeP ti, p)
+
+instance Convert LibManager Gen.LibManager where
+    encode = Gen.LibManager . encode . LibManager.labNodes
+    decode (Gen.LibManager libs) = LibManager.mk <$> decode libs <*> pure []

@@ -17,6 +17,7 @@ module Flowbox.Graphics.Mockup.Matte (
 ) where
 
 import qualified Data.Array.Accelerate     as A
+import           Data.RTuple               (RTuple (RTuple), toTuple)
 import           Math.Coordinate.Cartesian (Point2 (..))
 import           Math.Space.Space          (Grid (..))
 import qualified System.FilePath           as FilePath
@@ -30,42 +31,46 @@ import           Flowbox.Graphics.Image.Channel (Channel (..), ChannelData (..))
 import           Flowbox.Graphics.Image.Image   (Image)
 import           Flowbox.Graphics.Image.Matte   (Matte)
 import qualified Flowbox.Graphics.Image.Matte   as Matte
+import           Flowbox.Graphics.Mockup.Basic
 import           Flowbox.Graphics.Shader.Shader (CartesianShader, Shader (..))
 import qualified Flowbox.Graphics.Shader.Shader as Shader
 import           Flowbox.Math.Matrix            (Matrix2)
 import qualified Flowbox.Math.Matrix            as M
 import           Flowbox.Prelude                as P
-
-import Flowbox.Graphics.Mockup.Basic
-
+import           Luna.Target.HS.Host.Lift       (expandEl)
 
 
-type ControlPoint2 a = ( VPS (Point2 a)
-                       , VPS (Maybe (Point2 a))
-                       , VPS (Maybe (Point2 a))
-                       )
 
-type Path2 a = ( VPS Bool
-               , VPS [VPS (ControlPoint2 a)]
-               )
+type ControlPoint2 a = RTuple (  VPS (Point2 a)
+                              , (VPS (Maybe (Point2 a))
+                              , (VPS (Maybe (Point2 a))
+                              , ())))
+
+type Path2 a = RTuple (  VPS Bool
+                      , (VPS [VPS (ControlPoint2 a)]
+                      , ()))
+
+type Path2x a = RTuple ( Bool
+                      , ([VPS (ControlPoint2 a)]
+                      , ()))
 
 type Shape2 a = [VPS (Path2 a)]
 
-type Mask2 a = ( VPS (Path2 a)
-               , VPS (Maybe (Path2 a))
-               )
+type Mask2 a = RTuple (  VPS (Path2 a)
+                      , (VPS (Maybe (Path2x a))
+                      , ()))
 
 convertControlPoint :: ControlPoint2 a -> ControlPoint a
-convertControlPoint (unpackLunaVar -> a, unpackLunaVar -> b, unpackLunaVar -> c) = ControlPoint a b c
+convertControlPoint (toTuple -> (unpackLunaVar -> a, unpackLunaVar -> b, unpackLunaVar -> c)) = ControlPoint a b c
 
 convertPath :: Path2 a -> Path a
-convertPath (unpackLunaVar -> a, unpackLunaList.unpackLunaVar -> b) = Path a (fmap convertControlPoint b)
+convertPath (toTuple -> (unpackLunaVar -> a, unpackLunaList.unpackLunaVar -> b)) = Path a (fmap convertControlPoint b)
 
 convertShape :: Shape2 a -> GShape.Shape a
 convertShape (unpackLunaList -> a) = GShape.Shape (fmap convertPath a)
 
 convertMask :: Mask2 a -> Mask.Mask a
-convertMask (unpackLunaVar -> a, unpackLunaVar -> b) = Mask.Mask (convertPath a) (fmap convertPath b)
+convertMask (toTuple -> (unpackLunaVar -> a, unpackLunaVar -> (fmap expandEl) -> b)) = Mask.Mask (convertPath a) (fmap convertPath b)
 
 rasterizeMaskLuna :: (Real a, Fractional a, a ~ Float) => Int -> Int -> Mask2 a -> Image
 rasterizeMaskLuna w h (convertMask -> m) = matrixToImage $ rasterizeMask w h m

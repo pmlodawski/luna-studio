@@ -14,6 +14,10 @@ import Flowbox.Graphics.Mockup.Merge
 import Data.Array.Accelerate.CUDA as AC
 import Flowbox.Graphics.Composition.Merge
 import qualified Data.Array.Accelerate as A
+import System.Directory
+import Network.Curl.Download
+import qualified Data.ByteString as B
+import TestConfigParser
 
 shouldBeCloseTo :: (Show a, Comparable a b) => String -> b -> a -> a -> Expectation
 shouldBeCloseTo name metric actual expected = assertAlmostEqual name "" metric expected actual
@@ -202,9 +206,53 @@ instance Comparable Image ImageMetric where
 --    let (r,g,b,a) = Mock.unsafeGetChannels img
 --    in  (M.toList AC.run r) ++ (M.toList AC.run g) ++ (M.toList AC.run b) ++(M.toList AC.run a)
 
-getDefaultTestPic specPath testName = 
-    loadImageLuna $ specPath++testName++"Test/"++testName++"_expected.png"
-
 testSave image = do
     saveImageLuna "./test/samples/x_result.png" image
     return ()
+
+getDefaultTestPic :: String -> String -> IO Image
+getDefaultTestPic specPath testName = do
+    directoryExists <- doesDirectoryExist $ specPath++testName++"Test/"
+    if directoryExists
+        then loadImageLuna $ specPath++testName++"Test/"++testName++"_expected.png"
+        else tryDownloading specPath testName
+
+tryDownloading specPath testName = do
+    customExists  <- doesFileExist "./test/custom.config"
+    defaultExists <- doesFileExist "./test/default.config"
+    if customExists 
+        then do
+            conf <- getTestConfig "./test/custom.config"
+            print $ getRemotePath conf
+            site <- openURI $ (getRemotePath conf) ++specPath++testName++"Test/"++testName++"_expected.png"
+            trySaveSite site specPath testName
+        else do
+            if defaultExists
+                then do
+                    altConf <- getTestConfig "./test/default.config"
+                    print $ getRemotePath altConf
+                    site <- openURI $ (getRemotePath altConf) ++specPath++testName++"Test/"++testName++"_expected.png"
+                    trySaveSite site specPath testName
+                else error "No config files. You need custom.config or default.config file in test directory."
+
+        --case site of
+        --    Left err -> do
+        --        altConf <- getTestConfig "./test/default.config"
+        --        altSite <- openURI $ (getRemotePath altConf) ++specPath++testName++"Test/"++testName++"_expected.png"
+        --        case altSite of
+        --            Left err -> error "no image"               
+        --            Right img -> do
+        --                createDirectory $ specPath++testName++"Test/"
+        --                B.writeFile (specPath++testName++"Test/"++testName++"_expected.png") img
+        --                loadImageLuna $ specPath++testName++"Test/"++testName++"_expected.png"
+        --Right img -> do
+        --    createDirectory $ specPath++testName++"Test/"
+        --    B.writeFile (specPath++testName++"Test/"++testName++"_expected.png") img
+        --    loadImageLuna $ specPath++testName++"Test/"++testName++"_expected.png"
+    
+trySaveSite site specPath testName = case site of
+    Left err -> error "no image"               
+    Right img -> do
+        createDirectory $ specPath++testName++"Test/"
+        B.writeFile (specPath++testName++"Test/"++testName++"_expected.png") img
+        loadImageLuna $ specPath++testName++"Test/"++testName++"_expected.png"

@@ -30,3 +30,8 @@ message Library {
     	}
     }
 }
+
+
+message LibManager {
+    repeated Library libraries = 1;
+}
