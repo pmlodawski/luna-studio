@@ -139,10 +139,10 @@ def Image.save self::Image path::FilePath -> Image:
 def Image.offset self::Image value::Color matte::(Maybe (Matte Float)) -> Image:
     ```liftF3 offsetLuna #{value} #{matte} #{self}```
 
-def Image.contrast self::Image value::ColorRGB matte::(Maybe (Matte Float)) -> Image:
+def Image.contrast self::Image value::Color matte::(Maybe (Matte Float)) -> Image:
     ```liftF3 contrastLuna #{value} #{matte} #{self}```
 
-def Image.exposure self::Image blackpoint::ColorRGB ex::ColorRGB matte::(Maybe (Matte Float)) -> Image:
+def Image.exposure self::Image blackpoint::Color ex::Color matte::(Maybe (Matte Float)) -> Image:
     ```liftF4 exposureLuna #{blackpoint} #{ex} #{matte} #{self}```
 
 def Image.grade self::Image blackpoint::Color whitepoint::Color lift::Color gain::Color multiply::Color offset::Color gamma::Color matte::(Maybe (Matte Float)) -> Image:
@@ -171,7 +171,7 @@ def Image.colorCorrectCurves self::Image
 def Image.hueCorrect self::Image curves::HueCorrectGUI -> Image:
     ```liftF2 hueCorrectLuna #{curves} #{self}```
 
-def Image.saturate self::Image saturation::ColorRGB -> Image:
+def Image.saturate self::Image saturation::Color -> Image:
     ```liftF2 saturateLuna #{saturation} #{self}```
 
 def Image.posterize self::Image colors::Float -> Image:
@@ -283,8 +283,8 @@ class ```MergeMode```:
     HardLight: ab :: AlphaBlend
     Hypot: ab :: AlphaBlend
     In
-    Mask
-    Matte
+    MergeMask
+    MergeMatte
     # Max
     # Min
     Minus: ab :: AlphaBlend
@@ -405,7 +405,7 @@ class Matte a
 def imageMatte self::Std image::Image channelName::String -> (Maybe (Matte Float)):
      ```lift2 imageMatteLuna #{image} #{channelName}```
 
-def vectorMatte self::Std mask::Mask -> (Maybe (Matte Float)):
+def vectorMatte self::Std mask::(Mask Float) -> (Maybe (Matte Float)):
     ```liftF1 vectorMatteLuna #{mask}```
 
 def noMatte self::Std -> (Maybe (Matte Float)):
@@ -417,7 +417,7 @@ def point self::Std x y:
 def nopoint self::Std:
     ```val (Nothing :: Maybe (Point2 Float))```
 
-def rasterizeMask self::Std w::Int h::Int m::Mask -> Image:
+def rasterizeMask self::Std w::Int h::Int m::(Mask Float) -> Image:
     ```liftF3 rasterizeMaskLuna #{w} #{h} #{m}```
 
 # COLORS
