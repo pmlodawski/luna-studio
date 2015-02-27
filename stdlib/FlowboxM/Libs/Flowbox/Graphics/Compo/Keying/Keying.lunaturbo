@@ -19,7 +19,7 @@ foreign haskell class KeyerMode:
     Min
 
 foreign haskell class KeyerThresholds a:
-    min, minRolloff, max, maxRolloff :: a
+    KeyerThresholds: min, minRolloff, max, maxRolloff :: a
 
 foreign haskell def Image.key mode thresholds:
     liftF3 keyerLuna mode thresholds self

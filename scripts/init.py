@@ -1,4 +1,4 @@
-#!/usr/bin/python2.7
+#!/usr/bin/env python2.7
 
 ###########################################################################
 ## Copyright (C) Flowbox, Inc / All Rights Reserved
@@ -113,7 +113,8 @@ def checkPythonPkg(package, version=None):
     except CalledProcessError, e:
         retcode = e.returncode
         print_error("Sorry, but `pip freeze` returned code {retcode}".format(**locals()))
-        fatal()
+        if not ask ("Continue?"):
+            fatal()
 
 def try_call(cmd):
     print_info ("Running '%s'" % cmd)
@@ -223,6 +224,7 @@ def main():
     try_call ('python2.7 %s' % path)
 
     checkPythonPkg("psutil")
+    checkPythonPkg("docopt")
 
 
     print_info ("Success")

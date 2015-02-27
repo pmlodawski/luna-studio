@@ -24,9 +24,10 @@ type Lit = Lit.Lit
 
 data Expr = DataD        { _name      :: Text     , _params    :: [Text]      , _cons    :: [Expr]      , _derivings :: [Deriving]                           }
           | Module       { _name      :: Text     , _path      :: [Text]      , _ext     :: [Extension] , _imports :: [Expr]      , _body  :: [Expr]         }
-          | TySynD       { _name      :: Text     , _paramsE   :: [Expr]      , _dstType :: Expr                                                             } -- FIXME: paramsE -> params
+          -- FIXME: paramsE -> params
+          | TySynD       { _name      :: Text     , _paramsE   :: [Expr]      , _dstType :: Expr                                                             }
           | Function     { _name      :: Text     , _pats      :: [Expr]      , _expr    :: Expr                                                             }
-          | NewTypeD     { _name      :: Text     , _paramsE   :: [Expr]      , _con     :: Expr                                                             } -- FIXME: paramsE -> params
+          | NewTypeD     { _name      :: Text     , _params    :: [Text]      , _con     :: Expr        , _derivings :: [Deriving]                           }
           | TypeD        { _src       :: Expr     , _dst       :: Expr                                                                                       }
           | CondE        { _cond      :: Expr     , _success   :: [Expr]      , _failure :: [Expr]                                                           }
           | RecUpdE      { _expr      :: Expr     , _name      :: Text        , _value   :: Expr                                                             }
@@ -47,6 +48,7 @@ data Expr = DataD        { _name      :: Text     , _params    :: [Text]      , 
           | AppT         { _src       :: Expr     , _dst       :: Expr                                                                                       }
           | AppP         { _src       :: Expr     , _dst       :: Expr                                                                                       }
           | CaseE        { _expr      :: Expr     , _matches   :: [Expr]                                                                                     }
+          | LambdaCase   { _matches   :: [Expr]                                                                                                              }
           | Match        { _pat       :: Expr     , _matchBody :: Expr                                                                                       }
           | ViewP        { _expr      :: Expr     , _dst       :: Expr                                                                                       } 
           | Tuple        { _items     :: [Expr]                                                                                                              }
@@ -87,12 +89,18 @@ app        = foldl AppE
 appP       = foldl AppP
 appT       = foldl AppT
 
-rtuple items = MacroE  ("_rtup" <> show (length items)) items
+dot        = OperatorE "."
 
+rTuple items = MacroE  ("_rtup" <> show (length items)) items
+rTupleX items = AppE (ConE ["RTuple"]) $ foldr tup2 (Tuple []) items
+
+tup2 a b = Tuple [a,b]
 
 val = flip Function mempty
 
 
-
+instance FromText Expr where
+     fromText = Var
+     
 instance IsString Expr where
      fromString = Var . fromString

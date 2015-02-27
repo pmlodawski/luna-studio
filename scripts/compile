@@ -1,4 +1,4 @@
-#!/usr/bin/python2.7
+#!/usr/bin/env python2.7
 
 ###########################################################################
 ## Copyright (C) Flowbox, Inc / All Rights Reserved

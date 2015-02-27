@@ -1,0 +1,20 @@
+#define _typedArg(a,t) let {_ = a `ofType` (anyType :: m t);};
+#define _typed(a,t)    ((a) `ofType` (anyType :: m (t)))
+#define _name(n)       (Proxy :: Proxy n)
+#define _member(n)     member _name(n)
+#define _nuSigArg(n)   nuSigArg (Proxy::Proxy n)
+#define _npSigArg(n,a) npSigArg (Proxy::Proxy n) (a)
+#define _call(n)       call2 (Proxy::Proxy n)
+
+#define _rtup0()            ()
+#define _rtup1(t1)          (t1,())
+#define _rtup2(t1,t2)       (t1,(t2,()))
+#define _rtup3(t1,t2,t3)    (t1,(t2,(t3,())))
+#define _rtup4(t1,t2,t3,t4) (t1,(t2,(t3,(t4,()))))
+
+
+#define _rtupX0()            (RTuple ())
+#define _rtupX1(t1)          (RTuple (t1,()))
+#define _rtupX2(t1,t2)       (RTuple (t1,(t2,())))
+#define _rtupX3(t1,t2,t3)    (RTuple (t1,(t2,(t3,()))))
+#define _rtupX4(t1,t2,t3,t4) (RTuple (t1,(t2,(t3,(t4,())))))
