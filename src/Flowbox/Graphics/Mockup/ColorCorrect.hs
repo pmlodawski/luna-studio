@@ -57,7 +57,7 @@ type ColorD = Color.RGBA Float
 pattern ColorD r g b a = Color.RGBA r g b a
 
 offsetLuna :: Color.RGBA Float -> Maybe (Matte.Matte Float) -> Image -> Image
-offsetLuna x@(fmap variable -> Color.RGBA r g b a) matte img =
+offsetLuna (fmap variable -> Color.RGBA r g b a) matte img =
   case matte of
     Nothing -> onEachRGBA (CC.offset r) (CC.offset g) (CC.offset b) (CC.offset a) img
     Just m ->
@@ -67,7 +67,7 @@ offsetLuna x@(fmap variable -> Color.RGBA r g b a) matte img =
                            (applyMatteFloat (CC.offset a) m) img
 
 contrastLuna :: Color.RGB Float -> Maybe (Matte.Matte Float) -> Image -> Image
-contrastLuna x@(fmap variable -> Color.RGB r g b) matte img =
+contrastLuna (fmap variable -> Color.RGB r g b) matte img =
   case matte of
     Nothing -> onEachRGBA (CC.contrast r) (CC.contrast g) (CC.contrast b) id img
     Just m ->
@@ -77,8 +77,8 @@ contrastLuna x@(fmap variable -> Color.RGB r g b) matte img =
                            id img
 
 exposureLuna :: Color.RGB Float -> Color.RGB Float -> Maybe (Matte.Matte Float) -> Image -> Image
-exposureLuna x@(fmap variable -> Color.RGB blackpointR blackpointG blackpointB)
-                  y@(fmap variable -> Color.RGB exR exG exB) matte img =
+exposureLuna (fmap variable -> Color.RGB blackpointR blackpointG blackpointB)
+                  (fmap variable -> Color.RGB exR exG exB) matte img =
                     case matte of
                       Nothing -> onEachRGBA (CC.exposure blackpointR exR) (CC.exposure blackpointG exG) (CC.exposure blackpointB exB) id img
                       Just m ->
