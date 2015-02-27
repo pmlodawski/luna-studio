@@ -20,7 +20,7 @@ module Main3 where
 -- import Luna.Target.HS
 -- 
 -- -- body --
--- #include "pragmas.cpp"
+-- #include "pragmas.h"
 -- 
 -- -- ====== Main type ====== --
 -- data Main  = Main deriving (Show, Eq, Ord, Generic, Typeable)

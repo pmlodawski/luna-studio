@@ -1,0 +1,14 @@
+class BoxedString:
+  val :: String
+
+  def append x:
+    BoxedString (val + x)
+
+
+def foo:
+  x = BoxedString " ma w posiadaniu "
+  x.prepend "Ala"
+  x.append  "kota"
+
+def BoxedString.prepend x:
+  BoxedString (x + val)

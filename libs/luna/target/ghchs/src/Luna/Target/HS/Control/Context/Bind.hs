@@ -15,6 +15,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 {-# LANGUAGE DysfunctionalDependencies #-}
+{-# LANGUAGE OverlappingInstances #-}
 
 !{-# LANGUAGE RightSideContexts #-}
 
@@ -28,6 +29,7 @@ import Luna.Target.HS.Control.Context.MonadCtx
 import Luna.Target.HS.Control.Context.Value
 import Data.TypeLevel
 import Control.Monad.IO.Class
+import Control.Monad.Shuffle
 
 import Luna.Target.HS.Control.Error
 
@@ -266,3 +268,36 @@ instance PolyMonadCtx (MonadCtx env1 set1 m1 s1) (CtxWrapper (ValCtx m2' s2') (M
 instance PolyMonadCtx (CtxWrapper (ValCtx m1' s1') (MonadCtx env1 set1 m1 s1)) (MonadCtx env2 set2 m2 s2) <= (m1~m2, MonadSafety m2 s1 s2) where
     a >>>~ f = (unpackCtxWrapper a) >>>~ f
 
+
+
+
+----------------------
+
+
+--class MonadSafety m s1 s2 where
+--    bindSafety :: m s1 a -> (a -> m s2 b) -> m (MatchSafety s1 s2) b
+
+--bindSafety :: Value IO s1 a -> (a -> Value IO s2 b) -> Value IO (MatchSafety s1 s2) b
+
+
+
+instance MonadSafety (Value Pure) s1 s2 <= PolyMonad s1 s2 (MatchSafety s1 s2) where
+    bindSafety m f = tst where
+        f' = fromPure . fromValue . f -- :: a -> (s2 b)
+        m' = fromPure $ fromValue m   -- :: (s1 a)
+        tst = Value $ Pure $ m' >>>= f'
+        -- PureS $ fromPureS m >>>= (fromPureS . f)
+
+instance MonadSafety (Value IO) s1 s2 <= (PolyMonad s1 s2 (MatchSafety s1 s2), Shuffle s1 IO, Functor s1) where
+    bindSafety m f = Value $ do
+        m' <- fromValue m -- s1 a
+        let f' = fromValue . f -- a -> IO (s2 b)
+            g  = fmap f' m' -- s1 (IO (s2 b))
+            h  = shuffle g -- IO (s1 (s2 b))
+        fmap polyJoin h -- IO (sx b)
+
+
+instance MonadSafety (Value IO) Safe s where
+    bindSafety m f = Value $ do
+        Safe a <- fromValue m
+        fromValue $ f a

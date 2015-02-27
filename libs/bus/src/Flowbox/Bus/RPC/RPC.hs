@@ -4,8 +4,9 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE TupleSections #-}
-
+{-# LANGUAGE LambdaCase      #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TupleSections   #-}
 module Flowbox.Bus.RPC.RPC where
 
 import           Control.Exception          (SomeException)
@@ -14,6 +15,7 @@ import           Control.Monad.Trans.Either
 import           Control.Monad.Trans.State
 
 import Flowbox.Prelude
+import Flowbox.System.Log.Logger
 
 
 
@@ -27,6 +29,10 @@ data NoState = NoState
              deriving (Read, Show)
 
 
+logger :: LoggerIO
+logger = getLoggerIO $moduleName
+
+
 run :: (Catch.MonadCatch m, Monad m, Functor m)
     => RPC s m r -> StateT s m (Either Error r)
 run rpc = do
@@ -37,3 +43,9 @@ run rpc = do
     case result of
         Left   err      -> {-put s  >> -} return (Left err)
         Right (res, s') -> put s' >> return res
+
+
+interceptErrors :: (MonadIO m, Monoid r) => RPC c m r -> RPC c m r
+interceptErrors rpc = lift (runEitherT rpc) >>= \case
+    Left err -> logger warning err >> return mempty
+    Right r  -> return r
