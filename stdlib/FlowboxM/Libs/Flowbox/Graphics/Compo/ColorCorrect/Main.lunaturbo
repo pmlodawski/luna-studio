@@ -4,14 +4,24 @@
 #include ../../Matte/Matte.lunaturbo
 #include ../../Color/Color.lunaturbo
 #include ../../Geom2D/Geom.lunaturbo
-#include ColorCorrection.lunaturbo
+# include ColorCorrection.lunaturbo
+
+foreign haskell import Flowbox.Graphics.Mockup.ColorCorrect
+
+foreign haskell def Image.offsetRaw value matte:
+    liftF3 offsetLuna value matte self
+
+def Image.offset value matte:
+    self.offsetRaw value.toRGBA matte
 
 def main:
     print "color correct test"
 
-    input = load "moonbow.jpg"
-    grad  = load "grad.png"
+    # setup
 
+    input = load "moonbow.jpg"
+
+    grad  = load "grad.png"
     imgMatte = self.imageMatte grad "rgba.r"
 
     vertices = [ ControlPoint (Point2 100.0 100.0) Nothing Nothing

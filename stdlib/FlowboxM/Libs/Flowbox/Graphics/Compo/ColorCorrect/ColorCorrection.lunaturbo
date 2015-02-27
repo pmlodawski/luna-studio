@@ -16,17 +16,17 @@ foreign haskell def Image.clamp thresholds clamps:
     liftF3 clampLuna thresholds clamps self
 
 foreign haskell def Image.offsetRaw value matte:
-    liftF2 offsetLuna value matte self
+    liftF3 offsetLuna value matte self
 def Image.offset value matte:
     self.offsetRaw value.toRGBA matte
 
 foreign haskell def Image.contrastRaw value matte:
-    liftF2 contrastLuna value matte self
+    liftF3 contrastLuna value matte self
 def Image.contrast value matte:
     self.contrastRaw value.toRGBA matte
 
 foreign haskell def Image.exposureRaw blackpoint ex matte:
-    liftF3 exposureLuna blackpoint ex matte self
+    liftF4 exposureLuna blackpoint ex matte self
 def Image.exposure blackpoint ex matte:
     self.exposure blackpoint.toRGBA ex.toRGBA matte
 
@@ -53,17 +53,17 @@ def Image.saturate saturation:
 #               brightnessRangeStart brightnessRangeEnd brightnessAdjustment brightnessRolloff self```
 
 foreign haskell def Image.multiplyRaw val matte:
-    liftF2 multiplyLuna val matte self
+    liftF3 multiplyLuna val matte self
 def Image.multiply val matte:
     self.multiplyRaw val.toRGBA matte
 
 foreign haskell def Image.gammaRaw val matte:
-    liftF2 gammaLuna val matte self
+    liftF3 gammaLuna val matte self
 def Image.gamma val matte:
     self.gammaRaw val.toRGBA matte
 
 foreign haskell def Image.gradeRaw blackpoint whitepoint lift gain multiply offset gamma matte:
-    liftF5 (gradeLunaColor blackpoint whitepoint lift) gain multiply offset gamma matte self
+    liftF5 (gradeLunaColor blackpoint whitepoint lift gain) multiply offset gamma matte self
 def Image.grade blackpoint whitepoint lift gain multiply offset gamma matte:
     self.gradeRaw blackpoint.toRGBA whitepoint.toRGBA lift.toRGBA gain.toRGBA multiply.toRGBA offset.toRGBA gamma.toRGBA matte
 
