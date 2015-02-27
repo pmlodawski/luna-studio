@@ -10,11 +10,6 @@ foreign haskell class RGBA a:
 
 def RGBA.toRGBA: self
 
-class ColorCC color:
-    saturation, contrast, gamma, gain, offset :: color
-    def toRGBA:
-        ColorCC saturation.toRGBA contrast.toRGBA gamma.toRGBA gain.toRGBA offset.toRGBA
-
 class ColorMult color:
     color      :: color
     multiplier :: Float

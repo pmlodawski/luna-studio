@@ -148,7 +148,13 @@ def Image.exposure self::Image blackpoint::Color ex::Color matte::(Maybe (Matte 
 def Image.grade self::Image blackpoint::Color whitepoint::Color lift::Color gain::Color multiply::Color offset::Color gamma::Color matte::(Maybe (Matte Float)) -> Image:
     ```liftF5 (gradeLunaColor #{blackpoint} #{whitepoint} #{lift} #{gain}) #{multiply} #{offset} #{gamma} #{matte} #{self}```
 
-alias ColorCorrectGUI = (CurveGUI Float, CurveGUI Float)
+class ```ColorCorrectCurves``` a:
+    ColorCorrectCurves:
+        shadows, highlights :: CurveGUI a
+
+class ColorCC color:
+    saturation, contrast, gamma, gain, offset :: color
+
 alias HueCorrectGUI = (CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float)
 
 def Image.colorCorrect self::Image
@@ -160,7 +166,7 @@ def Image.colorCorrect self::Image
     ```liftF5 colorCorrectLuna' #{master} #{shadows} #{midtones} #{highlights} #{self}```
 
 def Image.colorCorrectCurves self::Image
-                       curves::ColorCorrectGUI
+                       curves::ColorCorrectCurves
                        master::ColorCC Color
                        shadows::ColorCC Color
                        midtones::ColorCC Color
@@ -426,9 +432,6 @@ class ```RGBA``` a:
     rgbaR, rgbaG, rgbaB, rgbaA :: a
 
 alias Color = ColorMult (RGBA Float)
-
-class ColorCC color:
-    saturation, contrast, gamma, gain, offset :: color
 
 class ```Format```:
     PCVideo

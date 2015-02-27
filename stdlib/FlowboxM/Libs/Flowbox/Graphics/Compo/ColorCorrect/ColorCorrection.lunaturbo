@@ -67,8 +67,18 @@ foreign haskell def Image.gradeRaw blackpoint whitepoint lift gain multiply offs
 def Image.grade blackpoint whitepoint lift gain multiply offset gamma matte:
     self.gradeRaw blackpoint.toRGBA whitepoint.toRGBA lift.toRGBA gain.toRGBA multiply.toRGBA offset.toRGBA gamma.toRGBA matte
 
-alias ColorCorrectGUI = (CurveGUI Float, CurveGUI Float)
-alias HueCorrectGUI = (CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float)
+# alias HueCorrectGUI = (CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float)
+
+foreign haskell class ColorCorrectCurves a:
+    ColorCorrectCurves:
+        shadows, highlights :: CurveGUI a
+
+foreign haskell class ColorCC color:
+    ColorCC:
+        saturation, contrast, gamma, gain, offset :: color
+    def toRGBA:
+        ColorCC saturation contrast gamma gain offset = self
+        ColorCC saturation.toRGBA contrast.toRGBA gamma.toRGBA gain.toRGBA offset.toRGBA
 
 foreign haskell def Image.colorCorrectRaw master shadows midtones highlights:
     liftF5 colorCorrectLuna master shadows midtones highlights self
