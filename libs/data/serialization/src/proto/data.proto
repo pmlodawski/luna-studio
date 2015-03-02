@@ -13,20 +13,21 @@ import "enums-type.proto";
 
 message Value {
     enum Type {
-        Error      = 13;
-        EmptyTuple = 0;
-        Int        = 1;
-        Char       = 2;
-        Bool       = 3;
-        String     = 4;
-        Float      = 5;
-        Double     = 6;
-        Matrix     = 7;
-        View       = 8;
-        Point      = 9;
-        Tangent    = 10;
-        Vertex     = 11;
-        Curve      = 12;
+        EmptyTuple  = 0;
+        Int         = 1;
+        Char        = 2;
+        Bool        = 3;
+        String      = 4;
+        Float       = 5;
+        Double      = 6;
+        Matrix      = 7;
+        View        = 8;
+        Point       = 9;
+        Tangent     = 10;
+        Vertex      = 11;
+        Curve       = 12;
+        Error       = 13;
+        ChannelData = 14;
     }
 
     required Type type = 1;
@@ -97,20 +98,27 @@ message DoubleData {
 
 message MatrixData {
     enum Type {
-        INT    = 0;
-        FLOAT  = 1;
-        DOUBLE = 2;
-        BOOL   = 3;
+        INT     = 0;
+        FLOAT   = 1;
+        DOUBLE  = 2;
+        BOOL    = 3;
+    }
+
+    enum Tag {
+        BINARY  = 0;
+        POINTER = 1;
     }
 
     extend Value {
         optional MatrixData data = 107;
     }
 
-    required bytes value         = 1;
-    required uint32 width        = 2;
-    required uint32 height       = 3;
-    required Type precision = 4;
+    optional bytes  value   = 1;
+    optional uint64 ptr     = 2;
+    required uint32 width   = 3;
+    required uint32 height  = 4;
+    required Type precision = 5;
+    required Tag  tag       = 6;
 }
 
 message ViewData {
@@ -133,7 +141,7 @@ message ChannelDescription {
 		Blue = 3;
 		Alpha = 4;
 	}
-	
+
 	optional MatrixData.Type dataType = 1;
 	required ChannelID id = 2;
 	optional string name = 3;
@@ -148,7 +156,7 @@ message ChannelData {
 	extend Value {
 		optional ChannelData data = 114;
 	}
-	
+
 	repeated Channel channels = 1;
 }
 
@@ -190,3 +198,4 @@ message CurveData {
 
     repeated VertexData vertices = 1;
 }
+
