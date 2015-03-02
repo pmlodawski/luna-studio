@@ -245,7 +245,13 @@ def Image.close self::Image size::Int -> Image:
 # def Image.radialBlur self::Image size::Int angle::Float:
 #     ```liftF3 radialBlurLuna #{size} #{angle} #{self}```
 
-def Image.edgeDetect self::Image edgeOperator -> Image:
+class ```EdgeOperator```:
+    Prewitt
+    Sobel
+    Scharr
+    Laplace: x,y :: Int, cross, side :: Float 
+
+def Image.edgeDetect self::Image edgeOperator::EdgeOperator -> Image:
     ```liftF2 edgeDetectLuna #{edgeOperator} #{self}```
 
 # def Image.bayer self::Image bits::Int:
