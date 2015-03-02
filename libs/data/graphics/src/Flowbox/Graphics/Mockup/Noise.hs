@@ -54,7 +54,6 @@ data NoiseParams = Perlin { quality     :: Quality
                                , lacunarity :: Float
                                , octaves    :: Int
                                , maxOctave  :: Int
-                               , seed       :: Int
                                , exponent   :: Float
                                , offset     :: Float
                                , gain       :: Float
@@ -68,5 +67,6 @@ noiseLuna noiseParams (variable -> width) (variable -> height) = channelToImageR
           noiseShader = Transform.scale (Grid width height) $ case noiseParams of
               Perlin q f l o p s z -> perlinGen q (variable f) (variable l) (variable o) (variable p) (variable s) (variable z)
               Billow q f l o p s z -> billowGen q (variable f) (variable l) (variable o) (variable p) (variable s) (variable z)
-              RidgedMulti q f l oc m s e o g z -> ridgedMultiGen q (variable f) (variable l) (variable oc) (variable m) (variable s)
-                                                                   (variable e) (variable o) (variable g) (variable z)
+--              RidgedMulti q f l oc m s e o g z -> ridgedMultiGen q (variable f) (variable l) (variable oc) (variable m) (variable s)
+--                                                                   (variable e) (variable o) (variable g) (variable z)
+              RidgedMulti q f l oc m e o g z -> ridgedMultiGen q (variable f) (variable l) (variable oc) (variable m) 1 (variable e) (variable o) (variable g) (variable z)

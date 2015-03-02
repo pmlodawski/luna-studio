@@ -22,11 +22,6 @@ module Flowbox.Graphics.Mockup.Basic (
     getChannelFromPrimaryLuna,
     getChannelLuna,
     insertChannelFloats,
-    liftF7,
-    liftF10,
-    liftF13,
-    liftCons7,
-    liftCons10,
     loadImageLuna,
     multisampleChannelsLuna,
     onEach,
@@ -461,34 +456,3 @@ liftF13 fun a b c d e f g h i j k l m = do
             <<*>> g' <<*>> h' <<*>> i' <<*>> j' <<*>> k' <<*>> l' <<*>> m'
 
 
-liftF7 fun a b c d e f g = do
-    a' <- a
-    b' <- b
-    c' <- c
-    d' <- d
-    e' <- e
-    f' <- f
-    g' <- g
-    val fun <<*>> a' <<*>> b' <<*>> c' <<*>> d' <<*>> e' <<*>> f' <<*>> g'
-
-liftCons7 = curryTuple8 . const . liftF7
-
-
-liftF10 fun a b c d e f g h i j = do
-    a' <- a
-    b' <- b
-    c' <- c
-    d' <- d
-    e' <- e
-    f' <- f
-    g' <- g
-    h' <- h
-    i' <- i
-    j' <- j
-    val fun <<*>> a' <<*>> b' <<*>> c' <<*>> d' <<*>> e' <<*>> f' <<*>> g'
-            <<*>> h' <<*>> i' <<*>> j'
-
-liftCons10 = curryTuple11 . const . liftF10
-
-curryTuple10 f (x,xs) = curryTuple9 (f x) xs
-curryTuple11 f (x,xs) = curryTuple10 (f x) xs
