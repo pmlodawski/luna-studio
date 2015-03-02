@@ -235,6 +235,9 @@ tryDownloading specPath testName = do
                     trySaveSite site specPath testName
                 else error "No config files. You need custom.config or default.config file in test directory."
 
+--tryDownloading' specPath testName = (try local) || (try customFTP) || (try defaultFTP)
+
+--try local = 
         --case site of
         --    Left err -> do
         --        altConf <- getTestConfig "./test/default.config"
