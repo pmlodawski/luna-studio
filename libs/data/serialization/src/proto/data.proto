@@ -37,7 +37,7 @@ message Value {
 
 message ErrorData {
     extend Value {
-        optional ErrorData data = 113;
+        optional ErrorData data = 114;
     }
     required string message = 1;
 }
@@ -154,7 +154,7 @@ message Channel {
 
 message ChannelData {
 	extend Value {
-		optional ChannelData data = 114;
+		optional ChannelData data = 113;
 	}
 
 	repeated Channel channels = 1;
