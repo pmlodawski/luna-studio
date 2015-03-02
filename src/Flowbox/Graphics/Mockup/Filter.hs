@@ -170,8 +170,22 @@ ditherLuna (fmap constantBoundaryWrapper -> boundary) bits table img = do
 --orderedDitherLuna :: Int -> Image -> Image
 --orderedDitherLuna bits = onEachChannel $ bayer bits
 
-edgeDetectLuna :: Matrix2 Float -> Image -> Image
-edgeDetectLuna edgeOperator img = img'
+data EdgeOperator = Prewitt
+                  | Sobel
+                  | Scharr
+                  | Laplace Int Int Float Float
+
+edgeDetectLuna :: EdgeOperator -> Image -> Image
+edgeDetectLuna edgeOperator img =
+    edgeDetectLuna' edgeOperatorMatrix img where
+        edgeOperatorMatrix = case edgeOperator of
+            Prewitt                -> Filter.prewitt
+            Sobel                  -> Filter.sobel
+            Scharr                 -> Filter.scharr
+            Laplace x y cross side -> Filter.laplacian (variable cross) (variable side) (Grid (variable x) (variable y))
+
+edgeDetectLuna' :: Matrix2 Float -> Image -> Image
+edgeDetectLuna' edgeOperator img = img'
     where alphas = onShader (Stencil.stencil (+) (Shader.unsafeFromMatrix edgeOperator) (+) 0) img
           (r, g, b, _) = unsafeGetChannels alphas
           alphaSum = M.zipWith3 (\a b c -> a + b + c) r g b
