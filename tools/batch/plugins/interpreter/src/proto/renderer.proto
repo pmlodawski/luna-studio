@@ -24,12 +24,27 @@ message FrameCompileError {
 message Renderer {
     message Render {
         message Request {
-            repeated FrameRange ranges   = 1;
-            repeated string     adresses = 2;
+            repeated FrameRange ranges    = 1;
+            repeated string     addresses = 2;
         }
         message Update {
             required Request           request = 1;
             repeated FrameCompileError errors  = 2;
+        }
+        message Progress {
+            required int32 current = 1;
+            required int32 total   = 2;
+        }
+    }
+
+    message RenderNode {
+        message Request {
+            required generated.proto.interpreter.CallPointPath callPointPath = 1;
+            repeated FrameRange                                ranges        = 2;
+            repeated string                                    addresses     = 3;
+        }
+        message Update {
+            required Request request = 1;
         }
         message Progress {
             required int32 current = 1;
