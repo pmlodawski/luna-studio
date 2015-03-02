@@ -71,9 +71,16 @@ foreign haskell def Image.close size:
 # foreign haskell def Image.radialBlur size angle:
 #     liftF3 radialBlurLuna size angle self
 
+
+foreign haskell class EdgeOperator:
+    Prewitt
+    Sobel
+    Scharr
+    Laplace: x, y :: Int, cross, side :: Float
+
 foreign haskell def Image.edgeDetect edgeOperator:
     liftF2 edgeDetectLuna edgeOperator self
-
+    
 foreign haskell class InterpolationFilter:
     NearestNeighbour
     Box
