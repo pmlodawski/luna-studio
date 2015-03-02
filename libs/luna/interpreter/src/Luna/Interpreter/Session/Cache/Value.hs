@@ -132,7 +132,7 @@ computeLookupValue varName time (modValues, compValMap) mode = do
 computeValue :: VarName -> Time -> Mode -> Session mm Value
 computeValue varName time mode = do
     lift2 $ flip Catch.catch excHandler $ do
-        let toValueExpr = "\\m -> flip computeValue m =<< toIOEnv (fromValue (" <> VarName.toString varName <> " " <> show time <> "))"
+        let toValueExpr = "\\m -> flip computeValue m =<< toIOEnv (fromValue (" <> VarName.toString varName <> " (" <> show time <> ")))"
         logger trace toValueExpr
         action <- HEval.interpret'' toValueExpr "Mode -> IO (Maybe SValue)"
         liftIO $ action mode <??&.> "Internal error"
