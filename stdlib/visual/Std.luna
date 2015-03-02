@@ -307,7 +307,7 @@ class ```AlphaBlend```:
     Adobe
     Custom
 
-def Image.merge self::Image mode::MergeMode img::Image -> Image:
+def Image.merge self::Image foreground::Image mode::MergeMode -> Image:
     ```liftF3 mergeLuna #{mode} #{self} #{img}```
 
 def perlin self::Std z::Float width::Int height::Int -> Image:
@@ -524,7 +524,7 @@ alias Time = Float
 def foo self::Std a::Time:
 	a
 
-def Image.render self::Image path::FilePath t::Time:
+def render self::Std img::Image path::FilePath a::Time:
     ()
 #
 #                MATH and such
