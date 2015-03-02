@@ -133,6 +133,9 @@ curryTuple6 f (x,xs) = curryTuple5 (f x) xs
 curryTuple7 f (x,xs) = curryTuple6 (f x) xs
 curryTuple8 f (x,xs) = curryTuple7 (f x) xs
 curryTuple9 f (x,xs) = curryTuple8 (f x) xs
+curryTuple10 f (x,xs) = curryTuple9 (f x) xs
+curryTuple11 f (x,xs) = curryTuple10 (f x) xs
+curryTuple12 f (x,xs) = curryTuple11 (f x) xs
 
 
 -- === UncurryTuple ===
