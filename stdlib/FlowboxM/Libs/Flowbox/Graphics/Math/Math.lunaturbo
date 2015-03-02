@@ -2,6 +2,8 @@
 #                MATH and such
 #
 
+foreign haskell import Flowbox.Graphics.Mockup.Curves
+
 alias Point2F = Point2 Float
 alias HandleGUI = (Int, Float, Float)
 alias ControlPointGUI = (Point2F, HandleGUI, HandleGUI)

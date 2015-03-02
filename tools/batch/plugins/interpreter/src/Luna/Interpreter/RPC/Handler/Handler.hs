@@ -94,7 +94,8 @@ handlerMap prefix queueInfo crl output callback = HandlerMap.fromList $ Prefix.p
     , (Topic.interpreterMemorySetLimitsRequest             , respond update   Interpreter.setMemoryLimits)
     , (Topic.interpreterExitRequest                        , respond update   Interpreter.exit)
 
-    , (Topic.rendererRenderRequest , respond update $ Renderer.render $ Renderer.reportProgress crl output)
+    , (Topic.rendererRenderRequest     , respond update $ Renderer.render     $ Renderer.reportProgress crl output)
+    , (Topic.rendererRenderNodeRequest , respond update $ Renderer.renderNode $ Renderer.reportProgress crl output)
 
     , (Topic.projectmanagerSyncGetRequest                           /+ status, call0 Sync.projectmanagerSyncGet)
 
