@@ -91,9 +91,89 @@ liftF5 f t1 t2 t3 t4 t5 = do
     t5' <- t5
     val f <<*>> t1' <<*>> t2' <<*>> t3' <<*>> t4' <<*>> t5'
 
+liftF6 f t1 t2 t3 t4 t5 t6 = do
+    t1' <- t1
+    t2' <- t2
+    t3' <- t3
+    t4' <- t4
+    t5' <- t5
+    t6' <- t6
+    val f <<*>> t1' <<*>> t2' <<*>> t3' <<*>> t4' <<*>> t5' <<*>> t6'
 
+liftF7 f t1 t2 t3 t4 t5 t6 t7 = do
+    t1' <- t1
+    t2' <- t2
+    t3' <- t3
+    t4' <- t4
+    t5' <- t5
+    t6' <- t6
+    t7' <- t7
+    val f <<*>> t1' <<*>> t2' <<*>> t3' <<*>> t4' <<*>> t5' <<*>> t6' <<*>> t7'
 
+liftF8 f t1 t2 t3 t4 t5 t6 t7 t8 = do
+    t1' <- t1
+    t2' <- t2
+    t3' <- t3
+    t4' <- t4
+    t5' <- t5
+    t6' <- t6
+    t7' <- t7
+    t8' <- t8
+    val f <<*>> t1' <<*>> t2' <<*>> t3' <<*>> t4' <<*>> t5' <<*>> t6' <<*>> t7' <<*>> t8'
 
+liftF9 f t1 t2 t3 t4 t5 t6 t7 t8 t9 = do
+    t1' <- t1
+    t2' <- t2
+    t3' <- t3
+    t4' <- t4
+    t5' <- t5
+    t6' <- t6
+    t7' <- t7
+    t8' <- t8
+    t9' <- t9
+    val f <<*>> t1' <<*>> t2' <<*>> t3' <<*>> t4' <<*>> t5' <<*>> t6' <<*>> t7' <<*>> t8' <<*>> t9'
+
+liftF10 f t1 t2 t3 t4 t5 t6 t7 t8 t9 t10 = do
+    t1' <- t1
+    t2' <- t2
+    t3' <- t3
+    t4' <- t4
+    t5' <- t5
+    t6' <- t6
+    t7' <- t7
+    t8' <- t8
+    t9' <- t9
+    t10' <- t10
+    val f <<*>> t1' <<*>> t2' <<*>> t3' <<*>> t4' <<*>> t5' <<*>> t6' <<*>> t7' <<*>> t8' <<*>> t9' <<*>> t10'
+
+liftF11 f t1 t2 t3 t4 t5 t6 t7 t8 t9 t10 t11 = do
+    t1' <- t1
+    t2' <- t2
+    t3' <- t3
+    t4' <- t4
+    t5' <- t5
+    t6' <- t6
+    t7' <- t7
+    t8' <- t8
+    t9' <- t9
+    t10' <- t10
+    t11' <- t11
+    val f <<*>> t1' <<*>> t2' <<*>> t3' <<*>> t4' <<*>> t5' <<*>> t6' <<*>> t7' <<*>> t8' <<*>> t9' <<*>> t10' <<*>> t11'
+
+liftF12 f t1 t2 t3 t4 t5 t6 t7 t8 t9 t10 t11 t12 = do
+    t1' <- t1
+    t2' <- t2
+    t3' <- t3
+    t4' <- t4
+    t5' <- t5
+    t6' <- t6
+    t7' <- t7
+    t8' <- t8
+    t9' <- t9
+    t10' <- t10
+    t11' <- t11
+    t12' <- t12
+    val f <<*>> t1' <<*>> t2' <<*>> t3' <<*>> t4' <<*>> t5' <<*>> t6' <<*>> t7' <<*>> t8' <<*>> t9' <<*>> t10' <<*>> t11' <<*>> t12'
 
 liftFR0 = curryTuple0 . liftF0 -- :: a                     -> ()                           -> Value Pure Safe a
 liftFR1 = curryTuple1 . liftF1 -- :: (a1 -> c)             -> (m1 a, ())                   -> XOut m1 m2 c
@@ -101,6 +181,13 @@ liftFR2 = curryTuple2 . liftF2 -- :: (a3 -> a2 -> c)       -> (m1 a, (m2 a1, ())
 liftFR3 = curryTuple3 . liftF3 -- :: (a5 -> a4 -> a3 -> c) -> (m1 a, (m2 a1, (m3 a2, ()))) -> XOut m1 (XOut m2 (XOut m3 m4)) c
 liftFR4 = curryTuple4 . liftF4 
 liftFR5 = curryTuple5 . liftF5
+liftFR6 = curryTuple6 . liftF6
+liftFR7 = curryTuple7 . liftF7
+liftFR8 = curryTuple8 . liftF8
+liftFR9 = curryTuple9 . liftF9
+liftFR10 = curryTuple10 . liftF10
+liftFR11 = curryTuple11 . liftF11
+liftFR12 = curryTuple12 . liftF12
 
 
 --liftCons0 f = liftFR0 f . snd -- :: a                     -> (_,())                           -> Value Pure Safe a
@@ -116,6 +203,13 @@ liftCons2 v _ = liftFlatF2 v
 liftCons3 v _ = liftFlatF3 v
 liftCons4 v _ = liftFlatF4 v
 liftCons5 v _ = liftFlatF5 v
+liftCons6 v _ = liftFlatF6 v
+liftCons7 v _ = liftFlatF7 v
+liftCons8 v _ = liftFlatF8 v
+liftCons9 v _ = liftFlatF9 v
+liftCons10 v _ = liftFlatF10 v
+liftCons11 v _ = liftFlatF11 v
+liftCons12 v _ = liftFlatF12 v
 
 liftFlatF0 = flatF0 . liftF0
 liftFlatF1 = flatF1 . liftF1
@@ -123,6 +217,13 @@ liftFlatF2 = flatF2 . liftF2
 liftFlatF3 = flatF3 . liftF3
 liftFlatF4 = flatF4 . liftF4
 liftFlatF5 = flatF5 . liftF5
+liftFlatF6 = flatF6 . liftF6
+liftFlatF7 = flatF7 . liftF7
+liftFlatF8 = flatF8 . liftF8
+liftFlatF9 = flatF9 . liftF9
+liftFlatF10 = flatF10 . liftF10
+liftFlatF11 = flatF11 . liftF11
+liftFlatF12 = flatF12 . liftF12
 
 
 --liftCons0 = curryTuple1 . const . liftF0
@@ -171,6 +272,9 @@ liftErr6 = app6 . Safe
 liftErr7 = app7 . Safe
 liftErr8 = app8 . Safe
 liftErr9 = app9 . Safe
+liftErr10 = app10 . Safe
+liftErr11 = app11 . Safe
+liftErr12 = app12 . Safe
 
 
 --liftErr0' = Safe
@@ -233,6 +337,13 @@ autoLift2 = (polyJoin . fmap autoLift) `dot3` liftF2
 autoLift3 = (polyJoin . fmap autoLift) `dot4` liftF3
 autoLift4 = (polyJoin . fmap autoLift) `dot5` liftF4
 autoLift5 = (polyJoin . fmap autoLift) `dot6` liftF5
+autoLift6 = (polyJoin . fmap autoLift) `dot7` liftF6
+autoLift7 = (polyJoin . fmap autoLift) `dot8` liftF7
+autoLift8 = (polyJoin . fmap autoLift) `dot9` liftF8
+autoLift9 = (polyJoin . fmap autoLift) `dot10` liftF9
+autoLift10 = (polyJoin . fmap autoLift) `dot11` liftF10
+autoLift11 = (polyJoin . fmap autoLift) `dot12` liftF11
+autoLift12 = (polyJoin . fmap autoLift) `dot13` liftF12
 
 
 -- FIXME [wd]: automate with TH
@@ -311,6 +422,13 @@ flatF2 f t1             = flatF1 f t1          . flattenEnv
 flatF3 f t1 t2          = flatF2 f t1 t2       . flattenEnv
 flatF4 f t1 t2 t3       = flatF3 f t1 t2 t3    . flattenEnv
 flatF5 f t1 t2 t3 t4    = flatF4 f t1 t2 t3 t4 . flattenEnv
+flatF6 f t1 t2 t3 t4 t5 = flatF5 f t1 t2 t3 t4 t5 . flattenEnv
+flatF7 f t1 t2 t3 t4 t5 t6 = flatF6 f t1 t2 t3 t4 t5 t6 . flattenEnv
+flatF8 f t1 t2 t3 t4 t5 t6 t7 = flatF7 f t1 t2 t3 t4 t5 t6 t7 . flattenEnv
+flatF9 f t1 t2 t3 t4 t5 t6 t7 t8 = flatF8 f t1 t2 t3 t4 t5 t6 t7 t8 . flattenEnv
+flatF10 f t1 t2 t3 t4 t5 t6 t7 t8 t9 = flatF9 f t1 t2 t3 t4 t5 t6 t7 t8 t9 . flattenEnv
+flatF11 f t1 t2 t3 t4 t5 t6 t7 t8 t9 t10 = flatF10 f t1 t2 t3 t4 t5 t6 t7 t8 t9 t10 . flattenEnv
+flatF12 f t1 t2 t3 t4 t5 t6 t7 t8 t9 t10 t11 = flatF11 f t1 t2 t3 t4 t5 t6 t7 t8 t9 t10 t11 . flattenEnv
 
 class FlattenEnv ma a mb b | ma a -> mb b where
     flattenEnv :: ma a -> mb b
