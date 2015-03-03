@@ -15,6 +15,7 @@ module Flowbox.Graphics.Mockup.Filter (
     dilateLuna,
     ditherLuna,
     EdgeOperator (..),
+    Orientation (..),
     edgeDetectLuna,
     erodeLuna,
     histEqLuna,
@@ -171,18 +172,26 @@ ditherLuna (fmap constantBoundaryWrapper -> boundary) bits table img = do
 --orderedDitherLuna :: Int -> Image -> Image
 --orderedDitherLuna bits = onEachChannel $ bayer bits
 
-data EdgeOperator = Prewitt
-                  | Sobel
-                  | Scharr
+data EdgeOperator = Prewitt Orientation
+                  | Sobel Orientation
+                  | Scharr Orientation
                   | Laplace Int Int Float Float
+
+data Orientation = Vertical
+                 | Horizontal
 
 edgeDetectLuna :: EdgeOperator -> Image -> Image
 edgeDetectLuna edgeOperator img =
     edgeDetectLuna' edgeOperatorMatrix img where
         edgeOperatorMatrix = case edgeOperator of
-            Prewitt                -> Filter.prewitt
-            Sobel                  -> Filter.sobel
-            Scharr                 -> Filter.scharr
+            Prewitt Vertical       -> M.transpose baseEdgeOperatorMatrix
+            Sobel Vertical         -> M.transpose baseEdgeOperatorMatrix
+            Scharr Vertical        -> M.transpose baseEdgeOperatorMatrix
+            _                      -> baseEdgeOperatorMatrix
+        baseEdgeOperatorMatrix = case edgeOperator of
+            Prewitt _              -> Filter.prewitt
+            Sobel _                -> Filter.sobel
+            Scharr _               -> Filter.scharr
             Laplace x y cross side -> Filter.laplacian (variable cross) (variable side) (Grid (variable x) (variable y))
 
 edgeDetectLuna' :: Matrix2 Float -> Image -> Image
