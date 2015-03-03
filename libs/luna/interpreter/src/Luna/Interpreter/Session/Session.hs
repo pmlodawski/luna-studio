@@ -29,6 +29,7 @@ import           Flowbox.Source.Location                    (Location, loc)
 import           Flowbox.System.FilePath                    (expand')
 import           Flowbox.System.Log.Logger                  as Logger
 import           Luna.Interpreter.Session.Env               (Env, Session, SessionST)
+import qualified Luna.Interpreter.Session.Env               as Env
 import           Luna.Interpreter.Session.Error             (Error)
 import qualified Luna.Interpreter.Session.Error             as Error
 import qualified Luna.Interpreter.Session.Hint.Eval         as HEval
@@ -37,7 +38,7 @@ import qualified Luna.Interpreter.Session.TargetHS.Bindings as Bindings
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 type Import = String
@@ -60,14 +61,14 @@ initialize config imports = do
         extraPkgConfs p = [ GHC.PkgConfFile globalPkgDb
                           , GHC.PkgConfFile localPkgDb
                           ] ++ filter isNotUser p
-    flags <- lift2 GHC.getSessionDynFlags
-    _  <- lift2 $ GHC.setSessionDynFlags flags
-                { GHC.extraPkgConfs = extraPkgConfs
-                , GHC.hscTarget = GHC.HscInterpreted
-                , GHC.ghcLink   = GHC.LinkInMemory
-                , GHC.ctxtStkDepth = 1000
-                --, GHC.verbosity = 4
-                }
+    flags <- lift2   GHC.getSessionDynFlags
+    _     <- lift2 $ GHC.setSessionDynFlags flags
+                   { GHC.extraPkgConfs = extraPkgConfs
+                   , GHC.hscTarget     = GHC.HscInterpreted
+                   , GHC.ghcLink       = GHC.LinkInMemory
+                   , GHC.ctxtStkDepth  = 1000
+                   --, GHC.verbosity = 4
+                   }
     setHardcodedExtensions
     setImports $ "Data.Word"
                : "Flowbox.Data.Hash"
@@ -186,7 +187,7 @@ runDecls decls = do
 
 
 runAssignment :: String -> String -> Session mm ()
-runAssignment asigned asignee = do
+runAssignment asigned asignee = Env.fragile $ do
     lift2 $ Bindings.remove asigned
     runDecls $ asigned <> " = " <> asignee
 
