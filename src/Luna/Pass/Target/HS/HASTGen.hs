@@ -567,6 +567,7 @@ genPatMatch patBase (Label lab pat) expr = case pat of
     --Pat.Wildcard            -> return $ HE.WildP
     --Pat.Lit         lit     -> genLit lit
     --Pat.Var         name    -> pure $ HE.ViewP "val" $ HE.Var (Naming.mkVar $ convVar name)
+    Pat.Con name            -> return $ HE.Match (HE.ConP $ convVar name) expr
     a                       -> error $ "Pattern match not supported: " ++ show a
 
     where genVars (Label lab' pat') = case pat' of
