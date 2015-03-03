@@ -41,9 +41,18 @@ spec = do
               testPath = specPath++testName
                 in describe testName $ do
                     describe "should save ok image" $ do
-                        let actualImage = liftM (edgeDetectLuna (Laplace 1 5 1 1)) $ loadImageLuna "./test/samples/lena.png"
+                        let actualImage = liftM (edgeDetectLuna Sobel) $ loadImageLuna "./test/samples/lena.png"
                         it "in test" $ do
+                            pending
                             (testSave =<< actualImage) `shouldReturn` () --(testSave =<< actualImage)
+                    describe "should match reference image" $ do
+                        let actualImage = liftM (edgeDetectLuna Sobel) $ loadImageLuna "./test/samples/lena.png"
+                            expectedImage = getDefaultTestPic specPath testName
+                        it "in pixel-wise metric" $ do
+                            returnShouldBeCloseTo testPath PixelWise actualImage expectedImage
+                        it "in image-wise metric" $ do
+                            returnShouldBeCloseTo testPath ImageWise actualImage expectedImage
+
 
 
 
