@@ -210,6 +210,11 @@ testSave image = do
     saveImageLuna "./test/samples/x_result.png" image
     return ()
 
+returnTestSave image = do
+    image' <- image
+    saveImageLuna "./test/samples/x_result.png" image'
+    return ()
+
 getDefaultTestPic :: String -> String -> IO Image
 getDefaultTestPic specPath testName = do
     directoryExists <- doesDirectoryExist $ specPath++testName++"Test/"

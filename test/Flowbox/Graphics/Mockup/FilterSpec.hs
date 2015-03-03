@@ -6,6 +6,8 @@ import Flowbox.Graphics.Mockup.Basic as M
 import Flowbox.Graphics.Mockup.Filter as M
 import Flowbox.Graphics.Composition.EdgeBlur as EB
 import qualified Flowbox.Math.Matrix as M
+import System.IO.Unsafe
+import Control.Monad
 
 
 
@@ -34,6 +36,16 @@ spec = do
                         testSaveEdgeBlur 5 5 "rgba.x" `shouldThrow` anyException
                     it "should be efficent" $ do
                         pending
+
+          let testName = "edgeDetectLuna"
+              testPath = specPath++testName
+                in describe testName $ do
+                    describe "should save ok image" $ do
+                        let actualImage = liftM (edgeDetectLuna (Laplace 1 5 1 1)) $ loadImageLuna "./test/samples/lena.png"
+                        it "in test" $ do
+                            returnTestSave actualImage `shouldReturn` () --(testSave =<< actualImage)
+
+
 
               --let testName = "dither"
               --  in describe testName $ do
