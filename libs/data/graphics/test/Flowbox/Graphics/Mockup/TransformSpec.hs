@@ -21,7 +21,7 @@ spec = do
 
             describe testName $ do
                 describe "Should save ok image" $ do
-                    let actualImage = rotateLuna (pi/4) (conicalLuna 100 120)
+                    --let actualImage = rotateAtLuna (pi/4) (conicalLuna 100 120)
                     -- let  expectedImage = getDefaultTestPic specPath testName
                     it "in test" $ do
                         pending --testSave actualImage `shouldReturn` ()
