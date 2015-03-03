@@ -103,13 +103,13 @@ logger = getLoggerIO $(moduleName)
 projectCreate :: MemoryManager mm => ProjectCreate.Update -> RPC Context (SessionST mm) ()
 projectCreate (ProjectCreate.Update request project updateNo) = do
     sync updateNo $ ProjectHandler.create request
-    projectID <- Gen.Project.id project <??> "ASTWatch.projectCreate : 'projectID' field is missing"
+    let projectID = Gen.Project.id project
     CacheWrapper.modifyAll projectID
 
 
 projectOpen :: MemoryManager mm => ProjectOpen.Update -> RPC Context (SessionST mm) ()
 projectOpen (ProjectOpen.Update _ project _) = do
-    projectID <- Gen.Project.id project <??> "ASTWatch.projectOpen : 'projectID' field is missing"
+    let projectID = Gen.Project.id project
     CacheWrapper.modifyAll projectID
 
 

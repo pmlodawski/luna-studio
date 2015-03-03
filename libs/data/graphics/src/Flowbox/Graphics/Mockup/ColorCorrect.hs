@@ -34,6 +34,7 @@ module Flowbox.Graphics.Mockup.ColorCorrect (
 ) where
 
 import qualified Data.Array.Accelerate     as A
+import           Data.RTuple               (RTuple(..), toTuple)
 import           Math.Coordinate.Cartesian (Point2 (..))
 
 import qualified Flowbox.Graphics.Color.Color             as Color
@@ -201,8 +202,8 @@ hsvToolLuna (VPS (variable -> hueRangeStart)) (VPS (variable -> hueRangeEnd))
                                   )) image
 
 
-clampLuna :: (VPS Float, VPS Float) -> Maybe (VPS Float, VPS Float) -> Image -> Image
-clampLuna (VPS (variable -> thLo), VPS (variable -> thHi)) clamps =
+clampLuna :: RTuple (VPS Float, (VPS Float, ())) -> Maybe (VPS Float, VPS Float) -> Image -> Image
+clampLuna (toTuple -> (VPS (variable -> thLo), VPS (variable -> thHi))) clamps =
     case clamps of
         Just (VPS clampLo, VPS clampHi) -> onEach $ CC.clamp (CC.Range thLo thHi) $ Just $ CC.Range (variable clampLo) (variable clampHi)
         _                               -> onEach $ CC.clamp (CC.Range thLo thHi) Nothing

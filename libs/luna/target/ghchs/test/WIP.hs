@@ -105,7 +105,7 @@ $(registerMethod ''List "empty")
 
 -- ====== Method: List.bool ====== --
 memSig_List_bool = _rtup1 (_nuSigArg ("self"))
-memDef_List_bool _self = _call (0) (appNext (_call (1) (_member ("empty") _self)) (_member ("not") cons_Main))
+memDef_List_bool _self = _call (0) (appNext (_call (1) (_member ("empty") _self)) (_member ("not") (_call (2) cons_Main)))
 memFnc_List_bool = (memSig_List_bool, memDef_List_bool)
 $(registerMethod ''List "bool")
 
@@ -124,9 +124,9 @@ $(registerMethod ''Bool "bool")
 -- ====== Method: Main.not ====== --
 memSig_Main_not = _rtup2 (_nuSigArg ("self"), _nuSigArg ("a"))
 memDef_Main_not _self _a = polyJoin (liftF1 (\pat_base -> case pat_base of 
-    True -> (_call (2) cons_False)
-    False -> (_call (3) cons_True)
-    _ -> (error "Non-exhaustive patterns in case")) (_call (4) (_member ("bool") _a)))
+    True -> (_call (3) cons_False)
+    False -> (_call (4) cons_True)
+    _ -> (error "Non-exhaustive patterns in case")) (_call (5) (_member ("bool") _a)))
 memFnc_Main_not = (memSig_Main_not, memDef_Main_not)
 $(registerMethod ''Main "not")
 
@@ -138,7 +138,7 @@ $(registerMethod ''Main "foo")
 
 -- ====== Method: Main._equals_equals ====== --
 memSig_Main__equals_equals = _rtup3 (_nuSigArg ("self"), _nuSigArg ("a"), _nuSigArg ("b"))
-memDef_Main__equals_equals _self _a _b = _call (5) (appNext _b (_member ("_equals_equals") _a))
+memDef_Main__equals_equals _self _a _b = _call (6) (appNext _b (_member ("_equals_equals") _a))
 memFnc_Main__equals_equals = (memSig_Main__equals_equals, memDef_Main__equals_equals)
 $(registerMethod ''Main "_equals_equals")
 
@@ -146,7 +146,7 @@ $(registerMethod ''Main "_equals_equals")
 memSig_Main_main = _rtup1 (_nuSigArg ("self"))
 memDef_Main_main _self = do 
     _a <- val []
-    _call (6) (appNext (_call (7) (appNext (val (2 :: Int)) (appNext (val (1 :: Int)) (appNext (_call (8) (appNext _a (_member ("not") _self))) (_member ("if_then_else") _self))))) (_member ("print") _self))
+    _call (7) (appNext (_call (8) (appNext (val (2 :: Int)) (appNext (val (1 :: Int)) (appNext (_call (9) (appNext _a (_member ("not") _self))) (_member ("if_then_else") _self))))) (_member ("print") _self))
 memFnc_Main_main = (memSig_Main_main, memDef_Main_main)
 $(registerMethod ''Main "main")
 
@@ -155,7 +155,7 @@ memSig_Main_if_then_else = _rtup4 (_nuSigArg ("self"), _nuSigArg ("base"), _nuSi
 memDef_Main_if_then_else _self _base _ok _fail = polyJoin (liftF1 (\pat_base -> case pat_base of 
     True -> _ok
     False -> _fail
-    _ -> (error "Non-exhaustive patterns in case")) (_call (9) (_member ("bool") _base)))
+    _ -> (error "Non-exhaustive patterns in case")) (_call (10) (_member ("bool") _base)))
 memFnc_Main_if_then_else = (memSig_Main_if_then_else, memDef_Main_if_then_else)
 $(registerMethod ''Main "if_then_else")
 
