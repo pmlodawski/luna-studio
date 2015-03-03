@@ -43,7 +43,7 @@ spec = do
                     describe "should save ok image" $ do
                         let actualImage = liftM (edgeDetectLuna (Laplace 1 5 1 1)) $ loadImageLuna "./test/samples/lena.png"
                         it "in test" $ do
-                            returnTestSave actualImage `shouldReturn` () --(testSave =<< actualImage)
+                            (testSave =<< actualImage) `shouldReturn` () --(testSave =<< actualImage)
 
 
 

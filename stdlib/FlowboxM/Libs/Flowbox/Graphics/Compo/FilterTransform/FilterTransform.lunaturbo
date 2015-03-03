@@ -76,7 +76,8 @@ foreign haskell class EdgeOperator:
     Prewitt
     Sobel
     Scharr
-    Laplace: x, y :: Int, cross, side :: Float
+    Laplace: x, y :: Int
+             cross, side :: Float
 
 foreign haskell def Image.edgeDetect edgeOperator:
     liftF2 edgeDetectLuna edgeOperator self

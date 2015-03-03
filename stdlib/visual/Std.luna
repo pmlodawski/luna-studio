@@ -249,7 +249,8 @@ class ```EdgeOperator```:
     Prewitt
     Sobel
     Scharr
-    Laplace: x,y :: Int, cross, side :: Float 
+    Laplace: x,y :: Int
+             cross, side :: Float 
 
 def Image.edgeDetect self::Image edgeOperator::EdgeOperator -> Image:
     ```liftF2 edgeDetectLuna #{edgeOperator} #{self}```
