@@ -71,11 +71,14 @@ foreign haskell def Image.close size:
 # foreign haskell def Image.radialBlur size angle:
 #     liftF3 radialBlurLuna size angle self
 
+foreign haskell class Orientation:
+    Vertical
+    Horizontal
 
 foreign haskell class EdgeOperator:
-    Prewitt
-    Sobel
-    Scharr
+    Prewitt: dir :: Orientation
+    Sobel: dir :: Orientation
+    Scharr: dir :: Orientation
     Laplace: x, y :: Int
              cross, side :: Float
 

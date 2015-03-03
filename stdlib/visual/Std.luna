@@ -245,12 +245,16 @@ def Image.close self::Image size::Int -> Image:
 # def Image.radialBlur self::Image size::Int angle::Float:
 #     ```liftF3 radialBlurLuna #{size} #{angle} #{self}```
 
+class ```Orientation```:
+    Vertical
+    Horizontal
+    
 class ```EdgeOperator```:
-    Prewitt
-    Sobel
-    Scharr
-    Laplace: x,y :: Int
-             cross, side :: Float 
+    Prewitt: dir :: Orientation
+    Sobel: dir :: Orientation
+    Scharr: dir :: Orientation
+    Laplace: x, y :: Int
+             cross, side :: Float
 
 def Image.edgeDetect self::Image edgeOperator::EdgeOperator -> Image:
     ```liftF2 edgeDetectLuna #{edgeOperator} #{self}```

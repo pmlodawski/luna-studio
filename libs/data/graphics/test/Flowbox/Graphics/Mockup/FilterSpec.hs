@@ -46,7 +46,7 @@ spec = do
                             pending
                             (testSave =<< actualImage) `shouldReturn` () --(testSave =<< actualImage)
                     describe "should match reference image" $ do
-                        let actualImage = liftM (edgeDetectLuna (Sobel Vertical)) $ loadImageLuna "./test/samples/lena.png"
+                        let actualImage = liftM (edgeDetectLuna (Sobel Horizontal)) $ loadImageLuna "./test/samples/lena.png"
                             expectedImage = getDefaultTestPic specPath testName
                         it "in pixel-wise metric" $ do
                             returnShouldBeCloseTo testPath PixelWise actualImage expectedImage
