@@ -8,6 +8,7 @@ module Luna.Renderer.Renderer where
 
 import           Control.Monad (forM, forM_)
 import qualified Data.IntSet   as IntSet
+import qualified Control.Concurrent.Async as Async
 
 import           Flowbox.Data.MapForest                      (MapForest)
 import           Flowbox.Prelude
@@ -53,9 +54,9 @@ renderNode callPointPath frameRanges progressReporter = do
         iFrames    = zip [1..] frames
         progress i = liftIO $ progressReporter i $ length frames
     varName <- Value.getVarName callPointPath
-    let expr = VarName.toString varName
+    let expr = "\\_time -> do { _ <- " <> VarName.toString varName <> " _time ; return () }"
     action <- Session.interpret expr
     progress 0
-    forM_ iFrames $ \(i, frame) -> do
-        () <- liftIO $ action frame
+    void $ liftIO $ Async.async $ forM_ iFrames $ \(i, frame) -> do
+        () <- action frame
         progress i
