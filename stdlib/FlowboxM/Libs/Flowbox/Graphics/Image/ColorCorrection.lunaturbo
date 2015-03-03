@@ -60,8 +60,8 @@ foreign haskell def Image.gradeMatte blackpoint whitepoint lift gain multiply of
 foreign haskell def Image.multiply val:
     liftF2 multiplyLuna val self
 
-foreign haskell def Image.gamma val:
-    liftF2 gammaLuna val self
+foreign haskell def Image.gamma val alpha:
+    liftF3 gammaLuna val alpha self
 
 foreign haskell def Image.grade blackpoint whitepoint lift gain multiply offset gamma:
     liftF5 (gradeLunaColor blackpoint whitepoint lift) gain multiply offset gamma self

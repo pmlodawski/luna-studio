@@ -187,8 +187,8 @@ def Image.posterize self::Image colors::Float -> Image:
 def Image.multiply self::Image val::Color -> Image:
     ```liftF2 multiplyLuna #{val} #{self}```
 
-def Image.gamma self::Image val::Color -> Image:
-    ```liftF2 gammaLuna #{val} #{self}```
+def Image.gamma self::Image val::Color affectAlpha::Bool -> Image:
+    ```liftF3 gammaLuna #{val} #{affectAlpha} #{self}```
 
 class ```KeyerMode```:
     Red
