@@ -223,8 +223,12 @@ colorMatrixLuna matrix = onEachColorRGB (A.lift1 $ (CC.colorMatrix :: ColorMatri
 multiplyLuna :: Color.RGBA Float -> Image -> Image
 multiplyLuna (fmap variable -> Color.RGBA r g b a) = onEachRGBA (*r) (*g) (*b) (*a)
 
-gammaLuna :: Color.RGBA Float -> Image -> Image
-gammaLuna (fmap variable -> Color.RGBA r g b a) = onEachRGBA (CC.gamma r) (CC.gamma g) (CC.gamma b) (CC.gamma a)
+type AffectAlpha = Bool
+
+gammaLuna :: Color.RGBA Float -> AffectAlpha -> Image -> Image
+gammaLuna (fmap variable -> Color.RGBA r g b a) affectAlpha =
+    if affectAlpha then onEachRGBA (CC.gamma r) (CC.gamma g) (CC.gamma b) (CC.gamma a)
+                   else onEachRGBA (CC.gamma r) (CC.gamma g) (CC.gamma b) id
 
 type HueCorrect a = (VPS (LunaCurveGUI a),
                      VPS (LunaCurveGUI a),
