@@ -37,3 +37,12 @@ foreign haskell def applyTime path time:
 
 def foo a:
 	a
+
+def load1 path gamma:
+    img = load path
+    img.gammaToLinear gamma
+
+def Image.save1 path gamma:
+    img = self.gammaFromLinear gamma
+    img.save path
+    self
