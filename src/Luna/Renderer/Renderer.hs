@@ -60,6 +60,6 @@ renderNode callPointPath frameRanges progressReporter = do
     let expr = "\\_time -> do { _ <- toIOEnv (fromValue (" <> VarName.toString varName <> " _time)) ; return () }"
     (action :: Time -> IO ()) <- Session.interpret expr
     progress 0
-    void $ liftIO $ Async.async $ forM_ iFrames $ \(i, frame) -> do
+    forM_ iFrames $ \(i, frame) -> liftIO $ do
         action $ fromIntegral frame
         progress i
