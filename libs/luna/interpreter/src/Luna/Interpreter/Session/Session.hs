@@ -189,7 +189,8 @@ runDecls decls = do
 runAssignment :: String -> String -> Session mm ()
 runAssignment asigned asignee = Env.fragile $ do
     lift2 $ Bindings.remove asigned
-    runDecls $ asigned <> " = " <> asignee
+    -- do not use runDecls here: its bindings are hard to remove and cause memory leaks!
+    runStmt $ "let " <> asigned <> " = " <> asignee
 
 
 runAssignment' :: String -> String -> Session mm ()
