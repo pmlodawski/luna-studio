@@ -67,7 +67,7 @@ instance LunaShow Expr where
                                                                 , csLunaShow context name
                                                                 , [' ' | not $ null inputs]
                                                                 , unwords $ map (csLunaShow context) inputs
-                                                                , if isUnknown output then "" else " -> " ++ csLunaShow context output
+                                                                , if isUnknown output then "" else " -> " ++ cLunaShow context output
                                                                 , if null body then "" else ":\n    " ++ List.intercalate "\n    " (map (cLunaShow context) body)
                                                                 , "\n"
                                                                 ]
@@ -138,14 +138,15 @@ instance LunaShow Pat where
 
 
 instance LunaShow Type where
-    lunaShowC context t = simple  $ case t of
-        Type.Unknown _           -> ["Unknown"]
-        Type.Var     _ name      -> [name]
-        Type.Tuple   _ items     -> ["(", List.intercalate ", " $ map (csLunaShow context) items, ")"]
-        Type.List    _ item      -> ["[", csLunaShow context item, "]"]
+    lunaShowC context t = case t of
+        Type.Unknown _           -> simple  ["Unknown"]
+        Type.Var     _ name      -> simple  [name]
+        Type.Tuple   _ items     -> simple  ["(", List.intercalate ", " $ map (csLunaShow context) items, ")"]
+        Type.List    _ item      -> simple  ["[", csLunaShow context item, "]"]
+        Type.App     _ src args  -> complex [unwords $ map (csLunaShow context) $ src : args]
         --Type.Class   _ name params' -> name ++ " " ++ (List.intercalate " " params')
         --Type.Module  _ path'         -> List.intercalate "." path'
-        Type.Con     _ segments  -> [List.intercalate "." segments]
+        Type.Con     _ segments  -> simple  [List.intercalate "." segments]
         _ -> error $ "lunaShow: Not implemented: " ++ show t
 
 
