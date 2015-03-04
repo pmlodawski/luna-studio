@@ -124,8 +124,14 @@ def emptyImage self::Std -> Image:
 def load self::Std path::FilePath -> Image:
     ```autoLift1 realReadLuna #{path}```
 
+def load1 self::Std path::FilePath gamma::(Gamma Float) -> Image:
+    ```placeholder```
+
 def Image.save self::Image path::FilePath -> Image:
     ```autoLift2 saveImageLuna #{path} #{self}```
+
+def Image.save1 self::Image path::FilePath gamma::(Gamma Float) -> Image:
+    ```placeholder```
 
 # def Image.defocus self::Image radius::Int:
 #     ```liftF2 defocus #{radius} #{self}```
@@ -181,8 +187,8 @@ def Image.posterize self::Image colors::Float -> Image:
 def Image.multiply self::Image val::Color -> Image:
     ```liftF2 multiplyLuna #{val} #{self}```
 
-def Image.gamma self::Image val::Color -> Image:
-    ```liftF2 gammaLuna #{val} #{self}```
+def Image.gamma self::Image val::Color affectAlpha::Bool -> Image:
+    ```liftF3 gammaLuna #{val} #{affectAlpha} #{self}```
 
 class ```KeyerMode```:
     Red
@@ -307,7 +313,7 @@ class ```AlphaBlend```:
     Adobe
     Custom
 
-def Image.merge self::Image mode::MergeMode img::Image -> Image:
+def Image.merge self::Image foreground::Image mode::MergeMode -> Image:
     ```liftF3 mergeLuna #{mode} #{self} #{img}```
 
 def perlin self::Std z::Float width::Int height::Int -> Image:
@@ -524,7 +530,7 @@ alias Time = Float
 def foo self::Std a::Time:
 	a
 
-def Image.render self::Image path::FilePath t::Time:
+def render self::Std img::Image path::FilePath a::Time:
     ()
 #
 #                MATH and such

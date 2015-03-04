@@ -220,6 +220,7 @@ getDefaultTestPic specPath testName = do
 tryDownloading specPath testName = do
     customExists  <- doesFileExist "./test/custom.config"
     defaultExists <- doesFileExist "./test/default.config"
+    --let tries = [tryLocal, tryCustom, tryDefault]
     if customExists 
         then do
             conf <- getTestConfig "./test/custom.config"
@@ -235,6 +236,9 @@ tryDownloading specPath testName = do
                     trySaveSite site specPath testName
                 else error "No config files. You need custom.config or default.config file in test directory."
 
+--tryDownloading' specPath testName = (try local) || (try customFTP) || (try defaultFTP)
+
+--try local = 
         --case site of
         --    Left err -> do
         --        altConf <- getTestConfig "./test/default.config"

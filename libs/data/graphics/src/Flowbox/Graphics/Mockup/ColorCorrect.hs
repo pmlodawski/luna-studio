@@ -34,6 +34,7 @@ module Flowbox.Graphics.Mockup.ColorCorrect (
 ) where
 
 import qualified Data.Array.Accelerate     as A
+import           Data.RTuple               (RTuple(..), toTuple)
 import           Math.Coordinate.Cartesian (Point2 (..))
 
 import qualified Flowbox.Graphics.Color.Color             as Color
@@ -201,8 +202,8 @@ hsvToolLuna (VPS (variable -> hueRangeStart)) (VPS (variable -> hueRangeEnd))
                                   )) image
 
 
-clampLuna :: (VPS Float, VPS Float) -> Maybe (VPS Float, VPS Float) -> Image -> Image
-clampLuna (VPS (variable -> thLo), VPS (variable -> thHi)) clamps =
+clampLuna :: RTuple (VPS Float, (VPS Float, ())) -> Maybe (VPS Float, VPS Float) -> Image -> Image
+clampLuna (toTuple -> (VPS (variable -> thLo), VPS (variable -> thHi))) clamps =
     case clamps of
         Just (VPS clampLo, VPS clampHi) -> onEach $ CC.clamp (CC.Range thLo thHi) $ Just $ CC.Range (variable clampLo) (variable clampHi)
         _                               -> onEach $ CC.clamp (CC.Range thLo thHi) Nothing
@@ -222,8 +223,12 @@ colorMatrixLuna matrix = onEachColorRGB (A.lift1 $ (CC.colorMatrix :: ColorMatri
 multiplyLuna :: Color.RGBA Float -> Image -> Image
 multiplyLuna (fmap variable -> Color.RGBA r g b a) = onEachRGBA (*r) (*g) (*b) (*a)
 
-gammaLuna :: Color.RGBA Float -> Image -> Image
-gammaLuna (fmap variable -> Color.RGBA r g b a) = onEachRGBA (CC.gamma r) (CC.gamma g) (CC.gamma b) (CC.gamma a)
+type AffectAlpha = Bool
+
+gammaLuna :: Color.RGBA Float -> AffectAlpha -> Image -> Image
+gammaLuna (fmap variable -> Color.RGBA r g b a) affectAlpha =
+    if affectAlpha then onEachRGBA (CC.gamma r) (CC.gamma g) (CC.gamma b) (CC.gamma a)
+                   else onEachRGBA (CC.gamma r) (CC.gamma g) (CC.gamma b) id
 
 type HueCorrect a = (VPS (LunaCurveGUI a),
                      VPS (LunaCurveGUI a),

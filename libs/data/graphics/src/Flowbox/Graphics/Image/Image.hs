@@ -10,6 +10,7 @@
 module Flowbox.Graphics.Image.Image (
     Image,
     pattern DefaultView,
+    pattern ForceView,
     empty,
     singleton,
     singletonFromChans,
@@ -51,6 +52,7 @@ data Image = Image { _arbitraryViews :: Set View
                    } deriving (Show)
 
 pattern DefaultView view <- Image _ view
+pattern ForceView view <- Image _ (fromMaybe (error "view not found") -> view)
 
 makeLenses ''Image
 
@@ -156,3 +158,4 @@ dummyView name = View.empty name
 
 primaryViewTag :: String
 primaryViewTag = "- - primary view - -"
+
