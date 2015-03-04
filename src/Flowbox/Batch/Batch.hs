@@ -15,8 +15,8 @@ module Flowbox.Batch.Batch (
 import           Control.Monad.State        as X
 import           Control.Monad.Trans.Either as X
 import           Data.Int                   (Int32)
-import           Data.Map.Lazy              (Map)
-import qualified Data.Map.Lazy              as Map
+import           Data.Bimap                 (Bimap)
+import qualified Data.Bimap                 as Bimap
 
 import           Flowbox.Batch.Project.ProjectManager (ProjectManager)
 import qualified Flowbox.Batch.Project.ProjectManager as ProjectManager
@@ -27,13 +27,11 @@ import           Flowbox.Prelude
 
 type Error = String
 
-data IDMap = IDMap { _k2v :: Map Int Int
-                   , _v2k :: Map Int Int
-                   } deriving (Show)
 
-makeLenses ''IDMap
+type IDMap = Bimap Int Int
 
-emptyIDMap = IDMap Map.empty Map.empty
+emptyIDMap = Bimap.empty
+
 
 type Batch a = (Functor m, MonadIO m) => EitherT Error (StateT BatchEnv m) a
 
