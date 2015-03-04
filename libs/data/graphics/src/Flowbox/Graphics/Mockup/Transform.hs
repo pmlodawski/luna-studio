@@ -199,10 +199,11 @@ skewAtLuna p skew matte = onEachChannel (skewChannelAt p skew matte)
 transformLuna :: Transform Float -> Maybe (Matte Float) -> Image -> Image
 transformLuna tr matte = onEachChannel (transformChannel tr matte)
     where
-        transformChannel :: Transform Float -> Maybe (Matte Float) -> Image -> Image
+        transformChannel :: Transform Float -> Maybe (Matte Float) -> Channel -> Channel
         transformChannel (Transform tr phi sc skew ce) matte chan = transformation chan
-        transformation :: Channel -> Channel
-        transformation = (translateChannel tr matte) . (rotateChannelAt ce phi matte) . (skewChannelAt ce skew matte) . (scaleChannelAt ce sc matte)
+            where
+                transformation :: Channel -> Channel
+                transformation = (translateChannel tr matte) . (rotateChannelAt ce phi matte) . (skewChannelAt ce skew matte) . (scaleChannelAt ce sc matte)
 
 --transformLuna :: Transform Float -> Image -> Image
 --transformLuna tr = onEachChannel (transformChannel tr)
