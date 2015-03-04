@@ -25,6 +25,7 @@ Library
 
     Build-Depends:  base,
                     batch-plugin-ur-manager,
+                    bimap,
                     bytestring,
                     containers,
                     either,
