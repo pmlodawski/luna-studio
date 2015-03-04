@@ -167,10 +167,10 @@ def Image.colorCorrect self::Image
 
 def Image.colorCorrectCurves self::Image
                        curves::ColorCorrectCurves
-                       master::ColorCC Color
-                       shadows::ColorCC Color
-                       midtones::ColorCC Color
-                       highlights::ColorCC Color
+                       master::(ColorCC Color)
+                       shadows::(ColorCC Color)
+                       midtones::(ColorCC Color)
+                       highlights::(ColorCC Color)
                        -> Image:
     ```liftF5 (colorCorrectLunaCurves curves) #{master} #{shadows} #{midtones} #{highlights} #{self}```
 
