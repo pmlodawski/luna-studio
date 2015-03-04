@@ -311,7 +311,7 @@ colorCorrectLunaBase (curveShadows, curveHighlights)
                   ( ColorCCV highlightsGainR highlightsGainG highlightsGainB highlightsGainA )
                   ( ColorCCV highlightsOffsetR highlightsOffsetG highlightsOffsetB highlightsOffsetA )
                   )
-                  = undefined -- onEachColorRGBA correct
+                  = onEachColorRGBA correct
     where
           strShadows x    = BSpline.valueAt (A.use curveShadows :: A.Acc (BSpline Float)) x
           strHighlights x = BSpline.valueAt (A.use curveHighlights :: A.Acc (BSpline Float)) x
