@@ -399,8 +399,8 @@ def Image.scaleAt self::Image point::(Point2 Float) vec::(V2 Float) matte::(Mayb
 def Image.skewAt self::Image point::(Point2 Float) skew::(Skew Float) matte::(Maybe (Matte Float)) -> Image:
     ```liftF4 skewAtLuna #{point} #{skew} #{matte} #{self}```
 
-def Image.transform self::Image trans::TransformF -> Image:
-    ```liftF2 transformLuna #{trans} #{self}```
+def Image.transform self::Image trans::TransformF matte::(Maybe (Matte Float)) -> Image:
+    ```liftF3 transformLuna #{trans} #{matte} #{self}```
 
 class ```ControlPoint``` a:
     point               :: Point2 a
