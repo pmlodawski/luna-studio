@@ -158,10 +158,10 @@ class ColorCC color:
 alias HueCorrectGUI = (CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float)
 
 def Image.colorCorrect self::Image
-                       master::ColorCC Color
-                       shadows::ColorCC Color
-                       midtones::ColorCC Color
-                       highlights::ColorCC Color
+                       master::(ColorCC Color)
+                       shadows::(ColorCC Color)
+                       midtones::(ColorCC Color)
+                       highlights::(ColorCC Color)
                        -> Image:
     ```liftF5 colorCorrectLuna' #{master} #{shadows} #{midtones} #{highlights} #{self}```
 
