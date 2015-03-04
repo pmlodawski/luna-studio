@@ -49,6 +49,4 @@ run cmd = case cmd of
         rootLogger setIntLevel $ Cmd.verbose cmd
         cfg <- Config.load
         let ctx = Context.mk
-        print "gjhgjfhgfh"
-        logger info "dupa"
         eitherStringToM' $ Server.run (EP.clientFromConfig cfg) ctx Handler.handlerMap
