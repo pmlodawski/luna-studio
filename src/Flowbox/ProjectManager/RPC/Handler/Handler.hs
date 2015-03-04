@@ -17,6 +17,7 @@ import Control.Monad.Trans.State
 import           Flowbox.Bus.Data.Message                         (Message)
 import qualified Flowbox.Bus.Data.Message                         as Message
 import           Flowbox.Bus.Data.Topic                           ((/+))
+import           Flowbox.Bus.Data.Topic                           (Topic)
 import qualified Flowbox.Bus.Data.Topic                           as Topic
 import           Flowbox.Bus.RPC.HandlerMap                       (HandlerMap)
 import qualified Flowbox.Bus.RPC.HandlerMap                       as HandlerMap
@@ -83,19 +84,19 @@ handlerMap callback = HandlerMap.fromList
     , (Topic.projectLibraryAstFunctionModifyOutputRequest           , call Topic.update ASTHandler.functionOutputModify)
     , (Topic.projectLibraryAstFunctionModifyPathRequest             , call Topic.update ASTHandler.functionPathModify)
     , (Topic.projectLibraryAstFunctionGraphGetRequest               , call Topic.status GraphHandler.get)
-    , (Topic.projectLibraryAstFunctionGraphConnectRequest           , call2 Topic.update GraphHandler.connect)
-    , ("undone." ++ Topic.projectLibraryAstFunctionGraphConnectRequest , call3 "project.library.ast.function.graph.connect.update" GraphHandler.connect)
-    , (Topic.projectLibraryAstFunctionGraphDisconnectRequest        , call2 Topic.update GraphHandler.disconnect)
-    , ("undone." ++ Topic.projectLibraryAstFunctionGraphDisconnectRequest , call3 "project.library.ast.function.graph.disconnect.update" GraphHandler.disconnect)
+    , (Topic.projectLibraryAstFunctionGraphConnectRequest           , cleanCall (/+ Topic.update) GraphHandler.connect $ Just Topic.urmRegisterRequest)
+    , (u Topic.projectLibraryAstFunctionGraphConnectRequest         , cleanCall (/* Topic.update) GraphHandler.connect Nothing)
+    , (Topic.projectLibraryAstFunctionGraphDisconnectRequest        , cleanCall (/+ Topic.update) GraphHandler.disconnect $ Just Topic.urmRegisterRequest)
+    , (u Topic.projectLibraryAstFunctionGraphDisconnectRequest      , cleanCall (/* Topic.update) GraphHandler.disconnect Nothing)
     , (Topic.projectLibraryAstFunctionGraphLookupRequest            , call Topic.status GraphHandler.lookup)
     , (Topic.projectLibraryAstFunctionGraphLookupManyRequest        , call Topic.status GraphHandler.lookupMany)
-    , (Topic.projectLibraryAstFunctionGraphNodeAddRequest           , call2 Topic.update GraphHandler.nodeAdd)
-    , ("undone." ++ Topic.projectLibraryAstFunctionGraphNodeAddRequest , call3 "project.library.ast.function.graph.node.add.update" GraphHandler.nodeAdd)
-    , (Topic.projectLibraryAstFunctionGraphNodeRemoveRequest        , call4 Topic.update GraphHandler.nodeRemove)
-    , ("undone." ++ Topic.projectLibraryAstFunctionGraphNodeRemoveRequest , call5 "project.library.ast.function.graph.node.remove.update" GraphHandler.nodeRemove)
+    , (Topic.projectLibraryAstFunctionGraphNodeAddRequest           , cleanCall (/+ Topic.update) GraphHandler.nodeAdd $ Just Topic.urmRegisterRequest)
+    , (u Topic.projectLibraryAstFunctionGraphNodeAddRequest         , cleanCall (/* Topic.update) GraphHandler.nodeAdd Nothing)
+    , (Topic.projectLibraryAstFunctionGraphNodeRemoveRequest        , cleanCall (/+ Topic.update) GraphHandler.nodeRemove $ Just Topic.urmRegisterMultipleRequest)
+    , (u Topic.projectLibraryAstFunctionGraphNodeRemoveRequest      , cleanCall (/* Topic.update) GraphHandler.nodeRemove Nothing)
     , (Topic.projectLibraryAstFunctionGraphNodeModifyRequest        , call Topic.update GraphHandler.nodeModify)
-    , (Topic.projectLibraryAstFunctionGraphNodeModifyinplaceRequest , call2 Topic.update GraphHandler.nodeModifyInPlace)
-    , ("undone." ++ Topic.projectLibraryAstFunctionGraphNodeModifyinplaceRequest , call3 "project.library.ast.function.graph.node.modifyinplace.update" GraphHandler.nodeModifyInPlace)
+    , (Topic.projectLibraryAstFunctionGraphNodeModifyinplaceRequest , cleanCall (/+ Topic.update) GraphHandler.nodeModifyInPlace $ Just Topic.urmRegisterRequest)
+    , (u Topic.projectLibraryAstFunctionGraphNodeModifyinplaceRequest,cleanCall (/* Topic.update) GraphHandler.nodeModifyInPlace Nothing)
     , (Topic.projectLibraryAstFunctionGraphNodeDefaultGetRequest    , call Topic.status NodeDefaultHandler.get)
     , (Topic.projectLibraryAstFunctionGraphNodeDefaultRemoveRequest , call Topic.update NodeDefaultHandler.remove)
     , (Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest    , call Topic.update NodeDefaultHandler.set)
@@ -112,19 +113,15 @@ handlerMap callback = HandlerMap.fromList
         call :: (Proto.Serializable args, Proto.Serializable result)
              => String -> (args -> RPC Context IO result) -> StateT Context IO [Message]
         call type_ = callback (/+ type_) . Processor.singleResult
-        call2 :: (Proto.Serializable args, Proto.Serializable result)
-             => String -> (args -> RPC Context IO (result, Register.Request)) -> StateT Context IO [Message]
-        call2 t fun = callback (/+ t) $ \a -> do (r1, r2) <- fun a
-                                                 return ([r1], [Message.mk Topic.urmRegisterRequest r2])
-        call3 :: (Proto.Serializable args, Proto.Serializable result)
-              => String -> (args -> RPC Context IO (result, Register.Request)) -> StateT Context IO [Message]
-        call3 type_ fun = callback (\_ -> type_) $ \a -> do r1 <- liftM fst $ fun a
-                                                            return ([r1], [])
-        call4 :: (Proto.Serializable args, Proto.Serializable result)
-              => String -> (args -> RPC Context IO (result, RegisterMultiple.Request)) -> StateT Context IO [Message]
-        call4 t fun = callback (/+ t) $ \a -> do (r1, r2) <- fun a
-                                                 return ([r1], [Message.mk Topic.urmRegisterMultipleRequest r2])
-        call5 :: (Proto.Serializable args, Proto.Serializable result)
-              => String -> (args -> RPC Context IO (result, RegisterMultiple.Request)) -> StateT Context IO [Message]
-        call5 type_ fun = callback (\_ -> type_) $ \a -> do r1 <- liftM fst $ fun a
-                                                            return ([r1], [])
+        cleanCall :: (Proto.Serializable args, Proto.Serializable result)
+                  => (Topic -> Topic) -> (args -> Maybe Topic -> RPC Context IO ([result], [Message])) -> Maybe Topic -> StateT Context IO [Message]
+        cleanCall topiConstr fun = callback topiConstr . flip fun
+
+
+        (/*) :: Topic -> Topic -> Topic
+        a /* b = tail (dropWhile (/= '.') a) /+ b
+--        (/*) = (/+) . tail . dropWhile ('.' /=) -- co lepsze?
+
+
+        u :: Topic -> Topic
+        u = ("undone." ++)
