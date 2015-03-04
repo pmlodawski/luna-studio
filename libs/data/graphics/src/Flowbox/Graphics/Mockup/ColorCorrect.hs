@@ -244,27 +244,28 @@ data ColorCorrectCurves a = ColorCorrectCurves { _shadows    :: CurveGUI a
                                                , _highlights :: CurveGUI a
                                                }
 
-data ColorCC a = ColorCC { _saturation :: ColorD
-                         , _contrast   :: ColorD
-                         , _gamma      :: ColorD
-                         , _gain       :: ColorD
-                         , _offset     :: ColorD
+data ColorCC a = ColorCC { _saturation :: a
+                         , _contrast   :: a
+                         , _gamma      :: a
+                         , _gain       :: a
+                         , _offset     :: a
                          }
+    deriving (Show)
 
 colorCorrectLunaCurves :: VPS (ColorCorrectCurves Float)
-                       -> ColorCC Float
-                       -> ColorCC Float
-                       -> ColorCC Float
-                       -> ColorCC Float
+                       -> ColorCC ColorD
+                       -> ColorCC ColorD
+                       -> ColorCC ColorD
+                       -> ColorCC ColorD
                        -> Image
                        -> Image
 colorCorrectLunaCurves (VPS (ColorCorrectCurves curveShadows curveHighlights)) = colorCorrectLunaBase (prepare curveShadows, prepare curveHighlights)
     where prepare (BezierCurveGUI nodes) = let nodes' = CurveGUI.convertToNodeList nodes in A.fromList (Z :. length nodes') nodes'
 
-colorCorrectLuna :: ColorCC Float
-                 -> ColorCC Float
-                 -> ColorCC Float
-                 -> ColorCC Float
+colorCorrectLuna :: ColorCC ColorD
+                 -> ColorCC ColorD
+                 -> ColorCC ColorD
+                 -> ColorCC ColorD
                  -> Image
                  -> Image
 colorCorrectLuna = colorCorrectLunaBase (curveShadows, curveHighlights)
@@ -275,10 +276,10 @@ colorCorrectLuna = colorCorrectLunaBase (curveShadows, curveHighlights)
 pattern ColorCCV r g b a <- (fmap variable -> ColorD r g b a)
 
 colorCorrectLunaBase :: (BSpline Float, BSpline Float)
-                     -> ColorCC Float
-                     -> ColorCC Float
-                     -> ColorCC Float
-                     -> ColorCC Float
+                     -> ColorCC ColorD
+                     -> ColorCC ColorD
+                     -> ColorCC ColorD
+                     -> ColorCC ColorD
                      -> Image
                      -> Image
 colorCorrectLunaBase (curveShadows, curveHighlights)
