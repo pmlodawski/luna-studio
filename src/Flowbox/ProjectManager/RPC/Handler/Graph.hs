@@ -167,8 +167,8 @@ nodeRemove (NodeRemove.Request tnodeIDs tbc tlibID tprojectID astID) undoTopic =
                                  return $ encode (nid, node)
                      ) $ originIDs
 
-    let removed = Set.toList . Set.fromList . concat . map (\node -> BatchG.nodeEdges node bc libID projectID) oldNodes
-    logger warning $ show removed
+--    let removed = Set.toList . Set.fromList . concat . map (\node -> BatchG.nodeEdges node bc libID projectID) oldNodes
+--    logger warning $ show removed
     
     BatchG.removeNodes newIDs bc libID projectID
     updateNo <- Batch.getUpdateNo
