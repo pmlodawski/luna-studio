@@ -46,14 +46,12 @@ registerMultiple request@(RegisterMultiple.Request undoActions redoAction) = do
 reg :: [Message] -> Message -> RPC Context IO ()
 reg undoA redoA = do
     Context undoL redoL <- lift get
-    logger info $ "register: undo " ++ (show $ length undoL) ++ " redo " ++ (show $ length redoL)
     lift $ put $ Context ((undoA, redoA) : undoL) []
 
 
 undo :: Undo.Request -> RPC Context IO (Undo.Status, Maybe [Message])
 undo request = do
     Context undoL redoL <- lift get
-    logger info $ "undo: undo " ++ (show $ length undoL) ++ " redo " ++ (show $ length redoL)
     case undoL of
         []            -> do
             return $ (Undo.Status request False, Nothing)
@@ -64,7 +62,6 @@ undo request = do
 redo :: Redo.Request -> RPC Context IO (Redo.Status, Maybe [Message])
 redo request = do
     Context undoL redoL <- lift get
-    logger info $ "redo: undo " ++ (show $ length undoL) ++ " redo " ++ (show $ length redoL)
     case redoL of
         []               -> do
             return (Redo.Status request False, Nothing)
