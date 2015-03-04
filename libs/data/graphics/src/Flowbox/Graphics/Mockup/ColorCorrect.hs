@@ -54,8 +54,8 @@ import Flowbox.Graphics.Mockup.Matte
 
 
 
-type ColorD = Color.RGBA Float
-pattern ColorD r g b a = Color.RGBA r g b a
+type ColorF = Color.RGBA Float
+pattern ColorF r g b a = Color.RGBA r g b a
 
 offsetLuna :: Color.RGBA Float -> Maybe (Matte.Matte Float) -> Image -> Image
 offsetLuna (fmap variable -> Color.RGBA r g b a) matte img =
@@ -253,19 +253,19 @@ data ColorCC a = ColorCC { _saturation :: a
     deriving (Show)
 
 colorCorrectLunaCurves :: VPS (ColorCorrectCurves Float)
-                       -> ColorCC ColorD
-                       -> ColorCC ColorD
-                       -> ColorCC ColorD
-                       -> ColorCC ColorD
+                       -> ColorCC ColorF
+                       -> ColorCC ColorF
+                       -> ColorCC ColorF
+                       -> ColorCC ColorF
                        -> Image
                        -> Image
 colorCorrectLunaCurves (VPS (ColorCorrectCurves curveShadows curveHighlights)) = colorCorrectLunaBase (prepare curveShadows, prepare curveHighlights)
     where prepare (BezierCurveGUI nodes) = let nodes' = CurveGUI.convertToNodeList nodes in A.fromList (Z :. length nodes') nodes'
 
-colorCorrectLuna :: ColorCC ColorD
-                 -> ColorCC ColorD
-                 -> ColorCC ColorD
-                 -> ColorCC ColorD
+colorCorrectLuna :: ColorCC ColorF
+                 -> ColorCC ColorF
+                 -> ColorCC ColorF
+                 -> ColorCC ColorF
                  -> Image
                  -> Image
 colorCorrectLuna = colorCorrectLunaBase (curveShadows, curveHighlights)
@@ -273,13 +273,13 @@ colorCorrectLuna = colorCorrectLunaBase (curveShadows, curveHighlights)
           curveHighlights = makeSpline [BSplineNode (Point2 0.5 0) (Point2 (-0.5) 0) (Point2 (2/3) 0), BSplineNode (Point2 1 1) (Point2 (5/6) 1) (Point2 2 1)]
           makeSpline      = A.fromList (Z :. 2)
 
-pattern ColorCCV r g b a <- (fmap variable -> ColorD r g b a)
+pattern ColorCCV r g b a <- (fmap variable -> ColorF r g b a)
 
 colorCorrectLunaBase :: (BSpline Float, BSpline Float)
-                     -> ColorCC ColorD
-                     -> ColorCC ColorD
-                     -> ColorCC ColorD
-                     -> ColorCC ColorD
+                     -> ColorCC ColorF
+                     -> ColorCC ColorF
+                     -> ColorCC ColorF
+                     -> ColorCC ColorF
                      -> Image
                      -> Image
 colorCorrectLunaBase (curveShadows, curveHighlights)
