@@ -33,13 +33,13 @@ compute varName = do
 
 computeInherit :: String -> [VarName] -> Session mm [Hash]
 computeInherit varName varNames =
-    --case foldl mergeHashes (Just []) varNames of
-    --    Just inherited -> Maybe.maybe inherited (:inherited) <$> compute varName
-    --    Nothing        -> return []
-    --where
-    --    mergeHashes  Nothing      _  = Nothing
-    --    mergeHashes (Just hashes) vn = case vn ^. VarName.hash of
-    --        [] -> Nothing
-    --        h  -> Just $ hashes ++ h
-    Maybe.maybe inherited (:inherited) <$> compute varName
-    where inherited = concatMap (view VarName.hash) varNames
+    case foldl mergeHashes (Just []) varNames of
+        Just inherited -> Maybe.maybe inherited (:inherited) <$> compute varName
+        Nothing        -> return []
+    where
+        mergeHashes  Nothing      _  = Nothing
+        mergeHashes (Just hashes) vn = case vn ^. VarName.hash of
+            [] -> Nothing
+            h  -> Just $ hashes ++ h
+    --Maybe.maybe inherited (:inherited) <$> compute varName
+    --where inherited = concatMap (view VarName.hash) varNames
