@@ -124,8 +124,14 @@ def emptyImage self::Std -> Image:
 def load self::Std path::FilePath -> Image:
     ```autoLift1 realReadLuna #{path}```
 
+def load1 self::Std path::FilePath gamma::(Gamma Float) -> Image:
+    ```placeholder```
+
 def Image.save self::Image path::FilePath -> Image:
     ```autoLift2 saveImageLuna #{path} #{self}```
+
+def Image.save1 self::Image path::FilePath gamma::(Gamma Float) -> Image:
+    ```placeholder```
 
 # def Image.defocus self::Image radius::Int:
 #     ```liftF2 defocus #{radius} #{self}```
@@ -186,8 +192,8 @@ def Image.posterize self::Image colors::Float -> Image:
 def Image.multiply self::Image val::Color matte::(Maybe (Matte Float)) -> Image:
     ```liftF2 multiplyLuna #{val} #{matte} #{self}```
 
-def Image.gamma self::Image val::Color matte::(Maybe (Matte Float)) -> Image:
-    ```liftF2 gammaLuna #{val} #{matte} #{self}```
+def Image.gamma self::Image val::Color affectAlpha::Bool matte::(Maybe (Matte Float)) -> Image:
+    ```liftF4 gammaLuna #{val} #{affectAlpha} #{matte} #{self}```
 
 class ```KeyerMode```:
     Red
@@ -248,7 +254,7 @@ def Image.close self::Image size::Int -> Image:
 class ```Orientation```:
     Vertical
     Horizontal
-    
+
 class ```EdgeOperator```:
     Prewitt: dir :: Orientation
     Sobel: dir :: Orientation
@@ -323,7 +329,7 @@ class ```AlphaBlend```:
     Adobe
     Custom
 
-def Image.merge self::Image foreground::Image mode::MergeMode -> Image:
+def Image.merge background::Image foreground::Image mode::MergeMode -> Image:
     ```liftF3 mergeLuna #{mode} #{self} #{img}```
 
 def perlin self::Std z::Float width::Int height::Int -> Image:

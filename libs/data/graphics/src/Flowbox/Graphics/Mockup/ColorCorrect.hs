@@ -125,15 +125,20 @@ multiplyLuna (fmap variable -> Color.RGBA r g b a) matte img =
                            (applyMatteFloat (*b) m)
                            (applyMatteFloat (*a) m) img
 
-gammaLuna :: Color.RGBA Float -> Maybe (Matte.Matte Float) -> Image -> Image
-gammaLuna (fmap variable -> Color.RGBA r g b a) matte img =
+type AffectAlpha = Bool
+
+gammaLuna :: Color.RGBA Float -> AffectAlpha -> Maybe (Matte.Matte Float) -> Image -> Image
+gammaLuna (fmap variable -> Color.RGBA r g b a) affectAlpha matte img =
   case matte of
-    Nothing -> onEachRGBA (CC.gamma r) (CC.gamma g) (CC.gamma b) (CC.gamma a) img
+    Nothing -> onEachRGBA (CC.gamma r) (CC.gamma g) (CC.gamma b) alpha img
     Just m ->
         onEachRGBAChannels (applyMatteFloat (CC.gamma r) m)
                            (applyMatteFloat (CC.gamma g) m)
                            (applyMatteFloat (CC.gamma b) m)
-                           (applyMatteFloat (CC.gamma a) m) img
+                           (applyMatteFloat alpha m) img
+  where alpha = case affectAlpha of
+                    True  -> (CC.gamma a)
+                    False -> id
 
 -- [TODO] - zamaskować saturate
 saturateLuna :: Color.RGB Float -> Image -> Image

@@ -57,10 +57,10 @@ foreign haskell def Image.multiplyRaw val matte:
 def Image.multiply val matte:
     self.multiplyRaw val.toRGBA matte
 
-foreign haskell def Image.gammaRaw val matte:
-    liftF3 gammaLuna val matte self
-def Image.gamma val matte:
-    self.gammaRaw val.toRGBA matte
+foreign haskell def Image.gammaRaw val alpha matte:
+    liftF3 gammaLuna val alpha matte self
+def Image.gamma val alpha matte:
+    self.gammaRaw val.toRGBA alpha matte
 
 foreign haskell def Image.gradeRaw blackpoint whitepoint lift gain multiply offset gamma matte:
     liftF5 (gradeLunaColor blackpoint whitepoint lift gain) multiply offset gamma matte self

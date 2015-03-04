@@ -4,10 +4,13 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module Luna.Renderer.Renderer where
 
 import           Control.Monad (forM, forM_)
 import qualified Data.IntSet   as IntSet
+import qualified Control.Concurrent.Async as Async
 
 import           Flowbox.Data.MapForest                      (MapForest)
 import           Flowbox.Prelude
@@ -24,6 +27,7 @@ import           Luna.Interpreter.Session.Session            (Session)
 import qualified Luna.Interpreter.Session.Session            as Session
 import           Luna.Renderer.Data.FrameRange               (FrameRanges)
 import qualified Luna.Renderer.Data.FrameRange               as FrameRange
+import Luna.Interpreter.Session.Data.Time (Time)
 
 
 
@@ -53,9 +57,9 @@ renderNode callPointPath frameRanges progressReporter = do
         iFrames    = zip [1..] frames
         progress i = liftIO $ progressReporter i $ length frames
     varName <- Value.getVarName callPointPath
-    let expr = VarName.toString varName
-    action <- Session.interpret expr
+    let expr = "\\_time -> do { _ <- toIOEnv (fromValue (" <> VarName.toString varName <> " _time)) ; return () }"
+    (action :: Time -> IO ()) <- Session.interpret expr
     progress 0
-    forM_ iFrames $ \(i, frame) -> do
-        () <- liftIO $ action frame
+    forM_ iFrames $ \(i, frame) -> liftIO $ do
+        action $ fromIntegral frame
         progress i
