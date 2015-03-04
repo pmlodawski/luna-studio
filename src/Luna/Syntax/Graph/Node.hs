@@ -17,9 +17,11 @@ import           Luna.Syntax.Name                  (VNameP)
 
 
 
-data Node a e = Expr     { _expr :: NodeExpr a e, _outputName :: VNameP, _pos :: Position }
-              | Inputs   {                                               _pos :: Position }
-              | Outputs  {                                               _pos :: Position }
+data Node a e = Expr    { _expr       :: NodeExpr a e
+                        , _outputName :: Maybe VNameP
+                        , _pos        :: Position }
+              | Inputs  { _pos :: Position }
+              | Outputs { _pos :: Position }
               deriving (Show, Eq)
 
 

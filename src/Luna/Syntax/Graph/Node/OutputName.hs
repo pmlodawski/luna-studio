@@ -45,7 +45,7 @@ fixEmpty' (nodeID, node) =
 
 provide :: Node a e -> Node.ID -> Node a e
 provide node@(Node.Expr nodeExpr _ _) nodeID =
-    node & Node.outputName .~ generate nodeExpr nodeID
+    node & Node.outputName .~ Just (generate nodeExpr nodeID)
 provide node                   _      = node
 
 
