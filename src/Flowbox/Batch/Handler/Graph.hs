@@ -45,6 +45,10 @@ nodesByIDs :: [Node.ID] -> Breadcrumbs -> Library.ID -> Project.ID -> Batch [(No
 nodesByIDs = Batch.getNodes
 
 
+nodeEdges :: Node -> Breadcrumbs -> Library.ID -> Project.ID -> Batch EdgeView
+nodeEdges node bc libID projectID = GraphView.inn_ node $ Batch.getGraphView bc libID projectID
+
+
 addNode :: Node -> Breadcrumbs -> Library.ID -> Project.ID -> Batch Node.ID
 addNode node bc libID projectID = do
     (graph, propertyMap) <- Batch.getGraphView bc libID projectID
