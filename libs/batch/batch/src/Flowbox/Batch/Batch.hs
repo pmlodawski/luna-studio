@@ -30,6 +30,7 @@ type Error = String
 
 type IDMap = Bimap Int Int
 
+emptyIDMap :: IDMap
 emptyIDMap = Bimap.empty
 
 

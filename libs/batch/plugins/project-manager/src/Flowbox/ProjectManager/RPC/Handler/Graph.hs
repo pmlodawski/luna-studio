@@ -13,6 +13,7 @@ import qualified Data.Bimap    as Bimap
 import qualified Data.Either   as Either
 import qualified Data.List     as List
 import           Data.Maybe    (fromMaybe, isJust)
+--import qualified Data.Set      as Set
 import qualified Data.Sequence as Sequence
 
 import qualified Flowbox.Batch.Batch                                                                          as Batch
@@ -166,12 +167,16 @@ nodeRemove (NodeRemove.Request tnodeIDs tbc tlibID tprojectID astID) undoTopic =
                                  return $ encode (nid, node)
                      ) $ originIDs
 
+    let removed = Set.toList . Set.fromList . concat . map (\node -> BatchG.nodeEdges node bc libID projectID) oldNodes
+    logger warning $ show removed
+    
     BatchG.removeNodes newIDs bc libID projectID
     updateNo <- Batch.getUpdateNo
 
     return ( [NodeRemove.Update (updatedRequest $ encodeP newIDs) updateNo]
            , makeMsgArr (RegisterMultiple.Request
-              (Sequence.fromList $ map (\node -> fun Topic.projectLibraryAstFunctionGraphNodeAddRequest $ NodeAdd.Request node tbc tlibID tprojectID astID) $ oldNodes)
+              (  Sequence.fromList $ map (\node -> fun Topic.projectLibraryAstFunctionGraphNodeAddRequest $ NodeAdd.Request node tbc tlibID tprojectID astID) $ oldNodes)
+--              >< Sequence.fromList $ map (\node -> fun Topic.projectLibraryAstFunctionGraphConnectRequest $ Connect.Request )
               (fun Topic.projectLibraryAstFunctionGraphNodeRemoveRequest $ updatedRequest $ encodeP originIDs)
                         ) undoTopic
            )
