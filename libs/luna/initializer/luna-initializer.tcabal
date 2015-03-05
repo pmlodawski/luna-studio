@@ -12,8 +12,6 @@ Flag Debug
 
 Library
   Hs-Source-Dirs: src
-  if flag(debug)
-    GHC-Options:  -csacc
   GHC-Options:    -Wall -O2
   Other-Modules:  Paths_luna_initializer
   Extensions:     DoAndIfThenElse,
