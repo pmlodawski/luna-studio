@@ -271,9 +271,42 @@ class ```AlphaBlend```:
 
 def Image.merge background::Image foreground::Image mode::MergeMode mask::(Maybe (Matte Float))-> Image
 
-def perlin self::Std z::Float width::Int height::Int -> Image
+class ```Quality```:
+    Fast
+    Standard
+    Best
 
-def billow self::Std z::Float width::Int height::Int -> Image
+class ```NoiseParams```:
+    Perlin:
+        quality :: Quality
+        frequency :: Float
+        lacunarity :: Float
+        octaves :: Int
+        persistence :: Float
+        seed :: Int
+        z :: Float
+    Billow:
+        quality :: Quality
+        frequency :: Float
+        lacunarity :: Float
+        octaves :: Int
+        persistence :: Float
+        seed :: Int
+        z :: Float
+    RidgedMulti:
+        quality :: Quality
+        frequency :: Float
+        lacunarity :: Float
+        octaves :: Int
+        maxOctave :: Int
+      #  seed :: Int
+        exponent :: Float
+        offset :: Float
+        gain :: Float
+        z :: Float
+
+
+def noise self::Std params::NoiseParams width::Int height::Int -> Image
 
 # TRANSFORMATIONS
 
