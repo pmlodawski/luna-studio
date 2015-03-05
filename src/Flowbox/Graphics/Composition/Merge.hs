@@ -101,7 +101,7 @@ liftBlend blend overlay _ background _ = blend overlay background
 
 -- | A*b + B*(1-a)
 atop :: (A.Elt a, A.IsFloating a) => ComplicatedBlendMode a
-atop overlay alphaOverlay background alphaBackground = overlay * alphaBackground + background * U.invert alphaOverlay
+atop overlay alphaOverlay background alphaBackground =  background * alphaOverlay + overlay * U.invert alphaBackground
 --atop overlay alphaOverlay background alphaBackground = background * alphaOverlay + overlay * U.invert alphaBackground
 
 -- | (A+B)/2
@@ -222,7 +222,7 @@ out overlay _ _ alphaBackground = overlay * U.invert alphaBackground
 
 -- | A + B(1-a)
 over :: (A.Elt a, A.IsFloating a) => ComplicatedBlendMode a
-over overlay alphaOverlay background _ = overlay + background * U.invert alphaOverlay
+over overlay alphaOverlay background alphaBackground = background + overlay * U.invert alphaBackground --overlay + background * U.invert alphaOverlay
 
 -- | A + B
 plus :: (A.Elt a, A.IsFloating a) => BlendMode a
