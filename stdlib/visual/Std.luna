@@ -93,13 +93,13 @@ class Image
 
 def emptyImage self::Std -> Image
 
-def load self::Std path::FilePath -> Image
+def load self::Std path::LoadPath -> Image
 
-def load1 self::Std path::FilePath gamma::(Gamma Float) -> Image
+def load1 self::Std path::LoadPath gamma::(Gamma Float) -> Image
 
-def Image.save self::Image path::FilePath -> Image
+def Image.save self::Image path::SavePath -> Image
 
-def Image.save1 self::Image path::FilePath gamma::(Gamma Float) -> Image
+def Image.save1 self::Image path::SavePath gamma::(Gamma Float) -> Image
 
 # def Image.defocus self::Image radius::Int
 
@@ -271,9 +271,42 @@ class ```AlphaBlend```:
 
 def Image.merge background::Image foreground::Image mode::MergeMode mask::(Maybe (Matte Float))-> Image
 
-def perlin self::Std z::Float width::Int height::Int -> Image
+class ```Quality```:
+    Fast
+    Standard
+    Best
 
-def billow self::Std z::Float width::Int height::Int -> Image
+class ```NoiseParams```:
+    Perlin:
+        quality :: Quality
+        frequency :: Float
+        lacunarity :: Float
+        octaves :: Int
+        persistence :: Float
+        seed :: Int
+        z :: Float
+    Billow:
+        quality :: Quality
+        frequency :: Float
+        lacunarity :: Float
+        octaves :: Int
+        persistence :: Float
+        seed :: Int
+        z :: Float
+    RidgedMulti:
+        quality :: Quality
+        frequency :: Float
+        lacunarity :: Float
+        octaves :: Int
+        maxOctave :: Int
+      #  seed :: Int
+        exponent :: Float
+        offset :: Float
+        gain :: Float
+        z :: Float
+
+
+def noise self::Std params::NoiseParams width::Int height::Int -> Image
 
 # TRANSFORMATIONS
 
@@ -418,7 +451,7 @@ alias Time = Float
 def foo self::Std a::Time:
 	a
 
-def render self::Std img::Image path::FilePath a::Time:
+def render self::Std img::Image path::SavePath a::Time:
     ()
 #
 #                MATH and such
