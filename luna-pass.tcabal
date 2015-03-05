@@ -14,8 +14,6 @@ Flag Debug
 Library
   Hs-Source-Dirs: src
   Other-Modules:  Paths_luna_pass
-  if flag(debug)
-    GHC-Options:  -csacc
   GHC-Options:    -Wall -O2 -threaded
                   -- -F -pgmF ./util/preprocessors/imports.py
   Extensions:     DoAndIfThenElse,
@@ -50,8 +48,6 @@ Executable luna-pass-test
   Main-Is:        Main.hs
   Hs-Source-Dirs: test
 
-  if flag(debug)
-    GHC-Options:  -csacc
   GHC-Options:    -Wall -O2
 
   Extensions:     DoAndIfThenElse
