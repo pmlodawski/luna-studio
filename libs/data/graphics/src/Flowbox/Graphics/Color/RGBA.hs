@@ -25,7 +25,7 @@ import Flowbox.Graphics.Utils.Accelerate
 
 
 data RGBA a = RGBA { _rgbaR :: a, _rgbaG :: a, _rgbaB :: a, _rgbaA :: a }
-			deriving (Foldable, Functor, Traversable, Typeable, Show)
+			deriving (Eq, Ord, Foldable, Functor, Traversable, Typeable, Show)
 
 makeLenses ''RGBA
 deriveAccelerate ''RGBA

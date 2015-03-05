@@ -12,9 +12,11 @@ module Flowbox.Batch.Batch (
 , module Flowbox.Batch.Batch
 ) where
 
-import Control.Monad.State        as X
-import Control.Monad.Trans.Either as X
-import Data.Int                   (Int32)
+import           Control.Monad.State        as X
+import           Control.Monad.Trans.Either as X
+import           Data.Int                   (Int32)
+import           Data.Bimap                 (Bimap)
+import qualified Data.Bimap                 as Bimap
 
 import           Flowbox.Batch.Project.ProjectManager (ProjectManager)
 import qualified Flowbox.Batch.Project.ProjectManager as ProjectManager
@@ -25,11 +27,19 @@ import           Flowbox.Prelude
 
 type Error = String
 
+
+type IDMap = Bimap Int Int
+
+emptyIDMap :: IDMap
+emptyIDMap = Bimap.empty
+
+
 type Batch a = (Functor m, MonadIO m) => EitherT Error (StateT BatchEnv m) a
 
 data BatchEnv = BatchEnv { _config         :: Config
                          , _projectManager :: ProjectManager
                          , _updateNo       :: Int32
+                         , _idMap          :: IDMap
                          } deriving (Show)
 
 
@@ -41,7 +51,7 @@ runBatch env batch = fst <$> runStateT (runEitherT batch) env
 
 
 make :: Config -> BatchEnv
-make config' = BatchEnv config' ProjectManager.empty 0
+make config' = BatchEnv config' ProjectManager.empty 0 emptyIDMap
 
 
 attributeKey :: String

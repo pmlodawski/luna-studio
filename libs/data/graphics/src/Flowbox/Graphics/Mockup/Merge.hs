@@ -46,8 +46,8 @@ data MergeMode = Atop
            | HardLight AlphaBlend
            | Hypot AlphaBlend
            | In
-           | Mask
-           | Matte
+           | MergeMask
+           | MergeMatte
            -- | Max
            -- | Min
            | Minus AlphaBlend
@@ -84,8 +84,8 @@ mergeLuna mode img1 img2 = case mode of
     HardLight alphaBlend           -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.hardLight
     Hypot alphaBlend               -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.hypot
     In                             -> processMerge $ Merge.threeWayMerge             Merge.inBlend
-    Mask                           -> processMerge $ Merge.threeWayMerge             Merge.withMask
-    Matte                          -> processMerge $ Merge.threeWayMerge             Merge.matte
+    MergeMask                      -> processMerge $ Merge.threeWayMerge             Merge.withMask
+    MergeMatte                     -> processMerge $ Merge.threeWayMerge             Merge.matte
     -- Max                         -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.max
     -- Min                         -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.min
     Minus alphaBlend               -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.minus

@@ -21,8 +21,8 @@ foreign haskell class MergeMode:
     HardLight: ab :: AlphaBlend
     Hypot: ab :: AlphaBlend
     In
-    Mask
-    Matte
+    MergeMask
+    MergeMatte
     # Max
     # Min
     Minus: ab :: AlphaBlend

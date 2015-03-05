@@ -9,6 +9,7 @@ import Flowbox.Graphics.Mockup.Basic
 import Flowbox.Graphics.Mockup.Transform
 import Flowbox.Prelude
 import Flowbox.Graphics.Color.Color
+import Math.Coordinate.Cartesian
 
 import TestHelpers
 
@@ -21,8 +22,16 @@ spec = do
 
             describe testName $ do
                 describe "Should save ok image" $ do
-                    let actualImage = rotateLuna (pi/4) (conicalLuna 100 120)
+                    let actualImage = rotateAtLuna (Point2 0 0) (pi/8) Nothing (conicalLuna 100 120)
+                    --let actualImage = rotateAtLuna (pi/4) (conicalLuna 100 120)
                     -- let  expectedImage = getDefaultTestPic specPath testName
                     it "in test" $ do
-                        pending --testSave actualImage `shouldReturn` ()
-                        -- rightReturnShouldBeCloseTo testPath PixelWise actualImage expectedImage
+                        pending
+                        testSave actualImage `shouldReturn` ()
+                describe "should match reference image" $ do
+                    let actualImage = rotateAtLuna (Point2 0 0) (pi/8) Nothing (conicalLuna 100 120)
+                        expectedImage = getDefaultTestPic specPath testName
+                    it "in pixel-wise metric" $ do
+                        rightReturnShouldBeCloseTo testPath PixelWise actualImage expectedImage
+                    it "in image-wise metric" $ do
+                        rightReturnShouldBeCloseTo testPath ImageWise actualImage expectedImage

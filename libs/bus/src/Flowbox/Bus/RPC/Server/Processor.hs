@@ -15,16 +15,17 @@ import qualified Control.Monad.Catch       as Catch
 import           Control.Monad.Trans.State
 import qualified Data.Maybe                as Maybe
 
-import           Flowbox.Bus.Data.Message     (Message)
-import qualified Flowbox.Bus.Data.Message     as Message
-import           Flowbox.Bus.Data.Topic       (Topic)
-import           Flowbox.Bus.RPC.HandlerMap   (HandlerMap)
-import qualified Flowbox.Bus.RPC.HandlerMap   as HandlerMap
-import qualified Flowbox.Bus.RPC.RPC          as RPC
-import           Flowbox.Prelude              hiding (error)
+import           Flowbox.Bus.Data.Message                 (Message)
+import qualified Flowbox.Bus.Data.Message                 as Message
+import           Flowbox.Bus.Data.Topic                   (Topic, (/+))
+import           Flowbox.Bus.RPC.HandlerMap               (HandlerMap)
+import qualified Flowbox.Bus.RPC.HandlerMap               as HandlerMap
+import qualified Flowbox.Bus.RPC.RPC                      as RPC
+import           Flowbox.Prelude                          hiding (error)
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.Text.ProtocolBuffers as Proto
-import           Generated.Proto.Rpc.Response (Response)
+import qualified Flowbox.Text.ProtocolBuffers             as Proto
+import           Generated.Proto.Rpc.Response             (Response)
+import qualified Generated.Proto.Urm.URM.Register.Request as Register
 
 
 
@@ -32,28 +33,33 @@ logger :: LoggerIO
 logger = getLoggerIO $moduleName
 
 
-singleResult :: MonadIO m => (a -> m b) -> a -> m [b]
-singleResult f a = liftM return $ f a
+singleResult :: MonadIO m => (a -> m b) -> a -> m ([b], [Message])
+singleResult f a = do 
+    b <- f a
+    return (return b, [])
 
 
-noResult :: MonadIO m => (a -> m ()) -> a -> m [Response]
-noResult f a = f a >> return []
+noResult :: MonadIO m => (a -> m ()) -> a -> m ([Response], [Message])
+noResult f a = f a >> return ([], [])
 
 
-optResult :: MonadIO m => (a -> m (Maybe b)) -> a -> m [b]
-optResult f a = liftM Maybe.maybeToList $ f a
+optResult :: MonadIO m => (a -> m (Maybe b)) -> a -> m ([b], [Message])
+optResult f a = do
+    arr <- liftM Maybe.maybeToList $ f a
+    return (arr, [])
 
 
 process :: (Catch.MonadCatch m, MonadIO m, Functor m)
         => HandlerMap s m -> Message -> StateT s m [Message]
 process handlerMap msg = HandlerMap.lookupAndCall handlerMap call topic where
+    call :: (Catch.MonadCatch m, MonadIO m, Functor m) => HandlerMap.Callback s m
     call mkTopic method = case Proto.messageGet' $ msg ^. Message.message of
         Left err   -> do logger error err
                          return $ Message.mkError topic err
         Right args -> do results <- RPC.run $ method args
                          return $ case results of
                             Left err -> Message.mkError topic err
-                            Right ok -> map (respond mkTopic) ok
+                            Right (ok, undos) -> map (respond mkTopic) ok ++ undos
 
     topic = msg ^. Message.topic
 

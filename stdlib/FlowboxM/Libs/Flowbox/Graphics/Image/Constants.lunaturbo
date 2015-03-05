@@ -23,8 +23,10 @@ foreign haskell class Format:
     Square2K
     CustomFormat: width, height :: Int
 
-foreign haskell def constant format color:
+foreign haskell def constantRaw format color:
     liftF2 constantLuna format color
+def constant format color:
+    self.constantRaw format color.toRGBA
 
 foreign haskell def circular width height:
     liftF2 circularLuna width height

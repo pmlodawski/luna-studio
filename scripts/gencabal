@@ -13,6 +13,7 @@ import sys
 import re
 from utils.glob2 import glob
 from utils.path import write_if_changed
+from subprocess import call
 
 header = '''\
 ---------------------------------------------------
@@ -24,6 +25,7 @@ header = '''\
 '''
 
 def main():
+    ret = call('git submodule update', shell=True)
     tcabals_paths     = glob("**/*.tcabal")
     cabals_paths_orig = [dropext(path) for path in tcabals_paths]
     cabal_paths       = [path + '.cabal' for path in cabals_paths_orig]

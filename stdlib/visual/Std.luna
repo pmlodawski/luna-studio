@@ -124,8 +124,14 @@ def emptyImage self::Std -> Image:
 def load self::Std path::FilePath -> Image:
     ```autoLift1 realReadLuna #{path}```
 
+def load1 self::Std path::FilePath gamma::(Gamma Float) -> Image:
+    ```placeholder```
+
 def Image.save self::Image path::FilePath -> Image:
     ```autoLift2 saveImageLuna #{path} #{self}```
+
+def Image.save1 self::Image path::FilePath gamma::(Gamma Float) -> Image:
+    ```placeholder```
 
 # def Image.defocus self::Image radius::Int:
 #     ```liftF2 defocus #{radius} #{self}```
@@ -136,36 +142,41 @@ def Image.save self::Image path::FilePath -> Image:
 # def Image.bilateral self::Image psigma::Float csigma::Float size::Int:
 #     ```liftF4 bilateral #{psigma} #{csigma} #{size} #{self}```
 
-def Image.offset self::Image value::Color -> Image:
-    ```liftF2 offsetLuna #{value} #{self}```
+def Image.offset self::Image value::Color matte::(Maybe (Matte Float)) -> Image:
+    ```liftF3 offsetLuna #{value} #{matte} #{self}```
 
-def Image.contrast self::Image value::Color -> Image:
-    ```liftF2 contrastLuna #{value} #{self}```
+def Image.contrast self::Image value::Color matte::(Maybe (Matte Float)) -> Image:
+    ```liftF3 contrastLuna #{value} #{matte} #{self}```
 
-def Image.exposure self::Image blackpoint::Color ex::Color -> Image:
-    ```liftF3 exposureLuna #{blackpoint} #{ex} #{self}```
+def Image.exposure self::Image blackpoint::Color ex::Color matte::(Maybe (Matte Float)) -> Image:
+    ```liftF4 exposureLuna #{blackpoint} #{ex} #{matte} #{self}```
 
-def Image.grade self::Image blackpoint::ColorBlack whitepoint::ColorWhite lift::ColorBlack gain::ColorWhite multiply::ColorWhite offset::ColorBlack gamma::ColorWhite -> Image:
-    ```liftF5 (gradeLunaColor #{blackpoint} #{whitepoint} #{lift}) #{gain} #{multiply} #{offset} #{gamma} #{self}```
+def Image.grade self::Image blackpoint::Color whitepoint::Color lift::Color gain::Color multiply::Color offset::Color gamma::Color matte::(Maybe (Matte Float)) -> Image:
+    ```liftF5 (gradeLunaColor #{blackpoint} #{whitepoint} #{lift} #{gain}) #{multiply} #{offset} #{gamma} #{matte} #{self}```
 
-alias ColorCorrectGUI = (CurveGUI, CurveGUI)
-alias HueCorrectGUI = (CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI, CurveGUI)
-alias Color5 = (Color, Color, Color, Color ,Color)
+class ```ColorCorrectCurves``` a:
+    ColorCorrectCurves:
+        shadows, highlights :: CurveGUI a
+
+class ColorCC color:
+    saturation, contrast, gamma, gain, offset :: color
+
+alias HueCorrectGUI = (CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float)
 
 def Image.colorCorrect self::Image
-                       master::Color5 #masterSaturation masterContrast masterGamma masterGain masterOffset
-                       shadows::Color5 #shadowsSaturation shadowsContrast shadowsGamma shadowsGain shadowsOffset
-                       midtones::Color5 #midtonesSaturation midtonesContrast midtonesGamma midtonesGain midtonesOffset
-                       highlights::Color5 #highlightsSaturation highlightsContrast highlightsGamma highlightsGain highlightsOffset:
+                       master::(ColorCC Color)
+                       shadows::(ColorCC Color)
+                       midtones::(ColorCC Color)
+                       highlights::(ColorCC Color)
                        -> Image:
     ```liftF5 colorCorrectLuna' #{master} #{shadows} #{midtones} #{highlights} #{self}```
 
 def Image.colorCorrectCurves self::Image
-                       curves::ColorCorrectGUI
-                       master::Color5 #masterSaturation masterContrast masterGamma masterGain masterOffset
-                       shadows::Color5 #shadowsSaturation shadowsContrast shadowsGamma shadowsGain shadowsOffset
-                       midtones::Color5 #midtonesSaturation midtonesContrast midtonesGamma midtonesGain midtonesOffset
-                       highlights::Color5 #highlightsSaturation highlightsContrast highlightsGamma highlightsGain highlightsOffset:
+                       curves::ColorCorrectCurves
+                       master::(ColorCC Color)
+                       shadows::(ColorCC Color)
+                       midtones::(ColorCC Color)
+                       highlights::(ColorCC Color)
                        -> Image:
     ```liftF5 (colorCorrectLunaCurves curves) #{master} #{shadows} #{midtones} #{highlights} #{self}```
 
@@ -178,11 +189,11 @@ def Image.saturate self::Image saturation::Color -> Image:
 def Image.posterize self::Image colors::Float -> Image:
     ```liftF2 posterizeLuna #{colors} #{self}```
 
-def Image.multiply self::Image val::Color -> Image:
-    ```liftF2 multiplyLuna #{val} #{self}```
+def Image.multiply self::Image val::Color matte::(Maybe (Matte Float)) -> Image:
+    ```liftF2 multiplyLuna #{val} #{matte} #{self}```
 
-def Image.gamma self::Image val::Color -> Image:
-    ```liftF2 gammaLuna #{val} #{self}```
+def Image.gamma self::Image val::Color affectAlpha::Bool matte::(Maybe (Matte Float)) -> Image:
+    ```liftF4 gammaLuna #{val} #{affectAlpha} #{matte} #{self}```
 
 class ```KeyerMode```:
     Red
@@ -240,7 +251,18 @@ def Image.close self::Image size::Int -> Image:
 # def Image.radialBlur self::Image size::Int angle::Float:
 #     ```liftF3 radialBlurLuna #{size} #{angle} #{self}```
 
-def Image.edgeDetect self::Image edgeOperator -> Image:
+class ```Orientation```:
+    Vertical
+    Horizontal
+
+class ```EdgeOperator```:
+    Prewitt: dir :: Orientation
+    Sobel: dir :: Orientation
+    Scharr: dir :: Orientation
+    Laplace: x, y :: Int
+             cross, side :: Float
+
+def Image.edgeDetect self::Image edgeOperator::EdgeOperator -> Image:
     ```liftF2 edgeDetectLuna #{edgeOperator} #{self}```
 
 # def Image.bayer self::Image bits::Int:
@@ -284,8 +306,8 @@ class ```MergeMode```:
     HardLight: ab :: AlphaBlend
     Hypot: ab :: AlphaBlend
     In
-    Mask
-    Matte
+    MergeMask
+    MergeMatte
     # Max
     # Min
     Minus: ab :: AlphaBlend
@@ -307,7 +329,7 @@ class ```AlphaBlend```:
     Adobe
     Custom
 
-def Image.merge self::Image foreground::Image mode::MergeMode -> Image:
+def Image.merge background::Image foreground::Image mode::MergeMode -> Image:
     ```liftF3 mergeLuna #{mode} #{self} #{img}```
 
 def perlin self::Std z::Float width::Int height::Int -> Image:
@@ -325,21 +347,6 @@ def noImgMask self::Std:
 
 class ```V2``` a:
     x, y :: a
-
-def Image.translate self::Image vec::(V2 Float) -> Image:
-    ```liftF2 translateLuna #{vec} #{self}```
-
-def Image.rotate self::Image phi::Float -> Image:
-    ```liftF2 rotateLuna #{phi} #{self}```
-
-def Image.rotateAt self::Image point::(Point2 Float) phi::Float -> Image:
-    ```liftF3 rotateAtLuna #{point} #{phi} #{self}```
-
-def Image.scale self::Image vec::(V2 Float) -> Image:
-    ```liftF2 scaleLuna #{vec} #{self}```
-
-def Image.scaleAt self::Image point::(Point2 Float) vec::(V2 Float) -> Image:
-    ```liftF3 scaleAtLuna #{point} #{vec} #{self}```
 
 def Image.crop self::Image rect::(Rectangle Int) reformat::Bool defaultOutside::Bool -> Image:
     ```liftF4 cropLuna ((fmap.fmap) variable -> #{rect}) #{reformat} #{defaultOutside} #{self}```
@@ -371,7 +378,7 @@ class ```SkewOrder```:
     SkewYX
 
 class ```Skew``` a:
-    point :: V2 a
+    value :: V2 a
     order :: SkewOrder
 
 class ```Transform``` a:
@@ -386,65 +393,46 @@ alias RectangleI = Rectangle Int
 
 alias TransformF = Transform Float
 
-# class ```ControlPoint``` a:
-# class ControlPoint a:
-#     point               :: Point2 a
-#     handleIn, handleOut :: Maybe (Point2 a)
+def Image.rotateAt self::Image point::(Point2 Float) phi::Float matte::(Maybe (Matte Float)) -> Image:
+    ```liftF4 rotateAtLuna #{point} #{phi} #{matte} #{self}```
 
-# class ```Path``` a:
-#     closed   :: Bool
-#     vertices :: [ControlPoint a]
+def Image.translate self::Image vec::(V2 Float) matte::(Maybe (Matte Float)) -> Image:
+    ```liftF3 translateLuna #{vec} #{matte} #{self}```
 
-# class ```Shape``` a:
-#     paths :: [Path a]
+def Image.scaleAt self::Image point::(Point2 Float) vec::(V2 Float) matte::(Maybe (Matte Float)) -> Image:
+    ```liftF4 scaleAtLuna #{point} #{vec} #{matte} #{self}```
 
-# class ```Mask``` a:
-#     path    :: Path a
-#     feather :: Maybe (Path a)
+def Image.skewAt self::Image point::(Point2 Float) skew::(Skew Float) matte::(Maybe (Matte Float)) -> Image:
+    ```liftF4 skewAtLuna #{point} #{skew} #{matte} #{self}```
 
-alias ControlPoint = (Point2 Float, Maybe (Point2 Float), Maybe (Point2 Float))
-alias Path         = (Bool, [ControlPoint])
-alias Shape        = [Path]
+def Image.transform self::Image trans::TransformF matte::(Maybe (Matte Float)) -> Image:
+    ```liftF3 transformLuna #{trans} #{matte} #{self}```
+
+class ```ControlPoint``` a:
+    point               :: Point2 a
+    handleIn, handleOut :: Maybe (Point2 a)
+
+class ```Path``` a:
+    closed   :: Bool
+    vertices :: [ControlPoint a]
+
+class ```Shape``` a:
+    paths :: [Path a]
+
+class ```Mask``` a:
+    path    :: Path a
+    feather :: Maybe (Path a)
 
 class Matte a
 
 def imageMatte self::Std image::Image channelName::String -> (Maybe (Matte Float)):
      ```lift2 imageMatteLuna #{image} #{channelName}```
 
-def vectorMatte self::Std mask::Mask -> (Maybe (Matte Float)):
+def vectorMatte self::Std mask::(Mask Float) -> (Maybe (Matte Float)):
     ```liftF1 vectorMatteLuna #{mask}```
 
 def noMatte self::Std -> (Maybe (Matte Float)):
     ```val (Nothing :: Maybe (Matte Float))```
-
-def Image.offsetMatte self::Image value::Color matte::(Maybe (Matte Float)) -> Image:
-    ```liftF3 offsetMatteLuna #{value} #{matte} #{self}```
-
-def Image.contrastMatte self::Image value::Color matte::(Maybe (Matte Float)) -> Image:
-    ```liftF3 contrastMatteLuna #{value} #{matte} #{self}```
-
-def Image.exposureMatte self::Image blackpoint::Color ex::Color matte::(Maybe (Matte Float)) -> Image:
-    ```liftF4 exposureMatteLuna #{blackpoint} #{ex} #{matte} #{self}```
-
-def Image.gradeMatte self::Image blackpoint::Color whitepoint::Color lift::Color gain::Color multiply::Color offset::Color gamma::Color matte::(Maybe (Matte Float)) -> Image:
-    ```liftF5 (gradeLunaColorMatte #{blackpoint} #{whitepoint} #{lift} #{gain}) #{multiply} #{offset} #{gamma} #{matte} #{self}```
-
-def Image.rotateAtMatte self::Image point::(Point2 Float) phi::Float matte::(Maybe (Matte Float)) -> Image:
-    ```liftF4 rotateAtMatteLuna #{point} #{phi} #{matte} #{self}```
-
-def Image.translateMatte self::Image vec::(V2 Float) matte::(Maybe (Matte Float)) -> Image:
-    ```liftF3 translateMatteLuna #{vec} #{matte} #{self}```
-
-def Image.scaleAtMatte self::Image point::(Point2 Float) vec::(V2 Float) matte::(Maybe (Matte Float)) -> Image:
-    ```liftF4 scaleAtMatteLuna #{point} #{vec} #{matte} #{self}```
-
-def Image.skewAtMatte self::Image point::(Point2 Float) skew::(Skew Float) matte::(Maybe (Matte Float)) -> Image:
-    ```liftF4 skewAtMatteLuna #{point} #{skew} #{matte} #{self}```
-
-def Image.transformMatte self::Image trans::TransformF matte::(Maybe (Matte Float)) -> Image:
-    ```liftF3 transformLuna #{trans} #{matte} #{self}```
-
-alias Mask = (Path, Maybe (Path))
 
 def point self::Std x y:
     Point2 x y
@@ -452,19 +440,7 @@ def point self::Std x y:
 def nopoint self::Std:
     ```val (Nothing :: Maybe (Point2 Float))```
 
-def controlPoint point handleIn handleOut:
-    (point, handleIn, handleOut)
-
-def path closed vertices:
-    (closed, vertices)
-
-def shape paths:
-    paths
-
-def mask path feather:
-    (path, feather)
-
-def rasterizeMask self::Std w::Int h::Int m::Mask -> Image:
+def rasterizeMask self::Std w::Int h::Int m::(Mask Float) -> Image:
     ```liftF3 rasterizeMaskLuna #{w} #{h} #{m}```
 
 # COLORS
@@ -472,11 +448,11 @@ def rasterizeMask self::Std w::Int h::Int m::Mask -> Image:
 class ```RGBA``` a:
     rgbaR, rgbaG, rgbaB, rgbaA :: a
 
-alias Color = RGBA Float
-alias ColorBlack = RGBA Float
-alias ColorWhite = RGBA Float
+class ```ColorMult``` color:
+    color      :: color
+    multiplier :: Float
 
-alias ColorCC = (Color, Color, Color, Color, Color)
+alias Color = ColorMult (RGBA Float)
 
 class ```Format```:
     PCVideo
@@ -530,25 +506,21 @@ def render self::Std img::Image path::FilePath a::Time:
 #                MATH and such
 #
 
-alias Point2F = Point2 Float
-alias CurveGUI = [ControlPointGUI]
-alias ControlPointGUI = (Point2F, HandleGUI, HandleGUI)
-alias HandleGUI = (Int, Float, Float)
+class ```HandleGUI```:
+    NonLinearGUI:
+        weight, angle :: Float
+    VerticalGUI:
+        length :: Float
+    LinearGUI
 
-def curveGUI self::Std vertices::CurveGUI -> CurveGUI:
-    vertices
+class ```ControlPointGUI``` x:
+    ControlPointGUI:
+        point :: Point2 x
+        handleIn, handleOut :: HandleGUI
 
-def controlPointGUI self::Std point::Point2F handleIn::HandleGUI handleOut::HandleGUI -> ControlPointGUI:
-    (point, handleIn, handleOut)
+class ```CurveGUI``` x:
+    BezierCurveGUI:
+        vertices :: [ControlPointGUI x]
 
-def nonLinearHandleGUI self::Std weight::Float angle::Float -> HandleGUI:
-    (0, weight, angle)
-
-def verticalHandleGUI self::Std length::Float -> HandleGUI:
-    (1, length, 0.0)
-
-def linearHandleGUI self::Std -> HandleGUI:
-    (2, 0.0, 0.0)
-
-def getValueAtCurve self::Std curve::curveGUI x::Time -> Float:
+def getValueAtCurve self::Std curve::(CurveGUI Float) x::Time -> Float:
     ```liftF2 getValueAtCurveGUI #{curve} #{x}```

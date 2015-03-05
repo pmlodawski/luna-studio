@@ -7,6 +7,7 @@
 {-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell     #-}
+{-# LANGUAGE ViewPatterns        #-}
 {-# OPTIONS_GHC -fcontext-stack=200 #-}
 
 module Main where
@@ -139,12 +140,12 @@ downscalingTest flt = do
 -- (Convolution regression test)
 --
 gaussianTest :: Exp Int -> IO ()
-gaussianTest kernSize = do
-    let hmat = id M.>-> normalize $ toMatrix (Grid 1 (variable kernSize)) $ gauss 1.0
-    let vmat = id M.>-> normalize $ toMatrix (Grid (variable kernSize) 1) $ gauss 1.0
+gaussianTest (variable -> kernSize) = do
+    let hmat = id M.>-> normalize $ toMatrix (Grid 1 kernSize) $ gauss 1.0
+    let vmat = id M.>-> normalize $ toMatrix (Grid kernSize 1) $ gauss 1.0
     let p = pipe A.Clamp
     let process x = rasterizer $ id `p` Conv.filter 1 vmat `p` Conv.filter 1 hmat `p` id $ fromMatrix A.Clamp x
-    forAllChannels "moonbow.bmp" process
+    forAllChannels "moonbow.jpg" process
 
 
 --
@@ -399,6 +400,6 @@ main :: IO ()
 main = do
     print "Szatan"
     --maskedTransformationsTest
-    --gradientsTest
+    gaussianTest 15
     --P.mapM morphologyTest [1..100]
     print "szatan"
