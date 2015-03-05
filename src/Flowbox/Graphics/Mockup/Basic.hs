@@ -17,6 +17,7 @@ module Flowbox.Graphics.Mockup.Basic (
     InterpolationFilter(..),
     VPS,
     pattern VPS,
+    applyTime,
     channelToImageRGBA,
     constantBoundaryWrapper,
     getChannelFromPrimaryLuna,
@@ -55,7 +56,7 @@ import           Math.Coordinate.Cartesian         (Point2 (..))
 import           Math.Space.Space                  (Grid (..))
 import qualified System.FilePath                   as FilePath
 
-
+import  Flowbox.Data.FilePath (applyTime)
 import qualified Flowbox.Graphics.Color.Color          as Color
 import qualified Flowbox.Graphics.Composition.Filter   as Filter
 import           Flowbox.Graphics.Image.Channel        (Channel (..), ChannelData (..))

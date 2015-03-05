@@ -29,8 +29,8 @@ main = do
     putStrLn "Mockup test"
 
     image <- loadImageLuna $ "samples/" P.++ input
-    let neutralSCGG = VPS $ RGBA 1 1 1 1 :: VPS (RGBA Float)
-        neutralOff  = VPS $ RGBA 0 0 0 0 :: VPS (RGBA Float)
+    let neutralSCGG = RGBA 1 1 1 1 :: RGBA Float
+        neutralOff  = RGBA 0 0 0 0 :: RGBA Float
 
     let curveShadows    = makeSpline [BSplineNode (Point2 0 1) (Point2 (-1) 1) (Point2 0.03 1), BSplineNode (Point2 0.09 0) (Point2 0.06 0) (Point2 1.09 0)] :: BSpline Float
         --curveHighlights = makeSpline [BSplineNode (Point2 0.5 0) (Point2 (-0.5) 0) (Point2 (2/3) 0), BSplineNode (Point2 1 1) (Point2 (5/6) 1) (Point2 2 1)]
@@ -40,10 +40,10 @@ main = do
 
     let outCC = colorCorrectLuna --Base (curveShadows, curveHighlights) -- TODO[KM]: remake this to use the same type of CurveGUI as Luna does (and the function colorCorrectLunaCurves)
 
-                {- master -}     (neutralSCGG, neutralSCGG, neutralSCGG, neutralOff, neutralOff)
-                {- shadows -}    (neutralSCGG, neutralSCGG, neutralSCGG, neutralSCGG, neutralOff)
-                {- midtones -}   (neutralSCGG, neutralSCGG, neutralSCGG, neutralSCGG, neutralOff)
-                {- highlights -} (neutralSCGG, neutralSCGG, neutralSCGG, neutralSCGG, neutralSCGG)
+                {- master -}     (ColorCC neutralSCGG neutralSCGG neutralSCGG neutralOff neutralOff)
+                {- shadows -}    (ColorCC neutralSCGG neutralSCGG neutralSCGG neutralSCGG neutralOff)
+                {- midtones -}   (ColorCC neutralSCGG neutralSCGG neutralSCGG neutralSCGG neutralOff)
+                {- highlights -} (ColorCC neutralSCGG neutralSCGG neutralSCGG neutralSCGG neutralSCGG)
 
                 image
 

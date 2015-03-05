@@ -26,6 +26,7 @@ import           Diagrams.Backend.Cairo.Internal
 import           Diagrams.Prelude                hiding (Path, (<*))
 import           Diagrams.Segment
 import           Graphics.Rendering.Cairo        hiding (Path, translate)
+import           Math.Space.Space                (Grid (..))
 import           System.IO.Unsafe
 
 import           Flowbox.Geom2D.Accelerate.QuadraticBezier.Solve
@@ -35,11 +36,15 @@ import           Flowbox.Geom2D.Mask
 import           Flowbox.Geom2D.Path
 import           Flowbox.Geom2D.QuadraticBezier
 import           Flowbox.Geom2D.QuadraticBezier.Conversion
+import qualified Flowbox.Graphics.Composition.Filter             as Filter
 import qualified Flowbox.Graphics.Image.Channel                  as Channel
 import           Flowbox.Graphics.Image.Image                    (Image)
 import qualified Flowbox.Graphics.Image.Image                    as Image
 import           Flowbox.Graphics.Image.IO.BMP
 import qualified Flowbox.Graphics.Image.View                     as View
+import qualified Flowbox.Graphics.Shader.Pipe                    as Shader
+import           Flowbox.Graphics.Shader.Rasterizer
+import           Flowbox.Graphics.Shader.Matrix
 import           Flowbox.Graphics.Utils.Accelerate               (variable)
 import           Flowbox.Math.Matrix                             ((:.) (..), DIM2, Matrix (..), Matrix2, Z (..))
 import qualified Flowbox.Math.Matrix                             as M
@@ -169,9 +174,16 @@ pathToMatrix w h path = extractArr $ pathToRGBA32 w h path
 rasterizeMask :: (Real a, Fractional a) => Int -> Int -> Mask a -> Matrix2 Float
 rasterizeMask w h (Mask path' feather') =
     case feather' of
-        Nothing -> path
-        Just feather -> checkEqual feather path'
-    where ptm = pathToMatrix w h
+        Nothing -> process path
+        Just feather -> process $ checkEqual feather path'
+    where hmat :: (A.Elt e, A.IsFloating e) => Matrix2 e
+          hmat = id M.>-> Filter.normalize $ Filter.toMatrix (Grid 1 kernelSize) $ Filter.gauss 1.0
+          vmat :: (A.Elt e, A.IsFloating e) => Matrix2 e
+          vmat = id M.>-> Filter.normalize $ Filter.toMatrix (Grid kernelSize 1) $ Filter.gauss 1.0
+          kernelSize = 3 -- magick number
+          p = Shader.pipe A.Clamp
+          process x = rasterizer $ id `p` Filter.filter 1 vmat `p` Filter.filter 1 hmat `p` id $ fromMatrix A.Clamp x
+          ptm = pathToMatrix w h
           path = ptm path'
           distance p (A.unlift . A.unindex2 -> (A.fromIntegral -> y, A.fromIntegral -> x) :: (A.Exp Int, A.Exp Int)) = let
                   h' = A.fromIntegral $ A.lift h

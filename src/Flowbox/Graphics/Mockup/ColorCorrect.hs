@@ -10,30 +10,29 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Flowbox.Graphics.Mockup.ColorCorrect (
+    ColorCorrectCurves(..),
+    ColorCC(..),
     clampLuna,
     colorCorrectLuna,
     colorCorrectLunaCurves,
     contrastLuna,
-    contrastMatteLuna,
     exposureLuna,
-    exposureMatteLuna,
     gammaFromLinearLuna,
     gammaLuna,
     gammaToLinearLuna,
     gradeLunaColor,
-    gradeLunaColorMatte,
     hsvToolLuna,
     hueCorrectLuna,
     invertLuna,
     multiplyLuna,
     offsetLuna,
-    offsetMatteLuna,
     premultiplyLuna,
     saturateLuna,
     unpremultiplyLuna,
 ) where
 
 import qualified Data.Array.Accelerate     as A
+import           Data.RTuple               (RTuple(..), toTuple)
 import           Math.Coordinate.Cartesian (Point2 (..))
 
 import qualified Flowbox.Graphics.Color.Color             as Color
@@ -55,12 +54,11 @@ import Flowbox.Graphics.Mockup.Matte
 
 
 
-type ColorD = Color.RGBA Float
-pattern ColorD r g b a = Color.RGBA r g b a
-type Color5 = (VPS ColorD, VPS ColorD, VPS ColorD, VPS ColorD, VPS ColorD)
+type ColorF = Color.RGBA Float
+pattern ColorF r g b a = Color.RGBA r g b a
 
-offsetMatteLuna :: Color.RGBA Float -> Maybe (Matte.Matte Float) -> Image -> Image
-offsetMatteLuna x@(fmap variable -> Color.RGBA r g b a) matte img =
+offsetLuna :: Color.RGBA Float -> Maybe (Matte.Matte Float) -> Image -> Image
+offsetLuna (fmap variable -> Color.RGBA r g b a) matte img =
   case matte of
     Nothing -> onEachRGBA (CC.offset r) (CC.offset g) (CC.offset b) (CC.offset a) img
     Just m ->
@@ -69,38 +67,38 @@ offsetMatteLuna x@(fmap variable -> Color.RGBA r g b a) matte img =
                            (applyMatteFloat (CC.offset b) m)
                            (applyMatteFloat (CC.offset a) m) img
 
-contrastMatteLuna :: Color.RGBA Float -> Maybe (Matte.Matte Float) -> Image -> Image
-contrastMatteLuna x@(fmap variable -> Color.RGBA r g b a) matte img =
+contrastLuna :: Color.RGB Float -> Maybe (Matte.Matte Float) -> Image -> Image
+contrastLuna (fmap variable -> Color.RGB r g b) matte img =
   case matte of
-    Nothing -> onEachRGBA (CC.contrast r) (CC.contrast g) (CC.contrast b) (CC.contrast a) img
+    Nothing -> onEachRGBA (CC.contrast r) (CC.contrast g) (CC.contrast b) id img
     Just m ->
         onEachRGBAChannels (applyMatteFloat (CC.contrast r) m)
                            (applyMatteFloat (CC.contrast g) m)
                            (applyMatteFloat (CC.contrast b) m)
-                           (applyMatteFloat (CC.contrast a) m) img
+                           id img
 
-exposureMatteLuna :: Color.RGBA Float -> Color.RGBA Float -> Maybe (Matte.Matte Float) -> Image -> Image
-exposureMatteLuna x@(fmap variable -> Color.RGBA blackpointR blackpointG blackpointB blackpointA)
-                  y@(fmap variable -> Color.RGBA exR exG exB exA) matte img =
+exposureLuna :: Color.RGB Float -> Color.RGB Float -> Maybe (Matte.Matte Float) -> Image -> Image
+exposureLuna (fmap variable -> Color.RGB blackpointR blackpointG blackpointB)
+                  (fmap variable -> Color.RGB exR exG exB) matte img =
                     case matte of
-                      Nothing -> onEachRGBA (CC.exposure blackpointR exR) (CC.exposure blackpointG exG) (CC.exposure blackpointB exB) id img -- (CC.exposure blackpointA exA)
+                      Nothing -> onEachRGBA (CC.exposure blackpointR exR) (CC.exposure blackpointG exG) (CC.exposure blackpointB exB) id img
                       Just m ->
                           onEachRGBAChannels (applyMatteFloat (CC.exposure blackpointR exR) m)
-                                             (applyMatteFloat (CC.exposure blackpointG exG) m)
-                                             (applyMatteFloat (CC.exposure blackpointB exB) m)
-                                             (applyMatteFloat (CC.exposure blackpointA exA) m) img
+                                            (applyMatteFloat (CC.exposure blackpointG exG) m)
+                                            (applyMatteFloat (CC.exposure blackpointB exB) m)
+                                            id img
 
-gradeLunaColorMatte :: VPS (Color.RGBA Float)
-                    -> VPS (Color.RGBA Float)
-                    -> VPS (Color.RGBA Float)
-                    -> VPS (Color.RGBA Float)
-                    -> Color.RGBA Float
-                    -> Color.RGBA Float
-                    -> Color.RGBA Float
-                    -> Maybe (Matte.Matte Float)
-                    -> Image
-                    -> Image
-gradeLunaColorMatte (VPS (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB blackpointA))
+gradeLunaColor :: VPS (Color.RGBA Float)
+               -> VPS (Color.RGBA Float)
+               -> VPS (Color.RGBA Float)
+               -> VPS (Color.RGBA Float)
+               -> Color.RGBA Float
+               -> Color.RGBA Float
+               -> Color.RGBA Float
+               -> Maybe (Matte.Matte Float)
+               -> Image
+               -> Image
+gradeLunaColor (VPS (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB blackpointA))
                     (VPS (fmap variable -> Color.RGBA whitepointR whitepointG whitepointB whitepointA))
                     (VPS (fmap variable -> Color.RGBA liftR liftG liftB liftA))
                     (VPS (fmap variable -> Color.RGBA gainR gainG gainB gainA))
@@ -111,42 +109,44 @@ gradeLunaColorMatte (VPS (fmap variable -> Color.RGBA blackpointR blackpointG bl
                         Nothing -> onEachRGBA (CC.grade blackpointR whitepointR liftR gainR multiplyR offsetR gammaR)
                                               (CC.grade blackpointG whitepointG liftG gainG multiplyG offsetG gammaG)
                                               (CC.grade blackpointB whitepointB liftB gainB multiplyB offsetB gammaB)
-                                              id img -- (CC.grade blackpointA whitepointA liftA gainA multiplyA offsetA gammaA)
+                                              (CC.grade blackpointA whitepointA liftA gainA multiplyA offsetA gammaA) img
                         Just m -> onEachRGBAChannels (applyMatteFloat (CC.grade blackpointR whitepointR liftR gainR multiplyR offsetR gammaR) m)
                                                      (applyMatteFloat (CC.grade blackpointG whitepointG liftG gainG multiplyG offsetG gammaG) m)
                                                      (applyMatteFloat (CC.grade blackpointB whitepointB liftB gainB multiplyB offsetB gammaB) m)
                                                      (applyMatteFloat (CC.grade blackpointA whitepointA liftA gainA multiplyA offsetA gammaA) m) img
 
-offsetLuna :: Color.RGBA Float -> Image -> Image
-offsetLuna (fmap variable -> Color.RGBA r g b a) = onEachRGBA (CC.offset r) (CC.offset g) (CC.offset b) id -- (CC.offset a)
+multiplyLuna :: Color.RGBA Float -> Maybe (Matte.Matte Float) -> Image -> Image
+multiplyLuna (fmap variable -> Color.RGBA r g b a) matte img =
+  case matte of
+    Nothing -> onEachRGBA (*r) (*g) (*b) (*a) img
+    Just m ->
+        onEachRGBAChannels (applyMatteFloat (*r) m)
+                           (applyMatteFloat (*g) m)
+                           (applyMatteFloat (*b) m)
+                           (applyMatteFloat (*a) m) img
 
-contrastLuna :: Color.RGBA Float -> Image -> Image
-contrastLuna (fmap variable -> Color.RGBA r g b a) = onEachRGBA (CC.contrast r) (CC.contrast g) (CC.contrast b) id -- (CC.contrast a)
+type AffectAlpha = Bool
 
-exposureLuna :: Color.RGBA Float -> Color.RGBA Float -> Image -> Image
-exposureLuna (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB blackpointA)
-             (fmap variable -> Color.RGBA exR exG exB exA) =
-                 onEachRGBA (CC.exposure blackpointR exR)
-                            (CC.exposure blackpointG exG)
-                            (CC.exposure blackpointB exB)
-                            id -- (CC.exposure blackpointA exA)
+gammaLuna :: Color.RGBA Float -> AffectAlpha -> Maybe (Matte.Matte Float) -> Image -> Image
+gammaLuna (fmap variable -> Color.RGBA r g b a) affectAlpha matte img =
+  case matte of
+    Nothing -> onEachRGBA (CC.gamma r) (CC.gamma g) (CC.gamma b) alpha img
+    Just m ->
+        onEachRGBAChannels (applyMatteFloat (CC.gamma r) m)
+                           (applyMatteFloat (CC.gamma g) m)
+                           (applyMatteFloat (CC.gamma b) m)
+                           (applyMatteFloat alpha m) img
+  where alpha = case affectAlpha of
+                    True  -> (CC.gamma a)
+                    False -> id
 
-gradeLuna :: VPS Float -> VPS Float -> VPS Float -> Float -> Float -> Float -> Float -> Image -> Image
-gradeLuna (VPS (variable -> blackpoint))
-          (VPS (variable -> whitepoint))
-          (VPS (variable -> lift))
-          (variable -> gain)
-          (variable -> multiply')
-          (variable -> offset')
-          (variable -> gamma') =
-            onEach $ CC.grade blackpoint whitepoint lift gain multiply' offset' gamma'
-
+-- [TODO] - zamaskować saturate
 saturateLuna :: Color.RGB Float -> Image -> Image
 saturateLuna (fmap variable -> Color.RGB saturationR saturationG saturationB) img = saturated
     where rgb = unsafeGetRGB img
 
           (rSaturated, gSaturated, bSaturated) = CC.saturateRGB saturationR saturationG saturationB rgb
-          
+
           --rgbRsaturated = M.map (A.lift1 (saturateOnHSV saturationR)) rgb
           --rgbGsaturated = M.map (A.lift1 (saturateOnHSV saturationG)) rgb
           --rgbBsaturated = M.map (A.lift1 (saturateOnHSV saturationB)) rgb
@@ -201,8 +201,8 @@ hsvToolLuna (VPS (variable -> hueRangeStart)) (VPS (variable -> hueRangeEnd))
                                   )) image
 
 
-clampLuna :: (VPS Float, VPS Float) -> Maybe (VPS Float, VPS Float) -> Image -> Image
-clampLuna (VPS (variable -> thLo), VPS (variable -> thHi)) clamps =
+clampLuna :: RTuple (VPS Float, (VPS Float, ())) -> Maybe (VPS Float, VPS Float) -> Image -> Image
+clampLuna (toTuple -> (VPS (variable -> thLo), VPS (variable -> thHi))) clamps =
     case clamps of
         Just (VPS clampLo, VPS clampHi) -> onEach $ CC.clamp (CC.Range thLo thHi) $ Just $ CC.Range (variable clampLo) (variable clampHi)
         _                               -> onEach $ CC.clamp (CC.Range thLo thHi) Nothing
@@ -219,28 +219,22 @@ invertLuna = onEachRGBA CC.invert CC.invert CC.invert id
 colorMatrixLuna :: ColorMatrix Color.RGB Float -> Image -> Image
 colorMatrixLuna matrix = onEachColorRGB (A.lift1 $ (CC.colorMatrix :: ColorMatrix Color.RGB Float -> Color.RGB (Exp Float) -> Color.RGB (Exp Float)) matrix)
 
-multiplyLuna :: Color.RGBA Float -> Image -> Image
-multiplyLuna (fmap variable -> Color.RGBA r g b a) = onEachRGBA (*r) (*g) (*b) (*a)
-
-gammaLuna :: Color.RGBA Float -> Image -> Image
-gammaLuna (fmap variable -> Color.RGBA r g b a) = onEachRGBA (CC.gamma r) (CC.gamma g) (CC.gamma b) (CC.gamma a)
-
-type HueCorrect a = (VPS (LunaCurveGUI a),
-                     VPS (LunaCurveGUI a),
-                     VPS (LunaCurveGUI a),
-                     VPS (LunaCurveGUI a),
-                     VPS (LunaCurveGUI a),
-                     VPS (LunaCurveGUI a),
-                     VPS (LunaCurveGUI a),
-                     VPS (LunaCurveGUI a))
+type HueCorrect a = (VPS (CurveGUI a),
+                     VPS (CurveGUI a),
+                     VPS (CurveGUI a),
+                     VPS (CurveGUI a),
+                     VPS (CurveGUI a),
+                     VPS (CurveGUI a),
+                     VPS (CurveGUI a),
+                     VPS (CurveGUI a))
 
 hueCorrectLuna :: HueCorrect Float ->
                   -- GUICurve Double -> sat_thrsh will be added later
                   -- sat_thrsh affects only r,g,b and lum parameters
                   Image -> Image
-hueCorrectLuna ( VPS (convertCurveGUI-> lum), VPS (convertCurveGUI -> sat)
-               , VPS (convertCurveGUI -> r), VPS (convertCurveGUI-> g), VPS (convertCurveGUI -> b)
-               , VPS (convertCurveGUI -> rSup), VPS (convertCurveGUI -> gSup), VPS (convertCurveGUI-> bSup)
+hueCorrectLuna ( VPS lum, VPS sat
+               , VPS r, VPS g, VPS b
+               , VPS rSup, VPS gSup, VPS bSup
                ) img = onEachColorRGB (CC.hueCorrect (CurveGUI.convertToBSpline lum)
                                                      (CurveGUI.convertToBSpline sat)
                                                      (CurveGUI.convertToBSpline r)
@@ -251,44 +245,32 @@ hueCorrectLuna ( VPS (convertCurveGUI-> lum), VPS (convertCurveGUI -> sat)
                                                      (CurveGUI.convertToBSpline bSup)
                                       ) img
 
-gradeLuna' :: VPS (Color.RGBA Float)
-           -> VPS (Color.RGBA Float)
-           -> VPS (Color.RGBA Float)
-           -> Color.RGBA Float
-           -> Color.RGBA Float
-           -> Color.RGBA Float
-           -> Color.RGBA Float
-           -> Image
-           -> Image
-gradeLuna' (VPS (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB blackpointA))
-           (VPS (fmap variable -> Color.RGBA whitepointR whitepointG whitepointB whitepointA))
-           (VPS (fmap variable -> Color.RGBA liftR liftG liftB liftA))
-           (fmap variable -> Color.RGBA gainR gainG gainB gainA)
-           (fmap variable -> Color.RGBA multiplyR multiplyG multiplyB multiplyA)
-           (fmap variable -> Color.RGBA offsetR offsetG offsetB offsetA)
-           (fmap variable -> Color.RGBA gammaR gammaG gammaB gammaA) =
-             onEachRGBA (CC.grade blackpointR whitepointR liftR gainR multiplyR offsetR gammaR)
-                        (CC.grade blackpointG whitepointG liftG gainG multiplyG offsetG gammaG)
-                        (CC.grade blackpointB whitepointB liftB gainB multiplyB offsetB gammaB)
-                        id -- (CC.grade blackpointA whitepointA liftA gainA multiplyA offsetA gammaA)
+data ColorCorrectCurves a = ColorCorrectCurves { _shadows    :: CurveGUI a
+                                               , _highlights :: CurveGUI a
+                                               }
 
-type ColorCorrect a = (VPS (LunaCurveGUI a), VPS (LunaCurveGUI a))
-pattern ColorCorrect a b = (VPS a, VPS b)
+data ColorCC a = ColorCC { _saturation :: a
+                         , _contrast   :: a
+                         , _gamma      :: a
+                         , _gain       :: a
+                         , _offset     :: a
+                         }
+    deriving (Show)
 
-colorCorrectLunaCurves :: VPS (ColorCorrect Float)
-                       -> Color5
-                       -> Color5
-                       -> Color5
-                       -> Color5
+colorCorrectLunaCurves :: VPS (ColorCorrectCurves Float)
+                       -> ColorCC ColorF
+                       -> ColorCC ColorF
+                       -> ColorCC ColorF
+                       -> ColorCC ColorF
                        -> Image
                        -> Image
-colorCorrectLunaCurves (VPS (ColorCorrect curveShadows curveHighlights)) = colorCorrectLunaBase (prepare curveShadows, prepare curveHighlights)
-    where prepare (convertCurveGUI -> CurveGUI.BezierCurve nodes) = let nodes' = CurveGUI.convertToNodeList nodes in A.fromList (Z :. length nodes') nodes'
+colorCorrectLunaCurves (VPS (ColorCorrectCurves curveShadows curveHighlights)) = colorCorrectLunaBase (prepare curveShadows, prepare curveHighlights)
+    where prepare (BezierCurveGUI nodes) = let nodes' = CurveGUI.convertToNodeList nodes in A.fromList (Z :. length nodes') nodes'
 
-colorCorrectLuna :: Color5
-                 -> Color5
-                 -> Color5
-                 -> Color5
+colorCorrectLuna :: ColorCC ColorF
+                 -> ColorCC ColorF
+                 -> ColorCC ColorF
+                 -> ColorCC ColorF
                  -> Image
                  -> Image
 colorCorrectLuna = colorCorrectLunaBase (curveShadows, curveHighlights)
@@ -296,39 +278,43 @@ colorCorrectLuna = colorCorrectLunaBase (curveShadows, curveHighlights)
           curveHighlights = makeSpline [BSplineNode (Point2 0.5 0) (Point2 (-0.5) 0) (Point2 (2/3) 0), BSplineNode (Point2 1 1) (Point2 (5/6) 1) (Point2 2 1)]
           makeSpline      = A.fromList (Z :. 2)
 
-pattern ColorDCC a b c d <- VPS (fmap variable -> ColorD a b c d)
+pattern ColorCCV r g b a <- (fmap variable -> ColorF r g b a)
 
 colorCorrectLunaBase :: (BSpline Float, BSpline Float)
-                     -> Color5
-                     -> Color5
-                     -> Color5
-                     -> Color5
+                     -> ColorCC ColorF
+                     -> ColorCC ColorF
+                     -> ColorCC ColorF
+                     -> ColorCC ColorF
                      -> Image
                      -> Image
 colorCorrectLunaBase (curveShadows, curveHighlights)
-                  ( ColorDCC masterSaturationR masterSaturationG masterSaturationB masterSaturationA
-                  , ColorDCC masterContrastR masterContrastG masterContrastB masterContrastA
-                  , ColorDCC masterGammaR masterGammaG masterGammaB masterGammaA
-                  , ColorDCC masterGainR masterGainG masterGainB masterGainA
-                  , ColorDCC masterOffsetR masterOffsetG masterOffsetB masterOffsetA
+                  ( ColorCC
+                  ( ColorCCV masterSaturationR masterSaturationG masterSaturationB masterSaturationA )
+                  ( ColorCCV masterContrastR masterContrastG masterContrastB masterContrastA )
+                  ( ColorCCV masterGammaR masterGammaG masterGammaB masterGammaA )
+                  ( ColorCCV masterGainR masterGainG masterGainB masterGainA )
+                  ( ColorCCV masterOffsetR masterOffsetG masterOffsetB masterOffsetA )
                   )
-                  ( ColorDCC shadowsSaturationR shadowsSaturationG shadowsSaturationB shadowsSaturationA
-                  , ColorDCC shadowsContrastR shadowsContrastG shadowsContrastB shadowsContrastA
-                  , ColorDCC shadowsGammaR shadowsGammaG shadowsGammaB shadowsGammaA
-                  , ColorDCC shadowsGainR shadowsGainG shadowsGainB shadowsGainA
-                  , ColorDCC shadowsOffsetR shadowsOffsetG shadowsOffsetB shadowsOffsetA
+                  ( ColorCC
+                  ( ColorCCV shadowsSaturationR shadowsSaturationG shadowsSaturationB shadowsSaturationA )
+                  ( ColorCCV shadowsContrastR shadowsContrastG shadowsContrastB shadowsContrastA )
+                  ( ColorCCV shadowsGammaR shadowsGammaG shadowsGammaB shadowsGammaA )
+                  ( ColorCCV shadowsGainR shadowsGainG shadowsGainB shadowsGainA )
+                  ( ColorCCV shadowsOffsetR shadowsOffsetG shadowsOffsetB shadowsOffsetA )
                   )
-                  ( ColorDCC midtonesSaturationR midtonesSaturationG midtonesSaturationB midtonesSaturationA
-                  , ColorDCC midtonesContrastR midtonesContrastG midtonesContrastB midtonesContrastA
-                  , ColorDCC midtonesGammaR midtonesGammaG midtonesGammaB midtonesGammaA
-                  , ColorDCC midtonesGainR midtonesGainG midtonesGainB midtonesGainA
-                  , ColorDCC midtonesOffsetR midtonesOffsetG midtonesOffsetB midtonesOffsetA
+                  ( ColorCC
+                  ( ColorCCV midtonesSaturationR midtonesSaturationG midtonesSaturationB midtonesSaturationA )
+                  ( ColorCCV midtonesContrastR midtonesContrastG midtonesContrastB midtonesContrastA )
+                  ( ColorCCV midtonesGammaR midtonesGammaG midtonesGammaB midtonesGammaA )
+                  ( ColorCCV midtonesGainR midtonesGainG midtonesGainB midtonesGainA )
+                  ( ColorCCV midtonesOffsetR midtonesOffsetG midtonesOffsetB midtonesOffsetA )
                   )
-                  ( ColorDCC highlightsSaturationR highlightsSaturationG highlightsSaturationB highlightsSaturationA
-                  , ColorDCC highlightsContrastR highlightsContrastG highlightsContrastB highlightsContrastA
-                  , ColorDCC highlightsGammaR highlightsGammaG highlightsGammaB highlightsGammaA
-                  , ColorDCC highlightsGainR highlightsGainG highlightsGainB highlightsGainA
-                  , ColorDCC highlightsOffsetR highlightsOffsetG highlightsOffsetB highlightsOffsetA
+                  ( ColorCC
+                  ( ColorCCV highlightsSaturationR highlightsSaturationG highlightsSaturationB highlightsSaturationA )
+                  ( ColorCCV highlightsContrastR highlightsContrastG highlightsContrastB highlightsContrastA )
+                  ( ColorCCV highlightsGammaR highlightsGammaG highlightsGammaB highlightsGammaA )
+                  ( ColorCCV highlightsGainR highlightsGainG highlightsGainB highlightsGainA )
+                  ( ColorCCV highlightsOffsetR highlightsOffsetG highlightsOffsetB highlightsOffsetA )
                   )
                   = onEachColorRGBA correct
     where
@@ -379,24 +365,3 @@ gammaToLinearLuna companding = onEach $ (Gamma.toLinear companding :: Exp Float 
 
 gammaFromLinearLuna :: Gamma.Companding a (Exp Float) => a -> Image -> Image
 gammaFromLinearLuna companding = onEach $ Gamma.fromLinear companding
-
-gradeLunaColor :: VPS (Color.RGBA Float)
-               -> VPS (Color.RGBA Float)
-               -> VPS (Color.RGBA Float)
-               -> Color.RGBA Float
-               -> Color.RGBA Float
-               -> Color.RGBA Float
-               -> Color.RGBA Float
-               -> Image
-               -> Image
-gradeLunaColor (VPS (fmap variable -> Color.RGBA blackpointR blackpointG blackpointB blackpointA))
-               (VPS (fmap variable -> Color.RGBA whitepointR whitepointG whitepointB whitepointA))
-               (VPS (fmap variable -> Color.RGBA liftR liftG liftB liftA))
-               (fmap variable -> Color.RGBA gainR gainG gainB gainA)
-               (fmap variable -> Color.RGBA multiplyR multiplyG multiplyB multiplyA)
-               (fmap variable -> Color.RGBA offsetR offsetG offsetB offsetA)
-               (fmap variable -> Color.RGBA gammaR gammaG gammaB gammaA)
-               = onEachRGBA (CC.grade blackpointR whitepointR liftR gainR multiplyR offsetR gammaR)
-                            (CC.grade blackpointG whitepointG liftG gainG multiplyG offsetG gammaG)
-                            (CC.grade blackpointB whitepointB liftB gainB multiplyB offsetB gammaB)
-                            id -- (CC.grade blackpointA whitepointA liftA gainA multiplyA offsetA gammaA)
