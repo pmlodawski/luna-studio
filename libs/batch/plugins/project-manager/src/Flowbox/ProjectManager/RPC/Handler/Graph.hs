@@ -13,8 +13,9 @@ import qualified Data.Bimap    as Bimap
 import qualified Data.Either   as Either
 import qualified Data.List     as List
 import           Data.Maybe    (fromMaybe, isJust)
---import qualified Data.Set      as Set
+import qualified Data.Set      as Set
 import qualified Data.Sequence as Sequence
+import           Data.Sequence ((><))
 
 import qualified Flowbox.Batch.Batch                                                                          as Batch
 import qualified Flowbox.Batch.Handler.Common                                                                 as Batch
@@ -50,6 +51,7 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Gra
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Update         as NodeRemove
 import qualified Generated.Proto.Urm.URM.Register.Request                                                     as Register
 import qualified Generated.Proto.Urm.URM.RegisterMultiple.Request                                             as RegisterMultiple
+import           Luna.DEP.Graph.View.EdgeView                                                                 (EdgeView (EdgeView))
 import           Luna.DEP.Data.Serialize.Proto.Conversion.Crumb                                               ()
 import           Luna.DEP.Data.Serialize.Proto.Conversion.GraphView                                           ()
 
@@ -158,6 +160,7 @@ nodeRemove (NodeRemove.Request tnodeIDs tbc tlibID tprojectID astID) undoTopic =
     let nodeIDs            = decodeP tnodeIDs
         mapIDs bimapLookup = map (mapID context bimapLookup) nodeIDs
         updatedRequest ids = NodeRemove.Request ids tbc tlibID tprojectID astID
+        originID nid       = if isJust undoTopic then mapID context Bimap.lookup nid else nid
         originIDs          = if isJust undoTopic then mapIDs Bimap.lookup else nodeIDs
         newIDs             = if isJust undoTopic then nodeIDs else mapIDs Bimap.lookupR
         libID              = decodeP tlibID
@@ -167,16 +170,17 @@ nodeRemove (NodeRemove.Request tnodeIDs tbc tlibID tprojectID astID) undoTopic =
                                  return $ encode (nid, node)
                      ) $ originIDs
 
---    let removed = Set.toList . Set.fromList . concat . map (\node -> BatchG.nodeEdges node bc libID projectID) oldNodes
---    logger warning $ show removed
+    rm <- mapM (\nid -> BatchG.nodeEdges nid bc libID projectID) newIDs
+    let removed = Set.toList $ Set.fromList $ concat rm
     
     BatchG.removeNodes newIDs bc libID projectID
     updateNo <- Batch.getUpdateNo
 
     return ( [NodeRemove.Update (updatedRequest $ encodeP newIDs) updateNo]
            , makeMsgArr (RegisterMultiple.Request
-              (  Sequence.fromList $ map (\node -> fun Topic.projectLibraryAstFunctionGraphNodeAddRequest $ NodeAdd.Request node tbc tlibID tprojectID astID) $ oldNodes)
---              >< Sequence.fromList $ map (\node -> fun Topic.projectLibraryAstFunctionGraphConnectRequest $ Connect.Request )
+              (  (Sequence.fromList $ map (\node -> fun Topic.projectLibraryAstFunctionGraphNodeAddRequest $ NodeAdd.Request node tbc tlibID tprojectID astID) $ oldNodes)
+              >< (Sequence.fromList $ map (\(srcID, dstID, EdgeView srcPorts dstPorts) -> fun Topic.projectLibraryAstFunctionGraphConnectRequest $ Connect.Request (encodeP $ originID srcID) (encodeP srcPorts) (encodeP $ originID dstID) (encodeP dstPorts) tbc tlibID tprojectID astID) removed)
+              )
               (fun Topic.projectLibraryAstFunctionGraphNodeRemoveRequest $ updatedRequest $ encodeP originIDs)
                         ) undoTopic
            )
