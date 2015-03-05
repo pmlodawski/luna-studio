@@ -329,8 +329,8 @@ class ```AlphaBlend```:
     Adobe
     Custom
 
-def Image.merge background::Image foreground::Image mode::MergeMode -> Image:
-    ```liftF3 mergeLuna #{mode} #{self} #{img}```
+def Image.merge background::Image foreground::Image mode::MergeMode mask::(Maybe (Matte Float))-> Image:
+    ```placeholder```
 
 def perlin self::Std z::Float width::Int height::Int -> Image:
     ```liftF3 perlinLuna #{z} #{width} #{height}```
