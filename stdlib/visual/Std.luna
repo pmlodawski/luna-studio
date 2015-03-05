@@ -2,15 +2,13 @@
 def null self::Std a::a -> a:
     a
 
-def print self msg::String:
-    ```autoLift1 print #{msg}```
+def print self msg::String
 
 class ```Bool```:
     True
     False
 
-def Bool.toString self::Bool -> String:
-    ```liftF1 show #{self}```
+def Bool.toString self::Bool -> String
 
 class ```Maybe``` a:
     Just:
@@ -23,37 +21,27 @@ class ```Either``` a b:
 
 # CHAR
 
-def Char.toString self::Char -> String:
-    ```liftF2 (:) #{self} (val ([] :: String))```
+def Char.toString self::Char -> String
 
 # INT
 
-def Int.+ self::Int a::Int -> Int:
-    ```liftF2 (+) #{self} #{a}```
+def Int.+ self::Int a::Int -> Int
 
-def Int.- self::Int a::Int -> Int:
-    ```liftF2 (-) #{self} #{a}```
+def Int.- self::Int a::Int -> Int
 
-def Int.* self::Int a::Int -> Int:
-    ```liftF2 (*) #{self} #{a}```
+def Int.* self::Int a::Int -> Int
 
-def Int./ self::Int a::Int -> Int:
-    ```liftF2 (/) #{self} #{a}```
+def Int./ self::Int a::Int -> Int
 
-def Int.> self::Int a::Int -> Bool:
-    ```liftF2 (>) #{self} #{a}```
+def Int.> self::Int a::Int -> Bool
 
-def Int.== self::Int a::Int -> Bool:
-    ```liftF2 (==) #{self} #{a}```
+def Int.== self::Int a::Int -> Bool
 
-def Int.< self::Int a::Int -> Bool:
-    ```liftF2 (<) #{self} #{a}```
+def Int.< self::Int a::Int -> Bool
 
-def Int.<= self::Int a::Int -> Bool:
-    ```liftF2 (<=) #{self} #{a}```
+def Int.<= self::Int a::Int -> Bool
 
-def Int.>= self::Int a::Int -> Bool:
-    ```liftF2 (>=) #{self} #{a}```
+def Int.>= self::Int a::Int -> Bool
 
 # def Int.inc:
 #     self.add 1
@@ -61,98 +49,71 @@ def Int.>= self::Int a::Int -> Bool:
 # def Int.dec:
 #     self.sub 1
 
-def Int.fromIntegral self::Int -> Float:
-    ```liftF1 fromIntegral #{self} :: Value Pure Safe Float```
+def Int.fromIntegral self::Int -> Float
 
-def Int.toString self::Int -> String:
-    ```liftF1 show #{self}```
+def Int.toString self::Int -> String
 
 # DOUBLE / FLOAT
 
-def Float.acc:
-    ```liftF1 variable #{self}```
+def Float.acc
 
-def Float.truncate self::Float -> Int:
-    ```liftF1 truncate #{self} :: Value Pure Safe Int```
+def Float.truncate self::Float -> Int
 
-def Float.round self::Float -> Int:
-    ```liftF1 round #{self} :: Value Pure Safe Int```
+def Float.round self::Float -> Int
 
-def Float.floor self::Float -> Int:
-    ```liftF1 floor #{self} :: Value Pure Safe Int```
+def Float.floor self::Float -> Int
 
-def Float.ceiling self::Float -> Int:
-    ```liftF1 ceiling #{self} :: Value Pure Safe Int```
+def Float.ceiling self::Float -> Int
 
-def Float.+ self::Float a::Float -> Float:
-    ```liftF2 (+) #{self} #{a}```
+def Float.+ self::Float a::Float -> Float
 
-def Float.- self::Float a::Float -> Float:
-    ```liftF2 (-) #{self} #{a}```
+def Float.- self::Float a::Float -> Float
 
-def Float.* self::Float a::Float -> Float:
-    ```liftF2 (*) #{self} #{a}```
+def Float.* self::Float a::Float -> Float
 
-def Float./ self::Float a::Float -> Float:
-    ```liftF2 (/) #{self} #{a}```
+def Float./ self::Float a::Float -> Float
 
-def Float.> self::Float a::Float -> Bool:
-    ```liftF2 (>) #{self} #{a}```
+def Float.> self::Float a::Float -> Bool
 
-def Float.== self::Float a::Float -> Bool:
-    ```liftF2 (==) #{self} #{a}```
+def Float.== self::Float a::Float -> Bool
 
-def Float.< self::Float a::Float -> Bool:
-    ```liftF2 (<) #{self} #{a}```
+def Float.< self::Float a::Float -> Bool
 
-def Float.<= self::Float a::Float -> Bool:
-    ```liftF2 (<=) #{self} #{a}```
+def Float.<= self::Float a::Float -> Bool
 
-def Float.>= self::Float a::Float -> Bool:
-    ```liftF2 (>=) #{self} #{a}```
+def Float.>= self::Float a::Float -> Bool
 
-def Float.toString self::Float -> String:
-    ```liftF1 show #{self}```
+def Float.toString self::Float -> String
 
 alias FilePath = String
+alias SavePath = String
+alias LoadPath = String
 
 class Image
 
-def emptyImage self::Std -> Image:
-    ```liftF0 Image.empty```
+def emptyImage self::Std -> Image
 
-def load self::Std path::FilePath -> Image:
-    ```autoLift1 realReadLuna #{path}```
+def load self::Std path::FilePath -> Image
 
-def load1 self::Std path::FilePath gamma::(Gamma Float) -> Image:
-    ```placeholder```
+def load1 self::Std path::FilePath gamma::(Gamma Float) -> Image
 
-def Image.save self::Image path::FilePath -> Image:
-    ```autoLift2 saveImageLuna #{path} #{self}```
+def Image.save self::Image path::FilePath -> Image
 
-def Image.save1 self::Image path::FilePath gamma::(Gamma Float) -> Image:
-    ```placeholder```
+def Image.save1 self::Image path::FilePath gamma::(Gamma Float) -> Image
 
-# def Image.defocus self::Image radius::Int:
-#     ```liftF2 defocus #{radius} #{self}```
+# def Image.defocus self::Image radius::Int
 
-# def Image.motionBlur self::Image size::Int angle::Float:
-#     ```liftF3 motionBlur #{size} #{angle} #{self}```
+# def Image.motionBlur self::Image size::Int angle::Float
 
-# def Image.bilateral self::Image psigma::Float csigma::Float size::Int:
-#     ```liftF4 bilateral #{psigma} #{csigma} #{size} #{self}```
+# def Image.bilateral self::Image psigma::Float csigma::Float size::Int
 
-def Image.offset self::Image value::Color matte::(Maybe (Matte Float)) -> Image:
-    ```liftF3 offsetLuna #{value} #{matte} #{self}```
+def Image.offset self::Image value::Color matte::(Maybe (Matte Float)) -> Image
 
-def Image.contrast self::Image value::Color matte::(Maybe (Matte Float)) -> Image:
-    ```liftF3 contrastLuna #{value} #{matte} #{self}```
+def Image.contrast self::Image value::Color matte::(Maybe (Matte Float)) -> Image
 
-def Image.exposure self::Image blackpoint::Color ex::Color matte::(Maybe (Matte Float)) -> Image:
-    ```liftF4 exposureLuna #{blackpoint} #{ex} #{matte} #{self}```
+def Image.exposure self::Image blackpoint::Color ex::Color matte::(Maybe (Matte Float)) -> Image
 
-def Image.grade self::Image blackpoint::Color whitepoint::Color lift::Color gain::Color multiply::Color offset::Color gamma::Color matte::(Maybe (Matte Float)) -> Image:
-    ```liftF5 (gradeLunaColor #{blackpoint} #{whitepoint} #{lift} #{gain}) #{multiply} #{offset} #{gamma} #{matte} #{self}```
+def Image.grade self::Image blackpoint::Color whitepoint::Color lift::Color gain::Color multiply::Color offset::Color gamma::Color matte::(Maybe (Matte Float)) -> Image
 
 class ```ColorCorrectCurves``` a:
     ColorCorrectCurves:
@@ -168,8 +129,7 @@ def Image.colorCorrect self::Image
                        shadows::(ColorCC Color)
                        midtones::(ColorCC Color)
                        highlights::(ColorCC Color)
-                       -> Image:
-    ```liftF5 colorCorrectLuna' #{master} #{shadows} #{midtones} #{highlights} #{self}```
+                       -> Image
 
 def Image.colorCorrectCurves self::Image
                        curves::ColorCorrectCurves
@@ -177,23 +137,17 @@ def Image.colorCorrectCurves self::Image
                        shadows::(ColorCC Color)
                        midtones::(ColorCC Color)
                        highlights::(ColorCC Color)
-                       -> Image:
-    ```liftF5 (colorCorrectLunaCurves curves) #{master} #{shadows} #{midtones} #{highlights} #{self}```
+                       -> Image
 
-def Image.hueCorrect self::Image curves::HueCorrectGUI -> Image:
-    ```liftF2 hueCorrectLuna #{curves} #{self}```
+def Image.hueCorrect self::Image curves::HueCorrectGUI -> Image
 
-def Image.saturate self::Image saturation::Color -> Image:
-    ```liftF2 saturateLuna #{saturation} #{self}```
+def Image.saturate self::Image saturation::Color -> Image
 
-def Image.posterize self::Image colors::Float -> Image:
-    ```liftF2 posterizeLuna #{colors} #{self}```
+def Image.posterize self::Image colors::Float -> Image
 
-def Image.multiply self::Image val::Color matte::(Maybe (Matte Float)) -> Image:
-    ```liftF2 multiplyLuna #{val} #{matte} #{self}```
+def Image.multiply self::Image val::Color matte::(Maybe (Matte Float)) -> Image
 
-def Image.gamma self::Image val::Color affectAlpha::Bool matte::(Maybe (Matte Float)) -> Image:
-    ```liftF4 gammaLuna #{val} #{affectAlpha} #{matte} #{self}```
+def Image.gamma self::Image val::Color affectAlpha::Bool matte::(Maybe (Matte Float)) -> Image
 
 class ```KeyerMode```:
     Red
@@ -212,44 +166,32 @@ class ```KeyerThresholds``` a:
 
 alias KeyerThresholdsF = KeyerThresholds Float
 
-def Image.key self::Image mode::KeyerMode thresholds::KeyerThresholdsF -> Image:
-    ```liftF3 keyerLuna #{mode} #{thresholds} #{self}```
+def Image.key self::Image mode::KeyerMode thresholds::KeyerThresholdsF -> Image
 
-def Image.differenceKey self::Image offset::Float gain::Float constantOutside::Bool background::Image -> Image:
-    ```liftF5 differenceKeyerLuna #{offset} #{gain} #{constantOutside} #{background} #{self}```
+def Image.differenceKey self::Image offset::Float gain::Float constantOutside::Bool background::Image -> Image
 
-def Image.premultiply self::Image -> Image:
-    ```liftF1 premultiplyLuna #{self}```
+def Image.premultiply self::Image -> Image
 
-def Image.unpremultiply self::Image -> Image:
-    ```liftF1 unpremultiplyLuna #{self}```
+def Image.unpremultiply self::Image -> Image
 
-def Image.invert self::Image -> Image:
-    ```liftF1 invertLuna #{self}```
+def Image.invert self::Image -> Image
 
-def Image.histEq self::Image bins::Int -> Image:
-    ```liftF2 histEqLuna #{bins} #{self}```
+def Image.histEq self::Image bins::Int -> Image
 
 alias Threshold = (Float, Float)
 alias Clamp = Maybe (Float, Float)
 
-def Image.clamp self::Image thresholds::Threshold clamps::Clamp -> Image:
-    ```liftF3 clampLuna #{thresholds} #{clamps} #{self}```
+def Image.clamp self::Image thresholds::Threshold clamps::Clamp -> Image
 
-def Image.erode self::Image size::Int -> Image:
-    ```liftF2 erodeLuna #{size} #{self}```
+def Image.erode self::Image size::Int -> Image
 
-def Image.dilate self::Image size::Int -> Image:
-    ```liftF2 dilateLuna #{size} #{self}```
+def Image.dilate self::Image size::Int -> Image
 
-def Image.open self::Image size::Int -> Image:
-    ```liftF2 openLuna #{size} #{self}```
+def Image.open self::Image size::Int -> Image
 
-def Image.close self::Image size::Int -> Image:
-    ```liftF2 closeLuna #{size} #{self}```
+def Image.close self::Image size::Int -> Image
 
-# def Image.radialBlur self::Image size::Int angle::Float:
-#     ```liftF3 radialBlurLuna #{size} #{angle} #{self}```
+# def Image.radialBlur self::Image size::Int angle::Float
 
 class ```Orientation```:
     Vertical
@@ -262,8 +204,7 @@ class ```EdgeOperator```:
     Laplace: x, y :: Int
              cross, side :: Float
 
-def Image.edgeDetect self::Image edgeOperator::EdgeOperator -> Image:
-    ```liftF2 edgeDetectLuna #{edgeOperator} #{self}```
+def Image.edgeDetect self::Image edgeOperator::EdgeOperator -> Image
 
 # def Image.bayer self::Image bits::Int:
 #     ```liftF2 orderedDitherLuna #{bits} #{self}```
@@ -283,8 +224,7 @@ class ```Point``` x y:
 
 #     ```liftF9 cornerPinLuna #{p1x} #{p1y} #{p2x} #{p2y} #{p3x} #{p3y} #{p4x} #{p4y} #{self}```
 
-def Image.blur self::Image kernelSize::Int -> Image:
-    ```liftF2 blurLuna #{kernelSize} #{self}```
+def Image.blur self::Image kernelSize::Int -> Image
 
 # def Image.laplacian self::Image kernelSize::Int centerVal::Float sideVal::Float:
 #     ```liftF4 laplacianLuna #{kernelSize} #{centerVal} #{sideVal} #{self}```
@@ -329,41 +269,32 @@ class ```AlphaBlend```:
     Adobe
     Custom
 
-def Image.merge background::Image foreground::Image mode::MergeMode -> Image:
-    ```liftF3 mergeLuna #{mode} #{self} #{img}```
+def Image.merge background::Image foreground::Image mode::MergeMode -> Image
 
-def perlin self::Std z::Float width::Int height::Int -> Image:
-    ```liftF3 perlinLuna #{z} #{width} #{height}```
+def perlin self::Std z::Float width::Int height::Int -> Image
 
-def billow self::Std z::Float width::Int height::Int -> Image:
-    ```liftF3 billowLuna #{z} #{width} #{height}```
+def billow self::Std z::Float width::Int height::Int -> Image
 
 # TRANSFORMATIONS
 
 alias ImgMask = Maybe Image
 
-def noImgMask self::Std:
-    ```val (Nothing :: Maybe (Value Pure Safe Image))```
+def noImgMask self::Std
 
 class ```V2``` a:
     x, y :: a
 
-def Image.crop self::Image rect::(Rectangle Int) reformat::Bool defaultOutside::Bool -> Image:
-    ```liftF4 cropLuna ((fmap.fmap) variable -> #{rect}) #{reformat} #{defaultOutside} #{self}```
+def Image.crop self::Image rect::(Rectangle Int) reformat::Bool defaultOutside::Bool -> Image
 
 # VIEW
 
-def View.channel self::View name::String:
-    ```liftF2 View.get #{self} #{name}```
+def View.channel self::View name::String
 
-def View.append self::View channel::String:
-    ```liftF2 View.append #{channel} #{self}```
+def View.append self::View channel::String
 
-def View.remove self::View name::String:
-    ```liftF2 View.remove #{name} #{self}```
+def View.remove self::View name::String
 
-def View.map self::View f:
-    ```liftF2 View.map #{f} #{self}```
+def View.map self::View f
 
 # GEOM
 
@@ -393,20 +324,15 @@ alias RectangleI = Rectangle Int
 
 alias TransformF = Transform Float
 
-def Image.rotateAt self::Image point::(Point2 Float) phi::Float matte::(Maybe (Matte Float)) -> Image:
-    ```liftF4 rotateAtLuna #{point} #{phi} #{matte} #{self}```
+def Image.rotateAt self::Image point::(Point2 Float) phi::Float matte::(Maybe (Matte Float)) -> Image
 
-def Image.translate self::Image vec::(V2 Float) matte::(Maybe (Matte Float)) -> Image:
-    ```liftF3 translateLuna #{vec} #{matte} #{self}```
+def Image.translate self::Image vec::(V2 Float) matte::(Maybe (Matte Float)) -> Image
 
-def Image.scaleAt self::Image point::(Point2 Float) vec::(V2 Float) matte::(Maybe (Matte Float)) -> Image:
-    ```liftF4 scaleAtLuna #{point} #{vec} #{matte} #{self}```
+def Image.scaleAt self::Image point::(Point2 Float) vec::(V2 Float) matte::(Maybe (Matte Float)) -> Image
 
-def Image.skewAt self::Image point::(Point2 Float) skew::(Skew Float) matte::(Maybe (Matte Float)) -> Image:
-    ```liftF4 skewAtLuna #{point} #{skew} #{matte} #{self}```
+def Image.skewAt self::Image point::(Point2 Float) skew::(Skew Float) matte::(Maybe (Matte Float)) -> Image
 
-def Image.transform self::Image trans::TransformF matte::(Maybe (Matte Float)) -> Image:
-    ```liftF3 transformLuna #{trans} #{matte} #{self}```
+def Image.transform self::Image trans::TransformF matte::(Maybe (Matte Float)) -> Image
 
 class ```ControlPoint``` a:
     point               :: Point2 a
@@ -425,23 +351,18 @@ class ```Mask``` a:
 
 class Matte a
 
-def imageMatte self::Std image::Image channelName::String -> (Maybe (Matte Float)):
-     ```lift2 imageMatteLuna #{image} #{channelName}```
+def imageMatte self::Std image::Image channelName::String -> (Maybe (Matte Float))
 
-def vectorMatte self::Std mask::(Mask Float) -> (Maybe (Matte Float)):
-    ```liftF1 vectorMatteLuna #{mask}```
+def vectorMatte self::Std mask::(Mask Float) -> (Maybe (Matte Float))
 
-def noMatte self::Std -> (Maybe (Matte Float)):
-    ```val (Nothing :: Maybe (Matte Float))```
+def noMatte self::Std -> (Maybe (Matte Float))
 
 def point self::Std x y:
     Point2 x y
 
-def nopoint self::Std:
-    ```val (Nothing :: Maybe (Point2 Float))```
+def nopoint self::Std
 
-def rasterizeMask self::Std w::Int h::Int m::(Mask Float) -> Image:
-    ```liftF3 rasterizeMaskLuna #{w} #{h} #{m}```
+def rasterizeMask self::Std w::Int h::Int m::(Mask Float) -> Image
 
 # COLORS
 
@@ -473,8 +394,7 @@ class ```Format```:
     Square2K
     CustomFormat: width, height :: Int
 
-def constant self::Std format::Format color::Color -> Image:
-    ```liftF2 constantLuna #{format} #{color}```
+def constant self::Std format::Format color::Color -> Image
 
 class ```Gamma``` a:
     Gamma: a :: Float
@@ -486,11 +406,9 @@ class ```Gamma``` a:
 
 # alias GammaF = Gamma Float
 
-def Image.gammaToLinear self::Image gamma::(Gamma Float) -> Image:
-    ```liftF2 gammaToLinearLuna #{gamma} #{self}```
+def Image.gammaToLinear self::Image gamma::(Gamma Float) -> Image
 
-def Image.gammaFromLinear self::Image gamma::(Gamma Float) -> Image:
-    ```liftF2 gammaFromLinearLuna #{gamma} #{self}```
+def Image.gammaFromLinear self::Image gamma::(Gamma Float) -> Image
 
 def time self::Std:
     0.0
@@ -522,5 +440,4 @@ class ```CurveGUI``` x:
     BezierCurveGUI:
         vertices :: [ControlPointGUI x]
 
-def getValueAtCurve self::Std curve::(CurveGUI Float) x::Time -> Float:
-    ```liftF2 getValueAtCurveGUI #{curve} #{x}```
+def getValueAtCurve self::Std curve::(CurveGUI Float) x::Time -> Float
