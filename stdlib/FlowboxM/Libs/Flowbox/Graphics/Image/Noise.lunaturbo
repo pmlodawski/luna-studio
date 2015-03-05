@@ -24,12 +24,11 @@ foreign haskell class NoiseParams:
         lacunarity :: Float
         octaves :: Int
         maxOctave :: Int
+       # seed :: Int
         exponent :: Float
         offset :: Float
         gain :: Float
         z :: Float
-#        frequency, lacunarity, exponent, offset, gain, z :: Float
-#        octaves, maxOctave, seed :: Int
 
 foreign haskell def noise params width height:
     liftF3 noiseLuna params width height

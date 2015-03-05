@@ -279,16 +279,32 @@ class ```Quality```:
 class ```NoiseParams```:
     Perlin:
         quality :: Quality
-        frequency, lacunarity, persistence, z :: Float
-        octaves, seed :: Int
+        frequency :: Float
+        lacunarity :: Float
+        octaves :: Int
+        persistence :: Float
+        seed :: Int
+        z :: Float
     Billow:
         quality :: Quality
-        frequency, lacunarity, persistence, z :: Float
-        octaves, seed :: Int
+        frequency :: Float
+        lacunarity :: Float
+        octaves :: Int
+        persistence :: Float
+        seed :: Int
+        z :: Float
     RidgedMulti:
         quality :: Quality
-        frequency, lacunarity, exponent, offset, gain, z :: Float
-        octaves, maxOctave, seed :: Int
+        frequency :: Float
+        lacunarity :: Float
+        octaves :: Int
+        maxOctave :: Int
+      #  seed :: Int
+        exponent :: Float
+        offset :: Float
+        gain :: Float
+        z :: Float
+
 
 def noise self::Std params::NoiseParams width::Int height::Int -> Image
 
