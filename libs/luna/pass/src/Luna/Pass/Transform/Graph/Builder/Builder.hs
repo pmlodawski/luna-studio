@@ -10,6 +10,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE Rank2Types            #-}
 {-# LANGUAGE TemplateHaskell       #-}
+{-# LANGUAGE TupleSections         #-}
 
 module Luna.Pass.Transform.Graph.Builder.Builder where
 
@@ -53,8 +54,10 @@ import           Luna.Syntax.Pat              (LPat)
 import qualified Luna.Syntax.Pat              as Pat
 import           Luna.Syntax.Traversals.Class (Traversal)
 --import qualified Luna.Syntax.Type                        as Type
-import Luna.System.Pragma.Store (MonadPragmaStore)
-import Luna.Util.LunaShow       (LunaShow, lunaShow)
+import           Luna.Syntax.Graph.Tag    (TDecl, TExpr, Tag)
+import qualified Luna.Syntax.Graph.Tag    as Tag
+import           Luna.System.Pragma.Store (MonadPragmaStore)
+import           Luna.Util.LunaShow       (LunaShow, lunaShow)
 
 
 
@@ -65,44 +68,56 @@ logger = getLoggerIO $moduleName
 type LunaExpr ae v = (Enumerated ae, LunaShow (LExpr ae v), LunaShow (LLit ae))
 
 
-run :: (MonadPragmaStore m, LunaExpr ae v, Enumerated ad)
-    => StructInfo -> Bool -> (LDecl ad (LExpr ae v))
-    -> EitherT Pass.PassError m (Graph ae v)
+inputsID = -1
+outputID = -2
+
+
+run :: (MonadPragmaStore m, LunaExpr ae v)
+    => StructInfo -> Bool -> TDecl v
+    -> EitherT Pass.PassError m (TDecl v, Graph ae v)
 run aliasInfo foldNodes lexpr =
     Pass.run_ (Pass.Info "GraphBuilder")
         (State.make aliasInfo foldNodes inputsID)
         (expr2graph lexpr)
-    where inputsID = - (lexpr ^. Label.label . to Enum.id)
 
 
-
-expr2graph :: (LunaExpr ae v, Enumerated ad)
-           => LDecl ad (LExpr ae v) -> GBPass ae v m (Graph ae v)
-expr2graph (Label l (Decl.Func (Decl.FuncDecl _ sig output body))) = do
-    let inputsID = -1
-        outputID = -2
+expr2graph :: LunaExpr ae v
+           => TDecl v -> GBPass ae v m (TDecl v, Graph ae v)
+expr2graph decl@(Label l (Decl.Func (Decl.FuncDecl _ sig output body))) = do
+    State.initFreeNodeID decl
     State.insNode (inputsID, Node.Inputs)
     State.insNode (outputID, Node.Outputs)
---    (inputsID, outputID) <- prepareInputsOutputs (Enum.id l) (-999)--FIXME!!! (output ^. Type.id)
-    parseArgs inputsID sig
-    if null body
-        then State.connectMonadic outputID
-        else do
-            --mapM_ (buildNode False True Nothing) $ init body
-            --buildOutput outputID $ last body
-            undefined
-    State.getGraph
+    sig'  <- parseArgs sig
+    body' <- parseBody body
+    decl' <- State.saveFreeNodeID decl
+    (,) <$> return (decl' & Label.element . Decl.funcDecl . Decl.funcDeclSig  .~ sig'
+                          & Label.element . Decl.funcDecl . Decl.funcDeclBody .~ body')
+        <*> State.getGraph
 
-parseArgs :: (Enumerated ad, Enumerated ae) => Node.ID -> Decl.FuncSig ad e -> GBPass ae v m ()
-parseArgs inputsID inputs = do
+parseBody :: [TExpr v] -> GBPass ae v m [TExpr v]
+parseBody []   = State.connectMonadic outputID >> return []
+parseBody body = do
+    --mapM_ (buildNode False True Nothing) $ init body
+    --buildOutput outputID $ last body
+    undefined
+
+
+parseArgs :: Enumerated ae => Decl.FuncSig Tag e -> GBPass ae v m (Decl.FuncSig Tag e)
+parseArgs inputs = do
     let numberedInputs = zip [0..] $ Pattern.args inputs
-    mapM_ (parseArg inputsID) numberedInputs
+    mapM_ parseArg numberedInputs
+    undefined
 
 
-parseArg :: (Enumerated ae, Enumerated ad) => Node.ID -> (Int, Arg ad e) -> GBPass ae v m ()
-parseArg inputsID (no, Arg pat _) = do
+parseArg :: Enumerated ae => (Int, Arg Tag e) -> GBPass ae v m ()
+parseArg (no, Arg pat _) = do
     [p] <- buildPat pat
     State.addToNodeMap p (inputsID, Port.Num no)
+
+
+withLabel :: Label Tag e -> Tag -> (Tag, Label Tag e)
+withLabel (Label (Tag.Empty {}) e) tag = (tag, Label tag e)
+withLabel (Label tag            e) _   = (tag, Label tag e)
 
 --prepareInputsOutputs :: AST.ID -> AST.ID -> GBPass a e m (Node.ID, Node.ID)
 --prepareInputsOutputs functionID funOutputID = do

@@ -32,6 +32,10 @@ import           Luna.Syntax.Graph.Node          (Node)
 import qualified Luna.Syntax.Graph.Node          as Node
 import           Luna.Syntax.Graph.Node.Position (Position)
 import           Luna.Syntax.Graph.Port          (Port)
+import           Luna.Syntax.Graph.Tag           (TDecl, Tag)
+import qualified Luna.Syntax.Graph.Tag           as Tag
+import           Luna.Syntax.Label               (Label (Label))
+import qualified Luna.Syntax.Label               as Label
 
 
 getPosition = undefined
@@ -43,27 +47,81 @@ logger = getLogger $moduleName
 
 type NodeMap = Map AST.ID (Node.ID, Port)
 
+type GBPass a e m result = Monad m => PassMonad (GBState a e) m result
 
-data GBState a e = GBState { _graph        :: Graph a e
-                           , _nodeMap      :: NodeMap
-                           , _aa           :: StructInfo
-                           , _foldNodes    :: Bool
-                           , _prevoiusNode :: Node.ID
+data GBState a e = GBState { _graph          :: Graph a e
+                           , _nodeMap        :: NodeMap
+
+                           , _resetNodeIDs   :: Bool
+                           , _nextFreeNodeID :: Node.ID
+
+                           , _aa             :: StructInfo
+                           , _foldNodes      :: Bool
+                           , _prevoiusNode   :: Node.ID
                            } deriving (Show)
 
 makeLenses ''GBState
 
 
-type GBPass a e m result = Monad m => PassMonad (GBState a e) m result
-
-
 make :: StructInfo -> Bool -> Node.ID -> GBState a e
-make = GBState def def
+make = GBState def def True def
 
+-- == getters and setters ================================================
+----- graph ---------------------------------------------------------------
+getGraph :: GBPass a e m (Graph a e)
+getGraph = gets $ view graph
+
+setGraph :: Graph a e -> GBPass a e m ()
+setGraph = modify . set graph
+
+----- nodeMap -------------------------------------------------------------
+getNodeMap :: GBPass a e m NodeMap
+getNodeMap = gets $ view nodeMap
+
+setNodeMap :: NodeMap -> GBPass a e m ()
+setNodeMap = modify . set nodeMap
 
 addToNodeMap :: AST.ID -> (Node.ID, Port) -> GBPass a e m ()
-addToNodeMap k v = do nm <- getNodeMap
-                      setNodeMap $ Map.insert k v nm
+addToNodeMap k v = setNodeMap . Map.insert k v =<< getNodeMap
+
+----- resetNodeIDs --------------------------------------------------------
+setResetNodeIDs :: Bool -> GBPass a e m ()
+setResetNodeIDs = modify . set resetNodeIDs
+
+getResetNodeIDs :: GBPass a e m Bool
+getResetNodeIDs = gets $ view resetNodeIDs
+
+----- nextFreeNodeID ------------------------------------------------------
+setNextFreeNodeID :: Node.ID -> GBPass a e m ()
+setNextFreeNodeID = modify . set nextFreeNodeID
+
+getNextFreeNodeID :: GBPass a e m Node.ID
+getNextFreeNodeID = gets $ view nextFreeNodeID
+
+initFreeNodeID :: TDecl v -> GBPass a e m ()
+initFreeNodeID decl = case decl ^. Label.label of
+    Tag.Empty {}        -> setResetNodeIDs True  >> setNextFreeNodeID 0
+    Tag.Node _ nodeID _ -> setResetNodeIDs False >> setNextFreeNodeID nodeID
+
+saveFreeNodeID :: TDecl v -> GBPass a e m (TDecl v)
+saveFreeNodeID (Label tag decl) = do
+    freeNodeID <- getNextFreeNodeID
+    return (Label (Tag.mkNode freeNodeID tag) decl)
+
+getNodeID :: Label Tag e -> GBPass a e m (Node.ID, Label Tag e)
+getNodeID labeled@(Label tag e) = case tag of
+    Tag.Node _ nodeID _ -> return (nodeID, labeled)
+    Tag.Empty {}        -> do
+        freeNodeID <- getNextFreeNodeID
+        setNextFreeNodeID $ freeNodeID + 1
+        return (freeNodeID, Label (Tag.mkNode freeNodeID tag) e)
+
+---------------------------------------------------------------------------
+
+
+withLabel :: Label Tag e -> Tag -> (Tag, Label Tag e)
+withLabel (Label (Tag.Empty {}) e) tag = (tag, Label tag e)
+withLabel (Label tag            e) _   = (tag, Label tag e)
 
 
 insNode :: (Node.ID, Position -> Node a e) -> GBPass a e m ()
@@ -71,6 +129,7 @@ insNode (nodeID, node) = do
     g   <- getGraph
     pos <- Maybe.fromMaybe (0,0) <$> getPosition nodeID
     setGraph $ Graph.insNode (nodeID, node pos) g
+
 
 
 --insNodeWithFlags :: (Node.ID, Position -> Node a e) -> Bool -> Bool -> GBPass a e m ()
@@ -85,17 +144,14 @@ insNode (nodeID, node) = do
 --    insNodeWithFlags (astID, node) isFolded assignment
 --    addToNodeMap astID (astID, outPort)
 
-
-connectNodes :: Node.ID -> Node.ID -> Edge -> GBPass a e m ()
-connectNodes srcID dstID edge = getGraph >>= setGraph . Graph.connect srcID dstID edge
-
-
 --connect :: AST.ID -> Node.ID -> Port -> GBPass a e m ()
 --connect srcID dstNID dstPort = do
 --    found             <- gvmNodeMapLookUp srcID
 --    (srcNID, srcPort) <- lift $ found <??> "Graph.Builder.State.connect : cannot find " ++ show srcID
 --    connectNodes srcNID dstNID $ Edge.Data srcPort dstPort
 
+connectNodes :: Node.ID -> Node.ID -> Edge -> GBPass a e m ()
+connectNodes srcID dstID edge = getGraph >>= setGraph . Graph.connect srcID dstID edge
 
 connectMonadic :: Node.ID -> GBPass a e m ()
 connectMonadic nodeID = do
@@ -108,20 +164,8 @@ connectMonadic nodeID = do
     connectNodes prevID nodeID Edge.Monadic
 
 
-getGraph :: GBPass a e m (Graph a e)
-getGraph = gets $ view graph
 
 
-setGraph :: Graph a e -> GBPass a e m ()
-setGraph = modify . set graph
-
-
-getNodeMap :: GBPass a e m NodeMap
-getNodeMap = gets $ view nodeMap
-
-
-setNodeMap :: NodeMap -> GBPass a e m ()
-setNodeMap = modify . set nodeMap
 
 
 --getAAMap :: GBPass a e m StructInfo
