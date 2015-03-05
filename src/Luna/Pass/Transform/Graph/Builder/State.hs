@@ -108,7 +108,7 @@ saveFreeNodeID (Label tag decl) = do
     freeNodeID <- getNextFreeNodeID
     return (Label (Tag.mkNode freeNodeID tag) decl)
 
-getNodeID :: Label Tag e -> GBPass a e m (Node.ID, Label Tag e)
+getNodeID :: Label Tag e -> GBPass a e1 m (Node.ID, Label Tag e)
 getNodeID labeled@(Label tag e) = case tag of
     Tag.Node _ nodeID _ -> return (nodeID, labeled)
     Tag.Empty {}        -> do

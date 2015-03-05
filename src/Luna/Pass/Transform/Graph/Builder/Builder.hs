@@ -18,7 +18,7 @@ module Luna.Pass.Transform.Graph.Builder.Builder where
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
 import qualified Data.List                  as List
---import qualified Data.Maybe                 as Maybe
+import qualified Data.Maybe                 as Maybe
 
 import Flowbox.Prelude hiding (Traversal, error, mapM, mapM_)
 --import qualified Flowbox.Prelude                         as Prelude
@@ -94,47 +94,35 @@ expr2graph decl@(Label l (Decl.Func (Decl.FuncDecl _ sig output body))) = do
                           & Label.element . Decl.funcDecl . Decl.funcDeclBody .~ body')
         <*> State.getGraph
 
+
+parseArgs :: Enumerated ae => Decl.FuncSig Tag e -> GBPass ae v m (Decl.FuncSig Tag e)
+parseArgs inputs@(Pattern.NamePat prefix base segmentList) = flip evalStateT (0::Int) $ do
+    prefix' <- case prefix of
+        Nothing -> return Nothing
+        Just pr -> Just <$> parseArg pr
+    base'        <- parseSegment base
+    segmentList' <- mapM parseSegment segmentList
+    return $ Pattern.NamePat prefix base segmentList'
+
+
+parseSegment (Pattern.Segment base args) = 
+    Pattern.Segment base <$> mapM parseArg args
+
+
+parseArg (Arg pat val) = do
+    no <- get
+    put $ no + 1
+    (i, pat') <- lift $ State.getNodeID pat
+    lift $ State.addToNodeMap i (inputsID, Port.Num no)
+    return $ Arg pat' val
+
+
 parseBody :: [TExpr v] -> GBPass ae v m [TExpr v]
 parseBody []   = State.connectMonadic outputID >> return []
 parseBody body = do
     --mapM_ (buildNode False True Nothing) $ init body
     --buildOutput outputID $ last body
     undefined
-
-
-parseArgs :: Enumerated ae => Decl.FuncSig Tag e -> GBPass ae v m (Decl.FuncSig Tag e)
-parseArgs inputs = do
-    let numberedInputs = zip [0..] $ Pattern.args inputs
-    mapM_ parseArg numberedInputs
-    undefined
-
-
-parseArg :: Enumerated ae => (Int, Arg Tag e) -> GBPass ae v m ()
-parseArg (no, Arg pat _) = do
-    [p] <- buildPat pat
-    State.addToNodeMap p (inputsID, Port.Num no)
-
-
-withLabel :: Label Tag e -> Tag -> (Tag, Label Tag e)
-withLabel (Label (Tag.Empty {}) e) tag = (tag, Label tag e)
-withLabel (Label tag            e) _   = (tag, Label tag e)
-
---prepareInputsOutputs :: AST.ID -> AST.ID -> GBPass a e m (Node.ID, Node.ID)
---prepareInputsOutputs functionID funOutputID = do
---    let inputsID = - functionID
---        outputID = - funOutputID
---    State.insNode (inputsID, Node.Inputs)
---    State.insNode (outputID, Node.Outputs)
---    return (inputsID, outputID)
-
-
---finalize :: GBPass a v m (Graph a v, PropertyMap a v)
---finalize = do g  <- State.getGraph
---              pm <- State.getPropertyMap
---              return (g, pm)
-
-
-
 
 --buildOutput :: LunaExpr a v
 --            => Node.ID -> LExpr a v -> GBPass a v m ()
