@@ -2,25 +2,23 @@
 #                MATH and such
 #
 
-alias Point2F = Point2 Float
-alias HandleGUI = (Int, Float, Float)
-alias ControlPointGUI = (Point2F, HandleGUI, HandleGUI)
-alias CurveGUI = [ControlPointGUI]
+foreign haskell import Flowbox.Graphics.Mockup.Curves
 
-def curveGUI vertices:
-    vertices
+foreign haskell class HandleGUI:
+    NonLinearGUI:
+        weight, angle :: Float
+    VerticalGUI:
+        length :: Float
+    LinearGUI
 
-def controlPointGUI point handleIn handleOut:
-    (point, handleIn, handleOut)
+foreign haskell class ControlPointGUI x:
+    ControlPointGUI:
+        point :: Point2 x
+        handleIn, handleOut :: HandleGUI
 
-def nonLinearHandleGUI weight angle:
-    (0, weight, angle)
-
-def verticalHandleGUI length:
-    (1, length, 0.0)
-
-def linearHandleGUI:
-    (2, 0.0, 0.0)
+foreign haskell class CurveGUI x:
+    BezierCurveGUI:
+        vertices :: [ControlPointGUI x]
 
 foreign haskell def getValueAtCurve curve x:
     liftF2 getValueAtCurveGUI curve x

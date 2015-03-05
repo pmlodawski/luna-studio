@@ -16,8 +16,10 @@ import           Flowbox.Graphics.Composition.Merge (AlphaBlend (..))
 import qualified Flowbox.Graphics.Composition.Merge as Merge
 import           Flowbox.Graphics.Image.Image       (Image)
 import qualified Flowbox.Graphics.Image.Image       as Image
+import qualified Flowbox.Graphics.Image.Matte       as Matte
 import qualified Flowbox.Graphics.Shader.Matrix     as Shader
 import qualified Flowbox.Graphics.Shader.Rasterizer as Shader
+import           Flowbox.Graphics.Utils.Utils
 import           Flowbox.Prelude                    as P hiding (lookup)
 
 import           Flowbox.Graphics.Mockup.Basic
@@ -46,8 +48,8 @@ data MergeMode = Atop
            | HardLight AlphaBlend
            | Hypot AlphaBlend
            | In
-           | Mask
-           | Matte
+           | MergeMask
+           | MergeMatte
            -- | Max
            -- | Min
            | Minus AlphaBlend
@@ -66,8 +68,8 @@ data MergeMode = Atop
            | XOR
            deriving (Show)
 
-mergeLuna :: MergeMode -> Image -> Image -> Image
-mergeLuna mode img1 img2 = case mode of
+mergeLuna :: MergeMode -> Image -> Image -> Maybe (Matte.Matte Float) -> Image
+mergeLuna mode img1 img2 matte = case mode of
     Atop                           -> processMerge $ Merge.threeWayMerge             Merge.atop
     Average alphaBlend             -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.average
     ColorBurn alphaBlend           -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.colorBurn
@@ -84,8 +86,8 @@ mergeLuna mode img1 img2 = case mode of
     HardLight alphaBlend           -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.hardLight
     Hypot alphaBlend               -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.hypot
     In                             -> processMerge $ Merge.threeWayMerge             Merge.inBlend
-    Mask                           -> processMerge $ Merge.threeWayMerge             Merge.withMask
-    Matte                          -> processMerge $ Merge.threeWayMerge             Merge.matte
+    MergeMask                      -> processMerge $ Merge.threeWayMerge             Merge.withMask
+    MergeMatte                     -> processMerge $ Merge.threeWayMerge             Merge.matte
     -- Max                         -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.max
     -- Min                         -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.min
     Minus alphaBlend               -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.minus
@@ -103,7 +105,7 @@ mergeLuna mode img1 img2 = case mode of
     Under                          -> processMerge $ Merge.threeWayMerge             Merge.under
     XOR                            -> processMerge $ Merge.threeWayMerge             Merge.xor
     where processMerge f = img'
-              where (r, g, b, a) = f r1 g1 b1 r2 g2 b2 a1 a2
+              where (r, g, b, a) = f r1 g1 b1 r2 g2 b2 foregroundAlpha a2
                     view' = insertChannelFloats view [
                                 ("rgba.r", Shader.rasterizer $ r)
                               , ("rgba.g", Shader.rasterizer $ g)
@@ -115,6 +117,9 @@ mergeLuna mode img1 img2 = case mode of
           Grid width1 height1 = canvas r1
           Grid width2 height2 = canvas r2
           (r1, g1, b1, a1) = unsafeGetChannels img1 & over each (Shader.fromMatrix (A.Constant 0))
+          foregroundAlpha = case matte of
+              Just m -> let (h,w) = unpackAccDims (height1, width1) in invert <$> Matte.matteToDiscrete h w m
+              _      -> a1
           (r2, g2, b2, a2) = unsafeGetChannels img2 & over each (Shader.transform transformation . Shader.fromMatrix (A.Constant 0))
           transformation :: Point2 (Exp Int) -> Point2 (Exp Int)
           transformation pt = case pt of

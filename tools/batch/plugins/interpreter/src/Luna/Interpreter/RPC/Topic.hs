@@ -31,4 +31,5 @@ interpreterMemoryGetLimitsRequest             = "interpreter.memory.getlimits.re
 interpreterMemorySetLimitsRequest             = "interpreter.memory.setlimits.request"
 interpreterExitRequest                        = "interpreter.exit.request"
 
-rendererRenderRequest = "renderer.render.request"
+rendererRenderRequest     = "renderer.render.request"
+rendererRenderNodeRequest = "renderer.rendernode.request"

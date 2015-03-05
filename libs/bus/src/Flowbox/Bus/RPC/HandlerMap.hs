@@ -20,13 +20,13 @@ import           Control.Monad.Trans.State
 import           Data.Map                  as X
 import qualified Data.Map                  as Map
 
-import           Flowbox.Bus.Data.Message     (Message)
-import qualified Flowbox.Bus.Data.Message     as Message
-import           Flowbox.Bus.Data.Topic       (Topic)
-import           Flowbox.Bus.RPC.RPC          (RPC)
-import           Flowbox.Prelude              hiding (error)
+import           Flowbox.Bus.Data.Message                 (Message)
+import qualified Flowbox.Bus.Data.Message                 as Message
+import           Flowbox.Bus.Data.Topic                   (Topic)
+import           Flowbox.Bus.RPC.RPC                      (RPC)
+import           Flowbox.Prelude                          hiding (error)
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.Text.ProtocolBuffers as Proto
+import qualified Flowbox.Text.ProtocolBuffers             as Proto
 
 
 
@@ -35,7 +35,7 @@ logger = getLoggerIO $moduleName
 
 
 type Callback s m = (Proto.Serializable args, Proto.Serializable result)
-                  => (Topic -> Topic) -> (args -> RPC s m [result]) -> StateT s m [Message]
+                  => (Topic -> Topic) -> (args -> RPC s m ([result], [Message])) -> StateT s m [Message]
 
 
 type HandlerMap s m = Callback s m -> Map Topic (StateT s m [Message])

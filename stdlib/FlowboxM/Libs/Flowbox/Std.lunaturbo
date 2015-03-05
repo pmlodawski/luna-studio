@@ -1,4 +1,4 @@
-#@AllowOrphans
+#% +OrphanNames
 
 foreign haskell import qualified Data.Array.Accelerate as A
 
@@ -12,11 +12,11 @@ foreign haskell import qualified Data.Array.Accelerate as A
 #include Graphics/Image/View.lunaturbo
 
 #include Graphics/Image/Constants.lunaturbo
-#include Graphics/Image/ColorCorrection.lunaturbo
 #include Graphics/Image/Merge.lunaturbo
 #include Graphics/Image/Noise.lunaturbo
 #include Graphics/Image/Dithering.lunaturbo
 
+#include Graphics/Compo/ColorCorrect/ColorCorrection.lunaturbo
 #include Graphics/Compo/FilterTransform/FilterTransform.lunaturbo
 #include Graphics/Compo/Keying/Keying.lunaturbo
 
@@ -30,7 +30,19 @@ def time:
     0.0
 
 def render a path time:
-    a.save path #FIXME: add time to path, e.g when path is "test$F4.png" and frame is 17 save to path "test0017.png"
+    a.save (applyTime path time)
+
+foreign haskell def applyTime path time:
+    liftF2 applyTime time path
 
 def foo a:
 	a
+
+def load1 path gamma:
+    img = load path
+    img.gammaToLinear gamma
+
+def Image.save1 path gamma:
+    img = self.gammaFromLinear gamma
+    img.save path
+    self

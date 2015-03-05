@@ -14,6 +14,8 @@ module Flowbox.Graphics.Mockup.Filter (
     closeLuna,
     dilateLuna,
     ditherLuna,
+    EdgeOperator (..),
+    Orientation (..),
     edgeDetectLuna,
     erodeLuna,
     histEqLuna,
@@ -170,8 +172,30 @@ ditherLuna (fmap constantBoundaryWrapper -> boundary) bits table img = do
 --orderedDitherLuna :: Int -> Image -> Image
 --orderedDitherLuna bits = onEachChannel $ bayer bits
 
-edgeDetectLuna :: Matrix2 Float -> Image -> Image
-edgeDetectLuna edgeOperator img = img'
+data EdgeOperator = Prewitt Orientation
+                  | Sobel Orientation
+                  | Scharr Orientation
+                  | Laplace Int Int Float Float
+
+data Orientation = Vertical
+                 | Horizontal
+
+edgeDetectLuna :: EdgeOperator -> Image -> Image
+edgeDetectLuna edgeOperator img =
+    edgeDetectLuna' edgeOperatorMatrix img where
+        edgeOperatorMatrix = case edgeOperator of
+            Prewitt Vertical       -> M.transpose baseEdgeOperatorMatrix
+            Sobel Vertical         -> M.transpose baseEdgeOperatorMatrix
+            Scharr Vertical        -> M.transpose baseEdgeOperatorMatrix
+            _                      -> baseEdgeOperatorMatrix
+        baseEdgeOperatorMatrix = case edgeOperator of
+            Prewitt _              -> Filter.prewitt
+            Sobel _                -> Filter.sobel
+            Scharr _               -> Filter.scharr
+            Laplace x y cross side -> Filter.laplacian (variable cross) (variable side) (Grid (variable x) (variable y))
+
+edgeDetectLuna' :: Matrix2 Float -> Image -> Image
+edgeDetectLuna' edgeOperator img = img'
     where alphas = onShader (Stencil.stencil (+) (Shader.unsafeFromMatrix edgeOperator) (+) 0) img
           (r, g, b, _) = unsafeGetChannels alphas
           alphaSum = M.zipWith3 (\a b c -> a + b + c) r g b

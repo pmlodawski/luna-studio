@@ -19,7 +19,8 @@ Library
 
     Exposed-modules: `findmodules('src', '.*\.hs')`
 
-    Build-Depends:  base,
+    Build-Depends:  async,
+                    base,
                     bytestring,
                     containers,
                     cpphs,

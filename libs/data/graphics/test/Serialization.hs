@@ -17,7 +17,7 @@ import Flowbox.Graphics.Serialization ()
 
 import qualified Data.Array.Accelerate                        as A
 import           Flowbox.Data.Mode                            ()
-import           Flowbox.Data.Serialization                   (compute, toValue)
+import           Flowbox.Data.Serialization                   (toValue)
 import           Flowbox.Graphics.Composition.Generator.Shape
 import           Flowbox.Graphics.Shader.Matrix
 import           Flowbox.Graphics.Shader.Rasterizer
@@ -66,3 +66,4 @@ defocusSerialize blurSize = do
 
 main :: IO ()
 main = defocusSerialize 10
+
