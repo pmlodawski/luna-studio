@@ -43,25 +43,25 @@ basicColorCompositingFormula :: (A.Elt a, A.IsFloating a)
 basicColorCompositingFormula (Shader cnv background) (Shader _ alphaBackground) (Shader _ overlay) (Shader _ alphaOverlay) alphaBlend blend =
     Shader cnv $ \p ->
     let alphaResult p' = case alphaBlend of
-            Adobe  -> alphaOverlay p' `union` alphaBackground p'
-            Custom -> alphaOverlay p' `blend` alphaBackground p'
+            Adobe  -> alphaBackground p' `union` alphaOverlay p'
+            Custom -> alphaBackground p' `blend` alphaOverlay p'
     in (1 - (alphaOverlay p / alphaResult p)) * background p + (alphaOverlay p / alphaResult p) *
-        (U.invert (alphaBackground p) * overlay p + alphaBackground p * blend (overlay p) (background p))
+        (U.invert (alphaBackground p) * overlay p + alphaBackground p * blend (background p) (overlay p))
 
 -- FIXME [KL]: Bounding box now is taken from the overlay generator
 threeWayMerge :: (A.Elt a, A.IsFloating a)
               => ComplicatedBlendMode a
-              -> Shader x (A.Exp a) -- ^ A.R
-              -> Shader x (A.Exp a) -- ^ A.G
-              -> Shader x (A.Exp a) -- ^ A.B
               -> Shader x (A.Exp a) -- ^ B.R
               -> Shader x (A.Exp a) -- ^ B.G
               -> Shader x (A.Exp a) -- ^ B.B
-              -> Shader x (A.Exp a) -- ^ A.A
+              -> Shader x (A.Exp a) -- ^ A.R
+              -> Shader x (A.Exp a) -- ^ A.G
+              -> Shader x (A.Exp a) -- ^ A.B
               -> Shader x (A.Exp a) -- ^ B.A
+              -> Shader x (A.Exp a) -- ^ A.A
               -> (Shader x (A.Exp a), Shader x (A.Exp a), Shader x (A.Exp a), Shader x (A.Exp a))
-threeWayMerge blend ar ag ab br bg bb aa ba =
-    (merge ar aa br ba, merge ag aa bg ba, merge ab aa bb ba, aa)
+threeWayMerge blend br bg bb ar ag ab ba aa =
+    (merge br ba ar aa, merge bg ba ag aa, merge bb ba ab aa, ba)
     where merge bgnd abgnd ov aov = complicatedColorCompositingFormula bgnd abgnd ov aov blend
 
 -- FIXME [KL]: Bounding box now is taken from the aa' generator
@@ -129,7 +129,7 @@ conjointOver background alphaBackground overlay alphaOverlay =
 
 -- | A
 copy :: (A.Elt a, A.IsFloating a) => BlendMode a
-copy _ overlay  = overlay
+copy _ overlay = overlay
 
 -- | |A-B|
 difference :: (A.Elt a, A.IsFloating a) => BlendMode a
