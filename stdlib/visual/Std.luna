@@ -269,7 +269,7 @@ class ```AlphaBlend```:
     Adobe
     Custom
 
-def Image.merge background::Image foreground::Image mode::MergeMode -> Image
+def Image.merge background::Image foreground::Image mode::MergeMode mask::(Maybe (Matte Float))-> Image
 
 def perlin self::Std z::Float width::Int height::Int -> Image
 
