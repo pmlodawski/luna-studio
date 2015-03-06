@@ -28,8 +28,8 @@ data Tag = Empty { _idTag :: ID }
 makeLenses ''Tag
 
 
-mkNode :: Node.ID -> Tag -> Tag
-mkNode nodeID' tag = Node (Enum.id tag) nodeID' def
+mkNode :: Node.ID -> Position -> Tag -> Tag
+mkNode nodeID' position' tag' = Node (Enum.id tag') nodeID' position'
 
 
 instance Enumerated Tag where
