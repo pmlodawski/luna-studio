@@ -45,8 +45,10 @@ basicColorCompositingFormula (Shader cnv background) (Shader _ alphaBackground) 
     let alphaResult p' = case alphaBlend of
             Adobe  -> alphaBackground p' `union` alphaOverlay p'
             Custom -> alphaBackground p' `blend` alphaOverlay p'
-    in (1 - (alphaOverlay p / alphaResult p)) * background p + (alphaOverlay p / alphaResult p) *
-        (U.invert (alphaBackground p) * overlay p + alphaBackground p * blend (background p) (overlay p))
+    in  -- A.cond ((alphaResult p) A.==* 0)
+            ((1 - (alphaOverlay p / alphaResult p)) * background p + (alphaOverlay p / alphaResult p) *
+                    (U.invert (alphaBackground p) * overlay p + alphaBackground p * blend (background p) (overlay p)))
+            -- 0
 
 -- FIXME [KL]: Bounding box now is taken from the overlay generator -- FIXED [KR]: Canvas from background. 
 threeWayMerge :: (A.Elt a, A.IsFloating a)
