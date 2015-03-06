@@ -68,6 +68,7 @@ data MergeMode = Atop
            | XOR
            deriving (Show)
 
+-- img1 is background, img2 is foreground
 mergeLuna :: MergeMode -> Image -> Image -> Maybe (Matte.Matte Float) -> Image
 mergeLuna mode img1 img2 matte = case mode of
     Atop                           -> processMerge $ Merge.threeWayMerge             Merge.atop
@@ -88,8 +89,8 @@ mergeLuna mode img1 img2 matte = case mode of
     In                             -> processMerge $ Merge.threeWayMerge             Merge.inBlend
     MergeMask                      -> processMerge $ Merge.threeWayMerge             Merge.withMask
     MergeMatte                     -> processMerge $ Merge.threeWayMerge             Merge.matte
-    MergeMax alphaBlend                 -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.max
-    MergeMin alphaBlend                 -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.min
+    MergeMax alphaBlend            -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.max
+    MergeMin alphaBlend            -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.min
     Minus alphaBlend               -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.minus
     Multiply alphaBlend            -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.multiply
     Out                            -> processMerge $ Merge.threeWayMerge             Merge.out
@@ -105,7 +106,7 @@ mergeLuna mode img1 img2 matte = case mode of
     Under                          -> processMerge $ Merge.threeWayMerge             Merge.under
     XOR                            -> processMerge $ Merge.threeWayMerge             Merge.xor
     where processMerge f = img'
-              where (r, g, b, a) = f r1 g1 b1 r2 g2 b2 foregroundAlpha a2
+              where (r, g, b, a) = f r1 g1 b1 r2 g2 b2 a1 foregroundAlpha
                     view' = insertChannelFloats view [
                                 ("rgba.r", Shader.rasterizer $ r)
                               , ("rgba.g", Shader.rasterizer $ g)
@@ -118,10 +119,10 @@ mergeLuna mode img1 img2 matte = case mode of
           Grid width2 height2 = canvas r2
           (r1, g1, b1, a1) = unsafeGetChannels img1 & over each (Shader.fromMatrix (A.Constant 0))
           foregroundAlpha = case matte of
-              Just m -> let (h,w) = unpackAccDims (height1, width1) in invert <$> Matte.matteToDiscrete h w m
-              _      -> a1
-          (r2, g2, b2, a2) = unsafeGetChannels img2 & over each (Shader.transform transformation . Shader.fromMatrix (A.Constant 0))
-          transformation :: Point2 (Exp Int) -> Point2 (Exp Int)
-          transformation pt = case pt of
+              Just m -> let (h,w) = unpackAccDims (height1, width1) in Matte.matteToDiscrete h w m
+              _      -> a2
+          (r2, g2, b2, a2) = unsafeGetChannels img2 & over each (Shader.transform toBottomLeft. Shader.fromMatrix (A.Constant 0))
+          toBottomLeft :: Point2 (Exp Int) -> Point2 (Exp Int)
+          toBottomLeft pt = case pt of
                                     Point2 x y -> Point2 x (y-height1+height2)
 
