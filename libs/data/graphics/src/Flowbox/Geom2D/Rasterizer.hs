@@ -175,7 +175,7 @@ translateFeather :: Num a => Path a -> Path a -> Path a
 translateFeather (Path _ path) (Path isClosed feather) = Path isClosed $ zipWith process path feather
     where process (ControlPoint p _ _) (ControlPoint f hIn hOut) = ControlPoint (p+f) hIn hOut
 
-rasterizeMask :: (Real a, Fractional a, Show a) => Int -> Int -> Mask a -> Matrix2 Float
+rasterizeMask :: (Real a, Fractional a) => Int -> Int -> Mask a -> Matrix2 Float
 rasterizeMask w h (Mask pathRaw maybeFeather) =
     case maybeFeather of
         Nothing -> process path

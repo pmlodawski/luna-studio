@@ -29,10 +29,11 @@ import           Flowbox.Geom2D.Path
 import           Flowbox.Geom2D.Rasterizer
 import qualified Flowbox.Geom2D.Shape           as GShape
 import           Flowbox.Graphics.Image.Channel (Channel (..), ChannelData (..))
+import qualified Flowbox.Graphics.Image.Channel as Channel
 import           Flowbox.Graphics.Image.Image   (Image)
+import qualified Flowbox.Graphics.Image.Image   as Image
 import           Flowbox.Graphics.Image.Matte   (Matte(..))
 import qualified Flowbox.Graphics.Image.Matte   as Matte
-import           Flowbox.Graphics.Mockup.Basic
 import           Flowbox.Graphics.Shader.Shader (CartesianShader, Shader (..))
 import qualified Flowbox.Graphics.Shader.Shader as Shader
 import           Flowbox.Math.Matrix            (Matrix2)
@@ -40,6 +41,7 @@ import qualified Flowbox.Math.Matrix            as M
 import           Flowbox.Prelude                as P
 import           Luna.Target.HS.Host.Lift       (expandEl)
 
+import           Flowbox.Graphics.Mockup.Basic        as Basic
 
 
 rasterizeMaskLuna :: (Real a, Fractional a, a ~ Float) => Int -> Int -> Mask a -> Image

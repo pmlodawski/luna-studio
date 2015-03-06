@@ -397,6 +397,8 @@ def nopoint self::Std
 
 def rasterizeMask self::Std w::Int h::Int m::(Mask Float) -> Image
 
+def Image.roto mask::(Mask Float) format::Format premultiply::Bool -> Image
+
 # COLORS
 
 class ```RGBA``` a:

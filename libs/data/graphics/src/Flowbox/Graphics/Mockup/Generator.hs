@@ -9,16 +9,18 @@
 {-# LANGUAGE ViewPatterns     #-}
 
 module Flowbox.Graphics.Mockup.Generator (
+    Format(..),
     circularLuna,
     conicalLuna,
     constantLuna,
     diamondLuna,
+    formatMap,
     gradientLuna,
     linearShapeLuna,
     radialShapeLuna,
+    rotoLuna,
     squareLuna,
-    Format(..),
-    formatMap
+    unwrapFormat,
 ) where
 
 import qualified Data.Array.Accelerate as A
@@ -30,12 +32,16 @@ import Math.Metric               (Metric, MetricCoord)
 import Math.Space.Space          (Grid (..))
 import qualified Data.Map as Map
 
+import           Flowbox.Geom2D.Mask                             (Mask(..))
+import qualified Flowbox.Geom2D.Rasterizer                       as Rasterizer
 import qualified Flowbox.Graphics.Color.Color                    as Color
 import           Flowbox.Graphics.Composition.Generator.Gradient (Tick (..))
 import qualified Flowbox.Graphics.Composition.Generator.Gradient as Gradient
 import qualified Flowbox.Graphics.Composition.Generator.Raster   as Raster
 import qualified Flowbox.Graphics.Composition.Transform          as Transform
+import qualified Flowbox.Graphics.Image.Channel                  as Channel
 import           Flowbox.Graphics.Image.Image                    (Image)
+import qualified Flowbox.Graphics.Image.Image                    as Image
 import qualified Flowbox.Graphics.Shader.Rasterizer              as Shader
 import qualified Flowbox.Graphics.Shader.Sampler                 as Sampler
 import           Flowbox.Graphics.Shader.Shader                  (Shader (..))
@@ -43,8 +49,11 @@ import           Flowbox.Graphics.Utils.Accelerate               (variable)
 import qualified Flowbox.Graphics.Utils.Utils                    as U
 import           Flowbox.Prelude                                 as P hiding (lookup)
 
-import Flowbox.Graphics.Mockup.Basic
+import Flowbox.Graphics.Mockup.Basic        as Basic
+import Flowbox.Graphics.Mockup.ColorCorrect
+import Flowbox.Graphics.Mockup.Matte
 
+-- FIXME[KM -> *]: this should not be in mockup but in a designated module (separate one or the Composition.Generator), we might want to use it in pure haskell too
 data Format = PCVideo
             | NTSC
             | PAL
@@ -83,6 +92,10 @@ formatMap = Map.fromList ([(PCVideo, (640, 480))
                          --,(CustomFormat x y, ( x, y))
                          ] :: [(Format,(Int,Int))] )
 
+unwrapFormat :: Format -> (Int,Int)
+unwrapFormat (CustomFormat w h) = (w, h)
+unwrapFormat f = formatMap Map.! f
+
 constantLuna :: Format -> Color.RGBA Float -> Image
 constantLuna format {-- (variable -> width) (variable -> height) --} (fmap variable -> Color.RGBA r g b a) =
     case format of
@@ -104,9 +117,9 @@ constantLuna format {-- (variable -> width) (variable -> height) --} (fmap varia
         --Raster.Square512     -> makeConst 512 512
         --Raster.Square1K      -> makeConst 1024 1024
         --Raster.Square2K      -> makeConst 2048 2048
-        
+
         where   makeConst' = P.uncurry makeConst
-                makeConst (variable -> width) (variable -> height) = 
+                makeConst (variable -> width) (variable -> height) =
                     Raster.constant (A.index2 height width) chans
                 chans = [ ("rgba.r", r)
                       , ("rgba.g", g)
@@ -159,3 +172,15 @@ gradientLuna gradient (variable -> width) (variable -> height) = channelToImageR
 
           weightFun tickPos val1 _ val2 _ = U.mix tickPos val1 val2
           mapper = flip Gradient.colorMapper weightFun
+
+rotoLuna :: (Real a, Fractional a) => Image -> Mask a -> Format -> Bool -> Image
+rotoLuna input mask format premult = (if premult then premultiplyLuna else id) $
+    if Image.null input
+    then
+        let (w, h) = unwrapFormat format
+        in Rasterizer.matrixToImage $ Rasterizer.rasterizeMask w h mask
+    else
+        let Right sampleChan = Image.getFromPrimary "rgba.r" input
+            (w, h)           = Basic.unpackAccDims $ maybe (0, 0) Channel.size sampleChan
+            Right (Just a)   = Image.getFromPrimary "rgba.a" $ Rasterizer.matrixToImage $ Rasterizer.rasterizeMask w h mask
+        in Image.appendToPrimary a input
