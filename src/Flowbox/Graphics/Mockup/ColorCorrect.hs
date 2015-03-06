@@ -141,8 +141,8 @@ gammaLuna (fmap variable -> Color.RGBA r g b a) affectAlpha matte img =
                     False -> id
 
 -- [TODO] - zamaskować saturate
-saturateLuna :: Color.RGB Float -> Image -> Image
-saturateLuna (fmap variable -> Color.RGB saturationR saturationG saturationB) img = saturated
+saturateLuna :: Color.RGBA Float -> Image -> Image
+saturateLuna (fmap variable -> Color.RGBA saturationR saturationG saturationB _) img = saturated
     where rgb = unsafeGetRGB img
 
           (rSaturated, gSaturated, bSaturated) = CC.saturateRGB saturationR saturationG saturationB rgb
