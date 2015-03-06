@@ -14,6 +14,7 @@ message URM {
         message Request {
             required generated.proto.bus.Message undoAction = 1;
             required generated.proto.bus.Message redoAction = 2;
+            required int32 projectID = 3;
         }
         message Status {
             required Request request = 1;
@@ -25,6 +26,7 @@ message URM {
         message Request {
             repeated generated.proto.bus.Message undoActions = 1;
             required generated.proto.bus.Message redoActions = 2;
+            required int32 projectID = 3;
         }
         message Status {
             required Request request = 1;
@@ -33,7 +35,9 @@ message URM {
     }
     
     message Undo {
-        message Request { }
+        message Request { 
+            required int32 projectID = 1;
+        }
         message Status {
             required Request request = 1;
             required bool    success = 2;
@@ -41,7 +45,9 @@ message URM {
     }
 
     message Redo {
-        message Request { }
+        message Request { 
+            required int32 projectID = 1;
+        }
         message Status {
             required Request request = 1;
             required bool    success = 2;
