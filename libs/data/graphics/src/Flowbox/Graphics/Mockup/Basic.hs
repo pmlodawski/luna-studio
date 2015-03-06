@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE DeriveFunctor       #-}
 {-# LANGUAGE LambdaCase          #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE PatternSynonyms     #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies        #-}
@@ -22,7 +23,6 @@ module Flowbox.Graphics.Mockup.Basic (
     getChannelFromPrimaryLuna,
     getChannelLuna,
     insertChannelFloats,
-    liftF13,
     loadImageLuna,
     multisampleChannelsLuna,
     onEach,
@@ -79,6 +79,7 @@ import           Flowbox.Math.Matrix                   as M
 import           Flowbox.Prelude                       as P hiding (lookup, view)
 
 import Control.PolyApplicative ((<<*>>))
+import Data.TupleList          (curryTuple8, curryTuple9)
 import Luna.Target.HS          (Pure (..), Safe (..), Value (..), autoLift, autoLift1, fromValue, val)
 
 
@@ -454,4 +455,5 @@ liftF13 fun a b c d e f g h i j k l m = do
     m' <- m
     val fun <<*>> a' <<*>> b' <<*>> c' <<*>> d' <<*>> e' <<*>> f'
             <<*>> g' <<*>> h' <<*>> i' <<*>> j' <<*>> k' <<*>> l' <<*>> m'
+
 

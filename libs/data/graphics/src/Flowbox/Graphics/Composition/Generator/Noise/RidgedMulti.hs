@@ -21,7 +21,7 @@ import Flowbox.Prelude
 
 
 ridgedMultiNoise :: (A.Elt a, A.IsFloating a, a ~ Float) => A.Exp a -> ContinuousShader (A.Exp a)
-ridgedMultiNoise z = unitShader $ runShader $ ridgedMultiGen Standard 1.0 2.0 6 30 0 1.0 1.0 2.0 z
+ridgedMultiNoise z = ridgedMultiGen Standard 1.0 2.0 6 30 0 1.0 1.0 2.0 z
 
 ridgedMultiGen :: forall a. (A.Elt a, A.IsFloating a, a ~ Float) =>
                   Quality -> A.Exp a -> A.Exp a ->
