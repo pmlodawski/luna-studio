@@ -201,8 +201,8 @@ class ```EdgeOperator```:
     Prewitt: dir :: Orientation
     Sobel: dir :: Orientation
     Scharr: dir :: Orientation
-    Laplace: x, y :: Int
-             cross, side :: Float
+    Laplace  # : x, y :: Int
+             #   cross, side :: Float
 
 def Image.edgeDetect self::Image edgeOperator::EdgeOperator -> Image
 
@@ -248,8 +248,8 @@ class ```MergeMode```:
     In
     MergeMask
     MergeMatte
-    Max: ab :: AlphaBlend
-    Min: ab :: AlphaBlend
+    # Max: ab :: AlphaBlend
+    # Min: ab :: AlphaBlend
     Minus: ab :: AlphaBlend
     Multiply: ab :: AlphaBlend
     Out
