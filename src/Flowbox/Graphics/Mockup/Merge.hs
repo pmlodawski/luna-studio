@@ -119,7 +119,7 @@ mergeLuna mode img1 img2 matte = case mode of
           Grid width2 height2 = canvas r2
           (r1, g1, b1, a1) = unsafeGetChannels img1 & over each (Shader.fromMatrix (A.Constant 0))
           foregroundAlpha = case matte of
-              Just m -> let (h,w) = unpackAccDims (height1, width1) in invert <$> Matte.matteToDiscrete h w m
+              Just m -> let (h,w) = unpackAccDims (height1, width1) in {-- invert <$> --} Matte.matteToDiscrete h w m
               _      -> a1
           (r2, g2, b2, a2) = unsafeGetChannels img2 & over each (Shader.transform toBottomLeft . Shader.fromMatrix (A.Constant 0))
           toBottomLeft :: Point2 (Exp Int) -> Point2 (Exp Int)
