@@ -115,5 +115,13 @@ instance ToTuple (RTuple (t1,(t2,()))) (t1,t2) where toTuple (RTuple (t1,(t2,())
 instance ToTuple (RTuple (t1,(t2,(t3,())))) (t1,t2,t3) where toTuple (RTuple (t1,(t2,(t3,())))) = (t1,t2,t3)
 instance ToTuple (RTuple (t1,(t2,(t3,(t4,()))))) (t1,t2,t3,t4) where toTuple (RTuple (t1,(t2,(t3,(t4,()))))) = (t1,t2,t3,t4)
 instance ToTuple (RTuple (t1,(t2,(t3,(t4,(t5,())))))) (t1,t2,t3,t4,t5) where toTuple (RTuple (t1,(t2,(t3,(t4,(t5,())))))) = (t1,t2,t3,t4,t5)
+instance ToTuple (RTuple (t1,(t2,(t3,(t4,(t5,(t6,()))))))) (t1,t2,t3,t4,t5,t6) where toTuple (RTuple (t1,(t2,(t3,(t4,(t5,(t6,()))))))) = (t1,t2,t3,t4,t5,t6)
+instance ToTuple (RTuple (t1,(t2,(t3,(t4,(t5,(t6,(t7,())))))))) (t1,t2,t3,t4,t5,t6,t7) where toTuple (RTuple (t1,(t2,(t3,(t4,(t5,(t6,(t7,())))))))) = (t1,t2,t3,t4,t5,t6,t7)
+instance ToTuple (RTuple (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,()))))))))) (t1,t2,t3,t4,t5,t6,t7,t8) where toTuple (RTuple (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,()))))))))) = (t1,t2,t3,t4,t5,t6,t7,t8)
+instance ToTuple (RTuple (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,(t9,())))))))))) (t1,t2,t3,t4,t5,t6,t7,t8,t9) where toTuple (RTuple (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,(t9,())))))))))) = (t1,t2,t3,t4,t5,t6,t7,t8,t9)
+instance ToTuple (RTuple (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,(t9,(t10,()))))))))))) (t1,t2,t3,t4,t5,t6,t7,t8,t9,t10) where toTuple (RTuple (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,(t9,(t10,()))))))))))) = (t1,t2,t3,t4,t5,t6,t7,t8,t9,t10)
+instance ToTuple (RTuple (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,(t9,(t10,(t11,())))))))))))) (t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11) where toTuple (RTuple (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,(t9,(t10,(t11,())))))))))))) = (t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11)
+instance ToTuple (RTuple (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,(t9,(t10,(t11,(t12,()))))))))))))) (t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12) where toTuple (RTuple (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,(t9,(t10,(t11,(t12,()))))))))))))) = (t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12)
+
 
 

@@ -21,7 +21,8 @@ spec = do
             describe testName $ do
                 describe "Should save ok image" $ do
 
-                    let actualImage = liftM( mergeLuna Over (conicalLuna 1200 1200) ) (loadImageLuna "./test/samples/lena.png") -- (constantLuna PCVideo (RGBA 0.3 0.4 0.9 0.6))    
+                    let actualImage = liftM( mergeLuna Over (conicalLuna 1200 1200) ) (loadImageLuna "./test/samples/lena.png") Nothing -- (constantLuna PCVideo (RGBA 0.3 0.4 0.9 0.6))    
+                    --let actualImage = mergeLuna Over (conicalLuna 1000 1200) (constantLuna PCVideo (RGBA 0.3 0.4 0.5 0.6)) Nothing
                     -- let  expectedImage = getDefaultTestPic specPath testName
                     it "in test" $ do
                         pending

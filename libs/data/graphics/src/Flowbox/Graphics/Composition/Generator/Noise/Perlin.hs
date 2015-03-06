@@ -21,7 +21,7 @@ import Flowbox.Prelude
 
 
 perlinNoise :: (A.Elt a, A.IsFloating a, a ~ A.Plain a, A.Lift A.Exp a) => A.Exp a -> CartesianShader (A.Exp a) (A.Exp a)
-perlinNoise z = unitShader $ runShader $ perlinGen Standard 1.0 2.0 6 0.5 0 z
+perlinNoise z = perlinGen Standard 1.0 2.0 6 0.5 0 z
 
 perlinGen :: forall a. (A.Elt a, A.IsFloating a, a ~ A.Plain a, A.Lift A.Exp a) =>
              Quality -> A.Exp a -> A.Exp a ->

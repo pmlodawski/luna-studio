@@ -139,7 +139,7 @@ instance Comparable Image ImageMetric where
                             [maxDiff] = M.toList AC.run maxDif
 
 
-                            diff = mergeLuna (Difference Adobe) actualImage expectedImage
+                            diff = mergeLuna (Difference Adobe) actualImage expectedImage Nothing
 
 
                             finMsg = "wrong result saved to"++resultPath++"\ndiff image saved to "++diffPath ++ "\nmax pixel-wise difference: " ++ (show $ maxDiff)   
