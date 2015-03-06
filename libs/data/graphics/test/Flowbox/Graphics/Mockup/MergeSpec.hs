@@ -35,8 +35,8 @@ spec = do
                            , In
                            , MergeMask
                            , MergeMatte
-                           -- ,- | Max
-                           -- ,- | Min
+                           , Max Custom
+                           , Min Custom
                            , Minus Custom
                            , Multiply Custom
                            , Out
@@ -55,15 +55,12 @@ spec = do
             describe testName $ do
                 describe "Should save ok images" $ do -- map ( \x ->
 
-                    let actualImages = map (\x -> liftM3 (mergeLuna x) (loadImageLuna "./test/samples/edge/desert.png")  (loadImageLuna "./test/samples/lena.png") (return Nothing) ) modes-- (constantLuna PCVideo (RGBA 0.3 0.4 0.9 0.6))    
-                    --let actualImage = liftM( mergeLuna Over (conicalLuna 1200 1200) ) (loadImageLuna "./test/samples/lena.png") Nothing
-                    --let actualImage = liftM( mergeLuna Over (conicalLuna 1200 1200) ) (loadImageLuna "./test/samples/lena.png") Nothing
-                    --let actualImage = liftM( mergeLuna Over (conicalLuna 1200 1200) ) (loadImageLuna "./test/samples/lena.png") Nothing
+                    let actualImages = map (\x -> liftM3 (mergeLuna x) (loadImageLuna "./test/samples/edge/desert.png")  (loadImageLuna "/home/chris/globe.png") (return Nothing) ) modes-- (constantLuna PCVideo (RGBA 0.3 0.4 0.9 0.6))    
                     --let actualImage = liftM( mergeLuna Over (conicalLuna 1200 1200) ) (loadImageLuna "./test/samples/lena.png") Nothing
                     --let actualImage = mergeLuna Over (conicalLuna 1000 1200) (constantLuna PCVideo (RGBA 0.3 0.4 0.5 0.6)) Nothing
                     -- let  expectedImage = getDefaultTestPic specPath testName
                     it "in test" $ do
-                        --pending
+                        pending
                         (zipWithM_ (\x y -> ((nameSave (show x)) =<< y)) modes actualImages) `shouldReturn` ()
                         -- rightReturnShouldBeCloseTo testPath PixelWise actualImage expectedImage
                     
