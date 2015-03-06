@@ -11,6 +11,13 @@
 #define _rtup2(t1,t2)       (t1,(t2,()))
 #define _rtup3(t1,t2,t3)    (t1,(t2,(t3,())))
 #define _rtup4(t1,t2,t3,t4) (t1,(t2,(t3,(t4,()))))
+#define _rtup5(t1,t2,t3,t4,t5) (t1,_rtup4(t2,t3,t4,t5))
+#define _rtup6(t1,t2,t3,t4,t5,t6) (t1,_rtup5(t2,t3,t4,t5,t6))
+#define _rtup7(t1,t2,t3,t4,t5,t6,t7) (t1,_rtup6(t2,t3,t4,t5,t6,t7))
+#define _rtup8(t1,t2,t3,t4,t5,t6,t7,t8) (t1,_rtup7(t2,t3,t4,t5,t6,t7,t8))
+#define _rtup9(t1,t2,t3,t4,t5,t6,t7,t8,t9) (t1,_rtup8(t2,t3,t4,t5,t6,t7,t8,t9))
+#define _rtup10(t1,t2,t3,t4,t5,t6,t7,t8,t9,t10) (t1,_rtup9(t2,t3,t4,t5,t6,t7,t8,t9,t10))
+#define _rtup11(t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11) (t1,_rtup10(t2,t3,t4,t5,t6,t7,t8,t9,t10,t11))
 
 
 #define _rtupX0()            (RTuple ())

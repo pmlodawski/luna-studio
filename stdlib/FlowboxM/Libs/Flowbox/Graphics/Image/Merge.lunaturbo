@@ -23,8 +23,8 @@ foreign haskell class MergeMode:
     In
     MergeMask
     MergeMatte
-    # Max
-    # Min
+    MergeMax: ab :: AlphaBlend
+    MergeMin: ab :: AlphaBlend
     Minus: ab :: AlphaBlend
     Multiply: ab :: AlphaBlend
     Out
