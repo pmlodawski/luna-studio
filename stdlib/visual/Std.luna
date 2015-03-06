@@ -248,8 +248,8 @@ class ```MergeMode```:
     In
     MergeMask
     MergeMatte
-    # Max: ab :: AlphaBlend
-    # Min: ab :: AlphaBlend
+    MergeMax: ab :: AlphaBlend
+    MergeMin: ab :: AlphaBlend
     Minus: ab :: AlphaBlend
     Multiply: ab :: AlphaBlend
     Out

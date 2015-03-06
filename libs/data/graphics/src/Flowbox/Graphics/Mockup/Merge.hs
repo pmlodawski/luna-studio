@@ -50,8 +50,8 @@ data MergeMode = Atop
            | In
            | MergeMask
            | MergeMatte
-           -- | Max AlphaBlend
-           -- | Min AlphaBlend
+           | MergeMax AlphaBlend
+           | MergeMin AlphaBlend
            | Minus AlphaBlend
            | Multiply AlphaBlend
            | Out
@@ -88,8 +88,8 @@ mergeLuna mode img1 img2 matte = case mode of
     In                             -> processMerge $ Merge.threeWayMerge             Merge.inBlend
     MergeMask                      -> processMerge $ Merge.threeWayMerge             Merge.withMask
     MergeMatte                     -> processMerge $ Merge.threeWayMerge             Merge.matte
-    -- Max alphaBlend                 -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.max
-    -- Min alphaBlend                 -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.min
+    MergeMax alphaBlend                 -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.max
+    MergeMin alphaBlend                 -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.min
     Minus alphaBlend               -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.minus
     Multiply alphaBlend            -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.multiply
     Out                            -> processMerge $ Merge.threeWayMerge             Merge.out
