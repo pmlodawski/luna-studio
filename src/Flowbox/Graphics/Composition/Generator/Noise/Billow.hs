@@ -21,7 +21,7 @@ import Flowbox.Prelude
 
 
 billowNoise :: (A.Elt a, A.IsFloating a, a ~ A.Plain a, A.Lift A.Exp a) => A.Exp a -> CartesianShader (A.Exp a) (A.Exp a)
-billowNoise z = unitShader $ runShader $ billowGen Standard 1.0 2.0 6 0.5 0 z
+billowNoise z = billowGen Standard 1.0 2.0 6 0.5 0 z
 
 billowGen :: forall a. (A.Elt a, A.IsFloating a, a ~ A.Plain a, A.Lift A.Exp a) =>
              Quality -> A.Exp a -> A.Exp a ->
