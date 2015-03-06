@@ -87,42 +87,47 @@ expr2graph decl@(Label l (Decl.Func (Decl.FuncDecl _ sig output body))) = do
     State.initFreeNodeID decl
     State.insNode (inputsID, Node.Inputs)
     State.insNode (outputID, Node.Outputs)
-    sig'  <- parseArgs sig
-    body' <- parseBody body
+    sig'  <- buildArgs sig
+    body' <- buildBody body
     decl' <- State.saveFreeNodeID decl
     (,) <$> return (decl' & Label.element . Decl.funcDecl . Decl.funcDeclSig  .~ sig'
                           & Label.element . Decl.funcDecl . Decl.funcDeclBody .~ body')
         <*> State.getGraph
 
 
-parseArgs :: Enumerated ae => Decl.FuncSig Tag e -> GBPass ae v m (Decl.FuncSig Tag e)
-parseArgs inputs@(Pattern.NamePat prefix base segmentList) = flip evalStateT (0::Int) $ do
+buildArgs :: Enumerated ae => Decl.FuncSig Tag e -> GBPass ae v m (Decl.FuncSig Tag e)
+buildArgs inputs@(Pattern.NamePat prefix base segmentList) = flip evalStateT (0::Int) $ do
     prefix' <- case prefix of
         Nothing -> return Nothing
-        Just pr -> Just <$> parseArg pr
+        Just pr -> Just <$> buildArg pr
     base'        <- parseSegment base
     segmentList' <- mapM parseSegment segmentList
     return $ Pattern.NamePat prefix base segmentList'
 
 
-parseSegment (Pattern.Segment base args) = 
-    Pattern.Segment base <$> mapM parseArg args
+parseSegment (Pattern.Segment base args) =
+    Pattern.Segment base <$> mapM buildArg args
 
 
-parseArg (Arg pat val) = do
+buildArg (Arg pat val) = do
     no <- get
     put $ no + 1
-    (i, pat') <- lift $ State.getNodeID pat
+    (i, _, pat') <- lift $ State.getNodeInfo pat
     lift $ State.addToNodeMap i (inputsID, Port.Num no)
     return $ Arg pat' val
 
 
-parseBody :: [TExpr v] -> GBPass ae v m [TExpr v]
-parseBody []   = State.connectMonadic outputID >> return []
-parseBody body = do
+buildBody :: [TExpr v] -> GBPass ae v m [TExpr v]
+buildBody []   = State.connectMonadic outputID >> return []
+buildBody body = do
+    body' <- mapM (flip buildNode Nothing) (init body)
     --mapM_ (buildNode False True Nothing) $ init body
-    --buildOutput outputID $ last body
-    undefined
+    let output' = last body
+    --output' <- buildOutput outputID $ last body
+    return $ body' ++ [output']
+
+
+
 
 --buildOutput :: LunaExpr a v
 --            => Node.ID -> LExpr a v -> GBPass a v m ()
@@ -147,6 +152,18 @@ parseBody body = do
 --buildApp        = undefined
 --buildAssignment = undefined
 -------------------
+
+buildNode lexpr outputName = case unwrap lexpr of
+    Expr.Assignment dst src   -> do src' <- buildNode src (Just undefined)
+                                    return $ Label tag $ Expr.Assignment dst src'
+    Expr.Lit lit              -> do (nodeID, position, lexpr') <- State.getNodeInfo lexpr
+                                    undefined
+
+
+    --Expr.App exprApp
+    where
+        tag   = lexpr ^. Label.label
+
 
 
 --buildNode :: LunaExpr a v
@@ -237,14 +254,14 @@ parseBody body = do
 --        genName nodeExpr i = Maybe.fromMaybe (OutputName.generate nodeExpr i) outName
 
 
-----isNativeVar (Expr.NativeVar {}) = True
-----isNativeVar _                   = False
+--isNativeVar (Expr.NativeVar {}) = True
+--isNativeVar _                   = False
 
 
-----buildArg :: Bool -> Bool -> Maybe String -> Expr -> GBPass (Maybe AST.ID)
-----buildArg astFolded monadicBind outName lexpr = case lexpr of
-----    Expr.Wildcard _ -> return Nothing
-----    _               -> Just <$> buildNode astFolded monadicBind outName lexpr
+--buildArg :: Bool -> Bool -> Maybe String -> Expr -> GBPass (Maybe AST.ID)
+--buildArg astFolded monadicBind outName lexpr = case lexpr of
+--    Expr.Wildcard _ -> return Nothing
+--    _               -> Just <$> buildNode astFolded monadicBind outName lexpr
 
 
 --buildAndConnectMany :: Bool -> Bool -> Maybe String -> AST.ID -> [LExpr a v] -> Int -> GBPass a v m ()
@@ -260,26 +277,26 @@ parseBody body = do
 --        Just srcID -> State.connect srcID dstID dstPort
 
 
-----isRealPat :: Pat -> Expr -> GBPass Bool
-----isRealPat pat dst = do
-----    isBound <- Maybe.isJust <$> State.gvmNodeMapLookUp (dst ^. Expr.id)
-----    return $ case (pat, dst, isBound) of
-----        (Pat.Var {}, Expr.Var {}, True) -> True
-----        (Pat.Var {}, _          , _   ) -> False
-----        _                               -> True
+--isRealPat :: Pat -> Expr -> GBPass Bool
+--isRealPat pat dst = do
+--    isBound <- Maybe.isJust <$> State.gvmNodeMapLookUp (dst ^. Expr.id)
+--    return $ case (pat, dst, isBound) of
+--        (Pat.Var {}, Expr.Var {}, True) -> True
+--        (Pat.Var {}, _          , _   ) -> False
+--        _                               -> True
 
 
-buildPat :: (Enumerated ae, Enumerated ad) => LPat ad -> GBPass ae v m [AST.ID]
-buildPat p = case unwrap p of
-    Pat.Var      _      -> return [i]
-    Pat.Lit      _      -> return [i]
-    Pat.Tuple    items  -> List.concat <$> mapM buildPat items
-    Pat.Con      _      -> return [i]
-    Pat.App      _ args -> List.concat <$> mapM buildPat args
-    Pat.Typed    pat _  -> buildPat pat
-    Pat.Wildcard        -> return [i]
-    Pat.Grouped  pat    -> buildPat pat
-    where i = p ^. Label.label . to Enum.id
+--buildPat :: (Enumerated ae, Enumerated ad) => LPat ad -> GBPass ae v m [AST.ID]
+--buildPat p = case unwrap p of
+--    Pat.Var      _      -> return [i]
+--    Pat.Lit      _      -> return [i]
+--    Pat.Tuple    items  -> List.concat <$> mapM buildPat items
+--    Pat.Con      _      -> return [i]
+--    Pat.App      _ args -> List.concat <$> mapM buildPat args
+--    Pat.Typed    pat _  -> buildPat pat
+--    Pat.Wildcard        -> return [i]
+--    Pat.Grouped  pat    -> buildPat pat
+--    where i = p ^. Label.label . to Enum.id
 
 ----showNative :: Expr -> String
 ----showNative native = case native of

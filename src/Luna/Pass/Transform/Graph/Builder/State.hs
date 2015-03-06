@@ -106,22 +106,19 @@ initFreeNodeID decl = case decl ^. Label.label of
 saveFreeNodeID :: TDecl v -> GBPass a e m (TDecl v)
 saveFreeNodeID (Label tag decl) = do
     freeNodeID <- getNextFreeNodeID
-    return (Label (Tag.mkNode freeNodeID tag) decl)
+    return (Label (Tag.mkNode freeNodeID def tag) decl)
 
-getNodeID :: Label Tag e -> GBPass a e1 m (Node.ID, Label Tag e)
-getNodeID labeled@(Label tag e) = case tag of
-    Tag.Node _ nodeID _ -> return (nodeID, labeled)
+getNodeInfo :: Label Tag e -> GBPass a e1 m (Node.ID, Position, Label Tag e)
+getNodeInfo labeled@(Label tag e) = case tag of
+    Tag.Node _ nodeID position -> return (nodeID, position, labeled)
     Tag.Empty {}        -> do
         freeNodeID <- getNextFreeNodeID
         setNextFreeNodeID $ freeNodeID + 1
-        return (freeNodeID, Label (Tag.mkNode freeNodeID tag) e)
+        let pos  = def
+            tag' = Tag.mkNode freeNodeID def tag
+        return (freeNodeID, pos, Label tag' e)
 
 ---------------------------------------------------------------------------
-
-
-withLabel :: Label Tag e -> Tag -> (Tag, Label Tag e)
-withLabel (Label (Tag.Empty {}) e) tag = (tag, Label tag e)
-withLabel (Label tag            e) _   = (tag, Label tag e)
 
 
 insNode :: (Node.ID, Position -> Node a e) -> GBPass a e m ()
