@@ -35,8 +35,8 @@ spec = do
                            , In
                            , MergeMask
                            , MergeMatte
-                           , Max Custom
-                           , Min Custom
+                           -- , Max Custom
+                           -- , Min Custom
                            , Minus Custom
                            , Multiply Custom
                            , Out

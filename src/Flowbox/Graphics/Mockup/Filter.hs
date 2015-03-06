@@ -175,7 +175,7 @@ ditherLuna (fmap constantBoundaryWrapper -> boundary) bits table img = do
 data EdgeOperator = Prewitt Orientation
                   | Sobel Orientation
                   | Scharr Orientation
-                  | Laplace Int Int Float Float
+                  | Laplace
 
 data Orientation = Vertical
                  | Horizontal
@@ -189,10 +189,10 @@ edgeDetectLuna edgeOperator img =
             Scharr Vertical        -> M.transpose baseEdgeOperatorMatrix
             _                      -> baseEdgeOperatorMatrix
         baseEdgeOperatorMatrix = case edgeOperator of
-            Prewitt _              -> Filter.prewitt
-            Sobel _                -> Filter.sobel
-            Scharr _               -> Filter.scharr
-            Laplace x y cross side -> Filter.laplacian (variable cross) (variable side) (Grid (variable x) (variable y))
+            Prewitt _ -> Filter.prewitt
+            Sobel _   -> Filter.sobel
+            Scharr _  -> Filter.scharr
+            Laplace   -> Filter.laplacian 1 1 (Grid 1 1)
 
 edgeDetectLuna' :: Matrix2 Float -> Image -> Image
 edgeDetectLuna' edgeOperator img = img'
