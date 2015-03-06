@@ -115,6 +115,7 @@ nodeAdd request@(NodeAdd.Request tnode tbc tlibID tprojectID astID) undoTopic = 
              , makeMsgArr (Register.Request
                 (fun Topic.projectLibraryAstFunctionGraphNodeRemoveRequest $ NodeRemove.Request (Sequence.singleton $ encodeP newNodeID) tbc tlibID tprojectID astID)
                 (fun Topic.projectLibraryAstFunctionGraphNodeAddRequest $ NodeAdd.Request (encode (mapID context Bimap.lookup newNodeID, node)) tbc tlibID tprojectID astID)
+                tprojectID
                           ) undoTopic
              )
 
@@ -147,8 +148,9 @@ nodeModifyInPlace request@(NodeModifyInPlace.Request tnode tbc tlibID tprojectID
 
     return $ ( [NodeModifyInPlace.Update (newRequest newID) updateNo]
              , makeMsgArr (Register.Request 
-                (fun Topic.projectLibraryAstFunctionGraphNodeModifyinplaceRequest $ NodeModifyInPlace.Request oldNode tbc tlibID tprojectID astID)
-                (fun Topic.projectLibraryAstFunctionGraphNodeModifyinplaceRequest $ newRequest originID)
+                            (fun Topic.projectLibraryAstFunctionGraphNodeModifyinplaceRequest $ NodeModifyInPlace.Request oldNode tbc tlibID tprojectID astID)
+                            (fun Topic.projectLibraryAstFunctionGraphNodeModifyinplaceRequest $ newRequest originID)
+                            tprojectID
                           ) undoTopic
              )
 
@@ -178,10 +180,11 @@ nodeRemove (NodeRemove.Request tnodeIDs tbc tlibID tprojectID astID) undoTopic =
 
     return ( [NodeRemove.Update (updatedRequest $ encodeP newIDs) updateNo]
            , makeMsgArr (RegisterMultiple.Request
-              (  (Sequence.fromList $ map (\node -> fun Topic.projectLibraryAstFunctionGraphNodeAddRequest $ NodeAdd.Request node tbc tlibID tprojectID astID) $ oldNodes)
-              >< (Sequence.fromList $ map (\(srcID, dstID, EdgeView srcPorts dstPorts) -> fun Topic.projectLibraryAstFunctionGraphConnectRequest $ Connect.Request (encodeP $ originID srcID) (encodeP srcPorts) (encodeP $ originID dstID) (encodeP dstPorts) tbc tlibID tprojectID astID) removed)
-              )
-              (fun Topic.projectLibraryAstFunctionGraphNodeRemoveRequest $ updatedRequest $ encodeP originIDs)
+                            (  (Sequence.fromList $ map (\node -> fun Topic.projectLibraryAstFunctionGraphNodeAddRequest $ NodeAdd.Request node tbc tlibID tprojectID astID) $ oldNodes)
+                            >< (Sequence.fromList $ map (\(srcID, dstID, EdgeView srcPorts dstPorts) -> fun Topic.projectLibraryAstFunctionGraphConnectRequest $ Connect.Request (encodeP $ originID srcID) (encodeP srcPorts) (encodeP $ originID dstID) (encodeP dstPorts) tbc tlibID tprojectID astID) removed)
+                            )
+                            (fun Topic.projectLibraryAstFunctionGraphNodeRemoveRequest $ updatedRequest $ encodeP originIDs)
+                            tprojectID
                         ) undoTopic
            )
 
@@ -207,6 +210,7 @@ connect request@(Connect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tli
     return $ ( [Connect.Update (newRequest newSID newDID) updateNo]
              , makeMsgArr (Register.Request (fun Topic.projectLibraryAstFunctionGraphDisconnectRequest $ Disconnect.Request (encodeP originSID) tsrcPort (encodeP originDID) tdstPort tbc tlibID tprojectID astID)
                                             (fun Topic.projectLibraryAstFunctionGraphConnectRequest $ newRequest originSID originDID)
+                                            tprojectID
                           ) undoTopic
              )
 
@@ -225,6 +229,7 @@ disconnect request@(Disconnect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort t
              , makeMsgArr (Register.Request
                             (fun Topic.projectLibraryAstFunctionGraphConnectRequest $ Connect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibID tprojectID astID)
                             (fun Topic.projectLibraryAstFunctionGraphDisconnectRequest request)
+                            tprojectID
                           ) undoTopic
              )
 
