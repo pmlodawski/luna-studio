@@ -9,10 +9,10 @@ foreign haskell class Image
 foreign haskell def emptyImage:
     liftF0 Image.empty
 
-foreign haskell def load path:
+foreign haskell def readRaw path:
     autoLift1 realReadLuna path
 
-foreign haskell def Image.save path:
+foreign haskell def Image.saveRaw path:
     autoLift2 saveImageLuna path self
 
 foreign haskell def Image.view name:

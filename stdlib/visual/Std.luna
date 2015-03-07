@@ -23,6 +23,10 @@ class ```Either``` a b:
 
 def Char.toString self::Char -> String
 
+# STRING
+
+def String.++ self::String str::String -> String
+
 # INT
 
 def Int.+ self::Int a::Int -> Int
@@ -93,13 +97,11 @@ class Image
 
 def emptyImage self::Std -> Image
 
-def load self::Std path::LoadPath -> Image
+def read self::Std path::LoadPath gamma::(Gamma Float) -> Image
 
-def load1 self::Std path::LoadPath gamma::(Gamma Float) -> Image
+def readSeq self::Std path::LoadPath gamma::(Gamma Float) frame::Int -> Image
 
-def Image.save self::Image path::SavePath -> Image
-
-def Image.save1 self::Image path::SavePath gamma::(Gamma Float) -> Image
+def Image.save self::Image path::SavePath gamma::(Gamma Float) -> Image
 
 # def Image.defocus self::Image radius::Int
 
@@ -434,6 +436,7 @@ def constant self::Std format::Format color::Color -> Image
 class ```Gamma``` a:
     Gamma: a :: Float
     Cineon
+    Linear
     LStar
     REDLog
     SLog
