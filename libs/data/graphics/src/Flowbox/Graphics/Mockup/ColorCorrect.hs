@@ -214,7 +214,7 @@ unpremultiplyLuna :: Image -> Image
 unpremultiplyLuna img = (/) `withAlpha` img
 
 invertLuna :: Image -> Image
-invertLuna = onEachRGBA CC.invert CC.invert CC.invert id
+invertLuna = onEachRGBA CC.invert CC.invert CC.invert CC.invert
 
 colorMatrixLuna :: ColorMatrix Color.RGB Float -> Image -> Image
 colorMatrixLuna matrix = onEachColorRGB (A.lift1 $ (CC.colorMatrix :: ColorMatrix Color.RGB Float -> Color.RGB (Exp Float) -> Color.RGB (Exp Float)) matrix)
