@@ -32,6 +32,7 @@ module Flowbox.Graphics.Mockup.Basic (
     onEachRGBA,
     onEachRGBAChannels,
     onShader,
+    printfInt,
     realReadLuna,
     saveImageLuna,
     temporaryBackend,
@@ -55,6 +56,7 @@ import qualified Data.Vector.Storable              as SV
 import           Math.Coordinate.Cartesian         (Point2 (..))
 import           Math.Space.Space                  (Grid (..))
 import qualified System.FilePath                   as FilePath
+import           Text.Printf
 
 import  Flowbox.Data.FilePath (applyTime)
 import qualified Flowbox.Graphics.Color.Color          as Color
@@ -114,6 +116,8 @@ unpackAccDims (x,y) =
 unsafeFromMaybe :: Maybe a -> a
 unsafeFromMaybe (Just a) = a
 
+printfInt :: String -> Int -> String
+printfInt str int = printf str int
 
 -- == LOAD / SAVE
 
