@@ -46,7 +46,7 @@ foreign haskell def printfInt str int:
     liftF2 printfInt str int
 
 def readSeq path fileName gamma frame:
-    read (printfInt ((path.++"/").++fileName) frame.floor) gamma
+    read (printfInt ((path.++"/").++fileName) (frame.floor)) gamma
 
 def Image.save path gamma:
     img = self.gammaFromLinear gamma
