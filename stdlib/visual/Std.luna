@@ -359,15 +359,15 @@ alias RectangleI = Rectangle Int
 
 alias TransformF = Transform Float
 
-def Image.rotateAt self::Image point::(Point2 Float) phi::Float matte::(Maybe (Matte Float)) -> Image
+def Image.rotateAt self::Image point::(Point2 Float) phi::Float reformat::Bool matte::(Maybe (Matte Float)) -> Image
 
-def Image.translate self::Image vec::(V2 Float) matte::(Maybe (Matte Float)) -> Image
+def Image.translate self::Image vec::(V2 Float) reformat::Bool matte::(Maybe (Matte Float)) -> Image
 
-def Image.scaleAt self::Image point::(Point2 Float) vec::(V2 Float) matte::(Maybe (Matte Float)) -> Image
+def Image.scaleAt self::Image point::(Point2 Float) vec::(V2 Float) reformat::Bool matte::(Maybe (Matte Float)) -> Image
 
-def Image.skewAt self::Image point::(Point2 Float) skew::(Skew Float) matte::(Maybe (Matte Float)) -> Image
+def Image.skewAt self::Image point::(Point2 Float) skew::(Skew Float) reformat::Bool matte::(Maybe (Matte Float)) -> Image
 
-def Image.transform self::Image trans::TransformF matte::(Maybe (Matte Float)) -> Image
+def Image.transform self::Image trans::TransformF reformat::Bool matte::(Maybe (Matte Float)) -> Image
 
 class ```ControlPoint``` a:
     point               :: Point2 a
