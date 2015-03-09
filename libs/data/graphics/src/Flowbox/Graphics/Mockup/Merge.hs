@@ -107,7 +107,7 @@ mergeLuna mode img1 img2 matte = if Image.null img2 then img1 else case mode of
     XOR                            -> processMerge $ Merge.threeWayMerge             Merge.xor
     where processMerge f = img'
               where (r, g, b, a) = f r1 g1 b1 r2 g2 b2 foregroundAlpha a2
-                    view' = insertChannelFloats view [
+                    view' = insertChannelFloats view [ -- FIXME[KM -> *]: this forces using Matrices, BAD
                                 ("rgba.r", Shader.rasterizer $ r)
                               , ("rgba.g", Shader.rasterizer $ g)
                               , ("rgba.b", Shader.rasterizer $ b)
@@ -117,11 +117,11 @@ mergeLuna mode img1 img2 matte = if Image.null img2 then img1 else case mode of
           Right view = Image.lookupPrimary img1
           Grid width1 height1 = canvas r1
           Grid width2 height2 = canvas r2
-          (r1, g1, b1, a1) = unsafeGetChannels img1 & over each (Shader.fromMatrix (A.Constant 0))
+          (r1, g1, b1, a1) = unsafeGetChannels img1 & over each (Shader.fromMatrix (A.Constant 0)) -- FIXME[KM -> *]: this forces using Matrices, BAD
           foregroundAlpha = case matte of
               Just m -> let (h,w) = unpackAccDims (height1, width1) in {-- invert <$> --} Matte.matteToDiscrete h w m
               _      -> a1
-          (r2, g2, b2, a2) = unsafeGetChannels img2 & over each (Shader.transform toBottomLeft . Shader.fromMatrix (A.Constant 0))
+          (r2, g2, b2, a2) = unsafeGetChannels img2 & over each (Shader.transform toBottomLeft . Shader.fromMatrix (A.Constant 0)) -- FIXME[KM -> *]: this forces using Matrices, BAD
           toBottomLeft :: Point2 (Exp Int) -> Point2 (Exp Int)
           toBottomLeft pt = case pt of
                                     Point2 x y -> Point2 x (y-height1+height2)
