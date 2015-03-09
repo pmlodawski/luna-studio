@@ -70,7 +70,7 @@ data MergeMode = Atop
 
 -- img1 is background, img2 is foreground
 mergeLuna :: MergeMode -> Image -> Image -> Maybe (Matte.Matte Float) -> Image
-mergeLuna mode img1 img2 matte = if Image.null img2 then img1 else case mode of
+mergeLuna mode img1 img2 matte = case mode of
     Atop                           -> processMerge $ Merge.threeWayMerge             Merge.atop
     Average alphaBlend             -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.average
     ColorBurn alphaBlend           -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.colorBurn
