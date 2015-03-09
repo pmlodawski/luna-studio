@@ -121,7 +121,7 @@ nodeAdd request@(NodeAdd.Request tnode tbc tlibID tprojectID astID) undoTopic = 
              )
 
 nodeModify :: NodeModify.Request -> Maybe Topic -> RPC Context IO ([NodeModify.Update], [Message])
-nodeModify request@(NodeModify.Request tnode tbc tlibID tprojectID astID) undoTopic = do
+nodeModify (NodeModify.Request tnode tbc tlibID tprojectID astID) undoTopic = do
     bc <- decodeE tbc
     context <- Batch.get
     (nodeID, node) <- decodeE tnode
@@ -149,22 +149,13 @@ nodeModify request@(NodeModify.Request tnode tbc tlibID tprojectID astID) undoTo
                 tprojectID
                 ) undoTopic
              )
-             
---nodeModify :: NodeModify.Request -> RPC Context IO NodeModify.Update
---nodeModify request@(NodeModify.Request tnode tbc tlibID tprojectID _) = do
---    bc <- decodeE tbc
---    (nodeID, node) <- decodeE tnode
---    let libID     = decodeP tlibID
---        projectID = decodeP tprojectID
---    newNodeID <- BatchG.updateNode (nodeID, node) bc libID projectID
---    updateNo <- Batch.getUpdateNo
---    return $ NodeModify.Update request (encode (newNodeID, node)) updateNo
+
 
 nodeModifyInPlace :: NodeModifyInPlace.Request -> Maybe Topic -> RPC Context IO ([NodeModifyInPlace.Update], [Message])
 nodeModifyInPlace (NodeModifyInPlace.Request tnode tbc tlibID tprojectID astID) undoTopic = do
-    bc      <- decodeE tbc
-    context <- Batch.get
+    bc             <- decodeE tbc
     (nid, newNode) <- decodeE tnode
+    context        <- Batch.get
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
         originID  = if isJust undoTopic then mapID context Bimap.lookup nid else nid
@@ -259,7 +250,7 @@ connect (Connect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibID tpro
              )
 
 disconnect :: Disconnect.Request -> Maybe Topic -> RPC Context IO ([Disconnect.Update], [Message])
-disconnect request@(Disconnect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibID tprojectID astID) undoTopic = do
+disconnect (Disconnect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibID tprojectID astID) undoTopic = do
     bc <- decodeE tbc
     context <- Batch.get
     let srcNodeID = decodeP tsrcNodeID
