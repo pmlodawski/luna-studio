@@ -56,7 +56,7 @@ assertAlmostEqual name preface metric expected actual = do
     
     let ret = do
           ioMsg <- diffMsg name metric actual expected
-          assertFailure $ (if null preface then "" else preface ++ "\n") ++ ioMsg
+          assertFailure $ (if P.null preface then "" else preface ++ "\n") ++ ioMsg
         in unless (closeEnough metric actual expected) ret
         --where msg = (if null preface then "" else preface ++ "\n") ++ ioMsg
 
