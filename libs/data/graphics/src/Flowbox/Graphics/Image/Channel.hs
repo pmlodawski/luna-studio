@@ -5,6 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE DeriveFunctor       #-}
+{-# LANGUAGE LambdaCase          #-}
 {-# LANGUAGE PatternSynonyms     #-}
 {-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -12,8 +13,10 @@
 
 module Flowbox.Graphics.Image.Channel where
 
-import Data.Array.Accelerate (Boundary(..), constant)
-import Data.Typeable
+import           Data.Array.Accelerate (Boundary(..), constant)
+import qualified Data.Array.Accelerate as A
+import           Data.Typeable
+import           Math.Space.Space (Grid(..))
 
 import Flowbox.Graphics.Shader.Matrix
 import Flowbox.Graphics.Shader.Rasterizer
@@ -52,8 +55,17 @@ name :: Channel -> Name
 name (ChannelFloat     n _) = n
 name (ChannelInt       n _) = n
 
-compute :: Backend -> Sampler Double -> Channel -> Channel
+size :: Channel -> (Exp Int, Exp Int)
+size = \case
+    (ChannelFloat _ zeData) -> getSize zeData
+    (ChannelInt   _ zeData) -> getSize zeData
+    where getSize :: Elt a => ChannelData a -> (Exp Int, Exp Int)
+          getSize = \case
+              MatrixData     m -> let (A.unlift -> Z :. h :. w) = M.shape m in (w, h)
+              DiscreteData   (Shader (Grid w h) _) -> (w, h)
+              ContinuousData (Shader (Grid w h) _) -> (w, h)
 
+compute :: Backend -> Sampler Double -> Channel -> Channel
 compute b _ (ChannelFloat     n d) = ChannelFloat n . computeData b $ d
 compute b _ (ChannelInt       n d) = ChannelInt   n . computeData b $ d
 

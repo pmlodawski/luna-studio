@@ -38,11 +38,17 @@ foreign haskell def applyTime path time:
 def foo a:
 	a
 
-def load1 path gamma:
-    img = load path
+def read path gamma:
+    img = readRaw path
     img.gammaToLinear gamma
 
-def Image.save1 path gamma:
+foreign haskell def printfInt str int:
+    liftF2 printfInt str int
+
+def readSeq path fileName gamma frame:
+    read (printfInt ((path.++"/").++fileName) (frame.floor)) gamma
+
+def Image.save path gamma:
     img = self.gammaFromLinear gamma
-    img.save path
+    img.saveRaw path
     self
