@@ -237,36 +237,36 @@ def Image.blur self::Image kernelSize::Int -> Image
 
 class ```MergeMode```:
     Atop
-    Average: ab :: AlphaBlend
-    ColorBurn: ab :: AlphaBlend
-    ColorDodge: ab :: AlphaBlend
+    Average: alphaBlend :: AlphaBlend
+    ColorBurn: alphaBlend :: AlphaBlend
+    ColorDodge: alphaBlend :: AlphaBlend
     ConjointOver
-    Copy: ab :: AlphaBlend
-    Difference: ab :: AlphaBlend
+    Copy: alphaBlend :: AlphaBlend
+    Difference: alphaBlend :: AlphaBlend
     DisjointOver
-    DivideBySource: ab :: AlphaBlend
-    DivideByDestination: ab :: AlphaBlend
-    Exclusion: ab :: AlphaBlend
-    From: ab :: AlphaBlend
-    Geometric: ab :: AlphaBlend
-    HardLight: ab :: AlphaBlend
-    Hypot: ab :: AlphaBlend
+    DivideBySource: alphaBlend :: AlphaBlend
+    DivideByDestination: alphaBlend :: AlphaBlend
+    Exclusion: alphaBlend :: AlphaBlend
+    From: alphaBlend :: AlphaBlend
+    Geometric: alphaBlend :: AlphaBlend
+    HardLight: alphaBlend :: AlphaBlend
+    Hypot: alphaBlend :: AlphaBlend
     In
     MergeMask
     MergeMatte
-    MergeMax: ab :: AlphaBlend
-    MergeMin: ab :: AlphaBlend
-    Minus: ab :: AlphaBlend
-    Multiply: ab :: AlphaBlend
+    MergeMax: alphaBlend :: AlphaBlend
+    MergeMin: alphaBlend :: AlphaBlend
+    Minus: alphaBlend :: AlphaBlend
+    Multiply: alphaBlend :: AlphaBlend
     Out
     Over
-    Overlay: ab :: AlphaBlend
-    Plus: ab :: AlphaBlend
-    Screen: ab :: AlphaBlend
-    SoftLight: ab :: AlphaBlend
-    SoftLightPegtop: ab :: AlphaBlend
-    SoftLightIllusions: ab :: AlphaBlend
-    SoftLightPhotoshop: ab :: AlphaBlend
+    Overlay: alphaBlend :: AlphaBlend
+    Plus: alphaBlend :: AlphaBlend
+    Screen: alphaBlend :: AlphaBlend
+    SoftLight: alphaBlend :: AlphaBlend
+    SoftLightPegtop: alphaBlend :: AlphaBlend
+    SoftLightIllusions: alphaBlend :: AlphaBlend
+    SoftLightPhotoshop: alphaBlend :: AlphaBlend
     Stencil
     Under
     XOR
