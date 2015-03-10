@@ -47,6 +47,7 @@ import qualified Flowbox.Graphics.Shader.Sampler                 as Sampler
 import           Flowbox.Graphics.Shader.Shader                  (Shader (..))
 import           Flowbox.Graphics.Utils.Accelerate               (variable)
 import qualified Flowbox.Graphics.Utils.Utils                    as U
+import qualified Flowbox.Math.Matrix                             as M
 import           Flowbox.Prelude                                 as P hiding (lookup)
 
 import Flowbox.Graphics.Mockup.Basic        as Basic
@@ -173,14 +174,33 @@ gradientLuna gradient (variable -> width) (variable -> height) = channelToImageR
           weightFun tickPos val1 _ val2 _ = U.mix tickPos val1 val2
           mapper = flip Gradient.colorMapper weightFun
 
-rotoLuna :: (Real a, Fractional a) => Image -> Mask a -> Format -> Bool -> Image
-rotoLuna input mask format premult = (if premult then premultiplyLuna else id) $
+--rotoLuna :: (Real a, Fractional a) => Image -> Mask a -> Format -> Bool -> Image
+--rotoLuna input mask format premult = (if premult then premultiplyLuna else id) $
+--    if Image.null input
+--    then
+--        let (w, h) = unwrapFormat format
+--        in Rasterizer.matrixToImage $ Rasterizer.rasterizeMask w h mask
+--    else
+--        let Right sampleChan = Image.getFromPrimary "rgba.r" input
+--            (w, h)           = Basic.unpackAccDims $ maybe (0, 0) Channel.size sampleChan
+--            Right (Just a)   = Image.getFromPrimary "rgba.a" $ Rasterizer.matrixToImage $ Rasterizer.rasterizeMask w h mask
+--        in Image.appendToPrimary a input
+
+rotoLuna :: (Real a, Fractional a) => Image -> Mask a -> Format -> Bool -> Bool -> Image
+rotoLuna input mask format premult premultAlpha = (if premult then premultiplyLuna else id) $
     if Image.null input
     then
         let (w, h) = unwrapFormat format
         in Rasterizer.matrixToImage $ Rasterizer.rasterizeMask w h mask
     else
-        let Right sampleChan = Image.getFromPrimary "rgba.r" input
-            (w, h)           = Basic.unpackAccDims $ maybe (0, 0) Channel.size sampleChan
-            Right (Just a)   = Image.getFromPrimary "rgba.a" $ Rasterizer.matrixToImage $ Rasterizer.rasterizeMask w h mask
+        let Right (Just aInput) = Image.getFromPrimary "rgba.a" input
+            (w, h)              = Basic.unpackAccDims $ maybe (0, 0) Channel.size $ Just aInput
+            aMatrix             = Rasterizer.rasterizeMask w h mask
+            --a                   = Channel.ChannelFloat "rgba.a" $ Channel.MatrixData $ Rasterizer.rasterizeMask w h mask
+            a = intersectOrOverWrite premultAlpha aMatrix $ Channel.asMatrix aInput
+                where 
+                    intersectOrOverWrite :: Bool -> M.Matrix2 Float -> Channel.Channel -> Channel.Channel
+                    intersectOrOverWrite True mat1 (Channel.ChannelFloat name (Channel.MatrixData mat2)) = Channel.ChannelFloat name $ Channel.MatrixData $ M.zipWith (*) mat1 mat2
+                    intersectOrOverWrite False mat1 _ = Channel.ChannelFloat "rgba.a" $ Channel.MatrixData mat1
+                    --fuck mat1 (ChannelInt name (MatrixData mat2)) = ChannelInt   name $ MatrixData $ M.zipWith (\a b -> a*b) mat1 mat2
         in Image.appendToPrimary a input

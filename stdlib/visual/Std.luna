@@ -141,7 +141,11 @@ def Image.colorCorrectCurves self::Image
                        highlights::(ColorCC Color)
                        -> Image
 
-def Image.hueCorrect self::Image curves::HueCorrectGUI -> Image
+class ```HueCorrectCurves``` a:
+    HueCorrectCurves:
+        sat, lum, red, green, blue, rsup, gsup, bsup :: CurveGUI a
+
+def Image.hueCorrect self::Image curves::HueCorrectCurves -> Image
 
 def Image.saturate self::Image saturation::Color -> Image
 
@@ -399,7 +403,7 @@ def nopoint self::Std
 
 def rasterizeMask self::Std w::Int h::Int m::(Mask Float) -> Image
 
-def Image.roto self::Image mask::(Mask Float) format::Format premultiply::Bool -> Image
+def Image.roto self::Image mask::(Mask Float) format::Format premultiply::Bool alpha::Bool -> Image
 
 # COLORS
 

@@ -12,6 +12,7 @@
 module Flowbox.Graphics.Mockup.ColorCorrect (
     ColorCorrectCurves(..),
     ColorCC(..),
+    HueCorrectCurves(..),
     clampLuna,
     colorCorrectLuna,
     colorCorrectLunaCurves,
@@ -219,31 +220,31 @@ invertLuna = onEachRGBA CC.invert CC.invert CC.invert CC.invert
 colorMatrixLuna :: ColorMatrix Color.RGB Float -> Image -> Image
 colorMatrixLuna matrix = onEachColorRGB (A.lift1 $ (CC.colorMatrix :: ColorMatrix Color.RGB Float -> Color.RGB (Exp Float) -> Color.RGB (Exp Float)) matrix)
 
-type HueCorrect a = (VPS (CurveGUI a),
-                     VPS (CurveGUI a),
-                     VPS (CurveGUI a),
-                     VPS (CurveGUI a),
-                     VPS (CurveGUI a),
-                     VPS (CurveGUI a),
-                     VPS (CurveGUI a),
-                     VPS (CurveGUI a))
+data HueCorrectCurves a = HueCorrectCurves { _sat   :: CurveGUI a
+                                           , _lum   :: CurveGUI a
+                                           , _red   :: CurveGUI a
+                                           , _green :: CurveGUI a
+                                           , _blue  :: CurveGUI a
+                                           , _rsup  :: CurveGUI a
+                                           , _gsup  :: CurveGUI a
+                                           , _bsup  :: CurveGUI a
+                                           }
+                        deriving Show
 
-hueCorrectLuna :: HueCorrect Float ->
+hueCorrectLuna :: HueCorrectCurves Float ->
                   -- GUICurve Double -> sat_thrsh will be added later
                   -- sat_thrsh affects only r,g,b and lum parameters
                   Image -> Image
-hueCorrectLuna ( VPS lum, VPS sat
-               , VPS r, VPS g, VPS b
-               , VPS rSup, VPS gSup, VPS bSup
-               ) img = onEachColorRGB (CC.hueCorrect (CurveGUI.convertToBSpline lum)
-                                                     (CurveGUI.convertToBSpline sat)
-                                                     (CurveGUI.convertToBSpline r)
-                                                     (CurveGUI.convertToBSpline g)
-                                                     (CurveGUI.convertToBSpline b)
-                                                     (CurveGUI.convertToBSpline rSup)
-                                                     (CurveGUI.convertToBSpline gSup)
-                                                     (CurveGUI.convertToBSpline bSup)
-                                      ) img
+hueCorrectLuna (HueCorrectCurves sat lum r g b rSup gSup bSup) img =
+    onEachColorRGB (CC.hueCorrect (CurveGUI.convertToBSpline lum)
+                                  (CurveGUI.convertToBSpline sat)
+                                  (CurveGUI.convertToBSpline r)
+                                  (CurveGUI.convertToBSpline g)
+                                  (CurveGUI.convertToBSpline b)
+                                  (CurveGUI.convertToBSpline rSup)
+                                  (CurveGUI.convertToBSpline gSup)
+                                  (CurveGUI.convertToBSpline bSup)
+                   ) img
 
 data ColorCorrectCurves a = ColorCorrectCurves { _shadows    :: CurveGUI a
                                                , _highlights :: CurveGUI a
