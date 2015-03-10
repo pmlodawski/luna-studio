@@ -56,14 +56,13 @@ import qualified Luna.Interpreter.Session.TargetHS.Bindings as Bindings
 import qualified Luna.Interpreter.Session.TargetHS.TargetHS as TargetHS
 import qualified Luna.Interpreter.Session.Var               as Var
 import qualified Luna.Parser.Parser                         as Parser
-import qualified Luna.Parser.Pragma                         as Pragma
 import qualified Luna.Pass                                  as Pass
 import qualified Luna.Pass.Target.HS.HASTGen                as HASTGen
 import qualified Luna.Pass.Target.HS.HSC                    as HSC
 import           Luna.Syntax.Enum                           (IDTag)
 import           Luna.Syntax.Expr                           (LExpr)
+import qualified Luna.Syntax.Expr                           as Expr
 import qualified Luna.Syntax.Name.Hash                      as Hash
-import qualified Luna.System.Pragma.Store                   as Pragma
 import           Luna.System.Session                        as Session
 
 
@@ -179,52 +178,6 @@ execute callDataPath nodeExpr varNames = do
         CacheStatus.Ready        -> left $ Error.OtherError $(loc) "something went wrong : status = Ready"
 
 
-data VarType = Lit      String
-             | LitInt   String
-             | LitFloat String
-             | Con      String
-             | Var      String
-             | Native   String
-             | Tuple
-             | List
-             | TimeVar
-             | Id
-             | Expression String
-             deriving Show
-
-
-varType :: NodeExpr -> Session mm VarType
-varType (NodeExpr.StringExpr  StringExpr.Id                ) = return   Id
-varType (NodeExpr.StringExpr  StringExpr.Tuple             ) = return   Tuple
-varType (NodeExpr.StringExpr  StringExpr.List              ) = return   List
-varType (NodeExpr.StringExpr (StringExpr.Native name      )) = return $ Native name
-varType (NodeExpr.StringExpr (StringExpr.Expr   []        )) = return $ Prelude.error "varType : empty expression"
-varType (NodeExpr.StringExpr (StringExpr.Expr   name@(h:_)))
-    | Maybe.isJust (Read.readMaybe name :: Maybe Char)   = return $ Lit      name
-    | Maybe.isJust (Read.readMaybe name :: Maybe Int)    = return $ LitInt   name
-    | Maybe.isJust (Read.readMaybe name :: Maybe Float)  = return $ LitFloat name
-    | Maybe.isJust (Read.readMaybe name :: Maybe String) = return $ Lit      name
-    | name == Var.timeRef                                = return   TimeVar
-    | Char.isUpper h                                     = return $ Con name
-    | otherwise                                          = return $ Var name
-varType (NodeExpr.ASTExpr oldExpr') = do
-    oldExpr  <- Var.replaceTimeRefs oldExpr'
-    expr     <- mapError $(loc) (convertAST oldExpr)
-    result <- Session.runT $ do
-        void   Parser.init
-        void $ Pragma.enable (Pragma.orphanNames)
-        void $ Pragma.pop    (Pragma.orphanNames)
-        runEitherT $ Pass.run1_ HASTGen.passExpr (expr :: LExpr IDTag ())
-    cpphsOptions <- Env.getCpphsOptions
-    hexpr <- hoistEitherWith (Error.OtherError $(loc) . show) $ fst result
-    let code = Text.unpack $ HSC.genExpr hexpr
-    Expression . Utils.replace "_time" "(val _time)" . last . lines <$> liftIO (Cpphs.runCpphs cpphsOptions "" code)
-
-
-nameHash :: String -> String
-nameHash = Hash.hash
-
-
 evalFunction :: MemoryManager mm
              => NodeExpr -> CallDataPath -> [VarName] -> Session mm VarName
 evalFunction nodeExpr callDataPath varNames = do
@@ -261,3 +214,65 @@ evalFunction nodeExpr callDataPath varNames = do
         Manager.reportUseMany varNames
         Manager.reportUse varName
         return varName
+
+
+nameHash :: String -> String
+nameHash = Hash.hash
+
+
+hastExpr :: LExpr IDTag () -> Session mm String
+hastExpr expr = do
+    result <- Session.runT $ do
+        void Parser.init
+        runEitherT $ Pass.run1_ HASTGen.passExpr (expr :: LExpr IDTag ())
+    cpphsOptions <- Env.getCpphsOptions
+    hexpr <- hoistEitherWith (Error.OtherError $(loc) . show) $ fst result
+    let code = Text.unpack $ HSC.genExpr hexpr
+    last . lines <$> liftIO (Cpphs.runCpphs cpphsOptions "" code)
+
+
+--nodeToExpr :: NodeExpr -> [VarName] -> LExpr IDTag ()
+--nodeToExpr nodeExpr varNames = wrap $ case nodeExpr of
+--    NodeExpr.StringExpr StringExpr.Id                -> unwrap self
+--    NodeExpr.StringExpr StringExpr.Tuple             -> Expr.Tuple args
+--    NodeExpr.StringExpr StringExpr.List              -> Expr.List $ Expr.SeqList args
+--    NodeExpr.StringExpr (StringExpr.Expr [])         -> Prelude.error "varType : empty expression"
+--    NodeExpr.StringExpr (StringExpr.Expr name@(h:_))
+--        | Maybe.isJust (Read.readMaybe name :: Maybe Char)   -> undefined
+--    _ -> Prelude.error $ show nodeExpr
+--    where args = map (wrap . flip Expr.var () . fromString . VarName.toString) varNames
+--          self = head args
+
+
+data VarType = Lit      String
+             | LitInt   String
+             | LitFloat String
+             | Con      String
+             | Var      String
+             | Native   String
+             | Tuple
+             | List
+             | TimeVar
+             | Id
+             | Expression String
+             deriving Show
+
+
+varType :: NodeExpr -> Session mm VarType
+varType (NodeExpr.StringExpr  StringExpr.Id                ) = return   Id
+varType (NodeExpr.StringExpr  StringExpr.Tuple             ) = return   Tuple
+varType (NodeExpr.StringExpr  StringExpr.List              ) = return   List
+varType (NodeExpr.StringExpr (StringExpr.Native name      )) = return $ Native name
+varType (NodeExpr.StringExpr (StringExpr.Expr   []        )) = return $ Prelude.error "varType : empty expression"
+varType (NodeExpr.StringExpr (StringExpr.Expr   name@(h:_)))
+    | Maybe.isJust (Read.readMaybe name :: Maybe Char)   = return $ Lit      name
+    | Maybe.isJust (Read.readMaybe name :: Maybe Int)    = return $ LitInt   name
+    | Maybe.isJust (Read.readMaybe name :: Maybe Float)  = return $ LitFloat name
+    | Maybe.isJust (Read.readMaybe name :: Maybe String) = return $ Lit      name
+    | name == Var.timeRef                                = return   TimeVar
+    | Char.isUpper h                                     = return $ Con name
+    | otherwise                                          = return $ Var name
+varType (NodeExpr.ASTExpr oldExpr') = do
+    oldExpr  <- Var.replaceTimeRefs oldExpr'
+    expr     <- mapError $(loc) (convertAST oldExpr)
+    Expression . Utils.replace "_time" "(val _time)" <$> hastExpr expr
