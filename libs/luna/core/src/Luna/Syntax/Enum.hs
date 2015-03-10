@@ -27,3 +27,7 @@ instance Enumerated IDTag where
 instance Enumerated Int where
     id  i = i
     tag i = i
+
+instance Default IDTag where
+    def = IDTag def
+
