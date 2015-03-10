@@ -136,8 +136,8 @@ convertToNodeList l =
     in
         case l of
             (a:b:seg) -> safeMap (b:seg) a [processLeftmost a b]
-            (a:[]) -> convertSingleElem a
-
+            (a:[])    -> convertSingleElem a
+            []        -> []
 
 
 valueAtSpline :: CurveGUI Float -> Float -> Float

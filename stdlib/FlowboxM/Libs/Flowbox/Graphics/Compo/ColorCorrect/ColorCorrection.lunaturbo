@@ -90,6 +90,10 @@ foreign haskell def Image.colorCorrectCurvesRaw curves master shadows midtones h
 def Image.colorCorrectCurves curves master shadows midtones highlights:
     self.colorCorrectCurvesRaw curves master.toRGBA shadows.toRGBA midtones.toRGBA highlights.toRGBA
 
+foreign haskell class HueCorrectCurves a:
+    HueCorrectCurves:
+        sat, lum, red, green, blue, rSup, gSup, bSup :: a
+
 foreign haskell def Image.hueCorrect curves:
     liftF2 hueCorrectLuna curves self
 

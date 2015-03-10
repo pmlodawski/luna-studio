@@ -23,6 +23,7 @@ module Flowbox.Graphics.Image.Image (
     lookupPrimary,
     lookupDefault,
     map,
+    null,
     get,
     getFromPrimary,
     getChannels,
@@ -43,7 +44,7 @@ import qualified Flowbox.Graphics.Image.Channel as Channel
 import           Flowbox.Graphics.Image.Error
 import           Flowbox.Graphics.Image.View  (View(..))
 import qualified Flowbox.Graphics.Image.View  as View
-import           Flowbox.Prelude              hiding (empty, lookup, map, view, views)
+import           Flowbox.Prelude              hiding (empty, lookup, map, null, view, views)
 
 
 
@@ -58,6 +59,9 @@ makeLenses ''Image
 
 empty :: Image
 empty = Image Set.empty Nothing
+
+null :: Image -> Bool
+null (Image arbitrary primary) = Set.null arbitrary && isNothing primary
 
 singleton :: View -> Image
 singleton = Image Set.empty . Just

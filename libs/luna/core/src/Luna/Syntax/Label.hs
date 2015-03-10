@@ -4,14 +4,13 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE FunctionalDependencies#-}
-{-# LANGUAGE FlexibleInstances#-}
+{-# LANGUAGE DeriveGeneric          #-}
+{-# LANGUAGE FlexibleInstances      #-}
+{-# LANGUAGE FunctionalDependencies #-}
 
 module Luna.Syntax.Label where
 
-import           Flowbox.Prelude hiding (element)
-import           GHC.Generics (Generic)
+import Flowbox.Prelude hiding (element)
 
 
 ----------------------------------------------------------------------
@@ -28,8 +27,8 @@ instance (Show l, Show a) => Show (Label l a) where
 
 
 instance Default l => Wrap (Label l) where
-	wrap   = Label def
+    wrap   = Label def
 
 instance Unwrap (Label l) where
-	unwrap = view element
+    unwrap = view element
 

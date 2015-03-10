@@ -23,6 +23,7 @@ foreign haskell class Gamma:
     AlexaV3LogC
     Cineon
     Gamma: a :: Float
+    Linear
     LStar
     Panalog
     PLogLin

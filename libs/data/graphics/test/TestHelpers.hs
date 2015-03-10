@@ -18,6 +18,7 @@ import System.Directory
 import Network.Curl.Download
 import qualified Data.ByteString as B
 import TestConfigParser
+import Control.Monad
 
 shouldBeCloseTo :: (Show a, Comparable a b) => String -> b -> a -> a -> Expectation
 shouldBeCloseTo name metric actual expected = assertAlmostEqual name "" metric expected actual
@@ -56,7 +57,7 @@ assertAlmostEqual name preface metric expected actual = do
     
     let ret = do
           ioMsg <- diffMsg name metric actual expected
-          assertFailure $ (if null preface then "" else preface ++ "\n") ++ ioMsg
+          assertFailure $ (if P.null preface then "" else preface ++ "\n") ++ ioMsg
         in unless (closeEnough metric actual expected) ret
         --where msg = (if null preface then "" else preface ++ "\n") ++ ioMsg
 
@@ -265,3 +266,24 @@ trySaveSite site specPath testName = case site of
         createDirectory $ specPath++testName++"Test/"
         B.writeFile (specPath++testName++"Test/"++testName++"_expected.png") img
         loadImageLuna $ specPath++testName++"Test/"++testName++"_expected.png"
+
+
+defaultReferenceTest testName specPath image =
+    describe testName $ do
+        describe "Should match reference image" $ do
+            let expectedImage = getDefaultTestPic specPath testName
+                testPath      = specPath ++ testName
+            it "in pixel-wise metric" $ do
+                rightReturnShouldBeCloseTo testPath PixelWise image expectedImage
+            it "in image-wise metric" $ do
+                rightReturnShouldBeCloseTo testPath ImageWise image expectedImage
+
+defaultReferenceTestM testName specPath image = 
+    describe testName $ do
+        describe "Should match reference image" $ do
+            let expectedImage = getDefaultTestPic specPath testName
+                testPath      = specPath ++ testName
+            it "in pixel-wise metric" $ do
+                returnShouldBeCloseTo testPath PixelWise image expectedImage
+            it "in image-wise metric" $ do
+                returnShouldBeCloseTo testPath ImageWise image expectedImage

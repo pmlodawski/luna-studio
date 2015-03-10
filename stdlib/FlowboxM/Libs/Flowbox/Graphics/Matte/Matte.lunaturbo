@@ -2,6 +2,8 @@
 #                MATTES
 #
 
+# foreign haskell import Flowbox.Graphics.Image.Image (Image)
+
 foreign haskell import Flowbox.Graphics.Mockup.Curves
 foreign haskell import Flowbox.Graphics.Mockup.Matte
 

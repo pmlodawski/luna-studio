@@ -45,3 +45,6 @@ foreign haskell def linear width height:
 
 foreign haskell def square side:
     liftF1 squareLuna side
+
+foreign haskell def Image.roto mask format premultiply alpha:
+    liftF5 rotoLuna self mask format premultiply alpha

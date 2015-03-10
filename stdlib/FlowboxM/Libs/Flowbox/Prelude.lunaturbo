@@ -12,9 +12,10 @@ foreign haskell import Flowbox.Graphics.Mockup.Basic
 
 
 
-foreign haskell class Char
-foreign haskell class Float
 foreign haskell class Int
+foreign haskell class Float
+foreign haskell class Char
+foreign haskell class String
 
 foreign haskell class Bool:
     True
@@ -62,6 +63,11 @@ foreign haskell def print msg:
 
 foreign haskell def Char.toString:
     liftF2 (:) self (val ([] :: String))
+
+# STRING
+
+foreign haskell def String.++ str:
+    liftF2 (++) self str
 
 # INT
 
