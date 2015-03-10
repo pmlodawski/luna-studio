@@ -129,11 +129,12 @@ mergeLuna mode img1 img2 matte = case mode of
           --                  in ((*)<$>r2<*>msh,(*)<$>g2<*>msh,(*)<$>b2<*>msh,(*)<$>a2<*>msh) -- {-- invert <$> --} Matte.matteToDiscrete h w m
           --    _      -> (r2, g2, b2, a2)
           mask = case matte of
-              Just m -> let (h,w) = unpackAccDims (height2, width2) 
+              Just m -> let (h,w) = unpackAccDims (height1, width1) 
+                            -- Grid hm wm = canvas m
                             msh = {-- Shader.bound A.Clamp $ --} Matte.matteToDiscrete h w m
-                            in msh -- {-- invert <$> --} Matte.matteToDiscrete h w m
+                            in Shader.transform toBottomLeft msh -- {-- invert <$> --} Matte.matteToDiscrete h w m
               _      -> Shader.unitShader (\_->1)
           toBottomLeft :: Point2 (Exp Int) -> Point2 (Exp Int)
           toBottomLeft pt = case pt of
-                                    Point2 x y -> Point2 x (y-height1+height2)
+                                    Point2 x y -> let offset = height1-height2 in Point2 x (y-offset) -- (y-height1+height2)
 
