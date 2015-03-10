@@ -11,17 +11,17 @@
 
 module Luna.Pass.Transform.Graph.Builder.State where
 
-import Control.Monad.State
---import qualified Data.IntMap         as IntMap
-import           Data.Map   (Map)
-import qualified Data.Map   as Map
-import qualified Data.Maybe as Maybe
+import           Control.Monad.State
+import qualified Data.IntMap         as IntMap
+import           Data.Map            (Map)
+import qualified Data.Map            as Map
+import qualified Data.Maybe          as Maybe
 
 --import           Flowbox.Control.Error
-import Flowbox.Prelude
-import Flowbox.System.Log.Logger
-import Luna.Data.StructInfo      (StructInfo)
---import qualified Luna.Data.StructInfo            as StructInfo
+import           Flowbox.Prelude
+import           Flowbox.System.Log.Logger
+import           Luna.Data.StructInfo            (StructInfo)
+import qualified Luna.Data.StructInfo            as StructInfo
 import           Luna.Pass.Pass                  (PassMonad)
 import qualified Luna.Syntax.AST                 as AST
 import           Luna.Syntax.Graph.Edge          (Edge)
@@ -37,15 +37,17 @@ import qualified Luna.Syntax.Graph.Tag           as Tag
 import           Luna.Syntax.Label               (Label (Label))
 import qualified Luna.Syntax.Label               as Label
 
-
 getPosition = undefined
 setPosition = undefined
+
+
+
 
 logger :: Logger
 logger = getLogger $moduleName
 
 
-type NodeMap = Map AST.ID (Node.ID, Port)
+type NodeMap = Map Node.ID (Node.ID, Port)
 
 type GBPass a e m result = Monad m => PassMonad (GBState a e) m result
 
@@ -120,13 +122,9 @@ getNodeInfo labeled@(Label tag e) = case tag of
 
 ---------------------------------------------------------------------------
 
-
-insNode :: (Node.ID, Position -> Node a e) -> GBPass a e m ()
-insNode (nodeID, node) = do
-    g   <- getGraph
-    pos <- Maybe.fromMaybe (0,0) <$> getPosition nodeID
-    setGraph $ Graph.insNode (nodeID, node pos) g
-
+insNode :: (Node.ID, Node a e) -> GBPass a e m ()
+insNode (nodeID, node) =
+    getGraph >>= setGraph . Graph.insNode (nodeID, node)
 
 
 --insNodeWithFlags :: (Node.ID, Position -> Node a e) -> Bool -> Bool -> GBPass a e m ()
@@ -162,42 +160,31 @@ connectMonadic nodeID = do
 
 
 
+getAAMap :: GBPass a e m StructInfo
+getAAMap = gets $ view aa
 
 
-
---getAAMap :: GBPass a e m StructInfo
---getAAMap = gets (view aa)
-
-
---setAAMap :: StructInfo -> GBPass a e m ()
---setAAMap aa' = modify (set aa aa')
+setAAMap :: StructInfo -> GBPass a e m ()
+setAAMap = modify . set aa
 
 
---getPropertyMap :: GBPass a e m (PropertyMap a e)
---getPropertyMap = gets (view propertyMap)
+aaLookUp :: AST.ID -> GBPass a e m (Maybe AST.ID)
+aaLookUp astID = do
+    aa' <- getAAMap
+    return $ view StructInfo.target
+          <$> IntMap.lookup astID (aa' ^. StructInfo.alias)
 
 
---setPropertyMap :: PropertyMap a e -> GBPass a e m ()
---setPropertyMap pm = modify (set propertyMap pm)
+nodeMapLookUp :: Node.ID -> GBPass a e m (Maybe (Node.ID, Port))
+nodeMapLookUp nodeID = Map.lookup nodeID <$> getNodeMap
 
 
---aaLookUp :: AST.ID -> GBPass a e m (Maybe AST.ID)
---aaLookUp astID = do aa' <- getAAMap
---                    return $ view StructInfo.target
---                          <$> IntMap.lookup astID (aa' ^. StructInfo.alias)
-
-
---nodeMapLookUp :: AST.ID -> GBPass a e m (Maybe (Node.ID, Port))
---nodeMapLookUp astID = do nm <- getNodeMap
---                         return $ Map.lookup astID nm
-
-
---gvmNodeMapLookUp :: AST.ID -> GBPass a e m (Maybe (Node.ID, Port))
---gvmNodeMapLookUp astID = do
---    found <- nodeMapLookUp =<< Maybe.fromMaybe astID <$> aaLookUp astID
---    if Maybe.isNothing found
---        then nodeMapLookUp astID
---        else return found
+gvmNodeMapLookUp :: Node.ID -> GBPass a e m (Maybe (Node.ID, Port))
+gvmNodeMapLookUp nodeID = do
+    found <- nodeMapLookUp =<< Maybe.fromMaybe nodeID <$> aaLookUp nodeID
+    if Maybe.isNothing found
+        then nodeMapLookUp nodeID
+        else return found
 
 
 getPrevoiusNode :: GBPass a e m Node.ID

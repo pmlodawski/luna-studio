@@ -31,23 +31,23 @@ import           Luna.Pass.Transform.Graph.Builder.State (GBPass)
 import qualified Luna.Pass.Transform.Graph.Builder.State as State
 import           Luna.Syntax.Arg                         (Arg (Arg))
 --import qualified Luna.Syntax.Arg                         as Arg
-import qualified Luna.Syntax.AST         as AST
-import           Luna.Syntax.Decl        (LDecl)
-import qualified Luna.Syntax.Decl        as Decl
-import           Luna.Syntax.Enum        (Enumerated)
-import qualified Luna.Syntax.Enum        as Enum
-import           Luna.Syntax.Expr        (LExpr)
-import qualified Luna.Syntax.Expr        as Expr
-import           Luna.Syntax.Graph.Graph (Graph)
-import qualified Luna.Syntax.Graph.Node  as Node
---import qualified Luna.Syntax.Graph.Node.Expr             as NodeExpr
+import qualified Luna.Syntax.AST             as AST
+import           Luna.Syntax.Decl            (LDecl)
+import qualified Luna.Syntax.Decl            as Decl
+import           Luna.Syntax.Enum            (Enumerated)
+import qualified Luna.Syntax.Enum            as Enum
+import           Luna.Syntax.Expr            (LExpr)
+import qualified Luna.Syntax.Expr            as Expr
+import           Luna.Syntax.Graph.Graph     (Graph)
+import qualified Luna.Syntax.Graph.Node      as Node
+import qualified Luna.Syntax.Graph.Node.Expr as NodeExpr
 --import qualified Luna.Syntax.Graph.Node.OutputName       as OutputName
---import qualified Luna.Syntax.Graph.Node.StringExpr       as StringExpr
-import           Luna.Syntax.Graph.Port (Port)
-import qualified Luna.Syntax.Graph.Port as Port
-import           Luna.Syntax.Label      (Label (Label))
-import qualified Luna.Syntax.Label      as Label
-import           Luna.Syntax.Lit        (LLit)
+import qualified Luna.Syntax.Graph.Node.StringExpr as StringExpr
+import           Luna.Syntax.Graph.Port            (Port)
+import qualified Luna.Syntax.Graph.Port            as Port
+import           Luna.Syntax.Label                 (Label (Label))
+import qualified Luna.Syntax.Label                 as Label
+import           Luna.Syntax.Lit                   (LLit)
 --import           Luna.Syntax.Name                        (VNameP)
 import qualified Luna.Syntax.Name.Pattern     as Pattern
 import           Luna.Syntax.Pat              (LPat)
@@ -85,8 +85,8 @@ expr2graph :: LunaExpr ae v
            => TDecl v -> GBPass ae v m (TDecl v, Graph ae v)
 expr2graph decl@(Label l (Decl.Func (Decl.FuncDecl _ sig output body))) = do
     State.initFreeNodeID decl
-    State.insNode (inputsID, Node.Inputs)
-    State.insNode (outputID, Node.Outputs)
+    State.insNode (inputsID, Node.Inputs def)
+    State.insNode (outputID, Node.Outputs def)
     sig'  <- buildArgs sig
     body' <- buildBody body
     decl' <- State.saveFreeNodeID decl
@@ -121,7 +121,6 @@ buildBody :: [TExpr v] -> GBPass ae v m [TExpr v]
 buildBody []   = State.connectMonadic outputID >> return []
 buildBody body = do
     body' <- mapM (flip buildNode Nothing) (init body)
-    --mapM_ (buildNode False True Nothing) $ init body
     let output' = last body
     --output' <- buildOutput outputID $ last body
     return $ body' ++ [output']
@@ -157,7 +156,20 @@ buildNode lexpr outputName = case unwrap lexpr of
     Expr.Assignment dst src   -> do src' <- buildNode src (Just undefined)
                                     return $ Label tag $ Expr.Assignment dst src'
     Expr.Lit lit              -> do (nodeID, position, lexpr') <- State.getNodeInfo lexpr
-                                    undefined
+                                    let nodeExpr = NodeExpr.StringExpr $ StringExpr.fromString $ lunaShow lexpr
+                                        node = Node.Expr nodeExpr outputName position
+                                    State.insNode (nodeID, node)
+                                    return lexpr'
+    --Expr.Var (Expr.Variable vname _) -> do
+    --        isBound <- Maybe.isJust <$> State.gvmNodeMapLookUp nodeID
+    --        if isBound
+    --            then return nodeID
+    --            else addExprNode (toString name) []
+
+
+
+
+
 
 
     --Expr.App exprApp

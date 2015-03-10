@@ -15,7 +15,7 @@ module Luna.Util.LunaShow where
 import Flowbox.Prelude hiding (simple)
 --import           Luna.AST.Arg        (Arg)
 --import qualified Luna.AST.Arg        as Arg
---import           Luna.Syntax.Expr       (Expr)
+import Luna.Syntax.Expr (LExpr)
 --import qualified Luna.Syntax.Expr       as Expr
 --import           Luna.DEP.AST.Lit        (Lit)
 --import qualified Luna.DEP.AST.Lit        as Lit
@@ -44,6 +44,8 @@ class LunaShow ast where
     lunaShow  = code . lunaShowC def
     lunaShowC :: ShowContext -> ast -> CodeBuilder String
 
+instance LunaShow (LExpr a v) where
+    lunaShowC = error "Luna.Util.LunaShow.lunaShowC: not implemented"
 
 --instance LunaShow Expr where
 --    lunaShowC context expr =  case expr of
