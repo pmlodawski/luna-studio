@@ -49,7 +49,7 @@ logger = getLoggerIO $moduleName
 
 getIfReady :: CallPointPath -> Time -> Session mm [ModeValue]
 getIfReady callPointPath time = do
-    varName   <- foldedReRoute callPointPath
+    varName   <- getVarName callPointPath
     cacheInfo <- Cache.getCacheInfo callPointPath
     let status = cacheInfo ^. CacheInfo.status
     assertE (status == Status.Ready) $ Error.CacheError $(loc) $ concat ["Object ", show callPointPath, " is not computed yet."]
@@ -66,7 +66,7 @@ data Status = Ready
 
 getWithStatus :: CallPointPath -> Time -> Session mm (Status, [ModeValue])
 getWithStatus callPointPath time = do
-    varName <- foldedReRoute callPointPath
+    varName <- getVarName callPointPath
     Env.cachedLookup callPointPath >>= \case
         Nothing        -> return (NotInCache, [])
         Just cacheInfo -> do
@@ -87,7 +87,7 @@ getWithStatus callPointPath time = do
 reportIfVisible :: CallPointPath -> Session mm ()
 reportIfVisible callPointPath = do
     Env.whenVisible callPointPath $
-        foldedReRoute callPointPath >>= report callPointPath
+        getVarName callPointPath >>= report callPointPath
 
 
 report :: CallPointPath -> VarName -> Session mm ()
@@ -132,7 +132,7 @@ computeLookupValue varName time (modValues, compValMap) mode = do
 computeValue :: VarName -> Time -> Mode -> Session mm Value
 computeValue varName time mode = do
     lift2 $ flip Catch.catch excHandler $ do
-        let toValueExpr = "\\m -> flip computeValue m =<< toIOEnv (fromValue (" <> VarName.toString varName <> " " <> show time <> "))"
+        let toValueExpr = "\\m -> flip computeValue m =<< toIOEnv (fromValue (" <> VarName.toString varName <> " (" <> show time <> ")))"
         logger trace toValueExpr
         action <- HEval.interpret'' toValueExpr "Mode -> IO (Maybe SValue)"
         liftIO $ action mode <??&.> "Internal error"
@@ -145,8 +145,8 @@ computeValue varName time mode = do
                 liftIO (Serialization.toValue (ValueError.Error $ show exc) def) <??&.> "Internal error"
 
 
-foldedReRoute :: CallPointPath -> Session mm VarName
-foldedReRoute callPointPath = do
+getVarName :: CallPointPath -> Session mm VarName
+getVarName callPointPath = do
     let callPointLast = last callPointPath
         callPointInit = init callPointPath
     mfoldTop <- Flags.getFoldTop <$> Env.getFlags callPointLast

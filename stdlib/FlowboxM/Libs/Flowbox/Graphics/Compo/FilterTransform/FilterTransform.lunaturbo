@@ -38,38 +38,20 @@ foreign haskell def Image.blur kernelSize:
 foreign haskell class V2 a:
     V2 : x, y :: a
 
-foreign haskell def Image.translate vec:
-    liftF2 translateLuna vec self
+foreign haskell def Image.translate vec reformat matte:
+    liftF4 translateLuna vec reformat matte self
 
-foreign haskell def Image.rotate phi:
-    liftF2 rotateLuna phi self
+foreign haskell def Image.rotateAt point phi reformat matte:
+    liftF5 rotateAtLuna point phi reformat matte self
 
-foreign haskell def Image.rotateAt point phi:
-    liftF3 rotateAtLuna point phi self
+foreign haskell def Image.scaleAt point vec reformat matte:
+    liftF5 scaleAtLuna point vec reformat matte self
 
-foreign haskell def Image.scale vec:
-    liftF2 scaleLuna vec self
+foreign haskell def Image.skewAt point skew reformat matte:
+    liftF5 skewAtLuna point skew reformat matte self
 
-foreign haskell def Image.scaleAt point vec:
-    liftF3 scaleAtLuna point vec self
-
-foreign haskell def Image.translateMatte vec matte:
-    liftF3 translateMatteLuna vec matte self
-
-foreign haskell def Image.rotateAtMatte point phi matte:
-    liftF4 rotateAtMatteLuna point phi matte self
-
-foreign haskell def Image.scaleAtMatte point vec matte:
-    liftF4 scaleAtMatteLuna point vec matte self
-
-foreign haskell def Image.skewAtMatte point skew matte:
-    liftF4 skewAtMatteLuna point skew matte self
-
-foreign haskell def Image.transformMatte trans matte:
-    liftF3 transformLuna trans matte self
-
-foreign haskell def Image.transform trans:
-    liftF2 transformLuna trans self
+foreign haskell def Image.transform trans reformat matte:
+    liftF4 transformLuna trans reformat matte self
 
 foreign haskell def Image.crop rect reformat defaultOutside:
     liftF4 cropLuna ((fmap.fmap) variable $ rect) reformat defaultOutside self
@@ -88,6 +70,17 @@ foreign haskell def Image.close size:
 
 # foreign haskell def Image.radialBlur size angle:
 #     liftF3 radialBlurLuna size angle self
+
+foreign haskell class Orientation:
+    Vertical
+    Horizontal
+
+foreign haskell class EdgeOperator:
+    Prewitt: dir :: Orientation
+    Sobel: dir :: Orientation
+    Scharr: dir :: Orientation
+    Laplace  # : x, y :: Int
+             #   cross, side :: Float
 
 foreign haskell def Image.edgeDetect edgeOperator:
     liftF2 edgeDetectLuna edgeOperator self
@@ -111,3 +104,6 @@ foreign haskell class InterpolationFilter:
 
 foreign haskell def Image.multisample grid filter:
     liftF3 multisampleChannelsLuna grid filter self
+
+foreign haskell def Image.histEq bins:
+    liftF2 histEqLuna bins self

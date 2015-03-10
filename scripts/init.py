@@ -1,4 +1,4 @@
-#!/usr/bin/python2.7
+#!/usr/bin/env python2.7
 
 ###########################################################################
 ## Copyright (C) Flowbox, Inc / All Rights Reserved
@@ -14,7 +14,7 @@ import platform
 import subprocess
 from subprocess        import call, Popen, PIPE, check_output, CalledProcessError
 from distutils.version import LooseVersion
-from utils.colors      import print_info, print_error, putInfo, print_warning
+from utils.colors      import print_info, print_error, putInfo
 from utils.errors      import fatal
 from utils.net         import download
 from utils.system      import platformFix
@@ -24,7 +24,6 @@ import argparse
 import tempfile
 import glob
 from contextlib import contextmanager
-from time import sleep
 
 SILENTINSTALL = False
 
@@ -114,7 +113,8 @@ def checkPythonPkg(package, version=None):
     except CalledProcessError, e:
         retcode = e.returncode
         print_error("Sorry, but `pip freeze` returned code {retcode}".format(**locals()))
-        raise Error("Checking failed")
+        if not ask ("Continue?"):
+            fatal()
 
 def try_call(cmd):
     print_info ("Running '%s'" % cmd)
@@ -223,11 +223,9 @@ def main():
     path = os.path.join(rootPath, 'scripts', 'gencabal')
     try_call ('python2.7 %s' % path)
 
-    try:
-        checkPythonPkg("psutil")
-    except:
-        if not ask ("Unable to check for installed package, continue?"):
-            raise 
+    checkPythonPkg("psutil")
+    checkPythonPkg("docopt")
+
 
     print_info ("Success")
     sys.exit(0)

@@ -25,27 +25,32 @@ import           Flowbox.System.IO.Serializer    (Deserializable (..), Serializa
 import qualified Flowbox.System.IO.Serializer    as Serializer
 import           Flowbox.System.UniPath          (UniPath)
 import qualified Generated.Proto.Project.Project as Gen
-import           Luna.DEP.Lib.Manager            (LibManager)
+import qualified Luna.DEP.Lib.Lib                as Library
+import qualified Luna.DEP.Lib.Manager            as LibManager
 
 
 
-saveProject :: Project -> Handle -> IO ()
-saveProject project h =
-    ByteString.hPut h $ Proto.messagePut $ (encode (Project.ID $ -1, project) :: (Gen.Project, LibManager)) ^. _1
+saveProject :: Project -> [Library.ID] -> Handle -> IO ()
+saveProject project libIDs h = do
+    let save       = ByteString.hPut h . Proto.messagePut
+        filterLibs = flip LibManager.mk [] . Maybe.fromMaybe [] . flip LibManager.labVtxs libIDs
+        filteredProject = project & (Project.libs %~ filterLibs)
+        tproject        = encode (Project.ID $ -1, filteredProject) :: Gen.Project
+    save tproject
 
 
 getProject :: Handle -> IO Project
 getProject h = runScript $ do
     bytes                        <- scriptIO $ ByteString.hGetContents h
     (tproject :: Gen.Project, _) <- tryRight $ Proto.messageGet bytes
-    (_ :: Project.ID, project)   <- tryRight $ decode (tproject, def :: LibManager)
+    (_ :: Project.ID, project)   <- tryRight $ decode tproject
     return project
 
 
-storeProject :: Project -> Maybe UniPath -> IO ()
-storeProject project mpath = do
+storeProject :: Project -> [Library.ID] -> Maybe UniPath -> IO ()
+storeProject project libIDs mpath = do
     let filepath = Maybe.fromMaybe (project ^. Project.path) mpath
-        sproject = Serializable filepath (saveProject project)
+        sproject = Serializable filepath (saveProject project libIDs)
     Serializer.serialize sproject
 
 

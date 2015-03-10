@@ -1,0 +1,4 @@
+def const x y:
+    result1 = x
+    result2 = y
+    result1

@@ -10,6 +10,8 @@ import qualified Flowbox.Bus.Data.Flag    as Flag
 import qualified Flowbox.Bus.Data.Message as Message
 import           Flowbox.Bus.EndPoint     (BusEndPoints (BusEndPoints))
 import           Flowbox.Prelude
+--import     Flowbox.Text.ProtocolBuffers
+--import qualified Generated.Proto.Urm.URM.Undo.Request as Proto
 
 
 
@@ -17,8 +19,10 @@ test :: Bus ()
 test = do
     Bus.subscribe ""
     clientID <- Bus.getClientID
+--    Bus.send Flag.Enable $ Message.Message "urm.undo.request" (123 :: Int)
+--    Bus.send Flag.Enable $ Message.Message "urm.undo.request" $ messagePut' (678910 :: Int)
     Bus.reply (Message.CorrelationID clientID 0) Flag.Enable
-              (Message.Message "interpreter.run.request" (Char8.pack ""))
+              (Message.Message "urm.undo.perform.request" (Char8.pack ""))
     putStrLn "sent"
     _ <- Bus.receive
     putStrLn "received"

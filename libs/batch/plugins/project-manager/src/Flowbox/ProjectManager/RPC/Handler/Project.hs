@@ -34,22 +34,22 @@ import qualified Generated.Proto.ProjectManager.Project.Open.Update    as Open
 import qualified Generated.Proto.ProjectManager.Project.Store.Request  as Store
 import qualified Generated.Proto.ProjectManager.Project.Store.Status   as Store
 import           Luna.DEP.Data.Serialize.Proto.Conversion.Attributes   ()
-import           Luna.DEP.Lib.Manager                                  (LibManager)
 
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 ------ public api -------------------------------------------------
 
-encodeProject :: (Project.ID, Project) -> (Gen.Project, LibManager)
+encodeProject :: (Project.ID, Project) -> Gen.Project
 encodeProject = encode
+
 
 list :: List.Request -> RPC Context IO List.Status
 list request = do
     projects <- BatchP.projects
-    let tprojects       = map (\a -> (encodeProject a) ^. _1) projects
+    let tprojects       = map (encodeProject . set (_2 . Project.libs) def) projects
         tprojectsVector = Sequence.fromList tprojects
     return $ List.Status request tprojectsVector
 
@@ -58,7 +58,7 @@ lookup :: Lookup.Request -> RPC Context IO Lookup.Status
 lookup request@(Lookup.Request tprojectID) = do
     let projectID = decodeP tprojectID
     project <- BatchP.projectByID projectID
-    return $ Lookup.Status request $ (encodeProject (projectID, project)) ^. _1
+    return $ Lookup.Status request $ (encodeProject (projectID, project & Project.libs .~ def))
 
 
 create :: Create.Request -> RPC Context IO Create.Update
@@ -67,19 +67,19 @@ create request@(Create.Request tname tpath tattributes) = do
         path = decodeP tpath
         attributes = decodeP tattributes
     newProject <- BatchP.createProject name path attributes
-    Create.Update request (encodeProject newProject ^. _1) <$> Batch.getUpdateNo
+    Create.Update request (encodeProject $ _2 . Project.libs .~ def $ newProject) <$> Batch.getUpdateNo
 
 
 open :: Open.Request -> RPC Context IO Open.Update
 open request@(Open.Request tpath) = do
     let upath = decodeP tpath
     (projectID, project) <- BatchP.openProject upath
-    Open.Update request ((encodeProject (projectID, project)) ^. _1) <$> Batch.getUpdateNo
+    Open.Update request ((encodeProject (projectID, project & Project.libs .~ def))) <$> Batch.getUpdateNo
 
 
 modify :: Modify.Request -> RPC Context IO Modify.Update
 modify request@(Modify.Request tproject) = do
-    projectWithID <- decodeE (tproject, def :: LibManager) :: RPC Context IO (Project.ID, Project)
+    projectWithID <- decodeE tproject :: RPC Context IO (Project.ID, Project)
     BatchP.updateProject projectWithID
     Modify.Update request <$> Batch.getUpdateNo
 
@@ -91,6 +91,6 @@ close request@(Close.Request tprojectID) = do
 
 
 store :: Store.Request -> RPC Context IO Store.Status
-store request@(Store.Request tprojectID mtpath) = do
-    BatchP.storeProject (decodeP tprojectID) $ fmap decodeP mtpath
+store request@(Store.Request tprojectID tlibIDs mtpath) = do
+    BatchP.storeProject (decodeP tprojectID) (decodeP tlibIDs) $ fmap decodeP mtpath
     return $ Store.Status request

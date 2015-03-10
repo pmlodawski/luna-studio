@@ -18,4 +18,4 @@ import Prelude
 dot0  = ($)
 dot1  = (.)
 
-mkDots 2 10
+mkDots 2 15

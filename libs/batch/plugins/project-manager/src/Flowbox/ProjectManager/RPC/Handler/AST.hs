@@ -289,7 +289,7 @@ codeGet request@(CodeGet.Request tbc tlibID tprojectID _) = do
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     code <- Batch.getCode bc libID projectID
-    seq code $ return ()
+    foldr seq (return ()) code
     return $ CodeGet.Status request $ encodeP code
 
 

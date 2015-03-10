@@ -103,13 +103,13 @@ logger = getLoggerIO $(moduleName)
 projectCreate :: MemoryManager mm => ProjectCreate.Update -> RPC Context (SessionST mm) ()
 projectCreate (ProjectCreate.Update request project updateNo) = do
     sync updateNo $ ProjectHandler.create request
-    projectID <- Gen.Project.id project <??> "ASTWatch.projectCreate : 'projectID' field is missing"
+    let projectID = Gen.Project.id project
     CacheWrapper.modifyAll projectID
 
 
 projectOpen :: MemoryManager mm => ProjectOpen.Update -> RPC Context (SessionST mm) ()
 projectOpen (ProjectOpen.Update _ project _) = do
-    projectID <- Gen.Project.id project <??> "ASTWatch.projectOpen : 'projectID' field is missing"
+    let projectID = Gen.Project.id project
     CacheWrapper.modifyAll projectID
 
 
@@ -283,7 +283,7 @@ astPropertiesSet (ASTPropertiesSet.Update request updateNo) =
 
 graphConnect :: GraphConnect.Update -> RPC Context (SessionST mm) ()
 graphConnect (GraphConnect.Update request updateNo) = do
-    sync updateNo $ GraphHandler.connect request
+    sync updateNo $ GraphHandler.connect request Nothing
     let projectID = GraphConnect.projectID request
         libraryID = GraphConnect.libraryID request
         dstID     = GraphConnect.dstNodeID request
@@ -292,7 +292,7 @@ graphConnect (GraphConnect.Update request updateNo) = do
 
 graphDisconnect :: GraphDisconnect.Update -> RPC Context (SessionST mm) ()
 graphDisconnect (GraphDisconnect.Update request updateNo) = do
-    sync updateNo $ GraphHandler.disconnect request
+    sync updateNo $ GraphHandler.disconnect request Nothing
     let projectID = GraphDisconnect.projectID request
         libraryID = GraphDisconnect.libraryID request
         dstID     = GraphDisconnect.dstNodeID request
@@ -301,7 +301,7 @@ graphDisconnect (GraphDisconnect.Update request updateNo) = do
 
 graphNodeAdd :: GraphNodeAdd.Update -> RPC Context (SessionST mm) ()
 graphNodeAdd (GraphNodeAdd.Update request node updateNo) = do
-    sync updateNo $ GraphHandler.nodeAdd request
+    sync updateNo $ GraphHandler.nodeAdd request Nothing
     let projectID = GraphNodeAdd.projectID request
         libraryID = GraphNodeAdd.libraryID request
     nodeID <- Gen.Node.id node <??> "ASTWatch.graphNodeAdd : 'nodeID' field is missing"
@@ -320,7 +320,7 @@ graphNodeRemove (GraphNodeRemove.Update request updateNo) = do
     mapM_ (CacheWrapper.modifyNodeSuccessors projectID libraryID bc) nodeIDs
     mapM_ (CacheWrapper.deleteNode projectID libraryID) nodeIDs
     CacheWrapper.interpreterDo projectID GPUMemory.performGC
-    sync updateNo $ GraphHandler.nodeRemove request
+    sync updateNo $ GraphHandler.nodeRemove request Nothing
     --TODO[PM] : remove old time refs if were present
 
 
@@ -338,7 +338,7 @@ graphNodeModify (GraphNodeModify.Update request node updateNo) = do
 
 graphNodeModifyInPlace :: GraphNodeModifyInPlace.Update -> RPC Context (SessionST mm) ()
 graphNodeModifyInPlace (GraphNodeModifyInPlace.Update request updateNo) = do
-    sync updateNo $ GraphHandler.nodeModifyInPlace request
+    sync updateNo $ GraphHandler.nodeModifyInPlace request Nothing
     let projectID = GraphNodeModifyInPlace.projectID request
         libraryID = GraphNodeModifyInPlace.libraryID request
         node      = GraphNodeModifyInPlace.node request

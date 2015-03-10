@@ -11,9 +11,11 @@ import os
 from colors         import print_info, print_error
 from utils.net      import download
 
-from utils.enum     import enum
 
 
+def enum(*sequential, **named):
+    enums = dict(zip(sequential, range(len(sequential))), **named)
+    return type('Enum', (), enums)
 
 
 systems = enum ('LINUX', 'WINDOWS', 'DARWIN')

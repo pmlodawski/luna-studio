@@ -21,10 +21,10 @@ foreign haskell class MergeMode:
     HardLight: ab :: AlphaBlend
     Hypot: ab :: AlphaBlend
     In
-    Mask
-    Matte
-    # Max
-    # Min
+    MergeMask
+    MergeMatte
+    MergeMax: ab :: AlphaBlend
+    MergeMin: ab :: AlphaBlend
     Minus: ab :: AlphaBlend
     Multiply: ab :: AlphaBlend
     Out
@@ -44,5 +44,5 @@ foreign haskell class AlphaBlend:
     Adobe
     Custom
 
-foreign haskell def Image.merge mode img:
-    liftF3 mergeLuna mode self img
+foreign haskell def Image.merge img mode mask:
+    liftF4 mergeLuna mode self img mask

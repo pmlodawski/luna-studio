@@ -16,15 +16,10 @@ module Flowbox.Graphics.Mockup.Transform (
     Transform(..),
     cropLuna,
     rotateAtLuna,
-    rotateAtMatteLuna,
-    rotateLuna,
-    scaleAtMatteLuna,
     scaleAtLuna,
-    scaleLuna,
-    transformLuna,
     translateLuna,
-    translateMatteLuna,
-    skewAtMatteLuna
+    skewAtLuna,
+    transformLuna
 ) where
 
 import           Data.Array.Accelerate     (Exp, Z(..), (:.)(..))
@@ -48,7 +43,6 @@ import qualified Flowbox.Math.Matrix                    as M
 import           Flowbox.Prelude                        as P hiding (lookup)
 
 import Flowbox.Graphics.Mockup.Basic
-
 
 
 data SkewOrder = SkewXY | SkewYX
@@ -87,123 +81,10 @@ cropLuna rect reformat constantOutside = onEachChannel cropChannel
               ChannelFloat name zeData -> ChannelFloat name $ Transform.crop' rect reformat (if constantOutside then Just (0 :: Exp Float) else Nothing) zeData
               ChannelInt   name zeData -> ChannelInt   name $ Transform.crop' rect reformat (if constantOutside then Just (0 :: Exp Int)   else Nothing) zeData
 
-translateLuna :: V2 Float -> Image -> Image
-translateLuna (fmap variable -> V2 x y) = onEachChannel translateChannel
-    where v    = V2 x (-y)
-          mask = Nothing
-          translateChannel = \case
-              (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-              (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-          transformation :: Point2 (Exp Float) -> Point2 (Exp Float)
-          transformation pt = Transform.translate (strength pt) pt
-          strength :: Point2 (Exp Float) -> V2 (Exp Float)
-          strength pt = case mask of
-              Nothing      -> v
-              --TODO[KM]: handle the mask properly (aka. get rid of that ugly pattern match) and uncomment the other case option
-              --          and keep in mind that applying mask for functions using a center point might cause the shader to extract the strength value from wrong mask's coordinates
-              _ -> v
-              --Just (VPS m) -> let
-              --        Right rgba = Image.lookupPrimary m
-              --        unpackMat (Right (Just (ChannelFloat _ (asMatrixData -> MatrixData c)))) = c -- TODO[KM]: this ugly pattern match :D
-              --        m' = unpackMat $ View.get rgba "rgba.r"
-              --        Shader _ str = Shader.nearest $ Shader.fromMatrix (A.Constant (0 :: Exp Double)) $ m'
-              --        mult :: Point2 (Exp Double) -> Exp Double -> Exp Double
-              --        mult pt x = str pt * x
-              --    in (fmap (mult pt) v)
-
-rotateLuna :: Float -> Image -> Image
-rotateLuna (variable -> phi) = onEachChannel rotateChannel
-    where mask = Nothing
-          rotateChannel = \case
-              (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-              (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-          transformation :: Point2 (Exp Float) -> Point2 (Exp Float)
-          transformation pt = Transform.rotate (strength pt) pt
-          strength :: Point2 (Exp Float) -> Exp Float
-          strength pt = case mask of
-              Nothing -> phi
-              --TODO[KM]: handle the mask properly
-              _       -> phi
-
-rotateAtLuna :: Point2 Float -> Float -> Image -> Image
-rotateAtLuna (fmap variable -> (Point2 x y)) (variable -> phi) = onEachChannel rotateChannel
-    where vBefore = V2 x y
-          vAfter  = V2 (-x) (-y)
-          mask    = Nothing
-          rotateChannel = \case
-              (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-              (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-          transformation :: Point2 (Exp Float) -> Point2 (Exp Float)
-          transformation pt = Transform.translate vAfter $ Transform.rotate (strength pt) $ Transform.translate vBefore pt
-          strength :: Point2 (Exp Float) -> Exp Float
-          strength pt = case mask of
-              Nothing -> phi
-              --TODO[KM]: handle the mask properly
-              _       -> phi
-
-scaleLuna :: V2 Float -> Image -> Image
-scaleLuna (fmap variable -> v) = onEachChannel scaleChannel
-    where mask = Nothing
-          scaleChannel = \case
-              (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-              (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-          transformation :: Point2 (Exp Float) -> Point2 (Exp Float)
-          transformation pt = Transform.scale (strength pt) pt
-          strength :: Point2 (Exp Float) -> V2 (Exp Float)
-          strength pt = case mask of
-              Nothing -> v
-              --TODO[KM]: handle the mask properly
-              _       -> v
-
-scaleAtLuna :: Point2 Float -> V2 Float -> Image -> Image
-scaleAtLuna (fmap variable -> (Point2 x y)) (fmap variable -> v) = onEachChannel scaleChannel
-    where vBefore = V2 x y
-          vAfter  = V2 (-x) (-y)
-          mask    = Nothing
-          scaleChannel = \case
-              (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-              (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-          transformation :: Point2 (Exp Float) -> Point2 (Exp Float)
-          transformation pt = Transform.translate vAfter $ Transform.scale (strength pt) $ Transform.translate vBefore pt
-          strength :: Point2 (Exp Float) -> V2 (Exp Float)
-          strength pt = case mask of
-              Nothing -> v
-              --TODO[KM]: handle the mask properly
-              _       -> v
-
 --scaleToLuna :: A.Boundary (Exp Double) -> Int -> Int -> Image -> Image
 --scaleToLuna boundary (variable -> x) (variable -> y) = onEachChannel $ rasterizer . monosampler . foo
 --    where foo :: Matrix2 Double -> ContinuousShader (Exp Double)
 --          foo = scale (Grid x y) . nearest . fromMatrix boundary
-
---transformLuna :: Transform Float -> Image -> Image
---transformLuna _ img = img
---transformLuna (Transform tr (variable -> phi) (fmap variable -> sc) _ ce) = onEachChannel transformChannel
---    where V2     translateX translateY = fmap variable tr
---          Point2 centerX    centerY    = fmap variable ce
---          vBefore = V2 (-centerX) centerY
---          vAfter  = V2 centerX (-centerY)
---          mask    = Nothing
---          tr      = V2 translateX (-translateY)
---          transformChannel = \case
---              (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
---              (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
---          transformation :: Point2 (Exp Double) -> Point2 (Exp Double)
---          transformation pt = Transform.translate (strengthTranslate pt) $ Transform.translate vAfter $ Transform.rotate (strengthRotate pt) $ Transform.scale (strengthScale pt) $ Transform.translate vBefore pt
---          strengthRotate    = strengthScalar phi
---          strengthScale     = strengthVector sc
---          strengthTranslate = strengthVector tr
---          -- TODO: extract those 2 functions as a top-level binding
---          strengthScalar :: Exp Double -> Point2 (Exp Double) -> Exp Double
---          strengthScalar val pt = case mask of
---              Nothing -> val
---              --TODO[KM]: handle the mask properly
---              _       -> val
---          strengthVector :: V2 (Exp Double) -> Point2 (Exp Double) -> V2 (Exp Double)
---          strengthVector v pt = case mask of
---              Nothing -> v
---              --TODO[KM]: handle the mask properly
---              _       -> v
 
 channelDim :: Channel -> (Int,Int)
 channelDim = unpackAccDims . channelDimAcc
@@ -241,52 +122,52 @@ strengthShader matte chan = case matte of
                                             Shader _ matteShader = Matte.matteToContinuous h w m
                                         in (\x -> (matteShader x))
 
-rotateChannelAt :: Point2 Float -> Float -> Maybe (Matte Float) -> Channel -> Channel
-rotateChannelAt (fmap variable -> (Point2 x y)) (variable -> phi) matte chan = (rotate chan)
+rotateChannelAt :: Point2 Float -> Float -> Bool -> Maybe (Matte Float) -> Channel -> Channel
+rotateChannelAt (fmap variable -> Point2 x y) (variable -> phi) reformat matte chan = rotate chan
     where
       vBefore = V2 (-x) (-y)
       vAfter  = V2 x y
 
       rotate = \case
-          (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-          (Channel.asContinuous -> ChannelInt name zeData) -> ChannelInt name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+          (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData (Shader.fixY -> shader)) -> ContinuousData $ Shader.fixY $ Shader.transform transformation shader) zeData
+          (Channel.asContinuous -> ChannelInt name zeData)   -> ChannelInt name   $ (\(ContinuousData (Shader.fixY -> shader)) -> ContinuousData $ Shader.fixY $ Shader.transform transformation shader) zeData
 
       strength = strengthShader matte chan
 
       transformation :: Point2 (Exp Float) -> Point2 (Exp Float)
-      transformation pt = (changeCoordinateSystem chan) $ Transform.translate vBefore $ Transform.rotate ((-phi)*(strength pt)) $ Transform.translate vAfter $ (changeCoordinateSystem chan) pt
+      transformation pt = Transform.translate vBefore $ Transform.rotate (phi * strength pt) $ Transform.translate vAfter $ pt
 
-scaleChannelAt :: Point2 Float -> V2 Float -> Maybe (Matte Float) -> Channel -> Channel
-scaleChannelAt (fmap variable -> (Point2 x y)) (fmap variable -> v) matte chan = (scale chan)
+scaleChannelAt :: Point2 Float -> V2 Float -> Bool -> Maybe (Matte Float) -> Channel -> Channel
+scaleChannelAt (fmap variable -> (Point2 x y)) (fmap variable -> v@(V2 vx vy)) reformat matte chan = (scale chan)
     where
       vBefore = V2 (-x) (-y)
       vAfter  = V2 x y
 
       scale = \case
-        (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-        (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+        (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData (Shader.fixY -> Shader g@(Grid w h) runS)) -> ContinuousData $ Shader.fixY $ Shader.transform transformation (Shader (if reformat then Grid (max w (A.ceiling $ A.fromIntegral w * vx)) (max h (A.ceiling $ A.fromIntegral h * vy)) else g) runS)) zeData
+        (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData (Shader.fixY -> Shader g@(Grid w h) runS)) -> ContinuousData $ Shader.fixY $ Shader.transform transformation (Shader (if reformat then Grid (max w (A.ceiling $ A.fromIntegral w * vx)) (max h (A.ceiling $ A.fromIntegral h * vy)) else g) runS)) zeData
 
       strength = strengthShader matte chan
 
       transformation :: Point2 (Exp Float) -> Point2 (Exp Float)
-      transformation pt = (changeCoordinateSystem chan) $ Transform.translate vBefore $ Transform.scale (fmap (* (strength pt)) v) $ Transform.translate vAfter $ (changeCoordinateSystem chan) pt
+      transformation pt = Transform.translate vBefore $ Transform.scale (fmap (* (strength pt)) v) $ Transform.translate vAfter $ pt
 
-translateChannel :: V2 Float -> Maybe (Matte Float) -> Channel -> Channel
-translateChannel (fmap variable -> V2 x y) matte chan = (translate chan)
+translateChannel :: V2 Float -> Bool -> Maybe (Matte Float) -> Channel -> Channel
+translateChannel (fmap variable -> V2 x y) reformat matte chan = (translate chan)
   where
-    t = V2 x (-y)
+    t = V2 x y
 
     translate = \case
-        (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-        (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+        (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData (Shader.fixY -> Shader g@(Grid w h) runS)) -> ContinuousData $ Shader.fixY $ Shader.transform transformation (Shader (if reformat then Grid (max w (w + A.ceiling x)) (max h (h + A.ceiling y)) else g) runS)) zeData
+        (Channel.asContinuous -> ChannelInt   name zeData) -> ChannelInt   name $ (\(ContinuousData (Shader.fixY -> Shader g@(Grid w h) runS)) -> ContinuousData $ Shader.fixY $ Shader.transform transformation (Shader (if reformat then Grid (max w (w + A.ceiling x)) (max h (h + A.ceiling y)) else g) runS)) zeData
 
     strength = strengthShader matte chan
 
     transformation :: Point2 (Exp Float) -> Point2 (Exp Float)
     transformation pt = Transform.translate (fmap (*(strength pt)) t) pt
 
-skewChannelAt :: Point2 Float -> Skew Float -> Maybe (Matte Float) -> Channel -> Channel
-skewChannelAt (fmap variable -> p) (Skew (fmap variable -> V2 k k') order) matte chan = (skew chan)
+skewChannelAt :: Point2 Float -> Skew Float -> Bool -> Maybe (Matte Float) -> Channel -> Channel
+skewChannelAt (fmap variable -> p) (Skew (fmap variable -> V2 k k') order) reformat matte chan = (skew chan)
   where
     Point2 x y = changeCoordinateSystem chan p
     vBefore = V2 (-x) (-y)
@@ -303,27 +184,32 @@ skewChannelAt (fmap variable -> p) (Skew (fmap variable -> V2 k k') order) matte
       where
         str = strength pt
 
--- temporary name
-rotateAtMatteLuna :: Point2 Float -> Float -> Maybe (Matte Float) -> Image -> Image
-rotateAtMatteLuna p ang matte = onEachChannel (rotateChannelAt p ang matte)
+rotateAtLuna :: Point2 Float -> Float -> Bool -> Maybe (Matte Float) -> Image -> Image
+rotateAtLuna p ang reformat matte = onEachChannel (rotateChannelAt p ang reformat matte)
 
--- temporary name
-scaleAtMatteLuna :: Point2 Float -> V2 Float -> Maybe (Matte Float) -> Image -> Image
-scaleAtMatteLuna p v matte = onEachChannel (scaleChannelAt p v matte)
+scaleAtLuna :: Point2 Float -> V2 Float -> Bool -> Maybe (Matte Float) -> Image -> Image
+scaleAtLuna p v reformat matte = onEachChannel (scaleChannelAt p v reformat matte)
 
--- temporary name
-translateMatteLuna :: V2 Float -> Maybe (Matte Float) -> Image -> Image
-translateMatteLuna tr matte = onEachChannel (translateChannel tr matte)
+translateLuna :: V2 Float -> Bool -> Maybe (Matte Float) -> Image -> Image
+translateLuna tr reformat matte = onEachChannel (translateChannel tr reformat matte)
 
--- temporary name
-skewAtMatteLuna :: Point2 Float -> Skew Float -> Maybe (Matte Float) -> Image -> Image
-skewAtMatteLuna p skew matte = onEachChannel (skewChannelAt p skew matte)
+skewAtLuna :: Point2 Float -> Skew Float -> Bool -> Maybe (Matte Float) -> Image -> Image
+skewAtLuna p skew reformat matte = onEachChannel (skewChannelAt p skew reformat matte)
 
-transformLuna :: Transform Float -> Maybe (Matte Float) -> Image -> Image
-transformLuna tr matte = onEachChannel (transformChannel tr matte)
+transformLuna :: Transform Float -> Bool -> Maybe (Matte Float) -> Image -> Image
+transformLuna tr reformat matte = onEachChannel (transformChannel tr reformat matte)
     where
-      transformChannel :: Transform Float -> Maybe (Matte Float) -> Channel -> Channel
-      transformChannel (Transform tr phi sc skew ce) matte chan = (transformation chan)
-        where
-          transformation :: Channel -> Channel
-          transformation = (translateChannel tr matte) . (rotateChannelAt ce phi matte) . (skewChannelAt ce skew matte) . (scaleChannelAt ce sc matte)
+        transformChannel :: Transform Float -> Bool -> Maybe (Matte Float) -> Channel -> Channel -- FIXME[KM -> MD]: why are the arguments passed as arguments if they are in the scope where they need to be?
+        transformChannel (Transform tr phi sc skew ce) reformat matte chan = transformation chan
+            where
+                transformation :: Channel -> Channel
+                transformation = (translateChannel tr reformat matte) . (rotateChannelAt ce phi reformat matte) . (skewChannelAt ce skew reformat matte) . (scaleChannelAt ce sc reformat matte)
+
+--transformLuna :: Transform Float -> Image -> Image
+--transformLuna tr = onEachChannel (transformChannel tr)
+--    where
+--      transformChannel :: Transform Float -> Channel -> Channel
+--      transformChannel (Transform tr phi sc skew ce) chan = transformation chan
+--        where
+--          transformation :: Channel -> Channel
+--          transformation = (translateChannel tr Nothing) . (rotateChannelAt ce phi Nothing) . (skewChannelAt ce skew Nothing) . (scaleChannelAt ce sc Nothing)
