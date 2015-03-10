@@ -65,16 +65,16 @@ spec = do
                         pending
                         (zipWithM_ (\x y -> ((nameSave (show x)) =<< y)) modes actualImages) `shouldReturn` ()
                         -- rightReturnShouldBeCloseTo testPath PixelWise actualImage expectedImage
-                    
-
-            describe "should match reference image" $ do
-                let actualImage = liftM2 (mergeLuna Over (conicalLuna 1200 1200)) (loadImageLuna "./test/samples/lena.png") (return Nothing)
-                    expectedImage = getDefaultTestPic specPath testName
-                it "in pixel-wise metric" $ do
-                    returnShouldBeCloseTo testPath PixelWise actualImage expectedImage
-                it "in image-wise metric" $ do
-                    returnShouldBeCloseTo testPath ImageWise actualImage expectedImage
-
+            
+            let actualImage = liftM2 (mergeLuna Over (conicalLuna 1200 1200)) (loadImageLuna "./test/samples/lena.png") (return Nothing)        
+            defaultReferenceTestM testName specPath actualImage
+            --describe "should match reference image" $ do
+            --    let actualImage = liftM2 (mergeLuna Over (conicalLuna 1200 1200)) (loadImageLuna "./test/samples/lena.png") (return Nothing)
+            --        expectedImage = getDefaultTestPic specPath testName
+            --    it "in pixel-wise metric" $ do
+            --        returnShouldBeCloseTo testPath PixelWise actualImage expectedImage
+            --    it "in image-wise metric" $ do
+            --        returnShouldBeCloseTo testPath ImageWise actualImage expectedImage
 
 nameSave name image = do
     saveImageLuna ("./test/samples/mergeResults/"++name++".png") image
