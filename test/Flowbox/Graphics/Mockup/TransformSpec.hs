@@ -22,14 +22,14 @@ spec = do
 
             describe testName $ do
                 describe "Should save ok image" $ do
-                    let actualImage = rotateAtLuna (Point2 0 0) (pi/8) False Nothing (conicalLuna 100 120)
+                    let actualImage = rotateAtLuna (Point2 0 0) (-pi/8) False Nothing (conicalLuna 100 120)
                     --let actualImage = rotateAtLuna (pi/4) (conicalLuna 100 120)
                     -- let  expectedImage = getDefaultTestPic specPath testName
                     it "in test" $ do
                         pending
                         testSave actualImage `shouldReturn` ()
                 describe "should match reference image" $ do
-                    let actualImage = rotateAtLuna (Point2 0 0) (pi/8) False Nothing (conicalLuna 100 120)
+                    let actualImage = rotateAtLuna (Point2 0 0) (-pi/8) False Nothing (conicalLuna 100 120)
                         expectedImage = getDefaultTestPic specPath testName
                     it "in pixel-wise metric" $ do
                         rightReturnShouldBeCloseTo testPath PixelWise actualImage expectedImage
