@@ -117,14 +117,16 @@ profile = do
 main = do
     let closed = True
         (w,h)  = (640, 480) :: (Int, Int)
+        --------------------------------------------------------------------------------------------------------------------------
         points =   [ ControlPoint (Point2 212 209) Nothing                             (Just $ Point2 (211-212) (114-209))
                    , ControlPoint (Point2 338 210) (Just $ Point2 (329-338) (109-210)) (Just $ Point2 (450-338) (211-210))
                    , ControlPoint (Point2 343 330) (Just $ Point2 (456-343) (331-330)) Nothing
                    ]
-        feather =  [ ControlPoint (Point2 212 (209-40)) Nothing                        (Just $ Point2 (211-212) (114-209))
-                   , ControlPoint (Point2 338 (210-40)) (Just $ Point2 (329-338) (109-210)) (Just $ Point2 (450-338) (211-210))
-                   , ControlPoint (Point2 343 (330-40)) (Just $ Point2 (456-343) (331-330)) Nothing
+        feather =  [ ControlPoint (Point2 (212-212) (209-40-209)) Nothing                        (Just $ Point2 (211-212) (114-209))
+                   , ControlPoint (Point2 (338-338) (210-40-210)) (Just $ Point2 (329-338) (109-210)) (Just $ Point2 (450-338) (211-210))
+                   , ControlPoint (Point2 (343-343) (330-40-330)) (Just $ Point2 (456-343) (331-330)) Nothing
                    ]
+        --------------------------------------------------------------------------------------------------------------------------
         points1  = [ ControlPoint (Point2 212 209) Nothing Nothing
                    , ControlPoint (Point2 338 210) Nothing Nothing
                    , ControlPoint (Point2 343 330) Nothing Nothing
@@ -165,6 +167,15 @@ main = do
                       , ControlPoint (Point2 1046.300413 866.547248) Nothing Nothing
                       , ControlPoint (Point2 1025.632820 793.611354) (Just (Point2 (-1.636959) 2.455438)) (Just (Point2 1.636959 (-2.455438)))
                       ]
+    P.putStrLn "Test rasterizeMask empty list --> fooD.png "
+
+    let patd = Path True []
+        fead = Path True []
+
+    let arrD = rasterizeMask w h $ (Mask patd (Just fead))
+        imgD = matrixToImage arrD
+
+    --saveImageLuna "fooD.png" imgD
 
     P.putStrLn "Test rasterizeMask one line, no handles --> foo.png"
 
@@ -174,7 +185,7 @@ main = do
     let arrD = rasterizeMask w h $ (Mask patd (Just fead))
         imgD = matrixToImage arrD
 
-    saveImageLuna "foo.png" imgD
+    --saveImageLuna "foo.png" imgD
 
     P.putStrLn "Test rasterizeMask no fea, no handles --> foo1.png"
 
@@ -184,14 +195,14 @@ main = do
     let arrD = rasterizeMask w h $ (Mask pat1 Nothing)
         imgD = matrixToImage arrD
 
-    saveImageLuna "foo1.png" imgD
+    --saveImageLuna "foo1.png" imgD
 
     P.putStrLn "Test rasterizeMask no handles --> foo2.png"
 
     let arrD = rasterizeMask w h $ (Mask pat1 (Just fea1))
         imgD = matrixToImage arrD
 
-    saveImageLuna "foo2.png" imgD
+    --saveImageLuna "foo2.png" imgD
 
     P.putStrLn "Test rasterizeMask no fea --> fooD1.png"
 
@@ -201,7 +212,7 @@ main = do
     let arrD = rasterizeMask w h $ (Mask pat Nothing)
         imgD = matrixToImage arrD
 
-    saveImageLuna "fooD1.png" imgD
+    --saveImageLuna "fooD1.png" imgD
 
     P.putStrLn "Test rasterizeMask --> fooD2.png"
 
@@ -217,7 +228,7 @@ main = do
         arrGUI = rasterizeMask w h (Mask patGUI (Just feaGUI))
         imgGUI = matrixToImage arrGUI
 
-    saveImageLuna "fooD3.png" imgGUI
+    --saveImageLuna "fooD3.png" imgGUI
 
     P.putStrLn "Test rasterizeMask GUI2 example --> fooD4.png"
 
@@ -226,7 +237,7 @@ main = do
         arrGUI = rasterizeMask 1920 1080 (Mask patGUI (Just feaGUI))
         imgGUI = matrixToImage arrGUI
 
-    saveImageLuna "fooD4.png" imgGUI
+    --saveImageLuna "fooD4.png" imgGUI
 
 
 

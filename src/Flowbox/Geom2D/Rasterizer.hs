@@ -26,6 +26,7 @@ import           Diagrams.Backend.Cairo.Internal
 import           Diagrams.Prelude                hiding (Path, (<*))
 import           Diagrams.Segment
 import           Graphics.Rendering.Cairo        hiding (Path, translate)
+import           Math.Space.Space                (Grid (..))
 import           System.IO.Unsafe
 
 import           Flowbox.Geom2D.Accelerate.QuadraticBezier.Solve
@@ -35,17 +36,22 @@ import           Flowbox.Geom2D.Mask
 import           Flowbox.Geom2D.Path
 import           Flowbox.Geom2D.QuadraticBezier
 import           Flowbox.Geom2D.QuadraticBezier.Conversion
+import qualified Flowbox.Graphics.Composition.Filter             as Filter
 import qualified Flowbox.Graphics.Image.Channel                  as Channel
 import           Flowbox.Graphics.Image.Image                    (Image)
 import qualified Flowbox.Graphics.Image.Image                    as Image
 import           Flowbox.Graphics.Image.IO.BMP
 import qualified Flowbox.Graphics.Image.View                     as View
+import qualified Flowbox.Graphics.Shader.Pipe                    as Shader
+import           Flowbox.Graphics.Shader.Rasterizer
+import           Flowbox.Graphics.Shader.Matrix
 import           Flowbox.Graphics.Utils.Accelerate               (variable)
 import           Flowbox.Math.Matrix                             ((:.) (..), DIM2, Matrix (..), Matrix2, Z (..))
 import qualified Flowbox.Math.Matrix                             as M
 import           Flowbox.Prelude                                 hiding (use, ( # ), (<*))
 import           Math.Coordinate.Cartesian                       (Point2 (..))
 
+import qualified Debug.Trace as Dbg (trace)
 
 
 -- intended to be hidden from this package
@@ -143,8 +149,8 @@ makeCubics (Path closed points) = combine points
               in CubicBezier a (a+b) (d+c) d : combine (d':xs)
           combine _ = error "Flowbox.Geom2D.Rasterizer.makeCubics: unsupported ammount of points"
 
-
 pathToRGBA32 :: (Real a, Fractional a) => Int -> Int -> Path a -> A.Array DIM2 RGBA32
+pathToRGBA32 w h (Path _ []) = A.fromList (Z:.h:.w) [0..]
 pathToRGBA32 w h (Path closed points) = unsafePerformIO rasterize
     where ControlPoint (Point2 ox oy) _ _ = fmap f2d $ head points
           h' = fromIntegral h
@@ -165,13 +171,24 @@ pathToMatrix w h path = extractArr $ pathToRGBA32 w h path
           extractVal :: M.Exp RGBA32 -> M.Exp Float
           extractVal rgba = (A.fromIntegral $ (rgba `div` 0x1000000) .&. 0xFF) / 255
 
+translateFeather :: Num a => Path a -> Path a -> Path a
+translateFeather (Path _ path) (Path isClosed feather) = Path isClosed $ zipWith process path feather
+    where process (ControlPoint p _ _) (ControlPoint f hIn hOut) = ControlPoint (p+f) hIn hOut
+
 rasterizeMask :: (Real a, Fractional a) => Int -> Int -> Mask a -> Matrix2 Float
-rasterizeMask w h (Mask path' feather') =
-    case feather' of
-        Nothing -> path
-        Just feather -> checkEqual feather path'
-    where ptm = pathToMatrix w h
-          path = ptm path'
+rasterizeMask w h (Mask pathRaw maybeFeather) =
+    case maybeFeather of
+        Nothing -> process path
+        Just featherRaw -> process $ checkEqual (translateFeather pathRaw featherRaw) pathRaw
+    where hmat :: (A.Elt e, A.IsFloating e) => Matrix2 e
+          hmat = id M.>-> Filter.normalize $ Filter.toMatrix (Grid 1 kernelSize) $ Filter.gauss 1.0
+          vmat :: (A.Elt e, A.IsFloating e) => Matrix2 e
+          vmat = id M.>-> Filter.normalize $ Filter.toMatrix (Grid kernelSize 1) $ Filter.gauss 1.0
+          kernelSize = 3 -- magick number
+          p = Shader.pipe A.Clamp
+          process x = rasterizer $ id `p` Filter.filter 1 vmat `p` Filter.filter 1 hmat `p` id $ fromMatrix A.Clamp x
+          ptm = pathToMatrix w h
+          path = ptm pathRaw
           distance p (A.unlift . A.unindex2 -> (A.fromIntegral -> y, A.fromIntegral -> x) :: (A.Exp Int, A.Exp Int)) = let
                   h' = A.fromIntegral $ A.lift h
                   d = distanceFromQuadratics' (A.lift $ Point2 x ((y - (h'/2))*(-1) + (h'/2)))
@@ -203,24 +220,24 @@ rasterizeMask w h (Mask path' feather') =
                               a = makeCubics p
                               quads = convertCubicsToQuadratics 5 0.001 $ (fmap.fmap) f2f a
                           in A.use $ A.fromList (Z :. length quads) quads
-                      cA = convert path'
+                      cA = convert pathRaw
                       cB = convert fea
                       dP = M.generate (A.index2 (variable h) (variable w)) $ distance cA
                       dF = M.generate (A.index2 (variable h) (variable w)) $ distance cB
                   in M.zipWith4 (\p f dp df -> (combine p f dp df)) path feather dP dF
-    --case feather' of
+    --case featherRaw of
     --    Nothing -> path
-    --    Just feather' -> let
-    --            feather = ptm feather'
+    --    Just featherRaw -> let
+    --            feather = ptm featherRaw
     --            convert :: Real a => Path a -> A.Acc (A.Vector (QuadraticBezier Double))
     --            convert p = let
     --                    a = makeCubics p
     --                in A.use $ A.fromList (Z :. length a) $ convertCubicsToQuadratics 5 0.001 $ (fmap.fmap) f2d a
-    --            cA = convert path'
-    --            cB = convert feather'
+    --            cA = convert pathRaw
+    --            cB = convert featherRaw
     --        in M.generate (A.index2 (variable h) (variable w)) $ combine feather cA cB
     --where ptm  = pathToMatrix w h
-    --      path = ptm path'
+    --      path = ptm pathRaw
     --      combine :: Matrix2 Double -> A.Acc (A.Vector (QuadraticBezier Double)) -> A.Acc (A.Vector (QuadraticBezier Double)) -> A.Exp A.DIM2 -> A.Exp Double
     --      combine feather pQ fQ idx@(A.unlift . A.unindex2 -> (A.fromIntegral -> y, A.fromIntegral -> x) :: (A.Exp Int, A.Exp Int)) = let
     --              p  = path M.! idx

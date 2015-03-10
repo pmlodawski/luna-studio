@@ -10,7 +10,7 @@ module Main where
 
 import           Flowbox.Graphics.Mockup
 import           Flowbox.Graphics.Mockup.Basic as Mockup
-import           Flowbox.Graphics.Mockup.Transform
+import           Flowbox.Graphics.Mockup.Transform as Transform
 import qualified Flowbox.Math.Matrix as M
 import           Data.Array.Accelerate as A hiding (fromIntegral)
 import           Data.Array.Accelerate.IO
@@ -33,7 +33,7 @@ import qualified Flowbox.Graphics.Mockup as Mockup
 import           Flowbox.Graphics.Shader.Shader
 import           Flowbox.Graphics.Image.Matte
 import           Flowbox.Graphics.Composition.Generator.Gradient
-import           Flowbox.Graphics.Composition.Transform as Transform
+import           Flowbox.Graphics.Composition.Transform
 import           Flowbox.Graphics.Image.View as View
 import           Flowbox.Graphics.Image.Image
 import           Flowbox.Graphics.Shader.Sampler
@@ -57,25 +57,25 @@ main :: IO ()
 main = do
     print "- - - = = =   Transformations Test  = = = - - -"
 
-    img <- loadImageLuna "lena.png"
+    --img <- loadImageLuna "lena.png"
 
-    let t = Transform (V2 50.0 200.0) (pi/2) (V2 1.5 1.8) (Skew (V2 0.0 1.3) SkewYX) (Point2 300.0 100.0)
-    let img1 = transformLuna t (Nothing) img
-    saveImageLuna "./t1.png" img1
+    --let t = Transform (V2 50.0 200.0) (pi/2) (V2 1.5 1.8) (Skew (V2 0.0 1.3) SkewYX) (Point2 300.0 100.0)
+    --let img1 = Transform.transformLuna t img
+    --saveImageLuna "./t1.png" img1
 
-    let img2 = scaleAtMatteLuna (Point2 180.0 100.0) (V2 0.9 0.6) (Nothing) img
-    saveImageLuna "./t2.png" img2
+    --let img2 = scaleAtLuna (Point2 180.0 100.0) (V2 0.9 0.6) (Nothing) img
+    --saveImageLuna "./t2.png" img2
 
-    let img11 = skewAtMatteLuna (Point2 250.0 150.0) (Skew (V2 1.5 0.5) SkewYX) (Nothing) img
-    saveImageLuna "./t3.png" img11
+    --let img11 = skewAtLuna (Point2 250.0 150.0) (Skew (V2 1.5 0.5) SkewYX) (Nothing) img
+    --saveImageLuna "./t3.png" img11
 
-    let img4 = translateMatteLuna (V2 140.0 50.0) (Nothing) img
-    saveImageLuna "./t4.png" img4
+    --let img4 = translateLuna (V2 140.0 50.0) (Nothing) img
+    --saveImageLuna "./t4.png" img4
 
-    let img5 = skewAtMatteLuna (Point2 100.0 150.0) (Skew (V2 1.0 1.0) SkewXY) (Nothing) img
-    saveImageLuna "./t5.png" img5
+    --let img5 = skewAtLuna (Point2 100.0 150.0) (Skew (V2 1.0 1.0) SkewXY) (Nothing) img
+    --saveImageLuna "./t5.png" img5
 
-    let img6 = rotateAtMatteLuna (Point2 200.0 400.0) (pi/3) (Nothing) img
-    saveImageLuna "./t6.png" img6
+    --let img6 = rotateAtLuna (Point2 200.0 400.0) (pi/3) (Nothing) img
+    --saveImageLuna "./t6.png" img6
 
     print "done"

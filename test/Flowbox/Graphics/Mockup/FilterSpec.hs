@@ -6,8 +6,12 @@ import Flowbox.Graphics.Mockup.Basic as M
 import Flowbox.Graphics.Mockup.Filter as M
 import Flowbox.Graphics.Composition.EdgeBlur as EB
 import qualified Flowbox.Math.Matrix as M
-
-
+import System.IO.Unsafe
+import Control.Monad
+import qualified Flowbox.Graphics.Image.Image   as Img
+import qualified Flowbox.Graphics.Image.Channel as Chan
+import qualified Flowbox.Graphics.Image.View    as View
+import Flowbox.Graphics.Utils.Utils (clamp') 
 
 import Flowbox.Prelude as P
 
@@ -34,6 +38,25 @@ spec = do
                         testSaveEdgeBlur 5 5 "rgba.x" `shouldThrow` anyException
                     it "should be efficent" $ do
                         pending
+
+          let testName = "edgeDetectLuna"
+              testPath = specPath++testName
+                in describe testName $ do
+                    describe "should save ok image" $ do
+                        let actualImage = liftM (edgeDetectLuna (Sobel Horizontal)) $ loadImageLuna "./test/samples/lena.png"
+                        it "in test" $ do
+                            pending
+                            (testSave =<< actualImage) `shouldReturn` () --(testSave =<< actualImage)
+                    describe "should match reference image" $ do
+                        let actualImage = liftM (Img.map (View.map (Chan.unsafeMap (Chan.FunFloat (clamp' 0 1))))) $ liftM (edgeDetectLuna (Sobel Horizontal)) $ loadImageLuna "./test/samples/lena.png"
+                            expectedImage = getDefaultTestPic specPath testName
+                        it "in pixel-wise metric" $ do
+                            returnShouldBeCloseTo testPath PixelWise actualImage expectedImage
+                        it "in image-wise metric" $ do
+                            returnShouldBeCloseTo testPath ImageWise actualImage expectedImage
+
+
+
 
               --let testName = "dither"
               --  in describe testName $ do

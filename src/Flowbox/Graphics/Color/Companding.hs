@@ -16,6 +16,7 @@ module Flowbox.Graphics.Color.Companding (
     , AlexaV3LogC(..)
     , Cineon(..)
     , Gamma(..)
+    , Linear(..)
     , LStar(..)
     , Panalog(..)
     , PLogLin(..)
@@ -81,6 +82,14 @@ instance (A.IsFloating t, A.Elt t) => Companding (Gamma (A.Exp t)) (A.Exp t) whe
     toLinear (Gamma g) v = v ** g
 
     fromLinear (Gamma g) v = v ** (1 / g)
+
+
+data Linear = Linear
+            deriving Show
+
+instance Floating a => Companding Linear a where
+    toLinear   _ v = v
+    fromLinear _ v = v
 
 
 data LStar = LStar

@@ -121,8 +121,8 @@ saturateRGB rs gs bs rgb = (rSaturated, gSaturated, bSaturated) where
     rgbGsaturated = M.map (A.lift1 ((saturate :: Exp Float -> RGB (Exp Float) -> RGB (Exp Float)) gs)) rgb
     rgbBsaturated = M.map (A.lift1 ((saturate :: Exp Float -> RGB (Exp Float) -> RGB (Exp Float)) bs)) rgb
 
-    saturateOnHSV :: Exp Float -> RGB (Exp Float) -> RGB (Exp Float)
-    saturateOnHSV sat pix = toHSL pix & (\(HSL h s l) -> HSL h (s * sat) l) & toRGB
+    --saturateOnHSV :: Exp Float -> RGB (Exp Float) -> RGB (Exp Float)
+    --saturateOnHSV sat pix = toHSL pix & (\(HSL h s l) -> HSL h (s * sat) l) & toRGB
 
     rSaturated = M.map (\(A.unlift -> RGB r _ _) -> r) rgbRsaturated
     gSaturated = M.map (\(A.unlift -> RGB _ g _) -> g) rgbGsaturated

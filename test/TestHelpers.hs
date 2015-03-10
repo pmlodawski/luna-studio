@@ -56,7 +56,7 @@ assertAlmostEqual name preface metric expected actual = do
     
     let ret = do
           ioMsg <- diffMsg name metric actual expected
-          assertFailure $ (if null preface then "" else preface ++ "\n") ++ ioMsg
+          assertFailure $ (if P.null preface then "" else preface ++ "\n") ++ ioMsg
         in unless (closeEnough metric actual expected) ret
         --where msg = (if null preface then "" else preface ++ "\n") ++ ioMsg
 
@@ -139,7 +139,7 @@ instance Comparable Image ImageMetric where
                             [maxDiff] = M.toList AC.run maxDif
 
 
-                            diff = mergeLuna (Difference Adobe) actualImage expectedImage
+                            diff = mergeLuna (Difference Adobe) actualImage expectedImage Nothing
 
 
                             finMsg = "wrong result saved to"++resultPath++"\ndiff image saved to "++diffPath ++ "\nmax pixel-wise difference: " ++ (show $ maxDiff)   
@@ -210,6 +210,11 @@ testSave image = do
     saveImageLuna "./test/samples/x_result.png" image
     return ()
 
+--returnTestSave image = do
+--    image' <- image
+--    saveImageLuna "./test/samples/x_result.png" image'
+--    return ()
+
 getDefaultTestPic :: String -> String -> IO Image
 getDefaultTestPic specPath testName = do
     directoryExists <- doesDirectoryExist $ specPath++testName++"Test/"
@@ -220,6 +225,7 @@ getDefaultTestPic specPath testName = do
 tryDownloading specPath testName = do
     customExists  <- doesFileExist "./test/custom.config"
     defaultExists <- doesFileExist "./test/default.config"
+    --let tries = [tryLocal, tryCustom, tryDefault]
     if customExists 
         then do
             conf <- getTestConfig "./test/custom.config"

@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE DeriveFunctor       #-}
 {-# LANGUAGE LambdaCase          #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE PatternSynonyms     #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeFamilies        #-}
@@ -16,12 +17,12 @@ module Flowbox.Graphics.Mockup.Basic (
     InterpolationFilter(..),
     VPS,
     pattern VPS,
+    applyTime,
     channelToImageRGBA,
     constantBoundaryWrapper,
     getChannelFromPrimaryLuna,
     getChannelLuna,
     insertChannelFloats,
-    liftF13,
     loadImageLuna,
     multisampleChannelsLuna,
     onEach,
@@ -31,6 +32,7 @@ module Flowbox.Graphics.Mockup.Basic (
     onEachRGBA,
     onEachRGBAChannels,
     onShader,
+    printfInt,
     realReadLuna,
     saveImageLuna,
     temporaryBackend,
@@ -54,8 +56,9 @@ import qualified Data.Vector.Storable              as SV
 import           Math.Coordinate.Cartesian         (Point2 (..))
 import           Math.Space.Space                  (Grid (..))
 import qualified System.FilePath                   as FilePath
+import           Text.Printf
 
-
+import  Flowbox.Data.FilePath (applyTime)
 import qualified Flowbox.Graphics.Color.Color          as Color
 import qualified Flowbox.Graphics.Composition.Filter   as Filter
 import           Flowbox.Graphics.Image.Channel        (Channel (..), ChannelData (..))
@@ -78,6 +81,7 @@ import           Flowbox.Math.Matrix                   as M
 import           Flowbox.Prelude                       as P hiding (lookup, view)
 
 import Control.PolyApplicative ((<<*>>))
+import Data.TupleList          (curryTuple8, curryTuple9)
 import Luna.Target.HS          (Pure (..), Safe (..), Value (..), autoLift, autoLift1, fromValue, val)
 
 
@@ -112,6 +116,8 @@ unpackAccDims (x,y) =
 unsafeFromMaybe :: Maybe a -> a
 unsafeFromMaybe (Just a) = a
 
+printfInt :: String -> Int -> String
+printfInt str int = printf str int
 
 -- == LOAD / SAVE
 
@@ -453,4 +459,5 @@ liftF13 fun a b c d e f g h i j k l m = do
     m' <- m
     val fun <<*>> a' <<*>> b' <<*>> c' <<*>> d' <<*>> e' <<*>> f'
             <<*>> g' <<*>> h' <<*>> i' <<*>> j' <<*>> k' <<*>> l' <<*>> m'
+
 

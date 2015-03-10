@@ -10,6 +10,7 @@
 module Flowbox.Graphics.Image.Image (
     Image,
     pattern DefaultView,
+    pattern ForceView,
     empty,
     singleton,
     singletonFromChans,
@@ -22,6 +23,7 @@ module Flowbox.Graphics.Image.Image (
     lookupPrimary,
     lookupDefault,
     map,
+    null,
     get,
     getFromPrimary,
     getChannels,
@@ -42,7 +44,7 @@ import qualified Flowbox.Graphics.Image.Channel as Channel
 import           Flowbox.Graphics.Image.Error
 import           Flowbox.Graphics.Image.View  (View(..))
 import qualified Flowbox.Graphics.Image.View  as View
-import           Flowbox.Prelude              hiding (empty, lookup, map, view, views)
+import           Flowbox.Prelude              hiding (empty, lookup, map, null, view, views)
 
 
 
@@ -51,11 +53,15 @@ data Image = Image { _arbitraryViews :: Set View
                    } deriving (Show)
 
 pattern DefaultView view <- Image _ view
+pattern ForceView view <- Image _ (fromMaybe (error "view not found") -> view)
 
 makeLenses ''Image
 
 empty :: Image
 empty = Image Set.empty Nothing
+
+null :: Image -> Bool
+null (Image arbitrary primary) = Set.null arbitrary && isNothing primary
 
 singleton :: View -> Image
 singleton = Image Set.empty . Just
@@ -156,3 +162,4 @@ dummyView name = View.empty name
 
 primaryViewTag :: String
 primaryViewTag = "- - primary view - -"
+

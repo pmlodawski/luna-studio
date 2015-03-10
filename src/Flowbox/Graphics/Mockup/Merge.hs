@@ -16,8 +16,10 @@ import           Flowbox.Graphics.Composition.Merge (AlphaBlend (..))
 import qualified Flowbox.Graphics.Composition.Merge as Merge
 import           Flowbox.Graphics.Image.Image       (Image)
 import qualified Flowbox.Graphics.Image.Image       as Image
+import qualified Flowbox.Graphics.Image.Matte       as Matte
 import qualified Flowbox.Graphics.Shader.Matrix     as Shader
 import qualified Flowbox.Graphics.Shader.Rasterizer as Shader
+import           Flowbox.Graphics.Utils.Utils
 import           Flowbox.Prelude                    as P hiding (lookup)
 
 import           Flowbox.Graphics.Mockup.Basic
@@ -46,10 +48,10 @@ data MergeMode = Atop
            | HardLight AlphaBlend
            | Hypot AlphaBlend
            | In
-           | Mask
-           | Matte
-           -- | Max
-           -- | Min
+           | MergeMask
+           | MergeMatte
+           | MergeMax AlphaBlend
+           | MergeMin AlphaBlend
            | Minus AlphaBlend
            | Multiply AlphaBlend
            | Out
@@ -66,8 +68,9 @@ data MergeMode = Atop
            | XOR
            deriving (Show)
 
-mergeLuna :: MergeMode -> Image -> Image -> Image
-mergeLuna mode img1 img2 = case mode of
+-- img1 is background, img2 is foreground
+mergeLuna :: MergeMode -> Image -> Image -> Maybe (Matte.Matte Float) -> Image
+mergeLuna mode img1 img2 matte = case mode of
     Atop                           -> processMerge $ Merge.threeWayMerge             Merge.atop
     Average alphaBlend             -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.average
     ColorBurn alphaBlend           -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.colorBurn
@@ -84,10 +87,10 @@ mergeLuna mode img1 img2 = case mode of
     HardLight alphaBlend           -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.hardLight
     Hypot alphaBlend               -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.hypot
     In                             -> processMerge $ Merge.threeWayMerge             Merge.inBlend
-    Mask                           -> processMerge $ Merge.threeWayMerge             Merge.withMask
-    Matte                          -> processMerge $ Merge.threeWayMerge             Merge.matte
-    -- Max                         -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.max
-    -- Min                         -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.min
+    MergeMask                      -> processMerge $ Merge.threeWayMerge             Merge.withMask
+    MergeMatte                     -> processMerge $ Merge.threeWayMerge             Merge.matte
+    MergeMax alphaBlend            -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.max
+    MergeMin alphaBlend            -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.min
     Minus alphaBlend               -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.minus
     Multiply alphaBlend            -> processMerge $ Merge.threeWayMerge' alphaBlend Merge.multiply
     Out                            -> processMerge $ Merge.threeWayMerge             Merge.out
@@ -104,19 +107,33 @@ mergeLuna mode img1 img2 = case mode of
     XOR                            -> processMerge $ Merge.threeWayMerge             Merge.xor
     where processMerge f = img'
               where (r, g, b, a) = f r1 g1 b1 r2 g2 b2 a1 a2
+                    rm = (+)<$>((*)<$>r<*>mask)<*>((*)<$>r1<*>(fmap ((-) 1) mask))
+                    gm = (+)<$>((*)<$>g<*>mask)<*>((*)<$>g1<*>(fmap ((-) 1) mask))
+                    bm = (+)<$>((*)<$>b<*>mask)<*>((*)<$>b1<*>(fmap ((-) 1) mask))
+                    am = (+)<$>((*)<$>a<*>mask)<*>((*)<$>a1<*>(fmap ((-) 1) mask))
                     view' = insertChannelFloats view [
-                                ("rgba.r", Shader.rasterizer $ r)
-                              , ("rgba.g", Shader.rasterizer $ g)
-                              , ("rgba.b", Shader.rasterizer $ b)
-                              , ("rgba.a", Shader.rasterizer $ a)
+                                ("rgba.r", Shader.rasterizer $ rm)
+                              , ("rgba.g", Shader.rasterizer $ gm)
+                              , ("rgba.b", Shader.rasterizer $ bm)
+                              , ("rgba.a", Shader.rasterizer $ am)
                             ]
                     img' = Image.insertPrimary view' img1
           Right view = Image.lookupPrimary img1
           Grid width1 height1 = canvas r1
           Grid width2 height2 = canvas r2
           (r1, g1, b1, a1) = unsafeGetChannels img1 & over each (Shader.fromMatrix (A.Constant 0))
-          (r2, g2, b2, a2) = unsafeGetChannels img2 & over each (Shader.transform transformation . Shader.fromMatrix (A.Constant 0))
-          transformation :: Point2 (Exp Int) -> Point2 (Exp Int)
-          transformation pt = case pt of
+          (r2, g2, b2, a2) = unsafeGetChannels img2 & over each (Shader.transform toBottomLeft . Shader.fromMatrix (A.Constant 0))
+          --(r2m, g2m, b2m, a2m) = case matte of
+          --    Just m -> let (h,w) = unpackAccDims (height2, width2) 
+          --                  msh = Shader.bound A.Clamp $ Matte.matteToDiscrete h w m
+          --                  in ((*)<$>r2<*>msh,(*)<$>g2<*>msh,(*)<$>b2<*>msh,(*)<$>a2<*>msh) -- {-- invert <$> --} Matte.matteToDiscrete h w m
+          --    _      -> (r2, g2, b2, a2)
+          mask = case matte of
+              Just m -> let (h,w) = unpackAccDims (height2, width2) 
+                            msh = {-- Shader.bound A.Clamp $ --} Matte.matteToDiscrete h w m
+                            in msh -- {-- invert <$> --} Matte.matteToDiscrete h w m
+              _      -> Shader.unitShader (\_->1)
+          toBottomLeft :: Point2 (Exp Int) -> Point2 (Exp Int)
+          toBottomLeft pt = case pt of
                                     Point2 x y -> Point2 x (y-height1+height2)
 
