@@ -19,6 +19,7 @@ import           Data.Sequence ((><))
 import qualified Flowbox.Batch.Batch                                                                          as Batch
 import qualified Flowbox.Batch.Handler.Common                                                                 as Batch
 import qualified Flowbox.Batch.Handler.Graph                                                                  as BatchG
+import qualified Flowbox.Batch.Handler.NodeDefault                                                            as BatchND
 import           Flowbox.Bus.Data.Message                                                                     as Message
 import           Flowbox.Bus.Data.Topic                                                                       (Topic)
 import           Flowbox.Bus.Data.Serialize.Proto.Conversion.Message                                          ()
@@ -42,6 +43,7 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Gra
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.LookupMany.Status          as LookupMany
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Add.Request           as NodeAdd
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Add.Update            as NodeAdd
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Default.Set.Request   as NodeDefaultSet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Modify.Request        as NodeModify
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Modify.Update         as NodeModify
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.ModifyInPlace.Request as NodeModifyInPlace
@@ -50,6 +52,7 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Gra
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Update         as NodeRemove
 import qualified Generated.Proto.Urm.URM.Register.Request                                                     as Register
 import qualified Generated.Proto.Urm.URM.RegisterMultiple.Request                                             as RegisterMultiple
+import qualified Luna.DEP.Graph.View.Default.DefaultsMap                                                      as DefaultsMap
 import           Luna.DEP.Graph.View.EdgeView                                                                 (EdgeView (EdgeView))
 import           Luna.DEP.Data.Serialize.Proto.Conversion.Crumb                                               ()
 import           Luna.DEP.Data.Serialize.Proto.Conversion.GraphView                                           ()
@@ -199,6 +202,13 @@ nodeRemove (NodeRemove.Request tnodeIDs tbc tlibID tprojectID astID) undoTopic =
 
     rm <- mapM (\nid -> BatchG.nodeEdges nid bc libID projectID) newIDs
     let removed = Set.toList $ Set.fromList $ concat rm
+    properties <- mapM (\nid -> do properties <- BatchND.nodeDefaults nid bc libID projectID
+                                   return $ DefaultsMap.mapWithKey (\k v -> fun Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest
+                                                                                $ NodeDefaultSet.Request (encodeP k) (encode $ snd v) (encodeP nid) tbc tlibID tprojectID astID
+                                                                   )
+                                                                   properties
+                       )
+                       nodeIDs
     
     BatchG.removeNodes newIDs bc libID projectID
     updateNo <- Batch.getUpdateNo
@@ -208,7 +218,20 @@ nodeRemove (NodeRemove.Request tnodeIDs tbc tlibID tprojectID astID) undoTopic =
     return ( [NodeRemove.Update (updatedRequest $ encodeP newIDs) updateNo]
            , makeMsgArr (RegisterMultiple.Request
                             (  (Sequence.fromList $ map (\node -> fun Topic.projectLibraryAstFunctionGraphNodeAddRequest $ NodeAdd.Request node tbc tlibID tprojectID astID) $ oldNodes)
-                            >< (Sequence.fromList $ map (\(srcID, dstID, EdgeView srcPorts dstPorts) -> fun Topic.projectLibraryAstFunctionGraphConnectRequest $ Connect.Request (encodeP $ originID srcID) (encodeP srcPorts) (encodeP $ originID dstID) (encodeP dstPorts) tbc tlibID tprojectID astID) removed)
+                            >< (Sequence.fromList $ map (\(srcID, dstID, EdgeView srcPorts dstPorts) -> fun Topic.projectLibraryAstFunctionGraphConnectRequest 
+                                                                                                            $ Connect.Request (encodeP $ originID srcID)
+                                                                                                                              (encodeP srcPorts)
+                                                                                                                              (encodeP $ originID dstID)
+                                                                                                                              (encodeP dstPorts)
+                                                                                                                              tbc
+                                                                                                                              tlibID
+                                                                                                                              tprojectID
+                                                                                                                              astID
+                                                        ) 
+                                                        removed
+                               )
+                            >< (Sequence.fromList $ concat $ map (map snd . DefaultsMap.toList) properties
+                               )
                             )
                             (fun Topic.projectLibraryAstFunctionGraphNodeRemoveRequest $ updatedRequest $ encodeP originIDs)
                             tprojectID

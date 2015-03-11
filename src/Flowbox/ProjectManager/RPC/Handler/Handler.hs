@@ -11,11 +11,9 @@
 
 module Flowbox.ProjectManager.RPC.Handler.Handler where
 
-import           Control.Monad             (liftM)
 import Control.Monad.Trans.State
 
 import           Flowbox.Bus.Data.Message                         (Message)
-import qualified Flowbox.Bus.Data.Message                         as Message
 import           Flowbox.Bus.Data.Topic                           ((/+))
 import           Flowbox.Bus.Data.Topic                           (Topic)
 import qualified Flowbox.Bus.Data.Topic                           as Topic
@@ -37,10 +35,6 @@ import qualified Flowbox.ProjectManager.RPC.Topic                 as Topic
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.Text.ProtocolBuffers                     as Proto
 import qualified Flowbox.UR.Manager.RPC.Topic                     as Topic
-import qualified Generated.Proto.Urm.URM.Register.Request         as Register
-import qualified Generated.Proto.Urm.URM.RegisterMultiple.Request as RegisterMultiple
-import qualified Generated.Proto.Urm.URM.Undo.Request             as Undo
-import           Flowbox.Text.ProtocolBuffers                     (Serializable)
 
 
 
