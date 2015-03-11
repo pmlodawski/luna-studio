@@ -102,7 +102,7 @@ instance Comparable Image ImageMetric where
         TileWise  -> True
         SizeWise  -> eqSize
         ImageWise -> sC/sRefC < 0.01) where
-            [eqSize] = M.toList AC.run eqSizeAc
+            --[eqSize] = M.toList AC.run eqSizeAc
             [maxDiff] = M.toList AC.run maxDif
             [sC] = M.toList AC.run s
             [sRefC] = M.toList AC.run sRef
@@ -115,7 +115,10 @@ instance Comparable Image ImageMetric where
             g = M.map abs $ M.zipWith (-) g1 g2
             b = M.map abs $ M.zipWith (-) b1 b2
             a = M.map abs $ M.zipWith (-) a1 a2
-            eqSizeAc = M.unit $ (M.size r1) A.==* (M.size r2)
+            eqSize = w1 == w2 && h1 == h2 -- M.unit $ (M.size r1) A.==* (M.size r2)
+            [A.Z A.:.w1 A.:.h1] =  M.toList AC.run $ M.unit $ M.shape r1
+            [A.Z A.:.w2 A.:.h2] =  M.toList AC.run $ M.unit $ M.shape r2
+            --A.Z A.:.w2 A.:.h2 = M.shape r2
             (r1,g1,b1,a1) = Mock.unsafeGetChannels actualImage
             (r2,g2,b2,a2) = Mock.unsafeGetChannels expectedImage
             
@@ -287,3 +290,5 @@ defaultReferenceTestM testName specPath image =
                 returnShouldBeCloseTo testPath PixelWise image expectedImage
             it "in image-wise metric" $ do
                 returnShouldBeCloseTo testPath ImageWise image expectedImage
+            it "in size-wise metric" $ do
+                returnShouldBeCloseTo testPath SizeWise image expectedImage
