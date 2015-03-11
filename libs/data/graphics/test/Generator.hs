@@ -15,7 +15,6 @@ module Main where
 import Flowbox.Geom2D.Accelerate.CubicBezier
 import Flowbox.Geom2D.Accelerate.CubicBezier.Solve
 import Flowbox.Geom2D.CubicBezier
-import Flowbox.Graphics.Composition.Color              (LinearShader (..), crosstalk)
 import Flowbox.Graphics.Composition.Dither
 import Flowbox.Graphics.Composition.Filter
 import Flowbox.Graphics.Composition.Filter             as Conv
@@ -329,19 +328,19 @@ orderedDitherTest a = do
 --
 -- Crosstalk test
 --
-crosstalkTest :: IO ()
-crosstalkTest = do
-    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/lena.png"
-    let r' = fromMatrix A.Clamp r
-        g' = fromMatrix A.Clamp g
-        b' = fromMatrix A.Clamp b
-        zero = LinearShader $ const 0
-        id' = LinearShader $ id
-        foo = LinearShader $ valueAtX 20 0.00001 (A.lift $ CubicBezier (Point2 0 (0::A.Exp Float)) (Point2 0.25 1.2) (Point2 0.75 1.2) (Point2 1 0))
-
-        (newR, newG, newB) = crosstalk foo id' id' zero zero zero zero zero zero r' g' b'
-    print "foo"
-    testSaveRGBA' "out.png" (rasterizer newR) (rasterizer newG) (rasterizer newB) a
+--crosstalkTest :: IO ()
+--crosstalkTest = do
+--    (r :: Matrix2 Float, g, b, a) <- testLoadRGBA' "samples/lena.png"
+--    let r' = fromMatrix A.Clamp r
+--        g' = fromMatrix A.Clamp g
+--        b' = fromMatrix A.Clamp b
+--        zero = LinearShader $ const 0
+--        id' = LinearShader $ id
+--        foo = LinearShader $ valueAtX 20 0.00001 (A.lift $ CubicBezier (Point2 0 (0::A.Exp Float)) (Point2 0.25 1.2) (Point2 0.75 1.2) (Point2 1 0))
+--
+--        (newR, newG, newB) = crosstalk foo id' id' zero zero zero zero zero zero r' g' b'
+--    print "foo"
+--    testSaveRGBA' "out.png" (rasterizer newR) (rasterizer newG) (rasterizer newB) a
 
 
 --

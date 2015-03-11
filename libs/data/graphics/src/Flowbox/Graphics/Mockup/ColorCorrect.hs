@@ -13,10 +13,12 @@ module Flowbox.Graphics.Mockup.ColorCorrect (
     ColorCorrectCurves(..),
     ColorCC(..),
     HueCorrectCurves(..),
+    CrosstalkCurves(..),
     clampLuna,
     colorCorrectLuna,
     colorCorrectLunaCurves,
     contrastLuna,
+    crosstalkLuna,
     exposureLuna,
     gammaFromLinearLuna,
     gammaLuna,
@@ -366,3 +368,28 @@ gammaToLinearLuna companding = onEach $ (Gamma.toLinear companding :: Exp Float 
 
 gammaFromLinearLuna :: Gamma.Companding a (Exp Float) => a -> Image -> Image
 gammaFromLinearLuna companding = onEach $ Gamma.fromLinear companding
+
+data CrosstalkCurves a = CrosstalkCurves { _redC :: CurveGUI a
+                                         , _greenC :: CurveGUI a
+                                         , _blueC :: CurveGUI a
+                                         , _redGreen :: CurveGUI a
+                                         , _redBlue :: CurveGUI a
+                                         , _greenRed :: CurveGUI a
+                                         , _greenBlue :: CurveGUI a
+                                         , _blueRed :: CurveGUI a
+                                         , _blueGreen :: CurveGUI a
+                                         }
+                       deriving Show
+
+crosstalkLuna :: CrosstalkCurves Float -> Image -> Image
+crosstalkLuna (CrosstalkCurves r g b rg rb gr gb br bg) img =
+    onEachColorRGB (CC.crosstalk (CurveGUI.convertToBSpline r)
+                                 (CurveGUI.convertToBSpline g)
+                                 (CurveGUI.convertToBSpline b)
+                                 (CurveGUI.convertToBSpline rg)
+                                 (CurveGUI.convertToBSpline rb)
+                                 (CurveGUI.convertToBSpline gr)
+                                 (CurveGUI.convertToBSpline gb)
+                                 (CurveGUI.convertToBSpline br)
+                                 (CurveGUI.convertToBSpline bg)
+                   ) img
