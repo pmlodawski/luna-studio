@@ -15,50 +15,46 @@
 module Luna.Pass.Transform.Graph.Builder.Builder where
 
 --import           Control.Applicative
-import           Control.Monad.State
-import           Control.Monad.Trans.Either
-import qualified Data.List                  as List
-import qualified Data.Maybe                 as Maybe
+import Control.Monad.State
+import Control.Monad.Trans.Either
 
-import Flowbox.Prelude hiding (Traversal, error, mapM, mapM_)
---import qualified Flowbox.Prelude                         as Prelude
-import Flowbox.System.Log.Logger
-import Luna.Data.StructInfo      (StructInfo)
 --import qualified Luna.Pass.Analysis.ID.MinID             as MinID
-import           Luna.Pass.Analysis.ID.State             (IDState)
+--import qualified Luna.Syntax.Arg                         as Arg
+--import qualified Luna.Syntax.Graph.Node.OutputName       as OutputName
+--import qualified Luna.Syntax.Type                        as Type
+--import           Luna.Syntax.Pat                         (LPat)
+--import qualified Luna.Syntax.Pat                         as Pat
+--import           Luna.Syntax.Traversals.Class            (Traversal)
+--import qualified Luna.Syntax.Graph.Tag                   as Tag
+--import qualified Luna.Syntax.Enum                        as Enum
+--import           Luna.Syntax.Decl                        (LDecl)
+import           Flowbox.Prelude                         hiding (Traversal, error, mapM, mapM_)
+import           Flowbox.System.Log.Logger
+import           Luna.Data.StructInfo                    (StructInfo)
 import qualified Luna.Pass.Pass                          as Pass
 import           Luna.Pass.Transform.Graph.Builder.State (GBPass)
 import qualified Luna.Pass.Transform.Graph.Builder.State as State
 import           Luna.Syntax.Arg                         (Arg (Arg))
---import qualified Luna.Syntax.Arg                         as Arg
-import qualified Luna.Syntax.AST             as AST
-import           Luna.Syntax.Decl            (LDecl)
-import qualified Luna.Syntax.Decl            as Decl
-import           Luna.Syntax.Enum            (Enumerated)
-import qualified Luna.Syntax.Enum            as Enum
-import           Luna.Syntax.Expr            (LExpr)
-import qualified Luna.Syntax.Expr            as Expr
-import           Luna.Syntax.Graph.Graph     (Graph)
-import qualified Luna.Syntax.Graph.Node      as Node
-import           Luna.Syntax.Graph.Node.Expr (NodeExpr)
-import qualified Luna.Syntax.Graph.Node.Expr as NodeExpr
---import qualified Luna.Syntax.Graph.Node.OutputName       as OutputName
-import qualified Luna.Syntax.Graph.Node.StringExpr as StringExpr
-import           Luna.Syntax.Graph.Port            (Port)
-import qualified Luna.Syntax.Graph.Port            as Port
-import           Luna.Syntax.Label                 (Label (Label))
-import qualified Luna.Syntax.Label                 as Label
-import           Luna.Syntax.Lit                   (LLit)
-import           Luna.Syntax.Name                  (VNameP)
-import qualified Luna.Syntax.Name.Pattern          as Pattern
-import           Luna.Syntax.Pat                   (LPat)
-import qualified Luna.Syntax.Pat                   as Pat
-import           Luna.Syntax.Traversals.Class      (Traversal)
---import qualified Luna.Syntax.Type                        as Type
-import           Luna.Syntax.Graph.Tag    (TDecl, TExpr, Tag)
-import qualified Luna.Syntax.Graph.Tag    as Tag
-import           Luna.System.Pragma.Store (MonadPragmaStore)
-import           Luna.Util.LunaShow       (LunaShow, lunaShow)
+import qualified Luna.Syntax.Decl                        as Decl
+import           Luna.Syntax.Enum                        (Enumerated)
+import           Luna.Syntax.Expr                        (LExpr)
+import qualified Luna.Syntax.Expr                        as Expr
+import           Luna.Syntax.Graph.Graph                 (Graph)
+import qualified Luna.Syntax.Graph.Node                  as Node
+import           Luna.Syntax.Graph.Node.Expr             (NodeExpr)
+import qualified Luna.Syntax.Graph.Node.Expr             as NodeExpr
+import qualified Luna.Syntax.Graph.Node.StringExpr       as StringExpr
+import           Luna.Syntax.Graph.Port                  (Port)
+import qualified Luna.Syntax.Graph.Port                  as Port
+import           Luna.Syntax.Graph.Tag                   (TDecl, TExpr, Tag)
+import           Luna.Syntax.Label                       (Label (Label))
+import qualified Luna.Syntax.Label                       as Label
+import           Luna.Syntax.Lit                         (LLit)
+import           Luna.Syntax.Name                        (VNameP)
+import qualified Luna.Syntax.Name.Pattern                as Pattern
+import           Luna.System.Pragma.Store                (MonadPragmaStore)
+import           Luna.Util.LunaShow                      (LunaShow, lunaShow)
+
 
 
 logger :: LoggerIO
@@ -68,6 +64,7 @@ logger = getLoggerIO $moduleName
 type LunaExpr ae v = (Enumerated ae, LunaShow (LExpr ae v), LunaShow (LLit ae))
 
 
+inputsID, outputID :: Node.ID
 inputsID = -1
 outputID = -2
 
@@ -83,7 +80,7 @@ run aliasInfo foldNodes lexpr =
 
 expr2graph :: LunaExpr ae v
            => TDecl v -> GBPass ae v m (TDecl v, Graph ae v)
-expr2graph decl@(Label l (Decl.Func (Decl.FuncDecl _ sig output body))) = do
+expr2graph decl@(Label _ (Decl.Func (Decl.FuncDecl _ sig _ body))) = do
     State.initFreeNodeID decl
     State.insNode (inputsID, Node.Inputs def)
     State.insNode (outputID, Node.Outputs def)
@@ -96,13 +93,13 @@ expr2graph decl@(Label l (Decl.Func (Decl.FuncDecl _ sig output body))) = do
 
 
 buildArgs :: Enumerated ae => Decl.FuncSig Tag e -> GBPass ae v m (Decl.FuncSig Tag e)
-buildArgs inputs@(Pattern.NamePat prefix base segmentList) = flip evalStateT (0::Int) $ do
+buildArgs (Pattern.NamePat prefix base segmentList) = flip evalStateT (0::Int) $ do
     prefix' <- case prefix of
         Nothing -> return Nothing
         Just pr -> Just <$> buildArg pr
     base'        <- parseSegment base
     segmentList' <- mapM parseSegment segmentList
-    return $ Pattern.NamePat prefix base segmentList'
+    return $ Pattern.NamePat prefix' base' segmentList'
 
 
 parseSegment (Pattern.Segment base args) =
@@ -157,9 +154,14 @@ buildNode lexpr outputName = case unwrap lexpr of
     Expr.Assignment dst src   -> do src' <- buildNode src (Just undefined)
                                     return $ Label tag $ Expr.Assignment dst src'
     --Expr.App exprApp -> addNodeWithArgs
-    --Expr.Tuple items -> addNodeWithArgs
+    Expr.Tuple items  -> do itemsArgs <- mapM processArg $ zip items $ map Port.Num [0..]
+                            let items' = map fst itemsArgs
+                                args   = map snd itemsArgs
+                                lexpr' = Label tag $ Expr.Tuple items'
+                            addNodeWithExpr lexpr' outputName (NodeExpr.StringExpr StringExpr.Tuple) args
+
     --Expr.List  list  -> addNodeWithArgs
-    _ -> addNode lexpr outputName
+    _ -> addNode lexpr outputName []
 
     --Expr.Var (Expr.Variable vname _) -> do
     --        isBound <- Maybe.isJust <$> State.gvmNodeMapLookUp nodeID
@@ -179,28 +181,24 @@ buildNode lexpr outputName = case unwrap lexpr of
         --    forM processArg args
         --    addAppNode nodeID
 
-processArg lexpr = undefined
+processArg :: (TExpr v, Port) -> GBPass ae v m (TExpr v, (Node.ID, Port))
+processArg (lexpr, port) = undefined
     --if constainsVar
     --    then buildNode
     --    else argAsNodeDefault
 
-addNodeWithArgs :: TExpr v -> Maybe VNameP -> NodeExpr ae v
-                -> [(Node.ID, Port)] -> GBPass ae v m (TExpr v)
-addNodeWithArgs lexpr outputName nodeExpr argsIDs = do
-    (nodeID, position, lexpr') <- State.getNodeInfo lexpr
-    mapM_ (\(srcID, port) -> State.connect srcID nodeID port) argsIDs
-    addNodeWithExpr lexpr' outputName nodeExpr
+addNode :: TExpr v -> Maybe VNameP -> [(Node.ID, Port)] -> GBPass ae v m (TExpr v)
+addNode lexpr outputName args = addNodeWithExpr lexpr outputName nodeExpr args
+    where nodeExpr = NodeExpr.StringExpr $ StringExpr.fromString $ lunaShow lexpr
 
-addNode :: TExpr v -> Maybe VNameP -> GBPass ae v m (TExpr v)
-addNode lexpr outputName = addNodeWithExpr lexpr outputName
-    $ NodeExpr.StringExpr $ StringExpr.fromString $ lunaShow lexpr
 
 addNodeWithExpr :: TExpr v -> Maybe VNameP
-                -> NodeExpr ae v -> GBPass ae v m (TExpr v)
-addNodeWithExpr lexpr outputName nodeExpr = do
+                -> NodeExpr ae v -> [(Node.ID, Port)] -> GBPass ae v m (TExpr v)
+addNodeWithExpr lexpr outputName nodeExpr args = do
     (nodeID, position, lexpr') <- State.getNodeInfo lexpr
     let node = Node.Expr nodeExpr outputName position
     State.insNode (nodeID, node)
+    mapM_ (\(srcID, port) -> State.connect srcID nodeID port) args
     return lexpr'
 
 
