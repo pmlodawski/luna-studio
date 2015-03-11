@@ -18,14 +18,11 @@ import qualified Luna.Syntax.Control.Crumb    as Crumb
 import qualified Luna.Syntax.Control.Focus    as Focus
 import           Luna.Syntax.Module           (Module)
 --import qualified Luna.AST.Name                             as Name
---import qualified Luna.Pass.Analysis.Alias.Alias            as Analysis.Alias
---import qualified Luna.Pass.Analysis.ID.MaxID               as MaxID
---import qualified Luna.Pass.Transform.AST.IDFixer.IDFixer   as IDFixer
+import qualified Luna.Pass.Analysis.Struct                 as Struct
 import qualified Luna.Pass.Transform.Graph.Builder.Builder as GraphBuilder
 import qualified Luna.Pass.Transform.Graph.Parser.Parser   as GraphParser
 --import           Luna.Syntax.Expr                          (Expr)
-import Luna.Syntax.Graph.Graph       (Graph)
-import Luna.Syntax.Graph.PropertyMap (PropertyMap)
+import Luna.Syntax.Graph.Graph (Graph)
 
 
 
@@ -37,24 +34,22 @@ mainBC :: Breadcrumbs
 mainBC = [Crumb.Module "Main", Crumb.Function [] "main"]
 
 
-getGraph :: Breadcrumbs -> PropertyMap -> Module -> IO (Graph, PropertyMap)
-getGraph bc pm ast = eitherStringToM' $ runEitherT $ do
+getGraph :: Breadcrumbs -> Module -> IO Graph
+getGraph bc ast = eitherStringToM' $ runEitherT $ do
     focus <- hoistEither $ BCZipper.getFocus <$> BCZipper.focusBreadcrumbs' bc ast
     expr  <- focus ^? Focus.expr <??> "test.Common.getFunctionGraph : Target is not a function"
-    aliasInfo <- EitherT $ Analysis.Alias.run ast
-    EitherT $ GraphBuilder.run aliasInfo pm True expr
+    aliasInfo <- EitherT $ Struct.run ast
+    EitherT $ GraphBuilder.run aliasInfo expr
 
 
-getExpr :: Breadcrumbs -> Graph -> PropertyMap -> Module -> IO (Module, PropertyMap)
-getExpr bc graph pm ast = eitherStringToM' $ runEitherT $ do
+getExpr :: Breadcrumbs -> Graph -> Module -> IO Module
+getExpr bc graph ast = eitherStringToM' $ runEitherT $ do
     zipper <- hoistEither $ BCZipper.focusBreadcrumbs' bc ast
     let focus = BCZipper.getFocus zipper
     expr <- focus ^? Focus.expr <??> "test.Common.getExpr : Target is not a function"
-    (expr2', pm2) <- EitherT $ GraphParser.run graph pm expr
-    maxID         <- EitherT $ MaxID.runExpr expr2'
-    expr2         <- EitherT $ IDFixer.runExpr maxID Nothing False expr2'
+    expr2 <- EitherT $ GraphParser.run graph expr
     let newFocus = focus & Focus.expr .~ expr2
-    return (BCZipper.close $ BCZipper.modify (const newFocus) zipper, pm2)
+    return (BCZipper.close $ BCZipper.modify (const newFocus) zipper)
 
 
 getMain :: Module -> IO Expr
