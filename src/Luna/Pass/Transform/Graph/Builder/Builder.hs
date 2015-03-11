@@ -17,6 +17,7 @@ module Luna.Pass.Transform.Graph.Builder.Builder where
 --import           Control.Applicative
 import Control.Monad.State
 import Control.Monad.Trans.Either
+import Data.Either                (lefts, rights)
 
 --import qualified Luna.Pass.Analysis.ID.MinID             as MinID
 --import qualified Luna.Syntax.Arg                         as Arg
@@ -34,6 +35,7 @@ import           Luna.Data.StructInfo                    (StructInfo)
 import qualified Luna.Pass.Pass                          as Pass
 import           Luna.Pass.Transform.Graph.Builder.State (GBPass)
 import qualified Luna.Pass.Transform.Graph.Builder.State as State
+import qualified           Luna.Syntax.Graph.DefaultsMap     as DefaultsMap
 import           Luna.Syntax.Arg                         (Arg (Arg))
 import qualified Luna.Syntax.Decl                        as Decl
 import           Luna.Syntax.Enum                        (Enumerated)
@@ -46,6 +48,7 @@ import qualified Luna.Syntax.Graph.Node.Expr             as NodeExpr
 import qualified Luna.Syntax.Graph.Node.StringExpr       as StringExpr
 import           Luna.Syntax.Graph.Port                  (Port)
 import qualified Luna.Syntax.Graph.Port                  as Port
+import           Luna.Syntax.Graph.PortDescriptor        (PortDescriptor)
 import           Luna.Syntax.Graph.Tag                   (TDecl, TExpr, Tag)
 import           Luna.Syntax.Label                       (Label (Label))
 import qualified Luna.Syntax.Label                       as Label
@@ -82,8 +85,8 @@ expr2graph :: LunaExpr ae v
            => TDecl v -> GBPass ae v m (TDecl v, Graph ae v)
 expr2graph decl@(Label _ (Decl.Func (Decl.FuncDecl _ sig _ body))) = do
     State.initFreeNodeID decl
-    State.insNode (inputsID, Node.Inputs def)
-    State.insNode (outputID, Node.Outputs def)
+    State.insNode (inputsID, Node.mkInputs)
+    State.insNode (outputID, Node.mkOutputs)
     sig'  <- buildArgs sig
     body' <- buildBody body
     decl' <- State.saveFreeNodeID decl
@@ -155,13 +158,14 @@ buildNode lexpr outputName = case unwrap lexpr of
                                     return $ Label tag $ Expr.Assignment dst src'
     --Expr.App exprApp -> addNodeWithArgs
     Expr.Tuple items  -> do itemsArgs <- mapM processArg $ zip items $ map Port.Num [0..]
-                            let items' = map fst itemsArgs
-                                args   = map snd itemsArgs
+                            let items'   = map fst itemsArgs
+                                defaults = lefts $ map snd itemsArgs
+                                args     = rights $ map snd itemsArgs
                                 lexpr' = Label tag $ Expr.Tuple items'
-                            addNodeWithExpr lexpr' outputName (NodeExpr.StringExpr StringExpr.Tuple) args
+                            addNodeWithExpr lexpr' outputName (NodeExpr.StringExpr StringExpr.Tuple) args defaults
 
     --Expr.List  list  -> addNodeWithArgs
-    _ -> addNode lexpr outputName []
+    _ -> addNode lexpr outputName [] []
 
     --Expr.Var (Expr.Variable vname _) -> do
     --        isBound <- Maybe.isJust <$> State.gvmNodeMapLookUp nodeID
@@ -169,34 +173,26 @@ buildNode lexpr outputName = case unwrap lexpr of
     --            then return nodeID
     --            else addExprNode (toString name) []
     where
-        tag   = lexpr ^. Label.label
+        tag = lexpr ^. Label.label
 
 
-        --processArg arg = if constainsVar
-        --    then buildNode
-        --    else argAsNodeDefault
+processArg :: (TExpr v, Port) -> GBPass ae v m (TExpr v, Either (PortDescriptor, NodeExpr ae v) (Node.ID, Port))
+processArg (lexpr, port) = if False --constainsVar
+    then do (nodeID, _, lexpr') <- State.getNodeInfo =<< buildNode lexpr (Just undefined)
+            return (lexpr', Right (nodeID, port))
+    else return (lexpr, Left (Port.toList port, NodeExpr.StringExpr $ StringExpr.fromString $ lunaShow lexpr))
 
-        --addNodeWithArgs node args =
-        --    nodeID <- getNodeInfo node
-        --    forM processArg args
-        --    addAppNode nodeID
 
-processArg :: (TExpr v, Port) -> GBPass ae v m (TExpr v, (Node.ID, Port))
-processArg (lexpr, port) = undefined
-    --if constainsVar
-    --    then buildNode
-    --    else argAsNodeDefault
-
-addNode :: TExpr v -> Maybe VNameP -> [(Node.ID, Port)] -> GBPass ae v m (TExpr v)
-addNode lexpr outputName args = addNodeWithExpr lexpr outputName nodeExpr args
+addNode :: TExpr v -> Maybe VNameP -> [(Node.ID, Port)] -> [(PortDescriptor, NodeExpr ae v)] -> GBPass ae v m (TExpr v)
+addNode lexpr outputName args defaults = addNodeWithExpr lexpr outputName nodeExpr args defaults
     where nodeExpr = NodeExpr.StringExpr $ StringExpr.fromString $ lunaShow lexpr
 
 
 addNodeWithExpr :: TExpr v -> Maybe VNameP
-                -> NodeExpr ae v -> [(Node.ID, Port)] -> GBPass ae v m (TExpr v)
-addNodeWithExpr lexpr outputName nodeExpr args = do
+                -> NodeExpr ae v -> [(Node.ID, Port)] -> [(PortDescriptor, NodeExpr ae v)] -> GBPass ae v m (TExpr v)
+addNodeWithExpr lexpr outputName nodeExpr args defaults = do
     (nodeID, position, lexpr') <- State.getNodeInfo lexpr
-    let node = Node.Expr nodeExpr outputName position
+    let node = Node.Expr nodeExpr outputName (DefaultsMap.fromList defaults) position
     State.insNode (nodeID, node)
     mapM_ (\(srcID, port) -> State.connect srcID nodeID port) args
     return lexpr'
