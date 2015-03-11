@@ -20,6 +20,7 @@ import qualified Flowbox.Batch.Batch                                            
 import qualified Flowbox.Batch.Handler.Common                                                                 as Batch
 import qualified Flowbox.Batch.Handler.Graph                                                                  as BatchG
 import qualified Flowbox.Batch.Handler.NodeDefault                                                            as BatchND
+import qualified Flowbox.Batch.Handler.Properties                                                             as BatchP
 import           Flowbox.Bus.Data.Message                                                                     as Message
 import           Flowbox.Bus.Data.Topic                                                                       (Topic)
 import           Flowbox.Bus.Data.Serialize.Proto.Conversion.Message                                          ()
@@ -50,6 +51,7 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Gra
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.ModifyInPlace.Update  as NodeModifyInPlace
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Request        as NodeRemove
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Update         as NodeRemove
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Properties.Set.Request                    as SetNodeProperties
 import qualified Generated.Proto.Urm.URM.Register.Request                                                     as Register
 import qualified Generated.Proto.Urm.URM.RegisterMultiple.Request                                             as RegisterMultiple
 import qualified Luna.DEP.Graph.View.Default.DefaultsMap                                                      as DefaultsMap
@@ -202,13 +204,18 @@ nodeRemove (NodeRemove.Request tnodeIDs tbc tlibID tprojectID astID) undoTopic =
 
     rm <- mapM (\nid -> BatchG.nodeEdges nid bc libID projectID) newIDs
     let removed = Set.toList $ Set.fromList $ concat rm
-    properties <- mapM (\nid -> do properties <- BatchND.nodeDefaults nid bc libID projectID
-                                   return $ DefaultsMap.mapWithKey (\k v -> fun Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest
-                                                                                $ NodeDefaultSet.Request (encodeP k) (encode $ snd v) (encodeP nid) tbc tlibID tprojectID astID
-                                                                   )
-                                                                   properties
+    defaults <- mapM (\nid -> do defaults <- BatchND.nodeDefaults nid bc libID projectID
+                                 return $ DefaultsMap.mapWithKey (\k v -> fun Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest
+                                                                              $ NodeDefaultSet.Request (encodeP k) (encode $ snd v) (encodeP $ originID nid) tbc tlibID tprojectID astID
+                                                                 )
+                                                                 defaults
+                     )
+                     newIDs
+    properties <- mapM (\nid -> do properties <- BatchP.getProperties nid libID projectID
+                                   return $ fun Topic.projectLibraryAstFunctionGraphNodePropertiesSetRequest 
+                                                $ SetNodeProperties.Request (encode properties) (encodeP $ originID nid) tbc tlibID tprojectID astID
                        )
-                       nodeIDs
+                       newIDs
     
     BatchG.removeNodes newIDs bc libID projectID
     updateNo <- Batch.getUpdateNo
@@ -230,8 +237,8 @@ nodeRemove (NodeRemove.Request tnodeIDs tbc tlibID tprojectID astID) undoTopic =
                                                         ) 
                                                         removed
                                )
-                            >< (Sequence.fromList $ concat $ map (map snd . DefaultsMap.toList) properties
-                               )
+                            >< (Sequence.fromList $ map snd . DefaultsMap.toList =<< defaults)
+                            >< (Sequence.fromList properties)
                             )
                             (fun Topic.projectLibraryAstFunctionGraphNodeRemoveRequest $ updatedRequest $ encodeP originIDs)
                             tprojectID
