@@ -316,60 +316,37 @@ mul4x4 ((a, b, c, d), (e, f, g, h), (i, j, k, l), (m, n, o, p)) pix = toTuple ((
           w' = m * x + n * y + o * z + p * w
 
 
-data LinearShader a = LinearShader { runBezier :: a -> a }
-
-crosstalk :: (A.Elt a, A.IsFloating a)
-          => LinearShader (A.Exp a) -- ^ red channel curve
-          -> LinearShader (A.Exp a) -- ^ green channel curve
-          -> LinearShader (A.Exp a) -- ^ blue channel curve
-          -> LinearShader (A.Exp a) -- ^ r->g curve
-          -> LinearShader (A.Exp a) -- ^ r->b curve
-          -> LinearShader (A.Exp a) -- ^ g->r curve
-          -> LinearShader (A.Exp a) -- ^ g->b curve
-          -> LinearShader (A.Exp a) -- ^ b->r curve
-          -> LinearShader (A.Exp a) -- ^ b->g curve
-          -> Shader x (A.Exp a)         -- ^ r channel
-          -> Shader x (A.Exp a)         -- ^ g channel
-          -> Shader x (A.Exp a)         -- ^ b channel
-          -> (Shader x (A.Exp a), Shader x (A.Exp a), Shader x (A.Exp a))
+crosstalk :: BSpline.BSpline Float -- ^ red channel curve
+          -> BSpline.BSpline Float -- ^ green channel curve
+          -> BSpline.BSpline Float -- ^ blue channel curve
+          -> BSpline.BSpline Float -- ^ r->g curve
+          -> BSpline.BSpline Float -- ^ r->b curve
+          -> BSpline.BSpline Float -- ^ g->r curve
+          -> BSpline.BSpline Float -- ^ g->b curve
+          -> BSpline.BSpline Float -- ^ b->r curve
+          -> BSpline.BSpline Float -- ^ b->g curve
+          -> A.Exp (RGB Float)
+          -> A.Exp (RGB Float)
 crosstalk redBezier greenBezier blueBezier
           redGreenBezier redBlueBezier
           greenRedBezier greenBlueBezier
           blueRedBezier blueGreenBezier
-          red green blue = (newRed, newGreen, newBlue)
-    where newRed   = Shader (canvas red)   $ \x ->
-              runShader redBeziered x + runShader greenToRed x + runShader blueToRed x
+          rgb = A.lift $ RGB newRed newGreen newBlue
+    where RGB r g b = A.unlift rgb :: RGB (A.Exp Float)
 
-          newGreen = Shader (canvas green) $ \x ->
-              runShader greenBeziered x + runShader redToGreen x + runShader blueToGreen x
+          newRed   = redBeziered   + greenToRed + blueToRed
+          newGreen = greenBeziered + redToGreen + blueToGreen
+          newBlue  = blueBeziered  + redToBlue  + greenToBlue
 
-          newBlue  = Shader (canvas blue)  $ \x ->
-              runShader blueBeziered x + runShader redToBlue x + runShader greenToBlue x
+          redBeziered = BSpline.valueAt (A.use redBezier) r
+          redToGreen  = BSpline.valueAt (A.use redGreenBezier) r
+          redToBlue   = BSpline.valueAt (A.use redBlueBezier) r
 
-          redBeziered = Shader (canvas red) $ \x -> let redColor = runShader red x
-                                                    in  runBezier redBezier redColor
+          greenBeziered = BSpline.valueAt (A.use greenBezier) g
+          greenToRed    = BSpline.valueAt (A.use greenRedBezier) g
+          greenToBlue   = BSpline.valueAt (A.use greenBlueBezier) g
 
-          redToGreen = Shader (canvas red) $ \x -> let redColor = runShader red x
-                                                   in  runBezier redGreenBezier redColor
-
-          redToBlue = Shader (canvas red) $ \x -> let redColor = runShader red x
-                                                  in  runBezier redBlueBezier redColor
-
-          greenBeziered = Shader (canvas green) $ \x -> let greenColor = runShader green x
-                                                        in  runBezier greenBezier greenColor
-
-          greenToRed = Shader (canvas green) $ \x -> let greenColor = runShader green x
-                                                     in  runBezier greenRedBezier greenColor
-
-          greenToBlue = Shader (canvas green) $ \x -> let greenColor = runShader green x
-                                                      in  runBezier greenBlueBezier greenColor
-
-          blueBeziered = Shader (canvas blue) $ \x -> let blueColor = runShader blue x
-                                                      in  runBezier blueBezier blueColor
-
-          blueToRed = Shader (canvas blue) $ \x -> let blueColor = runShader blue x
-                                                   in  runBezier blueRedBezier blueColor
-
-          blueToGreen = Shader (canvas blue) $ \x -> let blueColor = runShader blue x
-                                                     in  runBezier blueGreenBezier blueColor
+          blueBeziered = BSpline.valueAt (A.use blueBezier) b
+          blueToRed    = BSpline.valueAt (A.use blueRedBezier) b
+          blueToGreen  = BSpline.valueAt (A.use blueGreenBezier) b
 
