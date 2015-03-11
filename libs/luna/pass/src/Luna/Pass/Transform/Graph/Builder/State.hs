@@ -17,7 +17,7 @@ import           Data.Map            (Map)
 import qualified Data.Map            as Map
 import qualified Data.Maybe          as Maybe
 
---import           Flowbox.Control.Error
+import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import           Luna.Data.StructInfo            (StructInfo)
@@ -139,11 +139,11 @@ insNode (nodeID, node) =
 --    insNodeWithFlags (astID, node) isFolded assignment
 --    addToNodeMap astID (astID, outPort)
 
---connect :: AST.ID -> Node.ID -> Port -> GBPass a e m ()
---connect srcID dstNID dstPort = do
---    found             <- gvmNodeMapLookUp srcID
---    (srcNID, srcPort) <- lift $ found <??> "Graph.Builder.State.connect : cannot find " ++ show srcID
---    connectNodes srcNID dstNID $ Edge.Data srcPort dstPort
+connect :: Node.ID -> Node.ID -> Port -> GBPass a e m ()
+connect srcID dstNID dstPort = do
+    found             <- gvmNodeMapLookUp srcID
+    (srcNID, srcPort) <- lift $ found <??> "Graph.Builder.State.connect : cannot find " ++ show srcID
+    connectNodes srcNID dstNID $ Edge.Data srcPort dstPort
 
 connectNodes :: Node.ID -> Node.ID -> Edge -> GBPass a e m ()
 connectNodes srcID dstID edge = getGraph >>= setGraph . Graph.connect srcID dstID edge

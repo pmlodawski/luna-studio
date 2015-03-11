@@ -40,6 +40,7 @@ import           Luna.Syntax.Expr            (LExpr)
 import qualified Luna.Syntax.Expr            as Expr
 import           Luna.Syntax.Graph.Graph     (Graph)
 import qualified Luna.Syntax.Graph.Node      as Node
+import           Luna.Syntax.Graph.Node.Expr (NodeExpr)
 import qualified Luna.Syntax.Graph.Node.Expr as NodeExpr
 --import qualified Luna.Syntax.Graph.Node.OutputName       as OutputName
 import qualified Luna.Syntax.Graph.Node.StringExpr as StringExpr
@@ -48,17 +49,16 @@ import qualified Luna.Syntax.Graph.Port            as Port
 import           Luna.Syntax.Label                 (Label (Label))
 import qualified Luna.Syntax.Label                 as Label
 import           Luna.Syntax.Lit                   (LLit)
---import           Luna.Syntax.Name                        (VNameP)
-import qualified Luna.Syntax.Name.Pattern     as Pattern
-import           Luna.Syntax.Pat              (LPat)
-import qualified Luna.Syntax.Pat              as Pat
-import           Luna.Syntax.Traversals.Class (Traversal)
+import           Luna.Syntax.Name                  (VNameP)
+import qualified Luna.Syntax.Name.Pattern          as Pattern
+import           Luna.Syntax.Pat                   (LPat)
+import qualified Luna.Syntax.Pat                   as Pat
+import           Luna.Syntax.Traversals.Class      (Traversal)
 --import qualified Luna.Syntax.Type                        as Type
 import           Luna.Syntax.Graph.Tag    (TDecl, TExpr, Tag)
 import qualified Luna.Syntax.Graph.Tag    as Tag
 import           Luna.System.Pragma.Store (MonadPragmaStore)
 import           Luna.Util.LunaShow       (LunaShow, lunaShow)
-
 
 
 logger :: LoggerIO
@@ -152,29 +152,56 @@ buildBody body = do
 --buildAssignment = undefined
 -------------------
 
+buildNode :: TExpr v -> Maybe VNameP -> GBPass ae v m (TExpr v)
 buildNode lexpr outputName = case unwrap lexpr of
     Expr.Assignment dst src   -> do src' <- buildNode src (Just undefined)
                                     return $ Label tag $ Expr.Assignment dst src'
-    Expr.Lit lit              -> do (nodeID, position, lexpr') <- State.getNodeInfo lexpr
-                                    let nodeExpr = NodeExpr.StringExpr $ StringExpr.fromString $ lunaShow lexpr
-                                        node = Node.Expr nodeExpr outputName position
-                                    State.insNode (nodeID, node)
-                                    return lexpr'
+    --Expr.App exprApp -> addNodeWithArgs
+    --Expr.Tuple items -> addNodeWithArgs
+    --Expr.List  list  -> addNodeWithArgs
+    _ -> addNode lexpr outputName
+
     --Expr.Var (Expr.Variable vname _) -> do
     --        isBound <- Maybe.isJust <$> State.gvmNodeMapLookUp nodeID
     --        if isBound
     --            then return nodeID
     --            else addExprNode (toString name) []
-
-
-
-
-
-
-
-    --Expr.App exprApp
     where
         tag   = lexpr ^. Label.label
+
+
+        --processArg arg = if constainsVar
+        --    then buildNode
+        --    else argAsNodeDefault
+
+        --addNodeWithArgs node args =
+        --    nodeID <- getNodeInfo node
+        --    forM processArg args
+        --    addAppNode nodeID
+
+processArg lexpr = undefined
+    --if constainsVar
+    --    then buildNode
+    --    else argAsNodeDefault
+
+addNodeWithArgs :: TExpr v -> Maybe VNameP -> NodeExpr ae v
+                -> [(Node.ID, Port)] -> GBPass ae v m (TExpr v)
+addNodeWithArgs lexpr outputName nodeExpr argsIDs = do
+    (nodeID, position, lexpr') <- State.getNodeInfo lexpr
+    mapM_ (\(srcID, port) -> State.connect srcID nodeID port) argsIDs
+    addNodeWithExpr lexpr' outputName nodeExpr
+
+addNode :: TExpr v -> Maybe VNameP -> GBPass ae v m (TExpr v)
+addNode lexpr outputName = addNodeWithExpr lexpr outputName
+    $ NodeExpr.StringExpr $ StringExpr.fromString $ lunaShow lexpr
+
+addNodeWithExpr :: TExpr v -> Maybe VNameP
+                -> NodeExpr ae v -> GBPass ae v m (TExpr v)
+addNodeWithExpr lexpr outputName nodeExpr = do
+    (nodeID, position, lexpr') <- State.getNodeInfo lexpr
+    let node = Node.Expr nodeExpr outputName position
+    State.insNode (nodeID, node)
+    return lexpr'
 
 
 
