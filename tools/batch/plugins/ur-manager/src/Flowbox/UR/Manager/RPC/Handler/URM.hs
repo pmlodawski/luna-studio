@@ -12,7 +12,7 @@ module Flowbox.UR.Manager.RPC.Handler.URM where
 
 import           Control.Monad.Trans.State.Lazy                      (get, put)
 import           Data.Map                                            as Map
-import           Data.Maybe                                          (fromMaybe, maybe)
+import           Data.Maybe                                          (fromMaybe)
 
 import           Flowbox.Bus.Data.Message                            (Message)
 import           Flowbox.Bus.Data.Serialize.Proto.Conversion.Message ()
@@ -21,8 +21,7 @@ import           Flowbox.Data.Convert
 import           Flowbox.Prelude                                     hiding (Context, error)
 import qualified Flowbox.Text.ProtocolBuffers                        as Proto
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.UR.Manager.Context                          as Context
-import           Flowbox.UR.Manager.Context                          (Context, ProjectContext(..), Stack(..))
+import           Flowbox.UR.Manager.Context                          (Context, ProjectContext(..), Stack)
 import qualified Generated.Proto.Urm.URM.Redo.Request                as Redo
 import qualified Generated.Proto.Urm.URM.Redo.Status                 as Redo
 import qualified Generated.Proto.Urm.URM.Register.Request            as Register

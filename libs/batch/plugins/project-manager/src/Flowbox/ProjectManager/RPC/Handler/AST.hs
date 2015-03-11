@@ -107,33 +107,47 @@ moduleAdd request@(AddModule.Request tnewModule tbcParent tlibID tprojectID _) u
            )
 
 
-dataAdd :: AddData.Request -> RPC Context IO AddData.Update
-dataAdd request@(AddData.Request tnewData tbcParent tlibID tprojectID _) = do
+dataAdd :: AddData.Request -> Maybe Topic -> RPC Context IO ([AddData.Update], [Message])
+dataAdd request@(AddData.Request tnewData tbcParent tlibID tprojectID _) undoTopic = do
     newData  <- decodeE tnewData
     bcParent <- decodeE tbcParent
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     addedData <- BatchAST.addClass newData bcParent libID projectID
     let newBC = bcParent ++ [Crumb.Class $ addedData ^. Expr.cls . Type.name]
+    let newID = addedData ^. Expr.id
     updateNo <- Batch.getUpdateNo
-    return $ AddData.Update request (encode addedData) (encode newBC) updateNo
+    return ( [AddData.Update request (encode addedData) (encode newBC) updateNo]
+           , makeMsgArr (Register.Request
+                            (fun Topic.projectLibraryAstRemoveRequest $ Remove.Request (encode newBC) tlibID tprojectID (encodeP newID))
+                            (fun Topic.projectLibraryAstDataAddRequest request)
+                            tprojectID
+                        ) undoTopic
+           )
 
 
-functionAdd :: AddFunction.Request -> RPC Context IO AddFunction.Update
-functionAdd request@(AddFunction.Request tnewFunction tbcParent tlibID tprojectID _) = do
+functionAdd :: AddFunction.Request -> Maybe Topic -> RPC Context IO ([AddFunction.Update], [Message])
+functionAdd request@(AddFunction.Request tnewFunction tbcParent tlibID tprojectID _) undoTopic = do
     newFunction <- decodeE tnewFunction
     bcParent    <- decodeE tbcParent
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     addedFunction <- BatchAST.addFunction newFunction bcParent libID projectID
     let newBC = bcParent ++ [Crumb.Function (addedFunction ^?! Expr.fname) (addedFunction ^. Expr.path)]
+    let newID = addedFunction ^. Expr.id
     updateNo <- Batch.getUpdateNo
-    return $ AddFunction.Update request (encode addedFunction) (encode newBC) updateNo
+    return ( [AddFunction.Update request (encode addedFunction) (encode newBC) updateNo]
+           , makeMsgArr (Register.Request
+                            (fun Topic.projectLibraryAstRemoveRequest $ Remove.Request (encode newBC) tlibID tprojectID (encodeP newID))
+                            (fun Topic.projectLibraryAstFunctionAddRequest request)
+                            tprojectID
+                        ) undoTopic
+           )
 
 
 
 remove :: Remove.Request -> Maybe Topic -> RPC Context IO ([Remove.Update], [Message])
-remove request@(Remove.Request tbc tlibID tprojectID astID) undoTopic = do
+remove request@(Remove.Request tbc tlibID tprojectID _) _ = do
     bc  <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
