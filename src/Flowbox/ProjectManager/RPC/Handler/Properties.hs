@@ -67,7 +67,7 @@ getNodeProperties request@(GetNodeProperties.Request tnodeID _ tlibID tprojectID
 
 
 setNodeProperties :: SetNodeProperties.Request -> Maybe Topic -> RPC Context IO ([SetNodeProperties.Update], [Message])
-setNodeProperties request@(SetNodeProperties.Request tproperties tnodeID tbc tlibID tprojectID astID) undoTopic = do
+setNodeProperties (SetNodeProperties.Request tproperties tnodeID tbc tlibID tprojectID astID) undoTopic = do
     properties <- decodeE tproperties
     context <- Batch.get
     let nodeID    = decodeP tnodeID
