@@ -44,9 +44,9 @@ fixEmpty' (nodeID, node) =
 
 
 provide :: Node a e -> Node.ID -> Node a e
-provide node@(Node.Expr nodeExpr _ _) nodeID =
+provide node@(Node.Expr nodeExpr _ _ _) nodeID =
     node & Node.outputName .~ Just (generate nodeExpr nodeID)
-provide node                   _      = node
+provide node _ = node
 
 
 mangle :: String -> String
