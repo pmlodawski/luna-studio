@@ -37,10 +37,6 @@ import qualified Luna.Syntax.Graph.Tag           as Tag
 import           Luna.Syntax.Label               (Label (Label))
 import qualified Luna.Syntax.Label               as Label
 
-getPosition = undefined
-setPosition = undefined
-
-
 
 
 logger :: Logger
@@ -59,7 +55,7 @@ data GBState a v = GBState { _graph          :: Graph a v
 
                            , _aa             :: StructInfo
                            , _foldNodes      :: Bool
-                           , _prevoiusNode   :: Node.ID
+                           , _prevoiusNodeID :: Node.ID
                            } deriving (Show)
 
 makeLenses ''GBState
@@ -75,6 +71,15 @@ getGraph = gets $ view graph
 
 setGraph :: Graph a v -> GBPass a v m ()
 setGraph = modify . set graph
+
+getNode :: Node.ID -> GBPass a v m (Node a v)
+getNode nodeID = do
+    gr   <- getGraph
+    lift $ Graph.lab gr nodeID <??> "addNodeDefault : Cannot find nodeID = " ++ show nodeID
+
+updateNode :: (Node.ID, Node a v) -> GBPass a v m ()
+updateNode node = getGraph >>= setGraph . Graph.updateNode node
+
 
 ----- nodeMap -------------------------------------------------------------
 getNodeMap :: GBPass a v m NodeMap
@@ -156,14 +161,15 @@ connectNodes srcID dstID edge = getGraph >>= setGraph . Graph.connect srcID dstI
 
 connectMonadic :: Node.ID -> GBPass a v m ()
 connectMonadic nodeID = do
-    prevID <- getPrevoiusNode
-    setPrevoiusNode nodeID
-    prevPos <- Maybe.fromMaybe (0,0) <$> getPosition prevID
-    currPos <- getPosition nodeID
-    when (Maybe.isNothing currPos) $
-        setPosition nodeID (fst prevPos + 10, snd prevPos)
+    prevID   <- getPrevoiusNodeID
+    prevNode <- getNode prevID
+    currNode <- getNode nodeID
+    setPrevoiusNodeID nodeID
+    let prevPos = prevNode ^. Node.pos
+        currPos = currNode ^. Node.pos
+    when (prevPos == currPos) $
+        updateNode (nodeID, currNode & Node.pos .~ (fst prevPos + 10, snd prevPos))
     connectNodes prevID nodeID Edge.Monadic
-
 
 
 getAAMap :: GBPass a v m StructInfo
@@ -193,13 +199,12 @@ gvmNodeMapLookUp nodeID = do
         else return found
 
 
-getPrevoiusNode :: GBPass a v m Node.ID
-getPrevoiusNode = gets $ view prevoiusNode
+getPrevoiusNodeID :: GBPass a v m Node.ID
+getPrevoiusNodeID = gets $ view prevoiusNodeID
 
 
-setPrevoiusNode :: Node.ID -> GBPass a v m ()
-setPrevoiusNode = modify . set prevoiusNode
-
+setPrevoiusNodeID :: Node.ID -> GBPass a v m ()
+setPrevoiusNodeID = modify . set prevoiusNodeID
 
 --modifyFlags :: (Flags -> Flags) -> Node.ID -> GBPass a v m ()
 --modifyFlags fun nodeID =
