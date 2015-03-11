@@ -382,4 +382,4 @@ graphNodeDefaultSet (GraphNodeDefaultSet.Update request updateNo) = do
 
 graphNodePropertiesSet :: GraphNodePropertiesSet.Update -> RPC Context (SessionST mm) ()
 graphNodePropertiesSet (GraphNodePropertiesSet.Update request updateNo) =
-    sync updateNo $ PropertiesHandler.setNodeProperties request
+    sync updateNo $ PropertiesHandler.setNodeProperties request Nothing
