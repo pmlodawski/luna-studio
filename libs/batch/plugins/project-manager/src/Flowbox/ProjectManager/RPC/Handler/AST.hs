@@ -9,10 +9,14 @@ module Flowbox.ProjectManager.RPC.Handler.AST where
 
 import qualified Flowbox.Batch.Handler.AST                                                            as BatchAST
 import qualified Flowbox.Batch.Handler.Common                                                         as Batch
+import           Flowbox.Bus.Data.Message                                                             (Message)
+import           Flowbox.Bus.Data.Topic                                                               (Topic)
 import           Flowbox.Bus.RPC.RPC                                                                  (RPC)
 import           Flowbox.Data.Convert
 import           Flowbox.Prelude                                                                      hiding (Context, cons)
 import           Flowbox.ProjectManager.Context                                                       (Context)
+import           Flowbox.ProjectManager.RPC.Handler.Graph                                             (fun, makeMsgArr) 
+import qualified Flowbox.ProjectManager.RPC.Topic                                                     as Topic
 import           Flowbox.System.Log.Logger
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Get.Request                  as CodeGet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Get.Status                   as CodeGet
@@ -56,6 +60,7 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Remove.Reque
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Remove.Update                     as Remove
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Resolve.Request                   as ResolveDefinition
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Resolve.Status                    as ResolveDefinition
+import qualified Generated.Proto.Urm.URM.Register.Request                                             as Register
 import qualified Luna.DEP.AST.Control.Crumb                                                           as Crumb
 import qualified Luna.DEP.AST.Expr                                                                    as Expr
 import qualified Luna.DEP.AST.Module                                                                  as Module
@@ -83,16 +88,23 @@ get request@(Definitions.Request mtmaxDepth tbc tlibID tprojectID _) = do
     return $ Definitions.Status request $ encode focus
 
 
-moduleAdd :: AddModule.Request -> RPC Context IO AddModule.Update
-moduleAdd request@(AddModule.Request tnewModule tbcParent tlibID tprojectID _) = do
+moduleAdd :: AddModule.Request -> Maybe Topic -> RPC Context IO ([AddModule.Update], [Message])
+moduleAdd request@(AddModule.Request tnewModule tbcParent tlibID tprojectID _) undoTopic = do
     newModule <- decodeE tnewModule
     bcParent  <- decodeE tbcParent
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     addedModule <- BatchAST.addModule newModule bcParent libID projectID
     let newBC = bcParent ++ [Crumb.Module $ addedModule ^. Module.cls . Type.name]
+    let newID = addedModule ^. Module.id
     updateNo <- Batch.getUpdateNo
-    return $ AddModule.Update request (encode addedModule) (encode newBC) updateNo
+    return ( [AddModule.Update request (encode addedModule) (encode newBC) updateNo]
+           , makeMsgArr (Register.Request
+                            (fun Topic.projectLibraryAstRemoveRequest $ Remove.Request (encode newBC) tlibID tprojectID (encodeP newID))
+                            (fun Topic.projectLibraryAstModuleAddRequest request)
+                            tprojectID
+                        ) undoTopic
+           )
 
 
 dataAdd :: AddData.Request -> RPC Context IO AddData.Update
@@ -120,14 +132,14 @@ functionAdd request@(AddFunction.Request tnewFunction tbcParent tlibID tprojectI
 
 
 
-remove :: Remove.Request -> RPC Context IO Remove.Update
-remove request@(Remove.Request tbc tlibID tprojectID _) = do
+remove :: Remove.Request -> Maybe Topic -> RPC Context IO ([Remove.Update], [Message])
+remove request@(Remove.Request tbc tlibID tprojectID astID) undoTopic = do
     bc  <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     BatchAST.remove bc libID projectID
     updateNo <- Batch.getUpdateNo
-    return $ Remove.Update request updateNo
+    return ([Remove.Update request updateNo], [])
 
 
 resolve :: ResolveDefinition.Request -> RPC Context IO ResolveDefinition.Status

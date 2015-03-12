@@ -123,19 +123,19 @@ strengthShader matte chan = case matte of
                                         in (\x -> (matteShader x))
 
 rotateChannelAt :: Point2 Float -> Float -> Bool -> Maybe (Matte Float) -> Channel -> Channel
-rotateChannelAt (fmap variable -> (Point2 x y)) (variable -> phi) reformat matte chan = (rotate chan)
+rotateChannelAt (fmap variable -> Point2 x y) (variable -> phi) reformat matte chan = rotate chan
     where
       vBefore = V2 (-x) (-y)
       vAfter  = V2 x y
 
       rotate = \case
-          (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
-          (Channel.asContinuous -> ChannelInt name zeData) -> ChannelInt name $ (\(ContinuousData shader) -> ContinuousData $ Shader.transform transformation shader) zeData
+          (Channel.asContinuous -> ChannelFloat name zeData) -> ChannelFloat name $ (\(ContinuousData (Shader.fixY -> shader)) -> ContinuousData $ Shader.fixY $ Shader.transform transformation shader) zeData
+          (Channel.asContinuous -> ChannelInt name zeData)   -> ChannelInt name   $ (\(ContinuousData (Shader.fixY -> shader)) -> ContinuousData $ Shader.fixY $ Shader.transform transformation shader) zeData
 
       strength = strengthShader matte chan
 
       transformation :: Point2 (Exp Float) -> Point2 (Exp Float)
-      transformation pt = (changeCoordinateSystem chan) $ Transform.translate vBefore $ Transform.rotate ((-phi)*(strength pt)) $ Transform.translate vAfter $ (changeCoordinateSystem chan) pt
+      transformation pt = Transform.translate vBefore $ Transform.rotate (phi * strength pt) $ Transform.translate vAfter $ pt
 
 scaleChannelAt :: Point2 Float -> V2 Float -> Bool -> Maybe (Matte Float) -> Channel -> Channel
 scaleChannelAt (fmap variable -> (Point2 x y)) (fmap variable -> v@(V2 vx vy)) reformat matte chan = (scale chan)

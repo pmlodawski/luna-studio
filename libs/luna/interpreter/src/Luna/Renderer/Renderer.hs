@@ -10,7 +10,6 @@ module Luna.Renderer.Renderer where
 
 import           Control.Monad (forM, forM_)
 import qualified Data.IntSet   as IntSet
-import qualified Control.Concurrent.Async as Async
 
 import           Flowbox.Data.MapForest                      (MapForest)
 import           Flowbox.Prelude
@@ -19,6 +18,7 @@ import qualified Luna.Interpreter.Session.Cache.Invalidate   as Invalidate
 import qualified Luna.Interpreter.Session.Cache.Value        as Value
 import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint)
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
+import           Luna.Interpreter.Session.Data.Time          (Time)
 import qualified Luna.Interpreter.Session.Data.VarName       as VarName
 import qualified Luna.Interpreter.Session.Env                as Env
 import           Luna.Interpreter.Session.Error              (Error)
@@ -27,7 +27,6 @@ import           Luna.Interpreter.Session.Session            (Session)
 import qualified Luna.Interpreter.Session.Session            as Session
 import           Luna.Renderer.Data.FrameRange               (FrameRanges)
 import qualified Luna.Renderer.Data.FrameRange               as FrameRange
-import Luna.Interpreter.Session.Data.Time (Time)
 
 
 

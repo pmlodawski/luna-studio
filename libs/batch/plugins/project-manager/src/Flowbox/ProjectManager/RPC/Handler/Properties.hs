@@ -7,12 +7,19 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Flowbox.ProjectManager.RPC.Handler.Properties where
 
+import qualified Data.Bimap    as Bimap   
+import           Data.Maybe    (isJust)
+
+import qualified Flowbox.Batch.Batch                                                                           as Batch
 import qualified Flowbox.Batch.Handler.Common                                                                  as Batch
 import qualified Flowbox.Batch.Handler.Properties                                                              as BatchP
+import           Flowbox.Bus.Data.Message                                                                      (Message)
+import           Flowbox.Bus.Data.Topic                                                                        (Topic)
 import           Flowbox.Bus.RPC.RPC                                                                           (RPC)
 import           Flowbox.Data.Convert
 import           Flowbox.Prelude                                                                               hiding (Context)
 import           Flowbox.ProjectManager.Context                                                                (Context)
+import           Flowbox.ProjectManager.RPC.Handler.Graph                                                      (mapID) 
 import           Flowbox.System.Log.Logger
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Properties.Get.Request as GetNodeProperties
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Properties.Get.Status  as GetNodeProperties
@@ -59,11 +66,14 @@ getNodeProperties request@(GetNodeProperties.Request tnodeID _ tlibID tprojectID
     return $ GetNodeProperties.Status request (encode properties)
 
 
-setNodeProperties :: SetNodeProperties.Request -> RPC Context IO SetNodeProperties.Update
-setNodeProperties request@(SetNodeProperties.Request tproperties tnodeID _ tlibID tprojectID _) = do
+setNodeProperties :: SetNodeProperties.Request -> Maybe Topic -> RPC Context IO ([SetNodeProperties.Update], [Message])
+setNodeProperties request@(SetNodeProperties.Request tproperties tnodeID tbc tlibID tprojectID astID) undoTopic = do
     properties <- decodeE tproperties
+    context <- Batch.get
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    BatchP.setProperties properties nodeID libID projectID
-    SetNodeProperties.Update request <$> Batch.getUpdateNo
+        newID     = if isJust undoTopic then nodeID else mapID context Bimap.lookupR nodeID
+    BatchP.setProperties properties newID libID projectID
+    updateNo <- Batch.getUpdateNo
+    return ([SetNodeProperties.Update (SetNodeProperties.Request tproperties (encodeP newID) tbc tlibID tprojectID astID) updateNo], [])
