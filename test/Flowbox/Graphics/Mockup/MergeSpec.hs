@@ -6,6 +6,7 @@ import Test.QuickCheck
 import Flowbox.Graphics.Mockup.Merge
 import Flowbox.Graphics.Mockup.Generator
 import Flowbox.Graphics.Mockup.Basic
+import Flowbox.Graphics.Mockup.Matte
 import Flowbox.Graphics.Color.Color
 import Flowbox.Prelude
 import Control.Monad
@@ -55,24 +56,25 @@ spec = do
             describe testName $ do
                 describe "Should save ok images" $ do -- map ( \x ->
 
-                    let actualImages = map (\x -> liftM3 (mergeLuna x) (loadImageLuna "./test/samples/edge/desert.png")  (loadImageLuna "/home/chris/globe.png") (return Nothing) ) modes-- (constantLuna PCVideo (RGBA 0.3 0.4 0.9 0.6))    
+                    let actualImages = map (\x -> liftM3 (mergeLuna x) (loadImageLuna "/home/chris/brygen.png" {-- "./test/samples/edge/desert.png" --} )  (loadImageLuna "/home/chris/Lena.png") (return matte) ) modes -- (constantLuna PCVideo (RGBA 0.3 0.4 0.9 0.6))    
+                        matte = imageMatteLuna (constantLuna (CustomFormat 2100 2100) (RGBA 1 1 1 1)) "rgba.r" 
                     --let actualImage = liftM( mergeLuna Over (conicalLuna 1200 1200) ) (loadImageLuna "./test/samples/lena.png") Nothing
                     --let actualImage = mergeLuna Over (conicalLuna 1000 1200) (constantLuna PCVideo (RGBA 0.3 0.4 0.5 0.6)) Nothing
                     -- let  expectedImage = getDefaultTestPic specPath testName
                     it "in test" $ do
-                        --pending
+                        pending
                         (zipWithM_ (\x y -> ((nameSave (show x)) =<< y)) modes actualImages) `shouldReturn` ()
                         -- rightReturnShouldBeCloseTo testPath PixelWise actualImage expectedImage
-                    
-
-            describe "should match reference image" $ do
-                let actualImage = liftM2 (mergeLuna Over (conicalLuna 1200 1200)) (loadImageLuna "./test/samples/lena.png") (return Nothing)
-                    expectedImage = getDefaultTestPic specPath testName
-                it "in pixel-wise metric" $ do
-                    returnShouldBeCloseTo testPath PixelWise actualImage expectedImage
-                it "in image-wise metric" $ do
-                    returnShouldBeCloseTo testPath ImageWise actualImage expectedImage
-
+            
+            let actualImage = liftM2 (mergeLuna Over (conicalLuna 1200 1200)) (loadImageLuna "./test/samples/lena.png") (return Nothing)        
+            defaultReferenceTestM testName specPath actualImage
+            --describe "should match reference image" $ do
+            --    let actualImage = liftM2 (mergeLuna Over (conicalLuna 1200 1200)) (loadImageLuna "./test/samples/lena.png") (return Nothing)
+            --        expectedImage = getDefaultTestPic specPath testName
+            --    it "in pixel-wise metric" $ do
+            --        returnShouldBeCloseTo testPath PixelWise actualImage expectedImage
+            --    it "in image-wise metric" $ do
+            --        returnShouldBeCloseTo testPath ImageWise actualImage expectedImage
 
 nameSave name image = do
     saveImageLuna ("./test/samples/mergeResults/"++name++".png") image
