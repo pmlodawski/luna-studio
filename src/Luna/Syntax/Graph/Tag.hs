@@ -15,6 +15,7 @@ import qualified Luna.Syntax.Enum                as Enum
 import           Luna.Syntax.Expr                (LExpr)
 import qualified Luna.Syntax.Graph.Node          as Node
 import           Luna.Syntax.Graph.Node.Position (Position)
+import           Luna.Syntax.Module              (LModule)
 
 
 
@@ -39,3 +40,4 @@ instance Enumerated Tag where
 
 type TExpr v = LExpr Tag v
 type TDecl v = LDecl Tag (TExpr v)
+type TModule v = LModule Tag (TExpr v)
