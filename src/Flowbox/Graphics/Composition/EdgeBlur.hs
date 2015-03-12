@@ -38,13 +38,13 @@ mixImages edgesMask first second = (+) <$>
 --mixImages edgesMask first second = (+) <$>
 --                               ( (*) <$> first <*> edgesMask )
 --                               <*>
-                               ( (*) <$> second <*> (fmap ((-) 1) edgesMask) )
+                               ( (*) <$> second <*> fmap (1 -) edgesMask )
 
 detectEdges :: (Elt a, IsFloating a) => Exp a -> DiscreteShader (Exp a) -> DiscreteShader (Exp a)
 detectEdges sens img = (\x y -> P.min 1.0 $ sens*x+sens*y) <$>
-                       (fmap abs $ applyKernel (M.transpose (sobel {-- :: Matrix2 Double --} )) img)
+                       (fmap abs $ applyKernel (M.transpose sobel {-- :: Matrix2 Double --} ) img)
                        <*>
-                       (fmap abs $ applyKernel (sobel {-- :: Matrix2 Double --} ) img)
+                       (fmap abs $ applyKernel sobel {-- :: Matrix2 Double --} img)
 
 --edgeBlur :: BlurType -> Exp Int -> Exp Double -> Matrix2 Double -> [Matrix2 Double] -> [Matrix2 Double]
 --edgeBlur blurType kernelSize edgeMult matteCh chs = fmap ( rasterizer . blurFunc . (fromMatrix Clamp) ) chs where
@@ -91,7 +91,7 @@ data BlurType = GaussBlur | BoxBlur | TriangleBlur -- | Quadratic
 
 blur :: (IsFloating a, Elt a) => Filter (Exp a) -> Exp Int -> DiscreteShader (Exp a) -> DiscreteShader (Exp a)
 blur kernel kernSize img = process img where
-    hmat = id M.>-> normalize $ toMatrix (Grid 1 (variable kernSize)) $ kernel
-    vmat = id M.>-> normalize $ toMatrix (Grid (variable kernSize) 1) $ kernel
+    hmat = id M.>-> normalize $ toMatrix (Grid 1 (variable kernSize)) kernel
+    vmat = id M.>-> normalize $ toMatrix (Grid (variable kernSize) 1) kernel
     p = pipe A.Clamp
     process x = id `p` F.filter 1 vmat `p` F.filter 1 hmat `p` id $ x

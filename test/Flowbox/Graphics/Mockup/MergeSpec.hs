@@ -18,37 +18,38 @@ spec = do
         in do 
             let testName = "mergeLuna"
             let testPath = specPath++testName
+            let alphaBlend = Adobe
             let modes = [  Atop
-                           , Average Custom
-                           , ColorBurn Custom
-                           , ColorDodge Custom
+                           , Average alphaBlend
+                           , ColorBurn alphaBlend
+                           , ColorDodge alphaBlend
                            , ConjointOver
-                           , Copy Custom
-                           , Difference Custom
+                           , Copy alphaBlend
+                           , Difference alphaBlend
                            , DisjointOver
-                           , DivideBySource Custom
-                           , DivideByDestination Custom
-                           , Exclusion Custom
-                           , From Custom
-                           , Geometric Custom
-                           , HardLight Custom
-                           , Hypot Custom
+                           , DivideBySource alphaBlend
+                           , DivideByDestination alphaBlend
+                           , Exclusion alphaBlend
+                           , From alphaBlend
+                           , Geometric alphaBlend
+                           , HardLight alphaBlend
+                           , Hypot alphaBlend
                            , In
                            , MergeMask
                            , MergeMatte
-                           , MergeMax Custom
-                           , MergeMin Custom
-                           , Minus Custom
-                           , Multiply Custom
+                           , MergeMax alphaBlend
+                           , MergeMin alphaBlend
+                           , Minus alphaBlend
+                           , Multiply alphaBlend
                            , Out
                            , Over
-                           , Overlay Custom
-                           , Plus Custom
-                           , Screen Custom
-                           , SoftLight Custom
-                           , SoftLightPegtop Custom
-                           , SoftLightIllusions Custom
-                           , SoftLightPhotoshop Custom
+                           , Overlay alphaBlend
+                           , Plus alphaBlend
+                           , Screen alphaBlend
+                           , SoftLight alphaBlend
+                           , SoftLightPegtop alphaBlend
+                           , SoftLightIllusions alphaBlend
+                           , SoftLightPhotoshop alphaBlend
                            , Stencil
                            , Under
                            , XOR ]
