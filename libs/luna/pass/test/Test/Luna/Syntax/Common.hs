@@ -26,13 +26,12 @@ import qualified Luna.Syntax.Enum                           as Enum
 import           Luna.Syntax.Expr                           (LExpr)
 import           Luna.Syntax.Module                         (LModule)
 import           Luna.Syntax.Unit                           (Unit (Unit))
-import           Luna.System.Pragma                         (PragmaMap)
 import           Luna.System.Session                        as Session
 
 
 
-getAST :: String -> IO (LModule Enum.IDTag (LExpr Enum.IDTag ()), PragmaMap)
-getAST code =  Session.runT $ do
+getAST :: String -> IO (LModule Enum.IDTag (LExpr Enum.IDTag ()))
+getAST code = fmap fst $ Session.runT $ do
     void Parser.init
     eitherStringToM' $ runEitherT $ do
         let src  = Source "Main" (Text $ fromString code)

@@ -12,18 +12,20 @@ module Test.Luna.Pass.Transform.Graph.Common where
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
-import qualified Luna.Syntax.Control.BCZipper as BCZipper
-import           Luna.Syntax.Control.Crumb    (Breadcrumbs)
-import qualified Luna.Syntax.Control.Crumb    as Crumb
-import qualified Luna.Syntax.Control.Focus    as Focus
-import           Luna.Syntax.Module           (Module)
---import qualified Luna.AST.Name                             as Name
+import qualified Luna.Pass                                 as Pass
 import qualified Luna.Pass.Analysis.Struct                 as Struct
 import qualified Luna.Pass.Transform.Graph.Builder.Builder as GraphBuilder
 import qualified Luna.Pass.Transform.Graph.Parser.Parser   as GraphParser
---import           Luna.Syntax.Expr                          (Expr)
-import Luna.Syntax.Graph.Graph (Graph)
-
+import qualified Luna.Syntax.Control.BCZipper              as BCZipper
+import           Luna.Syntax.Control.Crumb                 (Breadcrumbs)
+import qualified Luna.Syntax.Control.Crumb                 as Crumb
+import qualified Luna.Syntax.Control.Focus                 as Focus
+import           Luna.Syntax.Decl                          (LDecl)
+import           Luna.Syntax.Enum                          (Enumerated)
+import           Luna.Syntax.Graph.Graph                   (Graph)
+import           Luna.Syntax.Graph.Tag                     (TDecl, TModule)
+import           Luna.Syntax.Module                        (LModule)
+import           Luna.System.Session                       as Session
 
 
 named :: a -> b -> (a, b)
@@ -34,25 +36,34 @@ mainBC :: Breadcrumbs
 mainBC = [Crumb.Module "Main", Crumb.Function [] "main"]
 
 
-getGraph :: Breadcrumbs -> Module -> IO Graph
-getGraph bc ast = eitherStringToM' $ runEitherT $ do
-    focus <- hoistEither $ BCZipper.getFocus <$> BCZipper.focusBreadcrumbs' bc ast
-    expr  <- focus ^? Focus.expr <??> "test.Common.getFunctionGraph : Target is not a function"
-    aliasInfo <- EitherT $ Struct.run ast
-    EitherT $ GraphBuilder.run aliasInfo expr
+type V = ()
 
 
-getExpr :: Breadcrumbs -> Graph -> Module -> IO Module
-getExpr bc graph ast = eitherStringToM' $ runEitherT $ do
-    zipper <- hoistEither $ BCZipper.focusBreadcrumbs' bc ast
+getGraph :: Enumerated a => Breadcrumbs -> TModule V -> IO (TDecl V, Graph a V)
+getGraph bc ast = runPass $ do
+    focus <- lift $ eitherStringToM $ BCZipper.getFocus <$> BCZipper.focusBreadcrumbs' bc ast
+    decl  <- focus ^? Focus.decl <??> "test.Common.getFunctionGraph : Target is not a function"
+    aliasInfo <- Pass.run1_ Struct.pass ast
+    GraphBuilder.run aliasInfo decl
+
+
+getExpr :: Enumerated a => Breadcrumbs -> Graph a v -> TModule V -> IO (TModule V)
+getExpr bc graph ast = runPass $ do
+    zipper <- lift $ eitherStringToM $ BCZipper.focusBreadcrumbs' bc ast
     let focus = BCZipper.getFocus zipper
-    expr <- focus ^? Focus.expr <??> "test.Common.getExpr : Target is not a function"
-    expr2 <- EitherT $ GraphParser.run graph expr
-    let newFocus = focus & Focus.expr .~ expr2
+    decl <- focus ^? Focus.decl <??> "test.Common.getExpr : Target is not a function"
+    decl2 <- Pass.run2_ GraphParser.pass graph decl
+    let newFocus = focus & Focus.decl .~ decl2
     return (BCZipper.close $ BCZipper.modify (const newFocus) zipper)
 
 
-getMain :: Module -> IO Expr
+getMain :: (Show a, Show e) => LModule a e -> IO (LDecl a e)
 getMain ast = eitherStringToM' $ runEitherT $ do
     focus <- hoistEither $ BCZipper.getFocus <$> BCZipper.focusBreadcrumbs' mainBC ast
     Focus.getFunction focus <??> "test.Common.getMain : Target is not a function"
+
+
+runPass pass = do
+    result <- Session.runT $ runEitherT pass
+    eitherToM $ fst result
+

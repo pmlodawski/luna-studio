@@ -32,7 +32,6 @@ import Data.Either                (lefts, rights)
 import           Flowbox.Prelude                         hiding (Traversal, error, mapM, mapM_)
 import           Flowbox.System.Log.Logger
 import           Luna.Data.StructInfo                    (StructInfo)
-import qualified Luna.Pass.Pass                          as Pass
 import           Luna.Pass.Transform.Graph.Builder.State (GBPass)
 import qualified Luna.Pass.Transform.Graph.Builder.State as State
 import           Luna.Syntax.Arg                         (Arg (Arg))
@@ -55,7 +54,6 @@ import qualified Luna.Syntax.Label                       as Label
 import           Luna.Syntax.Lit                         (LLit)
 import           Luna.Syntax.Name                        (VNameP)
 import qualified Luna.Syntax.Name.Pattern                as Pattern
-import           Luna.System.Pragma.Store                (MonadPragmaStore)
 import           Luna.Util.LunaShow                      (LunaShow, lunaShow)
 
 
@@ -72,13 +70,10 @@ inputsID = -1
 outputID = -2
 
 
-run :: (MonadPragmaStore m, LunaExpr ae v)
-    => StructInfo -> Bool -> TDecl v
-    -> EitherT Pass.PassError m (TDecl v, Graph ae v)
-run aliasInfo foldNodes lexpr =
-    Pass.run_ (Pass.Info "GraphBuilder")
-        (State.make aliasInfo foldNodes inputsID)
-        (expr2graph lexpr)
+run :: (LunaExpr ae v, Enumerated ae, Monad m)
+    => StructInfo -> TDecl v -> EitherT State.Error m (TDecl v, Graph ae v)
+run aliasInfo lexpr = evalStateT (expr2graph lexpr) $
+                                 State.mk aliasInfo inputsID
 
 
 expr2graph :: LunaExpr ae v

@@ -17,7 +17,7 @@ module Luna.Pass.Transform.Graph.Parser.Parser where
 --import qualified Data.List                  as List
 --import qualified Data.Text.Lazy             as Text
 
---import           Flowbox.Prelude                        hiding (error, folded, mapM, mapM_)
+import Flowbox.Prelude hiding (error, folded, mapM, mapM_)
 --import           Flowbox.System.Log.Logger
 --import qualified Luna.Parser.Token                      as Token
 --import qualified Luna.Pass.Analysis.ID.ExtractIDs       as ExtractIDs
@@ -47,6 +47,7 @@ module Luna.Pass.Transform.Graph.Parser.Parser where
 --import qualified Luna.Syntax.Pat                        as Pat
 --import           Luna.System.Pragma.Store               (MonadPragmaStore)
 
+pass = undefined
 
 ----FIXME[PM]: remove
 --patternParser :: String -> Int -> Either String (LPat a, Int)
