@@ -265,15 +265,24 @@ dataMethodsModify request@(ModifyDataMethods.Request tmethods tbc tlibID tprojec
     return $ ModifyDataMethods.Update request updateNo
 
 
-functionNameModify :: ModifyFunctionName.Request -> RPC Context IO ModifyFunctionName.Update
-functionNameModify request@(ModifyFunctionName.Request tname tbc tlibID tprojectID _) = do
+functionNameModify :: ModifyFunctionName.Request -> Maybe Topic -> RPC Context IO ([ModifyFunctionName.Update], [Message])
+functionNameModify request@(ModifyFunctionName.Request tname tbc tlibID tprojectID astID) undoTopic = do
     bc <- decodeE tbc
     name <- decodeE tname
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
+    focus <- Batch.getFunctionFocus bc libID projectID
+    let tnewBC    = encode $ init bc ++ [Crumb.Function name $ focus ^. Expr.path]
     BatchAST.updateFunctionName name bc libID projectID
     updateNo <- Batch.getUpdateNo
-    return $ ModifyFunctionName.Update request updateNo
+    return ( [ModifyFunctionName.Update request updateNo]
+           , makeMsgArr ( Register.Request
+                              (fun Topic.projectLibraryAstFunctionModifyNameRequest $ ModifyFunctionName.Request (encode $ focus ^?! Expr.fname) tnewBC tlibID tprojectID astID)
+                              (fun Topic.projectLibraryAstFunctionModifyNameRequest $ request)
+                              tprojectID
+                        ) undoTopic
+           )
+                        
 
 
 functionPathModify :: ModifyFunctionPath.Request -> RPC Context IO ModifyFunctionPath.Update
