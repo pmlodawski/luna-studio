@@ -11,11 +11,9 @@
 
 module Flowbox.ProjectManager.RPC.Handler.Handler where
 
-import           Control.Monad             (liftM)
 import Control.Monad.Trans.State
 
 import           Flowbox.Bus.Data.Message                         (Message)
-import qualified Flowbox.Bus.Data.Message                         as Message
 import           Flowbox.Bus.Data.Topic                           ((/+))
 import           Flowbox.Bus.Data.Topic                           (Topic)
 import qualified Flowbox.Bus.Data.Topic                           as Topic
@@ -37,10 +35,6 @@ import qualified Flowbox.ProjectManager.RPC.Topic                 as Topic
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.Text.ProtocolBuffers                     as Proto
 import qualified Flowbox.UR.Manager.RPC.Topic                     as Topic
-import qualified Generated.Proto.Urm.URM.Register.Request         as Register
-import qualified Generated.Proto.Urm.URM.RegisterMultiple.Request as RegisterMultiple
-import qualified Generated.Proto.Urm.URM.Undo.Request             as Undo
-import           Flowbox.Text.ProtocolBuffers                     (Serializable)
 
 
 
@@ -65,9 +59,11 @@ handlerMap callback = HandlerMap.fromList
     , (Topic.projectLibraryUnloadRequest                            , call Topic.update LibraryHandler.unload)
     , (Topic.projectLibraryStoreRequest                             , call Topic.status LibraryHandler.store)
     , (Topic.projectLibraryAstGetRequest                            , call Topic.status ASTHandler.get)
-    , (Topic.projectLibraryAstRemoveRequest                         , call Topic.update ASTHandler.remove)
+    , (Topic.projectLibraryAstRemoveRequest                         , cleanCall (/+ Topic.update) ASTHandler.remove $ Just Topic.urmRegisterRequest)
+    , (u Topic.projectLibraryAstRemoveRequest                       , cleanCall (/* Topic.update) ASTHandler.remove Nothing)
     , (Topic.projectLibraryAstResolveRequest                        , call Topic.status ASTHandler.resolve)
-    , (Topic.projectLibraryAstModuleAddRequest                      , call Topic.update ASTHandler.moduleAdd)
+    , (Topic.projectLibraryAstModuleAddRequest                      , cleanCall (/+ Topic.update) ASTHandler.moduleAdd $ Just Topic.urmRegisterRequest)
+    , (u Topic.projectLibraryAstModuleAddRequest                    , cleanCall (/* Topic.update) ASTHandler.moduleAdd Nothing)
     , (Topic.projectLibraryAstModuleModifyClsRequest                , call Topic.update ASTHandler.moduleClsModify)
     , (Topic.projectLibraryAstModuleModifyFieldsRequest             , call Topic.update ASTHandler.moduleFieldsModify)
     , (Topic.projectLibraryAstModuleModifyTypeAliasesRequest        , call Topic.update ASTHandler.moduleTypeAliasesModify)
@@ -94,14 +90,18 @@ handlerMap callback = HandlerMap.fromList
     , (u Topic.projectLibraryAstFunctionGraphNodeAddRequest         , cleanCall (/* Topic.update) GraphHandler.nodeAdd Nothing)
     , (Topic.projectLibraryAstFunctionGraphNodeRemoveRequest        , cleanCall (/+ Topic.update) GraphHandler.nodeRemove $ Just Topic.urmRegisterMultipleRequest)
     , (u Topic.projectLibraryAstFunctionGraphNodeRemoveRequest      , cleanCall (/* Topic.update) GraphHandler.nodeRemove Nothing)
-    , (Topic.projectLibraryAstFunctionGraphNodeModifyRequest        , call Topic.update GraphHandler.nodeModify)
+    , (Topic.projectLibraryAstFunctionGraphNodeModifyRequest        , cleanCall (/+ Topic.update) GraphHandler.nodeModify $ Just Topic.urmRegisterRequest)
+    , (u Topic.projectLibraryAstFunctionGraphNodeModifyRequest      , cleanCall (/* Topic.update) GraphHandler.nodeModify Nothing)
     , (Topic.projectLibraryAstFunctionGraphNodeModifyinplaceRequest , cleanCall (/+ Topic.update) GraphHandler.nodeModifyInPlace $ Just Topic.urmRegisterRequest)
     , (u Topic.projectLibraryAstFunctionGraphNodeModifyinplaceRequest,cleanCall (/* Topic.update) GraphHandler.nodeModifyInPlace Nothing)
     , (Topic.projectLibraryAstFunctionGraphNodeDefaultGetRequest    , call Topic.status NodeDefaultHandler.get)
-    , (Topic.projectLibraryAstFunctionGraphNodeDefaultRemoveRequest , call Topic.update NodeDefaultHandler.remove)
-    , (Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest    , call Topic.update NodeDefaultHandler.set)
+    , (Topic.projectLibraryAstFunctionGraphNodeDefaultRemoveRequest , cleanCall (/+ Topic.update) NodeDefaultHandler.remove $ Just Topic.urmRegisterRequest)
+    , (u Topic.projectLibraryAstFunctionGraphNodeDefaultRemoveRequest,cleanCall (/* Topic.update) NodeDefaultHandler.remove Nothing)
+    , (Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest    , cleanCall (/+ Topic.update) NodeDefaultHandler.set $ Just Topic.urmRegisterRequest)
+    , (u Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest  , cleanCall (/* Topic.update) NodeDefaultHandler.set Nothing)
     , (Topic.projectLibraryAstFunctionGraphNodePropertiesGetRequest , call Topic.status PropertiesHandler.getNodeProperties)
-    , (Topic.projectLibraryAstFunctionGraphNodePropertiesSetRequest , call Topic.update PropertiesHandler.setNodeProperties)
+    , (Topic.projectLibraryAstFunctionGraphNodePropertiesSetRequest , cleanCall (/+ Topic.update) PropertiesHandler.setNodeProperties $ Just Topic.urmRegisterRequest)
+    , (u Topic.projectLibraryAstFunctionGraphNodePropertiesSetRequest,cleanCall (/* Topic.update) PropertiesHandler.setNodeProperties Nothing)
     , (Topic.projectLibraryAstPropertiesGetRequest                  , call Topic.status PropertiesHandler.getASTProperties)
     , (Topic.projectLibraryAstPropertiesSetRequest                  , call Topic.update PropertiesHandler.setASTProperties)
     , (Topic.projectLibraryAstCodeGetRequest                        , call Topic.status ASTHandler.codeGet)

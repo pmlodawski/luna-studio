@@ -149,7 +149,7 @@ libraryUnload (LibraryUnload.Update request updateNo) = do
 
 astRemove :: ASTRemove.Update -> RPC Context (SessionST mm) ()
 astRemove (ASTRemove.Update request updateNo) = do
-    sync updateNo $ ASTHandler.remove request
+    sync updateNo $ ASTHandler.remove request Nothing
     let projectID = ASTRemove.projectID request
         libraryID = ASTRemove.libraryID request
         bc        = ASTRemove.bc request
@@ -158,7 +158,7 @@ astRemove (ASTRemove.Update request updateNo) = do
 
 astModuleAdd :: ASTModuleAdd.Update -> RPC Context (SessionST mm) ()
 astModuleAdd (ASTModuleAdd.Update request _ bc updateNo) = do
-    sync updateNo $ ASTHandler.moduleAdd request
+    sync updateNo $ ASTHandler.moduleAdd request Nothing
     let projectID = ASTModuleAdd.projectID request
         libraryID = ASTModuleAdd.libraryID request
     CacheWrapper.modifyBreadcrumbsRec projectID libraryID bc
@@ -326,7 +326,7 @@ graphNodeRemove (GraphNodeRemove.Update request updateNo) = do
 
 graphNodeModify :: GraphNodeModify.Update -> RPC Context (SessionST mm) ()
 graphNodeModify (GraphNodeModify.Update request node updateNo) = do
-    sync updateNo $ GraphHandler.nodeModify request
+    sync updateNo $ GraphHandler.nodeModify request Nothing
     let projectID = GraphNodeModify.projectID request
         libraryID = GraphNodeModify.libraryID request
     nodeID    <- Gen.Node.id node <??> "ASTWatch.graphNodeModify : 'nodeID' field is missing"
@@ -351,7 +351,7 @@ graphNodeModifyInPlace (GraphNodeModifyInPlace.Update request updateNo) = do
 
 graphNodeDefaultRemove :: GraphNodeDefaultRemove.Update -> RPC Context (SessionST mm) ()
 graphNodeDefaultRemove (GraphNodeDefaultRemove.Update request updateNo) = do
-    sync updateNo $ NodeDefaultHandler.remove request
+    sync updateNo $ NodeDefaultHandler.remove request Nothing
     let projectID = GraphNodeDefaultRemove.projectID request
         libraryID = GraphNodeDefaultRemove.libraryID request
         nodeID    = GraphNodeDefaultRemove.nodeID request
@@ -373,7 +373,7 @@ graphNodeDefaultSet (GraphNodeDefaultSet.Update request updateNo) = do
         Batch.lookupNodeDefault inPort nodeID libraryID projectID >>= \case
             Nothing               -> return ()
             Just (defID, defExpr) -> Var.deleteTimeRef libraryID nodeID defID defExpr
-        sync updateNo $ NodeDefaultHandler.set request
+        sync updateNo $ NodeDefaultHandler.set request Nothing
         Batch.lookupNodeDefault inPort nodeID libraryID projectID >>= \case
             Nothing               -> left "ASTWatch.graphNodeDefaultSet"
             Just (defID, defExpr) -> Var.insertTimeRef libraryID nodeID defID defExpr
@@ -382,4 +382,4 @@ graphNodeDefaultSet (GraphNodeDefaultSet.Update request updateNo) = do
 
 graphNodePropertiesSet :: GraphNodePropertiesSet.Update -> RPC Context (SessionST mm) ()
 graphNodePropertiesSet (GraphNodePropertiesSet.Update request updateNo) =
-    sync updateNo $ PropertiesHandler.setNodeProperties request
+    sync updateNo $ PropertiesHandler.setNodeProperties request Nothing

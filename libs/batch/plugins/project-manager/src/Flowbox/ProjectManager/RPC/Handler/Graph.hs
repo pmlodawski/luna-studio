@@ -11,14 +11,16 @@ module Flowbox.ProjectManager.RPC.Handler.Graph where
 
 import qualified Data.Bimap    as Bimap   
 import qualified Data.Either   as Either
-import qualified Data.List     as List
 import           Data.Maybe    (fromMaybe, isJust)
---import qualified Data.Set      as Set
+import qualified Data.Set      as Set
 import qualified Data.Sequence as Sequence
+import           Data.Sequence ((><))
 
 import qualified Flowbox.Batch.Batch                                                                          as Batch
 import qualified Flowbox.Batch.Handler.Common                                                                 as Batch
 import qualified Flowbox.Batch.Handler.Graph                                                                  as BatchG
+import qualified Flowbox.Batch.Handler.NodeDefault                                                            as BatchND
+import qualified Flowbox.Batch.Handler.Properties                                                             as BatchP
 import           Flowbox.Bus.Data.Message                                                                     as Message
 import           Flowbox.Bus.Data.Topic                                                                       (Topic)
 import           Flowbox.Bus.Data.Serialize.Proto.Conversion.Message                                          ()
@@ -42,14 +44,18 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Gra
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.LookupMany.Status          as LookupMany
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Add.Request           as NodeAdd
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Add.Update            as NodeAdd
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Default.Set.Request   as NodeDefaultSet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Modify.Request        as NodeModify
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Modify.Update         as NodeModify
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.ModifyInPlace.Request as NodeModifyInPlace
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.ModifyInPlace.Update  as NodeModifyInPlace
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Request        as NodeRemove
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Update         as NodeRemove
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Properties.Set.Request                    as SetNodeProperties
 import qualified Generated.Proto.Urm.URM.Register.Request                                                     as Register
 import qualified Generated.Proto.Urm.URM.RegisterMultiple.Request                                             as RegisterMultiple
+import qualified Luna.DEP.Graph.View.Default.DefaultsMap                                                      as DefaultsMap
+import           Luna.DEP.Graph.View.EdgeView                                                                 (EdgeView (EdgeView))
 import           Luna.DEP.Data.Serialize.Proto.Conversion.Crumb                                               ()
 import           Luna.DEP.Data.Serialize.Proto.Conversion.GraphView                                           ()
 
@@ -97,45 +103,69 @@ lookupMany request@(LookupMany.Request tnodeIDs tbc tlibID tprojectID _) = do
 nodeAdd :: NodeAdd.Request -> Maybe Topic -> RPC Context IO ([NodeAdd.Update], [Message])
 nodeAdd request@(NodeAdd.Request tnode tbc tlibID tprojectID astID) undoTopic = do
     bc <- decodeE tbc
-    (oldNodeId, node) <- decodeE tnode
+    (oldNodeID, node) <- decodeE tnode
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     newNodeID <- BatchG.addNode node bc libID projectID
     updateNo <- Batch.getUpdateNo
 
     context <- Batch.get
-    Batch.put $ Batch.idMap %~ Bimap.insert newNodeID ( case oldNodeId of
+    Batch.put $ Batch.idMap %~ Bimap.insert newNodeID ( case oldNodeID of
                                                            -1 -> newNodeID
                                                            nid -> nid
                                                       ) $ context 
 
+    logger error $ "oldNodeID " ++ show oldNodeID
+    logger error $ "newNodeID "  ++ show newNodeID
     return $ ( [NodeAdd.Update request (encode (newNodeID, node)) updateNo]
              , makeMsgArr (Register.Request
                 (fun Topic.projectLibraryAstFunctionGraphNodeRemoveRequest $ NodeRemove.Request (Sequence.singleton $ encodeP newNodeID) tbc tlibID tprojectID astID)
                 (fun Topic.projectLibraryAstFunctionGraphNodeAddRequest $ NodeAdd.Request (encode (mapID context Bimap.lookup newNodeID, node)) tbc tlibID tprojectID astID)
+                tprojectID
                           ) undoTopic
              )
 
-nodeModify :: NodeModify.Request -> RPC Context IO NodeModify.Update
-nodeModify request@(NodeModify.Request tnode tbc tlibID tprojectID _) = do
+nodeModify :: NodeModify.Request -> Maybe Topic -> RPC Context IO ([NodeModify.Update], [Message])
+nodeModify (NodeModify.Request tnode tbc tlibID tprojectID astID) undoTopic = do
     bc <- decodeE tbc
+    context <- Batch.get
     (nodeID, node) <- decodeE tnode
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    newNodeID <- BatchG.updateNode (nodeID, node) bc libID projectID
+        originID  = if isJust undoTopic then mapID context Bimap.lookup nodeID else nodeID
+        newID     = if isJust undoTopic then nodeID else mapID context Bimap.lookupR nodeID
+    oldNode <- BatchG.nodeByID newID bc libID projectID
+    newNodeID <- BatchG.updateNode (newID, node) bc libID projectID
     updateNo <- Batch.getUpdateNo
-    return $ NodeModify.Update request (encode (newNodeID, node)) updateNo
+    let toldNode = encode (originID, oldNode)
+        tnewNode = encode (originID, node)
+
+    context2 <- Batch.get
+    Batch.put $ Batch.idMap %~ Bimap.insert newNodeID originID $ context2
+
+    logger error $ "nodeID " ++ show nodeID
+    logger error $ "newNodeID" ++ show newNodeID
+    logger error $ "newID "  ++ show newID
+    logger error $ "originID" ++ show originID
+    return $ ( [NodeModify.Update (NodeModify.Request (encode (newID, node)) tbc tlibID tprojectID astID) (encode (newNodeID, node)) updateNo]
+             , makeMsgArr (Register.Request
+                (fun Topic.projectLibraryAstFunctionGraphNodeModifyRequest $ NodeModify.Request toldNode tbc tlibID tprojectID astID)
+                (fun Topic.projectLibraryAstFunctionGraphNodeModifyRequest $ NodeModify.Request tnewNode tbc tlibID tprojectID astID)
+                tprojectID
+                ) undoTopic
+             )
+
 
 nodeModifyInPlace :: NodeModifyInPlace.Request -> Maybe Topic -> RPC Context IO ([NodeModifyInPlace.Update], [Message])
-nodeModifyInPlace request@(NodeModifyInPlace.Request tnode tbc tlibID tprojectID astID) undoTopic = do
-    bc      <- decodeE tbc
-    context <- Batch.get
-    nodeWithId@(nid, newNode) <- decodeE tnode
+nodeModifyInPlace (NodeModifyInPlace.Request tnode tbc tlibID tprojectID astID) undoTopic = do
+    bc             <- decodeE tbc
+    (nid, newNode) <- decodeE tnode
+    context        <- Batch.get
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
         originID  = if isJust undoTopic then mapID context Bimap.lookup nid else nid
         newID     = if isJust undoTopic then nid else mapID context Bimap.lookupR nid
-        newRequest nid = NodeModifyInPlace.Request (encode (nid, newNode)) tbc tlibID tprojectID astID
+        newRequest nodeId = NodeModifyInPlace.Request (encode (nodeId, newNode)) tbc tlibID tprojectID astID
     
     oldNd <- BatchG.nodeByID newID bc libID projectID
     let oldNode   = encode (originID, oldNd)
@@ -143,10 +173,14 @@ nodeModifyInPlace request@(NodeModifyInPlace.Request tnode tbc tlibID tprojectID
     BatchG.updateNodeInPlace (newID, newNode) bc libID projectID
     updateNo <- Batch.getUpdateNo
 
+    logger error $ "nid " ++ show nid
+    logger error $ "newID "  ++ show newID
+    logger error $ "originID" ++ show originID
     return $ ( [NodeModifyInPlace.Update (newRequest newID) updateNo]
              , makeMsgArr (Register.Request 
-                (fun Topic.projectLibraryAstFunctionGraphNodeModifyinplaceRequest $ NodeModifyInPlace.Request oldNode tbc tlibID tprojectID astID)
-                (fun Topic.projectLibraryAstFunctionGraphNodeModifyinplaceRequest $ newRequest originID)
+                            (fun Topic.projectLibraryAstFunctionGraphNodeModifyinplaceRequest $ NodeModifyInPlace.Request oldNode tbc tlibID tprojectID astID)
+                            (fun Topic.projectLibraryAstFunctionGraphNodeModifyinplaceRequest $ newRequest originID)
+                            tprojectID
                           ) undoTopic
              )
 
@@ -158,6 +192,7 @@ nodeRemove (NodeRemove.Request tnodeIDs tbc tlibID tprojectID astID) undoTopic =
     let nodeIDs            = decodeP tnodeIDs
         mapIDs bimapLookup = map (mapID context bimapLookup) nodeIDs
         updatedRequest ids = NodeRemove.Request ids tbc tlibID tprojectID astID
+        originID nid       = if isJust undoTopic then mapID context Bimap.lookup nid else nid
         originIDs          = if isJust undoTopic then mapIDs Bimap.lookup else nodeIDs
         newIDs             = if isJust undoTopic then nodeIDs else mapIDs Bimap.lookupR
         libID              = decodeP tlibID
@@ -167,23 +202,52 @@ nodeRemove (NodeRemove.Request tnodeIDs tbc tlibID tprojectID astID) undoTopic =
                                  return $ encode (nid, node)
                      ) $ originIDs
 
---    let removed = Set.toList . Set.fromList . concat . map (\node -> BatchG.nodeEdges node bc libID projectID) oldNodes
---    logger warning $ show removed
+    rm <- mapM (\nid -> BatchG.nodeEdges nid bc libID projectID) newIDs
+    let removed = Set.toList $ Set.fromList $ concat rm
+    defaults <- mapM (\nid -> do defaults <- BatchND.nodeDefaults nid bc libID projectID
+                                 return $ DefaultsMap.mapWithKey (\k v -> fun Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest
+                                                                              $ NodeDefaultSet.Request (encodeP k) (encode $ snd v) (encodeP $ originID nid) tbc tlibID tprojectID astID
+                                                                 )
+                                                                 defaults
+                     )
+                     newIDs
+    properties <- mapM (\nid -> do properties <- BatchP.getProperties nid libID projectID
+                                   return $ fun Topic.projectLibraryAstFunctionGraphNodePropertiesSetRequest 
+                                                $ SetNodeProperties.Request (encode properties) (encodeP $ originID nid) tbc tlibID tprojectID astID
+                       )
+                       newIDs
     
     BatchG.removeNodes newIDs bc libID projectID
     updateNo <- Batch.getUpdateNo
 
+    logger error $ "newIDs "  ++ show newIDs
+    logger error $ "originIDs" ++ show originIDs
     return ( [NodeRemove.Update (updatedRequest $ encodeP newIDs) updateNo]
            , makeMsgArr (RegisterMultiple.Request
-              (  Sequence.fromList $ map (\node -> fun Topic.projectLibraryAstFunctionGraphNodeAddRequest $ NodeAdd.Request node tbc tlibID tprojectID astID) $ oldNodes)
---              >< Sequence.fromList $ map (\node -> fun Topic.projectLibraryAstFunctionGraphConnectRequest $ Connect.Request )
-              (fun Topic.projectLibraryAstFunctionGraphNodeRemoveRequest $ updatedRequest $ encodeP originIDs)
+                            (  (Sequence.fromList $ map (\node -> fun Topic.projectLibraryAstFunctionGraphNodeAddRequest $ NodeAdd.Request node tbc tlibID tprojectID astID) $ oldNodes)
+                            >< (Sequence.fromList $ map (\(srcID, dstID, EdgeView srcPorts dstPorts) -> fun Topic.projectLibraryAstFunctionGraphConnectRequest 
+                                                                                                            $ Connect.Request (encodeP $ originID srcID)
+                                                                                                                              (encodeP srcPorts)
+                                                                                                                              (encodeP $ originID dstID)
+                                                                                                                              (encodeP dstPorts)
+                                                                                                                              tbc
+                                                                                                                              tlibID
+                                                                                                                              tprojectID
+                                                                                                                              astID
+                                                        ) 
+                                                        removed
+                               )
+                            >< (Sequence.fromList $ map snd . DefaultsMap.toList =<< defaults)
+                            >< (Sequence.fromList properties)
+                            )
+                            (fun Topic.projectLibraryAstFunctionGraphNodeRemoveRequest $ updatedRequest $ encodeP originIDs)
+                            tprojectID
                         ) undoTopic
            )
 
 
 connect :: Connect.Request -> Maybe Topic -> RPC Context IO ([Connect.Update], [Message])
-connect request@(Connect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibID tprojectID astID) undoTopic = do
+connect (Connect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibID tprojectID astID) undoTopic = do
     bc <- decodeE tbc
     context <- Batch.get
     let srcNodeID = decodeP tsrcNodeID
@@ -196,31 +260,56 @@ connect request@(Connect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tli
         newSID    = if isJust undoTopic then srcNodeID else mapID context Bimap.lookupR srcNodeID
         originDID = if isJust undoTopic then mapID context Bimap.lookup dstNodeID else dstNodeID
         newDID    = if isJust undoTopic then dstNodeID else mapID context Bimap.lookupR dstNodeID
-        newRequest sid did = Connect.Request (encodeP sid) tsrcPort (encodeP did) tdstPort tbc tlibID tprojectID astID
+        newRequest constr sid did = constr (encodeP sid) tsrcPort (encodeP did) tdstPort tbc tlibID tprojectID astID
 
     BatchG.connect newSID srcPort newDID dstPort bc libID projectID
     updateNo <- Batch.getUpdateNo
-    return $ ( [Connect.Update (newRequest newSID newDID) updateNo]
-             , makeMsgArr (Register.Request (fun Topic.projectLibraryAstFunctionGraphDisconnectRequest $ Disconnect.Request (encodeP originSID) tsrcPort (encodeP originDID) tdstPort tbc tlibID tprojectID astID)
-                                            (fun Topic.projectLibraryAstFunctionGraphConnectRequest $ newRequest originSID originDID)
+    logger error $ "srcNodeID " ++ show srcNodeID
+    logger error $ "srcPort " ++ show srcPort
+    logger error $ "newSID "  ++ show newSID
+    logger error $ "originSID" ++ show originSID
+    logger error $ "dstNodeID " ++ show dstNodeID
+    logger error $ "dstPort " ++ show dstPort
+    logger error $ "newDID "  ++ show newDID
+    logger error $ "originDID" ++ show originDID
+    return $ ( [Connect.Update (newRequest Connect.Request newSID newDID) updateNo]
+             , makeMsgArr (Register.Request (fun Topic.projectLibraryAstFunctionGraphDisconnectRequest $ newRequest Disconnect.Request originSID originDID)
+                                            (fun Topic.projectLibraryAstFunctionGraphConnectRequest $ newRequest Connect.Request originSID originDID)
+                                            tprojectID
                           ) undoTopic
              )
 
 disconnect :: Disconnect.Request -> Maybe Topic -> RPC Context IO ([Disconnect.Update], [Message])
-disconnect request@(Disconnect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibID tprojectID astID) undoTopic = do
+disconnect (Disconnect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibID tprojectID astID) undoTopic = do
     bc <- decodeE tbc
+    context <- Batch.get
     let srcNodeID = decodeP tsrcNodeID
         srcPort   = decodeP tsrcPort
         dstNodeID = decodeP tdstNodeID
         dstPort   = decodeP tdstPort
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    BatchG.disconnect srcNodeID srcPort dstNodeID dstPort bc libID projectID
+        originSID = if isJust undoTopic then mapID context Bimap.lookup srcNodeID else srcNodeID
+        newSID    = if isJust undoTopic then srcNodeID else mapID context Bimap.lookupR srcNodeID
+        originDID = if isJust undoTopic then mapID context Bimap.lookup dstNodeID else dstNodeID
+        newDID    = if isJust undoTopic then dstNodeID else mapID context Bimap.lookupR dstNodeID
+        newRequest constr sid did = constr (encodeP sid) tsrcPort (encodeP did) tdstPort tbc tlibID tprojectID astID
+
+    BatchG.disconnect newSID srcPort newDID dstPort bc libID projectID
     updateNo <- Batch.getUpdateNo
-    return $ ( [Disconnect.Update request updateNo]
+    logger error $ "srcNodeID " ++ show srcNodeID
+    logger error $ "srcPort " ++ show srcPort
+    logger error $ "newSID "  ++ show newSID
+    logger error $ "originSID" ++ show originSID
+    logger error $ "dstNodeID " ++ show dstNodeID
+    logger error $ "dstPort " ++ show dstPort
+    logger error $ "newDID "  ++ show newDID
+    logger error $ "originDID" ++ show originDID
+    return $ ( [Disconnect.Update (newRequest Disconnect.Request newSID newDID) updateNo]
              , makeMsgArr (Register.Request
-                            (fun Topic.projectLibraryAstFunctionGraphConnectRequest $ Connect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibID tprojectID astID)
-                            (fun Topic.projectLibraryAstFunctionGraphDisconnectRequest request)
+                            (fun Topic.projectLibraryAstFunctionGraphConnectRequest $ newRequest Connect.Request originSID originDID)
+                            (fun Topic.projectLibraryAstFunctionGraphDisconnectRequest $ newRequest Disconnect.Request originSID originDID)
+                            tprojectID
                           ) undoTopic
              )
 
