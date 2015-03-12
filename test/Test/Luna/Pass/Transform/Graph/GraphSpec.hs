@@ -9,9 +9,12 @@ module Test.Luna.Pass.Transform.Graph.GraphSpec where
 
 import Test.Hspec
 
-import Flowbox.Prelude
---import           Luna.Syntax.Control.Crumb                  (Breadcrumbs)
---import           Luna.Pass.Transform.AST.IDFixer.IDFixer (clearIDs)
+import           Flowbox.Prelude
+import           Luna.Syntax.Control.Crumb             (Breadcrumbs)
+import qualified Test.Luna.Pass.Transform.Graph.Common as Common
+import           Test.Luna.Sample.Code                 (sampleCodes)
+import qualified Test.Luna.Sample.Code                 as SampleCode
+import qualified Test.Luna.Syntax.Common               as Common
 --import qualified Luna.Syntax.Graph.Edge                  as Edge
 --import           Luna.Syntax.Graph.Graph                 (Graph)
 --import qualified Luna.Syntax.Graph.Graph                 as Graph
@@ -20,11 +23,7 @@ import Flowbox.Prelude
 --import qualified Luna.Syntax.Graph.Node.Expr             as NodeExpr
 --import qualified Luna.Syntax.Graph.Node.StringExpr       as StringExpr
 --import qualified Luna.Syntax.Graph.Port                  as Port
---import qualified Test.Luna.Pass.Transform.Graph.Common   as Common
---import           Test.Luna.Sample.Code                   (sampleCodes)
---import qualified Test.Luna.Sample.Code                   as SampleCode
 --import           Test.Luna.Sample.Graph                  (buggyGraphs, sampleGraphs)
---import qualified Test.Luna.Syntax.AST                    as Common
 
 
 
@@ -32,34 +31,33 @@ import Flowbox.Prelude
 --strExpr = NodeExpr.StringExpr . StringExpr.Expr
 
 
---backAndForth :: Breadcrumbs -> String -> IO ()
---backAndForth bc code = do
---    ast         <- Common.getAST code
---    --putStrLn "== getGraph"
---    (graph, pm) <- Common.getGraph bc def ast
---    --printLn
---    --print ast
---    --printLn
---    --putStrLn $ ppShow graph
---    --printLn
---    --print pm
---    --printLn
---    --putStrLn "== getExpr"
---    (ast2  , pm2) <- Common.getExpr bc graph pm ast
---    --print ast2
---    --printLn
---    --print pm2
---    --printLn
---    --putStrLn "== getGraph"
---    (graph3, pm3) <- Common.getGraph bc pm2 ast2
---    --print pm3
---    --printLn
---    expr  <- Common.getMain (clearIDs 0 ast)
---    expr2 <- Common.getMain (clearIDs 0 ast2)
+backAndForth :: Breadcrumbs -> String -> IO ()
+backAndForth bc code = do
+    ast         <- Common.getAST code
+    --putStrLn "== getGraph"
+    (graph, ast) <- Common.getGraph bc ast
+    --printLn
+    --print ast
+    --printLn
+    --putStrLn $ ppShow graph
+    --printLn
+    --print pm
+    --printLn
+    --putStrLn "== getExpr"
+    ast2   <- Common.getExpr bc graph ast
+    --print ast2
+    --printLn
+    --print pm2
+    --printLn
+    --putStrLn "== getGraph"
+    (graph3, ast2) <- Common.getGraph bc ast2
+    --print pm3
+    --printLn
+    expr  <- Common.getMain ast
+    expr2 <- Common.getMain ast2
 
---    expr2  `shouldBe` expr
---    graph3 `shouldBe` graph
---    pm3    `shouldBe` pm2
+    expr2  `shouldBe` expr
+    graph3 `shouldBe` graph
 
 
 --backAndForth2 :: Breadcrumbs -> Graph -> IO ()
@@ -87,8 +85,8 @@ spec :: Spec
 spec = do
     describe "ast <-> graph conversion" $ do
         it "" pending
-        --mapM_ (\(name, code) -> it ("returns the same when converting back and forth - " ++ name) $
-        --        backAndForth Common.mainBC code) sampleCodes
+        mapM_ (\(name, code) -> it ("returns the same when converting back and forth - " ++ name) $
+                backAndForth Common.mainBC code) sampleCodes
         --mapM_ (\(name, bc, code) -> it ("returns the same when converting back and forth - " ++ name) $
         --        backAndForth bc code) SampleCode.sampleLambdas
 

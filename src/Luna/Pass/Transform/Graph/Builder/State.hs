@@ -22,7 +22,6 @@ import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import           Luna.Data.StructInfo            (StructInfo)
 import qualified Luna.Data.StructInfo            as StructInfo
-import           Luna.Pass.Pass                  (PassMonad)
 import qualified Luna.Syntax.AST                 as AST
 import           Luna.Syntax.Graph.Edge          (Edge)
 import qualified Luna.Syntax.Graph.Edge          as Edge
@@ -44,8 +43,9 @@ logger = getLogger $moduleName
 
 
 type NodeMap = Map Node.ID (Node.ID, Port)
+type Error = String
 
-type GBPass a v m result = Monad m => PassMonad (GBState a v) m result
+type GBPass a v m result = Monad m => StateT (GBState a v) (EitherT String m) result
 
 data GBState a v = GBState { _graph          :: Graph a v
                            , _nodeMap        :: NodeMap
@@ -54,15 +54,14 @@ data GBState a v = GBState { _graph          :: Graph a v
                            , _nextFreeNodeID :: Node.ID
 
                            , _aa             :: StructInfo
-                           , _foldNodes      :: Bool
                            , _prevoiusNodeID :: Node.ID
                            } deriving (Show)
 
 makeLenses ''GBState
 
 
-make :: StructInfo -> Bool -> Node.ID -> GBState a e
-make = GBState def def True def
+mk :: StructInfo -> Node.ID -> GBState a e
+mk = GBState def def True def
 
 -- == getters and setters ================================================
 ----- graph ---------------------------------------------------------------

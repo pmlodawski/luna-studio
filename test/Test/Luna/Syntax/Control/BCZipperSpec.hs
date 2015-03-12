@@ -29,7 +29,7 @@ main = hspec spec
 
 
 getAST :: IO (LModule Enum.IDTag (LExpr Enum.IDTag ()))
-getAST = fst <$> Common.getAST SampleCode.zipperTestModule
+getAST = Common.getAST SampleCode.zipperTestModule
 
 
 --zipTo :: (a -> Bool) -> BCZipper h j [a] -> Maybe (BCZipper h j [a] :>> a)
