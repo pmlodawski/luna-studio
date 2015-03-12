@@ -9,18 +9,22 @@
 
 module Flowbox.UR.Manager.Context where
 
+import           Data.Map                           (Map)
+import qualified Data.Map                           as Map
+
 import           Flowbox.Bus.Data.Message           (Message)
 import           Flowbox.Prelude                    hiding (Context)
 
 
 type Stack = [([Message], Message)]
 
+type Context = Map Int ProjectContext
 
-data Context = Context { _undo :: Stack, _redo :: Stack }
-                       deriving (Show)
+data ProjectContext = ProjectContext { _undo :: Stack, _redo :: Stack }
+                                     deriving (Show)
 
-makeLenses ''Context
+makeLenses ''ProjectContext
 
 
 mk :: Context
-mk =  Context [] []
+mk = Map.empty
