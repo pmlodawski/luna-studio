@@ -9,14 +9,18 @@ module Flowbox.ProjectManager.RPC.Handler.Project where
 
 import qualified Data.Sequence as Sequence
 
+import qualified Flowbox.Batch.Batch                                   as Batch
 import qualified Flowbox.Batch.Handler.Common                          as Batch
 import qualified Flowbox.Batch.Handler.Project                         as BatchP
 import           Flowbox.Batch.Project.Project                         (Project)
 import qualified Flowbox.Batch.Project.Project                         as Project
+import           Flowbox.Bus.Data.Message                              (Message)
+import           Flowbox.Bus.Data.Topic                                (Topic)
 import           Flowbox.Bus.RPC.RPC                                   (RPC)
 import           Flowbox.Data.Convert
 import           Flowbox.Prelude                                       hiding (Context)
 import           Flowbox.ProjectManager.Context                        (Context)
+import           Flowbox.ProjectManager.RPC.Handler.Graph              (makeMsgArr)
 import           Flowbox.System.Log.Logger
 import qualified Generated.Proto.Project.Project                       as Gen
 import qualified Generated.Proto.ProjectManager.Project.Close.Request  as Close
@@ -33,6 +37,7 @@ import qualified Generated.Proto.ProjectManager.Project.Open.Request   as Open
 import qualified Generated.Proto.ProjectManager.Project.Open.Update    as Open
 import qualified Generated.Proto.ProjectManager.Project.Store.Request  as Store
 import qualified Generated.Proto.ProjectManager.Project.Store.Status   as Store
+import qualified Generated.Proto.Urm.URM.ClearStack.Request            as ClearStack
 import           Luna.DEP.Data.Serialize.Proto.Conversion.Attributes   ()
 
 
@@ -70,11 +75,14 @@ create request@(Create.Request tname tpath tattributes) = do
     Create.Update request (encodeProject $ _2 . Project.libs .~ def $ newProject) <$> Batch.getUpdateNo
 
 
-open :: Open.Request -> RPC Context IO Open.Update
-open request@(Open.Request tpath) = do
+open :: Open.Request -> Maybe Topic -> RPC Context IO ([Open.Update], [Message])
+open request@(Open.Request tpath) clearStackTopic = do
     let upath = decodeP tpath
     (projectID, project) <- BatchP.openProject upath
-    Open.Update request ((encodeProject (projectID, project & Project.libs .~ def))) <$> Batch.getUpdateNo
+    context <- Batch.get
+    Batch.put $ Batch.idMap .~ Batch.emptyIDMap $ context
+    flip (,) (makeMsgArr (ClearStack.Request (encodeP projectID)) clearStackTopic)
+             . return . (Open.Update request ((encodeProject (projectID, project & Project.libs .~ def)))) <$> Batch.getUpdateNo
 
 
 modify :: Modify.Request -> RPC Context IO Modify.Update

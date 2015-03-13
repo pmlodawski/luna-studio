@@ -21,9 +21,10 @@ import qualified Flowbox.Batch.Handler.Common                                   
 import qualified Flowbox.Batch.Handler.Graph                                                                  as BatchG
 import qualified Flowbox.Batch.Handler.NodeDefault                                                            as BatchND
 import qualified Flowbox.Batch.Handler.Properties                                                             as BatchP
-import           Flowbox.Bus.Data.Message                                                                     as Message
-import           Flowbox.Bus.Data.Topic                                                                       (Topic)
+import           Flowbox.Bus.Data.Message                                                                     (Message)
+import qualified Flowbox.Bus.Data.Message                                                                     as Message
 import           Flowbox.Bus.Data.Serialize.Proto.Conversion.Message                                          ()
+import           Flowbox.Bus.Data.Topic                                                                       (Topic)
 import           Flowbox.Bus.RPC.RPC                                                                          (RPC)
 import           Flowbox.Data.Convert
 import           Flowbox.Prelude                                                                              hiding (Context, error)
@@ -49,15 +50,15 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Gra
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Modify.Update         as NodeModify
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.ModifyInPlace.Request as NodeModifyInPlace
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.ModifyInPlace.Update  as NodeModifyInPlace
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Properties.Set.Request                    as SetNodeProperties
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Request        as NodeRemove
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Update         as NodeRemove
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Properties.Set.Request                    as SetNodeProperties
 import qualified Generated.Proto.Urm.URM.Register.Request                                                     as Register
 import qualified Generated.Proto.Urm.URM.RegisterMultiple.Request                                             as RegisterMultiple
-import qualified Luna.DEP.Graph.View.Default.DefaultsMap                                                      as DefaultsMap
-import           Luna.DEP.Graph.View.EdgeView                                                                 (EdgeView (EdgeView))
 import           Luna.DEP.Data.Serialize.Proto.Conversion.Crumb                                               ()
 import           Luna.DEP.Data.Serialize.Proto.Conversion.GraphView                                           ()
+import qualified Luna.DEP.Graph.View.Default.DefaultsMap                                                      as DefaultsMap
+import           Luna.DEP.Graph.View.EdgeView                                                                 (EdgeView (EdgeView))
 
 
 
@@ -205,6 +206,7 @@ nodeRemove (NodeRemove.Request tnodeIDs tbc tlibID tprojectID astID) undoTopic =
     rm <- mapM (\nid -> BatchG.nodeEdges nid bc libID projectID) newIDs
     let removed = Set.toList $ Set.fromList $ concat rm
     defaults <- mapM (\nid -> do defaults <- BatchND.nodeDefaults nid bc libID projectID
+                                 logger warning $ "difolty dla " ++ (show nid) ++ ": " ++ (show defaults)
                                  return $ DefaultsMap.mapWithKey (\k v -> fun Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest
                                                                               $ NodeDefaultSet.Request (encodeP k) (encode $ snd v) (encodeP $ originID nid) tbc tlibID tprojectID astID
                                                                  )
@@ -222,6 +224,8 @@ nodeRemove (NodeRemove.Request tnodeIDs tbc tlibID tprojectID astID) undoTopic =
 
     logger error $ "newIDs "  ++ show newIDs
     logger error $ "originIDs" ++ show originIDs
+    logger warning $ show $ map snd . DefaultsMap.toList =<< defaults
+    logger warning $ show $ map snd $ DefaultsMap.toList =<< defaults
     return ( [NodeRemove.Update (updatedRequest $ encodeP newIDs) updateNo]
            , makeMsgArr (RegisterMultiple.Request
                             (  (Sequence.fromList $ map (\node -> fun Topic.projectLibraryAstFunctionGraphNodeAddRequest $ NodeAdd.Request node tbc tlibID tprojectID astID) $ oldNodes)

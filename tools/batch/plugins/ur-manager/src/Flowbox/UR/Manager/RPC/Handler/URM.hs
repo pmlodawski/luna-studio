@@ -22,6 +22,9 @@ import           Flowbox.Prelude                                     hiding (Con
 import qualified Flowbox.Text.ProtocolBuffers                        as Proto
 import           Flowbox.System.Log.Logger
 import           Flowbox.UR.Manager.Context                          (Context, ProjectContext(..), Stack)
+import qualified Flowbox.UR.Manager.Context                          as Context
+import qualified Generated.Proto.Urm.URM.ClearStack.Request          as ClearStack
+import qualified Generated.Proto.Urm.URM.ClearStack.Status           as ClearStack
 import qualified Generated.Proto.Urm.URM.Redo.Request                as Redo
 import qualified Generated.Proto.Urm.URM.Redo.Status                 as Redo
 import qualified Generated.Proto.Urm.URM.Register.Request            as Register
@@ -74,3 +77,8 @@ execAction projectID accessor invert retCons = do
         []              -> return (retCons False, Nothing)
         (action : rest) -> do lift $ put $ Map.insert projectID (invert ProjectContext rest $ action : stack2) contextMap
                               return (retCons True, Just $ accessor action)
+
+clearStack :: ClearStack.Request -> RPC Context IO ClearStack.Status
+clearStack request@(ClearStack.Request projectID) = do
+    lift $ put Context.mk
+    return $ ClearStack.Status request 

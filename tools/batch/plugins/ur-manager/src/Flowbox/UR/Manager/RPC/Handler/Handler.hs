@@ -33,6 +33,7 @@ handlerMap callback = HandlerMap.fromList
     , (Topic.urmRedoRequest             , respond2 status URMHandler.redo)
     , (Topic.urmPingRequest             , respond status Maintenance.ping) 
     , (Topic.urmUndoRequest             , respond2 status URMHandler.undo)
+    , (Topic.urmClearStackRequest       , respond status URMHandler.clearStack)
     ]
     where
         respond :: (Proto.Serializable args, Proto.Serializable result)
@@ -40,6 +41,5 @@ handlerMap callback = HandlerMap.fromList
         respond type_ = callback (/+ type_) . Processor.singleResult
         respond2 :: (Proto.Serializable args, Proto.Serializable result)
                  => String -> (args -> RPC Context IO (result, Maybe [Message])) -> StateT Context IO [Message]
-        respond2 type_ fun = callback (/+ type_) (\a -> do
-                                                          (b, c) <- fun a
-                                                          return ([b], concat $ maybeToList c))
+        respond2 type_ fun = callback (/+ type_) (\a -> do (b, c) <- fun a
+                                                           return ([b], concat $ maybeToList c))
