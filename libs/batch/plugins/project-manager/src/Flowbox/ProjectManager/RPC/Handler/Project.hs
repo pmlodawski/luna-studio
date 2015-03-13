@@ -75,14 +75,11 @@ create request@(Create.Request tname tpath tattributes) = do
     Create.Update request (encodeProject $ _2 . Project.libs .~ def $ newProject) <$> Batch.getUpdateNo
 
 
-open :: Open.Request -> Maybe Topic -> RPC Context IO ([Open.Update], [Message])
-open request@(Open.Request tpath) clearStackTopic = do
+open :: Open.Request -> RPC Context IO Open.Update
+open request@(Open.Request tpath) = do
     let upath = decodeP tpath
     (projectID, project) <- BatchP.openProject upath
-    context <- Batch.get
-    Batch.put $ Batch.idMap .~ Batch.emptyIDMap $ context
-    flip (,) (makeMsgArr (ClearStack.Request (encodeP projectID)) clearStackTopic)
-             . return . (Open.Update request ((encodeProject (projectID, project & Project.libs .~ def)))) <$> Batch.getUpdateNo
+    Open.Update request (encodeProject (projectID, project & Project.libs .~ def)) <$> Batch.getUpdateNo
 
 
 modify :: Modify.Request -> RPC Context IO Modify.Update
@@ -92,10 +89,13 @@ modify request@(Modify.Request tproject) = do
     Modify.Update request <$> Batch.getUpdateNo
 
 
-close :: Close.Request -> RPC Context IO Close.Update
-close request@(Close.Request tprojectID) = do
+close :: Close.Request -> Maybe Topic -> RPC Context IO ([Close.Update], [Message])
+close request@(Close.Request tprojectID) clearStackTopic = do
     BatchP.closeProject $ decodeP tprojectID
-    Close.Update request <$> Batch.getUpdateNo
+    context <- Batch.get
+    Batch.put $ Batch.idMap .~ Batch.emptyIDMap $ context
+    flip (,) (makeMsgArr (ClearStack.Request tprojectID) clearStackTopic)
+             . return . (Close.Update request) <$> Batch.getUpdateNo
 
 
 store :: Store.Request -> RPC Context IO Store.Status
