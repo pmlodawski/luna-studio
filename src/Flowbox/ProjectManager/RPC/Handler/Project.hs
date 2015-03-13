@@ -92,8 +92,7 @@ modify request@(Modify.Request tproject) = do
 close :: Close.Request -> Maybe Topic -> RPC Context IO ([Close.Update], [Message])
 close request@(Close.Request tprojectID) clearStackTopic = do
     BatchP.closeProject $ decodeP tprojectID
-    context <- Batch.get
-    Batch.put $ Batch.idMap .~ Batch.emptyIDMap $ context
+    Batch.put =<< (Batch.idMap .~ Batch.emptyIDMap) <$> Batch.get
     flip (,) (makeMsgArr (ClearStack.Request tprojectID) clearStackTopic)
              . return . (Close.Update request) <$> Batch.getUpdateNo
 

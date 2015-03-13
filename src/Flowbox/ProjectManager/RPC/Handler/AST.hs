@@ -296,15 +296,21 @@ functionPathModify request@(ModifyFunctionPath.Request tpath tbc tlibID tproject
     return $ ModifyFunctionPath.Update request updateNo
 
 
-functionInputsModify :: ModifyFunctionInputs.Request -> RPC Context IO ModifyFunctionInputs.Update
-functionInputsModify request@(ModifyFunctionInputs.Request tinputs tbc tlibID tprojectID _) = do
+functionInputsModify :: ModifyFunctionInputs.Request -> Maybe Topic -> RPC Context IO ([ModifyFunctionInputs.Update], [Message])
+functionInputsModify request@(ModifyFunctionInputs.Request tinputs tbc tlibID tprojectID astID) undoTopic = do
     inputs <- decodeE tinputs
     bc     <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
+    oldInputs <- (^. Expr.inputs) <$> Batch.getFunctionFocus bc libID projectID
     BatchAST.updateFunctionInputs inputs bc libID projectID
-    updateNo <- Batch.getUpdateNo
-    return $ ModifyFunctionInputs.Update request updateNo
+    flip (,) ( makeMsgArr ( Register.Request
+                                (fun Topic.projectLibraryAstFunctionModifyInputsRequest $ ModifyFunctionInputs.Request (encode oldInputs) tbc tlibID tprojectID astID)
+                                (fun Topic.projectLibraryAstFunctionModifyInputsRequest $ request)
+                                tprojectID
+                          ) undoTopic
+             )
+             . return . (ModifyFunctionInputs.Update request) <$> Batch.getUpdateNo
 
 
 functionOutputModify :: ModifyFunctionOutput.Request -> RPC Context IO ModifyFunctionOutput.Update
