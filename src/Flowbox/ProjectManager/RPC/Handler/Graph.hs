@@ -21,6 +21,7 @@ import qualified Flowbox.Batch.Handler.Common                                   
 import qualified Flowbox.Batch.Handler.Graph                                                                  as BatchG
 import qualified Flowbox.Batch.Handler.NodeDefault                                                            as BatchND
 import qualified Flowbox.Batch.Handler.Properties                                                             as BatchP
+import qualified Flowbox.Batch.Project.Project                                                                as Project
 import           Flowbox.Bus.Data.Message                                                                     (Message)
 import qualified Flowbox.Bus.Data.Message                                                                     as Message
 import           Flowbox.Bus.Data.Serialize.Proto.Conversion.Message                                          ()
@@ -328,3 +329,13 @@ mapID context bimaplookup nid = fromMaybe nid $ bimaplookup nid $ context ^. Bat
 
 makeMsgArr :: (Proto.ReflectDescriptor request, Proto.Wire request) => request -> Maybe Topic -> [Message]
 makeMsgArr request = maybe [] $ return . (flip Message.mk request)
+
+
+prepareResponse :: (Proto.Serializable undoMessage, Proto.Serializable redoMessage, Proto.Serializable urmMessage, Monad m)
+                => Project.ID -> Topic -> undoMessage -> Topic -> redoMessage -> Maybe Topic -> urmMessage -> m ([urmMessage], [Message])
+prepareResponse projectID undoTopic undoAction redoTopic redoAction urmTopic = return . (flip (,) urmMessages . return)
+    where
+        urmMessages = makeMsgArr (Register.Request (fun undoTopic $ undoAction)
+                                                   (fun redoTopic $ redoAction)
+                                                   (encodeP projectID)
+                                 ) urmTopic

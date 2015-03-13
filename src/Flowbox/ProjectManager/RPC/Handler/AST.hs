@@ -15,7 +15,7 @@ import           Flowbox.Bus.RPC.RPC                                            
 import           Flowbox.Data.Convert
 import           Flowbox.Prelude                                                                      hiding (Context, cons)
 import           Flowbox.ProjectManager.Context                                                       (Context)
-import           Flowbox.ProjectManager.RPC.Handler.Graph                                             (fun, makeMsgArr) 
+import           Flowbox.ProjectManager.RPC.Handler.Graph                                             (prepareResponse, fun, makeMsgArr) 
 import qualified Flowbox.ProjectManager.RPC.Topic                                                     as Topic
 import           Flowbox.System.Log.Logger
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Get.Request                  as CodeGet
@@ -304,24 +304,32 @@ functionInputsModify request@(ModifyFunctionInputs.Request tinputs tbc tlibID tp
         projectID = decodeP tprojectID
     oldInputs <- (^. Expr.inputs) <$> Batch.getFunctionFocus bc libID projectID
     BatchAST.updateFunctionInputs inputs bc libID projectID
-    flip (,) ( makeMsgArr ( Register.Request
-                                (fun Topic.projectLibraryAstFunctionModifyInputsRequest $ ModifyFunctionInputs.Request (encode oldInputs) tbc tlibID tprojectID astID)
-                                (fun Topic.projectLibraryAstFunctionModifyInputsRequest $ request)
-                                tprojectID
-                          ) undoTopic
-             )
-             . return . (ModifyFunctionInputs.Update request) <$> Batch.getUpdateNo
+    prepareResponse projectID
+                    Topic.projectLibraryAstFunctionModifyInputsRequest
+                    (ModifyFunctionInputs.Request (encode oldInputs) tbc tlibID tprojectID astID)
+                    Topic.projectLibraryAstFunctionModifyInputsRequest
+                    request
+                    undoTopic
+                    =<< ModifyFunctionInputs.Update request <$> Batch.getUpdateNo
 
 
-functionOutputModify :: ModifyFunctionOutput.Request -> RPC Context IO ModifyFunctionOutput.Update
-functionOutputModify request@(ModifyFunctionOutput.Request toutput tbc tlibID tprojectID _) = do
+functionOutputModify :: ModifyFunctionOutput.Request -> Maybe Topic -> RPC Context IO ([ModifyFunctionOutput.Update], [Message])
+functionOutputModify request@(ModifyFunctionOutput.Request toutput tbc tlibID tprojectID astID) undoTopic = do
     output <- decodeE toutput
     bc     <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
+    oldOutputs <- (^?! Expr.output) <$> Batch.getFunctionFocus bc libID projectID
     BatchAST.updateFunctionOutput output bc libID projectID
-    updateNo <- Batch.getUpdateNo
-    return $ ModifyFunctionOutput.Update request updateNo
+    prepareResponse projectID
+                    Topic.projectLibraryAstFunctionModifyOutputRequest
+                    (ModifyFunctionOutput.Request (encode oldOutputs) tbc tlibID tprojectID astID)
+                    Topic.projectLibraryAstFunctionModifyOutputRequest
+                    request
+                    undoTopic
+                    =<< ModifyFunctionOutput.Update request <$> Batch.getUpdateNo
+--    updateNo <- Batch.getUpdateNo
+--    return $ ModifyFunctionOutput.Update request updateNo
 
 
 codeGet :: CodeGet.Request -> RPC Context IO CodeGet.Status
