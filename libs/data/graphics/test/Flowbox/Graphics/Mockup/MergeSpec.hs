@@ -18,7 +18,7 @@ spec = do
         in do 
             let testName = "mergeLuna"
             let testPath = specPath++testName
-            let alphaBlend = Adobe
+            let alphaBlend = Custom
             let modes = [  Atop
                            , Average alphaBlend
                            , ColorBurn alphaBlend
@@ -57,8 +57,8 @@ spec = do
             describe testName $ do
                 describe "Should save ok images" $ do -- map ( \x ->
 
-                    let actualImages = map (\x -> liftM3 (mergeLuna x) (loadImageLuna "/home/chris/brygen.png" {-- "./test/samples/edge/desert.png" --} )  (loadImageLuna "/home/chris/Lena.png") (return matte) ) modes -- (constantLuna PCVideo (RGBA 0.3 0.4 0.9 0.6))    
-                        matte = imageMatteLuna (constantLuna (CustomFormat 2100 2100) (RGBA 1 1 1 1)) "rgba.r" 
+                    let actualImages = map (\x -> liftM3 (mergeLuna x) (loadImageLuna  "./test/samples/edge/desert.png" )  (loadImageLuna "/home/chris/globe.png") (return matte) ) modes -- (constantLuna PCVideo (RGBA 0.3 0.4 0.9 0.6))    
+                        matte = imageMatteLuna (constantLuna (CustomFormat 200 200) (RGBA 1 0 0 0)) "rgba.r" 
                     --let actualImage = liftM( mergeLuna Over (conicalLuna 1200 1200) ) (loadImageLuna "./test/samples/lena.png") Nothing
                     --let actualImage = mergeLuna Over (conicalLuna 1000 1200) (constantLuna PCVideo (RGBA 0.3 0.4 0.5 0.6)) Nothing
                     -- let  expectedImage = getDefaultTestPic specPath testName
