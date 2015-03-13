@@ -20,8 +20,8 @@ import           Flowbox.Bus.RPC.RPC                                   (RPC)
 import           Flowbox.Data.Convert
 import           Flowbox.Prelude                                       hiding (Context)
 import           Flowbox.ProjectManager.Context                        (Context)
-import           Flowbox.ProjectManager.RPC.Handler.Graph              (makeMsgArr)
 import           Flowbox.System.Log.Logger
+import           Flowbox.UR.Manager.RPC.Handler.Handler                (makeMsgArr)
 import qualified Generated.Proto.Project.Project                       as Gen
 import qualified Generated.Proto.ProjectManager.Project.Close.Request  as Close
 import qualified Generated.Proto.ProjectManager.Project.Close.Update   as Close

@@ -19,10 +19,10 @@ import           Flowbox.Bus.RPC.RPC                                            
 import           Flowbox.Data.Convert
 import           Flowbox.Prelude                                                                               hiding (Context)
 import           Flowbox.ProjectManager.Context                                                                (Context)
--- move functions below somewhere else
-import           Flowbox.ProjectManager.RPC.Handler.Graph                                                      (fun, makeMsgArr, mapID) 
+import           Flowbox.ProjectManager.RPC.Handler.Graph                                                      (mapID) 
 import qualified Flowbox.ProjectManager.RPC.Topic                                                              as Topic
 import           Flowbox.System.Log.Logger
+import           Flowbox.UR.Manager.RPC.Handler.Handler                                                        (makeMsgArr, fun)
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Default.Get.Request    as NodeDefaultGet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Default.Get.Status     as NodeDefaultGet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Default.Remove.Request as NodeDefaultRemove
@@ -76,6 +76,16 @@ set (NodeDefaultSet.Request tdstPort tvalue tnodeID tbc tlibID tprojectID astID)
                             tprojectID
                         ) undoTopic
            )
+--    prepareResponse projectID
+--                    Topic.projectLibraryAstFunctionGraphNodeDefaultRemoveRequest
+--                    (maybe (NodeDefaultRemove.Request tdstPort (encodeP originID) tbc tlibID tprojectID astID)
+--                           (newRequest originID . snd)
+--                           $ DefaultsMap.lookup dstPort defaultsMap
+--                    )
+--                    Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest
+--                    (newRequest originID value)
+--                    undoTopic
+--                    =<< NodeDefaultSet.Update (newRequest newID value) <$> Batch.getUpdateNo
 
 
 remove :: NodeDefaultRemove.Request -> Maybe Topic -> RPC Context IO ([NodeDefaultRemove.Update], [Message])
