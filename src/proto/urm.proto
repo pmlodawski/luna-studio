@@ -60,4 +60,13 @@ message URM {
             required Request request = 1;
         }
     }
+
+    message ClearStack {
+        message Request {
+            required int32 projectID = 1;
+        }
+        message Status {
+            required Request request = 1;
+        }
+    }
 }
