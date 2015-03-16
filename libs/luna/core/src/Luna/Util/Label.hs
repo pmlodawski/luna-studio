@@ -222,7 +222,17 @@ replaceFuncOutput conv funcout = fmap (replaceType conv) funcout
 
 
 
+replaceFieldUpd :: (l1 -> l2) -> Expr.FieldUpd l1 v -> Expr.FieldUpd l2 v
+replaceFieldUpd conv (Expr.FieldUpd sel lexpr) = Expr.FieldUpd sel (replaceExpr conv lexpr)
 
-replaceFieldUpd = undefined
-replaceExprArg = undefined
-replaceMatch = undefined
+
+
+replaceExprArg :: (l1 -> l2) -> Expr.ExprArg l1 v -> Expr.ExprArg l2 v
+replaceExprArg conv (Label l1 arg) = Label (conv l1) (replaceArg conv arg)
+
+
+replaceMatch :: (l1 -> l2) -> Expr.LMatch l1 v -> Expr.LMatch l2 v
+replaceMatch conv (Label l1 (Expr.Match lpat mbody)) = Label (conv l1) (Expr.Match newPat newMBody)
+    where newPat   = replaceLPat conv lpat
+          newMBody = map (replaceExpr conv) mbody
+
