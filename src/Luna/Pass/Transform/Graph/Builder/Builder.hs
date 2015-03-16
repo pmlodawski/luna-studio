@@ -48,11 +48,10 @@ import qualified Luna.Syntax.Graph.Node.StringExpr       as StringExpr
 import           Luna.Syntax.Graph.Port                  (Port)
 import qualified Luna.Syntax.Graph.Port                  as Port
 import           Luna.Syntax.Graph.PortDescriptor        (PortDescriptor)
-import           Luna.Syntax.Graph.Tag                   (TDecl, TExpr, Tag)
+import           Luna.Syntax.Graph.Tag                   (TDecl, TExpr, TPat, Tag)
 import           Luna.Syntax.Label                       (Label (Label))
 import qualified Luna.Syntax.Label                       as Label
 import           Luna.Syntax.Lit                         (LLit)
-import           Luna.Syntax.Name                        (VNameP)
 import qualified Luna.Syntax.Name.Pattern                as Pattern
 import           Luna.Util.LunaShow                      (LunaShow, lunaShow)
 
@@ -66,8 +65,8 @@ type LunaExpr ae v = (Enumerated ae, LunaShow (LExpr ae v), LunaShow (LLit ae))
 
 
 inputsID, outputID :: Node.ID
-inputsID = -1
-outputID = -2
+inputsID = -2
+outputID = -1
 
 
 run :: Monad m => StructInfo -> TDecl v -> EitherT State.Error m (TDecl v, Graph Tag v)
@@ -114,31 +113,30 @@ buildBody []   = State.connectMonadic outputID >> return []
 buildBody body = do
     body' <- mapM (flip buildNode Nothing) (init body)
     let output' = last body
-    --output' <- buildOutput outputID $ last body
+    output' <- buildOutput outputID $ last body
     return $ body' ++ [output']
 
 
+buildOutput :: Node.ID -> TExpr v -> GBPass v m (TExpr v)
+buildOutput outputID lexpr = do
+    lexpr' <- case unwrap lexpr of
+        Expr.Assignment {}                        -> buildNode lexpr Nothing
+        --Expr.Tuple   items                        -> buildAndConnectMany True  True Nothing outputID items 0
+        --Expr.Grouped (Label _ (Expr.Tuple items)) -> buildAndConnectMany True  True Nothing outputID items 0
+        --Expr.Grouped v@(Label _ (Expr.Var {}))    -> buildAndConnect     True  True Nothing outputID (v, Port.Num 0)
+        --Expr.Grouped v                            -> buildAndConnect     False True Nothing outputID (v, Port.Num 0)
+        --Expr.Var {}                               -> buildAndConnect     True  True Nothing outputID (lexpr, Port.All)
+        --_                                         -> buildAndConnect     False True Nothing outputID (lexpr, Port.All)
+        --_   ->  buildNode lexpr Nothing -- FIXME FIXME FIXME FIXME FIXME FIXME
+    State.connectMonadic outputID
+    return lexpr'
 
 
---buildOutput :: LunaExpr a v
---            => Node.ID -> LExpr a v -> GBPass a v m ()
---buildOutput outputID lexpr = do
---    case unwrap lexpr of
---        Expr.Assignment {}                        -> void $ buildNode    False True Nothing lexpr
---        Expr.Tuple   items                        -> buildAndConnectMany True  True Nothing outputID items 0
---        Expr.Grouped (Label _ (Expr.Tuple items)) -> buildAndConnectMany True  True Nothing outputID items 0
---        Expr.Grouped v@(Label _ (Expr.Var {}))    -> buildAndConnect     True  True Nothing outputID (v, Port.Num 0)
---        Expr.Grouped v                            -> buildAndConnect     False True Nothing outputID (v, Port.Num 0)
---        Expr.Var {}                               -> buildAndConnect     True  True Nothing outputID (lexpr, Port.All)
---        _                                         -> buildAndConnect     False True Nothing outputID (lexpr, Port.All)
---    State.connectMonadic outputID
 
-
-
-buildNode :: TExpr v -> Maybe VNameP -> GBPass v m (TExpr v)
+buildNode :: TExpr v -> Maybe TPat -> GBPass v m (TExpr v)
 buildNode lexpr outputName = case unwrap lexpr of
     Expr.Assignment dst src   -> do
-        src' <- buildNode src (Just undefined)
+        src' <- buildNode src (Just dst)
         return $ Label tag $ Expr.Assignment dst src'
     Expr.Tuple items  -> do
         itemsArgs <- mapM processArg $ zip items $ map Port.Num [0..]
@@ -174,12 +172,12 @@ processArg (lexpr, port) = if undefined --constainsVar
     else return (lexpr, Left (Port.toList port, NodeExpr.StringExpr $ StringExpr.fromString $ lunaShow lexpr))
 
 
-addNode :: TExpr v -> Maybe VNameP -> [(Node.ID, Port)] -> [(PortDescriptor, NodeExpr Tag v)] -> GBPass v m (TExpr v)
+addNode :: TExpr v -> Maybe TPat -> [(Node.ID, Port)] -> [(PortDescriptor, NodeExpr Tag v)] -> GBPass v m (TExpr v)
 addNode lexpr outputName args defaults = addNodeWithExpr lexpr outputName nodeExpr args defaults
     where nodeExpr = NodeExpr.StringExpr $ StringExpr.fromString $ lunaShow lexpr
 
 
-addNodeWithExpr :: TExpr v -> Maybe VNameP
+addNodeWithExpr :: TExpr v -> Maybe TPat
                 -> NodeExpr Tag v -> [(Node.ID, Port)] -> [(PortDescriptor, NodeExpr Tag v)] -> GBPass v m (TExpr v)
 addNodeWithExpr lexpr outputName nodeExpr args defaults = do
     (nodeID, position, lexpr') <- State.getNodeInfo lexpr
