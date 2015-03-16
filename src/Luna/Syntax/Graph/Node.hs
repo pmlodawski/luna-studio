@@ -14,12 +14,12 @@ import           Luna.Syntax.Graph.Node.Expr       (NodeExpr)
 import qualified Luna.Syntax.Graph.Node.Expr       as NodeExpr
 import           Luna.Syntax.Graph.Node.Position   (Position)
 import qualified Luna.Syntax.Graph.Node.StringExpr as StringExpr
-import           Luna.Syntax.Name                  (VNameP)
+import           Luna.Syntax.Pat                   (LPat)
 
 
 
 data Node a v = Expr    { _expr       :: NodeExpr a v
-                        , _outputName :: Maybe VNameP
+                        , _outputName :: Maybe (LPat a)
                         , _defaults   :: DefaultsMap a v
                         , _pos        :: Position
                         }
@@ -67,6 +67,11 @@ exprStr :: Node a v -> Maybe String
 exprStr (Expr (NodeExpr.StringExpr strExpr) _ _ _) = Just $ StringExpr.toString strExpr
 exprStr _                                          = Nothing
 
+
+
+getOutputName :: Node a v -> Maybe (LPat a)
+getOutputName (Expr { _outputName = on }) = on
+getOutputName _                           = Nothing
 
 --insertDefault :: PortDescriptor -> NodeExpr a v -> Node a v -> Node a v
 --insertDefault pd ne = defaults %~ DefaultsMap.insert pd ne
