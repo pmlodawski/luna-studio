@@ -147,6 +147,12 @@ class ```HueCorrectCurves``` a:
 
 def Image.hueCorrect self::Image curves::HueCorrectCurves -> Image
 
+class ```CrosstalkCurves``` a:
+    CrosstalkCurves:
+        red, green, blue, redGreen, redBlue, greenRed, greenBlue, blueRed, blueGreen :: CurveGUI a
+
+def Image.crosstalk self::Image curves::CrosstalkCurves -> Image
+
 def Image.saturate self::Image saturation::Color -> Image
 
 def Image.posterize self::Image colors::Float -> Image
