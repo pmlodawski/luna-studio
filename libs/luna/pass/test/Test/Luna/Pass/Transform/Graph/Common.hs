@@ -21,11 +21,12 @@ import           Luna.Syntax.Control.Crumb                 (Breadcrumbs)
 import qualified Luna.Syntax.Control.Crumb                 as Crumb
 import qualified Luna.Syntax.Control.Focus                 as Focus
 import           Luna.Syntax.Decl                          (LDecl)
-import           Luna.Syntax.Enum                          (Enumerated)
 import           Luna.Syntax.Graph.Graph                   (Graph)
-import           Luna.Syntax.Graph.Tag                     (TDecl, TModule)
+import           Luna.Syntax.Graph.Tag                     (Tag)
+import           Luna.Syntax.Graph.Tag                     (TModule)
 import           Luna.Syntax.Module                        (LModule)
 import           Luna.System.Session                       as Session
+
 
 
 named :: a -> b -> (a, b)
@@ -39,15 +40,18 @@ mainBC = [Crumb.Module "Main", Crumb.Function [] "main"]
 type V = ()
 
 
-getGraph :: Enumerated a => Breadcrumbs -> TModule V -> IO (TDecl V, Graph a V)
+getGraph :: Breadcrumbs -> TModule V -> IO (TModule V, Graph Tag V)
 getGraph bc ast = runPass $ do
-    focus <- lift $ eitherStringToM $ BCZipper.getFocus <$> BCZipper.focusBreadcrumbs' bc ast
+    zipper <- lift $ eitherStringToM $ BCZipper.focusBreadcrumbs' bc ast
+    let focus = BCZipper.getFocus zipper
     decl  <- focus ^? Focus.decl <??> "test.Common.getFunctionGraph : Target is not a function"
     aliasInfo <- Pass.run1_ Struct.pass ast
-    GraphBuilder.run aliasInfo decl
+    (decl2, graph) <- GraphBuilder.run aliasInfo decl
+    let newFocus = focus & Focus.decl .~ decl2
+    return (BCZipper.close $ BCZipper.modify (const newFocus) zipper, graph)
 
 
-getExpr :: Enumerated a => Breadcrumbs -> Graph a v -> TModule V -> IO (TModule V)
+getExpr :: Breadcrumbs -> Graph a v -> TModule V -> IO (TModule V)
 getExpr bc graph ast = runPass $ do
     zipper <- lift $ eitherStringToM $ BCZipper.focusBreadcrumbs' bc ast
     let focus = BCZipper.getFocus zipper

@@ -23,7 +23,7 @@ data Tag = Empty { _idTag :: ID }
          | Node  { _idTag    :: ID
                  , _nodeID   :: Node.ID
                  , _position :: Position
-                 } deriving (Show)
+                 } deriving (Show, Eq)
 
 
 makeLenses ''Tag
@@ -41,3 +41,7 @@ instance Enumerated Tag where
 type TExpr v = LExpr Tag v
 type TDecl v = LDecl Tag (TExpr v)
 type TModule v = LModule Tag (TExpr v)
+
+
+fromEnumerated :: Enumerated e => e -> Tag
+fromEnumerated = tag . Enum.id

@@ -11,6 +11,8 @@ import Test.Hspec
 
 import           Flowbox.Prelude
 import           Luna.Syntax.Control.Crumb             (Breadcrumbs)
+import qualified Luna.Syntax.Graph.Tag                 as Tag
+import qualified Luna.Util.Label                       as Label
 import qualified Test.Luna.Pass.Transform.Graph.Common as Common
 import           Test.Luna.Sample.Code                 (sampleCodes)
 import qualified Test.Luna.Sample.Code                 as SampleCode
@@ -33,9 +35,11 @@ import qualified Test.Luna.Syntax.Common               as Common
 
 backAndForth :: Breadcrumbs -> String -> IO ()
 backAndForth bc code = do
-    ast         <- Common.getAST code
+    ast'        <- Common.getAST code
+    let ast = Label.replace Tag.fromEnumerated ast'
     --putStrLn "== getGraph"
-    (graph, ast) <- Common.getGraph bc ast
+
+    (ast, graph) <- Common.getGraph bc ast
     --printLn
     --print ast
     --printLn
@@ -50,7 +54,7 @@ backAndForth bc code = do
     --print pm2
     --printLn
     --putStrLn "== getGraph"
-    (graph3, ast2) <- Common.getGraph bc ast2
+    (ast2, graph3) <- Common.getGraph bc ast2
     --print pm3
     --printLn
     expr  <- Common.getMain ast
