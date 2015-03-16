@@ -37,17 +37,15 @@ backAndForth :: Breadcrumbs -> String -> IO ()
 backAndForth bc code = do
     ast'        <- Common.getAST code
     let ast = Label.replace Tag.fromEnumerated ast'
-    --putStrLn "== getGraph"
+    putStrLn "== getGraph"
 
     (ast, graph) <- Common.getGraph bc ast
-    --printLn
-    --print ast
-    --printLn
-    --putStrLn $ ppShow graph
-    --printLn
-    --print pm
-    --printLn
-    --putStrLn "== getExpr"
+    printLn
+    prettyPrint ast
+    printLn
+    prettyPrint graph
+    printLn
+    putStrLn "== getExpr"
     ast2   <- Common.getExpr bc graph ast
     --print ast2
     --printLn
