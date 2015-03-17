@@ -127,7 +127,7 @@ buildOutput outputID lexpr = do
         --Expr.Grouped v                            -> buildAndConnect     False True Nothing outputID (v, Port.Num 0)
         --Expr.Var {}                               -> buildAndConnect     True  True Nothing outputID (lexpr, Port.All)
         --_                                         -> buildAndConnect     False True Nothing outputID (lexpr, Port.All)
-        _   ->  do lexpr' <- buildNode lexpr Nothing -- FIXME FIXME FIXME FIXME FIXME FIXME
+        _   ->  do lexpr' <- buildNode lexpr Nothing
                    (nodeID, _, lexpr'') <- State.getNodeInfo lexpr'
                    State.connect nodeID outputID Port.All
                    return lexpr''

@@ -55,7 +55,7 @@ instance (Show a, Show v) => LunaShow (LExpr a v) where
         --Expr.RecUpd     vname  fieldUpds   ->
         --Expr.Case       expr   match       ->
         Expr.Typed      cls    expr        -> complex [csLunaShow context expr, " :: ", csLunaShow context expr]
-        Expr.Assignment dst    src         -> complex [csLunaShow context dst, " = ", csLunaShow context src ]
+        Expr.Assignment dst    src         -> simple  [csLunaShow context dst, " = ", cLunaShow context src ]
         Expr.Accessor   acc    src         -> simple  [csLunaShow (context & accessorContent .~ True) src, ".", csLunaShow context acc]
         --Expr.Curry      expr               ->
         --Expr.Meta       meta               ->
