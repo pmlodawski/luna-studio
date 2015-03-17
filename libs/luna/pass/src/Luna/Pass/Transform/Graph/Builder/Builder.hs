@@ -69,11 +69,11 @@ inputsID = -2
 outputID = -1
 
 
-run :: Monad m => StructInfo -> TDecl v -> EitherT State.Error m (TDecl v, Graph Tag v)
+run :: (Show v, Monad m) => StructInfo -> TDecl v -> EitherT State.Error m (TDecl v, Graph Tag v)
 run aliasInfo lexpr = evalStateT (expr2graph lexpr) $ State.mk aliasInfo inputsID
 
 
-expr2graph :: TDecl v -> GBPass v m (TDecl v, Graph Tag v)
+expr2graph :: Show v => TDecl v -> GBPass v m (TDecl v, Graph Tag v)
 expr2graph decl@(Label _ (Decl.Func (Decl.FuncDecl _ sig _ body))) = do
     State.initFreeNodeID decl
     State.insNode (inputsID, Node.mkInputs)
@@ -108,7 +108,7 @@ buildArg (Arg pat val) = do
     return $ Arg pat' val
 
 
-buildBody :: [TExpr v] -> GBPass v m [TExpr v]
+buildBody :: Show v => [TExpr v] -> GBPass v m [TExpr v]
 buildBody []   = State.connectMonadic outputID >> return []
 buildBody body = do
     body' <- mapM (flip buildNode Nothing) (init body)
@@ -117,7 +117,7 @@ buildBody body = do
     return $ body' ++ [output']
 
 
-buildOutput :: Node.ID -> TExpr v -> GBPass v m (TExpr v)
+buildOutput :: Show v => Node.ID -> TExpr v -> GBPass v m (TExpr v)
 buildOutput outputID lexpr = do
     lexpr' <- case unwrap lexpr of
         Expr.Assignment {}                        -> buildNode lexpr Nothing
@@ -127,13 +127,16 @@ buildOutput outputID lexpr = do
         --Expr.Grouped v                            -> buildAndConnect     False True Nothing outputID (v, Port.Num 0)
         --Expr.Var {}                               -> buildAndConnect     True  True Nothing outputID (lexpr, Port.All)
         --_                                         -> buildAndConnect     False True Nothing outputID (lexpr, Port.All)
-        --_   ->  buildNode lexpr Nothing -- FIXME FIXME FIXME FIXME FIXME FIXME
+        _   ->  do lexpr' <- buildNode lexpr Nothing -- FIXME FIXME FIXME FIXME FIXME FIXME
+                   (nodeID, _, lexpr'') <- State.getNodeInfo lexpr'
+                   State.connect nodeID outputID Port.All
+                   return lexpr''
     State.connectMonadic outputID
     return lexpr'
 
 
 
-buildNode :: TExpr v -> Maybe TPat -> GBPass v m (TExpr v)
+buildNode :: Show v => TExpr v -> Maybe TPat -> GBPass v m (TExpr v)
 buildNode lexpr outputName = case unwrap lexpr of
     Expr.Assignment dst src   -> do
         src' <- buildNode src (Just dst)
@@ -165,14 +168,14 @@ buildNode lexpr outputName = case unwrap lexpr of
         tag = lexpr ^. Label.label
 
 
-processArg :: (TExpr v, Port) -> GBPass v m (TExpr v, Either (PortDescriptor, NodeExpr Tag v) (Node.ID, Port))
+processArg :: Show v => (TExpr v, Port) -> GBPass v m (TExpr v, Either (PortDescriptor, NodeExpr Tag v) (Node.ID, Port))
 processArg (lexpr, port) = if undefined --constainsVar
     then do (nodeID, _, lexpr') <- State.getNodeInfo =<< buildNode lexpr (Just undefined)
             return (lexpr', Right (nodeID, port))
     else return (lexpr, Left (Port.toList port, NodeExpr.StringExpr $ StringExpr.fromString $ lunaShow lexpr))
 
 
-addNode :: TExpr v -> Maybe TPat -> [(Node.ID, Port)] -> [(PortDescriptor, NodeExpr Tag v)] -> GBPass v m (TExpr v)
+addNode :: Show v => TExpr v -> Maybe TPat -> [(Node.ID, Port)] -> [(PortDescriptor, NodeExpr Tag v)] -> GBPass v m (TExpr v)
 addNode lexpr outputName args defaults = addNodeWithExpr lexpr outputName nodeExpr args defaults
     where nodeExpr = NodeExpr.StringExpr $ StringExpr.fromString $ lunaShow lexpr
 
@@ -183,6 +186,7 @@ addNodeWithExpr lexpr outputName nodeExpr args defaults = do
     (nodeID, position, lexpr') <- State.getNodeInfo lexpr
     let node = Node.Expr nodeExpr outputName (DefaultsMap.fromList defaults) position
     State.insNode (nodeID, node)
+    State.addToNodeMap nodeID (nodeID, Port.All)
     mapM_ (\(srcID, port) -> State.connect srcID nodeID port) args
     return lexpr'
 
