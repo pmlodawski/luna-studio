@@ -22,7 +22,6 @@ import           Luna.Syntax.Graph.Node.Expr       (NodeExpr)
 import qualified Luna.Syntax.Graph.Node.Expr       as NodeExpr
 import qualified Luna.Syntax.Graph.Node.StringExpr as StringExpr
 import           Luna.Syntax.Label                 (Label (Label))
-import           Luna.Syntax.Name                  (VNameP)
 import           Luna.Syntax.Pat                   (LPat)
 import qualified Luna.Syntax.Pat                   as Pat
 
@@ -32,6 +31,7 @@ generate :: Default a => NodeExpr a e -> Int -> LPat a
 generate nodeExpr num = Label def $ Pat.Var $ fromString $ mangle (exprStr ++ "Result") ++ show num where
     exprStr = case nodeExpr of
         NodeExpr.ASTExpr    {}      -> ""
+        NodeExpr.MultiPart  {}      -> ""
         NodeExpr.StringExpr strExpr -> StringExpr.toString strExpr
 
 
