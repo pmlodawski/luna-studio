@@ -7,18 +7,21 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Flowbox.ProjectManager.RPC.Handler.AST where
 
+import qualified Data.Sequence as Sequence
+import           Data.Sequence ((><))
+
 import qualified Flowbox.Batch.Handler.AST                                                            as BatchAST
 import qualified Flowbox.Batch.Handler.Common                                                         as Batch
+import qualified Flowbox.Batch.Handler.Properties                                                     as BatchP
 import           Flowbox.Bus.Data.Message                                                             (Message)
 import           Flowbox.Bus.Data.Topic                                                               (Topic)
 import           Flowbox.Bus.RPC.RPC                                                                  (RPC)
-import           Flowbox.Control.Error
 import           Flowbox.Data.Convert
 import           Flowbox.Prelude                                                                      hiding (Context, cons)
 import           Flowbox.ProjectManager.Context                                                       (Context)
 import qualified Flowbox.ProjectManager.RPC.Topic                                                     as Topic
 import           Flowbox.System.Log.Logger
-import           Flowbox.UR.Manager.RPC.Handler.Handler                                               (prepareResponse)
+import           Flowbox.UR.Manager.RPC.Handler.Handler                                               (prepareResponse, makeMsgArr, fun)
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Get.Request                  as CodeGet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Get.Status                   as CodeGet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Set.Request                  as CodeSet
@@ -57,10 +60,12 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Modif
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Modify.TypeAliases.Update  as ModifyModuleTypeAliases
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Modify.TypeDefs.Request    as ModifyModuleTypeDefs
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Modify.TypeDefs.Update     as ModifyModuleTypeDefs
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Properties.Set.Request            as SetASTProperties
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Remove.Request                    as Remove
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Remove.Update                     as Remove
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Resolve.Request                   as ResolveDefinition
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Resolve.Status                    as ResolveDefinition
+import qualified Generated.Proto.Urm.URM.RegisterMultiple.Request                                     as RegisterMultiple
 import qualified Luna.DEP.AST.Control.Crumb                                                           as Crumb
 import qualified Luna.DEP.AST.Control.Focus                                                           as Focus
 import qualified Luna.DEP.AST.Expr                                                                    as Expr
@@ -149,21 +154,26 @@ remove request@(Remove.Request tbc tlibID tprojectID astID) undoTopic = do
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
         tbcParent = (encode $ init bc)
-        prepare topic action = 
-            prepareResponse projectID
-                            topic
-                            action
-                            Topic.projectLibraryAstRemoveRequest
-                            request
-                            undoTopic
-                            =<< Remove.Update request <$> Batch.getUpdateNo
     definition <- BatchAST.definitions Nothing bc libID projectID
+    nodeID <- Focus.traverseM_ (return . (^?! Module.id)) (return . (^?! Expr.id)) definition
+    properties <- BatchP.getProperties nodeID libID projectID
+    let tproperties = fun Topic.projectLibraryAstPropertiesSetRequest $ SetASTProperties.Request (encode properties) (encodeP nodeID) tlibID tprojectID
     BatchAST.remove bc libID projectID
-    case definition of
-        Focus.Function f -> prepare Topic.projectLibraryAstFunctionAddRequest $ AddFunction.Request (encode f) tbcParent tlibID tprojectID astID
-        Focus.Class    c -> prepare Topic.projectLibraryAstDataAddRequest     $ AddData.Request     (encode c) tbcParent tlibID tprojectID astID
-        Focus.Module   m -> prepare Topic.projectLibraryAstModuleAddRequest   $ AddModule.Request   (encode m) tbcParent tlibID tprojectID astID
-        _                -> left $ "Unhandled definition delletion: " ++ (show definition)
+    updateNo <- Batch.getUpdateNo
+    let undoMsg = Sequence.fromList 
+                     [ case definition of
+                         Focus.Function f -> fun Topic.projectLibraryAstFunctionAddRequest $ AddFunction.Request (encode f) tbcParent tlibID tprojectID astID
+                         Focus.Class    c -> fun Topic.projectLibraryAstDataAddRequest     $ AddData.Request     (encode c) tbcParent tlibID tprojectID astID
+                         Focus.Module   m -> fun Topic.projectLibraryAstModuleAddRequest   $ AddModule.Request   (encode m) tbcParent tlibID tprojectID astID
+                     , tproperties
+                     ]
+    return ( [Remove.Update request updateNo]
+           , makeMsgArr (RegisterMultiple.Request
+                            undoMsg
+                            (fun Topic.projectLibraryAstRemoveRequest $ request)
+                            tprojectID
+                        ) undoTopic
+           )
 
 
 resolve :: ResolveDefinition.Request -> RPC Context IO ResolveDefinition.Status
@@ -231,15 +241,22 @@ moduleFieldsModify request@(ModifyModuleFields.Request tfields tbc tlibID tproje
     return $ ModifyModuleFields.Update request updateNo
 
 
-dataClsModify :: ModifyDataCls.Request -> RPC Context IO ModifyDataCls.Update
-dataClsModify request@(ModifyDataCls.Request tcls tbc tlibID tprojectID _) = do
+dataClsModify :: ModifyDataCls.Request -> Maybe Topic -> RPC Context IO ([ModifyDataCls.Update], [Message])
+dataClsModify request@(ModifyDataCls.Request tcls tbc tlibID tprojectID astID) undoTopic = do
     cls <- decodeE tcls
     bc  <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
+        toldBC    = encode $ init bc ++ [Crumb.Class $ cls ^?! Type.name]
+    toldCls <- encode . (^?! Expr.cls) . (^?! Focus.expr) <$> BatchAST.definitions (Just 1) bc libID projectID
     BatchAST.updateDataCls cls bc libID projectID
-    updateNo <- Batch.getUpdateNo
-    return $ ModifyDataCls.Update request updateNo
+    prepareResponse projectID
+                    Topic.projectLibraryAstDataModifyClsRequest
+                    (ModifyDataCls.Request toldCls toldBC tlibID tprojectID astID)
+                    Topic.projectLibraryAstDataModifyClsRequest
+                    request
+                    undoTopic
+                    =<< ModifyDataCls.Update request <$> Batch.getUpdateNo
 
 
 dataConsModify :: ModifyDataCons.Request -> RPC Context IO ModifyDataCons.Update

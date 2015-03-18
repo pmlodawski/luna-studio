@@ -68,8 +68,8 @@ set (NodeDefaultSet.Request tdstPort tvalue tnodeID tbc tlibID tprojectID astID)
     updateNo  <- Batch.getUpdateNo
     return ( [NodeDefaultSet.Update (newRequest newID value) updateNo]
            , maybe []
-                   (\map -> makeMsgArr (Register.Request
-                                            (fun Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest $ newRequest originID $ snd map)
+                   (\bmp -> makeMsgArr (Register.Request
+                                            (fun Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest $ newRequest originID $ snd bmp)
                                             (fun Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest $ newRequest originID value)
                                             tprojectID
                                        ) undoTopic)
