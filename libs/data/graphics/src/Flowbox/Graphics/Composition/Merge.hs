@@ -31,41 +31,6 @@ data AlphaBlend = Adobe
 union :: Num a => a -> a -> a
 union a b = a + b - (a * b)
 
--- FIXME [KL]: Bounding box now is taken from the overlay generator -- FIXED [KR]: Canvas from background. 
-basicColorCompositingFormula :: (A.Elt a, A.IsFloating a)
-                             => Shader x (A.Exp a) -- ^ Background / Destination / B
-                             -> Shader x (A.Exp a) -- ^ Background alpha
-                             -> Shader x (A.Exp a) -- ^ Overlay / Source / Foreground / A
-                             -> Shader x (A.Exp a) -- ^ Overlay alpha
-                             -> AlphaBlend            -- ^ Specifies if the same blending method is used on alpha channels
-                             -> BlendMode a           -- ^ Function used for blending
-                             -> Shader x (A.Exp a) -- ^ Merge result
-basicColorCompositingFormula (Shader cnv background) (Shader _ alphaBackground) (Shader _ overlay) (Shader _ alphaOverlay) alphaBlend blend =
-    Shader cnv $ \p ->
-    let alphaResult p' = case alphaBlend of
-            Adobe  -> alphaBackground p' `union` alphaOverlay p'
-            Custom -> alphaBackground p' `blend` alphaOverlay p'
-    in  -- A.cond ((alphaResult p) A.==* 0)
-            ((1 - (alphaOverlay p / alphaResult p)) * background p + (alphaOverlay p / alphaResult p) *
-                    (U.invert (alphaBackground p) * overlay p + alphaBackground p * blend (background p) (overlay p)))
-            -- 0
-
--- FIXME [KL]: Bounding box now is taken from the overlay generator -- FIXED [KR]: Canvas from background. 
-threeWayMerge :: (A.Elt a, A.IsFloating a)
-              => ComplicatedBlendMode a
-              -> Shader x (A.Exp a) -- ^ B.R
-              -> Shader x (A.Exp a) -- ^ B.G
-              -> Shader x (A.Exp a) -- ^ B.B
-              -> Shader x (A.Exp a) -- ^ A.R
-              -> Shader x (A.Exp a) -- ^ A.G
-              -> Shader x (A.Exp a) -- ^ A.B
-              -> Shader x (A.Exp a) -- ^ B.A
-              -> Shader x (A.Exp a) -- ^ A.A
-              -> (Shader x (A.Exp a), Shader x (A.Exp a), Shader x (A.Exp a), Shader x (A.Exp a))
-threeWayMerge blend br bg bb ar ag ab ba aa =
-    (merge br ba ar aa, merge bg ba ag aa, merge bb ba ab aa, ba)
-    where merge bgnd abgnd ov aov = complicatedColorCompositingFormula bgnd abgnd ov aov blend
-
 -- FIXME [KL]: Bounding box now is taken from the aa' generator -- FIXED [KR]: Canvas from background. 
 threeWayMerge' :: (A.Elt a, A.IsFloating a)
               => AlphaBlend
@@ -85,6 +50,41 @@ threeWayMerge' alphaBlend blend br bg bb ar ag ab ba aa =
         mergeAlpha (Shader cnv ba') (Shader _ aa') = Shader cnv $ \p -> case alphaBlend of
             Adobe  -> ba' p `union` aa' p
             Custom -> ba' p `blend` aa' p
+
+-- FIXME [KL]: Bounding box now is taken from the overlay generator -- FIXED [KR]: Canvas from background. 
+basicColorCompositingFormula :: (A.Elt a, A.IsFloating a)
+                             => Shader x (A.Exp a) -- ^ Background / Destination / B
+                             -> Shader x (A.Exp a) -- ^ Background alpha
+                             -> Shader x (A.Exp a) -- ^ Overlay / Source / Foreground / A
+                             -> Shader x (A.Exp a) -- ^ Overlay alpha
+                             -> AlphaBlend         -- ^ Specifies if the same blending method is used on alpha channels
+                             -> BlendMode a        -- ^ Function used for blending
+                             -> Shader x (A.Exp a) -- ^ Merge result
+basicColorCompositingFormula (Shader cnv background) (Shader _ alphaBackground) (Shader _ overlay) (Shader _ alphaOverlay) alphaBlend blend =
+    Shader cnv $ \p ->
+    let alphaResult p' = alphaBackground p' `union` alphaOverlay p' --case alphaBlend of
+            --Adobe  -> alphaBackground p' `union` alphaOverlay p'
+            --Custom -> alphaBackground p' `blend` alphaOverlay p'
+    in   A.cond ((alphaResult p) A./=* 0)
+            ((1 - (alphaOverlay p / alphaResult p)) * background p + (alphaOverlay p / alphaResult p) *
+                    (U.invert (alphaBackground p) * overlay p + alphaBackground p * blend (background p) (overlay p)))
+            0
+
+-- FIXME [KL]: Bounding box now is taken from the overlay generator -- FIXED [KR]: Canvas from background. 
+threeWayMerge :: (A.Elt a, A.IsFloating a)
+              => ComplicatedBlendMode a
+              -> Shader x (A.Exp a) -- ^ B.R
+              -> Shader x (A.Exp a) -- ^ B.G
+              -> Shader x (A.Exp a) -- ^ B.B
+              -> Shader x (A.Exp a) -- ^ A.R
+              -> Shader x (A.Exp a) -- ^ A.G
+              -> Shader x (A.Exp a) -- ^ A.B
+              -> Shader x (A.Exp a) -- ^ B.A
+              -> Shader x (A.Exp a) -- ^ A.A
+              -> (Shader x (A.Exp a), Shader x (A.Exp a), Shader x (A.Exp a), Shader x (A.Exp a))
+threeWayMerge blend br bg bb ar ag ab ba aa =
+    (merge br ba ar aa, merge bg ba ag aa, merge bb ba ab aa, ba)
+    where merge bgnd abgnd ov aov = complicatedColorCompositingFormula bgnd abgnd ov aov blend
 
 -- FIXME [KL]: Bounding box now is taken from the overlay generator 
 -- Changed images order - everywhere first background/B then foreground/overlay/A.

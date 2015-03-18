@@ -92,7 +92,7 @@ def Image.colorCorrectCurves curves master shadows midtones highlights:
 
 foreign haskell class HueCorrectCurves a:
     HueCorrectCurves:
-        sat, lum, red, green, blue, rSup, gSup, bSup :: a
+        sat, lum, red, green, blue, rSup, gSup, bSup :: CurveGUI a
 
 foreign haskell def Image.hueCorrect curves:
     liftF2 hueCorrectLuna curves self
@@ -105,3 +105,11 @@ foreign haskell def Image.unpremultiply:
 
 foreign haskell def Image.invert:
     liftF1 invertLuna self
+
+foreign haskell class CrosstalkCurves a:
+    CrosstalkCurves:
+        red, green, blue, redGreen, redBlue, greenRed, greenBlue, blueRed, blueGreen :: CurveGUI a
+
+foreign haskell def Image.crosstalk curves:
+    liftF2 crosstalkLuna curves self
+

@@ -2,7 +2,7 @@
 
 foreign haskell import qualified Data.Array.Accelerate as A
 
-#include Prelude.lunaturbo
+#include Prelude/Prelude.lunaturbo
 #include Graphics/Geom2D/Geom.lunaturbo
 #include Graphics/Math/Math.lunaturbo
 #include Graphics/Color/Color.lunaturbo
