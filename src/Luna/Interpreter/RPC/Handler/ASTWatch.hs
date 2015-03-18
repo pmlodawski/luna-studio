@@ -115,7 +115,7 @@ projectOpen (ProjectOpen.Update _ project _) = do
 
 projectClose :: ProjectClose.Update -> RPC Context (SessionST mm) ()
 projectClose (ProjectClose.Update request updateNo) = do
-    sync updateNo $ ProjectHandler.close request
+    sync updateNo $ ProjectHandler.close request Nothing
     CacheWrapper.closeProject $ ProjectClose.projectID request
 
 
@@ -193,7 +193,7 @@ astModuleModifyImports (ASTModuleModifyImports.Update request updateNo) = do
 
 astDataAdd :: ASTDataAdd.Update -> RPC Context (SessionST mm) ()
 astDataAdd (ASTDataAdd.Update request _ bc updateNo) = do
-    sync updateNo $ ASTHandler.dataAdd request
+    sync updateNo $ ASTHandler.dataAdd request Nothing
     let projectID = ASTDataAdd.projectID request
         libraryID = ASTDataAdd.libraryID request
     CacheWrapper.modifyBreadcrumbsRec projectID libraryID bc
@@ -209,7 +209,7 @@ astDataModifyClasses (ASTDataModifyClasses.Update request updateNo) = do
 
 astDataModifyCls :: ASTDataModifyCls.Update -> RPC Context (SessionST mm) ()
 astDataModifyCls (ASTDataModifyCls.Update request updateNo) = do
-    sync updateNo $ ASTHandler.dataClsModify request
+    sync updateNo $ ASTHandler.dataClsModify request Nothing
     let projectID = ASTDataModifyCls.projectID request
         libraryID = ASTDataModifyCls.libraryID request
         bc        = ASTDataModifyCls.bc request
@@ -234,7 +234,7 @@ astDataModifyMethods (ASTDataModifyMethods.Update request updateNo) = do
 
 astFunctionAdd :: ASTFunctionAdd.Update -> RPC Context (SessionST mm) ()
 astFunctionAdd (ASTFunctionAdd.Update request _ bc updateNo) = do
-    sync updateNo $ ASTHandler.functionAdd request
+    sync updateNo $ ASTHandler.functionAdd request Nothing
     let projectID = ASTFunctionAdd.projectID request
         libraryID = ASTFunctionAdd.libraryID request
     CacheWrapper.modifyBreadcrumbsRec projectID libraryID bc
@@ -242,7 +242,7 @@ astFunctionAdd (ASTFunctionAdd.Update request _ bc updateNo) = do
 
 astFunctionModifyInputs :: ASTFunctionModifyInputs.Update -> RPC Context (SessionST mm) ()
 astFunctionModifyInputs (ASTFunctionModifyInputs.Update request updateNo) = do
-    sync updateNo $ ASTHandler.functionInputsModify request
+    sync updateNo $ ASTHandler.functionInputsModify request Nothing
     let projectID = ASTFunctionModifyInputs.projectID request
         libraryID = ASTFunctionModifyInputs.libraryID request
         bc        = ASTFunctionModifyInputs.bc request
@@ -251,7 +251,7 @@ astFunctionModifyInputs (ASTFunctionModifyInputs.Update request updateNo) = do
 
 astFunctionModifyName :: ASTFunctionModifyName.Update -> RPC Context (SessionST mm) ()
 astFunctionModifyName (ASTFunctionModifyName.Update request updateNo) = do
-    sync updateNo $ ASTHandler.functionNameModify request
+    sync updateNo $ ASTHandler.functionNameModify request Nothing
     let projectID = ASTFunctionModifyName.projectID request
         libraryID = ASTFunctionModifyName.libraryID request
         bc        = ASTFunctionModifyName.bc request
@@ -260,7 +260,7 @@ astFunctionModifyName (ASTFunctionModifyName.Update request updateNo) = do
 
 astFunctionModifyOutput :: ASTFunctionModifyOutput.Update -> RPC Context (SessionST mm) ()
 astFunctionModifyOutput (ASTFunctionModifyOutput.Update request updateNo) = do
-    sync updateNo $ ASTHandler.functionOutputModify request
+    sync updateNo $ ASTHandler.functionOutputModify request Nothing
     let projectID = ASTFunctionModifyOutput.projectID request
         libraryID = ASTFunctionModifyOutput.libraryID request
         bc        = ASTFunctionModifyOutput.bc request
@@ -278,7 +278,7 @@ astFunctionModifyPath (ASTFunctionModifyPath.Update request updateNo) = do
 
 astPropertiesSet :: ASTPropertiesSet.Update -> RPC Context (SessionST mm) ()
 astPropertiesSet (ASTPropertiesSet.Update request updateNo) =
-    sync updateNo $ PropertiesHandler.setASTProperties request
+    sync updateNo $ PropertiesHandler.setASTProperties request Nothing
 
 
 graphConnect :: GraphConnect.Update -> RPC Context (SessionST mm) ()
@@ -351,7 +351,7 @@ graphNodeModifyInPlace (GraphNodeModifyInPlace.Update request updateNo) = do
 
 graphNodeDefaultRemove :: GraphNodeDefaultRemove.Update -> RPC Context (SessionST mm) ()
 graphNodeDefaultRemove (GraphNodeDefaultRemove.Update request updateNo) = do
-    sync updateNo $ NodeDefaultHandler.remove request Nothing
+    sync updateNo $ NodeDefaultHandler.remove request 
     let projectID = GraphNodeDefaultRemove.projectID request
         libraryID = GraphNodeDefaultRemove.libraryID request
         nodeID    = GraphNodeDefaultRemove.nodeID request
