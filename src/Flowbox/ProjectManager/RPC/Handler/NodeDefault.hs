@@ -88,7 +88,7 @@ set (NodeDefaultSet.Request tdstPort tvalue tnodeID tbc tlibID tprojectID astID)
 
 
 remove :: NodeDefaultRemove.Request -> RPC Context IO NodeDefaultRemove.Update
-remove request@(NodeDefaultRemove.Request tdstPort tnodeID tbc tlibID tprojectID astID) = do
+remove request@(NodeDefaultRemove.Request tdstPort tnodeID tbc tlibID tprojectID _) = do
     bc <- decodeE tbc
     let dstPort   = decodeP tdstPort
         nodeID    = decodeP tnodeID
