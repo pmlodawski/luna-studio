@@ -67,14 +67,13 @@ set (NodeDefaultSet.Request tdstPort tvalue tnodeID tbc tlibID tprojectID astID)
     BatchND.setNodeDefault dstPort value newID bc libID projectID
     updateNo  <- Batch.getUpdateNo
     return ( [NodeDefaultSet.Update (newRequest newID value) updateNo]
-           , makeMsgArr (Register.Request
-                            (maybe (fun Topic.projectLibraryAstFunctionGraphNodeDefaultRemoveRequest $ NodeDefaultRemove.Request tdstPort (encodeP originID) tbc tlibID tprojectID astID)
-                                   (fun Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest . newRequest originID . snd)
-                                   $ DefaultsMap.lookup dstPort defaultsMap
-                            )
-                            (fun Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest $ newRequest originID value)
-                            tprojectID
-                        ) undoTopic
+           , maybe []
+                   (\map -> makeMsgArr (Register.Request
+                                            (fun Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest $ newRequest originID $ snd map)
+                                            (fun Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest $ newRequest originID value)
+                                            tprojectID
+                                       ) undoTopic)
+                   $ DefaultsMap.lookup dstPort defaultsMap
            )
 --    prepareResponse projectID
 --                    Topic.projectLibraryAstFunctionGraphNodeDefaultRemoveRequest
@@ -88,15 +87,13 @@ set (NodeDefaultSet.Request tdstPort tvalue tnodeID tbc tlibID tprojectID astID)
 --                    =<< NodeDefaultSet.Update (newRequest newID value) <$> Batch.getUpdateNo
 
 
-remove :: NodeDefaultRemove.Request -> Maybe Topic -> RPC Context IO ([NodeDefaultRemove.Update], [Message])
-remove (NodeDefaultRemove.Request tdstPort tnodeID tbc tlibID tprojectID astID) undoTopic = do
+remove :: NodeDefaultRemove.Request -> RPC Context IO NodeDefaultRemove.Update
+remove request@(NodeDefaultRemove.Request tdstPort tnodeID tbc tlibID tprojectID astID) = do
     bc <- decodeE tbc
-    context <- Batch.get
     let dstPort   = decodeP tdstPort
         nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
-        newID     = if isJust undoTopic then nodeID else mapID context Bimap.lookupR nodeID
-    BatchND.removeNodeDefault dstPort newID bc libID projectID
+    BatchND.removeNodeDefault dstPort nodeID bc libID projectID
     updateNo <- Batch.getUpdateNo
-    return $ ([NodeDefaultRemove.Update (NodeDefaultRemove.Request tdstPort (encodeP newID) tbc tlibID tprojectID astID) updateNo], [])
+    return $ NodeDefaultRemove.Update request updateNo

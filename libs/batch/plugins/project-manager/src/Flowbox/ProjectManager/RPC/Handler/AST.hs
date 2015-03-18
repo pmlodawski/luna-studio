@@ -12,6 +12,7 @@ import qualified Flowbox.Batch.Handler.Common                                   
 import           Flowbox.Bus.Data.Message                                                             (Message)
 import           Flowbox.Bus.Data.Topic                                                               (Topic)
 import           Flowbox.Bus.RPC.RPC                                                                  (RPC)
+import           Flowbox.Control.Error
 import           Flowbox.Data.Convert
 import           Flowbox.Prelude                                                                      hiding (Context, cons)
 import           Flowbox.ProjectManager.Context                                                       (Context)
@@ -61,6 +62,7 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Remove.Updat
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Resolve.Request                   as ResolveDefinition
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Resolve.Status                    as ResolveDefinition
 import qualified Luna.DEP.AST.Control.Crumb                                                           as Crumb
+import qualified Luna.DEP.AST.Control.Focus                                                           as Focus
 import qualified Luna.DEP.AST.Expr                                                                    as Expr
 import qualified Luna.DEP.AST.Module                                                                  as Module
 import qualified Luna.DEP.AST.Type                                                                    as Type
@@ -142,13 +144,26 @@ functionAdd request@(AddFunction.Request tnewFunction tbcParent tlibID tprojectI
 
 
 remove :: Remove.Request -> Maybe Topic -> RPC Context IO ([Remove.Update], [Message])
-remove request@(Remove.Request tbc tlibID tprojectID _) _ = do
+remove request@(Remove.Request tbc tlibID tprojectID astID) undoTopic = do
     bc  <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
+        tbcParent = (encode $ init bc)
+        prepare topic action = 
+            prepareResponse projectID
+                            topic
+                            action
+                            Topic.projectLibraryAstRemoveRequest
+                            request
+                            undoTopic
+                            =<< Remove.Update request <$> Batch.getUpdateNo
+    definition <- BatchAST.definitions Nothing bc libID projectID
     BatchAST.remove bc libID projectID
-    updateNo <- Batch.getUpdateNo
-    return ([Remove.Update request updateNo], [])
+    case definition of
+        Focus.Function f -> prepare Topic.projectLibraryAstFunctionAddRequest $ AddFunction.Request (encode f) tbcParent tlibID tprojectID astID
+        Focus.Class    c -> prepare Topic.projectLibraryAstDataAddRequest     $ AddData.Request     (encode c) tbcParent tlibID tprojectID astID
+        Focus.Module   m -> prepare Topic.projectLibraryAstModuleAddRequest   $ AddModule.Request   (encode m) tbcParent tlibID tprojectID astID
+        _                -> left $ "Unhandled definition delletion: " ++ (show definition)
 
 
 resolve :: ResolveDefinition.Request -> RPC Context IO ResolveDefinition.Status
@@ -333,11 +348,18 @@ codeGet request@(CodeGet.Request tbc tlibID tprojectID _) = do
     return $ CodeGet.Status request $ encodeP code
 
 
-codeSet :: CodeSet.Request -> RPC Context IO CodeSet.Update
-codeSet request@(CodeSet.Request tcode tbc tlibID tprojectID _) = do
+codeSet :: CodeSet.Request -> Maybe Topic -> RPC Context IO ([CodeSet.Update], [Message])
+codeSet request@(CodeSet.Request tcode tbc tlibID tprojectID astID) undoTopic = do
     bc <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
         code      = decodeP tcode
+    oldCode <- Batch.getCode bc libID projectID
     Batch.setCode code bc libID projectID
-    return $ CodeSet.Update request
+    prepareResponse projectID
+                    Topic.projectLibraryAstCodeSetRequest
+                    (CodeSet.Request (encodeP oldCode) tbc tlibID tprojectID astID)
+                    Topic.projectLibraryAstCodeSetRequest
+                    request
+                    undoTopic
+                    =<< (return $ CodeSet.Update request)
