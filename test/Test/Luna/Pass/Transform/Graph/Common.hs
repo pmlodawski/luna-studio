@@ -25,6 +25,7 @@ import           Luna.Syntax.Graph.Graph                   (Graph)
 import           Luna.Syntax.Graph.Tag                     (Tag)
 import           Luna.Syntax.Graph.Tag                     (TModule)
 import           Luna.Syntax.Module                        (LModule)
+import qualified Luna.System.Pragma.Store                  as Pragma
 import           Luna.System.Session                       as Session
 
 
@@ -67,6 +68,7 @@ getMain ast = eitherStringToM' $ runEitherT $ do
     Focus.getFunction focus <??> "test.Common.getMain : Target is not a function"
 
 
+runPass :: (MonadIO m, Show a) => EitherT a (Pragma.PragmaStoreT m) b -> m b
 runPass pass = do
     result <- Session.runT $ runEitherT pass
     eitherToM $ fst result

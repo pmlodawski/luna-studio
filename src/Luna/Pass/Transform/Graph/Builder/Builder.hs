@@ -44,6 +44,7 @@ import           Luna.Syntax.Graph.Graph                 (Graph)
 import qualified Luna.Syntax.Graph.Node                  as Node
 import           Luna.Syntax.Graph.Node.Expr             (NodeExpr)
 import qualified Luna.Syntax.Graph.Node.Expr             as NodeExpr
+import qualified Luna.Syntax.Graph.Node.MultiPart        as MultiPart
 import qualified Luna.Syntax.Graph.Node.StringExpr       as StringExpr
 import           Luna.Syntax.Graph.Port                  (Port)
 import qualified Luna.Syntax.Graph.Port                  as Port
@@ -78,7 +79,7 @@ expr2graph decl@(Label _ (Decl.Func (Decl.FuncDecl _ sig _ body))) = do
     State.initFreeNodeID decl
     State.insNode (inputsID, Node.mkInputs)
     State.insNode (outputID, Node.mkOutputs)
-    sig'  <- buildArgs sig
+    sig'  <- buildInputsArgs sig
     body' <- buildBody body
     decl' <- State.saveFreeNodeID decl
     (,) <$> return (decl' & Label.element . Decl.funcDecl . Decl.funcDeclSig  .~ sig'
@@ -86,39 +87,37 @@ expr2graph decl@(Label _ (Decl.Func (Decl.FuncDecl _ sig _ body))) = do
         <*> State.getGraph
 
 
-buildArgs :: Decl.FuncSig Tag e -> GBPass v m (Decl.FuncSig Tag e)
-buildArgs (Pattern.NamePat prefix base segmentList) = flip evalStateT (0::Int) $ do
+buildInputsArgs :: Pattern.ArgPat Tag e -> GBPass v m (Pattern.ArgPat Tag e)
+buildInputsArgs (Pattern.NamePat prefix base segmentList) = flip evalStateT (0::Int) $ do
     prefix' <- case prefix of
         Nothing -> return Nothing
-        Just pr -> Just <$> buildArg pr
-    base'        <- parseSegment base
-    segmentList' <- mapM parseSegment segmentList
+        Just pr -> Just <$> buildInputsArg pr
+    base'        <- parseInputsSegment base
+    segmentList' <- mapM parseInputsSegment segmentList
     return $ Pattern.NamePat prefix' base' segmentList'
+    where
+        parseInputsSegment (Pattern.Segment sBase sArgs) =
+            Pattern.Segment sBase <$> mapM buildInputsArg sArgs
 
-
-parseSegment (Pattern.Segment base args) =
-    Pattern.Segment base <$> mapM buildArg args
-
-
-buildArg (Arg pat val) = do
-    no <- get
-    put $ no + 1
-    (i, _, pat') <- lift $ State.getNodeInfo pat
-    lift $ State.addToNodeMap i (inputsID, Port.Num no)
-    return $ Arg pat' val
+        buildInputsArg (Arg pat val) = do
+            no <- get
+            put $ no + 1
+            (i, _, pat') <- lift $ State.getNodeInfo pat
+            lift $ State.addToNodeMap i (inputsID, Port.Num no)
+            return $ Arg pat' val
 
 
 buildBody :: Show v => [TExpr v] -> GBPass v m [TExpr v]
 buildBody []   = State.connectMonadic outputID >> return []
 buildBody body = do
     body' <- mapM (flip buildNode Nothing) (init body)
-    let output' = last body
-    output' <- buildOutput outputID $ last body
+    let output = last body
+    output' <- buildOutput output
     return $ body' ++ [output']
 
 
-buildOutput :: Show v => Node.ID -> TExpr v -> GBPass v m (TExpr v)
-buildOutput outputID lexpr = do
+buildOutput :: Show v => TExpr v -> GBPass v m (TExpr v)
+buildOutput lexpr = do
     lexpr' <- case unwrap lexpr of
         Expr.Assignment {}                        -> buildNode lexpr Nothing
         --Expr.Tuple   items                        -> buildAndConnectMany True  True Nothing outputID items 0
@@ -134,6 +133,34 @@ buildOutput outputID lexpr = do
     State.connectMonadic outputID
     return lexpr'
 
+
+buildExprApp :: Show v => Expr.ExprApp Tag v -> GBPass v m (Expr.ExprApp Tag v, [Either (PortDescriptor, NodeExpr Tag v) (Node.ID, Port)])
+buildExprApp (Pattern.NamePat prefix base segmentList) = flip runStateT [] $ do
+    prefix' <- case prefix of
+        Nothing     -> return Nothing
+        Just appArg -> Just <$> buildAppArg appArg
+    base' <- buildBase base
+    segmentList' <- mapM buildSegment segmentList
+    modify reverse
+    return $ Pattern.NamePat prefix' base' segmentList'
+    where
+        addArg arg = modify (arg:)
+
+        buildBase (Pattern.Segment sBase sArgs) = do
+            --port <- Port.Num . length <$> get
+            --(sBase', arg) <- lift $ processArg (sBase, port)
+            --addArg arg
+            sArgs' <- mapM buildAppArg sArgs
+            return $ Pattern.Segment sBase sArgs'
+
+        buildSegment (Pattern.Segment sBase sArgs) =
+            Pattern.Segment sBase <$> mapM buildAppArg sArgs
+
+        buildAppArg (Expr.AppArg argName e) = do
+            port <- Port.Num . length <$> get
+            (e', arg) <- lift $ processArg (e, port)
+            addArg arg
+            return $ Expr.AppArg argName e'
 
 
 buildNode :: Show v => TExpr v -> Maybe TPat -> GBPass v m (TExpr v)
@@ -155,7 +182,14 @@ buildNode lexpr outputName = case unwrap lexpr of
             args     = rights $ map snd itemsArgs
             lexpr' = Label tag $ Expr.List $ Expr.SeqList items'
         addNodeWithExpr lexpr' outputName (NodeExpr.StringExpr StringExpr.List) args defaults
-    --Expr.App exprApp -> addNodeWithArgs
+    Expr.App exprApp -> do
+        (exprApp', defsArgs) <- buildExprApp exprApp
+        let mp = MultiPart.fromNamePat exprApp'
+            lexpr' = Label tag $ Expr.App exprApp'
+            defaults = lefts defsArgs
+            args     = rights defsArgs
+        addNodeWithExpr lexpr' outputName (NodeExpr.MultiPart mp) args defaults
+
 
     _ -> addNode lexpr outputName [] []
 
@@ -169,7 +203,7 @@ buildNode lexpr outputName = case unwrap lexpr of
 
 
 processArg :: Show v => (TExpr v, Port) -> GBPass v m (TExpr v, Either (PortDescriptor, NodeExpr Tag v) (Node.ID, Port))
-processArg (lexpr, port) = if undefined --constainsVar
+processArg (lexpr, port) = if constainsVar lexpr
     then do (nodeID, _, lexpr') <- State.getNodeInfo =<< buildNode lexpr (Just undefined)
             return (lexpr', Right (nodeID, port))
     else return (lexpr, Left (Port.toList port, NodeExpr.StringExpr $ StringExpr.fromString $ lunaShow lexpr))
@@ -187,8 +221,61 @@ addNodeWithExpr lexpr outputName nodeExpr args defaults = do
     let node = Node.Expr nodeExpr outputName (DefaultsMap.fromList defaults) position
     State.insNode (nodeID, node)
     State.addToNodeMap nodeID (nodeID, Port.All)
+    State.connectMonadic nodeID
     mapM_ (\(srcID, port) -> State.connect srcID nodeID port) args
     return lexpr'
+
+
+constainsVar = undefined
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
