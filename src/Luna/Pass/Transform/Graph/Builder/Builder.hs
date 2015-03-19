@@ -14,21 +14,11 @@
 
 module Luna.Pass.Transform.Graph.Builder.Builder where
 
---import           Control.Applicative
 import Control.Monad.State
 import Control.Monad.Trans.Either
 import Data.Either                (lefts, rights)
+import qualified Data.Maybe as Maybe
 
---import qualified Luna.Pass.Analysis.ID.MinID             as MinID
---import qualified Luna.Syntax.Arg                         as Arg
---import qualified Luna.Syntax.Graph.Node.OutputName       as OutputName
---import qualified Luna.Syntax.Type                        as Type
---import           Luna.Syntax.Pat                         (LPat)
---import qualified Luna.Syntax.Pat                         as Pat
---import           Luna.Syntax.Traversals.Class            (Traversal)
---import qualified Luna.Syntax.Graph.Tag                   as Tag
---import qualified Luna.Syntax.Enum                        as Enum
---import           Luna.Syntax.Decl                        (LDecl)
 import           Flowbox.Prelude                         hiding (Traversal, error, mapM, mapM_)
 import           Flowbox.System.Log.Logger
 import           Luna.Data.StructInfo                    (StructInfo)
@@ -110,7 +100,7 @@ buildInputsArgs (Pattern.NamePat prefix base segmentList) = flip evalStateT (0::
 buildBody :: Show v => [TExpr v] -> GBPass v m [TExpr v]
 buildBody []   = State.connectMonadic outputID >> return []
 buildBody body = do
-    body' <- mapM (flip buildNode Nothing) (init body)
+    body' <- mapM (fmap fst . flip buildNode Nothing) (init body)
     let output = last body
     output' <- buildOutput output
     return $ body' ++ [output']
@@ -119,17 +109,16 @@ buildBody body = do
 buildOutput :: Show v => TExpr v -> GBPass v m (TExpr v)
 buildOutput lexpr = do
     lexpr' <- case unwrap lexpr of
-        Expr.Assignment {}                        -> buildNode lexpr Nothing
+        Expr.Assignment {}                        -> fst <$> buildNode lexpr Nothing
         --Expr.Tuple   items                        -> buildAndConnectMany True  True Nothing outputID items 0
         --Expr.Grouped (Label _ (Expr.Tuple items)) -> buildAndConnectMany True  True Nothing outputID items 0
         --Expr.Grouped v@(Label _ (Expr.Var {}))    -> buildAndConnect     True  True Nothing outputID (v, Port.Num 0)
         --Expr.Grouped v                            -> buildAndConnect     False True Nothing outputID (v, Port.Num 0)
         --Expr.Var {}                               -> buildAndConnect     True  True Nothing outputID (lexpr, Port.All)
         --_                                         -> buildAndConnect     False True Nothing outputID (lexpr, Port.All)
-        _   ->  do lexpr' <- buildNode lexpr Nothing
-                   (nodeID, _, lexpr'') <- State.getNodeInfo lexpr'
+        _   ->  do (lexpr', nodeID) <- buildNode lexpr Nothing
                    State.connect nodeID outputID Port.All
-                   return lexpr''
+                   return lexpr'
     State.connectMonadic outputID
     return lexpr'
 
@@ -163,11 +152,11 @@ buildExprApp (Pattern.NamePat prefix base segmentList) = flip runStateT [] $ do
             return $ Expr.AppArg argName e'
 
 
-buildNode :: Show v => TExpr v -> Maybe TPat -> GBPass v m (TExpr v)
+buildNode :: Show v => TExpr v -> Maybe TPat -> GBPass v m (TExpr v, Node.ID)
 buildNode lexpr outputName = case unwrap lexpr of
     Expr.Assignment dst src   -> do
-        src' <- buildNode src (Just dst)
-        return $ Label tag $ Expr.Assignment dst src'
+        (src', nodeID) <- buildNode src (Just dst)
+        return (Label tag $ Expr.Assignment dst src', nodeID)
     Expr.Tuple items  -> do
         itemsArgs <- mapM processArg $ zip items $ map Port.Num [0..]
         let items'   = map fst itemsArgs
@@ -189,33 +178,30 @@ buildNode lexpr outputName = case unwrap lexpr of
             defaults = lefts defsArgs
             args     = rights defsArgs
         addNodeWithExpr lexpr' outputName (NodeExpr.MultiPart mp) args defaults
-
-
-    _ -> addNode lexpr outputName [] []
-
     --Expr.Var (Expr.Variable vname _) -> do
     --        isBound <- Maybe.isJust <$> State.gvmNodeMapLookUp nodeID
     --        if isBound
-    --            then return nodeID
-    --            else addExprNode (toString name) []
+    --            then return (lexpr, nodeID)
+    --            else addNode lexpr Nothing [] []
+    _ -> addNode lexpr outputName [] []
     where
         tag = lexpr ^. Label.label
 
 
 processArg :: Show v => (TExpr v, Port) -> GBPass v m (TExpr v, Either (PortDescriptor, NodeExpr Tag v) (Node.ID, Port))
 processArg (lexpr, port) = if constainsVar lexpr
-    then do (nodeID, _, lexpr') <- State.getNodeInfo =<< buildNode lexpr (Just undefined)
+    then do (lexpr', nodeID) <- buildNode lexpr Nothing
             return (lexpr', Right (nodeID, port))
     else return (lexpr, Left (Port.toList port, NodeExpr.StringExpr $ StringExpr.fromString $ lunaShow lexpr))
 
 
-addNode :: Show v => TExpr v -> Maybe TPat -> [(Node.ID, Port)] -> [(PortDescriptor, NodeExpr Tag v)] -> GBPass v m (TExpr v)
+addNode :: Show v => TExpr v -> Maybe TPat -> [(Node.ID, Port)] -> [(PortDescriptor, NodeExpr Tag v)] -> GBPass v m (TExpr v, Node.ID)
 addNode lexpr outputName args defaults = addNodeWithExpr lexpr outputName nodeExpr args defaults
     where nodeExpr = NodeExpr.StringExpr $ StringExpr.fromString $ lunaShow lexpr
 
 
 addNodeWithExpr :: TExpr v -> Maybe TPat
-                -> NodeExpr Tag v -> [(Node.ID, Port)] -> [(PortDescriptor, NodeExpr Tag v)] -> GBPass v m (TExpr v)
+                -> NodeExpr Tag v -> [(Node.ID, Port)] -> [(PortDescriptor, NodeExpr Tag v)] -> GBPass v m (TExpr v, Node.ID)
 addNodeWithExpr lexpr outputName nodeExpr args defaults = do
     (nodeID, position, lexpr') <- State.getNodeInfo lexpr
     let node = Node.Expr nodeExpr outputName (DefaultsMap.fromList defaults) position
@@ -223,10 +209,10 @@ addNodeWithExpr lexpr outputName nodeExpr args defaults = do
     State.addToNodeMap nodeID (nodeID, Port.All)
     State.connectMonadic nodeID
     mapM_ (\(srcID, port) -> State.connect srcID nodeID port) args
-    return lexpr'
+    return (lexpr', nodeID)
 
 
-constainsVar = undefined
+constainsVar _ = undefined
 
 
 
