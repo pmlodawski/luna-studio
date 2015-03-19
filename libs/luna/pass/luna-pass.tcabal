@@ -30,7 +30,9 @@ Library
 
   Build-Depends:  base,
                   containers,
+                  directory,
                   either,
+                  filepath,
                   luna-core,
                   luna-target-ghchs,
                   flowbox-config,

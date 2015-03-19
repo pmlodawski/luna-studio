@@ -5,6 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Flowbox.Data.MapForest where
 
@@ -18,7 +19,7 @@ import Flowbox.Prelude hiding (children, lookup, toList)
 
 data Node k v = Node { _value    :: Maybe v
                      , _children :: MapForest k v
-                     } deriving (Show, Read, Eq, Ord)
+                     } deriving (Generic, Show, Read, Eq, Ord)
 
 type Path k = [k]
 
