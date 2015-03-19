@@ -39,3 +39,14 @@ foreign haskell def randomRIO lo hi:
 
 foreign haskell def randomIO:
     autoLift randomIO
+
+foreign haskell def StdGen.next:
+    liftF1 next self
+
+foreign haskell def StdGen.genRange:
+    liftF1 genRange self
+
+foreign haskell def StdGen.split:
+    liftF1 split self
+
+
