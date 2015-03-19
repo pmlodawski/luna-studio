@@ -1,14 +1,16 @@
 
 module Luna.Data.ModuleInfo where
 
+import           Data.Maybe             (fromMaybe)
 import           Data.Map               (Map)
 import qualified Data.Map       as Map
-import           System.Directory       (findFile)
-import           System.FilePath        (joinPath)
+import           System.Environment     (lookupEnv)
+import           System.Directory       (findFile, createDirectory)
+import           System.FilePath        (joinPath, (</>))
 
 
 import           Luna.Data.StructInfo   (StructInfo)
-import           Luna.Syntax.Name.Path
+import           Luna.Syntax.Name.Path  (NamePath)
 import           Luna.Syntax.AST        (ID)
 import           Luna.Syntax.Name       (TName(TName), TNameP)
 import           Luna.Syntax.Decl       (Path)
@@ -41,17 +43,42 @@ getSymbolId name mInfo = Map.lookup name (_symTable mInfo)
 
 
 
+-- checks if the module exists (but not if it's parsed)
 moduleExists :: Path -> IO Bool
 moduleExists path = do
-    f <- findFile ["."] (modPathToString path)
+    let fullPath = modPathToString path ++ ".hs"
+    f <- findFile ["."] fullPath 
     return $ case f of
         Just p  -> True
         Nothing -> False
 
 
 
--- Path == [TNameP] == [TName NamePath]
+-- checks if module is already parsed (i.e. the ModuleInfo is present)
+moduleIsParsed :: Path -> IO Bool
+moduleIsParsed path = do
+    let fullPath = modPathToString path ++ liFileSuffix
+    liPath <- liFilePath
+    f      <- findFile [liPath] fullPath
+    return $ case f of
+        Just p  -> True
+        Nothing -> False
+
+
+
 modPathToString :: Path -> String
 modPathToString path =  joinPath $ map getFromTName path
     where getFromTName (TName np) = toString np
- 
+
+
+
+-- ModuleInfo serialization utils:
+liFileSuffix :: FilePath
+liFileSuffix = "li"
+
+liFilePath :: IO FilePath
+liFilePath = do
+    r <- lookupEnv "LUNAROOT"
+    let root = fromMaybe "." r
+    return $ root </> "modinfo"
+
