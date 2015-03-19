@@ -9,7 +9,7 @@ module Flowbox.Graphics.Mockup.Merge (
   MergeMode(..),
   mergeLuna,
 ) where
-    
+
 
 import           Flowbox.Graphics.Composition.Merge (AlphaBlend (..))
 import qualified Flowbox.Graphics.Composition.Merge as Merge
@@ -123,12 +123,13 @@ mergeLuna mode img1 img2 matte = case mode of
           (r1, g1, b1, a1) = unsafeGetChannels img1 & over each (Shader.fromMatrix (A.Constant 0))
           (r2, g2, b2, a2) = unsafeGetChannels img2 & over each (Shader.transform toBottomLeft . Shader.fromMatrix (A.Constant 0))
           --(r2m, g2m, b2m, a2m) = case matte of
-          --    Just m -> let (h,w) = unpackAccDims (height2, width2) 
+          --    Just m -> let (h,w) = unpackAccDims (height2, width2)
           --                  msh = Shader.bound A.Clamp $ Matte.matteToDiscrete h w m
           --                  in ((*)<$>r2<*>msh,(*)<$>g2<*>msh,(*)<$>b2<*>msh,(*)<$>a2<*>msh) -- {-- invert <$> --} Matte.matteToDiscrete h w m
           --    _      -> (r2, g2, b2, a2)
+
           matteShader = case matte of
-              Just m -> let (h,w) = unpackAccDims (height1, width1) 
+              Just m -> let (h,w) = unpackAccDims (height1, width1)
                             msh = {-- Shader.bound A.Clamp $ --} Matte.matteToDiscrete h w m
                             in msh --Shader.transform toBottomLeft msh -- {-- invert <$> --} Matte.matteToDiscrete h w m
               _      -> Shader.unitShader (\_->1)
