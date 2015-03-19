@@ -9,6 +9,7 @@
 -- moze stworzyc ogolna klase FS (isDirectory path -> Bool) etc, dla ktorego instancje beda dla amazona etc.
 
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE DeriveGeneric    #-}
 
 module Flowbox.System.UniPath where
 
@@ -29,7 +30,7 @@ data PathItem = Node String
               | Var  String
               | Up
               | Current
-              | Empty deriving (Eq, Ord, Show, Read)
+              | Empty deriving (Generic, Eq, Ord, Show, Read)
 
 type UniPath = [PathItem]
 
