@@ -155,9 +155,9 @@ regForeignDecl id (Foreign tgt fdecl) = case fdecl of
     Decl.FFunc fdecl -> regFuncDecl id fdecl
     _                -> pure ()
 
-regFuncDecl id (Decl.FuncDecl _ sig _ _) =  regVarName (OriginInfo "dupa" id) (NamePattern.toNamePath sig)
+-- regParent here means that the class will be the parent of its methods. Do we need it? Seems sane. 
+regFuncDecl id (Decl.FuncDecl _ sig _ _) =  regParent id *> regVarName (OriginInfo "dupa" id) (NamePattern.toNamePath sig)
                                          <* regNamePatDesc id (NamePattern.toDesc sig)
-
 regDataDecl id (Decl.DataDecl name _ cons _) =  regTypeName (OriginInfo "dupa" id) (unwrap name) 
                                              <* mapM_ registerCons cons
     where registerCons (Label lab (Decl.Cons name fields)) = regVarName (OriginInfo "dupa" (Enum.id lab)) (unwrap name)
