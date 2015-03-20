@@ -11,7 +11,7 @@ import           System.Environment       (lookupEnv)
 import qualified System.Directory as Dir
 import           System.FilePath          (joinPath, (</>))
 
-
+import qualified Luna.Data.StructInfo as SI
 import           Luna.Data.StructInfo     (StructInfo, Scope, OriginInfo)
 import           Luna.Syntax.AST          (ID)
 import           Luna.Syntax.Decl         (Path)
@@ -30,33 +30,47 @@ type Name = String
 -- stores the information about a module, needed while importing
 -- and resolving names. Checking whether a file needs recompilation is done based on the file  edit dates
 data ModuleInfo = ModuleInfo {
-                     _name     :: Path, -- [?] for now this is Path, but may be subject to change
-                     _path     :: UniPath,
-                     _strInfo  :: StructInfo,
+                     _name     :: Path,       -- [?] for now this is Path, but may be subject to change
+                     _path     :: UniPath,    -- [?] is this really necessary
+                     _strInfo  :: StructInfo, -- [?] Namespace here?
                      _symTable :: Map Name ID
                   } deriving (Generic, Eq, Show, Read)
 
 makeLenses ''ModuleInfo
 
 
+---------------------------------------------------------------------------------------------
+-- functions that wrap their counterparts in StructInfo, just for convenience and consistency
+---------------------------------------------------------------------------------------------
+
+addSymbol name id = symTable %~ Map.insert name id
+
+regParent  id pid  = strInfo %~ SI.regParent id pid
+
+regOrphan id err = strInfo %~ SI.regOrphan id err
+
+regAlias id name scopeID = strInfo %~ SI.regAlias id name scopeID
+
+-- TODO[PMo] setScope, scopeLookup
+
 --------------------------------------------------------------------
 -- simple utility functions for lookups and checks
 --------------------------------------------------------------------
 
 nameExists :: Name -> ModuleInfo -> Bool
-nameExists name mInfo = Map.member name (_symTable mInfo)
+nameExists name mInfo = Map.member name (mInfo^.symTable)
 
 
 
 getSymbolId :: Name -> ModuleInfo -> Maybe ID
-getSymbolId name mInfo = Map.lookup name (_symTable mInfo)
+getSymbolId name mInfo = Map.lookup name (mInfo^.symTable)
 
 
 
 -- checks if the module exists (but not if it's parsed)
 moduleExists :: Path -> IO Bool
 moduleExists path = do
-    let fullPath = modPathToString path ++ ".hs"
+    let fullPath = modPathToString path ++ ".luna"
     f <- Dir.findFile ["."] fullPath 
     return $ case f of
         Just p  -> True
@@ -109,7 +123,7 @@ writeModInfoToFile :: ModuleInfo -> IO ()
 writeModInfoToFile modInfo = do
     -- if the directory doesn't exist, create one:
     liDir <- liDirectory
-    let modDir = liDir </> (modPathToDirString $ _name modInfo)
+    let modDir = liDir </> (modPathToDirString $ modInfo^.name)
     Dir.createDirectoryIfMissing True modDir
     -- serialize with Data.Binry:
     encodeFile modDir modInfo
