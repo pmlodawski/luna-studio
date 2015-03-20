@@ -4,37 +4,37 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE RankNTypes      #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE ConstraintKinds     #-}
+{-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell     #-}
 
 module Flowbox.ProjectManager.RPC.Handler.Handler where
 
 import Control.Monad.Trans.State
 
-import           Flowbox.Bus.Data.Message                         (Message)
-import           Flowbox.Bus.Data.Topic                           ((/+))
-import           Flowbox.Bus.Data.Topic                           (Topic)
-import qualified Flowbox.Bus.Data.Topic                           as Topic
-import           Flowbox.Bus.RPC.HandlerMap                       (HandlerMap)
-import qualified Flowbox.Bus.RPC.HandlerMap                       as HandlerMap
-import           Flowbox.Bus.RPC.RPC                              (RPC)
-import qualified Flowbox.Bus.RPC.Server.Processor                 as Processor
-import           Flowbox.Prelude                                  hiding (Context, error)
-import           Flowbox.ProjectManager.Context                   (Context)
-import qualified Flowbox.ProjectManager.RPC.Handler.AST           as ASTHandler
-import qualified Flowbox.ProjectManager.RPC.Handler.Graph         as GraphHandler
-import qualified Flowbox.ProjectManager.RPC.Handler.Library       as LibraryHandler
-import qualified Flowbox.ProjectManager.RPC.Handler.Maintenance   as MaintenanceHandler
-import qualified Flowbox.ProjectManager.RPC.Handler.NodeDefault   as NodeDefaultHandler
-import qualified Flowbox.ProjectManager.RPC.Handler.Project       as ProjectHandler
-import qualified Flowbox.ProjectManager.RPC.Handler.Properties    as PropertiesHandler
-import qualified Flowbox.ProjectManager.RPC.Handler.Sync          as SyncHandler
-import qualified Flowbox.ProjectManager.RPC.Topic                 as Topic
+import           Flowbox.Bus.Data.Message                       (Message)
+import           Flowbox.Bus.Data.Topic                         ((/+))
+import           Flowbox.Bus.Data.Topic                         (Topic)
+import qualified Flowbox.Bus.Data.Topic                         as Topic
+import           Flowbox.Bus.RPC.HandlerMap                     (HandlerMap)
+import qualified Flowbox.Bus.RPC.HandlerMap                     as HandlerMap
+import           Flowbox.Bus.RPC.RPC                            (RPC)
+import qualified Flowbox.Bus.RPC.Server.Processor               as Processor
+import           Flowbox.Prelude                                hiding (Context, error)
+import           Flowbox.ProjectManager.Context                 (Context)
+import qualified Flowbox.ProjectManager.RPC.Handler.AST         as ASTHandler
+import qualified Flowbox.ProjectManager.RPC.Handler.Graph       as GraphHandler
+import qualified Flowbox.ProjectManager.RPC.Handler.Library     as LibraryHandler
+import qualified Flowbox.ProjectManager.RPC.Handler.Maintenance as MaintenanceHandler
+import qualified Flowbox.ProjectManager.RPC.Handler.NodeDefault as NodeDefaultHandler
+import qualified Flowbox.ProjectManager.RPC.Handler.Project     as ProjectHandler
+import qualified Flowbox.ProjectManager.RPC.Handler.Properties  as PropertiesHandler
+import qualified Flowbox.ProjectManager.RPC.Handler.Sync        as SyncHandler
+import qualified Flowbox.ProjectManager.RPC.Topic               as Topic
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.Text.ProtocolBuffers                     as Proto
-import qualified Flowbox.UR.Manager.RPC.Topic                     as Topic
+import qualified Flowbox.Text.ProtocolBuffers                   as Proto
+import qualified Flowbox.UR.Manager.RPC.Topic                   as Topic
 
 
 
@@ -73,6 +73,9 @@ handlerMap callback = HandlerMap.fromList
     , (Topic.projectLibraryAstDataModifyClassesRequest              , call Topic.update ASTHandler.dataClassesModify)
     , (Topic.projectLibraryAstDataModifyClsRequest                  , call Topic.update ASTHandler.dataClsModify)
     , (Topic.projectLibraryAstDataModifyConsRequest                 , call Topic.update ASTHandler.dataConsModify)
+    , (Topic.projectLibraryAstDataConModifyRequest                 , call Topic.update ASTHandler.dataConModify)
+    , (Topic.projectLibraryAstDataConAddRequest                 , call Topic.update ASTHandler.dataConAdd)
+    , (Topic.projectLibraryAstDataConDeleteRequest                 , call Topic.update ASTHandler.dataConDelete)
     , (Topic.projectLibraryAstDataModifyMethodsRequest              , call Topic.update ASTHandler.dataMethodsModify)
     , (Topic.projectLibraryAstFunctionAddRequest                    , call Topic.update ASTHandler.functionAdd)
     , (Topic.projectLibraryAstFunctionModifyInputsRequest           , call Topic.update ASTHandler.functionInputsModify)
