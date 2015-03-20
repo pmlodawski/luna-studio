@@ -150,6 +150,27 @@ updateDataCons cons bc libID projectID = astClassFocusOp bc libID projectID $ \m
     return (m & Expr.cons .~ fixedCons, ())
 
 
+insertDataCon :: Expr -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
+insertDataCon con bc libID projectID = astClassFocusOp bc libID projectID $ \m -> do
+    maxID     <- Batch.getMaxID libID projectID
+    fixedCon  <- EitherT $ IDFixer.runExpr maxID Nothing True con
+    return (m & Expr.cons %~ (fixedCon:), ())
+
+
+deleteDataCon :: String -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
+deleteDataCon conName bc libID projectID = astClassFocusOp bc libID projectID $ \m -> do
+    let cons = filter ((==) (Just conName) . preview Expr.name) $ m ^. Expr.cons
+    return (m & Expr.cons .~ cons, ())
+
+
+updateDataCon :: Expr -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
+updateDataCon con bc libID projectID = astClassFocusOp bc libID projectID $ \m -> do
+    maxID     <- Batch.getMaxID libID projectID
+    fixedCon  <- EitherT $ IDFixer.runExpr maxID Nothing True con
+    let cons = filter ((==) (fixedCon ^? Expr.name) . preview Expr.name) $ m ^. Expr.cons
+    return (m & Expr.cons %~ (fixedCon:), ())
+
+
 updateDataClasses :: [Expr] -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
 updateDataClasses classes bc libID projectID = astClassFocusOp bc libID projectID $ \m -> do
     maxID        <- Batch.getMaxID libID projectID

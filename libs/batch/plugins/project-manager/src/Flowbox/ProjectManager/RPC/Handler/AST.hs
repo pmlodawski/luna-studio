@@ -15,7 +15,7 @@ import           Flowbox.Bus.RPC.RPC                                            
 import           Flowbox.Data.Convert
 import           Flowbox.Prelude                                                                      hiding (Context, cons)
 import           Flowbox.ProjectManager.Context                                                       (Context)
-import           Flowbox.ProjectManager.RPC.Handler.Graph                                             (fun, makeMsgArr) 
+import           Flowbox.ProjectManager.RPC.Handler.Graph                                             (fun, makeMsgArr)
 import qualified Flowbox.ProjectManager.RPC.Topic                                                     as Topic
 import           Flowbox.System.Log.Logger
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Get.Request                  as CodeGet
@@ -24,6 +24,12 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Set.Req
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Set.Update                   as CodeSet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Add.Request                  as AddData
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Add.Update                   as AddData
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Add.Request              as AddDataCon
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Add.Update               as AddDataCon
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Delete.Request           as DeleteDataCon
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Delete.Update            as DeleteDataCon
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Modify.Request           as ModifyDataCon
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Modify.Update            as ModifyDataCon
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Classes.Request       as ModifyDataClasses
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Classes.Update        as ModifyDataClasses
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Cls.Request           as ModifyDataCls
@@ -216,6 +222,39 @@ dataClsModify request@(ModifyDataCls.Request tcls tbc tlibID tprojectID _) = do
     BatchAST.updateDataCls cls bc libID projectID
     updateNo <- Batch.getUpdateNo
     return $ ModifyDataCls.Update request updateNo
+
+
+dataConModify :: ModifyDataCon.Request -> RPC Context IO ModifyDataCon.Update
+dataConModify request@(ModifyDataCon.Request tcon tbc tlibID tprojectID _) = do
+    con <- decodeE tcon
+    bc  <- decodeE tbc
+    let libID     = decodeP tlibID
+        projectID = decodeP tprojectID
+    BatchAST.updateDataCon con bc libID projectID
+    updateNo <- Batch.getUpdateNo
+    return $ ModifyDataCon.Update request updateNo
+
+
+dataConAdd :: AddDataCon.Request -> RPC Context IO AddDataCon.Update
+dataConAdd request@(AddDataCon.Request tcon tbc tlibID tprojectID _) = do
+    con <- decodeE tcon
+    bc  <- decodeE tbc
+    let libID     = decodeP tlibID
+        projectID = decodeP tprojectID
+    BatchAST.insertDataCon con bc libID projectID
+    updateNo <- Batch.getUpdateNo
+    return $ AddDataCon.Update request updateNo
+
+
+dataConDelete :: DeleteDataCon.Request -> RPC Context IO DeleteDataCon.Update
+dataConDelete request@(DeleteDataCon.Request tname tbc tlibID tprojectID _) = do
+    let name = decodeP tname
+    bc  <- decodeE tbc
+    let libID     = decodeP tlibID
+        projectID = decodeP tprojectID
+    BatchAST.deleteDataCon name bc libID projectID
+    updateNo <- Batch.getUpdateNo
+    return $ DeleteDataCon.Update request updateNo
 
 
 dataConsModify :: ModifyDataCons.Request -> RPC Context IO ModifyDataCons.Update
