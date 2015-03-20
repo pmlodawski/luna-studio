@@ -36,6 +36,12 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Del
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Delete.Update                     as ASTDataConDelete
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Modify.Request                    as ASTDataConModify
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Modify.Update                     as ASTDataConModify
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Field.Add.Request                       as ASTDataConFieldAdd
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Field.Add.Update                        as ASTDataConFieldAdd
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Field.Delete.Request                    as ASTDataConFieldDelete
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Field.Delete.Update                     as ASTDataConFieldDelete
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Field.Modify.Request                    as ASTDataConFieldModify
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Field.Modify.Update                     as ASTDataConFieldModify
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Classes.Request                as ASTDataModifyClasses
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Classes.Update                 as ASTDataModifyClasses
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Cls.Request                    as ASTDataModifyCls
@@ -244,6 +250,31 @@ astDataConDelete (ASTDataConDelete.Update request updateNo) = do
         libraryID = ASTDataConDelete.libraryID request
         bc        = ASTDataConDelete.bc request
     CacheWrapper.modifyBreadcrumbsRec projectID libraryID bc
+
+astDataConFieldAdd :: ASTDataConFieldAdd.Update -> RPC Context (SessionST mm) ()
+astDataConFieldAdd (ASTDataConFieldAdd.Update request updateNo) = do
+    sync updateNo $ ASTHandler.addDataConField request
+    let projectID = ASTDataConFieldAdd.projectID request
+        libraryID = ASTDataConFieldAdd.libraryID request
+        bc        = ASTDataConFieldAdd.bc request
+    CacheWrapper.modifyBreadcrumbsRec projectID libraryID bc
+
+astDataConFieldDelete :: ASTDataConFieldDelete.Update -> RPC Context (SessionST mm) ()
+astDataConFieldDelete (ASTDataConFieldDelete.Update request updateNo) = do
+    sync updateNo $ ASTHandler.deleteDataConField request
+    let projectID = ASTDataConFieldDelete.projectID request
+        libraryID = ASTDataConFieldDelete.libraryID request
+        bc        = ASTDataConFieldDelete.bc request
+    CacheWrapper.modifyBreadcrumbsRec projectID libraryID bc
+
+astDataConFieldModify :: ASTDataConFieldModify.Update -> RPC Context (SessionST mm) ()
+astDataConFieldModify (ASTDataConFieldModify.Update request updateNo) = do
+    sync updateNo $ ASTHandler.modifyDataConField request
+    let projectID = ASTDataConFieldModify.projectID request
+        libraryID = ASTDataConFieldModify.libraryID request
+        bc        = ASTDataConFieldModify.bc request
+    CacheWrapper.modifyBreadcrumbsRec projectID libraryID bc
+
 
 astDataModifyCons :: ASTDataModifyCons.Update -> RPC Context (SessionST mm) ()
 astDataModifyCons (ASTDataModifyCons.Update request updateNo) = do
