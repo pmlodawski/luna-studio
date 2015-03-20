@@ -364,7 +364,7 @@ message Project {
                                 required int32 updateNo  = 2;
                             }
                         }
-                        message Value {
+                        /*message Value {
                             message Set {
                                 message Request {
                                     required generated.proto.dep.expr.Expr value = 1;
@@ -394,7 +394,7 @@ message Project {
                                     required int32 updateNo  = 2;
                                 }
                             }
-                        }
+                        }*/
                     }
                 }
                 message Modify {

@@ -28,6 +28,12 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Add
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Add.Update               as AddDataCon
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Delete.Request           as DeleteDataCon
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Delete.Update            as DeleteDataCon
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Field.Add.Request        as AddDataConField
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Field.Add.Update         as AddDataConField
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Field.Delete.Request     as DeleteDataConField
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Field.Delete.Update      as DeleteDataConField
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Field.Modify.Request     as ModifyDataConField
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Field.Modify.Update      as ModifyDataConField
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Modify.Request           as ModifyDataCon
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Modify.Update            as ModifyDataCon
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Classes.Request       as ModifyDataClasses
@@ -119,7 +125,7 @@ addData request@(AddData.Request tnewData tbcParent tlibID tprojectID _) = do
     bcParent <- decodeE tbcParent
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    addedData <- BatchAST.addClass newData bcParent libID projectID
+    addedData <- BatchAST.addData newData bcParent libID projectID
     let newBC = bcParent ++ [Crumb.Class $ addedData ^. Expr.cls . Type.name]
     updateNo <- Batch.getUpdateNo
     return $ AddData.Update request (encode addedData) (encode newBC) updateNo
@@ -241,7 +247,7 @@ addDataCon request@(AddDataCon.Request tcon tbc tlibID tprojectID _) = do
     bc  <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    BatchAST.insertDataCon con bc libID projectID
+    BatchAST.addDataCon con bc libID projectID
     updateNo <- Batch.getUpdateNo
     return $ AddDataCon.Update request updateNo
 
@@ -255,6 +261,40 @@ deleteDataCon request@(DeleteDataCon.Request tconID tbc tlibID tprojectID _) = d
     BatchAST.deleteDataCon conID bc libID projectID
     updateNo <- Batch.getUpdateNo
     return $ DeleteDataCon.Update request updateNo
+
+addDataConField :: AddDataConField.Request -> RPC Context IO AddDataConField.Update
+addDataConField request@(AddDataConField.Request tfield tconID tbc tlibID tprojectID _) = do
+    field <- decodeE tfield
+    let conID = decodeP tconID
+    bc <- decodeE tbc
+    let libID     = decodeP tlibID
+        projectID = decodeP tprojectID
+    BatchAST.addDataConField field conID bc libID projectID
+    updateNo <- Batch.getUpdateNo
+    return $ AddDataConField.Update request updateNo
+
+deleteDataConField :: DeleteDataConField.Request -> RPC Context IO DeleteDataConField.Update
+deleteDataConField request@(DeleteDataConField.Request tfieldID tconID tbc tlibID tprojectID _) = do
+    let fieldID = decodeP tfieldID
+        conID = decodeP tconID
+    bc <- decodeE tbc
+    let libID     = decodeP tlibID
+        projectID = decodeP tprojectID
+    BatchAST.deleteDataConField fieldID conID bc libID projectID
+    updateNo <- Batch.getUpdateNo
+    return $ DeleteDataConField.Update request updateNo
+
+modifyDataConField :: ModifyDataConField.Request -> RPC Context IO ModifyDataConField.Update
+modifyDataConField request@(ModifyDataConField.Request tfield tfieldID tconID tbc tlibID tprojectID _) = do
+    field <- decodeE tfield
+    let fieldID = decodeP tfieldID
+        conID = decodeP tconID
+    bc <- decodeE tbc
+    let libID     = decodeP tlibID
+        projectID = decodeP tprojectID
+    BatchAST.modifyDataConField field fieldID conID bc libID projectID
+    updateNo <- Batch.getUpdateNo
+    return $ ModifyDataConField.Update request updateNo
 
 
 modifyDataCons :: ModifyDataCons.Request -> RPC Context IO ModifyDataCons.Update
