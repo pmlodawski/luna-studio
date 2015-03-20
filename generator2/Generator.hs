@@ -6,10 +6,13 @@ module Generator where
 import Control.Applicative
 import Text.Printf
 import Language.Haskell.TH
+import Language.Haskell.TH.Syntax (VarStrictType)
 import qualified Language.Haskell.TH.Syntax as THS
 import Language.Haskell.TH.Quote
 import Data.List
+import qualified Data.Set as Set
 
+import Debug.Trace
 
 
 type HeaderSource = String
@@ -119,43 +122,84 @@ generateRootClassWrapper :: Dec -> CppClass
 generateRootClassWrapper (DataD cxt name tyVars cons names) = 
 	CppClass (translateToCppName name) [] [] []
 
-typeOfField :: Type -> String
+typeOfField :: Type -> Q String
 typeOfField (ConT name) = 
 	let nb = nameBase name
-	in if nb == "String" then "std::string" else nb
-	
-	-- let tinfo =  
-	-- in "<" ++ show name ++ ">"
-typeOfField (AppT ListT (nested)) = printf "std::vector<%s>" $ typeOfField nested
+	in return $ if nb == "String" then "std::string" else nb
+
+typeOfField (AppT ListT (nested)) = do
+	nestedType <- typeOfField nested
+	return $ printf "std::vector<%s>" $ nestedType
 --typeOfField (AppT ConT (maybe)) = printf "boost::optional<%s>" $ typeOfField nested
-typeOfField t = "[" ++ show t ++ "]"
+typeOfField t = return $ "[" ++ show t ++ "]"
 
-processField :: THS.VarStrictType -> CppField
-processField field@(name, _, t) = CppField (translateToCppName name) (typeOfField t)
+processField :: THS.VarStrictType -> Q CppField
+processField field@(name, _, t) = do
+	filedType <- typeOfField t
+	return $ CppField (translateToCppName name) filedType
 
-processConstructor :: Con -> Name -> CppClass
+processConstructor :: Con -> Name -> Q CppClass
 processConstructor con@(RecC cname fields) base = 
-	let baseCppName = translateToCppName base
-	    derCppName = baseCppName ++ "_" ++ translateToCppName cname
-	    cppFields = processField <$> fields
-	in CppClass derCppName cppFields [] [CppDerive baseCppName False Public]
+	do
+		let baseCppName = translateToCppName base
+		    derCppName = baseCppName ++ "_" ++ translateToCppName cname
+		cppFields <- mapM processField fields
+		return $ CppClass derCppName cppFields [] [CppDerive baseCppName False Public]
 
-generateCppWrapperHlp :: Dec -> CppParts
+generateCppWrapperHlp :: Dec -> Q CppParts
 generateCppWrapperHlp dec@(DataD cxt name tyVars cons names) = 
-	let baseClass = generateRootClassWrapper dec
-	    derClasses = processConstructor <$> cons <*> [name]
-	    classes = baseClass : derClasses
-	    functions = []
-	in CppParts classes functions
+	do
+		let baseClass = generateRootClassWrapper dec
+		derClasses <- sequence $ processConstructor <$> cons <*> [name]
+		-- derClasses = processConstructor <$> cons <*> [name]
+		let classes = baseClass : derClasses
+		    functions = []
+		return (CppParts classes functions)
 
-generateCppWrapper :: Info -> (String, String)
+generateCppWrapper :: Info -> Q (String, String)
 generateCppWrapper (TyConI dec@(DataD cxt name tyVars cons names)) = 
-	let cppParts = generateCppWrapperHlp dec
-	    cppFormattedParts = formatCpp cppParts
-	in cppFormattedParts --fst cppFormattedParts ++ " \n$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n " ++ snd cppFormattedParts
-generateCppWrapper (DataConI n t p f) = ("ggggggggg", show n)
-generateCppWrapper exp = ("barrrrrr","baz")
+	do
+		cppParts <- generateCppWrapperHlp dec
+		let cppFormattedParts = formatCpp cppParts
+		return cppFormattedParts --fst cppFormattedParts ++ " \n$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n " ++ snd cppFormattedParts
+--generateCppWrapper (DataConI n t p f) = ("ggggggggg", show n)
+--generateCppWrapper exp = ("barrrrrr","baz")
 
+class TypesDependencies a where
+	listDependencies :: a -> Q [Name]
+
+instance TypesDependencies Type where
+	listDependencies (ConT name) = do
+		nestedDeps <- collectDependencies name
+		return $ nub $ [name] ++ nestedDeps
+	listDependencies (AppT lhs rhs) = do
+		list1 <- listDependencies lhs
+		list2 <- listDependencies rhs
+		return $ nub $ list1 ++ list2
+	listDependencies ListT = return []
+	listDependencies arg = trace (show arg) (return [])
+
+instance TypesDependencies VarStrictType where
+	listDependencies (_, _, t) = listDependencies t
+
+instance TypesDependencies a => TypesDependencies [a] where
+	listDependencies listToProcess = do
+		list <- mapM listDependencies listToProcess
+		return $ nub $ concat list
+
+instance TypesDependencies Con where
+	listDependencies con@(RecC cname fields) = listDependencies fields
+	listDependencies arg = return []
+
+instance TypesDependencies Info where
+	listDependencies (TyConI (DataD _ n _ cons _)) = listDependencies cons
+	listDependencies (TyConI (TySynD n _ t)) = listDependencies t
+	listDependencies arg = trace (show arg) (return [])
+
+collectDependencies :: Name -> Q [Name]
+collectDependencies name = do
+	info <- reify name
+	listDependencies info
 
 printAst :: Info -> String
 printAst  (TyConI dec@(DataD cxt name tyVars cons names)) = 
@@ -173,7 +217,10 @@ generateCpp name path = do
 	let cppName = path ++ ".cpp"
 
 	reifiedName <- reify name
-	let (header,body) = generateCppWrapper reifiedName
+	(header,body) <- generateCppWrapper reifiedName
+
+	dependencies <- collectDependencies name
+	runIO (putStrLn $ printf "Found %d dependencies: %s" (length dependencies) (show dependencies))
 
 	runIO (writeFile headerName header)
 	runIO (writeFile cppName body)

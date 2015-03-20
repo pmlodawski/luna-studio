@@ -1,3 +1,5 @@
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 import Generator
@@ -16,8 +18,7 @@ main = do
 
 	encodeFile "test.bin" bs
 
-	$(generateCpp ''Expr "generated")
-
-	-- Prelude.putStrLn $(TH.stringE . (fst generateCppWrapper =<< TH.reify ''Expr))
 	putStrLn $(TH.stringE . printAst =<< TH.reify ''Expr)
 	putStrLn $(TH.stringE . TH.pprint =<< TH.reify ''Expr)
+
+	$(generateCpp ''Expr "generated")
