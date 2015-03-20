@@ -9,9 +9,10 @@
 
 module Flowbox.Batch.Handler.Common where
 
-import Control.Monad.RWS
-import Data.Int          (Int32)
-import Text.Show.Pretty
+import           Control.Monad.RWS
+import           Data.Int          (Int32)
+import qualified Data.List         as List
+import           Text.Show.Pretty
 
 import           Flowbox.Batch.Batch                                             (Batch)
 import qualified Flowbox.Batch.Batch                                             as Batch
@@ -20,7 +21,7 @@ import qualified Flowbox.Batch.Project.Project                                  
 import           Flowbox.Batch.Project.ProjectManager                            (ProjectManager)
 import qualified Flowbox.Batch.Project.ProjectManager                            as ProjectManager
 import           Flowbox.Control.Error
-import           Flowbox.Prelude                                                 hiding (error)
+import           Flowbox.Prelude                                                 hiding (cons, error)
 import           Flowbox.System.Log.Logger
 import qualified Luna.DEP.AST.AST                                                as AST
 import           Luna.DEP.AST.Control.Crumb                                      (Breadcrumbs)
@@ -164,18 +165,18 @@ setFocus newFocus bc libraryID projectID = do
     setAST newM libraryID projectID
 
 
-getModuleFocus :: Breadcrumbs -> Library.ID -> Project.ID -> Batch Module
-getModuleFocus bc libraryID projectID = do
+getModule :: Breadcrumbs -> Library.ID -> Project.ID -> Batch Module
+getModule bc libraryID projectID = do
     focus <- getFocus bc libraryID projectID
     Focus.getModule focus <??> "Target is not a module"
 
 
-setModuleFocus :: Module -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
-setModuleFocus newModule = setFocus (Focus.Module newModule)
+setModule :: Module -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
+setModule newModule = setFocus (Focus.Module newModule)
 
 
-getFunctionFocus :: Breadcrumbs -> Library.ID -> Project.ID -> Batch Expr
-getFunctionFocus bc libraryID projectID = do
+getFunction :: Breadcrumbs -> Library.ID -> Project.ID -> Batch Expr
+getFunction bc libraryID projectID = do
     focus <- getFocus bc libraryID projectID
     Focus.getFunction focus <??> "Target is not a function"
 
@@ -184,14 +185,31 @@ setFunctionFocus :: Expr -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
 setFunctionFocus newFunction = setFocus (Focus.Function newFunction)
 
 
-getClassFocus :: Breadcrumbs -> Library.ID -> Project.ID -> Batch Expr
-getClassFocus bc libraryID projectID = do
+getData :: Breadcrumbs -> Library.ID -> Project.ID -> Batch Expr
+getData bc libraryID projectID = do
     focus <- getFocus bc libraryID projectID
     Focus.getClass focus <??> "Target is not a class"
 
 
-setClassFocus :: Expr -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
-setClassFocus newClass = setFocus (Focus.Class newClass)
+setData :: Expr -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
+setData newClass = setFocus (Focus.Class newClass)
+
+
+getDataCon :: AST.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch Expr
+getDataCon conID bc libraryID projectID = do
+    data_ <- getData bc libraryID projectID
+    List.find ((==) conID . view Expr.id) (data_ ^. Expr.cons) <??> "No data constructor with id = " ++ show conID
+
+
+setDataCon :: Expr -> AST.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
+setDataCon con conID bc libraryID projectID = do
+    data_ <- getData bc libraryID projectID
+    let cons = data_ ^. Expr.cons
+        (a, b) = List.break ((==) conID . view Expr.id) cons
+    b' <- case b of
+        _:t -> return $ con : t
+        _   -> left $ "No data constructor with id = " ++ show conID
+    setData (data_ & Expr.cons .~ (a ++ b')) bc libraryID projectID
 
 
 getGraph :: Breadcrumbs -> Library.ID -> Project.ID -> Batch (Graph, PropertyMap)
@@ -199,7 +217,7 @@ getGraph bc libraryID projectID = do
     ast         <- getAST libraryID projectID
     logger trace $ ppShow ast
     propertyMap <- getPropertyMap libraryID projectID
-    expr        <- getFunctionFocus bc libraryID projectID
+    expr        <- getFunction bc libraryID projectID
     aa          <- EitherT $ Alias.run ast
     result <- EitherT $ GraphBuilder.run aa propertyMap True expr
     logger trace $ ppShow result
@@ -210,7 +228,7 @@ setGraph :: (Graph, PropertyMap) -> Breadcrumbs -> Library.ID -> Project.ID -> B
 setGraph (newGraph, newPM) bc libraryID projectID = do
     logger trace $ ppShow newGraph
     logger trace $ ppShow newPM
-    expr <- getFunctionFocus bc libraryID projectID
+    expr <- getFunction bc libraryID projectID
     (ast, newPM2)  <- EitherT $ GraphParser.run newGraph newPM expr
     newMaxID <- EitherT $ MaxID.runExpr ast
     fixedAst <- EitherT $ IDFixer.runExpr newMaxID Nothing False ast
@@ -224,13 +242,13 @@ setGraph (newGraph, newPM) bc libraryID projectID = do
 
 getCode :: Breadcrumbs -> Library.ID -> Project.ID -> Batch String
 getCode bc libraryID projectID = do
-    expr <- getFunctionFocus bc libraryID projectID
+    expr <- getFunction bc libraryID projectID
     fst <$> EitherT (STBuilder.run def expr)
 
 
 setCode :: String -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
 setCode code bc libraryID projectID = do
-    expr <- getFunctionFocus bc libraryID projectID
+    expr <- getFunction bc libraryID projectID
     newExpr <- EitherT $ STParser.run code expr
     maxID   <- getMaxID libraryID projectID
     fixedExpr <- EitherT $ IDFixer.runExpr maxID Nothing True newExpr
@@ -345,33 +363,41 @@ astFocusOp bc libraryID projectID operation = do
     return r
 
 
-astModuleFocusOp :: Breadcrumbs -> Library.ID -> Project.ID
-                 -> (Module -> Batch (Module, r))
-                 -> Batch r
-astModuleFocusOp bc libraryID projectID operation = do
-    m <- getModuleFocus bc libraryID projectID
+astModuleOp :: Breadcrumbs -> Library.ID -> Project.ID
+            -> (Module -> Batch (Module, r))
+            -> Batch r
+astModuleOp bc libraryID projectID operation = do
+    m <- getModule bc libraryID projectID
     (newM, r) <- operation m
-    setModuleFocus newM bc libraryID projectID
+    setModule newM bc libraryID projectID
     return r
 
 
-astFunctionFocusOp :: Breadcrumbs -> Library.ID -> Project.ID
-                   -> (Expr -> Batch (Expr, r))
-                   -> Batch r
-astFunctionFocusOp bc libraryID projectID operation = do
-    f <- getFunctionFocus bc libraryID projectID
+astFunctionOp :: Breadcrumbs -> Library.ID -> Project.ID
+              -> (Expr -> Batch (Expr, r))
+              -> Batch r
+astFunctionOp bc libraryID projectID operation = do
+    f <- getFunction bc libraryID projectID
     (newF, r) <- operation f
     setFunctionFocus newF bc libraryID projectID
     return r
 
 
-astClassFocusOp :: Breadcrumbs -> Library.ID -> Project.ID
-                -> (Expr -> Batch (Expr, r))
-                -> Batch r
-astClassFocusOp bc libraryID projectID operation = do
-    c <- getClassFocus bc libraryID projectID
+astDataOp :: Breadcrumbs -> Library.ID -> Project.ID
+          -> (Expr -> Batch (Expr, r)) -> Batch r
+astDataOp bc libraryID projectID operation = do
+    c <- getData bc libraryID projectID
     (newC, r) <- operation c
-    setClassFocus newC bc libraryID projectID
+    setData newC bc libraryID projectID
+    return r
+
+
+astDataConOp :: AST.ID -> Breadcrumbs -> Library.ID -> Project.ID
+             -> (Expr -> Batch (Expr, r)) -> Batch r
+astDataConOp conID bc libraryID projectID operation = do
+    c <- getDataCon conID bc libraryID projectID
+    (c', r) <- operation c
+    setDataCon c' conID bc libraryID projectID
     return r
 
 
