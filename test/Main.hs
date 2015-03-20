@@ -24,6 +24,7 @@ import qualified Luna.Parser.Parser as Parser
 import qualified Luna.Parser.Pragma as Pragma
 import           Luna.Syntax.Name   (TName(TName))
 import qualified Luna.Pass.Analysis.Struct as SA
+import qualified Luna.Pass.Import          as I
 import qualified Luna.Pass.Transform.Parse.Stage2 as Stage2
 import qualified Luna.Pass.Transform.Parse.Stage1 as Stage1
 import qualified Luna.Pass.Transform.Desugar.ImplicitSelf as ImplSelf
@@ -71,7 +72,11 @@ main = do
             printHeader "Stage1"
             (ast, astinfo) <- Pass.run1_ Stage1.pass src
             ppPrint ast
-
+            -- This may be remove
+            printHeader "Extraction of imports"
+            ppPrint $ I.getImportList ast
+            ppPrint $ I.getModPathsFromImportList . I.getImportList $ ast
+            -- To this
             printHeader "SA"
             sa             <- Pass.run1_ SA.pass ast
             ppPrint sa
