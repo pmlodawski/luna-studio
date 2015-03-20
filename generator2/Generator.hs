@@ -1,21 +1,11 @@
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE FlexibleInstances #-}
 
 module Generator where
 
-import Expr
-
 import Control.Applicative
 import Text.Printf
-import GHC.Generics
-import Text.XML.ToFromXML
-import qualified Data.ByteString
-import qualified Data.ByteString.Char8
-import qualified Language.Haskell.TH as TH
+import Language.Haskell.TH
 import qualified Language.Haskell.TH.Syntax as THS
 import Language.Haskell.TH.Quote
 import Data.List
@@ -122,93 +112,72 @@ instance CppFormattable CppParts where
 		    bodyCode = collectCodePieces snd
 		in (headerCode, bodyCode)
 
-translateToCppName :: TH.Name -> String 
-translateToCppName name = TH.nameBase name
+translateToCppName :: Name -> String 
+translateToCppName name = nameBase name
 
-generateRootClassWrapper :: TH.Dec -> CppClass
-generateRootClassWrapper (TH.DataD cxt name tyVars cons names) = 
+generateRootClassWrapper :: Dec -> CppClass
+generateRootClassWrapper (DataD cxt name tyVars cons names) = 
 	CppClass (translateToCppName name) [] [] []
 
-typeOfField :: TH.Type -> String
-typeOfField (TH.ConT name) = 
-	let nb = TH.nameBase name
+typeOfField :: Type -> String
+typeOfField (ConT name) = 
+	let nb = nameBase name
 	in if nb == "String" then "std::string" else nb
 	
 	-- let tinfo =  
 	-- in "<" ++ show name ++ ">"
-typeOfField (TH.AppT TH.ListT (nested)) = printf "std::vector<%s>" $ typeOfField nested
---typeOfField (TH.AppT TH.ConT (maybe)) = printf "boost::optional<%s>" $ typeOfField nested
+typeOfField (AppT ListT (nested)) = printf "std::vector<%s>" $ typeOfField nested
+--typeOfField (AppT ConT (maybe)) = printf "boost::optional<%s>" $ typeOfField nested
 typeOfField t = "[" ++ show t ++ "]"
 
 processField :: THS.VarStrictType -> CppField
 processField field@(name, _, t) = CppField (translateToCppName name) (typeOfField t)
 
-processConstructor :: TH.Con -> TH.Name -> CppClass
-processConstructor con@(TH.RecC cname fields) base = 
+processConstructor :: Con -> Name -> CppClass
+processConstructor con@(RecC cname fields) base = 
 	let baseCppName = translateToCppName base
 	    derCppName = baseCppName ++ "_" ++ translateToCppName cname
 	    cppFields = processField <$> fields
 	in CppClass derCppName cppFields [] [CppDerive baseCppName False Public]
 
-generateCppWrapperHlp :: TH.Dec -> CppParts
-generateCppWrapperHlp dec@(TH.DataD cxt name tyVars cons names) = 
+generateCppWrapperHlp :: Dec -> CppParts
+generateCppWrapperHlp dec@(DataD cxt name tyVars cons names) = 
 	let baseClass = generateRootClassWrapper dec
 	    derClasses = processConstructor <$> cons <*> [name]
 	    classes = baseClass : derClasses
 	    functions = []
 	in CppParts classes functions
 
-generateCppWrapper :: TH.Info -> (String, String)
-generateCppWrapper (TH.TyConI dec@(TH.DataD cxt name tyVars cons names)) = 
+generateCppWrapper :: Info -> (String, String)
+generateCppWrapper (TyConI dec@(DataD cxt name tyVars cons names)) = 
 	let cppParts = generateCppWrapperHlp dec
 	    cppFormattedParts = formatCpp cppParts
 	in cppFormattedParts --fst cppFormattedParts ++ " \n$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n " ++ snd cppFormattedParts
-generateCppWrapper (TH.DataConI n t p f) = ("ggggggggg", show n)
+generateCppWrapper (DataConI n t p f) = ("ggggggggg", show n)
 generateCppWrapper exp = ("barrrrrr","baz")
 
 
-printAst :: TH.Info -> String
-printAst  (TH.TyConI dec@(TH.DataD cxt name tyVars cons names)) = 
+printAst :: Info -> String
+printAst  (TyConI dec@(DataD cxt name tyVars cons names)) = 
 	let namesShown = (Prelude.map show names) :: [String]
 	    consCount = Data.List.length cons :: Int
 	    ret = ("cxt=" ++ show cxt ++ "\nname=" ++ show name ++ "\ntyVars=" ++ show tyVars ++ "\ncons=" ++ show cons ++ "\nnames=" ++ show names) :: String
 	in show consCount ++ "___" ++ ret
 
-fileContents :: TH.Q String
+fileContents :: Q String
 fileContents = return "blah"
 
-generateCpp :: TH.Name -> FilePath -> TH.Q TH.Exp
+generateCpp :: Name -> FilePath -> Q Exp
 generateCpp name path = do
 	let headerName = path ++ ".h"
 	let cppName = path ++ ".cpp"
 
-	reifiedName <- TH.reify name
+	reifiedName <- reify name
 	let (header,body) = generateCppWrapper reifiedName
 
-	TH.runIO (writeFile headerName header)
-	TH.runIO (writeFile cppName body)
+	runIO (writeFile headerName header)
+	runIO (writeFile cppName body)
 
-	TH.runIO (writeFile cppName (printf "#include \"%s\"" headerName))
+	runIO (writeFile cppName (printf "#include \"%s\"" headerName))
 	[|  return () |]
 
-
-
--- main = do
--- 	let test = Test "abc" (42,'z') :: Test
--- 	let shownTest = (show test)::String
--- 	-- Prelude.putStrLn $(TH.stringE . generateCppWrapper =<< TH.reify ''Expr)
--- 	Prelude.putStrLn $(TH.stringE . TH.pprint =<< TH.reify ''Expr)
-
--- 	process ''Bool
-
--- 	-- Prelude.putStrLn [|testowa|]
-
--- 	--dataInfo <- inmq
--- 	Data.ByteString.Char8.putStrLn $ toXML $ test
--- 	Prelude.putStrLn "Hello World"
--- 	Prelude.putStrLn (dump $ Just test)
--- 	Prelude.putStrLn (dump $ (Nothing::Maybe Int))
--- 	Prelude.putStrLn $ show moja
--- 	-- Prelude.putStrLn (dump $ (Nothing::Maybe Int))
--- 	-- return 
--- 	-- Prelude.putStrLn $ show $ TH.reify ''Data
