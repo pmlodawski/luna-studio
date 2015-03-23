@@ -14,8 +14,9 @@
 
 module Luna.Pass.Transform.Graph.Builder.Builder where
 
-import Control.Monad.State
-import Control.Monad.Trans.Either
+import           Control.Monad.State
+import           Control.Monad.Trans.Either
+import qualified Data.Maybe                 as Maybe
 
 import           Flowbox.Prelude                          hiding (Traversal, error, mapM, mapM_)
 import           Flowbox.System.Log.Logger
@@ -60,11 +61,11 @@ inputsID = -2
 outputID = -1
 
 
-run :: (Show V, Monad m) => StructInfo -> TDecl V -> EitherT State.Error m (TDecl V, Graph Tag V)
+run :: Monad m => StructInfo -> TDecl V -> EitherT State.Error m (TDecl V, Graph Tag V)
 run aliasInfo lexpr = evalStateT (expr2graph lexpr) $ State.mk aliasInfo inputsID
 
 
-expr2graph :: Show V => TDecl V -> GBPass V m (TDecl V, Graph Tag V)
+expr2graph :: TDecl V -> GBPass V m (TDecl V, Graph Tag V)
 expr2graph decl@(Label _ (Decl.Func (Decl.FuncDecl _ sig _ body))) = do
     State.initFreeNodeID decl
     State.insNode (inputsID, Node.mkInputs)
@@ -97,7 +98,7 @@ buildInputsArgs (Pattern.NamePat prefix base segmentList) = flip evalStateT (0::
             return $ Arg pat' val
 
 
-buildBody :: Show V => [TExpr V] -> GBPass V m [TExpr V]
+buildBody :: [TExpr V] -> GBPass V m [TExpr V]
 buildBody []   = State.connectMonadic outputID >> return []
 buildBody body = do
     body' <- mapM (fmap (view _1) . flip buildNode Nothing) (init body)
@@ -106,7 +107,7 @@ buildBody body = do
     return $ body' ++ [output']
 
 
-buildOutput :: Show V => TExpr V -> GBPass V m (TExpr V)
+buildOutput :: TExpr V -> GBPass V m (TExpr V)
 buildOutput lexpr = do
     lexpr' <- case unwrap lexpr of
         Expr.Assignment {}                        -> view _1 <$> buildNode lexpr Nothing
@@ -123,7 +124,7 @@ buildOutput lexpr = do
     return lexpr'
 
 
-buildExprApp :: Show V => Expr.ExprApp Tag V -> GBPass V m (Expr.ExprApp Tag V, [ArgRef])
+buildExprApp :: Expr.ExprApp Tag V -> GBPass V m (Expr.ExprApp Tag V, [ArgRef])
 buildExprApp (Pattern.NamePat prefix base segmentList) = flip runStateT [] $ do
     prefix' <- case prefix of
         Nothing     -> return Nothing
@@ -152,36 +153,41 @@ buildExprApp (Pattern.NamePat prefix base segmentList) = flip runStateT [] $ do
             return $ Expr.AppArg argName e'
 
 
-buildNode :: Show V => TExpr V -> Maybe TPat -> GBPass V m (TExpr V, Node.ID, SrcPort)
+buildNode :: TExpr V -> Maybe TPat -> GBPass V m (TExpr V, Node.ID, SrcPort)
 buildNode lexpr outputName = case unwrap lexpr of
-    Expr.Assignment dst src   -> do
+    Expr.Assignment dst src -> do
         (src', nodeID, srcPort) <- buildNode src (Just dst)
         State.registerIDs lexpr (nodeID, Port.mkSrcAll)
         return (Label tag $ Expr.Assignment dst src', nodeID, srcPort)
-    Expr.Tuple items  -> do
+    Expr.Tuple items -> do
         (items', argRefs) <- processArgs items
-        let lexpr'  = Label tag $ Expr.Tuple items'
-        (le, ni) <- addNodeWithExpr lexpr' outputName (NodeExpr.StringExpr StringExpr.Tuple) argRefs
+        let lexpr' = Label tag $ Expr.Tuple items'
+        (le, ni)  <- addNodeWithExpr lexpr' outputName (NodeExpr.StringExpr StringExpr.Tuple) argRefs
         State.registerIDs le (ni, Port.mkSrcAll)
         return (le, ni, Port.mkSrcAll)
-    Expr.List  (Expr.SeqList items)  -> do
+    Expr.List (Expr.SeqList items) -> do
         (items', argRefs) <- processArgs items
-        let lexpr'  = Label tag $ Expr.List $ Expr.SeqList items'
-        (le, ni) <- addNodeWithExpr lexpr' outputName (NodeExpr.StringExpr StringExpr.List) argRefs
+        let lexpr' = Label tag $ Expr.List $ Expr.SeqList items'
+        (le, ni)  <- addNodeWithExpr lexpr' outputName (NodeExpr.StringExpr StringExpr.List) argRefs
         State.registerIDs le (ni, Port.mkSrcAll)
         return (le, ni, Port.mkSrcAll)
     Expr.App exprApp -> do
         (exprApp', argRefs) <- buildExprApp exprApp
-        let mp = MultiPart.fromNamePat exprApp'
+        let mp     = MultiPart.fromNamePat exprApp'
             lexpr' = Label tag $ Expr.App exprApp'
-        (le, ni) <- addNodeWithExpr lexpr' outputName (NodeExpr.MultiPart mp) argRefs
+        (le, ni)  <- addNodeWithExpr lexpr' outputName (NodeExpr.MultiPart mp) argRefs
         State.registerIDs le (ni, Port.mkSrcAll)
         return (le, ni, Port.mkSrcAll)
-    Expr.Var (Expr.Variable vname _) -> do
-        State.gvmNodeMapLookUp (Enum.id tag) >>= \case
-            Just (nodeID, port) -> return (lexpr, nodeID, port)
-            Nothing             -> do (le, ni) <- addNode lexpr Nothing []
-                                      return (le, ni, Port.mkSrcAll)
+    Expr.Var (Expr.Variable vname _) -> State.gvmNodeMapLookUp (Enum.id tag) >>= \case
+        Nothing             -> do (le, ni) <- addNode lexpr outputName []
+                                  return (le, ni, Port.mkSrcAll)
+        Just (srcNID, srcPort) -> if Maybe.isJust outputName
+            then do let nodeExpr = NodeExpr.StringExpr $ StringExpr.fromString "_pattern_match_"
+                    (le, ni) <- addNodeWithExpr lexpr outputName nodeExpr []
+                    State.connect srcNID srcPort ni Port.mkDstAll
+                    return (le, ni, Port.mkSrcAll)
+            else do State.registerIDs lexpr (srcNID, srcPort)
+                    return (lexpr, srcNID, srcPort)
     _ -> do
         (le, ni) <- addNode lexpr outputName []
         State.registerIDs le (ni, Port.mkSrcAll)
@@ -197,14 +203,14 @@ processArgs items = do
     return (items', argRefs)
 
 
-processArg :: Show V => (TExpr V, DstPort) -> GBPass V m (TExpr V, ArgRef)
+processArg :: (TExpr V, DstPort) -> GBPass V m (TExpr V, ArgRef)
 processArg (lexpr, dstPort) = if constainsVar lexpr
     then do (lexpr', nodeID, srcPort) <- buildNode lexpr Nothing
             return (lexpr', ArgRef.mkNode (nodeID, srcPort, dstPort))
     else return (lexpr, ArgRef.mkDefault (Port.toList $ unwrap dstPort, NodeExpr.StringExpr $ StringExpr.fromString $ lunaShow lexpr))
 
 
-addNode :: Show V => TExpr V -> Maybe TPat -> [ArgRef] -> GBPass V m (TExpr V, Node.ID)
+addNode :: TExpr V -> Maybe TPat -> [ArgRef] -> GBPass V m (TExpr V, Node.ID)
 addNode lexpr outputName argRefs = addNodeWithExpr lexpr outputName nodeExpr argRefs
     where nodeExpr = NodeExpr.StringExpr $ StringExpr.fromString $ lunaShow lexpr
 
@@ -222,7 +228,7 @@ addNodeWithExpr lexpr outputName nodeExpr argRefs = do
     return (lexpr', nodeID)
 
 
-constainsVar _ = undefined
+constainsVar _ = True
 
 
 
