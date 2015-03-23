@@ -109,6 +109,7 @@ moduleAdd request@(AddModule.Request tnewModule tbcParent tlibID tprojectID _) u
                     Topic.projectLibraryAstModuleAddRequest
                     request
                     undoTopic
+                    "add module"
                     =<< AddModule.Update request (encode addedModule) (encode newBC) <$> Batch.getUpdateNo
 
 
@@ -127,6 +128,7 @@ dataAdd request@(AddData.Request tnewData tbcParent tlibID tprojectID _) undoTop
                     Topic.projectLibraryAstDataAddRequest
                     request
                     undoTopic
+                    "add class"
                     =<< AddData.Update request (encode addedData) (encode newBC) <$> Batch.getUpdateNo
 
 
@@ -145,6 +147,7 @@ functionAdd request@(AddFunction.Request tnewFunction tbcParent tlibID tprojectI
                     Topic.projectLibraryAstFunctionAddRequest
                     request
                     undoTopic
+                    "add function"
                     =<< AddFunction.Update request (encode addedFunction) (encode newBC) <$> Batch.getUpdateNo
 
 
@@ -172,6 +175,7 @@ remove request@(Remove.Request tbc tlibID tprojectID astID) undoTopic = do
                             undoMsg
                             (fun Topic.projectLibraryAstRemoveRequest $ request)
                             tprojectID
+                            (encodeP $ "remove " ++ (show bc))
                         ) undoTopic
            )
 
@@ -256,6 +260,7 @@ dataClsModify request@(ModifyDataCls.Request tcls tbc tlibID tprojectID astID) u
                     Topic.projectLibraryAstDataModifyClsRequest
                     request
                     undoTopic
+                    "modify class"
                     =<< ModifyDataCls.Update request <$> Batch.getUpdateNo
 
 
@@ -307,6 +312,7 @@ functionNameModify request@(ModifyFunctionName.Request tname tbc tlibID tproject
                     Topic.projectLibraryAstFunctionModifyNameRequest
                     request
                     undoTopic
+                    ("rename function " ++ (show $ focus ^?! Expr.fname) ++ " to " ++ (show name))
                     =<< ModifyFunctionName.Update request  <$> Batch.getUpdateNo
 
 
@@ -335,6 +341,7 @@ functionInputsModify request@(ModifyFunctionInputs.Request tinputs tbc tlibID tp
                     Topic.projectLibraryAstFunctionModifyInputsRequest
                     request
                     undoTopic
+                    "modify inputs"
                     =<< ModifyFunctionInputs.Update request <$> Batch.getUpdateNo
 
 
@@ -352,6 +359,7 @@ functionOutputModify request@(ModifyFunctionOutput.Request toutput tbc tlibID tp
                     Topic.projectLibraryAstFunctionModifyOutputRequest
                     request
                     undoTopic
+                    ("change output from " ++ (show oldOutputs) ++ " to " ++ (show output))
                     =<< ModifyFunctionOutput.Update request <$> Batch.getUpdateNo
 
 
@@ -379,4 +387,5 @@ codeSet request@(CodeSet.Request tcode tbc tlibID tprojectID astID) undoTopic = 
                     Topic.projectLibraryAstCodeSetRequest
                     request
                     undoTopic
+                    "commit code"
                     =<< (return $ CodeSet.Update request)
