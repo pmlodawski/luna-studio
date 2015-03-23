@@ -4,15 +4,17 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE ConstraintKinds  #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE RankNTypes       #-}
-{-# LANGUAGE TemplateHaskell  #-}
+{-# LANGUAGE ConstraintKinds       #-}
+{-# LANGUAGE FlexibleContexts      #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE RankNTypes            #-}
+{-# LANGUAGE TemplateHaskell       #-}
 
 module Luna.Pass.Transform.Graph.Builder.State where
 
-import           Control.Monad.State
+import           Control.Monad.State hiding (mapM_)
 import qualified Data.IntMap         as IntMap
+import qualified Data.IntSet         as IntSet
 import           Data.Map            (Map)
 import qualified Data.Map            as Map
 import qualified Data.Maybe          as Maybe
@@ -20,21 +22,22 @@ import qualified Data.Maybe          as Maybe
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-import           Luna.Data.StructInfo            (StructInfo)
-import qualified Luna.Data.StructInfo            as StructInfo
-import qualified Luna.Syntax.AST                 as AST
-import           Luna.Syntax.Graph.Edge          (Edge)
-import qualified Luna.Syntax.Graph.Edge          as Edge
-import           Luna.Syntax.Graph.Graph         (Graph)
-import qualified Luna.Syntax.Graph.Graph         as Graph
-import           Luna.Syntax.Graph.Node          (Node)
-import qualified Luna.Syntax.Graph.Node          as Node
-import           Luna.Syntax.Graph.Node.Position (Position)
-import           Luna.Syntax.Graph.Port          (Port)
-import           Luna.Syntax.Graph.Tag           (TDecl, Tag)
-import qualified Luna.Syntax.Graph.Tag           as Tag
-import           Luna.Syntax.Label               (Label (Label))
-import qualified Luna.Syntax.Label               as Label
+import           Luna.Data.StructInfo             (StructInfo)
+import qualified Luna.Data.StructInfo             as StructInfo
+import qualified Luna.Pass.Analysis.ID.ExtractIDs as ExtractIDs
+import qualified Luna.Syntax.AST                  as AST
+import           Luna.Syntax.Graph.Edge           (Edge)
+import qualified Luna.Syntax.Graph.Edge           as Edge
+import           Luna.Syntax.Graph.Graph          (Graph)
+import qualified Luna.Syntax.Graph.Graph          as Graph
+import           Luna.Syntax.Graph.Node           (Node)
+import qualified Luna.Syntax.Graph.Node           as Node
+import           Luna.Syntax.Graph.Node.Position  (Position)
+import           Luna.Syntax.Graph.Port           (DstPort, SrcPort)
+import           Luna.Syntax.Graph.Tag            (TDecl, Tag)
+import qualified Luna.Syntax.Graph.Tag            as Tag
+import           Luna.Syntax.Label                (Label (Label))
+import qualified Luna.Syntax.Label                as Label
 
 
 
@@ -42,7 +45,7 @@ logger :: Logger
 logger = getLogger $moduleName
 
 
-type NodeMap = Map Node.ID (Node.ID, Port)
+type NodeMap = Map AST.ID (Node.ID, SrcPort)
 type Error = String
 
 type GBPass v m result = Monad m => StateT (GBState v) (EitherT String m) result
@@ -87,8 +90,16 @@ getNodeMap = gets $ view nodeMap
 setNodeMap :: NodeMap -> GBPass v m ()
 setNodeMap = modify . set nodeMap
 
-addToNodeMap :: AST.ID -> (Node.ID, Port) -> GBPass v m ()
+addToNodeMap :: AST.ID -> (Node.ID, SrcPort) -> GBPass v m ()
 addToNodeMap k v = setNodeMap . Map.insert k v =<< getNodeMap
+
+
+registerIDs :: ExtractIDs.EIDDefaultTraversal Identity labeled
+            => labeled -> (Node.ID, SrcPort) -> GBPass v m ()
+registerIDs labeled np = do
+    let ids = ExtractIDs.run labeled
+    mapM_ (flip addToNodeMap np) $ IntSet.toList ids
+
 
 ----- resetNodeIDs --------------------------------------------------------
 setResetNodeIDs :: Bool -> GBPass v m ()
@@ -149,10 +160,8 @@ insNode (nodeID, node) =
 --    insNodeWithFlags (astID, node) isFolded assignment
 --    addToNodeMap astID (astID, outPort)
 
-connect :: Node.ID -> Node.ID -> Port -> GBPass v m ()
-connect srcID dstNID dstPort = do
-    found             <- gvmNodeMapLookUp srcID
-    (srcNID, srcPort) <- lift $ found <??> "Graph.Builder.State.connect : cannot find " ++ show srcID
+connect :: Node.ID -> SrcPort -> Node.ID -> DstPort -> GBPass v m ()
+connect srcNID srcPort dstNID dstPort =
     connectNodes srcNID dstNID $ Edge.Data srcPort dstPort
 
 connectNodes :: Node.ID -> Node.ID -> Edge -> GBPass v m ()
@@ -186,11 +195,11 @@ aaLookUp astID = do
           <$> IntMap.lookup astID (aa' ^. StructInfo.alias)
 
 
-nodeMapLookUp :: Node.ID -> GBPass v m (Maybe (Node.ID, Port))
+nodeMapLookUp :: Node.ID -> GBPass v m (Maybe (Node.ID, SrcPort))
 nodeMapLookUp nodeID = Map.lookup nodeID <$> getNodeMap
 
 
-gvmNodeMapLookUp :: Node.ID -> GBPass v m (Maybe (Node.ID, Port))
+gvmNodeMapLookUp :: Node.ID -> GBPass v m (Maybe (Node.ID, SrcPort))
 gvmNodeMapLookUp nodeID = do
     found <- nodeMapLookUp =<< Maybe.fromMaybe nodeID <$> aaLookUp nodeID
     if Maybe.isNothing found
