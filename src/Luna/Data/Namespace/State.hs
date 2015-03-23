@@ -19,6 +19,7 @@ import           Flowbox.Prelude           hiding (id)
 import           Flowbox.System.Log.Logger
 import           Luna.Syntax.AST           (AST, ID)
 import qualified Luna.Syntax.AST           as AST
+import           Luna.Syntax.Decl          (Path)
 import           Luna.Syntax.Expr          (Expr)
 import qualified Luna.Syntax.Expr          as Expr
 import           Luna.Syntax.Lit           (Lit)
@@ -149,6 +150,13 @@ regAlias ident name = do
     -- TODO [kgdk]: remove Just
     structInfo' <- withCurrentScopeID_ (\scopeId -> Just $ StructInfo.regAlias ident name scopeId structInfo)
     modify $ Namespace.info .~ structInfo'
+
+
+-- regOrphan :: NamespaceState m => ID -> Path -> String -> m ()
+-- regOrphan id path msg = do
+--     structInfo <- StructInfo.get
+--     structInfo' <- withCurrentScopeID_ (\scopeId -> Just $ StructInfo.regOrphan id (StructInfo.ImportError path (toText msg)))
+--     modify $ Namespace.info .~ structInfo'
 
 
 withCurrentScopeID_ :: NamespaceState m => (ID -> Maybe a) -> m a
