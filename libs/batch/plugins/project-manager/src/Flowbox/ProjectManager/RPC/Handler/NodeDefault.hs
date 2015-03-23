@@ -72,6 +72,7 @@ set (NodeDefaultSet.Request tdstPort tvalue tnodeID tbc tlibID tprojectID astID)
                                             (fun Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest $ newRequest originID $ snd bmp)
                                             (fun Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest $ newRequest originID value)
                                             tprojectID
+                                            (encodeP $ "set port " ++ (show dstPort) ++ " value to " ++ (show value) ++ " in " ++ (show nodeID))
                                        ) undoTopic)
                    $ DefaultsMap.lookup dstPort defaultsMap
            )

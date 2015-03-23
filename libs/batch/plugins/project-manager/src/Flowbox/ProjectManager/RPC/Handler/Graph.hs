@@ -118,6 +118,7 @@ nodeAdd request@(NodeAdd.Request tnode tbc tlibID tprojectID astID) undoTopic = 
                     Topic.projectLibraryAstFunctionGraphNodeAddRequest
                     (NodeAdd.Request (encode (mapID context Bimap.lookup newNodeID, node)) tbc tlibID tprojectID astID)
                     undoTopic
+                    ("add node " ++ (show node))
                     =<< NodeAdd.Update request (encode (newNodeID, node)) <$> Batch.getUpdateNo
 
 nodeModify :: NodeModify.Request -> Maybe Topic -> RPC Context IO ([NodeModify.Update], [Message])
@@ -145,6 +146,7 @@ nodeModify (NodeModify.Request tnode tbc tlibID tprojectID astID) undoTopic = do
                     Topic.projectLibraryAstFunctionGraphNodeModifyRequest
                     (NodeModify.Request tnewNode tbc tlibID tprojectID astID)
                     undoTopic
+                    ("modify node " ++ (show bc))
                     =<< NodeModify.Update (NodeModify.Request (encode (newID, node)) tbc tlibID tprojectID astID) (encode (newNodeID, node)) <$> Batch.getUpdateNo
 
 
@@ -171,6 +173,7 @@ nodeModifyInPlace (NodeModifyInPlace.Request tnode tbc tlibID tprojectID astID) 
                     Topic.projectLibraryAstFunctionGraphNodeModifyinplaceRequest
                     (newRequest originID)
                     undoTopic
+                    ("modify node " ++ (show bc))
                     =<< NodeModifyInPlace.Update (newRequest newID) <$> Batch.getUpdateNo
 
 
@@ -234,6 +237,7 @@ nodeRemove (NodeRemove.Request tnodeIDs tbc tlibID tprojectID astID) undoTopic =
                             )
                             (fun Topic.projectLibraryAstFunctionGraphNodeRemoveRequest $ updatedRequest $ encodeP originIDs)
                             tprojectID
+                            (encodeP $ "remove nodes " ++ (show nodeIDs))
                         ) undoTopic
            )
 
@@ -268,6 +272,7 @@ connect (Connect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibID tpro
                     Topic.projectLibraryAstFunctionGraphConnectRequest
                     (newRequest Connect.Request originSID originDID)
                     undoTopic
+                    ("connect " ++ (show srcNodeID) ++ " with " ++ (show dstNodeID))
                     =<< Connect.Update (newRequest Connect.Request newSID newDID) <$> Batch.getUpdateNo
 
 disconnect :: Disconnect.Request -> Maybe Topic -> RPC Context IO ([Disconnect.Update], [Message])
@@ -300,6 +305,7 @@ disconnect (Disconnect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibI
                     Topic.projectLibraryAstFunctionGraphDisconnectRequest
                     (newRequest Disconnect.Request originSID originDID)
                     undoTopic
+                    ("disconnect " ++ (show srcNodeID) ++ " from the " ++ (show dstNodeID))
                     =<< Disconnect.Update (newRequest Disconnect.Request newSID newDID) <$> Batch.getUpdateNo
 
 

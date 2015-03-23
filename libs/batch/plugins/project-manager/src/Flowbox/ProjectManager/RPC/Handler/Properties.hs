@@ -63,6 +63,7 @@ setASTProperties request@(SetASTProperties.Request tproperties tnodeID tlibID tp
                     Topic.projectLibraryAstPropertiesSetRequest
                     request
                     undoTopic
+                    "set AST properties"
                     =<< SetASTProperties.Update request <$> Batch.getUpdateNo
 
 
