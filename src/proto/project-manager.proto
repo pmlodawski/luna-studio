@@ -279,6 +279,124 @@ message Project {
                         required int32 updateNo  = 4;
                     }
                 }
+                message Con {
+                    message Add {
+                        message Request {
+                            required generated.proto.dep.expr.Expr con        = 1;
+                            required generated.proto.dep.crumb.Breadcrumbs bc = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                            required int32 _astID    = 5;
+                        }
+                        message Update {
+                            required Request request = 1;
+                            required int32 updateNo  = 2;
+                        }
+                    }
+                    message Delete {
+                        message Request {
+                            required int32 conID     = 1;
+                            required generated.proto.dep.crumb.Breadcrumbs bc = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                            required int32 _astID    = 5;
+                        }
+                        message Update {
+                            required Request request = 1;
+                            required int32 updateNo  = 2;
+                        }
+                    }
+                    message Modify {
+                        message Request {
+                            required generated.proto.dep.expr.Expr con        = 1;
+                            required int32 conID     = 2;
+                            required generated.proto.dep.crumb.Breadcrumbs bc = 3;
+                            required int32 libraryID = 4;
+                            required int32 projectID = 5;
+                            required int32 _astID    = 6;
+                        }
+                        message Update {
+                            required Request request = 1;
+                            required int32 updateNo  = 2;
+                        }
+                    }
+                    message Field {
+                        message Add {
+                            message Request {
+                                required generated.proto.dep.expr.Expr field      = 1;
+                                required int32 conID     = 2;
+                                required generated.proto.dep.crumb.Breadcrumbs bc = 3;
+                                required int32 libraryID = 4;
+                                required int32 projectID = 5;
+                                required int32 _astID    = 6;
+                            }
+                            message Update {
+                                required Request request = 1;
+                                required int32 updateNo  = 2;
+                            }
+                        }
+                        message Delete {
+                            message Request {
+                                required int32 fieldID   = 1;
+                                required int32 conID     = 2;
+                                required generated.proto.dep.crumb.Breadcrumbs bc = 3;
+                                required int32 libraryID = 4;
+                                required int32 projectID = 5;
+                                required int32 _astID    = 6;
+                            }
+                            message Update {
+                                required Request request = 1;
+                                required int32 updateNo  = 2;
+                            }
+                        }
+                        message Modify {
+                            message Request {
+                                required generated.proto.dep.expr.Expr field = 1;
+                                required int32 fieldID   = 2;
+                                required int32 conID     = 3;
+                                required generated.proto.dep.crumb.Breadcrumbs bc = 4;
+                                required int32 libraryID = 5;
+                                required int32 projectID = 6;
+                                required int32 _astID    = 7;
+                            }
+                            message Update {
+                                required Request request = 1;
+                                required int32 updateNo  = 2;
+                            }
+                        }
+                        /*message Value {
+                            message Set {
+                                message Request {
+                                    required generated.proto.dep.expr.Expr value = 1;
+                                    required int32 fieldID   = 2;
+                                    required int32 conID     = 3;
+                                    required generated.proto.dep.crumb.Breadcrumbs bc = 4;
+                                    required int32 libraryID = 5;
+                                    required int32 projectID = 6;
+                                    required int32 _astID    = 7;
+                                }
+                                message Update {
+                                    required Request request = 1;
+                                    required int32 updateNo  = 2;
+                                }
+                            }
+                            message Unset {
+                                message Request {
+                                    required int32 fieldID   = 1;
+                                    required int32 conID     = 2;
+                                    required generated.proto.dep.crumb.Breadcrumbs bc = 3;
+                                    required int32 libraryID = 4;
+                                    required int32 projectID = 5;
+                                    required int32 _astID    = 6;
+                                }
+                                message Update {
+                                    required Request request = 1;
+                                    required int32 updateNo  = 2;
+                                }
+                            }
+                        }*/
+                    }
+                }
                 message Modify {
                     message Cls {
                         message Request {

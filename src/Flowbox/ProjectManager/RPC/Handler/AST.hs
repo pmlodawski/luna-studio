@@ -19,6 +19,7 @@ import           Flowbox.Bus.RPC.RPC                                            
 import           Flowbox.Data.Convert
 import           Flowbox.Prelude                                                                      hiding (Context, cons)
 import           Flowbox.ProjectManager.Context                                                       (Context)
+import           Flowbox.ProjectManager.RPC.Handler.Graph                                             (fun, makeMsgArr)
 import qualified Flowbox.ProjectManager.RPC.Topic                                                     as Topic
 import           Flowbox.System.Log.Logger
 import           Flowbox.UR.Manager.RPC.Handler.Handler                                               (prepareResponse, makeMsgArr, fun)
@@ -28,6 +29,18 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Set.Req
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Set.Update                   as CodeSet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Add.Request                  as AddData
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Add.Update                   as AddData
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Add.Request              as AddDataCon
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Add.Update               as AddDataCon
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Delete.Request           as DeleteDataCon
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Delete.Update            as DeleteDataCon
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Field.Add.Request        as AddDataConField
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Field.Add.Update         as AddDataConField
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Field.Delete.Request     as DeleteDataConField
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Field.Delete.Update      as DeleteDataConField
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Field.Modify.Request     as ModifyDataConField
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Field.Modify.Update      as ModifyDataConField
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Modify.Request           as ModifyDataCon
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Modify.Update            as ModifyDataCon
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Classes.Request       as ModifyDataClasses
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Classes.Update        as ModifyDataClasses
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Cls.Request           as ModifyDataCls
@@ -94,8 +107,8 @@ get request@(Definitions.Request mtmaxDepth tbc tlibID tprojectID _) = do
     return $ Definitions.Status request $ encode focus
 
 
-moduleAdd :: AddModule.Request -> Maybe Topic -> RPC Context IO ([AddModule.Update], [Message])
-moduleAdd request@(AddModule.Request tnewModule tbcParent tlibID tprojectID _) undoTopic = do
+addModule :: AddModule.Request -> Maybe Topic -> RPC Context IO ([AddModule.Update], [Message])
+addModule request@(AddModule.Request tnewModule tbcParent tlibID tprojectID _) undoTopic = do
     newModule <- decodeE tnewModule
     bcParent  <- decodeE tbcParent
     let libID     = decodeP tlibID
@@ -113,13 +126,13 @@ moduleAdd request@(AddModule.Request tnewModule tbcParent tlibID tprojectID _) u
                     =<< AddModule.Update request (encode addedModule) (encode newBC) <$> Batch.getUpdateNo
 
 
-dataAdd :: AddData.Request -> Maybe Topic -> RPC Context IO ([AddData.Update], [Message])
-dataAdd request@(AddData.Request tnewData tbcParent tlibID tprojectID _) undoTopic = do
+addData :: AddData.Request -> Maybe Topic -> RPC Context IO ([AddData.Update], [Message])
+addData request@(AddData.Request tnewData tbcParent tlibID tprojectID _) undoTopic = do
     newData  <- decodeE tnewData
     bcParent <- decodeE tbcParent
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    addedData <- BatchAST.addClass newData bcParent libID projectID
+    addedData <- BatchAST.addData newData bcParent libID projectID
     let newBC = bcParent ++ [Crumb.Class $ addedData ^. Expr.cls . Type.name]
     let newID = addedData ^. Expr.id
     prepareResponse projectID
@@ -132,8 +145,8 @@ dataAdd request@(AddData.Request tnewData tbcParent tlibID tprojectID _) undoTop
                     =<< AddData.Update request (encode addedData) (encode newBC) <$> Batch.getUpdateNo
 
 
-functionAdd :: AddFunction.Request -> Maybe Topic -> RPC Context IO ([AddFunction.Update], [Message])
-functionAdd request@(AddFunction.Request tnewFunction tbcParent tlibID tprojectID _) undoTopic = do
+addFunction :: AddFunction.Request -> Maybe Topic -> RPC Context IO ([AddFunction.Update], [Message])
+addFunction request@(AddFunction.Request tnewFunction tbcParent tlibID tprojectID _) undoTopic = do
     newFunction <- decodeE tnewFunction
     bcParent    <- decodeE tbcParent
     let libID     = decodeP tlibID
@@ -152,7 +165,7 @@ functionAdd request@(AddFunction.Request tnewFunction tbcParent tlibID tprojectI
 
 
 remove :: Remove.Request -> Maybe Topic -> RPC Context IO ([Remove.Update], [Message])
-remove request@(Remove.Request tbc tlibID tprojectID astID) undoTopic = do
+remove request@(Remove.Request tbc tlibID tprojectID _) undoTopic = do
     bc  <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
@@ -190,70 +203,70 @@ resolve request@(ResolveDefinition.Request tname tbc tlibID tprojectID _) = do
     return $ ResolveDefinition.Status request (encode results)
 
 
-moduleClsModify :: ModifyModuleCls.Request -> RPC Context IO ModifyModuleCls.Update
-moduleClsModify request@(ModifyModuleCls.Request tcls tbc tlibID tprojectID _) = do
+modifyModuleCls :: ModifyModuleCls.Request -> RPC Context IO ModifyModuleCls.Update
+modifyModuleCls request@(ModifyModuleCls.Request tcls tbc tlibID tprojectID _) = do
     cls <- decodeE tcls
     bc  <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    BatchAST.updateModuleCls cls bc libID projectID
+    BatchAST.modifyModuleCls cls bc libID projectID
     updateNo <- Batch.getUpdateNo
     return $ ModifyModuleCls.Update request updateNo
 
 
-moduleImportsModify :: ModifyModuleImports.Request -> RPC Context IO ModifyModuleImports.Update
-moduleImportsModify request@(ModifyModuleImports.Request timports tbc tlibID tprojectID _) = do
+modifyModuleImports :: ModifyModuleImports.Request -> RPC Context IO ModifyModuleImports.Update
+modifyModuleImports request@(ModifyModuleImports.Request timports tbc tlibID tprojectID _) = do
     imports <- decodeE timports
     bc      <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    BatchAST.updateModuleImports imports bc libID projectID
+    BatchAST.modifyModuleImports imports bc libID projectID
     updateNo <- Batch.getUpdateNo
     return $ ModifyModuleImports.Update request updateNo
 
 
-moduleTypeAliasesModify :: ModifyModuleTypeAliases.Request -> RPC Context IO ModifyModuleTypeAliases.Update
-moduleTypeAliasesModify request@(ModifyModuleTypeAliases.Request tfields tbc tlibID tprojectID _) = do
+modifyModuleTypeAliases :: ModifyModuleTypeAliases.Request -> RPC Context IO ModifyModuleTypeAliases.Update
+modifyModuleTypeAliases request@(ModifyModuleTypeAliases.Request tfields tbc tlibID tprojectID _) = do
     fields <- decodeE tfields
     bc     <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    BatchAST.updateModuleFields fields bc libID projectID
+    BatchAST.modifyModuleFields fields bc libID projectID
     updateNo <- Batch.getUpdateNo
     return $ ModifyModuleTypeAliases.Update request updateNo
 
 
-moduleTypeDefsModify :: ModifyModuleTypeDefs.Request -> RPC Context IO ModifyModuleTypeDefs.Update
-moduleTypeDefsModify request@(ModifyModuleTypeDefs.Request tfields tbc tlibID tprojectID _) = do
+modifyModuleTypeDefs :: ModifyModuleTypeDefs.Request -> RPC Context IO ModifyModuleTypeDefs.Update
+modifyModuleTypeDefs request@(ModifyModuleTypeDefs.Request tfields tbc tlibID tprojectID _) = do
     fields <- decodeE tfields
     bc     <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    BatchAST.updateModuleFields fields bc libID projectID
+    BatchAST.modifyModuleFields fields bc libID projectID
     updateNo <- Batch.getUpdateNo
     return $ ModifyModuleTypeDefs.Update request updateNo
 
 
-moduleFieldsModify :: ModifyModuleFields.Request -> RPC Context IO ModifyModuleFields.Update
-moduleFieldsModify request@(ModifyModuleFields.Request tfields tbc tlibID tprojectID _) = do
+modifyModuleFields :: ModifyModuleFields.Request -> RPC Context IO ModifyModuleFields.Update
+modifyModuleFields request@(ModifyModuleFields.Request tfields tbc tlibID tprojectID _) = do
     fields <- decodeE tfields
     bc     <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    BatchAST.updateModuleFields fields bc libID projectID
+    BatchAST.modifyModuleFields fields bc libID projectID
     updateNo <- Batch.getUpdateNo
     return $ ModifyModuleFields.Update request updateNo
 
 
-dataClsModify :: ModifyDataCls.Request -> Maybe Topic -> RPC Context IO ([ModifyDataCls.Update], [Message])
-dataClsModify request@(ModifyDataCls.Request tcls tbc tlibID tprojectID astID) undoTopic = do
+modifyDataCls :: ModifyDataCls.Request -> Maybe Topic -> RPC Context IO ([ModifyDataCls.Update], [Message])
+modifyDataCls request@(ModifyDataCls.Request tcls tbc tlibID tprojectID astID) undoTopic = do
     cls <- decodeE tcls
     bc  <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
         toldBC    = encode $ init bc ++ [Crumb.Class $ cls ^?! Type.name]
     toldCls <- encode . (^?! Expr.cls) . (^?! Focus.expr) <$> BatchAST.definitions (Just 1) bc libID projectID
-    BatchAST.updateDataCls cls bc libID projectID
+    BatchAST.modifyDataCls cls bc libID projectID
     prepareResponse projectID
                     Topic.projectLibraryAstDataModifyClsRequest
                     (ModifyDataCls.Request toldCls toldBC tlibID tprojectID astID)
@@ -264,48 +277,116 @@ dataClsModify request@(ModifyDataCls.Request tcls tbc tlibID tprojectID astID) u
                     =<< ModifyDataCls.Update request <$> Batch.getUpdateNo
 
 
-dataConsModify :: ModifyDataCons.Request -> RPC Context IO ModifyDataCons.Update
-dataConsModify request@(ModifyDataCons.Request tcons tbc tlibID tprojectID _) = do
+modifyDataCon :: ModifyDataCon.Request -> RPC Context IO ModifyDataCon.Update
+modifyDataCon request@(ModifyDataCon.Request tcon tconID tbc tlibID tprojectID _) = do
+    con <- decodeE tcon
+    let conID = decodeP tconID
+    bc  <- decodeE tbc
+    let libID     = decodeP tlibID
+        projectID = decodeP tprojectID
+    BatchAST.modifyDataCon con conID bc libID projectID
+    updateNo <- Batch.getUpdateNo
+    return $ ModifyDataCon.Update request updateNo
+
+
+addDataCon :: AddDataCon.Request -> RPC Context IO AddDataCon.Update
+addDataCon request@(AddDataCon.Request tcon tbc tlibID tprojectID _) = do
+    con <- decodeE tcon
+    bc  <- decodeE tbc
+    let libID     = decodeP tlibID
+        projectID = decodeP tprojectID
+    BatchAST.addDataCon con bc libID projectID
+    updateNo <- Batch.getUpdateNo
+    return $ AddDataCon.Update request updateNo
+
+
+deleteDataCon :: DeleteDataCon.Request -> RPC Context IO DeleteDataCon.Update
+deleteDataCon request@(DeleteDataCon.Request tconID tbc tlibID tprojectID _) = do
+    let conID = decodeP tconID
+    bc  <- decodeE tbc
+    let libID     = decodeP tlibID
+        projectID = decodeP tprojectID
+    BatchAST.deleteDataCon conID bc libID projectID
+    updateNo <- Batch.getUpdateNo
+    return $ DeleteDataCon.Update request updateNo
+
+addDataConField :: AddDataConField.Request -> RPC Context IO AddDataConField.Update
+addDataConField request@(AddDataConField.Request tfield tconID tbc tlibID tprojectID _) = do
+    field <- decodeE tfield
+    let conID = decodeP tconID
+    bc <- decodeE tbc
+    let libID     = decodeP tlibID
+        projectID = decodeP tprojectID
+    BatchAST.addDataConField field conID bc libID projectID
+    updateNo <- Batch.getUpdateNo
+    return $ AddDataConField.Update request updateNo
+
+deleteDataConField :: DeleteDataConField.Request -> RPC Context IO DeleteDataConField.Update
+deleteDataConField request@(DeleteDataConField.Request tfieldID tconID tbc tlibID tprojectID _) = do
+    let fieldID = decodeP tfieldID
+        conID = decodeP tconID
+    bc <- decodeE tbc
+    let libID     = decodeP tlibID
+        projectID = decodeP tprojectID
+    BatchAST.deleteDataConField fieldID conID bc libID projectID
+    updateNo <- Batch.getUpdateNo
+    return $ DeleteDataConField.Update request updateNo
+
+modifyDataConField :: ModifyDataConField.Request -> RPC Context IO ModifyDataConField.Update
+modifyDataConField request@(ModifyDataConField.Request tfield tfieldID tconID tbc tlibID tprojectID _) = do
+    field <- decodeE tfield
+    let fieldID = decodeP tfieldID
+        conID = decodeP tconID
+    bc <- decodeE tbc
+    let libID     = decodeP tlibID
+        projectID = decodeP tprojectID
+    BatchAST.modifyDataConField field fieldID conID bc libID projectID
+    updateNo <- Batch.getUpdateNo
+    return $ ModifyDataConField.Update request updateNo
+
+
+modifyDataCons :: ModifyDataCons.Request -> RPC Context IO ModifyDataCons.Update
+modifyDataCons request@(ModifyDataCons.Request tcons tbc tlibID tprojectID _) = do
     cons <- decodeE tcons
     bc   <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    BatchAST.updateDataCons cons bc libID projectID
+    BatchAST.modifyDataCons cons bc libID projectID
     updateNo <- Batch.getUpdateNo
     return $ ModifyDataCons.Update request updateNo
 
 
-dataClassesModify :: ModifyDataClasses.Request -> RPC Context IO ModifyDataClasses.Update
-dataClassesModify request@(ModifyDataClasses.Request tclasses tbc tlibID tprojectID _) = do
+modifyDataClasses :: ModifyDataClasses.Request -> RPC Context IO ModifyDataClasses.Update
+modifyDataClasses request@(ModifyDataClasses.Request tclasses tbc tlibID tprojectID _) = do
     classes <- decodeE tclasses
     bc      <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    BatchAST.updateDataClasses classes bc libID projectID
+    BatchAST.modifyDataClasses classes bc libID projectID
     updateNo <- Batch.getUpdateNo
     return $ ModifyDataClasses.Update request updateNo
 
 
-dataMethodsModify :: ModifyDataMethods.Request -> RPC Context IO ModifyDataMethods.Update
-dataMethodsModify request@(ModifyDataMethods.Request tmethods tbc tlibID tprojectID _) = do
+modifyDataMethods :: ModifyDataMethods.Request -> RPC Context IO ModifyDataMethods.Update
+modifyDataMethods request@(ModifyDataMethods.Request tmethods tbc tlibID tprojectID _) = do
     methods <- decodeE tmethods
     bc      <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    BatchAST.updateDataMethods methods bc libID projectID
+    BatchAST.modifyDataMethods methods bc libID projectID
     updateNo <- Batch.getUpdateNo
     return $ ModifyDataMethods.Update request updateNo
 
 
-functionNameModify :: ModifyFunctionName.Request -> Maybe Topic -> RPC Context IO ([ModifyFunctionName.Update], [Message])
-functionNameModify request@(ModifyFunctionName.Request tname tbc tlibID tprojectID astID) undoTopic = do
+modifyFunctionName :: ModifyFunctionName.Request -> Maybe Topic -> RPC Context IO ([ModifyFunctionName.Update], [Message])
+modifyFunctionName request@(ModifyFunctionName.Request tname tbc tlibID tprojectID astID) undoTopic = do
     bc <- decodeE tbc
     name <- decodeE tname
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     focus <- Batch.getFunctionFocus bc libID projectID
     let tnewBC    = encode $ init bc ++ [Crumb.Function name $ focus ^. Expr.path]
-    BatchAST.updateFunctionName name bc libID projectID
+    BatchAST.modifyFunctionName name bc libID projectID
     prepareResponse projectID
                     Topic.projectLibraryAstFunctionModifyNameRequest
                     (ModifyFunctionName.Request (encode $ focus ^?! Expr.fname) tnewBC tlibID tprojectID astID)
@@ -316,25 +397,25 @@ functionNameModify request@(ModifyFunctionName.Request tname tbc tlibID tproject
                     =<< ModifyFunctionName.Update request  <$> Batch.getUpdateNo
 
 
-functionPathModify :: ModifyFunctionPath.Request -> RPC Context IO ModifyFunctionPath.Update
-functionPathModify request@(ModifyFunctionPath.Request tpath tbc tlibID tprojectID _) = do
+modifyFunctionPath :: ModifyFunctionPath.Request -> RPC Context IO ModifyFunctionPath.Update
+modifyFunctionPath request@(ModifyFunctionPath.Request tpath tbc tlibID tprojectID _) = do
     bc <- decodeE tbc
     let path      = decodeP tpath
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    BatchAST.updateFunctionPath path bc libID projectID
+    BatchAST.modifyFunctionPath path bc libID projectID
     updateNo <- Batch.getUpdateNo
     return $ ModifyFunctionPath.Update request updateNo
 
 
-functionInputsModify :: ModifyFunctionInputs.Request -> Maybe Topic -> RPC Context IO ([ModifyFunctionInputs.Update], [Message])
-functionInputsModify request@(ModifyFunctionInputs.Request tinputs tbc tlibID tprojectID astID) undoTopic = do
+modifyFunctionInputs :: ModifyFunctionInputs.Request -> Maybe Topic -> RPC Context IO ([ModifyFunctionInputs.Update], [Message])
+modifyFunctionInputs request@(ModifyFunctionInputs.Request tinputs tbc tlibID tprojectID astID) undoTopic = do
     inputs <- decodeE tinputs
     bc     <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     oldInputs <- (^. Expr.inputs) <$> Batch.getFunctionFocus bc libID projectID
-    BatchAST.updateFunctionInputs inputs bc libID projectID
+    BatchAST.modifyFunctionInputs inputs bc libID projectID
     prepareResponse projectID
                     Topic.projectLibraryAstFunctionModifyInputsRequest
                     (ModifyFunctionInputs.Request (encode oldInputs) tbc tlibID tprojectID astID)
@@ -345,14 +426,14 @@ functionInputsModify request@(ModifyFunctionInputs.Request tinputs tbc tlibID tp
                     =<< ModifyFunctionInputs.Update request <$> Batch.getUpdateNo
 
 
-functionOutputModify :: ModifyFunctionOutput.Request -> Maybe Topic -> RPC Context IO ([ModifyFunctionOutput.Update], [Message])
-functionOutputModify request@(ModifyFunctionOutput.Request toutput tbc tlibID tprojectID astID) undoTopic = do
+modifyFunctionOutput :: ModifyFunctionOutput.Request -> Maybe Topic -> RPC Context IO ([ModifyFunctionOutput.Update], [Message])
+modifyFunctionOutput request@(ModifyFunctionOutput.Request toutput tbc tlibID tprojectID astID) undoTopic = do
     output <- decodeE toutput
     bc     <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
     oldOutputs <- (^?! Expr.output) <$> Batch.getFunctionFocus bc libID projectID
-    BatchAST.updateFunctionOutput output bc libID projectID
+    BatchAST.modifyFunctionOutput output bc libID projectID
     prepareResponse projectID
                     Topic.projectLibraryAstFunctionModifyOutputRequest
                     (ModifyFunctionOutput.Request (encode oldOutputs) tbc tlibID tprojectID astID)
@@ -363,8 +444,8 @@ functionOutputModify request@(ModifyFunctionOutput.Request toutput tbc tlibID tp
                     =<< ModifyFunctionOutput.Update request <$> Batch.getUpdateNo
 
 
-codeGet :: CodeGet.Request -> RPC Context IO CodeGet.Status
-codeGet request@(CodeGet.Request tbc tlibID tprojectID _) = do
+getCode :: CodeGet.Request -> RPC Context IO CodeGet.Status
+getCode request@(CodeGet.Request tbc tlibID tprojectID _) = do
     bc <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
@@ -373,8 +454,8 @@ codeGet request@(CodeGet.Request tbc tlibID tprojectID _) = do
     return $ CodeGet.Status request $ encodeP code
 
 
-codeSet :: CodeSet.Request -> Maybe Topic -> RPC Context IO ([CodeSet.Update], [Message])
-codeSet request@(CodeSet.Request tcode tbc tlibID tprojectID astID) undoTopic = do
+setCode :: CodeSet.Request -> Maybe Topic -> RPC Context IO ([CodeSet.Update], [Message])
+setCode request@(CodeSet.Request tcode tbc tlibID tprojectID astID) undoTopic = do
     bc <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
