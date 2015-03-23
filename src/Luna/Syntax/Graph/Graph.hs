@@ -20,7 +20,7 @@ import           Luna.Syntax.Graph.Edge (Edge)
 import qualified Luna.Syntax.Graph.Edge as Edge
 import           Luna.Syntax.Graph.Node (Node)
 import qualified Luna.Syntax.Graph.Node as Node
-import           Luna.Syntax.Graph.Port (Port)
+import           Luna.Syntax.Graph.Port (DstPort)
 
 
 
@@ -31,15 +31,15 @@ connect :: Node.ID -> Node.ID -> Edge -> Graph a e -> Graph a e
 connect srcID dstID edge = insEdge (srcID, dstID, edge)
 
 
-portMatches :: Port -> LEdge Edge -> Bool
+portMatches :: DstPort -> LEdge Edge -> Bool
 portMatches _          (_, _, Edge.Monadic) = False
 portMatches newDstPort (_, _, Edge.Data _ connectedDstPort) =
     newDstPort == connectedDstPort
 
 
-isNotAlreadyConnected :: Graph a e -> Node.ID -> Port -> Bool
-isNotAlreadyConnected graph nodeID adstPort = not connected where
-    connected = any (portMatches adstPort) (inn graph nodeID)
+isNotAlreadyConnected :: Graph a e -> Node.ID -> DstPort -> Bool
+isNotAlreadyConnected graph nodeID dstPort = not connected where
+    connected = any (portMatches dstPort) (inn graph nodeID)
 
 
 sort :: (Eq a, Eq e) => Graph a e -> [(Node.ID, Node a e)]
