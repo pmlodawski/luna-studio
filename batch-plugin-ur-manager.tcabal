@@ -26,6 +26,7 @@ Library
                   -- constraint on blaze-markup is a temporary fix for trifectasdbnboflus
                   bytestring,
                   containers,
+                  dlist,
                   exceptions < 0.7,
                   flowbox-batch,
                   flowbox-bus,
@@ -50,6 +51,7 @@ Executable urm
                   -- constraint on blaze-markup is a temporary fix for trifectasdbnboflus
                   bytestring,
                   containers,
+                  dlist,
                   exceptions < 0.7,
                   flowbox-batch,
                   flowbox-bus,

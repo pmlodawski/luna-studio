@@ -60,10 +60,11 @@ makeMsgArr request = maybe [] $ return . (flip Message.mk request)
 
 
 prepareResponse :: (Proto.Serializable undoMessage, Proto.Serializable redoMessage, Proto.Serializable urmMessage, Monad m)
-                => Project.ID -> Topic -> undoMessage -> Topic -> redoMessage -> Maybe Topic -> urmMessage -> m ([urmMessage], [Message])
-prepareResponse projectID undoTopic undoAction redoTopic redoAction urmTopic = return . (flip (,) urmMessages . return)
+                => Project.ID -> Topic -> undoMessage -> Topic -> redoMessage -> Maybe Topic -> String -> urmMessage -> m ([urmMessage], [Message])
+prepareResponse projectID undoTopic undoAction redoTopic redoAction urmTopic description = return . (flip (,) urmMessages . return)
     where
         urmMessages = makeMsgArr (Register.Request (fun undoTopic $ undoAction)
                                                    (fun redoTopic $ redoAction)
                                                    (encodeP projectID)
+                                                   (encodeP description)
                                  ) urmTopic
