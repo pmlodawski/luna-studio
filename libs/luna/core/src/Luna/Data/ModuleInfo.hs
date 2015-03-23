@@ -47,7 +47,7 @@ addSymbol name id = symTable %~ Map.insert name id
 
 regParent  id pid  = strInfo %~ SI.regParent id pid
 
-regOrphan id err = strInfo %~ SI.regOrphan id err
+--regOrphan id err = strInfo %~ SI.regOrphan id err
 
 regAlias id name scopeID = strInfo %~ SI.regAlias id name scopeID
 
@@ -158,6 +158,7 @@ instance Binary PathItem
 instance Binary NamePatDesc
 instance Binary SegmentDesc
 instance Binary (TName NamePath)
+instance Binary SI.Error
 
 instance Binary (Node Text OriginInfo)
 

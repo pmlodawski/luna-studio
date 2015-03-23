@@ -18,6 +18,7 @@ import           Data.IntMap  (IntMap)
 import           Data.Map     (Map)
 import           Luna.Syntax.AST (AST, ID)
 import qualified Luna.Syntax.AST as AST
+import           Luna.Syntax.Decl (Path)
 import qualified Data.Maps    as Map
 import           Luna.Syntax.Name.Path  (NamePath, QualPath)
 import qualified Luna.Syntax.Name.Path  as NamePath
@@ -36,7 +37,8 @@ type IDMap = IntMap
 
 type NameMap v = MapForest Text v
 
-data Error  = LookupError {key :: Text}
+data Error  = LookupError { key  :: Text }
+            | ImportError { path :: Path, msg :: String }
             deriving (Show, Eq, Generic, Read)
 
 
@@ -58,7 +60,7 @@ data OriginInfo = OriginInfo { _mod    :: QualPath
 
 data StructInfo = StructInfo { _scope   :: IDMap Scope
                              , _alias   :: IDMap OriginInfo
-                             , _orphans :: IDMap NamePath
+                             , _orphans :: IDMap Error
                              , _parent  :: IDMap ID
                              , _argPats :: IDMap NamePatDesc
                              } deriving (Show, Eq, Generic, Read)
@@ -100,7 +102,7 @@ scopeLookup pid info = case Map.lookup pid (_scope info) of
 regAlias :: ID -> NamePath -> ScopeID -> StructInfo -> StructInfo
 regAlias id name scopeID structInfo = case mvid of
     Just vid -> structInfo & alias   . at id ?~ vid
-    Nothing  -> structInfo & orphans . at id ?~ name
+    Nothing  -> structInfo & orphans . at id ?~ (LookupError $ toText name)
     where vnames = structInfo ^? scope . ix scopeID . varnames
           mvid   = join $ fmap (MapForest.lookup $ NamePath.toList name) vnames
 
