@@ -46,9 +46,11 @@ import qualified Luna.Data.Namespace          as Namespace
 import           Luna.Data.Namespace          (Namespace)
 
 import           Luna.Data.StructInfo         (StructInfo, OriginInfo(OriginInfo))
+import qualified Luna.Data.StructInfo         as SI
+import qualified Luna.Data.ModuleInfo         as ModuleInfo
 
 import qualified Luna.Data.Namespace.State    as State 
-import           Luna.Data.Namespace.State    (regAlias, regParent, regVarName, regNamePatDesc, regTypeName, withScope)
+import           Luna.Data.Namespace.State    (regAlias, regOrphan, regParent, regVarName, regNamePatDesc, regTypeName, withScope)
 import qualified Luna.Parser.State            as ParserState
 --import qualified Luna.Syntax.Name.Pattern     as NamePattern
 import qualified Luna.Syntax.Name.Pattern     as NamePattern
@@ -61,7 +63,7 @@ import           Luna.Syntax.Foreign          (Foreign(Foreign))
 data StructAnalysis = StructAnalysis
 
 type SAPass                 m   = PassMonad Namespace m
-type SACtx              lab m a = (Enumerated lab, SATraversal m a)
+type SACtx              lab m a = (Enumerated lab, SATraversal m a, MonadIO m)
 type SATraversal            m a = (PassCtx m, AST.Traversal        StructAnalysis (SAPass m) a a)
 type SADefaultTraversal     m a = (PassCtx m, AST.DefaultTraversal StructAnalysis (SAPass m) a a)
 
@@ -147,6 +149,7 @@ registerHeaders (Label lab decl) = case decl of
     Decl.Func    fdecl -> regFuncDecl id fdecl
     Decl.Data    ddecl -> regDataDecl id ddecl
     Decl.Foreign fdecl -> regForeignDecl id fdecl
+    Decl.Imp     imp   -> regImport id imp
     _                  -> pure ()
     where id = Enum.id lab
           
@@ -155,10 +158,18 @@ regForeignDecl id (Foreign tgt fdecl) = case fdecl of
     Decl.FFunc fdecl -> regFuncDecl id fdecl
     _                -> pure ()
 
+regImport id imp = do
+    let path = Decl._modPath imp
+    exists <- liftIO $ ModuleInfo.moduleExists path
+    unless exists $ regOrphan id (SI.ImportError path "Module not found.")
+    
+
+
+
 -- regParent here means that the class will be the parent of its methods. Do we need it? Seems sane. 
-regFuncDecl id (Decl.FuncDecl _ sig _ _) =  regParent id *> regVarName (OriginInfo "dupa" id) (NamePattern.toNamePath sig)
+regFuncDecl id (Decl.FuncDecl _ sig _ _) = regParent id *> regVarName (OriginInfo "dupa" id) (NamePattern.toNamePath sig)
                                          <* regNamePatDesc id (NamePattern.toDesc sig)
-regDataDecl id (Decl.DataDecl name _ cons _) =  regTypeName (OriginInfo "dupa" id) (unwrap name) 
+regDataDecl id (Decl.DataDecl name _ cons _) = regParent id *> regTypeName (OriginInfo "dupa" id) (unwrap name) 
                                              <* mapM_ registerCons cons
     where registerCons (Label lab (Decl.Cons name fields)) = regVarName (OriginInfo "dupa" (Enum.id lab)) (unwrap name)
 
