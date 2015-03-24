@@ -12,32 +12,28 @@
 
 module Luna.Pass.Transform.Graph.Parser.State where
 
-import Control.Monad.State
-import Data.Map            (Map)
---import qualified Data.Map            as Map
---import qualified Data.Maybe          as Maybe
+import           Control.Monad.State hiding (mapM)
+import           Data.Map            (Map)
+import qualified Data.Map            as Map
+import qualified Data.Maybe          as Maybe
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
+import qualified Luna.Syntax.Enum          as Enum
+import qualified Luna.Syntax.Expr          as Expr
+import qualified Luna.Syntax.Graph.Edge    as Edge
 import           Luna.Syntax.Graph.Graph   (Graph)
+import qualified Luna.Syntax.Graph.Graph   as Graph
 import qualified Luna.Syntax.Graph.Node    as Node
-import           Luna.Syntax.Graph.Port    (Port)
+import           Luna.Syntax.Graph.Port    (DstPortP (DstPort), SrcPort)
+import qualified Luna.Syntax.Graph.Port    as Port
 import           Luna.Syntax.Graph.Tag     (TExpr, Tag)
---import           Luna.Pass.Pass                        (PassMonad)
---import qualified Luna.Pass.Transform.AST.IDFixer.State as IDFixer
---import qualified Luna.Syntax.Enum                      as Enum
---import           Luna.Syntax.Expr                      (LExpr)
---import qualified Luna.Syntax.Expr                      as Expr
---import qualified Luna.Syntax.Graph.Edge                as Edge
---import           Luna.Syntax.Graph.Graph               (Graph)
---import qualified Luna.Syntax.Graph.Graph               as Graph
---import           Luna.Syntax.Graph.Node                (Node)
---import           Luna.Syntax.Graph.Node.Position       (Position)
---import qualified Luna.Syntax.Graph.Port                as Port
---import           Luna.Syntax.Label                     (Label (Label))
---import           Luna.Syntax.Name                      (VNameP)
+import           Luna.Syntax.Label         (Label (Label))
 
+
+
+dummyTag = Enum.tag (-999)
 
 
 logger :: Logger
@@ -46,13 +42,13 @@ logger = getLogger $moduleName
 
 type Error = String
 
-type NodeMap v = Map (Node.ID, Port) (TExpr v)
+type VarMap v = Map (Node.ID, SrcPort) (Expr.Variable v)
 
 
-data GPState v = GPState { _body    :: [TExpr v]
-                         , _output  :: Maybe (TExpr v)
-                         , _nodeMap :: NodeMap v
-                         , _graph   :: Graph Tag v
+data GPState v = GPState { _body   :: [TExpr v]
+                         , _output :: Maybe (TExpr v)
+                         , _varMap :: VarMap v
+                         , _graph  :: Graph Tag v
                          } deriving (Show)
 
 makeLenses ''GPState
@@ -72,6 +68,9 @@ getBody = gets $ view body
 setBody :: [TExpr v] -> GPPass v m ()
 setBody = modify . set body
 
+addToBody :: TExpr v -> GPPass v m ()
+addToBody e = setBody . (e :) =<< getBody
+
 ----- output --------------------------------------------------------------
 getOutput :: GPPass v m (Maybe (TExpr v))
 getOutput = gets $ view output
@@ -79,12 +78,12 @@ getOutput = gets $ view output
 setOutput :: TExpr v -> GPPass v m ()
 setOutput = modify . set output . Just
 
------ nodeMap -------------------------------------------------------------
-getNodeMap :: GPPass v m (NodeMap v)
-getNodeMap = gets $ view nodeMap
+----- varMap -------------------------------------------------------------
+getVarMap :: GPPass v m (VarMap v)
+getVarMap = gets $ view varMap
 
-setNodeMap :: NodeMap v -> GPPass v m ()
-setNodeMap = modify . set nodeMap
+setVarMap :: VarMap v -> GPPass v m ()
+setVarMap = modify . set varMap
 
 ----- graph ---------------------------------------------------------------
 getGraph :: GPPass v m (Graph Tag v)
@@ -99,36 +98,37 @@ getGraph = gets $ view graph
 --setPropertyMap pm =  modify (set propertyMap pm)
 
 
---addToBody :: LExpr a v -> GPPass a v m ()
---addToBody e = do b <- getBody
---                 setBody $ e : b
 
 
 --addToNodeMap :: (Node.ID, Port) -> LExpr a v -> GPPass a v m ()
 --addToNodeMap key expr = getNodeMap >>= setNodeMap . Map.insert key expr
 
 
---nodeMapLookup :: (Node.ID, Port) -> GPPass a v m (LExpr a v)
---nodeMapLookup key = do
---    nm <- getNodeMap
---    lift $ Map.lookup key nm <??> "GraphParser: nodeMapLookup: Cannot find " ++ show key ++ " in nodeMap"
+varMapLookup :: (Node.ID, SrcPort) -> GPPass v m (Expr.Variable v)
+varMapLookup key = do
+    nm <- getVarMap
+    lift $ Map.lookup key nm <??> "GraphParser: varMapLookup: Cannot find " ++ show key ++ " in nodeMap"
 
 
---getNodeSrcs :: Node.ID -> GPPass a v m [LExpr a v]
---getNodeSrcs nodeID = do
---    g <- getGraph
---    let processEdge (pNID, _, Edge.Data s  Port.All   ) = Just (0, (pNID, s))
---        processEdge (pNID, _, Edge.Data s (Port.Num d)) = Just (d, (pNID, s))
---        processEdge (_   , _, Edge.Monadic            ) = Nothing
+getNodeSrcs :: Node.ID -> GPPass v m [Expr.AppArg (TExpr v)]
+getNodeSrcs nodeID = do
+    g <- getGraph
+    let connectedMap = Map.fromList
+                     $ Maybe.mapMaybe processEdge
+                     $ Graph.lprel g nodeID
+    case Map.size connectedMap of
+        0 -> return []
+        _ -> do let maxPort   = fst $ Map.findMax connectedMap
+                    connected = map (flip Map.lookup connectedMap) [0..maxPort]
+                mapM getNodeSrc connected
+    where
+        processEdge (pNID, _, Edge.Data s (DstPort (Port.All  ))) = Just (0, (pNID, s))
+        processEdge (pNID, _, Edge.Data s (DstPort (Port.Num d))) = Just (d, (pNID, s))
+        processEdge (_   , _, Edge.Monadic                      ) = Nothing
 
---        connectedMap = Map.fromList
---                     $ Maybe.mapMaybe processEdge
---                     $ Graph.lprel g nodeID
---    case Map.size connectedMap of
---        0 -> return []
---        _ -> do let maxPort   = fst $ Map.findMax connectedMap
---                    connected = map (flip Map.lookup connectedMap) [0..maxPort]
---                mapM getNodeSrc connected
+        getNodeSrc :: Maybe (Node.ID, SrcPort) -> GPPass v m (Expr.AppArg (TExpr v))
+        getNodeSrc Nothing  = return $ Expr.unnamed $ Label dummyTag Expr.Wildcard
+        getNodeSrc (Just a) = Expr.unnamed . Label dummyTag . Expr.Var <$> varMapLookup a
 
 
 --inboundPorts :: Node.ID -> GPPass a v m [Port]
@@ -138,11 +138,6 @@ getGraph = gets $ view graph
 --        processEdge (_, Edge.Monadic ) = Nothing
 --    return $ Maybe.mapMaybe processEdge
 --           $ Graph.lpre g nodeID
-
-
---getNodeSrc :: Maybe (Node.ID, Port) -> GPPass a v m (LExpr a v)
---getNodeSrc Nothing  = return $ Label (Enum.tag IDFixer.unknownID) Expr.Wildcard
---getNodeSrc (Just a) = nodeMapLookup a
 
 
 --getNode :: Node.ID -> GPPass a v m (Node a v)

@@ -72,3 +72,11 @@ lsuclData = filter (Edge.isData . view _3) .: DG.lsucl
 
 inputsNode :: DG.Graph (Node a e) l -> Maybe (Node.ID, Node a e)
 inputsNode = List.find (Node.isInputs . snd) . DG.labNodes
+
+
+inDataDeg :: Graph a e -> Node.ID -> Int
+inDataDeg = length .: lprelData
+
+
+outDataDeg :: Graph a e -> Node.ID -> Int
+outDataDeg = length .: lsuclData
