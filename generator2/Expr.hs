@@ -15,7 +15,13 @@ type ID = Int
 type Pat = Int
 type Lit = Int
 type Type = String
-type Arg a = [a]
+
+
+-- type Arg a = [a]
+data Arg a = Named   { _iid :: ID, _naame :: String, _aarg :: a }
+           | Unnamed { _iid :: ID, _aarg :: a                  }
+           deriving (Show, Eq, Generic, Read)
+
 type Name = String
 
 data Expr  = NOP          { _id :: ID                                                                                            }

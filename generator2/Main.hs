@@ -10,6 +10,7 @@ import qualified Language.Haskell.TH as TH
 
 instance Binary Accessor
 instance Binary Expr
+instance Binary a => Binary (Arg a)
 
 main = do
 	putStrLn "Generator 2 im. Arystotelesa."
