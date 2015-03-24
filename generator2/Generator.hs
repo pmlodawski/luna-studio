@@ -113,8 +113,13 @@ instance CppFormattable CppClass where
 
 data CppInclude = CppSystemInclude String | CppLocalInclude String
 instance CppFormattable CppInclude where
-    formatCpp (CppSystemInclude path) = (printf "#include <%s>" path,"")
-    formatCpp (CppLocalInclude path) = (printf "#include \"%s\"" path,"")
+    formatCpp (CppSystemInclude path) = (printf "#include <%s>" path, "")
+    formatCpp (CppLocalInclude path) = (printf "#include \"%s\"" path, "")
+
+data CppForwardDecl = CppForwardDeclClass String | CppForwardDeclStruct String
+instance CppFormattable CppForwardDecl where
+    formatCpp (CppForwardDeclClass name) = (printf "class %s;" name, "")
+    formatCpp (CppForwardDeclStruct name) = (printf "struct %s;" name, "")
 
 data CppTypedef  = CppTypedef 
     { introducedType :: String
@@ -126,19 +131,22 @@ instance CppFormattable CppTypedef where
 
 data CppParts = CppParts
     { includes :: [CppInclude]
+    , forwardDecls :: [CppForwardDecl]
     , typedefs :: [CppTypedef]
     , classes :: [CppClass]
     , functions :: [CppFunction]
     }
 
 instance CppFormattable CppParts where
-    formatCpp (CppParts incl tpdefs cs fns) = 
+    formatCpp (CppParts incl frwrds tpdefs cs fns) = 
         let includesPieces = map formatCpp incl
+            forwardDeclPieces = map formatCpp frwrds
             typedefPieces = map formatCpp tpdefs
             classesCodePieces = map formatCpp cs
             functionsPieces = map formatCpp fns
+            -- FIXME code duplication above
 
-            allPieces = concat [includesPieces, typedefPieces, classesCodePieces, functionsPieces]
+            allPieces = concat [includesPieces, forwardDeclPieces, typedefPieces, classesCodePieces, functionsPieces]
 
             collectCodePieces fn = Data.List.intercalate "\n\n/****************/\n\n" (map fn allPieces)
             headerCode = collectCodePieces fst
@@ -166,6 +174,17 @@ isValueType (ConT name) = do
     isValueTypeInfo info
 isValueType _ = return False
 
+--data WhatTheTypeIs = Primitive | Pointer | Maybe | List
+
+--whatTypeIs :: Type -> WhatTheTypeIs
+--whatTypeIs t@(ConT name) = do
+--    let nb = nameBase name
+--    byValue <- isValueType t
+--    return $ 
+--        if if byValue then nb
+--        else "std::shared_ptr<" ++ nb ++ ">"
+
+
 typeOfField :: Type -> Q String
 typeOfField t@(ConT name) = do
     let nb = nameBase name
@@ -178,7 +197,8 @@ typeOfField t@(ConT name) = do
 
 typeOfField (AppT (ConT base) nested) | (base == ''Maybe) = do
     nestedName <- typeOfField nested
-    return $ "boost::optional<" ++ nestedName ++ ">"
+    isNestedValue <- isValueType nested
+    return $ if isNestedValue then "boost::optional<" ++ nestedName ++ ">" else nestedName
 
 typeOfField (AppT ListT (nested)) = do
     nestedType <- typeOfField nested
@@ -187,7 +207,7 @@ typeOfField (AppT ListT (nested)) = do
 typeOfField t = return $ "[" ++ show t ++ "]"
 
 emptyQParts :: Q CppParts
-emptyQParts = return $ CppParts [] []  [] []
+emptyQParts = return $ CppParts [] [] []  [] []
 
 processField :: THS.VarStrictType -> Q CppField
 processField field@(name, _, t) = do
@@ -213,11 +233,12 @@ generateCppWrapperHlp dec@(DataD cxt name tyVars cons names) =
         -- derClasses = processConstructor <$> cons <*> [name]
         let classes = baseClass : derClasses
             functions = []
-        return (CppParts standardSystemIncludes [] classes functions)
+            forwardDecs = map (\c -> CppForwardDeclClass $ className c) classes
+        return (CppParts standardSystemIncludes forwardDecs [] classes functions)
 generateCppWrapperHlp tysyn@(TySynD name tyvars rhstype) = do
     baseTName <- typeOfField rhstype
     let tf = CppTypedef (nameBase name) baseTName
-    return $ CppParts [] [tf] [] []
+    return $ CppParts [] [] [tf] [] []
 generateCppWrapperHlp arg = trace ("FIXME: generateCppWrapperHlp for " ++ show arg) emptyQParts
 
 --generateSingleWrapperInfo
@@ -234,7 +255,7 @@ generateSingleWrapper _ = undefined
 
 joinParts :: [CppParts] -> CppParts
 joinParts parts = 
-    CppParts (concat $ map includes parts) (concat $ map typedefs parts) (concat $ map classes parts) (concat $ map functions parts)
+    CppParts (concat $ map includes parts) (concat $ map forwardDecls parts) (concat $ map typedefs parts) (concat $ map classes parts) (concat $ map functions parts)
 
 generateWrappers :: [Name] -> Q CppParts
 generateWrappers names = do
