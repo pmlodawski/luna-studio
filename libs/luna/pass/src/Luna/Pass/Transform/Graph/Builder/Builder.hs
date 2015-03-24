@@ -62,11 +62,11 @@ outputID = -1
 
 
 run :: Monad m => StructInfo -> TDecl V -> EitherT State.Error m (TDecl V, Graph Tag V)
-run aliasInfo lexpr = evalStateT (expr2graph lexpr) $ State.mk aliasInfo inputsID
+run aliasInfo lexpr = evalStateT (func2graph lexpr) $ State.mk aliasInfo inputsID
 
 
-expr2graph :: TDecl V -> GBPass V m (TDecl V, Graph Tag V)
-expr2graph decl@(Label _ (Decl.Func (Decl.FuncDecl _ sig _ body))) = do
+func2graph :: TDecl V -> GBPass V m (TDecl V, Graph Tag V)
+func2graph decl@(Label _ (Decl.Func (Decl.FuncDecl _ sig _ body))) = do
     State.initFreeNodeID decl
     State.insNode (inputsID, Node.mkInputs)
     State.insNode (outputID, Node.mkOutputs)
