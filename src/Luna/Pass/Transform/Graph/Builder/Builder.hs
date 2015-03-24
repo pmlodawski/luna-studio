@@ -90,12 +90,11 @@ buildInputsArgs (Pattern.NamePat prefix base segmentList) = flip evalStateT (0::
         parseInputsSegment (Pattern.Segment sBase sArgs) =
             Pattern.Segment sBase <$> mapM buildInputsArg sArgs
 
-        buildInputsArg (Arg pat val) = do
+        buildInputsArg arg@(Arg pat _) = do
             no <- get
             put $ no + 1
-            (i, _, pat') <- lift $ State.getNodeInfo pat
-            lift $ State.addToNodeMap i (inputsID, Port.mkSrc no)
-            return $ Arg pat' val
+            lift $ State.addToNodeMap (Enum.id $ pat ^. Label.label) (inputsID, Port.mkSrc no)
+            return arg
 
 
 buildBody :: [TExpr V] -> GBPass V m [TExpr V]
