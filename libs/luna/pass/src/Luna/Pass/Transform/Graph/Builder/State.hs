@@ -199,12 +199,10 @@ nodeMapLookUp :: Node.ID -> GBPass v m (Maybe (Node.ID, SrcPort))
 nodeMapLookUp nodeID = Map.lookup nodeID <$> getNodeMap
 
 
-gvmNodeMapLookUp :: Node.ID -> GBPass v m (Maybe (Node.ID, SrcPort))
-gvmNodeMapLookUp nodeID = do
-    found <- nodeMapLookUp =<< Maybe.fromMaybe nodeID <$> aaLookUp nodeID
-    if Maybe.isNothing found
-        then nodeMapLookUp nodeID
-        else return found
+gvmNodeMapLookUp :: AST.ID -> GBPass v m (Maybe (Node.ID, SrcPort))
+gvmNodeMapLookUp astID =
+    nodeMapLookUp =<< Maybe.fromMaybe astID <$> aaLookUp astID
+
 
 
 getPrevoiusNodeID :: GBPass v m Node.ID
