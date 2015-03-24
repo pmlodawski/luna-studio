@@ -43,5 +43,5 @@ fromSegment :: Pattern.Segment base arg -> MultiPartSegment base
 fromSegment (Pattern.Segment nBase nSegmentArgs) = MultiPartSegment nBase $ length nSegmentArgs
 
 
---toNamePat :: MultiPartExpr base -> [arg] -> Pattern.NamePat base arg
---toNamePat = undefined
+toNamePat :: MultiPartExpr base -> [arg] -> arg -> Pattern.NamePat base arg
+toNamePat (MultiPartExpr mPrefix mBase mSegments) args missing = undefined
