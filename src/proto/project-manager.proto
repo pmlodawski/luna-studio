@@ -279,7 +279,7 @@ message Project {
                         required int32 updateNo  = 4;
                     }
                 }
-                message Con {
+                message Con_ {
                     message Add {
                         message Request {
                             required generated.proto.dep.expr.Expr con        = 1;

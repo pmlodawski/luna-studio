@@ -19,7 +19,6 @@ import           Flowbox.Bus.RPC.RPC                                            
 import           Flowbox.Data.Convert
 import           Flowbox.Prelude                                                                      hiding (Context, cons)
 import           Flowbox.ProjectManager.Context                                                       (Context)
-import           Flowbox.ProjectManager.RPC.Handler.Graph                                             (fun, makeMsgArr)
 import qualified Flowbox.ProjectManager.RPC.Topic                                                     as Topic
 import           Flowbox.System.Log.Logger
 import           Flowbox.UR.Manager.RPC.Handler.Handler                                               (prepareResponse, makeMsgArr, fun)
@@ -29,18 +28,18 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Set.Req
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Set.Update                   as CodeSet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Add.Request                  as AddData
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Add.Update                   as AddData
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Add.Request              as AddDataCon
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Add.Update               as AddDataCon
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Delete.Request           as DeleteDataCon
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Delete.Update            as DeleteDataCon
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Field.Add.Request        as AddDataConField
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Field.Add.Update         as AddDataConField
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Field.Delete.Request     as DeleteDataConField
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Field.Delete.Update      as DeleteDataConField
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Field.Modify.Request     as ModifyDataConField
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Field.Modify.Update      as ModifyDataConField
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Modify.Request           as ModifyDataCon
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con.Modify.Update            as ModifyDataCon
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Add.Request              as AddDataCon
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Add.Update               as AddDataCon
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Delete.Request           as DeleteDataCon
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Delete.Update            as DeleteDataCon
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Field.Add.Request        as AddDataConField
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Field.Add.Update         as AddDataConField
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Field.Delete.Request     as DeleteDataConField
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Field.Delete.Update      as DeleteDataConField
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Field.Modify.Request     as ModifyDataConField
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Field.Modify.Update      as ModifyDataConField
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Modify.Request           as ModifyDataCon
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Modify.Update            as ModifyDataCon
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Classes.Request       as ModifyDataClasses
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Classes.Update        as ModifyDataClasses
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Cls.Request           as ModifyDataCls
@@ -165,7 +164,7 @@ addFunction request@(AddFunction.Request tnewFunction tbcParent tlibID tprojectI
 
 
 remove :: Remove.Request -> Maybe Topic -> RPC Context IO ([Remove.Update], [Message])
-remove request@(Remove.Request tbc tlibID tprojectID _) undoTopic = do
+remove request@(Remove.Request tbc tlibID tprojectID astID) undoTopic = do
     bc  <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
@@ -384,7 +383,7 @@ modifyFunctionName request@(ModifyFunctionName.Request tname tbc tlibID tproject
     name <- decodeE tname
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    focus <- Batch.getFunctionFocus bc libID projectID
+    focus <- Batch.getFunction bc libID projectID
     let tnewBC    = encode $ init bc ++ [Crumb.Function name $ focus ^. Expr.path]
     BatchAST.modifyFunctionName name bc libID projectID
     prepareResponse projectID
@@ -414,7 +413,7 @@ modifyFunctionInputs request@(ModifyFunctionInputs.Request tinputs tbc tlibID tp
     bc     <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    oldInputs <- (^. Expr.inputs) <$> Batch.getFunctionFocus bc libID projectID
+    oldInputs <- (^. Expr.inputs) <$> Batch.getFunction bc libID projectID
     BatchAST.modifyFunctionInputs inputs bc libID projectID
     prepareResponse projectID
                     Topic.projectLibraryAstFunctionModifyInputsRequest
@@ -432,7 +431,7 @@ modifyFunctionOutput request@(ModifyFunctionOutput.Request toutput tbc tlibID tp
     bc     <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    oldOutputs <- (^?! Expr.output) <$> Batch.getFunctionFocus bc libID projectID
+    oldOutputs <- (^?! Expr.output) <$> Batch.getFunction bc libID projectID
     BatchAST.modifyFunctionOutput output bc libID projectID
     prepareResponse projectID
                     Topic.projectLibraryAstFunctionModifyOutputRequest
