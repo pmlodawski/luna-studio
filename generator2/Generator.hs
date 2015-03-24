@@ -16,6 +16,7 @@ import Language.Haskell.TH.Quote
 import Data.List
 import qualified Data.Set as Set
 
+import GHC.Stack
 import Debug.Trace
 
 
@@ -48,6 +49,8 @@ data CppFunction = CppFunction
     , body :: String
     }
 
+instance CppFormattable CppFunction where
+    formatCpp fn = ("function fundc", "function fdunc")
 
 formatArgsList :: [CppArg] -> String
 formatArgsList args = "(" ++ Data.List.intercalate ", " (map format args) ++ ")"
@@ -119,7 +122,7 @@ data CppTypedef  = CppTypedef
     }
 
 instance CppFormattable CppTypedef where
-    formatCpp (CppTypedef to from) = (printf "typedef %s %s" from to, "")
+    formatCpp (CppTypedef to from) = (printf "typedef %s %s;" from to, "")
 
 data CppParts = CppParts
     { includes :: [CppInclude]
@@ -130,8 +133,14 @@ data CppParts = CppParts
 
 instance CppFormattable CppParts where
     formatCpp (CppParts incl tpdefs cs fns) = 
-        let pairs = Data.List.map formatCpp cs
-            collectCodePieces fn = Data.List.intercalate "\n\n/****************/\n\n" (map fn pairs)
+        let includesPieces = map formatCpp incl
+            typedefPieces = map formatCpp tpdefs
+            classesCodePieces = map formatCpp cs
+            functionsPieces = map formatCpp fns
+
+            allPieces = concat [includesPieces, typedefPieces, classesCodePieces, functionsPieces]
+
+            collectCodePieces fn = Data.List.intercalate "\n\n/****************/\n\n" (map fn allPieces)
             headerCode = collectCodePieces fst
             bodyCode = collectCodePieces snd
         in (headerCode, bodyCode)
@@ -163,6 +172,7 @@ typeOfField t@(ConT name) = do
     byValue <- isValueType t
     return $ 
         if name == ''String then "std::string" 
+        else if name == ''Int then "int"
         else if byValue then nb
         else "std::shared_ptr<" ++ nb ++ ">"
 
@@ -204,7 +214,11 @@ generateCppWrapperHlp dec@(DataD cxt name tyVars cons names) =
         let classes = baseClass : derClasses
             functions = []
         return (CppParts standardSystemIncludes [] classes functions)
-generateCppWrapperHlp arg = trace ("FIXME: wrapper for " ++ show arg) emptyQParts
+generateCppWrapperHlp tysyn@(TySynD name tyvars rhstype) = do
+    baseTName <- typeOfField rhstype
+    let tf = CppTypedef (nameBase name) baseTName
+    return $ CppParts [] [tf] [] []
+generateCppWrapperHlp arg = trace ("FIXME: generateCppWrapperHlp for " ++ show arg) emptyQParts
 
 --generateSingleWrapperInfo
 
@@ -214,6 +228,7 @@ generateSingleWrapper name = do
     nameInfo <- reify name
     let bb = case nameInfo of
             (TyConI dec) -> generateCppWrapperHlp dec
+            _ -> trace ("ignoring entry " ++ show name) emptyQParts
     bb
 generateSingleWrapper _ = undefined
 
@@ -243,6 +258,9 @@ foo :: Show a => a -> a
 foo a | trace ("zzzz ") False = undefined
 foo a = a
 
+
+builtInTypes = [''Maybe, ''String, ''Int]
+
 class TypesDependencies a where
     symbolDependencies :: a -> Set Name
 
@@ -250,10 +268,11 @@ instance TypesDependencies Type where
     --symbolDependencies t | trace ("Type: " ++ show t) False = undefined
 
     -- Maybe and String are handled as a special-case
-    symbolDependencies (ConT name) | (elem name [''Maybe, ''String]) = Set.empty
+    symbolDependencies (ConT name) | (elem name builtInTypes) = Set.empty
     symbolDependencies contype@(ConT name) = Set.singleton name
     symbolDependencies apptype@(AppT ListT nested) = symbolDependencies nested
     symbolDependencies apptype@(AppT base nested) = symbolDependencies [base, nested]
+    symbolDependencies vartype@(VarT n) = Set.empty
     symbolDependencies t = trace ("FIXME not handled type: " ++ show t) Set.empty
 
 instance (TypesDependencies a, Show a) => TypesDependencies [a] where
@@ -262,11 +281,14 @@ instance (TypesDependencies a, Show a) => TypesDependencies [a] where
         let listOfSets = (map symbolDependencies listToProcess)::[Set Name]
         in Set.unions listOfSets
 
+instance TypesDependencies (Strict, Type) where
+    symbolDependencies (_, t) = symbolDependencies t
+
 instance TypesDependencies Con where
     --symbolDependencies t | trace ("Con: " ++ show t) False = undefined
     symbolDependencies (RecC name fields) = symbolDependencies fields
-
-    symbolDependencies t = trace ("FIXME not handled Con: " ++ show t) (Set.empty)
+    symbolDependencies (NormalC name fields) = symbolDependencies fields
+    symbolDependencies t = trace ("FIXME not handled Con: " ++ show t) (errorWithStackTrace) []
 
 instance TypesDependencies VarStrictType where
     --symbolDependencies t | trace ("Field: " ++ show t) False = undefined
@@ -329,11 +351,10 @@ generateCpp name path = do
     let headerName = path ++ ".h"
     let cppName = path ++ ".cpp"
 
-    reifiedName <- reify name
-    (header,body) <- formatCppWrapper name
-
     dependencies <- collectDependencies name
     runIO (putStrLn $ printf "Found %d dependencies: %s" (length dependencies) (show dependencies))
+    (header,body) <- formatCppWrapper name
+
 
     runIO (writeFile headerName header)
     runIO (writeFile cppName body)
