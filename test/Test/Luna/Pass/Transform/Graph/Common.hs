@@ -52,12 +52,12 @@ getGraph bc ast = runPass $ do
     return (BCZipper.close $ BCZipper.modify (const newFocus) zipper, graph)
 
 
-getExpr :: Breadcrumbs -> Graph a v -> TModule V -> IO (TModule V)
+getExpr :: Breadcrumbs -> Graph Tag V -> TModule V -> IO (TModule V)
 getExpr bc graph ast = runPass $ do
     zipper <- lift $ eitherStringToM $ BCZipper.focusBreadcrumbs' bc ast
     let focus = BCZipper.getFocus zipper
     decl <- focus ^? Focus.decl <??> "test.Common.getExpr : Target is not a function"
-    decl2 <- Pass.run2_ GraphParser.pass graph decl
+    decl2 <- GraphParser.run graph decl
     let newFocus = focus & Focus.decl .~ decl2
     return (BCZipper.close $ BCZipper.modify (const newFocus) zipper)
 

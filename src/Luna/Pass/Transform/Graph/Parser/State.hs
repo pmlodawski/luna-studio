@@ -12,14 +12,18 @@
 
 module Luna.Pass.Transform.Graph.Parser.State where
 
---import           Control.Monad.State
---import           Data.Map            (Map)
+import Control.Monad.State
+import Data.Map            (Map)
 --import qualified Data.Map            as Map
 --import qualified Data.Maybe          as Maybe
 
---import           Flowbox.Control.Error
---import           Flowbox.Prelude                       hiding (mapM)
---import           Flowbox.System.Log.Logger
+import           Flowbox.Control.Error
+import           Flowbox.Prelude
+import           Flowbox.System.Log.Logger
+import           Luna.Syntax.Graph.Graph   (Graph)
+import qualified Luna.Syntax.Graph.Node    as Node
+import           Luna.Syntax.Graph.Port    (Port)
+import           Luna.Syntax.Graph.Tag     (TExpr, Tag)
 --import           Luna.Pass.Pass                        (PassMonad)
 --import qualified Luna.Pass.Transform.AST.IDFixer.State as IDFixer
 --import qualified Luna.Syntax.Enum                      as Enum
@@ -29,66 +33,62 @@ module Luna.Pass.Transform.Graph.Parser.State where
 --import           Luna.Syntax.Graph.Graph               (Graph)
 --import qualified Luna.Syntax.Graph.Graph               as Graph
 --import           Luna.Syntax.Graph.Node                (Node)
---import qualified Luna.Syntax.Graph.Node                as Node
 --import           Luna.Syntax.Graph.Node.Position       (Position)
---import           Luna.Syntax.Graph.Port                (Port)
 --import qualified Luna.Syntax.Graph.Port                as Port
 --import           Luna.Syntax.Label                     (Label (Label))
 --import           Luna.Syntax.Name                      (VNameP)
 
 
 
---logger :: Logger
---logger = getLogger $(moduleName)
+logger :: Logger
+logger = getLogger $moduleName
 
 
---type NodeMap a v = Map (Node.ID, Port) (LExpr a v)
+type Error = String
+
+type NodeMap v = Map (Node.ID, Port) (TExpr v)
 
 
---data GPState a v = GPState { _body        :: [LExpr a v]
---                           , _output      :: Maybe (LExpr a v)
---                           , _nodeMap     :: NodeMap a v
---                           , _graph       :: Graph a v
---                           , _propertyMap :: PropertyMap a v
---                           } deriving (Show)
+data GPState v = GPState { _body    :: [TExpr v]
+                         , _output  :: Maybe (TExpr v)
+                         , _nodeMap :: NodeMap v
+                         , _graph   :: Graph Tag v
+                         } deriving (Show)
 
---makeLenses ''GPState
-
-
---type GPPass a v m result = (Monad m, Enum.Enumerated a)
---                         => PassMonad (GPState a v) m result
+makeLenses ''GPState
 
 
---make :: Graph a v -> PropertyMap a v -> GPState a v
---make = GPState [] Nothing Map.empty
+type GPPass v m result = Monad m => StateT (GPState v) (EitherT Error m) result
 
 
---getBody :: GPPass a v m [LExpr a v]
---getBody = gets (view body)
+mk :: Graph Tag v -> GPState v
+mk = GPState def def def
 
 
---setBody :: [LExpr a v] -> GPPass a v m ()
---setBody b = modify (set body b)
+----- body ----------------------------------------------------------------
+getBody :: GPPass v m [TExpr v]
+getBody = gets $ view body
 
+setBody :: [TExpr v] -> GPPass v m ()
+setBody = modify . set body
 
---getOutput :: GPPass a v m (Maybe (LExpr a v))
---getOutput = gets (view output)
+----- output --------------------------------------------------------------
+getOutput :: GPPass v m (Maybe (TExpr v))
+getOutput = gets $ view output
 
+setOutput :: TExpr v -> GPPass v m ()
+setOutput = modify . set output . Just
 
---setOutput :: LExpr a v -> GPPass a v m ()
---setOutput o = modify (set output $ Just o)
+----- nodeMap -------------------------------------------------------------
+getNodeMap :: GPPass v m (NodeMap v)
+getNodeMap = gets $ view nodeMap
 
+setNodeMap :: NodeMap v -> GPPass v m ()
+setNodeMap = modify . set nodeMap
 
---getNodeMap :: GPPass a v m (NodeMap a v)
---getNodeMap = gets (view nodeMap)
-
-
---setNodeMap :: NodeMap a v -> GPPass a v m ()
---setNodeMap nm = modify (set nodeMap nm)
-
-
---getGraph :: GPPass a v m (Graph a v)
---getGraph = gets (view graph)
+----- graph ---------------------------------------------------------------
+getGraph :: GPPass v m (Graph Tag v)
+getGraph = gets $ view graph
 
 
 --getPropertyMap :: GPPass a v m (PropertyMap a v)

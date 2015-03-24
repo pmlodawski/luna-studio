@@ -48,7 +48,7 @@ logger = getLogger $moduleName
 type NodeMap = Map AST.ID (Node.ID, SrcPort)
 type Error = String
 
-type GBPass v m result = Monad m => StateT (GBState v) (EitherT String m) result
+type GBPass v m result = Monad m => StateT (GBState v) (EitherT Error m) result
 
 data GBState v = GBState { _graph          :: Graph Tag v
                          , _nodeMap        :: NodeMap
@@ -82,6 +82,28 @@ getNode nodeID = do
 updateNode :: (Node.ID, Node Tag v) -> GBPass v m ()
 updateNode node = getGraph >>= setGraph . Graph.updateNode node
 
+insNode :: (Node.ID, Node Tag v) -> GBPass v m ()
+insNode (nodeID, node) =
+    getGraph >>= setGraph . Graph.insNode (nodeID, node)
+
+connect :: Node.ID -> SrcPort -> Node.ID -> DstPort -> GBPass v m ()
+connect srcNID srcPort dstNID dstPort =
+    connectNodes srcNID dstNID $ Edge.Data srcPort dstPort
+
+connectNodes :: Node.ID -> Node.ID -> Edge -> GBPass v m ()
+connectNodes srcID dstID edge = getGraph >>= setGraph . Graph.connect srcID dstID edge
+
+connectMonadic :: Node.ID -> GBPass v m ()
+connectMonadic nodeID = do
+    prevID   <- getPrevoiusNodeID
+    prevNode <- getNode prevID
+    currNode <- getNode nodeID
+    setPrevoiusNodeID nodeID
+    let prevPos = prevNode ^. Node.pos
+        currPos = currNode ^. Node.pos
+    when (prevPos == currPos) $
+        updateNode (nodeID, currNode & Node.pos .~ (fst prevPos + 10, snd prevPos))
+    connectNodes prevID nodeID Edge.Monadic
 
 ----- nodeMap -------------------------------------------------------------
 getNodeMap :: GBPass v m NodeMap
@@ -135,12 +157,34 @@ getNodeInfo labeled@(Label tag e) = case tag of
             tag' = Tag.mkNode freeNodeID def tag
         return (freeNodeID, pos, Label tag' e)
 
+----- aa ------------------------------------------------------------------
+getAAMap :: GBPass v m StructInfo
+getAAMap = gets $ view aa
+
+setAAMap :: StructInfo -> GBPass v m ()
+setAAMap = modify . set aa
+
+aaLookUp :: AST.ID -> GBPass v m (Maybe AST.ID)
+aaLookUp astID = do
+    aa' <- getAAMap
+    return $ view StructInfo.target
+          <$> IntMap.lookup astID (aa' ^. StructInfo.alias)
+
+nodeMapLookUp :: Node.ID -> GBPass v m (Maybe (Node.ID, SrcPort))
+nodeMapLookUp nodeID = Map.lookup nodeID <$> getNodeMap
+
+gvmNodeMapLookUp :: AST.ID -> GBPass v m (Maybe (Node.ID, SrcPort))
+gvmNodeMapLookUp astID =
+    nodeMapLookUp =<< Maybe.fromMaybe astID <$> aaLookUp astID
+
+----- previousNodeID ------------------------------------------------------
+getPrevoiusNodeID :: GBPass v m Node.ID
+getPrevoiusNodeID = gets $ view prevoiusNodeID
+
+setPrevoiusNodeID :: Node.ID -> GBPass v m ()
+setPrevoiusNodeID = modify . set prevoiusNodeID
+
 ---------------------------------------------------------------------------
-
-insNode :: (Node.ID, Node Tag v) -> GBPass v m ()
-insNode (nodeID, node) =
-    getGraph >>= setGraph . Graph.insNode (nodeID, node)
-
 --addNodeDefault :: Node.ID -> PortDescriptor -> NodeExpr a v -> GBPass v m ()
 --addNodeDefault nodeID pd ne = do
 --    gr   <- getGraph
@@ -159,58 +203,6 @@ insNode (nodeID, node) =
 --addNode astID outPort node isFolded assignment = do
 --    insNodeWithFlags (astID, node) isFolded assignment
 --    addToNodeMap astID (astID, outPort)
-
-connect :: Node.ID -> SrcPort -> Node.ID -> DstPort -> GBPass v m ()
-connect srcNID srcPort dstNID dstPort =
-    connectNodes srcNID dstNID $ Edge.Data srcPort dstPort
-
-connectNodes :: Node.ID -> Node.ID -> Edge -> GBPass v m ()
-connectNodes srcID dstID edge = getGraph >>= setGraph . Graph.connect srcID dstID edge
-
-connectMonadic :: Node.ID -> GBPass v m ()
-connectMonadic nodeID = do
-    prevID   <- getPrevoiusNodeID
-    prevNode <- getNode prevID
-    currNode <- getNode nodeID
-    setPrevoiusNodeID nodeID
-    let prevPos = prevNode ^. Node.pos
-        currPos = currNode ^. Node.pos
-    when (prevPos == currPos) $
-        updateNode (nodeID, currNode & Node.pos .~ (fst prevPos + 10, snd prevPos))
-    connectNodes prevID nodeID Edge.Monadic
-
-
-getAAMap :: GBPass v m StructInfo
-getAAMap = gets $ view aa
-
-
-setAAMap :: StructInfo -> GBPass v m ()
-setAAMap = modify . set aa
-
-
-aaLookUp :: AST.ID -> GBPass v m (Maybe AST.ID)
-aaLookUp astID = do
-    aa' <- getAAMap
-    return $ view StructInfo.target
-          <$> IntMap.lookup astID (aa' ^. StructInfo.alias)
-
-
-nodeMapLookUp :: Node.ID -> GBPass v m (Maybe (Node.ID, SrcPort))
-nodeMapLookUp nodeID = Map.lookup nodeID <$> getNodeMap
-
-
-gvmNodeMapLookUp :: AST.ID -> GBPass v m (Maybe (Node.ID, SrcPort))
-gvmNodeMapLookUp astID =
-    nodeMapLookUp =<< Maybe.fromMaybe astID <$> aaLookUp astID
-
-
-
-getPrevoiusNodeID :: GBPass v m Node.ID
-getPrevoiusNodeID = gets $ view prevoiusNodeID
-
-
-setPrevoiusNodeID :: Node.ID -> GBPass v m ()
-setPrevoiusNodeID = modify . set prevoiusNodeID
 
 --modifyFlags :: (Flags -> Flags) -> Node.ID -> GBPass v m ()
 --modifyFlags fun nodeID =

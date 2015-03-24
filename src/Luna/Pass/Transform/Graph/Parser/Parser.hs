@@ -11,29 +11,34 @@
 
 module Luna.Pass.Transform.Graph.Parser.Parser where
 
---import           Control.Monad.State
---import           Control.Monad.Trans.Either
+import Control.Monad.State
+import Control.Monad.Trans.Either
 --import qualified Data.IntSet                as IntSet
 --import qualified Data.List                  as List
 --import qualified Data.Text.Lazy             as Text
 
-import Flowbox.Prelude hiding (error, folded, mapM, mapM_)
---import           Flowbox.System.Log.Logger
+import           Flowbox.Prelude                        hiding (error, folded, mapM, mapM_)
+import           Flowbox.System.Log.Logger
+import           Luna.Pass.Transform.Graph.Parser.State (GPPass)
+import qualified Luna.Pass.Transform.Graph.Parser.State as State
+import qualified Luna.Syntax.Decl                       as Decl
+import           Luna.Syntax.Graph.Graph                (Graph)
+import qualified Luna.Syntax.Graph.Graph                as Graph
+import qualified Luna.Syntax.Graph.Node                 as Node
+import           Luna.Syntax.Graph.Tag                  (TDecl, TExpr, Tag)
+import           Luna.Syntax.Label                      (Label (Label))
+import qualified Luna.Syntax.Label                      as Label
 --import qualified Luna.Parser.Token                      as Token
 --import qualified Luna.Pass.Analysis.ID.ExtractIDs       as ExtractIDs
 --import qualified Luna.Pass.Pass                         as Pass
 --import qualified Luna.Pass.Transform.AST.IDFixer.State  as IDFixer
---import           Luna.Pass.Transform.Graph.Parser.State (GPPass)
---import qualified Luna.Pass.Transform.Graph.Parser.State as State
 --import           Luna.Syntax.Arg                        (Arg (Arg))
 --import qualified Luna.Syntax.Decl                       as Decl
 --import qualified Luna.Syntax.Enum                       as Enum
 --import           Luna.Syntax.Expr                       (LExpr)
 --import qualified Luna.Syntax.Expr                       as Expr
 --import           Luna.Syntax.Graph.Graph                (Graph)
---import qualified Luna.Syntax.Graph.Graph                as Graph
 --import           Luna.Syntax.Graph.Node                 (Node)
---import qualified Luna.Syntax.Graph.Node                 as Node
 --import           Luna.Syntax.Graph.Node.Expr            (NodeExpr)
 --import qualified Luna.Syntax.Graph.Node.Expr            as NodeExpr
 --import qualified Luna.Syntax.Graph.Node.StringExpr      as StringExpr
@@ -45,9 +50,36 @@ import Flowbox.Prelude hiding (error, folded, mapM, mapM_)
 --import qualified Luna.Syntax.Native                     as Native
 --import           Luna.Syntax.Pat                        (LPat)
 --import qualified Luna.Syntax.Pat                        as Pat
---import           Luna.System.Pragma.Store               (MonadPragmaStore)
 
-pass = undefined
+
+logger :: Logger
+logger = getLogger $moduleName
+
+
+run :: (Monad m, Eq v) => Graph Tag v -> TDecl v -> EitherT State.Error m (TDecl v)
+run graph ldecl = evalStateT (func2graph ldecl) $ State.mk graph
+
+
+func2graph :: Eq v => TDecl v -> GPPass v m (TDecl v)
+func2graph decl@(Label _ (Decl.Func funcDecl)) = do
+    let sig = funcDecl ^. Decl.funcDeclSig
+    graph <- State.getGraph
+    mapM_ (parseNode sig) $ Graph.sort graph
+    b  <- State.getBody
+    mo <- State.getOutput
+    let body = reverse $ case mo of
+                Nothing -> b
+                Just o  -> o : b
+    return (decl & Label.element . Decl.funcDecl . Decl.funcDeclBody .~ body)
+
+
+--parseNode :: Decl.FuncSig a e -> (Node.ID, Node a V) -> GPPass a V m ()
+parseNode signature (nodeID, node) = case node of
+    Node.Expr    expr _ _ _ -> undefined --parseExprNode    nodeID expr
+    Node.Inputs  {}         -> undefined --parseInputsNode  nodeID signature
+    Node.Outputs {}         -> undefined --parseOutputsNode nodeID
+
+
 
 ----FIXME[PM]: remove
 --patternParser :: String -> Int -> Either String (LPat a, Int)
@@ -61,28 +93,12 @@ pass = undefined
 --type V = ()
 
 
---logger :: Logger
---logger = getLogger $(moduleName)
-
 
 --run :: (Eq a, Enum.Enumerated a, MonadPragmaStore m)
 --    => Graph a V -> PropertyMap a V -> FuncDecl a e V
 --    -> EitherT Pass.PassError m (FuncDecl a e V, PropertyMap a V)
 --run gr pm = Pass.run_ (Pass.Info "GraphParser") (State.make gr pm) . graph2expr
 
-
---graph2expr :: Eq a => FuncDecl a e V -> GPPass a V m (FuncDecl a e V, PropertyMap a V)
---graph2expr funcDecl = do
---    let sig = funcDecl ^. Decl.funcDeclSig
---    graph <- State.getGraph
---    mapM_ (parseNode sig) $ Graph.sort graph
---    b  <- State.getBody
---    mo <- State.getOutput
---    let body = reverse $ case mo of
---                Nothing -> b
---                Just o  -> o : b
---    pm <- State.getPropertyMap
---    return (funcDecl & Decl.funcDeclBody .~ body, pm)
 
 
 --label :: Enum.Enumerated l => Enum.ID -> a -> Label l a
