@@ -11,45 +11,27 @@
 
 module Luna.Pass.Transform.Graph.Parser.Parser where
 
-import Control.Monad.State
-import Control.Monad.Trans.Either
---import qualified Data.IntSet                as IntSet
---import qualified Data.List                  as List
---import qualified Data.Text.Lazy             as Text
+import           Control.Monad.State
+import           Control.Monad.Trans.Either
+import qualified Data.Maybe                 as Maybe
 
 import           Flowbox.Prelude                        hiding (error, folded, mapM, mapM_)
 import           Flowbox.System.Log.Logger
 import           Luna.Pass.Transform.Graph.Parser.State (GPPass)
 import qualified Luna.Pass.Transform.Graph.Parser.State as State
 import qualified Luna.Syntax.Decl                       as Decl
+import qualified Luna.Syntax.Expr                       as Expr
 import           Luna.Syntax.Graph.Graph                (Graph)
 import qualified Luna.Syntax.Graph.Graph                as Graph
 import qualified Luna.Syntax.Graph.Node                 as Node
+import           Luna.Syntax.Graph.Node.Expr            (NodeExpr)
+import qualified Luna.Syntax.Graph.Node.Expr            as NodeExpr
+import qualified Luna.Syntax.Graph.Node.MultiPart       as MultiPart
+import           Luna.Syntax.Graph.Node.Position        (Position)
 import           Luna.Syntax.Graph.Tag                  (TDecl, TExpr, Tag)
 import           Luna.Syntax.Label                      (Label (Label))
 import qualified Luna.Syntax.Label                      as Label
---import qualified Luna.Parser.Token                      as Token
---import qualified Luna.Pass.Analysis.ID.ExtractIDs       as ExtractIDs
---import qualified Luna.Pass.Pass                         as Pass
---import qualified Luna.Pass.Transform.AST.IDFixer.State  as IDFixer
---import           Luna.Syntax.Arg                        (Arg (Arg))
---import qualified Luna.Syntax.Decl                       as Decl
---import qualified Luna.Syntax.Enum                       as Enum
---import           Luna.Syntax.Expr                       (LExpr)
---import qualified Luna.Syntax.Expr                       as Expr
---import           Luna.Syntax.Graph.Graph                (Graph)
---import           Luna.Syntax.Graph.Node                 (Node)
---import           Luna.Syntax.Graph.Node.Expr            (NodeExpr)
---import qualified Luna.Syntax.Graph.Node.Expr            as NodeExpr
---import qualified Luna.Syntax.Graph.Node.StringExpr      as StringExpr
---import qualified Luna.Syntax.Graph.Port                 as Port
---import           Luna.Syntax.Label                      (Label (Label))
---import qualified Luna.Syntax.Label                      as Label
---import qualified Luna.Syntax.Name                       as Name
---import qualified Luna.Syntax.Name.Pattern               as Pattern
---import qualified Luna.Syntax.Native                     as Native
---import           Luna.Syntax.Pat                        (LPat)
---import qualified Luna.Syntax.Pat                        as Pat
+
 
 
 logger :: Logger
@@ -73,11 +55,42 @@ func2graph decl@(Label _ (Decl.Func funcDecl)) = do
     return (decl & Label.element . Decl.funcDecl . Decl.funcDeclBody .~ body)
 
 
---parseNode :: Decl.FuncSig a e -> (Node.ID, Node a V) -> GPPass a V m ()
+----parseNode :: Decl.FuncSig a e -> (Node.ID, Node a V) -> GPPass a V m ()
+parseNode :: t -> (Node.ID, Node.Node Tag v) -> GPPass v m ()
 parseNode signature (nodeID, node) = case node of
-    Node.Expr    expr _ _ _ -> undefined --parseExprNode    nodeID expr
-    Node.Inputs  {}         -> undefined --parseInputsNode  nodeID signature
-    Node.Outputs {}         -> undefined --parseOutputsNode nodeID
+    Node.Inputs pos -> parseInputs signature pos
+    Node.Expr expr outputName defaults pos -> do
+        graph <- State.getGraph
+        let lprel = Graph.lprelData graph nodeID
+        srcs <- State.getNodeSrcs nodeID
+        ast <- buildExpr expr srcs
+        if length lprel > 0 || Maybe.isJust outputName
+            then do let pat = undefined lprel
+                        assignment = Expr.Assignment pat ast
+                    undefined -- add to var name to nodeMap
+                    State.addToBody $ Label State.dummyTag assignment
+            else State.addToBody ast
+
+
+buildExpr :: NodeExpr Tag v -> [Expr.AppArg (TExpr v)] -> GPPass v m (TExpr v)
+buildExpr expr srcs = case expr of
+    NodeExpr.ASTExpr expr -> return expr
+    NodeExpr.MultiPart mp -> return $ Label State.dummyTag $ Expr.App $ MultiPart.toNamePat mp srcs
+
+
+parseInputs :: a -> Position -> GPPass v m ()
+parseInputs signature pos = do
+    undefined
+
+----parseExprNode :: Node.ID -> NodeExpr a V -> GPPass a V m ()
+--parseExprNode nodeID nodeExpr = case nodeExpr of
+--    --NodeExpr.StringExpr strExpr -> case strExpr of
+--    --    StringExpr.List           -> parseListNode    nodeID
+--    --    StringExpr.Tuple          -> parseTupleNode   nodeID
+--    --    StringExpr.Pattern pat    -> parsePatNode     nodeID pat
+--    --    StringExpr.Native  native -> parseNativeNode  nodeID native
+--    --    _                         -> parseAppNode     nodeID $ StringExpr.toString strExpr
+--    NodeExpr.ASTExpr expr   -> parseASTExprNode nodeID expr
 
 
 
