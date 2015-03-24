@@ -23,11 +23,13 @@ type HeaderSource = String
 
 type ImplementationSource = String
 
+type CppFormattedCode = (HeaderSource, ImplementationSource)
+
 class CppFormattablePart a where
     format :: a -> String
 
 class CppFormattable a where
-    formatCpp :: a -> (HeaderSource, ImplementationSource)
+    formatCpp :: a -> CppFormattedCode
 
 data CppArg = CppArg 
     { argName :: String
@@ -174,10 +176,14 @@ typeOfField (AppT ListT (nested)) = do
 --typeOfField (AppT ConT (maybe)) = printf "boost::optional<%s>" $ typeOfField nested
 typeOfField t = return $ "[" ++ show t ++ "]"
 
+emptyQParts :: Q CppParts
+emptyQParts = return $ CppParts [] []  [] []
+
 processField :: THS.VarStrictType -> Q CppField
 processField field@(name, _, t) = do
     filedType <- typeOfField t
     return $ CppField (translateToCppName name) filedType
+processField arg = trace ("FIXME: Field for " ++ show arg) (return $ CppField "__" "--")
 
 processConstructor :: Con -> Name -> Q CppClass
 processConstructor con@(RecC cname fields) base = 
@@ -186,8 +192,10 @@ processConstructor con@(RecC cname fields) base =
             derCppName = baseCppName ++ "_" ++ translateToCppName cname
         cppFields <- mapM processField fields
         return $ CppClass derCppName cppFields [] [CppDerive baseCppName False Public]
+processConstructor arg name = trace ("FIXME: Con for " ++ show arg) (return $ CppClass "" [] [] [])
 
 generateCppWrapperHlp :: Dec -> Q CppParts
+-- generateCppWrapperHlp arg | trace ("generateCppWrapperHlp: " ++ show arg) False = undefined
 generateCppWrapperHlp dec@(DataD cxt name tyVars cons names) = 
     do
         let baseClass = generateRootClassWrapper dec
@@ -196,15 +204,40 @@ generateCppWrapperHlp dec@(DataD cxt name tyVars cons names) =
         let classes = baseClass : derClasses
             functions = []
         return (CppParts standardSystemIncludes [] classes functions)
+generateCppWrapperHlp arg = trace ("FIXME: wrapper for " ++ show arg) emptyQParts
 
-generateCppWrapper :: Info -> Q (String, String)
-generateCppWrapper (TyConI dec@(DataD cxt name tyVars cons names)) = 
-    do
-        cppParts <- generateCppWrapperHlp dec
-        let cppFormattedParts = formatCpp cppParts
-        return cppFormattedParts --fst cppFormattedParts ++ " \n$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n " ++ snd cppFormattedParts
---generateCppWrapper (DataConI n t p f) = ("ggggggggg", show n)
---generateCppWrapper exp = ("barrrrrr","baz")
+--generateSingleWrapperInfo
+
+generateSingleWrapper :: Name -> Q CppParts
+generateSingleWrapper arg | trace ("generateSingleWrapper: " ++ show arg) False = undefined
+generateSingleWrapper name = do
+    nameInfo <- reify name
+    let bb = case nameInfo of
+            (TyConI dec) -> generateCppWrapperHlp dec
+    bb
+generateSingleWrapper _ = undefined
+
+joinParts :: [CppParts] -> CppParts
+joinParts parts = 
+    CppParts (concat $ map includes parts) (concat $ map typedefs parts) (concat $ map classes parts) (concat $ map functions parts)
+
+generateWrappers :: [Name] -> Q CppParts
+generateWrappers names = do
+    let partsWithQ = map generateSingleWrapper names
+    parts <- sequence partsWithQ
+    return $ joinParts parts
+
+generateWrapperWithDeps :: Name -> Q CppParts
+generateWrapperWithDeps name = do
+    relevantNames <- collectDependencies name
+    generateWrappers relevantNames
+
+
+formatCppWrapper :: Name -> Q CppFormattedCode
+formatCppWrapper arg | trace ("formatCppWrapper: " ++ show arg) False = undefined
+formatCppWrapper name = do
+    parts <- generateWrapperWithDeps name
+    return $ formatCpp parts
 
 foo :: Show a => a -> a
 foo a | trace ("zzzz ") False = undefined
@@ -297,7 +330,7 @@ generateCpp name path = do
     let cppName = path ++ ".cpp"
 
     reifiedName <- reify name
-    (header,body) <- generateCppWrapper reifiedName
+    (header,body) <- formatCppWrapper name
 
     dependencies <- collectDependencies name
     runIO (putStrLn $ printf "Found %d dependencies: %s" (length dependencies) (show dependencies))
