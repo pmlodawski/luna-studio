@@ -95,7 +95,7 @@ instance CppFormattableCtx CppMethod CppClass where
             signatureHeader = printf "\t%s%s %s%s %s;" st rt nt at qt :: String
 
             scope = cn
-            signatureImpl = printf "\t%s%s %s::%s%s %s" st rt scope nt at qt :: String
+            signatureImpl = printf "\t%s %s::%s%s %s" rt scope nt at qt :: String
             implementation = signatureImpl ++ "\n\t{\n" ++ b ++ "\n\t}"
 
         in (signatureHeader, implementation)
