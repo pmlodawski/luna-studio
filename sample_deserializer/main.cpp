@@ -1,3 +1,4 @@
+#include "helper.h"
 #include "main.h"
 
 #include <fstream>
@@ -46,6 +47,6 @@ std::shared_ptr<Expr_Con> Expr_Con::deserializeFrom(Input &input)
 {
 	auto ret = std::make_shared<Expr_Con>();
 	ret->_id = readInt64(input);
-	decode(ret->name, input);
+	deserialize(ret->name, input);
 	return ret;
 }
