@@ -50,6 +50,8 @@ instance CppFormattablePart CppArg where
     format arg = argType arg ++ " " ++ argName arg
 
 data CppQualifier = ConstQualifier | VolatileQualifier | PureVirtualQualifier
+                    deriving (Eq)
+
 instance CppFormattablePart CppQualifier where
     format ConstQualifier = " const"
     format VolatileQualifier = " volatile"
@@ -97,11 +99,12 @@ instance CppFormattableCtx CppMethod CppClass where
             nt = n :: String
             at = formatArgsList a :: String
             qt = format q :: String
-            signatureHeader = printf "\t%s%s %s%s %s;" st rt nt at qt :: String
+            signatureHeader = printf "\t%s%s %s%s%s;" st rt nt at qt :: String
 
-            scope = cn
+            scope = (templateDepName cls)
             templateIntr = formatTemplateIntroductor tmpl
-            signatureImpl = printf "%s%s %s::%s%s %s" templateIntr rt (templateDepName cls) nt at qt :: String
+            qst = (format $ filter ((/=) PureVirtualQualifier) q) -- qualifiers signature text
+            signatureImpl = printf "%s%s %s::%s%s %s" templateIntr rt scope nt at qst :: String
             implementation = signatureImpl ++ "\n{\n" ++ b ++ "\n}"
 
         in (signatureHeader, implementation)
@@ -152,7 +155,7 @@ cppClassTypeUse :: CppClass -> String
 cppClassTypeUse cls@(CppClass name _ _ _ tmpl) = if null tmpl then name else printf "%s<%s>" name (formatTemplateArgs tmpl)
 
 collapseCode :: [CppFormattedCode] -> CppFormattedCode
-collapseCode input = (concat (map fst input), concat (map snd input))
+collapseCode input = (intercalate "\n" (map fst input), intercalate "\n\n" (map snd input))
 
 instance CppFormattable CppClass where
     formatCpp cls@(CppClass name fields methods bases tmpl) = 
