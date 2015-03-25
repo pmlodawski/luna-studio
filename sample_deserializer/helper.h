@@ -5,6 +5,7 @@
 #include <boost/optional.hpp>
 
 typedef std::istream Input;
+typedef std::ostream Output;
 
 template <typename T>
 inline T swap_endian(T u)
