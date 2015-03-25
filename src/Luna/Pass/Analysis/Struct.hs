@@ -50,9 +50,8 @@ import qualified Luna.Data.StructInfo         as SI
 import qualified Luna.Data.ModuleInfo         as ModuleInfo
 
 import qualified Luna.Data.Namespace.State    as State 
-import           Luna.Data.Namespace.State    (regAlias, regOrphan, regParent, regVarName, regNamePatDesc, regTypeName, withScope)
+import           Luna.Data.Namespace.State    (regSymbol, regOrphan, regAlias, regParent, regVarName, regNamePatDesc, regTypeName, withScope)
 import qualified Luna.Parser.State            as ParserState
---import qualified Luna.Syntax.Name.Pattern     as NamePattern
 import qualified Luna.Syntax.Name.Pattern     as NamePattern
 import           Luna.Syntax.Foreign          (Foreign(Foreign))
 
@@ -144,7 +143,7 @@ registerDataDecl (Label lab decl) = case decl of
               Just n  -> regVarName (OriginInfo "dupa" (Enum.id lab)) (unwrap n)
 
 
-registerHeaders :: SACtx lab m a => LDecl lab a -> SAPass m ()
+registerHeaders :: (SACtx lab m a) => LDecl lab a -> SAPass m ()
 registerHeaders (Label lab decl) = case decl of
     Decl.Func    fdecl -> regFuncDecl id fdecl
     Decl.Data    ddecl -> regDataDecl id ddecl
@@ -167,9 +166,9 @@ regImport id imp = do
 
 
 -- regParent here means that the class will be the parent of its methods. Do we need it? Seems sane. 
-regFuncDecl id (Decl.FuncDecl _ sig _ _) = regParent id *> regVarName (OriginInfo "dupa" id) (NamePattern.toNamePath sig)
+regFuncDecl id (Decl.FuncDecl _ sig _ _) = regSymbol (NamePattern.toNamePath sig) id *> regParent id *> regVarName (OriginInfo "dupa" id) (NamePattern.toNamePath sig)
                                          <* regNamePatDesc id (NamePattern.toDesc sig)
-regDataDecl id (Decl.DataDecl name _ cons _) = regParent id *> regTypeName (OriginInfo "dupa" id) (unwrap name) 
+regDataDecl id (Decl.DataDecl name _ cons _) =  regSymbol (unwrap name) id *> regParent id *> regTypeName (OriginInfo "dupa" id) (unwrap name) 
                                              <* mapM_ registerCons cons
     where registerCons (Label lab (Decl.Cons name fields)) = regVarName (OriginInfo "dupa" (Enum.id lab)) (unwrap name)
 
