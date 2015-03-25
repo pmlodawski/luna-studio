@@ -20,8 +20,8 @@ import qualified Test.Luna.DEP.Sample.Code                          as SampleCod
 
 backAndForth :: String -> IO ()
 backAndForth code = do
-    targetExpr <- Common.getMain =<< Common.getAST code
-    emptyExpr  <- Common.getMain =<< Common.getAST SampleCode.emptyMain
+    targetExpr <- Common.getMain =<< (fst <$> Common.getAST code)
+    emptyExpr  <- Common.getMain =<< (fst <$> Common.getAST SampleCode.emptyMain)
     --putStrLn code
     expr2 <- eitherToM' $ Parser.run code emptyExpr
     --prettyPrint expr2
@@ -29,7 +29,6 @@ backAndForth code = do
     expr2 `shouldBe` targetExpr
     (code3, _) <- eitherToM' $ Builder.run def expr2
     code3 `shouldBe` code
-    return ()
 
 
 main :: IO ()

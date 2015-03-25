@@ -61,7 +61,6 @@ import qualified Luna.Pass.Target.HS.HASTGen                as HASTGen
 import qualified Luna.Pass.Target.HS.HSC                    as HSC
 import           Luna.Syntax.Enum                           (IDTag)
 import           Luna.Syntax.Expr                           (LExpr)
-import qualified Luna.Syntax.Expr                           as Expr
 import qualified Luna.Syntax.Name.Hash                      as Hash
 import           Luna.System.Session                        as Session
 
