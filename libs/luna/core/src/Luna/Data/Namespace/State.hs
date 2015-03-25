@@ -122,7 +122,7 @@ withParentID f = do pid <- popID
 
 regOrphan = modifyStructInfo .: StructInfo.regOrphan
 
-
+regSymbol = modifyStructInfo .: StructInfo.regSymbol
 
 --regID :: NamespaceState m => ID -> m ()
 regID id = do
