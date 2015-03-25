@@ -8,9 +8,10 @@
 
 module Luna.Syntax.Graph.Node.MultiPart where
 
-import qualified Data.Maybe as Maybe
+import           Control.Monad.State
+import qualified Data.Maybe          as Maybe
 
-import           Flowbox.Prelude
+import           Flowbox.Prelude          hiding (mapM)
 import qualified Luna.Syntax.Name.Pattern as Pattern
 
 
@@ -33,15 +34,26 @@ makeLenses ''MultiPartSegment
 
 
 fromNamePat :: Pattern.NamePat base arg -> MultiPartExpr base
-fromNamePat (Pattern.NamePat nPrefix nBase nSegmentList) = MultiPartExpr mPrefix mBase mSegments where
-    mPrefix = Maybe.isJust nPrefix
-    mBase = fromSegment nBase
-    mSegments = map fromSegment nSegmentList
+fromNamePat (Pattern.NamePat nPrefix nBase nSegmentList) =
+    MultiPartExpr (Maybe.isJust nPrefix)
+                  (fromSegment nBase)
+                  (map fromSegment nSegmentList)
 
 
 fromSegment :: Pattern.Segment base arg -> MultiPartSegment base
-fromSegment (Pattern.Segment nBase nSegmentArgs) = MultiPartSegment nBase $ length nSegmentArgs
+fromSegment (Pattern.Segment nBase nSegmentArgs) =
+    MultiPartSegment nBase $ length nSegmentArgs
 
 
 toNamePat :: MultiPartExpr base -> [arg] -> arg -> Pattern.NamePat base arg
-toNamePat (MultiPartExpr mPrefix mBase mSegments) args missing = undefined
+toNamePat (MultiPartExpr mPrefix mBase mSegments) args missing =
+    flip evalState (args ++ repeat missing) $ do
+        Pattern.NamePat <$> (if mPrefix then Just <$> arg else return Nothing)
+                        <*> toSegment mBase
+                        <*> mapM toSegment mSegments
+    where
+        toSegment (MultiPartSegment mBase mCount) = Pattern.Segment mBase <$> replicateM mCount arg
+        arg = do
+            h:t <- get
+            put t
+            return h
