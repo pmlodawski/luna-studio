@@ -86,7 +86,7 @@ inline void deserialize(std::vector<T> &out, std::istream &input)
 	out.resize(size);
 	for(int i = 0; i < size; i++)
 	{
-		decode(out[i], input);
+		deserialize(out[i], input);
 	}
 }
 
@@ -107,7 +107,7 @@ inline void deserialize(boost::optional<T> &out, std::istream &input)
 	if(nonempty)
 	{
 		out = T();
-		deserialize(*out);
+		deserialize(*out, input);
 	}
 	else
 		out = boost::none;
