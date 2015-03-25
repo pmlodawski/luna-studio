@@ -4,7 +4,8 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RankNTypes      #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.Batch.Handler.Graph where
 
@@ -17,6 +18,7 @@ import           Flowbox.Control.Error              (assertE)
 import           Flowbox.Prelude                    hiding (error)
 import           Flowbox.System.Log.Logger
 import           Luna.DEP.AST.Control.Crumb         (Breadcrumbs)
+import qualified Luna.DEP.Data.ASTInfo              as ASTInfo
 import           Luna.DEP.Graph.Node                (Node)
 import qualified Luna.DEP.Graph.Node                as Node
 import qualified Luna.DEP.Graph.Node.OutputName     as OutputName
@@ -30,7 +32,7 @@ import qualified Luna.DEP.Lib.Lib                   as Library
 
 
 loggerIO :: LoggerIO
-loggerIO = getLoggerIO "Flowbox.Batch.Handler.Graph"
+loggerIO = getLoggerIO $moduleName
 
 
 nodesGraph :: Breadcrumbs -> Library.ID -> Project.ID -> Batch GraphView
@@ -54,10 +56,12 @@ nodeEdges node bc libID projectID = do
 addNode :: Node -> Breadcrumbs -> Library.ID -> Project.ID -> Batch Node.ID
 addNode node bc libID projectID = do
     (graph, propertyMap) <- Batch.getGraphView bc libID projectID
-    maxID <- Batch.getMaxID libID projectID
-    let newID     = maxID + 1
+    astInfo <- Batch.getASTInfo libID projectID
+    let astInfo'  = ASTInfo.incID astInfo
+        newID     = astInfo' ^. ASTInfo.lastID
         fixedNode = OutputName.fixEmpty node newID
         newGraph  = GraphView.insNode (newID, fixedNode) graph
+    Batch.setASTInfo astInfo' libID projectID
     Batch.setGraphView (newGraph, propertyMap) bc libID projectID
     return newID
 
@@ -66,11 +70,13 @@ updateNode :: (Node.ID, Node) -> Breadcrumbs -> Library.ID -> Project.ID -> Batc
 updateNode (nodeID, newNode) bc libID projectID = do
     (nodeID >= 0 || not (Node.isExpr newNode)) `assertE` "Cannot update, wrong node id"
     (graph, propertyMap) <- Batch.getGraphView bc libID projectID
-    maxID                <- Batch.getMaxID libID projectID
-    let newID     = maxID + 1
+    astInfo <- Batch.getASTInfo libID projectID
+    let astInfo'  = ASTInfo.incID astInfo
+        newID     = astInfo' ^. ASTInfo.lastID
         fixedNode = OutputName.fixEmpty newNode newID
         newGraph  = GraphView.replaceNode (newID, fixedNode) nodeID graph
         newPropertyMap = PropertyMap.move nodeID newID propertyMap
+    Batch.setASTInfo astInfo' libID projectID
     Batch.setGraphView (newGraph, newPropertyMap) bc libID projectID
     return newID
 

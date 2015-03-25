@@ -46,15 +46,16 @@ logger = getLoggerIO $moduleName
 
 
 definitions :: Maybe Int -> Breadcrumbs -> Library.ID -> Project.ID -> Batch Focus
-definitions mmaxDepth bc libID projectID = astFocusOp bc libID projectID (\focus -> do
+definitions mmaxDepth bc libraryID projectID = astFocusOp bc libraryID projectID (\focus -> do
     shrinked <- Shrink.shrinkFunctionBodies focus
     return (focus, shrinked))
 
 
 addModule :: Module -> Breadcrumbs -> Library.ID -> Project.ID -> Batch Module
-addModule newModule bcParent libID projectID = astFocusOp bcParent libID projectID (\focus -> do
-    maxID       <- Batch.getMaxID libID projectID
-    fixedModule <- EitherT $ IDFixer.runModule maxID Nothing True newModule
+addModule newModule bcParent libraryID projectID = astFocusOp bcParent libraryID projectID (\focus -> do
+    astInfo     <- Batch.getASTInfo libraryID projectID
+    (fixedModule, astInfo') <- EitherT $ IDFixer.runModule astInfo Nothing True newModule
+    Batch.setASTInfo astInfo' libraryID projectID
     newFocus    <- case focus of
         Focus.Class    _ -> left "Cannot add module to a class"
         Focus.Function _ -> left "Cannot add module to a function"
@@ -64,9 +65,10 @@ addModule newModule bcParent libID projectID = astFocusOp bcParent libID project
 
 
 addData :: Expr -> Breadcrumbs -> Library.ID -> Project.ID -> Batch Expr
-addData newClass bcParent libID projectID = astFocusOp bcParent libID projectID (\focus -> do
-    maxID       <- Batch.getMaxID libID projectID
-    fixedClass <- EitherT $ IDFixer.runExpr maxID Nothing True newClass
+addData newClass bcParent libraryID projectID = astFocusOp bcParent libraryID projectID (\focus -> do
+    astInfo <- Batch.getASTInfo libraryID projectID
+    (fixedClass, astInfo') <- EitherT $ IDFixer.runExpr astInfo Nothing True newClass
+    Batch.setASTInfo astInfo' libraryID projectID
     newFocus <- case focus of
         Focus.Class    c -> return $ Focus.Class $ Expr.addClass fixedClass c
         Focus.Function _ -> left "Cannot add class to a function"
@@ -76,9 +78,10 @@ addData newClass bcParent libID projectID = astFocusOp bcParent libID projectID 
 
 
 addFunction :: Expr -> Breadcrumbs -> Library.ID -> Project.ID -> Batch Expr
-addFunction newFunction bcParent libID projectID = astFocusOp bcParent libID projectID (\focus -> do
-    maxID       <- Batch.getMaxID libID projectID
-    fixedFunction <- EitherT $ IDFixer.runExpr maxID Nothing True newFunction
+addFunction newFunction bcParent libraryID projectID = astFocusOp bcParent libraryID projectID (\focus -> do
+    astInfo <- Batch.getASTInfo libraryID projectID
+    (fixedFunction, astInfo') <- EitherT $ IDFixer.runExpr astInfo Nothing True newFunction
+    Batch.setASTInfo astInfo' libraryID projectID
     newFocus <- case focus of
         Focus.Class    c -> return $ Focus.Class $ Expr.addMethod fixedFunction c
         Focus.Function _ -> left "Cannot add function to a function"
@@ -88,7 +91,7 @@ addFunction newFunction bcParent libID projectID = astFocusOp bcParent libID pro
 
 
 remove :: Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
-remove bc libID projectID = astOp libID projectID (\ast propertyMap -> do
+remove bc libraryID projectID = astOp libraryID projectID (\ast propertyMap -> do
     focus <- hoistEither $ Zipper.focusBreadcrumbs' bc ast
     ids   <- EitherT $ ExtractIDs.run $ Zipper.getFocus focus
     let newPropertyMap = foldr PropertyMap.delete propertyMap $ IntSet.toList ids
@@ -97,100 +100,111 @@ remove bc libID projectID = astOp libID projectID (\ast propertyMap -> do
 
 
 resolveDefinition :: String -> Breadcrumbs -> Library.ID -> Project.ID -> Batch [(Breadcrumbs, Library.ID)]
-resolveDefinition name bc libID projectID = do
+resolveDefinition name bc libraryID projectID = do
     libManager <- Batch.getLibManager projectID
-    results <- EitherT $ NameResolver.run name bc libID libManager
+    results <- EitherT $ NameResolver.run name bc libraryID libManager
     return (map Tuple.swap results)
 
 
 modifyModuleCls :: Type -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
-modifyModuleCls cls bc libID projectID = astModuleOp bc libID projectID $ \m -> do
-    maxID    <- Batch.getMaxID libID projectID
-    fixedCls <- EitherT $ IDFixer.runType maxID (Just $ m ^. Module.cls . Type.id) True cls
+modifyModuleCls cls bc libraryID projectID = astModuleOp bc libraryID projectID $ \m -> do
+    astInfo <- Batch.getASTInfo libraryID projectID
+    (fixedCls, astInfo') <- EitherT $ IDFixer.runType astInfo (Just $ m ^. Module.cls . Type.id) True cls
+    Batch.setASTInfo astInfo' libraryID projectID
     return (m & Module.cls .~ fixedCls, ())
 
 
 modifyModuleImports :: [Expr] -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
-modifyModuleImports imports bc libID projectID = astModuleOp bc libID projectID $ \m -> do
-    maxID        <- Batch.getMaxID libID projectID
-    fixedImports <- EitherT $ IDFixer.runExprs maxID Nothing True imports
+modifyModuleImports imports bc libraryID projectID = astModuleOp bc libraryID projectID $ \m -> do
+    astInfo <- Batch.getASTInfo libraryID projectID
+    (fixedImports, astInfo') <- EitherT $ IDFixer.runExprs astInfo Nothing True imports
+    Batch.setASTInfo astInfo' libraryID projectID
     return (m & Module.imports .~ fixedImports, ())
 
 
 modifyModuleTypeAliases :: [Expr] -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
-modifyModuleTypeAliases typeAliases bc libID projectID = astModuleOp bc libID projectID $ \m -> do
-    maxID <- Batch.getMaxID libID projectID
-    fixedTypeAliases <- EitherT $ IDFixer.runExprs maxID Nothing True typeAliases
+modifyModuleTypeAliases typeAliases bc libraryID projectID = astModuleOp bc libraryID projectID $ \m -> do
+    astInfo <- Batch.getASTInfo libraryID projectID
+    (fixedTypeAliases, astInfo') <- EitherT $ IDFixer.runExprs astInfo Nothing True typeAliases
+    Batch.setASTInfo astInfo' libraryID projectID
     return (m & Module.typeAliases .~ fixedTypeAliases, ())
 
 
 modifyModuleTypeDefs :: [Expr] -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
-modifyModuleTypeDefs typeDefs bc libID projectID = astModuleOp bc libID projectID $ \m -> do
-    maxID <- Batch.getMaxID libID projectID
-    fixedTypeDefs <- EitherT $ IDFixer.runExprs maxID Nothing True typeDefs
+modifyModuleTypeDefs typeDefs bc libraryID projectID = astModuleOp bc libraryID projectID $ \m -> do
+    astInfo <- Batch.getASTInfo libraryID projectID
+    (fixedTypeDefs, astInfo') <- EitherT $ IDFixer.runExprs astInfo Nothing True typeDefs
+    Batch.setASTInfo astInfo' libraryID projectID
     return (m & Module.typeDefs .~ fixedTypeDefs, ())
 
 
 modifyModuleFields :: [Expr] -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
-modifyModuleFields fields bc libID projectID = astModuleOp bc libID projectID $ \m -> do
-    maxID       <- Batch.getMaxID libID projectID
-    fixedFields <- EitherT $ IDFixer.runExprs maxID Nothing True fields
+modifyModuleFields fields bc libraryID projectID = astModuleOp bc libraryID projectID $ \m -> do
+    astInfo <- Batch.getASTInfo libraryID projectID
+    (fixedFields, astInfo') <- EitherT $ IDFixer.runExprs astInfo Nothing True fields
+    Batch.setASTInfo astInfo' libraryID projectID
     return (m & Module.fields .~ fixedFields, ())
 
 
 modifyDataCls :: Type -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
-modifyDataCls cls bc libID projectID = astDataOp bc libID projectID (\m -> do
-    maxID    <- Batch.getMaxID libID projectID
-    fixedCls <- EitherT $ IDFixer.runType maxID (Just $ m ^?! Expr.cls . Type.id) True cls
+modifyDataCls cls bc libraryID projectID = astDataOp bc libraryID projectID (\m -> do
+    astInfo <- Batch.getASTInfo libraryID projectID
+    (fixedCls, astInfo') <- EitherT $ IDFixer.runType astInfo (Just $ m ^?! Expr.cls . Type.id) True cls
+    Batch.setASTInfo astInfo' libraryID projectID
     return (m & Expr.cls .~ fixedCls, ()))
 
 
 modifyDataCons :: [Expr] -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
-modifyDataCons cons bc libID projectID = astDataOp bc libID projectID $ \m -> do
-    maxID     <- Batch.getMaxID libID projectID
-    fixedCons <- EitherT $ IDFixer.runExprs maxID Nothing True cons
+modifyDataCons cons bc libraryID projectID = astDataOp bc libraryID projectID $ \m -> do
+    astInfo <- Batch.getASTInfo libraryID projectID
+    (fixedCons, astInfo') <- EitherT $ IDFixer.runExprs astInfo Nothing True cons
+    Batch.setASTInfo astInfo' libraryID projectID
     return (m & Expr.cons .~ fixedCons, ())
 
 
 addDataCon :: Expr -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
-addDataCon con bc libID projectID = astDataOp bc libID projectID $ \data_ -> do
-    maxID     <- Batch.getMaxID libID projectID
-    fixedCon  <- EitherT $ IDFixer.runExpr maxID Nothing True con
+addDataCon con bc libraryID projectID = astDataOp bc libraryID projectID $ \data_ -> do
+    astInfo <- Batch.getASTInfo libraryID projectID
+    (fixedCon, astInfo') <- EitherT $ IDFixer.runExpr astInfo Nothing True con
+    Batch.setASTInfo astInfo' libraryID projectID
     return (data_ & Expr.cons %~ (fixedCon:), ())
 
 
 deleteDataCon :: AST.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
-deleteDataCon conID bc libID projectID = astDataOp bc libID projectID $ \data_ -> do
+deleteDataCon conID bc libraryID projectID = astDataOp bc libraryID projectID $ \data_ -> do
     let cons = filter ((/=) conID . view Expr.id) $ data_ ^. Expr.cons
     return (data_ & Expr.cons .~ cons, ())
 
 
 modifyDataCon :: Expr -> AST.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
-modifyDataCon con conID bc libID projectID = astDataOp bc libID projectID $ \data_ -> do
-    maxID     <- Batch.getMaxID libID projectID
-    fixedCon  <- EitherT $ IDFixer.runExpr maxID Nothing True con
+modifyDataCon con conID bc libraryID projectID = astDataOp bc libraryID projectID $ \data_ -> do
+    astInfo <- Batch.getASTInfo libraryID projectID
+    (fixedCon, astInfo')  <- EitherT $ IDFixer.runExpr astInfo Nothing True con
+    Batch.setASTInfo astInfo' libraryID projectID
     let fixedCon' = fixedCon & Expr.id .~ conID
         cons = filter ((/=) conID . view Expr.id) $ data_ ^. Expr.cons
     return (data_ & Expr.cons .~ (fixedCon':cons), ())
 
 
 addDataConField :: Expr -> AST.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
-addDataConField field conID bc libID projectID = astDataConOp conID bc libID projectID $ \dataCon -> do
-    maxID      <- Batch.getMaxID libID projectID
-    fixedField <- EitherT $ IDFixer.runExpr maxID Nothing True field
+addDataConField field conID bc libraryID projectID = astDataConOp conID bc libraryID projectID $ \dataCon -> do
+    astInfo <- Batch.getASTInfo libraryID projectID
+    (fixedField, astInfo') <- EitherT $ IDFixer.runExpr astInfo Nothing True field
+    Batch.setASTInfo astInfo' libraryID projectID
     return (dataCon & Expr.fields %~ (fixedField:), ())
 
 
 deleteDataConField :: AST.ID -> AST.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
-deleteDataConField fieldID conID bc libID projectID = astDataConOp conID bc libID projectID $ \dataCon -> do
+deleteDataConField fieldID conID bc libraryID projectID = astDataConOp conID bc libraryID projectID $ \dataCon -> do
     let fields = filter ((/=) fieldID . view Expr.id) $ dataCon ^. Expr.fields
     return (dataCon & Expr.fields .~ fields, ())
 
 
 modifyDataConField :: Expr -> AST.ID -> AST.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
-modifyDataConField field fieldID conID bc libID projectID = astDataConOp conID bc libID projectID $ \dataCon -> do
-    maxID     <- Batch.getMaxID libID projectID
-    fixedField  <- EitherT $ IDFixer.runExpr maxID Nothing True field
+modifyDataConField field fieldID conID bc libraryID projectID = astDataConOp conID bc libraryID projectID $ \dataCon -> do
+    astInfo <- Batch.getASTInfo libraryID projectID
+    (fixedField, astInfo')  <- EitherT $ IDFixer.runExpr astInfo Nothing True field
+    Batch.setASTInfo astInfo' libraryID projectID
     let fixedField' = fixedField & Expr.id .~ fieldID
         (a, b) = List.break ((==) fieldID . view Expr.id) $ dataCon ^. Expr.fields
     b' <- case b of
@@ -200,49 +214,53 @@ modifyDataConField field fieldID conID bc libID projectID = astDataConOp conID b
 
 
 modifyDataClasses :: [Expr] -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
-modifyDataClasses classes bc libID projectID = astDataOp bc libID projectID $ \data_ -> do
-    maxID        <- Batch.getMaxID libID projectID
-    fixedClasses <- EitherT $ IDFixer.runExprs maxID Nothing True classes
+modifyDataClasses classes bc libraryID projectID = astDataOp bc libraryID projectID $ \data_ -> do
+    astInfo <- Batch.getASTInfo libraryID projectID
+    (fixedClasses, astInfo') <- EitherT $ IDFixer.runExprs astInfo Nothing True classes
+    Batch.setASTInfo astInfo' libraryID projectID
     return (data_ & Expr.classes .~ fixedClasses, ())
 
 
 modifyDataMethods :: [Expr] -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
-modifyDataMethods methods bc libID projectID = astDataOp bc libID projectID $ \data_ -> do
-    maxID        <- Batch.getMaxID libID projectID
-    fixedMethods <- EitherT $ IDFixer.runExprs maxID Nothing True methods
+modifyDataMethods methods bc libraryID projectID = astDataOp bc libraryID projectID $ \data_ -> do
+    astInfo <- Batch.getASTInfo libraryID projectID
+    (fixedMethods, astInfo') <- EitherT $ IDFixer.runExprs astInfo Nothing True methods
+    Batch.setASTInfo astInfo' libraryID projectID
     return (data_ & Expr.methods .~ fixedMethods, ())
 
 
 modifyFunctionName :: Name -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
-modifyFunctionName name bc libID projectID = astFunctionOp bc libID projectID $ \fun ->
+modifyFunctionName name bc libraryID projectID = astFunctionOp bc libraryID projectID $ \fun ->
     return (fun & Expr.fname .~ name, ())
 
 
 modifyFunctionPath :: [String] -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
-modifyFunctionPath path bc libID projectID = astFunctionOp bc libID projectID $ \fun ->
+modifyFunctionPath path bc libraryID projectID = astFunctionOp bc libraryID projectID $ \fun ->
     return (fun & Expr.path .~ path, ())
 
 
 modifyFunctionInputs :: [Expr] -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
-modifyFunctionInputs inputs bc libID projectID = astFunctionOp bc libID projectID $ \fun -> do
-    maxID       <- Batch.getMaxID libID projectID
-    fixedInputs <- EitherT $ IDFixer.runExprs maxID Nothing True inputs
+modifyFunctionInputs inputs bc libraryID projectID = astFunctionOp bc libraryID projectID $ \fun -> do
+    astInfo <- Batch.getASTInfo libraryID projectID
+    (fixedInputs, astInfo') <- EitherT $ IDFixer.runExprs astInfo Nothing True inputs
+    Batch.setASTInfo astInfo' libraryID projectID
     return (fun & Expr.inputs .~ fixedInputs, ())
 
 
 modifyFunctionOutput :: Type -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
-modifyFunctionOutput output bc libID projectID = do
-    function    <- Batch.getFunction bc libID projectID
-    propertyMap <- Batch.getPropertyMap libID projectID
+modifyFunctionOutput output bc libraryID projectID = do
+    function    <- Batch.getFunction bc libraryID projectID
+    propertyMap <- Batch.getPropertyMap libraryID projectID
 
     let oldID = function ^?! Expr.output . Type.id
 
-    maxID       <- Batch.getMaxID libID projectID
-    fixedOutput <- EitherT $ IDFixer.runType maxID (Just oldID) True output
+    astInfo <- Batch.getASTInfo libraryID projectID
+    (fixedOutput, astInfo') <- EitherT $ IDFixer.runType astInfo (Just oldID) True output
+    Batch.setASTInfo astInfo' libraryID projectID
 
     let newID = fixedOutput ^. Type.id
         newFunction    = function & Expr.output .~ fixedOutput
         newPropertyMap = PropertyMap.move (-oldID) (-newID) propertyMap
 
-    Batch.setFunctionFocus newFunction bc libID projectID
-    Batch.setPropertyMap newPropertyMap libID projectID
+    Batch.setFunctionFocus newFunction bc libraryID projectID
+    Batch.setPropertyMap newPropertyMap libraryID projectID

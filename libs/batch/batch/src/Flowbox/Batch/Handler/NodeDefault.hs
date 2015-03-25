@@ -14,6 +14,7 @@ import qualified Flowbox.Batch.Project.Project               as Project
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Luna.DEP.AST.Control.Crumb                  (Breadcrumbs)
+import qualified Luna.DEP.Data.ASTInfo                       as ASTInfo
 import qualified Luna.DEP.Graph.Flags                        as Flags
 import qualified Luna.DEP.Graph.Node                         as Node
 import           Luna.DEP.Graph.Node.Expr                    (NodeExpr)
@@ -27,30 +28,33 @@ import qualified Luna.DEP.Pass.Transform.AST.IDFixer.IDFixer as IDFixer
 
 
 nodeDefaults :: Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch DefaultsMap
-nodeDefaults nodeID _ libID projectID =
-    PropertyMap.getDefaultsMap nodeID <$> Batch.getPropertyMap libID projectID
+nodeDefaults nodeID _ libraryID projectID =
+    PropertyMap.getDefaultsMap nodeID <$> Batch.getPropertyMap libraryID projectID
 
 
 setNodeDefault :: PortDescriptor -> NodeExpr
                -> Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
-setNodeDefault dstPort value nodeID bc libID projectID = do
-    propertyMap <- Batch.getPropertyMap libID projectID
-    maxID       <- Batch.getMaxID libID projectID
-    (fixedValue, newMaxID) <- EitherT $ IDFixer.runNodeExpr' maxID Nothing True value
-    let newPM1 = PropertyMap.modifyDefaultsMap (DefaultsMap.insert dstPort (maxID, fixedValue)) nodeID propertyMap
-        newPM  = foldr (PropertyMap.modifyFlags (Flags.defaultNodeGenerated .~ Just True)) newPM1 [maxID..newMaxID-1]
-    Batch.setPropertyMap newPM libID projectID
+setNodeDefault dstPort value nodeID bc libraryID projectID = do
+    propertyMap <- Batch.getPropertyMap libraryID projectID
+    astInfo     <- Batch.getASTInfo libraryID projectID
+    (fixedValue, astInfo') <- EitherT $ IDFixer.runNodeExpr astInfo Nothing True value
+    let newID    = astInfo ^. ASTInfo.lastID
+        newMaxID = astInfo' ^. ASTInfo.lastID
+        newPM1   = PropertyMap.modifyDefaultsMap (DefaultsMap.insert dstPort (newID, fixedValue)) nodeID propertyMap
+        newPM    = foldr (PropertyMap.modifyFlags (Flags.defaultNodeGenerated .~ Just True)) newPM1 [newID..newMaxID-1]
+    Batch.setASTInfo astInfo' libraryID projectID
+    Batch.setPropertyMap newPM libraryID projectID
     --TODO[PM] : Temporary fix
-    Batch.graphViewOp bc libID projectID $ \gv pm -> return ((gv, pm), ())
+    Batch.graphViewOp bc libraryID projectID $ \gv pm -> return ((gv, pm), ())
 
 
 
 removeNodeDefault :: PortDescriptor
                   -> Node.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
-removeNodeDefault dstPort nodeID bc libID projectID = do
-    propertyMap <- Batch.getPropertyMap libID projectID
+removeNodeDefault dstPort nodeID bc libraryID projectID = do
+    propertyMap <- Batch.getPropertyMap libraryID projectID
     let newPM = PropertyMap.modifyDefaultsMap (DefaultsMap.delete dstPort) nodeID propertyMap
-    Batch.setPropertyMap newPM libID projectID
+    Batch.setPropertyMap newPM libraryID projectID
     --TODO[PM] : Temporary fix
-    Batch.graphViewOp bc libID projectID $ \gv pm -> return ((gv, pm), ())
+    Batch.graphViewOp bc libraryID projectID $ \gv pm -> return ((gv, pm), ())
 
