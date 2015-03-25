@@ -18,8 +18,12 @@ type Type = String
 
 
 -- type Arg a = [a]
+
+type EvilArg a = [a]
+
 data Arg a = Named   { _iid :: ID, _naame :: String, _aarg :: a }
            | Unnamed { _iid :: ID, _aarg :: a                  }
+           | NestingEvil { _evil :: EvilArg a }
            deriving (Show, Eq, Generic, Read)
 
 type Name = String
