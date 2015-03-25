@@ -55,20 +55,22 @@ inline std::int8_t readInt8(std::istream &input)
 	return readPrimitive<char>(input);
 }
 
-void deserialize(std::int8_t &val, Input &input)
+inline void deserialize(std::int8_t &val, Input &input)
 {
 	val = readInt8(input);
 }
 
-void deserialize(std::int16_t &val, Input &input)
+inline void deserialize(std::int16_t &val, Input &input)
 {
 	val = readInt16(input);
 }
-void deserialize(std::int32_t &val, Input &input)
+
+inline void deserialize(std::int32_t &val, Input &input)
 {
 	val = readInt32(input);
 }
-void deserialize(std::int64_t &val, Input &input)
+
+inline void deserialize(std::int64_t &val, Input &input)
 {
 	val = readInt64(input);
 }
