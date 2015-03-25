@@ -13,21 +13,25 @@ message URM {
     message Transaction {
         message Begin {
             message Request {
-                required string description = 1;
+                required int32  projectID   = 1;
+                required string description = 2;
             }
             message Status {
                 required Request request = 1;
             }
         }
         message Commit {
-            message Request { }
+            message Request { 
+                required int32  projectID   = 1;
+            }
             message Status {
                 required Request request = 1;
             }
         }
         message Rollback { 
             message Request {
-//                optional int32 savedPoint = 1;
+                required int32  projectID   = 1;
+//                optional int32 savedPoint = 2;
             }
             message Status {
                 required Request request = 1;
@@ -35,7 +39,9 @@ message URM {
         }
         // [MW] proposal
 //        message SavePoint {
-//            message Request { }
+//            message Request { 
+//                required int32  projectID   = 1;
+//            }
 //            message Status {
 //                required Request request = 1;
 //                required int32 savedPoint = 2;
