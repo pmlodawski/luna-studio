@@ -9,11 +9,12 @@
 
 module Expr where
 
+import Data.Int
 import GHC.Generics        (Generic)
 
-type ID = Int
-type Pat = Int
-type Lit = Int
+type ID = Int64
+type Pat = Int64
+type Lit = Int64
 type Type = String
 
 
