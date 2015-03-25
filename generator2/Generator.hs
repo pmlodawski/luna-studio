@@ -92,10 +92,13 @@ instance CppFormattableCtx CppMethod CppClass where
             nt = n :: String
             at = formatArgsList a :: String
             qt = format q :: String
-            signature = printf "\t%s%s %s%s %s" st rt nt at qt :: String
-            headerImpl = signature ++ "\n\t{\n" ++ b ++ "\n\t}"
+            signatureHeader = printf "\t%s%s %s%s %s;" st rt nt at qt :: String
 
-        in (headerImpl, "")
+            scope = cn
+            signatureImpl = printf "\t%s%s %s::%s%s %s" st rt scope nt at qt :: String
+            implementation = signatureImpl ++ "\n\t{\n" ++ b ++ "\n\t}"
+
+        in (signatureHeader, implementation)
 
 data CppField = CppField 
     { fieldName :: String
@@ -157,7 +160,7 @@ instance CppFormattable CppClass where
             (methodsHeader, methodsImpl) = collapseCode (formatCppCtx <$> methods <*> [cls])
             templatePreamble = formatTemplateIntroductor tmpl
             headerCode = printf "%sclass %s %s \n{\npublic:\n%s\n\n%s\n};" templatePreamble name basesTxt fieldsTxt methodsHeader
-            bodyCode = ""
+            bodyCode = methodsImpl
         in (headerCode, bodyCode)
 
 data CppInclude = CppSystemInclude String | CppLocalInclude String
@@ -165,10 +168,10 @@ instance CppFormattable CppInclude where
     formatCpp (CppSystemInclude path) = (printf "#include <%s>" path, "")
     formatCpp (CppLocalInclude path) = (printf "#include \"%s\"" path, "")
 
-data CppForwardDecl = CppForwardDeclClass String | CppForwardDeclStruct String
+data CppForwardDecl = CppForwardDeclClass String [String] -- | CppForwardDeclStruct String
 instance CppFormattable CppForwardDecl where
-    formatCpp (CppForwardDeclClass name) = (printf "class %s;" name, "")
-    formatCpp (CppForwardDeclStruct name) = (printf "struct %s;" name, "")
+    formatCpp (CppForwardDeclClass name tmpl) = (printf "%sclass %s;" (formatTemplateIntroductor tmpl) name, "")
+    -- formatCpp (CppForwardDeclStruct name) = (printf "struct %s;" name, "")
 
 data CppTypedef  = CppTypedef 
     { introducedType :: String
@@ -366,7 +369,7 @@ generateCppWrapperHlp dec@(DataD cxt name tyVars cons names) =
         -- derClasses = processConstructor <$> cons <*> [name]
         let classes = baseClass : derClasses
             functions = []
-            forwardDecs = map (\c -> CppForwardDeclClass $ className c) classes
+            forwardDecs = map (\c -> CppForwardDeclClass (className c) (templateParams c)) classes
         return (CppParts standardSystemIncludes forwardDecs [] classes functions)
 
 generateCppWrapperHlp tysyn@(TySynD name tyVars rhstype) = do
@@ -512,6 +515,6 @@ generateCpp name path = do
     runIO (writeFile headerName header)
     runIO (writeFile cppName body)
 
-    runIO (writeFile cppName (printf "#include \"%s\"" headerName))
+    runIO (writeFile cppName $ (printf "#include \"helper.h\"\n#include \"%s\"\n\n" headerName) ++ body)
     [|  return () |]
 
