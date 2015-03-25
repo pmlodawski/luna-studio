@@ -18,10 +18,10 @@ import qualified Luna.DEP.AST.Control.Zipper                   as Zipper
 import           Luna.DEP.AST.Expr                             (Expr)
 import           Luna.DEP.AST.Module                           (Module)
 import qualified Luna.DEP.AST.Name                             as Name
+import           Luna.DEP.Data.ASTInfo                         (ASTInfo)
 import           Luna.DEP.Graph.Graph                          (Graph)
 import           Luna.DEP.Graph.PropertyMap                    (PropertyMap)
 import qualified Luna.DEP.Pass.Analysis.Alias.Alias            as Analysis.Alias
-import qualified Luna.DEP.Pass.Analysis.ID.MaxID               as MaxID
 import qualified Luna.DEP.Pass.Transform.AST.IDFixer.IDFixer   as IDFixer
 import qualified Luna.DEP.Pass.Transform.Graph.Builder.Builder as GraphBuilder
 import qualified Luna.DEP.Pass.Transform.Graph.Parser.Parser   as GraphParser
@@ -48,16 +48,15 @@ getGraph bc pm ast = eitherStringToM' $ runEitherT $ do
     EitherT $ GraphBuilder.run aliasInfo pm True expr
 
 
-getExpr :: Breadcrumbs -> Graph -> PropertyMap -> Module -> IO (Module, PropertyMap)
-getExpr bc graph pm ast = eitherStringToM' $ runEitherT $ do
+getExpr :: Breadcrumbs -> Graph -> PropertyMap -> Module -> ASTInfo -> IO (Module, PropertyMap, ASTInfo)
+getExpr bc graph pm ast astInfo = eitherStringToM' $ runEitherT $ do
     zipper <- hoistEither $ Zipper.focusBreadcrumbs' bc ast
     let focus = Zipper.getFocus zipper
     expr <- focus ^? Focus.expr <??> "test.Common.getExpr : Target is not a function"
-    (expr2', pm2) <- EitherT $ GraphParser.run graph pm expr
-    maxID         <- EitherT $ MaxID.runExpr expr2'
-    expr2         <- EitherT $ IDFixer.runExpr maxID Nothing False expr2'
+    (expr2', pm2)     <- EitherT $ GraphParser.run graph pm expr
+    (expr2, astInfo') <- EitherT $ IDFixer.runExpr astInfo Nothing False expr2'
     let newFocus = focus & Focus.expr .~ expr2
-    return (Zipper.close $ Zipper.modify (const newFocus) zipper, pm2)
+    return (Zipper.close $ Zipper.modify (const newFocus) zipper, pm2, astInfo')
 
 
 getMain :: Module -> IO Expr

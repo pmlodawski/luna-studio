@@ -48,7 +48,6 @@ import qualified Luna.DEP.Parser.Parser                                         
 import qualified Luna.DEP.Pass.Analysis.Alias.Alias                                as Analysis.Alias
 import qualified Luna.DEP.Pass.Analysis.CallGraph.CallGraph                        as Analysis.CallGraph
 import qualified Luna.DEP.Pass.Analysis.FuncPool.FuncPool                          as FuncPool
-import qualified Luna.DEP.Pass.Analysis.ID.MaxID                                   as MaxID
 import qualified Luna.DEP.Pass.CodeGen.HSC.HSC                                     as HSC
 import qualified Luna.DEP.Pass.General.Luna.Luna                                   as Luna
 import qualified Luna.DEP.Pass.Source.File.Reader                                  as FileReader

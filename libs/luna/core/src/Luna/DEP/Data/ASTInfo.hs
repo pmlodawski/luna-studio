@@ -6,7 +6,6 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE TemplateHaskell #-}
 
-
 module Luna.DEP.Data.ASTInfo where
 
 import           Flowbox.Prelude     hiding (id)
