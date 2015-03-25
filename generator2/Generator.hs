@@ -155,9 +155,7 @@ instance CppFormattable CppClass where
             fieldsTxt = format fields
             -- fff =  (formatCppCtx <$> methods <*> [cls]) :: [CppFormattedCode]
             (methodsHeader, methodsImpl) = collapseCode (formatCppCtx <$> methods <*> [cls])
-            templatePreamble = if null tmpl then "" else
-                                    let params = intercalate ", " (map ((++) "typename ") tmpl)
-                                    in printf "template<%s>\n" params :: String
+            templatePreamble = formatTemplateIntroductor tmpl
             headerCode = printf "%sclass %s %s \n{\npublic:\n%s\n\n%s\n};" templatePreamble name basesTxt fieldsTxt methodsHeader
             bodyCode = ""
         in (headerCode, bodyCode)
@@ -175,10 +173,13 @@ instance CppFormattable CppForwardDecl where
 data CppTypedef  = CppTypedef 
     { introducedType :: String
     , baseType :: String
+    , _typedefTmpl :: [String]
     }
 
 instance CppFormattable CppTypedef where
-    formatCpp (CppTypedef to from) = (printf "using %s = %s;" to from, "")
+    formatCpp (CppTypedef to from tmpl) = 
+        let templateList = formatTemplateIntroductor tmpl
+        in (printf "%susing %s = %s;" templateList to from, "")
 
 data CppParts = CppParts
     { includes :: [CppInclude]
@@ -203,6 +204,11 @@ instance CppFormattable CppParts where
             headerCode = collectCodePieces fst
             bodyCode = collectCodePieces snd
         in (headerCode, bodyCode)
+
+formatTemplateIntroductor :: [String] -> String
+formatTemplateIntroductor tmpl = if null tmpl then "" else
+                                    let params = intercalate ", " (map ((++) "typename ") tmpl)
+                                    in printf "template<%s>\n" params :: String
 
 standardSystemIncludes :: [CppInclude]
 standardSystemIncludes = map CppSystemInclude ["memory", "vector", "string"]
@@ -357,9 +363,10 @@ generateCppWrapperHlp dec@(DataD cxt name tyVars cons names) =
             forwardDecs = map (\c -> CppForwardDeclClass $ className c) classes
         return (CppParts standardSystemIncludes forwardDecs [] classes functions)
 
-generateCppWrapperHlp tysyn@(TySynD name tyvars rhstype) = do
+generateCppWrapperHlp tysyn@(TySynD name tyVars rhstype) = do
     baseTName <- typeOfField rhstype
-    let tf = CppTypedef (nameBase name) baseTName
+    let tnames = map tyvarToCppName tyVars
+    let tf = CppTypedef (nameBase name) baseTName tnames
     return $ CppParts [] [] [tf] [] []
 
 generateCppWrapperHlp arg = trace ("FIXME: generateCppWrapperHlp for " ++ show arg) emptyQParts
