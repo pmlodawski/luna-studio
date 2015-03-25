@@ -86,7 +86,7 @@ data CppMethod = CppMethod
     }
 
 instance CppFormattableCtx CppMethod CppClass where
-    formatCppCtx (CppMethod (CppFunction n r a b) q s) cls@(CppClass cn _ _ _ _) = 
+    formatCppCtx (CppMethod (CppFunction n r a b) q s) cls@(CppClass cn _ _ _ tmpl) = 
         let st = format s :: String
             rt = r :: String
             nt = n :: String
@@ -95,7 +95,8 @@ instance CppFormattableCtx CppMethod CppClass where
             signatureHeader = printf "\t%s%s %s%s %s;" st rt nt at qt :: String
 
             scope = cn
-            signatureImpl = printf "\t%s %s::%s%s %s" rt scope nt at qt :: String
+            templateIntr = formatTemplateIntroductor tmpl
+            signatureImpl = printf "%s%s %s::%s%s %s" templateIntr rt (templateDepName cls) nt at qt :: String
             implementation = signatureImpl ++ "\n\t{\n" ++ b ++ "\n\t}"
 
         in (signatureHeader, implementation)
@@ -141,6 +142,9 @@ data CppClass = CppClass
     , baseClasses :: [CppDerive]
     , templateParams :: [String]
     }
+
+cppClassTypeUse :: CppClass -> String
+cppClassTypeUse cls@(CppClass name _ _ _ tmpl) = if null tmpl then name else printf "%s<%s>" name (formatTemplateArgs tmpl)
 
 collapseCode :: [CppFormattedCode] -> CppFormattedCode
 collapseCode input = (concat (map fst input), concat (map snd input))
@@ -208,10 +212,12 @@ instance CppFormattable CppParts where
             bodyCode = collectCodePieces snd
         in (headerCode, bodyCode)
 
+formatTemplateArgs :: [String] -> String
+formatTemplateArgs tmpl = intercalate ", " (map ((++) "typename ") tmpl)
+
 formatTemplateIntroductor :: [String] -> String
 formatTemplateIntroductor tmpl = if null tmpl then "" else
-                                    let params = intercalate ", " (map ((++) "typename ") tmpl)
-                                    in printf "template<%s>\n" params :: String
+                                    printf "template<%s>\n" (formatTemplateArgs tmpl) :: String
 
 standardSystemIncludes :: [CppInclude]
 standardSystemIncludes = map CppSystemInclude ["memory", "vector", "string"]
@@ -253,6 +259,9 @@ isValueType _ = return False
 --formatTemplateArg :: Type -> String
 --formatTemplateArg (ConT n) = nameBase n
 --formatTemplateArg (VarT n) = show n
+
+templateDepName :: CppClass -> String
+templateDepName cls@(CppClass clsName _ _ _ tmpl) = if null tmpl then clsName else printf "%s<%s>" clsName $ intercalate "," tmpl
 
 typeOfField :: Type -> Q String
 typeOfField t@(ConT name) = do
@@ -297,17 +306,17 @@ deserializeFromFName = "deserializeFrom"
 
 
 prepareDeserializeMethodBase :: CppClass -> [CppClass] -> CppMethod
-prepareDeserializeMethodBase cls derClasses = 
+prepareDeserializeMethodBase cls@(CppClass clsName _ _ _ tmpl) derClasses = 
     let fname = deserializeFromFName
-        clsName = className cls
         arg = CppArg "input" "Input &"
-        rettype = printf "std::shared_ptr<%s>" clsName
+        rettype = printf "std::shared_ptr<%s>" $ if null tmpl then clsName 
+            else templateDepName cls
 
         indices = [0 ..  (length derClasses)-1]
         caseForCon index =
             let ithCon =  derClasses !! index
                 conName = className ithCon
-            in printf "case %d: return %s::deserializeFrom(input);" index conName :: String
+            in printf "case %d: return %s::deserializeFrom(input);" index (templateDepName cls) :: String
 
         cases = map caseForCon indices
 
@@ -325,15 +334,16 @@ prepareDeserializeMethodBase cls derClasses =
     in CppMethod fun NoQualifier Static
 
 prepareDeserializeMethodDer :: CppClass -> CppMethod
-prepareDeserializeMethodDer cls = 
+prepareDeserializeMethodDer cls@(CppClass clsName _ _ _ tmpl)  = 
     let fname = deserializeFromFName
         clsName = className cls
         arg = CppArg "input" "Input &"
-        rettype = printf "std::shared_ptr<%s>" clsName
+        nestedRetType = if null tmpl then clsName else templateDepName cls
+        rettype = printf "std::shared_ptr<%s>" nestedRetType
 
         deserializeField field@(CppField fieldName fieldType) = printf "\t\tdeserialize(ret->%s, input);" fieldName :: String
 
-        bodyOpener = printf "\t\tauto ret = std::make_shared<%s>();" clsName :: String
+        bodyOpener = printf "\t\tauto ret = std::make_shared<%s>();" nestedRetType :: String
         bodyCloser = "\t\treturn ret;"
         body = intercalate "\n" $ [bodyOpener] ++ (map deserializeField $ classFields cls) ++ [bodyCloser]
 
