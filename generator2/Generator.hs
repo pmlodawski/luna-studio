@@ -260,8 +260,11 @@ isValueType _ = return False
 --formatTemplateArg (ConT n) = nameBase n
 --formatTemplateArg (VarT n) = show n
 
+templateDepNameBase :: String -> [String] -> String
+templateDepNameBase clsName tmpl = if null tmpl then clsName else printf "%s<%s>" clsName $ intercalate "," tmpl
+
 templateDepName :: CppClass -> String
-templateDepName cls@(CppClass clsName _ _ _ tmpl) = if null tmpl then clsName else printf "%s<%s>" clsName $ intercalate "," tmpl
+templateDepName cls@(CppClass clsName _ _ _ tmpl) = templateDepNameBase clsName tmpl
 
 typeOfField :: Type -> Q String
 typeOfField t@(ConT name) = do
@@ -316,7 +319,7 @@ prepareDeserializeMethodBase cls@(CppClass clsName _ _ _ tmpl) derClasses =
         caseForCon index =
             let ithCon =  derClasses !! index
                 conName = className ithCon
-            in printf "case %d: return %s::deserializeFrom(input);" index (templateDepName cls) :: String
+            in printf "case %d: return %s::deserializeFrom(input);" index (templateDepNameBase conName tmpl) :: String
 
         cases = map caseForCon indices
 
