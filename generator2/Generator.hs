@@ -228,6 +228,9 @@ isValueTypeInfo (TyConI (TySynD name vars t)) = isValueType t
 isValueTypeInfo _ = return False
 
 isValueType :: Type -> Q Bool
+isValueType (VarT name) = return True
+isValueType ListT = return True
+isValueType (AppT base nested) = isValueType base
 isValueType (ConT name) | (elem name [''Int]) = return True
 isValueType (ConT name) = do
     info <- reify name
@@ -244,6 +247,9 @@ isValueType _ = return False
 --        if if byValue then nb
 --        else "std::shared_ptr<" ++ nb ++ ">"
 
+--formatTemplateArg :: Type -> String
+--formatTemplateArg (ConT n) = nameBase n
+--formatTemplateArg (VarT n) = show n
 
 typeOfField :: Type -> Q String
 typeOfField t@(ConT name) = do
@@ -267,9 +273,9 @@ typeOfField (AppT ListT (nested)) = do
 
 typeOfField (VarT n) = return $ show n
 
-typeOfField (AppT bt@(ConT base) (ConT arg)) = do
+typeOfField (AppT bt@(ConT base) arg) = do
     let baseType = nameBase base
-        argType = nameBase arg
+    argType <- typeOfField arg
     isBaseVal <- isValueType bt
     return $ printf (if isBaseVal then "%s<%s>" else "std::shared_ptr<%s<%s>>") baseType argType
 
