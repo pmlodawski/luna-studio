@@ -30,8 +30,7 @@ type Name = String
 -- stores the information about a module, needed while importing
 -- and resolving names. Checking whether a file needs recompilation is done based on the file  edit dates
 data ModuleInfo = ModuleInfo {
-                     _name     :: Path,       -- [?] for now this is Path, but may be subject to change
-                     _path     :: UniPath,    -- [?] is this really necessary
+                     _name     :: Path,      
                      _strInfo  :: StructInfo  -- [?] Namespace here?
                   } deriving (Generic, Eq, Show, Read)
 
@@ -74,18 +73,14 @@ moduleIsParsed path = do
         Nothing -> False
 
 
-
 modPathToString :: Path -> String
-modPathToString path = joinPath $ Flowbox.Prelude.map getFromTName path
-    where getFromTName (TName np) = toString np
-
+modPathToString path = joinPath $ Flowbox.Prelude.map toString path
 
 
 -- the difference between this one and modPathToString is that
 -- this returns the directory of the module, not the module name itself
 modPathToDirString :: Path -> FilePath
-modPathToDirString path = joinPath . Flowbox.Prelude.init $ Flowbox.Prelude.map getFromTName path
-    where getFromTName (TName np) = toString np
+modPathToDirString path = joinPath . Flowbox.Prelude.init $ Flowbox.Prelude.map toString path
 
 --------------------------------------------------------------------------
 -- ModuleInfo serialization utils
@@ -108,10 +103,11 @@ writeModInfoToFile :: ModuleInfo -> IO ()
 writeModInfoToFile modInfo = do
     -- if the directory doesn't exist, create one:
     liDir <- liDirectory
-    let modDir = liDir </> (modPathToDirString $ modInfo^.name)
+    let modDir = liDir </> (modPathToDirString $ modInfo ^. name)
     Dir.createDirectoryIfMissing True modDir
+    let fPath = liDir </> (modPathToString $ modInfo ^. name) ++ ('.' : liFileSuffix)
     -- serialize with Data.Binry:
-    encodeFile modDir modInfo
+    encodeFile fPath modInfo
 
 
 -- serialization of only StructInfo:
