@@ -4,7 +4,6 @@
 #include <iostream>
 #include <boost/optional.hpp>
 
-typedef std::int32_t ID;
 typedef std::istream Input;
 
 template <typename T>

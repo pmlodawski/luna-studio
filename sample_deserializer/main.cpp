@@ -1,4 +1,5 @@
 #include "helper.h"
+#include "generated.h"
 #include "main.h"
 
 #include <fstream>
