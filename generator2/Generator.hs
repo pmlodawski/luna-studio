@@ -331,7 +331,7 @@ prepareDeserializeMethodDer cls =
         arg = CppArg "input" "Input &"
         rettype = printf "std::shared_ptr<%s>" clsName
 
-        deserializeField field@(CppField fieldName fieldType) = printf "\t\tdeserialize(ret->%s, input)" fieldName :: String
+        deserializeField field@(CppField fieldName fieldType) = printf "\t\tdeserialize(ret->%s, input);" fieldName :: String
 
         bodyOpener = printf "\t\tauto ret = std::make_shared<%s>();" clsName :: String
         bodyCloser = "\t\treturn ret;"
