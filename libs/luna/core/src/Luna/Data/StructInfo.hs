@@ -63,6 +63,7 @@ data StructInfo = StructInfo { _scope   :: IDMap Scope
                              , _orphans :: IDMap Error
                              , _parent  :: IDMap ID
                              , _argPats :: IDMap NamePatDesc
+                             , _symTable :: Map NamePath ID
                              } deriving (Show, Eq, Generic, Read)
 
 makeLenses (''Scope)
@@ -81,6 +82,7 @@ class StructInfoMonad m where
 ----------------------------------------------------------------------
 -- Utils
 ----------------------------------------------------------------------
+regSymbol name id = symTable %~ Map.insert name id
 
 regParent  id pid  = parent %~ Map.insert id pid
 regVarName pid id name info = setScope info pid $ Scope (vnmap & at name ?~ id) tnmap where
@@ -117,12 +119,13 @@ instance Monoid Scope where
 
 
 instance Monoid StructInfo where
-    mempty      = StructInfo mempty mempty mempty mempty mempty
-    mappend a b = StructInfo (mappend (a ^. scope)   (b ^. scope))
-                             (mappend (a ^. alias)   (b ^. alias))
-                             (mappend (a ^. orphans) (b ^. orphans))
-                             (mappend (a ^. parent)  (b ^. parent))
-                             (mappend (a ^. argPats) (b ^. argPats))
+    mempty      = StructInfo mempty mempty mempty mempty mempty mempty
+    mappend a b = StructInfo (mappend (a ^. scope)    (b ^. scope))
+                             (mappend (a ^. alias)    (b ^. alias))
+                             (mappend (a ^. orphans)  (b ^. orphans))
+                             (mappend (a ^. parent)   (b ^. parent))
+                             (mappend (a ^. argPats)  (b ^. argPats))
+                             (mappend (a ^. symTable) (b ^.symTable))
 
 
 instance Default Scope where
