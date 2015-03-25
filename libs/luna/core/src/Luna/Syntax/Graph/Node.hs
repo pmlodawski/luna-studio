@@ -68,7 +68,6 @@ exprStr (Expr (NodeExpr.StringExpr strExpr) _ _ _) = Just $ StringExpr.toString 
 exprStr _                                          = Nothing
 
 
-
 getOutputName :: Node a v -> Maybe (LPat a)
 getOutputName (Expr { _outputName = on }) = on
 getOutputName _                           = Nothing

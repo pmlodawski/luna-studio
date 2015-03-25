@@ -19,6 +19,7 @@ import           Flowbox.Prelude                        hiding (error, folded, m
 import           Flowbox.System.Log.Logger
 import           Luna.Pass.Transform.Graph.Parser.State (GPPass)
 import qualified Luna.Pass.Transform.Graph.Parser.State as State
+import           Luna.Syntax.Arg                        (Arg (Arg))
 import qualified Luna.Syntax.Decl                       as Decl
 import qualified Luna.Syntax.Expr                       as Expr
 import           Luna.Syntax.Graph.Graph                (Graph)
@@ -27,22 +28,27 @@ import qualified Luna.Syntax.Graph.Node                 as Node
 import           Luna.Syntax.Graph.Node.Expr            (NodeExpr)
 import qualified Luna.Syntax.Graph.Node.Expr            as NodeExpr
 import qualified Luna.Syntax.Graph.Node.MultiPart       as MultiPart
-import           Luna.Syntax.Graph.Node.Position        (Position)
+import qualified Luna.Syntax.Graph.Port                 as Port
 import           Luna.Syntax.Graph.Tag                  (TDecl, TExpr, Tag)
 import           Luna.Syntax.Label                      (Label (Label))
 import qualified Luna.Syntax.Label                      as Label
+import qualified Luna.Syntax.Name.Pattern               as Pattern
+import qualified Luna.Syntax.Pat                        as Pat
 
+
+
+type V = ()
 
 
 logger :: Logger
 logger = getLogger $moduleName
 
 
-run :: (Monad m, Eq v) => Graph Tag v -> TDecl v -> EitherT State.Error m (TDecl v)
+run :: Monad m => Graph Tag V -> TDecl V -> EitherT State.Error m (TDecl V)
 run graph ldecl = evalStateT (func2graph ldecl) $ State.mk graph
 
 
-func2graph :: Eq v => TDecl v -> GPPass v m (TDecl v)
+func2graph :: TDecl V -> GPPass V m (TDecl V)
 func2graph decl@(Label _ (Decl.Func funcDecl)) = do
     let sig = funcDecl ^. Decl.funcDeclSig
     graph <- State.getGraph
@@ -55,32 +61,73 @@ func2graph decl@(Label _ (Decl.Func funcDecl)) = do
     return (decl & Label.element . Decl.funcDecl . Decl.funcDeclBody .~ body)
 
 
-----parseNode :: Decl.FuncSig a e -> (Node.ID, Node a V) -> GPPass a V m ()
-parseNode :: t -> (Node.ID, Node.Node Tag v) -> GPPass v m ()
+parseNode :: Decl.FuncSig a e -> (Node.ID, Node.Node Tag V) -> GPPass V m ()
 parseNode signature (nodeID, node) = case node of
-    Node.Inputs pos -> parseInputs signature pos
+    Node.Outputs defaults pos -> parseOutputs nodeID
+    Node.Inputs           pos -> parseInputs nodeID signature
     Node.Expr expr outputName defaults pos -> do
         graph <- State.getGraph
         let lprel = Graph.lprelData graph nodeID
-        srcs <- State.getNodeSrcs nodeID
-        ast <- buildExpr expr srcs
+        srcs <- map Expr.unnamed <$> State.getNodeSrcs nodeID
+        ast  <- buildExpr expr srcs
         if length lprel > 0 || Maybe.isJust outputName
-            then do let pat = undefined lprel
+            then do let pat = buildPat lprel outputName
                         assignment = Expr.Assignment pat ast
+                    --addVars lprel outputName
                     undefined -- add to var name to nodeMap
-                    State.addToBody $ Label State.dummyTag assignment
+                    State.addToBody $ State.dummyLabel assignment
             else State.addToBody ast
 
 
-buildExpr :: NodeExpr Tag v -> [Expr.AppArg (TExpr v)] -> GPPass v m (TExpr v)
+--buildPat :: Int -> GPPass V m (TExpr V)
+buildPat = undefined
+
+buildExpr :: NodeExpr Tag V -> [Expr.AppArg (TExpr V)] -> GPPass V m (TExpr V)
 buildExpr expr srcs = case expr of
     NodeExpr.ASTExpr expr -> return expr
-    NodeExpr.MultiPart mp -> return $ Label State.dummyTag $ Expr.App $ MultiPart.toNamePat mp srcs
+    NodeExpr.MultiPart mp -> do let defArg = Expr.unnamed $ State.dummyLabel Expr.Wildcard
+                                return $ State.dummyLabel $ Expr.App $ MultiPart.toNamePat mp srcs defArg
+    --NodeExpr.StringExpr str -> case str of
+    --    StringExpr.List           -> parseListNode    nodeID
+    --    StringExpr.Tuple          -> parseTupleNode   nodeID
+    --    StringExpr.Pattern pat    -> parsePatNode     nodeID pat
+    --    StringExpr.Native  native -> parseNativeNode  nodeID native
+    --    _                         -> parseAppNode     nodeID $ StringExpr.toString str
 
 
-parseInputs :: a -> Position -> GPPass v m ()
-parseInputs signature pos = do
-    undefined
+parseInputs :: Node.ID -> Decl.FuncSig a e -> GPPass V m ()
+parseInputs nodeID = mapM_ (parseArg nodeID) . zip [0..] . Pattern.args
+
+
+parseArg :: Node.ID -> (Int, Arg a e) -> GPPass V m ()
+parseArg nodeID (num, input) = case input of
+    Arg (Label _                     (Pat.Var vname)    ) _ -> addVar vname
+    Arg (Label _ (Pat.Typed (Label _ (Pat.Var vname)) _)) _ -> addVar vname
+    _                                                       -> lift $ left "parseArg: Wrong Arg type"
+    where addVar vname = State.addToVarMap (nodeID, Port.mkSrc num) $ Expr.Variable vname ()
+
+
+parseOutputs :: Node.ID -> GPPass V m ()
+parseOutputs nodeID = do
+    srcs    <- State.getNodeSrcs nodeID
+    inPorts <- State.inboundPorts nodeID
+    case (srcs, map unwrap inPorts) of
+        ([], _)               -> whenM doesLastStatementReturn $
+                                   State.setOutput $ State.dummyLabel $ Expr.Grouped
+                                                   $ State.dummyLabel $ Expr.Tuple []
+        ([src], [Port.Num 0]) -> State.setOutput $ State.dummyLabel $ Expr.Grouped src
+        ([src], _           ) -> State.setOutput src
+        _                     -> State.setOutput $ State.dummyLabel $ Expr.Tuple srcs
+
+
+doesLastStatementReturn :: GPPass V m Bool
+doesLastStatementReturn = do
+    body <- State.getBody
+    return $ case body of
+        []                                 -> False
+        (Label _ (Expr.Assignment {}) : _) -> False --TODO[PM] : check it
+        _                                  -> True
+
 
 ----parseExprNode :: Node.ID -> NodeExpr a V -> GPPass a V m ()
 --parseExprNode nodeID nodeExpr = case nodeExpr of
@@ -266,7 +313,7 @@ parseInputs signature pos = do
 ----    addExpr nodeID e
 
 
---parseListNode :: Node.ID -> GPPass a V m ()
+--parseListNode :: Node.ID -> GPPass V m ()
 --parseListNode nodeID = do
 --    srcs <- State.getNodeSrcs nodeID
 --    let e = label nodeID $ Expr.List $ Expr.SeqList srcs
