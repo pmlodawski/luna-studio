@@ -75,7 +75,7 @@ inline void deserialize(std::int64_t &val, Input &input)
 }
 
 template<typename T>
-void deserialize(std::shared_ptr<T> &val, Input &input)
+inline void deserialize(std::shared_ptr<T> &val, Input &input)
 {
 	val = typename T::deserializeFrom(input);
 }
