@@ -32,38 +32,23 @@ type Name = String
 data ModuleInfo = ModuleInfo {
                      _name     :: Path,       -- [?] for now this is Path, but may be subject to change
                      _path     :: UniPath,    -- [?] is this really necessary
-                     _strInfo  :: StructInfo, -- [?] Namespace here?
-                     _symTable :: Map Name ID
+                     _strInfo  :: StructInfo  -- [?] Namespace here?
                   } deriving (Generic, Eq, Show, Read)
 
 makeLenses ''ModuleInfo
 
 
----------------------------------------------------------------------------------------------
--- functions that wrap their counterparts in StructInfo, just for convenience and consistency
----------------------------------------------------------------------------------------------
-
-addSymbol name id = symTable %~ Map.insert name id
-
-regParent  id pid  = strInfo %~ SI.regParent id pid
-
---regOrphan id err = strInfo %~ SI.regOrphan id err
-
-regAlias id name scopeID = strInfo %~ SI.regAlias id name scopeID
-
--- TODO[PMo] setScope, scopeLookup
-
 --------------------------------------------------------------------
 -- simple utility functions for lookups and checks
 --------------------------------------------------------------------
 
-nameExists :: Name -> ModuleInfo -> Bool
-nameExists name mInfo = Map.member name (mInfo^.symTable)
+nameExists :: NamePath -> ModuleInfo -> Bool
+nameExists name mInfo = Map.member name (mInfo^.strInfo^.(SI.symTable))
 
 
 
-getSymbolId :: Name -> ModuleInfo -> Maybe ID
-getSymbolId name mInfo = Map.lookup name (mInfo^.symTable)
+getSymbolId :: NamePath -> ModuleInfo -> Maybe ID
+getSymbolId name mInfo = Map.lookup name (mInfo^.strInfo^.(SI.symTable))
 
 
 
@@ -129,6 +114,14 @@ writeModInfoToFile modInfo = do
     encodeFile modDir modInfo
 
 
+-- serialization of only StructInfo:
+writeStructInfoToFile :: String -> StructInfo -> IO ()
+writeStructInfoToFile name sInfo = do
+    liDir <- liDirectory
+    let p = liDir </> name
+    Dir.createDirectoryIfMissing True liDir
+    encodeFile p sInfo
+
 
 -- deserialization:
 readModInfoFromFile :: Path -> IO (Maybe ModuleInfo)
@@ -141,8 +134,17 @@ readModInfoFromFile path = do
             let modPath = liDir </> ((modPathToString path) ++ liFileSuffix)
             fmap Just $ decodeFile modPath
         
-    
+-- deserialization of StructInfo only:
+readStructInfoFromFile :: String -> IO (Maybe StructInfo)
+readStructInfoFromFile name = do
+    liDir <- liDirectory
+    let fPath = liDir </> name
+    exists <- Dir.doesFileExist fPath
+    case exists of
+        False -> return Nothing
+        True  -> fmap Just (decodeFile $ fPath)
 
+        
 -----------------------------------------------------------------------------
 -- instance declarations for serialization
 -- they can be moved to a separate module, save ModuleInfo (that would cause cycle imports
