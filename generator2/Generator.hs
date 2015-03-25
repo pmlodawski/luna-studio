@@ -49,20 +49,24 @@ data CppArg = CppArg
 instance CppFormattablePart CppArg where
     format arg = argType arg ++ " " ++ argName arg
 
-data CppQualifiers = NoQualifier | ConstQualifier | Volatile | ConstVolatile
+data CppQualifier = ConstQualifier | VolatileQualifier | PureVirtualQualifier
+instance CppFormattablePart CppQualifier where
+    format ConstQualifier = " const"
+    format VolatileQualifier = " volatile"
+    format PureVirtualQualifier = " = 0"
+
+type CppQualifiers = [CppQualifier]
 
 instance CppFormattablePart CppQualifiers where
-    format NoQualifier = ""
-    format ConstQualifier = "const "
-    format Volatile = "volatile "
-    format ConstVolatile = "const volatile "
+    format qualifiers = intercalate " " $ (map format qualifiers)
 
 
-data CppStorage = Usual | Static
+data CppStorage = Usual | Static | Virtual
 
 instance CppFormattablePart CppStorage where
     format Usual = ""
     format Static = "static "
+    format Virtual = "virtual "
 
 data CppFunction = CppFunction
     { name :: String
@@ -231,7 +235,10 @@ generateRootClassWrapper (DataD cxt name tyVars cons names) derClasses =
     let tnames = map tyvarToCppName tyVars
         initialCls = CppClass (translateToCppName name) [] [] [] tnames
         deserializeMethod = prepareDeserializeMethodBase initialCls derClasses
-    in CppClass (translateToCppName name) [] [deserializeMethod] [] tnames
+        serializeMethod = 
+            let fn = CppFunction "serialize" "void" [CppArg "output" "Output &"] "assert(0); // pure virtual function"
+            in CppMethod fn [PureVirtualQualifier] Virtual
+    in CppClass (translateToCppName name) [] [serializeMethod, deserializeMethod] [] tnames
 
 isValueTypeInfo :: Info -> Q Bool
 isValueTypeInfo (TyConI (TySynD name vars t)) = isValueType t
@@ -246,20 +253,6 @@ isValueType (ConT name) = do
     info <- reify name
     isValueTypeInfo info
 isValueType _ = return False
-
---data WhatTheTypeIs = Primitive | Pointer | Maybe | List
-
---whatTypeIs :: Type -> WhatTheTypeIs
---whatTypeIs t@(ConT name) = do
---    let nb = nameBase name
---    byValue <- isValueType t
---    return $ 
---        if if byValue then nb
---        else "std::shared_ptr<" ++ nb ++ ">"
-
---formatTemplateArg :: Type -> String
---formatTemplateArg (ConT n) = nameBase n
---formatTemplateArg (VarT n) = show n
 
 templateDepNameBase :: String -> [String] -> String
 templateDepNameBase clsName tmpl = if null tmpl then clsName else printf "%s<%s>" clsName $ intercalate "," tmpl
@@ -338,7 +331,7 @@ prepareDeserializeMethodBase cls@(CppClass clsName _ _ _ tmpl) derClasses =
         prettyBody = intercalate "\n" (map ((++) "\t") body)
 
         fun = CppFunction fname rettype [arg] prettyBody
-    in CppMethod fun NoQualifier Static
+    in CppMethod fun [] Static
 
 prepareDeserializeMethodDer :: CppClass -> CppMethod
 prepareDeserializeMethodDer cls@(CppClass clsName _ _ _ tmpl)  = 
@@ -355,7 +348,7 @@ prepareDeserializeMethodDer cls@(CppClass clsName _ _ _ tmpl)  =
         body = intercalate "\n" $ [bodyOpener] ++ (map deserializeField $ classFields cls) ++ [bodyCloser]
 
         fun = CppFunction fname rettype [arg] body
-        qual = NoQualifier
+        qual = []
         stor = Static
     in CppMethod fun qual stor
 
@@ -397,7 +390,6 @@ generateCppWrapperHlp tysyn@(TySynD name tyVars rhstype) = do
 
 generateCppWrapperHlp arg = trace ("FIXME: generateCppWrapperHlp for " ++ show arg) emptyQParts
 
---generateSingleWrapperInfo
 
 generateSingleWrapper :: Name -> Q CppParts
 generateSingleWrapper arg | trace ("generateSingleWrapper: " ++ show arg) False = undefined
@@ -407,7 +399,6 @@ generateSingleWrapper name = do
             (TyConI dec) -> generateCppWrapperHlp dec
             _ -> trace ("ignoring entry " ++ show name) emptyQParts
     bb
---generateSingleWrapper _ = undefined
 
 joinParts :: [CppParts] -> CppParts
 joinParts parts = 
@@ -515,9 +506,6 @@ printAst  (TyConI dec@(DataD cxt name tyVars cons names)) =
         consCount = Data.List.length cons :: Int
         ret = ("cxt=" ++ show cxt ++ "\nname=" ++ show name ++ "\ntyVars=" ++ show tyVars ++ "\ncons=" ++ show cons ++ "\nnames=" ++ show names) :: String
     in show consCount ++ "___" ++ ret
-
-fileContents :: Q String
-fileContents = return "blah"
 
 generateCpp :: Name -> FilePath -> Q Exp
 generateCpp name path = do
