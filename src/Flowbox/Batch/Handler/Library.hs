@@ -4,7 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RankNTypes      #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.Batch.Handler.Library where
@@ -23,7 +23,6 @@ import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.Platform               as Platform
 import           Flowbox.System.UniPath                (UniPath)
 import qualified Flowbox.System.UniPath                as UniPath
-import qualified Luna.DEP.Data.ASTInfo                 as ASTInfo
 import qualified Luna.DEP.Data.Serialize.Proto.Library as LibSerialization
 import           Luna.DEP.Lib.Lib                      (Library)
 import qualified Luna.DEP.Lib.Lib                      as Library
@@ -100,8 +99,8 @@ buildLibrary libraryID projectID = do
         buildType   = BuildConfig.Executable outputPath -- TODO [PM] : hardoded executable type
         bldCfg      = BuildConfig name version libs ghcFlags cppFlags cabalFlags buildType cfg diag buildDir
 
-    maxID <- Batch.getMaxID libraryID projectID
-    EitherT $ Build.run bldCfg ast (ASTInfo.mk maxID) False
+    astInfo <- Batch.getASTInfo libraryID projectID
+    EitherT $ Build.run bldCfg ast astInfo False
 
 
 -- TODO [PM] : Needs architecture change
