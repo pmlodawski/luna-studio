@@ -20,7 +20,9 @@ import           Flowbox.Data.Convert
 import           Flowbox.Prelude                                                                               hiding (Context)
 import           Flowbox.ProjectManager.Context                                                                (Context)
 import           Flowbox.ProjectManager.RPC.Handler.Graph                                                      (mapID) 
+import qualified Flowbox.ProjectManager.RPC.Topic                                                             as Topic
 import           Flowbox.System.Log.Logger
+import           Flowbox.UR.Manager.RPC.Handler.Handler                                                        (prepareResponse)
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Properties.Get.Request as GetNodeProperties
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Properties.Get.Status  as GetNodeProperties
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Properties.Set.Request as SetNodeProperties
@@ -47,14 +49,22 @@ getASTProperties request@(GetASTProperties.Request tnodeID tlibID tprojectID) = 
     return $ GetASTProperties.Status request $ encode properties
 
 
-setASTProperties :: SetASTProperties.Request -> RPC Context IO SetASTProperties.Update
-setASTProperties request@(SetASTProperties.Request tproperties tnodeID tlibID tprojectID) = do
+setASTProperties :: SetASTProperties.Request -> Maybe Topic -> RPC Context IO ([SetASTProperties.Update], [Message])
+setASTProperties request@(SetASTProperties.Request tproperties tnodeID tlibID tprojectID) undoTopic = do
     properties <- decodeE tproperties
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
+    toldProperties <- encode <$> BatchP.getProperties nodeID libID projectID
     BatchP.setProperties properties nodeID libID projectID
-    SetASTProperties.Update request <$> Batch.getUpdateNo
+    prepareResponse projectID
+                    Topic.projectLibraryAstPropertiesSetRequest
+                    (SetASTProperties.Request toldProperties tnodeID tlibID tprojectID)
+                    Topic.projectLibraryAstPropertiesSetRequest
+                    request
+                    undoTopic
+                    "set AST properties"
+                    =<< SetASTProperties.Update request <$> Batch.getUpdateNo
 
 
 getNodeProperties :: GetNodeProperties.Request -> RPC Context IO GetNodeProperties.Status
@@ -67,7 +77,7 @@ getNodeProperties request@(GetNodeProperties.Request tnodeID _ tlibID tprojectID
 
 
 setNodeProperties :: SetNodeProperties.Request -> Maybe Topic -> RPC Context IO ([SetNodeProperties.Update], [Message])
-setNodeProperties request@(SetNodeProperties.Request tproperties tnodeID tbc tlibID tprojectID astID) undoTopic = do
+setNodeProperties (SetNodeProperties.Request tproperties tnodeID tbc tlibID tprojectID astID) undoTopic = do
     properties <- decodeE tproperties
     context <- Batch.get
     let nodeID    = decodeP tnodeID
