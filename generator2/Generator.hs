@@ -17,6 +17,7 @@ import qualified Language.Haskell.TH.Syntax as THS
 import Language.Haskell.TH.Quote
 import Data.List
 import qualified Data.Set as Set
+import Data.Int
 
 import GHC.Stack
 import Debug.Trace
@@ -240,7 +241,7 @@ isValueType :: Type -> Q Bool
 isValueType (VarT name) = return True
 isValueType ListT = return True
 isValueType (AppT base nested) = isValueType base
-isValueType (ConT name) | (elem name [''Int]) = return True
+isValueType (ConT name) | (elem name builtInTypes) = return True
 isValueType (ConT name) = do
     info <- reify name
     isValueTypeInfo info
@@ -273,6 +274,9 @@ typeOfField t@(ConT name) = do
     return $ 
         if name == ''String then "std::string" 
         else if name == ''Int then "int"
+        else if name == ''Int64 then "std::int64_t"
+        else if name == ''Int32 then "std::int32_t"
+        else if name == ''Int16 then "std::int16_t"
         else if byValue then nb
         else "std::shared_ptr<" ++ nb ++ ">"
 
@@ -428,7 +432,7 @@ formatCppWrapper name = do
     return $ formatCpp parts
 
 
-builtInTypes = [''Maybe, ''String, ''Int]
+builtInTypes = [''Maybe, ''String, ''Int, ''Int32, ''Int64, ''Int16, ''Int8]
 
 class TypesDependencies a where
     symbolDependencies :: a -> Set Name
