@@ -26,14 +26,14 @@ import qualified Luna.Syntax.Graph.Edge    as Edge
 import           Luna.Syntax.Graph.Graph   (Graph)
 import qualified Luna.Syntax.Graph.Graph   as Graph
 import qualified Luna.Syntax.Graph.Node    as Node
-import           Luna.Syntax.Graph.Port    (DstPortP (DstPort), SrcPort)
+import           Luna.Syntax.Graph.Port    (DstPortP (DstPort), SrcPort, DstPort)
 import qualified Luna.Syntax.Graph.Port    as Port
 import           Luna.Syntax.Graph.Tag     (TExpr, Tag)
 import           Luna.Syntax.Label         (Label (Label))
 
 
-
-dummyTag = Enum.tag (-999)
+dummyLabel :: a -> Label Tag a
+dummyLabel = Label (Enum.tag (-999))
 
 
 logger :: Logger
@@ -85,32 +85,15 @@ getVarMap = gets $ view varMap
 setVarMap :: VarMap v -> GPPass v m ()
 setVarMap = modify . set varMap
 
------ graph ---------------------------------------------------------------
-getGraph :: GPPass v m (Graph Tag v)
-getGraph = gets $ view graph
-
-
---getPropertyMap :: GPPass a v m (PropertyMap a v)
---getPropertyMap = gets (view propertyMap)
-
-
---setPropertyMap :: PropertyMap a v -> GPPass a v m ()
---setPropertyMap pm =  modify (set propertyMap pm)
-
-
-
-
---addToNodeMap :: (Node.ID, Port) -> LExpr a v -> GPPass a v m ()
---addToNodeMap key expr = getNodeMap >>= setNodeMap . Map.insert key expr
-
+addToVarMap :: (Node.ID, SrcPort) -> Expr.Variable v -> GPPass v m ()
+addToVarMap key expr = getVarMap >>= setVarMap . Map.insert key expr
 
 varMapLookup :: (Node.ID, SrcPort) -> GPPass v m (Expr.Variable v)
 varMapLookup key = do
     nm <- getVarMap
     lift $ Map.lookup key nm <??> "GraphParser: varMapLookup: Cannot find " ++ show key ++ " in nodeMap"
 
-
-getNodeSrcs :: Node.ID -> GPPass v m [Expr.AppArg (TExpr v)]
+getNodeSrcs :: Node.ID -> GPPass v m [TExpr v]
 getNodeSrcs nodeID = do
     g <- getGraph
     let connectedMap = Map.fromList
@@ -126,18 +109,22 @@ getNodeSrcs nodeID = do
         processEdge (pNID, _, Edge.Data s (DstPort (Port.Num d))) = Just (d, (pNID, s))
         processEdge (_   , _, Edge.Monadic                      ) = Nothing
 
-        getNodeSrc :: Maybe (Node.ID, SrcPort) -> GPPass v m (Expr.AppArg (TExpr v))
-        getNodeSrc Nothing  = return $ Expr.unnamed $ Label dummyTag Expr.Wildcard
-        getNodeSrc (Just a) = Expr.unnamed . Label dummyTag . Expr.Var <$> varMapLookup a
+        getNodeSrc :: Maybe (Node.ID, SrcPort) -> GPPass v m (TExpr v)
+        getNodeSrc Nothing  = return $ dummyLabel Expr.Wildcard
+        getNodeSrc (Just a) = dummyLabel . Expr.Var <$> varMapLookup a
+
+----- graph ---------------------------------------------------------------
+getGraph :: GPPass v m (Graph Tag v)
+getGraph = gets $ view graph
 
 
---inboundPorts :: Node.ID -> GPPass a v m [Port]
---inboundPorts nodeID = do
---    g <- getGraph
---    let processEdge (_, Edge.Data _ d) = Just d
---        processEdge (_, Edge.Monadic ) = Nothing
---    return $ Maybe.mapMaybe processEdge
---           $ Graph.lpre g nodeID
+inboundPorts :: Node.ID -> GPPass v m [DstPort]
+inboundPorts nodeID = do
+    g <- getGraph
+    let processEdge (_, Edge.Data _ d) = Just d
+        processEdge (_, Edge.Monadic ) = Nothing
+    return $ Maybe.mapMaybe processEdge
+           $ Graph.lpre g nodeID
 
 
 --getNode :: Node.ID -> GPPass a v m (Node a v)
@@ -173,12 +160,3 @@ getNodeSrcs nodeID = do
 --setGraphFoldTop :: Node.ID -> Node.ID -> GPPass a v m ()
 --setGraphFoldTop nodeID topID =
 --    modifyFlags (Flags.graphFoldInfo .~ Just (Flags.FoldTop topID)) nodeID
-
-
---doesLastStatementReturn :: GPPass a v m Bool
---doesLastStatementReturn = do
---    body' <- getBody
---    return $ case body' of
---        []                                 -> False
---        (Label _ (Expr.Assignment {}) : _) -> False --TODO[PM] : check it
---        _                                  -> True
