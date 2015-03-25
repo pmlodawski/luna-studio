@@ -49,6 +49,8 @@ import qualified Luna.System.Pragma.Store as Pragma
 import Control.Monad (when)
 import Luna.Syntax.Name.Path (QualPath(QualPath))
 
+import qualified Luna.Data.ModuleInfo as MI
+
 header txt = "\n-------- " <> txt <> " --------"
 printHeader = putStrLn . header
 
@@ -80,6 +82,8 @@ main = do
             printHeader "SA"
             sa             <- Pass.run1_ SA.pass ast
             ppPrint sa
+            liftIO $ MI.writeStructInfoToFile "testModule.li" sa
+
 
             printHeader "Stage2"
             (ast, astinfo) <- Pass.run3_ Stage2.pass (Namespace [] sa) astinfo ast
