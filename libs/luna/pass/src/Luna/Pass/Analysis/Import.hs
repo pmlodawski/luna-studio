@@ -17,8 +17,9 @@ import           Flowbox.Prelude
 import           Luna.Data.StructInfo (StructInfo)
 import           Flowbox.Control.Monad.State  hiding (mapM_, (<$!>), join, mapM, State)
 import qualified Luna.Syntax.Traversals       as AST
---import qualified Luna.Syntax.Enum             as Enum
+import qualified Luna.Syntax.Enum             as Enum
 import           Luna.Syntax.Enum             (Enumerated, IDTag(IDTag))
+import qualified Data.IntMap as IntMap
 --import qualified Luna.Syntax.Decl             as Decl
 --import           Luna.Syntax.Decl             (LDecl, Field(Field))
 --import qualified Luna.Syntax.Module           as Module
@@ -44,9 +45,11 @@ import qualified Luna.Pass                    as Pass
 --
 import qualified Luna.Data.Namespace          as Namespace
 import           Luna.Data.Namespace          (Namespace)
+
+import           Luna.Data.ASTInfo            (ASTInfo)
 --
 --import           Luna.Data.StructInfo         (StructInfo, OriginInfo(OriginInfo))
---import qualified Luna.Data.StructInfo         as SI
+import qualified Luna.Data.StructInfo         as SI
 --import qualified Luna.Data.ModuleInfo         as ModuleInfo
 --
 --import qualified Luna.Data.Namespace.State    as State 
@@ -81,27 +84,29 @@ defaultTraverseM = AST.defaultTraverseM ImportAnalysis
 -- Pass functions
 ----------------------------------------------------------------------
 
-pass :: (Monoid s, IADefaultTraversal m a) => Pass s (a -> IAPass m StructInfo)
+pass :: (IADefaultTraversal m a) => Pass Namespace (Namespace -> a -> IAPass m StructInfo)
 pass = Pass "Import analysis" 
             "Basic import analysis that results in import renaming and proper path" 
             mempty iaUnit
 
-iaUnit :: IADefaultTraversal m a => a -> IAPass m StructInfo
-iaUnit ast = defaultTraverseM ast *> (view Namespace.info <$> get)
+iaUnit astInfo ast = do
+                     put astInfo
+                     defaultTraverseM ast *> (view Namespace.info <$> get)
 
 iaExpr :: IACtx lab m a => LExpr lab a -> IAPass m (LExpr lab a)
-iaExpr e@(Label id expr) = case expr of
-                  Expr.Var ident -> (putStrLn "blee") *> continue
+iaExpr e@(Label lab expr) = case expr of
+                  Expr.Var ident -> (findFun lab ident) *> continue
 
                   _              -> continue
               where continue = defaultTraverseM e 
 
 
-
--- putStrLn "AAA" *> defaultTraverseM expr
-
-
-
+findFun lab ident = do
+            parentMap <- view ( Namespace.info . SI.parent) <$> get
+            scopeMap <- view ( Namespace.info . SI.scope) <$> get
+            let parentScope = scopeMap IntMap.! (parentMap IntMap.! id)
+            
+        where id = Enum.id lab
 
 
 
