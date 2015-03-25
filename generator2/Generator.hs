@@ -92,7 +92,7 @@ instance CppFormattableCtx CppMethod CppClass where
             nt = n :: String
             at = formatArgsList a :: String
             qt = format q :: String
-            signature = printf "\t%s%s %s(%s) %s" st rt nt at qt :: String
+            signature = printf "\t%s%s %s%s %s" st rt nt at qt :: String
             headerImpl = signature ++ "\n\t{\n" ++ b ++ "\n\t}"
 
         in (headerImpl, "")
@@ -199,9 +199,11 @@ standardSystemIncludes = map CppSystemInclude ["memory", "vector", "string"]
 translateToCppName :: Name -> String 
 translateToCppName name = nameBase name
 
-generateRootClassWrapper :: Dec -> CppClass
-generateRootClassWrapper (DataD cxt name tyVars cons names) = 
-    CppClass (translateToCppName name) [] [] []
+generateRootClassWrapper :: Dec -> [CppClass] -> CppClass
+generateRootClassWrapper (DataD cxt name tyVars cons names) derClasses = 
+    let initialCls = CppClass (translateToCppName name) [] [] []
+        deserializeMethod = prepareDeserializeMethodBase initialCls derClasses
+    in CppClass (translateToCppName name) [] [deserializeMethod] []
 
 isValueTypeInfo :: Info -> Q Bool
 isValueTypeInfo (TyConI (TySynD name vars t)) = isValueType t
@@ -255,11 +257,39 @@ processField field@(name, _, t) = do
     return $ CppField (translateToCppName name) filedType
 -- processField arg = trace ("FIXME: Field for " ++ show arg) (return $ CppField "__" "--")
 
+deserializeFromFName = "deserializeFrom"
 
+
+prepareDeserializeMethodBase :: CppClass -> [CppClass] -> CppMethod
+prepareDeserializeMethodBase cls derClasses = 
+    let fname = deserializeFromFName
+        clsName = className cls
+        arg = CppArg "input" "Input &"
+        rettype = printf "std::shared_ptr<%s>" clsName
+
+        indices = [0 ..  (length derClasses)-1]
+        caseForCon index =
+            let ithCon =  derClasses !! index
+                conName = className ithCon
+            in printf "case %d: return %s::deserializeFrom(input);" index conName :: String
+
+        cases = map caseForCon indices
+
+        body =  [ "auto constructorIndex = readInt8(input);"
+                , "switch(constructorIndex)"
+                , "{"
+                ] ++ cases ++ 
+                [ "}"
+                ]
+
+        prettyBody = intercalate "\n" (map ((++) "\t\t") body)
+
+        fun = CppFunction fname rettype [arg] prettyBody
+    in CppMethod fun NoQualifier Static
 
 prepareDeserializeMethodDer :: CppClass -> CppMethod
 prepareDeserializeMethodDer cls = 
-    let fname = "deserializeFrom"
+    let fname = deserializeFromFName
         clsName = className cls
         arg = CppArg "input" "Input &"
         rettype = printf "std::shared_ptr<%s>" clsName
@@ -292,8 +322,8 @@ generateCppWrapperHlp :: Dec -> Q CppParts
 -- generateCppWrapperHlp arg | trace ("generateCppWrapperHlp: " ++ show arg) False = undefined
 generateCppWrapperHlp dec@(DataD cxt name tyVars cons names) = 
     do
-        let baseClass = generateRootClassWrapper dec
         derClasses <- sequence $ processConstructor <$> cons <*> [name]
+        let baseClass = generateRootClassWrapper dec derClasses
         -- derClasses = processConstructor <$> cons <*> [name]
         let classes = baseClass : derClasses
             functions = []
