@@ -86,7 +86,7 @@ data CppMethod = CppMethod
     }
 
 instance CppFormattableCtx CppMethod CppClass where
-    formatCppCtx (CppMethod (CppFunction n r a b) q s) cls@(CppClass cn _ _ _) = 
+    formatCppCtx (CppMethod (CppFunction n r a b) q s) cls@(CppClass cn _ _ _ _) = 
         let st = format s :: String
             rt = r :: String
             nt = n :: String
@@ -124,30 +124,41 @@ data CppDerive = CppDerive
     , access :: CppAccess
     }
 
-instance CppFormattablePart CppDerive where
-    format (CppDerive base virtual access) = format access ++ " " ++ (if virtual then "virtual " else "") ++ base
+--instance CppFormattablePart CppDerive where
+--    format (CppDerive base virtual access) = format access ++ " " ++ (if virtual then "virtual " else "") ++ base
 
-instance CppFormattablePart [CppDerive] where
-    format [] = ""
-    format derives = ": " ++ Data.List.intercalate ", " (map format derives)
+--instance CppFormattablePart [CppDerive] where
+--    format [] = ""
+--    format derives = ": " ++ Data.List.intercalate ", " (map format derives)
 
 data CppClass = CppClass 
     { className :: String
     , classFields :: [CppField]
     , classMethods :: [CppMethod]
     , baseClasses :: [CppDerive]
+    , templateParams :: [String]
     }
 
 collapseCode :: [CppFormattedCode] -> CppFormattedCode
 collapseCode input = (concat (map fst input), concat (map snd input))
 
 instance CppFormattable CppClass where
-    formatCpp cls@(CppClass name fields methods bases) = 
-        let basesTxt = format bases
+    formatCpp cls@(CppClass name fields methods bases tmpl) = 
+        let formatBase (CppDerive bname bvirt bacc) = 
+                let baseTempl = if null tmpl then "" else printf "<%s>" (intercalate ", " tmpl)
+                in format bacc ++ " " ++ (if bvirt then "virtual " else "") ++ bname ++ baseTempl
+
+            basesTxt = if null bases then
+                    ""
+                else
+                    ": " ++ intercalate ", " (formatBase <$> bases)
             fieldsTxt = format fields
             -- fff =  (formatCppCtx <$> methods <*> [cls]) :: [CppFormattedCode]
             (methodsHeader, methodsImpl) = collapseCode (formatCppCtx <$> methods <*> [cls])
-            headerCode = printf "class %s %s \n{\npublic:\n%s\n\n%s\n};" name basesTxt fieldsTxt methodsHeader
+            templatePreamble = if null tmpl then "" else
+                                    let params = intercalate ", " (map ((++) "typename ") tmpl)
+                                    in printf "template<%s>\n" params :: String
+            headerCode = printf "%sclass %s %s \n{\npublic:\n%s\n\n%s\n};" templatePreamble name basesTxt fieldsTxt methodsHeader
             bodyCode = ""
         in (headerCode, bodyCode)
 
@@ -201,9 +212,10 @@ translateToCppName name = nameBase name
 
 generateRootClassWrapper :: Dec -> [CppClass] -> CppClass
 generateRootClassWrapper (DataD cxt name tyVars cons names) derClasses = 
-    let initialCls = CppClass (translateToCppName name) [] [] []
+    let tnames = map tyvarToCppName tyVars
+        initialCls = CppClass (translateToCppName name) [] [] [] tnames
         deserializeMethod = prepareDeserializeMethodBase initialCls derClasses
-    in CppClass (translateToCppName name) [] [deserializeMethod] []
+    in CppClass (translateToCppName name) [] [deserializeMethod] [] tnames
 
 isValueTypeInfo :: Info -> Q Bool
 isValueTypeInfo (TyConI (TySynD name vars t)) = isValueType t
@@ -246,7 +258,16 @@ typeOfField (AppT ListT (nested)) = do
     nestedType <- typeOfField nested
     return $ printf "std::vector<%s>" $ nestedType
 --typeOfField (AppT ConT (maybe)) = printf "boost::optional<%s>" $ typeOfField nested
-typeOfField t = return $ "[" ++ show t ++ "]"
+
+typeOfField (VarT n) = return $ show n
+
+typeOfField (AppT bt@(ConT base) (ConT arg)) = do
+    let baseType = nameBase base
+        argType = nameBase arg
+    isBaseVal <- isValueType bt
+    return $ printf (if isBaseVal then "%s<%s>" else "std::shared_ptr<%s<%s>>") baseType argType
+
+typeOfField t = return $ trace ("FIXME: typeOfField for " ++ show t) $ "[" ++ show t ++ "]"
 
 emptyQParts :: Q CppParts
 emptyQParts = return $ CppParts [] [] []  [] []
@@ -279,7 +300,8 @@ prepareDeserializeMethodBase cls derClasses =
                 , "switch(constructorIndex)"
                 , "{"
                 ] ++ cases ++ 
-                [ "}"
+                [ "default: return nullptr;"
+                , "}"
                 ]
 
         prettyBody = intercalate "\n" (map ((++) "\t\t") body)
@@ -306,33 +328,40 @@ prepareDeserializeMethodDer cls =
     in CppMethod fun qual stor
 
 
-processConstructor :: Con -> Name -> Q CppClass
-processConstructor con@(RecC cname fields) base = 
+processConstructor :: Dec -> Con -> Q CppClass
+processConstructor dec@(DataD cxt name tyVars cons names) con@(RecC cname fields) = 
     do
-        let baseCppName = translateToCppName base
+        let baseCppName = translateToCppName name
+            tnames = map tyvarToCppName tyVars
             derCppName = baseCppName ++ "_" ++ translateToCppName cname
         cppFields <- mapM processField fields
         let baseClasses = [CppDerive baseCppName False Public]
-        let classInitial = CppClass derCppName cppFields [] baseClasses
+        let classInitial = CppClass derCppName cppFields [] baseClasses tnames
         let methods = [prepareDeserializeMethodDer classInitial]
-        return $ CppClass derCppName cppFields methods baseClasses
-processConstructor arg name = trace ("FIXME: Con for " ++ show arg) (return $ CppClass "" [] [] [])
+        return $ CppClass derCppName cppFields methods baseClasses tnames
+processConstructor dec arg = trace ("FIXME: Con for " ++ show arg) (return $ CppClass "" [] [] [] [])
+
+tyvarToCppName :: TyVarBndr -> String
+tyvarToCppName (PlainTV n) = show n
+tyvarToCppName arg = trace ("FIXME: tyvarToCppName for " ++ show arg) $ show arg
 
 generateCppWrapperHlp :: Dec -> Q CppParts
 -- generateCppWrapperHlp arg | trace ("generateCppWrapperHlp: " ++ show arg) False = undefined
 generateCppWrapperHlp dec@(DataD cxt name tyVars cons names) = 
     do
-        derClasses <- sequence $ processConstructor <$> cons <*> [name]
+        derClasses <- sequence $ processConstructor <$> [dec] <*> cons
         let baseClass = generateRootClassWrapper dec derClasses
         -- derClasses = processConstructor <$> cons <*> [name]
         let classes = baseClass : derClasses
             functions = []
             forwardDecs = map (\c -> CppForwardDeclClass $ className c) classes
         return (CppParts standardSystemIncludes forwardDecs [] classes functions)
+
 generateCppWrapperHlp tysyn@(TySynD name tyvars rhstype) = do
     baseTName <- typeOfField rhstype
     let tf = CppTypedef (nameBase name) baseTName
     return $ CppParts [] [] [tf] [] []
+
 generateCppWrapperHlp arg = trace ("FIXME: generateCppWrapperHlp for " ++ show arg) emptyQParts
 
 --generateSingleWrapperInfo
