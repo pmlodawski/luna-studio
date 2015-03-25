@@ -49,12 +49,13 @@ data CppArg = CppArg
 instance CppFormattablePart CppArg where
     format arg = argType arg ++ " " ++ argName arg
 
-data CppQualifier = ConstQualifier | VolatileQualifier | PureVirtualQualifier
+data CppQualifier = ConstQualifier | VolatileQualifier | PureVirtualQualifier | OverrideQualifier
                     deriving (Eq)
 
 instance CppFormattablePart CppQualifier where
     format ConstQualifier = " const"
     format VolatileQualifier = " volatile"
+    format OverrideQualifier = " override"
     format PureVirtualQualifier = " = 0"
 
 type CppQualifiers = [CppQualifier]
@@ -103,7 +104,7 @@ instance CppFormattableCtx CppMethod CppClass where
 
             scope = (templateDepName cls)
             templateIntr = formatTemplateIntroductor tmpl
-            qst = (format $ filter ((/=) PureVirtualQualifier) q) -- qualifiers signature text
+            qst = (format $ filter ((==) ConstQualifier) q) -- qualifiers signature text
             signatureImpl = printf "%s%s %s::%s%s %s" templateIntr rt scope nt at qst :: String
             implementation = signatureImpl ++ "\n{\n" ++ b ++ "\n}"
 
@@ -365,7 +366,13 @@ processConstructor dec@(DataD cxt name tyVars cons names) con@(RecC cname fields
         cppFields <- mapM processField fields
         let baseClasses = [CppDerive baseCppName False Public]
         let classInitial = CppClass derCppName cppFields [] baseClasses tnames
-        let methods = [prepareDeserializeMethodDer classInitial]
+        let Just index = elemIndex con cons
+        let serializeField field = printf "\tserialize(%s, input);" (fieldName field) :: String
+        let serializeCode = intercalate "\n" $ [printf "\tserialize(std::int8_t(%d));" index :: String] ++ (serializeField <$> cppFields)
+        let serializeFn = CppFunction "serialize" "void" [CppArg "output" "Output &"] serializeCode
+
+        let serializeMethod = CppMethod serializeFn [OverrideQualifier] Virtual
+        let methods = [serializeMethod, prepareDeserializeMethodDer classInitial]
         return $ CppClass derCppName cppFields methods baseClasses tnames
 processConstructor dec arg = trace ("FIXME: Con for " ++ show arg) (return $ CppClass "" [] [] [] [])
 
