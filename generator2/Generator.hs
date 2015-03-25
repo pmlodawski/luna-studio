@@ -1,5 +1,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FunctionalDependencies #-}
 
 module Generator where
 
@@ -29,8 +31,14 @@ type CppFormattedCode = (HeaderSource, ImplementationSource)
 class CppFormattablePart a where
     format :: a -> String
 
-class CppFormattable a where
+class CppFormattable a  where
     formatCpp :: a -> CppFormattedCode
+
+class CppFormattableCtx a ctx | a -> ctx where
+    formatCppCtx :: a -> ctx -> CppFormattedCode
+
+--instance (CppFormattableCtx a ctx) => CppFormattableCtx [a] ctx where
+--    formatCppCtx = ("", "")
 
 data CppArg = CppArg 
     { argName :: String
@@ -40,7 +48,20 @@ data CppArg = CppArg
 instance CppFormattablePart CppArg where
     format arg = argType arg ++ " " ++ argName arg
 
-data CppQualifiers = None | Const | Volatile | ConstVolatile
+data CppQualifiers = NoQualifier | ConstQualifier | Volatile | ConstVolatile
+
+instance CppFormattablePart CppQualifiers where
+    format NoQualifier = ""
+    format ConstQualifier = "const "
+    format Volatile = "volatile "
+    format ConstVolatile = "const volatile "
+
+
+data CppStorage = Usual | Static
+
+instance CppFormattablePart CppStorage where
+    format Usual = ""
+    format Static = "static "
 
 data CppFunction = CppFunction
     { name :: String
@@ -61,7 +82,20 @@ formatSignature (CppFunction name ret args _) = formatArgsList args
 data CppMethod = CppMethod
     { function :: CppFunction
     , qualifiers :: CppQualifiers
+    , storage :: CppStorage
     }
+
+instance CppFormattableCtx CppMethod CppClass where
+    formatCppCtx (CppMethod (CppFunction n r a b) q s) cls@(CppClass cn _ _ _) = 
+        let st = format s :: String
+            rt = r :: String
+            nt = n :: String
+            at = formatArgsList a :: String
+            qt = format q :: String
+            signature = printf "\t%s%s %s(%s) %s" st rt nt at qt :: String
+            headerImpl = signature ++ "\n\t{\n" ++ b ++ "\n\t}"
+
+        in (headerImpl, "")
 
 data CppField = CppField 
     { fieldName :: String
@@ -104,10 +138,16 @@ data CppClass = CppClass
     , baseClasses :: [CppDerive]
     }
 
+collapseCode :: [CppFormattedCode] -> CppFormattedCode
+collapseCode input = (concat (map fst input), concat (map snd input))
 
 instance CppFormattable CppClass where
-    formatCpp (CppClass name fields methods bases) = 
-        let headerCode = printf "class %s %s \n{\npublic:\n%s\n};" name (format bases) (format fields)
+    formatCpp cls@(CppClass name fields methods bases) = 
+        let basesTxt = format bases
+            fieldsTxt = format fields
+            -- fff =  (formatCppCtx <$> methods <*> [cls]) :: [CppFormattedCode]
+            (methodsHeader, methodsImpl) = collapseCode (formatCppCtx <$> methods <*> [cls])
+            headerCode = printf "class %s %s \n{\npublic:\n%s\n\n%s\n};" name basesTxt fieldsTxt methodsHeader
             bodyCode = ""
         in (headerCode, bodyCode)
 
@@ -127,7 +167,7 @@ data CppTypedef  = CppTypedef
     }
 
 instance CppFormattable CppTypedef where
-    formatCpp (CppTypedef to from) = (printf "typedef %s %s;" from to, "")
+    formatCpp (CppTypedef to from) = (printf "using %s = %s;" to from, "")
 
 data CppParts = CppParts
     { includes :: [CppInclude]
@@ -213,7 +253,28 @@ processField :: THS.VarStrictType -> Q CppField
 processField field@(name, _, t) = do
     filedType <- typeOfField t
     return $ CppField (translateToCppName name) filedType
-processField arg = trace ("FIXME: Field for " ++ show arg) (return $ CppField "__" "--")
+-- processField arg = trace ("FIXME: Field for " ++ show arg) (return $ CppField "__" "--")
+
+
+
+prepareDeserializeMethodDer :: CppClass -> CppMethod
+prepareDeserializeMethodDer cls = 
+    let fname = "deserializeFrom"
+        clsName = className cls
+        arg = CppArg "input" "Input &"
+        rettype = printf "std::shared_ptr<%s>" clsName
+
+        deserializeField field@(CppField fieldName fieldType) = printf "\t\tdeserialize(ret->%s, input)" fieldName :: String
+
+        bodyOpener = printf "\t\tauto ret = std::make_shared<%s>();" clsName :: String
+        bodyCloser = "\t\treturn ret;"
+        body = intercalate "\n" $ [bodyOpener] ++ (map deserializeField $ classFields cls) ++ [bodyCloser]
+
+        fun = CppFunction fname rettype [arg] body
+        qual = NoQualifier
+        stor = Static
+    in CppMethod fun qual stor
+
 
 processConstructor :: Con -> Name -> Q CppClass
 processConstructor con@(RecC cname fields) base = 
@@ -221,7 +282,10 @@ processConstructor con@(RecC cname fields) base =
         let baseCppName = translateToCppName base
             derCppName = baseCppName ++ "_" ++ translateToCppName cname
         cppFields <- mapM processField fields
-        return $ CppClass derCppName cppFields [] [CppDerive baseCppName False Public]
+        let baseClasses = [CppDerive baseCppName False Public]
+        let classInitial = CppClass derCppName cppFields [] baseClasses
+        let methods = [prepareDeserializeMethodDer classInitial]
+        return $ CppClass derCppName cppFields methods baseClasses
 processConstructor arg name = trace ("FIXME: Con for " ++ show arg) (return $ CppClass "" [] [] [])
 
 generateCppWrapperHlp :: Dec -> Q CppParts
@@ -251,7 +315,7 @@ generateSingleWrapper name = do
             (TyConI dec) -> generateCppWrapperHlp dec
             _ -> trace ("ignoring entry " ++ show name) emptyQParts
     bb
-generateSingleWrapper _ = undefined
+--generateSingleWrapper _ = undefined
 
 joinParts :: [CppParts] -> CppParts
 joinParts parts = 
@@ -274,10 +338,6 @@ formatCppWrapper arg | trace ("formatCppWrapper: " ++ show arg) False = undefine
 formatCppWrapper name = do
     parts <- generateWrapperWithDeps name
     return $ formatCpp parts
-
-foo :: Show a => a -> a
-foo a | trace ("zzzz ") False = undefined
-foo a = a
 
 
 builtInTypes = [''Maybe, ''String, ''Int]
