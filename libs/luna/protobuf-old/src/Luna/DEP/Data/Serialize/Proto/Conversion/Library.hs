@@ -32,8 +32,15 @@ import           Luna.DEP.Graph.Properties                                (Prope
 import           Luna.DEP.Lib.Lib                                         (Library (Library))
 import qualified Luna.DEP.Lib.Lib                                         as Library
 import           Luna.DEP.Lib.Manager                                     (LibManager)
+import           Luna.DEP.Data.ASTInfo      (ASTInfo)
+import qualified           Luna.DEP.Data.ASTInfo      as ASTInfo
 import qualified Luna.DEP.Lib.Manager                                     as LibManager
 
+
+
+instance ConvertPure ASTInfo Int32 where
+    encodeP = encodeP . view ASTInfo.lastID
+    decodeP = ASTInfo.mk . decodeP
 
 
 instance ConvertPure Library.ID Int32 where
@@ -42,9 +49,9 @@ instance ConvertPure Library.ID Int32 where
 
 
 instance Convert (Library.ID, Library) Gen.Library where
-    encode (i, Library name version path ast propertyMap) =
-        Gen.Library (encodePJ i) (encodePJ name) (encodePJ version) (encodePJ path) (encodeJ ast) (encodeJ propertyMap)
-    decode (Gen.Library mtid mtname mtversion mtpath mtast mtpropertyMap) = do
+    encode (i, Library name version path ast propertyMap lastID) =
+        Gen.Library (encodePJ i) (encodePJ name) (encodePJ version) (encodePJ path) (encodeJ ast) (encodeJ propertyMap) (encodeP lastID)
+    decode (Gen.Library mtid mtname mtversion mtpath mtast mtpropertyMap lastID) = do
         i            <- decodeP <$> mtid   <?> "Failed to decode Library: 'id' field is missing"
         name         <- decodeP <$> mtname <?> "Failed to decode Library: 'name' field is missing"
         version      <- decodeP <$> mtversion <?> "Failed to decode Library: 'version' field is missing"
@@ -53,7 +60,7 @@ instance Convert (Library.ID, Library) Gen.Library where
         tast         <- mtast   <?> "Failed to decode Library: 'ast' field is missing"
         ast          <- decode tast
         propertyMap  <- decode tpropertyMap
-        pure (i, Library name version path ast propertyMap)
+        pure (i, Library name version path ast propertyMap (decodeP lastID))
 
 
 instance Convert (IntMap Properties) Gen.PropertyMap where

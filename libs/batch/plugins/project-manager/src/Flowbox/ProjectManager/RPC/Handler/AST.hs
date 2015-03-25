@@ -8,7 +8,6 @@
 module Flowbox.ProjectManager.RPC.Handler.AST where
 
 import qualified Data.Sequence as Sequence
-import           Data.Sequence ((><))
 
 import qualified Flowbox.Batch.Handler.AST                                                            as BatchAST
 import qualified Flowbox.Batch.Handler.Common                                                         as Batch
