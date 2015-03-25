@@ -14,7 +14,9 @@ instance Binary a => Binary (Arg a)
 
 main = do
 	putStrLn "Generator 2 im. Arystotelesa."
-	let con = Con 100 "[fooBarBazBarfooBarBazBarfooBarBazBarfooBarBazBar]"
+	let con0 = Con 100 "[fooBarBazBarfooBarBazBarfooBarBazBarfooBarBazBar]"
+	let args = [NestingEvil [con0]] :: [Arg Expr]
+	let con = App 1200 (TypeDef 76 "typ1" "Typ2") args
 	let bs = encode con
 
 	encodeFile "test.bin" bs
