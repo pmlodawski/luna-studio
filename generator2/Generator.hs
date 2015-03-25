@@ -98,7 +98,7 @@ instance CppFormattableCtx CppMethod CppClass where
             scope = cn
             templateIntr = formatTemplateIntroductor tmpl
             signatureImpl = printf "%s%s %s::%s%s %s" templateIntr rt (templateDepName cls) nt at qt :: String
-            implementation = signatureImpl ++ "\n\t{\n" ++ b ++ "\n\t}"
+            implementation = signatureImpl ++ "\n{\n" ++ b ++ "\n}"
 
         in (signatureHeader, implementation)
 
@@ -164,7 +164,7 @@ instance CppFormattable CppClass where
             -- fff =  (formatCppCtx <$> methods <*> [cls]) :: [CppFormattedCode]
             (methodsHeader, methodsImpl) = collapseCode (formatCppCtx <$> methods <*> [cls])
             templatePreamble = formatTemplateIntroductor tmpl
-            headerCode = printf "%sclass %s %s \n{\npublic:\n%s\n\n%s\n};" templatePreamble name basesTxt fieldsTxt methodsHeader
+            headerCode = printf "%sclass %s %s \n{\npublic:\n\tvirtual ~%s() {}\n%s\n\n%s\n};" templatePreamble name basesTxt name fieldsTxt methodsHeader
             bodyCode = methodsImpl
         in (headerCode, bodyCode)
 
@@ -335,7 +335,7 @@ prepareDeserializeMethodBase cls@(CppClass clsName _ _ _ tmpl) derClasses =
                 , "}"
                 ]
 
-        prettyBody = intercalate "\n" (map ((++) "\t\t") body)
+        prettyBody = intercalate "\n" (map ((++) "\t") body)
 
         fun = CppFunction fname rettype [arg] prettyBody
     in CppMethod fun NoQualifier Static
@@ -348,10 +348,10 @@ prepareDeserializeMethodDer cls@(CppClass clsName _ _ _ tmpl)  =
         nestedRetType = if null tmpl then clsName else templateDepName cls
         rettype = printf "std::shared_ptr<%s>" nestedRetType
 
-        deserializeField field@(CppField fieldName fieldType) = printf "\t\tdeserialize(ret->%s, input);" fieldName :: String
+        deserializeField field@(CppField fieldName fieldType) = printf "\tdeserialize(ret->%s, input);" fieldName :: String
 
-        bodyOpener = printf "\t\tauto ret = std::make_shared<%s>();" nestedRetType :: String
-        bodyCloser = "\t\treturn ret;"
+        bodyOpener = printf "\tauto ret = std::make_shared<%s>();" nestedRetType :: String
+        bodyCloser = "\treturn ret;"
         body = intercalate "\n" $ [bodyOpener] ++ (map deserializeField $ classFields cls) ++ [bodyCloser]
 
         fun = CppFunction fname rettype [arg] body
