@@ -34,12 +34,14 @@ import qualified Generated.Proto.Urm.URM.Register.Request   as Register
 
 handlerMap :: HandlerMap Context IO
 handlerMap callback = HandlerMap.fromList
-    [ (Topic.urmRegisterRequest         , respond status URMHandler.register)
-    , (Topic.urmRegisterMultipleRequest , respond status URMHandler.registerMultiple)
-    , (Topic.urmRedoRequest             , respond2 status URMHandler.redo)
-    , (Topic.urmPingRequest             , respond status Maintenance.ping) 
-    , (Topic.urmUndoRequest             , respond2 status URMHandler.undo)
-    , (Topic.urmClearStackRequest       , respond status URMHandler.clearStack)
+    [ (Topic.urmRegisterRequest          , respond status URMHandler.register)
+    , (Topic.urmRegisterMultipleRequest  , respond status URMHandler.registerMultiple)
+    , (Topic.urmRedoRequest              , respond2 status URMHandler.redo)
+    , (Topic.urmPingRequest              , respond status Maintenance.ping) 
+    , (Topic.urmUndoRequest              , respond2 status URMHandler.undo)
+    , (Topic.urmClearStackRequest        , respond status URMHandler.clearStack)
+    , (Topic.urmTransactionBeginRequest  , respond status URMHandler.tBegin)
+    , (Topic.urmTransactionCommitRequest , respond status URMHandler.tCommit)
     ]
     where
         respond :: (Proto.Serializable args, Proto.Serializable result)

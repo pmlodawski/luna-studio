@@ -30,6 +30,10 @@ import qualified Generated.Proto.Urm.URM.Redo.Request                as Redo
 import qualified Generated.Proto.Urm.URM.Redo.Status                 as Redo
 import qualified Generated.Proto.Urm.URM.Register.Request            as Register
 import qualified Generated.Proto.Urm.URM.Register.Status             as Register
+import qualified Generated.Proto.Urm.URM.Transaction.Begin.Request   as TBegin
+import qualified Generated.Proto.Urm.URM.Transaction.Begin.Status    as TBegin
+import qualified Generated.Proto.Urm.URM.Transaction.Commit.Request  as TCommit
+import qualified Generated.Proto.Urm.URM.Transaction.Commit.Status   as TCommit
 import qualified Generated.Proto.Urm.URM.RegisterMultiple.Request    as RegisterMultiple
 import qualified Generated.Proto.Urm.URM.RegisterMultiple.Status     as RegisterMultiple
 import qualified Generated.Proto.Urm.URM.Undo.Request                as Undo
@@ -41,16 +45,18 @@ logger = getLoggerIO $(moduleName)
 
 
 register :: Register.Request -> RPC Context IO Register.Status
-register request@(Register.Request undoAction redoAction projectID tdescription) = do
+register request@(Register.Request undoAction redoAction tprojectID tdescription) = do
+    let projectID = decodeP tprojectID
     let description = decodeP tdescription
-    reg (decodeP projectID) [decodeP undoAction] (decodeP redoAction) description
+    reg projectID [decodeP undoAction] (decodeP redoAction) description
     return $ Register.Status request True
 
 
 registerMultiple :: RegisterMultiple.Request -> RPC Context IO RegisterMultiple.Status
-registerMultiple request@(RegisterMultiple.Request undoActions redoAction projectID tdescription) = do
+registerMultiple request@(RegisterMultiple.Request undoActions redoAction tprojectID tdescription) = do
+    let projectID = decodeP tprojectID
     let description = decodeP tdescription
-    reg (decodeP projectID) (decodeP undoActions) (decodeP redoAction) description
+    reg projectID (decodeP undoActions) (decodeP redoAction) description
     return $ RegisterMultiple.Status request True
 
 reg :: Int -> [Message] -> Message -> String -> RPC Context IO ()
@@ -67,16 +73,16 @@ reg projectID undoA redoA description = do
 
 
 undo :: Undo.Request -> RPC Context IO (Undo.Status, Maybe [Message])
-undo request@(Undo.Request projectID) = execAction (decodeP projectID) fst            id   $ Undo.Status request
+undo request@(Undo.Request tprojectID) = execAction (decodeP tprojectID) fst            id   reverse $ Undo.Status request
 
 redo :: Redo.Request -> RPC Context IO (Redo.Status, Maybe [Message])
-redo request@(Redo.Request projectID) = execAction (decodeP projectID) (return . snd) flip $ Redo.Status request 
+redo request@(Redo.Request tprojectID) = execAction (decodeP tprojectID) (return . snd) flip id      $ Redo.Status request 
 
 execAction :: Proto.Serializable ret =>
                      -- could be ((a, b) -> c) but "c ~ Message could not be deduced"
               Int -> (Context.Actions -> [Message]) -> ((Stack -> Stack -> (Maybe Context.Transaction -> ProjectContext)) -> Stack -> Stack -> (Maybe Context.Transaction -> ProjectContext)) ->
-              (Bool-> ret) -> RPC Context IO (ret, Maybe [Message])
-execAction projectID accessor invert retCons = do
+              ([Context.Actions] -> [Context.Actions]) -> (Bool-> ret) -> RPC Context IO (ret, Maybe [Message])
+execAction projectID accessor invert rev retCons = do
     contextMap <- lift get
     let projContexts                   = Map.lookup projectID contextMap 
         ProjectContext stack1 stack2 trans = maybe (Context.emptyProjectContext)
@@ -85,9 +91,29 @@ execAction projectID accessor invert retCons = do
     case stack1 of
         []              -> return (retCons False, Nothing)
         (action : rest) -> do lift $ put $ Map.insert projectID (invert ProjectContext rest (action : stack2) $ trans) contextMap
-                              return (retCons True, Just $ (DList.toList $ fst action) >>= accessor)
+                              return (retCons True, Just $ (rev $ DList.toList $ fst action) >>= accessor)
 
 clearStack :: ClearStack.Request -> RPC Context IO ClearStack.Status
-clearStack request@(ClearStack.Request projectID) = do
-    lift . put . Map.insert (decodeP projectID) Context.emptyProjectContext =<< lift get
+clearStack request@(ClearStack.Request tprojectID) = do
+    let projectID = decodeP tprojectID
+    lift . put . Map.insert projectID Context.emptyProjectContext =<< lift get
     return $ ClearStack.Status request 
+
+
+-- [MW] TODO: nested transactions
+tBegin :: TBegin.Request -> RPC Context IO TBegin.Status
+tBegin request@(TBegin.Request tprojectID tdescription) = do
+    let projectID   = decodeP tprojectID
+        description = decodeP tdescription
+        createTrans = Context.trans .~ Just (DList.empty, description)
+    lift . put . (Map.adjust createTrans projectID) =<< lift get
+    return $ TBegin.Status request
+
+tCommit :: TCommit.Request -> RPC Context IO TCommit.Status
+tCommit request@(TCommit.Request tprojectID) = do
+   let projectID = decodeP tprojectID 
+   context  <- lift get
+   let pContext@(ProjectContext undo redo trans) = fromMaybe Context.emptyProjectContext $ Map.lookup projectID context
+       newUndo = maybe undo (: undo) $ pContext ^. Context.trans
+   lift $ put $ Map.insert projectID (ProjectContext newUndo [] Nothing) context
+   return $ TCommit.Status request
