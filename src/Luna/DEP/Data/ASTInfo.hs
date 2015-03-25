@@ -13,9 +13,10 @@ import           Flowbox.Prelude     hiding (id)
 import qualified Luna.DEP.AST.Common as AST
 
 
-data ASTInfo = ASTInfo { _lastID :: AST.ID } deriving (Show)
 
-makeLenses (''ASTInfo)
+data ASTInfo = ASTInfo { _lastID :: AST.ID } deriving (Show, Read, Eq)
+
+makeLenses ''ASTInfo
 
 
 incID :: ASTInfo -> ASTInfo
