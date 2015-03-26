@@ -206,7 +206,7 @@ processArg :: (TExpr V, DstPort) -> GBPass V m (TExpr V, ArgRef)
 processArg (lexpr, dstPort) = if constainsVar lexpr
     then do (lexpr', nodeID, srcPort) <- buildNode lexpr Nothing
             return (lexpr', ArgRef.mkNode (nodeID, srcPort, dstPort))
-    else return (lexpr, ArgRef.mkDefault (Port.toList $ unwrap dstPort, NodeExpr.StringExpr $ StringExpr.fromString $ lunaShow lexpr))
+    else return (lexpr, ArgRef.mkDefault (dstPort, lexpr))
 
 
 addNode :: TExpr V -> Maybe TPat -> [ArgRef] -> GBPass V m (TExpr V, Node.ID)

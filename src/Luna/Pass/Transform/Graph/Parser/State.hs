@@ -9,6 +9,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE RankNTypes            #-}
 {-# LANGUAGE TemplateHaskell       #-}
+{-# LANGUAGE TupleSections         #-}
 
 module Luna.Pass.Transform.Graph.Parser.State where
 
@@ -20,16 +21,18 @@ import qualified Data.Maybe          as Maybe
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-import qualified Luna.Syntax.Enum          as Enum
-import qualified Luna.Syntax.Expr          as Expr
-import qualified Luna.Syntax.Graph.Edge    as Edge
-import           Luna.Syntax.Graph.Graph   (Graph)
-import qualified Luna.Syntax.Graph.Graph   as Graph
-import qualified Luna.Syntax.Graph.Node    as Node
-import           Luna.Syntax.Graph.Port    (DstPortP (DstPort), SrcPort, DstPort)
-import qualified Luna.Syntax.Graph.Port    as Port
-import           Luna.Syntax.Graph.Tag     (TExpr, Tag)
-import           Luna.Syntax.Label         (Label (Label))
+import qualified Luna.Syntax.Enum              as Enum
+import qualified Luna.Syntax.Expr              as Expr
+import           Luna.Syntax.Graph.DefaultsMap (DefaultsMap)
+import qualified Luna.Syntax.Graph.Edge        as Edge
+import           Luna.Syntax.Graph.Graph       (Graph)
+import qualified Luna.Syntax.Graph.Graph       as Graph
+import qualified Luna.Syntax.Graph.Node        as Node
+import           Luna.Syntax.Graph.Port        (DstPort, DstPortP (DstPort), SrcPort)
+import qualified Luna.Syntax.Graph.Port        as Port
+import           Luna.Syntax.Graph.Tag         (TExpr, Tag)
+import           Luna.Syntax.Label             (Label (Label))
+
 
 
 dummyLabel :: a -> Label Tag a
@@ -93,25 +96,27 @@ varMapLookup key = do
     nm <- getVarMap
     lift $ Map.lookup key nm <??> "GraphParser: varMapLookup: Cannot find " ++ show key ++ " in nodeMap"
 
-getNodeSrcs :: Node.ID -> GPPass v m [TExpr v]
-getNodeSrcs nodeID = do
+getNodeSrcs :: Node.ID -> DefaultsMap Tag v -> GPPass v m [TExpr v]
+getNodeSrcs nodeID defaults = do
     g <- getGraph
-    let connectedMap = Map.fromList
-                     $ Maybe.mapMaybe processEdge
-                     $ Graph.lprel g nodeID
-    case Map.size connectedMap of
-        0 -> return []
-        _ -> do let maxPort   = fst $ Map.findMax connectedMap
-                    connected = map (flip Map.lookup connectedMap) [0..maxPort]
-                mapM getNodeSrc connected
+    connectedVars <- mapM (getVar . processEdge) $ Graph.lprelData g nodeID
+    let defalutsExprs = map processDefault $ Map.toList defaults
+        srcsMap = Map.union (Map.fromList connectedVars) (Map.fromList defalutsExprs)
+    if Map.null srcsMap
+        then return []
+        else do let maxPort = fst $ Map.findMax srcsMap
+                return $ map (wildcardMissing . flip Map.lookup srcsMap) [0..maxPort]
     where
-        processEdge (pNID, _, Edge.Data s (DstPort (Port.All  ))) = Just (0, (pNID, s))
-        processEdge (pNID, _, Edge.Data s (DstPort (Port.Num d))) = Just (d, (pNID, s))
-        processEdge (_   , _, Edge.Monadic                      ) = Nothing
+        processEdge (pNID, _, Edge.Data s (DstPort (Port.All  ))) = (0, (pNID, s))
+        processEdge (pNID, _, Edge.Data s (DstPort (Port.Num d))) = (d, (pNID, s))
 
-        getNodeSrc :: Maybe (Node.ID, SrcPort) -> GPPass v m (TExpr v)
-        getNodeSrc Nothing  = return $ dummyLabel Expr.Wildcard
-        getNodeSrc (Just a) = dummyLabel . Expr.Var <$> varMapLookup a
+        processDefault (DstPort (Port.All  ), expr) = (0, expr)
+        processDefault (DstPort (Port.Num d), expr) = (d, expr)
+
+        getVar (i, key) = (i,) . dummyLabel . Expr.Var <$> varMapLookup key
+
+        wildcardMissing Nothing  = dummyLabel Expr.Wildcard
+        wildcardMissing (Just e) = e
 
 ----- graph ---------------------------------------------------------------
 getGraph :: GPPass v m (Graph Tag v)
