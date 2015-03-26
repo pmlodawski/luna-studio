@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TupleSections #-}
 
 module Luna.Syntax.Graph.Graph(
     module Flowbox.Data.Graph,
@@ -71,7 +72,7 @@ lsuclData = filter (Edge.isData . view _3) .: DG.lsucl
 
 
 inputsNode :: DG.Graph (Node a e) l -> Maybe (Node.ID, Node a e)
-inputsNode = List.find (Node.isInputs . snd) . DG.labNodes
+inputsNode graph = (Node.inputsID,) <$> DG.lab graph Node.inputsID
 
 
 inDataDeg :: Graph a e -> Node.ID -> Int

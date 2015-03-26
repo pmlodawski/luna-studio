@@ -18,10 +18,10 @@ import           Luna.Syntax.Pat                   (LPat)
 
 
 
-data Node a v = Expr    { _expr       :: NodeExpr a v
-                        , _outputName :: Maybe (LPat a)
-                        , _defaults   :: DefaultsMap a v
-                        , _pos        :: Position
+data Node a v = Expr    { _expr      :: NodeExpr a v
+                        , _outputPat :: Maybe (LPat a)
+                        , _defaults  :: DefaultsMap a v
+                        , _pos       :: Position
                         }
               | Inputs  { _pos :: Position
                         }
@@ -76,9 +76,9 @@ exprStr (Expr (NodeExpr.StringExpr strExpr) _ _ _) = Just $ StringExpr.toString 
 exprStr _                                          = Nothing
 
 
-getOutputName :: Node a v -> Maybe (LPat a)
-getOutputName (Expr { _outputName = on }) = on
-getOutputName _                           = Nothing
+getOutputPat :: Node a v -> Maybe (LPat a)
+getOutputPat (Expr { _outputPat = pat }) = pat
+getOutputPat _                           = Nothing
 
 --insertDefault :: PortDescriptor -> NodeExpr a v -> Node a v -> Node a v
 --insertDefault pd ne = defaults %~ DefaultsMap.insert pd ne

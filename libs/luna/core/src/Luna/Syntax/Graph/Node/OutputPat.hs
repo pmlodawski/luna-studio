@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Luna.Syntax.Graph.Node.OutputName (
+module Luna.Syntax.Graph.Node.OutputPat (
     provide,
     fixEmpty,
     fixEmpty',
@@ -36,7 +36,7 @@ generate nodeExpr num = Label def $ Pat.Var $ fromString $ mangle (exprStr ++ "R
 
 
 fixEmpty :: Default a => Node a e -> Node.ID -> Node a e
-fixEmpty node nodeID = case Node.getOutputName node of
+fixEmpty node nodeID = case Node.getOutputPat node of
     Nothing -> provide node nodeID
     _       -> node
 
@@ -48,7 +48,7 @@ fixEmpty' (nodeID, node) =
 
 provide :: Default a => Node a e -> Node.ID -> Node a e
 provide node@(Node.Expr nodeExpr _ _ _) nodeID =
-    node & Node.outputName .~ Just (generate nodeExpr nodeID)
+    node & Node.outputPat .~ Just (generate nodeExpr nodeID)
 provide node _ = node
 
 
