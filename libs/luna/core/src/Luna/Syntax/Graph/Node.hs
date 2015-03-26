@@ -9,12 +9,11 @@
 module Luna.Syntax.Graph.Node where
 
 import           Flowbox.Prelude
-import           Luna.Syntax.Graph.DefaultsMap     (DefaultsMap)
-import           Luna.Syntax.Graph.Node.Expr       (NodeExpr)
-import qualified Luna.Syntax.Graph.Node.Expr       as NodeExpr
-import           Luna.Syntax.Graph.Node.Position   (Position)
-import qualified Luna.Syntax.Graph.Node.StringExpr as StringExpr
-import           Luna.Syntax.Pat                   (LPat)
+import           Luna.Syntax.Graph.DefaultsMap   (DefaultsMap)
+import           Luna.Syntax.Graph.Node.Expr     (NodeExpr)
+import qualified Luna.Syntax.Graph.Node.Expr     as NodeExpr
+import           Luna.Syntax.Graph.Node.Position (Position)
+import           Luna.Syntax.Pat                 (LPat)
 
 
 
@@ -72,7 +71,7 @@ isExpr _         = False
 
 
 exprStr :: Node a v -> Maybe String
-exprStr (Expr (NodeExpr.StringExpr strExpr) _ _ _) = Just $ StringExpr.toString strExpr
+exprStr (Expr (NodeExpr.StringExpr strExpr) _ _ _) = Just $ toString strExpr
 exprStr _                                          = Nothing
 
 

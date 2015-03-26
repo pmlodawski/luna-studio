@@ -15,17 +15,17 @@ import qualified Luna.Syntax.Decl         as Decl
 import           Luna.Syntax.Expr         (LExpr)
 import qualified Luna.Syntax.Expr         as Expr
 import           Luna.Syntax.Foreign      (Foreign (Foreign))
-import qualified Luna.Syntax.Foreign      as Foreign
 import           Luna.Syntax.Label        (Label (Label))
 import qualified Luna.Syntax.Label        as Label
+import qualified Luna.Syntax.Lit          as Lit
 import           Luna.Syntax.Module       (LModule)
 import qualified Luna.Syntax.Module       as Module
 import qualified Luna.Syntax.Name.Pattern as Pattern
+import qualified Luna.Syntax.Native       as Native
+import qualified Luna.Syntax.Pat          as Pat
 import           Luna.Syntax.Type         (LType)
 import qualified Luna.Syntax.Type         as Type
-import qualified Luna.Syntax.Pat          as Pat
-import qualified Luna.Syntax.Lit          as Lit
-import qualified Luna.Syntax.Native       as Native
+
 
 
 
@@ -156,7 +156,7 @@ replaceArg conv (A.Arg pat val) = A.Arg (conv' pat) (fmap (replaceExpr conv) val
 replacePat :: (l1 -> l2) -> Pat.Pat l1 -> Pat.Pat l2
 replacePat conv a = case a of
          Pat.App src args     -> Pat.App   (replaceLPat conv src) (fmap (replaceLPat conv) args)
-         Pat.Typed pat typ    -> Pat.Typed (replaceLPat conv pat) (replaceType conv typ)  
+         Pat.Typed pat typ    -> Pat.Typed (replaceLPat conv pat) (replaceType conv typ)
          Pat.Grouped pat      -> Pat.Grouped (replaceLPat conv pat)
          Pat.Lit (Label l1 a) -> Pat.Lit (Label (conv l1) a)
          Pat.Tuple items      -> Pat.Tuple (fmap (replaceLPat conv) items)
@@ -167,7 +167,7 @@ replacePat conv a = case a of
 
 
 
-replaceLPat :: (l1 -> l2) -> Label l1 (Pat.Pat l1) -> Label l2 (Pat.Pat l2) 
+replaceLPat :: (l1 -> l2) -> Label l1 (Pat.Pat l1) -> Label l2 (Pat.Pat l2)
 replaceLPat conv (Label l1 pat) = Label (conv l1) (replacePat conv pat)
 
 
@@ -186,8 +186,8 @@ replaceList conv list = case list of
 
 replaceSequence :: (l1 -> l2) -> Expr.Sequence (LExpr l1 v) -> Expr.Sequence (LExpr l2 v)
 replaceSequence conv seq = case seq of
-                        Expr.Linear a b -> Expr.Linear (replaceExpr conv a) (fmap (replaceExpr conv) b) 
-                        Expr.Geometric a a1 b -> Expr.Geometric (replaceExpr conv a) (replaceExpr conv a1) (fmap (replaceExpr conv) b) 
+                        Expr.Linear a b -> Expr.Linear (replaceExpr conv a) (fmap (replaceExpr conv) b)
+                        Expr.Geometric a a1 b -> Expr.Geometric (replaceExpr conv a) (replaceExpr conv a1) (fmap (replaceExpr conv) b)
 
 
 

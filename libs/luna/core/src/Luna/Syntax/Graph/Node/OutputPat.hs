@@ -16,14 +16,13 @@ import qualified Data.Char as Char
 import qualified Data.List as List
 
 import           Flowbox.Prelude
-import           Luna.Syntax.Graph.Node            (Node)
-import qualified Luna.Syntax.Graph.Node            as Node
-import           Luna.Syntax.Graph.Node.Expr       (NodeExpr)
-import qualified Luna.Syntax.Graph.Node.Expr       as NodeExpr
-import qualified Luna.Syntax.Graph.Node.StringExpr as StringExpr
-import           Luna.Syntax.Label                 (Label (Label))
-import           Luna.Syntax.Pat                   (LPat)
-import qualified Luna.Syntax.Pat                   as Pat
+import           Luna.Syntax.Graph.Node      (Node)
+import qualified Luna.Syntax.Graph.Node      as Node
+import           Luna.Syntax.Graph.Node.Expr (NodeExpr)
+import qualified Luna.Syntax.Graph.Node.Expr as NodeExpr
+import           Luna.Syntax.Label           (Label (Label))
+import           Luna.Syntax.Pat             (LPat)
+import qualified Luna.Syntax.Pat             as Pat
 
 
 
@@ -32,7 +31,7 @@ generate nodeExpr num = Label def $ Pat.Var $ fromString $ mangle (exprStr ++ "R
     exprStr = case nodeExpr of
         NodeExpr.ASTExpr    {}      -> ""
         NodeExpr.MultiPart  {}      -> ""
-        NodeExpr.StringExpr strExpr -> StringExpr.toString strExpr
+        NodeExpr.StringExpr strExpr -> toString strExpr
 
 
 fixEmpty :: Default a => Node a e -> Node.ID -> Node a e
