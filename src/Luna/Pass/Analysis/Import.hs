@@ -114,7 +114,7 @@ findFun lab (Expr.Variable vnp v) = do
                 inScope     = member [textName] (parentScope ^. SI.varnames)
             case inScope of
                 True  -> return ()
-                False -> (liftIO $ putStrLn "NOT IN SCOPE") *> return ()
+                False -> (putStrLn "NOT IN SCOPE") *> return ()
         where id = Enum.id lab
 
 

@@ -94,8 +94,8 @@ main = do
             (ast, astinfo) <- Pass.run3_ Stage2.pass (Namespace [] sa) astinfo ast
             ppPrint ast
 
-            printHeader "Imports"
-            sa <- Pass.run
+            -- printHeader "Imports"
+            -- sa <- Pass.run
 
             printHeader "ImplSelf"
             (ast, astinfo) <- Pass.run2_ ImplSelf.pass astinfo ast
