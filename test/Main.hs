@@ -50,6 +50,8 @@ import Control.Monad (when)
 import Luna.Syntax.Name.Path (QualPath(QualPath))
 
 import qualified Luna.Data.ModuleInfo as MI
+import           Data.String.Utils (replace)
+
 
 header txt = "\n-------- " <> txt <> " --------"
 printHeader = putStrLn . header
@@ -59,9 +61,10 @@ ppPrint = putStrLn . ppShow
 main = do
     args <- getArgs
     when (length args < 2) $ fail "provide input and output path!"
-    let path = args !! 0
-        out  = args !! 1
-        src  = Source (QualPath [] "Main") (File $ fromString path)
+    let path   = args !! 0
+        liFile = replace "luna" "" path
+        out    = args !! 1
+        src    = Source (QualPath [] "Main") (File $ fromString path)
 
     Session.runT $ do
 
@@ -74,15 +77,15 @@ main = do
             printHeader "Stage1"
             (ast, astinfo) <- Pass.run1_ Stage1.pass src
             ppPrint ast
-            -- This may be remove
+            -- This may be removed
             printHeader "Extraction of imports"
             ppPrint $ I.getImportList ast
             ppPrint $ I.getModPathsFromImportList . I.getImportList $ ast
-            -- To this
+            -- Up to this
             printHeader "SA"
             sa             <- Pass.run1_ SA.pass ast
             ppPrint sa
-            let mInfo = MI.ModuleInfo [fromString "Main"] sa
+            let mInfo = MI.ModuleInfo [fromString liFile] sa
             liftIO $ MI.writeModInfoToFile mInfo
             --liftIO $ MI.writeStructInfoToFile "testModule.li" sa
 
@@ -90,6 +93,9 @@ main = do
             printHeader "Stage2"
             (ast, astinfo) <- Pass.run3_ Stage2.pass (Namespace [] sa) astinfo ast
             ppPrint ast
+
+            printHeader "Imports"
+            sa <- Pass.run
 
             printHeader "ImplSelf"
             (ast, astinfo) <- Pass.run2_ ImplSelf.pass astinfo ast
