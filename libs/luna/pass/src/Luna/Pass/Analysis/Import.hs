@@ -36,7 +36,7 @@ import qualified Luna.Syntax.Expr             as Expr
 --import qualified Luna.Syntax.Lit              as Lit 
 --import           Luna.Syntax.Arg              (Arg(Arg))
 --import qualified Luna.Syntax.Native           as Native
---import           Luna.Syntax.Name.Path        (NamePath(NamePath))
+import           Luna.Syntax.Name.Path        ()
 --import qualified Luna.Syntax.Name.Path        as NamePath
 --import qualified Luna.Syntax.Name             as Name
 --import           Luna.Syntax.Name             (TName(TName), TVName(TVName))
@@ -58,6 +58,8 @@ import qualified Luna.Data.StructInfo         as SI
 ----import qualified Luna.Syntax.Name.Pattern     as NamePattern
 --import qualified Luna.Syntax.Name.Pattern     as NamePattern
 --import           Luna.Syntax.Foreign          (Foreign(Foreign))
+
+import           Flowbox.Data.MapForest       (member)
 
 ----------------------------------------------------------------------
 -- Base types
@@ -101,11 +103,18 @@ iaExpr e@(Label lab expr) = case expr of
               where continue = defaultTraverseM e 
 
 
-findFun lab ident = do
-            parentMap <- view ( Namespace.info . SI.parent) <$> get
-            scopeMap <- view ( Namespace.info . SI.scope) <$> get
-            let parentScope = scopeMap IntMap.! (parentMap IntMap.! id)
-            
+findFun lab (Expr.Variable vnp v) = do
+            info <- view Namespace.info <$> get
+            --parentMap <- view ( Namespace.info . SI.parent) <$> get
+            --scopeMap <- view ( Namespace.info . SI.scope) <$> get
+            let parentMap   = info ^. SI.parent
+                scopeMap    = info ^. SI.scope
+                parentScope = scopeMap IntMap.! (parentMap IntMap.! id)
+                textName    = toText vnp
+                inScope     = member [textName] (parentScope ^. SI.varnames)
+            case inScope of
+                True  -> return ()
+                False -> (liftIO $ putStrLn "NOT IN SCOPE") *> return ()
         where id = Enum.id lab
 
 
