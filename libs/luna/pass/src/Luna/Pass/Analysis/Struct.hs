@@ -161,6 +161,7 @@ regImport id imp = do
     let path = Decl._modPath imp
     exists <- liftIO $ ModuleInfo.moduleExists path
     unless exists $ regOrphan id (SI.ImportError path "Module not found.")
+    when exists $ State.regImport path
     
 
 

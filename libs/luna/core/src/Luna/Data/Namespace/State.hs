@@ -119,6 +119,7 @@ withParentID f = do pid <- popID
 
 ----switchID :: NamespaceState m => ID -> m ()
 ----switchID id = modify (currentID .~ id)
+regImport = modifyStructInfo .  StructInfo.regImport
 
 regOrphan = modifyStructInfo .: StructInfo.regOrphan
 
