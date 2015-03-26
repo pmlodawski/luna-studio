@@ -8,11 +8,13 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE Rank2Types       #-}
 {-# LANGUAGE TemplateHaskell  #-}
+{-# LANGUAGE TupleSections    #-}
 
 module Luna.Pass.Transform.Graph.Parser.Parser where
 
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
+import qualified Data.Map                   as Map
 import qualified Data.Maybe                 as Maybe
 
 import           Flowbox.Prelude                        hiding (error, folded, mapM, mapM_)
@@ -23,12 +25,14 @@ import           Luna.Syntax.Arg                        (Arg (Arg))
 import qualified Luna.Syntax.Decl                       as Decl
 import qualified Luna.Syntax.Expr                       as Expr
 import           Luna.Syntax.Graph.DefaultsMap          (DefaultsMap)
+import qualified Luna.Syntax.Graph.Edge                 as Edge
 import           Luna.Syntax.Graph.Graph                (Graph)
 import qualified Luna.Syntax.Graph.Graph                as Graph
 import qualified Luna.Syntax.Graph.Node                 as Node
 import           Luna.Syntax.Graph.Node.Expr            (NodeExpr)
 import qualified Luna.Syntax.Graph.Node.Expr            as NodeExpr
 import qualified Luna.Syntax.Graph.Node.MultiPart       as MultiPart
+import           Luna.Syntax.Graph.Port                 (DstPortP (DstPort))
 import qualified Luna.Syntax.Graph.Port                 as Port
 import           Luna.Syntax.Graph.Tag                  (TDecl, TExpr, Tag)
 import           Luna.Syntax.Label                      (Label (Label))
@@ -69,7 +73,7 @@ parseNode signature (nodeID, node) = case node of
     Node.Expr expr outputName defaults pos -> do
         graph <- State.getGraph
         let lprel = Graph.lprelData graph nodeID
-        srcs <- map Expr.unnamed <$> State.getNodeSrcs nodeID defaults
+        srcs <- map Expr.unnamed <$> getNodeSrcs nodeID defaults
         ast  <- buildExpr expr srcs
         if length lprel > 0 || Maybe.isJust outputName
             then do let pat = buildPat lprel outputName
@@ -82,7 +86,12 @@ parseNode signature (nodeID, node) = case node of
 
 --buildPat :: Int -> GPPass V m (TExpr V)
 buildPat lprel outputName = do
+    let actualOutput = construct 
     undefined
+
+    where
+        construct [] = State.dummyLabel $ Pat.Grouped $ State.dummyLabel $ Pat.Tuple []
+        construct _ = undefined
 
 
 
@@ -113,7 +122,7 @@ parseArg nodeID (num, input) = case input of
 
 parseOutputs :: Node.ID -> DefaultsMap Tag V -> GPPass V m ()
 parseOutputs nodeID defaults = do
-    srcs    <- State.getNodeSrcs nodeID defaults
+    srcs    <- getNodeSrcs nodeID defaults
     inPorts <- State.inboundPorts nodeID
     case (srcs, map unwrap inPorts) of
         ([], _)               -> whenM doesLastStatementReturn $
@@ -132,6 +141,28 @@ doesLastStatementReturn = do
         (Label _ (Expr.Assignment {}) : _) -> False --TODO[PM] : check it
         _                                  -> True
 
+
+getNodeSrcs :: Node.ID -> DefaultsMap Tag v -> GPPass v m [TExpr v]
+getNodeSrcs nodeID defaults = do
+    g <- State.getGraph
+    connectedVars <- mapM (getVar . processEdge) $ Graph.lprelData g nodeID
+    let defalutsExprs = map processDefault $ Map.toList defaults
+        srcsMap = Map.union (Map.fromList connectedVars) (Map.fromList defalutsExprs)
+    if Map.null srcsMap
+        then return []
+        else do let maxPort = fst $ Map.findMax srcsMap
+                return $ map (wildcardMissing . flip Map.lookup srcsMap) [0..maxPort]
+    where
+        processEdge (pNID, _, Edge.Data s (DstPort (Port.All  ))) = (0, (pNID, s))
+        processEdge (pNID, _, Edge.Data s (DstPort (Port.Num d))) = (d, (pNID, s))
+
+        processDefault (DstPort (Port.All  ), expr) = (0, expr)
+        processDefault (DstPort (Port.Num d), expr) = (d, expr)
+
+        getVar (i, key) = (i,) . State.dummyLabel . Expr.Var <$> State.varMapLookup key
+
+        wildcardMissing Nothing  = State.dummyLabel Expr.Wildcard
+        wildcardMissing (Just e) = e
 
 ----parseExprNode :: Node.ID -> NodeExpr a V -> GPPass a V m ()
 --parseExprNode nodeID nodeExpr = case nodeExpr of
