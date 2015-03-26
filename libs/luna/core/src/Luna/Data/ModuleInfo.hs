@@ -105,7 +105,7 @@ writeModInfoToFile modInfo = do
     liDir <- liDirectory
     let modDir = liDir </> (modPathToDirString $ modInfo ^. name)
     Dir.createDirectoryIfMissing True modDir
-    let fPath = liDir </> (modPathToString $ modInfo ^. name) ++ ('.' : liFileSuffix)
+    let fPath = liDir </> (modPathToString $ modInfo ^. name) ++ (liFileSuffix)
     -- serialize with Data.Binry:
     encodeFile fPath modInfo
 
@@ -167,3 +167,7 @@ instance Binary Text
                        return $ T.pack t
 
 
+instance Monoid ModuleInfo where
+    mempty      = ModuleInfo mempty mempty
+    mappend a b = ModuleInfo (mappend (a ^. name)  (b ^. name))
+                        (mappend (a ^. strInfo) (b ^. strInfo))
