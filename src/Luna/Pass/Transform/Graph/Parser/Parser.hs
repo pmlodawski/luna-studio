@@ -70,22 +70,22 @@ parseNode :: Decl.FuncSig a e -> (Node.ID, Node.Node Tag V) -> GPPass V m ()
 parseNode signature (nodeID, node) = case node of
     Node.Outputs defaults pos -> parseOutputs nodeID defaults
     Node.Inputs           pos -> parseInputs nodeID signature
-    Node.Expr expr outputName defaults pos -> do
+    Node.Expr expr outputPat defaults pos -> do
         graph <- State.getGraph
         let lprel = Graph.lprelData graph nodeID
         srcs <- map Expr.unnamed <$> getNodeSrcs nodeID defaults
         ast  <- buildExpr expr srcs
-        if length lprel > 0 || Maybe.isJust outputName
-            then do let pat = buildPat lprel outputName
+        if length lprel > 0 || Maybe.isJust outputPat
+            then do let pat = buildPat lprel outputPat
                         assignment = Expr.Assignment pat ast
-                    --addVars lprel outputName
+                    --addVars lprel outputPat
                     undefined -- add to var name to nodeMap
                     State.addToBody $ State.dummyLabel assignment
             else State.addToBody ast
 
 
 --buildPat :: Int -> GPPass V m (TExpr V)
-buildPat lprel outputName = do
+buildPat lprel outputPat = do
     let actualOutput = construct 
     undefined
 
