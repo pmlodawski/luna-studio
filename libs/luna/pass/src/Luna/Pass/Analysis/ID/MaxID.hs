@@ -8,7 +8,6 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE Rank2Types            #-}
-{-# LANGUAGE TemplateHaskell       #-}
 
 module Luna.Pass.Analysis.ID.MaxID where
 

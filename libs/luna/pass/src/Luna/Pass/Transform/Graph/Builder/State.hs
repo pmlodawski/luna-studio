@@ -120,7 +120,7 @@ registerIDs :: ExtractIDs.EIDDefaultTraversal Identity labeled
             => labeled -> (Node.ID, SrcPort) -> GBPass v m ()
 registerIDs labeled np = do
     let ids = ExtractIDs.run labeled
-    mapM_ (flip addToNodeMap np) $ IntSet.toList ids
+    mapM_ (`addToNodeMap` np) $ IntSet.toList ids
 
 
 ----- resetNodeIDs --------------------------------------------------------

@@ -206,7 +206,7 @@ processArg (lexpr, dstPort) = if constainsVar lexpr
 
 
 addNode :: TExpr V -> Maybe TPat -> [ArgRef] -> GBPass V m (TExpr V, Node.ID)
-addNode lexpr outputName argRefs = addNodeWithExpr lexpr outputName nodeExpr argRefs
+addNode lexpr outputName = addNodeWithExpr lexpr outputName nodeExpr
     where nodeExpr = NodeExpr.StringExpr $ StringExpr.fromString $ lunaShow lexpr
 
 
