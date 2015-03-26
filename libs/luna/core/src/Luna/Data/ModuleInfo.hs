@@ -1,17 +1,19 @@
 
 module Luna.Data.ModuleInfo where
 
+import           Control.Monad            ((>=>), (<=<), liftM)
 import           Data.Binary             
-import           Data.Maybe               (fromMaybe)
+import           Data.List                (find, filter)
+import           Data.Maybe               (fromMaybe, fromJust)
 import           Data.Map                 (Map)
-import qualified Data.Map         as Map
+import qualified Data.Map                 as Map
 import           Data.Text.Internal.Lazy  (Text)
-import           Data.Text.Lazy   as T
+import           Data.Text.Lazy           as T
 import           System.Environment       (lookupEnv)
-import qualified System.Directory as Dir
+import qualified System.Directory         as Dir
 import           System.FilePath          (joinPath, (</>))
 
-import qualified Luna.Data.StructInfo as SI
+import qualified Luna.Data.StructInfo     as SI
 import           Luna.Data.StructInfo     (StructInfo, Scope, OriginInfo)
 import           Luna.Syntax.AST          (ID)
 import           Luna.Syntax.Decl         (Path)
@@ -37,17 +39,34 @@ data ModuleInfo = ModuleInfo {
 makeLenses ''ModuleInfo
 
 
+-- checks whether a given symbol is anywhere in the imported list
+-- returns the list of ALL matches (non-singleton list means some kind of conflict)
+getSymbolOriginsAux :: NamePath -> [ModuleInfo] -> [Path]
+getSymbolOriginsAux symbol infos = Flowbox.Prelude.map (^. name) results
+    where results = Flowbox.Prelude.filter (nameExists symbol) infos
+
+-- this is the main version, as you only have to pass it your currently parsed module
+getSymbolOrigins :: NamePath -> ModuleInfo -> IO [Path]
+getSymbolOrigins symbol mInfo = do
+    infos <- getModuleInfos (mInfo ^. strInfo ^. SI.imports)
+    return $ getSymbolOriginsAux symbol infos
+
+
+-- given a list of paths, lookups all the necessary ModuleInfo structs
+getModuleInfos :: [Path] -> IO [ModuleInfo]
+getModuleInfos paths = mapM ((return . fromJust) <=< readModInfoFromFile) paths
+
 --------------------------------------------------------------------
 -- simple utility functions for lookups and checks
 --------------------------------------------------------------------
 
 nameExists :: NamePath -> ModuleInfo -> Bool
-nameExists name mInfo = Map.member name (mInfo^.strInfo^.(SI.symTable))
+nameExists name mInfo = Map.member name (mInfo ^. strInfo ^. (SI.symTable))
 
 
 
 getSymbolId :: NamePath -> ModuleInfo -> Maybe ID
-getSymbolId name mInfo = Map.lookup name (mInfo^.strInfo^.(SI.symTable))
+getSymbolId name mInfo = Map.lookup name (mInfo ^. strInfo ^. (SI.symTable))
 
 
 
