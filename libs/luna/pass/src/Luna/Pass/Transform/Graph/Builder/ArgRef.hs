@@ -10,16 +10,14 @@ module Luna.Pass.Transform.Graph.Builder.ArgRef where
 import Data.Either (lefts, rights)
 
 import           Flowbox.Prelude
-import qualified Luna.Syntax.Graph.Node           as Node
-import           Luna.Syntax.Graph.Node.Expr      (NodeExpr)
-import           Luna.Syntax.Graph.Port           (DstPort, SrcPort)
-import           Luna.Syntax.Graph.PortDescriptor (PortDescriptor)
-import           Luna.Syntax.Graph.Tag            (Tag)
+import qualified Luna.Syntax.Graph.Node as Node
+import           Luna.Syntax.Graph.Port (DstPort, SrcPort)
+import           Luna.Syntax.Graph.Tag  (TExpr)
 
 
 
 type NodeRef    = (Node.ID, SrcPort, DstPort)
-type DefaultRef = (PortDescriptor, NodeExpr Tag ())
+type DefaultRef = (DstPort, TExpr ())
 type ArgRef     = Either NodeRef DefaultRef
 
 

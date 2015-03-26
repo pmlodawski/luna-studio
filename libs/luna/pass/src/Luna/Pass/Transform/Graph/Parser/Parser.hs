@@ -22,6 +22,7 @@ import qualified Luna.Pass.Transform.Graph.Parser.State as State
 import           Luna.Syntax.Arg                        (Arg (Arg))
 import qualified Luna.Syntax.Decl                       as Decl
 import qualified Luna.Syntax.Expr                       as Expr
+import           Luna.Syntax.Graph.DefaultsMap          (DefaultsMap)
 import           Luna.Syntax.Graph.Graph                (Graph)
 import qualified Luna.Syntax.Graph.Graph                as Graph
 import qualified Luna.Syntax.Graph.Node                 as Node
@@ -63,12 +64,12 @@ func2graph decl@(Label _ (Decl.Func funcDecl)) = do
 
 parseNode :: Decl.FuncSig a e -> (Node.ID, Node.Node Tag V) -> GPPass V m ()
 parseNode signature (nodeID, node) = case node of
-    Node.Outputs defaults pos -> parseOutputs nodeID
+    Node.Outputs defaults pos -> parseOutputs nodeID defaults
     Node.Inputs           pos -> parseInputs nodeID signature
     Node.Expr expr outputName defaults pos -> do
         graph <- State.getGraph
         let lprel = Graph.lprelData graph nodeID
-        srcs <- map Expr.unnamed <$> State.getNodeSrcs nodeID
+        srcs <- map Expr.unnamed <$> State.getNodeSrcs nodeID defaults
         ast  <- buildExpr expr srcs
         if length lprel > 0 || Maybe.isJust outputName
             then do let pat = buildPat lprel outputName
@@ -80,7 +81,10 @@ parseNode signature (nodeID, node) = case node of
 
 
 --buildPat :: Int -> GPPass V m (TExpr V)
-buildPat = undefined
+buildPat lprel outputName = do
+    undefined
+
+
 
 buildExpr :: NodeExpr Tag V -> [Expr.AppArg (TExpr V)] -> GPPass V m (TExpr V)
 buildExpr expr srcs = case expr of
@@ -107,9 +111,9 @@ parseArg nodeID (num, input) = case input of
     where addVar vname = State.addToVarMap (nodeID, Port.mkSrc num) $ Expr.Variable vname ()
 
 
-parseOutputs :: Node.ID -> GPPass V m ()
-parseOutputs nodeID = do
-    srcs    <- State.getNodeSrcs nodeID
+parseOutputs :: Node.ID -> DefaultsMap Tag V -> GPPass V m ()
+parseOutputs nodeID defaults = do
+    srcs    <- State.getNodeSrcs nodeID defaults
     inPorts <- State.inboundPorts nodeID
     case (srcs, map unwrap inPorts) of
         ([], _)               -> whenM doesLastStatementReturn $
