@@ -49,14 +49,14 @@ backAndForth bc code = do
     ast4   <- Common.getExpr bc graph ast3
     prettyPrint ast4
     putStrLn "getGraph"
-    --(ast5, graph2) <- Common.getGraph bc ast4
+    (ast5, graph2) <- Common.getGraph bc ast4
     ----print pm3
     ----printLn
-    --expr  <- Common.getMain ast2
-    --expr2 <- Common.getMain ast5
+    expr  <- Common.getMain ast2
+    expr2 <- Common.getMain ast5
 
-    --expr2  `shouldBe` expr
-    --graph2 `shouldBe` graph
+    expr2  `shouldBe` expr
+    graph2 `shouldBe` graph
 
 
 --backAndForth2 :: Breadcrumbs -> Graph -> IO ()
