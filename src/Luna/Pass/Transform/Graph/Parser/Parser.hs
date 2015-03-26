@@ -19,6 +19,7 @@ import qualified Data.Maybe                 as Maybe
 
 import           Flowbox.Prelude                        hiding (error, folded, mapM, mapM_)
 import           Flowbox.System.Log.Logger
+import qualified Luna.Parser.Parser                     as Parser
 import           Luna.Pass.Transform.Graph.Parser.State (GPPass)
 import qualified Luna.Pass.Transform.Graph.Parser.State as State
 import           Luna.Syntax.Arg                        (Arg (Arg))
@@ -34,13 +35,17 @@ import           Luna.Syntax.Graph.Node.Expr            (NodeExpr)
 import qualified Luna.Syntax.Graph.Node.Expr            as NodeExpr
 import qualified Luna.Syntax.Graph.Node.MultiPart       as MultiPart
 import qualified Luna.Syntax.Graph.Node.OutputPat       as OutputPat
+import qualified Luna.Syntax.Graph.Node.StringExpr      as StringExpr
 import           Luna.Syntax.Graph.Port                 (DstPortP (DstPort))
 import qualified Luna.Syntax.Graph.Port                 as Port
 import           Luna.Syntax.Graph.Tag                  (TDecl, TExpr, TPat, Tag)
+import qualified Luna.Syntax.Graph.Tag                  as Tag
 import           Luna.Syntax.Label                      (Label (Label))
 import qualified Luna.Syntax.Label                      as Label
 import qualified Luna.Syntax.Name.Pattern               as Pattern
 import qualified Luna.Syntax.Pat                        as Pat
+import           Luna.System.Session                    as Session
+import qualified Luna.Util.Label                        as Label
 
 
 
@@ -75,7 +80,7 @@ parseNode signature (nodeID, node) = case node of
     Node.Expr expr outputPat defaults pos -> do
         graph <- State.getGraph
         let inDataEdges = map (view _3) $ Graph.lprelData graph nodeID
-        srcs <- map Expr.unnamed <$> getNodeSrcs nodeID defaults
+        srcs <- getNodeSrcs nodeID defaults
         ast  <- buildExpr expr srcs
         if not (null inDataEdges) || Maybe.isJust outputPat
             then do let pat = buildPat expr nodeID inDataEdges outputPat
@@ -85,7 +90,27 @@ parseNode signature (nodeID, node) = case node of
             else State.addToBody ast
 
 
---buildPat :: Int -> GPPass V m (TExpr V)
+buildExpr :: NodeExpr Tag V -> [TExpr V] -> GPPass V m (TExpr V)
+buildExpr expr srcs = case expr of
+    NodeExpr.ASTExpr expr -> return expr
+    NodeExpr.MultiPart mp -> do let defArg = Expr.unnamed $ State.dummyLabel Expr.Wildcard
+                                    args = map Expr.unnamed srcs
+                                return $ State.dummyLabel $ Expr.App $ MultiPart.toNamePat mp args defArg
+    NodeExpr.StringExpr str -> case str of
+        StringExpr.List           -> return $ State.dummyLabel $ Expr.List $ Expr.SeqList srcs
+        StringExpr.Tuple          -> return $ State.dummyLabel $ Expr.Tuple srcs
+        _                         -> do
+            r <- Session.runT $ do void Parser.init
+                                   Parser.parseString (toString str) (Parser.exprParser2 Parser.defState)
+            case fst r of
+                Left err -> lift $ left $ toString err
+                Right (lexpr, _) -> return $ Label.replaceExpr Tag.fromEnumerated lexpr
+
+        --StringExpr.Pattern pat    -> parsePatNode     nodeID pat
+        --StringExpr.Native  native -> parseNativeNode  nodeID native
+        --_                         -> parseAppNode     nodeID $ StringExpr.toString str
+
+
 buildPat :: NodeExpr Tag e -> Node.ID -> [Edge] -> Maybe TPat -> TPat
 buildPat nodeExpr nodeID edges = construct (map (unwrap . (^?! Edge.dst)) edges)
     where
@@ -108,19 +133,6 @@ addVars nodeID tpat = case tpat of
         add i (h:t) = case h of
             Label _ (Pat.Var vname) -> addToVarMap (Port.mkSrc i) vname >> add (i + 1) t
             _                       -> add (i + 1) t
-
-
-buildExpr :: NodeExpr Tag V -> [Expr.AppArg (TExpr V)] -> GPPass V m (TExpr V)
-buildExpr expr srcs = case expr of
-    NodeExpr.ASTExpr expr -> return expr
-    NodeExpr.MultiPart mp -> do let defArg = Expr.unnamed $ State.dummyLabel Expr.Wildcard
-                                return $ State.dummyLabel $ Expr.App $ MultiPart.toNamePat mp srcs defArg
-    --NodeExpr.StringExpr str -> case str of
-    --    StringExpr.List           -> parseListNode    nodeID
-    --    StringExpr.Tuple          -> parseTupleNode   nodeID
-    --    StringExpr.Pattern pat    -> parsePatNode     nodeID pat
-    --    StringExpr.Native  native -> parseNativeNode  nodeID native
-    --    _                         -> parseAppNode     nodeID $ StringExpr.toString str
 
 
 parseInputs :: Node.ID -> Decl.FuncSig a e -> GPPass V m ()

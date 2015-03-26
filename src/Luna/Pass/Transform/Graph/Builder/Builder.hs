@@ -8,6 +8,7 @@
 {-# LANGUAGE FlexibleContexts      #-}
 {-# LANGUAGE LambdaCase            #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedStrings     #-}
 {-# LANGUAGE Rank2Types            #-}
 {-# LANGUAGE TemplateHaskell       #-}
 {-# LANGUAGE TupleSections         #-}
@@ -177,7 +178,7 @@ buildNode lexpr outputName = case unwrap lexpr of
         Nothing             -> do (le, ni) <- addNode lexpr outputName []
                                   return (le, ni, Port.mkSrcAll)
         Just (srcNID, srcPort) -> if Maybe.isJust outputName
-            then do let nodeExpr = NodeExpr.StringExpr $ StringExpr.fromString "_pattern_match_"
+            then do let nodeExpr = NodeExpr.StringExpr "_pattern_match_"
                     (le, ni) <- addNodeWithExpr lexpr outputName nodeExpr []
                     State.connect srcNID srcPort ni Port.mkDstAll
                     return (le, ni, Port.mkSrcAll)
@@ -207,7 +208,7 @@ processArg (lexpr, dstPort) = if constainsVar lexpr
 
 addNode :: TExpr V -> Maybe TPat -> [ArgRef] -> GBPass V m (TExpr V, Node.ID)
 addNode lexpr outputName = addNodeWithExpr lexpr outputName nodeExpr
-    where nodeExpr = NodeExpr.StringExpr $ StringExpr.fromString $ lunaShow lexpr
+    where nodeExpr = NodeExpr.StringExpr $ fromString $ lunaShow lexpr
 
 
 addNodeWithExpr :: TExpr V -> Maybe TPat
