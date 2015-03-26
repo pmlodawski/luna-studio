@@ -25,6 +25,7 @@ import           Luna.Syntax.Arg                        (Arg (Arg))
 import qualified Luna.Syntax.Decl                       as Decl
 import qualified Luna.Syntax.Expr                       as Expr
 import           Luna.Syntax.Graph.DefaultsMap          (DefaultsMap)
+import           Luna.Syntax.Graph.Edge                 (Edge)
 import qualified Luna.Syntax.Graph.Edge                 as Edge
 import           Luna.Syntax.Graph.Graph                (Graph)
 import qualified Luna.Syntax.Graph.Graph                as Graph
@@ -32,9 +33,10 @@ import qualified Luna.Syntax.Graph.Node                 as Node
 import           Luna.Syntax.Graph.Node.Expr            (NodeExpr)
 import qualified Luna.Syntax.Graph.Node.Expr            as NodeExpr
 import qualified Luna.Syntax.Graph.Node.MultiPart       as MultiPart
+import qualified Luna.Syntax.Graph.Node.OutputPat       as OutputPat
 import           Luna.Syntax.Graph.Port                 (DstPortP (DstPort))
 import qualified Luna.Syntax.Graph.Port                 as Port
-import           Luna.Syntax.Graph.Tag                  (TDecl, TExpr, Tag)
+import           Luna.Syntax.Graph.Tag                  (TDecl, TExpr, TPat, Tag)
 import           Luna.Syntax.Label                      (Label (Label))
 import qualified Luna.Syntax.Label                      as Label
 import qualified Luna.Syntax.Name.Pattern               as Pattern
@@ -72,27 +74,40 @@ parseNode signature (nodeID, node) = case node of
     Node.Inputs           pos -> parseInputs nodeID signature
     Node.Expr expr outputPat defaults pos -> do
         graph <- State.getGraph
-        let lprel = Graph.lprelData graph nodeID
+        let inDataEdges = map (view _3) $ Graph.lprelData graph nodeID
         srcs <- map Expr.unnamed <$> getNodeSrcs nodeID defaults
         ast  <- buildExpr expr srcs
-        if length lprel > 0 || Maybe.isJust outputPat
-            then do let pat = buildPat lprel outputPat
+        if not (null inDataEdges) || Maybe.isJust outputPat
+            then do let pat = buildPat expr nodeID inDataEdges outputPat
                         assignment = Expr.Assignment pat ast
-                    --addVars lprel outputPat
-                    undefined -- add to var name to nodeMap
+                    addVars nodeID pat
                     State.addToBody $ State.dummyLabel assignment
             else State.addToBody ast
 
 
 --buildPat :: Int -> GPPass V m (TExpr V)
-buildPat lprel outputPat = do
-    let actualOutput = construct 
-    undefined
-
+buildPat :: NodeExpr Tag e -> Node.ID -> [Edge] -> Maybe TPat -> TPat
+buildPat nodeExpr nodeID edges = construct (map (unwrap . (^?! Edge.dst)) edges)
     where
-        construct [] = State.dummyLabel $ Pat.Grouped $ State.dummyLabel $ Pat.Tuple []
-        construct _ = undefined
+        construct [] (Just o) = o
+        construct []  _       = l $ Pat.Grouped $ l $ Pat.Tuple []
+        construct [Port.All] (Just o@(Label _ (Pat.Var _))) = o
+        construct [Port.All] _                              = OutputPat.generate nodeExpr nodeID
+        l = State.dummyLabel
 
+
+addVars :: Node.ID -> TPat -> GPPass V m ()
+addVars nodeID tpat = case tpat of
+    Label _ (Pat.Var  vname) -> addToVarMap Port.mkSrcAll vname
+    Label _ (Pat.Grouped gr) -> addVars nodeID gr
+    Label _ (Pat.Tuple   tp) -> add 0 tp
+    _                        -> return ()
+    where
+        addToVarMap port vname = State.addToVarMap (nodeID, port) $ Expr.Variable vname ()
+        add _ []    = return ()
+        add i (h:t) = case h of
+            Label _ (Pat.Var vname) -> addToVarMap (Port.mkSrc i) vname >> add (i + 1) t
+            _                       -> add (i + 1) t
 
 
 buildExpr :: NodeExpr Tag V -> [Expr.AppArg (TExpr V)] -> GPPass V m (TExpr V)
@@ -153,10 +168,10 @@ getNodeSrcs nodeID defaults = do
         else do let maxPort = fst $ Map.findMax srcsMap
                 return $ map (wildcardMissing . flip Map.lookup srcsMap) [0..maxPort]
     where
-        processEdge (pNID, _, Edge.Data s (DstPort (Port.All  ))) = (0, (pNID, s))
+        processEdge (pNID, _, Edge.Data s (DstPort  Port.All   )) = (0, (pNID, s))
         processEdge (pNID, _, Edge.Data s (DstPort (Port.Num d))) = (d, (pNID, s))
 
-        processDefault (DstPort (Port.All  ), expr) = (0, expr)
+        processDefault (DstPort  Port.All   , expr) = (0, expr)
         processDefault (DstPort (Port.Num d), expr) = (d, expr)
 
         getVar (i, key) = (i,) . State.dummyLabel . Expr.Var <$> State.varMapLookup key
