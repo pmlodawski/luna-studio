@@ -20,54 +20,35 @@ import qualified Luna.Syntax.Traversals       as AST
 import qualified Luna.Syntax.Enum             as Enum
 import           Luna.Syntax.Enum             (Enumerated, IDTag(IDTag))
 import qualified Data.IntMap as IntMap
---import qualified Luna.Syntax.Decl             as Decl
---import           Luna.Syntax.Decl             (LDecl, Field(Field))
---import qualified Luna.Syntax.Module           as Module
---import           Luna.Syntax.Module           (Module(Module), LModule)
---import           Luna.Syntax.Unit             (Unit(Unit))
+import qualified Luna.Syntax.Decl             as Decl
+import           Luna.Syntax.Decl             (Path)
 import qualified Luna.Syntax.Label            as Label
 import           Luna.Syntax.Label            (Label(Label))
---import qualified Luna.Syntax.Type             as Type
---import           Luna.Syntax.Type             (Type)
 import           Luna.Syntax.Expr             (LExpr, Expr)
 import qualified Luna.Syntax.Expr             as Expr
---import qualified Luna.Syntax.Pat              as Pat
---import           Luna.Syntax.Pat              (LPat, Pat)
---import qualified Luna.Syntax.Lit              as Lit 
---import           Luna.Syntax.Arg              (Arg(Arg))
---import qualified Luna.Syntax.Native           as Native
 import           Luna.Syntax.Name.Path        ()
---import qualified Luna.Syntax.Name.Path        as NamePath
---import qualified Luna.Syntax.Name             as Name
---import           Luna.Syntax.Name             (TName(TName), TVName(TVName))
 import           Luna.Pass                    (Pass(Pass), PassMonad, PassCtx)
 import qualified Luna.Pass                    as Pass
---
-import qualified Luna.Data.Namespace          as Namespace
-import           Luna.Data.Namespace          (Namespace)
+import qualified Luna.Data.ModuleInfo         as ModuleInfo
+import qualified Luna.Data.StructInfo         as StructInfo
+import           Luna.Data.StructInfo         (StructInfo)
+import           Luna.Data.ModuleInfo         (ModuleInfo)
 
 import           Luna.Data.ASTInfo            (ASTInfo)
---
---import           Luna.Data.StructInfo         (StructInfo, OriginInfo(OriginInfo))
 import qualified Luna.Data.StructInfo         as SI
---import qualified Luna.Data.ModuleInfo         as ModuleInfo
---
---import qualified Luna.Data.Namespace.State    as State 
---import           Luna.Data.Namespace.State    (regAlias, regOrphan, regParent, regVarName, regNamePatDesc, regTypeName, withScope)
---import qualified Luna.Parser.State            as ParserState
-----import qualified Luna.Syntax.Name.Pattern     as NamePattern
---import qualified Luna.Syntax.Name.Pattern     as NamePattern
---import           Luna.Syntax.Foreign          (Foreign(Foreign))
-
 import           Flowbox.Data.MapForest       (member)
+import           Luna.Syntax.Decl             (Imp)
+import           Luna.Pass.Import             (getImportList) 
 
+import           Luna.Syntax.Unit   (Unit(Unit))
+import           Luna.Syntax.Module (Module(Module))
 ----------------------------------------------------------------------
 -- Base types
 ----------------------------------------------------------------------
 
 data ImportAnalysis = ImportAnalysis
 
-type IAPass                 m   = PassMonad Namespace m
+type IAPass                 m   = PassMonad ModuleInfo m
 type IACtx              lab m a = (Enumerated lab, IATraversal m a, MonadIO m)
 type IATraversal            m a = (PassCtx m, AST.Traversal        ImportAnalysis (IAPass m) a a)
 type IADefaultTraversal     m a = (PassCtx m, AST.DefaultTraversal ImportAnalysis (IAPass m) a a)
@@ -86,14 +67,15 @@ defaultTraverseM = AST.defaultTraverseM ImportAnalysis
 -- Pass functions
 ----------------------------------------------------------------------
 
-pass :: (IADefaultTraversal m a) => Pass Namespace (Namespace -> a -> IAPass m StructInfo)
+pass :: (IADefaultTraversal m a) => Pass ModuleInfo (ModuleInfo -> a -> IAPass m ModuleInfo)
 pass = Pass "Import analysis" 
             "Basic import analysis that results in import renaming and proper path" 
             mempty iaUnit
 
+--iaUnit :: Namespace -> Unit a -> IAPass m StructInfo
 iaUnit astInfo ast = do
                      put astInfo
-                     defaultTraverseM ast *> (view Namespace.info <$> get)
+                     defaultTraverseM ast *> get
 
 iaExpr :: IACtx lab m a => LExpr lab a -> IAPass m (LExpr lab a)
 iaExpr e@(Label lab expr) = case expr of
@@ -104,9 +86,8 @@ iaExpr e@(Label lab expr) = case expr of
 
 
 findFun lab (Expr.Variable vnp v) = do
-            info <- view Namespace.info <$> get
-            --parentMap <- view ( Namespace.info . SI.parent) <$> get
-            --scopeMap <- view ( Namespace.info . SI.scope) <$> get
+            info <- view ModuleInfo.strInfo <$> get
+            
             let parentMap   = info ^. SI.parent
                 scopeMap    = info ^. SI.scope
                 parentScope = scopeMap IntMap.! (parentMap IntMap.! id)
@@ -114,7 +95,7 @@ findFun lab (Expr.Variable vnp v) = do
                 inScope     = member [textName] (parentScope ^. SI.varnames)
             case inScope of
                 True  -> return ()
-                False -> (putStrLn "NOT IN SCOPE") *> return ()
+                False -> getSymbol *> return ()
         where id = Enum.id lab
 
 
