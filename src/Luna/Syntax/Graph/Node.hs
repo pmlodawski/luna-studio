@@ -37,6 +37,14 @@ makeLenses ''Node
 type ID = Int
 
 
+inputsID :: ID
+inputsID = -2
+
+
+outputID :: ID
+outputID = -1
+
+
 mkInputs :: Node a v
 mkInputs = Inputs def
 
