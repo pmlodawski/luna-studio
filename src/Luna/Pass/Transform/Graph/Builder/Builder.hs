@@ -56,20 +56,16 @@ logger = getLoggerIO $moduleName
 type LunaExpr ae = (Enumerated ae, LunaShow (LExpr ae V), LunaShow (LLit ae))
 type V = ()
 
-inputsID, outputID :: Node.ID
-inputsID = -2
-outputID = -1
-
 
 run :: Monad m => StructInfo -> TDecl V -> EitherT State.Error m (TDecl V, Graph Tag V)
-run aliasInfo lexpr = evalStateT (func2graph lexpr) $ State.mk aliasInfo inputsID
+run aliasInfo lexpr = evalStateT (func2graph lexpr) $ State.mk aliasInfo Node.inputsID
 
 
 func2graph :: TDecl V -> GBPass V m (TDecl V, Graph Tag V)
 func2graph decl@(Label _ (Decl.Func (Decl.FuncDecl _ sig _ body))) = do
     State.initFreeNodeID decl
-    State.insNode (inputsID, Node.mkInputs)
-    State.insNode (outputID, Node.mkOutputs)
+    State.insNode (Node.inputsID, Node.mkInputs)
+    State.insNode (Node.outputID, Node.mkOutputs)
     sig'  <- buildInputsArgs sig
     body' <- buildBody body
     decl' <- State.saveFreeNodeID decl
@@ -93,12 +89,12 @@ buildInputsArgs (Pattern.NamePat prefix base segmentList) = flip evalStateT (0::
         buildInputsArg arg@(Arg pat _) = do
             no <- get
             put $ no + 1
-            lift $ State.addToNodeMap (Enum.id $ pat ^. Label.label) (inputsID, Port.mkSrc no)
+            lift $ State.addToNodeMap (Enum.id $ pat ^. Label.label) (Node.inputsID, Port.mkSrc no)
             return arg
 
 
 buildBody :: [TExpr V] -> GBPass V m [TExpr V]
-buildBody []   = State.connectMonadic outputID >> return []
+buildBody []   = State.connectMonadic Node.outputID >> return []
 buildBody body = do
     body' <- mapM (fmap (view _1) . flip buildNode Nothing) (init body)
     let output = last body
@@ -110,16 +106,16 @@ buildOutput :: TExpr V -> GBPass V m (TExpr V)
 buildOutput lexpr = do
     lexpr' <- case unwrap lexpr of
         Expr.Assignment {}                        -> view _1 <$> buildNode lexpr Nothing
-        --Expr.Tuple   items                        -> buildAndConnectMany True  True Nothing outputID items 0
-        --Expr.Grouped (Label _ (Expr.Tuple items)) -> buildAndConnectMany True  True Nothing outputID items 0
-        --Expr.Grouped v@(Label _ (Expr.Var {}))    -> buildAndConnect     True  True Nothing outputID (v, Port.Num 0)
-        --Expr.Grouped V                            -> buildAndConnect     False True Nothing outputID (v, Port.Num 0)
-        --Expr.Var {}                               -> buildAndConnect     True  True Nothing outputID (lexpr, Port.All)
-        --_                                         -> buildAndConnect     False True Nothing outputID (lexpr, Port.All)
+        --Expr.Tuple   items                        -> buildAndConnectMany True  True Nothing Node.outputID items 0
+        --Expr.Grouped (Label _ (Expr.Tuple items)) -> buildAndConnectMany True  True Nothing Node.outputID items 0
+        --Expr.Grouped v@(Label _ (Expr.Var {}))    -> buildAndConnect     True  True Nothing Node.outputID (v, Port.Num 0)
+        --Expr.Grouped V                            -> buildAndConnect     False True Nothing Node.outputID (v, Port.Num 0)
+        --Expr.Var {}                               -> buildAndConnect     True  True Nothing Node.outputID (lexpr, Port.All)
+        --_                                         -> buildAndConnect     False True Nothing Node.outputID (lexpr, Port.All)
         _   ->  do (lexpr', nodeID, srcPort) <- buildNode lexpr Nothing
-                   State.connect nodeID srcPort outputID Port.mkDstAll
+                   State.connect nodeID srcPort Node.outputID Port.mkDstAll
                    return lexpr'
-    State.connectMonadic outputID
+    State.connectMonadic Node.outputID
     return lexpr'
 
 
