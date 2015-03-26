@@ -79,11 +79,11 @@ parseNode signature (nodeID, node) = case node of
     Node.Inputs           pos -> parseInputs nodeID signature
     Node.Expr expr outputPat defaults pos -> do
         graph <- State.getGraph
-        let inDataEdges = map (view _3) $ Graph.lprelData graph nodeID
+        let outDataEdges = map (view _3) $ Graph.lsuclData graph nodeID
         srcs <- getNodeSrcs nodeID defaults
         ast  <- buildExpr expr srcs
-        if not (null inDataEdges) || Maybe.isJust outputPat
-            then do let pat = buildPat expr nodeID inDataEdges outputPat
+        if not (null outDataEdges) || Maybe.isJust outputPat
+            then do let pat = buildPat expr nodeID outDataEdges outputPat
                         assignment = Expr.Assignment pat ast
                     addVars nodeID pat
                     State.addToBody $ State.dummyLabel assignment
