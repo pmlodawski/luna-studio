@@ -12,9 +12,9 @@ module Luna.Syntax.Graph.DefaultsMap (
 
 import Data.Map as X
 
-import Luna.Syntax.Graph.Node.Expr      (NodeExpr)
-import Luna.Syntax.Graph.PortDescriptor (PortDescriptor)
+import Luna.Syntax.Expr       (LExpr)
+import Luna.Syntax.Graph.Port (DstPort)
 
 
 
-type DefaultsMap a v = Map PortDescriptor (NodeExpr a v)
+type DefaultsMap a v = Map DstPort (LExpr a v)
