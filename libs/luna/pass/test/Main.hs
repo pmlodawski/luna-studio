@@ -51,7 +51,7 @@ import Luna.Syntax.Name.Path (QualPath(QualPath))
 
 import qualified Luna.Data.ModuleInfo as MI
 import           Data.String.Utils (replace)
-
+import qualified Luna.Pass.Analysis.Import as ImportAnalysis
 
 header txt = "\n-------- " <> txt <> " --------"
 printHeader = putStrLn . header
@@ -96,6 +96,9 @@ main = do
 
             -- printHeader "Imports"
             -- sa <- Pass.run
+            printHeader "ImportAnalysis"
+            x <- Pass.run2_ ImportAnalysis.pass mInfo ast
+            ppPrint x
 
             printHeader "ImplSelf"
             (ast, astinfo) <- Pass.run2_ ImplSelf.pass astinfo ast
