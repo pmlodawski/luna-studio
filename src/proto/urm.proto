@@ -83,6 +83,15 @@ message URM {
             required Request request = 1;
             required bool    success = 2;
         }
+        message Descriptions {
+            message Request {
+                required int32 projectID = 1;
+            }
+            message Status {
+                required Request request = 1;
+                repeated string descriptions = 2;
+            }
+        }
     }
 
     message Redo {
@@ -92,6 +101,15 @@ message URM {
         message Status {
             required Request request = 1;
             required bool    success = 2;
+        }
+        message Descriptions {
+            message Request {
+                required int32 projectID = 1;
+            }
+            message Status {
+                required Request request = 1;
+                repeated string descriptions = 2;
+            }
         }
     }
 
