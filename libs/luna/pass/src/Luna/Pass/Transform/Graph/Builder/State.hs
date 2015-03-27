@@ -101,7 +101,7 @@ connectMonadic nodeID = do
     setPrevoiusNodeID nodeID
     let prevPos = prevNode ^. Node.pos
         currPos = currNode ^. Node.pos
-    when (prevPos == currPos) $
+    when (prevPos >= currPos) $
         updateNode (nodeID, currNode & Node.pos .~ (fst prevPos + 10, snd prevPos))
     connectNodes prevID nodeID Edge.Monadic
 
