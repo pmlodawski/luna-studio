@@ -86,22 +86,23 @@ iaExpr e@(Label lab expr) = case expr of
 
 
 findFun lab (Expr.Variable vnp v) = do
-            info <- view ModuleInfo.strInfo <$> get
+            mInfo <- get
             
-            let parentMap   = info ^. SI.parent
-                scopeMap    = info ^. SI.scope
+   
+            let info        = mInfo ^. ModuleInfo.strInfo            
+                parentMap   = info  ^. SI.parent
+                scopeMap    = info  ^. SI.scope
                 parentScope = scopeMap IntMap.! (parentMap IntMap.! id)
                 textName    = toText vnp
                 inScope     = member [textName] (parentScope ^. SI.varnames)
             case inScope of
                 True  -> return () -- regAlias here!
                 False -> do
-                    symbolOrigins <- ModuleInfo.getSymbolOrigins name <$> get 
-                    so <- symbolOrigins
+                    symbolOrigins <- liftIO $ ModuleInfo.getSymbolOrigins name mInfo 
                     case symbolOrigins of
-                        []       -> put $ ModuleInfo.regOrphan id (SI.LookupError textName) <$> get 
-                        [origin] -> put $ ModuleInfo.regOrigin id 1233445 name origin <$> get
-                        origins  -> put $ ModuleInfo.regOrphan id (SI.AmbRefError name origins "Ambiguous reference") <$> get
+                        []       -> put $ ModuleInfo.regOrphan id (SI.LookupError textName) mInfo 
+                        [origin] -> put $ ModuleInfo.regOrigin id 1233445 name origin mInfo
+                        origins  -> put $ ModuleInfo.regOrphan id (SI.AmbRefError name origins "Ambiguous reference") mInfo
         where id   = Enum.id lab
               name = unwrap vnp
 
