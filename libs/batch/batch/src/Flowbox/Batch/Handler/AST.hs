@@ -162,12 +162,12 @@ modifyDataCons cons bc libraryID projectID = astDataOp bc libraryID projectID $ 
     return (m & Expr.cons .~ fixedCons, ())
 
 
-addDataCon :: Expr -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
+addDataCon :: Expr -> Breadcrumbs -> Library.ID -> Project.ID -> Batch AST.ID
 addDataCon con bc libraryID projectID = astDataOp bc libraryID projectID $ \data_ -> do
     astInfo <- Batch.getASTInfo libraryID projectID
     (fixedCon, astInfo') <- EitherT $ IDFixer.runExpr astInfo Nothing True con
     Batch.setASTInfo astInfo' libraryID projectID
-    return (data_ & Expr.cons %~ (fixedCon:), ())
+    return (data_ & Expr.cons %~ (fixedCon:), fixedCon ^. Expr.id)
 
 
 deleteDataCon :: AST.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
@@ -186,12 +186,12 @@ modifyDataCon con conID bc libraryID projectID = astDataOp bc libraryID projectI
     return (data_ & Expr.cons .~ (fixedCon':cons), ())
 
 
-addDataConField :: Expr -> AST.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
+addDataConField :: Expr -> AST.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch AST.ID
 addDataConField field conID bc libraryID projectID = astDataConOp conID bc libraryID projectID $ \dataCon -> do
     astInfo <- Batch.getASTInfo libraryID projectID
     (fixedField, astInfo') <- EitherT $ IDFixer.runExpr astInfo Nothing True field
     Batch.setASTInfo astInfo' libraryID projectID
-    return (dataCon & Expr.fields %~ (fixedField:), ())
+    return (dataCon & Expr.fields %~ (fixedField:), fixedField ^. Expr.id)
 
 
 deleteDataConField :: AST.ID -> AST.ID -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()

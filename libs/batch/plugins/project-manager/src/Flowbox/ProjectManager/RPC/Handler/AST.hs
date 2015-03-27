@@ -293,9 +293,9 @@ addDataCon request@(AddDataCon.Request tcon tbc tlibID tprojectID _) = do
     bc  <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    BatchAST.addDataCon con bc libID projectID
+    conID <- BatchAST.addDataCon con bc libID projectID
     updateNo <- Batch.getUpdateNo
-    return $ AddDataCon.Update request updateNo
+    return $ AddDataCon.Update request (encodeP conID) updateNo
 
 
 deleteDataCon :: DeleteDataCon.Request -> RPC Context IO DeleteDataCon.Update
@@ -315,9 +315,9 @@ addDataConField request@(AddDataConField.Request tfield tconID tbc tlibID tproje
     bc <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    BatchAST.addDataConField field conID bc libID projectID
+    fieldID <- BatchAST.addDataConField field conID bc libID projectID
     updateNo <- Batch.getUpdateNo
-    return $ AddDataConField.Update request updateNo
+    return $ AddDataConField.Update request (encodeP fieldID) updateNo
 
 deleteDataConField :: DeleteDataConField.Request -> RPC Context IO DeleteDataConField.Update
 deleteDataConField request@(DeleteDataConField.Request tfieldID tconID tbc tlibID tprojectID _) = do
