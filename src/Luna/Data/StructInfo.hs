@@ -37,8 +37,9 @@ type IDMap = IntMap
 
 type NameMap v = MapForest Text v
 
-data Error  = LookupError { key  :: Text }
-            | ImportError { path :: Path, msg :: String }
+data Error  = LookupError { key    :: Text }
+            | ImportError { path   :: Path,                        msg :: String } -- module not found
+            | AmbRefError { symbol :: NamePath, modules :: [Path], msg :: String } -- ambiguous reference
             deriving (Show, Eq, Generic, Read)
 
 
@@ -83,28 +84,42 @@ class StructInfoMonad m where
 ----------------------------------------------------------------------
 -- Utils
 ----------------------------------------------------------------------
+regOrigin :: ID -> ID -> NamePath -> Path -> StructInfo -> StructInfo
+regOrigin id pid name path = alias %~ Map.insert id originInfo
+    where originInfo = OriginInfo qPath pid
+          qPath      = NamePath.QualPath (map toText path) (toText name)
+
+
 regImport :: Path -> StructInfo -> StructInfo
 regImport path = imports %~ (path :)
 
+
 regSymbol :: NamePath -> Int -> StructInfo -> StructInfo
 regSymbol name id = symTable %~ Map.insert name id
+
 
 regParent  id pid  = parent %~ Map.insert id pid
 regVarName pid id name info = setScope info pid $ Scope (vnmap & at name ?~ id) tnmap where
     (vnmap, tnmap) = scopeLookup pid info
 
+
 regOrphan id err = orphans %~ Map.insert id err
 
+
 regArgPat id argPat = argPats %~ Map.insert id argPat
+
 
 regTypeName pid id name info = setScope info pid $ Scope vnmap (tnmap & at name ?~ id) where
     (vnmap, tnmap) = scopeLookup pid info
 
+
 setScope info id s = info & scope.at id ?~ s
+
 
 scopeLookup pid info = case Map.lookup pid (_scope info) of
         Nothing          -> (mempty, mempty)
         Just (Scope v t) -> (v,t)
+
 
 regAlias :: ID -> NamePath -> ScopeID -> StructInfo -> StructInfo
 regAlias id name scopeID structInfo = case mvid of
