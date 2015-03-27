@@ -33,6 +33,8 @@ makeLenses ''Tag
 mkNode :: Node.ID -> Position -> Tag -> Tag
 mkNode nodeID' position' tag' = Node (Enum.id tag') nodeID' position'
 
+mkEmpty :: Tag -> Tag
+mkEmpty = Empty . view idTag
 
 instance Enumerated Tag where
     id = view idTag

@@ -12,6 +12,7 @@ module Test.Luna.Pass.Transform.Graph.Common where
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
+import           Luna.Data.ASTInfo                         (ASTInfo)
 import qualified Luna.Pass                                 as Pass
 import qualified Luna.Pass.Analysis.Struct                 as Struct
 import qualified Luna.Pass.Transform.Graph.Builder.Builder as GraphBuilder
@@ -52,14 +53,14 @@ getGraph bc ast = runPass $ do
     return (BCZipper.close $ BCZipper.modify (const newFocus) zipper, graph)
 
 
-getExpr :: Breadcrumbs -> Graph Tag V -> TModule V -> IO (TModule V)
-getExpr bc graph ast = runPass $ do
+getExpr :: Breadcrumbs -> Graph Tag V -> TModule V -> ASTInfo -> IO (TModule V, ASTInfo)
+getExpr bc graph ast astInfo = runPass $ do
     zipper <- lift $ eitherStringToM $ BCZipper.focusBreadcrumbs' bc ast
     let focus = BCZipper.getFocus zipper
     decl <- focus ^? Focus.decl <??> "test.Common.getExpr : Target is not a function"
-    decl2 <- GraphParser.run graph decl
+    (decl2, astInfo2) <- GraphParser.run graph decl astInfo
     let newFocus = focus & Focus.decl .~ decl2
-    return (BCZipper.close $ BCZipper.modify (const newFocus) zipper)
+    return (BCZipper.close $ BCZipper.modify (const newFocus) zipper, astInfo2)
 
 
 getMain :: (Show a, Show e) => LModule a e -> IO (LDecl a e)

@@ -12,6 +12,7 @@ module Test.Luna.Syntax.Common where
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
+import           Luna.Data.ASTInfo                          (ASTInfo)
 import           Luna.Data.Namespace                        (Namespace (Namespace))
 import           Luna.Data.Source                           (Source (Source), Text (Text))
 import qualified Luna.Parser.Parser                         as Parser
@@ -30,17 +31,17 @@ import           Luna.System.Session                        as Session
 
 
 
-getAST :: String -> IO (LModule Enum.IDTag (LExpr Enum.IDTag ()))
+getAST :: String -> IO (LModule Enum.IDTag (LExpr Enum.IDTag ()), ASTInfo)
 getAST code = fmap fst $ Session.runT $ do
     void Parser.init
     eitherStringToM' $ runEitherT $ do
         let src  = Source "Main" (Text $ fromString code)
-        (ast,  astinfo) <- Pass.run1_ Stage1.pass src
-        sa              <- Pass.run1_ SA.pass ast
-        (ast,  astinfo) <- Pass.run3_ Stage2.pass (Namespace [] sa) astinfo ast
-        (ast,  astinfo) <- Pass.run2_ ImplSelf.pass astinfo ast
-        sa              <- Pass.run1_ SA.pass ast
-        (ast,  astinfo) <- Pass.run3_ ImplScopes.pass astinfo sa ast
-        (ast, _astinfo) <- Pass.run2_ ImplCalls.pass astinfo ast
+        (ast, astInfo) <- Pass.run1_ Stage1.pass src
+        sa             <- Pass.run1_ SA.pass ast
+        (ast, astInfo) <- Pass.run3_ Stage2.pass (Namespace [] sa) astInfo ast
+        (ast, astInfo) <- Pass.run2_ ImplSelf.pass astInfo ast
+        sa             <- Pass.run1_ SA.pass ast
+        (ast, astInfo) <- Pass.run3_ ImplScopes.pass astInfo sa ast
+        (ast, astInfo) <- Pass.run2_ ImplCalls.pass astInfo ast
         let Unit retAST = ast
-        return retAST
+        return (retAST, astInfo)
