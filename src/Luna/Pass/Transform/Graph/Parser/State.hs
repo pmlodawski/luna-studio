@@ -21,7 +21,6 @@ import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import qualified Luna.Syntax.Enum          as Enum
-import qualified Luna.Syntax.Expr          as Expr
 import qualified Luna.Syntax.Graph.Edge    as Edge
 import           Luna.Syntax.Graph.Graph   (Graph)
 import qualified Luna.Syntax.Graph.Graph   as Graph
@@ -42,12 +41,12 @@ logger = getLogger $moduleName
 
 type Error = String
 
-type VarMap v = Map (Node.ID, SrcPort) (Expr.Variable v)
+type ExprMap v = Map (Node.ID, SrcPort) (TExpr v)
 
 
 data GPState v = GPState { _body   :: [TExpr v]
                          , _output :: Maybe (TExpr v)
-                         , _varMap :: VarMap v
+                         , _varMap :: ExprMap v
                          , _graph  :: Graph Tag v
                          } deriving (Show)
 
@@ -79,21 +78,19 @@ setOutput :: TExpr v -> GPPass v m ()
 setOutput = modify . set output . Just
 
 ----- varMap -------------------------------------------------------------
-getVarMap :: GPPass v m (VarMap v)
-getVarMap = gets $ view varMap
+getExprMap :: GPPass v m (ExprMap v)
+getExprMap = gets $ view varMap
 
-setVarMap :: VarMap v -> GPPass v m ()
-setVarMap = modify . set varMap
+setExprMap :: ExprMap v -> GPPass v m ()
+setExprMap = modify . set varMap
 
-addToVarMap :: (Node.ID, SrcPort) -> Expr.Variable v -> GPPass v m ()
-addToVarMap key expr = getVarMap >>= setVarMap . Map.insert key expr
+addToExprMap :: (Node.ID, SrcPort) -> TExpr v -> GPPass v m ()
+addToExprMap key expr = getExprMap >>= setExprMap . Map.insert key expr
 
-varMapLookup :: (Node.ID, SrcPort) -> GPPass v m (Expr.Variable v)
-varMapLookup key = do
-    nm <- getVarMap
-    lift $ Map.lookup key nm <??> "GraphParser: varMapLookup: Cannot find " ++ show key ++ " in nodeMap"
-
-
+exprMapLookup :: (Node.ID, SrcPort) -> GPPass v m (TExpr v)
+exprMapLookup key = do
+    nm <- getExprMap
+    lift $ Map.lookup key nm <??> "GraphParser: exprMapLookup: Cannot find " ++ show key ++ " in exprMap"
 
 ----- graph ---------------------------------------------------------------
 getGraph :: GPPass v m (Graph Tag v)
