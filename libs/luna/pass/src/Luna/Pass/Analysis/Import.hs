@@ -94,9 +94,16 @@ findFun lab (Expr.Variable vnp v) = do
                 textName    = toText vnp
                 inScope     = member [textName] (parentScope ^. SI.varnames)
             case inScope of
-                True  -> return ()
-                False -> getSymbol *> return ()
-        where id = Enum.id lab
+                True  -> return () -- regAlias here!
+                False -> do
+                    symbolOrigins <- ModuleInfo.getSymbolOrigins name <$> get 
+                    so <- symbolOrigins
+                    case symbolOrigins of
+                        []       -> put $ ModuleInfo.regOrphan id (SI.LookupError textName) <$> get 
+                        [origin] -> put $ ModuleInfo.regOrigin id 1233445 name origin <$> get
+                        origins  -> put $ ModuleInfo.regOrphan id (SI.AmbRefError name origins "Ambiguous reference") <$> get
+        where id   = Enum.id lab
+              name = unwrap vnp
 
 
 

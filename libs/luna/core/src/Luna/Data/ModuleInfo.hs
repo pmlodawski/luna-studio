@@ -56,6 +56,17 @@ getSymbolOrigins symbol mInfo = do
 getModuleInfos :: [Path] -> IO [ModuleInfo]
 getModuleInfos paths = mapM ((return . fromJust) <=< readModInfoFromFile) paths
 
+-------------------------------------------------------------------------------------
+-- wrappers for structInfo functions
+-------------------------------------------------------------------------------------
+regOrigin :: ID -> ID -> NamePath -> Path -> ModuleInfo -> ModuleInfo
+regOrigin id pid name path = strInfo %~ SI.regOrigin id pid name path
+
+
+regOrphan :: ID -> SI.Error -> ModuleInfo -> ModuleInfo
+regOrphan id err = strInfo %~ SI.regOrphan id err
+
+
 --------------------------------------------------------------------
 -- simple utility functions for lookups and checks
 --------------------------------------------------------------------
