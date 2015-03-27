@@ -290,6 +290,7 @@ message Project {
                         }
                         message Update {
                             required Request request = 1;
+                            required int32 conID     = 3;
                             required int32 updateNo  = 2;
                         }
                     }
@@ -332,6 +333,7 @@ message Project {
                             }
                             message Update {
                                 required Request request = 1;
+                                required int32 fieldID   = 3;
                                 required int32 updateNo  = 2;
                             }
                         }

@@ -236,7 +236,7 @@ astDataConModify (ASTDataConModify.Update request updateNo) = do
     CacheWrapper.modifyBreadcrumbsRec projectID libraryID bc
 
 astDataConAdd :: ASTDataConAdd.Update -> RPC Context (SessionST mm) ()
-astDataConAdd (ASTDataConAdd.Update request updateNo) = do
+astDataConAdd (ASTDataConAdd.Update request _ updateNo) = do
     sync updateNo $ ASTHandler.addDataCon request
     let projectID = ASTDataConAdd.projectID request
         libraryID = ASTDataConAdd.libraryID request
@@ -252,7 +252,7 @@ astDataConDelete (ASTDataConDelete.Update request updateNo) = do
     CacheWrapper.modifyBreadcrumbsRec projectID libraryID bc
 
 astDataConFieldAdd :: ASTDataConFieldAdd.Update -> RPC Context (SessionST mm) ()
-astDataConFieldAdd (ASTDataConFieldAdd.Update request updateNo) = do
+astDataConFieldAdd (ASTDataConFieldAdd.Update request _ updateNo) = do
     sync updateNo $ ASTHandler.addDataConField request
     let projectID = ASTDataConFieldAdd.projectID request
         libraryID = ASTDataConFieldAdd.libraryID request
