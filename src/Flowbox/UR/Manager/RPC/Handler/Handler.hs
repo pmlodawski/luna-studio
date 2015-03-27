@@ -42,6 +42,8 @@ handlerMap callback = HandlerMap.fromList
     , (Topic.urmClearStackRequest        , respond status URMHandler.clearStack)
     , (Topic.urmTransactionBeginRequest  , respond status URMHandler.tBegin)
     , (Topic.urmTransactionCommitRequest , respond status URMHandler.tCommit)
+    , (Topic.urmUndoDescriptionRequest   , respond status URMHandler.undoDescriptions)
+    , (Topic.urmRedoDescriptionRequest   , respond status URMHandler.redoDescriptions)
     ]
     where
         respond :: (Proto.Serializable args, Proto.Serializable result)

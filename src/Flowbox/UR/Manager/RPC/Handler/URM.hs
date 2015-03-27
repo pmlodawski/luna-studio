@@ -12,7 +12,7 @@ module Flowbox.UR.Manager.RPC.Handler.URM where
 
 import           Control.Monad.Trans.State.Lazy                      (get, put)
 import qualified Data.DList                                          as DList
-import           Data.Map                                            as Map
+import qualified Data.Map                                            as Map
 import           Data.Maybe                                          (fromMaybe)
 
 import           Flowbox.Bus.Data.Message                            (Message)
@@ -20,22 +20,26 @@ import           Flowbox.Bus.Data.Serialize.Proto.Conversion.Message ()
 import           Flowbox.Bus.RPC.RPC                                 (RPC)
 import           Flowbox.Data.Convert
 import           Flowbox.Prelude                                     hiding (Context, error)
-import qualified Flowbox.Text.ProtocolBuffers                        as Proto
 import           Flowbox.System.Log.Logger
+import qualified Flowbox.Text.ProtocolBuffers                        as Proto
 import           Flowbox.UR.Manager.Context                          (Context, ProjectContext(..), Stack)
 import qualified Flowbox.UR.Manager.Context                          as Context
 import qualified Generated.Proto.Urm.URM.ClearStack.Request          as ClearStack
 import qualified Generated.Proto.Urm.URM.ClearStack.Status           as ClearStack
+import qualified Generated.Proto.Urm.URM.Redo.Descriptions.Request   as RDescriptions
+import qualified Generated.Proto.Urm.URM.Redo.Descriptions.Status    as RDescriptions
 import qualified Generated.Proto.Urm.URM.Redo.Request                as Redo
 import qualified Generated.Proto.Urm.URM.Redo.Status                 as Redo
 import qualified Generated.Proto.Urm.URM.Register.Request            as Register
 import qualified Generated.Proto.Urm.URM.Register.Status             as Register
+import qualified Generated.Proto.Urm.URM.RegisterMultiple.Request    as RegisterMultiple
+import qualified Generated.Proto.Urm.URM.RegisterMultiple.Status     as RegisterMultiple
 import qualified Generated.Proto.Urm.URM.Transaction.Begin.Request   as TBegin
 import qualified Generated.Proto.Urm.URM.Transaction.Begin.Status    as TBegin
 import qualified Generated.Proto.Urm.URM.Transaction.Commit.Request  as TCommit
 import qualified Generated.Proto.Urm.URM.Transaction.Commit.Status   as TCommit
-import qualified Generated.Proto.Urm.URM.RegisterMultiple.Request    as RegisterMultiple
-import qualified Generated.Proto.Urm.URM.RegisterMultiple.Status     as RegisterMultiple
+import qualified Generated.Proto.Urm.URM.Undo.Descriptions.Request   as UDescriptions
+import qualified Generated.Proto.Urm.URM.Undo.Descriptions.Status    as UDescriptions
 import qualified Generated.Proto.Urm.URM.Undo.Request                as Undo
 import qualified Generated.Proto.Urm.URM.Undo.Status                 as Undo
 
@@ -117,3 +121,37 @@ tCommit request@(TCommit.Request tprojectID) = do
        newUndo = maybe undo (: undo) $ pContext ^. Context.trans
    lift $ put $ Map.insert projectID (ProjectContext newUndo [] Nothing) context
    return $ TCommit.Status request
+
+
+undoDescriptions :: UDescriptions.Request -> RPC Context IO UDescriptions.Status
+undoDescriptions request@(UDescriptions.Request tprojectID) = do
+    let projectID = decodeP tprojectID
+    oko <- lift get
+    let context = Map.lookup projectID oko
+    return $ (UDescriptions.Status request) $ maybe (encodeP [""]) (encodeP . map snd . (^. Context.undo)) context
+                                                                                                                                
+redoDescriptions :: RDescriptions.Request -> RPC Context IO RDescriptions.Status                                                
+redoDescriptions request@(RDescriptions.Request tprojectID) = do
+    let projectID = decodeP tprojectID
+    oko <- lift get
+    let context = Map.lookup projectID oko
+    return $ (RDescriptions.Status request) $ maybe (encodeP [""]) (encodeP . map snd . (^. Context.redo)) context
+
+
+--descriptions :: lens -> Int -> (descriptions -> response) -> RPC Context IO response
+--descriptions lens projectID responseCons = do
+--    oko <- lift get
+--    let context = Map.lookup projectID oko
+--    return $ responseCons $ maybe [] (map snd . (^. lens)) context
+--
+--undoDescriptions :: UDescriptions.Request -> RPC Context IO UDescriptions.Status
+--undoDescriptions request@(UDescriptions.Request tprojectID) = descriptions Context.undo (encodeP tprojectID) (UDescriptions.Status request)
+--                                                                                                                                
+--redoDescriptions :: RDescriptions.Request -> RPC Context IO RDescriptions.Status                                                
+--redoDescriptions request@(RDescriptions.Request tprojectID) = descriptions Context.redo (encodeP tprojectID) (RDescriptions.Status request)
+--
+--descriptions :: lens -> Int -> (descriptions -> response) -> RPC Context IO response
+--descriptions lens projectID responseCons = do
+--    oko <- lift get
+--    let context = Map.lookup projectID oko
+--    return $ responseCons $ maybe [] (map snd . (^. lens)) context
