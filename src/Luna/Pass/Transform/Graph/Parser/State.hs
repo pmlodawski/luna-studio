@@ -20,19 +20,16 @@ import qualified Data.Maybe          as Maybe
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-import qualified Luna.Syntax.Enum          as Enum
+import           Luna.Data.ASTInfo         (ASTInfo)
+import qualified Luna.Data.ASTInfo         as ASTInfo
+import qualified Luna.Syntax.AST           as AST
 import qualified Luna.Syntax.Graph.Edge    as Edge
 import           Luna.Syntax.Graph.Graph   (Graph)
 import qualified Luna.Syntax.Graph.Graph   as Graph
 import qualified Luna.Syntax.Graph.Node    as Node
 import           Luna.Syntax.Graph.Port    (DstPort, SrcPort)
 import           Luna.Syntax.Graph.Tag     (TExpr, Tag)
-import           Luna.Syntax.Label         (Label (Label))
 
-
-
-dummyLabel :: a -> Label Tag a
-dummyLabel = Label (Enum.tag (-999))
 
 
 logger :: Logger
@@ -44,10 +41,11 @@ type Error = String
 type ExprMap v = Map (Node.ID, SrcPort) (TExpr v)
 
 
-data GPState v = GPState { _body   :: [TExpr v]
-                         , _output :: Maybe (TExpr v)
-                         , _varMap :: ExprMap v
-                         , _graph  :: Graph Tag v
+data GPState v = GPState { _body    :: [TExpr v]
+                         , _output  :: Maybe (TExpr v)
+                         , _varMap  :: ExprMap v
+                         , _graph   :: Graph Tag v
+                         , _astInfo :: ASTInfo
                          } deriving (Show)
 
 makeLenses ''GPState
@@ -56,7 +54,7 @@ makeLenses ''GPState
 type GPPass v m result = Monad m => StateT (GPState v) (EitherT Error m) result
 
 
-mk :: Graph Tag v -> GPState v
+mk :: Graph Tag v -> ASTInfo -> GPState v
 mk = GPState def def def
 
 
@@ -105,6 +103,20 @@ inboundPorts nodeID = do
     return $ Maybe.mapMaybe processEdge
            $ Graph.lpre g nodeID
 
+----- astInfo -------------------------------------------------------------
+
+getASTInfo :: GPPass v m ASTInfo
+getASTInfo = gets $ view astInfo
+
+setASTInfo :: ASTInfo -> GPPass v m ()
+setASTInfo = modify . set astInfo
+
+nextID :: GPPass v m AST.ID
+nextID = do
+    i <- getASTInfo
+    let n = ASTInfo.incID i
+    setASTInfo n
+    return $ n ^. ASTInfo.lastID
 
 --getNode :: Node.ID -> GPPass a v m (Node a v)
 --getNode nodeID = do

@@ -11,6 +11,7 @@ import Test.Hspec
 
 import           Flowbox.Prelude
 import           Luna.Syntax.Control.Crumb             (Breadcrumbs)
+import           Luna.Syntax.Graph.Tag                 (Tag)
 import qualified Luna.Syntax.Graph.Tag                 as Tag
 import qualified Luna.Util.Label                       as Label
 import qualified Test.Luna.Pass.Transform.Graph.Common as Common
@@ -35,17 +36,23 @@ import qualified Test.Luna.Syntax.Common               as Common
 printHeader :: MonadIO m => String -> m ()
 printHeader header = printLn >> putStrLn ("=== " <> header <> " ===") >> printLn
 
+cleanIDs :: Tag -> Tag
+cleanIDs = Tag.idTag .~ def
+
+cleanTags :: Tag -> Tag
+cleanTags = Tag.mkEmpty
 
 backAndForth :: Breadcrumbs -> String -> IO ()
 backAndForth bc code = do
     printLn >> printLn >> printLn
-    ast <- Label.replace Tag.fromEnumerated <$> Common.getAST code
+    (ast', astInfo) <- Common.getAST code
+    let ast = Label.replace Tag.fromEnumerated ast'
     prettyPrint ast
     printHeader "getGraph"
     (ast2, graph2) <- Common.getGraph bc ast
     prettyPrint graph2
     printHeader "getExpr"
-    ast3   <- Common.getExpr bc graph2 ast2
+    (ast3, astInfo3) <- Common.getExpr bc graph2 ast2 astInfo
     prettyPrint ast3
     putStrLn "getGraph"
     (ast4, graph4) <- Common.getGraph bc ast3
@@ -55,9 +62,9 @@ backAndForth bc code = do
     expr2 <- Common.getMain ast2
     expr4 <- Common.getMain ast4
 
-    Label.replaceDecl Tag.fromEnumerated expr2 `shouldBe` Label.replaceDecl Tag.fromEnumerated expr
-    graph4 `shouldBe` graph2
-    expr4  `shouldBe` expr2
+    Label.replaceDecl  cleanTags expr2  `shouldBe` Label.replaceDecl  cleanTags expr
+    Label.replaceGraph cleanIDs  graph4 `shouldBe` Label.replaceGraph cleanIDs  graph2
+    Label.replaceDecl  cleanIDs  expr4  `shouldBe` Label.replaceDecl  cleanIDs  expr2
 
 
 --backAndForth2 :: Breadcrumbs -> Graph -> IO ()
