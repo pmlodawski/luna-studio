@@ -39,24 +39,25 @@ printHeader header = printLn >> putStrLn ("=== " <> header <> " ===") >> printLn
 backAndForth :: Breadcrumbs -> String -> IO ()
 backAndForth bc code = do
     printLn >> printLn >> printLn
-    ast    <- Common.getAST code
-    let ast2 = Label.replace Tag.fromEnumerated ast
-    prettyPrint ast2
+    ast <- Label.replace Tag.fromEnumerated <$> Common.getAST code
+    prettyPrint ast
     printHeader "getGraph"
-    (ast3, graph) <- Common.getGraph bc ast2
-    prettyPrint graph
+    (ast2, graph2) <- Common.getGraph bc ast
+    prettyPrint graph2
     printHeader "getExpr"
-    ast4   <- Common.getExpr bc graph ast3
-    prettyPrint ast4
+    ast3   <- Common.getExpr bc graph2 ast2
+    prettyPrint ast3
     putStrLn "getGraph"
-    (ast5, graph2) <- Common.getGraph bc ast4
+    (ast4, graph4) <- Common.getGraph bc ast3
     ----print pm3
     ----printLn
-    expr  <- Common.getMain ast2
-    expr2 <- Common.getMain ast5
+    expr  <- Common.getMain ast
+    expr2 <- Common.getMain ast2
+    expr4 <- Common.getMain ast4
 
-    expr2  `shouldBe` expr
-    graph2 `shouldBe` graph
+    Label.replaceDecl Tag.fromEnumerated expr2 `shouldBe` Label.replaceDecl Tag.fromEnumerated expr
+    graph4 `shouldBe` graph2
+    expr4  `shouldBe` expr2
 
 
 --backAndForth2 :: Breadcrumbs -> Graph -> IO ()

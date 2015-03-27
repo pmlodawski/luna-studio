@@ -79,19 +79,23 @@ parseNode signature (nodeID, node) = case node of
     Node.Inputs           pos -> parseInputs nodeID signature
     Node.Expr expr outputPat defaults pos -> do
         graph <- State.getGraph
-        let outDataEdges = map (view _3) $ Graph.lsuclData graph nodeID
+        let lsuclData = Graph.lsuclData graph nodeID
+            connectedOnlyToOutput = map (\(dstNID, _, edge) -> (dstNID, edge ^? Edge.src)) lsuclData == [(Node.outputID, Just Port.mkSrcAll)]
+            outDataEdges = map (view _3) lsuclData
         srcs <- getNodeSrcs nodeID defaults
         ast  <- buildExpr expr srcs
-        if not (null outDataEdges) || Maybe.isJust outputPat
-            then do let pat = buildPat expr nodeID outDataEdges outputPat
-                        assignment = Expr.Assignment pat ast
-                    addVars nodeID pat
-                    State.addToBody $ State.dummyLabel assignment
-            else State.addToBody ast
+        if connectedOnlyToOutput
+            then State.addToExprMap (nodeID, Port.mkSrcAll) ast
+            else if not (null outDataEdges) || Maybe.isJust outputPat
+                then do let pat = buildPat expr nodeID outDataEdges outputPat
+                            assignment = Expr.Assignment pat ast
+                        addExprs nodeID pat
+                        State.addToBody $ State.dummyLabel assignment
+                else State.addToBody ast
 
 
 buildExpr :: NodeExpr Tag V -> [TExpr V] -> GPPass V m (TExpr V)
-buildExpr expr srcs = case expr of
+buildExpr nodeExpr srcs = case nodeExpr of
     NodeExpr.ASTExpr expr -> return expr
     NodeExpr.MultiPart mp -> do let defArg = Expr.unnamed $ State.dummyLabel Expr.Wildcard
                                     args = map Expr.unnamed srcs
@@ -121,17 +125,18 @@ buildPat nodeExpr nodeID edges = construct (map (unwrap . (^?! Edge.dst)) edges)
         l = State.dummyLabel
 
 
-addVars :: Node.ID -> TPat -> GPPass V m ()
-addVars nodeID tpat = case tpat of
-    Label _ (Pat.Var  vname) -> addToVarMap Port.mkSrcAll vname
-    Label _ (Pat.Grouped gr) -> addVars nodeID gr
+addExprs :: Node.ID -> TPat -> GPPass V m ()
+addExprs nodeID tpat = case tpat of
+    Label _ (Pat.Var  vname) -> addToExprMap Port.mkSrcAll vname
+    Label _ (Pat.Grouped gr) -> addExprs nodeID gr
     Label _ (Pat.Tuple   tp) -> add 0 tp
     _                        -> return ()
     where
-        addToVarMap port vname = State.addToVarMap (nodeID, port) $ Expr.Variable vname ()
+        addToExprMap port vname = State.addToExprMap (nodeID, port)
+                                $ State.dummyLabel $ Expr.Var $ Expr.Variable vname ()
         add _ []    = return ()
         add i (h:t) = case h of
-            Label _ (Pat.Var vname) -> addToVarMap (Port.mkSrc i) vname >> add (i + 1) t
+            Label _ (Pat.Var vname) -> addToExprMap (Port.mkSrc i) vname >> add (i + 1) t
             _                       -> add (i + 1) t
 
 
@@ -144,7 +149,8 @@ parseArg nodeID (num, input) = case input of
     Arg (Label _                     (Pat.Var vname)    ) _ -> addVar vname
     Arg (Label _ (Pat.Typed (Label _ (Pat.Var vname)) _)) _ -> addVar vname
     _                                                       -> lift $ left "parseArg: Wrong Arg type"
-    where addVar vname = State.addToVarMap (nodeID, Port.mkSrc num) $ Expr.Variable vname ()
+    where addVar vname = State.addToExprMap (nodeID, Port.mkSrc num)
+                       $ State.dummyLabel $ Expr.Var $ Expr.Variable vname ()
 
 
 parseOutputs :: Node.ID -> DefaultsMap Tag V -> GPPass V m ()
@@ -186,7 +192,7 @@ getNodeSrcs nodeID defaults = do
         processDefault (DstPort  Port.All   , expr) = (0, expr)
         processDefault (DstPort (Port.Num d), expr) = (d, expr)
 
-        getVar (i, key) = (i,) . State.dummyLabel . Expr.Var <$> State.varMapLookup key
+        getVar (i, key) = (i,) <$> State.exprMapLookup key
 
         wildcardMissing Nothing  = State.dummyLabel Expr.Wildcard
         wildcardMissing (Just e) = e
