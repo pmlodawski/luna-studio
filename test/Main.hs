@@ -46,8 +46,3 @@ main_inner = Luna.run $ do
         path = UniPath.fromUnixString "$LUNAROOT/global/visual/stdlib.lunalib"
         library = Library name def path ast def astInfo
     liftIO $ LibSerialization.storeLibrary library Nothing
-
-    --FIXME[PM] : Below code only for compatibility, remove it later.
-    let path = UniPath.fromUnixString "~/.flowbox/visual/stdlib.lunalib"
-        library = Library name def path ast def astInfo
-    liftIO $ LibSerialization.storeLibrary library Nothing
