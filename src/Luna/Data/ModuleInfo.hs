@@ -31,11 +31,19 @@ import           Flowbox.Prelude
 
 type Name = String
 
+
+data ImportError = NotFoundError { path   :: Path }
+                 | AmbRefError   { symbol :: NamePath, modules :: [Path] }
+
+
 -- stores the information about a module, needed while importing
 -- and resolving names. Checking whether a file needs recompilation is done based on the file  edit dates
 data ModuleInfo = ModuleInfo {
-                     _name     :: Path,      
-                     _strInfo  :: StructInfo  -- [?] Namespace here?
+                     _name     :: Path,
+                     _symTable :: Map NamePath ID,
+                     _imports  :: [Path],
+                     _strInfo  :: StructInfo,  -- [?] Namespace here?
+                     _errors   :: [ImportError]
                   } deriving (Generic, Eq, Show, Read)
 
 makeLenses ''ModuleInfo
@@ -57,21 +65,12 @@ getSymbolOrigins symbol mInfo = do
 
 -- given a list of paths, lookups all the necessary ModuleInfo structs
 getModuleInfos :: [Path] -> IO [ModuleInfo]
-getModuleInfos paths = mapM ((return . fromJust) <=< readModInfoFromFile) paths
+getModuleInfos paths = mapM getModuleInfo paths
 
 
 
 getModuleInfo :: Path -> IO ModuleInfo
 getModuleInfo = (return . fromJust <=< readModInfoFromFile)
-
--- given a list of ModuleInfos, returns a union of their scopes that you can later
--- construct the top-level scope with
-scopeUnion :: [ModuleInfo] -> SI.Scope
-scopeUnion infos = SI.Scope vnames tnames
-    where scopeMaps = Flowbox.Prelude.map (\info -> info ^. strInfo ^. SI.scope) infos
-          scopes    = Flowbox.Prelude.map (\m -> m IntMap.! 0) scopeMaps
-          vnames    = MF.fromList $ Flowbox.Prelude.concat $ fmap (MF.toList . SI._varnames)  scopes
-          tnames    = MF.fromList $ Flowbox.Prelude.concat $ fmap (MF.toList . SI._typenames) scopes
 
 -------------------------------------------------------------------------------------
 -- wrappers for structInfo functions
@@ -215,6 +214,10 @@ instance Binary Text
 
 
 instance Monoid ModuleInfo where
-    mempty      = ModuleInfo mempty mempty
-    mappend a b = ModuleInfo (mappend (a ^. name)  (b ^. name))
-                        (mappend (a ^. strInfo) (b ^. strInfo))
+    mempty      = ModuleInfo mempty mempty mempty mempty mempty
+    mappend a b = ModuleInfo (mappend (a ^. name)     (b ^. name))
+                             (mappend (a ^. symTable) (b ^. symTable))
+                             (mappend (a ^. imports)  (b ^. imports))
+                             (mappend (a ^. strInfo)  (b ^. strInfo))
+                             (mappend (a ^. errors)   (b ^. errors))
+
