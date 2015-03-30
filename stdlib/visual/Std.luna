@@ -90,9 +90,9 @@ def Float.>= self::Float a::Float -> Bool
 def Float.toString self::Float -> String
 
 alias FilePath = String
-alias SavePath = String
-alias LoadPath = String
-alias LoadDirPath = String
+alias SavePath = FilePath
+alias LoadPath = FilePath
+alias LoadDirPath = FilePath
 
 class Image
 
