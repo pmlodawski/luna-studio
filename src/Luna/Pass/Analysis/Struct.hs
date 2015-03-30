@@ -55,6 +55,7 @@ import qualified Luna.Parser.State            as ParserState
 import qualified Luna.Syntax.Name.Pattern     as NamePattern
 import           Luna.Syntax.Foreign          (Foreign(Foreign))
 
+import qualified Data.IntMap                  as IntMap
 ----------------------------------------------------------------------
 -- Base types
 ----------------------------------------------------------------------
@@ -86,7 +87,7 @@ pass = Pass "Alias analysis"
             mempty aaUnit
 
 aaUnit :: SADefaultTraversal m a => a -> SAPass m StructInfo
-aaUnit ast = defaultTraverseM ast *> (view Namespace.info <$> get)
+aaUnit ast = State.createImportScope *> defaultTraverseM ast *> (view Namespace.info <$> get)
 
 aaMod :: SACtx lab m a => LModule lab a -> SAPass m (LModule lab a)
 aaMod mod@(Label lab (Module _ body)) = withScope id continue
@@ -161,7 +162,10 @@ regImport id imp = do
     let path = Decl._modPath imp
     exists <- liftIO $ ModuleInfo.moduleExists path
     unless exists $ regOrphan id (SI.ImportError path "Module not found.")
-    when exists $ State.regImport path
+    when exists $ do
+        mInfo <- liftIO $ ModuleInfo.getModuleInfo path
+        State.appendImportScope $ (mInfo ^. ModuleInfo.strInfo ^. SI.scope) IntMap.! (-1)
+        State.regImport path
     
 
 
