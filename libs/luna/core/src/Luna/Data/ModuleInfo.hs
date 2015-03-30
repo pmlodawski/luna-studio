@@ -7,6 +7,7 @@ import           Data.List                (find, filter)
 import           Data.Maybe               (fromMaybe, fromJust)
 import           Data.Map                 (Map)
 import qualified Data.Map                 as Map
+import qualified Data.IntMap              as IntMap
 import           Data.Text.Internal.Lazy  (Text)
 import           Data.Text.Lazy           as T
 import           System.Environment       (lookupEnv)
@@ -22,6 +23,7 @@ import           Luna.Syntax.Name.Path    (NamePath, QualPath)
 import           Luna.Syntax.Name.Pattern (NamePatDesc, SegmentDesc)
 
 import           Flowbox.Data.MapForest   (Node)
+import qualified Flowbox.Data.MapForest   as MF
 import           Flowbox.System.UniPath   (UniPath, PathItem)
 import           Flowbox.Prelude
 
@@ -52,9 +54,21 @@ getSymbolOrigins symbol mInfo = do
     return $ getSymbolOriginsAux symbol infos
 
 
+
 -- given a list of paths, lookups all the necessary ModuleInfo structs
 getModuleInfos :: [Path] -> IO [ModuleInfo]
 getModuleInfos paths = mapM ((return . fromJust) <=< readModInfoFromFile) paths
+
+
+
+-- given a list of ModuleInfos, returns a union of their scopes that you can later
+-- construct the top-level scope with
+scopeUnion :: [ModuleInfo] -> SI.Scope
+scopeUnion infos = SI.Scope vnames tnames
+    where scopeMaps = Flowbox.Prelude.map (\info -> info ^. strInfo ^. SI.scope) infos
+          scopes    = Flowbox.Prelude.map (\m -> m IntMap.! 0) scopeMaps
+          vnames    = MF.fromList $ Flowbox.Prelude.concat $ fmap (MF.toList . SI._varnames)  scopes
+          tnames    = MF.fromList $ Flowbox.Prelude.concat $ fmap (MF.toList . SI._typenames) scopes
 
 -------------------------------------------------------------------------------------
 -- wrappers for structInfo functions

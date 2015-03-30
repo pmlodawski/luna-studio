@@ -57,6 +57,14 @@ head :: Namespace -> Maybe ID
 head (Namespace (id:_) _) = Just id
 head _                    = Nothing
 
+
+-- adds a surrounding scope, containing a union of all the imports' top-level scopes
+appendImportScope :: StructInfo.Scope -> Namespace -> Namespace
+appendImportScope scope = (stack %~ (++ [-1])) . addScope
+    where addScope    = modStructInfo insertScope
+          insertScope = \info -> StructInfo.setScope info (-1) scope
+
+
 -- FIXME[wd]: dodac asserty!
 pushNewScope :: ID -> Namespace -> Namespace
 pushNewScope id ns@(Namespace st inf) = ns
