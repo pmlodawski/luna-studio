@@ -16,6 +16,7 @@ module Luna.Data.Namespace where
 import GHC.Generics (Generic)
 
 import qualified Data.Maps           as Map
+import qualified Data.IntMap         as IntMap
 import           Data.Maybe          (fromJust)
 import           Flowbox.Prelude     hiding (head, id)
 import           Luna.Data.StructInfo (StructInfo, StructInfoMonad)
@@ -23,7 +24,9 @@ import qualified Luna.Data.StructInfo as StructInfo
 import           Data.Maybe          (fromJust)
 import           Control.Monad.RWS   (RWST)
 import qualified Control.Monad.RWS   as RWST
-import            Control.Monad.Trans.Class (lift, MonadTrans)
+import           Control.Monad.Trans.Class (lift, MonadTrans)
+
+import qualified Flowbox.Data.MapForest as MapForest
 
 ----------------------------------------------------------------------
 -- Data types
@@ -58,11 +61,22 @@ head (Namespace (id:_) _) = Just id
 head _                    = Nothing
 
 
--- adds a surrounding scope, containing a union of all the imports' top-level scopes
-appendImportScope :: StructInfo.Scope -> Namespace -> Namespace
-appendImportScope scope = (stack %~ (++ [-1])) . addScope
+-- adds a surrounding scope, for storing all the imports' top-level scopes
+-- the scope created by this function is empty
+createImportScope :: Namespace -> Namespace
+createImportScope = (stack %~ (++ [-1])) . addScope
     where addScope    = modStructInfo insertScope
-          insertScope = \info -> StructInfo.setScope info (-1) scope
+          insertScope = StructInfo.scope %~ (IntMap.insert (-1) mempty)
+
+
+-- adds symbols from the import's scope into the -1 scope in namespace
+appendImportScope :: StructInfo.Scope -> Namespace -> Namespace
+appendImportScope scope = modScope (-1) (joinScopes scope)
+    where joinScopes (StructInfo.Scope vNamesNew tNamesNew) (StructInfo.Scope vNamesOld tNamesOld) = StructInfo.Scope (MapForest.union vNamesOld vNamesNew) (MapForest.union tNamesOld tNamesNew)
+
+modScope :: Int -> (StructInfo.Scope -> StructInfo.Scope) -> Namespace -> Namespace
+modScope idx f = modStructInfo (StructInfo.scope %~ fIndexed)
+    where fIndexed = \s -> IntMap.insert idx (f $ s IntMap.! idx) s
 
 
 -- FIXME[wd]: dodac asserty!
