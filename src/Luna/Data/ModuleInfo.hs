@@ -61,6 +61,9 @@ getModuleInfos paths = mapM ((return . fromJust) <=< readModInfoFromFile) paths
 
 
 
+getModuleInfo :: Path -> IO ModuleInfo
+getModuleInfo = (return . fromJust <=< readModInfoFromFile)
+
 -- given a list of ModuleInfos, returns a union of their scopes that you can later
 -- construct the top-level scope with
 scopeUnion :: [ModuleInfo] -> SI.Scope
