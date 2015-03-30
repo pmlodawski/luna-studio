@@ -13,11 +13,12 @@
 
 module Luna.DEP.AST.Arg where
 
+import Data.Binary  (Binary)
 import GHC.Generics (Generic)
 
 import Flowbox.Generics.Deriving.QShow
 import Flowbox.Prelude                 hiding (Traversal, cons, drop, id)
-import Luna.DEP.AST.Common                 (ID)
+import Luna.DEP.AST.Common             (ID)
 
 
 
@@ -26,5 +27,7 @@ data Arg a = Named   { _id :: ID, _name :: String, _arg :: a }
            deriving (Show, Eq, Generic, Read)
 
 
+instance Binary a => Binary (Arg a)
+
 instance QShow a => QShow (Arg a)
-makeLenses (''Arg)
+makeLenses ''Arg

@@ -11,11 +11,14 @@
 
 module Luna.DEP.AST.Type where
 
+import Data.Binary  (Binary)
 import GHC.Generics
 
 import Flowbox.Generics.Deriving.QShow
 import Flowbox.Prelude                 hiding (Traversal, drop, id)
-import Luna.DEP.AST.Common                 (ID)
+import Luna.DEP.AST.Common             (ID)
+
+
 
 data Type = Unknown  { _id :: ID                                               }
           | Var      { _id :: ID, _name     :: String                          }
@@ -28,9 +31,10 @@ data Type = Unknown  { _id :: ID                                               }
           | App      { _id :: ID, _src      :: Type     , _args    :: [Type]   }
           deriving (Show, Eq, Generic, Read)
 
+instance Binary Type
 
 instance QShow Type
-makeLenses (''Type)
+makeLenses ''Type
 
 type Traversal m = (Functor m, Applicative m, Monad m)
 
