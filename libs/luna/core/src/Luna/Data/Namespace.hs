@@ -64,9 +64,10 @@ head _                    = Nothing
 -- adds a surrounding scope, for storing all the imports' top-level scopes
 -- the scope created by this function is empty
 createImportScope :: Namespace -> Namespace
-createImportScope = (stack %~ (++ [-1])) . addScope
+createImportScope = (stack %~ (++ [-1])) . addScope . addParent
     where addScope    = modStructInfo insertScope
           insertScope = StructInfo.scope %~ (IntMap.insert (-1) mempty)
+          addParent   = modStructInfo $ StructInfo.parent %~ (IntMap.insert 0 (-1))
 
 
 -- adds symbols from the import's scope into the -1 scope in namespace
