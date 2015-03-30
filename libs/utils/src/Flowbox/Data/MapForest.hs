@@ -45,6 +45,12 @@ fromList :: Ord k => [(Path k, v)] -> MapForest k v
 fromList = foldl (\mf (p, val) -> insert p val mf) Flowbox.Data.MapForest.empty
 
 
+-- this union should be performed with bigger map as the first argument
+-- also, it's not a union in a set-theory meaning, it's kind of a join
+union :: (Eq k, Ord k) => MapForest k v -> MapForest k v -> MapForest k v
+union a b = foldl (\mf (p, val) -> insert p val mf) a (toList b)
+
+
 keys :: MapForest k v -> [Path k]
 keys = map fst . toList
 
