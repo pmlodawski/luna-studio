@@ -110,9 +110,12 @@ instance CppFormattableCtx CppMethod CppClass where
 
         in (signatureHeader, implementation)
 
+data CppFieldSource = CppFieldSourceRec VarStrictType
+
 data CppField = CppField 
     { fieldName :: String
     , fieldType :: String
+    , source :: CppFieldSource
     }
 
 instance CppFormattablePart CppField where
@@ -274,6 +277,7 @@ typeOfField t@(ConT name) = do
         else if name == ''Int64 then "std::int64_t"
         else if name == ''Int32 then "std::int32_t"
         else if name == ''Int16 then "std::int16_t"
+        else if name == ''Int8 then "std::int8_t"
         else if byValue then nb
         else "std::shared_ptr<" ++ nb ++ ">"
 
@@ -303,7 +307,7 @@ emptyQParts = return $ CppParts [] [] []  [] []
 processField :: THS.VarStrictType -> Q CppField
 processField field@(name, _, t) = do
     filedType <- typeOfField t
-    return $ CppField (translateToCppName name) filedType
+    return $ CppField (translateToCppName name) filedType (CppFieldSourceRec field)
 -- processField arg = trace ("FIXME: Field for " ++ show arg) (return $ CppField "__" "--")
 
 deserializeFromFName = "deserializeFrom"
@@ -345,7 +349,7 @@ prepareDeserializeMethodDer cls@(CppClass clsName _ _ _ tmpl)  =
         nestedRetType = if null tmpl then clsName else templateDepName cls
         rettype = printf "std::shared_ptr<%s>" nestedRetType
 
-        deserializeField field@(CppField fieldName fieldType) = printf "\tdeserialize(ret->%s, input);" fieldName :: String
+        deserializeField field@(CppField fieldName fieldType fieldSrc) = printf "\tdeserialize(ret->%s, input);" fieldName :: String
 
         bodyOpener = printf "\tauto ret = std::make_shared<%s>();" nestedRetType :: String
         bodyCloser = "\treturn ret;"
@@ -367,8 +371,8 @@ processConstructor dec@(DataD cxt name tyVars cons names) con@(RecC cname fields
         let baseClasses = [CppDerive baseCppName False Public]
         let classInitial = CppClass derCppName cppFields [] baseClasses tnames
         let Just index = elemIndex con cons
-        let serializeField field = printf "\tserialize(%s, input);" (fieldName field) :: String
-        let serializeCode = intercalate "\n" $ [printf "\tserialize(std::int8_t(%d));" index :: String] ++ (serializeField <$> cppFields)
+        let serializeField field = printf "\t::serialize(%s, output);" (fieldName field) :: String
+        let serializeCode = intercalate "\n" $ [printf "\t::serialize(std::int8_t(%d), output);" index :: String] ++ (serializeField <$> cppFields)
         let serializeFn = CppFunction "serialize" "void" [CppArg "output" "Output &"] serializeCode
 
         let serializeMethod = CppMethod serializeFn [OverrideQualifier] Virtual
