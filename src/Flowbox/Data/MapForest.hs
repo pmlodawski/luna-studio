@@ -41,6 +41,10 @@ toList :: MapForest k v -> [(Path k, v)]
 toList = find (const . const True)
 
 
+fromList :: Ord k => [(Path k, v)] -> MapForest k v
+fromList = foldl (\mf (p, val) -> insert p val mf) Flowbox.Data.MapForest.empty
+
+
 keys :: MapForest k v -> [Path k]
 keys = map fst . toList
 
