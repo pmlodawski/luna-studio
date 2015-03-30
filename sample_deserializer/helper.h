@@ -114,3 +114,70 @@ inline void deserialize(boost::optional<T> &out, std::istream &input)
 	else
 		out = boost::none;
 }
+
+template<typename T>
+inline void writePrimitive(std::ostream &output, const T &value)
+{
+	const auto fixedEndian = swap_endian(value);
+	const auto length = sizeof(fixedEndian);
+	output.write((const char *)&fixedEndian, length);
+}
+
+inline void serialize(const std::int8_t &value, std::ostream &output)
+{
+	writePrimitive(output, value);
+}
+
+inline void serialize(const std::int16_t &value, std::ostream &output)
+{
+	writePrimitive(output, value);
+}
+
+inline void serialize(const std::int32_t &value, std::ostream &output)
+{
+	writePrimitive(output, value);
+}
+
+inline void serialize(const std::int64_t &value, std::ostream &output)
+{
+	writePrimitive(output, value);
+}
+
+template<typename T>
+inline void serialize(const std::shared_ptr<T> &value, std::ostream &output)
+{
+	return value->serialize(output);
+}
+
+template<typename T>
+inline void serialize(const std::vector<T> &values, std::ostream &output)
+{
+	const std::int64_t size = values.size();
+	serialize(size, output);
+	for(int i = 0; i < size; i++)
+	{
+		serialize(values[i], output);
+	}
+}
+
+inline void serialize(const std::string &value, std::ostream &output)
+{
+	const std::int64_t size = value.size();
+	serialize(size, output);
+	for(int i = 0; i < size; i++)
+	{
+		serialize(std::int8_t(value[i]), output);
+	}
+}
+
+template<typename T>
+inline void serialize(const boost::optional<T> &value, std::ostream &output)
+{
+	const std::int8_t nonempty = value.is_initialized();
+	serialize(nonempty, output);
+
+	if(value)
+	{
+		serialize(*value, output);
+	}
+}
