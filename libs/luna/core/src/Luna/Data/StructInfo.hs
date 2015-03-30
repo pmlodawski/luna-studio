@@ -38,8 +38,6 @@ type IDMap = IntMap
 type NameMap v = MapForest Text v
 
 data Error  = LookupError { key    :: Text }
-            | ImportError { path   :: Path,                        msg :: String } -- module not found
-            | AmbRefError { symbol :: NamePath, modules :: [Path], msg :: String } -- ambiguous reference
             deriving (Show, Eq, Generic, Read)
 
 
@@ -64,8 +62,6 @@ data StructInfo = StructInfo { _scope    :: IDMap Scope
                              , _orphans  :: IDMap Error
                              , _parent   :: IDMap ID
                              , _argPats  :: IDMap NamePatDesc
-                             , _symTable :: Map NamePath ID
-                             , _imports  :: [Path]
                              } deriving (Show, Eq, Generic, Read)
 
 makeLenses (''Scope)
@@ -145,8 +141,6 @@ instance Monoid StructInfo where
                              (mappend (a ^. orphans)  (b ^. orphans))
                              (mappend (a ^. parent)   (b ^. parent))
                              (mappend (a ^. argPats)  (b ^. argPats))
-                             (mappend (a ^. symTable) (b ^. symTable))
-                             (mappend (a ^. imports)  (b ^. imports))
 
 
 instance Default Scope where
