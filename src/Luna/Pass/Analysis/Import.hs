@@ -102,7 +102,7 @@ findFun lab (Expr.Variable vnp v) = do
                     case symbolOrigins of
                         []       -> put $ ModuleInfo.regOrphan id (SI.LookupError textName) mInfo 
                         [origin] -> put $ ModuleInfo.regOrigin id 1233445 name origin mInfo
-                        origins  -> put $ ModuleInfo.regOrphan id (SI.AmbRefError name origins "Ambiguous reference") mInfo
+                        origins  -> put $ ModuleInfo.regError (ModuleInfo.AmbRefError name origins) mInfo
         where id   = Enum.id lab
               name = unwrap vnp
 

@@ -50,7 +50,7 @@ import qualified Luna.Data.StructInfo         as SI
 import qualified Luna.Data.ModuleInfo         as ModuleInfo
 
 import qualified Luna.Data.Namespace.State    as State 
-import           Luna.Data.Namespace.State    (regSymbol, regOrphan, regAlias, regParent, regVarName, regNamePatDesc, regTypeName, withScope)
+import           Luna.Data.Namespace.State    (regOrphan, regAlias, regParent, regVarName, regNamePatDesc, regTypeName, withScope)
 import qualified Luna.Parser.State            as ParserState
 import qualified Luna.Syntax.Name.Pattern     as NamePattern
 import           Luna.Syntax.Foreign          (Foreign(Foreign))
@@ -87,7 +87,7 @@ pass = Pass "Alias analysis"
             mempty aaUnit
 
 aaUnit :: SADefaultTraversal m a => a -> SAPass m StructInfo
-aaUnit ast = State.createImportScope *> defaultTraverseM ast *> (view Namespace.info <$> get)
+aaUnit ast = defaultTraverseM ast *> (view Namespace.info <$> get)
 
 aaMod :: SACtx lab m a => LModule lab a -> SAPass m (LModule lab a)
 aaMod mod@(Label lab (Module _ body)) = withScope id continue
@@ -149,7 +149,7 @@ registerHeaders (Label lab decl) = case decl of
     Decl.Func    fdecl -> regFuncDecl id fdecl
     Decl.Data    ddecl -> regDataDecl id ddecl
     Decl.Foreign fdecl -> regForeignDecl id fdecl
-    Decl.Imp     imp   -> regImport id imp
+    --Decl.Imp     imp   -> regImport id imp
     _                  -> pure ()
     where id = Enum.id lab
           
@@ -158,20 +158,18 @@ regForeignDecl id (Foreign tgt fdecl) = case fdecl of
     Decl.FFunc fdecl -> regFuncDecl id fdecl
     _                -> pure ()
 
-regImport id imp = do
-    let path = Decl._modPath imp
-    exists <- liftIO $ ModuleInfo.moduleExists path
-    unless exists $ regOrphan id (SI.ImportError path "Module not found.")
-        State.appendImportScope $ (mInfo ^. ModuleInfo.strInfo ^. SI.scope) IntMap.! (-1)
-        State.regImport path
+--regImport id imp = do
+--    let path = Decl._modPath imp
+--    exists <- liftIO $ ModuleInfo.moduleExists path
+--    unless exists $ regOrphan id (SI.ImportError path "Module not found.") -- TODO errors go to ModuleInfo now!
     
 
 
 
 -- regParent here means that the class will be the parent of its methods. Do we need it? Seems sane. 
-regFuncDecl id (Decl.FuncDecl _ sig _ _) = regSymbol (NamePattern.toNamePath sig) id *> regParent id *> regVarName (OriginInfo "dupa" id) (NamePattern.toNamePath sig)
+regFuncDecl id (Decl.FuncDecl _ sig _ _) = regParent id *> regVarName (OriginInfo "dupa" id) (NamePattern.toNamePath sig)
                                          <* regNamePatDesc id (NamePattern.toDesc sig)
-regDataDecl id (Decl.DataDecl name _ cons _) =  regSymbol (unwrap name) id *> regParent id *> regTypeName (OriginInfo "dupa" id) (unwrap name) 
+regDataDecl id (Decl.DataDecl name _ cons _) =  regParent id *> regTypeName (OriginInfo "dupa" id) (unwrap name) 
                                              <* mapM_ registerCons cons
     where registerCons (Label lab (Decl.Cons name fields)) = regVarName (OriginInfo "dupa" (Enum.id lab)) (unwrap name)
 
