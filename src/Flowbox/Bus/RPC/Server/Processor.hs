@@ -15,17 +15,16 @@ import qualified Control.Monad.Catch       as Catch
 import           Control.Monad.Trans.State
 import qualified Data.Maybe                as Maybe
 
-import           Flowbox.Bus.Data.Message                 (Message)
-import qualified Flowbox.Bus.Data.Message                 as Message
-import           Flowbox.Bus.Data.Topic                   (Topic, (/+))
-import           Flowbox.Bus.RPC.HandlerMap               (HandlerMap)
-import qualified Flowbox.Bus.RPC.HandlerMap               as HandlerMap
-import qualified Flowbox.Bus.RPC.RPC                      as RPC
-import           Flowbox.Prelude                          hiding (error)
+import           Flowbox.Bus.Data.Message     (Message)
+import qualified Flowbox.Bus.Data.Message     as Message
+import           Flowbox.Bus.Data.Topic       (Topic)
+import           Flowbox.Bus.RPC.HandlerMap   (HandlerMap)
+import qualified Flowbox.Bus.RPC.HandlerMap   as HandlerMap
+import qualified Flowbox.Bus.RPC.RPC          as RPC
+import           Flowbox.Prelude              hiding (error)
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.Text.ProtocolBuffers             as Proto
-import           Generated.Proto.Rpc.Response             (Response)
-import qualified Generated.Proto.Urm.URM.Register.Request as Register
+import qualified Flowbox.Text.ProtocolBuffers as Proto
+import           Generated.Proto.Rpc.Response (Response)
 
 
 
@@ -34,7 +33,7 @@ logger = getLoggerIO $moduleName
 
 
 singleResult :: MonadIO m => (a -> m b) -> a -> m ([b], [Message])
-singleResult f a = do 
+singleResult f a = do
     b <- f a
     return (return b, [])
 
