@@ -3,6 +3,7 @@ module Luna.Data.ModuleInfo where
 
 import           Control.Monad            ((>=>), (<=<), liftM)
 import           Data.Binary             
+import           Data.Either              (lefts, rights)
 import           Data.List                (find, filter)
 import           Data.Maybe               (fromMaybe, fromJust)
 import           Data.Map                 (Map)
@@ -57,23 +58,26 @@ getSymbolOriginsAux :: NamePath -> [ModuleInfo] -> [Path]
 getSymbolOriginsAux symbol infos = Flowbox.Prelude.map (^. name) results
     where results = Flowbox.Prelude.filter (nameExists symbol) infos
 
+-- [TODO] update to account for the Either version of getModuleInfo(s)
 -- this is the main version, as you only have to pass it your currently parsed module
 getSymbolOrigins :: NamePath -> ModuleInfo -> IO [Path]
 getSymbolOrigins symbol mInfo = do
-    infos <- getModuleInfos (mInfo ^. imports)
-    return $ getSymbolOriginsAux symbol infos
-
-
+    res <- getModuleInfos (mInfo ^. imports)
+    return $ fmap (_name) $ rights res
 
 -- given a list of paths, lookups all the necessary ModuleInfo structs
-getModuleInfos :: [Path] -> IO [ModuleInfo]
+getModuleInfos :: [Path] -> IO [Either ImportError ModuleInfo]
 getModuleInfos paths = mapM getModuleInfo paths
 
 
 
-getModuleInfo :: Path -> IO ModuleInfo
-getModuleInfo = (return . fromJust <=< readModInfoFromFile)
-
+getModuleInfo :: Path -> IO (Either ImportError ModuleInfo)
+--getModuleInfo = (return . fromJust <=< readModInfoFromFile)
+getModuleInfo path = do
+    result <- readModInfoFromFile path
+    return $ case result of
+        Just modInfo -> Right modInfo
+        Nothing      -> Left (NotFoundError path)
 
 
 regError :: ImportError -> ModuleInfo -> ModuleInfo
