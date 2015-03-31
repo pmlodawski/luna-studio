@@ -40,6 +40,12 @@ class CppFormattable a  where
 class CppFormattableCtx a ctx | a -> ctx where
     formatCppCtx :: a -> ctx -> CppFormattedCode
 
+class TypesDependencies a where
+    symbolDependencies :: a -> Set Name
+
+class HsTyped a where
+    hsType :: a -> Type
+
 --instance (CppFormattableCtx a ctx) => CppFormattableCtx [a] ctx where
 --    formatCppCtx = ("", "")
 
@@ -113,6 +119,9 @@ instance CppFormattableCtx CppMethod CppClass where
         in (signatureHeader, implementation)
 
 data CppFieldSource = CppFieldSourceRec VarStrictType
+
+instance HsTyped CppFieldSource where
+    hsType (CppFieldSourceRec vst@(n, s, t)) = t
 
 data CppField = CppField 
     { fieldName :: String
@@ -274,6 +283,13 @@ typeOfField t@(ConT name) = do
     byValue <- isValueType t
     --return $ case name of
     --    ''String -> "std::string"
+    --    ''Int    -> "int"
+    --    ''Int64  -> "std::int64_t"
+    --    ''Int32  -> "std::int32_t"
+    --    ''Int16  -> "std::int16_t"
+    --    ''Int8   -> "std::int8_t"
+    --    _        ->  if byValue then nb
+    --                else "std::shared_ptr<" <> nb <> ">"
     return $ 
         if name == ''String then "std::string" 
         else if name == ''Int then "int"
@@ -284,10 +300,12 @@ typeOfField t@(ConT name) = do
         else if byValue then nb
         else "std::shared_ptr<" <> nb <> ">"
 
-typeOfField (AppT (ConT base) nested) | (base == ''Maybe) = do
+typeOfField t@(AppT (ConT base) nested) | (base == ''Maybe) = do
     nestedName <- typeOfField nested
-    isNestedValue <- isValueType nested
-    return $ if isNestedValue then "boost::optional<" <> nestedName <> ">" else nestedName
+    shouldCollapse <- isCollapsedMaybePtr t
+    return $ if shouldCollapse 
+             then nestedName
+             else "boost::optional<" <> nestedName <> ">"
 
 typeOfField (AppT ListT (nested)) = do
     nestedType <- typeOfField nested
@@ -296,13 +314,21 @@ typeOfField (AppT ListT (nested)) = do
 
 typeOfField (VarT n) = return $ show n
 
-typeOfField (AppT bt@(ConT base) arg) = do
+typeOfField t@(AppT bt@(ConT base) arg) = do
     let baseType = nameBase base
     argType <- typeOfField arg
     isBaseVal <- isValueType bt
     return $ printf (if isBaseVal then "%s<%s>" else "std::shared_ptr<%s<%s>>") baseType argType
 
 typeOfField t = return $ trace ("FIXME: typeOfField for " <> show t) $ "[" <> show t <> "]"
+
+isCollapsedMaybePtr :: Type -> Q Bool
+isCollapsedMaybePtr (AppT (ConT base) nested) | (base == ''Maybe) = do
+    nestedName <- typeOfField nested
+    isNestedValue <- isValueType nested
+    return $ not isNestedValue
+isCollapsedMaybePtr _ = return False
+
 
 instance Default CppParts where
     def = CppParts [] [] []  [] []
@@ -347,25 +373,36 @@ prepareDeserializeMethodBase cls@(CppClass clsName _ _ _ tmpl) derClasses =
         fun = CppFunction fname rettype [arg] prettyBody
     in CppMethod fun [] Static
 
-prepareDeserializeMethodDer :: CppClass -> CppMethod
-prepareDeserializeMethodDer cls@(CppClass clsName _ _ _ tmpl)  = 
+deserializeField :: CppField -> Q String
+deserializeField field@(CppField fieldName fieldType fieldSrc) = do
+    collapsedMaybe <- isCollapsedMaybePtr (hsType fieldSrc)
+    let fname = if collapsedMaybe then "deserializeMaybe" else "deserialize"
+    return $ printf "\t%s(ret->%s, input);" fname fieldName
+
+prepareDeserializeMethodDer :: CppClass -> Q CppMethod
+prepareDeserializeMethodDer cls@(CppClass clsName _ _ _ tmpl)  = do
     let fname = deserializeFromFName
         clsName = className cls
         arg = CppArg "input" "Input &"
         nestedRetType = if null tmpl then clsName else templateDepName cls
         rettype = printf "std::shared_ptr<%s>" nestedRetType
-
-        deserializeField field@(CppField fieldName fieldType fieldSrc) = printf "\tdeserialize(ret->%s, input);" fieldName :: String
-
-        bodyOpener = printf "\tauto ret = std::make_shared<%s>();" nestedRetType :: String
+        --deserializeField field@(CppField fieldName fieldType fieldSrc) = printf "\tdeserialize(ret->%s, input);" fieldName :: String
+    fieldsCode <- sequence (map deserializeField $ classFields cls)
+    let bodyOpener = printf "\tauto ret = std::make_shared<%s>();" nestedRetType :: String
         bodyCloser = "\treturn ret;"
-        body = intercalate "\n" $ [bodyOpener] <> (map deserializeField $ classFields cls) <> [bodyCloser]
+        body = intercalate "\n" $ [bodyOpener] <> fieldsCode <> [bodyCloser]
 
         fun = CppFunction fname rettype [arg] body
         qual = []
         stor = Static
-    in CppMethod fun qual stor
+    return $ CppMethod fun qual stor
 
+
+serializeField :: CppField -> Q String
+serializeField field@(CppField fieldName fieldType fieldSrc) = do
+    collapsedMaybe <- isCollapsedMaybePtr (hsType fieldSrc)
+    let fname = if collapsedMaybe then "serializeMaybe" else "serialize"
+    return $ printf "\t::%s(%s, output);" fname fieldName
 
 processConstructor :: Dec -> Con -> Q CppClass
 processConstructor dec@(DataD cxt name tyVars cons names) con@(RecC cname fields) = 
@@ -377,12 +414,15 @@ processConstructor dec@(DataD cxt name tyVars cons names) con@(RecC cname fields
         let baseClasses   = [CppDerive baseCppName False Public]
             classInitial  = CppClass derCppName cppFields [] baseClasses tnames
             Just index    = elemIndex con cons
-            serializeCode = intercalate "\n" $ [printf "\t::serialize(std::int8_t(%d), output);" index :: String] <> (serializeField <$> cppFields)
+        serializeFieldsLines <- sequence $ (serializeField <$> cppFields)
+        let serializeCode = intercalate "\n" ([printf "\t::serialize(std::int8_t(%d), output);" index :: String] <> serializeFieldsLines)
             serializeFn   = CppFunction "serialize" "void" [CppArg "output" "Output &"] serializeCode
-            serializeField field = printf "\t::serialize(%s, output);" (fieldName field) :: String
+            --serializeField field = printf "\t::serialize(%s, output);" (fieldName field) :: String
 
         let serializeMethod = CppMethod serializeFn [OverrideQualifier] Virtual
-        let methods = [serializeMethod, prepareDeserializeMethodDer classInitial]
+        deserializeMethod <- prepareDeserializeMethodDer classInitial
+
+        let methods = [serializeMethod, deserializeMethod]
         return $ CppClass derCppName cppFields methods baseClasses tnames
 processConstructor dec arg = trace ("FIXME: Con for " <> show arg) (return $ CppClass "" [] [] [] [])
 
@@ -411,42 +451,7 @@ generateCppWrapperHlp tysyn@(TySynD name tyVars rhstype) = do
 generateCppWrapperHlp arg = trace ("FIXME: generateCppWrapperHlp for " <> show arg) emptyQParts
 
 
-generateSingleWrapper :: Name -> Q CppParts
-generateSingleWrapper arg | trace ("generateSingleWrapper: " <> show arg) False = undefined
-generateSingleWrapper name = do
-    nameInfo <- reify name
-    let bb = case nameInfo of
-            (TyConI dec) -> generateCppWrapperHlp dec
-            _ -> trace ("ignoring entry " <> show name) emptyQParts
-    bb
-
-joinParts :: [CppParts] -> CppParts
-joinParts parts = 
-    CppParts (concat $ map includes parts) (concat $ map forwardDecls parts) (concat $ map typedefs parts) (concat $ map classes parts) (concat $ map functions parts)
-
-generateWrappers :: [Name] -> Q CppParts
-generateWrappers names = do
-    let partsWithQ = map generateSingleWrapper names
-    parts <- sequence partsWithQ
-    return $ joinParts parts
-
-generateWrapperWithDeps :: Name -> Q CppParts
-generateWrapperWithDeps name = do
-    relevantNames <- collectDependencies name
-    generateWrappers relevantNames
-
-
-formatCppWrapper :: Name -> Q CppFormattedCode
-formatCppWrapper arg | trace ("formatCppWrapper: " <> show arg) False = undefined
-formatCppWrapper name = do
-    parts <- generateWrapperWithDeps name
-    return $ formatCpp parts
-
-
 builtInTypes = [''Maybe, ''String, ''Int, ''Int32, ''Int64, ''Int16, ''Int8]
-
-class TypesDependencies a where
-    symbolDependencies :: a -> Set Name
 
 instance TypesDependencies Type where
     --symbolDependencies t | trace ("Type: " <> show t) False = undefined
@@ -526,6 +531,35 @@ printAst  (TyConI dec@(DataD cxt name tyVars cons names)) =
         consCount = Data.List.length cons :: Int
         ret = ("cxt=" <> show cxt <> "\nname=" <> show name <> "\ntyVars=" <> show tyVars <> "\ncons=" <> show cons <> "\nnames=" <> show names) :: String
     in show consCount <> "___" <> ret
+
+joinParts :: [CppParts] -> CppParts
+joinParts parts = 
+    CppParts (concat $ map includes parts) (concat $ map forwardDecls parts) (concat $ map typedefs parts) (concat $ map classes parts) (concat $ map functions parts)
+
+generateSingleWrapper :: Name -> Q CppParts
+generateSingleWrapper arg | trace ("generateSingleWrapper: " <> show arg) False = undefined
+generateSingleWrapper name = do
+    nameInfo <- reify name
+    case nameInfo of
+            (TyConI dec)    -> generateCppWrapperHlp dec
+            _               -> trace ("ignoring entry " <> show name) emptyQParts
+
+generateWrappers :: [Name] -> Q CppParts
+generateWrappers names = do
+    let partsWithQ = map generateSingleWrapper names
+    parts <- sequence partsWithQ
+    return $ joinParts parts
+
+generateWrapperWithDeps :: Name -> Q CppParts
+generateWrapperWithDeps name = do
+    relevantNames <- collectDependencies name
+    generateWrappers relevantNames
+
+formatCppWrapper :: Name -> Q CppFormattedCode
+formatCppWrapper arg | trace ("formatCppWrapper: " <> show arg) False = undefined
+formatCppWrapper name = do
+    parts <- generateWrapperWithDeps name
+    return $ formatCpp parts
 
 generateCpp :: Name -> FilePath -> Q Exp
 generateCpp name path = do
