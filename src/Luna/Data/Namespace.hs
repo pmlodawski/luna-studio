@@ -61,25 +61,6 @@ head (Namespace (id:_) _) = Just id
 head _                    = Nothing
 
 
--- adds a surrounding scope, for storing all the imports' top-level scopes
--- the scope created by this function is empty
-createImportScope :: Namespace -> Namespace
-createImportScope = (stack %~ (++ [-1])) . addScope . addParent
-    where addScope    = modStructInfo insertScope
-          insertScope = StructInfo.scope %~ (IntMap.insert (-1) mempty)
-          addParent   = modStructInfo $ StructInfo.parent %~ (IntMap.insert 0 (-1))
-
-
--- adds symbols from the import's scope into the -1 scope in namespace
-appendImportScope :: StructInfo.Scope -> Namespace -> Namespace
-appendImportScope scope = modScope (-1) (joinScopes scope)
-    where joinScopes (StructInfo.Scope vNamesNew tNamesNew) (StructInfo.Scope vNamesOld tNamesOld) = StructInfo.Scope (MapForest.union vNamesOld vNamesNew) (MapForest.union tNamesOld tNamesNew)
-
-modScope :: Int -> (StructInfo.Scope -> StructInfo.Scope) -> Namespace -> Namespace
-modScope idx f = modStructInfo (StructInfo.scope %~ fIndexed)
-    where fIndexed = \s -> IntMap.insert idx (f $ s IntMap.! idx) s
-
-
 -- FIXME[wd]: dodac asserty!
 pushNewScope :: ID -> Namespace -> Namespace
 pushNewScope id ns@(Namespace st inf) = ns

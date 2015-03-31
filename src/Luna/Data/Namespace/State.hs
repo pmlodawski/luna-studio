@@ -103,10 +103,6 @@ popID = do
 --withID id f = pushID id *> f <* popID
 
 -- creates the base scope, in which you store the imported symbols
-createImportScope = modify $ Namespace.createImportScope
-
-appendImportScope scope = modify $ Namespace.appendImportScope scope
-
 
 pushNewScope id = modify $ Namespace.pushNewScope id
 pushScope    id = modify $ Namespace.pushScope id
@@ -125,11 +121,8 @@ withParentID f = do pid <- popID
 
 ----switchID :: NamespaceState m => ID -> m ()
 ----switchID id = modify (currentID .~ id)
-regImport = modifyStructInfo .  StructInfo.regImport
-
 regOrphan = modifyStructInfo .: StructInfo.regOrphan
 
-regSymbol = modifyStructInfo .: StructInfo.regSymbol
 
 --regID :: NamespaceState m => ID -> m ()
 regID id = do

@@ -86,14 +86,6 @@ regOrigin id pid name path = alias %~ Map.insert id originInfo
           qPath      = NamePath.QualPath (map toText path) (toText name)
 
 
-regImport :: Path -> StructInfo -> StructInfo
-regImport path = imports %~ (path :)
-
-
-regSymbol :: NamePath -> Int -> StructInfo -> StructInfo
-regSymbol name id = symTable %~ Map.insert name id
-
-
 regParent  id pid  = parent %~ Map.insert id pid
 regVarName pid id name info = setScope info pid $ Scope (vnmap & at name ?~ id) tnmap where
     (vnmap, tnmap) = scopeLookup pid info
@@ -135,7 +127,7 @@ instance Monoid Scope where
 
 
 instance Monoid StructInfo where
-    mempty      = StructInfo mempty mempty mempty mempty mempty mempty mempty
+    mempty      = StructInfo mempty mempty mempty mempty mempty
     mappend a b = StructInfo (mappend (a ^. scope)    (b ^. scope))
                              (mappend (a ^. alias)    (b ^. alias))
                              (mappend (a ^. orphans)  (b ^. orphans))
