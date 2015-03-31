@@ -88,7 +88,7 @@ parseNode signature (nodeID, node) = case node of
             connectedOnlyToOutput = map (\(dstNID, _, edge) -> (dstNID, edge ^? Edge.src)) lsuclData == [(Node.outputID, Just Port.mkSrcAll)]
             outDataEdges = map (view _3) lsuclData
         srcs <- getNodeSrcs nodeID defaults
-        ast <- (Label.label %~ Tag.mkNode nodeID pos) <$> buildExpr expr srcs
+        ast <- (Label.label %~ Tag.mkNode nodeID pos Nothing) <$> buildExpr expr srcs
         if connectedOnlyToOutput
             then State.addToExprMap (nodeID, Port.mkSrcAll) ast
             else if not (null outDataEdges) || Maybe.isJust outputPat

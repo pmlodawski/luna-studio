@@ -34,7 +34,7 @@ import           Luna.Syntax.Graph.Node           (Node)
 import qualified Luna.Syntax.Graph.Node           as Node
 import           Luna.Syntax.Graph.Node.Position  (Position)
 import           Luna.Syntax.Graph.Port           (DstPort, SrcPort)
-import           Luna.Syntax.Graph.Tag            (TDecl, Tag)
+import           Luna.Syntax.Graph.Tag            (TDecl, Tag, TExpr)
 import qualified Luna.Syntax.Graph.Tag            as Tag
 import           Luna.Syntax.Label                (Label (Label))
 import qualified Luna.Syntax.Label                as Label
@@ -93,17 +93,32 @@ connect srcNID srcPort dstNID dstPort =
 connectNodes :: Node.ID -> Node.ID -> Edge -> GBPass v m ()
 connectNodes srcID dstID edge = getGraph >>= setGraph . Graph.connect srcID dstID edge
 
-connectMonadic :: Node.ID -> GBPass v m ()
-connectMonadic nodeID = do
+connectMonadic :: Node.ID -> TExpr v -> GBPass v m (TExpr v)
+connectMonadic nodeID lexpr = do
+    newPos <- connectMonadic' nodeID
+    return (lexpr & Label.label . Tag.position .~ newPos)
+
+connectMonadic' :: Node.ID -> GBPass v m Position
+connectMonadic' nodeID = do
     prevID   <- getPrevoiusNodeID
     prevNode <- getNode prevID
     currNode <- getNode nodeID
-    setPrevoiusNodeID nodeID
     let prevPos = prevNode ^. Node.pos
         currPos = currNode ^. Node.pos
-    when (prevPos >= currPos) $
-        updateNode (nodeID, currNode & Node.pos .~ (fst prevPos + 10, snd prevPos))
+        newPos  = if prevPos >= currPos
+            then (fst prevPos + 10, snd prevPos)
+            else currPos
+    setPrevoiusNodeID nodeID
     connectNodes prevID nodeID Edge.Monadic
+    updateNode (nodeID, currNode & Node.pos .~ newPos)
+    return newPos
+
+
+connectMonadicOutput :: TDecl v -> GBPass v m (TDecl v)
+connectMonadicOutput ldecl = do
+    newPos <- connectMonadic' Node.outputID
+    return (ldecl & Label.label . Tag.additionalPos .~ Just newPos)
+
 
 ----- nodeMap -------------------------------------------------------------
 getNodeMap :: GBPass v m NodeMap
@@ -137,24 +152,30 @@ setNextFreeNodeID = modify . set nextFreeNodeID
 getNextFreeNodeID :: GBPass v m Node.ID
 getNextFreeNodeID = gets $ view nextFreeNodeID
 
-initFreeNodeID :: TDecl v -> GBPass v m ()
+initFreeNodeID :: TDecl v -> GBPass v m (Position, Position, TDecl v)
 initFreeNodeID decl = case decl ^. Label.label of
-    Tag.Empty {}        -> setResetNodeIDs True  >> setNextFreeNodeID 0
-    Tag.Node _ nodeID _ -> setResetNodeIDs False >> setNextFreeNodeID nodeID
+    Tag.Node _ freeNodeID inputsPos mOutputPos -> do
+        let outputPos = Maybe.fromMaybe def mOutputPos
+        setResetNodeIDs False
+        setNextFreeNodeID freeNodeID
+        return (inputsPos, outputPos, decl & Label.label . Tag.additionalPos .~ Just outputPos)
+    Tag.Empty {} -> do
+        setResetNodeIDs True
+        return (def, def, decl & Label.label %~ Tag.mkNode def def (Just def))
 
 saveFreeNodeID :: TDecl v -> GBPass v m (TDecl v)
-saveFreeNodeID (Label tag decl) = do
+saveFreeNodeID decl = do
     freeNodeID <- getNextFreeNodeID
-    return (Label (Tag.mkNode freeNodeID def tag) decl)
+    return (decl & Label.label . Tag.nodeID .~ freeNodeID)
 
 getNodeInfo :: Label Tag e -> GBPass e1 m (Node.ID, Position, Label Tag e)
 getNodeInfo labeled@(Label tag e) = case tag of
-    Tag.Node _ nodeID position -> return (nodeID, position, labeled)
+    Tag.Node _ nodeID position _ -> return (nodeID, position, labeled)
     Tag.Empty {}        -> do
         freeNodeID <- getNextFreeNodeID
         setNextFreeNodeID $ freeNodeID + 1
         let pos  = def
-            tag' = Tag.mkNode freeNodeID def tag
+            tag' = Tag.mkNode freeNodeID def def tag
         return (freeNodeID, pos, Label tag' e)
 
 ----- aa ------------------------------------------------------------------
@@ -183,64 +204,3 @@ getPrevoiusNodeID = gets $ view prevoiusNodeID
 
 setPrevoiusNodeID :: Node.ID -> GBPass v m ()
 setPrevoiusNodeID = modify . set prevoiusNodeID
-
----------------------------------------------------------------------------
---addNodeDefault :: Node.ID -> PortDescriptor -> NodeExpr a v -> GBPass v m ()
---addNodeDefault nodeID pd ne = do
---    gr   <- getGraph
---    node <- lift $ Graph.lab gr nodeID <??> "addNodeDefault : Cannot find nodeID = " ++ show nodeID
---    let node' = Node.insertDefault pd ne node
---    setGraph $ Graph.insNode (nodeID, node') gr
-
---insNodeWithFlags :: (Node.ID, Position -> Node a v) -> Bool -> Bool -> GBPass v m ()
---insNodeWithFlags n@(nodeID, _) isFolded assignment = do
---    insNode n
---    when isFolded   $ modifyFlags (Flags.astFolded     .~ Just True) nodeID
---    when assignment $ modifyFlags (Flags.astAssignment .~ Just True) nodeID
-
-
---addNode :: AST.ID -> Port -> (Position -> Node a v) -> Bool -> Bool -> GBPass v m ()
---addNode astID outPort node isFolded assignment = do
---    insNodeWithFlags (astID, node) isFolded assignment
---    addToNodeMap astID (astID, outPort)
-
---modifyFlags :: (Flags -> Flags) -> Node.ID -> GBPass v m ()
---modifyFlags fun nodeID =
---    getPropertyMap >>= setPropertyMap . PropertyMap.modifyFlags fun nodeID
-
-
---getFlags :: Node.ID -> GBPass v m Flags
---getFlags nodeID = PropertyMap.getFlags nodeID <$> getPropertyMap
-
-
---getPosition :: Node.ID -> GBPass v m (Maybe Position)
---getPosition nodeID =
---    view Flags.nodePosition <$> getFlags nodeID
-
-
---setPosition :: Node.ID -> Position -> GBPass v m ()
---setPosition nodeID pos = do
---    modifyFlags (Flags.nodePosition .~ Just pos) nodeID
---    graph' <- getGraph
---    node   <- lift $ Graph.lab graph' nodeID <??> "BuilderState.setPosition : cannot find node with id = " ++ show nodeID
---    setGraph $ Graph.updateNode (nodeID, node & Node.pos .~ pos) graph'
-
-
---getDefaultGenerated :: Node.ID -> GBPass v m Bool
---getDefaultGenerated nodeID = do
---    foldSetting <- gets (view foldNodes)
---    if foldSetting
---        then flip Flags.isSet' (view Flags.defaultNodeGenerated) <$> getFlags nodeID
---        else return False
-
-
---getGraphFolded :: Node.ID -> GBPass v m Bool
---getGraphFolded nodeID = do
---    foldSetting <- gets (view foldNodes)
---    if foldSetting
---        then Flags.isFolded <$> getFlags nodeID
---        else return False
-
-
---setGrouped :: Node.ID -> GBPass v m ()
---setGrouped = modifyFlags (Flags.grouped .~ Just True)

@@ -21,20 +21,23 @@ import           Luna.Syntax.Pat                 (LPat)
 
 
 data Tag = Empty { _idTag :: ID }
-         | Node  { _idTag    :: ID
-                 , _nodeID   :: Node.ID
-                 , _position :: Position
+         | Node  { _idTag         :: ID
+                 , _nodeID        :: Node.ID
+                 , _position      :: Position
+                 , _additionalPos :: Maybe Position
                  } deriving (Show, Eq)
 
 
 makeLenses ''Tag
 
 
-mkNode :: Node.ID -> Position -> Tag -> Tag
-mkNode nodeID' position' tag' = Node (Enum.id tag') nodeID' position'
+mkNode :: Node.ID -> Position -> (Maybe Position) -> Tag -> Tag
+mkNode nodeID' position' additionalPos' tag' =
+    Node (Enum.id tag') nodeID' position' additionalPos'
 
 mkEmpty :: Tag -> Tag
 mkEmpty = Empty . view idTag
+
 
 instance Enumerated Tag where
     id = view idTag
