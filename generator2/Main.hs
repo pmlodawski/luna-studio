@@ -19,9 +19,18 @@ main = do
 	let con = App 1200 (TypeDef 76 "typ1" "Typ2") args
 	let bs = encode con
 
-	encodeFile "test.bin" bs
+	encodeFile "../sample_deserializer/test.bin" con
 
-	putStrLn $(TH.stringE . printAst =<< TH.reify ''Expr)
-	putStrLn $(TH.stringE . TH.pprint =<< TH.reify ''Expr)
+	let acc = Accessor 503 (ConAccessor "bar") (Con 502 "foo")
+	putStrLn $ show $ encode acc
+	encodeFile "testacc.bin" acc
+
+	putStrLn "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+	ns <- decodeFile "../sample_deserializer/testout.bin" :: IO Expr
+	putStrLn $ show ns
+	putStrLn "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+
+	-- putStrLn $(TH.stringE . printAst =<< TH.reify ''Expr)
+	-- putStrLn $(TH.stringE . TH.pprint =<< TH.reify ''Expr)
 
 	$(generateCpp ''Expr "../sample_deserializer/generated")

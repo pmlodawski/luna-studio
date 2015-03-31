@@ -18,6 +18,8 @@ import Language.Haskell.TH.Quote
 import Data.List
 import qualified Data.Set as Set
 import Data.Int
+import Data.Default
+import Data.Monoid
 
 import GHC.Stack
 import Debug.Trace
@@ -47,7 +49,7 @@ data CppArg = CppArg
     }
 
 instance CppFormattablePart CppArg where
-    format arg = argType arg ++ " " ++ argName arg
+    format arg = argType arg <> " " <> argName arg
 
 data CppQualifier = ConstQualifier | VolatileQualifier | PureVirtualQualifier | OverrideQualifier
                     deriving (Eq)
@@ -82,7 +84,7 @@ instance CppFormattable CppFunction where
     formatCpp fn = ("function fundc", "function fdunc")
 
 formatArgsList :: [CppArg] -> String
-formatArgsList args = "(" ++ Data.List.intercalate ", " (map format args) ++ ")"
+formatArgsList args = "(" <> Data.List.intercalate ", " (map format args) <> ")"
 
 formatSignature :: CppFunction -> String
 formatSignature (CppFunction name ret args _) = formatArgsList args
@@ -102,11 +104,11 @@ instance CppFormattableCtx CppMethod CppClass where
             qt = format q :: String
             signatureHeader = printf "\t%s%s %s%s%s;" st rt nt at qt :: String
 
-            scope = (templateDepName cls)
+            scope = templateDepName cls
             templateIntr = formatTemplateIntroductor tmpl
-            qst = (format $ filter ((==) ConstQualifier) q) -- qualifiers signature text
+            qst = format $ filter ((==) ConstQualifier) q -- qualifiers signature text
             signatureImpl = printf "%s%s %s::%s%s %s" templateIntr rt scope nt at qst :: String
-            implementation = signatureImpl ++ "\n{\n" ++ b ++ "\n}"
+            implementation = signatureImpl <> "\n{\n" <> b <> "\n}"
 
         in (signatureHeader, implementation)
 
@@ -119,7 +121,7 @@ data CppField = CppField
     }
 
 instance CppFormattablePart CppField where
-    format field = fieldType field ++ " " ++ fieldName field
+    format field = fieldType field <> " " <> fieldName field
 
 instance CppFormattablePart [CppField] where
     format fields = 
@@ -131,8 +133,8 @@ instance CppFormattablePart [CppField] where
 data CppAccess = Protected | Public | Private
 instance CppFormattablePart CppAccess where
     format Protected = "protected"
-    format Public = "public"
-    format Private = "private"
+    format Public    = "public"
+    format Private   = "private"
 
 data CppDerive = CppDerive
     { baseName :: String
@@ -141,11 +143,11 @@ data CppDerive = CppDerive
     }
 
 --instance CppFormattablePart CppDerive where
---    format (CppDerive base virtual access) = format access ++ " " ++ (if virtual then "virtual " else "") ++ base
+--    format (CppDerive base virtual access) = format access <> " " <> (if virtual then "virtual " else "") <> base
 
 --instance CppFormattablePart [CppDerive] where
 --    format [] = ""
---    format derives = ": " ++ Data.List.intercalate ", " (map format derives)
+--    format derives = ": " <> Data.List.intercalate ", " (map format derives)
 
 data CppClass = CppClass 
     { className :: String
@@ -165,12 +167,11 @@ instance CppFormattable CppClass where
     formatCpp cls@(CppClass name fields methods bases tmpl) = 
         let formatBase (CppDerive bname bvirt bacc) = 
                 let baseTempl = if null tmpl then "" else printf "<%s>" (intercalate ", " tmpl)
-                in format bacc ++ " " ++ (if bvirt then "virtual " else "") ++ bname ++ baseTempl
+                in format bacc <> " " <> (if bvirt then "virtual " else "") <> bname <> baseTempl
 
-            basesTxt = if null bases then
-                    ""
-                else
-                    ": " ++ intercalate ", " (formatBase <$> bases)
+            basesTxt = if null bases 
+                then ""
+                else ": " <> intercalate ", " (formatBase <$> bases)
             fieldsTxt = format fields
             -- fff =  (formatCppCtx <$> methods <*> [cls]) :: [CppFormattedCode]
             (methodsHeader, methodsImpl) = collapseCode (formatCppCtx <$> methods <*> [cls])
@@ -200,13 +201,12 @@ instance CppFormattable CppTypedef where
         let templateList = formatTemplateIntroductor tmpl
         in (printf "%susing %s = %s;" templateList to from, "")
 
-data CppParts = CppParts
-    { includes :: [CppInclude]
-    , forwardDecls :: [CppForwardDecl]
-    , typedefs :: [CppTypedef]
-    , classes :: [CppClass]
-    , functions :: [CppFunction]
-    }
+data CppParts = CppParts { includes     :: [CppInclude]
+                         , forwardDecls :: [CppForwardDecl]
+                         , typedefs     :: [CppTypedef]
+                         , classes      :: [CppClass]
+                         , functions    :: [CppFunction]
+                         }
 
 instance CppFormattable CppParts where
     formatCpp (CppParts incl frwrds tpdefs cs fns) = 
@@ -218,14 +218,14 @@ instance CppFormattable CppParts where
             -- FIXME code duplication above
 
             allPieces = concat [includesPieces, forwardDeclPieces, typedefPieces, classesCodePieces, functionsPieces]
-
+            -- replicate 10 '*'
             collectCodePieces fn = Data.List.intercalate "\n\n/****************/\n\n" (map fn allPieces)
             headerCode = collectCodePieces fst
             bodyCode = collectCodePieces snd
         in (headerCode, bodyCode)
 
 formatTemplateArgs :: [String] -> String
-formatTemplateArgs tmpl = intercalate ", " (map ((++) "typename ") tmpl)
+formatTemplateArgs tmpl = intercalate ", " (map ((<>) "typename ") tmpl)
 
 formatTemplateIntroductor :: [String] -> String
 formatTemplateIntroductor tmpl = if null tmpl then "" else
@@ -252,10 +252,11 @@ isValueTypeInfo (TyConI (TySynD name vars t)) = isValueType t
 isValueTypeInfo _ = return False
 
 isValueType :: Type -> Q Bool
-isValueType (VarT name) = return True
+isValueType (VarT name) = return True :: Q Bool
 isValueType ListT = return True
 isValueType (AppT base nested) = isValueType base
 isValueType (ConT name) | (elem name builtInTypes) = return True
+                        -- | otherwise = do
 isValueType (ConT name) = do
     info <- reify name
     isValueTypeInfo info
@@ -271,6 +272,8 @@ typeOfField :: Type -> Q String
 typeOfField t@(ConT name) = do
     let nb = nameBase name
     byValue <- isValueType t
+    --return $ case name of
+    --    ''String -> "std::string"
     return $ 
         if name == ''String then "std::string" 
         else if name == ''Int then "int"
@@ -279,12 +282,12 @@ typeOfField t@(ConT name) = do
         else if name == ''Int16 then "std::int16_t"
         else if name == ''Int8 then "std::int8_t"
         else if byValue then nb
-        else "std::shared_ptr<" ++ nb ++ ">"
+        else "std::shared_ptr<" <> nb <> ">"
 
 typeOfField (AppT (ConT base) nested) | (base == ''Maybe) = do
     nestedName <- typeOfField nested
     isNestedValue <- isValueType nested
-    return $ if isNestedValue then "boost::optional<" ++ nestedName ++ ">" else nestedName
+    return $ if isNestedValue then "boost::optional<" <> nestedName <> ">" else nestedName
 
 typeOfField (AppT ListT (nested)) = do
     nestedType <- typeOfField nested
@@ -299,16 +302,19 @@ typeOfField (AppT bt@(ConT base) arg) = do
     isBaseVal <- isValueType bt
     return $ printf (if isBaseVal then "%s<%s>" else "std::shared_ptr<%s<%s>>") baseType argType
 
-typeOfField t = return $ trace ("FIXME: typeOfField for " ++ show t) $ "[" ++ show t ++ "]"
+typeOfField t = return $ trace ("FIXME: typeOfField for " <> show t) $ "[" <> show t <> "]"
+
+instance Default CppParts where
+    def = CppParts [] [] []  [] []
 
 emptyQParts :: Q CppParts
-emptyQParts = return $ CppParts [] [] []  [] []
+emptyQParts = return def
 
 processField :: THS.VarStrictType -> Q CppField
 processField field@(name, _, t) = do
     filedType <- typeOfField t
     return $ CppField (translateToCppName name) filedType (CppFieldSourceRec field)
--- processField arg = trace ("FIXME: Field for " ++ show arg) (return $ CppField "__" "--")
+-- processField arg = trace ("FIXME: Field for " <> show arg) (return $ CppField "__" "--")
 
 deserializeFromFName = "deserializeFrom"
 
@@ -331,12 +337,12 @@ prepareDeserializeMethodBase cls@(CppClass clsName _ _ _ tmpl) derClasses =
         body =  [ "auto constructorIndex = readInt8(input);"
                 , "switch(constructorIndex)"
                 , "{"
-                ] ++ cases ++ 
+                ] <> cases <> 
                 [ "default: return nullptr;"
                 , "}"
                 ]
 
-        prettyBody = intercalate "\n" (map ((++) "\t") body)
+        prettyBody = intercalate "\n" (map ((<>) "\t") body)
 
         fun = CppFunction fname rettype [arg] prettyBody
     in CppMethod fun [] Static
@@ -353,7 +359,7 @@ prepareDeserializeMethodDer cls@(CppClass clsName _ _ _ tmpl)  =
 
         bodyOpener = printf "\tauto ret = std::make_shared<%s>();" nestedRetType :: String
         bodyCloser = "\treturn ret;"
-        body = intercalate "\n" $ [bodyOpener] ++ (map deserializeField $ classFields cls) ++ [bodyCloser]
+        body = intercalate "\n" $ [bodyOpener] <> (map deserializeField $ classFields cls) <> [bodyCloser]
 
         fun = CppFunction fname rettype [arg] body
         qual = []
@@ -366,26 +372,26 @@ processConstructor dec@(DataD cxt name tyVars cons names) con@(RecC cname fields
     do
         let baseCppName = translateToCppName name
             tnames = map tyvarToCppName tyVars
-            derCppName = baseCppName ++ "_" ++ translateToCppName cname
+            derCppName = baseCppName <> "_" <> translateToCppName cname
         cppFields <- mapM processField fields
-        let baseClasses = [CppDerive baseCppName False Public]
-        let classInitial = CppClass derCppName cppFields [] baseClasses tnames
-        let Just index = elemIndex con cons
-        let serializeField field = printf "\t::serialize(%s, output);" (fieldName field) :: String
-        let serializeCode = intercalate "\n" $ [printf "\t::serialize(std::int8_t(%d), output);" index :: String] ++ (serializeField <$> cppFields)
-        let serializeFn = CppFunction "serialize" "void" [CppArg "output" "Output &"] serializeCode
+        let baseClasses   = [CppDerive baseCppName False Public]
+            classInitial  = CppClass derCppName cppFields [] baseClasses tnames
+            Just index    = elemIndex con cons
+            serializeCode = intercalate "\n" $ [printf "\t::serialize(std::int8_t(%d), output);" index :: String] <> (serializeField <$> cppFields)
+            serializeFn   = CppFunction "serialize" "void" [CppArg "output" "Output &"] serializeCode
+            serializeField field = printf "\t::serialize(%s, output);" (fieldName field) :: String
 
         let serializeMethod = CppMethod serializeFn [OverrideQualifier] Virtual
         let methods = [serializeMethod, prepareDeserializeMethodDer classInitial]
         return $ CppClass derCppName cppFields methods baseClasses tnames
-processConstructor dec arg = trace ("FIXME: Con for " ++ show arg) (return $ CppClass "" [] [] [] [])
+processConstructor dec arg = trace ("FIXME: Con for " <> show arg) (return $ CppClass "" [] [] [] [])
 
 tyvarToCppName :: TyVarBndr -> String
 tyvarToCppName (PlainTV n) = show n
-tyvarToCppName arg = trace ("FIXME: tyvarToCppName for " ++ show arg) $ show arg
+tyvarToCppName arg = trace ("FIXME: tyvarToCppName for " <> show arg) $ show arg
 
 generateCppWrapperHlp :: Dec -> Q CppParts
--- generateCppWrapperHlp arg | trace ("generateCppWrapperHlp: " ++ show arg) False = undefined
+-- generateCppWrapperHlp arg | trace ("generateCppWrapperHlp: " <> show arg) False = undefined
 generateCppWrapperHlp dec@(DataD cxt name tyVars cons names) = 
     do
         derClasses <- sequence $ processConstructor <$> [dec] <*> cons
@@ -402,16 +408,16 @@ generateCppWrapperHlp tysyn@(TySynD name tyVars rhstype) = do
     let tf = CppTypedef (nameBase name) baseTName tnames
     return $ CppParts [] [] [tf] [] []
 
-generateCppWrapperHlp arg = trace ("FIXME: generateCppWrapperHlp for " ++ show arg) emptyQParts
+generateCppWrapperHlp arg = trace ("FIXME: generateCppWrapperHlp for " <> show arg) emptyQParts
 
 
 generateSingleWrapper :: Name -> Q CppParts
-generateSingleWrapper arg | trace ("generateSingleWrapper: " ++ show arg) False = undefined
+generateSingleWrapper arg | trace ("generateSingleWrapper: " <> show arg) False = undefined
 generateSingleWrapper name = do
     nameInfo <- reify name
     let bb = case nameInfo of
             (TyConI dec) -> generateCppWrapperHlp dec
-            _ -> trace ("ignoring entry " ++ show name) emptyQParts
+            _ -> trace ("ignoring entry " <> show name) emptyQParts
     bb
 
 joinParts :: [CppParts] -> CppParts
@@ -431,7 +437,7 @@ generateWrapperWithDeps name = do
 
 
 formatCppWrapper :: Name -> Q CppFormattedCode
-formatCppWrapper arg | trace ("formatCppWrapper: " ++ show arg) False = undefined
+formatCppWrapper arg | trace ("formatCppWrapper: " <> show arg) False = undefined
 formatCppWrapper name = do
     parts <- generateWrapperWithDeps name
     return $ formatCpp parts
@@ -443,7 +449,7 @@ class TypesDependencies a where
     symbolDependencies :: a -> Set Name
 
 instance TypesDependencies Type where
-    --symbolDependencies t | trace ("Type: " ++ show t) False = undefined
+    --symbolDependencies t | trace ("Type: " <> show t) False = undefined
 
     -- Maybe and String are handled as a special-case
     symbolDependencies (ConT name) | (elem name builtInTypes) = Set.empty
@@ -451,10 +457,10 @@ instance TypesDependencies Type where
     symbolDependencies apptype@(AppT ListT nested) = symbolDependencies nested
     symbolDependencies apptype@(AppT base nested) = symbolDependencies [base, nested]
     symbolDependencies vartype@(VarT n) = Set.empty
-    symbolDependencies t = trace ("FIXME not handled type: " ++ show t) Set.empty
+    symbolDependencies t = trace ("FIXME not handled type: " <> show t) Set.empty
 
 instance (TypesDependencies a, Show a) => TypesDependencies [a] where
-    --symbolDependencies t | trace ("list: " ++ show t) False = undefined
+    --symbolDependencies t | trace ("list: " <> show t) False = undefined
     symbolDependencies listToProcess =
         let listOfSets = (map symbolDependencies listToProcess)::[Set Name]
         in Set.unions listOfSets
@@ -463,20 +469,20 @@ instance TypesDependencies (Strict, Type) where
     symbolDependencies (_, t) = symbolDependencies t
 
 instance TypesDependencies Con where
-    --symbolDependencies t | trace ("Con: " ++ show t) False = undefined
+    --symbolDependencies t | trace ("Con: " <> show t) False = undefined
     symbolDependencies (RecC name fields) = symbolDependencies fields
     symbolDependencies (NormalC name fields) = symbolDependencies fields
-    symbolDependencies t = trace ("FIXME not handled Con: " ++ show t) (errorWithStackTrace) []
+    symbolDependencies t = trace ("FIXME not handled Con: " <> show t) (errorWithStackTrace) []
 
 instance TypesDependencies VarStrictType where
-    --symbolDependencies t | trace ("Field: " ++ show t) False = undefined
+    --symbolDependencies t | trace ("Field: " <> show t) False = undefined
     symbolDependencies (_, _, t) = symbolDependencies t
 
 instance TypesDependencies Info where
---    symbolDependencies t | trace ("Info: " ++ show t) False = undefined
+--    symbolDependencies t | trace ("Info: " <> show t) False = undefined
     symbolDependencies (TyConI (DataD _ n _ cons _)) = symbolDependencies cons
     symbolDependencies (TyConI (TySynD n _ t)) = symbolDependencies t
-    symbolDependencies arg = trace ("FIXME not handled Info: " ++ show arg) (Set.empty)
+    symbolDependencies arg = trace ("FIXME not handled Info: " <> show arg) (Set.empty)
 
 blah :: Name -> StateT [Name] Q [Name]
 blah name = do
@@ -490,7 +496,7 @@ additionalDependencies alreadyKnownDeps queriedInfo =
     in newDeps
 
 collectDirectDependencies :: Name -> Q [Name]
--- collectDirectDependencies name | trace ("collectDirectDependencies " ++ show name) False = undefined
+-- collectDirectDependencies name | trace ("collectDirectDependencies " <> show name) False = undefined
 collectDirectDependencies name = do
     nameInfo <- reify name
     let namesSet = symbolDependencies nameInfo
@@ -498,14 +504,14 @@ collectDirectDependencies name = do
     -- evalStateT (blah name) []
 
 naiveBfs :: [Name] -> [Name] -> Q [Name]
--- naiveBfs q d | trace (show q ++ "\n\n" ++ show d) False = undefined
+-- naiveBfs q d | trace (show q <> "\n\n" <> show d) False = undefined
 naiveBfs [] discovered = return discovered
 naiveBfs queue discovered = do
     let vertex = head queue
     neighbours <- collectDirectDependencies vertex
     let neighboursToAdd = filter (flip notElem discovered) neighbours
-    let newQueue = tail queue ++ neighboursToAdd
-    let newDiscovered = discovered ++ neighboursToAdd
+        newQueue        = tail queue <> neighboursToAdd
+        newDiscovered   = discovered <> neighboursToAdd
     naiveBfs newQueue newDiscovered
 
 collectDependencies :: Name -> Q [Name]
@@ -518,22 +524,22 @@ printAst :: Info -> String
 printAst  (TyConI dec@(DataD cxt name tyVars cons names)) = 
     let namesShown = (Prelude.map show names) :: [String]
         consCount = Data.List.length cons :: Int
-        ret = ("cxt=" ++ show cxt ++ "\nname=" ++ show name ++ "\ntyVars=" ++ show tyVars ++ "\ncons=" ++ show cons ++ "\nnames=" ++ show names) :: String
-    in show consCount ++ "___" ++ ret
+        ret = ("cxt=" <> show cxt <> "\nname=" <> show name <> "\ntyVars=" <> show tyVars <> "\ncons=" <> show cons <> "\nnames=" <> show names) :: String
+    in show consCount <> "___" <> ret
 
 generateCpp :: Name -> FilePath -> Q Exp
 generateCpp name path = do
-    let headerName = path ++ ".h"
-    let cppName = path ++ ".cpp"
+    let headerName = path <> ".h"
+    let cppName = path <> ".cpp"
 
     dependencies <- collectDependencies name
     runIO (putStrLn $ printf "Found %d dependencies: %s" (length dependencies) (show dependencies))
     (header,body) <- formatCppWrapper name
 
-
+    -- try using liftIO zamiast runIO
     runIO (writeFile headerName header)
     runIO (writeFile cppName body)
 
-    runIO (writeFile cppName $ (printf "#include \"helper.h\"\n#include \"%s\"\n\n" headerName) ++ body)
+    runIO (writeFile cppName $ (printf "#include \"helper.h\"\n#include \"%s\"\n\n" headerName) <> body)
     [|  return () |]
 
