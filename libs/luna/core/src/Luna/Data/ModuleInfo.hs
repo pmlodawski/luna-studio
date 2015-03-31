@@ -34,6 +34,7 @@ type Name = String
 
 data ImportError = NotFoundError { path   :: Path }
                  | AmbRefError   { symbol :: NamePath, modules :: [Path] }
+                 deriving (Generic, Eq, Show, Read)
 
 
 -- stores the information about a module, needed while importing
@@ -49,6 +50,7 @@ data ModuleInfo = ModuleInfo {
 makeLenses ''ModuleInfo
 
 
+
 -- checks whether a given symbol is anywhere in the imported list
 -- returns the list of ALL matches (non-singleton list means some kind of conflict)
 getSymbolOriginsAux :: NamePath -> [ModuleInfo] -> [Path]
@@ -58,7 +60,7 @@ getSymbolOriginsAux symbol infos = Flowbox.Prelude.map (^. name) results
 -- this is the main version, as you only have to pass it your currently parsed module
 getSymbolOrigins :: NamePath -> ModuleInfo -> IO [Path]
 getSymbolOrigins symbol mInfo = do
-    infos <- getModuleInfos (mInfo ^. strInfo ^. SI.imports)
+    infos <- getModuleInfos (mInfo ^. imports)
     return $ getSymbolOriginsAux symbol infos
 
 
@@ -72,6 +74,11 @@ getModuleInfos paths = mapM getModuleInfo paths
 getModuleInfo :: Path -> IO ModuleInfo
 getModuleInfo = (return . fromJust <=< readModInfoFromFile)
 
+
+
+regError :: ImportError -> ModuleInfo -> ModuleInfo
+regError err = errors %~ (err:)
+
 -------------------------------------------------------------------------------------
 -- wrappers for structInfo functions
 -------------------------------------------------------------------------------------
@@ -83,17 +90,21 @@ regOrphan :: ID -> SI.Error -> ModuleInfo -> ModuleInfo
 regOrphan id err = strInfo %~ SI.regOrphan id err
 
 
+regParent id pid = strInfo %~ SI.regParent id pid
+
+regArgPat id argPat = strInfo %~ SI.regArgPat id argPat
+
 --------------------------------------------------------------------
 -- simple utility functions for lookups and checks
 --------------------------------------------------------------------
 
 nameExists :: NamePath -> ModuleInfo -> Bool
-nameExists name mInfo = Map.member name (mInfo ^. strInfo ^. (SI.symTable))
+nameExists name mInfo = Map.member name (mInfo ^. symTable)
 
 
 
 getSymbolId :: NamePath -> ModuleInfo -> Maybe ID
-getSymbolId name mInfo = Map.lookup name (mInfo ^. strInfo ^. (SI.symTable))
+getSymbolId name mInfo = Map.lookup name (mInfo ^. symTable)
 
 
 
@@ -203,6 +214,7 @@ instance Binary NamePatDesc
 instance Binary SegmentDesc
 instance Binary (TName NamePath)
 instance Binary SI.Error
+instance Binary ImportError
 
 instance Binary (Node Text OriginInfo)
 

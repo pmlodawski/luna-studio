@@ -85,7 +85,7 @@ main = do
             printHeader "SA"
             sa             <- Pass.run1_ SA.pass ast
             ppPrint sa
-            let mInfo = MI.ModuleInfo [fromString liFile] sa
+            let mInfo = MI.ModuleInfo [fromString liFile] mempty mempty sa mempty
             liftIO $ MI.writeModInfoToFile mInfo
             --liftIO $ MI.writeStructInfoToFile "testModule.li" sa
 

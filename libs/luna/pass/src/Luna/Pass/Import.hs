@@ -13,22 +13,40 @@ import           Flowbox.Prelude
 getFromUnit :: Unit a -> a
 getFromUnit (Unit a) = a
 
+
+
 getFromLabel :: Label l a -> a
 getFromLabel (Label l a) = a 
+
+
 
 filterImports :: Label l (Dec.Decl a e) -> Bool
 filterImports (Label _  (Dec.Imp _))   = True
 filterImports _ = False
 
+
+
 unpackImport :: Dec.Decl a e -> Dec.Imp
 unpackImport (Dec.Imp x) = x
+
+
 
 getImportList :: Unit ( Label l0 (Module a0 e0)) -> [Dec.Imp]
 getImportList = fmap (unpackImport . _element) . filter filterImports . _body . getFromLabel . getFromUnit
 
+
+
 getModPathsFromImportList :: [Dec.Imp] -> [Dec.Path]
 getModPathsFromImportList list = map getModPath list
+
+
 
 getModPath :: Dec.Imp -> Dec.Path
 getModPath (Dec.ModImp  path _) = path
 getModPath (Dec.DeclImp path _) = path
+
+
+
+getImportPaths :: Unit (Label l0 (Module a0 e0)) -> [Dec.Path]
+getImportPaths = getModPathsFromImportList . getImportList
+
