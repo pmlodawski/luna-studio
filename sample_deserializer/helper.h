@@ -82,6 +82,20 @@ inline void deserialize(std::shared_ptr<T> &val, Input &input)
 }
 
 template<typename T>
+inline void deserializeMaybe(std::shared_ptr<T> &val, Input &input)
+{
+	auto isNonEmpty = readInt8(input);
+	if(isNonEmpty)
+	{
+		val = typename T::deserializeFrom(input);
+	}
+	else
+	{
+		val = nullptr;
+	}
+}
+
+template<typename T>
 inline void deserialize(std::vector<T> &out, std::istream &input)
 {
 	auto size = readInt64(input);
@@ -147,6 +161,14 @@ template<typename T>
 inline void serialize(const std::shared_ptr<T> &value, std::ostream &output)
 {
 	return value->serialize(output);
+}
+
+template<typename T>
+inline void serializeMaybe(std::shared_ptr<T> &val, Output &input)
+{
+	writePrimitive<std::int8_t>(input, !!val);
+	if(val)
+		val->serialize(output);
 }
 
 template<typename T>
