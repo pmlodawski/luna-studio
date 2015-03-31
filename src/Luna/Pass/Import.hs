@@ -3,12 +3,19 @@
 
 module Luna.Pass.Import where
 
-import           Luna.Syntax.Label  (Label(Label), _element)
-import           Luna.Syntax.Module (_body, Module(Module))
-import qualified Luna.Syntax.Decl   as Dec
-import           Luna.Syntax.Name   (TName(TName))
-import           Luna.Syntax.Unit   (Unit(Unit))
+import           Control.Monad.IO.Class (liftIO)
+
+import           Luna.Syntax.Label      (Label(Label), _element)
+import           Luna.Syntax.Module     (_body, Module(Module))
+import qualified Luna.Syntax.Decl       as Dec
+import           Luna.Syntax.Name       (TName(TName))
+import           Luna.Syntax.Unit       (Unit(Unit))
+
+import qualified Luna.Data.ModuleInfo as MI
+
 import           Flowbox.Prelude	
+
+
 
 getFromUnit :: Unit a -> a
 getFromUnit (Unit a) = a
@@ -49,4 +56,10 @@ getModPath (Dec.DeclImp path _) = path
 
 getImportPaths :: Unit (Label l0 (Module a0 e0)) -> [Dec.Path]
 getImportPaths = getModPathsFromImportList . getImportList
+
+
+
+getModuleInfos :: (MonadIO m) => [Dec.Path] -> m [Either MI.ImportError MI.ModuleInfo]
+getModuleInfos = liftIO . MI.getModuleInfos
+
 
