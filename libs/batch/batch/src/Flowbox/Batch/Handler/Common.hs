@@ -31,6 +31,7 @@ import qualified Luna.DEP.AST.Control.Zipper                                    
 import           Luna.DEP.AST.Expr                                               (Expr)
 import qualified Luna.DEP.AST.Expr                                               as Expr
 import           Luna.DEP.AST.Module                                             (Module)
+import           Luna.DEP.Data.ASTInfo                                           (ASTInfo)
 import           Luna.DEP.Graph.Graph                                            (Graph)
 import qualified Luna.DEP.Graph.Graph                                            as Graph
 import           Luna.DEP.Graph.Node                                             (Node)
@@ -48,7 +49,6 @@ import qualified Luna.DEP.Lib.Lib                                               
 import           Luna.DEP.Lib.Manager                                            (LibManager)
 import qualified Luna.DEP.Lib.Manager                                            as LibManager
 import qualified Luna.DEP.Pass.Analysis.Alias.Alias                              as Alias
-import qualified Luna.DEP.Pass.Analysis.ID.MaxID                                 as MaxID
 import qualified Luna.DEP.Pass.Transform.AST.IDFixer.IDFixer                     as IDFixer
 import qualified Luna.DEP.Pass.Transform.Graph.Builder.Builder                   as GraphBuilder
 import qualified Luna.DEP.Pass.Transform.Graph.GCNodeProperties.GCNodeProperties as GCNodeProperties
@@ -116,6 +116,16 @@ setLibrary :: Library -> Library.ID -> Project.ID -> Batch ()
 setLibrary newLibary libraryID projectID = do
     libManager <- getLibManager projectID
     setLibManager (LibManager.updateNode (libraryID, newLibary) libManager) projectID
+
+
+getASTInfo :: Library.ID -> Project.ID -> Batch ASTInfo
+getASTInfo = fmap (view Library.astInfo) .: getLibrary
+
+
+setASTInfo :: ASTInfo -> Library.ID -> Project.ID -> Batch ()
+setASTInfo astInfo libraryID projectID = do
+    library <- getLibrary libraryID projectID
+    setLibrary (library & Library.astInfo .~ astInfo) libraryID projectID
 
 
 getPropertyMap :: Library.ID -> Project.ID -> Batch PropertyMap
@@ -230,8 +240,9 @@ setGraph (newGraph, newPM) bc libraryID projectID = do
     logger trace $ ppShow newPM
     expr <- getFunction bc libraryID projectID
     (ast, newPM2)  <- EitherT $ GraphParser.run newGraph newPM expr
-    newMaxID <- EitherT $ MaxID.runExpr ast
-    fixedAst <- EitherT $ IDFixer.runExpr newMaxID Nothing False ast
+    astInfo <- getASTInfo libraryID projectID
+    (fixedAst, astInfo') <- EitherT $ IDFixer.runExpr astInfo Nothing False ast
+    setASTInfo astInfo' libraryID projectID
     logger debug $ show newGraph
     logger debug $ show newPM2
     logger debug $ ppShow fixedAst
@@ -248,10 +259,11 @@ getCode bc libraryID projectID = do
 
 setCode :: String -> Breadcrumbs -> Library.ID -> Project.ID -> Batch ()
 setCode code bc libraryID projectID = do
-    expr <- getFunction bc libraryID projectID
-    newExpr <- EitherT $ STParser.run code expr
-    maxID   <- getMaxID libraryID projectID
-    fixedExpr <- EitherT $ IDFixer.runExpr maxID Nothing True newExpr
+    expr      <- getFunction bc libraryID projectID
+    newExpr   <- EitherT $ STParser.run code expr
+    astInfo   <- getASTInfo libraryID projectID
+    (fixedExpr, astInfo') <- EitherT $ IDFixer.runExpr astInfo Nothing True newExpr
+    setASTInfo astInfo' libraryID projectID
     setFunctionFocus (Expr.id .~ (newExpr ^. Expr.id) $ fixedExpr) bc libraryID projectID
 
 
@@ -287,13 +299,6 @@ getNodes :: [Node.ID] -> Breadcrumbs -> Library.ID -> Project.ID -> Batch [(Node
 getNodes nodeIDs bc libraryID projectID = do
     (graphView, _) <- getGraphView bc libraryID projectID
     return $ map (\nodeID -> (nodeID, Graph.lab graphView nodeID)) nodeIDs
-
----------------------------------------------------------------------------
-
-getMaxID :: Library.ID -> Project.ID -> Batch AST.ID
-getMaxID libraryID projectID = do
-    ast <- getAST libraryID projectID
-    EitherT $ MaxID.run ast
 
 ---------------------------------------------------------------------------
 

@@ -38,6 +38,7 @@ Library
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
   Build-Depends:  base,
+                  binary,
                   blaze-markup >= 0.6.3,
                   containers,
                   data-default,

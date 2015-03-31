@@ -27,7 +27,7 @@ main = hspec spec
 
 
 getAST :: IO Module
-getAST = Common.getAST SampleCode.zipperTestModule
+getAST = fst <$> Common.getAST SampleCode.zipperTestModule
 
 
 spec :: Spec

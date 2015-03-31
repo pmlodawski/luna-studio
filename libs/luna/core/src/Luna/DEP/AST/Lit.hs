@@ -10,13 +10,15 @@
 
 module Luna.DEP.AST.Lit where
 
-import           Control.Lens
+import Control.Lens
+import Data.Binary  (Binary)
+import GHC.Generics
+
 import           Flowbox.Generics.Deriving.QShow
 import           Flowbox.Prelude                 (Eq, Read, Show)
 import qualified Flowbox.Prelude                 as Prelude
-import           GHC.Generics
-import           Luna.DEP.AST.Common                 (ID)
-import           Luna.DEP.AST.Lit.Number             (Number)
+import           Luna.DEP.AST.Common             (ID)
+import           Luna.DEP.AST.Lit.Number         (Number)
 
 
 
@@ -25,6 +27,7 @@ data Lit = Char    { _id :: ID, _char :: Prelude.Char   }
          | Number  { _id :: ID, _num  :: Number         }
          deriving (Show, Eq, Generic, Read)
 
+instance Binary Lit
 
 instance QShow Lit
 makeLenses ''Lit
