@@ -4,15 +4,66 @@
 
 #include <fstream>
 
+std::shared_ptr<Expr> parseFile(const std::string &fname)
+{
+	std::ifstream in{fname, std::ios::binary };
+	if(!in) 
+		throw std::runtime_error("Failed to open the file " + fname);
+
+	try
+	{
+		in.exceptions(std::ios::badbit | std::ios::failbit | std::ios::eofbit);
+		return Expr::deserializeFrom(std::ifstream{fname, std::ios::binary });
+	}
+	catch(std::exception &e)
+	{
+		throw std::runtime_error("Failed when reading file " + fname + " : " + e.what());
+	}
+}
+
 int main()
 {
+	try
+	{
 	std::ifstream input{ "test.bin", std::ios::binary };
-	auto blah = readPrimitive<std::int64_t>(input);
+	//std::int64_t blah = readPrimitive<std::int64_t>(input);
 
 	if(!input)
 		return 1;
 
 	auto moje = Expr::deserializeFrom(input);
+
+	auto acc = std::make_shared<Accessor_ConAccessor>();
+	acc->_accName = "bar";
+
+	auto con = std::make_shared<Expr_Con>();
+	con->_id = 502;
+	con->_name = "foo";
+
+	auto moje2 = std::make_shared<Expr_Accessor>();
+	moje2->_id = 503;
+	moje2->_dst = con;
+	moje2->_acc = acc;
+
+	auto testimp = Expr::deserializeFrom(std::ifstream{ "testimp.bin", std::ios::binary });
+	auto argexp = parseFile("testargexp.bin");
+
+	{
+		std::ofstream output{ "testout0.bin", std::ios::binary };
+		//serialize(blah, output);
+		moje->serialize(output);
+	}
+
+	{
+		std::ofstream output{ "testout.bin", std::ios::binary };
+		//serialize(blah, output);
+		moje2->serialize(output);
+	}
+	}
+	catch(std::exception &e)
+	{
+		std::cout << "Exception encountered: " << e.what() << std::endl;
+	}
 	return 0;
 }
 
