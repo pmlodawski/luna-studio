@@ -73,6 +73,9 @@ reg projectID undoA redoA description = do
                             let newTransaction = Just $ _1 %~ (`DList.snoc` (undoA, redoA)) $ tr
                             in  Context.trans .~ newTransaction $ pContext
                         Nothing -> ProjectContext (transaction description : undoL) [] Nothing
+    logger warning (case maybeTr of
+                        Just tr -> "appended transaction: " ++ (snd tr) ++ " with " ++ description
+                        Nothing -> "added action: " ++ description)
     lift $ put $ Map.insert projectID newContext contextMap
 
 
@@ -88,19 +91,25 @@ execAction :: Proto.Serializable ret =>
               ([Context.Actions] -> [Context.Actions]) -> (Bool-> ret) -> RPC Context IO (ret, Maybe [Message])
 execAction projectID accessor invert rev retCons = do
     contextMap <- lift get
-    let projContexts                   = Map.lookup projectID contextMap 
+    let projContexts = Map.lookup projectID contextMap 
         ProjectContext stack1 stack2 trans = maybe (Context.emptyProjectContext)
                                                    (\(ProjectContext a b t) -> invert ProjectContext a b $ t)
                                                    projContexts
     case stack1 of
-        []              -> return (retCons False, Nothing)
-        (action : rest) -> do lift $ put $ Map.insert projectID (invert ProjectContext rest (action : stack2) $ trans) contextMap
-                              return (retCons True, Just $ (rev $ DList.toList $ fst action) >>= accessor)
+        [] -> 
+            return (retCons False, Nothing)
+        (action : rest) -> do 
+            let newMap = invert ProjectContext rest (action : stack2) $ trans
+            lift $ put $ Map.insert projectID newMap contextMap
+            logger warning $ "Undo/Redo on " ++ (snd action)
+            return (retCons True, Just $ (rev $ DList.toList $ fst action) >>= accessor)
+
 
 clearStack :: ClearStack.Request -> RPC Context IO ClearStack.Status
 clearStack request@(ClearStack.Request tprojectID) = do
     let projectID = decodeP tprojectID
     lift . put . Map.insert projectID Context.emptyProjectContext =<< lift get
+    logger warning "clearing stack"
     return $ ClearStack.Status request 
 
 
@@ -111,15 +120,18 @@ tBegin request@(TBegin.Request tprojectID tdescription) = do
         description = decodeP tdescription
         createTrans = Context.trans .~ Just (DList.empty, description)
     lift . put . (Map.adjust createTrans projectID) =<< lift get
+    logger warning $ "opening transaction: " ++ description
     return $ TBegin.Status request
 
 tCommit :: TCommit.Request -> RPC Context IO TCommit.Status
 tCommit request@(TCommit.Request tprojectID) = do
    let projectID = decodeP tprojectID 
-   context  <- lift get
+   context <- lift get
    let pContext@(ProjectContext undo redo trans) = fromMaybe Context.emptyProjectContext $ Map.lookup projectID context
-       newUndo = maybe undo (: undo) $ pContext ^. Context.trans
+       newUndo = maybe undo (: undo) trans
+   logger warning $ "projID" ++ (show projectID)
    lift $ put $ Map.insert projectID (ProjectContext newUndo [] Nothing) context
+   logger warning $ "closing transaction: " ++ (snd $ head newUndo)
    return $ TCommit.Status request
 
 
