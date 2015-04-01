@@ -24,8 +24,8 @@ import qualified Luna.Parser.Pragma                         as Pragma
 import qualified Luna.Parser.Parser                         as Parser
 import qualified Luna.Parser.Pragma                         as Pragma
 import           Luna.Syntax.Name                           (TName(TName))
+import qualified Luna.Pass.Analysis.Imports                 as Imports
 import qualified Luna.Pass.Analysis.Struct                  as SA
-import qualified Luna.Pass.Import                           as I
 import qualified Luna.Pass.Transform.Parse.Stage2           as Stage2
 import qualified Luna.Pass.Transform.Parse.Stage1           as Stage1
 import qualified Luna.Pass.Transform.Desugar.ImplicitSelf   as ImplSelf
@@ -48,7 +48,7 @@ import           Flowbox.Text.Show.Hs                       (hsShow)
 import           Luna.System.Session                        as Session
 import qualified Luna.System.Pragma.Store                   as Pragma
 import           Control.Monad                              (when)
-import Luna.Syntax.Name.Path                                (QualPath(QualPath))
+import           Luna.Syntax.Name.Path                      (QualPath(QualPath))
 
 import qualified Luna.Data.ModuleInfo                       as MI
 import           Data.String.Utils                          (replace)
@@ -82,10 +82,9 @@ main = do
             ppPrint ast
 
             printHeader "Extraction of imports"
-            let impPaths =  I.getImportPaths ast
-            infoEithers  <- I.getModuleInfos impPaths
-            let mInfos   =  rights infoEithers
-                mErrors  =  lefts  infoEithers
+            (strInfos, modErrors) <- Pass.run1_ Imports.pass ast 
+            ppPrint strInfos
+            ppPrint modErrors
 
             printHeader "SA"
             sa           <- Pass.run1_ SA.pass ast

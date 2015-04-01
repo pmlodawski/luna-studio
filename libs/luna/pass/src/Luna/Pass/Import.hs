@@ -13,8 +13,10 @@ import           Luna.Syntax.Unit       (Unit(Unit))
 
 import qualified Luna.Data.ModuleInfo as MI
 
-import           Flowbox.Prelude	
+import           Flowbox.Prelude
 
+
+type ASTUnit l a e = Unit (Label l (Module a e))
 
 
 getFromUnit :: Unit a -> a
@@ -38,7 +40,7 @@ unpackImport (Dec.Imp x) = x
 
 
 
-getImportList :: Unit ( Label l0 (Module a0 e0)) -> [Dec.Imp]
+getImportList :: ASTUnit l a e -> [Dec.Imp]
 getImportList = fmap (unpackImport . _element) . filter filterImports . _body . getFromLabel . getFromUnit
 
 
@@ -54,7 +56,7 @@ getModPath (Dec.DeclImp path _) = path
 
 
 
-getImportPaths :: Unit (Label l0 (Module a0 e0)) -> [Dec.Path]
+getImportPaths :: ASTUnit l a e -> [Dec.Path]
 getImportPaths = getModPathsFromImportList . getImportList
 
 

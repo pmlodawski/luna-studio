@@ -188,7 +188,7 @@ readModInfoFromFile path = do
         then return Nothing
         else do
             liDir <- liDirectory
-            let modPath = liDir </> ((modPathToString path) ++ liFileSuffix)
+            let modPath = liDir </> ((modPathToString path) ++ "." ++ liFileSuffix)
             fmap Just $ decodeFile modPath
         
 -- deserialization of StructInfo only:
