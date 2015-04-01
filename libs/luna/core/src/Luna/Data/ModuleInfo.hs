@@ -126,7 +126,7 @@ moduleExists path = do
 -- checks if module is already parsed (i.e. the ModuleInfo is present)
 moduleIsParsed :: Path -> IO Bool
 moduleIsParsed path = do
-    let fullPath = modPathToString path ++ liFileSuffix
+    let fullPath = modPathToString path ++ "." ++ liFileSuffix
     liPath <- liDirectory
     f      <- Dir.findFile [liPath] fullPath
     return $ case f of
@@ -185,11 +185,12 @@ readModInfoFromFile :: Path -> IO (Maybe ModuleInfo)
 readModInfoFromFile path = do
     isParsed <- moduleIsParsed path
     if isParsed
-        then return Nothing
-        else do
+        then do 
             liDir <- liDirectory
             let modPath = liDir </> ((modPathToString path) ++ "." ++ liFileSuffix)
+            putStrLn $ "[[[[[[MODPATH: " ++ modPath ++ " ]]]]]]"
             fmap Just $ decodeFile modPath
+        else return Nothing
         
 -- deserialization of StructInfo only:
 readStructInfoFromFile :: String -> IO (Maybe StructInfo)
