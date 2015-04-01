@@ -4,6 +4,10 @@
 
 #include <fstream>
 
+using Expr = Expr_Expr;
+using Expr_Con = Expr_Expr_Expr_Con;
+using Accessor_ConAccessor = Expr_Accessor_Expr_ConAccessor;
+
 std::shared_ptr<Expr> parseFile(const std::string &fname)
 {
 	std::ifstream in{fname, std::ios::binary };
@@ -40,7 +44,7 @@ int main()
 	con->_id = 502;
 	con->_name = "foo";
 
-	auto moje2 = std::make_shared<Expr_Accessor>();
+	auto moje2 = std::make_shared<Expr_Expr_Expr_Accessor>();
 	moje2->_id = 503;
 	moje2->_dst = con;
 	moje2->_acc = acc;
