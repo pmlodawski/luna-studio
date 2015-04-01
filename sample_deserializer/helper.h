@@ -75,6 +75,16 @@ inline void deserialize(std::int64_t &val, Input &input)
 	val = readInt64(input);
 }
 
+inline void deserialize(float &val, Input &input)
+{
+	val = readPrimitive<float>(input);
+}
+
+inline void deserialize(double &val, Input &input)
+{
+	val = readPrimitive<double>(input);
+}
+
 template<typename T>
 inline void deserialize(std::shared_ptr<T> &val, Input &input)
 {
@@ -157,6 +167,16 @@ inline void serialize(const std::int64_t &value, std::ostream &output)
 	writePrimitive(output, value);
 }
 
+inline void serialize(const float &value, std::ostream &output)
+{
+	writePrimitive(output, value);
+}
+
+inline void serialize(const double &value, std::ostream &output)
+{
+	writePrimitive(output, value);
+}
+
 template<typename T>
 inline void serialize(const std::shared_ptr<T> &value, std::ostream &output)
 {
@@ -164,9 +184,9 @@ inline void serialize(const std::shared_ptr<T> &value, std::ostream &output)
 }
 
 template<typename T>
-inline void serializeMaybe(std::shared_ptr<T> &val, Output &input)
+inline void serializeMaybe(std::shared_ptr<T> &val, Output &output)
 {
-	writePrimitive<std::int8_t>(input, !!val);
+	writePrimitive<std::int8_t>(output, !!val);
 	if(val)
 		val->serialize(output);
 }
