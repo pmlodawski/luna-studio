@@ -303,6 +303,7 @@ typeOfField t@(ConT name) = do
         else if name == ''Int8 then "std::int8_t"
         else if name == ''Float then "float"
         else if name == ''Double then "double"
+        else if name == ''Char then "char"
         else if byValue then nb
         else "std::shared_ptr<" <> nb <> ">"
 
@@ -433,8 +434,6 @@ processConstructor dec@(DataD cxt name tyVars cons names) con =
                     in sequence r
                 _             -> return []
 
-
-
         let derCppName = baseCppName <> "_" <> translateToCppName cname
         let baseClasses   = [CppDerive baseCppName False Public]
             classInitial  = CppClass derCppName cppFields [] baseClasses tnames
@@ -476,7 +475,7 @@ generateCppWrapperHlp tysyn@(TySynD name tyVars rhstype) = do
 generateCppWrapperHlp arg = trace ("FIXME: generateCppWrapperHlp for " <> show arg) emptyQParts
 
 
-builtInTypes = [''Maybe, ''String, ''Int, ''Int32, ''Int64, ''Int16, ''Int8, ''Float, ''Double]
+builtInTypes = [''Maybe, ''String, ''Int, ''Int32, ''Int64, ''Int16, ''Int8, ''Float, ''Double, ''Char]
 
 instance TypesDependencies Type where
     --symbolDependencies t | trace ("Type: " <> show t) False = undefined
