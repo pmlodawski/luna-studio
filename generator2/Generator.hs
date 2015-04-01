@@ -303,7 +303,7 @@ typeOfField t@(ConT name) = do
     --                else "std::shared_ptr<" <> nb <> ">"
     return $ 
         if name == ''String then "std::string" 
-        else if name == ''Int then "int"
+        else if name == ''Int then "std::int64_t" --"int"
         else if name == ''Int64 then "std::int64_t"
         else if name == ''Int32 then "std::int32_t"
         else if name == ''Int16 then "std::int16_t"
