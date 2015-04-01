@@ -9,12 +9,13 @@
 
 module Expr where
 
+import AST.Lit
 import Data.Int
 import GHC.Generics        (Generic)
 
 type ID = Int64
 type Pat = Int64
-type Lit = Int64
+--type Lit = Int64
 type Type = String
 
 
