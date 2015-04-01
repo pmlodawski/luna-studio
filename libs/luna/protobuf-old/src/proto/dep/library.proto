@@ -20,6 +20,7 @@ message Library {
     optional string                              path        = 3;
     optional generated.proto.dep.module.Module   ast         = 4;
     optional PropertyMap                         propertyMap = 5;
+    required int32                               lastID      = 7;
 
     message PropertyMap {
     	repeated KeyValue items = 1;

@@ -15,33 +15,35 @@ import Control.Monad.State
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import qualified Luna.DEP.AST.Common       as AST
+import           Luna.DEP.Data.ASTInfo     (ASTInfo)
+import qualified Luna.DEP.Data.ASTInfo     as ASTInfo
 
 
 
 logger :: Logger
-logger = getLogger $(moduleName)
+logger = getLogger $moduleName
 
 
-data IDFixerState = IDFixerState { maxID  :: AST.ID
-                                 , rootID :: Maybe AST.ID
-                                 , fixAll :: Bool
+data IDFixerState = IDFixerState { astInfo :: ASTInfo
+                                 , rootID  :: Maybe AST.ID
+                                 , fixAll  :: Bool
                                  } deriving (Show)
 
 
-type IDFixerStateM m = MonadState IDFixerState m
+type IDFixerStateM m = (MonadState IDFixerState m, Functor m)
 
 
-make :: AST.ID -> Maybe AST.ID -> Bool -> IDFixerState
-make = IDFixerState
+mk :: ASTInfo -> Maybe AST.ID -> Bool -> IDFixerState
+mk = IDFixerState
 
 
-getMaxID :: IDFixerStateM m => m AST.ID
-getMaxID = liftM maxID get
+getASTInfo :: IDFixerStateM m => m ASTInfo
+getASTInfo = liftM astInfo get
 
 
-setMaxID :: IDFixerStateM m => AST.ID -> m ()
-setMaxID i = do s <- get
-                put s { maxID = i }
+setASTInfo :: IDFixerStateM m => ASTInfo -> m ()
+setASTInfo i = do s <- get
+                  put s { astInfo = i }
 
 
 getFixAll :: IDFixerStateM m => m Bool
@@ -55,10 +57,9 @@ getRootIDOnce = do s <- get
 
 
 newID :: IDFixerStateM m => m AST.ID
-newID = do i <- getMaxID
-           let n = i + 1
-           setMaxID n
-           return n
+newID = do n <- ASTInfo.incID <$> getASTInfo
+           setASTInfo n
+           return $ n ^. ASTInfo.lastID
 
 
 fixID :: IDFixerStateM m => AST.ID -> m AST.ID

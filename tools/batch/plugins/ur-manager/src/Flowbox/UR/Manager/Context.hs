@@ -9,6 +9,7 @@
 
 module Flowbox.UR.Manager.Context where
 
+import           Data.DList                         (DList)
 import           Data.Map                           (Map)
 import qualified Data.Map                           as Map
 
@@ -16,11 +17,18 @@ import           Flowbox.Bus.Data.Message           (Message)
 import           Flowbox.Prelude                    hiding (Context)
 
 
-type Stack = [([Message], Message)]
+type Actions = ([Message], Message)
+
+type Transaction = (DList Actions, String)
+
+type Stack = [Transaction]
 
 type Context = Map Int ProjectContext
 
-data ProjectContext = ProjectContext { _undo :: Stack, _redo :: Stack }
+data ProjectContext = ProjectContext { _undo  :: Stack
+                                     , _redo  :: Stack 
+                                     , _trans :: Maybe Transaction
+                                     }
                                      deriving (Show)
 
 makeLenses ''ProjectContext
@@ -28,3 +36,6 @@ makeLenses ''ProjectContext
 
 mk :: Context
 mk = Map.empty
+
+emptyProjectContext :: ProjectContext
+emptyProjectContext = ProjectContext [] [] Nothing

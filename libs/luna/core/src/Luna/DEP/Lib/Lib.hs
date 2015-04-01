@@ -16,9 +16,8 @@ import           Flowbox.System.UniPath     (UniPath)
 import           Luna.DEP.AST.Module        (Module)
 import qualified Luna.DEP.AST.Module        as Module
 import qualified Luna.DEP.AST.Type          as Type
+import           Luna.DEP.Data.ASTInfo      (ASTInfo (ASTInfo))
 import           Luna.DEP.Graph.PropertyMap (PropertyMap)
-import qualified Luna.DEP.Graph.PropertyMap as PropertyMap
-
 
 
 type Name = String
@@ -28,6 +27,7 @@ data Library = Library { _name        :: Name
                        , _path        :: UniPath
                        , _ast         :: Module
                        , _propertyMap :: PropertyMap
+                       , _astInfo     :: ASTInfo
                        } deriving (Show, Read, Eq)
 
 makeLenses ''Library
@@ -37,6 +37,6 @@ newtype ID = ID { toInt :: Int }
 
 
 make :: Name -> Version -> UniPath -> [String] -> Library
-make name' version' path' modulePath = Library name' version' path' emptyModule PropertyMap.empty where
+make name' version' path' modulePath = Library name' version' path' emptyModule def $ ASTInfo 1 where
     emptyModule = Module.mk 0 $ Type.mkModule 1 modulePath
 

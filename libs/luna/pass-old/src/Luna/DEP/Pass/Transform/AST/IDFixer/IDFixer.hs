@@ -28,6 +28,7 @@ import           Luna.DEP.AST.Pat                          (Pat)
 import qualified Luna.DEP.AST.Pat                          as Pat
 import           Luna.DEP.AST.Type                         (Type)
 import qualified Luna.DEP.AST.Type                         as Type
+import           Luna.DEP.Data.ASTInfo                     (ASTInfo)
 import           Luna.DEP.Graph.Node.Expr                  (NodeExpr)
 import qualified Luna.DEP.Graph.Node.Expr                  as NodeExpr
 import           Luna.DEP.Pass.Pass                        (Pass)
@@ -38,47 +39,39 @@ import qualified Luna.DEP.Pass.Transform.AST.IDFixer.State as State
 
 
 logger :: Logger
-logger = getLogger $(moduleName)
+logger = getLogger $moduleName
 
 
 type IDFixerPass result = Pass IDFixerState result
 
 
 runPass :: (Monad m, Functor m)
-        => AST.ID -> Maybe AST.ID -> Bool -> Pass.ESRT err Pass.Info IDFixerState m result -> m (Either err result)
-runPass maxID rootID fixAll = Pass.run_ (Pass.Info "IDFixer") $ State.make maxID rootID fixAll
+        => ASTInfo -> Maybe AST.ID -> Bool -> Pass.ESRT err Pass.Info IDFixerState m result -> m (Either err result)
+runPass astInfo rootID fixAll = Pass.run_ (Pass.Info "IDFixer") $ State.mk astInfo rootID fixAll
 
 
-run :: AST.ID -> Maybe AST.ID -> Bool -> Focus -> Pass.Result Focus
-run maxID rootID fixAll = Pass.run_ (Pass.Info "IDFixer") (State.make maxID rootID fixAll) . fixFocus
+run :: ASTInfo -> Maybe AST.ID -> Bool -> Focus -> Pass.Result (Focus, ASTInfo)
+run astInfo rootID fixAll = Pass.run_ (Pass.Info "IDFixer") (State.mk astInfo rootID fixAll) . withASTInfo . fixFocus
 
 
-runModule :: AST.ID -> Maybe AST.ID -> Bool -> Module -> Pass.Result Module
-runModule maxID rootID fixAll = runPass maxID rootID fixAll . fixModule
+runModule :: ASTInfo -> Maybe AST.ID -> Bool -> Module -> Pass.Result (Module, ASTInfo)
+runModule astInfo rootID fixAll = runPass astInfo rootID fixAll . withASTInfo . fixModule
 
 
-runExpr :: AST.ID -> Maybe AST.ID -> Bool -> Expr -> Pass.Result Expr
-runExpr maxID rootID fixAll = runPass maxID rootID fixAll . fixExpr
+runExpr :: ASTInfo -> Maybe AST.ID -> Bool -> Expr -> Pass.Result (Expr, ASTInfo)
+runExpr astInfo rootID fixAll = runPass astInfo rootID fixAll . withASTInfo . fixExpr
 
 
-runExpr' :: AST.ID -> Maybe AST.ID -> Bool -> Expr -> Pass.Result (Expr, AST.ID)
-runExpr' maxID rootID fixAll = runPass maxID rootID fixAll . fixExpr'
+runExprs :: ASTInfo -> Maybe AST.ID -> Bool -> [Expr] -> Pass.Result ([Expr], ASTInfo)
+runExprs astInfo rootID fixAll = runPass astInfo rootID fixAll . withASTInfo . mapM fixExpr
 
 
-runExprs :: AST.ID -> Maybe AST.ID -> Bool -> [Expr] -> Pass.Result [Expr]
-runExprs maxID rootID fixAll = runPass maxID rootID fixAll . mapM fixExpr
+runType :: ASTInfo -> Maybe AST.ID -> Bool -> Type -> Pass.Result (Type, ASTInfo)
+runType astInfo rootID fixAll = runPass astInfo rootID fixAll . withASTInfo . fixType
 
 
-runType :: AST.ID -> Maybe AST.ID -> Bool -> Type -> Pass.Result Type
-runType maxID rootID fixAll = runPass maxID rootID fixAll . fixType
-
-
-runNodeExpr :: AST.ID -> Maybe AST.ID -> Bool -> NodeExpr -> Pass.Result NodeExpr
-runNodeExpr maxID rootID fixAll = runPass maxID rootID fixAll . fixNodeExpr
-
-
-runNodeExpr' :: AST.ID -> Maybe AST.ID -> Bool -> NodeExpr -> Pass.Result (NodeExpr, AST.ID)
-runNodeExpr' maxID rootID fixAll = runPass maxID rootID fixAll . fixNodeExpr'
+runNodeExpr :: ASTInfo -> Maybe AST.ID -> Bool -> NodeExpr -> Pass.Result (NodeExpr, ASTInfo)
+runNodeExpr astInfo rootID fixAll = runPass astInfo rootID fixAll . withASTInfo . fixNodeExpr
 
 
 fixFocus :: Focus -> IDFixerPass Focus
@@ -86,22 +79,21 @@ fixFocus = Focus.traverseM fixModule fixExpr
 
 
 fixModule :: Module -> IDFixerPass Module
-fixModule m = do n <- State.fixID $ m ^. Module.id
-                 Module.traverseM fixModule fixExpr fixType fixPat fixLit fixArg $ m & Module.id .~ n
-
-
-fixExpr' :: Expr -> IDFixerPass (Expr, AST.ID)
-fixExpr' e = (,) <$> fixExpr e <*> State.getMaxID
+fixModule m = do
+    n <- State.fixID $ m ^. Module.id
+    Module.traverseM fixModule fixExpr fixType fixPat fixLit fixArg $ m & Module.id .~ n
 
 
 fixExpr :: Expr -> IDFixerPass Expr
-fixExpr e = do n <- State.fixID $ e ^. Expr.id
-               Expr.traverseM fixExpr fixType fixPat fixLit fixArg $ e & Expr.id .~ n
+fixExpr e = do
+    n <- State.fixID $ e ^. Expr.id
+    Expr.traverseM fixExpr fixType fixPat fixLit fixArg $ e & Expr.id .~ n
 
 
 fixPat :: Pat -> IDFixerPass Pat
-fixPat p = do n <- State.fixID $ p ^. Pat.id
-              Pat.traverseM fixPat fixType fixLit $ p & Pat.id .~ n
+fixPat p = do
+    n <- State.fixID $ p ^. Pat.id
+    Pat.traverseM fixPat fixType fixLit $ p & Pat.id .~ n
 
 
 fixType :: Type -> IDFixerPass Type
@@ -124,8 +116,7 @@ fixNodeExpr (NodeExpr.ASTExpr expr) = NodeExpr.ASTExpr <$> fixExpr expr
 fixNodeExpr stringExpr              = return stringExpr
 
 
-fixNodeExpr' :: NodeExpr -> IDFixerPass (NodeExpr, AST.ID)
-fixNodeExpr' n = (,) <$> fixNodeExpr n <*> State.getMaxID
+withASTInfo a = (,) <$> a <*> State.getASTInfo
 
 
 clearIDs :: AST.ID -> Module -> Module

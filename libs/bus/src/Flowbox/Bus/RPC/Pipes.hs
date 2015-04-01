@@ -52,8 +52,8 @@ run :: BusEndPoints -> [Topic]
     -> IO (Pipes.Input  (Message, Message.CorrelationID),
            Pipes.Output (Message, Message.CorrelationID, Flag))
 run endPoints topics = do
-    (output1, input1) <- Pipes.spawn Pipes.Single
-    (output2, input2) <- Pipes.spawn Pipes.Single
+    (output1, input1) <- Pipes.spawn $ Pipes.bounded 1
+    (output2, input2) <- Pipes.spawn $ Pipes.bounded 1
     let forkPipesThread fun = forkIO_ $ eitherStringToM' $ Bus.runBus endPoints $ do
                             mapM_ Bus.subscribe topics
                             BusT.runBusT $ Pipes.runEffect fun
