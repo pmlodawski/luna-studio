@@ -470,7 +470,7 @@ instance (TypesDependencies a, Show a) => TypesDependencies [a] where
         let listOfSets = (map symbolDependencies listToProcess)::[Set Name]
         in Set.unions listOfSets
 
-instance TypesDependencies (Strict, Type) where
+instance TypesDependencies (THS.Strict, Type) where
     symbolDependencies (_, t) = symbolDependencies t
 
 instance TypesDependencies Con where
@@ -527,7 +527,7 @@ collectDependencies name = do
 
 printAst :: Info -> String
 printAst  (TyConI dec@(DataD cxt name tyVars cons names)) = 
-    let namesShown = (Prelude.map show names) :: [String]
+    let namesShown = (show <$> names) :: [String]
         consCount = Data.List.length cons :: Int
         ret = ("cxt=" <> show cxt <> "\nname=" <> show name <> "\ntyVars=" <> show tyVars <> "\ncons=" <> show cons <> "\nnames=" <> show names) :: String
     in show consCount <> "___" <> ret
