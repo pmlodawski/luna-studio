@@ -20,12 +20,14 @@ import qualified Data.Maybe                 as Maybe
 import           Flowbox.Prelude                        hiding (folded, mapM, mapM_)
 import           Flowbox.System.Log.Logger              hiding (error)
 import           Luna.Data.ASTInfo                      (ASTInfo)
+import qualified Luna.Data.ASTInfo                      as ASTInfo
 import qualified Luna.Parser.Parser                     as Parser
 import qualified Luna.Parser.State                      as Parser
 import           Luna.Pass.Transform.Graph.Parser.State (GPPass)
 import qualified Luna.Pass.Transform.Graph.Parser.State as State
 import           Luna.Syntax.Arg                        (Arg (Arg))
 import qualified Luna.Syntax.Decl                       as Decl
+import qualified Luna.Syntax.Enum                       as Enum
 import qualified Luna.Syntax.Expr                       as Expr
 import           Luna.Syntax.Graph.DefaultsMap          (DefaultsMap)
 import           Luna.Syntax.Graph.Edge                 (Edge)
@@ -50,9 +52,6 @@ import           Luna.System.Session                    as Session
 import qualified Luna.Util.Label                        as Label
 
 
-emptyLabel :: a -> Label Tag a
-emptyLabel = Label def
-
 
 type V = ()
 
@@ -61,7 +60,7 @@ logger :: Logger
 logger = getLogger $moduleName
 
 
-run :: Monad m => Graph Tag V -> TDecl V -> ASTInfo -> EitherT State.Error m (TDecl V, ASTInfo)
+run :: MonadIO m => Graph Tag V -> TDecl V -> ASTInfo -> EitherT State.Error m (TDecl V, ASTInfo)
 run graph ldecl astInfo = evalStateT (func2graph ldecl) $ State.mk graph astInfo
 
 
@@ -90,48 +89,48 @@ parseNode signature (nodeID, node) = case node of
         srcs <- getNodeSrcs nodeID defaults
         ast <- (Label.label %~ Tag.mkNode nodeID pos Nothing) <$> buildExpr expr srcs
         if connectedOnlyToOutput
-            then State.addToExprMap (nodeID, Port.mkSrcAll) ast
+            then State.addToExprMap (nodeID, Port.mkSrcAll) $ return ast
             else if not (null outDataEdges) || Maybe.isJust outputPat
-                then do let pat = buildPat expr nodeID outDataEdges outputPat
-                            assignment = Expr.Assignment pat ast
+                then do pat <- buildPat expr nodeID outDataEdges outputPat
+                        let assignment = Expr.Assignment pat ast
                         addExprs nodeID pat
-                        State.addToBody $ emptyLabel assignment
+                        State.addToBody =<< newLabel assignment
                 else State.addToBody ast
 
 
 buildExpr :: NodeExpr Tag V -> [TExpr V] -> GPPass V m (TExpr V)
 buildExpr nodeExpr srcs = case nodeExpr of
     NodeExpr.ASTExpr expr -> return expr
-    NodeExpr.MultiPart mp -> do let defArg = Expr.unnamed $ emptyLabel Expr.Wildcard
-                                    args = map Expr.unnamed srcs
-                                return $ emptyLabel $ Expr.App $ MultiPart.toNamePat mp args defArg
+    NodeExpr.MultiPart mp -> do defArg <- Expr.unnamed <$> newLabel Expr.Wildcard
+                                let args = map Expr.unnamed srcs
+                                newLabel $ Expr.App $ MultiPart.toNamePat mp args defArg
     NodeExpr.StringExpr str -> case str of
-        StringExpr.List           -> return $ emptyLabel $ Expr.List $ Expr.SeqList srcs
-        StringExpr.Tuple          -> return $ emptyLabel $ Expr.Tuple srcs
+        StringExpr.List           -> newLabel $ Expr.List $ Expr.SeqList srcs
+        StringExpr.Tuple          -> newLabel $ Expr.Tuple srcs
         _                         -> do
             astInfo <- State.getASTInfo
             r <- Session.runT $ do
                 void Parser.init
-                let state = Parser.defState & Parser.info .~ astInfo
-                Parser.parseString (toString str) (Parser.exprParser2 state)
+                let parserState = Parser.defState & Parser.info .~ astInfo
+                Parser.parseString (toString str) (Parser.exprParser2 parserState)
             case fst r of
                 Left err -> lift $ left $ toString err
-                Right (lexpr, state) -> do
-                    State.setASTInfo $ state ^. Parser.info
+                Right (lexpr, parserState) -> do
+                    State.setASTInfo $ parserState ^. Parser.info
                     return $ Label.replaceExpr Tag.fromEnumerated lexpr
         --StringExpr.Pattern pat    -> parsePatNode     nodeID pat
         --StringExpr.Native  native -> parseNativeNode  nodeID native
         --_                         -> parseAppNode     nodeID $ StringExpr.toString str
 
 
-buildPat :: NodeExpr Tag V -> Node.ID -> [Edge] -> Maybe TPat -> TPat
+buildPat :: NodeExpr Tag V -> Node.ID -> [Edge] -> Maybe TPat -> GPPass V m TPat
 buildPat nodeExpr nodeID edges = construct (map (unwrap . (^?! Edge.src)) edges)
     where
-        construct [] (Just o) = o
-        construct []  _       = l $ Pat.Grouped $ l $ Pat.Tuple []
-        construct [Port.All] (Just o@(Label _ (Pat.Var _))) = o
-        construct [Port.All] _                              = OutputPat.generate nodeExpr nodeID
-        l = emptyLabel
+        construct [] (Just o) = return o
+        construct []  _       = l . Pat.Grouped =<< l (Pat.Tuple [])
+        construct [Port.All] (Just o@(Label _ (Pat.Var _))) = return o
+        construct [Port.All] _                              = State.withASTInfo $ OutputPat.generate nodeExpr nodeID
+        l = newLabel
 
 
 addExprs :: Node.ID -> TPat -> GPPass V m ()
@@ -142,7 +141,7 @@ addExprs nodeID tpat = case tpat of
     _                        -> return ()
     where
         addToExprMap port vname = State.addToExprMap (nodeID, port)
-                                $ emptyLabel $ Expr.Var $ Expr.Variable vname ()
+                                $ newLabel' $ Expr.Var $ Expr.Variable vname ()
         add _ []    = return ()
         add i (h:t) = case h of
             Label _ (Pat.Var vname) -> addToExprMap (Port.mkSrc i) vname >> add (i + 1) t
@@ -159,7 +158,7 @@ parseArg nodeID (num, input) = case input of
     Arg (Label _ (Pat.Typed (Label _ (Pat.Var vname)) _)) _ -> addVar vname
     _                                                       -> lift $ left "parseArg: Wrong Arg type"
     where addVar vname = State.addToExprMap (nodeID, Port.mkSrc num)
-                       $ emptyLabel $ Expr.Var $ Expr.Variable vname ()
+                       $ newLabel' $ Expr.Var $ Expr.Variable vname ()
 
 
 parseOutputs :: Node.ID -> DefaultsMap Tag V -> GPPass V m ()
@@ -168,11 +167,11 @@ parseOutputs nodeID defaults = do
     inPorts <- State.inboundPorts nodeID
     case (srcs, map unwrap inPorts) of
         ([], _)               -> whenM doesLastStatementReturn $
-                                   State.setOutput $ emptyLabel $ Expr.Grouped
-                                                   $ emptyLabel $ Expr.Tuple []
-        ([src], [Port.Num 0]) -> State.setOutput $ emptyLabel $ Expr.Grouped src
+                                   State.setOutput =<< newLabel . Expr.Grouped
+                                                   =<< newLabel (Expr.Tuple [])
+        ([src], [Port.Num 0]) -> State.setOutput =<< newLabel (Expr.Grouped src)
         ([src], _           ) -> State.setOutput src
-        _                     -> State.setOutput $ emptyLabel $ Expr.Tuple srcs
+        _                     -> State.setOutput =<< newLabel (Expr.Tuple srcs)
 
 
 doesLastStatementReturn :: GPPass V m Bool
@@ -193,7 +192,7 @@ getNodeSrcs nodeID defaults = do
     if Map.null srcsMap
         then return []
         else do let maxPort = fst $ Map.findMax srcsMap
-                return $ map (wildcardMissing . flip Map.lookup srcsMap) [0..maxPort]
+                mapM (wildcardMissing . flip Map.lookup srcsMap) [0..maxPort]
     where
         processEdge (pNID, _, Edge.Data s (DstPort  Port.All   )) = (0, (pNID, s))
         processEdge (pNID, _, Edge.Data s (DstPort (Port.Num d))) = (d, (pNID, s))
@@ -203,239 +202,14 @@ getNodeSrcs nodeID defaults = do
 
         getVar (i, key) = (i,) <$> State.exprMapLookup key
 
-        wildcardMissing Nothing  = emptyLabel Expr.Wildcard
-        wildcardMissing (Just e) = e
+        wildcardMissing Nothing  = newLabel Expr.Wildcard
+        wildcardMissing (Just e) = return e
 
-----parseExprNode :: Node.ID -> NodeExpr a V -> GPPass a V m ()
---parseExprNode nodeID nodeExpr = case nodeExpr of
---    --NodeExpr.StringExpr strExpr -> case strExpr of
---    --    StringExpr.List           -> parseListNode    nodeID
---    --    StringExpr.Tuple          -> parseTupleNode   nodeID
---    --    StringExpr.Pattern pat    -> parsePatNode     nodeID pat
---    --    StringExpr.Native  native -> parseNativeNode  nodeID native
---    --    _                         -> parseAppNode     nodeID $ StringExpr.toString strExpr
---    NodeExpr.ASTExpr expr   -> parseASTExprNode nodeID expr
+newLabel :: a -> GPPass v m (Label Tag a)
+newLabel = State.withASTInfo . newLabel'
 
-
-
-----FIXME[PM]: remove
---patternParser :: String -> Int -> Either String (LPat a, Int)
---patternParser = undefined
---exprParser :: String -> Int -> Either String (LExpr a v, Int)
---exprParser = undefined
--------------------
-
-
---type FuncDecl a e v = Decl.FuncDecl a e [Expr.LExpr a v]
---type V = ()
-
-
-
---run :: (Eq a, Enum.Enumerated a, MonadPragmaStore m)
---    => Graph a V -> PropertyMap a V -> FuncDecl a e V
---    -> EitherT Pass.PassError m (FuncDecl a e V, PropertyMap a V)
---run gr pm = Pass.run_ (Pass.Info "GraphParser") (State.make gr pm) . graph2expr
-
-
-
---label :: Enum.Enumerated l => Enum.ID -> a -> Label l a
---label num = Label (Enum.tag num)
-
-
---labelUnknown :: Enum.Enumerated l => a -> Label l a
---labelUnknown = Label (Enum.tag IDFixer.unknownID)
-
-
---parseNode :: Decl.FuncSig a e -> (Node.ID, Node a V) -> GPPass a V m ()
---parseNode signature (nodeID, node) = do
---    case node of
---        Node.Expr    expr _ _ -> parseExprNode    nodeID expr
---        Node.Inputs  {}       -> parseInputsNode  nodeID signature
---        Node.Outputs {}       -> parseOutputsNode nodeID
---    State.setPosition    nodeID $ node ^. Node.pos
-
-
-----TODO[PM] : zrobić z tego typeclass
---parseExprNode :: Node.ID -> NodeExpr a V -> GPPass a V m ()
---parseExprNode nodeID nodeExpr = case nodeExpr of
---    NodeExpr.StringExpr strExpr -> case strExpr of
---        StringExpr.List           -> parseListNode    nodeID
---        StringExpr.Tuple          -> parseTupleNode   nodeID
---        StringExpr.Pattern pat    -> parsePatNode     nodeID pat
---        StringExpr.Native  native -> parseNativeNode  nodeID native
---        _                         -> parseAppNode     nodeID $ StringExpr.toString strExpr
---    NodeExpr.ASTExpr expr   -> parseASTExprNode nodeID expr
-
-
---parseInputsNode :: Node.ID -> Decl.FuncSig a e -> GPPass a V m ()
---parseInputsNode nodeID = mapM_ (parseArg nodeID) . zip [0..] . Pattern.args
-
-
---parseArg :: Node.ID -> (Int, Arg a e) -> GPPass a V m ()
---parseArg nodeID (num, input) = case input of
---    Arg (Label _                     (Pat.Var vname)    ) _ -> addVar vname
---    Arg (Label _ (Pat.Typed (Label _ (Pat.Var vname)) _)) _ -> addVar vname
---    _                                                       -> lift $ left "parseArg: Wrong Arg type"
---    where addVar vname = State.addToNodeMap (nodeID, Port.Num num) $ labelUnknown $ Expr.Var $ Expr.Variable vname ()
-
-
---parseOutputsNode :: Node.ID -> GPPass a V m ()
---parseOutputsNode nodeID = do
---    srcs    <- State.getNodeSrcs nodeID
---    inPorts <- State.inboundPorts nodeID
---    case (srcs, inPorts) of
---        ([], _)               -> whenM State.doesLastStatementReturn $
---                                   State.setOutput $ labelUnknown $ Expr.Grouped
---                                                   $ labelUnknown $ Expr.Tuple []
---        ([src], [Port.Num 0]) -> State.setOutput $ labelUnknown $ Expr.Grouped src
---        ([src], _           ) -> State.setOutput src
---        _                     -> State.setOutput $ labelUnknown $ Expr.Tuple srcs
-
-
---patVariables :: LPat a -> [LExpr a V]
---patVariables pat = case pat of
---    Label l (Pat.Var   name  ) -> [Label l $ Expr.Var $ Expr.Variable name ()]
---    Label _ (Pat.Tuple items ) -> concatMap patVariables items
---    Label _ (Pat.App   _ args) -> concatMap patVariables args
---    _                          -> []
-
-
-----patchedParserState :: ASTInfo
-----                   -> ParserState.State (Pragma Pragma.ImplicitSelf, (Pragma Pragma.AllowOrphans, (Pragma Pragma.TabLength, ())))
-----patchedParserState info' = def
-----    & ParserState.info .~ info'
-----    & ParserState.conf .~ parserConf
-----    where parserConf  = Parser.defConfig & Config.setPragma Pragma.AllowOrphans
-
-
---parsePatNode :: Node.ID -> String -> GPPass a V m ()
---parsePatNode nodeID pat = do
---    srcs <- State.getNodeSrcs nodeID
---    case srcs of
---        [s] -> do
---            p <- case patternParser pat IDFixer.unknownID of
---                    Left  er     -> lift $ left $ show er
---                    Right (p, _) -> return p
---            let e = label nodeID $ Expr.Assignment p s
---            case patVariables p of
---                [var] -> State.addToNodeMap (nodeID, Port.All) var
---                vars  -> mapM_ (\(i, v) -> State.addToNodeMap (nodeID, Port.Num i) v) $ zip [0..] vars
---            State.addToBody e
---        _      -> lift $ left "parsePatNode: Wrong Pat arguments"
-
-
---parseNativeNode :: Node.ID -> String -> GPPass a V m ()
---parseNativeNode nodeID native = do
---    srcs <- State.getNodeSrcs nodeID
---    expr <- case exprParser native nodeID of
---                    Left  er     -> lift $ left $ show er
---                    Right (e, _) -> return e
---    addExpr nodeID $ replaceNativeVars srcs expr
-
-
---replaceNativeVars :: [LExpr a v] -> LExpr a v -> LExpr a v
---replaceNativeVars srcs native = native & Label.element . Expr.native . Native.segments %~ replaceNativeVars' srcs where
---    replaceNativeVars' []                                             segments              = segments
---    replaceNativeVars' _                                              []                    = []
---    replaceNativeVars' vars                                           (sh@Native.Str {}:st) =  sh                                 : replaceNativeVars' vars st
---    replaceNativeVars' (Label _ (Expr.Var (Expr.Variable name _)):vt) (sh@Native.Var {}:st) = (sh & Native.name .~ toString name) : replaceNativeVars' vt   st
-
-
---parseAppNode :: Node.ID -> String -> GPPass a V m ()
---parseAppNode nodeID app = do
---    srcs <- State.getNodeSrcs nodeID
---    expr <- if isOperator app
---                then return $ label nodeID $ Expr.Var $ Expr.Variable (fromString app) ()
---                else do
---                    case exprParser app nodeID of
---                        Left  er     -> lift $ left $ show er
---                        Right (e, _) -> return e
---    let ids = ExtractIDs.run expr
---    mapM_ State.setGraphFolded $ IntSet.toList $ IntSet.delete nodeID ids
---    State.setGraphFoldTop nodeID $ exprToNodeID expr
---    let requiresApp (Expr.Cons {}) = True
---        requiresApp _              = False
---    case srcs of
---        []                      -> addExpr nodeID $ if requiresApp $ unwrap expr
---                                       then labelUnknown $ Expr.app expr []
---                                       else expr
---        Label _ Expr.Wildcard:t -> addExpr nodeID $ labelUnknown $ Expr.app expr $ map Expr.unnamed t
---        f:t                     -> addExpr nodeID $ labelUnknown $ Expr.app acc  $ map Expr.unnamed t
---                                        where acc = label nodeID $ Expr.Accessor (Name.mkNameBaseAccessor $ Text.pack app) f
-
-
---exprToNodeID :: Enum.Enumerated a => LExpr a v -> Node.ID
---exprToNodeID (Label _ (Expr.App exprApp)) = exprToNodeID $ exprApp ^. Pattern.base . Pattern.segmentBase
---exprToNodeID lexpr                        = Enum.id $ lexpr ^. Label.label
-
-
---setNodeID :: Enum.Enumerated a => Node.ID -> LExpr a v -> LExpr a v
---setNodeID nodeID lexpr@(Label _ (Expr.App _)) = lexpr & Label.element . Expr.exprApp
---                                                      . Pattern.base . Pattern.segmentBase
---                                                      %~ setNodeID nodeID
---setNodeID nodeID lexpr                        = lexpr & Label.label              .~ Enum.tag  nodeID
-
-
---parseTupleNode :: Node.ID -> GPPass a V m ()
---parseTupleNode nodeID = do
---    srcs <- State.getNodeSrcs nodeID
---    let e = label nodeID $ Expr.Tuple srcs
---    addExpr nodeID e
-
-
-----parseGroupedNode :: Node.ID -> GPPass ()
-----parseGroupedNode nodeID = do
-----    [src] <- State.getNodeSrcs nodeID
-----    let e = Expr.Grouped nodeID src
-----    addExpr nodeID e
-
-
---parseListNode :: Node.ID -> GPPass V m ()
---parseListNode nodeID = do
---    srcs <- State.getNodeSrcs nodeID
---    let e = label nodeID $ Expr.List $ Expr.SeqList srcs
---    addExpr nodeID e
-
-
---parseASTExprNode :: Node.ID -> LExpr a V -> GPPass a V m ()
---parseASTExprNode nodeID = addExpr nodeID
---                        . setNodeID nodeID
-
-
---addExpr :: Node.ID -> LExpr a V  -> GPPass a V m ()
---addExpr nodeID expr' = do
---    graph <- State.getGraph
-
---    flags <- State.getFlags nodeID
---    let folded         = Flags.isSet' flags $ view Flags.astFolded
---        assignment     = Flags.isSet' flags $ view Flags.astAssignment
---        defaultNodeGen = Flags.isSet' flags $ view Flags.defaultNodeGenerated
---        grouped        = Flags.isSet' flags $ view Flags.grouped
-
---    let assignmentEdge (dstID, dst, _) = (not $ Node.isOutputs dst) || (length (Graph.lprelData graph dstID) > 1)
---        assignmentCount = length $ List.filter assignmentEdge
---                                 $ Graph.lsuclData graph nodeID
-
---        connectedToOutput = List.any (Node.isOutputs . view _2)
---                          $ Graph.lsuclData graph nodeID
-
---        expr = if grouped
---            then labelUnknown $ Expr.Grouped expr'
---            else expr'
-
---    if (folded && assignmentCount == 1) || defaultNodeGen
---        then State.addToNodeMap (nodeID, Port.All) expr
---        else if assignment || assignmentCount > 1
---            then do outName <- State.getNodeOutputName nodeID
---                    let p = labelUnknown $ Pat.Var  outName
---                        v = labelUnknown $ Expr.Var $ Expr.Variable outName ()
---                        a = labelUnknown $ Expr.Assignment p expr
---                    State.addToNodeMap (nodeID, Port.All) v
---                    State.addToBody a
---            else do State.addToNodeMap (nodeID, Port.All) expr
---                    unless (connectedToOutput || assignmentCount == 1) $
---                        State.addToBody expr
-
-
---isOperator :: String -> Bool
---isOperator expr = length expr == 1 && head expr `elem` Token.opChars
+newLabel' :: a -> State ASTInfo (Label Tag a)
+newLabel' a = do
+    n <- ASTInfo.incID <$> get
+    put n
+    return $ Label (Enum.tag $ n ^. ASTInfo.lastID) a

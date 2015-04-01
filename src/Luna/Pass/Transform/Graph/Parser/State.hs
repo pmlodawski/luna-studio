@@ -38,20 +38,20 @@ logger = getLogger $moduleName
 
 type Error = String
 
-type ExprMap v = Map (Node.ID, SrcPort) (TExpr v)
+type ExprMap v = Map (Node.ID, SrcPort) (State ASTInfo (TExpr v))
 
+type GPPass v m result = Monad m => StateT (GPState v) (EitherT Error m) result
 
 data GPState v = GPState { _body    :: [TExpr v]
                          , _output  :: Maybe (TExpr v)
                          , _varMap  :: ExprMap v
                          , _graph   :: Graph Tag v
                          , _astInfo :: ASTInfo
-                         } deriving (Show)
+                         }
 
 makeLenses ''GPState
 
 
-type GPPass v m result = Monad m => StateT (GPState v) (EitherT Error m) result
 
 
 mk :: Graph Tag v -> ASTInfo -> GPState v
@@ -82,13 +82,14 @@ getExprMap = gets $ view varMap
 setExprMap :: ExprMap v -> GPPass v m ()
 setExprMap = modify . set varMap
 
-addToExprMap :: (Node.ID, SrcPort) -> TExpr v -> GPPass v m ()
+addToExprMap :: (Node.ID, SrcPort) -> State ASTInfo (TExpr v) -> GPPass v m ()
 addToExprMap key expr = getExprMap >>= setExprMap . Map.insert key expr
 
 exprMapLookup :: (Node.ID, SrcPort) -> GPPass v m (TExpr v)
 exprMapLookup key = do
     nm <- getExprMap
-    lift $ Map.lookup key nm <??> "GraphParser: exprMapLookup: Cannot find " ++ show key ++ " in exprMap"
+    r <- lift $ Map.lookup key nm <??> "GraphParser: exprMapLookup: Cannot find " ++ show key ++ " in exprMap"
+    withASTInfo r
 
 ----- graph ---------------------------------------------------------------
 getGraph :: GPPass v m (Graph Tag v)
@@ -117,6 +118,13 @@ nextID = do
     let n = ASTInfo.incID i
     setASTInfo n
     return $ n ^. ASTInfo.lastID
+
+withASTInfo :: State ASTInfo a -> GPPass v m a
+withASTInfo s = do
+    i <- getASTInfo
+    let (r, i') = runState s i
+    setASTInfo i'
+    return r
 
 --getNode :: Node.ID -> GPPass a v m (Node a v)
 --getNode nodeID = do
