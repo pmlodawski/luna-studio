@@ -17,8 +17,8 @@ import           Control.Monad.Trans.Either
 import qualified Data.Map                   as Map
 import qualified Data.Maybe                 as Maybe
 
-import           Flowbox.Prelude                        hiding (error, folded, mapM, mapM_)
-import           Flowbox.System.Log.Logger
+import           Flowbox.Prelude                        hiding (folded, mapM, mapM_)
+import           Flowbox.System.Log.Logger              hiding (error)
 import           Luna.Data.ASTInfo                      (ASTInfo)
 import qualified Luna.Parser.Parser                     as Parser
 import qualified Luna.Parser.State                      as Parser
@@ -124,8 +124,8 @@ buildExpr nodeExpr srcs = case nodeExpr of
         --_                         -> parseAppNode     nodeID $ StringExpr.toString str
 
 
-buildPat :: NodeExpr Tag e -> Node.ID -> [Edge] -> Maybe TPat -> TPat
-buildPat nodeExpr nodeID edges = construct (map (unwrap . (^?! Edge.dst)) edges)
+buildPat :: NodeExpr Tag V -> Node.ID -> [Edge] -> Maybe TPat -> TPat
+buildPat nodeExpr nodeID edges = construct (map (unwrap . (^?! Edge.src)) edges)
     where
         construct [] (Just o) = o
         construct []  _       = l $ Pat.Grouped $ l $ Pat.Tuple []
