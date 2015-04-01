@@ -2,6 +2,7 @@
 #include <memory>
 #include <cstdint>
 #include <iostream>
+#include <string>
 #include <boost/optional.hpp>
 
 typedef std::istream Input;
@@ -55,6 +56,55 @@ inline std::int8_t readInt8(std::istream &input)
 	return readPrimitive<char>(input);
 }
 
+inline void deserialize(std::int8_t &val, Input &input);
+template<typename T>
+inline void deserialize(std::vector<T> &out, std::istream &input);
+
+inline long long readInteger(Input &input)
+{
+	bool isBig = readInt8(input);
+	if(!isBig)
+	{
+		return readInt32(input);
+	}
+	else
+	{
+		std::vector<std::int8_t> bytes;
+
+		int signum = readInt8(input);
+		deserialize(bytes, input);
+
+		if(bytes.size() > 7)
+		{
+			std::runtime_error("Cannot deserialize " + std::to_string(bytes.size()) + " bytes long Integer!");
+		}
+
+		std::int64_t ret = 0;
+		for(int i = 0; i < bytes.size(); i++)
+		{
+			ret = ret << 8;
+			std::uint8_t byte = bytes[bytes.size() - 1 - i];
+			ret += byte;
+			//ret += (std::uint8_t) bytes[/*bytes.size() - 1 -*/ i];
+		}
+
+		if(signum < 0)
+			return -ret;
+
+		return ret;
+	}
+}
+
+template<typename T>
+T readFloatingPoint(Input &input)
+{
+	T ret = 0;
+	double mantissa = readInteger(input);
+	double exponent = readInt64(input);
+	ret = std::ldexp(mantissa, exponent);
+	return ret;
+}
+
 inline void deserialize(char &val, Input &input)
 {
 	val = readInt8(input);
@@ -82,12 +132,12 @@ inline void deserialize(std::int64_t &val, Input &input)
 
 inline void deserialize(float &val, Input &input)
 {
-	val = readPrimitive<float>(input);
+	val = readFloatingPoint<float>(input);
 }
 
 inline void deserialize(double &val, Input &input)
 {
-	val = readPrimitive<double>(input);
+	val = readFloatingPoint<double>(input);
 }
 
 template<typename T>

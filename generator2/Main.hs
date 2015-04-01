@@ -31,6 +31,8 @@ main = do
 	putStrLn $ show $ encode acc
 	encodeFile "testacc.bin" acc
 
+	encodeFile "../sample_deserializer/testname.bin" (NameA "Foo blah" 34864296 123456789)
+
 	putStrLn "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
 	ns <- decodeFile "../sample_deserializer/testout.bin" :: IO Expr
 	putStrLn $ show ns
