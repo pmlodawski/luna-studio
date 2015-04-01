@@ -8,7 +8,8 @@ using Expr = Expr_Expr;
 using Expr_Con = Expr_Expr_Con;
 using Accessor_ConAccessor = Expr_Accessor_ConAccessor;
 
-std::shared_ptr<Expr> parseFile(const std::string &fname)
+template<typename T = Expr>
+std::shared_ptr<T> parseFile(const std::string &fname)
 {
 	std::ifstream in{fname, std::ios::binary };
 	if(!in) 
@@ -17,7 +18,7 @@ std::shared_ptr<Expr> parseFile(const std::string &fname)
 	try
 	{
 		in.exceptions(std::ios::badbit | std::ios::failbit | std::ios::eofbit);
-		return Expr::deserializeFrom(std::ifstream{fname, std::ios::binary });
+		return T::deserializeFrom(std::ifstream{fname, std::ios::binary });
 	}
 	catch(std::exception &e)
 	{
@@ -49,8 +50,20 @@ int main()
 	moje2->_dst = con;
 	moje2->_acc = acc;
 
+	std::int64_t mantissa = 8285044862877696;
+	int exponent = -26;
+// 	mantissa = std::frexp(123456789, &exponent);
+// 
+// 	auto tttt=  std::ldexp(8285044862877696,-26);
+
 	auto testimp = Expr::deserializeFrom(std::ifstream{ "testimp.bin", std::ios::binary });
 	auto argexp = parseFile("testargexp.bin");
+	auto argexp2 = parseFile<Expr_Name>("testname.bin");
+	if(auto a = std::dynamic_pointer_cast<Expr_Name_NameA>(argexp2))
+	{
+		auto bbbb = swap_endian(a->field_2);
+
+	}
 
 	{
 		std::ofstream output{ "testout0.bin", std::ios::binary };
