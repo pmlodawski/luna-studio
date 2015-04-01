@@ -9,7 +9,7 @@
 
 module Expr where
 
-import AST.Lit
+import qualified AST.Lit
 import Data.Int
 import GHC.Generics        (Generic)
 
@@ -18,7 +18,7 @@ type Pat = Int64
 --type Lit = Int64
 type Type = String
 
-
+type Lit = AST.Lit.Lit
 -- type Arg a = [a]
 
 type EvilArg a = [a]
