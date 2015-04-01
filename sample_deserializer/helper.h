@@ -55,6 +55,11 @@ inline std::int8_t readInt8(std::istream &input)
 	return readPrimitive<char>(input);
 }
 
+inline void deserialize(char &val, Input &input)
+{
+	val = readInt8(input);
+}
+
 inline void deserialize(std::int8_t &val, Input &input)
 {
 	val = readInt8(input);
@@ -145,6 +150,11 @@ inline void writePrimitive(std::ostream &output, const T &value)
 	const auto fixedEndian = swap_endian(value);
 	const auto length = sizeof(fixedEndian);
 	output.write((const char *)&fixedEndian, length);
+}
+
+inline void serialize(const char &value, std::ostream &output)
+{
+	writePrimitive(output, value);
 }
 
 inline void serialize(const std::int8_t &value, std::ostream &output)
