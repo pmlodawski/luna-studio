@@ -441,7 +441,7 @@ processConstructor dec@(DataD cxt name tyVars cons names) con =
                     in sequence r
                 _             -> return []
 
-        let derCppName = baseCppName <> "_" <> translateToCppNameQualified cname
+        let derCppName = baseCppName <> "_" <> translateToCppNamePlain cname
         let baseClasses   = [CppDerive baseCppName False Public]
             classInitial  = CppClass derCppName cppFields [] baseClasses tnames
             Just index    = elemIndex con cons
