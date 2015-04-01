@@ -247,18 +247,25 @@ formatTemplateIntroductor tmpl = if null tmpl then "" else
 standardSystemIncludes :: [CppInclude]
 standardSystemIncludes = map CppSystemInclude ["memory", "vector", "string"]
 
-translateToCppName :: Name -> String 
-translateToCppName name = nameBase name
+translateToCppNameQualified :: Name -> String 
+translateToCppNameQualified name = 
+    let repl '.' = '_'
+        repl c = c
+    in map repl $ show name
+
+translateToCppNamePlain :: Name -> String 
+translateToCppNamePlain = nameBase
 
 generateRootClassWrapper :: Dec -> [CppClass] -> CppClass
 generateRootClassWrapper (DataD cxt name tyVars cons names) derClasses = 
     let tnames = map tyvarToCppName tyVars
-        initialCls = CppClass (translateToCppName name) [] [] [] tnames
+        n = translateToCppNameQualified name
+        initialCls = CppClass n [] [] [] tnames
         deserializeMethod = prepareDeserializeMethodBase initialCls derClasses
         serializeMethod = 
             let fn = CppFunction "serialize" "void" [CppArg "output" "Output &"] "assert(0); // pure virtual function"
             in CppMethod fn [PureVirtualQualifier] Virtual
-    in CppClass (translateToCppName name) [] [serializeMethod, deserializeMethod] [] tnames
+    in CppClass n [] [serializeMethod, deserializeMethod] [] tnames
 
 isValueTypeInfo :: Info -> Q Bool
 isValueTypeInfo (TyConI (TySynD name vars t)) = isValueType t
@@ -283,7 +290,7 @@ templateDepName cls@(CppClass clsName _ _ _ tmpl) = templateDepNameBase clsName 
 
 typeOfField :: Type -> Q String
 typeOfField t@(ConT name) = do
-    let nb = nameBase name
+    let nb = translateToCppNameQualified name
     byValue <- isValueType t
     --return $ case name of
     --    ''String -> "std::string"
@@ -322,7 +329,7 @@ typeOfField (AppT ListT (nested)) = do
 typeOfField (VarT n) = return $ show n
 
 typeOfField t@(AppT bt@(ConT base) arg) = do
-    let baseType = nameBase base
+    let baseType = translateToCppNameQualified base
     argType <- typeOfField arg
     isBaseVal <- isValueType bt
     return $ printf (if isBaseVal then "%s<%s>" else "std::shared_ptr<%s<%s>>") baseType argType
@@ -346,7 +353,7 @@ emptyQParts = return def
 processField :: THS.VarStrictType -> Q CppField
 processField field@(name, _, t) = do
     filedType <- typeOfField t
-    return $ CppField (translateToCppName name) filedType (CppFieldSourceRec field)
+    return $ CppField (translateToCppNamePlain name) filedType (CppFieldSourceRec field)
 
 processField2 :: THS.StrictType -> Int -> Q CppField
 processField2 field@(_, t) index = do
@@ -418,7 +425,7 @@ serializeField field@(CppField fieldName fieldType fieldSrc) = do
 processConstructor :: Dec -> Con -> Q CppClass
 processConstructor dec@(DataD cxt name tyVars cons names) con = 
     do
-        let baseCppName = translateToCppName name
+        let baseCppName = translateToCppNameQualified name
             tnames = map tyvarToCppName tyVars
 
         let cname = case con of
@@ -434,7 +441,7 @@ processConstructor dec@(DataD cxt name tyVars cons names) con =
                     in sequence r
                 _             -> return []
 
-        let derCppName = baseCppName <> "_" <> translateToCppName cname
+        let derCppName = baseCppName <> "_" <> translateToCppNameQualified cname
         let baseClasses   = [CppDerive baseCppName False Public]
             classInitial  = CppClass derCppName cppFields [] baseClasses tnames
             Just index    = elemIndex con cons
@@ -469,7 +476,7 @@ generateCppWrapperHlp dec@(DataD cxt name tyVars cons names) =
 generateCppWrapperHlp tysyn@(TySynD name tyVars rhstype) = do
     baseTName <- typeOfField rhstype
     let tnames = map tyvarToCppName tyVars
-    let tf = CppTypedef (nameBase name) baseTName tnames
+    let tf = CppTypedef (translateToCppNameQualified name) baseTName tnames
     return $ CppParts [] [] [tf] [] []
 
 generateCppWrapperHlp arg = trace ("FIXME: generateCppWrapperHlp for " <> show arg) emptyQParts
