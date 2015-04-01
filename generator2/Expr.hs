@@ -27,7 +27,8 @@ data Arg a = Named   { _iid :: ID, _naame :: String, _aarg :: a }
            | NestingEvil { _evil :: EvilArg a }
            deriving (Show, Eq, Generic, Read)
 
-type Name = String
+data Name = NameA String Int Float | NameB (Maybe (Maybe (Maybe Expr)))
+           deriving (Show, Eq, Generic, Read)
 
 data Expr  = NOP          { _id :: ID                                                                                            }
            | Accessor     { _id :: ID, _acc       :: Accessor , _dst       :: Expr                                               }

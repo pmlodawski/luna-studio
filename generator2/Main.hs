@@ -11,6 +11,7 @@ import qualified Language.Haskell.TH.Quote as THQ
 
 instance Binary Accessor
 instance Binary Expr
+instance Binary Name
 instance Binary a => Binary (Arg a)
 
 main = do
