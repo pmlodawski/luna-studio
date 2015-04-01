@@ -82,9 +82,8 @@ main = do
             ppPrint ast
 
             printHeader "Extraction of imports"
-            (strInfos, modErrors) <- Pass.run1_ Imports.pass ast 
-            ppPrint strInfos
-            ppPrint modErrors
+            importInfo <- Pass.run1_ Imports.pass ast 
+            ppPrint importInfo
 
             printHeader "SA"
             sa           <- Pass.run1_ SA.pass ast

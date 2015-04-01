@@ -1,7 +1,7 @@
 
 module Luna.Data.ModuleInfo where
 
-import           Control.Monad            ((>=>), (<=<), liftM)
+import           Control.Monad            ((>=>), (<=<), liftM, foldM)
 import           Data.Binary             
 import           Data.Either              (lefts, rights)
 import           Data.List                (find, filter)
@@ -26,7 +26,9 @@ import           Luna.Syntax.Name.Pattern (NamePatDesc, SegmentDesc)
 import           Flowbox.Data.MapForest   (Node)
 import qualified Flowbox.Data.MapForest   as MF
 import           Flowbox.System.UniPath   (UniPath, PathItem)
+import           Data.Either.Combinators  (mapRight)
 import           Flowbox.Prelude
+
 
 
 
@@ -69,6 +71,14 @@ getSymbolOrigins symbol mInfo = do
 getModuleInfos :: [Path] -> IO [Either ImportError ModuleInfo]
 getModuleInfos paths = mapM getModuleInfo paths
 
+getStructInfosMap :: [Path] -> IO (Map Path (Either ImportError StructInfo))
+getStructInfosMap paths = foldM fun Map.empty paths
+
+fun :: Map Path (Either ImportError StructInfo) -> Path -> IO (Map Path (Either ImportError StructInfo))
+fun currentMap path = do
+    mi <- getModuleInfo path
+    let si = mapRight _strInfo mi
+    return $ Map.insert path si currentMap
 
 
 getModuleInfo :: Path -> IO (Either ImportError ModuleInfo)
