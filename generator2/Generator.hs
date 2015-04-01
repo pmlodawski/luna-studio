@@ -429,9 +429,7 @@ processConstructor dec@(DataD cxt name tyVars cons names) con =
                 RecC _ fields      -> mapM processField fields
                 NormalC _ fields   -> 
                     let fields' = processField2 <$> fields :: [Int -> Q CppField]
-                        indices = [0 ..]
-                        fieldIndexPairs = zip fields' indices
-                        r = map (\(f, i) -> f i) fieldIndexPairs :: [Q CppField]
+                        r = zipWith ($) fields' [0 ..]
                     in sequence r
                 _             -> return []
 
