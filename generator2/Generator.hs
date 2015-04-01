@@ -46,6 +46,9 @@ class TypesDependencies a where
 class HsTyped a where
     hsType :: a -> Type
 
+class HsNamed a where
+    hsName :: a -> Name
+
 --instance (CppFormattableCtx a ctx) => CppFormattableCtx [a] ctx where
 --    formatCppCtx = ("", "")
 
@@ -118,10 +121,11 @@ instance CppFormattableCtx CppMethod CppClass where
 
         in (signatureHeader, implementation)
 
-data CppFieldSource = CppFieldSourceRec VarStrictType
+data CppFieldSource = CppFieldSourceRec VarStrictType | CppFieldSourceNormal THS.StrictType
 
 instance HsTyped CppFieldSource where
     hsType (CppFieldSourceRec vst@(n, s, t)) = t
+    hsType (CppFieldSourceNormal st@(s, t)) = t
 
 data CppField = CppField 
     { fieldName :: String
@@ -297,6 +301,8 @@ typeOfField t@(ConT name) = do
         else if name == ''Int32 then "std::int32_t"
         else if name == ''Int16 then "std::int16_t"
         else if name == ''Int8 then "std::int8_t"
+        else if name == ''Float then "float"
+        else if name == ''Double then "double"
         else if byValue then nb
         else "std::shared_ptr<" <> nb <> ">"
 
@@ -340,7 +346,11 @@ processField :: THS.VarStrictType -> Q CppField
 processField field@(name, _, t) = do
     filedType <- typeOfField t
     return $ CppField (translateToCppName name) filedType (CppFieldSourceRec field)
--- processField arg = trace ("FIXME: Field for " <> show arg) (return $ CppField "__" "--")
+
+processField2 :: THS.StrictType -> Int -> Q CppField
+processField2 field@(_, t) index = do
+    filedType <- typeOfField t
+    return $ CppField ("field_" <> show index) filedType (CppFieldSourceNormal field)
 
 deserializeFromFName = "deserializeFrom"
 
@@ -405,12 +415,29 @@ serializeField field@(CppField fieldName fieldType fieldSrc) = do
     return $ printf "\t::%s(%s, output);" fname fieldName
 
 processConstructor :: Dec -> Con -> Q CppClass
-processConstructor dec@(DataD cxt name tyVars cons names) con@(RecC cname fields) = 
+processConstructor dec@(DataD cxt name tyVars cons names) con = 
     do
         let baseCppName = translateToCppName name
             tnames = map tyvarToCppName tyVars
-            derCppName = baseCppName <> "_" <> translateToCppName cname
-        cppFields <- mapM processField fields
+
+        let cname = case con of
+                RecC n _      -> n
+                NormalC n _   -> n
+                _             -> ''Dec
+
+        cppFields <- case con of
+                RecC _ fields      -> mapM processField fields
+                NormalC _ fields   -> 
+                    let fields' = processField2 <$> fields :: [Int -> Q CppField]
+                        indices = [0 ..]
+                        fieldIndexPairs = zip fields' indices
+                        r = map (\(f, i) -> f i) fieldIndexPairs :: [Q CppField]
+                    in sequence r
+                _             -> return []
+
+
+
+        let derCppName = baseCppName <> "_" <> translateToCppName cname
         let baseClasses   = [CppDerive baseCppName False Public]
             classInitial  = CppClass derCppName cppFields [] baseClasses tnames
             Just index    = elemIndex con cons
@@ -451,7 +478,7 @@ generateCppWrapperHlp tysyn@(TySynD name tyVars rhstype) = do
 generateCppWrapperHlp arg = trace ("FIXME: generateCppWrapperHlp for " <> show arg) emptyQParts
 
 
-builtInTypes = [''Maybe, ''String, ''Int, ''Int32, ''Int64, ''Int16, ''Int8]
+builtInTypes = [''Maybe, ''String, ''Int, ''Int32, ''Int64, ''Int16, ''Int8, ''Float, ''Double]
 
 instance TypesDependencies Type where
     --symbolDependencies t | trace ("Type: " <> show t) False = undefined
