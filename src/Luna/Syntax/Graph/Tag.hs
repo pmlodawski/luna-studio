@@ -43,8 +43,6 @@ instance Enumerated Tag where
     id = view idTag
     tag = Empty
 
-instance Default Tag where
-    def = Empty def
 
 type TPat    = LPat Tag
 type TExpr v = LExpr Tag v
