@@ -56,8 +56,7 @@ backAndForth bc code = do
     prettyPrint ast3
     putStrLn "getGraph"
     (ast4, graph4) <- Common.getGraph bc ast3
-    ----print pm3
-    ----printLn
+    prettyPrint graph4
     expr  <- Common.getMain ast
     expr2 <- Common.getMain ast2
     expr4 <- Common.getMain ast4
