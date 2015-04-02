@@ -18,6 +18,12 @@ data ImportInfo = ImportInfo {
 
 makeLenses ''ImportInfo
 
+
+
+ -- appendScope :: Path -> StructInfo -> ImportInfo -> ImportInfo
+-- append  
+
+
 instance Monoid ImportInfo where
     mempty      = ImportInfo  mempty mempty mempty
     mappend a b = ImportInfo (mappend (a ^. strInfos) (b ^. strInfos))

@@ -65,3 +65,12 @@ getModuleInfos :: (MonadIO m) => [Dec.Path] -> m [Either MI.ImportError MI.Modul
 getModuleInfos = liftIO . MI.getModuleInfos
 
 
+
+moduleInfosToTuples :: (MonadIO m) => [Dec.Path] -> m [(Dec.Path, Either MI.ImportError MI.ModuleInfo)]
+moduleInfosToTuples paths = do
+	eithers <- getModuleInfos paths
+	return $ zip paths eithers
+
+
+
+

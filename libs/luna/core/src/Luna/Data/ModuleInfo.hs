@@ -71,14 +71,14 @@ getSymbolOrigins symbol mInfo = do
 getModuleInfos :: [Path] -> IO [Either ImportError ModuleInfo]
 getModuleInfos paths = mapM getModuleInfo paths
 
-getStructInfosMap :: [Path] -> IO (Map Path (Either ImportError StructInfo))
-getStructInfosMap paths = foldM fun Map.empty paths
+-- getStructInfosMap :: (MonadIO m) => [Path] -> m (Map Path (Either ImportError StructInfo))
+-- getStructInfosMap paths = foldM fun Map.empty paths
 
-fun :: Map Path (Either ImportError StructInfo) -> Path -> IO (Map Path (Either ImportError StructInfo))
-fun currentMap path = do
-    mi <- getModuleInfo path
-    let si = mapRight _strInfo mi
-    return $ Map.insert path si currentMap
+-- fun :: Map Path (Either ImportError StructInfo) -> Path -> IO (Map Path (Either ImportError StructInfo))
+-- fun currentMap path = do
+--     mi <- getModuleInfo path
+--     let si = mapRight _strInfo mi
+--     return $ Map.insert path si currentMap
 
 
 getModuleInfo :: Path -> IO (Either ImportError ModuleInfo)
