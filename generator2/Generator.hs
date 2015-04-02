@@ -398,26 +398,40 @@ prepareDeserializeMethodBase cls@(CppClass clsName _ _ _ tmpl) derClasses =
         fun = CppFunction fname rettype [arg] prettyBody
     in CppMethod fun [] Static
 
+inputArg = CppArg "input" "Input &"
+
 deserializeField :: CppField -> Q String
 deserializeField field@(CppField fieldName fieldType fieldSrc) = do
     collapsedMaybe <- isCollapsedMaybePtr (hsType fieldSrc)
     let fname = if collapsedMaybe then "deserializeMaybe" else "deserialize"
-    return $ printf "\t%s(ret->%s, input);" fname fieldName
+    return $ printf "\t::%s(%s, input);" fname fieldName
+
+deserializeReturnSharedType :: CppClass -> String
+deserializeReturnSharedType cls@(CppClass clsName _ _ _ tmpl) = 
+    if null tmpl then clsName else templateDepName cls
+
+deserializeReturnType :: CppClass -> String
+deserializeReturnType cls = printf "std::shared_ptr<%s>" $ deserializeReturnSharedType cls
 
 prepareDeserializeMethodDer :: CppClass -> Q CppMethod
 prepareDeserializeMethodDer cls@(CppClass clsName _ _ _ tmpl)  = do
+    fieldsCode <- sequence (map deserializeField $ classFields cls)
+    let body = intercalate "\n" $ fieldsCode
+        fun = CppFunction "deserialize" "void" [inputArg] body
+    return $ CppMethod fun [] Usual
+
+prepareDeserializeFromMethodDer :: CppClass -> Q CppMethod
+prepareDeserializeFromMethodDer cls@(CppClass clsName _ _ _ tmpl)  = do
     let fname = deserializeFromFName
         clsName = className cls
-        arg = CppArg "input" "Input &"
-        nestedRetType = if null tmpl then clsName else templateDepName cls
-        rettype = printf "std::shared_ptr<%s>" nestedRetType
         --deserializeField field@(CppField fieldName fieldType fieldSrc) = printf "\tdeserialize(ret->%s, input);" fieldName :: String
-    fieldsCode <- sequence (map deserializeField $ classFields cls)
-    let bodyOpener = printf "\tauto ret = std::make_shared<%s>();" nestedRetType :: String
+    
+    let bodyOpener = printf "\tauto ret = std::make_shared<%s>();" (deserializeReturnSharedType cls) :: String
+        bodyMiddle = "\tret->deserialize(input);"
         bodyCloser = "\treturn ret;"
-        body = intercalate "\n" $ [bodyOpener] <> fieldsCode <> [bodyCloser]
+        body = intercalate "\n" $ [bodyOpener, bodyMiddle, bodyCloser]
 
-        fun = CppFunction fname rettype [arg] body
+        fun = CppFunction fname (deserializeReturnType cls) [inputArg] body
         qual = []
         stor = Static
     return $ CppMethod fun qual stor
@@ -458,9 +472,10 @@ processConstructor dec@(DataD cxt name tyVars cons names) con =
             --serializeField field = printf "\t::serialize(%s, output);" (fieldName field) :: String
 
         let serializeMethod = CppMethod serializeFn [OverrideQualifier] Virtual
+        deserializeFromMethod <- prepareDeserializeFromMethodDer classInitial
         deserializeMethod <- prepareDeserializeMethodDer classInitial
 
-        let methods = [serializeMethod, deserializeMethod]
+        let methods = [serializeMethod, deserializeMethod, deserializeFromMethod]
         return $ CppClass derCppName cppFields methods baseClasses tnames
 processConstructor dec arg = trace ("FIXME: Con for " <> show arg) (return $ CppClass "" [] [] [] [])
 
