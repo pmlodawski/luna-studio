@@ -37,7 +37,7 @@ type Name = String
 
 data ImportError = NotFoundError { path   :: Path }
                  | AmbRefError   { symbol :: NamePath, modules :: [Path] }
-                 deriving (Generic, Eq, Show, Read)
+                 deriving (Generic, Eq, Show, Ord, Read)
 
 
 -- stores the information about a module, needed while importing
