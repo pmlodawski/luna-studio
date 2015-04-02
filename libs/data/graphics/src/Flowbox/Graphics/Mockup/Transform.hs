@@ -197,13 +197,10 @@ skewAtLuna :: Point2 Float -> Skew Float -> Bool -> Maybe (Matte Float) -> Image
 skewAtLuna p skew reformat matte = onEachChannel (skewChannelAt p skew reformat matte)
 
 transformLuna :: Transform Float -> Bool -> Maybe (Matte Float) -> Image -> Image
-transformLuna tr reformat matte = onEachChannel (transformChannel tr reformat matte)
+transformLuna (Transform tr phi sc skew ce) reformat matte = onEachChannel transformChannel
     where
-        transformChannel :: Transform Float -> Bool -> Maybe (Matte Float) -> Channel -> Channel -- FIXME[KM -> MD]: why are the arguments passed as arguments if they are in the scope where they need to be?
-        transformChannel (Transform tr phi sc skew ce) reformat matte chan = transformation chan
-            where
-                transformation :: Channel -> Channel
-                transformation = (translateChannel tr reformat matte) . (rotateChannelAt ce phi reformat matte) . (skewChannelAt ce skew reformat matte) . (scaleChannelAt ce sc reformat matte)
+        transformChannel :: Channel -> Channel
+        transformChannel = (translateChannel tr reformat matte) . (rotateChannelAt ce phi reformat matte) . (skewChannelAt ce skew reformat matte) . (scaleChannelAt ce sc reformat matte)
 
 --transformLuna :: Transform Float -> Image -> Image
 --transformLuna tr = onEachChannel (transformChannel tr)
