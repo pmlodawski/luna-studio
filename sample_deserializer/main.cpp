@@ -66,8 +66,12 @@ int main()
 	}
 
 	{
+		std::ofstream output{ "testimp0.bin", std::ios::binary };
+		testimp->serialize(output);
+	}
+
+	{
 		std::ofstream output{ "testout0.bin", std::ios::binary };
-		//serialize(blah, output);
 		moje->serialize(output);
 	}
 

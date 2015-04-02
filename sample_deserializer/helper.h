@@ -171,13 +171,36 @@ inline void deserialize(std::vector<T> &out, std::istream &input)
 	}
 }
 
+inline std::string deserializeUtf8CharacterAsString(Input &input)
+{
+	char bytes[5] = {0};
+	
+	bytes[0] = readInt8(input);
+	if((unsigned char)bytes[0] < 0x80)
+		return {bytes};
+
+	bytes[1] = readInt8(input);
+	if((unsigned char)bytes[0] < 0xE0)
+		return{ bytes };
+
+	bytes[2] = readInt8(input);
+	if((unsigned char)bytes[0] < 0xF0)
+		return{ bytes };
+
+	bytes[3] = readInt8(input);
+	return bytes;
+}
+
+
 inline void deserialize(std::string &out, std::istream &input)
 {
 	auto size = readInt64(input);
 	out.resize(size);
+	out.clear();
+
 	for(int i = 0; i < size; i++)
 	{
-		out[i] = readInt8(input);
+		out += deserializeUtf8CharacterAsString(input);
 	}
 }
 
@@ -264,9 +287,18 @@ inline void serialize(const std::vector<T> &values, std::ostream &output)
 
 inline void serialize(const std::string &value, std::ostream &output)
 {
-	const std::int64_t size = value.size();
-	serialize(size, output);
-	for(int i = 0; i < size; i++)
+	// Count UTF-8 characters
+	const std::int64_t length = std::count_if(value.begin(), value.end(), [](const unsigned char &c)
+	{
+		const unsigned char mask = 0xC0; // 11 00 00 00
+		const unsigned char test = 0x80; // 10 00 00 00
+
+		return (c & mask) != test;
+	});
+
+
+	serialize(length, output);	
+	for(int i = 0; i < value.size(); i++)
 	{
 		serialize(std::int8_t(value[i]), output);
 	}
