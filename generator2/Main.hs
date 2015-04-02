@@ -9,6 +9,8 @@ import Data.Binary
 import qualified Language.Haskell.TH as TH
 import qualified Language.Haskell.TH.Quote as THQ
 
+import qualified AST.Lit
+
 instance Binary Accessor
 instance Binary Expr
 instance Binary Name
@@ -22,16 +24,18 @@ main = do
 	let imp = Import 4613 ["foo1 日本穂ショック！", "foo2", "foo3", "foo4"] con (Just "opcjonalny tekst")
 	let argexp = Arg 4321 (0) (Just imp)
 	let bs = encode con
+	let lit = Lit 500 (AST.Lit.IntLit 400)
 
 	encodeFile "../sample_deserializer/test.bin" con
 	encodeFile "../sample_deserializer/testimp.bin" imp
 	encodeFile "../sample_deserializer/testargexp.bin" argexp
+	encodeFile "../sample_deserializer/testlit.bin" lit
 
 	let acc = Accessor 503 (ConAccessor "bar") (Con 502 "foo")
 	putStrLn $ show $ encode acc
 	encodeFile "testacc.bin" acc
 
-	encodeFile "../sample_deserializer/testname.bin" (NameA "Foo blah" 34864296 123456789)
+	encodeFile "../sample_deserializer/testname.bin" (NameA "Foo blah" 34864296 500.750)
 
 	putStrLn "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
 	ns <- decodeFile "../sample_deserializer/testout.bin" :: IO Expr

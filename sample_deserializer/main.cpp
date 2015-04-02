@@ -59,12 +59,18 @@ int main()
 	auto testimp = Expr::deserializeFrom(std::ifstream{ "testimp.bin", std::ios::binary });
 	auto argexp = parseFile("testargexp.bin");
 	auto argexp2 = parseFile<Expr_Name>("testname.bin");
+	auto testlit = parseFile<Expr>("testlit.bin");
 	if(auto a = std::dynamic_pointer_cast<Expr_Name_NameA>(argexp2))
 	{
 		auto bbbb = swap_endian(a->field_2);
 
 	}
 
+
+	{
+		std::ofstream output{ "testlit0.bin", std::ios::binary };
+		testlit->serialize(output);
+	}
 	{
 		std::ofstream output{ "testimp0.bin", std::ios::binary };
 		testimp->serialize(output);
