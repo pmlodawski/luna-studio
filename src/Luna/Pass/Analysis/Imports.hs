@@ -14,7 +14,7 @@ import           Luna.Syntax.Traversals      ()
 import           Luna.Pass                   (Pass(Pass), PassMonad, PassCtx)
 import qualified Luna.Pass                   as Pass
 import           Flowbox.Prelude             hiding(isLeft, isRight, filter, map, fromList)
-import           Luna.Data.ImportInfo        (ImportInfo(ImportInfo))
+import           Luna.Data.ImportInfo        (ImportInfo(ImportInfo), createSymTable)
 import           Data.Map                    (elems, filter, map, fromList)
 import           Data.Either.Utils           (fromRight, fromLeft)
 import           Luna.Pass                   (PassMonad)
@@ -34,7 +34,7 @@ data NoState = NoState deriving (Read, Show)
 
 --pass :: (MonadIO m) => Pass NoState (Unit (Label l (Module a e)) -> m ImportInfo)
 pass = Pass "Import analysis" 
-            "Basic import analysis that results in import renaming and proper path" 
+            "Basic import analysis that performs error checks and returns both struct info and symbol table" 
             NoState iaMain
 
 iaMain :: (MonadIO m) => Unit (Label l (Module a e)) -> m ImportInfo
@@ -44,5 +44,6 @@ iaMain ast =  do
     let infoEithers = fromList listEithers
     let mInfos   =  map (_strInfo . fromRight) $ filter isRight infoEithers
         mErrors  =  fmap fromLeft $ elems $ filter isLeft infoEithers
-    return $ ImportInfo mInfos mempty mErrors   
+        info     =  ImportInfo mInfos mempty mErrors
+    return $ createSymTable info
 
