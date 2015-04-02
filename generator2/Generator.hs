@@ -288,8 +288,10 @@ templateDepNameBase clsName tmpl = if null tmpl then clsName else printf "%s<%s>
 templateDepName :: CppClass -> String
 templateDepName cls@(CppClass clsName _ _ _ tmpl) = templateDepNameBase clsName tmpl
 
-typeOfField :: Type -> Q String
-typeOfField t@(ConT name) = do
+data TypeDeducingMode = TypeField | TypeAlias
+
+hsTypeToCppType :: Type -> TypeDeducingMode -> Q String
+hsTypeToCppType t@(ConT name) tdm = do
     let nb = translateToCppNameQualified name
     byValue <- isValueType t
     --return $ case name of
@@ -312,29 +314,34 @@ typeOfField t@(ConT name) = do
         else if name == ''Double then "double"
         else if name == ''Char then "char"
         else if byValue then nb
-        else "std::shared_ptr<" <> nb <> ">"
+        else case tdm of
+            TypeField -> "std::shared_ptr<" <> nb <> ">"
+            TypeAlias -> nb
 
-typeOfField t@(AppT (ConT base) nested) | (base == ''Maybe) = do
-    nestedName <- typeOfField nested
+hsTypeToCppType t@(AppT (ConT base) nested) tdm | (base == ''Maybe) = do
+    nestedName <- hsTypeToCppType nested tdm
     shouldCollapse <- isCollapsedMaybePtr t
     return $ if shouldCollapse 
              then nestedName
              else "boost::optional<" <> nestedName <> ">"
 
-typeOfField (AppT ListT (nested)) = do
-    nestedType <- typeOfField nested
+hsTypeToCppType (AppT ListT (nested)) tdm = do
+    nestedType <- hsTypeToCppType nested tdm
     return $ printf "std::vector<%s>" $ nestedType
 --typeOfField (AppT ConT (maybe)) = printf "boost::optional<%s>" $ typeOfField nested
 
-typeOfField (VarT n) = return $ show n
+hsTypeToCppType (VarT n) tdm = return $ show n
 
-typeOfField t@(AppT bt@(ConT base) arg) = do
+hsTypeToCppType t@(AppT bt@(ConT base) arg) tdm = do
     let baseType = translateToCppNameQualified base
-    argType <- typeOfField arg
+    argType <- hsTypeToCppType arg tdm
     isBaseVal <- isValueType bt
     return $ printf (if isBaseVal then "%s<%s>" else "std::shared_ptr<%s<%s>>") baseType argType
 
-typeOfField t = return $ trace ("FIXME: typeOfField for " <> show t) $ "[" <> show t <> "]"
+hsTypeToCppType t tdm = return $ trace ("FIXME: hsTypeToCppType for " <> show t) $ "[" <> show t <> "]"
+
+typeOfField t = hsTypeToCppType t TypeField
+typeOfAlias t = hsTypeToCppType t TypeAlias
 
 isCollapsedMaybePtr :: Type -> Q Bool
 isCollapsedMaybePtr (AppT (ConT base) nested) | (base == ''Maybe) = do
@@ -474,7 +481,7 @@ generateCppWrapperHlp dec@(DataD cxt name tyVars cons names) =
         return (CppParts standardSystemIncludes forwardDecs [] classes functions)
 
 generateCppWrapperHlp tysyn@(TySynD name tyVars rhstype) = do
-    baseTName <- typeOfField rhstype
+    baseTName <- typeOfAlias rhstype
     let tnames = map tyvarToCppName tyVars
     let tf = CppTypedef (translateToCppNameQualified name) baseTName tnames
     return $ CppParts [] [] [tf] [] []
