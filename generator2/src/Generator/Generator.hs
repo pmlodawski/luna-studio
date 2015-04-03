@@ -23,7 +23,7 @@ import Data.Monoid
 
 import GHC.Stack
 import Debug.Trace
-
+import Control.Exception
 
 type HeaderSource = String
 
@@ -623,10 +623,17 @@ generateCpp name path = do
     runIO (putStrLn $ printf "Found %d dependencies: %s" (length dependencies) (show dependencies))
     (header,body) <- formatCppWrapper name
 
-    -- try using liftIO zamiast runIO
-    runIO (writeFile headerName header)
-    runIO (writeFile cppName body)
 
-    runIO (writeFile cppName $ (printf "#include \"helper.h\"\n#include \"%s\"\n\n" headerName) <> body)
+    let tryioaction action = try action :: IO (Either SomeException ())
+
+    -- try using liftIO zamiast runIO
+    runIO (tryioaction $ writeFile headerName header)
+    runIO (tryioaction $ writeFile cppName body)
+
+    
+    let ioaction =  writeFile cppName $ (printf "#include \"helper.h\"\n#include \"%s\"\n\n" headerName) <> body :: IO ()
+    
+    runIO $ tryioaction ioaction
+
     [|  return () |]
 
