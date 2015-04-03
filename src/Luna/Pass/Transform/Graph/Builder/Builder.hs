@@ -47,6 +47,7 @@ import qualified Luna.Syntax.Label                        as Label
 import           Luna.Syntax.Lit                          (LLit)
 import qualified Luna.Syntax.Name.Pattern                 as Pattern
 import           Luna.Util.LunaShow                       (LunaShow, lunaShow)
+import qualified Luna.Pass.Analysis.Find.Find as Find
 
 
 
@@ -222,4 +223,7 @@ addNodeWithExpr lexpr outputName nodeExpr argRefs = do
     return (lexpr'', nodeID)
 
 
-constainsVar _ = True
+constainsVar :: TExpr V -> Bool
+constainsVar = not . null . Find.run isVar where
+    isVar (Label _ (Expr.Var {})) = True
+    isVar _                       = False
