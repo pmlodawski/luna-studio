@@ -22,6 +22,7 @@ import qualified Data.Maybe                 as Maybe
 import           Flowbox.Prelude                          hiding (Traversal, error, mapM, mapM_)
 import           Flowbox.System.Log.Logger
 import           Luna.Data.StructInfo                     (StructInfo)
+import qualified Luna.Pass.Analysis.Find.Find             as Find
 import           Luna.Pass.Transform.Graph.Builder.ArgRef (ArgRef)
 import qualified Luna.Pass.Transform.Graph.Builder.ArgRef as ArgRef
 import           Luna.Pass.Transform.Graph.Builder.State  (GBPass)
@@ -47,7 +48,6 @@ import qualified Luna.Syntax.Label                        as Label
 import           Luna.Syntax.Lit                          (LLit)
 import qualified Luna.Syntax.Name.Pattern                 as Pattern
 import           Luna.Util.LunaShow                       (LunaShow, lunaShow)
-import qualified Luna.Pass.Analysis.Find.Find as Find
 
 
 
@@ -173,11 +173,11 @@ buildNode lexpr outputName = case unwrap lexpr of
         (le, ni)  <- addNodeWithExpr lexpr' outputName (NodeExpr.MultiPart mp) argRefs
         State.registerIDs le (ni, Port.mkSrcAll)
         return (le, ni, Port.mkSrcAll)
-    Expr.Var (Expr.Variable vname _) -> State.gvmNodeMapLookUp (Enum.id tag) >>= \case
+    Expr.Var _ -> State.gvmNodeMapLookUp (Enum.id tag) >>= \case
         Nothing             -> do (le, ni) <- addNode lexpr outputName []
                                   return (le, ni, Port.mkSrcAll)
         Just (srcNID, srcPort) -> if Maybe.isJust outputName
-            then do let nodeExpr = NodeExpr.StringExpr "_pattern_match_"
+            then do let nodeExpr = NodeExpr.StringExpr $ StringExpr.Pattern ""
                     (le, ni) <- addNodeWithExpr lexpr outputName nodeExpr []
                     State.connect srcNID srcPort ni Port.mkDstAll
                     return (le, ni, Port.mkSrcAll)
