@@ -17,6 +17,7 @@ import           Control.Monad.Trans.Either
 import qualified Data.Map                   as Map
 import qualified Data.Maybe                 as Maybe
 
+import           Flowbox.Control.Error                  ((<??>))
 import           Flowbox.Prelude                        hiding (folded, mapM, mapM_)
 import           Flowbox.System.Log.Logger              hiding (error)
 import           Luna.Data.ASTInfo                      (ASTInfo)
@@ -107,6 +108,7 @@ buildExpr nodeExpr srcs = case nodeExpr of
     NodeExpr.StringExpr str -> case str of
         StringExpr.List           -> newLabel $ Expr.List $ Expr.SeqList srcs
         StringExpr.Tuple          -> newLabel $ Expr.Tuple srcs
+        StringExpr.Pattern pat    -> lift $ Maybe.listToMaybe srcs <??> "GraphParser.buildExpr"
         _                         -> do
             astInfo <- State.getASTInfo
             r <- Session.runT $ do
