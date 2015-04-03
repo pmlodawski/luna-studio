@@ -8,9 +8,13 @@
 
 module Flowbox.UR.Manager.RPC.Topic where
 
-urmRegisterRequest         = "urm.register.request"
-urmRegisterMultipleRequest = "urm.registermultiple.request"
-urmRedoRequest             = "urm.redo.request" 
-urmPingRequest             = "urm.ping.request"         
-urmUndoRequest             = "urm.undo.request" 
-urmClearStackRequest       = "urm.clearstack.request"
+urmClearStackRequest        = "urm.clearstack.request"
+urmPingRequest              = "urm.ping.request"         
+urmRedoDescriptionRequest   = "urm.redo.descriptions.request" 
+urmRedoRequest              = "urm.redo.request" 
+urmRegisterMultipleRequest  = "urm.registermultiple.request"
+urmRegisterRequest          = "urm.register.request"
+urmTransactionBeginRequest  = "urm.transaction.begin.request"
+urmTransactionCommitRequest = "urm.transaction.commit.request"
+urmUndoDescriptionRequest   = "urm.undo.descriptions.request" 
+urmUndoRequest              = "urm.undo.request" 
