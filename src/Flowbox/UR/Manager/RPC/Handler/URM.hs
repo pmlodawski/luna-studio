@@ -11,7 +11,6 @@
 module Flowbox.UR.Manager.RPC.Handler.URM where
 
 import           Control.Monad.Trans.State.Lazy                      (get, put)
-import qualified Data.DList                                          as DList
 import qualified Data.Map                                            as Map
 import           Data.Maybe                                          (fromMaybe)
 
@@ -65,31 +64,31 @@ registerMultiple request@(RegisterMultiple.Request undoActions redoAction tproje
 
 reg :: Int -> [Message] -> Message -> String -> RPC Context IO ()
 reg projectID undoA redoA description = do
-    let transaction d = (DList.singleton (undoA, redoA), d)
     contextMap <- lift get
     pContext@(ProjectContext undoL _ maybeTr) <- return $ fromMaybe (Context.emptyProjectContext) $ Map.lookup projectID contextMap
-    let newContext = case maybeTr of
-                        Just tr ->
-                            let newTransaction = Just $ _1 %~ (`DList.snoc` (undoA, redoA)) $ tr
-                            in  Context.trans .~ newTransaction $ pContext
-                        Nothing -> ProjectContext (transaction description : undoL) [] Nothing
+    let action = (undoA, redoA)
+        newPC  = 
+            maybe (Context.undo %~ (([action], [description]) :) $ pContext)
+                  (\(al, dl) -> Context.trans .~ Just (action : al, dl) $ pContext)
+                  maybeTr
     logger warning (case maybeTr of
-                        Just tr -> "appended transaction: " ++ (snd tr) ++ " with " ++ description
+                        Just tr -> "appended transaction: " ++ (head $ snd tr) ++ " with " ++ description
                         Nothing -> "added action: " ++ description)
-    lift $ put $ Map.insert projectID newContext contextMap
+    lift $ put $ Map.insert projectID newPC contextMap
 
 
 undo :: Undo.Request -> RPC Context IO (Undo.Status, Maybe [Message])
-undo request@(Undo.Request tprojectID) = execAction (decodeP tprojectID) fst            id   reverse $ Undo.Status request
+undo request@(Undo.Request tprojectID) = execAction (decodeP tprojectID) fst            id   $ Undo.Status request
 
 redo :: Redo.Request -> RPC Context IO (Redo.Status, Maybe [Message])
-redo request@(Redo.Request tprojectID) = execAction (decodeP tprojectID) (return . snd) flip id      $ Redo.Status request 
+redo request@(Redo.Request tprojectID) = execAction (decodeP tprojectID) (return . snd) flip $ Redo.Status request 
 
 execAction :: Proto.Serializable ret =>
                      -- could be ((a, b) -> c) but "c ~ Message could not be deduced"
-              Int -> (Context.Actions -> [Message]) -> ((Stack -> Stack -> (Maybe Context.Transaction -> ProjectContext)) -> Stack -> Stack -> (Maybe Context.Transaction -> ProjectContext)) ->
-              ([Context.Actions] -> [Context.Actions]) -> (Bool-> ret) -> RPC Context IO (ret, Maybe [Message])
-execAction projectID accessor invert rev retCons = do
+              Int -> (Context.Actions -> [Message]) -> 
+              ((Stack -> Stack -> (Context.PT -> Context.ProjectContext)) -> Stack -> Stack -> (Context.PT -> Context.ProjectContext)) ->
+              (Bool-> ret) -> RPC Context IO (ret, Maybe [Message])
+execAction projectID accessor invert retCons = do
     contextMap <- lift get
     let projContexts = Map.lookup projectID contextMap 
         ProjectContext stack1 stack2 trans = maybe (Context.emptyProjectContext)
@@ -98,11 +97,11 @@ execAction projectID accessor invert rev retCons = do
     case stack1 of
         [] -> 
             return (retCons False, Nothing)
-        (action : rest) -> do 
-            let newMap = invert ProjectContext rest (action : stack2) $ trans
+        ((actions, desc) : rest) -> do 
+            let newMap = invert ProjectContext rest ((reverse actions, desc) : stack2) $ trans
             lift $ put $ Map.insert projectID newMap contextMap
-            logger warning $ "Undo/Redo on " ++ (snd action)
-            return (retCons True, Just $ (rev $ DList.toList $ fst action) >>= accessor)
+            logger warning $ "Undo/Redo on " ++ (head desc)
+            return (retCons True, Just $ actions >>= accessor)
 
 
 clearStack :: ClearStack.Request -> RPC Context IO ClearStack.Status
@@ -113,26 +112,31 @@ clearStack request@(ClearStack.Request tprojectID) = do
     return $ ClearStack.Status request 
 
 
--- [MW] TODO: nested transactions
 tBegin :: TBegin.Request -> RPC Context IO TBegin.Status
 tBegin request@(TBegin.Request tprojectID tdescription) = do
     let projectID   = decodeP tprojectID
         description = decodeP tdescription
-        createTrans = Context.trans .~ Just (DList.empty, description)
+        newTransaction =
+            maybe (Just ([], [description]))
+                  (Just . (_2 %~ (description :)))
+        createTrans =
+            Context.trans %~ newTransaction
     lift . put . (Map.adjust createTrans projectID) =<< lift get
     logger warning $ "opening transaction: " ++ description
     return $ TBegin.Status request
 
 tCommit :: TCommit.Request -> RPC Context IO TCommit.Status
 tCommit request@(TCommit.Request tprojectID) = do
-   let projectID = decodeP tprojectID 
-   context <- lift get
-   let pContext@(ProjectContext undo redo trans) = fromMaybe Context.emptyProjectContext $ Map.lookup projectID context
-       newUndo = maybe undo (: undo) trans
-   logger warning $ "projID" ++ (show projectID)
-   lift $ put $ Map.insert projectID (ProjectContext newUndo [] Nothing) context
-   logger warning $ "closing transaction: " ++ (snd $ head newUndo)
-   return $ TCommit.Status request
+    let projectID = decodeP tprojectID 
+    context <- lift get
+    let pContext@(ProjectContext undo redo maybeTr) = fromMaybe Context.emptyProjectContext $ Map.lookup projectID context
+        newPC = case maybeTr of
+                    Nothing -> pContext
+                    Just t@(trans, [desc]) -> ProjectContext (t : undo) [] Nothing
+                    Just   (trans, (_:cx)) -> ProjectContext undo       [] (Just (trans, cx))
+    logger warning $ maybe "Nothing to commit" (("closing transaction: " ++) . head . snd) maybeTr
+    lift $ put $ Map.insert projectID newPC context
+    return $ TCommit.Status request
 
 
 undoDescriptions :: UDescriptions.Request -> RPC Context IO UDescriptions.Status
@@ -140,14 +144,14 @@ undoDescriptions request@(UDescriptions.Request tprojectID) = do
     let projectID = decodeP tprojectID
     oko <- lift get
     let context = Map.lookup projectID oko
-    return $ (UDescriptions.Status request) $ maybe (encodeP [""]) (encodeP . map snd . (^. Context.undo)) context
+    return $ (UDescriptions.Status request) $ maybe (encodeP [""]) (encodeP . map (head . snd) . (^. Context.undo)) context
                                                                                                                                 
 redoDescriptions :: RDescriptions.Request -> RPC Context IO RDescriptions.Status                                                
 redoDescriptions request@(RDescriptions.Request tprojectID) = do
     let projectID = decodeP tprojectID
     oko <- lift get
     let context = Map.lookup projectID oko
-    return $ (RDescriptions.Status request) $ maybe (encodeP [""]) (encodeP . map snd . (^. Context.redo)) context
+    return $ (RDescriptions.Status request) $ maybe (encodeP [""]) (encodeP . map (head . snd) . (^. Context.redo)) context
 
 
 --descriptions :: lens -> Int -> (descriptions -> response) -> RPC Context IO response
