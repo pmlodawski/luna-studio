@@ -45,11 +45,11 @@ module Generator.Binary (
     -- ** Example
     -- $example
 
-#ifdef GENERICS
+-- #ifdef GENERICS
     -- * Generic support
     -- $generics
     , GBinary(..)
-#endif
+-- #endif
 
     -- * The Get and Put monads
     , Get
@@ -78,9 +78,9 @@ import Data.Word
 import Generator.Binary.Class
 import Generator.Binary.Put
 import Generator.Binary.Get
-#ifdef GENERICS
+-- #ifdef GENERICS
 import Generator.Binary.Generic ()
-#endif
+-- #endif
 
 import qualified Data.ByteString as B ( hGet, length )
 import Data.ByteString.Lazy (ByteString)

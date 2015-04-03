@@ -2,13 +2,13 @@
 #if __GLASGOW_HASKELL__ >= 701
 {-# LANGUAGE Trustworthy #-}
 #endif
-#ifdef GENERICS
+-- #ifdef GENERICS
 {-# LANGUAGE DefaultSignatures #-}
-#endif
+-- #endif
 
-#if MIN_VERSION_base(4,8,0)
+-- #if MIN_VERSION_base(4,8,0)
 #define HAS_NATURAL
-#endif
+-- #endif
 
 -----------------------------------------------------------------------------
 -- |
@@ -29,10 +29,10 @@ module Generator.Binary.Class (
     -- * The Binary class
       Binary(..)
 
-#ifdef GENERICS
+-- #ifdef GENERICS
     -- * Support for generics
     , GBinary(..)
-#endif
+-- #endif
 
     ) where
 
@@ -65,9 +65,9 @@ import qualified Data.ReinterpretCast as RC
 
 import Data.Array.Unboxed
 
-#ifdef GENERICS
+-- #ifdef GENERICS
 import GHC.Generics
-#endif
+-- #endif
 
 #ifdef HAS_NATURAL
 import Numeric.Natural
@@ -82,11 +82,11 @@ import qualified Data.Foldable as Fold
 
 ------------------------------------------------------------------------
 
-#ifdef GENERICS
+-- #ifdef GENERICS
 class GBinary f where
     gput :: f t -> Put
     gget :: Get (f t)
-#endif
+-- #endif
 
 -- | The 'Binary' class provides 'put' and 'get', methods to encode and
 -- decode a Haskell value to a lazy 'ByteString'. It mirrors the 'Read' and
@@ -111,13 +111,13 @@ class Binary t where
     -- | Decode a value in the Get monad
     get :: Get t
 
-#ifdef GENERICS
+-- #ifdef GENERICS
     default put :: (Generic t, GBinary (Rep t)) => t -> Put
     put = gput . from
 
     default get :: (Generic t, GBinary (Rep t)) => Get t
     get = to `fmap` gget
-#endif
+-- #endif
 
 ------------------------------------------------------------------------
 -- Simple instances

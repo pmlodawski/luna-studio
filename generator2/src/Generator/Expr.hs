@@ -7,9 +7,9 @@
 {-# LANGUAGE TypeFamilies              #-}
 -- {-# LANGUAGE FunctionalDependencies    #-}
 
-module Expr where
+module Generator.Expr where
 
-import qualified AST.Lit
+import qualified Generator.AST.Lit
 import Data.Int
 import GHC.Generics        (Generic)
 
@@ -18,7 +18,7 @@ type Pat = Int64
 --type Lit = Int64
 type Type = String
 
-type Lit = AST.Lit.Lit
+type Lit = Generator.AST.Lit.Lit
 -- type Arg a = [a]
 
 type EvilArg a = [a]

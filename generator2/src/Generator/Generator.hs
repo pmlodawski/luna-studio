@@ -3,7 +3,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
 
-module Generator where
+module Generator.Generator where
 
 import Data.Set (Set)
 import qualified Data.Set as Set
