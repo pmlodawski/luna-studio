@@ -155,8 +155,10 @@ def install_from_sources(name, version=None):
                 try_call('cabal install')
 
 def install_alex_happy(name, version=None):
-    try_call('cabal install alex')
-    try_call('cabal install happy')
+    checkCabalPkg("alex")
+    checkCabalPkg("happy")
+    # try_call('cabal install alex')
+    # try_call('cabal install happy')
     if version:
         return (name + "-" + version)
     else:
