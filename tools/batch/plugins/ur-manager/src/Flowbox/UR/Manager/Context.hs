@@ -9,7 +9,6 @@
 
 module Flowbox.UR.Manager.Context where
 
-import           Data.DList                         (DList)
 import           Data.Map                           (Map)
 import qualified Data.Map                           as Map
 
@@ -19,15 +18,17 @@ import           Flowbox.Prelude                    hiding (Context)
 
 type Actions = ([Message], Message)
 
-type Transaction = (DList Actions, String)
+type Transaction = ([Actions], [String])
 
 type Stack = [Transaction]
 
 type Context = Map Int ProjectContext
 
+type PT = Maybe Transaction
+
 data ProjectContext = ProjectContext { _undo  :: Stack
                                      , _redo  :: Stack 
-                                     , _trans :: Maybe Transaction
+                                     , _trans :: PT
                                      }
                                      deriving (Show)
 
