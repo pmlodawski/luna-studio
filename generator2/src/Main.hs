@@ -5,7 +5,7 @@
 
 import Generator.Generator
 import Generator.Expr
-
+import System.FilePath
 -- import Data.Binary
 import Generator.Binary
 -- import Generator.Binary.Class
@@ -13,13 +13,17 @@ import Generator.Binary
 import qualified Language.Haskell.TH as TH
 import qualified Language.Haskell.TH.Quote as THQ
 
-import qualified Genrator.AST.Lit
+import qualified Generator.AST.Lit
 
-instance Binary Generator.AST.Lit
+instance Binary Generator.AST.Lit.Lit
 instance Binary Accessor
 instance Binary Expr
 instance Binary Name
 instance Binary a => Binary (Arg a)
+
+outputDirectory = ".." </> ".." </> "sample_deserializer"
+
+encodeWithFname fname val = encodeFile (outputDirectory </> fname) val
 
 main = do
 	putStrLn "Generator 2 im. Arystotelesa."
@@ -28,17 +32,17 @@ main = do
 	let con = App 1200 (TypeDef 76 "typ1" "Typ2") args
 	let imp = Import 4613 ["foo1 日本穂ショック！", "foo2", "foo3", "foo4"] con (Just "opcjonalny tekst")
 	let argexp = Arg 4321 (0) (Just imp)
-	let lit = Lit 500 (AST.Lit.IntLit 400)
+	let lit = Lit 500 (Generator.AST.Lit.IntLit 400)
 
 	let acc = Accessor 503 (ConAccessor "bar") (Con 502 "foo")
 
 	--let bs = encode con
 
-	--encodeFile "../../sample_deserializer/test.bin" con
-	--encodeFile "../../sample_deserializer/testimp.bin" imp
-	--encodeFile "../../sample_deserializer/testargexp.bin" argexp
-	--encodeFile "../../sample_deserializer/testlit.bin" lit
-	encodeFile "../../sample_deserializer/testacc.bin" ("foo")
+	encodeWithFname "test.bin" con
+	encodeWithFname "testimp.bin" imp
+	encodeWithFname "testargexp.bin" argexp
+	encodeWithFname "testlit.bin" lit
+	encodeWithFname "testacc.bin" acc
 
 	--putStrLn $ show $ encode acc
 
@@ -53,4 +57,4 @@ main = do
 	---- putStrLn $(TH.stringE . printAst =<< TH.reify ''Expr)
 	---- putStrLn $(TH.stringE . TH.pprint =<< TH.reify ''Expr)
 
-	-- $(generateCpp ''Expr "../../sample_deserializer/generated")
+	$(generateCpp ''Expr "../../sample_deserializer/generated")
