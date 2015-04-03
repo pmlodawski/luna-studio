@@ -4,9 +4,9 @@
 
 #include <fstream>
 
-using Expr = Expr_Expr;
-using Expr_Con = Expr_Expr_Con;
-using Accessor_ConAccessor = Expr_Accessor_ConAccessor;
+using Expr = Generator_Expr_Expr;
+using Expr_Con = Generator_Expr_Expr_Con;
+using Accessor_ConAccessor = Generator_Expr_Accessor_ConAccessor;
 
 template<typename T = Expr>
 std::shared_ptr<T> parseFile(const std::string &fname)
@@ -45,7 +45,7 @@ int main()
 	con->_id = 502;
 	con->_name = "foo";
 
-	auto moje2 = std::make_shared<Expr_Expr_Accessor>();
+	auto moje2 = std::make_shared<Generator_Expr_Expr_Accessor>();
 	moje2->_id = 503;
 	moje2->_dst = con;
 	moje2->_acc = acc;
@@ -58,9 +58,9 @@ int main()
 
 	auto testimp = Expr::deserializeFrom(std::ifstream{ "testimp.bin", std::ios::binary });
 	auto argexp = parseFile("testargexp.bin");
-	auto argexp2 = parseFile<Expr_Name>("testname.bin");
+	auto argexp2 = parseFile<Generator_Expr_Name>("testname.bin");
 	auto testlit = parseFile<Expr>("testlit.bin");
-	if(auto a = std::dynamic_pointer_cast<Expr_Name_NameA>(argexp2))
+	if(auto a = std::dynamic_pointer_cast<Generator_Expr_Name_NameA>(argexp2))
 	{
 		auto bbbb = swap_endian(a->field_2);
 
