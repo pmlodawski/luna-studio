@@ -26,35 +26,35 @@ outputDirectory = ".." </> ".." </> "sample_deserializer"
 encodeWithFname fname val = encodeFile (outputDirectory </> fname) val
 
 main = do
-	putStrLn "Generator 2 im. Arystotelesa."
-	let con0 = Con 100 "[fooBarBazBarfooBarBazBarfooBarBazBarfooBarBazBar]"
-	let args = [NestingEvil [con0]] :: [Arg Expr]
-	let con = App 1200 (TypeDef 76 "typ1" "Typ2") args
-	let imp = Import 4613 ["foo1 日本穂ショック！", "foo2", "foo3", "foo4"] con (Just "opcjonalny tekst")
-	let argexp = Arg 4321 (0) (Just imp)
-	let lit = Lit 500 (Generator.AST.Lit.IntLit 400)
+    putStrLn "Generator 2 im. Arystotelesa."
+    let con0 = Con 100 "[fooBarBazBarfooBarBazBarfooBarBazBarfooBarBazBar]"
+    let args = [NestingEvil [con0]] :: [Arg Expr]
+    let con = App 1200 (TypeDef 76 "typ1" "Typ2") args
+    let imp = Import 4613 ["foo1 日本穂ショック！", "foo2", "foo3", "foo4"] con (Just "opcjonalny tekst")
+    let argexp = Arg 4321 (0) (Just imp)
+    let lit = Lit 500 (Generator.AST.Lit.IntLit 400)
 
-	let acc = Accessor 503 (ConAccessor "bar") (Con 502 "foo")
+    let acc = Accessor 503 (ConAccessor "bar") (Con 502 "foo")
 
-	--let bs = encode con
+    --let bs = encode con
 
-	encodeWithFname "test.bin" con
-	encodeWithFname "testimp.bin" imp
-	encodeWithFname "testargexp.bin" argexp
-	encodeWithFname "testlit.bin" lit
-	encodeWithFname "testacc.bin" acc
+    encodeWithFname "test.bin" con
+    encodeWithFname "testimp.bin" imp
+    encodeWithFname "testargexp.bin" argexp
+    encodeWithFname "testlit.bin" lit
+    encodeWithFname "testacc.bin" acc
 
-	--putStrLn $ show $ encode acc
+    --putStrLn $ show $ encode acc
 
-	--encodeFile "../../sample_deserializer/testname.bin" (NameA "Foo blah" 34864296 500.750)
+    --encodeFile "../../sample_deserializer/testname.bin" (NameA "Foo blah" 34864296 500.750)
 
-	--putStrLn "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
-	--ns <- decodeFile "../../sample_deserializer/testout.bin" :: IO Expr
-	--putStrLn $ show ns
-	--putStrLn "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+    --putStrLn "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+    --ns <- decodeFile "../../sample_deserializer/testout.bin" :: IO Expr
+    --putStrLn $ show ns
+    --putStrLn "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
 
-	---- $(THQ.dataToExpQ (const Nothing) (formatCppWrapper ''Expr))
-	---- putStrLn $(TH.stringE . printAst =<< TH.reify ''Expr)
-	---- putStrLn $(TH.stringE . TH.pprint =<< TH.reify ''Expr)
+    ---- $(THQ.dataToExpQ (const Nothing) (formatCppWrapper ''Expr))
+    ---- putStrLn $(TH.stringE . printAst =<< TH.reify ''Expr)
+    ---- putStrLn $(TH.stringE . TH.pprint =<< TH.reify ''Expr)
 
-	$(generateCpp ''Expr "../../sample_deserializer/generated")
+    $(generateCpp ''Expr "../../sample_deserializer/generated")
