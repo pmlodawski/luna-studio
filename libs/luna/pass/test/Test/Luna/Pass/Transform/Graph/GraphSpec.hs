@@ -60,7 +60,6 @@ backAndForth bc code = do
     expr  <- Common.getMain ast
     expr2 <- Common.getMain ast2
     expr4 <- Common.getMain ast4
-
     Label.replaceDecl  cleanTags expr2  `shouldBe` Label.replaceDecl  cleanTags expr
     Label.replaceGraph cleanIDs  graph4 `shouldBe` Label.replaceGraph cleanIDs  graph2
     Label.replaceDecl  cleanIDs  expr4  `shouldBe` Label.replaceDecl  cleanIDs  expr2

@@ -227,10 +227,11 @@ replaceGraph conv = Graph.nmap (replaceNode conv)
 
 replaceNode :: (l1 -> l2) -> Node l1 v -> Node l2 v
 replaceNode conv node = case node of
-    Node.Expr expr outputPat defaults pos -> Node.Expr (replaceNodeExpr conv expr)
-                                                       (replaceLPat conv <$> outputPat)
-                                                       (replaceDefaultsMap conv defaults)
-                                                       pos
+    Node.Expr expr outputPat defaults pos groupInfo ->
+        Node.Expr (replaceNodeExpr conv expr)
+                  (replaceLPat conv <$> outputPat)
+                  (replaceDefaultsMap conv defaults)
+                  pos (map conv groupInfo)
     Node.Inputs pos -> Node.Inputs pos
     Node.Outputs defaults pos -> Node.Outputs (replaceDefaultsMap conv defaults) pos
 
