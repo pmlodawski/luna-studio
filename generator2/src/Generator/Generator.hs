@@ -24,6 +24,7 @@ import Data.Monoid
 import GHC.Stack
 import Debug.Trace
 import Control.Exception
+import System.FilePath
 
 type HeaderSource = String
 
@@ -643,7 +644,7 @@ generateCpp name path = do
     runIO (tryioaction $ writeFile cppName body)
 
     
-    let ioaction =  writeFile cppName $ (printf "#include \"helper.h\"\n#include \"%s\"\n\n" headerName) <> body :: IO ()
+    let ioaction =  writeFile cppName $ (printf "#include \"helper.h\"\n#include \"%s\"\n\n" (takeFileName headerName)) <> body :: IO ()
     
     runIO $ tryioaction ioaction
 
