@@ -274,6 +274,7 @@ isValueTypeInfo _ = return False
 isValueType :: Type -> Q Bool
 isValueType (VarT name) = return True :: Q Bool
 isValueType ListT = return True
+isValueType (TupleT _) = return True
 isValueType (AppT base nested) = isValueType base
 isValueType (ConT name) | (elem name builtInTypes) = return True
                         -- | otherwise = do
@@ -290,19 +291,16 @@ templateDepName cls@(CppClass clsName _ _ _ tmpl) = templateDepNameBase clsName 
 
 data TypeDeducingMode = TypeField | TypeAlias
 
+browseAppTree :: Type -> (Type, [Type]) -- returns (Base, [params])
+browseAppTree (AppT l r) = 
+    let (base, paramsTail) = browseAppTree l
+    in (base, paramsTail <> [r])
+browseAppTree t = (t, [])
+
 hsTypeToCppType :: Type -> TypeDeducingMode -> Q String
 hsTypeToCppType t@(ConT name) tdm = do
     let nb = translateToCppNameQualified name
     byValue <- isValueType t
-    --return $ case name of
-    --    ''String -> "std::string"
-    --    ''Int    -> "int"
-    --    ''Int64  -> "std::int64_t"
-    --    ''Int32  -> "std::int32_t"
-    --    ''Int16  -> "std::int16_t"
-    --    ''Int8   -> "std::int8_t"
-    --    _        ->  if byValue then nb
-    --                else "std::shared_ptr<" <> nb <> ">"
     return $ 
         if name == ''String then "std::string" 
         else if name == ''Int then "std::int64_t" --"int"
@@ -332,11 +330,22 @@ hsTypeToCppType (AppT ListT (nested)) tdm = do
 
 hsTypeToCppType (VarT n) tdm = return $ show n
 
-hsTypeToCppType t@(AppT bt@(ConT base) arg) tdm = do
-    let baseType = translateToCppNameQualified base
-    argType <- hsTypeToCppType arg tdm
-    isBaseVal <- isValueType bt
-    return $ printf (if isBaseVal then "%s<%s>" else "std::shared_ptr<%s<%s>>") baseType argType
+hsTypeToCppType t@(AppT _ _) tdm = do
+    let (baseType, paramTypes) = browseAppTree t
+    baseTypename <- hsTypeToCppType baseType TypeAlias
+    argTypenames <- sequence (hsTypeToCppType <$> paramTypes <*> [tdm])
+    isBaseVal <- isValueType baseType
+    let paramTypesList = intercalate ", " argTypenames
+    return $ printf (if isBaseVal then "%s<%s>" else "std::shared_ptr<%s<%s>>") baseTypename paramTypesList
+
+hsTypeToCppType t@(TupleT _) tdm = return "std::tuple"
+
+--hsTypeToCppType t@(AppT bt@(ConT base) arg) tdm = do
+--    let baseType = translateToCppNameQualified base
+--    argType <- hsTypeToCppType arg tdm
+--    isBaseVal <- isValueType bt
+--    return $ printf (if isBaseVal then "%s<%s>" else "std::shared_ptr<%s<%s>>") baseType argType
+
 
 hsTypeToCppType t tdm = return $ trace ("FIXME: hsTypeToCppType for " <> show t) $ "[" <> show t <> "]"
 
@@ -513,6 +522,7 @@ instance TypesDependencies Type where
     symbolDependencies (ConT name) | (elem name builtInTypes) = Set.empty
     symbolDependencies contype@(ConT name) = Set.singleton name
     symbolDependencies apptype@(AppT ListT nested) = symbolDependencies nested
+    symbolDependencies apptype@(AppT (TupleT _) nested) = symbolDependencies nested
     symbolDependencies apptype@(AppT base nested) = symbolDependencies [base, nested]
     symbolDependencies vartype@(VarT n) = Set.empty
     symbolDependencies t = trace ("FIXME not handled type: " <> show t) Set.empty
