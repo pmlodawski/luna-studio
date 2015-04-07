@@ -15,21 +15,22 @@ module Luna.DEP.AST.Expr where
 
 import Control.Applicative
 import Control.Monad       ((<=<))
+import Data.Binary         (Binary)
 import GHC.Generics        (Generic)
 
+import qualified Data.Char                       as Char
 import           Flowbox.Generics.Deriving.QShow
 import           Flowbox.Prelude                 hiding (Traversal, cons, drop, id)
-import           Luna.DEP.AST.Arg                    (Arg)
-import qualified Luna.DEP.AST.Arg                    as Arg
-import           Luna.DEP.AST.Common                 (ID)
-import qualified Luna.DEP.AST.Lit                    as Lit
-import           Luna.DEP.AST.Name                   (Name)
-import qualified Luna.DEP.AST.Pat                    as Pat
-import           Luna.DEP.AST.Prop                   (HasName)
-import qualified Luna.DEP.AST.Prop                   as Prop
-import           Luna.DEP.AST.Type                   (Type)
-import qualified Luna.DEP.AST.Type                   as Type
-import qualified Data.Char                       as Char
+import           Luna.DEP.AST.Arg                (Arg)
+import qualified Luna.DEP.AST.Arg                as Arg
+import           Luna.DEP.AST.Common             (ID)
+import qualified Luna.DEP.AST.Lit                as Lit
+import           Luna.DEP.AST.Name               (Name)
+import qualified Luna.DEP.AST.Pat                as Pat
+import           Luna.DEP.AST.Prop               (HasName)
+import qualified Luna.DEP.AST.Prop               as Prop
+import           Luna.DEP.AST.Type               (Type)
+import qualified Luna.DEP.AST.Type               as Type
 
 
 
@@ -90,6 +91,9 @@ mkAccessor :: String -> Accessor
 mkAccessor ""       = VarAccessor ""
 mkAccessor s@(x:xs) = ($ s) $ if Char.isUpper x then ConAccessor else VarAccessor
 
+
+instance Binary Accessor
+instance Binary Expr
 
 instance QShow Expr
 makeLenses ''Expr
