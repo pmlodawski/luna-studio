@@ -66,8 +66,8 @@ data Expr  = NOP          { _id :: ID                                           
            | Native       { _id :: ID, _segments  :: [Expr]                                                                      }
            | NativeCode   { _id :: ID, _code      :: String                                                                      }
            | NativeVar    { _id :: ID, _name      :: String                                                                      }
-           | Ref          { _id :: ID, _dst       :: Expr                                                                        }
-           | RefType      { _id :: ID, _typeName  :: String   , _name      :: String                                             }
+           | Ref          { _id :: ID, _dstr       :: (Int, Float, Maybe [Expr], (Int, String))                                                                        }
+           | RefType      { _id :: ID, _typeName  :: String   , _namet      :: ()                                             }
            | Case         { _id :: ID, _expr      :: Expr     , _match     :: [Expr]                                             }
            | Match        { _id :: ID, _pat       :: Pat      , _body      :: [Expr]                                             }
            deriving (Show, Eq, Generic, Read)
