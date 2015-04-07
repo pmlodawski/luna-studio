@@ -61,7 +61,7 @@ logger :: Logger
 logger = getLogger $moduleName
 
 
-run :: MonadIO m => Graph Tag V -> TDecl V -> ASTInfo -> EitherT State.Error m (TDecl V, ASTInfo)
+run :: Monad m => Graph Tag V -> TDecl V -> ASTInfo -> EitherT State.Error m (TDecl V, ASTInfo)
 run graph ldecl astInfo = evalStateT (func2graph ldecl) $ State.mk graph astInfo
 
 
@@ -82,13 +82,13 @@ parseNode :: Decl.FuncSig a e -> (Node.ID, Node.Node Tag V) -> GPPass V m ()
 parseNode signature (nodeID, node) = case node of
     Node.Outputs defaults pos -> parseOutputs nodeID defaults
     Node.Inputs           pos -> parseInputs nodeID signature
-    Node.Expr expr outputPat defaults pos -> do
+    Node.Expr expr outputPat defaults pos groupInfo -> do
         graph <- State.getGraph
         let lsuclData = Graph.lsuclData graph nodeID
             connectedOnlyToOutput = map (\(dstNID, _, edge) -> (dstNID, edge ^? Edge.src)) lsuclData == [(Node.outputID, Just Port.mkSrcAll)]
             outDataEdges = map (view _3) lsuclData
         srcs <- getNodeSrcs nodeID defaults
-        ast <- (Label.label %~ Tag.mkNode nodeID pos Nothing) <$> buildExpr expr srcs
+        ast  <- groupExpr groupInfo . (Label.label %~ Tag.mkNode nodeID pos Nothing) <$> buildExpr expr srcs
         if connectedOnlyToOutput
             then State.addToExprMap (nodeID, Port.mkSrcAll) $ return ast
             else if not (null outDataEdges) || Maybe.isJust outputPat
@@ -97,6 +97,11 @@ parseNode signature (nodeID, node) = case node of
                         addExprs nodeID pat
                         State.addToBody =<< newLabel assignment
                 else State.addToBody ast
+
+
+groupExpr :: [Tag] -> TExpr v -> TExpr v
+groupExpr []    texpr = texpr
+groupExpr (h:t) texpr = groupExpr t $ Label h $ Expr.Grouped texpr
 
 
 buildExpr :: NodeExpr Tag V -> [TExpr V] -> GPPass V m (TExpr V)
