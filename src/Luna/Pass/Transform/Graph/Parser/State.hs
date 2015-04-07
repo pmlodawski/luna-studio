@@ -52,11 +52,8 @@ data GPState v = GPState { _body    :: [TExpr v]
 makeLenses ''GPState
 
 
-
-
 mk :: Graph Tag v -> ASTInfo -> GPState v
 mk = GPState def def def
-
 
 ----- body ----------------------------------------------------------------
 getBody :: GPPass v m [TExpr v]
@@ -95,7 +92,6 @@ exprMapLookup key = do
 getGraph :: GPPass v m (Graph Tag v)
 getGraph = gets $ view graph
 
-
 inboundPorts :: Node.ID -> GPPass v m [DstPort]
 inboundPorts nodeID = do
     g <- getGraph
@@ -125,37 +121,3 @@ withASTInfo s = do
     let (r, i') = runState s i
     setASTInfo i'
     return r
-
---getNode :: Node.ID -> GPPass a v m (Node a v)
---getNode nodeID = do
---    gr <- getGraph
---    lift $ Graph.lab gr nodeID <??> "GraphParser: getNodeOutputName: Cannot find nodeID=" ++ show nodeID ++ " in graph"
-
-
---getNodeOutputName :: Node.ID -> GPPass a v m VNameP
---getNodeOutputName nodeID = do
---    outputName <- preview Node.outputName <$> getNode nodeID
---    lift $ outputName <??> "GraphParser: getNodeOutputName"
-
-
---getFlags :: Node.ID -> GPPass a v m Flags
---getFlags nodeID = PropertyMap.getFlags nodeID <$> getPropertyMap
-
-
---modifyFlags :: (Flags -> Flags) -> Node.ID -> GPPass a v m ()
---modifyFlags fun nodeID =
---    getPropertyMap >>= setPropertyMap . PropertyMap.modifyFlags fun nodeID
-
-
---setPosition :: Node.ID -> Position -> GPPass a v m ()
---setPosition nodeID position =
---    modifyFlags (Flags.nodePosition .~ Just position) nodeID
-
-
---setGraphFolded :: Node.ID -> GPPass a v m ()
---setGraphFolded = modifyFlags (Flags.graphFoldInfo .~ Just Flags.Folded)
-
-
---setGraphFoldTop :: Node.ID -> Node.ID -> GPPass a v m ()
---setGraphFoldTop nodeID topID =
---    modifyFlags (Flags.graphFoldInfo .~ Just (Flags.FoldTop topID)) nodeID
