@@ -74,7 +74,7 @@ keyer mode = A.lift2 $ keyer' mode
                   risingEdgePosition :: A.Exp a -> A.Exp a
                   risingEdgePosition x = A.caseof aVal [
                                              ((A.==* bVal), 1)
-                                           , ((A.==* 0),    0)
+                                           -- , ((A.==* 0),    0)
                                          ]
                                          ((1 / (bVal - aVal)) * x + (aVal / (aVal - bVal)))
 

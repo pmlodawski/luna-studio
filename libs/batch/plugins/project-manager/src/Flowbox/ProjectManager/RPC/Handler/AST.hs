@@ -186,7 +186,7 @@ remove request@(Remove.Request tbc tlibID tprojectID astID) undoTopic = do
                             undoMsg
                             (fun Topic.projectLibraryAstRemoveRequest $ request)
                             tprojectID
-                            (encodeP $ "remove " ++ (show bc))
+                            (encodeP $ "remove sth")
                         ) undoTopic
            )
 
