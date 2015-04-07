@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds  #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE MultiWayIf       #-}
 {-# LANGUAGE Rank2Types       #-}
 {-# LANGUAGE TemplateHaskell  #-}
 {-# LANGUAGE TupleSections    #-}
@@ -85,18 +86,16 @@ parseNode signature (nodeID, node) = case node of
     Node.Expr expr outputPat defaults pos groupInfo -> do
         graph <- State.getGraph
         let lsuclData = Graph.lsuclData graph nodeID
-            connectedOnlyToOutput = map (\(dstNID, _, edge) -> (dstNID, edge ^? Edge.src)) lsuclData == [(Node.outputID, Just Port.mkSrcAll)]
             outDataEdges = map (view _3) lsuclData
         srcs <- getNodeSrcs nodeID defaults
         ast  <- groupExpr groupInfo . (Label.label %~ Tag.mkNode nodeID pos Nothing) <$> buildExpr expr srcs
-        if connectedOnlyToOutput
-            then State.addToExprMap (nodeID, Port.mkSrcAll) $ return ast
-            else if not (null outDataEdges) || Maybe.isJust outputPat
-                then do pat <- buildPat expr nodeID outDataEdges outputPat
-                        let assignment = Expr.Assignment pat ast
-                        addExprs nodeID pat
-                        State.addToBody =<< newLabel assignment
-                else State.addToBody ast
+        if  | Maybe.isJust outputPat -> do
+                pat <- buildPat expr nodeID outDataEdges outputPat
+                let assignment = Expr.Assignment pat ast
+                addExprs nodeID pat
+                State.addToBody =<< newLabel assignment
+            | not (null outDataEdges) -> State.addToExprMap (nodeID, Port.mkSrcAll) $ return ast
+            | otherwise ->  State.addToBody ast
 
 
 groupExpr :: [Tag] -> TExpr v -> TExpr v

@@ -44,19 +44,19 @@ cleanTags = Tag.mkEmpty
 
 backAndForth :: Breadcrumbs -> String -> IO ()
 backAndForth bc code = do
-    printLn >> printLn >> printLn
+    --printLn >> printLn >> printLn
     (ast', astInfo) <- Common.getAST code
     let ast = Label.replace Tag.fromEnumerated ast'
-    prettyPrint ast
-    printHeader "getGraph"
+    --prettyPrint ast
+    --printHeader "getGraph"
     (ast2, graph2) <- Common.getGraph bc ast
-    prettyPrint graph2
-    printHeader "getExpr"
+    --prettyPrint graph2
+    --printHeader "getExpr"
     (ast3, astInfo3) <- Common.getExpr bc graph2 ast2 astInfo
-    prettyPrint ast3
-    putStrLn "getGraph"
+    --prettyPrint ast3
+    --putStrLn "getGraph"
     (ast4, graph4) <- Common.getGraph bc ast3
-    prettyPrint graph4
+    --prettyPrint graph4
     expr  <- Common.getMain ast
     expr2 <- Common.getMain ast2
     expr4 <- Common.getMain ast4
