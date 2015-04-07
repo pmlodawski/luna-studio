@@ -34,7 +34,7 @@ import           Luna.Syntax.Graph.Node           (Node)
 import qualified Luna.Syntax.Graph.Node           as Node
 import           Luna.Syntax.Graph.Node.Position  (Position)
 import           Luna.Syntax.Graph.Port           (DstPort, SrcPort)
-import           Luna.Syntax.Graph.Tag            (TDecl, Tag, TExpr)
+import           Luna.Syntax.Graph.Tag            (TDecl, TExpr, Tag)
 import qualified Luna.Syntax.Graph.Tag            as Tag
 import           Luna.Syntax.Label                (Label (Label))
 import qualified Luna.Syntax.Label                as Label
@@ -130,13 +130,11 @@ setNodeMap = modify . set nodeMap
 addToNodeMap :: AST.ID -> (Node.ID, SrcPort) -> GBPass v m ()
 addToNodeMap k v = setNodeMap . Map.insert k v =<< getNodeMap
 
-
 registerIDs :: ExtractIDs.EIDDefaultTraversal Identity labeled
             => labeled -> (Node.ID, SrcPort) -> GBPass v m ()
 registerIDs labeled np = do
     let ids = ExtractIDs.run labeled
     mapM_ (`addToNodeMap` np) $ IntSet.toList ids
-
 
 ----- resetNodeIDs --------------------------------------------------------
 setResetNodeIDs :: Bool -> GBPass v m ()
@@ -169,7 +167,7 @@ saveFreeNodeID decl = do
     return (decl & Label.label . Tag.nodeID .~ freeNodeID)
 
 getNodeInfo :: Label Tag e -> GBPass e1 m (Node.ID, Position, Label Tag e)
-getNodeInfo labeled@(Label tag e) = case tag of
+getNodeInfo labeled@(Label tag e) = case tag of --FIXME[PM] when ResetNodeIDs set, always assign new nodeID
     Tag.Node _ nodeID position _ -> return (nodeID, position, labeled)
     Tag.Empty {}        -> do
         freeNodeID <- getNextFreeNodeID
