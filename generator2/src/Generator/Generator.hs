@@ -338,6 +338,8 @@ hsTypeToCppType t@(AppT _ _) tdm = do
     let paramTypesList = intercalate ", " argTypenames
     return $ printf (if isBaseVal then "%s<%s>" else "std::shared_ptr<%s<%s>>") baseTypename paramTypesList
 
+hsTypeToCppType t@(TupleT 0) tdm = return "std::tuple<>"
+
 hsTypeToCppType t@(TupleT _) tdm = return "std::tuple"
 
 --hsTypeToCppType t@(AppT bt@(ConT base) arg) tdm = do
