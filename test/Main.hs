@@ -65,7 +65,7 @@ main = do
     args <- getArgs
     when (length args < 2) $ fail "provide input and output path!"
     let path   = args !! 0
-        liFile = replace "luna" "" path
+        liFile = replace ".luna" "" path
         out    = args !! 1
         src    = Source (QualPath [] "Main") (File $ fromString path)
 
@@ -88,7 +88,7 @@ main = do
             printHeader "SA"
             sa           <- Pass.run1_ SA.pass ast
             ppPrint sa
-            let mInfo = MI.ModuleInfo [fromString liFile] mempty mempty sa mempty
+            let mInfo = MI.ModuleInfo (QualPath [] (fromString liFile)) mempty mempty sa mempty
             liftIO $ MI.writeModInfoToFile mInfo
 
 
