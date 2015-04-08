@@ -5,12 +5,11 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE OverloadedStrings #-}
-
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances      #-}
+{-# LANGUAGE RankNTypes                #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE OverloadedStrings         #-}
+{-# LANGUAGE TypeFamilies              #-}
 
 module Luna.Pass.Analysis.Struct where
 
@@ -47,6 +46,10 @@ import           Luna.Data.Namespace          (Namespace)
 
 import           Luna.Data.StructInfo         (StructInfo, OriginInfo(OriginInfo))
 import qualified Luna.Data.StructInfo         as SI
+
+import           Luna.Data.StructData         (StructData)
+import qualified Luna.Data.StructData         as StructData
+
 import qualified Luna.Data.ModuleInfo         as ModuleInfo
 
 import qualified Luna.Data.Namespace.State    as State 
@@ -56,13 +59,15 @@ import qualified Luna.Syntax.Name.Pattern     as NamePattern
 import           Luna.Syntax.Foreign          (Foreign(Foreign))
 
 import qualified Data.IntMap                  as IntMap
+import qualified Luna.Data.ImportInfo         as II
+
 ----------------------------------------------------------------------
 -- Base types
 ----------------------------------------------------------------------
 
 data StructAnalysis = StructAnalysis
 
-type SAPass                 m   = PassMonad Namespace m
+type SAPass                 m   = PassMonad StructData m
 type SACtx              lab m a = (Enumerated lab, SATraversal m a, MonadIO m)
 type SATraversal            m a = (PassCtx m, AST.Traversal        StructAnalysis (SAPass m) a a)
 type SADefaultTraversal     m a = (PassCtx m, AST.DefaultTraversal StructAnalysis (SAPass m) a a)
@@ -87,7 +92,7 @@ pass = Pass "Alias analysis"
             mempty aaUnit
 
 aaUnit :: SADefaultTraversal m a => a -> SAPass m StructInfo
-aaUnit ast = defaultTraverseM ast *> (view Namespace.info <$> get)
+aaUnit ast = defaultTraverseM ast *> (((view Namespace.info) . (view StructData.namespace)) <$> get)
 
 aaMod :: SACtx lab m a => LModule lab a -> SAPass m (LModule lab a)
 aaMod mod@(Label lab (Module _ body)) = withScope id continue

@@ -52,7 +52,7 @@ logger = getLoggerIO $(moduleName)
 
 --makeLenses (''VAState)
 
-type NamespaceState m = (Monad m, Applicative m, NamespaceMonad m, StructInfoMonad m)
+type NamespaceState m = (Monad m, Applicative m, NamespaceMonad m, StructInfoMonad m)   -- ++ StructDataMonad m ?
 
 
 --getCurrentID :: NamespaceState m => m (Maybe ID)
