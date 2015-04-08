@@ -10,7 +10,7 @@ import           Data.Map                 (Map)
 import qualified Data.Map                 as Map
 import qualified Data.IntMap              as IntMap
 import           Data.Text.Internal.Lazy  (Text)
-import           Data.Text.Lazy           as T
+import qualified Data.Text.Lazy           as T
 import           System.Environment       (lookupEnv)
 import qualified System.Directory         as Dir
 import           System.FilePath          (joinPath, (</>))
@@ -20,7 +20,7 @@ import           Luna.Data.StructInfo     (StructInfo, Scope, OriginInfo)
 import           Luna.Syntax.AST          (ID)
 import           Luna.Syntax.Decl         (Path)
 import           Luna.Syntax.Name         (TName(TName), TNameP)
-import           Luna.Syntax.Name.Path    (NamePath, QualPath)
+import           Luna.Syntax.Name.Path    (NamePath, QualPath(QualPath))
 import           Luna.Syntax.Name.Pattern (NamePatDesc, SegmentDesc)
 
 import           Flowbox.Data.MapForest   (Node)
@@ -35,17 +35,17 @@ import           Flowbox.Prelude
 type Name = String
 
 
-data ImportError = NotFoundError { path   :: Path }
-                 | AmbRefError   { symbol :: NamePath, modules :: [Path] }
+data ImportError = NotFoundError { path   :: QualPath }
+                 | AmbRefError   { symbol :: NamePath, modules :: [QualPath] }
                  deriving (Generic, Eq, Show, Ord, Read)
 
 
 -- stores the information about a module, needed while importing
 -- and resolving names. Checking whether a file needs recompilation is done based on the file  edit dates
 data ModuleInfo = ModuleInfo {
-                     _name     :: Path,
+                     _name     :: QualPath,
                      _symTable :: Map NamePath ID,
-                     _imports  :: [Path],
+                     _imports  :: [QualPath],
                      _strInfo  :: StructInfo,  -- [?] Namespace here?
                      _errors   :: [ImportError]
                   } deriving (Generic, Eq, Show, Read)
@@ -56,22 +56,22 @@ makeLenses ''ModuleInfo
 
 -- checks whether a given symbol is anywhere in the imported list
 -- returns the list of ALL matches (non-singleton list means some kind of conflict)
-getSymbolOriginsAux :: NamePath -> [ModuleInfo] -> [Path]
-getSymbolOriginsAux symbol infos = Flowbox.Prelude.map (^. name) results
-    where results = Flowbox.Prelude.filter (nameExists symbol) infos
+getSymbolOriginsAux :: NamePath -> [ModuleInfo] -> [QualPath]
+getSymbolOriginsAux symbol infos = map (^. name) results
+    where results = filter (nameExists symbol) infos
 
 -- [TODO] update to account for the Either version of getModuleInfo(s)
 -- this is the main version, as you only have to pass it your currently parsed module
-getSymbolOrigins :: NamePath -> ModuleInfo -> IO [Path]
+getSymbolOrigins :: NamePath -> ModuleInfo -> IO [QualPath]
 getSymbolOrigins symbol mInfo = do
     res <- getModuleInfos (mInfo ^. imports)
     return $ fmap (_name) $ rights res
 
 -- given a list of paths, lookups all the necessary ModuleInfo structs
-getModuleInfos :: [Path] -> IO [Either ImportError ModuleInfo]
+getModuleInfos :: [QualPath] -> IO [Either ImportError ModuleInfo]
 getModuleInfos paths = mapM getModuleInfo paths
 
-getModuleInfo :: Path -> IO (Either ImportError ModuleInfo)
+getModuleInfo :: QualPath -> IO (Either ImportError ModuleInfo)
 --getModuleInfo = (return . fromJust <=< readModInfoFromFile)
 getModuleInfo path = do
     result <- readModInfoFromFile path
@@ -86,8 +86,8 @@ regError err = errors %~ (err:)
 -------------------------------------------------------------------------------------
 -- wrappers for structInfo functions
 -------------------------------------------------------------------------------------
-regOrigin :: ID -> ID -> NamePath -> Path -> ModuleInfo -> ModuleInfo
-regOrigin id pid name path = strInfo %~ SI.regOrigin id pid name path
+regOrigin :: ID -> ID -> NamePath -> QualPath -> ModuleInfo -> ModuleInfo
+regOrigin id pid name path = strInfo %~ SI.regOrigin id pid name (qualPathToPath path)
 
 
 regOrphan :: ID -> SI.Error -> ModuleInfo -> ModuleInfo
@@ -113,7 +113,7 @@ getSymbolId name mInfo = Map.lookup name (mInfo ^. symTable)
 
 
 -- checks if the module exists (but not if it's parsed)
-moduleExists :: Path -> IO Bool
+moduleExists :: QualPath -> IO Bool
 moduleExists path = do
     let fullPath = modPathToString path ++ ".luna"
     f <- Dir.findFile ["."] fullPath 
@@ -124,7 +124,7 @@ moduleExists path = do
 
 
 -- checks if module is already parsed (i.e. the ModuleInfo is present)
-moduleIsParsed :: Path -> IO Bool
+moduleIsParsed :: QualPath -> IO Bool
 moduleIsParsed path = do
     let fullPath = modPathToString path ++ "." ++ liFileSuffix
     liPath <- liDirectory
@@ -134,14 +134,28 @@ moduleIsParsed path = do
         Nothing -> False
 
 
-modPathToString :: Path -> String
-modPathToString path = joinPath $ Flowbox.Prelude.map toString path
+modPathToString :: QualPath -> String
+modPathToString (QualPath ns n) = (joinPath $ map T.unpack ns) </> (T.unpack n)
 
 
 -- the difference between this one and modPathToString is that
 -- this returns the directory of the module, not the module name itself
-modPathToDirString :: Path -> FilePath
-modPathToDirString path = joinPath . Flowbox.Prelude.init $ Flowbox.Prelude.map toString path
+modPathToDirString :: QualPath -> FilePath
+modPathToDirString (QualPath ns _) = joinPath $ map T.unpack ns
+
+
+
+pathToQualPath :: Path -> QualPath
+pathToQualPath path = QualPath ns n
+    where list = map toText path
+          n    = last list
+          ns   = init list
+
+qualPathToPath :: QualPath -> Path
+qualPathToPath (QualPath ns n) = segs ++ [seg]
+    where segs = (map makeTNameP ns)
+          seg  = (fromText n) :: TNameP
+          makeTNameP = (\x -> fromText x) :: T.Text -> TNameP
 
 --------------------------------------------------------------------------
 -- ModuleInfo serialization utils
@@ -181,7 +195,7 @@ writeStructInfoToFile name sInfo = do
 
 
 -- deserialization:
-readModInfoFromFile :: Path -> IO (Maybe ModuleInfo)
+readModInfoFromFile :: QualPath -> IO (Maybe ModuleInfo)
 readModInfoFromFile path = do
     isParsed <- moduleIsParsed path
     if isParsed
@@ -237,4 +251,9 @@ instance Monoid ModuleInfo where
                              (mappend (a ^. imports)  (b ^. imports))
                              (mappend (a ^. strInfo)  (b ^. strInfo))
                              (mappend (a ^. errors)   (b ^. errors))
+
+
+instance Monoid QualPath where
+    mempty      = QualPath [] mempty
+    mappend a b = b
 
