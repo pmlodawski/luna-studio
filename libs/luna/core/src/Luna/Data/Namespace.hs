@@ -157,7 +157,6 @@ instance (MonadTrans t, NamespaceMonad m, Monad m) => NamespaceMonad (t m) where
     get = lift get
     put = lift . put
 
-
 instance (Monad m, NamespaceMonad m) => StructInfoMonad m where
     get = do 
         ns <- get

@@ -7,13 +7,14 @@
 {-# LANGUAGE TemplateHaskell      #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE OverlappingInstances  #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 
 module Luna.Data.StructData where
 
 import           Flowbox.Prelude
 import qualified Luna.Data.ImportInfo      as II
 import           Luna.Data.ImportInfo      (ImportInfo)
-import qualified Luna.Data.Namespace       as NM
+import qualified Luna.Data.Namespace       as NS
 import           Luna.Data.Namespace       (Namespace)
 import qualified Luna.Data.Namespace.State as NMS
 import           Luna.Data.StructInfo      (StructInfoMonad)
@@ -22,11 +23,13 @@ import           Control.Monad.RWS         (RWST)
 import qualified Control.Monad.RWS         as RWST
 import           Control.Monad.Trans.Class (lift, MonadTrans)
 
+import qualified Control.Monad.State.Lazy  as State
+
 ----------------------------------------------------------------------
 -- Data types
 ----------------------------------------------------------------------
 data StructData = StructData { _namespace  :: Namespace
-	                         , _importInfo :: ImportInfo
+	                     , _importInfo :: ImportInfo
                              } 
 
 makeLenses ''StructData
@@ -43,10 +46,9 @@ class StructDataMonad m where
 ----------------------------------------------------------------------
 
 
-
-------------------------------------------------------------------------
+----------------------------------------------------------------------
 ---- Instances
-------------------------------------------------------------------------
+----------------------------------------------------------------------
 
 instance Monoid StructData where
     mempty      = StructData  mempty mempty
@@ -54,18 +56,35 @@ instance Monoid StructData where
                              (mappend (a ^. importInfo) (b ^. importInfo))
 
 
--- instance (Monad m, Monoid w) => StructDataMonad (RWST r w StructData m) where
---     get = RWST.get
---     put = RWST.put
+instance (Monad m, Monoid w) => StructDataMonad (RWST r w StructData m) where
+    get = RWST.get
+    put = RWST.put
 
--- instance (MonadTrans t, StructDataMonad m, Monad m) => StructDataMonad (t m) where
---     get = lift get
---     put = lift . put
 
--- instance (Monad m, StructDataMonad m) => NM.NamespaceMonad m where
---     get = do 
---         sd <- get
---         return $ sd ^. namespace
---     put i = do
---         sd <- get
---         put (sd & namespace .~ i)
+instance (Monad m, Monoid w) => NS.NamespaceMonad (RWST r w StructData m) where
+    get = do
+        sd <- get
+        return $ sd ^. namespace
+    put i = do
+        sd <- get
+        put (sd & namespace .~ i)
+
+
+------------------------------------------------------------------------------------
+--
+--instance (MonadTrans t, StructDataMonad m, Monad m) => StructDataMonad (t m) where
+--    get = lift get
+--    put = lift . put
+--
+--foo = do
+--    x <- get
+--    return x
+--
+--foo2 = do
+--    x <- NS.get
+--    return x
+--
+--bar = RWST.runRWST foo (mempty :: StructData)
+--bar2 = RWST.runRWST foo2 (mempty :: StructData)
+--
+
