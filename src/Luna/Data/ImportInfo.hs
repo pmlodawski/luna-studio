@@ -13,9 +13,10 @@ import           Flowbox.Prelude
 type ID = Int
 
 data ImportInfo = ImportInfo {
-    _strInfos :: Map Path StructInfo,
-    _symTable :: Map NamePath [OriginInfo],
-    _errors   :: [ImportError]
+    _path        :: Path,       -- move to Namespace (?)
+    _structInfos :: Map Path StructInfo,
+    _symTable    :: Map NamePath [OriginInfo],
+    _errors      :: [ImportError]
 } deriving (Generic, Show, Eq, Read)
 
 makeLenses ''ImportInfo
@@ -33,8 +34,8 @@ createSymTable info = info & symTable .~ (combineScopes info)
 -- symbol appears in more than one module, the list isn't a singleton
 combineScopes :: ImportInfo -> Map NamePath [OriginInfo]
 combineScopes info = Map.unionsWith (++) maps
-    where strInfos = Map.elems $ _strInfos info
-          maps     = map topLevelScope strInfos
+    where structInfos = Map.elems $ _structInfos info
+          maps     = map topLevelScope structInfos
 
 
 
@@ -52,13 +53,9 @@ toNamePath (t:ts) = multi t ts
 
 
 instance Monoid ImportInfo where
-    mempty      = ImportInfo  mempty mempty mempty
-    mappend a b = ImportInfo (mappend (a ^. strInfos) (b ^. strInfos))
-                             (mappend (a ^. symTable) (b ^. symTable))
-                             (mappend (a ^. errors)   (b ^. errors))
-
-
-
-
-
-
+    mempty      = ImportInfo  mempty mempty mempty mempty
+    mappend a b = ImportInfo mempty
+                             (mappend (a ^. structInfos) (b ^. structInfos))
+                             (mappend (a ^. symTable)    (b ^. symTable))
+                             (mappend (a ^. errors)      (b ^. errors))
+                             

@@ -9,7 +9,6 @@
 {-# LANGUAGE TemplateHaskell           #-}
 {-# LANGUAGE UndecidableInstances      #-}
 {-# LANGUAGE OverlappingInstances      #-}
-
 module Luna.Data.Namespace where
 
 
@@ -166,3 +165,4 @@ instance (Monad m, NamespaceMonad m) => StructInfoMonad m where
     put i = do
         ns <- get
         put (ns & info .~ i)
+-- 
