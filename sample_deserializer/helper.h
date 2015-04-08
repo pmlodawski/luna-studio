@@ -63,7 +63,7 @@ inline void deserialize(std::vector<T> &out, std::istream &input);
 
 inline long long readInteger(Input &input)
 {
-	bool isBig = readInt8(input);
+	auto isBig = readInt8(input);
 	if(!isBig)
 	{
 		return readInt32(input);
@@ -81,7 +81,7 @@ inline long long readInteger(Input &input)
 		}
 
 		std::int64_t ret = 0;
-		for(int i = 0; i < bytes.size(); i++)
+		for(int i = 0; i < (int)bytes.size(); i++)
 		{
 			ret = ret << 8;
 			std::uint8_t byte = bytes[bytes.size() - 1 - i];
@@ -166,7 +166,7 @@ template<typename T>
 inline void deserialize(std::vector<T> &out, std::istream &input)
 {
 	auto size = readInt64(input);
-	out.resize(size);
+	out.resize((size_t)size);
 	for(int i = 0; i < size; i++)
 	{
 		deserialize(out[i], input);
@@ -197,7 +197,7 @@ inline std::string deserializeUtf8CharacterAsString(Input &input)
 inline void deserialize(std::string &out, std::istream &input)
 {
 	auto size = readInt64(input);
-	out.resize(size);
+	out.resize((size_t)size);
 	out.clear();
 
 	for(int i = 0; i < size; i++)
@@ -300,7 +300,7 @@ inline void serialize(const std::string &value, std::ostream &output)
 
 
 	serialize(length, output);	
-	for(int i = 0; i < value.size(); i++)
+	for(int i = 0; i < (int)value.size(); i++)
 	{
 		serialize(std::int8_t(value[i]), output);
 	}
