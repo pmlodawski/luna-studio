@@ -25,9 +25,35 @@ std::shared_ptr<T> parseFile(const std::string &fname)
 		throw std::runtime_error("Failed when reading file " + fname + " : " + e.what());
 	}
 }
+ 
+//template<std::size_t> struct int_ {};
+
+template <class Tuple, size_t Pos>
+std::ostream& print_tuple(std::ostream& out, const Tuple& t, int_<Pos>)
+{
+	out << std::get< std::tuple_size<Tuple>::value - Pos >(t) << ',';
+	return print_tuple(out, t, int_<Pos - 1>());
+}
+
+template <class Tuple>
+std::ostream& print_tuple(std::ostream& out, const Tuple& t, int_<1>)
+{
+	return out << std::get<std::tuple_size<Tuple>::value - 1>(t);
+}
+
+template <class... Args>
+std::ostream& operator<<(std::ostream& out, const std::tuple<Args...>& t)
+{
+	out << '(';
+	print_tuple(out, t, int_<sizeof...(Args)>());
+	return out << ')';
+}
+
 
 int main()
 {
+	auto t1 = std::make_tuple("Foo", 1, 3.5);
+	std::cout << t1 << std::endl; // => (2,3.4f,"awesomeness")
 	try
 	{
 	std::ifstream input{ "test.bin", std::ios::binary };

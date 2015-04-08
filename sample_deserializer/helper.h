@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <iostream>
 #include <string>
+#include <tuple>
 #include <boost/optional.hpp>
 
 typedef std::istream Input;
@@ -314,4 +315,57 @@ inline void serialize(const boost::optional<T> &value, std::ostream &output)
 	{
 		serialize(*value, output);
 	}
+}
+
+// Define a type which holds an unsigned integer value 
+template<std::size_t> struct int_ {};
+
+template <class Tuple, size_t Pos>
+void serializeTuple(const Tuple& t, std::ostream& out, int_<Pos>)
+{
+	const auto &value = std::get<std::tuple_size<Tuple>::value - Pos>(t);
+	serialize(value, out);
+	serializeTuple(t, out, int_<Pos - 1>());
+}
+
+
+template <class Tuple>
+void serializeTuple(const Tuple& t, std::ostream& out, int_<1>)
+{
+	const auto &value = std::get<std::tuple_size<Tuple>::value - 1>(t);
+	serialize(value, out);
+}
+
+template <class Tuple, size_t Pos>
+void deserializeTuple(Tuple& t, std::istream& in, int_<Pos>)
+{
+	auto &value = std::get<std::tuple_size<Tuple>::value - Pos>(t);
+	deserialize(value, in);
+	deserializeTuple(t, in, int_<Pos - 1>());
+}
+
+
+template <class Tuple>
+void deserializeTuple(Tuple& t, std::istream& in, int_<1>)
+{
+	auto &value = std::get<std::tuple_size<Tuple>::value - 1>(t);
+	deserialize(value, in);
+}
+
+inline void serialize(const std::tuple<> &value, std::ostream &output)
+{}
+
+template<typename ...Args>
+inline void serialize(const std::tuple<Args...> &value, std::ostream &output)
+{
+	serializeTuple(value, output, int_<sizeof...(Args)>());
+}
+
+inline void deserialize(std::tuple<> &value, std::istream &input)
+{}
+
+template<typename ...Args>
+inline void deserialize(std::tuple<Args...> &value, std::istream &input)
+{
+	deserializeTuple(value, input, int_<sizeof...(Args)>());
 }
