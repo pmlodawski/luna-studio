@@ -36,6 +36,7 @@ main = do
 
     let acc = Accessor 503 (ConAccessor "bar") (Con 502 "foo")
 
+    let ref = Ref 568  (1, 2.5, Just [NOP 50], (5, "pięć"))
     --let bs = encode con
 
     encodeWithFname "test.bin" con
@@ -43,6 +44,7 @@ main = do
     encodeWithFname "testargexp.bin" argexp
     encodeWithFname "testlit.bin" lit
     encodeWithFname "testacc.bin" acc
+    encodeWithFname "testref.bin" ref
 
     --putStrLn $ show $ encode acc
 
