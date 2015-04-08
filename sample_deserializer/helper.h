@@ -99,11 +99,12 @@ inline long long readInteger(Input &input)
 template<typename T>
 T readFloatingPoint(Input &input)
 {
-	T ret = 0;
-	double mantissa = readInteger(input);
-	double exponent = readInt64(input);
-	ret = std::ldexp(mantissa, exponent);
-	return ret;
+	return readPrimitive<T>(input);
+// 	T ret = 0;
+// 	double mantissa = readInteger(input);
+// 	double exponent = readInt64(input);
+// 	ret = std::ldexp(mantissa, exponent);
+// 	return ret;
 }
 
 inline void deserialize(char &val, Input &input)
