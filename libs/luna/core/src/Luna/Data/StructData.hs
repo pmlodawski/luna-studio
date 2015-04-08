@@ -45,6 +45,26 @@ class StructDataMonad m where
 -- Utils
 ----------------------------------------------------------------------
 
+modify f = do
+    sd <- get
+    put $ f sd
+
+modifyNamespace f = do
+    ns <- NS.get
+    NS.put $ f ns
+
+modifyImportInfo f = do
+    ii <- II.get
+    II.put $ f ii
+
+
+setPath path = modifyImportInfo $ II.setPath path
+
+
+getPath = do
+    ii <- II.get
+    return $ II.getPath ii
+
 
 ----------------------------------------------------------------------
 ---- Instances
@@ -70,21 +90,31 @@ instance (Monad m, Monoid w) => NS.NamespaceMonad (RWST r w StructData m) where
         put (sd & namespace .~ i)
 
 
+instance (Monad m, Monoid w) => II.ImportInfoMonad (RWST r w StructData m) where
+    get = do
+        sd <- get
+        return $ sd ^. importInfo
+    put i = do
+        sd <- get
+        put (sd & importInfo .~ i)
+
+
+
 ------------------------------------------------------------------------------------
 --
 --instance (MonadTrans t, StructDataMonad m, Monad m) => StructDataMonad (t m) where
 --    get = lift get
 --    put = lift . put
---
---foo = do
---    x <- get
---    return x
---
---foo2 = do
---    x <- NS.get
---    return x
---
---bar = RWST.runRWST foo (mempty :: StructData)
---bar2 = RWST.runRWST foo2 (mempty :: StructData)
---
+
+foo = do
+    x <- get
+    return x
+
+foo2 = do
+    x <- NS.get
+    return x
+
+bar = RWST.runRWST foo (mempty :: StructData)
+bar2 = RWST.runRWST foo2 (mempty :: StructData)
+
 

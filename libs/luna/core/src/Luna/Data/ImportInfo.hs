@@ -6,20 +6,41 @@ import qualified Flowbox.Data.MapForest   as MapForest
 import           Luna.Data.StructInfo     (StructInfo, OriginInfo, Scope)
 import qualified Luna.Data.StructInfo     as SI
 import           Luna.Syntax.Decl         (Path)
-import           Luna.Syntax.Name.Path    (NamePath, QualPath, multi)
-import           Luna.Data.ModuleInfo     (ImportError)
+import           Luna.Syntax.Name.Path    (NamePath, QualPath(QualPath), multi)
+import           Luna.Data.ModuleInfo     (ImportError, qualPathToPath)
+import           Control.Monad.RWS        (RWST)
+import qualified Control.Monad.RWS        as RWST
 import           Flowbox.Prelude
 
 type ID = Int
 
 data ImportInfo = ImportInfo {
-    _path        :: Path,       -- move to Namespace (?)
-    _structInfos :: Map Path StructInfo,
+    _path        :: QualPath,       -- move to Namespace (?)
+    _structInfos :: Map QualPath StructInfo,
     _symTable    :: Map NamePath [OriginInfo],
     _errors      :: [ImportError]
 } deriving (Generic, Show, Eq, Read)
 
 makeLenses ''ImportInfo
+
+----------------------------------------------------------------------------------------
+-- Type classes
+----------------------------------------------------------------------------------------
+class ImportInfoMonad m where
+    get :: m ImportInfo
+    put :: ImportInfo -> m ()
+
+
+----------------------------------------------------------------------------------------
+-- Utils
+----------------------------------------------------------------------------------------
+setPath :: QualPath -> ImportInfo -> ImportInfo
+setPath p = path .~ p
+
+
+
+getPath :: ImportInfo -> Path
+getPath info = qualPathToPath $ _path info
 
 
 
@@ -34,8 +55,8 @@ createSymTable info = info & symTable .~ (combineScopes info)
 -- symbol appears in more than one module, the list isn't a singleton
 combineScopes :: ImportInfo -> Map NamePath [OriginInfo]
 combineScopes info = Map.unionsWith (++) maps
-    where structInfos = Map.elems $ _structInfos info
-          maps     = map topLevelScope structInfos
+    where strInfos = Map.elems $ _structInfos info
+          maps     = map topLevelScope strInfos
 
 
 
@@ -51,6 +72,9 @@ toNamePath :: [Text] -> NamePath
 toNamePath (t:ts) = multi t ts          
 
 
+-----------------------------------------------------------------------------------------
+--Instances
+-----------------------------------------------------------------------------------------
 
 instance Monoid ImportInfo where
     mempty      = ImportInfo  mempty mempty mempty mempty
@@ -58,4 +82,9 @@ instance Monoid ImportInfo where
                              (mappend (a ^. structInfos) (b ^. structInfos))
                              (mappend (a ^. symTable)    (b ^. symTable))
                              (mappend (a ^. errors)      (b ^. errors))
+
+
+instance (Monad m, Monoid w) => ImportInfoMonad (RWST r w ImportInfo m) where
+    get = RWST.get
+    put = RWST.put
                              
