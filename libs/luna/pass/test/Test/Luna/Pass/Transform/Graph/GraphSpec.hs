@@ -11,6 +11,13 @@ import Test.Hspec
 
 import           Flowbox.Prelude
 import           Luna.Syntax.Control.Crumb             (Breadcrumbs)
+import qualified Luna.Syntax.Graph.Edge                as Edge
+import qualified Luna.Syntax.Graph.Graph               as Graph
+import qualified Luna.Syntax.Graph.Node                as Node
+import           Luna.Syntax.Graph.Node.Expr           (NodeExpr)
+import qualified Luna.Syntax.Graph.Node.Expr           as NodeExpr
+import qualified Luna.Syntax.Graph.Node.StringExpr     as StringExpr
+import qualified Luna.Syntax.Graph.Port                as Port
 import           Luna.Syntax.Graph.Tag                 (Tag)
 import qualified Luna.Syntax.Graph.Tag                 as Tag
 import qualified Luna.Util.Label                       as Label
@@ -18,20 +25,13 @@ import qualified Test.Luna.Pass.Transform.Graph.Common as Common
 import           Test.Luna.Sample.Code                 (sampleCodes)
 import qualified Test.Luna.Syntax.Common               as Common
 --import qualified Test.Luna.Sample.Code                 as SampleCode
---import qualified Luna.Syntax.Graph.Edge                  as Edge
 --import           Luna.Syntax.Graph.Graph                 (Graph)
---import qualified Luna.Syntax.Graph.Graph                 as Graph
---import qualified Luna.Syntax.Graph.Node                  as Node
---import           Luna.Syntax.Graph.Node.Expr             (NodeExpr)
---import qualified Luna.Syntax.Graph.Node.Expr             as NodeExpr
---import qualified Luna.Syntax.Graph.Node.StringExpr       as StringExpr
---import qualified Luna.Syntax.Graph.Port                  as Port
 --import           Test.Luna.Sample.Graph                  (buggyGraphs, sampleGraphs)
 
 
 
---strExpr :: String -> NodeExpr
---strExpr = NodeExpr.StringExpr . StringExpr.Expr
+strExpr :: String -> NodeExpr Tag ()
+strExpr = NodeExpr.StringExpr . StringExpr.Expr
 
 printHeader :: MonadIO m => String -> m ()
 printHeader header = printLn >> putStrLn ("=== " <> header <> " ===") >> printLn
@@ -104,19 +104,18 @@ spec = do
 
 
     describe "graph sort alghorithm" $ do
-        it "" pending
-        --it "sorts graph correctly" $ do
-        --    let n1 = (1, Node.Expr (strExpr "") "" (1, 0))
-        --        n2 = (2, Node.Expr (strExpr "") "" (2, 0))
-        --        n3 = (3, Node.Expr (strExpr "") "" (2, 0))
-        --        n4 = (4, Node.Expr (strExpr "") "" (3, 0))
-        --        n5 = (5, Node.Expr (strExpr "") "" (4, 0))
-        --        n6 = (6, Node.Expr (strExpr "") "" (5, 0))
-        --        properOrder = [n1, n2, n4, n5, n3, n6]
-        --        testOrder   = [n2, n3, n5, n6, n4, n1]
-        --        edges  = [(1, 2, Edge.Data Port.All $ Port.Num 0)
-        --                 ,(5, 3, Edge.Data Port.All $ Port.Num 0)]
-        --        graph  = Graph.mkGraph testOrder edges
-        --        sorted = Graph.sort graph
-        --    map fst sorted `shouldBe` map fst properOrder
-        --    sorted         `shouldBe` properOrder
+        it "sorts graph correctly" $ do
+            let n1 = (1, Node.Expr (strExpr "") def def (1, 0) def)
+                n2 = (2, Node.Expr (strExpr "") def def (2, 0) def)
+                n3 = (3, Node.Expr (strExpr "") def def (2, 0) def)
+                n4 = (4, Node.Expr (strExpr "") def def (3, 0) def)
+                n5 = (5, Node.Expr (strExpr "") def def (4, 0) def)
+                n6 = (6, Node.Expr (strExpr "") def def (5, 0) def)
+                properOrder = [n1, n2, n4, n5, n3, n6]
+                testOrder   = [n2, n3, n5, n6, n4, n1]
+                edges  = [(1, 2, Edge.Data Port.mkSrcAll $ Port.mkDst 0)
+                         ,(5, 3, Edge.Data Port.mkSrcAll $ Port.mkDst 0)]
+                graph  = Graph.mkGraph testOrder edges
+                sorted = Graph.sort graph
+            map fst sorted `shouldBe` map fst properOrder
+            sorted         `shouldBe` properOrder
