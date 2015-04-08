@@ -200,6 +200,8 @@ instance CppFormattable CppInclude where
     formatCpp (CppLocalInclude path) = (printf "#include \"%s\"" path, "")
 
 data CppForwardDecl = CppForwardDeclClass String [String] -- | CppForwardDeclStruct String
+    deriving (Ord, Eq)
+
 instance CppFormattable CppForwardDecl where
     formatCpp (CppForwardDeclClass name tmpl) = (printf "%sclass %s;" (formatTemplateIntroductor tmpl) name, "")
     -- formatCpp (CppForwardDeclStruct name) = (printf "struct %s;" name, "")
@@ -216,7 +218,7 @@ instance CppFormattable CppTypedef where
         in (printf "%susing %s = %s;" templateList to from, "")
 
 data CppParts = CppParts { includes     :: [CppInclude]
-                         , forwardDecls :: [CppForwardDecl]
+                         , forwardDecls :: Set CppForwardDecl
                          , typedefs     :: [CppTypedef]
                          , classes      :: [CppClass]
                          , functions    :: [CppFunction]
@@ -225,7 +227,7 @@ data CppParts = CppParts { includes     :: [CppInclude]
 instance CppFormattable CppParts where
     formatCpp (CppParts incl frwrds tpdefs cs fns) = 
         let includesPieces = map formatCpp incl
-            forwardDeclPieces = map formatCpp frwrds
+            forwardDeclPieces = map formatCpp (Set.toList frwrds)
             typedefPieces = map formatCpp tpdefs
             classesCodePieces = map formatCpp cs
             functionsPieces = map formatCpp fns
@@ -364,7 +366,7 @@ isCollapsedMaybePtr _ = return False
 
 
 instance Default CppParts where
-    def = CppParts [] [] []  [] []
+    def = CppParts [] def []  [] []
 
 emptyQParts :: Q CppParts
 emptyQParts = return def
@@ -505,13 +507,13 @@ generateCppWrapperHlp dec@(DataD cxt name tyVars cons names) =
         let classes = baseClass : derClasses
             functions = []
             forwardDecs = map (\c -> CppForwardDeclClass (className c) (templateParams c)) classes
-        return (CppParts standardSystemIncludes forwardDecs [] classes functions)
+        return (CppParts standardSystemIncludes (Set.fromList forwardDecs) [] classes functions)
 
 generateCppWrapperHlp tysyn@(TySynD name tyVars rhstype) = do
     baseTName <- typeOfAlias rhstype
     let tnames = map tyvarToCppName tyVars
     let tf = CppTypedef (translateToCppNameQualified name) baseTName tnames
-    return $ CppParts [] [] [tf] [] []
+    return $ CppParts [] def [tf] [] []
 
 generateCppWrapperHlp arg = trace ("FIXME: generateCppWrapperHlp for " <> show arg) emptyQParts
 
@@ -600,7 +602,7 @@ printAst  (TyConI dec@(DataD cxt name tyVars cons names)) =
 
 joinParts :: [CppParts] -> CppParts
 joinParts parts = 
-    CppParts (concat $ map includes parts) (concat $ map forwardDecls parts) (concat $ map typedefs parts) (concat $ map classes parts) (concat $ map functions parts)
+    CppParts (concat $ map includes parts) (Set.unions $ fmap forwardDecls parts) (concat $ map typedefs parts) (concat $ map classes parts) (concat $ map functions parts)
 
 generateSingleWrapper :: Name -> Q CppParts
 generateSingleWrapper arg | trace ("generateSingleWrapper: " <> show arg) False = undefined
@@ -651,15 +653,29 @@ writeFilePair outputDir fileBaseName cppParts = do
     writeOutput cppName sourceFileContents
     return ()
 
+writeFileFor :: Name -> FilePath -> Q ()
+writeFileFor name outputDir = do
+
+    deps <- collectDirectDependencies name
+    runIO $ putStrLn $ printf "%s deps ==> %s" (show name) (show deps)
+
+    parts <- generateSingleWrapper name
+    writeFilePair outputDir (nameBase name) parts
+
+
 generateCpp :: Name -> FilePath -> Q Exp
 generateCpp name outputDir = do
 
     dependencies <- collectDependencies name
     runIO (putStrLn $ printf "Found %d dependencies: %s" (length dependencies) (show dependencies))
     --    (header,body) <- formatCppWrapper name
-    cppParts <- generateWrapperWithDeps name
 
-    writeFilePair outputDir "generated" cppParts
+    sequence $ writeFileFor <$> dependencies <*> [outputDir]
+
+
+     --cppParts <- generateWrapperWithDeps name
+
+    -- writeFilePair outputDir "generated" cppParts
 
     [|  return () |]
 
