@@ -12,26 +12,20 @@ import Test.Hspec
 import           Flowbox.Prelude
 import           Luna.Syntax.Control.Crumb             (Breadcrumbs)
 import qualified Luna.Syntax.Graph.Edge                as Edge
+import           Luna.Syntax.Graph.Graph               (Graph)
 import qualified Luna.Syntax.Graph.Graph               as Graph
 import qualified Luna.Syntax.Graph.Node                as Node
-import           Luna.Syntax.Graph.Node.Expr           (NodeExpr)
-import qualified Luna.Syntax.Graph.Node.Expr           as NodeExpr
-import qualified Luna.Syntax.Graph.Node.StringExpr     as StringExpr
 import qualified Luna.Syntax.Graph.Port                as Port
 import           Luna.Syntax.Graph.Tag                 (Tag)
 import qualified Luna.Syntax.Graph.Tag                 as Tag
 import qualified Luna.Util.Label                       as Label
 import qualified Test.Luna.Pass.Transform.Graph.Common as Common
 import           Test.Luna.Sample.Code                 (sampleCodes)
+import qualified Test.Luna.Sample.Code                 as SampleCode
+import           Test.Luna.Sample.Graph                (V, sampleGraphs, strExpr)
 import qualified Test.Luna.Syntax.Common               as Common
---import qualified Test.Luna.Sample.Code                 as SampleCode
---import           Luna.Syntax.Graph.Graph                 (Graph)
---import           Test.Luna.Sample.Graph                  (buggyGraphs, sampleGraphs)
 
 
-
-strExpr :: String -> NodeExpr Tag ()
-strExpr = NodeExpr.StringExpr . StringExpr.Expr
 
 printHeader :: MonadIO m => String -> m ()
 printHeader header = printLn >> putStrLn ("=== " <> header <> " ===") >> printLn
@@ -52,7 +46,7 @@ backAndForth bc code = do
     (ast2, graph2) <- Common.getGraph bc ast
     --prettyPrint graph2
     --printHeader "getExpr"
-    (ast3, astInfo3) <- Common.getExpr bc graph2 ast2 astInfo
+    (ast3, _astInfo3) <- Common.getExpr bc graph2 ast2 astInfo
     --prettyPrint ast3
     --putStrLn "getGraph"
     (ast4, graph4) <- Common.getGraph bc ast3
@@ -65,21 +59,22 @@ backAndForth bc code = do
     Label.replaceDecl  cleanIDs  expr4  `shouldBe` Label.replaceDecl  cleanIDs  expr2
 
 
---backAndForth2 :: Breadcrumbs -> Graph -> IO ()
---backAndForth2 bc graph = backAndForth2' bc graph graph
+backAndForth2 :: Breadcrumbs -> Graph Tag V -> IO ()
+backAndForth2 bc graph = backAndForth2' bc graph graph
 
 
---backAndForth2' :: Breadcrumbs -> Graph -> Graph -> IO ()
---backAndForth2' bc providedGraph expectedGraph = do
---    emptyAst  <- Common.getAST SampleCode.emptyMain
---    (ast, pm) <- Common.getExpr bc providedGraph def emptyAst
---    --printLn
---    --print ast
---    --printLn
---    --print pm
---    --printLn
---    (resultGraph, _pm2) <- Common.getGraph bc pm ast
---    resultGraph `shouldBe` expectedGraph
+backAndForth2' :: Breadcrumbs -> Graph Tag V -> Graph Tag V -> IO ()
+backAndForth2' bc providedGraph expectedGraph = do
+    (ast',  astInfo)  <- Common.getAST SampleCode.emptyMain
+    let ast = Label.replace Tag.fromEnumerated ast'
+    (ast2, _astInfo2) <- Common.getExpr bc providedGraph ast astInfo
+    --printLn
+    --prettyPrint ast2
+    --printLn
+    (ast3, resultGraph) <- Common.getGraph bc ast2
+    --prettyPrint ast3
+    --printLn
+    resultGraph `shouldBe` expectedGraph
 
 
 main :: IO ()
@@ -89,16 +84,14 @@ main = hspec spec
 spec :: Spec
 spec = do
     describe "ast <-> graph conversion" $ do
-        it "" pending
         mapM_ (\(name, code) -> it ("returns the same when converting back and forth - " ++ name) $
                 backAndForth Common.mainBC code) sampleCodes
         --mapM_ (\(name, bc, code) -> it ("returns the same when converting back and forth - " ++ name) $
         --        backAndForth bc code) SampleCode.sampleLambdas
 
     describe "graph <-> ast conversion" $ do
-        it "" pending
-        --mapM_ (\(name, graph) -> it ("returns the same when converting back and forth - " ++ name) $
-        --        backAndForth2 Common.mainBC graph) sampleGraphs
+        mapM_ (\(name, graph) -> it ("returns the same when converting back and forth - " ++ name) $
+                backAndForth2 Common.mainBC graph) sampleGraphs
         --mapM_ (\(name, providedGraph, expectedGraph) -> it ("fixes buggy graphs - " ++ name) $
         --        backAndForth2' Common.mainBC providedGraph expectedGraph) buggyGraphs
 

@@ -20,15 +20,16 @@ import qualified Data.Maybe          as Maybe
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-import           Luna.Data.ASTInfo         (ASTInfo)
-import qualified Luna.Data.ASTInfo         as ASTInfo
-import qualified Luna.Syntax.AST           as AST
-import qualified Luna.Syntax.Graph.Edge    as Edge
-import           Luna.Syntax.Graph.Graph   (Graph)
-import qualified Luna.Syntax.Graph.Graph   as Graph
-import qualified Luna.Syntax.Graph.Node    as Node
-import           Luna.Syntax.Graph.Port    (DstPort, SrcPort)
-import           Luna.Syntax.Graph.Tag     (TExpr, Tag)
+import           Luna.Data.ASTInfo               (ASTInfo)
+import qualified Luna.Data.ASTInfo               as ASTInfo
+import qualified Luna.Syntax.AST                 as AST
+import qualified Luna.Syntax.Graph.Edge          as Edge
+import           Luna.Syntax.Graph.Graph         (Graph)
+import qualified Luna.Syntax.Graph.Graph         as Graph
+import qualified Luna.Syntax.Graph.Node          as Node
+import           Luna.Syntax.Graph.Node.Position (Position)
+import           Luna.Syntax.Graph.Port          (DstPort, SrcPort)
+import           Luna.Syntax.Graph.Tag           (TExpr, Tag)
 
 
 
@@ -42,18 +43,21 @@ type ExprMap v = Map (Node.ID, SrcPort) (State ASTInfo (TExpr v))
 
 type GPPass v m result = Monad m => StateT (GPState v) (EitherT Error m) result
 
-data GPState v = GPState { _body    :: [TExpr v]
-                         , _output  :: Maybe (TExpr v)
-                         , _varMap  :: ExprMap v
-                         , _graph   :: Graph Tag v
-                         , _astInfo :: ASTInfo
+data GPState v = GPState { _body       :: [TExpr v]
+                         , _output     :: Maybe (TExpr v)
+                         , _varMap     :: ExprMap v
+                         , _inputsPos  :: Position
+                         , _outputsPos :: Position
+                         , _highestNodeID :: Node.ID
+                         , _graph      :: Graph Tag v
+                         , _astInfo    :: ASTInfo
                          }
 
 makeLenses ''GPState
 
 
 mk :: Graph Tag v -> ASTInfo -> GPState v
-mk = GPState def def def
+mk = GPState def def def def def def
 
 ----- body ----------------------------------------------------------------
 getBody :: GPPass v m [TExpr v]
@@ -88,6 +92,27 @@ exprMapLookup key = do
     r <- lift $ Map.lookup key nm <??> "GraphParser: exprMapLookup: Cannot find " ++ show key ++ " in exprMap"
     withASTInfo r
 
+----- inputsPos -----------------------------------------------------------
+setInputsPos :: Position -> GPPass v m ()
+setInputsPos = modify . set inputsPos
+
+getInputsPos :: GPPass v m Position
+getInputsPos = gets $ view inputsPos
+
+----- outputsPos ----------------------------------------------------------
+setOutputsPos :: Position -> GPPass v m ()
+setOutputsPos = modify . set outputsPos
+
+getOutputsPos :: GPPass v m Position
+getOutputsPos = gets $ view outputsPos
+
+----- highestNodeID -------------------------------------------------------
+reportID :: Node.ID -> GPPass v m ()
+reportID = modify . over highestNodeID . max
+
+getHighestID :: GPPass v m Node.ID
+getHighestID = gets $ view highestNodeID
+
 ----- graph ---------------------------------------------------------------
 getGraph :: GPPass v m (Graph Tag v)
 getGraph = gets $ view graph
@@ -101,7 +126,6 @@ inboundPorts nodeID = do
            $ Graph.lpre g nodeID
 
 ----- astInfo -------------------------------------------------------------
-
 getASTInfo :: GPPass v m ASTInfo
 getASTInfo = gets $ view astInfo
 

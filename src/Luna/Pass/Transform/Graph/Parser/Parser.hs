@@ -40,6 +40,7 @@ import qualified Luna.Syntax.Graph.Node                 as Node
 import           Luna.Syntax.Graph.Node.Expr            (NodeExpr)
 import qualified Luna.Syntax.Graph.Node.Expr            as NodeExpr
 import qualified Luna.Syntax.Graph.Node.MultiPart       as MultiPart
+import           Luna.Syntax.Graph.Node.Position (Position)
 import qualified Luna.Syntax.Graph.Node.OutputPat       as OutputPat
 import qualified Luna.Syntax.Graph.Node.StringExpr      as StringExpr
 import           Luna.Syntax.Graph.Port                 (DstPortP (DstPort))
@@ -52,6 +53,8 @@ import qualified Luna.Syntax.Name.Pattern               as Pattern
 import qualified Luna.Syntax.Pat                        as Pat
 import           Luna.System.Session                    as Session
 import qualified Luna.Util.Label                        as Label
+import qualified Luna.Parser.Pragma as Pragma
+import qualified Luna.System.Pragma.Store as Pragma
 
 
 
@@ -67,23 +70,33 @@ run graph ldecl astInfo = evalStateT (func2graph ldecl) $ State.mk graph astInfo
 
 
 func2graph :: TDecl V -> GPPass V m (TDecl V, ASTInfo)
-func2graph decl@(Label _ (Decl.Func funcDecl)) = do
+func2graph decl@(Label l (Decl.Func funcDecl)) = do
     let sig = funcDecl ^. Decl.funcDeclSig
     graph <- State.getGraph
     mapM_ (parseNode sig) $ Graph.sort graph
     b  <- State.getBody
     mo <- State.getOutput
+    inputsPos  <- State.getInputsPos
+    outputsPos <- State.getOutputsPos
+    highestID  <- State.getHighestID
     let body = reverse $ case mo of
                 Nothing -> b
                 Just o  -> o : b
-    (decl & Label.element . Decl.funcDecl . Decl.funcDeclBody .~ body,) <$> State.getASTInfo
+        label = if Tag.isEmpty l
+            then Tag.mkNode (highestID+1) inputsPos (Just outputsPos) l
+            else l & Tag.position .~ inputsPos
+                   & Tag.additionalPos .~ Just outputsPos
+    (decl & Label.label .~ label
+          & Label.element . Decl.funcDecl . Decl.funcDeclBody .~ body
+          ,) <$> State.getASTInfo
 
 
 parseNode :: Decl.FuncSig a e -> (Node.ID, Node.Node Tag V) -> GPPass V m ()
 parseNode signature (nodeID, node) = case node of
-    Node.Outputs defaults pos -> parseOutputs nodeID defaults
-    Node.Inputs           pos -> parseInputs nodeID signature
+    Node.Outputs defaults pos -> parseOutputs nodeID defaults pos
+    Node.Inputs           pos -> parseInputs nodeID signature pos
     Node.Expr expr outputPat defaults pos groupInfo -> do
+        State.reportID nodeID
         graph <- State.getGraph
         let lsuclData = Graph.lsuclData graph nodeID
             outDataEdges = map (view _3) lsuclData
@@ -117,8 +130,9 @@ buildExpr nodeExpr srcs = case nodeExpr of
             astInfo <- State.getASTInfo
             r <- Session.runT $ do
                 void Parser.init
+                Pragma.enable Pragma.orphanNames
                 let parserState = Parser.defState & Parser.info .~ astInfo
-                Parser.parseString (toString str) (Parser.exprParser2 parserState)
+                Parser.parseString (toString str) (Parser.exprParser parserState)
             case fst r of
                 Left err -> lift $ left $ toString err
                 Right (lexpr, parserState) -> do
@@ -154,8 +168,10 @@ addExprs nodeID tpat = case tpat of
             _                       -> add (i + 1) t
 
 
-parseInputs :: Node.ID -> Decl.FuncSig a e -> GPPass V m ()
-parseInputs nodeID = mapM_ (parseArg nodeID) . zip [0..] . Pattern.args
+parseInputs :: Node.ID -> Decl.FuncSig a e -> Position -> GPPass V m ()
+parseInputs nodeID funcSig position = do
+    State.setInputsPos position
+    mapM_ (parseArg nodeID) $ zip [0..] $ Pattern.args funcSig
 
 
 parseArg :: Node.ID -> (Int, Arg a e) -> GPPass V m ()
@@ -167,8 +183,9 @@ parseArg nodeID (num, input) = case input of
                        $ newLabel' $ Expr.Var $ Expr.Variable vname ()
 
 
-parseOutputs :: Node.ID -> DefaultsMap Tag V -> GPPass V m ()
-parseOutputs nodeID defaults = do
+parseOutputs :: Node.ID -> DefaultsMap Tag V -> Position -> GPPass V m ()
+parseOutputs nodeID defaults position = do
+    State.setOutputsPos position
     srcs    <- getNodeSrcs nodeID defaults
     inPorts <- State.inboundPorts nodeID
     case (srcs, map unwrap inPorts) of

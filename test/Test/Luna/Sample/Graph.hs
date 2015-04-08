@@ -7,189 +7,199 @@
 
 module Test.Luna.Sample.Graph where
 
+import Control.Monad.State
+
 import           Flowbox.Prelude
 import qualified Luna.Syntax.Graph.Edge                as Edge
 import           Luna.Syntax.Graph.Graph               (Graph)
 import qualified Luna.Syntax.Graph.Graph               as Graph
+import           Luna.Syntax.Graph.Node                (Node)
 import qualified Luna.Syntax.Graph.Node                as Node
 import           Luna.Syntax.Graph.Node.Expr           (NodeExpr)
 import qualified Luna.Syntax.Graph.Node.Expr           as NodeExpr
-import           Luna.Syntax.Graph.Node.OutputName     (fixEmpty')
+import qualified Luna.Syntax.Graph.Node.OutputPat      as OutputPat
 import qualified Luna.Syntax.Graph.Node.StringExpr     as StringExpr
 import qualified Luna.Syntax.Graph.Port                as Port
+import           Luna.Syntax.Graph.Tag                 (Tag)
 import           Test.Luna.Pass.Transform.Graph.Common (named)
 
 
 
-strExpr :: String -> NodeExpr
+type V = ()
+
+strExpr :: String -> NodeExpr Tag V
 strExpr = NodeExpr.StringExpr . StringExpr.Expr
 
 
-sampleGraphs :: [(String, Graph)]
+fixEmpty' :: (Node.ID, Node Tag V) -> (Node.ID, Node Tag V)
+fixEmpty' = flip evalState def . OutputPat.fixEmpty'
+
+
+sampleGraphs :: [(String, Graph Tag V)]
 sampleGraphs =
     [ named "simple graph 1"
     $ Graph.addMonadicEdges $ Graph.mkGraph
         [(-2, Node.Inputs         (0, 0))
-        , fixEmpty' (100, Node.Expr (strExpr "foo") "" (0, 1))
-        ,(-3, Node.Outputs        (0, 2))
+        , fixEmpty' (100, Node.Expr (strExpr "foo") def def (0, 1) def)
+        ,(-1, Node.Outputs def    (0, 2))
         ]
         []
     , named "simple graph 2"
     $ Graph.addMonadicEdges $ Graph.mkGraph
         [(-2, Node.Inputs         (0, 0))
-        , fixEmpty' (100, Node.Expr (strExpr "main") "" (0, 1))
-        ,(-3, Node.Outputs        (0, 2))
+        , fixEmpty' (100, Node.Expr (strExpr "main") def def (0, 1) def)
+        ,(-1, Node.Outputs def    (0, 2))
         ]
         []
     , named "simple graph 3"
     $ Graph.addMonadicEdges $ Graph.mkGraph
         [(-2, Node.Inputs         (0, 0))
-        , fixEmpty' (100, Node.Expr (strExpr "foo") "" (0, 1))
-        , fixEmpty' (200, Node.Expr (strExpr "bar") "" (0, 2))
-        ,(-3, Node.Outputs        (0, 3))
+        , fixEmpty' (100, Node.Expr (strExpr "foo") def def (0, 1) def)
+        , fixEmpty' (200, Node.Expr (strExpr "bar") def def (0, 2) def)
+        ,(-1, Node.Outputs def    (0, 3))
         ]
-        [(100, 200, Edge.Data Port.All $ Port.Num 5)]
+        [(100, 200, Edge.Data Port.mkSrcAll $ Port.mkDst 5)]
     , named "simple graph 4"
     $ Graph.addMonadicEdges $ Graph.mkGraph
         [(-2, Node.Inputs         (0, 0))
-        , fixEmpty' (100, Node.Expr (strExpr "foo") "" (0, 1))
-        , fixEmpty' (200, Node.Expr (strExpr "bar") "" (0, 2))
-        ,(-3, Node.Outputs        (0, 3))
+        , fixEmpty' (100, Node.Expr (strExpr "foo") def def (0, 1) def)
+        , fixEmpty' (200, Node.Expr (strExpr "bar") def def (0, 2) def)
+        ,(-1, Node.Outputs def    (0, 3))
         ]
-        [(100, 200, Edge.Data Port.All $ Port.Num 5)
-        ,(100, 200, Edge.Data Port.All $ Port.Num 3)
+        [(100, 200, Edge.Data Port.mkSrcAll $ Port.mkDst 5)
+        ,(100, 200, Edge.Data Port.mkSrcAll $ Port.mkDst 3)
         ]
     , named "simple graph 5"
     $ Graph.addMonadicEdges $ Graph.mkGraph
         [(-2, Node.Inputs         (0, 0))
-        , fixEmpty' (100, Node.Expr (strExpr "foo") "" (0, 1))
-        ,(-3, Node.Outputs        (0, 3))
+        , fixEmpty' (100, Node.Expr (strExpr "foo") def def (0, 1) def)
+        ,(-1, Node.Outputs def    (0, 3))
         ]
-        [(100, -3, Edge.Data Port.All $ Port.Num 2)
-        ,(100, -3, Edge.Data Port.All $ Port.Num 3)
+        [(100, -1, Edge.Data Port.mkSrcAll $ Port.mkDst 2)
+        ,(100, -1, Edge.Data Port.mkSrcAll $ Port.mkDst 3)
         ]
     , named "simple graph 6"
     $ Graph.addMonadicEdges $ Graph.mkGraph
         [(-2, Node.Inputs         (0, 0))
-        , fixEmpty' (100, Node.Expr (strExpr "main") "" (0, 1))
-        ,(-3, Node.Outputs        (0, 3))
+        , fixEmpty' (100, Node.Expr (strExpr "main") def def (0, 1) def)
+        ,(-1, Node.Outputs def    (0, 3))
         ]
-        [(100, -3, Edge.Data Port.All Port.All)]
+        [(100, -1, Edge.Data Port.mkSrcAll Port.mkDstAll)]
     , named "simple graph 7"
     $ Graph.addMonadicEdges $ Graph.mkGraph
         [(-2, Node.Inputs         (0, 0))
-        , fixEmpty' (100, Node.Expr (strExpr "main") "" (0, 1))
-        ,(-3, Node.Outputs        (0, 3))
+        , fixEmpty' (100, Node.Expr (strExpr "main") def def (0, 1) def)
+        ,(-1, Node.Outputs def    (0, 3))
         ]
-        [(-2 ,100, Edge.Data (Port.Num 0) $ Port.Num 0)
-        ,(100, -3, Edge.Data  Port.All      Port.All  )
+        [(-2 ,100, Edge.Data (Port.mkSrc 0) $ Port.mkDst 0)
+        ,(100, -1, Edge.Data  Port.mkSrcAll   Port.mkDstAll  )
         ]
     , named "simple graph 8"
     $ Graph.addMonadicEdges $ Graph.mkGraph
         [(-2, Node.Inputs         (0, 0))
-        , fixEmpty' (100, Node.Expr (strExpr "25") "" (0, 1))
-        , fixEmpty' (200, Node.Expr (strExpr "*") "" (0, 1))
-        ,(-3, Node.Outputs        (0, 3))
+        , fixEmpty' (100, Node.Expr (strExpr "25") def def (0, 1) def)
+        , fixEmpty' (200, Node.Expr (strExpr "*") def def (0, 1) def)
+        ,(-1, Node.Outputs def    (0, 3))
         ]
-        [(100,200, Edge.Data Port.All $ Port.Num 0)
-        ,(100,200, Edge.Data Port.All $ Port.Num 1)
+        [(100,200, Edge.Data Port.mkSrcAll $ Port.mkDst 0)
+        ,(100,200, Edge.Data Port.mkSrcAll $ Port.mkDst 1)
         ]
     , named "inverse order graph"
     $ Graph.addMonadicEdges $ Graph.mkGraph
         [(-2, Node.Inputs         (0, 0))
-        , fixEmpty' (100, Node.Expr (strExpr "foo") "" (0, 1))
-        , fixEmpty' (200, Node.Expr (strExpr "bar") "" (0, 2))
-        ,(-3, Node.Outputs        (0, 3))
+        , fixEmpty' (100, Node.Expr (strExpr "foo") def def (0, 1) def)
+        , fixEmpty' (200, Node.Expr (strExpr "bar") def def (0, 2) def)
+        ,(-1, Node.Outputs def    (0, 3))
         ]
-        [(200, 100, Edge.Data Port.All $ Port.Num 5)]
+        [(200, 100, Edge.Data Port.mkSrcAll $ Port.mkDst 5)]
     -- , named "graph with folded nodes 1"
     -- $ Graph.addMonadicEdges $ Graph.mkGraph
     --    [(-2, Node.Inputs         (0, 0))
     --    , fixEmpty' (100, Node.Expr "1 * 2 * 3" "" (0, 1))
-    --    ,(-3, Node.Outputs        (0, 2))
+    --    ,(-1, Node.Outputs def    (0, 2))
     --    ]
     --    []
     , named "graph with folded nodes 2"
     $ Graph.addMonadicEdges $ Graph.mkGraph
         [(-2, Node.Inputs         (0, 0))
-        , fixEmpty' (100, Node.Expr (strExpr "1.+ 2") "" (0, 1))
-        ,(-3, Node.Outputs        (0, 2))
+        , fixEmpty' (100, Node.Expr (strExpr "1.+ 2") def def (0, 1) def)
+        ,(-1, Node.Outputs def    (0, 2))
         ]
         []
     , named "graph with folded nodes 3"
     $ Graph.addMonadicEdges $ Graph.mkGraph
         [(-2, Node.Inputs         (0, 0))
-        , fixEmpty' (100, Node.Expr (strExpr "1.+ 2.* 2") "" (0, 1))
-        ,(-3, Node.Outputs        (0, 2))
+        , fixEmpty' (100, Node.Expr (strExpr "1.+ 2.* 2") def def (0, 1) def)
+        ,(-1, Node.Outputs def    (0, 2))
         ]
         []
     , named "graph with folded nodes 4"
     $ Graph.addMonadicEdges $ Graph.mkGraph
         [(-2, Node.Inputs         (0, 0))
-        , fixEmpty' (100, Node.Expr (strExpr "(1.+ 2).* 2") "" (0, 1))
-        ,(-3, Node.Outputs        (0, 2))
+        , fixEmpty' (100, Node.Expr (strExpr "(1.+ 2).* 2") def def (0, 1) def)
+        ,(-1, Node.Outputs def    (0, 2))
         ]
         []
     , named "graph with folded nodes 5"
     $ Graph.addMonadicEdges $ Graph.mkGraph
         [(-2, Node.Inputs         (0, 0))
-        , fixEmpty' (100, Node.Expr (strExpr "a.foo bar 1 \"asda\"") "" (0, 1))
-        ,(-3, Node.Outputs        (0, 2))
+        , fixEmpty' (100, Node.Expr (strExpr "a.foo bar 1 \"asda\"") def def (0, 1) def)
+        ,(-1, Node.Outputs def    (0, 2))
         ]
         []
-     , named "graph with folded nodes 6"
-     $ Graph.addMonadicEdges $ Graph.mkGraph
+    , named "graph with folded nodes 6"
+    $ Graph.addMonadicEdges $ Graph.mkGraph
         [(-2, Node.Inputs         (0, 0))
-        , fixEmpty' (100, Node.Expr (strExpr "a.foo bar baz (gaz 1 \"asda\")") "" (0, 1))
-        ,(-3, Node.Outputs        (0, 2))
+        , fixEmpty' (100, Node.Expr (strExpr "a.foo bar baz (gaz 1 \"asda\")") def def (0, 1) def)
+        ,(-1, Node.Outputs def    (0, 2))
         ]
         []
-     , named "BATCH-62"
-     $ Graph.addMonadicEdges $ Graph.mkGraph
+    , named "BATCH-62"
+    $ Graph.addMonadicEdges $ Graph.mkGraph
         [(-2, Node.Inputs         (0, 0))
-        , fixEmpty' (100, Node.Expr (strExpr "12") "" (0, 1))
-        ,(-3, Node.Outputs        (0, 2))
+        , fixEmpty' (100, Node.Expr (strExpr "12") def def (0, 1) def)
+        ,(-1, Node.Outputs def    (0, 2))
         ]
-        [(100, -3, Edge.Data Port.All $ Port.Num 1)]
-     , named "BATCH-67"
-     $ Graph.addMonadicEdges $ Graph.mkGraph
+        [(100, -1, Edge.Data Port.mkSrcAll $ Port.mkDst 1)]
+    , named "BATCH-67"
+    $ Graph.addMonadicEdges $ Graph.mkGraph
         [(-2, Node.Inputs         (0, 0))
-        , fixEmpty' (100, Node.Expr (strExpr "12") "" (0, 1))
-        , fixEmpty' (200, Node.Expr (strExpr "15") "" (0, 1))
-        , fixEmpty' (300, Node.Expr (strExpr "*") "" (0, 1))
-        , fixEmpty' (400, Node.Expr (strExpr "+") "" (0, 1))
-        ,(-3, Node.Outputs        (0, 2))
+        , fixEmpty' (100, Node.Expr (strExpr "12") def def (0, 1) def)
+        , fixEmpty' (200, Node.Expr (strExpr "15") def def (0, 1) def)
+        , fixEmpty' (300, Node.Expr (strExpr "*") def def (0, 1) def)
+        , fixEmpty' (400, Node.Expr (strExpr "+") def def (0, 1) def)
+        ,(-1, Node.Outputs def    (0, 2))
         ]
-        [(100, 300, Edge.Data Port.All $ Port.Num 0)
-        ,(200, 300, Edge.Data Port.All $ Port.Num 1)
-        ,(300, 400, Edge.Data Port.All $ Port.Num 0)
-        ,(300, 400, Edge.Data Port.All $ Port.Num 1)
+        [(100, 300, Edge.Data Port.mkSrcAll $ Port.mkDst 0)
+        ,(200, 300, Edge.Data Port.mkSrcAll $ Port.mkDst 1)
+        ,(300, 400, Edge.Data Port.mkSrcAll $ Port.mkDst 0)
+        ,(300, 400, Edge.Data Port.mkSrcAll $ Port.mkDst 1)
         ]
-     , named "graph with [] port descriptor on output"
-     $ Graph.addMonadicEdges $ Graph.mkGraph
+    , named "graph with [] port descriptor on output"
+    $ Graph.addMonadicEdges $ Graph.mkGraph
         [(-2,Node.Inputs  (0  ,0))
-        ,(-3,Node.Outputs (100,0))
-        ,fixEmpty' (100, Node.Expr (strExpr "foo") "" (0 , 1))
+        ,(-1,Node.Outputs def (100,0))
+        ,fixEmpty' (100, Node.Expr (strExpr "foo") def def (0, 1) def)
         ]
-        [(100, -3, Edge.Data Port.All   Port.All)]
-     , named "graph with [0] port descriptor on output - 1"
-     $ Graph.addMonadicEdges $ Graph.mkGraph
+        [(100, -1, Edge.Data Port.mkSrcAll   Port.mkDstAll)]
+    , named "graph with [0] port descriptor on output - 1"
+    $ Graph.addMonadicEdges $ Graph.mkGraph
         [(-2,Node.Inputs  (0 ,0))
-        ,(-3,Node.Outputs (10,0))
-        ,fixEmpty' (100, Node.Expr (strExpr "foo") "" (0 , 1))
+        ,(-1,Node.Outputs def (10,0))
+        ,fixEmpty' (100, Node.Expr (strExpr "foo") def def (0, 1) def)
         ]
-        [(100, -3, Edge.Data Port.All $ Port.Num 0)]
-     , named "graph with [0] port descriptor on output - 2"
-     $ Graph.addMonadicEdges $ Graph.mkGraph
+        [(100, -1, Edge.Data Port.mkSrcAll $ Port.mkDst 0)]
+    , named "graph with [0] port descriptor on output - 2"
+    $ Graph.addMonadicEdges $ Graph.mkGraph
         [(-2,Node.Inputs  (0 ,0))
-        ,(-3,Node.Outputs (10,0))
-        ,fixEmpty' (100, Node.Expr (strExpr "255") "" (0 , 1))
+        ,(-1,Node.Outputs def (10,0))
+        ,fixEmpty' (100, Node.Expr (strExpr "255") def def (0, 1) def)
         ]
-        [(100, -3, Edge.Data Port.All $ Port.Num 0)]
+        [(100, -1, Edge.Data Port.mkSrcAll $ Port.mkDst 0)]
     ]
 
 
-buggyGraphs :: [(String, Graph, Graph)]
+buggyGraphs :: [(String, Graph Tag V, Graph Tag V)]
 buggyGraphs =
     [(  "empty"
      ,  Graph.addMonadicEdges $ Graph.mkGraph
@@ -197,110 +207,110 @@ buggyGraphs =
         []
      ,  Graph.addMonadicEdges $ Graph.mkGraph
         [(-2,Node.Inputs  (0 ,0))
-        ,(-3,Node.Outputs (10,0))
+        ,(-1,Node.Outputs def (10,0))
         ]
         []
     ),( "buggy graph 1"
      ,  Graph.mkGraph
-        [fixEmpty' (100, Node.Expr (strExpr "main") "" (0, 1))]
+        [fixEmpty' (100, Node.Expr (strExpr "main") def def (0, 1) def)]
         []
      ,  Graph.addMonadicEdges $ Graph.mkGraph
-        [(-2,Node.Inputs           (0 , 0))
-        ,(-3,Node.Outputs          (10, 1))
-        ,fixEmpty' (100, Node.Expr (strExpr "main") "" (0 , 1))
+        [(-2,Node.Inputs           (0, 0))
+        ,(-1,Node.Outputs def      (10, 1))
+        ,fixEmpty' (100, Node.Expr (strExpr "main") def def (0, 1) def)
         ]
-        [(100, -3, Edge.Data Port.All Port.All)]
+        [(100, -1, Edge.Data Port.mkSrcAll Port.mkDstAll)]
     ),( "graph with [0] and [1] port descriptors on output"
      ,  Graph.addMonadicEdges $ Graph.mkGraph
         [(-2,Node.Inputs  (0 ,0))
-        ,(-3,Node.Outputs (100,0))
-        ,fixEmpty' (100, Node.Expr (strExpr "foo") "" (0 , 1))
+        ,(-1,Node.Outputs def (100,0))
+        ,fixEmpty' (100, Node.Expr (strExpr "foo") def def (0, 1) def)
         ]
-        [(100, -3, Edge.Data Port.All $ Port.Num 0)
-        ,(100, -3, Edge.Data Port.All $ Port.Num 1)
+        [(100, -1, Edge.Data Port.mkSrcAll $ Port.mkDst 0)
+        ,(100, -1, Edge.Data Port.mkSrcAll $ Port.mkDst 1)
         ]
      ,  Graph.addMonadicEdges $ Graph.mkGraph
         [(-2,Node.Inputs  (0 ,0))
-        ,(-3,Node.Outputs (100,0))
-        ,fixEmpty' (100, Node.Expr (strExpr "foo") "" (0 , 1))
+        ,(-1,Node.Outputs def (100,0))
+        ,fixEmpty' (100, Node.Expr (strExpr "foo") def def (0, 1) def)
         ]
-        [(100, -3, Edge.Data Port.All $ Port.Num 0)
-        ,(100, -3, Edge.Data Port.All $ Port.Num 1)
+        [(100, -1, Edge.Data Port.mkSrcAll $ Port.mkDst 0)
+        ,(100, -1, Edge.Data Port.mkSrcAll $ Port.mkDst 1)
         ]
     ),( "graph with [] and [1] port descriptors on output - 1"
      ,  Graph.addMonadicEdges $ Graph.mkGraph
         [(-2,Node.Inputs  (0 ,0))
-        ,(-3,Node.Outputs (100,0))
-        ,fixEmpty' (100, Node.Expr (strExpr "foo") "" (0 , 1))
+        ,(-1,Node.Outputs def (100,0))
+        ,fixEmpty' (100, Node.Expr (strExpr "foo") def def (0, 1) def)
         ]
-        [(100, -3, Edge.Data Port.All $ Port.All)
-        ,(100, -3, Edge.Data Port.All $ Port.Num 1)
+        [(100, -1, Edge.Data Port.mkSrcAll $ Port.mkDstAll)
+        ,(100, -1, Edge.Data Port.mkSrcAll $ Port.mkDst 1)
         ]
      ,  Graph.addMonadicEdges $ Graph.mkGraph
         [(-2,Node.Inputs  (0 ,0))
-        ,(-3,Node.Outputs (100,0))
-        ,fixEmpty' (100, Node.Expr (strExpr "foo") "" (0 , 1))
+        ,(-1,Node.Outputs def (100,0))
+        ,fixEmpty' (100, Node.Expr (strExpr "foo") def def (0, 1) def)
         ]
-        [(100, -3, Edge.Data Port.All $ Port.Num 0)
-        ,(100, -3, Edge.Data Port.All $ Port.Num 1)
+        [(100, -1, Edge.Data Port.mkSrcAll $ Port.mkDst 0)
+        ,(100, -1, Edge.Data Port.mkSrcAll $ Port.mkDst 1)
         ]
     ),( "graph with [] and [1] port descriptors on output - 2"
      ,  Graph.addMonadicEdges $ Graph.mkGraph
         [(-2,Node.Inputs  (0 ,0))
-        ,(-3,Node.Outputs (100,0))
-        ,fixEmpty' (100, Node.Expr (strExpr "foo") "" (0 , 1))
-        ,fixEmpty' (200, Node.Expr (strExpr "bar") "" (0 , 2))
+        ,(-1,Node.Outputs def (100,0))
+        ,fixEmpty' (100, Node.Expr (strExpr "foo") def def (0, 1) def)
+        ,fixEmpty' (200, Node.Expr (strExpr "bar") def def (0, 2) def)
         ]
-        [(100, -3, Edge.Data Port.All $ Port.All)
-        ,(200, -3, Edge.Data Port.All $ Port.Num 1)
+        [(100, -1, Edge.Data Port.mkSrcAll $ Port.mkDstAll)
+        ,(200, -1, Edge.Data Port.mkSrcAll $ Port.mkDst 1)
         ]
      ,  Graph.addMonadicEdges $ Graph.mkGraph
         [(-2,Node.Inputs  (0 ,0))
-        ,(-3,Node.Outputs (100,0))
-        ,fixEmpty' (100, Node.Expr (strExpr "foo") "" (0 , 1))
-        ,fixEmpty' (200, Node.Expr (strExpr "bar") "" (0 , 2))
+        ,(-1,Node.Outputs def (100,0))
+        ,fixEmpty' (100, Node.Expr (strExpr "foo") def def (0, 1) def)
+        ,fixEmpty' (200, Node.Expr (strExpr "bar") def def (0, 2) def)
         ]
-        [(100, -3, Edge.Data Port.All $ Port.Num 0)
-        ,(200, -3, Edge.Data Port.All $ Port.Num 1)
+        [(100, -1, Edge.Data Port.mkSrcAll $ Port.mkDst 0)
+        ,(200, -1, Edge.Data Port.mkSrcAll $ Port.mkDst 1)
         ]
     ),( "graph with [], [1] and [2] port descriptors on output - 1"
      ,  Graph.addMonadicEdges $ Graph.mkGraph
         [(-2,Node.Inputs  (0 ,0))
-        ,(-3,Node.Outputs (100,0))
-        ,fixEmpty' (100, Node.Expr (strExpr "foo") "" (0 , 1))
+        ,(-1,Node.Outputs def (100,0))
+        ,fixEmpty' (100, Node.Expr (strExpr "foo") def def (0, 1) def)
         ]
-        [(100, -3, Edge.Data Port.All $ Port.All)
-        ,(100, -3, Edge.Data Port.All $ Port.Num 1)
-        ,(100, -3, Edge.Data Port.All $ Port.Num 2)
+        [(100, -1, Edge.Data Port.mkSrcAll $ Port.mkDstAll)
+        ,(100, -1, Edge.Data Port.mkSrcAll $ Port.mkDst 1)
+        ,(100, -1, Edge.Data Port.mkSrcAll $ Port.mkDst 2)
         ]
      ,  Graph.addMonadicEdges $ Graph.mkGraph
         [(-2,Node.Inputs  (0 ,0))
-        ,(-3,Node.Outputs (100,0))
-        ,fixEmpty' (100, Node.Expr (strExpr "foo") "" (0 , 1))
+        ,(-1,Node.Outputs def (100,0))
+        ,fixEmpty' (100, Node.Expr (strExpr "foo") def def (0, 1) def)
         ]
-        [(100, -3, Edge.Data Port.All $ Port.Num 0)
-        ,(100, -3, Edge.Data Port.All $ Port.Num 1)
-        ,(100, -3, Edge.Data Port.All $ Port.Num 2)
+        [(100, -1, Edge.Data Port.mkSrcAll $ Port.mkDst 0)
+        ,(100, -1, Edge.Data Port.mkSrcAll $ Port.mkDst 1)
+        ,(100, -1, Edge.Data Port.mkSrcAll $ Port.mkDst 2)
         ]
     ),( "graph with [], [1] and [2] port descriptors on output - 2"
      ,  Graph.addMonadicEdges $ Graph.mkGraph
         [(-2,Node.Inputs  (0 ,0))
-        ,(-3,Node.Outputs (100,0))
-        ,fixEmpty' (100, Node.Expr (strExpr "foo") "" (0 , 1))
-        ,fixEmpty' (200, Node.Expr (strExpr "bar") "" (0 , 2))
+        ,(-1,Node.Outputs def (100,0))
+        ,fixEmpty' (100, Node.Expr (strExpr "foo") def def (0, 1) def)
+        ,fixEmpty' (200, Node.Expr (strExpr "bar") def def (0, 2) def)
         ]
-        [(100, -3, Edge.Data Port.All $ Port.All)
-        ,(200, -3, Edge.Data Port.All $ Port.Num 1)
-        ,(100, -3, Edge.Data Port.All $ Port.Num 2)
+        [(100, -1, Edge.Data Port.mkSrcAll $ Port.mkDstAll)
+        ,(200, -1, Edge.Data Port.mkSrcAll $ Port.mkDst 1)
+        ,(100, -1, Edge.Data Port.mkSrcAll $ Port.mkDst 2)
         ]
      ,  Graph.addMonadicEdges $ Graph.mkGraph
         [(-2,Node.Inputs  (0 ,0))
-        ,(-3,Node.Outputs (100,0))
-        ,fixEmpty' (100, Node.Expr (strExpr "foo") "" (0 , 1))
-        ,fixEmpty' (200, Node.Expr (strExpr "bar") "" (0 , 2))
+        ,(-1,Node.Outputs def (100,0))
+        ,fixEmpty' (100, Node.Expr (strExpr "foo") def def (0, 1) def)
+        ,fixEmpty' (200, Node.Expr (strExpr "bar") def def (0, 2) def)
         ]
-        [(100, -3, Edge.Data Port.All $ Port.Num 0)
-        ,(200, -3, Edge.Data Port.All $ Port.Num 1)
-        ,(100, -3, Edge.Data Port.All $ Port.Num 2)
+        [(100, -1, Edge.Data Port.mkSrcAll $ Port.mkDst 0)
+        ,(200, -1, Edge.Data Port.mkSrcAll $ Port.mkDst 1)
+        ,(100, -1, Edge.Data Port.mkSrcAll $ Port.mkDst 2)
         ]
     )]
