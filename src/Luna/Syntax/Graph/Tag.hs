@@ -39,6 +39,10 @@ mkEmpty :: Tag -> Tag
 mkEmpty = Empty . view idTag
 
 
+isEmpty :: Tag -> Bool
+isEmpty (Empty {}) = True
+isEmpty _          = False
+
 instance Enumerated Tag where
     id = view idTag
     tag = Empty
