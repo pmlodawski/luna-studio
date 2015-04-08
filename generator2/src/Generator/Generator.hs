@@ -610,16 +610,21 @@ generateSingleWrapper name = do
             (TyConI dec)    -> generateCppWrapperHlp dec
             _               -> trace ("ignoring entry " <> show name) emptyQParts
 
-generateWrappers :: [Name] -> Q CppParts
+generateWrappers :: [Name] -> Q [CppParts]
 generateWrappers names = do
     let partsWithQ = map generateSingleWrapper names
     parts <- sequence partsWithQ
+    return parts
+
+generateUnifiedWrapper :: [Name] -> Q CppParts
+generateUnifiedWrapper names = do
+    parts <- generateWrappers names
     return $ joinParts parts
 
 generateWrapperWithDeps :: Name -> Q CppParts
 generateWrapperWithDeps name = do
     relevantNames <- collectDependencies name
-    generateWrappers relevantNames
+    generateUnifiedWrapper relevantNames
 
 formatCppWrapper :: Name -> Q CppFormattedCode
 formatCppWrapper arg | trace ("formatCppWrapper: " <> show arg) False = undefined
@@ -627,26 +632,34 @@ formatCppWrapper name = do
     parts <- generateWrapperWithDeps name
     return $ formatCpp parts
 
+writeFilePair :: FilePath -> String -> CppParts -> Q ()
+writeFilePair outputDir fileBaseName cppParts = do
+    let headerBaseName = fileBaseName <.> ".h"
+    let headerName = outputDir </> headerBaseName
+    let cppName = outputDir </> fileBaseName <.> ".cpp"
+
+    let (headerBody, body) = formatCpp cppParts
+
+    let headerFileContents = headerBody
+    let sourceFileContents = (printf "#include \"helper.h\"\n#include \"%s\"\n\n" headerBaseName) <> body
+  
+    let tryioaction action = try action :: IO (Either SomeException ())
+
+    let writeOutput fname contents = runIO (tryioaction $ writeFile fname contents)
+
+    writeOutput headerName headerFileContents
+    writeOutput cppName sourceFileContents
+    return ()
+
 generateCpp :: Name -> FilePath -> Q Exp
-generateCpp name path = do
-    let headerName = path <> ".h"
-    let cppName = path <> ".cpp"
+generateCpp name outputDir = do
 
     dependencies <- collectDependencies name
     runIO (putStrLn $ printf "Found %d dependencies: %s" (length dependencies) (show dependencies))
-    (header,body) <- formatCppWrapper name
+    --    (header,body) <- formatCppWrapper name
+    cppParts <- generateWrapperWithDeps name
 
-
-    let tryioaction action = try action :: IO (Either SomeException ())
-
-    -- try using liftIO zamiast runIO
-    runIO (tryioaction $ writeFile headerName header)
-    runIO (tryioaction $ writeFile cppName body)
-
-    
-    let ioaction =  writeFile cppName $ (printf "#include \"helper.h\"\n#include \"%s\"\n\n" (takeFileName headerName)) <> body :: IO ()
-    
-    runIO $ tryioaction ioaction
+    writeFilePair outputDir "generated" cppParts
 
     [|  return () |]
 
