@@ -92,7 +92,7 @@ pass = Pass "Alias analysis"
             mempty aaUnit
 
 aaUnit :: SADefaultTraversal m a => a -> SAPass m StructInfo
-aaUnit ast = defaultTraverseM ast *> (((view Namespace.info) . (view StructData.namespace)) <$> get)
+aaUnit ast = defaultTraverseM ast *> ((view Namespace.info) . (view StructData.namespace) <$> get)
 
 aaMod :: SACtx lab m a => LModule lab a -> SAPass m (LModule lab a)
 aaMod mod@(Label lab (Module _ body)) = withScope id continue
