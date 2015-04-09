@@ -41,16 +41,16 @@ type Error = String
 
 type ExprMap v = Map (Node.ID, SrcPort) (State ASTInfo (TExpr v))
 
-type GPPass v m result = Monad m => StateT (GPState v) (EitherT Error m) result
+type GPPass v m result = MonadIO m => StateT (GPState v) (EitherT Error m) result
 
-data GPState v = GPState { _body       :: [TExpr v]
-                         , _output     :: Maybe (TExpr v)
-                         , _varMap     :: ExprMap v
-                         , _inputsPos  :: Position
-                         , _outputsPos :: Position
+data GPState v = GPState { _body          :: [TExpr v]
+                         , _output        :: Maybe (TExpr v)
+                         , _varMap        :: ExprMap v
+                         , _inputsPos     :: Position
+                         , _outputsPos    :: Position
                          , _highestNodeID :: Node.ID
-                         , _graph      :: Graph Tag v
-                         , _astInfo    :: ASTInfo
+                         , _graph         :: Graph Tag v
+                         , _astInfo       :: ASTInfo
                          }
 
 makeLenses ''GPState

@@ -15,11 +15,11 @@
 
 module Luna.Pass.Transform.Graph.Builder.Builder where
 
-import           Control.Monad.State
+import           Control.Monad.State        hiding (mapM, mapM_)
 import           Control.Monad.Trans.Either
 import qualified Data.Maybe                 as Maybe
 
-import           Flowbox.Prelude                          hiding (Traversal, error, mapM, mapM_)
+import           Flowbox.Prelude                          hiding (Traversal, error)
 import           Flowbox.System.Log.Logger
 import           Luna.Data.StructInfo                     (StructInfo)
 import qualified Luna.Pass.Analysis.Find.Find             as Find
@@ -120,9 +120,9 @@ buildOutput lexpr = case unwrap lexpr of
 
 
 buildExprApp :: Expr.ExprApp Tag V -> GBPass V m (Expr.ExprApp Tag V, [ArgRef])
-buildExprApp (Pattern.NamePat prefix base segmentList) = flip runStateT [] $ do
+buildExprApp (Pattern.NamePat prefix base segmentList) = fmap (_2 %~ Maybe.catMaybes) . flip runStateT [] $ do
     prefix' <- case prefix of
-        Nothing     -> return Nothing
+        Nothing     -> addArg Nothing >> return Nothing
         Just appArg -> Just <$> buildAppArg appArg
     base' <- buildBase base
     segmentList' <- mapM buildSegment segmentList
@@ -195,15 +195,17 @@ processArgs :: [TExpr V] -> GBPass V m ([TExpr V], [ArgRef])
 processArgs items = do
     itemsArgs <- mapM processArg $ zip items $ map Port.mkDst [0..]
     let items'  = map fst itemsArgs
-        argRefs = map snd itemsArgs
+        argRefs = Maybe.mapMaybe snd itemsArgs
     return (items', argRefs)
 
 
-processArg :: (TExpr V, DstPort) -> GBPass V m (TExpr V, ArgRef)
-processArg (lexpr, dstPort) = if constainsVar lexpr
-    then do (lexpr', nodeID, srcPort) <- buildNode Nothing [] lexpr
-            return (lexpr', ArgRef.mkNode (nodeID, srcPort, dstPort))
-    else return (lexpr, ArgRef.mkDefault (dstPort, lexpr))
+processArg :: (TExpr V, DstPort) -> GBPass V m (TExpr V, Maybe ArgRef)
+processArg (lexpr, dstPort)
+    | constainsVar lexpr = do
+        (lexpr', nodeID, srcPort) <- buildNode Nothing [] lexpr
+        return (lexpr', Just $ ArgRef.mkNode (nodeID, srcPort, dstPort))
+    | isWildcard lexpr = return (lexpr, Nothing)
+    | otherwise = return (lexpr, Just $ ArgRef.mkDefault (dstPort, lexpr))
 
 
 addNode :: Maybe TPat -> [ArgRef] -> [Tag] -> TExpr V -> GBPass V m (TExpr V, Node.ID)
@@ -228,3 +230,7 @@ constainsVar :: TExpr V -> Bool
 constainsVar = not . null . Find.run isVar where
     isVar (Label _ (Expr.Var {})) = True
     isVar _                       = False
+
+isWildcard :: TExpr V -> Bool
+isWildcard (Label _ (Expr.Wildcard)) = True
+isWildcard _                         = False
