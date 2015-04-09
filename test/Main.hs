@@ -53,7 +53,6 @@ import           Luna.Syntax.Name.Path                      (QualPath(QualPath))
 
 import qualified Luna.Data.ModuleInfo                       as MI
 import           Data.String.Utils                          (replace)
-import qualified Luna.Pass.Analysis.Import                  as ImportAnalysis
 
 
 
