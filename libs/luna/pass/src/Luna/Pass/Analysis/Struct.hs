@@ -96,14 +96,14 @@ aaUnit ast = defaultTraverseM ast *> ((view Namespace.info) . (view StructData.n
 
 aaMod :: SACtx lab m a => LModule lab a -> SAPass m (LModule lab a)
 aaMod mod@(Label lab (Module path body)) = withScope id continue
-    where continue =  registerDecls body
-                   *> StructData.setPath path
+    where continue = StructData.setPath path
+                   *> registerDecls body
                    *> defaultTraverseM mod
           id       = Enum.id lab
 
 aaPat :: (PassCtx m, Enumerated lab) => LPat lab -> SAPass m (LPat lab)
 aaPat p@(Label lab pat) = case pat of
-    Pat.Var         name       -> regVarName (OriginInfo "dupa" id) (unwrap name)
+    Pat.Var         name       -> StructData.regVarNameLocal id (unwrap name)
                                   *> regParent id
                                   *> continue
     _                          -> continue
@@ -147,7 +147,7 @@ registerDataDecl (Label lab decl) = case decl of
           registerCons (Label lab (Decl.Cons _ fields)) = mapM registerField fields
           registerField (Label lab (Decl.Field t mn v)) = case mn of
               Nothing -> return ()
-              Just n  -> regVarName (OriginInfo "dupa" (Enum.id lab)) (unwrap n)
+              Just n  -> StructData.regVarNameLocal (Enum.id lab) (unwrap n)
 
 
 registerHeaders :: (SACtx lab m a) => LDecl lab a -> SAPass m ()
@@ -173,11 +173,11 @@ regForeignDecl id (Foreign tgt fdecl) = case fdecl of
 
 
 -- regParent here means that the class will be the parent of its methods. Do we need it? Seems sane. 
-regFuncDecl id (Decl.FuncDecl _ sig _ _) = regParent id *> regVarName (OriginInfo "dupa" id) (NamePattern.toNamePath sig)
+regFuncDecl id (Decl.FuncDecl _ sig _ _) = regParent id *> StructData.regVarNameLocal id (NamePattern.toNamePath sig)
                                          <* regNamePatDesc id (NamePattern.toDesc sig)
 regDataDecl id (Decl.DataDecl name _ cons _) =  regParent id *> regTypeName (OriginInfo "dupa" id) (unwrap name) 
                                              <* mapM_ registerCons cons
-    where registerCons (Label lab (Decl.Cons name fields)) = regVarName (OriginInfo "dupa" (Enum.id lab)) (unwrap name)
+    where registerCons (Label lab (Decl.Cons name fields)) = StructData.regVarNameLocal (Enum.id lab) (unwrap name)
 
 ----------------------------------------------------------------------
 -- Instances

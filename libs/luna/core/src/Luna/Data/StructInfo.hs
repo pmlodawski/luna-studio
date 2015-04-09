@@ -109,6 +109,12 @@ scopeLookup pid info = case Map.lookup pid (_scope info) of
         Just (Scope v t) -> (v,t)
 
 
+lookupVarInScope :: NamePath -> Scope -> Maybe OriginInfo
+lookupVarInScope name scope = MapForest.lookup nameList vnames
+    where nameList = NamePath.toList name
+          vnames   = _varnames scope
+
+
 regAlias :: ID -> NamePath -> ScopeID -> StructInfo -> StructInfo
 regAlias id name scopeID structInfo = case mvid of
     Just vid -> structInfo & alias   . at id ?~ vid
