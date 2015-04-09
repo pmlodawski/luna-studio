@@ -12,15 +12,18 @@
 module Luna.Data.StructData where
 
 import           Flowbox.Prelude
-import qualified Data.Map                 as Map
-import           Data.Map                 (Map)
+import qualified Data.Map                  as Map
+import           Data.Map                  (Map)
 import qualified Luna.Data.ImportInfo      as II
 import           Luna.Data.ImportInfo      (ImportInfo)
+import qualified Luna.Data.ModuleInfo      as MI
+import           Luna.Data.ModuleInfo      (ImportError(..))
 import qualified Luna.Data.Namespace       as NS
 import           Luna.Data.Namespace       (Namespace)
 import qualified Luna.Data.Namespace.State as NMS
 import           Luna.Data.StructInfo      (StructInfoMonad)
 import qualified Luna.Data.StructInfo      as SI
+import           Luna.Syntax.Name.Path     (QualPath)
 import           Control.Monad.RWS         (RWST)
 import qualified Control.Monad.RWS         as RWST
 import           Control.Monad.Trans.Class (lift, MonadTrans)
@@ -31,7 +34,7 @@ import qualified Control.Monad.State.Lazy  as State
 -- Data types
 ----------------------------------------------------------------------
 data StructData = StructData { _namespace  :: Namespace
-	                         , _importInfo :: ImportInfo
+	                     , _importInfo :: ImportInfo
                              } deriving Show
 
 makeLenses ''StructData
@@ -52,12 +55,12 @@ modify f = do
     put $ f sd
 
 modifyNamespace f = do
-    ns <- NS.get
-    NS.put $ f ns
+    StructData ns ii <- get
+    put $ StructData (f ns) ii
 
 modifyImportInfo f = do
-    ii <- II.get
-    II.put $ f ii
+    StructData ns ii <- get
+    put $ StructData ns (f ii)
 
 
 setPath path = modifyImportInfo $ II.setPath path
@@ -79,10 +82,30 @@ regVarName id name = do
     ii <- II.get
     let path = II._path ii
         nameMap = II._symTable ii
-        dummyResult = case (Map.lookup name nameMap) of
-            Just [o] -> o
-            _        -> (SI.OriginInfo path 600)
-    NMS.regVarName dummyResult name
+    case (Map.lookup name nameMap) of
+        Just [origin]      -> regOrigin id origin
+        Just mods@(o:os)   -> regError (AmbRefError name (getOriginPaths mods))
+        _                  -> regOrphan id (SI.LookupError $ toText name)
+
+
+getOriginPaths :: [SI.OriginInfo] -> [QualPath]
+getOriginPaths infos = map f infos
+    where f (SI.OriginInfo m _) = m
+
+
+regOrigin id origin = do
+    sd <- get
+    let (scopeID:rest) = NS._stack $ _namespace sd
+        sInfo          = NS._info  $ _namespace sd
+    modifyNamespace $ NS.regOrigin id origin
+
+
+regOrphan id err = do
+    modifyNamespace $ NS.regOrphan id err
+
+
+regError err = do
+    modifyImportInfo $ II.regError err
 
 -- wrapper for the regVarName from Namespace, sets the appropriate path
 --regVarName id name = do

@@ -50,6 +50,11 @@ createSymTable info = info & symTable .~ (combineScopes info)
 
 
 
+regError :: ImportError -> ImportInfo -> ImportInfo
+regError err = errors %~ (err:)
+
+
+
 -- combines the top-level scopes of all the imported modules
 -- results in a map from NamePath to [OriginInfo] -- if a given
 -- symbol appears in more than one module, the list isn't a singleton
