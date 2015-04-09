@@ -37,7 +37,7 @@ import qualified Luna.Syntax.Native           as Native
 import           Luna.Syntax.Name.Path        (NamePath(NamePath))
 import qualified Luna.Syntax.Name.Path        as NamePath
 import qualified Luna.Syntax.Name             as Name
-import           Luna.Syntax.Name             (TName(TName), TVName(TVName))
+import           Luna.Syntax.Name             (TName(TName), TVName(TVName), VName(VName))
 import           Luna.Pass                    (Pass(Pass), PassMonad, PassCtx)
 import qualified Luna.Pass                    as Pass
 
@@ -86,13 +86,13 @@ defaultTraverseM = AST.defaultTraverseM StructAnalysis
 -- Pass functions
 ----------------------------------------------------------------------
 
-pass :: (Monoid s, SADefaultTraversal m a) => Pass s (a -> SAPass m StructInfo)
+pass :: (Monoid s, SADefaultTraversal m a) => Pass s (StructData -> a -> SAPass m StructData)
 pass = Pass "Alias analysis" 
             "Basic alias analysis that results in scope, alias, orphans and parent mapping information" 
             mempty aaUnit
 
-aaUnit :: SADefaultTraversal m a => a -> SAPass m StructInfo
-aaUnit ast = defaultTraverseM ast *> ((view Namespace.info) . (view StructData.namespace) <$> get)
+aaUnit :: SADefaultTraversal m a => StructData -> a -> SAPass m StructData
+aaUnit sd ast = put sd *> defaultTraverseM ast *> get
 
 aaMod :: SACtx lab m a => LModule lab a -> SAPass m (LModule lab a)
 aaMod mod@(Label lab (Module path body)) = withScope id continue
@@ -117,8 +117,9 @@ aaDecl d@(Label lab decl) = withScope id continue
 
 aaExpr :: SACtx lab m a => (LExpr lab a) -> SAPass m (LExpr lab a)
 aaExpr e@(Label lab expr) = case expr of
-    var@(Expr.Var (Expr.Variable name _)) -> regParent id
-                                          *> regAlias id (unwrap name)
+    var@(Expr.Var (Expr.Variable vname@(VName name) _)) -> regParent id
+                                          *> regAlias id (unwrap vname)
+                                          *> StructData.regVarName id name
                                           *> continue
     cons@(Expr.Cons name)                 -> regParent id
                                           *> regAlias id (unwrap name)

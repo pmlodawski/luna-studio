@@ -28,6 +28,7 @@ import           Control.Monad          (join)
 import           Luna.Syntax.Name.Pattern (NamePatDesc)
 import           Control.Monad.RWS         (RWST)
 import qualified Luna.Syntax.Module as Module
+import qualified Luna.Syntax.Enum         as Enum
 
 ----------------------------------------------------------------------
 -- Data types

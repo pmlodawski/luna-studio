@@ -12,6 +12,8 @@
 module Luna.Data.StructData where
 
 import           Flowbox.Prelude
+import qualified Data.Map                 as Map
+import           Data.Map                 (Map)
 import qualified Luna.Data.ImportInfo      as II
 import           Luna.Data.ImportInfo      (ImportInfo)
 import qualified Luna.Data.Namespace       as NS
@@ -29,8 +31,8 @@ import qualified Control.Monad.State.Lazy  as State
 -- Data types
 ----------------------------------------------------------------------
 data StructData = StructData { _namespace  :: Namespace
-	                     , _importInfo :: ImportInfo
-                             } 
+	                         , _importInfo :: ImportInfo
+                             } deriving Show
 
 makeLenses ''StructData
 
@@ -72,7 +74,15 @@ regVarNameLocal id name = do
     let path = II._path ii
     NMS.regVarName (SI.OriginInfo path id) name
 
-
+regVarName id name = do
+    ns <- NS.get
+    ii <- II.get
+    let path = II._path ii
+        nameMap = II._symTable ii
+        dummyResult = case (Map.lookup name nameMap) of
+            Just [o] -> o
+            _        -> (SI.OriginInfo path 600)
+    NMS.regVarName dummyResult name
 
 -- wrapper for the regVarName from Namespace, sets the appropriate path
 --regVarName id name = do
@@ -116,11 +126,9 @@ instance (Monad m, Monoid w) => II.ImportInfoMonad (RWST r w StructData m) where
 
 
 
-------------------------------------------------------------------------------------
---
---instance (MonadTrans t, StructDataMonad m, Monad m) => StructDataMonad (t m) where
---    get = lift get
---    put = lift . put
+----------------------------------------------------------------------
+---- Some funs to check if Monads implemented properly ;)
+----------------------------------------------------------------------
 
 foo = do
     x <- get
@@ -132,5 +140,3 @@ foo2 = do
 
 bar = RWST.runRWST foo (mempty :: StructData)
 bar2 = RWST.runRWST foo2 (mempty :: StructData)
-
-
