@@ -81,3 +81,7 @@ inDataDeg = length .: lprelData
 
 outDataDeg :: Graph a v -> Node.ID -> Int
 outDataDeg = length .: lsuclData
+
+
+toStringNodes :: (Show a, Show v) => Graph a v -> Graph a v
+toStringNodes = DG.nmap Node.toStringNode

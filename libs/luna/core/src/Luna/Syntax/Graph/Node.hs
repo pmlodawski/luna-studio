@@ -80,5 +80,8 @@ getOutputPat :: Node a v -> Maybe (LPat a)
 getOutputPat (Expr { _outputPat = pat }) = pat
 getOutputPat _                           = Nothing
 
+
+toStringNode :: (Show a, Show v) => Node a v -> Node a v
+toStringNode = expr %~ NodeExpr.toStringExpr
 --insertDefault :: PortDescriptor -> NodeExpr a v -> Node a v -> Node a v
 --insertDefault pd ne = defaults %~ DefaultsMap.insert pd ne

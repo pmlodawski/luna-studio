@@ -8,10 +8,13 @@
 
 module Luna.Syntax.Graph.Node.Expr where
 
-import Flowbox.Prelude
-import Luna.Syntax.Expr                  (LExpr)
-import Luna.Syntax.Graph.Node.MultiPart  (MultiPartExpr)
-import Luna.Syntax.Graph.Node.StringExpr (StringExpr)
+import           Flowbox.Prelude
+import           Luna.Syntax.Expr                  (LExpr)
+import           Luna.Syntax.Graph.Node.MultiPart  (MultiPartExpr)
+import qualified Luna.Syntax.Graph.Node.MultiPart  as MultiPart
+import           Luna.Syntax.Graph.Node.StringExpr (StringExpr)
+import           qualified Luna.Syntax.Graph.Node.StringExpr as StringExpr
+import           Luna.Util.LunaShow                (lunaShow)
 
 
 
@@ -24,3 +27,9 @@ data NodeExpr a v = StringExpr { _strExpr :: StringExpr }
 makeLenses ''NodeExpr
 
 
+
+toStringExpr :: (Show a, Show v) => NodeExpr a v -> NodeExpr a v
+toStringExpr nodeExpr = case nodeExpr of
+    StringExpr {} -> nodeExpr
+    MultiPart mpe -> StringExpr $ fromString $ MultiPart.getName mpe
+    ASTExpr  expr -> StringExpr $ fromString $ lunaShow expr
