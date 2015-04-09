@@ -24,6 +24,7 @@ import           Flowbox.System.Log.Logger              hiding (error)
 import           Luna.Data.ASTInfo                      (ASTInfo)
 import qualified Luna.Data.ASTInfo                      as ASTInfo
 import qualified Luna.Parser.Parser                     as Parser
+import qualified Luna.Parser.Pragma                     as Pragma
 import qualified Luna.Parser.State                      as Parser
 import           Luna.Pass.Transform.Graph.Parser.State (GPPass)
 import qualified Luna.Pass.Transform.Graph.Parser.State as State
@@ -40,8 +41,8 @@ import qualified Luna.Syntax.Graph.Node                 as Node
 import           Luna.Syntax.Graph.Node.Expr            (NodeExpr)
 import qualified Luna.Syntax.Graph.Node.Expr            as NodeExpr
 import qualified Luna.Syntax.Graph.Node.MultiPart       as MultiPart
-import           Luna.Syntax.Graph.Node.Position (Position)
 import qualified Luna.Syntax.Graph.Node.OutputPat       as OutputPat
+import           Luna.Syntax.Graph.Node.Position        (Position)
 import qualified Luna.Syntax.Graph.Node.StringExpr      as StringExpr
 import           Luna.Syntax.Graph.Port                 (DstPortP (DstPort))
 import qualified Luna.Syntax.Graph.Port                 as Port
@@ -51,10 +52,9 @@ import           Luna.Syntax.Label                      (Label (Label))
 import qualified Luna.Syntax.Label                      as Label
 import qualified Luna.Syntax.Name.Pattern               as Pattern
 import qualified Luna.Syntax.Pat                        as Pat
+import qualified Luna.System.Pragma.Store               as Pragma
 import           Luna.System.Session                    as Session
 import qualified Luna.Util.Label                        as Label
-import qualified Luna.Parser.Pragma as Pragma
-import qualified Luna.System.Pragma.Store as Pragma
 
 
 
@@ -65,7 +65,7 @@ logger :: Logger
 logger = getLogger $moduleName
 
 
-run :: Monad m => Graph Tag V -> TDecl V -> ASTInfo -> EitherT State.Error m (TDecl V, ASTInfo)
+run :: MonadIO m => Graph Tag V -> TDecl V -> ASTInfo -> EitherT State.Error m (TDecl V, ASTInfo)
 run graph ldecl astInfo = evalStateT (func2graph ldecl) $ State.mk graph astInfo
 
 
@@ -129,15 +129,22 @@ buildExpr nodeExpr srcs = case nodeExpr of
         _                         -> do
             astInfo <- State.getASTInfo
             r <- Session.runT $ do
-                void Parser.init
-                Pragma.enable Pragma.orphanNames
+                void   Parser.init
+                void $ Pragma.enable Pragma.orphanNames
                 let parserState = Parser.defState & Parser.info .~ astInfo
                 Parser.parseString (toString str) (Parser.exprParser parserState)
-            case fst r of
+            expr <- case fst r of
                 Left err -> lift $ left $ toString err
                 Right (lexpr, parserState) -> do
                     State.setASTInfo $ parserState ^. Parser.info
                     return $ Label.replaceExpr Tag.fromEnumerated lexpr
+            case (unwrap expr, srcs) of
+                (Expr.Var (Expr.Variable vname _), h:t) -> do
+                    let args = map Expr.unnamed t
+                    acc <- newLabel $ Expr.Accessor (fromString $ toString $ unwrap vname) h
+                    newLabel $ Expr.app acc args
+                _ -> return expr
+
         --StringExpr.Pattern pat    -> parsePatNode     nodeID pat
         --StringExpr.Native  native -> parseNativeNode  nodeID native
         --_                         -> parseAppNode     nodeID $ StringExpr.toString str
@@ -227,6 +234,7 @@ getNodeSrcs nodeID defaults = do
 
         wildcardMissing Nothing  = newLabel Expr.Wildcard
         wildcardMissing (Just e) = return e
+
 
 newLabel :: a -> GPPass v m (Label Tag a)
 newLabel = State.withASTInfo . newLabel'
