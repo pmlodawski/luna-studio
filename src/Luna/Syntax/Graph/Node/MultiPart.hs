@@ -12,7 +12,9 @@ import           Control.Monad.State
 import qualified Data.Maybe          as Maybe
 
 import           Flowbox.Prelude          hiding (mapM)
+import           Luna.Syntax.Expr         (LExpr)
 import qualified Luna.Syntax.Name.Pattern as Pattern
+import           Luna.Util.LunaShow       (lunaShow)
 
 
 
@@ -57,3 +59,8 @@ toNamePat (MultiPartExpr mPrefix mBase mSegments) args missing =
             h:t <- get
             put t
             return h
+
+getName :: (Show a, Show v) => MultiPartExpr (LExpr a v) -> String
+getName (MultiPartExpr _ base' segments') = unwords $ getName' base' : map getName'' segments' where
+    getName'  (MultiPartSegment b  _) = lunaShow b
+    getName'' (MultiPartSegment sn _) = toString sn
