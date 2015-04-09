@@ -35,7 +35,8 @@ import qualified Luna.Pass.Target.HS.HASTGen                as HASTGen
 import qualified Luna.Pass.Target.HS.HSC                    as HSC
 import qualified Luna.Pass.Transform.Desugar.ImplicitScopes as ImplScopes
 import qualified Luna.Pass.Transform.Desugar.ImplicitCalls  as ImplCalls
-import           Luna.Data.Namespace                        (Namespace(Namespace))
+import           Luna.Data.Namespace                        (Namespace(Namespace), _info)
+import           Luna.Data.StructData                       (StructData(StructData), _namespace)
 import qualified Luna.Pass                                  as Pass
 import           Control.Monad.Trans.Either
 import           Control.Monad.Trans.Class                  (lift)
@@ -74,7 +75,7 @@ main = do
         Parser.init
 
         Pragma.enable (Pragma.orphanNames)
-        Pragma.pop    (Pragma.orphanNames)
+        -- Pragma.pop    (Pragma.orphanNames)
 
         result <- runEitherT $ do
             printHeader "Stage1"
@@ -86,32 +87,27 @@ main = do
             ppPrint importInfo
 
             printHeader "SA"
-            sa           <- Pass.run1_ SA.pass ast
-            ppPrint sa
-            let mInfo = MI.ModuleInfo (QualPath [] (fromString liFile)) mempty mempty sa mempty
+            sa           <- Pass.run2_ SA.pass (StructData mempty importInfo) ast
+            let sa1 = _info . _namespace $ sa
+            let mInfo = MI.ModuleInfo (QualPath [] (fromString liFile)) mempty mempty sa1 mempty
+            ppPrint mInfo
             liftIO $ MI.writeModInfoToFile mInfo
 
 
             printHeader "Stage2"
-            (ast, astinfo) <- Pass.run3_ Stage2.pass (Namespace [] sa) astinfo ast
+            (ast, astinfo) <- Pass.run3_ Stage2.pass (Namespace [] sa1) astinfo ast
             ppPrint ast
-
-            -- printHeader "Imports"
-            -- sa <- Pass.run
-            printHeader "ImportAnalysis"
-            x <- Pass.run2_ ImportAnalysis.pass mInfo ast
-            ppPrint x
 
             printHeader "ImplSelf"
             (ast, astinfo) <- Pass.run2_ ImplSelf.pass astinfo ast
             ppPrint ast
 
-            printHeader "SA"
-            sa             <- Pass.run1_ SA.pass ast
+            printHeader "SA2"
+            sa             <- Pass.run2_ SA.pass sa ast
             ppPrint sa
 
             printHeader "ImplScopes"
-            (ast, astinfo) <- Pass.run3_ ImplScopes.pass astinfo sa ast
+            (ast, astinfo) <- Pass.run3_ ImplScopes.pass astinfo sa1 ast
             ppPrint ast
 
             printHeader "ImplCalls"
