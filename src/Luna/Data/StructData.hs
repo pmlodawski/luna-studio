@@ -66,6 +66,22 @@ getPath = do
     return $ II.getPath ii
 
 
+regVarNameLocal id name = do
+    ns <- NS.get
+    ii <- II.get
+    let path = II._path ii
+    NMS.regVarName (SI.OriginInfo path id) name
+
+
+
+-- wrapper for the regVarName from Namespace, sets the appropriate path
+--regVarName id name = do
+--    ns <- NS.get
+--    s  <- NS.getCurrentScope
+--    case s of
+--        Just scope -> case SI.lookupVarInScope of
+--            Just originInfo -> NS.regVarName originInfo
+
 ----------------------------------------------------------------------
 ---- Instances
 ----------------------------------------------------------------------
