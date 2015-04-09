@@ -21,6 +21,9 @@ import Data.Int
 import Data.Default
 import Data.Monoid
 
+import Control.Lens hiding ((<.>))
+import Control.Lens.TH
+
 import GHC.Stack
 import Debug.Trace
 import Control.Exception
@@ -58,11 +61,15 @@ data CppArg = CppArg
     , argType :: String    
     }
 
+makeLenses ''CppArg
+
 instance CppFormattablePart CppArg where
     format arg = argType arg <> " " <> argName arg
 
 data CppQualifier = ConstQualifier | VolatileQualifier | PureVirtualQualifier | OverrideQualifier
                     deriving (Eq)
+
+makeLenses ''CppQualifier
 
 instance CppFormattablePart CppQualifier where
     format ConstQualifier = " const"
@@ -78,6 +85,8 @@ instance CppFormattablePart CppQualifiers where
 
 data CppStorage = Usual | Static | Virtual
 
+makeLenses ''CppQualifier
+
 instance CppFormattablePart CppStorage where
     format Usual = ""
     format Static = "static "
@@ -89,6 +98,8 @@ data CppFunction = CppFunction
     , args :: [CppArg]
     , body :: String
     }
+
+makeLenses ''CppFunction
 
 instance CppFormattable CppFunction where
     formatCpp fn = ("function fundc", "function fdunc")
@@ -104,6 +115,41 @@ data CppMethod = CppMethod
     , qualifiers :: CppQualifiers
     , storage :: CppStorage
     }
+
+makeLenses ''CppMethod
+
+data CppFieldSource = CppFieldSourceRec VarStrictType
+                    | CppFieldSourceNormal THS.StrictType
+
+makeLenses ''CppFieldSource
+
+data CppField = CppField 
+    { fieldName :: String
+    , fieldType :: String
+    , source :: CppFieldSource
+    }
+makeLenses ''CppField
+
+
+data CppAccess = Protected | Public | Private
+makeLenses ''CppAccess
+
+data CppDerive = CppDerive
+    { baseName :: String
+    , isVirtual :: Bool
+    , access :: CppAccess
+    }
+makeLenses ''CppDerive
+
+data CppClass = CppClass 
+    { _className :: String
+    , _classFields :: [CppField]
+    , _classMethods :: [CppMethod]
+    , _classBases :: [CppDerive]
+    , _classTemplateParams :: [String]
+    }
+makeLenses ''CppClass
+    
 
 instance CppFormattableCtx CppMethod CppClass where
     formatCppCtx (CppMethod (CppFunction n r a b) q s) cls@(CppClass cn _ _ _ tmpl) = 
@@ -122,17 +168,11 @@ instance CppFormattableCtx CppMethod CppClass where
 
         in (signatureHeader, implementation)
 
-data CppFieldSource = CppFieldSourceRec VarStrictType | CppFieldSourceNormal THS.StrictType
 
 instance HsTyped CppFieldSource where
     hsType (CppFieldSourceRec vst@(n, s, t)) = t
     hsType (CppFieldSourceNormal st@(s, t)) = t
 
-data CppField = CppField 
-    { fieldName :: String
-    , fieldType :: String
-    , source :: CppFieldSource
-    }
 
 instance CppFormattablePart CppField where
     format field = fieldType field <> " " <> fieldName field
@@ -144,17 +184,11 @@ instance CppFormattablePart [CppField] where
             ret = intercalate "\n" formattedFields
         in ret
 
-data CppAccess = Protected | Public | Private
 instance CppFormattablePart CppAccess where
     format Protected = "protected"
     format Public    = "public"
     format Private   = "private"
 
-data CppDerive = CppDerive
-    { baseName :: String
-    , isVirtual :: Bool
-    , access :: CppAccess
-    }
 
 --instance CppFormattablePart CppDerive where
 --    format (CppDerive base virtual access) = format access <> " " <> (if virtual then "virtual " else "") <> base
@@ -163,13 +197,6 @@ data CppDerive = CppDerive
 --    format [] = ""
 --    format derives = ": " <> Data.List.intercalate ", " (map format derives)
 
-data CppClass = CppClass 
-    { className :: String
-    , classFields :: [CppField]
-    , classMethods :: [CppMethod]
-    , baseClasses :: [CppDerive]
-    , templateParams :: [String]
-    }
 
 cppClassTypeUse :: CppClass -> String
 cppClassTypeUse cls@(CppClass name _ _ _ tmpl) = if null tmpl then name else printf "%s<%s>" name (formatTemplateArgs tmpl)
@@ -364,6 +391,9 @@ isCollapsedMaybePtr (AppT (ConT base) nested) | (base == ''Maybe) = do
     return $ not isNestedValue
 isCollapsedMaybePtr _ = return False
 
+data CppWrapperType = CppWrapperTypeClass | CppWrapperAlias
+data CppWrapper = Name Info CppWrapperType
+
 
 instance Default CppParts where
     def = CppParts [] def []  [] []
@@ -394,7 +424,7 @@ prepareDeserializeMethodBase cls@(CppClass clsName _ _ _ tmpl) derClasses =
         indices = [0 ..  (length derClasses)-1]
         caseForCon index =
             let ithCon =  derClasses !! index
-                conName = className ithCon
+                conName = ithCon ^. className
             in printf "case %d: return %s::deserializeFrom(input);" index (templateDepNameBase conName tmpl) :: String
 
         cases = map caseForCon indices
@@ -429,7 +459,7 @@ deserializeReturnType cls = printf "std::shared_ptr<%s>" $ deserializeReturnShar
 
 prepareDeserializeMethodDer :: CppClass -> Q CppMethod
 prepareDeserializeMethodDer cls@(CppClass clsName _ _ _ tmpl)  = do
-    fieldsCode <- sequence (map deserializeField $ classFields cls)
+    fieldsCode <- sequence (map deserializeField $ cls^.classFields)
     let body = intercalate "\n" $ fieldsCode
         fun = CppFunction "deserialize" "void" [inputArg] body
     return $ CppMethod fun [] Usual
@@ -437,7 +467,7 @@ prepareDeserializeMethodDer cls@(CppClass clsName _ _ _ tmpl)  = do
 prepareDeserializeFromMethodDer :: CppClass -> Q CppMethod
 prepareDeserializeFromMethodDer cls@(CppClass clsName _ _ _ tmpl)  = do
     let fname = deserializeFromFName
-        clsName = className cls
+        clsName = cls ^. className
         --deserializeField field@(CppField fieldName fieldType fieldSrc) = printf "\tdeserialize(ret->%s, input);" fieldName :: String
     
     let bodyOpener = printf "\tauto ret = std::make_shared<%s>();" (deserializeReturnSharedType cls) :: String
@@ -497,6 +527,12 @@ tyvarToCppName :: TyVarBndr -> String
 tyvarToCppName (PlainTV n) = show n
 tyvarToCppName arg = trace ("FIXME: tyvarToCppName for " <> show arg) $ show arg
 
+toForwardDecl :: Name -> Q CppForwardDecl
+toForwardDecl name = do
+    info <- reify name 
+    return $ case info of
+        _ -> CppForwardDeclClass (translateToCppNamePlain name) []
+
 generateCppWrapperHlp :: Dec -> Q CppParts
 -- generateCppWrapperHlp arg | trace ("generateCppWrapperHlp: " <> show arg) False = undefined
 generateCppWrapperHlp dec@(DataD cxt name tyVars cons names) = 
@@ -506,7 +542,7 @@ generateCppWrapperHlp dec@(DataD cxt name tyVars cons names) =
         -- derClasses = processConstructor <$> cons <*> [name]
         let classes = baseClass : derClasses
             functions = []
-            forwardDecs = map (\c -> CppForwardDeclClass (className c) (templateParams c)) classes
+            forwardDecs = map (\c -> CppForwardDeclClass (c ^. className) (c ^. classTemplateParams)) classes
         return (CppParts standardSystemIncludes (Set.fromList forwardDecs) [] classes functions)
 
 generateCppWrapperHlp tysyn@(TySynD name tyVars rhstype) = do
