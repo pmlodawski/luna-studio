@@ -68,7 +68,7 @@ main = do
     let path   = args !! 0
         liFile = replace ".luna" "" path
         out    = args !! 1
-        src    = Source (QualPath [] "Main") (File $ fromString path)
+        src    = Source (QualPath [] (fromString liFile)) (File $ fromString path)
 
     Session.runT $ do
 
