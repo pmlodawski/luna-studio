@@ -86,8 +86,8 @@ regError err = errors %~ (err:)
 -------------------------------------------------------------------------------------
 -- wrappers for structInfo functions
 -------------------------------------------------------------------------------------
-regOrigin :: ID -> ID -> NamePath -> QualPath -> ModuleInfo -> ModuleInfo
-regOrigin id pid name path = strInfo %~ SI.regOrigin id pid name (qualPathToPath path)
+regOrigin :: ID -> SI.OriginInfo -> ModuleInfo -> ModuleInfo
+regOrigin id origin = strInfo %~ SI.regOrigin id origin
 
 
 regOrphan :: ID -> SI.Error -> ModuleInfo -> ModuleInfo

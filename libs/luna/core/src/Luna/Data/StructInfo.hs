@@ -81,13 +81,13 @@ class StructInfoMonad m where
 ----------------------------------------------------------------------
 -- Utils
 ----------------------------------------------------------------------
-regOrigin :: ID -> ID -> NamePath -> Path -> StructInfo -> StructInfo
-regOrigin id pid name path = alias %~ Map.insert id originInfo
-    where originInfo = OriginInfo qPath pid
-          qPath      = NamePath.QualPath (map toText path) (toText name)
+--TODO[PM] check if it should be id or parent id
+regOrigin :: ID -> OriginInfo -> StructInfo -> StructInfo
+regOrigin id origin = alias %~ Map.insert id origin
 
 
 regParent  id pid  = parent %~ Map.insert id pid
+
 regVarName pid id name info = setScope info pid $ Scope (vnmap & at name ?~ id) tnmap where
     (vnmap, tnmap) = scopeLookup pid info
 

@@ -6,7 +6,7 @@ module Luna.Pass.Import where
 import           Control.Monad.IO.Class (liftIO)
 
 import           Luna.Syntax.Label      (Label(Label), _element)
-import           Luna.Syntax.Module     (_body, Module(Module))
+import           Luna.Syntax.Module     (_mpath, _body, Module(Module))
 import qualified Luna.Syntax.Decl       as Dec
 import           Luna.Syntax.Name       (TName(TName))
 import           Luna.Syntax.Name.Path  (QualPath(QualPath), multi)
@@ -27,6 +27,11 @@ getFromUnit (Unit a) = a
 
 getFromLabel :: Label l a -> a
 getFromLabel (Label l a) = a 
+
+
+
+getModulePath :: ASTUnit l a e -> QualPath
+getModulePath ast = _mpath . getFromLabel . getFromUnit $ ast
 
 
 
