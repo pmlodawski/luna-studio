@@ -30,7 +30,7 @@ main = do
     let con0 = Con 100 "[fooBarBazBarfooBarBazBarfooBarBazBarfooBarBazBar]"
     let args = [NestingEvil [con0]] :: [Arg Expr]
     let con = App 1200 (TypeDef 76 "typ1" "Typ2") args
-    let imp = Import 4613 ["foo1 日本穂ショック！", "foo2", "foo3", "foo4"] con (Just "opcjonalny tekst")
+    let imp = Import 4613 ["foo1 日本語ショック！", "foo2", "foo3", "foo4"] con (Just "opcjonalny tekst")
     let argexp = Arg 4321 (0) (Just imp)
     let lit = Lit 500 (Generator.AST.Lit.IntLit 400)
 
