@@ -60,8 +60,19 @@ backAndForth bc code = do
 
 
 backAndForth2 :: Breadcrumbs -> Graph Tag V -> IO ()
-backAndForth2 bc graph = backAndForth2' bc graph graph
-
+backAndForth2 bc providedGraph = do
+    (ast',  astInfo)  <- Common.getAST SampleCode.emptyMain
+    let ast = Label.replace Tag.fromEnumerated ast'
+    (ast2, _astInfo2) <- Common.getExpr bc providedGraph ast astInfo
+    --printLn
+    --prettyPrint ast2
+    --printLn
+    (ast3, resultGraph) <- Common.getGraph bc ast2
+    --prettyPrint resultGraph
+    --printLn
+    --prettyPrint ast3
+    --printLn
+    (Graph.toStringNodes resultGraph) `shouldBe` providedGraph
 
 backAndForth2' :: Breadcrumbs -> Graph Tag V -> Graph Tag V -> IO ()
 backAndForth2' bc providedGraph expectedGraph = do
