@@ -55,7 +55,7 @@ pass = Pass "Find expressions in ast"
             def extract
 
 extract :: FDefaultTraversal a m a => (a -> Bool) -> a -> FPass a m [a]
-extract pred ast = State.setPredicate pred >> defaultTraverseM ast >> State.getFound
+extract pred ast = State.setPredicate pred >> eidLabel ast >> State.getFound
 
 
 run :: FDefaultTraversal a Identity a => (a -> Bool) -> a -> [a]
