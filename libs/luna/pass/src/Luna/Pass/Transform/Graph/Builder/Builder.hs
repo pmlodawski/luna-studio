@@ -122,7 +122,7 @@ buildOutput lexpr = case unwrap lexpr of
 buildExprApp :: Expr.ExprApp Tag V -> GBPass V m (Expr.ExprApp Tag V, [ArgRef])
 buildExprApp (Pattern.NamePat prefix base segmentList) = fmap (_2 %~ Maybe.catMaybes) . flip runStateT [] $ do
     prefix' <- case prefix of
-        Nothing     -> addArg Nothing >> return Nothing
+        Nothing     -> return Nothing
         Just appArg -> Just <$> buildAppArg appArg
     base' <- buildBase base
     segmentList' <- mapM buildSegment segmentList
@@ -132,13 +132,13 @@ buildExprApp (Pattern.NamePat prefix base segmentList) = fmap (_2 %~ Maybe.catMa
         addArg arg = modify (arg:)
 
         buildBase (Pattern.Segment sBase sArgs) = do
+            when (isAccessorOnWildcard sBase) $ addArg Nothing
             --port <- Port.mkDst . length <$> get
             --(sBase', arg) <- lift $ processArg (sBase, port)
             --addArg arg
-            sArgs' <- mapM buildAppArg sArgs
-            return $ Pattern.Segment sBase sArgs'
+            Pattern.Segment sBase <$> mapM buildAppArg sArgs
 
-        buildSegment (Pattern.Segment sBase sArgs) =
+        buildSegment (Pattern.Segment sBase sArgs) = do
             Pattern.Segment sBase <$> mapM buildAppArg sArgs
 
         buildAppArg (Expr.AppArg argName e) = do
@@ -234,3 +234,7 @@ constainsVar = not . null . Find.run isVar where
 isWildcard :: TExpr V -> Bool
 isWildcard (Label _ (Expr.Wildcard)) = True
 isWildcard _                         = False
+
+isAccessorOnWildcard :: TExpr V -> Bool
+isAccessorOnWildcard (Label _ (Expr.Accessor _ src)) = isWildcard src
+isAccessorOnWildcard _= False

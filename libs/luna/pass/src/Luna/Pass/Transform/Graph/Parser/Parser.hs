@@ -17,6 +17,7 @@ import           Control.Monad.State
 import           Control.Monad.Trans.Either
 import qualified Data.Map                   as Map
 import qualified Data.Maybe                 as Maybe
+import qualified Data.List as List
 
 import           Flowbox.Control.Error                  ((<??>))
 import           Flowbox.Prelude                        hiding (folded, mapM, mapM_)
@@ -151,7 +152,7 @@ buildExpr nodeExpr srcs = case nodeExpr of
 
 
 buildPat :: NodeExpr Tag V -> Node.ID -> [Edge] -> Maybe TPat -> GPPass V m TPat
-buildPat nodeExpr nodeID edges = construct (map (unwrap . (^?! Edge.src)) edges)
+buildPat nodeExpr nodeID edges = construct (List.nub $ map (unwrap . (^?! Edge.src)) edges)
     where
         construct [] (Just o) = return o
         construct []  _       = l . Pat.Grouped =<< l (Pat.Tuple [])
