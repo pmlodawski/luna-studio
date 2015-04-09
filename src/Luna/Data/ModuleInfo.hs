@@ -115,7 +115,7 @@ getSymbolId name mInfo = Map.lookup name (mInfo ^. symTable)
 -- checks if the module exists (but not if it's parsed)
 moduleExists :: QualPath -> IO Bool
 moduleExists path = do
-    let fullPath = modPathToString path ++ ".luna"
+    let fullPath = modPathToString path ++ lunaFileSuffix
     f <- Dir.findFile ["."] fullPath 
     return $ case f of
         Just p  -> True
@@ -126,7 +126,7 @@ moduleExists path = do
 -- checks if module is already parsed (i.e. the ModuleInfo is present)
 moduleIsParsed :: QualPath -> IO Bool
 moduleIsParsed path = do
-    let fullPath = modPathToString path ++ "." ++ liFileSuffix
+    let fullPath = modPathToString path ++ liFileSuffix
     liPath <- liDirectory
     f      <- Dir.findFile [liPath] fullPath
     return $ case f of
@@ -160,8 +160,11 @@ qualPathToPath (QualPath ns n) = segs ++ [seg]
 --------------------------------------------------------------------------
 -- ModuleInfo serialization utils
 --------------------------------------------------------------------------
+lunaFileSuffix :: FilePath
+lunaFileSuffix = ".luna"
+
 liFileSuffix :: FilePath
-liFileSuffix = "li"
+liFileSuffix = ".li"
 
 
 
@@ -180,7 +183,7 @@ writeModInfoToFile modInfo = do
     liDir <- liDirectory
     let modDir = liDir </> (modPathToDirString $ modInfo ^. name)
     Dir.createDirectoryIfMissing True modDir
-    let fPath = liDir </> (modPathToString $ modInfo ^. name) ++ (liFileSuffix)
+    let fPath = liDir </> (modPathToString $ modInfo ^. name) ++ liFileSuffix
     -- serialize with Data.Binry:
     encodeFile fPath modInfo
 
@@ -201,7 +204,7 @@ readModInfoFromFile path = do
     if isParsed
         then do 
             liDir <- liDirectory
-            let modPath = liDir </> ((modPathToString path) ++ "." ++ liFileSuffix)
+            let modPath = liDir </> ((modPathToString path) ++ liFileSuffix)
             putStrLn $ "[[[[[[MODPATH: " ++ modPath ++ " ]]]]]]"
             fmap Just $ decodeFile modPath
         else return Nothing
