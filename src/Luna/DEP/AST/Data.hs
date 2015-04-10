@@ -4,17 +4,17 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE FlexibleInstances         #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE FlexibleInstances #-}
 
 module Luna.DEP.AST.Data where
 
-import           Flowbox.Prelude   hiding (cons)
-import           Luna.DEP.AST.Common   (ID)
-import           Luna.DEP.AST.Expr     
-import qualified Luna.DEP.AST.Expr     as Expr
-import qualified Luna.DEP.AST.Type     as Type
-import           Luna.DEP.AST.Type     (Type)
+import           Flowbox.Prelude     hiding (cons)
+import           Luna.DEP.AST.Common (ID)
+import           Luna.DEP.AST.Expr
+import qualified Luna.DEP.AST.Expr   as Expr
+import           Luna.DEP.AST.Type   (Type)
+import qualified Luna.DEP.AST.Type   as Type
 
 
 --mk :: ID -> Type -> Expr -> Expr

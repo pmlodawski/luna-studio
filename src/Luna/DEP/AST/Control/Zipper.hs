@@ -12,8 +12,8 @@ module Luna.DEP.AST.Control.Zipper where
 import Control.Monad.Trans.State
 import Data.List                 (find)
 
-import           Flowbox.Control.Error  (assert, (<?>))
-import           Flowbox.Prelude        hiding (drop, id, mod)
+import           Flowbox.Control.Error      (assert, (<?>))
+import           Flowbox.Prelude            hiding (drop, id, mod)
 import qualified Luna.DEP.AST.Common        as AST
 import           Luna.DEP.AST.Control.Crumb (Breadcrumbs, Crumb)
 import qualified Luna.DEP.AST.Control.Crumb as Crumb

@@ -14,15 +14,15 @@ import           Control.Applicative
 import           Flowbox.Generics.Deriving.QShow
 import           Flowbox.Prelude                 hiding (Traversal, drop, id, mod)
 import           GHC.Generics                    (Generic)
-import           Luna.DEP.AST.Arg                    (Arg)
-import           Luna.DEP.AST.Common                 (ID)
-import           Luna.DEP.AST.Expr                   (Expr)
-import qualified Luna.DEP.AST.Expr                   as Expr
-import           Luna.DEP.AST.Lit                    (Lit)
-import           Luna.DEP.AST.Pat                    (Pat)
-import qualified Luna.DEP.AST.Pat                    as Pat
-import           Luna.DEP.AST.Type                   (Type)
-import qualified Luna.DEP.AST.Type                   as Type
+import           Luna.DEP.AST.Arg                (Arg)
+import           Luna.DEP.AST.Common             (ID)
+import           Luna.DEP.AST.Expr               (Expr)
+import qualified Luna.DEP.AST.Expr               as Expr
+import           Luna.DEP.AST.Lit                (Lit)
+import           Luna.DEP.AST.Pat                (Pat)
+import qualified Luna.DEP.AST.Pat                as Pat
+import           Luna.DEP.AST.Type               (Type)
+import qualified Luna.DEP.AST.Type               as Type
 
 
 
