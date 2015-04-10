@@ -114,9 +114,6 @@ buildOutput lexpr = case unwrap lexpr of
             nodes    = ArgRef.nodes    argRefs
         mapM_ (\(srcID, srcPort, dstPort) -> State.connect srcID srcPort Node.outputID dstPort) nodes
         return $ Label tag $ Expr.Grouped $ Label l $ Expr.Tuple items'
-
-
-
     --Expr.Tuple   items                        -> buildAndConnectMany True  True Nothing Node.outputID items 0
     --Expr.Grouped (Label _ (Expr.Tuple items)) -> buildAndConnectMany True  True Nothing Node.outputID items 0
     --Expr.Grouped v@(Label _ (Expr.Var {}))    -> buildAndConnect     True  True Nothing Node.outputID (v, Port.Num 0)
@@ -145,6 +142,7 @@ buildExprApp (Pattern.NamePat prefix base segmentList) = fmap (_2 %~ Maybe.catMa
                                                           addArg arg
                                                           return $ Label l (Expr.Accessor accName src')
                 Label _ (Expr.Cons _) -> addArg Nothing >> return lexpr
+                Label _ (Expr.Var  _) -> addArg Nothing >> return lexpr
             prefix' <- buildPrefix prefix_
             (prefix',) . Pattern.Segment lexpr' <$> mapM buildAppArg sArgs
 
