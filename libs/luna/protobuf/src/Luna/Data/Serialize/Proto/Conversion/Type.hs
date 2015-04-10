@@ -28,8 +28,8 @@ import qualified Generated.Proto.Type.Type       as Gen
 import qualified Generated.Proto.Type.Type.Cls   as GenCls
 import qualified Generated.Proto.Type.Unknown    as GenUnknown
 import qualified Generated.Proto.Type.Var        as GenVar
-import           Luna.DEP.AST.Type                   (Type)
-import qualified Luna.DEP.AST.Type                   as Type
+import           Luna.DEP.AST.Type               (Type)
+import qualified Luna.DEP.AST.Type               as Type
 import qualified Luna.Syntax.AST                 as AST
 import qualified Text.ProtocolBuffers.Extensions as Extensions
 

@@ -11,8 +11,8 @@ module Luna.DEP.AST.IDMap (
     module X
 ) where
 
-import qualified Data.IntMap as IntMap
 import           Data.IntMap as X hiding (IntMap)
+import qualified Data.IntMap as IntMap
 
 
 type IDMap = IntMap.IntMap

@@ -26,10 +26,10 @@ import qualified Generated.Proto.Lit.Number      as GenNumber
 import qualified Generated.Proto.Lit.Repr        as Gen
 import qualified Generated.Proto.Lit.Repr.Cls    as GenCls
 import qualified Generated.Proto.Lit.Sign        as Gen
-import           Luna.DEP.AST.Lit                    (Lit)
-import qualified Luna.DEP.AST.Lit                    as Lit
-import           Luna.DEP.AST.Lit.Number             (Number (Number))
-import qualified Luna.DEP.AST.Lit.Number             as Number
+import           Luna.DEP.AST.Lit                (Lit)
+import qualified Luna.DEP.AST.Lit                as Lit
+import           Luna.DEP.AST.Lit.Number         (Number (Number))
+import qualified Luna.DEP.AST.Lit.Number         as Number
 import qualified Text.ProtocolBuffers.Extensions as Extensions
 
 
