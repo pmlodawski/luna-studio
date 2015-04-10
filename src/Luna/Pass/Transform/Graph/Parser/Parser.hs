@@ -15,9 +15,9 @@ module Luna.Pass.Transform.Graph.Parser.Parser where
 
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
+import qualified Data.List                  as List
 import qualified Data.Map                   as Map
 import qualified Data.Maybe                 as Maybe
-import qualified Data.List as List
 
 import           Flowbox.Control.Error                  ((<??>))
 import           Flowbox.Prelude                        hiding (folded, mapM, mapM_)
@@ -120,9 +120,12 @@ groupExpr (h:t) texpr = groupExpr t $ Label h $ Expr.Grouped texpr
 buildExpr :: NodeExpr Tag V -> [TExpr V] -> GPPass V m (TExpr V)
 buildExpr nodeExpr srcs = case nodeExpr of
     NodeExpr.ASTExpr expr -> return expr
-    NodeExpr.MultiPart mp -> do defArg <- Expr.unnamed <$> newLabel Expr.Wildcard
-                                let args = map Expr.unnamed srcs
-                                newLabel $ Expr.App $ MultiPart.toNamePat mp args defArg
+    NodeExpr.MultiPart mp -> do let defArg = Expr.unnamed <$> newLabel' Expr.Wildcard
+                                    (self, args) = case srcs of
+                                        []    -> (newLabel' Expr.Wildcard, [])
+                                        (h:t) -> (return h, map Expr.unnamed t)
+                                acc <- State.withASTInfo $ MultiPart.toNamePat mp self args defArg
+                                newLabel $ Expr.App acc
     NodeExpr.StringExpr str -> case str of
         StringExpr.List           -> newLabel $ Expr.List $ Expr.SeqList srcs
         StringExpr.Tuple          -> newLabel $ Expr.Tuple srcs
