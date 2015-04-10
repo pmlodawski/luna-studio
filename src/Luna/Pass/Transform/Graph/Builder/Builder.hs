@@ -108,6 +108,15 @@ buildBody body = do
 buildOutput :: TExpr V -> GBPass V m (TExpr V)
 buildOutput lexpr = case unwrap lexpr of
     Expr.Assignment {}                        -> view _1 <$> buildNode Nothing [] lexpr
+    Expr.Grouped (Label l (Expr.Tuple items)) -> do
+        (items', argRefs) <- processArgs items
+        let defaults = ArgRef.defaults argRefs
+            nodes    = ArgRef.nodes    argRefs
+        mapM_ (\(srcID, srcPort, dstPort) -> State.connect srcID srcPort Node.outputID dstPort) nodes
+        return $ Label tag $ Expr.Grouped $ Label l $ Expr.Tuple items'
+
+
+
     --Expr.Tuple   items                        -> buildAndConnectMany True  True Nothing Node.outputID items 0
     --Expr.Grouped (Label _ (Expr.Tuple items)) -> buildAndConnectMany True  True Nothing Node.outputID items 0
     --Expr.Grouped v@(Label _ (Expr.Var {}))    -> buildAndConnect     True  True Nothing Node.outputID (v, Port.Num 0)
@@ -117,6 +126,7 @@ buildOutput lexpr = case unwrap lexpr of
     _   ->  do (lexpr', nodeID, srcPort) <- buildNode Nothing [] lexpr
                State.connect nodeID srcPort Node.outputID Port.mkDstAll
                return lexpr'
+    where tag = lexpr ^. Label.label
 
 
 buildExprApp :: Expr.ExprApp Tag V -> GBPass V m (Expr.ExprApp Tag V, [ArgRef])
