@@ -20,25 +20,25 @@ import           Flowbox.Prelude                                                
 import           Flowbox.ProjectManager.Context                                                       (Context)
 import qualified Flowbox.ProjectManager.RPC.Topic                                                     as Topic
 import           Flowbox.System.Log.Logger
-import           Flowbox.UR.Manager.RPC.Handler.Handler                                               (prepareResponse, makeMsgArr, fun)
+import           Flowbox.UR.Manager.RPC.Handler.Handler                                               (fun, makeMsgArr, prepareResponse)
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Get.Request                  as CodeGet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Get.Status                   as CodeGet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Set.Request                  as CodeSet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Set.Update                   as CodeSet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Add.Request                  as AddData
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Add.Update                   as AddData
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Add.Request              as AddDataCon
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Add.Update               as AddDataCon
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Delete.Request           as DeleteDataCon
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Delete.Update            as DeleteDataCon
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Field.Add.Request        as AddDataConField
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Field.Add.Update         as AddDataConField
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Field.Delete.Request     as DeleteDataConField
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Field.Delete.Update      as DeleteDataConField
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Field.Modify.Request     as ModifyDataConField
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Field.Modify.Update      as ModifyDataConField
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Modify.Request           as ModifyDataCon
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Modify.Update            as ModifyDataCon
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Add.Request             as AddDataCon
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Add.Update              as AddDataCon
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Delete.Request          as DeleteDataCon
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Delete.Update           as DeleteDataCon
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Field.Add.Request       as AddDataConField
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Field.Add.Update        as AddDataConField
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Field.Delete.Request    as DeleteDataConField
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Field.Delete.Update     as DeleteDataConField
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Field.Modify.Request    as ModifyDataConField
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Field.Modify.Update     as ModifyDataConField
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Modify.Request          as ModifyDataCon
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Modify.Update           as ModifyDataCon
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Classes.Request       as ModifyDataClasses
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Classes.Update        as ModifyDataClasses
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Cls.Request           as ModifyDataCls
@@ -174,7 +174,7 @@ remove request@(Remove.Request tbc tlibID tprojectID astID) undoTopic = do
     let tproperties = fun Topic.projectLibraryAstPropertiesSetRequest $ SetASTProperties.Request (encode properties) (encodeP nodeID) tlibID tprojectID
     BatchAST.remove bc libID projectID
     updateNo <- Batch.getUpdateNo
-    let undoMsg = Sequence.fromList 
+    let undoMsg = Sequence.fromList
                      [ case definition of
                          Focus.Function f -> fun Topic.projectLibraryAstFunctionAddRequest $ AddFunction.Request (encode f) tbcParent tlibID tprojectID astID
                          Focus.Class    c -> fun Topic.projectLibraryAstDataAddRequest     $ AddData.Request     (encode c) tbcParent tlibID tprojectID astID
