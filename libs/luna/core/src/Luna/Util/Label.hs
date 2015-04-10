@@ -247,10 +247,10 @@ replaceNodeExpr conv nodeExpr = case nodeExpr of
     NodeExpr.ASTExpr expr -> NodeExpr.ASTExpr $ replaceExpr conv expr
 
 
-replaceMultiPart :: (l1 -> l2) -> MultiPartExpr (LExpr l1 v) -> MultiPartExpr (LExpr l2 v)
+replaceMultiPart :: (l1 -> l2) -> MultiPartExpr l1 -> MultiPartExpr l2
 replaceMultiPart conv = MultiPartExpr.base %~ replaceMultiPartSegment conv
 
 
-replaceMultiPartSegment :: (l1 -> l2) -> MultiPartSegment (LExpr l1 v) -> MultiPartSegment (LExpr l2 v)
-replaceMultiPartSegment conv = MultiPartExpr.segmentBase %~ replaceExpr conv
+replaceMultiPartSegment :: (l1 -> l2) -> MultiPartSegment (l1, a) -> MultiPartSegment (l2, a)
+replaceMultiPartSegment conv = MultiPartExpr.segmentBase . _1 %~ conv
 

@@ -13,13 +13,12 @@ import           Luna.Syntax.Expr                  (LExpr)
 import           Luna.Syntax.Graph.Node.MultiPart  (MultiPartExpr)
 import qualified Luna.Syntax.Graph.Node.MultiPart  as MultiPart
 import           Luna.Syntax.Graph.Node.StringExpr (StringExpr)
-import           qualified Luna.Syntax.Graph.Node.StringExpr as StringExpr
 import           Luna.Util.LunaShow                (lunaShow)
 
 
 
 data NodeExpr a v = StringExpr { _strExpr :: StringExpr }
-                  | MultiPart  { _multiPartExpr :: MultiPartExpr (LExpr a v) }
+                  | MultiPart  { _multiPartExpr :: MultiPartExpr a }
                   | ASTExpr    { _expr :: LExpr a v }
                   deriving (Show, Eq, Read)
 
@@ -32,4 +31,4 @@ toStringExpr :: (Show a, Show v) => NodeExpr a v -> NodeExpr a v
 toStringExpr nodeExpr = case nodeExpr of
     StringExpr {} -> nodeExpr
     MultiPart mpe -> StringExpr $ fromString $ MultiPart.getName mpe
-    ASTExpr  expr -> StringExpr $ fromString $ lunaShow expr
+    ASTExpr   e   -> StringExpr $ fromString $ lunaShow e

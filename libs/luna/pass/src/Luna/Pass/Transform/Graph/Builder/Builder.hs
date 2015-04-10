@@ -19,8 +19,8 @@ import           Control.Monad.State        hiding (mapM, mapM_)
 import           Control.Monad.Trans.Either
 import qualified Data.Maybe                 as Maybe
 
-import           Flowbox.Prelude                          hiding (Traversal, error)
-import           Flowbox.System.Log.Logger
+import           Flowbox.Prelude
+import           Flowbox.System.Log.Logger                hiding (error)
 import           Luna.Data.StructInfo                     (StructInfo)
 import qualified Luna.Pass.Analysis.Find.Find             as Find
 import           Luna.Pass.Transform.Graph.Builder.ArgRef (ArgRef)
@@ -121,22 +121,26 @@ buildOutput lexpr = case unwrap lexpr of
 
 buildExprApp :: Expr.ExprApp Tag V -> GBPass V m (Expr.ExprApp Tag V, [ArgRef])
 buildExprApp (Pattern.NamePat prefix base segmentList) = fmap (_2 %~ Maybe.catMaybes) . flip runStateT [] $ do
-    prefix' <- case prefix of
-        Nothing     -> return Nothing
-        Just appArg -> Just <$> buildAppArg appArg
-    base' <- buildBase base
+    (prefix', base') <- buildBase prefix base
     segmentList' <- mapM buildSegment segmentList
     modify reverse
     return $ Pattern.NamePat prefix' base' segmentList'
     where
         addArg arg = modify (arg:)
 
-        buildBase (Pattern.Segment sBase sArgs) = do
-            when (isAccessorOnWildcard sBase) $ addArg Nothing
-            --port <- Port.mkDst . length <$> get
-            --(sBase', arg) <- lift $ processArg (sBase, port)
-            --addArg arg
-            Pattern.Segment sBase <$> mapM buildAppArg sArgs
+        buildBase prefix_ (Pattern.Segment lexpr sArgs) = do
+            lexpr' <- case lexpr of
+                Label l (Expr.Accessor accName src) -> do port <- Port.mkDst . length <$> get
+                                                          (src', arg) <- lift $ processArg (src, port)
+                                                          addArg arg
+                                                          return $ Label l (Expr.Accessor accName src')
+                Label _ (Expr.Cons _) -> addArg Nothing >> return lexpr
+            prefix' <- buildPrefix prefix_
+            (prefix',) . Pattern.Segment lexpr' <$> mapM buildAppArg sArgs
+
+        buildPrefix = \case
+            Nothing     -> return Nothing
+            Just appArg -> Just <$> buildAppArg appArg
 
         buildSegment (Pattern.Segment sBase sArgs) = do
             Pattern.Segment sBase <$> mapM buildAppArg sArgs
