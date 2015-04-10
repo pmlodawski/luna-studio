@@ -201,12 +201,12 @@ parseOutputs nodeID defaults position = do
     inPorts <- State.inboundPorts nodeID
     case (srcs, map unwrap inPorts) of
         ([], _)               -> whenM doesLastStatementReturn $
-                                   State.setOutput =<< newLabel . Expr.Grouped
-                                                   =<< newLabel (Expr.Tuple [])
-        ([src], [Port.Num 0]) -> State.setOutput =<< newLabel (Expr.Grouped src)
+                                   State.setOutput =<< mkTuple []
+        ([src], [Port.Num 0]) -> State.setOutput =<< mkTuple [src]
         ([src], _           ) -> State.setOutput src
-        _                     -> State.setOutput =<< newLabel (Expr.Tuple srcs)
-
+        _                     -> State.setOutput =<< mkTuple srcs
+    where
+        mkTuple = newLabel . Expr.Grouped <=< newLabel . Expr.Tuple
 
 doesLastStatementReturn :: GPPass V m Bool
 doesLastStatementReturn = do
