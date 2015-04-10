@@ -6,8 +6,8 @@
 ---------------------------------------------------------------------------
 
 import qualified Data.List                          as List
-import           Distribution.Simple
 import           Distribution.PackageDescription
+import           Distribution.Simple
 import           Distribution.Simple.LocalBuildInfo
 import           Distribution.Simple.PreProcess
 import qualified System.FilePath                    as FilePath
