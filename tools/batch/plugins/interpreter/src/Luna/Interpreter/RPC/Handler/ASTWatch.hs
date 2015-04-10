@@ -30,18 +30,18 @@ import qualified Generated.Proto.ProjectManager.Project.Close.Update            
 import qualified Generated.Proto.ProjectManager.Project.Create.Update                                          as ProjectCreate
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Add.Request                           as ASTDataAdd
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Add.Update                            as ASTDataAdd
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Add.Request                       as ASTDataConAdd
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Add.Update                        as ASTDataConAdd
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Delete.Request                    as ASTDataConDelete
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Delete.Update                     as ASTDataConDelete
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Modify.Request                    as ASTDataConModify
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Modify.Update                     as ASTDataConModify
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Field.Add.Request                       as ASTDataConFieldAdd
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Field.Add.Update                        as ASTDataConFieldAdd
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Field.Delete.Request                    as ASTDataConFieldDelete
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Field.Delete.Update                     as ASTDataConFieldDelete
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Field.Modify.Request                    as ASTDataConFieldModify
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Field.Modify.Update                     as ASTDataConFieldModify
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Add.Request                      as ASTDataConAdd
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Add.Update                       as ASTDataConAdd
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Delete.Request                   as ASTDataConDelete
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Delete.Update                    as ASTDataConDelete
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Field.Add.Request                as ASTDataConFieldAdd
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Field.Add.Update                 as ASTDataConFieldAdd
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Field.Delete.Request             as ASTDataConFieldDelete
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Field.Delete.Update              as ASTDataConFieldDelete
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Field.Modify.Request             as ASTDataConFieldModify
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Field.Modify.Update              as ASTDataConFieldModify
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Modify.Request                   as ASTDataConModify
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Con_.Modify.Update                    as ASTDataConModify
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Classes.Request                as ASTDataModifyClasses
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Classes.Update                 as ASTDataModifyClasses
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Data.Modify.Cls.Request                    as ASTDataModifyCls
@@ -411,7 +411,7 @@ graphNodeModifyInPlace (GraphNodeModifyInPlace.Update request updateNo) = do
 
 graphNodeDefaultRemove :: GraphNodeDefaultRemove.Update -> RPC Context (SessionST mm) ()
 graphNodeDefaultRemove (GraphNodeDefaultRemove.Update request updateNo) = do
-    sync updateNo $ NodeDefaultHandler.remove request 
+    sync updateNo $ NodeDefaultHandler.remove request
     let projectID = GraphNodeDefaultRemove.projectID request
         libraryID = GraphNodeDefaultRemove.libraryID request
         nodeID    = GraphNodeDefaultRemove.nodeID request

@@ -13,11 +13,11 @@ module Flowbox.Data.Version (
     module X,
 ) where
 
-import           Control.Arrow (first)
+import           Control.Arrow                (first)
 import           Data.Aeson
-import           Data.Map      (Map)
-import qualified Data.Map      as Map
-import           Data.Version  as X
+import           Data.Map                     (Map)
+import qualified Data.Map                     as Map
+import           Data.Version                 as X
 import           GHC.Generics
 import qualified Text.ParserCombinators.ReadP as ReadP
 

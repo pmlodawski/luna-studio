@@ -55,7 +55,23 @@ spec = do
                         it "in image-wise metric" $ do
                             returnShouldBeCloseTo testPath ImageWise actualImage expectedImage
 
+          let testName = "blurLuna"
+              actualImage = liftM (blurLuna 20) $ loadImageLuna "./test/samples/lena.png"
+                in 
+                    --defaultReferenceSaveM testName specPath actualImage
+                    defaultReferenceTestM testName specPath actualImage
 
+          let testName = "closeLuna"
+              actualImage = liftM (closeLuna 5) $ loadImageLuna "./test/samples/lena.png"
+                in 
+                    --defaultReferenceSaveM testName specPath actualImage
+                    defaultReferenceTestM testName specPath actualImage
+
+          let testName = "histEqLuna"
+              actualImage = liftM (histEqLuna 10) $ loadImageLuna "./test/samples/lena.png"
+                in 
+                    --defaultReferenceSaveM testName specPath actualImage
+                    defaultReferenceTestM testName specPath actualImage
 
 
               --let testName = "dither"

@@ -18,7 +18,7 @@ import           Flowbox.Prelude
 import qualified Flowbox.System.Directory as Directory
 import qualified Flowbox.System.IO.IO     as IO
 import qualified Flowbox.System.UniPath   as UniPath
-import qualified Luna.Compiler.Build         as Build
+import qualified Luna.Compiler.Build      as Build
 import qualified Luna.Console.Options     as Opt
 import           Test.Luna.Sample.Program (Program)
 import qualified Test.Luna.Sample.Program as Program
@@ -35,7 +35,7 @@ build program =
         let inputFile  = UniPath.append "Main.luna" tmpDir
             outputFile = UniPath.append "out" tmpDir
         IO.writeFile inputFile (program ^. Program.code)
-        Build.run cfg $ Opt.BuildOptions 
+        Build.run cfg $ Opt.BuildOptions
             {   Opt.input        = (UniPath.toUnixString inputFile)
             ,   Opt.output       = (UniPath.toUnixString outputFile)
             ,   Opt.optimisation = 2

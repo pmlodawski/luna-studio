@@ -16,9 +16,9 @@ import Control.Applicative
 
 import           Flowbox.Data.Convert
 import qualified Generated.Proto.Module.Module             as Gen
-import           Luna.DEP.AST.Module                           (Module (Module))
 import           Luna.Data.Serialize.Proto.Conversion.Expr ()
 import           Luna.Data.Serialize.Proto.Conversion.Type ()
+import           Luna.DEP.AST.Module                       (Module (Module))
 
 
 instance Convert Module Gen.Module where
