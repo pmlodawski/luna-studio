@@ -2,6 +2,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE DeriveGeneric             #-}
 
 module Generator.Generator where
 
@@ -28,6 +29,34 @@ import GHC.Stack
 import Debug.Trace
 import Control.Exception
 import System.FilePath
+import Data.DeriveTH
+
+derive makeIs ''Dec
+
+----------------------------------
+
+getDecName :: Dec -> Name
+getDecName dec = case dec of
+    FunD         n _       -> n
+    DataD        _ n _ _ _ -> n
+    NewtypeD     _ n _ _ _ -> n
+    TySynD       n _ _     -> n
+    ClassD       _ n _ _ _ -> n
+    SigD         n _       -> n
+    FamilyD      _ n _ _   -> n
+    DataInstD    _ n _ _ _ -> n
+    NewtypeInstD _ n _ _ _ -> n
+    --TySynInstD   n _ _     -> n
+    _                      -> error "This Dec does not have a name!"
+
+
+getTypeName :: Type -> Name
+getTypeName t = case t of
+    VarT n  -> n
+    ConT n  -> n
+    _       -> error "Type " ++ show n ++ "has no name!"
+
+----------------------------------
 
 type HeaderSource = String
 
@@ -151,6 +180,51 @@ data CppClass = CppClass
 makeLenses ''CppClass
     
 
+data CppTypedef  = CppTypedef 
+    { introducedType :: String
+    , baseType :: String
+    , _typedefTmpl :: [String]
+    }
+
+makeLenses ''CppTypedef
+
+
+data CppWrapperType = CppWrapperTypeClass Dec | CppWrapperAlias Dec
+
+derive makeIs ''CppWrapperType
+
+data CppWrapper = Name Info CppWrapperType
+
+data CppInclude = CppSystemInclude String | CppLocalInclude String
+
+--data CppInclude = CppSystemInclude String | CppLocalInclude String
+--instance CppFormattable CppInclude where
+--    formatCpp (CppSystemInclude path) = (printf "#include <%s>" path, "")
+--    formatCpp (CppLocalInclude path) = (printf "#include \"%s\"" path, "")
+
+includeText :: CppInclude -> String
+includeText (CppSystemInclude path) = printf "#include <%s>" path
+includeText (CppLocalInclude path) = printf "#include \"%s\"" path
+
+instance CppFormattable ([CppInclude],[CppInclude]) where
+    formatCpp (headerIncludes, cppIncludes) = 
+        let formatIncl incl = intercalate "\n" (includeText <$> incl)
+        in (formatIncl headerIncludes, formatIncl cppIncludes)
+
+
+data CppForwardDecl = CppForwardDeclClass String [String] -- | CppForwardDeclStruct String
+    deriving (Ord, Eq)
+
+
+data CppParts = CppParts { includes     :: ([CppInclude],[CppInclude])
+                         , forwardDecls :: Set CppForwardDecl
+                         , typedefs     :: [CppTypedef]
+                         , classes      :: [CppClass]
+                         , functions    :: [CppFunction]
+                         }
+makeLenses ''CppParts
+
+
 instance CppFormattableCtx CppMethod CppClass where
     formatCppCtx (CppMethod (CppFunction n r a b) q s) cls@(CppClass cn _ _ _ tmpl) = 
         let st = format s :: String
@@ -221,46 +295,26 @@ instance CppFormattable CppClass where
             bodyCode = methodsImpl
         in (headerCode, bodyCode)
 
-data CppInclude = CppSystemInclude String | CppLocalInclude String
-instance CppFormattable CppInclude where
-    formatCpp (CppSystemInclude path) = (printf "#include <%s>" path, "")
-    formatCpp (CppLocalInclude path) = (printf "#include \"%s\"" path, "")
-
-data CppForwardDecl = CppForwardDeclClass String [String] -- | CppForwardDeclStruct String
-    deriving (Ord, Eq)
-
 instance CppFormattable CppForwardDecl where
     formatCpp (CppForwardDeclClass name tmpl) = (printf "%sclass %s;" (formatTemplateIntroductor tmpl) name, "")
     -- formatCpp (CppForwardDeclStruct name) = (printf "struct %s;" name, "")
-
-data CppTypedef  = CppTypedef 
-    { introducedType :: String
-    , baseType :: String
-    , _typedefTmpl :: [String]
-    }
 
 instance CppFormattable CppTypedef where
     formatCpp (CppTypedef to from tmpl) = 
         let templateList = formatTemplateIntroductor tmpl
         in (printf "%susing %s = %s;" templateList to from, "")
 
-data CppParts = CppParts { includes     :: [CppInclude]
-                         , forwardDecls :: Set CppForwardDecl
-                         , typedefs     :: [CppTypedef]
-                         , classes      :: [CppClass]
-                         , functions    :: [CppFunction]
-                         }
 
 instance CppFormattable CppParts where
     formatCpp (CppParts incl frwrds tpdefs cs fns) = 
-        let includesPieces = map formatCpp incl
+        let includesPieces = formatCpp incl
             forwardDeclPieces = map formatCpp (Set.toList frwrds)
             typedefPieces = map formatCpp tpdefs
             classesCodePieces = map formatCpp cs
             functionsPieces = map formatCpp fns
             -- FIXME code duplication above
 
-            allPieces = concat [includesPieces, forwardDeclPieces, typedefPieces, classesCodePieces, functionsPieces]
+            allPieces = concat [[includesPieces], forwardDeclPieces, typedefPieces, classesCodePieces, functionsPieces]
             -- replicate 10 '*'
             collectCodePieces fn = Data.List.intercalate "\n\n/****************/\n\n" (map fn allPieces)
             headerCode = collectCodePieces fst
@@ -391,12 +445,27 @@ isCollapsedMaybePtr (AppT (ConT base) nested) | (base == ''Maybe) = do
     return $ not isNestedValue
 isCollapsedMaybePtr _ = return False
 
-data CppWrapperType = CppWrapperTypeClass | CppWrapperAlias
-data CppWrapper = Name Info CppWrapperType
 
+class HasCppWrapper a where
+    whatComesFrom :: a -> Q CppWrapperType
+
+instance HasCppWrapper Info where
+    whatComesFrom info = do
+        return $ case info of
+            TyConI dec -> case dec of 
+                DataD cxt name params cons names 
+                    -> CppWrapperTypeClass dec
+                TySynD name params dstType 
+                    -> CppWrapperAlias dec
+                _   
+                    -> error $ "whatComesFrom fails for " ++ show info
+            _ -> error $ "whatComesFrom fails for " ++ show info
+
+instance HasCppWrapper Name where
+    whatComesFrom name = reify name >>= whatComesFrom
 
 instance Default CppParts where
-    def = CppParts [] def []  [] []
+    def = CppParts def def []  [] []
 
 emptyQParts :: Q CppParts
 emptyQParts = return def
@@ -527,29 +596,99 @@ tyvarToCppName :: TyVarBndr -> String
 tyvarToCppName (PlainTV n) = show n
 tyvarToCppName arg = trace ("FIXME: tyvarToCppName for " <> show arg) $ show arg
 
-toForwardDecl :: Name -> Q CppForwardDecl
-toForwardDecl name = do
-    info <- reify name 
+class ForwardDeclarable a where
+    makeForwardDeclaration :: a -> Q CppForwardDecl
+
+instance ForwardDeclarable (Name, [TyVarBndr]) where
+    makeForwardDeclaration (name, params) = do
+        return $ CppForwardDeclClass (translateToCppNameQualified name) (tyvarToCppName <$> params)
+
+instance ForwardDeclarable Dec where
+    makeForwardDeclaration dec = do
+        let nameAndParams = case dec of
+                (DataD cxt name params cons names) -> (name, params)
+                (TySynD name params rhsType)       -> error ("No forward declarations for aliases! " ++ show dec) --(name, params)
+                _ -> error ("makeForwardDeclaration Dec " ++ show dec)
+        makeForwardDeclaration nameAndParams
+
+instance ForwardDeclarable Name where
+    makeForwardDeclaration name = do
+        info <- reify name
+        case info of
+            TyConI dec -> makeForwardDeclaration dec
+            _ -> error ("makeForwardDeclaration Name " ++ show name)
+
+instance ForwardDeclarable CppClass where
+    makeForwardDeclaration cls = return $ CppForwardDeclClass (cls ^. className) (cls ^. classTemplateParams)
+
+--toForwardDecl :: Name -> Q CppForwardDecl
+--toForwardDecl name = do
+--    info <- reify name 
+--    return $ case info of
+--        _ -> CppForwardDeclClass (translateToCppNamePlain name) []
+
+
+makesAlias :: Name -> Q Bool
+makesAlias name = do
+    info <- reify name
     return $ case info of
-        _ -> CppForwardDeclClass (translateToCppNamePlain name) []
+        TyConI dec -> isTySynD dec
+        _ -> False
+
+aliasDependencies :: Name -> Q [Name]
+aliasDependencies name = do
+    info <- reify name
+    case info of 
+        TyConI dec -> case dec of
+            TySynD name params destType -> [name,]
+
+generateTypedefCppWrapper :: Dec -> Q CppTypedef
+generateTypedefCppWrapper tysyn@(TySynD name tyVars rhstype) = do
+    baseTName <- typeOfAlias rhstype
+    let tnames = map tyvarToCppName tyVars
+    return $ CppTypedef (translateToCppNameQualified name) baseTName tnames
+generateTypedefCppWrapper arg = error ("FIXME: generateTypedefCppWrapper for " <> show arg) 
+
+
+goOverAliasCollectingNonAliasDeps :: Name -> Q [Name]
+goOverAliasCollectingNonAliasDeps name = do
+    let neighbourhood name = return [name]
+    generalBfs neighbourhood [name] [name]
 
 generateCppWrapperHlp :: Dec -> Q CppParts
 -- generateCppWrapperHlp arg | trace ("generateCppWrapperHlp: " <> show arg) False = undefined
 generateCppWrapperHlp dec@(DataD cxt name tyVars cons names) = 
     do
         derClasses <- sequence $ processConstructor <$> [dec] <*> cons
+        let dependencies = symbolDependencies dec
+        reifiedDeps <- sequence $ reify <$> Set.toList dependencies
+
+        let dataDepsDecs = [dec | (TyConI dec) <- reifiedDeps, isDataD dec]
+        let aliasDepsDecs = [dec | (TyConI dec) <- reifiedDeps, isTySynD dec]
+
+        aliases <- sequence $ generateTypedefCppWrapper <$> aliasDepsDecs
+
+
+        let aliasDepNames = getDecName <$> aliasDepsDecs
+
+
         let baseClass = generateRootClassWrapper dec derClasses
         -- derClasses = processConstructor <$> cons <*> [name]
         let classes = baseClass : derClasses
             functions = []
-            forwardDecs = map (\c -> CppForwardDeclClass (c ^. className) (c ^. classTemplateParams)) classes
-        return (CppParts standardSystemIncludes (Set.fromList forwardDecs) [] classes functions)
+
+        let includesForDeps = [CppLocalInclude (nameBase n <> ".h") | (DataD _ n _ _ _) <- dataDepsDecs]
+
+        --forwardDecsClasses <- sequence $ makeForwardDeclaration <$> classes
+        forwardDecsClasses <- sequence $ [makeForwardDeclaration baseClass]
+        forwardDecsDeps <- sequence $ makeForwardDeclaration <$> dataDepsDecs
+        let forwardDecs = Set.fromList $ forwardDecsClasses <> forwardDecsDeps
+
+        return (CppParts (standardSystemIncludes, includesForDeps) forwardDecs aliases classes functions)
 
 generateCppWrapperHlp tysyn@(TySynD name tyVars rhstype) = do
-    baseTName <- typeOfAlias rhstype
-    let tnames = map tyvarToCppName tyVars
-    let tf = CppTypedef (translateToCppNameQualified name) baseTName tnames
-    return $ CppParts [] def [tf] [] []
+    tf <- generateTypedefCppWrapper tysyn
+    return $ CppParts def def [tf] [] []
 
 generateCppWrapperHlp arg = trace ("FIXME: generateCppWrapperHlp for " <> show arg) emptyQParts
 
@@ -566,6 +705,7 @@ instance TypesDependencies Type where
     symbolDependencies apptype@(AppT (TupleT _) nested) = symbolDependencies nested
     symbolDependencies apptype@(AppT base nested) = symbolDependencies [base, nested]
     symbolDependencies vartype@(VarT n) = Set.empty
+    symbolDependencies (TupleT 0) = Set.empty
     symbolDependencies t = trace ("FIXME not handled type: " <> show t) Set.empty
 
 instance (TypesDependencies a, Show a) => TypesDependencies [a] where
@@ -587,22 +727,16 @@ instance TypesDependencies VarStrictType where
     --symbolDependencies t | trace ("Field: " <> show t) False = undefined
     symbolDependencies (_, _, t) = symbolDependencies t
 
+instance TypesDependencies Dec where
+    symbolDependencies (DataD _ n _ cons _) = symbolDependencies cons
+    symbolDependencies (TySynD n _ t) = symbolDependencies t
+    symbolDependencies arg = trace ("FIXME not handled Dec: " <> show arg) (Set.empty)
+
 instance TypesDependencies Info where
 --    symbolDependencies t | trace ("Info: " <> show t) False = undefined
-    symbolDependencies (TyConI (DataD _ n _ cons _)) = symbolDependencies cons
-    symbolDependencies (TyConI (TySynD n _ t)) = symbolDependencies t
+    symbolDependencies (TyConI dec) = symbolDependencies dec
     symbolDependencies arg = trace ("FIXME not handled Info: " <> show arg) (Set.empty)
 
-blah :: Name -> StateT [Name] Q [Name]
-blah name = do
-    nameInfo <- lift $ reify name
-    return []
-
-additionalDependencies :: Set Name -> Info -> Set Name
-additionalDependencies alreadyKnownDeps queriedInfo = 
-    let allDepsOfInfo = symbolDependencies queriedInfo
-        newDeps = Set.difference alreadyKnownDeps allDepsOfInfo
-    in newDeps
 
 collectDirectDependencies :: Name -> Q [Name]
 -- collectDirectDependencies name | trace ("collectDirectDependencies " <> show name) False = undefined
@@ -612,22 +746,33 @@ collectDirectDependencies name = do
     return $ Set.elems namesSet
     -- evalStateT (blah name) []
 
-naiveBfs :: [Name] -> [Name] -> Q [Name]
--- naiveBfs q d | trace (show q <> "\n\n" <> show d) False = undefined
-naiveBfs [] discovered = return discovered
-naiveBfs queue discovered = do
+generalBfs :: (Name -> Q [Name]) -> [Name] -> [Name] -> Q [Name]
+-- generalBfs q d | trace (show q <> "\n\n" <> show d) False = undefined
+generalBfs _ [] discovered = return discovered
+generalBfs getNeighbours queue discovered = do
     let vertex = head queue
-    neighbours <- collectDirectDependencies vertex
+    neighbours <- getNeighbours vertex
     let neighboursToAdd = filter (flip notElem discovered) neighbours
         newQueue        = tail queue <> neighboursToAdd
         newDiscovered   = discovered <> neighboursToAdd
-    naiveBfs newQueue newDiscovered
+    generalBfs getNeighbours newQueue newDiscovered
+
+--naiveBfs :: [Name] -> [Name] -> Q [Name]
+---- naiveBfs q d | trace (show q <> "\n\n" <> show d) False = undefined
+--naiveBfs [] discovered = return discovered
+--naiveBfs queue discovered = do
+--    let vertex = head queue
+--    neighbours <- collectDirectDependencies vertex
+--    let neighboursToAdd = filter (flip notElem discovered) neighbours
+--        newQueue        = tail queue <> neighboursToAdd
+--        newDiscovered   = discovered <> neighboursToAdd
+--    naiveBfs newQueue newDiscovered
 
 collectDependencies :: Name -> Q [Name]
 collectDependencies name = do
     let queue = [name]
     let discovered = [name]
-    naiveBfs queue discovered
+    generalBfs collectDirectDependencies queue discovered
 
 printAst :: Info -> String
 printAst  (TyConI dec@(DataD cxt name tyVars cons names)) = 
@@ -638,7 +783,8 @@ printAst  (TyConI dec@(DataD cxt name tyVars cons names)) =
 
 joinParts :: [CppParts] -> CppParts
 joinParts parts = 
-    CppParts (concat $ map includes parts) (Set.unions $ fmap forwardDecls parts) (concat $ map typedefs parts) (concat $ map classes parts) (concat $ map functions parts)
+    let collapseIncludes which = which <$> includes <$> parts
+    in CppParts (concat $ collapseIncludes fst, concat $ collapseIncludes snd) (Set.unions $ fmap forwardDecls parts) (concat $ map typedefs parts) (concat $ map classes parts) (concat $ map functions parts)
 
 generateSingleWrapper :: Name -> Q CppParts
 generateSingleWrapper arg | trace ("generateSingleWrapper: " <> show arg) False = undefined
@@ -678,7 +824,7 @@ writeFilePair outputDir fileBaseName cppParts = do
 
     let (headerBody, body) = formatCpp cppParts
 
-    let headerFileContents = headerBody
+    let headerFileContents = printf "#pragma once\n\n%s" headerBody
     let sourceFileContents = (printf "#include \"helper.h\"\n#include \"%s\"\n\n" headerBaseName) <> body
   
     let tryioaction action = try action :: IO (Either SomeException ())
