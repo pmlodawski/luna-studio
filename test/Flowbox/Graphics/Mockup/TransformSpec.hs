@@ -8,13 +8,18 @@ import Flowbox.Graphics.Mockup.Basic
 import Flowbox.Graphics.Mockup.Transform
 import Flowbox.Prelude
 import Flowbox.Graphics.Color.Color
+import Flowbox.Geom2D.Rectangle
 import Math.Coordinate.Cartesian
+import Control.Monad
+import Linear (V2 (..))
+import Flowbox.Graphics.Mockup.Matte
+
 
 import TestHelpers
 
 spec :: Spec
 spec = do
-    --let specPath = "./test/Flowbox/Graphics/Mockup/"
+    let specPath = "./test/Flowbox/Graphics/Mockup/"
     --    in do 
     --        let testName = "rotateLuna"
     --        let testPath = specPath++testName
@@ -35,6 +40,33 @@ spec = do
     --            --    it "in image-wise metric" $ do
     --            --        rightReturnShouldBeCloseTo testPath ImageWise actualImage expectedImage
     --        describe testName $ do
-                let actualImage = rotateAtLuna (Point2 0 0) (-pi/8) False Nothing (conicalLuna 100 120)
-                --defaultReferenceTest testName specPath actualImage
-                defaultReferenceTest "rotateLuna" "./test/Flowbox/Graphics/Mockup/" actualImage
+    let actualImage = rotateAtLuna (Point2 0 0) (-pi/8) False Nothing (conicalLuna 100 120)
+    --defaultReferenceTest testName specPath actualImage
+    defaultReferenceTest "rotateLuna" "./test/Flowbox/Graphics/Mockup/" actualImage
+
+
+    let testName = "cropLuna"
+        actualImage = liftM (cropLuna (Rect 10 20 310 420) False True) $ loadImageLuna "./test/samples/lena.png"
+    --defaultReferenceSaveM testName specPath actualImage
+    defaultReferenceTestM testName specPath actualImage
+
+    let testName = "translateLuna"
+        actualImage = liftM (translateLuna (V2 100 200) True Nothing) $ loadImageLuna "./test/samples/lena.png"
+    --defaultReferenceSaveM testName specPath actualImage
+    defaultReferenceTestM testName specPath actualImage
+
+    let testName = "masked_translateLuna"
+        matte = imageMatteLuna (constantLuna (CustomFormat 200 200) (RGBA 1 0 0 0)) "rgba.r" 
+        actualImage = liftM (translateLuna (V2 40 60) True matte) $ loadImageLuna "./test/samples/lena.png"
+    --defaultReferenceSaveM testName specPath actualImage
+    defaultReferenceTestM testName specPath actualImage
+
+    let testName = "rotateAtLuna"
+        actualImage = liftM (rotateAtLuna (Point2 100 400) (pi/4) True Nothing) $ loadImageLuna "./test/samples/lena.png"
+    --defaultReferenceSaveM testName specPath actualImage
+    defaultReferenceTestM testName specPath actualImage
+
+    let testName = "scaleAtLuna"
+        actualImage = liftM (scaleAtLuna (Point2 100 400) (V2 0.8 2) True Nothing) $ loadImageLuna "./test/samples/lena.png"
+    --defaultReferenceSaveM testName specPath actualImage
+    defaultReferenceTestM testName specPath actualImage
