@@ -37,8 +37,8 @@ fixEmpty :: Int -> (Node.ID, Node Tag V) -> (Node.ID, Node Tag V)
 fixEmpty start = flip evalState (ASTInfo start) . OutputPat.fixEmpty'
 
 
-sampleGraphs :: [(String, Graph Tag V)]
-sampleGraphs =
+samples :: [(String, Graph Tag V)]
+samples =
     [ named "simple graph 1"
     $ Graph.addMonadicEdges $ Graph.mkGraph
         [(-2, Node.Inputs         (0, 0))
@@ -201,8 +201,8 @@ sampleGraphs =
     ]
 
 
-buggyGraphs :: [(String, Graph Tag V, Graph Tag V)]
-buggyGraphs =
+buggy :: [(String, Graph Tag V, Graph Tag V)]
+buggy =
     [(  "empty"
      ,  Graph.addMonadicEdges $ Graph.mkGraph
         []
@@ -221,7 +221,7 @@ buggyGraphs =
         ,(-1,Node.Outputs def      (10, 1))
         ,fixEmpty 10 (100, Node.Expr (strExpr "main") def def (0, 1) def)
         ]
-        [(100, -1, Edge.Data Port.mkSrcAll Port.mkDstAll)]
+        []
     ),( "graph with [0] and [1] port descriptors on output"
      ,  Graph.addMonadicEdges $ Graph.mkGraph
         [(-2,Node.Inputs  (0 ,0))

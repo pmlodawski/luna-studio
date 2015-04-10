@@ -22,7 +22,8 @@ import qualified Luna.Util.Label                       as Label
 import qualified Test.Luna.Pass.Transform.Graph.Common as Common
 import           Test.Luna.Sample.Code                 (sampleCodes)
 import qualified Test.Luna.Sample.Code                 as SampleCode
-import           Test.Luna.Sample.Graph                (V, sampleGraphs, strExpr)
+import           Test.Luna.Sample.Graph                (V, strExpr)
+import qualified Test.Luna.Sample.Graph                as Graph
 import qualified Test.Luna.Syntax.Common               as Common
 
 
@@ -102,9 +103,9 @@ spec = do
 
     describe "graph <-> ast conversion" $ do
         mapM_ (\(name, graph) -> it ("returns the same when converting back and forth - " ++ name) $
-                backAndForth2 Common.mainBC graph) sampleGraphs
-        --mapM_ (\(name, providedGraph, expectedGraph) -> it ("fixes buggy graphs - " ++ name) $
-        --        backAndForth2' Common.mainBC providedGraph expectedGraph) buggyGraphs
+                backAndForth2 Common.mainBC graph) Graph.samples
+        mapM_ (\(name, providedGraph, expectedGraph) -> it ("fixes buggy graphs - " ++ name) $
+                backAndForth2' Common.mainBC providedGraph expectedGraph) Graph.buggy
 
 
     describe "graph sort alghorithm" $ do
