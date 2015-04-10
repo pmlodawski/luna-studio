@@ -1,14 +1,14 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 
-import Prelude hiding (id)
-import Data.Default
-import Data.IntMap (IntMap)
-import Control.Lens
-import qualified Data.IntMap as IntMap
-import qualified Data.IntSet    as IntSet
-import           Data.IntSet    (IntSet)
+import           Control.Lens
+import           Data.Default
+import           Data.IntMap        (IntMap)
+import qualified Data.IntMap        as IntMap
+import           Data.IntSet        (IntSet)
+import qualified Data.IntSet        as IntSet
 import           Data.Monoid
-import System.Environment (getArgs)
+import           Prelude            hiding (id)
+import           System.Environment (getArgs)
 
 
 class Element n where
@@ -65,7 +65,7 @@ instance GraphClass Graph where
               ns'   = maybe ns updateNodes medge
               updateNodes (EdgeCtx n m _) = IntMap.adjust (\(NodeCtx ins outs a) -> NodeCtx (IntSet.delete eid ins) outs a) m
                                           $ IntMap.adjust (\(NodeCtx ins outs a) -> NodeCtx ins (IntSet.delete eid outs) a) n
-                                          $ ns 
+                                          $ ns
 
 instance Default (Graph n e) where
     def = Graph def def
@@ -106,7 +106,7 @@ main = do
     let num  = read (args!!0) :: Int
     let num2 = read (args!!1) :: Int
     --print num
-    let 
+    let
         g = (def :: Graph (Labeled () Node) Edge)
           & insNode (labeled () $ node 0)
           & insNode (labeled () $ node 1)
