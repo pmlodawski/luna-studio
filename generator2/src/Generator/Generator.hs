@@ -30,6 +30,10 @@ import Debug.Trace
 import Control.Exception
 import System.FilePath
 import Data.DeriveTH
+import Data.List.Split
+import System.Directory
+
+-- import Generator.Expr (Lit4)
 
 derive makeIs ''Dec
 
@@ -54,7 +58,7 @@ getTypeName :: Type -> Name
 getTypeName t = case t of
     VarT n  -> n
     ConT n  -> n
-    _       -> error "Type " ++ show n ++ "has no name!"
+    _       -> error $ "Type " ++ show t ++ "has no name!"
 
 ----------------------------------
 
@@ -216,14 +220,30 @@ data CppForwardDecl = CppForwardDeclClass String [String] -- | CppForwardDeclStr
     deriving (Ord, Eq)
 
 
-data CppParts = CppParts { includes     :: ([CppInclude],[CppInclude])
-                         , forwardDecls :: Set CppForwardDecl
+type CppIncludes = ([CppInclude],[CppInclude])
+type CppForwardDecls = Set CppForwardDecl
+
+data CppParts = CppParts { includes     :: CppIncludes
+                         , forwardDecls :: CppForwardDecls
                          , typedefs     :: [CppTypedef]
                          , classes      :: [CppClass]
                          , functions    :: [CppFunction]
                          }
 makeLenses ''CppParts
 
+
+
+joinParts :: [CppParts] -> CppParts
+joinParts parts = 
+    let collapseIncludes which = which <$> includes <$> parts
+    in CppParts (concat $ collapseIncludes fst, concat $ collapseIncludes snd) (Set.unions $ fmap forwardDecls parts) (concat $ map typedefs parts) (concat $ map classes parts) (concat $ map functions parts)
+
+
+--instance Monoid CppParts where
+--    mempty = def
+--    mappend lhs rhs = 
+--        let collapseIncludes which = which <$> includes <$> parts
+--        in CppParts (concat $ collapseIncludes fst, concat $ collapseIncludes snd) (Set.unions $ fmap forwardDecls parts) (concat $ map typedefs parts) (concat $ map classes parts) (concat $ map functions parts)
 
 instance CppFormattableCtx CppMethod CppClass where
     formatCppCtx (CppMethod (CppFunction n r a b) q s) cls@(CppClass cn _ _ _ tmpl) = 
@@ -374,6 +394,7 @@ templateDepName :: CppClass -> String
 templateDepName cls@(CppClass clsName _ _ _ tmpl) = templateDepNameBase clsName tmpl
 
 data TypeDeducingMode = TypeField | TypeAlias
+    deriving (Show)
 
 browseAppTree :: Type -> (Type, [Type]) -- returns (Base, [params])
 browseAppTree (AppT l r) = 
@@ -385,6 +406,7 @@ hsTypeToCppType :: Type -> TypeDeducingMode -> Q String
 hsTypeToCppType t@(ConT name) tdm = do
     let nb = translateToCppNameQualified name
     byValue <- isValueType t
+    -- trace ("Koza " ++ show t ++ " value? " ++ show byValue ++ "#" ++ show tdm) (return ())
     return $ 
         if name == ''String then "std::string" 
         else if name == ''Int then "std::int64_t" --"int"
@@ -415,9 +437,10 @@ hsTypeToCppType (AppT ListT (nested)) tdm = do
 hsTypeToCppType (VarT n) tdm = return $ show n
 
 hsTypeToCppType t@(AppT _ _) tdm = do
+    -- trace ("Gęś " ++ show t) (return ())
     let (baseType, paramTypes) = browseAppTree t
     baseTypename <- hsTypeToCppType baseType TypeAlias
-    argTypenames <- sequence (hsTypeToCppType <$> paramTypes <*> [tdm])
+    argTypenames <- sequence (hsTypeToCppType <$> paramTypes <*> [TypeField])
     isBaseVal <- isValueType baseType
     let paramTypesList = intercalate ", " argTypenames
     return $ printf (if isBaseVal then "%s<%s>" else "std::shared_ptr<%s<%s>>") baseTypename paramTypesList
@@ -436,6 +459,8 @@ hsTypeToCppType t@(TupleT _) tdm = return "std::tuple"
 hsTypeToCppType t tdm = return $ trace ("FIXME: hsTypeToCppType for " <> show t) $ "[" <> show t <> "]"
 
 typeOfField t = hsTypeToCppType t TypeField
+
+typeOfAlias :: Type -> Q String
 typeOfAlias t = hsTypeToCppType t TypeAlias
 
 isCollapsedMaybePtr :: Type -> Q Bool
@@ -635,13 +660,6 @@ makesAlias name = do
         TyConI dec -> isTySynD dec
         _ -> False
 
-aliasDependencies :: Name -> Q [Name]
-aliasDependencies name = do
-    info <- reify name
-    case info of 
-        TyConI dec -> case dec of
-            TySynD name params destType -> [name,]
-
 generateTypedefCppWrapper :: Dec -> Q CppTypedef
 generateTypedefCppWrapper tysyn@(TySynD name tyVars rhstype) = do
     baseTName <- typeOfAlias rhstype
@@ -649,46 +667,61 @@ generateTypedefCppWrapper tysyn@(TySynD name tyVars rhstype) = do
     return $ CppTypedef (translateToCppNameQualified name) baseTName tnames
 generateTypedefCppWrapper arg = error ("FIXME: generateTypedefCppWrapper for " <> show arg) 
 
+includeFor :: Name -> CppInclude
+includeFor name = CppLocalInclude (nameToDir name </> nameBase name <> ".h")
 
-goOverAliasCollectingNonAliasDeps :: Name -> Q [Name]
-goOverAliasCollectingNonAliasDeps name = do
-    let neighbourhood name = return [name]
-    generalBfs neighbourhood [name] [name]
+class HasThinkableCppDependencies a where
+    cppDependenciesParts :: a -> Q CppParts
+
+instance HasThinkableCppDependencies [Name] where
+    cppDependenciesParts dependencies =  do
+        reifiedDeps <- sequence $ reify <$> dependencies
+
+        let aliasDepsNames = [n | (TyConI (TySynD n _ _)) <- reifiedDeps]
+        let includesForAliases = includeFor <$> aliasDepsNames
+
+        let dataDepsDecs = [dec | (TyConI dec) <- reifiedDeps, isDataD dec]
+        forwardDecsDeps <- sequence $ makeForwardDeclaration <$> dataDepsDecs
+        let includesForDeps = [includeFor n | (DataD _ n _ _ _) <- dataDepsDecs]
+
+        let includes = (includesForAliases, includesForDeps)
+
+        return $ CppParts includes (Set.fromList forwardDecsDeps) def def def
+
+instance HasThinkableCppDependencies (Set Name) where
+    cppDependenciesParts dependencies = cppDependenciesParts $ Set.toList dependencies
+
+instance HasThinkableCppDependencies Dec where
+    cppDependenciesParts dec = do
+        let dependencies = symbolDependencies dec
+        cppDependenciesParts dependencies
+
 
 generateCppWrapperHlp :: Dec -> Q CppParts
 -- generateCppWrapperHlp arg | trace ("generateCppWrapperHlp: " <> show arg) False = undefined
 generateCppWrapperHlp dec@(DataD cxt name tyVars cons names) = 
     do
         derClasses <- sequence $ processConstructor <$> [dec] <*> cons
-        let dependencies = symbolDependencies dec
-        reifiedDeps <- sequence $ reify <$> Set.toList dependencies
-
-        let dataDepsDecs = [dec | (TyConI dec) <- reifiedDeps, isDataD dec]
-        let aliasDepsDecs = [dec | (TyConI dec) <- reifiedDeps, isTySynD dec]
-
-        aliases <- sequence $ generateTypedefCppWrapper <$> aliasDepsDecs
-
-
-        let aliasDepNames = getDecName <$> aliasDepsDecs
-
-
         let baseClass = generateRootClassWrapper dec derClasses
-        -- derClasses = processConstructor <$> cons <*> [name]
-        let classes = baseClass : derClasses
-            functions = []
 
-        let includesForDeps = [CppLocalInclude (nameBase n <> ".h") | (DataD _ n _ _ _) <- dataDepsDecs]
+        depParts <- cppDependenciesParts dec
 
-        --forwardDecsClasses <- sequence $ makeForwardDeclaration <$> classes
         forwardDecsClasses <- sequence $ [makeForwardDeclaration baseClass]
-        forwardDecsDeps <- sequence $ makeForwardDeclaration <$> dataDepsDecs
-        let forwardDecs = Set.fromList $ forwardDecsClasses <> forwardDecsDeps
 
-        return (CppParts (standardSystemIncludes, includesForDeps) forwardDecs aliases classes functions)
+        let includes = (standardSystemIncludes, [])
+        let forwardDecs = Set.fromList forwardDecsClasses
+        let aliases = []
+        let classes = baseClass : derClasses
+        let functions = []
+
+        let mainParts = CppParts includes forwardDecs aliases classes functions
+
+        return $ joinParts [depParts, mainParts]
 
 generateCppWrapperHlp tysyn@(TySynD name tyVars rhstype) = do
     tf <- generateTypedefCppWrapper tysyn
-    return $ CppParts def def [tf] [] []
+    depParts <- cppDependenciesParts tysyn    
+    return $ joinParts [depParts, (CppParts def def [tf] [] [])]
 
 generateCppWrapperHlp arg = trace ("FIXME: generateCppWrapperHlp for " <> show arg) emptyQParts
 
@@ -781,11 +814,6 @@ printAst  (TyConI dec@(DataD cxt name tyVars cons names)) =
         ret = ("cxt=" <> show cxt <> "\nname=" <> show name <> "\ntyVars=" <> show tyVars <> "\ncons=" <> show cons <> "\nnames=" <> show names) :: String
     in show consCount <> "___" <> ret
 
-joinParts :: [CppParts] -> CppParts
-joinParts parts = 
-    let collapseIncludes which = which <$> includes <$> parts
-    in CppParts (concat $ collapseIncludes fst, concat $ collapseIncludes snd) (Set.unions $ fmap forwardDecls parts) (concat $ map typedefs parts) (concat $ map classes parts) (concat $ map functions parts)
-
 generateSingleWrapper :: Name -> Q CppParts
 generateSingleWrapper arg | trace ("generateSingleWrapper: " <> show arg) False = undefined
 generateSingleWrapper name = do
@@ -816,6 +844,12 @@ formatCppWrapper name = do
     parts <- generateWrapperWithDeps name
     return $ formatCpp parts
 
+nameToDir :: Name -> FilePath
+nameToDir name = 
+    joinPath $ case nameModule name of
+            Just a -> splitOn "." a
+            _ -> []
+
 writeFilePair :: FilePath -> String -> CppParts -> Q ()
 writeFilePair outputDir fileBaseName cppParts = do
     let headerBaseName = fileBaseName <.> ".h"
@@ -829,6 +863,7 @@ writeFilePair outputDir fileBaseName cppParts = do
   
     let tryioaction action = try action :: IO (Either SomeException ())
 
+    runIO $ createDirectoryIfMissing True outputDir
     let writeOutput fname contents = runIO (tryioaction $ writeFile fname contents)
 
     writeOutput headerName headerFileContents
@@ -842,11 +877,18 @@ writeFileFor name outputDir = do
     runIO $ putStrLn $ printf "%s deps ==> %s" (show name) (show deps)
 
     parts <- generateSingleWrapper name
-    writeFilePair outputDir (nameBase name) parts
+
+    let outputSubDir = outputDir </> nameToDir name
+
+    writeFilePair outputSubDir (nameBase name) parts
 
 
 generateCpp :: Name -> FilePath -> Q Exp
 generateCpp name outputDir = do
+
+    --lit4 <- [t|Lit4|]
+    --islitval <- isValueType lit4
+    --runIO $ putStrLn $ "Foooo /// " ++ show islitval ++ " /// " ++ show lit4
 
     dependencies <- collectDependencies name
     runIO (putStrLn $ printf "Found %d dependencies: %s" (length dependencies) (show dependencies))

@@ -1,8 +1,11 @@
 #include "helper.h"
-#include "generated.h"
+#include "Generator/Expr/Expr.h"
+#include "Generator/Expr/Accessor.h"
 #include "main.h"
 
 #include <fstream>
+#include "Generator/Expr/Name.h"
+#include <Generator/Expr/Lit4.h>
 
 using Expr = Generator_Expr_Expr;
 using Expr_Con = Generator_Expr_Expr_Con;
@@ -58,6 +61,8 @@ std::ostream& operator<<(std::ostream& out, const std::tuple<Args...>& t)
 
 int main()
 {
+	std::shared_ptr<Generator_Expr_Lit4> lit4;
+
 	auto t1 = std::make_tuple("Foo", 1, 3.5);
 	std::cout << t1 << std::endl; // => (2,3.4f,"awesomeness")
 	try

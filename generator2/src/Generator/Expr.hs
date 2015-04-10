@@ -21,6 +21,10 @@ type Type = String
 type Lit = Generator.AST.Lit.Lit
 -- type Arg a = [a]
 
+type Lit2 = (Lit, ID, String, Lit4)
+type Lit3 = Expr
+type Lit4 = Lit3
+
 type EvilArg a = [a]
 
 data Arg a = Named   { _iid :: ID, _naame :: String, _aarg :: a }
@@ -33,7 +37,7 @@ data Name = NameA String Int Double | NameB (Maybe (Maybe (Maybe Expr)))
 
 data Expr  = NOP          { _id :: ID                                                                                            }
            | Accessor     { _id :: ID, _acc       :: Accessor , _dst       :: Expr                                               }
-           | TypeAlias    { _id :: ID, _srcType   :: Type     , _dstType   :: Type                                               }
+           | TypeAlias    { _id :: ID, _srcType2   :: Lit4     , _dstType   :: Type                                               }
            | TypeDef      { _id :: ID, _srcType   :: Type     , _dstType   :: Type                                               }
            | App          { _id :: ID, _src       :: Expr     , _args      :: [Arg Expr]                                         }
            -- | AppCons_     { _id :: ID, _args      :: [Expr]                                                                      }
@@ -52,7 +56,7 @@ data Expr  = NOP          { _id :: ID                                           
            | ImportNative { _id :: ID, _segments  :: [Expr]                                                                      }
            | Infix        { _id :: ID, _name      :: String   , _src       :: Expr   , _dst       :: Expr                        }
            | List         { _id :: ID, _items     :: [Expr]                                                                      }
-           | Lit          { _id :: ID, _lvalue    :: Lit                                                                         }
+           | Lit          { _id :: ID, _lvalue    :: Lit2                                                                         }
            | Tuple        { _id :: ID, _items     :: [Expr]                                                                      }
            -- | TupleCons_   { _id :: ID, _items     :: [Expr]                                                                      }
            | Typed        { _id :: ID, _cls       :: Type     , _expr      :: Expr                                               }
