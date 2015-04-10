@@ -105,7 +105,7 @@ connectMonadic' nodeID = do
     currNode <- getNode nodeID
     let prevPos = prevNode ^. Node.pos
         currPos = currNode ^. Node.pos
-        newPos  = if prevPos >= currPos
+        newPos  = if currPos == def
             then (fst prevPos + 10, snd prevPos)
             else currPos
     setPrevoiusNodeID nodeID
@@ -113,12 +113,10 @@ connectMonadic' nodeID = do
     updateNode (nodeID, currNode & Node.pos .~ newPos)
     return newPos
 
-
 connectMonadicOutput :: TDecl v -> GBPass v m (TDecl v)
 connectMonadicOutput ldecl = do
     newPos <- connectMonadic' Node.outputID
     return (ldecl & Label.label . Tag.additionalPos .~ Just newPos)
-
 
 ----- nodeMap -------------------------------------------------------------
 getNodeMap :: GBPass v m NodeMap
