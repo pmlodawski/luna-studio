@@ -27,6 +27,7 @@ import qualified Luna.Data.ASTInfo                      as ASTInfo
 import qualified Luna.Parser.Parser                     as Parser
 import qualified Luna.Parser.Pragma                     as Pragma
 import qualified Luna.Parser.State                      as Parser
+import qualified Luna.Parser.Token                      as Tok
 import           Luna.Pass.Transform.Graph.Parser.State (GPPass)
 import qualified Luna.Pass.Transform.Graph.Parser.State as State
 import           Luna.Syntax.Arg                        (Arg (Arg))
@@ -126,22 +127,26 @@ buildExpr nodeExpr srcs = case nodeExpr of
                                         (h:t) -> (return h, map Expr.unnamed t)
                                 acc <- State.withASTInfo $ MultiPart.toNamePat mp self args defArg
                                 newLabel $ Expr.App acc
-    NodeExpr.StringExpr str -> case str of
+    NodeExpr.StringExpr strExpr -> case strExpr of
         StringExpr.List           -> newLabel $ Expr.List $ Expr.SeqList srcs
         StringExpr.Tuple          -> newLabel $ Expr.Tuple srcs
         StringExpr.Pattern pat    -> lift $ Maybe.listToMaybe srcs <??> "GraphParser.buildExpr"
         _                         -> do
-            astInfo <- State.getASTInfo
-            r <- Session.runT $ do
-                void   Parser.init
-                void $ Pragma.enable Pragma.orphanNames
-                let parserState = Parser.defState & Parser.info .~ astInfo
-                Parser.parseString (toString str) (Parser.exprParser parserState)
-            expr <- case fst r of
-                Left err -> lift $ left $ toString err
-                Right (lexpr, parserState) -> do
-                    State.setASTInfo $ parserState ^. Parser.info
-                    return $ Label.replaceExpr Tag.fromEnumerated lexpr
+            let str = toString strExpr
+            expr <- if isOperator str
+                then newLabel $ Expr.Var $ Expr.Variable (fromString str) ()
+                else do
+                    astInfo <- State.getASTInfo
+                    r <- Session.runT $ do
+                        void   Parser.init
+                        void $ Pragma.enable Pragma.orphanNames
+                        let parserState = Parser.defState & Parser.info .~ astInfo
+                        Parser.parseString str (Parser.exprParser parserState)
+                    case fst r of
+                        Left err -> lift $ left $ toString err
+                        Right (lexpr, parserState) -> do
+                            State.setASTInfo $ parserState ^. Parser.info
+                            return $ Label.replaceExpr Tag.fromEnumerated lexpr
             case (unwrap expr, srcs) of
                 (Expr.Var (Expr.Variable vname _), h:t) -> do
                     let args = map Expr.unnamed t
@@ -152,6 +157,9 @@ buildExpr nodeExpr srcs = case nodeExpr of
         --StringExpr.Pattern pat    -> parsePatNode     nodeID pat
         --StringExpr.Native  native -> parseNativeNode  nodeID native
         --_                         -> parseAppNode     nodeID $ StringExpr.toString str
+
+isOperator :: String -> Bool
+isOperator expr = length expr == 1 && head expr `elem` Tok.opChars
 
 
 buildPat :: NodeExpr Tag V -> Node.ID -> [Edge] -> Maybe TPat -> GPPass V m TPat
