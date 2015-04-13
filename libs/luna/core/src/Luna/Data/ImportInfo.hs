@@ -14,6 +14,8 @@ import           Flowbox.Prelude
 
 type ID = Int
 
+data Tag = Vars | Types deriving (Show, Eq)
+
 data ImportInfo = ImportInfo {
     _path        :: QualPath,       -- move to Namespace (?)
     _structInfos :: Map QualPath StructInfo,
@@ -50,10 +52,10 @@ createSymTable :: ImportInfo -> ImportInfo
 createSymTable = createSymTableVars . createSymTableTypes
 
 createSymTableVars :: ImportInfo -> ImportInfo
-createSymTableVars info = info & (symTable .~ (combineScopesVars info))
+createSymTableVars info = info & (symTable .~ (combineScopes Vars info))
 
 createSymTableTypes :: ImportInfo -> ImportInfo
-createSymTableTypes info = info & (typeTable .~ (combineScopesTypes info))
+createSymTableTypes info = info & (typeTable .~ (combineScopes Types info))
 
 
 
@@ -65,30 +67,20 @@ regError err = errors %~ (err:)
 -- combines the top-level scopes of all the imported modules
 -- results in a map from NamePath to [OriginInfo] -- if a given
 -- symbol appears in more than one module, the list isn't a singleton
-combineScopesVars :: ImportInfo -> Map NamePath [OriginInfo]
-combineScopesVars info = Map.unionsWith (++) maps
+combineScopes :: Tag -> ImportInfo -> Map NamePath [OriginInfo]
+combineScopes tag info = Map.unionsWith (++) maps
     where strInfos = Map.elems $ _structInfos info
-          maps     = map topLevelScopeVars strInfos
-
-
-combineScopesTypes :: ImportInfo -> Map NamePath [OriginInfo]
-combineScopesTypes info = Map.unionsWith (++) maps
-    where strInfos = Map.elems $ _structInfos info
-          maps     = map topLevelScopeTypes strInfos
+          maps     = map (topLevelScope tag) strInfos
 
 
 
-topLevelScopeVars :: StructInfo -> Map NamePath [OriginInfo]
-topLevelScopeVars sInfo = Map.fromList varsNP
-    where scope   = SI.scopeLookup (0::Int) sInfo
-          vars    = MapForest.toList $ fst scope
-          varsNP  = map (\(p, origin) -> (toNamePath p, [origin])) vars
+topLevelScope :: Tag -> StructInfo -> Map NamePath [OriginInfo]
+topLevelScope tag sInfo = Map.fromList nps
+    where scope = SI.scopeLookup (0::Int) sInfo
+          vars  = MapForest.toList $ (case tag of Vars -> fst; Types -> snd) scope
+          nps   = map (\(p, origin) -> (toNamePath p, [origin])) vars
 
-topLevelScopeTypes :: StructInfo -> Map NamePath [OriginInfo]
-topLevelScopeTypes sInfo = Map.fromList typesNP
-    where scope   = SI.scopeLookup (0::Int) sInfo
-          types   = MapForest.toList $ snd scope
-          typesNP = map (\(p, origin) -> (toNamePath p, [origin])) types
+
 
 toNamePath :: [Text] -> NamePath
 toNamePath (t:ts) = multi t ts          
