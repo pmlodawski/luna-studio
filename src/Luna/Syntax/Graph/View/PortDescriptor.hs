@@ -5,7 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Luna.Syntax.Graph.PortDescriptor where
+module Luna.Syntax.Graph.View.PortDescriptor where
 
 import Flowbox.Prelude
 
