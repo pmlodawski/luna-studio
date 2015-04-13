@@ -67,7 +67,7 @@ instance (Show a, Show v) => LunaShow (LExpr a v) where
         --Expr.Native     native             -> simple  [csLunaShow context native]
         Expr.Var        ident              -> simple  [csLunaShow context ident]
         Expr.List       list               -> simple  [csLunaShow context list]
-        Expr.App        exprApp            -> simple  [csLunaShow context exprApp]
+        Expr.App        exprApp            -> simple  [cLunaShow context exprApp]
         Expr.Wildcard                      -> simple  ["_"]
         _ -> error $ "LunaShow (LExpr a v): Not implemented" ++ show (unwrap lexpr)
 --        Expr.Accessor     _ acc      dst  -> simple  [csLunaShow (context & accessorContent .~ True) dst, ".", view Expr.accName acc]

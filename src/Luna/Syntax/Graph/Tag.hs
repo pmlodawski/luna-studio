@@ -8,7 +8,7 @@
 
 module Luna.Syntax.Graph.Tag where
 
-import           Flowbox.Prelude
+import           Flowbox.Prelude                 hiding (folded)
 import           Luna.Syntax.Decl                (LDecl)
 import           Luna.Syntax.Enum                (Enumerated (..), ID)
 import qualified Luna.Syntax.Enum                as Enum
@@ -20,11 +20,14 @@ import           Luna.Syntax.Pat                 (LPat)
 
 
 
-data Tag = Empty { _idTag :: ID }
+data Tag = Empty { _idTag  :: ID
+                 , _folded :: Bool
+                 }
          | Node  { _idTag         :: ID
                  , _nodeID        :: Node.ID
                  , _position      :: Position
                  , _additionalPos :: Maybe Position
+                 , _folded        :: Bool
                  } deriving (Show, Eq)
 
 
@@ -33,11 +36,13 @@ makeLenses ''Tag
 
 mkNode :: Node.ID -> Position -> (Maybe Position) -> Tag -> Tag
 mkNode nodeID' position' additionalPos' tag' =
-    Node (Enum.id tag') nodeID' position' additionalPos'
+    Node (Enum.id tag') nodeID' position' additionalPos' (tag' ^. folded)
 
 mkEmpty :: Tag -> Tag
-mkEmpty = Empty . view idTag
+mkEmpty tag' = Empty (tag' ^. idTag) (tag' ^. folded)
 
+fromEnumerated :: Enumerated e => e -> Tag
+fromEnumerated = tag . Enum.id
 
 isEmpty :: Tag -> Bool
 isEmpty (Empty {}) = True
@@ -45,14 +50,10 @@ isEmpty _          = False
 
 instance Enumerated Tag where
     id = view idTag
-    tag = Empty
+    tag = flip Empty False
 
 
 type TPat    = LPat Tag
 type TExpr v = LExpr Tag v
 type TDecl v = LDecl Tag (TExpr v)
 type TModule v = LModule Tag (TExpr v)
-
-
-fromEnumerated :: Enumerated e => e -> Tag
-fromEnumerated = tag . Enum.id
