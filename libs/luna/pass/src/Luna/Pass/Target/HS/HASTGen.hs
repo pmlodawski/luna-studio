@@ -55,6 +55,8 @@ import qualified Luna.Data.Namespace          as Namespace
 import           Luna.Data.Namespace          (Namespace)
 
 import           Luna.Data.ASTInfo            (ASTInfo, genID)
+import           Luna.Data.ImportInfo         (ImportInfo)
+import qualified Luna.Data.ImportInfo         as II
 
 import           Luna.Syntax.Arg              (Arg(Arg), LArg)
 import qualified Luna.Syntax.Arg              as Arg
@@ -117,13 +119,18 @@ defaultTraverseM = AST.defaultTraverseM HASTGen
 mkVal    = HE.AppE "val"
 
 
-pass :: Ctx m a v => Pass State.GenState (Unit (LModule a (LExpr a v)) -> PassResult m HE)
+makeImportList :: ImportInfo -> [HE.Expr]
+makeImportList info = map mkImp (II._imports info)
+    where mkImp = \qp -> HE.Import False (II.qualPathToList qp) Nothing Nothing
+
+
+pass :: Ctx m a v => Pass State.GenState (ImportInfo -> Unit (LModule a (LExpr a v)) -> PassResult m HE)
 pass = Pass "HASTGen" "Haskell AST generator" def genUnit
 
 passExpr :: Ctx m a v => Pass State.GenState (LExpr a v -> PassResult m HE)
 passExpr = Pass "HASTGen" "Haskell AST generator" def genExpr
 
-genUnit (Unit m) = genModule m
+genUnit importInfo (Unit m) = genModule importInfo m
 
 
 
@@ -133,9 +140,10 @@ genNonEmptySec header lst f = when (not $ null lst) $ do
     f lst
 
 
-genModule :: Ctx m a v => LModule a (LExpr a v) -> PassResult m HE
-genModule (Label lab (Module path body)) = withCtx (fromText $ view Path.name path) $ do
+genModule :: Ctx m a v => ImportInfo -> LModule a (LExpr a v) -> PassResult m HE
+genModule importInfo (Label lab (Module path body)) = withCtx (fromText $ view Path.name path) $ do
     let mod     = HModule.addImport (HE.Import False ["Luna", "Target", "HS"] Nothing Nothing)
+                $ foldl (.) id (map HModule.addImport (makeImportList importInfo))
                 $ foldr HModule.addExt (HModule.mk modBaseName modPath)
                 $ [ HExt.DataKinds
                   , HExt.DeriveDataTypeable

@@ -44,6 +44,6 @@ iaMain ast =  do
     let infoEithers = fromList listEithers
     let mInfos   =  map (_strInfo . fromRight) $ filter isRight infoEithers
         mErrors  =  fmap fromLeft $ elems $ filter isLeft infoEithers
-        info     =  ImportInfo mempty mInfos mempty mempty mErrors
+        info     =  ImportInfo mempty impPaths mInfos mempty mempty mErrors
     return $ createSymTable info
 

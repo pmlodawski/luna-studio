@@ -1,15 +1,16 @@
 module Luna.Data.ImportInfo where
 
+import           Control.Monad.RWS        (RWST)
+import qualified Control.Monad.RWS        as RWST
 import qualified Data.Map                 as Map
 import           Data.Map                 (Map)
 import qualified Flowbox.Data.MapForest   as MapForest
 import           Luna.Data.StructInfo     (StructInfo, OriginInfo, Scope)
 import qualified Luna.Data.StructInfo     as SI
 import           Luna.Syntax.Decl         (Path)
-import           Luna.Syntax.Name.Path    (NamePath, QualPath(QualPath), multi)
+import           Luna.Syntax.Name.Path    (NamePath, QualPath(QualPath))
+import qualified Luna.Syntax.Name.Path    as NP
 import           Luna.Data.ModuleInfo     (ImportError, qualPathToPath)
-import           Control.Monad.RWS        (RWST)
-import qualified Control.Monad.RWS        as RWST
 import           Flowbox.Prelude
 
 type ID = Int
@@ -18,6 +19,7 @@ data Tag = Vars | Types deriving (Show, Eq)
 
 data ImportInfo = ImportInfo {
     _path        :: QualPath,       -- move to Namespace (?)
+    _imports     :: [QualPath],
     _structInfos :: Map QualPath StructInfo,
     _symTable    :: Map NamePath [OriginInfo],
     _typeTable   :: Map NamePath [OriginInfo],
@@ -32,6 +34,7 @@ makeLenses ''ImportInfo
 class ImportInfoMonad m where
     get :: m ImportInfo
     put :: ImportInfo -> m ()
+
 
 
 ----------------------------------------------------------------------------------------
@@ -83,16 +86,20 @@ topLevelScope tag sInfo = Map.fromList nps
 
 
 toNamePath :: [Text] -> NamePath
-toNamePath (t:ts) = multi t ts          
+toNamePath (t:ts) = NP.multi t ts          
 
+
+qualPathToList :: QualPath -> [Text]
+qualPathToList qp = (NP._name qp) : (NP._path qp)
 
 -----------------------------------------------------------------------------------------
 --Instances
 -----------------------------------------------------------------------------------------
 
 instance Monoid ImportInfo where
-    mempty      = ImportInfo mempty mempty mempty mempty mempty
+    mempty      = ImportInfo mempty mempty mempty mempty mempty mempty
     mappend a b = ImportInfo (mappend (a ^. path)        (b ^. path))
+                             (mappend (a ^. imports)     (b ^. imports))
                              (mappend (a ^. structInfos) (b ^. structInfos))
                              (mappend (a ^. symTable)    (b ^. symTable))
                              (mappend (a ^. typeTable)   (b ^. typeTable))

@@ -121,7 +121,7 @@ main = do
             ppPrint ast
 
             printHeader "HAST"
-            hast           <- Pass.run1_ HASTGen.pass ast
+            hast           <- Pass.run2_ HASTGen.pass importInfo ast
             ppPrint hast
 
             printHeader "HSC"
