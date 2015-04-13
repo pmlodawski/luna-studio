@@ -148,7 +148,7 @@ registerDataDecl (Label lab decl) = case decl of
           registerCons (Label lab (Decl.Cons _ fields)) = mapM registerField fields
           registerField (Label lab (Decl.Field t mn v)) = case mn of
               Nothing -> return ()
-              Just n  -> StructData.regVarNameLocal (Enum.id lab) (unwrap n)
+              Just n  -> StructData.regVarNameLocal (Enum.id lab) (unwrap n)   -- TDOO[PMo] regTypeName, probably
 
 
 registerHeaders :: (SACtx lab m a) => LDecl lab a -> SAPass m ()
@@ -178,7 +178,7 @@ regFuncDecl id (Decl.FuncDecl _ sig _ _) = regParent id *> StructData.regVarName
                                          <* regNamePatDesc id (NamePattern.toDesc sig)
 regDataDecl id (Decl.DataDecl name _ cons _) =  regParent id *> regTypeName (OriginInfo "dupa" id) (unwrap name) 
                                              <* mapM_ registerCons cons
-    where registerCons (Label lab (Decl.Cons name fields)) = StructData.regVarNameLocal (Enum.id lab) (unwrap name)
+    where registerCons (Label lab (Decl.Cons name fields)) = StructData.regVarNameLocal (Enum.id lab) (unwrap name) -- TODO[PMo] reg typename
 
 ----------------------------------------------------------------------
 -- Instances
