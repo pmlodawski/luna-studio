@@ -24,6 +24,7 @@ type Lit = Generator.AST.Lit.Lit
 type Lit2 = (Lit, ID, String, Lit4)
 type Lit3 = Expr
 type Lit4 = Lit3
+type Lit5 = (Lit2, Pat)
 
 type EvilArg a = [a]
 

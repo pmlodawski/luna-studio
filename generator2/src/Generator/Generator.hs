@@ -33,7 +33,7 @@ import Data.DeriveTH
 import Data.List.Split
 import System.Directory
 
--- import Generator.Expr (Lit4)
+import Generator.Expr (Lit5)
 
 derive makeIs ''Dec
 
@@ -93,6 +93,7 @@ data CppArg = CppArg
     { argName :: String
     , argType :: String    
     }
+    deriving (Show)
 
 makeLenses ''CppArg
 
@@ -100,7 +101,7 @@ instance CppFormattablePart CppArg where
     format arg = argType arg <> " " <> argName arg
 
 data CppQualifier = ConstQualifier | VolatileQualifier | PureVirtualQualifier | OverrideQualifier
-                    deriving (Eq)
+                    deriving (Show, Eq)
 
 makeLenses ''CppQualifier
 
@@ -117,6 +118,7 @@ instance CppFormattablePart CppQualifiers where
 
 
 data CppStorage = Usual | Static | Virtual
+    deriving (Show)
 
 makeLenses ''CppQualifier
 
@@ -131,6 +133,7 @@ data CppFunction = CppFunction
     , args :: [CppArg]
     , body :: String
     }
+    deriving (Show)
 
 makeLenses ''CppFunction
 
@@ -148,11 +151,13 @@ data CppMethod = CppMethod
     , qualifiers :: CppQualifiers
     , storage :: CppStorage
     }
+    deriving (Show)
 
 makeLenses ''CppMethod
 
 data CppFieldSource = CppFieldSourceRec VarStrictType
                     | CppFieldSourceNormal THS.StrictType
+    deriving (Show)
 
 makeLenses ''CppFieldSource
 
@@ -161,10 +166,12 @@ data CppField = CppField
     , fieldType :: String
     , source :: CppFieldSource
     }
+    deriving (Show)
 makeLenses ''CppField
 
 
 data CppAccess = Protected | Public | Private
+    deriving (Show)
 makeLenses ''CppAccess
 
 data CppDerive = CppDerive
@@ -172,6 +179,7 @@ data CppDerive = CppDerive
     , isVirtual :: Bool
     , access :: CppAccess
     }
+    deriving (Show)
 makeLenses ''CppDerive
 
 data CppClass = CppClass 
@@ -181,6 +189,7 @@ data CppClass = CppClass
     , _classBases :: [CppDerive]
     , _classTemplateParams :: [String]
     }
+    deriving (Show)
 makeLenses ''CppClass
     
 
@@ -189,6 +198,7 @@ data CppTypedef  = CppTypedef
     , baseType :: String
     , _typedefTmpl :: [String]
     }
+    deriving (Show)
 
 makeLenses ''CppTypedef
 
@@ -200,6 +210,7 @@ derive makeIs ''CppWrapperType
 data CppWrapper = Name Info CppWrapperType
 
 data CppInclude = CppSystemInclude String | CppLocalInclude String
+    deriving (Show)
 
 --data CppInclude = CppSystemInclude String | CppLocalInclude String
 --instance CppFormattable CppInclude where
@@ -217,10 +228,11 @@ instance CppFormattable ([CppInclude],[CppInclude]) where
 
 
 data CppForwardDecl = CppForwardDeclClass String [String] -- | CppForwardDeclStruct String
-    deriving (Ord, Eq)
+    deriving (Show, Ord, Eq)
 
 
-type CppIncludes = ([CppInclude],[CppInclude])
+type CppIncludes = ([CppInclude],[CppInclude]) 
+
 type CppForwardDecls = Set CppForwardDecl
 
 data CppParts = CppParts { includes     :: CppIncludes
@@ -229,6 +241,7 @@ data CppParts = CppParts { includes     :: CppIncludes
                          , classes      :: [CppClass]
                          , functions    :: [CppFunction]
                          }
+                deriving (Show)
 makeLenses ''CppParts
 
 
@@ -402,6 +415,11 @@ browseAppTree (AppT l r) =
     in (base, paramsTail <> [r])
 browseAppTree t = (t, [])
 
+-------------------------------------------------------------------------------
+builtInTypes = [''Maybe, ''String, ''Int, ''Int32, ''Int64, ''Int16, ''Int8, ''Float, ''Double, ''Char]
+
+
+
 hsTypeToCppType :: Type -> TypeDeducingMode -> Q String
 hsTypeToCppType t@(ConT name) tdm = do
     let nb = translateToCppNameQualified name
@@ -446,17 +464,42 @@ hsTypeToCppType t@(AppT _ _) tdm = do
     return $ printf (if isBaseVal then "%s<%s>" else "std::shared_ptr<%s<%s>>") baseTypename paramTypesList
 
 hsTypeToCppType t@(TupleT 0) tdm = return "std::tuple<>"
-
 hsTypeToCppType t@(TupleT _) tdm = return "std::tuple"
 
---hsTypeToCppType t@(AppT bt@(ConT base) arg) tdm = do
---    let baseType = translateToCppNameQualified base
---    argType <- hsTypeToCppType arg tdm
---    isBaseVal <- isValueType bt
---    return $ printf (if isBaseVal then "%s<%s>" else "std::shared_ptr<%s<%s>>") baseType argType
-
-
 hsTypeToCppType t tdm = return $ trace ("FIXME: hsTypeToCppType for " <> show t) $ "[" <> show t <> "]"
+
+-------------------------------------------------------------------------------
+
+
+nonValueAliasDependencies :: Type -> Q [Name]
+nonValueAliasDependencies con@(ConT name) = do
+    info <- reify name
+    --trace ("\t:::::" <>show info) $ return ()
+    case info of
+        TyConI (DataD _ _ _ _ _) -> do
+            isValue <- isValueType con
+            return $ if name `elem` builtInTypes || isValue then [] else [name]
+        TyConI (TySynD _ _ rhsType) -> nonValueAliasDependencies rhsType
+        _ -> return []
+    
+nonValueAliasDependencies app@(AppT base rhs) = do
+    -- trace ("\t|||||" <>show app) $ return ()
+    a <- nonValueAliasDependencies base
+    b <- nonValueAliasDependencies rhs
+    return $ a <> b
+nonValueAliasDependencies arg = return [] -- trace ("\t+++++" <> show arg) return []
+
+dependenciesFromAliasUsage :: Type -> Q [Name]
+dependenciesFromAliasUsage con@(ConT name) = do
+    info <- reify name
+    case info of
+        TyConI (TySynD _ _ rhsType) -> nonValueAliasDependencies con
+        _ -> return []
+dependenciesFromAliasUsage _ = return []
+
+
+-------------------------------------------------------------------------------
+
 
 typeOfField t = hsTypeToCppType t TypeField
 
@@ -685,8 +728,10 @@ instance HasThinkableCppDependencies [Name] where
         let includesForDeps = [includeFor n | (DataD _ n _ _ _) <- dataDepsDecs]
 
         let includes = (includesForAliases, includesForDeps)
-
-        return $ CppParts includes (Set.fromList forwardDecsDeps) def def def
+        let frwrdDecs = (Set.fromList forwardDecsDeps)
+        let ret = CppParts includes frwrdDecs def def def 
+        -- traceM (printf "\t### %s -> \n\t\t%s\n\n" (show dependencies) (show ret))
+        return ret
 
 instance HasThinkableCppDependencies (Set Name) where
     cppDependenciesParts dependencies = cppDependenciesParts $ Set.toList dependencies
@@ -703,7 +748,6 @@ generateCppWrapperHlp dec@(DataD cxt name tyVars cons names) =
     do
         derClasses <- sequence $ processConstructor <$> [dec] <*> cons
         let baseClass = generateRootClassWrapper dec derClasses
-
         depParts <- cppDependenciesParts dec
 
         forwardDecsClasses <- sequence $ [makeForwardDeclaration baseClass]
@@ -719,27 +763,29 @@ generateCppWrapperHlp dec@(DataD cxt name tyVars cons names) =
         return $ joinParts [depParts, mainParts]
 
 generateCppWrapperHlp tysyn@(TySynD name tyVars rhstype) = do
+    trace ("\tGenerating wrapper for " <> show tysyn) $ return ()
     tf <- generateTypedefCppWrapper tysyn
     depParts <- cppDependenciesParts tysyn    
     return $ joinParts [depParts, (CppParts def def [tf] [] [])]
 
 generateCppWrapperHlp arg = trace ("FIXME: generateCppWrapperHlp for " <> show arg) emptyQParts
 
-
-builtInTypes = [''Maybe, ''String, ''Int, ''Int32, ''Int64, ''Int16, ''Int8, ''Float, ''Double, ''Char]
-
 instance TypesDependencies Type where
     --symbolDependencies t | trace ("Type: " <> show t) False = undefined
 
     -- Maybe and String are handled as a special-case
     symbolDependencies (ConT name) | (elem name builtInTypes) = Set.empty
-    symbolDependencies contype@(ConT name) = Set.singleton name
-    symbolDependencies apptype@(AppT ListT nested) = symbolDependencies nested
+
+    symbolDependencies contype@(ConT name)              = Set.singleton name
+    symbolDependencies apptype@(AppT ListT nested)      = symbolDependencies nested
     symbolDependencies apptype@(AppT (TupleT _) nested) = symbolDependencies nested
-    symbolDependencies apptype@(AppT base nested) = symbolDependencies [base, nested]
-    symbolDependencies vartype@(VarT n) = Set.empty
-    symbolDependencies (TupleT 0) = Set.empty
+    symbolDependencies apptype@(AppT base nested)       = symbolDependencies 
+                                                                    [base, nested]
+    symbolDependencies vartype@(VarT n)                 = Set.empty
+    symbolDependencies (TupleT 0)                       = Set.empty
+
     symbolDependencies t = trace ("FIXME not handled type: " <> show t) Set.empty
+
 
 instance (TypesDependencies a, Show a) => TypesDependencies [a] where
     --symbolDependencies t | trace ("list: " <> show t) False = undefined
@@ -874,7 +920,7 @@ writeFileFor :: Name -> FilePath -> Q ()
 writeFileFor name outputDir = do
 
     deps <- collectDirectDependencies name
-    runIO $ putStrLn $ printf "%s deps ==> %s" (show name) (show deps)
+    runIO $ putStrLn $ printf "Dependencies of %s ==> %s" (show name) (show deps)
 
     parts <- generateSingleWrapper name
 
@@ -886,9 +932,10 @@ writeFileFor name outputDir = do
 generateCpp :: Name -> FilePath -> Q Exp
 generateCpp name outputDir = do
 
-    --lit4 <- [t|Lit4|]
-    --islitval <- isValueType lit4
-    --runIO $ putStrLn $ "Foooo /// " ++ show islitval ++ " /// " ++ show lit4
+    lit4 <- [t|Lit5|]
+    litdep <- nonValueAliasDependencies lit4
+    runIO $ putStrLn $ show lit4
+    runIO $ putStrLn $ "Foooo /// " ++ show litdep
 
     dependencies <- collectDependencies name
     runIO (putStrLn $ printf "Found %d dependencies: %s" (length dependencies) (show dependencies))
