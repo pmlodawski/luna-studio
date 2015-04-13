@@ -150,7 +150,7 @@ buildExprApp (Pattern.NamePat prefix base segmentList) = fmap (_2 %~ Maybe.catMa
             Nothing     -> return Nothing
             Just appArg -> Just <$> buildAppArg appArg
 
-        buildSegment (Pattern.Segment sBase sArgs) = do
+        buildSegment (Pattern.Segment sBase sArgs) =
             Pattern.Segment sBase <$> mapM buildAppArg sArgs
 
         buildAppArg (Expr.AppArg argName e) = do
@@ -248,8 +248,8 @@ constainsVar = not . null . Find.run isVar where
     isVar _                       = False
 
 isWildcard :: TExpr V -> Bool
-isWildcard (Label _ (Expr.Wildcard)) = True
-isWildcard _                         = False
+isWildcard (Label _ Expr.Wildcard) = True
+isWildcard _                       = False
 
 isAccessorOnWildcard :: TExpr V -> Bool
 isAccessorOnWildcard (Label _ (Expr.Accessor _ src)) = isWildcard src
