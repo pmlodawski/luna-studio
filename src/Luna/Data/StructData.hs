@@ -71,21 +71,39 @@ getPath = do
     return $ II.getPath ii
 
 
-regVarNameLocal id name = do
-    ns <- NS.get
-    ii <- II.get
-    let path = II._path ii
-    NMS.regVarName (SI.OriginInfo path id) name
 
-regVarName id name = do
-    ns <- NS.get
+regNameLocal tag id name = do
     ii <- II.get
-    let path = II._path ii
-        nameMap = II._symTable ii
+    let path       = II._path ii
+        originInfo = (SI.OriginInfo path id)
+        regFun     = case tag of
+            II.Vars  -> NMS.regVarName
+            II.Types -> NMS.regTypeName
+    regFun originInfo name
+    case tag of
+        II.Vars ->  modifyImportInfo $ II.symTable  %~ (Map.insertWith (++) name [originInfo])
+        II.Types -> modifyImportInfo $ II.typeTable %~ (Map.insertWith (++) name [originInfo])
+
+
+regVarNameLocal = regNameLocal II.Vars
+
+regTypeNameLocal = regNameLocal II.Types
+
+
+
+regName tag id name = do
+    ii <- II.get
+    let path    = II._path ii
+        nameMap = (case tag of II.Vars -> II._symTable; II.Types -> II._typeTable) ii
     case (Map.lookup name nameMap) of
-        Just [origin]      -> regOrigin id origin
-        Just mods@(o:os)   -> regError (AmbRefError name (getOriginPaths mods))
-        _                  -> regOrphan id (SI.LookupError $ toText name)
+        Just [origin]    -> regOrigin id origin
+        Just mods@(o:os) -> regError (AmbRefError name (getOriginPaths mods))
+        _                -> regOrphan id (SI.LookupError $ toText name)
+
+
+regVarName = regName II.Vars
+
+regTypeName = regName II.Types
 
 
 
