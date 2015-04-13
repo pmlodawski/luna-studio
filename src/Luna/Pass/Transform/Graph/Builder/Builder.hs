@@ -43,12 +43,12 @@ import qualified Luna.Syntax.Graph.Node.StringExpr        as StringExpr
 import           Luna.Syntax.Graph.Port                   (DstPort, SrcPort)
 import qualified Luna.Syntax.Graph.Port                   as Port
 import           Luna.Syntax.Graph.Tag                    (TDecl, TExpr, TPat, Tag)
+import qualified Luna.Syntax.Graph.Tag                    as Tag
 import           Luna.Syntax.Label                        (Label (Label))
 import qualified Luna.Syntax.Label                        as Label
 import           Luna.Syntax.Lit                          (LLit)
 import qualified Luna.Syntax.Name.Pattern                 as Pattern
 import           Luna.Util.LunaShow                       (LunaShow, lunaShow)
-
 
 
 logger :: LoggerIO
@@ -161,47 +161,51 @@ buildExprApp (Pattern.NamePat prefix base segmentList) = fmap (_2 %~ Maybe.catMa
 
 
 buildNode :: Maybe TPat -> [Tag] -> TExpr V -> GBPass V m (TExpr V, Node.ID, SrcPort)
-buildNode outputName groupInfo lexpr = case unwrap lexpr of
-    Expr.Assignment dst src -> do
-        (src', nodeID, srcPort) <- buildNode (Just dst) groupInfo src
-        State.registerIDs lexpr (nodeID, Port.mkSrcAll)
-        return (Label tag $ Expr.Assignment dst src', nodeID, srcPort)
-    Expr.Grouped grouped -> (_1 %~ Label tag . Expr.Grouped) <$>  buildNode outputName (lexpr ^. Label.label :groupInfo) grouped
-    Expr.Tuple items -> do
-        (items', argRefs) <- processArgs items
-        let lexpr' = Label tag $ Expr.Tuple items'
-        (le, ni)  <- addNodeWithExpr outputName (NodeExpr.StringExpr StringExpr.Tuple) argRefs groupInfo lexpr'
-        State.registerIDs le (ni, Port.mkSrcAll)
-        return (le, ni, Port.mkSrcAll)
-    Expr.List (Expr.SeqList items) -> do
-        (items', argRefs) <- processArgs items
-        let lexpr' = Label tag $ Expr.List $ Expr.SeqList items'
-        (le, ni)  <- addNodeWithExpr outputName (NodeExpr.StringExpr StringExpr.List) argRefs groupInfo lexpr'
-        State.registerIDs le (ni, Port.mkSrcAll)
-        return (le, ni, Port.mkSrcAll)
-    Expr.App exprApp -> do
-        (exprApp', argRefs) <- buildExprApp exprApp
-        let mp     = MultiPart.fromNamePat exprApp'
-            lexpr' = Label tag $ Expr.App exprApp'
-        (le, ni)  <- addNodeWithExpr outputName (NodeExpr.MultiPart mp) argRefs groupInfo lexpr'
-        State.registerIDs le (ni, Port.mkSrcAll)
-        return (le, ni, Port.mkSrcAll)
-    Expr.Var _ -> State.gvmNodeMapLookUp (Enum.id tag) >>= \case
-        Nothing             -> do (le, ni) <- addNode outputName [] groupInfo lexpr
-                                  return (le, ni, Port.mkSrcAll)
-        Just (srcNID, srcPort) -> if Maybe.isJust outputName
-            then do let nodeExpr = NodeExpr.StringExpr $ StringExpr.Pattern ""
-                    (le, ni) <- addNodeWithExpr outputName nodeExpr [] groupInfo lexpr
-                    State.connect srcNID srcPort ni Port.mkDstAll
-                    return (le, ni, Port.mkSrcAll)
-            else do State.registerIDs lexpr (srcNID, srcPort)
-                    return (lexpr, srcNID, srcPort)
-    _ -> do
-        (le, ni) <- addNode outputName [] groupInfo lexpr
-        State.registerIDs le (ni, Port.mkSrcAll)
-        return (le, ni, Port.mkSrcAll)
+buildNode outputName groupInfo lexpr = if tag ^. Tag.folded
+    then showAndAddNode
+    else case unwrap lexpr of
+        Expr.Assignment dst src -> do
+            (src', nodeID, srcPort) <- buildNode (Just dst) groupInfo src
+            State.registerIDs lexpr (nodeID, Port.mkSrcAll)
+            return (Label tag $ Expr.Assignment dst src', nodeID, srcPort)
+        Expr.Grouped grouped -> (_1 %~ Label tag . Expr.Grouped) <$>  buildNode outputName (lexpr ^. Label.label :groupInfo) grouped
+        Expr.Tuple items -> do
+            (items', argRefs) <- processArgs items
+            let lexpr' = Label tag $ Expr.Tuple items'
+            (le, ni)  <- addNodeWithExpr outputName (NodeExpr.StringExpr StringExpr.Tuple) argRefs groupInfo lexpr'
+            State.registerIDs le (ni, Port.mkSrcAll)
+            return (le, ni, Port.mkSrcAll)
+        Expr.List (Expr.SeqList items) -> do
+            (items', argRefs) <- processArgs items
+            let lexpr' = Label tag $ Expr.List $ Expr.SeqList items'
+            (le, ni)  <- addNodeWithExpr outputName (NodeExpr.StringExpr StringExpr.List) argRefs groupInfo lexpr'
+            State.registerIDs le (ni, Port.mkSrcAll)
+            return (le, ni, Port.mkSrcAll)
+        Expr.App exprApp -> do
+            (exprApp', argRefs) <- buildExprApp exprApp
+            let mp     = MultiPart.fromNamePat exprApp'
+                lexpr' = Label tag $ Expr.App exprApp'
+            (le, ni)  <- addNodeWithExpr outputName (NodeExpr.MultiPart mp) argRefs groupInfo lexpr'
+            State.registerIDs le (ni, Port.mkSrcAll)
+            return (le, ni, Port.mkSrcAll)
+        Expr.Var _ -> State.gvmNodeMapLookUp (Enum.id tag) >>= \case
+            Nothing             -> do (le, ni) <- addNode outputName [] groupInfo lexpr
+                                      return (le, ni, Port.mkSrcAll)
+            Just (srcNID, srcPort) -> if Maybe.isJust outputName
+                then do let nodeExpr = NodeExpr.StringExpr $ StringExpr.Pattern ""
+                        (le, ni) <- addNodeWithExpr outputName nodeExpr [] groupInfo lexpr
+                        State.connect srcNID srcPort ni Port.mkDstAll
+                        return (le, ni, Port.mkSrcAll)
+                else do State.registerIDs lexpr (srcNID, srcPort)
+                        return (lexpr, srcNID, srcPort)
+        _ -> showAndAddNode
+
     where
         tag = lexpr ^. Label.label
+        showAndAddNode = do
+            (le, ni) <- addNode outputName [] groupInfo lexpr
+            State.registerIDs le (ni, Port.mkSrcAll)
+            return (le, ni, Port.mkSrcAll)
 
 processArgs :: [TExpr V] -> GBPass V m ([TExpr V], [ArgRef])
 processArgs items = do

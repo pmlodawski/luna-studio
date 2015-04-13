@@ -146,7 +146,7 @@ buildExpr nodeExpr srcs = case nodeExpr of
                         Left err -> lift $ left $ toString err
                         Right (lexpr, parserState) -> do
                             State.setASTInfo $ parserState ^. Parser.info
-                            return $ Label.replaceExpr Tag.fromEnumerated lexpr
+                            return $ Label.label . Tag.folded .~ True $ Label.replaceExpr Tag.fromEnumerated lexpr
             case (unwrap expr, srcs) of
                 (Expr.Var (Expr.Variable vname _), h:t) -> do
                     let args = map Expr.unnamed t

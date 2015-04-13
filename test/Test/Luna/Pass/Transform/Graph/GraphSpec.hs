@@ -35,7 +35,11 @@ cleanIDs :: Tag -> Tag
 cleanIDs = Tag.idTag .~ def
 
 cleanTags :: Tag -> Tag
-cleanTags = Tag.mkEmpty
+cleanTags = Tag.fromEnumerated
+
+cleanFolded :: Tag -> Tag
+cleanFolded = (Tag.folded .~ False) . cleanIDs
+
 
 backAndForth :: Breadcrumbs -> String -> IO ()
 backAndForth bc code = do
@@ -55,9 +59,9 @@ backAndForth bc code = do
     expr  <- Common.getMain ast
     expr2 <- Common.getMain ast2
     expr4 <- Common.getMain ast4
-    Label.replaceDecl  cleanTags expr2  `shouldBe` Label.replaceDecl  cleanTags expr
-    Label.replaceGraph cleanIDs  graph4 `shouldBe` Label.replaceGraph cleanIDs  graph2
-    Label.replaceDecl  cleanIDs  expr4  `shouldBe` Label.replaceDecl  cleanIDs  expr2
+    Label.replaceDecl  cleanTags   expr2  `shouldBe` Label.replaceDecl  cleanTags   expr
+    Label.replaceGraph cleanFolded graph4 `shouldBe` Label.replaceGraph cleanFolded graph2
+    Label.replaceDecl  cleanFolded expr4  `shouldBe` Label.replaceDecl  cleanFolded expr2
 
 
 backAndForth2 :: Breadcrumbs -> Graph Tag V -> IO ()
@@ -73,7 +77,7 @@ backAndForth2 bc providedGraph = do
     --printLn
     --prettyPrint ast3
     --printLn
-    (Graph.toStringNodes resultGraph) `shouldBe` providedGraph
+    Graph.toStringNodes resultGraph `shouldBe` providedGraph
 
 backAndForth2' :: Breadcrumbs -> Graph Tag V -> Graph Tag V -> IO ()
 backAndForth2' bc providedGraph expectedGraph = do
