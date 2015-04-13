@@ -8,7 +8,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TupleSections     #-}
 
-module Test.Luna.Syntax.Common where
+module Test.Luna.Syntax.AST where
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
