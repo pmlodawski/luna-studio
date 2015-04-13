@@ -88,6 +88,7 @@ regVarName id name = do
         _                  -> regOrphan id (SI.LookupError $ toText name)
 
 
+
 getOriginPaths :: [SI.OriginInfo] -> [QualPath]
 getOriginPaths infos = map f infos
     where f (SI.OriginInfo m _) = m
