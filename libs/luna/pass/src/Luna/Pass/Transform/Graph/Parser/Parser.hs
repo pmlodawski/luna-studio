@@ -97,7 +97,7 @@ parseNode :: Decl.FuncSig a e -> (Node.ID, Node.Node Tag V) -> GPPass V m ()
 parseNode signature (nodeID, node) = case node of
     Node.Outputs defaults pos -> parseOutputs nodeID defaults pos
     Node.Inputs           pos -> parseInputs nodeID signature pos
-    Node.Expr expr outputPat defaults pos groupInfo -> do
+    Node.Expr expr outputPat defaults pos groupInfo _ -> do
         State.reportID nodeID
         graph <- State.getGraph
         let lsuclData = Graph.lsuclData graph nodeID

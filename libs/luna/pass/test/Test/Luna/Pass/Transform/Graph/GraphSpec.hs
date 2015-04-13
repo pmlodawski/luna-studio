@@ -24,7 +24,7 @@ import           Test.Luna.Sample.Code                 (sampleCodes)
 import qualified Test.Luna.Sample.Code                 as SampleCode
 import           Test.Luna.Sample.Graph                (V, strExpr)
 import qualified Test.Luna.Sample.Graph                as Graph
-import qualified Test.Luna.Syntax.Common               as Common
+import qualified Test.Luna.Syntax.AST                  as AST
 
 
 
@@ -44,7 +44,7 @@ cleanFolded = (Tag.folded .~ False) . cleanIDs
 backAndForth :: Breadcrumbs -> String -> IO ()
 backAndForth bc code = do
     --printLn >> printLn >> printLn
-    (ast', astInfo) <- Common.getAST code
+    (ast', astInfo) <- AST.getAST code
     let ast = Label.replace Tag.fromEnumerated ast'
     --prettyPrint ast
     --printHeader "getGraph"
@@ -66,7 +66,7 @@ backAndForth bc code = do
 
 backAndForth2 :: Breadcrumbs -> Graph Tag V -> IO ()
 backAndForth2 bc providedGraph = do
-    (ast',  astInfo)  <- Common.getAST SampleCode.emptyMain
+    (ast',  astInfo)  <- AST.getAST SampleCode.emptyMain
     let ast = Label.replace Tag.fromEnumerated ast'
     (ast2, _astInfo2) <- Common.getExpr bc providedGraph ast astInfo
     --printLn
@@ -81,7 +81,7 @@ backAndForth2 bc providedGraph = do
 
 backAndForth2' :: Breadcrumbs -> Graph Tag V -> Graph Tag V -> IO ()
 backAndForth2' bc providedGraph expectedGraph = do
-    (ast',  astInfo)  <- Common.getAST SampleCode.emptyMain
+    (ast',  astInfo)  <- AST.getAST SampleCode.emptyMain
     let ast = Label.replace Tag.fromEnumerated ast'
     (ast2, _astInfo2) <- Common.getExpr bc providedGraph ast astInfo
     --printLn
@@ -114,12 +114,12 @@ spec = do
 
     describe "graph sort alghorithm" $ do
         it "sorts graph correctly" $ do
-            let n1 = (1, Node.Expr (strExpr "") def def (1, 0) def)
-                n2 = (2, Node.Expr (strExpr "") def def (2, 0) def)
-                n3 = (3, Node.Expr (strExpr "") def def (2, 0) def)
-                n4 = (4, Node.Expr (strExpr "") def def (3, 0) def)
-                n5 = (5, Node.Expr (strExpr "") def def (4, 0) def)
-                n6 = (6, Node.Expr (strExpr "") def def (5, 0) def)
+            let n1 = (1, Node.Expr (strExpr "") def def (1, 0) def False)
+                n2 = (2, Node.Expr (strExpr "") def def (2, 0) def False)
+                n3 = (3, Node.Expr (strExpr "") def def (2, 0) def False)
+                n4 = (4, Node.Expr (strExpr "") def def (3, 0) def False)
+                n5 = (5, Node.Expr (strExpr "") def def (4, 0) def False)
+                n6 = (6, Node.Expr (strExpr "") def def (5, 0) def False)
                 properOrder = [n1, n2, n4, n5, n3, n6]
                 testOrder   = [n2, n3, n5, n6, n4, n1]
                 edges  = [(1, 2, Edge.Data Port.mkSrcAll $ Port.mkDst 0)

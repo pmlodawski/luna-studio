@@ -235,7 +235,7 @@ addNodeWithExpr outputName nodeExpr argRefs groupInfo lexpr = do
     (nodeID, position, lexpr') <- State.getNodeInfo lexpr
     let defaults = ArgRef.defaults argRefs
         nodes    = ArgRef.nodes    argRefs
-        node = Node.Expr nodeExpr outputName (DefaultsMap.fromList defaults) position groupInfo
+        node = Node.Expr nodeExpr outputName (DefaultsMap.fromList defaults) position groupInfo False
     State.insNode (nodeID, node)
     lexpr'' <- State.connectMonadic nodeID lexpr'
     mapM_ (\(srcID, srcPort, dstPort) -> State.connect srcID srcPort nodeID dstPort) nodes

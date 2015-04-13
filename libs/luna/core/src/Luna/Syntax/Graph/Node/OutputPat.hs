@@ -51,7 +51,7 @@ fixEmpty' (nodeID, node) = (nodeID,) <$> fixEmpty node nodeID
 
 
 provide :: Enumerated a => Node a e -> Node.ID -> State ASTInfo (Node a e)
-provide node@(Node.Expr nodeExpr _ _ _ _) nodeID = do
+provide node@(Node.Expr nodeExpr _ _ _ _ _) nodeID = do
     outputPat <- generate nodeExpr nodeID
     return (node & Node.outputPat .~ Just outputPat)
 provide node _ = return node

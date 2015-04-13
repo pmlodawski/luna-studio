@@ -22,6 +22,7 @@ data Node a v = Expr    { _expr      :: NodeExpr a v
                         , _defaults  :: DefaultsMap a v
                         , _pos       :: Position
                         , _groupInfo :: [a]
+                        , _generated :: Bool
                         }
               | Inputs  { _pos :: Position
                         }
@@ -72,8 +73,8 @@ isExpr _         = False
 
 
 exprStr :: Node a v -> Maybe String
-exprStr (Expr (NodeExpr.StringExpr strExpr) _ _ _ _) = Just $ toString strExpr
-exprStr _                                            = Nothing
+exprStr (Expr (NodeExpr.StringExpr strExpr) _ _ _ _ _) = Just $ toString strExpr
+exprStr _                                              = Nothing
 
 
 getOutputPat :: Node a v -> Maybe (LPat a)
