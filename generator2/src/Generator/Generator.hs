@@ -32,8 +32,9 @@ import System.FilePath
 import Data.DeriveTH
 import Data.List.Split
 import System.Directory
+import Control.Monad
 
-import Generator.Expr (Lit5)
+import Generator.Expr (Lit2, Lit5)
 
 derive makeIs ''Dec
 
@@ -384,21 +385,24 @@ generateRootClassWrapper (DataD cxt name tyVars cons names) derClasses =
             in CppMethod fn [PureVirtualQualifier] Virtual
     in CppClass n [] [serializeMethod, deserializeMethod] [] tnames
 
-isValueTypeInfo :: Info -> Q Bool
-isValueTypeInfo (TyConI (TySynD name vars t)) = isValueType t
-isValueTypeInfo _ = return False
+class IsValueType a where
+    isValueType :: a -> Q Bool
 
-isValueType :: Type -> Q Bool
-isValueType (VarT name) = return True :: Q Bool
-isValueType ListT = return True
-isValueType (TupleT _) = return True
-isValueType (AppT base nested) = isValueType base
-isValueType (ConT name) | (elem name builtInTypes) = return True
-                        -- | otherwise = do
-isValueType (ConT name) = do
-    info <- reify name
-    isValueTypeInfo info
-isValueType _ = return False
+instance IsValueType Info where
+    isValueType (TyConI (TySynD name vars t)) = isValueType t
+    isValueType _ = return False
+
+instance IsValueType Type where
+    isValueType (VarT name) = return True :: Q Bool
+    isValueType ListT = return True
+    isValueType (TupleT _) = return True
+    isValueType (AppT base nested) = isValueType base
+    isValueType (ConT name) | (elem name builtInTypes) = return True
+                            -- | otherwise = do
+    isValueType (ConT name) = do
+        info <- reify name
+        isValueType info
+    isValueType _ = return False
 
 templateDepNameBase :: String -> [String] -> String
 templateDepNameBase clsName tmpl = if null tmpl then clsName else printf "%s<%s>" clsName $ intercalate "," tmpl
@@ -716,6 +720,37 @@ includeFor name = CppLocalInclude (nameToDir name </> nameBase name <> ".h")
 class HasThinkableCppDependencies a where
     cppDependenciesParts :: a -> Q CppParts
 
+class ListAliasDependencies a where
+    listAliasDependencies :: a -> Q [Name]
+
+instance ListAliasDependencies Info where
+    listAliasDependencies (TyConI info) = listAliasDependencies info
+
+instance ListAliasDependencies Type where
+    listAliasDependencies (AppT l r) = do
+        ldeps <- listAliasDependencies l
+        rdeps <- listAliasDependencies r
+        return $ ldeps <> rdeps
+
+    listAliasDependencies (ConT n) | (not $ n `elem` builtInTypes) = do
+        info <- reify n
+        case info of
+            TyConI (TySynD _ _ rhs) -> listAliasDependencies rhs
+            TyConI (DataD _ _ _ _ _) -> return  [n]
+            _ -> return []
+
+    listAliasDependencies _ = return []
+
+
+
+instance ListAliasDependencies Dec where
+    listAliasDependencies (TySynD name params rhstype) = do
+        listAliasDependencies rhstype
+    listAliasDependencies _             = return []
+
+instance ListAliasDependencies Name where 
+    listAliasDependencies n = reify n >>= listAliasDependencies
+
 instance HasThinkableCppDependencies [Name] where
     cppDependenciesParts dependencies =  do
         reifiedDeps <- sequence $ reify <$> dependencies
@@ -763,7 +798,7 @@ generateCppWrapperHlp dec@(DataD cxt name tyVars cons names) =
         return $ joinParts [depParts, mainParts]
 
 generateCppWrapperHlp tysyn@(TySynD name tyVars rhstype) = do
-    trace ("\tGenerating wrapper for " <> show tysyn) $ return ()
+    -- trace ("\tGenerating wrapper for " <> show tysyn) $ return ()
     tf <- generateTypedefCppWrapper tysyn
     depParts <- cppDependenciesParts tysyn    
     return $ joinParts [depParts, (CppParts def def [tf] [] [])]
@@ -919,8 +954,13 @@ writeFilePair outputDir fileBaseName cppParts = do
 writeFileFor :: Name -> FilePath -> Q ()
 writeFileFor name outputDir = do
 
+    --hlp <- listAliasDependencies ''Lit2
+    --hlp2 <- (sequence $ reify <$> hlp) 
+    --hlp3 <- ((fmap not) . isValueType) `filterM` hlp2
+    --traceM ("*****" <> show hlp) 
+
     deps <- collectDirectDependencies name
-    runIO $ putStrLn $ printf "Dependencies of %s ==> %s" (show name) (show deps)
+    -- runIO $ putStrLn $ printf "Dependencies of %s ==> %s" (show name) (show deps)
 
     parts <- generateSingleWrapper name
 
@@ -932,10 +972,10 @@ writeFileFor name outputDir = do
 generateCpp :: Name -> FilePath -> Q Exp
 generateCpp name outputDir = do
 
-    lit4 <- [t|Lit5|]
-    litdep <- nonValueAliasDependencies lit4
-    runIO $ putStrLn $ show lit4
-    runIO $ putStrLn $ "Foooo /// " ++ show litdep
+    --lit4 <- [t|Lit5|]
+    --litdep <- nonValueAliasDependencies lit4
+    --runIO $ putStrLn $ show lit4
+    --runIO $ putStrLn $ "Foooo /// " ++ show litdep
 
     dependencies <- collectDependencies name
     runIO (putStrLn $ printf "Found %d dependencies: %s" (length dependencies) (show dependencies))
