@@ -150,7 +150,7 @@ getNextFreeNodeID = gets $ view nextFreeNodeID
 
 initFreeNodeID :: TDecl v -> GBPass v m (Position, Position, TDecl v)
 initFreeNodeID decl = case decl ^. Label.label of
-    Tag.Node _ freeNodeID inputsPos mOutputPos -> do
+    Tag.Node _ freeNodeID inputsPos mOutputPos _ -> do
         let outputPos = Maybe.fromMaybe def mOutputPos
         setResetNodeIDs False
         setNextFreeNodeID freeNodeID
@@ -166,7 +166,7 @@ saveFreeNodeID decl = do
 
 getNodeInfo :: Label Tag e -> GBPass e1 m (Node.ID, Position, Label Tag e)
 getNodeInfo labeled@(Label tag e) = case tag of --FIXME[PM] when ResetNodeIDs set, always assign new nodeID
-    Tag.Node _ nodeID position _ -> return (nodeID, position, labeled)
+    Tag.Node _ nodeID position _ _ -> return (nodeID, position, labeled)
     Tag.Empty {}        -> do
         freeNodeID <- getNextFreeNodeID
         setNextFreeNodeID $ freeNodeID + 1
