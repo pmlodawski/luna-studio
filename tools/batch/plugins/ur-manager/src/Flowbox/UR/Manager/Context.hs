@@ -13,6 +13,7 @@ import           Data.Map                           (Map)
 import qualified Data.Map                           as Map
 
 import           Flowbox.Bus.Data.Message           (Message)
+import qualified Flowbox.Bus.Data.Message           as Message
 import           Flowbox.Prelude                    hiding (Context)
 
 
@@ -20,23 +21,25 @@ type Actions = ([Message], Message)
 
 type Transaction = ([Actions], [String])
 
-type Stack = [Transaction]
+type Package  = ([Actions], String, Maybe Message.RequestID)
 
-type Context = Map Int ProjectContext
+type Stack = [Package]
 
-type PT = Maybe Transaction
+type Trans = [(Message.RequestID, String)]
 
 data ProjectContext = ProjectContext { _undo  :: Stack
-                                     , _redo  :: Stack 
-                                     , _trans :: PT
+                                     , _redo  :: Stack
+                                     , _trans :: Trans
                                      }
                                      deriving (Show)
 
 makeLenses ''ProjectContext
+
+type Context = Map Int ProjectContext
 
 
 mk :: Context
 mk = Map.empty
 
 emptyProjectContext :: ProjectContext
-emptyProjectContext = ProjectContext [] [] Nothing
+emptyProjectContext = ProjectContext [] [] []

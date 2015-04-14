@@ -49,4 +49,4 @@ run cmd = case cmd of
         rootLogger setIntLevel $ Cmd.verbose cmd
         cfg <- Config.load
         let ctx = Context.mk
-        eitherStringToM' $ Server.run (EP.clientFromConfig cfg) ctx Handler.handlerMap
+        eitherStringToM' $ Server.runWithCid (EP.clientFromConfig cfg) ctx Handler.handlerMap

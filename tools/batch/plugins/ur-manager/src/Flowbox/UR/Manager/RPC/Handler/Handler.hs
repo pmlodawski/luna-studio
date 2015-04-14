@@ -14,11 +14,11 @@ import Control.Monad.Trans.State
 import           Data.Maybe      (maybeToList)
 
 import qualified Flowbox.Batch.Project.Project              as Project
-import           Flowbox.Bus.Data.Message                   (Message)
+import           Flowbox.Bus.Data.Message                   (CorrelationID, Message)
 import qualified Flowbox.Bus.Data.Message                   as Message
 import           Flowbox.Bus.Data.Topic                     (Topic)
 import           Flowbox.Bus.Data.Topic                     (status, (/+))
-import           Flowbox.Bus.RPC.HandlerMap                 (HandlerMap)
+import           Flowbox.Bus.RPC.HandlerMap                 (HandlerMapWithCid)
 import qualified Flowbox.Bus.RPC.HandlerMap                 as HandlerMap
 import           Flowbox.Bus.RPC.RPC                        (RPC)
 import qualified Flowbox.Bus.RPC.Server.Processor           as Processor
@@ -32,27 +32,27 @@ import           Flowbox.UR.Manager.RPC.Topic               as Topic
 import qualified Generated.Proto.Bus.Message                as Bus
 import qualified Generated.Proto.Urm.URM.Register.Request   as Register
 
-handlerMap :: HandlerMap Context IO
+handlerMap :: HandlerMapWithCid Context IO
 handlerMap callback = HandlerMap.fromList
     [ (Topic.urmRegisterRequest          , respond status URMHandler.register)
     , (Topic.urmRegisterMultipleRequest  , respond status URMHandler.registerMultiple)
-    , (Topic.urmRedoRequest              , respond2 status URMHandler.redo)
-    , (Topic.urmPingRequest              , respond status Maintenance.ping) 
-    , (Topic.urmUndoRequest              , respond2 status URMHandler.undo)
-    , (Topic.urmClearStackRequest        , respond status URMHandler.clearStack)
+    , (Topic.urmRedoRequest              , respond2 status $ const URMHandler.redo)
+    , (Topic.urmPingRequest              , respond status $ const Maintenance.ping) 
+    , (Topic.urmUndoRequest              , respond2 status $ const URMHandler.undo)
+    , (Topic.urmClearStackRequest        , respond status $ const URMHandler.clearStack)
     , (Topic.urmTransactionBeginRequest  , respond status URMHandler.tBegin)
-    , (Topic.urmTransactionCommitRequest , respond status URMHandler.tCommit)
-    , (Topic.urmUndoDescriptionRequest   , respond status URMHandler.undoDescriptions)
-    , (Topic.urmRedoDescriptionRequest   , respond status URMHandler.redoDescriptions)
+    , (Topic.urmTransactionCommitRequest , respond status $ const URMHandler.tCommit)
+    , (Topic.urmUndoDescriptionRequest   , respond status $ const URMHandler.undoDescriptions)
+    , (Topic.urmRedoDescriptionRequest   , respond status $ const URMHandler.redoDescriptions)
     ]
     where
         respond :: (Proto.Serializable args, Proto.Serializable result)
-                => String -> (args -> RPC Context IO result) -> StateT Context IO [Message]
-        respond type_ = callback (/+ type_) . Processor.singleResult
+                => String -> (CorrelationID -> args -> RPC Context IO result) -> StateT Context IO [Message]
+        respond type_ = callback (/+ type_) . Processor.singleResultWithCid
         respond2 :: (Proto.Serializable args, Proto.Serializable result)
-                 => String -> (args -> RPC Context IO (result, Maybe [Message])) -> StateT Context IO [Message]
-        respond2 type_ fun = callback (/+ type_) (\a -> do (b, c) <- fun a
-                                                           return ([b], concat $ maybeToList c))
+                 => String -> (CorrelationID -> args -> RPC Context IO (result, Maybe [Message])) -> StateT Context IO [Message]
+        respond2 type_ fun = callback (/+ type_) (\cid a -> do (b, c) <- fun cid a
+                                                               return ([b], concat $ maybeToList c))
 
 
 fun :: Proto.Serializable message => Topic -> message -> Bus.Message

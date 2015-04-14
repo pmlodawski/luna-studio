@@ -19,3 +19,7 @@ import           Generated.Proto.Bus.Message as Gen
 instance ConvertPure M.Message Gen.Message where
     encodeP (M.Message topic message) = Gen.Message (encodeP topic) (ByteString.fromStrict message)
     decodeP (Gen.Message topic message) = M.Message (decodeP topic) (ByteString.toStrict   message)
+
+instance ConvertPure M.RequestID M.RequestID where
+    encodeP = id
+    decodeP = id
