@@ -5,26 +5,24 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
+{-# LANGUAGE DeriveGeneric             #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE TemplateHaskell           #-}
-{-# LANGUAGE DeriveGeneric             #-}
 {-# LANGUAGE TypeFamilies              #-}
-
 
 module Luna.Syntax.Name.Path where
 
+import           Data.Binary       (Binary)
+import           Data.List         (intersperse)
+import           Data.Map          (Map)
+import qualified Data.Map          as Map
+import           Data.String       (IsString, fromString)
+import           Data.String.Utils (join)
+import           Data.Text.Lazy    (Text)
 
-import GHC.Generics (Generic)
-
-import           Flowbox.Prelude
-import qualified Data.Map              as Map
-import           Data.Map              (Map)
-import           Flowbox.Generics.Deriving.QShow
-import           Data.String.Utils     (join)
-import           Data.List             (intersperse)
-import           Data.String           (IsString, fromString)
-import           Luna.Syntax.Name.Hash (Hashable, hash)
-import           Data.Text.Lazy        (Text)
+import Flowbox.Generics.Deriving.QShow
+import Flowbox.Prelude
+import Luna.Syntax.Name.Hash           (Hashable, hash)
 
 ----------------------------------------------------------------------
 -- Data types
@@ -35,12 +33,15 @@ data NamePath = NamePath { _base :: Text, _segments :: [Text] }
 
 
 data QualPath = QualPath { _path :: [Text], _name :: Text }
-			  deriving (Show, Eq, Generic, Read, Ord)
+              deriving (Show, Eq, Generic, Read, Ord)
 
 makeLenses ''NamePath
-instance QShow (NamePath)
-
 makeLenses ''QualPath
+
+instance QShow NamePath
+
+instance Binary NamePath
+instance Binary QualPath
 
 instance Default QualPath where
     def = QualPath def def
@@ -92,16 +93,16 @@ instance Hashable QualPath Text where
     hash (QualPath path name) = mjoin "_" (path <> mempty) <> hash name
 
 instance FromText QualPath where
-	fromText = QualPath []
+    fromText = QualPath []
 
 instance IsList QualPath where
-	type (Item QualPath) = Text
-	toList (QualPath path name) = path ++ [name]
+    type (Item QualPath) = Text
+    toList (QualPath path name) = path ++ [name]
 
 instance ToText NamePath where
     toText (NamePath base segs) = base <> mjoin " " (mempty : segs)
 
 instance ToString NamePath where
-	toString = toString . toText
+    toString = toString . toText
 
 
