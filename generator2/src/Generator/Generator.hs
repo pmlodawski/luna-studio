@@ -212,7 +212,7 @@ derive makeIs ''CppWrapperType
 data CppWrapper = Name Info CppWrapperType
 
 data CppInclude = CppSystemInclude String | CppLocalInclude String
-    deriving (Show)
+    deriving (Eq, Ord, Show)
 
 --data CppInclude = CppSystemInclude String | CppLocalInclude String
 --instance CppFormattable CppInclude where
@@ -223,9 +223,9 @@ includeText :: CppInclude -> String
 includeText (CppSystemInclude path) = printf "#include <%s>" path
 includeText (CppLocalInclude path) = printf "#include \"%s\"" path
 
-instance CppFormattable ([CppInclude],[CppInclude]) where
+instance CppFormattable CppIncludes where
     formatCpp (headerIncludes, cppIncludes) = 
-        let formatIncl incl = intercalate "\n" (includeText <$> incl)
+        let formatIncl incl = intercalate "\n" (includeText <$> Set.toList incl)
         in (formatIncl headerIncludes, formatIncl cppIncludes)
 
 
@@ -233,7 +233,7 @@ data CppForwardDecl = CppForwardDeclClass String [String] -- | CppForwardDeclStr
     deriving (Show, Ord, Eq)
 
 
-type CppIncludes = ([CppInclude],[CppInclude]) 
+type CppIncludes = (Set CppInclude, Set CppInclude) 
 
 type CppForwardDecls = Set CppForwardDecl
 
@@ -251,7 +251,7 @@ makeLenses ''CppParts
 joinParts :: [CppParts] -> CppParts
 joinParts parts = 
     let collapseIncludes which = which <$> includes <$> parts
-    in CppParts (concat $ collapseIncludes fst, concat $ collapseIncludes snd) (Set.unions $ fmap forwardDecls parts) (concat $ map typedefs parts) (concat $ map classes parts) (concat $ map functions parts)
+    in CppParts (Set.unions $ collapseIncludes fst, Set.unions $ collapseIncludes snd) (Set.unions $ fmap forwardDecls parts) (concat $ map typedefs parts) (concat $ map classes parts) (concat $ map functions parts)
 
 
 --instance Monoid CppParts where
@@ -365,8 +365,8 @@ formatTemplateIntroductor :: [String] -> String
 formatTemplateIntroductor tmpl = if null tmpl then "" else
                                     printf "template<%s>\n" (formatTemplateArgs tmpl) :: String
 
-standardSystemIncludes :: [CppInclude]
-standardSystemIncludes = map CppSystemInclude ["memory", "vector", "string"]
+standardSystemIncludes :: Set CppInclude
+standardSystemIncludes = Set.fromList $ map CppSystemInclude ["memory", "vector", "string"]
 
 translateToCppNameQualified :: Name -> String 
 translateToCppNameQualified name = 
@@ -759,11 +759,11 @@ instance HasThinkableCppDependencies [Name] where
         reifiedDeps <- sequence $ reify <$> dependencies
 
         let aliasDepsNames = [n | (TyConI (TySynD n _ _)) <- reifiedDeps]
-        let includesForAliases = includeFor <$> aliasDepsNames
+        let includesForAliases = Set.fromList $ includeFor <$> aliasDepsNames
 
         let dataDepsDecs = [dec | (TyConI dec) <- reifiedDeps, isDataD dec]
         forwardDecsDeps <- sequence $ makeForwardDeclaration <$> dataDepsDecs
-        let includesForDeps = [includeFor n | (DataD _ n _ _ _) <- dataDepsDecs]
+        let includesForDeps = Set.fromList [includeFor n | (DataD _ n _ _ _) <- dataDepsDecs]
 
         let includes = (includesForAliases, includesForDeps)
         let frwrdDecs = (Set.fromList forwardDecsDeps)
@@ -796,7 +796,7 @@ generateCppWrapperHlp dec@(DataD cxt name tyVars cons names) =
 
         additionalIncludes <- sequence $ includesResultingFromAliases <$> derClasses
          -- traceM $ printf "$$$ %s -> %s" (show dec) (show additionalIncludes)
-        let includes    = (standardSystemIncludes, concat additionalIncludes)
+        let includes    = (standardSystemIncludes, Set.fromList $ concat additionalIncludes)
         let forwardDecs = Set.fromList forwardDecsClasses
         let aliases     = []
         let classes     = baseClass : derClasses
