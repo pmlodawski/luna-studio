@@ -85,6 +85,13 @@ class HsTyped a where
 class HsNamed a where
     hsName :: a -> Name
 
+instance HsNamed Con where
+    hsName con = case con of
+        NormalC n _ -> n
+        RecC n _ -> n
+        InfixC _ n _ -> n
+        ForallC _ _ con -> hsName con
+
 data CppArg = CppArg 
     { argName :: String
     , argType :: String    
@@ -178,12 +185,20 @@ data CppDerive = CppDerive
     deriving (Show)
 makeLenses ''CppDerive
 
+data CppEnum = CppEnum
+    { _enumName :: String
+    , _enumElems :: [String]
+    }
+    deriving (Show)
+makeLenses ''CppEnum
+
 data CppClass = CppClass 
     { _className :: String
     , _classFields :: [CppField]
     , _classMethods :: [CppMethod]
     , _classBases :: [CppDerive]
     , _classTemplateParams :: [String]
+    , _classEnums :: [CppEnum]
     }
     deriving (Show)
 makeLenses ''CppClass
@@ -207,6 +222,16 @@ data CppWrapper = Name Info CppWrapperType
 
 data CppInclude = CppSystemInclude String | CppLocalInclude String
     deriving (Eq, Ord, Show)
+
+
+
+instance CppFormattablePart CppEnum where
+    format (CppEnum name elems) = 
+        let fmt = "enum class %s { %s };"
+        in printf fmt (name) (intercalate ", " elems)
+
+instance CppFormattablePart [CppEnum] where
+    format enums = intercalate "\n" (format <$> enums)
 
 --data CppInclude = CppSystemInclude String | CppLocalInclude String
 --instance CppFormattable CppInclude where
@@ -262,7 +287,7 @@ data FormattedCppMethod = FormattedCppMethod
 makeLenses ''FormattedCppMethod
 
 formatMethod :: CppMethod -> CppClass -> FormattedCppMethod
-formatMethod (CppMethod (CppFunction n r a b) q s) cls@(CppClass cn _ _ _ tmpl) = 
+formatMethod (CppMethod (CppFunction n r a b) q s) cls@(CppClass cn _ _ _ tmpl _) = 
     let st = format s :: String
         rt = r :: String
         nt = n :: String
@@ -313,7 +338,7 @@ instance CppFormattablePart CppAccess where
 
 
 cppClassTypeUse :: CppClass -> String
-cppClassTypeUse cls@(CppClass name _ _ _ tmpl) = if null tmpl then name else printf "%s<%s>" name (formatTemplateArgs tmpl)
+cppClassTypeUse cls@(CppClass name _ _ _ tmpl _) = if null tmpl then name else printf "%s<%s>" name (formatTemplateArgs tmpl)
 
 class CollapsibleCode a where
     collapseCode :: [a] -> a
@@ -331,7 +356,7 @@ instance  CollapsibleCode FormattedCppMethod where
             (intercalate "\n\n"  $  _cppCode <$> methods)
 
 instance CppFormattable CppClass where
-    formatCpp cls@(CppClass name fields methods bases tmpl) = 
+    formatCpp cls@(CppClass name fields methods bases tmpl enums) = 
         let formatBase (CppDerive bname bvirt bacc) = 
                 let baseTempl = if null tmpl then "" else printf "<%s>" (intercalate ", " tmpl)
                 in format bacc <> " " <> (if bvirt then "virtual " else "") <> bname <> baseTempl
@@ -340,13 +365,14 @@ instance CppFormattable CppClass where
                 then ""
                 else ": " <> intercalate ", " (formatBase <$> bases)
             fieldsTxt = format fields
+            enumsTxt = "\t" <> format enums
             -- fff =  (formatCppCtx <$> methods <*> [cls]) :: [CppFormattedCode]
             (FormattedCppMethod methodsHeader implsHeader methodsImpl) = collapseCode (formatMethod <$> methods <*> [cls])
             templatePreamble = formatTemplateIntroductor tmpl
             headerCode = 
                 printf 
-                    "%sclass %s %s \n{\npublic:\n\tvirtual ~%s() {}\n%s\n\n%s\n};\n%s" 
-                    templatePreamble name basesTxt name fieldsTxt methodsHeader implsHeader
+                    "%sclass %s %s \n{\npublic:\n\tvirtual ~%s() {}\n%s%s\n\n%s\n};\n%s" 
+                    templatePreamble name basesTxt name enumsTxt fieldsTxt methodsHeader implsHeader
             bodyCode = methodsImpl
         in (headerCode, bodyCode)
 
@@ -399,12 +425,13 @@ generateRootClassWrapper :: Dec -> [CppClass] -> CppClass
 generateRootClassWrapper (DataD cxt name tyVars cons names) derClasses = 
     let tnames = map tyvarToCppName tyVars
         n = translateToCppNameQualified name
-        initialCls = CppClass n [] [] [] tnames
+        initialCls = CppClass n [] [] [] tnames []
         deserializeMethod = prepareDeserializeMethodBase initialCls derClasses
         serializeMethod = 
             let fn = CppFunction "serialize" "void" [CppArg "output" "Output &"] "assert(0); // pure virtual function"
             in CppMethod fn [PureVirtualQualifier] Virtual
-    in CppClass n [] [serializeMethod, deserializeMethod] [] tnames
+        consEnum = CppEnum "Constructors" (translateToCppNamePlain <$> hsName <$> cons)
+    in CppClass n [] [serializeMethod, deserializeMethod] [] tnames [consEnum]
 
 class IsValueType a where
     isValueType :: a -> Q Bool
@@ -429,7 +456,7 @@ templateDepNameBase :: String -> [String] -> String
 templateDepNameBase clsName tmpl = if null tmpl then clsName else printf "%s<%s>" clsName $ intercalate "," tmpl
 
 templateDepName :: CppClass -> String
-templateDepName cls@(CppClass clsName _ _ _ tmpl) = templateDepNameBase clsName tmpl
+templateDepName cls@(CppClass clsName _ _ _ tmpl _) = templateDepNameBase clsName tmpl
 
 data TypeDeducingMode = TypeField | TypeAlias
     deriving (Show)
@@ -577,7 +604,7 @@ deserializeFromFName = "deserializeFrom"
 
 
 prepareDeserializeMethodBase :: CppClass -> [CppClass] -> CppMethod
-prepareDeserializeMethodBase cls@(CppClass clsName _ _ _ tmpl) derClasses = 
+prepareDeserializeMethodBase cls@(CppClass clsName _ _ _ tmpl _) derClasses = 
     let fname = deserializeFromFName
         arg = CppArg "input" "Input &"
         rettype = printf "std::shared_ptr<%s>" $ if null tmpl then clsName 
@@ -613,21 +640,21 @@ deserializeField field@(CppField fieldName fieldType fieldSrc) = do
     return $ printf "\t::%s(%s, input);" fname fieldName
 
 deserializeReturnSharedType :: CppClass -> String
-deserializeReturnSharedType cls@(CppClass clsName _ _ _ tmpl) = 
+deserializeReturnSharedType cls@(CppClass clsName _ _ _ tmpl _) = 
     if null tmpl then clsName else templateDepName cls
 
 deserializeReturnType :: CppClass -> String
 deserializeReturnType cls = printf "std::shared_ptr<%s>" $ deserializeReturnSharedType cls
 
 prepareDeserializeMethodDer :: CppClass -> Q CppMethod
-prepareDeserializeMethodDer cls@(CppClass clsName _ _ _ tmpl)  = do
+prepareDeserializeMethodDer cls@(CppClass clsName _ _ _ tmpl _)  = do
     fieldsCode <- sequence (map deserializeField $ cls^.classFields)
     let body = intercalate "\n" $ fieldsCode
         fun = CppFunction "deserialize" "void" [inputArg] body
     return $ CppMethod fun [] Usual
 
 prepareDeserializeFromMethodDer :: CppClass -> Q CppMethod
-prepareDeserializeFromMethodDer cls@(CppClass clsName _ _ _ tmpl)  = do
+prepareDeserializeFromMethodDer cls@(CppClass clsName _ _ _ tmpl _)  = do
     let fname = deserializeFromFName
         clsName = cls ^. className
         --deserializeField field@(CppField fieldName fieldType fieldSrc) = printf "\tdeserialize(ret->%s, input);" fieldName :: String
@@ -655,10 +682,7 @@ processConstructor dec@(DataD cxt name tyVars cons names) con =
         let baseCppName = translateToCppNameQualified name
             tnames = map tyvarToCppName tyVars
 
-        let cname = case con of
-                RecC n _      -> n
-                NormalC n _   -> n
-                _             -> ''Dec
+        let cname = hsName con
 
         cppFields <- case con of
                 RecC _ fields      -> mapM processField fields
@@ -670,7 +694,7 @@ processConstructor dec@(DataD cxt name tyVars cons names) con =
 
         let derCppName = baseCppName <> "_" <> translateToCppNamePlain cname
         let baseClasses   = [CppDerive baseCppName False Public]
-            classInitial  = CppClass derCppName cppFields [] baseClasses tnames
+            classInitial  = CppClass derCppName cppFields [] baseClasses tnames []
             Just index    = elemIndex con cons
         serializeFieldsLines <- sequence $ (serializeField <$> cppFields)
         let serializeCode = intercalate "\n" ([printf "\t::serialize(std::int8_t(%d), output);" index :: String] <> serializeFieldsLines)
@@ -682,8 +706,8 @@ processConstructor dec@(DataD cxt name tyVars cons names) con =
         deserializeMethod <- prepareDeserializeMethodDer classInitial
 
         let methods = [serializeMethod, deserializeMethod, deserializeFromMethod]
-        return $ CppClass derCppName cppFields methods baseClasses tnames
-processConstructor dec arg = trace ("FIXME: Con for " <> show arg) (return $ CppClass "" [] [] [] [])
+        return $ CppClass derCppName cppFields methods baseClasses tnames []
+processConstructor dec arg = trace ("FIXME: Con for " <> show arg) (return $ CppClass "" [] [] [] [] [])
 
 tyvarToCppName :: TyVarBndr -> String
 tyvarToCppName (PlainTV n) = show n
