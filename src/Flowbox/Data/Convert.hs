@@ -26,7 +26,7 @@ import           Foreign.C.Types            (CTime)
 import           System.Posix.Types         (FileOffset)
 
 import           Flowbox.Control.Error
-import           Flowbox.Prelude            hiding(Text)
+import           Flowbox.Prelude            hiding (Text)
 import           Flowbox.System.UniPath     (UniPath)
 import qualified Flowbox.System.UniPath     as UniPath
 import qualified Text.ProtocolBuffers.Basic as Proto
