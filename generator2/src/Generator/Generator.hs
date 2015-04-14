@@ -76,9 +76,6 @@ class CppFormattablePart a where
 class CppFormattable a  where
     formatCpp :: a -> CppFormattedCode
 
-class CppFormattableCtx a ctx | a -> ctx where
-    formatCppCtx :: a -> ctx -> CppFormattedCode
-
 class TypesDependencies a where
     symbolDependencies :: a -> Set Name
 
@@ -87,9 +84,6 @@ class HsTyped a where
 
 class HsNamed a where
     hsName :: a -> Name
-
---instance (CppFormattableCtx a ctx) => CppFormattableCtx [a] ctx where
---    formatCppCtx = ("", "")
 
 data CppArg = CppArg 
     { argName :: String
@@ -260,22 +254,31 @@ joinParts parts =
 --        let collapseIncludes which = which <$> includes <$> parts
 --        in CppParts (concat $ collapseIncludes fst, concat $ collapseIncludes snd) (Set.unions $ fmap forwardDecls parts) (concat $ map typedefs parts) (concat $ map classes parts) (concat $ map functions parts)
 
-instance CppFormattableCtx CppMethod CppClass where
-    formatCppCtx (CppMethod (CppFunction n r a b) q s) cls@(CppClass cn _ _ _ tmpl) = 
-        let st = format s :: String
-            rt = r :: String
-            nt = n :: String
-            at = formatArgsList a :: String
-            qt = format q :: String
-            signatureHeader = printf "\t%s%s %s%s%s;" st rt nt at qt :: String
+data FormattedCppMethod = FormattedCppMethod 
+    { _inClassCode :: String 
+    , _afterClassCode :: String
+    , _cppCode :: String
+    }
+makeLenses ''FormattedCppMethod
 
-            scope = templateDepName cls
-            templateIntr = formatTemplateIntroductor tmpl
-            qst = format $ filter ((==) ConstQualifier) q -- qualifiers signature text
-            signatureImpl = printf "%s%s %s::%s%s %s" templateIntr rt scope nt at qst :: String
-            implementation = signatureImpl <> "\n{\n" <> b <> "\n}"
+formatMethod :: CppMethod -> CppClass -> FormattedCppMethod
+formatMethod (CppMethod (CppFunction n r a b) q s) cls@(CppClass cn _ _ _ tmpl) = 
+    let st = format s :: String
+        rt = r :: String
+        nt = n :: String
+        at = formatArgsList a :: String
+        qt = format q :: String
+        signatureHeader = printf "\t%s%s %s%s%s;" st rt nt at qt :: String
 
-        in (signatureHeader, implementation)
+        scope = templateDepName cls
+        templateIntr = formatTemplateIntroductor tmpl
+        qst = format $ filter ((==) ConstQualifier) q -- qualifiers signature text
+        signatureImpl = printf "%s%s %s::%s%s %s" templateIntr rt scope nt at qst :: String
+        implementation = signatureImpl <> "\n{\n" <> b <> "\n}"
+
+    in if null tmpl 
+       then FormattedCppMethod signatureHeader "" implementation
+       else FormattedCppMethod signatureHeader implementation ""
 
 
 instance HsTyped CppFieldSource where
@@ -312,8 +315,20 @@ instance CppFormattablePart CppAccess where
 cppClassTypeUse :: CppClass -> String
 cppClassTypeUse cls@(CppClass name _ _ _ tmpl) = if null tmpl then name else printf "%s<%s>" name (formatTemplateArgs tmpl)
 
-collapseCode :: [CppFormattedCode] -> CppFormattedCode
-collapseCode input = (intercalate "\n" (map fst input), intercalate "\n\n" (map snd input))
+class CollapsibleCode a where
+    collapseCode :: [a] -> a
+
+instance CollapsibleCode CppFormattedCode where
+    collapseCode input = 
+        ( intercalate "\n" (map fst input)
+        , intercalate "\n\n" (map snd input)
+        )
+
+instance  CollapsibleCode FormattedCppMethod where
+    collapseCode methods = FormattedCppMethod
+            (intercalate "\n"    $  _inClassCode <$> methods)
+            (intercalate "\n\n"  $  _afterClassCode <$> methods)
+            (intercalate "\n\n"  $  _cppCode <$> methods)
 
 instance CppFormattable CppClass where
     formatCpp cls@(CppClass name fields methods bases tmpl) = 
@@ -326,9 +341,12 @@ instance CppFormattable CppClass where
                 else ": " <> intercalate ", " (formatBase <$> bases)
             fieldsTxt = format fields
             -- fff =  (formatCppCtx <$> methods <*> [cls]) :: [CppFormattedCode]
-            (methodsHeader, methodsImpl) = collapseCode (formatCppCtx <$> methods <*> [cls])
+            (FormattedCppMethod methodsHeader implsHeader methodsImpl) = collapseCode (formatMethod <$> methods <*> [cls])
             templatePreamble = formatTemplateIntroductor tmpl
-            headerCode = printf "%sclass %s %s \n{\npublic:\n\tvirtual ~%s() {}\n%s\n\n%s\n};" templatePreamble name basesTxt name fieldsTxt methodsHeader
+            headerCode = 
+                printf 
+                    "%sclass %s %s \n{\npublic:\n\tvirtual ~%s() {}\n%s\n\n%s\n};\n%s" 
+                    templatePreamble name basesTxt name fieldsTxt methodsHeader implsHeader
             bodyCode = methodsImpl
         in (headerCode, bodyCode)
 
