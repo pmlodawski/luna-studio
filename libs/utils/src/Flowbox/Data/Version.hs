@@ -47,8 +47,6 @@ readVersionMaybe s = case [ x | (x,"") <- ReadP.readP_to_S parseVersion $ s] of
 -- INSTANCES
 ------------------------------------------------------------------------
 
-deriving instance Generic Version
-
 instance ToString Name where
   toString (Name name) = name
 
@@ -69,4 +67,3 @@ instance Default Version where
 
 instance ToJSON Version
 instance FromJSON Version
-instance Binary Version
