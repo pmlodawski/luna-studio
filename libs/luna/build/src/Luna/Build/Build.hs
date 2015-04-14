@@ -30,7 +30,7 @@ import           Luna.Build.Diagnostics                     (Diagnostics, printA
 import qualified Luna.Build.Source.File                     as File
 import           Luna.Data.Namespace                        (Namespace (Namespace), _info)
 import           Luna.Data.StructData                       (StructData(StructData), _namespace)
-import           Luna.Data.Source                           (Code (Code), Source (Source))
+import           Luna.Data.Source                           (Code (Code), Source (Source), _modName)
 import qualified Luna.Data.Source                           as Source
 import qualified Luna.Distribution.Cabal.Gen                as CabalGen
 import qualified Luna.Distribution.Cabal.Install            as CabalInstall
@@ -51,7 +51,10 @@ import qualified Luna.Pass.Transform.SSA                    as SSA
 import qualified Luna.System.Pragma.Store                   as Pragma
 import           Luna.System.Session                        as Session
 
+import           Luna.Syntax.Name.Path                      (QualPath(QualPath))
+
 import qualified Luna.Data.ModuleInfo                       as MI
+import           Data.String.Utils                          (replace)
 
 type Builder m = (MonadIO m, Functor m)
 
@@ -77,6 +80,7 @@ tmpDirPrefix = "lunac"
 
 prepareSource :: Builder m => Diagnostics -> Source Source.File -> m (Source Code)
 prepareSource diag src = do
+    let liFile = replace ".luna" "" (toString $ _modName src)
     result <- Session.runT $ do
         void   Parser.init
         void $ Pragma.enable (Pragma.orphanNames)
@@ -88,13 +92,13 @@ prepareSource diag src = do
 
             printHeader "Extraction of imports"
             importInfo <- Pass.run1_ Imports.pass ast 
-            ppPrint importInfo
+            --ppPrint importInfo
 
             printHeader "SA"
             sa           <- Pass.run2_ SA.pass (StructData mempty importInfo) ast
             let sa1 = _info . _namespace $ sa
             let mInfo = MI.ModuleInfo (QualPath [] (fromString liFile)) mempty mempty sa1 mempty
-            ppPrint mInfo
+            -- ppPrint ModuleInfo
             liftIO $ MI.writeModInfoToFile mInfo
 
             printHeader "Stage2"
@@ -107,7 +111,7 @@ prepareSource diag src = do
 
             printHeader "SA2"
             sa             <- Pass.run2_ SA.pass sa ast
-            ppPrint sa
+            --ppPrint sa
 
             printHeader "ImplScopes"
             (ast, astinfo) <- Pass.run3_ ImplScopes.pass astinfo sa1 ast
@@ -126,7 +130,7 @@ prepareSource diag src = do
 
             printHeader "HAST"
             hast           <- Pass.run2_ HASTGen.pass importInfo ast
-            ppPrint hast
+            -- ppPrint hast
 
             printHeader "HSC"
             hsc            <- Pass.run1_ HSC.pass hast
