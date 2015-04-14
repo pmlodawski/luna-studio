@@ -25,6 +25,8 @@ import qualified Generated.Proto.Dep.Library.Library                      as Gen
 import qualified Generated.Proto.Dep.Library.Library.PropertyMap          as Gen
 import qualified Generated.Proto.Dep.Library.Library.PropertyMap.KeyValue as Gen
 import qualified Luna.DEP.AST.AST                                         as AST
+import           Luna.DEP.Data.ASTInfo                                    (ASTInfo)
+import qualified Luna.DEP.Data.ASTInfo                                    as ASTInfo
 import           Luna.DEP.Data.Serialize.Proto.Conversion.Attributes      ()
 import           Luna.DEP.Data.Serialize.Proto.Conversion.Module          ()
 import           Luna.DEP.Data.Serialize.Proto.Conversion.Version         ()
@@ -32,8 +34,6 @@ import           Luna.DEP.Graph.Properties                                (Prope
 import           Luna.DEP.Lib.Lib                                         (Library (Library))
 import qualified Luna.DEP.Lib.Lib                                         as Library
 import           Luna.DEP.Lib.Manager                                     (LibManager)
-import           Luna.DEP.Data.ASTInfo      (ASTInfo)
-import qualified           Luna.DEP.Data.ASTInfo      as ASTInfo
 import qualified Luna.DEP.Lib.Manager                                     as LibManager
 
 

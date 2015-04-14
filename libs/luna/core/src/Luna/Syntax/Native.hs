@@ -13,10 +13,13 @@ import Flowbox.Prelude
 import GHC.Generics
 
 
-data Native e = Code [NativeSegment]
-              | AST e
+data Native e = Code { _segments :: [NativeSegment] }
+              | AST  { _ast      :: e               }
               deriving (Show, Generic, Eq, Read)
 
 data NativeSegment = Str { _code :: String }
                    | Var { _name :: String } 
                    deriving (Show, Generic, Eq, Read)
+
+makeLenses ''Native
+makeLenses ''NativeSegment

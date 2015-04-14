@@ -62,6 +62,7 @@ data SegmentDesc      = SegmentDesc SegmentName [Bool]             deriving (Sho
 
 type SegmentName      = Text
 
+
 makeLenses ''NamePat
 makeLenses ''Segment
 

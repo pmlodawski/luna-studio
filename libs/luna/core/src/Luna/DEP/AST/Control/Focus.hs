@@ -9,7 +9,7 @@
 
 module Luna.DEP.AST.Control.Focus where
 
-import           Flowbox.Prelude hiding (Traversal)
+import           Flowbox.Prelude     hiding (Traversal)
 import           Luna.DEP.AST.Arg    (Arg)
 import           Luna.DEP.AST.Expr   (Expr)
 import qualified Luna.DEP.AST.Expr   as Expr

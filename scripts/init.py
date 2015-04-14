@@ -120,13 +120,9 @@ def try_call(cmd):
     print_info ("Running '%s'" % cmd)
     if call(cmd, shell=True): fatal()
 
-
-
-
 def removeIfExists(pathToRemove):
     if os.path.exists(pathToRemove):
         os.remove(pathToRemove)
-
 
 @contextmanager
 def temporary_directory():
@@ -141,7 +137,6 @@ def changed_cwd(newdir):
     yield
     os.chdir(cwd)
 
-
 def install_from_sources(name, version=None):
     with temporary_directory() as tmpPath:
         with changed_cwd(tmpPath):
@@ -155,17 +150,21 @@ def install_from_sources(name, version=None):
                 try_call('cabal install')
 
 def install_alex_happy(name, version=None):
-    try_call('cabal install alex')
-    try_call('cabal install happy')
+    alex_version_out = subprocess.check_output("alex --version", shell=True)
+    alex_version = "3.1.4"
+    happy_version_out = subprocess.check_output("happy --version", shell=True)
+    happy_version = "1.19.5"
+    if alex_version not in alex_version_out:
+        try_call('cabal install alex-%s'%alex_version)
+    if happy_version not in happy_version_out:
+        try_call('cabal install happy-%s'%happy_version)
     if version:
         return (name + "-" + version)
     else:
         return name
 
-
 def createSandbox(path='.'):
     try_call('cabal sandbox init --sandbox=%s' % path)
-
 
 def main():
     global SILENTINSTALL

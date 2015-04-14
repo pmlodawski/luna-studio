@@ -24,24 +24,22 @@ data StringExpr = Expr    { _string :: String }
 makeLenses ''StringExpr
 
 
-toString :: StringExpr -> String
-toString exprStr = case exprStr of
-    Expr    str -> str
-    Tuple       -> "Tuple"
-    Get     str -> "get " ++ str
-    List        -> "List"
-    Id          -> "id"
-    Pattern str -> '=' : str
-    Native  str -> str
+instance IsString StringExpr where
+    fromString str = case str of
+        "List"               -> List
+        "Tuple"              -> Tuple
+        "id"                 -> Id
+        'g':'e':'t':' ':name -> Get     name
+        '=':pat              -> Pattern pat
+        '`':'`':'`':_        -> Native  str
+        _                    -> Expr    str
 
-
-fromString :: String -> StringExpr
-fromString str = case str of
-    "List"               -> List
-    "Tuple"              -> Tuple
-    "id"                 -> Id
-    'g':'e':'t':' ':name -> Get     name
-    '=':pat              -> Pattern pat
-    '`':'`':'`':_        -> Native  str
-    _                    -> Expr    str
-
+instance ToString StringExpr where
+    toString exprStr = case exprStr of
+        Expr    str -> str
+        Tuple       -> "Tuple"
+        Get     str -> "get " ++ str
+        List        -> "List"
+        Id          -> "id"
+        Pattern str -> '=' : str
+        Native  str -> str

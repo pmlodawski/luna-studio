@@ -7,8 +7,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Flowbox.ProjectManager.RPC.Handler.NodeDefault where
 
-import qualified Data.Bimap    as Bimap   
-import           Data.Maybe    (isJust)
+import qualified Data.Bimap as Bimap
+import           Data.Maybe (isJust)
 
 import qualified Flowbox.Batch.Batch                                                                           as Batch
 import qualified Flowbox.Batch.Handler.Common                                                                  as Batch
@@ -19,10 +19,10 @@ import           Flowbox.Bus.RPC.RPC                                            
 import           Flowbox.Data.Convert
 import           Flowbox.Prelude                                                                               hiding (Context)
 import           Flowbox.ProjectManager.Context                                                                (Context)
-import           Flowbox.ProjectManager.RPC.Handler.Graph                                                      (mapID) 
+import           Flowbox.ProjectManager.RPC.Handler.Graph                                                      (mapID)
 import qualified Flowbox.ProjectManager.RPC.Topic                                                              as Topic
 import           Flowbox.System.Log.Logger
-import           Flowbox.UR.Manager.RPC.Handler.Handler                                                        (makeMsgArr, fun)
+import           Flowbox.UR.Manager.RPC.Handler.Handler                                                        (fun, makeMsgArr)
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Default.Get.Request    as NodeDefaultGet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Default.Get.Status     as NodeDefaultGet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Default.Remove.Request as NodeDefaultRemove
@@ -72,7 +72,7 @@ set (NodeDefaultSet.Request tdstPort tvalue tnodeID tbc tlibID tprojectID astID)
                                             (fun Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest $ newRequest originID $ snd bmp)
                                             (fun Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest $ newRequest originID value)
                                             tprojectID
-                                            (encodeP $ "set port " ++ (show dstPort) ++ " value to " ++ (show value) ++ " in " ++ (show nodeID))
+                                            (encodeP $ "set port " ++ (show dstPort) ++ " in " ++ (show nodeID))
                                        ) undoTopic)
                    $ DefaultsMap.lookup dstPort defaultsMap
            )

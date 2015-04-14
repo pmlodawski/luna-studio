@@ -9,12 +9,12 @@
 module Luna.Syntax.Graph.Edge where
 
 import Flowbox.Prelude
-import Luna.Syntax.Graph.Port (Port)
+import Luna.Syntax.Graph.Port (DstPort, SrcPort)
 
 
 
-data Edge = Data { _src :: Port
-                 , _dst :: Port
+data Edge = Data { _src :: SrcPort
+                 , _dst :: DstPort
                  }
           | Monadic
           deriving (Show, Read, Ord, Eq)
@@ -34,6 +34,6 @@ isMonadic _       = False
 
 
 match :: Edge -> Edge -> Bool
-match (Data _ d) (Data s _) = d == s
+match (Data _ d) (Data s _) = unwrap d == unwrap s
 match  Monadic    Monadic   = True
 match  _          _         = False

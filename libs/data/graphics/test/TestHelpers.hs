@@ -292,3 +292,23 @@ defaultReferenceTestM testName specPath image =
                 returnShouldBeCloseTo testPath ImageWise image expectedImage
             it "in size-wise metric" $ do
                 returnShouldBeCloseTo testPath SizeWise image expectedImage
+
+saveReference path image = do
+    saveImageLuna path image
+    return ()
+
+defaultReferenceSave testName specPath image =
+    describe testName $ do
+        describe "should save ok image" $ do
+            it "in test" $ do
+                let savePath = specPath++testName++"Test/"++testName++"_reference.png"
+                    save = saveReference savePath
+                save image `shouldReturn` ()
+
+defaultReferenceSaveM testName specPath image =
+    describe testName $ do
+        describe "should save ok image" $ do
+            it "in test" $ do
+                let savePath = specPath++testName++"Test/"++testName++"_reference.png"
+                    save = saveReference savePath
+                (save =<< image) `shouldReturn` ()

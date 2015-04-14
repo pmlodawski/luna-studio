@@ -4,59 +4,66 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE ConstraintKinds #-}
+{-# LANGUAGE ConstraintKinds     #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell     #-}
 module Flowbox.ProjectManager.RPC.Handler.Graph where
 
-import qualified Data.Bimap    as Bimap   
+import qualified Data.Bimap    as Bimap
 import qualified Data.Either   as Either
 import           Data.Maybe    (fromMaybe, isJust)
-import qualified Data.Set      as Set
-import qualified Data.Sequence as Sequence
 import           Data.Sequence ((><))
+import qualified Data.Sequence as Sequence
+import qualified Data.Set      as Set
 
-import qualified Flowbox.Batch.Batch                                                                          as Batch
-import qualified Flowbox.Batch.Handler.Common                                                                 as Batch
-import qualified Flowbox.Batch.Handler.Graph                                                                  as BatchG
-import qualified Flowbox.Batch.Handler.NodeDefault                                                            as BatchND
-import qualified Flowbox.Batch.Handler.Properties                                                             as BatchP
-import           Flowbox.Bus.Data.Message                                                                     (Message)
-import           Flowbox.Bus.Data.Serialize.Proto.Conversion.Message                                          ()
-import           Flowbox.Bus.Data.Topic                                                                       (Topic)
-import           Flowbox.Bus.RPC.RPC                                                                          (RPC)
+import qualified Flowbox.Batch.Batch                                                                           as Batch
+import qualified Flowbox.Batch.Handler.Common                                                                  as Batch
+import qualified Flowbox.Batch.Handler.Graph                                                                   as BatchG
+import qualified Flowbox.Batch.Handler.NodeDefault                                                             as BatchND
+import qualified Flowbox.Batch.Handler.Properties                                                              as BatchP
+import           Flowbox.Bus.Data.Message                                                                      (Message)
+import           Flowbox.Bus.Data.Serialize.Proto.Conversion.Message                                           ()
+import           Flowbox.Bus.Data.Topic                                                                        (Topic)
+import           Flowbox.Bus.RPC.RPC                                                                           (RPC)
 import           Flowbox.Data.Convert
-import           Flowbox.Prelude                                                                              hiding (Context, error)
-import           Flowbox.ProjectManager.Context                                                               (Context)
-import qualified Flowbox.ProjectManager.RPC.Topic                                                             as Topic
+import           Flowbox.Prelude                                                                               hiding (Context, error)
+import           Flowbox.ProjectManager.Context                                                                (Context)
+import qualified Flowbox.ProjectManager.RPC.Topic                                                              as Topic
 import           Flowbox.System.Log.Logger
-import           Flowbox.UR.Manager.RPC.Handler.Handler                                                       (makeMsgArr, fun, prepareResponse)
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Connect.Request            as Connect
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Connect.Update             as Connect
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Disconnect.Request         as Disconnect
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Disconnect.Update          as Disconnect
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Get.Request                as GetGraph
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Get.Status                 as GetGraph
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Lookup.Request             as Lookup
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Lookup.Status              as Lookup
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.LookupMany.Request         as LookupMany
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.LookupMany.Status          as LookupMany
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Add.Request           as NodeAdd
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Add.Update            as NodeAdd
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Default.Set.Request   as NodeDefaultSet
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Modify.Request        as NodeModify
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Modify.Update         as NodeModify
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.ModifyInPlace.Request as NodeModifyInPlace
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.ModifyInPlace.Update  as NodeModifyInPlace
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Properties.Set.Request                    as SetNodeProperties
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Request        as NodeRemove
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Update         as NodeRemove
-import qualified Generated.Proto.Urm.URM.RegisterMultiple.Request                                             as RegisterMultiple
-import           Luna.DEP.Data.Serialize.Proto.Conversion.Crumb                                               ()
-import           Luna.DEP.Data.Serialize.Proto.Conversion.GraphView                                           ()
-import qualified Luna.DEP.Graph.View.Default.DefaultsMap                                                      as DefaultsMap
-import           Luna.DEP.Graph.View.EdgeView                                                                 (EdgeView (EdgeView))
+import           Flowbox.UR.Manager.RPC.Handler.Handler                                                        (fun, makeMsgArr, prepareResponse)
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Connect.Request             as Connect
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Connect.Update              as Connect
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Disconnect.Request          as Disconnect
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Disconnect.Update           as Disconnect
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Get.Request                 as GetGraph
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Get.Status                  as GetGraph
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Lookup.Request              as Lookup
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Lookup.Status               as Lookup
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.LookupMany.Request          as LookupMany
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.LookupMany.Status           as LookupMany
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Add.Request            as NodeAdd
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Add.Update             as NodeAdd
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Default.Set.Request    as NodeDefaultSet
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Modify.Request         as NodeModify
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Modify.Update          as NodeModify
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.ModifyInPlace.Request  as NodeModifyInPlace
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.ModifyInPlace.Update   as NodeModifyInPlace
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Properties.Set.Request as SetNodeProperties
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Request         as NodeRemove
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Update          as NodeRemove
+import qualified Generated.Proto.Urm.URM.RegisterMultiple.Request                                              as RegisterMultiple
+import           Luna.DEP.Data.Serialize.Proto.Conversion.Crumb                                                ()
+import           Luna.DEP.Data.Serialize.Proto.Conversion.GraphView                                            ()
+import qualified Luna.DEP.Graph.View.Default.DefaultsMap                                                       as DefaultsMap
+import           Luna.DEP.Graph.View.EdgeView                                                                  (EdgeView (EdgeView))
 
+import qualified Luna.DEP.Graph.Node            as Node
+import qualified Luna.DEP.Graph.Node.Expr       as NodeExpr
+import qualified Luna.DEP.Graph.Node.StringExpr as StringExpr
+nodeName :: Node.Node -> String
+nodeName = fromMaybe "" . maybe Nothing (^? StringExpr.string) . maybe Nothing (^? NodeExpr.strExpr) . (^? Node.expr)
+--nodeName = fromMaybe "" . (^? StringExpr.string) =<< (^? NodeExpr.strExpr) =<< (^? Node.expr)
+--nodeName = (^?! StringExpr.string) . (^?! NodeExpr.strExpr) . (^?! Node.expr)
 
 
 logger :: LoggerIO
@@ -118,7 +125,7 @@ nodeAdd request@(NodeAdd.Request tnode tbc tlibID tprojectID astID) undoTopic = 
                     Topic.projectLibraryAstFunctionGraphNodeAddRequest
                     (NodeAdd.Request (encode (mapID context Bimap.lookup newNodeID, node)) tbc tlibID tprojectID astID)
                     undoTopic
-                    ("add node " ++ (show node))
+                    ("add node " ++ (nodeName node))
                     =<< NodeAdd.Update request (encode (newNodeID, node)) <$> Batch.getUpdateNo
 
 nodeModify :: NodeModify.Request -> Maybe Topic -> RPC Context IO ([NodeModify.Update], [Message])
@@ -146,7 +153,7 @@ nodeModify (NodeModify.Request tnode tbc tlibID tprojectID astID) undoTopic = do
                     Topic.projectLibraryAstFunctionGraphNodeModifyRequest
                     (NodeModify.Request tnewNode tbc tlibID tprojectID astID)
                     undoTopic
-                    ("modify node " ++ (show bc))
+                    ("modify node " ++ (nodeName node))
                     =<< NodeModify.Update (NodeModify.Request (encode (newID, node)) tbc tlibID tprojectID astID) (encode (newNodeID, node)) <$> Batch.getUpdateNo
 
 
@@ -160,7 +167,7 @@ nodeModifyInPlace (NodeModifyInPlace.Request tnode tbc tlibID tprojectID astID) 
         originID  = if isJust undoTopic then mapID context Bimap.lookup nid else nid
         newID     = if isJust undoTopic then nid else mapID context Bimap.lookupR nid
         newRequest nodeId = NodeModifyInPlace.Request (encode (nodeId, newNode)) tbc tlibID tprojectID astID
-    
+
     oldNd <- BatchG.nodeByID newID bc libID projectID
     let oldNode   = encode (originID, oldNd)
     BatchG.updateNodeInPlace (newID, newNode) bc libID projectID
@@ -173,7 +180,7 @@ nodeModifyInPlace (NodeModifyInPlace.Request tnode tbc tlibID tprojectID astID) 
                     Topic.projectLibraryAstFunctionGraphNodeModifyinplaceRequest
                     (newRequest originID)
                     undoTopic
-                    ("modify node " ++ (show bc))
+                    ("modify node " ++ (nodeName newNode))
                     =<< NodeModifyInPlace.Update (newRequest newID) <$> Batch.getUpdateNo
 
 
@@ -190,14 +197,12 @@ nodeRemove (NodeRemove.Request tnodeIDs tbc tlibID tprojectID astID) undoTopic =
         libID              = decodeP tlibID
         projectID          = decodeP tprojectID
 
-    oldNodes <- mapM (\nid -> do node <- BatchG.nodeByID (mapID context Bimap.lookupR nid) bc libID projectID
-                                 return $ encode (nid, node)
-                     ) $ originIDs
+    oldNodes <- mapM (\nid -> BatchG.nodeByID (mapID context Bimap.lookupR nid) bc libID projectID) originIDs
+    let toldNodes = zipWith (\nid node -> encode (nid, node)) originIDs oldNodes
 
     rm <- mapM (\nid -> BatchG.nodeEdges nid bc libID projectID) newIDs
     let removed = Set.toList $ Set.fromList $ concat rm
     defaults <- mapM (\nid -> do defaults <- BatchND.nodeDefaults nid bc libID projectID
-                                 logger warning $ "difolty dla " ++ (show nid) ++ ": " ++ (show defaults)
                                  return $ DefaultsMap.mapWithKey (\k v -> fun Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest
                                                                               $ NodeDefaultSet.Request (encodeP k) (encode $ snd v) (encodeP $ originID nid) tbc tlibID tprojectID astID
                                                                  )
@@ -205,11 +210,11 @@ nodeRemove (NodeRemove.Request tnodeIDs tbc tlibID tprojectID astID) undoTopic =
                      )
                      newIDs
     properties <- mapM (\nid -> do properties <- BatchP.getProperties nid libID projectID
-                                   return $ fun Topic.projectLibraryAstFunctionGraphNodePropertiesSetRequest 
+                                   return $ fun Topic.projectLibraryAstFunctionGraphNodePropertiesSetRequest
                                                 $ SetNodeProperties.Request (encode properties) (encodeP $ originID nid) tbc tlibID tprojectID astID
                        )
                        newIDs
-    
+
     BatchG.removeNodes newIDs bc libID projectID
     updateNo <- Batch.getUpdateNo
 
@@ -219,8 +224,8 @@ nodeRemove (NodeRemove.Request tnodeIDs tbc tlibID tprojectID astID) undoTopic =
     logger warning $ show $ map snd $ DefaultsMap.toList =<< defaults
     return ( [NodeRemove.Update (updatedRequest $ encodeP newIDs) updateNo]
            , makeMsgArr (RegisterMultiple.Request
-                            (  (Sequence.fromList $ map (\node -> fun Topic.projectLibraryAstFunctionGraphNodeAddRequest $ NodeAdd.Request node tbc tlibID tprojectID astID) $ oldNodes)
-                            >< (Sequence.fromList $ map (\(srcID, dstID, EdgeView srcPorts dstPorts) -> fun Topic.projectLibraryAstFunctionGraphConnectRequest 
+                            (  (Sequence.fromList $ map (\node -> fun Topic.projectLibraryAstFunctionGraphNodeAddRequest $ NodeAdd.Request node tbc tlibID tprojectID astID) $ toldNodes)
+                            >< (Sequence.fromList $ map (\(srcID, dstID, EdgeView srcPorts dstPorts) -> fun Topic.projectLibraryAstFunctionGraphConnectRequest
                                                                                                             $ Connect.Request (encodeP $ originID srcID)
                                                                                                                               (encodeP srcPorts)
                                                                                                                               (encodeP $ originID dstID)
@@ -229,7 +234,7 @@ nodeRemove (NodeRemove.Request tnodeIDs tbc tlibID tprojectID astID) undoTopic =
                                                                                                                               tlibID
                                                                                                                               tprojectID
                                                                                                                               astID
-                                                        ) 
+                                                        )
                                                         removed
                                )
                             >< (Sequence.fromList $ map snd . DefaultsMap.toList =<< defaults)
@@ -237,7 +242,7 @@ nodeRemove (NodeRemove.Request tnodeIDs tbc tlibID tprojectID astID) undoTopic =
                             )
                             (fun Topic.projectLibraryAstFunctionGraphNodeRemoveRequest $ updatedRequest $ encodeP originIDs)
                             tprojectID
-                            (encodeP $ "remove nodes " ++ (show nodeIDs))
+                            (encodeP $ "remove nodes " ++ (show $ map (nodeName) oldNodes))
                         ) undoTopic
            )
 

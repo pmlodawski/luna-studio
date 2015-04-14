@@ -4,8 +4,8 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE BangPatterns    #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE BangPatterns #-}
 module Flowbox.Bus.Logger.Logger where
 
 import           Control.Monad                    (forever)
