@@ -28,7 +28,8 @@ import           Luna.Build.BuildConfig                     (BuildConfig (BuildC
 import qualified Luna.Build.BuildConfig                     as BuildConfig
 import           Luna.Build.Diagnostics                     (Diagnostics, printAST, printHAST, printHSC, printHeader, printSA, printSSA)
 import qualified Luna.Build.Source.File                     as File
-import           Luna.Data.Namespace                        (Namespace (Namespace))
+import           Luna.Data.Namespace                        (Namespace (Namespace), _info)
+import           Luna.Data.StructData                       (StructData(StructData), _namespace)
 import           Luna.Data.Source                           (Code (Code), Source (Source))
 import qualified Luna.Data.Source                           as Source
 import qualified Luna.Distribution.Cabal.Gen                as CabalGen
@@ -37,6 +38,7 @@ import qualified Luna.Distribution.Cabal.Store              as CabalStore
 import qualified Luna.Parser.Parser                         as Parser
 import qualified Luna.Parser.Pragma                         as Pragma
 import qualified Luna.Pass                                  as Pass
+import qualified Luna.Pass.Analysis.Imports                 as Imports
 import qualified Luna.Pass.Analysis.Struct                  as SA
 import qualified Luna.Pass.Target.HS.HASTGen                as HASTGen
 import qualified Luna.Pass.Target.HS.HSC                    as HSC
@@ -49,7 +51,7 @@ import qualified Luna.Pass.Transform.SSA                    as SSA
 import qualified Luna.System.Pragma.Store                   as Pragma
 import           Luna.System.Session                        as Session
 
-
+import qualified Luna.Data.ModuleInfo                       as MI
 
 type Builder m = (MonadIO m, Functor m)
 
@@ -78,30 +80,37 @@ prepareSource diag src = do
     result <- Session.runT $ do
         void   Parser.init
         void $ Pragma.enable (Pragma.orphanNames)
-        void $ Pragma.pop    (Pragma.orphanNames)
+        --void $ Pragma.pop    (Pragma.orphanNames)
         runEitherT $ do
             printHeader "Stage1"
             (ast, astinfo) <- Pass.run1_ Stage1.pass src
             printAST diag ast
 
+            printHeader "Extraction of imports"
+            importInfo <- Pass.run1_ Imports.pass ast 
+            ppPrint importInfo
+
             printHeader "SA"
-            sa             <- Pass.run1_ SA.pass ast
-            printSA diag sa
+            sa           <- Pass.run2_ SA.pass (StructData mempty importInfo) ast
+            let sa1 = _info . _namespace $ sa
+            let mInfo = MI.ModuleInfo (QualPath [] (fromString liFile)) mempty mempty sa1 mempty
+            ppPrint mInfo
+            liftIO $ MI.writeModInfoToFile mInfo
 
             printHeader "Stage2"
-            (ast, astinfo) <- Pass.run3_ Stage2.pass (Namespace [] sa) astinfo ast
+            (ast, astinfo) <- Pass.run3_ Stage2.pass (Namespace [] sa1) astinfo ast
             printAST diag ast
 
             printHeader "ImplSelf"
             (ast, astinfo) <- Pass.run2_ ImplSelf.pass astinfo ast
             printAST diag ast
 
-            printHeader "SA"
-            sa             <- Pass.run1_ SA.pass ast
-            printSA diag sa
+            printHeader "SA2"
+            sa             <- Pass.run2_ SA.pass sa ast
+            ppPrint sa
 
             printHeader "ImplScopes"
-            (ast, astinfo) <- Pass.run3_ ImplScopes.pass astinfo sa ast
+            (ast, astinfo) <- Pass.run3_ ImplScopes.pass astinfo sa1 ast
             printAST diag ast
 
             printHeader "ImplCalls"
@@ -116,8 +125,8 @@ prepareSource diag src = do
             printSSA diag ast
 
             printHeader "HAST"
-            hast           <- Pass.run1_ HASTGen.pass ast
-            printHAST diag hast
+            hast           <- Pass.run2_ HASTGen.pass importInfo ast
+            ppPrint hast
 
             printHeader "HSC"
             hsc            <- Pass.run1_ HSC.pass hast
