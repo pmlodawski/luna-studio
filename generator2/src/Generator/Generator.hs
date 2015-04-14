@@ -107,6 +107,7 @@ data CppQualifier = ConstQualifier | VolatileQualifier | PureVirtualQualifier | 
                     deriving (Show, Eq)
 
 makeLenses ''CppQualifier
+derive makeIs ''CppQualifier
 
 instance CppFormattablePart CppQualifier where
     format ConstQualifier = " const"
@@ -157,6 +158,9 @@ data CppMethod = CppMethod
     deriving (Show)
 
 makeLenses ''CppMethod
+
+isPureVirtual :: CppMethod -> Bool
+isPureVirtual method = any isPureVirtualQualifier $ qualifiers method
 
 data CppFieldSource = CppFieldSourceRec VarStrictType
                     | CppFieldSourceNormal THS.StrictType
@@ -227,7 +231,7 @@ data CppInclude = CppSystemInclude String | CppLocalInclude String
 
 instance CppFormattablePart CppEnum where
     format (CppEnum name elems) = 
-        let fmt = "enum class %s { %s };"
+        let fmt = "enum %s { %s };"
         in printf fmt (name) (intercalate ", " elems)
 
 instance CppFormattablePart [CppEnum] where
@@ -287,7 +291,7 @@ data FormattedCppMethod = FormattedCppMethod
 makeLenses ''FormattedCppMethod
 
 formatMethod :: CppMethod -> CppClass -> FormattedCppMethod
-formatMethod (CppMethod (CppFunction n r a b) q s) cls@(CppClass cn _ _ _ tmpl _) = 
+formatMethod mth@(CppMethod (CppFunction n r a b) q s) cls@(CppClass cn _ _ _ tmpl _) = 
     let st = format s :: String
         rt = r :: String
         nt = n :: String
@@ -299,7 +303,9 @@ formatMethod (CppMethod (CppFunction n r a b) q s) cls@(CppClass cn _ _ _ tmpl _
         templateIntr = formatTemplateIntroductor tmpl
         qst = format $ filter ((==) ConstQualifier) q -- qualifiers signature text
         signatureImpl = printf "%s%s %s::%s%s %s" templateIntr rt scope nt at qst :: String
-        implementation = signatureImpl <> "\n{\n" <> b <> "\n}"
+        implementation = case isPureVirtual mth of
+                True -> "" 
+                _    -> signatureImpl <> "\n{\n" <> b <> "\n}"
 
     in if null tmpl 
        then FormattedCppMethod signatureHeader "" implementation
@@ -337,8 +343,15 @@ instance CppFormattablePart CppAccess where
 --    format derives = ": " <> Data.List.intercalate ", " (map format derives)
 
 
+formatParametrizedName :: String -> [String] -> String
+formatParametrizedName name params = 
+    if null params then 
+        name 
+    else 
+        printf "%s<%s>" name (formatTemplateArgs params)
+
 cppClassTypeUse :: CppClass -> String
-cppClassTypeUse cls@(CppClass name _ _ _ tmpl _) = if null tmpl then name else printf "%s<%s>" name (formatTemplateArgs tmpl)
+cppClassTypeUse cls@(CppClass name _ _ _ tmpl _) = formatParametrizedName name tmpl
 
 class CollapsibleCode a where
     collapseCode :: [a] -> a
@@ -365,7 +378,7 @@ instance CppFormattable CppClass where
                 then ""
                 else ": " <> intercalate ", " (formatBase <$> bases)
             fieldsTxt = format fields
-            enumsTxt = "\t" <> format enums
+            enumsTxt = if null enums then "" else "\t" <> format enums
             -- fff =  (formatCppCtx <$> methods <*> [cls]) :: [CppFormattedCode]
             (FormattedCppMethod methodsHeader implsHeader methodsImpl) = collapseCode (formatMethod <$> methods <*> [cls])
             templatePreamble = formatTemplateIntroductor tmpl
@@ -421,17 +434,32 @@ translateToCppNameQualified name =
 translateToCppNamePlain :: Name -> String 
 translateToCppNamePlain = nameBase
 
+class PureVirtualMethodInfo a where
+    pureVirtualMethod :: a -> CppMethod
+
+instance PureVirtualMethodInfo (String, String, [CppArg], String) where
+    pureVirtualMethod (name, ret, args, body) = 
+        pureVirtualMethod $ CppFunction name ret args body
+
+instance PureVirtualMethodInfo CppFunction where
+    pureVirtualMethod fn = CppMethod fn [PureVirtualQualifier] Virtual
+
+whichFunction :: String -> [String] -> String -> CppFunction
+whichFunction baseName baseParams body = 
+    CppFunction "which" (templateDepTypenameBase baseName baseParams <> "::Constructors") [] body
+
 generateRootClassWrapper :: Dec -> [CppClass] -> CppClass
 generateRootClassWrapper (DataD cxt name tyVars cons names) derClasses = 
-    let tnames = map tyvarToCppName tyVars
+    let tnames = tyvarToCppName <$> tyVars
         n = translateToCppNameQualified name
         initialCls = CppClass n [] [] [] tnames []
         deserializeMethod = prepareDeserializeMethodBase initialCls derClasses
-        serializeMethod = 
-            let fn = CppFunction "serialize" "void" [CppArg "output" "Output &"] "assert(0); // pure virtual function"
-            in CppMethod fn [PureVirtualQualifier] Virtual
+        serializeMethod = pureVirtualMethod ("serialize", "void", 
+            [CppArg "output" "Output &"], 
+            "assert(0); // pure virtual function")
+        whichConMethod = pureVirtualMethod $ whichFunction n tnames "assert(0); // pure virtual function"
         consEnum = CppEnum "Constructors" (translateToCppNamePlain <$> hsName <$> cons)
-    in CppClass n [] [serializeMethod, deserializeMethod] [] tnames [consEnum]
+    in CppClass n [] [serializeMethod, deserializeMethod, whichConMethod] [] tnames [consEnum]
 
 class IsValueType a where
     isValueType :: a -> Q Bool
@@ -454,6 +482,9 @@ instance IsValueType Type where
 
 templateDepNameBase :: String -> [String] -> String
 templateDepNameBase clsName tmpl = if null tmpl then clsName else printf "%s<%s>" clsName $ intercalate "," tmpl
+
+templateDepTypenameBase :: String -> [String] -> String
+templateDepTypenameBase clsName tmpl = if null tmpl then clsName else printf "typename %s<%s>" clsName $ intercalate "," tmpl
 
 templateDepName :: CppClass -> String
 templateDepName cls@(CppClass clsName _ _ _ tmpl _) = templateDepNameBase clsName tmpl
@@ -683,6 +714,7 @@ processConstructor dec@(DataD cxt name tyVars cons names) con =
             tnames = map tyvarToCppName tyVars
 
         let cname = hsName con
+        let prettyConName = translateToCppNamePlain cname
 
         cppFields <- case con of
                 RecC _ fields      -> mapM processField fields
@@ -692,7 +724,7 @@ processConstructor dec@(DataD cxt name tyVars cons names) con =
                     in sequence r
                 _             -> return []
 
-        let derCppName = baseCppName <> "_" <> translateToCppNamePlain cname
+        let derCppName = baseCppName <> "_" <> prettyConName
         let baseClasses   = [CppDerive baseCppName False Public]
             classInitial  = CppClass derCppName cppFields [] baseClasses tnames []
             Just index    = elemIndex con cons
@@ -705,7 +737,11 @@ processConstructor dec@(DataD cxt name tyVars cons names) con =
         deserializeFromMethod <- prepareDeserializeFromMethodDer classInitial
         deserializeMethod <- prepareDeserializeMethodDer classInitial
 
-        let methods = [serializeMethod, deserializeMethod, deserializeFromMethod]
+        let whichMethod = 
+                let whichFn = whichFunction baseCppName tnames ("\treturn " <> baseCppName<> "::" <> prettyConName <> ";")
+                in CppMethod whichFn [OverrideQualifier] Virtual
+
+        let methods = [serializeMethod, deserializeMethod, deserializeFromMethod, whichMethod]
         return $ CppClass derCppName cppFields methods baseClasses tnames []
 processConstructor dec arg = trace ("FIXME: Con for " <> show arg) (return $ CppClass "" [] [] [] [] [])
 
