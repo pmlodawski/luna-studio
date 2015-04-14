@@ -154,7 +154,7 @@ buildInFolder (BuildConfig name version libs ghcOptions ccOptions includeDirs ca
                 : "luna-target-ghchs"
                 : "template-haskell"
                 : libs
-                ++ ["flowboxM-stdlib" | name /= "flowboxM-stdlib"]
+                ++ []
     src <- File.getSource rootPath srcPath
     hsc <- prepareSource diag src
     let cabal = case buildType of
