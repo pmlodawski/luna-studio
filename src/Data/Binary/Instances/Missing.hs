@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
+{-# LANGUAGE StandaloneDeriving #-}
 
 module Data.Binary.Instances.Missing where
 
@@ -12,6 +13,8 @@ import           Data.Binary         (Binary (..))
 import           Data.Text.Lazy      (Text)
 import qualified Data.Text.Lazy      as Text
 import           Prelude
+import Data.Version
+import GHC.Generics(Generic)
 
 
 
@@ -19,3 +22,5 @@ instance Binary Text where
     put text = put $ Text.unpack text
     get = Text.pack <$> get
 
+deriving instance Generic Version
+instance Binary Version
