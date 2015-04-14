@@ -15,6 +15,7 @@ module Flowbox.Data.Version (
 
 import           Control.Arrow                (first)
 import           Data.Aeson
+import           Data.Binary                  (Binary)
 import           Data.Map                     (Map)
 import qualified Data.Map                     as Map
 import           Data.Version                 as X
@@ -68,5 +69,4 @@ instance Default Version where
 
 instance ToJSON Version
 instance FromJSON Version
-
-
+instance Binary Version

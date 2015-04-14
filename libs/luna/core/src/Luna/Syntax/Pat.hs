@@ -8,13 +8,14 @@
 
 module Luna.Syntax.Pat where
 
-import Flowbox.Prelude
+import Data.Binary (Binary)
 
-import           Luna.Syntax.Type      (LType)
+import           Flowbox.Prelude
+import           Luna.Syntax.Label     (Label)
 import           Luna.Syntax.Lit       (Lit)
 import qualified Luna.Syntax.Name      as Name
-import           Luna.Syntax.Label     (Label)
 import           Luna.Syntax.Name.Path (NamePath)
+import           Luna.Syntax.Type      (LType)
 
 type VName = Name.VName NamePath
 type CName = Name.CName NamePath
@@ -22,7 +23,7 @@ type CName = Name.CName NamePath
 type LPat a = Label a (Pat a)
 type L      = Label
 
-data Pat a 
+data Pat a
     = App         { _src   :: LPat a    , _args :: [LPat a] }
     | Typed       { _pat   :: LPat a    , _cls  :: LType a  }
     | Grouped     { _pat   :: LPat a                        }
@@ -30,6 +31,8 @@ data Pat a
     | Tuple       { _items :: [LPat a ]                     }
     | Con         { _cname :: CName                         }
     | Var         { _vname :: VName                         }
-    | Wildcard 
+    | Wildcard
     | RecWildcard
     deriving (Show, Generic, Eq, Read)
+
+instance Binary a => Binary (Pat a)
