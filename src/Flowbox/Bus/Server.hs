@@ -19,7 +19,7 @@ import qualified Flowbox.Bus.Bus               as Bus
 import           Flowbox.Bus.BusT              (BusT (BusT))
 import qualified Flowbox.Bus.BusT              as BusT
 import qualified Flowbox.Bus.Data.Flag         as Flag
-import           Flowbox.Bus.Data.Message      (Message)
+import           Flowbox.Bus.Data.Message      (Message, CorrelationID)
 import qualified Flowbox.Bus.Data.Message      as Message
 import           Flowbox.Bus.Data.MessageFrame (MessageFrame (MessageFrame))
 import           Flowbox.Bus.Data.Topic        (Topic)
@@ -53,21 +53,21 @@ handle process = do
         Bus.reply crlID Flag.Enable $ last response
 
 
-runState :: BusEndPoints -> [Topic] -> s -> (Message -> StateT s IO [Message]) -> IO (Either Bus.Error ())
+runState :: BusEndPoints -> [Topic] -> s -> (CorrelationID -> Message -> StateT s IO [Message]) -> IO (Either Bus.Error ())
 runState endPoints topics s process = Bus.runBus endPoints $ handleLoopState topics s process
 
 
-handleLoopState :: [Topic] -> s -> (Message -> StateT s IO [Message]) -> Bus ()
+handleLoopState :: [Topic] -> s -> (CorrelationID -> Message -> StateT s IO [Message]) -> Bus ()
 handleLoopState topics s process = do
     mapM_ Bus.subscribe topics
     void $ BusT.runBusT $ runStateT (forever $ handleState process) s
 
 
-handleState :: (Message -> StateT s IO [Message]) -> StateT s BusT ()
+handleState :: (CorrelationID -> Message -> StateT s IO [Message]) -> StateT s BusT ()
 handleState process = do
     MessageFrame msg crlID _ _ <- lift $ BusT Bus.receive
     liftIO $ logger debug $ "Received request: " ++ (msg ^. Message.topic)
-    response <- hoist liftIO $ process msg
+    response <- hoist liftIO $ process crlID msg
     lift $ BusT $ unless (null response) $ do
         mapM_ (Bus.reply crlID Flag.Disable) (init response)
         Bus.reply crlID Flag.Enable $ last response

@@ -11,7 +11,7 @@
 module Flowbox.Bus.RPC.Server.Server where
 
 import           Flowbox.Bus.EndPoint             (BusEndPoints)
-import           Flowbox.Bus.RPC.HandlerMap       (HandlerMap)
+import           Flowbox.Bus.RPC.HandlerMap       (HandlerMap, HandlerMapWithCid)
 import qualified Flowbox.Bus.RPC.HandlerMap       as HandlerMap
 import qualified Flowbox.Bus.RPC.Server.Processor as Processor
 import qualified Flowbox.Bus.Server               as Server
@@ -26,5 +26,9 @@ logger = getLoggerIO $(moduleName)
 
 run :: BusEndPoints -> s -> HandlerMap s IO -> IO (Either String ())
 run endPoints s handlerMap =
-    Server.runState endPoints (HandlerMap.topics handlerMap) s $ Processor.process handlerMap
+    Server.runState endPoints (HandlerMap.topics handlerMap) s $ const $ Processor.process handlerMap
+
+runWithCid :: BusEndPoints -> s -> HandlerMapWithCid s IO -> IO (Either String ())
+runWithCid endPoints s handlerMap =
+    Server.runState endPoints (HandlerMap.topicsWithCid handlerMap) s $ Processor.processWithCid handlerMap
 
