@@ -190,12 +190,9 @@ def main:
 def main arg:
     x = 4
     y = [1, x]
-|], named "native code" [r|
-def main arg:
-    ```autoLift1 print #{arg}```
 |], named "hello world" [r|
-def print msg:
-    ```autoLift1 print #{msg}```
+foreign haskell def print msg:
+    autoLift1 print msg
 
 def main:
     hello = "hello"

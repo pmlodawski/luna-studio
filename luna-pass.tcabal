@@ -91,6 +91,7 @@ Test-Suite tests
                   flowbox-utils,
                   hspec,
                   MissingH,
+                  mtl,
                   pretty-show,
                   raw-strings-qq,
                   zippers
