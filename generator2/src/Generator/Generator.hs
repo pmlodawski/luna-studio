@@ -3,6 +3,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE DeriveGeneric             #-}
+{-# LANGUAGE NamedFieldPuns #-}
 
 module Generator.Generator where
 
@@ -281,6 +282,8 @@ instance HsTyped CppFieldSource where
     hsType (CppFieldSourceRec vst@(n, s, t)) = t
     hsType (CppFieldSourceNormal st@(s, t)) = t
 
+instance HsTyped CppField where
+    hsType (CppField{source}) = hsType source
 
 instance CppFormattablePart CppField where
     format field = fieldType field <> " " <> fieldName field
@@ -776,6 +779,10 @@ instance HasThinkableCppDependencies Dec where
         let dependencies = symbolDependencies dec
         cppDependenciesParts dependencies
 
+includesResultingFromAliases :: CppClass -> Q [CppInclude]
+includesResultingFromAliases cls = do
+    names <- concat <$> (sequence $ listAliasDependencies <$> hsType <$> (cls ^. classFields))  :: Q [Name]
+    return $ includeFor <$> names
 
 generateCppWrapperHlp :: Dec -> Q CppParts
 -- generateCppWrapperHlp arg | trace ("generateCppWrapperHlp: " <> show arg) False = undefined
@@ -787,11 +794,15 @@ generateCppWrapperHlp dec@(DataD cxt name tyVars cons names) =
 
         forwardDecsClasses <- sequence $ [makeForwardDeclaration baseClass]
 
-        let includes = (standardSystemIncludes, [])
+        additionalIncludes <- sequence $ includesResultingFromAliases <$> derClasses
+         -- traceM $ printf "$$$ %s -> %s" (show dec) (show additionalIncludes)
+        let includes    = (standardSystemIncludes, concat additionalIncludes)
         let forwardDecs = Set.fromList forwardDecsClasses
-        let aliases = []
-        let classes = baseClass : derClasses
-        let functions = []
+        let aliases     = []
+        let classes     = baseClass : derClasses
+        let functions   = []
+
+
 
         let mainParts = CppParts includes forwardDecs aliases classes functions
 
