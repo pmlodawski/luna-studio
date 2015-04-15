@@ -12,30 +12,32 @@ Library
 
     GHC-Options:    -Wall -O2
 
-    Extensions:   DoAndIfThenElse,
+    Extensions:   ConstraintKinds,
+                  DefaultSignatures,
+                  DeriveFoldable,
+                  DeriveFunctor,
+                  DeriveGeneric,
+                  DeriveTraversable,
+                  DoAndIfThenElse,
+                  FlexibleContexts,
+                  FlexibleInstances,
+                  GeneralizedNewtypeDeriving,
+                  MultiParamTypeClasses,
                   NoImplicitPrelude,
                   TemplateHaskell,
                   OverloadedStrings,
-                  DeriveGeneric,
                   StandaloneDeriving,
-                  FlexibleContexts,
-                  MultiParamTypeClasses,
-                  DefaultSignatures,
-                  DeriveFunctor,
-                  DeriveTraversable,
-                  DeriveFoldable,
-                  FlexibleInstances,
-                  LambdaCase,
-                  ConstraintKinds,
-                  GeneralizedNewtypeDeriving
+                  LambdaCase
 
     Exposed-modules: `findmodules('src', '.*\.hs', exclude='System.Logging')`
 
     Build-Depends:  aeson >= 0.7.0.5,
-                    base,
                     ansi-terminal,
+                    base,
+                    binary,
                     bytestring,
                     containers,
+                    convertible,
                     data-default,
                     directory,
                     dlist,
@@ -44,6 +46,7 @@ Library
                     fgl,
                     filepath,
                     generic-deriving,
+                    hashable,
                     hslogger,
                     hspec,
                     lens,
@@ -63,9 +66,7 @@ Library
                     transformers,
                     template-haskell,
                     QuickCheck,
-                    unordered-containers,
-                    convertible,
-                    hashable
+                    unordered-containers
 
   if os(windows)
     Build-Depends:  Win32
@@ -96,5 +97,5 @@ Test-Suite tests
   GHC-Options:    -Wall -threaded -O2
   Extensions:     NoImplicitPrelude
   Build-Depends:  base,
-                  flowbox-utils,
-                  hspec
+                  hspec,
+                  flowbox-utils

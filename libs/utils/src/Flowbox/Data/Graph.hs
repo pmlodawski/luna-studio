@@ -35,12 +35,13 @@ module Flowbox.Data.Graph (
     topsortStable,
 ) where
 
+import           Data.Binary          (Binary)
 import           Data.Graph.Inductive hiding (Graph, Node)
 import qualified Data.Graph.Inductive as DG
 import qualified Data.List            as List
 import           Data.Maybe           (fromJust)
 
-import Flowbox.Prelude hiding (fromJust, pre, (&))
+import Flowbox.Prelude hiding (pre, (&))
 
 
 
@@ -48,7 +49,7 @@ type Graph a b = DG.Gr a b
 type Vertex    = DG.Node
 type LVertex a = DG.LNode a
 
-
+instance (Binary a, Binary b) => Binary (Graph a b)
 instance Default (Graph a b) where
     def = DG.empty
 

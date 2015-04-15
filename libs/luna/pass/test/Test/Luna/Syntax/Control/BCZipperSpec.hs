@@ -21,7 +21,7 @@ import           Luna.Syntax.Expr             (LExpr)
 import           Luna.Syntax.Label            (Label (Label))
 import           Luna.Syntax.Module           (LModule)
 import qualified Test.Luna.Sample.Code        as SampleCode
-import qualified Test.Luna.Syntax.Common      as Common
+import qualified Test.Luna.Syntax.AST         as AST
 
 
 main :: IO ()
@@ -29,7 +29,7 @@ main = hspec spec
 
 
 getAST :: IO (LModule Enum.IDTag (LExpr Enum.IDTag ()))
-getAST = fst <$> Common.getAST SampleCode.zipperTestModule
+getAST = fst <$> AST.getAST SampleCode.zipperTestModule
 
 
 --zipTo :: (a -> Bool) -> BCZipper h j [a] -> Maybe (BCZipper h j [a] :>> a)

@@ -21,8 +21,9 @@ data EdgeView = EdgeView { _src :: PortDescriptor
                          } deriving (Show, Read, Ord, Eq)
 
 
-makeLenses(''EdgeView)
+makeLenses ''EdgeView
 
 fromEdge :: Edge -> Maybe EdgeView
 fromEdge (Edge.Monadic ) = Nothing
-fromEdge (Edge.Data s d) = Just $ EdgeView (Port.toList s) (Port.toList d)
+fromEdge (Edge.Data s d) = Just $ EdgeView (Port.toList $ unwrap s)
+                                           (Port.toList $ unwrap d)

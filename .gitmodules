@@ -38,3 +38,6 @@
 	path = third-party/accelerate-cuda
 	url = https://github.com/flowbox-public/accelerate-cuda.git
 	branch = backports/0.16
+[submodule "third-party/fgl"]
+	path = third-party/fgl
+	url = https://github.com/pmlodawski/fgl.git
