@@ -4,8 +4,9 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE RankNTypes           #-}
+{-# LANGUAGE TemplateHaskell      #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE RankNTypes #-}
 
 {-# LANGUAGE OverlappingInstances #-}
 
@@ -13,16 +14,17 @@ module Luna.Syntax.Decl where
 
 import Flowbox.Prelude hiding (Cons, traverse)
 
+import Data.Binary              (Binary)
 import GHC.Generics             (Generic)
-import Luna.Syntax.Type         (LType)
-import Luna.Syntax.Name         (VNameP, TNameP, CNameP, TVNameP, NameBaseP)
-import Luna.Syntax.Native       (Native)
-import Luna.Syntax.Label        (Label)
-import Luna.Syntax.Pat          (LPat)
-import Luna.Syntax.Name.Pattern (ArgPat)
 import Luna.Syntax.Foreign      (Foreign)
-import Luna.Syntax.Label        (Label(Label))
+import Luna.Syntax.Label        (Label)
+import Luna.Syntax.Label        (Label (Label))
+import Luna.Syntax.Name         (CNameP, NameBaseP, TNameP, TVNameP, VNameP)
+import Luna.Syntax.Name.Pattern (ArgPat)
+import Luna.Syntax.Native       (Native)
+import Luna.Syntax.Pat          (LPat)
 import Luna.Syntax.Pragma       (Pragma)
+import Luna.Syntax.Type         (LType)
 
 import qualified Prelude
 
@@ -101,7 +103,7 @@ makeLenses ''FuncDecl
 
 -- === DataBuilder ===
 
-data DataBuilder a e = DataBuilder { _decl    :: DataDecl a e 
+data DataBuilder a e = DataBuilder { _decl    :: DataDecl a e
                                    , _dfields :: [LField a e]
                                    } deriving (Show, Generic, Eq, Read)
 makeLenses ''DataBuilder
@@ -113,4 +115,12 @@ addDecl   d = (decl . dataDeclDecls) %~ (++ [d])
 addField  f = dfields %~ (++ [f])
 addFields f = dfields %~ (++ f)
 
-
+instance (Binary a, Binary e) => Binary (Cons a e)
+instance (Binary a, Binary e) => Binary (DataDecl a e)
+instance (Binary a, Binary e) => Binary (Decl a e)
+instance (Binary a, Binary e) => Binary (Field a e)
+instance (Binary a, Binary e) => Binary (FuncDecl a e [e])
+instance (Binary a, Binary e) => Binary (FuncDecl a e ForeignCode)
+instance Binary Imp
+instance Binary ImpTgt
+instance (Binary a, Binary e) => Binary (ForeignDecl a e)

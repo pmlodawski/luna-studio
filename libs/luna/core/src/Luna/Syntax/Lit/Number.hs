@@ -10,11 +10,13 @@
 
 module Luna.Syntax.Lit.Number where
 
-import           Control.Lens
+import Control.Lens
+import Data.Binary  (Binary)
+import GHC.Generics
+
 import           Flowbox.Generics.Deriving.QShow
-import           Flowbox.Prelude                 (Eq, Ord, Maybe, Maybe (Just, Nothing), Read, Show, concat, (++))
+import           Flowbox.Prelude                 (Eq, Maybe, Maybe (Just, Nothing), Ord, Read, Show, concat, (++))
 import qualified Flowbox.Prelude                 as P
-import           GHC.Generics
 
 
 
@@ -38,9 +40,13 @@ data Number = Number { _base :: Base
             deriving (Show, Eq, Ord, Generic, Read)
 
 
+instance Binary Sign
+instance Binary Repr
+instance Binary Number
 instance QShow Sign
 instance QShow Repr
 instance QShow Number
+
 makeLenses ''Repr
 makeLenses ''Number
 

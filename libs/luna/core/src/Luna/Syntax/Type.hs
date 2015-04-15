@@ -8,11 +8,12 @@
 
 module Luna.Syntax.Type where
 
-import Flowbox.Prelude
+import Data.Binary (Binary)
 
+import Flowbox.Prelude
 import Luna.Syntax.Label     (Label)
+import Luna.Syntax.Name      (TNameP, VNameP)
 import Luna.Syntax.Name.Path (NamePath)
-import Luna.Syntax.Name      (VNameP, TNameP)
 
 
 data Type a
@@ -23,7 +24,7 @@ data Type a
     | List     { _item     :: LType a                            }
     | Con      { _segments :: [TNameP]                           }
     | Meta     (LMeta a)
-    | Wildcard 
+    | Wildcard
     deriving (Show, Generic, Eq, Read)
 
 
@@ -35,3 +36,6 @@ data Meta = MetaCons TNameP
           deriving (Show, Generic, Eq, Read)
 
 type LMeta a = Label a Meta
+
+instance Binary Meta
+instance Binary a => Binary (Type a)

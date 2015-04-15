@@ -4,22 +4,27 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE DeriveGeneric             #-}
+{-# LANGUAGE LambdaCase                #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE ViewPatterns              #-}
 
 module Luna.Syntax.Name where
 
-import           Flowbox.Prelude
+import Flowbox.Prelude
 
+import           Data.Binary     (Binary)
+import qualified Data.Char       as Char
+import           Data.Char.Class (LetterCase, isLower, isUpper)
+import           Data.String     (IsString, fromString)
+import qualified Data.Text.Lazy  as Text
 import           GHC.Generics
-import           Data.String             (IsString, fromString)
 
 import qualified Luna.Syntax.Name.Assert as Assert
-import           Data.Char.Class          (LetterCase, isLower, isUpper)
-import qualified Luna.Syntax.Name.Path   as NamePath
-import           Luna.Syntax.Name.Path   (NamePath(NamePath))
 import           Luna.Syntax.Name.Hash   (Hashable, hash)
+import           Luna.Syntax.Name.Path   (NamePath (NamePath))
+import qualified Luna.Syntax.Name.Path   as NamePath
 
 ----------------------------------------------------------------------
 -- Utils
@@ -27,6 +32,11 @@ import           Luna.Syntax.Name.Hash   (Hashable, hash)
 
 unsafeConvert :: (Wrapper m, Wrapper n) => m a -> n a
 unsafeConvert = rewrap
+
+mkNameBaseAccessor :: Text -> NameBaseP
+mkNameBaseAccessor s  = if Text.null s || Char.isLower (Text.head s)
+    then VarName  $ fromText s
+    else TypeName $ fromText s
 
 ----------------------------------------------------------------------
 -- Data types
@@ -68,9 +78,9 @@ instance IsString (TName  NamePath) where fromString = tname  . fromString
 instance IsString (CName  NamePath) where fromString = cname  . fromString
 instance IsString (TVName NamePath) where fromString = tvname . fromString
 
-instance IsString (VName  String)   where fromString = vname 
-instance IsString (TName  String)   where fromString = tname 
-instance IsString (CName  String)   where fromString = cname 
+instance IsString (VName  String)   where fromString = vname
+instance IsString (TName  String)   where fromString = tname
+instance IsString (CName  String)   where fromString = cname
 instance IsString (TVName String)   where fromString = tvname
 
 instance ToString a => ToString (VName  a) where toString = toString . unwrap
@@ -88,7 +98,11 @@ instance ToText a => ToText (TName  a) where toText = toText . unwrap
 instance ToText a => ToText (CName  a) where toText = toText . unwrap
 instance ToText a => ToText (TVName a) where toText = toText . unwrap
 
-
+instance Binary a => Binary (VName  a)
+instance Binary a => Binary (TName  a)
+instance Binary a => Binary (CName  a)
+instance Binary a => Binary (TVName a)
+instance Binary a => Binary (NameBase a)
 
 instance Wrap   VName  where wrap              = VName
 instance Wrap   TName  where wrap              = TName
@@ -98,7 +112,7 @@ instance Unwrap VName  where unwrap (VName  a) = a
 instance Unwrap TName  where unwrap (TName  a) = a
 instance Unwrap CName  where unwrap (CName  a) = a
 instance Unwrap TVName where unwrap (TVName a) = a
-instance Unwrap NameBase where 
+instance Unwrap NameBase where
     unwrap = \case
         VarName  a -> unwrap a
         TypeName a -> unwrap a
@@ -126,5 +140,5 @@ instance Hashable a b => Hashable (NameBase a) b where hash = hash . unwrap
 
 
 instance (IsString a) => IsString (NameBase a) where
-	fromString s = if isLower s then VarName  (VName $ fromString s)
-		                        else TypeName (TName $ fromString s)
+    fromString s = if isLower s then VarName  (VName $ fromString s)
+                                else TypeName (TName $ fromString s)

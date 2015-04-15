@@ -14,9 +14,9 @@ module Flowbox.Batch.Batch (
 
 import           Control.Monad.State        as X
 import           Control.Monad.Trans.Either as X
-import           Data.Int                   (Int32)
 import           Data.Bimap                 (Bimap)
 import qualified Data.Bimap                 as Bimap
+import           Data.Int                   (Int32)
 
 import           Flowbox.Batch.Project.ProjectManager (ProjectManager)
 import qualified Flowbox.Batch.Project.ProjectManager as ProjectManager

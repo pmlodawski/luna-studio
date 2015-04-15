@@ -23,6 +23,7 @@ message URM {
         message Commit {
             message Request { 
                 required int32  projectID   = 1;
+                repeated int32  messageIDs  = 2;
             }
             message Status {
                 required Request request = 1;

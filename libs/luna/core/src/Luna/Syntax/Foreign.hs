@@ -9,7 +9,9 @@ module Luna.Syntax.Foreign where
 
 import Flowbox.Prelude
 
+import           Data.Binary (Binary)
 import qualified Prelude
+
 
 
 data Foreign a = Foreign Target a
@@ -19,3 +21,6 @@ data Foreign a = Foreign Target a
 data Target = Haskell
             | CPP
             deriving (Show, Generic, Eq, Read)
+
+instance Binary a => Binary (Foreign a)
+instance Binary Target

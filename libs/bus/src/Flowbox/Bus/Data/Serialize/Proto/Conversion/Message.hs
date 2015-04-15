@@ -9,13 +9,17 @@
 
 module Flowbox.Bus.Data.Serialize.Proto.Conversion.Message where
 
-import qualified Data.ByteString.Lazy        as ByteString
+import qualified Data.ByteString.Lazy as ByteString
 
-import           Flowbox.Bus.Data.Message    as M
-import           Flowbox.Data.Convert
-import           Flowbox.Prelude
-import           Generated.Proto.Bus.Message as Gen
+import Flowbox.Bus.Data.Message    as M
+import Flowbox.Data.Convert
+import Flowbox.Prelude
+import Generated.Proto.Bus.Message as Gen
 
 instance ConvertPure M.Message Gen.Message where
     encodeP (M.Message topic message) = Gen.Message (encodeP topic) (ByteString.fromStrict message)
     decodeP (Gen.Message topic message) = M.Message (decodeP topic) (ByteString.toStrict   message)
+
+instance ConvertPure M.RequestID M.RequestID where
+    encodeP = id
+    decodeP = id

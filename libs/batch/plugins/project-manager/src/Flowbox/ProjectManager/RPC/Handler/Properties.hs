@@ -7,8 +7,8 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Flowbox.ProjectManager.RPC.Handler.Properties where
 
-import qualified Data.Bimap    as Bimap   
-import           Data.Maybe    (isJust)
+import qualified Data.Bimap as Bimap
+import           Data.Maybe (isJust)
 
 import qualified Flowbox.Batch.Batch                                                                           as Batch
 import qualified Flowbox.Batch.Handler.Common                                                                  as Batch
@@ -19,8 +19,8 @@ import           Flowbox.Bus.RPC.RPC                                            
 import           Flowbox.Data.Convert
 import           Flowbox.Prelude                                                                               hiding (Context)
 import           Flowbox.ProjectManager.Context                                                                (Context)
-import           Flowbox.ProjectManager.RPC.Handler.Graph                                                      (mapID) 
-import qualified Flowbox.ProjectManager.RPC.Topic                                                             as Topic
+import           Flowbox.ProjectManager.RPC.Handler.Graph                                                      (mapID)
+import qualified Flowbox.ProjectManager.RPC.Topic                                                              as Topic
 import           Flowbox.System.Log.Logger
 import           Flowbox.UR.Manager.RPC.Handler.Handler                                                        (prepareResponse)
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Properties.Get.Request as GetNodeProperties

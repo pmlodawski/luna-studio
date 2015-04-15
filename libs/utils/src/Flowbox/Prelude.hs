@@ -6,6 +6,7 @@
 ---------------------------------------------------------------------------
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE LambdaCase                #-}
 {-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
@@ -20,6 +21,7 @@ import           Control.Lens                       as X
 import           Control.Monad                      as X (MonadPlus, mplus, mzero, unless, void, when)
 import           Control.Monad.IO.Class             as X (MonadIO, liftIO)
 import           Control.Monad.Trans                as X (MonadTrans, lift)
+import           Data.Binary.Instances.Missing      ()
 import           Data.Convertible                   as X (Convertible (safeConvert), convert)
 import           Data.Convertible.Instances.Missing as X
 import           Data.Default                       as X
@@ -40,7 +42,6 @@ import           GHC.Generics                       as X (Generic)
 import           Prelude                            hiding (mapM, mapM_, print, putStr, putStrLn, (++), (.))
 import qualified Prelude
 import           Text.Show.Pretty                   (ppShow)
-
 
 
 (++) :: Monoid a => a -> a -> a
