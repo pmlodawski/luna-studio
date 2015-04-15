@@ -30,7 +30,7 @@ import           Flowbox.Bus.Data.Topic                   (Topic)
 import           Flowbox.Bus.RPC.RPC                      (RPC)
 import           Flowbox.Prelude                          hiding (error)
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.Text.ProtocolBuffers             as Proto
+import qualified Flowbox.Text.ProtocolBuffers as Proto
 
 
 
