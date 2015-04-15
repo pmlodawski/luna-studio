@@ -6,9 +6,11 @@ import System.IO.Unsafe
 
 import Flowbox.Graphics.Mockup.Generator
 import Flowbox.Graphics.Mockup.Keying
+import Flowbox.Graphics.Composition.Keying
 import Flowbox.Graphics.Mockup.Basic
 import Flowbox.Prelude
 import Flowbox.Graphics.Color.Color
+import Control.Monad
 
 import TestHelpers
 
@@ -36,15 +38,16 @@ spec = do
                         --shouldBeCloseTo testPath SizeWise actualImage (unsafePerformIO expectedImage)
 
             do
-                let testName = "conicalLuna"
-                let testPath = specPath++testName
+                let testName = "keyerLuna"
+                let actualImage = liftM (keyerLuna Greenscreen (KeyerThresholds 0 1 1 1) ) $ loadImageLuna "/home/chris/key.jpg"
+                defaultReferenceTestM testName specPath actualImage
 
-                describe testName $ do
-                    let actualImage = conicalLuna 100 120
-                    let expectedImage = getDefaultTestPic specPath testName
-                    --it "should save img" $ do
-                    --  testSave actualImage `shouldReturn` ()
-                    describe "should match reference image" $ do
-                        it "in pixel-wise metric" $ do
-                            pending
-                            --shouldBeCloseTo testPath PixelWise actualImage (unsafePerformIO expectedImage)
+                --describe testName $ do
+                   
+                --    -- let expectedImage = getDefaultTestPic specPath testName
+                --    it "should save img" $ do
+                --        (testSave=<<actualImage) `shouldReturn` ()
+                --    describe "should match reference image" $ do
+                --        it "in pixel-wise metric" $ do
+                --            pending
+                --            shouldBeCloseTo testPath PixelWise actualImage (unsafePerformIO expectedImage)
