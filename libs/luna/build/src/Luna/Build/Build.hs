@@ -100,7 +100,8 @@ prepareSource diag src = do
             let mInfo = MI.ModuleInfo (QualPath [] (fromString liFile)) mempty mempty sa1 mempty
             -- ppPrint ModuleInfo
             liftIO $ MI.writeModInfoToFile mInfo
-
+            printSA diag sa1   
+           
             printHeader "Stage2"
             (ast, astinfo) <- Pass.run3_ Stage2.pass (Namespace [] sa1) astinfo ast
             printAST diag ast
@@ -111,10 +112,11 @@ prepareSource diag src = do
 
             printHeader "SA2"
             sa             <- Pass.run2_ SA.pass sa ast
-            --ppPrint sa
-
+            printSA diag (_info . _namespace $ sa)
+            let sa2 = _info . _namespace $ sa
+            
             printHeader "ImplScopes"
-            (ast, astinfo) <- Pass.run3_ ImplScopes.pass astinfo sa1 ast
+            (ast, astinfo) <- Pass.run3_ ImplScopes.pass astinfo sa2 ast
             printAST diag ast
 
             printHeader "ImplCalls"
@@ -130,7 +132,7 @@ prepareSource diag src = do
 
             printHeader "HAST"
             hast           <- Pass.run2_ HASTGen.pass importInfo ast
-            -- ppPrint hast
+            printHAST diag hast
 
             printHeader "HSC"
             hsc            <- Pass.run1_ HSC.pass hast
@@ -154,7 +156,7 @@ buildInFolder (BuildConfig name version libs ghcOptions ccOptions includeDirs ca
                 : "luna-target-ghchs"
                 : "template-haskell"
                 : libs
-                ++ []
+                ++ ["flowboxM-stdlib" | name /= "flowboxM-stdlib"]
     src <- File.getSource rootPath srcPath
     hsc <- prepareSource diag src
     let cabal = case buildType of
