@@ -37,9 +37,13 @@ makeLenses ''ProjectContext
 
 type Context = Map Int ProjectContext
 
-
+-- do wywalenia, uzywaj mempty
 mk :: Context
 mk = Map.empty
 
 emptyProjectContext :: ProjectContext
 emptyProjectContext = ProjectContext [] [] []
+
+-- FIXME
+--instance Default ProjectContext where
+--	def = ProjectContext [] [] []
