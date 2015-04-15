@@ -14,7 +14,7 @@ import Flowbox.Prelude
 
 type ID = Int
 
-newtype IDTag = IDTag ID deriving (Show, Generic, Num, Eq)
+newtype IDTag = IDTag ID deriving (Show, Generic, Num, Eq, Read)
 
 class Enumerated a where
     id  :: a -> ID
@@ -27,7 +27,3 @@ instance Enumerated IDTag where
 instance Enumerated Int where
     id  i = i
     tag i = i
-
-instance Default IDTag where
-    def = IDTag def
-

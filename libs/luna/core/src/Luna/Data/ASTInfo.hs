@@ -5,17 +5,19 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE TemplateHaskell #-}
-
+{-# LANGUAGE TemplateHaskell           #-}
 
 module Luna.Data.ASTInfo where
 
-import           Flowbox.Prelude hiding (id)
-import           Control.Monad.RWS (RWST, get, put)
+import Control.Monad.RWS (RWST, get, put)
+import Flowbox.Prelude   hiding (id)
+
+
 
 data ASTInfo = ASTInfo { _lastID :: Int } deriving (Show)
 
-makeLenses (''ASTInfo)
+
+makeLenses ''ASTInfo
 
 
 incID :: ASTInfo -> ASTInfo
