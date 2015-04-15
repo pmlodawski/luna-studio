@@ -5,29 +5,30 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
+{-# LANGUAGE DeriveGeneric             #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE TemplateHaskell           #-}
-{-# LANGUAGE DeriveGeneric             #-}
-{-# LANGUAGE FunctionalDependencies    #-}
-
 
 module Luna.Syntax.Name.Pattern where
 
-
-import GHC.Generics (Generic)
-
-import           Flowbox.Prelude
-import qualified Data.Map        as Map
-import           Data.Map        (Map)
-import           Flowbox.Generics.Deriving.QShow
-import           Data.String.Utils (join)
+import           Data.Binary       (Binary)
+import           Data.Foldable     (Foldable)
 import           Data.List         (intersperse)
-import           Data.String             (IsString, fromString)
-import           Luna.Syntax.Name.Path (NamePath(NamePath))
-import           Data.Maybe (isNothing)
-import           Data.Foldable (Foldable)
-import           Luna.Syntax.Name.Hash (Hashable, hash)
-import           Luna.Syntax.Arg (Arg(Arg))
+import           Data.Map          (Map)
+import qualified Data.Map          as Map
+import           Data.Maybe        (isNothing)
+import           Data.String       (IsString, fromString)
+import           Data.String.Utils (join)
+import           GHC.Generics      (Generic)
+
+import Flowbox.Generics.Deriving.QShow
+import Flowbox.Prelude
+import Luna.Syntax.Arg                 (Arg (Arg))
+import Luna.Syntax.Name.Hash           (Hashable, hash)
+import Luna.Syntax.Name.Path           (NamePath (NamePath))
 
 ----------------------------------------------------------------------
 -- Type classes
@@ -44,8 +45,8 @@ class SegName s n | s -> n where
 -- Data types
 ----------------------------------------------------------------------
 
-data NamePat base arg = NamePat { _prefix   :: Maybe arg
-                                , _base     :: Segment base arg
+data NamePat base arg = NamePat { _prefix      :: Maybe arg
+                                , _base        :: Segment base arg
                                 , _segmentList :: [Segment SegmentName arg]
             -- FIXME [kgdk -> wd]: ^-- better name for this. Was '_segments', but this name conflicts
             -- with method in NamePatternClass
@@ -109,7 +110,7 @@ args (NamePat pfx base segs) = allArgs
               Just a  -> a : postArgs
               Nothing -> postArgs
 
-segmentNames = fmap segName . segments 
+segmentNames = fmap segName . segments
 
 
 ----------------------------------------------------------------------
@@ -122,7 +123,7 @@ instance NamePatternClass (NamePat SegmentName arg) (Segment SegmentName arg) wh
         where sgmtName (Segment base _) = base
 
 instance NamePatternClass NamePatDesc SegmentDesc where
-    segments (NamePatDesc _ base segs) = base : segs 
+    segments (NamePatDesc _ base segs) = base : segs
     toNamePath (NamePatDesc _ base segs) = NamePath (sgmtName base) (fmap sgmtName segs)
         where sgmtName (SegmentDesc base _) = base
 
@@ -132,9 +133,11 @@ instance Hashable base Text => Hashable (NamePat base arg) Text where
               segNames = fSegment hash base : fmap (fSegment hash) segs
 
 
-
 instance SegName (Segment base arg) base where
     segName (Segment base _) = base
 
 instance SegName SegmentDesc SegmentName where
     segName (SegmentDesc base _) = base
+
+instance (Binary base, Binary arg) => Binary (NamePat base arg)
+instance (Binary base, Binary arg) => Binary (Segment base arg)
