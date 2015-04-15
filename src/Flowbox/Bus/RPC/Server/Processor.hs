@@ -46,13 +46,15 @@ singleResultWithCid f cid a = do
 noResult :: MonadIO m => (a -> m ()) -> a -> m ([Response], [Message])
 noResult f a = f a >> return ([], [])
 
-
+-- FIXME: typ malo mowi
 optResult :: MonadIO m => (a -> m (Maybe b)) -> a -> m ([b], [Message])
 optResult f a = do
     arr <- liftM Maybe.maybeToList $ f a
     return (arr, [])
 
-
+-- FIXME!!! process i processWithCid - uogolnic
+-- Zapytaj o to Piotrka
+-- jezeli brak pomyslow, to zawolajcie WD
 process :: (Catch.MonadCatch m, MonadIO m, Functor m)
         => HandlerMap s m -> Message -> StateT s m [Message]
 process handlerMap msg = HandlerMap.lookupAndCall handlerMap call topic where
