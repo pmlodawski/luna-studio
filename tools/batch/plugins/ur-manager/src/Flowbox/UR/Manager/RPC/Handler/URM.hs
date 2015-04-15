@@ -119,7 +119,7 @@ tBegin cid request@(TBegin.Request tprojectID tdescription) = do
     let projectID   = decodeP tprojectID
         description = decodeP tdescription
         pushMid     = maybe Context.emptyProjectContext (Context.trans %~ ((cid ^. Message.messageID, description) :))
-    lift . put . Map.alter (Just pushMid) projectID =<< lift get
+    lift . put . Map.alter (Just . pushMid) projectID =<< lift get
     logger warning $ "Opening transaction: " <> description <> " [" <> show cid <> "]"
     return $ TBegin.Status request
 
@@ -138,7 +138,7 @@ tCommit request@(TCommit.Request tprojectID tmessageIDs) = do
                           transaction = (concatMap (^. _1) t, snd tmid, Nothing)
                       in  ProjectContext (transaction : notT <> rest) redo []
             (_:cx) -> Context.trans .~ cx $ pc
-    logger warning $ maybe "Nothing to commit" (("closing transaction[" <> (show trans) <> "]: " <>) . snd) $ listToMaybe trans
+    logger warning $ maybe "Nothing to commit" (((("closing transaction[" <> (show trans)) <> "]: ") <>) . snd) $ listToMaybe trans
     lift $ put $ Map.insert projectID newPC contextMap
     return $ TCommit.Status request
 

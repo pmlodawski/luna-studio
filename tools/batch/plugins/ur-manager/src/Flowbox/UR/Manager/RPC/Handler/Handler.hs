@@ -6,24 +6,23 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE RankNTypes      #-}
-{-# LANGUAGE TemplateHaskell #-}
+--{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.UR.Manager.RPC.Handler.Handler where
 
 import Control.Monad.Trans.State
-import           Data.Maybe      (maybeToList)
+import Data.Maybe                (maybeToList)
 
 import qualified Flowbox.Batch.Project.Project              as Project
 import           Flowbox.Bus.Data.Message                   (CorrelationID, Message)
 import qualified Flowbox.Bus.Data.Message                   as Message
-import           Flowbox.Bus.Data.Topic                     (Topic)
-import           Flowbox.Bus.Data.Topic                     (status, (/+))
+import           Flowbox.Bus.Data.Topic                     (Topic, status, (/+))
 import           Flowbox.Bus.RPC.HandlerMap                 (HandlerMapWithCid)
 import qualified Flowbox.Bus.RPC.HandlerMap                 as HandlerMap
 import           Flowbox.Bus.RPC.RPC                        (RPC)
 import qualified Flowbox.Bus.RPC.Server.Processor           as Processor
 import           Flowbox.Data.Convert
-import           Flowbox.Prelude                            hiding (error, Context)
+import           Flowbox.Prelude                            hiding (Context, error)
 import qualified Flowbox.Text.ProtocolBuffers               as Proto
 import           Flowbox.UR.Manager.Context                 as Context
 import qualified Flowbox.UR.Manager.RPC.Handler.Maintenance as Maintenance
@@ -36,13 +35,13 @@ import qualified Generated.Proto.Urm.URM.Register.Request   as Register
 --data Message = RegisterRequest
 --             | ...
 
-data Respond = Status
-             | Update
+--data Respond = Status
+--             | Update
 
-handlerMap msg = case msg of
-    RegisterRequest         -> respond $ respond             Status URMHandler.register
-    RegisterMultipleRequest -> respond $ respond             Status URMHandler.register
-    RedoRequest             -> respond $ respondWithFeedback Status URMHandler.register
+--handlerMap msg = case msg of
+--    RegisterRequest         -> respond $ respond             Status URMHandler.register
+--    RegisterMultipleRequest -> respond $ respond             Status URMHandler.register
+--    RedoRequest             -> respond $ respondWithFeedback Status URMHandler.register
 
 -- TODO zrefaktoruj funckje by byly przejrzystsze - fun, a , b, c ?
 handlerMap :: HandlerMapWithCid Context IO
@@ -50,7 +49,7 @@ handlerMap callback = HandlerMap.fromList
     [ (Topic.urmRegisterRequest          , respond status URMHandler.register)
     , (Topic.urmRegisterMultipleRequest  , respond status URMHandler.registerMultiple)
     , (Topic.urmRedoRequest              , respond2 status $ const URMHandler.redo)
-    , (Topic.urmPingRequest              , respond status $ const Maintenance.ping) 
+    , (Topic.urmPingRequest              , respond status $ const Maintenance.ping)
     , (Topic.urmUndoRequest              , respond2 status $ const URMHandler.undo)
     , (Topic.urmClearStackRequest        , respond status $ const URMHandler.clearStack)
     , (Topic.urmTransactionBeginRequest  , respond status URMHandler.tBegin)
@@ -73,15 +72,15 @@ fun = (encodeP .) . Message.mk . ("undone." ++)
 
 
 makeMsgArr :: (Proto.ReflectDescriptor request, Proto.Wire request) => request -> Maybe Topic -> [Message]
-makeMsgArr request = maybe [] $ return . (flip Message.mk request)
+makeMsgArr request = maybe [] $ return . flip Message.mk request
 
 
 prepareResponse :: (Proto.Serializable undoMessage, Proto.Serializable redoMessage, Proto.Serializable urmMessage, Monad m)
                 => Project.ID -> Topic -> undoMessage -> Topic -> redoMessage -> Maybe Topic -> String -> urmMessage -> m ([urmMessage], [Message])
-prepareResponse projectID undoTopic undoAction redoTopic redoAction urmTopic description = return . (flip (,) urmMessages . return)
+prepareResponse projectID undoTopic undoAction redoTopic redoAction urmTopic description = return . flip (,) urmMessages . return
     where
-        urmMessages = makeMsgArr (Register.Request (fun undoTopic $ undoAction)
-                                                   (fun redoTopic $ redoAction)
+        urmMessages = makeMsgArr (Register.Request (fun undoTopic undoAction)
+                                                   (fun redoTopic redoAction)
                                                    (encodeP projectID)
                                                    (encodeP description)
                                  ) urmTopic
