@@ -8,17 +8,20 @@
 
 module Luna.Syntax.Lit where
 
-import           GHC.Generics
-import           Luna.Syntax.Lit.Number (Number)
+import Data.Binary            (Binary)
+import GHC.Generics
+import Luna.Syntax.Lit.Number (Number)
 
-import           Prelude (Show, Eq, Read, Ord)
-import qualified Prelude
 import           Luna.Syntax.Label (Label)
+import           Prelude           (Eq, Ord, Read, Show)
+import qualified Prelude
 
 
 type LLit a = Label a Lit
 
 data Lit = Char    { _char :: Prelude.Char   }
-         | String  { _str  :: Prelude.String }
-         | Number  { _num  :: Number         }
+         | String  { _str :: Prelude.String }
+         | Number  { _num :: Number         }
          deriving (Show, Generic, Eq, Read)
+
+instance Binary Lit

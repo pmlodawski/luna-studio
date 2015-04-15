@@ -15,6 +15,7 @@ module Flowbox.Data.Version (
 
 import           Control.Arrow                (first)
 import           Data.Aeson
+import           Data.Binary                  (Binary)
 import           Data.Map                     (Map)
 import qualified Data.Map                     as Map
 import           Data.Version                 as X
@@ -46,8 +47,6 @@ readVersionMaybe s = case [ x | (x,"") <- ReadP.readP_to_S parseVersion $ s] of
 -- INSTANCES
 ------------------------------------------------------------------------
 
-deriving instance Generic Version
-
 instance ToString Name where
   toString (Name name) = name
 
@@ -68,5 +67,3 @@ instance Default Version where
 
 instance ToJSON Version
 instance FromJSON Version
-
-
