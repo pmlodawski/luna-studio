@@ -119,13 +119,14 @@ nodeAdd request@(NodeAdd.Request tnode tbc tlibID tprojectID astID) undoTopic = 
                                                       ) $ context
     logger error $ "oldNodeID " ++ show oldNodeID
     logger error $ "newNodeID " ++ show newNodeID
+    -- ZWIEKSZYC CZYTELNOSC nizej
     prepareResponse projectID
                     Topic.projectLibraryAstFunctionGraphNodeRemoveRequest
                     (NodeRemove.Request (Sequence.singleton $ encodeP newNodeID) tbc tlibID tprojectID astID)
                     Topic.projectLibraryAstFunctionGraphNodeAddRequest
                     (NodeAdd.Request (encode (mapID context Bimap.lookup newNodeID, node)) tbc tlibID tprojectID astID)
                     undoTopic
-                    ("add node " ++ (nodeName node))
+                    ("add node " ++ nodeName node)
                     =<< NodeAdd.Update request (encode (newNodeID, node)) <$> Batch.getUpdateNo
 
 nodeModify :: NodeModify.Request -> Maybe Topic -> RPC Context IO ([NodeModify.Update], [Message])
@@ -200,6 +201,8 @@ nodeRemove (NodeRemove.Request tnodeIDs tbc tlibID tprojectID astID) undoTopic =
     oldNodes <- mapM (\nid -> BatchG.nodeByID (mapID context Bimap.lookupR nid) bc libID projectID) originIDs
     let toldNodes = zipWith (\nid node -> encode (nid, node)) originIDs oldNodes
 
+    -- KOMENTARZ MARKA: co to robi? Zrobmy tak by kod byl jasny
+    -- lambdy wydziel do whera jako funkcje i wiecej zmiennych!
     rm <- mapM (\nid -> BatchG.nodeEdges nid bc libID projectID) newIDs
     let removed = Set.toList $ Set.fromList $ concat rm
     defaults <- mapM (\nid -> do defaults <- BatchND.nodeDefaults nid bc libID projectID
@@ -214,6 +217,8 @@ nodeRemove (NodeRemove.Request tnodeIDs tbc tlibID tprojectID astID) undoTopic =
                                                 $ SetNodeProperties.Request (encode properties) (encodeP $ originID nid) tbc tlibID tprojectID astID
                        )
                        newIDs
+
+
     
     BatchG.removeNodes newIDs bc libID projectID
     updateNo <- Batch.getUpdateNo
