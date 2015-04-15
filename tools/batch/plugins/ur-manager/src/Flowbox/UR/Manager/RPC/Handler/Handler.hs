@@ -32,6 +32,19 @@ import           Flowbox.UR.Manager.RPC.Topic               as Topic
 import qualified Generated.Proto.Bus.Message                as Bus
 import qualified Generated.Proto.Urm.URM.Register.Request   as Register
 
+
+--data Message = RegisterRequest
+--             | ...
+
+data Respond = Status
+             | Update
+
+handlerMap msg = case msg of
+    RegisterRequest         -> respond $ respond             Status URMHandler.register
+    RegisterMultipleRequest -> respond $ respond             Status URMHandler.register
+    RedoRequest             -> respond $ respondWithFeedback Status URMHandler.register
+
+-- TODO zrefaktoruj funckje by byly przejrzystsze - fun, a , b, c ?
 handlerMap :: HandlerMapWithCid Context IO
 handlerMap callback = HandlerMap.fromList
     [ (Topic.urmRegisterRequest          , respond status URMHandler.register)
@@ -72,3 +85,8 @@ prepareResponse projectID undoTopic undoAction redoTopic redoAction urmTopic des
                                                    (encodeP projectID)
                                                    (encodeP description)
                                  ) urmTopic
+
+        --urmMessages = urmTopic & makeMsgArr $ Register.Request (fun undoTopic $ undoAction)
+        --                                                       (fun redoTopic $ redoAction)
+        --                                                       (encodeP projectID)
+        --                                                       (encodeP description)

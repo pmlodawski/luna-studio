@@ -16,6 +16,7 @@ import qualified Flowbox.Bus.Data.Message as Message
 import           Flowbox.Bus.Data.Message (Message)
 import           Flowbox.Prelude
 
+-- ZNOWU KROTKI :O
 data Env = Env { _times :: ((Map Message.CorrelationID UTCTime), [(Message.CorrelationID, Message)]) }
                deriving (Show)
 

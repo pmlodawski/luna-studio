@@ -5,9 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Flowbox.UR.Manager.Config (
-    module Paths_batch_plugin_ur_manager,
-) where
+module Flowbox.UR.Manager.Config (module X) where
 
-import Paths_batch_plugin_ur_manager (version)
+import Paths_batch_plugin_ur_manager as X (version)
 

@@ -20,3 +20,9 @@ full = manager
 
 manager :: Bool -> String
 manager numeric = (if numeric then "" else "Flowbox undo-redo version ") ++ Version.showVersion Config.version
+
+---- TO POWINNO BYC TAK:
+----version = Version.showVersion Config.version
+
+--showVersion numeric = if numeric then ...
+--	                             else ...
