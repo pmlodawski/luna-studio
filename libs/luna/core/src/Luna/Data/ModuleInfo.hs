@@ -44,7 +44,7 @@ data ImportError = NotFoundError { path   :: QualPath }
 -- and resolving names. Checking whether a file needs recompilation is done based on the file  edit dates
 data ModuleInfo = ModuleInfo {
                      _name     :: QualPath,
-                     _symTable :: Map NamePath ID,
+--                     _symTable :: Map NamePath ID,
                      _imports  :: [QualPath],
                      _strInfo  :: StructInfo,  -- [?] Namespace here?
                      _errors   :: [ImportError]
@@ -56,16 +56,16 @@ makeLenses ''ModuleInfo
 
 -- checks whether a given symbol is anywhere in the imported list
 -- returns the list of ALL matches (non-singleton list means some kind of conflict)
-getSymbolOriginsAux :: NamePath -> [ModuleInfo] -> [QualPath]
-getSymbolOriginsAux symbol infos = map (^. name) results
-    where results = filter (nameExists symbol) infos
+--getSymbolOriginsAux :: NamePath -> [ModuleInfo] -> [QualPath]
+--getSymbolOriginsAux symbol infos = map (^. name) results
+--    where results = filter (nameExists symbol) infos
 
 -- [TODO] update to account for the Either version of getModuleInfo(s)
 -- this is the main version, as you only have to pass it your currently parsed module
-getSymbolOrigins :: NamePath -> ModuleInfo -> IO [QualPath]
-getSymbolOrigins symbol mInfo = do
-    res <- getModuleInfos (mInfo ^. imports)
-    return $ fmap (_name) $ rights res
+--getSymbolOrigins :: NamePath -> ModuleInfo -> IO [QualPath]
+--getSymbolOrigins symbol mInfo = do
+--    res <- getModuleInfos (mInfo ^. imports)
+--    return $ fmap (_name) $ rights res
 
 -- given a list of paths, lookups all the necessary ModuleInfo structs
 getModuleInfos :: [QualPath] -> IO [Either ImportError ModuleInfo]
@@ -102,13 +102,13 @@ regArgPat id argPat = strInfo %~ SI.regArgPat id argPat
 -- simple utility functions for lookups and checks
 --------------------------------------------------------------------
 
-nameExists :: NamePath -> ModuleInfo -> Bool
-nameExists name mInfo = Map.member name (mInfo ^. symTable)
+--nameExists :: NamePath -> ModuleInfo -> Bool
+--nameExists name mInfo = Map.member name (mInfo ^. symTable)
 
 
 
-getSymbolId :: NamePath -> ModuleInfo -> Maybe ID
-getSymbolId name mInfo = Map.lookup name (mInfo ^. symTable)
+--getSymbolId :: NamePath -> ModuleInfo -> Maybe ID
+--getSymbolId name mInfo = Map.lookup name (mInfo ^. symTable)
 
 
 
@@ -135,7 +135,7 @@ moduleIsParsed path = do
 
 
 modPathToString :: QualPath -> String
-modPathToString (QualPath ns n) = (joinPath $ map T.unpack ns) </> (T.unpack n)
+modPathToString qp@(QualPath _ n) = (modPathToDirString qp) </> (T.unpack n)
 
 
 -- the difference between this one and modPathToString is that
@@ -188,14 +188,6 @@ writeModInfoToFile modInfo = do
     encodeFile fPath modInfo
 
 
--- serialization of only StructInfo:
-writeStructInfoToFile :: String -> StructInfo -> IO ()
-writeStructInfoToFile name sInfo = do
-    liDir <- liDirectory
-    let p = liDir </> name
-    Dir.createDirectoryIfMissing True liDir
-    encodeFile p sInfo
-
 
 -- deserialization:
 readModInfoFromFile :: QualPath -> IO (Maybe ModuleInfo)
@@ -208,18 +200,8 @@ readModInfoFromFile path = do
             putStrLn $ "[[[[[[MODPATH: " ++ modPath ++ " ]]]]]]"
             fmap Just $ decodeFile modPath
         else return Nothing
-        
--- deserialization of StructInfo only:
-readStructInfoFromFile :: String -> IO (Maybe StructInfo)
-readStructInfoFromFile name = do
-    liDir <- liDirectory
-    let fPath = liDir </> name
-    exists <- Dir.doesFileExist fPath
-    case exists of
-        False -> return Nothing
-        True  -> fmap Just (decodeFile $ fPath)
 
-        
+
 -----------------------------------------------------------------------------
 -- instance declarations for serialization
 -- they can be moved to a separate module, save ModuleInfo (that would cause cycle imports
@@ -237,9 +219,9 @@ instance Binary (Node Text OriginInfo)
 
 
 instance Monoid ModuleInfo where
-    mempty      = ModuleInfo mempty mempty mempty mempty mempty
+    mempty      = ModuleInfo mempty mempty mempty mempty --mempty
     mappend a b = ModuleInfo (mappend (a ^. name)     (b ^. name))
-                             (mappend (a ^. symTable) (b ^. symTable))
+                             --(mappend (a ^. symTable) (b ^. symTable))
                              (mappend (a ^. imports)  (b ^. imports))
                              (mappend (a ^. strInfo)  (b ^. strInfo))
                              (mappend (a ^. errors)   (b ^. errors))
