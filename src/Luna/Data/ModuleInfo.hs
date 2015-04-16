@@ -229,22 +229,11 @@ instance Binary ModuleInfo
 instance Binary StructInfo
 instance Binary OriginInfo
 instance Binary Scope
-instance Binary QualPath
-instance Binary NamePath
-instance Binary PathItem
 instance Binary NamePatDesc
 instance Binary SegmentDesc
-instance Binary (TName NamePath)
 instance Binary SI.Error
 instance Binary ImportError
-
 instance Binary (Node Text OriginInfo)
-
--- perhaps this could be done without going through string
-instance Binary Text
-    where put txt = put $ T.unpack txt
-          get     = do t <- get :: Get String
-                       return $ T.pack t
 
 
 instance Monoid ModuleInfo where
