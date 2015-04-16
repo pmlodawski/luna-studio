@@ -123,7 +123,9 @@ replaceNode (vid, v) oldv graph = newGraph where
 
 
 newVtxs :: Graph a b -> [Vertex]
-newVtxs g = [n+1..] where (_,n) = nodeRange g
+newVtxs g = if isEmpty g
+    then [1..]
+    else [n+1..] where (_,n) = nodeRange g
 
 
 newVtx :: Graph a b -> Vertex
