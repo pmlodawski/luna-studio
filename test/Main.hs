@@ -88,7 +88,7 @@ main = do
             printHeader "SA"
             sa           <- Pass.run2_ SA.pass (StructData mempty importInfo) ast
             let sa1 = _info . _namespace $ sa
-            let mInfo = MI.ModuleInfo (QualPath [] (fromString liFile)) mempty mempty sa1 mempty
+            let mInfo = MI.ModuleInfo (QualPath [] (fromString liFile)) mempty sa1 mempty
             ppPrint mInfo
             liftIO $ MI.writeModInfoToFile mInfo
 
