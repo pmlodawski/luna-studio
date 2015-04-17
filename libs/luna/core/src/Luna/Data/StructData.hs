@@ -81,8 +81,8 @@ regNameLocal tag id name = do
             II.Types -> NMS.regTypeName
     regFun originInfo name
     case tag of
-        II.Vars ->  modifyImportInfo $ II.symTable  %~ (Map.insertWith (++) name [originInfo])
-        II.Types -> modifyImportInfo $ II.typeTable %~ (Map.insertWith (++) name [originInfo])
+        II.Vars ->  modifyImportInfo $ II.symTable  %~ (Map.insert name [originInfo]) -- TODO[PMo] make inserting function
+        II.Types -> modifyImportInfo $ II.typeTable %~ (Map.insert name [originInfo])
 
 
 regVarNameLocal = regNameLocal II.Vars

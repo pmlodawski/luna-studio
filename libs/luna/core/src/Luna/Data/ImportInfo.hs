@@ -17,6 +17,16 @@ type ID = Int
 
 data Tag = Vars | Types deriving (Show, Eq)
 
+
+data Import = Import {
+    _impPath  :: QualPath,
+    _wildcard :: Bool,
+    _hiding   :: [NamePath],
+    _targets  :: [NamePath],
+    _rename   :: Maybe Text
+} deriving (Generic, Show, Eq, Read)
+
+
 data ImportInfo = ImportInfo {
     _path        :: QualPath,       -- move to Namespace (?)
     _imports     :: [QualPath],

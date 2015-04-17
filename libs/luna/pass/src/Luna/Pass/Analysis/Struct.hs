@@ -103,8 +103,7 @@ aaMod mod@(Label lab (Module path body)) = withScope id continue
 
 aaPat :: (PassCtx m, Enumerated lab) => LPat lab -> SAPass m (LPat lab)
 aaPat p@(Label lab pat) = case pat of
-    Pat.Var         name       -> StructData.regVarNameLocal id (unwrap name)
-                                  *> regParent id
+    Pat.Var         name       -> regParent id--StructData.regVarNameLocal id (unwrap name)
                                   *> continue
     _                          -> continue
     where id = Enum.id lab
