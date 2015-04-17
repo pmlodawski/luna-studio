@@ -23,13 +23,13 @@ data Import = Import {
     _wildcard :: Bool,
     _hiding   :: [NamePath],
     _targets  :: [NamePath],
-    _rename   :: Maybe Text
+    _rename   :: Maybe NamePath
 } deriving (Generic, Show, Eq, Read)
 
 
 data ImportInfo = ImportInfo {
     _path        :: QualPath,       -- move to Namespace (?)
-    _imports     :: [QualPath],
+    _imports     :: [Import],
     _structInfos :: Map QualPath StructInfo,
     _symTable    :: Map NamePath [OriginInfo],
     _typeTable   :: Map NamePath [OriginInfo],
