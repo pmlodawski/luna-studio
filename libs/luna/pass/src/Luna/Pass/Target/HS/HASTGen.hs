@@ -55,7 +55,7 @@ import qualified Luna.Data.Namespace          as Namespace
 import           Luna.Data.Namespace          (Namespace)
 
 import           Luna.Data.ASTInfo            (ASTInfo, genID)
-import           Luna.Data.ImportInfo         (ImportInfo)
+import           Luna.Data.ImportInfo         (ImportInfo, _impPath)
 import qualified Luna.Data.ImportInfo         as II
 
 import           Luna.Syntax.Arg              (Arg(Arg), LArg)
@@ -120,7 +120,7 @@ mkVal    = HE.AppE "val"
 
 
 makeImportList :: ImportInfo -> [HE.Expr]
-makeImportList info = map mkImp (II._imports info)
+makeImportList info = map (mkImp._impPath) (II._imports info)
     where mkImp = \qp -> HE.Import False (II.qualPathToList qp) Nothing Nothing
 
 

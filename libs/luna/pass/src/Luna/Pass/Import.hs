@@ -8,13 +8,12 @@ import           Control.Monad.IO.Class (liftIO)
 import           Luna.Syntax.Label      (Label(Label), _element)
 import           Luna.Syntax.Module     (_mpath, _body, Module(Module))
 import qualified Luna.Syntax.Decl       as Dec
-import           Luna.Syntax.Name       (TName(TName))
-import           Luna.Syntax.Name.Path  (QualPath(QualPath), multi)
+import           Luna.Syntax.Name       (TName(TName), VName(VName))
+import           Luna.Syntax.Name.Path  (QualPath(QualPath), multi, _base)
 import           Luna.Syntax.Unit       (Unit(Unit))
 
 import qualified Luna.Data.ModuleInfo as MI
 import qualified Luna.Data.ImportInfo as II
-
 import           Flowbox.Prelude
 
 
@@ -64,11 +63,16 @@ getModPath (Dec.DeclImp path _) = MI.pathToQualPath path
 
 
 getImport :: Dec.Imp -> II.Import
-getImport = undefined
+getImport (Dec.ModImp path rename) = II.Import (MI.pathToQualPath path) False [] [] Nothing
+getImport (Dec.DeclImp path impVar) = case (_base . takeFromVName .Dec._vName . head $ impVar) of
+                                            "*" -> II.Import (MI.pathToQualPath path) True [] [] Nothing
 
+
+takeFromVName :: VName a -> a
+takeFromVName   (VName a) = a
 
 getImports :: ASTUnit l a e -> [II.Import]
-getImports = undefined
+getImports ast = fmap getImport $ getImportList ast
 
 
 getImportPaths :: ASTUnit l a e -> [QualPath]

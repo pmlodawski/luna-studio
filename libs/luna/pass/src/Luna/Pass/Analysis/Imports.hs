@@ -37,6 +37,8 @@ pass = Pass "Import analysis"
             "Basic import analysis that performs error checks and returns both struct info and symbol table" 
             NoState iaMain
 
+
+--TODO - jeśli przechodzimy na [Import] to wszystko co tu mamy się spier... piiiii!
 iaMain :: (MonadIO m) => Unit (Label l (Module a e)) -> m ImportInfo
 iaMain ast =  do           
     let impPaths =  I.getImportPaths ast
@@ -44,6 +46,6 @@ iaMain ast =  do
     let infoEithers = fromList listEithers
     let mInfos   =  map (_strInfo . fromRight) $ filter isRight infoEithers
         mErrors  =  fmap fromLeft $ elems $ filter isLeft infoEithers
-        info     =  ImportInfo mempty impPaths mInfos mempty mempty mErrors
+        info     =  ImportInfo mempty (I.getImports ast) mInfos mempty mempty mErrors
     return $ createSymTable info
 
