@@ -95,7 +95,7 @@ passRunner ai si ast = do
     put $ PassState ai si
     (,) <$> defaultTraverseM ast <*> (view astInfo <$> get)
 
-exprScopes :: ISCtx lab m a => LExpr lab a -> ISPass m (LExpr lab a)
+exprScopes :: (MonadIO m, ISCtx lab m a) => LExpr lab a -> ISPass m (LExpr lab a)
 exprScopes ast@(Label lab e) = case e of
     Expr.Var (Expr.Variable name v) -> fmake ast id
     --Expr.Curry v@(Label lab' (Expr.Var {}) ->  fmake v
@@ -110,10 +110,10 @@ fmake ast@(Label lab e) f = case e of
             pid       = view (at id) parentMap
             tgt       = fmap (view StructInfo.target) $ view (at id) aliasMap
             tgtPid    = join $ fmap (\tid -> view (at tid) parentMap) tgt
-
-        if pid == tgtPid then return ast
-                         else return $ Label (-888) $ Expr.Accessor (convert name) (f $ Label lab $ Expr.Var $ Expr.Variable "self" v)
-                         -- TODO [kgdk -> wd]: ^-- a magic constant :)
+        liftIO . putStrLn $ "MINE" ++ show pid ++ " " ++ show tgtPid ++ "\nNow AST:\n" ++ show name
+        case pid == tgtPid of
+            True  -> return ast
+            False -> return $ Label (-888) $ Expr.Accessor (convert name) (f $ Label lab $ Expr.Var $ Expr.Variable "self" v)
     where id = Enum.id lab
 ----------------------------------------------------------------------
 -- Instances

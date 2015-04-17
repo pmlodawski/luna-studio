@@ -103,9 +103,8 @@ aaMod mod@(Label lab (Module path body)) = withScope id continue
 
 aaPat :: (PassCtx m, Enumerated lab) => LPat lab -> SAPass m (LPat lab)
 aaPat p@(Label lab pat) = case pat of
-    Pat.Var         name       -> StructData.regVarNameLocal id (unwrap name)
-                                  *> regParent id
-                                  *> continue
+    Pat.Var         name       -> regParent id
+                               *> continue
     _                          -> continue
     where id = Enum.id lab
           continue = defaultTraverseM p 
@@ -148,7 +147,7 @@ registerDataDecl (Label lab decl) = case decl of
           registerCons (Label lab (Decl.Cons _ fields)) = mapM registerField fields
           registerField (Label lab (Decl.Field t mn v)) = case mn of
               Nothing -> return ()
-              Just n  -> StructData.regVarNameLocal (Enum.id lab) (unwrap n)   -- TDOO[PMo] regTypeName, probably
+              Just n  -> StructData.regTypeNameLocal (Enum.id lab) (unwrap n)   -- TDOO[PMo] regTypeName, probably
 
 
 registerHeaders :: (SACtx lab m a) => LDecl lab a -> SAPass m ()
