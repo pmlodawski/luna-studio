@@ -9,7 +9,8 @@ import           Luna.Syntax.Label      (Label(Label), _element)
 import           Luna.Syntax.Module     (_mpath, _body, Module(Module))
 import qualified Luna.Syntax.Decl       as Dec
 import           Luna.Syntax.Name       (TName(TName), VName(VName))
-import           Luna.Syntax.Name.Path  (QualPath(QualPath), multi, _base)
+import           Luna.Syntax.Name.Path  (NamePath(NamePath), QualPath(QualPath))
+import qualified Luna.Syntax.Name.Path  as NP
 import           Luna.Syntax.Unit       (Unit(Unit))
 
 import qualified Luna.Data.ModuleInfo as MI
@@ -18,6 +19,21 @@ import           Flowbox.Prelude
 
 
 type ASTUnit l a e = Unit (Label l (Module a e))
+
+
+data TargetInfo = TargetInfo {
+    _hiding   :: [NamePath],
+    _targets  :: [NamePath],
+    _wildcard :: Bool
+}
+
+makeLenses ''TargetInfo
+
+instance Monoid TargetInfo where
+    mempty      = TargetInfo [] [] False
+    mappend a b = TargetInfo  ((a ^. hiding)   `mappend` (b ^. hiding  ))
+                              ((a ^. targets)  `mappend` (b ^. targets ))
+                              ((a ^. wildcard) ||        (b ^. wildcard))
 
 
 getFromUnit :: Unit a -> a
@@ -62,14 +78,27 @@ getModPath (Dec.DeclImp path _) = MI.pathToQualPath path
 
 
 
+processTarget :: Dec.ImpTgt -> TargetInfo
+processTarget (Dec.ImpVar  vname vrename) = case NP._base $ unwrap vname of
+    "*" -> TargetInfo [] [] True
+    _   -> TargetInfo [] [unwrap vname] False
+processTarget (Dec.ImpType tname trename) = case NP._base $ unwrap tname of
+    "*" -> TargetInfo [] [] True
+    _   -> TargetInfo [] [unwrap tname] False 
+processTarget (Dec.Wildcard hide)         = TargetInfo (fmap unwrap hide) [] True
+
+
+
+processTargets :: [Dec.ImpTgt] -> TargetInfo
+processTargets targets = mconcat $ fmap processTarget targets
+
+
 getImport :: Dec.Imp -> II.Import
-getImport (Dec.ModImp path rename) = II.Import (MI.pathToQualPath path) False [] [] Nothing
-getImport (Dec.DeclImp path impVar) = case (_base . takeFromVName .Dec._vName . head $ impVar) of
-                                            "*" -> II.Import (MI.pathToQualPath path) True [] [] Nothing
+getImport (Dec.ModImp path rename) = II.Import (MI.pathToQualPath path) False [] [] (fmap unwrap rename)
+getImport (Dec.DeclImp path tgts) = II.Import (MI.pathToQualPath path) (tgtInfo ^. wildcard) (tgtInfo ^. hiding) (tgtInfo ^. targets) Nothing
+    where tgtInfo = processTargets tgts
+                                     
 
-
-takeFromVName :: VName a -> a
-takeFromVName   (VName a) = a
 
 getImports :: ASTUnit l a e -> [II.Import]
 getImports ast = fmap getImport $ getImportList ast
