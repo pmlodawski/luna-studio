@@ -53,20 +53,6 @@ data ModuleInfo = ModuleInfo {
 makeLenses ''ModuleInfo
 
 
-
--- checks whether a given symbol is anywhere in the imported list
--- returns the list of ALL matches (non-singleton list means some kind of conflict)
---getSymbolOriginsAux :: NamePath -> [ModuleInfo] -> [QualPath]
---getSymbolOriginsAux symbol infos = map (^. name) results
---    where results = filter (nameExists symbol) infos
-
--- [TODO] update to account for the Either version of getModuleInfo(s)
--- this is the main version, as you only have to pass it your currently parsed module
---getSymbolOrigins :: NamePath -> ModuleInfo -> IO [QualPath]
---getSymbolOrigins symbol mInfo = do
---    res <- getModuleInfos (mInfo ^. imports)
---    return $ fmap (_name) $ rights res
-
 -- given a list of paths, lookups all the necessary ModuleInfo structs
 getModuleInfos :: [QualPath] -> IO [Either ImportError ModuleInfo]
 getModuleInfos paths = mapM getModuleInfo paths
