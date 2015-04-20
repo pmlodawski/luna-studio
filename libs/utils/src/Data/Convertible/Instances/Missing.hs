@@ -11,8 +11,13 @@ module Data.Convertible.Instances.Missing where
 import Data.ByteString
 import Data.Convertible
 import Prelude
+--import Data.Traversable (Traversable, sequenceA)
 
 
 
 instance Convertible a b => Convertible [a] [b] where
     safeConvert = sequence . fmap safeConvert
+
+--FIXME[WD]: make this work!
+--instance (Functor f, Traversable f, Convertible a b) => Convertible (f a) (f b) where
+--    safeConvert = sequenceA . fmap safeConvert
