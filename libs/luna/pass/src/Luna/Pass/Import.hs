@@ -120,3 +120,12 @@ moduleInfosToTuples paths = do
 	return $ zip paths eithers
 
 
+getImportInfo :: (MonadIO m) => ASTUnit l a e -> m [(II.Import, Either MI.ImportError MI.ModuleInfo)]
+getImportInfo ast = do
+    let imports =  getImports ast
+        paths   =  getImportPaths ast
+    eithers     <- getModuleInfos paths
+    return $ zip imports eithers
+
+
+
