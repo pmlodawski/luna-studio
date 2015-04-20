@@ -63,10 +63,10 @@ ppPrint = putStrLn . ppShow
 
 main = do
     args <- getArgs
-    when (length args < 2) $ fail "provide input and output path!"
+    when (length args < 1) $ fail "provide input path!"
     let path   = args !! 0
         liFile = replace ".luna" "" path
-        out    = args !! 1
+        out    = case args of [x] -> "hscdump_gen"; (_:outpath:_) -> outpath
         src    = Source (QualPath [] (fromString liFile)) (File $ fromString path)
 
     Session.runT $ do
