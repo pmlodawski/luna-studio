@@ -117,8 +117,8 @@ nodeAdd request@(NodeAdd.Request tnode tbc tlibID tprojectID astID) undoTopic = 
                                                           -1  -> newNodeID
                                                           nid -> nid
                                                       ) $ context
-    logger error $ "oldNodeID " ++ show oldNodeID
-    logger error $ "newNodeID " ++ show newNodeID
+    --logger error $ "oldNodeID " ++ show oldNodeID
+    --logger error $ "newNodeID " ++ show newNodeID
     -- ZWIEKSZYC CZYTELNOSC nizej
     prepareResponse projectID
                     Topic.projectLibraryAstFunctionGraphNodeRemoveRequest
@@ -144,10 +144,10 @@ nodeModify (NodeModify.Request tnode tbc tlibID tprojectID astID) undoTopic = do
         tnewNode = encode (originID, node)
     context2 <- Batch.get
     Batch.put $ (Batch.idMap %~ Bimap.insert newNodeID originID) $ context2
-    logger error $ "nodeID " ++ show nodeID
-    logger error $ "newNodeID" ++ show newNodeID
-    logger error $ "newID "  ++ show newID
-    logger error $ "originID" ++ show originID
+    --logger error $ "nodeID " ++ show nodeID
+    --logger error $ "newNodeID" ++ show newNodeID
+    --logger error $ "newID "  ++ show newID
+    --logger error $ "originID" ++ show originID
     prepareResponse projectID
                     Topic.projectLibraryAstFunctionGraphNodeModifyRequest
                     (NodeModify.Request toldNode tbc tlibID tprojectID astID)
@@ -172,9 +172,9 @@ nodeModifyInPlace (NodeModifyInPlace.Request tnode tbc tlibID tprojectID astID) 
     oldNd <- BatchG.nodeByID newID bc libID projectID
     let oldNode   = encode (originID, oldNd)
     BatchG.updateNodeInPlace (newID, newNode) bc libID projectID
-    logger error $ "nid " ++ show nid
-    logger error $ "newID "  ++ show newID
-    logger error $ "originID" ++ show originID
+    --logger error $ "nid " ++ show nid
+    --logger error $ "newID "  ++ show newID
+    --logger error $ "originID" ++ show originID
     prepareResponse projectID
                     Topic.projectLibraryAstFunctionGraphNodeModifyinplaceRequest
                     (NodeModifyInPlace.Request oldNode tbc tlibID tprojectID astID)
@@ -221,10 +221,10 @@ nodeRemove (NodeRemove.Request tnodeIDs tbc tlibID tprojectID astID) undoTopic =
     BatchG.removeNodes newIDs bc libID projectID
     updateNo <- Batch.getUpdateNo
 
-    logger error $ "newIDs "  ++ show newIDs
-    logger error $ "originIDs" ++ show originIDs
-    logger warning $ show $ map snd . DefaultsMap.toList =<< defaults
-    logger warning $ show $ map snd $ DefaultsMap.toList =<< defaults
+    --logger error $ "newIDs "  ++ show newIDs
+    --logger error $ "originIDs" ++ show originIDs
+    --logger warning $ show $ map snd . DefaultsMap.toList =<< defaults
+    --logger warning $ show $ map snd $ DefaultsMap.toList =<< defaults
     return ( [NodeRemove.Update (updatedRequest $ encodeP newIDs) updateNo]
            , makeMsgArr (RegisterMultiple.Request
                             (  (Sequence.fromList $ map (\node -> fun Topic.projectLibraryAstFunctionGraphNodeAddRequest $ NodeAdd.Request node tbc tlibID tprojectID astID) $ toldNodes)
@@ -266,14 +266,14 @@ connect (Connect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibID tpro
         newDID    = if isJust undoTopic then dstNodeID else mapID context Bimap.lookupR dstNodeID
         newRequest constr sid did = constr (encodeP sid) tsrcPort (encodeP did) tdstPort tbc tlibID tprojectID astID
     BatchG.connect newSID srcPort newDID dstPort bc libID projectID
-    logger error $ "srcNodeID " ++ show srcNodeID
-    logger error $ "srcPort " ++ show srcPort
-    logger error $ "newSID "  ++ show newSID
-    logger error $ "originSID" ++ show originSID
-    logger error $ "dstNodeID " ++ show dstNodeID
-    logger error $ "dstPort " ++ show dstPort
-    logger error $ "newDID "  ++ show newDID
-    logger error $ "originDID" ++ show originDID
+    --logger error $ "srcNodeID " ++ show srcNodeID
+    --logger error $ "srcPort " ++ show srcPort
+    --logger error $ "newSID "  ++ show newSID
+    --logger error $ "originSID" ++ show originSID
+    --logger error $ "dstNodeID " ++ show dstNodeID
+    --logger error $ "dstPort " ++ show dstPort
+    --logger error $ "newDID "  ++ show newDID
+    --logger error $ "originDID" ++ show originDID
     prepareResponse projectID
                     Topic.projectLibraryAstFunctionGraphDisconnectRequest
                     (newRequest Disconnect.Request originSID originDID)
@@ -299,14 +299,14 @@ disconnect (Disconnect.Request tsrcNodeID tsrcPort tdstNodeID tdstPort tbc tlibI
         newDID    = if isJust undoTopic then dstNodeID else mapID context Bimap.lookupR dstNodeID
         newRequest constr sid did = constr (encodeP sid) tsrcPort (encodeP did) tdstPort tbc tlibID tprojectID astID
     BatchG.disconnect newSID srcPort newDID dstPort bc libID projectID
-    logger error $ "srcNodeID " ++ show srcNodeID
-    logger error $ "srcPort " ++ show srcPort
-    logger error $ "newSID "  ++ show newSID
-    logger error $ "originSID" ++ show originSID
-    logger error $ "dstNodeID " ++ show dstNodeID
-    logger error $ "dstPort " ++ show dstPort
-    logger error $ "newDID "  ++ show newDID
-    logger error $ "originDID" ++ show originDID
+    --logger error $ "srcNodeID " ++ show srcNodeID
+    --logger error $ "srcPort " ++ show srcPort
+    --logger error $ "newSID "  ++ show newSID
+    --logger error $ "originSID" ++ show originSID
+    --logger error $ "dstNodeID " ++ show dstNodeID
+    --logger error $ "dstPort " ++ show dstPort
+    --logger error $ "newDID "  ++ show newDID
+    --logger error $ "originDID" ++ show originDID
     prepareResponse projectID
                     Topic.projectLibraryAstFunctionGraphConnectRequest
                     (newRequest Connect.Request originSID originDID)
