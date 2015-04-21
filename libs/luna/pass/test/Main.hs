@@ -104,9 +104,10 @@ main = do
             printHeader "SA2"
             sa             <- Pass.run2_ SA.pass sa ast
             ppPrint sa
-
+            
+            let sa2  = _info $ _namespace sa
             printHeader "ImplScopes"
-            (ast, astinfo) <- Pass.run3_ ImplScopes.pass astinfo sa1 ast
+            (ast, astinfo) <- Pass.run2_ ImplScopes.pass (astinfo, sa2, importInfo) ast
             ppPrint ast
 
             printHeader "ImplCalls"
