@@ -5,7 +5,7 @@ import qualified Control.Monad.RWS        as RWST
 import qualified Data.Map                 as Map
 import           Data.Map                 (Map)
 import qualified Flowbox.Data.MapForest   as MapForest
-import           Luna.Data.StructInfo     (StructInfo, OriginInfo, Scope)
+import           Luna.Data.StructInfo     (StructInfo, OriginInfo(OriginInfo), Scope)
 import qualified Luna.Data.StructInfo     as SI
 import           Luna.Syntax.Decl         (Path)
 import           Luna.Syntax.Name.Path    (NamePath, QualPath(QualPath))
@@ -62,7 +62,19 @@ getPath info = qualPathToPath $ _path info
 
 -- Creates the mapping between symbol names (NamePath) and their origins (OriginInfo)
 createSymTable :: ImportInfo -> ImportInfo
-createSymTable = createSymTableVars . createSymTableTypes
+createSymTable = addMNameToSymTable . addMNameToTypeTable . createSymTableVars . createSymTableTypes
+
+-- TODO[PMo] add every module name to both type- and symTable
+addMNameToSymTable :: ImportInfo -> ImportInfo
+addMNameToSymTable info = info & (symTable %~ (Map.unionWith (++) (createNameMap $ _imports info)))
+
+addMNameToTypeTable :: ImportInfo -> ImportInfo
+addMNameToTypeTable info = info & (typeTable %~ (Map.unionWith (++) (createNameMap $ _imports info)))
+
+createNameMap :: [Import] -> Map NamePath [OriginInfo]
+createNameMap imps = Map.fromList tuples
+    where tuples = fmap (\imp -> (moduleObjectName (_impPath imp), [OriginInfo (_impPath imp) 0])) imps -- TODO check if it's really 0
+
 
 createSymTableVars :: ImportInfo -> ImportInfo
 createSymTableVars info = info & (symTable .~ (combineScopes Vars info))
@@ -93,6 +105,10 @@ topLevelScope tag sInfo = Map.fromList nps
           vars  = MapForest.toList $ (case tag of Vars -> fst; Types -> snd) scope
           nps   = map (\(p, origin) -> (toNamePath p, [origin])) vars
 
+
+
+moduleObjectName :: QualPath -> NamePath
+moduleObjectName (QualPath _ name) = NP.single name
 
 
 toNamePath :: [Text] -> NamePath

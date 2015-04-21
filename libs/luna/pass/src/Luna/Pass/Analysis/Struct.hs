@@ -117,17 +117,18 @@ aaDecl d@(Label lab decl) = withScope id continue
 aaExpr :: SACtx lab m a => (LExpr lab a) -> SAPass m (LExpr lab a)
 aaExpr e@(Label lab expr) = case expr of
     var@(Expr.Var (Expr.Variable vname@(VName name) _)) -> regParent id
-                                          *> regAlias id (unwrap vname)
-                                          *> StructData.regVarName id name
+                                         -- *> regAlias id (unwrap vname)
+                                          *> StructData.regVarName id name *> (putStrLn $ "VAR!! regVarName: " ++ (show id) ++ (show name))
                                           *> continue
-    cons@(Expr.Cons name)                 -> regParent id
-                                          *> regAlias id (unwrap name)
+    cons@(Expr.Cons name)                 -> regParent id *> (putStrLn $ "CONS!! name == " ++ (show name))
+                                          *> StructData.regVarName id (unwrap name)  
+                                       -- *> regAlias id (unwrap name) 
                                           *> continue
     Expr.RecUpd name _                    -> regParent  id
                                           *> regAlias   id (unwrap name)
                                           *> regVarName (OriginInfo "dupa" id) (unwrap name)
                                           *> continue
-    _                                     -> continue
+    _                                     -> (putStrLn "UPS, uot da fak mate") *> continue
     where id       = Enum.id lab
           continue = defaultTraverseM e
 

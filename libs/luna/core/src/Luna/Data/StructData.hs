@@ -98,7 +98,7 @@ regName tag id name = do
     case (Map.lookup name nameMap) of
         Just [origin]    -> regOrigin id origin
         Just mods@(o:os) -> regError (AmbRefError name (getOriginPaths mods))
-        _                -> regOrphan id (SI.LookupError $ toText name)
+        _                -> NMS.regAlias id name --regOrphan id (SI.LookupError $ toText name)
 
 
 regVarName = regName II.Vars
@@ -113,9 +113,6 @@ getOriginPaths infos = map f infos
 
 
 regOrigin id origin = do
-    sd <- get
-    let (scopeID:rest) = NS._stack $ _namespace sd
-        sInfo          = NS._info  $ _namespace sd
     modifyNamespace $ NS.regOrigin id origin
 
 
