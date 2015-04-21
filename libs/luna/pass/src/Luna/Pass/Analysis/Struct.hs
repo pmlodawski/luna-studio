@@ -103,8 +103,9 @@ aaMod mod@(Label lab (Module path body)) = withScope id continue
 
 aaPat :: (PassCtx m, Enumerated lab) => LPat lab -> SAPass m (LPat lab)
 aaPat p@(Label lab pat) = case pat of
-    Pat.Var         name       -> regParent id--StructData.regVarNameLocal id (unwrap name)
-                                  *> continue
+    Pat.Var         name       -> regParent id
+                               *> StructData.regVarNameLocal id (unwrap name)
+                               *> continue
     _                          -> continue
     where id = Enum.id lab
           continue = defaultTraverseM p 
@@ -122,7 +123,7 @@ aaExpr e@(Label lab expr) = case expr of
                                           *> continue
     cons@(Expr.Cons name)                 -> regParent id *> (putStrLn $ "CONS!! name == " ++ (show name))
                                           *> StructData.regVarName id (unwrap name)  
-                                       -- *> regAlias id (unwrap name) 
+                                         -- *> regAlias id (unwrap name) 
                                           *> continue
     Expr.RecUpd name _                    -> regParent  id
                                           *> regAlias   id (unwrap name)

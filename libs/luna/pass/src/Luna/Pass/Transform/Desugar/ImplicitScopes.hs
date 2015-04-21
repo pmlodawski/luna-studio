@@ -122,7 +122,7 @@ fmake ast@(Label lab e) f = case e of
         if originMod == (Just thisMod)
             then if pid == tgtPid then return ast
                                   else return $ Label (-888) $ Expr.Accessor (convert name) (f $ Label lab $ Expr.Var $ Expr.Variable "self" v)
-            else return $ Label (-777) $ Expr.Accessor (convert name) (f $ Label lab $ Expr.Var $ Expr.Variable (VName . ImportInfo.moduleObjectName . fromJust $ originMod) v)
+            else return $ Label (-777) $ Expr.Accessor (convert name) (f $ Label lab $ Expr.Cons $ Name.cname . ImportInfo.moduleObjectName . fromJust $ originMod)
                          -- TODO [kgdk -> wd]: ^-- a magic constant :)
     where id = Enum.id lab
 ----------------------------------------------------------------------
