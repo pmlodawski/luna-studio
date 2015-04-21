@@ -262,4 +262,5 @@ addExpr nodeID expr' = do
 
 
 isOperator :: String -> Bool
-isOperator expr = length expr == 1 && head expr `elem` Tok.opChars
+isOperator = all (`elem` Tok.opChars)
+
