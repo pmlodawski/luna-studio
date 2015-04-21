@@ -159,7 +159,7 @@ buildExpr nodeExpr srcs = case nodeExpr of
         --_                         -> parseAppNode     nodeID $ StringExpr.toString str
 
 isOperator :: String -> Bool
-isOperator expr = length expr == 1 && head expr `elem` Tok.opChars
+isOperator = all (`elem` Tok.opChars)
 
 
 buildPat :: NodeExpr Tag V -> Node.ID -> [Edge] -> Maybe TPat -> GPPass V m TPat
