@@ -37,7 +37,7 @@ Library
                     binary,
                     bytestring,
                     containers,
-                    convertible,
+                    convertible >= 1.1.1.0,
                     data-default,
                     directory,
                     dlist,
