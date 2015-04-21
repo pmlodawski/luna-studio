@@ -29,8 +29,8 @@ alias Time=Float
 def time:
     0.0
 
-def render a path time:
-    a.save (applyTime path time)
+def render a path gamma time:
+    a.save (applyTime path time) gamma
 
 foreign haskell def applyTime path time:
     liftF2 applyTime time path
