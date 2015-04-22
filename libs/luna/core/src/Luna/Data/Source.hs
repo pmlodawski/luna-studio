@@ -8,15 +8,15 @@
 
 module Luna.Data.Source where
 
-import           Flowbox.Prelude hiding (readFile, Text)
-import qualified Data.ByteString as ByteString
-import           Data.ByteString (ByteString)
-import qualified Data.ByteString.UTF8          as UTF8
+import           Data.ByteString         (ByteString)
+import qualified Data.ByteString         as ByteString
+import           Data.ByteString.Lazy    (toStrict)
+import qualified Data.ByteString.UTF8    as UTF8
+import qualified Data.Text.Lazy          as T
 import           Data.Text.Lazy.Encoding (encodeUtf8)
-import           Data.ByteString.Lazy (toStrict)
-import           Data.Text.Lazy.IO (readFile)
-import qualified Data.Text.Lazy as T
-import           Luna.Syntax.Name.Path (QualPath(QualPath))
+import           Data.Text.Lazy.IO       (readFile)
+import           Flowbox.Prelude         hiding (Text, readFile)
+import           Luna.Syntax.Name.Path   (QualPath (QualPath))
 
 
 ----------------------------------------------------------------------
@@ -34,7 +34,7 @@ class SourceReader m a where
 data Source a = Source { _modName :: QualPath, _src :: a} deriving (Show, Functor)
 
 newtype File = File { _path :: T.Text } deriving (Show)
-newtype Text = Text { _txt  :: T.Text } deriving (Show)
+newtype Text = Text { _txt :: T.Text } deriving (Show)
 newtype Code = Code { _code :: T.Text } deriving (Show)
 
 makeLenses ''Source
@@ -47,7 +47,7 @@ makeLenses ''Code
 ----------------------------------------------------------------------
 
 instance (Functor m, MonadIO m) => SourceReader m File where
-    read (Source name src) = (fmap $ Source name . Code) 
+    read (Source name src) = fmap (Source name . Code)
                            $ liftIO $ readFile (toString $ view path src)
 
 

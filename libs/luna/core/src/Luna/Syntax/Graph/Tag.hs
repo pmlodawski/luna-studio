@@ -9,7 +9,8 @@
 module Luna.Syntax.Graph.Tag where
 
 import           Flowbox.Prelude                 hiding (folded)
-import           Luna.Syntax.Decl                (LDecl)
+import           Luna.Syntax.Control.Focus       (Focus)
+import           Luna.Syntax.Decl                (LCons, LDecl, LField)
 import           Luna.Syntax.Enum                (Enumerated (..), ID)
 import qualified Luna.Syntax.Enum                as Enum
 import           Luna.Syntax.Expr                (LExpr)
@@ -53,7 +54,18 @@ instance Enumerated Tag where
     tag = flip Empty False
 
 
-type TPat    = LPat Tag
-type TExpr v = LExpr Tag v
-type TDecl v = LDecl Tag (TExpr v)
+type TPat      = LPat    Tag
+type TExpr   v = LExpr   Tag v
+type TCons   v = LCons   Tag (TExpr v)
+type TDecl   v = LDecl   Tag (TExpr v)
+type TField  v = LField  Tag (TExpr v)
 type TModule v = LModule Tag (TExpr v)
+type TFocus  v = Focus   Tag (TExpr v)
+
+type V = ()
+type TVExpr   = TExpr V
+type TVDecl   = TDecl V
+type TVCons   = TCons V
+type TVField  = TField V
+type TVModule = TModule V
+type TVFocus  = TFocus V
