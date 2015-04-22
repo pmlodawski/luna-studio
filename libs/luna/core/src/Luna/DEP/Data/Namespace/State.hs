@@ -97,7 +97,7 @@ popID = do
 
 pushScope id = modify $ Namespace.pushScope id
 
-popScope = modify $ Namespace.popScope
+popScope = modify Namespace.popScope
 
 withScope id p = pushScope id *> p <* popScope
 
@@ -157,7 +157,7 @@ regName lens name id = do
     case mcid of
         Nothing  -> fail "Unable to get current id"
         Just cid -> putAliasInfo a2
-            where varRel  = a ^. (AliasInfo.scope . (ix cid))
+            where varRel  = a ^. (AliasInfo.scope . ix cid)
                   varRel2 = varRel & lens.at name ?~ id
                   a2      = a & AliasInfo.scope.at cid ?~ varRel2
 

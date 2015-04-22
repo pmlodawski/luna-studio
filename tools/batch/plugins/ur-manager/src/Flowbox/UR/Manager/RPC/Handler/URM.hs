@@ -73,9 +73,10 @@ reg cid projectID undoA redoA description = do
     pContext <- return $ fromMaybe Context.emptyProjectContext $ Map.lookup projectID contextMap
     let action = (undoA, redoA)
 -- TODO: pododawaæ &
-        newPC  = (pContext & Context.undo %~ (([action], description, Just $ cid ^. Message.messageID) :))
-    logger warning ("action added: " <> description)
-    lift $ put $ Map.insert projectID newPC contextMap
+        pContextNewUndo = (pContext & Context.undo %~ (([action], description, Just $ cid ^. Message.messageID) :))
+        pContextFinal   = pContextNewUndo & Context.redo .~ []
+    logger debug ("action added: " <> description)
+    lift $ put $ Map.insert projectID pContextFinal contextMap
 
 
 undo :: Undo.Request -> RPC Context IO (Undo.Status, Maybe [Message])
@@ -102,7 +103,7 @@ execAction projectID accessor invert retCons = do
         ((actions, desc, cid) : rest) -> do 
             let newMap = invert ProjectContext rest ((reverse actions, desc, cid) : stack2) $ trans
             lift $ put $ Map.insert projectID newMap contextMap
-            logger warning $ "Undo/Redo on " <> desc
+            logger debug $ "Undo/Redo on " <> desc
             return (retCons True, Just $ actions >>= accessor)
 
 
@@ -110,7 +111,7 @@ clearStack :: ClearStack.Request -> RPC Context IO ClearStack.Status
 clearStack request@(ClearStack.Request tprojectID) = do
     let projectID = decodeP tprojectID
     lift . put . Map.insert projectID Context.emptyProjectContext =<< lift get
-    logger warning "Clearing stack"
+    logger debug "Clearing stack"
     return $ ClearStack.Status request 
 
 
@@ -120,7 +121,7 @@ tBegin cid request@(TBegin.Request tprojectID tdescription) = do
         description = decodeP tdescription
         pushMid     = maybe Context.emptyProjectContext (Context.trans %~ ((cid ^. Message.messageID, description) :))
     lift . put . Map.alter (Just . pushMid) projectID =<< lift get
-    logger warning $ "Opening transaction: " <> description <> " [" <> show cid <> "]"
+    logger debug $ "Opening transaction: " <> description <> " [" <> show cid <> "]"
     return $ TBegin.Status request
 
 
@@ -136,9 +137,9 @@ tCommit request@(TCommit.Request tprojectID tmessageIDs) = do
                           (new, rest) = break (cond $ fst tmid) undo
                           (t, notT)   = span (maybe False (flip Set.member $ Set.fromList $ decodeP tmessageIDs) . (^. _3)) new
                           transaction = (concatMap (^. _1) t, snd tmid, Nothing)
-                      in  ProjectContext (transaction : notT <> rest) redo []
+                      in  ProjectContext (transaction : notT <> rest) [] []
             (_:cx) -> Context.trans .~ cx $ pc
-    logger warning $ maybe "Nothing to commit" (((("closing transaction[" <> (show trans)) <> "]: ") <>) . snd) $ listToMaybe trans
+    logger debug $ maybe "Nothing to commit" (((("closing transaction[" <> (show trans)) <> "]: ") <>) . snd) $ listToMaybe trans
     lift $ put $ Map.insert projectID newPC contextMap
     return $ TCommit.Status request
 

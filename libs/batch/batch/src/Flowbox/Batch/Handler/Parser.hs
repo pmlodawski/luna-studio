@@ -29,7 +29,7 @@ import           Luna.DEP.Pragma.Pragma (Pragma)
 
 
 parseNodeExpr :: (Applicative m, Monad m) => String -> EitherT Error m Expr
-parseNodeExpr str = if length str == 1 && head str `elem` Tok.opChars
+parseNodeExpr str = if all (`elem` Tok.opChars) str
     -- FIXME [PM] : remove this hack, create real node expression parser
     then return $ Expr.Infix 0 str (Expr.Wildcard 1) (Expr.Wildcard 2)
     else case Parser.parseString str $ Parser.exprParser (patchedParserState $ ASTInfo.mk 0) of

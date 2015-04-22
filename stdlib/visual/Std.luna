@@ -474,7 +474,7 @@ alias Time = Float
 def foo self::Std a::Time:
 	a
 
-def render self::Std img::Image path::SavePath a::Time:
+def render self::Std img::Image path::SavePath gamma::(Gamma Float) a::Time:
     ()
 #
 #                MATH and such
