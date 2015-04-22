@@ -73,9 +73,10 @@ reg cid projectID undoA redoA description = do
     pContext <- return $ fromMaybe Context.emptyProjectContext $ Map.lookup projectID contextMap
     let action = (undoA, redoA)
 -- TODO: pododawaæ &
-        newPC  = (pContext & Context.undo %~ (([action], description, Just $ cid ^. Message.messageID) :))
+        pContextNewUndo = (pContext & Context.undo %~ (([action], description, Just $ cid ^. Message.messageID) :))
+        pContextFinal   = pContextNewUndo & Context.redo .~ []
     logger debug ("action added: " <> description)
-    lift $ put $ Map.insert projectID newPC contextMap
+    lift $ put $ Map.insert projectID pContextFinal contextMap
 
 
 undo :: Undo.Request -> RPC Context IO (Undo.Status, Maybe [Message])
@@ -136,7 +137,7 @@ tCommit request@(TCommit.Request tprojectID tmessageIDs) = do
                           (new, rest) = break (cond $ fst tmid) undo
                           (t, notT)   = span (maybe False (flip Set.member $ Set.fromList $ decodeP tmessageIDs) . (^. _3)) new
                           transaction = (concatMap (^. _1) t, snd tmid, Nothing)
-                      in  ProjectContext (transaction : notT <> rest) redo []
+                      in  ProjectContext (transaction : notT <> rest) [] []
             (_:cx) -> Context.trans .~ cx $ pc
     logger debug $ maybe "Nothing to commit" (((("closing transaction[" <> (show trans)) <> "]: ") <>) . snd) $ listToMaybe trans
     lift $ put $ Map.insert projectID newPC contextMap
