@@ -34,7 +34,7 @@ Library
                   containers                       ,
                   cubicbezier                      ,
                   diagrams-cairo                   ,
-                  diagrams-lib  >= 1.2.0.8         ,
+                  diagrams-lib  >= 1.2.0.8 && <= 1.2.0.9,
                   distributive                     ,
                   either                           ,
                   errors                           ,
