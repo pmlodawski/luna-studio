@@ -6,9 +6,10 @@
 ---------------------------------------------------------------------------
 
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE OverlappingInstances      #-}
 {-# LANGUAGE TemplateHaskell           #-}
 {-# LANGUAGE UndecidableInstances      #-}
-{-# LANGUAGE OverlappingInstances      #-}
+
 module Luna.Data.Namespace where
 
 
@@ -27,6 +28,7 @@ import qualified Control.Monad.RWS   as RWST
 import           Control.Monad.Trans.Class (lift, MonadTrans)
 
 import qualified Flowbox.Data.MapForest as MapForest
+
 
 ----------------------------------------------------------------------
 -- Data types
@@ -93,12 +95,12 @@ popID ns = (id, ns & stack .~ ids)
     where (id:ids) = view stack ns
 
 --bindVar :: ID -> String -> Namespace -> Either () (Namespace)
---bindVar id name ns = 
+--bindVar id name ns =
 --    case head ns of
 --        Nothing  -> Left ()
 --        Just pid -> case view (info.StructInfo.scope.at pid) ns of
 --            Nothing    -> Left ()
---            Just (StructInfo.Scope varnames typenames) -> case (varnames^.at name) of 
+--            Just (StructInfo.Scope varnames typenames) -> case (varnames^.at name) of
 --                Nothing    -> Left ()
 --                Just dstID -> Right (ns & info . StructInfo.StructInfo . at id ?~ dstID)
 
@@ -122,7 +124,7 @@ regOrigin id origin = modStructInfo (StructInfo.regOrigin id origin)
 --pushScopeM id = do
 --    s <- get
 --    put $ pushScope id s
-    
+
 ----popScopeM     = popScope id <$> get
 
 --withScope id p = do
@@ -148,7 +150,7 @@ instance Monoid Namespace where
     mempty      = Namespace mempty mempty
     mappend a b = Namespace (mappend (a ^. stack) (b ^. stack))
                             (mappend (a ^. info)  (b ^. info))
-                            
+
 
 instance (Monad m, Monoid w) => NamespaceMonad (RWST r w Namespace m) where
     get = RWST.get
@@ -161,10 +163,11 @@ instance (MonadTrans t, NamespaceMonad m, Monad m) => NamespaceMonad (t m) where
     put = lift . put
 
 instance (Monad m, NamespaceMonad m) => StructInfoMonad m where
-    get = do 
+    get = do
         ns <- get
         return $ ns ^. info
     put i = do
         ns <- get
         put (ns & info .~ i)
--- 
+
+

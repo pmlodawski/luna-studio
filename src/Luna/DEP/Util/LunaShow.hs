@@ -52,7 +52,7 @@ instance LunaShow Expr where
             Expr.VarAccessor accName -> simple  [csLunaShow (context & accessorContent .~ True) dst, ".", accName]
         Expr.App          _ src      args -> app $ csLunaShow context src : if f
                                                 then ["(", List.intercalate ", " $ map (csLunaShow $ accessorContent .~ False $ context) args, ")"]
-                                                else [unwords $ "" : (map (csLunaShow $ accessorContent .~ False $ context) $ args)]
+                                                else [unwords $ "" : map (csLunaShow $ accessorContent .~ False $ context) args]
                                              where app = if null args || f then simple else complex
                                                    f = context ^. accessorContent && length args > 1
         --Expr.AppCons_     _ args
