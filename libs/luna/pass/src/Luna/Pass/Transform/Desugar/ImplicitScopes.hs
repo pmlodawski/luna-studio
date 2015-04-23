@@ -5,11 +5,11 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE OverlappingInstances #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE OverloadedStrings         #-}
+{-# LANGUAGE RankNTypes                #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 
 module Luna.Pass.Transform.Desugar.ImplicitScopes where
@@ -57,6 +57,19 @@ import qualified Luna.Data.ImportInfo         as ImportInfo
 import           Control.Monad                (join)
 
 import           Data.Maybe                   (Maybe(Just), fromJust)
+
+import           Flowbox.Control.Monad.State hiding (State, join, mapM, mapM_)
+import           Flowbox.Prelude             hiding (Traversal)
+import           Luna.Data.ASTInfo           (ASTInfo)
+import           Luna.Data.StructInfo        (StructInfo)
+import qualified Luna.Data.StructInfo        as StructInfo
+import           Luna.Pass                   (Pass (Pass), PassCtx, PassMonad)
+import           Luna.Syntax.Enum            (Enumerated)
+import qualified Luna.Syntax.Enum            as Enum
+import qualified Luna.Syntax.Expr            as Expr
+import           Luna.Syntax.Expr            (LExpr)
+import           Luna.Syntax.Label           (Label (Label))
+import qualified Luna.Syntax.Traversals      as AST
 
 ----------------------------------------------------------------------
 -- Base types
