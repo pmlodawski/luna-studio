@@ -29,7 +29,7 @@ import qualified Luna.Build.BuildConfig                     as BuildConfig
 import           Luna.Build.Diagnostics                     (Diagnostics, printAST, printHAST, printHSC, printHeader, printSA, printSSA)
 import qualified Luna.Build.Source.File                     as File
 import           Luna.Data.Namespace                        (Namespace (Namespace), _info)
-import           Luna.Data.StructData                       (StructData(StructData), _namespace)
+import           Luna.Data.StructData                       (StructData(StructData), _namespace, _importInfo)
 import           Luna.Data.Source                           (Code (Code), Source (Source), _modName)
 import qualified Luna.Data.Source                           as Source
 import qualified Luna.Distribution.Cabal.Gen                as CabalGen
@@ -114,9 +114,10 @@ prepareSource diag src = do
             sa             <- Pass.run2_ SA.pass sa ast
             printSA diag (_info . _namespace $ sa)
             let sa2 = _info . _namespace $ sa
+                ii2 = _importInfo sa
             
             printHeader "ImplScopes"
-            (ast, astinfo) <- Pass.run3_ ImplScopes.pass astinfo sa2 ast
+            (ast, astinfo) <- Pass.run2_ ImplScopes.pass (astinfo, sa2, ii2)  ast
             printAST diag ast
 
             printHeader "ImplCalls"
