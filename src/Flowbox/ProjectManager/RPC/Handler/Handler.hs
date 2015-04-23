@@ -39,7 +39,7 @@ import qualified Flowbox.UR.Manager.RPC.Topic                   as Topic
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 handlerMap :: HandlerMap Context IO
