@@ -92,6 +92,10 @@ message URM {
                 required Request request = 1;
                 repeated string descriptions = 2;
             }
+            message Added {
+                required string description = 1;
+            }
+            message Removed { }
         }
     }
 
@@ -111,7 +115,12 @@ message URM {
                 required Request request = 1;
                 repeated string descriptions = 2;
             }
+            message Removed { }
         }
+    }
+
+    message Descriptions {
+        message Cleared { }
     }
 
     message Ping {
