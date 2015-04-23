@@ -80,7 +80,7 @@ tmpDirPrefix = "lunac"
 
 prepareSource :: Builder m => Diagnostics -> Source Source.File -> m (Source Code)
 prepareSource diag src = do
-    let liFile = replace ".luna" "" (toString $ _modName src)
+    let liFile =  _modName src
     result <- Session.runT $ do
         void   Parser.init
         void $ Pragma.enable (Pragma.orphanNames)
@@ -97,7 +97,7 @@ prepareSource diag src = do
             printHeader "SA"
             sa           <- Pass.run2_ SA.pass (StructData mempty importInfo) ast
             let sa1 = _info . _namespace $ sa
-            let mInfo = MI.ModuleInfo (QualPath [] (fromString liFile)) mempty sa1 mempty
+            let mInfo = MI.ModuleInfo liFile mempty sa1 mempty
             -- ppPrint ModuleInfo
             liftIO $ MI.writeModInfoToFile mInfo
             printSA diag sa1   
@@ -113,6 +113,9 @@ prepareSource diag src = do
             printHeader "SA2"
             sa             <- Pass.run2_ SA.pass sa ast
             printSA diag (_info . _namespace $ sa)
+            --liftIO $ putStrLn "--------- ImportInfo -----------"
+            --prettyPrint sa
+            
             let sa2 = _info . _namespace $ sa
                 ii2 = _importInfo sa
             
