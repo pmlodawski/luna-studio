@@ -36,7 +36,7 @@ import qualified Luna.Pass.Target.HS.HSC                    as HSC
 import qualified Luna.Pass.Transform.Desugar.ImplicitScopes as ImplScopes
 import qualified Luna.Pass.Transform.Desugar.ImplicitCalls  as ImplCalls
 import           Luna.Data.Namespace                        (Namespace(Namespace), _info)
-import           Luna.Data.StructData                       (StructData(StructData), _namespace)
+import           Luna.Data.StructData                       (StructData(StructData), _namespace, _importInfo)
 import qualified Luna.Pass                                  as Pass
 import           Control.Monad.Trans.Either
 import           Control.Monad.Trans.Class                  (lift)
@@ -106,8 +106,9 @@ main = do
             ppPrint sa
             
             let sa2  = _info $ _namespace sa
+                ii2  = _importInfo sa
             printHeader "ImplScopes"
-            (ast, astinfo) <- Pass.run2_ ImplScopes.pass (astinfo, sa2, importInfo) ast
+            (ast, astinfo) <- Pass.run2_ ImplScopes.pass (astinfo, sa2, ii2) ast
             ppPrint ast
 
             printHeader "ImplCalls"
