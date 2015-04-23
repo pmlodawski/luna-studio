@@ -21,6 +21,7 @@ import           Luna.Syntax.AST          (ID)
 import           Luna.Syntax.Decl         (Path)
 import           Luna.Syntax.Name         (TName(TName), TNameP)
 import           Luna.Syntax.Name.Path    (NamePath, QualPath(QualPath))
+import qualified Luna.Syntax.Name.Path    as NP
 import           Luna.Syntax.Name.Pattern (NamePatDesc, SegmentDesc)
 
 import           Flowbox.Data.MapForest   (Node)
@@ -113,7 +114,7 @@ moduleExists path = do
 moduleIsParsed :: QualPath -> IO Bool
 moduleIsParsed path = do
     let fullPath = modPathToString path ++ liFileSuffix
-    liPath <- liDirectory
+        liPath   = liDirectory
     f      <- Dir.findFile [liPath] fullPath
     return $ case f of
         Just p  -> True
@@ -129,6 +130,9 @@ modPathToString qp@(QualPath _ n) = (modPathToDirString qp) </> (T.unpack n)
 modPathToDirString :: QualPath -> FilePath
 modPathToDirString (QualPath ns _) = joinPath $ map T.unpack ns
 
+
+modName :: QualPath -> String
+modName qp = T.unpack $ NP._name qp 
 
 
 pathToQualPath :: Path -> QualPath
@@ -153,12 +157,8 @@ liFileSuffix :: FilePath
 liFileSuffix = ".li"
 
 
-
-liDirectory :: IO FilePath
-liDirectory = do
-    r <- lookupEnv "LUNAROOT"
-    let root = fromMaybe "." r
-    return $ root </> "modinfo"
+liDirectory :: FilePath
+liDirectory = "modinfo"
 
 
 
@@ -166,10 +166,10 @@ liDirectory = do
 writeModInfoToFile :: ModuleInfo -> IO ()
 writeModInfoToFile modInfo = do
     -- if the directory doesn't exist, create one:
-    liDir <- liDirectory
-    let modDir = liDir </> (modPathToDirString $ modInfo ^. name)
+    let modDir = liDirectory </> (modPathToDirString $ modInfo ^. name)
     Dir.createDirectoryIfMissing True modDir
-    let fPath = liDir </> (modPathToString $ modInfo ^. name) ++ liFileSuffix
+    let mName = modName $ _name modInfo
+    let fPath = liDirectory </> mName ++ liFileSuffix
     -- serialize with Data.Binry:
     encodeFile fPath modInfo
 
@@ -181,9 +181,7 @@ readModInfoFromFile path = do
     isParsed <- moduleIsParsed path
     if isParsed
         then do 
-            liDir <- liDirectory
-            let modPath = liDir </> ((modPathToString path) ++ liFileSuffix)
-            putStrLn $ "[[[[[[MODPATH: " ++ modPath ++ " ]]]]]]"
+            let modPath = liDirectory </> ((modName path) ++ liFileSuffix)
             fmap Just $ decodeFile modPath
         else return Nothing
 
