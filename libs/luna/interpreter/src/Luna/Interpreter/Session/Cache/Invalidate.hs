@@ -112,7 +112,7 @@ modifyNode libraryID nodeID = do
 
 modifyNode' :: Library.ID -> Node.ID -> Session mm ()
 modifyNode' libraryID nodeID = do
-    let matchNode k _ = last k == CallPoint libraryID nodeID
+    let matchNode k _ = CallPoint libraryID nodeID `elem` k
     logger info $ "Mark modified: node " ++ show (libraryID, nodeID)
     modifyMatching matchNode
 

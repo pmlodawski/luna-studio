@@ -76,8 +76,6 @@ unified n = if isSingle n
 -- close the definition, check if name holes are defined explicite
 -- define Holes otherwise
 close :: Name -> Name
-close n@(Name base segments) = case Hole `elem` segments of
-    True  -> n
-    False -> case null segments of
-        True  -> n
-        False -> Name base $ (Hole : intersperse Hole segments)
+close n@(Name base segments) = if Hole `elem` segments || null segments
+    then n
+    else Name base (Hole : intersperse Hole segments)

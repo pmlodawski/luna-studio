@@ -239,6 +239,13 @@ class ```Point``` x y:
 
 def Image.blur self::Image kernelSize::Int -> Image
 
+class ```BlurType```:
+    GaussBlur
+    BoxBlur
+    TriangleBlur
+
+def Image.edgeBlur self::Image channel::String blurType::BlurType kernelSize::Int multiplier::Float -> Image
+
 # def Image.laplacian self::Image kernelSize::Int centerVal::Float sideVal::Float:
 #     ```liftF4 laplacianLuna #{kernelSize} #{centerVal} #{sideVal} #{self}```
 
@@ -467,7 +474,7 @@ alias Time = Float
 def foo self::Std a::Time:
 	a
 
-def render self::Std img::Image path::SavePath a::Time:
+def render self::Std img::Image path::SavePath gamma::(Gamma Float) a::Time:
     ()
 #
 #                MATH and such
