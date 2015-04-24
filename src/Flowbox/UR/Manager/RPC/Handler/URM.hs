@@ -19,36 +19,37 @@ import qualified Data.Set                  as Set
 
 import Flowbox.Prelude hiding (Context, error)
 
-import           Flowbox.Bus.Data.Message                            (CorrelationID, Message)
-import qualified Flowbox.Bus.Data.Message                            as Message
-import           Flowbox.Bus.Data.Serialize.Proto.Conversion.Message ()
-import           Flowbox.Bus.RPC.RPC                                 (RPC)
+import           Flowbox.Bus.Data.Message                                 (CorrelationID, Message)
+import qualified Flowbox.Bus.Data.Message                                 as Message
+import           Flowbox.Bus.Data.Serialize.Proto.Conversion.Message      ()
+import           Flowbox.Bus.RPC.RPC                                      (RPC)
 import           Flowbox.Data.Convert
 import           Flowbox.System.Log.Logger
-import           Flowbox.UR.Manager.Context                          (Context, ProjectContext (..), Stack)
-import qualified Flowbox.UR.Manager.Context                          as Context
-import           Flowbox.UR.Manager.RPC.Topic                        as Topic
-import qualified Generated.Proto.Urm.URM.ClearStack.Request          as ClearStack
-import qualified Generated.Proto.Urm.URM.ClearStack.Status           as ClearStack
-import qualified Generated.Proto.Urm.URM.Descriptions.Cleared        as UDescriptions
-import qualified Generated.Proto.Urm.URM.Redo.Descriptions.Request   as RDescriptions
-import qualified Generated.Proto.Urm.URM.Redo.Descriptions.Status    as RDescriptions
-import qualified Generated.Proto.Urm.URM.Redo.Request                as Redo
-import qualified Generated.Proto.Urm.URM.Redo.Status                 as Redo
-import qualified Generated.Proto.Urm.URM.Register.Request            as Register
-import qualified Generated.Proto.Urm.URM.Register.Status             as Register
-import qualified Generated.Proto.Urm.URM.RegisterMultiple.Request    as RegisterMultiple
-import qualified Generated.Proto.Urm.URM.RegisterMultiple.Status     as RegisterMultiple
-import qualified Generated.Proto.Urm.URM.Transaction.Begin.Request   as TBegin
-import qualified Generated.Proto.Urm.URM.Transaction.Begin.Status    as TBegin
-import qualified Generated.Proto.Urm.URM.Transaction.Commit.Request  as TCommit
-import qualified Generated.Proto.Urm.URM.Transaction.Commit.Status   as TCommit
-import qualified Generated.Proto.Urm.URM.Undo.Descriptions.Added     as UDescriptions
-import qualified Generated.Proto.Urm.URM.Undo.Descriptions.Removed   as UDescriptions
-import qualified Generated.Proto.Urm.URM.Undo.Descriptions.Request   as UDescriptions
-import qualified Generated.Proto.Urm.URM.Undo.Descriptions.Status    as UDescriptions
-import qualified Generated.Proto.Urm.URM.Undo.Request                as Undo
-import qualified Generated.Proto.Urm.URM.Undo.Status                 as Undo
+import           Flowbox.UR.Manager.Context                               (Context, ProjectContext (..), Stack)
+import qualified Flowbox.UR.Manager.Context                               as Context
+import           Flowbox.UR.Manager.RPC.Topic                             as Topic
+import qualified Generated.Proto.Urm.URM.ClearStack.Request               as ClearStack
+import qualified Generated.Proto.Urm.URM.ClearStack.Status                as ClearStack
+import qualified Generated.Proto.Urm.URM.Descriptions.Cleared.Update      as UDescCleared
+import qualified Generated.Proto.Urm.URM.Redo.Descriptions.Removed.Update as RDescRemoved
+import qualified Generated.Proto.Urm.URM.Redo.Descriptions.Request        as RDescriptions
+import qualified Generated.Proto.Urm.URM.Redo.Descriptions.Status         as RDescriptions
+import qualified Generated.Proto.Urm.URM.Redo.Request                     as Redo
+import qualified Generated.Proto.Urm.URM.Redo.Status                      as Redo
+import qualified Generated.Proto.Urm.URM.Register.Request                 as Register
+import qualified Generated.Proto.Urm.URM.Register.Status                  as Register
+import qualified Generated.Proto.Urm.URM.RegisterMultiple.Request         as RegisterMultiple
+import qualified Generated.Proto.Urm.URM.RegisterMultiple.Status          as RegisterMultiple
+import qualified Generated.Proto.Urm.URM.Transaction.Begin.Request        as TBegin
+import qualified Generated.Proto.Urm.URM.Transaction.Begin.Status         as TBegin
+import qualified Generated.Proto.Urm.URM.Transaction.Commit.Request       as TCommit
+import qualified Generated.Proto.Urm.URM.Transaction.Commit.Status        as TCommit
+import qualified Generated.Proto.Urm.URM.Undo.Descriptions.Added.Update   as UDescAdded
+import qualified Generated.Proto.Urm.URM.Undo.Descriptions.Removed.Update as UDescRemoved
+import qualified Generated.Proto.Urm.URM.Undo.Descriptions.Request        as UDescriptions
+import qualified Generated.Proto.Urm.URM.Undo.Descriptions.Status         as UDescriptions
+import qualified Generated.Proto.Urm.URM.Undo.Request                     as Undo
+import qualified Generated.Proto.Urm.URM.Undo.Status                      as Undo
 
 --------------------------------------------------------------------------------
 -- Utils
@@ -89,7 +90,7 @@ reg cid projectID undoA redoA description = do
                           else Just descNotific)
     where action      = Context.Actions undoA redoA
           metadata    = Context.Metadata description $ Just $ cid ^. Message.messageID
-          descNotific = Message.mk Topic.urmUndoDescriptionAdded $ UDescriptions.Added (encodeP description)
+          descNotific = Message.mk Topic.urmUndoDescriptionAdded $ UDescAdded.Update (encodeP projectID) (encodeP description)
 
 --------------------------------------------------------------------------------
 -- Undo / redo execution
@@ -105,7 +106,7 @@ undo request@(Undo.Request tprojectID) = do
         [] -> return (Undo.Status request False, [])
         _  -> return (Undo.Status request True , descNotific : messages)
     where projectID   = decodeP tprojectID
-          descNotific = Message.mk Topic.urmRedoDescriptionRemoved UDescriptions.Removed
+          descNotific = Message.mk Topic.urmRedoDescriptionRemoved $ UDescRemoved.Update tprojectID
 
 redo :: Redo.Request -> RPC Context IO (Redo.Status, [Message])
 redo request@(Redo.Request tprojectID) = do
@@ -117,7 +118,7 @@ redo request@(Redo.Request tprojectID) = do
         [] -> return (Redo.Status request False, [])
         _  -> return (Redo.Status request True , descNotific : messages)
     where projectID   = decodeP tprojectID
-          descNotific = Message.mk Topic.urmUndoDescriptionRemoved UDescriptions.Removed
+          descNotific = Message.mk Topic.urmUndoDescriptionRemoved $ RDescRemoved.Update tprojectID
 
 execAction :: ProjectID -> Lens' ProjectContext Stack -> Lens' ProjectContext Stack -> RPC Context IO [Context.Actions]
 execAction projectID source dest = do
@@ -147,7 +148,7 @@ clearStack request@(ClearStack.Request tprojectID) = do
     logger debug "Clearing stack"
     return (ClearStack.Status request, [descNotific])
     where projectID = decodeP tprojectID
-          descNotific = Message.mk Topic.urmDescriptionsCleared UDescriptions.Cleared
+          descNotific = Message.mk Topic.urmDescriptionsCleared $ UDescCleared.Update tprojectID
 
 --------------------------------------------------------------------------------
 -- Transactions
@@ -185,7 +186,7 @@ tCommit request@(TCommit.Request tprojectID tmessageIDs) = do
     return (TCommit.Status request, descNotific)
     where pkgCid    = (^. Context.cid) . (^. Context.metadata)
           projectID = decodeP tprojectID
-          descNotificMk = Message.mk Topic.urmUndoDescriptionAdded . UDescriptions.Added
+          descNotificMk = Message.mk Topic.urmUndoDescriptionAdded . UDescAdded.Update tprojectID
 
 --------------------------------------------------------------------------------
 -- Desctiptions fetching
