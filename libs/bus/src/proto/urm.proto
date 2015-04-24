@@ -93,9 +93,16 @@ message URM {
                 repeated string descriptions = 2;
             }
             message Added {
-                required string description = 1;
+                message Update {
+                    required int32 projectID = 1;
+                    required string description = 2;
+                }
             }
-            message Removed { }
+            message Removed { 
+                message Update {
+                    required int32 projectID = 1;
+                }
+            }
         }
     }
 
@@ -115,12 +122,20 @@ message URM {
                 required Request request = 1;
                 repeated string descriptions = 2;
             }
-            message Removed { }
+            message Removed { 
+                message Update { 
+                    required int32 projectID = 1;
+                }
+            }
         }
     }
 
     message Descriptions {
-        message Cleared { }
+        message Cleared { 
+            message Update { 
+                required int32 projectID = 1;
+            }
+        }
     }
 
     message Ping {
