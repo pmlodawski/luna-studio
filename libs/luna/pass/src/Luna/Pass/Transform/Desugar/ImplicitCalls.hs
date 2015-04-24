@@ -23,6 +23,7 @@ import GHC.TypeLits
 import           Flowbox.Control.Monad.State hiding (State, join, mapM, mapM_)
 import           Flowbox.Prelude             hiding (Traversal)
 import           Luna.Data.ASTInfo           (ASTInfo)
+import qualified Luna.Data.ASTInfo           as ASTInfo
 import           Luna.Pass                   (Pass (Pass), PassCtx, PassMonad)
 import           Luna.Syntax.Enum            (Enumerated)
 import qualified Luna.Syntax.Enum            as Enum
@@ -78,9 +79,8 @@ passRunner ai ast = do
 
 exprScopes :: (ISCtx lab m 1 a) => LExpr lab a -> ISPass m (LExpr lab a)
 exprScopes ast@(Label lab e) = case e of
-    Expr.Cons     {} -> Label 998 <$> (Expr.app <$> continue <*> pure [])
-    Expr.Accessor {} -> Label 997 <$> (Expr.app <$> continue <*> pure [])
-                -- TODO [wd]: ^-- a magic constants :)
+    Expr.Cons     {} -> Label <$> tag <*> (Expr.app <$> continue <*> pure [])
+    Expr.Accessor {} -> Label <$> tag <*> (Expr.app <$> continue <*> pure [])
     Expr.Curry (Label lab' acc@(Expr.Accessor {})) -> Label lab . Expr.Curry <$> (Label lab' <$> defaultTraverseOmitM (Proxy::Proxy 1) acc)
     Expr.App (NamePat pfx (Segment base args) segs) ->
         (Label lab . Expr.App) <$> (NamePat <$> defaultTraverseM pfx
@@ -90,8 +90,13 @@ exprScopes ast@(Label lab e) = case e of
         where getSegArgs (Segment _ args) = args
               allArgs = args ++ concat (fmap getSegArgs segs)
     _                -> continue
-    where continue = defaultTraverseM ast
-          id       = Enum.id lab
+    where
+        continue = defaultTraverseM ast
+        id       = Enum.id lab
+        tag      = do
+            i <- ASTInfo.incID <$> get
+            put i
+            return $ Enum.tag $ i ^. ASTInfo.lastID
 
 procSeg expr@(Label lab e) = case e of
     Expr.Accessor {} -> defaultTraverseM expr
