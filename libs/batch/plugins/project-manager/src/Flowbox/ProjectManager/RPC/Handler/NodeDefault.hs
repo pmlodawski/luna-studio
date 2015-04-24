@@ -69,10 +69,10 @@ set (NodeDefaultSet.Request tdstPort tvalue tnodeID tbc tlibID tprojectID astID)
     return ( [NodeDefaultSet.Update (newRequest newID value) updateNo]
            , maybe []
                    (\bmp -> makeMsgArr (Register.Request
-                                            (serialize Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest $ newRequest originID $ snd bmp)
-                                            (serialize Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest $ newRequest originID value)
+                                            (serialize ("undone." <> Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest) $ newRequest originID $ snd bmp)
+                                            (serialize ("undone." <> Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest) $ newRequest originID value)
                                             tprojectID
-                                            (encodeP $ "set port " ++ (show dstPort) ++ " in " ++ (show nodeID))
+                                            (encodeP $ "set port " <> (show dstPort) ++ " in " ++ (show nodeID))
                                        ) undoTopic)
                    $ DefaultsMap.lookup dstPort defaultsMap
            )

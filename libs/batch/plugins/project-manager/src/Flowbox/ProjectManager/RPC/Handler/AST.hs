@@ -171,20 +171,20 @@ remove request@(Remove.Request tbc tlibID tprojectID astID) undoTopic = do
     definition <- BatchAST.definitions Nothing bc libID projectID
     nodeID <- Focus.traverseM_ (return . (^?! Module.id)) (return . (^?! Expr.id)) definition
     properties <- BatchP.getProperties nodeID libID projectID
-    let tproperties = serialize Topic.projectLibraryAstPropertiesSetRequest $ SetASTProperties.Request (encode properties) (encodeP nodeID) tlibID tprojectID
+    let tproperties = serialize ("undone." <> Topic.projectLibraryAstPropertiesSetRequest) $ SetASTProperties.Request (encode properties) (encodeP nodeID) tlibID tprojectID
     BatchAST.remove bc libID projectID
     updateNo <- Batch.getUpdateNo
     let undoMsg = Sequence.fromList
                      [ case definition of
-                         Focus.Function f -> serialize Topic.projectLibraryAstFunctionAddRequest $ AddFunction.Request (encode f) tbcParent tlibID tprojectID astID
-                         Focus.Class    c -> serialize Topic.projectLibraryAstDataAddRequest     $ AddData.Request     (encode c) tbcParent tlibID tprojectID astID
-                         Focus.Module   m -> serialize Topic.projectLibraryAstModuleAddRequest   $ AddModule.Request   (encode m) tbcParent tlibID tprojectID astID
+                         Focus.Function f -> serialize ("undone." <> Topic.projectLibraryAstFunctionAddRequest) $ AddFunction.Request (encode f) tbcParent tlibID tprojectID astID
+                         Focus.Class    c -> serialize ("undone." <> Topic.projectLibraryAstDataAddRequest)     $ AddData.Request     (encode c) tbcParent tlibID tprojectID astID
+                         Focus.Module   m -> serialize ("undone." <> Topic.projectLibraryAstModuleAddRequest)   $ AddModule.Request   (encode m) tbcParent tlibID tprojectID astID
                      , tproperties
                      ]
     return ( [Remove.Update request updateNo]
            , makeMsgArr (RegisterMultiple.Request
                             undoMsg
-                            (serialize Topic.projectLibraryAstRemoveRequest $ request)
+                            (serialize ("undone." <> Topic.projectLibraryAstRemoveRequest) $ request)
                             tprojectID
                             (encodeP $ "remove sth")
                         ) undoTopic
