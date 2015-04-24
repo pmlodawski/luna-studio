@@ -73,17 +73,17 @@ regError err = errors %~ (err:)
 -------------------------------------------------------------------------------------
 -- wrappers for structInfo functions
 -------------------------------------------------------------------------------------
-regOrigin :: ID -> SI.OriginInfo -> ModuleInfo -> ModuleInfo
-regOrigin id origin = strInfo %~ SI.regOrigin id origin
+--regOrigin :: ID -> SI.OriginInfo -> ModuleInfo -> ModuleInfo
+--regOrigin id origin = strInfo %~ SI.regOrigin id origin
 
 
-regOrphan :: ID -> SI.Error -> ModuleInfo -> ModuleInfo
-regOrphan id err = strInfo %~ SI.regOrphan id err
+--regOrphan :: ID -> SI.Error -> ModuleInfo -> ModuleInfo
+--regOrphan id err = strInfo %~ SI.regOrphan id err
 
 
-regParent id pid = strInfo %~ SI.regParent id pid
+--regParent id pid = strInfo %~ SI.regParent id pid
 
-regArgPat id argPat = strInfo %~ SI.regArgPat id argPat
+--regArgPat id argPat = strInfo %~ SI.regArgPat id argPat
 
 --------------------------------------------------------------------
 -- simple utility functions for lookups and checks
@@ -114,8 +114,7 @@ moduleExists path = do
 moduleIsParsed :: QualPath -> IO Bool
 moduleIsParsed path = do
     let fullPath = modPathToString path ++ liFileSuffix
-        liPath   = liDirectory
-    f      <- Dir.findFile [liPath] fullPath
+    f      <- Dir.findFile [liDirectory] fullPath
     return $ case f of
         Just p  -> True
         Nothing -> False
@@ -169,7 +168,7 @@ writeModInfoToFile modInfo = do
     let modDir = liDirectory </> (modPathToDirString $ modInfo ^. name)
     Dir.createDirectoryIfMissing True modDir
     let mName = modName $ _name modInfo
-    let fPath = liDirectory </> mName ++ liFileSuffix
+    let fPath = modDir </> mName ++ liFileSuffix
     -- serialize with Data.Binry:
     encodeFile fPath modInfo
 
@@ -180,8 +179,8 @@ readModInfoFromFile :: QualPath -> IO (Maybe ModuleInfo)
 readModInfoFromFile path = do
     isParsed <- moduleIsParsed path
     if isParsed
-        then do 
-            let modPath = liDirectory </> ((modName path) ++ liFileSuffix)
+        then do
+            let modPath = liDirectory </> (modPathToString path) ++ liFileSuffix
             fmap Just $ decodeFile modPath
         else return Nothing
 
