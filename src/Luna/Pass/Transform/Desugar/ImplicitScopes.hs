@@ -61,15 +61,15 @@ import           Data.Maybe                   (Maybe(Just), fromJust)
 import           Flowbox.Control.Monad.State hiding (State, join, mapM, mapM_)
 import           Flowbox.Prelude             hiding (Traversal)
 import           Luna.Data.ASTInfo           (ASTInfo)
-import           Luna.Data.StructInfo        (StructInfo)
-import qualified Luna.Data.StructInfo        as StructInfo
-import           Luna.Pass                   (Pass (Pass), PassCtx, PassMonad)
+import qualified Luna.Data.ASTInfo           as ASTInfo
 import           Luna.Syntax.Enum            (Enumerated)
 import qualified Luna.Syntax.Enum            as Enum
 import qualified Luna.Syntax.Expr            as Expr
 import           Luna.Syntax.Expr            (LExpr)
 import           Luna.Syntax.Label           (Label (Label))
 import qualified Luna.Syntax.Traversals      as AST
+import           Control.Monad.RWS           (RWST)
+import qualified Control.Monad.RWS           as RWST
 
 ----------------------------------------------------------------------
 -- Base types
@@ -122,8 +122,9 @@ exprScopes ast@(Label lab e) = case e of
 
 fmake ast@(Label lab e) f = case e of
     Expr.Var (Expr.Variable name v) -> do
-        si <- view structInfo <$> get
-        ii <- view importInfo <$> get
+        si    <- view structInfo <$> get
+        ii    <- view importInfo <$> get
+        newID <- fromIntegral <$> genID
         let parentMap = view StructInfo.parent si
             aliasMap  = view StructInfo.alias si
             originMod = fmap (view StructInfo.mod) $ view (at id) aliasMap
@@ -134,8 +135,8 @@ fmake ast@(Label lab e) f = case e of
 
         if originMod == (Just thisMod)
             then if pid == tgtPid then return ast
-                                  else return $ Label (-888) $ Expr.Accessor (convert name) (f $ Label lab $ Expr.Var $ Expr.Variable "self" v)
-            else return $ Label (-777) $ Expr.Accessor (convert name) (f $ Label lab $ Expr.Cons $ Name.cname . ImportInfo.moduleObjectName . fromJust $ originMod)
+                                  else return $ Label newID $ Expr.Accessor (convert name) (f $ Label lab $ Expr.Var $ Expr.Variable "self" v)
+            else return $ Label newID $ Expr.Accessor (convert name) (f $ Label lab $ Expr.Cons $ Name.cname . ImportInfo.moduleObjectName . fromJust $ originMod)
                          -- TODO [kgdk -> wd]: ^-- a magic constant :)
     where id = Enum.id lab
 ----------------------------------------------------------------------
@@ -144,4 +145,12 @@ fmake ast@(Label lab e) f = case e of
 
 instance ISCtx lab m a => AST.Traversal ImplScopes (ISPass m) (LExpr lab a) (LExpr lab a) where
     traverseM _ = exprScopes
+
+instance (Monoid w, Monad m) => ASTInfo.ASTInfoClass (RWST r w PassState m) where
+    getASTInfo = do
+        st <- RWST.get
+        return $ _astInfo st
+    putASTInfo info = do
+        st <- RWST.get
+        RWST.put (st & astInfo .~ info)
 
