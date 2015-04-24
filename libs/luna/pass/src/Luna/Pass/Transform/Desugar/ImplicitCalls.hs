@@ -22,7 +22,7 @@ import GHC.TypeLits
 
 import           Flowbox.Control.Monad.State hiding (State, join, mapM, mapM_)
 import           Flowbox.Prelude             hiding (Traversal)
-import           Luna.Data.ASTInfo           (ASTInfo)
+import           Luna.Data.ASTInfo           (ASTInfo, genID)
 import           Luna.Pass                   (Pass (Pass), PassCtx, PassMonad)
 import           Luna.Syntax.Enum            (Enumerated)
 import qualified Luna.Syntax.Enum            as Enum
@@ -78,8 +78,8 @@ passRunner ai ast = do
 
 exprScopes :: (ISCtx lab m 1 a) => LExpr lab a -> ISPass m (LExpr lab a)
 exprScopes ast@(Label lab e) = case e of
-    Expr.Cons     {} -> Label 998 <$> (Expr.app <$> continue <*> pure [])
-    Expr.Accessor {} -> Label 997 <$> (Expr.app <$> continue <*> pure [])
+    Expr.Cons     {} -> do newID <- fromIntegral <$> genID; Label newID <$> (Expr.app <$> continue <*> pure [])
+    Expr.Accessor {} -> do newID <- fromIntegral <$> genID; Label newID <$> (Expr.app <$> continue <*> pure [])
                 -- TODO [wd]: ^-- a magic constants :)
     Expr.Curry (Label lab' acc@(Expr.Accessor {})) -> Label lab . Expr.Curry <$> (Label lab' <$> defaultTraverseOmitM (Proxy::Proxy 1) acc)
     Expr.App (NamePat pfx (Segment base args) segs) ->
