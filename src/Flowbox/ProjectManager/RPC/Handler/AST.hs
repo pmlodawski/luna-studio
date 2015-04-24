@@ -20,7 +20,7 @@ import           Flowbox.Prelude                                                
 import           Flowbox.ProjectManager.Context                                                       (Context)
 import qualified Flowbox.ProjectManager.RPC.Topic                                                     as Topic
 import           Flowbox.System.Log.Logger
-import           Flowbox.UR.Manager.RPC.Handler.Handler                                               (fun, makeMsgArr, prepareResponse)
+import           Flowbox.UR.Manager.RPC.Handler.Handler                                               (serialize, makeMsgArr, prepareResponse)
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Get.Request                  as CodeGet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Get.Status                   as CodeGet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Set.Request                  as CodeSet
@@ -171,20 +171,20 @@ remove request@(Remove.Request tbc tlibID tprojectID astID) undoTopic = do
     definition <- BatchAST.definitions Nothing bc libID projectID
     nodeID <- Focus.traverseM_ (return . (^?! Module.id)) (return . (^?! Expr.id)) definition
     properties <- BatchP.getProperties nodeID libID projectID
-    let tproperties = fun Topic.projectLibraryAstPropertiesSetRequest $ SetASTProperties.Request (encode properties) (encodeP nodeID) tlibID tprojectID
+    let tproperties = serialize Topic.projectLibraryAstPropertiesSetRequest $ SetASTProperties.Request (encode properties) (encodeP nodeID) tlibID tprojectID
     BatchAST.remove bc libID projectID
     updateNo <- Batch.getUpdateNo
     let undoMsg = Sequence.fromList
                      [ case definition of
-                         Focus.Function f -> fun Topic.projectLibraryAstFunctionAddRequest $ AddFunction.Request (encode f) tbcParent tlibID tprojectID astID
-                         Focus.Class    c -> fun Topic.projectLibraryAstDataAddRequest     $ AddData.Request     (encode c) tbcParent tlibID tprojectID astID
-                         Focus.Module   m -> fun Topic.projectLibraryAstModuleAddRequest   $ AddModule.Request   (encode m) tbcParent tlibID tprojectID astID
+                         Focus.Function f -> serialize Topic.projectLibraryAstFunctionAddRequest $ AddFunction.Request (encode f) tbcParent tlibID tprojectID astID
+                         Focus.Class    c -> serialize Topic.projectLibraryAstDataAddRequest     $ AddData.Request     (encode c) tbcParent tlibID tprojectID astID
+                         Focus.Module   m -> serialize Topic.projectLibraryAstModuleAddRequest   $ AddModule.Request   (encode m) tbcParent tlibID tprojectID astID
                      , tproperties
                      ]
     return ( [Remove.Update request updateNo]
            , makeMsgArr (RegisterMultiple.Request
                             undoMsg
-                            (fun Topic.projectLibraryAstRemoveRequest $ request)
+                            (serialize Topic.projectLibraryAstRemoveRequest $ request)
                             tprojectID
                             (encodeP $ "remove sth")
                         ) undoTopic

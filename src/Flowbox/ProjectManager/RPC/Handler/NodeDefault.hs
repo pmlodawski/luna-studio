@@ -22,7 +22,7 @@ import           Flowbox.ProjectManager.Context                                 
 import           Flowbox.ProjectManager.RPC.Handler.Graph                                                      (mapID)
 import qualified Flowbox.ProjectManager.RPC.Topic                                                              as Topic
 import           Flowbox.System.Log.Logger
-import           Flowbox.UR.Manager.RPC.Handler.Handler                                                        (fun, makeMsgArr)
+import           Flowbox.UR.Manager.RPC.Handler.Handler                                                        (serialize, makeMsgArr)
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Default.Get.Request    as NodeDefaultGet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Default.Get.Status     as NodeDefaultGet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Default.Remove.Request as NodeDefaultRemove
@@ -69,8 +69,8 @@ set (NodeDefaultSet.Request tdstPort tvalue tnodeID tbc tlibID tprojectID astID)
     return ( [NodeDefaultSet.Update (newRequest newID value) updateNo]
            , maybe []
                    (\bmp -> makeMsgArr (Register.Request
-                                            (fun Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest $ newRequest originID $ snd bmp)
-                                            (fun Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest $ newRequest originID value)
+                                            (serialize Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest $ newRequest originID $ snd bmp)
+                                            (serialize Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest $ newRequest originID value)
                                             tprojectID
                                             (encodeP $ "set port " ++ (show dstPort) ++ " in " ++ (show nodeID))
                                        ) undoTopic)
