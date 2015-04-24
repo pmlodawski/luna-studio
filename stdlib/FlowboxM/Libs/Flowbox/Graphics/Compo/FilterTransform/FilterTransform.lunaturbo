@@ -32,6 +32,9 @@ foreign haskell
 foreign haskell def Image.blur kernelSize:
     liftF2 blurLuna kernelSize self
 
+foreign haskell def Image.edgeBlur channel blurType kernelSize multiplier:
+    liftF5 edgeBlurLuna channel blurType kernelSize multiplier self
+
 # foreign haskell def Image.laplacian kernelSize centerVal sideVal:
 #     liftF4 laplacianLuna kernelSize centerVal sideVal self
 

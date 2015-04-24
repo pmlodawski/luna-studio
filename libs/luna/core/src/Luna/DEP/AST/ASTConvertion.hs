@@ -1,4 +1,9 @@
-{-# LANGUAGE FunctionalDependencies    #-}
+---------------------------------------------------------------------------
+-- Copyright (C) Flowbox, Inc - All Rights Reserved
+-- Unauthorized copying of this file, via any medium is strictly prohibited
+-- Proprietary and confidential
+-- Flowbox Team <contact@flowbox.io>, 2014
+---------------------------------------------------------------------------
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
 module Luna.DEP.AST.ASTConvertion where
@@ -156,7 +161,7 @@ convertExpr2Decl = \case
                   convertField (DExpr.Field fid n t mv) = l fid <$> (Decl.Field <$> convertAST t <*> pure (Just $ fromString n) <*> mapM convertAST mv)
         DExpr.DataNative id t cons cls methods -> do
             (Label lab (Decl.Data decl)) <- convertExpr2Decl $ DExpr.Data id t cons cls methods
-            return $ l id $ Decl.Foreign $ Foreign Foreign.Haskell $ Decl.FData $ decl
+            return $ l id $ Decl.Foreign $ Foreign Foreign.Haskell $ Decl.FData decl
         DExpr.Function id path n ins ot [DExpr.Native _ segments] -> l id . Decl.Foreign . Foreign Foreign.Haskell . Decl.FFunc <$> decl where
             decl = Decl.FuncDecl (fmap fromString path)
                                  <$> (NamePat Nothing <$> (Segment (fromString $ DName._base n) <$> mapM convertArg ins) <*> pure [])

@@ -23,46 +23,46 @@ Library
     CPP-options:        -DACCELERATE_CUDA_BACKEND
     Build-Depends:      accelerate-cuda  == 0.16.*
 
-  Build-Depends:  base           == 4.7.*          ,
-                  accelerate     == 0.16.*         ,
-                  accelerate-io  == 0.16.*         ,
-                  accelerate-fft == 0.16.*         ,
-                  algebraic       > 0.1            ,
-                  bmp                              ,
-                  bytestring                       ,
-                  cairo                            ,
-                  containers                       ,
-                  cubicbezier                      ,
-                  diagrams-cairo                   ,
-                  diagrams-lib  >= 1.2.0.8         ,
-                  distributive                     ,
-                  either                           ,
-                  errors                           ,
-                  filepath                         ,
-                  flowbox-serialization            ,
-                  flowbox-utils                    ,
-                  imagemagick   >= 0.0.3.6         ,
-                  JuicyPixels                      ,
-                  lifted-base                      ,
-                  linear                           ,
-                  linear-accelerate                ,
-                  monad-control                    ,
-                  mtl                              ,
-                  openexr                          ,
-                  profunctors                      ,
-                  protocol-buffers                 ,
-                  protocol-buffers-descriptor      ,
-                  parallel                         ,
-                  resourcet                        ,
-                  split                            ,
-                  system-filepath                  ,
-                  template-haskell                 ,
-                  thyme                            ,
-                  transformers        == 0.3.0.0   ,
-                  transformers-compat  < 0.4       ,
-                  vector                           ,
-                  vector-space     < 0.9           ,
-                  luna-target-ghchs                
+  Build-Depends:  base           == 4.7.*,
+                  accelerate     == 0.16.*,
+                  accelerate-io  == 0.16.*,
+                  accelerate-fft == 0.16.*,
+                  algebraic       > 0.1,
+                  bmp,
+                  bytestring,
+                  cairo,
+                  containers,
+                  cubicbezier,
+                  diagrams-cairo,
+                  diagrams-lib  >= 1.2.0.8 && <= 1.2.0.9,
+                  distributive,
+                  either,
+                  errors,
+                  filepath,
+                  flowbox-serialization,
+                  flowbox-utils,
+                  imagemagick   >= 0.0.3.6,
+                  JuicyPixels,
+                  lifted-base,
+                  linear,
+                  linear-accelerate,
+                  monad-control,
+                  mtl,
+                  openexr,
+                  profunctors,
+                  protocol-buffers,
+                  protocol-buffers-descriptor,
+                  parallel,
+                  resourcet,
+                  split,
+                  system-filepath,
+                  template-haskell,
+                  thyme,
+                  transformers        == 0.3.0.0,
+                  transformers-compat  < 0.4,
+                  vector,
+                  vector-space     < 0.9,
+                  luna-target-ghchs                     
         -- vector-space < 0.9 is a temporal constrain until https://github.com/diagrams/active/issues/13 is resolved
 
 -- == test non numeric animation ==
@@ -81,12 +81,12 @@ Executable test_non_numeric
   Default-Language:       Haskell2010
 
 
-  Build-Depends:  base           == 4.7.*  ,
-                  assert                   ,
-                  linear                   ,
-                  algebraic                ,
-                  flowbox-utils            ,
-                  flowbox-graphics         ,
+  Build-Depends:  base           == 4.7.*,
+                  assert,
+                  linear,
+                  algebraic,
+                  flowbox-utils,
+                  flowbox-graphics,
                   lens                     
 
 -- == HSpec tests ==
@@ -112,24 +112,24 @@ Test-suite hspec_tests
     CPP-options:        -DACCELERATE_CUDA_BACKEND
     Build-Depends:      accelerate-cuda  == 0.16.*
 
-  Build-Depends:  base           == 4.7.*  ,
-                  linear                   ,
-                  accelerate               ,
-                  accelerate-io            ,
-                  accelerate-fft           ,
-                  algebraic                ,
-                  flowbox-utils            ,
-                  flowbox-graphics         ,
-                  JuicyPixels              ,
-                  lens                     ,
-                  split                    ,
-                  vector                   ,
-                  hspec                    ,
-                  HUnit                    ,
-                  QuickCheck               ,
-                  directory                ,
-                  download-curl            ,
-                  bytestring               ,
+  Build-Depends:  base           == 4.7.*,
+                  linear,
+                  accelerate,
+                  accelerate-io,
+                  accelerate-fft,
+                  algebraic,
+                  flowbox-utils,
+                  flowbox-graphics,
+                  JuicyPixels,
+                  lens,
+                  split,
+                  vector,
+                  hspec,
+                  HUnit,
+                  QuickCheck,
+                  directory,
+                  download-curl,
+                  bytestring,
                   aeson
 
 -- == test generator ==
@@ -153,17 +153,17 @@ Executable test_generator
     CPP-options:        -DACCELERATE_CUDA_BACKEND
     Build-Depends:      accelerate-cuda  == 0.16.*
 
-  Build-Depends:  base           == 4.7.*  ,
-                  linear                   ,
-                  accelerate               ,
-                  accelerate-io            ,
-                  accelerate-fft           ,
-                  algebraic                ,
-                  flowbox-utils            ,
-                  flowbox-graphics         ,
-                  JuicyPixels              ,
-                  lens                     ,
-                  split                    ,
+  Build-Depends:  base           == 4.7.*,
+                  linear,
+                  accelerate,
+                  accelerate-io,
+                  accelerate-fft,
+                  algebraic,
+                  flowbox-utils,
+                  flowbox-graphics,
+                  JuicyPixels,
+                  lens,
+                  split,
                   vector
 
 -- == test shape and bezier (curves) ==
@@ -187,17 +187,17 @@ Executable test_curves
     CPP-options:        -DACCELERATE_CUDA_BACKEND
     Build-Depends:      accelerate-cuda  == 0.16.*
 
-  Build-Depends:  base           == 4.7.*  ,
-                  linear                   ,
-                  accelerate               ,
-                  accelerate-io            ,
-                  algebraic                ,
-                  flowbox-utils            ,
-                  flowbox-graphics         ,
-                  JuicyPixels              ,
-                  lens                     ,
-                  split                    ,
-                  cubicbezier              ,
+  Build-Depends:  base           == 4.7.*,
+                  linear,
+                  accelerate,
+                  accelerate-io,
+                  algebraic,
+                  flowbox-utils,
+                  flowbox-graphics,
+                  JuicyPixels,
+                  lens,
+                  split,
+                  cubicbezier,
                   vector
 
   if flag(cuda)
@@ -225,15 +225,15 @@ Executable test_func
     CPP-options:        -DACCELERATE_CUDA_BACKEND
     Build-Depends:      accelerate-cuda  == 0.16.*
 
-  Build-Depends:  base           == 4.7.*  ,
-                  linear                   ,
-                  accelerate               ,
-                  accelerate-io            ,
-                  algebraic                ,
-                  flowbox-utils            ,
-                  flowbox-graphics         ,
-                  lens                     ,
-                  split                    ,
+  Build-Depends:  base           == 4.7.*,
+                  linear,
+                  accelerate,
+                  accelerate-io,
+                  algebraic,
+                  flowbox-utils,
+                  flowbox-graphics,
+                  lens,
+                  split,
                   cubicbezier
 
   if flag(cuda)
@@ -259,16 +259,16 @@ Executable test_merge
     CPP-options:        -DACCELERATE_CUDA_BACKEND
     Build-Depends:      accelerate-cuda  == 0.16.*
 
-  Build-Depends:  base           == 4.7.*  ,
-                  linear                   ,
-                  accelerate               ,
-                  accelerate-io            ,
-                  algebraic                ,
-                  flowbox-utils            ,
-                  flowbox-graphics         ,
-                  JuicyPixels              ,
-                  lens                     ,
-                  split                    ,
+  Build-Depends:  base           == 4.7.*,
+                  linear,
+                  accelerate,
+                  accelerate-io,
+                  algebraic,
+                  flowbox-utils,
+                  flowbox-graphics,
+                  JuicyPixels,
+                  lens,
+                  split,
                   vector
 
   if flag(cuda)
@@ -294,17 +294,17 @@ Executable test_color
     CPP-options:        -DACCELERATE_CUDA_BACKEND
     Build-Depends:      accelerate-cuda  == 0.16.*
 
-  Build-Depends:  base           == 4.7.*  ,
-                  linear                   ,
-                  accelerate               ,
-                  accelerate-io            ,
-                  algebraic                ,
-                  flowbox-utils            ,
-                  flowbox-graphics         ,
-                  JuicyPixels              ,
-                  lens                     ,
-                  QuickCheck               ,
-                  split                    ,
+  Build-Depends:  base           == 4.7.*,
+                  linear,
+                  accelerate,
+                  accelerate-io,
+                  algebraic,
+                  flowbox-utils,
+                  flowbox-graphics,
+                  JuicyPixels,
+                  lens,
+                  QuickCheck,
+                  split,
                   vector
 
 Executable test_serialization
@@ -324,17 +324,17 @@ Executable test_serialization
     CPP-options:        -DACCELERATE_CUDA_BACKEND
     Build-Depends:      accelerate-cuda  == 0.16.*
 
-  Build-Depends:  algebraic                ,
-                  accelerate               ,
-                  accelerate-io            ,
-                  base           == 4.7.*  ,
-                  bytestring               ,
-                  flowbox-graphics         ,
-                  flowbox-serialization    ,
-                  flowbox-utils            ,
-                  JuicyPixels              ,
-                  protocol-buffers    ,
-                  split                    ,
+  Build-Depends:  algebraic,
+                  accelerate,
+                  accelerate-io,
+                  base           == 4.7.*,
+                  bytestring,
+                  flowbox-graphics,
+                  flowbox-serialization,
+                  flowbox-utils,
+                  JuicyPixels,
+                  protocol-buffers,
+                  split,
                   vector
 
 
@@ -357,20 +357,20 @@ Executable test_vector_rasterization
     CPP-options:        -DACCELERATE_CUDA_BACKEND
     Build-Depends:      accelerate-cuda  == 0.16.*
 
-  Build-Depends:  base           == 4.7.*  ,
-                  linear                   ,
-                  accelerate               ,
-                  accelerate-io            ,
-                  algebraic                ,
-                  bytestring               ,
-                  vector-space             ,
-                  flowbox-utils            ,
-                  flowbox-graphics         ,
-                  JuicyPixels              ,
-                  lens                     ,
-                  QuickCheck               ,
-                  split                    ,
-                  thyme                    ,
+  Build-Depends:  base           == 4.7.*,
+                  linear,
+                  accelerate,
+                  accelerate-io,
+                  algebraic,
+                  bytestring,
+                  vector-space,
+                  flowbox-utils,
+                  flowbox-graphics,
+                  JuicyPixels,
+                  lens,
+                  QuickCheck,
+                  split,
+                  thyme,
                   vector
 
 -- == test mockup ==
@@ -392,19 +392,19 @@ Executable mockup
     CPP-options:        -DACCELERATE_CUDA_BACKEND
     Build-Depends:      accelerate-cuda  == 0.16.*
 
-  Build-Depends:  base           == 4.7.*  ,
-                  linear                   ,
-                  accelerate               ,
-                  accelerate-io            ,
-                  algebraic                ,
-                  bytestring               ,
-                  vector-space             ,
-                  flowbox-utils            ,
-                  flowbox-graphics         ,
-                  JuicyPixels              ,
-                  lens                     ,
-                  QuickCheck               ,
-                  split                    ,
+  Build-Depends:  base           == 4.7.*,
+                  linear,
+                  accelerate,
+                  accelerate-io,
+                  algebraic,
+                  bytestring,
+                  vector-space,
+                  flowbox-utils,
+                  flowbox-graphics,
+                  JuicyPixels,
+                  lens,
+                  QuickCheck,
+                  split,
                   vector
 
 -- == test hueCorrect  ==
@@ -426,19 +426,19 @@ Executable test_hue_correct
     CPP-options:        -DACCELERATE_CUDA_BACKEND
     Build-Depends:      accelerate-cuda  == 0.16.*
 
-  Build-Depends:  base           == 4.7.*  ,
-                  linear                   ,
-                  accelerate               ,
-                  accelerate-io            ,
-                  algebraic                ,
-                  bytestring               ,
-                  vector-space             ,
-                  flowbox-utils            ,
-                  flowbox-graphics         ,
-                  JuicyPixels              ,
-                  lens                     ,
-                  QuickCheck               ,
-                  split                    ,
+  Build-Depends:  base           == 4.7.*,
+                  linear,
+                  accelerate,
+                  accelerate-io,
+                  algebraic,
+                  bytestring,
+                  vector-space,
+                  flowbox-utils,
+                  flowbox-graphics,
+                  JuicyPixels,
+                  lens,
+                  QuickCheck,
+                  split,
                   vector
 
 -- == test transformations  ==
@@ -460,18 +460,18 @@ Executable test_transformations
     CPP-options:        -DACCELERATE_CUDA_BACKEND
     Build-Depends:      accelerate-cuda  == 0.16.*
 
-  Build-Depends:  base           == 4.7.*  ,
-                  linear                   ,
-                  accelerate               ,
-                  accelerate-io            ,
-                  algebraic                ,
-                  bytestring               ,
-                  vector-space             ,
-                  flowbox-utils            ,
-                  flowbox-graphics         ,
-                  JuicyPixels              ,
-                  lens                     ,
-                  QuickCheck               ,
-                  split                    ,
+  Build-Depends:  base           == 4.7.*,
+                  linear,
+                  accelerate,
+                  accelerate-io,
+                  algebraic,
+                  bytestring,
+                  vector-space,
+                  flowbox-utils,
+                  flowbox-graphics,
+                  JuicyPixels,
+                  lens,
+                  QuickCheck,
+                  split,
                   vector
                   
