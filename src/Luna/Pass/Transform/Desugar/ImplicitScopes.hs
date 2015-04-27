@@ -124,7 +124,6 @@ fmake ast@(Label lab e) f = case e of
     Expr.Var (Expr.Variable name v) -> do
         si    <- view structInfo <$> get
         ii    <- view importInfo <$> get
-        newID <- fromIntegral <$> genID
         let parentMap = view StructInfo.parent si
             aliasMap  = view StructInfo.alias si
             originMod = fmap (view StructInfo.mod) $ view (at id) aliasMap
@@ -135,10 +134,13 @@ fmake ast@(Label lab e) f = case e of
 
         if originMod == (Just thisMod)
             then if pid == tgtPid then return ast
-                                  else return $ Label newID $ Expr.Accessor (convert name) (f $ Label lab $ Expr.Var $ Expr.Variable "self" v)
-            else return $ Label newID $ Expr.Accessor (convert name) (f $ Label lab $ Expr.Cons $ Name.cname . ImportInfo.moduleObjectName . fromJust $ originMod)
+                                  else Label <$> newID <*> pure (Expr.Accessor (convert name) (f $ Label lab $ Expr.Var $ Expr.Variable "self" v))
+            else Label <$> newID <*> pure (Expr.Accessor (convert name) (f $ Label lab $ Expr.Cons $ Name.cname . ImportInfo.moduleObjectName . fromJust $ originMod))
                          -- TODO [kgdk -> wd]: ^-- a magic constant :)
-    where id = Enum.id lab
+    where id    = Enum.id lab
+          newID = do fromIntegral <$> genID
+
+
 ----------------------------------------------------------------------
 -- Instances
 ----------------------------------------------------------------------
