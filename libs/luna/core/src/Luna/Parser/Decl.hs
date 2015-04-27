@@ -45,7 +45,8 @@ declImp = Decl.DeclImp <$> impPath
                        <*> blockBegin importTarget
                        <?> "declaration import"
 
-importTarget =   body Decl.ImpVar Tok.varOp 
+importTarget =   Tok.importAll *> (pure $ Decl.Wildcard [])
+             <|> body Decl.ImpVar Tok.varOp 
              <|> body Decl.ImpType Tok.typeIdent
              <?> "import declaration"
              where body c p = c <$> p <*> ((Just <$ Tok.kwAs <*> p) <|> pure Nothing)
