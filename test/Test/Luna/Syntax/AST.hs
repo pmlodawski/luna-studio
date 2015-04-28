@@ -47,7 +47,9 @@ getAST code = fmap fst $ Session.runT $ do
         (ast, astInfo) <- Pass.run3_ Stage2.pass (Namespace [] structInfo) astInfo ast
         (ast, astInfo) <- Pass.run2_ ImplSelf.pass astInfo ast
         sd             <- Pass.run2_ SA.pass sd ast
-        (ast, astInfo) <- Pass.run2_ ImplScopes.pass (astInfo, structInfo, sd ^. StructData.importInfo) ast
+        let structInfo = sd ^. StructData.namespace . Namespace.info
+            importInfo = sd ^. StructData.importInfo
+        (ast, astInfo) <- Pass.run2_ ImplScopes.pass (astInfo, structInfo, importInfo) ast
         (ast, astInfo) <- Pass.run2_ ImplCalls.pass astInfo ast
         let Unit retAST = ast
         return (retAST, astInfo)
