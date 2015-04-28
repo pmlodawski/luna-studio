@@ -65,9 +65,9 @@ data StructInfo = StructInfo { _scope    :: IDMap Scope
                              , _argPats  :: IDMap NamePatDesc
                              } deriving (Show, Eq, Generic, Read)
 
-makeLenses (''Scope)
-makeLenses (''OriginInfo)
-makeLenses (''StructInfo)
+makeLenses ''Scope
+makeLenses ''OriginInfo
+makeLenses ''StructInfo
 
 ----------------------------------------------------------------------
 -- Type classes
