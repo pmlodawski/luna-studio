@@ -48,13 +48,16 @@ import qualified Luna.Pass.Transform.Desugar.ImplicitSelf   as ImplSelf
 import qualified Luna.Pass.Transform.Parse.Stage1           as Stage1
 import qualified Luna.Pass.Transform.Parse.Stage2           as Stage2
 import qualified Luna.Pass.Transform.SSA                    as SSA
+import           Luna.Pass.Import                           (getImportPaths)
 import qualified Luna.System.Pragma.Store                   as Pragma
 import           Luna.System.Session                        as Session
 
 import           Luna.Syntax.Name.Path                      (QualPath(QualPath))
 
 import qualified Luna.Data.ModuleInfo                       as MI
+import qualified Luna.Data.ImportInfo                       as II
 import           Data.String.Utils                          (replace)
+import           Data.Text.Lazy                             (pack)
 
 type Builder m = (MonadIO m, Functor m)
 
@@ -78,7 +81,7 @@ tmpDirPrefix :: String
 tmpDirPrefix = "lunac"
 
 
-prepareSource :: Builder m => Diagnostics -> Source Source.File -> m (Source Code)
+prepareSource :: Builder m => Diagnostics -> Source Source.File -> m [Source Code]
 prepareSource diag src = do
     let liFile =  _modName src
     result <- Session.runT $ do
@@ -90,12 +93,24 @@ prepareSource diag src = do
             (ast, astinfo) <- Pass.run1_ Stage1.pass src
             printAST diag ast
 
+            -- compilation of imported modules:
+            -- (assuming each one is our module, NOT a library)
+            let importPaths = getImportPaths ast
+            --liftIO $ putStrLn "Module paths:"
+            --liftIO . putStrLn $ show importPaths
+            let mkFile      = Source.File . pack . (++ ".luna") . MI.modPathToString
+                sources     = map (\i -> Source i (mkFile i)) importPaths
+                hscs        = mapM (prepareSource diag) sources
+            compiledCodes <- hscs
+            --liftIO $ putStrLn "Codes: "
+            --liftIO . putStrLn $ show compiledCodes
+
             printHeader "Extraction of imports"
-            importInfo <- Pass.run1_ Imports.pass ast 
+            importInfo     <- Pass.run1_ Imports.pass ast 
             --ppPrint importInfo
 
             printHeader "SA"
-            sa           <- Pass.run2_ SA.pass (StructData mempty importInfo) ast
+            sa             <- Pass.run2_ SA.pass (StructData mempty importInfo) ast
             let sa1 = _info . _namespace $ sa
             let mInfo = MI.ModuleInfo liFile mempty sa1 mempty
             -- ppPrint ModuleInfo
@@ -142,9 +157,9 @@ prepareSource diag src = do
             hsc            <- Pass.run1_ HSC.pass hast
             printHSC diag hsc
 
-            return hsc
-    code <- eitherStringToM $ fst result
-    return $ Source (src ^. Source.modName) $ Code code
+            return (hsc, concat compiledCodes)
+    codes <- eitherStringToM $ fst result
+    return $ (Source (src ^. Source.modName) $ Code (fst codes)) : (snd codes)
 
 
 run :: Builder m => BuildConfig -> Diagnostics -> UniPath -> UniPath -> m ()
@@ -162,11 +177,11 @@ buildInFolder (BuildConfig name version libs ghcOptions ccOptions includeDirs ca
                 : libs
                 ++ ["flowboxM-stdlib" | name /= "flowboxM-stdlib"]
     src <- File.getSource rootPath srcPath
-    hsc <- prepareSource diag src
+    hsc <- prepareSource diag src          -- tutaj moze warto przekazac folder do passow, zeby moc tam odpalic cabala
     let cabal = case buildType of
             BuildConfig.Executable {} -> CabalGen.genExecutable name version ghcOptions ccOptions includeDirs allLibs
-            BuildConfig.Library       -> CabalGen.genLibrary    name version ghcOptions ccOptions includeDirs allLibs [hsc]
-    writeSources buildDir [hsc]
+            BuildConfig.Library       -> CabalGen.genLibrary    name version ghcOptions ccOptions includeDirs allLibs hsc
+    writeSources buildDir hsc
     CabalStore.run cabal $ UniPath.append (name ++ cabalExt) buildDir
     CabalInstall.run cfg buildDir cabalFlags
     case buildType of
