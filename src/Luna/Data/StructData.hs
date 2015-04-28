@@ -4,37 +4,38 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE TemplateHaskell      #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE OverlappingInstances  #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE TemplateHaskell           #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 module Luna.Data.StructData where
 
-import           Flowbox.Prelude
-import qualified Data.Map                  as Map
+import           Control.Monad.RWS         (RWST)
+import qualified Control.Monad.RWS         as RWST
+import           Control.Monad.Trans.Class (MonadTrans, lift)
 import           Data.Map                  (Map)
-import qualified Luna.Data.ImportInfo      as II
+import qualified Data.Map                  as Map
+import           Flowbox.Prelude
 import           Luna.Data.ImportInfo      (ImportInfo)
+import qualified Luna.Data.ImportInfo      as II
+import           Luna.Data.ModuleInfo      (ImportError (..))
 import qualified Luna.Data.ModuleInfo      as MI
-import           Luna.Data.ModuleInfo      (ImportError(..))
-import qualified Luna.Data.Namespace       as NS
 import           Luna.Data.Namespace       (Namespace)
+import qualified Luna.Data.Namespace       as NS
 import qualified Luna.Data.Namespace.State as NMS
 import           Luna.Data.StructInfo      (StructInfoMonad)
 import qualified Luna.Data.StructInfo      as SI
 import           Luna.Syntax.Name.Path     (QualPath)
-import           Control.Monad.RWS         (RWST)
-import qualified Control.Monad.RWS         as RWST
-import           Control.Monad.Trans.Class (lift, MonadTrans)
 
-import qualified Control.Monad.State.Lazy  as State
+import qualified Control.Monad.State.Lazy as State
+
 
 ----------------------------------------------------------------------
 -- Data types
 ----------------------------------------------------------------------
 data StructData = StructData { _namespace  :: Namespace
-	                     , _importInfo :: ImportInfo
+                             , _importInfo :: ImportInfo
                              } deriving Show
 
 makeLenses ''StructData
