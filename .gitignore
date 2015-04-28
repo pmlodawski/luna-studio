@@ -10,6 +10,7 @@
 *.dll
 out
 a.out
+*.li
 
 # profiling results
 *.hp
