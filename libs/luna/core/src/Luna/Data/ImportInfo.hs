@@ -59,6 +59,8 @@ getPath :: ImportInfo -> Path
 getPath info = qualPathToPath $ _path info
 
 
+getImportPaths :: ImportInfo -> [QualPath]
+getImportPaths info = map _impPath (_imports info)
 
 -- Creates the mapping between symbol names (NamePath) and their origins (OriginInfo)
 createSymTable :: ImportInfo -> ImportInfo
