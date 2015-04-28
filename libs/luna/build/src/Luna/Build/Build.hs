@@ -72,59 +72,60 @@ cabalExt = ".cabal"
 tmpDirPrefix :: String
 tmpDirPrefix = "lunac"
 
+runSession s =
+    eitherStringToM . fst =<< Session.runT (void Parser.init >> runEitherT s)
+
+parseSource diag src = do
+    printHeader "Stage1"
+    (ast, astinfo) <- Pass.run1_ Stage1.pass src
+    printAST diag ast
+
+    printHeader "SA"
+    sa             <- Pass.run1_ SA.pass ast
+    printSA diag sa
+
+    printHeader "Stage2"
+    (ast, astinfo) <- Pass.run3_ Stage2.pass (Namespace [] sa) astinfo ast
+    printAST diag ast
+
+    printHeader "ImplSelf"
+    (ast, astinfo) <- Pass.run2_ ImplSelf.pass astinfo ast
+    printAST diag ast
+
+    printHeader "SA"
+    sa             <- Pass.run1_ SA.pass ast
+    printSA diag sa
+
+    printHeader "ImplScopes"
+    (ast, astinfo) <- Pass.run3_ ImplScopes.pass astinfo sa ast
+    printAST diag ast
+
+    printHeader "ImplCalls"
+    (ast, astinfo) <- Pass.run2_ ImplCalls.pass astinfo ast
+    printAST diag ast
+    return (ast, astinfo)
 
 prepareSource :: Builder m => Diagnostics -> Source Source.File -> m (Source Code)
 prepareSource diag src = do
-    result <- Session.runT $ do
-        void   Parser.init
-        void $ Pragma.enable (Pragma.orphanNames)
-        void $ Pragma.pop    (Pragma.orphanNames)
-        runEitherT $ do
-            printHeader "Stage1"
-            (ast, astinfo) <- Pass.run1_ Stage1.pass src
-            printAST diag ast
+    code <- runSession $ do
+        (ast, astinfo) <- parseSource diag src
 
-            printHeader "SA"
-            sa             <- Pass.run1_ SA.pass ast
-            printSA diag sa
+        --printHeader "Hash"
+        --ast             <- Pass.run1_ Hash.pass ast
 
-            printHeader "Stage2"
-            (ast, astinfo) <- Pass.run3_ Stage2.pass (Namespace [] sa) astinfo ast
-            printAST diag ast
+        printHeader "SSA"
+        ast            <- Pass.run1_ SSA.pass ast
+        printSSA diag ast
 
-            printHeader "ImplSelf"
-            (ast, astinfo) <- Pass.run2_ ImplSelf.pass astinfo ast
-            printAST diag ast
+        printHeader "HAST"
+        hast           <- Pass.run1_ HASTGen.pass ast
+        printHAST diag hast
 
-            printHeader "SA"
-            sa             <- Pass.run1_ SA.pass ast
-            printSA diag sa
+        printHeader "HSC"
+        hsc            <- Pass.run1_ HSC.pass hast
+        printHSC diag hsc
 
-            printHeader "ImplScopes"
-            (ast, astinfo) <- Pass.run3_ ImplScopes.pass astinfo sa ast
-            printAST diag ast
-
-            printHeader "ImplCalls"
-            (ast, _astinfo) <- Pass.run2_ ImplCalls.pass astinfo ast
-            printAST diag ast
-
-            --printHeader "Hash"
-            --ast             <- Pass.run1_ Hash.pass ast
-
-            printHeader "SSA"
-            ast            <- Pass.run1_ SSA.pass ast
-            printSSA diag ast
-
-            printHeader "HAST"
-            hast           <- Pass.run1_ HASTGen.pass ast
-            printHAST diag hast
-
-            printHeader "HSC"
-            hsc            <- Pass.run1_ HSC.pass hast
-            printHSC diag hsc
-
-            return hsc
-    code <- eitherStringToM $ fst result
+        return hsc
     return $ Source (src ^. Source.modName) $ Code code
 
 
