@@ -38,7 +38,6 @@ pass = Pass "Import analysis"
             NoState iaMain
 
 
---TODO - jeśli przechodzimy na [Import] to wszystko co tu mamy się spier... piiiii!
 iaMain :: (MonadIO m) => Unit (Label l (Module a e)) -> m ImportInfo
 iaMain ast =  do           
     let impPaths =  I.getImportPaths ast
