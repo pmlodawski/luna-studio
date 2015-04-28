@@ -13,7 +13,11 @@ module Test.Luna.Pass.Transform.Graph.Common where
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Luna.Data.ASTInfo                         (ASTInfo)
+import qualified Luna.Data.Namespace                       as Namespace
+import           Luna.Data.StructData                      (StructData (StructData))
+import qualified Luna.Data.StructData                      as StructData
 import qualified Luna.Pass                                 as Pass
+import qualified Luna.Pass.Analysis.Imports                as Imports
 import qualified Luna.Pass.Analysis.Struct                 as Struct
 import qualified Luna.Pass.Transform.Graph.Builder.Builder as GraphBuilder
 import qualified Luna.Pass.Transform.Graph.Parser.Parser   as GraphParser
@@ -26,6 +30,7 @@ import           Luna.Syntax.Graph.Graph                   (Graph)
 import           Luna.Syntax.Graph.Tag                     (Tag)
 import           Luna.Syntax.Graph.Tag                     (TModule)
 import           Luna.Syntax.Module                        (LModule)
+import           Luna.Syntax.Unit                          (Unit (Unit))
 import qualified Luna.System.Pragma.Store                  as Pragma
 import           Luna.System.Session                       as Session
 
@@ -47,8 +52,9 @@ getGraph bc ast = runPass $ do
     zipper <- lift $ eitherStringToM $ BCZipper.focusBreadcrumbs' bc ast
     let focus = BCZipper.getFocus zipper
     decl  <- focus ^? Focus.decl <??> "test.Common.getFunctionGraph : Target is not a function"
-    aliasInfo <- Pass.run1_ Struct.pass ast
-    (decl2, graph) <- GraphBuilder.run aliasInfo decl
+    importInfo     <- Pass.run1_ Imports.pass (Unit ast)
+    structData <- Pass.run2_ Struct.pass (StructData mempty importInfo) ast
+    (decl2, graph) <- GraphBuilder.run (structData ^. StructData.namespace . Namespace.info) decl
     let newFocus = focus & Focus.decl .~ decl2
     return (BCZipper.close $ BCZipper.modify (const newFocus) zipper, graph)
 
