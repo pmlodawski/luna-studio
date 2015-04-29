@@ -9,27 +9,26 @@
 
 module Luna.Data.StructInfo where
 
-import Flowbox.Prelude
-
-import GHC.Generics        (Generic)
+import GHC.Generics (Generic)
 
 
-import           Data.IntMap  (IntMap)
-import           Data.Map     (Map)
-import           Luna.Syntax.AST (AST, ID)
-import qualified Luna.Syntax.AST as AST
-import           Luna.Syntax.Decl (Path)
-import qualified Data.Maps    as Map
-import           Luna.Syntax.Name.Path  (NamePath, QualPath)
-import qualified Luna.Syntax.Name.Path  as NamePath
-import qualified Flowbox.Data.MapForest as MapForest
-import           Flowbox.Data.MapForest (MapForest)
-import           Control.Monad          (join)
-import           Luna.Syntax.Name.Pattern (NamePatDesc)
-import           Control.Monad.RWS         (RWST)
-import qualified Luna.Syntax.Module as Module
+import           Control.Monad     (join)
+import           Control.Monad.RWS (RWST)
+import           Data.IntMap       (IntMap)
+import           Data.Map          (Map)
+import qualified Data.Maps         as Map
+
+import           Flowbox.Data.MapForest   (MapForest)
+import qualified Flowbox.Data.MapForest   as MapForest
+import           Flowbox.Prelude
+import           Luna.Syntax.AST          (AST, ID)
+import qualified Luna.Syntax.AST          as AST
+import           Luna.Syntax.Decl         (Path)
 import qualified Luna.Syntax.Enum         as Enum
-
+import qualified Luna.Syntax.Module       as Module
+import           Luna.Syntax.Name.Path    (NamePath, QualPath)
+import qualified Luna.Syntax.Name.Path    as NamePath
+import           Luna.Syntax.Name.Pattern (NamePatDesc)
 ----------------------------------------------------------------------
 -- Data types
 ----------------------------------------------------------------------
@@ -38,7 +37,7 @@ type IDMap = IntMap
 
 type NameMap v = MapForest Text v
 
-data Error  = LookupError { key    :: Text }
+data Error  = LookupError { key :: Text }
             deriving (Show, Eq, Generic, Read)
 
 
@@ -46,9 +45,8 @@ data Error  = LookupError { key    :: Text }
 
 
 data Scope = Scope { _varnames  :: NameMap OriginInfo
-                   , _typenames :: NameMap OriginInfo 
+                   , _typenames :: NameMap OriginInfo
                    } deriving (Show, Eq, Generic, Read)
-
 
 
 
@@ -58,11 +56,11 @@ data OriginInfo = OriginInfo { _mod    :: QualPath
                              , _target :: ID
                              } deriving (Show, Eq, Generic, Read)
 
-data StructInfo = StructInfo { _scope    :: IDMap Scope
-                             , _alias    :: IDMap OriginInfo
-                             , _orphans  :: IDMap Error
-                             , _parent   :: IDMap ID
-                             , _argPats  :: IDMap NamePatDesc
+data StructInfo = StructInfo { _scope   :: IDMap Scope
+                             , _alias   :: IDMap OriginInfo
+                             , _orphans :: IDMap Error
+                             , _parent  :: IDMap ID
+                             , _argPats :: IDMap NamePatDesc
                              } deriving (Show, Eq, Generic, Read)
 
 makeLenses ''Scope
@@ -81,33 +79,39 @@ class StructInfoMonad m where
 ----------------------------------------------------------------------
 -- Utils
 ----------------------------------------------------------------------
---TODO[PM] check if it should be id or parent id
+--TODO[PMo] check if it should be id or parent id
 regOrigin :: ID -> OriginInfo -> StructInfo -> StructInfo
 regOrigin id origin = alias %~ Map.insert id origin
 
 
+--CR[PM->TD] : add type signature
 regParent  id pid  = parent %~ Map.insert id pid
 
+--CR[PM->TD] : add type signature
 regVarName pid id name info = setScope info pid $ Scope (vnmap & at name ?~ id) tnmap where
     (vnmap, tnmap) = scopeLookup pid info
 
 
+--CR[PM->TD] : add type signature
 regOrphan id err = orphans %~ Map.insert id err
 
 
+--CR[PM->TD] : add type signature
 regArgPat id argPat = argPats %~ Map.insert id argPat
 
 
+--CR[PM->TD] : add type signature
 regTypeName pid id name info = setScope info pid $ Scope vnmap (tnmap & at name ?~ id) where
     (vnmap, tnmap) = scopeLookup pid info
 
 
+--CR[PM->TD] : add type signature
 setScope info id s = info & scope.at id ?~ s
 
 
 scopeLookup pid info = case Map.lookup pid (info ^. scope) of
-        Nothing          -> (mempty, mempty)
-        Just (Scope v t) -> (v,t)
+    Nothing          -> (mempty, mempty)
+    Just (Scope v t) -> (v,t)
 
 
 lookupVarInScope :: NamePath -> Scope -> Maybe OriginInfo
@@ -150,5 +154,3 @@ instance Default StructInfo where
 
 
 
---instance StructInfoMonad (RWST ) where
---    func = 

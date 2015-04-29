@@ -7,54 +7,52 @@
 
 module Luna.Data.ModuleInfo where
 
-import           Control.Monad            ((>=>), (<=<), liftM, foldM)
-import           Data.Binary             
-import           Data.Either              (lefts, rights)
-import           Data.List                (find, filter)
-import           Data.Maybe               (fromMaybe, fromJust)
-import           Data.Map                 (Map)
-import qualified Data.Map                 as Map
-import qualified Data.IntMap              as IntMap
-import           Data.Text.Internal.Lazy  (Text)
-import qualified Data.Text.Lazy           as T
-import           System.Environment       (lookupEnv)
-import qualified System.Directory         as Dir
-import           System.FilePath          (joinPath, (</>))
+import           Control.Monad           (foldM, liftM, (<=<), (>=>))
+import           Data.Binary
+import           Data.Either             (lefts, rights)
+import qualified Data.IntMap             as IntMap
+import           Data.List               (filter, find)
+import           Data.Map                (Map)
+import qualified Data.Map                as Map
+import           Data.Maybe              (fromJust, fromMaybe, isJust)
+import           Data.Text.Internal.Lazy (Text)
+import qualified Data.Text.Lazy          as T
+import qualified System.Directory        as Dir
+import           System.Environment      (lookupEnv)
+import           System.FilePath         (joinPath, (</>))
 
-import qualified Luna.Data.StructInfo     as SI
-import           Luna.Data.StructInfo     (StructInfo, Scope, OriginInfo)
-import           Luna.Syntax.AST          (ID)
-import           Luna.Syntax.Decl         (Path)
-import           Luna.Syntax.Name         (TName(TName), TNameP)
-import           Luna.Syntax.Name.Path    (NamePath, QualPath(QualPath))
-import qualified Luna.Syntax.Name.Path    as NP
-import           Luna.Syntax.Name.Pattern (NamePatDesc, SegmentDesc)
-
+import           Data.Either.Combinators  (mapRight)
 import           Flowbox.Data.MapForest   (Node)
 import qualified Flowbox.Data.MapForest   as MF
-import           Flowbox.System.UniPath   (UniPath, PathItem)
-import           Data.Either.Combinators  (mapRight)
 import           Flowbox.Prelude
-
-
+import           Flowbox.System.UniPath   (PathItem, UniPath)
+import           Luna.Data.StructInfo     (OriginInfo, Scope, StructInfo)
+import qualified Luna.Data.StructInfo     as SI
+import           Luna.Syntax.AST          (ID)
+import           Luna.Syntax.Decl         (Path)
+import           Luna.Syntax.Name         (TName (TName), TNameP)
+import           Luna.Syntax.Name.Path    (NamePath, QualPath (QualPath))
+import qualified Luna.Syntax.Name.Path    as NP
+import           Luna.Syntax.Name.Pattern (NamePatDesc, SegmentDesc)
 
 
 type Name = String
 
 
-data ImportError = NotFoundError { path   :: QualPath }
+data ImportError = NotFoundError { path :: QualPath }
                  | AmbRefError   { symbol :: NamePath, modules :: [QualPath] }
                  deriving (Generic, Eq, Show, Ord, Read)
 
+makeLenses ''ImportError
 
 -- stores the information about a module, needed while importing
 -- and resolving names. Checking whether a file needs recompilation is done based on the file  edit dates
 data ModuleInfo = ModuleInfo {
-                     _name     :: QualPath,
+                     _name    :: QualPath,
 --                     _symTable :: Map NamePath ID,
-                     _imports  :: [QualPath],
-                     _strInfo  :: StructInfo,  -- [?] Namespace here?
-                     _errors   :: [ImportError]
+                     _imports :: [QualPath],
+                     _strInfo :: StructInfo,  -- [?] Namespace here?
+                     _errors  :: [ImportError]
                   } deriving (Generic, Eq, Show, Read)
 
 makeLenses ''ModuleInfo
@@ -62,57 +60,24 @@ makeLenses ''ModuleInfo
 
 -- given a list of paths, lookups all the necessary ModuleInfo structs
 getModuleInfos :: [QualPath] -> IO [Either ImportError ModuleInfo]
-getModuleInfos paths = mapM getModuleInfo paths
+getModuleInfos = mapM getModuleInfo
 
 getModuleInfo :: QualPath -> IO (Either ImportError ModuleInfo)
---getModuleInfo = (return . fromJust <=< readModInfoFromFile)
-getModuleInfo path = do
-    result <- readModInfoFromFile path
-    return $ case result of
-        Just modInfo -> Right modInfo
-        Nothing      -> Left (NotFoundError path)
+getModuleInfo path = readModInfoFromFile path >>= \case
+    Just modInfo -> return $ Right modInfo
+    Nothing      -> return $ Left (NotFoundError path)
 
 
 regError :: ImportError -> ModuleInfo -> ModuleInfo
 regError err = errors %~ (err:)
-
--------------------------------------------------------------------------------------
--- wrappers for structInfo functions
--------------------------------------------------------------------------------------
---regOrigin :: ID -> SI.OriginInfo -> ModuleInfo -> ModuleInfo
---regOrigin id origin = strInfo %~ SI.regOrigin id origin
-
-
---regOrphan :: ID -> SI.Error -> ModuleInfo -> ModuleInfo
---regOrphan id err = strInfo %~ SI.regOrphan id err
-
-
---regParent id pid = strInfo %~ SI.regParent id pid
-
---regArgPat id argPat = strInfo %~ SI.regArgPat id argPat
-
---------------------------------------------------------------------
--- simple utility functions for lookups and checks
---------------------------------------------------------------------
-
---nameExists :: NamePath -> ModuleInfo -> Bool
---nameExists name mInfo = Map.member name (mInfo ^. symTable)
-
-
-
---getSymbolId :: NamePath -> ModuleInfo -> Maybe ID
---getSymbolId name mInfo = Map.lookup name (mInfo ^. symTable)
-
 
 
 -- checks if the module exists (but not if it's parsed)
 moduleExists :: QualPath -> IO Bool
 moduleExists path = do
     let fullPath = modPathToString path ++ lunaFileSuffix
-    f <- Dir.findFile ["."] fullPath 
-    return $ case f of
-        Just p  -> True
-        Nothing -> False
+    f <- Dir.findFile ["."] fullPath
+    return $ isJust f
 
 
 
@@ -121,13 +86,11 @@ moduleIsParsed :: QualPath -> IO Bool
 moduleIsParsed path = do
     let fullPath = modPathToString path ++ liFileSuffix
     f      <- Dir.findFile [liDirectory] fullPath
-    return $ case f of
-        Just p  -> True
-        Nothing -> False
+    return $ isJust f
 
 
 modPathToString :: QualPath -> String
-modPathToString qp@(QualPath _ n) = (modPathToDirString qp) </> (T.unpack n)
+modPathToString qp@(QualPath _ n) = modPathToDirString qp </> T.unpack n
 
 
 -- the difference between this one and modPathToString is that
@@ -137,7 +100,7 @@ modPathToDirString (QualPath ns _) = joinPath $ map T.unpack ns
 
 
 modName :: QualPath -> String
-modName qp = T.unpack $ qp ^. NP.name 
+modName qp = T.unpack $ qp ^. NP.name
 
 
 pathToQualPath :: Path -> QualPath
@@ -148,7 +111,7 @@ pathToQualPath path = QualPath ns n
 
 qualPathToPath :: QualPath -> Path
 qualPathToPath (QualPath ns n) = segs ++ [seg]
-    where segs = (map makeTNameP ns)
+    where segs = map makeTNameP ns
           seg  = (fromText n) :: TNameP
           makeTNameP = (\x -> fromText x) :: T.Text -> TNameP
 
@@ -166,7 +129,6 @@ liDirectory :: FilePath
 liDirectory = "modinfo"
 
 
-
 -- does the main serialization:
 writeModInfoToFile :: ModuleInfo -> IO ()
 writeModInfoToFile modInfo = do
@@ -174,10 +136,9 @@ writeModInfoToFile modInfo = do
     let modDir = liDirectory </> (modPathToDirString $ modInfo ^. name)
     Dir.createDirectoryIfMissing True modDir
     let mName = modName $ modInfo ^. name
-    let fPath = modDir </> mName ++ liFileSuffix
+        fPath = modDir </> mName ++ liFileSuffix
     -- serialize with Data.Binry:
     encodeFile fPath modInfo
-
 
 
 -- deserialization:
@@ -186,8 +147,8 @@ readModInfoFromFile path = do
     isParsed <- moduleIsParsed path
     if isParsed
         then do
-            let modPath = liDirectory </> (modPathToString path) ++ liFileSuffix
-            fmap Just $ decodeFile modPath
+            let modPath = liDirectory </> modPathToString path ++ liFileSuffix
+            Just <$> decodeFile modPath
         else return Nothing
 
 
@@ -218,5 +179,5 @@ instance Monoid ModuleInfo where
 
 instance Monoid QualPath where
     mempty      = QualPath [] mempty
-    mappend a b = b
+    mappend     = const
 
