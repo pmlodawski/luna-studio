@@ -32,6 +32,7 @@ data Import = Import {
     _rename   :: Maybe NamePath
 } deriving (Generic, Show, Eq, Read)
 
+makeLenses ''Import
 
 data ImportInfo = ImportInfo {
     _path        :: QualPath,       -- move to Namespace (?)
@@ -62,11 +63,11 @@ setPath p = path .~ p
 
 
 getPath :: ImportInfo -> Path
-getPath info = qualPathToPath $ _path info
+getPath info = qualPathToPath $ info ^. path
 
 
 getImportPaths :: ImportInfo -> [QualPath]
-getImportPaths info = map _impPath (_imports info)
+getImportPaths info = map _impPath (info ^. imports)
 
 -- Creates the mapping between symbol names (NamePath) and their origins (OriginInfo)
 createSymTable :: ImportInfo -> ImportInfo
@@ -74,14 +75,14 @@ createSymTable = addMNameToSymTable . addMNameToTypeTable . createSymTableVars .
 
 -- TODO[PMo] add every module name to both type- and symTable
 addMNameToSymTable :: ImportInfo -> ImportInfo
-addMNameToSymTable info = info & (symTable %~ (Map.unionWith (++) (createNameMap $ _imports info)))
+addMNameToSymTable info = info & (symTable %~ (Map.unionWith (++) (createNameMap $ info ^. imports)))
 
 addMNameToTypeTable :: ImportInfo -> ImportInfo
-addMNameToTypeTable info = info & (typeTable %~ (Map.unionWith (++) (createNameMap $ _imports info)))
+addMNameToTypeTable info = info & (typeTable %~ (Map.unionWith (++) (createNameMap $ info ^. imports)))
 
 createNameMap :: [Import] -> Map NamePath [OriginInfo]
 createNameMap imps = Map.fromList tuples
-    where tuples = fmap (\imp -> (moduleObjectName (_impPath imp), [OriginInfo (_impPath imp) 0])) imps -- TODO check if it's really 0
+    where tuples = fmap (\imp -> (moduleObjectName (imp ^. impPath), [OriginInfo (imp ^. impPath) 0])) imps -- TODO check if it's really 0
 
 
 createSymTableVars :: ImportInfo -> ImportInfo
@@ -102,7 +103,7 @@ regError err = errors %~ (err:)
 -- symbol appears in more than one module, the list isn't a singleton
 combineScopes :: Tag -> ImportInfo -> Map NamePath [OriginInfo]
 combineScopes tag info = Map.unionsWith (++) maps
-    where strInfos = Map.elems $ _structInfos info
+    where strInfos = Map.elems $ info ^. structInfos
           maps     = map (topLevelScope tag) strInfos
 
 
@@ -124,7 +125,7 @@ toNamePath (t:ts) = NP.multi t ts
 
 
 qualPathToList :: QualPath -> [Text]
-qualPathToList qp = (NP._path qp) ++ [NP._name qp]
+qualPathToList qp = (qp ^. NP.path) ++ [qp ^. NP.name]
 
 -----------------------------------------------------------------------------------------
 --Instances

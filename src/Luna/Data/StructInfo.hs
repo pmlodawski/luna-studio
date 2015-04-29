@@ -105,7 +105,7 @@ regTypeName pid id name info = setScope info pid $ Scope vnmap (tnmap & at name 
 setScope info id s = info & scope.at id ?~ s
 
 
-scopeLookup pid info = case Map.lookup pid (_scope info) of
+scopeLookup pid info = case Map.lookup pid (info ^. scope) of
         Nothing          -> (mempty, mempty)
         Just (Scope v t) -> (v,t)
 
@@ -113,7 +113,7 @@ scopeLookup pid info = case Map.lookup pid (_scope info) of
 lookupVarInScope :: NamePath -> Scope -> Maybe OriginInfo
 lookupVarInScope name scope = MapForest.lookup nameList vnames
     where nameList = NamePath.toList name
-          vnames   = _varnames scope
+          vnames   = scope ^. varnames
 
 
 regAlias :: ID -> NamePath -> ScopeID -> StructInfo -> StructInfo
