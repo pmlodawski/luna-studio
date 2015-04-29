@@ -8,26 +8,26 @@
 {-# LANGUAGE Rank2Types                #-}
 {-# LANGUAGE TypeOperators             #-}
 
-module Luna.Syntax.Control.BCZipper where
+module Luna.Control.BCZipper where
 
 import           Control.Zipper ((:>>), Top)
 import qualified Control.Zipper as Zipper
 import qualified Data.List      as List
 
-import           Flowbox.Control.Error     (assert, (<?>))
-import           Flowbox.Prelude           hiding (drop, id, mod)
-import           Luna.Syntax.Control.Crumb (Breadcrumbs, Crumb)
-import qualified Luna.Syntax.Control.Crumb as Crumb
-import           Luna.Syntax.Control.Focus (Focus, FocusPath)
-import qualified Luna.Syntax.Control.Focus as Focus
-import           Luna.Syntax.Decl          (LDecl)
-import qualified Luna.Syntax.Decl          as Decl
-import qualified Luna.Syntax.Label         as Label
-import           Luna.Syntax.Module        (LModule)
-import qualified Luna.Syntax.Module        as Module
-import           Luna.Syntax.Name          (TNameP)
-import           Luna.Syntax.Name.Path     (NamePath, QualPath)
-import qualified Luna.Syntax.Name.Pattern  as Pattern
+import           Flowbox.Control.Error    (assert, (<?>))
+import           Flowbox.Prelude          hiding (drop, id, mod)
+import           Luna.Control.Crumb       (Breadcrumbs, Crumb)
+import qualified Luna.Control.Crumb       as Crumb
+import           Luna.Control.Focus       (Focus, FocusPath)
+import qualified Luna.Control.Focus       as Focus
+import           Luna.Syntax.Decl         (LDecl)
+import qualified Luna.Syntax.Decl         as Decl
+import qualified Luna.Syntax.Label        as Label
+import           Luna.Syntax.Module       (LModule)
+import qualified Luna.Syntax.Module       as Module
+import           Luna.Syntax.Name         (TNameP)
+import           Luna.Syntax.Name.Path    (NamePath, QualPath)
+import qualified Luna.Syntax.Name.Pattern as Pattern
 
 
 type BCZipper a v = (Focus a v, FocusPath a v)
