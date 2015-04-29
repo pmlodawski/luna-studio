@@ -12,8 +12,8 @@ import Text.RawString.QQ
 
 import Flowbox.Prelude
 import Test.Luna.Pass.Transform.Graph.Common (named)
---import           Luna.Syntax.Control.Crumb             (Breadcrumbs)
---import qualified Luna.Syntax.Control.Crumb             as Crumb
+--import           Luna.Control.Crumb             (Breadcrumbs)
+--import qualified Luna.Control.Crumb             as Crumb
 --import qualified Luna.DEP.AST.Name                         as Name
 
 

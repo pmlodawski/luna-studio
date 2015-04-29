@@ -9,7 +9,7 @@
 module Luna.Syntax.Graph.Tag where
 
 import           Flowbox.Prelude                 hiding (folded)
-import           Luna.Syntax.Control.Focus       (Focus)
+import           Luna.Control.Focus              (Focus)
 import           Luna.Syntax.Decl                (LCons, LDecl, LField)
 import           Luna.Syntax.Enum                (Enumerated (..), ID)
 import qualified Luna.Syntax.Enum                as Enum
