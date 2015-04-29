@@ -75,7 +75,7 @@ getPath = do
 
 regNameLocal tag id name = do
     ii <- II.get
-    let path       = II._path ii
+    let path       = ii ^. II.path
         originInfo = (SI.OriginInfo path id)
         regFun     = case tag of
             II.Vars  -> NMS.regVarName
@@ -94,8 +94,8 @@ regTypeNameLocal = regNameLocal II.Types
 
 regName tag id name = do
     ii <- II.get
-    let path    = II._path ii
-        nameMap = (case tag of II.Vars -> II._symTable; II.Types -> II._typeTable) ii
+    let path    = ii ^. II.path
+        nameMap = (case tag of II.Vars -> ii ^. II.symTable; II.Types -> ii ^. II.typeTable)
     case (Map.lookup name nameMap) of
         Just [origin]    -> regOrigin id origin
         Just mods@(o:os) -> regError (AmbRefError name (getOriginPaths mods))

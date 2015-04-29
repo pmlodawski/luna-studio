@@ -12,8 +12,10 @@ module Luna.Pass.Import where
 
 import           Control.Monad.IO.Class (liftIO)
 
-import           Luna.Syntax.Label      (Label(Label), _element)
-import           Luna.Syntax.Module     (_mpath, _body, Module(Module))
+import           Luna.Syntax.Label      (Label(Label))
+import qualified Luna.Syntax.Label      as L
+import           Luna.Syntax.Module     (Module(Module))
+import qualified Luna.Syntax.Module     as M
 import qualified Luna.Syntax.Decl       as Dec
 import           Luna.Syntax.Name       (TName(TName), VName(VName))
 import           Luna.Syntax.Name.Path  (NamePath(NamePath), QualPath(QualPath))
@@ -54,7 +56,7 @@ getFromLabel (Label l a) = a
 
 
 getModulePath :: ASTUnit l a e -> QualPath
-getModulePath ast = _mpath . getFromLabel . getFromUnit $ ast
+getModulePath ast = M._mpath . getFromLabel . getFromUnit $ ast
 
 
 
@@ -70,7 +72,7 @@ unpackImport (Dec.Imp x) = x
 
 
 getImportList :: ASTUnit l a e -> [Dec.Imp]
-getImportList = fmap (unpackImport . _element) . filter filterImports . _body . getFromLabel . getFromUnit
+getImportList = fmap (unpackImport . L._element) . filter filterImports . M._body . getFromLabel . getFromUnit
 
 
 
@@ -86,10 +88,10 @@ getModPath (Dec.DeclImp path _) = MI.pathToQualPath path
 
 
 processTarget :: Dec.ImpTgt -> TargetInfo
-processTarget (Dec.ImpVar  vname vrename) = case NP._base $ unwrap vname of
+processTarget (Dec.ImpVar  vname vrename) = case (unwrap vname) ^. NP.base of
     "*" -> TargetInfo [] [] True
     _   -> TargetInfo [] [unwrap vname] False
-processTarget (Dec.ImpType tname trename) = case NP._base $ unwrap tname of
+processTarget (Dec.ImpType tname trename) = case (unwrap tname) ^. NP.base of
     "*" -> TargetInfo [] [] True
     _   -> TargetInfo [] [unwrap tname] False 
 processTarget (Dec.Wildcard hide)         = TargetInfo (fmap unwrap hide) [] True

@@ -15,7 +15,7 @@ module Luna.Pass.Analysis.Imports where
 import           Data.Either                 (isLeft, isRight)
 import           Luna.Data.ModuleInfo        (ImportError(..))
 import           Luna.Data.StructInfo        (StructInfo)
-import           Luna.Data.ModuleInfo        (_strInfo)
+import qualified Luna.Data.ModuleInfo        as MI
 import qualified Luna.Pass.Import            as I
 import           Luna.Syntax.Traversals      ()
 import           Luna.Pass                   (Pass(Pass), PassMonad, PassCtx)
@@ -50,7 +50,7 @@ iaMain ast =  do
     let impPaths =  I.getImportPaths ast
     listEithers  <- I.moduleInfosToTuples impPaths
     let infoEithers = fromList listEithers
-    let mInfos   =  map (_strInfo . fromRight) $ filter isRight infoEithers
+    let mInfos   =  map (MI._strInfo . fromRight) $ filter isRight infoEithers
         mErrors  =  fmap fromLeft $ elems $ filter isLeft infoEithers
         info     =  ImportInfo mempty (I.getImports ast) mInfos mempty mempty mErrors
     return $ createSymTable info

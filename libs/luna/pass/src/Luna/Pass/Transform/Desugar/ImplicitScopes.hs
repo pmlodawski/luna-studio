@@ -114,7 +114,7 @@ fmake ast@(Label lab e) f = case e of
         let parentMap = view StructInfo.parent si
             aliasMap  = view StructInfo.alias si
             originMod = fmap (view StructInfo.mod) $ view (at id) aliasMap
-            thisMod   = ImportInfo._path ii
+            thisMod   = ii ^. ImportInfo.path
             pid       = view (at id) parentMap
             tgt       = fmap (view StructInfo.target) $ view (at id) aliasMap
             tgtPid    = join $ fmap (\tid -> view (at tid) parentMap) tgt
@@ -138,7 +138,7 @@ instance ISCtx lab m a => AST.Traversal ImplScopes (ISPass m) (LExpr lab a) (LEx
 instance (Monoid w, Monad m) => ASTInfo.ASTInfoClass (RWST r w PassState m) where
     getASTInfo = do
         st <- RWST.get
-        return $ _astInfo st
+        return $ st ^. astInfo
     putASTInfo info = do
         st <- RWST.get
         RWST.put (st & astInfo .~ info)

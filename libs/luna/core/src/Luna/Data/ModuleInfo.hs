@@ -137,7 +137,7 @@ modPathToDirString (QualPath ns _) = joinPath $ map T.unpack ns
 
 
 modName :: QualPath -> String
-modName qp = T.unpack $ NP._name qp 
+modName qp = T.unpack $ qp ^. NP.name 
 
 
 pathToQualPath :: Path -> QualPath
@@ -173,7 +173,7 @@ writeModInfoToFile modInfo = do
     -- if the directory doesn't exist, create one:
     let modDir = liDirectory </> (modPathToDirString $ modInfo ^. name)
     Dir.createDirectoryIfMissing True modDir
-    let mName = modName $ _name modInfo
+    let mName = modName $ modInfo ^. name
     let fPath = modDir </> mName ++ liFileSuffix
     -- serialize with Data.Binry:
     encodeFile fPath modInfo
