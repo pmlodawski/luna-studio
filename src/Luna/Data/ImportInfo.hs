@@ -124,7 +124,7 @@ toNamePath (t:ts) = NP.multi t ts
 
 
 qualPathToList :: QualPath -> [Text]
-qualPathToList qp = (NP._name qp) : (NP._path qp)
+qualPathToList qp = (NP._path qp) ++ [NP._name qp]
 
 -----------------------------------------------------------------------------------------
 --Instances
