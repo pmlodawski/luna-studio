@@ -17,6 +17,8 @@ module Luna.Build.Build where
 import Control.Monad.RWS hiding (mapM, mapM_)
 
 import           Control.Monad.Trans.Either
+import           Data.String.Utils                          (replace)
+import           Data.Text.Lazy                             (pack)
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import qualified Flowbox.System.Directory.Directory         as Directory
@@ -28,10 +30,14 @@ import           Luna.Build.BuildConfig                     (BuildConfig (BuildC
 import qualified Luna.Build.BuildConfig                     as BuildConfig
 import           Luna.Build.Diagnostics                     (Diagnostics, printAST, printHAST, printHSC, printHeader, printSA, printSSA)
 import qualified Luna.Build.Source.File                     as File
-import           Luna.Data.Namespace                        (Namespace (Namespace), _info)
-import           Luna.Data.StructData                       (StructData(StructData), _namespace, _importInfo)
-import           Luna.Data.Source                           (Code (Code), Source (Source), _modName)
+import qualified Luna.Data.ImportInfo                       as II
+import qualified Luna.Data.ModuleInfo                       as MI
+import           Luna.Data.Namespace                        (Namespace (Namespace))
+import qualified Luna.Data.Namespace                        as Namespace
+import           Luna.Data.Source                           (Code (Code), Source (Source))
 import qualified Luna.Data.Source                           as Source
+import           Luna.Data.StructData                       (StructData (StructData))
+import qualified Luna.Data.StructData                       as StructData
 import qualified Luna.Distribution.Cabal.Gen                as CabalGen
 import qualified Luna.Distribution.Cabal.Install            as CabalInstall
 import qualified Luna.Distribution.Cabal.Store              as CabalStore
@@ -40,6 +46,7 @@ import qualified Luna.Parser.Pragma                         as Pragma
 import qualified Luna.Pass                                  as Pass
 import qualified Luna.Pass.Analysis.Imports                 as Imports
 import qualified Luna.Pass.Analysis.Struct                  as SA
+import           Luna.Pass.Import                           (getImportPaths)
 import qualified Luna.Pass.Target.HS.HASTGen                as HASTGen
 import qualified Luna.Pass.Target.HS.HSC                    as HSC
 import qualified Luna.Pass.Transform.Desugar.ImplicitCalls  as ImplCalls
@@ -48,16 +55,11 @@ import qualified Luna.Pass.Transform.Desugar.ImplicitSelf   as ImplSelf
 import qualified Luna.Pass.Transform.Parse.Stage1           as Stage1
 import qualified Luna.Pass.Transform.Parse.Stage2           as Stage2
 import qualified Luna.Pass.Transform.SSA                    as SSA
-import           Luna.Pass.Import                           (getImportPaths)
+import           Luna.Syntax.Name.Path                      (QualPath (QualPath))
 import qualified Luna.System.Pragma.Store                   as Pragma
 import           Luna.System.Session                        as Session
 
-import           Luna.Syntax.Name.Path                      (QualPath(QualPath))
 
-import qualified Luna.Data.ModuleInfo                       as MI
-import qualified Luna.Data.ImportInfo                       as II
-import           Data.String.Utils                          (replace)
-import           Data.Text.Lazy                             (pack)
 
 type Builder m = (MonadIO m, Functor m)
 
@@ -80,85 +82,80 @@ cabalExt = ".cabal"
 tmpDirPrefix :: String
 tmpDirPrefix = "lunac"
 
+runSession s =
+    eitherStringToM . fst =<< Session.runT (void Parser.init >> runEitherT s)
+    --eitherStringToM . fst =<< Session.runT (void Parser.init >> Pragma.enable (Pragma.orphanNames) >> runEitherT s)
+
+parseSource diag src = do
+    let liFile =  src ^. Source.modName
+    printHeader "Stage1"
+    (ast, astinfo) <- Pass.run1_ Stage1.pass src
+    printAST diag ast
+
+    printHeader "Extraction of imports"
+    importInfo     <- Pass.run1_ Imports.pass ast
+
+    printHeader "SA"
+    sa             <- Pass.run2_ SA.pass (StructData mempty importInfo) ast
+    let sa1   = sa ^. StructData.namespace . Namespace.info
+        mInfo = MI.ModuleInfo liFile mempty sa1 mempty
+
+    liftIO $ MI.writeModInfoToFile mInfo
+    printSA diag sa1
+
+    printHeader "Stage2"
+    (ast, astinfo) <- Pass.run3_ Stage2.pass (Namespace [] sa1) astinfo ast
+    printAST diag ast
+
+    printHeader "ImplSelf"
+    (ast, astinfo) <- Pass.run2_ ImplSelf.pass astinfo ast
+    printAST diag ast
+
+    printHeader "SA2"
+    sa             <- Pass.run2_ SA.pass sa ast
+    printSA diag (sa ^. StructData.namespace . Namespace.info)
+
+    let sa2 = sa ^. StructData.namespace . Namespace.info
+        ii2 = sa ^. StructData.importInfo
+
+    printHeader "ImplScopes"
+    (ast, astinfo) <- Pass.run2_ ImplScopes.pass (astinfo, sa2, ii2)  ast
+    printAST diag ast
+
+    printHeader "ImplCalls"
+    (ast, _astinfo) <- Pass.run2_ ImplCalls.pass astinfo ast
+    printAST diag ast
+    return (ast, astinfo, importInfo)
+
 
 prepareSource :: Builder m => Diagnostics -> Source Source.File -> m [Source Code]
 prepareSource diag src = do
-    let liFile =  _modName src
-    result <- Session.runT $ do
-        void   Parser.init
-        void $ Pragma.enable (Pragma.orphanNames)
-        --void $ Pragma.pop    (Pragma.orphanNames)
-        runEitherT $ do
-            printHeader "Stage1"
-            (ast, astinfo) <- Pass.run1_ Stage1.pass src
-            printAST diag ast
+    codes <- runSession $ do
+        (ast, astinfo, importInfo) <- parseSource diag src
 
-            -- compilation of imported modules:
-            -- (assuming each one is our module, NOT a library)
-            let importPaths = getImportPaths ast
-            --liftIO $ putStrLn "Module paths:"
-            --liftIO . putStrLn $ show importPaths
-            let mkFile      = Source.File . pack . (++ ".luna") . MI.modPathToString
-                sources     = map (\i -> Source i (mkFile i)) importPaths
-                hscs        = mapM (prepareSource diag) sources
-            compiledCodes <- hscs
-            --liftIO $ putStrLn "Codes: "
-            --liftIO . putStrLn $ show compiledCodes
+        -- compilation of imported modules:
+        -- (assuming each one is our module, NOT a library)
+        let importPaths = getImportPaths ast
+            mkFile      = Source.File . pack . (++ ".luna") . MI.modPathToString
+            sources     = map (\i -> Source i (mkFile i)) importPaths
+            hscs        = mapM (prepareSource diag) sources
+        compiledCodes <- hscs
+        --printHeader "Hash"
+        --ast             <- Pass.run1_ Hash.pass ast
 
-            printHeader "Extraction of imports"
-            importInfo     <- Pass.run1_ Imports.pass ast 
-            --ppPrint importInfo
+        printHeader "SSA"
+        ast            <- Pass.run1_ SSA.pass ast
+        printSSA diag ast
 
-            printHeader "SA"
-            sa             <- Pass.run2_ SA.pass (StructData mempty importInfo) ast
-            let sa1 = _info . _namespace $ sa
-            let mInfo = MI.ModuleInfo liFile mempty sa1 mempty
-            -- ppPrint ModuleInfo
-            liftIO $ MI.writeModInfoToFile mInfo
-            printSA diag sa1   
-           
-            printHeader "Stage2"
-            (ast, astinfo) <- Pass.run3_ Stage2.pass (Namespace [] sa1) astinfo ast
-            printAST diag ast
+        printHeader "HAST"
+        hast           <- Pass.run2_ HASTGen.pass importInfo ast
+        printHAST diag hast
 
-            printHeader "ImplSelf"
-            (ast, astinfo) <- Pass.run2_ ImplSelf.pass astinfo ast
-            printAST diag ast
+        printHeader "HSC"
+        hsc            <- Pass.run1_ HSC.pass hast
+        printHSC diag hsc
 
-            printHeader "SA2"
-            sa             <- Pass.run2_ SA.pass sa ast
-            printSA diag (_info . _namespace $ sa)
-            --liftIO $ putStrLn "--------- ImportInfo -----------"
-            --prettyPrint sa
-            
-            let sa2 = _info . _namespace $ sa
-                ii2 = _importInfo sa
-            
-            printHeader "ImplScopes"
-            (ast, astinfo) <- Pass.run2_ ImplScopes.pass (astinfo, sa2, ii2)  ast
-            printAST diag ast
-
-            printHeader "ImplCalls"
-            (ast, _astinfo) <- Pass.run2_ ImplCalls.pass astinfo ast
-            printAST diag ast
-
-            --printHeader "Hash"
-            --ast             <- Pass.run1_ Hash.pass ast
-
-            printHeader "SSA"
-            ast            <- Pass.run1_ SSA.pass ast
-            printSSA diag ast
-
-            printHeader "HAST"
-            hast           <- Pass.run2_ HASTGen.pass importInfo ast
-            printHAST diag hast
-
-            printHeader "HSC"
-            hsc            <- Pass.run1_ HSC.pass hast
-            printHSC diag hsc
-
-            return (hsc, concat compiledCodes)
-    codes <- eitherStringToM $ fst result
+        return (hsc, concat compiledCodes)
     return $ (Source (src ^. Source.modName) $ Code (fst codes)) : (snd codes)
 
 
