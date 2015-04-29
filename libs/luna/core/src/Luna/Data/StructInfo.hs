@@ -7,6 +7,7 @@
 
 {-# LANGUAGE TemplateHaskell #-}
 
+--CR[PM->TD] : imports should be splitted in two groups: std and flowbox
 module Luna.Data.StructInfo where
 
 import Flowbox.Prelude
@@ -29,6 +30,7 @@ import           Luna.Syntax.Name.Pattern (NamePatDesc)
 import           Control.Monad.RWS         (RWST)
 import qualified Luna.Syntax.Module as Module
 import qualified Luna.Syntax.Enum         as Enum
+--CR[PM->TD] : 3 new lines between imports and code
 
 ----------------------------------------------------------------------
 -- Data types
@@ -48,6 +50,7 @@ data Error  = LookupError { key    :: Text }
 data Scope = Scope { _varnames  :: NameMap OriginInfo
                    , _typenames :: NameMap OriginInfo 
                    } deriving (Show, Eq, Generic, Read)
+--CR[PM->TD] : too many newlines (4 instead of 2)
 
 
 
@@ -81,31 +84,39 @@ class StructInfoMonad m where
 ----------------------------------------------------------------------
 -- Utils
 ----------------------------------------------------------------------
---TODO[PM] check if it should be id or parent id
+--TODO[PMo] check if it should be id or parent id
 regOrigin :: ID -> OriginInfo -> StructInfo -> StructInfo
 regOrigin id origin = alias %~ Map.insert id origin
 
 
+--CR[PM->TD] : add type signature
 regParent  id pid  = parent %~ Map.insert id pid
 
+--CR[PM->TD] : add type signature
 regVarName pid id name info = setScope info pid $ Scope (vnmap & at name ?~ id) tnmap where
     (vnmap, tnmap) = scopeLookup pid info
 
 
+--CR[PM->TD] : add type signature
 regOrphan id err = orphans %~ Map.insert id err
 
 
+--CR[PM->TD] : add type signature
 regArgPat id argPat = argPats %~ Map.insert id argPat
 
 
+--CR[PM->TD] : add type signature
 regTypeName pid id name info = setScope info pid $ Scope vnmap (tnmap & at name ?~ id) where
     (vnmap, tnmap) = scopeLookup pid info
 
 
+--CR[PM->TD] : add type signature
 setScope info id s = info & scope.at id ?~ s
 
 
+--CR[PM->TD] : add type signature
 scopeLookup pid info = case Map.lookup pid (_scope info) of
+--CR[PM->TD] : reduce indentation (4 spaces instead of 8)
         Nothing          -> (mempty, mempty)
         Just (Scope v t) -> (v,t)
 
@@ -149,6 +160,6 @@ instance Default StructInfo where
     def = mempty
 
 
-
+--CR[PM->TD]: not used? remove
 --instance StructInfoMonad (RWST ) where
 --    func = 

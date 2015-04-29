@@ -29,12 +29,14 @@ import           Luna.Syntax.Name         (TName(TName), TNameP)
 import           Luna.Syntax.Name.Path    (NamePath, QualPath(QualPath))
 import qualified Luna.Syntax.Name.Path    as NP
 import           Luna.Syntax.Name.Pattern (NamePatDesc, SegmentDesc)
+--CR[PM->TD] : do not separate this imports
 
 import           Flowbox.Data.MapForest   (Node)
 import qualified Flowbox.Data.MapForest   as MF
 import           Flowbox.System.UniPath   (UniPath, PathItem)
 import           Data.Either.Combinators  (mapRight)
 import           Flowbox.Prelude
+--CR[PM->TD] : 3 new lines between imports and code
 
 
 
@@ -42,6 +44,7 @@ import           Flowbox.Prelude
 type Name = String
 
 
+--CR[PM->TD] : create lens
 data ImportError = NotFoundError { path   :: QualPath }
                  | AmbRefError   { symbol :: NamePath, modules :: [QualPath] }
                  deriving (Generic, Eq, Show, Ord, Read)
@@ -62,12 +65,14 @@ makeLenses ''ModuleInfo
 
 -- given a list of paths, lookups all the necessary ModuleInfo structs
 getModuleInfos :: [QualPath] -> IO [Either ImportError ModuleInfo]
+--CR[PM->TD] : curry paths
 getModuleInfos paths = mapM getModuleInfo paths
 
 getModuleInfo :: QualPath -> IO (Either ImportError ModuleInfo)
 --getModuleInfo = (return . fromJust <=< readModInfoFromFile)
 getModuleInfo path = do
     result <- readModInfoFromFile path
+--CR[PM->TD] : use \case (LambdaCase)
     return $ case result of
         Just modInfo -> Right modInfo
         Nothing      -> Left (NotFoundError path)
@@ -76,6 +81,7 @@ getModuleInfo path = do
 regError :: ImportError -> ModuleInfo -> ModuleInfo
 regError err = errors %~ (err:)
 
+--CR[PM->TD] : not used? remove
 -------------------------------------------------------------------------------------
 -- wrappers for structInfo functions
 -------------------------------------------------------------------------------------
@@ -109,7 +115,9 @@ regError err = errors %~ (err:)
 moduleExists :: QualPath -> IO Bool
 moduleExists path = do
     let fullPath = modPathToString path ++ lunaFileSuffix
+--CR[PM->TD] : magic constant
     f <- Dir.findFile ["."] fullPath 
+--CR[PM->TD] : use Maybe.isJust
     return $ case f of
         Just p  -> True
         Nothing -> False
@@ -121,12 +129,14 @@ moduleIsParsed :: QualPath -> IO Bool
 moduleIsParsed path = do
     let fullPath = modPathToString path ++ liFileSuffix
     f      <- Dir.findFile [liDirectory] fullPath
+--CR[PM->TD] : use Maybe.isJust
     return $ case f of
         Just p  -> True
         Nothing -> False
 
 
 modPathToString :: QualPath -> String
+--CR[PM->TD] : parenthesis are not required
 modPathToString qp@(QualPath _ n) = (modPathToDirString qp) </> (T.unpack n)
 
 
@@ -137,6 +147,7 @@ modPathToDirString (QualPath ns _) = joinPath $ map T.unpack ns
 
 
 modName :: QualPath -> String
+--CR[PM->TD] : curry qp
 modName qp = T.unpack $ NP._name qp 
 
 
@@ -148,6 +159,7 @@ pathToQualPath path = QualPath ns n
 
 qualPathToPath :: QualPath -> Path
 qualPathToPath (QualPath ns n) = segs ++ [seg]
+--CR[PM->TD] : parenthesis are not required
     where segs = (map makeTNameP ns)
           seg  = (fromText n) :: TNameP
           makeTNameP = (\x -> fromText x) :: T.Text -> TNameP
@@ -164,6 +176,7 @@ liFileSuffix = ".li"
 
 liDirectory :: FilePath
 liDirectory = "modinfo"
+--CR[PM->TD] : too many newlines (3 instead of 2)
 
 
 
@@ -174,9 +187,11 @@ writeModInfoToFile modInfo = do
     let modDir = liDirectory </> (modPathToDirString $ modInfo ^. name)
     Dir.createDirectoryIfMissing True modDir
     let mName = modName $ _name modInfo
+--CR[PM->TD] : "let" is not required here
     let fPath = modDir </> mName ++ liFileSuffix
     -- serialize with Data.Binry:
     encodeFile fPath modInfo
+--CR[PM->TD] : too many newlines (3 instead of 2)
 
 
 
@@ -186,7 +201,9 @@ readModInfoFromFile path = do
     isParsed <- moduleIsParsed path
     if isParsed
         then do
+--CR[PM->TD] : parenthesis are not required
             let modPath = liDirectory </> (modPathToString path) ++ liFileSuffix
+--CR[PM->TD] : use <$>
             fmap Just $ decodeFile modPath
         else return Nothing
 
@@ -218,5 +235,7 @@ instance Monoid ModuleInfo where
 
 instance Monoid QualPath where
     mempty      = QualPath [] mempty
+--CR[PM->TD] : curry b
+--CR[PM->TD] : a is not used, use _ or "const"
     mappend a b = b
 

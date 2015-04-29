@@ -11,6 +11,7 @@
 
 module Luna.Data.StructData where
 
+--CR[PM->TD] : imports should be splitted in two groups: std and flowbox
 import           Control.Monad.RWS         (RWST)
 import qualified Control.Monad.RWS         as RWST
 import           Control.Monad.Trans.Class (MonadTrans, lift)
@@ -51,30 +52,45 @@ class StructDataMonad m where
 -- Utils
 ----------------------------------------------------------------------
 
+--CR[PM->TD] : add type signature
+--CR[PM->TD] : "do" is not required
 modify f = do
+--CR[PM->TD] : use modify
     sd <- get
     put $ f sd
 
+--CR[PM->TD] : add type signature
+--CR[PM->TD] : "do" is not required
 modifyNamespace f = do
+--CR[PM->TD] : use modify
     StructData ns ii <- get
     put $ StructData (f ns) ii
 
+--CR[PM->TD] : add type signature
+--CR[PM->TD] : "do" is not required
 modifyImportInfo f = do
+--CR[PM->TD] : use modify
     StructData ns ii <- get
     put $ StructData ns (f ii)
 
 
+--CR[PM->TD] : add type signature
 setPath path = modifyImportInfo $ II.setPath path
 
 
+--CR[PM->TD] : add type signature
+--CR[PM->TD] : "do" is not required
 getPath = do
+--CR[PM->TD] : use <$>
     ii <- II.get
     return $ II.getPath ii
 
 
 
+--CR[PM->TD] : add type signature
 regNameLocal tag id name = do
     ii <- II.get
+--CR[PM->TD] : use lens
     let path       = II._path ii
         originInfo = (SI.OriginInfo path id)
         regFun     = case tag of
@@ -86,15 +102,20 @@ regNameLocal tag id name = do
         II.Types -> modifyImportInfo $ II.typeTable %~ (Map.insert name [originInfo])
 
 
+--CR[PM->TD] : add type signature
 regVarNameLocal = regNameLocal II.Vars
 
+--CR[PM->TD] : add type signature
 regTypeNameLocal = regNameLocal II.Types
 
 
 
+--CR[PM->TD] : add type signature
 regName tag id name = do
     ii <- II.get
+--CR[PM->TD] : use lens
     let path    = II._path ii
+--CR[PM->TD] : use lens
         nameMap = (case tag of II.Vars -> II._symTable; II.Types -> II._typeTable) ii
     case (Map.lookup name nameMap) of
         Just [origin]    -> regOrigin id origin
@@ -102,8 +123,10 @@ regName tag id name = do
         _                -> NMS.regAlias id name --regOrphan id (SI.LookupError $ toText name)
 
 
+--CR[PM->TD] : add type signature
 regVarName = regName II.Vars
 
+--CR[PM->TD] : add type signature
 regTypeName = regName II.Types
 
 
@@ -113,14 +136,20 @@ getOriginPaths infos = map f infos
     where f (SI.OriginInfo m _) = m
 
 
+--CR[PM->TD] : add type signature
+--CR[PM->TD] : "do" is not required
 regOrigin id origin = do
     modifyNamespace $ NS.regOrigin id origin
 
 
+--CR[PM->TD] : add type signature
+--CR[PM->TD] : "do" is not required
 regOrphan id err = do
     modifyNamespace $ NS.regOrphan id err
 
 
+--CR[PM->TD] : add type signature
+--CR[PM->TD] : "do" is not required
 regError err = do
     modifyImportInfo $ II.regError err
 
@@ -148,18 +177,22 @@ instance (Monad m, Monoid w) => StructDataMonad (RWST r w StructData m) where
 
 
 instance (Monad m, Monoid w) => NS.NamespaceMonad (RWST r w StructData m) where
+--CR[PM->TD] : use <$> and "view"
     get = do
         sd <- get
         return $ sd ^. namespace
+--CR[PM->TD] : use "modify" and %~
     put i = do
         sd <- get
         put (sd & namespace .~ i)
 
 
 instance (Monad m, Monoid w) => II.ImportInfoMonad (RWST r w StructData m) where
+--CR[PM->TD] : use <$> and "view"
     get = do
         sd <- get
         return $ sd ^. importInfo
+--CR[PM->TD] : use "modify" and %~
     put i = do
         sd <- get
         put (sd & importInfo .~ i)
@@ -170,13 +203,17 @@ instance (Monad m, Monoid w) => II.ImportInfoMonad (RWST r w StructData m) where
 ---- Some funs to check if Monads implemented properly ;)
 ----------------------------------------------------------------------
 
+--CR[PM->TD] : remove it
 foo = do
     x <- get
     return x
 
+--CR[PM->TD] : remove it
 foo2 = do
     x <- NS.get
     return x
 
+--CR[PM->TD] : remove it
 bar = RWST.runRWST foo (mempty :: StructData)
+--CR[PM->TD] : remove it
 bar2 = RWST.runRWST foo2 (mempty :: StructData)
