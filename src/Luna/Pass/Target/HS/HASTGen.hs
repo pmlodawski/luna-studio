@@ -125,7 +125,7 @@ mkVal    = HE.AppE "val"
 
 
 makeImportList :: ImportInfo -> [HE.Expr]
-makeImportList info = map (mkImp._impPath) (II._imports info)
+makeImportList info = map (mkImp._impPath) (info ^. II.imports )
     where mkImp = \qp -> HE.Import False (II.qualPathToList qp) Nothing Nothing
 
 
