@@ -86,8 +86,8 @@ reg cid projectID undoA redoA description = do
         newUndo     = Context.Package [action] metadata : undoL
         newProjCtxt = ProjectContext newUndo [] trans
     lift $ put $ Map.insert projectID newProjCtxt contextMap
-    return (if null trans then Nothing
-                          else Just descNotific)
+    return (if null trans then Just descNotific
+                          else Nothing)
     where action      = Context.Actions undoA redoA
           metadata    = Context.Metadata description $ Just $ cid ^. Message.messageID
           descNotific = Message.mk Topic.urmUndoDescriptionAdded $ UDescAdded.Update (encodeP projectID) (encodeP description)
@@ -106,7 +106,7 @@ undo request@(Undo.Request tprojectID) = do
         [] -> return (Undo.Status request False, [])
         _  -> return (Undo.Status request True , descNotific : messages)
     where projectID   = decodeP tprojectID
-          descNotific = Message.mk Topic.urmRedoDescriptionRemoved $ UDescRemoved.Update tprojectID
+          descNotific = Message.mk Topic.urmUndoDescriptionRemoved $ UDescRemoved.Update tprojectID
 
 redo :: Redo.Request -> RPC Context IO (Redo.Status, [Message])
 redo request@(Redo.Request tprojectID) = do
@@ -118,7 +118,7 @@ redo request@(Redo.Request tprojectID) = do
         [] -> return (Redo.Status request False, [])
         _  -> return (Redo.Status request True , descNotific : messages)
     where projectID   = decodeP tprojectID
-          descNotific = Message.mk Topic.urmUndoDescriptionRemoved $ RDescRemoved.Update tprojectID
+          descNotific = Message.mk Topic.urmRedoDescriptionRemoved $ RDescRemoved.Update tprojectID
 
 execAction :: ProjectID -> Lens' ProjectContext Stack -> Lens' ProjectContext Stack -> RPC Context IO [Context.Actions]
 execAction projectID source dest = do

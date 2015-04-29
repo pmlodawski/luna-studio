@@ -11,7 +11,7 @@ module Flowbox.UR.Manager.RPC.Topic where
 urmClearStackRequest        = "urm.clearstack.request"
 urmDescriptionsCleared      = "urm.descriptions.cleared.update"
 urmPingRequest              = "urm.ping.request"
-urmRedoDescriptionRemoved   = "urm.redo.descriptions.removed"
+urmRedoDescriptionRemoved   = "urm.redo.descriptions.removed.update"
 urmRedoDescriptionRequest   = "urm.redo.descriptions.request"
 urmRedoRequest              = "urm.redo.request"
 urmRegisterMultipleRequest  = "urm.registermultiple.request"
