@@ -6,31 +6,32 @@
 ---------------------------------------------------------------------------
 
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE RankNTypes                #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 module Luna.Pass.Analysis.Imports where
 
-import           Data.Either                 (isLeft, isRight)
-import           Luna.Data.ModuleInfo        (ImportError(..))
-import           Luna.Data.StructInfo        (StructInfo)
-import qualified Luna.Data.ModuleInfo        as MI
-import qualified Luna.Pass.Import            as I
-import           Luna.Syntax.Traversals      ()
-import           Luna.Pass                   (Pass(Pass), PassMonad, PassCtx)
-import qualified Luna.Pass                   as Pass
-import           Flowbox.Prelude             hiding(isLeft, isRight, filter, map, fromList)
-import           Luna.Data.ImportInfo        (ImportInfo(ImportInfo), createSymTable)
-import           Data.Map                    (elems, filter, map, fromList)
-import           Data.Either.Utils           (fromRight, fromLeft)
-import           Luna.Pass                   (PassMonad)
-import qualified Luna.Syntax.Traversals      as AST
-import           Luna.Syntax.Enum            (Enumerated)
+import Data.Either       (isLeft, isRight)
+import Data.Either.Utils (fromLeft, fromRight)
+import Data.Map          (elems, filter, fromList, map)
 
-import           Luna.Syntax.Unit            (Unit(Unit))
-import           Luna.Syntax.Label           (Label(Label), _element)
-import           Luna.Syntax.Module          (_body, Module(Module))
+import           Flowbox.Prelude        hiding (filter, fromList, isLeft, isRight, map)
+import           Luna.Data.ImportInfo   (ImportInfo (ImportInfo), createSymTable)
+import           Luna.Data.ModuleInfo   (ImportError (..))
+import qualified Luna.Data.ModuleInfo   as MI
+import           Luna.Data.StructInfo   (StructInfo)
+import           Luna.Pass              (Pass (Pass), PassCtx, PassMonad)
+import           Luna.Pass              (PassMonad)
+import qualified Luna.Pass              as Pass
+import qualified Luna.Pass.Import       as I
+import           Luna.Syntax.Enum       (Enumerated)
+import           Luna.Syntax.Traversals ()
+import qualified Luna.Syntax.Traversals as AST
+
+import Luna.Syntax.Label  (Label (Label), _element)
+import Luna.Syntax.Module (Module (Module))
+import Luna.Syntax.Unit   (Unit (Unit))
 
 
 
@@ -39,18 +40,18 @@ data ImportsAnalysis = ImportsAnalysis
 
 data NoState = NoState deriving (Read, Show)
 
---pass :: (MonadIO m) => Pass NoState (Unit (Label l (Module a e)) -> m ImportInfo)
-pass = Pass "Import analysis" 
-            "Basic import analysis that performs error checks and returns both struct info and symbol table" 
+pass :: MonadIO m => Pass NoState (Unit (Label l (Module a e)) -> m ImportInfo)
+pass = Pass "Import analysis"
+            "Basic import analysis that performs error checks and returns both struct info and symbol table"
             NoState iaMain
 
 
-iaMain :: (MonadIO m) => Unit (Label l (Module a e)) -> m ImportInfo
-iaMain ast =  do           
+iaMain :: MonadIO m => Unit (Label l (Module a e)) -> m ImportInfo
+iaMain ast =  do
     let impPaths =  I.getImportPaths ast
     listEithers  <- I.moduleInfosToTuples impPaths
     let infoEithers = fromList listEithers
-    let mInfos   =  map (MI._strInfo . fromRight) $ filter isRight infoEithers
+        mInfos   =  map (MI._strInfo . fromRight) $ filter isRight infoEithers
         mErrors  =  fmap fromLeft $ elems $ filter isLeft infoEithers
         info     =  ImportInfo mempty (I.getImports ast) mInfos mempty mempty mErrors
     return $ createSymTable info
