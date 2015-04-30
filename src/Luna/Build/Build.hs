@@ -93,18 +93,18 @@ parseSource diag src = do
     (ast, astinfo) <- Pass.run1_ Stage1.pass src
     printAST diag ast
 
+    printHeader "Extraction of imports"
+    (importInfo, compilable)     <- Pass.run1_ Imports.pass ast
+
     -- compilation of imported modules:
     -- (assuming each one is our module, NOT a library)
-    let importPaths = getImportPaths ast
-        mkFile      = Source.File . pack . (++ ".luna") . MI.modPathToString
-        sources     = map (\i -> Source i (mkFile i)) importPaths
+    let mkFile      = Source.File . pack . (++ ".luna") . MI.modPathToString
+        sources     = map (\i -> Source i (mkFile i)) compilable
         hscs        = mapM (prepareSource diag) sources
     compiledCodes <- hscs
     --printHeader "Hash"
     --ast             <- Pass.run1_ Hash.pass ast
 
-    printHeader "Extraction of imports"
-    importInfo     <- Pass.run1_ Imports.pass ast
 
     printHeader "SA"
     sa             <- Pass.run2_ SA.pass (StructData mempty importInfo) ast
@@ -136,13 +136,13 @@ parseSource diag src = do
     printHeader "ImplCalls"
     (ast, _astinfo) <- Pass.run2_ ImplCalls.pass astinfo ast
     printAST diag ast
-    return (ast, astinfo, importInfo)
+    return (ast, astinfo, importInfo, compiledCodes)
 
 
 prepareSource :: Builder m => Diagnostics -> Source Source.File -> m [Source Code]
 prepareSource diag src = do
     codes <- runSession $ do
-        (ast, astinfo, importInfo) <- parseSource diag src
+        (ast, astinfo, importInfo, compiledCodes) <- parseSource diag src
 
         printHeader "SSA"
         ast            <- Pass.run1_ SSA.pass ast
