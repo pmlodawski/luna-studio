@@ -75,11 +75,14 @@ regError err = errors %~ (err:)
 -- checks if the module exists (but not if it's parsed)
 moduleExists :: QualPath -> IO Bool
 moduleExists path = do
-    let fullPath = modPathToString path ++ lunaFileSuffix
-    f <- Dir.findFile ["."] fullPath
+    f <- Dir.findFile [modPathToDirString path] (modName path ++ lunaFileSuffix)
     return $ isJust f
 
 
+moduleNotExists :: QualPath -> IO Bool
+moduleNotExists path = do
+    f <- Dir.findFile [modPathToDirString path] (modName path ++ lunaFileSuffix)
+    return . not . isJust $ f
 
 -- checks if module is already parsed (i.e. the ModuleInfo is present)
 moduleIsParsed :: QualPath -> IO Bool

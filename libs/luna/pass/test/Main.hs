@@ -82,7 +82,7 @@ main = do
             ppPrint ast
 
             printHeader "Extraction of imports"
-            importInfo <- Pass.run1_ Imports.pass ast 
+            (importInfo, _) <- Pass.run1_ Imports.pass ast 
             ppPrint importInfo
 
             printHeader "SA"

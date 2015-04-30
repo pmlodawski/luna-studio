@@ -12,9 +12,10 @@
 
 module Luna.Pass.Analysis.Imports where
 
-import Data.Either       (isLeft, isRight)
-import Data.Either.Utils (fromLeft, fromRight)
-import Data.Map          (elems, filter, fromList, map)
+import           Control.Monad     (filterM)
+import           Data.Either       (isLeft, isRight)
+import           Data.Either.Utils (fromLeft, fromRight)
+import           Data.Map          (elems, filter, fromList, map)
 
 import           Flowbox.Prelude        hiding (filter, fromList, isLeft, isRight, map)
 import           Luna.Data.ImportInfo   (ImportInfo (ImportInfo), createSymTable)
@@ -28,11 +29,10 @@ import qualified Luna.Pass.Import       as I
 import           Luna.Syntax.Enum       (Enumerated)
 import           Luna.Syntax.Traversals ()
 import qualified Luna.Syntax.Traversals as AST
-
-import Luna.Syntax.Label  (Label (Label), _element)
-import Luna.Syntax.Module (Module (Module))
-import Luna.Syntax.Unit   (Unit (Unit))
-
+import           Luna.Syntax.Label  (Label (Label), _element)
+import           Luna.Syntax.Module (Module (Module))
+import           Luna.Syntax.Unit   (Unit (Unit))
+import           Luna.Syntax.Name.Path (QualPath)
 
 
 data ImportsAnalysis = ImportsAnalysis
@@ -40,19 +40,21 @@ data ImportsAnalysis = ImportsAnalysis
 
 data NoState = NoState deriving (Read, Show)
 
-pass :: MonadIO m => Pass NoState (Unit (Label l (Module a e)) -> m ImportInfo)
+pass :: MonadIO m => Pass NoState (Unit (Label l (Module a e)) -> m (ImportInfo,[QualPath]))
 pass = Pass "Import analysis"
             "Basic import analysis that performs error checks and returns both struct info and symbol table"
             NoState iaMain
 
 
-iaMain :: MonadIO m => Unit (Label l (Module a e)) -> m ImportInfo
+iaMain :: MonadIO m => Unit (Label l (Module a e)) -> m (ImportInfo, [QualPath])
 iaMain ast =  do
     let impPaths =  I.getImportPaths ast
-    listEithers  <- I.moduleInfosToTuples impPaths
+    compilable <- liftIO $ filterM MI.moduleExists impPaths
+    withoutSources <- liftIO $ filterM MI.moduleNotExists impPaths
+    listEithers  <- I.moduleInfosToTuples withoutSources
     let infoEithers = fromList listEithers
         mInfos   =  map (MI._strInfo . fromRight) $ filter isRight infoEithers
         mErrors  =  fmap fromLeft $ elems $ filter isLeft infoEithers
         info     =  ImportInfo mempty (I.getImports ast) mInfos mempty mempty mErrors
-    return $ createSymTable info
+    return $ (createSymTable info, compilable)
 
