@@ -83,14 +83,25 @@ tmpDirPrefix :: String
 tmpDirPrefix = "lunac"
 
 runSession s =
-    eitherStringToM . fst =<< Session.runT (void Parser.init >> runEitherT s)
-    --eitherStringToM . fst =<< Session.runT (void Parser.init >> Pragma.enable (Pragma.orphanNames) >> runEitherT s)
+    --eitherStringToM . fst =<< Session.runT (void Parser.init >> runEitherT s)
+    eitherStringToM . fst =<< Session.runT (void Parser.init >> Pragma.enable (Pragma.orphanNames) >> runEitherT s)
 
 parseSource diag src = do
     let liFile =  src ^. Source.modName
+
     printHeader "Stage1"
     (ast, astinfo) <- Pass.run1_ Stage1.pass src
     printAST diag ast
+
+    -- compilation of imported modules:
+    -- (assuming each one is our module, NOT a library)
+    let importPaths = getImportPaths ast
+        mkFile      = Source.File . pack . (++ ".luna") . MI.modPathToString
+        sources     = map (\i -> Source i (mkFile i)) importPaths
+        hscs        = mapM (prepareSource diag) sources
+    compiledCodes <- hscs
+    --printHeader "Hash"
+    --ast             <- Pass.run1_ Hash.pass ast
 
     printHeader "Extraction of imports"
     importInfo     <- Pass.run1_ Imports.pass ast
@@ -132,16 +143,6 @@ prepareSource :: Builder m => Diagnostics -> Source Source.File -> m [Source Cod
 prepareSource diag src = do
     codes <- runSession $ do
         (ast, astinfo, importInfo) <- parseSource diag src
-
-        -- compilation of imported modules:
-        -- (assuming each one is our module, NOT a library)
-        let importPaths = getImportPaths ast
-            mkFile      = Source.File . pack . (++ ".luna") . MI.modPathToString
-            sources     = map (\i -> Source i (mkFile i)) importPaths
-            hscs        = mapM (prepareSource diag) sources
-        compiledCodes <- hscs
-        --printHeader "Hash"
-        --ast             <- Pass.run1_ Hash.pass ast
 
         printHeader "SSA"
         ast            <- Pass.run1_ SSA.pass ast
