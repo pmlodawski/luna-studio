@@ -25,7 +25,7 @@ import           Data.Either.Combinators  (mapRight)
 import           Flowbox.Data.MapForest   (Node)
 import qualified Flowbox.Data.MapForest   as MF
 import           Flowbox.Prelude
-import           Flowbox.System.UniPath   (PathItem, UniPath)
+import           Flowbox.System.UniPath   (PathItem, UniPath, toUnixString)
 import           Luna.Data.StructInfo     (OriginInfo, Scope, StructInfo)
 import qualified Luna.Data.StructInfo     as SI
 import           Luna.Syntax.AST          (ID)
@@ -136,7 +136,8 @@ liDirectory = "modinfo"
 writeModInfoToFile :: ModuleInfo -> IO ()
 writeModInfoToFile modInfo = do
     -- if the directory doesn't exist, create one:
-    let modDir = liDirectory </> (modPathToDirString $ modInfo ^. name)
+    tmpDir <- Dir.getTemporaryDirectory
+    let modDir = tmpDir </> liDirectory </> (modPathToDirString $ modInfo ^. name)
     Dir.createDirectoryIfMissing True modDir
     let mName = modName $ modInfo ^. name
         fPath = modDir </> mName ++ liFileSuffix
