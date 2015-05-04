@@ -1,0 +1,13 @@
+Name:                   flowbox-gui-mockup
+Version:                0.1.0.0
+Cabal-version:          >= 1.20
+Tested-with:            GHC == 7.8.*
+Build-type:             Simple
+
+Library
+  Hs-Source-Dirs:     src
+  GHC-Options:        -Wall -O2 -fforce-recomp -pgml g++ -debug -threaded -dynamic -shared -fPIC
+  Exposed-modules:    `findmodules('src', '.*\.hs')`
+
+  Build-Depends:  base >= 4.6,
+                  algebraic > 0.1
