@@ -19,13 +19,14 @@ import Control.Monad (join)
 import           Flowbox.Control.Monad.State hiding (State, join, mapM, mapM_)
 import           Flowbox.Prelude             hiding (Traversal)
 import           Luna.Data.ASTInfo           (ASTInfo)
+import qualified Luna.Data.ASTInfo           as ASTInfo
 import           Luna.Data.StructInfo        (StructInfo)
 import qualified Luna.Data.StructInfo        as StructInfo
 import           Luna.Pass                   (Pass (Pass), PassCtx, PassMonad)
 import           Luna.Syntax.Enum            (Enumerated)
 import qualified Luna.Syntax.Enum            as Enum
-import qualified Luna.Syntax.Expr            as Expr
 import           Luna.Syntax.Expr            (LExpr)
+import qualified Luna.Syntax.Expr            as Expr
 import           Luna.Syntax.Label           (Label (Label))
 import qualified Luna.Syntax.Traversals      as AST
 
@@ -88,9 +89,14 @@ fmake ast@(Label lab e) f = case e of
             tgtPid    = join $ fmap (\tid -> view (at tid) parentMap) tgt
 
         if pid == tgtPid then return ast
-                         else return $ Label (-888) $ Expr.Accessor (convert name) (f $ Label lab $ Expr.Var $ Expr.Variable "self" v)
-                         -- TODO [kgdk -> wd]: ^-- a magic constant :)
-    where id = Enum.id lab
+                         else Label <$> tag <*> pure (Expr.Accessor (convert name) (f $ Label lab $ Expr.Var $ Expr.Variable "self" v))
+    where
+        id  = Enum.id lab
+        tag = do
+            s <- (astInfo %~ ASTInfo.incID) <$> get
+            put s
+            return $ Enum.tag $ s ^. astInfo . ASTInfo.lastID
+
 ----------------------------------------------------------------------
 -- Instances
 ----------------------------------------------------------------------
