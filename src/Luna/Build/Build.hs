@@ -58,7 +58,7 @@ import qualified Luna.Pass.Transform.SSA                    as SSA
 import           Luna.Syntax.Name.Path                      (QualPath (QualPath))
 import qualified Luna.System.Pragma.Store                   as Pragma
 import           Luna.System.Session                        as Session
-
+import qualified Luna.Pass.Analysis.InsertStd               as InsertStd
 
 
 type Builder m = (MonadIO m, Functor m)
@@ -86,13 +86,14 @@ runSession s =
     --eitherStringToM . fst =<< Session.runT (void Parser.init >> runEitherT s)
     eitherStringToM . fst =<< Session.runT (void Parser.init >> Pragma.enable (Pragma.orphanNames) >> runEitherT s)
 
-parseSource diag src = do
+parseSource diag src inclStd = do
     let liFile =  src ^. Source.modName
 
     printHeader "Stage1"
     (ast, astinfo) <- Pass.run1_ Stage1.pass src
     printAST diag ast
 
+    (ast, astinfo) <-  if inclStd then (Pass.run2_ InsertStd.pass astinfo ast) else return $ (ast, astinfo)
     printHeader "Extraction of imports"
     (importInfo, compilable)     <- Pass.run1_ Imports.pass ast
 
@@ -100,7 +101,7 @@ parseSource diag src = do
     -- (assuming each one is our module, NOT a library)
     let mkFile      = Source.File . pack . (++ ".luna") . MI.modPathToString
         sources     = map (\i -> Source i (mkFile i)) compilable
-        hscs        = mapM (prepareSource diag) sources
+        hscs        = mapM (prepareSource diag inclStd) sources
     compiledCodes <- hscs
     --printHeader "Hash"
     --ast             <- Pass.run1_ Hash.pass ast
@@ -139,10 +140,10 @@ parseSource diag src = do
     return (ast, astinfo, importInfo, compiledCodes)
 
 
-prepareSource :: Builder m => Diagnostics -> Source Source.File -> m [Source Code]
-prepareSource diag src = do
+prepareSource :: Builder m => Diagnostics -> Bool -> Source Source.File  -> m [Source Code]
+prepareSource diag inclStd src = do
     codes <- runSession $ do
-        (ast, astinfo, importInfo, compiledCodes) <- parseSource diag src
+        (ast, astinfo, importInfo, compiledCodes) <- parseSource diag src inclStd
 
         printHeader "SSA"
         ast            <- Pass.run1_ SSA.pass ast
@@ -168,14 +169,14 @@ run buildConfig diag rootPath filePath = case buildConfig ^. BuildConfig.buildDi
 
 
 buildInFolder :: Builder m => BuildConfig -> Diagnostics -> UniPath -> UniPath -> UniPath -> m ()
-buildInFolder (BuildConfig name version libs ghcOptions ccOptions includeDirs cabalFlags buildType cfg _ _) diag rootPath srcPath buildDir = do
+buildInFolder (BuildConfig name version libs ghcOptions ccOptions includeDirs cabalFlags buildType cfg _ _ inclStd) diag rootPath srcPath buildDir = do
     let allLibs = "base"
                 : "luna-target-ghchs"
                 : "template-haskell"
                 : libs
                 ++ ["flowboxM-stdlib" | name /= "flowboxM-stdlib"]
     src <- File.getSource rootPath srcPath
-    hsc <- prepareSource diag src          -- tutaj moze warto przekazac folder do passow, zeby moc tam odpalic cabala
+    hsc <- prepareSource diag inclStd src        -- tutaj moze warto przekazac folder do passow, zeby moc tam odpalic cabala
     let cabal = case buildType of
             BuildConfig.Executable {} -> CabalGen.genExecutable name version ghcOptions ccOptions includeDirs allLibs
             BuildConfig.Library       -> CabalGen.genLibrary    name version ghcOptions ccOptions includeDirs allLibs hsc
