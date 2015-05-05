@@ -75,5 +75,6 @@ build cfg op diag filePath = do
         buildDir   = case Options.buildDir op of
                         "" -> Nothing
                         d  -> Just $ UniPath.fromUnixString d
-        bldCfg = BuildConfig name version libs ghcOptions ccOptions includeDirs cabalFlags buildType cfg diag buildDir
+        inclStd    = not $ Options.noStdlib  op
+        bldCfg     = BuildConfig name version libs ghcOptions ccOptions includeDirs cabalFlags buildType cfg diag buildDir inclStd
     Build.run bldCfg diag rootPath filePath
