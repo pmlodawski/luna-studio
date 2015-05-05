@@ -9,4 +9,5 @@ module Luna.Syntax.Unit where
 import GHC.Generics      (Generic)
 import Flowbox.Prelude
 
-data Unit a = Unit a deriving (Generic, Show)
+data Unit a = Unit {_element :: a} deriving (Generic, Show)
+makeLenses ''Unit
