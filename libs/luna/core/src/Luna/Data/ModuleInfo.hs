@@ -136,7 +136,7 @@ liDirectory = "modinfo"
 writeModInfoToFile :: ModuleInfo -> IO ()
 writeModInfoToFile modInfo = do
     -- if the directory doesn't exist, create one:
-    let modDir = liDirectory </> (modPathToDirString $ modInfo ^. name)
+    let modDir = (modPathToDirString $ modInfo ^. name)
     Dir.createDirectoryIfMissing True modDir
     let mName = modName $ modInfo ^. name
         fPath = modDir </> mName ++ liFileSuffix
@@ -150,7 +150,7 @@ readModInfoFromFile path = do
     isParsed <- moduleIsParsed path
     if isParsed
         then do
-            let modPath = liDirectory </> modPathToString path ++ liFileSuffix
+            let modPath =  modPathToString path ++ liFileSuffix
             Just <$> decodeFile modPath
         else return Nothing
 

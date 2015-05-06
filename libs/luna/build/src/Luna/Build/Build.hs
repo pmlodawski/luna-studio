@@ -8,7 +8,6 @@
 
 {-# LANGUAGE ConstraintKinds   #-}
 {-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE Rank2Types        #-}
 {-# LANGUAGE TemplateHaskell   #-}
 
@@ -18,13 +17,15 @@ import Control.Monad.RWS hiding (mapM, mapM_)
 
 import           Control.Monad.Trans.Either
 import           Data.String.Utils                          (replace)
-import           Data.Text.Lazy                             (pack)
+import           Data.Text.Lazy                             (pack, unpack)
+import           System.Posix.Env                           (setEnv, getEnv)
+
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import qualified Flowbox.System.Directory.Directory         as Directory
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.Platform                    as Platform
-import           Flowbox.System.UniPath                     (UniPath)
+import           Flowbox.System.UniPath                     (UniPath, fromUnixString, toUnixString)
 import qualified Flowbox.System.UniPath                     as UniPath
 import           Luna.Build.BuildConfig                     (BuildConfig (BuildConfig))
 import qualified Luna.Build.BuildConfig                     as BuildConfig
@@ -60,6 +61,7 @@ import           Luna.Syntax.Name.Path                      (QualPath (QualPath)
 import qualified Luna.System.Pragma.Store                   as Pragma
 import           Luna.System.Session                        as Session
 import qualified Luna.Pass.Analysis.InsertStd               as InsertStd
+import           Flowbox.System.Directory.Directory         (getCurrentDirectory)
 
 
 type Builder m = (MonadIO m, Functor m)
@@ -89,6 +91,8 @@ runSession s =
 
 parseSource diag src inclStd = do
     let liFile =  src ^. Source.modName
+    currDir <- liftIO getCurrentDirectory
+    putStrLn . show $ currDir ++ (fromUnixString . unpack $ src ^. Source.src ^. Source.path)
 
     printHeader "Stage1"
     (ast, astinfo) <- Pass.run1_ Stage1.pass src
@@ -98,7 +102,6 @@ parseSource diag src inclStd = do
 
     let impPaths =  I.getImportPaths ast
     compilable <- liftIO $ filterM MI.moduleExists impPaths
-    putStrLn . show $ compilable
     let mkFile      = Source.File . pack . (++ ".luna") . MI.modPathToString
         sources     = map (\i -> Source i (mkFile i)) compilable
         hscs        = mapM (prepareSource diag inclStd) sources
@@ -107,16 +110,15 @@ parseSource diag src inclStd = do
     printHeader "Extraction of imports"
     importInfo     <- Pass.run1_ Imports.pass ast
 
-
-    ----printHeader "Hash"
-    ----ast             <- Pass.run1_ Hash.pass ast
-
     printHeader "SA"
     sa             <- Pass.run2_ SA.pass (StructData mempty importInfo) ast
     let sa1   = sa ^. StructData.namespace . Namespace.info
         mInfo = MI.ModuleInfo liFile mempty sa1 mempty
 
     liftIO $ MI.writeModInfoToFile mInfo
+    liftIO $ setEnv "LUNA_PATH" (toUnixString(currDir ++ (fromUnixString . unpack $ src ^. Source.src ^. Source.path))) True
+    lookup <- liftIO $ getEnv "LUNA_PATH"
+    putStrLn . show $ lookup
     printSA diag sa1
 
     printHeader "Stage2"
