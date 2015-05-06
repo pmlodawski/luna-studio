@@ -136,8 +136,7 @@ liDirectory = "modinfo"
 writeModInfoToFile :: ModuleInfo -> IO ()
 writeModInfoToFile modInfo = do
     -- if the directory doesn't exist, create one:
-    tmpDir <- Dir.getTemporaryDirectory
-    let modDir = tmpDir </> liDirectory </> (modPathToDirString $ modInfo ^. name)
+    let modDir = liDirectory </> (modPathToDirString $ modInfo ^. name)
     Dir.createDirectoryIfMissing True modDir
     let mName = modName $ modInfo ^. name
         fPath = modDir </> mName ++ liFileSuffix

@@ -31,6 +31,7 @@ import qualified Luna.Build.BuildConfig                     as BuildConfig
 import           Luna.Build.Diagnostics                     (Diagnostics, printAST, printHAST, printHSC, printHeader, printSA, printSSA)
 import qualified Luna.Build.Source.File                     as File
 import qualified Luna.Data.ImportInfo                       as II
+import qualified Luna.Pass.Import                           as I
 import qualified Luna.Data.ModuleInfo                       as MI
 import           Luna.Data.Namespace                        (Namespace (Namespace))
 import qualified Luna.Data.Namespace                        as Namespace
@@ -94,18 +95,21 @@ parseSource diag src inclStd = do
     printAST diag ast
 
     (ast, astinfo) <-  if inclStd then (Pass.run2_ InsertStd.pass astinfo ast) else return $ (ast, astinfo)
-    printHeader "Extraction of imports"
-    (importInfo, compilable)     <- Pass.run1_ Imports.pass ast
 
-    -- compilation of imported modules:
-    -- (assuming each one is our module, NOT a library)
+    let impPaths =  I.getImportPaths ast
+    compilable <- liftIO $ filterM MI.moduleExists impPaths
+    putStrLn . show $ compilable
     let mkFile      = Source.File . pack . (++ ".luna") . MI.modPathToString
         sources     = map (\i -> Source i (mkFile i)) compilable
         hscs        = mapM (prepareSource diag inclStd) sources
     compiledCodes <- hscs
-    --printHeader "Hash"
-    --ast             <- Pass.run1_ Hash.pass ast
 
+    printHeader "Extraction of imports"
+    importInfo     <- Pass.run1_ Imports.pass ast
+
+
+    ----printHeader "Hash"
+    ----ast             <- Pass.run1_ Hash.pass ast
 
     printHeader "SA"
     sa             <- Pass.run2_ SA.pass (StructData mempty importInfo) ast
