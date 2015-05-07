@@ -83,9 +83,11 @@ cabalExt = ".cabal"
 tmpDirPrefix :: String
 tmpDirPrefix = "lunac"
 
-runSession s =
-    --eitherStringToM . fst =<< Session.runT (void Parser.init >> runEitherT s)
-    eitherStringToM . fst =<< Session.runT (void Parser.init >> Pragma.enable (Pragma.orphanNames) >> runEitherT s)
+runSession inclStd s =
+    case inclStd of
+        True  -> eitherStringToM . fst =<< Session.runT (void Parser.init >> Pragma.enable (Pragma.includeStd)  >> Pragma.enable (Pragma.orphanNames) >> runEitherT s)
+        False -> eitherStringToM . fst =<< Session.runT (void Parser.init >> Pragma.enable (Pragma.orphanNames) >> runEitherT s)
+    
 
 parseSource diag src inclStd = do
     let liFile =  src ^. Source.modName
@@ -94,7 +96,7 @@ parseSource diag src inclStd = do
     (ast, astinfo) <- Pass.run1_ Stage1.pass src
     printAST diag ast
 
-    (ast, astinfo) <-  if inclStd then (Pass.run2_ InsertStd.pass astinfo ast) else return $ (ast, astinfo)
+    (ast, astinfo) <- Pass.run2_ InsertStd.pass astinfo ast
 
     let impPaths =  I.getImportPaths ast
     compilable <- liftIO $ filterM MI.moduleExists impPaths
@@ -146,7 +148,7 @@ parseSource diag src inclStd = do
 
 prepareSource :: Builder m => Diagnostics -> Bool -> Source Source.File  -> m [Source Code]
 prepareSource diag inclStd src = do
-    codes <- runSession $ do
+    codes <- runSession inclStd $ do
         (ast, astinfo, importInfo, compiledCodes) <- parseSource diag src inclStd
 
         printHeader "SSA"
