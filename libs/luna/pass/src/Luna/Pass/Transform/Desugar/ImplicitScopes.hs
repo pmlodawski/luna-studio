@@ -85,7 +85,7 @@ fmake ast@(Label lab e) f = case e of
         let parentMap = view StructInfo.parent si
             aliasMap  = view StructInfo.alias si
             pid       = view (at id) parentMap
-            tgt       = fmap (view StructInfo.target) $ view (at id) aliasMap
+            tgt       = view StructInfo.target <$> view (at id) aliasMap
             tgtPid    = join $ fmap (\tid -> view (at tid) parentMap) tgt
 
         if pid == tgtPid then return ast

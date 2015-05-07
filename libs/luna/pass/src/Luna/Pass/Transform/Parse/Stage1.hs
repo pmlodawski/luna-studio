@@ -52,9 +52,9 @@ passRunner src = do
     ps <- tmpFixErrorParse code (Parser.moduleParser name Parser.defState)
     result <- lift . hoistEither $ ps
     let astinfo = view ParserState.info $ snd result
-    return $ (fst result, astinfo)
+    return (fst result, astinfo)
 
-tmpFixErrorParse a b = fmap fixme $ Parser.parseText a b where
+tmpFixErrorParse a b = fixme <$> Parser.parseText a b where
     fixme = \case
         Left doc -> Left $ showWidth 200 doc
         Right r  -> Right r
