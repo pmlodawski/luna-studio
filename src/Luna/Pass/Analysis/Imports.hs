@@ -49,7 +49,7 @@ pass = Pass "Import analysis"
 iaMain :: MonadIO m => Unit (Label l (Module a e)) -> m (ImportInfo)
 iaMain ast =  do
     let impPaths =  I.getImportPaths ast
-    withoutSources <- liftIO $ filterM MI.moduleNotExists impPaths
+    withoutSources <- liftIO $ filterM (\m -> not <$> MI.moduleExists m) impPaths
     listEithers  <- I.moduleInfosToTuples impPaths
     let infoEithers = fromList listEithers
         mInfos   =  map (MI._strInfo . fromRight) $ filter isRight infoEithers
