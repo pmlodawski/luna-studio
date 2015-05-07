@@ -43,32 +43,32 @@ import qualified Generated.Proto.Urm.URM.Register.Request   as Register
 --    RegisterMultipleRequest -> respond $ respond             Status URMHandler.register
 --    RedoRequest             -> respond $ respondWithFeedback Status URMHandler.register
 
--- TODO zrefaktoruj funckje by byly przejrzystsze - fun, a , b, c ?
+-- TODO zrefaktoruj funckje by byly przejrzystsze - serialize, a , b, c ?
 handlerMap :: HandlerMapWithCid Context IO
 handlerMap callback = HandlerMap.fromList
-    [ (Topic.urmRegisterRequest          , respond status URMHandler.register)
-    , (Topic.urmRegisterMultipleRequest  , respond status URMHandler.registerMultiple)
-    , (Topic.urmRedoRequest              , respond2 status $ const URMHandler.redo)
-    , (Topic.urmPingRequest              , respond status $ const Maintenance.ping)
-    , (Topic.urmUndoRequest              , respond2 status $ const URMHandler.undo)
-    , (Topic.urmClearStackRequest        , respond status $ const URMHandler.clearStack)
-    , (Topic.urmTransactionBeginRequest  , respond status URMHandler.tBegin)
-    , (Topic.urmTransactionCommitRequest , respond status $ const URMHandler.tCommit)
-    , (Topic.urmUndoDescriptionRequest   , respond status $ const URMHandler.undoDescriptions)
-    , (Topic.urmRedoDescriptionRequest   , respond status $ const URMHandler.redoDescriptions)
+    [ (Topic.urmRegisterRequest          , respondWithAction status         URMHandler.register        )
+    , (Topic.urmRegisterMultipleRequest  , respondWithAction status         URMHandler.registerMultiple)
+    , (Topic.urmRedoRequest              , respondWithAction status $ const URMHandler.redo            )
+    , (Topic.urmPingRequest              , respond           status $ const Maintenance.ping           )
+    , (Topic.urmUndoRequest              , respondWithAction status $ const URMHandler.undo            )
+    , (Topic.urmClearStackRequest        , respondWithAction status $ const URMHandler.clearStack      )
+    , (Topic.urmTransactionBeginRequest  , respond           status         URMHandler.tBegin          )
+    , (Topic.urmTransactionCommitRequest , respondWithAction status $ const URMHandler.tCommit         )
+    , (Topic.urmUndoDescriptionRequest   , respond           status $ const URMHandler.undoDescriptions)
+    , (Topic.urmRedoDescriptionRequest   , respond           status $ const URMHandler.redoDescriptions)
     ]
     where
         respond :: (Proto.Serializable args, Proto.Serializable result)
                 => String -> (CorrelationID -> args -> RPC Context IO result) -> StateT Context IO [Message]
         respond type_ = callback (/+ type_) . Processor.singleResultWithCid
-        respond2 :: (Proto.Serializable args, Proto.Serializable result)
-                 => String -> (CorrelationID -> args -> RPC Context IO (result, Maybe [Message])) -> StateT Context IO [Message]
-        respond2 type_ fun = callback (/+ type_) (\cid a -> do (b, c) <- fun cid a
-                                                               return ([b], concat $ maybeToList c))
+        respondWithAction :: (Proto.Serializable request, Proto.Serializable result)
+                          => String -> (CorrelationID -> request -> RPC Context IO (result, [Message])) -> StateT Context IO [Message]
+        respondWithAction type_ handler = callback (/+ type_) (\cid request -> do (result, action) <- handler cid request
+                                                                                  return ([result], action))
 
 
-fun :: Proto.Serializable message => Topic -> message -> Bus.Message
-fun = (encodeP .) . Message.mk . ("undone." ++)
+serialize :: Proto.Serializable message => Topic -> message -> Bus.Message
+serialize = (encodeP .) . Message.mk
 
 
 makeMsgArr :: (Proto.ReflectDescriptor request, Proto.Wire request) => request -> Maybe Topic -> [Message]
@@ -79,13 +79,8 @@ prepareResponse :: (Proto.Serializable undoMessage, Proto.Serializable redoMessa
                 => Project.ID -> Topic -> undoMessage -> Topic -> redoMessage -> Maybe Topic -> String -> urmMessage -> m ([urmMessage], [Message])
 prepareResponse projectID undoTopic undoAction redoTopic redoAction urmTopic description = return . flip (,) urmMessages . return
     where
-        urmMessages = makeMsgArr (Register.Request (fun undoTopic undoAction)
-                                                   (fun redoTopic redoAction)
+        urmMessages = makeMsgArr (Register.Request (serialize ("undone." ++ undoTopic) undoAction)
+                                                   (serialize ("undone." ++ redoTopic) redoAction)
                                                    (encodeP projectID)
                                                    (encodeP description)
                                  ) urmTopic
-
-        --urmMessages = urmTopic & makeMsgArr $ Register.Request (fun undoTopic $ undoAction)
-        --                                                       (fun redoTopic $ redoAction)
-        --                                                       (encodeP projectID)
-        --                                                       (encodeP description)

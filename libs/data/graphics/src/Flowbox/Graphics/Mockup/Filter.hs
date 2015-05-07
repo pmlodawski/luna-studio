@@ -16,6 +16,7 @@ module Flowbox.Graphics.Mockup.Filter (
     ditherLuna,
     EdgeOperator (..),
     Orientation (..),
+    EdgeBlur.BlurType (..),
     edgeDetectLuna,
     erodeLuna,
     histEqLuna,

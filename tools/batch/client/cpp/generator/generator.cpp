@@ -71,7 +71,7 @@ public:
 	Maybe<std::chrono::milliseconds> timeout;
 
 	std::shared_ptr<Transaction> currentTransaction();
-	std::shared_ptr<ScopeGuardian> setTransaction(std::shared_ptr<Transaction> t);
+	std::shared_ptr<ScopeGuardian> setTransaction(const std::shared_ptr<Transaction> &t);
 
 	CorrelationId sendRequest(std::string baseTopic, std::string requestTopic, const google::protobuf::Message &msg, ConversationDoneCb callback);
 
@@ -108,16 +108,17 @@ void %wrapper_name%::makeSureTranactionExistsInCurrentThread()
 		transactions.reset(new std::stack<std::shared_ptr<Transaction>>);
 }
 
-CorrelationId %wrapper_name%::sendRequest(std::string baseTopic, std::string requestTopic, const google::protobuf::Message &msg, ConversationDoneCb callback)
-{
-	auto cid = bh->request(std::move(baseTopic), std::move(requestTopic), msg.SerializeAsString(), callback);
-	if(auto t = currentTransaction())
-		t->pushCorrelation(cid);
-
+Correlation
+	auto cid = bh->request(baseTopic, std::move(requestTopic), msg.SerializeAsString(), callback);
+	if (baseTopic != "urm.transaction.commit")
+	{
+		if (auto t = currentTransaction())
+			t->pushCorrelation(cid);
+	}
 	return cid;
 }
 
-std::shared_ptr<ScopeGuardian> %wrapper_name%::setTransaction(std::shared_ptr<Transaction> t)
+std::shared_ptr<ScopeGuardian> %wrapper_name%::setTransaction(const std::shared_ptr<Transaction> &t)
 {
 	makeSureTranactionExistsInCurrentThread();
 	return make_shared<ScopeGuardian>(
