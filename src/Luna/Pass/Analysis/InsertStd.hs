@@ -24,19 +24,26 @@ import           Luna.Data.ASTInfo      (ASTInfo,  _lastID, genID, incID)
 import qualified Luna.Data.ASTInfo      as ASTInfo
 import qualified Luna.Syntax.Enum       as Enum
 import           Luna.System.Pragma.Store (MonadPragmaStore)
+import qualified Luna.System.Pragma.Store  as Pragma
+import qualified Luna.System.Pragma        as Pragma (isEnabled)
+import qualified Luna.Parser.Pragma        as Pragma
 
 type SAPass m = PassMonad NoState m
 data NoState  = NoState deriving Show
 
 
-pass :: (Enum.Enumerated a, MonadPragmaStore m) => Pass NoState (ASTInfo -> U.Unit (L.Label l (M.Module a e)) -> SAPass m (U.Unit (L.Label l (M.Module a e)), ASTInfo))
+pass :: (Enum.Enumerated a, MonadPragmaStore m, MonadIO m) => Pass NoState (ASTInfo -> U.Unit (L.Label l (M.Module a e)) -> SAPass m (U.Unit (L.Label l (M.Module a e)), ASTInfo))
 pass = Pass "StdLib import insertion"
             "Insertion of standard library"
             undefined iaMain
 
 
-iaMain :: (Enum.Enumerated a, MonadPragmaStore m) => ASTInfo -> U.Unit (L.Label l (M.Module a e)) -> SAPass m (U.Unit (L.Label l (M.Module a e)), ASTInfo)
-iaMain astinfo ast = pure ((U.element . L.element . M.body) `over`  ((stdImport astinfo):) $ ast, incID astinfo)
+iaMain :: (Enum.Enumerated a, MonadPragmaStore m, MonadIO m) => ASTInfo -> U.Unit (L.Label l (M.Module a e)) -> SAPass m (U.Unit (L.Label l (M.Module a e)), ASTInfo)
+iaMain astinfo ast = do includeStd <- Pragma.lookup Pragma.includeStd
+                        putStrLn . show $ includeStd
+                        case fmap Pragma.isEnabled includeStd of
+                            Right True -> return ((U.element . L.element . M.body) `over`  ((stdImport astinfo):) $ ast, incID astinfo)
+                            _          -> return (ast, astinfo)
 
 
 stdImport :: Enum.Enumerated a => ASTInfo -> D.LDecl a e
