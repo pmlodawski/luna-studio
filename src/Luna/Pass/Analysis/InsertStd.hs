@@ -42,7 +42,7 @@ iaMain :: (Enum.Enumerated a, MonadPragmaStore m, MonadIO m) => ASTInfo -> U.Uni
 iaMain astinfo ast = do includeStd <- Pragma.lookup Pragma.includeStd
                         --putStrLn . show $ includeStd
                         case fmap Pragma.isEnabled includeStd of
-                            Right True -> return ((U.element . L.element . M.body) `over`  ((stdImport astinfo):) $ ast, incID astinfo)
+                            Right True -> return ((U.fromUnit . L.element . M.body) `over`  ((stdImport astinfo):) $ ast, incID astinfo)
                             _          -> return (ast, astinfo)
 
 

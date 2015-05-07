@@ -12,6 +12,10 @@ module Test.Luna.Pass.Transform.Graph.Common where
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
+import qualified Luna.Control.BCZipper                     as BCZipper
+import           Luna.Control.Crumb                        (Breadcrumbs)
+import qualified Luna.Control.Crumb                        as Crumb
+import qualified Luna.Control.Focus                        as Focus
 import           Luna.Data.ASTInfo                         (ASTInfo)
 import qualified Luna.Data.Namespace                       as Namespace
 import           Luna.Data.StructData                      (StructData (StructData))
@@ -21,10 +25,6 @@ import qualified Luna.Pass.Analysis.Imports                as Imports
 import qualified Luna.Pass.Analysis.Struct                 as Struct
 import qualified Luna.Pass.Transform.Graph.Builder.Builder as GraphBuilder
 import qualified Luna.Pass.Transform.Graph.Parser.Parser   as GraphParser
-import qualified Luna.Syntax.Control.BCZipper              as BCZipper
-import           Luna.Syntax.Control.Crumb                 (Breadcrumbs)
-import qualified Luna.Syntax.Control.Crumb                 as Crumb
-import qualified Luna.Syntax.Control.Focus                 as Focus
 import           Luna.Syntax.Decl                          (LDecl)
 import           Luna.Syntax.Graph.Graph                   (Graph)
 import           Luna.Syntax.Graph.Tag                     (Tag)
