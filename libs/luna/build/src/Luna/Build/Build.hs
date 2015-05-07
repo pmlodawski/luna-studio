@@ -18,7 +18,9 @@ import Control.Monad.RWS hiding (mapM, mapM_)
 
 import           Control.Monad.Trans.Either
 import           Data.String.Utils                          (replace)
-import           Data.Text.Lazy                             (pack)
+import           Data.Text.Lazy                             (pack, unpack)
+import qualified System.Posix.Env                           as Env
+
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import qualified Flowbox.System.Directory.Directory         as Directory
@@ -89,7 +91,7 @@ runSession inclStd s =
         False -> eitherStringToM . fst =<< Session.runT (void Parser.init >> Pragma.enable (Pragma.orphanNames) >> runEitherT s)
     
 
-parseSource diag src inclStd = do
+parseSource diag rootSrc src inclStd = do
     let liFile =  src ^. Source.modName
 
     printHeader "Stage1"
@@ -103,7 +105,7 @@ parseSource diag src inclStd = do
     --putStrLn . show $ compilable
     let mkFile      = Source.File . pack . (++ ".luna") . MI.modPathToString
         sources     = map (\i -> Source i (mkFile i)) compilable
-        hscs        = mapM (prepareSource diag inclStd) sources
+    let hscs        = mapM (prepareSource diag inclStd rootSrc) sources
     compiledCodes <- hscs
 
     printHeader "Extraction of imports"
@@ -118,7 +120,7 @@ parseSource diag src inclStd = do
     let sa1   = sa ^. StructData.namespace . Namespace.info
         mInfo = MI.ModuleInfo liFile mempty sa1 mempty
 
-    liftIO $ MI.writeModInfoToFile mInfo
+    liftIO $ MI.writeModInfoToFile mInfo (unpack $ rootSrc ^. Source.src ^. Source.path)
     printSA diag sa1
 
     printHeader "Stage2"
@@ -146,10 +148,10 @@ parseSource diag src inclStd = do
     return (ast, astinfo, importInfo, compiledCodes)
 
 
-prepareSource :: Builder m => Diagnostics -> Bool -> Source Source.File  -> m [Source Code]
-prepareSource diag inclStd src = do
+prepareSource :: Builder m => Diagnostics -> Bool -> Source Source.File -> Source Source.File  -> m [Source Code]
+prepareSource diag inclStd rootSrc src = do
     codes <- runSession inclStd $ do
-        (ast, astinfo, importInfo, compiledCodes) <- parseSource diag src inclStd
+        (ast, astinfo, importInfo, compiledCodes) <- parseSource diag rootSrc src inclStd
 
         printHeader "SSA"
         ast            <- Pass.run1_ SSA.pass ast
@@ -168,10 +170,14 @@ prepareSource diag inclStd src = do
 
 
 run :: Builder m => BuildConfig -> Diagnostics -> UniPath -> UniPath -> m ()
-run buildConfig diag rootPath filePath = case buildConfig ^. BuildConfig.buildDir of
-    Nothing -> Directory.withTmpDirectory tmpDirPrefix $ buildInFolder buildConfig diag rootPath filePath
-    Just bd -> do liftIO $ Directory.createDirectoryIfMissing True bd
-                  buildInFolder buildConfig diag rootPath filePath bd
+run buildConfig diag rootPath filePath = do
+    lunaPath <- liftIO $ Env.getEnvDefault "LUNAPATH" ""
+    let modPath = UniPath.toUnixString $ init filePath
+    liftIO $ Env.setEnv "LUNAPATH" (modPath ++ (':' : lunaPath)) True
+    case buildConfig ^. BuildConfig.buildDir of
+        Nothing -> Directory.withTmpDirectory tmpDirPrefix $ buildInFolder buildConfig diag rootPath filePath
+        Just bd -> do liftIO $ Directory.createDirectoryIfMissing True bd
+                      buildInFolder buildConfig diag rootPath filePath bd
 
 
 buildInFolder :: Builder m => BuildConfig -> Diagnostics -> UniPath -> UniPath -> UniPath -> m ()
@@ -182,7 +188,7 @@ buildInFolder (BuildConfig name version libs ghcOptions ccOptions includeDirs ca
                 : libs
                 ++ ["flowboxM-stdlib" | name /= "flowboxM-stdlib"]
     src <- File.getSource rootPath srcPath
-    hsc <- prepareSource diag inclStd src        -- tutaj moze warto przekazac folder do passow, zeby moc tam odpalic cabala
+    hsc <- prepareSource diag inclStd src src
     let cabal = case buildType of
             BuildConfig.Executable {} -> CabalGen.genExecutable name version ghcOptions ccOptions includeDirs allLibs
             BuildConfig.Library       -> CabalGen.genLibrary    name version ghcOptions ccOptions includeDirs allLibs hsc

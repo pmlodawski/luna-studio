@@ -14,6 +14,7 @@ import qualified Luna.Parser.Parser                         as Parser
 import           Text.PrettyPrint.ANSI.Leijen               (displayIO, linebreak, renderPretty)
 import           Data.Default
 import           Data.Either                                (lefts, rights)
+import qualified Data.Text.Lazy                             as B
 import           System.IO                                  (stdout)
 import           Text.Show.Pretty
 import qualified Luna.Parser.State                          as State
@@ -90,7 +91,7 @@ main = do
             let sa1 = _info . _namespace $ sa
             let mInfo = MI.ModuleInfo (QualPath [] (fromString liFile)) mempty sa1 mempty
             ppPrint mInfo
-            liftIO $ MI.writeModInfoToFile mInfo
+            liftIO $ MI.writeModInfoToFile mInfo (B.unpack $ src ^. Source.src ^. Source.path)
 
 
             printHeader "Stage2"
