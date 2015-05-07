@@ -7,39 +7,37 @@
 
 {-# LANGUAGE ConstraintKinds           #-}
 {-# LANGUAGE FlexibleContexts          #-}
-{-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE Rank2Types                #-}
-{-# LANGUAGE TemplateHaskell           #-}
-{-# LANGUAGE TupleSections             #-}
-{-# LANGUAGE OverloadedStrings         #-}
-{-# LANGUAGE UndecidableInstances      #-}
-{-# LANGUAGE OverlappingInstances      #-}
 {-# LANGUAGE GADTs                     #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE OverloadedStrings         #-}
+{-# LANGUAGE Rank2Types                #-}
+{-# LANGUAGE TupleSections             #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 module Luna.Pass.Target.HS.HSC where
 
-import           Flowbox.Prelude          hiding (cons, simple, assign)
+import           Control.Monad.State           hiding (mapM)
+import           Data.List                     (intersperse)
+import           Data.Text.CodeBuilder.Builder
+import           Data.Text.CodeBuilder.Doc     (between, line, nested, (</>))
+import qualified Data.Text.CodeBuilder.Doc     as Doc
+import           Data.Text.CodeBuilder.Tok     (Prec (Top), Tok (Tok))
+import qualified Data.Text.CodeBuilder.Tok     as Tok
+import           Data.Text.Lazy                (Text)
+import qualified Data.Text.Lazy                as Text
+import           Data.Text.Lazy.Builder        (fromLazyText, toLazyText)
+import qualified Data.Text.Lazy.Builder        as Text
+
+import           Flowbox.Prelude              hiding (assign, cons, simple)
+import           Luna.Data.Source             (Source (Source))
+import           Luna.Pass                    (Pass (Pass), PassMonad)
+import           Luna.Pass.Pass               (Pass)
+import qualified Luna.Pass.Pass               as Pass
 import qualified Luna.Target.HS.AST.Comment   as HComment
 import qualified Luna.Target.HS.AST.Expr      as HExpr
 import           Luna.Target.HS.AST.Extension (Extension)
 import qualified Luna.Target.HS.AST.Lit       as HLit
-import           Luna.Data.Source         (Source (Source))
-import           Luna.Pass.Pass           (Pass)
-import qualified Luna.Pass.Pass           as Pass
-import           Luna.Pass                    (Pass(Pass), PassMonad)
-
-import qualified Data.Text.Lazy as Text
-import           Data.Text.Lazy (Text)
-import qualified Data.Text.Lazy.Builder as Text
-import           Data.Text.Lazy.Builder   (toLazyText, fromLazyText)
-
-import           Data.Text.CodeBuilder.Builder
-import           Data.Text.CodeBuilder.Doc (between, (</>), nested, line)
-import qualified Data.Text.CodeBuilder.Doc as Doc
-import           Data.Text.CodeBuilder.Tok (Tok(Tok), Prec(Top))
-import qualified Data.Text.CodeBuilder.Tok as Tok
-import Control.Monad.State    hiding (mapM)
-import Data.List (intersperse)
 
 ----------------------------------------------------------------------
 -- Basic types
@@ -153,14 +151,14 @@ buildBody2 exprs = if null exprs then "" else mjoin "; " (gen exprs) <> ";"
 tuple' = tuple . fmap convert
 
 doBlock = \case
-    []     -> error "empty do-block!"
-    (x:[]) -> x
-    items  -> app "do" . block $ items
+    []    -> error "empty do-block!"
+    [x]   -> x
+    items -> app "do" . block $ items
 
 lineBlock = \case
-    []     -> error "empty line-block!"
-    (x:[]) -> x
-    items  -> block $ items
+    []    -> error "empty line-block!"
+    [x]   -> x
+    items -> block items
 
 typed base t = apps' base ["::", t]
 
@@ -171,11 +169,11 @@ removeEmptyBegining = \case
     [] -> []
     (x:xs) -> case x of
         "" -> removeEmptyBegining xs
-        _  -> (x:xs)
+        _  -> x:xs
 
 instance (Render s ConsBlock, Render s Block) => Generator2 HExpr s where
     generate2 = \case
-        HExpr.WildP                           -> "_"  
+        HExpr.WildP                           -> "_"
         HExpr.RecWildP                        -> "{}"
         HExpr.NOP                             -> "nop"
         HExpr.Var      name                   -> convert name
@@ -184,8 +182,8 @@ instance (Render s ConsBlock, Render s Block) => Generator2 HExpr s where
         HExpr.ConT     name                   -> convert name
         HExpr.ConP     name                   -> convert name
         HExpr.Native   natCode                -> lineBlock lines where
-                                                 lines = fmap fromString 
-                                                       $ removeEmptyBegining 
+                                                 lines = fmap fromString
+                                                       $ removeEmptyBegining
                                                        $ fmap (fromText . Text.strip)
                                                        $ Text.lines natCode
         HExpr.Pragma   p                      -> gen p
@@ -199,8 +197,8 @@ instance (Render s ConsBlock, Render s Block) => Generator2 HExpr s where
         HExpr.AppE     src dst                -> app' (gen src) $ gen dst
         HExpr.RecUpdE  expr name val          -> app' (gen expr) $ braced $ name `assign` gen val
         HExpr.InstanceD tp decs               -> "instance " <> gen tp <> " where { " <> mjoin "; " (gen decs) <> " }"
-        HExpr.TypeInstance tp expr            -> app' ("type instance" :: String) (gen tp) `assign` (gen expr)
-        HExpr.NewTypeD name params con  ders  -> apps' ("newtype" :: String) (name : params) `app'` (consBlock [gen con] $ fmap (fromString . show) ders)
+        HExpr.TypeInstance tp expr            -> app' ("type instance" :: String) (gen tp) `assign` gen expr
+        HExpr.NewTypeD name params con  ders  -> apps' ("newtype" :: String) (name : params) `app'` consBlock [gen con] (fmap (fromString . show) ders)
         HExpr.DataD    name params cons ders  -> dataDecl name params $ consBlock (gen cons) (fmap (fromString . show) ders)
         HExpr.TypeD    dst src                -> app' ("type" :: String) (gen dst) `assign` gen src
         HExpr.Con      name fields            -> apps' name $ gen fields
@@ -223,7 +221,7 @@ instance (Render s ConsBlock, Render s Block) => Generator2 HExpr s where
         HExpr.TupleP   items                  -> tuple' $ gen items
         HExpr.ConE     qname                  -> mjoin "." (convert qname)
         HExpr.ListE    items                  -> list $ gen items
-        HExpr.ListT    item                   -> list $ [gen item]
+        HExpr.ListT    item                   -> list [gen item]
         HExpr.Bang     expr                   -> "--->>>   " <> gen expr
         HExpr.Match    pat matchBody          -> gen pat `arrow` gen matchBody
         HExpr.ViewP    expr dst               -> parensed $ gen expr `arrow` gen dst
@@ -236,7 +234,7 @@ instance (Render s ConsBlock, Render s Block) => Generator2 HExpr s where
         HExpr.CaseE    expr matches           -> apps "case" [gen expr, "of", block $ gen matches] -- " of {" <> buildBody2 matches <> "}"
         HExpr.LambdaCase matches              -> app "\\case" (block $ gen matches)
         --HExpr.CondE    cond sucess failure    -> complex $ "ifThenElse' " <> gen cond <> (simplify.buildDoBlock) sucess <> (simplify.buildDoBlock) failure
-        
+
         s -> tok 10 $ fromString $ "unknown: " ++ show s
         where sepjoin     = mjoin ", "
 
@@ -287,13 +285,13 @@ data HSCompact = HSCompact deriving (Show)
 
 instance Render HSIndent Block where
     render _ (Block items) = Tok Top . nested
-                                     . foldl (</>) mempty 
+                                     . foldl (</>) mempty
                                      $ fmap (view Tok.doc) items
 
 instance Render HSCompact Block where
-    render _ (Block items) = Tok Top . nested 
-                                     . between "{" "}" 
-                                     . foldl (<>) mempty 
+    render _ (Block items) = Tok Top . nested
+                                     . between "{" "}"
+                                     . foldl (<>) mempty
                                      $ fmap ((<>";") . view Tok.doc) items
 
 
@@ -307,5 +305,5 @@ instance Render HSIndent ConsBlock where
 
 genDeriving ders = case ders of
     [] -> id
-    _  -> (<> (line <> "deriving " 
+    _  -> (<> (line <> "deriving "
                     <> Doc.parensed (mjoin "," $ fmap fromText ders)))

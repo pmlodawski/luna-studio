@@ -102,12 +102,12 @@ aaPat p@(Label lab pat) = case pat of
     where id = Enum.id lab
           continue = defaultTraverseM p 
 
-aaDecl :: SACtx lab m a => (LDecl lab a) -> SAPass m (LDecl lab a)
+aaDecl :: SACtx lab m a => LDecl lab a -> SAPass m (LDecl lab a)
 aaDecl d@(Label lab decl) = withScope id continue
     where id       = Enum.id lab
           continue = defaultTraverseM d
 
-aaExpr :: SACtx lab m a => (LExpr lab a) -> SAPass m (LExpr lab a)
+aaExpr :: SACtx lab m a => LExpr lab a -> SAPass m (LExpr lab a)
 aaExpr e@(Label lab expr) = case expr of
     var@(Expr.Var (Expr.Variable name _)) -> regParent id
                                           *> regAlias id (unwrap name)
