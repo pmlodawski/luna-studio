@@ -27,7 +27,7 @@ import           Data.Either.Combinators  (mapRight)
 import           Flowbox.Data.MapForest   (Node)
 import qualified Flowbox.Data.MapForest   as MF
 import           Flowbox.Prelude
-import           Flowbox.System.UniPath   (PathItem, UniPath, toUnixString)
+import           Flowbox.System.UniPath   (PathItem, UniPath, toUnixString, fromUnixString)
 import qualified Flowbox.System.Directory as FlowDir
 import           Luna.Data.StructInfo     (OriginInfo, Scope, StructInfo)
 import qualified Luna.Data.StructInfo     as SI
@@ -186,13 +186,11 @@ findModInfo path = do
 
 
 -- does the main serialization:
-writeModInfoToFile :: ModuleInfo -> IO ()
-writeModInfoToFile modInfo = do
-    -- if the directory doesn't exist, create one:
-    let modDir = modPathToDirString $ modInfo ^. name
-    Dir.createDirectoryIfMissing True modDir
-    let mName = modName $ modInfo ^. name
-        fPath = modDir </> mName ++ liFileSuffix
+writeModInfoToFile :: ModuleInfo -> FilePath -> IO ()
+writeModInfoToFile modInfo filePath = do
+    let basePath = toUnixString . init . fromUnixString $ filePath
+    let modPath = basePath </> modName (modInfo ^. name)
+        fPath   = modPath ++ liFileSuffix
     -- serialize with Data.Binry:
     encodeFile fPath modInfo
 
