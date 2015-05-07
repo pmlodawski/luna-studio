@@ -10,4 +10,10 @@ Library
   Exposed-modules:    `findmodules('src', '.*\.hs')`
 
   Build-Depends:  base >= 4.6,
-                  algebraic > 0.1
+                  algebraic > 0.1,
+                  vector,
+                  linear,
+                  lens,
+                  errors,
+                  transformers,
+                  storable-tuple
