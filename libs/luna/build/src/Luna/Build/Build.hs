@@ -100,7 +100,7 @@ parseSource diag src inclStd = do
 
     let impPaths =  I.getImportPaths ast
     compilable <- liftIO $ filterM MI.moduleExists impPaths
-    putStrLn . show $ compilable
+    --putStrLn . show $ compilable
     let mkFile      = Source.File . pack . (++ ".luna") . MI.modPathToString
         sources     = map (\i -> Source i (mkFile i)) compilable
         hscs        = mapM (prepareSource diag inclStd) sources

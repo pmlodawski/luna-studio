@@ -40,7 +40,7 @@ pass = Pass "StdLib import insertion"
 
 iaMain :: (Enum.Enumerated a, MonadPragmaStore m, MonadIO m) => ASTInfo -> U.Unit (L.Label l (M.Module a e)) -> SAPass m (U.Unit (L.Label l (M.Module a e)), ASTInfo)
 iaMain astinfo ast = do includeStd <- Pragma.lookup Pragma.includeStd
-                        putStrLn . show $ includeStd
+                        --putStrLn . show $ includeStd
                         case fmap Pragma.isEnabled includeStd of
                             Right True -> return ((U.element . L.element . M.body) `over`  ((stdImport astinfo):) $ ast, incID astinfo)
                             _          -> return (ast, astinfo)
