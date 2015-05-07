@@ -1,9 +1,11 @@
-module Flowbox.GuiMockup.LineSnap where
+module Flowbox.GuiMockup.LineSnap 
+    ( module Flowbox.GuiMockup.LineSnap
+    , module Math.Coordinate.Cartesian
+        ) where
 
 import Math.Coordinate.Cartesian
 import Debug.Trace
 --import qualified Prelude as P
-
 
 data CubicBezier a = CubicBezier { cubicC0 :: Point2 a
                                  , cubicC1 :: Point2 a
@@ -105,14 +107,25 @@ assignControlPoint bezierLength strokeWithDists =
         intersectingBezier = snd $ head end
         startDistance = if null start then 0.0 else fst (last start)
         rest = (bezierLength - startDistance)/( (fst (head end)) - startDistance) -- * (sum $ map (\(_,x) -> arcLength x) strokeWithDists)
-    in {--trace ("\nstart is: "++show start++"\nbezierLength: "++show bezierLength++"\nrest: "++show rest) $ --} deCasteljauCubic rest intersectingBezier 
+    in deCasteljauCubic rest intersectingBezier 
+
+assignControlPoint' :: Float -> [(Float, CubicBezier Float)] -> (Point2 Float, Point2 Float, Point2 Float)
+assignControlPoint' bezierLength strokeWithDists = 
+    let (start, end) = span (\(dist,_) -> {-- trace ("dist is: "++show dist) $--} dist<bezierLength) strokeWithDists
+        intersectingBezier = snd $ head end
+        startDistance = if null start then 0.0 else fst (last start)
+        rest = (bezierLength - startDistance)/( (fst (head end)) - startDistance) -- * (sum $ map (\(_,x) -> arcLength x) strokeWithDists)
+        (p, hi, ho) = deCasteljauCubic rest intersectingBezier 
+        restPoint = Point2 (1/rest) (1/rest)
+        invertRestPoint = Point2 (1/(1-rest)) (1/(1-rest))
+    in (p, p+restPoint*(hi-p),  p+invertRestPoint*(ho-p) ) --{--trace ("\nstart is: "++show start++"\nbezierLength: "++show bezierLength++"\nrest: "++show rest) $ --} deCasteljauCubic rest intersectingBezier 
 
 assignControlPoints :: [CubicBezier Float] -> [CubicBezier Float] -> [(Point2 Float, Point2 Float, Point2 Float)]
 assignControlPoints original strokeAproximation = 
     let originalDistancesNorm = normalizeDistances $ bezierDistances original
         strokeDistancesNorm = normalizeDistances $ bezierDistances strokeAproximation
         strokeWithDists = zip (tail strokeDistancesNorm) strokeAproximation
-    in {--trace ("\nstrokeDistancesNorm: "++show strokeDistancesNorm) $--} map (flip assignControlPoint strokeWithDists) $ tail originalDistancesNorm
+    in {--trace ("\nstrokeDistancesNorm: "++show strokeDistancesNorm) $--} map (flip assignControlPoint' strokeWithDists) $ tail originalDistancesNorm
 
 assignPoints :: [CubicBezier Float] -> [Point2 Float] -> [Point2 Float]
 assignPoints beziers stroke = 
@@ -158,3 +171,19 @@ printJsPoints :: [Point2 Float] -> String
 printJsPoints points = show $ map (\(Point2 x y) -> [floor x, floor y]) points
 
 process = printJsPoints . (assignPoints [exampleCurve, exampleCurve, exampleCurve, exampleCurve, exampleCurve2, exampleCurve, exampleCurve]) . getPoints 
+
+
+type PaperPoint = (Float,Float)
+
+type PaperControlPoint = (PaperPoint,PaperPoint,PaperPoint)
+
+s111221 :: [CubicBezier Float]
+s111221 = [streight1,streight1,streight1,streight2,streight2,streight1]
+--paperPointsToBeziers :: [PaperControlPoint] -> [CubicBezier Float]
+paperPointsToBeziers points = 
+    tail $ tail $ map snd $ scanl funcR ((0,0), streight1) points
+
+funcR = (\((x,y),bezier) (p,hi,ho) -> ((p,p+ho), CubicBezier x y (p+hi) p))
+
+process2 original = printJsPoints . concat . (map (\(x,y,z) -> [x,y-x,z-x])) . assignControlPoints original . paperPointsToBeziers
+
