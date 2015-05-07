@@ -116,7 +116,7 @@ fmake ast@(Label lab e) f = case e of
             originMod = fmap (view StructInfo.mod) $ view (at id) aliasMap
             thisMod   = ii ^. ImportInfo.path
             pid       = view (at id) parentMap
-            tgt       = fmap (view StructInfo.target) $ view (at id) aliasMap
+            tgt       = view StructInfo.target <$> view (at id) aliasMap
             tgtPid    = join $ fmap (\tid -> view (at tid) parentMap) tgt
 
         if originMod == (Just thisMod)

@@ -6,7 +6,7 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE TemplateHaskell #-}
 
-module Luna.Syntax.Control.Crumb where
+module Luna.Control.Crumb where
 
 import           Flowbox.Prelude
 import qualified Luna.Syntax.AST       as AST

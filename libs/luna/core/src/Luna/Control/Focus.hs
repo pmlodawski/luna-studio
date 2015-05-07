@@ -8,7 +8,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeOperators   #-}
 
-module Luna.Syntax.Control.Focus where
+module Luna.Control.Focus where
 
 import Control.Zipper ((:>>), Top)
 

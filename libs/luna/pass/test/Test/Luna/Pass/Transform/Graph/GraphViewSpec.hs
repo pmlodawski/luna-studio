@@ -11,7 +11,7 @@ import Test.Hspec
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
-import           Luna.Syntax.Control.Crumb             (Breadcrumbs)
+import           Luna.Control.Crumb                    (Breadcrumbs)
 import           Luna.Syntax.Graph.Tag                 (Tag)
 import qualified Luna.Syntax.Graph.Tag                 as Tag
 import           Luna.Syntax.Graph.View.GraphView      (GraphView)
