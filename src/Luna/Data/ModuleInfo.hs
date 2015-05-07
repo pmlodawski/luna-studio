@@ -7,25 +7,28 @@
 
 module Luna.Data.ModuleInfo where
 
-import           Control.Monad           (foldM, liftM, (<=<), (>=>))
+import           Control.Monad            (foldM, liftM, (<=<), (>=>))
 import           Data.Binary
-import           Data.Either             (lefts, rights)
-import qualified Data.IntMap             as IntMap
-import           Data.List               (filter, find)
-import           Data.Map                (Map)
-import qualified Data.Map                as Map
-import           Data.Maybe              (fromJust, fromMaybe, isJust)
-import           Data.Text.Internal.Lazy (Text)
-import qualified Data.Text.Lazy          as T
-import qualified System.Directory        as Dir
-import           System.Environment      (lookupEnv)
-import           System.FilePath         (joinPath, (</>))
+import           Data.Either              (lefts, rights)
+import qualified Data.IntMap              as IntMap
+import           Data.List                (filter, find)
+import           Data.Map                 (Map)
+import qualified Data.Map                 as Map
+import           Data.Maybe               (fromJust, fromMaybe, isJust)
+import           Data.Text.Internal.Lazy  (Text)
+import qualified Data.Text.Lazy           as T
+import qualified Data.Text                as Text
+import qualified System.Directory         as Dir
+import           System.Environment       (lookupEnv)
+import           System.FilePath          (joinPath, (</>))
+import qualified System.Posix.Env         as Env
 
 import           Data.Either.Combinators  (mapRight)
 import           Flowbox.Data.MapForest   (Node)
 import qualified Flowbox.Data.MapForest   as MF
 import           Flowbox.Prelude
 import           Flowbox.System.UniPath   (PathItem, UniPath, toUnixString)
+import qualified Flowbox.System.Directory as FlowDir
 import           Luna.Data.StructInfo     (OriginInfo, Scope, StructInfo)
 import qualified Luna.Data.StructInfo     as SI
 import           Luna.Syntax.AST          (ID)
@@ -63,7 +66,7 @@ getModuleInfos :: [QualPath] -> IO [Either ImportError ModuleInfo]
 getModuleInfos = mapM getModuleInfo
 
 getModuleInfo :: QualPath -> IO (Either ImportError ModuleInfo)
-getModuleInfo path = readModInfoFromFile path >>= \case
+getModuleInfo path = findModInfo path >>= \case
     Just modInfo -> return $ Right modInfo
     Nothing      -> return $ Left (NotFoundError path)
 
@@ -73,23 +76,23 @@ regError err = errors %~ (err:)
 
 
 -- checks if the module exists (but not if it's parsed)
-moduleExists :: QualPath -> IO Bool
-moduleExists path = do
-    f <- Dir.findFile [modPathToDirString path] (modName path ++ lunaFileSuffix)
-    return $ isJust f
+--moduleExists :: QualPath -> IO Bool
+--moduleExists path = do
+--    f <- Dir.findFile [modPathToDirString path] (modName path ++ lunaFileSuffix)
+--    return $ isJust f
 
 
-moduleNotExists :: QualPath -> IO Bool
-moduleNotExists path = do
-    f <- Dir.findFile [modPathToDirString path] (modName path ++ lunaFileSuffix)
-    return . not . isJust $ f
+--moduleNotExists :: QualPath -> IO Bool
+--moduleNotExists path = do
+--    f <- Dir.findFile [modPathToDirString path] (modName path ++ lunaFileSuffix)
+--    return . not . isJust $ f
 
 -- checks if module is already parsed (i.e. the ModuleInfo is present)
-moduleIsParsed :: QualPath -> IO Bool
-moduleIsParsed path = do
-    let fullPath = modPathToString path ++ liFileSuffix
-    f      <- Dir.findFile [liDirectory] fullPath
-    return $ isJust f
+--moduleIsParsed :: QualPath -> IO Bool
+--moduleIsParsed path = do
+--    let fullPath = modPathToString path ++ liFileSuffix
+--    f      <- Dir.findFile [liDirectory] fullPath
+--    return $ isJust f
 
 
 modPathToString :: QualPath -> String
@@ -104,6 +107,11 @@ modPathToDirString (QualPath ns _) = joinPath $ map T.unpack ns
 
 modName :: QualPath -> String
 modName qp = T.unpack $ qp ^. NP.name
+
+
+--getBasePath :: QualPath -> IO FilePath
+--getBasePath qpath = do
+    
 
 
 pathToQualPath :: Path -> QualPath
@@ -131,12 +139,57 @@ liFileSuffix = ".li"
 liDirectory :: FilePath
 liDirectory = "modinfo"
 
+lunaPathVar :: String
+lunaPathVar = "LUNAPATH"
+
+pathSep :: String
+pathSep = ":"
+
+
+data CheckType = IsParsed | Exists
+
+
+checkModule :: CheckType -> QualPath -> IO Bool
+checkModule checkType path = do
+    lunaPath     <- Env.getEnvDefault lunaPathVar ""
+    let pathDirs = Text.splitOn (Text.pack pathSep) (Text.pack lunaPath) & map Text.unpack
+        currDir  = "." 
+        dirs     = currDir : pathDirs
+        modPath  = (modPathToString path) ++ (case checkType of IsParsed -> liFileSuffix; Exists -> lunaFileSuffix)
+    -- TODO[PMo] recursive search
+    found        <- Dir.findFile dirs modPath
+    return $ case found of
+        Nothing -> False
+        Just p  -> True
+
+
+moduleExists :: QualPath -> IO Bool
+moduleExists = checkModule Exists
+
+
+moduleIsParsed :: QualPath -> IO Bool
+moduleIsParsed = checkModule IsParsed
+
+
+findModInfo :: QualPath -> IO (Maybe ModuleInfo)
+findModInfo path = do
+    lunaPath     <- Env.getEnvDefault lunaPathVar ""
+    let pathDirs = Text.splitOn (Text.pack pathSep) (Text.pack lunaPath) & map Text.unpack
+        currDir  = "." 
+        dirs     = currDir : pathDirs
+        modPath  = (modPathToString path) ++ liFileSuffix
+    -- TODO[PMo] recursive search
+    found        <- Dir.findFile dirs modPath
+    case found of
+        Nothing -> return Nothing
+        Just p  -> Just <$> decodeFile p
+
 
 -- does the main serialization:
 writeModInfoToFile :: ModuleInfo -> IO ()
 writeModInfoToFile modInfo = do
     -- if the directory doesn't exist, create one:
-    let modDir = liDirectory </> (modPathToDirString $ modInfo ^. name)
+    let modDir = modPathToDirString $ modInfo ^. name
     Dir.createDirectoryIfMissing True modDir
     let mName = modName $ modInfo ^. name
         fPath = modDir </> mName ++ liFileSuffix
