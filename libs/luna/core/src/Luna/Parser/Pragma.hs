@@ -29,14 +29,19 @@ instance IsPragma ImplicitSelf
 implicitSelf = pragma :: SwitchPragma ImplicitSelf
 
 
-data OrphanNames  = OrphanNames   deriving (Show, Read, Typeable)
+data OrphanNames  = OrphanNames  deriving (Show, Read, Typeable)
 instance IsPragma OrphanNames
 orphanNames  = pragma :: SwitchPragma OrphanNames
+
+data IncludeStd   = IncludeStd   deriving  (Show, Read, Typeable)
+instance IsPragma IncludeStd
+includeStd   = pragma :: SwitchPragma IncludeStd
 
 
 init = do
     Pragma.register implicitSelf
     Pragma.register orphanNames
+    Pragma.register includeStd
 
     Pragma.enable   implicitSelf
     --Pragma.disable  orphanNames
