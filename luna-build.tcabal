@@ -35,6 +35,7 @@ Library
                   luna-core,
                   luna-distribution,
                   luna-pass,
+                  filepath,
                   flowbox-config,
                   flowbox-utils,
                   MissingH,

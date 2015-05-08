@@ -19,6 +19,7 @@ import Control.Monad.RWS hiding (mapM, mapM_)
 import           Control.Monad.Trans.Either
 import           Data.String.Utils                          (replace)
 import           Data.Text.Lazy                             (pack, unpack)
+import           System.FilePath                            ((</>))
 import qualified System.Posix.Env                           as Env
 
 import           Flowbox.Control.Error
@@ -92,7 +93,8 @@ runSession inclStd s =
     
 
 parseSource diag rootSrc src inclStd = do
-    let liFile =  src ^. Source.modName
+    let liFile   = src ^. Source.modName
+        rootPath = UniPath.toUnixString . UniPath.basePath . UniPath.fromUnixString . unpack $ rootSrc ^. Source.src ^. Source.path
 
     printHeader "Stage1"
     (ast, astinfo) <- Pass.run1_ Stage1.pass src
@@ -103,7 +105,7 @@ parseSource diag rootSrc src inclStd = do
     let impPaths =  I.getImportPaths ast
     compilable <- liftIO $ filterM MI.moduleExists impPaths
     --putStrLn . show $ compilable
-    let mkFile      = Source.File . pack . (++ ".luna") . MI.modPathToString
+    let mkFile      = Source.File . pack . (rootPath </>) . (++ ".luna") . MI.modPathToString
         sources     = map (\i -> Source i (mkFile i)) compilable
     let hscs        = mapM (prepareSource diag inclStd rootSrc) sources
     compiledCodes <- hscs
@@ -120,7 +122,7 @@ parseSource diag rootSrc src inclStd = do
     let sa1   = sa ^. StructData.namespace . Namespace.info
         mInfo = MI.ModuleInfo liFile mempty sa1 mempty
 
-    liftIO $ MI.writeModInfoToFile mInfo (unpack $ rootSrc ^. Source.src ^. Source.path)
+    liftIO $ MI.writeModInfoToFile mInfo (unpack $ src ^. Source.src ^. Source.path)
     printSA diag sa1
 
     printHeader "Stage2"
