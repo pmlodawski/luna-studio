@@ -10,50 +10,50 @@
 module Flowbox.FileManager.RPC.Handler.Directory where
 import qualified Data.Sequence as Sequence
 
-import           Flowbox.Bus.RPC.RPC                                             (RPC)
+import           Flowbox.Bus.RPC.RPC                                                   (RPC)
 import           Flowbox.Data.Convert
-import           Flowbox.FileManager.FileManager                                 (FileManager)
-import qualified Flowbox.FileManager.FileManager                                 as FileManager
-import           Flowbox.Prelude                                                 hiding (Context)
+import           Flowbox.FileManager.FileManager                                       (FileManager)
+import qualified Flowbox.FileManager.FileManager                                       as FileManager
+import           Flowbox.Prelude                                                       hiding (Context)
 import           Flowbox.System.Log.Logger
-import qualified Generated.Proto.FileManager.FileSystem.Directory.Copy.Request   as Copy
-import qualified Generated.Proto.FileManager.FileSystem.Directory.Copy.Update    as Copy
-import qualified Generated.Proto.FileManager.FileSystem.Directory.Create.Request as Create
-import qualified Generated.Proto.FileManager.FileSystem.Directory.Create.Update  as Create
-import qualified Generated.Proto.FileManager.FileSystem.Directory.Exists.Request as Exists
-import qualified Generated.Proto.FileManager.FileSystem.Directory.Exists.Status  as Exists
-import qualified Generated.Proto.FileManager.FileSystem.Directory.Fetch.Request  as Fetch
-import qualified Generated.Proto.FileManager.FileSystem.Directory.Fetch.Status   as Fetch
-import qualified Generated.Proto.FileManager.FileSystem.Directory.List.Request   as List
-import qualified Generated.Proto.FileManager.FileSystem.Directory.List.Status    as List
-import qualified Generated.Proto.FileManager.FileSystem.Directory.Move.Request   as Move
-import qualified Generated.Proto.FileManager.FileSystem.Directory.Move.Update    as Move
-import qualified Generated.Proto.FileManager.FileSystem.Directory.Remove.Request as Remove
-import qualified Generated.Proto.FileManager.FileSystem.Directory.Remove.Update  as Remove
-import qualified Generated.Proto.FileManager.FileSystem.Directory.Upload.Request as Upload
-import qualified Generated.Proto.FileManager.FileSystem.Directory.Upload.Status  as Upload
+import qualified Generated.Proto.FileManager.FileSystem.Directory.Copy.Request         as Copy
+import qualified Generated.Proto.FileManager.FileSystem.Directory.Copy.Update          as Copy
+import qualified Generated.Proto.FileManager.FileSystem.Directory.Create.Request       as Create
+import qualified Generated.Proto.FileManager.FileSystem.Directory.Create.Update        as Create
+import qualified Generated.Proto.FileManager.FileSystem.Directory.Exists.Request       as Exists
+import qualified Generated.Proto.FileManager.FileSystem.Directory.Exists.Status        as Exists
+import qualified Generated.Proto.FileManager.FileSystem.Directory.List.Request         as List
+import qualified Generated.Proto.FileManager.FileSystem.Directory.List.Status          as List
+import qualified Generated.Proto.FileManager.FileSystem.Directory.Move.Request         as Move
+import qualified Generated.Proto.FileManager.FileSystem.Directory.Move.Update          as Move
+import qualified Generated.Proto.FileManager.FileSystem.Directory.RemoteFetch.Request  as RemoteFetch
+import qualified Generated.Proto.FileManager.FileSystem.Directory.RemoteFetch.Status   as RemoteFetch
+import qualified Generated.Proto.FileManager.FileSystem.Directory.RemoteUpload.Request as RemoteUpload
+import qualified Generated.Proto.FileManager.FileSystem.Directory.RemoteUpload.Status  as RemoteUpload
+import qualified Generated.Proto.FileManager.FileSystem.Directory.Remove.Request       as Remove
+import qualified Generated.Proto.FileManager.FileSystem.Directory.Remove.Update        as Remove
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 ------ public api -------------------------------------------------
 
 
-upload :: FileManager fm ctx => fm
-       -> Upload.Request -> RPC ctx IO Upload.Status
-upload fm request@(Upload.Request tpath) = do
+remoteUpload :: FileManager fm ctx => fm
+             -> RemoteUpload.Request -> RPC ctx IO RemoteUpload.Status
+remoteUpload fm request@(RemoteUpload.Request tpath) = do
     let path = decodeP tpath
-    FileManager.uploadDirectory fm path
-    return $ Upload.Status request
+    FileManager.remoteUploadDirectory fm path
+    return $ RemoteUpload.Status request
 
 
-fetch :: FileManager fm ctx => fm
-      -> Fetch.Request -> RPC ctx IO Fetch.Status
-fetch fm request@(Fetch.Request tpath) = do
+remoteFetch :: FileManager fm ctx => fm
+            -> RemoteFetch.Request -> RPC ctx IO RemoteFetch.Status
+remoteFetch fm request@(RemoteFetch.Request tpath) = do
     let path = decodeP tpath
-    FileManager.fetchDirectory fm path
-    return $ Fetch.Status request
+    FileManager.remoteFetchDirectory fm path
+    return $ RemoteFetch.Status request
 
 
 create :: FileManager fm ctx => fm

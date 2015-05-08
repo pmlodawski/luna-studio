@@ -25,7 +25,7 @@ import qualified Generated.Proto.FileManager.FileSystem.Stat.Status      as Stat
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 -------- public api -------------------------------------------------
 
