@@ -14,24 +14,25 @@ import           Flowbox.Prelude
 import qualified Generated.Proto.FileManager.FileSystem.Item as Gen
 
 
+
 class FileManager fm ctx where
     stat            :: fm -> FilePath -> RPC ctx IO Gen.Item
 
-    uploadDirectory :: fm -> FilePath -> RPC ctx IO ()
-    fetchDirectory  :: fm -> FilePath -> RPC ctx IO ()
-    createDirectory :: fm -> FilePath -> RPC ctx IO ()
-    directoryExists :: fm -> FilePath -> RPC ctx IO Bool
-    listDirectory   :: fm -> FilePath -> RPC ctx IO [Gen.Item]
-    removeDirectory :: fm -> FilePath -> RPC ctx IO ()
-    copyDirectory   :: fm -> FilePath -> FilePath -> RPC ctx IO ()
-    moveDirectory   :: fm -> FilePath -> FilePath -> RPC ctx IO ()
+    createDirectory       :: fm -> FilePath -> RPC ctx IO ()
+    directoryExists       :: fm -> FilePath -> RPC ctx IO Bool
+    listDirectory         :: fm -> FilePath -> RPC ctx IO [Gen.Item]
+    removeDirectory       :: fm -> FilePath -> RPC ctx IO ()
+    copyDirectory         :: fm -> FilePath -> FilePath -> RPC ctx IO ()
+    moveDirectory         :: fm -> FilePath -> FilePath -> RPC ctx IO ()
+    remoteUploadDirectory :: fm -> FilePath -> RPC ctx IO ()
+    remoteFetchDirectory  :: fm -> FilePath -> RPC ctx IO ()
 
-    uploadFile      :: fm -> FilePath -> RPC ctx IO ()
-    fetchFile       :: fm -> FilePath -> RPC ctx IO ()
-    fileExists      :: fm -> FilePath -> RPC ctx IO Bool
-    removeFile      :: fm -> FilePath -> RPC ctx IO ()
-    copyFile        :: fm -> FilePath -> FilePath -> RPC ctx IO ()
-    moveFile        :: fm -> FilePath -> FilePath -> RPC ctx IO ()
+    fileExists            :: fm -> FilePath -> RPC ctx IO Bool
+    removeFile            :: fm -> FilePath -> RPC ctx IO ()
+    copyFile              :: fm -> FilePath -> FilePath -> RPC ctx IO ()
+    moveFile              :: fm -> FilePath -> FilePath -> RPC ctx IO ()
+    remoteUploadFile      :: fm -> FilePath -> RPC ctx IO ()
+    remoteFetchFile       :: fm -> FilePath -> RPC ctx IO ()
 
-    resolvePath     :: fm -> FilePath -> RPC ctx IO FilePath
+    resolvePath           :: fm -> FilePath -> RPC ctx IO FilePath
 
