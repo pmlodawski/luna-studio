@@ -15,6 +15,7 @@ import           Data.List                (filter, find)
 import           Data.Map                 (Map)
 import qualified Data.Map                 as Map
 import           Data.Maybe               (fromJust, fromMaybe, isJust)
+import           Data.String.Utils        (replace)
 import           Data.Text.Internal.Lazy  (Text)
 import qualified Data.Text.Lazy           as T
 import qualified Data.Text                as Text
@@ -188,9 +189,9 @@ findModInfo path = do
 -- does the main serialization:
 writeModInfoToFile :: ModuleInfo -> FilePath -> IO ()
 writeModInfoToFile modInfo filePath = do
-    let basePath = toUnixString . init . fromUnixString $ filePath
-    let modPath = basePath </> modPathToString (modInfo ^. name)
-        fPath   = modPath ++ liFileSuffix
+    --let basePath = toUnixString . init . fromUnixString $ filePath
+    --let modPath = basePath </> modPathToString (modInfo ^. name)
+    let fPath = replace lunaFileSuffix liFileSuffix filePath
     -- serialize with Data.Binry:
     encodeFile fPath modInfo
 
