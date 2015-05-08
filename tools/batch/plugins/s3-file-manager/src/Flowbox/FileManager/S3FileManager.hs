@@ -22,24 +22,24 @@ data S3FileManager = S3FileManager
 
 
 instance FileManager S3FileManager S3.S3Env where
-    uploadDirectory _ = Context.run . Directory.upload "."
-    fetchDirectory  _ = Context.run . Directory.fetch  "."
-    createDirectory _ = Context.run . Directory.create
-    directoryExists _ = Context.run . Directory.exists
-    listDirectory   _ = fmap (map toGen)
-                      . Context.run . Directory.getContents
-    removeDirectory _ = Context.run . Directory.remove
-    copyDirectory   _ = Context.run .: Directory.copy
-    moveDirectory   _ = Context.run .: Directory.copy
+    createDirectory       _ = Context.run . Directory.create
+    directoryExists       _ = Context.run . Directory.exists
+    listDirectory         _ = fmap (map toGen)
+                            . Context.run . Directory.getContents
+    removeDirectory       _ = Context.run . Directory.remove
+    copyDirectory         _ = Context.run .: Directory.copy
+    moveDirectory         _ = Context.run .: Directory.copy
+    remoteUploadDirectory _ = Context.run . Directory.upload "."
+    remoteFetchDirectory  _ = Context.run . Directory.fetch  "."
 
-    uploadFile      _ = Context.run . File.upload "."
-    fetchFile       _ = Context.run . File.fetch "."
-    fileExists      _ = Context.run . File.exists
-    removeFile      _ = Context.run . File.remove
-    copyFile        _ = Context.run .: File.copy
-    moveFile        _ = Context.run .: File.rename
+    fileExists            _ = Context.run . File.exists
+    removeFile            _ = Context.run . File.remove
+    copyFile              _ = Context.run .: File.copy
+    moveFile              _ = Context.run .: File.rename
+    remoteUploadFile      _ = Context.run . File.upload "."
+    remoteFetchFile       _ = Context.run . File.fetch "."
 
-    resolvePath     _ = return
-    stat            _ = return . toGen -- TODO [PM] : implement me
+    resolvePath           _ = return
+    stat                  _ = return . toGen -- TODO [PM] : implement me
 
 

@@ -34,7 +34,7 @@ message FileSystem {
         }
     }
     message Directory {
-        message Fetch {
+        message RemoteFetch {
             message Request {
                 required string path = 1;
             }
@@ -42,7 +42,7 @@ message FileSystem {
                 required Request request = 1;
             }
         }
-        message Upload {
+        message RemoteUpload {
             message Request {
                 required string path = 1;
             }
@@ -104,7 +104,7 @@ message FileSystem {
         }
     }
     message File {
-        message Fetch {
+        message RemoteFetch {
             message Request {
                 required string path = 1;
             }
@@ -112,7 +112,7 @@ message FileSystem {
                 required Request request = 1;
             }
         }
-        message Upload {
+        message RemoteUpload {
             message Request {
                 required string path = 1;
             }

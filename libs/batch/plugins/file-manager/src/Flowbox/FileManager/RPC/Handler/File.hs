@@ -9,24 +9,24 @@
 
 module Flowbox.FileManager.RPC.Handler.File where
 
-import           Flowbox.Bus.RPC.RPC                                        (RPC)
+import           Flowbox.Bus.RPC.RPC                                              (RPC)
 import           Flowbox.Data.Convert
-import           Flowbox.FileManager.FileManager                            (FileManager)
-import qualified Flowbox.FileManager.FileManager                            as FileManager
-import           Flowbox.Prelude                                            hiding (Context)
+import           Flowbox.FileManager.FileManager                                  (FileManager)
+import qualified Flowbox.FileManager.FileManager                                  as FileManager
+import           Flowbox.Prelude                                                  hiding (Context)
 import           Flowbox.System.Log.Logger
-import qualified Generated.Proto.FileManager.FileSystem.File.Copy.Request   as Copy
-import qualified Generated.Proto.FileManager.FileSystem.File.Copy.Update    as Copy
-import qualified Generated.Proto.FileManager.FileSystem.File.Exists.Request as Exists
-import qualified Generated.Proto.FileManager.FileSystem.File.Exists.Status  as Exists
-import qualified Generated.Proto.FileManager.FileSystem.File.Fetch.Request  as Fetch
-import qualified Generated.Proto.FileManager.FileSystem.File.Fetch.Status   as Fetch
-import qualified Generated.Proto.FileManager.FileSystem.File.Move.Request   as Move
-import qualified Generated.Proto.FileManager.FileSystem.File.Move.Update    as Move
-import qualified Generated.Proto.FileManager.FileSystem.File.Remove.Request as Remove
-import qualified Generated.Proto.FileManager.FileSystem.File.Remove.Update  as Remove
-import qualified Generated.Proto.FileManager.FileSystem.File.Upload.Request as Upload
-import qualified Generated.Proto.FileManager.FileSystem.File.Upload.Status  as Upload
+import qualified Generated.Proto.FileManager.FileSystem.File.Copy.Request         as Copy
+import qualified Generated.Proto.FileManager.FileSystem.File.Copy.Update          as Copy
+import qualified Generated.Proto.FileManager.FileSystem.File.Exists.Request       as Exists
+import qualified Generated.Proto.FileManager.FileSystem.File.Exists.Status        as Exists
+import qualified Generated.Proto.FileManager.FileSystem.File.Move.Request         as Move
+import qualified Generated.Proto.FileManager.FileSystem.File.Move.Update          as Move
+import qualified Generated.Proto.FileManager.FileSystem.File.RemoteFetch.Request  as RemoteFetch
+import qualified Generated.Proto.FileManager.FileSystem.File.RemoteFetch.Status   as RemoteFetch
+import qualified Generated.Proto.FileManager.FileSystem.File.RemoteUpload.Request as RemoteUpload
+import qualified Generated.Proto.FileManager.FileSystem.File.RemoteUpload.Status  as RemoteUpload
+import qualified Generated.Proto.FileManager.FileSystem.File.Remove.Request       as Remove
+import qualified Generated.Proto.FileManager.FileSystem.File.Remove.Update        as Remove
 
 
 
@@ -36,20 +36,20 @@ logger = getLoggerIO $(moduleName)
 ------ public api -------------------------------------------------
 
 
-upload :: FileManager fm ctx => fm
-       -> Upload.Request -> RPC ctx IO Upload.Status
-upload fm request@(Upload.Request tpath) = do
+remoteUpload :: FileManager fm ctx => fm
+             -> RemoteUpload.Request -> RPC ctx IO RemoteUpload.Status
+remoteUpload fm request@(RemoteUpload.Request tpath) = do
     let path = decodeP tpath
-    FileManager.uploadFile fm path
-    return $ Upload.Status request
+    FileManager.remoteUploadFile fm path
+    return $ RemoteUpload.Status request
 
 
-fetch :: FileManager fm ctx => fm
-      -> Fetch.Request -> RPC ctx IO Fetch.Status
-fetch fm request@(Fetch.Request tpath) = do
+remoteFetch :: FileManager fm ctx => fm
+            -> RemoteFetch.Request -> RPC ctx IO RemoteFetch.Status
+remoteFetch fm request@(RemoteFetch.Request tpath) = do
     let path = decodeP tpath
-    FileManager.fetchFile fm path
-    return $ Fetch.Status request
+    FileManager.remoteFetchFile fm path
+    return $ RemoteFetch.Status request
 
 
 exists :: FileManager fm ctx => fm
