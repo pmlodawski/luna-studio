@@ -7,11 +7,10 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Flowbox.ProjectManager.RPC.Handler.AST where
 
-import           Data.Maybe    (fromMaybe, isJust)
-import qualified Data.Sequence as Sequence
 import qualified Data.Bimap    as Bimap
-import qualified Data.Map    as Map
+import qualified Data.Sequence as Sequence
 
+import qualified Flowbox.Batch.Batch                                                                  as Batch
 import qualified Flowbox.Batch.Handler.AST                                                            as BatchAST
 import qualified Flowbox.Batch.Handler.Common                                                         as Batch
 import qualified Flowbox.Batch.Handler.Properties                                                     as BatchP
@@ -21,10 +20,9 @@ import           Flowbox.Bus.RPC.RPC                                            
 import           Flowbox.Data.Convert
 import           Flowbox.Prelude                                                                      hiding (Context, cons)
 import           Flowbox.ProjectManager.Context                                                       (Context)
-import qualified Flowbox.Batch.Batch                                                                           as Batch
 import qualified Flowbox.ProjectManager.RPC.Topic                                                     as Topic
 import           Flowbox.System.Log.Logger
-import           Flowbox.UR.Manager.RPC.Handler.Handler                                               (serialize, makeMsgArr, prepareResponse)
+import           Flowbox.UR.Manager.RPC.Handler.Handler                                               (makeMsgArr, prepareResponse, serialize)
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Get.Request                  as CodeGet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Get.Status                   as CodeGet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Set.Request                  as CodeSet
@@ -89,22 +87,23 @@ import qualified Luna.DEP.AST.Type                                              
 import           Luna.DEP.Data.Serialize.Proto.Conversion.Crumb                                       ()
 import           Luna.DEP.Data.Serialize.Proto.Conversion.Expr                                        ()
 import           Luna.DEP.Data.Serialize.Proto.Conversion.Focus                                       ()
-import qualified Flowbox.Batch.Batch                                                                           as Batch
 import           Luna.DEP.Data.Serialize.Proto.Conversion.Module                                      ()
 import           Luna.DEP.Data.Serialize.Proto.Conversion.Name                                        ()
 
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
+updateIdMaps :: Int -> Int -> Batch.BatchEnv -> Batch.BatchEnv
 updateIdMaps newID originID = Batch.idMap  %~ Bimap.insert newID originID
 
 
+originID :: (Num a, Eq a) => a -> a -> a
 originID astID newID = case astID of
                         0     -> newID
                         astID -> astID
---                                        originID = if isJust maybe 
+--                                        originID = if isJust maybe
 --                                                   then astID
 --                                                   else Bimap.lookupR astID
 
@@ -200,8 +199,8 @@ remove request@(Remove.Request tbc tlibID tprojectID tastID) undoTopic = do
         originID  = maybe tastID
                           encodeP
                           $ Bimap.lookup astID $ context ^. Batch.idMap
-        newID     = maybe tastID 
-                          encodeP 
+        newID     = maybe tastID
+                          encodeP
                           $ Bimap.lookupR astID $ context ^. Batch.idMap
 --                                          oldMap                 = context ^. Batch.astMap
 --                                          (mOriginId, newAstMap) = Map.insertLookupWithKey (const $ const id) newBC newID oldMap
