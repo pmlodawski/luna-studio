@@ -100,15 +100,14 @@ parseSource diag rootSrc src inclStd = do
     (ast, astinfo) <- Pass.run1_ Stage1.pass src
     printAST diag ast
 
-    (ast, astinfo) <- Pass.run2_ InsertStd.pass astinfo ast
-
     let impPaths =  I.getImportPaths ast
     compilable <- liftIO $ filterM MI.moduleExists impPaths
-    --putStrLn . show $ compilable
     let mkFile      = Source.File . pack . (rootPath </>) . (++ ".luna") . MI.modPathToString
         sources     = map (\i -> Source i (mkFile i)) compilable
     let hscs        = mapM (prepareSource diag inclStd rootSrc) sources
     compiledCodes <- hscs
+
+    (ast, astinfo) <- Pass.run2_ InsertStd.pass astinfo ast
 
     printHeader "Extraction of imports"
     importInfo     <- Pass.run1_ Imports.pass ast
