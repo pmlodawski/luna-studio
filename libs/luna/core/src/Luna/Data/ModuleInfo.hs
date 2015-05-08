@@ -186,17 +186,12 @@ findModInfo path = do
         Just p  -> Just <$> decodeFile p
 
 
--- does the main serialization:
 writeModInfoToFile :: ModuleInfo -> FilePath -> IO ()
 writeModInfoToFile modInfo filePath = do
-    --let basePath = toUnixString . init . fromUnixString $ filePath
-    --let modPath = basePath </> modPathToString (modInfo ^. name)
     let fPath = replace lunaFileSuffix liFileSuffix filePath
-    -- serialize with Data.Binry:
     encodeFile fPath modInfo
 
 
--- deserialization:
 readModInfoFromFile :: QualPath -> IO (Maybe ModuleInfo)
 readModInfoFromFile path = do
     isParsed <- moduleIsParsed path
