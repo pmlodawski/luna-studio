@@ -34,22 +34,6 @@ message FileSystem {
         }
     }
     message Directory {
-        message RemoteFetch {
-            message Request {
-                required string path = 1;
-            }
-            message Status {
-                required Request request = 1;
-            }
-        }
-        message RemoteUpload {
-            message Request {
-                required string path = 1;
-            }
-            message Status {
-                required Request request = 1;
-            }
-        }
         message Create {
             message Request {
                 required string path = 1;
@@ -102,8 +86,6 @@ message FileSystem {
                 required Request request = 1;
             }
         }
-    }
-    message File {
         message RemoteFetch {
             message Request {
                 required string path = 1;
@@ -120,6 +102,8 @@ message FileSystem {
                 required Request request = 1;
             }
         }
+    }
+    message File {
         message Exists {
             message Request {
                 required string path = 1;
@@ -152,6 +136,22 @@ message FileSystem {
                 required string dst = 2;
             }
             message Update { 
+                required Request request = 1;
+            }
+        }
+        message RemoteFetch {
+            message Request {
+                required string path = 1;
+            }
+            message Status {
+                required Request request = 1;
+            }
+        }
+        message RemoteUpload {
+            message Request {
+                required string path = 1;
+            }
+            message Status {
                 required Request request = 1;
             }
         }
