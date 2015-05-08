@@ -11,6 +11,7 @@
 module Flowbox.FileManager.LocalFileManager where
 
 import           Control.Exception        (SomeException, catch)
+import qualified Data.ByteString.Lazy     as ByteString
 import qualified System.Directory         as Directory
 import qualified System.FilePath          as FilePath
 import qualified System.PosixCompat.Files as Files
@@ -42,7 +43,7 @@ getFileStatus name =
 
 
 instance FileManager LocalFileManager () where
-    stat            _   = safeLiftIO . getFileStatus
+    stat                  _   = safeLiftIO . getFileStatus
     createDirectory       _   = safeLiftIO . Directory.createDirectoryIfMissing True
     directoryExists       _   = safeLiftIO . Directory.doesDirectoryExist
     listDirectory         _ p = safeLiftIO $ mapM (getFileStatus . FilePath.combine p )
@@ -55,8 +56,10 @@ instance FileManager LocalFileManager () where
     remoteUploadDirectory _ _ = return ()
     remoteFetchDirectory  _ _ = return ()
 
-    fileExists          _   = safeLiftIO . Directory.doesFileExist
-    removeFile          _   = safeLiftIO . Directory.removeFile
+    download            _   = safeLiftIO .  ByteString.readFile
+    upload              _   = safeLiftIO .: ByteString.writeFile
+    fileExists          _   = safeLiftIO .  Directory.doesFileExist
+    removeFile          _   = safeLiftIO .  Directory.removeFile
     copyFile            _   = safeLiftIO .: Directory.copyFile
     moveFile            _   = safeLiftIO .: Directory.renameFile
     remoteUploadFile    _ _ = return ()
