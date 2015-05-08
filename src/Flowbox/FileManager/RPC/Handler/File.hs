@@ -17,6 +17,8 @@ import           Flowbox.Prelude                                                
 import           Flowbox.System.Log.Logger
 import qualified Generated.Proto.FileManager.FileSystem.File.Copy.Request         as Copy
 import qualified Generated.Proto.FileManager.FileSystem.File.Copy.Update          as Copy
+import qualified Generated.Proto.FileManager.FileSystem.File.Download.Request     as Download
+import qualified Generated.Proto.FileManager.FileSystem.File.Download.Update      as Download
 import qualified Generated.Proto.FileManager.FileSystem.File.Exists.Request       as Exists
 import qualified Generated.Proto.FileManager.FileSystem.File.Exists.Status        as Exists
 import qualified Generated.Proto.FileManager.FileSystem.File.Move.Request         as Move
@@ -27,11 +29,12 @@ import qualified Generated.Proto.FileManager.FileSystem.File.RemoteUpload.Reques
 import qualified Generated.Proto.FileManager.FileSystem.File.RemoteUpload.Status  as RemoteUpload
 import qualified Generated.Proto.FileManager.FileSystem.File.Remove.Request       as Remove
 import qualified Generated.Proto.FileManager.FileSystem.File.Remove.Update        as Remove
-
+import qualified Generated.Proto.FileManager.FileSystem.File.Upload.Request       as Upload
+import qualified Generated.Proto.FileManager.FileSystem.File.Upload.Update        as Upload
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 ------ public api -------------------------------------------------
 
@@ -84,3 +87,19 @@ move fm request@(Move.Request tsrc tdst) = do
         dst = decodeP tdst
     FileManager.moveFile fm src dst
     return $ Move.Update request
+
+
+upload :: FileManager fm ctx => fm
+       -> Upload.Request -> RPC ctx IO Upload.Update
+upload fm (Upload.Request tpath file) = do
+    let path = decodeP tpath
+    FileManager.upload fm path file
+    return $ Upload.Update tpath
+
+
+download :: FileManager fm ctx => fm
+         -> Download.Request -> RPC ctx IO Download.Update
+download fm request@(Download.Request tpath) = do
+    let path = decodeP tpath
+    file <- FileManager.download fm path
+    return $ Download.Update request file

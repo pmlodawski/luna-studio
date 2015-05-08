@@ -104,6 +104,24 @@ message FileSystem {
         }
     }
     message File {
+        message Download {
+            message Request {
+                required string path = 1;
+            }
+            message Update {
+                required Request request = 1;
+                required bytes   file    = 2;
+            }
+        }
+        message Upload {
+            message Request {
+                required string path = 1;
+                required bytes  file = 2;
+            }
+            message Update {
+                required string path = 1;
+            }
+        }
         message Exists {
             message Request {
                 required string path = 1;
