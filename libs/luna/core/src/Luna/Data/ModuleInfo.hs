@@ -189,7 +189,7 @@ findModInfo path = do
 writeModInfoToFile :: ModuleInfo -> FilePath -> IO ()
 writeModInfoToFile modInfo filePath = do
     let basePath = toUnixString . init . fromUnixString $ filePath
-    let modPath = basePath </> modName (modInfo ^. name)
+    let modPath = basePath </> modPathToString (modInfo ^. name)
         fPath   = modPath ++ liFileSuffix
     -- serialize with Data.Binry:
     encodeFile fPath modInfo
