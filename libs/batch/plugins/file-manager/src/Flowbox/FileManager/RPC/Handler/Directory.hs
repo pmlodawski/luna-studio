@@ -35,7 +35,7 @@ import qualified Generated.Proto.FileManager.FileSystem.Directory.Remove.Update 
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 ------ public api -------------------------------------------------
 
