@@ -73,7 +73,7 @@ import qualified Luna.Data.Namespace          as Namespace
 import           Luna.Data.Namespace          (Namespace)
 
 import           Luna.Data.ASTInfo            (ASTInfo, genID)
-import           Luna.Data.ImportInfo         (ImportInfo, _impPath)
+import           Luna.Data.ImportInfo         (ImportInfo, Import(Import))
 import qualified Luna.Data.ImportInfo         as II
 
 import           Luna.Syntax.Arg              (Arg(Arg), LArg)
@@ -124,8 +124,8 @@ mkVal    = HE.AppE "val"
 
 
 makeImportList :: ImportInfo -> [HE.Expr]
-makeImportList info = map (mkImp._impPath) (info ^. II.imports )
-    where mkImp = \qp -> HE.Import False (II.qualPathToList qp) Nothing Nothing
+makeImportList info = map mkImp (info ^. II.imports )
+    where mkImp = \(Import path _ _ _ rn) -> HE.Import (isJust rn) (II.qualPathToList path) (toText <$> rn) Nothing
 
 
 pass :: Ctx m a v => Pass State.GenState (ImportInfo -> Unit (LModule a (LExpr a v)) -> PassResult m HE)
