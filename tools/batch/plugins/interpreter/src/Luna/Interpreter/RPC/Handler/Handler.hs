@@ -78,6 +78,7 @@ handlerMap prefix queueInfo crl output callback = HandlerMap.fromList $ Prefix.p
     , (Topic.interpreterSetMainPtrRequest                  , respond update   Interpreter.setMainPtr       )
     , (Topic.interpreterGetMainPtrRequest                  , respond status   Interpreter.getMainPtr       )
     , (Topic.interpreterRunRequest                         , respond update $ Interpreter.run queueInfo crl)
+    , (Topic.interpreterInvalidateRequest                  , respond update   Interpreter.invalidate       )
     , (Topic.interpreterWatchPointAddRequest               , respond update   Interpreter.watchPointAdd    )
     , (Topic.interpreterWatchPointRemoveRequest            , respond update   Interpreter.watchPointRemove )
     , (Topic.interpreterWatchPointListRequest              , respond status   Interpreter.watchPointList   )
