@@ -90,11 +90,25 @@ runSession inclStd s =
     case inclStd of
         True  -> eitherStringToM . fst =<< Session.runT (void Parser.init >> Pragma.enable (Pragma.includeStd)  >> Pragma.enable (Pragma.orphanNames) >> runEitherT s)
         False -> eitherStringToM . fst =<< Session.runT (void Parser.init >> Pragma.enable (Pragma.orphanNames) >> runEitherT s)
+
+
+processCompilable diag rootSrc inclStd compilable  = do 
+    let rootPath = UniPath.toUnixString . UniPath.basePath . UniPath.fromUnixString . unpack $ rootSrc ^. Source.src ^. Source.path
+        mkFile   = Source.File . pack . (rootPath </>) . (++ ".luna") . MI.modPathToString
+        sources  = map (\i -> Source i (mkFile i)) compilable
+        hscs     = mapM (prepareSource diag inclStd rootSrc) sources
+    hscs
+
+
+-- @PMlodawski: use this one ;)
+processSource diag src = parseSource' diag src src False (\_ _ _ _ -> return [])
     
 
-parseSource diag rootSrc src inclStd = do
+parseSource diag rootSrc src inclStd = parseSource' diag rootSrc src inclStd processCompilable
+
+
+parseSource' diag rootSrc src inclStd procComp = do
     let liFile   = src ^. Source.modName
-        rootPath = UniPath.toUnixString . UniPath.basePath . UniPath.fromUnixString . unpack $ rootSrc ^. Source.src ^. Source.path
 
     printHeader "Stage1"
     (ast, astinfo) <- Pass.run1_ Stage1.pass src
@@ -102,16 +116,12 @@ parseSource diag rootSrc src inclStd = do
 
     let impPaths =  I.getImportPaths ast
     compilable <- liftIO $ filterM MI.moduleExists impPaths
-    let mkFile      = Source.File . pack . (rootPath </>) . (++ ".luna") . MI.modPathToString
-        sources     = map (\i -> Source i (mkFile i)) compilable
-    let hscs        = mapM (prepareSource diag inclStd rootSrc) sources
-    compiledCodes <- hscs
+    compiledCodes <- procComp diag rootSrc inclStd compilable
 
     (ast, astinfo) <- Pass.run2_ InsertStd.pass astinfo ast
 
     printHeader "Extraction of imports"
     importInfo     <- Pass.run1_ Imports.pass ast
-
 
     ----printHeader "Hash"
     ----ast             <- Pass.run1_ Hash.pass ast
