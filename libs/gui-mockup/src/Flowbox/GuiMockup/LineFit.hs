@@ -333,8 +333,8 @@ computeCenterTangent points center = normalize tHatCenter
 
 -- I/O
 
-readPoints :: String -> V.Vector (V2 Float)
-readPoints = V.map (\(x,y) -> V2 x y) . V.fromList . (read :: String -> [(Float, Float)])
+readPoints :: [[Float]] -> V.Vector (V2 Float)
+readPoints = V.fromList . map (\[x,y] -> V2 x y)
 
 jsifyVector :: V.Vector (CubicBezier Float) -> String
 jsifyVector = intercalate "," . map jsifyBezier . V.toList
@@ -353,5 +353,5 @@ jsifyObject fields values = wrap $ intercalate "," $ zipWith (\f v -> f ++ ": " 
 	where
 		wrap s = "{" ++ s ++ "}"
 
-test :: Float -> String -> String
+test :: Float -> [[Float]] -> String
 test err input = jsifyVector $ fitCurve (readPoints input) err
