@@ -348,10 +348,10 @@ jsifyBezier (CubicBezier c0 c1 c2 c3) = jsifyObject fields points
 		fields = zipWith (:) (repeat 'p') $ map show [0..]
 
 jsifyV2 :: V2 Float -> String
-jsifyV2 (V2 x y) = "{x: " ++ show x ++ ", y: " ++ show y ++ "}"
+jsifyV2 (V2 x y) = "{\"x\": " ++ show x ++ ", \"y\": " ++ show y ++ "}"
 
 jsifyObject :: [String] -> [String] -> String
-jsifyObject fields values = wrap $ intercalate "," $ zipWith (\f v -> f ++ ": " ++ v) fields values
+jsifyObject fields values = wrap $ intercalate "," $ zipWith (\f v -> show f ++ ": " ++ v) fields values
 	where
 		wrap s = "{" ++ s ++ "}"
 
