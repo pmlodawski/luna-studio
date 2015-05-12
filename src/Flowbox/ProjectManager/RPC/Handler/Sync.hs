@@ -19,7 +19,7 @@ import qualified Generated.Proto.ProjectManager.ProjectManager.Sync.Get.Status  
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 ------ public api -------------------------------------------------
 

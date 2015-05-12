@@ -37,7 +37,7 @@ import           Luna.DEP.Data.Serialize.Proto.Conversion.Library               
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 getASTProperties :: GetASTProperties.Request -> RPC Context IO GetASTProperties.Status
