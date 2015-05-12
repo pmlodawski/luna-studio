@@ -17,10 +17,10 @@ module Luna.Build.Build where
 import Control.Monad.RWS hiding (mapM, mapM_)
 
 import           Control.Monad.Trans.Either
-import           Data.String.Utils                          (replace)
-import           Data.Text.Lazy                             (pack, unpack)
-import           System.FilePath                            ((</>))
-import qualified System.Posix.Env                           as Env
+import           Data.String.Utils          (replace)
+import           Data.Text.Lazy             (pack, unpack)
+import           System.FilePath            ((</>))
+import qualified System.Posix.Env           as Env
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
@@ -34,7 +34,6 @@ import qualified Luna.Build.BuildConfig                     as BuildConfig
 import           Luna.Build.Diagnostics                     (Diagnostics, printAST, printHAST, printHSC, printHeader, printSA, printSSA)
 import qualified Luna.Build.Source.File                     as File
 import qualified Luna.Data.ImportInfo                       as II
-import qualified Luna.Pass.Import                           as I
 import qualified Luna.Data.ModuleInfo                       as MI
 import           Luna.Data.Namespace                        (Namespace (Namespace))
 import qualified Luna.Data.Namespace                        as Namespace
@@ -49,8 +48,10 @@ import qualified Luna.Parser.Parser                         as Parser
 import qualified Luna.Parser.Pragma                         as Pragma
 import qualified Luna.Pass                                  as Pass
 import qualified Luna.Pass.Analysis.Imports                 as Imports
+import qualified Luna.Pass.Analysis.InsertStd               as InsertStd
 import qualified Luna.Pass.Analysis.Struct                  as SA
 import           Luna.Pass.Import                           (getImportPaths)
+import qualified Luna.Pass.Import                           as I
 import qualified Luna.Pass.Target.HS.HASTGen                as HASTGen
 import qualified Luna.Pass.Target.HS.HSC                    as HSC
 import qualified Luna.Pass.Transform.Desugar.ImplicitCalls  as ImplCalls
@@ -62,13 +63,12 @@ import qualified Luna.Pass.Transform.SSA                    as SSA
 import           Luna.Syntax.Name.Path                      (QualPath (QualPath))
 import qualified Luna.System.Pragma.Store                   as Pragma
 import           Luna.System.Session                        as Session
-import qualified Luna.Pass.Analysis.InsertStd               as InsertStd
 
 
 type Builder m = (MonadIO m, Functor m)
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 srcFolder :: String
@@ -90,7 +90,7 @@ runSession inclStd s =
     case inclStd of
         True  -> eitherStringToM . fst =<< Session.runT (void Parser.init >> Pragma.enable (Pragma.includeStd)  >> Pragma.enable (Pragma.orphanNames) >> runEitherT s)
         False -> eitherStringToM . fst =<< Session.runT (void Parser.init >> Pragma.enable (Pragma.orphanNames) >> runEitherT s)
-    
+
 
 parseSource diag rootSrc src inclStd = do
     let liFile   = src ^. Source.modName
