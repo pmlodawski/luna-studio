@@ -20,7 +20,7 @@ import qualified Generated.Proto.Bus.ID.Create.Result as ID_Create
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 -------- public api -------------------------------------------------
 
