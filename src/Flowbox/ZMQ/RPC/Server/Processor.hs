@@ -32,7 +32,7 @@ import qualified Generated.Proto.Rpc.Response.Type as ResponseType
 
 
 loggerIO :: LoggerIO
-loggerIO = getLoggerIO $(moduleName)
+loggerIO = getLoggerIO $moduleName
 
 
 responseExt :: ResponseType.Type -> Maybe Int32 -> rsp -> Extensions.Key Maybe Response rsp -> ByteString
