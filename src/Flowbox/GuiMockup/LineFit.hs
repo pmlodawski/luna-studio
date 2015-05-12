@@ -337,7 +337,9 @@ readPoints :: [[Float]] -> V.Vector (V2 Float)
 readPoints = V.fromList . map (\[x,y] -> V2 x y)
 
 jsifyVector :: V.Vector (CubicBezier Float) -> String
-jsifyVector = intercalate "," . map jsifyBezier . V.toList
+jsifyVector = wrap . intercalate "," . map jsifyBezier . V.toList
+	where
+		wrap s = "[" ++ s ++ "]"
 
 jsifyBezier :: CubicBezier Float -> String
 jsifyBezier (CubicBezier c0 c1 c2 c3) = jsifyObject fields points
