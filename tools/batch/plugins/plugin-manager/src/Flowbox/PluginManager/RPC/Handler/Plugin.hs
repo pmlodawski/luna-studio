@@ -39,7 +39,7 @@ import qualified Generated.Proto.PluginManager.Plugin.Stop.Update     as Stop
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 -------- public api -------------------------------------------------
 

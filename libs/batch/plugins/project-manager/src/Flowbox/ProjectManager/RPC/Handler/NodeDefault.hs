@@ -22,7 +22,7 @@ import           Flowbox.ProjectManager.Context                                 
 import           Flowbox.ProjectManager.RPC.Handler.Graph                                                      (mapID)
 import qualified Flowbox.ProjectManager.RPC.Topic                                                              as Topic
 import           Flowbox.System.Log.Logger
-import           Flowbox.UR.Manager.RPC.Handler.Handler                                                        (serialize, makeMsgArr)
+import           Flowbox.UR.Manager.RPC.Handler.Handler                                                        (makeMsgArr, serialize)
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Default.Get.Request    as NodeDefaultGet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Default.Get.Status     as NodeDefaultGet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Default.Remove.Request as NodeDefaultRemove
@@ -38,7 +38,7 @@ import qualified Luna.DEP.Graph.View.Default.DefaultsMap                        
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 get :: NodeDefaultGet.Request -> RPC Context IO NodeDefaultGet.Status

@@ -54,7 +54,7 @@ import qualified Luna.DEP.Pass.Transform.HAST.HASTGen.HASTGen                   
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 srcFolder :: String

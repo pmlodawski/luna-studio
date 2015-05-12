@@ -30,7 +30,7 @@ import qualified Luna.DEP.Pass.Pass                 as Pass
 
 
 logger :: Logger
-logger = getLogger $(moduleName)
+logger = getLogger $moduleName
 
 
 type ExtractIDPass result = Pass IDState result

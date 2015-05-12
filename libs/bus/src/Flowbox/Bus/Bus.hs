@@ -43,7 +43,7 @@ import qualified Generated.Proto.Bus.Request.Method   as Method
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 type Error = String

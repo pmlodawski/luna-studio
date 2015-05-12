@@ -28,7 +28,7 @@ import qualified Generated.Proto.AccountManager.User.Session.Result  as User_Ses
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 -------- public api -------------------------------------------------
 

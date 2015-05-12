@@ -40,7 +40,7 @@ rootLogger = getLogger "Flowbox"
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 region :: Region

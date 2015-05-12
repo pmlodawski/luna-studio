@@ -42,7 +42,7 @@ import qualified Luna.DEP.Pass.Pass          as Pass
 
 
 logger :: Logger
-logger = getLogger $(moduleName)
+logger = getLogger $moduleName
 
 
 type NRPass result = Pass Pass.NoState result

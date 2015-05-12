@@ -30,7 +30,7 @@ import           Flowbox.Prelude                                                
 import           Flowbox.ProjectManager.Context                                                                (Context)
 import qualified Flowbox.ProjectManager.RPC.Topic                                                              as Topic
 import           Flowbox.System.Log.Logger
-import           Flowbox.UR.Manager.RPC.Handler.Handler                                                        (serialize, makeMsgArr, prepareResponse)
+import           Flowbox.UR.Manager.RPC.Handler.Handler                                                        (makeMsgArr, prepareResponse, serialize)
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Connect.Request             as Connect
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Connect.Update              as Connect
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Disconnect.Request          as Disconnect
@@ -67,7 +67,7 @@ nodeName = fromMaybe "" . maybe Nothing (^? StringExpr.string) . maybe Nothing (
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 get :: GetGraph.Request -> RPC Context IO GetGraph.Status

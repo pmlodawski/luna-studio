@@ -33,7 +33,7 @@ import qualified Luna.DEP.Data.AliasInfo   as AliasInfo
 
 
 logger :: Logger
-logger = getLogger $(moduleName)
+logger = getLogger $moduleName
 
 
 data VAState = VAState { _aa      :: AliasInfo

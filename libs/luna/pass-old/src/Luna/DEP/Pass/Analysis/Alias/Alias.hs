@@ -34,7 +34,7 @@ import qualified Luna.DEP.Pass.Pass            as Pass
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 type VAPass result = Pass Namespace result

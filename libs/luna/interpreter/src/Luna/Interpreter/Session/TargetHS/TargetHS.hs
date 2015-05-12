@@ -25,7 +25,7 @@ import qualified Luna.Interpreter.Session.TargetHS.Reload    as Reload
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 enabledFlags :: [GHC.ExtensionFlag]

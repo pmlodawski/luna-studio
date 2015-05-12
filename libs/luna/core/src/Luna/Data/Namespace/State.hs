@@ -4,18 +4,24 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE ConstraintKinds            #-}
-{-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE TemplateHaskell            #-}
-{-# LANGUAGE ScopedTypeVariables        #-}
-{-# LANGUAGE NoMonomorphismRestriction  #-}
+{-# LANGUAGE ConstraintKinds           #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE TemplateHaskell           #-}
 
 module Luna.Data.Namespace.State where
 
 import           Control.Monad.State (MonadState)
 import qualified Data.IntMap         as IntMap
 
+import qualified Flowbox.Data.MapForest    as MapForest
 import           Flowbox.Prelude           hiding (id)
+import           Flowbox.System.Log.Logger as L
+import           Luna.Data.Namespace       (Namespace, NamespaceMonad)
+import qualified Luna.Data.Namespace       as Namespace
+import           Luna.Data.StructInfo      (OriginInfo, StructInfo, StructInfoMonad)
+import qualified Luna.Data.StructInfo      as StructInfo
 import           Luna.Syntax.AST           (AST, ID)
 import qualified Luna.Syntax.AST           as AST
 import           Luna.Syntax.Decl          (Path)
@@ -25,23 +31,17 @@ import           Luna.Syntax.Lit           (Lit)
 import qualified Luna.Syntax.Lit           as Lit
 import           Luna.Syntax.Module        (Module)
 import qualified Luna.Syntax.Module        as Module
+import           Luna.Syntax.Name.Path     (NamePath)
+import qualified Luna.Syntax.Name.Path     as NamePath
+import           Luna.Syntax.Name.Pattern  (NamePatDesc)
 import           Luna.Syntax.Pat           (Pat)
 import qualified Luna.Syntax.Pat           as Pat
 import           Luna.Syntax.Type          (Type)
 import qualified Luna.Syntax.Type          as Type
-import           Luna.Data.StructInfo      (StructInfo, StructInfoMonad, OriginInfo)
-import qualified Luna.Data.StructInfo      as StructInfo
-import           Luna.Data.Namespace       (Namespace, NamespaceMonad)
-import qualified Luna.Data.Namespace       as Namespace
-import           Flowbox.System.Log.Logger as L
-import qualified Flowbox.Data.MapForest    as MapForest
-import           Luna.Syntax.Name.Path     (NamePath)
-import qualified Luna.Syntax.Name.Path     as NamePath
-import           Luna.Syntax.Name.Pattern  (NamePatDesc)
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 --data VAState = VAState { _info    :: StructInfo

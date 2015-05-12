@@ -25,7 +25,7 @@ import           Flowbox.System.Log.Logger
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 handlerMap :: FileManager fm ctx => fm -> HandlerMap ctx IO

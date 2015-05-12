@@ -31,7 +31,7 @@ import           Flowbox.System.Log.Logger
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 produce :: Pipes.Producer (Message, Message.CorrelationID) BusT ()

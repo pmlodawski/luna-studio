@@ -36,7 +36,7 @@ import qualified Generated.Proto.Bus.Exception as Gen
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 run :: BusEndPoints -> [Topic] -> IO (Either Bus.Error ())

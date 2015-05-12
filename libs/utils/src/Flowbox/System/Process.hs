@@ -35,7 +35,7 @@ import qualified Flowbox.System.UniPath             as UniPath
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 runProcess' :: FilePath -> [String] -> Maybe FilePath -> Maybe [(String, String)] -> Maybe IO.Handle -> Maybe IO.Handle -> Maybe IO.Handle -> IO ProcessHandle

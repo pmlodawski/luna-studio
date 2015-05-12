@@ -17,7 +17,7 @@ import qualified Generated.Proto.PluginManager.PluginManager.Ping.Status  as Pin
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 -------- public api -------------------------------------------------
 

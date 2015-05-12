@@ -39,7 +39,7 @@ import           Luna.Interpreter.Session.Session                      (SessionS
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 get :: Value.Request -> RPC Context (SessionST mm) Value.Update

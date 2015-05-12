@@ -31,7 +31,7 @@ rootLogger = getLogger ""
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 parser :: Parser Cmd
