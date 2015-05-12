@@ -123,6 +123,20 @@ assignControlPoint' bezierLength strokeWithDists =
         invertRestPoint = Point2 (1/(1-rest)) (1/(1-rest))
     in (p, p+restPoint*(hi-p),  p+invertRestPoint*(ho-p) ) --{--trace ("\nstart is: "++show start++"\nbezierLength: "++show bezierLength++"\nrest: "++show rest) $ --} deCasteljauCubic rest intersectingBezier 
 
+placePoint :: Float -> [(Float, CubicBezier Float)] -> (Point2 Float, Point2 Float, Point2 Float)
+placePoint bezierLength strokeWithDists = 
+    let (start, end) = span (\(dist,_) -> {-- trace ("dist is: "++show dist) $--} dist<bezierLength) strokeWithDists
+        intersectingBezier = snd $ head end
+        startDistance = if null start then 0.0 else fst (last start)
+        endDistance = if null end then 1.0 else fst (head end)
+        rest = (bezierLength - startDistance)/( (fst (head end)) - startDistance) -- * (sum $ map (\(_,x) -> arcLength x) strokeWithDists)
+    in deCasteljauCubic rest intersectingBezier 
+
+normVec p = 
+    let vecLen = euclidianDistance (Point2 0 0) p
+        lenPoint = Point2 vecLen vecLen
+    in p/lenPoint
+
 assignControlPoint'' :: (Float, Float, Float) -> [(Float, CubicBezier Float)] -> (Point2 Float, Point2 Float, Point2 Float)
 assignControlPoint'' (prev, bezierLength, next) strokeWithDists = 
     let (start, end) = span (\(dist,_) -> {-- trace ("dist is: "++show dist) $--} dist<bezierLength) strokeWithDists
@@ -131,13 +145,17 @@ assignControlPoint'' (prev, bezierLength, next) strokeWithDists =
         endDistance = if null end then 1.0 else fst (head end)
         rest = (bezierLength - startDistance)/( (fst (head end)) - startDistance) -- * (sum $ map (\(_,x) -> arcLength x) strokeWithDists)
         (p, hi, ho) = deCasteljauCubic rest intersectingBezier 
+        (pPrev,_,_) = placePoint prev strokeWithDists
+        (pNext,_,_) = placePoint next strokeWithDists
         --restPoint = Point2 (3/rest) (3/rest)
         --invertRestPoint = Point2 (3/(1-rest)) (3/(1-rest))
-        --Point2 x y = (normVec (p)*(normVec ())
+        Point2 x1 y1 = (normVec (pPrev-p))*(normVec (hi-p))
+        Point2 x2 y2 = (normVec (pNext-p))*(normVec (ho-p))
         --dotProduct = 
-        --cosPHo = x + y
-        ratio1 = (bezierLength - prev)/(bezierLength - startDistance)
-        ratio2 = (next - bezierLength )/(endDistance - bezierLength)
+        cosPHi = 1 --max 0.75 (x1 + y1)
+        cosPHo = 1 --max 0.75 (x2 + y2)
+        ratio1 = (1/cosPHi)*(bezierLength - prev)/(bezierLength - startDistance)
+        ratio2 = (1/cosPHo)*(next - bezierLength )/(endDistance - bezierLength)
         ratioPoint1 = Point2 ratio1 ratio1
         ratioPoint2 = Point2 ratio2 ratio2
     in (p, p+ratioPoint1*(hi-p),  p+ratioPoint2*(ho-p) ) --{--trace ("\nstart is: "++show start++"\nbezierLength: "++show bezierLength++"\nrest: "++show rest) $ --} deCasteljauCubic rest intersectingBezier 
