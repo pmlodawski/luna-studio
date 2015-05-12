@@ -25,7 +25,7 @@ import           Test.Luna.DEP.Sample.GraphView            (sampleGraphs)
 
 backAndForth :: Breadcrumbs -> String -> IO ()
 backAndForth bc code = do
-    expr          <- Common.getAST code
+    (expr, _)     <- Common.getAST code
     (graph , pm)  <- Common.getGraph bc def expr
     let (graphview, pm2) = GraphView.fromGraph graph pm
     (graph3, pm3) <- eitherStringToM $ GraphView.toGraph graphview pm2

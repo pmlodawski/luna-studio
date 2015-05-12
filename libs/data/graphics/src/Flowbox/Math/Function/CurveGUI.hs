@@ -75,7 +75,7 @@ convertToNodeList l =
                 BSplineNode _ _ r = processRightmost a a
 
         processLeftmost :: ControlPointGUI Float -> ControlPointGUI Float -> BSplineNode Float
-        processLeftmost a@(ControlPointGUI p@(Point2 x y) LinearGUI _) b = BSplineNode (Point2 x y) (Point2 (rx-1) ry) r
+        processLeftmost a@(ControlPointGUI p@(Point2 x y) LinearGUI _) b = BSplineNode (Point2 x y) (Point2 (x-1) y) r
             where
                 r@(Point2 rx ry) = processRight a b
 
@@ -90,7 +90,7 @@ convertToNodeList l =
                 r = processRight a b
 
         processRightmost :: ControlPointGUI Float -> ControlPointGUI Float -> BSplineNode Float
-        processRightmost a b@(ControlPointGUI p@(Point2 x y) _ LinearGUI) = BSplineNode (Point2 x y) l (Point2 (lx+1) ly)
+        processRightmost a b@(ControlPointGUI p@(Point2 x y) _ LinearGUI) = BSplineNode (Point2 x y) l (Point2 (x+1) y)
             where
                 l@(Point2 lx ly) = processLeft a b
 

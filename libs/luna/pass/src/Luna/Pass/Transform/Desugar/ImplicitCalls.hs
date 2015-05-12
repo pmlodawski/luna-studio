@@ -4,59 +4,34 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE DataKinds                 #-}
+{-# LANGUAGE KindSignatures            #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE OverlappingInstances #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE DataKinds #-}
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE OverloadedStrings         #-}
+{-# LANGUAGE RankNTypes                #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE TypeOperators             #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 
 module Luna.Pass.Transform.Desugar.ImplicitCalls where
 
-import           Flowbox.Prelude              hiding (Traversal)
-import           Flowbox.Control.Monad.State  hiding (mapM_, (<$!>), join, mapM, State)
-import qualified Luna.Syntax.Traversals       as AST
-import qualified Luna.Syntax.Enum             as Enum
-import           Luna.Syntax.Enum             (Enumerated, IDTag(IDTag))
-import qualified Luna.Syntax.Decl             as Decl
-import           Luna.Syntax.Decl             (Decl, LDecl, Field(Field))
-import qualified Luna.Syntax.Module           as Module
-import           Luna.Syntax.Module           (Module(Module), LModule)
-import           Luna.Syntax.Unit             (Unit(Unit))
-import qualified Luna.Syntax.Label            as Label
-import           Luna.Syntax.Label            (Label(Label))
-import qualified Luna.Syntax.Type             as Type
-import           Luna.Syntax.Type             (Type)
-import qualified Luna.Syntax.Pat              as Pat
-import           Luna.Syntax.Pat              (LPat, Pat)
-import           Luna.Syntax.Expr             (LExpr, Expr)
-import qualified Luna.Syntax.Expr             as Expr
-import qualified Luna.Syntax.Lit              as Lit
-import qualified Luna.Syntax.Native           as Native
-import qualified Luna.Syntax.Name             as Name
-import           Luna.Syntax.Name             (TName(TName), TVName(TVName))
-import           Luna.Pass                    (Pass(Pass), PassMonad, PassCtx)
-import qualified Luna.Pass                    as Pass
+import Data.Typeable
+import GHC.TypeLits
 
-import qualified Luna.Data.Namespace          as Namespace
-import           Luna.Data.Namespace          (Namespace)
-
-import           Luna.Data.ASTInfo            (ASTInfo, genID)
-
-import qualified Luna.Data.Namespace.State    as State 
-import qualified Luna.Parser.Parser           as Parser
-import qualified Luna.Parser.State            as ParserState
-import           Luna.Syntax.Arg              (Arg(Arg))
-import           Luna.Syntax.Name.Pattern     (NamePat(NamePat), Segment(Segment))
-import           Luna.Data.StructInfo         (StructInfo)
-import qualified Luna.Data.StructInfo         as StructInfo
-import Control.Monad (join)
-import           GHC.TypeLits
-import           Data.Typeable
+import           Flowbox.Control.Monad.State hiding (State, join, mapM, mapM_)
+import           Flowbox.Prelude             hiding (Traversal)
+import           Luna.Data.ASTInfo           (ASTInfo)
+import qualified Luna.Data.ASTInfo           as ASTInfo
+import           Luna.Pass                   (Pass (Pass), PassCtx, PassMonad)
+import           Luna.Syntax.Enum            (Enumerated)
+import qualified Luna.Syntax.Enum            as Enum
+import           Luna.Syntax.Expr            (LExpr)
+import qualified Luna.Syntax.Expr            as Expr
+import           Luna.Syntax.Label           (Label (Label))
+import           Luna.Syntax.Name.Pattern    (NamePat (NamePat), Segment (Segment))
+import qualified Luna.Syntax.Traversals      as AST
 
 ----------------------------------------------------------------------
 -- Base types
@@ -104,20 +79,21 @@ passRunner ai ast = do
 
 exprScopes :: (ISCtx lab m 1 a) => LExpr lab a -> ISPass m (LExpr lab a)
 exprScopes ast@(Label lab e) = case e of
-    Expr.Cons     {} -> Label 998 <$> (Expr.app <$> continue <*> pure [])
-    Expr.Accessor {} -> Label 997 <$> (Expr.app <$> continue <*> pure [])
-                -- TODO [wd]: ^-- a magic constants :)
+    Expr.Cons     {} -> Label <$> tag <*> (Expr.app <$> continue <*> pure [])
+    Expr.Accessor {} -> Label <$> tag <*> (Expr.app <$> continue <*> pure [])
     Expr.Curry (Label lab' acc@(Expr.Accessor {})) -> Label lab . Expr.Curry <$> (Label lab' <$> defaultTraverseOmitM (Proxy::Proxy 1) acc)
-    Expr.App (NamePat pfx (Segment base args) segs) -> 
-        (Label lab . Expr.App) <$> (NamePat <$> defaultTraverseM pfx 
-                                            <*> (Segment <$> procSeg base 
+    Expr.App (NamePat pfx (Segment base args) segs) ->
+        (Label lab . Expr.App) <$> (NamePat <$> defaultTraverseM pfx
+                                            <*> (Segment <$> procSeg base
                                                          <*> defaultTraverseM allArgs)
                                             <*> pure [])
         where getSegArgs (Segment _ args) = args
               allArgs = args ++ concat (fmap getSegArgs segs)
     _                -> continue
-    where continue = defaultTraverseM ast
-          id       = Enum.id lab
+    where
+        continue = defaultTraverseM ast
+        id       = Enum.id lab
+        tag      = fromIntegral <$> ASTInfo.genID
 
 procSeg expr@(Label lab e) = case e of
     Expr.Accessor {} -> defaultTraverseM expr
@@ -137,4 +113,3 @@ instance (ISCtx lab m n a, ISTraversalOmit m (n-1) a, ISTraversalOmit m (n-1) (L
 
 instance (ISCtx lab m 1 a) => AST.Traversal (ImplCallsOmit 1) (ISPass m) (LExpr lab a) (LExpr lab a) where
     traverseM _ = defaultTraverseM
-

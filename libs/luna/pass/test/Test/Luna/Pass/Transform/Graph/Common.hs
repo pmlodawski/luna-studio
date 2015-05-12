@@ -5,26 +5,34 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# OPTIONS_GHC -fno-warn-name-shadowing #-}
-{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TupleSections     #-}
 
 module Test.Luna.Pass.Transform.Graph.Common where
 
---import           Flowbox.Control.Error
---import           Flowbox.Prelude
---import           Luna.Syntax.Control.Crumb                    (Breadcrumbs)
---import qualified Luna.Syntax.Control.Crumb                    as Crumb
---import qualified Luna.Syntax.Control.Focus                    as Focus
---import qualified Luna.Syntax.Control.Zipper                   as Zipper
---import           Luna.DEP.AST.Module                           (Module)
---import qualified Luna.DEP.AST.Name                             as Name
---import qualified Luna.Pass.Analysis.Alias.Alias            as Analysis.Alias
---import qualified Luna.Pass.Analysis.ID.MaxID               as MaxID
---import qualified Luna.Pass.Transform.AST.IDFixer.IDFixer   as IDFixer
---import qualified Luna.Pass.Transform.Graph.Builder.Builder as GraphBuilder
---import qualified Luna.Pass.Transform.Graph.Parser.Parser   as GraphParser
---import           Luna.Syntax.Expr                          (Expr)
---import           Luna.Syntax.Graph.Graph                   (Graph)
---import           Luna.Syntax.Graph.PropertyMap             (PropertyMap)
+import           Flowbox.Control.Error
+import           Flowbox.Prelude
+import qualified Luna.Control.BCZipper                     as BCZipper
+import           Luna.Control.Crumb                        (Breadcrumbs)
+import qualified Luna.Control.Crumb                        as Crumb
+import qualified Luna.Control.Focus                        as Focus
+import           Luna.Data.ASTInfo                         (ASTInfo)
+import qualified Luna.Data.Namespace                       as Namespace
+import           Luna.Data.StructData                      (StructData (StructData))
+import qualified Luna.Data.StructData                      as StructData
+import qualified Luna.Pass                                 as Pass
+import qualified Luna.Pass.Analysis.Imports                as Imports
+import qualified Luna.Pass.Analysis.Struct                 as Struct
+import qualified Luna.Pass.Transform.Graph.Builder.Builder as GraphBuilder
+import qualified Luna.Pass.Transform.Graph.Parser.Parser   as GraphParser
+import           Luna.Syntax.Decl                          (LDecl)
+import           Luna.Syntax.Graph.Graph                   (Graph)
+import           Luna.Syntax.Graph.Tag                     (Tag)
+import           Luna.Syntax.Graph.Tag                     (TModule)
+import           Luna.Syntax.Module                        (LModule)
+import           Luna.Syntax.Unit                          (Unit (Unit))
+import qualified Luna.System.Pragma.Store                  as Pragma
+import           Luna.System.Session                       as Session
 
 
 
@@ -32,31 +40,43 @@ named :: a -> b -> (a, b)
 named = (,)
 
 
---mainBC :: Breadcrumbs
---mainBC = [Crumb.Module "Main", Crumb.Function (Name.single "main") []]
+mainBC :: Breadcrumbs
+mainBC = [Crumb.Module "Main", Crumb.Function [] "main"]
 
 
---getGraph :: Breadcrumbs -> PropertyMap -> Module -> IO (Graph, PropertyMap)
---getGraph bc pm ast = eitherStringToM' $ runEitherT $ do
---    focus <- hoistEither $ Zipper.getFocus <$> Zipper.focusBreadcrumbs' bc ast
---    expr  <- focus ^? Focus.expr <??> "test.Common.getFunctionGraph : Target is not a function"
---    aliasInfo <- EitherT $ Analysis.Alias.run ast
---    EitherT $ GraphBuilder.run aliasInfo pm True expr
+type V = ()
 
 
---getExpr :: Breadcrumbs -> Graph -> PropertyMap -> Module -> IO (Module, PropertyMap)
---getExpr bc graph pm ast = eitherStringToM' $ runEitherT $ do
---    zipper <- hoistEither $ Zipper.focusBreadcrumbs' bc ast
---    let focus = Zipper.getFocus zipper
---    expr <- focus ^? Focus.expr <??> "test.Common.getExpr : Target is not a function"
---    (expr2', pm2) <- EitherT $ GraphParser.run graph pm expr
---    maxID         <- EitherT $ MaxID.runExpr expr2'
---    expr2         <- EitherT $ IDFixer.runExpr maxID Nothing False expr2'
---    let newFocus = focus & Focus.expr .~ expr2
---    return (Zipper.close $ Zipper.modify (const newFocus) zipper, pm2)
+getGraph :: Breadcrumbs -> TModule V -> IO (TModule V, Graph Tag V)
+getGraph bc ast = runPass $ do
+    zipper <- lift $ eitherStringToM $ BCZipper.focusBreadcrumbs' bc ast
+    let focus = BCZipper.getFocus zipper
+    decl  <- focus ^? Focus.decl <??> "test.Common.getFunctionGraph : Target is not a function"
+    importInfo     <- Pass.run1_ Imports.pass (Unit ast)
+    structData <- Pass.run2_ Struct.pass (StructData mempty importInfo) ast
+    (decl2, graph) <- GraphBuilder.run (structData ^. StructData.namespace . Namespace.info) decl
+    let newFocus = focus & Focus.decl .~ decl2
+    return (BCZipper.close $ BCZipper.modify (const newFocus) zipper, graph)
 
 
---getMain :: Module -> IO Expr
---getMain ast = eitherStringToM' $ runEitherT $ do
---    focus <- hoistEither $ Zipper.getFocus <$> Zipper.focusBreadcrumbs' mainBC ast
---    Focus.getFunction focus <??> "test.Common.getMain : Target is not a function"
+getExpr :: Breadcrumbs -> Graph Tag V -> TModule V -> ASTInfo -> IO (TModule V, ASTInfo)
+getExpr bc graph ast astInfo = runPass $ do
+    zipper <- lift $ eitherStringToM $ BCZipper.focusBreadcrumbs' bc ast
+    let focus = BCZipper.getFocus zipper
+    decl <- focus ^? Focus.decl <??> "test.Common.getExpr : Target is not a function"
+    (decl2, astInfo2) <- GraphParser.run graph decl astInfo
+    let newFocus = focus & Focus.decl .~ decl2
+    return (BCZipper.close $ BCZipper.modify (const newFocus) zipper, astInfo2)
+
+
+getMain :: (Show a, Show e) => LModule a e -> IO (LDecl a e)
+getMain ast = eitherStringToM' $ runEitherT $ do
+    focus <- hoistEither $ BCZipper.getFocus <$> BCZipper.focusBreadcrumbs' mainBC ast
+    Focus.getFunction focus <??> "test.Common.getMain : Target is not a function"
+
+
+runPass :: (MonadIO m, Show a) => EitherT a (Pragma.PragmaStoreT m) b -> m b
+runPass pass = do
+    result <- Session.runT $ runEitherT pass
+    eitherToM $ fst result
+

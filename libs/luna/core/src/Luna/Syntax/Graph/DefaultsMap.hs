@@ -5,17 +5,16 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
-module Luna.Syntax.Graph.View.Default.DefaultsMap (
-    module Luna.Syntax.Graph.View.Default.DefaultsMap,
+module Luna.Syntax.Graph.DefaultsMap (
+    module Luna.Syntax.Graph.DefaultsMap,
     module X,
 ) where
 
 import Data.Map as X
 
-import qualified Luna.Syntax.Graph.Node                as Node
-import           Luna.Syntax.Graph.Node.Expr           (NodeExpr)
-import           Luna.Syntax.Graph.View.PortDescriptor (PortDescriptor)
+import Luna.Syntax.Expr       (LExpr)
+import Luna.Syntax.Graph.Port (DstPort)
 
 
 
-type DefaultsMap a e = Map PortDescriptor (Node.ID, NodeExpr a e)
+type DefaultsMap a v = Map DstPort (LExpr a v)

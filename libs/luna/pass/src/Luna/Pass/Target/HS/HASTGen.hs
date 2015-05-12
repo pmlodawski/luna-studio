@@ -5,43 +5,61 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE OverlappingInstances #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE OverloadedStrings         #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE UndecidableInstances      #-}
+{-# LANGUAGE ViewPatterns              #-}
 
 module Luna.Pass.Target.HS.HASTGen where
 
-import           Flowbox.Prelude              hiding (Traversal)
-import           Flowbox.Control.Monad.State  hiding (mapM_, (<$!>), join, mapM, State)
-import qualified Luna.Syntax.Traversals       as AST
+import           Data.Maybe (catMaybes, isJust)
+import qualified Data.Set   as Set
+
+import           Flowbox.Prelude                   hiding (Traversal)
+import           Luna.Pass                         (Pass (Pass), PassMonad)
+import qualified Luna.Pass                         as Pass
+import           Luna.Pass.Target.HS.HASTGen.State (addComment, addImport, genCallID, getCtx, regDecl, regFunc, regTHExpr, withCtx)
+import qualified Luna.Pass.Target.HS.HASTGen.State as State
+import           Luna.Syntax.Arg                   (Arg (Arg))
+import qualified Luna.Syntax.Arg                   as Arg
+import           Luna.Syntax.Decl                  (LDecl)
+import qualified Luna.Syntax.Decl                  as Decl
+import           Luna.Syntax.Enum                  (Enumerated)
+import           Luna.Syntax.Expr                  (LExpr)
+import qualified Luna.Syntax.Expr                  as Expr
+import           Luna.Syntax.Foreign               (Foreign (Foreign))
+import qualified Luna.Syntax.Foreign               as Foreign
+import           Luna.Syntax.Label                 (Label (Label))
+import qualified Luna.Syntax.Label                 as Label
+import           Luna.Syntax.Lit                   (LLit)
+import qualified Luna.Syntax.Lit                   as Lit
+import qualified Luna.Syntax.Lit.Number            as Number
+import           Luna.Syntax.Module                (LModule, Module (Module))
+import qualified Luna.Syntax.Name                  as Name
+import           Luna.Syntax.Name.Hash             (Hashable, hash)
+import qualified Luna.Syntax.Name.Path             as Path
+import           Luna.Syntax.Name.Pattern          (NamePat (NamePat), Segment (Segment))
+import qualified Luna.Syntax.Name.Pattern          as NamePat
+import           Luna.Syntax.Pat                   (LPat)
+import qualified Luna.Syntax.Pat                   as Pat
+import qualified Luna.Syntax.Traversals            as AST
+import           Luna.Syntax.Type                  (LType)
+import qualified Luna.Syntax.Type                  as Type
+import           Luna.Syntax.Unit                  (Unit (Unit))
+import qualified Luna.Target.HS.AST.Builder.TH     as TH
+import           Luna.Target.HS.AST.Comment        (Comment (H1, H2, H3, H5))
+import qualified Luna.Target.HS.AST.Deriving       as Deriving
+import qualified Luna.Target.HS.AST.Expr           as HE
+import qualified Luna.Target.HS.AST.Extension      as HExt
+import qualified Luna.Target.HS.AST.Lit            as HLit
+import qualified Luna.Target.HS.AST.Module         as HModule
+import qualified Luna.Target.HS.Host.Naming2       as Naming
+--import           Flowbox.Control.Monad.State  hiding (mapM_, (<$!>), join, mapM, State)
 --import qualified Luna.Syntax.Enum             as Enum
-import           Luna.Syntax.Enum             (Enumerated, IDTag(IDTag))
-import qualified Luna.Syntax.Decl             as Decl
-import           Luna.Syntax.Decl             (Decl, LDecl, Field(Field))
-import qualified Luna.Syntax.Module           as Module
-import           Luna.Syntax.Module           (Module(Module), LModule)
-import           Luna.Syntax.Unit             (Unit(Unit))
-import qualified Luna.Syntax.Label            as Label
-import           Luna.Syntax.Label            (Label(Label))
-import qualified Luna.Syntax.Type             as Type
-import           Luna.Syntax.Type             (Type, LType)
-import qualified Luna.Syntax.Pat              as Pat
-import           Luna.Syntax.Pat              (LPat, Pat)
-import           Luna.Syntax.Expr             (LExpr, Expr)
-import qualified Luna.Syntax.Expr             as Expr
-import qualified Luna.Syntax.Lit              as Lit
-import qualified Luna.Syntax.Lit.Number       as Number
-import           Luna.Syntax.Lit              (Lit, LLit)
 --import qualified Luna.Syntax.Native           as Native
-import qualified Luna.Syntax.Name             as Name
 --import           Luna.Syntax.Name             (TName(TName), TVName(TVName))
-import qualified Luna.Target.HS.AST.Expr                         as HE
-import qualified Luna.Target.HS.AST.Lit                          as HLit
-import qualified Luna.Target.HS.AST.Module                       as HModule
-import qualified Luna.Target.HS.AST.Extension                    as HExt
 --import qualified Luna.Target.HS.AST.Comment                      as HComment
 import           Luna.Target.HS.AST.Comment (Comment(H1, H2, H3, H4, H5))
 
@@ -55,6 +73,8 @@ import qualified Luna.Data.Namespace          as Namespace
 import           Luna.Data.Namespace          (Namespace)
 
 import           Luna.Data.ASTInfo            (ASTInfo, genID)
+import           Luna.Data.ImportInfo         (ImportInfo, _impPath)
+import qualified Luna.Data.ImportInfo         as II
 
 import           Luna.Syntax.Arg              (Arg(Arg), LArg)
 import qualified Luna.Syntax.Arg              as Arg
@@ -67,20 +87,6 @@ import qualified Luna.Pass.Target.HS.HASTGen.State as State
 import           Luna.Pass.Target.HS.HASTGen.State (addComment, setModule, getModule, regFunc, regTHExpr, pushCtx, popCtx, getCtx, withCtx, regDecl, genCallID, addImport)
 import           Luna.Syntax.Name.Hash              (Hashable, hash)
 --import qualified Luna.Target.HS.Host.NamingOld                          as Naming
-import qualified Luna.Target.HS.Host.Naming2 as Naming
-import qualified Luna.Target.HS.AST.Builder.TH    as TH
-import qualified Luna.Target.HS.AST.Builder.Utils as HUtils
-import qualified Luna.Syntax.Name.Pattern as NamePat
-import           Luna.Syntax.Name.Pattern (NamePat)
-import           Data.Maybe (isNothing)
-import qualified Luna.Syntax.Foreign         as Foreign
-import           Luna.Syntax.Foreign         (Foreign(Foreign))
-import qualified Luna.Syntax.Enum            as Enum
-import qualified Luna.Syntax.Name.Path       as Path
-
-import Data.Set (Set)
-import qualified Data.Set as Set
-import Data.Maybe (catMaybes)
 
 -- FIXME[wd]: remove (Show ...) after pass implementation
 
@@ -117,27 +123,33 @@ defaultTraverseM = AST.defaultTraverseM HASTGen
 mkVal    = HE.AppE "val"
 
 
-pass :: Ctx m a v => Pass State.GenState (Unit (LModule a (LExpr a v)) -> PassResult m HE)
+makeImportList :: ImportInfo -> [HE.Expr]
+makeImportList info = map (mkImp._impPath) (info ^. II.imports )
+    where mkImp = \qp -> HE.Import False (II.qualPathToList qp) Nothing Nothing
+
+
+pass :: Ctx m a v => Pass State.GenState (ImportInfo -> Unit (LModule a (LExpr a v)) -> PassResult m HE)
 pass = Pass "HASTGen" "Haskell AST generator" def genUnit
 
 passExpr :: Ctx m a v => Pass State.GenState (LExpr a v -> PassResult m HE)
 passExpr = Pass "HASTGen" "Haskell AST generator" def genExpr
 
-genUnit (Unit m) = genModule m
+genUnit importInfo (Unit m) = genModule importInfo m
 
 
 
 
-genNonEmptySec header lst f = when (not $ null lst) $ do
+genNonEmptySec header lst f = unless (null lst) $ do
     State.addComment header
     f lst
 
 
-genModule :: Ctx m a v => LModule a (LExpr a v) -> PassResult m HE
-genModule (Label lab (Module path body)) = withCtx (fromText $ view Path.name path) $ do
+genModule :: Ctx m a v => ImportInfo -> LModule a (LExpr a v) -> PassResult m HE
+genModule importInfo (Label lab (Module path body)) = withCtx (fromText $ view Path.name path) $ do
     let mod     = HModule.addImport (HE.Import False ["Luna", "Target", "HS"] Nothing Nothing)
+                $ foldl (.) id (map HModule.addImport (makeImportList importInfo))
                 $ foldr HModule.addExt (HModule.mk modBaseName modPath)
-                $ [ HExt.DataKinds
+                  [ HExt.DataKinds
                   , HExt.DeriveDataTypeable
                   , HExt.DeriveGeneric
                   , HExt.NoMonomorphismRestriction
@@ -197,9 +209,9 @@ genDataDeclHeaders isNative (Decl.DataDecl (convVar -> name) params cons defs) =
     if not isNative then State.addDataType =<< consDecl
                     else State.addComment  $ H5 "datatype provided externally"
     regTHExpr $ TH.mkRegType name
-    when (length cons > 0) $ regTHExpr $ TH.mkRegCons name conNames
+    unless (null cons) $ regTHExpr $ TH.mkRegCons name conNames
 
-    when (not $ null fieldNames) $ do
+    unless (null fieldNames) $ do
         State.addComment . H3 $ name <> " accessors"
         regTHExpr $ TH.mkFieldAccessors2 name conDescs
         regTHExpr $ TH.mkRegFieldAccessors name fieldNames
@@ -221,7 +233,7 @@ genDataDeclHeaders isNative (Decl.DataDecl (convVar -> name) params cons defs) =
 --data Cons  a e = Cons   { _consName :: CNameP  , _fields :: [LField a e]                   } deriving (Show, Generic, Eq, Read)
 
 genDataDeclDefs :: (Monad m, Enumerated lab, Num lab, Show lab) => Decl.DataDecl lab (LExpr lab ()) -> PassResult m ()
-genDataDeclDefs (Decl.DataDecl (convVar -> name) params cons defs) = withCtx (fromText name) $ do
+genDataDeclDefs (Decl.DataDecl (convVar -> name) params cons defs) = withCtx (fromText name) $
     mapM_ genDecl defs
 
 genDataDecl :: (Monad m, Enumerated lab, Num lab, Show lab) => Bool -> Decl.DataDecl lab (LExpr lab ()) -> PassResult m ()
@@ -247,13 +259,13 @@ genCon name params derivings isNative cons = do
                                      (HE.VarE conName)
                 args       = fmap mkArgFromName fieldNames
                 -- FIXME[wd]: '@' is ugly hack for names double-hashing
-                func       = Decl.FuncDecl [fromString . ("@" ++) . fromText $ clsConName'] 
-                            (NamePat Nothing (Segment ("@" <> conName) (selfArg : args)) []) 
+                func       = Decl.FuncDecl [fromString . ("@" ++) . fromText $ clsConName']
+                            (NamePat Nothing (Segment ("@" <> conName) (selfArg : args)) [])
                             Nothing []
                 mkArgFromName name = case name of
                     Just n -> Arg (Label (0::Int) $ Pat.Var $ fromText n) Nothing
                     Nothing -> error "TODO!"
-                            
+
             addComment . H3 $ dotname [name, conName] <> " constructor"
             regFunc consDef
             genFuncNoBody func
@@ -263,9 +275,9 @@ genCon name params derivings isNative cons = do
         conDesc    = getConDesc conDecls
         fieldNames = Set.toList . Set.fromList . catMaybes $ snd conDesc :: [Text]
         genField (Label _ (Decl.Field tp name val)) = genType tp
-    
+
     genConData conDecls
-    
+
 
 --underscoreToHash = \case
 --  [] -> []
@@ -319,11 +331,11 @@ genFunc (Decl.FuncDecl (fmap convVar -> path) sig output body) bodyBuilder mkVar
     when (length path > 1) $ Pass.fail "Complex method extension paths are not supported yet."
 
     ctx <- getCtx
-    let tpName = if (null path)
+    let tpName = if null path
         then case ctx of
             Nothing -> ""
             Just n  -> hash n
-        else (path!!0) -- FIXME[wd]: needs name resolver
+        else head path -- FIXME[wd]: needs name resolver
                        -- in case of defining extensionmethod inside of a class
                        -- maybe it should have limited scope to all classes inside that one?
         argNum     = length (NamePat.segments sig)
@@ -340,7 +352,7 @@ genFunc (Decl.FuncDecl (fmap convVar -> path) sig output body) bodyBuilder mkVar
     addComment $ H2 $ "Method: " <> pfx <> name
 
     funcSig <- genFuncSig sigArgs
-    
+
     let sigDecl = HE.val memSigName funcSig
         funcReg = TH.registerMethod tpName name
         funcFck = HE.val memFncName $ HE.Tuple [HE.VarE memSigName, HE.VarE memDefName]
@@ -363,7 +375,7 @@ genFuncPats sigArgs mkVarNames = do
 
     if mkVarNames then mapM genPat sigPatsUntyped
                   else mapM genPatNoVarnames sigPatsUntyped
-    
+
 genFuncSig :: (Monad m, Enumerated lab, Num lab, Show lab) => [Arg a (LExpr lab ())] -> PassResult m HE
 genFuncSig sigArgs = do
     let sigPats    = fmap (view Arg.pat) sigArgs
@@ -372,7 +384,7 @@ genFuncSig sigArgs = do
     hdefs <- (mapM.mapM) genExpr sigVals
     return $ HE.rTuple $ fmap genSigArg (zip sigNames hdefs)
 
-genSigArg (name, val) = (HE.MacroE ('_' : npfx : vpfx : "SigArg") nargs) where
+genSigArg (name, val) = HE.MacroE ('_' : npfx : vpfx : "SigArg") nargs where
     (vpfx, vargs) = case val of
         Nothing -> ('u', [])
         Just v  -> ('p', [v])
@@ -408,13 +420,13 @@ genForeign (Foreign target a) = case target of
 
 
 genFFuncBody :: Monad m => Text -> a -> PassResult m [HE]
-genFFuncBody txt _ = pure $ [HE.Native txt]
+genFFuncBody txt _ = pure [HE.Native txt]
 
 genFuncBody :: Ctx m a v => [LExpr a v] -> Maybe (LType a) -> PassResult m [HE]
 --genFuncBody (transAssigExprs -> exprs) output = case exprs of
 genFuncBody exprs output = case exprs of
     []   -> (:[]) <$> pure (mkVal $ HE.Tuple [])
-    x:[] -> (:) <$> genExpr x
+    [x]  -> (:) <$> genExpr x
                 <*> case unwrap x of
                       Expr.Assignment {} -> (:[]) <$> pure (mkVal $ HE.Tuple [])
                       Expr.RecUpd     {} -> (:[]) <$> pure (mkVal $ HE.Tuple [])
@@ -429,12 +441,12 @@ splitPatTypes :: LPat a -> LPat a
 splitPatTypes (Label lab pat) = case pat of
     Pat.Typed       pat cls  -> splitPatTypes pat
     Pat.App         src args -> Label lab $ Pat.App (splitPatTypes src) (fmap splitPatTypes args)
-    Pat.Var         name     -> Label lab $ pat
+    Pat.Var         name     -> Label lab pat
     Pat.Tuple       items    -> Label lab $ Pat.Tuple (fmap splitPatTypes items)
-    Pat.Lit         value    -> Label lab $ pat
-    Pat.Wildcard             -> Label lab $ pat
-    Pat.RecWildcard          -> Label lab $ pat
-    Pat.Con         name     -> Label lab $ pat
+    Pat.Lit         value    -> Label lab pat
+    Pat.Wildcard             -> Label lab pat
+    Pat.RecWildcard          -> Label lab pat
+    Pat.Con         name     -> Label lab pat
     Pat.Grouped     p        -> Label lab $ Pat.Grouped $ splitPatTypes p
 
 
@@ -452,15 +464,15 @@ genPatGen genRec (Label lab pat) = case pat of
                                     Pat.Con name -> HE.AppP (HE.ConP $ convVar name) . HE.ViewP "expandEl" . HE.rTupleX <$> mapM genRec args
     Pat.Var         name     -> pure $ HE.Var (Naming.mkVar $ convVar name)
     Pat.Typed       pat cls  -> HE.Typed <$> genRec pat <*> genType cls
-    Pat.Tuple       items    -> (HE.ViewP $ HE.VarE $ "extractRTuple") . HE.rTupleX <$> mapM genRec items
+    Pat.Tuple       items    -> HE.ViewP (HE.VarE "extractRTuple") . HE.rTupleX <$> mapM genRec items
     Pat.Lit         value    -> genLit value
-    Pat.Wildcard             -> pure $ HE.WildP
-    Pat.RecWildcard          -> pure $ HE.RecWildP
+    Pat.Wildcard             -> pure   HE.WildP
+    Pat.RecWildcard          -> pure   HE.RecWildP
     Pat.Con         name     -> pure $ HE.ConP $ convVar name
     Pat.Grouped     p        -> genRec p
 
 
---data Pat a 
+--data Pat a
 --    = App         { _src   :: LPat a    , _args :: [LPat a] }
 --    | Typed       { _pat   :: LPat a    , _cls  :: LType a  }
 --    | Grouped     { _pat   :: LPat a                        }
@@ -468,7 +480,7 @@ genPatGen genRec (Label lab pat) = case pat of
 --    | Tuple       { _items :: [LPat a ]                     }
 --    | Con         { _cname :: CName                         }
 --    | Var         { _vname :: VName                         }
---    | Wildcard 
+--    | Wildcard
 --    | RecWildcard
 --    deriving (Show, Eq, Generic, Read, Ord)
 
@@ -480,9 +492,9 @@ genType (Label lab t) = case t of
     Type.Tuple    items           -> HE.Tuple <$> mapM genType items
     Type.App      src      args   -> HE.app <$> genType src <*> mapM genType args
     Type.List     item            -> HE.ListT <$> genType item
-    --Type.Function inputs   output -> 
-    --Type.List     item            -> 
-    --Type.Wildcard                 -> 
+    --Type.Function inputs   output ->
+    --Type.List     item            ->
+    --Type.Wildcard                 ->
     --where mtype    = HE.VarT $ "m_" <> fromString (show (777::Int))
           --stype    = HE.VarT $ "s_" <> fromString (show (777::Int))
           --thandler = HE.AppT mtype . HE.AppT stype
@@ -494,7 +506,7 @@ mkLiftf1     = HE.AppE "liftF1"
 
 
 ofType :: a -> a -> a
-ofType = const 
+ofType = const
 
 
 
@@ -559,9 +571,9 @@ genPatMatch patBase (Label lab pat) expr = case pat of
                                         recTup = HE.rTupleX $ fmap genVars args
                                         recLayout = HE.AppE "expandEl" (HE.AppE (HE.VarE $ "layout_" <> conName) $ HE.VarE patBase)
                                         recExp = HE.Assignment recTup recLayout
-                                        hpat = HE.AppP (HE.ConP $ conName) HE.RecWildP
+                                        hpat = HE.AppP (HE.ConP conName) HE.RecWildP
                                         conName = convVar name
-                                    -- . HE.ViewP "expandEl" . HE.rTupleX $ fmap genVars args 
+                                    -- . HE.ViewP "expandEl" . HE.rTupleX $ fmap genVars args
                                     _ -> error "Non constructor based pattern application is not supported yet."
     --Pat.Tuple       args    -> return $ HE.rTupleX $ fmap genVars args
     --Pat.Wildcard            -> return $ HE.WildP
@@ -594,7 +606,7 @@ genExpr (Label lab expr) = case expr of
     Expr.Curry e                             -> genExpr e
     Expr.Grouped expr                        -> genExpr expr
     Expr.Assignment dst src                  ->  go dst where
-                                                    go p = case (unwrap p) of
+                                                    go p = case unwrap p of
                                                         Pat.Var     {} -> simple
                                                         Pat.Tuple   {} -> simple
                                                         Pat.Grouped g  -> go g
@@ -634,27 +646,27 @@ genExpr (Label lab expr) = case expr of
       where args = fmap unwrap inputs
 
     Expr.RecUpd  name fieldUpdts -> HE.Arrow (HE.Var $ Naming.mkVar $ hash name) <$> case fieldUpdts of
-        (fieldUpdt:[]) -> genField fieldUpdt
-        _              -> Pass.fail "Multi fields updates are not supported yet"
+        [fieldUpdt] -> genField fieldUpdt
+        _           -> Pass.fail "Multi fields updates are not supported yet"
         where src                  = Label 0 $ Expr.Var $ Expr.Variable name ()
               setter exp field val = Label 0 $ Expr.app (Label 0 $ Expr.Accessor (Name.VarName $ fromText . ("set#"<>) $ hash field) exp) [Expr.AppArg Nothing val]
               getter exp field     = Label 0 $ Expr.app (Label 0 $ Expr.Accessor (Name.VarName field) exp) []
               getSel sel           = foldl (flip($)) src (fmap (flip getter) (reverse sel))
               setStep       (x:xs) = setter (getSel xs) x
-              setSteps args@(_:[]) = setStep args
+              setSteps args@[_]    = setStep args
               setSteps args@(_:xs) = setSteps xs . setStep args
               setSteps          [] = undefined
               genField (Expr.FieldUpd sels expr) = genExpr $ setSteps (reverse sels) expr
 
-    Expr.App npat@(NamePat pfx base args) -> mod <*> (foldl (flip (<*>)) (genExpr $ segBase) $ (fmap.fmap) HE.AppE argGens)
-      where argGens = fmap genArg $ NamePat.args npat
+    Expr.App npat@(NamePat pfx base args) -> mod <*> foldl (flip (<*>)) (genExpr segBase) ((fmap.fmap) HE.AppE argGens)
+      where argGens = genArg <$> NamePat.args npat
             genArg (Expr.AppArg mname expr) = nameMod mname <$> genExpr expr
             nameMod mname = case mname of
                 Nothing -> HE.AppE "appNext"
                 Just n  -> HE.AppE $ HE.AppE "appByName" (HE.MacroE "_name" [HE.Lit $ HLit.String n])
             segBase = NamePat.segBase base
-            mod = case (unwrap segBase) of
-                Expr.Curry {} -> pure $ id
+            mod = case unwrap segBase of
+                Expr.Curry {} -> pure id
                 _             -> (\cid -> HE.AppE (HE.MacroE "_call" [HE.Lit . HLit.Int . fromString $ show cid])) <$> genCallID
 
     Expr.List lst -> case lst of
@@ -663,9 +675,9 @@ genExpr (Label lab expr) = case expr of
         Expr.RangeList {}  -> Pass.fail "Range lists are not supported yet"
 
     Expr.Meta meta -> case unwrap meta of
-        Type.MetaCons n -> return $ HE.NOP
+        Type.MetaCons n -> return HE.NOP
         _               -> Pass.fail "Only meta-constructors are supported now"
-    
+
     Expr.Decl _ -> Pass.fail "Nested declarations are not supported yet"
     Expr.Wildcard -> return "_"
 
@@ -681,7 +693,7 @@ genLit (Label lab lit) = case lit of
     -- FIXME[wd]: fix the number handling.
     Lit.Number (Number.Number base repr exp sign) -> do
         when (base /= 10) $ Pass.fail "number base different than 10 are not yet supported"
-        when (not $ isNothing exp) $ Pass.fail "number exponents are not yet supported"
+        when (isJust exp) $ Pass.fail "number exponents are not yet supported"
         let sign' = case sign of
                         Number.Positive -> ""
                         Number.Negative -> "-"
@@ -720,7 +732,7 @@ genLit (Label lab lit) = case lit of
 --    State.addDataType $ HE.DataD clsConName mempty [consClsHE] derivings
 
 --    regFunc $ HE.Function (Naming.con conName) [] (mkAppE [HE.VarE "member", mkProxyE conName, mkVal (HE.VarE clsConName)])
-    
+
 --    regFunc $ HE.Function conSigName [] (foldr biTuple (HE.Tuple []) (selfSig : replicate (length fields) paramSig))
 --    regFunc $ HE.Function conDefName [] (HE.AppE (HE.VarE $ "liftCons" ++ show (length fields)) (HE.VarE conName))
 --    regTHExpr $ thRegisterMethod clsConName conName

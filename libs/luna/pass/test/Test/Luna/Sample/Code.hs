@@ -12,8 +12,8 @@ import Text.RawString.QQ
 
 import Flowbox.Prelude
 import Test.Luna.Pass.Transform.Graph.Common (named)
---import           Luna.Syntax.Control.Crumb             (Breadcrumbs)
---import qualified Luna.Syntax.Control.Crumb             as Crumb
+--import           Luna.Control.Crumb             (Breadcrumbs)
+--import qualified Luna.Control.Crumb             as Crumb
 --import qualified Luna.DEP.AST.Name                         as Name
 
 
@@ -190,12 +190,9 @@ def main:
 def main arg:
     x = 4
     y = [1, x]
-|], named "native code" [r|
-def main arg:
-    ```autoLift1 print #{arg}```
 |], named "hello world" [r|
-def print msg:
-    ```autoLift1 print #{msg}```
+foreign haskell def print msg:
+    autoLift1 print msg
 
 def main:
     hello = "hello"

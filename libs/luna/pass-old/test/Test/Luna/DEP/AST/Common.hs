@@ -11,6 +11,7 @@ module Test.Luna.DEP.AST.Common where
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Luna.DEP.AST.Module                                               (Module)
+import           Luna.DEP.Data.ASTInfo                                             (ASTInfo)
 import           Luna.DEP.Data.Source                                              (Source (Source))
 import qualified Luna.DEP.Pass.Analysis.Alias.Alias                                as Analysis.Alias
 import qualified Luna.DEP.Pass.Analysis.CallGraph.CallGraph                        as Analysis.CallGraph
@@ -23,7 +24,7 @@ import qualified Luna.DEP.Pass.Transform.AST.TxtParser.TxtParser                
 
 
 
-getAST :: String -> IO Module
+getAST :: String -> IO (Module, ASTInfo)
 getAST code = eitherStringToM' $ runEitherT $ do
     (ast, _, astInfo) <- EitherT $ TxtParser.run $ Source ["Main"] code
     (ast, astInfo)    <- EitherT $ Desugar.ImplicitSelf.run astInfo ast
@@ -32,6 +33,5 @@ getAST code = eitherStringToM' $ runEitherT $ do
     callGraph         <- EitherT $ Analysis.CallGraph.run aliasInfo ast
     ast               <- EitherT $ Transform.DepSort.run callGraph aliasInfo ast
     (ast, astInfo)    <- EitherT $ Desugar.ImplicitScopes.run astInfo aliasInfo ast
-    (ast, _astInfo)   <- EitherT $ Desugar.ImplicitCalls.run astInfo ast
-    return ast
+    EitherT $ Desugar.ImplicitCalls.run astInfo ast
 

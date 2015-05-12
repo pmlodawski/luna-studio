@@ -4,16 +4,16 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE TemplateHaskell      #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Luna.Syntax.Module where
 
-import GHC.Generics      (Generic)
-import Flowbox.Prelude
+import Data.Binary (Binary)
 
-import Luna.Syntax.Name  (TName)
-import Luna.Syntax.Decl  (LDecl)
-import Luna.Syntax.Label (Label)
+import Flowbox.Prelude
+import Luna.Syntax.Decl      (LDecl)
+import Luna.Syntax.Label     (Label)
 import Luna.Syntax.Name.Path (QualPath)
 
 
@@ -26,6 +26,7 @@ makeLenses ''Module
 
 type LModule a e = Label a (Module a e)
 
+instance (Binary a, Binary e) => Binary (Module a e)
 
 instance (Default a, Default e) => Default (Module a e) where
     def = Module def def

@@ -31,6 +31,8 @@ import qualified Generated.Proto.Interpreter.Interpreter.GetMainPtr.Request     
 import qualified Generated.Proto.Interpreter.Interpreter.GetMainPtr.Status                   as GetMainPtr
 import qualified Generated.Proto.Interpreter.Interpreter.GetProjectID.Request                as GetProjectID
 import qualified Generated.Proto.Interpreter.Interpreter.GetProjectID.Status                 as GetProjectID
+import qualified Generated.Proto.Interpreter.Interpreter.Invalidate.Request                  as Invalidate
+import qualified Generated.Proto.Interpreter.Interpreter.Invalidate.Update                   as Invalidate
 import qualified Generated.Proto.Interpreter.Interpreter.Memory.GetLimits.Request            as MemoryGetLimits
 import qualified Generated.Proto.Interpreter.Interpreter.Memory.GetLimits.Status             as MemoryGetLimits
 import qualified Generated.Proto.Interpreter.Interpreter.Memory.SetLimits.Request            as MemorySetLimits
@@ -129,6 +131,11 @@ run queueInfo crl request@(Run.Request mtime) = do
         tcompileErrors = encodeP $ map (_1 %~ (projectID, )) $ MapForest.toList compileErrors
     return $ Run.Update request tprofileInfos tcompileErrors
 
+
+invalidate :: Invalidate.Request -> RPC Context (SessionST mm) Invalidate.Update
+invalidate request@(Invalidate.Request tprojectID tlibraryID _ tnodeID) = do
+    Cache.modifyNode tprojectID tlibraryID tnodeID
+    return $ Invalidate.Update request
 
 
 watchPointAdd :: WatchPointAdd.Request -> RPC Context (SessionST mm) WatchPointAdd.Update

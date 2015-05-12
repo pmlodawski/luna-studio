@@ -38,10 +38,13 @@ Library
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
   Build-Depends:  base,
+                  binary,
                   blaze-markup >= 0.6.3,
                   containers,
                   data-default,
+                  directory,
                   fgl,
+                  filepath,
                   flowbox-utils,
                   lens,
                   MissingH,
@@ -63,5 +66,6 @@ Library
                   edit-distance,
                   tuple,
                   optparse-applicative >= 0.11,
+                  unix,
                   zippers
 --[PM] : blaze-markup is a temporary dependency until https://github.com/ekmett/trifecta/issues/42 is resolved

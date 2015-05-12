@@ -11,14 +11,15 @@
 module Luna.DEP.AST.Name where
 
 
+import Data.Binary  (Binary)
 import GHC.Generics (Generic)
 
-import           Flowbox.Prelude
-import qualified Data.Map        as Map
-import           Data.Map        (Map)
+import           Data.List                       (intersperse)
+import           Data.Map                        (Map)
+import qualified Data.Map                        as Map
+import           Data.String.Utils               (join)
 import           Flowbox.Generics.Deriving.QShow
-import           Data.String.Utils (join)
-import           Data.List         (intersperse)
+import           Flowbox.Prelude
 
 
 ----------------------------------------------------------------------
@@ -31,6 +32,9 @@ data Name = Name { _base :: String, _segments :: [Segment] }
 data Segment = Token String
              | Hole
              deriving (Show, Eq, Generic, Read, Ord)
+
+instance Binary Name
+instance Binary Segment
 
 makeLenses ''Name
 instance QShow Name
@@ -72,8 +76,6 @@ unified n = if isSingle n
 -- close the definition, check if name holes are defined explicite
 -- define Holes otherwise
 close :: Name -> Name
-close n@(Name base segments) = case Hole `elem` segments of
-    True  -> n
-    False -> case null segments of
-        True  -> n
-        False -> Name base $ (Hole : intersperse Hole segments)
+close n@(Name base segments) = if Hole `elem` segments || null segments
+    then n
+    else Name base (Hole : intersperse Hole segments)

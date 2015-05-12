@@ -28,6 +28,8 @@ import Flowbox.Geom2D.Shape.Conversion
 import Flowbox.Graphics.Image.Image
 import Flowbox.Prelude
 
+import Flowbox.Math.Function.CurveGUI as CurveGUI
+
 import Utils
 
 
@@ -84,6 +86,17 @@ main = do
         paths    = fmap generatePath     controls
         shape    = Shape paths
         quadratics = toQuadratics shape
+
+    let curve = BezierCurveGUI [ControlPointGUI (Point2 1.0 1.0) LinearGUI LinearGUI,
+                                ControlPointGUI (Point2 2.0 2.0) LinearGUI LinearGUI,
+                                ControlPointGUI (Point2 3.0 1.0) LinearGUI LinearGUI
+                               ]
+
+    let valueOutside  = CurveGUI.valueAtSpline curve 0.5
+    let valueOutside2 = CurveGUI.valueAtSpline curve 4.0
+
+    print valueOutside
+    print valueOutside2
 
     print $ quadratics
 

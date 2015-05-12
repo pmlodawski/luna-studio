@@ -34,22 +34,6 @@ message FileSystem {
         }
     }
     message Directory {
-        message Fetch {
-            message Request {
-                required string path = 1;
-            }
-            message Status {
-                required Request request = 1;
-            }
-        }
-        message Upload {
-            message Request {
-                required string path = 1;
-            }
-            message Status {
-                required Request request = 1;
-            }
-        }
         message Create {
             message Request {
                 required string path = 1;
@@ -102,9 +86,7 @@ message FileSystem {
                 required Request request = 1;
             }
         }
-    }
-    message File {
-        message Fetch {
+        message RemoteFetch {
             message Request {
                 required string path = 1;
             }
@@ -112,12 +94,32 @@ message FileSystem {
                 required Request request = 1;
             }
         }
-        message Upload {
+        message RemoteUpload {
             message Request {
                 required string path = 1;
             }
             message Status {
                 required Request request = 1;
+            }
+        }
+    }
+    message File {
+        message Download {
+            message Request {
+                required string path = 1;
+            }
+            message Update {
+                required Request request = 1;
+                required bytes   file    = 2;
+            }
+        }
+        message Upload {
+            message Request {
+                required string path = 1;
+                required bytes  file = 2;
+            }
+            message Update {
+                required string path = 1;
             }
         }
         message Exists {
@@ -152,6 +154,22 @@ message FileSystem {
                 required string dst = 2;
             }
             message Update { 
+                required Request request = 1;
+            }
+        }
+        message RemoteFetch {
+            message Request {
+                required string path = 1;
+            }
+            message Status {
+                required Request request = 1;
+            }
+        }
+        message RemoteUpload {
+            message Request {
+                required string path = 1;
+            }
+            message Status {
                 required Request request = 1;
             }
         }

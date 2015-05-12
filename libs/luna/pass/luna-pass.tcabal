@@ -30,7 +30,10 @@ Library
 
   Build-Depends:  base,
                   containers,
+                  directory,
                   either,
+                  filepath,
+                  lens,
                   luna-core,
                   luna-target-ghchs,
                   flowbox-config,
@@ -89,6 +92,7 @@ Test-Suite tests
                   flowbox-utils,
                   hspec,
                   MissingH,
+                  mtl,
                   pretty-show,
                   raw-strings-qq,
                   zippers

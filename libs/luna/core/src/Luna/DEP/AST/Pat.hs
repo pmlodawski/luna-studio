@@ -12,33 +12,36 @@
 module Luna.DEP.AST.Pat where
 
 import Control.Applicative
+import Data.Binary         (Binary)
 import GHC.Generics
 
 import           Flowbox.Generics.Deriving.QShow
 import           Flowbox.Prelude                 hiding (Traversal, drop, id)
-import           Luna.DEP.AST.Common                 (ID)
-import qualified Luna.DEP.AST.Lit                    as Lit
-import           Luna.DEP.AST.Prop                   (HasName)
-import qualified Luna.DEP.AST.Prop                   as Prop
-import           Luna.DEP.AST.Type                   (Type)
-import qualified Luna.DEP.AST.Type                   as Type
+import           Luna.DEP.AST.Common             (ID)
+import qualified Luna.DEP.AST.Lit                as Lit
+import           Luna.DEP.AST.Prop               (HasName)
+import qualified Luna.DEP.AST.Prop               as Prop
+import           Luna.DEP.AST.Type               (Type)
+import qualified Luna.DEP.AST.Type               as Type
 
 
 type Lit = Lit.Lit
 
-data Pat = Var             { _id :: ID, _name  :: String                          }
-         | Lit             { _id :: ID, _value :: Lit                             }
-         | Tuple           { _id :: ID, _items :: [Pat]                           }
-         | Con             { _id :: ID, _name  :: String                          }
-         | App             { _id :: ID, _src   :: Pat       , _args      :: [Pat] }
-         | Typed           { _id :: ID, _pat   :: Pat       , _cls       :: Type  }
-         | Wildcard        { _id :: ID                                            }
-         | Grouped         { _id :: ID, _pat   :: Pat                             }
-         | RecWildcard     { _id :: ID                                            }
+data Pat = Var             { _id :: ID, _name  :: String                 }
+         | Lit             { _id :: ID, _value :: Lit                    }
+         | Tuple           { _id :: ID, _items :: [Pat]                  }
+         | Con             { _id :: ID, _name  :: String                 }
+         | App             { _id :: ID, _src   :: Pat   , _args :: [Pat] }
+         | Typed           { _id :: ID, _pat   :: Pat   , _cls  :: Type  }
+         | Wildcard        { _id :: ID                                   }
+         | Grouped         { _id :: ID, _pat   :: Pat                    }
+         | RecWildcard     { _id :: ID                                   }
          deriving (Show, Eq, Generic, Read)
 
+instance Binary Pat
+
 instance QShow Pat
-makeLenses (''Pat)
+makeLenses ''Pat
 
 
 var :: String -> ID -> Pat

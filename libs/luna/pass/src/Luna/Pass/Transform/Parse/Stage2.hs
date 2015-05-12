@@ -5,50 +5,29 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE OverlappingInstances #-}
+{-# LANGUAGE OverlappingInstances      #-}
+{-# LANGUAGE RankNTypes                #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 module Luna.Pass.Transform.Parse.Stage2 where
 
-import           Flowbox.Prelude              hiding (Traversal)
-import           Flowbox.Control.Monad.State  hiding (mapM_, (<$!>), join, mapM, State)
-import qualified Luna.Syntax.Traversals       as AST
-import qualified Luna.Syntax.Enum       as Enum
-import           Luna.Syntax.Enum       (Enumerated, IDTag(IDTag))
-import qualified Luna.Syntax.Decl   as Decl
-import           Luna.Syntax.Decl   (LDecl, Field(Field), LField)
-import qualified Luna.Syntax.Module as Module
-import           Luna.Syntax.Module (Module(Module), LModule)
-import           Luna.Syntax.Unit   (Unit(Unit))
-import qualified Luna.Syntax.Label  as Label
-import           Luna.Syntax.Label  (Label(Label))
-import qualified Luna.Syntax.Type   as Type
-import           Luna.Syntax.Type   (Type)
-import qualified Luna.Syntax.Pat    as Pat
-import           Luna.Syntax.Pat    (LPat, Pat)
-import           Luna.Syntax.Expr   (LExpr, Expr)
-import qualified Luna.Syntax.Lit    as Lit
-import           Luna.Syntax.Arg    (Arg(Arg))
---import           Luna.Syntax.Arg    (Arg(Arg))
-import qualified Luna.Syntax.Native as Native
-import           Luna.Syntax.Name.Path        (NamePath(NamePath))
-import qualified Luna.Syntax.Name.Path        as NamePath
-import qualified Luna.Syntax.Name             as Name
-import           Luna.Syntax.Name             (TName(TName), TVName(TVName))
-import           Luna.Pass              (Pass(Pass), PassMonad, PassCtx)
-import qualified Luna.Pass              as Pass
-
-import qualified Luna.Data.Namespace          as Namespace
-import           Luna.Data.Namespace          (Namespace)
-
-import           Luna.Data.ASTInfo            (ASTInfo)
-
-import qualified Luna.Data.Namespace.State    as State 
-import qualified Luna.Parser.Parser           as Parser
-import qualified Luna.Parser.State            as ParserState
-import           Luna.Parser.State            (ParserState)
+import           Flowbox.Control.Monad.State hiding (State, join, mapM, mapM_)
+import           Flowbox.Prelude             hiding (Traversal)
+import           Luna.Data.ASTInfo           (ASTInfo)
+import           Luna.Data.Namespace         (Namespace)
+import qualified Luna.Parser.Parser          as Parser
+import           Luna.Parser.State           (ParserState)
+import qualified Luna.Parser.State           as ParserState
+import           Luna.Pass                   (Pass (Pass), PassCtx, PassMonad)
+import           Luna.Syntax.Arg             (Arg (Arg))
+import           Luna.Syntax.Decl            (Field (Field), LDecl, LField)
+import qualified Luna.Syntax.Decl            as Decl
+import           Luna.Syntax.Enum            (Enumerated, IDTag)
+import qualified Luna.Syntax.Enum            as Enum
+import           Luna.Syntax.Expr            (LExpr)
+import           Luna.Syntax.Label           (Label (Label))
+import qualified Luna.Syntax.Traversals      as AST
 
 ----------------------------------------------------------------------
 -- Base types
@@ -92,12 +71,12 @@ passRunner ns info ast = do
 
 traverseDecl :: Stage2Ctx lab m => LDecl lab String -> Stage2Pass m (LDecl lab ResultExpr)
 traverseDecl e@(Label lab decl) = fmap (Label lab) $ case decl of
-    Decl.Func (Decl.FuncDecl path sig output body) 
+    Decl.Func (Decl.FuncDecl path sig output body)
                                      -> do subAST <- subparse (unlines body)
                                            sig'   <- mapM (subparseArg id) sig
                                            return . Decl.Func $ Decl.FuncDecl path sig' output subAST
     Decl.Data (Decl.DataDecl name params cons defs)
-                                     -> Decl.Data <$> (Decl.DataDecl name params <$> defaultTraverseM cons 
+                                     -> Decl.Data <$> (Decl.DataDecl name params <$> defaultTraverseM cons
                                                                                  <*> defaultTraverseM defs
                                                       )
     Decl.Imp     imp                 -> return $ Decl.Imp     imp
@@ -106,9 +85,9 @@ traverseDecl e@(Label lab decl) = fmap (Label lab) $ case decl of
     Decl.Pragma  p                   -> return $ Decl.Pragma  p
     Decl.Foreign fdecl               -> Decl.Foreign <$> mapM (traverseFDecl id) fdecl
     where id       = Enum.id lab
-          --continue = defaultTraverseM e 
+          --continue = defaultTraverseM e
           subparse expr = do
-              result <- ParserState.withScope id $ do 
+              result <- ParserState.withScope id $ do
                   pstate <- get
                   Parser.parseString expr $ Parser.exprBlockParser2 pstate
               case result of
@@ -119,7 +98,7 @@ traverseDecl e@(Label lab decl) = fmap (Label lab) $ case decl of
 subparseArg id (Arg pat mexpr) = Arg pat <$> mapM (subparseInlineExpr id) mexpr
 
 subparseInlineExpr id expr = do
-              result <- ParserState.withScope id $ do 
+              result <- ParserState.withScope id $ do
                   pstate <- get
                   Parser.parseString expr $ Parser.exprParser2 pstate
               case result of
@@ -129,11 +108,11 @@ subparseInlineExpr id expr = do
 
 --traverseDecl :: Stage2Ctx lab m => LDecl lab String -> Stage2Pass m (LDecl lab ResultExpr)
 traverseFDecl id = \case
-    Decl.FFunc (Decl.FuncDecl path sig output body) 
+    Decl.FFunc (Decl.FuncDecl path sig output body)
                                      -> do sig'   <- mapM (subparseArg id) sig
                                            return . Decl.FFunc $ Decl.FuncDecl path sig' output body
     Decl.FData (Decl.DataDecl name params cons defs)
-                                     -> Decl.FData <$> (Decl.DataDecl name params <$> defaultTraverseM cons 
+                                     -> Decl.FData <$> (Decl.DataDecl name params <$> defaultTraverseM cons
                                                                                   <*> defaultTraverseM defs
                                                       )
     Decl.FImp imp -> return $ Decl.FImp imp

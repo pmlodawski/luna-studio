@@ -29,7 +29,6 @@ import           Luna.Interpreter.Session.Error         (mapError)
 import qualified Luna.Interpreter.Session.Error         as Error
 import           Luna.Interpreter.Session.Session       (Session)
 import qualified Luna.Parser.Parser                     as Parser
-import qualified Luna.Parser.Pragma                     as Pragma
 import qualified Luna.Pass                              as Pass
 import qualified Luna.Pass.Target.HS.HASTGen            as HASTGen
 import qualified Luna.Pass.Target.HS.HSC                as HSC
@@ -37,7 +36,6 @@ import           Luna.Syntax.Enum                       (IDTag)
 import           Luna.Syntax.Expr                       (LExpr)
 import           Luna.Syntax.Module                     (LModule)
 import           Luna.Syntax.Unit                       (Unit (Unit))
-import qualified Luna.System.Pragma.Store               as Pragma
 import           Luna.System.Session                    as Session
 
 
@@ -84,11 +82,9 @@ genCode :: ([String] -> [String]) -> Module -> Session mm String
 genCode selector oldAst = do
     ast <- Unit <$> mapError $(loc) (convertAST oldAst)
     result <- Session.runT $ do
-        void   Parser.init
-        void $ Pragma.enable (Pragma.orphanNames)
-        void $ Pragma.pop    (Pragma.orphanNames)
+        void Parser.init
         runEitherT $ do
-            hast <- Pass.run1_ HASTGen.pass (ast :: Unit (LModule IDTag (LExpr IDTag ())))
+            hast <- Pass.run2_ HASTGen.pass mempty (ast :: Unit (LModule IDTag (LExpr IDTag ())))
             Pass.run1_ HSC.pass hast
     cpphsOptions <- Env.getCpphsOptions
     hsc <- hoistEitherWith (Error.OtherError $(loc) . show) $ fst result

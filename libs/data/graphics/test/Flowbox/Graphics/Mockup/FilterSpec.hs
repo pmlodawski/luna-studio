@@ -55,7 +55,23 @@ spec = do
                         it "in image-wise metric" $ do
                             returnShouldBeCloseTo testPath ImageWise actualImage expectedImage
 
+          let testName = "blurLuna"
+              actualImage = liftM (blurLuna 20) $ loadImageLuna "./test/samples/lena.png"
+                in 
+                    --defaultReferenceSaveM testName specPath actualImage
+                    defaultReferenceTestM testName specPath actualImage
 
+          let testName = "closeLuna"
+              actualImage = liftM (closeLuna 5) $ loadImageLuna "./test/samples/lena.png"
+                in 
+                    --defaultReferenceSaveM testName specPath actualImage
+                    defaultReferenceTestM testName specPath actualImage
+
+          let testName = "histEqLuna"
+              actualImage = liftM (histEqLuna 10) $ loadImageLuna "./test/samples/lena.png"
+                in 
+                    --defaultReferenceSaveM testName specPath actualImage
+                    defaultReferenceTestM testName specPath actualImage
 
 
               --let testName = "dither"
@@ -71,12 +87,12 @@ spec = do
 
 testSaveEdgeBlur kernelSize edgeMultiplier channel = do
     img <- loadImageLuna "./test/samples/lena.png"
-    let a = edgeBlur channel EB.GaussBlur kernelSize edgeMultiplier img
+    let a = edgeBlurLuna channel EB.GaussBlur kernelSize edgeMultiplier img
     saveImageLuna "./libs/data/graphics/test/samples/x_result.png" a
 
 testEdgeBlur kernelSize edgeMultiplier channel = do
     img <- loadImageLuna "./test/samples/lena.png"
-    let a = edgeBlur channel EB.GaussBlur kernelSize edgeMultiplier img
+    let a = edgeBlurLuna channel EB.GaussBlur kernelSize edgeMultiplier img
     return a
 
 --testDither a = do

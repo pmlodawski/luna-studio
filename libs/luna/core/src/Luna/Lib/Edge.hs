@@ -7,6 +7,8 @@
 
 module Luna.Lib.Edge where
 
+import Data.Binary (Binary)
+
 import Flowbox.Prelude
 
 
@@ -15,4 +17,6 @@ noEdges :: [Edge]
 noEdges = []
 
 
-data Edge = Standard deriving (Show, Read, Ord, Eq)
+data Edge = Standard deriving (Show, Read, Ord, Eq, Generic)
+
+instance Binary Edge

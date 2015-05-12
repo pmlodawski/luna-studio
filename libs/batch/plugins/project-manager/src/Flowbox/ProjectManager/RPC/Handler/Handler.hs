@@ -4,110 +4,125 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE RankNTypes      #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE ConstraintKinds     #-}
+{-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell     #-}
 
 module Flowbox.ProjectManager.RPC.Handler.Handler where
 
-import           Control.Monad             (liftM)
 import Control.Monad.Trans.State
 
-import           Flowbox.Bus.Data.Message                         (Message)
-import qualified Flowbox.Bus.Data.Message                         as Message
-import           Flowbox.Bus.Data.Topic                           ((/+))
-import           Flowbox.Bus.Data.Topic                           (Topic)
-import qualified Flowbox.Bus.Data.Topic                           as Topic
-import           Flowbox.Bus.RPC.HandlerMap                       (HandlerMap)
-import qualified Flowbox.Bus.RPC.HandlerMap                       as HandlerMap
-import           Flowbox.Bus.RPC.RPC                              (RPC)
-import qualified Flowbox.Bus.RPC.Server.Processor                 as Processor
-import           Flowbox.Prelude                                  hiding (Context, error)
-import           Flowbox.ProjectManager.Context                   (Context)
-import qualified Flowbox.ProjectManager.RPC.Handler.AST           as ASTHandler
-import qualified Flowbox.ProjectManager.RPC.Handler.Graph         as GraphHandler
-import qualified Flowbox.ProjectManager.RPC.Handler.Library       as LibraryHandler
-import qualified Flowbox.ProjectManager.RPC.Handler.Maintenance   as MaintenanceHandler
-import qualified Flowbox.ProjectManager.RPC.Handler.NodeDefault   as NodeDefaultHandler
-import qualified Flowbox.ProjectManager.RPC.Handler.Project       as ProjectHandler
-import qualified Flowbox.ProjectManager.RPC.Handler.Properties    as PropertiesHandler
-import qualified Flowbox.ProjectManager.RPC.Handler.Sync          as SyncHandler
-import qualified Flowbox.ProjectManager.RPC.Topic                 as Topic
+import           Flowbox.Bus.Data.Message                       (Message)
+import           Flowbox.Bus.Data.Topic                         ((/+))
+import           Flowbox.Bus.Data.Topic                         (Topic)
+import qualified Flowbox.Bus.Data.Topic                         as Topic
+import           Flowbox.Bus.RPC.HandlerMap                     (HandlerMap)
+import qualified Flowbox.Bus.RPC.HandlerMap                     as HandlerMap
+import           Flowbox.Bus.RPC.RPC                            (RPC)
+import qualified Flowbox.Bus.RPC.Server.Processor               as Processor
+import           Flowbox.Prelude                                hiding (Context, error)
+import           Flowbox.ProjectManager.Context                 (Context)
+import qualified Flowbox.ProjectManager.RPC.Handler.AST         as ASTHandler
+import qualified Flowbox.ProjectManager.RPC.Handler.Graph       as GraphHandler
+import qualified Flowbox.ProjectManager.RPC.Handler.Library     as LibraryHandler
+import qualified Flowbox.ProjectManager.RPC.Handler.Maintenance as MaintenanceHandler
+import qualified Flowbox.ProjectManager.RPC.Handler.NodeDefault as NodeDefaultHandler
+import qualified Flowbox.ProjectManager.RPC.Handler.Project     as ProjectHandler
+import qualified Flowbox.ProjectManager.RPC.Handler.Properties  as PropertiesHandler
+import qualified Flowbox.ProjectManager.RPC.Handler.Sync        as SyncHandler
+import qualified Flowbox.ProjectManager.RPC.Topic               as Topic
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.Text.ProtocolBuffers                     as Proto
-import qualified Flowbox.UR.Manager.RPC.Topic                     as Topic
-import qualified Generated.Proto.Urm.URM.Register.Request         as Register
-import qualified Generated.Proto.Urm.URM.RegisterMultiple.Request as RegisterMultiple
-import qualified Generated.Proto.Urm.URM.Undo.Request             as Undo
-import           Flowbox.Text.ProtocolBuffers                     (Serializable)
+import qualified Flowbox.Text.ProtocolBuffers                   as Proto
+import qualified Flowbox.UR.Manager.RPC.Topic                   as Topic
 
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 handlerMap :: HandlerMap Context IO
 handlerMap callback = HandlerMap.fromList
-    [ (Topic.projectListRequest                                     , call Topic.status ProjectHandler.list)
-    , (Topic.projectLookupRequest                                   , call Topic.status ProjectHandler.lookup)
-    , (Topic.projectCreateRequest                                   , call Topic.update ProjectHandler.create)
-    , (Topic.projectOpenRequest                                     , call Topic.update ProjectHandler.open)
-    , (Topic.projectModifyRequest                                   , call Topic.update ProjectHandler.modify)
-    , (Topic.projectCloseRequest                                    , call Topic.update ProjectHandler.close)
-    , (Topic.projectStoreRequest                                    , call Topic.status ProjectHandler.store)
-    , (Topic.projectLibraryListRequest                              , call Topic.status LibraryHandler.list)
-    , (Topic.projectLibraryLookupRequest                            , call Topic.status LibraryHandler.lookup)
-    , (Topic.projectLibraryCreateRequest                            , call Topic.update LibraryHandler.create)
-    , (Topic.projectLibraryModifyRequest                            , call Topic.update LibraryHandler.modify)
-    , (Topic.projectLibraryLoadRequest                              , call Topic.update LibraryHandler.load)
-    , (Topic.projectLibraryUnloadRequest                            , call Topic.update LibraryHandler.unload)
-    , (Topic.projectLibraryStoreRequest                             , call Topic.status LibraryHandler.store)
-    , (Topic.projectLibraryAstGetRequest                            , call Topic.status ASTHandler.get)
-    , (Topic.projectLibraryAstRemoveRequest                         , call Topic.update ASTHandler.remove)
-    , (Topic.projectLibraryAstResolveRequest                        , call Topic.status ASTHandler.resolve)
-    , (Topic.projectLibraryAstModuleAddRequest                      , call Topic.update ASTHandler.moduleAdd)
-    , (Topic.projectLibraryAstModuleModifyClsRequest                , call Topic.update ASTHandler.moduleClsModify)
-    , (Topic.projectLibraryAstModuleModifyFieldsRequest             , call Topic.update ASTHandler.moduleFieldsModify)
-    , (Topic.projectLibraryAstModuleModifyTypeAliasesRequest        , call Topic.update ASTHandler.moduleTypeAliasesModify)
-    , (Topic.projectLibraryAstModuleModifyTypeDefsRequest           , call Topic.update ASTHandler.moduleTypeDefsModify)
-    , (Topic.projectLibraryAstModuleModifyImportsRequest            , call Topic.update ASTHandler.moduleImportsModify)
-    , (Topic.projectLibraryAstDataAddRequest                        , call Topic.update ASTHandler.dataAdd)
-    , (Topic.projectLibraryAstDataModifyClassesRequest              , call Topic.update ASTHandler.dataClassesModify)
-    , (Topic.projectLibraryAstDataModifyClsRequest                  , call Topic.update ASTHandler.dataClsModify)
-    , (Topic.projectLibraryAstDataModifyConsRequest                 , call Topic.update ASTHandler.dataConsModify)
-    , (Topic.projectLibraryAstDataModifyMethodsRequest              , call Topic.update ASTHandler.dataMethodsModify)
-    , (Topic.projectLibraryAstFunctionAddRequest                    , call Topic.update ASTHandler.functionAdd)
-    , (Topic.projectLibraryAstFunctionModifyInputsRequest           , call Topic.update ASTHandler.functionInputsModify)
-    , (Topic.projectLibraryAstFunctionModifyNameRequest             , call Topic.update ASTHandler.functionNameModify)
-    , (Topic.projectLibraryAstFunctionModifyOutputRequest           , call Topic.update ASTHandler.functionOutputModify)
-    , (Topic.projectLibraryAstFunctionModifyPathRequest             , call Topic.update ASTHandler.functionPathModify)
-    , (Topic.projectLibraryAstFunctionGraphGetRequest               , call Topic.status GraphHandler.get)
-    , (Topic.projectLibraryAstFunctionGraphConnectRequest           , cleanCall (/+ Topic.update) GraphHandler.connect $ Just Topic.urmRegisterRequest)
-    , (u Topic.projectLibraryAstFunctionGraphConnectRequest         , cleanCall (/* Topic.update) GraphHandler.connect Nothing)
-    , (Topic.projectLibraryAstFunctionGraphDisconnectRequest        , cleanCall (/+ Topic.update) GraphHandler.disconnect $ Just Topic.urmRegisterRequest)
-    , (u Topic.projectLibraryAstFunctionGraphDisconnectRequest      , cleanCall (/* Topic.update) GraphHandler.disconnect Nothing)
-    , (Topic.projectLibraryAstFunctionGraphLookupRequest            , call Topic.status GraphHandler.lookup)
-    , (Topic.projectLibraryAstFunctionGraphLookupManyRequest        , call Topic.status GraphHandler.lookupMany)
-    , (Topic.projectLibraryAstFunctionGraphNodeAddRequest           , cleanCall (/+ Topic.update) GraphHandler.nodeAdd $ Just Topic.urmRegisterRequest)
-    , (u Topic.projectLibraryAstFunctionGraphNodeAddRequest         , cleanCall (/* Topic.update) GraphHandler.nodeAdd Nothing)
-    , (Topic.projectLibraryAstFunctionGraphNodeRemoveRequest        , cleanCall (/+ Topic.update) GraphHandler.nodeRemove $ Just Topic.urmRegisterMultipleRequest)
-    , (u Topic.projectLibraryAstFunctionGraphNodeRemoveRequest      , cleanCall (/* Topic.update) GraphHandler.nodeRemove Nothing)
-    , (Topic.projectLibraryAstFunctionGraphNodeModifyRequest        , call Topic.update GraphHandler.nodeModify)
-    , (Topic.projectLibraryAstFunctionGraphNodeModifyinplaceRequest , cleanCall (/+ Topic.update) GraphHandler.nodeModifyInPlace $ Just Topic.urmRegisterRequest)
-    , (u Topic.projectLibraryAstFunctionGraphNodeModifyinplaceRequest,cleanCall (/* Topic.update) GraphHandler.nodeModifyInPlace Nothing)
-    , (Topic.projectLibraryAstFunctionGraphNodeDefaultGetRequest    , call Topic.status NodeDefaultHandler.get)
-    , (Topic.projectLibraryAstFunctionGraphNodeDefaultRemoveRequest , call Topic.update NodeDefaultHandler.remove)
-    , (Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest    , call Topic.update NodeDefaultHandler.set)
-    , (Topic.projectLibraryAstFunctionGraphNodePropertiesGetRequest , call Topic.status PropertiesHandler.getNodeProperties)
-    , (Topic.projectLibraryAstFunctionGraphNodePropertiesSetRequest , call Topic.update PropertiesHandler.setNodeProperties)
-    , (Topic.projectLibraryAstPropertiesGetRequest                  , call Topic.status PropertiesHandler.getASTProperties)
-    , (Topic.projectLibraryAstPropertiesSetRequest                  , call Topic.update PropertiesHandler.setASTProperties)
-    , (Topic.projectLibraryAstCodeGetRequest                        , call Topic.status ASTHandler.codeGet)
-    , (Topic.projectLibraryAstCodeSetRequest                        , call Topic.update ASTHandler.codeSet)
-    , (Topic.projectmanagerSyncGetRequest                           , call Topic.status SyncHandler.syncGet)
-    , (Topic.projectmanagerPingRequest                              , call Topic.status MaintenanceHandler.ping)
+    [ (  Topic.projectCloseRequest                                   , cleanCall (/+ Topic.update) ProjectHandler.close $ Just Topic.urmClearStackRequest)
+    , (u Topic.projectCloseRequest                                   , cleanCall (/* Topic.update) ProjectHandler.close $ Just Topic.urmClearStackRequest)
+    , (  Topic.projectCreateRequest                                  , call Topic.update ProjectHandler.create)
+    , (  Topic.projectLibraryAstCodeGetRequest                       , call Topic.status ASTHandler.getCode)
+    , (  Topic.projectLibraryAstCodeSetRequest                       , cleanCall (/+ Topic.update) ASTHandler.setCode $ Just Topic.urmRegisterRequest)
+    , (u Topic.projectLibraryAstCodeSetRequest                       , cleanCall (/* Topic.update) ASTHandler.setCode $ Nothing)
+    , (  Topic.projectLibraryAstDataAddRequest                       , cleanCall (/+ Topic.update) ASTHandler.addData $ Just Topic.urmRegisterRequest)
+    , (u Topic.projectLibraryAstDataAddRequest                       , cleanCall (/* Topic.update) ASTHandler.addData Nothing)
+    , (  Topic.projectLibraryAstDataConAddRequest                    , call Topic.update ASTHandler.addDataCon)
+    , (  Topic.projectLibraryAstDataConDeleteRequest                 , call Topic.update ASTHandler.deleteDataCon)
+    , (  Topic.projectLibraryAstDataConFieldAddRequest               , call Topic.update ASTHandler.addDataConField)
+    , (  Topic.projectLibraryAstDataConFieldDeleteRequest            , call Topic.update ASTHandler.deleteDataConField)
+    , (  Topic.projectLibraryAstDataConFieldModifyRequest            , call Topic.update ASTHandler.modifyDataConField)
+    , (  Topic.projectLibraryAstDataConModifyRequest                 , call Topic.update ASTHandler.modifyDataCon)
+    , (  Topic.projectLibraryAstDataModifyClassesRequest             , call Topic.update ASTHandler.modifyDataClasses)
+    , (  Topic.projectLibraryAstDataModifyClsRequest                 , cleanCall (/+ Topic.update) ASTHandler.modifyDataCls $ Just Topic.urmRegisterRequest)
+    , (u Topic.projectLibraryAstDataModifyClsRequest                 , cleanCall (/* Topic.update) ASTHandler.modifyDataCls Nothing)
+    , (  Topic.projectLibraryAstDataModifyConsRequest                , call Topic.update ASTHandler.modifyDataCons)
+    , (  Topic.projectLibraryAstDataModifyMethodsRequest             , call Topic.update ASTHandler.modifyDataMethods)
+    , (  Topic.projectLibraryAstFunctionAddRequest                   , cleanCall (/+ Topic.update) ASTHandler.addFunction $ Just Topic.urmRegisterRequest)
+    , (u Topic.projectLibraryAstFunctionAddRequest                   , cleanCall (/* Topic.update) ASTHandler.addFunction Nothing)
+    , (  Topic.projectLibraryAstFunctionGraphConnectRequest          , cleanCall (/+ Topic.update) GraphHandler.connect $ Just Topic.urmRegisterRequest)
+    , (u Topic.projectLibraryAstFunctionGraphConnectRequest          , cleanCall (/* Topic.update) GraphHandler.connect Nothing)
+    , (  Topic.projectLibraryAstFunctionGraphDisconnectRequest       , cleanCall (/+ Topic.update) GraphHandler.disconnect $ Just Topic.urmRegisterRequest)
+    , (u Topic.projectLibraryAstFunctionGraphDisconnectRequest       , cleanCall (/* Topic.update) GraphHandler.disconnect Nothing)
+    , (  Topic.projectLibraryAstFunctionGraphGetRequest              , call Topic.status GraphHandler.get)
+    , (  Topic.projectLibraryAstFunctionGraphLookupManyRequest       , call Topic.status GraphHandler.lookupMany)
+    , (  Topic.projectLibraryAstFunctionGraphLookupRequest           , call Topic.status GraphHandler.lookup)
+    , (  Topic.projectLibraryAstFunctionGraphNodeAddRequest          , cleanCall (/+ Topic.update) GraphHandler.nodeAdd $ Just Topic.urmRegisterRequest)
+    , (u Topic.projectLibraryAstFunctionGraphNodeAddRequest          , cleanCall (/* Topic.update) GraphHandler.nodeAdd Nothing)
+    , (  Topic.projectLibraryAstFunctionGraphNodeDefaultGetRequest   , call Topic.status NodeDefaultHandler.get)
+    , (  Topic.projectLibraryAstFunctionGraphNodeDefaultRemoveRequest, call Topic.update NodeDefaultHandler.remove)
+    , (  Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest   , cleanCall (/+ Topic.update) NodeDefaultHandler.set $ Just Topic.urmRegisterRequest)
+    , (u Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest   , cleanCall (/* Topic.update) NodeDefaultHandler.set Nothing)
+    , (  Topic.projectLibraryAstFunctionGraphNodeModifyinplaceRequest, cleanCall (/+ Topic.update) GraphHandler.nodeModifyInPlace $ Just Topic.urmRegisterRequest)
+    , (u Topic.projectLibraryAstFunctionGraphNodeModifyinplaceRequest, cleanCall (/* Topic.update) GraphHandler.nodeModifyInPlace Nothing)
+    , (  Topic.projectLibraryAstFunctionGraphNodeModifyRequest       , cleanCall (/+ Topic.update) GraphHandler.nodeModify $ Just Topic.urmRegisterRequest)
+    , (u Topic.projectLibraryAstFunctionGraphNodeModifyRequest       , cleanCall (/* Topic.update) GraphHandler.nodeModify Nothing)
+    , (  Topic.projectLibraryAstFunctionGraphNodePropertiesGetRequest, call Topic.status PropertiesHandler.getNodeProperties)
+    , (  Topic.projectLibraryAstFunctionGraphNodePropertiesSetRequest, cleanCall (/+ Topic.update) PropertiesHandler.setNodeProperties $ Just Topic.urmRegisterRequest)
+    , (u Topic.projectLibraryAstFunctionGraphNodePropertiesSetRequest, cleanCall (/* Topic.update) PropertiesHandler.setNodeProperties Nothing)
+    , (  Topic.projectLibraryAstFunctionGraphNodeRemoveRequest       , cleanCall (/+ Topic.update) GraphHandler.nodeRemove $ Just Topic.urmRegisterMultipleRequest)
+    , (u Topic.projectLibraryAstFunctionGraphNodeRemoveRequest       , cleanCall (/* Topic.update) GraphHandler.nodeRemove Nothing)
+    , (  Topic.projectLibraryAstFunctionModifyInputsRequest          , cleanCall (/+ Topic.update) ASTHandler.modifyFunctionInputs $ Just Topic.urmRegisterRequest)
+    , (u Topic.projectLibraryAstFunctionModifyInputsRequest          , cleanCall (/* Topic.update) ASTHandler.modifyFunctionInputs Nothing)
+    , (  Topic.projectLibraryAstFunctionModifyNameRequest            , cleanCall (/+ Topic.update) ASTHandler.modifyFunctionName $ Just Topic.urmRegisterRequest)
+    , (u Topic.projectLibraryAstFunctionModifyNameRequest            , cleanCall (/* Topic.update) ASTHandler.modifyFunctionName Nothing)
+    , (  Topic.projectLibraryAstFunctionModifyOutputRequest          , cleanCall (/+ Topic.update) ASTHandler.modifyFunctionOutput $ Just Topic.urmRegisterRequest)
+    , (u Topic.projectLibraryAstFunctionModifyOutputRequest          , cleanCall (/* Topic.update) ASTHandler.modifyFunctionOutput Nothing)
+    , (  Topic.projectLibraryAstFunctionModifyPathRequest            , call Topic.update ASTHandler.modifyFunctionPath)
+    , (  Topic.projectLibraryAstGetRequest                           , call Topic.status ASTHandler.get)
+    , (  Topic.projectLibraryAstModuleAddRequest                     , cleanCall (/+ Topic.update) ASTHandler.addModule $ Just Topic.urmRegisterRequest)
+    , (u Topic.projectLibraryAstModuleAddRequest                     , cleanCall (/* Topic.update) ASTHandler.addModule Nothing)
+    , (  Topic.projectLibraryAstModuleModifyClsRequest               , call Topic.update ASTHandler.modifyModuleCls)
+    , (  Topic.projectLibraryAstModuleModifyFieldsRequest            , call Topic.update ASTHandler.modifyModuleFields)
+    , (  Topic.projectLibraryAstModuleModifyImportsRequest           , call Topic.update ASTHandler.modifyModuleImports)
+    , (  Topic.projectLibraryAstModuleModifyTypeAliasesRequest       , call Topic.update ASTHandler.modifyModuleTypeAliases)
+    , (  Topic.projectLibraryAstModuleModifyTypeDefsRequest          , call Topic.update ASTHandler.modifyModuleTypeDefs)
+    , (  Topic.projectLibraryAstPropertiesGetRequest                 , call Topic.status PropertiesHandler.getASTProperties)
+    , (  Topic.projectLibraryAstPropertiesSetRequest                 , cleanCall (/+ Topic.update) PropertiesHandler.setASTProperties $ Just Topic.urmRegisterRequest)
+    , (u Topic.projectLibraryAstPropertiesSetRequest                 , cleanCall (/* Topic.update) PropertiesHandler.setASTProperties Nothing)
+    , (  Topic.projectLibraryAstRemoveRequest                        , cleanCall (/+ Topic.update) ASTHandler.remove $ Just Topic.urmRegisterMultipleRequest)
+    , (u Topic.projectLibraryAstRemoveRequest                        , cleanCall (/* Topic.update) ASTHandler.remove Nothing)
+    , (  Topic.projectLibraryAstResolveRequest                       , call Topic.status ASTHandler.resolve)
+    , (  Topic.projectLibraryCreateRequest                           , call Topic.update LibraryHandler.create)
+    , (  Topic.projectLibraryListRequest                             , call Topic.status LibraryHandler.list)
+    , (  Topic.projectLibraryLoadRequest                             , call Topic.update LibraryHandler.load)
+    , (  Topic.projectLibraryLookupRequest                           , call Topic.status LibraryHandler.lookup)
+    , (  Topic.projectLibraryModifyRequest                           , call Topic.update LibraryHandler.modify)
+    , (  Topic.projectLibraryStoreRequest                            , call Topic.status LibraryHandler.store)
+    , (  Topic.projectLibraryUnloadRequest                           , call Topic.update LibraryHandler.unload)
+    , (  Topic.projectLibraryUpdateRequest                           , call Topic.update LibraryHandler.modify)
+    , (  Topic.projectListRequest                                    , call Topic.status ProjectHandler.list)
+    , (  Topic.projectLookupRequest                                  , call Topic.status ProjectHandler.lookup)
+    , (  Topic.projectmanagerPingRequest                             , call Topic.status MaintenanceHandler.ping)
+    , (  Topic.projectmanagerSyncGetRequest                          , call Topic.status SyncHandler.syncGet)
+    , (  Topic.projectModifyRequest                                  , call Topic.update ProjectHandler.modify)
+    , (  Topic.projectOpenRequest                                    , call Topic.update ProjectHandler.open)
+    , (  Topic.projectStoreRequest                                   , call Topic.status ProjectHandler.store)
     ]
     where
         call :: (Proto.Serializable args, Proto.Serializable result)

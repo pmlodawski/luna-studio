@@ -58,12 +58,20 @@ const std::string headerFile = R"(
 #include "../bus/BusLibrary.h"
 
 class BusHandler;
+class Transaction;
 
 class %wrapper_name%
 {
+	boost::thread_specific_ptr<std::stack<std::shared_ptr<Transaction>>> transactions;
+
+	void makeSureTranactionExistsInCurrentThread();
+
 public:
 	shared_ptr<BusHandler> bh;
 	Maybe<std::chrono::milliseconds> timeout;
+
+	std::shared_ptr<Transaction> currentTransaction();
+	std::shared_ptr<ScopeGuardian> setTransaction(const std::shared_ptr<Transaction> &t);
 
 	CorrelationId sendRequest(std::string baseTopic, std::string requestTopic, const google::protobuf::Message &msg, ConversationDoneCb callback);
 
@@ -88,14 +96,45 @@ public:
 const std::string sourceFile = R"(
 #include "stdafx.h"
 #include "%wrapper_name%.h"
+#include "../BatchRealizer.h"
 
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/io/coded_stream.h>
 
-
-CorrelationId %wrapper_name%::sendRequest(std::string baseTopic, std::string requestTopic, const google::protobuf::Message &msg, ConversationDoneCb callback)
+void %wrapper_name%::makeSureTranactionExistsInCurrentThread()
 {
-	return bh->request(std::move(baseTopic), std::move(requestTopic), msg.SerializeAsString(), callback);
+	auto a = transactions.get();
+	if (!transactions.get())
+		transactions.reset(new std::stack<std::shared_ptr<Transaction>>);
+}
+
+Correlation
+	auto cid = bh->request(baseTopic, std::move(requestTopic), msg.SerializeAsString(), callback);
+	if (baseTopic != "urm.transaction.commit")
+	{
+		if (auto t = currentTransaction())
+			t->pushCorrelation(cid);
+	}
+	return cid;
+}
+
+std::shared_ptr<ScopeGuardian> %wrapper_name%::setTransaction(const std::shared_ptr<Transaction> &t)
+{
+	makeSureTranactionExistsInCurrentThread();
+	return make_shared<ScopeGuardian>(
+		[=] { transactions->pop(); },
+		[=] { transactions->push(t); }
+	);
+}
+
+shared_ptr<Transaction> %wrapper_name%::currentTransaction()
+{
+	makeSureTranactionExistsInCurrentThread();
+
+	if (transactions->size())
+		return transactions->top();
+
+	return nullptr;
 }
 
 generated::proto::dep::crumb::Breadcrumbs %wrapper_name%::crumbify(DefinitionId defID)

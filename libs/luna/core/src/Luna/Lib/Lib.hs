@@ -9,32 +9,33 @@
 
 module Luna.Lib.Lib where
 
+import Data.Binary  (Binary)
 import Data.Version (Version)
 
 import Flowbox.Prelude
-import Flowbox.System.UniPath        (UniPath)
-import Luna.Syntax.Graph.PropertyMap (PropertyMap)
-import Luna.Syntax.Module            (Module (Module))
-import Luna.Syntax.Name.Path         (QualPath)
+import Flowbox.System.UniPath (UniPath)
+import Luna.Syntax.Module     (Module (Module))
+import Luna.Syntax.Name.Path  (QualPath)
 
 
 
 type Name = String
 
-data Library a e v = Library { _name        :: Name
-                             , _version     :: Version
-                             , _path        :: UniPath
-                             , _ast         :: Module a e
-                             , _propertyMap :: PropertyMap a v
-                             } deriving (Show, Read, Eq)
+data Library a e = Library
+    { _name    :: Name
+    , _version :: Version
+    , _path    :: UniPath
+    , _ast     :: Module a e
+    } deriving (Show, Read, Eq, Generic)
 
 makeLenses ''Library
 
-newtype ID = ID { toInt :: Int }
-           deriving (Show, Ord, Eq)
+instance (Binary a, Binary e) => Binary (Library a e)
+
+newtype ID = ID { toInt :: Int } deriving (Show, Ord, Eq)
 
 
-make :: Name -> Version -> UniPath -> QualPath -> Library a e v
-make name' version' path' mpath = Library name' version' path' emptyModule def where
+make :: Name -> Version -> UniPath -> QualPath -> Library a e
+make name' version' path' mpath = Library name' version' path' emptyModule where
     emptyModule = Module mpath []
 

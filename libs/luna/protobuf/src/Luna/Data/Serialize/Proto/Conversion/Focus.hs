@@ -25,10 +25,10 @@ import qualified Generated.Proto.Focus.Focus.Cls             as GenCls
 import qualified Generated.Proto.Focus.FunctionFocus         as GenFunction
 import qualified Generated.Proto.Focus.LambdaFocus           as GenLambda
 import qualified Generated.Proto.Focus.ModuleFocus           as GenModule
+import           Luna.Control.Focus                          (Focus)
+import qualified Luna.Control.Focus                          as Focus
 import           Luna.Data.Serialize.Proto.Conversion.Expr   ()
 import           Luna.Data.Serialize.Proto.Conversion.Module ()
-import           Luna.Syntax.Control.Focus                   (Focus)
-import qualified Luna.Syntax.Control.Focus                   as Focus
 
 
 

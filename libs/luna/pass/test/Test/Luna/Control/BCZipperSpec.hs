@@ -6,22 +6,22 @@
 ---------------------------------------------------------------------------
 {-# LANGUAGE OverloadedStrings #-}
 
-module Test.Luna.Syntax.Control.BCZipperSpec where
+module Test.Luna.Control.BCZipperSpec where
 
 import Test.Hspec
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
-import qualified Luna.Syntax.Control.BCZipper as BCZipper
-import qualified Luna.Syntax.Control.Crumb    as Crumb
-import qualified Luna.Syntax.Control.Focus    as Focus
-import qualified Luna.Syntax.Decl             as Decl
-import qualified Luna.Syntax.Enum             as Enum
-import           Luna.Syntax.Expr             (LExpr)
-import           Luna.Syntax.Label            (Label (Label))
-import           Luna.Syntax.Module           (LModule)
-import qualified Test.Luna.Sample.Code        as SampleCode
-import qualified Test.Luna.Syntax.Common      as Common
+import qualified Luna.Control.BCZipper as BCZipper
+import qualified Luna.Control.Crumb    as Crumb
+import qualified Luna.Control.Focus    as Focus
+import qualified Luna.Syntax.Decl      as Decl
+import qualified Luna.Syntax.Enum      as Enum
+import           Luna.Syntax.Expr      (LExpr)
+import           Luna.Syntax.Label     (Label (Label))
+import           Luna.Syntax.Module    (LModule)
+import qualified Test.Luna.Sample.Code as SampleCode
+import qualified Test.Luna.Syntax.AST  as AST
 
 
 main :: IO ()
@@ -29,7 +29,7 @@ main = hspec spec
 
 
 getAST :: IO (LModule Enum.IDTag (LExpr Enum.IDTag ()))
-getAST = fst <$> Common.getAST SampleCode.zipperTestModule
+getAST = fst <$> AST.getAST SampleCode.zipperTestModule
 
 
 --zipTo :: (a -> Bool) -> BCZipper h j [a] -> Maybe (BCZipper h j [a] :>> a)

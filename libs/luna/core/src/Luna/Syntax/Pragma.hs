@@ -4,12 +4,14 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE RankNTypes           #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE RankNTypes #-}
 
 {-# LANGUAGE OverlappingInstances #-}
 
 module Luna.Syntax.Pragma where
+
+import Data.Binary (Binary)
 
 import Flowbox.Prelude hiding (Cons, traverse)
 
@@ -20,4 +22,4 @@ data Pragma = Enable  Text
             | Pop     Text
             deriving (Show, Generic, Eq, Read)
 
-
+instance Binary Pragma

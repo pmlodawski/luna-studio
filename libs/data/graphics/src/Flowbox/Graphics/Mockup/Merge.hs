@@ -10,7 +10,6 @@ module Flowbox.Graphics.Mockup.Merge (
   mergeLuna,
 ) where
 
-import qualified Data.Array.Accelerate as A
 
 import           Flowbox.Graphics.Composition.Merge (AlphaBlend (..))
 import qualified Flowbox.Graphics.Composition.Merge as Merge
@@ -107,10 +106,10 @@ mergeLuna mode img1 img2 matte = case mode of
     XOR                            -> processMerge $ Merge.threeWayMerge             Merge.xor
     where processMerge f = img'
               where (r, g, b, a) = f r1 g1 b1 r2 g2 b2 a1 a2
-                    rm = (+)<$>((*)<$>r<*>mask)<*>((*)<$>r1<*>(fmap ((-) 1) mask))
-                    gm = (+)<$>((*)<$>g<*>mask)<*>((*)<$>g1<*>(fmap ((-) 1) mask))
-                    bm = (+)<$>((*)<$>b<*>mask)<*>((*)<$>b1<*>(fmap ((-) 1) mask))
-                    am = (+)<$>((*)<$>a<*>mask)<*>((*)<$>a1<*>(fmap ((-) 1) mask))
+                    rm = mixImages r r1 matteShader
+                    gm = mixImages g g1 matteShader
+                    bm = mixImages b b1 matteShader
+                    am = mixImages a a1 matteShader
                     view' = insertChannelFloats view [
                                 ("rgba.r", Shader.rasterizer $ rm)
                               , ("rgba.g", Shader.rasterizer $ gm)
@@ -124,16 +123,19 @@ mergeLuna mode img1 img2 matte = case mode of
           (r1, g1, b1, a1) = unsafeGetChannels img1 & over each (Shader.fromMatrix (A.Constant 0))
           (r2, g2, b2, a2) = unsafeGetChannels img2 & over each (Shader.transform toBottomLeft . Shader.fromMatrix (A.Constant 0))
           --(r2m, g2m, b2m, a2m) = case matte of
-          --    Just m -> let (h,w) = unpackAccDims (height2, width2) 
+          --    Just m -> let (h,w) = unpackAccDims (height2, width2)
           --                  msh = Shader.bound A.Clamp $ Matte.matteToDiscrete h w m
           --                  in ((*)<$>r2<*>msh,(*)<$>g2<*>msh,(*)<$>b2<*>msh,(*)<$>a2<*>msh) -- {-- invert <$> --} Matte.matteToDiscrete h w m
           --    _      -> (r2, g2, b2, a2)
-          mask = case matte of
-              Just m -> let (h,w) = unpackAccDims (height2, width2) 
+
+          matteShader = case matte of
+              Just m -> let (h,w) = unpackAccDims (height1, width1)
                             msh = {-- Shader.bound A.Clamp $ --} Matte.matteToDiscrete h w m
-                            in msh -- {-- invert <$> --} Matte.matteToDiscrete h w m
+                            in msh --Shader.transform toBottomLeft msh -- {-- invert <$> --} Matte.matteToDiscrete h w m
               _      -> Shader.unitShader (\_->1)
           toBottomLeft :: Point2 (Exp Int) -> Point2 (Exp Int)
           toBottomLeft pt = case pt of
-                                    Point2 x y -> Point2 x (y-height1+height2)
+                                    Point2 x y -> let offset = height1-height2 in Point2 x (y-offset) -- (y-height1+height2)
+          mixImages :: (Applicative f, Floating a) => f a -> f a -> f a -> f a -- CartesianShader a -> CartesianShader a -> CartesianShader a -> CartesianShader a
+          mixImages merged original mask = (+)<$>((*)<$>merged<*>mask)<*>((*)<$>original<*>fmap (1 -) mask)
 

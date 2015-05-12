@@ -15,7 +15,6 @@ import GHC.Generics (Generic)
 
 import qualified Data.Maps               as Map
 import           Data.Maybe              (fromJust)
-import           Data.Maybe              (fromJust)
 import           Flowbox.Prelude         hiding (head, id)
 import           Luna.DEP.AST.AST        (ID)
 import qualified Luna.DEP.AST.AST        as AST
@@ -73,7 +72,7 @@ bindVar id name ns =
         Nothing  -> Left ()
         Just pid -> case view (info.Alias.scope.at pid) ns of
             Nothing    -> Left ()
-            Just (Alias.Scope varnames typenames) -> case (varnames^.at name) of
+            Just (Alias.Scope varnames typenames) -> case varnames^.at name of
                 Nothing    -> Left ()
                 Just dstID -> Right (ns & info . Alias.alias . at id ?~ dstID)
 

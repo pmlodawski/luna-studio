@@ -16,12 +16,13 @@ module Flowbox.Graphics.Mockup.Filter (
     ditherLuna,
     EdgeOperator (..),
     Orientation (..),
+    EdgeBlur.BlurType (..),
     edgeDetectLuna,
     erodeLuna,
     histEqLuna,
     openLuna,
     posterizeLuna,
-    edgeBlur
+    edgeBlurLuna
 ) where
 
 import qualified Data.Array.Accelerate as A
@@ -65,8 +66,8 @@ import Flowbox.Graphics.Mockup.Basic
 --          process = rasterizer . normStencil (+) kernel (+) 0 . fromMatrix A.Clamp
 
 
-edgeBlur :: Channel.Name -> EdgeBlur.BlurType -> Int -> Float -> Image -> Image
-edgeBlur channelName blurType kernelSize edgeMultiplier image =
+edgeBlurLuna :: Channel.Name -> EdgeBlur.BlurType -> Int -> Float -> Image -> Image
+edgeBlurLuna channelName blurType kernelSize edgeMultiplier image =
     case Image.getFromPrimary channelName image of
         Left err             -> error $ show err
         Right (Nothing)      -> image

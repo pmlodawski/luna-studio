@@ -16,9 +16,9 @@ import           Control.Monad.State (MonadState)
 import qualified Data.IntMap         as IntMap
 
 import           Flowbox.Prelude           hiding (id)
-import           Flowbox.System.Log.Logger
 import           Luna.Syntax.AST           (AST, ID)
 import qualified Luna.Syntax.AST           as AST
+import           Luna.Syntax.Decl          (Path)
 import           Luna.Syntax.Expr          (Expr)
 import qualified Luna.Syntax.Expr          as Expr
 import           Luna.Syntax.Lit           (Lit)
@@ -51,7 +51,7 @@ logger = getLoggerIO $(moduleName)
 
 --makeLenses (''VAState)
 
-type NamespaceState m = (Monad m, Applicative m, NamespaceMonad m, StructInfoMonad m)
+type NamespaceState m = (Monad m, Applicative m, NamespaceMonad m, StructInfoMonad m)   -- ++ StructDataMonad m ?
 
 
 --getCurrentID :: NamespaceState m => m (Maybe ID)
@@ -101,10 +101,12 @@ popID = do
 --withID :: NamespaceState m => ID -> m f -> m f
 --withID id f = pushID id *> f <* popID
 
+-- creates the base scope, in which you store the imported symbols
+
 pushNewScope id = modify $ Namespace.pushNewScope id
 pushScope    id = modify $ Namespace.pushScope id
 
-popScope = modify $ Namespace.popScope
+popScope = modify Namespace.popScope
 
 withNewScope id p = pushNewScope id *> p <* popScope
 withScope    id p = pushScope    id *> p <* popScope
@@ -118,9 +120,7 @@ withParentID f = do pid <- popID
 
 ----switchID :: NamespaceState m => ID -> m ()
 ----switchID id = modify (currentID .~ id)
-
 regOrphan = modifyStructInfo .: StructInfo.regOrphan
-
 
 
 --regID :: NamespaceState m => ID -> m ()
@@ -151,18 +151,25 @@ regAlias ident name = do
     modify $ Namespace.info .~ structInfo'
 
 
+-- regOrphan :: NamespaceState m => ID -> Path -> String -> m ()
+-- regOrphan id path msg = do
+--     structInfo <- StructInfo.get
+--     structInfo' <- withCurrentScopeID_ (\scopeId -> Just $ StructInfo.regOrphan id (StructInfo.ImportError path (toText msg)))
+--     modify $ Namespace.info .~ structInfo'
+
+
 withCurrentScopeID_ :: NamespaceState m => (ID -> Maybe a) -> m a
 withCurrentScopeID_ action = withCurrentScopeID action >>= maybe (fail "Cannot obtain current scope") return
 
 withCurrentScopeID :: NamespaceState m => (ID -> Maybe a) -> m (Maybe a)
-withCurrentScopeID action = scopeID >>= maybe (return Nothing) (return . action)
+withCurrentScopeID action = scopeID >>= (return . maybe Nothing action)
 
 withCurrentScope_ :: NamespaceState m => (StructInfo.Scope -> Maybe a) -> m a
 withCurrentScope_ action = withCurrentScope action >>= maybe (fail "Cannot obtain current scope") return
 
 
 withCurrentScope :: NamespaceState m => (StructInfo.Scope -> Maybe a) -> m (Maybe a)
-withCurrentScope action = getCurrentScope >>= maybe (return Nothing) (return . action)
+withCurrentScope action = getCurrentScope >>= (return . maybe Nothing action)
 
 
 getCurrentScope :: NamespaceState m => m (Maybe StructInfo.Scope)
@@ -182,7 +189,7 @@ regName lens id name = do
         Nothing  -> fail "Unable to get current id"
         Just cid -> putStructInfo a2
             where varRel  = a ^. (StructInfo.scope . ix cid)
-                  varRel2 = varRel & lens %~ (MapForest.insert (NamePath.toList name) id)
+                  varRel2 = varRel & lens %~ MapForest.insert (NamePath.toList name) id
                   a2      = a & StructInfo.scope.at cid ?~ varRel2
 
 

@@ -35,7 +35,6 @@ import qualified Luna.DEP.AST.Name                                              
 import qualified Luna.DEP.AST.Type                                                 as Type
 import           Luna.DEP.Data.Source                                              (Source (Source))
 import qualified Luna.DEP.Data.Source                                              as Source
-import qualified Luna.DEP.Graph.PropertyMap                                        as PropertyMap
 import           Luna.DEP.Lib.Lib                                                  (Library (Library))
 import qualified Luna.DEP.Lib.Lib                                                  as Library
 import           Luna.DEP.Lib.Manager                                              (LibManager)
@@ -150,11 +149,11 @@ readSource source = eitherStringToM' $ runEitherT $ do
     callGraph         <- EitherT $ Analysis.CallGraph.run aliasInfo ast
     ast               <- EitherT $ Transform.DepSort.run callGraph aliasInfo ast
     (ast, astInfo)    <- EitherT $ Desugar.ImplicitScopes.run astInfo aliasInfo ast
-    (ast, _astInfo)   <- EitherT $ Desugar.ImplicitCalls.run astInfo ast
+    (ast, astInfo)    <- EitherT $ Desugar.ImplicitCalls.run astInfo ast
     _aliasInfo        <- EitherT $ Analysis.Alias.run ast
 
     let path = UniPath.fromUnixString "."
-    return $ LibManager.insNewNode (Library "Main" def path ast PropertyMap.empty) def
+    return $ LibManager.insNewNode (Library "Main" def path ast def astInfo) def
 
 
 main1 :: IO ()

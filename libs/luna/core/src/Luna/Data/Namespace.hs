@@ -6,9 +6,9 @@
 ---------------------------------------------------------------------------
 
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE OverlappingInstances      #-}
 {-# LANGUAGE TemplateHaskell           #-}
 {-# LANGUAGE UndecidableInstances      #-}
-{-# LANGUAGE OverlappingInstances      #-}
 
 module Luna.Data.Namespace where
 
@@ -16,14 +16,19 @@ module Luna.Data.Namespace where
 import GHC.Generics (Generic)
 
 import qualified Data.Maps           as Map
+import qualified Data.IntMap         as IntMap
 import           Data.Maybe          (fromJust)
 import           Flowbox.Prelude     hiding (head, id)
 import           Luna.Data.StructInfo (StructInfo, StructInfoMonad)
 import qualified Luna.Data.StructInfo as StructInfo
+import qualified Luna.Syntax.Name.Path as NamePath
 import           Data.Maybe          (fromJust)
 import           Control.Monad.RWS   (RWST)
 import qualified Control.Monad.RWS   as RWST
-import            Control.Monad.Trans.Class (lift, MonadTrans)
+import           Control.Monad.Trans.Class (lift, MonadTrans)
+
+import qualified Flowbox.Data.MapForest as MapForest
+
 
 ----------------------------------------------------------------------
 -- Data types
@@ -57,6 +62,7 @@ head :: Namespace -> Maybe ID
 head (Namespace (id:_) _) = Just id
 head _                    = Nothing
 
+
 -- FIXME[wd]: dodac asserty!
 pushNewScope :: ID -> Namespace -> Namespace
 pushNewScope id ns@(Namespace st inf) = ns
@@ -89,19 +95,21 @@ popID ns = (id, ns & stack .~ ids)
     where (id:ids) = view stack ns
 
 --bindVar :: ID -> String -> Namespace -> Either () (Namespace)
---bindVar id name ns = 
+--bindVar id name ns =
 --    case head ns of
 --        Nothing  -> Left ()
 --        Just pid -> case view (info.StructInfo.scope.at pid) ns of
 --            Nothing    -> Left ()
---            Just (StructInfo.Scope varnames typenames) -> case (varnames^.at name) of 
+--            Just (StructInfo.Scope varnames typenames) -> case (varnames^.at name) of
 --                Nothing    -> Left ()
 --                Just dstID -> Right (ns & info . StructInfo.StructInfo . at id ?~ dstID)
 
 
 regParent id pid = info %~ StructInfo.regParent id pid
 
+regOrphan id err = info %~ StructInfo.regOrphan id err
 
+regOrigin id origin = modStructInfo (StructInfo.regOrigin id origin)
 
 --pushID :: ID -> m ()
 --pushID id = modify (idStack %~ (id:))
@@ -116,7 +124,7 @@ regParent id pid = info %~ StructInfo.regParent id pid
 --pushScopeM id = do
 --    s <- get
 --    put $ pushScope id s
-    
+
 ----popScopeM     = popScope id <$> get
 
 --withScope id p = do
@@ -142,7 +150,7 @@ instance Monoid Namespace where
     mempty      = Namespace mempty mempty
     mappend a b = Namespace (mappend (a ^. stack) (b ^. stack))
                             (mappend (a ^. info)  (b ^. info))
-                            
+
 
 instance (Monad m, Monoid w) => NamespaceMonad (RWST r w Namespace m) where
     get = RWST.get
@@ -154,11 +162,12 @@ instance (MonadTrans t, NamespaceMonad m, Monad m) => NamespaceMonad (t m) where
     get = lift get
     put = lift . put
 
-
 instance (Monad m, NamespaceMonad m) => StructInfoMonad m where
-    get = do 
+    get = do
         ns <- get
         return $ ns ^. info
     put i = do
         ns <- get
         put (ns & info .~ i)
+
+
