@@ -205,7 +205,7 @@ foo3 a b = a + b
 
 
 --logger :: LoggerIO
---logger = getLoggerIO $(moduleName)
+--logger = getLoggerIO $moduleName
 
 
 ----example :: Source

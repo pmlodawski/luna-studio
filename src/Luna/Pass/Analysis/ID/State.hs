@@ -22,7 +22,7 @@ import qualified Luna.Syntax.AST           as AST
 
 
 logger :: Logger
-logger = getLogger $(moduleName)
+logger = getLogger $moduleName
 
 
 data IDState = IDState { _foundID :: Maybe AST.ID
