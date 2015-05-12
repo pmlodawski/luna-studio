@@ -21,7 +21,7 @@ import Flowbox.System.Log.Logger
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 data Config = Config      { root      :: Section
