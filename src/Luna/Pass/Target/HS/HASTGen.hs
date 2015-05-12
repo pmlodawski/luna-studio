@@ -16,7 +16,7 @@ module Luna.Pass.Target.HS.HASTGen where
 
 import           Data.Maybe (catMaybes, isJust)
 import qualified Data.Set   as Set
-
+import           Data.Text.Lazy                   (pack)
 import           Flowbox.Prelude                   hiding (Traversal)
 import           Luna.Pass                         (Pass (Pass), PassMonad)
 import qualified Luna.Pass                         as Pass
@@ -308,13 +308,17 @@ convVar = hash . unwrap
 
 genDecl :: (Monad m, Enumerated lab, Num lab, Show lab) => LDecl lab (LExpr lab ()) -> PassResult m ()
 genDecl ast@(Label lab decl) = case decl of
-    Decl.Imp     {}       -> return () -- FIXME[PM->WD]
+    Decl.Imp     imp       -> return () {-genQualifiedImp imp-}
     Decl.Func    funcDecl -> genStdFunc funcDecl
     Decl.Foreign fdecl    -> genForeign fdecl
     Decl.Data    ddecl    -> genDataDecl False ddecl
     Decl.Pragma  {}       -> return ()
     Decl.TpAls   dst src  -> State.regDecl =<< (HE.TypeD <$> genType dst <*> genType src)
 
+
+genQualifiedImp :: (Monad m) => Decl.Imp -> PassResult m ()
+genQualifiedImp (Decl.ModImp path (Just rename)) = State.regDecl =<< (return $ (HE.Assignment (HE.Var $ pack "bu") (HE.Var $ pack "hehehe")))
+genQualifiedImp _ = return ()
 
 genStdFunc :: (Monad m, Enumerated lab, Num lab, Show lab)
            => Decl.FuncDecl lab (LExpr lab ()) [LExpr lab ()] -> PassResult m ()
