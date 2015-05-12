@@ -83,7 +83,7 @@ import           Luna.Interpreter.Session.Session                               
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 getProjectID :: GetProjectID.Request -> RPC Context (SessionST mm) GetProjectID.Status
