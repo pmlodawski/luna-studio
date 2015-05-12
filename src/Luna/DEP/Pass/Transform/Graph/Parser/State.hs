@@ -40,7 +40,7 @@ import qualified Luna.DEP.Pass.Transform.AST.IDFixer.State as IDFixer
 
 
 logger :: Logger
-logger = getLogger $(moduleName)
+logger = getLogger $moduleName
 
 
 type NodeMap = Map (Node.ID, Port) Expr

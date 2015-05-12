@@ -31,7 +31,7 @@ import Flowbox.Prelude     hiding (error)
 
 
 logger :: Logger
-logger = getLogger $(moduleName)
+logger = getLogger $moduleName
 
 
 type ParserPass m = Pass Pass.NoState m

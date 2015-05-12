@@ -25,7 +25,7 @@ import qualified Luna.DEP.Data.CallGraph   as CallGraph
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 data State = State { _cg      :: CallGraph

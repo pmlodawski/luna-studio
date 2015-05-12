@@ -28,7 +28,7 @@ import Flowbox.System.Log.Logger
 
 
 logger :: Logger
-logger = getLogger $(moduleName)
+logger = getLogger $moduleName
 
 type HExpr = HExpr.Expr
 type HComment = HComment.Comment
