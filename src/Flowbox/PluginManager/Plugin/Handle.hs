@@ -21,7 +21,7 @@ import           Flowbox.System.Log.Logger           as L
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 data PluginHandle = PluginHandle { _plugin :: Plugin
