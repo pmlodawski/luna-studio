@@ -17,10 +17,10 @@ import Control.Monad.Reader
 import Control.Monad.State        hiding (fail, state)
 import Control.Monad.Trans.Either
 
+import Control.Monad.Trans.RWS   (RWST, runRWST)
 import Flowbox.Prelude           hiding (error, fail)
 import Flowbox.System.Log.Logger
-import Control.Monad.Trans.RWS (RWST, runRWST)
-import Luna.System.Session     (SessionMonad)
+import Luna.System.Session       (SessionMonad)
 
 
 data Info = Info { name :: String
@@ -28,7 +28,7 @@ data Info = Info { name :: String
 
 
 logger :: Logger
-logger = getLogger $(moduleName)
+logger = getLogger $moduleName
 
 
 data Pass s f = Pass { _name :: String, _desc :: String, _state :: s, _func :: f }

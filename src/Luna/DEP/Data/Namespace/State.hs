@@ -35,7 +35,7 @@ import qualified Luna.DEP.Data.Namespace   as Namespace
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 --data VAState = VAState { _info    :: AliasInfo
