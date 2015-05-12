@@ -41,7 +41,7 @@ import           Luna.System.Session                    as Session
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 emptyModule :: Module

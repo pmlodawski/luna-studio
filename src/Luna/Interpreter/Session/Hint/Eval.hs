@@ -20,7 +20,7 @@ import qualified Luna.Interpreter.Session.Hint.Util as Util
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 interpret :: (GHC.GhcMonad m, Typeable a) => String -> m a

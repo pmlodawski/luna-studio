@@ -18,7 +18,7 @@ import qualified Luna.Interpreter.Session.Hint.Conversions as Conversions
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 typeOf :: GHC.GhcMonad m => String -> m String

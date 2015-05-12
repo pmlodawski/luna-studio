@@ -18,7 +18,7 @@ import           Luna.Interpreter.Session.Session  (Session)
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 dumpBindings :: Session mm ()
