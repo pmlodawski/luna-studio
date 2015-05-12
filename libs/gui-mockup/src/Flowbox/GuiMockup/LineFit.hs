@@ -11,6 +11,7 @@ import           Control.Lens.Operators
 import           Control.Monad                (forM_, when)
 import           Control.Monad.ST             (runST)
 import           Control.Monad.Trans.Class    (lift)
+import           Data.List                    (intercalate)
 import           Data.STRef
 import qualified Data.Vector.Storable         as V
 import qualified Data.Vector.Storable.Mutable as MV
@@ -84,7 +85,7 @@ fitCubic points tHat1 tHat2 err
                 u' <- lift $ newSTRef u
                 splitPoint' <- lift $ newSTRef initialSplitPoint
 
-                forM_ [1..4] $ \_ -> do
+                forM_ [(1::Int)..4] $ \_ -> do
                     uVal <- lift $ readSTRef u'
                     let uPrime = reparameterize points uVal bezCurve
                         bezCurveVal = generateBezier points uPrime tHat1 tHat2
@@ -328,3 +329,29 @@ computeCenterTangent points center = normalize tHatCenter
         v1 = (points V.! (center - 1)) - (points V.! center)
         v2 = (points V.! center) - (points V.! (center + 1))
         tHatCenter = (v1 + v2) ^/ 2
+
+
+-- I/O
+
+readPoints :: String -> V.Vector (V2 Float)
+readPoints = V.map (\(x,y) -> V2 x y) . V.fromList . (read :: String -> [(Float, Float)])
+
+jsifyVector :: V.Vector (CubicBezier Float) -> String
+jsifyVector = intercalate "," . map jsifyBezier . V.toList
+
+jsifyBezier :: CubicBezier Float -> String
+jsifyBezier (CubicBezier c0 c1 c2 c3) = jsifyObject fields points
+	where
+		points = map jsifyV2 [c0, c1, c2, c3]
+		fields = zipWith (:) (repeat 'p') $ map show [0..]
+
+jsifyV2 :: V2 Float -> String
+jsifyV2 (V2 x y) = "{x: " ++ show x ++ ", y: " ++ show y ++ "}"
+
+jsifyObject :: [String] -> [String] -> String
+jsifyObject fields values = wrap $ intercalate "," $ zipWith (\f v -> f ++ ": " ++ v) fields values
+	where
+		wrap s = "{" ++ s ++ "}"
+
+test :: Float -> String -> String
+test err input = jsifyVector $ fitCurve (readPoints input) err
