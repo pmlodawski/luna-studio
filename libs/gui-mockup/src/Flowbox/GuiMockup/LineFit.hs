@@ -1,9 +1,10 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Flowbox.GuiMockup.LineFit (
-	  CubicBezier(..)
-	, fitCurve
-	) where
+module Flowbox.GuiMockup.LineFit where
+-- (
+--	  CubicBezier(..)
+--	, fitCurve
+--	) where
 
 import           Control.Applicative          ((<$>), (<*>))
 import           Control.Error                hiding (err)
