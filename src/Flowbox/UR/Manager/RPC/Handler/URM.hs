@@ -58,7 +58,7 @@ import qualified Generated.Proto.Urm.URM.Undo.Status                      as Und
 type ProjectID = Int
 
 logger :: LoggerIO
-logger = getLoggerIO  $(moduleName)
+logger = getLoggerIO  $moduleName
 
 --------------------------------------------------------------------------------
 -- Messages registration

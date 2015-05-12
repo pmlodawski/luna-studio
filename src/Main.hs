@@ -8,25 +8,25 @@
 
 module Main where
 
-import qualified Flowbox.Bus.EndPoint        as EP
-import qualified Flowbox.Bus.RPC.Server.Server              as Server
-import           Flowbox.UR.Manager.Cmd      (Cmd)
-import qualified Flowbox.UR.Manager.Cmd      as Cmd
-import qualified Flowbox.UR.Manager.Context  as Context
-import qualified Flowbox.UR.Manager.RPC.Handler.Handler as Handler
-import qualified Flowbox.UR.Manager.Version  as Version
-import qualified Flowbox.Config.Config       as Config
+import qualified Flowbox.Bus.EndPoint                   as EP
+import qualified Flowbox.Bus.RPC.Server.Server          as Server
+import qualified Flowbox.Config.Config                  as Config
 import           Flowbox.Control.Error
-import           Flowbox.Options.Applicative hiding (info)
-import qualified Flowbox.Options.Applicative as Opt
+import           Flowbox.Options.Applicative            hiding (info)
+import qualified Flowbox.Options.Applicative            as Opt
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
+import           Flowbox.UR.Manager.Cmd                 (Cmd)
+import qualified Flowbox.UR.Manager.Cmd                 as Cmd
+import qualified Flowbox.UR.Manager.Context             as Context
+import qualified Flowbox.UR.Manager.RPC.Handler.Handler as Handler
+import qualified Flowbox.UR.Manager.Version             as Version
 
 rootLogger :: Logger
 rootLogger = getLogger ""
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 parser :: Parser Cmd
 parser = Opt.flag' Cmd.Version (long "version" <> hidden)
