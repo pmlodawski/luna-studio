@@ -308,7 +308,7 @@ convVar = hash . unwrap
 
 genDecl :: (Monad m, Enumerated lab, Num lab, Show lab) => LDecl lab (LExpr lab ()) -> PassResult m ()
 genDecl ast@(Label lab decl) = case decl of
-    Decl.Imp     imp       -> return () {-genQualifiedImp imp-}
+    Decl.Imp     imp       -> {- return () -} genQualifiedImp imp
     Decl.Func    funcDecl -> genStdFunc funcDecl
     Decl.Foreign fdecl    -> genForeign fdecl
     Decl.Data    ddecl    -> genDataDecl False ddecl
@@ -317,7 +317,7 @@ genDecl ast@(Label lab decl) = case decl of
 
 
 genQualifiedImp :: (Monad m) => Decl.Imp -> PassResult m ()
-genQualifiedImp (Decl.ModImp path (Just rename)) = State.regDecl =<< (return $ (HE.Assignment (HE.Var $ pack "bu") (HE.Var $ pack "hehehe")))
+genQualifiedImp (Decl.ModImp path (Just rename)) = State.regDecl =<< (return $ (HE.Assignment (HE.Var . pack $ "cons_" ++ (toString rename)) (HE.VarE . pack $ (toString rename) ++ ".cons_"  ++ (toString . last $ path))))
 genQualifiedImp _ = return ()
 
 genStdFunc :: (Monad m, Enumerated lab, Num lab, Show lab)
