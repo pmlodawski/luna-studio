@@ -65,6 +65,8 @@ import           Luna.System.Session                        as Session
 import qualified Luna.Pass.Analysis.InsertStd               as InsertStd
 
 
+
+
 type Builder m = (MonadIO m, Functor m)
 
 logger :: LoggerIO
@@ -93,7 +95,7 @@ runSession inclStd s =
 
 
 processCompilable diag rootSrc inclStd compilable  = do 
-    let rootPath = UniPath.toUnixString . UniPath.basePath . UniPath.fromUnixString . unpack $ rootSrc ^. Source.src ^. Source.path
+    let rootPath = UniPath.toUnixString . UniPath.basePath . UniPath.fromUnixString . getPath $ rootSrc ^. Source.src
         mkFile   = Source.File . pack . (rootPath </>) . (++ ".luna") . MI.modPathToString
         sources  = map (\i -> Source i (mkFile i)) compilable
         hscs     = mapM (prepareSource diag inclStd rootSrc) sources
@@ -131,7 +133,7 @@ parseSource' diag rootSrc src inclStd procComp = do
     let sa1   = sa ^. StructData.namespace . Namespace.info
         mInfo = MI.ModuleInfo liFile mempty sa1 mempty
 
-    liftIO $ MI.writeModInfoToFile mInfo (unpack $ src ^. Source.src ^. Source.path)
+    liftIO $ MI.writeModInfoToFile mInfo (getPath  $ src ^. Source.src)
     printSA diag sa1
 
     printHeader "Stage2"
@@ -225,3 +227,22 @@ copyExecutable location name outputPath = liftIO $ do
     let execName   = Platform.dependent name (name ++ ".exe") name
         executable = UniPath.append ("dist/build/" ++ name ++ "/" ++ execName) location
     Directory.copyFile executable outputPath
+
+
+------------------------------------------------------------------------------------
+-- CLASSES AND INSTANCES
+------------------------------------------------------------------------------------
+class GetFromSource a where
+    getPath :: a -> String
+    getText :: a -> String
+
+
+instance GetFromSource Source.File where
+    getPath (Source.File path) = unpack path
+    getText (Source.File path) = "TODO"
+
+
+instance GetFromSource Source.Text where
+    getPath (Source.Text txt) = "Interactive/Interactive.luna"
+    getText (Source.Text txt) = unpack txt
+
