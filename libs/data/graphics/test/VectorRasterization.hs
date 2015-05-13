@@ -175,7 +175,7 @@ main = do
     let arrD = rasterizeMask w h $ (Mask patd (Just fead))
         imgD = matrixToImage arrD
 
-    --saveImageLuna "fooD.png" imgD
+    saveImageLuna "fooD.png" imgD
 
     P.putStrLn "Test rasterizeMask one line, no handles --> foo.png"
 
@@ -185,7 +185,7 @@ main = do
     let arrD = rasterizeMask w h $ (Mask patd (Just fead))
         imgD = matrixToImage arrD
 
-    --saveImageLuna "foo.png" imgD
+    saveImageLuna "foo.png" imgD
 
     P.putStrLn "Test rasterizeMask no fea, no handles --> foo1.png"
 
@@ -195,14 +195,14 @@ main = do
     let arrD = rasterizeMask w h $ (Mask pat1 Nothing)
         imgD = matrixToImage arrD
 
-    --saveImageLuna "foo1.png" imgD
+    saveImageLuna "foo1.png" imgD
 
     P.putStrLn "Test rasterizeMask no handles --> foo2.png"
 
     let arrD = rasterizeMask w h $ (Mask pat1 (Just fea1))
         imgD = matrixToImage arrD
 
-    --saveImageLuna "foo2.png" imgD
+    saveImageLuna "foo2.png" imgD
 
     P.putStrLn "Test rasterizeMask no fea --> fooD1.png"
 
@@ -212,7 +212,7 @@ main = do
     let arrD = rasterizeMask w h $ (Mask pat Nothing)
         imgD = matrixToImage arrD
 
-    --saveImageLuna "fooD1.png" imgD
+    saveImageLuna "fooD1.png" imgD
 
     P.putStrLn "Test rasterizeMask --> fooD2.png"
 
@@ -228,7 +228,7 @@ main = do
         arrGUI = rasterizeMask w h (Mask patGUI (Just feaGUI))
         imgGUI = matrixToImage arrGUI
 
-    --saveImageLuna "fooD3.png" imgGUI
+    saveImageLuna "fooD3.png" imgGUI
 
     P.putStrLn "Test rasterizeMask GUI2 example --> fooD4.png"
 
@@ -237,7 +237,7 @@ main = do
         arrGUI = rasterizeMask 1920 1080 (Mask patGUI (Just feaGUI))
         imgGUI = matrixToImage arrGUI
 
-    --saveImageLuna "fooD4.png" imgGUI
+    saveImageLuna "fooD4.png" imgGUI
 
 
 

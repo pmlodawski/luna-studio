@@ -208,7 +208,7 @@ rasterizeMask w h (Mask pathRaw maybeFeather) =
                   nc2 = A.fromIntegral $ A.boolToInt $ A.not cond2
                   x' = (dp*p + df*f)/(dp+df)
               --in dp --c1*p*f + nc1 * (c2*x' + nc2*(max p f))
-              --in df/80
+              -- in df/80
               in A.cond (cond1)
                   (p*f)
                   (c2*x' + nc2*(max p f))
@@ -219,7 +219,7 @@ rasterizeMask w h (Mask pathRaw maybeFeather) =
                       convert p = let
                               a = makeCubics p
                               quads = convertCubicsToQuadratics 5 0.001 $ (fmap.fmap) f2f a
-                          in A.use $ A.fromList (Z :. length quads) quads
+                          in {-Dbg.trace ("calling with quads = " ++ show quads)-} (A.use $ A.fromList (Z :. length quads) quads)
                       cA = convert pathRaw
                       cB = convert fea
                       dP = M.generate (A.index2 (variable h) (variable w)) $ distance cA
