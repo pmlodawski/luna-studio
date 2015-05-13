@@ -95,21 +95,22 @@ runSession inclStd s =
 
 
 processCompilable diag rootSrc inclStd compilable  = do 
-    let rootPath = UniPath.toUnixString . UniPath.basePath . UniPath.fromUnixString . getPath $ rootSrc ^. Source.src
-        mkFile   = Source.File . pack . (rootPath </>) . (++ ".luna") . MI.modPathToString
-        sources  = map (\i -> Source i (mkFile i)) compilable
-        hscs     = mapM (prepareSource diag inclStd rootSrc) sources
+    let getBasePath = UniPath.toUnixString . UniPath.basePath . UniPath.fromUnixString
+        rootPath    = getBasePath . getPath $ rootSrc ^. Source.src
+        mkFile      = Source.File . pack . (rootPath </>) . (++ ".luna") . MI.modPathToString
+        sources     = map (\i -> Source i (mkFile i)) compilable
+        hscs        = mapM (prepareSource diag inclStd rootSrc) sources
     hscs
 
 
 -- @PMlodawski: use this one ;)
-processSource diag src = parseSource' diag src src False (\_ _ _ _ -> return [])
+processSource diag src = parseSourceWithFun diag src src False (\_ _ _ _ -> return [])
     
 
-parseSource diag rootSrc src inclStd = parseSource' diag rootSrc src inclStd processCompilable
+parseSource diag rootSrc src inclStd = parseSourceWithFun diag rootSrc src inclStd processCompilable
 
 
-parseSource' diag rootSrc src inclStd procComp = do
+parseSourceWithFun diag rootSrc src inclStd procComp = do
     let liFile   = src ^. Source.modName
 
     printHeader "Stage1"
@@ -129,9 +130,9 @@ parseSource' diag rootSrc src inclStd procComp = do
     ----ast             <- Pass.run1_ Hash.pass ast
 
     printHeader "SA"
-    sa             <- Pass.run2_ SA.pass (StructData mempty importInfo) ast
-    let sa1   = sa ^. StructData.namespace . Namespace.info
-        mInfo = MI.ModuleInfo liFile mempty sa1 mempty
+    structData1 <- Pass.run2_ SA.pass (StructData mempty importInfo) ast
+    let sa1     = structData1 ^. StructData.namespace . Namespace.info
+        mInfo   = MI.ModuleInfo liFile mempty sa1 mempty
 
     liftIO $ MI.writeModInfoToFile mInfo (getPath  $ src ^. Source.src)
     printSA diag sa1
@@ -145,11 +146,11 @@ parseSource' diag rootSrc src inclStd procComp = do
     printAST diag ast
 
     printHeader "SA2"
-    sa             <- Pass.run2_ SA.pass sa ast
-    printSA diag (sa ^. StructData.namespace . Namespace.info)
+    structData2 <- Pass.run2_ SA.pass structData1 ast
+    printSA diag (structData2 ^. StructData.namespace . Namespace.info)
 
-    let sa2 = sa ^. StructData.namespace . Namespace.info
-        ii2 = sa ^. StructData.importInfo
+    let sa2 = structData2 ^. StructData.namespace . Namespace.info
+        ii2 = structData2 ^. StructData.importInfo
 
     printHeader "ImplScopes"
     (ast, astinfo) <- Pass.run2_ ImplScopes.pass (astinfo, sa2, ii2)  ast
