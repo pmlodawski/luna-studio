@@ -1,9 +1,9 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
 module Flowbox.GuiMockup.LineFit (
-	  CubicBezier(..)
-	, fitCurve
-	) where
+      CubicBezier(..)
+    , fitCurve
+    ) where
 
 import           Control.Applicative          ((<$>), (<*>))
 import           Control.Error                hiding (err)
@@ -330,20 +330,21 @@ computeCenterTangent points center = normalize tHatCenter
         v2 = (points V.! center) - (points V.! (center + 1))
         tHatCenter = (v1 + v2) ^/ 2
 
-cross' :: Num a => V2 a -> V2 a -> a
-cross' (V2 x1 y1) (V2 x2 y2) = x1 * y2 - x2 * y1
-
-linearity :: Num a => V2 a -> V2 a -> V2 a -> a
-linearity p0 p1 p2 = cross' (p2 - p0) (p1 - p0)
+linearity :: (Num a, Floating a, Epsilon a) => V2 a -> V2 a -> V2 a -> a
+linearity p0 p1 p2 = (a `dot` b) / n
+    where
+        a = p2 - p0
+        b = p1 - p0
+        n = norm a * norm b
 
 test2 :: [[Float]] -> String
 test2 input = jsify $ V.map (curry3 linearity) vector
-	where
-		inputVector = readPoints input
-		vector = V.zipWith3 (,,) inputVector (V.tail inputVector) (V.tail $ V.tail inputVector)
-		jsify = wrap . intercalate ", " . map show . V.toList
-			where
-				wrap s = "[" ++ s ++ "]"
+    where
+        inputVector = readPoints input
+        vector = V.zipWith3 (,,) inputVector (V.tail inputVector) (V.tail $ V.tail inputVector)
+        jsify = wrap . intercalate ", " . map show . V.toList
+         where
+             wrap s = "[" ++ s ++ "]"
 
 curry3 :: (a -> b -> c -> d) -> (a, b, c) -> d
 curry3 f (a, b, c) = f a b c
@@ -355,22 +356,22 @@ readPoints = V.fromList . map (\[x,y] -> V2 x y)
 
 jsifyVector :: V.Vector (CubicBezier Float) -> String
 jsifyVector = wrap . intercalate "," . map jsifyBezier . V.toList
-	where
-		wrap s = "[" ++ s ++ "]"
+    where
+        wrap s = "[" ++ s ++ "]"
 
 jsifyBezier :: CubicBezier Float -> String
 jsifyBezier (CubicBezier c0 c1 c2 c3) = jsifyObject fields points
-	where
-		points = map jsifyV2 [c0, c1, c2, c3]
-		fields = zipWith (:) (repeat 'p') $ map show [0..]
+    where
+        points = map jsifyV2 [c0, c1, c2, c3]
+        fields = zipWith (:) (repeat 'p') $ map show [0..]
 
 jsifyV2 :: V2 Float -> String
 jsifyV2 (V2 x y) = "{\"x\": " ++ show x ++ ", \"y\": " ++ show y ++ "}"
 
 jsifyObject :: [String] -> [String] -> String
 jsifyObject fields values = wrap $ intercalate "," $ zipWith (\f v -> show f ++ ": " ++ v) fields values
-	where
-		wrap s = "{" ++ s ++ "}"
+    where
+        wrap s = "{" ++ s ++ "}"
 
 test :: Float -> [[Float]] -> String
 test err input = jsifyVector $ fitCurve (readPoints input) err
