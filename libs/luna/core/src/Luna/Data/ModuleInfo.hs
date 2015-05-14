@@ -20,9 +20,8 @@ import           Data.Text.Internal.Lazy  (Text)
 import qualified Data.Text.Lazy           as T
 import qualified Data.Text                as Text
 import qualified System.Directory         as Dir
-import           System.Environment       (lookupEnv)
 import           System.FilePath          (joinPath, (</>))
-import qualified System.Posix.Env         as Env
+import qualified System.Environment       as Env
 
 import           Data.Either.Combinators  (mapRight)
 import           Flowbox.Data.MapForest   (Node)
@@ -152,8 +151,9 @@ data CheckType = IsParsed | Exists
 
 checkModule :: CheckType -> QualPath -> IO Bool
 checkModule checkType path = do
-    lunaPath     <- Env.getEnvDefault lunaPathVar ""
-    let pathDirs = Text.splitOn (Text.pack pathSep) (Text.pack lunaPath) & map Text.unpack
+    lunaP        <- Env.lookupEnv lunaPathVar
+    let lunaPath = case lunaP of Just p -> p; Nothing -> ""
+        pathDirs = Text.splitOn (Text.pack pathSep) (Text.pack lunaPath) & map Text.unpack
         currDir  = "." 
         dirs     = currDir : pathDirs
         modPath  = (modPathToString path) ++ (case checkType of IsParsed -> liFileSuffix; Exists -> lunaFileSuffix)
@@ -174,8 +174,9 @@ moduleIsParsed = checkModule IsParsed
 
 findModInfo :: QualPath -> IO (Maybe ModuleInfo)
 findModInfo path = do
-    lunaPath     <- Env.getEnvDefault lunaPathVar ""
-    let pathDirs = Text.splitOn (Text.pack pathSep) (Text.pack lunaPath) & map Text.unpack
+    lunaP        <- Env.lookupEnv lunaPathVar
+    let lunaPath = case lunaP of Just p -> p; Nothing -> ""  
+        pathDirs = Text.splitOn (Text.pack pathSep) (Text.pack lunaPath) & map Text.unpack
         currDir  = "." 
         dirs     = currDir : pathDirs
         modPath  = (modPathToString path) ++ liFileSuffix
