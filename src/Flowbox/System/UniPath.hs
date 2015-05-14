@@ -98,6 +98,16 @@ toList = fmap str where
             Empty    -> ""
             Var v    -> v
 
+
+
+fromFilePath :: FilePath.FilePath -> UniPath
+fromFilePath = fromUnixString    -- TODO[PMocz] does that really work?
+
+
+toFilePath :: UniPath -> FilePath.FilePath
+toFilePath = FilePath.joinPath . toList
+
+
 -- FIXME[wd]: poprawic caly UniPath !!! kawalek refactoru:
 --instance IsList UniPath where
 --    type (Item UniPath) = String
