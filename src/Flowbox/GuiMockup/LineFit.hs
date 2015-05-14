@@ -86,12 +86,17 @@ fitCubic points tHat1 tHat2 err
             iteration = runST $ runEitherT $ do
                 u' <- lift $ newSTRef u
                 splitPoint' <- lift $ newSTRef initialSplitPoint
+                bezCurve' <- lift $ newSTRef bezCurve
 
                 forM_ [(1::Int)..4] $ \_ -> do
                     uVal <- lift $ readSTRef u'
-                    let uPrime = reparameterize points uVal bezCurve
-                        bezCurveVal = generateBezier points uPrime tHat1 tHat2
-                        (maxErrorVal, splitPointVal) = computeMaxError points bezCurveVal uPrime
+                    bezCurveVal <- lift $ readSTRef bezCurve'
+                    let uPrime = reparameterize points uVal bezCurveVal
+
+                    lift $ writeSTRef bezCurve' $ generateBezier points uPrime tHat1 tHat2
+
+                    bezCurveVal <- lift $ readSTRef bezCurve'
+                    let (maxErrorVal, splitPointVal) = computeMaxError points bezCurveVal uPrime
 
                     lift $ writeSTRef splitPoint' splitPointVal
                     when (maxErrorVal < iterationError) $ left bezCurveVal
