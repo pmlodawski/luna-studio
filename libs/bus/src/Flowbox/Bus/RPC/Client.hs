@@ -31,7 +31,7 @@ import qualified Flowbox.Text.ProtocolBuffers  as Proto
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 isCorrelationIDValid :: Message.CorrelationID -> MessageFrame -> Bool

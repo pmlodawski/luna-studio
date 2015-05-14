@@ -21,7 +21,7 @@ import qualified Luna.Interpreter.Session.Memory.Status  as Status
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 data LRU = LRU { _recentlyUsed :: IndexedSet VarName }

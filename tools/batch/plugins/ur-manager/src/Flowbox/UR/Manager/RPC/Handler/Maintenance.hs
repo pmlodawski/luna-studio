@@ -9,14 +9,14 @@ module Flowbox.UR.Manager.RPC.Handler.Maintenance where
 
 import           Flowbox.Bus.RPC.RPC                  (RPC)
 import           Flowbox.Prelude                      hiding (Context)
-import           Flowbox.UR.Manager.Context           (Context)
 import           Flowbox.System.Log.Logger
+import           Flowbox.UR.Manager.Context           (Context)
 import qualified Generated.Proto.Urm.URM.Ping.Request as Ping
 import qualified Generated.Proto.Urm.URM.Ping.Status  as Ping
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 ------ public api -------------------------------------------------
 

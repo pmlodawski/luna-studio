@@ -39,7 +39,7 @@ import qualified Luna.Interpreter.Session.TargetHS.Reload    as Reload
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 modifyAll :: Session mm ()

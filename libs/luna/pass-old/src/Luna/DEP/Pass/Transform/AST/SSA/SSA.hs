@@ -31,7 +31,7 @@ import qualified Luna.DEP.Pass.Pass        as Pass
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 type SSAPass result = Pass Pass.NoState result

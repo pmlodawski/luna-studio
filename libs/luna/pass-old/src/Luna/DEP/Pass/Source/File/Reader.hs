@@ -32,7 +32,7 @@ type FRPass result = Pass Pass.NoState result
 
 
 logger :: Logger
-logger = getLogger $(moduleName)
+logger = getLogger $moduleName
 
 
 run :: UniPath -> UniPath -> Pass.Result Source

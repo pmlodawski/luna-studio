@@ -34,7 +34,7 @@ import           Luna.DEP.Util.LunaShow                         (lunaShow)
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 -------- public api -------------------------------------------------
 

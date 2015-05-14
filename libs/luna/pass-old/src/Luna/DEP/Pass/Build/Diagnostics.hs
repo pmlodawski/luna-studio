@@ -44,7 +44,7 @@ none = Diagnostics False False False False False False
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 printAST :: (QShow.QShow a, MonadIO m) => a -> Diagnostics -> m ()

@@ -32,7 +32,7 @@ import qualified Luna.DEP.Pass.Transform.AST.Desugar.ImplicitScopes.State as Sta
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 type DesugarPass result = Pass State result

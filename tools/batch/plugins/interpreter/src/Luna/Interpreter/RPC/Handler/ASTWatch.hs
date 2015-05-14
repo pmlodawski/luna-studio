@@ -10,6 +10,7 @@
 module Luna.Interpreter.RPC.Handler.ASTWatch where
 
 import qualified Flowbox.Batch.Handler.Common                                                                  as Batch
+import qualified Flowbox.Batch.Handler.Graph                                                                   as Batch
 import           Flowbox.Bus.RPC.RPC                                                                           (RPC)
 import           Flowbox.Control.Error                                                                         hiding (err)
 import           Flowbox.Data.Convert
@@ -96,6 +97,7 @@ import qualified Generated.Proto.ProjectManager.Project.Library.Unload.Request  
 import qualified Generated.Proto.ProjectManager.Project.Library.Unload.Update                                  as LibraryUnload
 import qualified Generated.Proto.ProjectManager.Project.Modify.Update                                          as ProjectModify
 import qualified Generated.Proto.ProjectManager.Project.Open.Update                                            as ProjectOpen
+import qualified Luna.DEP.Graph.Node                                                                           as Node
 import           Luna.Interpreter.Proto.CallPointPath                                                          ()
 import qualified Luna.Interpreter.RPC.Handler.Cache                                                            as CacheWrapper
 import           Luna.Interpreter.RPC.Handler.Sync                                                             (sync)
@@ -107,7 +109,7 @@ import           Luna.Interpreter.Session.Session                               
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 --- handlers --------------------------------------------------------------
@@ -398,15 +400,22 @@ graphNodeModify (GraphNodeModify.Update request node updateNo) = do
 
 graphNodeModifyInPlace :: GraphNodeModifyInPlace.Update -> RPC Context (SessionST mm) ()
 graphNodeModifyInPlace (GraphNodeModifyInPlace.Update request updateNo) = do
+    let tprojectID = GraphNodeModifyInPlace.projectID request
+        tlibraryID = GraphNodeModifyInPlace.libraryID request
+        tnode      = GraphNodeModifyInPlace.node request
+        tbc      = GraphNodeModifyInPlace.bc request
+    tnodeID   <- Gen.Node.id tnode <??> "ASTWatch.graphNodeModify : 'nodeID' field is missing"
+    tNodeExpr <- Gen.Node.expr tnode <??> "ASTWatch.graphNodeAdd : 'expr' field is missing"
+    let projectID = decodeP tprojectID
+        libraryID = decodeP tlibraryID
+        nodeID    = decodeP tnodeID
+    bc      <- decodeE tbc
+    oldNode <- Batch.nodeByID nodeID bc libraryID projectID
     sync updateNo $ GraphHandler.nodeModifyInPlace request Nothing
-    let projectID = GraphNodeModifyInPlace.projectID request
-        libraryID = GraphNodeModifyInPlace.libraryID request
-        node      = GraphNodeModifyInPlace.node request
-    nodeID    <- Gen.Node.id node <??> "ASTWatch.graphNodeModify : 'nodeID' field is missing"
-    tNodeExpr <- Gen.Node.expr node <??> "ASTWatch.graphNodeAdd : 'expr' field is missing"
     nodeExpr  <- decodeE tNodeExpr
-    Var.insertTimeRef' (decodeP libraryID) (decodeP nodeID) nodeExpr --TODO[PM] : remove old refs if were present
-    CacheWrapper.modifyNode projectID libraryID nodeID
+    Var.insertTimeRef' libraryID nodeID nodeExpr --TODO[PM] : remove old refs if were present
+    when (Just nodeExpr /= oldNode ^? Node.expr) $
+        CacheWrapper.modifyNode tprojectID tlibraryID tnodeID
 
 
 graphNodeDefaultRemove :: GraphNodeDefaultRemove.Update -> RPC Context (SessionST mm) ()

@@ -82,7 +82,7 @@ genProject name = let
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 --example :: Source

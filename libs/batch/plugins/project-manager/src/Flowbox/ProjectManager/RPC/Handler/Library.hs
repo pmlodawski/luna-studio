@@ -34,7 +34,7 @@ import           Luna.DEP.Data.Serialize.Proto.Conversion.Library              (
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 -------- public api -------------------------------------------------
 

@@ -30,7 +30,7 @@ import qualified Luna.Console.Options            as Options
 
 
 logger :: Logger
-logger = getLogger $(moduleName)
+logger = getLogger $moduleName
 
 
 

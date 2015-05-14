@@ -22,7 +22,7 @@ import           Luna.DEP.Util.LunaShow                                (lunaShow
 
 
 logger :: Logger
-logger = getLogger $(moduleName)
+logger = getLogger $moduleName
 
 
 type STBPass result = Pass Pass.NoState result

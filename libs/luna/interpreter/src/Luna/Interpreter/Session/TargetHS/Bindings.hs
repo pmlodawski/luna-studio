@@ -21,7 +21,7 @@ import Luna.Interpreter.Session.GHC.Util (dshow)
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 bindingMatch :: GHC.DynFlags -> String -> HscTypes.TyThing -> Bool

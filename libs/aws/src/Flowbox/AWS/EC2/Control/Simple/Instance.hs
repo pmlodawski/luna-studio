@@ -28,7 +28,7 @@ import           Flowbox.System.Log.Logger           hiding (info)
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 findInstances :: EC2Resource m => EC2 m [Types.Instance]

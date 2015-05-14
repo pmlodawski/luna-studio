@@ -40,7 +40,7 @@ import           Luna.DEP.Pass.Pass           (Pass)
 
 
 logger :: Logger
-logger = getLogger $(moduleName)
+logger = getLogger $moduleName
 
 
 type NodeMap = Map AST.ID (Node.ID, Port)

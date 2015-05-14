@@ -40,7 +40,7 @@ import           Flowbox.System.Log.Logger             hiding (error)
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 nearEndGapTime :: Time.NominalDiffTime

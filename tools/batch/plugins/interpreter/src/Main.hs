@@ -36,11 +36,11 @@ rootLogger = getLogger "Luna"
 
 
 mainLogger :: Logger
-mainLogger = getLogger $(moduleName)
+mainLogger = getLogger $moduleName
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 parser :: Parser Cmd
