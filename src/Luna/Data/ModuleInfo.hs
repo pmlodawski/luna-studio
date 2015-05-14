@@ -27,7 +27,7 @@ import           Data.Either.Combinators  (mapRight)
 import           Flowbox.Data.MapForest   (Node)
 import qualified Flowbox.Data.MapForest   as MF
 import           Flowbox.Prelude
-import           Flowbox.System.UniPath   (PathItem, UniPath, toUnixString, fromUnixString)
+import           Flowbox.System.UniPath   (PathItem, UniPath)
 import qualified Flowbox.System.Directory as FlowDir
 import           Luna.Data.StructInfo     (OriginInfo, Scope, StructInfo)
 import qualified Luna.Data.StructInfo     as SI
