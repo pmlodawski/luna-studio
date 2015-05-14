@@ -641,15 +641,22 @@ prepareDeserializeMethodBase cls@(CppClass clsName _ _ _ tmpl _) derClasses =
         rettype = printf "std::shared_ptr<%s>" $ if null tmpl then clsName 
             else templateDepName cls
 
+        returnDeserialize conName = printf "return %s::deserializeFrom(input);" (templateDepNameBase conName tmpl) :: String
+
         indices = [0 ..  (length derClasses)-1]
         caseForCon index =
             let ithCon =  derClasses !! index
                 conName = ithCon ^. className
-            in printf "case %d: return %s::deserializeFrom(input);" index (templateDepNameBase conName tmpl) :: String
+            in printf "case %d: %s" index (returnDeserialize conName) :: String
 
         cases = map caseForCon indices
 
-        body =  [ "auto constructorIndex = readInt8(input);"
+        -- If there is only one constructor, we omit its index.
+        body = if length derClasses == 1 then
+                let conName = (derClasses !! 0) ^. className
+                in [returnDeserialize conName]
+               else
+                [ "auto constructorIndex = readInt8(input);"
                 , "switch(constructorIndex)"
                 , "{"
                 ] <> cases <> 
@@ -729,7 +736,10 @@ processConstructor dec@(DataD cxt name tyVars cons names) con =
             classInitial  = CppClass derCppName cppFields [] baseClasses tnames []
             Just index    = elemIndex con cons
         serializeFieldsLines <- sequence $ (serializeField <$> cppFields)
-        let serializeCode = intercalate "\n" ([printf "\t::serialize(std::int8_t(%d), output);" index :: String] <> serializeFieldsLines)
+
+        -- Omit constructor index if there is only one constructor
+        let serializeConIndex = if length cons == 1 then [] else [printf "\t::serialize(std::int8_t(%d), output);" index] :: [String]
+        let serializeCode = intercalate "\n" (serializeConIndex <> serializeFieldsLines)
             serializeFn   = CppFunction "serialize" "void" [CppArg "output" "Output &"] serializeCode
             --serializeField field = printf "\t::serialize(%s, output);" (fieldName field) :: String
 
