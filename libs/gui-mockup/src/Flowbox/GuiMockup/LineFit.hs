@@ -3,6 +3,7 @@
 module Flowbox.GuiMockup.LineFit (
 	  CubicBezier(..)
 	, fitCurve
+    , test
 	) where
 
 import           Control.Applicative          ((<$>), (<*>))
