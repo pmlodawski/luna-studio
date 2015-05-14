@@ -12,6 +12,7 @@ module Generator.Expr where
 import qualified Generator.AST.Lit
 import Data.Int
 import GHC.Generics        (Generic)
+import qualified Data.Set as Set
 
 type ID = Int64
 type Pat = Int64
@@ -31,10 +32,10 @@ type EvilArg a = [a]
 data Arg a = Named   { _iid :: ID, _naame :: String, _aarg :: a }
            | Unnamed { _iid :: ID, _aarg :: a                  }
            | NestingEvil { _evil :: EvilArg a }
-           deriving (Show, Eq, Generic, Read)
+           deriving (Show, Eq, Generic, Ord, Read)
 
 data Name = NameA String Int Double | NameB (Maybe (Maybe (Maybe Expr)))
-           deriving (Show, Eq, Generic, Read)
+           deriving (Show, Eq, Ord, Generic, Read)
 
 data Expr  = NOP          { _id :: ID                                                                                            }
            | Accessor     { _id :: ID, _acc       :: Accessor , _dst       :: Expr                                               }
@@ -62,7 +63,7 @@ data Expr  = NOP          { _id :: ID                                           
            -- | TupleCons_   { _id :: ID, _items     :: [Expr]                                                                      }
            | Typed        { _id :: ID, _cls       :: Type     , _expr      :: Expr                                               }
            | Var          { _id :: ID, _name      :: String                                                                      }
-           | FuncVar      { _id :: ID, _fname     :: Name                                                                        }
+           | FuncVar      { _id :: ID, _fnames     :: Set.Set Name                                                                        }
            | Wildcard     { _id :: ID                                                                                            }
            | RangeFromTo  { _id :: ID, _start     :: Expr     , _end       :: Expr                                               }
            | RangeFrom    { _id :: ID, _start     :: Expr                                                                        }
@@ -75,8 +76,8 @@ data Expr  = NOP          { _id :: ID                                           
            | RefType      { _id :: ID, _typeName  :: String   , _namet      :: ()                                             }
            | Case         { _id :: ID, _expr      :: Expr     , _match     :: [Expr]                                             }
            | Match        { _id :: ID, _pat       :: Pat      , _body      :: [Expr]                                             }
-           deriving (Show, Eq, Generic, Read)
+           deriving (Show, Eq, Generic, Ord, Read)
 
 data Accessor = VarAccessor { _accName :: String }
               | ConAccessor { _accName :: String }
-              deriving (Show, Eq, Generic, Read)
+              deriving (Show, Eq, Generic, Ord,  Read)

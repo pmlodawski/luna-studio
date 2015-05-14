@@ -4,12 +4,23 @@
 #include "main.h"
 
 #include <fstream>
+#include <sstream>
 #include "Generator/Expr/Name.h"
 #include <Generator/Expr/Lit4.h>
 
 using Expr = Generator_Expr_Expr;
 using Expr_Con = Generator_Expr_Expr_Con;
 using Accessor_ConAccessor = Generator_Expr_Accessor_ConAccessor;
+
+void request(std::string baseTopic, std::string topic, std::string msgContents)
+{}
+
+// std::shared_ptr<Expr> parse(std::string text)
+// {
+// 	std::ostringstream buffer;
+// 	serialize(text, buffer);
+// 	request("parse", "request", buffer.str());
+// }
 
 template<typename T = Expr>
 std::shared_ptr<T> parseFile(const std::string &fname)

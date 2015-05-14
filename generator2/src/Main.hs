@@ -7,7 +7,7 @@ import Generator.Generator
 import Generator.Expr
 import System.FilePath
 -- import Data.Binary
-import Generator.Binary
+import Data.Binary
 -- import Generator.Binary.Class
 
 import qualified Language.Haskell.TH as TH
