@@ -330,6 +330,23 @@ computeCenterTangent points center = normalize tHatCenter
         v2 = (points V.! center) - (points V.! (center + 1))
         tHatCenter = (v1 + v2) ^/ 2
 
+cross' :: Num a => V2 a -> V2 a -> a
+cross' (V2 x1 y1) (V2 x2 y2) = x1 * y2 - x2 * y1
+
+linearity :: Num a => V2 a -> V2 a -> V2 a -> a
+linearity p0 p1 p2 = cross' (p2 - p0) (p1 - p0)
+
+test2 :: [[Float]] -> String
+test2 input = jsify $ V.map (curry3 linearity) vector
+	where
+		inputVector = readPoints input
+		vector = V.zipWith3 (,,) inputVector (V.tail inputVector) (V.tail $ V.tail inputVector)
+		jsify = wrap . intercalate ", " . map show . V.toList
+			where
+				wrap s = "[" ++ s ++ "]"
+
+curry3 :: (a -> b -> c -> d) -> (a, b, c) -> d
+curry3 f (a, b, c) = f a b c
 
 -- I/O
 
