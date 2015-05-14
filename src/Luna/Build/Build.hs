@@ -34,7 +34,6 @@ import qualified Luna.Build.BuildConfig                     as BuildConfig
 import           Luna.Build.Diagnostics                     (Diagnostics, printAST, printHAST, printHSC, printHeader, printSA, printSSA)
 import qualified Luna.Build.Source.File                     as File
 import qualified Luna.Data.ImportInfo                       as II
-import qualified Luna.Pass.Import                           as I
 import qualified Luna.Data.ModuleInfo                       as MI
 import           Luna.Data.Namespace                        (Namespace (Namespace))
 import qualified Luna.Data.Namespace                        as Namespace
@@ -49,8 +48,10 @@ import qualified Luna.Parser.Parser                         as Parser
 import qualified Luna.Parser.Pragma                         as Pragma
 import qualified Luna.Pass                                  as Pass
 import qualified Luna.Pass.Analysis.Imports                 as Imports
+import qualified Luna.Pass.Analysis.InsertStd               as InsertStd
 import qualified Luna.Pass.Analysis.Struct                  as SA
 import           Luna.Pass.Import                           (getImportPaths)
+import qualified Luna.Pass.Import                           as I
 import qualified Luna.Pass.Target.HS.HASTGen                as HASTGen
 import qualified Luna.Pass.Target.HS.HSC                    as HSC
 import qualified Luna.Pass.Transform.Desugar.ImplicitCalls  as ImplCalls
@@ -62,7 +63,6 @@ import qualified Luna.Pass.Transform.SSA                    as SSA
 import           Luna.Syntax.Name.Path                      (QualPath (QualPath))
 import qualified Luna.System.Pragma.Store                   as Pragma
 import           Luna.System.Session                        as Session
-import qualified Luna.Pass.Analysis.InsertStd               as InsertStd
 
 
 
@@ -70,7 +70,7 @@ import qualified Luna.Pass.Analysis.InsertStd               as InsertStd
 type Builder m = (MonadIO m, Functor m)
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 srcFolder :: String
@@ -103,7 +103,6 @@ processCompilable diag rootSrc inclStd compilable  = do
     hscs
 
 
--- @PMlodawski: use this one ;)
 processSource diag src = parseSourceWithFun diag src src False (\_ _ _ _ -> return [])
     
 
