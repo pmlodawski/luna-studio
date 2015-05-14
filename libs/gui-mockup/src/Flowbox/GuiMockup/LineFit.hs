@@ -1,10 +1,13 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Flowbox.GuiMockup.LineFit where
--- (
---	  CubicBezier(..)
---	, fitCurve
---	) where
+module Flowbox.GuiMockup.LineFit 
+ (
+      CubicBezier(..)
+    , generateBezier
+    , fitCurve
+    , chordLengthParameterize
+    , reparameterize
+    ) where
 
 import           Control.Applicative          ((<$>), (<*>))
 import           Control.Error                hiding (err)
@@ -342,17 +345,17 @@ jsifyVector = intercalate "," . map jsifyBezier . V.toList
 
 jsifyBezier :: CubicBezier Float -> String
 jsifyBezier (CubicBezier c0 c1 c2 c3) = jsifyObject fields points
-	where
-		points = map jsifyV2 [c0, c1, c2, c3]
-		fields = zipWith (:) (repeat 'p') $ map show [0..]
+    where
+        points = map jsifyV2 [c0, c1, c2, c3]
+        fields = zipWith (:) (repeat 'p') $ map show [0..]
 
 jsifyV2 :: V2 Float -> String
 jsifyV2 (V2 x y) = "{x: " ++ show x ++ ", y: " ++ show y ++ "}"
 
 jsifyObject :: [String] -> [String] -> String
 jsifyObject fields values = wrap $ intercalate "," $ zipWith (\f v -> f ++ ": " ++ v) fields values
-	where
-		wrap s = "{" ++ s ++ "}"
+    where
+        wrap s = "{" ++ s ++ "}"
 
 test :: Float -> [[Float]] -> String
 test err input = jsifyVector $ fitCurve (readPoints input) err
