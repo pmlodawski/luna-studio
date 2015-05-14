@@ -95,7 +95,7 @@ runSession inclStd s =
 
 
 processCompilable diag rootSrc inclStd compilable  = do 
-    let getBasePath = UniPath.toUnixString . UniPath.basePath . UniPath.fromUnixString
+    let getBasePath = UniPath.toFilePath . UniPath.basePath . UniPath.fromFilePath
         rootPath    = getBasePath . getPath $ rootSrc ^. Source.src
         mkFile      = Source.File . pack . (rootPath </>) . (++ ".luna") . MI.modPathToString
         sources     = map (\i -> Source i (mkFile i)) compilable
@@ -186,7 +186,7 @@ run :: Builder m => BuildConfig -> Diagnostics -> UniPath -> UniPath -> m ()
 run buildConfig diag rootPath filePath = do
     lunaP        <- liftIO $ Env.lookupEnv "LUNAPATH"
     let lunaPath = case lunaP of Just p -> p; Nothing -> ""
-        modPath  = UniPath.toUnixString $ init filePath
+        modPath  = UniPath.toFilePath $ init filePath
     liftIO $ Env.setEnv "LUNAPATH" (modPath ++ (':' : lunaPath))
     case buildConfig ^. BuildConfig.buildDir of
         Nothing -> Directory.withTmpDirectory tmpDirPrefix $ buildInFolder buildConfig diag rootPath filePath
