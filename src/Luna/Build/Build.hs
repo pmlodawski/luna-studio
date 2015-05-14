@@ -20,7 +20,7 @@ import           Control.Monad.Trans.Either
 import           Data.String.Utils                          (replace)
 import           Data.Text.Lazy                             (pack, unpack)
 import           System.FilePath                            ((</>))
-import qualified System.Posix.Env                           as Env
+import qualified System.Environment                         as Env
 
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
@@ -185,9 +185,10 @@ prepareSource diag inclStd rootSrc src = do
 
 run :: Builder m => BuildConfig -> Diagnostics -> UniPath -> UniPath -> m ()
 run buildConfig diag rootPath filePath = do
-    lunaPath <- liftIO $ Env.getEnvDefault "LUNAPATH" ""
-    let modPath = UniPath.toUnixString $ init filePath
-    liftIO $ Env.setEnv "LUNAPATH" (modPath ++ (':' : lunaPath)) True
+    lunaP        <- liftIO $ Env.lookupEnv "LUNAPATH"
+    let lunaPath = case lunaP of Just p -> p; Nothing -> ""
+        modPath  = UniPath.toUnixString $ init filePath
+    liftIO $ Env.setEnv "LUNAPATH" (modPath ++ (':' : lunaPath))
     case buildConfig ^. BuildConfig.buildDir of
         Nothing -> Directory.withTmpDirectory tmpDirPrefix $ buildInFolder buildConfig diag rootPath filePath
         Just bd -> do liftIO $ Directory.createDirectoryIfMissing True bd
