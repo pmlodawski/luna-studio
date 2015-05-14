@@ -204,10 +204,11 @@ rasterizeMask w h (Mask pathRaw maybeFeather) =
                   cond2 = (p0 &&* f1) ||* (p1 &&* f0)
                   c2 = A.fromIntegral $ A.boolToInt cond2
                   nc2 = A.fromIntegral $ A.boolToInt $ A.not cond2
-                  x' = (dp*p + df*f)/(dp+df)
+                  x' = srgb $ ((dp*p + df*f)/(dp+df))
               in A.cond (cond1)
                   (p*f)
                   (c2*x' + nc2*(max p f))
+          srgb v = v A.<=* 0.0031308 A.? (12.92 * v, (1.055 * v) ** (1 / 2.4) - 0.055)
           checkEqual fea pat
               | fea == pat = path
               | otherwise  = let
