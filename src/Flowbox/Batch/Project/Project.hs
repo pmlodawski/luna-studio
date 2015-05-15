@@ -4,13 +4,15 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE FlexibleInstances     #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TemplateHaskell       #-}
 
 module Flowbox.Batch.Project.Project where
 
-import Data.Int (Int32)
+import Data.Int     (Int32)
+import GHC.Generics ()
 
 import           Flowbox.Data.Convert
 import           Flowbox.Prelude
@@ -34,7 +36,7 @@ makeLenses ''Project
 
 
 newtype ID = ID { toInt :: Int }
-           deriving (Show, Ord, Eq)
+           deriving (Show, Ord, Eq, Generic)
 
 
 instance Default Project where
