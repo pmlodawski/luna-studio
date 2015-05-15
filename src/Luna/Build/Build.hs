@@ -65,6 +65,8 @@ import qualified Luna.System.Pragma.Store                   as Pragma
 import           Luna.System.Session                        as Session
 
 
+
+
 type Builder m = (MonadIO m, Functor m)
 
 logger :: LoggerIO
@@ -92,9 +94,23 @@ runSession inclStd s =
         False -> eitherStringToM . fst =<< Session.runT (void Parser.init >> Pragma.enable (Pragma.orphanNames) >> runEitherT s)
 
 
-parseSource diag rootSrc src inclStd = do
+processCompilable diag rootSrc inclStd compilable  = do 
+    let getBasePath = UniPath.toFilePath . UniPath.basePath . UniPath.fromFilePath
+        rootPath    = getBasePath . getPath $ rootSrc ^. Source.src
+        mkFile      = Source.File . pack . (rootPath </>) . (++ ".luna") . MI.modPathToString
+        sources     = map (\i -> Source i (mkFile i)) compilable
+        hscs        = mapM (prepareSource diag inclStd rootSrc) sources
+    hscs
+
+
+processSource diag src = parseSourceWithFun diag src src False (\_ _ _ _ -> return [])
+    
+
+parseSource diag rootSrc src inclStd = parseSourceWithFun diag rootSrc src inclStd processCompilable
+
+
+parseSourceWithFun diag rootSrc src inclStd procComp = do
     let liFile   = src ^. Source.modName
-        rootPath = UniPath.toUnixString . UniPath.basePath . UniPath.fromUnixString . unpack $ rootSrc ^. Source.src ^. Source.path
 
     printHeader "Stage1"
     (ast, astinfo) <- Pass.run1_ Stage1.pass src
@@ -102,26 +118,22 @@ parseSource diag rootSrc src inclStd = do
 
     let impPaths =  I.getImportPaths ast
     compilable <- liftIO $ filterM MI.moduleExists impPaths
-    let mkFile      = Source.File . pack . (rootPath </>) . (++ ".luna") . MI.modPathToString
-        sources     = map (\i -> Source i (mkFile i)) compilable
-    let hscs        = mapM (prepareSource diag inclStd rootSrc) sources
-    compiledCodes <- hscs
+    compiledCodes <- procComp diag rootSrc inclStd compilable
 
     (ast, astinfo) <- Pass.run2_ InsertStd.pass astinfo ast
 
     printHeader "Extraction of imports"
     importInfo     <- Pass.run1_ Imports.pass ast
 
-
     ----printHeader "Hash"
     ----ast             <- Pass.run1_ Hash.pass ast
 
     printHeader "SA"
-    sa             <- Pass.run2_ SA.pass (StructData mempty importInfo) ast
-    let sa1   = sa ^. StructData.namespace . Namespace.info
-        mInfo = MI.ModuleInfo liFile mempty sa1 mempty
+    structData1 <- Pass.run2_ SA.pass (StructData mempty importInfo) ast
+    let sa1     = structData1 ^. StructData.namespace . Namespace.info
+        mInfo   = MI.ModuleInfo liFile mempty sa1 mempty
 
-    liftIO $ MI.writeModInfoToFile mInfo (unpack $ src ^. Source.src ^. Source.path)
+    liftIO $ MI.writeModInfoToFile mInfo (getPath  $ src ^. Source.src)
     printSA diag sa1
 
     printHeader "Stage2"
@@ -133,11 +145,11 @@ parseSource diag rootSrc src inclStd = do
     printAST diag ast
 
     printHeader "SA2"
-    sa             <- Pass.run2_ SA.pass sa ast
-    printSA diag (sa ^. StructData.namespace . Namespace.info)
+    structData2 <- Pass.run2_ SA.pass structData1 ast
+    printSA diag (structData2 ^. StructData.namespace . Namespace.info)
 
-    let sa2 = sa ^. StructData.namespace . Namespace.info
-        ii2 = sa ^. StructData.importInfo
+    let sa2 = structData2 ^. StructData.namespace . Namespace.info
+        ii2 = structData2 ^. StructData.importInfo
 
     printHeader "ImplScopes"
     (ast, astinfo) <- Pass.run2_ ImplScopes.pass (astinfo, sa2, ii2)  ast
@@ -172,9 +184,9 @@ prepareSource diag inclStd rootSrc src = do
 
 run :: Builder m => BuildConfig -> Diagnostics -> UniPath -> UniPath -> m ()
 run buildConfig diag rootPath filePath = do
-    lunaP <- liftIO $ Env.lookupEnv "LUNAPATH"
+    lunaP        <- liftIO $ Env.lookupEnv "LUNAPATH"
     let lunaPath = case lunaP of Just p -> p; Nothing -> ""
-        modPath  = UniPath.toUnixString $ init filePath
+        modPath  = UniPath.toFilePath $ init filePath
     liftIO $ Env.setEnv "LUNAPATH" (modPath ++ (':' : lunaPath))
     case buildConfig ^. BuildConfig.buildDir of
         Nothing -> Directory.withTmpDirectory tmpDirPrefix $ buildInFolder buildConfig diag rootPath filePath
@@ -216,3 +228,22 @@ copyExecutable location name outputPath = liftIO $ do
     let execName   = Platform.dependent name (name ++ ".exe") name
         executable = UniPath.append ("dist/build/" ++ name ++ "/" ++ execName) location
     Directory.copyFile executable outputPath
+
+
+------------------------------------------------------------------------------------
+-- CLASSES AND INSTANCES
+------------------------------------------------------------------------------------
+class GetFromSource a where
+    getPath :: a -> String
+    getText :: a -> String
+
+
+instance GetFromSource Source.File where
+    getPath (Source.File path) = unpack path
+    getText (Source.File path) = "TODO"
+
+
+instance GetFromSource Source.Text where
+    getPath (Source.Text txt) = "Interactive/Interactive.luna"
+    getText (Source.Text txt) = unpack txt
+
