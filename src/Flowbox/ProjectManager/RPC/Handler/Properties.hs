@@ -50,7 +50,7 @@ getASTProperties request@(GetASTProperties.Request tnodeID tlibID tprojectID) = 
 
 
 setASTProperties :: SetASTProperties.Request -> Maybe Topic -> RPC Context IO ([SetASTProperties.Update], [Message])
-setASTProperties request@(SetASTProperties.Request tproperties tnodeID tlibID tprojectID) undoTopic = do
+setASTProperties (SetASTProperties.Request tproperties tnodeID tlibID tprojectID) undoTopic = do
     properties <- decodeE tproperties
     context <- Batch.get
     let nodeID    = decodeP tnodeID
