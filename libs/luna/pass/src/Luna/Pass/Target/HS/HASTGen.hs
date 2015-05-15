@@ -16,7 +16,7 @@ module Luna.Pass.Target.HS.HASTGen where
 
 import           Data.Maybe (catMaybes, isJust)
 import qualified Data.Set   as Set
-
+import           Data.Text.Lazy                   (pack)
 import           Flowbox.Prelude                   hiding (Traversal)
 import           Luna.Pass                         (Pass (Pass), PassMonad)
 import qualified Luna.Pass                         as Pass
@@ -73,7 +73,7 @@ import qualified Luna.Data.Namespace          as Namespace
 import           Luna.Data.Namespace          (Namespace)
 
 import           Luna.Data.ASTInfo            (ASTInfo, genID)
-import           Luna.Data.ImportInfo         (ImportInfo, _impPath)
+import           Luna.Data.ImportInfo         (ImportInfo, Import(Import))
 import qualified Luna.Data.ImportInfo         as II
 
 import           Luna.Syntax.Arg              (Arg(Arg), LArg)
@@ -124,8 +124,8 @@ mkVal    = HE.AppE "val"
 
 
 makeImportList :: ImportInfo -> [HE.Expr]
-makeImportList info = map (mkImp._impPath) (info ^. II.imports )
-    where mkImp = \qp -> HE.Import False (II.qualPathToList qp) Nothing Nothing
+makeImportList info = map mkImp (info ^. II.imports )
+    where mkImp = \(Import path _ _ _ rn) -> HE.Import (isJust rn) (II.qualPathToList path) (toText <$> rn) Nothing
 
 
 pass :: Ctx m a v => Pass State.GenState (ImportInfo -> Unit (LModule a (LExpr a v)) -> PassResult m HE)
@@ -308,13 +308,17 @@ convVar = hash . unwrap
 
 genDecl :: (Monad m, Enumerated lab, Num lab, Show lab) => LDecl lab (LExpr lab ()) -> PassResult m ()
 genDecl ast@(Label lab decl) = case decl of
-    Decl.Imp     {}       -> return () -- FIXME[PM->WD]
+    Decl.Imp     imp       -> {- return () -} genQualifiedImp imp
     Decl.Func    funcDecl -> genStdFunc funcDecl
     Decl.Foreign fdecl    -> genForeign fdecl
     Decl.Data    ddecl    -> genDataDecl False ddecl
     Decl.Pragma  {}       -> return ()
     Decl.TpAls   dst src  -> State.regDecl =<< (HE.TypeD <$> genType dst <*> genType src)
 
+
+genQualifiedImp :: (Monad m) => Decl.Imp -> PassResult m ()
+genQualifiedImp (Decl.ModImp path (Just rename)) = State.regDecl =<< (return $ (HE.Assignment (HE.Var . pack $ "cons_" ++ (toString rename)) (HE.VarE . pack $ (toString rename) ++ ".cons_"  ++ (toString . last $ path))))
+genQualifiedImp _ = return ()
 
 genStdFunc :: (Monad m, Enumerated lab, Num lab, Show lab)
            => Decl.FuncDecl lab (LExpr lab ()) [LExpr lab ()] -> PassResult m ()

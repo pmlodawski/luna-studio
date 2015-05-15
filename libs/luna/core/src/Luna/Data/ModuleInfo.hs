@@ -27,7 +27,7 @@ import           Data.Either.Combinators  (mapRight)
 import           Flowbox.Data.MapForest   (Node)
 import qualified Flowbox.Data.MapForest   as MF
 import           Flowbox.Prelude
-import           Flowbox.System.UniPath   (PathItem, UniPath, toUnixString, fromUnixString)
+import           Flowbox.System.UniPath   (PathItem, UniPath)
 import qualified Flowbox.System.Directory as FlowDir
 import           Luna.Data.StructInfo     (OriginInfo, Scope, StructInfo)
 import qualified Luna.Data.StructInfo     as SI
@@ -151,7 +151,7 @@ data CheckType = IsParsed | Exists
 
 checkModule :: CheckType -> QualPath -> IO Bool
 checkModule checkType path = do
-    lunaP <- liftIO $ Env.lookupEnv lunaPathVar
+    lunaP        <- Env.lookupEnv lunaPathVar
     let lunaPath = case lunaP of Just p -> p; Nothing -> ""
         pathDirs = Text.splitOn (Text.pack pathSep) (Text.pack lunaPath) & map Text.unpack
         currDir  = "." 
@@ -174,8 +174,8 @@ moduleIsParsed = checkModule IsParsed
 
 findModInfo :: QualPath -> IO (Maybe ModuleInfo)
 findModInfo path = do
-    lunaP <- liftIO $ Env.lookupEnv lunaPathVar
-    let lunaPath = case lunaP of Just p -> p; Nothing -> ""
+    lunaP        <- Env.lookupEnv lunaPathVar
+    let lunaPath = case lunaP of Just p -> p; Nothing -> ""  
         pathDirs = Text.splitOn (Text.pack pathSep) (Text.pack lunaPath) & map Text.unpack
         currDir  = "." 
         dirs     = currDir : pathDirs
