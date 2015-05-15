@@ -96,13 +96,13 @@ logger :: LoggerIO
 logger = getLoggerIO $moduleName
 
 updateIdMaps :: Int -> Int -> Batch.BatchEnv -> Batch.BatchEnv
-updateIdMaps newID originID = Batch.idMap  %~ Bimap.insert newID originID
+updateIdMaps newID origID = Batch.idMap  %~ Bimap.insert newID origID
 
 
 originID :: (Num a, Eq a) => a -> a -> a
 originID astID newID = case astID of
-                        0     -> newID
-                        astID -> astID
+                        0              -> newID
+                        x | x == astID -> astID
 --                                        originID = if isJust maybe
 --                                                   then astID
 --                                                   else Bimap.lookupR astID
@@ -166,7 +166,7 @@ addData request@(AddData.Request tnewData tbcParent tlibID tprojectID tastID) un
 
 
 addFunction :: AddFunction.Request -> Maybe Topic -> RPC Context IO ([AddFunction.Update], [Message])
-addFunction request@(AddFunction.Request tnewFunction tbcParent tlibID tprojectID tastID) undoTopic = do
+addFunction (AddFunction.Request tnewFunction tbcParent tlibID tprojectID tastID) undoTopic = do
     newFunction <- decodeE tnewFunction
     bcParent    <- decodeE tbcParent
     let libID     = decodeP tlibID
