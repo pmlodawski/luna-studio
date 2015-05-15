@@ -14,6 +14,14 @@ import           Flowbox.GuiMockup.LineFit
 import           Foreign.Storable
 import           Control.Applicative 
 import           Foreign.Ptr
+import           Control.Monad        (forM_, when)
+import           Control.Monad.ST       (runST) 
+import           Data.STRef  
+import           Control.Monad.Trans.Class    (lift)
+import           Control.Error                hiding (err)
+
+
+
 
 --data CubicBezier a = CubicBezier { cubicC0 :: V2 a
 --                                 , cubicC1 :: V2 a
@@ -192,8 +200,51 @@ generateFittingBezier (startLength, endLength) strokeWithDists =
                             then resampleBezierFragment startRest endRest startPointBezier 
                             else (resampleBezierFragment startRest 1.0 startPointBezier) V.++ (V.concat (map resampleBezier (V.toList nextBeziers))) V.++ (resampleBezierFragment 0.0 endRest endPointBezier)
         u =  chordLengthParameterize resampledPoints
-        generatedBezier = generateBezier resampledPoints u ((ho-startPoint)) (normVec (hi-endPoint))
-    in generatedBezier --CubicBezier startPoint ho hi endPoint
+        tHat1 = ho-startPoint
+        tHat2 = hi-endPoint
+        generatedBezier = generateBezier resampledPoints u tHat1 tHat2
+
+        --iteration :: Float
+        --iteration = runST $ do
+        --    u' <- newSTRef u
+        --    --splitPoint' <- lift $ newSTRef initialSplitPoint
+        --    bezCurve' <- newSTRef generatedBezier
+
+        --    forM_ [(1::Int)..4] $ \_ -> do
+        --        uVal <- readSTRef u'
+        --        bezCurveVal <- readSTRef bezCurve'
+        --        let uPrime = reparameterize resampledPoints uVal bezCurveVal
+
+        --        writeSTRef bezCurve' $ generateBezier resampledPoints uPrime tHat1 tHat2
+
+        --        bezCurveVal <- readSTRef bezCurve'
+        --        --let (maxErrorVal, splitPointVal) = computeMaxError points bezCurveVal uPrime
+
+        --        --writeSTRef splitPoint' splitPointVal
+        --        --when (maxErrorVal < iterationError) $ left bezCurveVal
+
+        --        writeSTRef u' uPrime
+
+        --    return $ readSTRef bezCurve'
+        iteration = runST $ runEitherT $ do
+                u' <- lift $ newSTRef u
+                bezCurve' <- lift $ newSTRef generatedBezier
+
+                forM_ [(1::Int)..4] $ \_ -> do
+                    uVal <- lift $ readSTRef u'
+                    bezCurveVal <- lift $ readSTRef bezCurve'
+                    let uPrime = reparameterize resampledPoints uVal bezCurveVal
+
+                    lift $ writeSTRef bezCurve' $ generateBezier resampledPoints uPrime tHat1 tHat2
+
+                    bezCurveVal <- lift $ readSTRef bezCurve'
+
+                    lift $ writeSTRef u' uPrime
+
+                lift (readSTRef bezCurve') >>= right
+        Right resultBezier = iteration
+          
+    in resultBezier --CubicBezier startPoint ho hi endPoint
 
 assignControlPoint'' :: (Float, Float, Float) -> V.Vector (Float, CubicBezier Float) -> (V2 Float, V2 Float, V2 Float)
 assignControlPoint'' (prev, bezierLength, next) strokeWithDists = 
