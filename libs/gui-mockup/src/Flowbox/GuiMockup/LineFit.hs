@@ -7,7 +7,10 @@ module Flowbox.GuiMockup.LineFit
     , fitCurve
     , chordLengthParameterize
     , reparameterize
-    ) where
+	, fitCurve
+    , test
+    , test2
+	) where
 
 import           Control.Applicative          ((<$>), (<*>))
 import           Control.Error                hiding (err)
@@ -88,12 +91,17 @@ fitCubic points tHat1 tHat2 err
             iteration = runST $ runEitherT $ do
                 u' <- lift $ newSTRef u
                 splitPoint' <- lift $ newSTRef initialSplitPoint
+                bezCurve' <- lift $ newSTRef bezCurve
 
                 forM_ [(1::Int)..4] $ \_ -> do
                     uVal <- lift $ readSTRef u'
-                    let uPrime = reparameterize points uVal bezCurve
-                        bezCurveVal = generateBezier points uPrime tHat1 tHat2
-                        (maxErrorVal, splitPointVal) = computeMaxError points bezCurveVal uPrime
+                    bezCurveVal <- lift $ readSTRef bezCurve'
+                    let uPrime = reparameterize points uVal bezCurveVal
+
+                    lift $ writeSTRef bezCurve' $ generateBezier points uPrime tHat1 tHat2
+
+                    bezCurveVal <- lift $ readSTRef bezCurve'
+                    let (maxErrorVal, splitPointVal) = computeMaxError points bezCurveVal uPrime
 
                     lift $ writeSTRef splitPoint' splitPointVal
                     when (maxErrorVal < iterationError) $ left bezCurveVal
@@ -334,6 +342,24 @@ computeCenterTangent points center = normalize tHatCenter
         v2 = (points V.! center) - (points V.! (center + 1))
         tHatCenter = (v1 + v2) ^/ 2
 
+linearity :: (Num a, Floating a, Epsilon a) => V2 a -> V2 a -> V2 a -> a
+linearity p0 p1 p2 = (a `dot` b) / n
+    where
+        a = p2 - p0
+        b = p1 - p0
+        n = norm a * norm b
+
+test2 :: [[Float]] -> String
+test2 input = jsify $ V.map (curry3 linearity) vector
+    where
+        inputVector = readPoints input
+        vector = V.zipWith3 (,,) inputVector (V.tail inputVector) (V.tail $ V.tail inputVector)
+        jsify = wrap . intercalate ", " . map show . V.toList
+         where
+             wrap s = "[" ++ s ++ "]"
+
+curry3 :: (a -> b -> c -> d) -> (a, b, c) -> d
+curry3 f (a, b, c) = f a b c
 
 -- I/O
 
@@ -341,7 +367,9 @@ readPoints :: [[Float]] -> V.Vector (V2 Float)
 readPoints = V.fromList . map (\[x,y] -> V2 x y)
 
 jsifyVector :: V.Vector (CubicBezier Float) -> String
-jsifyVector = intercalate "," . map jsifyBezier . V.toList
+jsifyVector = wrap . intercalate "," . map jsifyBezier . V.toList
+    where
+        wrap s = "[" ++ s ++ "]"
 
 jsifyBezier :: CubicBezier Float -> String
 jsifyBezier (CubicBezier c0 c1 c2 c3) = jsifyObject fields points
@@ -350,10 +378,10 @@ jsifyBezier (CubicBezier c0 c1 c2 c3) = jsifyObject fields points
         fields = zipWith (:) (repeat 'p') $ map show [0..]
 
 jsifyV2 :: V2 Float -> String
-jsifyV2 (V2 x y) = "{x: " ++ show x ++ ", y: " ++ show y ++ "}"
+jsifyV2 (V2 x y) = "{\"x\": " ++ show x ++ ", \"y\": " ++ show y ++ "}"
 
 jsifyObject :: [String] -> [String] -> String
-jsifyObject fields values = wrap $ intercalate "," $ zipWith (\f v -> f ++ ": " ++ v) fields values
+jsifyObject fields values = wrap $ intercalate "," $ zipWith (\f v -> show f ++ ": " ++ v) fields values
     where
         wrap s = "{" ++ s ++ "}"
 
