@@ -35,7 +35,7 @@ import Data.List.Split
 import System.Directory
 import Control.Monad
 
-import Generator.Expr (Lit2, Lit5)
+-- import Generator.Expr (Lit2, Lit5)
 
 derive makeIs ''Dec
 

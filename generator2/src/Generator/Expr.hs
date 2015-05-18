@@ -13,6 +13,10 @@ import qualified Generator.AST.Lit
 import Data.Int
 import GHC.Generics        (Generic)
 import qualified Data.Set as Set
+import Data.Binary (Binary, encode, decode)
+import GHC.Generics        (Generic)
+import Data.ByteString.Lazy (ByteString, empty, pack, unpack)
+
 
 type ID = Int64
 type Pat = Int64
@@ -28,6 +32,22 @@ type Lit4 = Lit3
 type Lit5 = (Lit2, Pat)
 
 type EvilArg a = [a]
+
+
+data Point = Point { x::Int, y::Int} deriving (Show, Generic)
+instance Binary Point
+
+adjust :: String -> [Point] -> String
+adjust s a = "Tere fere" ++ show a ++ " String: " ++ s
+
+foo a  = a + 2
+
+adjust' :: ByteString -> ByteString
+adjust' argBin = resultBin 
+        where
+            (arg0, arg1) = decode argBin
+            result = adjust arg0 arg1
+            resultBin = encode result
 
 data Arg a = Named   { _iid :: ID, _naame :: String, _aarg :: a }
            | Unnamed { _iid :: ID, _aarg :: a                  }

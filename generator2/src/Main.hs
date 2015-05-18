@@ -4,6 +4,7 @@
 
 
 import Generator.Generator
+import Generator.FFI
 import Generator.Expr
 import System.FilePath
 -- import Data.Binary
@@ -15,6 +16,9 @@ import qualified Language.Haskell.TH.Quote as THQ
 
 import qualified Generator.AST.Lit
 
+
+import Data.ByteString.Lazy (ByteString)
+
 instance Binary Generator.AST.Lit.Lit
 instance Binary Accessor
 instance Binary Expr
@@ -24,6 +28,18 @@ instance Binary a => Binary (Arg a)
 outputDirectory = ".." </> ".." </> "sample_deserializer"
 
 encodeWithFname fname val = encodeFile (outputDirectory </> fname) val
+
+$(generateFFI 'adjust)
+
+moja :: Int -> Int
+moja a = a * 43
+
+$(generateFFI 'moja)
+
+mmm a = Main.moja' a
+
+ttt :: ByteString -> ByteString
+ttt b = Main.adjust' b
 
 main = do
     putStrLn "Generator 2 im. Arystotelesa."
