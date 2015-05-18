@@ -14,6 +14,12 @@ import           Linear
 
 
 
+--main function for gui
+guiLineSnap :: V.Vector (CubicBezier Float) -> V.Vector (V2 Float) -> V.Vector (CubicBezier Float)
+guiLineSnap originalCurve strokePoints = optimizeBeziers originalCurve strokeAproximation
+    where
+        strokeAproximation = fitCurve strokePoints 10
+
 optimizeBeziers :: V.Vector (CubicBezier Float) -> V.Vector (CubicBezier Float) -> V.Vector (CubicBezier Float) -- V.Vector (V2 Float, V2 Float, V2 Float)
 optimizeBeziers original strokeAproximation = 
     let originalDistancesNorm = normalizeDistances $ bezierDistances original
