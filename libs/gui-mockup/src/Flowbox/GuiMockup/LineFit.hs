@@ -1,15 +1,16 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ViewPatterns        #-}
 
-module Flowbox.GuiMockup.LineFit 
+module Flowbox.GuiMockup.LineFit
  (
       CubicBezier(..)
     , generateBezier
     , fitCurve
     , chordLengthParameterize
     , reparameterize
-	, fitCurve
     , test
     , test2
+    , test3
 	) where
 
 import           Control.Applicative          ((<$>), (<*>))
@@ -366,8 +367,8 @@ curry3 f (a, b, c) = f a b c
 readPoints :: [[Float]] -> V.Vector (V2 Float)
 readPoints = V.fromList . map (\[x,y] -> V2 x y)
 
-jsifyVector :: V.Vector (CubicBezier Float) -> String
-jsifyVector = wrap . intercalate "," . map jsifyBezier . V.toList
+jsifyVector :: Storable a => (a -> String) -> V.Vector a -> String
+jsifyVector f = wrap . intercalate "," . map f . V.toList
     where
         wrap s = "[" ++ s ++ "]"
 
@@ -386,4 +387,27 @@ jsifyObject fields values = wrap $ intercalate "," $ zipWith (\f v -> show f ++ 
         wrap s = "{" ++ s ++ "}"
 
 test :: Float -> [[Float]] -> String
-test err input = jsifyVector $ fitCurve (readPoints input) err
+test err input = jsifyVector jsifyBezier $ fitCurve (readPoints input) err
+
+---
+
+resample :: Int -> V.Vector (V2 Float) -> V.Vector (V2 Float)
+resample n v@(V.toList -> points) = V.fromList $ go 0 (head points) (tail points) [head points]
+    where
+        i = pathLength v / fromIntegral (n - 1)
+
+        go :: Float -> V2 Float -> [V2 Float] -> [V2 Float] -> [V2 Float]
+        go bigD previousPoint (point:ps) newPoints =
+            let d = distance previousPoint point
+            in  if bigD + d >= i
+                then let q = previousPoint + ((i - bigD) / d) *^ (point - previousPoint)
+                     in  go 0 point (q:ps) (q:newPoints)
+                else go (bigD + d) point ps newPoints
+        go _ _ [] newPoints = reverse newPoints
+
+pathLength :: V.Vector (V2 Float) -> Float
+pathLength v = V.foldl' (\d (prev, next) -> d + distance prev next) 0
+             $ V.zipWith (,) v (V.tail v)
+
+test3 :: Int -> [[Float]] -> String
+test3 n input = jsifyVector jsifyV2 $ resample n $ readPoints input
