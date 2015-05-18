@@ -391,11 +391,13 @@ graphNodeModify (GraphNodeModify.Update request node updateNo) = do
     sync updateNo $ GraphHandler.nodeModify request Nothing
     let projectID = GraphNodeModify.projectID request
         libraryID = GraphNodeModify.libraryID request
-    nodeID    <- Gen.Node.id node <??> "ASTWatch.graphNodeModify : 'nodeID' field is missing"
-    tNodeExpr <- Gen.Node.expr node <??> "ASTWatch.graphNodeAdd : 'expr' field is missing"
-    nodeExpr  <- decodeE tNodeExpr
-    Var.insertTimeRef' (decodeP libraryID) (decodeP nodeID) nodeExpr --TODO[PM] : remove old refs if were present
-    CacheWrapper.modifyNode projectID libraryID nodeID
+    nodeID     <- Gen.Node.id node <??> "ASTWatch.graphNodeModify : 'nodeID' field is missing"
+    case Gen.Node.expr node of
+        Nothing       -> return ()
+        Just tNodeExpr -> do
+            nodeExpr <- decodeE tNodeExpr
+            Var.insertTimeRef' (decodeP libraryID) (decodeP nodeID) nodeExpr --TODO[PM] : remove old refs if were present
+            CacheWrapper.modifyNode projectID libraryID nodeID
 
 
 graphNodeModifyInPlace :: GraphNodeModifyInPlace.Update -> RPC Context (SessionST mm) ()
@@ -404,18 +406,20 @@ graphNodeModifyInPlace (GraphNodeModifyInPlace.Update request updateNo) = do
         tlibraryID = GraphNodeModifyInPlace.libraryID request
         tnode      = GraphNodeModifyInPlace.node request
         tbc      = GraphNodeModifyInPlace.bc request
-    tnodeID   <- Gen.Node.id tnode <??> "ASTWatch.graphNodeModify : 'nodeID' field is missing"
-    tNodeExpr <- Gen.Node.expr tnode <??> "ASTWatch.graphNodeAdd : 'expr' field is missing"
+    tnodeID   <- Gen.Node.id tnode <??> "ASTWatch.graphNodeModifyInPlace : 'nodeID' field is missing"
     let projectID = decodeP tprojectID
         libraryID = decodeP tlibraryID
         nodeID    = decodeP tnodeID
     bc      <- decodeE tbc
     oldNode <- Batch.nodeByID nodeID bc libraryID projectID
     sync updateNo $ GraphHandler.nodeModifyInPlace request Nothing
-    nodeExpr  <- decodeE tNodeExpr
-    Var.insertTimeRef' libraryID nodeID nodeExpr --TODO[PM] : remove old refs if were present
-    when (Just nodeExpr /= oldNode ^? Node.expr) $
-        CacheWrapper.modifyNode tprojectID tlibraryID tnodeID
+    case Gen.Node.expr tnode of
+        Nothing -> return ()
+        Just tNodeExpr -> do
+            nodeExpr <- decodeE tNodeExpr
+            Var.insertTimeRef' libraryID nodeID nodeExpr --TODO[PM] : remove old refs if were present
+            when (Just nodeExpr /= oldNode ^? Node.expr) $
+                CacheWrapper.modifyNode tprojectID tlibraryID tnodeID
 
 
 graphNodeDefaultRemove :: GraphNodeDefaultRemove.Update -> RPC Context (SessionST mm) ()
