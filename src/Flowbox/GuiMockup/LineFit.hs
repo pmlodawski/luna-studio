@@ -10,6 +10,7 @@ module Flowbox.GuiMockup.LineFit
     , reparameterize
     , test
     , test2
+    , test3
 	) where
 
 import           Control.Applicative          ((<$>), (<*>))
