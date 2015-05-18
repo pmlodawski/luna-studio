@@ -37,17 +37,17 @@ type EvilArg a = [a]
 data Point = Point { x::Int, y::Int} deriving (Show, Generic)
 instance Binary Point
 
-adjust :: String -> [Point] -> String
-adjust s a = "Tere fere" ++ show a ++ " String: " ++ s
+--adjust :: String -> [Point] -> String
+--adjust s a = "Tere fere" ++ show a ++ " String: " ++ s
 
-foo a  = a + 2
+--foo a  = a + 2
 
-adjust' :: ByteString -> ByteString
-adjust' argBin = resultBin 
-        where
-            (arg0, arg1) = decode argBin
-            result = adjust arg0 arg1
-            resultBin = encode result
+--adjust' :: ByteString -> ByteString
+--adjust' argBin = resultBin
+--        where
+--            (arg0, arg1) = decode argBin
+--            result = adjust arg0 arg1
+--            resultBin = encode result
 
 data Arg a = Named   { _iid :: ID, _naame :: String, _aarg :: a }
            | Unnamed { _iid :: ID, _aarg :: a                  }

@@ -29,17 +29,17 @@ outputDirectory = ".." </> ".." </> "sample_deserializer"
 
 encodeWithFname fname val = encodeFile (outputDirectory </> fname) val
 
-$(generateFFI 'adjust)
+-- $(generateFFI 'adjust)
 
-moja :: Int -> Int
-moja a = a * 43
+--moja :: Int -> Int
+--moja a = a * 43
 
-$(generateFFI 'moja)
+-- $(generateFFI 'moja)
 
-mmm a = Main.moja' a
+--mmm a = Main.moja' a
 
-ttt :: ByteString -> ByteString
-ttt b = Main.adjust' b
+--ttt :: ByteString -> ByteString
+--ttt b = Main.adjust' b
 
 main = do
     putStrLn "Generator 2 im. Arystotelesa."

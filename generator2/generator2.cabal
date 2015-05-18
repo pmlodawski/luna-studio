@@ -20,7 +20,7 @@ executable generator
   hs-source-dirs:   src
   -- other-modules:       
   other-extensions:    DeriveGeneric, TypeFamilies, FlexibleContexts, DefaultSignatures, TemplateHaskell
-  build-depends:       base, directory, lens, derive, split, tofromxml, bytestring, template-haskell, binary, filepath, transformers, data-default, containers, nats, utf8-string, reinterpret-cast, array      
+  build-depends:       base, directory, lens, derive, split, tofromxml, bytestring, template-haskell, binary, filepath, transformers, data-default, containers, nats, utf8-string, reinterpret-cast, array, neat-interpolation      
   default-language:    Haskell2010
 
 
@@ -28,7 +28,7 @@ library
   hs-source-dirs:   src
   -- other-modules:       
   other-extensions:    DeriveGeneric, TypeFamilies, FlexibleContexts, DefaultSignatures, TemplateHaskell
-  build-depends:       base, directory, lens, derive, split, tofromxml, bytestring, template-haskell, binary, filepath, transformers, data-default, containers, nats, utf8-string, reinterpret-cast, array      
+  build-depends:       base, directory, lens, derive, split, tofromxml, bytestring, template-haskell, binary, filepath, transformers, data-default, containers, nats, utf8-string, reinterpret-cast, array, neat-interpolation      
   default-language:    Haskell2010
   exposed-modules: Generator.Generator, Generator.AST.Lit, Generator.Expr, Generator.FFI
   ghc-options:     -O2 -Wall -fliberate-case-threshold=1000  
