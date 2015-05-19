@@ -48,3 +48,4 @@ iaMain astinfo ast = do includeStd <- Pragma.lookup Pragma.includeStd
 
 stdImport :: Enum.Enumerated a => ASTInfo -> D.LDecl a e
 stdImport astinfo = L.Label (Enum.tag $ astinfo ^. ASTInfo.lastID) (D.Imp $ D.DeclImp [fromText "FlowboxM", fromText "Libs", fromText "Flowbox", fromText "Std"] [D.Wildcard []])
+
