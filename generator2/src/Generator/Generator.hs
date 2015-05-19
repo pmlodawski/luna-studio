@@ -790,7 +790,7 @@ processConstructor dec@(DataD cxt name tyVars cons names) con =
         deserializeFromMethod <- prepareDeserializeFromMethodDer classInitial
         deserializeMethod <- prepareDeserializeMethodDer classInitial
 
-        let defaultCtor = CppMethod (CppFunction prettyConName "" [] "") [] Usual
+        let defaultCtor = CppMethod (CppFunction derCppName "" [] "") [] Usual
 
         let whichMethod =
                 let whichFn = whichFunction baseCppName tnames ("\treturn " <> baseCppName<> "::" <> prettyConName <> ";")
