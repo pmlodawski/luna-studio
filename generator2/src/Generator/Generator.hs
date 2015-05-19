@@ -757,6 +757,13 @@ serializeField field@(CppField fieldName fieldType fieldSrc) = do
     let fname = if collapsedMaybe then "serializeMaybe" else "serialize"
     return $ printf "\t::%s(%s, output);" fname fieldName
 
+initializingCtor :: String -> [CppField] -> CppMethod
+initializingCtor n fields = CppMethod (CppFunction n "" args body) [] Usual where
+    arg field = CppArg (fieldName field) (fieldType field)
+    assignment field = let fn = (fieldName field) in printf "this->%s = %s;" fn fn
+    body = (intercalate "\n" $ assignment <$> fields)
+    args = arg <$> fields
+
 processConstructor :: Dec -> Con -> Q CppClass
 processConstructor dec@(DataD cxt name tyVars cons names) con =
     do
@@ -791,12 +798,13 @@ processConstructor dec@(DataD cxt name tyVars cons names) con =
         deserializeMethod <- prepareDeserializeMethodDer classInitial
 
         let defaultCtor = CppMethod (CppFunction derCppName "" [] "") [] Usual
+        let initCtor = initializingCtor derCppName cppFields
 
         let whichMethod =
                 let whichFn = whichFunction baseCppName tnames ("\treturn " <> baseCppName<> "::" <> prettyConName <> ";")
                 in CppMethod whichFn [OverrideQualifier] Virtual
 
-        let methods = [defaultCtor, serializeMethod, deserializeMethod, deserializeFromMethod, whichMethod]
+        let methods = [defaultCtor, initCtor, serializeMethod, deserializeMethod, deserializeFromMethod, whichMethod]
         return $ CppClass derCppName cppFields methods baseClasses tnames []
 processConstructor dec arg = trace ("FIXME: Con for " <> show arg) (return $ CppClass "" [] [] [] [] [])
 
