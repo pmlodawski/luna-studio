@@ -790,11 +790,13 @@ processConstructor dec@(DataD cxt name tyVars cons names) con =
         deserializeFromMethod <- prepareDeserializeFromMethodDer classInitial
         deserializeMethod <- prepareDeserializeMethodDer classInitial
 
+        let defaultCtor = CppMethod (CppFunction prettyConName "" [] "") [] Usual
+
         let whichMethod =
                 let whichFn = whichFunction baseCppName tnames ("\treturn " <> baseCppName<> "::" <> prettyConName <> ";")
                 in CppMethod whichFn [OverrideQualifier] Virtual
 
-        let methods = [serializeMethod, deserializeMethod, deserializeFromMethod, whichMethod]
+        let methods = [defaultCtor, serializeMethod, deserializeMethod, deserializeFromMethod, whichMethod]
         return $ CppClass derCppName cppFields methods baseClasses tnames []
 processConstructor dec arg = trace ("FIXME: Con for " <> show arg) (return $ CppClass "" [] [] [] [] [])
 
