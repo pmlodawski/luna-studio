@@ -77,11 +77,12 @@ instance ArgumentTypes Type where
 
 
 returnedType :: Type -> Type
+returnedType functionType | trace ("<<>>" <> show functionType) False = undefined
 returnedType functionType = case functionType of
-        AppT (AppT ArrowT _) ret@(ConT t)  
-            -> ret
-        AppT (AppT ArrowT _) right@(AppT _ _)
+        AppT (AppT ArrowT _) right@(AppT (AppT ArrowT _) _)
             -> returnedType right
+        AppT (AppT ArrowT _) ret  
+            -> ret
         _   -> error $ "Failed to deduce returned type from " ++ show functionType
 
 -- takes name of function to call and list of arguments names
@@ -400,6 +401,11 @@ instance  CollapsibleCode FormattedCppMethod where
             (intercalate "\n\n"  $  _afterClassCode <$> methods)
             (intercalate "\n\n"  $  _cppCode <$> methods)
 
+hasDtorDefined :: CppClass -> Bool
+hasDtorDefined (CppClass clsname _ methods _ _ _) = any isDtor methods where
+    isDtor method = (name (function method)) == "~"<>clsname
+
+
 instance CppFormattable CppClass where
     formatCpp cls@(CppClass name fields methods bases tmpl enums) =
         let formatBase (CppDerive bname bvirt bacc) =
@@ -414,10 +420,11 @@ instance CppFormattable CppClass where
             -- fff =  (formatCppCtx <$> methods <*> [cls]) :: [CppFormattedCode]
             (FormattedCppMethod methodsHeader implsHeader methodsImpl) = collapseCode (formatMethod <$> methods <*> [cls])
             templatePreamble = formatTemplateIntroductor tmpl
+            dtorCode = if hasDtorDefined cls then "" else printf "\tvirtual ~%s() {}\n" name
             headerCode =
                 printf 
-                    "%sclass %s %s \n{\npublic:\n\tvirtual ~%s() {}\n%s%s\n\n%s\n};\n%s"
-                    templatePreamble name basesTxt name enumsTxt fieldsTxt methodsHeader implsHeader
+                    "%sclass %s %s \n{\npublic:\n%s%s%s\n\n%s\n};\n%s"
+                    templatePreamble name basesTxt dtorCode enumsTxt fieldsTxt methodsHeader implsHeader
             bodyCode = methodsImpl
         in (headerCode, bodyCode)
 
