@@ -1,54 +1,168 @@
-#% +OrphanNames
-
-foreign haskell import qualified Data.Array.Accelerate as A
-
-#include Prelude/Prelude.lunaturbo
-#include Graphics/Geom2D/Geom.lunaturbo
-#include Graphics/Math/Math.lunaturbo
-#include Graphics/Color/Color.lunaturbo
-#include Graphics/Matte/Matte.lunaturbo
-
-#include Graphics/Image/Image.lunaturbo
-#include Graphics/Image/View.lunaturbo
-
-#include Graphics/Image/Constants.lunaturbo
-#include Graphics/Image/Merge.lunaturbo
-#include Graphics/Image/Noise.lunaturbo
-#include Graphics/Image/Dithering.lunaturbo
-
-#include Graphics/Compo/ColorCorrect/ColorCorrection.lunaturbo
-#include Graphics/Compo/FilterTransform/FilterTransform.lunaturbo
-#include Graphics/Compo/Keying/Keying.lunaturbo
-
 #
-#                OTHER
+#                STD
 #
 
-alias Time=Float
+foreign haskell import Data.Maybe (fromJust)
 
-def time:
-    0.0
 
-def render a path gamma time:
-    a.save (applyTime path time) gamma
+foreign haskell class Int
+foreign haskell class Float
+foreign haskell class Char
+foreign haskell class String
 
-foreign haskell def applyTime path time:
-    liftF2 applyTime time path
+foreign haskell class Bool:
+    True
+    False
 
-def foo a:
-	a
+foreign haskell def Bool.toString:
+    liftF1 show self
 
-def read path gamma:
-    img = readRaw path
-    img.gammaToLinear gamma
+foreign haskell class Maybe a:
+    Just:
+        unwrap :: a
+    Nothing
 
-foreign haskell def printfInt str int:
-    liftF2 printfInt str int
+foreign haskell class Either a b:
+    Left: l :: a
+    Right: r :: b
 
-def readSeq path fileName gamma frame:
-    read (printfInt ((path.++"/").++fileName) (frame.floor)) gamma
+foreign haskell def Either.unwrap:
+    liftF1 (either (error "unwrap called on Left") id) self
 
-def Image.save path gamma:
-    img = self.gammaFromLinear gamma
-    img.saveRaw path
-    self
+class Range:
+    lo, hi :: Float
+
+alias FilePath = String
+
+def null a:
+    a
+
+foreign haskell def print msg:
+    autoLift1 print msg
+
+# CHAR
+
+foreign haskell def Char.toString:
+    liftF2 (:) self (val ([] :: String))
+
+# STRING
+
+foreign haskell def String.++ str:
+    liftF2 (++) self str
+
+# INT
+
+foreign haskell def Int.+ a:
+    liftF2 (+) self a
+
+foreign haskell def Int.- a:
+    liftF2 (-) self a
+
+foreign haskell def Int.* a:
+    liftF2 (*) self a
+
+foreign haskell def Int./ a:
+    liftF2 (/) self a
+
+foreign haskell def Int.> a:
+    liftF2 (>) self a
+
+foreign haskell def Int.== a:
+    liftF2 (==) self a
+
+foreign haskell def Int.< a:
+    liftF2 (<) self a
+
+foreign haskell def Int.<= a:
+    liftF2 (<=) self a
+
+foreign haskell def Int.>= a:
+    liftF2 (>=) self a
+
+def Int.inc:
+    self + 1
+
+def Int.dec:
+    self - 1
+
+foreign haskell def Int.fromIntegral:
+    liftF1 fromIntegral self :: Value Pure Safe Float
+
+foreign haskell def Int.toString:
+    liftF1 show self
+
+# DOUBLE
+
+foreign haskell def Float.truncate:
+    liftF1 truncate self :: Value Pure Safe Int
+
+foreign haskell def Float.round:
+    liftF1 round self :: Value Pure Safe Int
+
+foreign haskell def Float.floor:
+    liftF1 floor self :: Value Pure Safe Int
+
+foreign haskell def Float.ceiling:
+    liftF1 ceiling self :: Value Pure Safe Int
+
+foreign haskell def Float.+ a:
+    liftF2 (+) self a
+
+foreign haskell def Float.- a:
+    liftF2 (-) self a
+
+foreign haskell def Float.* a:
+    liftF2 (*) self a
+
+foreign haskell def Float./ a:
+    liftF2 (/) self a
+
+foreign haskell def Float.> a:
+    liftF2 (>) self a
+
+foreign haskell def Float.== a:
+    liftF2 (==) self a
+
+foreign haskell def Float.< a:
+    liftF2 (<) self a
+
+foreign haskell def Float.<= a:
+    liftF2 (<=) self a
+
+foreign haskell def Float.>= a:
+    liftF2 (>=) self a
+
+foreign haskell def Float.toString:
+    liftF1 show self
+
+# foreign haskell def Float.floor:
+#     liftF1 floor self
+
+# infix operators:
+def + a b:
+    a.+ b
+
+def - a b:
+    a.- b
+
+def * a b:
+    a.* b
+
+def / a b:
+    a./ b
+
+def == a b:
+    a.== b
+
+def <= a b:
+    a.<= b
+
+def => a b:
+    a.=> b
+
+def < a b:
+    a.< b
+
+def > a b:
+    a.> b
+
