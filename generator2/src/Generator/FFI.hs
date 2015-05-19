@@ -56,7 +56,7 @@ generateCppWrapperBody :: String -> [String] -> String -> String
 generateCppWrapperBody ffiName argNames retType = body where
     serializeCalls = intercalate "\n" $ printf "serialize(%s, out);" <$> argNames
     resultDecl = printf "%s result;" retType
-    body = [string|
+    body = [string|    
     std::ostringstream out;
 
     //////////////////////////////////////////////////////////////////////////
@@ -180,6 +180,9 @@ generateDllInterface fnames outputDir = do
     let includes = (def, Set.fromList [CppSystemInclude "sstream", CppLocalInclude stubIncludePath])
 
     writeFilePair outputDir "DllApi" $ joinParts [(CppParts includes def def def [cppWrapper]), depParts]
+    generateCppList deps outputDir
+
+
     return decs
 
 
