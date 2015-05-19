@@ -16,7 +16,8 @@ import           Control.Applicative          ((<$>), (<*>))
 import           Control.Error                hiding (err)
 import           Control.Lens.Operators
 import           Control.Monad                (forM_, when)
-import           Control.Monad.ST             (runST)
+import           Control.Monad.Loops
+import           Control.Monad.ST             (ST, runST)
 import           Control.Monad.Trans.Class    (lift)
 import           Data.List                    (intercalate)
 import           Data.STRef
@@ -27,30 +28,8 @@ import           Foreign.Storable
 import           Foreign.Storable.Tuple       ()
 import           Linear                       hiding (point)
 
+import           Flowbox.GuiMockup.JSInterop
 
-
-data CubicBezier a = CubicBezier { cubicC0 :: V2 a
-                                 , cubicC1 :: V2 a
-                                 , cubicC2 :: V2 a
-                                 , cubicC3 :: V2 a
-                                 }
-    deriving (Eq, Show)
-
-instance Storable a => Storable (CubicBezier a) where
-    sizeOf _ = 4 * sizeOf (undefined :: V2 a)
-    alignment _ = alignment (undefined :: V2 a)
-    peek ptr = CubicBezier <$> peek ptr'
-                           <*> peekElemOff ptr' 1
-                           <*> peekElemOff ptr' 2
-                           <*> peekElemOff ptr' 3
-        where
-            ptr' = castPtr ptr
-    poke ptr (CubicBezier c0 c1 c2 c3) = do
-        let ptr' = castPtr ptr
-        poke ptr' c0
-        pokeElemOff ptr' 1 c1
-        pokeElemOff ptr' 2 c2
-        pokeElemOff ptr' 3 c3
 
 
 toVec :: CubicBezier Float -> V.Vector (V2 Float)
@@ -361,52 +340,6 @@ test2 input = jsify $ V.map (curry3 linearity) vector
 curry3 :: (a -> b -> c -> d) -> (a, b, c) -> d
 curry3 f (a, b, c) = f a b c
 
--- I/O
-
-readPoints :: [[Float]] -> V.Vector (V2 Float)
-readPoints = V.fromList . map (\[x,y] -> V2 x y)
-
-jsifyVector :: Storable a => (a -> String) -> V.Vector a -> String
-jsifyVector f = wrap . intercalate "," . map f . V.toList
-    where
-        wrap s = "[" ++ s ++ "]"
-
-jsifyBezier :: CubicBezier Float -> String
-jsifyBezier (CubicBezier c0 c1 c2 c3) = jsifyObject fields points
-    where
-        points = map jsifyV2 [c0, c1, c2, c3]
-        fields = zipWith (:) (repeat 'p') $ map show [0..]
-
-jsifyV2 :: V2 Float -> String
-jsifyV2 (V2 x y) = "{\"x\": " ++ show x ++ ", \"y\": " ++ show y ++ "}"
-
-jsifyObject :: [String] -> [String] -> String
-jsifyObject fields values = wrap $ intercalate "," $ zipWith (\f v -> show f ++ ": " ++ v) fields values
-    where
-        wrap s = "{" ++ s ++ "}"
 
 test :: Float -> [[Float]] -> String
 test err input = jsifyVector jsifyBezier $ fitCurve (readPoints input) err
-
----
-
-resample :: Int -> V.Vector (V2 Float) -> V.Vector (V2 Float)
-resample n v@(V.toList -> points) = V.fromList $ go 0 (head points) (tail points) [head points]
-    where
-        i = pathLength v / fromIntegral (n - 1)
-
-        go :: Float -> V2 Float -> [V2 Float] -> [V2 Float] -> [V2 Float]
-        go bigD previousPoint (point:ps) newPoints =
-            let d = distance previousPoint point
-            in  if bigD + d >= i
-                then let q = previousPoint + ((i - bigD) / d) *^ (point - previousPoint)
-                     in  go 0 point (q:ps) (q:newPoints)
-                else go (bigD + d) point ps newPoints
-        go _ _ [] newPoints = reverse newPoints
-
-pathLength :: V.Vector (V2 Float) -> Float
-pathLength v = V.foldl' (\d (prev, next) -> d + distance prev next) 0
-             $ V.zipWith (,) v (V.tail v)
-
-test3 :: Int -> [[Float]] -> String
-test3 n input = jsifyVector jsifyV2 $ resample n $ readPoints input
