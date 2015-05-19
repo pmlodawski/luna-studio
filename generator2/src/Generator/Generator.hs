@@ -1108,6 +1108,11 @@ writeFileFor name outputDir = do
 
     writeFilePair outputSubDir (nameBase name) parts
 
+generateCppList :: [Name] -> FilePath -> Q Exp
+generateCppList names outputDir = do
+    allNames <- (Set.toList . Set.fromList . concat) <$> (sequence $ collectDependencies <$> names)
+    sequence $ generateCpp <$> allNames <*> [outputDir]
+    [|  return () |]
 
 generateCpp :: Name -> FilePath -> Q Exp
 generateCpp name outputDir = do
