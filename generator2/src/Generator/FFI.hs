@@ -16,6 +16,7 @@ import Debug.Trace
 import Control.Monad
 
 import Foreign.Storable (poke)
+import Foreign.Marshal.Alloc (free)
 import Foreign.Marshal.Array (peekArray, newArray)
 import Data.ByteString.Lazy (ByteString, empty, pack, unpack)
 import Language.Haskell.TH
@@ -57,28 +58,28 @@ generateCppWrapperBody ffiName argNames retType = body where
     serializeCalls = intercalate "\n" $ printf "serialize(%s, out);" <$> argNames
     resultDecl = printf "%s result;" retType
     body = [string|    
-    std::ostringstream out;
+               std::ostringstream out;
 
-    //////////////////////////////////////////////////////////////////////////
-    $serializeCalls
-    $resultDecl
-    //////////////////////////////////////////////////////////////////////////
+               //////////////////////////////////////////////////////////////////////////
+               $serializeCalls
+               $resultDecl
+               //////////////////////////////////////////////////////////////////////////
 
-    auto argData = out.str();
-    auto arglength = argData.size();
-    auto argdata = argData.data();
+               auto argData = out.str();
+               auto arglength = argData.size();
+               auto argdata = argData.data();
 
-    std::int64_t bufferSize = -1;
+               std::int64_t bufferSize = -1;
 
-    auto resultptr = $ffiName(arglength, (void*)argdata, &bufferSize);
-    
-    imemstream memstream((char*)resultptr, bufferSize);
+               auto resultptr = $ffiName(arglength, (void*)argdata, &bufferSize);
+                
+               imemstream memstream((char*)resultptr, bufferSize);
 
-    deserialize(result, memstream);
+               deserialize(result, memstream);
 
-    hsfree(resultptr);
-    return result;
-    |]
+               hsfree(resultptr);
+               return result;
+           |]
 
 generateCppWrapper :: Name -> Name -> [Type] -> Type -> Q CppFunction
 generateCppWrapper fname fnameFfi argsTypes retType = do
@@ -167,15 +168,30 @@ generateFFI fname = do
     return $ (cppWrapper, decs)
 
 
+hsfreeFunction :: Q [Dec]
+hsfreeFunction = do
+    ptr <- newName "ptr"
+    ftype <- [t| Ptr Word8 -> IO () |]
+    farg <- [p| $(varP ptr) |]
+    fbody <- [e| free $(varE ptr) |]
+    return $ makeExportedFunction
+        (mkName "hsfree")
+        ftype
+        [farg]
+        fbody
+        []
+
+
 generateDllInterface :: [Name] -> FilePath -> Q [Dec]
 generateDllInterface fnames outputDir = do
+    module_name <- (loc_module <$> location)
     let fname = fnames !! 0
     deps <- collectDependencies fname
     depParts <- cppDependenciesParts deps
 
     (cppWrapper, decs) <- generateFFI $ fname
+    hsfreeDecs <- hsfreeFunction
 
-    module_name <- (loc_module <$> location)
     let stubIncludePath = printf "../../hs/dist/build/%s_stub.h" module_name
     let includes = (def, Set.fromList [CppSystemInclude "sstream", CppLocalInclude stubIncludePath])
 
@@ -183,7 +199,7 @@ generateDllInterface fnames outputDir = do
     generateCppList deps outputDir
 
 
-    return decs
+    return (decs <> hsfreeDecs)
 
 
 
