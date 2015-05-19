@@ -34,6 +34,7 @@ import Data.DeriveTH
 import Data.List.Split
 import System.Directory
 import Control.Monad
+import Data.String.Utils
 
 -- import Generator.Expr (Lit2, Lit5)
 
@@ -267,9 +268,12 @@ instance CppFormattablePart [CppEnum] where
 --    formatCpp (CppSystemInclude path) = (printf "#include <%s>" path, "")
 --    formatCpp (CppLocalInclude path) = (printf "#include \"%s\"" path, "")
 
+unixifyPath :: String -> String
+unixifyPath = replace "\\" "/"
+
 includeText :: CppInclude -> String
-includeText (CppSystemInclude path) = printf "#include <%s>" path
-includeText (CppLocalInclude path) = printf "#include \"%s\"" path
+includeText (CppSystemInclude path) = printf "#include <%s>" $ unixifyPath path
+includeText (CppLocalInclude path) = printf "#include \"%s\"" $ unixifyPath path
 
 instance CppFormattable CppIncludes where
     formatCpp (headerIncludes, cppIncludes) =
