@@ -27,7 +27,7 @@ optimizeBeziers original strokeAproximation =
         originalDistancesNormWithNeighbours = vzip originalDistancesNorm (V.tail originalDistancesNorm)
         strokeDistancesNorm = normalizeDistances $ bezierDistances strokeAproximation
         strokeWithDists = vzip (V.tail strokeDistancesNorm) strokeAproximation
-    in V.map (flip generateFittingBezier strokeWithDists) $ originalDistancesNormWithNeighbours
+    in V.map (flip generateFittingBezier strokeWithDists) originalDistancesNormWithNeighbours
 
 generateFittingBezier :: (Float, Float) -> V.Vector (Float, CubicBezier Float) -> CubicBezier Float
 generateFittingBezier (startLength, endLength) strokeWithDists = iteration
@@ -52,9 +52,9 @@ generateFittingBezier (startLength, endLength) strokeWithDists = iteration
         generatedBezier = generateBezier resampledPoints u tHat1 tHat2 
         resampledPoints = if startPointBezier == endPointBezier
                             then resampleBezierFragment startRest endRest startPointBezier 
-                            else (resampleBezierFragment startRest 1.0 startPointBezier) V.++ 
-                                 (V.concat (map resampleBezier (V.toList nextBeziers))) V.++ 
-                                 (resampleBezierFragment 0.0 endRest endPointBezier)
+                            else resampleBezierFragment startRest 1.0 startPointBezier V.++ 
+                                 V.concat (map resampleBezier (V.toList nextBeziers)) V.++ 
+                                 resampleBezierFragment 0.0 endRest endPointBezier
         u = chordLengthParameterize resampledPoints
         tHat1 = ho-startPoint
         tHat2 = hi-endPoint
@@ -75,7 +75,7 @@ generateFittingBezier (startLength, endLength) strokeWithDists = iteration
         nextBeziers = V.map snd $ V.tail beforeEndStrokeBeziers
 
 beziersToControlPoints :: V.Vector (CubicBezier Float) -> V.Vector (V2 Float, V2 Float, V2 Float)
-beziersToControlPoints beziers = V.snoc (V.map snd $ V.tail $ (V.scanl (\(prevhi,_) (CubicBezier point1 ho hi point2) -> (hi,(point1,prevhi,ho))) (0.0, (firstPoint,dummyHandle,firstPointHo)) beziers)) lastControlPoint where
+beziersToControlPoints beziers = V.snoc (V.map snd $ V.tail $ V.scanl (\(prevhi,_) (CubicBezier point1 ho hi point2) -> (hi,(point1,prevhi,ho))) (0.0, (firstPoint,dummyHandle,firstPointHo)) beziers) lastControlPoint where
     CubicBezier firstPoint firstPointHo _ _ = V.head beziers
     dummyHandle = V2 0 0
     CubicBezier _ _ lastPointHi lastPoint = V.last beziers
@@ -126,14 +126,14 @@ euclidianDistance (V2 x1 y1) (V2 x2 y2)= sqrt ((x1-x2)*(x1-x2) + (y1-y2)*(y1-y2)
 --strokeDistances points = V.map fst $ V.scanl lengthCounter (0, V.head points) (V.tail points)
 
 bezierDistances :: V.Vector (CubicBezier Float) -> V.Vector Float
-bezierDistances beziers = V.scanl (\acc c -> acc+arcLength c) 0 beziers
+bezierDistances = V.scanl (\acc c -> acc+arcLength c) 0
 --bezierDistances beziers = map arcLength beziers
 
 normalizeDistances :: V.Vector Float -> V.Vector Float
-normalizeDistances distances = V.map (/(V.last distances)) distances
+normalizeDistances distances = V.map (/ V.last distances) distances
 
 vzip :: (Storable a, Storable b) => V.Vector a -> V.Vector b -> V.Vector (a,b) 
-vzip x y = V.zipWith (,) x y
+vzip = V.zipWith (,)
 
 
 -- helpers for testing with JFiddle
@@ -151,7 +151,7 @@ paperPointsToBeziers points =
 funcR = (\((x,y),bezier) (p,hi,ho) -> ((p,p+ho), CubicBezier x y (p+hi) p))
 
 -- test function
-process original = printJsPoints . concat . (map (\(x,y,z) -> [x,y-x,z-x])) . V.toList . beziersToControlPoints . optimizeBeziers original . paperPointsToBeziers
+process original = printJsPoints . concatMap (\(x,y,z) -> [x,y-x,z-x]) . V.toList . beziersToControlPoints . optimizeBeziers original . paperPointsToBeziers
 
 -- test data
 s111221 :: V.Vector (CubicBezier Float)
