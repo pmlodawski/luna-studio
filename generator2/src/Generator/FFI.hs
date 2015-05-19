@@ -22,6 +22,7 @@ import Language.Haskell.TH
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax (VarStrictType)
 import qualified Language.Haskell.TH.Syntax as THS
+import qualified Data.Set as Set
 
 import Control.Applicative ((<*>))
 import Data.Binary (encode, decode)
@@ -53,7 +54,7 @@ import Text.Printf (printf)
 
 generateCppWrapperBody :: String -> [String] -> String -> String
 generateCppWrapperBody ffiName argNames retType = body where
-    serializeCalls = intercalate "\n" $ printf "serialize(%s, out)" <$> argNames
+    serializeCalls = intercalate "\n" $ printf "serialize(%s, out);" <$> argNames
     resultDecl = printf "%s result;" retType
     body = [string|
     std::ostringstream out;
@@ -168,8 +169,17 @@ generateFFI fname = do
 
 generateDllInterface :: [Name] -> FilePath -> Q [Dec]
 generateDllInterface fnames outputDir = do
-    (cppWrapper, decs) <- generateFFI $ fnames !! 0
-    writeFilePair outputDir "DllApi" $ (CppParts def def def def [cppWrapper])
+    let fname = fnames !! 0
+    deps <- collectDependencies fname
+    depParts <- cppDependenciesParts deps
+
+    (cppWrapper, decs) <- generateFFI $ fname
+
+    module_name <- (loc_module <$> location)
+    let stubIncludePath = printf "../../hs/dist/build/%s_stub.h" module_name
+    let includes = (def, Set.fromList [CppSystemInclude "sstream", CppLocalInclude stubIncludePath])
+
+    writeFilePair outputDir "DllApi" $ joinParts [(CppParts includes def def def [cppWrapper]), depParts]
     return decs
 
 
