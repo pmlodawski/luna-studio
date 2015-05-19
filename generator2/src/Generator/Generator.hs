@@ -949,6 +949,7 @@ instance TypesDependencies Type where
     -- Maybe and String are handled as a special-case
     symbolDependencies (ConT name) | (elem name builtInTypes) = Set.empty
 
+    symbolDependencies ArrowT                           = Set.empty
     symbolDependencies contype@(ConT name)              = Set.singleton name
     symbolDependencies apptype@(AppT ListT nested)      = symbolDependencies nested
     symbolDependencies apptype@(AppT (TupleT _) nested) = symbolDependencies nested
@@ -987,6 +988,7 @@ instance TypesDependencies Dec where
 instance TypesDependencies Info where
 --    symbolDependencies t | trace ("Info: " <> show t) False = undefined
     symbolDependencies (TyConI dec) = symbolDependencies dec
+    symbolDependencies (VarI n t _ _) = symbolDependencies t
     symbolDependencies arg = trace ("FIXME not handled Info: " <> show arg) (Set.empty)
 
 
@@ -1110,15 +1112,16 @@ writeFileFor name outputDir = do
 generateCpp :: Name -> FilePath -> Q Exp
 generateCpp name outputDir = do
 
-    deps <- cppDependenciesParts 'writeFileFor
-    runIO $ putStrLn $ show deps
+    deps <- collectDependencies 'formatSignature
+    --let deps = symbolDependencies 'writeFileFor
+    runIO $ putStrLn $ ">>>>>>" <> show deps
     --lit4 <- [t|Lit5|]
     --litdep <- nonValueAliasDependencies lit4
     --runIO $ putStrLn $ show lit4
     --runIO $ putStrLn $ "Foooo /// " ++ show litdep
 
     dependencies <- collectDependencies name
-    runIO (putStrLn $ printf "Found %d dependencies: %s" (length dependencies) (show dependencies))
+    runIO (putStrLn $ printf "%s has %d dependencies: %s" (show name) (length dependencies) (show dependencies))
     --    (header,body) <- formatCppWrapper name
 
     sequence $ writeFileFor <$> dependencies <*> [outputDir]
