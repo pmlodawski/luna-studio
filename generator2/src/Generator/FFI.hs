@@ -180,25 +180,58 @@ hsfreeFunction = do
         [farg]
         fbody
         []
+                            
+data MethodStuff = MethodStuff {
+    cppMethod::CppMethod, 
+    dependencies::[Name], 
+    generatedDecls::[Dec]
+}
 
+generateDllStuff :: Name -> Q MethodStuff
+generateDllStuff fname = do
+    deps <- collectDependencies fname
+    (cppFunction, decs) <- generateFFI $ fname
+    let method = CppMethod cppFunction [] Static
+    return $ MethodStuff method deps decs
+
+runtimeCtor :: String -> CppMethod
+runtimeCtor clsname = CppMethod fun [] Usual where
+    body = [string|     
+        int argc = 1;
+        char* argv[] = { "ghcDll", NULL }; // argv must end with NULL
+        char** args = argv;
+        hs_init(&argc, &args);
+        |]
+    fun = CppFunction clsname "" [] body
+
+
+runtimeDtor :: String -> CppMethod
+runtimeDtor clsname = CppMethod fun [] Virtual where
+    body = "hs_exit();"
+    fun = CppFunction ("~"<>clsname) "" [] body
 
 generateDllInterface :: [Name] -> FilePath -> Q [Dec]
 generateDllInterface fnames outputDir = do
     module_name <- (loc_module <$> location)
-    let fname = fnames !! 0
-    deps <- collectDependencies fname
+
+    methodsInfo <- sequence $ generateDllStuff <$> fnames
+    let deps = concat $ dependencies <$> methodsInfo
+    let decs = concat $ generatedDecls <$> methodsInfo
+
     depParts <- cppDependenciesParts deps
 
-    (cppWrapper, decs) <- generateFFI $ fname
-    hsfreeDecs <- hsfreeFunction
+    let clsname = ("HaskellDll"<>module_name)
+    let cppMethods = (cppMethod <$> methodsInfo) <> [runtimeCtor clsname, runtimeDtor clsname]
+    let cls = CppClass clsname [] cppMethods [] [] []
 
     let stubIncludePath = printf "../../hs/dist/build/%s_stub.h" module_name
     let includes = (def, Set.fromList [CppSystemInclude "sstream", CppLocalInclude stubIncludePath])
 
-    writeFilePair outputDir "DllApi" $ joinParts [(CppParts includes def def def [cppWrapper]), depParts]
+    writeFilePair outputDir "DllApi" $ joinParts [(CppParts includes def def [cls] []), depParts]
     generateCppList deps outputDir
 
 
+    hsfreeDecs <- hsfreeFunction
     return (decs <> hsfreeDecs)
 
 
