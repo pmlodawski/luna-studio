@@ -6,7 +6,10 @@ Build-type:             Simple
 
 Library
   Hs-Source-Dirs:     src
-  GHC-Options:        -Wall -O2 -fforce-recomp -pgml g++ -debug -threaded -dynamic -shared -fPIC
+  GHC-Options:        -Wall -O2 -fforce-recomp -pgml g++ -debug -threaded -shared -fPIC
+  if !os(windows)
+    GHC-Options:    -dynamic
+
   Exposed-modules:    `findmodules('src', '.*\.hs')`
 
   Build-Depends:  base >= 4.6,
