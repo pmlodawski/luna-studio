@@ -184,7 +184,7 @@ rasterizeMask w h (Mask pathRaw maybeFeather) =
           hmat = id M.>-> Filter.normalize $ Filter.toMatrix (Grid 1 kernelSize) $ Filter.gauss 1.0
           vmat :: (A.Elt e, A.IsFloating e) => Matrix2 e
           vmat = id M.>-> Filter.normalize $ Filter.toMatrix (Grid kernelSize 1) $ Filter.gauss 1.0
-          kernelSize = 3 -- magick number
+          kernelSize = 4 -- magick number
           p = Shader.pipe A.Clamp
           process x = rasterizer $ id `p` Filter.filter 1 vmat `p` Filter.filter 1 hmat `p` id $ fromMatrix A.Clamp x
           ptm = pathToMatrix w h
@@ -204,11 +204,13 @@ rasterizeMask w h (Mask pathRaw maybeFeather) =
                   cond2 = (p0 &&* f1) ||* (p1 &&* f0)
                   c2 = A.fromIntegral $ A.boolToInt cond2
                   nc2 = A.fromIntegral $ A.boolToInt $ A.not cond2
-                  x' = srgb $ ((dp*p + df*f)/(dp+df))
+                  x' = ((dp*p + df*f)/(dp+df))
+                  --x' = (sigmoid (((df*f + dp*p)/(dp*f + df*p))*6 - 5.5))
               in A.cond (cond1)
                   (p*f)
                   (c2*x' + nc2*(max p f))
-          srgb v = v A.<=* 0.0031308 A.? (12.92 * v, (1.055 * v) ** (1 / 2.4) - 0.055)
+          sigmoid a = 1 / (1 + (2.71828**(-a))) -- 1 / (1 +  2.71828^(-a))
+          --srgb v = v A.<=* 0.0031308 A.? (12.92 * v, (1.055 * v) ** (1 / 2.4) - 0.055)
           checkEqual fea pat
               | fea == pat = path
               | otherwise  = let
