@@ -62,7 +62,7 @@ Library
                   transformers-compat  < 0.4,
                   vector,
                   vector-space     < 0.9,
-                  luna-target-ghchs                     
+                  luna-target-ghchs
         -- vector-space < 0.9 is a temporal constrain until https://github.com/diagrams/active/issues/13 is resolved
 
 -- == test non numeric animation ==
