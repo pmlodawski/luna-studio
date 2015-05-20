@@ -28,12 +28,12 @@ cuberoot x = signum x * pow (abs x)
     where pow = flip (**) (1/3)
 
 almostAlmostCardano :: Exp Float -> Exp Float -> Exp (Int, (Float, Float, Float))
-almostAlmostCardano a b = A.cond (a <=* 0.1 &&* a >=* -0.1) res1 res2
+almostAlmostCardano a b = A.cond (a <=* 0.01 &&* a >=* -0.01) res1 res2
     where res1 = A.lift ( 0 :: Int, (0::Float, 0::Float, 0::Float))
           res2 = A.lift ( 0 :: Int, (0::Float, 0::Float, -b/a))
 
 almostCardano :: Exp Float -> Exp Float -> Exp Float -> Exp (Int, (Float, Float, Float))
-almostCardano a b c = A.cond (a <=* 0.1 &&* a >=* -0.1) (almostAlmostCardano b c) (A.cond (delta ==* 0) res1 res2)
+almostCardano a b c = A.cond (a <=* 0.01 &&* a >=* -0.01) (almostAlmostCardano b c) (A.cond (delta ==* 0) res1 res2)
     where res1 = A.lift ( 0 :: Int, (0::Float, 0::Float, r1))
           res2 = A.lift ( 0 :: Int, (0::Float, r1      , r2))
           delta = b^2 - 4*a*c
@@ -41,7 +41,7 @@ almostCardano a b c = A.cond (a <=* 0.1 &&* a >=* -0.1) (almostAlmostCardano b c
           r2 = (-b - (sqrt delta))/(2*a)
 
 cardano :: Exp Float -> Exp Float -> Exp Float -> Exp Float -> Exp (Int, (Float, Float, Float))
-cardano a b c d = A.cond (a <=* 0.1 &&* a >=* -0.1) (almostCardano b c d) (A.cond (delta >=* 0) ( A.cond (delta >* 0) opt1 opt2) opt3)
+cardano a b c d = A.cond (a <=* 0.01 &&* a >=* -0.01) (almostCardano b c d) (A.cond (delta >=* 0) ( A.cond (delta >* 0) opt1 opt2) opt3)
     where opt1     = A.lift ( 1::Int, (opt1y1, 0::Float, 0::Float))
           opt2     = A.lift ( 2::Int, (opt2y1, opt2y2  , 0::Float))
           opt3     = A.lift ( 3::Int, (opt3y1, opt3y2  , opt3y3  ))
@@ -90,5 +90,10 @@ distanceFromQuadratics' :: Exp (Point2 Float) -> Acc(Vector (QuadraticBezier Flo
 distanceFromQuadratics' p = A.sfoldl getMin 1e20 A.index0
     where getMin acc curve = min acc $ distanceFromQuadratic' p curve
 
-distanceFromQuadratics :: Exp (Point2 Float) -> Acc(Vector (QuadraticBezier Float)) -> Exp Float
-distanceFromQuadratics p = error "not implemented yet"
+distanceFromQuadratics2 :: Exp (Point2 Float) -> Acc(Vector (QuadraticBezier Float)) -> Exp (Float, Float)
+distanceFromQuadratics2 p = A.sfoldl getMin (A.lift (1e20::Float, 1e20::Float)) A.index0
+    where getMin :: Exp (Float, Float) -> Exp (QuadraticBezier Float) -> Exp (Float, Float)
+          getMin acc curve = ( (A.lift (0::Float,0::Float)))
+          dc curve = distanceFromQuadratic' p curve
+    --where getMin (p1, p2) curve = (A.cond (dc <* p1) () (),0::Float)
+          --dc = distanceFromQuadratic' p curve
