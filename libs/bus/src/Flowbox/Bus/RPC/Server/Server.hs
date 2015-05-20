@@ -21,7 +21,7 @@ import           Flowbox.System.Log.Logger
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 run :: BusEndPoints -> s -> HandlerMap s IO -> IO (Either String ())

@@ -22,7 +22,7 @@ import qualified Luna.Interpreter.Session.Env                 as Env
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 handleAbort :: (Catch.MonadCatch m, MonadIO m) => m () -> m ()

@@ -93,10 +93,7 @@ exprScopes ast@(Label lab e) = case e of
     where
         continue = defaultTraverseM ast
         id       = Enum.id lab
-        tag      = do
-            i <- ASTInfo.incID <$> get
-            put i
-            return $ Enum.tag $ i ^. ASTInfo.lastID
+        tag      = fromIntegral <$> ASTInfo.genID
 
 procSeg expr@(Label lab e) = case e of
     Expr.Accessor {} -> defaultTraverseM expr

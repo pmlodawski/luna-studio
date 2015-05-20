@@ -30,7 +30,7 @@ import           Flowbox.Prelude                                                
 import           Flowbox.ProjectManager.Context                                                                (Context)
 import qualified Flowbox.ProjectManager.RPC.Topic                                                              as Topic
 import           Flowbox.System.Log.Logger
-import           Flowbox.UR.Manager.RPC.Handler.Handler                                                        (fun, makeMsgArr, prepareResponse)
+import           Flowbox.UR.Manager.RPC.Handler.Handler                                                        (makeMsgArr, prepareResponse, serialize)
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Connect.Request             as Connect
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Connect.Update              as Connect
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Disconnect.Request          as Disconnect
@@ -67,7 +67,7 @@ nodeName = fromMaybe "" . maybe Nothing (^? StringExpr.string) . maybe Nothing (
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 get :: GetGraph.Request -> RPC Context IO GetGraph.Status
@@ -206,14 +206,14 @@ nodeRemove (NodeRemove.Request tnodeIDs tbc tlibID tprojectID astID) undoTopic =
     rm <- mapM (\nid -> BatchG.nodeEdges nid bc libID projectID) newIDs
     let removed = Set.toList $ Set.fromList $ concat rm
     defaults <- mapM (\nid -> do defaults <- BatchND.nodeDefaults nid bc libID projectID
-                                 return $ DefaultsMap.mapWithKey (\k v -> fun Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest
+                                 return $ DefaultsMap.mapWithKey (\k v -> serialize ("undone." <> Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest)
                                                                               $ NodeDefaultSet.Request (encodeP k) (encode $ snd v) (encodeP $ originID nid) tbc tlibID tprojectID astID
                                                                  )
                                                                  defaults
                      )
                      newIDs
     properties <- mapM (\nid -> do properties <- BatchP.getProperties nid libID projectID
-                                   return $ fun Topic.projectLibraryAstFunctionGraphNodePropertiesSetRequest
+                                   return $ serialize ("undone." <> Topic.projectLibraryAstFunctionGraphNodePropertiesSetRequest)
                                                 $ SetNodeProperties.Request (encode properties) (encodeP $ originID nid) tbc tlibID tprojectID astID
                        )
                        newIDs
@@ -227,8 +227,8 @@ nodeRemove (NodeRemove.Request tnodeIDs tbc tlibID tprojectID astID) undoTopic =
     --logger warning $ show $ map snd $ DefaultsMap.toList =<< defaults
     return ( [NodeRemove.Update (updatedRequest $ encodeP newIDs) updateNo]
            , makeMsgArr (RegisterMultiple.Request
-                            (  (Sequence.fromList $ map (\node -> fun Topic.projectLibraryAstFunctionGraphNodeAddRequest $ NodeAdd.Request node tbc tlibID tprojectID astID) $ toldNodes)
-                            >< (Sequence.fromList $ map (\(srcID, dstID, EdgeView srcPorts dstPorts) -> fun Topic.projectLibraryAstFunctionGraphConnectRequest
+                            (  (Sequence.fromList $ map (\node -> serialize ("undone." <> Topic.projectLibraryAstFunctionGraphNodeAddRequest) $ NodeAdd.Request node tbc tlibID tprojectID astID) $ toldNodes)
+                            >< (Sequence.fromList $ map (\(srcID, dstID, EdgeView srcPorts dstPorts) -> serialize ("undone." <> Topic.projectLibraryAstFunctionGraphConnectRequest)
                                                                                                             $ Connect.Request (encodeP $ originID srcID)
                                                                                                                               (encodeP srcPorts)
                                                                                                                               (encodeP $ originID dstID)
@@ -243,7 +243,7 @@ nodeRemove (NodeRemove.Request tnodeIDs tbc tlibID tprojectID astID) undoTopic =
                             >< (Sequence.fromList $ map snd . DefaultsMap.toList =<< defaults)
                             >< (Sequence.fromList properties)
                             )
-                            (fun Topic.projectLibraryAstFunctionGraphNodeRemoveRequest $ updatedRequest $ encodeP originIDs)
+                            (serialize ("undone." <> Topic.projectLibraryAstFunctionGraphNodeRemoveRequest) $ updatedRequest $ encodeP originIDs)
                             tprojectID
                             (encodeP $ "remove nodes " ++ (show $ map (nodeName) oldNodes))
                         ) undoTopic

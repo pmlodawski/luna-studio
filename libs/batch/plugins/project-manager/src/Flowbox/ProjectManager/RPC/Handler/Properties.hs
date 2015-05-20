@@ -37,7 +37,7 @@ import           Luna.DEP.Data.Serialize.Proto.Conversion.Library               
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 getASTProperties :: GetASTProperties.Request -> RPC Context IO GetASTProperties.Status
@@ -50,21 +50,25 @@ getASTProperties request@(GetASTProperties.Request tnodeID tlibID tprojectID) = 
 
 
 setASTProperties :: SetASTProperties.Request -> Maybe Topic -> RPC Context IO ([SetASTProperties.Update], [Message])
-setASTProperties request@(SetASTProperties.Request tproperties tnodeID tlibID tprojectID) undoTopic = do
+setASTProperties (SetASTProperties.Request tproperties tnodeID tlibID tprojectID) undoTopic = do
     properties <- decodeE tproperties
+    context <- Batch.get
     let nodeID    = decodeP tnodeID
         libID     = decodeP tlibID
         projectID = decodeP tprojectID
-    toldProperties <- encode <$> BatchP.getProperties nodeID libID projectID
-    BatchP.setProperties properties nodeID libID projectID
+        idMap     = context ^. Batch.idMap
+        newID     = maybe tnodeID encodeP $ Bimap.lookupR nodeID idMap
+        originID  = maybe tnodeID encodeP $ Bimap.lookup  nodeID idMap
+    toldProperties <- encode <$> BatchP.getProperties (decodeP newID) libID projectID
+    BatchP.setProperties properties (decodeP newID) libID projectID
     prepareResponse projectID
                     Topic.projectLibraryAstPropertiesSetRequest
-                    (SetASTProperties.Request toldProperties tnodeID tlibID tprojectID)
+                    (SetASTProperties.Request toldProperties originID tlibID tprojectID)
                     Topic.projectLibraryAstPropertiesSetRequest
-                    request
+                    (SetASTProperties.Request tproperties originID tlibID tprojectID)
                     undoTopic
                     "set AST properties"
-                    =<< SetASTProperties.Update request <$> Batch.getUpdateNo
+                    =<< SetASTProperties.Update (SetASTProperties.Request tproperties newID tlibID tprojectID) <$> Batch.getUpdateNo
 
 
 getNodeProperties :: GetNodeProperties.Request -> RPC Context IO GetNodeProperties.Status

@@ -9,6 +9,7 @@
 -- moze stworzyc ogolna klase FS (isDirectory path -> Bool) etc, dla ktorego instancje beda dla amazona etc.
 
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE DeriveGeneric    #-}
 
 module Flowbox.System.UniPath where
 
@@ -96,6 +97,16 @@ toList = fmap str where
             Current  -> "."
             Empty    -> ""
             Var v    -> v
+
+
+
+fromFilePath :: FilePath.FilePath -> UniPath
+fromFilePath = fromUnixString    -- TODO[PMocz] does that really work?
+
+
+toFilePath :: UniPath -> FilePath.FilePath
+toFilePath = FilePath.joinPath . toList
+
 
 -- FIXME[wd]: poprawic caly UniPath !!! kawalek refactoru:
 --instance IsList UniPath where

@@ -7,8 +7,10 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Flowbox.ProjectManager.RPC.Handler.AST where
 
+import qualified Data.Bimap    as Bimap
 import qualified Data.Sequence as Sequence
 
+import qualified Flowbox.Batch.Batch                                                                  as Batch
 import qualified Flowbox.Batch.Handler.AST                                                            as BatchAST
 import qualified Flowbox.Batch.Handler.Common                                                         as Batch
 import qualified Flowbox.Batch.Handler.Properties                                                     as BatchP
@@ -20,7 +22,7 @@ import           Flowbox.Prelude                                                
 import           Flowbox.ProjectManager.Context                                                       (Context)
 import qualified Flowbox.ProjectManager.RPC.Topic                                                     as Topic
 import           Flowbox.System.Log.Logger
-import           Flowbox.UR.Manager.RPC.Handler.Handler                                               (fun, makeMsgArr, prepareResponse)
+import           Flowbox.UR.Manager.RPC.Handler.Handler                                               (makeMsgArr, prepareResponse, serialize)
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Get.Request                  as CodeGet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Get.Status                   as CodeGet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Set.Request                  as CodeSet
@@ -91,7 +93,19 @@ import           Luna.DEP.Data.Serialize.Proto.Conversion.Name                  
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
+
+updateIdMaps :: Int -> Int -> Batch.BatchEnv -> Batch.BatchEnv
+updateIdMaps newID origID = Batch.idMap  %~ Bimap.insert newID origID
+
+
+originID :: (Num a, Eq a) => a -> a -> a
+originID astID newID = case astID of
+                        0              -> newID
+                        x | x == astID -> astID
+--                                        originID = if isJust maybe
+--                                                   then astID
+--                                                   else Bimap.lookupR astID
 
 -------- public api -------------------------------------------------
 
@@ -106,14 +120,18 @@ get request@(Definitions.Request mtmaxDepth tbc tlibID tprojectID _) = do
 
 
 addModule :: AddModule.Request -> Maybe Topic -> RPC Context IO ([AddModule.Update], [Message])
-addModule request@(AddModule.Request tnewModule tbcParent tlibID tprojectID _) undoTopic = do
+addModule request@(AddModule.Request tnewModule tbcParent tlibID tprojectID tastID) undoTopic = do
     newModule <- decodeE tnewModule
     bcParent  <- decodeE tbcParent
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
+        astID     = decodeP tastID
     addedModule <- BatchAST.addModule newModule bcParent libID projectID
     let newBC = bcParent ++ [Crumb.Module $ addedModule ^. Module.cls . Type.name]
-    let newID = addedModule ^. Module.id
+        newID = addedModule ^. Module.id
+        origin = originID astID newID
+    Batch.put . updateIdMaps newID origin =<< Batch.get
+    logger warning $ "addMDF astID: " <> show astID
     prepareResponse projectID
                     Topic.projectLibraryAstRemoveRequest
                     (Remove.Request (encode newBC) tlibID tprojectID (encodeP newID))
@@ -125,14 +143,18 @@ addModule request@(AddModule.Request tnewModule tbcParent tlibID tprojectID _) u
 
 
 addData :: AddData.Request -> Maybe Topic -> RPC Context IO ([AddData.Update], [Message])
-addData request@(AddData.Request tnewData tbcParent tlibID tprojectID _) undoTopic = do
+addData request@(AddData.Request tnewData tbcParent tlibID tprojectID tastID) undoTopic = do
     newData  <- decodeE tnewData
     bcParent <- decodeE tbcParent
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
+        astID     = decodeP tastID
     addedData <- BatchAST.addData newData bcParent libID projectID
     let newBC = bcParent ++ [Crumb.Class $ addedData ^. Expr.cls . Type.name]
-    let newID = addedData ^. Expr.id
+        newID = addedData ^. Expr.id
+        origin = originID astID newID
+    logger warning $ "addMDF astID: " <> show astID
+    Batch.put . updateIdMaps newID origin =<< Batch.get
     prepareResponse projectID
                     Topic.projectLibraryAstRemoveRequest
                     (Remove.Request (encode newBC) tlibID tprojectID (encodeP newID))
@@ -144,47 +166,63 @@ addData request@(AddData.Request tnewData tbcParent tlibID tprojectID _) undoTop
 
 
 addFunction :: AddFunction.Request -> Maybe Topic -> RPC Context IO ([AddFunction.Update], [Message])
-addFunction request@(AddFunction.Request tnewFunction tbcParent tlibID tprojectID _) undoTopic = do
+addFunction (AddFunction.Request tnewFunction tbcParent tlibID tprojectID tastID) undoTopic = do
     newFunction <- decodeE tnewFunction
     bcParent    <- decodeE tbcParent
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
+        astID     = decodeP tastID
     addedFunction <- BatchAST.addFunction newFunction bcParent libID projectID
-    let newBC = bcParent ++ [Crumb.Function (addedFunction ^?! Expr.fname) (addedFunction ^. Expr.path)]
-    let newID = addedFunction ^. Expr.id
+    let newBC     = bcParent ++ [Crumb.Function (addedFunction ^?! Expr.fname) (addedFunction ^. Expr.path)]
+        newID     = addedFunction ^. Expr.id
+        origin    = originID astID newID
+    Batch.put . updateIdMaps newID origin =<< Batch.get
+    logger warning $ "addMDF astID: " <> show astID <> ", newID: " <> show newID
     prepareResponse projectID
                     Topic.projectLibraryAstRemoveRequest
-                    (Remove.Request (encode newBC) tlibID tprojectID (encodeP newID))
+                    (Remove.Request (encode newBC) tlibID tprojectID (encodeP origin))
                     Topic.projectLibraryAstFunctionAddRequest
-                    request
+                    (AddFunction.Request tnewFunction tbcParent tlibID tprojectID $ encodeP origin)
                     undoTopic
                     "add function"
-                    =<< AddFunction.Update request (encode addedFunction) (encode newBC) <$> Batch.getUpdateNo
+                    =<< AddFunction.Update (AddFunction.Request tnewFunction tbcParent tlibID tprojectID (encodeP newID)) (encode addedFunction) (encode newBC) <$> Batch.getUpdateNo
 
 
 remove :: Remove.Request -> Maybe Topic -> RPC Context IO ([Remove.Update], [Message])
-remove request@(Remove.Request tbc tlibID tprojectID astID) undoTopic = do
+remove request@(Remove.Request tbc tlibID tprojectID tastID) undoTopic = do
     bc  <- decodeE tbc
+    context <- Batch.get
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
         tbcParent = (encode $ init bc)
+        astID     = decodeP tastID
+        originID  = maybe tastID
+                          encodeP
+                          $ Bimap.lookup astID $ context ^. Batch.idMap
+        newID     = maybe tastID
+                          encodeP
+                          $ Bimap.lookupR astID $ context ^. Batch.idMap
+--                                          oldMap                 = context ^. Batch.astMap
+--                                          (mOriginId, newAstMap) = Map.insertLookupWithKey (const $ const id) newBC newID oldMap
+--                                          originID               = fromMaybe newID mOriginId
     definition <- BatchAST.definitions Nothing bc libID projectID
     nodeID <- Focus.traverseM_ (return . (^?! Module.id)) (return . (^?! Expr.id)) definition
     properties <- BatchP.getProperties nodeID libID projectID
-    let tproperties = fun Topic.projectLibraryAstPropertiesSetRequest $ SetASTProperties.Request (encode properties) (encodeP nodeID) tlibID tprojectID
+    let tproperties = serialize ("undone." <> Topic.projectLibraryAstPropertiesSetRequest) $ SetASTProperties.Request (encode properties) (encodeP nodeID) tlibID tprojectID
     BatchAST.remove bc libID projectID
     updateNo <- Batch.getUpdateNo
+    logger warning $ "rm astID " <> show astID <> ", origin: " <> show originID
     let undoMsg = Sequence.fromList
                      [ case definition of
-                         Focus.Function f -> fun Topic.projectLibraryAstFunctionAddRequest $ AddFunction.Request (encode f) tbcParent tlibID tprojectID astID
-                         Focus.Class    c -> fun Topic.projectLibraryAstDataAddRequest     $ AddData.Request     (encode c) tbcParent tlibID tprojectID astID
-                         Focus.Module   m -> fun Topic.projectLibraryAstModuleAddRequest   $ AddModule.Request   (encode m) tbcParent tlibID tprojectID astID
+                         Focus.Function f -> serialize ("undone." <> Topic.projectLibraryAstFunctionAddRequest) $ AddFunction.Request (encode f) tbcParent tlibID tprojectID originID
+                         Focus.Class    c -> serialize ("undone." <> Topic.projectLibraryAstDataAddRequest)     $ AddData.Request     (encode c) tbcParent tlibID tprojectID originID
+                         Focus.Module   m -> serialize ("undone." <> Topic.projectLibraryAstModuleAddRequest)   $ AddModule.Request   (encode m) tbcParent tlibID tprojectID originID
                      , tproperties
                      ]
-    return ( [Remove.Update request updateNo]
+    return ( [Remove.Update (Remove.Request tbc tlibID tprojectID newID) updateNo]
            , makeMsgArr (RegisterMultiple.Request
                             undoMsg
-                            (fun Topic.projectLibraryAstRemoveRequest $ request)
+                            (serialize ("undone." <> Topic.projectLibraryAstRemoveRequest) $ request)
                             tprojectID
                             (encodeP $ "remove sth")
                         ) undoTopic
@@ -257,7 +295,7 @@ modifyModuleFields request@(ModifyModuleFields.Request tfields tbc tlibID tproje
 
 
 modifyDataCls :: ModifyDataCls.Request -> Maybe Topic -> RPC Context IO ([ModifyDataCls.Update], [Message])
-modifyDataCls request@(ModifyDataCls.Request tcls tbc tlibID tprojectID astID) undoTopic = do
+modifyDataCls request@(ModifyDataCls.Request tcls tbc tlibID tprojectID tastID) undoTopic = do
     cls <- decodeE tcls
     bc  <- decodeE tbc
     let libID     = decodeP tlibID
@@ -267,7 +305,7 @@ modifyDataCls request@(ModifyDataCls.Request tcls tbc tlibID tprojectID astID) u
     BatchAST.modifyDataCls cls bc libID projectID
     prepareResponse projectID
                     Topic.projectLibraryAstDataModifyClsRequest
-                    (ModifyDataCls.Request toldCls toldBC tlibID tprojectID astID)
+                    (ModifyDataCls.Request toldCls toldBC tlibID tprojectID tastID)
                     Topic.projectLibraryAstDataModifyClsRequest
                     request
                     undoTopic
@@ -377,7 +415,7 @@ modifyDataMethods request@(ModifyDataMethods.Request tmethods tbc tlibID tprojec
 
 
 modifyFunctionName :: ModifyFunctionName.Request -> Maybe Topic -> RPC Context IO ([ModifyFunctionName.Update], [Message])
-modifyFunctionName request@(ModifyFunctionName.Request tname tbc tlibID tprojectID astID) undoTopic = do
+modifyFunctionName request@(ModifyFunctionName.Request tname tbc tlibID tprojectID tastID) undoTopic = do
     bc <- decodeE tbc
     name <- decodeE tname
     let libID     = decodeP tlibID
@@ -387,7 +425,7 @@ modifyFunctionName request@(ModifyFunctionName.Request tname tbc tlibID tproject
     BatchAST.modifyFunctionName name bc libID projectID
     prepareResponse projectID
                     Topic.projectLibraryAstFunctionModifyNameRequest
-                    (ModifyFunctionName.Request (encode $ focus ^?! Expr.fname) tnewBC tlibID tprojectID astID)
+                    (ModifyFunctionName.Request (encode $ focus ^?! Expr.fname) tnewBC tlibID tprojectID tastID)
                     Topic.projectLibraryAstFunctionModifyNameRequest
                     request
                     undoTopic
@@ -407,7 +445,7 @@ modifyFunctionPath request@(ModifyFunctionPath.Request tpath tbc tlibID tproject
 
 
 modifyFunctionInputs :: ModifyFunctionInputs.Request -> Maybe Topic -> RPC Context IO ([ModifyFunctionInputs.Update], [Message])
-modifyFunctionInputs request@(ModifyFunctionInputs.Request tinputs tbc tlibID tprojectID astID) undoTopic = do
+modifyFunctionInputs request@(ModifyFunctionInputs.Request tinputs tbc tlibID tprojectID tastID) undoTopic = do
     inputs <- decodeE tinputs
     bc     <- decodeE tbc
     let libID     = decodeP tlibID
@@ -416,7 +454,7 @@ modifyFunctionInputs request@(ModifyFunctionInputs.Request tinputs tbc tlibID tp
     BatchAST.modifyFunctionInputs inputs bc libID projectID
     prepareResponse projectID
                     Topic.projectLibraryAstFunctionModifyInputsRequest
-                    (ModifyFunctionInputs.Request (encode oldInputs) tbc tlibID tprojectID astID)
+                    (ModifyFunctionInputs.Request (encode oldInputs) tbc tlibID tprojectID tastID)
                     Topic.projectLibraryAstFunctionModifyInputsRequest
                     request
                     undoTopic
@@ -425,7 +463,7 @@ modifyFunctionInputs request@(ModifyFunctionInputs.Request tinputs tbc tlibID tp
 
 
 modifyFunctionOutput :: ModifyFunctionOutput.Request -> Maybe Topic -> RPC Context IO ([ModifyFunctionOutput.Update], [Message])
-modifyFunctionOutput request@(ModifyFunctionOutput.Request toutput tbc tlibID tprojectID astID) undoTopic = do
+modifyFunctionOutput request@(ModifyFunctionOutput.Request toutput tbc tlibID tprojectID tastID) undoTopic = do
     output <- decodeE toutput
     bc     <- decodeE tbc
     let libID     = decodeP tlibID
@@ -434,7 +472,7 @@ modifyFunctionOutput request@(ModifyFunctionOutput.Request toutput tbc tlibID tp
     BatchAST.modifyFunctionOutput output bc libID projectID
     prepareResponse projectID
                     Topic.projectLibraryAstFunctionModifyOutputRequest
-                    (ModifyFunctionOutput.Request (encode oldOutputs) tbc tlibID tprojectID astID)
+                    (ModifyFunctionOutput.Request (encode oldOutputs) tbc tlibID tprojectID tastID)
                     Topic.projectLibraryAstFunctionModifyOutputRequest
                     request
                     undoTopic
@@ -453,7 +491,7 @@ getCode request@(CodeGet.Request tbc tlibID tprojectID _) = do
 
 
 setCode :: CodeSet.Request -> Maybe Topic -> RPC Context IO ([CodeSet.Update], [Message])
-setCode request@(CodeSet.Request tcode tbc tlibID tprojectID astID) undoTopic = do
+setCode request@(CodeSet.Request tcode tbc tlibID tprojectID tastID) undoTopic = do
     bc <- decodeE tbc
     let libID     = decodeP tlibID
         projectID = decodeP tprojectID
@@ -462,7 +500,7 @@ setCode request@(CodeSet.Request tcode tbc tlibID tprojectID astID) undoTopic = 
     Batch.setCode code bc libID projectID
     prepareResponse projectID
                     Topic.projectLibraryAstCodeSetRequest
-                    (CodeSet.Request (encodeP oldCode) tbc tlibID tprojectID astID)
+                    (CodeSet.Request (encodeP oldCode) tbc tlibID tprojectID tastID)
                     Topic.projectLibraryAstCodeSetRequest
                     request
                     undoTopic

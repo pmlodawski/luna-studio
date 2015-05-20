@@ -47,7 +47,7 @@ import qualified Generated.Proto.PluginManager.PluginManager.Ping.Status  as Pin
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 restrictSingleResult :: Proto.Serializable result => [result] -> Bus result

@@ -26,7 +26,7 @@ import qualified Flowbox.System.UniPath             as UniPath
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 successfullInstallFilePath :: Config -> IO UniPath

@@ -39,7 +39,7 @@ data Info = Info { name :: String
 
 
 logger :: Logger
-logger = getLogger $(moduleName)
+logger = getLogger $moduleName
 
 
 type PassError = String

@@ -23,7 +23,7 @@ import Luna.Interpreter.Session.Session  (Session)
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 type ClsInstSelector = GHC.DynFlags -> InstEnv.ClsInst -> Bool

@@ -41,7 +41,7 @@ import           Luna.System.Session                    as Session
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 emptyModule :: Module
@@ -84,7 +84,7 @@ genCode selector oldAst = do
     result <- Session.runT $ do
         void Parser.init
         runEitherT $ do
-            hast <- Pass.run1_ HASTGen.pass (ast :: Unit (LModule IDTag (LExpr IDTag ())))
+            hast <- Pass.run2_ HASTGen.pass mempty (ast :: Unit (LModule IDTag (LExpr IDTag ())))
             Pass.run1_ HSC.pass hast
     cpphsOptions <- Env.getCpphsOptions
     hsc <- hoistEitherWith (Error.OtherError $(loc) . show) $ fst result

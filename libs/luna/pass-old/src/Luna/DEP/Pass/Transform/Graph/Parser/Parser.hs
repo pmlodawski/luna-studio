@@ -53,7 +53,7 @@ import           Luna.DEP.Pragma.Pragma (Pragma)
 
 
 logger :: Logger
-logger = getLogger $(moduleName)
+logger = getLogger $moduleName
 
 
 run :: Graph -> PropertyMap -> Expr -> Pass.Result (Expr, PropertyMap)

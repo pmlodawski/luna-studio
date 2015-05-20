@@ -31,7 +31,7 @@ import qualified System.FilePath                          as FilePath
 import qualified Text.ParserCombinators.ReadP             as ReadP
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 fromString :: Value -> Text
 fromString (Configurator.String a) = a

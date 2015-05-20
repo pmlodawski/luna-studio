@@ -19,7 +19,7 @@ import qualified Flowbox.Bus.Bus               as Bus
 import           Flowbox.Bus.BusT              (BusT (BusT))
 import qualified Flowbox.Bus.BusT              as BusT
 import qualified Flowbox.Bus.Data.Flag         as Flag
-import           Flowbox.Bus.Data.Message      (Message, CorrelationID)
+import           Flowbox.Bus.Data.Message      (CorrelationID, Message)
 import qualified Flowbox.Bus.Data.Message      as Message
 import           Flowbox.Bus.Data.MessageFrame (MessageFrame (MessageFrame))
 import           Flowbox.Bus.Data.Topic        (Topic)
@@ -30,7 +30,7 @@ import           Flowbox.System.Log.Logger
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 run :: BusEndPoints -> [Topic] -> (Message -> IO [Message]) -> IO (Either Bus.Error ())

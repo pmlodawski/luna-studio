@@ -28,6 +28,7 @@ data BuildConfig = BuildConfig { _name        :: String
                                , _config      :: Config
                                , _diag        :: Diagnostics
                                , _buildDir    :: Maybe UniPath
+                               , _includeStd  :: Bool
                                }
 
 data BuildType   = Executable  { outputPath :: UniPath }

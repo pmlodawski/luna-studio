@@ -54,7 +54,7 @@ type LModule = LModule.Module
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 

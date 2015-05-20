@@ -25,7 +25,7 @@ import qualified Flowbox.ZMQ.RPC.Server.Processor as Processor
 
 
 loggerIO :: LoggerIO
-loggerIO = getLoggerIO $(moduleName)
+loggerIO = getLoggerIO $moduleName
 
 
 run :: Proto.Serializable request

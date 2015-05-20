@@ -16,7 +16,7 @@ import qualified Generated.Proto.ProjectManager.ProjectManager.Ping.Status  as P
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 ------ public api -------------------------------------------------
 

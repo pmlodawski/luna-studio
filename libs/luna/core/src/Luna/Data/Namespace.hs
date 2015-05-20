@@ -15,14 +15,20 @@ module Luna.Data.Namespace where
 
 import GHC.Generics (Generic)
 
-import           Control.Monad.RWS         (RWST)
-import qualified Control.Monad.RWS         as RWST
-import           Control.Monad.Trans.Class (MonadTrans, lift)
-import qualified Data.Maps                 as Map
-import           Data.Maybe                (fromJust)
-import           Flowbox.Prelude           hiding (head, id)
-import           Luna.Data.StructInfo      (StructInfo, StructInfoMonad)
-import qualified Luna.Data.StructInfo      as StructInfo
+import qualified Data.Maps           as Map
+import qualified Data.IntMap         as IntMap
+import           Data.Maybe          (fromJust)
+import           Flowbox.Prelude     hiding (head, id)
+import           Luna.Data.StructInfo (StructInfo, StructInfoMonad)
+import qualified Luna.Data.StructInfo as StructInfo
+import qualified Luna.Syntax.Name.Path as NamePath
+import           Data.Maybe          (fromJust)
+import           Control.Monad.RWS   (RWST)
+import qualified Control.Monad.RWS   as RWST
+import           Control.Monad.Trans.Class (lift, MonadTrans)
+
+import qualified Flowbox.Data.MapForest as MapForest
+
 
 ----------------------------------------------------------------------
 -- Data types
@@ -55,6 +61,7 @@ class NamespaceMonad m where
 head :: Namespace -> Maybe ID
 head (Namespace (id:_) _) = Just id
 head _                    = Nothing
+
 
 -- FIXME[wd]: dodac asserty!
 pushNewScope :: ID -> Namespace -> Namespace
@@ -100,7 +107,9 @@ popID ns = (id, ns & stack .~ ids)
 
 regParent id pid = info %~ StructInfo.regParent id pid
 
+regOrphan id err = info %~ StructInfo.regOrphan id err
 
+regOrigin id origin = modStructInfo (StructInfo.regOrigin id origin)
 
 --pushID :: ID -> m ()
 --pushID id = modify (idStack %~ (id:))
@@ -153,7 +162,6 @@ instance (MonadTrans t, NamespaceMonad m, Monad m) => NamespaceMonad (t m) where
     get = lift get
     put = lift . put
 
-
 instance (Monad m, NamespaceMonad m) => StructInfoMonad m where
     get = do
         ns <- get
@@ -161,3 +169,5 @@ instance (Monad m, NamespaceMonad m) => StructInfoMonad m where
     put i = do
         ns <- get
         put (ns & info .~ i)
+
+

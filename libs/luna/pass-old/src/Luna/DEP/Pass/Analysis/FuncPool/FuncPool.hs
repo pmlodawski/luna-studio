@@ -33,7 +33,7 @@ import qualified Luna.DEP.Pass.Pass                   as Pass
 
 
 logger :: Logger
-logger = getLogger $(moduleName)
+logger = getLogger $moduleName
 
 
 type FPPass result = Pass Pool result

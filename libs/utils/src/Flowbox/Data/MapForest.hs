@@ -5,6 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DeriveGeneric #-}
 
 module Flowbox.Data.MapForest where
 
@@ -18,7 +19,7 @@ import Flowbox.Prelude hiding (children, lookup, toList)
 
 data Node k v = Node { _value    :: Maybe v
                      , _children :: MapForest k v
-                     } deriving (Show, Read, Eq, Ord)
+                     } deriving (Generic, Show, Read, Eq, Ord)
 
 type Path k = [k]
 
@@ -38,6 +39,16 @@ null = Map.null
 -- FIXME [pm]: wd: this implementation looks like an inefficient one
 toList :: MapForest k v -> [(Path k, v)]
 toList = find (const . const True)
+
+
+fromList :: Ord k => [(Path k, v)] -> MapForest k v
+fromList = foldl (\mf (p, val) -> insert p val mf) Flowbox.Data.MapForest.empty
+
+
+-- this union should be performed with bigger map as the first argument
+-- also, it's not a union in a set-theory meaning, it's kind of a join
+union :: (Eq k, Ord k) => MapForest k v -> MapForest k v -> MapForest k v
+union a b = foldl (\mf (p, val) -> insert p val mf) a (toList b)
 
 
 keys :: MapForest k v -> [Path k]

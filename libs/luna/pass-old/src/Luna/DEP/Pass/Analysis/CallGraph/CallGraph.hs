@@ -33,7 +33,7 @@ import qualified Luna.DEP.Pass.Pass                     as Pass
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 type CGPass result = Pass State result

@@ -6,7 +6,14 @@
 ---------------------------------------------------------------------------
 module Luna.Syntax.Unit where
 
-import GHC.Generics      (Generic)
 import Flowbox.Prelude
+import GHC.Generics    (Generic)
 
-data Unit a = Unit a deriving (Generic, Show)
+data Unit a = Unit { _fromUnit :: a } deriving (Generic, Show)
+
+makeLenses ''Unit
+
+instance Unwrap  Unit where unwrap = view fromUnit
+instance Wrap    Unit where wrap = Unit
+instance Wrapper Unit
+

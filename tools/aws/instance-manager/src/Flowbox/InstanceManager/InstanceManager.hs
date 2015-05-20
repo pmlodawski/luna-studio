@@ -29,7 +29,7 @@ userName = "flowbox"
 
 
 logger :: LoggerIO
-logger = getLoggerIO $(moduleName)
+logger = getLoggerIO $moduleName
 
 
 getCredential :: Cmd.Options -> IO AWS.Credential

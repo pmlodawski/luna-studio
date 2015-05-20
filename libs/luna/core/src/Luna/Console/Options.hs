@@ -66,6 +66,8 @@ data Options = VersionOptions { compiler :: Bool
                               , dump_hash    :: Bool
                               , dump_hast    :: Bool
                               , dump_hsc     :: Bool
+
+                              , noStdlib     :: Bool
                               }
               | ListOptions   { inputs :: [String]
                               --, installed :: Bool
@@ -110,6 +112,7 @@ buildParser = Build <$> ( BuildOptions <$> argument str ( metavar "INPUTS" )
                                        <*> switch ( long "dump-hash" <> hidden )
                                        <*> switch ( long "dump-hast" <> hidden )
                                        <*> switch ( long "dump-hsc"  <> hidden )
+                                       <*> switch ( long "no-stdlib" <> hidden )
                         )
 
 
