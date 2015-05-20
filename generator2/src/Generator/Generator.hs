@@ -190,7 +190,7 @@ isPureVirtual method = any isPureVirtualQualifier $ qualifiers method
 
 data CppFieldSource = CppFieldSourceRec VarStrictType
                     | CppFieldSourceNormal THS.StrictType
-    deriving (Show)
+    deriving (Show, Eq)
 
 makeLenses ''CppFieldSource
 
@@ -199,7 +199,7 @@ data CppField = CppField
     , fieldType :: String
     , source :: CppFieldSource
     }
-    deriving (Show)
+    deriving (Show, Eq)
 makeLenses ''CppField
 
 
@@ -420,7 +420,7 @@ instance CppFormattable CppClass where
                 then ""
                 else ": " <> intercalate ", " (formatBase <$> bases)
             fieldsTxt = format fields
-            enumsTxt = if null enums then "" else "\t" <> format enums
+            enumsTxt = if null enums then "" else "\t" <> format enums <> "\n"
             -- fff =  (formatCppCtx <$> methods <*> [cls]) :: [CppFormattedCode]
             (FormattedCppMethod methodsHeader implsHeader methodsImpl) = collapseCode (formatMethod <$> methods <*> [cls])
             templatePreamble = formatTemplateIntroductor tmpl
@@ -760,7 +760,7 @@ serializeField field@(CppField fieldName fieldType fieldSrc) = do
 initializingCtor :: String -> [CppField] -> CppMethod
 initializingCtor n fields = CppMethod (CppFunction n "" args body) [] Usual where
     arg field = CppArg (fieldName field) (fieldType field)
-    assignment field = let fn = (fieldName field) in printf "this->%s = %s;" fn fn
+    assignment field = let fn = (fieldName field) in printf "\tthis->%s = %s;" fn fn
     body = (intercalate "\n" $ assignment <$> fields)
     args = arg <$> fields
 
@@ -932,6 +932,21 @@ includesResultingFromAliases cls = do
     names <- concat <$> (sequence $ listAliasDependencies <$> hsType <$> (cls ^. classFields))  :: Q [Name]
     return $ includeFor <$> names
 
+elevateCommonFields :: CppClass -> [CppClass] -> (CppClass, [CppClass])
+elevateCommonFields base [] = (base, [])
+elevateCommonFields base ders = 
+    let presentIn field cls = elem field (cls ^. classFields)
+        presentInAll field = all (presentIn field) ders
+        candidates = (head ders) ^. classFields
+        toElevate = filter presentInAll candidates
+
+        removeFields cls = cls & classFields %~ filter (\x -> not $ elem x toElevate)
+
+        elevatedBase = base & classFields %~ mappend toElevate
+        elevDers = removeFields <$> ders        
+
+    in (elevatedBase, elevDers)
+
 generateCppWrapperHlp :: Dec -> Q CppParts
 -- generateCppWrapperHlp arg | trace ("generateCppWrapperHlp: " <> show arg) False = undefined
 generateCppWrapperHlp dec@(DataD cxt name tyVars cons names) =
@@ -947,12 +962,14 @@ generateCppWrapperHlp dec@(DataD cxt name tyVars cons names) =
         let includes    = (standardSystemIncludes, Set.fromList $ concat additionalIncludes)
         let forwardDecs = Set.fromList forwardDecsClasses
         let aliases     = []
-        let classes     = baseClass : derClasses
+        --let classes     = baseClass : derClasses
+        let (elevBase, elevDers) = elevateCommonFields baseClass derClasses
+        let elevClasses = elevBase : elevDers
         let functions   = []
 
 
 
-        let mainParts = CppParts includes forwardDecs aliases classes functions
+        let mainParts = CppParts includes forwardDecs aliases elevClasses functions
 
         return $ joinParts [depParts, mainParts]
 
