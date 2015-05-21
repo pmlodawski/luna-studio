@@ -71,17 +71,25 @@ makeLenses ''Segment
 -- Utils
 ----------------------------------------------------------------------
 
+single :: base -> [arg] -> NamePat base arg
 single base args = NamePat Nothing (Segment base args) []
 
+appendArg :: arg -> Segment base arg -> Segment base arg
 appendArg  arg  = appendArgs [arg]
+
+appendArgs :: [arg] -> Segment base arg -> Segment base arg
 appendArgs nargs (Segment base args) = Segment base (args ++ nargs)
 
+appendLastSegmentArg :: arg -> NamePat base arg -> NamePat base arg
 appendLastSegmentArg  arg  = appendLastSegmentArgs [arg]
+
+appendLastSegmentArgs :: [arg] -> NamePat base arg -> NamePat base arg
 appendLastSegmentArgs nargs (NamePat pfx base segs) = case segs of
     [] -> NamePat pfx (appendArgs nargs base) segs
     _  -> NamePat pfx base (init segs ++ [appendArgs nargs $ last segs])
 
-
+withLastSegment :: (Segment SegmentName arg -> Segment SegmentName arg)
+                ->  NamePat SegmentName arg -> NamePat SegmentName arg
 withLastSegment f (NamePat pfx base segs) = case segs of
     [] -> NamePat pfx (f base) segs
     _  -> NamePat pfx base (init segs ++ [f $ last segs])
@@ -93,14 +101,17 @@ toDesc (NamePat pfx base segments) = NamePatDesc (pfxToDesc pfx) (smntToDesc bas
           pfxToDesc  (Just arg)          = argToDesc arg
           pfxToDesc  Nothing             = True
 
-
+mapSegmentBase :: (t -> base) -> Segment t arg -> Segment base arg
 mapSegmentBase f (Segment base arg) = Segment (f base) arg
 
+mapSegments :: (Segment SegmentName arg -> Segment SegmentName arg)
+            ->  NamePat SegmentName arg -> NamePat SegmentName arg
 mapSegments f (NamePat pfx base segs) = NamePat pfx (f base) (fmap f segs)
 
-
+segArgs :: Segment base arg -> [arg]
 segArgs (Segment _ args) = args
 
+segBase :: Segment base arg -> base
 segBase (Segment base _) = base
 
 args :: NamePat base arg -> [arg]
