@@ -47,7 +47,7 @@ jsifyBezier :: CubicBezier Float -> String
 jsifyBezier (CubicBezier c0 c1 c2 c3) = jsifyObject fields points
     where
         points = map jsifyV2 [c0, c1, c2, c3]
-        fields = zipWith (:) (repeat 'p') $ map show [0..]
+        fields = zipWith (:) (repeat 'p') $ map show [(0::Int)..]
 
 jsifyV2 :: V2 Float -> String
 jsifyV2 (V2 x y) = "{\"x\": " ++ show x ++ ", \"y\": " ++ show y ++ "}"
