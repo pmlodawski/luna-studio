@@ -202,8 +202,10 @@ evalFunction nodeExpr callDataPath varNames = do
         Tuple            -> return $ "val (" <> List.intercalate "," args <> ")"
         TimeVar          -> return   "val _time"
         Expression  name -> return   name
+    time <- Env.getTimeVar
     catchEither (left . Error.RunError $(loc) callPointPath) $ do
         Session.runAssignment tmpVarName operation
+        Session.runStmt $ "_ <- toIOEnv $ fromValue $ " <> tmpVarName <> " (" <> show time <> ")"
         hash <- Hash.computeInherit tmpVarName varNames
         let varName = VarName callPointPath hash
         Session.runAssignment (VarName.toString varName) tmpVarName
