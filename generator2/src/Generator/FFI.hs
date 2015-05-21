@@ -53,11 +53,14 @@ import Text.Printf (printf)
     --outPtr <- newArray outputBytes
     --return outPtr
 
+indent :: Int -> String -> String
+indent level text = unlines $ ((<>) $ replicate level '\t') <$> (lines text)
+
 generateCppWrapperBody :: String -> [String] -> String -> String
 generateCppWrapperBody ffiName argNames retType = body where
     serializeCalls = intercalate "\n" $ printf "serialize(%s, out);" <$> argNames
     resultDecl = printf "%s result;" retType
-    body = [string|    
+    body = indent 1 $ [string|    
                std::ostringstream out;
 
                //////////////////////////////////////////////////////////////////////////
@@ -196,7 +199,7 @@ generateDllStuff fname = do
 
 runtimeCtor :: String -> CppMethod
 runtimeCtor clsname = CppMethod fun [] Usual where
-    body = [string|     
+    body = indent 1 $ [string|     
         int argc = 1;
         char* argv[] = { "ghcDll", NULL }; // argv must end with NULL
         char** args = argv;
@@ -207,7 +210,7 @@ runtimeCtor clsname = CppMethod fun [] Usual where
 
 runtimeDtor :: String -> CppMethod
 runtimeDtor clsname = CppMethod fun [] Virtual where
-    body = "hs_exit();"
+    body = indent 1 "hs_exit();"
     fun = CppFunction ("~"<>clsname) "" [] body
 
 generateDllInterface :: [Name] -> FilePath -> Q [Dec]
@@ -227,7 +230,9 @@ generateDllInterface fnames outputDir = do
     let stubIncludePath = printf "../../hs/dist/build/%s_stub.h" module_name
     let includes = (def, Set.fromList [CppSystemInclude "sstream", CppLocalInclude stubIncludePath])
 
-    writeFilePair outputDir "DllApi" $ joinParts [(CppParts includes def def [cls] []), depParts]
+    let globalVar = CppGlobalVariable "hsdll" clsname
+
+    writeFilePair outputDir "DllApi" $ joinParts [(CppParts includes def def [cls] [] [globalVar]), depParts]
     generateCppList deps outputDir
 
 

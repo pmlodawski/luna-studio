@@ -284,6 +284,10 @@ instance CppFormattable CppIncludes where
 data CppForwardDecl = CppForwardDeclClass String [String] -- | CppForwardDeclStruct String
     deriving (Show, Ord, Eq)
 
+data CppGlobalVariable = CppGlobalVariable { _gvName :: String,
+                                             _gvType :: String
+                                           }
+                                           deriving (Show)
 
 type CppIncludes = (Set CppInclude, Set CppInclude)
 
@@ -294,6 +298,7 @@ data CppParts = CppParts { includes     :: CppIncludes
                          , typedefs     :: [CppTypedef]
                          , classes      :: [CppClass]
                          , functions    :: [CppFunction]
+                         , globalVars   :: [CppGlobalVariable]
                          }
                 deriving (Show)
 makeLenses ''CppParts
@@ -303,7 +308,12 @@ makeLenses ''CppParts
 joinParts :: [CppParts] -> CppParts
 joinParts parts =
     let collapseIncludes which = which <$> includes <$> parts
-    in CppParts (Set.unions $ collapseIncludes fst, Set.unions $ collapseIncludes snd) (Set.unions $ fmap forwardDecls parts) (concat $ map typedefs parts) (concat $ map classes parts) (concat $ map functions parts)
+    in CppParts (Set.unions $ collapseIncludes fst, Set.unions $ collapseIncludes snd) 
+                (Set.unions $ fmap forwardDecls parts) 
+                (concat $ map typedefs parts) 
+                (concat $ map classes parts) 
+                (concat $ map functions parts) 
+                (concat $ map globalVars parts)
 
 
 --instance Monoid CppParts where
@@ -441,17 +451,20 @@ instance CppFormattable CppTypedef where
         let templateList = formatTemplateIntroductor tmpl
         in (printf "%susing %s = %s;" templateList to from, "")
 
+instance  CppFormattable CppGlobalVariable where
+    formatCpp (CppGlobalVariable n t) = (printf "extern %s %s;" t n, printf "%s %s;" t n) 
 
 instance CppFormattable CppParts where
-    formatCpp (CppParts incl frwrds tpdefs cs fns) =
+    formatCpp (CppParts incl frwrds tpdefs cs fns vars) =
         let includesPieces = formatCpp incl
             forwardDeclPieces = map formatCpp (Set.toList frwrds)
             typedefPieces = map formatCpp tpdefs
             classesCodePieces = map formatCpp cs
             functionsPieces = map formatCpp fns
+            globalVarsPieces = map formatCpp vars
             -- FIXME code duplication above
 
-            allPieces = concat [[includesPieces], forwardDeclPieces, typedefPieces, classesCodePieces, functionsPieces]
+            allPieces = concat [[includesPieces], forwardDeclPieces, typedefPieces, classesCodePieces, functionsPieces, globalVarsPieces]
             -- replicate 10 '*'
             collectCodePieces fn = Data.List.intercalate "\n\n/****************/\n\n" (map fn allPieces)
             headerCode = collectCodePieces fst
@@ -659,7 +672,7 @@ instance HasCppWrapper Name where
     whatComesFrom name = reify name >>= whatComesFrom
 
 instance Default CppParts where
-    def = CppParts def def []  [] []
+    def = CppParts def def []  [] [] []
 
 emptyQParts :: Q CppParts
 emptyQParts = return def
@@ -915,7 +928,7 @@ instance HasThinkableCppDependencies [Name] where
 
         let includes = (includesForAliases, includesForDeps)
         let frwrdDecs = (Set.fromList forwardDecsDeps)
-        let ret = CppParts includes frwrdDecs def def def
+        let ret = CppParts includes frwrdDecs def def def def
         -- traceM (printf "\t### %s -> \n\t\t%s\n\n" (show dependencies) (show ret))
         return ret
 
@@ -966,10 +979,11 @@ generateCppWrapperHlp dec@(DataD cxt name tyVars cons names) =
         let (elevBase, elevDers) = elevateCommonFields baseClass derClasses
         let elevClasses = elevBase : elevDers
         let functions   = []
+        let vars        = []
 
 
 
-        let mainParts = CppParts includes forwardDecs aliases elevClasses functions
+        let mainParts = CppParts includes forwardDecs aliases elevClasses functions vars
 
         return $ joinParts [depParts, mainParts]
 
@@ -977,7 +991,7 @@ generateCppWrapperHlp tysyn@(TySynD name tyVars rhstype) = do
     -- trace ("\tGenerating wrapper for " <> show tysyn) $ return ()
     tf <- generateTypedefCppWrapper tysyn
     depParts <- cppDependenciesParts tysyn
-    return $ joinParts [depParts, (CppParts def def [tf] [] [])]
+    return $ joinParts [depParts, (CppParts def def [tf] [] [] [])]
 
 generateCppWrapperHlp arg = trace ("FIXME: generateCppWrapperHlp for " <> show arg) emptyQParts
 
