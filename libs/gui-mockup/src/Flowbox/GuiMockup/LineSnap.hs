@@ -15,8 +15,8 @@ import           Linear
 
 
 --main function for gui
-guiLineSnap :: V.Vector (CubicBezier Float) -> V.Vector (V2 Float) -> V.Vector (CubicBezier Float)
-guiLineSnap originalCurve strokePoints = optimizeBeziers originalCurve strokeAproximation
+guiLineSnap :: [CubicBezier Float] -> [V2 Float] -> [CubicBezier Float]
+guiLineSnap originalCurve strokePoints = V.toList $ optimizeBeziers (V.fromList originalCurve) (V.fromList strokeAproximation)
     where
         strokeAproximation = fitCurve strokePoints 10
 

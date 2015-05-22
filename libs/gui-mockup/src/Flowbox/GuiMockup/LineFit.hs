@@ -8,9 +8,9 @@ module Flowbox.GuiMockup.LineFit
     , fitCurve
     , chordLengthParameterize
     , reparameterize
-    , test
+--    , test
     , test2
-    , test3
+--    , test3
 	) where
 
 import           Control.Applicative          ((<$>), (<*>))
@@ -38,12 +38,13 @@ toVec (CubicBezier c0 c1 c2 c3) = V.fromList [c0, c1, c2, c3]
 
 -- main function in this module
 
-fitCurve :: V.Vector (V2 Float) -> Float -> V.Vector (CubicBezier Float)
-fitCurve points err = fitCubic points tHat1 tHat2 err
+fitCurve :: [V2 Float] -> Float -> [CubicBezier Float]
+fitCurve points err = V.toList $ fitCubic points' tHat1 tHat2 err
     where
-        len = V.length points
-        tHat1 = computeLeftTangent points 0
-        tHat2 = computeRightTangent points $ len - 1
+        points' = V.fromList points
+        len = V.length points'
+        tHat1 = computeLeftTangent points' 0
+        tHat2 = computeRightTangent points' $ len - 1
 
 fitCubic :: V.Vector (V2 Float) -> V2 Float -> V2 Float -> Float -> V.Vector (CubicBezier Float)
 fitCubic points tHat1 tHat2 err
@@ -342,5 +343,5 @@ curry3 :: (a -> b -> c -> d) -> (a, b, c) -> d
 curry3 f (a, b, c) = f a b c
 
 
-test :: Float -> [[Float]] -> String
-test err input = jsifyVector jsifyBezier $ fitCurve (readPoints input) err
+--test :: Float -> [[Float]] -> String
+--test err input = jsifyVector jsifyBezier $ fitCurve (readPoints input) err
