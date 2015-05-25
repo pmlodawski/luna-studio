@@ -114,6 +114,40 @@ postProcessCorners points (V.toList -> corners) = V.fromList $ go3 (go1 False co
                                else go3 (c:c2:cs) (c1:acc)
         go3 [c1,c2]      acc = reverse $ c2:c1:acc
 
+curveDetection :: V.Vector (V2 Float) -> V.Vector Int -> V.Vector Int
+curveDetection points corners = V.fromList $ go (V.toList corners) []
+    where
+        shift = 15
+
+        go :: [Int] -> [Int] -> [Int]
+        go (previousCorner:currentCorner:nextCorner:cs) acc =
+            if beta - alpha > threshold
+                then go (nextCorner:cs)               (previousCorner:acc)
+                else go (currentCorner:nextCorner:cs) (previousCorner:acc)
+            where
+                preDiff  = currentCorner - previousCorner
+                nextDiff = nextCorner - currentCorner
+
+                startIndex = if preDiff  < shift then previousCorner else currentCorner - shift
+                endIndex   = if nextDiff < shift then nextCorner     else currentCorner + shift
+                alpha = getAngle (points V.! currentCorner) (points V.! startIndex) (points V.! endIndex)
+
+                startIndexBeta = currentCorner - (ceiling $ fromIntegral (currentCorner - startIndex) / 3)
+                endIndexBeta   = currentCorner - (ceiling $ fromIntegral (endIndex - currentCorner) / 3)
+                beta = getAngle (points V.! currentCorner) (points V.! startIndex) (points V.! endIndex)
+
+                threshold = 10 + 800 / (alpha + 35)
+
+        go [c1,c2] acc = reverse $ c2:c1:acc
+        go [c]     acc = reverse $ c:acc
+
+getAngle :: V2 Float -> V2 Float -> V2 Float -> Float
+getAngle center p1 p2 = angle * 180 / pi
+    where
+        angle = acos $ v1 ^. _x * v2 ^. _x + v1 ^. _y * v2  ^. _y
+        v1 = normalize $ p1 - center
+        v2 = normalize $ p2 - center
+
 isLine :: V.Vector (V2 Float) -> Bool
 isLine vec = len / pathLen > threshold
     where
