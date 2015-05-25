@@ -123,11 +123,18 @@ isLine vec = len / pathLen > threshold
 
 getCorners :: V.Vector (V2 Float) -> V.Vector Int
 getCorners points = runST $ do
-    let w = 3
+    let w :: Num a => a
+        w = 3
         straws = V.create $ do
             v <- MV.new $ V.length points
+            let lastValidIndex = V.length points - 1
 
-            forM_ [w .. V.length points - w - 1] $ \i -> do
+            MV.write v 1 $ distance (points V.! 0) (points V.! (1 + w)) * (2 * w) / (w + 1)
+            MV.write v 2 $ distance (points V.! 0) (points V.! (2 + w)) * (2 * w) / (w + 2)
+            MV.write v (lastValidIndex - 1) $ distance (points V.! lastValidIndex) (points V.! (lastValidIndex - 1 - w)) * (2 * w) / (w + 1)
+            MV.write v (lastValidIndex - 2) $ distance (points V.! lastValidIndex) (points V.! (lastValidIndex - 2 - w)) * (2 * w) / (w + 2)
+
+            forM_ [w .. lastValidIndex - w] $ \i -> do
                 MV.write v i $ distance (points V.! (i - w)) (points V.! (i + w))
 
             return v
