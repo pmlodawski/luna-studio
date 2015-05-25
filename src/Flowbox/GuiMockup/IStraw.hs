@@ -99,7 +99,7 @@ postProcessCorners points (V.toList -> corners) = V.fromList $ go3 (go1 False co
             where
                 go2 :: Bool -> [Int] -> [Int] -> [Int]
                 go2 currentBool corners@(c1:c2:cs) acc =
-                    let slice = V.slice c1 c2 points
+                    let slice = V.slice c1 (c2 - c1 + 1) points
                     in  if not $ isLine $ V.map fst slice
                         then let newCorner = c1 + halfwayCorner slice
                              in  if newCorner > c1 && newCorner < c2
@@ -109,7 +109,7 @@ postProcessCorners points (V.toList -> corners) = V.fromList $ go3 (go1 False co
                 go2 currentBool [c]                acc = go1 currentBool (reverse $ c:acc)
 
         go3 :: [Int] -> [Int] -> [Int]
-        go3 (c1:c:c2:cs) acc = if isLine $ V.map fst $ V.slice c1 c2 points
+        go3 (c1:c:c2:cs) acc = if isLine $ V.map fst $ V.slice c1 (c2 - c1 + 1) points
                                then go3 (c1:c2:cs) acc
                                else go3 (c:c2:cs) (c1:acc)
         go3 [c1,c2]      acc = reverse $ c2:c1:acc
