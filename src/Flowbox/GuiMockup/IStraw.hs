@@ -83,43 +83,36 @@ pathLength v = V.foldl' (\d (prev, next) -> d + distance prev next) 0
 test3 :: Float -> [[Float]] -> String
 test3 n input = jsifyVector jsifyV2 $ resample n $ readPoints input
 
-halfwayCorner :: V.Vector (V2 Float, Float) -> V2 Float
-halfwayCorner vec = fst $ V.minimumBy (compare `on` snd) vec'
+halfwayCorner :: V.Vector (V2 Float, Float) -> Int
+halfwayCorner vec = quarter + V.minIndexBy (compare `on` snd) vec'
     where
         vec'    = V.slice quarter len vec
         len     = V.length vec - 2 * quarter
         quarter = V.length vec `div` 4
 
-postProcessCorners :: V.Vector (V2 Float, Float) -> V.Vector (V2 Float) -> V.Vector (V2 Float)
+postProcessCorners :: V.Vector (V2 Float, Float) -> V.Vector Int -> V.Vector Int
 postProcessCorners points (V.toList -> corners) = V.fromList $ go3 (go1 False corners) []
     where
-        go1 :: Bool -> [V2 Float] -> [V2 Float]
+        go1 :: Bool -> [Int] -> [Int]
         go1 (not -> False) acc = acc
         go1 (not -> True)  acc = go2 True acc []
             where
-                go2 :: Bool -> [V2 Float] -> [V2 Float] -> [V2 Float]
+                go2 :: Bool -> [Int] -> [Int] -> [Int]
                 go2 currentBool corners@(c1:c2:cs) acc =
-                    let slice = getSlice points c1 c2
+                    let slice = V.slice c1 c2 points
                     in  if not $ isLine $ V.map fst slice
-                        then let newCorner = halfwayCorner slice
+                        then let newCorner = c1 + halfwayCorner slice
                              in  if newCorner > c1 && newCorner < c2
                                  then go2 False (newCorner:c2:cs) (c1:acc)
                                  else go2 currentBool (c2:cs) (c1:acc)
                         else go2 currentBool (c2:cs) (c1:acc)
                 go2 currentBool [c]                acc = go1 currentBool (reverse $ c:acc)
 
-        go3 :: [V2 Float] -> [V2 Float] -> [V2 Float]
-        go3 (c1:c:c2:cs) acc = if isLine $ V.map fst $ getSlice points c1 c2
+        go3 :: [Int] -> [Int] -> [Int]
+        go3 (c1:c:c2:cs) acc = if isLine $ V.map fst $ V.slice c1 c2 points
                                then go3 (c1:c2:cs) acc
                                else go3 (c:c2:cs) (c1:acc)
         go3 [c1,c2]      acc = reverse $ c2:c1:acc
-
-        getSlice :: V.Vector (V2 Float, Float) -> V2 Float -> V2 Float -> V.Vector (V2 Float, Float)
-        getSlice vec a1 a2 = V.slice i1 (i2 - i1 + 1) vec
-            where
-                fstvec = V.map fst vec
-                Just i1 = V.elemIndex a1 fstvec
-                Just i2 = V.elemIndex a2 fstvec
 
 isLine :: V.Vector (V2 Float) -> Bool
 isLine vec = len / pathLen > threshold
@@ -128,7 +121,7 @@ isLine vec = len / pathLen > threshold
         pathLen = pathLength vec
         threshold = 0.95
 
-getCorners :: V.Vector (V2 Float) -> V.Vector (V2 Float)
+getCorners :: V.Vector (V2 Float) -> V.Vector Int
 getCorners points = runST $ do
     let w = 3
         straws = V.create $ do
@@ -142,7 +135,7 @@ getCorners points = runST $ do
         t = mean straws * 0.95
 
     i <- newSTRef w
-    corners <- newSTRef [V.head points]
+    corners <- newSTRef [0]
 
     whileM_ ((\x -> x < V.length points - w - 1) <$> readSTRef i) $ do
         iVal <- readSTRef i
@@ -165,10 +158,10 @@ getCorners points = runST $ do
                 increment i
 
             localMinIndexVal <- readSTRef localMinIndex
-            modifySTRef corners (points V.! localMinIndexVal:)
+            modifySTRef corners (localMinIndexVal:)
         else increment i
 
-    modifySTRef corners (V.last points:)
+    modifySTRef corners (V.length points - 1 :)
 
     cornersVal <- reverse <$> readSTRef corners
 
@@ -179,7 +172,7 @@ mean :: (Num a, Storable a, Fractional a) => V.Vector a -> a
 mean vec = V.sum vec / (fromIntegral $ V.length vec)
 
 iStraw :: V.Vector (V2 Float, Float) -> V.Vector (V2 Float)
-iStraw (V.map fst -> points) = corners
+iStraw (V.map fst -> points) = V.backpermute points corners
     where
         s = determineResampleSpacing points
         resampled = resample s points
