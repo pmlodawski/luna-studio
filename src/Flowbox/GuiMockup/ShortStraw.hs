@@ -332,7 +332,6 @@ getCornersClean points = runST $ do
 
     return $ postProcessCornersClean (V.zipWith (,) points straws) (V.fromList cornersVal)
 
-
 shortStrawClean :: V.Vector (V2 Float) -> V.Vector (V2 Float)
 shortStrawClean points = corners
     where
