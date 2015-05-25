@@ -141,6 +141,17 @@ curveDetection points corners = V.fromList $ go (V.toList corners) []
         go [c1,c2] acc = reverse $ c2:c1:acc
         go [c]     acc = reverse $ c:acc
 
+removeAdjacentCorners :: V.Vector (V2 Float) -> V.Vector Float -> V.Vector Int -> V.Vector Int
+removeAdjacentCorners points straws corners = V.fromList $ go (V.toList corners) []
+    where
+        go :: [Int] -> [Int] ->[Int]
+        go (prevCorner:currentCorner:cs) acc =
+            if currentCorner - prevCorner == 1
+                then if straws V.! currentCorner < straws V.! prevCorner
+                        then go (currentCorner:cs) acc
+                        else go (prevCorner:cs)    acc
+                else go (currentCorner:cs) (prevCorner:acc)
+
 getAngle :: V2 Float -> V2 Float -> V2 Float -> Float
 getAngle center p1 p2 = angle * 180 / pi
     where
