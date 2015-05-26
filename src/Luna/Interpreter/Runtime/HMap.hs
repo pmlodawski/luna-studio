@@ -5,4 +5,13 @@
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
 
-module Luna.Interpreter.Runtime.HMap where
+module Luna.Interpreter.Runtime.HMap (
+    module HMap,
+    module HKey
+) where
+
+import Data.HKey as HKey
+import Data.HMap as HMap
+import Prelude
+
+
