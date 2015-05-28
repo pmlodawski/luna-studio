@@ -10,6 +10,7 @@ import           Control.Monad                (forM_, when)
 import           Control.Monad.Loops
 import           Control.Monad.ST             (ST, runST)
 import           Data.Function                (on)
+import           Data.List                    ((\\))
 import           Data.STRef
 import qualified Data.Vector.Algorithms.Intro as VA
 import qualified Data.Vector.Storable         as V
@@ -134,16 +135,48 @@ postProcessCorners points (V.toList -> corners) = V.fromList $ go3 (go1 False co
                                else go3 (c:c2:cs) (c1:acc)
         go3 [c1,c2]      acc = reverse $ c2:c1:acc
 
+-- curveDetection :: V.Vector (V2 Float) -> V.Vector Int -> V.Vector Int
+-- curveDetection points corners = V.fromList $ go (V.toList corners) []
+--     where
+--         shift = 15
+
+--         go :: [Int] -> [Int] -> [Int]
+--         go ((traceA "prev: " -> previousCorner):(traceA "curr: " -> currentCorner):nextCorner:cs) acc =
+--             if trace ("beta - alpha: " ++ show (beta - alpha)) (beta - alpha > threshold)
+--                 -- then trace "----------" $ go (nextCorner:cs)               (previousCorner:acc)
+--                 -- else trace "----------" $ go (currentCorner:nextCorner:cs) (previousCorner:acc)
+--                 then trace "----------" $ go (currentCorner:nextCorner:cs) acc
+--                 else trace "----------" $ go (currentCorner:nextCorner:cs) (currentCorner:acc)
+--             where
+--                 preDiff  = currentCorner - previousCorner
+--                 nextDiff = nextCorner - currentCorner
+
+--                 startIndex = traceA "startIndexAlpha: " $ if preDiff  < shift then previousCorner else currentCorner - shift
+--                 endIndex   = traceA "endIndexAlpha: " $ if nextDiff < shift then nextCorner     else currentCorner + shift
+--                 alpha = traceA "alpha: " $ getAngle (points V.! currentCorner) (points V.! startIndex) (points V.! endIndex)
+
+--                 startIndexBeta = traceA "startIndexBeta: " $ currentCorner - (ceiling $ fromIntegral (currentCorner - startIndex) / 3)
+--                 endIndexBeta   = traceA "endIndexBeta: " $ currentCorner + (ceiling $ fromIntegral (endIndex - currentCorner) / 3)
+--                 -- startIndexBeta = traceA "startIndexBeta: " $ currentCorner - (shift / 3)
+--                 -- endIndexBeta   = traceA "endIndexBeta: " $ currentCorner + (shift / 3)
+
+--                 beta = traceA "beta: " $ getAngle (points V.! currentCorner) (points V.! startIndexBeta) (points V.! endIndexBeta)
+
+--                 threshold = trace ("threshold: " ++ show (10 + 800 / (alpha + 35))) (10 + 800 / (alpha + 35))
+
+--         go [c1,c2] acc = reverse $ c2:c1:acc
+--         go [c]     acc = reverse $ c:acc
+
 curveDetection :: V.Vector (V2 Float) -> V.Vector Int -> V.Vector Int
-curveDetection points corners = V.fromList $ go (V.toList corners) []
+curveDetection points corners = V.fromList $ (V.toList corners) \\ (go (V.toList corners) [])
     where
         shift = 15
 
         go :: [Int] -> [Int] -> [Int]
         go (previousCorner:currentCorner:nextCorner:cs) acc =
             if beta - alpha > threshold
-                then go (nextCorner:cs)               (previousCorner:acc)
-                else go (currentCorner:nextCorner:cs) (previousCorner:acc)
+                then go (currentCorner:nextCorner:cs) (currentCorner:acc)
+                else go (currentCorner:nextCorner:cs) acc
             where
                 preDiff  = currentCorner - previousCorner
                 nextDiff = nextCorner - currentCorner
@@ -153,16 +186,19 @@ curveDetection points corners = V.fromList $ go (V.toList corners) []
                 alpha = getAngle (points V.! currentCorner) (points V.! startIndex) (points V.! endIndex)
 
                 startIndexBeta = currentCorner - (ceiling $ fromIntegral (currentCorner - startIndex) / 3)
-                endIndexBeta   = currentCorner - (ceiling $ fromIntegral (endIndex - currentCorner) / 3)
-                beta = getAngle (points V.! currentCorner) (points V.! startIndex) (points V.! endIndex)
+                endIndexBeta   = currentCorner + (ceiling $ fromIntegral (endIndex - currentCorner) / 3)
+
+                beta = getAngle (points V.! currentCorner) (points V.! startIndexBeta) (points V.! endIndexBeta)
 
                 threshold = 10 + 800 / (alpha + 35)
 
-        go [c1,c2] acc = reverse $ c2:c1:acc
-        go [c]     acc = reverse $ c:acc
+        go _     acc = acc
 
-removeAdjacentCorners :: V.Vector (V2 Float) -> V.Vector Float -> V.Vector Int -> V.Vector Int
-removeAdjacentCorners points straws corners = V.fromList $ go (V.toList corners) []
+traceA :: Show a => String -> a -> a
+traceA msg a = trace (msg ++ show a) a
+
+removeAdjacentCorners :: V.Vector Float -> V.Vector Int -> V.Vector Int
+removeAdjacentCorners straws corners = V.fromList $ go (V.toList corners) []
     where
         go :: [Int] -> [Int] ->[Int]
         go (prevCorner:currentCorner:cs) acc =
@@ -236,16 +272,21 @@ getCorners points = runST $ do
     modifySTRef corners (V.length points - 1 :)
 
     cornersVal <- reverse <$> readSTRef corners
+    let postprocessed = postProcessCorners (V.zipWith (,) points straws) (V.fromList cornersVal)
+        curveDetected = curveDetection points postprocessed
 
-    return $ postProcessCorners (V.zipWith (,) points straws) (V.fromList cornersVal)
+    return curveDetected
 
 
 mean :: (Num a, Storable a, Fractional a) => V.Vector a -> a
 mean vec = V.sum vec / (fromIntegral $ V.length vec)
 
-iStraw :: V.Vector (V2 Float, Float) -> V.Vector (V2 Float)
-iStraw (V.map fst -> points) = V.backpermute points corners
+iStraw :: V.Vector (V2 Float) -> V.Vector (V2 Float)
+iStraw points = V.backpermute resampled corners
     where
         s = determineResampleSpacing points
         resampled = resample s points
         corners = getCorners resampled
+
+test4 :: [[Float]] -> String
+test4 input = jsifyVector jsifyV2 $ iStraw $ readPoints input
