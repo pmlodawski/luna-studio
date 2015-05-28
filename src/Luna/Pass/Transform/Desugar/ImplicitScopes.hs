@@ -17,7 +17,7 @@ module Luna.Pass.Transform.Desugar.ImplicitScopes where
 import           Control.Monad               (join)
 import           Control.Monad.RWS           (RWST)
 import qualified Control.Monad.RWS           as RWST
-import           Data.Maybe                  (Maybe (Just), fromJust)
+import           Data.Maybe                  (Maybe (Just), fromJust, isJust)
 
 import           Flowbox.Control.Monad.State hiding (State, join, mapM, mapM_)
 import           Flowbox.Prelude             hiding (Traversal)
@@ -119,10 +119,13 @@ fmake ast@(Label lab e) f = case e of
             tgt       = view StructInfo.target <$> view (at id) aliasMap
             tgtPid    = join $ fmap (\tid -> view (at tid) parentMap) tgt
 
+        let x = if not $ isJust originMod then error $ "Undefined symbol: " ++ (toString name)
+                                          else ()
+ 
         if originMod == (Just thisMod)
             then if pid == tgtPid then return ast
                                   else Label <$> tag <*> pure (Expr.Accessor (convert name) (f $ Label lab $ Expr.Var $ Expr.Variable "self" v))
-            else Label <$> tag <*> pure (Expr.Accessor (convert name) (f $ Label lab $ Expr.Cons $ Name.cname . ImportInfo.moduleObjectName . fromJust $ originMod))
+            else Label <$> tag <*> pure (Expr.Accessor (convert name) (f $ Label lab $ Expr.Cons $ Name.cname . ImportInfo.moduleObjectName $ seq x (fromJust originMod)))
     where
         id    = Enum.id lab
         tag = do fromIntegral <$> ASTInfo.genID
