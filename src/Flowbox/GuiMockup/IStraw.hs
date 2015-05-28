@@ -76,6 +76,26 @@ resample i v@(V.toList -> points) = V.fromList $ go 0 (head points) (tail points
                 else go (bigD + d) point ps newPoints
         go _ _ [] newPoints = reverse newPoints
 
+
+resampleTime :: Float -> V.Vector (V2 Float, Float) -> V.Vector (V2 Float, Float)
+resampleTime i v@(V.toList -> points) = V.fromList $ go 0 (head points) (tail points) [head points]
+    where
+        go :: Float -> (V2 Float, Float) -> [(V2 Float, Float)] -> [(V2 Float, Float)] -> [(V2 Float, Float)]
+        go bigD previousPoint (point:ps) newPoints =
+            let d = (distance `on` fst) previousPoint point
+            in  if bigD + d >= i
+                then let q = let factor = ((i - bigD) / d)
+                                 (prevVec, prevTime) = previousPoint
+                                 (vec, time) = point
+                                 interpolate f a b = a + factor `f` (b - a)
+                                 newVec = interpolate (*^) prevVec vec
+                                 newTime = interpolate (*) prevTime time
+                             in  (newVec, newTime)
+                     in  go 0 q (point:ps) (q:newPoints)
+                else go (bigD + d) point ps newPoints
+        go _ _ [] newPoints = reverse newPoints
+
+
 pathLength :: V.Vector (V2 Float) -> Float
 pathLength v = V.foldl' (\d (prev, next) -> d + distance prev next) 0
              $ V.zipWith (,) v (V.tail v)
