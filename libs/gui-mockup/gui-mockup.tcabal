@@ -16,7 +16,7 @@ Library
   Build-Depends:  base >= 4.6,
                   algebraic > 0.1,
                   vector,
-                  linear,
+                  linear >= 1.18,
                   lens,
                   errors,
                   transformers,
