@@ -18,7 +18,7 @@ Library
                   vector,
                   linear >= 1.18,
                   lens,
-                  errors,
+                  errors < 2.0,
                   transformers,
                   storable-tuple,
                   monad-loops,
