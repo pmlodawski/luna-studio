@@ -227,7 +227,7 @@ generateDllInterface fnames outputDir = do
     let cppMethods = (cppMethod <$> methodsInfo) <> [runtimeCtor clsname, runtimeDtor clsname]
     let cls = CppClass clsname [] cppMethods [] [] []
 
-    let stubIncludePath = printf "../../hs/dist/build/%s_stub.h" module_name
+    let stubIncludePath = printf "%s_stub.h" module_name
     let includes = (def, Set.fromList [CppSystemInclude "sstream", CppLocalInclude stubIncludePath])
 
     let globalVar = CppGlobalVariable "hsdll" clsname
