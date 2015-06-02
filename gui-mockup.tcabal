@@ -24,4 +24,4 @@ Library
                   monad-loops,
                   vector-algorithms,
                   generator2,
-                  binary >= 0.8
+                  binary == 0.7.99.99
