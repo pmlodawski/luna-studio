@@ -731,7 +731,7 @@ deserializeField :: CppField -> Q String
 deserializeField field@(CppField fieldName fieldType fieldSrc) = do
     collapsedMaybe <- isCollapsedMaybePtr (hsType fieldSrc)
     let fname = if collapsedMaybe then "deserializeMaybe" else "deserialize"
-    return $ printf "\t::%s(%s, input);" fname fieldName
+    return $ printf "\t::%s(this->%s, input);" fname fieldName
 
 deserializeReturnSharedType :: CppClass -> String
 deserializeReturnSharedType cls@(CppClass clsName _ _ _ tmpl _) =
@@ -768,7 +768,7 @@ serializeField :: CppField -> Q String
 serializeField field@(CppField fieldName fieldType fieldSrc) = do
     collapsedMaybe <- isCollapsedMaybePtr (hsType fieldSrc)
     let fname = if collapsedMaybe then "serializeMaybe" else "serialize"
-    return $ printf "\t::%s(%s, output);" fname fieldName
+    return $ printf "\t::%s(this->%s, output);" fname fieldName
 
 initializingCtor :: String -> [CppField] -> CppMethod
 initializingCtor n fields = CppMethod (CppFunction n "" args body) [] Usual where
@@ -814,7 +814,7 @@ processConstructor dec@(DataD cxt name tyVars cons names) con =
         let initCtor = initializingCtor derCppName cppFields
 
         let whichMethod =
-                let whichFn = whichFunction baseCppName tnames ("\treturn " <> baseCppName<> "::" <> prettyConName <> ";")
+                let whichFn = whichFunction baseCppName tnames ("\treturn " <> (templateDepTypenameBase baseCppName tnames) <> "::" <> prettyConName <> ";")
                 in CppMethod whichFn [OverrideQualifier] Virtual
 
         let methods = [defaultCtor, initCtor, serializeMethod, deserializeMethod, deserializeFromMethod, whichMethod]
