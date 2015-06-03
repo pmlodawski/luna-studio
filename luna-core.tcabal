@@ -56,7 +56,7 @@ Library
                   either,
                   bytestring,
                   utf8-string,
-                  text,
+                  text >= 1.2.1.0,
                   trifecta >= 1.5.1.1,
                   charset,
                   unordered-containers,
