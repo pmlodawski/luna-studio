@@ -968,9 +968,9 @@ generateCppWrapperHlp dec@(DataD cxt name tyVars cons names) =
         let baseClass = generateRootClassWrapper dec derClasses
         depParts <- cppDependenciesParts dec
 
-        forwardDecsClasses <- sequence $ [makeForwardDeclaration baseClass]
+        forwardDecsClasses <- mapM makeForwardDeclaration $ baseClass:derClasses
 
-        additionalIncludes <- sequence $ includesResultingFromAliases <$> derClasses
+        additionalIncludes <- mapM includesResultingFromAliases derClasses
          -- traceM $ printf "$$$ %s -> %s" (show dec) (show additionalIncludes)
         let includes    = (standardSystemIncludes, Set.fromList $ concat additionalIncludes)
         let forwardDecs = Set.fromList forwardDecsClasses
