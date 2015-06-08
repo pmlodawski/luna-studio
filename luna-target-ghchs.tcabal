@@ -34,7 +34,7 @@ Library
                   transformers,
                   mtl,
                   QuickCheck,
-                  lens,
+                  lens == 4.9.1,
                   flowbox-utils,
                   tuple,
                   text,
