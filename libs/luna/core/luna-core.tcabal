@@ -46,7 +46,7 @@ Library
                   fgl,
                   filepath,
                   flowbox-utils,
-                  lens,
+                  lens == 4.9.1,
                   MissingH,
                   parsers,
                   transformers,
