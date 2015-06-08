@@ -18,9 +18,5 @@ import GHC.Generics(Generic)
 
 
 
-instance Binary Text where
-    put text = put $ Text.unpack text
-    get = Text.pack <$> get
-
 deriving instance Generic Version
 instance Binary Version
