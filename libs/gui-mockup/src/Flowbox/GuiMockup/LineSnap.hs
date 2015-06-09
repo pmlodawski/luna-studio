@@ -36,7 +36,7 @@ generateFittingBezier (startLength, endLength) strokeWithDists = iteration
             u' <- newSTRef u
             bezCurve' <- newSTRef generatedBezier
 
-            forM_ [(1::Int)..4] $ \_ -> do
+            forM_ [(1::Int)..20] $ \_ -> do
                 uVal <- readSTRef u'
                 bezCurveVal <- readSTRef bezCurve'
                 let uPrime = reparameterize resampledPoints uVal bezCurveVal
