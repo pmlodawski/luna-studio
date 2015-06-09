@@ -306,15 +306,18 @@ computeRightTangent :: V.Vector (V2 Float) -> Int -> V2 Float
 computeRightTangent points end = tHat2
     where
         tHat2 = normalize tHat2'
-        tHat2' = (points V.! (end - 1)) - avgPoint --(points V.! end)
-        avgPoint = V.sum $ V.take ((V.length points) `div` 100) points
+        tHat2' = avgPoint - (points V.! end) --(points V.! end)
+        avgPoint = (V.sum $ V.drop ((V.length points) - avgSample) points)/(fromIntegral avgSample)
+        avgSample = min 5 $ V.length points -1
+        
 
 computeLeftTangent :: V.Vector (V2 Float) -> Int -> V2 Float
 computeLeftTangent points end = tHat1
     where
         tHat1 = normalize tHat1'
-        tHat1' = (points V.! (end + 1)) - avgPoint --(points V.! end)
-        avgPoint = V.sum $ V.drop ((V.length points) - ((V.length points) `div` 100)) points
+        tHat1' = avgPoint - (points V.! end) --(points V.! end)
+        avgPoint = (V.sum $ V.take avgSample points)/(fromIntegral avgSample)
+        avgSample = min 5 $ V.length points -1
 
 computeCenterTangent :: V.Vector (V2 Float) -> Int -> V2 Float
 computeCenterTangent points center = normalize tHatCenter
