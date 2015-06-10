@@ -502,7 +502,7 @@ instance PureVirtualMethodInfo CppFunction where
 
 whichFunction :: String -> [String] -> String -> CppFunction
 whichFunction baseName baseParams body =
-    CppFunction "which" (templateDepTypenameBase baseName baseParams <> "::Constructors") [] body
+    CppFunction "which" (templateDepNameBase baseName baseParams <> "::Constructors") [] body
 
 generateRootClassWrapper :: Dec -> [CppClass] -> CppClass
 generateRootClassWrapper (DataD cxt name tyVars cons names) derClasses =
