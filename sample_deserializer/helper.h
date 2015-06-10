@@ -162,7 +162,7 @@ inline void deserialize(double &val, Input &input)
 template<typename T>
 inline void deserialize(std::shared_ptr<T> &val, Input &input)
 {
-	val = typename T::deserializeFrom(input);
+	val = T::deserializeFrom(input);
 }
 
 template<typename T>
