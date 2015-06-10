@@ -75,4 +75,4 @@ main = do
     ---- putStrLn $(TH.stringE . printAst =<< TH.reify ''Expr)
     ---- putStrLn $(TH.stringE . TH.pprint =<< TH.reify ''Expr)
 
-    $(generateCpp ''Expr "../../sample_deserializer")
+    -- $(generateCpp ''Expr "../../sample_deserializer")
