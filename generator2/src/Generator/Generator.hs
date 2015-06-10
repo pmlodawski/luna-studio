@@ -502,7 +502,7 @@ instance PureVirtualMethodInfo CppFunction where
 
 whichFunction :: String -> [String] -> String -> CppFunction
 whichFunction baseName baseParams body =
-    CppFunction "which" (templateDepNameBase baseName baseParams <> "::Constructors") [] body
+    CppFunction "which" (templateDepTypenameBase baseName baseParams <> "::Constructors") [] body
 
 generateRootClassWrapper :: Dec -> [CppClass] -> CppClass
 generateRootClassWrapper (DataD cxt name tyVars cons names) derClasses =
@@ -814,7 +814,7 @@ processConstructor dec@(DataD cxt name tyVars cons names) con =
         let initCtor = initializingCtor derCppName cppFields
 
         let whichMethod =
-                let whichFn = whichFunction baseCppName tnames ("\treturn " <> (templateDepTypenameBase baseCppName tnames) <> "::" <> prettyConName <> ";")
+                let whichFn = whichFunction baseCppName tnames ("\treturn " <> (templateDepNameBase baseCppName tnames) <> "::" <> prettyConName <> ";")
                 in CppMethod whichFn [OverrideQualifier] Virtual
 
         let methods = [defaultCtor, initCtor, serializeMethod, deserializeMethod, deserializeFromMethod, whichMethod]
