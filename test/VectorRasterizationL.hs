@@ -209,6 +209,12 @@ main = do
     let pat = Path True points
         fea = Path True feather
 
+    let p = makeCubics pat
+        f = makeCubics fea
+
+    print $ show p
+    print $ show f
+
     let arrD = rasterizeMaskL w h $ (Mask pat Nothing)
         imgD = matrixToImage arrD
 
