@@ -143,7 +143,8 @@ func name args body = apps' name args `assign` sbox body
 app' a b = app (convert a) (convert b)
 apps' base = foldl app' (convert base)
 
-macroApps name items = sbox $ app' name $ tuple items
+macroApps name items = sbox $ app name $ tuple items where
+    app a b = appWith "" L 10 (convert a) (convert b)
 
 buildBody2 exprs = if null exprs then "" else mjoin "; " (gen exprs) <> ";"
 

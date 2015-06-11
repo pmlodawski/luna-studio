@@ -1,0 +1,7 @@
+
+foreign haskell def print msg:
+    autoLift1 print msg
+
+
+def main:
+	print 1
