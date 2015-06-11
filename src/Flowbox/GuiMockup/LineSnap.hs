@@ -14,9 +14,24 @@ import           Linear
 
 
 
+type ControlPoint = (V2 Float, V2 Float, V2 Float)
+
 --main function for gui
-guiLineSnap :: V.Vector (CubicBezier Float) -> V.Vector (V2 Float) -> V.Vector (CubicBezier Float)
-guiLineSnap originalCurve strokePoints = optimizeBeziers originalCurve strokeAproximation
+guiLineSnap :: [ControlPoint] -> Maybe ControlPoint -> Maybe ControlPoint -> [V2 Float] -> [ControlPoint]
+guiLineSnap originalCurveControlPoints pointBefore pointAfter strokePoints = resultControlPoints
+    where
+        resultControlPoints = [startControlPoint] ++ midPoints ++ [endControlPoint] 
+        midPoints = beziersToControlPoints resultCurve
+        startControlPoint = (ps , his, ho)
+        endControlPoint = (pe, hi, hoe)
+        (_, his, _) = head originalCurveControlPoints
+        (_, _, hoe) = head originalCurveControlPoints
+        CubicBezier ps ho _ _ = head resultCurve
+        CubicBezier _ _ hi pe = last resultCurve
+        resultCurve = moveCurveToStroke (controlPointsToBeziers originalCurveControlPoints) strokePoints
+
+moveCurveToStroke :: [CubicBezier Float] -> [V2 Float] -> [CubicBezier Float]
+moveCurveToStroke originalCurve strokePoints = V.toList $ optimizeBeziers (V.fromList originalCurve) (V.fromList strokeAproximation)
     where
         strokeAproximation = fitCurve strokePoints 10
 
@@ -74,12 +89,23 @@ generateFittingBezier (startLength, endLength) strokeWithDists = iteration
         (endPoint, hi, _) = deCasteljauCubic endRest endPointBezier
         nextBeziers = V.map snd $ V.tail beforeEndStrokeBeziers
 
-beziersToControlPoints :: V.Vector (CubicBezier Float) -> V.Vector (V2 Float, V2 Float, V2 Float)
-beziersToControlPoints beziers = V.snoc (V.map snd $ V.tail $ V.scanl (\(prevhi,_) (CubicBezier point1 ho hi point2) -> (hi,(point1,prevhi,ho))) (0.0, (firstPoint,dummyHandle,firstPointHo)) beziers) lastControlPoint where
-    CubicBezier firstPoint firstPointHo _ _ = V.head beziers
+--beziersToControlPoints :: V.Vector (CubicBezier Float) -> V.Vector (V2 Float, V2 Float, V2 Float)
+--beziersToControlPoints beziers = --V.snoc (V.map snd $ V.tail $ V.scanl (\(prevhi,_) (CubicBezier point1 ho hi point2) -> (hi,(point1,prevhi,ho))) (0.0, (firstPoint,dummyHandle,firstPointHo)) beziers) lastControlPoint where
+    --CubicBezier firstPoint firstPointHo _ _ = V.head beziers
+    --dummyHandle = V2 0 0
+    --CubicBezier _ _ lastPointHi lastPoint = V.last beziers
+    --lastControlPoint = (lastPoint, lastPointHi, lastPoint) -- for js purpose. Change third element to dummyHandle
+
+beziersToControlPoints beziers = map snd $ tail . tail $ scanl (\(prevhi,_) (CubicBezier point1 ho hi point2) -> (hi,(point1,prevhi,ho))) (0.0, (firstPoint,dummyHandle,firstPointHo)) beziers where
+    CubicBezier firstPoint firstPointHo _ _ = head beziers
     dummyHandle = V2 0 0
-    CubicBezier _ _ lastPointHi lastPoint = V.last beziers
-    lastControlPoint = (lastPoint, lastPointHi, lastPoint) -- for js purpose. Change third element to dummyHandle
+    CubicBezier _ _ lastPointHi lastPoint = last beziers
+    --lastControlPoint = (lastPoint, lastPointHi, lastPoint) -- for js purpose. Change third element to dummyHandle
+
+controlPointsToBeziers controlPoints = 
+    tail $ tail $ map snd $ scanl funcRR ((0,0), streight1) controlPoints
+
+funcRR = (\((x,y),bezier) (p,hi,ho) -> ((p,ho), CubicBezier x y hi p))
 
 deCasteljauCubic :: Float -> CubicBezier Float -> (V2 Float, V2 Float, V2 Float)
 deCasteljauCubic t bezier = (point, handle1, handle2) where
@@ -151,7 +177,7 @@ paperPointsToBeziers points =
 funcR = (\((x,y),bezier) (p,hi,ho) -> ((p,p+ho), CubicBezier x y (p+hi) p))
 
 -- test function
-process original = printJsPoints . concatMap (\(x,y,z) -> [x,y-x,z-x]) . V.toList . beziersToControlPoints . optimizeBeziers original . paperPointsToBeziers
+--process original = printJsPoints . concatMap (\(x,y,z) -> [x,y-x,z-x]) . V.toList . beziersToControlPoints . optimizeBeziers original . paperPointsToBeziers
 
 -- test data
 s111221 :: V.Vector (CubicBezier Float)
