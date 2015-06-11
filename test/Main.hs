@@ -53,8 +53,9 @@ import           Control.Monad                              (when)
 import           Luna.Syntax.Name.Path                      (QualPath(QualPath))
 
 import qualified Luna.Data.ModuleInfo                       as MI
+import qualified Luna.Syntax.Module                         as Module
 import           Data.String.Utils                          (replace)
-
+import           Data.List.Utils                            (split)
 
 
 header txt = "\n-------- " <> txt <> " --------"
@@ -65,10 +66,15 @@ ppPrint = putStrLn . ppShow
 main = do
     args <- getArgs
     when (length args < 1) $ fail "provide input path!"
-    let path   = args !! 0
-        liFile = replace ".luna" "" path
-        out    = case args of [x] -> "hscdump_gen"; (_:outpath:_) -> outpath
-        src    = Source (QualPath [] (fromString liFile)) (File $ fromString path)
+    let path    = args !! 0
+        hscDump = case args of
+                  [_]     -> error "no second param" 
+                  (_:p:_) -> p
+        liFile  = replace ".luna" "" path
+        out     = case args of [x]-> "hscdump_gen"; (_:outpath:_) -> outpath
+        modName = last $ split "/" liFile
+        src     = Source (QualPath [] $ fromString modName) (File $ fromString path)
+
 
     Session.runT $ do
 
@@ -130,7 +136,7 @@ main = do
             printHeader "HSC"
             hsc            <- Pass.run1_ HSC.pass hast
             putStrLn (unpack hsc)
-            liftIO $ writeFile out (unpack hsc)
+            liftIO $ writeFile hscDump (unpack hsc)
 
 
         case result of
