@@ -16,7 +16,7 @@
 {-# LANGUAGE ExtendedDefaultRules #-}
 
 -- module --
-module libs.luna.pass.test.Test where
+module Test where
 
 -- imports --
 import Luna.Target.HS
