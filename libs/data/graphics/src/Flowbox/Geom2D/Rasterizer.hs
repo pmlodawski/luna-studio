@@ -285,16 +285,29 @@ func array pBezier fBezier h = do
         Point2 pC3x pC3y' = pC3
         pC3y = flipy pC3y'
         CubicBezier fC0 fC1 fC2 fC3 = fBezier
-        Point2 fC0x fC0y' = fC0
-        fC0y = flipy fC0y'
-        Point2 fC1x fC1y' = fC1
-        fC1y = flipy fC1y'
+        Point2 fC0x' fC0y' = fC0
+        fC0x = fC0x' + pC0x
+        fC0y = (flipy (fC0y' + pC0y'))
+        Point2 fC1x' fC1y' = fC1
+        --fC1x = pC0x
+        fC1x = fC1x' + pC0x
+        --fC1x = fC1x' + pC1x
+        fC1y = (flipy (fC1y'+ pC0y'))
+        --fC1y = (flipy (fC1y' + fC0y'+ pC0y'))
+        --fC1y = (flipy (fC1y' + pC1y'))
         --fC1y = (flipy fC1y') + fC0y
-        Point2 fC2x fC2y' = fC2
-        fC2y = flipy fC2y'
+        Point2 fC2x' fC2y' = fC2
+        --fC2x = fC3x
+        fC2x = fC2x' + pC3x
+        --fC2x = fC2x' + fC3x
+        --fC2x = fC2x' + pC2x
+        fC2y = (flipy (fC2y' + pC3y'))
+        --fC2y = (flipy (fC2y' + fC3y' + pC3y'))
+        --fC2y = (flipy (fC2y' + pC2y'))
         --fC2y = (flipy fC2y') + fC3y
-        Point2 fC3x fC3y' = fC3
-        fC3y = flipy fC3y'
+        Point2 fC3x' fC3y' = fC3
+        fC3x = fC3x' + pC3x
+        fC3y = (flipy (fC3y' + pC3y'))
         h' = fromIntegral h
         flipy x = ((x - (h'/2)) * (-1)) + (h'/2)
 
@@ -307,29 +320,6 @@ lineFunc array x1 y1 x2 y2 = do
       array (x1 + (ceiling (((fromIntegral y) / 1000.0) * (fromIntegral (x2 - x1))))) (y1 + (ceiling (((fromIntegral y) / 1000.0) * (fromIntegral (y2 - y1))))) M.$= 1.0 - ((fromIntegral y) / 1000.0)
     
 
-        -- do
-    --let bits = P.fromIntegral bits'
-    --let Z :. height :. width = canvas img
-    --let array x y = boundedIndex2D bnd img $ Point2 x y
-
-    --let update x y f = do
-    --        oldv <- get $ array x y
-    --        array x y $= f oldv
-
-    --let Z :. diffH :. diffW = canvas dTable
-    --let diffW2 = diffW `div` 2
-
-    --forM_ [0..height-1] $ \y ->
-    --    forM_ [0..width-1] $ \x -> do
-    --        oldpixel <- M.get $ array x y
-    --        let newpixel = P.fromIntegral (floor $ oldpixel * bits :: Int) / bits
-    --        array x y $= newpixel
-    --        let quant_error = oldpixel - newpixel
-
-    --        forM_ [0..diffH-1] $ \dy ->
-    --            forM_ [0..diffW-1] $ \dx -> do
-    --                let dither' = unsafeIndex2D dTable (Point2 dx dy)
-    --                update (x + dx - diffW2) (y + dy) ( + (quant_error * dither'))
 
 matrixToImage :: Matrix2 Float -> Image
 matrixToImage a = Image.singleton view
