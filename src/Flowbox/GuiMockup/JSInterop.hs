@@ -1,4 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE DeriveGeneric #-}
+
 
 module Flowbox.GuiMockup.JSInterop where
 
@@ -8,6 +10,8 @@ import qualified Data.Vector.Storable as V
 import           Foreign.Ptr
 import           Foreign.Storable
 import           Linear               (V2(..))
+--import           Data.Binary          (Binary)
+import           GHC.Generics         (Generic)
 
 
 
@@ -17,7 +21,9 @@ data CubicBezier a = CubicBezier { cubicC0 :: V2 a
                                  , cubicC2 :: V2 a
                                  , cubicC3 :: V2 a
                                  }
-    deriving (Eq, Show)
+    deriving (Eq, Show, Generic)
+
+--instance (Binary a) => Binary (CubicBezier a)
 
 instance V.Storable a => V.Storable (CubicBezier a) where
     sizeOf _ = 4 * sizeOf (undefined :: V2 a)

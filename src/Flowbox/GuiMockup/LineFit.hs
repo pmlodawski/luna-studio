@@ -8,8 +8,9 @@ module Flowbox.GuiMockup.LineFit
     , fitCurve
     , chordLengthParameterize
     , reparameterize
-    -- , test
+--    , test
     , test2
+--    , test3
 	) where
 
 import           Control.Applicative          ((<$>), (<*>))
