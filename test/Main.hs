@@ -201,9 +201,9 @@ main = do
         out      = args !! 1
         liPath   = replace ".luna" "" path
         pathSegs = splitDirectories liPath
-        fileName = fromString $ last pathSegs
+        modName  = fromString $ last pathSegs
         filePath = map fromString $ init pathSegs
-        src      = Source (QualPath filePath fileName) (Source.File $ fromString path)
+        src      = Source (QualPath [] modName) (Source.File $ fromString path)
 
     (processedSource:_) <- prepareSource False src src
     writeFile out (processedSource ^. Source.src ^. Source.code & unpack)
