@@ -1,3 +1,5 @@
+import Foo.Bar
+
 
 foreign haskell def print msg:
     autoLift1 print msg

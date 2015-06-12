@@ -31,7 +31,7 @@ import           Flowbox.System.Log.Logger
 import qualified Flowbox.System.Platform                    as Platform
 import           Flowbox.System.UniPath                     (UniPath)
 import qualified Flowbox.System.UniPath                     as UniPath
-import qualified Luna.Data.ImportInfo                       as ImpInfo
+import qualified Luna.Data.ImportInfo                       as II
 import qualified Luna.Data.ModuleInfo                       as ModInfo
 import           Luna.Data.Namespace                        (Namespace (Namespace))
 import qualified Luna.Data.Namespace                        as Namespace
@@ -64,7 +64,6 @@ import qualified Luna.Data.ModuleInfo                       as ModInfo
 import qualified Luna.Syntax.Module                         as Module
 import           Data.String.Utils                          (replace)
 import           Data.List.Utils                            (split)
-import qualified Luna.Syntax.Unit                           as Unit
 
 
 
@@ -107,85 +106,91 @@ runSession inclStd s = do
         runEitherT s
     eitherStringToM $ out
 
---processCompilable rootSrc inclStd compilable  = do 
---    let getBasePath = UniPath.toFilePath . UniPath.basePath . UniPath.fromFilePath
---        rootPath    = getBasePath . getPath $ rootSrc ^. Source.src
---        mkFile      = Source.File . pack . (rootPath </>) . (++ ".luna") . ModInfo.modPathToString
---        sources     = map (\i -> Source i (mkFile i)) compilable
---        hscs        = mapM (prepareSource inclStd rootSrc) sources
---    hscs
+processCompilable rootSrc inclStd compilable  = do 
+    let getBasePath = UniPath.toFilePath . UniPath.basePath . UniPath.fromFilePath
+        rootPath    = getBasePath . getPath $ rootSrc ^. Source.src
+        mkFile      = Source.File . pack . (rootPath </>) . (++ ".luna") . ModInfo.modPathToString
+        sources     = map (\i -> Source i (mkFile i)) compilable
+        hscs        = mapM (prepareSource inclStd rootSrc) sources
+    hscs
 
 
-prepareSource :: Builder m => Bool -> Source Source.File  -> m (Source Code)
-prepareSource inclStd src = do
-    code <- runSession inclStd $ do
+--processSource src = parseSourceWithFun src src False (\_ _ _ -> return [])
+    
 
-        printHeader "Stage1"
-        (ast, astinfo) <- Pass.run1_ Stage1.pass src
+--parseSource' rootSrc src inclStd = parseSourceWithFun rootSrc src inclStd processCompilable
+
+
+parseSource rootSrc src inclStd = do
+    printHeader "Stage1"
+    (ast, astinfo) <- Pass.run1_ Stage1.pass src
+    ppPrint ast
+
+    let impPaths =  Import.getImportPaths ast
+    compilable <- liftIO $ filterM ModInfo.moduleExists impPaths
+    compiledCodes <- processCompilable rootSrc inclStd compilable
+
+    (ast, astinfo) <- Pass.run2_ StdInsert.pass astinfo ast
+
+    printHeader "Extraction of imports"
+    importInfo     <- Pass.run1_ Imports.pass ast
+
+    ----printHeader "Hash"
+    ----ast             <- Pass.run1_ Hash.pass ast
+
+    printHeader "SA"
+    structData1 <- Pass.run2_ SA.pass (StructData mempty importInfo) ast
+    let sa1     = structData1 ^. StructData.namespace . Namespace.info
+        mInfo   = ModInfo.ModuleInfo liFile mempty sa1 mempty
+        liFile  = src ^. Source.modName
+
+    liftIO $ ModInfo.writeModInfoToFile mInfo (getPath  $ src ^. Source.src)
+    ppPrint sa1
+
+    printHeader "Stage2"
+    (ast, astinfo) <- Pass.run3_ Stage2.pass (Namespace [] sa1) astinfo ast
+    ppPrint ast
+
+    printHeader "ImplSelf"
+    (ast, astinfo) <- Pass.run2_ ImplSelf.pass astinfo ast
+    ppPrint ast
+
+    printHeader "SA2"
+    structData2 <- Pass.run2_ SA.pass structData1 ast
+    ppPrint (structData2 ^. StructData.namespace . Namespace.info)
+
+    let sa2 = structData2 ^. StructData.namespace . Namespace.info
+        ii2 = structData2 ^. StructData.importInfo
+
+    printHeader "ImplScopes"
+    (ast, astinfo) <- Pass.run2_ ImplScopes.pass (astinfo, sa2, ii2)  ast
+    ppPrint ast
+
+    printHeader "ImplCalls"
+    (ast, _astinfo) <- Pass.run2_ ImplCalls.pass astinfo ast
+    ppPrint ast
+    return (ast, astinfo, importInfo, compiledCodes)
+
+
+prepareSource :: Builder m => Bool -> Source Source.File -> Source Source.File  -> m [Source Code]
+prepareSource inclStd rootSrc src = do
+    codes <- runSession inclStd $ do
+        (ast, astinfo, importInfo, compiledCodes) <- parseSource rootSrc src inclStd
+
+        printHeader "SSA"
+        ast            <- Pass.run1_ SSA.pass ast
         ppPrint ast
 
-        (ast, astinfo) <- Pass.run2_ StdInsert.pass astinfo ast
+        printHeader "HAST"
+        hast           <- Pass.run2_ HASTGen.pass importInfo ast
+        ppPrint hast
 
-        let imps = Unit.imports ast
+        printHeader "HSC"
+        hsc            <- Pass.run1_ HSC.pass hast
+        putStrLn $ unpack hsc
 
-        --printHeader "Extraction of imports"
-        --importInfo     <- Pass.run1_ Imports.pass ast
-
-        print "---------"
-        print imps
-        fail "!!!"
-        ----printHeader "Hash"
-        ----ast             <- Pass.run1_ Hash.pass ast
-
-        --printHeader "SA"
-        --structData1 <- Pass.run2_ SA.pass (StructData mempty importInfo) ast
-        --let sa1     = structData1 ^. StructData.namespace . Namespace.info
-        --    mInfo   = ModInfo.ModuleInfo liFile mempty sa1 mempty
-        --    liFile  = src ^. Source.modName
-
-        --liftIO $ ModInfo.writeModInfoToFile mInfo (getPath  $ src ^. Source.src)
-        --ppPrint sa1
-
-        --printHeader "Stage2"
-        --(ast, astinfo) <- Pass.run3_ Stage2.pass (Namespace [] sa1) astinfo ast
-        --ppPrint ast
-
-        --printHeader "ImplSelf"
-        --(ast, astinfo) <- Pass.run2_ ImplSelf.pass astinfo ast
-        --ppPrint ast
-
-        --printHeader "SA2"
-        --structData2 <- Pass.run2_ SA.pass structData1 ast
-        --ppPrint (structData2 ^. StructData.namespace . Namespace.info)
-
-        --let sa2 = structData2 ^. StructData.namespace . Namespace.info
-        --    ii2 = structData2 ^. StructData.importInfo
-
-        --printHeader "ImplScopes"
-        --(ast, astinfo) <- Pass.run2_ ImplScopes.pass (astinfo, sa2, ii2)  ast
-        --ppPrint ast
-
-        --printHeader "ImplCalls"
-        --(ast, astinfo) <- Pass.run2_ ImplCalls.pass astinfo ast
-        --ppPrint ast
-        ----return (ast, astinfo, importInfo) --, compiledCodes)
-
-
-        --printHeader "SSA"
-        --ast            <- Pass.run1_ SSA.pass ast
-        --ppPrint ast
-
-        --printHeader "HAST"
-        --hast           <- Pass.run2_ HASTGen.pass importInfo ast
-        --ppPrint hast
-
-        --printHeader "HSC"
-        --hsc            <- Pass.run1_ HSC.pass hast
-        --putStrLn $ unpack hsc
-
-        --return hsc
-        return undefined
-    return $ (Source (src ^. Source.modName) $ Code code)
+        return (hsc, concat compiledCodes)
+    return $ (Source (src ^. Source.modName) $ Code (fst codes)) : (snd codes)
 
 
 header txt = "\n-------- " <> txt <> " --------"
@@ -208,7 +213,7 @@ main = do
         filePath = map fromString $ init pathSegs
         src      = Source (QualPath [] modName) (Source.File $ fromString path)
 
-    processedSource <- prepareSource False src
+    (processedSource:_) <- prepareSource False src src
     writeFile out (processedSource ^. Source.src ^. Source.code & unpack)
 
 ------------------------------------------------------------------------------------

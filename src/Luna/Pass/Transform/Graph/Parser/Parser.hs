@@ -137,12 +137,12 @@ buildExpr nodeExpr srcs = case nodeExpr of
                 then newLabel $ Expr.Var $ Expr.Variable (fromString str) ()
                 else do
                     astInfo <- State.getASTInfo
-                    r <- Session.runT $ do
+                    r <- Session.run $ do
                         void   Parser.init
                         void $ Pragma.enable Pragma.orphanNames
                         let parserState = Parser.defState & Parser.info .~ astInfo
                         Parser.parseString str (Parser.exprParser parserState)
-                    case fst r of
+                    case r of
                         Left err -> lift $ left $ toString err
                         Right (lexpr, parserState) -> do
                             State.setASTInfo $ parserState ^. Parser.info

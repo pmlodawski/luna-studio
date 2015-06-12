@@ -45,8 +45,8 @@ iaMain :: Ctx a m => ASTInfo -> ASTUnit a e -> SAPass m (ASTUnit a e, ASTInfo)
 iaMain astInfo ast = do 
     put astInfo
     newAst <- ifM (isEnabled Pragma.includeStd) (return ast) $ do
-    	id <- ASTInfo.genID
-    	return $ (fmap.fmap) (Module.body %~ ((stdImport id):)) ast
+        id <- ASTInfo.genID
+        return $ (fmap.fmap) (Module.body %~ ((stdImport id):)) ast
     (ast,) <$> get
 
 stdImport :: Enum.Enumerated a => Int -> LDecl a e
