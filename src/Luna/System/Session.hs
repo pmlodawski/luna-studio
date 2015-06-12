@@ -18,6 +18,7 @@ import Flowbox.Prelude
 
 import qualified Luna.System.Pragma.Store as PragmaStore
 import           Luna.System.Pragma.Store (PragmaStoreT, MonadPragmaStore)
+import           Control.Monad.State      (StateT, evalStateT)
 
 ----------------------------------------------------------------------
 -- Session
@@ -26,5 +27,15 @@ import           Luna.System.Pragma.Store (PragmaStoreT, MonadPragmaStore)
 type SessionMonad m = MonadPragmaStore m
 type SessionT m a = PragmaStoreT m a
 
-runT s = PragmaStore.runT s mempty
+--runT s = flip PragmaStore.runT mempty
+--       $ flip runStateT (0::Int) s
+
+--runT :: PragmaStoreT m a -> m a
+run = flip PragmaStore.evalT mempty
+    . flip evalStateT (0::Int)
+      
+
+--runT2 s = flip runStateT (0::Int) 
+--        $ flip PragmaStore.runT mempty s
+
 

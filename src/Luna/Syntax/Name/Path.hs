@@ -97,6 +97,7 @@ instance FromText QualPath where
 
 instance IsList QualPath where
     type (Item QualPath) = Text
+    fromList lst                = QualPath (init lst) (last lst)
     toList (QualPath path name) = path ++ [name]
 
 instance ToText NamePath where

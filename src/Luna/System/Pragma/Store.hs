@@ -20,7 +20,7 @@ import           Flowbox.Prelude     as P hiding (noneOf, lookup)
 
 import qualified Luna.System.Pragma  as Pragma
 import           Luna.System.Pragma  hiding (lookup, isEnabled)
-import           Control.Monad.State (MonadState, StateT, runStateT)
+import           Control.Monad.State (MonadState, StateT, runStateT, evalStateT)
 import qualified Control.Monad.State as State
 import           Text.Parser.Char        (string, noneOf, CharParsing)
 import           Text.Parser.Token
@@ -53,6 +53,10 @@ instance (MonadTrans t, MonadPragmaStore m, Monad (t m), Applicative (t m)) => M
     put = lift . put
 __overlapping__ = run get mempty
 
+instance MonadPragmaStore m => MonadPragmaStore (StateT s m) where
+    get = lift get
+    put = lift . put
+
 
 -- == State utils ==
 
@@ -61,6 +65,12 @@ runT = runStateT . unPragmaStoreT
 
 run :: PragmaStore a -> PragmaMap -> (a,PragmaMap)
 run = runIdentity .: runT
+
+evalT :: Monad m => PragmaStoreT m a -> PragmaMap -> m a
+evalT = evalStateT . unPragmaStoreT
+
+eval :: PragmaStore a -> PragmaMap -> a
+eval = runIdentity .: evalT
 
 defrunT :: PragmaStoreT m a -> m (a, PragmaMap)
 defrunT = flip runT def

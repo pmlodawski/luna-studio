@@ -98,6 +98,8 @@ type LField a e = Label a (Field a e)
 
 
 makeLenses ''Decl
+makeLenses ''Imp
+makeLenses ''ImpTgt
 makeLenses ''DataDecl
 makeLenses ''FuncDecl
 

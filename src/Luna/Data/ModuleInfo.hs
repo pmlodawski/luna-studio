@@ -113,7 +113,7 @@ modName qp = T.unpack $ qp ^. NP.name
 --getBasePath qpath = do
     
 
-
+--FIXME[wd]: remove the belov functions
 pathToQualPath :: Path -> QualPath
 pathToQualPath path = QualPath ns n
     where list = map toText path
