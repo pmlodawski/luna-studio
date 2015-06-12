@@ -18,7 +18,7 @@ module Flowbox.Prelude(
 
 import           Control.Applicative                as X
 import           Control.Lens                       as X
-import           Control.Monad                      as X (MonadPlus, mplus, mzero, unless, void, when)
+import           Control.Monad                      as X (MonadPlus, mplus, mzero, void)
 import           Control.Monad.IO.Class             as X (MonadIO, liftIO)
 import           Control.Monad.Trans                as X (MonadTrans, lift)
 import           Data.Binary.Instances.Missing      ()
@@ -39,6 +39,7 @@ import           Data.Typeable                      as X (Typeable)
 import           Data.Wrapper                       as X (Unwrap (unwrap), UnwrapT (unwrapT), Wrap (wrap), WrapT (wrapT), Wrapper, WrapperT, rewrap)
 import           GHC.Exts                           as X (IsList, Item, fromList, fromListN, toList)
 import           GHC.Generics                       as X (Generic)
+import           Control.Conditional                as X (ifM, unless, unlessM, when, whenM)
 import           Prelude                            hiding (mapM, mapM_, print, putStr, putStrLn, (++), (.))
 import qualified Prelude
 import           Text.Show.Pretty                   (ppShow)
@@ -159,21 +160,10 @@ lift3 :: (Monad (t1 (t2 m)), Monad (t2 m), Monad m,
 lift3 = lift . lift2
 
 
-ifM :: Monad m => m Bool -> m a -> m a -> m a
-ifM predicate a b = do bool <- predicate
-                       if bool then a else b
-
-whenM :: Monad m => m Bool -> m () -> m ()
-whenM predicate a = do
-    bool <- predicate
-    when bool a
-
-
-unlessM :: Monad m => m Bool -> m () -> m ()
-unlessM predicate a = do
-    bool <- predicate
-    unless bool a
-
+switch :: Monad m => m Bool -> a -> a -> m a
+switch cond fail ok = do
+  c <- cond
+  return $ if c then ok else fail
 
 mjoin :: Monoid a => a -> [a] -> a
 mjoin delim l = mconcat (intersperse delim l)

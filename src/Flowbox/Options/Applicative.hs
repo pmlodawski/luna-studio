@@ -11,7 +11,7 @@ module Flowbox.Options.Applicative (
 
 import Options.Applicative
 
-import Flowbox.Prelude
+import Flowbox.Prelude hiding (switch)
 
 
 
