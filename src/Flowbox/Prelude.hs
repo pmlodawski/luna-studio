@@ -43,6 +43,7 @@ import           Control.Conditional                as X (ifM, unless, unlessM, 
 import           Prelude                            hiding (mapM, mapM_, print, putStr, putStrLn, (++), (.))
 import qualified Prelude
 import           Text.Show.Pretty                   (ppShow)
+import           Data.Maybe                         as X (mapMaybe)
 
 
 (++) :: Monoid a => a -> a -> a
