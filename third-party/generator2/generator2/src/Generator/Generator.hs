@@ -1132,7 +1132,7 @@ writeFilePair outputDir fileBaseName cppParts = do
     let (headerBody, body) = formatCpp cppParts
 
     let headerFileContents = printf "#pragma once\n\n%s" headerBody
-    let sourceFileContents = (printf "#include \"helper.h\"\n#include \"%s\"\n\n" headerBaseName) <> body
+    let sourceFileContents = (printf "#include \"stdafx.h\"\n#include \"helper.h\"\n#include \"%s\"\n\n" headerBaseName) <> body
 
     let tryioaction action = try action :: IO (Either SomeException ())
 
