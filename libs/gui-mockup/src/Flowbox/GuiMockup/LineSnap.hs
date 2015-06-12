@@ -11,12 +11,34 @@ import           Data.STRef
 import           Flowbox.GuiMockup.LineFit  
 import           Foreign.Storable
 import           Linear
+import  Debug.Trace as D
 
 
+
+type ControlPoint = (V2 Float, V2 Float, V2 Float)
 
 --main function for gui
-guiLineSnap :: [CubicBezier Float] -> [V2 Float] -> [CubicBezier Float]
-guiLineSnap originalCurve strokePoints = V.toList $ optimizeBeziers (V.fromList originalCurve) (V.fromList strokeAproximation)
+guiLineSnap :: [ControlPoint] -> Maybe ControlPoint -> Maybe ControlPoint -> [V2 Float] -> [ControlPoint]
+guiLineSnap originalCurveControlPoints pointBefore pointAfter strokePoints = resultControlPoints
+    where
+        resultControlPoints = [startControlPoint] ++ midPoints ++ [endControlPoint] 
+        midPoints = beziersToFullControlPoints resultCurve
+        startControlPoint = (ps , his, ho)
+        endControlPoint = (pe, hi, hoe)
+        (_, his, _) = head originalCurveControlPoints
+        (_, _, hoe) = head originalCurveControlPoints
+        CubicBezier ps ho _ _ = head resultCurve
+        CubicBezier _ _ hi pe = last resultCurve
+        --resultCurve = moveCurveToStroke (controlPointsToBeziers originalCurveControlPoints) strokePoints
+        resultCurve = moveCurveToStroke' (controlPointsToBeziers originalCurveControlPoints) pointBefore pointAfter strokePoints
+
+moveCurveToStroke :: [CubicBezier Float] -> [V2 Float] -> [CubicBezier Float]
+moveCurveToStroke originalCurve strokePoints = V.toList $ optimizeBeziers (V.fromList originalCurve) (V.fromList strokeAproximation)
+    where
+        strokeAproximation = fitCurve strokePoints 10
+
+moveCurveToStroke' :: [CubicBezier Float] -> Maybe ControlPoint -> Maybe ControlPoint -> [V2 Float] -> [CubicBezier Float]
+moveCurveToStroke' originalCurve pointBefore pointAfter strokePoints = V.toList $ optimizeBeziers' (V.fromList originalCurve) pointBefore pointAfter (V.fromList strokeAproximation)
     where
         strokeAproximation = fitCurve strokePoints 10
 
@@ -25,9 +47,31 @@ optimizeBeziers original strokeAproximation =
     let originalDistancesNorm = normalizeDistances $ bezierDistances original
         --originalDistancesNormDoubleEnd = V.snoc originalDistancesNorm (V.last originalDistancesNorm)
         originalDistancesNormWithNeighbours = vzip originalDistancesNorm (V.tail originalDistancesNorm)
-        strokeDistancesNorm = normalizeDistances $ bezierDistances strokeAproximation
+        strokeDistancesNorm = D.trace ("\noriginalDistancesNormWN: "++show originalDistancesNormWithNeighbours) $ normalizeDistances $ bezierDistances strokeAproximation
         strokeWithDists = vzip (V.tail strokeDistancesNorm) strokeAproximation
     in V.map (flip generateFittingBezier strokeWithDists) originalDistancesNormWithNeighbours
+
+optimizeBeziers' :: V.Vector (CubicBezier Float) -> Maybe ControlPoint -> Maybe ControlPoint -> V.Vector (CubicBezier Float) -> V.Vector (CubicBezier Float) -- V.Vector (V2 Float, V2 Float, V2 Float)
+optimizeBeziers' original pointBefore pointAfter strokeAproximation = 
+    let originalDistancesNorm' = normalizeDistances $ bezierDistances original
+        originalDistancesNorm = case (pointBefore, pointAfter) of
+                                    (Nothing, Nothing) -> originalDistancesNorm'
+                                    (Just _, Nothing)  -> adjustStartDistance originalDistancesNorm'
+                                    (Nothing, Just _)  -> adjustEndDistance originalDistancesNorm'
+                                    (Just _, Just _)   -> adjustEndDistance $ adjustStartDistance originalDistancesNorm' -- unfortunately order of function matters
+        --originalDistancesNormDoubleEnd = V.snoc originalDistancesNorm (V.last originalDistancesNorm)
+        originalDistancesNormWithNeighbours = vzip originalDistancesNorm (V.tail originalDistancesNorm)
+        strokeDistancesNorm = D.trace ("\noriginalDistancesNormWN: "++show originalDistancesNormWithNeighbours) $ normalizeDistances $ bezierDistances strokeAproximation
+        strokeWithDists = vzip (V.tail strokeDistancesNorm) strokeAproximation
+    in V.map (flip generateFittingBezier strokeWithDists) originalDistancesNormWithNeighbours
+
+adjustStartDistance :: (V.Vector Float) -> (V.Vector Float)
+adjustStartDistance distances = normalizeDistances $ V.map (+1/(fromIntegral $ V.length distances)) distances -- because of normalization step this function has to be applied first
+
+adjustEndDistance :: (V.Vector Float) -> (V.Vector Float)
+adjustEndDistance distances = V.map (* ((len-1)/len) ) distances
+    where
+        len = fromIntegral $ V.length distances
 
 generateFittingBezier :: (Float, Float) -> V.Vector (Float, CubicBezier Float) -> CubicBezier Float
 generateFittingBezier (startLength, endLength) strokeWithDists = iteration
@@ -36,7 +80,7 @@ generateFittingBezier (startLength, endLength) strokeWithDists = iteration
             u' <- newSTRef u
             bezCurve' <- newSTRef generatedBezier
 
-            forM_ [(1::Int)..4] $ \_ -> do
+            forM_ [(1::Int)..20] $ \_ -> do
                 uVal <- readSTRef u'
                 bezCurveVal <- readSTRef bezCurve'
                 let uPrime = reparameterize resampledPoints uVal bezCurveVal
@@ -74,12 +118,23 @@ generateFittingBezier (startLength, endLength) strokeWithDists = iteration
         (endPoint, hi, _) = deCasteljauCubic endRest endPointBezier
         nextBeziers = V.map snd $ V.tail beforeEndStrokeBeziers
 
-beziersToControlPoints :: V.Vector (CubicBezier Float) -> V.Vector (V2 Float, V2 Float, V2 Float)
-beziersToControlPoints beziers = V.snoc (V.map snd $ V.tail $ V.scanl (\(prevhi,_) (CubicBezier point1 ho hi point2) -> (hi,(point1,prevhi,ho))) (0.0, (firstPoint,dummyHandle,firstPointHo)) beziers) lastControlPoint where
-    CubicBezier firstPoint firstPointHo _ _ = V.head beziers
+--beziersToControlPoints :: V.Vector (CubicBezier Float) -> V.Vector (V2 Float, V2 Float, V2 Float)
+--beziersToControlPoints beziers = --V.snoc (V.map snd $ V.tail $ V.scanl (\(prevhi,_) (CubicBezier point1 ho hi point2) -> (hi,(point1,prevhi,ho))) (0.0, (firstPoint,dummyHandle,firstPointHo)) beziers) lastControlPoint where
+    --CubicBezier firstPoint firstPointHo _ _ = V.head beziers
+    --dummyHandle = V2 0 0
+    --CubicBezier _ _ lastPointHi lastPoint = V.last beziers
+    --lastControlPoint = (lastPoint, lastPointHi, lastPoint) -- for js purpose. Change third element to dummyHandle
+
+beziersToFullControlPoints beziers = map snd $ tail . tail $ scanl (\(prevhi,_) (CubicBezier point1 ho hi point2) -> (hi,(point1,prevhi,ho))) (0.0, (firstPoint,dummyHandle,firstPointHo)) beziers where
+    CubicBezier firstPoint firstPointHo _ _ = head beziers
     dummyHandle = V2 0 0
-    CubicBezier _ _ lastPointHi lastPoint = V.last beziers
-    lastControlPoint = (lastPoint, lastPointHi, lastPoint) -- for js purpose. Change third element to dummyHandle
+    CubicBezier _ _ lastPointHi lastPoint = last beziers
+    --lastControlPoint = (lastPoint, lastPointHi, lastPoint) -- for js purpose. Change third element to dummyHandle
+
+controlPointsToBeziers controlPoints = 
+    tail $ tail $ map snd $ scanl funcRR ((0,0), streight1) controlPoints
+
+funcRR = (\((x,y),bezier) (p,hi,ho) -> ((p,ho), CubicBezier x y hi p))
 
 deCasteljauCubic :: Float -> CubicBezier Float -> (V2 Float, V2 Float, V2 Float)
 deCasteljauCubic t bezier = (point, handle1, handle2) where
@@ -151,7 +206,7 @@ paperPointsToBeziers points =
 funcR = (\((x,y),bezier) (p,hi,ho) -> ((p,p+ho), CubicBezier x y (p+hi) p))
 
 -- test function
-process original = printJsPoints . concatMap (\(x,y,z) -> [x,y-x,z-x]) . V.toList . beziersToControlPoints . optimizeBeziers original . paperPointsToBeziers
+--process original = printJsPoints . concatMap (\(x,y,z) -> [x,y-x,z-x]) . V.toList . beziersToControlPoints . optimizeBeziers original . paperPointsToBeziers
 
 -- test data
 s111221 :: V.Vector (CubicBezier Float)
