@@ -14,7 +14,7 @@
 
 --module Luna.Build.Build where
 
-import Control.Monad.RWS hiding (mapM, mapM_)
+import Control.Monad.RWS hiding (mapM, mapM_, when)
 
 import           Control.Monad.Trans.Either
 import           Data.String.Utils                          (replace)
@@ -43,7 +43,7 @@ import qualified Luna.Parser.Parser                         as Parser
 import qualified Luna.Parser.Pragma                         as Pragma
 import qualified Luna.Pass                                  as Pass
 import qualified Luna.Pass.Analysis.Imports                 as Imports
-import qualified Luna.Pass.Analysis.InsertStd               as InsertStd
+import qualified Luna.Pass.Transform.StdInsert              as StdInsert
 import qualified Luna.Pass.Analysis.Struct                  as SA
 import           Luna.Pass.Import                           (getImportPaths)
 import qualified Luna.Pass.Import                           as I
@@ -91,11 +91,20 @@ cabalExt = ".cabal"
 tmpDirPrefix :: String
 tmpDirPrefix = "lunac"
 
-runSession inclStd s =
-    case inclStd of
-        True  -> eitherStringToM . fst =<< Session.runT (void Parser.init >> Pragma.enable (Pragma.includeStd)  >> Pragma.enable (Pragma.orphanNames) >> runEitherT s)
-        False -> eitherStringToM . fst =<< Session.runT (void Parser.init >> Pragma.enable (Pragma.orphanNames) >> runEitherT s)
+--runSession inclStd s =
+--    case inclStd of
+--        True  -> eitherStringToM . fst =<< Session.runT (void Parser.init >> Pragma.enable (Pragma.includeStd)  >> Pragma.enable (Pragma.orphanNames) >> runEitherT s)
+--        False -> eitherStringToM . fst =<< Session.runT (void Parser.init >> Pragma.enable (Pragma.orphanNames) >> runEitherT s)
 
+when_ test = when test . void
+
+runSession inclStd s = do
+    out <- Session.runT $ do
+        Parser.init
+        when_ inclStd $ Pragma.enable (Pragma.includeStd)
+        Pragma.enable (Pragma.orphanNames)
+        runEitherT s
+    eitherStringToM . fst $ out
 
 processCompilable rootSrc inclStd compilable  = do 
     let getBasePath = UniPath.toFilePath . UniPath.basePath . UniPath.fromFilePath
@@ -113,8 +122,6 @@ processCompilable rootSrc inclStd compilable  = do
 
 
 parseSource rootSrc src inclStd = do
-    let liFile   = src ^. Source.modName
-
     printHeader "Stage1"
     (ast, astinfo) <- Pass.run1_ Stage1.pass src
     ppPrint ast
@@ -123,7 +130,7 @@ parseSource rootSrc src inclStd = do
     compilable <- liftIO $ filterM MI.moduleExists impPaths
     compiledCodes <- processCompilable rootSrc inclStd compilable
 
-    (ast, astinfo) <- Pass.run2_ InsertStd.pass astinfo ast
+    (ast, astinfo) <- Pass.run2_ StdInsert.pass astinfo ast
 
     printHeader "Extraction of imports"
     importInfo     <- Pass.run1_ Imports.pass ast
@@ -135,6 +142,7 @@ parseSource rootSrc src inclStd = do
     structData1 <- Pass.run2_ SA.pass (StructData mempty importInfo) ast
     let sa1     = structData1 ^. StructData.namespace . Namespace.info
         mInfo   = MI.ModuleInfo liFile mempty sa1 mempty
+        liFile  = src ^. Source.modName
 
     liftIO $ MI.writeModInfoToFile mInfo (getPath  $ src ^. Source.src)
     ppPrint sa1
