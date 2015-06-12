@@ -40,7 +40,7 @@ import qualified Luna.Syntax.Name    as Name
 import qualified Data.ByteString.UTF8         as UTF8
 import           Data.Char                    (isSpace)
 import qualified Luna.System.Session as Session
-import qualified Luna.System.Pragma.Store  as Pragma
+import qualified Luna.System.Pragma.Store  as Pragma hiding (isEnabled)
 import           Luna.System.Pragma.Store  (MonadPragmaStore)
 import qualified Luna.System.Pragma        as Pragma (isEnabled)
 import qualified Luna.Parser.Pragma        as Pragma
@@ -329,6 +329,7 @@ lookupAST name = do
                           then return Nothing
                           else do
                               allowOrphans <- Pragma.lookup Pragma.orphanNames
+
                               case fmap Pragma.isEnabled allowOrphans of
                                   Right True -> return Nothing
                                   _          -> fail . fromText $ "name '" <> name <> "' is not defined" <> msgTip

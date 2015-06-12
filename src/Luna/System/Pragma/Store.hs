@@ -2,6 +2,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE OverlappingInstances #-}
+{-# LANGUAGE TypeFamilies #-}
 
 -----------------------------------------------------------------------------
 -- |
@@ -18,7 +19,7 @@ module Luna.System.Pragma.Store where
 import           Flowbox.Prelude     as P hiding (noneOf, lookup)
 
 import qualified Luna.System.Pragma  as Pragma
-import           Luna.System.Pragma
+import           Luna.System.Pragma  hiding (lookup, isEnabled)
 import           Control.Monad.State (MonadState, StateT, runStateT)
 import qualified Control.Monad.State as State
 import           Text.Parser.Char        (string, noneOf, CharParsing)
@@ -113,8 +114,21 @@ pop p = do
     traverse_ (put.snd) lup
     return $ fmap fst lup
 
+
+----------------------------------------------------------------------
+-- SwitchPragma
+----------------------------------------------------------------------
+
 enable :: (IsPragma a, MonadPragmaStore m) => SwitchPragma a -> m (Either AccessError PragmaMap)
 enable = withStore . Pragma.enable
 
 disable :: (IsPragma a, MonadPragmaStore m) => SwitchPragma a -> m (Either AccessError PragmaMap)
 disable = withStore . Pragma.disable
+
+isEnabled :: (Ctx t m a, PragmaVal t a ~ Switch) => PragmaDef t a -> m Bool
+isEnabled p = do
+    pDef <- lookup p
+    return $ case fmap Pragma.isEnabled pDef of
+        Right True -> True
+        _          -> False
+

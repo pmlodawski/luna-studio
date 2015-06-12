@@ -15,7 +15,7 @@ import           Flowbox.Control.Applicative
 --FIXME[pm]: re-enable Flowbox.Distribution
 --import qualified Flowbox.Distribution.Client.List as DistList
 import           Flowbox.Options.Applicative (optIntFlag)
-import           Flowbox.Prelude             hiding (argument, op)
+import           Flowbox.Prelude             hiding (argument, op, switch)
 import           Flowbox.System.Log.Logger
 --import qualified Luna.Build.Build            as Build
 --import qualified Luna.Build.Version          as Version

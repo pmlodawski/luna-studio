@@ -8,8 +8,11 @@ module Luna.Syntax.Unit where
 
 import Flowbox.Prelude
 import GHC.Generics    (Generic)
+import Luna.Syntax.Module (LModule)
 
-data Unit a = Unit { _fromUnit :: a } deriving (Generic, Show)
+data Unit a = Unit { _fromUnit :: a } deriving (Generic, Show, Functor)
+
+type ASTUnit a e = Unit (LModule a e)
 
 makeLenses ''Unit
 

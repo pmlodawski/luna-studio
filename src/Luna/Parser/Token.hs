@@ -12,7 +12,7 @@
 module Luna.Parser.Token where
 
 import Control.Applicative
-import Control.Monad (MonadPlus(..), when)
+import Control.Monad (MonadPlus(..))
 import Data.Char
 import qualified Data.HashSet as HashSet
 import Data.HashSet (HashSet)

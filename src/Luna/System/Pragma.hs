@@ -106,13 +106,13 @@ import qualified Data.Maps               as Maps
 -- Lookup & status
 ----------------------------------------------------------------------
 
-data Error t = Error t Text deriving (Show)
+data Error t = Error t Text deriving (Show, Eq)
 
-data Unregistered    = Unregistered deriving (Show)
-data Occupied        = Occupied     deriving (Show)
+data Unregistered    = Unregistered deriving (Show, Eq)
+data Occupied        = Occupied     deriving (Show, Eq)
 data LookupErrorType = LookupUnregistered
                      | LookupUndefined
-                     deriving (Show)
+                     deriving (Show, Eq)
                      
 type AccessError   = Error Unregistered
 type LookupError   = Error LookupErrorType
@@ -300,6 +300,7 @@ disable p = push p Disabled
 
 isEnabled :: Pragma t a Switch -> Bool
 isEnabled = (==Enabled) . view val
+
 
 -- == Instances ==
 
