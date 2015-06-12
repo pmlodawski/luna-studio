@@ -20,6 +20,7 @@ module Test where
 
 -- imports --
 import Luna.Target.HS
+import Foo
 
 -- body --
 #include "pragmas.h"
