@@ -10,6 +10,7 @@
 {-# LANGUAGE Rank2Types       #-}
 {-# LANGUAGE TemplateHaskell  #-}
 {-# LANGUAGE TupleSections    #-}
+{-# LANGUAGE NoMonomorphismRestriction    #-}
 
 module Luna.Pass.Transform.Graph.Parser.Parser where
 
@@ -137,7 +138,7 @@ buildExpr nodeExpr srcs = case nodeExpr of
                 then newLabel $ Expr.Var $ Expr.Variable (fromString str) ()
                 else do
                     astInfo <- State.getASTInfo
-                    r <- Session.run $ do
+                    r <- Session.run def $ do
                         void   Parser.init
                         void $ Pragma.enable Pragma.orphanNames
                         let parserState = Parser.defState & Parser.info .~ astInfo

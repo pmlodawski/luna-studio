@@ -60,15 +60,17 @@ import qualified Luna.System.Pragma.Store                   as Pragma
 import           Luna.System.Session                        as Session
 
 
-import qualified Luna.Data.ModuleInfo                       as ModInfo
+import qualified Luna.Data.ModuleInfo                       as Repo
 import qualified Luna.Syntax.Module                         as Module
 import           Data.String.Utils                          (replace)
 import           Data.List.Utils                            (split)
 import qualified Luna.Syntax.Unit                           as Unit
 
+import qualified Luna.Syntax.Decl                           as Decl
 
-
-
+import           System.FilePath.Posix                      (dropFileName)
+import qualified Luna.System.Config                         as Config
+import           Control.Monad.State (evalStateT)
 
 type Builder m = (MonadIO m, Functor m)
 
@@ -99,13 +101,13 @@ tmpDirPrefix = "lunac"
 
 when_ test = when test . void
 
-runSession inclStd s = do
-    out <- Session.run $ do
-        Parser.init
-        when_ inclStd $ Pragma.enable (Pragma.includeStd)
-        Pragma.enable (Pragma.orphanNames)
-        runEitherT s
-    eitherStringToM $ out
+--runSession inclStd s = do
+--    out <- Session.run $ do
+--        Parser.init
+--        when_ inclStd $ Pragma.enable (Pragma.includeStd)
+--        Pragma.enable (Pragma.orphanNames)
+--        runEitherT s
+--    eitherStringToM $ out
 
 --processCompilable rootSrc inclStd compilable  = do 
 --    let getBasePath = UniPath.toFilePath . UniPath.basePath . UniPath.fromFilePath
@@ -115,10 +117,21 @@ runSession inclStd s = do
 --        hscs        = mapM (prepareSource inclStd rootSrc) sources
 --    hscs
 
+--TODO : rozciagnac ENV nad sprawdzaniem - kazdy modul deklaruje na poczatku swoj katalog bo tam moga lezec zrodla.
+collectImports modPath' = do
+    path <- get
+    let modPath = (fromList $ fmap (toText . unwrap) modPath' :: QualPath)
+    Repo.lookupModule modPath
 
-prepareSource :: Builder m => Bool -> Source Source.File  -> m (Source Code)
+
+
+
+--prepareSource :: Builder m => Bool -> Source Source.File  -> m (Source Code)
 prepareSource inclStd src = do
-    code <- runSession inclStd $ do
+    out <- Session.run def $ runEitherT $ do
+        Parser.init
+        when_ inclStd $ Pragma.enable (Pragma.includeStd)
+        Pragma.enable (Pragma.orphanNames)
 
         printHeader "Stage1"
         (ast, astinfo) <- Pass.run1_ Stage1.pass src
@@ -132,7 +145,14 @@ prepareSource inclStd src = do
         --importInfo     <- Pass.run1_ Imports.pass ast
 
         print "---------"
-        print imps
+        let imps2 = fmap (view Decl.modPath) imps
+        --libPaths <- Config.readPath
+        --print libPaths
+        --print $ dropFileName src
+        --x <- mapM (flip evalStateT libPaths . collectImports) imps2
+        --print x
+        --todo todo todo - ten x nie ma byc envami - mamy overlappujace sie staty, zmienic config na standalone
+        --print =<< mapM collectImports imps2
         fail "!!!"
         ----printHeader "Hash"
         ----ast             <- Pass.run1_ Hash.pass ast
@@ -185,7 +205,8 @@ prepareSource inclStd src = do
 
         --return hsc
         return undefined
-    return $ (Source (src ^. Source.modName) $ Code code)
+    --return $ (Source (src ^. Source.modName) $ Code code)
+    return out
 
 
 header txt = "\n-------- " <> txt <> " --------"
@@ -208,8 +229,9 @@ main = do
         filePath = map fromString $ init pathSegs
         src      = Source (QualPath [] modName) (Source.File $ fromString path)
 
-    processedSource <- prepareSource False src
-    writeFile out (processedSource ^. Source.src ^. Source.code & unpack)
+    prepareSource False src
+    --processedSource <- prepareSource False src
+    --writeFile out (processedSource ^. Source.src ^. Source.code & unpack)
 
 ------------------------------------------------------------------------------------
 -- CLASSES AND INSTANCES
