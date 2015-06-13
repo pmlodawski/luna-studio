@@ -3,6 +3,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE OverlappingInstances #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 -----------------------------------------------------------------------------
 -- |
@@ -18,67 +19,30 @@ module Luna.System.Pragma.Store where
 
 import           Flowbox.Prelude     as P hiding (noneOf, lookup)
 
-import qualified Luna.System.Pragma  as Pragma
-import           Luna.System.Pragma  hiding (lookup, isEnabled)
-import           Control.Monad.State (MonadState, StateT, runStateT, evalStateT)
-import qualified Control.Monad.State as State
-import           Text.Parser.Char        (string, noneOf, CharParsing)
+import qualified Luna.System.Pragma           as Pragma
+import           Luna.System.Pragma           hiding (lookup, isEnabled)
+import qualified Control.Monad.State          as State
+import           Text.Parser.Char             (string, noneOf, CharParsing)
 import           Text.Parser.Token
+import           Control.Monad.State.Generate (newState)
 
 ----------------------------------------------------------------------
 -- PragmaMap
 ----------------------------------------------------------------------
 
-type    PragmaStore      = PragmaStoreT Identity
-newtype PragmaStoreT m a = PragmaStoreT { unPragmaStoreT :: StateT PragmaMap m a }
-                         deriving (Monad, MonadIO, MonadPlus, Applicative, Alternative, Functor)
+$(newState "PragmaStore" ''PragmaMap)
 
-class (Monad m, Applicative m) => MonadPragmaStore m where
-    get :: m PragmaMap
-    put :: PragmaMap -> m ()
+--defrunT :: PragmaStoreT m a -> m (a, PragmaMap)
+--defrunT = flip runT def
 
-
--- == Instances ==
-
-instance MonadState s m => MonadState s (PragmaStoreT m) where
-    get = PragmaStoreT . lift $ State.get
-    put = PragmaStoreT . lift . State.put
-
-instance (Monad m, Functor m) => MonadPragmaStore (PragmaStoreT m) where
-    get = PragmaStoreT $ State.get
-    put = PragmaStoreT . State.put
-
-instance (MonadTrans t, MonadPragmaStore m, Monad (t m), Applicative (t m)) => MonadPragmaStore (t m) where
-    get = lift get
-    put = lift . put
-__overlapping__ = run get mempty
-
-instance MonadPragmaStore m => MonadPragmaStore (StateT s m) where
-    get = lift get
-    put = lift . put
-
-
--- == State utils ==
-
-runT :: PragmaStoreT m a -> PragmaMap -> m (a, PragmaMap)
-runT = runStateT . unPragmaStoreT
-
-run :: PragmaStore a -> PragmaMap -> (a,PragmaMap)
-run = runIdentity .: runT
-
-evalT :: Monad m => PragmaStoreT m a -> PragmaMap -> m a
-evalT = evalStateT . unPragmaStoreT
-
-eval :: PragmaStore a -> PragmaMap -> a
-eval = runIdentity .: evalT
-
-defrunT :: PragmaStoreT m a -> m (a, PragmaMap)
-defrunT = flip runT def
-
-defrun :: PragmaStore a -> (a, PragmaMap)
-defrun = flip run def
+--defrun :: PragmaStore a -> (a, PragmaMap)
+--defrun = flip run def
 
 -- == Pragma utils ==
+
+--instance MonadTrans PragmaStoreT
+
+deriving instance MonadTrans PragmaStoreT
 
 type StoreCtx m = MonadPragmaStore m
 type Ctx  t m a = (MonadPragmaStore m, IsPragma a, PragmaCons t)

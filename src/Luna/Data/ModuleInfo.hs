@@ -37,6 +37,7 @@ import           Luna.Syntax.Name         (TName (TName), TNameP)
 import           Luna.Syntax.Name.Path    (NamePath, QualPath (QualPath))
 import qualified Luna.Syntax.Name.Path    as NP
 import           Luna.Syntax.Name.Pattern (NamePatDesc, SegmentDesc)
+import qualified Luna.System.Config       as Config
 
 
 type Name = String
@@ -201,6 +202,12 @@ readModInfoFromFile path = do
             let modPath = liDirectory </> modPathToString path ++ liFileSuffix
             Just <$> decodeFile modPath
         else return Nothing
+
+
+--lookupModule :: MonadIO m => QualPath -> m (Maybe ModuleInfo)
+lookupModule path = do
+    envPath <- Config.readPath
+    return envPath
 
 
 -----------------------------------------------------------------------------

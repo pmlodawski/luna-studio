@@ -57,10 +57,10 @@ newtype TName  a = TName  a deriving (Show, Eq, Ord, Generic, Read, Functor)
 newtype CName  a = CName  a deriving (Show, Eq, Ord, Generic, Read, Functor)
 newtype TVName a = TVName a deriving (Show, Eq, Ord, Generic, Read, Functor)
 
-type VNameP    = VName  NamePath
-type TNameP    = TName  NamePath
-type CNameP    = CName  NamePath
-type TVNameP   = TVName NamePath
+type VNameP    = VName    NamePath
+type TNameP    = TName    NamePath
+type CNameP    = CName    NamePath
+type TVNameP   = TVName   NamePath
 type NameBaseP = NameBase NamePath
 
 vname  (Assert.isVName  -> s) = VName  s

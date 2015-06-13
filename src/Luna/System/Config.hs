@@ -7,55 +7,66 @@
 -- Stability   :  stable
 -- Portability :  portable
 -----------------------------------------------------------------------------
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE OverlappingInstances #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TemplateHaskell #-}
+
 module Luna.System.Config where
 
 import Flowbox.Prelude
 
-import           Control.Monad.State (StateT)
-import qualified Control.Monad.State as State
-import qualified System.Environment  as Env
+import qualified Luna.System.Pragma           as Pragma
+import           Luna.System.Pragma           hiding (lookup, isEnabled)
+import qualified Control.Monad.State          as State
+import           Text.Parser.Char             (string, noneOf, CharParsing)
+import           Text.Parser.Token
+import           Control.Monad.State.Generate (newState)
+import           Data.List.Split              (splitOn)
+import qualified System.Environment           as Env
 
-data Env     = Env     { _path :: String }
+----------------------------------------------------------------------
+-- ConfigStore
+----------------------------------------------------------------------
+
+data Env     = Env     { _pathName :: String }
                        deriving (Show)
 
-data Sources = Sources { _sourceExt  :: String
-                       , _modInfoExt :: String
+data Sources = Sources { _sourceExts  :: [String]
+                       , _modInfoExts :: [String]
                        } deriving (Show)
 
-data Config  = Config  { _env    :: Env 
-                       , _souces :: Sources
+data Config  = Config  { _env     :: Env 
+                       , _sources :: Sources
                        } deriving (Show)
 makeLenses ''Env
 makeLenses ''Sources
 makeLenses ''Config
 
-class ConfigMonad m where
-    get :: m Config
-    put :: Config -> m ()
+$(newState "ConfigStore" ''Config)
 
 -- == Utils ==
 
-readPath :: (MonadIO m, ConfigMonad m, Functor m) => m String
+readPath :: (MonadIO m, MonadConfigStore m, Functor m) => m [String]
 readPath = do
-    pathName <- view (env.path) <$> get
-    envPath  <- liftIO $ Env.lookupEnv pathName
-    return $ maybe "" id envPath
+    path     <- view (env.pathName) <$> get
+    envPath  <- liftIO $ Env.lookupEnv path
+    return $ filter (/= "")
+           $ maybe [] (splitOn ":") envPath
 
 
 -- == Instances ==
 
 instance Default Env where
-    def = Env { _path = "LUNAPATH" }
+    def = Env { _pathName = "LUNAPATH" }
 
 instance Default Sources where
-    def = Sources { _sourceExt  = "luna" 
-                  , _modInfoExt = "li"
+    def = Sources { _sourceExts  = ["luna"] 
+                  , _modInfoExts = ["li"]
                   } 
 
 instance Default Config where
     def = Config def def
 
-instance Monad m => ConfigMonad (StateT Config m) where
-    get = State.get
-    put = State.put

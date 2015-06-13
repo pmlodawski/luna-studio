@@ -66,5 +66,6 @@ Library
                   edit-distance,
                   tuple,
                   optparse-applicative >= 0.11,
-                  zippers
+                  zippers,
+                  split
 --[PM] : blaze-markup is a temporary dependency until https://github.com/ekmett/trifecta/issues/42 is resolved
