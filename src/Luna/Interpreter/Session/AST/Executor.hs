@@ -47,6 +47,7 @@ import qualified Luna.Interpreter.Session.Env               as Env
 import           Luna.Interpreter.Session.Error             (Error, mapError)
 import qualified Luna.Interpreter.Session.Error             as Error
 import qualified Luna.Interpreter.Session.Hash              as Hash
+import qualified Luna.Interpreter.Session.Hint.Typecheck    as Typecheck
 import           Luna.Interpreter.Session.Memory.Manager    (MemoryManager)
 import qualified Luna.Interpreter.Session.Memory.Manager    as Manager
 import           Luna.Interpreter.Session.ProfileInfo       (ProfileInfo)
@@ -204,6 +205,11 @@ evalFunction nodeExpr callDataPath varNames = do
         Expression  name -> return   name
     time <- Env.getTimeVar
     catchEither (left . Error.RunError $(loc) callPointPath) $ do
+        
+        exprType <- lift2 $ Typecheck.typeOf operation
+        Session.runStmt $ VarName.toString (VarName callPointPath def) <> " <- createKey :: HKey T (" <> exprType <> ")"
+        
+
         Session.runAssignment tmpVarName operation
         Session.runStmt $ "_ <- toIOEnv $ fromValue $ " <> tmpVarName <> " (" <> show time <> ")"
         hash <- Hash.computeInherit tmpVarName varNames

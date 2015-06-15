@@ -74,6 +74,7 @@ initialize config imports = do
                : "Flowbox.Data.Hash"
                : "Flowbox.Serialization"
                : "Luna.Target.HS"
+               : "Luna.Interpreter.Runtime"
                : "System.Mem"
                : imports
 
