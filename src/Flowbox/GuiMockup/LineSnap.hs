@@ -15,10 +15,10 @@ import           Linear
 
 
 --main function for gui
-guiLineSnap :: [CubicBezier Float] -> [V2 Float] -> [CubicBezier Float]
-guiLineSnap originalCurve strokePoints = V.toList $ optimizeBeziers (V.fromList originalCurve) (V.fromList strokeAproximation)
+guiLineSnap :: [CubicBezier Float] -> [V2 Float] -> Float -> [CubicBezier Float]
+guiLineSnap originalCurve strokePoints errorParameter = V.toList $ optimizeBeziers (V.fromList originalCurve) (V.fromList strokeAproximation)
     where
-        strokeAproximation = fitCurve strokePoints 10
+        strokeAproximation = fitCurve strokePoints errorParameter
 
 optimizeBeziers :: V.Vector (CubicBezier Float) -> V.Vector (CubicBezier Float) -> V.Vector (CubicBezier Float) -- V.Vector (V2 Float, V2 Float, V2 Float)
 optimizeBeziers original strokeAproximation = 
