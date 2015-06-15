@@ -32,6 +32,7 @@ Library
                     flowbox-config,
                     flowbox-serialization,
                     flowbox-utils,
+                    HMap,
                     ghc,
                     ghc-mtl,
                     luna-core,

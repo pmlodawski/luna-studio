@@ -28,6 +28,7 @@ import           Luna.DEP.Lib.Manager                        (LibManager)
 import           Luna.Interpreter.Session.Cache.Info         (CacheInfo)
 import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint)
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
+import           Luna.Interpreter.Session.Data.CompiledNode  (CompiledNode)
 import           Luna.Interpreter.Session.Data.DefPoint      (DefPoint)
 import           Luna.Interpreter.Session.Data.Time          (Time)
 import           Luna.Interpreter.Session.Error              (Error)
@@ -36,12 +37,12 @@ import           Luna.Interpreter.Session.ProfileInfo        (ProfileInfo)
 import           Luna.Interpreter.Session.TargetHS.Reload    (ReloadMap)
 
 
-
 type ResultCallBack = Project.ID -> CallPointPath -> [ModeValue] -> Time -> IO ()
 type FragileMVar    = MVar ()
 
 
-data Env memoryManager = Env { _cached             :: MapForest CallPoint CacheInfo
+data Env memoryManager = Env { _compiled           :: MapForest CallPoint CompiledNode
+                             , _cached             :: MapForest CallPoint CacheInfo
                              , _watchPoints        :: SetForest CallPoint
                              , _reloadMap          :: ReloadMap
                              , _allReady           :: Bool
@@ -78,7 +79,8 @@ mk :: Config -> memoryManager -> LibManager -> Maybe Project.ID -> Maybe DefPoin
    -> ResultCallBack -> IO (Env memoryManager)
 mk config memoryManager' libManager' projectID' mainPtr' resultCallBack' = do
     fo <- MVar.newMVar ()
-    return $ Env { _cached           = def
+    return $ Env { _compiled         = def
+                 , _cached           = def
                  , _watchPoints      = def
                  , _reloadMap        = def
                  , _allReady         = False
