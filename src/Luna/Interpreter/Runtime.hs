@@ -10,4 +10,5 @@ module Luna.Interpreter.Runtime (
     module X
 ) where
 
-import Luna.Interpreter.Runtime.HMap as X
+import Luna.Interpreter.Runtime.HMap  as X (T, HMap, HKey, insert, createKey)
+--import Luna.Interpreter.Runtime.HKey  as X (T, HMap, HKey, insert, createKey)
