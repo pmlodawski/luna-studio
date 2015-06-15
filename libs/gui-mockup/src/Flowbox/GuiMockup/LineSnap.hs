@@ -11,15 +11,14 @@ import           Data.STRef
 import           Flowbox.GuiMockup.LineFit  
 import           Foreign.Storable
 import           Linear
-import  Debug.Trace as D
 
 
 
 type ControlPoint = (V2 Float, V2 Float, V2 Float)
 
 --main function for gui
-guiLineSnap :: [ControlPoint] -> Maybe ControlPoint -> Maybe ControlPoint -> [V2 Float] -> [ControlPoint]
-guiLineSnap originalCurveControlPoints pointBefore pointAfter strokePoints = resultControlPoints
+guiLineSnap :: [ControlPoint] -> Maybe ControlPoint -> Maybe ControlPoint -> [V2 Float] -> Float -> [ControlPoint]
+guiLineSnap originalCurveControlPoints pointBefore pointAfter strokePoints errorParameter = resultControlPoints
     where
         resultControlPoints = [startControlPoint] ++ midPoints ++ [endControlPoint] 
         midPoints = beziersToFullControlPoints resultCurve
@@ -29,25 +28,25 @@ guiLineSnap originalCurveControlPoints pointBefore pointAfter strokePoints = res
         (_, _, hoe) = head originalCurveControlPoints
         CubicBezier ps ho _ _ = head resultCurve
         CubicBezier _ _ hi pe = last resultCurve
-        --resultCurve = moveCurveToStroke (controlPointsToBeziers originalCurveControlPoints) strokePoints
-        resultCurve = moveCurveToStroke' (controlPointsToBeziers originalCurveControlPoints) pointBefore pointAfter strokePoints
+        --resultCurve = moveCurveToStroke (controlPointsToBeziers originalCurveControlPoints) strokePoints errorParameter
+        resultCurve = moveCurveToStroke' (controlPointsToBeziers originalCurveControlPoints) pointBefore pointAfter strokePoints errorParameter
 
-moveCurveToStroke :: [CubicBezier Float] -> [V2 Float] -> [CubicBezier Float]
-moveCurveToStroke originalCurve strokePoints = V.toList $ optimizeBeziers (V.fromList originalCurve) (V.fromList strokeAproximation)
+moveCurveToStroke :: [CubicBezier Float] -> [V2 Float] -> Float -> [CubicBezier Float]
+moveCurveToStroke originalCurve strokePoints errorParameter = V.toList $ optimizeBeziers (V.fromList originalCurve) (V.fromList strokeAproximation)
     where
-        strokeAproximation = fitCurve strokePoints 10
+        strokeAproximation = fitCurve strokePoints errorParameter
 
-moveCurveToStroke' :: [CubicBezier Float] -> Maybe ControlPoint -> Maybe ControlPoint -> [V2 Float] -> [CubicBezier Float]
-moveCurveToStroke' originalCurve pointBefore pointAfter strokePoints = V.toList $ optimizeBeziers' (V.fromList originalCurve) pointBefore pointAfter (V.fromList strokeAproximation)
+moveCurveToStroke' :: [CubicBezier Float] -> Maybe ControlPoint -> Maybe ControlPoint -> [V2 Float] -> Float -> [CubicBezier Float]
+moveCurveToStroke' originalCurve pointBefore pointAfter strokePoints errorParameter = V.toList $ optimizeBeziers' (V.fromList originalCurve) pointBefore pointAfter (V.fromList strokeAproximation)
     where
-        strokeAproximation = fitCurve strokePoints 10
+        strokeAproximation = fitCurve strokePoints errorParameter
 
 optimizeBeziers :: V.Vector (CubicBezier Float) -> V.Vector (CubicBezier Float) -> V.Vector (CubicBezier Float) -- V.Vector (V2 Float, V2 Float, V2 Float)
 optimizeBeziers original strokeAproximation = 
     let originalDistancesNorm = normalizeDistances $ bezierDistances original
         --originalDistancesNormDoubleEnd = V.snoc originalDistancesNorm (V.last originalDistancesNorm)
         originalDistancesNormWithNeighbours = vzip originalDistancesNorm (V.tail originalDistancesNorm)
-        strokeDistancesNorm = D.trace ("\noriginalDistancesNormWN: "++show originalDistancesNormWithNeighbours) $ normalizeDistances $ bezierDistances strokeAproximation
+        strokeDistancesNorm = normalizeDistances $ bezierDistances strokeAproximation
         strokeWithDists = vzip (V.tail strokeDistancesNorm) strokeAproximation
     in V.map (flip generateFittingBezier strokeWithDists) originalDistancesNormWithNeighbours
 
@@ -61,7 +60,7 @@ optimizeBeziers' original pointBefore pointAfter strokeAproximation =
                                     (Just _, Just _)   -> adjustEndDistance $ adjustStartDistance originalDistancesNorm' -- unfortunately order of function matters
         --originalDistancesNormDoubleEnd = V.snoc originalDistancesNorm (V.last originalDistancesNorm)
         originalDistancesNormWithNeighbours = vzip originalDistancesNorm (V.tail originalDistancesNorm)
-        strokeDistancesNorm = D.trace ("\noriginalDistancesNormWN: "++show originalDistancesNormWithNeighbours) $ normalizeDistances $ bezierDistances strokeAproximation
+        strokeDistancesNorm = normalizeDistances $ bezierDistances strokeAproximation
         strokeWithDists = vzip (V.tail strokeDistancesNorm) strokeAproximation
     in V.map (flip generateFittingBezier strokeWithDists) originalDistancesNormWithNeighbours
 
@@ -72,6 +71,17 @@ adjustEndDistance :: (V.Vector Float) -> (V.Vector Float)
 adjustEndDistance distances = V.map (* ((len-1)/len) ) distances
     where
         len = fromIntegral $ V.length distances
+
+-- prototypes
+adjustStartDistance' :: (V.Vector Float) -> (V.Vector Float)
+adjustStartDistance' distances = normalizeDistances $ V.map (+ V.head distances) distances -- because of normalization step this function has to be applied first
+
+adjustEndDistance' :: (V.Vector Float) -> (V.Vector Float)
+adjustEndDistance' distances = V.map (* proportion ) distances
+    where
+        proportion = 1/(1.0 + V.last distances)
+
+-- end of prototypes
 
 generateFittingBezier :: (Float, Float) -> V.Vector (Float, CubicBezier Float) -> CubicBezier Float
 generateFittingBezier (startLength, endLength) strokeWithDists = iteration
