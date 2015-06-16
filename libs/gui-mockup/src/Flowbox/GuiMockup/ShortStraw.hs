@@ -48,9 +48,9 @@ getCorners points = runST $ do
 
     corners <- newSTRef [0]
     let straws = V.create $ do
-            s <- MV.new $ pointsLength - 2 * w
+            s <- MV.new pointsLength
 
-            forM_ [w .. pointsLength - w] $ \i ->
+            forM_ [w .. pointsLength - w - 1] $ \i ->
                 MV.write s i $ distance (points V.! (i - w)) (points V.! (i + w))
 
             return s
@@ -76,14 +76,14 @@ getCorners points = runST $ do
                     writeSTRef localMin $ straws V.! i'
                     writeSTRef localMinIndex i'
 
-                readSTRef i >>= \x -> writeSTRef i (x + 1)
+                increment i
 
             minIndex <- readSTRef localMinIndex
-            readSTRef corners >>= \x -> writeSTRef corners (minIndex:x)
+            modifySTRef corners (minIndex:)
         else
-            readSTRef i >>= \x -> writeSTRef i (x + 1)
+            increment i
 
-    modifySTRef corners ((:) pointsLength)
+    modifySTRef corners ((:) (pointsLength - 1))
 
     corners' <- readSTRef corners
     return $ V.fromList $ postProcessCorners points (reverse corners') straws
@@ -118,7 +118,7 @@ postProcessCorners points corners straws = runST $ do
 
         whileM_ cond $ do
             iVal <- readSTRef i
-            c1 <- readSTRef cornersRef <&> \x -> x !! (iVal - 1)
+            c1 <- traceShow iVal $ readSTRef cornersRef <&> \x -> x !! (iVal - 1)
             c2 <- readSTRef cornersRef <&> \x -> x !! iVal
 
             when (not $ isLine points c1 c2) $ do
@@ -143,14 +143,25 @@ postProcessCorners points corners straws = runST $ do
         then do
             invalidCorner <- readSTRef cornersRef <&> \x -> x !! iVal
             modifySTRef cornersRef $ remove invalidCorner
-            decrement i
+            -- decrement i
         else
             increment i
 
     readSTRef cornersRef
 
 halfwayCorner :: V.Vector Float -> Int -> Int -> Int
-halfwayCorner = undefined
+halfwayCorner straws a b = runST $ do
+    minValue <- newSTRef $ 1 / 0
+    minIndex <- newSTRef 0
+
+    let quarter = (b - a) `div` 4
+    forM_ [a + quarter .. b - quarter] $ \i -> do
+        cond <- (straws V.! i <) <$> readSTRef minValue
+        when cond $ do
+            writeSTRef minValue $ straws V.! i
+            writeSTRef minIndex i
+
+    readSTRef minIndex
 
 increment :: Num a => STRef s a -> ST s ()
 increment ref = modifySTRef ref (+1)
@@ -194,12 +205,27 @@ resample i v@(V.toList -> points) = V.fromList $ go 0 (head points) (tail points
     where
         go :: Float -> V2 Float -> [V2 Float] -> [V2 Float] -> [V2 Float]
         go bigD previousPoint (point:ps) newPoints =
-            let d = traceShowId $ distance previousPoint point
+            let d = distance previousPoint point
             in  if bigD + d >= i
                 then let q = previousPoint + ((i - bigD) / d) *^ (point - previousPoint)
                      in  go 0 q (point:ps) (q:newPoints)
                 else go (bigD + d) point ps newPoints
         go _ _ [] newPoints = reverse newPoints
+
+resampleScala :: Float -> V.Vector (V2 Float) -> V.Vector (V2 Float)
+resampleScala i v@(V.toList -> points) = V.reverse $ V.fromList $ resamplePoints (reverse points) [] 0
+    where
+        resamplePoints :: [V2 Float] -> [V2 Float] -> Float -> [V2 Float]
+        resamplePoints [] lz _ = lz
+        resamplePoints (h:t) lz d = case t of
+            [_] -> lz ++ [h]
+            _   -> let pt1 = h
+                       pt2 = head t
+                       d' = distance pt1 pt2
+                   in if d + d' >= i
+                      then let q = pt1 + ((i - d) / d') *^ (pt2 - pt1)
+                           in  resamplePoints (q:t) (lz ++ [q]) 0
+                      else resamplePoints t lz (d + d')
 
 pathLength :: V.Vector (V2 Float) -> Float
 pathLength v = V.foldl' (\d (prev, next) -> d + distance prev next) 0
@@ -207,3 +233,108 @@ pathLength v = V.foldl' (\d (prev, next) -> d + distance prev next) 0
 
 test3 :: Float -> [[Float]] -> String
 test3 n input = jsifyVector jsifyV2 $ resample n $ readPoints input
+
+
+-- clean reimplementation
+
+-- resample
+
+-- determineResampleSpacing
+
+halfwayCornerClean :: V.Vector (V2 Float, Float) -> V2 Float
+halfwayCornerClean vec = fst $ V.minimumBy (compare `on` snd) vec'
+    where
+        vec'    = V.slice quarter len vec
+        len     = V.length vec - 2 * quarter
+        quarter = V.length vec `div` 4
+
+postProcessCornersClean :: V.Vector (V2 Float, Float) -> V.Vector (V2 Float) -> V.Vector (V2 Float)
+postProcessCornersClean points (V.toList -> corners) = V.fromList $ go3 (go1 False corners) []
+    where
+        go1 :: Bool -> [V2 Float] -> [V2 Float]
+        go1 (not -> False) acc = acc
+        go1 (not -> True)  acc = go2 True acc []
+            where
+                go2 :: Bool -> [V2 Float] -> [V2 Float] -> [V2 Float]
+                go2 currentBool corners@(c1:c2:cs) acc =
+                    let slice = getSlice points c1 c2
+                    in  if not $ isLineClean $ V.map fst slice
+                        then let newCorner = halfwayCornerClean slice
+                             in  if newCorner > c1 && newCorner < c2
+                                 then go2 False (newCorner:c2:cs) (c1:acc)
+                                 else go2 currentBool (c2:cs) (c1:acc)
+                        else go2 currentBool (c2:cs) (c1:acc)
+                go2 currentBool [c]                acc = go1 currentBool (reverse $ c:acc)
+
+        go3 :: [V2 Float] -> [V2 Float] -> [V2 Float]
+        go3 (c1:c:c2:cs) acc = if isLineClean $ V.map fst $ getSlice points c1 c2
+                               then go3 (c1:c2:cs) acc
+                               else go3 (c:c2:cs) (c1:acc)
+        go3 [c1,c2]      acc = reverse $ c2:c1:acc
+
+        getSlice :: V.Vector (V2 Float, Float) -> V2 Float -> V2 Float -> V.Vector (V2 Float, Float)
+        getSlice vec a1 a2 = V.slice i1 (i2 - i1 + 1) vec
+            where
+                fstvec = V.map fst vec
+                Just i1 = V.elemIndex a1 fstvec
+                Just i2 = V.elemIndex a2 fstvec
+
+isLineClean :: V.Vector (V2 Float) -> Bool
+isLineClean vec = len / pathLen > threshold
+    where
+        len = distance (V.head vec) (V.last vec)
+        pathLen = pathLength vec
+        threshold = 0.95
+
+getCornersClean :: V.Vector (V2 Float) -> V.Vector (V2 Float)
+getCornersClean points = runST $ do
+    let w = 3
+        straws = V.create $ do
+            v <- MV.new $ V.length points
+
+            forM_ [w .. V.length points - w - 1] $ \i -> do
+                MV.write v i $ distance (points V.! (i - w)) (points V.! (i + w))
+
+            return v
+
+        t = median straws * 0.95
+
+    i <- newSTRef w
+    corners <- newSTRef [V.head points]
+
+    whileM_ ((\x -> x < V.length points - w - 1) <$> readSTRef i) $ do
+        iVal <- readSTRef i
+        if straws V.! iVal < t
+        then do
+            localMin <- newSTRef $ 1 / 0
+            localMinIndex <- newSTRef =<< readSTRef i
+
+            let cond = do
+                    iVal <- readSTRef i
+                    return $ iVal < V.length points - w && straws V.! iVal < t
+
+            whileM_ cond $ do
+                iVal <- readSTRef i
+                localMinVal <- readSTRef localMin
+                when (straws V.! iVal < localMinVal) $ do
+                    writeSTRef localMin $ straws V.! iVal
+                    writeSTRef localMinIndex iVal
+
+                increment i
+
+            localMinIndexVal <- readSTRef localMinIndex
+            modifySTRef corners (points V.! localMinIndexVal:)
+        else increment i
+
+    modifySTRef corners (V.last points:)
+
+    cornersVal <- reverse <$> readSTRef corners
+
+    return $ postProcessCornersClean (V.zipWith (,) points straws) (V.fromList cornersVal)
+
+shortStrawClean :: V.Vector (V2 Float) -> V.Vector (V2 Float)
+shortStrawClean points = corners
+    where
+        s = determineResampleSpacing points
+        resampled = resample s points
+        corners = getCornersClean resampled
