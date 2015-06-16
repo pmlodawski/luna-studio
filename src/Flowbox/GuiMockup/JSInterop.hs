@@ -10,7 +10,7 @@ import qualified Data.Vector.Storable as V
 import           Foreign.Ptr
 import           Foreign.Storable
 import           Linear               (V2(..))
-import           Data.Binary          (Binary)
+--import           Data.Binary          (Binary)
 import           GHC.Generics         (Generic)
 
 
@@ -23,7 +23,7 @@ data CubicBezier a = CubicBezier { cubicC0 :: V2 a
                                  }
     deriving (Eq, Show, Generic)
 
-instance (Binary a) => Binary (CubicBezier a)
+--instance (Binary a) => Binary (CubicBezier a)
 
 instance V.Storable a => V.Storable (CubicBezier a) where
     sizeOf _ = 4 * sizeOf (undefined :: V2 a)
@@ -53,7 +53,7 @@ jsifyBezier :: CubicBezier Float -> String
 jsifyBezier (CubicBezier c0 c1 c2 c3) = jsifyObject fields points
     where
         points = map jsifyV2 [c0, c1, c2, c3]
-        fields = zipWith (:) (repeat 'p') $ map show [0..]
+        fields = zipWith (:) (repeat 'p') $ map show [(0::Int)..]
 
 jsifyV2 :: V2 Float -> String
 jsifyV2 (V2 x y) = "{\"x\": " ++ show x ++ ", \"y\": " ++ show y ++ "}"
