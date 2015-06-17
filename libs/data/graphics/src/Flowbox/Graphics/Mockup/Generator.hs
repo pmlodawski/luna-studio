@@ -19,6 +19,7 @@ module Flowbox.Graphics.Mockup.Generator (
     linearShapeLuna,
     radialShapeLuna,
     rotoLuna,
+    rotoLunaB,
     squareLuna,
     unwrapFormat,
 ) where
