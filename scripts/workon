@@ -148,6 +148,7 @@ def workon(name):
                         zdotdir = os.path.expanduser('~')
                     os.environ['ZDOTDIR_ORIG'] = zdotdir
                 os.environ['ZDOTDIR'] = shellConfPath
+                os.putenv('PATH_ORIG', os.environ['PATH'])
             elif 'bash' in shellPath:
                 shellOpts = "--rcfile " + os.path.join(shellConfPath, '.bashrc')
             else:
@@ -164,6 +165,8 @@ def workon(name):
                         zdotdir = os.path.expanduser('~')
                     os.putenv('ZDOTDIR_ORIG', zdotdir)
                 os.putenv('ZDOTDIR', shellConfPath)
+                os.putenv('PATH_ORIG', os.environ['PATH'])
+
                 
                 # =====[ OSXWORKAROUND_01 ]=====
                 # From Python 2.7 documentation:

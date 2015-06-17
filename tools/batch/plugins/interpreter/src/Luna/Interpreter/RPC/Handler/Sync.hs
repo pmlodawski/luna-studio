@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE PackageImports      #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell     #-}
 module Luna.Interpreter.RPC.Handler.Sync where
@@ -11,13 +12,13 @@ module Luna.Interpreter.RPC.Handler.Sync where
 import           Data.Int  (Int32)
 import qualified Text.Read as Read
 
+import           "flowbox-utils" Control.Monad.Morph
 import qualified Flowbox.Batch.Handler.Common                                   as Batch
 import qualified Flowbox.Batch.Project.Project                                  as Project
 import           Flowbox.Batch.Project.ProjectManager                           (ProjectManager)
 import qualified Flowbox.Batch.Project.ProjectManager                           as ProjectManager
 import           Flowbox.Bus.RPC.RPC                                            (RPC)
 import           Flowbox.Control.Error                                          hiding (err)
-import           Flowbox.Control.Monad.Morph
 import           Flowbox.Data.Convert
 import           Flowbox.Prelude                                                hiding (Context, error, op)
 import           Flowbox.ProjectManager.Context                                 (Context)
