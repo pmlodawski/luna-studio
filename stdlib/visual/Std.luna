@@ -419,7 +419,9 @@ def rasterizeMask self::Std w::Int h::Int m::(Mask Float) -> Image
 
 def Image.roto self::Image mask::(Mask Float) format::Format premultiply::Bool alpha::Bool -> Image
 
-def Image.rotoB self::Image mask::(Mask Float) format::Format premultiply::Bool alpha::Bool -> Image
+alias BinaryMask = Mask Float
+
+def Image.rotoB self::Image mask::BinaryMask format::Format premultiply::Bool alpha::Bool -> Image
 
 # COLORS
 
