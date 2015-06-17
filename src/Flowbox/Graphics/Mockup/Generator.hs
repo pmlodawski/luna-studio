@@ -25,14 +25,16 @@ module Flowbox.Graphics.Mockup.Generator (
 
 import qualified Data.Array.Accelerate as A
 
-import Linear                    (V2 (..))
-import Math.Coordinate           (Cartesian)
-import Math.Coordinate.Cartesian (Point2 (..))
-import Math.Metric               (Metric, MetricCoord)
-import Math.Space.Space          (Grid (..))
-import qualified Data.Map as Map
+import qualified Data.Binary               as Binary
+import           Data.ByteString.Lazy      (ByteString)
+import qualified Data.Map                  as Map
+import           Linear                    (V2 (..))
+import           Math.Coordinate           (Cartesian)
+import           Math.Coordinate.Cartesian (Point2 (..))
+import           Math.Metric               (Metric, MetricCoord)
+import           Math.Space.Space          (Grid (..))
 
-import           Flowbox.Geom2D.Mask                             (Mask(..))
+import           Flowbox.Geom2D.Mask                             (Mask (..))
 import qualified Flowbox.Geom2D.Rasterizer                       as Rasterizer
 import qualified Flowbox.Graphics.Color.Color                    as Color
 import           Flowbox.Graphics.Composition.Generator.Gradient (Tick (..))
@@ -198,9 +200,13 @@ rotoLuna input mask format premult premultAlpha = (if premult then premultiplyLu
             aMatrix             = Rasterizer.rasterizeMask w h mask
             --a                   = Channel.ChannelFloat "rgba.a" $ Channel.MatrixData $ Rasterizer.rasterizeMask w h mask
             a = intersectOrOverWrite premultAlpha aMatrix $ Channel.asMatrix aInput
-                where 
+                where
                     intersectOrOverWrite :: Bool -> M.Matrix2 Float -> Channel.Channel -> Channel.Channel
                     intersectOrOverWrite True mat1 (Channel.ChannelFloat name (Channel.MatrixData mat2)) = Channel.ChannelFloat name $ Channel.MatrixData $ M.zipWith (*) mat1 mat2
                     intersectOrOverWrite False mat1 _ = Channel.ChannelFloat "rgba.a" $ Channel.MatrixData mat1
                     --fuck mat1 (ChannelInt name (MatrixData mat2)) = ChannelInt   name $ MatrixData $ M.zipWith (\a b -> a*b) mat1 mat2
         in Image.appendToPrimary a input
+
+
+rotoLunaB :: Image -> ByteString -> Format -> Bool -> Bool -> Image
+rotoLunaB input mask = rotoLuna input (Binary.decode mask :: Mask Float)
