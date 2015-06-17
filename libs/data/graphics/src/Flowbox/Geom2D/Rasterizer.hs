@@ -246,79 +246,67 @@ drawLines width height path feather img = do
         featherCubics = makeCubics feather
     return ()
     goThroughSegments pathCubics featherCubics array height
-    --func array
 
 goThroughSegments [] [] _ _ = return ()
 goThroughSegments (p:ax) (f:fx) array h = do
     func array p f h
     goThroughSegments ax fx array h
 
---segmentFunc array pBezier fBezier = do
---    VU.forM_ (VU.generate 100 (\x -> x)) $ \x ->
---        lineFunc array x1 y1 x2 y2
---        where
---            x1 = 1
---            y1 = 1
---            x2 = 100
---            y2 = 100
-
---lineFunc array x1 y1 x2 y2 = do
---    VU.forM_ (VU.generate 100 (\x -> x)) $ \x ->
---        array (x1 + xVec) (y1 + yVec) M.$= (fromIntegral x) / 100.0
---        where
---            xVec = x
---            yVec = x
-
---cubic :: a -> b -> b -> b -> b -> Int
-cubic ((/1000.0) -> t) p0 p1 p2 p3 = {-Dbg.trace ("calling cubic with t = " ++ show t)-} (ceiling $ ((1.0 - t)**3)*p0 + 3*((1 - t)**2)*t*p1 + 3*(1 - t)*t*t*p2 + (t**3)*p3)
+cubic t p0 p1 p2 p3 = (ceiling $ ((1.0 - t)**3)*p0 + 3*((1 - t)**2)*t*p1 + 3*(1 - t)*t*t*p2 + (t**3)*p3)
 
 func array pBezier fBezier h = do
     let CubicBezier pC0 pC1 pC2 pC3 = pBezier
-        Point2 pC0x pC0y' = pC0
-        pC0y = flipy pC0y'
-        Point2 pC1x pC1y' = pC1
-        pC1y = flipy pC1y'
-        --pC1y = (flipy pC1y') + pC0y
-        Point2 pC2x pC2y' = pC2
-        pC2y = flipy pC2y'
-        --pC2y = (flipy pC2y') + pC3y
-        Point2 pC3x pC3y' = pC3
-        pC3y = flipy pC3y'
         CubicBezier fC0 fC1 fC2 fC3 = fBezier
+        Point2 pC0x pC0y' = pC0
+        Point2 pC1x pC1y' = pC1
+        Point2 pC2x pC2y' = pC2
+        Point2 pC3x pC3y' = pC3
         Point2 fC0x' fC0y' = fC0
-        fC0x = fC0x' + pC0x
-        fC0y = (flipy (fC0y' + pC0y'))
         Point2 fC1x' fC1y' = fC1
-        --fC1x = pC0x
-        fC1x = fC1x' + pC0x
-        --fC1x = fC1x' + pC1x
-        fC1y = (flipy (fC1y'+ pC0y'))
-        --fC1y = (flipy (fC1y' + fC0y'+ pC0y'))
-        --fC1y = (flipy (fC1y' + pC1y'))
-        --fC1y = (flipy fC1y') + fC0y
         Point2 fC2x' fC2y' = fC2
-        --fC2x = fC3x
-        fC2x = fC2x' + pC3x
-        --fC2x = fC2x' + fC3x
-        --fC2x = fC2x' + pC2x
-        fC2y = (flipy (fC2y' + pC3y'))
-        --fC2y = (flipy (fC2y' + fC3y' + pC3y'))
-        --fC2y = (flipy (fC2y' + pC2y'))
-        --fC2y = (flipy fC2y') + fC3y
         Point2 fC3x' fC3y' = fC3
+
+        pC0y = ft $ flipy pC0y'
+        pC1y = ft $ flipy pC1y'
+        pC2y = ft $ flipy pC2y'
+        pC3y = ft $ flipy pC3y'
+
+        fC0x = fC0x' + pC0x
+        fC0y = ft $ (flipy (fC0y' + pC0y'))
+        fC1x = fC1x' + pC0x
+        fC1y = ft $ (flipy (fC1y'+ pC0y'))
+        fC2x = fC2x' + pC3x
+        fC2y = ft $ (flipy (fC2y' + pC3y'))
         fC3x = fC3x' + pC3x
-        fC3y = (flipy (fC3y' + pC3y'))
+        fC3y = ft $ (flipy (fC3y' + pC3y'))
+        
         h' = fromIntegral h
         flipy x = ((x - (h'/2)) * (-1)) + (h'/2)
+        ft x = fromRational (toRational x)
+        
+        pC0xft = ft pC0x
+        pC1xft = ft pC1x
+        pC2xft = ft pC2x
+        pC3xft = ft pC3x
+        fC0xft = ft fC0x
+        fC1xft = ft fC1x
+        fC2xft = ft fC2x
+        fC3xft = ft fC3x
 
-    VU.forM_ (VU.generate 1000 (\x -> x)) $ \t ->
-        lineFunc array (cubic (fromIntegral t) (fromRational (toRational pC0x)) (fromRational (toRational pC1x)) (fromRational (toRational pC2x)) (fromRational (toRational pC3x))) (cubic (fromIntegral t) (fromRational (toRational pC0y)) (fromRational (toRational pC1y)) (fromRational (toRational pC2y)) (fromRational (toRational pC3y))) (cubic (fromIntegral t) (fromRational (toRational fC0x)) (fromRational (toRational fC1x)) (fromRational (toRational fC2x)) (fromRational (toRational fC3x))) (cubic (fromIntegral t) (fromRational (toRational fC0y)) (fromRational (toRational fC1y)) (fromRational (toRational fC2y)) (fromRational (toRational fC3y)))
-        --array x x M.$= (fromIntegral x) / 100.0
+    VU.forM_ (VU.generate 1000 id) $ \t' ->
+        let t = (fromIntegral t') / 1000.0
+        in lineFunc array (cubic t pC0xft pC1xft pC2xft pC3xft) (cubic t pC0y pC1y pC2y pC3y) (cubic t fC0xft fC1xft fC2xft fC3xft) (cubic t fC0y fC1y fC2y fC3y)
 
 lineFunc array x1 y1 x2 y2 = do
-    VU.forM_ (VU.generate 1000 (\y -> y)) $ \y ->
-      array (x1 + (ceiling (((fromIntegral y) / 1000.0) * (fromIntegral (x2 - x1))))) (y1 + (ceiling (((fromIntegral y) / 1000.0) * (fromIntegral (y2 - y1))))) M.$= 1.0 - ((fromIntegral y) / 1000.0)
-    
+    let vecxraw = (fromIntegral (x2 - x1))
+        vecyraw = (fromIntegral (y2 - y1))
+        l       = sqrt $ (abs vecxraw)**2 + (abs vecyraw)**2
+        intl    = ceiling l
+    VU.forM_ (VU.generate intl id) $ \y ->
+        let vecx    = (ceiling ((t / l) * vecxraw))
+            vecy    = (ceiling ((t / l) * vecyraw))
+            t       = (fromIntegral y)
+        in array (x1 + vecx) (y1 + vecy) M.$= 1.0 - (t / (fromRational (toRational l)))
 
 
 matrixToImage :: Matrix2 Float -> Image
