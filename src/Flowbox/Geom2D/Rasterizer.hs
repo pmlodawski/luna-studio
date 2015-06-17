@@ -293,6 +293,16 @@ func array pBezier fBezier h = do
         fC2xft = ft fC2x
         fC3xft = ft fC3x
 
+        lab = sqrt $ (abs (pC0xft - pC1xft))**2 + (abs (pC0y - pC1y))
+        lbc = sqrt $ (abs (pC1xft - pC2xft))**2 + (abs (pC1y - pC2y))
+        lcd = sqrt $ (abs (pC2xft - pC3xft))**2 + (abs (pC2y - pC3y))
+        l   = lab + lbc + lcd
+        lab2 = sqrt $ (abs (fC0xft - fC1xft))**2 + (abs (fC0y - fC1y))
+        lbc2 = sqrt $ (abs (fC1xft - fC2xft))**2 + (abs (fC1y - fC2y))
+        lcd2 = sqrt $ (abs (fC2xft - fC3xft))**2 + (abs (fC2y - fC3y))
+        l2   = lab2 + lbc2 + lcd
+
+
     VU.forM_ (VU.generate 1000 id) $ \t' ->
         let t = (fromIntegral t') / 1000.0
         in lineFunc array (cubic t pC0xft pC1xft pC2xft pC3xft) (cubic t pC0y pC1y pC2y pC3y) (cubic t fC0xft fC1xft fC2xft fC3xft) (cubic t fC0y fC1y fC2y fC3y)
