@@ -1,0 +1,33 @@
+{
+  "author": "Flowbox Data GUI",
+  "name": "flowbox-data-gui",
+  "description": "Package description",
+  "version": "1.0.0",
+  "homepage": "",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "engines": {
+    "node": "~0.6.10 || 0.8 || 0.9 || 0.10"
+  },
+  "scripts": {
+    "start": "brunch watch --server",
+    "test": "brunch test"
+  },
+  "dependencies": {
+    "browserify-brunch": ">= 1.0 < 1.9",
+    "browserify-shader": "0.0.2",
+    "clean-css-brunch": ">= 1.0 < 1.9",
+    "css-brunch": ">= 1.0 < 1.9",
+    "exposify": "*",
+    "ghcjs-brunch": "kfigiela/ghcjs-brunch",
+    "jquery": "^2.1.4",
+    "three": "^0.71.0",
+    "three-bmfont-text": ">= 1.1 < 1.9",
+    "uglify-js-brunch": ">= 1.0 < 1.9",
+    "underscore": "^1.8.3",
+    "virtual-dom": "^2.0.1"
+  },
+  "devDependencies": {}
+}
