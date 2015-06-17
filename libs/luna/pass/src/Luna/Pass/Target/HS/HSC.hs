@@ -126,15 +126,6 @@ instance (Generator2 a s, out~Builder s Tok) => AutoGen a out where
 --instance Convertible Text CB.Code where
 --    safeConvert = Right . tok
 
-instance Convertible Text (Builder s Tok) where
-    safeConvert = Right . pure . fromText
-
-instance (s~s') => Convertible (Builder s Tok) (Builder s' Tok) where
-    safeConvert = Right
-
-instance Convertible String (Builder s Tok) where
-    safeConvert = Right . pure . fromString
-
 --dataDecl name params cons = app (apps "data" $ name : params) cons
 dataDecl name params cons = app' (apps' ("data"::String) $ name : params) cons
 

@@ -1,5 +1,6 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE GADTs                     #-}
 
 -----------------------------------------------------------------------------
 -- |
@@ -117,3 +118,12 @@ instance Monoid a => Monoid (Builder s a) where
         va <- a
         vb <- b
         return $ va <> vb
+
+instance Convertible Text (Builder s Tok) where
+    safeConvert = Right . pure . fromText
+
+instance (s~s') => Convertible (Builder s Tok) (Builder s' Tok) where
+    safeConvert = Right
+
+instance Convertible String (Builder s Tok) where
+    safeConvert = Right . pure . fromString
