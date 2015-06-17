@@ -28,6 +28,7 @@ Library
                   accelerate-io  == 0.16.*,
                   accelerate-fft == 0.16.*,
                   algebraic       > 0.1,
+                  binary,
                   bmp,
                   bytestring,
                   cairo,
