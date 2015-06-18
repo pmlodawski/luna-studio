@@ -21,37 +21,37 @@ data Diff
 
 -- === foreigns ===
 
-foreign import javascript unsafe "window.virtualDom.h($1, [$2])"
+foreign import javascript unsafe "virtualDom.h($1, [$2])"
   mkNode :: JSString -> JSString -> IO (JSRef VNode)
 
-foreign import javascript unsafe "window.virtualDom.create($1)"
+foreign import javascript unsafe "virtualDom.create($1)"
   createElement :: JSRef VNode -> IO Element
 
-foreign import javascript unsafe "window.virtualDom.diff($1, $2)"
+foreign import javascript unsafe "virtualDom.diff($1, $2)"
   diff :: JSRef VNode -> JSRef VNode -> IO (JSRef Diff)
 
-foreign import javascript unsafe "window.virtualDom.patch($1, $2)"
+foreign import javascript unsafe "virtualDom.patch($1, $2)"
   patch :: Element -> JSRef Diff -> IO ()
 
-foreign import javascript unsafe "exported.init()"
+foreign import javascript unsafe "app.init()"
   init :: IO ()
 
-foreign import javascript unsafe "exported.render()"
+foreign import javascript unsafe "app.render()"
   render :: IO ()
 
-foreign import javascript unsafe "exported.create($1)"
+foreign import javascript unsafe "app.create($1)"
   create :: Int -> IO () 
 
-foreign import javascript unsafe "exported.dragNode($1, $2, $3)"
+foreign import javascript unsafe "app.dragNode($1, $2, $3)"
   dragNode :: Int -> Int -> Int -> IO ()
 
-foreign import javascript unsafe "exported.setNodeFocused($1)"
+foreign import javascript unsafe "app.setNodeFocused($1)"
   setNodeFocused :: Int -> IO () 
 
-foreign import javascript unsafe "exported.setNodeSelected($1)"
+foreign import javascript unsafe "app.setNodeSelected($1)"
   setNodeSelected :: Int -> IO () 
 
-foreign import javascript unsafe "exported.setNodeUnselected($1)"
+foreign import javascript unsafe "app.setNodeUnselected($1)"
   setNodeUnselected :: Int -> IO () 
 
 -- foreign import javascript unsafe "isNodeSelected($1)"
@@ -60,16 +60,16 @@ foreign import javascript unsafe "exported.setNodeUnselected($1)"
 -- foreign import javascript unsafe "toggleNodeSelection($1)"
 --   toggleNodeSelection :: Int -> IO () 
 
-foreign import javascript unsafe "exported.unselectAllNodes()"
+foreign import javascript unsafe "app.unselectAllNodes()"
   unselectAllNodes :: IO ()
 
-foreign import javascript unsafe "exported.unfocusNode()"
+foreign import javascript unsafe "app.unfocusNode()"
   unfocusNode :: IO ()
 
 -- foreign import javascript unsafe "dragNodes($1, $2, $3)"
 --   dragNodes :: JSArray Int -> Int -> Int -> IO ()
 
-foreign import javascript unsafe "exported.getNodeAt($1, $2)"
+foreign import javascript unsafe "app.getNodeAt($1, $2)"
   getNodeAtJSArray :: Int -> Int -> IO (JSArray Int)
 
 getNodeAt :: Int -> Int -> IO (Int, Bool, Int, Int)

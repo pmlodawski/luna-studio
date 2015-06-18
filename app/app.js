@@ -3,9 +3,6 @@ var THREE = require('three')
 var _ = require('underscore')
 var fs = require('./shaders/node.frag')
 var vs = require('./shaders/node.vert')
-window.virtualDom = require('virtual-dom')
-
-console.log([fs(), vs()])
 
 // script to be inclued in index.html and referenced from Main.hs
 var scene, camera, renderer;
@@ -59,13 +56,15 @@ var stats = {begin: function(){}, end: function(){}};
 //// END STATS
 
 
-$(document).ready(function(){
-  THREE = require('three')
-  init();
-  create(50);
-  render();
-});
-
+function start() {
+  $(document).ready(function(){
+    THREE = require('three')
+    init();
+    create(50);
+    render();
+  });
+  
+}
 function render() {
   stats.begin();
   renderer.render(scene, camera);
@@ -504,7 +503,9 @@ function displayWindowInfo() {
     console.log("window scrollY: " + window.scrollY); 
 }
 
-window.exported = {
+console.log('dupa2')
+
+module.exports = {
   init: init,
   render: render,
   create: create,
@@ -514,7 +515,10 @@ window.exported = {
   setNodeUnselected: setNodeUnselected,
   unselectAllNodes: unselectAllNodes,
   unfocusNode: unfocusNode,
-  getNodeAt: getNodeAt
+  getNodeAt: getNodeAt,
+  start: start
 }
+
+
 
 

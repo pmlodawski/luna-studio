@@ -1,7 +1,4 @@
-// require('three')
-window.require = require;
-var _ = require('underscore')
-var $ = require('jquery')
-var THREE = require('three')
-var THREEtext = require('three-bmfont-text')
-require("./app")
+console.log("Current version: " + process.env.GIT_HASH)
+
+require('./app').start()
+
