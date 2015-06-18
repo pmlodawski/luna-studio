@@ -1,9 +1,12 @@
 shelljs = require 'shelljs'
 
+cabalProjectName = "gui"
+
 exports.config =
   # See https://github.com/brunch/brunch/blob/master/docs/config.md for documentation.
   paths:
     public: 'www'  
+    watched: ['app', 'test', 'vendor', "#{cabalProjectName}.cabal"]
   files:
     javascripts:
       joinTo:
@@ -33,7 +36,7 @@ exports.config =
   plugins:
     ghcjs:
       placeholder: 'app/env.ghcjs'
-      projectName: 'gui'
+      projectName: cabalProjectName
     browserify:
       # A string of extensions that will be used in Brunch and for browserify.
       # Default: js json coffee ts jsx hbs jade.
