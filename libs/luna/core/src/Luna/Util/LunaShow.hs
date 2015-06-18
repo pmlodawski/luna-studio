@@ -134,7 +134,7 @@ instance LunaShow e => LunaShow (Expr.List e) where
 instance LunaShow (LLit a) where
     lunaShowC context llit = pure $ case unwrap llit of
         Lit.Char   char -> '\'' : char : "'"
-        Lit.String str  -> '\"' : str ++ "\""
+        Lit.String str  -> show str
         Lit.Number num  -> csLunaShow context num
 
 

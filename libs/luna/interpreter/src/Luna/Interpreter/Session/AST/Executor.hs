@@ -188,7 +188,7 @@ evalFunction nodeExpr callDataPath varNames = do
         genNative = List.replaceByMany "#{}" args . List.stripIdx 3 3
         self      = head varNames
     vt <- varType nodeExpr
-    operation <- ("\\(_time :: Float) -> " <>) . Utils.replace "\\" "\\\\" <$> case vt of
+    operation <- ("\\(_time :: Float) -> " <>) . Utils.replace "\\\"" "\"" . init . tail . show <$> case vt of
         List        -> return $ "val [" <> List.intercalate "," args <> "]"
         Id          -> return $ mkArg self
         Native name -> return $ genNative name
