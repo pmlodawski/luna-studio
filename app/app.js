@@ -1,8 +1,12 @@
-var $ = require('jquery')
+var $ = require('jquery') 
 var THREE = require('three')
+var createText = require('three-bmfont-text')
+var Shader = require('./shaders/font')
+var font = require("./font/LatoBlack-sdf")
 var _ = require('underscore')
 var fs = require('./shaders/node.frag')
 var vs = require('./shaders/node.vert')
+var texture = THREE.ImageUtils.loadTexture('font/LatoBlack-sdf.png')
 
 // script to be inclued in index.html and referenced from Main.hs
 var scene, camera, renderer;
@@ -17,7 +21,6 @@ var camera;     // main camera
 var attributes = [];    // array used by shaders
 var uniforms = [];
 var commonUniforms =  {
-  color: { type: 'v4', value: new THREE.Vector4(1.0, 1.0, 1.0, .9) },
   camPan: {type: 'v2',value: new THREE.Vector2(0.0, 0.0)},
   camFactor: {type: 'f',value: 1.0},
   screenSize: {type: 'v2', value: new THREE.Vector2(1280.0, 800.0)}
@@ -60,10 +63,9 @@ function start() {
   $(document).ready(function(){
     THREE = require('three')
     init();
-    create(50);
+    create(40);
     render();
   });
-  
 }
 function render() {
   stats.begin();
@@ -231,7 +233,6 @@ function create(number) {
     // nodes
     var width = 60;     // nodes' width
     var height = 60;    // nodes' height
-
     for (var i = 0; i < number; i++)
     {
         posX = (Math.random() - 0.5) * (window.innerWidth - width);  // possible X coords of planes
@@ -273,6 +274,11 @@ function create(number) {
         nodeIndex[nodes[i].id] = i;
         nodes[i].position.x = posX;
         nodes[i].position.y = posY;
+        
+        
+        var text = renderText("# " + i)
+        text.position.z = 0.00009
+        nodes[i].add(text) 
 
 
         // var rect = new THREE.Mesh(
@@ -292,10 +298,64 @@ function create(number) {
         // nodes[i].userData.textBox.css({left: posX-20, top: -posY-10});
         // nodes[i].userData.textBox.appendTo('#zoomcanvas')
 
-        scene.add(nodes[i]);
+         scene.add(nodes[i]);
         // console.log("nodes " + nodeIndex[nodes[i].id] + " " + nodes[i].id);
     }
+    
     assignZs();
+    // renderText()
+}
+
+function renderText(msg) {
+
+  
+
+
+  var maxAni = renderer.getMaxAnisotropy()
+
+  //setup our texture with some nice mipmapping etc
+  // texture.needsUpdate = true
+  // texture.minFilter = THREE.LinearMipMapLinearFilter
+  // texture.magFilter = THREE.LinearFilter
+  // texture.generateMipmaps = true
+  // texture.anisotropy = maxAni
+  
+  
+  
+  var maxAni = renderer.getMaxAnisotropy()
+
+  // texture.minFilter = THREE.LinearMipMapLinearFilter
+  // texture.magFilter = THREE.LinearFilter
+  // texture.generateMipmaps = true
+  // texture.anisotropy = maxAni
+  // texture.needsUpdate = true
+  
+
+  var geom = createText({
+    text: msg,
+    font: font,
+    width: 700,
+  })
+
+  var material = new THREE.ShaderMaterial(Shader({
+    map: texture,
+    smooth: 1/16,
+    side: THREE.DoubleSide, 
+    transparent: true,
+    color: 'rgb(230, 230, 230)'
+  }))
+  
+  var layout = geom.layout
+  var text = new THREE.Mesh(geom, material)
+  // text.position.x = -layout.width/2
+  // //origin uses bottom left of last line
+  // //so we need to move it down a fair bit
+  // text.position.y = layout.height * 1.035
+  text.rotation.x = 180 * Math.PI/180;
+  //
+  //scale it down so it fits in our 3D units
+  return text
+  
 }
 
 function getNormalizedPosition(x, y) {
@@ -303,7 +363,7 @@ function getNormalizedPosition(x, y) {
     mouse.x =  (x / screenSize.x) * 2 - 1;
     mouse.y = -(y / screenSize.y) * 2 + 1;
     return mouse;
-}
+} 
 
 function isSelectedNodeIdOnOffset(nodeId, xy) {
     var d_squared = xy[0] * xy[0] + xy[1] * xy[1];
@@ -502,8 +562,6 @@ function displayWindowInfo() {
     console.log("window scrollX: " + window.scrollX);
     console.log("window scrollY: " + window.scrollY); 
 }
-
-console.log('dupa2')
 
 module.exports = {
   init: init,

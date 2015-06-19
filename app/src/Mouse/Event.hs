@@ -1,5 +1,5 @@
 module Mouse.Event where
-
+    
 import Data.Default
 import Data.Maybe ( fromJust )
 

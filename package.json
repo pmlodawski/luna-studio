@@ -9,14 +9,14 @@
     "url": ""
   },
   "engines": {
-    "node": "~0.6.10 || 0.8 || 0.9 || 0.10"
+    "node": "~0.6.10 || 0.8 || 0.9 || 0.12"
   },
   "scripts": {
     "start": "brunch watch --server",
     "test": "brunch test"
   },
   "dependencies": {
-    "browserify-brunch": ">= 1.0 < 1.9",
+    "browserify-brunch": "kfigiela/browserify-brunch",
     "browserify-shader": "0.0.2",
     "clean-css-brunch": ">= 1.0 < 1.9",
     "css-brunch": ">= 1.0 < 1.9",
@@ -26,10 +26,11 @@
     "jquery": "^2.1.4",
     "shelljs": "^0.5.1",
     "three": "^0.71.0",
-    "three-bmfont-text": ">= 1.1 < 1.9",
+    "three-bmfont-text": "kfigiela/three-bmfont-text",
     "uglify-js-brunch": ">= 1.0 < 1.9",
     "underscore": "^1.8.3",
-    "virtual-dom": "^2.0.1"
+    "virtual-dom": "^2.0.1",
+    "xtend": "^4.0.0"
   },
   "devDependencies": {}
 }

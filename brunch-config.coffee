@@ -10,26 +10,20 @@ exports.config =
   files:
     javascripts:
       joinTo:
+        'javascripts/null.js': /^app|^vendor\/libs\.js/
         'javascripts/ghcjs.js': /^app\/.*\.ghcjs$/
-        'javascripts/vendor.js': /^(vendor|bower_components)/
-        'test/javascripts/test.js': /^test(\/|\\)(?!vendor)/
-        'test/javascripts/test-vendor.js': /^test(\/|\\)(?=vendor)/
       order:
         before: []
 
     stylesheets:
       joinTo:
         'stylesheets/app.css': /^(app|vendor)/
-        'test/stylesheets/test.css': /^test/
       order:
         before: []
         after: []
 
-    templates:
-      joinTo: 'javascripts/app.js'
-
   conventions:
-    assets: /(assets|vendor\/assets|font)/
+    assets: /(assets|vendor\/assets)/
   modules:
     wrapper: false
     definition: false    
@@ -41,38 +35,50 @@ exports.config =
       # A string of extensions that will be used in Brunch and for browserify.
       # Default: js json coffee ts jsx hbs jade.
       extensions: """
-      js coffee
+      js vert frag
       """
       
       transforms: [require('browserify-shader'), require('envify')]
 
       bundles:
+        'javascripts/libs.js':
+          # Passed to browserify.
+          entry: 'vendor/libs.js'
+
+          # Anymatch, as used in Brunch.
+          matcher: /^vendor/
+
+          onBrowserifyLoad: (bundler) ->
+            bundler.require('three', {expose: 'three'})
+            bundler.require('jquery', {expose: 'jquery'})
+            bundler.require('three-bmfont-text', {expose: 'three-bmfont-text'})
+            bundler.require('virtual-dom', {expose: 'virtual-dom'})
+            bundler.require('underscore', {expose: 'underscore'})
+            console.log("Browserify compiling libs...")
+
+          onAfterBundle: (error, bundleContents) -> console.log 'Browserify is done with libs'
+
         'javascripts/app.js':
           # Passed to browserify.
           entry: 'app/bootstrap.js'
 
           # Anymatch, as used in Brunch.
           matcher: /^app/
-
-          # Any options to pass to `browserify`. 
-          # `extensions` will be set to a proper list of
-          # `plugins.browserify.extensions`
-          instanceOptions: {
-          }
-
-          # Any options to pass to `browserify.bundle`.
-          # `debug` will be set to `!production` if not already defined.
-          bundleOptions: {}
           
           onBrowserifyLoad: (bundler) ->
-            bundler.require('three', {expose: 'three'})
-            bundler.require('jquery', {expose: 'jquery'})
+            bundler.external('three')
+            bundler.external('three-bmfont-text')
+            bundler.external('jquery')
+            bundler.external('virtual-dom')
+            bundler.external('underscore')
             bundler.require('./app/app', {expose: 'app'})
-            bundler.require('virtual-dom', {expose: 'virtual-dom'})
+
           
           onBeforeBundle: (bundler) -> 
             local_changes = (shelljs.exec('git diff-index --quiet HEAD --').code == 1)
             git_hash = shelljs.exec('git rev-parse HEAD', {silent:true}).output.trim()
             process.env.GIT_HASH = "#{git_hash}#{if local_changes then "-local" else ""}";
+            process.env.BUILD_DATE = new Date
+            console.log("Browserify compiling app...")
 
-          onAfterBundle: (error, bundleContents) -> console.log 'Browserify is done'
+          onAfterBundle: (error, bundleContents) -> console.log 'Browserify is done with app'
