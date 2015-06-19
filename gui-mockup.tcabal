@@ -21,6 +21,6 @@ Library
                   transformers,
                   storable-tuple,
                   monad-loops,
-                  vector-algorithms
-                  -- generator2,
-                  -- binary == 0.7.99.99
+                  vector-algorithms,
+                  generator2,
+                  binary == 0.7.99.99
