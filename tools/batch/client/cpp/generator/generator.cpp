@@ -110,6 +110,7 @@ void %wrapper_name%::makeSureTranactionExistsInCurrentThread()
 
 CorrelationId %wrapper_name%::sendRequest(std::string baseTopic, std::string requestTopic, const google::protobuf::Message &msg, ConversationDoneCb callback)
 {
+	auto cid = bh->request(baseTopic, std::move(requestTopic), msg.SerializeAsString(), callback);
 	if (baseTopic != "urm.transaction.commit")
 	{
 		if (auto t = currentTransaction())
