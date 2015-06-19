@@ -308,25 +308,29 @@ func array pBezier fBezier h = do
         lbc2 = sqrt $ (abs (fC1xft - fC2xft))**2 + (abs (fC1y - fC2y))**2
         lcd2 = sqrt $ (abs (fC2xft - fC3xft))**2 + (abs (fC2y - fC3y))**2
         l2   = lab2 + lbc2 + lcd2
-        l    = (max l1 l2) * 2.1
+        l    = (max l1 l2) * 2.1 -- magick number...
         intl = ceiling l
 
     VU.forM_ (VU.generate intl id) $ \t' ->
         let t = (fromIntegral t') / l
-        in lineFunc array (cubic' t pC0xft pC1xft pC2xft pC3xft) (cubic' t pC0y pC1y pC2y pC3y) (cubic' t fC0xft fC1xft fC2xft fC3xft) (cubic' t fC0y fC1y fC2y fC3y)
+        in lineFunc array (cubic' t pC0xft pC1xft pC2xft pC3xft) 
+                          (cubic' t pC0y pC1y pC2y pC3y) 
+                          (cubic' t fC0xft fC1xft fC2xft fC3xft) 
+                          (cubic' t fC0y fC1y fC2y fC3y)
 
-lineFunc array x1' y1' x2' y2' = do
-    let vecxraw = x2' - x1'
-        vecyraw = y2' - y1'
+lineFunc array x1 y1 x2 y2 = do
+    let vecxraw = x2 - x1
+        vecyraw = y2 - y1
         l       = sqrt $ (vecxraw)**2 + (vecyraw)**2
         ftl     = fromRational (toRational l)
         intl    = ceiling l
     VU.forM_ (VU.generate intl id) $ \y ->
-        let vecx    = (t / l) * vecxraw
-            vecy    = (t / l) * vecyraw
+        let vecx    = move * vecxraw
+            vecy    = move * vecyraw
+            move    = t / l
             t       = fromIntegral y
-            newvecx = ceiling $ vecx + x1'
-            newvecy = ceiling $ vecy + y1'
+            newvecx = ceiling $ vecx + x1
+            newvecy = ceiling $ vecy + y1
         in array newvecx newvecy M.$= 1.0 - (t / ftl)
 
 
