@@ -373,6 +373,41 @@ Executable test_vector_rasterization
                   thyme,
                   vector
 
+-- == test vector rasterizationL ==
+
+Executable test_vector_rasterizationL
+  if !flag(cuda)
+    buildable: False
+
+  Main-Is:        VectorRasterizationL.hs
+  Hs-Source-Dirs: test
+
+  Ghc-options:          -O2 -Wall -threaded -rtsopts -eventlog
+  Ghc-prof-options:     -auto-all
+
+  Default-Extensions:     NoImplicitPrelude
+  Default-Language:       Haskell2010
+
+  if flag(cuda)
+    CPP-options:        -DACCELERATE_CUDA_BACKEND
+    Build-Depends:      accelerate-cuda  == 0.16.*
+
+  Build-Depends:  base           == 4.7.*,
+                  linear,
+                  accelerate,
+                  accelerate-io,
+                  algebraic,
+                  bytestring,
+                  vector-space,
+                  flowbox-utils,
+                  flowbox-graphics,
+                  JuicyPixels,
+                  lens,
+                  QuickCheck,
+                  split,
+                  thyme,
+                  vector
+
 -- == test mockup ==
 
 Executable mockup
