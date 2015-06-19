@@ -108,7 +108,8 @@ void %wrapper_name%::makeSureTranactionExistsInCurrentThread()
 		transactions.reset(new std::stack<std::shared_ptr<Transaction>>);
 }
 
-Correlation
+CorrelationId %wrapper_name%::sendRequest(std::string baseTopic, std::string requestTopic, const google::protobuf::Message &msg, ConversationDoneCb callback)
+{
 	auto cid = bh->request(baseTopic, std::move(requestTopic), msg.SerializeAsString(), callback);
 	if (baseTopic != "urm.transaction.commit")
 	{
@@ -727,8 +728,10 @@ void prepareMethodWrappersHelper(bool finalLeaves, std::vector<MethodWrapper> &m
 		}
 		else
 		{
-			if(d->FindNestedTypeByName("Request"))
-				methods.emplace_back(topicSoFar, nameSoFar, fileDescriptor, d, agent);
+			//FIXME fix the method, not omit here
+			if(d->full_name() != "generated.proto.interpreter.Interpreter.Invalidate")
+				if(d->FindNestedTypeByName("Request"))
+					methods.emplace_back(topicSoFar, nameSoFar, fileDescriptor, d, agent);
 		}
 		for(int i = 0; i < d->nested_type_count(); i++)
 		{
