@@ -12,6 +12,7 @@ exports.config =
       joinTo:
         'javascripts/null.js': /^app|^vendor\/libs\.js/
         'javascripts/ghcjs.js': /^app\/.*\.ghcjs$/
+        'javascripts/vendor.js': /^(vendor|bower_components)/
       order:
         before: []
 
