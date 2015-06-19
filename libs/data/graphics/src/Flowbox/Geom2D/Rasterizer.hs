@@ -252,7 +252,7 @@ goThroughSegments (p:ax) (f:fx) array h = do
     func array p f h
     goThroughSegments ax fx array h
 
-cubic t p0 p1 p2 p3 = (ceiling $ ((1.0 - t)**3)*p0 + 3*((1 - t)**2)*t*p1 + 3*(1 - t)*t*t*p2 + (t**3)*p3)
+cubic' t p0 p1 p2 p3 = ((1.0 - t)**3)*p0 + 3*((1 - t)**2)*t*p1 + 3*(1 - t)*t*t*p2 + (t**3)*p3
 
 func array pBezier fBezier h = do
     let CubicBezier pC0 pC1 pC2 pC3 = pBezier
@@ -293,30 +293,34 @@ func array pBezier fBezier h = do
         fC2xft = ft fC2x
         fC3xft = ft fC3x
 
-        lab = sqrt $ (abs (pC0xft - pC1xft))**2 + (abs (pC0y - pC1y))
-        lbc = sqrt $ (abs (pC1xft - pC2xft))**2 + (abs (pC1y - pC2y))
-        lcd = sqrt $ (abs (pC2xft - pC3xft))**2 + (abs (pC2y - pC3y))
-        l   = lab + lbc + lcd
-        lab2 = sqrt $ (abs (fC0xft - fC1xft))**2 + (abs (fC0y - fC1y))
-        lbc2 = sqrt $ (abs (fC1xft - fC2xft))**2 + (abs (fC1y - fC2y))
-        lcd2 = sqrt $ (abs (fC2xft - fC3xft))**2 + (abs (fC2y - fC3y))
-        l2   = lab2 + lbc2 + lcd
+        lab = sqrt $ (abs (pC0xft - pC1xft))**2 + (abs (pC0y - pC1y))**2
+        lbc = sqrt $ (abs (pC1xft - pC2xft))**2 + (abs (pC1y - pC2y))**2
+        lcd = sqrt $ (abs (pC2xft - pC3xft))**2 + (abs (pC2y - pC3y))**2
+        l1   = lab + lbc + lcd
+        lab2 = sqrt $ (abs (fC0xft - fC1xft))**2 + (abs (fC0y - fC1y))**2
+        lbc2 = sqrt $ (abs (fC1xft - fC2xft))**2 + (abs (fC1y - fC2y))**2
+        lcd2 = sqrt $ (abs (fC2xft - fC3xft))**2 + (abs (fC2y - fC3y))**2
+        l2   = lab2 + lbc2 + lcd2
+        l    = (max l1 l2) * 1.7
+        intl = ceiling l
 
+    VU.forM_ (VU.generate intl id) $ \t' ->
+        let t = (fromIntegral t') / l
+        in lineFunc array (cubic' t pC0xft pC1xft pC2xft pC3xft) (cubic' t pC0y pC1y pC2y pC3y) (cubic' t fC0xft fC1xft fC2xft fC3xft) (cubic' t fC0y fC1y fC2y fC3y)
 
-    VU.forM_ (VU.generate 1000 id) $ \t' ->
-        let t = (fromIntegral t') / 1000.0
-        in lineFunc array (cubic t pC0xft pC1xft pC2xft pC3xft) (cubic t pC0y pC1y pC2y pC3y) (cubic t fC0xft fC1xft fC2xft fC3xft) (cubic t fC0y fC1y fC2y fC3y)
-
-lineFunc array x1 y1 x2 y2 = do
-    let vecxraw = (fromIntegral (x2 - x1))
-        vecyraw = (fromIntegral (y2 - y1))
-        l       = sqrt $ (abs vecxraw)**2 + (abs vecyraw)**2
+lineFunc array x1' y1' x2' y2' = do
+    let vecxraw = x2' - x1'
+        vecyraw = y2' - y1'
+        l       = sqrt $ (vecxraw)**2 + (vecyraw)**2
+        ftl     = fromRational (toRational l)
         intl    = ceiling l
     VU.forM_ (VU.generate intl id) $ \y ->
-        let vecx    = (ceiling ((t / l) * vecxraw))
-            vecy    = (ceiling ((t / l) * vecyraw))
-            t       = (fromIntegral y)
-        in array (x1 + vecx) (y1 + vecy) M.$= 1.0 - (t / (fromRational (toRational l)))
+        let vecx    = (t / l) * vecxraw
+            vecy    = (t / l) * vecyraw
+            t       = fromIntegral y
+            newvecx = ceiling $ vecx + x1'
+            newvecy = ceiling $ vecy + y1'
+        in array newvecx newvecy M.$= 1.0 - (t / ftl)
 
 
 matrixToImage :: Matrix2 Float -> Image
