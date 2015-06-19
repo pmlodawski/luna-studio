@@ -727,8 +727,10 @@ void prepareMethodWrappersHelper(bool finalLeaves, std::vector<MethodWrapper> &m
 		}
 		else
 		{
-			if(d->FindNestedTypeByName("Request"))
-				methods.emplace_back(topicSoFar, nameSoFar, fileDescriptor, d, agent);
+			//FIXME fix the method, not omit here
+			if(d->full_name() != "generated.proto.interpreter.Interpreter.Invalidate")
+				if(d->FindNestedTypeByName("Request"))
+					methods.emplace_back(topicSoFar, nameSoFar, fileDescriptor, d, agent);
 		}
 		for(int i = 0; i < d->nested_type_count(); i++)
 		{
