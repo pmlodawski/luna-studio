@@ -164,7 +164,7 @@ pathToRGBA32 w h (Path closed points) = unsafePerformIO rasterize
               let path = fromSegments $ makeSegments closed points
                   diagram = case closed of
                       False -> path                        # translate (r2 (ox,oy)) # scaleY (-1) # translateY h' # lc white # lw (Output 1) :: Diagram Cairo R2
-                      True  -> (strokeLoop.closeLine) path # translate (r2 (ox,oy)) # scaleY (-1) # translateY h' # fc white # lw (Output 0) :: Diagram Cairo R2
+                      True  -> (strokeLoop.closeLine) path # translate (r2 (ox,oy)) # scaleY (-1) # translateY h' # fc white # lw (Output 3) :: Diagram Cairo R2
                   (_, r) = renderDia Cairo (CairoOptions "" (Dims (fromIntegral w) (fromIntegral h)) RenderOnly True) (diagram :: Diagram Cairo R2)
               surface <- createImageSurface FormatARGB32 w h
               renderWith surface r
@@ -235,9 +235,16 @@ rasterizeMaskL :: (Real a, Fractional a) => Int -> Int -> Mask a -> Matrix2 Floa
 rasterizeMaskL w h mask@(Mask pathRaw maybeFeather) = 
     case maybeFeather of
         Nothing -> ptm pathRaw
-        Just featherRaw -> unsafePerformIO $ M.mutableProcess temporaryBackend (drawLines w h pathRaw featherRaw) (ptm pathRaw)
+        Just featherRaw -> process $ unsafePerformIO $ M.mutableProcess temporaryBackend (drawLines w h pathRaw featherRaw) (ptm pathRaw)
     where
       ptm = pathToMatrix w h
+      hmat :: (A.Elt e, A.IsFloating e) => Matrix2 e
+      hmat = id M.>-> Filter.normalize $ Filter.toMatrix (Grid 1 kernelSize) $ Filter.gauss 1.0
+      vmat :: (A.Elt e, A.IsFloating e) => Matrix2 e
+      vmat = id M.>-> Filter.normalize $ Filter.toMatrix (Grid kernelSize 1) $ Filter.gauss 1.0
+      kernelSize = 4 -- magick number
+      p = Shader.pipe A.Clamp
+      process x = rasterizer $ id `p` Filter.filter 1 vmat `p` Filter.filter 1 hmat `p` id $ fromMatrix A.Clamp x
 
 drawLines :: (Storable a, RealFrac a, Real b, Fractional b) => Int -> Int -> Path b -> Path b -> M.MImage a -> IO ()
 drawLines width height path feather img = do
@@ -301,7 +308,7 @@ func array pBezier fBezier h = do
         lbc2 = sqrt $ (abs (fC1xft - fC2xft))**2 + (abs (fC1y - fC2y))**2
         lcd2 = sqrt $ (abs (fC2xft - fC3xft))**2 + (abs (fC2y - fC3y))**2
         l2   = lab2 + lbc2 + lcd2
-        l    = (max l1 l2) * 1.7
+        l    = (max l1 l2) * 2.1
         intl = ceiling l
 
     VU.forM_ (VU.generate intl id) $ \t' ->
