@@ -12,7 +12,7 @@ exports.config =
       joinTo:
         'javascripts/null.js': /^app|^vendor\/libs\.js/
         'javascripts/ghcjs.js': /^app\/.*\.ghcjs$/
-        'javascripts/vendor.js': /^(vendor|bower_components)/
+        'javascripts/vendor.js': /^(vendors|bower_components)/
       order:
         before: []
 
@@ -72,6 +72,7 @@ exports.config =
             bundler.external('jquery')
             bundler.external('virtual-dom')
             bundler.external('underscore')
+            bundler.require('./app/common', {expose: 'common'})
             bundler.require('./app/app', {expose: 'app'})
 
           

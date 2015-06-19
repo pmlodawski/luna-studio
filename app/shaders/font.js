@@ -1,11 +1,11 @@
-var xtend = require('xtend')
-var THREE = require('three')
+var xtend = require('xtend');
+var THREE = require('three');
 
 module.exports = function(opt) {
-  opt = opt||{}
-  var opacity = typeof opt.opacity === 'number' ? opt.opacity : 1
-  var alphaTest = typeof opt.alphaTest === 'number' ? opt.alphaTest : 0.06
-  var smooth = typeof opt.smooth === 'number' ? opt.smooth : 1/16 
+  opt = opt||{};
+  var opacity = typeof opt.opacity === 'number' ? opt.opacity : 1;
+  var alphaTest = typeof opt.alphaTest === 'number' ? opt.alphaTest : 0.06;
+  var smooth = typeof opt.smooth === 'number' ? opt.smooth : 1/16;
   return xtend({
     uniforms: xtend({
       opacity: { type: 'f', value: opacity },
@@ -55,5 +55,5 @@ module.exports = function(opt) {
       "USE_MAP": "",
       "ALPHATEST": Number(alphaTest || 0).toFixed(1)
     }
-  }, opt)
-}
+  }, opt);
+};

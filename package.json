@@ -24,6 +24,7 @@
     "exposify": "*",
     "ghcjs-brunch": "kfigiela/ghcjs-brunch",
     "jquery": "^2.1.4",
+    "jshint-brunch": "^1.8.0",
     "shelljs": "^0.5.1",
     "three": "^0.71.0",
     "three-bmfont-text": "kfigiela/three-bmfont-text",
