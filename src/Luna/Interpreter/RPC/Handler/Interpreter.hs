@@ -133,7 +133,7 @@ run queueInfo crl request@(Run.Request mtime) = do
 
 
 invalidate :: Invalidate.Request -> RPC Context (SessionST mm) Invalidate.Update
-invalidate request@(Invalidate.Request tprojectID tlibraryID _ tnodeID) = do
+invalidate request@(Invalidate.Request tnodeID _ tlibraryID tprojectID _) = do
     Cache.modifyNode tprojectID tlibraryID tnodeID
     return $ Invalidate.Update request
 
