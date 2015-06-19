@@ -68,8 +68,14 @@ function FunctionNode(id, position){
 }
 
 FunctionNode.prototype.selected = function(val) {
-  if(val !== undefined)
+  if(val !== undefined) {
     this.uniforms.selected.value = val;
+    switch(val){
+      case 0: this.label(":"+this.id); break;
+      case 1: this.label("o_o"); break;
+      case 2: this.label("^-^"); break;
+    }
+  }
   return this.uniforms.selected.value;
 };
 
@@ -91,21 +97,34 @@ FunctionNode.prototype.zPos = function(z) {
   return this.mesh.position.z;
 };
 
+
+
+FunctionNode.prototype.label = function(text) {  
+  if(text !== undefined) {
+    this.labelText = text;
+    this.updateLabel();
+  }
+  return this.labelText;
+};
+
 FunctionNode.prototype.updateLabel = function() {  
-  if(this.label) this.mesh.remove(this.label);
+  if(this.labelObject) this.mesh.remove(this.labelObject);
+  
   var geom = createText({
     text: this.labelText,
     font: font,
     width: 700,
   });
   
-  this.label = new THREE.Mesh(geom, textMaterial);
-  this.label.rotation.x = 180 * Math.PI/180;
-  this.label.scale.multiplyScalar(0.5);
-  this.label.position.z = 0.0001;
-  this.label.position.x = -20;
-  this.label.position.y = -5;
-  this.mesh.add(this.label);
+  var obj = new THREE.Mesh(geom, textMaterial);
+  obj.rotation.x = 180 * Math.PI/180;
+  obj.scale.multiplyScalar(0.5);
+  obj.position.z = 0.0001;
+  obj.position.x = -20;
+  obj.position.y = -5;
+  
+  this.labelObject = obj;
+  this.mesh.add(obj);
 };
 
 module.exports.FunctionNode = FunctionNode;
