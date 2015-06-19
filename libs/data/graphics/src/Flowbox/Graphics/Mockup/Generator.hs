@@ -34,6 +34,7 @@ import           Math.Coordinate           (Cartesian)
 import           Math.Coordinate.Cartesian (Point2 (..))
 import           Math.Metric               (Metric, MetricCoord)
 import           Math.Space.Space          (Grid (..))
+import Data.String (fromString)
 
 import           Flowbox.Geom2D.Mask                             (Mask (..))
 import qualified Flowbox.Geom2D.Rasterizer                       as Rasterizer
@@ -209,5 +210,5 @@ rotoLuna input mask format premult premultAlpha = (if premult then premultiplyLu
         in Image.appendToPrimary a input
 
 
-rotoLunaB :: Image -> ByteString -> Format -> Bool -> Bool -> Image
-rotoLunaB input mask = rotoLuna input (Binary.decode mask :: Mask Float)
+rotoLunaB :: Image -> String -> Format -> Bool -> Bool -> Image
+rotoLunaB input mask = rotoLuna input (Binary.decode (fromString mask) :: Mask Float)
