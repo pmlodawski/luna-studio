@@ -108,8 +108,8 @@ void %wrapper_name%::makeSureTranactionExistsInCurrentThread()
 		transactions.reset(new std::stack<std::shared_ptr<Transaction>>);
 }
 
-Correlation
-	auto cid = bh->request(baseTopic, std::move(requestTopic), msg.SerializeAsString(), callback);
+CorrelationId %wrapper_name%::sendRequest(std::string baseTopic, std::string requestTopic, const google::protobuf::Message &msg, ConversationDoneCb callback)
+{
 	if (baseTopic != "urm.transaction.commit")
 	{
 		if (auto t = currentTransaction())
