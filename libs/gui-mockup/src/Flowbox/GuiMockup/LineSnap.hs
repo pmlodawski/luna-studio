@@ -25,7 +25,7 @@ guiLineSnap originalCurveControlPoints pointBefore pointAfter strokePoints error
         startControlPoint = (ps , his, ho)
         endControlPoint = (pe, hi, hoe)
         (_, his, _) = head originalCurveControlPoints
-        (_, _, hoe) = head originalCurveControlPoints
+        (_, _, hoe) = last originalCurveControlPoints
         CubicBezier ps ho _ _ = head resultCurve
         CubicBezier _ _ hi pe = last resultCurve
         --resultCurve = moveCurveToStroke (controlPointsToBeziers originalCurveControlPoints) strokePoints errorParameter
