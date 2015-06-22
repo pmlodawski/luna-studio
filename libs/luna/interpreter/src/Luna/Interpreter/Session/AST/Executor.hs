@@ -13,6 +13,7 @@ module Luna.Interpreter.Session.AST.Executor where
 import           Control.Monad.State         hiding (mapM, mapM_)
 import           Control.Monad.Trans.Either
 import qualified Data.Char                   as Char
+import qualified Data.List                   as List
 import qualified Data.Maybe                  as Maybe
 import qualified Data.String.Utils           as Utils
 import qualified Data.Text.Lazy              as Text
@@ -188,7 +189,7 @@ evalFunction nodeExpr callDataPath varNames = do
         genNative = List.replaceByMany "#{}" args . List.stripIdx 3 3
         self      = head varNames
     vt <- varType nodeExpr
-    operation <- ("\\(_time :: Float) -> " <>) . Utils.replace "\\\"" "\"" . init . tail . show <$> case vt of
+    operation <- ("\\(_time :: Float) -> " <>) <$> case vt of
         List        -> return $ "val [" <> List.intercalate "," args <> "]"
         Id          -> return $ mkArg self
         Native name -> return $ genNative name
@@ -229,7 +230,9 @@ hastExpr expr = do
     cpphsOptions <- Env.getCpphsOptions
     hexpr <- hoistEitherWith (Error.OtherError $(loc) . show) $ fst result
     let code = Text.unpack $ HSC.genExpr hexpr
-    last . lines <$> liftIO (Cpphs.runCpphs cpphsOptions "" code)
+    unlines . filter (not . null) . lines <$> liftIO (Cpphs.runCpphs cpphsOptions "" code)
+
+
 
 
 --nodeToExpr :: NodeExpr -> [VarName] -> LExpr IDTag ()
