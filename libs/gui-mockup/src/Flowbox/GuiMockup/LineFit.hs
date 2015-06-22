@@ -4,6 +4,7 @@
 module Flowbox.GuiMockup.LineFit
     (
       CubicBezier(..)
+    , Openness(..)
     , generateBezier
     , fitCurve
     , chordLengthParameterize
@@ -36,10 +37,14 @@ import           Flowbox.GuiMockup.JSInterop
 toVec :: CubicBezier Float -> V.Vector (V2 Float)
 toVec (CubicBezier c0 c1 c2 c3) = V.fromList [c0, c1, c2, c3]
 
+data Openness = Open | Closed
+
 -- main function in this module
 
-fitCurve :: [V2 Float] -> Float -> [CubicBezier Float]
-fitCurve points err = V.toList $ fitCubic points' tHat1 tHat2 err
+fitCurve :: [V2 Float] -> Float -> Openness -> [CubicBezier Float]
+fitCurve points err openness = case openness of
+    Open   -> V.toList $ fitCubic points' tHat1 tHat2 err
+    Closed -> (V.head $ fitCubic (V.fromList [head points, last points]) tHat1 tHat2 err) : fitCurve points err Open
     where
         points' = V.fromList points
         len = V.length points'
@@ -311,7 +316,7 @@ computeRightTangent points end = tHat2
         tHat2' = avgPoint - (points V.! end) --(points V.! end)
         avgPoint = (V.sum $ V.drop ((V.length points) - avgSample) points)/(fromIntegral avgSample)
         avgSample = min 5 $ V.length points -1
-        
+
 
 computeLeftTangent :: V.Vector (V2 Float) -> Int -> V2 Float
 computeLeftTangent points end = tHat1
