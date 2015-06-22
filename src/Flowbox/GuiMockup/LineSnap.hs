@@ -1,4 +1,4 @@
-module Flowbox.GuiMockup.LineSnap 
+module Flowbox.GuiMockup.LineSnap
     ( module Flowbox.GuiMockup.LineSnap
     , module Linear
         ) where
@@ -8,7 +8,7 @@ import           Control.Monad                (forM_, when)
 import           Control.Monad.ST             (runST)
 import qualified Data.Vector.Storable         as V
 import           Data.STRef
-import           Flowbox.GuiMockup.LineFit  
+import           Flowbox.GuiMockup.LineFit
 import           Foreign.Storable
 import           Linear
 
@@ -21,7 +21,7 @@ type ControlPoint = (V2 Float, V2 Float, V2 Float)
 guiLineSnap :: [ControlPoint] -> Maybe ControlPoint -> Maybe ControlPoint -> [V2 Float] -> Float -> [ControlPoint]
 guiLineSnap originalCurveControlPoints pointBefore pointAfter strokePoints errorParameter = resultControlPoints
     where
-        resultControlPoints = [startControlPoint] ++ midPoints ++ [endControlPoint] 
+        resultControlPoints = [startControlPoint] ++ midPoints ++ [endControlPoint]
         midPoints = beziersToFullControlPoints resultCurve
         startControlPoint = (ps , his, ho)
         endControlPoint = (pe, hi, hoe)
@@ -35,15 +35,15 @@ guiLineSnap originalCurveControlPoints pointBefore pointAfter strokePoints error
 moveCurveToStroke :: [CubicBezier Float] -> [V2 Float] -> Float -> [CubicBezier Float]
 moveCurveToStroke originalCurve strokePoints errorParameter = V.toList $ optimizeBeziers (V.fromList originalCurve) (V.fromList strokeAproximation)
     where
-        strokeAproximation = fitCurve strokePoints errorParameter
+        strokeAproximation = fitCurve strokePoints errorParameter Open
 
 moveCurveToStroke' :: [CubicBezier Float] -> Maybe ControlPoint -> Maybe ControlPoint -> [V2 Float] -> Float -> [CubicBezier Float]
 moveCurveToStroke' originalCurve pointBefore pointAfter strokePoints errorParameter = V.toList $ optimizeBeziers' (V.fromList originalCurve) pointBefore pointAfter (V.fromList strokeAproximation)
     where
-        strokeAproximation = fitCurve strokePoints errorParameter
+        strokeAproximation = fitCurve strokePoints errorParameter Open
 
 optimizeBeziers :: V.Vector (CubicBezier Float) -> V.Vector (CubicBezier Float) -> V.Vector (CubicBezier Float) -- V.Vector (V2 Float, V2 Float, V2 Float)
-optimizeBeziers original strokeAproximation = 
+optimizeBeziers original strokeAproximation =
     let originalDistancesNorm = normalizeDistances $ bezierDistances original
         --originalDistancesNormDoubleEnd = V.snoc originalDistancesNorm (V.last originalDistancesNorm)
         originalDistancesNormWithNeighbours = vzip originalDistancesNorm (V.tail originalDistancesNorm)
@@ -52,7 +52,7 @@ optimizeBeziers original strokeAproximation =
     in V.map (flip generateFittingBezier strokeWithDists) originalDistancesNormWithNeighbours
 
 optimizeBeziers' :: V.Vector (CubicBezier Float) -> Maybe ControlPoint -> Maybe ControlPoint -> V.Vector (CubicBezier Float) -> V.Vector (CubicBezier Float) -- V.Vector (V2 Float, V2 Float, V2 Float)
-optimizeBeziers' original pointBefore pointAfter strokeAproximation = 
+optimizeBeziers' original pointBefore pointAfter strokeAproximation =
     let originalDistancesNorm' = normalizeDistances $ bezierDistances original
         originalDistancesNorm = case (pointBefore, pointAfter) of
                                     (Nothing, Nothing) -> originalDistancesNorm'
@@ -104,11 +104,11 @@ generateFittingBezier (startLength, endLength) strokeWithDists = iteration
 
             readSTRef bezCurve'
 
-        generatedBezier = generateBezier resampledPoints u tHat1 tHat2 
+        generatedBezier = generateBezier resampledPoints u tHat1 tHat2
         resampledPoints = if startPointBezier == endPointBezier
-                            then resampleBezierFragment startRest endRest startPointBezier 
-                            else resampleBezierFragment startRest 1.0 startPointBezier V.++ 
-                                 V.concat (map resampleBezier (V.toList nextBeziers)) V.++ 
+                            then resampleBezierFragment startRest endRest startPointBezier
+                            else resampleBezierFragment startRest 1.0 startPointBezier V.++
+                                 V.concat (map resampleBezier (V.toList nextBeziers)) V.++
                                  resampleBezierFragment 0.0 endRest endPointBezier
         u = chordLengthParameterize resampledPoints
         tHat1 = ho-startPoint
@@ -142,7 +142,7 @@ beziersToFullControlPoints beziers = map snd $ tail . tail $ scanl (\(prevhi,_) 
     CubicBezier _ _ lastPointHi lastPoint = last beziers
     --lastControlPoint = (lastPoint, lastPointHi, lastPoint) -- for js purpose. Change third element to dummyHandle
 
-controlPointsToBeziers controlPoints = 
+controlPointsToBeziers controlPoints =
     tail $ tail $ map snd $ scanl funcRR ((0,0), streight1) controlPoints
 
 funcRR = (\((x,y),bezier) (p,hi,ho) -> ((p,ho), CubicBezier x y hi p))
@@ -152,9 +152,9 @@ deCasteljauCubic t bezier = (point, handle1, handle2) where
     [point, handle1, handle2] = deCasteljau t [cubicC0 bezier, cubicC1 bezier, cubicC2 bezier, cubicC3 bezier]
 
 deCasteljau :: Float -> [V2 Float] -> [V2 Float]
-deCasteljau t coefs = --trace ("reduced: "++show reduced) $ 
+deCasteljau t coefs = --trace ("reduced: "++show reduced) $
     case coefs of
-        [c1,c2] -> reduced ++ coefs 
+        [c1,c2] -> reduced ++ coefs
         _       -> deCasteljau t reduced
     where
         reduced = zipWith (lerpP t) coefs (tail coefs)
@@ -162,20 +162,20 @@ deCasteljau t coefs = --trace ("reduced: "++show reduced) $
         lerp t a b = t * b + (1 - t) * a
 
 arcLength :: CubicBezier Float -> Float
-arcLength curve = 
+arcLength curve =
     let points = map (bezierPoint curve) [0.1, 0.2..1] -- fixed 10 segments division
-    in fst $ foldl lengthCounter (0, cubicC0 curve) points  
+    in fst $ foldl lengthCounter (0, cubicC0 curve) points
 
 lengthCounter :: (Float, V2 Float) -> V2 Float -> (Float, V2 Float)
 lengthCounter (acc, pt1) pt2 = (acc + euclidianDistance pt1 pt2, pt2)
 
 bezierPoint :: CubicBezier Float -> Float -> V2 Float
-bezierPoint curve t = 
+bezierPoint curve t =
     let V2 x0 y0 = cubicC0 curve
         V2 x1 y1 = cubicC1 curve
         V2 x2 y2 = cubicC2 curve
         V2 x3 y3 = cubicC3 curve
-        formula start control1 control2 end = 
+        formula start control1 control2 end =
             start*(1-t)*(1-t)*(1-t) + 3.0*control1*(1.0-t)*(1.0-t)*t + 3.0*control2*(1.0-t)*t*t + end*t*t*t
     in V2 (formula x0 x1 x2 x3) (formula y0 y1 y2 y3)
 
@@ -198,7 +198,7 @@ bezierDistances = V.scanl (\acc c -> acc+arcLength c) 0
 normalizeDistances :: V.Vector Float -> V.Vector Float
 normalizeDistances distances = V.map (/ V.last distances) distances
 
-vzip :: (Storable a, Storable b) => V.Vector a -> V.Vector b -> V.Vector (a,b) 
+vzip :: (Storable a, Storable b) => V.Vector a -> V.Vector b -> V.Vector (a,b)
 vzip = V.zipWith (,)
 
 
@@ -211,7 +211,7 @@ getPoints strings = map (Prelude.uncurry V2) (getJsPoints strings) where
 printJsPoints :: [V2 Float] -> String
 printJsPoints points = show $ map (\(V2 x y) -> [floor x, floor y]) points
 
-paperPointsToBeziers points = 
+paperPointsToBeziers points =
     V.fromList $ tail $ tail $ map snd $ scanl funcR ((0,0), streight1) points
 
 funcR = (\((x,y),bezier) (p,hi,ho) -> ((p,p+ho), CubicBezier x y (p+hi) p))
