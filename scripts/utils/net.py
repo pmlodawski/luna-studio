@@ -8,6 +8,7 @@
 import urllib2
 import os
 import sys
+import ssl
 
 from colors import print_info
 from path   import make_dirs_if_needed
@@ -25,7 +26,9 @@ def download(url, path):
     if os.path.exists(path):
         print_info("File %s already exists. Skipping download." % path)
         return
-    u = urllib2.urlopen(url)
+
+    scontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+    u = urllib2.urlopen(url, context=scontext)
 
     make_dirs_if_needed(os.path.dirname(path))
     f = open(path, 'wb')
