@@ -1,5 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ViewPatterns        #-}
+{-# LANGUAGE DeriveGeneric		 #-}
 
 module Flowbox.GuiMockup.LineFit
     (
@@ -14,6 +15,9 @@ module Flowbox.GuiMockup.LineFit
 --    , test3
 	) where
 
+
+import           GHC.Generics (Generic)
+
 import           Control.Applicative          ((<$>), (<*>))
 import           Control.Error                hiding (err)
 import           Control.Lens.Operators
@@ -21,6 +25,7 @@ import           Control.Monad                (forM_, when)
 import           Control.Monad.Loops
 import           Control.Monad.ST             (ST, runST)
 import           Control.Monad.Trans.Class    (lift)
+import           Data.Binary
 import           Data.List                    (intercalate)
 import           Data.STRef
 import qualified Data.Vector.Storable         as V
@@ -38,6 +43,9 @@ toVec :: CubicBezier Float -> V.Vector (V2 Float)
 toVec (CubicBezier c0 c1 c2 c3) = V.fromList [c0, c1, c2, c3]
 
 data Openness = Open | Closed
+	deriving (Show, Generic)
+	
+instance Binary Openness
 
 -- main function in this module
 
