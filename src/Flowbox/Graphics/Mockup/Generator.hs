@@ -187,7 +187,7 @@ gradientLuna gradient (variable -> width) (variable -> height) = channelToImageR
 --            Right (Just a)   = Image.getFromPrimary "rgba.a" $ Rasterizer.matrixToImage $ Rasterizer.rasterizeMask w h mask
 --        in Image.appendToPrimary a input
 
-rotoLuna :: (Real a, Fractional a) => Image -> Mask a -> Format -> Bool -> Bool -> Image
+rotoLuna :: Image -> Mask Float -> Format -> Bool -> Bool -> Image
 rotoLuna input mask format premult premultAlpha = (if premult then premultiplyLuna else id) $
     if Image.null input
     then
@@ -206,7 +206,7 @@ rotoLuna input mask format premult premultAlpha = (if premult then premultiplyLu
                     --fuck mat1 (ChannelInt name (MatrixData mat2)) = ChannelInt   name $ MatrixData $ M.zipWith (\a b -> a*b) mat1 mat2
         in Image.appendToPrimary a input
 
-rotoLunaL :: (Real a, Fractional a) => Image -> Mask a -> Format -> Bool -> Bool -> Image
+rotoLunaL :: Image -> Mask Float -> Format -> Bool -> Bool -> Image
 rotoLunaL input mask format premult premultAlpha = (if premult then premultiplyLuna else id) $
     if Image.null input
     then

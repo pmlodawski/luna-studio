@@ -9,6 +9,11 @@
 {-# LANGUAGE TypeOperators             #-}
 -- {-# LANGUAGE TypeFamilies              #-}
 {-# LANGUAGE ViewPatterns              #-}
+{-# LANGUAGE FlexibleContexts          #-}
+{-# LANGUAGE BangPatterns #-}
+{-# LANGUAGE ViewPatterns              #-}
+{-# LANGUAGE RecordWildCards #-}
+{-# OPTIONS_GHC -ddump-simpl -dsuppress-all #-}
 
 module Flowbox.Geom2D.Rasterizer (
     module Flowbox.Geom2D.Rasterizer,
@@ -22,6 +27,7 @@ import           Data.Bits                       ((.&.))
 import           Data.Maybe
 import           Data.VectorSpace
 import qualified Data.Vector.Unboxed as VU
+import qualified Data.Vector.Storable.Mutable as IOV
 import           Diagrams.Backend.Cairo
 import           Diagrams.Backend.Cairo.Internal
 import           Diagrams.Prelude                hiding (Path, (<*))
@@ -58,6 +64,7 @@ import           Math.Coordinate.Cartesian                       (Point2 (..))
 
 
 import qualified Debug.Trace as Dbg (trace)
+import GHC.Float
 
 
 -- intended to be hidden from this package
@@ -99,31 +106,31 @@ unpackP a b = fromMaybe ((b - a)/3)
 --              in bezier3 b (d ^+^ c ^-^ a) (d ^-^ a) : combine (d':xs)
 --          combine _ = error "Flowbox.Geom2D.Rasterizer.makeSegments: unsupported ammount of points"
 --          f2d' = fmap f2d
-makeSegments :: (Real a, Fractional a) => Bool -> [ControlPoint a] -> [Segment Closed R2]
+makeSegments :: Bool -> [ControlPoint Float] -> [Segment Closed R2]
 makeSegments closed points = combine points
     where combine []  = []
           combine [a'] = if not closed then [] else let
-                  ControlPoint pa@(Point2 ax ay) _ b' = f2d' a'
-                  ControlPoint pd@(Point2 dx dy) c' _ = f2d' $ head points
-                  Point2 bx by = unpackP pa pd b'
-                  Point2 cx cy = unpackP pd pa c'
-                  a = r2 (ax , ay)
-                  b = r2 (bx , by)
-                  c = r2 (cx , cy)
-                  d = r2 (dx , dy)
+                  ControlPoint !pa@(Point2 !ax !ay) _ !b' = f2d' a'
+                  ControlPoint !pd@(Point2 !dx !dy) !c' _ = f2d' $ head points
+                  Point2 !bx !by = unpackP pa pd b'
+                  Point2 !cx !cy = unpackP pd pa c'
+                  !a = r2 (ax , ay)
+                  !b = r2 (bx , by)
+                  !c = r2 (cx , cy)
+                  !d = r2 (dx , dy)
               in [bezier3 b (d ^+^ c ^-^ a) (d ^-^ a)]
           combine (a':d':xs) = let
-                  ControlPoint pa@(Point2 ax ay) _ b' = f2d' a'
-                  ControlPoint pd@(Point2 dx dy) c' _ = f2d' d'
-                  Point2 bx by = unpackP pa pd b'
-                  Point2 cx cy = unpackP pd pa c'
-                  a = r2 (ax , ay)
-                  b = r2 (bx , by)
-                  c = r2 (cx , cy)
-                  d = r2 (dx , dy)
+                  ControlPoint !pa@(Point2 !ax !ay) _ !b' = f2d' a'
+                  ControlPoint !pd@(Point2 !dx !dy) !c' _ = f2d' d'
+                  Point2 !bx !by = unpackP pa pd b'
+                  Point2 !cx !cy = unpackP pd pa c'
+                  !a = r2 (ax , ay)
+                  !b = r2 (bx , by)
+                  !c = r2 (cx , cy)
+                  !d = r2 (dx , dy)
               in bezier3 b (d ^+^ c ^-^ a) (d ^-^ a) : combine (d':xs)
           combine _ = error "Flowbox.Geom2D.Rasterizer.makeSegments: unsupported ammount of points"
-          f2d' = fmap f2d
+          f2d' = fmap float2Double
 
 -- TODO[1]
 --makeCubics :: Real a => Path a -> [CubicBezier a]
@@ -155,10 +162,10 @@ makeCubics (Path closed points) = combine points
               in CubicBezier a (a+b) (d+c) d : combine (d':xs)
           combine _ = error "Flowbox.Geom2D.Rasterizer.makeCubics: unsupported ammount of points"
 
-pathToRGBA32 :: (Real a, Fractional a) => Int -> Int -> Path a -> A.Array DIM2 RGBA32
+pathToRGBA32 :: Int -> Int -> Path Float -> A.Array DIM2 RGBA32
 pathToRGBA32 w h (Path _ []) = A.fromList (Z:.h:.w) [0..]
 pathToRGBA32 w h (Path closed points) = unsafePerformIO rasterize
-    where ControlPoint (Point2 ox oy) _ _ = fmap f2d $ head points
+    where ControlPoint (Point2 ox oy) _ _ = fmap float2Double $ head points
           h' = fromIntegral h
           rasterize = do
               let path = fromSegments $ makeSegments closed points
@@ -171,7 +178,7 @@ pathToRGBA32 w h (Path closed points) = unsafePerformIO rasterize
               bs <- imageSurfaceGetData surface
               fromByteString (Z:.h:.w) ((), bs)
 
-pathToMatrix :: (Real a, Fractional a) => Int -> Int -> Path a -> Matrix2 Float
+pathToMatrix :: Int -> Int -> Path Float -> Matrix2 Float
 pathToMatrix w h path = extractArr $ pathToRGBA32 w h path
     where extractArr arr = Delayed $ A.map extractVal $ A.use arr
           extractVal :: M.Exp RGBA32 -> M.Exp Float
@@ -181,7 +188,7 @@ translateFeather :: Num a => Path a -> Path a -> Path a
 translateFeather (Path _ path) (Path isClosed feather) = Path isClosed $ zipWith process path feather
     where process (ControlPoint p _ _) (ControlPoint f hIn hOut) = ControlPoint (p+f) hIn hOut
 
-rasterizeMask :: (Real a, Fractional a) => Int -> Int -> Mask a -> Matrix2 Float
+rasterizeMask :: Int -> Int -> Mask Float -> Matrix2 Float
 rasterizeMask w h (Mask pathRaw maybeFeather) =
     case maybeFeather of
         Nothing -> process path
@@ -231,7 +238,7 @@ rasterizeMask w h (Mask pathRaw maybeFeather) =
                       dF = M.generate (A.index2 (variable h) (variable w)) $ distance cB
                   in M.zipWith4 (\p f dp df -> (combine p f dp df)) path feather dP dF
 
-rasterizeMaskL :: (Real a, Fractional a) => Int -> Int -> Mask a -> Matrix2 Float
+rasterizeMaskL :: Int -> Int -> Mask Float -> Matrix2 Float
 rasterizeMaskL w h mask@(Mask pathRaw maybeFeather) = 
     case maybeFeather of
         Nothing -> ptm pathRaw
@@ -246,11 +253,26 @@ rasterizeMaskL w h mask@(Mask pathRaw maybeFeather) =
       p = Shader.pipe A.Clamp
       process x = rasterizer $ id `p` Filter.filter 1 vmat `p` Filter.filter 1 hmat `p` id $ fromMatrix A.Clamp x
 
-drawLines :: (Storable a, RealFrac a, Real b, Fractional b) => Int -> Int -> Path b -> Path b -> M.MImage a -> IO ()
+index2D :: M.MImage Float -> Point2 Int -> M.MValue Float
+index2D BMatrix{..} (Point2 !x !y) = M.MValue getter setter
+    where !linearIndex = toIndex canvas (y,x)
+          getter = IOV.unsafeRead  container linearIndex 
+          setter = IOV.unsafeWrite container linearIndex 
+
+toIndex :: A.DIM2 -> (Int, Int) -> Int
+toIndex (A.Z A.:. (!height) A.:. (!width)) (y, x) = y * width + x
+
+clampedIndex2D :: (Boundable (M.MImage Float) Int (M.MValue Float)) => M.MImage Float -> Point2 Int -> M.MValue Float
+clampedIndex2D obj (Point2 !x !y) = unsafeIndex2D obj $ Point2 ((x `min` maxX) `max` 0) ((y `min` maxY) `max` 0)
+    where Grid width height = boundary obj
+          maxX = width - 1
+          maxY = height - 1
+
+drawLines :: Int -> Int -> Path Float -> Path Float -> M.MImage Float -> IO ()
 drawLines width height path feather img = do
-    let array x y     = boundedIndex2D A.Clamp img $ Point2 x y
-        pathCubics    = makeCubics path
-        featherCubics = makeCubics feather
+    let array !x !y    = index2D img $ Point2 x y
+        !pathCubics    = makeCubics path
+        !featherCubics = makeCubics feather
     return ()
     goThroughSegments pathCubics featherCubics array height
 
@@ -259,79 +281,72 @@ goThroughSegments (p:ax) (f:fx) array h = do
     func array p f h
     goThroughSegments ax fx array h
 
-cubic' t p0 p1 p2 p3 = ((1.0 - t)**3)*p0 + 3*((1 - t)**2)*t*p1 + 3*(1 - t)*t*t*p2 + (t**3)*p3
+cubic' :: Float -> Float -> Float -> Float -> Float -> Float
+cubic' !t !p0 !p1 !p2 !p3 = ((1.0 - t)**3)*p0 + 3*((1 - t)**2)*t*p1 + 3*(1 - t)*t*t*p2 + (t**3)*p3
+ 
+func :: (Int -> Int -> M.MValue Float)
+     -> CubicBezier Float -> CubicBezier Float -> Int -> IO ()
+func array !pBezier !fBezier !h = do
+    let CubicBezier !pC0 !pC1 !pC2 !pC3 = pBezier
+        CubicBezier !fC0 !fC1 !fC2 !fC3 = fBezier
+        Point2 !pC0x  !pC0y' = pC0
+        Point2 !pC1x  !pC1y' = pC1
+        Point2 !pC2x  !pC2y' = pC2
+        Point2 !pC3x  !pC3y' = pC3
+        Point2 !fC0x' !fC0y' = fC0
+        Point2 !fC1x' !fC1y' = fC1
+        Point2 !fC2x' !fC2y' = fC2
+        Point2 !fC3x' !fC3y' = fC3
 
-func array pBezier fBezier h = do
-    let CubicBezier pC0 pC1 pC2 pC3 = pBezier
-        CubicBezier fC0 fC1 fC2 fC3 = fBezier
-        Point2 pC0x pC0y' = pC0
-        Point2 pC1x pC1y' = pC1
-        Point2 pC2x pC2y' = pC2
-        Point2 pC3x pC3y' = pC3
-        Point2 fC0x' fC0y' = fC0
-        Point2 fC1x' fC1y' = fC1
-        Point2 fC2x' fC2y' = fC2
-        Point2 fC3x' fC3y' = fC3
+        !pC0y = flipy pC0y'
+        !pC1y = flipy pC1y'
+        !pC2y = flipy pC2y'
+        !pC3y = flipy pC3y'
 
-        pC0y = ft $ flipy pC0y'
-        pC1y = ft $ flipy pC1y'
-        pC2y = ft $ flipy pC2y'
-        pC3y = ft $ flipy pC3y'
-
-        fC0x = fC0x' + pC0x
-        fC0y = ft $ (flipy (fC0y' + pC0y'))
-        fC1x = fC1x' + pC0x
-        fC1y = ft $ (flipy (fC1y'+ pC0y'))
-        fC2x = fC2x' + pC3x
-        fC2y = ft $ (flipy (fC2y' + pC3y'))
-        fC3x = fC3x' + pC3x
-        fC3y = ft $ (flipy (fC3y' + pC3y'))
+        !fC0x = fC0x' + pC0x
+        !fC0y = flipy (fC0y' + pC0y')
+        !fC1x = fC1x' + pC0x
+        !fC1y = flipy (fC1y'+ pC0y')
+        !fC2x = fC2x' + pC3x
+        !fC2y = flipy (fC2y' + pC3y')
+        !fC3x = fC3x' + pC3x
+        !fC3y = flipy (fC3y' + pC3y')
         
-        h' = fromIntegral h
-        flipy x = ((x - (h'/2)) * (-1)) + (h'/2)
-        ft x = fromRational (toRational x)
+        !h' = fromIntegral h
+        flipy !x = ((x - (h'/2)) * (-1)) + (h'/2)
         
-        pC0xft = ft pC0x
-        pC1xft = ft pC1x
-        pC2xft = ft pC2x
-        pC3xft = ft pC3x
-        fC0xft = ft fC0x
-        fC1xft = ft fC1x
-        fC2xft = ft fC2x
-        fC3xft = ft fC3x
-
-        lab = sqrt $ (abs (pC0xft - pC1xft))**2 + (abs (pC0y - pC1y))**2
-        lbc = sqrt $ (abs (pC1xft - pC2xft))**2 + (abs (pC1y - pC2y))**2
-        lcd = sqrt $ (abs (pC2xft - pC3xft))**2 + (abs (pC2y - pC3y))**2
-        l1   = lab + lbc + lcd
-        lab2 = sqrt $ (abs (fC0xft - fC1xft))**2 + (abs (fC0y - fC1y))**2
-        lbc2 = sqrt $ (abs (fC1xft - fC2xft))**2 + (abs (fC1y - fC2y))**2
-        lcd2 = sqrt $ (abs (fC2xft - fC3xft))**2 + (abs (fC2y - fC3y))**2
-        l2   = lab2 + lbc2 + lcd2
-        l    = (max l1 l2) * 2.1 -- magick number...
-        intl = ceiling l
+        !lab = sqrt $ (abs (pC0x - pC1x))**2 + (abs (pC0y - pC1y))**2
+        !lbc = sqrt $ (abs (pC1x - pC2x))**2 + (abs (pC1y - pC2y))**2
+        !lcd = sqrt $ (abs (pC2x - pC3x))**2 + (abs (pC2y - pC3y))**2
+        !l1   = lab + lbc + lcd
+        !lab2 = sqrt $ (abs (fC0x - fC1x))**2 + (abs (fC0y - fC1y))**2
+        !lbc2 = sqrt $ (abs (fC1x - fC2x))**2 + (abs (fC1y - fC2y))**2
+        !lcd2 = sqrt $ (abs (fC2x - fC3x))**2 + (abs (fC2y - fC3y))**2
+        !l2   = lab2 + lbc2 + lcd2
+        !l    = (max l1 l2) * 2.1 -- magick number...
+        !intl = ceiling l
 
     VU.forM_ (VU.generate intl id) $ \t' ->
-        let t = (fromIntegral t') / l
-        in lineFunc array (cubic' t pC0xft pC1xft pC2xft pC3xft) 
+        let !t = (fromIntegral t') / l
+        in lineFunc array (cubic' t pC0x pC1x pC2x pC3x) 
                           (cubic' t pC0y pC1y pC2y pC3y) 
-                          (cubic' t fC0xft fC1xft fC2xft fC3xft) 
+                          (cubic' t fC0x fC1x fC2x fC3x) 
                           (cubic' t fC0y fC1y fC2y fC3y)
 
-lineFunc array x1 y1 x2 y2 = do
-    let vecxraw = x2 - x1
-        vecyraw = y2 - y1
-        l       = sqrt $ (vecxraw)**2 + (vecyraw)**2
-        ftl     = fromRational (toRational l)
-        intl    = ceiling l
+lineFunc :: (Int -> Int -> M.MValue Float) -> Float -> Float -> Float -> Float -> IO ()
+lineFunc array !x1 !y1 !x2 !y2 = do
+    let !vecxraw = x2 - x1
+        !vecyraw = y2 - y1
+        !l       = sqrt $ (vecxraw)**2 + (vecyraw)**2
+        !intl    = ceiling l
     VU.forM_ (VU.generate intl id) $ \y ->
-        let vecx    = move * vecxraw
-            vecy    = move * vecyraw
-            move    = t / l
-            t       = fromIntegral y
-            newvecx = ceiling $ vecx + x1
-            newvecy = ceiling $ vecy + y1
-        in array newvecx newvecy M.$= 1.0 - (t / ftl)
+        let !vecx    = move * vecxraw
+            !vecy    = move * vecyraw
+            !move    = t / l
+            !t       = fromIntegral y
+            !newvecx = ceiling $ vecx + x1
+            !newvecy = ceiling $ vecy + y1
+        in array newvecx newvecy M.$= 1.0 - move
 
 
 matrixToImage :: Matrix2 Float -> Image
