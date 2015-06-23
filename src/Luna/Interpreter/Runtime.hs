@@ -10,5 +10,12 @@ module Luna.Interpreter.Runtime (
     module X
 ) where
 
-import Luna.Interpreter.Runtime.HMap  as X (T, HMap, HKey, insert, createKey)
---import Luna.Interpreter.Runtime.HKey  as X (T, HMap, HKey, insert, createKey)
+import           Luna.Interpreter.Runtime.Hash as X
+import           Luna.Interpreter.Runtime.HMap as X (HKey, HMap, T)
+import qualified Luna.Interpreter.Runtime.HMap as HMap
+
+
+
+hmapCreateKey = HMap.createKey
+hmapInsert    = HMap.insert
+hmapLookup    = HMap.lookup
