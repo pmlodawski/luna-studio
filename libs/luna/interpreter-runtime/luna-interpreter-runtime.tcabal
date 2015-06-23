@@ -20,4 +20,6 @@ Library
     Exposed-modules: `findmodules('src', '.*\.hs')`
 
     Build-Depends:  base,
-                    HMap
+                    data-hash,
+                    HMap,
+                    luna-target-ghchs

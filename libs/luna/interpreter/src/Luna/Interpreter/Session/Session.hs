@@ -71,7 +71,6 @@ initialize config imports = do
                    }
     setHardcodedExtensions
     setImports $ "Data.Word"
-               : "Flowbox.Data.Hash"
                : "Flowbox.Serialization"
                : "Luna.Target.HS"
                : "Luna.Interpreter.Runtime"
