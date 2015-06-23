@@ -205,10 +205,13 @@ evalFunction nodeExpr callDataPath varNames = do
         Expression  name -> return   name
     time <- Env.getTimeVar
     catchEither (left . Error.RunError $(loc) callPointPath) $ do
-        
+
         exprType <- lift2 $ Typecheck.typeOf operation
-        Session.runStmt $ VarName.toString (VarName callPointPath def) <> " <- createKey :: HKey T (" <> exprType <> ")"
-        
+        let varName =  VarName.toString (VarName callPointPath def)
+        Session.runStmt $ varName <> " <- hmapCreateKey :: IO (HKey T (" <> exprType <> "))"
+        putStrLn =<< lift2 (Typecheck.typeOf $ "\\hmap -> hmapInsert " <> varName <> " (" <> operation <> ") hmap")
+        putStrLn =<< lift2 (Typecheck.typeOf $ "\\hmap mode time -> let Just v = hmapLookup " <> varName <> " hmap in (flip computeValue mode =<< toIOEnv (fromValue (v time)))" )
+        --mode -> fmap (flip computeValue mode) .
 
         Session.runAssignment tmpVarName operation
         Session.runStmt $ "_ <- toIOEnv $ fromValue $ " <> tmpVarName <> " (" <> show time <> ")"
