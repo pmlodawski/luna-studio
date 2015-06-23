@@ -558,6 +558,7 @@ infixr 2 $=
 ($=) = set
 
 instance Storable a => Boundable (MImage a) Int (MValue a) where
+    {-# SPECIALIZE instance Boundable (MImage Float) Int (MValue Float) #-}
     unsafeIndex2D BMatrix{..} (Cartesian.Point2 x y) = MValue getter setter
         where linearIndex = Sugar.toIndex canvas (A.Z A.:. y A.:. x)
               getter = unsafeRead container linearIndex
