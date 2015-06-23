@@ -15,8 +15,10 @@ module Flowbox.Graphics.Mockup.Generator (
     constantLuna,
     diamondLuna,
     formatMap,
+    fromBinary,
     gradientLuna,
     linearShapeLuna,
+    maskFromBinary,
     radialShapeLuna,
     rotoLuna,
     rotoLunaB,
@@ -210,5 +212,17 @@ rotoLuna input mask format premult premultAlpha = (if premult then premultiplyLu
         in Image.appendToPrimary a input
 
 
+-- experimental ---------
+
 rotoLunaB :: Image -> String -> Format -> Bool -> Bool -> Image
 rotoLunaB input mask = rotoLuna input (Binary.decode (fromString mask) :: Mask Float)
+
+
+fromBinary :: Binary.Binary a => String -> a
+fromBinary = Binary.decode . fromString
+
+
+maskFromBinary :: String -> Mask Float
+maskFromBinary = fromBinary
+
+-------------------------

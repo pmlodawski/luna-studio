@@ -49,5 +49,13 @@ foreign haskell def square side:
 foreign haskell def Image.roto mask format premultiply alpha:
     liftF5 rotoLuna self mask format premultiply alpha
 
+# experimental ###################
+
 foreign haskell def Image.rotoB mask format premultiply alpha:
     liftF5 rotoLunaB self mask format premultiply alpha
+
+foreign haskell def fromBinary b : liftF1 fromBinary b
+
+foreign haskell def maskFromBinary b : liftF1 maskFromBinary b
+
+##################################

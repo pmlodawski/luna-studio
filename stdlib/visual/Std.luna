@@ -423,6 +423,8 @@ alias BinaryMask = String
 
 def Image.rotoB self::Image mask::BinaryMask format::Format premultiply::Bool alpha::Bool -> Image
 
+def maskFromBinary mask::BinaryMask -> Mask Float
+
 # COLORS
 
 class ```RGBA``` a:
