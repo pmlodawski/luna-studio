@@ -20,6 +20,7 @@ import           GHC.Generics (Generic)
 
 import           Control.Applicative          ((<$>), (<*>))
 import           Control.Error                hiding (err)
+import           Control.Lens
 import           Control.Lens.Operators
 import           Control.Monad                (forM_, when)
 import           Control.Monad.Loops
@@ -44,20 +45,33 @@ toVec (CubicBezier c0 c1 c2 c3) = V.fromList [c0, c1, c2, c3]
 
 data Openness = Open | Closed
 	deriving (Show, Generic)
-	
+
 instance Binary Openness
+
+type ControlPoint = (V2 Float, V2 Float, V2 Float)
 
 -- main function in this module
 
-fitCurve :: [V2 Float] -> Float -> Openness -> [CubicBezier Float]
+fitCurve :: [V2 Float] -> Float -> Openness -> [ControlPoint]
 fitCurve points err openness = case openness of
-    Open   -> V.toList $ fitCubic points' tHat1 tHat2 err
-    Closed -> (V.head $ fitCubic (V.fromList [head points, last points]) tHat1 tHat2 err) : fitCurve points err Open
+    Open   -> beziersToFullControlPoints $ V.toList $ fitCubic points' tHat1 tHat2 err
+    Closed -> let linkingBezier = V.head $ fitCubic (V.fromList [last points, head points]) (negated tHat2) (negated tHat1) err
+                  CubicBezier _ lastPointHo firstPointHi _ = linkingBezier
+                  controlPoints = fitCurve points err Open
+                  firstControlPoint = head controlPoints & _2 .~ firstPointHi
+                  lastControlPoint = last controlPoints & _3 .~ lastPointHo
+                  middleControlPoints = (init . tail) controlPoints
+              in firstControlPoint : middleControlPoints ++ [lastControlPoint]
     where
         points' = V.fromList points
         len = V.length points'
         tHat1 = computeLeftTangent points' 0
         tHat2 = computeRightTangent points' $ len - 1
+
+beziersToFullControlPoints beziers = map snd $ tail . tail $ scanl (\(prevhi,_) (CubicBezier point1 ho hi point2) -> (hi,(point1,prevhi,ho))) (0.0, (firstPoint,dummyHandle,firstPointHo)) beziers where
+    CubicBezier firstPoint firstPointHo _ _ = head beziers
+    dummyHandle = V2 0 0
+    CubicBezier _ _ lastPointHi lastPoint = last beziers
 
 fitCubic :: V.Vector (V2 Float) -> V2 Float -> V2 Float -> Float -> V.Vector (CubicBezier Float)
 fitCubic points tHat1 tHat2 err
@@ -361,5 +375,5 @@ curry3 :: (a -> b -> c -> d) -> (a, b, c) -> d
 curry3 f (a, b, c) = f a b c
 
 
---test :: Float -> [[Float]] -> String
---test err input = jsifyVector jsifyBezier $ fitCurve (readPoints input) err
+-- test :: Float -> [[Float]] -> String
+-- test err input = jsifyVector jsifyBezier $ V.fromList $ fitCurve (V.toList $ readPoints input) err Closed
