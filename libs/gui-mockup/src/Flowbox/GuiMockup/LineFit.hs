@@ -56,7 +56,7 @@ type ControlPoint = (V2 Float, V2 Float, V2 Float)
 fitCurve' :: [V2 Float] -> Float -> Openness -> [CubicBezier Float]
 fitCurve' points err openness = case openness of
     Open   -> V.toList $ fitCubic points' tHat1 tHat2 err
-    Closed -> (V.head $ fitCubic (V.fromList [head points, last points]) tHat1 tHat2 err) : fitCurve points err Open
+    Closed -> (V.head $ fitCubic (V.fromList [head points, last points]) tHat1 tHat2 err) : fitCurve' points err Open
     where
         points' = V.fromList points
         len = V.length points'
