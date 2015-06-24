@@ -35,12 +35,12 @@ guiLineSnap originalCurveControlPoints pointBefore pointAfter strokePoints error
 moveCurveToStroke :: [CubicBezier Float] -> [V2 Float] -> Float -> [CubicBezier Float]
 moveCurveToStroke originalCurve strokePoints errorParameter = V.toList $ optimizeBeziers (V.fromList originalCurve) (V.fromList strokeAproximation)
     where
-        strokeAproximation = fitCurve strokePoints errorParameter Open
+        strokeAproximation = fitCurve' strokePoints errorParameter Open
 
 moveCurveToStroke' :: [CubicBezier Float] -> Maybe ControlPoint -> Maybe ControlPoint -> [V2 Float] -> Float -> [CubicBezier Float]
 moveCurveToStroke' originalCurve pointBefore pointAfter strokePoints errorParameter = V.toList $ optimizeBeziers' (V.fromList originalCurve) pointBefore pointAfter (V.fromList strokeAproximation)
     where
-        strokeAproximation = fitCurve strokePoints errorParameter Open
+        strokeAproximation = fitCurve' strokePoints errorParameter Open
 
 optimizeBeziers :: V.Vector (CubicBezier Float) -> V.Vector (CubicBezier Float) -> V.Vector (CubicBezier Float) -- V.Vector (V2 Float, V2 Float, V2 Float)
 optimizeBeziers original strokeAproximation =

@@ -1,6 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE ViewPatterns        #-}
-{-# LANGUAGE DeriveGeneric		 #-}
+{-# LANGUAGE DeriveGeneric       #-}
 
 module Flowbox.GuiMockup.LineFit
     (
@@ -8,6 +8,7 @@ module Flowbox.GuiMockup.LineFit
     , Openness(..)
     , generateBezier
     , fitCurve
+    , fitCurve'
     , chordLengthParameterize
     , reparameterize
 --    , test
@@ -51,6 +52,16 @@ instance Binary Openness
 type ControlPoint = (V2 Float, V2 Float, V2 Float)
 
 -- main function in this module
+
+fitCurve' :: [V2 Float] -> Float -> Openness -> [CubicBezier Float]
+fitCurve' points err openness = case openness of
+    Open   -> V.toList $ fitCubic points' tHat1 tHat2 err
+    Closed -> (V.head $ fitCubic (V.fromList [head points, last points]) tHat1 tHat2 err) : fitCurve points err Open
+    where
+        points' = V.fromList points
+        len = V.length points'
+        tHat1 = computeLeftTangent points' 0
+        tHat2 = computeRightTangent points' $ len - 1
 
 fitCurve :: [V2 Float] -> Float -> Openness -> [ControlPoint]
 fitCurve points err openness = case openness of
