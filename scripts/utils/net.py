@@ -27,8 +27,11 @@ def download(url, path):
         print_info("File %s already exists. Skipping download." % path)
         return
 
-    scontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
-    u = urllib2.urlopen(url, context=scontext)
+    try:
+        scontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+        u = urllib2.urlopen(url, context=scontext)
+    except AttributeError:
+        u = urllib2.urlopen(url)
 
     make_dirs_if_needed(os.path.dirname(path))
     f = open(path, 'wb')
