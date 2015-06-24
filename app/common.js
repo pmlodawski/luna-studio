@@ -1,4 +1,5 @@
 var THREE = require('three');
+var $ = require('jquery');
 
 var commonUniforms =  {
   camPan: {type: 'v2',value: new THREE.Vector2(0.0, 0.0)},
@@ -15,3 +16,10 @@ module.exports = {
   camFactorBounds: [0.2, 4],
   camPan: commonUniforms.camPan.value
 };
+
+$(document).ready(function(){
+  module.exports.htmlCanvasPan = $("#htmlcanvas-pan");
+  module.exports.htmlCanvas = $("#htmlcanvas");
+});
+
+window.$$ = module.exports;

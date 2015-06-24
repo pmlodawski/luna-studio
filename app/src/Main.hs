@@ -37,7 +37,7 @@ import qualified Mouse.Event
 
 reactKey :: Char -> IO ()
 reactKey keyCode = case keyCode of
-  'u' -> unselectAllNodes -- not working properly
+  '\^[' -> unselectAllNodes -- not working properly
   _   -> return ()
 
 -- moveNode :: MouseHandled -> Point -> IO ()

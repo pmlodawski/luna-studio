@@ -1,5 +1,6 @@
 var THREE = require('three');
-var common = require('./common');
+var $ = require('jquery');
+var $$ = require('./common');
 
 var createText = require('three-bmfont-text');
 var font = require("./font/LatoBlack-sdf");
@@ -11,7 +12,7 @@ var utils = require('./utils');
 
 var textMaterial = new THREE.ShaderMaterial(require('./shaders/font')({
   map: THREE.ImageUtils.loadTexture('font/LatoBlack-sdf.png'),
-  smooth: 1/16,
+  smooth: 1/12,
   side: THREE.DoubleSide, 
   transparent: true,
   color: 'rgb(230, 230, 230)'
@@ -41,8 +42,8 @@ function FunctionNode(id, position){
       selected: { type: "i", value: 0 }
   };
   
-  Object.keys(common.commonUniforms).forEach(function(k) { // copy common uniforms
-    _this.uniforms[k] = common.commonUniforms[k];
+  Object.keys($$.commonUniforms).forEach(function(k) { // copy common uniforms
+    _this.uniforms[k] = $$.commonUniforms[k];
   });
   
   this.mesh = new THREE.Mesh(
@@ -57,23 +58,28 @@ function FunctionNode(id, position){
       })
   );
   this.mesh.userData.id = id;
+  this.htmlContainer = $('<div/>');
+  $$.htmlCanvas.append(this.htmlContainer);
+
+  this.htmlElements = {};
   this.moveTo(position.x, position.y);
   
   this.updateLabel();
-  // console.log(this)
-  // var text = renderText("# " + i)
-  // text.position.z = 0.00009
-  // text.position.x = -20
-  // nodes[i].add(text)
 }
 
 FunctionNode.prototype.selected = function(val) {
   if(val !== undefined) {
     this.uniforms.selected.value = val;
     switch(val){
-      case 0: this.label(":"+this.id); break;
-      case 1: this.label("o_o"); break;
-      case 2: this.label("^-^"); break;
+      // case 0: this.label(":"+this.id); break;
+      // case 1: this.label("o_o"); break;
+      case 2: {
+        this.showLabelEditor();
+        break;
+      }
+      default: {
+        break;
+      }
     }
   }
   return this.uniforms.selected.value;
@@ -89,6 +95,7 @@ FunctionNode.prototype.moveTo = function(a, b) {
   this.mesh.position.y = vec.y;
   
   this.attributes.pos.needsUpdate = true;
+  this.htmlContainer.css({left: vec.x, top: -vec.y});
 };
 
 FunctionNode.prototype.zPos = function(z) {
@@ -113,18 +120,69 @@ FunctionNode.prototype.updateLabel = function() {
   var geom = createText({
     text: this.labelText,
     font: font,
-    width: 700,
+    width: 100/0.35,
+    align: 'center'
   });
   
   var obj = new THREE.Mesh(geom, textMaterial);
   obj.rotation.x = 180 * Math.PI/180;
-  obj.scale.multiplyScalar(0.5);
+  obj.scale.multiplyScalar(0.35);
+  obj.position.x = -50;
   obj.position.z = 0.0001;
-  obj.position.x = -20;
-  obj.position.y = -5;
+  obj.position.y = 35;
   
   this.labelObject = obj;
   this.mesh.add(obj);
+};
+
+FunctionNode.prototype.showLabelEditor = function() {
+  if(this.htmlElements.labelEditor) return;
+  var editor = $('<input/>').css({left: -50, top: -52, width: 100, textAlign: 'center'});
+  editor.val(this.labelText);
+  this.htmlElements.labelEditor = editor;
+  this.htmlContainer.append(editor);
+  
+  this.mesh.remove(this.labelObject);
+  this.labelObject = null;
+  var _this = this;
+  setTimeout(function(){
+    editor.focus();
+    editor.blur(function(ev){
+        _this.label(_this.hideLabelEditor());
+    });
+  }, 50);
+};
+
+FunctionNode.prototype.renderExamplePlot = function() {
+
+  var svg = d3.select(this.htmlContainer[0])
+      .append("svg")
+      .attr("width", 400)
+      .attr("height", 250);
+  var i;
+  data = [];
+  for(i = 0; i < 12; i++) {
+    data[2*i] = {"Month": i, "Unit Sales": Math.random()*30, "Channel": "direct"};
+    data[2*i+1] = {"Month": i, "Unit Sales": Math.random()*30, "Channel": "web"};
+  }
+
+  var myChart = new dimple.chart(svg, data);
+  var x = myChart.addCategoryAxis("x", "Month");
+  x.addOrderRule("Date");
+  myChart.addMeasureAxis("y", "Unit Sales");
+  myChart.addSeries("Channel", dimple.plot.bubble);
+  myChart.addLegend(180, 10, 360, 20, "right");
+  myChart.draw();  
+};
+
+FunctionNode.prototype.hideLabelEditor = function() {
+  var editor = this.htmlElements.labelEditor;
+  var value = editor[0].value;
+  console.log("Entered: " + value);
+  editor.off();
+  editor.remove();
+  this.htmlElements.labelEditor = null;
+  return value;
 };
 
 module.exports.FunctionNode = FunctionNode;

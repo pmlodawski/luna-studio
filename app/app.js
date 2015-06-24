@@ -7,7 +7,7 @@ var config = require('./config');
 var utils = require('./utils');
 
 var nodes = {};    // array of nodes with nodes
-
+$$.nodes = nodes;
 var draggedIndex;   // index of object being dragged
 var dragging;       // indicates whether node is being dragged
 
@@ -103,7 +103,7 @@ function setup_pan_and_zoom() {
 
   $(document).mouseup(function(event) {
     dragMode = null;
-    event.preventDefault();
+    // event.preventDefault();
   });
 }
 
@@ -125,8 +125,8 @@ function updateCamFactor(val) {
 }
 
 function reconfigure_camera() {
-  $("#inputcanvas").css({left: $$.halfScreen.x-$$.camPan.x*$$.camFactor.value, top: $$.halfScreen.y+$$.camPan.y*$$.camFactor.value});
-  $("#zoomcanvas").css({zoom: $$.camFactor.value});
+  $$.htmlCanvasPan.css({left: $$.halfScreen.x - $$.camPan.x * $$.camFactor.value, top: $$.halfScreen.y + $$.camPan.y * $$.camFactor.value});
+  $$.htmlCanvas.css({zoom: $$.camFactor.value});
 
   $$.camera.left = - $$.halfScreen.x / $$.camFactor.value + $$.camPan.x;
   $$.camera.right = $$.halfScreen.x / $$.camFactor.value + $$.camPan.x;
