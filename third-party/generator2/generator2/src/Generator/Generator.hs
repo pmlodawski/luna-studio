@@ -712,7 +712,7 @@ prepareDeserializeMethodBase cls@(CppClass clsName _ _ _ tmpl _) derClasses =
                 let conName = (derClasses !! 0) ^. className
                 in [returnDeserialize conName]
                else
-                [ "auto constructorIndex = readInt8(input);"
+                [ "auto constructorIndex = binary::readInt8(input);"
                 , "switch(constructorIndex)"
                 , "{"
                 ] <> cases <>
@@ -731,7 +731,7 @@ deserializeField :: CppField -> Q String
 deserializeField field@(CppField fieldName fieldType fieldSrc) = do
     collapsedMaybe <- isCollapsedMaybePtr (hsType fieldSrc)
     let fname = if collapsedMaybe then "deserializeMaybe" else "deserialize"
-    return $ printf "\t::%s(this->%s, input);" fname fieldName
+    return $ printf "\tbinary::%s(this->%s, input);" fname fieldName
 
 deserializeReturnSharedType :: CppClass -> String
 deserializeReturnSharedType cls@(CppClass clsName _ _ _ tmpl _) =
@@ -768,7 +768,7 @@ serializeField :: CppField -> Q String
 serializeField field@(CppField fieldName fieldType fieldSrc) = do
     collapsedMaybe <- isCollapsedMaybePtr (hsType fieldSrc)
     let fname = if collapsedMaybe then "serializeMaybe" else "serialize"
-    return $ printf "\t::%s(this->%s, output);" fname fieldName
+    return $ printf "\tbinary::%s(this->%s, output);" fname fieldName
 
 initializingCtor :: String -> [CppField] -> CppMethod
 initializingCtor n fields = CppMethod (CppFunction n "" args body) [] Usual where
@@ -801,7 +801,7 @@ processConstructor dec@(DataD cxt name tyVars cons names) con =
         serializeFieldsLines <- sequence $ (serializeField <$> cppFields)
 
         -- Omit constructor index if there is only one constructor
-        let serializeConIndex = if length cons == 1 then [] else [printf "\t::serialize(std::int8_t(%d), output);" index] :: [String]
+        let serializeConIndex = if length cons == 1 then [] else [printf "\tbinary::serialize(std::int8_t(%d), output);" index] :: [String]
         let serializeCode = intercalate "\n" (serializeConIndex <> serializeFieldsLines)
             serializeFn   = CppFunction "serialize" "void" [CppArg "output" "Output &"] serializeCode
             --serializeField field = printf "\t::serialize(%s, output);" (fieldName field) :: String
@@ -812,12 +812,15 @@ processConstructor dec@(DataD cxt name tyVars cons names) con =
 
         let defaultCtor = CppMethod (CppFunction derCppName "" [] "") [] Usual
         let initCtor = initializingCtor derCppName cppFields
+        -- The initializing ctor should be used only if there are some fields
+        -- otherwise the intializing ctor would duplicate the default ctor
+        let ctors =  if null cppFields then [defaultCtor] else [defaultCtor, initCtor]
 
         let whichMethod =
                 let whichFn = whichFunction baseCppName tnames ("\treturn " <> (templateDepNameBase baseCppName tnames) <> "::" <> prettyConName <> ";")
                 in CppMethod whichFn [OverrideQualifier] Virtual
 
-        let methods = [defaultCtor, initCtor, serializeMethod, deserializeMethod, deserializeFromMethod, whichMethod]
+        let methods = ctors <> [serializeMethod, deserializeMethod, deserializeFromMethod, whichMethod]
         return $ CppClass derCppName cppFields methods baseClasses tnames []
 processConstructor dec arg = trace ("FIXME: Con for " <> show arg) (return $ CppClass "" [] [] [] [] [])
 

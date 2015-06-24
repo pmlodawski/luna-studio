@@ -58,7 +58,7 @@ indent level text = unlines $ ((<>) $ replicate level '\t') <$> (lines text)
 
 generateCppWrapperBody :: String -> [String] -> String -> String
 generateCppWrapperBody ffiName argNames retType = body where
-    serializeCalls = intercalate "\n" $ printf "serialize(%s, out);" <$> argNames
+    serializeCalls = intercalate "\n" $ printf "binary::serialize(%s, out);" <$> argNames
     resultDecl = printf "%s result;" retType
     body = indent 1 $ [string|    
                std::ostringstream out;
@@ -78,7 +78,7 @@ generateCppWrapperBody ffiName argNames retType = body where
                 
                imemstream memstream((char*)resultptr, bufferSize);
 
-               deserialize(result, memstream);
+               binary::deserialize(result, memstream);
 
                hsfree(resultptr);
                return result;
