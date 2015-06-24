@@ -10,6 +10,8 @@ module Luna.Interpreter.Session.Env.Env where
 
 import           Control.Concurrent.MVar     (MVar)
 import qualified Control.Concurrent.MVar     as MVar
+import           Data.HMap                   (HMap)
+import qualified Data.HMap                   as HMap
 import           Data.IntSet                 (IntSet)
 import           Data.Map                    (Map)
 import           Data.MultiSet               (MultiSet)
@@ -37,37 +39,81 @@ import           Luna.Interpreter.Session.ProfileInfo        (ProfileInfo)
 import           Luna.Interpreter.Session.TargetHS.Reload    (ReloadMap)
 
 
+
 type ResultCallBack = Project.ID -> CallPointPath -> [ModeValue] -> Time -> IO ()
 type FragileMVar    = MVar ()
 
 
-data Env memoryManager = Env { _compiled           :: MapForest CallPoint CompiledNode
-                             , _cached             :: MapForest CallPoint CacheInfo
-                             , _watchPoints        :: SetForest CallPoint
-                             , _reloadMap          :: ReloadMap
-                             , _allReady           :: Bool
-                             , _fragileOperation   :: FragileMVar
-                             , _dependentNodes     :: Map CallPoint IntSet
-                             , _cpphsOptions       :: Cpphs.CpphsOptions
-                             , _profileInfos       :: MapForest CallPoint ProfileInfo
-                             , _compileErrors      :: MapForest CallPoint Error
+data Env memoryManager = Env
+    { _sessionStatus :: SessionStatus
+    , _sessionConfig :: SessionConfig memoryManager
+    , _sessionData   :: SessionData
+    , _projectData   :: ProjectData
+    }
 
-                             , _timeVar            :: Time
-                             , _timeRefs           :: Set CallPoint
+data SessionStatus = SessionStatus
+    { _allReady         :: Bool
+    , _fragileOperation :: FragileMVar
+    }
 
-                             , _serializationModes :: MapForest CallPoint (MultiSet Mode)
-                             , _memoryConfig       :: Memory.Config
-                             , _memoryManager      :: memoryManager
+data SessionConfig memoryManager = SessionConfig
+    { _cpphsOptions   :: Cpphs.CpphsOptions
+    , _memoryConfig   :: Memory.Config
+    , _memoryManager  :: memoryManager
+    , _resultCallBack :: ResultCallBack
+    }
 
-                             , _libManager         :: LibManager
-                             , _projectID          :: Maybe Project.ID
-                             , _mainPtr            :: Maybe DefPoint
-                             , _resultCallBack     :: ResultCallBack
-                             }
+data SessionData = SessionData
+    { _expressions        :: HMap
+    , _compiled           :: MapForest CallPoint CompiledNode
+    , _cached             :: MapForest CallPoint CacheInfo
+    , _watchPoints        :: SetForest CallPoint
+    , _reloadMap          :: ReloadMap
+    , _dependentNodes     :: Map CallPoint IntSet
+    , _timeVar            :: Time
+    , _timeRefs           :: Set CallPoint
+    , _serializationModes :: MapForest CallPoint (MultiSet Mode)
+    , _profileInfos       :: MapForest CallPoint ProfileInfo
+    , _compileErrors      :: MapForest CallPoint Error
+    }
+
+data ProjectData = ProjectData
+    { _projectID  :: Maybe Project.ID
+    , _libManager :: LibManager
+    , _mainPtr    :: Maybe DefPoint
+    }
 
 
 makeLenses ''Env
+makeLenses ''SessionData
+makeLenses ''SessionConfig
+makeLenses ''SessionStatus
+makeLenses ''ProjectData
 
+
+instance Default SessionData where
+    def = SessionData
+        {- expressions        -} HMap.empty
+        {- compiled           -} def
+        {- cached             -} def
+        {- watchPoints        -} def
+        {- reloadMap          -} def
+        {- dependentNodes     -} def
+        {- timeVar            -} def
+        {- timeRefs           -} def
+        {- serializationModes -} def
+        {- profileInfos       -} def
+        {- compileErrors      -} def
+
+mkSessionStatus :: IO SessionStatus
+mkSessionStatus = SessionStatus False <$> MVar.newMVar ()
+
+mkSessionConfig :: Config -> memoryManager -> ResultCallBack -> SessionConfig memoryManager
+mkSessionConfig config memoryManager resultCallBack =
+    SessionConfig (mkCpphsOptions config)
+                  def
+                  memoryManager
+                  resultCallBack
 
 mkCpphsOptions :: Config -> Cpphs.CpphsOptions
 mkCpphsOptions config = Cpphs.CpphsOptions [] [] [] []
@@ -75,33 +121,14 @@ mkCpphsOptions config = Cpphs.CpphsOptions [] [] [] []
                             Cpphs.defaultBoolOptions { Cpphs.locations = False }
 
 
+
 mk :: Config -> memoryManager -> LibManager -> Maybe Project.ID -> Maybe DefPoint
    -> ResultCallBack -> IO (Env memoryManager)
-mk config memoryManager' libManager' projectID' mainPtr' resultCallBack' = do
-    fo <- MVar.newMVar ()
-    return $ Env { _compiled         = def
-                 , _cached           = def
-                 , _watchPoints      = def
-                 , _reloadMap        = def
-                 , _allReady         = False
-                 , _fragileOperation = fo
-                 , _dependentNodes   = def
-                 , _cpphsOptions     = mkCpphsOptions config
-                 , _profileInfos     = def
-                 , _compileErrors    = def
-
-                 , _timeVar          = def
-                 , _timeRefs         = def
-
-                 , _serializationModes = def
-                 , _memoryConfig       = def
-                 , _memoryManager      = memoryManager'
-
-                 , _libManager     = libManager'
-                 , _projectID      = projectID'
-                 , _mainPtr        = mainPtr'
-                 , _resultCallBack = resultCallBack'
-                 }
+mk config memoryManager' libManager' projectID' mainPtr' resultCallBack' =
+    Env <$> mkSessionStatus
+        <*> pure (mkSessionConfig config memoryManager' resultCallBack')
+        <*> pure def
+        <*> pure (ProjectData projectID' libManager' mainPtr')
 
 
 mkDef :: Config -> memoryManager -> IO (Env memoryManager)

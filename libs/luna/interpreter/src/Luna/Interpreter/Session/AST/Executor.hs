@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
+{-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell   #-}
 {-# LANGUAGE TupleSections     #-}
@@ -40,6 +41,7 @@ import qualified Luna.Interpreter.Session.Data.CallData     as CallData
 import           Luna.Interpreter.Session.Data.CallDataPath (CallDataPath)
 import qualified Luna.Interpreter.Session.Data.CallDataPath as CallDataPath
 import           Luna.Interpreter.Session.Data.CallPoint    (CallPoint)
+import           Luna.Interpreter.Session.Data.CompiledNode (CompiledNode (CompiledNode))
 import           Luna.Interpreter.Session.Data.VarName      (VarName (VarName))
 import qualified Luna.Interpreter.Session.Data.VarName      as VarName
 import qualified Luna.Interpreter.Session.Debug             as Debug
@@ -47,6 +49,7 @@ import qualified Luna.Interpreter.Session.Env               as Env
 import           Luna.Interpreter.Session.Error             (Error, mapError)
 import qualified Luna.Interpreter.Session.Error             as Error
 import qualified Luna.Interpreter.Session.Hash              as Hash
+import qualified Luna.Interpreter.Session.Hint.Eval         as HEval
 import qualified Luna.Interpreter.Session.Hint.Typecheck    as Typecheck
 import           Luna.Interpreter.Session.Memory.Manager    (MemoryManager)
 import qualified Luna.Interpreter.Session.Memory.Manager    as Manager
@@ -182,48 +185,70 @@ evalFunction :: MemoryManager mm
              => NodeExpr -> CallDataPath -> [VarName] -> Session mm VarName
 evalFunction nodeExpr callDataPath varNames = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
-        tmpVarName    = "_tmp"
-        mkArg arg = "(" <> VarName.toString arg <> " _time)"
-        args      = map mkArg varNames
-        appArgs a = if null a then "" else " $ appNext " <> List.intercalate " $ appNext " (reverse a)
-        genNative = List.replaceByMany "#{}" args . List.stripIdx 3 3
-        self      = head varNames
-    vt <- varType nodeExpr
-    operation <- ("\\(_time :: Float) -> " <>) . Utils.replace "\\" "\\\\" <$> case vt of
-        List        -> return $ "val [" <> List.intercalate "," args <> "]"
-        Id          -> return $ mkArg self
-        Native name -> return $ genNative name
-        Con    name -> return $ "call" <> appArgs args <> " $ cons_" <> nameHash name
-        Var    name -> if null args
-            then left $ Error.OtherError $(loc) "unsupported node type"
-            else return $ "call" <> appArgs (tail args) <> " $ member (Proxy::Proxy " <> show (nameHash name) <> ") " <> mkArg self
-        LitInt   name    -> return $ "val (" <> name <> " :: Int)"
-        LitFloat name    -> return $ "val (" <> name <> " :: Float)"
-        Lit      name    -> return $ "val  " <> name
-        Tuple            -> return $ "val (" <> List.intercalate "," args <> ")"
-        TimeVar          -> return   "val _time"
-        Expression  name -> return   name
-    time <- Env.getTimeVar
-    catchEither (left . Error.RunError $(loc) callPointPath) $ do
+        varName = VarName callPointPath def
+    prettyPrint (nodeExpr, callPointPath)
+    Env.compiledLookup callPointPath >>= \case
+        Just (CompiledNode update getValue) -> do
+            Env.updateExpressions update
+            print "compiled"
+        Nothing -> do
+            let tmpVarName    = "_tmp"
+                mkArg arg = "(" <> VarName.toString arg <> " _time)"
+                args      = map mkArg varNames
+                appArgs a = if null a then "" else " $ appNext " <> List.intercalate " $ appNext " (reverse a)
+                genNative = List.replaceByMany "#{}" args . List.stripIdx 3 3
+                self      = head varNames
+            vt <- varType nodeExpr
+            operation <- ("\\(_time :: Float) -> " <>) . Utils.replace "\\" "\\\\" <$> case vt of
+                List        -> return $ "val [" <> List.intercalate "," args <> "]"
+                Id          -> return $ mkArg self
+                Native name -> return $ genNative name
+                Con    name -> return $ "call" <> appArgs args <> " $ cons_" <> nameHash name
+                Var    name -> if null args
+                    then left $ Error.OtherError $(loc) "unsupported node type"
+                    else return $ "call" <> appArgs (tail args) <> " $ member (Proxy::Proxy " <> show (nameHash name) <> ") " <> mkArg self
+                LitInt   name    -> return $ "val (" <> name <> " :: Int)"
+                LitFloat name    -> return $ "val (" <> name <> " :: Float)"
+                Lit      name    -> return $ "val  " <> name
+                Tuple            -> return $ "val (" <> List.intercalate "," args <> ")"
+                TimeVar          -> return   "val _time"
+                Expression  name -> return   name
+            time <- Env.getTimeVar
+            catchEither (left . Error.RunError $(loc) callPointPath) $ do
+                putStrLn operation
+                exprType <- lift2 $ Typecheck.typeOf operation
+                putStrLn "==== 1"
+                let varNameStr =  VarName.toString (VarName callPointPath def)
+                Session.runStmt $ varNameStr <> " <- hmapCreateKey :: IO (HKey T (" <> exprType <> "))"
 
-        exprType <- lift2 $ Typecheck.typeOf operation
-        let varName =  VarName.toString (VarName callPointPath def)
-        Session.runStmt $ varName <> " <- hmapCreateKey :: IO (HKey T (" <> exprType <> "))"
-        putStrLn =<< lift2 (Typecheck.typeOf $ "\\hmap -> hmapInsert " <> varName <> " (" <> operation <> ") hmap")
-        putStrLn =<< lift2 (Typecheck.typeOf $ "\\hmap mode time -> let Just v = hmapLookup " <> varName <> " hmap in (flip computeValue mode =<< toIOEnv (fromValue (v time)))" )
-        --mode -> fmap (flip computeValue mode) .
+                update <- lift2 $ HEval.interpret $ "\\hmap -> hmapInsert " <> varNameStr <> " (" <> operation <> ") hmap"
+                Env.compiledInsert callPointPath $ CompiledNode update Nothing
+                Env.updateExpressions update
 
-        Session.runAssignment tmpVarName operation
-        Session.runStmt $ "_ <- toIOEnv $ fromValue $ " <> tmpVarName <> " (" <> show time <> ")"
-        hash <- Hash.computeInherit tmpVarName varNames
-        let varName = VarName callPointPath hash
-        Session.runAssignment (VarName.toString varName) tmpVarName
-        lift2 $ Bindings.remove tmpVarName
-        Cache.put callDataPath varNames varName
-        Value.reportIfVisible callPointPath
-        Manager.reportUseMany varNames
-        Manager.reportUse varName
-        return varName
+                ---- update
+                --putStrLn =<< lift2 (Typecheck.typeOf $ "\\hmap -> hmapInsert " <> varNameStr <> " (" <> operation <> ") hmap")
+
+                ---- get value
+                --putStrLn =<< lift2 (Typecheck.typeOf $ "\\hmap mode time -> let Just v = hmapLookup " <> varName <> " hmap in (flip computeValue mode =<< toIOEnv (fromValue (v time)))" )
+    Cache.put callDataPath varNames varName
+    Value.reportIfVisible callPointPath
+    Manager.reportUseMany varNames
+    Manager.reportUse varName
+    return varName
+
+                --mode -> fmap (flip computeValue mode) .
+
+                --Session.runAssignment tmpVarName operation
+                --Session.runStmt $ "_ <- toIOEnv $ fromValue $ " <> tmpVarName <> " (" <> show time <> ")"
+                --hash <- Hash.computeInherit tmpVarName varNames
+                --let varName = VarName callPointPath hash
+                --Session.runAssignment (VarName.toString varName) tmpVarName
+                --lift2 $ Bindings.remove tmpVarName
+                --Cache.put callDataPath varNames varName
+                --Value.reportIfVisible callPointPath
+                --Manager.reportUseMany varNames
+                --Manager.reportUse varName
+                --return varName
 
 
 nameHash :: String -> String

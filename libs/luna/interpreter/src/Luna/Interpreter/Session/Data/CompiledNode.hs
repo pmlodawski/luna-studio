@@ -16,8 +16,8 @@ import Generated.Proto.Mode.Mode  (Mode)
 
 
 
-data CompiledNode = CompiledNode { _update :: HMap -> IO HMap
-                                 , _value  :: HMap -> Mode -> IO Value
+data CompiledNode = CompiledNode { _update :: HMap -> HMap
+                                 , _value  :: Maybe (HMap -> Mode -> IO Value)
                                  }
 
 makeLenses ''CompiledNode

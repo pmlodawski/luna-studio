@@ -13,6 +13,7 @@ import qualified Control.Concurrent.MVar     as MVar
 import           Control.Monad.Catch         (bracket_)
 import           Control.Monad.State
 import           Control.Monad.Trans.Either
+import           Data.HMap                   (HMap)
 import           Data.IntSet                 (IntSet)
 import qualified Data.IntSet                 as IntSet
 import           Data.Map                    (Map)
@@ -57,6 +58,7 @@ import           Luna.Interpreter.Session.Cache.Info           (CacheInfo)
 import           Luna.Interpreter.Session.Data.CallPoint       (CallPoint)
 import qualified Luna.Interpreter.Session.Data.CallPoint       as CallPoint
 import           Luna.Interpreter.Session.Data.CallPointPath   (CallPointPath)
+import           Luna.Interpreter.Session.Data.CompiledNode    (CompiledNode)
 import           Luna.Interpreter.Session.Data.DefPoint        (DefPoint (DefPoint))
 import qualified Luna.Interpreter.Session.Data.DefPoint        as DefPoint
 import           Luna.Interpreter.Session.Data.Time            (Time)
@@ -71,18 +73,47 @@ import           Luna.Interpreter.Session.TargetHS.Reload      (Reload, ReloadMa
 
 
 
+
+---- Env.sessiondata.expressions ------------------------------------------
+
+getExpressions :: Session mm HMap
+getExpressions = gets $ view $ Env.sessionData . Env.expressions
+
+setExpressions :: HMap -> Session mm ()
+setExpressions = modify . set (Env.sessionData . Env.expressions)
+
+updateExpressions :: (HMap -> HMap) -> Session mm ()
+updateExpressions = modify . over (Env.sessionData . Env.expressions)
+
+---- Env.compiled ---------------------------------------------------------
+
+getCompiled :: Session mm (MapForest CallPoint CompiledNode)
+getCompiled = gets $ view $ Env.sessionData . Env.compiled
+
+compiledInsert :: CallPointPath -> CompiledNode -> Session mm ()
+compiledInsert = (modify . over (Env.sessionData . Env.compiled)) .: MapForest.insert
+
+compiledDelete :: CallPointPath -> Session mm ()
+compiledDelete = modify . over (Env.sessionData . Env.compiled) . MapForest.delete
+
+compiledLookup :: CallPointPath -> Session mm (Maybe CompiledNode)
+compiledLookup callPath = MapForest.lookup callPath <$> getCompiled
+
+compiledClean :: Session mm ()
+compiledClean = modify $ Env.sessionData . Env.compiled .~ def
+
 ---- Env.cached -----------------------------------------------------------
 
 getCached :: Session mm (MapForest CallPoint CacheInfo)
-getCached = gets $ view Env.cached
+getCached = gets $ view $ Env.sessionData . Env.cached
 
 
 cachedInsert :: CallPointPath -> CacheInfo -> Session mm ()
-cachedInsert = (modify . over Env.cached) .: MapForest.insert
+cachedInsert = (modify . over (Env.sessionData . Env.cached)) .: MapForest.insert
 
 
 cachedDelete :: CallPointPath -> Session mm ()
-cachedDelete = modify . over Env.cached . MapForest.delete
+cachedDelete = modify . over (Env.sessionData . Env.cached) . MapForest.delete
 
 
 cachedLookup :: CallPointPath -> Session mm (Maybe CacheInfo)
@@ -90,52 +121,52 @@ cachedLookup callPointPath = MapForest.lookup callPointPath <$> getCached
 
 
 cachedClear :: Session mm ()
-cachedClear = modify (Env.cached .~ def)
+cachedClear = modify (Env.sessionData . Env.cached .~ def)
 
 ---- Env.watchPoints ------------------------------------------------------
 
 addWatchPoint :: CallPointPath -> Session mm ()
-addWatchPoint callPath = modify (Env.watchPoints %~ SetForest.insert callPath)
+addWatchPoint callPath = modify (Env.sessionData . Env.watchPoints %~ SetForest.insert callPath)
 
 
 deleteWatchPoint :: CallPointPath -> Session mm ()
-deleteWatchPoint callPath = modify (Env.watchPoints %~ SetForest.delete callPath)
+deleteWatchPoint callPath = modify (Env.sessionData . Env.watchPoints %~ SetForest.delete callPath)
 
 
 cleanWatchPoints :: Session mm ()
-cleanWatchPoints = modify (Env.watchPoints .~ def)
+cleanWatchPoints = modify (Env.sessionData . Env.watchPoints .~ def)
 
 
 getWatchPoints :: Session mm (SetForest CallPoint)
-getWatchPoints = gets (view Env.watchPoints)
+getWatchPoints = gets $ view $ Env.sessionData . Env.watchPoints
 
 ---- Env.reloadMap --------------------------------------------------------
 
 addReload :: Library.ID -> Reload -> Session mm ()
-addReload libraryID reload = modify (Env.reloadMap %~ update) where
+addReload libraryID reload = modify (Env.sessionData . Env.reloadMap %~ update) where
     update = Map.alter (Just . (<> reload) . Maybe.fromMaybe def) libraryID
 
 
 getReloads :: Session mm ReloadMap
-getReloads = gets $ view Env.reloadMap
+getReloads = gets $ view $ Env.sessionData . Env.reloadMap
 
 
 cleanReloads :: Session mm ()
-cleanReloads = modify (Env.reloadMap .~ mempty)
+cleanReloads = modify (Env.sessionData . Env.reloadMap .~ mempty)
 
 ---- Env.allReady ---------------------------------------------------------
 
 setAllReady :: Bool -> Session mm ()
-setAllReady = modify . set Env.allReady
+setAllReady = modify . set (Env.sessionStatus . Env.allReady)
 
 
 getAllReady :: Session mm Bool
-getAllReady = gets $ view Env.allReady
+getAllReady = gets $ view $ Env.sessionStatus . Env.allReady
 
 ---- Env.fragileOperation -------------------------------------------------
 
 getFragile :: Session mm Env.FragileMVar
-getFragile = gets $ view Env.fragileOperation
+getFragile = gets $ view $ Env.sessionStatus . Env.fragileOperation
 
 
 fragile :: Session mm a -> Session mm a
@@ -146,7 +177,7 @@ fragile action = do
 ---- Env.dependentNodes ---------------------------------------------------
 
 getDependentNodes :: Session mm (Map CallPoint IntSet)
-getDependentNodes = gets $ view Env.dependentNodes
+getDependentNodes = gets $ view $ Env.sessionData . Env.dependentNodes
 
 
 getDependentNodesOf :: CallPoint -> Session mm IntSet
@@ -156,47 +187,47 @@ getDependentNodesOf callPoint =
 
 insertDependentNode :: CallPoint -> Node.ID -> Session mm ()
 insertDependentNode callPoint nodeID =
-    modify (Env.dependentNodes %~ Map.alter alter callPoint) where
+    modify (Env.sessionData . Env.dependentNodes %~ Map.alter alter callPoint) where
         alter = Just . IntSet.insert nodeID . Maybe.fromMaybe def
 
 
 insertDependentNodes :: CallPoint -> IntSet -> Session mm ()
 insertDependentNodes callPoint nodeIDs =
-    modify (Env.dependentNodes %~ Map.alter alter callPoint) where
+    modify (Env.sessionData . Env.dependentNodes %~ Map.alter alter callPoint) where
         alter = Just . IntSet.union nodeIDs . Maybe.fromMaybe def
 
 
 deleteDependentNodes :: CallPoint -> Session mm ()
-deleteDependentNodes = modify . over Env.dependentNodes . Map.delete
+deleteDependentNodes = modify . over (Env.sessionData . Env.dependentNodes) . Map.delete
 
 
 deleteDependentNode :: CallPoint -> Node.ID -> Session mm ()
 deleteDependentNode callPoint nodeID =
-    modify (Env.dependentNodes %~ Map.alter alter callPoint) where
+    modify (Env.sessionData . Env.dependentNodes %~ Map.alter alter callPoint) where
         alter = Just . IntSet.delete nodeID . Maybe.fromMaybe def
 
 
 cleanDependentNodes :: Session mm ()
-cleanDependentNodes = modify (Env.dependentNodes .~ def)
+cleanDependentNodes = modify (Env.sessionData . Env.dependentNodes .~ def)
 
 ---- Env.cpphsOptions -----------------------------------------------------
 
 getCpphsOptions :: Session mm Cpphs.CpphsOptions
-getCpphsOptions = gets $ view Env.cpphsOptions
+getCpphsOptions = gets $ view $ Env.sessionConfig . Env.cpphsOptions
 
 ---- Env.profileInfos -----------------------------------------------------
 
 cleanProfileInfos :: Session mm ()
-cleanProfileInfos = modify $ Env.profileInfos .~ def
+cleanProfileInfos = modify $ Env.sessionData . Env.profileInfos .~ def
 
 
 getProfileInfos :: Session mm (MapForest CallPoint ProfileInfo)
-getProfileInfos = gets $ view Env.profileInfos
+getProfileInfos = gets $ view $ Env.sessionData . Env.profileInfos
 
 
 insertProfileInfo :: CallPointPath -> ProfileInfo -> Session mm ()
 insertProfileInfo callPointPath info =
-    modify (Env.profileInfos %~ MapForest.insert callPointPath info)
+    modify (Env.sessionData . Env.profileInfos %~ MapForest.insert callPointPath info)
 
 
 profile :: CallPointPath -> Session mm a -> Session mm a
@@ -208,16 +239,16 @@ profile callPointPath action = do
 ---- Env.compileErrors ----------------------------------------------------
 
 cleanCompileErrors :: Session mm ()
-cleanCompileErrors = modify $ Env.compileErrors .~ def
+cleanCompileErrors = modify $ Env.sessionData . Env.compileErrors .~ def
 
 
 getCompileErrors :: Session mm (MapForest CallPoint Error)
-getCompileErrors = gets $ view Env.compileErrors
+getCompileErrors = gets $ view $ Env.sessionData . Env.compileErrors
 
 
 insertCompileError :: CallPointPath -> Error -> Session mm ()
 insertCompileError callPointPath err =
-    modify (Env.compileErrors %~ MapForest.insert callPointPath err)
+    modify (Env.sessionData . Env.compileErrors %~ MapForest.insert callPointPath err)
 
 
 reportCompileErrors :: CallPointPath -> Session mm () -> Session mm ()
@@ -235,33 +266,33 @@ debugNode callPointPath action =
 ---- Env.timeVar ----------------------------------------------------------
 
 getTimeVar :: Session mm Time
-getTimeVar = gets $ view Env.timeVar
+getTimeVar = gets $ view $ Env.sessionData . Env.timeVar
 
 
 setTimeVar :: Time -> Session mm ()
-setTimeVar = modify . set Env.timeVar
+setTimeVar = modify . set (Env.sessionData . Env.timeVar)
 
 ---- Env.timeRefs ---------------------------------------------------------
 
 insertTimeRef :: CallPoint -> Session mm ()
-insertTimeRef callPoint = modify (Env.timeRefs %~ Set.insert callPoint)
+insertTimeRef callPoint = modify (Env.sessionData . Env.timeRefs %~ Set.insert callPoint)
 
 
 deleteTimeRef :: CallPoint -> Session mm ()
-deleteTimeRef callPoint = modify (Env.timeRefs %~ Set.delete callPoint)
+deleteTimeRef callPoint = modify (Env.sessionData . Env.timeRefs %~ Set.delete callPoint)
 
 
 getTimeRefs :: Session mm (Set CallPoint)
-getTimeRefs = gets $ view Env.timeRefs
+getTimeRefs = gets $ view $ Env.sessionData . Env.timeRefs
 
 
 cleanTimeRefs :: Session mm ()
-cleanTimeRefs = modify $ Env.timeRefs .~ def
+cleanTimeRefs = modify $ Env.sessionData . Env.timeRefs .~ def
 
 ---- Env.serializationModes -----------------------------------------------
 
 getSerializationModesMap :: Session mm (MapForest CallPoint (MultiSet Mode))
-getSerializationModesMap = gets $ view Env.serializationModes
+getSerializationModesMap = gets $ view $ Env.sessionData . Env.serializationModes
 
 
 lookupSerializationModes :: CallPointPath -> Session mm (Maybe (MultiSet Mode))
@@ -276,44 +307,46 @@ getSerializationModes callPointPath =
 
 insertSerializationModes :: CallPointPath -> MultiSet Mode -> Session mm ()
 insertSerializationModes callPointPath modes =
-    modify (Env.serializationModes %~ MapForest.alter ins callPointPath) where
+    modify (Env.sessionData . Env.serializationModes %~ MapForest.alter ins callPointPath) where
         ins  Nothing = Just modes
         ins (Just s) = Just $ MultiSet.union s modes
 
 
 deleteSerializationModes :: CallPointPath -> MultiSet Mode -> Session mm ()
 deleteSerializationModes callPointPath modes =
-    modify (Env.serializationModes %~ MapForest.alter del callPointPath) where
+    modify (Env.sessionData . Env.serializationModes %~ MapForest.alter del callPointPath) where
         del  Nothing = Just modes
         del (Just s) = Just $ MultiSet.difference s modes
 
 
 deleteAllSerializationModes :: CallPointPath -> Session mm ()
-deleteAllSerializationModes = modify . over Env.serializationModes . MapForest.delete
+deleteAllSerializationModes = modify . over (Env.sessionData . Env.serializationModes) . MapForest.delete
 
 
 cleanSerializationModes :: Session mm ()
-cleanSerializationModes = modify (Env.serializationModes .~ def)
+cleanSerializationModes = modify (Env.sessionData . Env.serializationModes .~ def)
 
 ---- Env.memoryConfig -----------------------------------------------------
 
 getMemoryConfig :: Session mm Memory.Config
-getMemoryConfig = gets $ view Env.memoryConfig
+getMemoryConfig = gets $ view $ Env.sessionConfig . Env.memoryConfig
 
 
 setMemoryConfig :: Memory.Config -> Session mm ()
-setMemoryConfig = modify . set Env.memoryConfig
+setMemoryConfig = modify . set (Env.sessionConfig . Env.memoryConfig)
 
 ---- Env.memoryManager ----------------------------------------------------
 
 getMemoryManager :: Session mm mm
-getMemoryManager = gets $ view Env.memoryManager
+getMemoryManager = gets $ view $ Env.sessionConfig . Env.memoryManager
 
 
 updateMemoryManager :: (mm -> mm) -> Session mm ()
 updateMemoryManager updMethod = do
     s <- get
-    put $ s { Env._memoryManager = updMethod $ Env._memoryManager s }
+    let sessionConfig  = Env._sessionConfig s
+        sessionConfig' = sessionConfig { Env._memoryManager = updMethod $ Env._memoryManager sessionConfig}
+    put $ s { Env._sessionConfig = sessionConfig' }
 -- FIXME[PM] : https://github.com/ekmett/lens/issues/515
 --updateMemoryManager updMethod = do
 --    s <- get
@@ -327,16 +360,16 @@ updateMemoryManager updMethod = do
 
 
 setMemoryManager :: mm -> Session mm ()
-setMemoryManager = modify . set Env.memoryManager
+setMemoryManager = modify . set (Env.sessionConfig . Env.memoryManager)
 
 ---- Env.libManager -------------------------------------------------------
 
 setLibManager :: LibManager -> Session mm ()
-setLibManager = modify . set Env.libManager
+setLibManager = modify . set (Env.projectData . Env.libManager)
 
 
 getLibManager :: Session mm LibManager
-getLibManager = gets $ view Env.libManager
+getLibManager = gets $ view $ Env.projectData . Env.libManager
 
 
 getLibrary :: Library.ID -> Session mm Library
@@ -413,15 +446,15 @@ getProjectID = getProjectIDMaybe <??&> Error.ConfigError $(loc) "Project ID not 
 
 
 getProjectIDMaybe :: Session mm (Maybe Project.ID)
-getProjectIDMaybe = gets (view Env.projectID)
+getProjectIDMaybe = gets $ view $ Env.projectData . Env.projectID
 
 
 setProjectID :: Project.ID -> Session mm ()
-setProjectID = modify . set Env.projectID . Just
+setProjectID = modify . set (Env.projectData . Env.projectID) . Just
 
 
 unsetProjectID :: Session mm ()
-unsetProjectID = modify $ Env.projectID .~ Nothing
+unsetProjectID = modify $ Env.projectData . Env.projectID .~ Nothing
 
 ---- Env.mainPtr ----------------------------------------------------------
 
@@ -430,16 +463,16 @@ getMainPtr = getMainPtrMaybe <??&> Error.ConfigError $(loc) "MainPtr not set."
 
 
 getMainPtrMaybe :: Session mm (Maybe DefPoint)
-getMainPtrMaybe = gets (view Env.mainPtr)
+getMainPtrMaybe = gets $ view $ Env.projectData . Env.mainPtr
 
 
 setMainPtr :: DefPoint -> Session mm ()
-setMainPtr mainPtr = modify (Env.mainPtr .~ Just mainPtr)
+setMainPtr mainPtr = modify (Env.projectData . Env.mainPtr .~ Just mainPtr)
 
 ---- Env.resultCallback ---------------------------------------------------
 
 getResultCallBack :: Session mm Env.ResultCallBack
-getResultCallBack = gets $ view Env.resultCallBack
+getResultCallBack = gets $ view $ Env.sessionConfig . Env.resultCallBack
 
 ---------------------------------------------------------------------------
 
@@ -454,10 +487,5 @@ whenVisible callPointPath action = do
 ---------------------------------------------------------------------------
 
 cleanEnv :: Session mm ()
-cleanEnv = cleanWatchPoints
-        >> cleanTimeRefs
-        >> cleanDependentNodes
-        >> cleanProfileInfos
-        >> cleanCompileErrors
-        >> cleanSerializationModes
+cleanEnv = modify $ Env.sessionData .~ def
 

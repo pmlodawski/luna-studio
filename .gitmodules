@@ -41,3 +41,6 @@
 [submodule "third-party/fgl"]
 	path = third-party/fgl
 	url = https://github.com/pmlodawski/fgl.git
+[submodule "third-party/HMap"]
+	path = third-party/HMap
+	url = https://github.com/pmlodawski/HMap.git
