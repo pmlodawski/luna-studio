@@ -56,6 +56,24 @@ inline T swap_endian(T u)
 namespace binary
 {
 	template<typename T>
+	inline void serialize(const boost::optional<T> &value, std::ostream &output);
+
+	template<typename ...Args>
+	inline void serialize(const std::tuple<Args...> &value, std::ostream &output);
+
+	template<typename T>
+	inline void serialize(const std::vector<T> &values, std::ostream &output);
+
+	template<typename ...Args>
+	inline void deserialize(std::tuple<Args...> &value, std::istream &input);
+
+	template<typename T>
+	inline void deserialize(boost::optional<T> &out, std::istream &input);
+
+	template<typename T>
+	inline void deserialize(std::vector<T> &out, std::istream &input);
+
+	template<typename T>
 	inline T readPrimitive(std::istream &input)
 	{
 		T ret;
