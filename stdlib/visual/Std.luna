@@ -419,11 +419,25 @@ def rasterizeMask self::Std w::Int h::Int m::(Mask Float) -> Image
 
 def Image.roto self::Image mask::(Mask Float) format::Format premultiply::Bool alpha::Bool -> Image
 
+# experimental ######
+
 alias BinaryMask = String
+alias BinaryCurveGUI = String
+alias BinaryAnimableMask = String
 
 def Image.rotoB self::Image mask::BinaryMask format::Format premultiply::Bool alpha::Bool -> Image
 
 def maskFromBinary mask::BinaryMask -> Mask Float
+
+def animationFromBinary mask::BinaryCurveGUI -> CurveGUI Float
+
+def animableMaskFromBinary mask::BinaryAnimableMask -> Mask AnimableFloat
+
+class ```AnimableFloat```:
+    ConstantValue: value :: Float
+    AnimationCurve: curve :: CurveGUI Float
+
+#####################
 
 # COLORS
 
