@@ -4,12 +4,16 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
+{-# LANGUAGE DeriveGeneric    #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies     #-}
 {-# LANGUAGE ViewPatterns     #-}
 
 module Flowbox.Graphics.Mockup.Generator (
     Format(..),
+    AnimableFloat(..),
+    animableMaskFromBinary,
+    animationFromBinary,
     circularLuna,
     conicalLuna,
     constantLuna,
@@ -31,12 +35,12 @@ import qualified Data.Array.Accelerate as A
 import qualified Data.Binary               as Binary
 import           Data.ByteString.Lazy      (ByteString)
 import qualified Data.Map                  as Map
+import           Data.String               (fromString)
 import           Linear                    (V2 (..))
 import           Math.Coordinate           (Cartesian)
 import           Math.Coordinate.Cartesian (Point2 (..))
 import           Math.Metric               (Metric, MetricCoord)
 import           Math.Space.Space          (Grid (..))
-import Data.String (fromString)
 
 import           Flowbox.Geom2D.Mask                             (Mask (..))
 import qualified Flowbox.Geom2D.Rasterizer                       as Rasterizer
@@ -55,7 +59,10 @@ import           Flowbox.Graphics.Utils.Accelerate               (variable)
 import qualified Flowbox.Graphics.Utils.Utils                    as U
 import qualified Flowbox.Math.Matrix                             as M
 import           Flowbox.Prelude                                 as P hiding (lookup)
-
+-- experimental ---------
+import Data.Binary
+import Flowbox.Math.Function.CurveGUI (CurveGUI (..))
+-------------------------
 import Flowbox.Graphics.Mockup.Basic        as Basic
 import Flowbox.Graphics.Mockup.ColorCorrect
 import Flowbox.Graphics.Mockup.Matte
@@ -221,8 +228,23 @@ rotoLunaB input mask = rotoLuna input (Binary.decode (fromString mask) :: Mask F
 fromBinary :: Binary.Binary a => String -> a
 fromBinary = Binary.decode . fromString
 
-
 maskFromBinary :: String -> Mask Float
 maskFromBinary = fromBinary
+
+animationFromBinary :: String -> CurveGUI Float
+animationFromBinary = fromBinary
+
+animableMaskFromBinary :: String -> Mask AnimableFloat
+animableMaskFromBinary = fromBinary
+
+data AnimableFloat = ConstantValue Float
+                   | AnimationCurve (CurveGUI Float)
+                   deriving (Generic, Show)
+
+instance Binary AnimableFloat
+
+--interpolateMask :: Mask AnimableFloat -> Time -> Mask Float
+
+
 
 -------------------------
