@@ -13,9 +13,11 @@ module Luna.Interpreter.Runtime (
 import           Luna.Interpreter.Runtime.Hash as X
 import           Luna.Interpreter.Runtime.HMap as X (HKey, HMap, T)
 import qualified Luna.Interpreter.Runtime.HMap as HMap
+import Prelude
 
 
 
 hmapCreateKey = HMap.createKey
 hmapInsert    = HMap.insert
 hmapLookup    = HMap.lookup
+hmapGet       = HMap.findWithDefault (error "Luna.Interpreter.Runtime.hmapGet: Could not find item in HMap")
