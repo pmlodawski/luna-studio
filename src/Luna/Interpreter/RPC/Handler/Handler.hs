@@ -191,10 +191,10 @@ run cfg prefix ctx (input, output) = do
     interpreterThreadId <- Concurrent.myThreadId
     queueInfo           <- QueueInfo.mk
     (output1, input1)   <- Pipes.spawn Pipes.unbounded
-    env <- (Env.resultCallBack .~ Value.reportOutputValue crlRef output) <$> Env.mkDef cfg def
+    env <- (Env.sessionConfig . Env.resultCallBack .~ Value.reportOutputValue crlRef output) <$> Env.mkDef cfg def
     Concurrent.forkIO_ $ Pipes.runEffect $
             Pipes.fromInput input
-        >-> Preprocess.preprocess prefix queueInfo (env ^. Env.fragileOperation) interpreterThreadId
+        >-> Preprocess.preprocess prefix queueInfo (env ^. Env.sessionStatus . Env.fragileOperation) interpreterThreadId
         >-> Pipes.toOutput output1
     Session.run cfg env extraImports $ lift $ flip evalStateT ctx $
         Pipes.runSafeT $ Pipes.runEffect $ Abort.handleAbort $
