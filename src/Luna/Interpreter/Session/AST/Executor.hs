@@ -193,13 +193,13 @@ evalFunction nodeExpr callDataPath varNames = do
             print "compiled"
         Nothing -> do
             let tmpVarName    = "_tmp"
-                mkArg arg = "(" <> VarName.toString arg <> " _time)"
+                mkArg arg = "((hmapGet " <> VarName.toString arg <> " hmap) hmap _time)"
                 args      = map mkArg varNames
                 appArgs a = if null a then "" else " $ appNext " <> List.intercalate " $ appNext " (reverse a)
                 genNative = List.replaceByMany "#{}" args . List.stripIdx 3 3
                 self      = head varNames
             vt <- varType nodeExpr
-            operation <- ("\\(_time :: Float) -> " <>) . Utils.replace "\\" "\\\\" <$> case vt of
+            operation <- ("\\(hmap :: HMap) (_time :: Float) -> " <>) . Utils.replace "\\" "\\\\" <$> case vt of
                 List        -> return $ "val [" <> List.intercalate "," args <> "]"
                 Id          -> return $ mkArg self
                 Native name -> return $ genNative name
@@ -215,21 +215,20 @@ evalFunction nodeExpr callDataPath varNames = do
                 Expression  name -> return   name
             time <- Env.getTimeVar
             catchEither (left . Error.RunError $(loc) callPointPath) $ do
-                putStrLn operation
                 exprType <- lift2 $ Typecheck.typeOf operation
-                putStrLn "==== 1"
                 let varNameStr =  VarName.toString (VarName callPointPath def)
                 Session.runStmt $ varNameStr <> " <- hmapCreateKey :: IO (HKey T (" <> exprType <> "))"
-
                 update <- lift2 $ HEval.interpret $ "\\hmap -> hmapInsert " <> varNameStr <> " (" <> operation <> ") hmap"
                 Env.compiledInsert callPointPath $ CompiledNode update Nothing
                 Env.updateExpressions update
-
+                catchEither (left . Error.RunError $(loc) callPointPath) $ return ()
                 ---- update
                 --putStrLn =<< lift2 (Typecheck.typeOf $ "\\hmap -> hmapInsert " <> varNameStr <> " (" <> operation <> ") hmap")
 
                 ---- get value
-                --putStrLn =<< lift2 (Typecheck.typeOf $ "\\hmap mode time -> let Just v = hmapLookup " <> varName <> " hmap in (flip computeValue mode =<< toIOEnv (fromValue (v time)))" )
+                --putStrLn =<< lift2 (Typecheck.typeOf $ "\\hmap mode time -> let v = hmapGet " <> varName <> " hmap in (flip computeValue mode =<< toIOEnv (fromValue (v time)))" )
+                --putStrLn =<< lift2 (Typecheck.typeOf $ "\\hmap mode time -> flip computeValue mode =<< toIOEnv (fromValue (hmapGet " <> varNameStr <> " hmap) time)" )
+
     Cache.put callDataPath varNames varName
     Value.reportIfVisible callPointPath
     Manager.reportUseMany varNames

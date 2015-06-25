@@ -23,3 +23,9 @@ logger = getLoggerIO $moduleName
 
 typeOf :: GHC.GhcMonad m => String -> m String
 typeOf = GHC.exprType >=> Conversions.typeToString
+
+
+debugType :: GHC.GhcMonad m => String -> m ()
+debugType v = do
+    t <- typeOf v
+    putStrLn $ v <> "\n    :: " <> t
