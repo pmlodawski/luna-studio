@@ -21,6 +21,7 @@ module Flowbox.Graphics.Mockup.Generator (
     formatMap,
     fromBinary,
     gradientLuna,
+    interpolateMask,
     linearShapeLuna,
     maskFromBinary,
     radialShapeLuna,
@@ -61,7 +62,7 @@ import qualified Flowbox.Math.Matrix                             as M
 import           Flowbox.Prelude                                 as P hiding (lookup)
 -- experimental ---------
 import Data.Binary
-import Flowbox.Math.Function.CurveGUI (CurveGUI (..))
+import Flowbox.Math.Function.CurveGUI (CurveGUI (..), valueAtSpline)
 -------------------------
 import Flowbox.Graphics.Mockup.Basic        as Basic
 import Flowbox.Graphics.Mockup.ColorCorrect
@@ -243,8 +244,11 @@ data AnimableFloat = ConstantValue Float
 
 instance Binary AnimableFloat
 
---interpolateMask :: Mask AnimableFloat -> Time -> Mask Float
-
+interpolateMask :: Mask AnimableFloat -> Float -> Mask Float
+interpolateMask mask t = fmap (f t) mask
+    where
+        f _ (ConstantValue v)       = v
+        f t (AnimationCurve curve)  = valueAtSpline curve t
 
 
 -------------------------
