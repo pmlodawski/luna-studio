@@ -42,10 +42,7 @@ def main:
     black = RGBA 0.0 0.0 0.0 0.0
     white = RGBA 1.0 1.0 1.0 1.0
 
-    blackM = ColorMult black 1.0
-    whiteM = ColorMult white 1.0
-
-    colorCC = ColorCC whiteM whiteM whiteM whiteM blackM
+    # colorCC = ColorCC whiteM whiteM whiteM whiteM blackM
 
     # corrected = input.colorCorrect colorCC colorCC colorCC colorCC # for some reason the compilation hangs here ...
     # corrected.save "corrected.png"
