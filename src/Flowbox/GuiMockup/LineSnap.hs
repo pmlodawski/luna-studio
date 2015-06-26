@@ -17,7 +17,7 @@ import           Linear
 type PointC = V2 Float
 type LeftHandle = V2 Float
 type RightHandle = V2 Float
-type ControlPoint = (PointC, LeftHandle, RightHandle)
+type ControlPoint = (V2 Float, V2 Float, V2 Float)
 
 --main function for gui
 
