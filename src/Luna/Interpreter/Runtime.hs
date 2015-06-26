@@ -13,9 +13,12 @@ module Luna.Interpreter.Runtime (
 import           Luna.Interpreter.Runtime.Hash as X
 import           Luna.Interpreter.Runtime.HMap as X (HKey, HMap, T)
 import qualified Luna.Interpreter.Runtime.HMap as HMap
-import Prelude
+import           Prelude
 
 
+
+hmapCreateKeyWithWitness :: a -> IO (HKey T a)
+hmapCreateKeyWithWitness = const HMap.createKey
 
 hmapCreateKey = HMap.createKey
 hmapInsert    = HMap.insert
