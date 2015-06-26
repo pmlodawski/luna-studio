@@ -138,16 +138,28 @@ generateFittingBezier (startLength, endLength) strokeWithDists = iteration
     --CubicBezier _ _ lastPointHi lastPoint = V.last beziers
     --lastControlPoint = (lastPoint, lastPointHi, lastPoint) -- for js purpose. Change third element to dummyHandle
 
+-- Function returns control points where both handles are well defined (first point of first segment and second point of last segment are ignored)
+beziersToFullControlPoints :: [CubicBezier Float] -> [ControlPoint]
 beziersToFullControlPoints beziers = map snd $ tail . tail $ scanl (\(prevhi,_) (CubicBezier point1 ho hi point2) -> (hi,(point1,prevhi,ho))) (0.0, (firstPoint,dummyHandle,firstPointHo)) beziers where
     CubicBezier firstPoint firstPointHo _ _ = head beziers
     dummyHandle = V2 0 0
     CubicBezier _ _ lastPointHi lastPoint = last beziers
     --lastControlPoint = (lastPoint, lastPointHi, lastPoint) -- for js purpose. Change third element to dummyHandle
 
+beziersToControlPoints :: [CubicBezier Float] -> [ControlPoint]
+beziersToControlPoints beziers = [startControlPoint] ++ midPoints ++ [endControlPoint]
+    where
+        midPoints = beziersToFullControlPoints beziers
+        startControlPoint = (ps , ps, ho)
+        endControlPoint = (pe, hi, pe)
+        CubicBezier ps ho _ _ = head beziers
+        CubicBezier _ _ hi pe = last beziers
+
+controlPointsToBeziers :: [ControlPoint] -> [CubicBezier Float]
 controlPointsToBeziers controlPoints =
     tail $ tail $ map snd $ scanl funcRR ((0,0), streight1) controlPoints
-
-funcRR = (\((x,y),bezier) (p,hi,ho) -> ((p,ho), CubicBezier x y hi p))
+        where
+            funcRR = (\((x,y),bezier) (p,hi,ho) -> ((p,ho), CubicBezier x y hi p))
 
 deCasteljauCubic :: Float -> CubicBezier Float -> (V2 Float, V2 Float, V2 Float)
 deCasteljauCubic t bezier = (point, handle1, handle2) where
