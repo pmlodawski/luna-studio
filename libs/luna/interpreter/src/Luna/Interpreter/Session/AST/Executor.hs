@@ -226,33 +226,12 @@ evalFunction nodeExpr callDataPath varNames = do
                     Just <$> HEval.interpret ("\\hmap mode time -> flip computeValue mode =<< toIOEnv (fromValue ((hmapGet " <> varNameStr <> " hmap) hmap time))")
                 Env.compiledInsert callPointPath $ CompiledNode update getValue
                 Env.updateExpressions update
-
-                ---- update
-                --putStrLn =<< lift2 (Typecheck.typeOf $ "\\hmap -> hmapInsert " <> varNameStr <> " (" <> operation <> ") hmap")
-
-                ---- get value
-                --putStrLn =<< lift2 (Typecheck.typeOf $ "\\hmap mode time -> let v = hmapGet " <> varName <> " hmap in (flip computeValue mode =<< toIOEnv (fromValue (v time)))" )
-                --putStrLn =<< lift2 (Typecheck.typeOf $
-
     Cache.put callDataPath varNames varName
     Value.reportIfVisible callPointPath
     Manager.reportUseMany varNames
     Manager.reportUse varName
     return varName
 
-                --mode -> fmap (flip computeValue mode) .
-
-                --Session.runAssignment tmpVarName operation
-                --Session.runStmt $ "_ <- toIOEnv $ fromValue $ " <> tmpVarName <> " (" <> show time <> ")"
-                --hash <- Hash.computeInherit tmpVarName varNames
-                --let varName = VarName callPointPath hash
-                --Session.runAssignment (VarName.toString varName) tmpVarName
-                --lift2 $ Bindings.remove tmpVarName
-                --Cache.put callDataPath varNames varName
-                --Value.reportIfVisible callPointPath
-                --Manager.reportUseMany varNames
-                --Manager.reportUse varName
-                --return varName
 
 nameHash :: String -> String
 nameHash = Hash.hash
@@ -267,19 +246,6 @@ hastExpr expr = do
     hexpr <- hoistEitherWith (Error.OtherError $(loc) . show) $ fst result
     let code = Text.unpack $ HSC.genExpr hexpr
     last . lines <$> liftIO (Cpphs.runCpphs cpphsOptions "" code)
-
-
---nodeToExpr :: NodeExpr -> [VarName] -> LExpr IDTag ()
---nodeToExpr nodeExpr varNames = wrap $ case nodeExpr of
---    NodeExpr.StringExpr StringExpr.Id                -> unwrap self
---    NodeExpr.StringExpr StringExpr.Tuple             -> Expr.Tuple args
---    NodeExpr.StringExpr StringExpr.List              -> Expr.List $ Expr.SeqList args
---    NodeExpr.StringExpr (StringExpr.Expr [])         -> Prelude.error "varType : empty expression"
---    NodeExpr.StringExpr (StringExpr.Expr name@(h:_))
---        | Maybe.isJust (Read.readMaybe name :: Maybe Char)   -> undefined
---    _ -> Prelude.error $ show nodeExpr
---    where args = map (wrap . flip Expr.var () . fromString . VarName.toString) varNames
---          self = head args
 
 
 data VarType = Lit      String
