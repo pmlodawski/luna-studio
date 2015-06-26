@@ -40,6 +40,7 @@ import qualified Luna.Interpreter.Session.Env                 as Env
 import qualified Luna.Interpreter.Session.Error               as Error
 import qualified Luna.Interpreter.Session.Hint.Eval           as HEval
 import           Luna.Interpreter.Session.Session             (Session)
+import           Luna.Interpreter.Session.Data.CompiledNode (CompiledNode (CompiledNode))
 
 
 
@@ -131,18 +132,21 @@ computeLookupValue varName time (modValues, compValMap) mode = do
 
 computeValue :: VarName -> Time -> Mode -> Session mm SValue
 computeValue varName time mode = do
-    lift2 $ flip Catch.catch excHandler $ do
-        let toValueExpr = "\\m -> flip computeValue m =<< toIOEnv (fromValue (" <> VarName.toString varName <> " (" <> show time <> ")))"
-        logger trace toValueExpr
-        action <- HEval.interpret'' toValueExpr "Mode -> IO (Maybe SValue)"
-        liftIO $ action mode <??&.> "Internal error"
-    where
-        excHandler :: Catch.SomeException -> MGHC.Ghc SValue
-        excHandler exc = case Catch.fromException exc of
-            Just AbortException -> throw AbortException
-            Nothing -> do
-                logger L.error $ show exc
-                liftIO (Serialization.toValue (ValueError.Error $ show exc) def) <??&.> "Internal error"
+    Env.compiledLookup (varName ^. VarName.callPointPath) >>= \case
+        Just (CompiledNode _ (Just getValue)) -> do hmap <- Env.getExpressions
+                                                    liftIO $ getValue hmap mode time <??&.> "Internal error"
+    --lift2 $ flip Catch.catch excHandler $ do
+    --    let toValueExpr = "\\m -> flip computeValue m =<< toIOEnv (fromValue (" <> VarName.toString varName <> " (" <> show time <> ")))"
+    --    logger trace toValueExpr
+    --    action <- HEval.interpret'' toValueExpr "Mode -> IO (Maybe SValue)"
+    --    liftIO $ action mode <??&.> "Internal error"
+    --where
+    --    excHandler :: Catch.SomeException -> MGHC.Ghc SValue
+    --    excHandler exc = case Catch.fromException exc of
+    --        Just AbortException -> throw AbortException
+    --        Nothing -> do
+    --            logger L.error $ show exc
+    --            liftIO (Serialization.toValue (ValueError.Error $ show exc) def) <??&.> "Internal error"
 
 
 getVarName :: CallPointPath -> Session mm VarName
