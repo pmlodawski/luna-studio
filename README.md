@@ -1,6 +1,8 @@
-Brunch with Brunch
-==================
+Setup:
 
-This is as minimal of a project as possible with brunch. It includes only
-javascript, css, and optimization plugins. The rest is left up to you.
+sudo npm install -g brunch
+npm install
 
+
+Run:
+brunch watch --server
