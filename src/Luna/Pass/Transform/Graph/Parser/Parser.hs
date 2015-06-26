@@ -119,7 +119,7 @@ groupExpr []    texpr = texpr
 groupExpr (h:t) texpr = groupExpr t $ Label h $ Expr.Grouped texpr
 
 
-buildExpr :: NodeExpr Tag V -> [TExpr V] -> GPPass V m (TExpr V)
+--buildExpr :: NodeExpr Tag V -> [TExpr V] -> GPPass V m (TExpr V)
 buildExpr nodeExpr srcs = case nodeExpr of
     NodeExpr.ASTExpr expr -> return expr
     NodeExpr.MultiPart mp -> do let defArg = Expr.unnamed <$> newLabel' Expr.Wildcard

@@ -71,6 +71,8 @@ import qualified Luna.Syntax.Decl                           as Decl
 import           System.FilePath.Posix                      (dropFileName)
 import qualified Luna.System.Config                         as Config
 import           Control.Monad.State (evalStateT)
+import qualified Luna.System.Env                            as Env
+import           Luna.System.Env                            (MonadEnvState)
 
 type Builder m = (MonadIO m, Functor m)
 
@@ -114,97 +116,99 @@ when_ test = when test . void
 --        rootPath    = getBasePath . getPath $ rootSrc ^. Source.src
 --        mkFile      = Source.File . pack . (rootPath </>) . (++ ".luna") . ModInfo.modPathToString
 --        sources     = map (\i -> Source i (mkFile i)) compilable
---        hscs        = mapM (prepareSource inclStd rootSrc) sources
+--        hscs        = mapM (compile inclStd rootSrc) sources
 --    hscs
 
 --TODO : rozciagnac ENV nad sprawdzaniem - kazdy modul deklaruje na poczatku swoj katalog bo tam moga lezec zrodla.
+collectImports :: (MonadIO m, MonadEnvState m) => Decl.Path -> m [String]
 collectImports modPath' = do
-    path <- get
     let modPath = (fromList $ fmap (toText . unwrap) modPath' :: QualPath)
     Repo.lookupModule modPath
 
 
 
 
---prepareSource :: Builder m => Bool -> Source Source.File  -> m (Source Code)
-prepareSource inclStd src = do
+--compile :: Builder m => Bool -> Source Source.File  -> m (Source Code)
+compile inclStd src = do
     out <- Session.run def $ runEitherT $ do
-        Parser.init
-        when_ inclStd $ Pragma.enable (Pragma.includeStd)
-        Pragma.enable (Pragma.orphanNames)
+        --Env.with (Env.repos %~ (dropFileName src:)) $ do
+            Parser.init
+            when_ inclStd $ Pragma.enable (Pragma.includeStd)
+            Pragma.enable (Pragma.orphanNames)
 
-        printHeader "Stage1"
-        (ast, astinfo) <- Pass.run1_ Stage1.pass src
-        ppPrint ast
+            printHeader "Stage1"
+            (ast, astinfo) <- Pass.run1_ Stage1.pass src
+            ppPrint ast
 
-        (ast, astinfo) <- Pass.run2_ StdInsert.pass astinfo ast
+            (ast, astinfo) <- Pass.run2_ StdInsert.pass astinfo ast
 
-        let imps = Unit.imports ast
+            let imps = Unit.imports ast
 
-        --printHeader "Extraction of imports"
-        --importInfo     <- Pass.run1_ Imports.pass ast
+            --printHeader "Extraction of imports"
+            --importInfo     <- Pass.run1_ Imports.pass ast
 
-        print "---------"
-        let imps2 = fmap (view Decl.modPath) imps
-        --libPaths <- Config.readPath
-        --print libPaths
-        --print $ dropFileName src
-        --x <- mapM (flip evalStateT libPaths . collectImports) imps2
-        --print x
-        --todo todo todo - ten x nie ma byc envami - mamy overlappujace sie staty, zmienic config na standalone
-        --print =<< mapM collectImports imps2
-        fail "!!!"
-        ----printHeader "Hash"
-        ----ast             <- Pass.run1_ Hash.pass ast
+            print "---------"
+            let imps2 = fmap (view Decl.modPath) imps
+            --libPaths <- Config.readPath
+            --print libPaths
+            --print $ dropFileName src
+            --x <- mapM (flip evalStateT libPaths . collectImports) imps2
+            --print x
+            --todo todo todo - ten x nie ma byc envami - mamy overlappujace sie staty, zmienic config na standalone
+            print =<< mapM collectImports imps2
+            print imps2
+            fail "!!!"
+            ----printHeader "Hash"
+            ----ast             <- Pass.run1_ Hash.pass ast
 
-        --printHeader "SA"
-        --structData1 <- Pass.run2_ SA.pass (StructData mempty importInfo) ast
-        --let sa1     = structData1 ^. StructData.namespace . Namespace.info
-        --    mInfo   = ModInfo.ModuleInfo liFile mempty sa1 mempty
-        --    liFile  = src ^. Source.modName
+            --printHeader "SA"
+            --structData1 <- Pass.run2_ SA.pass (StructData mempty importInfo) ast
+            --let sa1     = structData1 ^. StructData.namespace . Namespace.info
+            --    mInfo   = ModInfo.ModuleInfo liFile mempty sa1 mempty
+            --    liFile  = src ^. Source.modName
 
-        --liftIO $ ModInfo.writeModInfoToFile mInfo (getPath  $ src ^. Source.src)
-        --ppPrint sa1
+            --liftIO $ ModInfo.writeModInfoToFile mInfo (getPath  $ src ^. Source.src)
+            --ppPrint sa1
 
-        --printHeader "Stage2"
-        --(ast, astinfo) <- Pass.run3_ Stage2.pass (Namespace [] sa1) astinfo ast
-        --ppPrint ast
+            --printHeader "Stage2"
+            --(ast, astinfo) <- Pass.run3_ Stage2.pass (Namespace [] sa1) astinfo ast
+            --ppPrint ast
 
-        --printHeader "ImplSelf"
-        --(ast, astinfo) <- Pass.run2_ ImplSelf.pass astinfo ast
-        --ppPrint ast
+            --printHeader "ImplSelf"
+            --(ast, astinfo) <- Pass.run2_ ImplSelf.pass astinfo ast
+            --ppPrint ast
 
-        --printHeader "SA2"
-        --structData2 <- Pass.run2_ SA.pass structData1 ast
-        --ppPrint (structData2 ^. StructData.namespace . Namespace.info)
+            --printHeader "SA2"
+            --structData2 <- Pass.run2_ SA.pass structData1 ast
+            --ppPrint (structData2 ^. StructData.namespace . Namespace.info)
 
-        --let sa2 = structData2 ^. StructData.namespace . Namespace.info
-        --    ii2 = structData2 ^. StructData.importInfo
+            --let sa2 = structData2 ^. StructData.namespace . Namespace.info
+            --    ii2 = structData2 ^. StructData.importInfo
 
-        --printHeader "ImplScopes"
-        --(ast, astinfo) <- Pass.run2_ ImplScopes.pass (astinfo, sa2, ii2)  ast
-        --ppPrint ast
+            --printHeader "ImplScopes"
+            --(ast, astinfo) <- Pass.run2_ ImplScopes.pass (astinfo, sa2, ii2)  ast
+            --ppPrint ast
 
-        --printHeader "ImplCalls"
-        --(ast, astinfo) <- Pass.run2_ ImplCalls.pass astinfo ast
-        --ppPrint ast
-        ----return (ast, astinfo, importInfo) --, compiledCodes)
+            --printHeader "ImplCalls"
+            --(ast, astinfo) <- Pass.run2_ ImplCalls.pass astinfo ast
+            --ppPrint ast
+            ----return (ast, astinfo, importInfo) --, compiledCodes)
 
 
-        --printHeader "SSA"
-        --ast            <- Pass.run1_ SSA.pass ast
-        --ppPrint ast
+            --printHeader "SSA"
+            --ast            <- Pass.run1_ SSA.pass ast
+            --ppPrint ast
 
-        --printHeader "HAST"
-        --hast           <- Pass.run2_ HASTGen.pass importInfo ast
-        --ppPrint hast
+            --printHeader "HAST"
+            --hast           <- Pass.run2_ HASTGen.pass importInfo ast
+            --ppPrint hast
 
-        --printHeader "HSC"
-        --hsc            <- Pass.run1_ HSC.pass hast
-        --putStrLn $ unpack hsc
+            --printHeader "HSC"
+            --hsc            <- Pass.run1_ HSC.pass hast
+            --putStrLn $ unpack hsc
 
-        --return hsc
-        return undefined
+            --return hsc
+            return undefined
     --return $ (Source (src ^. Source.modName) $ Code code)
     return out
 
@@ -229,24 +233,9 @@ main = do
         filePath = map fromString $ init pathSegs
         src      = Source (QualPath [] modName) (Source.File $ fromString path)
 
-    prepareSource False src
-    --processedSource <- prepareSource False src
+    compile False src
+    --processedSource <- compile False src
     --writeFile out (processedSource ^. Source.src ^. Source.code & unpack)
 
-------------------------------------------------------------------------------------
--- CLASSES AND INSTANCES
-------------------------------------------------------------------------------------
-class GetFromSource a where
-    getPath :: a -> String
-    getText :: a -> String
 
-
-instance GetFromSource Source.File where
-    getPath (Source.File path) = unpack path
-    getText (Source.File path) = "TODO"
-
-
-instance GetFromSource Source.Text where
-    getPath (Source.Text txt) = "Interactive/Interactive.luna"
-    getText (Source.Text txt) = unpack txt
 
