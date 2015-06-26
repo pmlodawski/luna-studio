@@ -4,10 +4,11 @@
 -- Proprietary and confidential
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell   #-}
-{-# LANGUAGE TupleSections     #-}
+{-# LANGUAGE LambdaCase          #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell     #-}
+{-# LANGUAGE TupleSections       #-}
 
 module Luna.Interpreter.Session.AST.Executor where
 
@@ -20,6 +21,8 @@ import qualified Data.Text.Lazy              as Text
 import qualified Language.Preprocessor.Cpphs as Cpphs
 import qualified Text.Read                   as Read
 
+import           Control.Monad.Catch                        (SomeException)
+import qualified Control.Monad.Catch                        as Catch
 import           Flowbox.Control.Error                      (catchEither, hoistEitherWith)
 import qualified Flowbox.Data.List                          as List
 import           Flowbox.Data.MapForest                     (MapForest)
@@ -215,19 +218,21 @@ evalFunction nodeExpr callDataPath varNames = do
                 Expression  name -> return   name
             time <- Env.getTimeVar
             catchEither (left . Error.RunError $(loc) callPointPath) $ do
-                exprType <- lift2 $ Typecheck.typeOf operation
                 let varNameStr =  VarName.toString (VarName callPointPath def)
-                Session.runStmt $ varNameStr <> " <- hmapCreateKey :: IO (HKey T (" <> exprType <> "))"
+                Session.runStmt $ varNameStr <> " <- hmapCreateKeyWithWitness $ " <> operation
                 update <- lift2 $ HEval.interpret $ "\\hmap -> hmapInsert " <> varNameStr <> " (" <> operation <> ") hmap"
-                Env.compiledInsert callPointPath $ CompiledNode update Nothing
+                let valErrHandler (e:: SomeException) = logger warning (show e) >> return Nothing
+                getValue <- lift2 $ flip Catch.catch valErrHandler $
+                    Just <$> HEval.interpret ("\\hmap mode time -> flip computeValue mode =<< toIOEnv (fromValue ((hmapGet " <> varNameStr <> " hmap) hmap time))")
+                Env.compiledInsert callPointPath $ CompiledNode update getValue
                 Env.updateExpressions update
-                catchEither (left . Error.RunError $(loc) callPointPath) $ return ()
+
                 ---- update
                 --putStrLn =<< lift2 (Typecheck.typeOf $ "\\hmap -> hmapInsert " <> varNameStr <> " (" <> operation <> ") hmap")
 
                 ---- get value
                 --putStrLn =<< lift2 (Typecheck.typeOf $ "\\hmap mode time -> let v = hmapGet " <> varName <> " hmap in (flip computeValue mode =<< toIOEnv (fromValue (v time)))" )
-                --putStrLn =<< lift2 (Typecheck.typeOf $ "\\hmap mode time -> flip computeValue mode =<< toIOEnv (fromValue (hmapGet " <> varNameStr <> " hmap) time)" )
+                --putStrLn =<< lift2 (Typecheck.typeOf $
 
     Cache.put callDataPath varNames varName
     Value.reportIfVisible callPointPath
@@ -248,7 +253,6 @@ evalFunction nodeExpr callDataPath varNames = do
                 --Manager.reportUseMany varNames
                 --Manager.reportUse varName
                 --return varName
-
 
 nameHash :: String -> String
 nameHash = Hash.hash
