@@ -65,7 +65,7 @@ fitCurve' points err openness = case openness of
 
 fitCurve :: [V2 Float] -> Float -> Openness -> [ControlPoint]
 fitCurve points err openness = case openness of
-    Open   -> beziersToFullControlPoints $ V.toList $ fitCubic points' tHat1 tHat2 err
+    Open   -> beziersToControlPoints $ V.toList $ fitCubic points' tHat1 tHat2 err
     Closed -> let linkingBezier = V.head $ fitCubic (V.fromList [last points, head points]) (negated tHat2) (negated tHat1) err
                   CubicBezier _ lastPointHo firstPointHi _ = linkingBezier
                   controlPoints = fitCurve points err Open
@@ -83,6 +83,15 @@ beziersToFullControlPoints beziers = map snd $ tail . tail $ scanl (\(prevhi,_) 
     CubicBezier firstPoint firstPointHo _ _ = head beziers
     dummyHandle = V2 0 0
     CubicBezier _ _ lastPointHi lastPoint = last beziers
+
+beziersToControlPoints :: [CubicBezier Float] -> [ControlPoint]
+beziersToControlPoints beziers = [startControlPoint] ++ midPoints ++ [endControlPoint]
+    where
+        midPoints = beziersToFullControlPoints beziers
+        startControlPoint = (ps , ps, ho)
+        endControlPoint = (pe, hi, pe)
+        CubicBezier ps ho _ _ = head beziers
+        CubicBezier _ _ hi pe = last beziers
 
 fitCubic :: V.Vector (V2 Float) -> V2 Float -> V2 Float -> Float -> V.Vector (CubicBezier Float)
 fitCubic points tHat1 tHat2 err
