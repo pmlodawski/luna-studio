@@ -62,8 +62,10 @@ foreign haskell def animationFromBinary b : liftF1 animationFromBinary b
 
 foreign haskell def animableMaskFromBinary b : liftF1 animableMaskFromBinary b
 
-foreign haskell class AnimableFloat: 
+foreign haskell class AnimableFloat:
     ConstantValue: value :: Float
     AnimationCurve: curve :: CurveGUI Float
+
+foreign haskell def interpolateMask mask time: liftF2 interpolateMask mask time
 
 ##################################

@@ -437,6 +437,8 @@ class ```AnimableFloat```:
     ConstantValue: value :: Float
     AnimationCurve: curve :: CurveGUI Float
 
+def interpolateMask mask::(Mask AnimableFloat) time::Time -> Mask Float
+
 #####################
 
 # COLORS
