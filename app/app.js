@@ -171,6 +171,7 @@ function isSelectedNodeIdOnOffset(nodeId, xy) {
 
 // export
 function setNodeFocused(nodeId) {
+  unfocusNode();
   nodes[nodeId].selected(2);
   moveToTopZ(nodeId);
 }
@@ -255,7 +256,7 @@ function getNodeAt(x, y) {
     var node = nodes[nodeId];
     var offset = getOffsetForNode(nodeId, x, y);
     if (isSelectedNodeIdOnOffset(nodeId, offset)) {
-      xy = utils.screenToGl(node.position);
+      var xy = utils.workspaceToScreen(node.position);
       return [nodeId, node.selected(), xy.x, xy.y];
     }
   }

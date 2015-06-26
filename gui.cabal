@@ -1,23 +1,41 @@
-
 name:                gui
 version:             0.1.0.0
 synopsis:            Flowbox Data GUI
--- description:         
+-- description:
 homepage:            data.flowbox.io
 --license:             AllRightsReserved
---license-file:        LICENSE
+--license-file:        LICENSE 
 author:              Flowbox Data
 maintainer:          data@flowbox.io
--- copyright:           
+-- copyright:
 category:            drag and drop test, all reactive
 build-type:          Simple
--- extra-source-files:  
+-- extra-source-files:
 cabal-version:       >=1.10
 
 executable gui
   main-is:             Main.hs
-  -- other-modules:       
-  -- other-extensions:    
+  -- other-modules:
+  -- other-extensions:
+  default-extensions:   DoAndIfThenElse
+                      , TemplateHaskell
+                      , DeriveGeneric
+                      , StandaloneDeriving
+                      , FlexibleContexts
+                      , MultiParamTypeClasses
+                      , DefaultSignatures
+                      , DeriveFunctor
+                      , DeriveTraversable
+                      , DeriveFoldable
+                      , FlexibleInstances
+                      , LambdaCase
+                      , ConstraintKinds
+                      , GeneralizedNewtypeDeriving
+                      , DeriveDataTypeable
+                      , RankNTypes
+                      , ScopedTypeVariables
+--                      , EmptyDataDecl
+
   build-depends:       base >=4.7 && <4.8
                      , data-default
                      , ghcjs-base
@@ -25,6 +43,8 @@ executable gui
                      , reactive-banana
                      , text
                      , transformers
+                     , mtl
+                     , lens
   hs-source-dirs:      app/src
   default-language:    Haskell2010
 

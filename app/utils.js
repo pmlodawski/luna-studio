@@ -31,6 +31,12 @@ function glToWorkspace(a, b) {
 
 function screenToWorkspace(a, b) {
   return glToWorkspace(screenToGl(a,b));
+} 
+
+function workspaceToScreen(a, b) {
+  var vec = ensureVector(a, b);
+
+  return new THREE.Vector2((vec.x  - $$.camPan.x) * $$.camFactor.value + $$.halfScreen.x , (- vec.y + $$.camPan.y) * $$.camFactor.value + $$.halfScreen.y );
 }
 
 module.exports = {
@@ -38,5 +44,6 @@ module.exports = {
   screenToGl: screenToGl,
   screenToNormalizedGl: screenToNormalizedGl,
   screenToWorkspace: screenToWorkspace,
-  glToWorkspace: glToWorkspace
+  glToWorkspace: glToWorkspace,
+  workspaceToScreen: workspaceToScreen
 };

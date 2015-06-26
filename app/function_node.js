@@ -1,6 +1,7 @@
 var THREE = require('three');
 var $ = require('jquery');
 var $$ = require('./common');
+var features = require('./features');
 
 var createText = require('three-bmfont-text');
 var font = require("./font/LatoBlack-sdf");
@@ -26,6 +27,7 @@ function FunctionNode(id, position){
   this.id = id;
   this.position = position;
   this.labelText = ":" + id;
+  
   this.attributes = {
       pos: {
           type: 'v2',
@@ -64,21 +66,16 @@ function FunctionNode(id, position){
   this.htmlElements = {};
   this.moveTo(position.x, position.y);
   
-  this.updateLabel();
+  if(features.node_labels) this.updateLabel();
 }
 
 FunctionNode.prototype.selected = function(val) {
   if(val !== undefined) {
+    console.log("focus: " + val);
     this.uniforms.selected.value = val;
-    switch(val){
-      // case 0: this.label(":"+this.id); break;
-      // case 1: this.label("o_o"); break;
-      case 2: {
+    if(features.label_editor) { 
+      if(val == 2) {
         this.showLabelEditor();
-        break;
-      }
-      default: {
-        break;
       }
     }
   }
@@ -105,7 +102,6 @@ FunctionNode.prototype.zPos = function(z) {
 };
 
 
-
 FunctionNode.prototype.label = function(text) {  
   if(text !== undefined) {
     this.labelText = text;
@@ -114,23 +110,23 @@ FunctionNode.prototype.label = function(text) {
   return this.labelText;
 };
 
-FunctionNode.prototype.updateLabel = function() {  
+FunctionNode.prototype.updateLabel = function() {
   if(this.labelObject) this.mesh.remove(this.labelObject);
-  
+
   var geom = createText({
     text: this.labelText,
     font: font,
     width: 100/0.35,
     align: 'center'
   });
-  
+
   var obj = new THREE.Mesh(geom, textMaterial);
   obj.rotation.x = 180 * Math.PI/180;
   obj.scale.multiplyScalar(0.35);
   obj.position.x = -50;
   obj.position.z = 0.0001;
   obj.position.y = 35;
-  
+
   this.labelObject = obj;
   this.mesh.add(obj);
 };

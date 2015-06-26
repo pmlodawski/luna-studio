@@ -1,80 +1,96 @@
 module Reactive.Handlers where
 
-import Control.Applicative
-import Data.Char           ( chr )
-import Data.Maybe          ( fromJust )
-import GHCJS.DOM           ( currentWindow )
-import GHCJS.DOM.DOMWindow ( IsDOMWindow
-                           , domWindowOnclick
-                           , domWindowOnmouseup
-                           , domWindowOnkeypress
-                           , domWindowOnmousedown
-                           , domWindowOnmousemove
-                           )
-import GHCJS.DOM.EventM    ( EventM
-                           , uiCharCode
-                           , mouseClientXY
-                           , mouseShiftKey
-                           , mouseCtrlKey
-                           , mouseAltKey
-                           , mouseMetaKey
-                           )
+import           Control.Applicative
+import           Control.Lens
+import           Data.Word
+import           Data.Char           ( chr )
+import           Data.Maybe          ( fromJust )
+import           Data.Dynamic        ( Dynamic )
+import           GHCJS.DOM           ( currentWindow )
+import           GHCJS.DOM.DOMWindow ( IsDOMWindow
+                                     , domWindowOnclick
+                                     , domWindowOnmouseup
+                                     , domWindowOnkeypress
+                                     , domWindowOnmousedown
+                                     , domWindowOnmousemove
+                                     )
+import           GHCJS.DOM.EventM    ( EventM
+                                     , uiCharCode
+                                     , mouseClientXY
+                                     , mouseButton
+                                     , mouseShiftKey
+                                     , mouseCtrlKey
+                                     , mouseAltKey
+                                     , mouseMetaKey
+                                     --, preventDefault
+                                     )
 import qualified GHCJS.DOM.MouseEvent
-import Reactive.Banana.Frameworks ( AddHandler(..), liftIO )
+import           Reactive.Banana.Frameworks ( AddHandler(..), liftIO )
 
-import Mouse.Event                ( Point(..), KeyMods(..), FunctionNode(..), Event, ObjectEvent )
-import qualified Mouse.Event
-import JS.Bindings
+import           JS.Bindings
+import           Object.Object
+import qualified Event.Keyboard ( KeyMods(..), Event, newEvent )
+import qualified Event.Mouse    ( Type(..), WithObjects, newWithObjects, newEvent )
+import qualified Object.Node    ( Node )
 
-readKeyMods :: (IsDOMWindow self) => EventM GHCJS.DOM.MouseEvent.MouseEvent self KeyMods
+readKeyMods :: (IsDOMWindow self) => EventM GHCJS.DOM.MouseEvent.MouseEvent self Event.Keyboard.KeyMods
 readKeyMods = do
   shift <- mouseShiftKey
   ctrl  <- mouseCtrlKey
   alt   <- mouseAltKey
   meta  <- mouseMetaKey
-  return $ KeyMods shift ctrl alt meta
+  return $ Event.Keyboard.KeyMods shift ctrl alt meta
+
+readButton :: (IsDOMWindow self) => EventM GHCJS.DOM.MouseEvent.MouseEvent self Word
+readButton = mouseButton
 
 readMousePos :: (IsDOMWindow self) => EventM GHCJS.DOM.MouseEvent.MouseEvent self Point
-readMousePos = --convert <$> mouseClientXY 
+readMousePos = --convert <$> mouseClientXY
   do
     (x, y) <- mouseClientXY
     return $ Point x y
 
-mouseClickedHandler :: AddHandler ()
-mouseClickedHandler = AddHandler $ \h -> do
-  window <- fromJust <$> currentWindow
-  domWindowOnclick window . liftIO $ h ()
 
-mouseDownHandler :: AddHandler ObjectEvent
+newMouseWithObjects :: Event.Mouse.Type -> Point -> Word -> Event.Keyboard.KeyMods -> [Object Dynamic] -> Event.Mouse.WithObjects Dynamic
+newMouseWithObjects eventType point button keyMods objects =
+  Event.Mouse.newWithObjects (Event.Mouse.newEvent eventType point button keyMods) objects
+
+mouseDownHandler :: AddHandler (Event.Mouse.WithObjects Dynamic)
 mouseDownHandler = AddHandler $ \h -> do
-  w <- currentWindow
-  domWindowOnmousedown (fromJust w) $ do
+  window <- fromJust <$> currentWindow
+  domWindowOnmousedown window $ do
     mousePos <- readMousePos
+    button   <- readButton
     keyMods  <- readKeyMods
     liftIO $ do
-      (nodeId, selected, x, y) <- getNodeAt (_x mousePos) (_y mousePos)
-      h $ Mouse.Event.newWithObject True mousePos keyMods nodeId selected (Point x y)
+      objects <- getObjectsAt (mousePos ^. x) (mousePos ^. y)
+      h $ newMouseWithObjects Event.Mouse.Pressed mousePos button keyMods objects
 
-mouseUpHandler :: AddHandler ObjectEvent
+mouseUpHandler :: AddHandler (Event.Mouse.WithObjects Dynamic)
 mouseUpHandler = AddHandler $ \h -> do
-  w <- currentWindow
-  domWindowOnmouseup (fromJust w) $ do
+  window <- fromJust <$> currentWindow
+  domWindowOnmouseup window $ do
     mousePos <- readMousePos
+    button   <- readButton
     keyMods  <- readKeyMods
     liftIO $ do
-      (nodeId, selected, x, y) <- getNodeAt (_x mousePos) (_y mousePos)
-      h $ Mouse.Event.newWithObject False mousePos keyMods nodeId selected (Point x y)
+      objects <- getObjectsAt (mousePos ^. x) (mousePos ^. y)
+      h $ newMouseWithObjects Event.Mouse.Released mousePos button keyMods objects
 
-mouseMovedHandler :: AddHandler Point
+mouseMovedHandler :: AddHandler (Event.Mouse.WithObjects Dynamic)
 mouseMovedHandler = AddHandler $ \h -> do
-  w <- currentWindow
-  domWindowOnmousemove (fromJust w) $ do
+  window <- fromJust <$> currentWindow
+  domWindowOnmousemove window $ do
     mousePos <- readMousePos
-    liftIO $ h mousePos
+    button   <- readButton
+    keyMods  <- readKeyMods
+    liftIO $ do
+      objects <- getObjectsAt (mousePos ^. x) (mousePos ^. y)
+      h $ newMouseWithObjects Event.Mouse.Moved mousePos button keyMods objects
 
-keyPressedHandler :: AddHandler Char
+keyPressedHandler :: AddHandler Event.Keyboard.Event
 keyPressedHandler = AddHandler $ \h -> do
-  w <- currentWindow
-  domWindowOnkeypress (fromJust w) $ do
-    key <- uiCharCode    
-    liftIO . h $ chr key
+  window <- fromJust <$> currentWindow
+  domWindowOnkeypress window $ do
+    key <- uiCharCode
+    liftIO . h $ Event.Keyboard.newEvent $ chr key
