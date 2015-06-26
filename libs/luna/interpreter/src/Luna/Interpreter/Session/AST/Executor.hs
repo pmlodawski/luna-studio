@@ -152,7 +152,7 @@ execute callDataPath nodeExpr varNames = do
     let execFunction = evalFunction nodeExpr callDataPath varNames
 
         executeModified = do
-            varName <- execFunction
+            varName <- execFunction True
             if varName /= prevVarName
                 then if boundVarName /= Just varName
                     then do logger debug "processing modified node - result value differs"
@@ -163,13 +163,13 @@ execute callDataPath nodeExpr varNames = do
                             Invalidate.markSuccessors callDataPath CacheStatus.Affected
                 else if null $ varName ^. VarName.hash
                     then do logger debug "processing modified node - result value non hashable"
-                            Invalidate.markSuccessors callDataPath CacheStatus.Modified
+                            Invalidate.markSuccessors callDataPath CacheStatus.Affected
                     else logger debug "processing modified node - result value is same"
 
         executeAffected = case boundVarName of
             Nothing    -> do
                 logger debug "processing affected node - result never bound"
-                _ <- execFunction
+                _ <- execFunction False
                 Invalidate.markSuccessors callDataPath CacheStatus.Modified
             Just bound -> do
                 logger debug "processing affected node - result rebound"
@@ -185,16 +185,17 @@ execute callDataPath nodeExpr varNames = do
 
 
 evalFunction :: MemoryManager mm
-             => NodeExpr -> CallDataPath -> [VarName] -> Session mm VarName
-evalFunction nodeExpr callDataPath varNames = do
+             => NodeExpr -> CallDataPath -> [VarName] -> Bool -> Session mm VarName
+evalFunction nodeExpr callDataPath varNames recompile = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
         varName = VarName callPointPath def
     prettyPrint (nodeExpr, callPointPath)
-    Env.compiledLookup callPointPath >>= \case
-        Just (CompiledNode update getValue) -> do
+    compiledNode <- Env.compiledLookup callPointPath
+    case (compiledNode, recompile) of
+        (Just (CompiledNode update getValue), False) -> do
             Env.updateExpressions update
-            print "compiled"
-        Nothing -> do
+            logger debug "running compiled code"
+        _ -> do
             let tmpVarName    = "_tmp"
                 mkArg arg = "((hmapGet " <> VarName.toString arg <> " hmap) hmap _time)"
                 args      = map mkArg varNames
@@ -219,7 +220,8 @@ evalFunction nodeExpr callDataPath varNames = do
             time <- Env.getTimeVar
             catchEither (left . Error.RunError $(loc) callPointPath) $ do
                 let varNameStr =  VarName.toString (VarName callPointPath def)
-                Session.runStmt $ varNameStr <> " <- hmapCreateKeyWithWitness $ " <> operation
+                when (Maybe.isNothing compiledNode) $
+                    Session.runStmt $ varNameStr <> " <- hmapCreateKeyWithWitness $ " <> operation
                 update <- lift2 $ HEval.interpret $ "\\hmap -> hmapInsert " <> varNameStr <> " (" <> operation <> ") hmap"
                 let valErrHandler (e:: SomeException) = logger warning (show e) >> return Nothing
                 getValue <- lift2 $ flip Catch.catch valErrHandler $
