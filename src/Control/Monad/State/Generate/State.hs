@@ -20,6 +20,7 @@ newState name el = sequence [ genDataType
                             , gen_run
                             , gen_evalT
                             , gen_eval
+                            , gen_with
                             ]
     
     where 
@@ -40,6 +41,7 @@ newState name el = sequence [ genDataType
         n_evalStateT  = mkName "State.evalStateT"
         n_runIdentity = mkName "runIdentity"
         n_Identity    = mkName "Identity"
+        n_return      = mkName "return"
 
         a         = mkName "a"
         b         = mkName "b"
@@ -117,7 +119,7 @@ newState name el = sequence [ genDataType
             s <- VarT <$> newName "s"
             m <- VarT <$> newName "m"
             let t = VarT $ mkName "t"
-                premise = [ ClassP className   [m]
+                premise = [ ClassP className     [m]
                           , ClassP n_monadTrans  [t]
                           , ClassP n_monad       [AppT t m]
                           , ClassP n_applicative [AppT t m]
@@ -146,12 +148,31 @@ newState name el = sequence [ genDataType
         gen_evalT :: Q Dec
         gen_evalT = return $ mkFunc n_evalT [VarP a] $ appChainE (VarE n_evalStateT) [VarE fieldName, VarE a]
 
-        --eval :: PragmaStore a -> Value -> a
+        --eval :: MyData a -> Value -> a
         --eval = runIdentity .: evalT
         n_eval = mkName "eval"
         gen_eval :: Q Dec
         gen_eval = return $ mkFunc n_eval [VarP a, VarP b] $ appChainE (VarE n_runIdentity) [appsE (VarE n_evalT) [VarE a, VarE b]]
 
+        --with :: MonadMyData m => (Val -> Val) -> m a -> m a
+        --with f m = do
+        --    a <- get
+        --    put (f a)
+        --    out <- m
+        --    put a
+        --    return out
+        n_with = mkName "with"
+        gen_with :: Q Dec
+        gen_with = return $ mkFunc n_with [VarP f,VarP m]
+                 $ DoE [ BindS (VarP a) (VarE getName)
+                       , NoBindS (AppE (VarE putName) (AppE (VarE f) (VarE a)))
+                       , BindS (VarP out) (VarE m)
+                       , NoBindS (AppE (VarE putName) (VarE a))
+                       , NoBindS (AppE (VarE n_return) (VarE out))
+                       ]
+                  where out = mkName "out"
+                        f   = mkName "f"
+                        m   = mkName "m"
 
 mkFunc name args func = FunD name [Clause args (NormalB func) []]
 

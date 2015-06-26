@@ -67,7 +67,8 @@ Library
                     template-haskell,
                     QuickCheck,
                     unordered-containers,
-                    cond
+                    cond,
+                    concrete-typerep
 
   if os(windows)
     Build-Depends:  Win32

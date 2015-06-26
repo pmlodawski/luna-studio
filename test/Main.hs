@@ -19,6 +19,7 @@ import Flowbox.Prelude hiding (error)
 
 import           Flowbox.Source.Location
 import qualified Flowbox.System.Console.StyledText.StyledText as Text
+import qualified Flowbox.System.Path as Path
 
 
 data Test = Test Int Int deriving(Show, Generic)
@@ -43,22 +44,24 @@ testLogger = runLogger $ do
 f :: String -> String
 f x = x
 
-main :: IO ()
-main = do
-    putStrLn $ format $loc
-    let t = Test 5 5
-    putStrLn $ fshow f t
+main = Path.main 
 
-    logger setLevel DEBUG
-    testLogger
-    loggerIO error "IO error"
+--main :: IO ()
+--main = do
+--    putStrLn $ format $loc
+--    let t = Test 5 5
+--    putStrLn $ fshow f t
 
-    print ("colored text test" :: String)
-    let x = "ala"
-        y = Text.green "ola"
-        txt = x ++ y ++ x
-    Text.print txt
-    Text.print $ Text.clearFormatting txt
-    print $ toText txt
+--    logger setLevel DEBUG
+--    testLogger
+--    loggerIO error "IO error"
 
-    return ()
+--    print ("colored text test" :: String)
+--    let x = "ala"
+--        y = Text.green "ola"
+--        txt = x ++ y ++ x
+--    Text.print txt
+--    Text.print $ Text.clearFormatting txt
+--    print $ toText txt
+
+--    return ()
