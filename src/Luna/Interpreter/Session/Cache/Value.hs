@@ -22,7 +22,7 @@ import qualified Flowbox.Data.Serialization                   as Serialization
 import           Flowbox.Prelude
 import           Flowbox.Source.Location                      (loc)
 import           Flowbox.System.Log.Logger                    as L
-import           Generated.Proto.Data.Value                   (Value)
+import           Generated.Proto.Data.SValue                  (SValue)
 import           Generated.Proto.Mode.Mode                    (Mode)
 import           Generated.Proto.Mode.ModeValue               (ModeValue (ModeValue))
 import qualified Luna.DEP.Graph.Flags                         as Flags
@@ -129,7 +129,7 @@ computeLookupValue varName time (modValues, compValMap) mode = do
                       return (ModeValue mode justVal:modValues, compValMap)
 
 
-computeValue :: VarName -> Time -> Mode -> Session mm Value
+computeValue :: VarName -> Time -> Mode -> Session mm SValue
 computeValue varName time mode = do
     lift2 $ flip Catch.catch excHandler $ do
         let toValueExpr = "\\m -> flip computeValue m =<< toIOEnv (fromValue (" <> VarName.toString varName <> " (" <> show time <> ")))"
@@ -137,7 +137,7 @@ computeValue varName time mode = do
         action <- HEval.interpret'' toValueExpr "Mode -> IO (Maybe SValue)"
         liftIO $ action mode <??&.> "Internal error"
     where
-        excHandler :: Catch.SomeException -> MGHC.Ghc Value
+        excHandler :: Catch.SomeException -> MGHC.Ghc SValue
         excHandler exc = case Catch.fromException exc of
             Just AbortException -> throw AbortException
             Nothing -> do

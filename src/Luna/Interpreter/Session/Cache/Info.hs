@@ -11,7 +11,7 @@ module Luna.Interpreter.Session.Cache.Info where
 import Data.Map (Map)
 
 import           Flowbox.Prelude
-import           Generated.Proto.Data.Value            (Value)
+import           Generated.Proto.Data.SValue           (SValue)
 import           Generated.Proto.Mode.Mode             (Mode)
 import qualified Luna.DEP.AST.AST                      as AST
 import           Luna.DEP.AST.Control.Crumb            (Breadcrumbs)
@@ -20,7 +20,7 @@ import           Luna.Interpreter.Session.Data.VarName (VarName)
 
 
 
-type CompValueMap = Map (VarName, Mode) Value
+type CompValueMap = Map (VarName, Mode) SValue
 
 data CacheInfo = CacheInfo { _defID         :: AST.ID
                            , _breadcrumbs   :: Breadcrumbs

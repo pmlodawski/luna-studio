@@ -11,13 +11,14 @@ module Luna.Interpreter.Session.Data.CompiledNode where
 import Data.HMap (HMap)
 
 import Flowbox.Prelude
-import Generated.Proto.Data.Value (Value)
-import Generated.Proto.Mode.Mode  (Mode)
+import Generated.Proto.Data.SValue (SValue)
+import Generated.Proto.Mode.Mode   (Mode)
+
 
 
 
 data CompiledNode = CompiledNode { _update :: HMap -> HMap
-                                 , _value  :: Maybe (HMap -> Mode -> IO Value)
+                                 , _value  :: Maybe (HMap -> Mode -> Float -> IO (Maybe SValue))
                                  }
 
 makeLenses ''CompiledNode
