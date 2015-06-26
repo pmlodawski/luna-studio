@@ -8,3 +8,8 @@ Run:
 ```
 brunch watch --server
 ```
+
+Open in browser:
+```
+http://localhost:3333
+```
