@@ -21,6 +21,7 @@ import           Luna.System.Pragma.Store (PragmaStoreT, MonadPragmaStore)
 import           Control.Monad.State      (StateT, evalStateT)
 import           Luna.System.Config       (Config)
 import qualified Luna.System.Config       as Config
+import qualified Luna.System.Env          as Env
 
 ----------------------------------------------------------------------
 -- Session
@@ -33,8 +34,9 @@ type SessionT m a = PragmaStoreT m a
 --       $ flip runStateT (0::Int) s
 
 --runT :: PragmaStoreT m a -> m a
-run cfg = flip PragmaStore.evalT mempty
-        . flip Config.evalT cfg
+run cfg session = flip PragmaStore.evalT mempty
+                . flip Config.evalT cfg
+                $ Env.evalT session =<< defM
       
 
 --runT2 s = flip runStateT (0::Int) 

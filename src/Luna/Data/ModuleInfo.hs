@@ -38,6 +38,9 @@ import           Luna.Syntax.Name.Path    (NamePath, QualPath (QualPath))
 import qualified Luna.Syntax.Name.Path    as NP
 import           Luna.Syntax.Name.Pattern (NamePatDesc, SegmentDesc)
 import qualified Luna.System.Config       as Config
+import qualified Luna.System.Env          as Env
+import           Luna.System.Env          (MonadEnvState)
+
 
 
 type Name = String
@@ -204,10 +207,12 @@ readModInfoFromFile path = do
         else return Nothing
 
 
---lookupModule :: MonadIO m => QualPath -> m (Maybe ModuleInfo)
-lookupModule path = do
-    envPath <- Config.readPath
+lookupModule :: (MonadIO m, MonadEnvState m) => QualPath -> m [String]
+lookupModule name = do
+    print name
+    envPath <- view Env.repos <$> Env.get
     return envPath
+    --return ()
 
 
 -----------------------------------------------------------------------------

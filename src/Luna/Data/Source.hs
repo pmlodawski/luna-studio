@@ -34,12 +34,10 @@ class SourceReader m a where
 data Source a = Source { _modName :: QualPath, _src :: a} deriving (Show, Functor)
 
 newtype File = File { _path :: T.Text } deriving (Show)
-newtype Text = Text { _txt :: T.Text } deriving (Show)
 newtype Code = Code { _code :: T.Text } deriving (Show)
 
 makeLenses ''Source
 makeLenses ''File
-makeLenses ''Text
 makeLenses ''Code
 
 ----------------------------------------------------------------------
@@ -51,6 +49,6 @@ instance (Functor m, MonadIO m) => SourceReader m File where
                            $ liftIO $ readFile (toString $ view path src)
 
 
-instance SourceReader m Text where
-    read (Source name src) = return . Source name . Code $ view txt src
+instance SourceReader m Code where
+    read = return
 

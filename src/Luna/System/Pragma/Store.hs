@@ -18,7 +18,7 @@
 module Luna.System.Pragma.Store where
 
 import           Flowbox.Prelude     as P hiding (noneOf, lookup)
-
+aq
 import qualified Luna.System.Pragma           as Pragma
 import           Luna.System.Pragma           hiding (lookup, isEnabled)
 import qualified Control.Monad.State          as State
@@ -52,7 +52,7 @@ parseByName n = do
     res <- Pragma.parseByName n <$> get
     case res of
         Left  e -> return $ Left e
-        Right p -> Right <$> (put =<< p) 
+        Right p -> Right <$> (put =<< p)
 
 pragmaNames :: MonadPragmaStore m => m [Text]
 pragmaNames = Pragma.pragmaNames <$> get
@@ -83,7 +83,7 @@ lookup :: Ctx t m a => PragmaDef t a -> m (Either LookupError (PragmaInst t a))
 lookup p = Pragma.lookup p <$> get
 
 pop :: Ctx t m a => PragmaDef t a -> m (Either LookupError (PragmaInst t a))
-pop p = do 
+pop p = do
     lup <- Pragma.pop p <$> get
     traverse_ (put.snd) lup
     return $ fmap fst lup
