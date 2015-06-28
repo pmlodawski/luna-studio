@@ -21,3 +21,4 @@ npm-debug.log
 dist
 www
 cabal.sandbox.config
+.cabal-sandbox
