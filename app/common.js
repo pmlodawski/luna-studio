@@ -1,3 +1,5 @@
+"use strict";
+
 var THREE = require('three');
 var $ = require('jquery');
 

@@ -1,3 +1,5 @@
+"use strict";
+
 var $ = require('jquery');
 var _ = require('underscore');
 var THREE = require('three');
@@ -8,8 +10,6 @@ var utils = require('./utils');
 
 var nodes = {};    // array of nodes with nodes
 $$.nodes = nodes;
-var draggedIndex;   // index of object being dragged
-var dragging;       // indicates whether node is being dragged
 
 var zOrderDiv = 10000.0;
 var currentMazZ = 0.0;
@@ -101,7 +101,7 @@ function setup_pan_and_zoom() {
     mouse.set(event.clientX, event.clientY);    
   });
 
-  $(document).mouseup(function(event) {
+  $(document).mouseup(function() {
     dragMode = null;
     // event.preventDefault();
   });
@@ -121,7 +121,7 @@ function setWindowSize(){
 
 function updateCamFactor(val) {
   $$.camFactor.value = Math.max($$.camFactorBounds[0], Math.min($$.camFactorBounds[1], val));
-  return ($$.camFactor.value == val);
+  return ($$.camFactor.value === val);
 }
 
 function reconfigure_camera() {
@@ -197,7 +197,7 @@ function unselectAllNodes() {
 // export
 function unfocusNode() {
   _.each(nodes, function(node){
-      if (node.selected() == 2) node.selected(1);
+      if (node.selected() === 2) node.selected(1);
   });
 }
 
@@ -227,8 +227,8 @@ function moveToTopZ(nodeId) {
 }
 
 // export
-function addNodeIdWithOffsetOnPosition(x, y) {
-    var emptyNode = [-1, 0, 0];
+// function addNodeIdWithOffsetOnPosition(x, y) {
+//     var emptyNode = [-1, 0, 0];
     // var nodeIds = getNodeIdsOnPosition(x, y);
     // // unselectAll();
     // if (nodeIds.length === 0) return emptyNode;
@@ -241,8 +241,8 @@ function addNodeIdWithOffsetOnPosition(x, y) {
     //         return [nodeId, xy[0], xy[1]];
     //     }
     // }
-    return emptyNode;
-}
+//     return emptyNode;
+// }
 
 // export
 function getNodeAt(x, y) {
@@ -283,11 +283,11 @@ function getOffsetForNode(nodeIndex, x, y) {
 }
 
 // export
-function dragNodes(nodeIndices, x, y) {
-  nodeIndices.forEach(function(nodeIndex) {
-    dragNode(nodeIndex, x, y);
-  });
-}
+// function dragNodes(nodeIndices, x, y) {
+//   nodeIndices.forEach(function(nodeIndex) {
+//     dragNode(nodeIndex, x, y);
+//   });
+// }
 
 // export
 function dragNode(nodeIndex, x, y) {

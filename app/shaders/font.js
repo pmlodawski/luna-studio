@@ -1,3 +1,5 @@
+"use strict";
+
 var xtend = require('xtend');
 var THREE = require('three');
 

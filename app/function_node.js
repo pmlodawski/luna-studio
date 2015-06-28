@@ -1,3 +1,7 @@
+/* globals dimple: false, d3: false */
+
+"use strict";
+
 var THREE = require('three');
 var $ = require('jquery');
 var $$ = require('./common');
@@ -15,7 +19,7 @@ var textMaterial = new THREE.ShaderMaterial(require('./shaders/font')({
   map: THREE.ImageUtils.loadTexture('font/LatoBlack-sdf.png'),
   smooth: 1/12,
   side: THREE.DoubleSide, 
-  transparent: true,
+  transparent: true, 
   color: 'rgb(230, 230, 230)'
 }));
 
@@ -74,7 +78,7 @@ FunctionNode.prototype.selected = function(val) {
     console.log("focus: " + val);
     this.uniforms.selected.value = val;
     if(features.label_editor) { 
-      if(val == 2) {
+      if(val === 2) {
         this.showLabelEditor();
       }
     }
@@ -143,7 +147,7 @@ FunctionNode.prototype.showLabelEditor = function() {
   var _this = this;
   setTimeout(function(){
     editor.focus();
-    editor.blur(function(ev){
+    editor.blur(function(){
         _this.label(_this.hideLabelEditor());
     });
   }, 50);
@@ -156,7 +160,7 @@ FunctionNode.prototype.renderExamplePlot = function() {
       .attr("width", 400)
       .attr("height", 250);
   var i;
-  data = [];
+  var data = [];
   for(i = 0; i < 12; i++) {
     data[2*i] = {"Month": i, "Unit Sales": Math.random()*30, "Channel": "direct"};
     data[2*i+1] = {"Month": i, "Unit Sales": Math.random()*30, "Channel": "web"};
