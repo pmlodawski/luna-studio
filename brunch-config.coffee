@@ -10,7 +10,7 @@ exports.config =
   files:
     javascripts:
       joinTo:
-        # 'javascripts/null.js': /^app|^vendor\/libs\.js/
+        'javascripts/null.js': /^app|^vendor\/libs\.js/
         'javascripts/ghcjs.js': /^app\/.*\.ghcjs$/
         # 'javascripts/vendor.js': /^(vendors|bower_components)/
       order:
