@@ -81,6 +81,17 @@ namespace binary
 		ret = swap_endian(ret);
 		return ret;
 	}
+	
+	template<typename T>
+	T readFloatingPoint(Input &input)
+	{
+		return readPrimitive<T>(input);
+		// 	T ret = 0;
+		// 	double mantissa = readInteger(input);
+		// 	double exponent = readInt64(input);
+		// 	ret = std::ldexp(mantissa, exponent);
+		// 	return ret;
+	}
 
 	inline std::int64_t readInt64(std::istream &input)
 	{
@@ -105,6 +116,16 @@ namespace binary
 	inline bool readBool(std::istream &input)
 	{
 		return readInt8(input);
+	}
+
+	inline float readFloat(std::istream &input)
+	{
+		return readFloatingPoint<float>(input);
+	}
+
+	inline double readDouble(std::istream &input)
+	{
+		return readFloatingPoint<double>(input);
 	}
 
 	inline void deserialize(std::int8_t &val, Input &input);
@@ -144,17 +165,6 @@ namespace binary
 
 			return ret;
 		}
-	}
-
-	template<typename T>
-	T readFloatingPoint(Input &input)
-	{
-		return readPrimitive<T>(input);
-	// 	T ret = 0;
-	// 	double mantissa = readInteger(input);
-	// 	double exponent = readInt64(input);
-	// 	ret = std::ldexp(mantissa, exponent);
-	// 	return ret;
 	}
 
 	inline void deserialize(char &val, Input &input)
@@ -285,6 +295,31 @@ namespace binary
 		const auto fixedEndian = swap_endian(value);
 		const auto length = sizeof(fixedEndian);
 		output.write((const char *)&fixedEndian, length);
+	}
+
+	inline void writeInt8(std::int8_t f, std::ostream &output)
+	{
+		writePrimitive(output, f);
+	}
+
+	inline void writeInt16(std::int16_t f, std::ostream &output)
+	{
+		writePrimitive(output, f);
+	}
+
+	inline void writeInt32(std::int32_t f, std::ostream &output)
+	{
+		writePrimitive(output, f);
+	}
+
+	inline void writeInt64(std::int64_t f, std::ostream &output)
+	{
+		writePrimitive(output, f);
+	}
+
+	inline void writeFloat(float f, std::ostream &output)
+	{
+		writePrimitive(output, f);
 	}
 
 	inline void serialize(const char &value, std::ostream &output)
