@@ -7,12 +7,13 @@ exports.config =
   paths:
     public: 'www'  
     watched: ['app', 'test', 'vendor', "#{cabalProjectName}.cabal"]
+
   files:
     javascripts:
       joinTo:
         'javascripts/null.js': /^app|^vendor\/libs\.js/
         'javascripts/ghcjs.js': /^app\/.*\.ghcjs$/
-        # 'javascripts/vendor.js': /^(vendors|bower_components)/
+        'javascripts/vendor.js': /^(vendors|bower_components)/
       order:
         before: []
 
@@ -25,13 +26,26 @@ exports.config =
 
   conventions:
     assets: /(assets|vendor\/assets)/
+
   modules:
     wrapper: false
     definition: false    
+
   plugins:
     ghcjs:
       placeholder: 'app/env.ghcjs'
       projectName: cabalProjectName
+
+    jshint:
+      pattern: /^app\/.*\.js$/
+      warnOnly: true
+
+    autoReload:
+      enabled:
+        css: on
+        js: off
+        assets: off
+        
     browserify:
       # A string of extensions that will be used in Brunch and for browserify.
       # Default: js json coffee ts jsx hbs jade.
@@ -44,7 +58,7 @@ exports.config =
       bundles:
         'javascripts/libs.js':
           # Passed to browserify.
-          entry: 'vendor/libs.js'
+          entry: 'app/libs.js'
 
           # Anymatch, as used in Brunch.
           matcher: /^vendor/

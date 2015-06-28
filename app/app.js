@@ -19,6 +19,7 @@ var maxZ = (Math.pow(2, 31) - 1) / zOrderDiv;
 // export to HTML
 function start() {
   $(document).ready(function(){
+    window.ghcjs();
     THREE = require('three');
     initialize_gl();
     setup_pan_and_zoom();
