@@ -32,12 +32,10 @@ data DragActionType = StartDrag
                     | StopDrag
                     deriving (Eq, Show)
 
-data DragPos = DragPos { _dragStartPos    :: Point
-                       , _dragPreviousPos :: Point
-                       , _dragCurrentPos  :: Point
-                       } deriving (Eq, Show)
-
-data DragState = DragState { _dragState :: Maybe DragPos } deriving (Eq, Show)
+data DragState = DragState { _dragStartPos    :: Point
+                           , _dragPreviousPos :: Point
+                           , _dragCurrentPos  :: Point
+                           } deriving (Eq, Show)
 
 data Action = SelectAction { _actionType :: ActionType
                            , _actionNode :: Node
@@ -48,7 +46,7 @@ data Action = SelectAction { _actionType :: ActionType
             | UnselectAll
             deriving (Eq, Show)
 
-data State = State { _drag  :: DragState
+data State = State { _drag  :: Maybe DragState
                    , _nodes :: [Node]
                    } deriving (Eq, Show)
 
@@ -57,11 +55,7 @@ type ActionState = WithState (Maybe Action) State
 
 makeLenses ''Action
 makeLenses ''State
-makeLenses ''DragPos
 makeLenses ''DragState
-
-instance Default DragState where
-    def = DragState def
 
 instance Default State where
     def = State def def
@@ -81,11 +75,8 @@ instance PrettyPrinter Action where
 instance PrettyPrinter State where
     display (State dragging nodes) = display dragging <> " " <> display nodes
 
-instance PrettyPrinter DragPos where
-    display (DragPos start prev current) = display start <> " " <> display prev <> " " <> display current
-
 instance PrettyPrinter DragState where
-    display (DragState dragState) = "d( " <> display dragState <> " )"
+    display (DragState start prev current) = "d( " <> display start <> " " <> display prev <> " " <> display current <> " )"
 
 
 moveNodes :: Point -> [Node] -> [Node]
@@ -101,7 +92,6 @@ accumActionState newAction oldActionState = WithState (Just newAction) $ State n
     oldAction                      = oldActionState ^. action
     oldState                       = oldActionState ^. state
     oldDrag                        = oldState ^. drag
-    oldDragState                   = oldDrag  ^. dragState
     oldNodes                       = oldState ^. nodes
     newNodes                       = case newAction of
         UnselectAll               -> []
@@ -113,7 +103,7 @@ accumActionState newAction oldActionState = WithState (Just newAction) $ State n
             where oldFilteredNodes = removeNode node oldNodes
                   newNode          = select node
         DragAction tpe point      -> case tpe of
-            Moving                -> case oldDragState of
+            Moving                -> case oldDrag of
                 Just oldDragState -> moveNodes delta oldNodes
                     where prevPos  = oldDragState ^. dragCurrentPos
                           delta    = point - prevPos
@@ -122,14 +112,14 @@ accumActionState newAction oldActionState = WithState (Just newAction) $ State n
         -- _                         -> oldNodes
     newDrag                        = case newAction of
         DragAction tpe point      -> case tpe of
-            StartDrag             -> DragState $ Just $ DragPos point point point
-            Moving                -> case oldDragState of
-                Just oldDragState -> DragState $ Just $ DragPos startPos prevPos point
-                    where startPos = oldDragState ^. dragStartPos
-                          prevPos  = oldDragState ^. dragCurrentPos
-                Nothing           -> DragState Nothing
-            StopDrag              -> DragState Nothing
-        _                         -> DragState Nothing
+            StartDrag             -> Just $ DragState point point point
+            Moving                -> case oldDrag of
+                Just oldDrag      -> Just $ DragState startPos prevPos point
+                    where startPos = oldDrag ^. dragStartPos
+                          prevPos  = oldDrag ^. dragCurrentPos
+                Nothing           -> Nothing
+            StopDrag              -> Nothing
+        _                         -> Nothing
 
 
 keyboardToAction :: Keyboard.Event -> Maybe Action
