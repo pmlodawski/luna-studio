@@ -1,12 +1,14 @@
 "use strict";
 
-var $ = require('jquery');
-var _ = require('underscore');
-var THREE = require('three');
-var FunctionNode = require('./function_node').FunctionNode;
-var $$ = require('./common');
-var config = require('./config');
-var utils = require('./utils');
+var $            = require('jquery'),
+    _            = require('underscore'),
+    THREE        = require('three'),
+    FunctionNode = require('./function_node').FunctionNode,
+    $$           = require('./common'),
+    config       = require('./config'),
+    utils        = require('./utils'),
+    features     = require('./features'),
+    NodeSearcher = require('./node_searcher');
 
 var nodes = {};    // array of nodes with nodes
 $$.nodes = nodes;
@@ -28,6 +30,11 @@ function start() {
     document.addEventListener('keydown', onDocumentKeyDown, false );
     createRandomNodes(40);
     render();
+    
+    if(features.node_searcher) {
+      $$.node_searcher = new NodeSearcher();
+      $('body').append($$.node_searcher.el);
+    }
   });
 }
 
