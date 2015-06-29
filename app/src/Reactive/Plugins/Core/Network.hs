@@ -34,7 +34,8 @@ import qualified Event.Keyboard as Keyboard ( KeyMods(..), Event(..) )
 import           Event.Mouse                ( WithObjects(..) )
 import qualified Event.Mouse    as Mouse
 import           Utils.PrettyPrinter
-import qualified Reactive.Plugins.Core.Action.Graph as Node
+import qualified Reactive.Plugins.Core.Action.Selection as Selection
+import qualified Reactive.Plugins.Core.Action.Drag      as Drag
 
 
 instance Monoid (Event t a) where
@@ -53,24 +54,32 @@ makeNetworkDescription = do
 
     let
         -- clicksCountB       = accumB 0 ((+ 1) <$ mouseClickedE)
-        lastKeyB                   = stepper Nothing $ Just <$> keyPressedE
+        lastKeyB                      = stepper def $ Just <$> keyPressedE
 
         mouseNodeDownE, mouseNodeUpE, mouseNodeMovedE :: Event t (WithObjects Node)
-        mouseNodeDownE             = unpackDynamic <$> mouseDownE
-        mouseNodeUpE               = unpackDynamic <$> mouseUpE
-        mouseNodeMovedE            = unpackDynamic <$> mouseMovedE
+        mouseNodeDownE                = unpackDynamic <$> mouseDownE
+        mouseNodeUpE                  = unpackDynamic <$> mouseUpE
+        mouseNodeMovedE               = unpackDynamic <$> mouseMovedE
 
         -- mouseE                     = mouseDownE <+> mouseUpE <+> mouseMovedE
-        mouseNodeE                 = mouseNodeDownE <+> mouseNodeUpE <+> mouseNodeMovedE
+        mouseNodeE                    = mouseNodeDownE <+> mouseNodeUpE <+> mouseNodeMovedE
 
-        mouseNodeSelectActionsE    = filterJust $ Node.mouseToSelectAction    <$> mouseNodeE
-        mouseNodeDragActionsE      = filterJust $ Node.mouseToDragAction      <$> mouseNodeE
-        keyboardNodeActionsE       = filterJust $ Node.keyboardToAction       <$> keyPressedE
+        mouseNodeSelectActionE        = filterJust $ Selection.mouseToAction      <$> mouseNodeE
+        keyboardNodeSelectionActionE  = filterJust $ Selection.keyboardToAction   <$> keyPressedE
+        nodeSelectionActionE          = mouseNodeSelectActionE <+> keyboardNodeSelectionActionE
+        nodeSelectionReactionE        = accumE def $ Selection.accumActionState   <$> nodeSelectionActionE
 
-        allNodeActionsE            = mouseNodeSelectActionsE <+> mouseNodeDragActionsE <+> keyboardNodeActionsE
+        nodeSelectionB                = stepper def $ Selection.toNodeSelection   <$> nodeSelectionReactionE
+
+        nodeDragActionsE              = filterJust $ Drag.mouseToAction           <$> mouseNodeE
+        nodeDragSelectionE            = Drag.AccumInput <$> nodeSelectionB        <@> nodeDragActionsE
+        nodeDragReactionsB            = accumB def $ Drag.accumActionState        <$> nodeDragSelectionE
+
+
+        -- allNodeActionsE            = mouseNodeSelectActionsE <+> mouseNodeDragActionsE <+> keyboardNodeActionsE
 
         -- mouseNodeReactionB         = accumB def $ Node.accumActionState <$> allNodeActionsE
-        mouseNodeReactionE         = accumE def $ Node.accumActionState <$> allNodeActionsE
+        -- mouseNodeReactionE  = accumE def $ Selection.accumActionState <$> allNodeActionsE
 
 
         -- logClicksB  = ("Clk " <>) . show <$> clicksCountB
@@ -95,8 +104,14 @@ makeNetworkDescription = do
 
     -- mouseNodeReactionF <- changes mouseNodeReactionB
     -- reactimate' $ (fmap Node.updateNodes) <$> mouseNodeReactionF
-    reactimate $ Node.updateNodesUI <$> mouseNodeReactionE
-    reactimate $ (logAs "") <$> (display <$> mouseNodeReactionE)
+    reactimate $ Selection.updateUI <$> nodeSelectionReactionE
+    reactimate $ (logAs "s: ") <$> (display <$> nodeSelectionReactionE)
+
+    nodeDragReactionsF <- changes nodeDragReactionsB
+    reactimate' $ (fmap Drag.updateUI) <$> nodeDragReactionsF
+    reactimate' $ (fmap $ logAs "d: ") <$> ((fmap display) <$> nodeDragReactionsF)
+
+
 
 
     return ()

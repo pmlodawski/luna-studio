@@ -23,7 +23,7 @@ function start() {
     THREE = require('three');
     initialize_gl();
     setup_pan_and_zoom();
-    
+
     // setup_pan_and_drag()
     document.addEventListener('keydown', onDocumentKeyDown, false );
     createRandomNodes(40);
@@ -71,9 +71,9 @@ function setup_pan_and_zoom() {
       default: dragMode = null;
     }
 
-    mouse.set(event.clientX, event.clientY);    
+    mouse.set(event.clientX, event.clientY);
     mouseStart.set(event.clientX - $$.halfScreen.x, - event.clientY + $$.halfScreen.y).divideScalar($$.camFactor.value);
-    
+
   });
 
   $(document).mousemove(function(event) {
@@ -86,7 +86,7 @@ function setup_pan_and_zoom() {
         reconfigure_camera();
         break;
       }
-      case 'zoom': {      
+      case 'zoom': {
         var deltaX = (event.clientX - mouse.x);
         var deltaY = -(event.clientY - mouse.y);
         var factor = (deltaX+deltaY)/512;
@@ -99,7 +99,7 @@ function setup_pan_and_zoom() {
         break;
       }
     }
-    mouse.set(event.clientX, event.clientY);    
+    mouse.set(event.clientX, event.clientY);
   });
 
   $(document).mouseup(function() {
@@ -172,7 +172,7 @@ function isSelectedNodeIdOnOffset(nodeId, xy) {
 
 // export
 function setNodeFocused(nodeId) {
-  unfocusNode();
+  unfocusNodes();
   nodes[nodeId].selected(2);
   moveToTopZ(nodeId);
 }
@@ -195,8 +195,8 @@ function unselectAllNodes() {
   });
 }
 
-// export
-function unfocusNode() {
+// no export
+function unfocusNodes() {
   _.each(nodes, function(node){
       if (node.selected() === 2) node.selected(1);
   });
@@ -251,7 +251,7 @@ function getNodeAt(x, y) {
   var nodeIds = getNodeIdsOnPosition(x, y);
 
   if (nodeIds.length === 0) return emptyNode;
-      
+
   for (var i = 0; i < nodeIds.length; i++) {
     var nodeId = nodeIds[i];
     var node = nodes[nodeId];
@@ -268,7 +268,7 @@ function getNodeIdsOnPosition(x, y) {
     var rayCaster = new THREE.Raycaster();
     rayCaster.setFromCamera(utils.screenToNormalizedGl(x, y), $$.camera);
     var intersects = rayCaster.intersectObjects($$.scene.children);
-        
+
     var ids = intersects.map(function(intersect){return intersect.object.userData.id;});
     return ids;
 }
@@ -279,7 +279,7 @@ function getOffsetForNode(nodeIndex, x, y) {
 
     var vec = utils.screenToWorkspace(x,y);
     var node = nodes[nodeIndex];
-    
+
     return node.position.clone().sub(vec).toArray();
 }
 
@@ -307,7 +307,6 @@ module.exports = {
   setNodeSelected: setNodeSelected,
   setNodeUnselected: setNodeUnselected,
   unselectAllNodes: unselectAllNodes,
-  unfocusNode: unfocusNode,
   getNodeAt: getNodeAt,
   start: start
 };

@@ -16,6 +16,8 @@ data Node = Node { _ident    :: ID
                  , _position :: Point
                  } deriving (Eq, Show, Typeable)
 
+type NodeSelection = [Node]
+
 makeLenses ''Node
 
 instance PrettyPrinter Node where

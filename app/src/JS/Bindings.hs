@@ -60,20 +60,8 @@ foreign import javascript unsafe "app.setNodeSelected($1)"
 foreign import javascript unsafe "app.setNodeUnselected($1)"
   setNodeUnselected :: Int -> IO ()
 
--- foreign import javascript unsafe "isNodeSelected($1)"
---   isNodeSelectedJSRef :: Int -> IO (JSRef Bool)
-
--- foreign import javascript unsafe "toggleNodeSelection($1)"
---   toggleNodeSelection :: Int -> IO ()
-
 foreign import javascript unsafe "app.unselectAllNodes()"
   unselectAllNodes :: IO ()
-
--- foreign import javascript unsafe "unfocusNode()"
---   unfocusNode :: IO ()
-
--- foreign import javascript unsafe "dragNodes($1, $2, $3)"
---   dragNodes :: JSArray Int -> Int -> Int -> IO ()
 
 foreign import javascript unsafe "app.getNodeAt($1, $2)"
   getNodeAtJSArray :: Int -> Int -> IO (JSArray Int)
