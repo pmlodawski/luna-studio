@@ -23,3 +23,5 @@ www
 cabal.sandbox.config
 .cabal-sandbox
 public
+
+app/features.js
