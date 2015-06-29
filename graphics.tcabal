@@ -42,6 +42,7 @@ Library
                   filepath,
                   flowbox-serialization,
                   flowbox-utils,
+                  glib <= 0.13.1.0,
                   imagemagick   >= 0.0.3.6,
                   JuicyPixels,
                   lifted-base,
