@@ -61,7 +61,7 @@ function NodeSearcher() {
   this.initSearchbox();
 }
 
-NodeSearcher.prototype.initSearchBox = function() {
+NodeSearcher.prototype.initSearchbox = function() {
   var _this = this;
 
   this.searchbox.on('input', function() {
@@ -85,19 +85,27 @@ NodeSearcher.prototype.initSearchBox = function() {
   
   this.searchbox.on('keydown', function(ev) {
     var val = _this.searchbox.val();
-    if(ev.keyCode === 8 && val === "") {
-      var idx = _this.ns.lastIndexOf('.');
-      _this.searchbox.val(_this.ns.substring(idx+1));
-      _this.ns = _this.ns.substring(0, idx);
-      _this.searchns.text(_this.ns);      
-      _this.updateNSWidth();
-      ev.preventDefault();
+    
+    console.log(ev.keyCode);
+    
+    switch(ev.keyCode){
+      case 8: {
+        if(val === "") {
+          var idx = _this.ns.lastIndexOf('.');
+          _this.searchbox.val(_this.ns.substring(idx+1));
+          _this.ns = _this.ns.substring(0, idx);
+          _this.searchns.text(_this.ns);      
+          _this.updateNSWidth();
+          ev.preventDefault();
+        }
+        break;
+      }
     }
   });
-});
+};
   
 NodeSearcher.prototype.updateNSWidth = function() {
-  this.columns[0].find('.ns').css({minWidth: this.searchns.width()});
+  this.columns[0].find('.ns').css({minWidth: Math.max(100,this.searchns.width())});
 };
 
 NodeSearcher.prototype.displayResults = function(results) {
