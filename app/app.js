@@ -72,9 +72,14 @@ function setup_pan_and_zoom() {
       case MMB: {
         event.preventDefault();
         dragMode = 'pan';
+        event.stopPropagation();        
         break;
       }
-      case RMB: dragMode = 'zoom'; break;
+      case RMB: {
+        dragMode = 'zoom'; 
+        event.stopPropagation();
+        break;
+      }
       default: dragMode = null;
     }
 
@@ -91,6 +96,7 @@ function setup_pan_and_zoom() {
         delta = utils.screenToWorkspace(mouse).sub(position);
         $$.camPan.add(delta);
         reconfigure_camera();
+        event.stopPropagation();      
         break;
       }
       case 'zoom': {
@@ -103,6 +109,7 @@ function setup_pan_and_zoom() {
           mouseStart.sub(delta);
         }
         reconfigure_camera();
+        event.stopPropagation();        
         break;
       }
     }
