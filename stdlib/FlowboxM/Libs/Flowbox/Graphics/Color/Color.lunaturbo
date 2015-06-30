@@ -11,15 +11,7 @@ foreign haskell class RGBA a:
 foreign haskell def RGBA.toRGBA:
     liftF1 convertColor self
 
-foreign haskell class ColorMult color:
-    ColorMult:
-        color      :: color
-        multiplier :: Float
-
-foreign haskell def ColorMult.toRGBA:
-        liftF1 toRGBAColorMult self
-
-alias Color = ColorMult (RGBA Float)
+alias Color = RGBA Float
 
 foreign haskell class Gamma:
     AlexaV3LogC

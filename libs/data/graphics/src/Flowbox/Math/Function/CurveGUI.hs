@@ -4,11 +4,13 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE ViewPatterns  #-}
 
 module Flowbox.Math.Function.CurveGUI where
 
 import qualified Data.Array.Accelerate     as A
+import           Data.Binary
 import           Math.Coordinate.Cartesian (Point2 (..))
 
 import Flowbox.Geom2D.CubicBezier               as CubicBezier
@@ -17,31 +19,35 @@ import Flowbox.Math.Function.Accelerate.BSpline
 import Flowbox.Prelude                          as P
 
 
-
 type Weight = Float
 type Length = Float
 type Angle  = Float
 
 newtype CurvesCollection x = CurvesCollection { _curves :: [(x, CurveGUI x)] } deriving (Show)
 
-data CurveGUI x = BezierCurveGUI { _vertices :: [ControlPointGUI x] } deriving (Show)
+data CurveGUI x = BezierCurveGUI { _vertices :: [ControlPointGUI x] } deriving (Generic, Show)
 
 data ControlPointGUI x = ControlPointGUI { _point     :: Point2 x
                                          , _handleIn  :: HandleGUI
                                          , _handleOut :: HandleGUI
-                                         } deriving (Show, Eq)
+                                         } deriving (Eq, Generic, Show)
 
 data HandleGUI = NonLinearGUI { _weight :: Weight
                               , _angle  :: Angle
                               }
                | VerticalGUI  { _length :: Length
                               }
-               | LinearGUI deriving (Show, Eq)
+               | LinearGUI deriving (Eq, Generic, Show)
 
 makeLenses ''CurvesCollection
 makeLenses ''CurveGUI
 makeLenses ''ControlPointGUI
 makeLenses ''HandleGUI
+
+instance Binary x => Binary (CurveGUI x)
+instance Binary x => Binary (ControlPointGUI x)
+instance Binary HandleGUI
+instance Binary x => Binary (Point2 x)
 
 convertToBSpline :: CurveGUI Float -> BSpline Float
 convertToBSpline (BezierCurveGUI vertices) = A.fromList (A.Z A.:. (P.length l)) l :: BSpline Float

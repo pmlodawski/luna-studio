@@ -13,6 +13,8 @@
 module Flowbox.Data.Convert where
 
 import           Control.Monad.Trans.Either
+import           Data.ByteString.Lazy       (ByteString)
+import qualified Data.ByteString.Lazy.Char8 as ByteString
 import qualified Data.Foldable              as Foldable
 import           Data.Int                   (Int32, Int64)
 import           Data.IntSet                (IntSet)
@@ -119,3 +121,8 @@ instance ConvertPure FileOffset Int64 where
 instance ConvertPure NominalDiffTime Int64 where
     encodeP = fromIntegral . fromEnum
     decodeP = fromIntegral
+
+
+instance ConvertPure String ByteString where
+    encodeP = ByteString.pack
+    decodeP = ByteString.unpack

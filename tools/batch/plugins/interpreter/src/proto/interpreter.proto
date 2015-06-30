@@ -76,10 +76,11 @@ message Interpreter {
     }
     message Invalidate {
         message Request {
-            required int32 projectID = 1;
-            required int32 libraryID = 2;
-            required generated.proto.dep.crumb.Breadcrumbs breadcrumbs = 3;
-            required int32 nodeID    = 4;
+            required int32 nodeID    = 1;
+            required generated.proto.dep.crumb.Breadcrumbs breadcrumbs = 2;
+            required int32 libraryID = 3;
+            required int32 projectID = 4;
+            required int32 astID     = 5;
         }
         message Update {
             required Request request = 1;

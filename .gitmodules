@@ -41,3 +41,6 @@
 [submodule "third-party/fgl"]
 	path = third-party/fgl
 	url = https://github.com/pmlodawski/fgl.git
+[submodule "third-party/binary"]
+	path = third-party/binary
+	url = https://github.com/flowbox-public/binary

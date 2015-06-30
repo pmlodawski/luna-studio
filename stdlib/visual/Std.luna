@@ -234,9 +234,6 @@ def prewitt self::Std -> EdgeOperator:
 def EdgeOperator.transpose self::EdgeOperator -> EdgeOperator:
     ```liftF1 transpose #{self}```
 
-def Image.edgeDetect self::Image edgeOperator::EdgeOperator -> Image:
-    ```liftF2 edgeDetectLuna #{edgeOperator} #{self}```
-
 # def Image.bayer self::Image bits::Int:
 #     ```liftF2 orderedDitherLuna #{bits} #{self}```
 
@@ -437,16 +434,36 @@ def rasterizeMask self::Std w::Int h::Int m::(Mask Float) -> Image
 
 def Image.roto self::Image mask::(Mask Float) format::Format premultiply::Bool alpha::Bool -> Image
 
+def Image.rotoL self::Image mask::(Mask Float) format::Format premultiply::Bool alpha::Bool -> Image
+
+# experimental ######
+
+alias BinaryMask = String
+alias BinaryCurveGUI = String
+alias BinaryAnimableMask = String
+
+def Image.rotoB self::Image mask::BinaryMask format::Format premultiply::Bool alpha::Bool -> Image
+
+def maskFromBinary mask::BinaryMask -> Mask Float
+
+def animationFromBinary mask::BinaryCurveGUI -> CurveGUI Float
+
+def animableMaskFromBinary mask::BinaryAnimableMask -> Mask AnimableFloat
+
+class ```AnimableFloat```:
+    ConstantValue: value :: Float
+    AnimationCurve: curve :: CurveGUI Float
+
+def interpolateMask mask::(Mask AnimableFloat) time::Time -> Mask Float
+
+#####################
+
 # COLORS
 
 class ```RGBA``` a:
     rgbaR, rgbaG, rgbaB, rgbaA :: a
 
-class ```ColorMult``` color:
-    color      :: color
-    multiplier :: Float
-
-alias Color = ColorMult (RGBA Float)
+alias Color = RGBA Float
 
 class ```Format```:
     PCVideo

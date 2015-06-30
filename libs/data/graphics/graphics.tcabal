@@ -1,6 +1,6 @@
 Name:                   flowbox-graphics
 Version:                0.16.0.0
-Cabal-version:          >= 1.20
+Cabal-version:          >= 1.10
 Tested-with:            GHC == 7.8.*
 Build-type:             Custom
 
@@ -28,6 +28,7 @@ Library
                   accelerate-io  == 0.16.*,
                   accelerate-fft == 0.16.*,
                   algebraic       > 0.1,
+                  binary,
                   bmp,
                   bytestring,
                   cairo,
@@ -346,6 +347,41 @@ Executable test_vector_rasterization
     buildable: False
 
   Main-Is:        VectorRasterization.hs
+  Hs-Source-Dirs: test
+
+  Ghc-options:          -O2 -Wall -threaded -rtsopts -eventlog
+  Ghc-prof-options:     -auto-all
+
+  Default-Extensions:     NoImplicitPrelude
+  Default-Language:       Haskell2010
+
+  if flag(cuda)
+    CPP-options:        -DACCELERATE_CUDA_BACKEND
+    Build-Depends:      accelerate-cuda  == 0.16.*
+
+  Build-Depends:  base           == 4.7.*,
+                  linear,
+                  accelerate,
+                  accelerate-io,
+                  algebraic,
+                  bytestring,
+                  vector-space,
+                  flowbox-utils,
+                  flowbox-graphics,
+                  JuicyPixels,
+                  lens,
+                  QuickCheck,
+                  split,
+                  thyme,
+                  vector
+
+-- == test vector rasterizationL ==
+
+Executable test_vector_rasterizationL
+  if !flag(cuda)
+    buildable: False
+
+  Main-Is:        VectorRasterizationL.hs
   Hs-Source-Dirs: test
 
   Ghc-options:          -O2 -Wall -threaded -rtsopts -eventlog

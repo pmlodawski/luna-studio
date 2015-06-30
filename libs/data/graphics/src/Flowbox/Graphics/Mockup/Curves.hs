@@ -14,10 +14,8 @@ module Flowbox.Graphics.Mockup.Curves (
     getValueAtCurveGUI,
 ) where
 
-import Math.Coordinate.Cartesian (Point2 (..))
-
-import           Data.RTuple                    (RTuple (RTuple), toTuple)
-import           Flowbox.Math.Function.CurveGUI (CurveGUI(..), ControlPointGUI(..), HandleGUI(..))
+import           Data.RTuple                    (toTuple)
+import           Flowbox.Math.Function.CurveGUI (ControlPointGUI (..), CurveGUI (..), HandleGUI (..))
 import qualified Flowbox.Math.Function.CurveGUI as CurveGUI
 import           Flowbox.Prelude                as P hiding (lookup)
 
