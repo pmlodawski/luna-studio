@@ -21,7 +21,6 @@ var maxZ = (Math.pow(2, 31) - 1) / zOrderDiv; // -> HS
 // export to HTML
 function start() {
   $(document).ready(function(){
-    window.ghcjs();
     THREE = require('three');
     initialize_gl();
 
@@ -33,6 +32,7 @@ function start() {
     // call -> HS
     render();
 
+    window.ghcjs();
     if(features.node_searcher) {
       $$.node_searcher = new NodeSearcher();
       $('body').append($$.node_searcher.el);
@@ -308,6 +308,9 @@ module.exports = {
   setNodeUnselected: setNodeUnselected,
   unselectAllNodes: unselectAllNodes, // remove
   getNodeAt: getNodeAt,  // remove
+  getFunctionNode: function() {
+    return $$.nodes[0];
+  },
   // newNodeAt
   start: start
 };

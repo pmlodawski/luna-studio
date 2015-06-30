@@ -2,6 +2,8 @@ module Main where
 
 import Reactive.Banana
 import Reactive.Banana.Frameworks ( Frameworks, actuate )
+import JS.Bindings
+import GHCJS.Foreign ( toJSString )
 
 import qualified Reactive.Plugins.Core.Network as CoreNetwork
 
@@ -14,6 +16,8 @@ main = do
     -- Main.create(30)
     -- Main.render
     functionRef <- getFunctionNode
+    -- showLabel functionRef (toJSString "Trolololo")
+    renderExamplePlot functionRef
 
 
 
