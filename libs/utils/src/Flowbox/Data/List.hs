@@ -43,3 +43,15 @@ stripIdx start end = reverse . drop end . reverse . drop start
 replaceByMany :: Eq a => [a] -> [[a]] -> [a] -> [a]
 replaceByMany _    []    = id
 replaceByMany from (to:rest) = replaceByMany from rest . Utils.replace from to
+
+
+insertAt :: Int -> a -> [a] -> [a]
+insertAt 0 a l = a:l
+insertAt i a [] = [a]
+insertAt i a (h:t) = h:(insertAt (i-1) a t)
+
+
+deleteAt :: Int -> [a] -> [a]
+deleteAt _ []    = []
+deleteAt 0 (_:t) = t
+deleteAt i (h:t) = h:(deleteAt (i-1) t)
