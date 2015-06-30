@@ -180,7 +180,7 @@ function createRandomNodes(number) {
 
 
 
-
+// -> HS
 function isSelectedNodeIdOnOffset(nodeId, xy) {
   var d_squared = xy[0] * xy[0] + xy[1] * xy[1];
   return d_squared <= 900;
@@ -191,32 +191,32 @@ function isSelectedNodeIdOnOffset(nodeId, xy) {
 //     return uniforms[nodeId].selected.value == 1;
 // }
 
-// export
+// -> HS
 function setNodeFocused(nodeId) {
   unfocusNodes();
-  nodes[nodeId].selected(2);
+  nodes[nodeId].selected(2); // -> JS
   moveToTopZ(nodeId);
 }
 
-// export
+// -> HS
 function setNodeSelected(nodeId) {
   nodes[nodeId].selected(1);
   moveToTopZ(nodeId);
 }
 
-// export
+// -> HS
 function setNodeUnselected(nodeId) {
   nodes[nodeId].selected(0);
 }
 
-// export
+// -> HS
 function unselectAllNodes() {
   _.each(nodes, function(node){
     node.selected(0);
   });
 }
 
-// no export
+// -> HS
 function unfocusNodes() {
   _.each(nodes, function(node){
       if (node.selected() === 2) node.selected(1);
@@ -229,6 +229,7 @@ function unfocusNodes() {
 //     uniforms[nodeId].selected.value = 1 - uniforms[nodeId].selected.value
 // }
 
+// -> HS
 function assignZs() {
   var sortedNodes = _.values(nodes);
   sortedNodes.sort(function(nodeA, nodeB) {
@@ -240,6 +241,7 @@ function assignZs() {
   currentMazZ = sortedNodes[sortedNodes.length - 1].zPos();
 }
 
+// -> HS
 function moveToTopZ(nodeId) {
   var node = nodes[nodeId];
   node.zPos(currentMazZ + 1.0 / zOrderDiv);
@@ -248,25 +250,7 @@ function moveToTopZ(nodeId) {
       assignZs();
 }
 
-// export
-// function addNodeIdWithOffsetOnPosition(x, y) {
-//     var emptyNode = [-1, 0, 0];
-    // var nodeIds = getNodeIdsOnPosition(x, y);
-    // // unselectAll();
-    // if (nodeIds.length === 0) return emptyNode;
-    // for (var i = 0; i < nodeIds.length; i++) {
-    //     var nodeId = nodeIds[i];
-    //     var xy = getOffsetForNode(nodeId, x, y);
-    //     if (isSelectedNodeIdOnPosition(nodeId, xy)) {
-    //         rearrangeNodesZOrder(nodes[nodeId]);
-    //         selectNode(nodeId);
-    //         return [nodeId, xy[0], xy[1]];
-    //     }
-    // }
-//     return emptyNode;
-// }
-
-// export
+// -> HS (redefined)
 function getNodeAt(x, y) {
   var emptyNode = [-1, 0, 0, 0];
   var nodeIds = getNodeIdsOnPosition(x, y);
@@ -285,6 +269,7 @@ function getNodeAt(x, y) {
   return emptyNode;
 }
 
+// -> HS ? (maybe not necessary)
 function getNodeIdsOnPosition(x, y) {
     var rayCaster = new THREE.Raycaster();
     rayCaster.setFromCamera(utils.screenToNormalizedGl(x, y), $$.camera);
@@ -294,6 +279,7 @@ function getNodeIdsOnPosition(x, y) {
     return ids;
 }
 
+// -> HS ?
 function getOffsetForNode(nodeIndex, x, y) {
     if (nodeIndex < 0)
         return [0, 0];
@@ -304,14 +290,7 @@ function getOffsetForNode(nodeIndex, x, y) {
     return node.position.clone().sub(vec).toArray();
 }
 
-// export
-// function dragNodes(nodeIndices, x, y) {
-//   nodeIndices.forEach(function(nodeIndex) {
-//     dragNode(nodeIndex, x, y);
-//   });
-// }
-
-// export
+// -> HS
 function dragNode(nodeIndex, x, y) {
   var node;
   if (nodeIndex < 0)
@@ -337,7 +316,7 @@ module.exports = {
 
 
 
-// to remove
+// -> HS
 function onDocumentKeyDown( event )
 {
   switch(event.keyCode)
