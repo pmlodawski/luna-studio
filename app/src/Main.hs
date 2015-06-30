@@ -16,8 +16,9 @@ main = do
     -- Main.create(30)
     -- Main.render
     functionRef <- getFunctionNode
-    -- showLabel functionRef (toJSString "Trolololo")
+    showLabel functionRef (toJSString "Trolololo")
     renderExamplePlot functionRef
+    setSelected functionRef 2
 
 
 

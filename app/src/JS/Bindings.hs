@@ -78,6 +78,9 @@ foreign import javascript unsafe "app.getFunctionNode()"
 foreign import javascript unsafe "$1.label($2)"
     showLabel :: JSRef FunctionNode -> JSString -> IO ()
 
+foreign import javascript unsafe "$1.uniforms.selected.value = $2"
+    setSelected :: JSRef FunctionNode -> Int -> IO ()
+
 foreign import javascript unsafe "$1.renderExamplePlot()"
     renderExamplePlot :: JSRef FunctionNode -> IO ()
 
