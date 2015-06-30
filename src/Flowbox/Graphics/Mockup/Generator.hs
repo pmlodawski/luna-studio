@@ -4,36 +4,47 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
+{-# LANGUAGE DeriveGeneric    #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies     #-}
 {-# LANGUAGE ViewPatterns     #-}
 
 module Flowbox.Graphics.Mockup.Generator (
     Format(..),
+    AnimableFloat(..),
+    animableMaskFromBinary,
+    animationFromBinary,
     circularLuna,
     conicalLuna,
     constantLuna,
     diamondLuna,
     formatMap,
+    fromBinary,
     gradientLuna,
+    interpolateMask,
     linearShapeLuna,
+    maskFromBinary,
     radialShapeLuna,
     rotoLuna,
     rotoLunaL,
+    rotoLunaB,
     squareLuna,
     unwrapFormat,
 ) where
 
 import qualified Data.Array.Accelerate as A
 
-import Linear                    (V2 (..))
-import Math.Coordinate           (Cartesian)
-import Math.Coordinate.Cartesian (Point2 (..))
-import Math.Metric               (Metric, MetricCoord)
-import Math.Space.Space          (Grid (..))
-import qualified Data.Map as Map
+import qualified Data.Binary               as Binary
+import           Data.ByteString.Lazy      (ByteString)
+import qualified Data.Map                  as Map
+import           Data.String               (fromString)
+import           Linear                    (V2 (..))
+import           Math.Coordinate           (Cartesian)
+import           Math.Coordinate.Cartesian (Point2 (..))
+import           Math.Metric               (Metric, MetricCoord)
+import           Math.Space.Space          (Grid (..))
 
-import           Flowbox.Geom2D.Mask                             (Mask(..))
+import           Flowbox.Geom2D.Mask                             (Mask (..))
 import qualified Flowbox.Geom2D.Rasterizer                       as Rasterizer
 import qualified Flowbox.Graphics.Color.Color                    as Color
 import           Flowbox.Graphics.Composition.Generator.Gradient (Tick (..))
@@ -50,7 +61,10 @@ import           Flowbox.Graphics.Utils.Accelerate               (variable)
 import qualified Flowbox.Graphics.Utils.Utils                    as U
 import qualified Flowbox.Math.Matrix                             as M
 import           Flowbox.Prelude                                 as P hiding (lookup)
-
+-- experimental ---------
+import Data.Binary
+import Flowbox.Math.Function.CurveGUI (CurveGUI (..), valueAtSpline)
+-------------------------
 import Flowbox.Graphics.Mockup.Basic        as Basic
 import Flowbox.Graphics.Mockup.ColorCorrect
 import Flowbox.Graphics.Mockup.Matte
@@ -199,7 +213,7 @@ rotoLuna input mask format premult premultAlpha = (if premult then premultiplyLu
             aMatrix             = Rasterizer.rasterizeMask w h mask
             --a                   = Channel.ChannelFloat "rgba.a" $ Channel.MatrixData $ Rasterizer.rasterizeMask w h mask
             a = intersectOrOverWrite premultAlpha aMatrix $ Channel.asMatrix aInput
-                where 
+                where
                     intersectOrOverWrite :: Bool -> M.Matrix2 Float -> Channel.Channel -> Channel.Channel
                     intersectOrOverWrite True mat1 (Channel.ChannelFloat name (Channel.MatrixData mat2)) = Channel.ChannelFloat name $ Channel.MatrixData $ M.zipWith (*) mat1 mat2
                     intersectOrOverWrite False mat1 _ = Channel.ChannelFloat "rgba.a" $ Channel.MatrixData mat1
@@ -224,3 +238,36 @@ rotoLunaL input mask format premult premultAlpha = (if premult then premultiplyL
                     intersectOrOverWrite False mat1 _ = Channel.ChannelFloat "rgba.a" $ Channel.MatrixData mat1
                     --fuck mat1 (ChannelInt name (MatrixData mat2)) = ChannelInt   name $ MatrixData $ M.zipWith (\a b -> a*b) mat1 mat2
         in Image.appendToPrimary a input
+
+-- experimental ---------
+
+rotoLunaB :: Image -> String -> Format -> Bool -> Bool -> Image
+rotoLunaB input mask = rotoLuna input (Binary.decode (fromString mask) :: Mask Float)
+
+
+fromBinary :: Binary.Binary a => String -> a
+fromBinary = Binary.decode . fromString
+
+maskFromBinary :: String -> Mask Float
+maskFromBinary = fromBinary
+
+animationFromBinary :: String -> CurveGUI Float
+animationFromBinary = fromBinary
+
+animableMaskFromBinary :: String -> Mask AnimableFloat
+animableMaskFromBinary = fromBinary
+
+data AnimableFloat = ConstantValue Float
+                   | AnimationCurve (CurveGUI Float)
+                   deriving (Generic, Show)
+
+instance Binary AnimableFloat
+
+interpolateMask :: Mask AnimableFloat -> Float -> Mask Float
+interpolateMask mask t = fmap (f t) mask
+    where
+        f _ (ConstantValue v)       = v
+        f t (AnimationCurve curve)  = valueAtSpline curve t
+
+
+-------------------------
