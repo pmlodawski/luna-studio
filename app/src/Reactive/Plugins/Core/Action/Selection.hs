@@ -38,7 +38,7 @@ data Action = SelectAction { _actionType :: ActionType
 data State = State { _nodes :: NodeSelection
                    } deriving (Eq, Show)
 
-type ActionState = WithState (Maybe Action) State
+type ActionState = WithStateMaybe Action State
 
 makeLenses ''Action
 makeLenses ''State

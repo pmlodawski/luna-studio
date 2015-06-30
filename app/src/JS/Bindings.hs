@@ -72,21 +72,18 @@ getNodeFromTuple4 (nodeId, sel, x, y)
     | nodeId >= 0 = Just $ Node nodeId (sel >= 1) (Point x y)
     | otherwise = Nothing
 
+(.:)  :: (x -> y) -> (a -> b -> x) -> a -> b -> y
+(.:)   = (.) . (.)
+
 getNodeAt :: Int -> Int -> IO (Maybe Node)
-getNodeAt x y = fmap getNodeFromTuple4 . getTuple4FromJSArray $ getNodeAtJSArray x y
+getNodeAt = (fmap getNodeFromTuple4 . getTuple4FromJSArray) .: getNodeAtJSArray
 
 -- temporary implementation
 getObjectsAt :: Int -> Int -> IO [Object Dynamic]
 getObjectsAt x y = getNodeAt x y >>= return . maybeToList . fmap (Object . toDyn)
 
 
--- getNodeAt = (getTuple4FromJSArray .) . getNodeIdWithOffsetOnPositionJSArray
 
--- isNodeSelected :: Int -> IO Bool
--- isNodeSelected = getFromJSRef . isNodeSelectedJSRef
-
---------------------------------------------------------------------------------
--- An element in the DOM that we can render virtualdom elements to
 data VNodePresentation = VNodePresentation (IORef (JSRef VNode)) Element
 
 data HTML = Text String
@@ -105,9 +102,3 @@ newTopLevelContainer = do
   Just body <- documentGetBody doc
   nodeAppendChild body (Just el)
   return (VNodePresentation currentVNode el)
-
-
-
--- foo (f : fs) s = case f s of
---     Nothing -> foo fs s
---     Just a  -> toDynamic (cons a)

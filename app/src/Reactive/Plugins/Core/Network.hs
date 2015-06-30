@@ -34,13 +34,9 @@ import qualified Event.Keyboard as Keyboard ( KeyMods(..), Event(..) )
 import           Event.Mouse                ( WithObjects(..) )
 import qualified Event.Mouse    as Mouse
 import           Utils.PrettyPrinter
+import qualified Reactive.Plugins.Core.Action.Action    as Action
 import qualified Reactive.Plugins.Core.Action.Selection as Selection
 import qualified Reactive.Plugins.Core.Action.Drag      as Drag
-
-
-instance Monoid (Event t a) where
-    mempty  = never
-    mappend = union
 
 infixr 6 <+>
 (<+>) = union
@@ -73,13 +69,7 @@ makeNetworkDescription = do
 
         nodeDragActionsE              = filterJust $ Drag.mouseToAction           <$> mouseNodeE
         nodeDragSelectionE            = Drag.AccumInput <$> nodeSelectionB        <@> nodeDragActionsE
-        nodeDragReactionsB            = accumB def $ Drag.accumActionState        <$> nodeDragSelectionE
-
-
-        -- allNodeActionsE            = mouseNodeSelectActionsE <+> mouseNodeDragActionsE <+> keyboardNodeActionsE
-
-        -- mouseNodeReactionB         = accumB def $ Node.accumActionState <$> allNodeActionsE
-        -- mouseNodeReactionE  = accumE def $ Selection.accumActionState <$> allNodeActionsE
+        nodeDragReactionsE            = filterE Action.filterAction $ accumE def $ Drag.accumActionState <$> nodeDragSelectionE
 
 
         -- logClicksB  = ("Clk " <>) . show <$> clicksCountB
@@ -104,12 +94,16 @@ makeNetworkDescription = do
 
     -- mouseNodeReactionF <- changes mouseNodeReactionB
     -- reactimate' $ (fmap Node.updateNodes) <$> mouseNodeReactionF
+
     reactimate $ Selection.updateUI <$> nodeSelectionReactionE
     reactimate $ (logAs "s: ") <$> (display <$> nodeSelectionReactionE)
 
-    nodeDragReactionsF <- changes nodeDragReactionsB
-    reactimate' $ (fmap Drag.updateUI) <$> nodeDragReactionsF
-    reactimate' $ (fmap $ logAs "d: ") <$> ((fmap display) <$> nodeDragReactionsF)
+    reactimate $ Drag.updateUI <$> nodeDragReactionsE
+    reactimate $ (logAs "d: ") <$> (display <$> nodeDragReactionsE)
+
+    -- nodeDragReactionsF <- changes nodeDragReactionsB
+    -- reactimate' $ (fmap Drag.updateUI) <$> nodeDragReactionsF
+    -- reactimate' $ (fmap $ logAs "d: ") <$> ((fmap display) <$> nodeDragReactionsF)
 
 
 
