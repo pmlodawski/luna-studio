@@ -434,8 +434,6 @@ def rasterizeMask self::Std w::Int h::Int m::(Mask Float) -> Image
 
 def Image.roto self::Image mask::(Mask Float) format::Format premultiply::Bool alpha::Bool -> Image
 
-def Image.rotoL self::Image mask::(Mask Float) format::Format premultiply::Bool alpha::Bool -> Image
-
 # experimental ######
 
 alias BinaryMask = String
