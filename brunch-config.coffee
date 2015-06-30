@@ -5,7 +5,7 @@ cabalProjectName = "gui"
 exports.config =
   # See https://github.com/brunch/brunch/blob/master/docs/config.md for documentation.
   paths:
-    public: 'www'  
+    public: 'www'
     watched: ['app', 'test', 'vendor', "#{cabalProjectName}.cabal"]
 
   files:
@@ -29,7 +29,7 @@ exports.config =
 
   modules:
     wrapper: false
-    definition: false    
+    definition: false
 
   plugins:
     ghcjs:
@@ -45,14 +45,14 @@ exports.config =
         css: on
         js: off
         assets: off
-        
+
     browserify:
       # A string of extensions that will be used in Brunch and for browserify.
       # Default: js json coffee ts jsx hbs jade.
       extensions: """
       js vert frag
       """
-      
+
       transforms: [require('browserify-shader'), require('envify')]
 
       bundles:
@@ -79,7 +79,7 @@ exports.config =
 
           # Anymatch, as used in Brunch.
           matcher: /^app/
-          
+
           onBrowserifyLoad: (bundler) ->
             bundler.external('three')
             bundler.external('three-bmfont-text')
@@ -88,9 +88,10 @@ exports.config =
             bundler.external('underscore')
             bundler.require('./app/common', {expose: 'common'})
             bundler.require('./app/app', {expose: 'app'})
+            bundler.require('./app/utils', {expose: 'utils'})
 
-          
-          onBeforeBundle: (bundler) -> 
+
+          onBeforeBundle: (bundler) ->
             local_changes = (shelljs.exec('git diff-index --quiet HEAD --').code == 1)
             git_hash = shelljs.exec('git rev-parse HEAD', {silent:true}).output.trim()
             process.env.GIT_HASH = "#{git_hash}#{if local_changes then "-local" else ""}";
