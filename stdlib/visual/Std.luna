@@ -234,9 +234,6 @@ def prewitt self::Std -> EdgeOperator:
 def EdgeOperator.transpose self::EdgeOperator -> EdgeOperator:
     ```liftF1 transpose #{self}```
 
-def Image.edgeDetect self::Image edgeOperator::EdgeOperator -> Image:
-    ```liftF2 edgeDetectLuna #{edgeOperator} #{self}```
-
 # def Image.bayer self::Image bits::Int:
 #     ```liftF2 orderedDitherLuna #{bits} #{self}```
 
@@ -464,11 +461,7 @@ def interpolateMask mask::(Mask AnimableFloat) time::Time -> Mask Float
 class ```RGBA``` a:
     rgbaR, rgbaG, rgbaB, rgbaA :: a
 
-class ```ColorMult``` color:
-    color      :: color
-    multiplier :: Float
-
-alias Color = ColorMult (RGBA Float)
+alias Color = RGBA Float
 
 class ```Format```:
     PCVideo

@@ -18,22 +18,22 @@ foreign haskell def Image.clamp thresholds clamps:
 foreign haskell def Image.offsetRaw value matte:
     liftF3 offsetLuna value matte self
 def Image.offset value matte:
-    self.offsetRaw value.toRGBA matte
+    self.offsetRaw value matte
 
 foreign haskell def Image.contrastRaw value matte:
     liftF3 contrastLuna value matte self
 def Image.contrast value matte:
-    self.contrastRaw value.toRGBA matte
+    self.contrastRaw value matte
 
 foreign haskell def Image.exposureRaw blackpoint ex matte:
     liftF4 exposureLuna blackpoint ex matte self
 def Image.exposure blackpoint ex matte:
-    self.exposure blackpoint.toRGBA ex.toRGBA matte
+    self.exposure blackpoint ex matte
 
 foreign haskell def Image.saturateRaw saturation:
     liftF2 saturateLuna saturation self
 def Image.saturate saturation:
-    self.saturateRaw saturation.toRGBA
+    self.saturateRaw saturation
 
 # foreign haskell def Image.hsvTool hueRange hueRotation hueRolloff
 #             saturationRange saturationAdjustment saturationRolloff
@@ -55,17 +55,17 @@ def Image.saturate saturation:
 foreign haskell def Image.multiplyRaw val matte:
     liftF3 multiplyLuna val matte self
 def Image.multiply val matte:
-    self.multiplyRaw val.toRGBA matte
+    self.multiplyRaw val matte
 
 foreign haskell def Image.gammaRaw val alpha matte:
     liftF3 gammaLuna val alpha matte self
 def Image.gamma val alpha matte:
-    self.gammaRaw val.toRGBA alpha matte
+    self.gammaRaw val alpha matte
 
 foreign haskell def Image.gradeRaw blackpoint whitepoint lift gain multiply offset gamma matte:
     liftF5 (gradeLunaColor blackpoint whitepoint lift gain) multiply offset gamma matte self
 def Image.grade blackpoint whitepoint lift gain multiply offset gamma matte:
-    self.gradeRaw blackpoint.toRGBA whitepoint.toRGBA lift.toRGBA gain.toRGBA multiply.toRGBA offset.toRGBA gamma.toRGBA matte
+    self.gradeRaw blackpoint whitepoint lift gain multiply offset gamma matte
 
 # alias HueCorrectGUI = (CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float, CurveGUI Float)
 
@@ -76,19 +76,16 @@ foreign haskell class ColorCorrectCurves a:
 foreign haskell class ColorCC color:
     ColorCC:
         saturation, contrast, gamma, gain, offset :: color
-    def toRGBA:
-        ColorCC saturation contrast gamma gain offset = self
-        ColorCC saturation.toRGBA contrast.toRGBA gamma.toRGBA gain.toRGBA offset.toRGBA
 
 foreign haskell def Image.colorCorrectRaw master shadows midtones highlights:
     liftF5 colorCorrectLuna master shadows midtones highlights self
 def Image.colorCorrect master shadows midtones highlights:
-    self.colorCorrectRaw master.toRGBA shadows.toRGBA midtones.toRGBA highlights.toRGBA
+    self.colorCorrectRaw master shadows midtones highlights
 
 foreign haskell def Image.colorCorrectCurvesRaw curves master shadows midtones highlights:
     liftF5 (colorCorrectLunaCurves curves) master shadows midtones highlights self
 def Image.colorCorrectCurves curves master shadows midtones highlights:
-    self.colorCorrectCurvesRaw curves master.toRGBA shadows.toRGBA midtones.toRGBA highlights.toRGBA
+    self.colorCorrectCurvesRaw curves master shadows midtones highlights
 
 foreign haskell class HueCorrectCurves a:
     HueCorrectCurves:

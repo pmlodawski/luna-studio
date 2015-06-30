@@ -26,7 +26,7 @@ foreign haskell class Format:
 foreign haskell def constantRaw format color:
     liftF2 constantLuna format color
 def constant format color:
-    self.constantRaw format color.toRGBA
+    self.constantRaw format color
 
 foreign haskell def circular width height:
     liftF2 circularLuna width height
