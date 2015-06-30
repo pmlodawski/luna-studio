@@ -38,11 +38,6 @@ import qualified Reactive.Plugins.Core.Action.Action    as Action
 import qualified Reactive.Plugins.Core.Action.Selection as Selection
 import qualified Reactive.Plugins.Core.Action.Drag      as Drag
 
-
-instance Monoid (Event t a) where
-    mempty  = never
-    mappend = union
-
 infixr 6 <+>
 (<+>) = union
 
