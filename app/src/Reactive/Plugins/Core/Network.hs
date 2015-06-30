@@ -88,7 +88,6 @@ makeNetworkDescription = do
     -- logF <- changes logB
     -- reactimate' $ (fmap $ logAs "") <$> logF
 
-    -- reactimate $ (logAs "ll:") <$> (display <$> mouseNodeE)
 
 
 
@@ -96,10 +95,11 @@ makeNetworkDescription = do
     -- reactimate' $ (fmap Node.updateNodes) <$> mouseNodeReactionF
 
     reactimate $ Selection.updateUI <$> nodeSelectionReactionE
-    reactimate $ (logAs "s: ") <$> (display <$> nodeSelectionReactionE)
+    reactimate $ Drag.updateUI      <$> nodeDragReactionsE
 
-    reactimate $ Drag.updateUI <$> nodeDragReactionsE
-    reactimate $ (logAs "d: ") <$> (display <$> nodeDragReactionsE)
+    reactimate $ logAs "n: " <$> mouseNodeE
+    -- reactimate $ logAs "s: " <$> nodeSelectionReactionE
+    -- reactimate $ logAs "d: " <$> nodeDragReactionsE
 
     -- nodeDragReactionsF <- changes nodeDragReactionsB
     -- reactimate' $ (fmap Drag.updateUI) <$> nodeDragReactionsF

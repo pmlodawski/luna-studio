@@ -17,7 +17,7 @@ import JS.Converters      ( getFromJSRef, getTuple4FromJSArray )
 
 import Object.Object      ( Point(..), Object(..) )
 import Object.Node        ( Node(..) )
-
+import Utils.PrettyPrinter
 -----------------------------------------------------------------------
 -- Enough to interact with virtual-dom
 -----------------------------------------------------------------------
@@ -28,40 +28,39 @@ data Diff
 -- === foreigns ===
 
 foreign import javascript unsafe "window.virtualDom.h($1, [$2])"
-  mkNode :: JSString -> JSString -> IO (JSRef VNode)
+    mkNode :: JSString -> JSString -> IO (JSRef VNode)
 
 foreign import javascript unsafe "window.virtualDom.create($1)"
-  createElement :: JSRef VNode -> IO Element
+    createElement :: JSRef VNode -> IO Element
 
 foreign import javascript unsafe "window.virtualDom.diff($1, $2)"
-  diff :: JSRef VNode -> JSRef VNode -> IO (JSRef Diff)
+    diff :: JSRef VNode -> JSRef VNode -> IO (JSRef Diff)
 
 foreign import javascript unsafe "window.virtualDom.patch($1, $2)"
-  patch :: Element -> JSRef Diff -> IO ()
+    patch :: Element -> JSRef Diff -> IO ()
+
+
 
 foreign import javascript unsafe "app.init()"
-  init :: IO ()
+    init :: IO ()
 
 foreign import javascript unsafe "app.render()"
-  render :: IO ()
+    render :: IO ()
 
 foreign import javascript unsafe "app.create($1)"
-  create :: Int -> IO ()
+    create :: Int -> IO ()
 
 foreign import javascript unsafe "app.dragNode($1, $2, $3)"
-  dragNode :: Int -> Int -> Int -> IO ()
+    dragNode :: Int -> Int -> Int -> IO ()
 
-foreign import javascript unsafe "app.setNodeFocused($1)"
-  setNodeFocused :: Int -> IO ()
+foreign import javascript unsafe "app.moveToTopZ($1)"
+    moveToTopZ :: Int -> IO ()
 
-foreign import javascript unsafe "app.setNodeSelected($1)"
-  setNodeSelected :: Int -> IO ()
+-- foreign import javascript unsafe "app.unselectAllNodes()"
+--     unselectAllNodes :: IO ()
 
-foreign import javascript unsafe "app.setNodeUnselected($1)"
-  setNodeUnselected :: Int -> IO ()
-
-foreign import javascript unsafe "app.unselectAllNodes()"
-  unselectAllNodes :: IO ()
+foreign import javascript unsafe "app.unfocusAllNodes()"
+    unfocusAllNodes :: IO ()
 
 foreign import javascript unsafe "app.getNodeAt($1, $2)"
     getNodeAtJSArray :: Int -> Int -> IO (JSArray Int)
@@ -71,15 +70,23 @@ data FunctionNode
 
 
 
-foreign import javascript unsafe "app.getFunctionNode()"
-    getFunctionNode :: IO (JSRef FunctionNode)
+foreign import javascript unsafe "app.getNode($1)"
+    getNode :: Int -> IO (JSRef FunctionNode)
+
+foreign import javascript unsafe "app.getNodes()"
+    getNodes :: IO (JSArray FunctionNode)
 
 
 foreign import javascript unsafe "$1.label($2)"
     showLabel :: JSRef FunctionNode -> JSString -> IO ()
 
-foreign import javascript unsafe "$1.uniforms.selected.value = $2"
-    setSelected :: JSRef FunctionNode -> Int -> IO ()
+
+foreign import javascript unsafe "$2.uniforms.selected.value = $1"
+    setSelectionValue :: Int -> JSRef FunctionNode -> IO ()
+
+setUnselected = setSelectionValue 0
+setSelected   = setSelectionValue 1
+setFocused    = setSelectionValue 2
 
 foreign import javascript unsafe "$1.renderExamplePlot()"
     renderExamplePlot :: JSRef FunctionNode -> IO ()
@@ -103,21 +110,22 @@ getObjectsAt x y = getNodeAt x y >>= return . maybeToList . fmap (Object . toDyn
 
 
 
+logAs :: PrettyPrinter a => String -> a -> IO ()
+logAs title a = putStrLn $ title <> (display a)
+
+--
+
 data VNodePresentation = VNodePresentation (IORef (JSRef VNode)) Element
 
-data HTML = Text String
-  deriving (Show)
+data HTML = Text String deriving (Show)
 
-logAs :: Show a => String -> a -> IO ()
-logAs title a =
-  putStrLn $ title <> (show a)
 
 newTopLevelContainer :: IO VNodePresentation
 newTopLevelContainer = do
-  initialVNode <- mkNode "div" ""
-  currentVNode <- newIORef initialVNode
-  el <- createElement initialVNode
-  Just doc <- currentDocument
-  Just body <- documentGetBody doc
-  nodeAppendChild body (Just el)
-  return (VNodePresentation currentVNode el)
+    initialVNode <- mkNode "div" ""
+    currentVNode <- newIORef initialVNode
+    el <- createElement initialVNode
+    Just doc <- currentDocument
+    Just body <- documentGetBody doc
+    nodeAppendChild body (Just el)
+    return (VNodePresentation currentVNode el)

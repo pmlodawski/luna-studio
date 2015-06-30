@@ -186,28 +186,6 @@ function isSelectedNodeIdOnOffset(nodeId, xy) {
   return d_squared <= 900;
 }
 
-// export
-// function isNodeSelected(nodeId) {
-//     return uniforms[nodeId].selected.value == 1;
-// }
-
-// -> HS
-function setNodeFocused(nodeId) {
-  unfocusNodes();
-  nodes[nodeId].selected(2); // -> JS
-  moveToTopZ(nodeId);
-}
-
-// -> HS
-function setNodeSelected(nodeId) {
-  nodes[nodeId].selected(1);
-  moveToTopZ(nodeId);
-}
-
-// -> HS
-function setNodeUnselected(nodeId) {
-  nodes[nodeId].selected(0);
-}
 
 // -> HS
 function unselectAllNodes() {
@@ -217,7 +195,7 @@ function unselectAllNodes() {
 }
 
 // -> HS
-function unfocusNodes() {
+function unfocusAllNodes() {
   _.each(nodes, function(node){
       if (node.selected() === 2) node.selected(1);
   });
@@ -303,13 +281,15 @@ function dragNode(nodeIndex, x, y) {
 module.exports = {
   render: render,
   dragNode: dragNode,
-  setNodeFocused: setNodeFocused,
-  setNodeSelected: setNodeSelected,
-  setNodeUnselected: setNodeUnselected,
-  unselectAllNodes: unselectAllNodes, // remove
+  moveToTopZ: moveToTopZ,
+  // unselectAllNodes: unselectAllNodes, // remove
+  unfocusAllNodes: unfocusAllNodes, // remove
   getNodeAt: getNodeAt,  // remove
-  getFunctionNode: function() {
-    return $$.nodes[0];
+  getNode: function(index) {
+    return $$.nodes[index];
+  },
+  getNodes: function() {
+    return $$.nodes;
   },
   // newNodeAt
   start: start

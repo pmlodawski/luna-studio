@@ -20,7 +20,7 @@ data Type = Pressed | Released | Moved deriving (Eq, Show, Typeable)
 
 data Event = Event { _tpe      :: Type
                    , _position :: Point
-                   , _button   :: Word
+                   , _button   :: Int
                    , _keyMods  :: KeyMods
                    } deriving (Eq, Show, Typeable)
 
@@ -30,7 +30,7 @@ instance PrettyPrinter Event where
     display (Event tpe pos butt keyMods) = "ev( " <> show tpe <> " -> " <> display pos <> " " <> show butt <>
                                            " : " <> display keyMods <> " )"
 
-newEvent :: Type -> Point -> Word -> KeyMods -> Event
+newEvent :: Type -> Point -> Int -> KeyMods -> Event
 newEvent t p b k = Event t p b k
 
 

@@ -1,5 +1,31 @@
 module Main where
 
+
+-- _|      _|
+-- _|_|    _|    _|_|    _|      _|      _|
+-- _|  _|  _|  _|_|_|_|  _|      _|      _|
+-- _|    _|_|  _|          _|  _|  _|  _|
+-- _|      _|    _|_|_|      _|      _|
+
+
+
+-- _|_|_|                _|
+-- _|    _|  _|    _|  _|_|_|_|    _|_|
+-- _|_|_|    _|    _|    _|      _|_|_|_|
+-- _|    _|  _|    _|    _|      _|
+-- _|_|_|      _|_|_|      _|_|    _|_|_|
+--                 _|
+--             _|_|
+
+--   _|_|                    _|
+-- _|    _|  _|  _|_|    _|_|_|    _|_|    _|  _|_|
+-- _|    _|  _|_|      _|    _|  _|_|_|_|  _|_|
+-- _|    _|  _|        _|    _|  _|        _|
+--   _|_|    _|          _|_|_|    _|_|_|  _|
+
+
+-- http://www.network-science.de/ascii/
+
 import Reactive.Banana
 import Reactive.Banana.Frameworks ( Frameworks, actuate )
 import JS.Bindings
@@ -15,10 +41,11 @@ main = do
     -- Main.init
     -- Main.create(30)
     -- Main.render
-    functionRef <- getFunctionNode
-    showLabel functionRef (toJSString "Trolololo")
-    renderExamplePlot functionRef
-    setSelected functionRef 2
+
+    -- functionRef <- getFunctionNode
+    -- showLabel functionRef (toJSString "Trolololo")
+    -- renderExamplePlot functionRef
+    -- setSelected functionRef 2
 
 
 
