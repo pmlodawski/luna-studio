@@ -26,7 +26,7 @@ foreign haskell class Format:
 foreign haskell def constantRaw format color:
     liftF2 constantLuna format color
 def constant format color:
-    self.constantRaw format color.toRGBA
+    self.constantRaw format color
 
 foreign haskell def circular width height:
     liftF2 circularLuna width height
@@ -51,3 +51,24 @@ foreign haskell def Image.roto mask format premultiply alpha:
 
 foreign haskell def Image.rotoL mask format premultiply alpha:
     liftF5 rotoLunaL self mask format premultiply alpha
+
+# experimental ###################
+
+foreign haskell def Image.rotoB mask format premultiply alpha:
+    liftF5 rotoLunaB self mask format premultiply alpha
+
+foreign haskell def fromBinary b : liftF1 fromBinary b
+
+foreign haskell def maskFromBinary b : liftF1 maskFromBinary b
+
+foreign haskell def animationFromBinary b : liftF1 animationFromBinary b
+
+foreign haskell def animableMaskFromBinary b : liftF1 animableMaskFromBinary b
+
+foreign haskell class AnimableFloat:
+    ConstantValue: value :: Float
+    AnimationCurve: curve :: CurveGUI Float
+
+foreign haskell def interpolateMask mask time: liftF2 interpolateMask mask time
+
+##################################
