@@ -72,7 +72,7 @@ helper w h pointPath featherPath = do
 
     P.putStrLn "------------------  Full Computation: "
     t1 <- getCurrentTime
-    let arr = rasterizeMask w h (Mask pointPath (Just featherPath))
+    let arr = rasterizeMaskL w h (Mask pointPath (Just featherPath))
     print $ case arr of
                 Raw m -> seq m ()
                 Delayed m -> let calcu = run m in seq calcu ()
@@ -172,7 +172,7 @@ main = do
     let patd = Path True []
         fead = Path True []
 
-    let arrD = rasterizeMask w h $ (Mask patd (Just fead))
+    let arrD = rasterizeMaskL w h $ (Mask patd (Just fead))
         imgD = matrixToImage arrD
 
     saveImageLuna "fooD.png" imgD
@@ -182,7 +182,7 @@ main = do
     let patd = Path True pointsd
         fead = Path True featherd
 
-    let arrD = rasterizeMask w h $ (Mask patd (Just fead))
+    let arrD = rasterizeMaskL w h $ (Mask patd (Just fead))
         imgD = matrixToImage arrD
 
     saveImageLuna "foo.png" imgD
@@ -192,14 +192,14 @@ main = do
     let pat1 = Path True points1
         fea1 = Path True feather1
 
-    let arrD = rasterizeMask w h $ (Mask pat1 Nothing)
+    let arrD = rasterizeMaskL w h $ (Mask pat1 Nothing)
         imgD = matrixToImage arrD
 
     saveImageLuna "foo1.png" imgD
 
     P.putStrLn "Test rasterizeMask no handles --> foo2.png"
 
-    let arrD = rasterizeMask w h $ (Mask pat1 (Just fea1))
+    let arrD = rasterizeMaskL w h $ (Mask pat1 (Just fea1))
         imgD = matrixToImage arrD
 
     saveImageLuna "foo2.png" imgD
@@ -209,14 +209,20 @@ main = do
     let pat = Path True points
         fea = Path True feather
 
-    let arrD = rasterizeMask w h $ (Mask pat Nothing)
+    let p = makeCubics pat
+        f = makeCubics fea
+
+    print $ show p
+    print $ show f
+
+    let arrD = rasterizeMaskL w h $ (Mask pat Nothing)
         imgD = matrixToImage arrD
 
     saveImageLuna "fooD1.png" imgD
 
     P.putStrLn "Test rasterizeMask --> fooD2.png"
 
-    let arrD = rasterizeMask w h $ (Mask pat (Just fea))
+    let arrD = rasterizeMaskL w h $ (Mask pat (Just fea))
         imgD = matrixToImage arrD
 
     saveImageLuna "fooD2.png" imgD
@@ -225,7 +231,7 @@ main = do
 
     let patGUI = Path True pointsGUI
         feaGUI = Path True featherGUI
-        arrGUI = rasterizeMask w h (Mask patGUI (Just feaGUI))
+        arrGUI = rasterizeMaskL w h (Mask patGUI (Just feaGUI))
         imgGUI = matrixToImage arrGUI
 
     saveImageLuna "fooD3.png" imgGUI
@@ -234,7 +240,7 @@ main = do
 
     let patGUI = Path True pointGUI2
         feaGUI = Path True featherGUI2
-        arrGUI = rasterizeMask 1920 1080 (Mask patGUI (Just feaGUI))
+        arrGUI = rasterizeMaskL 1920 1080 (Mask patGUI (Just feaGUI))
         imgGUI = matrixToImage arrGUI
 
     saveImageLuna "fooD4.png" imgGUI
