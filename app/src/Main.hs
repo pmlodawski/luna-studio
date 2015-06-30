@@ -13,6 +13,10 @@ main = do
     -- Main.init
     -- Main.create(30)
     -- Main.render
+    functionRef <- getFunctionNode
+
+
+
     eventNetwork <- compile makeNetworkDescription
     actuate eventNetwork
 

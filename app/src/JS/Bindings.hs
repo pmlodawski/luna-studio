@@ -64,7 +64,23 @@ foreign import javascript unsafe "app.unselectAllNodes()"
   unselectAllNodes :: IO ()
 
 foreign import javascript unsafe "app.getNodeAt($1, $2)"
-  getNodeAtJSArray :: Int -> Int -> IO (JSArray Int)
+    getNodeAtJSArray :: Int -> Int -> IO (JSArray Int)
+
+
+data FunctionNode
+
+
+
+foreign import javascript unsafe "app.getFunctionNode()"
+    getFunctionNode :: IO (JSRef FunctionNode)
+
+
+foreign import javascript unsafe "$1.label($2)"
+    showLabel :: JSRef FunctionNode -> JSString -> IO ()
+
+foreign import javascript unsafe "$1.renderExamplePlot()"
+    renderExamplePlot :: JSRef FunctionNode -> IO ()
+
 
 
 getNodeFromTuple4 :: (Int, Int, Int, Int) -> Maybe Node

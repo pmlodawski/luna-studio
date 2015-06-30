@@ -10,12 +10,12 @@ var $            = require('jquery'),
     features     = require('./features'),
     NodeSearcher = require('./node_searcher');
 
-var nodes = {};    // array of nodes with nodes
+var nodes = {};    // -> HS
 $$.nodes = nodes;
 
 var zOrderDiv = 10000.0;
 var currentMazZ = 0.0;
-var maxZ = (Math.pow(2, 31) - 1) / zOrderDiv;
+var maxZ = (Math.pow(2, 31) - 1) / zOrderDiv; // -> HS
 
 
 // export to HTML
@@ -24,13 +24,15 @@ function start() {
     window.ghcjs();
     THREE = require('three');
     initialize_gl();
-    setup_pan_and_zoom();
 
-    // setup_pan_and_drag()
+    // -> HS
+    setup_pan_and_zoom();
     document.addEventListener('keydown', onDocumentKeyDown, false );
     createRandomNodes(40);
+
+    // call -> HS
     render();
-    
+
     if(features.node_searcher) {
       $$.node_searcher = new NodeSearcher();
       $('body').append($$.node_searcher.el);
@@ -60,6 +62,7 @@ function initialize_gl() {
 }
 
 
+// -> HS
 function setup_pan_and_zoom() {
   var dragMode = null;
   var mouse = new THREE.Vector2(0,0);
@@ -72,11 +75,11 @@ function setup_pan_and_zoom() {
       case MMB: {
         event.preventDefault();
         dragMode = 'pan';
-        event.stopPropagation();        
+        event.stopPropagation();
         break;
       }
       case RMB: {
-        dragMode = 'zoom'; 
+        dragMode = 'zoom';
         event.stopPropagation();
         break;
       }
@@ -96,7 +99,7 @@ function setup_pan_and_zoom() {
         delta = utils.screenToWorkspace(mouse).sub(position);
         $$.camPan.add(delta);
         reconfigure_camera();
-        event.stopPropagation();      
+        event.stopPropagation();
         break;
       }
       case 'zoom': {
@@ -109,7 +112,7 @@ function setup_pan_and_zoom() {
           mouseStart.sub(delta);
         }
         reconfigure_camera();
-        event.stopPropagation();        
+        event.stopPropagation();
         break;
       }
     }
@@ -122,6 +125,7 @@ function setup_pan_and_zoom() {
   });
 }
 
+// -> HS
 function setWindowSize(){
   var w = window.innerWidth;
   var h = window.innerHeight;
@@ -134,11 +138,13 @@ function setWindowSize(){
   reconfigure_camera();
 }
 
+// -> HS
 function updateCamFactor(val) {
   $$.camFactor.value = Math.max($$.camFactorBounds[0], Math.min($$.camFactorBounds[1], val));
   return ($$.camFactor.value === val);
 }
 
+// -> HS
 function reconfigure_camera() {
   $$.htmlCanvasPan.css({left: $$.halfScreen.x - $$.camPan.x * $$.camFactor.value, top: $$.halfScreen.y + $$.camPan.y * $$.camFactor.value});
   $$.htmlCanvas.css({zoom: $$.camFactor.value});
@@ -151,6 +157,7 @@ function reconfigure_camera() {
   $$.camera.updateProjectionMatrix();
 }
 
+// -> HS
 function createRandomNodes(number) {
     var posX;
     var posY;
@@ -320,8 +327,9 @@ module.exports = {
   setNodeFocused: setNodeFocused,
   setNodeSelected: setNodeSelected,
   setNodeUnselected: setNodeUnselected,
-  unselectAllNodes: unselectAllNodes,
-  getNodeAt: getNodeAt,
+  unselectAllNodes: unselectAllNodes, // remove
+  getNodeAt: getNodeAt,  // remove
+  // newNodeAt
   start: start
 };
 
