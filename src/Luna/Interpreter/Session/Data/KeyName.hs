@@ -5,34 +5,27 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE TemplateHaskell #-}
-module Luna.Interpreter.Session.Data.VarName where
-
-import qualified Data.List as List
+module Luna.Interpreter.Session.Data.KeyName where
 
 import           Flowbox.Prelude
 import qualified Luna.DEP.Lib.Lib                            as Library
 import qualified Luna.Interpreter.Session.Data.CallPoint     as CallPoint
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
-import           Luna.Interpreter.Session.Data.Hash          (Hash)
 
 
 
-data VarName = VarName { _callPointPath :: CallPointPath
-                       , _hash          :: [Hash]
+data KeyName = KeyName { _callPointPath :: CallPointPath
                        } deriving (Show, Eq, Ord)
 
 
-makeLenses ''VarName
+makeLenses ''KeyName
 
 
-instance Default VarName where
-    def = VarName def def
+instance Default KeyName where
+    def = KeyName def
 
 
-toString :: VarName -> String
-toString varName = concatMap gen (varName ^. callPointPath) ++ hashStr (varName ^. hash) where
+toString :: KeyName -> String
+toString keyName = concatMap gen (keyName ^. callPointPath) where
     gen callPoint = "_" ++ show (abs $ Library.toInt (callPoint ^. CallPoint.libraryID))
                  ++ "_" ++ show (abs (callPoint ^. CallPoint.nodeID))
-    hashStr [] = "_nohash"
-    hashStr h  = '_' : List.intercalate "_" (map show h)
-

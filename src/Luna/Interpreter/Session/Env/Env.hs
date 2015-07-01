@@ -109,11 +109,11 @@ mkSessionStatus :: IO SessionStatus
 mkSessionStatus = SessionStatus False <$> MVar.newMVar ()
 
 mkSessionConfig :: Config -> memoryManager -> ResultCallBack -> SessionConfig memoryManager
-mkSessionConfig config memoryManager resultCallBack =
+mkSessionConfig config memoryManager' resultCallBack' =
     SessionConfig (mkCpphsOptions config)
                   def
-                  memoryManager
-                  resultCallBack
+                  memoryManager'
+                  resultCallBack'
 
 mkCpphsOptions :: Config -> Cpphs.CpphsOptions
 mkCpphsOptions config = Cpphs.CpphsOptions [] [] [] []

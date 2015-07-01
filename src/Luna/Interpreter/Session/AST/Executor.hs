@@ -12,6 +12,8 @@
 
 module Luna.Interpreter.Session.AST.Executor where
 
+import           Control.Monad.Catch         (SomeException)
+import qualified Control.Monad.Catch         as Catch
 import           Control.Monad.State         hiding (mapM, mapM_)
 import           Control.Monad.Trans.Either
 import qualified Data.Char                   as Char
@@ -21,8 +23,6 @@ import qualified Data.Text.Lazy              as Text
 import qualified Language.Preprocessor.Cpphs as Cpphs
 import qualified Text.Read                   as Read
 
-import           Control.Monad.Catch                        (SomeException)
-import qualified Control.Monad.Catch                        as Catch
 import           Flowbox.Control.Error                      (catchEither, hoistEitherWith)
 import qualified Flowbox.Data.List                          as List
 import           Flowbox.Data.MapForest                     (MapForest)
@@ -36,7 +36,6 @@ import qualified Luna.DEP.Graph.Node.Expr                   as NodeExpr
 import qualified Luna.DEP.Graph.Node.StringExpr             as StringExpr
 import qualified Luna.Interpreter.Session.AST.Traverse      as Traverse
 import qualified Luna.Interpreter.Session.Cache.Cache       as Cache
-import qualified Luna.Interpreter.Session.Cache.Free        as Free
 import qualified Luna.Interpreter.Session.Cache.Invalidate  as Invalidate
 import qualified Luna.Interpreter.Session.Cache.Status      as CacheStatus
 import qualified Luna.Interpreter.Session.Cache.Value       as Value
@@ -45,21 +44,18 @@ import           Luna.Interpreter.Session.Data.CallDataPath (CallDataPath)
 import qualified Luna.Interpreter.Session.Data.CallDataPath as CallDataPath
 import           Luna.Interpreter.Session.Data.CallPoint    (CallPoint)
 import           Luna.Interpreter.Session.Data.CompiledNode (CompiledNode (CompiledNode))
-import           Luna.Interpreter.Session.Data.VarName      (VarName (VarName))
-import qualified Luna.Interpreter.Session.Data.VarName      as VarName
+import           Luna.Interpreter.Session.Data.KeyName      (KeyName (KeyName))
+import qualified Luna.Interpreter.Session.Data.KeyName      as KeyName
 import qualified Luna.Interpreter.Session.Debug             as Debug
 import qualified Luna.Interpreter.Session.Env               as Env
 import           Luna.Interpreter.Session.Error             (Error, mapError)
 import qualified Luna.Interpreter.Session.Error             as Error
-import qualified Luna.Interpreter.Session.Hash              as Hash
 import qualified Luna.Interpreter.Session.Hint.Eval         as HEval
-import qualified Luna.Interpreter.Session.Hint.Typecheck    as Typecheck
 import           Luna.Interpreter.Session.Memory.Manager    (MemoryManager)
 import qualified Luna.Interpreter.Session.Memory.Manager    as Manager
 import           Luna.Interpreter.Session.ProfileInfo       (ProfileInfo)
 import           Luna.Interpreter.Session.Session           (Session)
 import qualified Luna.Interpreter.Session.Session           as Session
-import qualified Luna.Interpreter.Session.TargetHS.Bindings as Bindings
 import qualified Luna.Interpreter.Session.TargetHS.TargetHS as TargetHS
 import qualified Luna.Interpreter.Session.Var               as Var
 import qualified Luna.Parser.Parser                         as Parser
@@ -104,78 +100,60 @@ processNode callDataPath = Env.debugNode (CallDataPath.toCallPointPath callDataP
     arguments <- Traverse.arguments callDataPath
     let callData  = last callDataPath
         node      = callData ^. CallData.node
-    varNames <- mapM (Cache.recentVarName . CallDataPath.toCallPointPath) arguments
+        keyNames  = map (KeyName . CallDataPath.toCallPointPath) arguments
     children <- Traverse.into callDataPath
     if null children
         then case node of
             Node.Inputs  {} ->
                 return ()
             Node.Outputs {} ->
-                executeOutputs callDataPath varNames
+                executeOutputs callDataPath keyNames
             Node.Expr (NodeExpr.StringExpr (StringExpr.Pattern {})) _ _ ->
-                executeAssignment callDataPath varNames
+                executeAssignment callDataPath keyNames
             Node.Expr {}                                                ->
-                executeNode       callDataPath varNames
+                executeNode       callDataPath keyNames
         else mapM_ processNodeIfNeeded children
 
 
 executeOutputs :: MemoryManager mm
-               => CallDataPath -> [VarName] -> Session mm ()
-executeOutputs callDataPath varNames = do
+               => CallDataPath -> [KeyName] -> Session mm ()
+executeOutputs callDataPath keyNames = do
     let argsCount  = length $ Traverse.inDataConnections callDataPath
         nodeExpr = NodeExpr.StringExpr $ if argsCount == 1 then StringExpr.Id else StringExpr.Tuple
     when (length callDataPath > 1) $
-        execute (init callDataPath) nodeExpr varNames
+        execute (init callDataPath) nodeExpr keyNames
 
 
 executeNode :: MemoryManager mm
-            => CallDataPath -> [VarName] -> Session mm ()
-executeNode callDataPath varNames = do
+            => CallDataPath -> [KeyName] -> Session mm ()
+executeNode callDataPath keyNames = do
     let node       = last callDataPath ^. CallData.node
     case node of
-        Node.Expr nodeExpr _ _ -> execute callDataPath nodeExpr varNames
+        Node.Expr nodeExpr _ _ -> execute callDataPath nodeExpr keyNames
 
 
 executeAssignment :: MemoryManager mm
-                  => CallDataPath -> [VarName] -> Session mm ()
-executeAssignment callDataPath [varName] =
-    execute callDataPath (NodeExpr.StringExpr StringExpr.Id) [varName] -- TODO [PM] : handle Luna's pattern matching
+                  => CallDataPath -> [KeyName] -> Session mm ()
+executeAssignment callDataPath [keyName] =
+    execute callDataPath (NodeExpr.StringExpr StringExpr.Id) [keyName] -- TODO [PM] : handle Luna's pattern matching
 
 
 execute :: MemoryManager mm
-        => CallDataPath -> NodeExpr -> [VarName] -> Session mm ()
-execute callDataPath nodeExpr varNames = do
+        => CallDataPath -> NodeExpr -> [KeyName] -> Session mm ()
+execute callDataPath nodeExpr keyNames = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
     status       <- Cache.status        callPointPath
-    prevVarName  <- Cache.recentVarName callPointPath
-    boundVarName <- Cache.dependency varNames callPointPath
-    let execFunction = evalFunction nodeExpr callDataPath varNames
+    let execFunction = evalFunction nodeExpr callDataPath keyNames
 
         executeModified = do
-            varName <- execFunction True
-            if varName /= prevVarName
-                then if boundVarName /= Just varName
-                    then do logger debug "processing modified node - result value differs"
-                            mapM_ Free.freeVarName boundVarName
-                            Invalidate.markSuccessors callDataPath CacheStatus.Modified
+            logger debug "processing modified node"
+            execFunction True
+            Invalidate.markSuccessors callDataPath CacheStatus.Affected
 
-                    else do logger debug "processing modified node - result value differs but is cached"
-                            Invalidate.markSuccessors callDataPath CacheStatus.Affected
-                else if null $ varName ^. VarName.hash
-                    then do logger debug "processing modified node - result value non hashable"
-                            Invalidate.markSuccessors callDataPath CacheStatus.Affected
-                    else logger debug "processing modified node - result value is same"
-
-        executeAffected = case boundVarName of
-            Nothing    -> do
-                logger debug "processing affected node - result never bound"
-                _ <- execFunction False
-                Invalidate.markSuccessors callDataPath CacheStatus.Modified
-            Just bound -> do
-                logger debug "processing affected node - result rebound"
-                Cache.setRecentVarName bound callPointPath
-                Value.reportIfVisible callPointPath
-                Invalidate.markSuccessors callDataPath CacheStatus.Affected
+        executeAffected = do
+            logger debug "processing affected node"
+            execFunction False
+            Invalidate.markSuccessors callDataPath CacheStatus.Affected
 
     case status of
         CacheStatus.Affected     -> executeAffected
@@ -185,23 +163,22 @@ execute callDataPath nodeExpr varNames = do
 
 
 evalFunction :: MemoryManager mm
-             => NodeExpr -> CallDataPath -> [VarName] -> Bool -> Session mm VarName
-evalFunction nodeExpr callDataPath varNames recompile = do
+             => NodeExpr -> CallDataPath -> [KeyName] -> Bool -> Session mm ()
+evalFunction nodeExpr callDataPath keyNames recompile = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
-        varName = VarName callPointPath def
+        keyName = KeyName callPointPath
     prettyPrint (nodeExpr, callPointPath)
     compiledNode <- Env.compiledLookup callPointPath
     case (compiledNode, recompile) of
-        (Just (CompiledNode update getValue), False) -> do
+        (Just (CompiledNode update _), False) -> do
             Env.updateExpressions update
             logger debug "running compiled code"
         _ -> do
-            let tmpVarName    = "_tmp"
-                mkArg arg = "((hmapGet " <> VarName.toString arg <> " hmap) hmap _time)"
-                args      = map mkArg varNames
+            let mkArg arg = "((hmapGet " <> KeyName.toString arg <> " hmap) hmap _time)"
+                args      = map mkArg keyNames
                 appArgs a = if null a then "" else " $ appNext " <> List.intercalate " $ appNext " (reverse a)
                 genNative = List.replaceByMany "#{}" args . List.stripIdx 3 3
-                self      = head varNames
+                self      = head keyNames
             vt <- varType nodeExpr
             operation <- ("\\(hmap :: HMap) (_time :: Float) -> " <>) . Utils.replace "\\" "\\\\" <$> case vt of
                 List        -> return $ "val [" <> List.intercalate "," args <> "]"
@@ -217,22 +194,20 @@ evalFunction nodeExpr callDataPath varNames recompile = do
                 Tuple            -> return $ "val (" <> List.intercalate "," args <> ")"
                 TimeVar          -> return   "val _time"
                 Expression  name -> return   name
-            time <- Env.getTimeVar
             catchEither (left . Error.RunError $(loc) callPointPath) $ do
-                let varNameStr =  VarName.toString (VarName callPointPath def)
+                let keyNameStr =  KeyName.toString keyName
                 when (Maybe.isNothing compiledNode) $
-                    Session.runStmt $ varNameStr <> " <- hmapCreateKeyWithWitness $ " <> operation
-                update <- lift2 $ HEval.interpret $ "\\hmap -> hmapInsert " <> varNameStr <> " (" <> operation <> ") hmap"
+                    Session.runStmt $ keyNameStr <> " <- hmapCreateKeyWithWitness $ " <> operation
+                update <- lift2 $ HEval.interpret $ "\\hmap -> hmapInsert " <> keyNameStr <> " (" <> operation <> ") hmap"
                 let valErrHandler (e:: SomeException) = logger warning (show e) >> return Nothing
                 getValue <- lift2 $ flip Catch.catch valErrHandler $
-                    Just <$> HEval.interpret ("\\hmap mode time -> flip computeValue mode =<< toIOEnv (fromValue ((hmapGet " <> varNameStr <> " hmap) hmap time))")
+                    Just <$> HEval.interpret ("\\hmap mode time -> flip computeValue mode =<< toIOEnv (fromValue ((hmapGet " <> keyNameStr <> " hmap) hmap time))")
                 Env.compiledInsert callPointPath $ CompiledNode update getValue
                 Env.updateExpressions update
-    Cache.put callDataPath varNames varName
+    Cache.put callDataPath $ Prelude.error "Executor.hash:Not implemented"
     Value.reportIfVisible callPointPath
-    Manager.reportUseMany varNames
-    Manager.reportUse varName
-    return varName
+    Manager.reportUseMany keyNames
+    Manager.reportUse keyName
 
 
 nameHash :: String -> String

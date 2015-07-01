@@ -16,18 +16,18 @@ import           Generated.Proto.Mode.Mode             (Mode)
 import qualified Luna.DEP.AST.AST                      as AST
 import           Luna.DEP.AST.Control.Crumb            (Breadcrumbs)
 import           Luna.Interpreter.Session.Cache.Status (CacheStatus)
-import           Luna.Interpreter.Session.Data.VarName (VarName)
+import           Luna.Interpreter.Session.Data.Hash    (Hash)
+import           Luna.Interpreter.Session.Data.KeyName (KeyName)
 
 
 
-type CompValueMap = Map (VarName, Mode) SValue
+type CompValueMap = Map (Hash, Mode) SValue
 
-data CacheInfo = CacheInfo { _defID         :: AST.ID
-                           , _breadcrumbs   :: Breadcrumbs
-                           , _status        :: CacheStatus
-                           , _recentVarName :: VarName
-                           , _dependencies  :: Map [VarName] VarName
-                           , _values        :: CompValueMap
+data CacheInfo = CacheInfo { _defID       :: AST.ID
+                           , _breadcrumbs :: Breadcrumbs
+                           , _status      :: CacheStatus
+                           , _recentHash  :: Hash
+                           , _values      :: CompValueMap
                            } deriving (Show)
 
 makeLenses ''CacheInfo

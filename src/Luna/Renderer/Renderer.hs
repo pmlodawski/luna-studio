@@ -18,8 +18,9 @@ import qualified Luna.Interpreter.Session.Cache.Invalidate   as Invalidate
 import qualified Luna.Interpreter.Session.Cache.Value        as Value
 import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint)
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
+import           Luna.Interpreter.Session.Data.KeyName       (KeyName (KeyName))
+import qualified Luna.Interpreter.Session.Data.KeyName       as KeyName
 import           Luna.Interpreter.Session.Data.Time          (Time)
-import qualified Luna.Interpreter.Session.Data.VarName       as VarName
 import qualified Luna.Interpreter.Session.Env                as Env
 import           Luna.Interpreter.Session.Error              (Error)
 import           Luna.Interpreter.Session.Memory.Manager     (MemoryManager)
@@ -55,8 +56,8 @@ renderNode callPointPath frameRanges progressReporter = do
     let frames     = IntSet.toList $ FrameRange.frames frameRanges
         iFrames    = zip [1..] frames
         progress i = liftIO $ progressReporter i $ length frames
-    varName <- Value.getVarName callPointPath
-    let expr = "\\_time -> do { _ <- toIOEnv (fromValue (" <> VarName.toString varName <> " _time)) ; return () }"
+        keyName    = KeyName callPointPath
+    let expr = "\\_time -> do { _ <- toIOEnv (fromValue (" <> KeyName.toString keyName <> " _time)) ; return () }"
     (action :: Time -> IO ()) <- Session.interpret expr
     progress 0
     forM_ iFrames $ \(i, frame) -> liftIO $ do
