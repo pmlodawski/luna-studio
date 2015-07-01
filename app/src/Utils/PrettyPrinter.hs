@@ -13,3 +13,6 @@ instance PrettyPrinter a => PrettyPrinter [a] where
 instance PrettyPrinter a => PrettyPrinter (Maybe a) where
     display (Just v) = "J: " <> (display v)
     display Nothing  = "Nothing"
+
+instance PrettyPrinter Int where
+    display = show

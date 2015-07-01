@@ -16,6 +16,7 @@ import           GHCJS.DOM.DOMWindow ( IsDOMWindow
                                      )
 import           GHCJS.DOM.EventM    ( EventM
                                      , uiCharCode
+                                     , uiWhich
                                      , mouseClientXY
                                      , mouseButton
                                      , mouseShiftKey
@@ -41,8 +42,8 @@ readKeyMods = do
   meta  <- mouseMetaKey
   return $ Event.Keyboard.KeyMods shift ctrl alt meta
 
-readButton :: (IsDOMWindow self) => EventM GHCJS.DOM.MouseEvent.MouseEvent self Word
-readButton = mouseButton
+readButton :: (IsDOMWindow self) => EventM GHCJS.DOM.MouseEvent.MouseEvent self Int
+readButton = uiWhich
 
 readMousePos :: (IsDOMWindow self) => EventM GHCJS.DOM.MouseEvent.MouseEvent self Point
 readMousePos = --convert <$> mouseClientXY
@@ -51,7 +52,7 @@ readMousePos = --convert <$> mouseClientXY
     return $ Point x y
 
 
-newMouseWithObjects :: Event.Mouse.Type -> Point -> Word -> Event.Keyboard.KeyMods -> [Object Dynamic] -> Event.Mouse.WithObjects Dynamic
+newMouseWithObjects :: Event.Mouse.Type -> Point -> Int -> Event.Keyboard.KeyMods -> [Object Dynamic] -> Event.Mouse.WithObjects Dynamic
 newMouseWithObjects eventType point button keyMods objects =
   Event.Mouse.newWithObjects (Event.Mouse.newEvent eventType point button keyMods) objects
 

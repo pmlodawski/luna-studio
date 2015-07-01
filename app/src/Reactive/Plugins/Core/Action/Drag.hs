@@ -41,13 +41,13 @@ data Action = DragAction   { _actionType :: ActionType
             deriving (Eq, Show)
 
 data State = State { _drag  :: Maybe DragState
-                   , _nodes :: NodeSelection
+                   , _nodes :: NodeCollection
                    } deriving (Eq, Show)
 
 
 type ActionState = WithStateMaybe Action State
 
-data AccumInput = AccumInput NodeSelection Action
+data AccumInput = AccumInput NodeCollection Action
 
 makeLenses ''Action
 makeLenses ''State
@@ -84,20 +84,19 @@ mouseToAction eventWithObjects = case mouseEvent ^. tpe of
           isNoNode      = null $ eventWithObjects ^. objects
 
 
-mergeWith :: NodeSelection -> NodeSelection -> NodeSelection
+mergeWith :: NodeCollection -> NodeCollection -> NodeCollection
 mergeWith current new = (getCommon current new) <> (getNew new current)
     where
-    getNew, getCommon :: NodeSelection -> NodeSelection -> NodeSelection
+    getNew, getCommon :: NodeCollection -> NodeCollection -> NodeCollection
     getNew    = deleteFirstsBy $ on (==) (view ident)
     getCommon = intersectBy $ on (==) (view ident)
 
-moveNodes :: Point -> NodeSelection -> NodeSelection
+moveNodes :: Point -> NodeCollection -> NodeCollection
 moveNodes delta = fmap $ Node.position +~ delta
 
 accumActionState :: AccumInput -> ActionState -> ActionState
 accumActionState (AccumInput nodeSelection newActionCandidate) oldActionState = WithState maybeNewAction $ State newDrag newNodes
     where
-    oldAction                        = oldActionState ^. action
     oldState                         = oldActionState ^. state
     oldDrag                          = oldState ^. drag
     oldNodes                         = oldState ^. nodes
@@ -143,6 +142,6 @@ updateUI (WithState maybeAction state) = case maybeAction of
 moveNodeUI :: Node -> IO ()
 moveNodeUI (Node ident _ (Point x y)) = dragNode ident x y
 
-moveNodesUI :: NodeSelection -> IO ()
+moveNodesUI :: NodeCollection -> IO ()
 moveNodesUI nodes  = mapM_ moveNodeUI nodes
                   -- >> performGC
