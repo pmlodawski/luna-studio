@@ -11,12 +11,15 @@ import           Utils.PrettyPrinter
 import           Object.Dynamic
 import           Object.Object ( ID, Point, Object(..), Selectable(..) )
 
-data Node = Node { _ident    :: ID
+type NodeId = ID
+
+data Node = Node { _ident    :: NodeId
                  , _selected :: Bool
                  , _position :: Point
                  } deriving (Eq, Show, Typeable)
 
-type NodeSelection = [Node]
+type NodeCollection   = [Node]
+type NodeIdCollection = [NodeId]
 
 makeLenses ''Node
 
