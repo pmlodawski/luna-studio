@@ -17,6 +17,7 @@ import qualified Control.Monad.Catch         as Catch
 import           Control.Monad.State         hiding (mapM, mapM_)
 import           Control.Monad.Trans.Either
 import qualified Data.Char                   as Char
+import qualified Data.List                   as List
 import qualified Data.Maybe                  as Maybe
 import qualified Data.String.Utils           as Utils
 import qualified Data.Text.Lazy              as Text
@@ -180,7 +181,7 @@ evalFunction nodeExpr callDataPath keyNames recompile = do
                 genNative = List.replaceByMany "#{}" args . List.stripIdx 3 3
                 self      = head keyNames
             vt <- varType nodeExpr
-            operation <- ("\\(hmap :: HMap) (_time :: Float) -> " <>) . Utils.replace "\\" "\\\\" <$> case vt of
+            operation <- ("\\(hmap :: HMap) (_time :: Float) -> " <>) <$> case vt of
                 List        -> return $ "val [" <> List.intercalate "," args <> "]"
                 Id          -> return $ mkArg self
                 Native name -> return $ genNative name
@@ -222,7 +223,7 @@ hastExpr expr = do
     cpphsOptions <- Env.getCpphsOptions
     hexpr <- hoistEitherWith (Error.OtherError $(loc) . show) $ fst result
     let code = Text.unpack $ HSC.genExpr hexpr
-    last . lines <$> liftIO (Cpphs.runCpphs cpphsOptions "" code)
+    unlines . filter (not . null) . lines <$> liftIO (Cpphs.runCpphs cpphsOptions "" code)
 
 
 data VarType = Lit      String

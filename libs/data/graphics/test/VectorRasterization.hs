@@ -239,7 +239,7 @@ main = do
 
     saveImageLuna "fooD4.png" imgGUI
 
-
+    profile
 
 
     return ()

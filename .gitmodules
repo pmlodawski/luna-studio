@@ -44,3 +44,6 @@
 [submodule "third-party/HMap"]
 	path = third-party/HMap
 	url = https://github.com/pmlodawski/HMap.git
+[submodule "third-party/binary"]
+	path = third-party/binary
+	url = https://github.com/flowbox-public/binary

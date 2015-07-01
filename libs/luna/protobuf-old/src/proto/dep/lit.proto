@@ -17,7 +17,7 @@ message Lit {
     }
     required Cls  dtype    = 1;
     optional int32  id     = 2 [default = -1];
-    optional string str    = 3;
+    optional bytes  str    = 3;
     optional Number number = 4;
 }
 
