@@ -11,7 +11,7 @@ data WithState act st = WithState { _action :: act
                                   , _state  :: st
                                   } deriving (Eq, Show)
 
-type WithStateMaybe mact st = WithState (Maybe mact) st
+type WithStateMaybe act st = WithState (Maybe act) st
 
 makeLenses ''WithState
 
@@ -23,3 +23,14 @@ instance (Default act, Default st) => Default (WithState act st) where
 
 instance (PrettyPrinter act, PrettyPrinter st) => PrettyPrinter (WithState act st) where
     display (WithState action state) = "na( " <> display action <> " " <> display state <> " )"
+
+
+class ActionStateExecutor act st where
+    exec :: act -> st -> WithState act st
+
+class (Maybe act, ActionStateExecutor act st) => ActionStateTryExecutor act st where
+    tryExec :: Maybe act -> st -> WithState act st
+    tryExec Nothing state = WithState Nothing state
+    tryExec (Just action) = exec action state
+
+

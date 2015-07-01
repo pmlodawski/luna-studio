@@ -90,8 +90,8 @@ execMaybeActionOnState maybeAction state = case maybeAction of
     Nothing     -> WithState Nothing state
     Just action -> execActionOnState action state
 
-execActionOnState :: Action -> State -> ActionState
-execActionOnState newAction oldState = WithState (Just newAction) $ State newNodeIds
+exec :: Action -> State -> ActionState
+exec newAction oldState = WithState (Just newAction) $ State newNodeIds
     where
     oldNodeIds                       = oldState ^. nodeIds
     newNodeIds                       = case newAction of

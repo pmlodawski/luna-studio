@@ -24,12 +24,15 @@ import qualified Event.Keyboard as Keyboard ( KeyMods(..), Event(..) )
 import           Event.Mouse                ( WithObjects(..) )
 import qualified Event.Mouse    as Mouse
 import           Utils.PrettyPrinter
+
 import qualified Reactive.Plugins.Core.Action.Action    as Action
 import qualified Reactive.Plugins.Core.Action.Selection as Selection
 import qualified Reactive.Plugins.Core.Action.Drag      as Drag
 
-infixr 6 <+>
-(<+>) = union
+import Reactive.Plugins.Core.State
+
+
+
 
 data NewState = NewState String deriving (Show)
 
@@ -45,18 +48,16 @@ makeNetworkDescription = do
     keyPressedE   <- fromAddHandler keyPressedHandler
 
     let
-        anyE = unions [() <$ mouseDownE, () <$ mouseUpE, () <$ mouseMovedE, () <$ keyPressedE]
         -- aaaB = accumB (NewState "") $ (\(NewState c) (NewState o) -> NewState $ "a(" <> c <> ")") <$> (cccB <@ keyPressedE)
         -- bbbB = accumB (NewState "") $ (\(NewState a) (NewState o) -> NewState $ "b(" <> a <> ")") <$> (aaaB <@ keyPressedE)
         -- cccB = accumB (NewState "") $ (\(NewState b) (NewState o) -> NewState $ "c(" <> b <> ")") <$> (bbbB <@ keyPressedE)
 
-        -- clicksCountB       = accumB 0 ((+ 1) <$ mouseClickedE)
+        anyE       = unions [() <$ mouseDownE, () <$ mouseUpE, () <$ mouseMovedE, () <$ keyPressedE]
+        anyNoMoveE = unions [() <$ mouseDownE, () <$ mouseUpE, () <$ keyPressedE]
 
-        stateStSelB                   = stepper def $ nodeSelectionReactionB <@ anyE
+        nodeSelectionStateB           = stepper def $ nodeSelectionReactionStateB <@ anyNoMoveE
 
-        stateSelB                     = (^. Action.state) <$> stateStSelB
-
-        lastKeyB                      = stepper def $ Just <$> keyPressedE
+        -- lastKeyB                      = stepper def $ Just <$> keyPressedE
 
         mouseNodeDownE, mouseNodeUpE, mouseNodeMovedE :: Event t (WithObjects Node)
         mouseNodeDownE                = unpackDynamic <$> mouseDownE
@@ -64,16 +65,18 @@ makeNetworkDescription = do
         mouseNodeMovedE               = unpackDynamic <$> mouseMovedE
 
         -- mouseE                     = mouseDownE <+> mouseUpE <+> mouseMovedE
-        mouseNodeE                    = mouseNodeDownE <+> mouseNodeUpE <+> mouseNodeMovedE
+        mouseNodeE                    = unions [mouseNodeDownE, mouseNodeUpE, mouseNodeMovedE]
 
         mouseNodeSelectActionE        = Selection.mouseToAction      <$> mouseNodeE
         keyboardNodeSelectionActionE  = Selection.keyboardToAction   <$> keyPressedE
-        nodeSelectionActionE          = mouseNodeSelectActionE <+> keyboardNodeSelectionActionE
-
+        nodeSelectionActionE          = unions [mouseNodeSelectActionE, keyboardNodeSelectionActionE]
 
         nodeSelectionActionB          = stepper def $ nodeSelectionActionE
 
-        nodeSelectionReactionB        = Selection.execMaybeActionOnState <$> nodeSelectionActionB <*> stateSelB
+        nodeSelectionReactionB        = Selection.execMaybeActionOnState <$> nodeSelectionActionB <*> nodeSelectionStateB
+        nodeSelectionReactionStateB   = (^. Action.state) <$> nodeSelectionReactionB
+
+
 
         -- nodeSelectionReactionE        = accumE def $ Selection.execActionOnState   <$> nodeSelectionActionE
 
