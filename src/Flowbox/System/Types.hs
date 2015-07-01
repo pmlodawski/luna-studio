@@ -98,6 +98,14 @@ type family (a :: k) :== (b :: k) where
 ---------------------
 (.:) = (.) . (.)
 
+class ToMaybe m where
+    toMaybe :: m a -> Maybe a
+
+orElse :: Maybe a -> Maybe a -> Maybe a
+x `orElse` y = case x of
+                 Just _  -> x
+                 Nothing -> y
+
 
 ------------------------------------------------------------------------
 -- Named
@@ -188,6 +196,10 @@ instance (CmpNatRepCls v a cmp, InsertCmpCls cmp v (a,b) out) => InsertCls v (a,
 
 ----
 
+type family And a b where
+    And True True = True
+    And a    b    = False
+
 type family Insert val (set :: k) :: k
 type instance Insert v ()    = (v,())
 type instance Insert v (a,b) = Case (CmpNatRep v a)
@@ -204,6 +216,9 @@ type instance Insert v (a ': b) = Case (CmpNatRep v a)
                                       , LT :-> v ': (a ': b)
                                       ]
 
+type family IsSubset (set :: k) (superset :: k) :: Bool
+type instance IsSubset '[] sset = True
+type instance IsSubset (a ': as) sset = (a `In` sset) `And` (as `IsSubset` sset)
 ---
 
 type family Remove a (set :: k) :: k
@@ -218,7 +233,7 @@ type instance Diff set '[]      = set
 
 ---
 
-type family In a (set :: k) :: Bool
+type family In (a :: l) (set :: k) :: Bool
 type instance In v (a ': b) = If (v :== a) True (In v b)
 type instance In v '[]      = False
 type instance In v (a,b)    = If (v :== a) True (In v b)

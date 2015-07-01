@@ -89,8 +89,6 @@ import           GHC.Exts
 -- Records
 ------------------------------------------------------------------------
 
---data Record variants = Record (RecordTemplate variants) deriving (Eq)
-
 data Record a where
     Record :: Eq (RecordTemplate a) => (RecordTemplate a) -> Record a
 
@@ -105,14 +103,13 @@ type family MkRecord variants where
 
 -- === Utils ===
 
-type family VariantsOf a :: [*]
-type family VariantReprsOf (a :: [*]) :: [[Nat]] where
-    VariantReprsOf (v ': vs) = NatRep v ': VariantReprsOf vs
-    VariantReprsOf '[]       = '[]
-    --VariantReprsOf a         = VariantReprsOf (VariantsOf a)
+type family Variants a :: [*]
+type family Reprs (a :: [*]) :: [[Nat]] where
+    Reprs (v ': vs) = NatRep v ': Reprs vs
+    Reprs '[]       = '[]
 
-type instance VariantsOf (Maybe a) = VariantsOf a
-type instance VariantsOf (Record vars) = vars
+type instance Variants (Maybe a) = Variants a
+type instance Variants (Record vars) = vars
 
 -- === Instances ===
 
@@ -125,90 +122,86 @@ instance (IsSet a, VariantShow (RecordTemplate a)) => Show (Record a) where
 -- Variants
 ------------------------------------------------------------------------
 
-type VariantPolyCons a vType    = ConsByIdx (VariantIdx a vType) vType a
-type VariantPolyCons2 vType m cls    = ConsByIdx2 (VariantIdx cls vType) vType m cls
-type VariantCons     vars vType = VariantPolyCons (Record vars) vType
-type VariantIdx      vars vType = Index (NatRep vType) (VariantReprsOf (VariantsOf vars))
+type CheckConsByVariant variant m cons  = MaybeConsByIdx (variant `VariantIdx` cons) variant m cons
+type MaybeConsByVariant variant m cons  = (CheckConsByVariant variant m cons, ToMaybe m)
+--type SpecificCons      variant cons    = CheckConsByVariant variant Found cons
+
+type VariantIdx         variant a       = NatRep variant `Index` VariantReprs a
+type VariantReprs       variant         = Reprs (Variants variant)
 
 
 -- === Variant constructors ===
 
-data Val a = Val { fromVal :: a } deriving (Show)
-data NoVal a = NoVal deriving (Show)
+data Found    a = Found { fromVal :: a } deriving (Show)
+data NotFound a = NotFound deriving (Show)
 
-class ConsByIdx2 (idx :: Maybe Nat) a m cls | idx -> m where
-    consByIdx2 :: Proxy idx -> a -> m cls
+instance ToMaybe Found      where toMaybe = Just . fromVal
+instance ToMaybe NotFound where toMaybe _ = Nothing
 
-class ConsByIdx3 (idx :: Nat) a cls where
-    consByIdx3 :: Proxy idx -> a -> cls
+------------------------------------------------------------------------
+-- Constructors
+------------------------------------------------------------------------
+
+-- === Construction functions ===
+
+type Constructor      variant r = SmartConstructor variant (Record r)
+type MaybeConstructor variant r = SmartConstructor variant (Maybe (Record r))
+
+class SmartConstructor variant out where
+    cons :: variant -> out
+
+instance SpecificCons variant cons => SmartConstructor variant cons where
+    cons = specificCons
+
+instance MaybeConsByVariant variant m cons => SmartConstructor variant (Maybe cons) where
+    cons = maybeCons
 
 
-instance ConsByIdx2 Nothing a NoVal cls where
-    consByIdx2 _ _ = NoVal
+wrappedCons :: forall variant m cons. CheckConsByVariant variant m cons
+            => variant -> m cons
+wrappedCons = maybeConsByIdx (Proxy :: Proxy (variant `VariantIdx` cons))
 
-instance ConsByIdx3 n a cls => ConsByIdx2 ('Just n) a Val cls where
-    consByIdx2 _ a = Val $ consByIdx3 (Proxy :: Proxy n) a
+maybeCons :: MaybeConsByVariant variant m cons => variant -> Maybe cons
+maybeCons = toMaybe . wrappedCons
+
+class SpecificCons variant cons where
+    specificCons :: variant -> cons
 
 
+-- === Construction utiities ===
 
+-- MaybeConsByIdx
 
-class ConsByIdx (idx :: Maybe Nat) a cls where
-    consByIdx :: Proxy idx -> a -> cls
+class MaybeConsByIdx (idx :: Maybe Nat) variant m cons | idx -> m where
+    maybeConsByIdx :: Proxy idx -> variant -> m cons
 
-cons :: forall vType rec idx. (VariantPolyCons rec vType, idx ~ VariantIdx rec vType)
-     => vType -> rec
-cons = consByIdx (Proxy :: Proxy idx)
+instance (m ~ NotFound) => MaybeConsByIdx Nothing a m cons where
+    maybeConsByIdx _ _ = NotFound
 
-cons2 :: forall vType m cls idx. (idx ~ VariantIdx cls vType, ConsByIdx2 idx vType m cls)
-     => vType -> m cls
-cons2 = consByIdx2 (Proxy :: Proxy idx)
+instance (m ~ Found, ConsByIdx n a cons) => MaybeConsByIdx ('Just n) a m cons where
+    maybeConsByIdx _ = Found . consByIdx (Proxy :: Proxy n)
 
---cons' ::
-cons' = fromVal . cons2
+-- ConsByIdx
 
-class Constructor vType out where
-    cons'' :: vType -> out
+class ConsByIdx (idx :: Nat) variant cons where
+    consByIdx :: Proxy idx -> variant -> cons
 
-class ToMaybe m where
-    toMaybe :: m a -> Maybe a
-
-instance ToMaybe Val where
-    toMaybe = Just . fromVal
-
-instance ToMaybe NoVal where
-    toMaybe _ = Nothing
-
-instance VariantPolyCons2 vType Val cls => Constructor vType cls where
-    cons'' = fromVal . cons2
-
-instance (VariantPolyCons2 vType m cls, ToMaybe m) => Constructor vType (Maybe cls) where
-    cons'' = toMaybe . cons2
-
--- Basic handlers
-
-instance (ConsByIdx3 n a (RecordTemplate r), Eq (RecordTemplate r))
-      => ConsByIdx3 n a (Record r) where
-    consByIdx3 = Record .: consByIdx3
-
-instance (ConsByIdx (Just n) a (RecordTemplate r), IsSet r, Eq (RecordTemplate r)) => ConsByIdx (Just n) a (Record r) where
+instance (ConsByIdx n a tmpl, Eq tmpl, tmpl ~ RecordTemplate r)
+      => ConsByIdx n a (Record r) where
     consByIdx = Record .: consByIdx
 
--- Maybe support
+-- SpecificCons
 
-instance ConsByIdx Nothing a (Maybe r) where
-    consByIdx _ _ = Nothing
-
-instance ConsByIdx (Just n) a r => ConsByIdx (Just n) a (Maybe r) where
-    consByIdx = Just .: consByIdx
+instance (CheckConsByVariant variant m cons, InvalidRecordType m variant cons) => SpecificCons variant cons where
+    specificCons v = unpackValidRecord v $ wrappedCons v
 
 -- Failure assertion
 
-class InvalidRecordType a b | a -> b
-instance InvalidRecordType r a => ConsByIdx Nothing a r where
-    consByIdx = undefined
+class InvalidRecordType m variant cons where
+    unpackValidRecord :: variant -> m cons -> cons
 
---class InvalidRecordType2 (idx :: Maybe Nat) (m :: * -> *) a cls | idx -> m
---instance InvalidRecordType2 idx m a cls => ConsByIdx2 idx a m cls
+instance InvalidRecordType Found variant cons where
+    unpackValidRecord _ = fromVal
 
 
 ------------------------------------------------------------------------
@@ -217,9 +210,9 @@ instance InvalidRecordType r a => ConsByIdx Nothing a r where
 
 --- === Match ===
 
-newtype Match rec out = Match { runMatch :: rec -> Maybe out }
+newtype Match rec out = Match { runMatch :: rec -> Maybe out } deriving (Typeable)
 
-instance Show (Match rec out) where show _ = "Match"
+instance (Typeable rec, Typeable out) => Show (Match rec out) where show _ = show (typeOf (undefined :: Match rec out))
 
 --- === MatchSet ===
 
@@ -228,196 +221,102 @@ type MatchSet rec out = State [Match rec out] ()
 class IsMatchSet a rec out | a -> rec out where
     toMatchSet :: a -> MatchSet rec out
 
-instance IsMatchSet (MatchSet rec out) rec out where toMatchSet = id
+instance IsMatchSet (MatchSet rec out) rec out where toMatchSet     = id
 instance IsMatchSet [MatchSet rec out] rec out where toMatchSet lst = sequence lst *> pure ()
+instance IsMatchSet [Match rec out]    rec out where toMatchSet     = put
+instance (Typeable rec, Typeable out) => Show (MatchSet rec out) where
+    show _ = "MatchSet " ++ show (typeOf (undefined :: [Match rec out]))
 
 -- === Utils ===
 
-match :: RecordMod variant rec out => (variant -> out) -> MatchSet rec out
+match :: VariantMap v out rec => (v -> out) -> MatchSet rec out
 match m = withState (<> [Match $ mapVariant m])
-
-matchSet :: [Match rec out] -> MatchSet rec out
-matchSet = put
 
 runCase :: rec -> MatchSet rec out -> Maybe out
 runCase val s = case execState s mempty of
-    (m:ms) -> case runMatch m val of
-        Nothing -> runCase val $ matchSet ms
-        Just a  -> Just a
+    (m:ms) -> runMatch m val `orElse` runCase val (toMatchSet ms)
     []     -> Nothing
 
-secureCase :: (IsMatchSet matches rec out)
+secureCase :: IsMatchSet matches rec out
            => rec -> matches -> Maybe out
 secureCase rec matches = runCase rec $ toMatchSet matches
 
-unsecureCase :: (IsMatchSet matches rec out)
+unsecureCase :: IsMatchSet matches rec out
               => rec -> matches -> out
 unsecureCase = fromJust .: secureCase
 
-vcase :: (IsMatchSet matches rec out)
+case' :: IsMatchSet matches rec out
       => rec -> matches -> out
-vcase = unsecureCase
+case' = unsecureCase
 
 
 ------------------------------------------------------------------------
 -- Casting
 ------------------------------------------------------------------------
 
-data CAST = CAST
-type Cast a b = WithVariants CAST a b
+type IsSecureCast a b = IsSubset (VariantReprs a) (VariantReprs b)
+type WrappedCast  a m b = ( m ~ CastOutput (IsSecureCast a b)
+                          , WithVariantsM (Cast' (IsSecureCast a b)) a m b
+                          )
 
-cast :: Cast a b => a -> b
-cast = withVariants CAST
+type Cast a b' b = (WrappedCast a (CastOutput (IsSecureCast a b)) b', UnpackCast (CastOutput (IsSecureCast a b) b') b)
 
-instance (VariantPolyCons r a, Monad m) => WithVariantM CAST a m r where
-    withVariantM _ = return . cons
+type family CastOutput (secure :: Bool) :: (* -> *) where
+    CastOutput False = Maybe
+    CastOutput True  = Found
 
+-- Variant casting
 
---data SECURE_CAST = SECURE_CAST
---type SecureCast a b = WithVariants SECURE_CAST a b
+class Cast' (validCast :: Bool) a m b | validCast -> m where
+    cast' :: Proxy validCast -> a -> m b
 
---class WithVariantsX2 ctx (vars :: [*]) rec m rec' | rec -> vars where
---    withVariantsX2 :: Proxy ctx -> (forall x n y. ctx vars x n y => Proxy vars -> x -> n y) -> rec -> m rec'
+instance (CheckConsByVariant a Found b) => Cast' True a Found b where
+    cast' _ = wrappedCons
 
---class WithVariantX2 ctx vars a m b where
---    withVariantX2 :: ctx vars a m b => Proxy ctx -> (forall x n y. ctx vars x n y => Proxy vars -> x -> n y) -> a -> m b
+instance (CheckConsByVariant a m b, ToMaybe m) => Cast' False a Maybe b where
+    cast' _ = toMaybe . wrappedCons
 
-        --instance WithVariantX2 ctx a m b where
-        --    withVariantX2 _ f a = f a
+-- cast types
 
-class Cast2 (vars :: [*]) a m b | a b -> m where
-    cast2 :: Proxy vars -> a -> m b
+cast :: Cast a b' b => a -> b
+cast = unpackCast . wrappedCast
 
-instance (VariantPolyCons2 a m b) => Cast2 vars a m b where
-    cast2 _ = cons2
+wrappedCast :: forall secureCast a m b. (WrappedCast a m b, secureCast ~ IsSecureCast a b)
+            => a -> m b
+wrappedCast = withVariantsM (Proxy :: Proxy (Cast' secureCast)) $ cast' (Proxy :: Proxy secureCast)
 
---cast2' :: WithVariantsX2 Cast2 a m b => a -> m b
-cast2' = withVariantsX2 (Proxy :: Proxy Cast2) cast2
+-- cast unpacking
 
+class UnpackCast a b | b -> a where
+    unpackCast :: a -> b
 
+instance UnpackCast (Maybe a) (Maybe a) where
+    unpackCast = id
 
---type Cast a b = WithVariants CAST a b
+instance (a ~ Found b) => UnpackCast a b where
+    unpackCast = fromVal
 
---cast :: Cast a b => a -> b
---cast = withVariants CAST
-
---cons2 :: forall vType m cls idx. (idx ~ VariantIdx cls vType, ConsByIdx2 idx vType m cls)
---     => vType -> m cls
---cons2 = consByIdx2 (Proxy :: Proxy idx)
-
---instance (VariantPolyCons2 a m cls) => WithVariantM' SECURE_CAST a m cls where
---    withVariantM' _ = cons2
-
---cast' = withVariants' SECURE_CAST
-
---class Cast2 a b where
---    cast2 :: a -> b
-
---instance SecureCast a (Val b) => Cast2 a b where
---    cast2 = fromVal . cast'
-
---instance (SecureCast a (m b), ToMaybe m) => Cast2 a (Maybe b) where
---    cast2 = toMaybe . cast'
-
---xxx = toMaybe . cast'
 
 ------------------------------------------------------------------------
 -- Record bulk processing
 ------------------------------------------------------------------------
 
---class Foo a where
---    foo :: a -> String
+class WithVariantsM ctx a m b where
+    withVariantsM :: Proxy ctx -> (forall v. ctx v m b => v -> m b) -> a -> m b
 
---instance Show a => Foo a where
---    foo = show
-
---class Bar ctx where
---    bar :: (ctx a, ctx b) => Proxy ctx -> (forall x. ctx x => x -> String) -> (a,b) -> String
-
-----class Bar2 where
---bar2 :: (forall x. x -> String) -> (a,b) -> String
---bar2 f (a,b) = f a ++ f b
-
---instance Bar ctx where
---    bar _ f (a,b) = f a ++ f b
-
---x = bar (Proxy :: Proxy Foo) foo (1, "ala")
---x2 = bar2 foo (1, "ala")
-
---test = do
---    return ()
-
-
---type WithVariants' tp a b = WithVariantsM' tp a Identity b
-
-
---class WithVariantsX tp ctx a b where
---    withVariantsX :: ctx a b => Proxy ctx -> tp -> a -> b
-
---class WithVariantX tp ctx a b where
---    withVariantX :: ctx a b => Proxy ctx -> tp -> a -> b
-
-
---type WithVariant' tp a b = WithVariantM' tp a Identity b
-
---class WithVariantM' tp a m b | tp a -> b where
---    withVariantM' :: tp -> a -> m b
-
---withVariant' = runIdentity .: withVariantM'
-
----
-
-type WithVariants' tp a b = WithVariantsM' tp a Identity b
-
-class WithVariantsM' tp a m b | tp a -> b where
-    withVariantsM' :: tp -> a -> m b
-
-withVariants' = runIdentity .: withVariantsM'
-
-
-type WithVariant' tp a b = WithVariantM' tp a Identity b
-
-class WithVariantM' tp a m b | tp a -> b where
-    withVariantM' :: tp -> a -> m b
-
-withVariant' = runIdentity .: withVariantM'
-
----
-
-type WithVariants tp a b = WithVariantsM tp a Identity b
-
-class WithVariantsM tp r m out where
-    withVariantsM :: tp -> r -> m out
-
-withVariants :: WithVariants tp a b => tp -> a -> b
-withVariants = runIdentity .: withVariantsM
-
-
-type WithVariant tp a b = WithVariantM tp a Identity b
-
-class WithVariantM tp a m b where
-    withVariantM :: tp -> a -> m b
-
-variantPolyProc :: WithVariant tp a b => tp -> a -> b
-variantPolyProc = runIdentity .: withVariantM
+class WithVariants ctx a b where
+    withVariants :: Proxy ctx -> (forall v. ctx v b => v -> b) -> a -> b
 
 --
 
-instance (IsSet vars, WithVariantsM tp (RecordTemplate vars) m out) => WithVariantsM tp (Record vars) m out where
-    withVariantsM tp (Record a) = withVariantsM tp a
+instance (WithVariantsM ctx (RecordTemplate vars) m out)
+      => WithVariantsM ctx (Record vars) m out where
+    withVariantsM ctx f (Record a) = withVariantsM ctx f a
 
-instance (IsSet vars, WithVariantsM' tp (RecordTemplate vars) m out) => WithVariantsM' tp (Record vars) m out where
-    withVariantsM' tp (Record a) = withVariantsM' tp a
+instance (WithVariants ctx (RecordTemplate vars) out)
+      => WithVariants ctx (Record vars) out where
+    withVariants ctx f (Record a) = withVariants ctx f a
 
-instance (WithVariantsX2 ctx (RecordTemplate vars) m out, vars ~ VariantsOf (RecordTemplate vars))
-      => WithVariantsX2 ctx (Record vars) m out where
-    withVariantsX2 ctx f (Record a) = withVariantsX2 ctx f a
-
-
-
---class WithVariantsX2 ctx rec m rec' where
---    withVariantsX2 :: (vars ~ VariantsOf rec)
---                   => Proxy ctx -> (forall x n y. ctx vars x n y => Proxy vars -> x -> n y) -> rec -> m rec'
 
 ------------------------------------------------------------------------
 -- Variant Utilities
@@ -425,189 +324,195 @@ instance (WithVariantsX2 ctx (RecordTemplate vars) m out, vars ~ VariantsOf (Rec
 
 -- === VariantShow ===
 
-data VariantRawShow = VariantRawShow
-type VariantShow a   = WithVariants' VariantRawShow a String
+type VariantShow rec = WithVariants VariantsShow rec String
 
-instance (Show a, Monad m) => WithVariantM' VariantRawShow a m String where
-    withVariantM' _ = return . show
+class (out ~ String) => VariantsShow v out where
+    variantsShow :: v -> out
 
-variantShow :: VariantShow a => a -> String
-variantShow   = withVariants' VariantRawShow
+instance Show v => VariantsShow v String where
+    variantsShow = show
+
+variantShow :: VariantShow rec => rec -> String
+variantShow   = withVariants (Proxy :: Proxy VariantsShow) variantsShow
 
 
 -- === Variant map ===
 
-class MaybeApp a b where
-    maybeApp :: (a -> out) -> b -> Maybe out
+data ANY = ANY deriving (Show, Typeable)
 
-instance MaybeApp a a where
-    maybeApp = Just .: ($)
+class (m ~ Maybe, b~out) => MapVariant' a b v m out where
+    mapVariant' :: (a -> b) -> v -> m out
 
-instance MaybeApp a b where
-    maybeApp _ _ = Nothing
+instance MapVariant' a   out a Maybe out where mapVariant' f a = Just $ f a
+instance MapVariant' a   out b Maybe out where mapVariant' _ _ = Nothing
+instance MapVariant' ANY out b Maybe out where mapVariant' f _ = Just $ f ANY
 
----
+type VariantMap a b rec = WithVariantsM (MapVariant' a b) rec Maybe b
 
-type RecordMod a rec out = WithVariants' (VariantMod a out) rec (Maybe out)
-newtype VariantMod a b = VariantMod (a -> b)
-
-instance (MaybeApp a b, Monad m) => WithVariantM' (VariantMod a out) b m (Maybe out) where
-    withVariantM' (VariantMod f) = return . maybeApp f
-
-mapVariant :: RecordMod a rec out => (a -> out) -> rec -> Maybe out
-mapVariant f r = withVariants' (VariantMod f) r
+mapVariant :: VariantMap a b rec => (a -> b) -> rec -> Maybe b
+mapVariant (f :: (a -> b)) = withVariantsM (Proxy :: Proxy (MapVariant' a b)) (mapVariant' f)
 
 ------------------------------------------------------------------------
 -- MkRecord templates
 ------------------------------------------------------------------------
 
-data R1 a = R1_V1 a
+type family TemplateCtxsM' ctx ts (m :: * -> *) a :: Constraint where
+    TemplateCtxsM' ctx '[] m a = ()
+    TemplateCtxsM' ctx (t ': ts) m a = (ctx t m a, TemplateCtxsM' ctx ts m a)
+
+type TemplateCtxsM ctx t m a = TemplateCtxsM' ctx (Variants t) m a
+
+type family TemplateCtxs' ctx ts a :: Constraint where
+    TemplateCtxs' ctx '[] a = ()
+    TemplateCtxs' ctx (t ': ts) a = (ctx t a, TemplateCtxs' ctx ts a)
+
+type TemplateCtxs ctx t a = TemplateCtxs' ctx (Variants t) a
+
+---
+
+data R1 t1 = R1_V1 t1
     deriving (Show, Eq)
 
-data R2 a b
-    = R2_V1 a
-    | R2_V2 b
+data R2 t1 t2
+    = R2_V1 t1
+    | R2_V2 t2
     deriving (Show, Eq)
 
-data R3 a b c
-    = R3_V1 a
-    | R3_V2 b
-    | R3_V3 c
+data R3 t1 t2 t3
+    = R3_V1 t1
+    | R3_V2 t2
+    | R3_V3 t3
     deriving (Show, Eq)
+
+data R4 t1 t2 t3 t4
+   = R4_V1 t1
+   | R4_V2 t2
+   | R4_V3 t3
+   | R4_V4 t4
+   deriving (Show, Eq)
+
+data R5 t1 t2 t3 t4 t5
+   = R5_V1 t1
+   | R5_V2 t2
+   | R5_V3 t3
+   | R5_V4 t4
+   | R5_V5 t5
+   deriving (Show, Eq)
 
 
 -- === Instances ===
 
+instance TemplateCtxsM ctx (R1 t1) m a
+      => WithVariantsM ctx (R1 t1) m a where
+    withVariantsM _ f = \case
+        R1_V1 a -> f a
 
-class WithVariantsX2 ctx rec m rec' where
-    withVariantsX2 :: (vars ~ VariantsOf rec)
-                   => Proxy ctx -> (forall x n y. ctx vars x n y => Proxy vars -> x -> n y) -> rec -> m rec'
+instance TemplateCtxsM ctx (R2 t1 t2) m a
+      => WithVariantsM ctx (R2 t1 t2) m a where
+    withVariantsM _ f = \case
+        R2_V1 a -> f a
+        R2_V2 a -> f a
 
-class WithVariantX2 ctx (vars :: [*]) a m b where
-    withVariantX2 :: ctx vars a m b => Proxy ctx -> Proxy vars -> (forall x n y. ctx vars x n y => Proxy vars -> x -> n y) -> a -> m b
+instance TemplateCtxsM ctx (R3 t1 t2 t3) m a
+      => WithVariantsM ctx (R3 t1 t2 t3) m a where
+    withVariantsM _ f = \case
+        R3_V1 a -> f a
+        R3_V2 a -> f a
+        R3_V3 a -> f a
 
-instance WithVariantX2 ctx vars a m b where
-     withVariantX2 _ v f a = f v a
+instance TemplateCtxsM ctx (R4 t1 t2 t3 t4) m a
+      => WithVariantsM ctx (R4 t1 t2 t3 t4) m a where
+    withVariantsM _ f = \case
+        R4_V1 a -> f a
+        R4_V2 a -> f a
+        R4_V3 a -> f a
+        R4_V4 a -> f a
 
-type XC2 ctx vars t m a = (WithVariantX2 ctx vars t m a, ctx vars t m a)
-
-
-instance XC2 ctx '[t1] t1 m a => WithVariantsX2 ctx (R1 t1) m a where
-    withVariantsX2 ctx f = \case
-        R1_V1 a -> withVariantX2 ctx (Proxy :: Proxy '[t1]) f a
-
-instance (XC2 ctx '[t1,t2] t1 m a, XC2 ctx '[t1,t2] t2 m a) => WithVariantsX2 ctx (R2 t1 t2) m a where
-    withVariantsX2 ctx f = \case
-        R2_V1 a -> withVariantX2 ctx (Proxy :: Proxy '[t1, t2]) f a
-        R2_V2 a -> withVariantX2 ctx (Proxy :: Proxy '[t1, t2]) f a
-
-instance (XC2 ctx '[t1,t2,t3] t1 m a, XC2 ctx '[t1,t2,t3] t2 m a, XC2 ctx '[t1,t2,t3] t3 m a)
-      => WithVariantsX2 ctx (R3 t1 t2 t3) m a where
-    withVariantsX2 ctx f = \case
-        R3_V1 a -> withVariantX2 ctx (Proxy :: Proxy '[t1, t2, t3]) f a
-        R3_V2 a -> withVariantX2 ctx (Proxy :: Proxy '[t1, t2, t3]) f a
-        R3_V3 a -> withVariantX2 ctx (Proxy :: Proxy '[t1, t2, t3]) f a
-
-
-
-
-
-class WithVariantsX ctx a m b where
-    withVariantsX :: ctx a m b => Proxy ctx -> a -> m b
-
-class WithVariantX ctx a m b where
-    withVariantX :: ctx a m b => Proxy ctx -> a -> m b
-
-type XC ctx t m a = (WithVariantX ctx t m a, ctx t m a)
-
-instance (XC ctx t1 m a)
-      => WithVariantsX ctx (R1 t1) m a where
-    withVariantsX ctx = \case
-        R1_V1 a -> withVariantX ctx a
-
-instance (XC ctx t1 m a, XC ctx t2 m a)
-      => WithVariantsX ctx (R2 t1 t2) m a where
-    withVariantsX ctx = \case
-        R2_V1 a -> withVariantX ctx a
-        R2_V2 a -> withVariantX ctx a
-
-instance (XC ctx t1 m a, XC ctx t2 m a, XC ctx t3 m a)
-      => WithVariantsX ctx (R3 t1 t2 t3) m a where
-    withVariantsX ctx = \case
-        R3_V1 a -> withVariantX ctx a
-        R3_V2 a -> withVariantX ctx a
-        R3_V3 a -> withVariantX ctx a
-
--- Variant Proc
-
-instance (WithVariantM' tp t1 m out)
-      => WithVariantsM' tp (R1 t1) m out where
-    withVariantsM' tp = \case
-        R1_V1 a -> withVariantM' tp a
-
-instance (WithVariantM' tp t1 m out, WithVariantM' tp t2 m out)
-      => WithVariantsM' tp (R2 t1 t2) m out where
-    withVariantsM' tp = \case
-        R2_V1 a -> withVariantM' tp a
-        R2_V2 a -> withVariantM' tp a
-
-instance (WithVariantM' tp t1 m out, WithVariantM' tp t2 m out, WithVariantM' tp t3 m out)
-      => WithVariantsM' tp (R3 t1 t2 t3) m out where
-    withVariantsM' tp = \case
-        R3_V1 a -> withVariantM' tp a
-        R3_V2 a -> withVariantM' tp a
-        R3_V3 a -> withVariantM' tp a
+instance TemplateCtxsM ctx (R5 t1 t2 t3 t4 t5) m a
+      => WithVariantsM ctx (R5 t1 t2 t3 t4 t5) m a where
+    withVariantsM _ f = \case
+        R5_V1 a -> f a
+        R5_V2 a -> f a
+        R5_V3 a -> f a
+        R5_V4 a -> f a
+        R5_V5 a -> f a
 
 ---
 
-instance (WithVariantM tp t1 m out)
-      => WithVariantsM tp (R1 t1) m out where
-    withVariantsM tp = \case
-        R1_V1 a -> withVariantM tp a
+instance TemplateCtxs ctx (R1 t1) a
+      => WithVariants ctx (R1 t1) a where
+    withVariants _ f = \case
+        R1_V1 a -> f a
 
-instance (WithVariantM tp t1 m out, WithVariantM tp t2 m out)
-      => WithVariantsM tp (R2 t1 t2) m out where
-    withVariantsM tp = \case
-        R2_V1 a -> withVariantM tp a
-        R2_V2 a -> withVariantM tp a
+instance TemplateCtxs ctx (R2 t1 t2) a
+      => WithVariants ctx (R2 t1 t2) a where
+    withVariants _ f = \case
+        R2_V1 a -> f a
+        R2_V2 a -> f a
 
-instance (WithVariantM tp t1 m out, WithVariantM tp t2 m out, WithVariantM tp t3 m out)
-      => WithVariantsM tp (R3 t1 t2 t3) m out where
-    withVariantsM tp = \case
-        R3_V1 a -> withVariantM tp a
-        R3_V2 a -> withVariantM tp a
-        R3_V3 a -> withVariantM tp a
+instance TemplateCtxs ctx (R3 t1 t2 t3) a
+      => WithVariants ctx (R3 t1 t2 t3) a where
+    withVariants _ f = \case
+        R3_V1 a -> f a
+        R3_V2 a -> f a
+        R3_V3 a -> f a
+
+instance TemplateCtxs ctx (R4 t1 t2 t3 t4) a
+      => WithVariants ctx (R4 t1 t2 t3 t4) a where
+    withVariants _ f = \case
+        R4_V1 a -> f a
+        R4_V2 a -> f a
+        R4_V3 a -> f a
+        R4_V4 a -> f a
+
+instance TemplateCtxs ctx (R5 t1 t2 t3 t4 t5) a
+      => WithVariants ctx (R5 t1 t2 t3 t4 t5) a where
+    withVariants _ f = \case
+        R5_V1 a -> f a
+        R5_V2 a -> f a
+        R5_V3 a -> f a
+        R5_V4 a -> f a
+        R5_V5 a -> f a
+
+
 
 
 -- MkRecord templates
 type family RecordTemplate (variants :: [*]) :: *
+--type instance RecordTemplate '[] = R0
 type instance RecordTemplate '[t1] = R1 t1
 type instance RecordTemplate '[t1,t2] = R2 t1 t2
 type instance RecordTemplate '[t1,t2,t3] = R3 t1 t2 t3
+type instance RecordTemplate '[t1,t2,t3,t4] = R4 t1 t2 t3 t4
+type instance RecordTemplate '[t1,t2,t3,t4,t5] = R5 t1 t2 t3 t4 t5
 
--- ConsByIdx
-instance ConsByIdx (Just 0) t1 (R1 t1) where consByIdx _ = R1_V1
 
-instance ConsByIdx (Just 0) t1 (R2 t1 t2) where consByIdx _ = R2_V1
-instance ConsByIdx (Just 1) t2 (R2 t1 t2) where consByIdx _ = R2_V2
+instance ConsByIdx 0 t1 (R1 t1) where consByIdx _ = R1_V1
 
-instance ConsByIdx (Just 0) t1 (R3 t1 t2 t3) where consByIdx _ = R3_V1
-instance ConsByIdx (Just 1) t2 (R3 t1 t2 t3) where consByIdx _ = R3_V2
-instance ConsByIdx (Just 2) t3 (R3 t1 t2 t3) where consByIdx _ = R3_V3
+instance ConsByIdx 0 t1 (R2 t1 t2) where consByIdx _ = R2_V1
+instance ConsByIdx 1 t2 (R2 t1 t2) where consByIdx _ = R2_V2
 
-instance ConsByIdx3 0 t1 (R1 t1) where consByIdx3 _ = R1_V1
+instance ConsByIdx 0 t1 (R3 t1 t2 t3) where consByIdx _ = R3_V1
+instance ConsByIdx 1 t2 (R3 t1 t2 t3) where consByIdx _ = R3_V2
+instance ConsByIdx 2 t3 (R3 t1 t2 t3) where consByIdx _ = R3_V3
 
-instance ConsByIdx3 0 t1 (R2 t1 t2) where consByIdx3 _ = R2_V1
-instance ConsByIdx3 1 t2 (R2 t1 t2) where consByIdx3 _ = R2_V2
+instance ConsByIdx 0 t1 (R4 t1 t2 t3 t4) where consByIdx _ = R4_V1
+instance ConsByIdx 1 t2 (R4 t1 t2 t3 t4) where consByIdx _ = R4_V2
+instance ConsByIdx 2 t3 (R4 t1 t2 t3 t4) where consByIdx _ = R4_V3
+instance ConsByIdx 3 t4 (R4 t1 t2 t3 t4) where consByIdx _ = R4_V4
 
-instance ConsByIdx3 0 t1 (R3 t1 t2 t3) where consByIdx3 _ = R3_V1
-instance ConsByIdx3 1 t2 (R3 t1 t2 t3) where consByIdx3 _ = R3_V2
-instance ConsByIdx3 2 t3 (R3 t1 t2 t3) where consByIdx3 _ = R3_V3
+instance ConsByIdx 0 t1 (R5 t1 t2 t3 t4 t5) where consByIdx _ = R5_V1
+instance ConsByIdx 1 t2 (R5 t1 t2 t3 t4 t5) where consByIdx _ = R5_V2
+instance ConsByIdx 2 t3 (R5 t1 t2 t3 t4 t5) where consByIdx _ = R5_V3
+instance ConsByIdx 3 t4 (R5 t1 t2 t3 t4 t5) where consByIdx _ = R5_V4
+instance ConsByIdx 4 t5 (R5 t1 t2 t3 t4 t5) where consByIdx _ = R5_V5
 
--- VariantsOf
-type instance VariantsOf (R1 t1) = '[t1]
-type instance VariantsOf (R2 t1 t2) = '[t1,t2]
-type instance VariantsOf (R3 t1 t2 t3) = '[t1,t2,t3]
+-- Variants
+type instance Variants (R1 t1) = '[t1]
+type instance Variants (R2 t1 t2) = '[t1,t2]
+type instance Variants (R3 t1 t2 t3) = '[t1,t2,t3]
+type instance Variants (R4 t1 t2 t3 t4) = '[t1,t2,t3,t4]
+type instance Variants (R5 t1 t2 t3 t4 t5) = '[t1,t2,t3,t4,t5]
 
 
 
@@ -636,50 +541,45 @@ ofType :: a -> a -> a
 ofType = const
 
 main = do
-    let x1 = cons'' (A 1) :: Foo1
-        x2 = cons'' (B 1) :: Foo2
-        x3 = cons'' (C 1) :: Foo3
-        x4 = cons'' (C 1) :: Maybe Foo3
-        x5 = cons'' (C 1) :: Maybe Foo1
+    let x1 = cons (A 1) :: Foo1
+        x2 = cons (B 1) :: Foo2
+        x3 = cons (C 1) :: Foo3
+        x4 = cons (A 1) :: Maybe Foo3
+        x5 = cons (C 1) :: Maybe Foo3
+        x6 = cons (C 1) :: Maybe Foo1
 
-        xx = cons'' (A 1) :: Foox
+        --x7 = cons (B 1) :: Foo1
 
-        y1 = cast x1 :: Foo1
-        y2 = cast x2 :: Maybe Foo3
-        y3 = cast x2 :: Foo3
-        y4 = cast x2 :: Maybe Foo1
-
-
-        --y1' = cast2' x1 `ofType` (undefined :: Val Foo2)
-
-        --y5 = cast x2 :: Foo1
-
-    let x1' = cons' (A 1) :: Foo1
-        x1'' = cons2 (A 1) :: Val Foo1
-        x2'' = cons2 (B 1) :: NoVal Foo1
-
-    --print y1'
 
     print $ x1
-    print $ x1'
     print $ x2
     print $ x3
     print $ x4
     print $ x5
-
+    print $ x6
     print "---"
+
+    let y1 = cast x1 :: Foo1
+        y2 = cast x2 :: Foo3
+        y3 = cast x2 :: Maybe Foo1
+        --y4 = cast x2 :: Foo1
+
     print $ y1
     print $ y2
     print $ y3
-    print $ y4
-
     print "---"
-    let tst = cons (A 1) :: Foo2
+
+    let x1'  = specificCons (A 1) :: Foo1
+        x1'' = wrappedCons (A 1) :: Found Foo1
+        x2'' = wrappedCons (B 1) :: NotFound Foo1
+
+
+    let tst = cons (B 1) :: Foo2
         tst' = tst :: Foo2'
 
-    print $ vcase tst $ do
+    print $ case' tst $ do
         match $ \(A a) -> "a"
-        match $ \(B a) -> "b"
+        --match $ \(B a) -> "b"
+        match $ \ANY   -> "x"
     print "==="
     putStrLn ""
-
