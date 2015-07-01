@@ -46,30 +46,28 @@ html, body, input {
 }
 
 .node-searcher {  
-  .browser {
-    position: fixed;
-    top: 100px;
-    left: 300px;
-    right: 50px;
-    min-height: 200px;
-    max-height: 300px;
-    z-index: 2;
-    
-    display:flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-  }
+  position: fixed;
+  top: 100px;
+  left: 300px;
+  right: 50px;
+  min-height: 200px;
+  max-height: 300px;
+  z-index: 2;
+  
+  display:flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
   
   .column {
-    flex-shrink: 5;
+    flex-shrink: 0;
     overflow: auto;
     
-    &:first-child, &:last-child {
+    &:first-child, &:last-child, &:nth-last-child(2) {
       flex-shrink: 0;
     }
     
     display: block;
-    border-left: 2px solid #555;
+    border-right: 2px solid #555;
     padding: 10px 00px;
     position: relative;
     background: #333;
@@ -85,11 +83,18 @@ html, body, input {
     &:last-child {
       border-top-right-radius: 5px;
       border-bottom-right-radius: 5px;
+      border-right: none;
     }
 
-    transition: margin-left 0.1s;
+/*    transition: margin-left 0.1s;*/
     &.types {
       margin-left:-100px;
+      .query-ns, .ns {
+        display: inline-block;
+      }
+    }
+    &.current li.active {
+      border-left: 2px solid #FED546;
     }
   }
   
@@ -146,14 +151,15 @@ html, body, input {
   
   li {
     padding: 5px 10px;
-    whitespace: nowrap;
-
-    &.active, &:hover {
+    white-space: nowrap;
+    border-left: 2px solid transparent;
+    
+    &.active {
       background: #444;
     }
     .ns {
       color: #777;
-      display: inline-block;
+      display: none;
       text-align: right;
       padding-right: 10px;
     }
@@ -163,7 +169,7 @@ html, body, input {
       transition: margin-left 0.1s;
       margin-left: 0px;
       padding-right: 0;
-      padding-left: 10px;
+/*      padding-left: 10px;*/
     }    
     
     .fname {
