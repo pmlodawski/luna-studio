@@ -11,8 +11,6 @@ module Luna.DEP.Pass.Analysis.ID.Traverse where
 
 import           Flowbox.Prelude            hiding (mapM, mapM_, op)
 import           Luna.DEP.AST.Arg           (Arg)
-import           Luna.DEP.AST.Arg           (Arg)
-import qualified Luna.DEP.AST.Arg           as Arg
 import qualified Luna.DEP.AST.Arg           as Arg
 import qualified Luna.DEP.AST.Common        as AST
 import           Luna.DEP.AST.Control.Focus (Focus)

@@ -22,7 +22,11 @@ module Flowbox.Graphics.Mockup.Filter (
     histEqLuna,
     openLuna,
     posterizeLuna,
-    edgeBlurLuna
+    edgeBlurLuna,
+    laplacianOperator,
+    scharrOperator,
+    sobelOperator,
+    prewittOperator
 ) where
 
 import qualified Data.Array.Accelerate as A
@@ -202,6 +206,18 @@ edgeDetectLuna' edgeOperator img = img'
           alphaSum = M.zipWith3 (\a b c -> a + b + c) r g b
           Right view = Image.lookupPrimary img
           img' = Image.insertPrimary (insertChannelFloats view [("rgba.a", alphaSum)]) img
+
+laplacianOperator :: Int -> Float -> Float -> Matrix2 Float
+laplacianOperator (variable -> kernSize) (variable -> crossVal) (variable -> sideVal) = Filter.laplacian crossVal sideVal (pure kernSize)
+
+sobelOperator :: Matrix2 Float
+sobelOperator = Filter.sobel
+
+prewittOperator :: Matrix2 Float
+prewittOperator = Filter.prewitt
+
+scharrOperator :: Matrix2 Float
+scharrOperator = Filter.scharr
 
 medianLuna :: Int -> Image -> Image
 medianLuna size img = undefined

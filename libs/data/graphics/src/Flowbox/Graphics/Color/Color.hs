@@ -11,8 +11,6 @@
 module Flowbox.Graphics.Color.Color (
     --module Flowbox.Graphics.Color.Color,
     module X,
-    ColorMult(..),
-    toRGBAColorMult
 ) where
 
 import Flowbox.Graphics.Color.CMY                 as X
@@ -37,10 +35,3 @@ import Flowbox.Prelude
 
 -- TODO: LAB color space
 
-data ColorMult a = ColorMult { _color      :: a
-                             , _multiplier :: Float
-                             }
-                 deriving Show
-
-toRGBAColorMult :: ColorMult (RGBA Float) -> RGBA Float
-toRGBAColorMult (ColorMult color mult) = color & each %~ (*mult)

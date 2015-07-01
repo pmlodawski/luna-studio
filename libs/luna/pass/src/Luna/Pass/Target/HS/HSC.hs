@@ -248,7 +248,7 @@ instance Generator2 HLit.Lit m where
         HLit.Integer val -> fromString $ escapeNegative (toList val)
         HLit.Int     val -> fromString $ escapeNegative (toList val)
         HLit.Float   val -> fromString $ escapeNegative (toList val)
-        HLit.String  val -> between "\"" "\"" (fromText val)
+        HLit.String  val -> fromString $ show val
         HLit.Char    val -> between "'" "'" $ fromString [val]
         where escapeNegative num@('-':_) = "(" <> num <> ")"
               escapeNegative num         = num

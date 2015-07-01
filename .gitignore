@@ -63,6 +63,7 @@ tools/*/*/*/*.cabal
 
 #general builds
 dist
+DllWrappers
 
 # cabal sandbox
 cabal.sandbox.config
