@@ -119,7 +119,7 @@ pkgDb = dict(corePkgDb, **{
        , 'libs/data/accelerate/thrust'         : HProject   ('accelerate-thrust'            , os.path.join ('libs' , 'data', 'accelerate', 'thrust')        , 'libs'    , ['third-party/accelerate', 'third-party/accelerate-cuda'])
        , 'libs/data/serialization'             : HProject   ('flowbox-serialization'        , os.path.join ('libs' , 'data', 'serialization')               , 'libs'    , ['libs/luna/target/ghchs', 'libs/utils'])
        , 'libs/doc/markup'                     : HProject   ('doc-markup'                   , os.path.join ('libs' , 'doc', 'markup')                       , 'libs'    , [])
-       , 'libs/gui-mockup'                     : HProject   ('flowbox-gui-mockup'           , os.path.join ('libs' , 'gui-mockup')                          , 'libs'    , ['third-party/algebraic'])
+       , 'libs/gui-mockup'                     : HProject   ('flowbox-gui-mockup'           , os.path.join ('libs' , 'gui-mockup')                          , 'libs'    , ['third-party/algebraic', 'third-party/binary'])
        , 'libs/luna/core'                      : HProject   ('luna-core'                    , os.path.join ('libs' , 'luna', 'core')                        , 'libs'    , ['libs/utils'])
        , 'libs/luna/build'                     : HProject   ('luna-build'                   , os.path.join ('libs' , 'luna', 'build')                       , 'libs'    , ['libs/config', 'libs/luna/core', 'libs/luna/distribution', 'libs/luna/pass', 'libs/utils'])
        , 'libs/luna/distribution'              : HProject   ('luna-distribution'            , os.path.join ('libs' , 'luna', 'distribution')                , 'libs'    , ['libs/config', 'libs/luna/core', 'libs/utils'])
