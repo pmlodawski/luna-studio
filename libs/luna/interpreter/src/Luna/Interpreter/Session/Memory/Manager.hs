@@ -13,7 +13,7 @@ import           Control.Monad.State
 import           Control.Monad.Trans.Either
 
 import Flowbox.Prelude
-import Luna.Interpreter.Session.Data.VarName       (VarName)
+import Luna.Interpreter.Session.Data.KeyName       (KeyName)
 import Luna.Interpreter.Session.Env.Env            (Env)
 import Luna.Interpreter.Session.Error              (Error)
 import Luna.Interpreter.Session.Memory.Data.Status (Status)
@@ -25,10 +25,10 @@ type Session   m a = EitherT Error (SessionST m) a
 
 
 class Default mm => MemoryManager mm where
-    reportUse        :: VarName   -> Session mm ()
-    reportUseMany    :: [VarName] -> Session mm ()
-    reportDelete     :: VarName   -> Session mm ()
-    reportDeleteMany :: [VarName] -> Session mm ()
+    reportUse        :: KeyName   -> Session mm ()
+    reportUseMany    :: [KeyName] -> Session mm ()
+    reportDelete     :: KeyName   -> Session mm ()
+    reportDeleteMany :: [KeyName] -> Session mm ()
     clean            :: Status    -> Session mm ()
     cleanIfNeeded    :: Session mm ()
 

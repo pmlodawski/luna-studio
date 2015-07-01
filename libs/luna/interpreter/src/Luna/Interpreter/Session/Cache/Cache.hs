@@ -10,7 +10,6 @@ module Luna.Interpreter.Session.Cache.Cache where
 
 import           Control.Monad.State hiding (mapM, mapM_)
 import qualified Data.IntSet         as IntSet
-import qualified Data.Map            as Map
 import qualified Data.Maybe          as Maybe
 import qualified System.Mem          as Mem
 
@@ -32,12 +31,10 @@ import qualified Luna.Interpreter.Session.Data.CallDataPath  as CallDataPath
 import           Luna.Interpreter.Session.Data.CallPoint     (CallPoint (CallPoint))
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
 import           Luna.Interpreter.Session.Data.Hash          (Hash)
-import           Luna.Interpreter.Session.Data.VarName       (VarName (VarName))
-import qualified Luna.Interpreter.Session.Data.VarName       as VarName
+import           Luna.Interpreter.Session.Data.KeyName       (KeyName (KeyName))
 import qualified Luna.Interpreter.Session.Env                as Env
 import qualified Luna.Interpreter.Session.Error              as Error
 import           Luna.Interpreter.Session.Memory.Manager     (MemoryManager)
-import qualified Luna.Interpreter.Session.Memory.Manager     as Manager
 import           Luna.Interpreter.Session.Session            (Session)
 import qualified Luna.Interpreter.Session.Session            as Session
 
@@ -45,13 +42,6 @@ import qualified Luna.Interpreter.Session.Session            as Session
 
 logger :: LoggerIO
 logger = getLoggerIO $moduleName
-
-
-dump :: CallPointPath -> [Hash] -> Session mm ()
-dump callPointPath hash = do
-    let varName = VarName callPointPath hash
-    logger debug $ "Dumping " ++ VarName.toString varName
-    Session.runStmt $ "print " ++ VarName.toString varName
 
 
 dumpAll :: Session mm ()
@@ -78,20 +68,14 @@ setStatus :: CacheStatus -> CallPointPath -> Session mm ()
 setStatus newStatus = modifyCacheInfo $ CacheInfo.status .~ newStatus
 
 
-dependency :: [VarName] -> CallPointPath -> Session mm (Maybe VarName)
-dependency predVarNames = onCacheInfo
-    (return . Map.lookup predVarNames . view CacheInfo.dependencies)
-    (return Nothing)
-
-
-recentVarName :: CallPointPath -> Session mm VarName
-recentVarName = onCacheInfo
-    (return . view CacheInfo.recentVarName)
+recentHash :: CallPointPath -> Session mm Hash
+recentHash = onCacheInfo
+    (return . view CacheInfo.recentHash)
     (return def)
 
 
-setRecentVarName :: VarName -> CallPointPath -> Session mm ()
-setRecentVarName varName = modifyCacheInfo (CacheInfo.recentVarName .~ varName)
+setRecentHash :: Hash -> CallPointPath -> Session mm ()
+setRecentHash hash = modifyCacheInfo (CacheInfo.recentHash .~ hash)
 
 
 modifyCacheInfo :: (CacheInfo -> CacheInfo) -> CallPointPath ->  Session mm ()
@@ -107,20 +91,18 @@ onCacheInfo f alternative callPointPath =
     Maybe.maybe alternative f . MapForest.lookup callPointPath =<< Env.getCached
 
 
-put :: CallDataPath -> [VarName] -> VarName -> Session mm ()
-put callDataPath predVarNames varName = do
+put :: CallDataPath -> Hash -> Session mm ()
+put callDataPath hash = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
     mcacheInfo <- Env.cachedLookup callPointPath
     oldStatus  <- status callPointPath
     let updatedStatus = if oldStatus == CacheStatus.NonCacheable
                             then oldStatus
                             else CacheStatus.Ready
-        existingDeps   = Maybe.maybe def (view CacheInfo.dependencies) mcacheInfo
-        existingValues = Maybe.maybe def (view CacheInfo.values      ) mcacheInfo
-        dependencies = Map.insert predVarNames varName existingDeps
+        existingValues = Maybe.maybe def (view CacheInfo.values) mcacheInfo
         cacheInfo    = CacheInfo (last callDataPath ^. CallData.parentDefID)
                                  (last callDataPath ^. CallData.parentBC)
-                                 updatedStatus varName dependencies existingValues
+                                 updatedStatus hash existingValues
 
     Env.cachedInsert callPointPath cacheInfo
 
@@ -131,7 +113,7 @@ deleteNode libraryID nodeID = do
     let callPoint     = CallPoint libraryID nodeID
         matchNode k _ = last k == callPoint
     matching <- MapForest.find matchNode <$> Env.getCached
-    mapM_ delete' matching
+    mapM_ (delete . fst) matching
     dependent <- Env.getDependentNodesOf callPoint
     Env.deleteDependentNodes callPoint
     mapM_ (deleteNode libraryID) $ IntSet.toList dependent
@@ -140,37 +122,14 @@ deleteNode libraryID nodeID = do
 delete :: MemoryManager mm => CallPointPath -> Session mm ()
 delete callPointPath = do
     logger info $ "Cleaning cached value: " ++ show callPointPath
-    cacheInfo <- getCacheInfo callPointPath
-    delete' (callPointPath, cacheInfo)
-
-
-delete' :: MemoryManager mm => (CallPointPath, CacheInfo) -> Session mm ()
-delete' (callPointPath, cacheInfo) = do
-    Free.freeCacheInfo cacheInfo
+    Free.freeKeyName (KeyName callPointPath)
     Env.cachedDelete callPointPath
-    Manager.reportDeleteMany $ Map.elems $ cacheInfo ^. CacheInfo.dependencies
-
-
-deleteVarName :: VarName -> Session mm ()
-deleteVarName varName = do
-    onCacheInfo del err callPointPath
-    where
-        callPointPath = varName ^. VarName.callPointPath
-        err = logger warning $ "Cannot find callPointPath = " ++ show callPointPath
-        del cacheInfo = do
-            if cacheInfo ^. CacheInfo.recentVarName == varName
-                then Env.cachedDelete callPointPath
-                else Env.cachedInsert callPointPath
-                   $ clearDependencies $ clearValues cacheInfo
-            Free.freeVarName varName
-        clearDependencies = CacheInfo.dependencies %~ Map.filter (/= varName)
-        clearValues       = CacheInfo.values       %~ Map.filterWithKey (\k _ -> varName /= fst k)
 
 
 deleteAll :: MemoryManager mm => Session mm ()
 deleteAll = do
     logger info "Cleaning all cached values"
-    mapM_ delete' =<< MapForest.toList <$> Env.getCached
+    mapM_ (delete . fst) =<< MapForest.toList <$> Env.getCached
 
 
 getCacheInfo :: CallPointPath -> Session mm CacheInfo
@@ -183,4 +142,3 @@ performGC = do
     logger info "Running GC"
     Session.runStmt "performGC"
     safeLiftIO' (Error.IOError $(loc)) Mem.performGC
-

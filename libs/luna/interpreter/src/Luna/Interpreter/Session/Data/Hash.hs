@@ -10,4 +10,5 @@ import Data.Word (Word64)
 
 
 
-type Hash = Word64
+type Hash = [Word64]
+type SingleHash = Word64
