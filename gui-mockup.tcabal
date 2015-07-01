@@ -4,6 +4,9 @@ Cabal-version:          >= 1.20
 Tested-with:            GHC == 7.8.*
 Build-type:             Simple
 
+Flag Generator
+  Default: True
+
 Library
   Hs-Source-Dirs:     src
   GHC-Options:        -Wall -O2 -fforce-recomp -pgml g++ -debug -threaded -shared -fPIC
@@ -22,5 +25,8 @@ Library
                   storable-tuple,
                   monad-loops,
                   vector-algorithms,
-                  generator2,
                   binary == 0.7.99.99
+
+  if flag(generator)
+    Build-Depends: generator2
+    GHC-Options:   -DGENERATOR
