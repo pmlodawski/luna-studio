@@ -4,15 +4,21 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE DeriveGeneric #-}
+
 module Flowbox.Geom2D.ControlPoint where
 
-import Math.Coordinate.Cartesian (Point2(..))
+import Data.Binary (Binary)
+
 import Flowbox.Prelude
+import Math.Coordinate.Cartesian (Point2 (..))
+
+
 
 data ControlPoint a = ControlPoint { controlPoint :: Point2 a
                                    , handleIn     :: Maybe (Point2 a)
                                    , handleOut    :: Maybe (Point2 a)
-                                   } deriving (Eq, Ord, Show)
+                                   } deriving (Eq, Generic, Ord, Show)
 
 instance Functor ControlPoint where
     fmap f (ControlPoint a b c) = ControlPoint (fmap f a) ((fmap.fmap) f b) ((fmap.fmap) f c)
@@ -37,6 +43,9 @@ instance Applicative ControlPoint where
               q = handle c f
 
     {-# INLINE (<*>) #-}
+
+instance Binary a => Binary (Point2 a)
+instance Binary a => Binary (ControlPoint a)
 
 
 -- (Applicative f, Applicative g) => f (g (a -> b)) -> f (g a) -> f (g b)

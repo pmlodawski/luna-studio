@@ -25,7 +25,6 @@ import qualified Data.Array.Accelerate.Array.Sugar as A hiding (size)
 import           Data.Array.Accelerate.IO
 import           Data.ByteString                   as S (ByteString)
 import           Data.ByteString.Lazy              as L (ByteString, fromStrict)
-import           Data.Maybe                        (fromMaybe)
 -- import           Data.Set
 import           Data.Sequence                     (Seq, ViewL(..))
 import qualified Data.Sequence                     as Seq
@@ -41,7 +40,6 @@ import qualified Flowbox.Graphics.Image.Image         as Img
 import qualified Flowbox.Graphics.Image.View          as V
 import           Flowbox.Graphics.Prelude             hiding (mapM, views)
 import           Flowbox.Graphics.Shader.Sampler      (Sampler, monosampler)
-import           Flowbox.Graphics.Utils.Utils         (fstQuad)
 import qualified Flowbox.Math.Matrix                  as M
 import qualified Generated.Proto.Data.Channel         as ProtoChan
 import qualified Generated.Proto.Data.ChannelData     as ChanData
@@ -51,7 +49,6 @@ import qualified Generated.Proto.Data.MatrixData      as MatrixData
 import qualified Generated.Proto.Data.MatrixData.Type as MatrixData
 import qualified Generated.Proto.Data.MatrixData.Tag  as MatrixData
 import qualified Generated.Proto.Data.SValue.Type      as SValue
-import qualified Generated.Proto.Data.ViewData        as ViewData
 
 import qualified Data.Array.Accelerate.CUDA as CUDA
 
