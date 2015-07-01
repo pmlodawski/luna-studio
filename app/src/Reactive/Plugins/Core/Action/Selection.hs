@@ -85,24 +85,20 @@ mouseToAction eventWithObjects = case mouseEvent ^. tpe of
           toggleActionType = if node ^. selected then ToggleOff
                                                  else ToggleOn
 
-execMaybeActionOnState :: Maybe Action -> State -> ActionState
-execMaybeActionOnState maybeAction state = case maybeAction of
-    Nothing     -> WithState Nothing state
-    Just action -> execActionOnState action state
 
-exec :: Action -> State -> ActionState
-exec newAction oldState = WithState (Just newAction) $ State newNodeIds
-    where
-    oldNodeIds                       = oldState ^. nodeIds
-    newNodeIds                       = case newAction of
-        UnselectAll                 -> []
-        SelectAction tpe node       -> case tpe of
-            SelectNew               -> [newNodeId]
-            Focus                   -> newNodeId : oldFilteredNodeIds
-            ToggleOn                -> newNodeId : oldFilteredNodeIds
-            ToggleOff               -> oldFilteredNodeIds
-            where oldFilteredNodeIds = delete newNodeId oldNodeIds
-                  newNodeId          = node ^. ident
+instance ActionStateExecutor Action State where
+  exec newAction oldState = WithState (Just newAction) $ State newNodeIds
+      where
+      oldNodeIds                       = oldState ^. nodeIds
+      newNodeIds                       = case newAction of
+          UnselectAll                 -> []
+          SelectAction tpe node       -> case tpe of
+              SelectNew               -> [newNodeId]
+              Focus                   -> newNodeId : oldFilteredNodeIds
+              ToggleOn                -> newNodeId : oldFilteredNodeIds
+              ToggleOff               -> oldFilteredNodeIds
+              where oldFilteredNodeIds = delete newNodeId oldNodeIds
+                    newNodeId          = node ^. ident
 
 toNodeSelection :: ActionState -> NodeIdCollection
 toNodeSelection =  (^. state . nodeIds)

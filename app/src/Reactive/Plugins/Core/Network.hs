@@ -32,12 +32,9 @@ import qualified Reactive.Plugins.Core.Action.Drag      as Drag
 import Reactive.Plugins.Core.State
 
 
-
-
-data NewState = NewState String deriving (Show)
-
-instance PrettyPrinter NewState where
-    display = show
+-- data NewState = NewState String deriving (Show)
+-- instance PrettyPrinter NewState where
+    -- display = show
 
 
 makeNetworkDescription :: forall t. Frameworks t => Moment t ()
@@ -73,9 +70,8 @@ makeNetworkDescription = do
 
         nodeSelectionActionB          = stepper def $ nodeSelectionActionE
 
-        nodeSelectionReactionB        = Selection.execMaybeActionOnState <$> nodeSelectionActionB <*> nodeSelectionStateB
-        nodeSelectionReactionStateB   = (^. Action.state) <$> nodeSelectionReactionB
-
+        nodeSelectionReactionB        = Action.tryExec  <$> nodeSelectionActionB <*> nodeSelectionStateB
+        nodeSelectionReactionStateB   = Action.getState <$> nodeSelectionReactionB
 
 
         -- nodeSelectionReactionE        = accumE def $ Selection.execActionOnState   <$> nodeSelectionActionE
@@ -87,21 +83,7 @@ makeNetworkDescription = do
         -- nodeDragReactionsE            = filterE Action.filterAction $ accumE def $ Drag.accumActionState <$> nodeDragSelectionE
 
 
-        -- logClicksB  = ("Clk " <>) . show <$> clicksCountB
-        -- logLastKeyB = (""  <>) . display <$> lastKeyB
-        -- logMouseB   = (" " <>) . display <$> mouseNodeActionB
-        -- logMouseAB  = (" " <>) . display <$> allNodeActionsE
-        -- logMouseRB  = (" " <>) . display <$> mouseNodeReactionB
-        -- logB        = logLastKeyB <<*>> logMouseB <<*>> logMouseRB
-        -- logB        = logLastKeyB -- <<*>> logMouseRB
-
-
-      -- ng = NodeGraph newSelectionObjE
-
-    -- Render the initial view
     -- initial logB >>= liftIO . logAs ""
-    -- logF <- changes logB
-    -- reactimate' $ (fmap $ logAs "") <$> logF
 
     -- aaaF <- changes aaaB
     -- bbbF <- changes bbbB
@@ -127,8 +109,5 @@ makeNetworkDescription = do
     -- nodeDragReactionsF <- changes nodeDragReactionsB
     -- reactimate' $ (fmap Drag.updateUI) <$> nodeDragReactionsF
     -- reactimate' $ (fmap $ logAs "d: ") <$> ((fmap display) <$> nodeDragReactionsF)
-
-
-
 
     return ()

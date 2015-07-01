@@ -3,6 +3,7 @@ module Reactive.Plugins.Core.Action.Action where
 import           Data.Monoid          ( (<>) )
 import           Data.Default
 import           Data.Maybe           ( isJust )
+import           Data.Functor
 import           Control.Lens
 
 import           Utils.PrettyPrinter
@@ -15,6 +16,9 @@ type WithStateMaybe act st = WithState (Maybe act) st
 
 makeLenses ''WithState
 
+getState :: WithState act st -> st
+getState = (^. state)
+
 filterAction :: WithStateMaybe mact st -> Bool
 filterAction (WithState mact st) = isJust mact
 
@@ -26,11 +30,8 @@ instance (PrettyPrinter act, PrettyPrinter st) => PrettyPrinter (WithState act s
 
 
 class ActionStateExecutor act st where
-    exec :: act -> st -> WithState act st
-
-class (Maybe act, ActionStateExecutor act st) => ActionStateTryExecutor act st where
-    tryExec :: Maybe act -> st -> WithState act st
-    tryExec Nothing state = WithState Nothing state
-    tryExec (Just action) = exec action state
-
+    exec    :: act -> st -> WithStateMaybe act st
+    tryExec :: (Maybe act) -> st -> WithStateMaybe act st
+    tryExec Nothing       = WithState Nothing
+    tryExec (Just action) = exec action
 
