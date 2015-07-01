@@ -97,9 +97,9 @@ makeNetworkDescription = do
     reactimate $ Selection.updateUI <$> nodeSelectionReactionE
     reactimate $ Drag.updateUI      <$> nodeDragReactionsE
 
-    reactimate $ logAs "n: " <$> mouseNodeE
-    -- reactimate $ logAs "s: " <$> nodeSelectionReactionE
-    -- reactimate $ logAs "d: " <$> nodeDragReactionsE
+    -- reactimate $ logAs "n: " <$> mouseNodeE
+    reactimate $ logAs "s: " <$> nodeSelectionReactionE
+    reactimate $ logAs "d: " <$> nodeDragReactionsE
 
     -- nodeDragReactionsF <- changes nodeDragReactionsB
     -- reactimate' $ (fmap Drag.updateUI) <$> nodeDragReactionsF

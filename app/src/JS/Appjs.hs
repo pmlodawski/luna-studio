@@ -1,6 +1,9 @@
 module JS.Appjs where
 
+import Control.Monad
+
 import JS.Bindings
+import JS.Converters
 
 setNodeUnselected :: Int -> IO ()
 setNodeUnselected nodeId =
@@ -18,24 +21,24 @@ setNodeFocused nodeId = do
     moveToTopZ nodeId
 
 setNodeUnfocused :: Int -> IO ()
-setNodeUnfocused nodeId = do
-    unfocusAllNodes
-    getNode nodeId >>= setFocused
-    moveToTopZ nodeId
-
-
+setNodeUnfocused nodeId =
+    getNode nodeId >>= setUnfocused
 
 unselectAllNodes :: IO ()
 unselectAllNodes =
-    forM_ getNodes setNodeUnselected
+    getNodes >>= mapM_ setUnselected
 
--- unfocusAllNodes :: IO ()
--- unfocusAllNodes =
---     forM_ getNodes
+unfocusAllNodes :: IO ()
+unfocusAllNodes =
+    getNodes >>= mapM_ setUnfocused
 
 
--- function unfocusAllNodes() {
---   _.each(nodes, function(node){
---       if (node.selected() === 2) node.selected(1);
---   });
--- }
+
+
+
+-- dragNode :: Int -> Int -> Int -> IO ()
+-- dragNode nodeId x y = when nodeId >= 0 do
+--     node <- getNode nodeId
+--     (wx, wy) <- utils.screenToWorkspace(x,y)
+--     moveTo node wx wy
+

@@ -188,26 +188,6 @@ function isSelectedNodeIdOnOffset(nodeId, xy) {
 
 
 // -> HS
-function unselectAllNodes() {
-  _.each(nodes, function(node){
-    node.selected(0);
-  });
-}
-
-// -> HS
-function unfocusAllNodes() {
-  _.each(nodes, function(node){
-      if (node.selected() === 2) node.selected(1);
-  });
-}
-
-// export
-// function toggleNodeSelection(nodeId) {
-//     console.log("toggleNodeSelection " + nodeId)
-//     uniforms[nodeId].selected.value = 1 - uniforms[nodeId].selected.value
-// }
-
-// -> HS
 function assignZs() {
   var sortedNodes = _.values(nodes);
   sortedNodes.sort(function(nodeA, nodeB) {
@@ -282,14 +262,12 @@ module.exports = {
   render: render,
   dragNode: dragNode,
   moveToTopZ: moveToTopZ,
-  // unselectAllNodes: unselectAllNodes, // remove
-  unfocusAllNodes: unfocusAllNodes, // remove
   getNodeAt: getNodeAt,  // remove
   getNode: function(index) {
     return $$.nodes[index];
   },
   getNodes: function() {
-    return $$.nodes;
+    return _.values($$.nodes);
   },
   // newNodeAt
   start: start

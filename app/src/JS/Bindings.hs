@@ -8,12 +8,13 @@ import Data.Maybe         ( maybeToList )
 import Data.Monoid        ( (<>) )
 import Data.Dynamic
 
+import GHCJS.Foreign
 import GHCJS.DOM          ( currentDocument )
 import GHCJS.DOM.Document ( documentGetBody )
 import GHCJS.DOM.Element  ( Element )
 import GHCJS.DOM.Node     ( nodeAppendChild )
 import GHCJS.Types        ( JSRef, JSArray, JSString )
-import JS.Converters      ( getFromJSRef, getTuple4FromJSArray )
+import JS.Converters
 
 import Object.Object      ( Point(..), Object(..) )
 import Object.Node        ( Node(..) )
@@ -56,37 +57,53 @@ foreign import javascript unsafe "app.dragNode($1, $2, $3)"
 foreign import javascript unsafe "app.moveToTopZ($1)"
     moveToTopZ :: Int -> IO ()
 
--- foreign import javascript unsafe "app.unselectAllNodes()"
---     unselectAllNodes :: IO ()
-
-foreign import javascript unsafe "app.unfocusAllNodes()"
-    unfocusAllNodes :: IO ()
-
 foreign import javascript unsafe "app.getNodeAt($1, $2)"
     getNodeAtJSArray :: Int -> Int -> IO (JSArray Int)
 
 
-data FunctionNode
 
+
+data FunctionNode
 
 
 foreign import javascript unsafe "app.getNode($1)"
     getNode :: Int -> IO (JSRef FunctionNode)
 
 foreign import javascript unsafe "app.getNodes()"
-    getNodes :: IO (JSArray FunctionNode)
+    getNodesJSArray :: IO (JSArray FunctionNode)
 
+getNodes :: IO [JSRef FunctionNode]
+getNodes = getNodesJSArray >>= fromArray
+
+foreign import javascript unsafe "$1.moveTo($2, $3)"
+    moveTo :: JSRef FunctionNode -> Int -> Int -> IO ()
 
 foreign import javascript unsafe "$1.label($2)"
     showLabel :: JSRef FunctionNode -> JSString -> IO ()
 
 
-foreign import javascript unsafe "$2.uniforms.selected.value = $1"
-    setSelectionValue :: Int -> JSRef FunctionNode -> IO ()
+foreign import javascript unsafe "$1.uniforms.selected.value"
+    getSelectionValue :: JSRef FunctionNode -> IO Int
 
-setUnselected = setSelectionValue 0
-setSelected   = setSelectionValue 1
-setFocused    = setSelectionValue 2
+foreign import javascript unsafe "$1.uniforms.selected.value = $2"
+    setSelectionValue :: JSRef FunctionNode -> Int -> IO ()
+
+setUnselected, setSelected, setFocused, setUnfocused :: JSRef FunctionNode -> IO ()
+setUnselected = flip setSelectionValue 0
+setSelected   = flip setSelectionValue 1
+setFocused    = flip setSelectionValue 2
+setUnfocused node = do
+    focused <- isFocused node
+    if focused then setSelected node
+               else return ()
+
+hasSelectionValue :: JSRef FunctionNode -> Int -> IO Bool
+hasSelectionValue node value = getSelectionValue node >>= return . (== value)
+
+isUnselected, isSelected, isFocused :: JSRef FunctionNode -> IO Bool
+isUnselected = flip hasSelectionValue 0
+isSelected   = flip hasSelectionValue 1
+isFocused    = flip hasSelectionValue 2
 
 foreign import javascript unsafe "$1.renderExamplePlot()"
     renderExamplePlot :: JSRef FunctionNode -> IO ()
