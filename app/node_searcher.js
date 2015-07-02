@@ -4,7 +4,9 @@ var $ = require('jquery');
 var _ = require('underscore');
 
 
-function doSearch(ns, query) {
+function doSearch(expr) {
+  console.log("ExprSearch: " + expr);
+  // var ns = splitExpression(expr).prefix;
   var items = [
     {name: "Lorem",                       type: "module",   module: "Duis",        highlight: [{start:1, length: 3}]},
     {name: "TroLoLoMaLo",                 type: "module",   module: "Excepteur",   highlight: [{start:5, length: 2}, {start:9, length: 1}, {start:13, length: 2}]},
@@ -16,8 +18,8 @@ function doSearch(ns, query) {
     {name: "labore",                      type: "function", module: "Excepteur",   highlight: [{start:3, length: 2}]},
     {name: "magna",                       type: "function", module: "Duis",        highlight: [{start:2, length: 4}]},
     {name: "minim",                       type: "function", module: "Duis",        highlight: [{start:1, length: 3}]},
-    {name: "mollit",                      type: "function", module: "",        highlight: [{start:0, length: 2}, {start:4, length: 1}]},
-    {name: "voluptate",                   type: "function", module: "",        highlight: [{start:4, length: 1}, {start:7, length: 1}, {start:9, length: 2}]},
+    {name: "mollit",                      type: "function", module: "",            highlight: [{start:0, length: 2}, {start:4, length: 1}]},
+    {name: "voluptate",                   type: "function", module: "",            highlight: [{start:4, length: 1}, {start:7, length: 1}, {start:9, length: 2}]},
     {name: "Lorem",                       type: "module",   module: "Duis",        highlight: [{start:1, length: 3}]},
     {name: "TroLoLoMaLo",                 type: "module",   module: "Excepteur",   highlight: [{start:5, length: 2}, {start:9, length: 1}, {start:13, length: 2}]},
     {name: "aute",                        type: "function", module: "Ipsum",       highlight: [{start:0, length: 1}, {start:3, length: 1}]},
@@ -28,17 +30,21 @@ function doSearch(ns, query) {
     {name: "labore",                      type: "function", module: "Excepteur",   highlight: [{start:3, length: 2}]},
     {name: "magna",                       type: "function", module: "Duis",        highlight: [{start:2, length: 4}]},
     {name: "minim",                       type: "function", module: "Duis",        highlight: [{start:1, length: 3}]},
-    {name: "mollit",                      type: "function", module: "",        highlight: [{start:0, length: 2}, {start:4, length: 1}]},
-    {name: "voluptate",                   type: "function", module: "",        highlight: [{start:4, length: 1}, {start:7, length: 1}, {start:9, length: 2}]},
+    {name: "mollit",                      type: "function", module: "",            highlight: [{start:0, length: 2}, {start:4, length: 1}]},
+    {name: "voluptate",                   type: "function", module: "",            highlight: [{start:4, length: 1}, {start:7, length: 1}, {start:9, length: 2}]},
   ];
 
-  if(ns !== "") {
-    _(items).each(function(el){el.module = ns + "." + el.module;});
-  }
+  _(items).each(function(el){
+    if(el.module !== "")
+      el.fullName = el.module + "." + el.name;
+    else
+      el.fullName = el.name;
+  });
   return _.shuffle(items);
 }
-
-function doSearchTree(ns) {
+function doSearchTree(expr) {
+  console.log("TreeSearch: " + expr);
+  var ns = splitExpression(expr).prefix;
   var items = [
     {name: "Lorem",                       type: "module",   module: "Duis",        highlight: [{start:1, length: 3}]},
     {name: "TroLoLoMaLo",                 type: "module",   module: "Excepteur",   highlight: [{start:5, length: 2}, {start:9, length: 1}, {start:13, length: 2}]},
@@ -70,7 +76,12 @@ function doSearchTree(ns) {
   } else {
     _(items).each(function(el){el.module = "";});
   }
-
+  _(items).each(function(el){
+    if(el.module !== "")
+      el.fullName = el.module + "." + el.name;
+    else
+      el.fullName = el.name;
+  });
   return _.shuffle(items);
 }
 
@@ -93,83 +104,115 @@ function highlightText(name, highlight) {
   }, {pos: 0, elems: []});
 }
 
-function removeNS(item, prefix) {
-  var clean;
-  if(item.substring(0, prefix.length) === prefix) {
-    clean = item.substring(prefix.length);
-    if(clean[0] === '.') {
-      clean = clean.slice(1);
-    }
-    return clean;
-  } else {
-    return item;
-  }
+function shouldSplit(query) {
+  return (query.indexOf('.') > -1 || query.indexOf(' ') > -1);
 }
 
-function joinName(ns, item) {
-  if(ns === "")
-    return item;
-  else
-    return ns + "." + item;
+function splitExpression(expr) {
+  var prefix, query;
+  var idx = Math.max(expr.lastIndexOf('.'), expr.lastIndexOf(' '));
+  prefix = expr.substring(0, idx+1);
+  query  = expr.substring(idx+1);
+  return {prefix: prefix, query: query};
 }
 
 function NodeSearcher() {
   this.el = $('<div/>').addClass('node-searcher');
-
+  this.prefix = "";
   this.initSearchbox();
-  this.search("","");
+  this.setExpression("");
 }
+
+NodeSearcher.prototype.expression = function() {
+  return this.prefix + this.searchbox.val();
+};
+
+NodeSearcher.prototype.setExpression = function(expr) {
+  var split = splitExpression(expr);
+  this.prefix = split.prefix;
+  this.searchbox.val(split.query);
+  this.searchns.text(split.prefix);
+  this.updateNSWidth();
+  this.performSearch();
+};
+
+NodeSearcher.prototype.appendExpression = function(expr) {
+  this.setExpression(this.prefix + expr);
+};
 
 NodeSearcher.prototype.currentSelection = function() {
   return this.currentColumn.find('.item.active');
 };
 
-NodeSearcher.prototype.select = function(nextSelection) {
-  if(this.currentSelection().is(nextSelection)) return;
+NodeSearcher.prototype.select = function(newSelection) {
+  if(this.currentSelection().is(newSelection)) return;
 
-  if(!this.currentSelection().parents('.column').is(nextSelection.parents('.column'))) {
-    this.selectColumn(nextSelection.parents('.column'));
+  var inSameColumn = this.currentSelection().parents('.column').is(newSelection.parents('.column'));
+
+  if(!inSameColumn) {
+    this.selectColumn(newSelection.parents('.column'));
   }
 
   this.currentSelection().removeClass('active');
-  nextSelection.addClass('active');
-  nextSelection.parents(".column").nextAll().remove();
-  if(!nextSelection.hasClass('query') && nextSelection.data('match').type === 'module') {
+  newSelection.addClass('active');
+
+  newSelection.parents(".column").nextAll().remove();
+
+  if(!this.isSearchboxActive() && newSelection.data('match').type === 'module') {
     this.openColumn();
   }
 };
 
-NodeSearcher.prototype.onKeyUpDown = function(event, up) {
+NodeSearcher.prototype.scrollToSelected = function() {
+  var currentSelection  = this.currentSelection();
+
+  var visibleBottom  = this.currentColumn.find('ul').scrollTop() + this.currentColumn.find('ul').innerHeight() - 20;
+  var selectedBottom = this.currentColumn.find('ul').scrollTop() + currentSelection.position().top + currentSelection.height();
+
+  if(visibleBottom < selectedBottom) {
+    this.currentColumn.find('ul').animate({scrollTop: selectedBottom - this.currentColumn.find('ul').innerHeight() + 30 }, 50);
+  }
+
+  var visibleTop  = this.currentColumn.find('ul').scrollTop();
+  var selectedTop = this.currentColumn.find('ul').scrollTop() + currentSelection.position().top;
+  if(visibleTop > selectedTop) {
+    this.currentColumn.find('ul').animate({scrollTop: selectedTop - 10}, 50);
+  }
+};
+
+NodeSearcher.prototype.onKeyDown = function(event) {
   var currentSelection, nextSelection;
 
   currentSelection  = this.currentSelection();
-  if(up) {
-    nextSelection = currentSelection.prev();
-    if(this.currentColumn.hasClass('first-column') && nextSelection.length === 0) {
-      nextSelection = this.searchrow;
-    }
-  } else {
-    nextSelection = currentSelection.next();
-    if(currentSelection.hasClass('query')) {
-      nextSelection = this.firstColumn.find('li:first-child');
-    }
+  nextSelection = currentSelection.next();
+
+  if(this.isSearchboxActive()) {
+    nextSelection = this.firstColumn.find('li:first-child');
   }
 
   if(nextSelection.length > 0) {
     this.select(nextSelection);
+    this.scrollToSelected();
+  }
 
-    var visibleBottom  = this.currentColumn.find('ul').scrollTop() + this.currentColumn.find('ul').innerHeight() - 20;
-    var selectedBottom = this.currentColumn.find('ul').scrollTop() + nextSelection.position().top + nextSelection.height();
+  event.preventDefault();
+  event.stopPropagation();
+};
 
-    if(visibleBottom < selectedBottom) {
-      this.currentColumn.find('ul').animate({scrollTop: selectedBottom - this.currentColumn.find('ul').innerHeight() + 30 }, 50);
-    }
+NodeSearcher.prototype.onKeyUp = function(event) {
+  var currentSelection, nextSelection, shouldSelectSearchbox;
+  currentSelection  = this.currentSelection();
+  nextSelection = currentSelection.prev();
 
-    var visibleTop  = this.currentColumn.find('ul').scrollTop();
-    var selectedTop = this.currentColumn.find('ul').scrollTop() + nextSelection.position().top;
-    if(visibleTop > selectedTop) {
-      this.currentColumn.find('ul').animate({scrollTop: selectedTop - 10}, 50);
-    }
+  shouldSelectSearchbox = this.currentColumn.is(this.firstColumn) && nextSelection.length === 0;
+
+  if(shouldSelectSearchbox) {
+    nextSelection = this.searchrow;
+  }
+
+  if(nextSelection.length > 0) {
+    this.select(nextSelection);
+    this.scrollToSelected();
   }
 
   event.preventDefault();
@@ -178,13 +221,10 @@ NodeSearcher.prototype.onKeyUpDown = function(event, up) {
 
 NodeSearcher.prototype.onBackspace = function(event) {
   var val = this.searchbox.val();
-  var idx, ns, query;
+  var expr = this.expression();
 
   if(val === "") {
-    idx = this.ns.substring(0, this.ns.length).lastIndexOf('.');
-    query = this.ns.substring(idx+1, this.ns.length);
-    ns = this.ns.substring(0, idx);
-    this.search(ns, query);
+    this.setExpression(expr.slice(0, expr.length-1));
     event.preventDefault();
   }
 
@@ -197,7 +237,7 @@ NodeSearcher.prototype.isSearchboxActive = function() {
 
 NodeSearcher.prototype.onKeyLeft = function(event) {
   if(!this.isSearchboxActive()) {
-    if(!this.currentColumn.hasClass('first-column')){
+    if(!this.currentColumn.is(this.firstColumn)){
       this.currentColumn.nextAll().remove();
       this.selectColumn(this.currentColumn.prev());
     }
@@ -211,44 +251,22 @@ NodeSearcher.prototype.onKeyRight = function(event) {
   if(!this.isSearchboxActive()) {
     next = this.currentColumn.next();
     if(next.length > 0) {
-      this.selectColumn(next);
+      this.select(next.find("li:first-child"));
     }
     event.preventDefault();
   }
   event.stopPropagation();
 };
 
-NodeSearcher.prototype.selectNS = function(ns) {
-  var displayNS = ns;
-  this.ns = ns;
-
-  if(displayNS !== "") {
-    displayNS += ".";
-  }
-  this.searchns.text(displayNS);
-};
-
-
-NodeSearcher.prototype.search = function(ns, query) {
-  this.searchbox.val(query);
-  this.searchbox.focus();
-  this.selectNS(ns);
-  this.performSearch();
-};
-
 NodeSearcher.prototype.performSearch = function() {
   var results;
-  if(this.ns === "" && this.searchbox.val() === "") {
+  if(this.prefix === "" && this.searchbox.val() === "") {
     this.firstColumn.removeClass('types');
   } else {
     this.firstColumn.addClass('types');
   }
 
-  if(this.searchbox.val() === "") {
-    results = doSearchTree(this.ns);
-  } else {
-    results = doSearch(this.ns, this.searchbox.val());
-  }
+  results = doSearch(this.expression());
 
   this.searchrow.addClass('active');
   this.displaySearchResults(results);
@@ -256,33 +274,53 @@ NodeSearcher.prototype.performSearch = function() {
 
 
 NodeSearcher.prototype.onInput = function() {
-  var val = this.searchbox.val();
-  var ns, query;
-  var idx = val.indexOf('.');
-  if(idx !== -1 && idx > 0) {
-    ns = joinName(this.ns, val.substring(0, idx));
-    query = val.substring(idx+1);
-    this.search(ns, query);
+  var query = this.searchbox.val();
+  if(shouldSplit(query)) {
+    this.appendExpression(query);
   } else {
     this.performSearch();
   }
 };
 
-NodeSearcher.prototype.onEnter = function() {
+NodeSearcher.prototype.onEnter = function(ev) {
   var current, data;
 
   if(this.searchrow.hasClass('active')) {
-    this.createNode(joinName(this.ns, this.searchbox.val()));
+    this.createNode(this.prefix + this.searchbox.val());
   } else {
     current = this.currentSelection();
     data    = current.data('match');
 
     if(data.type === 'module') {
-      this.search(joinName(data.module, data.name), "");
+      this.appendExpression(data.fullName + ".");
     } else {
-      this.createNode(joinName(data.module, data.name));
+      this.appendExpression(data.fullName);
+      this.createNode();
     }
   }
+
+  ev.preventDefault();
+};
+
+NodeSearcher.prototype.onEsc = function(ev) {
+  ev.preventDefault();
+};
+
+NodeSearcher.prototype.onTab = function(ev) {
+  var current, data;
+
+  if(!this.searchrow.hasClass('active')) {
+    current = this.currentSelection();
+    data    = current.data('match');
+
+    if(data.type === 'module') {
+      this.appendExpression(data.fullName + ".");
+    } else {
+      this.appendExpression(data.fullName );
+    }
+  }
+
+  ev.preventDefault();
 };
 
 NodeSearcher.prototype.initSearchbox = function() {
@@ -297,11 +335,11 @@ NodeSearcher.prototype.initSearchbox = function() {
   this.searchbox = this.searchrow.find('input.query');
   this.searchns  = this.searchrow.find('span.query-ns');
 
-  this.ns = "";
-
   this.el.append(firstColumn);
   this.currentColumn = firstColumn;
   this.firstColumn = firstColumn;
+
+  this.updateNSWidth();
 
   this.searchbox.on('input', function() {
     _this.onInput();
@@ -311,17 +349,26 @@ NodeSearcher.prototype.initSearchbox = function() {
   });
 
   this.searchbox.on('keydown', function(ev) {
+    console.log(ev.keyCode);
     switch(ev.keyCode){
+      case 9: { //tab
+        _this.onTab(ev);
+        break;
+      }
+      case 27: { //esc
+        _this.onEsc(ev);
+        break;
+      }
       case 8: {
         _this.onBackspace(ev);
         break;
       }
       case 38: { //up
-        _this.onKeyUpDown(ev, true);
+        _this.onKeyUp(ev);
         break;
       }
       case 40: { // down
-        _this.onKeyUpDown(ev, false);
+        _this.onKeyDown(ev);
         break;
       }
       case 37: { // left
@@ -353,7 +400,7 @@ NodeSearcher.prototype.initSearchbox = function() {
 
 
   var x, y;
-  this.el.on("mousemove", ".column .item", function(ev) {;
+  this.el.on("mousemove", ".column .item", function(ev) {
     if(x !== ev.pageX || y !== ev.pageY) {
       x = ev.pageX;
       y = ev.pageY;
@@ -362,15 +409,13 @@ NodeSearcher.prototype.initSearchbox = function() {
   });
   this.el.on("click", ".column ul li.result", function(ev) {
     _this.select($(ev.currentTarget));
-    _this.onEnter();
+    _this.onEnter(ev);
   });
 };
 
-NodeSearcher.prototype.createNode = function(expression) {
-  alert(expression);
+NodeSearcher.prototype.createNode = function() {
+  alert(this.expression());
 };
-
-
 
 NodeSearcher.prototype.selectColumn = function(column) {
   this.currentColumn.removeClass('current');
@@ -388,18 +433,18 @@ NodeSearcher.prototype.openColumn = function() {
   column.append(column.items);
 
   this.el.append(column);
-  this.displayTree(doSearchTree(this.currentSelection().data('match').module +"."+ this.currentSelection().data('match').name), column.items);
+  this.displayTree(doSearchTree(this.currentSelection().data('match').fullName), column.items);
 };
 
 NodeSearcher.prototype.updateNSWidth = function() {
-  this.firstColumn.find('.ns').css({minWidth: 90+this.searchns.width()});
+  this.prefixWidth = 90+this.searchns.width();
+  this.firstColumn.find('.ns').css({minWidth: this.prefixWidth});
 };
 
 NodeSearcher.prototype.displaySearchResults = function(results) {
   this.firstColumn.nextAll().remove();
   this.currentColumn = this.firstColumn;
   this.displayResults(results, this.firstColumn.items);
-  this.updateNSWidth();
 };
 
 NodeSearcher.prototype.displayResults = function(results, ul) {
@@ -408,7 +453,7 @@ NodeSearcher.prototype.displayResults = function(results, ul) {
 
   _(results).each(function(item) {
     var li = $('<li/>').addClass('result').addClass('item');
-    var ns = $("<span/>").addClass('ns').text(removeNS(item.module, _this.ns));
+    var ns = $("<span/>").addClass('ns').text(item.module).css({minWidth: _this.prefixWidth});
     var name = $("<span/>").addClass('fname');
 
     li.data('match', item);
