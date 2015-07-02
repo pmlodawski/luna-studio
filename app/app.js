@@ -17,6 +17,7 @@ var zOrderDiv = 10000.0;
 var currentMazZ = 0.0;
 var maxZ = (Math.pow(2, 31) - 1) / zOrderDiv; // -> HS
 
+var maxNodeNr = 0;
 
 // export to HTML
 function start() {
@@ -166,17 +167,27 @@ function createRandomNodes(number) {
     var width  = 60;     // nodes' width
     var height = 60;    // nodes' height
     for (var i = 0; i < number; i++)
-    {
-        posX = (Math.random() - 0.5) * (window.innerWidth - width);  // possible X coords of planes
-        posY = (Math.random() - 0.5) * (window.innerHeight - height);  // possible Y coords of planes
+      newNodeAt(i);
 
-        var node = new FunctionNode(i, new THREE.Vector2(posX, posY));
-        nodes[i] = node;
-        $$.scene.add(node.mesh);
-    }
+    maxNodeNr = number - 1;
     assignZs();
 }
 
+
+function newNodeAt(i) {
+    if (i == undefined) {
+      console.log("i undefined");
+      i = maxNodeNr;
+      maxNodeNr += 1;
+    }
+
+    posX = (Math.random() - 0.5) * (window.innerWidth - width);  // possible X coords of planes
+    posY = (Math.random() - 0.5) * (window.innerHeight - height);  // possible Y coords of planes
+
+    var node = new FunctionNode(i, new THREE.Vector2(posX, posY));
+    nodes[i] = node;
+    $$.scene.add(node.mesh);
+}
 
 
 
@@ -269,7 +280,7 @@ module.exports = {
   getNodes: function() {
     return _.values($$.nodes);
   },
-  // newNodeAt
+  newNodeAt: newNodeAt
   start: start
 };
 

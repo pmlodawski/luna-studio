@@ -26,6 +26,7 @@ import qualified Event.Mouse    as Mouse
 import           Utils.PrettyPrinter
 
 import qualified Reactive.Plugins.Core.Action.Action    as Action
+import qualified Reactive.Plugins.Core.Action.AddRemove as AddRemove
 import qualified Reactive.Plugins.Core.Action.Selection as Selection
 import qualified Reactive.Plugins.Core.Action.Drag      as Drag
 
@@ -52,7 +53,8 @@ makeNetworkDescription = do
         anyE       = unions [() <$ mouseDownE, () <$ mouseUpE, () <$ mouseMovedE, () <$ keyPressedE]
         anyNoMoveE = unions [() <$ mouseDownE, () <$ mouseUpE, () <$ keyPressedE]
 
-        nodeSelectionStateB           = stepper def $ nodeSelectionReactionStateB <@ anyNoMoveE
+        nodeSelectionStateB           = stepper def $ nodeSelectionReactionStateB <@ anyE
+        nodeDragStateB                = stepper def $ nodeDragReactionStateB      <@ anyE
 
         -- lastKeyB                      = stepper def $ Just <$> keyPressedE
 
@@ -67,11 +69,22 @@ makeNetworkDescription = do
         mouseNodeSelectActionE        = Selection.mouseToAction      <$> mouseNodeE
         keyboardNodeSelectionActionE  = Selection.keyboardToAction   <$> keyPressedE
         nodeSelectionActionE          = unions [mouseNodeSelectActionE, keyboardNodeSelectionActionE]
-
         nodeSelectionActionB          = stepper def $ nodeSelectionActionE
 
         nodeSelectionReactionB        = Action.tryExec  <$> nodeSelectionActionB <*> nodeSelectionStateB
         nodeSelectionReactionStateB   = Action.getState <$> nodeSelectionReactionB
+
+
+
+        nodeDragActionE               = Drag.mouseToAction           <$> mouseNodeE
+        nodeDragActionB               = stepper def $ nodeDragActionE
+        -- -- nodeDragReactionB            :: Behavior t (Action.WithState (Maybe Drag.Action) Drag.State)
+        nodeDragReactionB             = Action.tryExec  <$> nodeDragActionB <*> nodeDragStateB
+        -- -- nodeDragReactionStateB       :: Behavior t Drag.State
+        nodeDragReactionStateB        = Action.getState <$> nodeDragReactionB
+
+        -- nodeDragSelectionE            = Drag.AccumInput <$> nodeSelectionB        <@> nodeDragActionsE
+        -- nodeDragReactionsE            = filterE Action.filterAction $ accumE def $ Drag.accumActionState <$> nodeDragSelectionE
 
 
         -- nodeSelectionReactionE        = accumE def $ Selection.execActionOnState   <$> nodeSelectionActionE
@@ -97,7 +110,11 @@ makeNetworkDescription = do
 
     nodeSelectionReactionF <- changes nodeSelectionReactionB
     reactimate' $ (fmap Selection.updateUI) <$> nodeSelectionReactionF
-    reactimate' $ (fmap $ logAs "") <$> nodeSelectionReactionF
+    reactimate' $ (fmap $ logAs "s|")       <$> nodeSelectionReactionF
+
+    nodeDragReactionF <- changes nodeDragReactionB
+    reactimate' $ (fmap Drag.updateUI) <$> nodeDragReactionF
+    reactimate' $ (fmap $ logAs "d|")  <$> nodeDragReactionF
 
     -- reactimate $ Selection.updateUI <$> nodeSelectionReactionE
     -- reactimate $ Drag.updateUI      <$> nodeDragReactionsE

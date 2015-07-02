@@ -30,7 +30,7 @@ instance (PrettyPrinter act, PrettyPrinter st) => PrettyPrinter (WithState act s
 
 
 class ActionStateExecutor act st where
-    exec    :: act -> st -> WithStateMaybe act st
+    exec    ::        act  -> st -> WithStateMaybe act st
     tryExec :: (Maybe act) -> st -> WithStateMaybe act st
     tryExec Nothing       = WithState Nothing
     tryExec (Just action) = exec action
