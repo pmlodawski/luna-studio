@@ -51,7 +51,7 @@ instance V.Storable a => V.Storable (CubicBezier a) where
         pokeElemOff ptr' 2 c2
         pokeElemOff ptr' 3 c3
 
-readPoints :: [[Float]] -> V.Vector (V2 Float)
+readPoints :: [[Double]] -> V.Vector (V2 Double)
 readPoints = V.fromList . map (\[x,y] -> V2 x y)
 
 jsifyVector :: V.Storable a => (a -> String) -> V.Vector a -> String
@@ -59,13 +59,13 @@ jsifyVector f = wrap . intercalate "," . map f . V.toList
     where
         wrap s = "[" ++ s ++ "]"
 
-jsifyBezier :: CubicBezier Float -> String
+jsifyBezier :: CubicBezier Double -> String
 jsifyBezier (CubicBezier c0 c1 c2 c3) = jsifyObject fields points
     where
         points = map jsifyV2 [c0, c1, c2, c3]
         fields = zipWith (:) (repeat 'p') $ map show [(0::Int)..]
 
-jsifyV2 :: V2 Float -> String
+jsifyV2 :: V2 Double -> String
 jsifyV2 (V2 x y) = "{\"x\": " ++ show x ++ ", \"y\": " ++ show y ++ "}"
 
 jsifyObject :: [String] -> [String] -> String
