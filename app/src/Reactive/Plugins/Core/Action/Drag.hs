@@ -47,7 +47,7 @@ data State = State { _drag  :: Maybe DragState
 
 type ActionState = WithStateMaybe Action State
 
-data AccumInput = AccumInput NodeCollection Action
+-- data AccumInput = AccumInput NodeCollection Action
 
 makeLenses ''Action
 makeLenses ''State
@@ -61,7 +61,7 @@ instance PrettyPrinter ActionType where
     display = show
 
 instance PrettyPrinter Action where
-    display (DragAction   tpe point) = "da( " <> display tpe <> " " <> display point <> " )"
+    display (DragAction tpe point) = "dA( " <> display tpe <> " " <> display point <> " )"
 
 instance PrettyPrinter State where
     display (State dragging nodes) = display dragging <> " " <> display nodes
@@ -84,47 +84,77 @@ mouseToAction eventWithObjects = case mouseEvent ^. tpe of
           isNoNode      = null $ eventWithObjects ^. objects
 
 
-mergeWith :: NodeCollection -> NodeCollection -> NodeCollection
-mergeWith current new = (getCommon current new) <> (getNew new current)
-    where
-    getNew, getCommon :: NodeCollection -> NodeCollection -> NodeCollection
-    getNew    = deleteFirstsBy $ on (==) (view ident)
-    getCommon = intersectBy $ on (==) (view ident)
+-- mergeWith :: NodeCollection -> NodeCollection -> NodeCollection
+-- mergeWith current new = (getCommon current new) <> (getNew new current)
+--     where
+--     getNew, getCommon :: NodeCollection -> NodeCollection -> NodeCollection
+--     getNew    = deleteFirstsBy $ on (==) (view ident)
+--     getCommon = intersectBy $ on (==) (view ident)
 
 moveNodes :: Point -> NodeCollection -> NodeCollection
 moveNodes delta = fmap $ Node.position +~ delta
 
-accumActionState :: AccumInput -> ActionState -> ActionState
-accumActionState (AccumInput nodeSelection newActionCandidate) oldActionState = WithState maybeNewAction $ State newDrag newNodes
-    where
-    oldState                         = oldActionState ^. state
-    oldDrag                          = oldState ^. drag
-    oldNodes                         = oldState ^. nodes
-    mergedOldNodes                   = oldNodes `mergeWith` nodeSelection
-    emptySelection                   = null mergedOldNodes
-    maybeNewAction                   = case newActionCandidate of
-        DragAction Moving pt        -> case oldDrag of
-            Nothing                 -> Nothing
-            _                       -> Just $ DragAction Dragging pt
-        _                           -> Just newActionCandidate
-    newNodes                         = case newActionCandidate of
-        DragAction tpe point        -> case tpe of
-            StartDrag               -> mergedOldNodes
-            Moving                  -> case oldDrag of
-                Just oldDragState   -> moveNodes delta mergedOldNodes
-                    where prevPos    = oldDragState ^. dragCurrentPos
-                          delta      = point - prevPos
-                Nothing             -> mergedOldNodes
-            StopDrag                -> mergedOldNodes
-    newDrag                          = case newActionCandidate of
-        DragAction tpe point        -> case tpe of
-            StartDrag               -> Just $ DragState point point point
-            Moving                  -> if emptySelection then Nothing else case oldDrag of
-                Just oldDragState   -> Just $ DragState startPos prevPos point
-                    where startPos   = oldDragState ^. dragStartPos
-                          prevPos    = oldDragState ^. dragCurrentPos
-                Nothing             -> Nothing
-            StopDrag                -> Nothing
+instance ActionStateExecutor Action State where
+    exec newActionCandidate oldState = WithState maybeNewAction $ State newDrag newNodes
+        where
+        oldDrag                          = oldState ^. drag
+        oldNodes                         = oldState ^. nodes
+        emptySelection                   = null oldNodes
+        maybeNewAction                   = case newActionCandidate of
+            DragAction Moving pt        -> case oldDrag of
+                Nothing                 -> Nothing
+                _                       -> Just $ DragAction Dragging pt
+            _                           -> Just newActionCandidate
+        newNodes                         = case newActionCandidate of
+            DragAction tpe point        -> case tpe of
+                StartDrag               -> oldNodes
+                Moving                  -> case oldDrag of
+                    Just oldDragState   -> moveNodes delta oldNodes
+                        where prevPos    = oldDragState ^. dragCurrentPos
+                              delta      = point - prevPos
+                    Nothing             -> oldNodes
+                StopDrag                -> oldNodes
+        newDrag                          = case newActionCandidate of
+            DragAction tpe point        -> case tpe of
+                StartDrag               -> Just $ DragState point point point
+                Moving                  -> if emptySelection then Nothing else case oldDrag of
+                    Just oldDragState   -> Just $ DragState startPos prevPos point
+                        where startPos   = oldDragState ^. dragStartPos
+                              prevPos    = oldDragState ^. dragCurrentPos
+                    Nothing             -> Nothing
+                StopDrag                -> Nothing
+
+-- accumActionState :: AccumInput -> ActionState -> ActionState
+-- accumActionState (AccumInput nodeSelection newActionCandidate) oldActionState = WithState maybeNewAction $ State newDrag newNodes
+--     where
+--     oldState                         = oldActionState ^. state
+--     oldDrag                          = oldState ^. drag
+--     oldNodes                         = oldState ^. nodes
+--     mergedOldNodes                   = oldNodes `mergeWith` nodeSelection
+--     emptySelection                   = null mergedOldNodes
+--     maybeNewAction                   = case newActionCandidate of
+--         DragAction Moving pt        -> case oldDrag of
+--             Nothing                 -> Nothing
+--             _                       -> Just $ DragAction Dragging pt
+--         _                           -> Just newActionCandidate
+--     newNodes                         = case newActionCandidate of
+--         DragAction tpe point        -> case tpe of
+--             StartDrag               -> mergedOldNodes
+--             Moving                  -> case oldDrag of
+--                 Just oldDragState   -> moveNodes delta mergedOldNodes
+--                     where prevPos    = oldDragState ^. dragCurrentPos
+--                           delta      = point - prevPos
+--                 Nothing             -> mergedOldNodes
+--             StopDrag                -> mergedOldNodes
+--     newDrag                          = case newActionCandidate of
+--         DragAction tpe point        -> case tpe of
+--             StartDrag               -> Just $ DragState point point point
+--             Moving                  -> if emptySelection then Nothing else case oldDrag of
+--                 Just oldDragState   -> Just $ DragState startPos prevPos point
+--                     where startPos   = oldDragState ^. dragStartPos
+--                           prevPos    = oldDragState ^. dragCurrentPos
+--                 Nothing             -> Nothing
+--             StopDrag                -> Nothing
 
 updateUI :: ActionState -> IO ()
 updateUI (WithState maybeAction state) = case maybeAction of

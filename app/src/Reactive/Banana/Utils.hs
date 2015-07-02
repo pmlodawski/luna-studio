@@ -9,3 +9,6 @@ import Reactive.Banana     ( Event, (<$), filterE )
 
 filterE_ :: (a -> Bool) -> Event t a -> Event t ()
 filterE_ p event = () <$ filterE p event
+
+-- infixr 6 <+>
+-- (<+>) = union

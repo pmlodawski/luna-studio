@@ -24,17 +24,18 @@ import qualified Event.Keyboard as Keyboard ( KeyMods(..), Event(..) )
 import           Event.Mouse                ( WithObjects(..) )
 import qualified Event.Mouse    as Mouse
 import           Utils.PrettyPrinter
+
 import qualified Reactive.Plugins.Core.Action.Action    as Action
+import qualified Reactive.Plugins.Core.Action.AddRemove as AddRemove
 import qualified Reactive.Plugins.Core.Action.Selection as Selection
 import qualified Reactive.Plugins.Core.Action.Drag      as Drag
 
-infixr 6 <+>
-(<+>) = union
+import Reactive.Plugins.Core.State
 
-data NewState = NewState String deriving (Show)
 
-instance PrettyPrinter NewState where
-    display = show
+-- data NewState = NewState String deriving (Show)
+-- instance PrettyPrinter NewState where
+    -- display = show
 
 
 makeNetworkDescription :: forall t. Frameworks t => Moment t ()
@@ -45,18 +46,17 @@ makeNetworkDescription = do
     keyPressedE   <- fromAddHandler keyPressedHandler
 
     let
-        anyE = unions [() <$ mouseDownE, () <$ mouseUpE, () <$ mouseMovedE, () <$ keyPressedE]
         -- aaaB = accumB (NewState "") $ (\(NewState c) (NewState o) -> NewState $ "a(" <> c <> ")") <$> (cccB <@ keyPressedE)
         -- bbbB = accumB (NewState "") $ (\(NewState a) (NewState o) -> NewState $ "b(" <> a <> ")") <$> (aaaB <@ keyPressedE)
         -- cccB = accumB (NewState "") $ (\(NewState b) (NewState o) -> NewState $ "c(" <> b <> ")") <$> (bbbB <@ keyPressedE)
 
-        -- clicksCountB       = accumB 0 ((+ 1) <$ mouseClickedE)
+        anyE       = unions [() <$ mouseDownE, () <$ mouseUpE, () <$ mouseMovedE, () <$ keyPressedE]
+        anyNoMoveE = unions [() <$ mouseDownE, () <$ mouseUpE, () <$ keyPressedE]
 
-        stateStSelB                   = stepper def $ nodeSelectionReactionB <@ anyE
+        nodeSelectionStateB           = stepper def $ nodeSelectionReactionStateB <@ anyE
+        nodeDragStateB                = stepper def $ nodeDragReactionStateB      <@ anyE
 
-        stateSelB                     = (^. Action.state) <$> stateStSelB
-
-        lastKeyB                      = stepper def $ Just <$> keyPressedE
+        -- lastKeyB                      = stepper def $ Just <$> keyPressedE
 
         mouseNodeDownE, mouseNodeUpE, mouseNodeMovedE :: Event t (WithObjects Node)
         mouseNodeDownE                = unpackDynamic <$> mouseDownE
@@ -64,16 +64,28 @@ makeNetworkDescription = do
         mouseNodeMovedE               = unpackDynamic <$> mouseMovedE
 
         -- mouseE                     = mouseDownE <+> mouseUpE <+> mouseMovedE
-        mouseNodeE                    = mouseNodeDownE <+> mouseNodeUpE <+> mouseNodeMovedE
+        mouseNodeE                    = unions [mouseNodeDownE, mouseNodeUpE, mouseNodeMovedE]
 
         mouseNodeSelectActionE        = Selection.mouseToAction      <$> mouseNodeE
         keyboardNodeSelectionActionE  = Selection.keyboardToAction   <$> keyPressedE
-        nodeSelectionActionE          = mouseNodeSelectActionE <+> keyboardNodeSelectionActionE
-
-
+        nodeSelectionActionE          = unions [mouseNodeSelectActionE, keyboardNodeSelectionActionE]
         nodeSelectionActionB          = stepper def $ nodeSelectionActionE
 
-        nodeSelectionReactionB        = Selection.execMaybeActionOnState <$> nodeSelectionActionB <*> stateSelB
+        nodeSelectionReactionB        = Action.tryExec  <$> nodeSelectionActionB <*> nodeSelectionStateB
+        nodeSelectionReactionStateB   = Action.getState <$> nodeSelectionReactionB
+
+
+
+        nodeDragActionE               = Drag.mouseToAction           <$> mouseNodeE
+        nodeDragActionB               = stepper def $ nodeDragActionE
+        -- -- nodeDragReactionB            :: Behavior t (Action.WithState (Maybe Drag.Action) Drag.State)
+        nodeDragReactionB             = Action.tryExec  <$> nodeDragActionB <*> nodeDragStateB
+        -- -- nodeDragReactionStateB       :: Behavior t Drag.State
+        nodeDragReactionStateB        = Action.getState <$> nodeDragReactionB
+
+        -- nodeDragSelectionE            = Drag.AccumInput <$> nodeSelectionB        <@> nodeDragActionsE
+        -- nodeDragReactionsE            = filterE Action.filterAction $ accumE def $ Drag.accumActionState <$> nodeDragSelectionE
+
 
         -- nodeSelectionReactionE        = accumE def $ Selection.execActionOnState   <$> nodeSelectionActionE
 
@@ -84,21 +96,7 @@ makeNetworkDescription = do
         -- nodeDragReactionsE            = filterE Action.filterAction $ accumE def $ Drag.accumActionState <$> nodeDragSelectionE
 
 
-        -- logClicksB  = ("Clk " <>) . show <$> clicksCountB
-        -- logLastKeyB = (""  <>) . display <$> lastKeyB
-        -- logMouseB   = (" " <>) . display <$> mouseNodeActionB
-        -- logMouseAB  = (" " <>) . display <$> allNodeActionsE
-        -- logMouseRB  = (" " <>) . display <$> mouseNodeReactionB
-        -- logB        = logLastKeyB <<*>> logMouseB <<*>> logMouseRB
-        -- logB        = logLastKeyB -- <<*>> logMouseRB
-
-
-      -- ng = NodeGraph newSelectionObjE
-
-    -- Render the initial view
     -- initial logB >>= liftIO . logAs ""
-    -- logF <- changes logB
-    -- reactimate' $ (fmap $ logAs "") <$> logF
 
     -- aaaF <- changes aaaB
     -- bbbF <- changes bbbB
@@ -112,7 +110,11 @@ makeNetworkDescription = do
 
     nodeSelectionReactionF <- changes nodeSelectionReactionB
     reactimate' $ (fmap Selection.updateUI) <$> nodeSelectionReactionF
-    reactimate' $ (fmap $ logAs "") <$> nodeSelectionReactionF
+    reactimate' $ (fmap $ logAs "s|")       <$> nodeSelectionReactionF
+
+    nodeDragReactionF <- changes nodeDragReactionB
+    reactimate' $ (fmap Drag.updateUI) <$> nodeDragReactionF
+    reactimate' $ (fmap $ logAs "d|")  <$> nodeDragReactionF
 
     -- reactimate $ Selection.updateUI <$> nodeSelectionReactionE
     -- reactimate $ Drag.updateUI      <$> nodeDragReactionsE
@@ -124,8 +126,5 @@ makeNetworkDescription = do
     -- nodeDragReactionsF <- changes nodeDragReactionsB
     -- reactimate' $ (fmap Drag.updateUI) <$> nodeDragReactionsF
     -- reactimate' $ (fmap $ logAs "d: ") <$> ((fmap display) <$> nodeDragReactionsF)
-
-
-
 
     return ()

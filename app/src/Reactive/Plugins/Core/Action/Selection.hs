@@ -38,6 +38,7 @@ data Action = SelectAction { _actionType :: ActionType
             deriving (Eq, Show)
 
 data State = State { _nodeIds :: NodeIdCollection
+                   , _nodes   :: NodeCollection
                    } deriving (Eq, Show)
 
 type ActionState = WithStateMaybe Action State
@@ -46,17 +47,17 @@ makeLenses ''Action
 makeLenses ''State
 
 instance Default State where
-    def = State def
+    def = State def def
 
 instance PrettyPrinter ActionType where
     display = show
 
 instance PrettyPrinter Action where
-    display UnselectAll = "sa( UnselectAll )"
-    display (SelectAction tpe node)  = "sa( " <> display tpe <> " " <> display node <> " )"
+    display UnselectAll = "sA( UnselectAll )"
+    display (SelectAction tpe node)  = "sA( " <> display tpe <> " " <> display node <> " )"
 
 instance PrettyPrinter State where
-    display (State nodeIds) = display nodeIds
+    display (State nodeIds nodes) = display nodeIds
 
 
 
@@ -85,27 +86,31 @@ mouseToAction eventWithObjects = case mouseEvent ^. tpe of
           toggleActionType = if node ^. selected then ToggleOff
                                                  else ToggleOn
 
-execMaybeActionOnState :: Maybe Action -> State -> ActionState
-execMaybeActionOnState maybeAction state = case maybeAction of
-    Nothing     -> WithState Nothing state
-    Just action -> execActionOnState action state
 
-execActionOnState :: Action -> State -> ActionState
-execActionOnState newAction oldState = WithState (Just newAction) $ State newNodeIds
-    where
-    oldNodeIds                       = oldState ^. nodeIds
-    newNodeIds                       = case newAction of
-        UnselectAll                 -> []
-        SelectAction tpe node       -> case tpe of
-            SelectNew               -> [newNodeId]
-            Focus                   -> newNodeId : oldFilteredNodeIds
-            ToggleOn                -> newNodeId : oldFilteredNodeIds
-            ToggleOff               -> oldFilteredNodeIds
-            where oldFilteredNodeIds = delete newNodeId oldNodeIds
-                  newNodeId          = node ^. ident
+updateNodeSelection :: NodeIdCollection -> Node -> Node
+updateNodeSelection selNodeIds node = let selection = elem (node ^. ident) selNodeIds in node & selected .~ selection
 
-toNodeSelection :: ActionState -> NodeIdCollection
-toNodeSelection =  (^. state . nodeIds)
+updateNodesSelection :: NodeIdCollection -> NodeCollection -> NodeCollection
+updateNodesSelection selNodeIds nodes = fmap (updateNodeSelection selNodeIds) nodes
+
+instance ActionStateExecutor Action State where
+  exec newAction oldState = WithState (Just newAction) $ State newNodeIds newNodes
+      where
+      oldNodeIds                       = oldState ^. nodeIds
+      oldNodes                         = oldState ^. nodes
+      newNodes                         = updateNodesSelection newNodeIds oldNodes
+      newNodeIds                       = case newAction of
+          UnselectAll                 -> []
+          SelectAction tpe node       -> case tpe of
+              SelectNew               -> [newNodeId]
+              Focus                   -> newNodeId : oldFilteredNodeIds
+              ToggleOn                -> newNodeId : oldFilteredNodeIds
+              ToggleOff               -> oldFilteredNodeIds
+              where oldFilteredNodeIds = delete newNodeId oldNodeIds
+                    newNodeId          = node ^. ident
+
+toNodeIdSelection :: ActionState -> NodeIdCollection
+toNodeIdSelection =  (^. state . nodeIds)
 
 
 updateUI :: ActionState -> IO ()
