@@ -1,10 +1,17 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveFoldable #-}
+{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE DeriveTraversable #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 
 module Flowbox.GuiMockup.JSInterop where
 
 import           Control.Applicative  ((<$>), (<*>))
+import           Control.Lens
+import           Data.Foldable
 import           Data.List            (intercalate)
 import qualified Data.Vector.Storable as V
 import           Foreign.Ptr
@@ -21,7 +28,10 @@ data CubicBezier a = CubicBezier { cubicC0 :: V2 a
                                  , cubicC2 :: V2 a
                                  , cubicC3 :: V2 a
                                  }
-    deriving (Eq, Show, Generic)
+    deriving (Eq, Show, Generic, Foldable, Traversable, Functor)
+
+instance Each (CubicBezier a) (CubicBezier b) a b where
+    each = traverse
 
 instance (Binary a) => Binary (CubicBezier a)
 
