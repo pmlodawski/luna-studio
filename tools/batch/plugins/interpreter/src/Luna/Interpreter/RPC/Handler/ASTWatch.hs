@@ -98,6 +98,7 @@ import qualified Generated.Proto.ProjectManager.Project.Library.Unload.Update   
 import qualified Generated.Proto.ProjectManager.Project.Modify.Update                                          as ProjectModify
 import qualified Generated.Proto.ProjectManager.Project.Open.Update                                            as ProjectOpen
 import qualified Luna.DEP.Graph.Node                                                                           as Node
+import           Luna.DEP.Graph.View.Default.Expr                                                              (DefaultExpr (DefaultExpr))
 import           Luna.Interpreter.Proto.CallPointPath                                                          ()
 import qualified Luna.Interpreter.RPC.Handler.Cache                                                            as CacheWrapper
 import           Luna.Interpreter.RPC.Handler.Sync                                                             (sync)
@@ -444,12 +445,12 @@ graphNodeDefaultSet (GraphNodeDefaultSet.Update request updateNo) = do
         inPort     = decodeP $ GraphNodeDefaultSet.inPort request
     CacheWrapper.interpreterDo' tprojectID $ do
         Batch.lookupNodeDefault inPort nodeID libraryID projectID >>= \case
-            Nothing               -> return ()
-            Just (defID, defExpr) -> Var.deleteTimeRef libraryID nodeID defID defExpr
+            Nothing                          -> return ()
+            Just (DefaultExpr defID defExpr) -> Var.deleteTimeRef libraryID nodeID defID defExpr
         sync updateNo $ NodeDefaultHandler.set request Nothing
         Batch.lookupNodeDefault inPort nodeID libraryID projectID >>= \case
-            Nothing               -> left "ASTWatch.graphNodeDefaultSet"
-            Just (defID, defExpr) -> Var.insertTimeRef libraryID nodeID defID defExpr
+            Nothing                          -> left "ASTWatch.graphNodeDefaultSet"
+            Just (DefaultExpr defID defExpr) -> Var.insertTimeRef libraryID nodeID defID defExpr
         CacheWrapper.modifyNode tprojectID tlibraryID tnodeID
 
 

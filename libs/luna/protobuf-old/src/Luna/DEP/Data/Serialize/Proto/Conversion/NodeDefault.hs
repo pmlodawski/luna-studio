@@ -23,6 +23,7 @@ import           Luna.DEP.Data.Serialize.Proto.Conversion.Graph    ()
 import qualified Luna.DEP.Graph.Node                               as Node
 import           Luna.DEP.Graph.Node.Expr                          (NodeExpr)
 import           Luna.DEP.Graph.View.Default.DefaultsMap           (DefaultsMap)
+import           Luna.DEP.Graph.View.Default.Expr                  (DefaultExpr (DefaultExpr))
 import           Luna.DEP.Graph.View.PortDescriptor                (PortDescriptor)
 
 
@@ -32,9 +33,9 @@ instance Convert DefaultsMap Gen.DefaultsMap where
     decode (Gen.DefaultsMap items) = Map.fromList <$> decode items
 
 
-instance Convert (PortDescriptor, (Node.ID, NodeExpr)) Gen.Entry where
-    encode (inPort, (nodeID, value)) = Gen.Entry (encodeP inPort) (encodePJ nodeID) (encodeJ value)
+instance Convert (PortDescriptor, DefaultExpr) Gen.Entry where
+    encode (inPort, DefaultExpr nodeID value) = Gen.Entry (encodeP inPort) (encodePJ nodeID) (encodeJ value)
     decode (Gen.Entry inPort mnodeID mvalue) = do
         nodeID <- decodeP <$> mnodeID <?> "Failed to decode DefaultsMap.Entry: 'nodeID' field is missing"
         value  <- decode  =<< mvalue  <?> "Failed to decode DefaultsMap.Entry: 'value' field is missing"
-        return (decodeP inPort, (nodeID, value))
+        return (decodeP inPort, DefaultExpr nodeID value)

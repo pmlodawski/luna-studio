@@ -54,12 +54,15 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Gra
 import qualified Generated.Proto.Urm.URM.RegisterMultiple.Request                                              as RegisterMultiple
 import           Luna.DEP.Data.Serialize.Proto.Conversion.Crumb                                                ()
 import           Luna.DEP.Data.Serialize.Proto.Conversion.GraphView                                            ()
+import qualified Luna.DEP.Graph.Node                                                                           as Node
+import qualified Luna.DEP.Graph.Node.Expr                                                                      as NodeExpr
+import qualified Luna.DEP.Graph.Node.StringExpr                                                                as StringExpr
 import qualified Luna.DEP.Graph.View.Default.DefaultsMap                                                       as DefaultsMap
+import qualified Luna.DEP.Graph.View.Default.Expr                                                              as DefaultExpr
 import           Luna.DEP.Graph.View.EdgeView                                                                  (EdgeView (EdgeView))
 
-import qualified Luna.DEP.Graph.Node            as Node
-import qualified Luna.DEP.Graph.Node.Expr       as NodeExpr
-import qualified Luna.DEP.Graph.Node.StringExpr as StringExpr
+
+
 nodeName :: Node.Node -> String
 nodeName = fromMaybe "" . maybe Nothing (^? StringExpr.string) . maybe Nothing (^? NodeExpr.strExpr) . (^? Node.expr)
 --nodeName = fromMaybe "" . (^? StringExpr.string) =<< (^? NodeExpr.strExpr) =<< (^? Node.expr)
@@ -143,7 +146,7 @@ nodeModify (NodeModify.Request tnode tbc tlibID tprojectID astID) undoTopic = do
     let toldNode = encode (originID, oldNode)
         tnewNode = encode (originID, node)
     context2 <- Batch.get
-    Batch.put $ (Batch.idMap %~ Bimap.insert newNodeID originID) $ context2
+    Batch.put $ (Batch.idMap %~ Bimap.insert newNodeID originID) context2
     --logger error $ "nodeID " ++ show nodeID
     --logger error $ "newNodeID" ++ show newNodeID
     --logger error $ "newID "  ++ show newID
@@ -154,7 +157,7 @@ nodeModify (NodeModify.Request tnode tbc tlibID tprojectID astID) undoTopic = do
                     Topic.projectLibraryAstFunctionGraphNodeModifyRequest
                     (NodeModify.Request tnewNode tbc tlibID tprojectID astID)
                     undoTopic
-                    ("modify node " ++ (nodeName node))
+                    ("modify node " ++ nodeName node)
                     =<< NodeModify.Update (NodeModify.Request (encode (newID, node)) tbc tlibID tprojectID astID) (encode (newNodeID, node)) <$> Batch.getUpdateNo
 
 
@@ -181,7 +184,7 @@ nodeModifyInPlace (NodeModifyInPlace.Request tnode tbc tlibID tprojectID astID) 
                     Topic.projectLibraryAstFunctionGraphNodeModifyinplaceRequest
                     (newRequest originID)
                     undoTopic
-                    ("modify node " ++ (nodeName newNode))
+                    ("modify node " ++ nodeName newNode)
                     =<< NodeModifyInPlace.Update (newRequest newID) <$> Batch.getUpdateNo
 
 
@@ -207,7 +210,7 @@ nodeRemove (NodeRemove.Request tnodeIDs tbc tlibID tprojectID astID) undoTopic =
     let removed = Set.toList $ Set.fromList $ concat rm
     defaults <- mapM (\nid -> do defaults <- BatchND.nodeDefaults nid bc libID projectID
                                  return $ DefaultsMap.mapWithKey (\k v -> serialize ("undone." <> Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest)
-                                                                              $ NodeDefaultSet.Request (encodeP k) (encode $ snd v) (encodeP $ originID nid) tbc tlibID tprojectID astID
+                                                                              $ NodeDefaultSet.Request (encodeP k) (encode $ view DefaultExpr.nodeExpr v) (encodeP $ originID nid) tbc tlibID tprojectID astID
                                                                  )
                                                                  defaults
                      )

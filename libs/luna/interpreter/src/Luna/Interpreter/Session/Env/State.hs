@@ -488,4 +488,3 @@ whenVisible callPointPath action = do
 
 cleanEnv :: Session mm ()
 cleanEnv = modify $ Env.sessionData .~ def
-
