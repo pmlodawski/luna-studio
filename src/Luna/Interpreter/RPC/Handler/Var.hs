@@ -15,6 +15,7 @@ import qualified Luna.DEP.Graph.Node                     as Node
 import           Luna.DEP.Graph.Node.Expr                (NodeExpr)
 import qualified Luna.DEP.Graph.PropertyMap              as PropertyMap
 import qualified Luna.DEP.Graph.View.Default.DefaultsMap as DefaultsMap
+import           Luna.DEP.Graph.View.Default.Expr        (DefaultExpr (DefaultExpr))
 import qualified Luna.DEP.Lib.Lib                        as Lib
 import qualified Luna.DEP.Lib.Manager                    as LibManager
 import           Luna.Interpreter.RPC.Handler.Lift
@@ -36,7 +37,7 @@ insertTimeRef libraryID nodeID defID defExpr = do
 
 insertTimeRef' :: Lib.ID -> Node.ID
                -> NodeExpr -> RPC Context (SessionST mm) ()
-insertTimeRef' libraryID defID defExpr = liftSession $ do
+insertTimeRef' libraryID defID defExpr = liftSession $
     when (Var.containsTimeRefs defExpr) $
         Env.insertTimeRef (CallPoint libraryID defID)
 
@@ -58,7 +59,7 @@ rebuildTimeRefs = do
     let libraries = LibManager.labNodes libManager
         procPropertyMap (libraryID, library) = mapM (procDefaultMap libraryID) $ PropertyMap.getDefaultsMaps $ library ^. Lib.propertyMap
         procDefaultMap libraryID (nodeID, defaultsMap) = mapM_ (process libraryID nodeID) $ DefaultsMap.elems defaultsMap
-        process libraryID nodeID (defID, defExpr) = insertTimeRef libraryID nodeID defID defExpr
+        process libraryID nodeID (DefaultExpr defID defExpr) = insertTimeRef libraryID nodeID defID defExpr
     liftSession Env.cleanTimeRefs
     mapM_ procPropertyMap libraries
     --TODO[PM] rebuild also all nodes
