@@ -22,6 +22,8 @@ import           Event.Event
 import           Utils.Wrapper
 import           Utils.PrettyPrinter
 import           Reactive.Plugins.Core.Action.Action
+import           Reactive.Plugins.Core.Action.State.Drag
+import qualified Reactive.Plugins.Core.Action.State.Global   as Global
 
 
 data ActionType = StartDrag
@@ -30,44 +32,21 @@ data ActionType = StartDrag
                 | StopDrag
                 deriving (Eq, Show)
 
-data DragState = DragState { _dragStartPos    :: Point
-                           , _dragPreviousPos :: Point
-                           , _dragCurrentPos  :: Point
-                           } deriving (Eq, Show)
-
-data Action = DragAction   { _actionType :: ActionType
-                           , _actionPos  :: Point
-                           }
+data Action = DragAction { _actionType :: ActionType
+                         , _actionPos  :: Point
+                         }
             deriving (Eq, Show)
 
-data State = State { _drag  :: Maybe DragState
-                   , _nodes :: NodeCollection
-                   } deriving (Eq, Show)
-
-
-type ActionState = WithStateMaybe Action State
-
--- data AccumInput = AccumInput NodeCollection Action
+type ActionState = WithStateMaybe Action Global.State
 
 makeLenses ''Action
-makeLenses ''State
-makeLenses ''DragState
 
-
-instance Default State where
-    def = State def def
 
 instance PrettyPrinter ActionType where
     display = show
 
 instance PrettyPrinter Action where
     display (DragAction tpe point) = "dA( " <> display tpe <> " " <> display point <> " )"
-
-instance PrettyPrinter State where
-    display (State dragging nodes) = display dragging <> " " <> display nodes
-
-instance PrettyPrinter DragState where
-    display (DragState start prev current) = "d( " <> display start <> " " <> display prev <> " " <> display current <> " )"
 
 
 mouseToAction :: Mouse.WithObjects Node -> Maybe Action
@@ -94,12 +73,14 @@ mouseToAction eventWithObjects = case mouseEvent ^. tpe of
 moveNodes :: Point -> NodeCollection -> NodeCollection
 moveNodes delta = fmap $ Node.position +~ delta
 
-instance ActionStateExecutor Action State where
-    exec newActionCandidate oldState = WithState maybeNewAction $ State newDrag newNodes
+instance ActionStateExecutor Action Global.State where
+    exec newActionCandidate oldState = WithState maybeNewAction newState
         where
-        oldDrag                          = oldState ^. drag
-        oldNodes                         = oldState ^. nodes
+        oldDrag                          = oldState ^. Global.drag . history
+        oldNodes                         = oldState ^. Global.nodes
         emptySelection                   = null oldNodes
+        newState                         = oldState & Global.drag  .~ (State newDrag)
+                                                    & Global.nodes .~ newNodes
         maybeNewAction                   = case newActionCandidate of
             DragAction Moving pt        -> case oldDrag of
                 Nothing                 -> Nothing
@@ -116,9 +97,9 @@ instance ActionStateExecutor Action State where
                 StopDrag                -> oldNodes
         newDrag                          = case newActionCandidate of
             DragAction tpe point        -> case tpe of
-                StartDrag               -> Just $ DragState point point point
+                StartDrag               -> Just $ DragHistory point point point
                 Moving                  -> if emptySelection then Nothing else case oldDrag of
-                    Just oldDragState   -> Just $ DragState startPos prevPos point
+                    Just oldDragState   -> Just $ DragHistory startPos prevPos point
                         where startPos   = oldDragState ^. dragStartPos
                               prevPos    = oldDragState ^. dragCurrentPos
                     Nothing             -> Nothing
@@ -165,7 +146,7 @@ updateUI (WithState maybeAction state) = case maybeAction of
             Moving    -> return ()
             Dragging  -> moveNodesUI selectedNodes
             StopDrag  -> return ()
-        where selectedNodes = state ^. nodes
+        where selectedNodes = state ^. Global.nodes
               topNodeId = selectedNodes ^? ix 0 . ident
 
 

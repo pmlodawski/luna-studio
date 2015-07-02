@@ -24,6 +24,8 @@ import           Event.Event
 import           Utils.Wrapper
 import           Utils.PrettyPrinter
 import           Reactive.Plugins.Core.Action.Action
+import           Reactive.Plugins.Core.Action.State.Selection
+import qualified Reactive.Plugins.Core.Action.State.Global   as Global
 
 data ActionType = SelectNew
                 | Focus
@@ -37,17 +39,9 @@ data Action = SelectAction { _actionType :: ActionType
             | UnselectAll
             deriving (Eq, Show)
 
-data State = State { _nodeIds :: NodeIdCollection
-                   , _nodes   :: NodeCollection
-                   } deriving (Eq, Show)
-
-type ActionState = WithStateMaybe Action State
+type ActionState = WithStateMaybe Action Global.State
 
 makeLenses ''Action
-makeLenses ''State
-
-instance Default State where
-    def = State def def
 
 instance PrettyPrinter ActionType where
     display = show
@@ -55,11 +49,6 @@ instance PrettyPrinter ActionType where
 instance PrettyPrinter Action where
     display UnselectAll = "sA( UnselectAll )"
     display (SelectAction tpe node)  = "sA( " <> display tpe <> " " <> display node <> " )"
-
-instance PrettyPrinter State where
-    display (State nodeIds nodes) = display nodeIds
-
-
 
 
 keyboardToAction :: Keyboard.Event -> Maybe Action
@@ -93,24 +82,27 @@ updateNodeSelection selNodeIds node = let selection = elem (node ^. ident) selNo
 updateNodesSelection :: NodeIdCollection -> NodeCollection -> NodeCollection
 updateNodesSelection selNodeIds nodes = fmap (updateNodeSelection selNodeIds) nodes
 
-instance ActionStateExecutor Action State where
-  exec newAction oldState = WithState (Just newAction) $ State newNodeIds newNodes
-      where
-      oldNodeIds                       = oldState ^. nodeIds
-      oldNodes                         = oldState ^. nodes
-      newNodes                         = updateNodesSelection newNodeIds oldNodes
-      newNodeIds                       = case newAction of
-          UnselectAll                 -> []
-          SelectAction tpe node       -> case tpe of
-              SelectNew               -> [newNodeId]
-              Focus                   -> newNodeId : oldFilteredNodeIds
-              ToggleOn                -> newNodeId : oldFilteredNodeIds
-              ToggleOff               -> oldFilteredNodeIds
-              where oldFilteredNodeIds = delete newNodeId oldNodeIds
-                    newNodeId          = node ^. ident
 
-toNodeIdSelection :: ActionState -> NodeIdCollection
-toNodeIdSelection =  (^. state . nodeIds)
+instance ActionStateExecutor Action Global.State where
+    exec newAction oldState = WithState (Just newAction) newState
+        where
+        oldNodeIds                       = oldState ^. Global.selection . nodeIds
+        oldNodes                         = oldState ^. Global.nodes
+        newNodes                         = updateNodesSelection newNodeIds oldNodes
+        newState                         = oldState & Global.selection .~ (State newNodeIds)
+                                                  & Global.nodes     .~ newNodes
+        newNodeIds                       = case newAction of
+            UnselectAll                 -> []
+            SelectAction tpe node       -> case tpe of
+                SelectNew               -> [newNodeId]
+                Focus                   -> newNodeId : oldFilteredNodeIds
+                ToggleOn                -> newNodeId : oldFilteredNodeIds
+                ToggleOff               -> oldFilteredNodeIds
+                where oldFilteredNodeIds = delete newNodeId oldNodeIds
+                      newNodeId          = node ^. ident
+
+-- toNodeIdSelection :: ActionState -> NodeIdCollection
+-- toNodeIdSelection =  (^. state . Global.selection . nodeIds)
 
 
 updateUI :: ActionState -> IO ()
@@ -125,5 +117,5 @@ updateUI (WithState maybeAction state) = case maybeAction of
             ToggleOff -> setNodeUnselected nodeId
                       >> mapM_ setNodeFocused topNodeId
         UnselectAll   -> unselectAllNodes
-        where selectedNodeIds = state ^. nodeIds
+        where selectedNodeIds = state ^. Global.selection . nodeIds
               topNodeId = selectedNodeIds ^? ix 0

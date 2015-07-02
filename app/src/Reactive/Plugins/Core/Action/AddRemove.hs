@@ -24,6 +24,8 @@ import           Event.Event
 import           Utils.Wrapper
 import           Utils.PrettyPrinter
 import           Reactive.Plugins.Core.Action.Action
+import qualified Reactive.Plugins.Core.Action.State.Global   as Global
+
 
 data ActionType = Add
                 | Remove
@@ -33,16 +35,11 @@ data Action = AddAction
             | RemoveAction { _actionNode :: Node }
             deriving (Eq, Show)
 
-data State = State { _nodes :: NodeCollection
-                   } deriving (Eq, Show)
 
-type ActionState = WithStateMaybe Action State
+type ActionState = WithStateMaybe Action Global.State
 
 makeLenses ''Action
-makeLenses ''State
 
-instance Default State where
-    def = State def
 
 instance PrettyPrinter ActionType where
     display = show
@@ -50,10 +47,6 @@ instance PrettyPrinter ActionType where
 instance PrettyPrinter Action where
     display AddAction            = "arA( AddAction )"
     display (RemoveAction node)  = "arA( RemoveAction " <> display node <> " )"
-
-instance PrettyPrinter State where
-    display (State nodes) = display nodes
-
 
 
 
@@ -63,16 +56,21 @@ keyboardToAction event = case event ^. char of
     _   -> Nothing
 
 
-instance ActionStateExecutor Action State where
-  exec newAction oldState = WithState (Just newAction) $ State newNodes
-      where
-      oldNodes              = oldState ^. nodes
-      newNodes              = case newAction of
-          AddAction         -> (Node 777 False $ Point 100 100) : oldNodes
-          RemoveAction node -> delete node oldNodes
+maxNodeId :: NodeCollection -> NodeId
+maxNodeId nodes = (view ident) $ maximumBy (on compare (view ident)) nodes
 
-toNodes :: ActionState -> NodeCollection
-toNodes =  (^. state . nodes)
+instance ActionStateExecutor Action Global.State where
+    exec newAction oldState = WithState (Just newAction) newState
+        where
+        newState              = oldState & Global.nodes .~ newNodes
+        oldNodes              = oldState ^. Global.nodes
+        nextNodeId            = 1 + (maxNodeId oldNodes)
+        newNodes              = case newAction of
+            AddAction         -> (Node nextNodeId False $ Point 100 100) : oldNodes
+            RemoveAction node -> delete node oldNodes
+
+-- toNodes :: ActionState -> NodeCollection
+-- toNodes =  (^. state . nodes)
 
 
 updateUI :: ActionState -> IO ()
@@ -80,15 +78,3 @@ updateUI (WithState maybeAction state) = case maybeAction of
     Nothing               -> return ()
     Just AddAction        -> newNodeAt
     Just (RemoveAction _) -> return ()
-
-    -- case action of
-    --     SelectAction tpe (Node nodeId _ _) -> case tpe of
-    --         SelectNew -> unselectAllNodes
-    --                   >> setNodeFocused nodeId
-    --         Focus     -> setNodeFocused nodeId
-    --         ToggleOn  -> setNodeFocused nodeId
-    --         ToggleOff -> setNodeUnselected nodeId
-    --                   >> mapM_ setNodeFocused topNodeId
-    --     UnselectAll   -> unselectAllNodes
-    --     where selectedNodeIds = state ^. nodeIds
-    --           topNodeId = selectedNodeIds ^? ix 0
