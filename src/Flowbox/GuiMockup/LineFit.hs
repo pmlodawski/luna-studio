@@ -39,6 +39,9 @@ import           Linear                       hiding (point)
 
 import           Flowbox.GuiMockup.JSInterop
 
+import System.IO.Unsafe
+import Control.Exception as Exc
+
 
 
 toVec :: CubicBezier Double -> V.Vector (V2 Double)
@@ -64,7 +67,10 @@ fitCurve' points err openness = case openness of
         tHat2 = computeRightTangent points' $ len - 1
 
 fitCurve :: [V2 Double] -> Double -> Openness -> [ControlPoint]
-fitCurve points err openness = case openness of
+fitCurve a b c = unsafePerformIO $ Exc.catch (return $ fitCurve'' a b c) (\(Exc.ErrorCall s) -> putStrLn s >> return [])
+
+fitCurve'' :: [V2 Double] -> Double -> Openness -> [ControlPoint]
+fitCurve'' points err openness = case openness of
     Open   -> beziersToControlPoints $ V.toList $ fitCubic points' tHat1 tHat2 err
     Closed -> let controlPoints = fitCurve points err Open
                   firstControlPoint@(fstCP, fstCPHi, fstCPHo) = head controlPoints
