@@ -23,19 +23,26 @@ type ControlPoint = (V2 Float, V2 Float, V2 Float) --(PointC, LeftHandle, RightH
 guiLineSnap :: [ControlPoint] -> Maybe ControlPoint -> Maybe ControlPoint -> [V2 Float] -> Float -> Openness -> [ControlPoint]
 guiLineSnap originalCurveControlPoints pointBefore pointAfter strokePoints errorParameter openness = resultControlPoints
     where
-        resultControlPoints = [startControlPoint] ++ midPoints ++ [endControlPoint]
+        resultControlPoints = case openness of
+            Closed -> startControlPoint : midPoints
+            Open   -> startControlPoint : midPoints ++ [endControlPoint]
         midPoints = beziersToFullControlPoints resultCurve
-        startControlPoint = (ps , his, ho)
+        startControlPoint = case openness of
+            Closed -> (ps, hi, ho)
+            Open   -> (ps , his, ho)
         endControlPoint = (pe, hi, hoe)
         (_, his, _) = head originalCurveControlPoints
         (_, _, hoe) = last originalCurveControlPoints
         CubicBezier ps ho _ _ = head resultCurve
         CubicBezier _ _ hi pe = last resultCurve
         --resultCurve = moveCurveToStroke (controlPointsToBeziers originalCurveControlPoints) strokePoints errorParameter
-        resultCurve = moveCurveToStroke' (controlPointsToBeziers originalCurveControlPoints) pointBefore pointAfter' strokePoints errorParameter openness
-        pointAfter' = case openness of
-            Closed -> pointAfter
-            Open   -> Just startControlPoint
+        resultCurve = moveCurveToStroke' (controlPointsToBeziers originalCurveControlPoints') pointBefore pointAfter strokePoints errorParameter openness
+        --pointAfter' = case openness of
+        --    Closed -> pointAfter
+        --    Open   -> Just startControlPoint
+        originalCurveControlPoints' = case openness of
+            Closed -> originalCurveControlPoints ++ [head originalCurveControlPoints]
+            Open   -> originalCurveControlPoints
 
 moveCurveToStroke :: [CubicBezier Float] -> [V2 Float] -> Float -> Openness -> [CubicBezier Float]
 moveCurveToStroke originalCurve strokePoints errorParameter openness = V.toList $ optimizeBeziers (V.fromList originalCurve) (V.fromList strokeAproximation)
