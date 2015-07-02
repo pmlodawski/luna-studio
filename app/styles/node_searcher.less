@@ -1,0 +1,151 @@
+@import 'utils';
+
+@fontFamily: "Menlo", monospace;
+@fontWeight: normal;
+@fontSize: 9pt;
+@background: #333;
+@inputBackground: @background;
+@dividerColor: #555;
+@itemColor: white;
+@nsColor: #777;
+@selectedBackground: #444;
+@focusColor: #FED546;
+@matchColor: @focusColor;
+
+
+
+.node-searcher {
+  position: fixed;
+  top: 100px;
+  left: 300px;
+  right: 50px;
+/*  min-height: 200px;
+  max-height: 300px;
+*/
+  height: 300px;
+  z-index: 2;
+
+  display:flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+
+  .column {
+    flex-shrink: 0;
+    overflow: hidden;
+
+    &:first-child, &:last-child, &:nth-last-child(2) {
+      flex-shrink: 0;
+    }
+
+    display: block;
+    border-right: 2px solid @dividerColor;
+    position: relative;
+    background: @background;
+
+    &:first-child {
+      min-width:  100px;
+      min-height: 200px;
+      margin-top:0;
+      border-top-left-radius: 5px;
+      border-bottom-left-radius: 5px;
+    }
+
+    &:last-child {
+      border-top-right-radius: 5px;
+      border-bottom-right-radius: 5px;
+      border-right: none;
+    }
+
+/*    transition: margin-left 0.1s;*/
+    &.types {
+      margin-left:-100px;
+      .query-ns, .ns {
+        display: inline-block;
+      }
+    }
+    &.current .item.active {
+      border-left: 2px solid @focusColor;
+    }
+  }
+
+  ul {
+    overflow: auto;
+    height: 300px;
+    .scrollbar;
+    position: relative;
+  }
+  .column:first-child ul {
+    height: 300px - 25px;
+  }
+
+
+
+  ul, li {
+    list-style-type: none;
+    display: block;
+    padding: 0;
+    margin: 0;
+  }
+
+  &, input.query {
+    font-family: @fontFamily;
+    font-weight: @fontWeight;
+    font-size: @fontSize;
+    color: @itemColor;
+  }
+
+  input.query {
+    background: @inputBackground;
+    padding: 5px 0px;
+    border: none;
+    &:focus {
+      outline-color: transparent;
+      outline-style: none;
+    }
+  }
+
+  .column.types .item .query-ns {
+    margin-left:100px;
+  }
+
+  .item {
+    padding: 5px 10px;
+    white-space: nowrap;
+    border-left: 2px solid transparent;
+    &.query {
+      height: 25px;
+    }
+    &.active {
+      background: @selectedBackground;
+    }
+    .ns {
+      color: @nsColor;
+      display: none;
+      text-align: right;
+      padding-right: 10px;
+    }
+
+    .query-ns {
+      .ns;
+      transition: margin-left 0.1s;
+      margin-left: 0px;
+      padding-right: 0;
+    }
+
+    .fname {
+      padding-right: 10px;
+    }
+
+    em {
+      font-variant: normal;
+      color: @matchColor;
+    }
+
+    &.module::after {
+      text-align: right;
+      float: right;
+      padding-left: 10px;
+      content: '›';
+    }
+  }
+}

@@ -18,12 +18,24 @@ function doSearch(ns, query) {
     {name: "minim",                       type: "function", module: "Duis",        highlight: [{start:1, length: 3}]},
     {name: "mollit",                      type: "function", module: "",        highlight: [{start:0, length: 2}, {start:4, length: 1}]},
     {name: "voluptate",                   type: "function", module: "",        highlight: [{start:4, length: 1}, {start:7, length: 1}, {start:9, length: 2}]},
+    {name: "Lorem",                       type: "module",   module: "Duis",        highlight: [{start:1, length: 3}]},
+    {name: "TroLoLoMaLo",                 type: "module",   module: "Excepteur",   highlight: [{start:5, length: 2}, {start:9, length: 1}, {start:13, length: 2}]},
+    {name: "aute",                        type: "function", module: "Ipsum",       highlight: [{start:0, length: 1}, {start:3, length: 1}]},
+    {name: "commodo_tro_lo_alo_lo",       type: "function", module: "Excepteur",   highlight: [{start:5, length: 2}, {start:9, length: 1}, {start:13, length: 2}]},
+    {name: "cupidatat",                   type: "function", module: "Ipsum",       highlight: [{start:3, length: 2}, {start:5, length: 1}, {start:8, length: 2}]},
+    {name: "eiusmod",                     type: "function", module: "Excepteur",   highlight: [{start:1, length: 2}, {start:8, length: 1}, {start:8, length: 2}]},
+    {name: "elit",                        type: "function", module: "Ipsum",       highlight: [{start:0, length: 2}, {start:3, length: 1}]},
+    {name: "labore",                      type: "function", module: "Excepteur",   highlight: [{start:3, length: 2}]},
+    {name: "magna",                       type: "function", module: "Duis",        highlight: [{start:2, length: 4}]},
+    {name: "minim",                       type: "function", module: "Duis",        highlight: [{start:1, length: 3}]},
+    {name: "mollit",                      type: "function", module: "",        highlight: [{start:0, length: 2}, {start:4, length: 1}]},
+    {name: "voluptate",                   type: "function", module: "",        highlight: [{start:4, length: 1}, {start:7, length: 1}, {start:9, length: 2}]},
   ];
-  
+
   if(ns !== "") {
     _(items).each(function(el){el.module = ns + "." + el.module;});
   }
-  return items;
+  return _.shuffle(items);
 }
 
 function doSearchTree(ns) {
@@ -39,16 +51,27 @@ function doSearchTree(ns) {
     {name: "magna",                       type: "function", module: "Duis",        highlight: [{start:2, length: 4}]},
     {name: "minim",                       type: "function", module: "Duis",        highlight: [{start:1, length: 3}]},
     {name: "mollit",                      type: "function", module: "Duis",        highlight: [{start:0, length: 2}, {start:4, length: 1}]},
+    {name: "Lorem",                       type: "module",   module: "Duis",        highlight: [{start:1, length: 3}]},
+    {name: "TroLoLoMaLo",                 type: "module",   module: "Excepteur",   highlight: [{start:5, length: 2}, {start:9, length: 1}, {start:13, length: 2}]},
+    {name: "aute",                        type: "function", module: "Ipsum",       highlight: [{start:0, length: 1}, {start:3, length: 1}]},
+    {name: "commodo_tro_lo_alo_lo",       type: "function", module: "Excepteur",   highlight: [{start:5, length: 2}, {start:9, length: 1}, {start:13, length: 2}]},
+    {name: "cupidatat",                   type: "function", module: "Ipsum",       highlight: [{start:3, length: 2}, {start:5, length: 1}, {start:8, length: 2}]},
+    {name: "eiusmod",                     type: "function", module: "Excepteur",   highlight: [{start:1, length: 2}, {start:8, length: 1}, {start:8, length: 2}]},
+    {name: "elit",                        type: "function", module: "Ipsum",       highlight: [{start:0, length: 2}, {start:3, length: 1}]},
+    {name: "labore",                      type: "function", module: "Excepteur",   highlight: [{start:3, length: 2}]},
+    {name: "magna",                       type: "function", module: "Duis",        highlight: [{start:2, length: 4}]},
+    {name: "minim",                       type: "function", module: "Duis",        highlight: [{start:1, length: 3}]},
+    {name: "mollit",                      type: "function", module: "Duis",        highlight: [{start:0, length: 2}, {start:4, length: 1}]},
     {name: "voluptate",                   type: "function", module: "Duis",        highlight: [{start:4, length: 1}, {start:7, length: 1}, {start:9, length: 2}]},
   ];
-  
+
   if(ns !== "") {
     _(items).each(function(el){el.module = ns;});
   } else {
     _(items).each(function(el){el.module = "";});
   }
-  
-  return items;
+
+  return _.shuffle(items);
 }
 
 function highlightText(name, highlight) {
@@ -98,54 +121,59 @@ function NodeSearcher() {
 }
 
 NodeSearcher.prototype.currentSelection = function() {
-  return this.currentColumn.find('li.active');
+  return this.currentColumn.find('.item.active');
 };
 
 NodeSearcher.prototype.select = function(nextSelection) {
-  if(this.currentSelection()[0] === nextSelection[0]) return;
-  
-  if(this.currentSelection().parent().parent() !== nextSelection.parent().parent()) {
-    this.selectColumn(nextSelection.parent().parent());
+  if(this.currentSelection().is(nextSelection)) return;
+
+  if(!this.currentSelection().parents('.column').is(nextSelection.parents('.column'))) {
+    this.selectColumn(nextSelection.parents('.column'));
   }
-  
-  this.currentSelection().parent().parent().nextAll().remove();
+
   this.currentSelection().removeClass('active');
   nextSelection.addClass('active');
-
+  nextSelection.parents(".column").nextAll().remove();
   if(!nextSelection.hasClass('query') && nextSelection.data('match').type === 'module') {
     this.openColumn();
-  } 
+  }
 };
 
 NodeSearcher.prototype.onKeyUpDown = function(event, up) {
   var currentSelection, nextSelection;
 
-  currentSelection  = this.currentSelection(); 
+  currentSelection  = this.currentSelection();
   if(up) {
     nextSelection = currentSelection.prev();
+    if(this.currentColumn.hasClass('first-column') && nextSelection.length === 0) {
+      nextSelection = this.searchrow;
+    }
   } else {
     nextSelection = currentSelection.next();
+    if(currentSelection.hasClass('query')) {
+      nextSelection = this.firstColumn.find('li:first-child');
+    }
   }
 
   if(nextSelection.length > 0) {
     this.select(nextSelection);
-    
-    var visibleBottom  = this.currentColumn.scrollTop() + this.currentColumn.innerHeight() - 20;
-    var selectedBottom = this.currentColumn.scrollTop() + nextSelection.position().top + nextSelection.height();
-    
+
+    var visibleBottom  = this.currentColumn.find('ul').scrollTop() + this.currentColumn.find('ul').innerHeight() - 20;
+    var selectedBottom = this.currentColumn.find('ul').scrollTop() + nextSelection.position().top + nextSelection.height();
+
     if(visibleBottom < selectedBottom) {
-      this.currentColumn.animate({scrollTop: selectedBottom - this.currentColumn.innerHeight() + 30 }, 50);
+      this.currentColumn.find('ul').animate({scrollTop: selectedBottom - this.currentColumn.find('ul').innerHeight() + 30 }, 50);
     }
-    
-    var visibleTop  = this.currentColumn.scrollTop();
-    var selectedTop = this.currentColumn.scrollTop() + nextSelection.position().top;
+
+    var visibleTop  = this.currentColumn.find('ul').scrollTop();
+    var selectedTop = this.currentColumn.find('ul').scrollTop() + nextSelection.position().top;
     if(visibleTop > selectedTop) {
-      this.currentColumn.animate({scrollTop: selectedTop - 10}, 50);
+      this.currentColumn.find('ul').animate({scrollTop: selectedTop - 10}, 50);
     }
   }
 
   event.preventDefault();
-  event.stopPropagation();  
+  event.stopPropagation();
 };
 
 NodeSearcher.prototype.onBackspace = function(event) {
@@ -158,30 +186,30 @@ NodeSearcher.prototype.onBackspace = function(event) {
     ns = this.ns.substring(0, idx);
     this.search(ns, query);
     event.preventDefault();
-  } 
-  
+  }
+
   event.stopPropagation();
 };
 
 NodeSearcher.prototype.isSearchboxActive = function() {
-  return this.searchrow.hasClass('active');  
+  return this.searchrow.hasClass('active');
 };
 
 NodeSearcher.prototype.onKeyLeft = function(event) {
-  if(!this.isSearchboxActive()) {    
-    if(this.currentColumn.prev().length !== 0){
+  if(!this.isSearchboxActive()) {
+    if(!this.currentColumn.hasClass('first-column')){
       this.currentColumn.nextAll().remove();
       this.selectColumn(this.currentColumn.prev());
-      event.preventDefault();
     }
+    event.preventDefault();
   }
   event.stopPropagation();
 };
 
-NodeSearcher.prototype.onKeyRight = function(event) { 
+NodeSearcher.prototype.onKeyRight = function(event) {
   var next;
   if(!this.isSearchboxActive()) {
-    next = this.currentColumn.next(); 
+    next = this.currentColumn.next();
     if(next.length > 0) {
       this.selectColumn(next);
     }
@@ -193,7 +221,7 @@ NodeSearcher.prototype.onKeyRight = function(event) {
 NodeSearcher.prototype.selectNS = function(ns) {
   var displayNS = ns;
   this.ns = ns;
-  
+
   if(displayNS !== "") {
     displayNS += ".";
   }
@@ -202,7 +230,7 @@ NodeSearcher.prototype.selectNS = function(ns) {
 
 
 NodeSearcher.prototype.search = function(ns, query) {
-  this.searchbox.val(query);  
+  this.searchbox.val(query);
   this.searchbox.focus();
   this.selectNS(ns);
   this.performSearch();
@@ -222,7 +250,7 @@ NodeSearcher.prototype.performSearch = function() {
     results = doSearch(this.ns, this.searchbox.val());
   }
 
-  this.searchrow.addClass('active');    
+  this.searchrow.addClass('active');
   this.displaySearchResults(results);
 };
 
@@ -234,7 +262,7 @@ NodeSearcher.prototype.onInput = function() {
   if(idx !== -1 && idx > 0) {
     ns = joinName(this.ns, val.substring(0, idx));
     query = val.substring(idx+1);
-    this.search(ns, query);      
+    this.search(ns, query);
   } else {
     this.performSearch();
   }
@@ -242,13 +270,13 @@ NodeSearcher.prototype.onInput = function() {
 
 NodeSearcher.prototype.onEnter = function() {
   var current, data;
-  
+
   if(this.searchrow.hasClass('active')) {
     this.createNode(joinName(this.ns, this.searchbox.val()));
   } else {
     current = this.currentSelection();
     data    = current.data('match');
-    
+
     if(data.type === 'module') {
       this.search(joinName(data.module, data.name), "");
     } else {
@@ -260,15 +288,15 @@ NodeSearcher.prototype.onEnter = function() {
 NodeSearcher.prototype.initSearchbox = function() {
   var _this = this;
 
-  var firstColumn = $('<div/>').addClass('column').addClass('current');
+  var firstColumn = $('<div/>').addClass('column').addClass('current').addClass('first-column');
+  this.searchrow = $('<div class="item active query"><span class="query-ns"></span><input autofocus="on" type="text" class="query"/></div>');
   firstColumn.items = $('<ul/>');
+  firstColumn.append(this.searchrow);
   firstColumn.append(firstColumn.items);
-  firstColumn.items.append('<li class="active query"><span class="query-ns"></span><input type="text" class="query"/></li>');
-  
-  this.searchrow = firstColumn.items.find('li');
-  this.searchbox = firstColumn.items.find('input.query');
-  this.searchns  = firstColumn.items.find('span.query-ns');
-  
+
+  this.searchbox = this.searchrow.find('input.query');
+  this.searchns  = this.searchrow.find('span.query-ns');
+
   this.ns = "";
 
   this.el.append(firstColumn);
@@ -277,6 +305,9 @@ NodeSearcher.prototype.initSearchbox = function() {
 
   this.searchbox.on('input', function() {
     _this.onInput();
+  });
+  this.searchbox.on('blur', function() {
+    _this.searchbox.focus();
   });
 
   this.searchbox.on('keydown', function(ev) {
@@ -305,14 +336,32 @@ NodeSearcher.prototype.initSearchbox = function() {
         _this.onEnter(ev);
         break;
       }
+      case 33: { //pgup
+        break;
+      }
+      case 34: { //pgdwn
+        break;
+      }
+      case 36: { //home
+        break;
+      }
+      case 35: { //end
+        break;
+      }
     }
   });
-  
-  this.el.on("mousemove", ".column ul li", function(ev) {
-    _this.select($(ev.currentTarget));
+
+
+  var x, y;
+  this.el.on("mousemove", ".column .item", function(ev) {;
+    if(x !== ev.pageX || y !== ev.pageY) {
+      x = ev.pageX;
+      y = ev.pageY;
+      _this.select($(ev.currentTarget));
+    }
   });
   this.el.on("click", ".column ul li.result", function(ev) {
-    _this.select($(ev.currentTarget));    
+    _this.select($(ev.currentTarget));
     _this.onEnter();
   });
 };
@@ -322,7 +371,7 @@ NodeSearcher.prototype.createNode = function(expression) {
 };
 
 
-  
+
 NodeSearcher.prototype.selectColumn = function(column) {
   this.currentColumn.removeClass('current');
   this.currentColumn = column;
@@ -330,10 +379,10 @@ NodeSearcher.prototype.selectColumn = function(column) {
   this.currentColumn.nextAll().find("li").removeClass("active");
   if(this.currentColumn.find("li.active").length === 0) {
     this.currentColumn.find("li:first-child").addClass("active");
-  }  
+  }
 };
 
-NodeSearcher.prototype.openColumn = function() {  
+NodeSearcher.prototype.openColumn = function() {
   var column = $('<div/>').addClass('column');
   column.items = $('<ul/>');
   column.append(column.items);
@@ -358,7 +407,7 @@ NodeSearcher.prototype.displayResults = function(results, ul) {
   ul.find('li.result').remove();
 
   _(results).each(function(item) {
-    var li = $('<li/>').addClass('result');
+    var li = $('<li/>').addClass('result').addClass('item');
     var ns = $("<span/>").addClass('ns').text(removeNS(item.module, _this.ns));
     var name = $("<span/>").addClass('fname');
 
@@ -380,7 +429,7 @@ NodeSearcher.prototype.displayTree = function(results, ul) {
   ul.find('li.result').remove();
 
   _(results).each(function(item) {
-    var li = $('<li/>').addClass('result');
+    var li = $('<li/>').addClass('result').addClass('item');
     var name = $("<span/>").addClass('fname').text(item.name);
 
     li.data('match', item);
