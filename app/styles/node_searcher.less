@@ -29,25 +29,61 @@
   flex-direction: row;
   flex-wrap: nowrap;
 
+
+  // colors
   .column {
     border-right: 2px solid @dividerColor;
-    background: @background;
 
+    .columnColors(@amount) {
+      color: darken(@itemColor, @amount, relative);
+
+      input.query {
+        background: @inputBackground;
+        text-shadow: 0 0 0 @itemColor;
+        border-bottom: 1px solid darken(@nsColor, @amount, relative);
+      }
+      .active input.query {
+        color: @itemColor;
+      }
+
+      background: darken(@background, @amount, relative);
+      .item {
+        &.active {
+          background: darken(@selectedBackground, @amount, relative);
+        }
+        .ns {
+          color: darken(@nsColor, @amount, relative);
+        }
+        em {
+          color: darken(@matchColor, @amount, relative);
+        }
+      }
+    }
+
+    .columnColors(20%);
+    ul {
+      .scrollbar(darken(@background, 20%, relative), darken(@background, 20%, relative), 8px);
+    }
+    &.current {
+      .columnColors(0%);
+      ul {
+        .scrollbar(@background, @nsColor, 8px);
+      }
+    }
   }
 
+  // layout
 
   .column {
     flex-shrink: 0;
     overflow: hidden;
 
-    &:first-child, &:last-child, &:nth-last-child(2) {
+  /*  &:first-child, &:last-child, &:nth-last-child(2) {
       flex-shrink: 0;
     }
-
+*/
     display: block;
-    border-right: 2px solid @dividerColor;
     position: relative;
-    background: @background;
 
     &:first-child {
       min-width:  100px;
@@ -63,26 +99,24 @@
       border-right: none;
     }
 
-/*    transition: margin-left 0.1s;*/
     &.types {
       margin-left:-100px;
       .query-ns, .ns {
         display: inline-block;
       }
     }
-    &.current .item.active {
-      border-left: 2px solid @focusColor;
-    }
+
   }
 
   ul {
-    overflow: auto;
+    overflow-y: auto;
+    overflow-x: hidden;
     height: 300px;
-    .scrollbar;
     position: relative;
+    user-select: none;
   }
   .column:first-child ul {
-    height: 300px - 25px;
+    height: 300px - 25px - 10px;
   }
 
 
@@ -98,22 +132,16 @@
     font-family: @fontFamily;
     font-weight: @fontWeight;
     font-size: @fontSize;
-    color: @itemColor;
   }
 
   input.query {
-    background: @inputBackground;
     padding: 5px 0px;
     border: none;
     color: transparent;
-    text-shadow: 0 0 0 @itemColor;
     &:focus {
       outline-color: transparent;
       outline-style: none;
     }
-  }
-  .active input.query {
-    color: @itemColor;
   }
 
   .column.types .item .query-ns {
@@ -123,35 +151,32 @@
   .item {
     padding: 5px 10px;
     white-space: nowrap;
-    border-left: 2px solid transparent;
+    text-overflow: ellipsis;
+
     &.query {
       height: 25px;
     }
-    &.active {
-      background: @selectedBackground;
-    }
     .ns {
-      color: @nsColor;
       display: none;
       text-align: right;
       padding-right: 10px;
       white-space: pre;
+      text-overflow: ellipsis;
+      vertical-align: middle;
     }
 
     .query-ns {
       .ns;
-      transition: margin-left 0.1s;
       margin-left: 0px;
       padding-right: 0;
     }
 
     .fname {
+      display: inline-block;
       padding-right: 10px;
     }
-
     em {
       font-style: normal;
-      color: @matchColor;
     }
 
     &.module::after {

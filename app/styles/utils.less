@@ -1,4 +1,4 @@
-.scrollbar {
+.scrollbar(@background, @slider, @radius) {
   &::-webkit-scrollbar {
     -webkit-appearance: none;
   }
@@ -12,13 +12,13 @@
   }
 
   &::-webkit-scrollbar-thumb {
-      border-radius: 8px;
-      border: 2px solid #444; /* sho.scrollbard match background, can't be transparent */
-      background-color: rgba(0, 0, 0, .5);
+      border-radius: @radius;
+      border: 2px solid @background; /* sho.scrollbard match background, can't be transparent */
+      background-color: @slider;
   }
 
   &::-webkit-scrollbar-track {
-      background-color: #444;
+      background-color: @background;
       border-radius: 8px;
   }
 }

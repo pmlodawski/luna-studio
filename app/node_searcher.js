@@ -438,7 +438,7 @@ NodeSearcher.prototype.openColumn = function() {
 
 NodeSearcher.prototype.updateNSWidth = function() {
   this.prefixWidth = 90+this.searchns.width();
-  this.firstColumn.find('.ns').css({minWidth: this.prefixWidth});
+  this.firstColumn.find('.ns').css({idth: this.prefixWidth});
 };
 
 NodeSearcher.prototype.displaySearchResults = function(results) {
