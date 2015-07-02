@@ -24,7 +24,7 @@ import           Debug.Trace
 
 
 
-determineResampleSpacing :: V.Vector (V2 Float) -> Float
+determineResampleSpacing :: V.Vector (V2 Double) -> Double
 determineResampleSpacing points = diagonal / 40
     where
         diagonal = distance topLeft bottomRight
@@ -55,7 +55,7 @@ increment ref = modifySTRef ref (+1)
 decrement :: Num a => STRef s a -> ST s ()
 decrement ref = modifySTRef ref (subtract 1)
 
--- pathDistance :: V.Vector (V2 Float) -> Int -> Int -> Float
+-- pathDistance :: V.Vector (V2 Double) -> Int -> Int -> Double
 -- pathDistance points i1 i2 = runST $ do
 --     d <- newSTRef 0
 
@@ -65,10 +65,10 @@ decrement ref = modifySTRef ref (subtract 1)
 
 --     readSTRef d
 
-resample :: Float -> V.Vector (V2 Float) -> V.Vector (V2 Float)
+resample :: Double -> V.Vector (V2 Double) -> V.Vector (V2 Double)
 resample i v@(V.toList -> points) = V.fromList $ go 0 (head points) (tail points) [head points]
     where
-        go :: Float -> V2 Float -> [V2 Float] -> [V2 Float] -> [V2 Float]
+        go :: Double -> V2 Double -> [V2 Double] -> [V2 Double] -> [V2 Double]
         go bigD previousPoint (point:ps) newPoints =
             let d = distance previousPoint point
             in  if bigD + d >= i
@@ -78,10 +78,10 @@ resample i v@(V.toList -> points) = V.fromList $ go 0 (head points) (tail points
         go _ _ [] newPoints = reverse newPoints
 
 
-resampleTime :: Float -> V.Vector (V2 Float, Float) -> V.Vector (V2 Float, Float)
+resampleTime :: Double -> V.Vector (V2 Double, Double) -> V.Vector (V2 Double, Double)
 resampleTime i v@(V.toList -> points) = V.fromList $ go 0 (head points) (tail points) [head points]
     where
-        go :: Float -> (V2 Float, Float) -> [(V2 Float, Float)] -> [(V2 Float, Float)] -> [(V2 Float, Float)]
+        go :: Double -> (V2 Double, Double) -> [(V2 Double, Double)] -> [(V2 Double, Double)] -> [(V2 Double, Double)]
         go bigD previousPoint (point:ps) newPoints =
             let d = (distance `on` fst) previousPoint point
             in  if bigD + d >= i
@@ -97,21 +97,21 @@ resampleTime i v@(V.toList -> points) = V.fromList $ go 0 (head points) (tail po
         go _ _ [] newPoints = reverse newPoints
 
 
-pathLength :: V.Vector (V2 Float) -> Float
+pathLength :: V.Vector (V2 Double) -> Double
 pathLength v = V.foldl' (\d (prev, next) -> d + distance prev next) 0
              $ V.zipWith (,) v (V.tail v)
 
-test3 :: Float -> [[Float]] -> String
+test3 :: Double -> [[Double]] -> String
 test3 n input = jsifyVector jsifyV2 $ resample n $ readPoints input
 
-halfwayCorner :: V.Vector (V2 Float, Float) -> Int
+halfwayCorner :: V.Vector (V2 Double, Double) -> Int
 halfwayCorner vec = quarter + V.minIndexBy (compare `on` snd) vec'
     where
         vec'    = V.slice quarter len vec
         len     = V.length vec - 2 * quarter
         quarter = V.length vec `div` 4
 
-postProcessCorners :: V.Vector (V2 Float, Float) -> V.Vector Int -> V.Vector Int
+postProcessCorners :: V.Vector (V2 Double, Double) -> V.Vector Int -> V.Vector Int
 postProcessCorners points (V.toList -> corners) = V.fromList $ go3 (go1 False corners) []
     where
         go1 :: Bool -> [Int] -> [Int]
@@ -135,7 +135,7 @@ postProcessCorners points (V.toList -> corners) = V.fromList $ go3 (go1 False co
                                else go3 (c:c2:cs) (c1:acc)
         go3 [c1,c2]      acc = reverse $ c2:c1:acc
 
--- curveDetection :: V.Vector (V2 Float) -> V.Vector Int -> V.Vector Int
+-- curveDetection :: V.Vector (V2 Double) -> V.Vector Int -> V.Vector Int
 -- curveDetection points corners = V.fromList $ go (V.toList corners) []
 --     where
 --         shift = 15
@@ -167,7 +167,7 @@ postProcessCorners points (V.toList -> corners) = V.fromList $ go3 (go1 False co
 --         go [c1,c2] acc = reverse $ c2:c1:acc
 --         go [c]     acc = reverse $ c:acc
 
-curveDetection :: V.Vector (V2 Float) -> V.Vector Int -> V.Vector Int
+curveDetection :: V.Vector (V2 Double) -> V.Vector Int -> V.Vector Int
 curveDetection points corners = V.fromList $ (V.toList corners) \\ (go (V.toList corners) [])
     where
         shift = 15
@@ -197,7 +197,7 @@ curveDetection points corners = V.fromList $ (V.toList corners) \\ (go (V.toList
 traceA :: Show a => String -> a -> a
 traceA msg a = trace (msg ++ show a) a
 
-removeAdjacentCorners :: V.Vector Float -> V.Vector Int -> V.Vector Int
+removeAdjacentCorners :: V.Vector Double -> V.Vector Int -> V.Vector Int
 removeAdjacentCorners straws corners = V.fromList $ go (V.toList corners) []
     where
         go :: [Int] -> [Int] ->[Int]
@@ -208,21 +208,21 @@ removeAdjacentCorners straws corners = V.fromList $ go (V.toList corners) []
                         else go (prevCorner:cs)    acc
                 else go (currentCorner:cs) (prevCorner:acc)
 
-getAngle :: V2 Float -> V2 Float -> V2 Float -> Float
+getAngle :: V2 Double -> V2 Double -> V2 Double -> Double
 getAngle center p1 p2 = angle * 180 / pi
     where
         angle = acos $ v1 ^. _x * v2 ^. _x + v1 ^. _y * v2  ^. _y
         v1 = normalize $ p1 - center
         v2 = normalize $ p2 - center
 
-isLine :: V.Vector (V2 Float) -> Bool
+isLine :: V.Vector (V2 Double) -> Bool
 isLine vec = len / pathLen > threshold
     where
         len = distance (V.head vec) (V.last vec)
         pathLen = pathLength vec
         threshold = 0.95
 
-getCorners :: V.Vector (V2 Float) -> V.Vector Int
+getCorners :: V.Vector (V2 Double) -> V.Vector Int
 getCorners points = runST $ do
     let w :: Num a => a
         w = 3
@@ -281,12 +281,12 @@ getCorners points = runST $ do
 mean :: (Num a, Storable a, Fractional a) => V.Vector a -> a
 mean vec = V.sum vec / (fromIntegral $ V.length vec)
 
-iStraw :: V.Vector (V2 Float) -> V.Vector (V2 Float)
+iStraw :: V.Vector (V2 Double) -> V.Vector (V2 Double)
 iStraw points = V.backpermute resampled corners
     where
         s = determineResampleSpacing points
         resampled = resample s points
         corners = getCorners resampled
 
-test4 :: [[Float]] -> String
+test4 :: [[Double]] -> String
 test4 input = jsifyVector jsifyV2 $ iStraw $ readPoints input
