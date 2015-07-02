@@ -34,6 +34,7 @@ import           Luna.DEP.Data.Serialize.Proto.Conversion.Crumb                 
 import           Luna.DEP.Data.Serialize.Proto.Conversion.Graph                                                ()
 import           Luna.DEP.Data.Serialize.Proto.Conversion.NodeDefault                                          ()
 import qualified Luna.DEP.Graph.View.Default.DefaultsMap                                                       as DefaultsMap
+import qualified Luna.DEP.Graph.View.Default.Expr                                                              as DefaultExpr
 
 
 
@@ -69,10 +70,10 @@ set (NodeDefaultSet.Request tdstPort tvalue tnodeID tbc tlibID tprojectID astID)
     return ( [NodeDefaultSet.Update (newRequest newID value) updateNo]
            , maybe []
                    (\bmp -> makeMsgArr (Register.Request
-                                            (serialize ("undone." <> Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest) $ newRequest originID $ snd bmp)
+                                            (serialize ("undone." <> Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest) $ newRequest originID $ view DefaultExpr.nodeExpr bmp)
                                             (serialize ("undone." <> Topic.projectLibraryAstFunctionGraphNodeDefaultSetRequest) $ newRequest originID value)
                                             tprojectID
-                                            (encodeP $ "set port " <> (show dstPort) ++ " in " ++ (show nodeID))
+                                            (encodeP $ "set port " <> show dstPort ++ " in " ++ show nodeID)
                                        ) undoTopic)
                    $ DefaultsMap.lookup dstPort defaultsMap
            )
