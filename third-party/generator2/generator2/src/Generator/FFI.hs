@@ -201,7 +201,7 @@ runtimeCtor :: String -> CppMethod
 runtimeCtor clsname = CppMethod fun [] Usual where
     body = indent 1 $ [string|     
         int argc = 1;
-        char* argv[] = { "ghcDll", NULL }; // argv must end with NULL
+        char* argv[] = { const_cast<char *>("ghcDll"), NULL }; // argv must end with NULL
         char** args = argv;
         hs_init(&argc, &args);
         |]
