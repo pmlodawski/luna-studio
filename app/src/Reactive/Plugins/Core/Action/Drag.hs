@@ -19,6 +19,7 @@ import qualified Event.Keyboard as Keyboard
 import           Event.Mouse    hiding      ( Event, WithObjects )
 import qualified Event.Mouse    as Mouse
 import           Event.Event
+import           Event.WithObjects
 import           Utils.Wrapper
 import           Utils.PrettyPrinter
 import           Reactive.Plugins.Core.Action.Action
@@ -49,18 +50,23 @@ instance PrettyPrinter Action where
     display (DragAction tpe point) = "dA( " <> display tpe <> " " <> display point <> " )"
 
 
-mouseToAction :: Mouse.WithObjects Node -> Maybe Action
-mouseToAction eventWithObjects = case mouseEvent ^. tpe of
+toAction :: Event Node -> Maybe Action
+toAction (Mouse (WithObjects mouseEvent objects)) = case mouseEvent ^. tpe of
     Mouse.Pressed  -> if isNoNode then Nothing
                                   else case mouseKeyMods of
                                        (KeyMods False False False False) -> Just (DragAction StartDrag mousePosition)
                                        _                                 -> Nothing
     Mouse.Released -> Just (DragAction StopDrag mousePosition)
     Mouse.Moved    -> Just (DragAction Moving   mousePosition)
-    where mouseEvent    = eventWithObjects ^. event
-          mouseKeyMods  = mouseEvent ^. keyMods
+    where mouseKeyMods  = mouseEvent ^. keyMods
           mousePosition = mouseEvent ^. position
-          isNoNode      = null $ eventWithObjects ^. objects
+          isNoNode      = null objects
+toAction _ = Nothing
+
+    -- where mouseEvent    = eventWithObjects ^. event
+    --       mouseKeyMods  = mouseEvent ^. keyMods
+    --       mousePosition = mouseEvent ^. position
+    --       isNoNode      = null $ eventWithObjects ^. objects
 
 
 -- mergeWith :: NodeCollection -> NodeCollection -> NodeCollection
@@ -79,7 +85,8 @@ instance ActionStateExecutor Action Global.State where
         oldDrag                          = oldState ^. Global.drag . history
         oldNodes                         = oldState ^. Global.nodes
         emptySelection                   = null oldNodes
-        newState                         = oldState & Global.drag  .~ (State newDrag)
+        newState                         = oldState & Global.iteration +~ 2
+                                                    & Global.drag  .~ (State newDrag)
                                                     & Global.nodes .~ newNodes
         maybeNewAction                   = case newActionCandidate of
             DragAction Moving pt        -> case oldDrag of

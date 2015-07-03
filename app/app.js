@@ -28,7 +28,7 @@ function start() {
     // -> HS
     setup_pan_and_zoom();
     document.addEventListener('keydown', onDocumentKeyDown, false );
-    createRandomNodes(40);
+    createRandomNodes(1);
 
     // call -> HS
     render();
@@ -164,25 +164,28 @@ function createRandomNodes(number) {
     var posY;
 
     // nodes
-    var width  = 60;     // nodes' width
+    var width  = 60;    // nodes' width
     var height = 60;    // nodes' height
-    for (var i = 0; i < number; i++)
-      newNodeAt(i);
+
+    for (var i = 0; i < number; i++) {
+      posX = (Math.random() - 0.5) * (window.innerWidth - width);  // possible X coords of planes
+      posY = (Math.random() - 0.5) * (window.innerHeight - height);  // possible Y coords of planes
+
+      newNodeAt(i, posX, posY);
+    }
 
     maxNodeNr = number - 1;
     assignZs();
 }
 
 
-function newNodeAt(i) {
+function newNodeAt(i, posX, posY) {
     if (i == undefined) {
       console.log("i undefined");
       i = maxNodeNr;
       maxNodeNr += 1;
     }
-
-    posX = (Math.random() - 0.5) * (window.innerWidth - width);  // possible X coords of planes
-    posY = (Math.random() - 0.5) * (window.innerHeight - height);  // possible Y coords of planes
+    console.log("adding new node " + i + " at " + posX + " " + posY);
 
     var node = new FunctionNode(i, new THREE.Vector2(posX, posY));
     nodes[i] = node;
@@ -280,7 +283,7 @@ module.exports = {
   getNodes: function() {
     return _.values($$.nodes);
   },
-  newNodeAt: newNodeAt
+  newNodeAt: newNodeAt,
   start: start
 };
 

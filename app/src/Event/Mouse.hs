@@ -12,7 +12,7 @@ import           Object.Dynamic
 import           Object.Object  ( ID, Point(..), Object(..), Selectable(..) )
 import           Object.Node    --( Node(..), isNode )
 import           Event.Keyboard ( KeyMods(..) )
-import qualified Event.Event as Event
+import qualified Event.WithObjects as WithObjects
 import           Utils.PrettyPrinter
 
 
@@ -34,8 +34,11 @@ newEvent :: Type -> Point -> Int -> KeyMods -> Event
 newEvent t p b k = Event t p b k
 
 
-type WithObjects obj = Event.WithObjects Event obj
+
+type MEvent obj = WithObjects.WithObjects Event obj
+
+-- type WithObjects obj = WithObjects.WithObjects Event obj
 
 
-newWithObjects :: Typeable a => Event -> [Object a] -> WithObjects a
-newWithObjects event objects = Event.WithObjects event objects
+newWithObjects :: Typeable a => Event -> [Object a] -> WithObjects.WithObjects Event a
+newWithObjects event objects = WithObjects.WithObjects event objects

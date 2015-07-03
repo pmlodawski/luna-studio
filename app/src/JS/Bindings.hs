@@ -60,8 +60,8 @@ foreign import javascript unsafe "app.moveToTopZ($1)"
 foreign import javascript unsafe "app.getNodeAt($1, $2)"
     getNodeAtJSArray :: Int -> Int -> IO (JSArray Int)
 
-foreign import javascript unsafe "app.newNodeAt()"
-    newNodeAt :: IO ()
+foreign import javascript unsafe "app.newNodeAt($1, $2, $3)"
+    newNodeAt :: Int -> Int -> Int -> IO ()
 
 
 

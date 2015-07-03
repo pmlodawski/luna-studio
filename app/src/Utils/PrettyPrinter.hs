@@ -16,3 +16,6 @@ instance PrettyPrinter a => PrettyPrinter (Maybe a) where
 
 instance PrettyPrinter Int where
     display = show
+
+instance PrettyPrinter Integer where
+    display = show

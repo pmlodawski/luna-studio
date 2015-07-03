@@ -16,7 +16,8 @@ import qualified Reactive.Plugins.Core.Action.State.Drag      as Drag
 
 -- data CommonState = CommonState { _nodes :: NodeCollection } deriving (Eq, Show)
 
-data State = State { _nodes     :: NodeCollection
+data State = State { _iteration :: Integer
+                   , _nodes     :: NodeCollection
                    , _selection :: Selection.State
                    , _drag      :: Drag.State
                    } deriving (Eq, Show)
@@ -25,7 +26,15 @@ data State = State { _nodes     :: NodeCollection
 makeLenses ''State
 
 instance Default State where
-    def = State def def def
+    def = State def def def def
 
 instance PrettyPrinter State where
-    display (State nodes selection drag) = "gS( " <> display nodes <> " " <> display selection <> " " <> display drag <> " )"
+    display (State iteration nodes selection drag) = "gS( " <> display iteration
+                                                     <> " " <> display nodes
+                                                     <> " " <> display selection
+                                                     <> " " <> display drag
+                                                     <> " )"
+
+instance Monoid State where
+    mempty = def
+    a `mappend` b = if a ^. iteration > b ^.iteration then a else b

@@ -18,9 +18,10 @@ import qualified Object.Node    as Node     ( position )
 import           Object.Node    hiding      ( position )
 import           Event.Keyboard hiding      ( Event )
 import qualified Event.Keyboard as Keyboard
-import           Event.Mouse    hiding      ( Event, WithObjects )
+import           Event.Mouse    hiding      ( Event )
 import qualified Event.Mouse    as Mouse
 import           Event.Event
+import           Event.WithObjects
 import           Utils.Wrapper
 import           Utils.PrettyPrinter
 import           Reactive.Plugins.Core.Action.Action
@@ -51,13 +52,13 @@ instance PrettyPrinter Action where
     display (SelectAction tpe node)  = "sA( " <> display tpe <> " " <> display node <> " )"
 
 
-keyboardToAction :: Keyboard.Event -> Maybe Action
-keyboardToAction event = case event ^. char of
-    'u' -> Just UnselectAll
-    _   -> Nothing
+-- keyboardToAction :: Keyboard.Event -> Maybe Action
+-- keyboardToAction event = case event ^. char of
+--     'u' -> Just UnselectAll
+--     _   -> Nothing
 
-mouseToAction :: Mouse.WithObjects Node -> Maybe Action
-mouseToAction eventWithObjects = case mouseEvent ^. tpe of
+toAction :: Event Node -> Maybe Action
+toAction (Mouse (WithObjects mouseEvent objects)) = case mouseEvent ^. tpe of
     Mouse.Pressed -> if isNoNode then case mouseKeyMods of
                                     (KeyMods False False False False) -> Just UnselectAll
                                     _                                 -> Nothing
@@ -66,14 +67,25 @@ mouseToAction eventWithObjects = case mouseEvent ^. tpe of
                                     (KeyMods False False True  False) -> Just (SelectAction toggleActionType node)
                                     _                                 -> Nothing
     _             -> Nothing
-    where mouseEvent       = eventWithObjects ^. event
-          mouseKeyMods     = mouseEvent ^. keyMods
-          isNoNode         = null $ eventWithObjects ^. objects
-          node             = unwrap . head $ eventWithObjects ^. objects
+    where mouseKeyMods     = mouseEvent ^. keyMods
+          isNoNode         = null objects
+          node             = unwrap . head $ objects
           selectActionType = if node ^. selected then Focus
                                                  else SelectNew
           toggleActionType = if node ^. selected then ToggleOff
                                                  else ToggleOn
+toAction (Keyboard (Keyboard.Event char)) = case char of
+    'u' -> Just UnselectAll
+    _   -> Nothing
+
+    -- where mouseEvent       = eventWithObjects ^. event
+    --       mouseKeyMods     = mouseEvent ^. keyMods
+    --       isNoNode         = null $ eventWithObjects ^. objects
+    --       node             = unwrap . head $ eventWithObjects ^. objects
+    --       selectActionType = if node ^. selected then Focus
+    --                                              else SelectNew
+    --       toggleActionType = if node ^. selected then ToggleOff
+    --                                              else ToggleOn
 
 
 updateNodeSelection :: NodeIdCollection -> Node -> Node
@@ -89,8 +101,9 @@ instance ActionStateExecutor Action Global.State where
         oldNodeIds                       = oldState ^. Global.selection . nodeIds
         oldNodes                         = oldState ^. Global.nodes
         newNodes                         = updateNodesSelection newNodeIds oldNodes
-        newState                         = oldState & Global.selection .~ (State newNodeIds)
-                                                  & Global.nodes     .~ newNodes
+        newState                         = oldState & Global.iteration +~ 1
+                                                    & Global.selection .~ (State newNodeIds)
+                                                    & Global.nodes     .~ newNodes
         newNodeIds                       = case newAction of
             UnselectAll                 -> []
             SelectAction tpe node       -> case tpe of

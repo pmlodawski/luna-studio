@@ -50,19 +50,21 @@ instance PrettyPrinter Action where
 
 
 
-keyboardToAction :: Keyboard.Event -> Maybe Action
-keyboardToAction event = case event ^. char of
+toAction :: Event Node -> Maybe Action
+toAction (Keyboard (Keyboard.Event char)) = case char of
     'a' -> Just AddAction
     _   -> Nothing
-
+toAction _ = Nothing
 
 maxNodeId :: NodeCollection -> NodeId
+maxNodeId []    = 0
 maxNodeId nodes = (view ident) $ maximumBy (on compare (view ident)) nodes
 
 instance ActionStateExecutor Action Global.State where
     exec newAction oldState = WithState (Just newAction) newState
         where
-        newState              = oldState & Global.nodes .~ newNodes
+        newState              = oldState & Global.iteration +~ 1
+                                         & Global.nodes .~ newNodes
         oldNodes              = oldState ^. Global.nodes
         nextNodeId            = 1 + (maxNodeId oldNodes)
         newNodes              = case newAction of
@@ -76,5 +78,10 @@ instance ActionStateExecutor Action Global.State where
 updateUI :: ActionState -> IO ()
 updateUI (WithState maybeAction state) = case maybeAction of
     Nothing               -> return ()
-    Just AddAction        -> newNodeAt
+    Just AddAction        -> newNodeAt nodeId px py
     Just (RemoveAction _) -> return ()
+    where
+        node   = head $ state ^. Global.nodes
+        px = node ^. Node.position . x
+        py = node ^. Node.position . y
+        nodeId = node ^. ident
