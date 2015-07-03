@@ -1,13 +1,39 @@
 "use strict";
 
-var $ = require('jquery');
-var _ = require('underscore');
+var $      = require('jquery')
+  , _      = require('underscore')
+  , config = require('./config')
+;
+
 
 
 function doSearch(expr) {
   console.log("ExprSearch: " + expr);
   // var ns = splitExpression(expr).prefix;
   var items = [
+    {name: "Lorem",                       type: "module",   module: "Duis",        highlight: [{start:1, length: 3}]},
+    {name: "TroLoLoMaLo",                 type: "module",   module: "Excepteur",   highlight: [{start:5, length: 2}, {start:9, length: 1}, {start:13, length: 2}]},
+    {name: "aute",                        type: "function", module: "Ipsum",       highlight: [{start:0, length: 1}, {start:3, length: 1}]},
+    {name: "commodo_tro_lo_alo_lo",       type: "function", module: "Excepteur",   highlight: [{start:5, length: 2}, {start:9, length: 1}, {start:13, length: 2}]},
+    {name: "cupidatat",                   type: "function", module: "Ipsum",       highlight: [{start:3, length: 2}, {start:5, length: 1}, {start:8, length: 2}]},
+    {name: "eiusmod",                     type: "function", module: "Excepteur",   highlight: [{start:1, length: 2}, {start:8, length: 1}, {start:8, length: 2}]},
+    {name: "elit",                        type: "function", module: "Ipsum",       highlight: [{start:0, length: 2}, {start:3, length: 1}]},
+    {name: "labore",                      type: "function", module: "Excepteur",   highlight: [{start:3, length: 2}]},
+    {name: "magna",                       type: "function", module: "Duis",        highlight: [{start:2, length: 4}]},
+    {name: "minim",                       type: "function", module: "Duis",        highlight: [{start:1, length: 3}]},
+    {name: "mollit",                      type: "function", module: "",            highlight: [{start:0, length: 2}, {start:4, length: 1}]},
+    {name: "voluptate",                   type: "function", module: "",            highlight: [{start:4, length: 1}, {start:7, length: 1}, {start:9, length: 2}]},
+    {name: "Lorem",                       type: "module",   module: "Duis",        highlight: [{start:1, length: 3}]},
+    {name: "TroLoLoMaLo",                 type: "module",   module: "Excepteur",   highlight: [{start:5, length: 2}, {start:9, length: 1}, {start:13, length: 2}]},
+    {name: "aute",                        type: "function", module: "Ipsum",       highlight: [{start:0, length: 1}, {start:3, length: 1}]},
+    {name: "commodo_tro_lo_alo_lo",       type: "function", module: "Excepteur",   highlight: [{start:5, length: 2}, {start:9, length: 1}, {start:13, length: 2}]},
+    {name: "cupidatat",                   type: "function", module: "Ipsum",       highlight: [{start:3, length: 2}, {start:5, length: 1}, {start:8, length: 2}]},
+    {name: "eiusmod",                     type: "function", module: "Excepteur",   highlight: [{start:1, length: 2}, {start:8, length: 1}, {start:8, length: 2}]},
+    {name: "elit",                        type: "function", module: "Ipsum",       highlight: [{start:0, length: 2}, {start:3, length: 1}]},
+    {name: "labore",                      type: "function", module: "Excepteur",   highlight: [{start:3, length: 2}]},
+    {name: "magna",                       type: "function", module: "Duis",        highlight: [{start:2, length: 4}]},
+    {name: "minim",                       type: "function", module: "Duis",        highlight: [{start:1, length: 3}]},
+    {name: "mollit",                      type: "function", module: "",            highlight: [{start:0, length: 2}, {start:4, length: 1}]},
     {name: "Lorem",                       type: "module",   module: "Duis",        highlight: [{start:1, length: 3}]},
     {name: "TroLoLoMaLo",                 type: "module",   module: "Excepteur",   highlight: [{start:5, length: 2}, {start:9, length: 1}, {start:13, length: 2}]},
     {name: "aute",                        type: "function", module: "Ipsum",       highlight: [{start:0, length: 1}, {start:3, length: 1}]},
@@ -132,7 +158,7 @@ NodeSearcher.prototype.setExpression = function(expr) {
   this.prefix = split.prefix;
   this.searchbox.val(split.query);
   this.searchns.text(split.prefix);
-  this.updateNSWidth();
+  this.updatePrefixWidth();
   this.performSearch();
 };
 
@@ -170,13 +196,13 @@ NodeSearcher.prototype.scrollToSelected = function() {
   var selectedBottom = this.currentColumn.find('ul').scrollTop() + currentSelection.position().top + currentSelection.height();
 
   if(visibleBottom < selectedBottom) {
-    this.currentColumn.find('ul').animate({scrollTop: selectedBottom - this.currentColumn.find('ul').innerHeight() + 30 }, 50);
+    this.currentColumn.find('ul').animate({scrollTop: selectedBottom - this.currentColumn.find('ul').innerHeight() + 30 }, config.nodeSearcher.scrollAnimationTime);
   }
 
   var visibleTop  = this.currentColumn.find('ul').scrollTop();
   var selectedTop = this.currentColumn.find('ul').scrollTop() + currentSelection.position().top;
   if(visibleTop > selectedTop) {
-    this.currentColumn.find('ul').animate({scrollTop: selectedTop - 10}, 50);
+    this.currentColumn.find('ul').animate({scrollTop: selectedTop - 10}, config.nodeSearcher.scrollAnimationTime);
   }
 };
 
@@ -306,6 +332,70 @@ NodeSearcher.prototype.onEsc = function(ev) {
   ev.preventDefault();
 };
 
+NodeSearcher.prototype.onKeyHome = function(ev) {
+  var _this = this;
+  var ul = this.currentColumn.find("ul");
+  if(!this.searchrow.hasClass('active')) {
+    this.currentColumn.find("ul").animate({scrollTop: 0}, config.nodeSearcher.scrollAnimationTime, function() {
+      _this.selectFirstVisible(ul);
+    });
+    ev.preventDefault();
+  }
+};
+
+NodeSearcher.prototype.onKeyEnd = function(ev) {
+  var _this = this;
+  var ul = this.currentColumn.find("ul");
+  if(!this.searchrow.hasClass('active')) {
+    ul.animate({scrollTop: ul.prop('scrollHeight')}, config.nodeSearcher.scrollAnimationTime, function() {
+      _this.selectLastVisible(ul);
+    });
+    ev.preventDefault();
+  }
+};
+
+NodeSearcher.prototype.selectFirstVisible = function(ul){
+  var firstVisible = _(ul.children()).find(function(el) { return $(el).position().top >= 0; });
+  if(firstVisible) {
+    this.select($(firstVisible));
+  }
+};
+
+NodeSearcher.prototype.selectLastVisible = function(ul){
+  var lastVisible = _(ul.children().get().reverse()).find(function(el) { return $(el).position().top + $(el).height() <= ul.height(); });
+  if(lastVisible) {
+    this.select($(lastVisible));
+  }
+};
+
+NodeSearcher.prototype.onKeyPgUp = function(ev) {
+  var _this = this;
+  var ul = this.currentColumn.find("ul");
+  var targetScroll;
+
+  if(!this.searchrow.hasClass('active')) {
+    targetScroll = ul.prop('scrollTop') - ul.height() + 50;
+    ul.animate({scrollTop: targetScroll}, config.nodeSearcher.scrollAnimationTime, function() {
+      _this.selectLastVisible(ul);
+    });
+    ev.preventDefault();
+  }
+};
+
+NodeSearcher.prototype.onKeyPgDn = function(ev) {
+  var _this = this;
+  var ul = this.currentColumn.find("ul");
+  var targetScroll;
+
+  if(!this.searchrow.hasClass('active')) {
+    targetScroll = ul.prop('scrollTop') + ul.height() - 50;
+    ul.animate({scrollTop: targetScroll}, config.nodeSearcher.scrollAnimationTime, function() {
+      _this.selectFirstVisible(ul);
+    });
+    ev.preventDefault();
+  }
+};
+
 NodeSearcher.prototype.onTab = function(ev) {
   var current, data;
 
@@ -339,7 +429,7 @@ NodeSearcher.prototype.initSearchbox = function() {
   this.currentColumn = firstColumn;
   this.firstColumn = firstColumn;
 
-  this.updateNSWidth();
+  this.updatePrefixWidth();
 
   this.searchbox.on('input', function() {
     _this.onInput();
@@ -349,7 +439,6 @@ NodeSearcher.prototype.initSearchbox = function() {
   });
 
   this.searchbox.on('keydown', function(ev) {
-    console.log(ev.keyCode);
     switch(ev.keyCode){
       case 9: { //tab
         _this.onTab(ev);
@@ -384,15 +473,19 @@ NodeSearcher.prototype.initSearchbox = function() {
         break;
       }
       case 33: { //pgup
+        _this.onKeyPgUp(ev);
         break;
       }
       case 34: { //pgdwn
+        _this.onKeyPgDn(ev);
         break;
       }
       case 36: { //home
+        _this.onKeyHome(ev);
         break;
       }
       case 35: { //end
+        _this.onKeyEnd(ev);
         break;
       }
     }
@@ -436,7 +529,7 @@ NodeSearcher.prototype.openColumn = function() {
   this.displayTree(doSearchTree(this.currentSelection().data('match').fullName), column.items);
 };
 
-NodeSearcher.prototype.updateNSWidth = function() {
+NodeSearcher.prototype.updatePrefixWidth = function() {
   this.prefixWidth = 90+this.searchns.width();
   this.firstColumn.find('.ns').css({idth: this.prefixWidth});
 };
