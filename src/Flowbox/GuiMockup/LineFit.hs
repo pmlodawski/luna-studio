@@ -35,7 +35,7 @@ import qualified Data.Vector.Storable.Mutable as MV
 import           Foreign.Ptr
 import           Foreign.Storable
 import           Foreign.Storable.Tuple       ()
-import           Linear                       hiding (point)
+import           Linear                       hiding (point, trace)
 
 import           Flowbox.GuiMockup.JSInterop
 
@@ -74,12 +74,13 @@ fitCurve'' points err openness = case openness of
     Open   -> beziersToControlPoints $ V.toList $ fitCubic points' tHat1 tHat2 err
     Closed -> let controlPoints = fitCurve points err Open
                   firstControlPoint@(fstCP, fstCPHi, fstCPHo) = head controlPoints
-                  penultimateControlPoint@(pCP, pCPHi, pCPHo) = (last.init) controlPoints
+                  penultimateControlPoint@(pCP, pCPHi, pCPHo) = if length controlPoints == 2 then last controlPoints else (last.init) controlPoints
+                                                                -- ^^^^^^^^^^^^^^^^^^^^^^^^^ [MM]: when we have only 2 control points, taking the last one as penultimate is kinda ok
                   linkingBezier = V.head $ fitCubic (V.fromList [pCP, fstCP]) (negated $ pCPHi - pCP) (negated tHat1) err
 
                   firstControlPointModified = firstControlPoint & _2 .~ fstCPHi
                   lastControlPointModified = penultimateControlPoint & _3 .~ pCPHo
-                  middleControlPoints = (init . init . tail) controlPoints
+                  middleControlPoints = if length controlPoints == 2 then [] else (init . init . tail) controlPoints
               in firstControlPointModified : middleControlPoints ++ [lastControlPointModified]
 
     where
