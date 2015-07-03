@@ -30,8 +30,9 @@ import           Luna.DEP.Graph.View.PortDescriptor (PortDescriptor)
 
 
 
-generatedProperties :: Properties
-generatedProperties = def & Properties.flags . Flags.defaultNodeGenerated .~ Just True
+generateProperties :: Node.ID -> Properties
+generateProperties originID = def & Properties.flags . Flags.defaultNodeGenerated .~ Just True
+                                  & Properties.flags . Flags.defaultNodeOriginID  .~ Just originID
 
 
 addDefaults :: GraphView -> PropertyMap -> (GraphView, PropertyMap)
@@ -47,7 +48,7 @@ addNodeDefaults nodeID gp@(_, propertyMap) =
 
 
 addNodeDefault :: Node.ID -> (PortDescriptor, DefaultExpr) -> (GraphView, PropertyMap) -> (GraphView, PropertyMap)
-addNodeDefault nodeID (adstPort, DefaultExpr defaultNodeID defaultValue) (graph, propertyMap) =
+addNodeDefault nodeID (adstPort, DefaultExpr defaultNodeID defaultOriginID defaultValue) (graph, propertyMap) =
     if GraphView.isNotAlreadyConnected graph nodeID adstPort
         then (newGraph2, newPropertyMap)
         else (graph, propertyMap)
@@ -55,7 +56,7 @@ addNodeDefault nodeID (adstPort, DefaultExpr defaultNodeID defaultValue) (graph,
       node      = OutputName.provide (Node.Expr defaultValue "" (0, 0)) nodeID
       newGraph  = GraphView.insNode (defaultNodeID, node) graph
       newGraph2 = GraphView.insEdge (defaultNodeID, nodeID, EdgeView [] adstPort) newGraph
-      newPropertyMap = PropertyMap.insert defaultNodeID generatedProperties propertyMap
+      newPropertyMap = PropertyMap.insert defaultNodeID (generateProperties defaultOriginID) propertyMap
 
 
 isGenerated :: Node.ID -> PropertyMap -> Bool
