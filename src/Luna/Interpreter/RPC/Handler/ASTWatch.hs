@@ -446,11 +446,11 @@ graphNodeDefaultSet (GraphNodeDefaultSet.Update request updateNo) = do
     CacheWrapper.interpreterDo' tprojectID $ do
         Batch.lookupNodeDefault inPort nodeID libraryID projectID >>= \case
             Nothing                          -> return ()
-            Just (DefaultExpr defID defExpr) -> Var.deleteTimeRef libraryID nodeID defID defExpr
+            Just (DefaultExpr defID _ defExpr) -> Var.deleteTimeRef libraryID nodeID defID defExpr
         sync updateNo $ NodeDefaultHandler.set request Nothing
         Batch.lookupNodeDefault inPort nodeID libraryID projectID >>= \case
             Nothing                          -> left "ASTWatch.graphNodeDefaultSet"
-            Just (DefaultExpr defID defExpr) -> Var.insertTimeRef libraryID nodeID defID defExpr
+            Just (DefaultExpr defID _ defExpr) -> Var.insertTimeRef libraryID nodeID defID defExpr
         CacheWrapper.modifyNode tprojectID tlibraryID tnodeID
 
 
