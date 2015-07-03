@@ -69,6 +69,7 @@ exports.config =
             bundler.require('three-bmfont-text', {expose: 'three-bmfont-text'})
             bundler.require('virtual-dom', {expose: 'virtual-dom'})
             bundler.require('underscore', {expose: 'underscore'})
+            bundler.require('malihu-custom-scrollbar-plugin', {expose: 'malihu-custom-scrollbar-plugin'})
             console.log("Browserify compiling libs...")
 
           onAfterBundle: (error, bundleContents) -> console.log 'Browserify is done with libs'
@@ -86,6 +87,7 @@ exports.config =
             bundler.external('jquery')
             bundler.external('virtual-dom')
             bundler.external('underscore')
+            bundler.external('malihu-custom-scrollbar-plugin')
             bundler.require('./app/common', {expose: 'common'})
             bundler.require('./app/app', {expose: 'app'})
             bundler.require('./app/utils', {expose: 'utils'})

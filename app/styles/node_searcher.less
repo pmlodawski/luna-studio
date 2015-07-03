@@ -108,14 +108,14 @@
 
   }
 
-  ul {
+  .ul-container {
     overflow-y: auto;
     overflow-x: hidden;
     height: 300px;
     position: relative;
     user-select: none;
   }
-  .column:first-child ul {
+  .column:first-child .ul-container {
     height: 300px - 25px - 10px;
   }
 
@@ -138,6 +138,7 @@
     padding: 5px 0px;
     border: none;
     color: transparent;
+    width: 200px;
     &:focus {
       outline-color: transparent;
       outline-style: none;

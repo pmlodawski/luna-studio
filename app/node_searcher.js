@@ -5,6 +5,7 @@ var $      = require('jquery')
   , config = require('./config')
 ;
 
+require('malihu-custom-scrollbar-plugin')($);
 
 
 function doSearch(expr) {
@@ -66,7 +67,7 @@ function doSearch(expr) {
     else
       el.fullName = el.name;
   });
-  return _.shuffle(items);
+  return _(_.shuffle(items)).sample(Math.random()*items.length);
 }
 function doSearchTree(expr) {
   console.log("TreeSearch: " + expr);
@@ -144,6 +145,9 @@ function splitExpression(expr) {
 
 function NodeSearcher() {
   this.el = $('<div/>').addClass('node-searcher');
+}
+
+NodeSearcher.prototype.init = function() {
   this.prefix = "";
   this.initSearchbox();
   this.setExpression("");
@@ -189,20 +193,36 @@ NodeSearcher.prototype.select = function(newSelection) {
   }
 };
 
+
+// var visibleBottom  = this.currentColumn.find('ul').scrollTop() + this.currentColumn.find('ul').innerHeight() - 20;
+// var selectedBottom = this.currentColumn.find('ul').scrollTop() + currentSelection.position().top + currentSelection.height();
+//
+// if(visibleBottom < selectedBottom) {
+//   this.currentColumn.find('ul').animate({scrollTop: selectedBottom - this.currentColumn.find('ul').innerHeight() + 30 }, config.nodeSearcher.scrollAnimationTime);
+// }
+//
+// var visibleTop  = this.currentColumn.find('ul').scrollTop();
+// var selectedTop = this.currentColumn.find('ul').scrollTop() + currentSelection.position().top;
+// if(visibleTop > selectedTop) {
+//   this.currentColumn.find('ul').animate({scrollTop: selectedTop - 10}, config.nodeSearcher.scrollAnimationTime);
+
+
 NodeSearcher.prototype.scrollToSelected = function() {
   var currentSelection  = this.currentSelection();
+  // var visibleBottom  = this.currentColumn.find('ul').scrollTop() + this.currentColumn.find('ul').innerHeight() - 20;
+  // var selectedBottom = this.currentSelection().position().top + this.currentColumn.find('.mCSB_container').position().top + currentSelection.height();
+  //
 
-  var visibleBottom  = this.currentColumn.find('ul').scrollTop() + this.currentColumn.find('ul').innerHeight() - 20;
-  var selectedBottom = this.currentColumn.find('ul').scrollTop() + currentSelection.position().top + currentSelection.height();
+  var selectedBottom = this.currentSelection().position().top + this.currentColumn.find('.mCSB_container').position().top + this.currentSelection().height();
 
-  if(visibleBottom < selectedBottom) {
-    this.currentColumn.find('ul').animate({scrollTop: selectedBottom - this.currentColumn.find('ul').innerHeight() + 30 }, config.nodeSearcher.scrollAnimationTime);
+  console.log([selectedBottom, this.currentColumn.find(".ul-container").height()]);
+  if(selectedBottom > this.currentColumn.find(".ul-container").height()) {
+this.currentColumn.find('.ul-container').mCustomScrollbar("scrollTo", this.currentSelection().position().top - this.currentColumn.find('.ul-container').innerHeight() + 30, {scrollInertia:50});
   }
 
-  var visibleTop  = this.currentColumn.find('ul').scrollTop();
-  var selectedTop = this.currentColumn.find('ul').scrollTop() + currentSelection.position().top;
-  if(visibleTop > selectedTop) {
-    this.currentColumn.find('ul').animate({scrollTop: selectedTop - 10}, config.nodeSearcher.scrollAnimationTime);
+  var selectedTop = this.currentSelection().position().top + this.currentColumn.find('.mCSB_container').position().top;
+  if(selectedTop < 0) {
+    this.currentColumn.find('.ul-container').mCustomScrollbar("scrollTo", this.currentSelection().position().top - 10, {scrollInertia:50});
   }
 };
 
@@ -355,14 +375,14 @@ NodeSearcher.prototype.onKeyEnd = function(ev) {
 };
 
 NodeSearcher.prototype.selectFirstVisible = function(ul){
-  var firstVisible = _(ul.children()).find(function(el) { return $(el).position().top >= 0; });
+  var firstVisible = _(ul.find('li')).find(function(el) { return $(el).position().top >= 0; });
   if(firstVisible) {
     this.select($(firstVisible));
   }
 };
 
 NodeSearcher.prototype.selectLastVisible = function(ul){
-  var lastVisible = _(ul.children().get().reverse()).find(function(el) { return $(el).position().top + $(el).height() <= ul.height(); });
+  var lastVisible = _(ul.find('li').get().reverse()).find(function(el) { return $(el).position().top + $(el).height() <= ul.height(); });
   if(lastVisible) {
     this.select($(lastVisible));
   }
@@ -419,9 +439,13 @@ NodeSearcher.prototype.initSearchbox = function() {
   var firstColumn = $('<div/>').addClass('column').addClass('current').addClass('first-column');
   this.searchrow = $('<div class="item active query"><span class="query-ns"></span><input autofocus="on" type="text" class="query"/></div>');
   firstColumn.items = $('<ul/>');
+  firstColumn.itemsDiv = $('<div class="ul-container"/>');
   firstColumn.append(this.searchrow);
-  firstColumn.append(firstColumn.items);
+  firstColumn.itemsDiv.append(firstColumn.items);
+  firstColumn.append(firstColumn.itemsDiv);
 
+
+  console.log(config.nodeSearcher.scrollbarOptions)
   this.searchbox = this.searchrow.find('input.query');
   this.searchns  = this.searchrow.find('span.query-ns');
 
@@ -430,6 +454,8 @@ NodeSearcher.prototype.initSearchbox = function() {
   this.firstColumn = firstColumn;
 
   this.updatePrefixWidth();
+
+  firstColumn.itemsDiv.mCustomScrollbar(config.nodeSearcher.scrollbarOptions);
 
   this.searchbox.on('input', function() {
     _this.onInput();
@@ -523,9 +549,12 @@ NodeSearcher.prototype.selectColumn = function(column) {
 NodeSearcher.prototype.openColumn = function() {
   var column = $('<div/>').addClass('column');
   column.items = $('<ul/>');
-  column.append(column.items);
+  column.itemsDiv = $('<div class="ul-container"/>');
+  column.itemsDiv.append(column.items);
+  column.append(column.itemsDiv);
 
   this.el.append(column);
+  column.itemsDiv.mCustomScrollbar(config.nodeSearcher.scrollbarOptions);
   this.displayTree(doSearchTree(this.currentSelection().data('match').fullName), column.items);
 };
 
@@ -559,7 +588,6 @@ NodeSearcher.prototype.displayResults = function(results, ul) {
     _(highlightText(item.name, item.highlight).elems).each(function(part){
       name.append(part);
     });
-
   });
 };
 
