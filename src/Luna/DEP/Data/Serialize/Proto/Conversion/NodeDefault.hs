@@ -34,8 +34,9 @@ instance Convert DefaultsMap Gen.DefaultsMap where
 
 
 instance Convert (PortDescriptor, DefaultExpr) Gen.Entry where
-    encode (inPort, DefaultExpr nodeID value) = Gen.Entry (encodeP inPort) (encodePJ nodeID) (encodeJ value)
-    decode (Gen.Entry inPort mnodeID mvalue) = do
-        nodeID <- decodeP <$> mnodeID <?> "Failed to decode DefaultsMap.Entry: 'nodeID' field is missing"
-        value  <- decode  =<< mvalue  <?> "Failed to decode DefaultsMap.Entry: 'value' field is missing"
-        return (decodeP inPort, DefaultExpr nodeID value)
+    encode (inPort, DefaultExpr nodeID originID value) = Gen.Entry (encodeP inPort) (encodePJ nodeID) (encodePJ originID) (encodeJ value)
+    decode (Gen.Entry inPort mnodeID moriginID mvalue) = do
+        nodeID   <- decodeP <$> mnodeID   <?> "Failed to decode DefaultsMap.Entry: 'nodeID' field is missing"
+        originID <- decodeP <$> moriginID <?> "Failed to decode DefaultsMap.Entry: 'originID' field is missing"
+        value    <- decode  =<< mvalue    <?> "Failed to decode DefaultsMap.Entry: 'value' field is missing"
+        return (decodeP inPort, DefaultExpr nodeID originID value)

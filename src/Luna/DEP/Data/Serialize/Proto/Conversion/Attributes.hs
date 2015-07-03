@@ -37,13 +37,14 @@ import           Luna.DEP.Graph.Properties                                (Prope
 
 
 instance Convert Flags Gen.Flags where
-    encode (Flags       omit  astFolded astAssignment graphFoldInfo grouped defaultNodeGenerated graphViewGenerated position) =
-        Gen.Flags (Just omit) astFolded astAssignment (fmap encode graphFoldInfo) grouped defaultNodeGenerated graphViewGenerated (fmap fst position) (fmap snd position)
-    decode (Gen.Flags   momit astFolded astAssignment tgraphFoldInfo grouped defaultNodeGenerated graphViewGenerated  mpositionX mpositionY) = do
+    encode (Flags       omit  astFolded astAssignment graphFoldInfo grouped defaultNodeGenerated defaultNodeOriginID graphViewGenerated position) =
+        Gen.Flags (Just omit) astFolded astAssignment (fmap encode graphFoldInfo) grouped defaultNodeGenerated (fmap encodeP defaultNodeOriginID) graphViewGenerated (fmap fst position) (fmap snd position)
+    decode (Gen.Flags   momit astFolded astAssignment tgraphFoldInfo grouped defaultNodeGenerated tdefaultNodeOriginID graphViewGenerated  mpositionX mpositionY) = do
         omit <- momit <?> "Failed to decode Flags: 'omit' field is missing"
         let position = (,) <$> mpositionX <*> mpositionY
-        graphFoldInfo <- Maybe.maybe (return Nothing) (fmap Just . decode) tgraphFoldInfo
-        return $ Flags omit astFolded astAssignment graphFoldInfo grouped defaultNodeGenerated graphViewGenerated  position
+        graphFoldInfo       <- Maybe.maybe (return Nothing) (fmap Just . decode) tgraphFoldInfo
+        let defaultNodeOriginID = decodeP <$> tdefaultNodeOriginID
+        return $ Flags omit astFolded astAssignment graphFoldInfo grouped defaultNodeGenerated defaultNodeOriginID graphViewGenerated  position
 
 
 instance ConvertPure Attributes Gen.Attributes where
@@ -64,7 +65,7 @@ instance ConvertPure (String, String) Gen.KeyValue where
 instance Convert Properties Gen.Properties where
     encode (Properties flags defautsMap attributes) =
         Gen.Properties (encodeJ flags) (encodeJ defautsMap) (encodePJ attributes)
-    decode (Gen.Properties flags defaultsMap attributes) = do
+    decode (Gen.Properties flags defaultsMap attributes) =
         Properties <$> decodeJ flags (missing "Properties" "flags")
                    <*> decodeJ defaultsMap (missing "Properties" "defaultsMap")
                    <*> decodePJ attributes (missing "Properties" "attributes")
