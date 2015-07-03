@@ -31,6 +31,7 @@ import           Flowbox.Prelude                            as Prelude hiding (c
 import           Flowbox.Source.Location                    (loc)
 import           Flowbox.System.Log.Logger
 import           Luna.DEP.AST.ASTConvertion                 (convertAST)
+import qualified Luna.DEP.Graph.Flags                       as Flags
 import qualified Luna.DEP.Graph.Node                        as Node
 import           Luna.DEP.Graph.Node.Expr                   (NodeExpr)
 import qualified Luna.DEP.Graph.Node.Expr                   as NodeExpr
@@ -44,6 +45,7 @@ import qualified Luna.Interpreter.Session.Data.CallData     as CallData
 import           Luna.Interpreter.Session.Data.CallDataPath (CallDataPath)
 import qualified Luna.Interpreter.Session.Data.CallDataPath as CallDataPath
 import           Luna.Interpreter.Session.Data.CallPoint    (CallPoint)
+import qualified Luna.Interpreter.Session.Data.CallPoint    as CallPoint
 import           Luna.Interpreter.Session.Data.CompiledNode (CompiledNode (CompiledNode))
 import           Luna.Interpreter.Session.Data.KeyName      (KeyName (KeyName))
 import qualified Luna.Interpreter.Session.Data.KeyName      as KeyName
@@ -127,10 +129,8 @@ executeOutputs callDataPath keyNames = do
 
 executeNode :: MemoryManager mm
             => CallDataPath -> [KeyName] -> Session mm ()
-executeNode callDataPath keyNames = do
-    let node       = last callDataPath ^. CallData.node
-    case node of
-        Node.Expr nodeExpr _ _ -> execute callDataPath nodeExpr keyNames
+executeNode callDataPath keyNames = case last callDataPath ^. CallData.node of
+    Node.Expr nodeExpr _ _ -> execute callDataPath nodeExpr keyNames
 
 
 executeAssignment :: MemoryManager mm
@@ -168,27 +168,28 @@ evalFunction :: MemoryManager mm
 evalFunction nodeExpr callDataPath keyNames recompile = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
         keyName = KeyName callPointPath
-    prettyPrint (nodeExpr, callPointPath)
     compiledNode <- Env.compiledLookup callPointPath
     case (compiledNode, recompile) of
         (Just (CompiledNode update _), False) -> do
             Env.updateExpressions update
             logger debug "running compiled code"
         _ -> do
-            let mkArg arg = "((hmapGet " <> KeyName.toString arg <> " hmap) hmap _time)"
-                args      = map mkArg keyNames
-                appArgs a = if null a then "" else " $ appNext " <> List.intercalate " $ appNext " (reverse a)
+            let mkArg arg = do
+                    str <- keyNameToString arg
+                    return $ "((hmapGet " <> str <> " hmap) hmap _time)"
+            args <- mapM mkArg keyNames
+            let appArgs a = if null a then "" else " $ appNext " <> List.intercalate " $ appNext " (reverse a)
                 genNative = List.replaceByMany "#{}" args . List.stripIdx 3 3
                 self      = head keyNames
             vt <- varType nodeExpr
             operation <- ("\\(hmap :: HMap) (_time :: Float) -> " <>) <$> case vt of
                 List        -> return $ "val [" <> List.intercalate "," args <> "]"
-                Id          -> return $ mkArg self
+                Id          -> mkArg self
                 Native name -> return $ genNative name
                 Con    name -> return $ "call" <> appArgs args <> " $ cons_" <> nameHash name
                 Var    name -> if null args
                     then left $ Error.OtherError $(loc) "unsupported node type"
-                    else return $ "call" <> appArgs (tail args) <> " $ member (Proxy::Proxy " <> show (nameHash name) <> ") " <> mkArg self
+                    else (\arg -> "call" <> appArgs (tail args) <> " $ member (Proxy::Proxy " <> show (nameHash name) <> ") " <> arg) <$> mkArg self
                 LitInt   name    -> return $ "val (" <> name <> " :: Int)"
                 LitFloat name    -> return $ "val (" <> name <> " :: Float)"
                 Lit      name    -> return $ "val  " <> name
@@ -196,19 +197,37 @@ evalFunction nodeExpr callDataPath keyNames recompile = do
                 TimeVar          -> return   "val _time"
                 Expression  name -> return   name
             catchEither (left . Error.RunError $(loc) callPointPath) $ do
-                let keyNameStr =  KeyName.toString keyName
-                when (Maybe.isNothing compiledNode) $
-                    Session.runStmt $ keyNameStr <> " <- hmapCreateKeyWithWitness $ " <> operation
-                update <- lift2 $ HEval.interpret $ "\\hmap -> hmapInsert " <> keyNameStr <> " (" <> operation <> ") hmap"
+                (realNode, keyNameStr) <- keyNameToString' keyName
+                let createKey       = Session.runStmt $ keyNameStr <> " <- hmapCreateKeyWithWitness $ " <> operation
+                    createUpdate    = lift2 $ HEval.interpret $ "\\hmap -> hmapInsert " <> keyNameStr <> " (" <> operation <> ") hmap"
+                    createGetValue  = HEval.interpret ("\\hmap mode time -> flip computeValue mode =<< toIOEnv (fromValue ((hmapGet " <> keyNameStr <> " hmap) hmap time))")
+                    createKeyUpdate = createKey >> createUpdate
+                update <- if Maybe.isNothing compiledNode && realNode
+                    then createKeyUpdate
+                    else Catch.catch createUpdate (\(_ :: SomeException) -> createKeyUpdate)
                 let valErrHandler (e:: SomeException) = logger warning (show e) >> return Nothing
                 getValue <- lift2 $ flip Catch.catch valErrHandler $
-                    Just <$> HEval.interpret ("\\hmap mode time -> flip computeValue mode =<< toIOEnv (fromValue ((hmapGet " <> keyNameStr <> " hmap) hmap time))")
+                    Just <$> createGetValue
                 Env.compiledInsert callPointPath $ CompiledNode update getValue
                 Env.updateExpressions update
     Cache.put callDataPath $ Prelude.error "Executor.hash:Not implemented"
     Value.reportIfVisible callPointPath
     Manager.reportUseMany keyNames
     Manager.reportUse keyName
+
+
+--FIXME[PM] Ugly workarounds ----------------
+keyNameToString' :: KeyName -> Session mm (Bool, String)
+keyNameToString' keyName = do
+    let callPoint = last $ keyName ^. KeyName.callPointPath
+    moriginID <- view Flags.defaultNodeOriginID <$> Env.getFlags callPoint
+    return $ case moriginID of
+                 Just originID -> (originID == callPoint ^. CallPoint.nodeID, "_" <> show originID)
+                 Nothing       -> (True, KeyName.toString keyName)
+
+keyNameToString :: KeyName -> Session mm String
+keyNameToString = fmap snd . keyNameToString'
+----------------------------------------------
 
 
 nameHash :: String -> String
