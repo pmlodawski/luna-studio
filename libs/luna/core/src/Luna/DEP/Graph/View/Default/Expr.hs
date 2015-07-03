@@ -13,6 +13,7 @@ import           Luna.DEP.Graph.Node.Expr (NodeExpr)
 
 
 data DefaultExpr = DefaultExpr { _nodeID   :: Node.ID
+                               , _originID :: Node.ID
                                , _nodeExpr :: NodeExpr
                                } deriving (Show, Eq, Read)
 

@@ -15,6 +15,7 @@ message DefaultsMap {
     message Entry {
         repeated int32 key    = 1;
         optional int32 nodeID = 2;
+        optional int32 originID = 4;
         optional generated.proto.dep.graph.NodeExpr value  = 3;
     }
 

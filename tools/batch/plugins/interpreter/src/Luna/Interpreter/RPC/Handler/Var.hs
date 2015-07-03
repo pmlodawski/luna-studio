@@ -59,7 +59,7 @@ rebuildTimeRefs = do
     let libraries = LibManager.labNodes libManager
         procPropertyMap (libraryID, library) = mapM (procDefaultMap libraryID) $ PropertyMap.getDefaultsMaps $ library ^. Lib.propertyMap
         procDefaultMap libraryID (nodeID, defaultsMap) = mapM_ (process libraryID nodeID) $ DefaultsMap.elems defaultsMap
-        process libraryID nodeID (DefaultExpr defID defExpr) = insertTimeRef libraryID nodeID defID defExpr
+        process libraryID nodeID (DefaultExpr defID _ defExpr) = insertTimeRef libraryID nodeID defID defExpr
     liftSession Env.cleanTimeRefs
     mapM_ procPropertyMap libraries
     --TODO[PM] rebuild also all nodes

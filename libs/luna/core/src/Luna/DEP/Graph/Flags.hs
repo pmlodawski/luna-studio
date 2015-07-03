@@ -20,6 +20,7 @@ data Flags = Flags { _omit                 :: Bool
                    , _graphFoldInfo        :: Maybe FoldInfo
                    , _grouped              :: Maybe Bool
                    , _defaultNodeGenerated :: Maybe Bool
+                   , _defaultNodeOriginID  :: Maybe Int
                    , _graphViewGenerated   :: Maybe Bool
                    , _nodePosition         :: Maybe Position
                    } deriving (Show, Read, Eq)
@@ -35,7 +36,7 @@ makeLenses ''FoldInfo
 
 
 instance Default Flags where
-    def = Flags False Nothing Nothing Nothing Nothing Nothing Nothing Nothing
+    def = Flags False Nothing Nothing Nothing Nothing Nothing Nothing Nothing Nothing
 
 
 isSet' :: Flags -> (Flags -> Maybe Bool) -> Bool
