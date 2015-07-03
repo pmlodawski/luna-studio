@@ -41,7 +41,9 @@ setNodeDefault dstPort value nodeID bc libraryID projectID = do
     (fixedValue, astInfo') <- EitherT $ IDFixer.runNodeExpr astInfo Nothing True value
     let newID    = astInfo ^. ASTInfo.lastID
         newMaxID = astInfo' ^. ASTInfo.lastID
-        newPM1   = PropertyMap.modifyDefaultsMap (DefaultsMap.insert dstPort (DefaultExpr newID fixedValue)) nodeID propertyMap
+        updateDefaultsMap  Nothing                          = Just (DefaultExpr newID newID    fixedValue)
+        updateDefaultsMap (Just (DefaultExpr _ originID _)) = Just (DefaultExpr newID originID fixedValue)
+        newPM1   = PropertyMap.modifyDefaultsMap (DefaultsMap.alter updateDefaultsMap dstPort) nodeID propertyMap
         newPM    = foldr (PropertyMap.modifyFlags (Flags.defaultNodeGenerated .~ Just True)) newPM1 [newID..newMaxID-1]
     Batch.setASTInfo astInfo' libraryID projectID
     Batch.setPropertyMap newPM libraryID projectID
