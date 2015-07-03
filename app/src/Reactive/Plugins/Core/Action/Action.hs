@@ -34,4 +34,3 @@ class ActionStateExecutor act st where
     tryExec :: (Maybe act) -> st -> WithStateMaybe act st
     tryExec Nothing       = WithState Nothing
     tryExec (Just action) = exec action
-

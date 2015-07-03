@@ -77,7 +77,7 @@ toAction _ = Nothing
 --     getCommon = intersectBy $ on (==) (view ident)
 
 moveNodes :: Point -> NodeCollection -> NodeCollection
-moveNodes delta = fmap $ Node.position +~ delta
+moveNodes delta = fmap $ \node -> if node ^. selected then node & Node.position +~ delta else node
 
 instance ActionStateExecutor Action Global.State where
     exec newActionCandidate oldState = WithState maybeNewAction newState
@@ -86,7 +86,7 @@ instance ActionStateExecutor Action Global.State where
         oldNodes                         = oldState ^. Global.nodes
         emptySelection                   = null oldNodes
         newPos                           = newActionCandidate ^. actionPos
-        newState                         = oldState & Global.iteration +~ 2
+        newState                         = oldState & Global.iteration +~ 1
                                                     & Global.mousePos .~ newPos
                                                     & Global.drag  .~ (State newDrag)
                                                     & Global.nodes .~ newNodes
