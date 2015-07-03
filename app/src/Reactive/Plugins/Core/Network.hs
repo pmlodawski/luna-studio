@@ -51,7 +51,7 @@ makeNetworkDescription = do
         -- cccB = accumB (NewState "") $ (\(NewState b) (NewState o) -> NewState $ "c(" <> b <> ")") <$> (bbbB <@ keyPressedE)
 
         anyE       = unions [mouseDownE, mouseUpE, mouseMovedE, keyPressedE]
-        anyNoMoveE = unions [() <$ mouseDownE, () <$ mouseUpE, () <$ keyPressedE]
+        -- anyNoMoveE = unions [() <$ mouseDownE, () <$ mouseUpE, () <$ keyPressedE]
 
 
         globalStateB                  = stepper def $ globalStateReactionB <@ anyE
@@ -96,8 +96,8 @@ makeNetworkDescription = do
         nodeAddRemReactionB           = Action.tryExec  <$> nodeAddRemActionB <*> globalStateB
         nodeAddRemReactionStateB      = Action.getState <$> nodeAddRemReactionB
 
-        -- globalStateReactionB          = nodeSelectionReactionStateB <<*>> nodeDragReactionStateB <<*>> nodeAddRemReactionStateB
-        globalStateReactionB          = nodeSelectionReactionStateB <<*>> nodeAddRemReactionStateB
+        globalStateReactionB          = nodeSelectionReactionStateB <<*>> nodeDragReactionStateB <<*>> nodeAddRemReactionStateB
+        -- globalStateReactionB          = nodeSelectionReactionStateB <<*>> nodeAddRemReactionStateB
 
 
         -- nodeDragSelectionE            = Drag.AccumInput <$> nodeSelectionB        <@> nodeDragActionsE

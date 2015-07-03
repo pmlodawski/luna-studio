@@ -17,6 +17,7 @@ import qualified Reactive.Plugins.Core.Action.State.Drag      as Drag
 -- data CommonState = CommonState { _nodes :: NodeCollection } deriving (Eq, Show)
 
 data State = State { _iteration :: Integer
+                   , _mousePos  :: Point
                    , _nodes     :: NodeCollection
                    , _selection :: Selection.State
                    , _drag      :: Drag.State
@@ -26,10 +27,12 @@ data State = State { _iteration :: Integer
 makeLenses ''State
 
 instance Default State where
-    def = State def def def def
+    def = State def def def def def
 
 instance PrettyPrinter State where
-    display (State iteration nodes selection drag) = "gS( " <> display iteration
+    display (State iteration mousePos nodes selection drag) =
+                                                     "gS( " <> display iteration
+                                                     <> " " <> display mousePos
                                                      <> " " <> display nodes
                                                      <> " " <> display selection
                                                      <> " " <> display drag

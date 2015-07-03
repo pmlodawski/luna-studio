@@ -85,7 +85,9 @@ instance ActionStateExecutor Action Global.State where
         oldDrag                          = oldState ^. Global.drag . history
         oldNodes                         = oldState ^. Global.nodes
         emptySelection                   = null oldNodes
+        newPos                           = newActionCandidate ^. actionPos
         newState                         = oldState & Global.iteration +~ 2
+                                                    & Global.mousePos .~ newPos
                                                     & Global.drag  .~ (State newDrag)
                                                     & Global.nodes .~ newNodes
         maybeNewAction                   = case newActionCandidate of

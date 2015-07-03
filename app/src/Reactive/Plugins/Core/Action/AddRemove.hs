@@ -66,9 +66,10 @@ instance ActionStateExecutor Action Global.State where
         newState              = oldState & Global.iteration +~ 1
                                          & Global.nodes .~ newNodes
         oldNodes              = oldState ^. Global.nodes
+        nodePos               = oldState ^. Global.mousePos
         nextNodeId            = 1 + (maxNodeId oldNodes)
         newNodes              = case newAction of
-            AddAction         -> (Node nextNodeId False $ Point 100 100) : oldNodes
+            AddAction         -> (Node nextNodeId False nodePos) : oldNodes
             RemoveAction node -> delete node oldNodes
 
 -- toNodes :: ActionState -> NodeCollection

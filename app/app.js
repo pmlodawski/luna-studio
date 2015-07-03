@@ -28,7 +28,7 @@ function start() {
     // -> HS
     setup_pan_and_zoom();
     document.addEventListener('keydown', onDocumentKeyDown, false );
-    createRandomNodes(1);
+    // createRandomNodes(1);
 
     // call -> HS
     render();
@@ -179,15 +179,17 @@ function createRandomNodes(number) {
 }
 
 
-function newNodeAt(i, posX, posY) {
-    if (i == undefined) {
-      console.log("i undefined");
-      i = maxNodeNr;
-      maxNodeNr += 1;
-    }
-    console.log("adding new node " + i + " at " + posX + " " + posY);
+function newNodeAt(i, x, y) {
+    // if (i 0== undefined) {
+    //   console.log("i undefined");
+    //   i = maxNodeNr;
+    //   maxNodeNr += 1;
+    // }
 
-    var node = new FunctionNode(i, new THREE.Vector2(posX, posY));
+    var vect = utils.screenToGl(x, y);
+    console.log("adding new node " + i + " at " + vect.x + " " + vect.y);
+
+    var node = new FunctionNode(i, vect);
     nodes[i] = node;
     $$.scene.add(node.mesh);
 }
