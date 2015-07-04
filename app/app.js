@@ -17,7 +17,7 @@ var zOrderDiv = 10000.0;
 var currentMazZ = 0.0;
 var maxZ = (Math.pow(2, 31) - 1) / zOrderDiv; // -> HS
 
-var maxNodeNr = 0;
+// var maxNodeNr = 0;
 
 // export to HTML
 function start() {
@@ -159,33 +159,27 @@ function reconfigure_camera() {
 }
 
 // -> HS
-function createRandomNodes(number) {
-    var posX;
-    var posY;
+// function createRandomNodes(number) {
+//     var posX;
+//     var posY;
 
-    // nodes
-    var width  = 60;    // nodes' width
-    var height = 60;    // nodes' height
+//     // nodes
+//     var width  = 60;    // nodes' width
+//     var height = 60;    // nodes' height
 
-    for (var i = 0; i < number; i++) {
-      posX = (Math.random() - 0.5) * (window.innerWidth - width);  // possible X coords of planes
-      posY = (Math.random() - 0.5) * (window.innerHeight - height);  // possible Y coords of planes
+//     for (var i = 0; i < number; i++) {
+//       posX = (Math.random() - 0.5) * (window.innerWidth - width);  // possible X coords of planes
+//       posY = (Math.random() - 0.5) * (window.innerHeight - height);  // possible Y coords of planes
 
-      newNodeAt(i, posX, posY);
-    }
+//       newNodeAt(i, posX, posY);
+//     }
 
-    maxNodeNr = number - 1;
-    assignZs();
-}
+//     maxNodeNr = number - 1;
+//     assignZs();
+// }
 
 
 function newNodeAt(i, x, y) {
-    // if (i 0== undefined) {
-    //   console.log("i undefined");
-    //   i = maxNodeNr;
-    //   maxNodeNr += 1;
-    // }
-
     var vect = utils.screenToGl(x, y);
     console.log("adding new node " + i + " at " + vect.x + " " + vect.y);
 
@@ -194,6 +188,11 @@ function newNodeAt(i, x, y) {
     $$.scene.add(node.mesh);
 }
 
+function removeNode(i) {
+  var node = nodes[i];
+  $$.scene.remove(node.mesh);
+  delete nodes[i];
+}
 
 
 // -> HS
@@ -286,6 +285,7 @@ module.exports = {
     return _.values($$.nodes);
   },
   newNodeAt: newNodeAt,
+  removeNode: removeNode,
   start: start
 };
 

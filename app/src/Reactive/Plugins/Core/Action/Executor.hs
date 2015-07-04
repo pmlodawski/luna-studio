@@ -16,7 +16,11 @@ import           Reactive.Plugins.Core.Action.State.Global
 
 
 execAll :: State -> Maybe AddRemove.Action -> Maybe Selection.Action -> Maybe Drag.Action ->
-          (State, WithStateMaybe AddRemove.Action State, WithStateMaybe Selection.Action State, WithStateMaybe Drag.Action State)
+          ( State
+          , WithStateMaybe AddRemove.Action State
+          , WithStateMaybe Selection.Action State
+          , WithStateMaybe Drag.Action State
+          )
 execAll stInit addRem selection drag = (stFinal, wsAddRem, wsSel, wsDrag)
     where
     wsAddRem = tryExec addRem    stInit

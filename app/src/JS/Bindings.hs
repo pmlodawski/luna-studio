@@ -63,6 +63,9 @@ foreign import javascript unsafe "app.getNodeAt($1, $2)"
 foreign import javascript unsafe "app.newNodeAt($1, $2, $3)"
     newNodeAt :: Int -> Int -> Int -> IO ()
 
+foreign import javascript unsafe "app.removeNode($1)"
+    removeNode :: Int -> IO ()
+
 
 
 
