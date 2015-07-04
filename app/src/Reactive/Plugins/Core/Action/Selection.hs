@@ -3,6 +3,7 @@ module Reactive.Plugins.Core.Action.Selection where
 import           Prelude       hiding       ( mapM_, forM_ )
 import           Data.Foldable              ( mapM_, forM_ )
 import           Control.Lens
+import           Control.Applicative
 import           Data.Default
 import           Data.Maybe
 import           Data.List
@@ -37,6 +38,7 @@ data ActionType = SelectNew
 data Action = SelectAction { _actionType :: ActionType
                            , _actionNode :: Node
                            }
+            | SelectAll
             | UnselectAll
             deriving (Eq, Show)
 
@@ -49,6 +51,7 @@ instance PrettyPrinter ActionType where
 
 instance PrettyPrinter Action where
     display UnselectAll = "sA( UnselectAll )"
+    display SelectAll   = "sA( SelectAll )"
     display (SelectAction tpe node)  = "sA( " <> display tpe <> " " <> display node <> " )"
 
 
@@ -70,6 +73,7 @@ toAction (Mouse (WithObjects mouseEvent objects)) = case mouseEvent ^. tpe of
           toggleActionType = if node ^. selected then ToggleOff
                                                  else ToggleOn
 toAction (Keyboard (Keyboard.Event char)) = case char of
+    'n' -> Just SelectAll
     'u' -> Just UnselectAll
     _   -> Nothing
 
@@ -88,9 +92,10 @@ instance ActionStateExecutor Action Global.State where
         oldNodes                         = oldState ^. Global.nodes
         newNodes                         = updateNodesSelection newNodeIds oldNodes
         newState                         = oldState & Global.iteration +~ 1
-                                                    & Global.selection .~ (State newNodeIds)
+                                                    & Global.selection . Selection.nodeIds .~ newNodeIds
                                                     & Global.nodes     .~ newNodes
         newNodeIds                       = case newAction of
+            SelectAll                   -> (^. ident) <$> oldNodes
             UnselectAll                 -> []
             SelectAction tpe node       -> case tpe of
                 SelectNew               -> [newNodeId]
@@ -110,6 +115,8 @@ updateUI (WithState maybeAction state) = case maybeAction of
             Focus     -> setNodeFocused nodeId
             ToggleOn  -> setNodeFocused nodeId
             ToggleOff -> setNodeUnselected nodeId
+                      >> mapM_ setNodeFocused topNodeId
+        SelectAll     -> selectAllNodes
                       >> mapM_ setNodeFocused topNodeId
         UnselectAll   -> unselectAllNodes
         where selectedNodeIds = state ^. Global.selection . Selection.nodeIds

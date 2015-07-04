@@ -15,8 +15,6 @@ import qualified Reactive.Plugins.Core.Action.State.Selection as Selection
 import qualified Reactive.Plugins.Core.Action.State.Drag      as Drag
 
 
--- data CommonState = CommonState { _nodes :: NodeCollection } deriving (Eq, Show)
-
 data State = State { _iteration :: Integer
                    , _mousePos  :: Point
                    , _nodes     :: NodeCollection
@@ -25,7 +23,6 @@ data State = State { _iteration :: Integer
                    , _drag      :: Drag.State
                    } deriving (Eq, Show)
 
--- makeLenses ''CommonState
 makeLenses ''State
 
 instance Default State where

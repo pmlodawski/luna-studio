@@ -33,8 +33,6 @@ import qualified Reactive.Plugins.Core.Action.Executor  as Executor
 import           Reactive.Plugins.Core.Action.State.Global
 
 
-
-
 updateUI :: ( State
             , Action.WithStateMaybe AddRemove.Action State
             , Action.WithStateMaybe Selection.Action State
@@ -45,6 +43,15 @@ updateUI (_, addRem, sel, drag) = do
     Selection.updateUI sel
     Drag.updateUI      drag
 
+
+logAll :: ( State
+            , Action.WithStateMaybe AddRemove.Action State
+            , Action.WithStateMaybe Selection.Action State
+            , Action.WithStateMaybe Drag.Action State
+            ) -> IO ()
+logAll (st, addRem, sel, drag) = do
+    logAs "g|" st
+
 makeNetworkDescription :: forall t. Frameworks t => Moment t ()
 makeNetworkDescription = do
     mouseDownE    <- fromAddHandler mouseDownHandler
@@ -53,61 +60,44 @@ makeNetworkDescription = do
     keyPressedE   <- fromAddHandler keyPressedHandler
 
     let
-        anyE       = unions [mouseDownE, mouseUpE, mouseMovedE, keyPressedE]
+        anyE                          = unions [mouseDownE, mouseUpE, mouseMovedE, keyPressedE]
 
         globalStateB                 :: Behavior t State
         globalStateB                  = stepper def $ ((view _1) <$> globalStateReactionB) <@ anyE
 
-        -- nodeSelectionStateB           = stepper def $ nodeSelectionReactionStateB <@ anyE
-        -- nodeDragStateB                = stepper def $ nodeDragReactionStateB      <@ anyE
-
-        -- lastKeyB                      = stepper def $ Just <$> keyPressedE
-
-        -- mouseNodeDownE, mouseNodeUpE, mouseNodeMovedE :: Event t (Event.Event Node)
-        -- mouseNodeDownE                = unpackDynamic <$> mouseDownE
-        -- mouseNodeUpE                  = unpackDynamic <$> mouseUpE
-        -- mouseNodeMovedE               = unpackDynamic <$> mouseMovedE
 
         anyNodeE                     :: Event t (Event.Event Node)
         anyNodeE                      = unpackDynamic <$> anyE
-
-        -- mouseE                     = mouseDownE <+> mouseUpE <+> mouseMovedE
-        -- mouseNodeE                    = unions [mouseNodeDownE, mouseNodeUpE, mouseNodeMovedE]
 
         nodeAddRemActionE             = AddRemove.toAction <$> anyNodeE
         nodeAddRemActionB             = stepper def $ nodeAddRemActionE
         -- nodeAddRemReactionB           = Action.tryExec  <$> nodeAddRemActionB <*> globalStateB
         -- nodeAddRemReactionStateB      = Action.getState <$> nodeAddRemReactionB
 
-
-        nodeSelectionActionE          = Selection.toAction      <$> anyNodeE
+        nodeSelectionActionE          = Selection.toAction <$> anyNodeE
         nodeSelectionActionB          = stepper def $ nodeSelectionActionE
         -- nodeSelectionReactionB        = Action.tryExec  <$> nodeSelectionActionB <*> globalStateB
         -- nodeSelectionReactionStateB   = Action.getState <$> nodeSelectionReactionB
-
 
         nodeDragActionE               = Drag.toAction <$> anyNodeE
         nodeDragActionB               = stepper def $ nodeDragActionE
         -- nodeDragReactionB             = Action.tryExec  <$> nodeDragActionB <*> globalStateB
         -- nodeDragReactionStateB        = Action.getState <$> nodeDragReactionB
 
-
-
         globalStateReactionB :: Behavior t ( State
                                            , Action.WithStateMaybe AddRemove.Action State
                                            , Action.WithStateMaybe Selection.Action State
                                            , Action.WithStateMaybe Drag.Action State
                                            )
-        globalStateReactionB          = Executor.execAll <$> globalStateB
-                                                         <*> nodeAddRemActionB
-                                                         <*> nodeSelectionActionB
-                                                         <*> nodeDragActionB
+        globalStateReactionB           = Executor.execAll <$> globalStateB
+                                                          <*> nodeAddRemActionB
+                                                          <*> nodeSelectionActionB
+                                                          <*> nodeDragActionB
 
         logIfActionAs as ws = if isJust (ws ^. Action.action) then logAs as ws else return ()
 
 
     -- initial logB >>= liftIO . logAs ""
-
 
     -- nodeSelectionReactionF <- changes nodeSelectionReactionB
     -- reactimate' $ (fmap Selection.updateUI) <$> nodeSelectionReactionF
@@ -123,7 +113,7 @@ makeNetworkDescription = do
 
 
     globalStateReactionF <- changes globalStateReactionB
-    reactimate' $ (fmap updateUI)     <$> globalStateReactionF
-    reactimate' $ (fmap $ logAs "g|") <$> globalStateReactionF
+    reactimate' $ (fmap updateUI) <$> globalStateReactionF
+    reactimate' $ (fmap $ logAll) <$> globalStateReactionF
 
     return ()

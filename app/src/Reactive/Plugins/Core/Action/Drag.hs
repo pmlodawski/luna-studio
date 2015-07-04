@@ -63,19 +63,6 @@ toAction (Mouse (WithObjects mouseEvent objects)) = case mouseEvent ^. tpe of
           isNoNode      = null objects
 toAction _ = Nothing
 
-    -- where mouseEvent    = eventWithObjects ^. event
-    --       mouseKeyMods  = mouseEvent ^. keyMods
-    --       mousePosition = mouseEvent ^. position
-    --       isNoNode      = null $ eventWithObjects ^. objects
-
-
--- mergeWith :: NodeCollection -> NodeCollection -> NodeCollection
--- mergeWith current new = (getCommon current new) <> (getNew new current)
---     where
---     getNew, getCommon :: NodeCollection -> NodeCollection -> NodeCollection
---     getNew    = deleteFirstsBy $ on (==) (view ident)
---     getCommon = intersectBy $ on (==) (view ident)
-
 moveNodes :: Point -> NodeCollection -> NodeCollection
 moveNodes delta = fmap $ \node -> if node ^. selected then node & Node.position +~ delta else node
 
@@ -114,37 +101,6 @@ instance ActionStateExecutor Action Global.State where
                     Nothing             -> Nothing
                 StopDrag                -> Nothing
 
--- accumActionState :: AccumInput -> ActionState -> ActionState
--- accumActionState (AccumInput nodeSelection newActionCandidate) oldActionState = WithState maybeNewAction $ State newDrag newNodes
---     where
---     oldState                         = oldActionState ^. state
---     oldDrag                          = oldState ^. drag
---     oldNodes                         = oldState ^. nodes
---     mergedOldNodes                   = oldNodes `mergeWith` nodeSelection
---     emptySelection                   = null mergedOldNodes
---     maybeNewAction                   = case newActionCandidate of
---         DragAction Moving pt        -> case oldDrag of
---             Nothing                 -> Nothing
---             _                       -> Just $ DragAction Dragging pt
---         _                           -> Just newActionCandidate
---     newNodes                         = case newActionCandidate of
---         DragAction tpe point        -> case tpe of
---             StartDrag               -> mergedOldNodes
---             Moving                  -> case oldDrag of
---                 Just oldDragState   -> moveNodes delta mergedOldNodes
---                     where prevPos    = oldDragState ^. dragCurrentPos
---                           delta      = point - prevPos
---                 Nothing             -> mergedOldNodes
---             StopDrag                -> mergedOldNodes
---     newDrag                          = case newActionCandidate of
---         DragAction tpe point        -> case tpe of
---             StartDrag               -> Just $ DragState point point point
---             Moving                  -> if emptySelection then Nothing else case oldDrag of
---                 Just oldDragState   -> Just $ DragState startPos prevPos point
---                     where startPos   = oldDragState ^. dragStartPos
---                           prevPos    = oldDragState ^. dragCurrentPos
---                 Nothing             -> Nothing
---             StopDrag                -> Nothing
 
 updateUI :: ActionState -> IO ()
 updateUI (WithState maybeAction state) = case maybeAction of

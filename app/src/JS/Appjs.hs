@@ -28,6 +28,10 @@ unselectAllNodes :: IO ()
 unselectAllNodes =
     getNodes >>= mapM_ setUnselected
 
+selectAllNodes :: IO ()
+selectAllNodes =
+    getNodes >>= mapM_ setSelected
+
 unfocusAllNodes :: IO ()
 unfocusAllNodes =
     getNodes >>= mapM_ setUnfocused
