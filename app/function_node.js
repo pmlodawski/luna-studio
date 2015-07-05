@@ -86,8 +86,20 @@ FunctionNode.prototype.selected = function(val) {
   return this.uniforms.selected.value;
 };
 
+// function ensureVector(a, b) {
+//   var x, y;
+//   if(a instanceof THREE.Vector2) {
+//     x = a.x;
+//     y = a.y;
+//   } else {
+//     x = a;
+//     y = b;
+//   }
+//   return new THREE.Vector2(x, y);
+// }
+
 FunctionNode.prototype.moveTo = function(a, b) {
-  var vec = utils.ensureVector(a, b);
+  var vec = new THREE.Vector2(a, b);
 
   this.position.x = vec.x;
   this.position.y = vec.y;

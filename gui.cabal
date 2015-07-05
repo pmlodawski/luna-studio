@@ -4,7 +4,7 @@ synopsis:            Flowbox Data GUI
 -- description:
 homepage:            data.flowbox.io
 --license:             AllRightsReserved
---license-file:        LICENSE 
+--license-file:        LICENSE
 author:              Flowbox Data
 maintainer:          data@flowbox.io
 -- copyright:
@@ -34,6 +34,8 @@ executable gui
                       , DeriveDataTypeable
                       , RankNTypes
                       , ScopedTypeVariables
+                      , ImpredicativeTypes
+                      , ExistentialQuantification
 --                      , EmptyDataDecl
 
   build-depends:       base >=4.7 && <4.8

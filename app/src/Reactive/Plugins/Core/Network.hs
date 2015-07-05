@@ -84,6 +84,19 @@ makeNetworkDescription = do
         -- nodeDragReactionB             = Action.tryExec  <$> nodeDragActionB <*> globalStateB
         -- nodeDragReactionStateB        = Action.getState <$> nodeDragReactionB
 
+
+
+        -- ss1B :: Int
+        -- ss1B = (Action.pureAction) <$> nodeAddRemActionB
+        -- ss1B :: Behavior t (forall act. Action.ActionStateExecutor (Maybe act) State => [Maybe act])
+
+        -- ss2B = (Action.appendAction) <$> nodeSelectionActionB <*> ss1B
+        -- -- ss2B :: Behavior t (forall act. Action.ActionStateExecutor act State => [act])
+
+        -- gB = Executor.execAll2 <$> globalStateB <*> ss2B
+        -- gB :: forall act. Action.ActionStateExecutor act State => [Action.WithState (Maybe act) State]
+
+
         globalStateReactionB :: Behavior t ( State
                                            , Action.WithStateMaybe AddRemove.Action State
                                            , Action.WithStateMaybe Selection.Action State

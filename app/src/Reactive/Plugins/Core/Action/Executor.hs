@@ -31,3 +31,65 @@ execAll stInit addRem selection drag = (stFinal, wsAddRem, wsSel, wsDrag)
     stSel    = wsSel    ^. state
     stDrag   = wsDrag   ^. state
     stFinal  = stDrag
+
+
+
+
+-- class ActionStateExecutor act st where
+--     exec    ::        act  -> st -> WithStateMaybe act st
+--     tryExec :: (Maybe act) -> st -> WithStateMaybe act st
+--     tryExec Nothing       = WithState Nothing
+--     tryExec (Just action) = exec action
+
+
+
+-- <*> :: f (a -> b) -> f a -> f b
+
+-- <*>    B (a -> [a]) -> f a -> f [a]
+
+
+execAll2 :: forall act. ActionStateExecutor act State => State -> [Maybe act] -> [WithStateMaybe act State]
+execAll2 stInit actions = scanl execAction (WithState Nothing stInit) actions
+    where
+    -- execAction :: WithStateMaybe act State -> Maybe act -> WithStateMaybe act State
+    execAction ws act = tryExec act $ ws ^. state
+
+
+
+-- pureAction :: forall act. ActionStateExecutor act State => act -> [act]
+-- pureAction a = [a]
+
+
+-- appendAction :: forall act. ActionStateExecutor act State => act -> [act] -> [act]
+-- appendAction = (:)
+
+
+
+
+-- scanl :: (b -> a -> b) -> b -> [a] -> [b]
+
+
+-- scanl f z [x1, x2, ...] == [z, z `f` x1, (z `f` x1) `f` x2, ...]
+
+
+-- class SuperAction a where
+--     trans :: st -> a -> st
+--     upUI  :: a -> IO ()
+
+-- appendSuperAction :: forall a. SuperAction a => a -> [a] -> [a]
+-- appendSuperAction = (:)
+
+-- instance SuperAction (WithStateMaybe AddRemove.Action State) where
+
+-- appendSuperAction x xs = x : xs
+
+-- -- act - typeclass
+
+-- execList :: State -> [Maybe act]
+
+-- execAll state list =
+
+-- appendSuperAction nodeAddRemActionB
+-- $ appendSuperAction nodeSelectionActionB
+-- $ appendSuperAction nodeDragActionB
+-- $ []

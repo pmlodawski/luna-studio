@@ -42,7 +42,7 @@ data Action = SelectAction { _actionType :: ActionType
             | UnselectAll
             deriving (Eq, Show)
 
-type ActionState = WithStateMaybe Action Global.State
+-- type ActionState = WithStateMaybe Action Global.State
 
 makeLenses ''Action
 
@@ -105,7 +105,7 @@ instance ActionStateExecutor Action Global.State where
                 where oldFilteredNodeIds = delete newNodeId oldNodeIds
                       newNodeId          = node ^. ident
 
-updateUI :: ActionState -> IO ()
+updateUI :: WithStateMaybe Action Global.State -> IO ()
 updateUI (WithState maybeAction state) = case maybeAction of
     Nothing           -> return ()
     Just action       -> case action of

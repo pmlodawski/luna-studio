@@ -97,7 +97,7 @@ function setup_pan_and_zoom() {
     switch(dragMode){
       case 'pan': {
         var position = utils.screenToWorkspace(event.clientX, event.clientY);
-        delta = utils.screenToWorkspace(mouse).sub(position);
+        delta = utils.screenToWorkspace(mouse.x, mouse.y).sub(position);
         $$.camPan.add(delta);
         reconfigure_camera();
         event.stopPropagation();
@@ -158,27 +158,6 @@ function reconfigure_camera() {
   $$.camera.updateProjectionMatrix();
 }
 
-// -> HS
-// function createRandomNodes(number) {
-//     var posX;
-//     var posY;
-
-//     // nodes
-//     var width  = 60;    // nodes' width
-//     var height = 60;    // nodes' height
-
-//     for (var i = 0; i < number; i++) {
-//       posX = (Math.random() - 0.5) * (window.innerWidth - width);  // possible X coords of planes
-//       posY = (Math.random() - 0.5) * (window.innerHeight - height);  // possible Y coords of planes
-
-//       newNodeAt(i, posX, posY);
-//     }
-
-//     maxNodeNr = number - 1;
-//     assignZs();
-// }
-
-
 function newNodeAt(i, x, y) {
     var vect = utils.screenToGl(x, y);
     console.log("adding new node " + i + " at " + vect.x + " " + vect.y);
@@ -235,7 +214,7 @@ function getNodeAt(x, y) {
     var node = nodes[nodeId];
     var offset = getOffsetForNode(nodeId, x, y);
     if (isSelectedNodeIdOnOffset(nodeId, offset)) {
-      var xy = utils.workspaceToScreen(node.position);
+      var xy = utils.workspaceToScreen(node.position.x, node.position.y);
       return [nodeId, node.selected(), xy.x, xy.y];
     }
   }
@@ -270,7 +249,8 @@ function dragNode(nodeIndex, x, y) {
     return;
 
   node = nodes[nodeIndex];
-  node.moveTo(utils.screenToWorkspace(x,y));
+  var vec = utils.screenToWorkspace(x,y);
+  node.moveTo(vec.x, vec.y);
 }
 
 module.exports = {
@@ -288,9 +268,6 @@ module.exports = {
   removeNode: removeNode,
   start: start
 };
-
-
-
 
 
 // -> HS

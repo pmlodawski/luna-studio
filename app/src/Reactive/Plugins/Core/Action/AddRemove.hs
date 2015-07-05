@@ -38,7 +38,7 @@ data Action = AddAction
             deriving (Eq, Show)
 
 
-type ActionState = WithStateMaybe Action Global.State
+-- type ActionState = WithStateMaybe Action Global.State
 
 makeLenses ''Action
 
@@ -93,7 +93,7 @@ instance ActionStateExecutor Action Global.State where
                 Just remId     -> filter (\node -> node ^. ident /= remId) oldNodes
 
 
-updateUI :: ActionState -> IO ()
+updateUI :: WithStateMaybe Action Global.State -> IO ()
 updateUI (WithState maybeAction state) = case maybeAction of
     Nothing               -> return ()
     Just AddAction        -> newNodeAt nodeId px py
@@ -108,3 +108,10 @@ updateUI (WithState maybeAction state) = case maybeAction of
         selectedNodeIds = state ^. Global.selection . Selection.nodeIds
         nodeId    = head $ state ^. Global.addRemove . AddRemove.toRemoveIds
         topNodeId = selectedNodeIds ^? ix 0
+
+
+-- instance SuperAction (WithStateMaybe Action Global.State) where
+--     trans :: Global.State -> Maybe AddRemove.Action -> WithStateMaybe Action Global.State
+--     trans st
+--     upUI  :: WithStateMaybe Action Global.State -> IO ()
+--     upUI = updateUI

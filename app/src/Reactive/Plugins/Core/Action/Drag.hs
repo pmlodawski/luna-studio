@@ -38,7 +38,7 @@ data Action = DragAction { _actionType :: ActionType
                          }
             deriving (Eq, Show)
 
-type ActionState = WithStateMaybe Action Global.State
+-- type ActionState = WithStateMaybe Action Global.State
 
 makeLenses ''Action
 
@@ -102,7 +102,7 @@ instance ActionStateExecutor Action Global.State where
                 StopDrag                -> Nothing
 
 
-updateUI :: ActionState -> IO ()
+updateUI :: WithStateMaybe Action Global.State -> IO ()
 updateUI (WithState maybeAction state) = case maybeAction of
     Nothing           -> return ()
     Just action       -> case action of
