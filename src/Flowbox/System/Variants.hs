@@ -36,6 +36,7 @@
 module Flowbox.System.Variants where
 
 --import           Control.Monad      ((>=>))
+import Prelude
 import           Data.Binary        (Binary)
 import           Data.Typeable      hiding (cast)
 --import           Data.List.Split    (splitOn)
@@ -259,11 +260,12 @@ type WrappedCast  a m b = ( m ~ CastOutput (IsSecureCast a b)
                           , WithVariantsM (Cast' (IsSecureCast a b)) a m b
                           )
 
-type Cast a b' b = (WrappedCast a (CastOutput (IsSecureCast a b)) b', UnpackCast (CastOutput (IsSecureCast a b) b') b)
-
 type family CastOutput (secure :: Bool) :: (* -> *) where
     CastOutput False = Maybe
     CastOutput True  = Found
+
+class Cast a b where
+    cast :: a -> b
 
 -- Variant casting
 
@@ -276,14 +278,16 @@ instance (CheckConsByVariant a Found b) => Cast' True a Found b where
 instance (CheckConsByVariant a m b, ToMaybe m) => Cast' False a Maybe b where
     cast' _ = toMaybe . wrappedCons
 
--- cast types
 
-cast :: Cast a b' b => a -> b
-cast = unpackCast . wrappedCast
+-- cast types
 
 wrappedCast :: forall secureCast a m b. (WrappedCast a m b, secureCast ~ IsSecureCast a b)
             => a -> m b
 wrappedCast = withVariantsM (Proxy :: Proxy (Cast' secureCast)) $ cast' (Proxy :: Proxy secureCast)
+
+instance (WrappedCast a (CastOutput (IsSecureCast a b)) b', UnpackCast (CastOutput (IsSecureCast a b) b') b)
+      => Cast a b where
+    cast = unpackCast . wrappedCast
 
 -- cast unpacking
 

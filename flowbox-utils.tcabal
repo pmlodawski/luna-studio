@@ -68,7 +68,8 @@ Library
                     QuickCheck,
                     unordered-containers,
                     cond,
-                    concrete-typerep
+                    concrete-typerep,
+                    unix
 
   if os(windows)
     Build-Depends:  Win32
@@ -86,7 +87,7 @@ Executable utils-test
                   NoImplicitPrelude
                   OverloadedStrings
                   TypeSynonymInstances
-                  
+
   Build-Depends:  base,
                   flowbox-utils,
                   ghc-prim

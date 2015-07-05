@@ -19,7 +19,7 @@ import Flowbox.Prelude hiding (error)
 
 import           Flowbox.Source.Location
 import qualified Flowbox.System.Console.StyledText.StyledText as Text
-import qualified Flowbox.System.Path as Path
+import qualified System.Path as Path
 
 
 data Test = Test Int Int deriving(Show, Generic)
@@ -44,7 +44,7 @@ testLogger = runLogger $ do
 f :: String -> String
 f x = x
 
-main = Path.main 
+main = Path.main
 
 --main :: IO ()
 --main = do

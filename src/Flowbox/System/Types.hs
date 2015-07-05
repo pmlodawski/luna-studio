@@ -30,6 +30,7 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE DatatypeContexts #-}
+{-# LANGUAGE EmptyDataDecls #-}
 
 {-# LANGUAGE DysfunctionalDependencies #-}
 
@@ -80,7 +81,7 @@ import Control.Applicative hiding (empty)
 import           Data.List.Split    (splitOn)
 import           GHC.Generics       (Generic)
 import           GHC.Exts
-
+import Prelude
 #include "ghcplatform.h"
 
 
@@ -230,6 +231,13 @@ type instance Remove v (a,b)    = If (v :== a) b (a, Remove v b)
 type family Diff (set :: k) (set' :: k) :: k
 type instance Diff set (a ': b) = Diff (Remove a set) b
 type instance Diff set '[]      = set
+
+---
+
+type family Union (set :: k) (set' :: k) :: k
+type instance Union (a ': b) set = Union b (Insert a set)
+type instance Union '[]      set = set
+
 
 ---
 
