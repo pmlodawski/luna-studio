@@ -151,7 +151,7 @@ NodeSearcher.prototype.init = function() {
   this.prefix = "";
   this.initSearchbox();
   this.setExpression("");
-}
+};
 
 NodeSearcher.prototype.expression = function() {
   return this.prefix + this.searchbox.val();
@@ -193,36 +193,18 @@ NodeSearcher.prototype.select = function(newSelection) {
   }
 };
 
-
-// var visibleBottom  = this.currentColumn.find('ul').scrollTop() + this.currentColumn.find('ul').innerHeight() - 20;
-// var selectedBottom = this.currentColumn.find('ul').scrollTop() + currentSelection.position().top + currentSelection.height();
-//
-// if(visibleBottom < selectedBottom) {
-//   this.currentColumn.find('ul').animate({scrollTop: selectedBottom - this.currentColumn.find('ul').innerHeight() + 30 }, config.nodeSearcher.scrollAnimationTime);
-// }
-//
-// var visibleTop  = this.currentColumn.find('ul').scrollTop();
-// var selectedTop = this.currentColumn.find('ul').scrollTop() + currentSelection.position().top;
-// if(visibleTop > selectedTop) {
-//   this.currentColumn.find('ul').animate({scrollTop: selectedTop - 10}, config.nodeSearcher.scrollAnimationTime);
-
-
 NodeSearcher.prototype.scrollToSelected = function() {
   var currentSelection  = this.currentSelection();
-  // var visibleBottom  = this.currentColumn.find('ul').scrollTop() + this.currentColumn.find('ul').innerHeight() - 20;
-  // var selectedBottom = this.currentSelection().position().top + this.currentColumn.find('.mCSB_container').position().top + currentSelection.height();
-  //
 
-  var selectedBottom = this.currentSelection().position().top + this.currentColumn.find('.mCSB_container').position().top + this.currentSelection().height();
+  var selectedBottom = currentSelection.position().top + this.currentColumn.find('.mCSB_container').position().top + this.currentSelection().height();
 
-  console.log([selectedBottom, this.currentColumn.find(".ul-container").height()]);
   if(selectedBottom > this.currentColumn.find(".ul-container").height()) {
-this.currentColumn.find('.ul-container').mCustomScrollbar("scrollTo", this.currentSelection().position().top - this.currentColumn.find('.ul-container').innerHeight() + 30, {scrollInertia:50});
+    this.currentColumn.find('.ul-container').mCustomScrollbar("scrollTo", currentSelection.position().top - this.currentColumn.find('.ul-container').innerHeight() + 30, {scrollInertia: config.nodeSearcher.scrollAnimationTime});
   }
 
-  var selectedTop = this.currentSelection().position().top + this.currentColumn.find('.mCSB_container').position().top;
+  var selectedTop = currentSelection.position().top + this.currentColumn.find('.mCSB_container').position().top;
   if(selectedTop < 0) {
-    this.currentColumn.find('.ul-container').mCustomScrollbar("scrollTo", this.currentSelection().position().top - 10, {scrollInertia:50});
+    this.currentColumn.find('.ul-container').mCustomScrollbar("scrollTo", Math.max(0, currentSelection.position().top - currentSelection.height()), {scrollInertia: config.nodeSearcher.scrollAnimationTime});
   }
 };
 
@@ -318,7 +300,6 @@ NodeSearcher.prototype.performSearch = function() {
   this.displaySearchResults(results);
 };
 
-
 NodeSearcher.prototype.onInput = function() {
   var query = this.searchbox.val();
   if(shouldSplit(query)) {
@@ -349,6 +330,7 @@ NodeSearcher.prototype.onEnter = function(ev) {
 };
 
 NodeSearcher.prototype.onEsc = function(ev) {
+  // TODO: Close searcher and send 'search-cancelled' event
   ev.preventDefault();
 };
 
@@ -356,9 +338,8 @@ NodeSearcher.prototype.onKeyHome = function(ev) {
   var _this = this;
   var ul = this.currentColumn.find("ul");
   if(!this.searchrow.hasClass('active')) {
-    this.currentColumn.find("ul").animate({scrollTop: 0}, config.nodeSearcher.scrollAnimationTime, function() {
-      _this.selectFirstVisible(ul);
-    });
+    this.select(this.currentColumn.find('li:first-child'));
+    this.currentColumn.find('.ul-container').mCustomScrollbar("scrollTo", 'top', {scrollInertia: config.nodeSearcher.scrollAnimationTime});
     ev.preventDefault();
   }
 };
@@ -367,51 +348,36 @@ NodeSearcher.prototype.onKeyEnd = function(ev) {
   var _this = this;
   var ul = this.currentColumn.find("ul");
   if(!this.searchrow.hasClass('active')) {
-    ul.animate({scrollTop: ul.prop('scrollHeight')}, config.nodeSearcher.scrollAnimationTime, function() {
-      _this.selectLastVisible(ul);
-    });
+    this.select(this.currentColumn.find('li:last-child'));
+    this.currentColumn.find('.ul-container').mCustomScrollbar("scrollTo", 'bottom', {scrollInertia: config.nodeSearcher.scrollAnimationTime});
     ev.preventDefault();
-  }
-};
-
-NodeSearcher.prototype.selectFirstVisible = function(ul){
-  var firstVisible = _(ul.find('li')).find(function(el) { return $(el).position().top >= 0; });
-  if(firstVisible) {
-    this.select($(firstVisible));
-  }
-};
-
-NodeSearcher.prototype.selectLastVisible = function(ul){
-  var lastVisible = _(ul.find('li').get().reverse()).find(function(el) { return $(el).position().top + $(el).height() <= ul.height(); });
-  if(lastVisible) {
-    this.select($(lastVisible));
   }
 };
 
 NodeSearcher.prototype.onKeyPgUp = function(ev) {
   var _this = this;
-  var ul = this.currentColumn.find("ul");
-  var targetScroll;
+  var targetScroll = this.currentSelection().position().top - this.currentColumn.find(".ul-container").height();
 
   if(!this.searchrow.hasClass('active')) {
-    targetScroll = ul.prop('scrollTop') - ul.height() + 50;
-    ul.animate({scrollTop: targetScroll}, config.nodeSearcher.scrollAnimationTime, function() {
-      _this.selectLastVisible(ul);
-    });
+    var lastVisible = _(this.currentColumn.find('li').get()).find(function(el) { return $(el).position().top >= targetScroll;});
+    if(lastVisible) {
+      this.select($(lastVisible));
+    }
+    this.scrollToSelected();
     ev.preventDefault();
   }
 };
 
 NodeSearcher.prototype.onKeyPgDn = function(ev) {
   var _this = this;
-  var ul = this.currentColumn.find("ul");
-  var targetScroll;
+  var targetScroll = this.currentSelection().position().top + this.currentColumn.find(".ul-container").height();
 
   if(!this.searchrow.hasClass('active')) {
-    targetScroll = ul.prop('scrollTop') + ul.height() - 50;
-    ul.animate({scrollTop: targetScroll}, config.nodeSearcher.scrollAnimationTime, function() {
-      _this.selectFirstVisible(ul);
-    });
+    var lastVisible = _(this.currentColumn.find('li').get().reverse()).find(function(el) { return $(el).position().top + $(el).height() <= targetScroll;});
+    if(lastVisible) {
+      this.select($(lastVisible));
+    }
+    this.scrollToSelected();
     ev.preventDefault();
   }
 };

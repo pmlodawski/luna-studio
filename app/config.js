@@ -1,7 +1,7 @@
 module.exports = {
   backgroundColor: 0x1a1a1a,
   nodeSearcher: {
-    scrollAnimationTime: 50,
+    scrollAnimationTime: 100,
     scrollbarOptions: {
       alwaysExpandScrollbar: true,
       alwaysShowScrollbar: 2,
