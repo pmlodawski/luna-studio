@@ -24,71 +24,94 @@ import           Event.Event
 import           Utils.Wrapper
 import           Utils.PrettyPrinter
 import           Reactive.Plugins.Core.Action.Action
+import qualified Reactive.Plugins.Core.Action.State.AddRemove as AddRemove
+import qualified Reactive.Plugins.Core.Action.State.Selection as Selection
+import qualified Reactive.Plugins.Core.Action.State.Global    as Global
+
 
 data ActionType = Add
                 | Remove
                 deriving (Eq, Show)
 
 data Action = AddAction
-            | RemoveAction { _actionNode :: Node }
+            | RemoveFocused
             deriving (Eq, Show)
 
-data State = State { _nodes :: NodeCollection
-                   } deriving (Eq, Show)
 
-type ActionState = WithStateMaybe Action State
+-- type ActionState = WithStateMaybe Action Global.State
 
 makeLenses ''Action
-makeLenses ''State
 
-instance Default State where
-    def = State def
 
 instance PrettyPrinter ActionType where
     display = show
 
 instance PrettyPrinter Action where
-    display AddAction            = "arA( AddAction )"
-    display (RemoveAction node)  = "arA( RemoveAction " <> display node <> " )"
-
-instance PrettyPrinter State where
-    display (State nodes) = display nodes
+    display AddAction     = "arA( AddAction )"
+    display RemoveFocused = "arA( RemoveFocused )"
 
 
 
+toAction :: Event Node -> Maybe Action
+toAction (Keyboard (Keyboard.Event char)) = case char of
+    'a'   -> Just AddAction
+    'r'   -> Just RemoveFocused
+    _     -> Nothing
+toAction _ = Nothing
 
-keyboardToAction :: Keyboard.Event -> Maybe Action
-keyboardToAction event = case event ^. char of
-    'a' -> Just AddAction
-    _   -> Nothing
+maxNodeId :: NodeCollection -> NodeId
+maxNodeId []    = 0
+maxNodeId nodes = (view ident) $ maximumBy (on compare (view ident)) nodes
+
+instance ActionStateExecutor Action Global.State where
+    exec newActionCandidate oldState = WithState newAction newState
+        where
+        newState                = oldState & Global.iteration +~ 1
+                                           & Global.nodes .~ newNodes
+                                           & Global.selection . Selection.nodeIds .~ newSelIds
+                                           & Global.addRemove . AddRemove.toRemoveIds .~ toRemoveIds
+        oldNodes                = oldState ^. Global.nodes
+        nodePos                 = oldState ^. Global.mousePos
+        oldSelNodeIds           = oldState ^. Global.selection . Selection.nodeIds
+        headNodeId              = listToMaybe oldSelNodeIds
+        nextNodeId              = 1 + (maxNodeId oldNodes)
+        newAction               = case newActionCandidate of
+            RemoveFocused      -> case headNodeId of
+                Nothing        -> Nothing
+                _              -> Just newActionCandidate
+            _                  -> Just newActionCandidate
+        toRemoveIds             = case newAction of
+            Just RemoveFocused -> maybeToList headNodeId
+            _                  -> []
+        newSelIds               = case newAction of
+            Just RemoveFocused -> drop 1 oldSelNodeIds
+            _                  -> oldSelNodeIds
+        newNodes                = case newActionCandidate of
+            AddAction          -> (Node nextNodeId False nodePos) : oldNodes
+            RemoveFocused      -> case headNodeId of
+                Nothing        -> oldNodes
+                Just remId     -> filter (\node -> node ^. ident /= remId) oldNodes
 
 
-instance ActionStateExecutor Action State where
-  exec newAction oldState = WithState (Just newAction) $ State newNodes
-      where
-      oldNodes              = oldState ^. nodes
-      newNodes              = case newAction of
-          AddAction         -> (Node 777 False $ Point 100 100) : oldNodes
-          RemoveAction node -> delete node oldNodes
-
-toNodes :: ActionState -> NodeCollection
-toNodes =  (^. state . nodes)
-
-
-updateUI :: ActionState -> IO ()
+updateUI :: WithStateMaybe Action Global.State -> IO ()
 updateUI (WithState maybeAction state) = case maybeAction of
     Nothing               -> return ()
-    Just AddAction        -> newNodeAt
-    Just (RemoveAction _) -> return ()
+    Just AddAction        -> newNodeAt nodeId px py
+        where
+        node   = head $ state ^. Global.nodes
+        px = node ^. Node.position . x
+        py = node ^. Node.position . y
+        nodeId = node ^. ident
+    Just RemoveFocused    -> removeNode nodeId
+                          >> mapM_ setNodeFocused topNodeId
+        where
+        selectedNodeIds = state ^. Global.selection . Selection.nodeIds
+        nodeId    = head $ state ^. Global.addRemove . AddRemove.toRemoveIds
+        topNodeId = selectedNodeIds ^? ix 0
 
-    -- case action of
-    --     SelectAction tpe (Node nodeId _ _) -> case tpe of
-    --         SelectNew -> unselectAllNodes
-    --                   >> setNodeFocused nodeId
-    --         Focus     -> setNodeFocused nodeId
-    --         ToggleOn  -> setNodeFocused nodeId
-    --         ToggleOff -> setNodeUnselected nodeId
-    --                   >> mapM_ setNodeFocused topNodeId
-    --     UnselectAll   -> unselectAllNodes
-    --     where selectedNodeIds = state ^. nodeIds
-    --           topNodeId = selectedNodeIds ^? ix 0
+
+-- instance SuperAction (WithStateMaybe Action Global.State) where
+--     trans :: Global.State -> Maybe AddRemove.Action -> WithStateMaybe Action Global.State
+--     trans st
+--     upUI  :: WithStateMaybe Action Global.State -> IO ()
+--     upUI = updateUI

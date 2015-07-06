@@ -10,17 +10,17 @@ import           Utils.PrettyPrinter
 
 data WithState act st = WithState { _action :: act
                                   , _state  :: st
-                                  } deriving (Eq, Show)
+                                  } -- deriving (Show)
 
 type WithStateMaybe act st = WithState (Maybe act) st
 
 makeLenses ''WithState
 
-getState :: WithState act st -> st
-getState = (^. state)
+-- getState :: WithState act st -> st
+-- getState = _state
 
-filterAction :: WithStateMaybe mact st -> Bool
-filterAction (WithState mact st) = isJust mact
+-- filterAction :: WithStateMaybe mact st -> Bool
+-- filterAction (WithState mact st) = isJust mact
 
 instance (Default act, Default st) => Default (WithState act st) where
     def = WithState def def
@@ -35,3 +35,8 @@ class ActionStateExecutor act st where
     tryExec Nothing       = WithState Nothing
     tryExec (Just action) = exec action
 
+    pureAction :: forall act. ActionStateExecutor act st => act -> [act]
+    pureAction a = [a]
+
+    appendAction :: forall act. ActionStateExecutor act st => act -> [act] -> [act]
+    appendAction = (:)

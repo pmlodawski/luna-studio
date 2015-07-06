@@ -87,7 +87,7 @@ FunctionNode.prototype.selected = function(val) {
 };
 
 FunctionNode.prototype.moveTo = function(a, b) {
-  var vec = utils.ensureVector(a, b);
+  var vec = new THREE.Vector2(a, b);
 
   this.position.x = vec.x;
   this.position.y = vec.y;

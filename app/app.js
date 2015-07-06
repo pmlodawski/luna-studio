@@ -17,7 +17,7 @@ var zOrderDiv = 10000.0;
 var currentMazZ = 0.0;
 var maxZ = (Math.pow(2, 31) - 1) / zOrderDiv; // -> HS
 
-var maxNodeNr = 0;
+// var maxNodeNr = 0;
 
 // export to HTML
 function start() {
@@ -26,9 +26,9 @@ function start() {
     initialize_gl();
 
     // -> HS
-    setup_pan_and_zoom();
+    setupPanAndZoom();
     document.addEventListener('keydown', onDocumentKeyDown, false );
-    createRandomNodes(40);
+    // createRandomNodes(1);
 
     // call -> HS
     render();
@@ -64,7 +64,7 @@ function initialize_gl() {
 
 
 // -> HS
-function setup_pan_and_zoom() {
+function setupPanAndZoom() {
   var dragMode = null;
   var mouse = new THREE.Vector2(0,0);
   var mouseStart = new THREE.Vector2(0,0);
@@ -97,9 +97,9 @@ function setup_pan_and_zoom() {
     switch(dragMode){
       case 'pan': {
         var position = utils.screenToWorkspace(event.clientX, event.clientY);
-        delta = utils.screenToWorkspace(mouse).sub(position);
+        delta = utils.screenToWorkspace(mouse.x, mouse.y).sub(position);
         $$.camPan.add(delta);
-        reconfigure_camera();
+        reconfigureCamera();
         event.stopPropagation();
         break;
       }
@@ -112,7 +112,7 @@ function setup_pan_and_zoom() {
           $$.camPan.add(delta);
           mouseStart.sub(delta);
         }
-        reconfigure_camera();
+        reconfigureCamera();
         event.stopPropagation();
         break;
       }
@@ -136,7 +136,7 @@ function setWindowSize(){
   $$.halfScreen.x = w / 2.0;
   $$.halfScreen.y = h / 2.0;
   $$.renderer.setSize( w, h );
-  reconfigure_camera();
+  reconfigureCamera();
 }
 
 // -> HS
@@ -146,49 +146,32 @@ function updateCamFactor(val) {
 }
 
 // -> HS
-function reconfigure_camera() {
+function reconfigureCamera() {
   $$.htmlCanvasPan.css({left: $$.halfScreen.x - $$.camPan.x * $$.camFactor.value, top: $$.halfScreen.y + $$.camPan.y * $$.camFactor.value});
   $$.htmlCanvas.css({zoom: $$.camFactor.value});
 
-  $$.camera.left = - $$.halfScreen.x / $$.camFactor.value + $$.camPan.x;
-  $$.camera.right = $$.halfScreen.x / $$.camFactor.value + $$.camPan.x;
-  $$.camera.top = $$.halfScreen.y / $$.camFactor.value + $$.camPan.y;
-  $$.camera.bottom = - $$.halfScreen.y / $$.camFactor.value + $$.camPan.y;
+  $$.camera.left   = -$$.halfScreen.x / $$.camFactor.value + $$.camPan.x;
+  $$.camera.right  =  $$.halfScreen.x / $$.camFactor.value + $$.camPan.x;
+  $$.camera.top    =  $$.halfScreen.y / $$.camFactor.value + $$.camPan.y;
+  $$.camera.bottom = -$$.halfScreen.y / $$.camFactor.value + $$.camPan.y;
 
   $$.camera.updateProjectionMatrix();
 }
 
-// -> HS
-function createRandomNodes(number) {
-    var posX;
-    var posY;
+function newNodeAt(i, x, y) {
+    var vect = utils.screenToGl(x, y);
+    console.log("adding new node " + i + " at " + vect.x + " " + vect.y);
 
-    // nodes
-    var width  = 60;     // nodes' width
-    var height = 60;    // nodes' height
-    for (var i = 0; i < number; i++)
-      newNodeAt(i);
-
-    maxNodeNr = number - 1;
-    assignZs();
-}
-
-
-function newNodeAt(i) {
-    if (i == undefined) {
-      console.log("i undefined");
-      i = maxNodeNr;
-      maxNodeNr += 1;
-    }
-
-    posX = (Math.random() - 0.5) * (window.innerWidth - width);  // possible X coords of planes
-    posY = (Math.random() - 0.5) * (window.innerHeight - height);  // possible Y coords of planes
-
-    var node = new FunctionNode(i, new THREE.Vector2(posX, posY));
+    var node = new FunctionNode(i, vect);
     nodes[i] = node;
     $$.scene.add(node.mesh);
 }
 
+function removeNode(i) {
+  var node = nodes[i];
+  $$.scene.remove(node.mesh);
+  delete nodes[i];
+}
 
 
 // -> HS
@@ -231,7 +214,7 @@ function getNodeAt(x, y) {
     var node = nodes[nodeId];
     var offset = getOffsetForNode(nodeId, x, y);
     if (isSelectedNodeIdOnOffset(nodeId, offset)) {
-      var xy = utils.workspaceToScreen(node.position);
+      var xy = utils.workspaceToScreen(node.position.x, node.position.y);
       return [nodeId, node.selected(), xy.x, xy.y];
     }
   }
@@ -259,19 +242,10 @@ function getOffsetForNode(nodeIndex, x, y) {
     return node.position.clone().sub(vec).toArray();
 }
 
-// -> HS
-function dragNode(nodeIndex, x, y) {
-  var node;
-  if (nodeIndex < 0)
-    return;
-
-  node = nodes[nodeIndex];
-  node.moveTo(utils.screenToWorkspace(x,y));
-}
 
 module.exports = {
   render: render,
-  dragNode: dragNode,
+  // dragNode: dragNode,
   moveToTopZ: moveToTopZ,
   getNodeAt: getNodeAt,  // remove
   getNode: function(index) {
@@ -280,12 +254,10 @@ module.exports = {
   getNodes: function() {
     return _.values($$.nodes);
   },
-  newNodeAt: newNodeAt
+  newNodeAt: newNodeAt,
+  removeNode: removeNode,
   start: start
 };
-
-
-
 
 
 // -> HS
@@ -295,32 +267,32 @@ function onDocumentKeyDown( event )
   {
     case 187: { // plus
       updateCamFactor($$.camFactor.value * 1.1);
-      reconfigure_camera();
+      reconfigureCamera();
       break;
     }
     case 189: { // minus
       updateCamFactor($$.camFactor.value  / 1.1);
-      reconfigure_camera();
+      reconfigureCamera();
       break;
     }
     case 37: { // left
       $$.camPan.x -= 10/$$.camFactor.value;
-      reconfigure_camera();
+      reconfigureCamera();
       break;
     }
     case 38: { // top
       $$.camPan.y += 10/$$.camFactor.value;
-      reconfigure_camera();
+      reconfigureCamera();
       break;
     }
     case 39: { // right
       $$.camPan.x += 10/$$.camFactor.value;
-      reconfigure_camera();
+      reconfigureCamera();
       break;
     }
     case 40: { // bottom
       $$.camPan.y -= 10/$$.camFactor.value;
-      reconfigure_camera();
+      reconfigureCamera();
       break;
     }
   }

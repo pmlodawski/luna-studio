@@ -4,6 +4,7 @@ import Control.Monad
 
 import JS.Bindings
 import JS.Converters
+import JS.Utils
 
 setNodeUnselected :: Int -> IO ()
 setNodeUnselected nodeId =
@@ -28,17 +29,18 @@ unselectAllNodes :: IO ()
 unselectAllNodes =
     getNodes >>= mapM_ setUnselected
 
+selectAllNodes :: IO ()
+selectAllNodes =
+    getNodes >>= mapM_ setSelected
+
 unfocusAllNodes :: IO ()
 unfocusAllNodes =
     getNodes >>= mapM_ setUnfocused
 
 
-
-
-
--- dragNode :: Int -> Int -> Int -> IO ()
--- dragNode nodeId x y = when nodeId >= 0 do
---     node <- getNode nodeId
---     (wx, wy) <- utils.screenToWorkspace(x,y)
---     moveTo node wx wy
+dragNode :: Int -> Int -> Int -> IO ()
+dragNode nodeId x y = when (nodeId >= 0) $ do
+    node <- getNode nodeId
+    (wx, wy) <- screenToWorkspace (fromIntegral x, fromIntegral y)
+    moveTo node wx wy
 

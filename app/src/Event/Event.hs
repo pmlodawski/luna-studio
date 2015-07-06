@@ -10,18 +10,18 @@ import Object.Object ( Object )
 import Object.Dynamic
 import Utils.PrettyPrinter
 
+import qualified Event.Keyboard as Keyboard
+import qualified Event.Mouse    as Mouse
+import qualified Event.WithObjects as WithObjects
 
-data WithObjects evnt obj = WithObjects { _event   :: evnt
-                                        , _objects :: [Object obj]
-                                        } deriving (Eq, Show)
 
-makeLenses ''WithObjects
+data Event obj = Keyboard Keyboard.Event
+               | Mouse    (Mouse.MEvent obj)
 
-instance Default a => Default (WithObjects a obj) where
-    def = WithObjects def def
 
-instance Typeable obj => UnpackDynamic (WithObjects evnt Dynamic) (WithObjects evnt obj) where
-    unpackDynamic = objects %~ unpackDynamic
+makeLenses ''Event
 
-instance (PrettyPrinter evnt, PrettyPrinter obj) => PrettyPrinter (WithObjects evnt obj) where
-    display (WithObjects ev objs) = "wo( " <> display ev <> " " <> display objs <> " )"
+instance Typeable obj => UnpackDynamic (Event Dynamic) (Event obj) where
+    unpackDynamic (Mouse (WithObjects.WithObjects ev obj)) = Mouse (WithObjects.WithObjects ev $ unpackDynamic obj)
+    unpackDynamic (Keyboard ev)                            = Keyboard ev
+

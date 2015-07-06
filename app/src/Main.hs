@@ -29,7 +29,6 @@ module Main where
 import           Reactive.Banana
 import           Reactive.Banana.Frameworks ( Frameworks, actuate )
 import qualified JS.Bindings as JS
-import           GHCJS.Foreign ( toJSString )
 
 import qualified Reactive.Plugins.Core.Network as CoreNetwork
 
@@ -41,6 +40,7 @@ main = do
     -- JS.init
     -- JS.create(30)
     -- JS.render
+    -- JS.innerHeight >>= print
 
     -- functionRef <- getFunctionNode
     -- showLabel functionRef (toJSString "Trolololo")
