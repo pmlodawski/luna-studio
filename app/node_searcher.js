@@ -153,6 +153,66 @@ NodeSearcher.prototype.init = function() {
   this.setExpression("");
 };
 
+NodeSearcher.prototype.initSearchbox = function() {
+  var _this = this;
+
+  var firstColumn = $('<div/>').addClass('column').addClass('current').addClass('first-column');
+  this.searchrow = $('<div class="item active query"><span class="query-ns"></span><input autofocus="on" type="text" class="query"/></div>');
+  firstColumn.items = $('<ul/>');
+  firstColumn.itemsDiv = $('<div class="ul-container"/>');
+  firstColumn.append(this.searchrow);
+  firstColumn.itemsDiv.append(firstColumn.items);
+  firstColumn.append(firstColumn.itemsDiv);
+
+  this.searchbox = this.searchrow.find('input.query');
+  this.searchns  = this.searchrow.find('span.query-ns');
+
+  this.el.append(firstColumn);
+  this.currentColumn = firstColumn;
+  this.firstColumn = firstColumn;
+
+  this.updatePrefixWidth();
+
+  firstColumn.itemsDiv.mCustomScrollbar(config.nodeSearcher.scrollbarOptions);
+
+  this.searchbox.on('input', function() {
+    _this.onInput();
+  });
+  this.searchbox.on('blur', function() {
+    _this.searchbox.focus();
+  });
+
+  this.searchbox.on('keydown', function(ev) {
+    switch(ev.keyCode){
+      case 9:  /* tab         */ _this.onTab(ev);       break;
+      case 27: /* esc         */ _this.onEsc(ev);       break;
+      case 8:  /* backspace   */ _this.onBackspace(ev); break;
+      case 38: /* arrow-up    */ _this.onKeyUp(ev);     break;
+      case 40: /* arrow-down  */ _this.onKeyDown(ev);   break;
+      case 37: /* arrow-left  */ _this.onKeyLeft(ev);   break;
+      case 39: /* arrow-right */ _this.onKeyRight(ev);  break;
+      case 13: /* enter       */ _this.onEnter(ev);     break;
+      case 33: /* page-up     */ _this.onKeyPgUp(ev);   break;
+      case 34: /* page-down   */ _this.onKeyPgDn(ev);   break;
+      case 36: /* home        */ _this.onKeyHome(ev);   break;
+      case 35: /* end         */ _this.onKeyEnd(ev);    break;
+    }
+  });
+
+  var x, y;
+  this.el.on("mousemove", ".column .item", function(ev) {
+    if(x !== ev.pageX || y !== ev.pageY) {
+      x = ev.pageX;
+      y = ev.pageY;
+      _this.select($(ev.currentTarget));
+    }
+  });
+  this.el.on("click", ".column ul li.result", function(ev) {
+    _this.select($(ev.currentTarget));
+    _this.onEnter(ev);
+  });
+};
+
 NodeSearcher.prototype.expression = function() {
   return this.prefix + this.searchbox.val();
 };
@@ -168,6 +228,20 @@ NodeSearcher.prototype.setExpression = function(expr) {
 
 NodeSearcher.prototype.appendExpression = function(expr) {
   this.setExpression(this.prefix + expr);
+};
+
+NodeSearcher.prototype.performSearch = function() {
+  var results;
+  if(this.prefix === "" && this.searchbox.val() === "") {
+    this.firstColumn.removeClass('types');
+  } else {
+    this.firstColumn.addClass('types');
+  }
+
+  results = doSearch(this.expression());
+
+  this.searchrow.addClass('active');
+  this.displaySearchResults(results);
 };
 
 NodeSearcher.prototype.currentSelection = function() {
@@ -208,294 +282,8 @@ NodeSearcher.prototype.scrollToSelected = function() {
   }
 };
 
-NodeSearcher.prototype.onKeyDown = function(event) {
-  var currentSelection, nextSelection;
-
-  currentSelection  = this.currentSelection();
-  nextSelection = currentSelection.next();
-
-  if(this.isSearchboxActive()) {
-    nextSelection = this.firstColumn.find('li:first-child');
-  }
-
-  if(nextSelection.length > 0) {
-    this.select(nextSelection);
-    this.scrollToSelected();
-  }
-
-  event.preventDefault();
-  event.stopPropagation();
-};
-
-NodeSearcher.prototype.onKeyUp = function(event) {
-  var currentSelection, nextSelection, shouldSelectSearchbox;
-  currentSelection  = this.currentSelection();
-  nextSelection = currentSelection.prev();
-
-  shouldSelectSearchbox = this.currentColumn.is(this.firstColumn) && nextSelection.length === 0;
-
-  if(shouldSelectSearchbox) {
-    nextSelection = this.searchrow;
-  }
-
-  if(nextSelection.length > 0) {
-    this.select(nextSelection);
-    this.scrollToSelected();
-  }
-
-  event.preventDefault();
-  event.stopPropagation();
-};
-
-NodeSearcher.prototype.onBackspace = function(event) {
-  var val = this.searchbox.val();
-  var expr = this.expression();
-
-  if(val === "") {
-    this.setExpression(expr.slice(0, expr.length-1));
-    event.preventDefault();
-  }
-
-  event.stopPropagation();
-};
-
 NodeSearcher.prototype.isSearchboxActive = function() {
   return this.searchrow.hasClass('active');
-};
-
-NodeSearcher.prototype.onKeyLeft = function(event) {
-  if(!this.isSearchboxActive()) {
-    if(!this.currentColumn.is(this.firstColumn)){
-      this.currentColumn.nextAll().remove();
-      this.selectColumn(this.currentColumn.prev());
-    }
-    event.preventDefault();
-  }
-  event.stopPropagation();
-};
-
-NodeSearcher.prototype.onKeyRight = function(event) {
-  var next;
-  if(!this.isSearchboxActive()) {
-    next = this.currentColumn.next();
-    if(next.length > 0) {
-      this.select(next.find("li:first-child"));
-    }
-    event.preventDefault();
-  }
-  event.stopPropagation();
-};
-
-NodeSearcher.prototype.performSearch = function() {
-  var results;
-  if(this.prefix === "" && this.searchbox.val() === "") {
-    this.firstColumn.removeClass('types');
-  } else {
-    this.firstColumn.addClass('types');
-  }
-
-  results = doSearch(this.expression());
-
-  this.searchrow.addClass('active');
-  this.displaySearchResults(results);
-};
-
-NodeSearcher.prototype.onInput = function() {
-  var query = this.searchbox.val();
-  if(shouldSplit(query)) {
-    this.appendExpression(query);
-  } else {
-    this.performSearch();
-  }
-};
-
-NodeSearcher.prototype.onEnter = function(ev) {
-  var current, data;
-
-  if(this.searchrow.hasClass('active')) {
-    this.createNode(this.prefix + this.searchbox.val());
-  } else {
-    current = this.currentSelection();
-    data    = current.data('match');
-
-    if(data.type === 'module') {
-      this.appendExpression(data.fullName + ".");
-    } else {
-      this.appendExpression(data.fullName);
-      this.createNode();
-    }
-  }
-
-  ev.preventDefault();
-};
-
-NodeSearcher.prototype.onEsc = function(ev) {
-  // TODO: Close searcher and send 'search-cancelled' event
-  ev.preventDefault();
-};
-
-NodeSearcher.prototype.onKeyHome = function(ev) {
-  var _this = this;
-  var ul = this.currentColumn.find("ul");
-  if(!this.searchrow.hasClass('active')) {
-    this.select(this.currentColumn.find('li:first-child'));
-    this.currentColumn.find('.ul-container').mCustomScrollbar("scrollTo", 'top', {scrollInertia: config.nodeSearcher.scrollAnimationTime});
-    ev.preventDefault();
-  }
-};
-
-NodeSearcher.prototype.onKeyEnd = function(ev) {
-  var _this = this;
-  var ul = this.currentColumn.find("ul");
-  if(!this.searchrow.hasClass('active')) {
-    this.select(this.currentColumn.find('li:last-child'));
-    this.currentColumn.find('.ul-container').mCustomScrollbar("scrollTo", 'bottom', {scrollInertia: config.nodeSearcher.scrollAnimationTime});
-    ev.preventDefault();
-  }
-};
-
-NodeSearcher.prototype.onKeyPgUp = function(ev) {
-  var _this = this;
-  var targetScroll = this.currentSelection().position().top - this.currentColumn.find(".ul-container").height();
-
-  if(!this.searchrow.hasClass('active')) {
-    var lastVisible = _(this.currentColumn.find('li').get()).find(function(el) { return $(el).position().top >= targetScroll;});
-    if(lastVisible) {
-      this.select($(lastVisible));
-    }
-    this.scrollToSelected();
-    ev.preventDefault();
-  }
-};
-
-NodeSearcher.prototype.onKeyPgDn = function(ev) {
-  var _this = this;
-  var targetScroll = this.currentSelection().position().top + this.currentColumn.find(".ul-container").height();
-
-  if(!this.searchrow.hasClass('active')) {
-    var lastVisible = _(this.currentColumn.find('li').get().reverse()).find(function(el) { return $(el).position().top + $(el).height() <= targetScroll;});
-    if(lastVisible) {
-      this.select($(lastVisible));
-    }
-    this.scrollToSelected();
-    ev.preventDefault();
-  }
-};
-
-NodeSearcher.prototype.onTab = function(ev) {
-  var current, data;
-
-  if(!this.searchrow.hasClass('active')) {
-    current = this.currentSelection();
-    data    = current.data('match');
-
-    if(data.type === 'module') {
-      this.appendExpression(data.fullName + ".");
-    } else {
-      this.appendExpression(data.fullName );
-    }
-  }
-
-  ev.preventDefault();
-};
-
-NodeSearcher.prototype.initSearchbox = function() {
-  var _this = this;
-
-  var firstColumn = $('<div/>').addClass('column').addClass('current').addClass('first-column');
-  this.searchrow = $('<div class="item active query"><span class="query-ns"></span><input autofocus="on" type="text" class="query"/></div>');
-  firstColumn.items = $('<ul/>');
-  firstColumn.itemsDiv = $('<div class="ul-container"/>');
-  firstColumn.append(this.searchrow);
-  firstColumn.itemsDiv.append(firstColumn.items);
-  firstColumn.append(firstColumn.itemsDiv);
-
-
-  console.log(config.nodeSearcher.scrollbarOptions)
-  this.searchbox = this.searchrow.find('input.query');
-  this.searchns  = this.searchrow.find('span.query-ns');
-
-  this.el.append(firstColumn);
-  this.currentColumn = firstColumn;
-  this.firstColumn = firstColumn;
-
-  this.updatePrefixWidth();
-
-  firstColumn.itemsDiv.mCustomScrollbar(config.nodeSearcher.scrollbarOptions);
-
-  this.searchbox.on('input', function() {
-    _this.onInput();
-  });
-  this.searchbox.on('blur', function() {
-    _this.searchbox.focus();
-  });
-
-  this.searchbox.on('keydown', function(ev) {
-    switch(ev.keyCode){
-      case 9: { //tab
-        _this.onTab(ev);
-        break;
-      }
-      case 27: { //esc
-        _this.onEsc(ev);
-        break;
-      }
-      case 8: {
-        _this.onBackspace(ev);
-        break;
-      }
-      case 38: { //up
-        _this.onKeyUp(ev);
-        break;
-      }
-      case 40: { // down
-        _this.onKeyDown(ev);
-        break;
-      }
-      case 37: { // left
-        _this.onKeyLeft(ev);
-        break;
-      }
-      case 39: { // right
-        _this.onKeyRight(ev);
-        break;
-      }
-      case 13: { //enter
-        _this.onEnter(ev);
-        break;
-      }
-      case 33: { //pgup
-        _this.onKeyPgUp(ev);
-        break;
-      }
-      case 34: { //pgdwn
-        _this.onKeyPgDn(ev);
-        break;
-      }
-      case 36: { //home
-        _this.onKeyHome(ev);
-        break;
-      }
-      case 35: { //end
-        _this.onKeyEnd(ev);
-        break;
-      }
-    }
-  });
-
-
-  var x, y;
-  this.el.on("mousemove", ".column .item", function(ev) {
-    if(x !== ev.pageX || y !== ev.pageY) {
-      x = ev.pageX;
-      y = ev.pageY;
-      _this.select($(ev.currentTarget));
-    }
-  });
-  this.el.on("click", ".column ul li.result", function(ev) {
-    _this.select($(ev.currentTarget));
-    _this.onEnter(ev);
-  });
 };
 
 NodeSearcher.prototype.createNode = function() {
@@ -571,5 +359,175 @@ NodeSearcher.prototype.displayTree = function(results, ul) {
     li.append(name);
   });
 };
+
+// input event handlers
+
+NodeSearcher.prototype.onInput = function() {
+  var query = this.searchbox.val();
+  if(shouldSplit(query)) {
+    this.appendExpression(query);
+  } else {
+    this.performSearch();
+  }
+};
+
+NodeSearcher.prototype.onBackspace = function(event) {
+  var val = this.searchbox.val();
+  var expr = this.expression();
+
+  if(val === "") {
+    this.setExpression(expr.slice(0, expr.length-1));
+    event.preventDefault();
+  }
+
+  event.stopPropagation();
+};
+
+NodeSearcher.prototype.onEnter = function(ev) {
+  var current, data;
+
+  if(this.searchrow.hasClass('active')) {
+    this.createNode(this.prefix + this.searchbox.val());
+  } else {
+    current = this.currentSelection();
+    data    = current.data('match');
+
+    if(data.type === 'module') {
+      this.appendExpression(data.fullName + ".");
+    } else {
+      this.appendExpression(data.fullName);
+      this.createNode();
+    }
+  }
+
+  ev.preventDefault();
+};
+
+NodeSearcher.prototype.onTab = function(ev) {
+  var current, data;
+
+  if(!this.searchrow.hasClass('active')) {
+    current = this.currentSelection();
+    data    = current.data('match');
+
+    if(data.type === 'module') {
+      this.appendExpression(data.fullName + ".");
+    } else {
+      this.appendExpression(data.fullName );
+    }
+  }
+
+  ev.preventDefault();
+};
+
+NodeSearcher.prototype.onEsc = function(ev) {
+  // TODO: Close searcher and send 'search-cancelled' event
+  ev.preventDefault();
+};
+
+NodeSearcher.prototype.onKeyDown = function(event) {
+  var currentSelection, nextSelection;
+
+  currentSelection  = this.currentSelection();
+  nextSelection = currentSelection.next();
+
+  if(this.isSearchboxActive()) {
+    nextSelection = this.firstColumn.find('li:first-child');
+  }
+
+  if(nextSelection.length > 0) {
+    this.select(nextSelection);
+    this.scrollToSelected();
+  }
+
+  event.preventDefault();
+  event.stopPropagation();
+};
+
+NodeSearcher.prototype.onKeyUp = function(event) {
+  var currentSelection, nextSelection, shouldSelectSearchbox;
+  currentSelection  = this.currentSelection();
+  nextSelection = currentSelection.prev();
+
+  shouldSelectSearchbox = this.currentColumn.is(this.firstColumn) && nextSelection.length === 0;
+
+  if(shouldSelectSearchbox) {
+    nextSelection = this.searchrow;
+  }
+
+  if(nextSelection.length > 0) {
+    this.select(nextSelection);
+    this.scrollToSelected();
+  }
+
+  event.preventDefault();
+  event.stopPropagation();
+};
+
+NodeSearcher.prototype.onKeyLeft = function(event) {
+  if(!this.isSearchboxActive()) {
+    if(!this.currentColumn.is(this.firstColumn)){
+      this.currentColumn.nextAll().remove();
+      this.selectColumn(this.currentColumn.prev());
+    }
+    event.preventDefault();
+  }
+  event.stopPropagation();
+};
+
+NodeSearcher.prototype.onKeyRight = function(event) {
+  var next;
+  if(!this.isSearchboxActive()) {
+    next = this.currentColumn.next();
+    if(next.length > 0) {
+      this.select(next.find("li:first-child"));
+    }
+    event.preventDefault();
+  }
+  event.stopPropagation();
+};
+
+NodeSearcher.prototype.onKeyHome = function(ev) {
+  if(!this.searchrow.hasClass('active')) {
+    this.select(this.currentColumn.find('li:first-child'));
+    this.currentColumn.find('.ul-container').mCustomScrollbar("scrollTo", 'top', {scrollInertia: config.nodeSearcher.scrollAnimationTime});
+    ev.preventDefault();
+  }
+};
+
+NodeSearcher.prototype.onKeyEnd = function(ev) {
+  if(!this.searchrow.hasClass('active')) {
+    this.select(this.currentColumn.find('li:last-child'));
+    this.currentColumn.find('.ul-container').mCustomScrollbar("scrollTo", 'bottom', {scrollInertia: config.nodeSearcher.scrollAnimationTime});
+    ev.preventDefault();
+  }
+};
+
+NodeSearcher.prototype.onKeyPgUp = function(ev) {
+  var targetScroll = this.currentSelection().position().top - this.currentColumn.find(".ul-container").height();
+
+  if(!this.searchrow.hasClass('active')) {
+    var lastVisible = _(this.currentColumn.find('li').get()).find(function(el) { return $(el).position().top >= targetScroll;});
+    if(lastVisible) {
+      this.select($(lastVisible));
+    }
+    this.scrollToSelected();
+    ev.preventDefault();
+  }
+};
+
+NodeSearcher.prototype.onKeyPgDn = function(ev) {
+  var targetScroll = this.currentSelection().position().top + this.currentColumn.find(".ul-container").height();
+
+  if(!this.searchrow.hasClass('active')) {
+    var lastVisible = _(this.currentColumn.find('li').get().reverse()).find(function(el) { return $(el).position().top + $(el).height() <= targetScroll;});
+    if(lastVisible) {
+      this.select($(lastVisible));
+    }
+    this.scrollToSelected();
+    ev.preventDefault();
+  }
+};
+
 
 module.exports = NodeSearcher;
