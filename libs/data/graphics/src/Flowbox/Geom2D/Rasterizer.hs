@@ -270,7 +270,7 @@ clampedIndex2D obj (Point2 !x !y) = unsafeIndex2D obj $ Point2 ((x `min` maxX) `
 
 drawLines :: Int -> Int -> Path Float -> Path Float -> M.MImage Float -> IO ()
 drawLines width height path feather img = do
-    let array !x !y    = index2D img $ Point2 x y
+    let array !x !y    = clampedIndex2D img $ Point2 x y
         !pathCubics    = makeCubics path
         !featherCubics = makeCubics feather
     return ()
