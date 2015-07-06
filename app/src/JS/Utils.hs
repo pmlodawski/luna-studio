@@ -1,17 +1,39 @@
 module JS.Utils where
 
+import JS.Bindings
 
--- screenToGl :: (Int, Int) -> (Int, Int)
--- screenToGl (x, y) = (x - $$.screenSize.x / 2, - y + $$.screenSize.y / 2)
 
--- screenToNormalizedGl :: (Int, Int) -> (Int, Int)
--- screenToNormalizedGl (x, y) = (x / $$.screenSize.x * 2 - 1, -(y / $$.screenSize.y) * 2 + 1)
 
--- glToWorkspace :: (Int, Int) -> (Int, Int)
--- glToWorkspace (x, y) = (x / $$.camFactor.value + $$.camPan.x, y / $$.camFactor.value + $$.camPan.y)
+screenToGl :: (Double, Double) -> IO (Double, Double)
+screenToGl (x, y) = do
+    screenSizeX <- getScreenSizeX
+    screenSizeY <- getScreenSizeY
+    return (x - screenSizeX / 2.0, - y + screenSizeY / 2.0)
 
--- screenToWorkspace :: (Int, Int) -> (Int, Int)
--- screenToWorkspace = glToWorkspace . screenToGl
 
--- workspaceToScreen :: (Int, Int) -> (Int, Int)
--- workspaceToScreen (x, y) = ((x  - $$.camPan.x) * $$.camFactor.value + $$.halfScreen.x , (-y + $$.camPan.y) * $$.camFactor.value + $$.halfScreen.y)
+screenToNormalizedGl :: (Double, Double) -> IO (Double, Double)
+screenToNormalizedGl (x, y) = do
+    screenSizeX <- getScreenSizeX
+    screenSizeY <- getScreenSizeY
+    return (x / screenSizeX * 2.0 - 1.0, -(y / screenSizeY) * 2.0 + 1.0)
+
+
+glToWorkspace :: (Double, Double) -> IO (Double, Double)
+glToWorkspace (x, y) = do
+    camFactor <- getCamFactor
+    camPanX   <- getCamPanX
+    camPanY   <- getCamPanY
+    return (x / camFactor + camPanX, y / camFactor + camPanY)
+
+
+screenToWorkspace :: (Double, Double) -> IO (Double, Double)
+screenToWorkspace (x, y) = glToWorkspace =<< screenToGl (x, y)
+
+
+workspaceToScreen :: (Double, Double) -> IO (Double, Double)
+workspaceToScreen (x, y) = do
+    camFactor <- getCamFactor
+    camPanX   <- getCamPanX
+    camPanY   <- getCamPanY
+    return (x / camFactor + camPanX, y / camFactor + camPanY)
+

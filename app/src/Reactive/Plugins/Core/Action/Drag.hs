@@ -11,6 +11,7 @@ import           Data.Function
 import           System.Mem
 
 import           JS.Bindings
+import           JS.Appjs
 import           Object.Object
 import qualified Object.Node    as Node     ( position )
 import           Object.Node    hiding      ( position )

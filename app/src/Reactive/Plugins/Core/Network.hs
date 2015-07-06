@@ -28,6 +28,7 @@ import qualified Reactive.Plugins.Core.Action.Action    as Action
 import qualified Reactive.Plugins.Core.Action.AddRemove as AddRemove
 import qualified Reactive.Plugins.Core.Action.Selection as Selection
 import qualified Reactive.Plugins.Core.Action.Drag      as Drag
+import qualified Reactive.Plugins.Core.Action.Camera    as Camera
 import qualified Reactive.Plugins.Core.Action.Executor  as Executor
 
 import           Reactive.Plugins.Core.Action.State.Global
@@ -37,19 +38,22 @@ updateUI :: ( State
             , Action.WithStateMaybe AddRemove.Action State
             , Action.WithStateMaybe Selection.Action State
             , Action.WithStateMaybe Drag.Action State
+            , Action.WithStateMaybe Camera.Action State
             ) -> IO ()
-updateUI (_, addRem, sel, drag) = do
+updateUI (_, addRem, sel, drag, cam) = do
     AddRemove.updateUI addRem
     Selection.updateUI sel
     Drag.updateUI      drag
+    Camera.updateUI    cam
 
 
 logAll :: ( State
             , Action.WithStateMaybe AddRemove.Action State
             , Action.WithStateMaybe Selection.Action State
             , Action.WithStateMaybe Drag.Action State
+            , Action.WithStateMaybe Camera.Action State
             ) -> IO ()
-logAll (st, addRem, sel, drag) = do
+logAll (st, addRem, sel, drag, cam) = do
     logAs "g|" st
 
 makeNetworkDescription :: forall t. Frameworks t => Moment t ()
@@ -84,6 +88,8 @@ makeNetworkDescription = do
         -- nodeDragReactionB             = Action.tryExec  <$> nodeDragActionB <*> globalStateB
         -- nodeDragReactionStateB        = Action.getState <$> nodeDragReactionB
 
+        cameraActionE                 = Camera.toAction <$> anyNodeE
+        cameraActionB                 = stepper def $ cameraActionE
 
 
         -- ss1B :: Int
@@ -101,11 +107,13 @@ makeNetworkDescription = do
                                            , Action.WithStateMaybe AddRemove.Action State
                                            , Action.WithStateMaybe Selection.Action State
                                            , Action.WithStateMaybe Drag.Action State
+                                           , Action.WithStateMaybe Camera.Action State
                                            )
         globalStateReactionB           = Executor.execAll <$> globalStateB
                                                           <*> nodeAddRemActionB
                                                           <*> nodeSelectionActionB
                                                           <*> nodeDragActionB
+                                                          <*> cameraActionB
 
         logIfActionAs as ws = if isJust (ws ^. Action.action) then logAs as ws else return ()
 

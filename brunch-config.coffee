@@ -89,6 +89,7 @@ exports.config =
             bundler.require('./app/common', {expose: 'common'})
             bundler.require('./app/app', {expose: 'app'})
             bundler.require('./app/utils', {expose: 'utils'})
+            bundler.require('./app/common', {expose: 'common'})
 
 
           onBeforeBundle: (bundler) ->

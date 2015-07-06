@@ -26,7 +26,7 @@ function start() {
     initialize_gl();
 
     // -> HS
-    setup_pan_and_zoom();
+    setupPanAndZoom();
     document.addEventListener('keydown', onDocumentKeyDown, false );
     // createRandomNodes(1);
 
@@ -64,7 +64,7 @@ function initialize_gl() {
 
 
 // -> HS
-function setup_pan_and_zoom() {
+function setupPanAndZoom() {
   var dragMode = null;
   var mouse = new THREE.Vector2(0,0);
   var mouseStart = new THREE.Vector2(0,0);
@@ -99,7 +99,7 @@ function setup_pan_and_zoom() {
         var position = utils.screenToWorkspace(event.clientX, event.clientY);
         delta = utils.screenToWorkspace(mouse.x, mouse.y).sub(position);
         $$.camPan.add(delta);
-        reconfigure_camera();
+        reconfigureCamera();
         event.stopPropagation();
         break;
       }
@@ -112,7 +112,7 @@ function setup_pan_and_zoom() {
           $$.camPan.add(delta);
           mouseStart.sub(delta);
         }
-        reconfigure_camera();
+        reconfigureCamera();
         event.stopPropagation();
         break;
       }
@@ -136,7 +136,7 @@ function setWindowSize(){
   $$.halfScreen.x = w / 2.0;
   $$.halfScreen.y = h / 2.0;
   $$.renderer.setSize( w, h );
-  reconfigure_camera();
+  reconfigureCamera();
 }
 
 // -> HS
@@ -146,14 +146,14 @@ function updateCamFactor(val) {
 }
 
 // -> HS
-function reconfigure_camera() {
+function reconfigureCamera() {
   $$.htmlCanvasPan.css({left: $$.halfScreen.x - $$.camPan.x * $$.camFactor.value, top: $$.halfScreen.y + $$.camPan.y * $$.camFactor.value});
   $$.htmlCanvas.css({zoom: $$.camFactor.value});
 
-  $$.camera.left = - $$.halfScreen.x / $$.camFactor.value + $$.camPan.x;
-  $$.camera.right = $$.halfScreen.x / $$.camFactor.value + $$.camPan.x;
-  $$.camera.top = $$.halfScreen.y / $$.camFactor.value + $$.camPan.y;
-  $$.camera.bottom = - $$.halfScreen.y / $$.camFactor.value + $$.camPan.y;
+  $$.camera.left   = -$$.halfScreen.x / $$.camFactor.value + $$.camPan.x;
+  $$.camera.right  =  $$.halfScreen.x / $$.camFactor.value + $$.camPan.x;
+  $$.camera.top    =  $$.halfScreen.y / $$.camFactor.value + $$.camPan.y;
+  $$.camera.bottom = -$$.halfScreen.y / $$.camFactor.value + $$.camPan.y;
 
   $$.camera.updateProjectionMatrix();
 }
@@ -242,20 +242,10 @@ function getOffsetForNode(nodeIndex, x, y) {
     return node.position.clone().sub(vec).toArray();
 }
 
-// -> HS
-function dragNode(nodeIndex, x, y) {
-  var node;
-  if (nodeIndex < 0)
-    return;
-
-  node = nodes[nodeIndex];
-  var vec = utils.screenToWorkspace(x,y);
-  node.moveTo(vec.x, vec.y);
-}
 
 module.exports = {
   render: render,
-  dragNode: dragNode,
+  // dragNode: dragNode,
   moveToTopZ: moveToTopZ,
   getNodeAt: getNodeAt,  // remove
   getNode: function(index) {
@@ -277,32 +267,32 @@ function onDocumentKeyDown( event )
   {
     case 187: { // plus
       updateCamFactor($$.camFactor.value * 1.1);
-      reconfigure_camera();
+      reconfigureCamera();
       break;
     }
     case 189: { // minus
       updateCamFactor($$.camFactor.value  / 1.1);
-      reconfigure_camera();
+      reconfigureCamera();
       break;
     }
     case 37: { // left
       $$.camPan.x -= 10/$$.camFactor.value;
-      reconfigure_camera();
+      reconfigureCamera();
       break;
     }
     case 38: { // top
       $$.camPan.y += 10/$$.camFactor.value;
-      reconfigure_camera();
+      reconfigureCamera();
       break;
     }
     case 39: { // right
       $$.camPan.x += 10/$$.camFactor.value;
-      reconfigure_camera();
+      reconfigureCamera();
       break;
     }
     case 40: { // bottom
       $$.camPan.y -= 10/$$.camFactor.value;
-      reconfigure_camera();
+      reconfigureCamera();
       break;
     }
   }

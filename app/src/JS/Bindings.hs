@@ -41,6 +41,13 @@ foreign import javascript unsafe "window.virtualDom.patch($1, $2)"
     patch :: Element -> JSRef Diff -> IO ()
 
 
+foreign import javascript unsafe "window.innerWidth"
+    innerWidth :: IO Int
+
+foreign import javascript unsafe "window.innerHeight"
+    innerHeight :: IO Int
+
+
 
 foreign import javascript unsafe "app.init()"
     init :: IO ()
@@ -50,9 +57,6 @@ foreign import javascript unsafe "app.render()"
 
 foreign import javascript unsafe "app.create($1)"
     create :: Int -> IO ()
-
-foreign import javascript unsafe "app.dragNode($1, $2, $3)"
-    dragNode :: Int -> Int -> Int -> IO ()
 
 foreign import javascript unsafe "app.moveToTopZ($1)"
     moveToTopZ :: Int -> IO ()
@@ -72,6 +76,37 @@ foreign import javascript unsafe "app.removeNode($1)"
 data FunctionNode
 
 
+
+
+
+
+
+
+foreign import javascript unsafe "common.commonUniforms.screenSize.value.x"
+    getScreenSizeX :: IO Double
+
+foreign import javascript unsafe "common.commonUniforms.screenSize.value.y"
+    getScreenSizeY :: IO Double
+
+foreign import javascript unsafe "common.commonUniforms.camPan.value.x"
+    getCamPanX :: IO Double
+
+foreign import javascript unsafe "common.commonUniforms.camPan.value.y"
+    getCamPanY :: IO Double
+
+foreign import javascript unsafe "common.commonUniforms.camFactor.value"
+    getCamFactor :: IO Double
+
+
+foreign import javascript unsafe "common.commonUniforms.samFactor.value = $1"
+    setCamFactor :: Double -> IO ()
+
+
+
+
+
+
+
 foreign import javascript unsafe "app.getNode($1)"
     getNode :: Int -> IO (JSRef FunctionNode)
 
@@ -82,10 +117,11 @@ getNodes :: IO [JSRef FunctionNode]
 getNodes = getNodesJSArray >>= fromArray
 
 foreign import javascript unsafe "$1.moveTo($2, $3)"
-    moveTo :: JSRef FunctionNode -> Int -> Int -> IO ()
+    moveTo :: JSRef FunctionNode -> Double -> Double -> IO ()
 
 foreign import javascript unsafe "$1.label($2)"
     showLabel :: JSRef FunctionNode -> JSString -> IO ()
+
 
 
 foreign import javascript unsafe "$1.uniforms.selected.value"
