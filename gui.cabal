@@ -32,10 +32,7 @@ executable gui
                       , ConstraintKinds
                       , GeneralizedNewtypeDeriving
                       , DeriveDataTypeable
-                      , RankNTypes
                       , ScopedTypeVariables
-                      , ImpredicativeTypes
-                      , ExistentialQuantification
 --                      , EmptyDataDecl
 
   build-depends:       base >=4.7 && <4.8
