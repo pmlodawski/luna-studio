@@ -29,7 +29,8 @@ import qualified Reactive.Plugins.Core.Action.AddRemove as AddRemove
 import qualified Reactive.Plugins.Core.Action.Selection as Selection
 import qualified Reactive.Plugins.Core.Action.Drag      as Drag
 import qualified Reactive.Plugins.Core.Action.Camera    as Camera
-import qualified Reactive.Plugins.Core.Action.Executor  as Executor
+-- import qualified Reactive.Plugins.Core.Action.Executor  as Executor
+import           Reactive.Plugins.Core.Action.Executor
 
 import           Reactive.Plugins.Core.Action.State.Global
 
@@ -98,6 +99,7 @@ makeNetworkDescription = do
         cameraActionE                 = Camera.toAction <$> anyNodeE
         cameraActionB                 = stepper def $ cameraActionE
 
+        -- nodeDragActionB :: Int
 
         nodeAddRemReactionB           = Action.tryExec  <$> nodeAddRemActionB    <*> globalStateB
         nodeSelectionReactionB        = Action.tryExec  <$> nodeSelectionActionB <*> globalStateB
@@ -127,8 +129,15 @@ makeNetworkDescription = do
         --                                                   <*> nodeDragActionB
         --                                                   <*> cameraActionB
 
+        -- globalStateReactionB = Executor.execAll3 globalStateB [ nodeAddRemActionB
+        --                                      , nodeSelectionActionB
+        --                                      , nodeDragActionB
+        --                                      , cameraActionB
+        --                                      ]
+
+
         globalStateReactionB :: Behavior t State
-        globalStateReactionB           = Executor.execAll' <$> globalStateB
+        globalStateReactionB           = execAll' <$> globalStateB
                                                            <*> nodeAddRemActionB
                                                            <*> nodeSelectionActionB
                                                            <*> nodeDragActionB

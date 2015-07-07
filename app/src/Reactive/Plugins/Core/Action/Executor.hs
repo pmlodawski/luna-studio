@@ -7,7 +7,7 @@ module Reactive.Plugins.Core.Action.Executor where
 
 import           Data.Monoid          ( (<>) )
 import           Data.Default
-import           Data.Maybe           ( isJust )
+import           Data.Maybe
 import           Data.Functor
 import           Control.Lens
 import           Utils.PrettyPrinter
@@ -68,13 +68,74 @@ execAll' initState addRem selection drag cam = finalState
 
 
 
--- <*> :: f (a -> b) -> f a -> f b
+-- data ActionExecutorElem = forall act. ActionStateExecutor act State => ActionExecutorElem act
 
--- <*>    B (a -> [a]) -> f a -> f [a]
+-- newtype ActionExecutorList = ActionExecutorList [ActionExecutorElem] deriving (Monoid)
 
-infixr 9 :-:
-data ActionExecList = forall a. ActionStateExecutor a State => a :-: ActionExecList
-                    | ActionExecNil
+-- single :: ActionStateExecutor act State => act -> ActionExecutorList
+-- single act = ActionExecutorList [ActionExecutorElem act]
+
+-- prepend :: ActionStateExecutor act State => act -> ActionExecutorList -> ActionExecutorList
+-- prepend act actionExecutorList = single act <> actionExecutorList
+
+-- append :: ActionStateExecutor act State => act -> ActionExecutorList -> ActionExecutorList
+-- append act actionExecutorList = actionExecutorList <> single act
+
+-- infixr 9 -:
+-- (-:) :: ActionStateExecutor act State => act -> ActionExecutorList -> ActionExecutorList
+-- (-:) = append
+
+data ActionExecutorElem = forall act. ActionStateExecutor act State => ActionExecutorElem act
+
+newtype ActionExecutorList = ActionExecutorList [ActionExecutorElem] deriving (Monoid)
+
+single :: ActionStateExecutor act State => act -> ActionExecutorList
+single act = ActionExecutorList [ActionExecutorElem act]
+
+prepend :: ActionStateExecutor act State => act -> ActionExecutorList -> ActionExecutorList
+prepend act actionExecutorList = single act <> actionExecutorList
+
+append :: ActionStateExecutor act State => act -> ActionExecutorList -> ActionExecutorList
+append act actionExecutorList = actionExecutorList <> single act
+
+infixr 9 -:
+(-:) :: ActionStateExecutor act State => act -> ActionExecutorList -> ActionExecutorList
+(-:) = append
+
+
+
+-- toActionExecutorListB :: ActionStateExecutor act State => [Behavior t act] -> Behavior t ActionExecutorList
+-- toActionExecutorListB list = undefined where
+    -- a = catMaybes <$> list
+
+-- toActionExecutorListB :: [Behavior t (forall act. ActionStateExecutor act State)]
+--        -> ActionExecutorList (Behavior t forall act. ActionStateExecutor act State])
+-- toActionExecutorListB list ->--
+
+
+execAll3 :: forall act t. ActionStateExecutor act State => Behavior t State -> [Behavior t (Maybe act)] -> Behavior t State
+execAll3 stInitB actionBs = foldl (\st act -> (fmap $ view state) $ tryExec <$> act <*> st) stInitB actionBs
+    -- where
+    -- execAction :: WithStateMaybe act State -> Maybe act -> WithStateMaybe act State
+    -- execAction ws act = tryExec act $ ws ^. state
+
+
+
+-- (Behavior t State -> Behavior t act -> Behavior t State) -> Behavior t State -> [Behavior  t act] -> Behavior t State
+
+-- foldl        :: (b -> a -> b) -> b -> [a] -> b
+-- foldl f z0 xs0 = lgo z0 xs0
+--              where
+--                 lgo z []     =  z
+--                 lgo z (x:xs) = lgo (f z x) xs
+
+-- toActionExecutorListB :: forall act t. [Behavior t (ActionStateExecutor act State)]
+--                       -> Behavior t ActionExecutorList ActionExecutorElem
+-- toActionExecutorListB list = mconcat ((fmap ActionExecutorElem) <$> list)
+
+-- infixr 9 :-:
+-- data ActionExecList = forall a. ActionStateExecutor a State => a :-: ActionExecList
+--                     | ActionExecNil
 
 -- execAll2 :: forall act. ActionStateExecutor act State => State -> [Maybe act] -> [WithStateMaybe act State]
 -- execAll2 stInit actions = scanl execAction (WithState Nothing stInit) actions
@@ -89,22 +150,22 @@ data ActionExecList = forall a. ActionStateExecutor a State => a :-: ActionExecL
 
 
 -- execAll2 :: State -> [forall act. (ActionStateExecutor act State) => Maybe act] -> State
-execAll2 :: Behavior t State -> [forall act. (ActionStateExecutor act State) => Behavior t (Maybe act)] -> Behavior t State
-execAll2 stInit actions = undefined where -- scanl execAction (WithState Nothing stInit) actions
+-- execAll2 :: Behavior t State -> [forall act. (ActionStateExecutor act State) => Behavior t (Maybe act)] -> Behavior t State
+-- execAll2 stInit actions = undefined where -- scanl execAction (WithState Nothing stInit) actions
     -- execAction ws act = tryExec act $ ws ^. state
 
 
-data ActionList t = forall act. (ActionStateExecutor act State) => ActionList [Behavior t (Maybe act)]
+-- data ActionList t = forall act. (ActionStateExecutor act State) => ActionList [Behavior t (Maybe act)]
 
 -- instance Monoid (ActionList t) where
 --     mempty = ActionList []
 --     -- (ActionList (a:as)) `mappend` (ActionList a') = ActionList (a : a')
 
-appendAction :: (forall act. (ActionStateExecutor act State) => Behavior t (Maybe act)) -> ActionList  t -> ActionList t
-appendAction a (ActionList as) = ActionList (a:as)
+-- appendAction :: (forall act. (ActionStateExecutor act State) => Behavior t (Maybe act)) -> ActionList  t -> ActionList t
+-- appendAction a (ActionList as) = ActionList (a:as)
 
-pureAction :: (forall act. (ActionStateExecutor act State) => Behavior t (Maybe act)) -> ActionList t
-pureAction a = ActionList [a]
+-- pureAction :: (forall act. (ActionStateExecutor act State) => Behavior t (Maybe act)) -> ActionList t
+-- pureAction a = ActionList [a]
 
 
 -- appendAction :: forall act. ActionStateExecutor act State => act -> [act] -> [act]
