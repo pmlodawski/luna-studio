@@ -10,12 +10,15 @@ import           GHCJS.DOM           ( currentWindow )
 import           GHCJS.DOM.DOMWindow ( IsDOMWindow
                                      , domWindowOnclick
                                      , domWindowOnmouseup
+                                     , domWindowOnkeydown
                                      , domWindowOnkeypress
+                                     , domWindowOnkeyup
                                      , domWindowOnmousedown
                                      , domWindowOnmousemove
                                      )
 import           GHCJS.DOM.EventM    ( EventM
                                      , uiCharCode
+                                     , uiKeyCode
                                      , uiWhich
                                      , mouseClientXY
                                      , mouseButton
@@ -29,11 +32,18 @@ import qualified GHCJS.DOM.MouseEvent
 import           Reactive.Banana.Frameworks ( AddHandler(..), liftIO )
 
 import           JS.Bindings
+import           JS.NodeSearcher
+import           GHCJS.Foreign
+
 import           Object.Object
-import qualified Event.Keyboard ( KeyMods(..), Event, newEvent )
+import qualified Event.Keyboard ( KeyMods(..), Event, newEvent, Type(..) )
 import qualified Event.Mouse    ( Type(..), newWithObjects, newEvent )
+import qualified Event.NodeSearcher ( newEvent )
 import qualified Object.Node    ( Node )
 import           Event.Event
+
+import qualified Data.Text.Lazy as Text
+import           Data.Text.Lazy (Text)
 
 readKeyMods :: (IsDOMWindow self) => EventM GHCJS.DOM.MouseEvent.MouseEvent self Event.Keyboard.KeyMods
 readKeyMods = do
@@ -95,4 +105,29 @@ keyPressedHandler = AddHandler $ \h -> do
     window <- fromJust <$> currentWindow
     domWindowOnkeypress window $ do
         key <- uiCharCode
-        liftIO . h $ Keyboard $ Event.Keyboard.newEvent $ chr key
+        liftIO . h $ Keyboard $ (Event.Keyboard.newEvent Event.Keyboard.Press (chr key))
+
+keyDownHandler :: AddHandler (Event Dynamic)
+keyDownHandler = AddHandler $ \h -> do
+    window <- fromJust <$> currentWindow
+    domWindowOnkeydown window $ do
+        key <- uiKeyCode
+        liftIO . h $ Keyboard $ (Event.Keyboard.newEvent Event.Keyboard.Down (chr key))
+
+keyUpHandler :: AddHandler (Event Dynamic)
+keyUpHandler = AddHandler $ \h -> do
+    window <- fromJust <$> currentWindow
+    domWindowOnkeyup window $ do
+        key <- uiKeyCode
+        liftIO . h $ Keyboard $ (Event.Keyboard.newEvent Event.Keyboard.Up (chr key))
+
+nodeSearcherHander :: AddHandler (Event Dynamic)
+nodeSearcherHander = AddHandler $ \h -> do
+    window <- fromJust <$> currentWindow
+    nodeSearcherOnEvent window $ do
+        action <- nsAction
+        expr   <- nsExpression
+        liftIO $ do
+             -- putStrLn $ "Hello from haskell world, you asked for " ++ (Text.unpack action) ++ " => " ++ (Text.unpack expr)
+             h $ NodeSearcher $ Event.NodeSearcher.newEvent action expr
+

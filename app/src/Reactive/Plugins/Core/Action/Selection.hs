@@ -56,7 +56,7 @@ instance PrettyPrinter Action where
 
 
 toAction :: Event Node -> Maybe Action
-toAction (Mouse (WithObjects mouseEvent objects)) = case mouseEvent ^. tpe of
+toAction (Mouse (WithObjects mouseEvent objects)) = case mouseEvent ^. Mouse.tpe of
     Mouse.Pressed -> if isNoNode then case mouseKeyMods of
                                     (KeyMods False False False False) -> Just UnselectAll
                                     _                                 -> Nothing
@@ -72,11 +72,11 @@ toAction (Mouse (WithObjects mouseEvent objects)) = case mouseEvent ^. tpe of
                                                  else SelectNew
           toggleActionType = if node ^. selected then ToggleOff
                                                  else ToggleOn
-toAction (Keyboard (Keyboard.Event char)) = case char of
+toAction (Keyboard (Keyboard.Event Keyboard.Press char)) = case char of
     'n' -> Just SelectAll
     'u' -> Just UnselectAll
     _   -> Nothing
-
+toAction _ = Nothing
 
 updateNodeSelection :: NodeIdCollection -> Node -> Node
 updateNodeSelection selNodeIds node = let selection = elem (node ^. ident) selNodeIds in node & selected .~ selection

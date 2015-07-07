@@ -45,11 +45,12 @@ instance PrettyPrinter Action where
 
 toAction :: Event Node -> Maybe Action
 toAction (Mouse (WithObjects mouseEvent objects)) = Nothing
-toAction (Keyboard (Keyboard.Event char)) = case char of
+toAction (Keyboard (Keyboard.Event Keyboard.Press char)) = case char of
     '=' -> Just ZoomIn
     '+' -> Just ZoomIn
     '-' -> Just ZoomOut
     _   -> Nothing
+toAction _ = Nothing
 
 
 instance ActionStateExecutor Action Global.State where

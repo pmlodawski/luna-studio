@@ -12,6 +12,7 @@ import qualified Reactive.Plugins.Core.Action.AddRemove as AddRemove
 import qualified Reactive.Plugins.Core.Action.Selection as Selection
 import qualified Reactive.Plugins.Core.Action.Drag      as Drag
 import qualified Reactive.Plugins.Core.Action.Camera    as Camera
+import qualified Reactive.Plugins.Core.Action.NodeSearcher as NodeSearcher
 import           Reactive.Plugins.Core.Action.State.Global
 
 
@@ -20,18 +21,21 @@ execAll :: State -> Maybe AddRemove.Action
                  -> Maybe Selection.Action
                  -> Maybe Drag.Action
                  -> Maybe Camera.Action
+                 -> Maybe NodeSearcher.Action
                  -> ( State
                     , WithStateMaybe AddRemove.Action State
                     , WithStateMaybe Selection.Action State
                     , WithStateMaybe Drag.Action State
                     , WithStateMaybe Camera.Action State
+                    , WithStateMaybe NodeSearcher.Action State
                     )
-execAll initState addRem selection drag cam = (finalState, wsAddRem, wsSel, wsDrag, wsCam)
+execAll initState addRem selection drag cam ns = (finalState, wsAddRem, wsSel, wsDrag, wsCam, wsNode)
     where
     wsAddRem   = tryExec addRem              initState
     wsSel      = tryExec selection $ wsAddRem ^. state
     wsDrag     = tryExec drag      $ wsSel    ^. state
     wsCam      = tryExec cam       $ wsDrag   ^. state
+    wsNode     = tryExec ns        $ wsCam    ^. state
     finalState = wsCam                        ^. state
 
 

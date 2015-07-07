@@ -8,6 +8,8 @@ import Data.List           ( intercalate )
 import Control.Lens
 import Utils.PrettyPrinter
 
+data Type = Press | Down | Up deriving (Eq, Show, Typeable)
+
 data KeyMods = KeyMods { _shift :: Bool
                        , _ctrl  :: Bool
                        , _alt   :: Bool
@@ -29,12 +31,12 @@ instance PrettyPrinter KeyMods where
                                                   , getString "meta"  $ keyMods ^. meta
                                                   ]
 
-data Event = Event { _char :: Char } deriving (Eq, Show, Typeable)
+data Event = Event { _tpe :: Type, _char :: Char } deriving (Eq, Show, Typeable)
 
 makeLenses ''Event
 
 instance PrettyPrinter Event where
-    display (Event c) = show c
+    display (Event t c) = show t <> " " <> show c
 
-newEvent :: Char -> Event
-newEvent ch = Event ch
+newEvent :: Type -> Char -> Event
+newEvent t ch = Event t ch

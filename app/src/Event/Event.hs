@@ -10,13 +10,15 @@ import Object.Object ( Object )
 import Object.Dynamic
 import Utils.PrettyPrinter
 
-import qualified Event.Keyboard as Keyboard
-import qualified Event.Mouse    as Mouse
-import qualified Event.WithObjects as WithObjects
+import qualified Event.Keyboard      as Keyboard
+import qualified Event.Mouse         as Mouse
+import qualified Event.NodeSearcher  as NodeSearcher
+import qualified Event.WithObjects   as WithObjects
 
 
 data Event obj = Keyboard Keyboard.Event
                | Mouse    (Mouse.MEvent obj)
+               | NodeSearcher  NodeSearcher.Event
 
 
 makeLenses ''Event
@@ -24,4 +26,5 @@ makeLenses ''Event
 instance Typeable obj => UnpackDynamic (Event Dynamic) (Event obj) where
     unpackDynamic (Mouse (WithObjects.WithObjects ev obj)) = Mouse (WithObjects.WithObjects ev $ unpackDynamic obj)
     unpackDynamic (Keyboard ev)                            = Keyboard ev
+    unpackDynamic (NodeSearcher ev)                        = NodeSearcher ev
 

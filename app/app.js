@@ -34,10 +34,10 @@ function start() {
     render();
 
     window.ghcjs();
-    if(features.node_searcher) {
-      $$.node_searcher = new NodeSearcher();
-      $('body').append($$.node_searcher.el);
-    }
+    // if(features.node_searcher) {
+    //   $$.node_searcher = new NodeSearcher();
+    //   $('body').append($$.node_searcher.el);
+    // }
   });
 }
 
@@ -242,10 +242,30 @@ function getOffsetForNode(nodeIndex, x, y) {
     return node.position.clone().sub(vec).toArray();
 }
 
+function createNodeSearcher(expression, left, top) {
+  var ns;
+  if(features.node_searcher) {
+    destroyNodeSearcher();
+
+    ns = new NodeSearcher();
+    $$.node_searcher = ns;
+    $('body').append(ns.el);
+    ns.init();
+    ns.el.css({left: left, top: top});
+    if(expression)
+      ns.setExpression(expression);
+    return ns;
+  }
+}
+
+function destroyNodeSearcher() {
+  if($$.node_searcher !== undefined) {
+    $$.node_searcher.destroy();
+  }
+}
 
 module.exports = {
   render: render,
-  // dragNode: dragNode,
   moveToTopZ: moveToTopZ,
   getNodeAt: getNodeAt,  // remove
   getNode: function(index) {
@@ -256,7 +276,9 @@ module.exports = {
   },
   newNodeAt: newNodeAt,
   removeNode: removeNode,
-  start: start
+  start: start,
+  createNodeSearcher: createNodeSearcher,
+  destroyNodeSearcher: destroyNodeSearcher
 };
 
 

@@ -48,7 +48,6 @@ main = do
     -- setSelected functionRef 2
 
 
-
     eventNetwork <- compile makeNetworkDescription
     actuate eventNetwork
 

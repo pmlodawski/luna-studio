@@ -30,6 +30,7 @@ import qualified Reactive.Plugins.Core.Action.Selection as Selection
 import qualified Reactive.Plugins.Core.Action.Drag      as Drag
 import qualified Reactive.Plugins.Core.Action.Camera    as Camera
 import qualified Reactive.Plugins.Core.Action.Executor  as Executor
+import qualified Reactive.Plugins.Core.Action.NodeSearcher  as NodeSearcher
 
 import           Reactive.Plugins.Core.Action.State.Global
 
@@ -39,12 +40,14 @@ updateUI :: ( State
             , Action.WithStateMaybe Selection.Action State
             , Action.WithStateMaybe Drag.Action State
             , Action.WithStateMaybe Camera.Action State
+            , Action.WithStateMaybe NodeSearcher.Action State
             ) -> IO ()
-updateUI (_, addRem, sel, drag, cam) = do
-    AddRemove.updateUI addRem
-    Selection.updateUI sel
-    Drag.updateUI      drag
-    Camera.updateUI    cam
+updateUI (_, addRem, sel, drag, cam, ns) = do
+    AddRemove.updateUI       addRem
+    Selection.updateUI       sel
+    Drag.updateUI            drag
+    Camera.updateUI          cam
+    NodeSearcher.updateUI    ns
 
 
 logAll :: ( State
@@ -52,8 +55,9 @@ logAll :: ( State
             , Action.WithStateMaybe Selection.Action State
             , Action.WithStateMaybe Drag.Action State
             , Action.WithStateMaybe Camera.Action State
+            , Action.WithStateMaybe NodeSearcher.Action State
             ) -> IO ()
-logAll (st, addRem, sel, drag, cam) = do
+logAll (st, addRem, sel, drag, cam, ns) = do
     logAs "g|" st
 
 makeNetworkDescription :: forall t. Frameworks t => Moment t ()
@@ -61,10 +65,13 @@ makeNetworkDescription = do
     mouseDownE    <- fromAddHandler mouseDownHandler
     mouseUpE      <- fromAddHandler mouseUpHandler
     mouseMovedE   <- fromAddHandler mouseMovedHandler
+    keyDownE      <- fromAddHandler keyDownHandler
     keyPressedE   <- fromAddHandler keyPressedHandler
+    keyUpE        <- fromAddHandler keyUpHandler
+    nodeSearcherE <- fromAddHandler nodeSearcherHander
 
     let
-        anyE                          = unions [mouseDownE, mouseUpE, mouseMovedE, keyPressedE]
+        anyE                          = unions [mouseDownE, mouseUpE, mouseMovedE, keyDownE, keyPressedE, keyUpE, nodeSearcherE]
 
         globalStateB                 :: Behavior t State
         globalStateB                  = stepper def $ ((view _1) <$> globalStateReactionB) <@ anyE
@@ -91,6 +98,8 @@ makeNetworkDescription = do
         cameraActionE                 = Camera.toAction <$> anyNodeE
         cameraActionB                 = stepper def $ cameraActionE
 
+        nodeSearcherActionE           = NodeSearcher.toAction <$> anyNodeE
+        nodeSearcherB                 = stepper def $ nodeSearcherActionE
 
         -- ss1B :: Int
         -- ss1B = (Action.pureAction) <$> nodeAddRemActionB
@@ -108,12 +117,14 @@ makeNetworkDescription = do
                                            , Action.WithStateMaybe Selection.Action State
                                            , Action.WithStateMaybe Drag.Action State
                                            , Action.WithStateMaybe Camera.Action State
+                                           , Action.WithStateMaybe NodeSearcher.Action State
                                            )
         globalStateReactionB           = Executor.execAll <$> globalStateB
                                                           <*> nodeAddRemActionB
                                                           <*> nodeSelectionActionB
                                                           <*> nodeDragActionB
                                                           <*> cameraActionB
+                                                          <*> nodeSearcherB
 
         logIfActionAs as ws = if isJust (ws ^. Action.action) then logAs as ws else return ()
 

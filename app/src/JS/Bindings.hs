@@ -8,17 +8,25 @@ import Data.Maybe         ( maybeToList )
 import Data.Monoid        ( (<>) )
 import Data.Dynamic
 
+import Control.Monad.Trans ( liftIO )
+
 import GHCJS.Foreign
+import GHCJS.DOM.EventM
 import GHCJS.DOM          ( currentDocument )
 import GHCJS.DOM.Document ( documentGetBody )
-import GHCJS.DOM.Element  ( Element )
+import GHCJS.DOM.Element  ( Element, IsElement )
 import GHCJS.DOM.Node     ( nodeAppendChild )
 import GHCJS.Types        ( JSRef, JSArray, JSString )
+import GHCJS.DOM.Types    ( UIEvent, IsDOMWindow, IsUIEvent, unUIEvent, toUIEvent )
 import JS.Converters
 
 import Object.Object      ( Point(..), Object(..) )
 import Object.Node        ( Node(..) )
 import Utils.PrettyPrinter
+
+import qualified Data.Text.Lazy as Text
+import           Data.Text.Lazy (Text)
+
 -----------------------------------------------------------------------
 -- Enough to interact with virtual-dom
 -----------------------------------------------------------------------

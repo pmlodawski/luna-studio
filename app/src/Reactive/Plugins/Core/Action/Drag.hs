@@ -52,7 +52,7 @@ instance PrettyPrinter Action where
 
 
 toAction :: Event Node -> Maybe Action
-toAction (Mouse (WithObjects mouseEvent objects)) = case mouseEvent ^. tpe of
+toAction (Mouse (WithObjects mouseEvent objects)) = case mouseEvent ^. Mouse.tpe of
     Mouse.Pressed  -> if isNoNode then Nothing
                                   else case mouseKeyMods of
                                        (KeyMods False False False False) -> Just (DragAction StartDrag mousePosition)
