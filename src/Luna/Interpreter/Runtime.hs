@@ -14,11 +14,13 @@ import           Luna.Interpreter.Runtime.Hash as X
 import           Luna.Interpreter.Runtime.HMap as X (HKey, HMap, T)
 import qualified Luna.Interpreter.Runtime.HMap as HMap
 import           Prelude
+import qualified System.IO.Unsafe              as Unsafe
 
 
 
-hmapCreateKeyWithWitness :: a -> IO (HKey T a)
-hmapCreateKeyWithWitness = const HMap.createKey
+hmapCreateKeyWithWitness :: a -> HKey T a
+hmapCreateKeyWithWitness = Unsafe.unsafePerformIO . const HMap.createKey
+
 
 hmapCreateKey = HMap.createKey
 hmapInsert    = HMap.insert
