@@ -35,7 +35,7 @@ import qualified Data.Vector.Storable.Mutable as MV
 import           Foreign.Ptr
 import           Foreign.Storable
 import           Foreign.Storable.Tuple       ()
-import           Linear                       hiding (point)
+import           Linear                       hiding (point, trace)
 
 import           Flowbox.GuiMockup.JSInterop
 
@@ -44,7 +44,7 @@ import Control.Exception as Exc
 
 
 
-toVec :: CubicBezier Float -> V.Vector (V2 Float)
+toVec :: CubicBezier Double -> V.Vector (V2 Double)
 toVec (CubicBezier c0 c1 c2 c3) = V.fromList [c0, c1, c2, c3]
 
 data Openness = Open | Closed
@@ -52,11 +52,11 @@ data Openness = Open | Closed
 
 instance Binary Openness
 
-type ControlPoint = (V2 Float, V2 Float, V2 Float)
+type ControlPoint = (V2 Double, V2 Double, V2 Double)
 
 -- main function in this module
 
-fitCurve' :: [V2 Float] -> Float -> Openness -> [CubicBezier Float]
+fitCurve' :: [V2 Double] -> Double -> Openness -> [CubicBezier Double]
 fitCurve' points err openness = case openness of
     Open   -> V.toList $ fitCubic points' tHat1 tHat2 err
     Closed -> (V.head $ fitCubic (V.fromList [head points, last points]) tHat1 tHat2 err) : fitCurve' points err Open
@@ -66,20 +66,21 @@ fitCurve' points err openness = case openness of
         tHat1 = computeLeftTangent points' 0
         tHat2 = computeRightTangent points' $ len - 1
 
-fitCurve :: [V2 Float] -> Float -> Openness -> [ControlPoint]
+fitCurve :: [V2 Double] -> Double -> Openness -> [ControlPoint]
 fitCurve a b c = unsafePerformIO $ Exc.catch (return $ fitCurve'' a b c) (\(Exc.ErrorCall s) -> putStrLn s >> return [])
 
-fitCurve'' :: [V2 Float] -> Float -> Openness -> [ControlPoint]
+fitCurve'' :: [V2 Double] -> Double -> Openness -> [ControlPoint]
 fitCurve'' points err openness = case openness of
     Open   -> beziersToControlPoints $ V.toList $ fitCubic points' tHat1 tHat2 err
     Closed -> let controlPoints = fitCurve points err Open
                   firstControlPoint@(fstCP, fstCPHi, fstCPHo) = head controlPoints
-                  penultimateControlPoint@(pCP, pCPHi, pCPHo) = (last.init) controlPoints
+                  penultimateControlPoint@(pCP, pCPHi, pCPHo) = if length controlPoints == 2 then last controlPoints else (last.init) controlPoints
+                                                                -- ^^^^^^^^^^^^^^^^^^^^^^^^^ [MM]: when we have only 2 control points, taking the last one as penultimate is kinda ok
                   linkingBezier = V.head $ fitCubic (V.fromList [pCP, fstCP]) (negated $ pCPHi - pCP) (negated tHat1) err
 
                   firstControlPointModified = firstControlPoint & _2 .~ fstCPHi
                   lastControlPointModified = penultimateControlPoint & _3 .~ pCPHo
-                  middleControlPoints = (init . init . tail) controlPoints
+                  middleControlPoints = if length controlPoints == 2 then [] else (init . init . tail) controlPoints
               in firstControlPointModified : middleControlPoints ++ [lastControlPointModified]
 
     where
@@ -93,7 +94,7 @@ beziersToFullControlPoints beziers = map snd $ tail . tail $ scanl (\(prevhi,_) 
     dummyHandle = V2 0 0
     CubicBezier _ _ lastPointHi lastPoint = last beziers
 
-beziersToControlPoints :: [CubicBezier Float] -> [ControlPoint]
+beziersToControlPoints :: [CubicBezier Double] -> [ControlPoint]
 beziersToControlPoints beziers = [startControlPoint] ++ midPoints ++ [endControlPoint]
     where
         midPoints = beziersToFullControlPoints beziers
@@ -102,7 +103,7 @@ beziersToControlPoints beziers = [startControlPoint] ++ midPoints ++ [endControl
         CubicBezier ps ho _ _ = head beziers
         CubicBezier _ _ hi pe = last beziers
 
-fitCubic :: V.Vector (V2 Float) -> V2 Float -> V2 Float -> Float -> V.Vector (CubicBezier Float)
+fitCubic :: V.Vector (V2 Double) -> V2 Double -> V2 Double -> Double -> V.Vector (CubicBezier Double)
 fitCubic points tHat1 tHat2 err
     | V.length points == 2 =
         let c0 = points V.! 0
@@ -159,7 +160,7 @@ splitPoints ix vec = (V.snoc left $ V.head right, right)
     where
         (left, right) = V.splitAt ix vec
 
-reparameterize :: V.Vector (V2 Float) -> V.Vector Float -> CubicBezier Float -> V.Vector Float
+reparameterize :: V.Vector (V2 Double) -> V.Vector Double -> CubicBezier Double -> V.Vector Double
 reparameterize points u bezierCurve = V.create $ do
     let len = V.length points
     uPrime <- MV.new len
@@ -171,7 +172,7 @@ reparameterize points u bezierCurve = V.create $ do
 
     return uPrime
 
-newtonRaphsonRootFind :: CubicBezier Float -> V2 Float -> Float -> Float
+newtonRaphsonRootFind :: CubicBezier Double -> V2 Double -> Double -> Double
 newtonRaphsonRootFind q p u =
     if denominator == 0 then u else u - numerator / denominator
     where
@@ -201,7 +202,7 @@ newtonRaphsonRootFind q p u =
                       (qu ^. _x - p ^. _x) * q2u ^. _x + (qu ^. _y - p ^. _y) * q2u ^. _y
 
 
-generateBezier :: V.Vector (V2 Float) -> V.Vector Float -> V2 Float -> V2 Float -> CubicBezier Float
+generateBezier :: V.Vector (V2 Double) -> V.Vector Double -> V2 Double -> V2 Double -> CubicBezier Double
 generateBezier points uPrime tHat1 tHat2 =
     if alphaL < eps || alphaR < eps
         then let dist = segLength / 3
@@ -229,7 +230,7 @@ generateBezier points uPrime tHat1 tHat2 =
         segLength = distance (V.last points) (V.head points)
         eps = 1.0e-6 * segLength
 
-computeMaxError :: V.Vector (V2 Float) -> CubicBezier Float -> V.Vector Float -> (Float, Int)
+computeMaxError :: V.Vector (V2 Double) -> CubicBezier Double -> V.Vector Double -> (Double, Int)
 computeMaxError points bezier u = runST $ do
     maxDist <- newSTRef 0
     let len = V.length points
@@ -250,7 +251,7 @@ computeMaxError points bezier u = runST $ do
 
     return (maxDist' , splitPoint')
 
-evalBezier :: V.Vector (V2 Float) -> Float -> V2 Float
+evalBezier :: V.Vector (V2 Double) -> Double -> V2 Double
 evalBezier vtemp t = runST $ do
     let degree = V.length vtemp - 1
     v <- V.thaw vtemp
@@ -264,7 +265,7 @@ evalBezier vtemp t = runST $ do
     MV.read v 0
 
 
-computeX :: V.Vector (V2 Float) -> V.Vector (V2 Float, V2 Float) -> V.Vector Float -> V2 Float
+computeX :: V.Vector (V2 Double) -> V.Vector (V2 Double, V2 Double) -> V.Vector Double -> V2 Double
 computeX points a uPrime = runST $ do
     x0 <- newSTRef 0
     x1 <- newSTRef 0
@@ -292,7 +293,7 @@ computeX points a uPrime = runST $ do
 
     return $ V2 x0' x1'
 
-computeC :: V.Vector (V2 Float, V2 Float) -> M22 Float
+computeC :: V.Vector (V2 Double, V2 Double) -> M22 Double
 computeC a = runST $ do
     c00 <- newSTRef 0
     c01 <- newSTRef 0
@@ -315,7 +316,7 @@ computeC a = runST $ do
 
     return $ V2 (V2 c00' c01') (V2 c10' c11')
 
-computeAMatrix :: Int -> V.Vector Float -> V2 Float -> V2 Float -> V.Vector (V2 Float, V2 Float)
+computeAMatrix :: Int -> V.Vector Double -> V2 Double -> V2 Double -> V.Vector (V2 Double, V2 Double)
 computeAMatrix len uPrime tHat1 tHat2 = V.create $ do
     t <- MV.new len
 
@@ -327,7 +328,7 @@ computeAMatrix len uPrime tHat1 tHat2 = V.create $ do
 
     return t
 
-b0, b1, b2, b3 :: Float -> Float
+b0, b1, b2, b3 :: Double -> Double
 b0 u = tmp * tmp * tmp
     where
         tmp = 1 - u
@@ -342,7 +343,7 @@ b2 u = 3 * u * u * tmp
 
 b3 u = u * u * u
 
-chordLengthParameterize :: V.Vector (V2 Float) -> V.Vector Float
+chordLengthParameterize :: V.Vector (V2 Double) -> V.Vector Double
 chordLengthParameterize points = V.create $ do
     u <- MV.new $ V.length points
     MV.write u 0 0
@@ -360,7 +361,7 @@ chordLengthParameterize points = V.create $ do
 
     return u
 
-computeRightTangent :: V.Vector (V2 Float) -> Int -> V2 Float
+computeRightTangent :: V.Vector (V2 Double) -> Int -> V2 Double
 computeRightTangent points end = tHat2
     where
         tHat2 = normalize tHat2'
@@ -369,7 +370,7 @@ computeRightTangent points end = tHat2
         avgSample = min 5 $ V.length points -1
 
 
-computeLeftTangent :: V.Vector (V2 Float) -> Int -> V2 Float
+computeLeftTangent :: V.Vector (V2 Double) -> Int -> V2 Double
 computeLeftTangent points end = tHat1
     where
         tHat1 = normalize tHat1'
@@ -377,7 +378,7 @@ computeLeftTangent points end = tHat1
         avgPoint = (V.sum $ V.take avgSample points)/(fromIntegral avgSample)
         avgSample = min 5 $ V.length points -1
 
-computeCenterTangent :: V.Vector (V2 Float) -> Int -> V2 Float
+computeCenterTangent :: V.Vector (V2 Double) -> Int -> V2 Double
 computeCenterTangent points center = normalize tHatCenter
     where
         v1 = (points V.! (center - 1)) - (points V.! center)
@@ -391,7 +392,7 @@ linearity p0 p1 p2 = (a `dot` b) / n
         b = p1 - p0
         n = norm a * norm b
 
-test2 :: [[Float]] -> String
+test2 :: [[Double]] -> String
 test2 input = jsify $ V.map (curry3 linearity) vector
     where
         inputVector = readPoints input
@@ -404,5 +405,5 @@ curry3 :: (a -> b -> c -> d) -> (a, b, c) -> d
 curry3 f (a, b, c) = f a b c
 
 
--- test :: Float -> [[Float]] -> String
+-- test :: Double -> [[Double]] -> String
 -- test err input = jsifyVector jsifyBezier $ V.fromList $ fitCurve (V.toList $ readPoints input) err Closed
