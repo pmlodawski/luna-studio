@@ -67,14 +67,14 @@ execAll' initState addRem selection drag cam ns = finalState
 
 
 
-class Foo a where
-    foo :: a -> String
+-- class Foo a where
+--     foo :: a -> String
 
-data FooLike = forall a. Foo a => FooLike a
+-- data FooLike = forall a. Foo a => FooLike a
 
 
-instance Foo FooLike where
-    foo (FooLike a) = foo a
+-- instance Foo FooLike where
+--     foo (FooLike a) = foo a
 
 
 
@@ -102,14 +102,46 @@ instance Foo FooLike where
 --          => Behavior t State -> [Behavior t ActionExec] -> Behavior t State
 
 
-execAll3 :: Behavior t State -> [Behavior t ActionST] -> Behavior t State
-execAll3 stInitB actionBs = foldl exec3 stInitB actionBs
-    where
-    exec3 :: Behavior t State -> Behavior t ActionST -> Behavior t State
-    exec3 stB actB = fromMaybe <$> stB <*> run3
-        where
-        run3 = ((fmap . fmap) getState) $ execSt <$> actB <*> stB
+-- execAll3 :: Behavior t State -> [Behavior t ActionST] -> Behavior t State
+-- execAll3 stInitB actionBs = foldl exec3 stInitB actionBs
+--     where
+--     exec3 :: Behavior t State -> Behavior t ActionST -> Behavior t State
+--     exec3 stB actB = fromMaybe <$> stB <*> run3
+--         where
+--         run3 = ((fmap . fmap) getState) $ execSt <$> actB <*> stB
 
+
+execAll4 :: Behavior t State -> [Behavior t ActionST] -> [Behavior t ActionUI]
+execAll4 stInitB actionBs = execAll4' (noActionUI <$> stInitB) actionBs
+
+execAll4' :: Behavior t ActionUI -> [Behavior t ActionST] -> [Behavior t ActionUI]
+execAll4' initB actionBs = scanl exec4 initB actionBs
+    where
+    exec4 :: Behavior t ActionUI -> Behavior t ActionST -> Behavior t ActionUI
+    exec4 pB cB = exec4' <$> pB <*> cB
+        where
+        exec4' :: ActionUI -> ActionST -> ActionUI
+        exec4' (ActionUI _ st) (ActionST act) = case res of
+            Nothing    -> noActionUI st
+            Just actUI -> actUI
+            where res = execSt act st
+
+
+    -- exec4 stB actB = fromMaybe <$> stB <*> run4
+    --     where
+    --     run4 :: Behavior t ActionUI -> Behavior t ActionST -> Behavior t ActionUI
+    --     run4 = execSt <$> actB <*> stB
+
+
+
+-- scanl                   :: (b -> a -> b) -> b -> [a] -> [b]
+-- scanl f q ls            =  q : (case ls of
+--                                 []   -> []
+--                                 x:xs -> scanl f (f q x) xs)
+
+-- scanl :: (b -> a -> b) -> b -> [a] -> [b]
+
+-- scanl f z [x1, x2, ...] == [z, z `f` x1, (z `f` x1) `f` x2, ...]
 
 -- execAll4 :: Behavior t State -> [Behavior t ActionST] -> Behavior t State
 -- execAll4 stInitB actionBs = foldl exec3 stInitB actionBs

@@ -68,7 +68,6 @@ logAll (st, addRem, sel, drag, cam, ns) = do
 
 logIfActionAs as ws = if isJust (ws ^. Action.action) then logAs as ws else return ()
 
-
 makeNetworkDescription :: forall t. Frameworks t => Moment t ()
 makeNetworkDescription = do
     mouseDownE    <- fromAddHandler mouseDownHandler
@@ -80,7 +79,8 @@ makeNetworkDescription = do
     nodeSearcherE <- fromAddHandler nodeSearcherHander
 
     let
-        anyE                          = unions [mouseDownE, mouseUpE, mouseMovedE, keyDownE, keyPressedE, keyUpE, nodeSearcherE]
+        -- anyE                          = unions [mouseDownE, mouseUpE, mouseMovedE, keyDownE, keyPressedE, keyUpE, nodeSearcherE]
+        anyE                          = unions [mouseDownE, mouseUpE, mouseMovedE, keyPressedE]
 
         globalStateB                 :: Behavior t State
         -- globalStateB                  = stepper def $ ((view _1) <$> globalStateReactionB) <@ anyE
@@ -116,14 +116,10 @@ makeNetworkDescription = do
         -- nodeDragActionB :: Int
 
 
-        nodeAddRemReactionB           = Action.tryExec  <$> nodeAddRemActionB    <*> globalStateB
-        nodeSelectionReactionB        = Action.tryExec  <$> nodeSelectionActionB <*> globalStateB
-        nodeDragReactionB             = Action.tryExec  <$> nodeDragActionB      <*> globalStateB
-        nodeSearcherReactionB         = Action.tryExec  <$> nodeSearcherActionB  <*> globalStateB
-
         -- nodeAddRemReactionB           = Action.tryExec  <$> nodeAddRemActionB    <*> globalStateB
         -- nodeSelectionReactionB        = Action.tryExec  <$> nodeSelectionActionB <*> globalStateB
         -- nodeDragReactionB             = Action.tryExec  <$> nodeDragActionB      <*> globalStateB
+        -- nodeSearcherReactionB         = Action.tryExec  <$> nodeSearcherActionB  <*> globalStateB
 
 
         -- nodeAddRemActionBE    = ActionExec <$> nodeAddRemActionB
@@ -132,15 +128,23 @@ makeNetworkDescription = do
 
         nodeAddRemActionBE    = ActionST <$> nodeAddRemActionB
         nodeSelectionActionBE = ActionST <$> nodeSelectionActionB
-        -- nodeDragActionBE      = ActionST <$> nodeDragActionB
+        nodeDragActionBE      = ActionST <$> nodeDragActionB
 
         -- dupa1 = ActionExec <$> (fromJust <$> nodeAddRemActionB)
         -- dupa2 = ActionExec <$> (fromJust <$> nodeSelectionActionB)
         -- dupa3 = ActionExec <$> (fromJust <$> nodeDragActionB)
 
-        allBE = [nodeAddRemActionBE, nodeSelectionActionBE]
+        allBE = [nodeAddRemActionBE, nodeSelectionActionBE, nodeDragActionBE]
         -- globalStateReactionB = execAll3 globalStateB allBE
 
+
+        allRBE = execAll4 globalStateB allBE
+
+        globalStateReactionB = getState <$> (last allRBE)
+
+
+        toReactimateB :: Behavior t [ActionUI]
+        toReactimateB = sequenceA allRBE
 
         -- ss1B :: Int
         -- ss1B = (Action.pureAction) <$> nodeAddRemActionB
@@ -174,13 +178,13 @@ makeNetworkDescription = do
 
 
 
-        globalStateReactionB :: Behavior t State
-        globalStateReactionB           = execAll' <$> globalStateB
-                                                           <*> nodeAddRemActionB
-                                                           <*> nodeSelectionActionB
-                                                           <*> nodeDragActionB
-                                                           <*> cameraActionB
-                                                           <*> nodeSearcherActionB
+        -- globalStateReactionB :: Behavior t State
+        -- globalStateReactionB           = execAll' <$> globalStateB
+        --                                                    <*> nodeAddRemActionB
+        --                                                    <*> nodeSelectionActionB
+        --                                                    <*> nodeDragActionB
+        --                                                    <*> cameraActionB
+        --                                                    <*> nodeSearcherActionB
 
 
 
@@ -208,6 +212,10 @@ makeNetworkDescription = do
 
     -- initial logB >>= liftIO . logAs ""
 
+    toReactimateF <- changes toReactimateB
+    reactimate' $ (fmap updatAllUI) <$> toReactimateF
+    reactimate' $ (fmap logAllUI) <$> toReactimateF
+
     -- nodeSelectionReactionF <- changes nodeSelectionReactionB
     -- reactimate' $ (fmap Selection.updateUI) <$> nodeSelectionReactionF
     -- reactimate' $ (fmap $ logIfActionAs "s|")       <$> nodeSelectionReactionF
@@ -220,9 +228,9 @@ makeNetworkDescription = do
     -- reactimate' $ (fmap AddRemove.updateUI) <$> nodeAddRemReactionF
     -- reactimate' $ (fmap $ logIfActionAs "r|")       <$> nodeAddRemReactionF
 
-    nodeSearcherReactionF <- changes nodeSearcherReactionB
-    reactimate' $ (fmap NodeSearcher.updateUI) <$> nodeSearcherReactionF
-    reactimate' $ (fmap $ logIfActionAs "r|")       <$> nodeSearcherReactionF
+    -- nodeSearcherReactionF <- changes nodeSearcherReactionB
+    -- reactimate' $ (fmap NodeSearcher.updateUI) <$> nodeSearcherReactionF
+    -- reactimate' $ (fmap $ logIfActionAs "r|")       <$> nodeSearcherReactionF
 
 
     -- globalStateReactionF <- changes globalStateReactionB
