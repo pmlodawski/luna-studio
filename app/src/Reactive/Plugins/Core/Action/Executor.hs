@@ -66,6 +66,70 @@ execAll' initState addRem selection drag cam ns = finalState
     finalState = wsNS                         ^. state
 
 
+
+class Foo a where
+    foo :: a -> String
+
+data FooLike = forall a. Foo a => FooLike a
+
+
+instance Foo FooLike where
+    foo (FooLike a) = foo a
+
+
+
+-- data ActionExec = forall act. ActionStateExecutor act State => ActionExec act
+
+
+-- instance ActionStateExecutor ActionExec State where
+--     -- tryExec :: ActionExec -> State -> WithStateMaybe act State
+--     exec (ActionExec a) st =
+--         WithState (Just oo) outState
+--         -- undefined
+--         where
+--             -- resultAP :: Int
+--             result    = exec a st
+--             outState  = result ^. state
+--             outAction = result ^. action
+--             oo  = case outAction of
+--                 -- Nothing  -> ActionExec Nothing
+--                 Just act -> ActionExec act
+
+
+    -- exec (ActionExec a) st = exec a st
+
+-- execAll3 :: forall act t. ActionStateExecutor act State
+--          => Behavior t State -> [Behavior t ActionExec] -> Behavior t State
+
+
+execAll3 :: Behavior t State -> [Behavior t ActionST] -> Behavior t State
+execAll3 stInitB actionBs = foldl exec3 stInitB actionBs
+    where
+    exec3 :: Behavior t State -> Behavior t ActionST -> Behavior t State
+    exec3 stB actB = fromMaybe <$> stB <*> run3
+        where
+        run3 = ((fmap . fmap) getState) $ execSt <$> actB <*> stB
+
+
+-- execAll4 :: Behavior t State -> [Behavior t ActionST] -> Behavior t State
+-- execAll4 stInitB actionBs = foldl exec3 stInitB actionBs
+--     where
+--     exec3 :: Behavior t State -> Behavior t ActionST -> Behavior t State
+--     exec3 stB actB = fromMaybe <$> stB <*> run3
+--         where
+--         run3 = ((fmap . fmap) getState) $ execSt <$> actB <*> stB
+
+
+
+    -- unpB :: forall a t. Behavior t ActionExec -> Behavior t (Maybe a)
+    -- unpB beh = (fmap (\(ActionExec a) -> a)) beh
+    -- where
+    -- execAction :: WithStateMaybe act State -> Maybe act -> WithStateMaybe act State
+    -- execAction ws act = tryExec act $ ws ^. state
+
+
+
+
 -- class ActionStateExecutor act st where
 --     exec    ::        act  -> st -> WithStateMaybe act st
 --     tryExec :: (Maybe act) -> st -> WithStateMaybe act st
@@ -91,22 +155,22 @@ execAll' initState addRem selection drag cam ns = finalState
 -- (-:) :: ActionStateExecutor act State => act -> ActionExecutorList -> ActionExecutorList
 -- (-:) = append
 
-data ActionExecutorElem = forall act. ActionStateExecutor act State => ActionExecutorElem act
+-- data ActionExecutorElem = forall act. ActionStateExecutor act State => ActionExecutorElem act
 
-newtype ActionExecutorList = ActionExecutorList [ActionExecutorElem] deriving (Monoid)
+-- newtype ActionExecutorList = ActionExecutorList [ActionExecutorElem] deriving (Monoid)
 
-single :: ActionStateExecutor act State => act -> ActionExecutorList
-single act = ActionExecutorList [ActionExecutorElem act]
+-- single :: ActionStateExecutor act State => act -> ActionExecutorList
+-- single act = ActionExecutorList [ActionExecutorElem act]
 
-prepend :: ActionStateExecutor act State => act -> ActionExecutorList -> ActionExecutorList
-prepend act actionExecutorList = single act <> actionExecutorList
+-- prepend :: ActionStateExecutor act State => act -> ActionExecutorList -> ActionExecutorList
+-- prepend act actionExecutorList = single act <> actionExecutorList
 
-append :: ActionStateExecutor act State => act -> ActionExecutorList -> ActionExecutorList
-append act actionExecutorList = actionExecutorList <> single act
+-- append :: ActionStateExecutor act State => act -> ActionExecutorList -> ActionExecutorList
+-- append act actionExecutorList = actionExecutorList <> single act
 
-infixr 9 -:
-(-:) :: ActionStateExecutor act State => act -> ActionExecutorList -> ActionExecutorList
-(-:) = append
+-- infixr 9 -:
+-- (-:) :: ActionStateExecutor act State => act -> ActionExecutorList -> ActionExecutorList
+-- (-:) = append
 
 
 
@@ -119,11 +183,7 @@ infixr 9 -:
 -- toActionExecutorListB list ->--
 
 
-execAll3 :: forall act t. ActionStateExecutor act State => Behavior t State -> [Behavior t (Maybe act)] -> Behavior t State
-execAll3 stInitB actionBs = foldl (\st act -> (fmap $ view state) $ tryExec <$> act <*> st) stInitB actionBs
-    -- where
-    -- execAction :: WithStateMaybe act State -> Maybe act -> WithStateMaybe act State
-    -- execAction ws act = tryExec act $ ws ^. state
+
 
 
 

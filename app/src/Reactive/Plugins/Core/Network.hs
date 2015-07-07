@@ -24,6 +24,7 @@ import qualified Event.Keyboard as Keyboard ( KeyMods(..), Event(..) )
 import qualified Event.Mouse    as Mouse
 import           Utils.PrettyPrinter
 
+import           Reactive.Plugins.Core.Action.Action
 import qualified Reactive.Plugins.Core.Action.Action    as Action
 import qualified Reactive.Plugins.Core.Action.AddRemove as AddRemove
 import qualified Reactive.Plugins.Core.Action.Selection as Selection
@@ -37,6 +38,7 @@ import           Reactive.Plugins.Core.Action.Executor
 import           Reactive.Plugins.Core.Action.State.Global
 
 import Data.Traversable (sequenceA)
+
 
 updateUI :: ( State
             , Action.WithStateMaybe AddRemove.Action State
@@ -99,6 +101,8 @@ makeNetworkDescription = do
         -- nodeSelectionReactionB        = Action.tryExec  <$> nodeSelectionActionB <*> globalStateB
         -- nodeSelectionReactionStateB   = Action.getState <$> nodeSelectionReactionB
 
+        -- nodeSelectionActionB :: Int
+
         nodeDragActionE               = Drag.toAction <$> anyNodeE
         nodeDragActionB               = stepper def $ nodeDragActionE
         -- nodeDragReactionB             = Action.tryExec  <$> nodeDragActionB <*> globalStateB
@@ -111,10 +115,32 @@ makeNetworkDescription = do
         nodeSearcherActionB           = stepper def $ nodeSearcherActionE
         -- nodeDragActionB :: Int
 
+
         nodeAddRemReactionB           = Action.tryExec  <$> nodeAddRemActionB    <*> globalStateB
         nodeSelectionReactionB        = Action.tryExec  <$> nodeSelectionActionB <*> globalStateB
         nodeDragReactionB             = Action.tryExec  <$> nodeDragActionB      <*> globalStateB
         nodeSearcherReactionB         = Action.tryExec  <$> nodeSearcherActionB  <*> globalStateB
+
+        -- nodeAddRemReactionB           = Action.tryExec  <$> nodeAddRemActionB    <*> globalStateB
+        -- nodeSelectionReactionB        = Action.tryExec  <$> nodeSelectionActionB <*> globalStateB
+        -- nodeDragReactionB             = Action.tryExec  <$> nodeDragActionB      <*> globalStateB
+
+
+        -- nodeAddRemActionBE    = ActionExec <$> nodeAddRemActionB
+        -- nodeSelectionActionBE = ActionExec <$> nodeSelectionActionB
+        -- nodeDragActionBE      = ActionExec <$> nodeDragActionB
+
+        nodeAddRemActionBE    = ActionST <$> nodeAddRemActionB
+        nodeSelectionActionBE = ActionST <$> nodeSelectionActionB
+        -- nodeDragActionBE      = ActionST <$> nodeDragActionB
+
+        -- dupa1 = ActionExec <$> (fromJust <$> nodeAddRemActionB)
+        -- dupa2 = ActionExec <$> (fromJust <$> nodeSelectionActionB)
+        -- dupa3 = ActionExec <$> (fromJust <$> nodeDragActionB)
+
+        allBE = [nodeAddRemActionBE, nodeSelectionActionBE]
+        -- globalStateReactionB = execAll3 globalStateB allBE
+
 
         -- ss1B :: Int
         -- ss1B = (Action.pureAction) <$> nodeAddRemActionB
@@ -147,6 +173,7 @@ makeNetworkDescription = do
         --                                      ]
 
 
+
         globalStateReactionB :: Behavior t State
         globalStateReactionB           = execAll' <$> globalStateB
                                                            <*> nodeAddRemActionB
@@ -154,6 +181,10 @@ makeNetworkDescription = do
                                                            <*> nodeDragActionB
                                                            <*> cameraActionB
                                                            <*> nodeSearcherActionB
+
+
+
+
 
         -- foo = Executor.execAll2 globalStateB [ nodeAddRemActionB
         --                                      , nodeSelectionActionB
@@ -177,17 +208,17 @@ makeNetworkDescription = do
 
     -- initial logB >>= liftIO . logAs ""
 
-    nodeSelectionReactionF <- changes nodeSelectionReactionB
-    reactimate' $ (fmap Selection.updateUI) <$> nodeSelectionReactionF
-    reactimate' $ (fmap $ logIfActionAs "s|")       <$> nodeSelectionReactionF
+    -- nodeSelectionReactionF <- changes nodeSelectionReactionB
+    -- reactimate' $ (fmap Selection.updateUI) <$> nodeSelectionReactionF
+    -- reactimate' $ (fmap $ logIfActionAs "s|")       <$> nodeSelectionReactionF
 
-    nodeDragReactionF <- changes nodeDragReactionB
-    reactimate' $ (fmap Drag.updateUI) <$> nodeDragReactionF
-    reactimate' $ (fmap $ logIfActionAs "d|")  <$> nodeDragReactionF
+    -- nodeDragReactionF <- changes nodeDragReactionB
+    -- reactimate' $ (fmap Drag.updateUI) <$> nodeDragReactionF
+    -- reactimate' $ (fmap $ logIfActionAs "d|")  <$> nodeDragReactionF
 
-    nodeAddRemReactionF <- changes nodeAddRemReactionB
-    reactimate' $ (fmap AddRemove.updateUI) <$> nodeAddRemReactionF
-    reactimate' $ (fmap $ logIfActionAs "r|")       <$> nodeAddRemReactionF
+    -- nodeAddRemReactionF <- changes nodeAddRemReactionB
+    -- reactimate' $ (fmap AddRemove.updateUI) <$> nodeAddRemReactionF
+    -- reactimate' $ (fmap $ logIfActionAs "r|")       <$> nodeAddRemReactionF
 
     nodeSearcherReactionF <- changes nodeSearcherReactionB
     reactimate' $ (fmap NodeSearcher.updateUI) <$> nodeSearcherReactionF

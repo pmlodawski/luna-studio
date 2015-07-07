@@ -121,3 +121,41 @@ updateUI (WithState maybeAction state) = case maybeAction of
         UnselectAll   -> unselectAllNodes
         where selectedNodeIds = state ^. Global.selection . Selection.nodeIds
               topNodeId = selectedNodeIds ^? ix 0
+
+
+
+instance ActionStateUpdater Action where
+    execSt newAction oldState = Just $ ActionUI newAction newState
+        where
+        oldNodeIds                       = oldState ^. Global.selection . Selection.nodeIds
+        oldNodes                         = oldState ^. Global.nodes
+        newNodes                         = updateNodesSelection newNodeIds oldNodes
+        newState                         = oldState & Global.iteration +~ 1
+                                                    & Global.selection . Selection.nodeIds .~ newNodeIds
+                                                    & Global.nodes     .~ newNodes
+        newNodeIds                       = case newAction of
+            SelectAll                   -> (^. ident) <$> oldNodes
+            UnselectAll                 -> []
+            SelectAction tpe node       -> case tpe of
+                SelectNew               -> [newNodeId]
+                Focus                   -> newNodeId : oldFilteredNodeIds
+                ToggleOn                -> newNodeId : oldFilteredNodeIds
+                ToggleOff               -> oldFilteredNodeIds
+                where oldFilteredNodeIds = delete newNodeId oldNodeIds
+                      newNodeId          = node ^. ident
+
+
+instance ActionUIUpdater Action where
+    updatUI (WithState action state) = case action of
+        SelectAction tpe (Node nodeId _ _) -> case tpe of
+            SelectNew -> unselectAllNodes
+                      >> setNodeFocused nodeId
+            Focus     -> setNodeFocused nodeId
+            ToggleOn  -> setNodeFocused nodeId
+            ToggleOff -> setNodeUnselected nodeId
+                      >> mapM_ setNodeFocused topNodeId
+        SelectAll     -> selectAllNodes
+                      >> mapM_ setNodeFocused topNodeId
+        UnselectAll   -> unselectAllNodes
+        where selectedNodeIds = state ^. Global.selection . Selection.nodeIds
+              topNodeId = selectedNodeIds ^? ix 0

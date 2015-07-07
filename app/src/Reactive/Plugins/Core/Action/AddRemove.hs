@@ -110,8 +110,51 @@ updateUI (WithState maybeAction state) = case maybeAction of
         topNodeId = selectedNodeIds ^? ix 0
 
 
--- instance SuperAction (WithStateMaybe Action Global.State) where
---     trans :: Global.State -> Maybe AddRemove.Action -> WithStateMaybe Action Global.State
---     trans st
---     upUI  :: WithStateMaybe Action Global.State -> IO ()
---     upUI = updateUI
+
+
+
+instance ActionStateUpdater Action where
+    execSt newActionCandidate oldState = case newAction of
+        Just action -> Just $ ActionUI newAction newState
+        Nothing     -> Nothing
+        where
+        newState                = oldState & Global.iteration +~ 1
+                                           & Global.nodes .~ newNodes
+                                           & Global.selection . Selection.nodeIds .~ newSelIds
+                                           & Global.addRemove . AddRemove.toRemoveIds .~ toRemoveIds
+        oldNodes                = oldState ^. Global.nodes
+        nodePos                 = oldState ^. Global.mousePos
+        oldSelNodeIds           = oldState ^. Global.selection . Selection.nodeIds
+        headNodeId              = listToMaybe oldSelNodeIds
+        nextNodeId              = 1 + (maxNodeId oldNodes)
+        newAction               = case newActionCandidate of
+            RemoveFocused      -> case headNodeId of
+                Nothing        -> Nothing
+                _              -> Just newActionCandidate
+            _                  -> Just newActionCandidate
+        toRemoveIds             = case newAction of
+            Just RemoveFocused -> maybeToList headNodeId
+            _                  -> []
+        newSelIds               = case newAction of
+            Just RemoveFocused -> drop 1 oldSelNodeIds
+            _                  -> oldSelNodeIds
+        newNodes                = case newActionCandidate of
+            AddAction          -> (Node nextNodeId False nodePos) : oldNodes
+            RemoveFocused      -> case headNodeId of
+                Nothing        -> oldNodes
+                Just remId     -> filter (\node -> node ^. ident /= remId) oldNodes
+
+instance ActionUIUpdater Action where
+    updatUI (WithState action state) = case action of
+        AddAction        -> newNodeAt nodeId px py
+            where
+            node   = head $ state ^. Global.nodes
+            px = node ^. Node.position . x
+            py = node ^. Node.position . y
+            nodeId = node ^. ident
+        RemoveFocused    -> removeNode nodeId
+                              >> mapM_ setNodeFocused topNodeId
+            where
+            selectedNodeIds = state ^. Global.selection . Selection.nodeIds
+            nodeId    = head $ state ^. Global.addRemove . AddRemove.toRemoveIds
+            topNodeId = selectedNodeIds ^? ix 0
