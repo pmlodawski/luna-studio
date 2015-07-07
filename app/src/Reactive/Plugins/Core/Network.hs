@@ -29,11 +29,14 @@ import qualified Reactive.Plugins.Core.Action.AddRemove as AddRemove
 import qualified Reactive.Plugins.Core.Action.Selection as Selection
 import qualified Reactive.Plugins.Core.Action.Drag      as Drag
 import qualified Reactive.Plugins.Core.Action.Camera    as Camera
-import qualified Reactive.Plugins.Core.Action.Executor  as Executor
+-- import qualified Reactive.Plugins.Core.Action.Executor  as Executor
 import qualified Reactive.Plugins.Core.Action.NodeSearcher  as NodeSearcher
+-- import qualified Reactive.Plugins.Core.Action.Executor  as Executor
+import           Reactive.Plugins.Core.Action.Executor
 
 import           Reactive.Plugins.Core.Action.State.Global
 
+import Data.Traversable (sequenceA)
 
 updateUI :: ( State
             , Action.WithStateMaybe AddRemove.Action State
@@ -60,6 +63,10 @@ logAll :: ( State
 logAll (st, addRem, sel, drag, cam, ns) = do
     logAs "g|" st
 
+
+logIfActionAs as ws = if isJust (ws ^. Action.action) then logAs as ws else return ()
+
+
 makeNetworkDescription :: forall t. Frameworks t => Moment t ()
 makeNetworkDescription = do
     mouseDownE    <- fromAddHandler mouseDownHandler
@@ -74,7 +81,9 @@ makeNetworkDescription = do
         anyE                          = unions [mouseDownE, mouseUpE, mouseMovedE, keyDownE, keyPressedE, keyUpE, nodeSearcherE]
 
         globalStateB                 :: Behavior t State
-        globalStateB                  = stepper def $ ((view _1) <$> globalStateReactionB) <@ anyE
+        -- globalStateB                  = stepper def $ ((view _1) <$> globalStateReactionB) <@ anyE
+        globalStateB                  = stepper def $ globalStateReactionB <@ anyE
+
 
 
         anyNodeE                     :: Event t (Event.Event Node)
@@ -99,7 +108,13 @@ makeNetworkDescription = do
         cameraActionB                 = stepper def $ cameraActionE
 
         nodeSearcherActionE           = NodeSearcher.toAction <$> anyNodeE
-        nodeSearcherB                 = stepper def $ nodeSearcherActionE
+        nodeSearcherActionB           = stepper def $ nodeSearcherActionE
+        -- nodeDragActionB :: Int
+
+        nodeAddRemReactionB           = Action.tryExec  <$> nodeAddRemActionB    <*> globalStateB
+        nodeSelectionReactionB        = Action.tryExec  <$> nodeSelectionActionB <*> globalStateB
+        nodeDragReactionB             = Action.tryExec  <$> nodeDragActionB      <*> globalStateB
+        nodeSearcherReactionB         = Action.tryExec  <$> nodeSearcherActionB  <*> globalStateB
 
         -- ss1B :: Int
         -- ss1B = (Action.pureAction) <$> nodeAddRemActionB
@@ -111,41 +126,76 @@ makeNetworkDescription = do
         -- gB = Executor.execAll2 <$> globalStateB <*> ss2B
         -- gB :: forall act. Action.ActionStateExecutor act State => [Action.WithState (Maybe act) State]
 
+        -- nodeAddRemActionB :: Int
 
-        globalStateReactionB :: Behavior t ( State
-                                           , Action.WithStateMaybe AddRemove.Action State
-                                           , Action.WithStateMaybe Selection.Action State
-                                           , Action.WithStateMaybe Drag.Action State
-                                           , Action.WithStateMaybe Camera.Action State
-                                           , Action.WithStateMaybe NodeSearcher.Action State
-                                           )
-        globalStateReactionB           = Executor.execAll <$> globalStateB
-                                                          <*> nodeAddRemActionB
-                                                          <*> nodeSelectionActionB
-                                                          <*> nodeDragActionB
-                                                          <*> cameraActionB
-                                                          <*> nodeSearcherB
+        -- globalStateReactionB :: Behavior t ( State
+        --                                    , Action.WithStateMaybe AddRemove.Action State
+        --                                    , Action.WithStateMaybe Selection.Action State
+        --                                    , Action.WithStateMaybe Drag.Action State
+        --                                    , Action.WithStateMaybe Camera.Action State
+        --                                    )
+        -- globalStateReactionB           = Executor.execAll <$> globalStateB
+        --                                                   <*> nodeAddRemActionB
+        --                                                   <*> nodeSelectionActionB
+        --                                                   <*> nodeDragActionB
+        --                                                   <*> cameraActionB
 
-        logIfActionAs as ws = if isJust (ws ^. Action.action) then logAs as ws else return ()
+        -- globalStateReactionB = Executor.execAll3 globalStateB [ nodeAddRemActionB
+        --                                      , nodeSelectionActionB
+        --                                      , nodeDragActionB
+        --                                      , cameraActionB
+        --                                      ]
+
+
+        globalStateReactionB :: Behavior t State
+        globalStateReactionB           = execAll' <$> globalStateB
+                                                           <*> nodeAddRemActionB
+                                                           <*> nodeSelectionActionB
+                                                           <*> nodeDragActionB
+                                                           <*> cameraActionB
+                                                           <*> nodeSearcherActionB
+
+        -- foo = Executor.execAll2 globalStateB [ nodeAddRemActionB
+        --                                      , nodeSelectionActionB
+        --                                      , nodeDragActionB
+        --                                      , cameraActionB
+        --                                      ]
+
+        -- lst =
+
+
+        -- x = Executor.execAll2 globalStateB [nodeAddRemActionB, nodeSelectionActionB]
+
+        -- y = Executor.ActionList [nodeAddRemActionB, nodeSelectionActionB]
+        -- s = sequenceA [ nodeAddRemActionB
+        --               , nodeSelectionActionB
+        --               ]
+
+
+        -- x = Executor.execAll2 <$> globalStateB <*> s
 
 
     -- initial logB >>= liftIO . logAs ""
 
-    -- nodeSelectionReactionF <- changes nodeSelectionReactionB
-    -- reactimate' $ (fmap Selection.updateUI) <$> nodeSelectionReactionF
-    -- reactimate' $ (fmap $ logIfActionAs "s|")       <$> nodeSelectionReactionF
+    nodeSelectionReactionF <- changes nodeSelectionReactionB
+    reactimate' $ (fmap Selection.updateUI) <$> nodeSelectionReactionF
+    reactimate' $ (fmap $ logIfActionAs "s|")       <$> nodeSelectionReactionF
 
-    -- nodeDragReactionF <- changes nodeDragReactionB
-    -- reactimate' $ (fmap Drag.updateUI) <$> nodeDragReactionF
-    -- reactimate' $ (fmap $ logIfActionAs "d|")  <$> nodeDragReactionF
+    nodeDragReactionF <- changes nodeDragReactionB
+    reactimate' $ (fmap Drag.updateUI) <$> nodeDragReactionF
+    reactimate' $ (fmap $ logIfActionAs "d|")  <$> nodeDragReactionF
 
-    -- nodeAddRemReactionF <- changes nodeAddRemReactionB
-    -- reactimate' $ (fmap AddRemove.updateUI) <$> nodeAddRemReactionF
-    -- reactimate' $ (fmap $ logIfActionAs "r|")       <$> nodeAddRemReactionF
+    nodeAddRemReactionF <- changes nodeAddRemReactionB
+    reactimate' $ (fmap AddRemove.updateUI) <$> nodeAddRemReactionF
+    reactimate' $ (fmap $ logIfActionAs "r|")       <$> nodeAddRemReactionF
+
+    nodeSearcherReactionF <- changes nodeSearcherReactionB
+    reactimate' $ (fmap NodeSearcher.updateUI) <$> nodeSearcherReactionF
+    reactimate' $ (fmap $ logIfActionAs "r|")       <$> nodeSearcherReactionF
 
 
-    globalStateReactionF <- changes globalStateReactionB
-    reactimate' $ (fmap updateUI) <$> globalStateReactionF
-    reactimate' $ (fmap $ logAll) <$> globalStateReactionF
+    -- globalStateReactionF <- changes globalStateReactionB
+    -- reactimate' $ (fmap updateUI) <$> globalStateReactionF
+    -- reactimate' $ (fmap $ logAll) <$> globalStateReactionF
 
     return ()

@@ -6,6 +6,7 @@ import           Data.Maybe           ( isJust )
 import           Data.Functor
 import           Control.Lens
 
+import           Reactive.Plugins.Core.Action.State.Global
 import           Utils.PrettyPrinter
 
 data WithState act st = WithState { _action :: act
@@ -35,8 +36,21 @@ class ActionStateExecutor act st where
     tryExec Nothing       = WithState Nothing
     tryExec (Just action) = exec action
 
-    pureAction :: forall act. ActionStateExecutor act st => act -> [act]
-    pureAction a = [a]
+    -- pureAction :: forall act. ActionStateExecutor act st => act -> [act]
+    -- pureAction a = [a]
 
-    appendAction :: forall act. ActionStateExecutor act st => act -> [act] -> [act]
-    appendAction = (:)
+    -- appendAction :: forall act. ActionStateExecutor act st => act -> [act] -> [act]
+    -- appendAction = (:)
+
+
+
+class ActionStateUpdate act st where
+    exec2    ::        act  -> st -> st
+    tryExec2 :: (Maybe act) -> st -> st
+    tryExec2 Nothing       = id
+    tryExec2 (Just action) = exec2 action
+
+
+class (ActionStateExecutor act State) => ActionGlobalStateExecutor act where
+
+
