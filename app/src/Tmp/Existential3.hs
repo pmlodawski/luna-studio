@@ -14,7 +14,19 @@ instance Foo Char where
 instance Foo Int where
     foo a = "num"
 
-data FooLike = forall a. Foo a => FooLike a
+data FooLike = forall a. Foo a => FooLike { get :: a }
+
+
+instance Foo FooLike where
+    foo (FooLike a) = foo a
+
+
+
+instance Show FooLike where
+    show a = "FooLike"
+
+-- instance Show (Foo a) where
+--     show a = "Foo"
 
 newtype Dat = Dat [FooLike] deriving (Monoid)
 
@@ -43,6 +55,9 @@ single a = Dat [FooLike a]
 a = Dat [FooLike (3 :: Int), FooLike 'a']
 
 b = (3 :: Int) -: 'a' -: mempty
+
+-- c = fmap
+
 
 main = do
     print "end"
