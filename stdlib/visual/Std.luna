@@ -432,7 +432,11 @@ def nopoint self::Std
 
 def rasterizeMask self::Std w::Int h::Int m::(Mask Float) -> Image
 
-def Image.roto self::Image mask::(Mask Float) format::Format premultiply::Bool alpha::Bool -> Image
+class ```RotoAlgorithm```:
+    GPU
+    CPU
+
+def Image.roto self::Image mask::(Mask Float) format::Format premultiply::Bool alpha::Bool algorithm::RotoAlgorithm -> Image
 
 # experimental ######
 
