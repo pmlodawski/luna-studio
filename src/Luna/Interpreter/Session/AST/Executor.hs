@@ -198,13 +198,11 @@ evalFunction nodeExpr callDataPath keyNames recompile = do
                 Expression  name -> return   name
             catchEither (left . Error.RunError $(loc) callPointPath) $ do
                 (realNode, keyNameStr) <- keyNameToString' keyName
-                let createKey       = Session.runStmt $ keyNameStr <> " <- hmapCreateKeyWithWitness $ " <> operation
+                let createKey       = Session.runDecls $ keyNameStr <> " = hmapCreateKeyWithWitness $ " <> operation
                     createUpdate    = lift2 $ HEval.interpret $ "\\hmap -> hmapInsert " <> keyNameStr <> " (" <> operation <> ") hmap"
                     createGetValue  = HEval.interpret ("\\hmap mode time -> flip computeValue mode =<< toIOEnv (fromValue ((hmapGet " <> keyNameStr <> " hmap) hmap time))")
                     createKeyUpdate = createKey >> createUpdate
-                update <- if Maybe.isNothing compiledNode && realNode
-                    then createKeyUpdate
-                    else Catch.catch createUpdate (\(_ :: SomeException) -> createKeyUpdate)
+                update <- Env.fragile $ Catch.catch createUpdate (\(_ :: SomeException) -> createKeyUpdate)
                 let valErrHandler (e:: SomeException) = logger warning (show e) >> return Nothing
                 getValue <- lift2 $ flip Catch.catch valErrHandler $
                     Just <$> createGetValue
