@@ -39,7 +39,6 @@ data Action = DragAction { _actionType :: ActionType
                          }
             deriving (Eq, Show)
 
--- type ActionState = WithStateMaybe Action Global.State
 
 makeLenses ''Action
 
@@ -67,67 +66,6 @@ toAction _ = Nothing
 moveNodes :: Point -> NodeCollection -> NodeCollection
 moveNodes delta = fmap $ \node -> if node ^. selected then node & Node.position +~ delta else node
 
-instance ActionStateExecutor Action Global.State where
-    exec newActionCandidate oldState = WithState maybeNewAction newState
-        where
-        oldDrag                          = oldState ^. Global.drag . history
-        oldNodes                         = oldState ^. Global.nodes
-        emptySelection                   = null oldNodes
-        newPos                           = newActionCandidate ^. actionPos
-        newState                         = oldState & Global.iteration +~ 1
-                                                    & Global.mousePos .~ newPos
-                                                    & Global.drag  .~ (State newDrag)
-                                                    & Global.nodes .~ newNodes
-        maybeNewAction                   = case newActionCandidate of
-            DragAction Moving pt        -> case oldDrag of
-                Nothing                 -> Nothing
-                _                       -> Just $ DragAction Dragging pt
-            _                           -> Just newActionCandidate
-        newNodes                         = case newActionCandidate of
-            DragAction tpe point        -> case tpe of
-                StartDrag               -> oldNodes
-                Moving                  -> case oldDrag of
-                    Just oldDragState   -> moveNodes delta oldNodes
-                        where prevPos    = oldDragState ^. dragCurrentPos
-                              delta      = point - prevPos
-                    Nothing             -> oldNodes
-                StopDrag                -> oldNodes
-        newDrag                          = case newActionCandidate of
-            DragAction tpe point        -> case tpe of
-                StartDrag               -> Just $ DragHistory point point point
-                Moving                  -> if emptySelection then Nothing else case oldDrag of
-                    Just oldDragState   -> Just $ DragHistory startPos prevPos point
-                        where startPos   = oldDragState ^. dragStartPos
-                              prevPos    = oldDragState ^. dragCurrentPos
-                    Nothing             -> Nothing
-                StopDrag                -> Nothing
-
-
-updateUI :: WithStateMaybe Action Global.State -> IO ()
-updateUI (WithState maybeAction state) = case maybeAction of
-    Nothing           -> return ()
-    Just action       -> case action of
-        DragAction tpe pt -> case tpe of
-            StartDrag -> return ()
-            Moving    -> return ()
-            Dragging  -> moveNodesUI selectedNodes
-            StopDrag  -> return ()
-        where selectedNodes = state ^. Global.nodes
-              topNodeId = selectedNodes ^? ix 0 . ident
-
-
-moveNodeUI :: Node -> IO ()
-moveNodeUI (Node ident _ (Point x y)) = dragNode ident x y
-
-moveNodesUI :: NodeCollection -> IO ()
-moveNodesUI nodes  = mapM_ moveNodeUI nodes
-                  -- >> performGC
-
-
-
-
-
-
 
 instance ActionStateUpdater Action where
     execSt newActionCandidate oldState = case newAction of
@@ -142,7 +80,7 @@ instance ActionStateUpdater Action where
                                                     & Global.mousePos .~ newPos
                                                     & Global.drag  .~ (State newDrag)
                                                     & Global.nodes .~ newNodes
-        newAction                   = case newActionCandidate of
+        newAction                        = case newActionCandidate of
             DragAction Moving pt        -> case oldDrag of
                 Nothing                 -> Nothing
                 _                       -> Just $ DragAction Dragging pt
@@ -169,10 +107,18 @@ instance ActionStateUpdater Action where
 
 instance ActionUIUpdater Action where
     updatUI (WithState action state) = case action of
-        DragAction tpe pt -> case tpe of
-            StartDrag -> return ()
-            Moving    -> return ()
-            Dragging  -> moveNodesUI selectedNodes
-            StopDrag  -> return ()
-        where selectedNodes = state ^. Global.nodes
-              topNodeId = selectedNodes ^? ix 0 . ident
+        DragAction tpe pt   -> case tpe of
+            StartDrag       -> return ()
+            Moving          -> return ()
+            Dragging        -> moveNodesUI selectedNodes
+            StopDrag        -> return ()
+        where selectedNodes  = state ^. Global.nodes
+              topNodeId      = selectedNodes ^? ix 0 . ident
+
+
+moveNodeUI :: Node -> IO ()
+moveNodeUI (Node ident _ (Point x y)) = dragNode ident x y
+
+moveNodesUI :: NodeCollection -> IO ()
+moveNodesUI nodes  = mapM_ moveNodeUI nodes
+                  -- >> performGC

@@ -38,8 +38,6 @@ data Action = AddAction
             deriving (Eq, Show)
 
 
--- type ActionState = WithStateMaybe Action Global.State
-
 makeLenses ''Action
 
 
@@ -62,56 +60,6 @@ toAction _ = Nothing
 maxNodeId :: NodeCollection -> NodeId
 maxNodeId []    = 0
 maxNodeId nodes = (view ident) $ maximumBy (on compare (view ident)) nodes
-
--- instance ActionStateExecutor Action Global.State where
---     exec newActionCandidate oldState = WithState newAction newState
---         where
---         newState                = oldState & Global.iteration +~ 1
---                                            & Global.nodes .~ newNodes
---                                            & Global.selection . Selection.nodeIds .~ newSelIds
---                                            & Global.addRemove . AddRemove.toRemoveIds .~ toRemoveIds
---         oldNodes                = oldState ^. Global.nodes
---         nodePos                 = oldState ^. Global.mousePos
---         oldSelNodeIds           = oldState ^. Global.selection . Selection.nodeIds
---         headNodeId              = listToMaybe oldSelNodeIds
---         nextNodeId              = 1 + (maxNodeId oldNodes)
---         newAction               = case newActionCandidate of
---             RemoveFocused      -> case headNodeId of
---                 Nothing        -> Nothing
---                 _              -> Just newActionCandidate
---             _                  -> Just newActionCandidate
---         toRemoveIds             = case newAction of
---             Just RemoveFocused -> maybeToList headNodeId
---             _                  -> []
---         newSelIds               = case newAction of
---             Just RemoveFocused -> drop 1 oldSelNodeIds
---             _                  -> oldSelNodeIds
---         newNodes                = case newActionCandidate of
---             AddAction          -> (Node nextNodeId False nodePos) : oldNodes
---             RemoveFocused      -> case headNodeId of
---                 Nothing        -> oldNodes
---                 Just remId     -> filter (\node -> node ^. ident /= remId) oldNodes
-
-
--- updateUI :: WithStateMaybe Action Global.State -> IO ()
--- updateUI (WithState maybeAction state) = case maybeAction of
---     Nothing               -> return ()
---     Just AddAction        -> newNodeAt nodeId px py
---         where
---         node   = head $ state ^. Global.nodes
---         px = node ^. Node.position . x
---         py = node ^. Node.position . y
---         nodeId = node ^. ident
---     Just RemoveFocused    -> removeNode nodeId
---                           >> mapM_ setNodeFocused topNodeId
---         where
---         selectedNodeIds = state ^. Global.selection . Selection.nodeIds
---         nodeId    = head $ state ^. Global.addRemove . AddRemove.toRemoveIds
---         topNodeId = selectedNodeIds ^? ix 0
-
-
-
-
 
 instance ActionStateUpdater Action where
     execSt newActionCandidate oldState = case newAction of
@@ -146,15 +94,15 @@ instance ActionStateUpdater Action where
 
 instance ActionUIUpdater Action where
     updatUI (WithState action state) = case action of
-        AddAction        -> print (display action) >> newNodeAt nodeId px py
+        AddAction          -> newNodeAt nodeId px py
             where
-            node   = head $ state ^. Global.nodes
-            px = node ^. Node.position . x
-            py = node ^. Node.position . y
-            nodeId = node ^. ident
-        RemoveFocused    -> removeNode nodeId
-                              >> mapM_ setNodeFocused topNodeId
+            node            = head $ state ^. Global.nodes
+            px              = node ^. Node.position . x
+            py              = node ^. Node.position . y
+            nodeId          = node ^. ident
+        RemoveFocused      -> removeNode nodeId
+                           >> mapM_ setNodeFocused topNodeId
             where
             selectedNodeIds = state ^. Global.selection . Selection.nodeIds
-            nodeId    = head $ state ^. Global.addRemove . AddRemove.toRemoveIds
-            topNodeId = selectedNodeIds ^? ix 0
+            nodeId          = head $ state ^. Global.addRemove . AddRemove.toRemoveIds
+            topNodeId       = selectedNodeIds ^? ix 0
