@@ -16,14 +16,13 @@ import           Flowbox.GuiMockup.LineFit
 import           Foreign.Storable
 import           Linear
 
-
-
+-- import qualified Debug.Trace as D
 
 
 type PointC = V2 Double
 type LeftHandle = V2 Double
 type RightHandle = V2 Double
-type ControlPoint = (V2 Double, V2 Double, V2 Double)
+type ControlPoint = (V2 Double, V2 Double, V2 Double) -- (PointC,LeftHandle,RightHandle)
 
 data Direction = ClockWise | CounterClockWise deriving(Show, Eq)
 
@@ -55,15 +54,8 @@ guiLineSnap originalCurveControlPoints pointBefore pointAfter strokePoints error
             Open   -> originalCurveControlPoints
         --strokeBox = (l,r,u,d) where
         strokePointsV = V.fromList strokePoints
-        ls = (V.minimum strokePointsV) ^._x
-        rs = (V.maximum strokePointsV) ^._x
-        us = (V.maximumBy (\(V2 x1 y1) (V2 x2 y2) -> compare y1 y2) strokePointsV) ^._y
-        ds = (V.minimumBy (\(V2 x1 y1) (V2 x2 y2) -> compare y1 y2) strokePointsV) ^._y
-        --originalCurveBox = (l,r,u,d) where
-        lc = (V.minimum curvePoints) ^._x
-        rc = (V.maximum curvePoints) ^._x
-        uc = (V.maximumBy (\(V2 x1 y1) (V2 x2 y2) -> compare y1 y2) curvePoints) ^._y
-        dc = (V.minimumBy (\(V2 x1 y1) (V2 x2 y2) -> compare y1 y2) curvePoints) ^._y
+        strokeBox@(ls, rs, us, ds) = boxPoints strokePointsV
+        curveBox@(lc, rc, uc, dc) = boxPoints curvePoints
         curvePoints = V.concatMap resampleBezier (V.fromList originalCurve)
         boxedControlPoints = V.fromList $ map box originalCurveControlPoints
         box :: ControlPoint -> V2 Double
@@ -71,9 +63,9 @@ guiLineSnap originalCurveControlPoints pointBefore pointAfter strokePoints error
         tox' :: Double -> Double 
         tox' x = ((x-lc)/(rc-lc))*(rs-ls)+ls
         toy' :: Double -> Double 
-        toy' y = ((y-dc)/(uc-dc))*(us-rs)+ds
+        toy' y = ((y-dc)/(uc-dc))*(us-ds)+ds
 
-        closestPointIdx = V.minIndex (V.map (euclidianDistance (V.head boxedControlPoints)) strokePointsV)
+        closestPointIdx = V.minIndex (V.map (euclidianDistance (V.head boxedControlPoints)) strokePointsV) --D.trace ("originalCurveControlPoints: "++show originalCurveControlPoints++"\n"++"boxedControlPoints: "++show boxedControlPoints++"\n") $
         originalCurveDirection = if (findDirection curvePoints >= 0) then ClockWise else CounterClockWise
         strokeDirection = if (findDirection strokePointsV >= 0) then ClockWise else CounterClockWise
         -- --second point based direction check
@@ -84,7 +76,7 @@ guiLineSnap originalCurveControlPoints pointBefore pointAfter strokePoints error
         
         strokePoints'  = take (length strokePoints) $ drop closestPointIdx $ cycle strokePoints
         strokePoints'' = case openness of
-            Closed -> if strokeDirection==originalCurveDirection then strokePoints' else reverse strokePoints'
+            Closed -> if strokeDirection==originalCurveDirection then strokePoints' else reverse strokePoints' --D.trace ("\n\ncurve box: " ++show curveBox++"\nstroke box: "++show strokeBox++"\n\n" ) $
             Open   -> strokePoints
         --cpy :: V2 Double -> V2 Double -> Ordering
         --cpy (V2 x1 y1) (V2 x2 y2) = compare y1 y2
@@ -92,6 +84,12 @@ guiLineSnap originalCurveControlPoints pointBefore pointAfter strokePoints error
 
 findDirection points = fst $ V.foldl (\(direction, V2 x1 y1) pt@(V2 x2 y2) -> (direction+(x2-x1)*(y2+y1), pt)) (0, V.last points) points
 
+boxPoints points = (l, r, u, d)
+    where       
+        l = (V.minimum points) ^._x
+        r = (V.maximum points) ^._x
+        u = (V.maximumBy (\(V2 x1 y1) (V2 x2 y2) -> compare y1 y2) points) ^._y
+        d = (V.minimumBy (\(V2 x1 y1) (V2 x2 y2) -> compare y1 y2) points) ^._y
 --moveCurveToStroke :: [CubicBezier Double] -> [V2 Double] -> Double -> Openness -> [CubicBezier Double]
 --moveCurveToStroke originalCurve strokePoints errorParameter openness = V.toList $ optimizeBeziers (V.fromList originalCurve) (V.fromList strokeAproximation)
 --     where
