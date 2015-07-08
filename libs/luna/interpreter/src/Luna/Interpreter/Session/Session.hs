@@ -70,11 +70,9 @@ initialize config imports = do
                    --, GHC.verbosity = 4
                    }
     setHardcodedExtensions
-    setImports $ "Data.Word"
-               : "Flowbox.Serialization"
+    setImports $ "Flowbox.Serialization"
                : "Luna.Target.HS"
                : "Luna.Interpreter.Runtime"
-               : "System.Mem"
                : imports
 
 
