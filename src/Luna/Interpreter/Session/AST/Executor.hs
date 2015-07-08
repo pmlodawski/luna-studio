@@ -198,7 +198,7 @@ evalFunction nodeExpr callDataPath keyNames recompile = do
                 Expression  name -> return   name
             catchEither (left . Error.RunError $(loc) callPointPath) $ do
                 (realNode, keyNameStr) <- keyNameToString' keyName
-                let createKey       = Session.runDecls $ keyNameStr <> " = hmapCreateKeyWithWitness $ " <> operation
+                let createKey       = Session.runDecls $ keyNameStr <> " = unsafePerformIO $ hmapCreateKeyWithWitness $ " <> operation
                     createUpdate    = lift2 $ HEval.interpret $ "\\hmap -> hmapInsert " <> keyNameStr <> " (" <> operation <> ") hmap"
                     createGetValue  = HEval.interpret ("\\hmap mode time -> flip computeValue mode =<< toIOEnv (fromValue ((hmapGet " <> keyNameStr <> " hmap) hmap time))")
                     createKeyUpdate = createKey >> createUpdate
