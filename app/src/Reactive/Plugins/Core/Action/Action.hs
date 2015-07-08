@@ -78,13 +78,13 @@ data ActionST = forall act. (ActionStateUpdater act, PrettyPrinter act) => Actio
 
 
 class ActionStateUpdater act where
-    execSt    ::        act  -> State -> Maybe ActionUI
+    execSt    ::        act  -> State -> ActionUI
 
 
 
 instance ActionStateUpdater act => ActionStateUpdater (Maybe act) where
     execSt (Just action) state = execSt action state
-    execSt Nothing       state = Nothing
+    execSt Nothing       state = ActionUI NoAction state
 
 
 instance ActionStateUpdater ActionST where
@@ -101,6 +101,11 @@ class ActionUIUpdater act where
     updatUI :: WithState act State -> IO ()
 
 
+    -- updUI :: WithState act State -> IO ()
+    -- updUI (WithState NoAction _) = return ()
+    -- updUI ws = updatUI ws
+
+
 instance ActionUIUpdater act => ActionUIUpdater (Maybe act) where
     updatUI (WithState (Just action) state) = updatUI (WithState action state)
     updatUI (WithState Nothing       _    ) = return ()
@@ -111,13 +116,13 @@ instance ActionUIUpdater act => ActionUIUpdater (Maybe act) where
 -- instance ActionUIUpdater act => ActionUIUpdater [act] where
 updatAllUI :: [ActionUI] -> IO ()
 updatAllUI [] =  return ()
-updatAllUI (a@(ActionUI act st):as) = updatUI (WithState act st) >> updatAllUI as
+updatAllUI ((ActionUI act st):as) = updatUI (WithState act st) >> updatAllUI as
 
 logAllUI :: [ActionUI] -> IO ()
-logAllUI [] = putStrLn "empty"
-logAllUI (a@(ActionUI act st):as) = do
-    putStrLn $ (display act) <> " s|" <> (display st)
-    updatAllUI as
+logAllUI [] = putStrLn "-"
+logAllUI ((ActionUI act st):as) = do
+    putStrLn $ (display st) <> " <- " <> (display act)
+    logAllUI as
 
 
 

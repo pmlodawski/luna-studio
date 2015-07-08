@@ -40,30 +40,30 @@ import           Reactive.Plugins.Core.Action.State.Global
 import Data.Traversable (sequenceA)
 
 
-updateUI :: ( State
-            , Action.WithStateMaybe AddRemove.Action State
-            , Action.WithStateMaybe Selection.Action State
-            , Action.WithStateMaybe Drag.Action State
-            , Action.WithStateMaybe Camera.Action State
-            , Action.WithStateMaybe NodeSearcher.Action State
-            ) -> IO ()
-updateUI (_, addRem, sel, drag, cam, ns) = do
-    AddRemove.updateUI       addRem
-    Selection.updateUI       sel
-    Drag.updateUI            drag
-    Camera.updateUI          cam
-    NodeSearcher.updateUI    ns
+-- updateUI :: ( State
+--             , Action.WithStateMaybe AddRemove.Action State
+--             , Action.WithStateMaybe Selection.Action State
+--             , Action.WithStateMaybe Drag.Action State
+--             , Action.WithStateMaybe Camera.Action State
+--             , Action.WithStateMaybe NodeSearcher.Action State
+--             ) -> IO ()
+-- updateUI (_, addRem, sel, drag, cam, ns) = do
+--     AddRemove.updateUI       addRem
+--     Selection.updateUI       sel
+--     Drag.updateUI            drag
+--     Camera.updateUI          cam
+--     NodeSearcher.updateUI    ns
 
 
-logAll :: ( State
-            , Action.WithStateMaybe AddRemove.Action State
-            , Action.WithStateMaybe Selection.Action State
-            , Action.WithStateMaybe Drag.Action State
-            , Action.WithStateMaybe Camera.Action State
-            , Action.WithStateMaybe NodeSearcher.Action State
-            ) -> IO ()
-logAll (st, addRem, sel, drag, cam, ns) = do
-    logAs "g|" st
+-- logAll :: ( State
+--             , Action.WithStateMaybe AddRemove.Action State
+--             , Action.WithStateMaybe Selection.Action State
+--             , Action.WithStateMaybe Drag.Action State
+--             , Action.WithStateMaybe Camera.Action State
+--             , Action.WithStateMaybe NodeSearcher.Action State
+--             ) -> IO ()
+-- logAll (st, addRem, sel, drag, cam, ns) = do
+--     logAs "g|" st
 
 
 logIfActionAs as ws = if isJust (ws ^. Action.action) then logAs as ws else return ()
@@ -145,6 +145,7 @@ makeNetworkDescription = do
 
         toReactimateB :: Behavior t [ActionUI]
         toReactimateB = sequenceA allRBE
+        -- toReactimateB = sequenceA (tail allRBE)
 
         -- ss1B :: Int
         -- ss1B = (Action.pureAction) <$> nodeAddRemActionB

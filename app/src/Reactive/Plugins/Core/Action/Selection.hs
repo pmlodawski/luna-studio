@@ -125,7 +125,7 @@ updateUI (WithState maybeAction state) = case maybeAction of
 
 
 instance ActionStateUpdater Action where
-    execSt newAction oldState = Just $ ActionUI newAction newState
+    execSt newAction oldState = ActionUI newAction newState
         where
         oldNodeIds                       = oldState ^. Global.selection . Selection.nodeIds
         oldNodes                         = oldState ^. Global.nodes

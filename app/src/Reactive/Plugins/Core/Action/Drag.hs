@@ -131,8 +131,8 @@ moveNodesUI nodes  = mapM_ moveNodeUI nodes
 
 instance ActionStateUpdater Action where
     execSt newActionCandidate oldState = case newAction of
-        Just action -> Just $ ActionUI newAction newState
-        Nothing     -> Nothing
+        Just action -> ActionUI newAction newState
+        Nothing     -> ActionUI NoAction newState
         where
         oldDrag                          = oldState ^. Global.drag . history
         oldNodes                         = oldState ^. Global.nodes

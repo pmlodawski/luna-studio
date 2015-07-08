@@ -27,43 +27,43 @@ import           Reactive.Plugins.Core.Action.State.Global
 
 
 
-execAll :: State -> Maybe AddRemove.Action
-                 -> Maybe Selection.Action
-                 -> Maybe Drag.Action
-                 -> Maybe Camera.Action
-                 -> Maybe NodeSearcher.Action
-                 -> ( State
-                    , WithStateMaybe AddRemove.Action State
-                    , WithStateMaybe Selection.Action State
-                    , WithStateMaybe Drag.Action State
-                    , WithStateMaybe Camera.Action State
-                    , WithStateMaybe NodeSearcher.Action State
-                    )
-execAll initState addRem selection drag cam ns = (finalState, wsAddRem, wsSel, wsDrag, wsCam, wsNode)
-    where
-    wsAddRem   = tryExec addRem              initState
-    wsSel      = tryExec selection $ wsAddRem ^. state
-    wsDrag     = tryExec drag      $ wsSel    ^. state
-    wsCam      = tryExec cam       $ wsDrag   ^. state
-    wsNode     = tryExec ns        $ wsCam    ^. state
-    finalState = wsCam                        ^. state
+-- execAll :: State -> Maybe AddRemove.Action
+--                  -> Maybe Selection.Action
+--                  -> Maybe Drag.Action
+--                  -> Maybe Camera.Action
+--                  -> Maybe NodeSearcher.Action
+--                  -> ( State
+--                     , WithStateMaybe AddRemove.Action State
+--                     , WithStateMaybe Selection.Action State
+--                     , WithStateMaybe Drag.Action State
+--                     , WithStateMaybe Camera.Action State
+--                     , WithStateMaybe NodeSearcher.Action State
+--                     )
+-- execAll initState addRem selection drag cam ns = (finalState, wsAddRem, wsSel, wsDrag, wsCam, wsNode)
+--     where
+--     wsAddRem   = tryExec addRem              initState
+--     wsSel      = tryExec selection $ wsAddRem ^. state
+--     wsDrag     = tryExec drag      $ wsSel    ^. state
+--     wsCam      = tryExec cam       $ wsDrag   ^. state
+--     wsNode     = tryExec ns        $ wsCam    ^. state
+--     finalState = wsCam                        ^. state
 
 
-execAll' :: State -> Maybe AddRemove.Action
-                 -> Maybe Selection.Action
-                 -> Maybe Drag.Action
-                 -> Maybe Camera.Action
-                 -> Maybe NodeSearcher.Action
-                 -> State
+-- execAll' :: State -> Maybe AddRemove.Action
+--                  -> Maybe Selection.Action
+--                  -> Maybe Drag.Action
+--                  -> Maybe Camera.Action
+--                  -> Maybe NodeSearcher.Action
+--                  -> State
 
-execAll' initState addRem selection drag cam ns = finalState
-    where
-    wsAddRem   = tryExec addRem              initState
-    wsSel      = tryExec selection $ wsAddRem ^. state
-    wsDrag     = tryExec drag      $ wsSel    ^. state
-    wsCam      = tryExec cam       $ wsDrag   ^. state
-    wsNS       = tryExec ns        $ wsCam    ^. state
-    finalState = wsNS                         ^. state
+-- execAll' initState addRem selection drag cam ns = finalState
+--     where
+--     wsAddRem   = tryExec addRem              initState
+--     wsSel      = tryExec selection $ wsAddRem ^. state
+--     wsDrag     = tryExec drag      $ wsSel    ^. state
+--     wsCam      = tryExec cam       $ wsDrag   ^. state
+--     wsNS       = tryExec ns        $ wsCam    ^. state
+--     finalState = wsNS                         ^. state
 
 
 
@@ -121,9 +121,9 @@ execAll4' initB actionBs = scanl exec4 initB actionBs
     exec4 pB cB = exec4' <$> pB <*> cB
         where
         exec4' :: ActionUI -> ActionST -> ActionUI
-        exec4' (ActionUI _ st) (ActionST act) = case res of
-            Nothing    -> noActionUI st
-            Just actUI -> actUI
+        exec4' (ActionUI _ st) (ActionST act) = res
+            -- Nothing    -> noActionUI st
+            -- Just actUI -> actUI
             where res = execSt act st
 
 
