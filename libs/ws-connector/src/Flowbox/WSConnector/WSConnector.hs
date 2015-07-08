@@ -22,8 +22,10 @@ import qualified Flowbox.Bus.Data.Message      as Message
 import qualified Flowbox.Bus.Data.MessageFrame as MessageFrame
 import qualified Flowbox.Bus.EndPoint          as EP
 import qualified Flowbox.Config.Config         as Config
-import           Flowbox.Control.Error
-import           Flowbox.Prelude
+import qualified FlowboxData.Config.Config     as FD
+import qualified Flowbox.Network.WebSocket.Connector.Config.Config as WS
+import Flowbox.Control.Error
+import Flowbox.Prelude
 
 
 fromWeb :: WS.Connection -> Bus ()
@@ -32,33 +34,30 @@ fromWeb conn = do
         webMessage <- liftIO $ do WS.receiveData conn
         Bus.sendByteString webMessage
 
-    return ()
-
 toWeb :: WS.Connection -> Bus ()
 toWeb  conn = do
-    let prefixTopic = ""
-    Bus.subscribe prefixTopic
-
+    Bus.subscribe mempty
     forever $ do
         messageBus <- Bus.receiveByteString
         liftIO $ do WS.sendTextData conn messageBus
 
-    return ()
 
 runBus :: EP.BusEndPoints -> Bus a -> IO (Either Bus.Error a)
 runBus e b = ZMQ.runZMQ $ Bus.runBus e b
 
-application ::  EP.BusEndPoints -> WS.ServerApp
-application busEndPoints pending = do
+application ::  Int -> EP.BusEndPoints -> WS.ServerApp
+application pingTime busEndPoints pending = do
     conn <- WS.acceptRequest pending
 
-    let pingTime = 30
     WS.forkPingThread conn pingTime
 
     _ <- forkIO $ eitherToM' $ runBus busEndPoints $ fromWeb conn
     void $ runBus busEndPoints $ toWeb conn
 
+
 run :: IO ()
 run = do
     busEndPoints <- EP.clientFromConfig <$> Config.load
-    WS.runServer "0.0.0.0" 8088 $ application busEndPoints
+    config <- WS.readWebsocketConfig <$> FD.load
+
+    WS.runServer (config ^. WS.host) (config ^. WS.port) $ application (config ^. WS.pingTime) busEndPoints
