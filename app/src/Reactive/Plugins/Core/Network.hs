@@ -51,34 +51,22 @@ makeNetworkDescription = do
         anyE                         :: Event t (Event.Event Dynamic)
         anyE                          = unions [mouseDownE, mouseUpE, mouseMovedE, keyDownE, keyPressedE, keyUpE, nodeSearcherE]
         anyNodeE                     :: Event t (Event.Event Node)
-        anyNodeE                      = unpackDynamic         <$> anyE
+        anyNodeE                      = unpackDynamic <$> anyE
 
         globalStateB                 :: Behavior t State
-        globalStateB                  = stepper def            $ globalStateReactionB <@ anyE
+        globalStateB                  = stepper def $ globalStateReactionB <@ anyE
 
-        nodeAddRemActionE             = AddRemove.toAction    <$> anyNodeE
-        nodeAddRemActionB             = stepper def            $  nodeAddRemActionE
-        nodeAddRemActionPackB         = ActionST              <$> nodeAddRemActionB
+        nodeAddRemActionB             = fmap ActionST . stepper def $    AddRemove.toAction <$> anyNodeE
+        nodeSelectionActionB          = fmap ActionST . stepper def $    Selection.toAction <$> anyNodeE
+        nodeDragActionB               = fmap ActionST . stepper def $         Drag.toAction <$> anyNodeE
+        -- cameraActionB                 = fmap ActionST . stepper def $       Camera.toAction <$> anyNodeE
+        -- nodeSearcherActionB           = fmap ActionST . stepper def $ NodeSearcher.toAction <$> anyNodeE
 
-        nodeSelectionActionE          = Selection.toAction    <$> anyNodeE
-        nodeSelectionActionB          = stepper def            $  nodeSelectionActionE
-        nodeSelectionActionPackB      = ActionST              <$> nodeSelectionActionB
-
-        nodeDragActionE               = Drag.toAction         <$> anyNodeE
-        nodeDragActionB               = stepper def            $  nodeDragActionE
-        nodeDragActionPackB           = ActionST              <$> nodeDragActionB
-
-        cameraActionE                 = Camera.toAction       <$> anyNodeE
-        cameraActionB                 = stepper def            $  cameraActionE
-
-        nodeSearcherActionE           = NodeSearcher.toAction <$> anyNodeE
-        nodeSearcherActionB           = stepper def            $  nodeSearcherActionE
-
-        allActionsPackB               = [nodeAddRemActionPackB, nodeSelectionActionPackB, nodeDragActionPackB]
+        allActionsPackB               = [nodeAddRemActionB, nodeSelectionActionB, nodeDragActionB]
         allReactionsPackB             = execAll globalStateB allActionsPackB
 
         globalStateReactionB         :: Behavior t State
-        globalStateReactionB          = getState              <$> (last allReactionsPackB)
+        globalStateReactionB          = getState <$> (last allReactionsPackB)
 
         allReactionsSeqPackB         :: Behavior t [ActionUI]
         allReactionsSeqPackB          = sequenceA allReactionsPackB

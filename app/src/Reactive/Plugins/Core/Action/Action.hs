@@ -44,14 +44,10 @@ class ActionStateExecutor act st where
 
 
 
-
-
 data ActionST = forall act. (ActionStateUpdater act, PrettyPrinter act) => ActionST act
 
-
 class ActionStateUpdater act where
-    execSt ::  act  -> State -> ActionUI
-
+    execSt :: act -> State -> ActionUI
 
 instance ActionStateUpdater act => ActionStateUpdater (Maybe act) where
     execSt (Just action) state = execSt action state
@@ -63,9 +59,7 @@ instance ActionStateUpdater ActionST where
 
 
 
-
 data ActionUI = forall act. (ActionUIUpdater act, PrettyPrinter act) => ActionUI act State
-
 
 class ActionUIUpdater act where
     updatUI :: WithState act State -> IO ()
@@ -73,25 +67,6 @@ class ActionUIUpdater act where
 instance ActionUIUpdater act => ActionUIUpdater (Maybe act) where
     updatUI (WithState (Just action) state) = updatUI (WithState action state)
     updatUI (WithState  Nothing      _    ) = return ()
-
-
-
-updatAllUI :: [ActionUI] -> IO ()
-updatAllUI [] =  return ()
-updatAllUI ((ActionUI act st):as) = updatUI (WithState act st) >> updatAllUI as
-
-logAllUI :: [ActionUI] -> IO ()
-logAllUI [] = putStrLn "-"
-logAllUI ((ActionUI act st):as) = do
-    putStrLn $ (display st) <> " <- " <> (display act)
-    logAllUI as
-
-
-
-getState :: ActionUI -> State
-getState (ActionUI _ st) = st
-
-
 
 data NoAction = NoAction
 
@@ -104,3 +79,16 @@ instance ActionUIUpdater NoAction where
 
 noActionUI :: State -> ActionUI
 noActionUI st = ActionUI NoAction st
+
+updatAllUI :: [ActionUI] -> IO ()
+updatAllUI [] =  return ()
+updatAllUI ((ActionUI act st):as) = updatUI (WithState act st) >> updatAllUI as
+
+logAllUI :: [ActionUI] -> IO ()
+logAllUI [] = putStrLn "-"
+logAllUI ((ActionUI act st):as) = do
+    putStrLn $ (display st) <> " <- " <> (display act)
+    logAllUI as
+
+getState :: ActionUI -> State
+getState (ActionUI _ st) = st
