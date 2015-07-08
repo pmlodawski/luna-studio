@@ -70,9 +70,9 @@ class ArgumentTypes a where
 
 instance ArgumentTypes Type where
     argumentTypes functionType = case functionType of
-        AppT 
-            (AppT ArrowT t) 
-            (rhs) 
+        AppT
+            (AppT ArrowT t)
+            (rhs)
           -> [t] ++ argumentTypes rhs
         _ -> []
 
@@ -82,7 +82,7 @@ returnedType functionType | trace ("<<>>" <> show functionType) False = undefine
 returnedType functionType = case functionType of
         AppT (AppT ArrowT _) right@(AppT (AppT ArrowT _) _)
             -> returnedType right
-        AppT (AppT ArrowT _) ret  
+        AppT (AppT ArrowT _) ret
             -> ret
         _   -> error $ "Failed to deduce returned type from " ++ show functionType
 
@@ -308,11 +308,11 @@ makeLenses ''CppParts
 joinParts :: [CppParts] -> CppParts
 joinParts parts =
     let collapseIncludes which = which <$> includes <$> parts
-    in CppParts (Set.unions $ collapseIncludes fst, Set.unions $ collapseIncludes snd) 
-                (Set.unions $ fmap forwardDecls parts) 
-                (concat $ map typedefs parts) 
-                (concat $ map classes parts) 
-                (concat $ map functions parts) 
+    in CppParts (Set.unions $ collapseIncludes fst, Set.unions $ collapseIncludes snd)
+                (Set.unions $ fmap forwardDecls parts)
+                (concat $ map typedefs parts)
+                (concat $ map classes parts)
+                (concat $ map functions parts)
                 (concat $ map globalVars parts)
 
 
@@ -331,7 +331,7 @@ makeLenses ''FormattedCppMethod
 
 
 instance CppFormattable CppFunction where
-    formatCpp (CppFunction n r a b) = 
+    formatCpp (CppFunction n r a b) =
         let at = formatArgsList a :: String
             signature = printf "%s %s%s" r n at
             body = printf "{\n%s\n}" b
@@ -436,7 +436,7 @@ instance CppFormattable CppClass where
             templatePreamble = formatTemplateIntroductor tmpl
             dtorCode = if hasDtorDefined cls then "" else printf "\tvirtual ~%s() {}\n" name
             headerCode =
-                printf 
+                printf
                     "%sclass %s %s \n{\npublic:\n%s%s%s\n\n%s\n};\n%s"
                     templatePreamble name basesTxt dtorCode enumsTxt fieldsTxt methodsHeader implsHeader
             bodyCode = methodsImpl
@@ -452,7 +452,7 @@ instance CppFormattable CppTypedef where
         in (printf "%susing %s = %s;" templateList to from, "")
 
 instance  CppFormattable CppGlobalVariable where
-    formatCpp (CppGlobalVariable n t) = (printf "extern %s %s;" t n, printf "%s %s;" t n) 
+    formatCpp (CppGlobalVariable n t) = (printf "extern %s %s;" t n, printf "%s %s;" t n)
 
 instance CppFormattable CppParts where
     formatCpp (CppParts incl frwrds tpdefs cs fns vars) =
@@ -826,6 +826,7 @@ processConstructor dec arg = trace ("FIXME: Con for " <> show arg) (return $ Cpp
 
 tyvarToCppName :: TyVarBndr -> String
 tyvarToCppName (PlainTV n) = show n
+tyvarToCppName (KindedTV n StarT) = show n  -- GHC 7.10 changed reify behavior so that type parameters are a::* instead of a
 tyvarToCppName arg = trace ("FIXME: tyvarToCppName for " <> show arg) $ show arg
 
 class ForwardDeclarable a where
@@ -950,7 +951,7 @@ includesResultingFromAliases cls = do
 
 elevateCommonFields :: CppClass -> [CppClass] -> (CppClass, [CppClass])
 elevateCommonFields base [] = (base, [])
-elevateCommonFields base ders = 
+elevateCommonFields base ders =
     let presentIn field cls = elem field (cls ^. classFields)
         presentInAll field = all (presentIn field) ders
         candidates = (head ders) ^. classFields
@@ -959,7 +960,7 @@ elevateCommonFields base ders =
         removeFields cls = cls & classFields %~ filter (\x -> not $ elem x toElevate)
 
         elevatedBase = base & classFields %~ mappend toElevate
-        elevDers = removeFields <$> ders        
+        elevDers = removeFields <$> ders
 
     in (elevatedBase, elevDers)
 
