@@ -119,7 +119,7 @@ next callDataPath = do
         graph  = callData ^. CallData.parentGraph
         nodeID = callData ^. CallData.callPoint . CallPoint.nodeID
         node   = callData ^. CallData.node
-        lsucl  = Graph.lsucl graph nodeID
+        lsucl  = Graph.lsuclData graph nodeID
     if Node.isOutputs node
         then return [init callDataPath]
         else List.nub . concat <$> mapM (globalSuccessors callDataPath) lsucl
@@ -136,7 +136,6 @@ globalSuccessors prevCallDataPath (nodeID, node           , edge) = do
             (graph, defID) <- Env.getGraph defPoint
             inputs         <- List.find (Node.isInputs . snd) (Graph.labNodes graph)
                                 <??> Error.GraphError $(loc) "cannot find inputs node"
-            let succs = List.filter (Edge.match edge . view _3) $ Graph.lsucl graph $ fst inputs
+            let succs = List.filter (Edge.match edge . view _3) $ Graph.lsuclData graph $ fst inputs
                 newCallDataPath = CallDataPath.append callDataPath defPoint defID graph inputs
             concat <$> mapM (globalSuccessors newCallDataPath) succs
-
