@@ -114,7 +114,6 @@ foreign import javascript unsafe "common.commonUniforms.samFactor.value = $1"
 
 
 
-
 foreign import javascript unsafe "app.getNode($1)"
     getNode :: Int -> IO (JSRef FunctionNode)
 

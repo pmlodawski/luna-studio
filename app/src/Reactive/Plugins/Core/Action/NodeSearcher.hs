@@ -35,13 +35,16 @@ import           Utils.PrettyPrinter
 import           Reactive.Plugins.Core.Action.Action
 import qualified Reactive.Plugins.Core.Action.State.Global    as Global
 import qualified Reactive.Plugins.Core.Action.State.NodeSearcher    as NodeSearcherState
+import qualified Reactive.Plugins.Core.Action.NodeSearcherMock    as Mock
 
 import qualified Data.Text.Lazy as Text
 import           Data.Text.Lazy (Text)
 
 
+data QueryType = Search | Tree deriving (Eq, Show)
 
-data Action = Query      { _expression :: Text }
+data Action =
+              Query      { _tpe :: QueryType, _expression :: Text }
             | CreateNode { _expression :: Text }
             | OpenNodeSearcher
             -- | CloseNodeSearcher
@@ -51,14 +54,16 @@ data Action = Query      { _expression :: Text }
 makeLenses ''Action
 
 instance PrettyPrinter Action where
-    display (Query expr)        = "ns(query [" ++ (Text.unpack expr) ++ "])"
+    display (Query Search expr) = "ns(query [" ++ (Text.unpack expr) ++ "])"
+    display (Query Tree expr)   = "ns(treequery [" ++ (Text.unpack expr) ++ "])"
     display (CreateNode expr)   = "ns(create [" ++ (Text.unpack expr) ++ "])"
     display OpenNodeSearcher    = "ns(open )"
 
 
 toAction :: Event Node -> Maybe Action
-toAction (NodeSearcher (NodeSearcher.Event tpe expr)) = case tpe of
-    "query"  -> Just $ Query expr
+toAction (NodeSearcher (NodeSearcher.Event tpe expr))   = case tpe of
+    "query"  -> Just $ Query Search expr
+    "tree"   -> Just $ Query Tree expr
     "create" -> Just $ CreateNode expr
     _        -> Nothing
 
@@ -78,24 +83,22 @@ instance ActionStateUpdater Action where
         --     (Just CloseNodeSearcher)  -> oldNodeSearcher & NodeSearcherState.isOpen .~ True
         -- newAction                        =  newActionCandidate
 
-mockQueryResults :: [JS.NodeSearcher.QueryResult]
-mockQueryResults =
-    [
-     (JS.NodeSearcher.QueryResult "Math" "sqrt" "Math.sqrt" [JS.NodeSearcher.Highlight 1 3] "function"),
-     (JS.NodeSearcher.QueryResult "Math" "Trig" "Math.Trig" [JS.NodeSearcher.Highlight 1 2] "module"),
-     (JS.NodeSearcher.QueryResult "Math.Trig" "sin" "Math.Trig.sin" [JS.NodeSearcher.Highlight 2 3] "function")
-    ]
+
 
 instance ActionUIUpdater Action where
     updatUI (WithState action state) = case action of
-        (Query expr)            -> do
-            JS.NodeSearcher.displayQueryResults mockQueryResults
+        (Query Search expr)      -> do
+            JS.NodeSearcher.displayQueryResults $ Mock.getItemsSearch expr
             putStrLn $ display action
-        (CreateNode expr)       -> do
+        (Query Tree expr)        -> do
+            JS.NodeSearcher.displayTreeResults $ Mock.getItemsTree expr
             putStrLn $ display action
-        OpenNodeSearcher        -> do
+        (CreateNode expr)        -> putStrLn $ display action
+        OpenNodeSearcher         -> do
             putStrLn $ display action
-            JS.NodeSearcher.initNodeSearcher "currentNodeExpressionOrEmpty" (state ^. Global.mousePos . x) (state ^. Global.mousePos . y)
+            JS.NodeSearcher.initNodeSearcher "" (state ^. Global.mousePos . x) (state ^. Global.mousePos . y)
         -- CloseNodeSearcher      -> do
         --     putStrLn $ display action
         --     JS.NodeSearcher.destroyNodeSearcher
+
+

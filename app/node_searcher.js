@@ -245,17 +245,25 @@ NodeSearcher.prototype.appendExpression = function(expr) {
 NodeSearcher.prototype.performSearch = function() {
   if(this.prefix === "" && this.searchbox.val() === "") {
     this.firstColumn.removeClass('types');
+    this.clearResults()
+    var ev = new CustomEvent('ns_event', {
+      detail: {
+        action: 'tree',
+        expression: ""
+      }
+    });
+    window.dispatchEvent(ev);
   } else {
     this.firstColumn.addClass('types');
+    var ev = new CustomEvent('ns_event', {
+      detail: {
+        action: 'query',
+        expression: this.expression()
+      }
+    });
+    window.dispatchEvent(ev);
   }
 
-  var ev = new CustomEvent('ns_event', {
-    detail: {
-      action: 'query',
-      expression: this.expression()
-    }
-  });
-  window.dispatchEvent(ev);
 };
 
 NodeSearcher.prototype.returnSearchResult = function(results) {
@@ -268,6 +276,7 @@ NodeSearcher.prototype.currentSelection = function() {
 };
 
 NodeSearcher.prototype.select = function(newSelection) {
+  if(newSelection.length == 0) return;
   if(this.currentSelection().is(newSelection)) return;
 
   var inSameColumn = this.currentSelection().parents('.column').is(newSelection.parents('.column'));
@@ -335,7 +344,16 @@ NodeSearcher.prototype.openColumn = function() {
 
   this.el.append(column);
   column.itemsDiv.mCustomScrollbar(config.nodeSearcher.scrollbarOptions);
-  this.displayTree(doSearchTree(this.currentSelection().data('match').fullname), column.items);
+
+  column.data('items', column.items);
+
+  var ev = new CustomEvent('ns_event', {
+    detail: {
+      action: 'tree',
+      expression: this.currentSelection().data('match').fullname
+    }
+  });
+  window.dispatchEvent(ev);
 };
 
 NodeSearcher.prototype.updatePrefixWidth = function() {
@@ -348,6 +366,7 @@ NodeSearcher.prototype.clearResults = function() {
   this.firstColumn.nextAll().remove();
   this.currentColumn = this.firstColumn;
   this.firstColumn.find('li.result').remove();
+  this.searchrow.addClass('active');
 };
 
 NodeSearcher.prototype.addResult = function(prefix, name, fullname, highlight, type) {
@@ -403,19 +422,17 @@ NodeSearcher.prototype.displayResults = function(results, ul) {
 
 
 
-NodeSearcher.prototype.displayTree = function(results, ul) {
-  ul.find('li.result').remove();
+NodeSearcher.prototype.addTreeResult = function(prefix, name, fullname, type) {
+  var ul = this.el.find('.column:last-child ul');
 
-  _(results).each(function(item) {
-    var li = $('<li/>').addClass('result').addClass('item');
-    var name = $("<span/>").addClass('fname').text(item.name);
+  var li = $('<li/>').addClass('result').addClass('item');
+  var namespan = $("<span/>").addClass('fname').text(name);
+  li.append(namespan);
 
-    li.data('match', item);
-    li.addClass(item.type);
+  li.data('match', {module: prefix, name: name, fullname: fullname, type: type});
+  li.addClass(type);
 
-    ul.append(li);
-    li.append(name);
-  });
+  ul.append(li);
 };
 
 // input event handlers
