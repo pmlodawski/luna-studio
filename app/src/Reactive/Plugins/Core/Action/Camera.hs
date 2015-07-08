@@ -7,6 +7,7 @@ import           Control.Applicative
 import           Data.Default
 import           Data.Maybe
 import           Data.List
+import           Data.Char
 import           Data.Monoid
 import           Data.Function
 import           System.Mem
@@ -32,6 +33,9 @@ import qualified Reactive.Plugins.Core.Action.State.Global    as Global
 data Action = ZoomIn
             | ZoomOut
             | MoveLeft
+            | MoveRight
+            | MoveUp
+            | MoveDown
             deriving (Eq, Show)
 
 
@@ -41,15 +45,24 @@ instance PrettyPrinter Action where
     display ZoomIn    = "cA( ZoomIn )"
     display ZoomOut   = "cA( ZoomOut )"
     display MoveLeft  = "cA( MoveLeft )"
+    display MoveRight = "cA( MoveRight )"
+    display MoveUp    = "cA( MoveUp )"
+    display MoveDown  = "cA( MoveDown )"
 
 
 toAction :: Event Node -> Maybe Action
 toAction (Mouse (WithObjects mouseEvent objects)) = Nothing
 toAction (Keyboard (Keyboard.Event Keyboard.Press char)) = case char of
-    '=' -> Just ZoomIn
-    '+' -> Just ZoomIn
-    '-' -> Just ZoomOut
-    _   -> Nothing
+    '='   -> Just ZoomIn
+    '+'   -> Just ZoomIn
+    '-'   -> Just ZoomOut
+    _     -> Nothing
+toAction (Keyboard (Keyboard.Event Keyboard.Down char)) = case char of
+    '\0037' -> Just MoveLeft
+    '\0039' -> Just MoveRight
+    '\0038' -> Just MoveUp
+    '\0040' -> Just MoveDown
+    _     -> Nothing
 toAction _ = Nothing
 
 
@@ -63,3 +76,6 @@ instance ActionUIUpdater Action where
         ZoomIn      -> putStrLn $ display action
         ZoomOut     -> putStrLn $ display action
         MoveLeft    -> putStrLn $ display action
+        MoveRight   -> putStrLn $ display action
+        MoveUp      -> putStrLn $ display action
+        MoveDown    -> putStrLn $ display action
