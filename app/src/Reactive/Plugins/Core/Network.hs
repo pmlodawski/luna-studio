@@ -63,10 +63,8 @@ makeNetworkDescription = do
         nodeSearcherActionB           = fmap ActionST . stepper def $ NodeSearcher.toAction <$> anyNodeE
 
         allActionsPackB               = [nodeAddRemActionB, nodeSelectionActionB, nodeDragActionB, cameraActionB, nodeSearcherActionB]
-        allReactionsPackB             = execAll globalStateB allActionsPackB
 
-        globalStateReactionB         :: Behavior t State
-        globalStateReactionB          = getState <$> (last allReactionsPackB)
+        (globalStateReactionB, allReactionsPackB) = execAll globalStateB allActionsPackB
 
         allReactionsSeqPackB         :: Behavior t [ActionUI]
         allReactionsSeqPackB          = sequenceA allReactionsPackB
