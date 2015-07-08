@@ -25,6 +25,8 @@ module Flowbox.Graphics.Mockup.Generator (
     linearShapeLuna,
     maskFromBinary,
     radialShapeLuna,
+    RotoAlgorithm(..),
+    rotoLunaWrap,
     rotoLuna,
     rotoLunaL,
     rotoLunaB,
@@ -200,6 +202,14 @@ gradientLuna gradient (variable -> width) (variable -> height) = channelToImageR
 --            (w, h)           = Basic.unpackAccDims $ maybe (0, 0) Channel.size sampleChan
 --            Right (Just a)   = Image.getFromPrimary "rgba.a" $ Rasterizer.matrixToImage $ Rasterizer.rasterizeMask w h mask
 --        in Image.appendToPrimary a input
+
+data RotoAlgorithm = GPU | CPU
+    deriving (Show, Generic)
+
+rotoLunaWrap :: Image -> Mask Float -> Format -> Bool -> Bool -> RotoAlgorithm -> Image
+rotoLunaWrap input mask format premult premultAlpha alg = case alg of
+    GPU -> rotoLuna input mask format premult premultAlpha
+    CPU -> rotoLunaL input mask format premult premultAlpha
 
 rotoLuna :: Image -> Mask Float -> Format -> Bool -> Bool -> Image
 rotoLuna input mask format premult premultAlpha = (if premult then premultiplyLuna else id) $
