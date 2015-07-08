@@ -7,19 +7,24 @@
 
 module Luna.Interpreter.Runtime (
     module Luna.Interpreter.Runtime,
-    module X
+    module X,
 ) where
 
+import           Data.Word                     as X
 import           Luna.Interpreter.Runtime.Hash as X
 import           Luna.Interpreter.Runtime.HMap as X (HKey, HMap, T)
 import qualified Luna.Interpreter.Runtime.HMap as HMap
 import           Prelude
-import qualified System.IO.Unsafe              as Unsafe
+import           System.IO.Unsafe              as X (unsafePerformIO)
+import           System.Mem                    as X (performGC)
 
 
 
-hmapCreateKeyWithWitness :: a -> HKey T a
-hmapCreateKeyWithWitness = Unsafe.unsafePerformIO . const HMap.createKey
+hmapCreateKeyWithWitness :: a -> IO (HKey T a)
+hmapCreateKeyWithWitness = const HMap.createKey
+
+hmapCreateKeyWithWitnessUnsafeIO :: a -> HKey T a
+hmapCreateKeyWithWitnessUnsafeIO = unsafePerformIO . const HMap.createKey
 
 
 hmapCreateKey = HMap.createKey
