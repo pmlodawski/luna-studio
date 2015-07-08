@@ -53,14 +53,13 @@ toAction (Keyboard (Keyboard.Event Keyboard.Press char)) = case char of
 toAction _ = Nothing
 
 
-instance ActionStateExecutor Action Global.State where
-    exec newAction oldState = WithState (Just newAction) oldState
+instance ActionStateUpdater Action where
+    execSt newAction oldState = ActionUI newAction oldState
 
 
-updateUI :: WithStateMaybe Action Global.State -> IO ()
-updateUI (WithState maybeAction state) = case maybeAction of
-    Nothing         -> return ()
-    Just action     -> case action of
+
+instance ActionUIUpdater Action where
+    updatUI (WithState action state) = case action of
         ZoomIn      -> putStrLn $ display action
         ZoomOut     -> putStrLn $ display action
         MoveLeft    -> putStrLn $ display action

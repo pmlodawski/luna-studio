@@ -44,6 +44,7 @@ import           Data.Text.Lazy (Text)
 data Action = Query      { _expression :: Text }
             | CreateNode { _expression :: Text }
             | OpenNodeSearcher
+            -- | CloseNodeSearcher
             deriving (Eq, Show)
 
 
@@ -67,21 +68,28 @@ toAction (Keyboard (Keyboard.Event Keyboard.Down char)) = case char of
 
 toAction _ = Nothing
 
-instance ActionStateExecutor Action Global.State where
-    exec newAction oldState = WithState (Just newAction) oldState
+instance ActionStateUpdater Action where
+    execSt newAction oldState = ActionUI newAction oldState
         -- where
-        -- oldNodeSearcher                  = oldState ^. NodeSearcher.isOpen
-        -- newState                         = oldState & Global.nodeSearcher .~ newNodeSearcher
+        -- oldNodeSearcher                  = oldState ^. Global.nodeSearcher . NodeSearcherState.isOpen
+        -- newState                         = oldState ^. Global.nodeSearcher .~ newNodeSearcher
         -- newNodeSearcher                  = case newAction of
-        --     OpenNodeSearcher   -> oldNodeSearcher & NodeSearcher.isOpen .~ True
-        --     CloseNodeSearcher  -> oldNodeSearcher & NodeSearcher.isOpen .~ True
+        --     (Just OpenNodeSearcher)   -> oldNodeSearcher & NodeSearcherState.isOpen .~ True
+        --     (Just CloseNodeSearcher)  -> oldNodeSearcher & NodeSearcherState.isOpen .~ True
+        -- newAction                        =  newActionCandidate
 
+mockQueryResults :: [JS.NodeSearcher.QueryResult]
+mockQueryResults =
+    [
+     (JS.NodeSearcher.QueryResult "Math" "sqrt" "Math.sqrt" [JS.NodeSearcher.Highlight 1 3] "function"),
+     (JS.NodeSearcher.QueryResult "Math" "Trig" "Math.Trig" [JS.NodeSearcher.Highlight 1 2] "module"),
+     (JS.NodeSearcher.QueryResult "Math.Trig" "sin" "Math.Trig.sin" [JS.NodeSearcher.Highlight 2 3] "function")
+    ]
 
-updateUI :: WithStateMaybe Action Global.State -> IO ()
-updateUI (WithState maybeAction state) = case maybeAction of
-    Nothing         -> return ()
-    Just action     -> case action of
+instance ActionUIUpdater Action where
+    updatUI (WithState action state) = case action of
         (Query expr)            -> do
+            JS.NodeSearcher.displayQueryResults mockQueryResults
             putStrLn $ display action
         (CreateNode expr)       -> do
             putStrLn $ display action

@@ -278,7 +278,8 @@ module.exports = {
   removeNode: removeNode,
   start: start,
   createNodeSearcher: createNodeSearcher,
-  destroyNodeSearcher: destroyNodeSearcher
+  destroyNodeSearcher: destroyNodeSearcher,
+  nodeSearcher: function() { return $$.node_searcher; }
 };
 
 

@@ -45,3 +45,33 @@ nodeSearcherEventGetAction self = do
 
 nsAction :: IsUIEvent e => EventM e t Text
 nsAction = event >>= (liftIO . nodeSearcherEventGetAction)
+
+
+
+-- display results
+
+foreign import javascript unsafe "app.nodeSearcher().clearResults()"
+    nodesearcher_clear_results :: IO ()
+
+foreign import javascript unsafe "app.nodeSearcher().addResult($1, $2, $3, [], $4)"
+    nodesearcher_add_result :: JSString -> JSString -> JSString -> JSString -> IO ()
+
+data Highlight = Highlight {start :: Int, len :: Int} deriving (Show, Eq)
+data QueryResult = QueryResult {_prefix :: Text, _name :: Text, _fullname :: Text, _highlights :: [Highlight], _tpe :: Text}
+
+displayQueryResult :: QueryResult -> IO ()
+displayQueryResult (QueryResult prefix name fullname _ tpe ) = nodesearcher_add_result (toJSString prefix) (toJSString name) (toJSString fullname) (toJSString tpe)
+
+displayQueryResults :: [QueryResult] -> IO ()
+displayQueryResults results = do
+    nodesearcher_clear_results
+    mapM_ displayQueryResult results
+
+--
+-- nodeSearcherEventGetAction :: (IsUIEvent self) => self -> IO Text
+-- nodeSearcherEventGetAction self = do
+--     action <- nodesearcher_event_get_action (unUIEvent (toUIEvent self))
+--     return $ fromJSString action
+--
+-- nsAction :: IsUIEvent e => EventM e t Text
+-- nsAction = event >>= (liftIO . nodeSearcherEventGetAction)

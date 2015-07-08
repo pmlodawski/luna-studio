@@ -59,10 +59,10 @@ makeNetworkDescription = do
         nodeAddRemActionB             = fmap ActionST . stepper def $    AddRemove.toAction <$> anyNodeE
         nodeSelectionActionB          = fmap ActionST . stepper def $    Selection.toAction <$> anyNodeE
         nodeDragActionB               = fmap ActionST . stepper def $         Drag.toAction <$> anyNodeE
-        -- cameraActionB                 = fmap ActionST . stepper def $       Camera.toAction <$> anyNodeE
-        -- nodeSearcherActionB           = fmap ActionST . stepper def $ NodeSearcher.toAction <$> anyNodeE
+        cameraActionB                 = fmap ActionST . stepper def $       Camera.toAction <$> anyNodeE
+        nodeSearcherActionB           = fmap ActionST . stepper def $ NodeSearcher.toAction <$> anyNodeE
 
-        allActionsPackB               = [nodeAddRemActionB, nodeSelectionActionB, nodeDragActionB]
+        allActionsPackB               = [nodeAddRemActionB, nodeSelectionActionB, nodeDragActionB, cameraActionB, nodeSearcherActionB]
         allReactionsPackB             = execAll globalStateB allActionsPackB
 
         globalStateReactionB         :: Behavior t State

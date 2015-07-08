@@ -33,17 +33,6 @@ instance (PrettyPrinter act, PrettyPrinter st) => PrettyPrinter (WithState act s
     display (WithState action state) = "na( " <> display action <> " " <> display state <> " )"
 
 
-
--- deprecated
-class ActionStateExecutor act st where
-    exec    ::        act  -> st -> WithStateMaybe act st
-    tryExec :: (Maybe act) -> st -> WithStateMaybe act st
-    tryExec Nothing       = WithState Nothing
-    tryExec (Just action) = exec action
-
-
-
-
 data ActionST = forall act. (ActionStateUpdater act, PrettyPrinter act) => ActionST act
 
 class ActionStateUpdater act where
