@@ -35,28 +35,31 @@ guiLineSnap originalCurveControlPoints pointBefore pointAfter strokePoints error
             Closed -> startControlPoint : midPoints
             Open   -> startControlPoint : midPoints ++ [endControlPoint]
         midPoints = beziersToFullControlPoints resultCurve
-        startControlPoint = case openness of
-            Closed -> (ps, hi, ho)
-            Open   -> (ps , his, ho)
-        endControlPoint = (pe, hi, hoe)
-        (_, his, _) = head originalCurveControlPoints
-        (_, _, hoe) = last originalCurveControlPoints
-        CubicBezier ps ho _ _ = head resultCurve
-        CubicBezier _ _ hi pe = last resultCurve
+        (startControlPoint, endControlPoint) = endsHandling openness resultCurve originalCurveControlPoints
         --resultCurve = moveCurveToStroke (controlPointsToBeziers originalCurveControlPoints) strokePoints errorParameter
         resultCurve = moveCurveToStroke' originalCurve pointBefore pointAfter strokePoints'' errorParameter openness
         originalCurve = controlPointsToBeziers originalCurveControlPoints'
-        --pointAfter' = case openness of
-        --    Closed -> pointAfter
-        --    Open   -> Just startControlPoint
+
+        strokePointsV = V.fromList strokePoints
+        curvePoints = V.concatMap resampleBezier (V.fromList originalCurve)
         originalCurveControlPoints' = case openness of
             Closed -> originalCurveControlPoints ++ [head originalCurveControlPoints]
             Open   -> originalCurveControlPoints
-        --strokeBox = (l,r,u,d) where
-        strokePointsV = V.fromList strokePoints
+        closestPointIdx = findStartPoint strokePointsV curvePoints originalCurveControlPoints
+        originalCurveDirection = if (findDirection curvePoints >= 0) then ClockWise else CounterClockWise
+        strokeDirection = if (findDirection strokePointsV >= 0) then ClockWise else CounterClockWise
+
+        strokePoints'  = take (length strokePoints) $ drop closestPointIdx $ cycle strokePoints
+        strokePoints'' = case openness of
+            Closed -> if strokeDirection==originalCurveDirection then strokePoints' else reverse strokePoints' --D.trace ("\n\ncurve box: " ++show curveBox++"\nstroke box: "++show strokeBox++"\n\n" ) $
+            Open   -> strokePoints
+
+findStartPoint strokePointsV curvePoints originalCurveControlPoints = 
+    V.minIndex (V.map (euclidianDistance (V.head boxedControlPoints)) strokePointsV)
+    where
         strokeBox@(ls, rs, us, ds) = boxPoints strokePointsV
         curveBox@(lc, rc, uc, dc) = boxPoints curvePoints
-        curvePoints = V.concatMap resampleBezier (V.fromList originalCurve)
+        
         boxedControlPoints = V.fromList $ map box originalCurveControlPoints
         box :: ControlPoint -> V2 Double
         box (V2 x y, hi, ho) = V2 (tox' x) (toy' y)
@@ -65,22 +68,18 @@ guiLineSnap originalCurveControlPoints pointBefore pointAfter strokePoints error
         toy' :: Double -> Double 
         toy' y = ((y-dc)/(uc-dc))*(us-ds)+ds
 
-        closestPointIdx = V.minIndex (V.map (euclidianDistance (V.head boxedControlPoints)) strokePointsV) --D.trace ("originalCurveControlPoints: "++show originalCurveControlPoints++"\n"++"boxedControlPoints: "++show boxedControlPoints++"\n") $
-        originalCurveDirection = if (findDirection curvePoints >= 0) then ClockWise else CounterClockWise
-        strokeDirection = if (findDirection strokePointsV >= 0) then ClockWise else CounterClockWise
-        -- --second point based direction check
-        --secClosPointIdx = V.minIndex (V.map (euclidianDistance (V.head (V.tail boxedControlPoints))) strokePointsV)
-
-        --distanceFront = if closestPointIdx < secClosPointIdx then secClosPointIdx - closestPointIdx else secClosPointIdx + (length strokePoints - closestPointIdx)
-        --distanceBack  = if closestPointIdx > secClosPointIdx then closestPointIdx - secClosPointIdx else closestPointIdx + (length strokePoints - secClosPointIdx)
-        
-        strokePoints'  = take (length strokePoints) $ drop closestPointIdx $ cycle strokePoints
-        strokePoints'' = case openness of
-            Closed -> if strokeDirection==originalCurveDirection then strokePoints' else reverse strokePoints' --D.trace ("\n\ncurve box: " ++show curveBox++"\nstroke box: "++show strokeBox++"\n\n" ) $
-            Open   -> strokePoints
-        --cpy :: V2 Double -> V2 Double -> Ordering
-        --cpy (V2 x1 y1) (V2 x2 y2) = compare y1 y2
-        -- --end
+endsHandling :: Openness -> [CubicBezier Double] -> [ControlPoint] -> (ControlPoint, ControlPoint)
+endsHandling openness resultCurve originalCurveControlPoints = (startControlPoint, endControlPoint) where
+    startControlPoint = case openness of
+        Closed -> (ps, hi, ho)
+        Open   -> (ps , his', ho)
+    endControlPoint = (pe, hi, hoe')
+    his' = his + (ps - originalStartPoint)
+    hoe' = hoe + (pe - originalEndPoint)
+    (originalStartPoint, his, _) = head originalCurveControlPoints
+    (originalEndPoint  , _, hoe) = last originalCurveControlPoints
+    CubicBezier ps ho _ _ = head resultCurve
+    CubicBezier _ _ hi pe = last resultCurve
 
 findDirection points = fst $ V.foldl (\(direction, V2 x1 y1) pt@(V2 x2 y2) -> (direction+(x2-x1)*(y2+y1), pt)) (0, V.last points) points
 
@@ -231,6 +230,31 @@ deCasteljau t coefs = --trace ("reduced: "++show reduced) $
         reduced = zipWith (lerpP t) coefs (tail coefs)
         lerpP t (V2 x0 y0) (V2 x1 y1) = V2 (lerp t x0 x1) (lerp t y0 y1)
         lerp t a b = t * b + (1 - t) * a
+
+bezierFormula formula curve t = 
+    let V2 x0 y0 = cubicC0 curve
+        V2 x1 y1 = cubicC1 curve
+        V2 x2 y2 = cubicC2 curve
+        V2 x3 y3 = cubicC3 curve
+     in V2 (formula x0 x1 x2 x3) (formula y0 y1 y2 y3)
+
+bezierFirstDerivative :: CubicBezier Double -> Double -> V2 Double
+bezierFirstDerivative curve t = bezierFormula formula curve t where
+    formula start control1 control2 end =
+        3.0*(1-t)*(1-t)*(control1-start) + 6.0*(control2-control1)*(1.0-t)*t + 3.0*(end-control2)*t*t
+--bezierDerivative curve t = 
+--    let V2 x0 y0 = cubicC0 curve
+--        V2 x1 y1 = cubicC1 curve
+--        V2 x2 y2 = cubicC2 curve
+--        V2 x3 y3 = cubicC3 curve
+--        
+--            
+--    in V2 (formula x0 x1 x2 x3) (formula y0 y1 y2 y3)
+
+bezierSecondDerivative :: CubicBezier Double -> Double -> V2 Double
+bezierSecondDerivative curve t = bezierFormula formula curve t where
+    formula start control1 control2 end =
+        6.0*(1-t)*(control2-2*control1+start) + 6.0*(end-2*control2+control1)*t
 
 arcLength :: CubicBezier Double -> Double
 arcLength curve =
