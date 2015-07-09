@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Reactive.Plugins.Core.Action.NodeSearcherSearch where
+module Utils.Searcher where
 
 import Data.Maybe
 import Data.List
@@ -8,6 +8,8 @@ import Control.Applicative
 
 import qualified Data.Text.Lazy as Text
 import           Data.Text.Lazy (Text)
+
+import           Data.Char ( isAlphaNum, isUpper )
 
 class Nameable a where
     name :: a -> Text
@@ -66,18 +68,18 @@ commonPrefixLength x y
     | (Text.head x) == (Text.head y) = 1 + commonPrefixLength (Text.tail x) (Text.tail y)
     | otherwise                      = 0
 
-shorterMatch :: Maybe [Submatch] -> Maybe [Submatch] -> Maybe [Submatch]
-shorterMatch Nothing Nothing   = Nothing
-shorterMatch (Just a) Nothing  = Just a
-shorterMatch Nothing (Just b)  = Just b
-shorterMatch (Just a) (Just b) = if (length a) <= (length b) then Just a else Just b
+-- shorterMatch :: Maybe [Submatch] -> Maybe [Submatch] -> Maybe [Submatch]
+-- shorterMatch Nothing Nothing   = Nothing
+-- shorterMatch (Just a) Nothing  = Just a
+-- shorterMatch Nothing (Just b)  = Just b
+-- shorterMatch (Just a) (Just b) = if (length a) <= (length b) then Just a else Just b
 
 findSubsequenceOf :: Text -> Text -> Maybe [Submatch]
 findSubsequenceOf = findSubsequenceOf' 0 where
     findSubsequenceOf' :: Int -> Text -> Text -> Maybe [Submatch]
     findSubsequenceOf' _   ""  ""                    = Just []
     findSubsequenceOf' _   _   ""                    = Nothing
-    findSubsequenceOf' idx a   b  | prefixLength > 0 = shorterMatch takePrefix skipHead
+    findSubsequenceOf' idx a   b  | prefixLength > 0 = nicerMatch b takePrefix skipHead
                                   | otherwise        = skipHead
                                   where
                                        prefixLength  = commonPrefixLength a b
@@ -87,7 +89,26 @@ findSubsequenceOf = findSubsequenceOf' 0 where
                                            $ findSubsequenceOf' (idx + prefixLength) (dropPrefix a) (dropPrefix b)
 
 
--- main = do
---   putStrLn $ show $ findSuggestions myIndex myAliases "pe"
---   putStrLn $ show $ findSuggestions myIndex myAliases "ple"
---   putStrLn $ show $ findSuggestions myIndex myAliases "fno"
+
+nicerMatch :: Text -> Maybe [Submatch] -> Maybe [Submatch] -> Maybe [Submatch]
+nicerMatch t Nothing Nothing   = Nothing
+nicerMatch t (Just a) Nothing  = Just a
+nicerMatch t Nothing (Just b)  = Just b
+nicerMatch t (Just a) (Just b) = if (countWordBoundaries t a) >= (countWordBoundaries t b) then Just a else Just b
+
+countWordBoundaries :: Text -> [Submatch] -> Int
+countWordBoundaries t sm = sum $ fmap (countTrue . substring) sm where
+     wb = wordBoundaries t
+     substring :: Submatch -> [Bool]
+     substring (Submatch s l) = take l $ drop s wb
+
+countTrue :: [Bool] -> Int
+countTrue list = sum $ map fromEnum list
+
+wordBoundaries :: Text -> [Bool]
+wordBoundaries t = reverse out where
+                   f :: (Bool, [Bool]) -> Char -> (Bool, [Bool])
+                   f (atBow, l) c = (((not $ isAlphaNum c) && c /= '.'), (atBow && isAlphaNum c || isUpper c):l)
+                   (_, out) = Text.foldl f (True, []) t
+
+
