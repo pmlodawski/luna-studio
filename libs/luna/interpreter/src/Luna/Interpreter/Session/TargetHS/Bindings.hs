@@ -26,18 +26,18 @@ logger = getLoggerIO $moduleName
 
 bindingMatch :: GHC.DynFlags -> String -> HscTypes.TyThing -> Bool
 bindingMatch dflags name binding = result where
-    result = bname == name || cname == '.':name
+    result = dropDot bname == name
     bname = dshow dflags $ HscTypes.tyThingAvailInfo binding
-    cname = List.dropWhile (/= '.') bname
+
+
+dropDot :: String -> String
+dropDot = reverse . List.takeWhile (/= '.') . reverse
 
 
 remove :: GhcMonad m => String -> m ()
 remove name = do
     dflags <- GHC.getSessionDynFlags
-    hscEnv <- GhcMonad.getSession
-    let ic_tythings = HscTypes.ic_tythings $ HscTypes.hsc_IC hscEnv
-        matching    = filter (bindingMatch dflags name) ic_tythings
-
+    matching <- filter (bindingMatch dflags name) <$> getIcTythings
     logger info $ "Deleting " ++ show (length matching) ++ " bindings"
     GhcMonad.liftIO $ Linker.deleteFromLinkEnv $ map GHC.getName matching
     removeIcTythings name
@@ -45,6 +45,18 @@ remove name = do
     --    pls <-  Linker.saveLinkerGlobals
     --    let closure_env = Linker.closure_env pls
     --    print $ dshow dflags closure_env
+
+getIcTythings :: GhcMonad m => m [HscTypes.TyThing]
+getIcTythings = do
+    dflags <- GHC.getSessionDynFlags
+    hscEnv <- GhcMonad.getSession
+    return $ HscTypes.ic_tythings $ HscTypes.hsc_IC hscEnv
+
+
+bindings :: GhcMonad m => m [String]
+bindings = do
+    dflags <- GHC.getSessionDynFlags
+    map (dropDot . dshow dflags . HscTypes.tyThingAvailInfo) <$> getIcTythings
 
 
 removeIcTythings :: GhcMonad m => String -> m ()
