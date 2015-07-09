@@ -28,3 +28,7 @@ instance Typeable obj => UnpackDynamic (Event Dynamic) (Event obj) where
     unpackDynamic (Keyboard ev)                            = Keyboard ev
     unpackDynamic (NodeSearcher ev)                        = NodeSearcher ev
 
+instance PrettyPrinter obj => PrettyPrinter (Event obj) where
+    display (Keyboard ev)         = "KeyEv(" <> display ev <> ")"
+    display (NodeSearcher ev)     = "NoSEv(" <> display ev <> ")"
+    display (Mouse (WithObjects.WithObjects ev o))          = "MousEv(" <> display ev <> ")"

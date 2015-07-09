@@ -55,17 +55,18 @@ instance PrettyPrinter Action where
 
 
 toAction :: Event Node -> Maybe Action
-toAction (Mouse (WithObjects mouseEvent objects)) = case mouseEvent ^. Mouse.tpe of
-    Mouse.Pressed -> if isNoNode then case mouseKeyMods of
-                                    (KeyMods False False False False) -> Just UnselectAll
-                                    _                                 -> Nothing
-                                 else case mouseKeyMods of
-                                    (KeyMods False False False False) -> Just (SelectAction selectActionType node)
-                                    (KeyMods False False True  False) -> Just (SelectAction toggleActionType node)
-                                    _                                 -> Nothing
-    _             -> Nothing
-    where mouseKeyMods     = mouseEvent ^. keyMods
-          isNoNode         = null objects
+toAction (Mouse (WithObjects (Mouse.Event tpe pos button keyMods) objects)) = case button of
+    1                 -> case tpe of
+        Mouse.Pressed -> if isNoNode then case keyMods of
+                                        (KeyMods False False False False) -> Just UnselectAll
+                                        _                                 -> Nothing
+                                     else case keyMods of
+                                        (KeyMods False False False False) -> Just (SelectAction selectActionType node)
+                                        (KeyMods False False True  False) -> Just (SelectAction toggleActionType node)
+                                        _                                 -> Nothing
+        _             -> Nothing
+    _                 -> Nothing
+    where isNoNode         = null objects
           node             = unwrap . head $ objects
           selectActionType = if node ^. selected then Focus
                                                  else SelectNew

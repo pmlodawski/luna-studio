@@ -31,12 +31,20 @@ import           Reactive.Plugins.Core.Action.State.Camera    as Camera
 import qualified Reactive.Plugins.Core.Action.State.Global    as Global
 
 
+data ZoomType = StartDrag
+              | Dragging
+              | StopDrag
+              deriving (Eq, Show)
+
 data Action = ZoomIn
             | ZoomOut
             | MoveLeft
             | MoveRight
             | MoveUp
             | MoveDown
+            | ZoomMouse { _zoomType :: ZoomType
+                        , _zoomPos  :: Point
+                        }
             deriving (Eq, Show)
 
 
@@ -53,6 +61,18 @@ instance PrettyPrinter Action where
 
 toAction :: Event Node -> Maybe Action
 toAction (Mouse (WithObjects mouseEvent objects)) = Nothing
+-- toAction (Mouse (WithObjects (Mouse.Event tpe pos button keyMods) objects)) = case button of
+--     3                  -> case tpe of
+--         Mouse.Pressed  -> if isNoNode then Nothing
+--                                       else case keyMods of
+--                                            (KeyMods False False False False) -> Just (ZoomMouse StartDrag pos)
+--                                            _                                 -> Nothing
+--         Mouse.Released -> Just (ZoomMouse StopDrag pos)
+--         Mouse.Moved    -> Just (ZoomMouse Dragging pos)
+--     _                  -> case tpe of
+--         Mouse.Released -> Just (ZoomMouse StopDrag pos)
+--         Mouse.Moved    -> Just (ZoomMouse Dragging pos)
+--         _              -> Nothing
 toAction (Keyboard (Keyboard.Event Keyboard.Press char)) = case char of
     '='   -> Just ZoomIn
     '+'   -> Just ZoomIn

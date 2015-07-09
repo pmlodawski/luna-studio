@@ -26,6 +26,7 @@ import           Utils.PrettyPrinter
 
 import           Reactive.Plugins.Core.Action.Action
 import qualified Reactive.Plugins.Core.Action.Action        as Action
+import qualified Reactive.Plugins.Core.Action.Move          as Move
 import qualified Reactive.Plugins.Core.Action.AddRemove     as AddRemove
 import qualified Reactive.Plugins.Core.Action.Selection     as Selection
 import qualified Reactive.Plugins.Core.Action.Drag          as Drag
@@ -56,13 +57,15 @@ makeNetworkDescription = do
         globalStateB                 :: Behavior t State
         globalStateB                  = stepper def $ globalStateReactionB <@ anyE
 
+        nodeMoveActionB               = fmap ActionST . stepper def $         Move.toAction <$> anyNodeE
         nodeAddRemActionB             = fmap ActionST . stepper def $    AddRemove.toAction <$> anyNodeE
         nodeSelectionActionB          = fmap ActionST . stepper def $    Selection.toAction <$> anyNodeE
         nodeDragActionB               = fmap ActionST . stepper def $         Drag.toAction <$> anyNodeE
         cameraActionB                 = fmap ActionST . stepper def $       Camera.toAction <$> anyNodeE
         nodeSearcherActionB           = fmap ActionST . stepper def $ NodeSearcher.toAction <$> anyNodeE
 
-        allActionsPackB               = [nodeAddRemActionB, nodeSelectionActionB, nodeDragActionB, cameraActionB, nodeSearcherActionB]
+        allActionsPackB               = [ nodeMoveActionB
+                                        , nodeAddRemActionB, nodeSelectionActionB, nodeDragActionB, cameraActionB, nodeSearcherActionB]
 
         (globalStateReactionB, allReactionsPackB) = execAll globalStateB allActionsPackB
 
@@ -77,6 +80,7 @@ makeNetworkDescription = do
     reactimate' $ (fmap updateAllUI) <$> allReactionsSeqPackF
     reactimate' $ (fmap logAllUI)    <$> allReactionsSeqPackF
 
+    reactimate  $ (logAs "m: ") <$> anyE
     -- nodeSelectionReactionF <- changes nodeSelectionReactionB
     -- reactimate' $ (fmap Selection.updateUI) <$> nodeSelectionReactionF
     -- reactimate' $ (fmap $ logIfActionAs "s|")       <$> nodeSelectionReactionF

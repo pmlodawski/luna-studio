@@ -51,16 +51,16 @@ instance PrettyPrinter Action where
 
 
 toAction :: Event Node -> Maybe Action
-toAction (Mouse (WithObjects mouseEvent objects)) = case mouseEvent ^. Mouse.tpe of
-    Mouse.Pressed  -> if isNoNode then Nothing
-                                  else case mouseKeyMods of
-                                       (KeyMods False False False False) -> Just (DragAction StartDrag mousePosition)
-                                       _                                 -> Nothing
-    Mouse.Released -> Just (DragAction StopDrag mousePosition)
-    Mouse.Moved    -> Just (DragAction Moving   mousePosition)
-    where mouseKeyMods  = mouseEvent ^. keyMods
-          mousePosition = mouseEvent ^. position
-          isNoNode      = null objects
+toAction (Mouse (WithObjects (Mouse.Event tpe pos button keyMods) objects)) = case button of
+    1                  -> case tpe of
+        Mouse.Pressed  -> if isNoNode then Nothing
+                                      else case keyMods of
+                                           (KeyMods False False False False) -> Just (DragAction StartDrag pos)
+                                           _                                 -> Nothing
+        Mouse.Released -> Just (DragAction StopDrag pos)
+        Mouse.Moved    -> Just (DragAction Moving   pos)
+    _                  -> Nothing
+    where isNoNode      = null objects
 toAction _ = Nothing
 
 moveNodes :: Point -> NodeCollection -> NodeCollection
@@ -75,9 +75,7 @@ instance ActionStateUpdater Action where
         oldDrag                          = oldState ^. Global.drag . history
         oldNodes                         = oldState ^. Global.nodes
         emptySelection                   = null oldNodes
-        newPos                           = newActionCandidate ^. actionPos
         newState                         = oldState & Global.iteration +~ 1
-                                                    & Global.mousePos .~ newPos
                                                     & Global.drag  .~ (State newDrag)
                                                     & Global.nodes .~ newNodes
         newAction                        = case newActionCandidate of

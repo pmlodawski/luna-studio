@@ -70,54 +70,54 @@ function setupPanAndZoom() {
   var RMB = 3, MMB = 2;
   $(document).bind('contextmenu', function(){return false;}); // prevent browser context menu
 
-  $(document).mousedown(function(event) {
-    switch(event.which) {
-      case MMB: {
-        event.preventDefault();
-        dragMode = 'pan';
-        event.stopPropagation();
-        break;
-      }
-      case RMB: {
-        dragMode = 'zoom';
-        event.stopPropagation();
-        break;
-      }
-      default: dragMode = null;
-    }
+  // $(document).mousedown(function(event) {
+  //   switch(event.which) {
+  //     case MMB: {
+  //       event.preventDefault();
+  //       dragMode = 'pan';
+  //       event.stopPropagation();
+  //       break;
+  //     }
+  //     case RMB: {
+  //       dragMode = 'zoom';
+  //       event.stopPropagation();
+  //       break;
+  //     }
+  //     default: dragMode = null;
+  //   }
 
-    mouse.set(event.clientX, event.clientY);
-    mouseStart.set(event.clientX - $$.halfScreen.x, - event.clientY + $$.halfScreen.y).divideScalar($$.camFactor.value);
+  //   mouse.set(event.clientX, event.clientY);
+  //   mouseStart.set(event.clientX - $$.halfScreen.x, - event.clientY + $$.halfScreen.y).divideScalar($$.camFactor.value);
 
-  });
+  // });
 
-  $(document).mousemove(function(event) {
-    var delta;
-    switch(dragMode){
-      case 'pan': {
-        var position = utils.screenToWorkspace(event.clientX, event.clientY);
-        delta = utils.screenToWorkspace(mouse.x, mouse.y).sub(position);
-        $$.camPan.add(delta);
-        reconfigureCamera();
-        event.stopPropagation();
-        break;
-      }
-      case 'zoom': {
-        var deltaX = (event.clientX - mouse.x);
-        var deltaY = -(event.clientY - mouse.y);
-        var factor = (deltaX+deltaY)/512;
-        delta = new THREE.Vector2(mouseStart.x, mouseStart.y).multiplyScalar(factor);
-        if(updateCamFactor($$.camFactor.value * (1+factor))) {
-          $$.camPan.add(delta);
-          mouseStart.sub(delta);
-        }
-        reconfigureCamera();
-        event.stopPropagation();
-        break;
-      }
-    }
-    mouse.set(event.clientX, event.clientY);
-  });
+  // $(document).mousemove(function(event) {
+  //   var delta;
+  //   switch(dragMode){
+  //     case 'pan': {
+  //       var position = utils.screenToWorkspace(event.clientX, event.clientY);
+  //       delta = utils.screenToWorkspace(mouse.x, mouse.y).sub(position);
+  //       $$.camPan.add(delta);
+  //       reconfigureCamera();
+  //       // event.stopPropagation();
+  //       break;
+  //     }
+  //     case 'zoom': {
+  //       var deltaX = (event.clientX - mouse.x);
+  //       var deltaY = -(event.clientY - mouse.y);
+  //       var factor = (deltaX+deltaY)/512;
+  //       delta = new THREE.Vector2(mouseStart.x, mouseStart.y).multiplyScalar(factor);
+  //       if(updateCamFactor($$.camFactor.value * (1+factor))) {
+  //         $$.camPan.add(delta);
+  //         mouseStart.sub(delta);
+  //       }
+  //       reconfigureCamera();
+  //       // event.stopPropagation();
+  //       break;
+  //     }
+  //   }
+  //   mouse.set(event.clientX, event.clientY);
+  // });
 
   $(document).mouseup(function() {
     dragMode = null;

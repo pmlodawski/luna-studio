@@ -2,6 +2,7 @@ module Utils.PrettyPrinter where
 
 import Data.List   ( intercalate )
 import Data.Maybe
+import Data.Dynamic
 import Data.Monoid ( (<>) )
 
 class PrettyPrinter a where
@@ -28,6 +29,9 @@ instance PrettyPrinter Char where
 
 instance PrettyPrinter String where
     display = show
+
+instance PrettyPrinter Dynamic where
+    display _ = "Dynamic"
 
 instance (PrettyPrinter a, PrettyPrinter b, PrettyPrinter c, PrettyPrinter d) => PrettyPrinter (a, b, c, d) where
     display (a, b, c, d) = "(" <> display a <> "," <> display b <> "," <> display c <> "," <> display d <> ")"
