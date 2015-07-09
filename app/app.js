@@ -27,7 +27,6 @@ function start() {
 
     // -> HS
     setupPanAndZoom();
-    document.addEventListener('keydown', onDocumentKeyDown, false );
     // createRandomNodes(1);
 
     // call -> HS
@@ -145,16 +144,40 @@ function updateCamFactor(val) {
   return ($$.camFactor.value === val);
 }
 
+
+function updateHtmCanvasPanPos(x, y, factor) {
+  $$.htmlCanvasPan.css({left: x, top: y});
+  $$.htmlCanvas.css({zoom: factor});
+}
+
+
+function updateCamera(factor, camPanX, camPanY, left, right, top, bottom) {
+  // console.log("fact " + factor + " " + left + " " + right + " " + top + " " + bottom);
+  $$.camFactor.value = factor;
+  $$.camPan.x        = camPanX;
+  $$.camPan.y        = camPanY;
+  $$.camera.left     = left;
+  $$.camera.right    = right;
+  $$.camera.top      = top;
+  $$.camera.bottom   = bottom;
+}
+
 // -> HS
 function reconfigureCamera() {
-  $$.htmlCanvasPan.css({left: $$.halfScreen.x - $$.camPan.x * $$.camFactor.value, top: $$.halfScreen.y + $$.camPan.y * $$.camFactor.value});
-  $$.htmlCanvas.css({zoom: $$.camFactor.value});
+  var htmlX = $$.halfScreen.x - $$.camPan.x * $$.camFactor.value;
+  var htmlY = $$.halfScreen.y + $$.camPan.y * $$.camFactor.value;
 
   $$.camera.left   = -$$.halfScreen.x / $$.camFactor.value + $$.camPan.x;
   $$.camera.right  =  $$.halfScreen.x / $$.camFactor.value + $$.camPan.x;
   $$.camera.top    =  $$.halfScreen.y / $$.camFactor.value + $$.camPan.y;
   $$.camera.bottom = -$$.halfScreen.y / $$.camFactor.value + $$.camPan.y;
 
+  updateHtmCanvasPanPos(htmlX, htmlY, $$.camFactor.value);
+  $$.camera.updateProjectionMatrix();
+}
+
+function updateProMax() {
+  console.log("updateProMax");
   $$.camera.updateProjectionMatrix();
 }
 
@@ -276,6 +299,9 @@ module.exports = {
   },
   newNodeAt: newNodeAt,
   removeNode: removeNode,
+  updateHtmCanvasPanPos: updateHtmCanvasPanPos,
+  updateCamera: updateCamera,
+  updateProMax: updateProMax,
   start: start,
   createNodeSearcher: createNodeSearcher,
   destroyNodeSearcher: destroyNodeSearcher,
@@ -283,40 +309,3 @@ module.exports = {
 };
 
 
-// -> HS
-function onDocumentKeyDown( event )
-{
-  switch(event.keyCode)
-  {
-    case 187: { // plus
-      updateCamFactor($$.camFactor.value * 1.1);
-      reconfigureCamera();
-      break;
-    }
-    case 189: { // minus
-      updateCamFactor($$.camFactor.value  / 1.1);
-      reconfigureCamera();
-      break;
-    }
-    case 37: { // left
-      $$.camPan.x -= 10/$$.camFactor.value;
-      reconfigureCamera();
-      break;
-    }
-    case 38: { // top
-      $$.camPan.y += 10/$$.camFactor.value;
-      reconfigureCamera();
-      break;
-    }
-    case 39: { // right
-      $$.camPan.x += 10/$$.camFactor.value;
-      reconfigureCamera();
-      break;
-    }
-    case 40: { // bottom
-      $$.camPan.y -= 10/$$.camFactor.value;
-      reconfigureCamera();
-      break;
-    }
-  }
-}

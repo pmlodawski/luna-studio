@@ -37,8 +37,6 @@ newEvent t p b k = Event t p b k
 
 type MEvent obj = WithObjects.WithObjects Event obj
 
--- type WithObjects obj = WithObjects.WithObjects Event obj
-
 
 newWithObjects :: Typeable a => Event -> [Object a] -> WithObjects.WithObjects Event a
 newWithObjects event objects = WithObjects.WithObjects event objects

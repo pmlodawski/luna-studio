@@ -20,5 +20,14 @@ instance PrettyPrinter Int where
 instance PrettyPrinter Integer where
     display = show
 
+instance PrettyPrinter Double where
+    display = show
+
+instance PrettyPrinter Char where
+    display = show
+
+instance PrettyPrinter String where
+    display = show
+
 instance (PrettyPrinter a, PrettyPrinter b, PrettyPrinter c, PrettyPrinter d) => PrettyPrinter (a, b, c, d) where
     display (a, b, c, d) = "(" <> display a <> "," <> display b <> "," <> display c <> "," <> display d <> ")"
