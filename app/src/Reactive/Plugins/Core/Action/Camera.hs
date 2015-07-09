@@ -137,12 +137,14 @@ updateCam state = do
     let
         hScreenX    = (fromIntegral screenWidth)  / 2.0
         hScreenY    = (fromIntegral screenHeight) / 2.0
-        camLeft     = cameraLeft   hScreenX cFactor cPanX
-        camRight    = cameraRight  hScreenX cFactor cPanX
-        camTop      = cameraTop    hScreenY cFactor cPanY
-        camBottom   = cameraBottom hScreenY cFactor cPanY
-        hX          = htmlX        hScreenX cFactor cPanX
-        hY          = htmlY        hScreenY cFactor cPanY
+        camLeft     = appX cameraLeft
+        camRight    = appX cameraRight
+        camTop      = appY cameraTop
+        camBottom   = appY cameraBottom
+        hX          = appX htmlX
+        hY          = appY htmlY
+        appX      f = f hScreenX cFactor cPanX
+        appY      f = f hScreenY cFactor cPanY
     updateCamera cFactor cPanX cPanY camLeft camRight camTop camBottom
     updateHtmCanvasPanPos hX hY cFactor
     updateProjectionMatrix
