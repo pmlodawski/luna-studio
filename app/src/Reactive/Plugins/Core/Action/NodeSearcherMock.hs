@@ -83,8 +83,8 @@ searchInScope root expr
         scope = moduleByPath root $ pathFromText prefix
         items = maybe [] searchableItems scope
         transformMatch m = case m of
-            ExactMatch     (SearchableItem path name tpe)    -> QueryResult path name (appendPath path name) [Highlight 0 (fromIntegral $ Text.length name)] (jsItemType tpe)
-            SubstringMatch (SearchableItem path name tpe) sm -> QueryResult path name (appendPath path name) (fmap toHighlight sm) (jsItemType tpe)
+            -- ExactMatch     (SearchableItem path name tpe)    -> QueryResult path name (appendPath path name) [Highlight 0 (fromIntegral $ Text.length name)] (jsItemType tpe)
+            Match score (SearchableItem path name tpe) sm -> QueryResult path name (appendPath path name) (fmap toHighlight sm) (jsItemType tpe)
         displayModuleItems (LunaModule it) = fmap di $ Map.toList it
         di  (name, t)  = QueryResult "" name name [] (jsItemType t)
 

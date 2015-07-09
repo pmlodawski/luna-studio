@@ -22,19 +22,13 @@ data Submatch = Submatch { start :: Int
                          , len   :: Int
                          } deriving (Show, Eq)
 
-data Match a = ExactMatch a
-             | SubstringMatch a [Submatch]
-             | AliasMatch a Text (Match a)
+data Match a = Match Double a [Submatch]
              deriving (Show, Eq)
 
 instance Eq t => Ord (Match t) where
-    a `compare` b = (score a) `compare` (score b)
+    (Match a _ _) `compare` (Match b _ _) = a `compare` b
 
 data Alias = Alias Text Text deriving (Eq, Show)
-
-sortOn :: Ord b => (a -> b) -> [a] -> [a]
-sortOn f =
-  map snd . sortBy (Data.Ord.comparing fst) . map (\x -> let y = f x in y `seq` (y, x))
 
 findSuggestions :: (Nameable a, Ord (Match a), Eq (Match a)) => [a] -> [Alias] -> Text -> [Match a]
 findSuggestions index aliases query =
@@ -45,25 +39,14 @@ findSuggestions index aliases query =
   -- where
   --   tryMatchAlias' (Alias choice to) = fmap (\match -> AliasMatch choice to match) $ tryMatch query choice
 
-
-score :: Match a -> Double
-score match = case match of
-    ExactMatch _       -> 1.0
-    SubstringMatch _ m -> subseqWeight / (fromIntegral $ (span + length m))
-                              where span = (start $ last m) + (len $ last m) - (start $ head m)
-    AliasMatch _ _ m   -> aliasWeight * score m
-    where
-        subseqWeight = 0.9
-        aliasWeight  = 0.8
-
-
 tryMatch :: Nameable a => Text -> a -> Maybe (Match a)
 tryMatch ""    _                 = Nothing
 tryMatch query choice
     | name choice == ""          = Nothing
     | otherwise                  = isSubstringMatch
     where
-        isSubstringMatch = fmap (SubstringMatch choice) $ bestMatch matches
+        isSubstringMatch = fmap (\x -> Match (rank (name choice) query x) choice x) bestMatchVal
+        bestMatchVal = bestMatch matches
         bestMatch :: [[Submatch]] -> Maybe [Submatch]
         bestMatch [] = Nothing
         bestMatch m  = Just $ maximumBy (compareMatches $ name choice) m
@@ -94,6 +77,24 @@ findSubsequenceOf = findSubsequenceOf' 0 where
 
 compareMatches :: Text -> [Submatch] -> [Submatch] -> Ordering
 compareMatches name a b = (countWordBoundaries name a) `compare` (countWordBoundaries name b)
+-- TODO `mappend` more criterions (first start offset, number of matches)
+
+rank :: Text -> Text -> [Submatch] -> Double
+rank choice query match
+    | n == capitalsTouched = (denom - 1) / denom + penalty
+    | otherwise            = let subtract = substrings * n + (n - capitalsTouched) in (denom - subtract) / denom + penalty
+    where
+        capitalsTouched = fromIntegral $ countWordBoundaries choice match
+        totalCapitals   = fromIntegral $ countTrue $ wordBoundaries choice
+        n               = fromIntegral $ Text.length query
+        m               = fromIntegral $ Text.length choice
+        denom           = n*(n+1) + 1.0
+        substrings      = fromIntegral $ length match
+        prefixSize      = case match of
+            ((Submatch 0 l):xs) -> fromIntegral l
+            _ -> fromIntegral 0
+        penalty = (m - prefixSize) / m / (2.0*denom) + capitalsTouched / totalCapitals / (4.0*denom) + n / m / (8.0*denom)
+
 
 countWordBoundaries :: Text -> [Submatch] -> Int
 countWordBoundaries t sm = sum $ fmap (countTrue . substring) sm where
