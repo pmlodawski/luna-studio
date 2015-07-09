@@ -17,12 +17,12 @@ module.exports = {
   camFactor: commonUniforms.camFactor,
   camFactorBounds: [0.2, 4],
   camPan: commonUniforms.camPan.value,
-  scene: null,
-  camera: null,
-  renderer: null,
-  htmlCanvasPan: null,
-  htmlCanvas: null,
-  node_searcher: null
+  scene: undefined,
+  camera: undefined,
+  renderer: undefined,
+  htmlCanvasPan: undefined,
+  htmlCanvas: undefined,
+  node_searcher: undefined
 };
 
 $(document).ready(function(){
