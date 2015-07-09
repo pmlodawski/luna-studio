@@ -16,7 +16,13 @@ module.exports = {
   halfScreen: commonUniforms.halfScreen,
   camFactor: commonUniforms.camFactor,
   camFactorBounds: [0.2, 4],
-  camPan: commonUniforms.camPan.value
+  camPan: commonUniforms.camPan.value,
+  scene: null,
+  camera: null,
+  renderer: null,
+  htmlCanvasPan: null,
+  htmlCanvas: null,
+  node_searcher: null
 };
 
 $(document).ready(function(){

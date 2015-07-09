@@ -9,14 +9,24 @@ import           Object.Object
 import           Utils.PrettyPrinter
 
 
-data State = State { _camPan    :: Point
-                   , _camFactor :: Double
+data State = State { _camPanX     :: Double
+                   , _camPanY     :: Double
+                   , _camFactor   :: Double
+                   , _halfScreenX :: Double
+                   , _halfScreenY :: Double
                    } deriving (Eq, Show)
 
 makeLenses ''State
 
+
 instance Default State where
-    def = State def def
+    def = State 0.0 0.0 1.0 800.0 450.0
 
 instance PrettyPrinter State where
-    display (State camPan camFactor) = "cS( " <> show camPan <> " " <> show camFactor <> " )"
+    display (State camPanX camPanY camFactor halfScreenX halfScreenY) =
+                                                "cS( " <> display camPanX
+                                                <> " " <> display camPanY
+                                                <> " " <> display camFactor
+                                                <> " " <> display halfScreenX
+                                                <> " " <> display halfScreenY
+                                                <> " )"
