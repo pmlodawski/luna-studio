@@ -94,8 +94,8 @@ processMain_ = do
 
 processNodeIfNeeded :: MemoryManager mm => CallDataPath -> Session mm ()
 processNodeIfNeeded callDataPath =
-    whenM (Cache.isDirty $ CallDataPath.toCallPointPath callDataPath)
-          (processNode callDataPath)
+    whenM (Cache.isDirty $ CallDataPath.toCallPointPath callDataPath) $
+          processNode callDataPath
 
 
 processNode :: MemoryManager mm => CallDataPath -> Session mm ()
@@ -142,18 +142,21 @@ executeAssignment callDataPath [keyName] =
 execute :: MemoryManager mm
         => CallDataPath -> NodeExpr -> [KeyName] -> Session mm ()
 execute callDataPath nodeExpr keyNames = do
+    prettyPrint nodeExpr
     let callPointPath = CallDataPath.toCallPointPath callDataPath
     status       <- Cache.status        callPointPath
     let execFunction = evalFunction nodeExpr callDataPath keyNames
 
         executeModified = do
-            logger debug "processing modified node"
-            execFunction True
-            Invalidate.markSuccessors callDataPath CacheStatus.Affected
+            logger debug "processing node"
+            rebind <- execFunction True
+            Invalidate.markSuccessors callDataPath $ if rebind
+                then CacheStatus.Modified
+                else CacheStatus.Affected
 
         executeAffected = do
             logger debug "processing affected node"
-            execFunction False
+            _ <- execFunction False
             Invalidate.markSuccessors callDataPath CacheStatus.Affected
 
     case status of
@@ -164,15 +167,16 @@ execute callDataPath nodeExpr keyNames = do
 
 
 evalFunction :: MemoryManager mm
-             => NodeExpr -> CallDataPath -> [KeyName] -> Bool -> Session mm ()
+             => NodeExpr -> CallDataPath -> [KeyName] -> Bool -> Session mm Bool
 evalFunction nodeExpr callDataPath keyNames recompile = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
         keyName = KeyName callPointPath
     compiledNode <- Env.compiledLookup callPointPath
-    case (compiledNode, recompile) of
+    rebind <- case (compiledNode, recompile) of
         (Just (CompiledNode update _), False) -> do
             Env.updateExpressions update
             logger debug "running compiled code"
+            return False
         _ -> do
             let mkArg arg = do
                     str <- keyNameToString arg
@@ -202,16 +206,18 @@ evalFunction nodeExpr callDataPath keyNames recompile = do
                     createUpdate    = lift2 $ HEval.interpret $ "\\hmap -> hmapInsert " <> keyNameStr <> " (" <> operation <> ") hmap"
                     createGetValue  = HEval.interpret ("\\hmap mode time -> flip computeValue mode =<< toIOEnv (fromValue ((hmapGet " <> keyNameStr <> " hmap) hmap time))")
                     createKeyUpdate = createKey >> createUpdate
-                update <- Env.fragile $ Catch.catch createUpdate (\(_ :: SomeException) -> createKeyUpdate)
-                let valErrHandler (e:: SomeException) = logger warning (show e) >> return Nothing
+                    valErrHandler (e:: SomeException) = logger warning (show e) >> return Nothing
+                (update, rebind) <- Env.fragile $ Catch.catch ((,False) <$> createUpdate) (\(_ :: SomeException) -> (,True) <$> createKeyUpdate)
                 getValue <- lift2 $ flip Catch.catch valErrHandler $
                     Just <$> createGetValue
                 Env.compiledInsert callPointPath $ CompiledNode update getValue
                 Env.updateExpressions update
+                return rebind
     Cache.put callDataPath $ Prelude.error "Executor.hash:Not implemented"
     Value.reportIfVisible callPointPath
     Manager.reportUseMany keyNames
     Manager.reportUse keyName
+    return rebind
 
 
 --FIXME[PM] Ugly workarounds ----------------

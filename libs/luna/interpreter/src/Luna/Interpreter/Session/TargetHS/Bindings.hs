@@ -53,8 +53,8 @@ getIcTythings = do
     return $ HscTypes.ic_tythings $ HscTypes.hsc_IC hscEnv
 
 
-bindings :: GhcMonad m => m [String]
-bindings = do
+getBindings :: GhcMonad m => m [String]
+getBindings = do
     dflags <- GHC.getSessionDynFlags
     map (dropDot . dshow dflags . HscTypes.tyThingAvailInfo) <$> getIcTythings
 
