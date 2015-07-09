@@ -64,8 +64,8 @@ status = onCacheInfo
     (return CacheStatus.Modified)
 
 
-setStatus :: CacheStatus -> CallPointPath -> Session mm ()
-setStatus newStatus = modifyCacheInfo $ CacheInfo.status .~ newStatus
+mergeStatus :: CacheStatus -> CallPointPath -> Session mm ()
+mergeStatus newStatus = modifyCacheInfo $ CacheInfo.status %~ CacheStatus.merge newStatus
 
 
 recentHash :: CallPointPath -> Session mm Hash
