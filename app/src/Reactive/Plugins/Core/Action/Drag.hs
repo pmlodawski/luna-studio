@@ -106,7 +106,7 @@ instance ActionStateUpdater Action where
 
 
 instance ActionUIUpdater Action where
-    updatUI (WithState action state) = case action of
+    updateUI (WithState action state) = case action of
         DragAction tpe pt   -> case tpe of
             StartDrag       -> return ()
             Moving          -> return ()

@@ -17,12 +17,12 @@ import JS.NodeSearcher
 import Reactive.Plugins.Core.Action.NodeSearcherSearch
 
 import qualified Data.Text.Lazy as Text
-import           Data.Text.Lazy (Text)
+import           Data.Text.Lazy             ( Text )
 
 
 
-data Entry =   Function { _name :: Text }
-             | Module   { _name :: Text } deriving (Show, Eq)
+data Entry = Function { _name :: Text }
+           | Module   { _name :: Text } deriving (Show, Eq)
 
 makeLenses ''Entry
 

@@ -74,8 +74,8 @@ makeNetworkDescription = do
     -- initial logB >>= liftIO . logAs ""
 
     allReactionsSeqPackF <- changes allReactionsSeqPackB
-    reactimate' $ (fmap updatAllUI) <$> allReactionsSeqPackF
-    reactimate' $ (fmap logAllUI)   <$> allReactionsSeqPackF
+    reactimate' $ (fmap updateAllUI) <$> allReactionsSeqPackF
+    reactimate' $ (fmap logAllUI)    <$> allReactionsSeqPackF
 
     -- nodeSelectionReactionF <- changes nodeSelectionReactionB
     -- reactimate' $ (fmap Selection.updateUI) <$> nodeSelectionReactionF

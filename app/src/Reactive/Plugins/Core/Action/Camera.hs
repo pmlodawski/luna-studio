@@ -72,7 +72,7 @@ instance ActionStateUpdater Action where
 
 
 instance ActionUIUpdater Action where
-    updatUI (WithState action state) = case action of
+    updateUI (WithState action state) = case action of
         ZoomIn      -> putStrLn $ display action
         ZoomOut     -> putStrLn $ display action
         MoveLeft    -> putStrLn $ display action

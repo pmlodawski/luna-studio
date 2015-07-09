@@ -51,11 +51,11 @@ instance ActionStateUpdater ActionST where
 data ActionUI = forall act. (ActionUIUpdater act, PrettyPrinter act) => ActionUI act State
 
 class ActionUIUpdater act where
-    updatUI :: WithState act State -> IO ()
+    updateUI :: WithState act State -> IO ()
 
 instance ActionUIUpdater act => ActionUIUpdater (Maybe act) where
-    updatUI (WithState (Just action) state) = updatUI (WithState action state)
-    updatUI (WithState  Nothing      _    ) = return ()
+    updateUI (WithState (Just action) state) = updateUI (WithState action state)
+    updateUI (WithState  Nothing      _    ) = return ()
 
 data NoAction = NoAction
 
@@ -63,15 +63,15 @@ instance PrettyPrinter NoAction where
     display a = "NoAction"
 
 instance ActionUIUpdater NoAction where
-    updatUI (WithState NoAction state) = return ()
+    updateUI (WithState NoAction state) = return ()
 
 
 noActionUI :: State -> ActionUI
 noActionUI st = ActionUI NoAction st
 
-updatAllUI :: [ActionUI] -> IO ()
-updatAllUI [] =  return ()
-updatAllUI ((ActionUI act st):as) = updatUI (WithState act st) >> updatAllUI as
+updateAllUI :: [ActionUI] -> IO ()
+updateAllUI [] =  return ()
+updateAllUI ((ActionUI act st):as) = updateUI (WithState act st) >> updateAllUI as
 
 logAllUI :: [ActionUI] -> IO ()
 logAllUI [] = putStrLn "-"

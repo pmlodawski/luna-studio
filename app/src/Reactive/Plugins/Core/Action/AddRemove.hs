@@ -93,7 +93,7 @@ instance ActionStateUpdater Action where
                 Just remId     -> filter (\node -> node ^. ident /= remId) oldNodes
 
 instance ActionUIUpdater Action where
-    updatUI (WithState action state) = case action of
+    updateUI (WithState action state) = case action of
         AddAction          -> newNodeAt nodeId px py
             where
             node            = head $ state ^. Global.nodes
