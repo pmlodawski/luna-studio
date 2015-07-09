@@ -137,6 +137,8 @@ pkgDb = dict(corePkgDb, **{
        , 'libs/rpc'                            : HProject   ('flowbox-rpc'                  , os.path.join ('libs' , 'rpc')                                 , 'libs'    , ['libs/utils'])
        , 'libs/task-queue'                     : HProject   ('task-queue'                   , os.path.join ('libs' , 'task-queue')                          , 'libs'    , ['libs/utils'])
        , 'libs/luna/target/ghchs'              : HProject   ('luna-target-ghchs'            , os.path.join ('libs' , 'luna', 'target', 'ghchs')             , 'libs'    , ['libs/utils'])
+       , 'libs/ws-connector'                   : HProject   ('flowbox-ws-connector'         , os.path.join ('libs' , 'ws-connector')                        , 'libs'    , ['libs/bus', 'libs/config', 'libs/rpc', 'libs/utils'])
+
        , 'tools/aws/account-manager'           : HProject   ('flowbox-account-manager'      , os.path.join ('tools', 'aws', 'account-manager')              , 'tools'   , ['libs/aws', 'libs/rpc', 'libs/utils'])
        , 'tools/aws/account-manager-mock'      : HProject   ('flowbox-account-manager-mock' , os.path.join ('tools', 'aws', 'account-manager-mock')         , 'tools'   , ['libs/aws', 'libs/rpc', 'libs/utils'])
        , 'tools/aws/instance-manager'          : HProject   ('flowbox-instance-manager'     , os.path.join ('tools', 'aws', 'instance-manager')             , 'tools'   , ['libs/aws', 'libs/utils' ])
