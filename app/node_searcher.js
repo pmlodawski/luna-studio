@@ -9,110 +9,6 @@ var $      = require('jquery')
 require('malihu-custom-scrollbar-plugin')($);
 
 
-// function doSearch(expr) {
-//   console.log("ExprSearch: " + expr);
-//   // var ns = splitExpression(expr).prefix;
-//   var items = [
-//     {name: "Lorem",                       type: "module",   module: "Duis",        highlight: [{start:1, length: 3}]},
-//     {name: "TroLoLoMaLo",                 type: "module",   module: "Excepteur",   highlight: [{start:5, length: 2}, {start:9, length: 1}, {start:13, length: 2}]},
-//     {name: "aute",                        type: "function", module: "Ipsum",       highlight: [{start:0, length: 1}, {start:3, length: 1}]},
-//     {name: "commodo_tro_lo_alo_lo",       type: "function", module: "Excepteur",   highlight: [{start:5, length: 2}, {start:9, length: 1}, {start:13, length: 2}]},
-//     {name: "cupidatat",                   type: "function", module: "Ipsum",       highlight: [{start:3, length: 2}, {start:5, length: 1}, {start:8, length: 2}]},
-//     {name: "eiusmod",                     type: "function", module: "Excepteur",   highlight: [{start:1, length: 2}, {start:8, length: 1}, {start:8, length: 2}]},
-//     {name: "elit",                        type: "function", module: "Ipsum",       highlight: [{start:0, length: 2}, {start:3, length: 1}]},
-//     {name: "labore",                      type: "function", module: "Excepteur",   highlight: [{start:3, length: 2}]},
-//     {name: "magna",                       type: "function", module: "Duis",        highlight: [{start:2, length: 4}]},
-//     {name: "minim",                       type: "function", module: "Duis",        highlight: [{start:1, length: 3}]},
-//     {name: "mollit",                      type: "function", module: "",            highlight: [{start:0, length: 2}, {start:4, length: 1}]},
-//     {name: "voluptate",                   type: "function", module: "",            highlight: [{start:4, length: 1}, {start:7, length: 1}, {start:9, length: 2}]},
-//     {name: "Lorem",                       type: "module",   module: "Duis",        highlight: [{start:1, length: 3}]},
-//     {name: "TroLoLoMaLo",                 type: "module",   module: "Excepteur",   highlight: [{start:5, length: 2}, {start:9, length: 1}, {start:13, length: 2}]},
-//     {name: "aute",                        type: "function", module: "Ipsum",       highlight: [{start:0, length: 1}, {start:3, length: 1}]},
-//     {name: "commodo_tro_lo_alo_lo",       type: "function", module: "Excepteur",   highlight: [{start:5, length: 2}, {start:9, length: 1}, {start:13, length: 2}]},
-//     {name: "cupidatat",                   type: "function", module: "Ipsum",       highlight: [{start:3, length: 2}, {start:5, length: 1}, {start:8, length: 2}]},
-//     {name: "eiusmod",                     type: "function", module: "Excepteur",   highlight: [{start:1, length: 2}, {start:8, length: 1}, {start:8, length: 2}]},
-//     {name: "elit",                        type: "function", module: "Ipsum",       highlight: [{start:0, length: 2}, {start:3, length: 1}]},
-//     {name: "labore",                      type: "function", module: "Excepteur",   highlight: [{start:3, length: 2}]},
-//     {name: "magna",                       type: "function", module: "Duis",        highlight: [{start:2, length: 4}]},
-//     {name: "minim",                       type: "function", module: "Duis",        highlight: [{start:1, length: 3}]},
-//     {name: "mollit",                      type: "function", module: "",            highlight: [{start:0, length: 2}, {start:4, length: 1}]},
-//     {name: "Lorem",                       type: "module",   module: "Duis",        highlight: [{start:1, length: 3}]},
-//     {name: "TroLoLoMaLo",                 type: "module",   module: "Excepteur",   highlight: [{start:5, length: 2}, {start:9, length: 1}, {start:13, length: 2}]},
-//     {name: "aute",                        type: "function", module: "Ipsum",       highlight: [{start:0, length: 1}, {start:3, length: 1}]},
-//     {name: "commodo_tro_lo_alo_lo",       type: "function", module: "Excepteur",   highlight: [{start:5, length: 2}, {start:9, length: 1}, {start:13, length: 2}]},
-//     {name: "cupidatat",                   type: "function", module: "Ipsum",       highlight: [{start:3, length: 2}, {start:5, length: 1}, {start:8, length: 2}]},
-//     {name: "eiusmod",                     type: "function", module: "Excepteur",   highlight: [{start:1, length: 2}, {start:8, length: 1}, {start:8, length: 2}]},
-//     {name: "elit",                        type: "function", module: "Ipsum",       highlight: [{start:0, length: 2}, {start:3, length: 1}]},
-//     {name: "labore",                      type: "function", module: "Excepteur",   highlight: [{start:3, length: 2}]},
-//     {name: "magna",                       type: "function", module: "Duis",        highlight: [{start:2, length: 4}]},
-//     {name: "minim",                       type: "function", module: "Duis",        highlight: [{start:1, length: 3}]},
-//     {name: "mollit",                      type: "function", module: "",            highlight: [{start:0, length: 2}, {start:4, length: 1}]},
-//     {name: "voluptate",                   type: "function", module: "",            highlight: [{start:4, length: 1}, {start:7, length: 1}, {start:9, length: 2}]},
-//     {name: "Lorem",                       type: "module",   module: "Duis",        highlight: [{start:1, length: 3}]},
-//     {name: "TroLoLoMaLo",                 type: "module",   module: "Excepteur",   highlight: [{start:5, length: 2}, {start:9, length: 1}, {start:13, length: 2}]},
-//     {name: "aute",                        type: "function", module: "Ipsum",       highlight: [{start:0, length: 1}, {start:3, length: 1}]},
-//     {name: "commodo_tro_lo_alo_lo",       type: "function", module: "Excepteur",   highlight: [{start:5, length: 2}, {start:9, length: 1}, {start:13, length: 2}]},
-//     {name: "cupidatat",                   type: "function", module: "Ipsum",       highlight: [{start:3, length: 2}, {start:5, length: 1}, {start:8, length: 2}]},
-//     {name: "eiusmod",                     type: "function", module: "Excepteur",   highlight: [{start:1, length: 2}, {start:8, length: 1}, {start:8, length: 2}]},
-//     {name: "elit",                        type: "function", module: "Ipsum",       highlight: [{start:0, length: 2}, {start:3, length: 1}]},
-//     {name: "labore",                      type: "function", module: "Excepteur",   highlight: [{start:3, length: 2}]},
-//     {name: "magna",                       type: "function", module: "Duis",        highlight: [{start:2, length: 4}]},
-//     {name: "minim",                       type: "function", module: "Duis",        highlight: [{start:1, length: 3}]},
-//     {name: "mollit",                      type: "function", module: "",            highlight: [{start:0, length: 2}, {start:4, length: 1}]},
-//     {name: "voluptate",                   type: "function", module: "",            highlight: [{start:4, length: 1}, {start:7, length: 1}, {start:9, length: 2}]},
-//   ];
-//
-//   _(items).each(function(el){
-//     if(el.module !== "")
-//       el.fullname = el.module + "." + el.name;
-//     else
-//       el.fullname = el.name;
-//   });
-//   return _(_.shuffle(items)).sample(Math.random()*items.length);
-// }
-function doSearchTree(expr) {
-  console.log("TreeSearch: " + expr);
-  var ns = splitExpression(expr).prefix;
-  var items = [
-    {name: "Lorem",                       type: "module",   module: "Duis",        highlight: [{start:1, length: 3}]},
-    {name: "TroLoLoMaLo",                 type: "module",   module: "Excepteur",   highlight: [{start:5, length: 2}, {start:9, length: 1}, {start:13, length: 2}]},
-    {name: "aute",                        type: "function", module: "Ipsum",       highlight: [{start:0, length: 1}, {start:3, length: 1}]},
-    {name: "commodo_tro_lo_alo_lo",       type: "function", module: "Excepteur",   highlight: [{start:5, length: 2}, {start:9, length: 1}, {start:13, length: 2}]},
-    {name: "cupidatat",                   type: "function", module: "Ipsum",       highlight: [{start:3, length: 2}, {start:5, length: 1}, {start:8, length: 2}]},
-    {name: "eiusmod",                     type: "function", module: "Excepteur",   highlight: [{start:1, length: 2}, {start:8, length: 1}, {start:8, length: 2}]},
-    {name: "elit",                        type: "function", module: "Ipsum",       highlight: [{start:0, length: 2}, {start:3, length: 1}]},
-    {name: "labore",                      type: "function", module: "Excepteur",   highlight: [{start:3, length: 2}]},
-    {name: "magna",                       type: "function", module: "Duis",        highlight: [{start:2, length: 4}]},
-    {name: "minim",                       type: "function", module: "Duis",        highlight: [{start:1, length: 3}]},
-    {name: "mollit",                      type: "function", module: "Duis",        highlight: [{start:0, length: 2}, {start:4, length: 1}]},
-    {name: "Lorem",                       type: "module",   module: "Duis",        highlight: [{start:1, length: 3}]},
-    {name: "TroLoLoMaLo",                 type: "module",   module: "Excepteur",   highlight: [{start:5, length: 2}, {start:9, length: 1}, {start:13, length: 2}]},
-    {name: "aute",                        type: "function", module: "Ipsum",       highlight: [{start:0, length: 1}, {start:3, length: 1}]},
-    {name: "commodo_tro_lo_alo_lo",       type: "function", module: "Excepteur",   highlight: [{start:5, length: 2}, {start:9, length: 1}, {start:13, length: 2}]},
-    {name: "cupidatat",                   type: "function", module: "Ipsum",       highlight: [{start:3, length: 2}, {start:5, length: 1}, {start:8, length: 2}]},
-    {name: "eiusmod",                     type: "function", module: "Excepteur",   highlight: [{start:1, length: 2}, {start:8, length: 1}, {start:8, length: 2}]},
-    {name: "elit",                        type: "function", module: "Ipsum",       highlight: [{start:0, length: 2}, {start:3, length: 1}]},
-    {name: "labore",                      type: "function", module: "Excepteur",   highlight: [{start:3, length: 2}]},
-    {name: "magna",                       type: "function", module: "Duis",        highlight: [{start:2, length: 4}]},
-    {name: "minim",                       type: "function", module: "Duis",        highlight: [{start:1, length: 3}]},
-    {name: "mollit",                      type: "function", module: "Duis",        highlight: [{start:0, length: 2}, {start:4, length: 1}]},
-    {name: "voluptate",                   type: "function", module: "Duis",        highlight: [{start:4, length: 1}, {start:7, length: 1}, {start:9, length: 2}]},
-  ];
-
-  if(ns !== "") {
-    _(items).each(function(el){el.module = ns;});
-  } else {
-    _(items).each(function(el){el.module = "";});
-  }
-  _(items).each(function(el){
-    if(el.module !== "")
-      el.fullname = el.module + "." + el.name;
-    else
-      el.fullname = el.name;
-  });
-  return _.shuffle(items);
-}
-
 function highlightText(name, highlight) {
   highlight.push({start: name.length, length: 0});
 
@@ -243,10 +139,11 @@ NodeSearcher.prototype.appendExpression = function(expr) {
 
 
 NodeSearcher.prototype.performSearch = function() {
+  var ev;
   if(this.prefix === "" && this.searchbox.val() === "") {
     this.firstColumn.removeClass('types');
     this.clearResults()
-    var ev = new CustomEvent('ns_event', {
+    ev = new CustomEvent('ns_event', {
       detail: {
         action: 'tree',
         expression: ""
@@ -255,7 +152,7 @@ NodeSearcher.prototype.performSearch = function() {
     window.dispatchEvent(ev);
   } else {
     this.firstColumn.addClass('types');
-    var ev = new CustomEvent('ns_event', {
+    ev = new CustomEvent('ns_event', {
       detail: {
         action: 'query',
         expression: this.expression()
@@ -276,7 +173,7 @@ NodeSearcher.prototype.currentSelection = function() {
 };
 
 NodeSearcher.prototype.select = function(newSelection) {
-  if(newSelection.length == 0) return;
+  if(newSelection.length === 0) return;
   if(this.currentSelection().is(newSelection)) return;
 
   var inSameColumn = this.currentSelection().parents('.column').is(newSelection.parents('.column'));
@@ -480,19 +377,24 @@ NodeSearcher.prototype.onEnter = function(ev) {
 
 NodeSearcher.prototype.onTab = function(ev) {
   var current, data;
+  ev.preventDefault();
 
   if(!this.searchrow.hasClass('active')) {
     current = this.currentSelection();
-    data    = current.data('match');
-
-    if(data.type === 'module') {
-      this.appendExpression(data.fullname + ".");
-    } else {
-      this.appendExpression(data.fullname );
-    }
+  } else {
+    current = this.currentColumn.find("li:first-child");
   }
 
-  ev.preventDefault();
+  if(current.length === 0) return;
+
+  data    = current.data('match');
+
+  if(data.type === 'module') {
+    this.appendExpression(data.fullname + ".");
+  } else {
+    this.appendExpression(data.fullname );
+  }
+
 };
 
 NodeSearcher.prototype.onEsc = function(ev) {

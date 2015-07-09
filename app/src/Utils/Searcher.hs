@@ -55,11 +55,11 @@ score match = case match of
 tryMatch :: Nameable a => Text -> a -> Maybe (Match a)
 tryMatch ""    _                 = Nothing
 tryMatch query choice
-    | nameToLower choice == ""   = Nothing
+    | name choice == ""          = Nothing
     | otherwise                  = listToMaybe $ catMaybes [isExactMatch, isSubstringMatch]
     where
         isExactMatch     = if (query == (nameToLower choice)) then Just $ ExactMatch choice else Nothing
-        isSubstringMatch = fmap (SubstringMatch choice) $ findSubsequenceOf query (nameToLower choice)
+        isSubstringMatch = fmap (SubstringMatch choice) $ findSubsequenceOf query (name choice)
 
 commonPrefixLength :: Text -> Text -> Int
 commonPrefixLength "" _  = 0
@@ -82,7 +82,7 @@ findSubsequenceOf = findSubsequenceOf' 0 where
     findSubsequenceOf' idx a   b  | prefixLength > 0 = nicerMatch b takePrefix skipHead
                                   | otherwise        = skipHead
                                   where
-                                       prefixLength  = commonPrefixLength a b
+                                       prefixLength  = commonPrefixLength (Text.toLower a) (Text.toLower b)
                                        dropPrefix    = Text.drop $ fromIntegral prefixLength
                                        skipHead      = findSubsequenceOf' (idx + 1) a (Text.tail b)
                                        takePrefix    = fmap ((Submatch idx prefixLength):)
@@ -94,7 +94,10 @@ nicerMatch :: Text -> Maybe [Submatch] -> Maybe [Submatch] -> Maybe [Submatch]
 nicerMatch t Nothing Nothing   = Nothing
 nicerMatch t (Just a) Nothing  = Just a
 nicerMatch t Nothing (Just b)  = Just b
-nicerMatch t (Just a) (Just b) = if (countWordBoundaries t a) >= (countWordBoundaries t b) then Just a else Just b
+nicerMatch t (Just a) (Just b) = if wba > wbb then Just a else Just b
+     where
+        wba = countWordBoundaries t a
+        wbb = countWordBoundaries t b
 
 countWordBoundaries :: Text -> [Submatch] -> Int
 countWordBoundaries t sm = sum $ fmap (countTrue . substring) sm where
@@ -110,5 +113,3 @@ wordBoundaries t = reverse out where
                    f :: (Bool, [Bool]) -> Char -> (Bool, [Bool])
                    f (atBow, l) c = (((not $ isAlphaNum c) && c /= '.'), (atBow && isAlphaNum c || isUpper c):l)
                    (_, out) = Text.foldl f (True, []) t
-
-
