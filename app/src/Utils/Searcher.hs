@@ -5,6 +5,7 @@ module Utils.Searcher where
 import Data.Maybe
 import Data.List
 import Control.Applicative
+import qualified Data.Ord
 
 import qualified Data.Text.Lazy as Text
 import           Data.Text.Lazy (Text)
@@ -31,6 +32,10 @@ instance Eq t => Ord (Match t) where
 
 data Alias = Alias Text Text deriving (Eq, Show)
 
+sortOn :: Ord b => (a -> b) -> [a] -> [a]
+sortOn f =
+  map snd . sortBy (Data.Ord.comparing fst) . map (\x -> let y = f x in y `seq` (y, x))
+
 findSuggestions :: (Nameable a, Ord (Match a), Eq (Match a)) => [a] -> [Alias] -> Text -> [Match a]
 findSuggestions index aliases query =
     reverse $ sort $ (mapMaybe (tryMatch lowQuery) index)
@@ -56,10 +61,15 @@ tryMatch :: Nameable a => Text -> a -> Maybe (Match a)
 tryMatch ""    _                 = Nothing
 tryMatch query choice
     | name choice == ""          = Nothing
-    | otherwise                  = listToMaybe $ catMaybes [isExactMatch, isSubstringMatch]
+    | otherwise                  = isSubstringMatch
     where
-        isExactMatch     = if (query == (nameToLower choice)) then Just $ ExactMatch choice else Nothing
-        isSubstringMatch = fmap (SubstringMatch choice) $ findSubsequenceOf query (name choice)
+        isSubstringMatch = fmap (SubstringMatch choice) $ bestMatch matches
+        bestMatch :: [[Submatch]] -> Maybe [Submatch]
+        bestMatch [] = Nothing
+        bestMatch m  = Just $ maximumBy (compareMatches $ name choice) m
+        matches :: [[Submatch]]
+        matches = findSubsequenceOf query (name choice)
+
 
 commonPrefixLength :: Text -> Text -> Int
 commonPrefixLength "" _  = 0
@@ -68,36 +78,22 @@ commonPrefixLength x y
     | (Text.head x) == (Text.head y) = 1 + commonPrefixLength (Text.tail x) (Text.tail y)
     | otherwise                      = 0
 
--- shorterMatch :: Maybe [Submatch] -> Maybe [Submatch] -> Maybe [Submatch]
--- shorterMatch Nothing Nothing   = Nothing
--- shorterMatch (Just a) Nothing  = Just a
--- shorterMatch Nothing (Just b)  = Just b
--- shorterMatch (Just a) (Just b) = if (length a) <= (length b) then Just a else Just b
-
-findSubsequenceOf :: Text -> Text -> Maybe [Submatch]
+findSubsequenceOf :: Text -> Text -> [[Submatch]]
 findSubsequenceOf = findSubsequenceOf' 0 where
-    findSubsequenceOf' :: Int -> Text -> Text -> Maybe [Submatch]
-    findSubsequenceOf' _   ""  ""                    = Just []
-    findSubsequenceOf' _   _   ""                    = Nothing
-    findSubsequenceOf' idx a   b  | prefixLength > 0 = nicerMatch b takePrefix skipHead
+    findSubsequenceOf' :: Int -> Text -> Text -> [[Submatch]]
+    findSubsequenceOf' _   ""  ""                    = [[]]
+    findSubsequenceOf' _   _   ""                    = []
+    findSubsequenceOf' idx a   b  | prefixLength > 0 = takePrefix ++ skipHead
                                   | otherwise        = skipHead
                                   where
                                        prefixLength  = commonPrefixLength (Text.toLower a) (Text.toLower b)
-                                       dropPrefix    = Text.drop $ fromIntegral prefixLength
+                                       dropPrefix    = Text.drop . fromIntegral
                                        skipHead      = findSubsequenceOf' (idx + 1) a (Text.tail b)
-                                       takePrefix    = fmap ((Submatch idx prefixLength):)
-                                           $ findSubsequenceOf' (idx + prefixLength) (dropPrefix a) (dropPrefix b)
+                                       takePrefix    = concatMap (\l -> fmap ((Submatch idx l):)
+                                           $ findSubsequenceOf' (idx + l) (dropPrefix l a) (dropPrefix l b)) [1..prefixLength]
 
-
-
-nicerMatch :: Text -> Maybe [Submatch] -> Maybe [Submatch] -> Maybe [Submatch]
-nicerMatch t Nothing Nothing   = Nothing
-nicerMatch t (Just a) Nothing  = Just a
-nicerMatch t Nothing (Just b)  = Just b
-nicerMatch t (Just a) (Just b) = if wba > wbb then Just a else Just b
-     where
-        wba = countWordBoundaries t a
-        wbb = countWordBoundaries t b
+compareMatches :: Text -> [Submatch] -> [Submatch] -> Ordering
+compareMatches name a b = (countWordBoundaries name a) `compare` (countWordBoundaries name b)
 
 countWordBoundaries :: Text -> [Submatch] -> Int
 countWordBoundaries t sm = sum $ fmap (countTrue . substring) sm where
