@@ -79,6 +79,7 @@ compareMatches :: Text -> [Submatch] -> [Submatch] -> Ordering
 compareMatches name a b = (countWordBoundaries name a) `compare` (countWordBoundaries name b)
 -- TODO `mappend` more criterions (first start offset, number of matches)
 
+-- Ranking algorithm heavily inspired on Textmate implementation: https://github.com/textmate/textmate/blob/master/Frameworks/text/src/ranker.cc
 rank :: Text -> Text -> [Submatch] -> Double
 rank choice query match
     | n == capitalsTouched = (denom - 1) / denom + penalty
