@@ -451,7 +451,7 @@ graphNodeDefaultSet (GraphNodeDefaultSet.Update request updateNo) = do
         Batch.lookupNodeDefault inPort nodeID libraryID projectID >>= \case
             Nothing                          -> left "ASTWatch.graphNodeDefaultSet"
             Just (DefaultExpr defID _ defExpr) -> Var.insertTimeRef libraryID nodeID defID defExpr
-        CacheWrapper.modifyNode tprojectID tlibraryID tnodeID
+        -- CacheWrapper.modifyNode tprojectID tlibraryID tnodeID
 
 
 graphNodePropertiesSet :: GraphNodePropertiesSet.Update -> RPC Context (SessionST mm) ()
