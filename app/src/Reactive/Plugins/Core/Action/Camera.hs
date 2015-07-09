@@ -58,16 +58,17 @@ toAction (Keyboard (Keyboard.Event Keyboard.Press char)) = case char of
     '-'   -> Just ZoomOut
     _     -> Nothing
 toAction (Keyboard (Keyboard.Event Keyboard.Down char)) = case char of
-    '\0037' -> Just MoveLeft
-    '\0039' -> Just MoveRight
-    '\0038' -> Just MoveUp
-    '\0040' -> Just MoveDown
+    '\37' -> Just MoveLeft
+    '\39' -> Just MoveRight
+    '\38' -> Just MoveUp
+    '\40' -> Just MoveDown
     _     -> Nothing
 toAction _ = Nothing
 
 
 instance ActionStateUpdater Action where
-    execSt newAction oldState = ActionUI newAction oldState
+    execSt newAction oldState = ActionUI newAction newState where
+        newState = oldState & Global.iteration +~ 1
 
 
 
