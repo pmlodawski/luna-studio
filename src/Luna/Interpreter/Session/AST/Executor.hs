@@ -142,7 +142,6 @@ executeAssignment callDataPath [keyName] =
 execute :: MemoryManager mm
         => CallDataPath -> NodeExpr -> [KeyName] -> Session mm ()
 execute callDataPath nodeExpr keyNames = do
-    prettyPrint nodeExpr
     let callPointPath = CallDataPath.toCallPointPath callDataPath
     status       <- Cache.status        callPointPath
     let execFunction = evalFunction nodeExpr callDataPath keyNames
@@ -179,7 +178,7 @@ evalFunction nodeExpr callDataPath keyNames recompile = do
             return False
         _ -> do
             let mkArg arg = do
-                    str <- keyNameToString arg
+                    str <- Env.keyNameToString arg
                     return $ "((hmapGet " <> str <> " hmap) hmap _time)"
             args <- mapM mkArg keyNames
             let appArgs a = if null a then "" else " $ appNext " <> List.intercalate " $ appNext " (reverse a)
@@ -201,13 +200,13 @@ evalFunction nodeExpr callDataPath keyNames recompile = do
                 TimeVar          -> return   "val _time"
                 Expression  name -> return   name
             catchEither (left . Error.RunError $(loc) callPointPath) $ do
-                (realNode, keyNameStr) <- keyNameToString' keyName
-                let createKey       = Session.runDecls $ keyNameStr <> " = unsafePerformIO $ hmapCreateKeyWithWitness $ " <> operation
+                (realNode, keyNameStr) <- Env.keyNameToString' keyName
+                let createKey       = Session.runAssignment keyNameStr $ "unsafePerformIO $ hmapCreateKeyWithWitness $ " <> operation
                     createUpdate    = lift2 $ HEval.interpret $ "\\hmap -> hmapInsert " <> keyNameStr <> " (" <> operation <> ") hmap"
                     createGetValue  = HEval.interpret ("\\hmap mode time -> flip computeValue mode =<< toIOEnv (fromValue ((hmapGet " <> keyNameStr <> " hmap) hmap time))")
                     createKeyUpdate = createKey >> createUpdate
                     valErrHandler (e:: SomeException) = logger warning (show e) >> return Nothing
-                (update, rebind) <- Env.fragile $ Catch.catch ((,False) <$> createUpdate) (\(_ :: SomeException) -> (,True) <$> createKeyUpdate)
+                (update, rebind) <- Catch.catch ((,False) <$> createUpdate) (\(e :: SomeException) -> (,True) <$> createKeyUpdate)
                 getValue <- lift2 $ flip Catch.catch valErrHandler $
                     Just <$> createGetValue
                 Env.compiledInsert callPointPath $ CompiledNode update getValue
@@ -218,20 +217,6 @@ evalFunction nodeExpr callDataPath keyNames recompile = do
     Manager.reportUseMany keyNames
     Manager.reportUse keyName
     return rebind
-
-
---FIXME[PM] Ugly workarounds ----------------
-keyNameToString' :: KeyName -> Session mm (Bool, String)
-keyNameToString' keyName = do
-    let callPoint = last $ keyName ^. KeyName.callPointPath
-    moriginID <- view Flags.defaultNodeOriginID <$> Env.getFlags callPoint
-    return $ case moriginID of
-                 Just originID -> (originID == callPoint ^. CallPoint.nodeID, "_" <> show originID)
-                 Nothing       -> (True, KeyName.toString keyName)
-
-keyNameToString :: KeyName -> Session mm String
-keyNameToString = fmap snd . keyNameToString'
-----------------------------------------------
 
 
 nameHash :: String -> String

@@ -74,6 +74,7 @@ initialize config imports = do
                : "Luna.Target.HS"
                : "Luna.Interpreter.Runtime"
                : imports
+    logger info "Interpreter: initialization successful"
 
 
 setStrFlags :: [String] -> Session mm ()
