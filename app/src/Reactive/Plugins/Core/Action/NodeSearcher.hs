@@ -33,9 +33,9 @@ import           Event.WithObjects
 import           Utils.Wrapper
 import           Utils.PrettyPrinter
 import           Reactive.Plugins.Core.Action.Action
-import qualified Reactive.Plugins.Core.Action.State.Global    as Global
+import qualified Reactive.Plugins.Core.Action.State.Global          as Global
 import qualified Reactive.Plugins.Core.Action.State.NodeSearcher    as NodeSearcherState
-import qualified Reactive.Plugins.Core.Action.NodeSearcherMock    as Mock
+import qualified Reactive.Plugins.Core.Action.NodeSearcher.Mock     as Mock
 
 import qualified Data.Text.Lazy as Text
 import           Data.Text.Lazy (Text)

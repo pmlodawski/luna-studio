@@ -1,12 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Utils.Searcher where
+module Reactive.Plugins.Core.Action.NodeSearcher.Searcher where
 
-import Data.Maybe
-import Data.List
-import Data.Monoid
-import Control.Applicative
-import qualified Data.Ord
+import           Data.Maybe
+import           Data.List
+import           Data.Monoid
 
 import qualified Data.Text.Lazy as Text
 import           Data.Text.Lazy (Text)
@@ -56,7 +54,7 @@ tryMatch query choice
 
 indexesToSubmatch :: [Int] -> [Submatch]
 indexesToSubmatch l = reverse $ foldl merge [] l where
-    merge [] next = [Submatch next 1]
+    merge []                  next = [Submatch next 1]
     merge ((Submatch s l):xs) next
         | next == s + l = (Submatch s (l+1)):xs
         | otherwise     = (Submatch next 1):(Submatch s l):xs
@@ -82,9 +80,9 @@ compareMatchesCapitalsHit :: Text -> [Submatch] -> [Submatch] -> Ordering
 compareMatchesCapitalsHit name a b = ((countWordBoundaries name a) `compare` (countWordBoundaries name b))
 
 compareFirstPrefixStart :: [Submatch] -> [Submatch] -> Ordering
-compareFirstPrefixStart [] [] = EQ
-compareFirstPrefixStart [] _  = LT
-compareFirstPrefixStart _  [] = GT
+compareFirstPrefixStart []                 []               = EQ
+compareFirstPrefixStart []                 _                = LT
+compareFirstPrefixStart _                  []               = GT
 compareFirstPrefixStart (Submatch s1 _:_) (Submatch s2 _:_) = s2 `compare` s1
 
 rank :: Text -> Text -> [Submatch] -> Double
@@ -97,11 +95,11 @@ rank choice query match
         totalCapitals   = fromIntegral $ countTrue $ wordBoundaries choice
         n               = fromIntegral $ Text.length query
         m               = fromIntegral $ Text.length choice
-        denom           = n*(n+1) + 1.0
         substrings      = fromIntegral $ length match
+        denom           = n*(n+1) + 1.0
         prefixSize      = case match of
             ((Submatch 0 l):xs) -> fromIntegral l
-            _ -> fromIntegral 0
+            _                   -> fromIntegral 0
         penalty = (m - prefixSize) / m / (2.0*denom) + capitalsTouched / totalCapitals / (4.0*denom) + n / m / (8.0*denom)
 
 
