@@ -45,9 +45,9 @@ insertTimeRef' libraryID defID defExpr = liftSession $
 deleteTimeRef :: MemoryManager mm
               => Lib.ID -> Node.ID -> Node.ID
               -> NodeExpr -> RPC Context (SessionST mm) ()
-deleteTimeRef libraryID nodeID defID defExpr = liftSession $ do
-    Cache.deleteNode libraryID defID
-    Env.deleteDependentNode (CallPoint libraryID nodeID) defID
+deleteTimeRef libraryID nodeID defID defExpr = liftSession $
+    -- Cache.deleteNode libraryID defID
+    -- Env.deleteDependentNode (CallPoint libraryID nodeID) defID
     when (Var.containsTimeRefs defExpr) $
         Env.deleteTimeRef (CallPoint libraryID defID)
 
