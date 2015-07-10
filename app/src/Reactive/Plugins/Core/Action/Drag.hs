@@ -24,7 +24,7 @@ import           Event.WithObjects
 import           Utils.Wrapper
 import           Utils.PrettyPrinter
 import           Reactive.Plugins.Core.Action.Action
-import           Reactive.Plugins.Core.Action.State.Drag
+import           Reactive.Plugins.Core.Action.State.Drag     as Drag
 import qualified Reactive.Plugins.Core.Action.State.Global   as Global
 
 
@@ -72,11 +72,11 @@ instance ActionStateUpdater Action where
         Just action -> ActionUI newAction newState
         Nothing     -> ActionUI NoAction newState
         where
-        oldDrag                          = oldState ^. Global.drag . history
+        oldDrag                          = oldState ^. Global.drag . Drag.history
         oldNodes                         = oldState ^. Global.nodes
         emptySelection                   = null oldNodes
         newState                         = oldState & Global.iteration +~ 1
-                                                    & Global.drag  .~ (State newDrag)
+                                                    & Global.drag  . Drag.history .~ newDrag
                                                     & Global.nodes .~ newNodes
         newAction                        = case newActionCandidate of
             DragAction Moving pt        -> case oldDrag of

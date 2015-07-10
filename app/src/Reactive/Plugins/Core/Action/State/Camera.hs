@@ -9,24 +9,36 @@ import           Object.Object
 import           Utils.PrettyPrinter
 
 
+data DragHistory = DragHistory { _dragStartPos    :: Point
+                               , _dragPreviousPos :: Point
+                               , _dragCurrentPos  :: Point
+                               } deriving (Eq, Show)
+
+
 data State = State { _camPanX     :: Double
                    , _camPanY     :: Double
                    , _camFactor   :: Double
                    , _halfScreenX :: Double
                    , _halfScreenY :: Double
+                   , _history     :: Maybe DragHistory
                    } deriving (Eq, Show)
 
 makeLenses ''State
+makeLenses ''DragHistory
 
 
 instance Default State where
-    def = State 0.0 0.0 1.0 800.0 450.0
+    def = State 0.0 0.0 1.0 800.0 450.0 def
 
 instance PrettyPrinter State where
-    display (State camPanX camPanY camFactor halfScreenX halfScreenY) =
+    display (State camPanX camPanY camFactor halfScreenX halfScreenY history) =
                                                 "cS( " <> display camPanX
                                                 <> " " <> display camPanY
                                                 <> " " <> display camFactor
                                                 <> " " <> display halfScreenX
                                                 <> " " <> display halfScreenY
+                                                <> " " <> display history
                                                 <> " )"
+
+instance PrettyPrinter DragHistory where
+    display (DragHistory start prev curr) = display start <> " " <> display prev <> " " <> display curr
