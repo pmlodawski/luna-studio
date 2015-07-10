@@ -9,6 +9,7 @@
 module Luna.Renderer.Renderer where
 
 import           Control.Monad (forM, forM_)
+import           Data.HMap     (HMap)
 import qualified Data.IntSet   as IntSet
 
 import           Flowbox.Data.MapForest                      (MapForest)
@@ -57,9 +58,11 @@ renderNode callPointPath frameRanges progressReporter = do
         iFrames    = zip [1..] frames
         progress i = liftIO $ progressReporter i $ length frames
         keyName    = KeyName callPointPath
-    let expr = "\\_time -> do { _ <- toIOEnv (fromValue (" <> KeyName.toString keyName <> " _time)) ; return () }"
-    (action :: Time -> IO ()) <- Session.interpret expr
+    keyNameStr <- Env.keyNameToString keyName
+    hmap       <- Env.getExpressions
+    let expr = "\\hmap time -> do { _ <- toIOEnv (fromValue ((hmapGet " <> keyNameStr <> " hmap) hmap time)) ; return () }"
+    (action :: HMap -> Time -> IO ()) <- Session.interpret expr
     progress 0
     forM_ iFrames $ \(i, frame) -> liftIO $ do
-        action $ fromIntegral frame
+        action hmap $ fromIntegral frame
         progress i
