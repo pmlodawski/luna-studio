@@ -12,7 +12,8 @@
 
 module Luna.DEP.Data.Serialize.Proto.Conversion.NodeDefault where
 
-import qualified Data.Map as Map
+import qualified Data.Map   as Map
+import qualified Data.Maybe as Maybe
 
 import           Flowbox.Control.Error
 import           Flowbox.Data.Convert
@@ -36,7 +37,8 @@ instance Convert DefaultsMap Gen.DefaultsMap where
 instance Convert (PortDescriptor, DefaultExpr) Gen.Entry where
     encode (inPort, DefaultExpr nodeID originID value) = Gen.Entry (encodeP inPort) (encodePJ nodeID) (encodePJ originID) (encodeJ value)
     decode (Gen.Entry inPort mnodeID moriginID mvalue) = do
-        nodeID   <- decodeP <$> mnodeID   <?> "Failed to decode DefaultsMap.Entry: 'nodeID' field is missing"
-        originID <- decodeP <$> moriginID <?> "Failed to decode DefaultsMap.Entry: 'originID' field is missing"
+        tnodeID  <- mnodeID   <?> "Failed to decode DefaultsMap.Entry: 'nodeID' field is missing"
+        let nodeID = decodeP tnodeID
         value    <- decode  =<< mvalue    <?> "Failed to decode DefaultsMap.Entry: 'value' field is missing"
+        let originID = decodeP $ Maybe.fromMaybe tnodeID moriginID
         return (decodeP inPort, DefaultExpr nodeID originID value)
