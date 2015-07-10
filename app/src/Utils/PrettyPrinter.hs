@@ -4,6 +4,7 @@ import Data.List   ( intercalate )
 import Data.Maybe
 import Data.Dynamic
 import Data.Monoid ( (<>) )
+import Text.Printf
 
 class PrettyPrinter a where
     display :: a -> String
@@ -22,7 +23,7 @@ instance PrettyPrinter Integer where
     display = show
 
 instance PrettyPrinter Double where
-    display = show
+    display v = show $ (fromIntegral (round $ v * 100000.0)) / 100000.0
 
 instance PrettyPrinter Char where
     display = show

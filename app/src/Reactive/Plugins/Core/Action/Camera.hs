@@ -31,48 +31,59 @@ import           Reactive.Plugins.Core.Action.State.Camera    as Camera
 import qualified Reactive.Plugins.Core.Action.State.Global    as Global
 
 
-data ZoomType = StartDrag
+data DragType = StartDrag
               | Dragging
               | StopDrag
               deriving (Eq, Show)
 
+data MouseActionType = Zoom | Pan deriving (Eq, Show)
+
 data Action = ZoomIn
             | ZoomOut
-            | MoveLeft
-            | MoveRight
-            | MoveUp
-            | MoveDown
-            | ZoomMouse { _zoomType :: ZoomType
-                        , _zoomPos  :: Point
-                        }
+            | PanLeft
+            | PanRight
+            | PanUp
+            | PanDown
+            | MouseAction { _actionType :: MouseActionType
+                          , _dragType   :: DragType
+                          , _zoomPos    :: Point
+                          }
             deriving (Eq, Show)
 
 
 makeLenses ''Action
 
 
-instance PrettyPrinter ZoomType where
+instance PrettyPrinter DragType where
+    display = show
+
+instance PrettyPrinter MouseActionType where
     display = show
 
 instance PrettyPrinter Action where
-    display ZoomIn              = "cA( ZoomIn )"
-    display ZoomOut             = "cA( ZoomOut )"
-    display MoveLeft            = "cA( MoveLeft )"
-    display MoveRight           = "cA( MoveRight )"
-    display MoveUp              = "cA( MoveUp )"
-    display MoveDown            = "cA( MoveDown )"
-    display (ZoomMouse tpe pos) = "cA( ZoomMouse " <> display tpe <> " " <> display pos <> " )"
+    display ZoomIn                    = "cA( ZoomIn )"
+    display ZoomOut                   = "cA( ZoomOut )"
+    display PanLeft                   = "cA( PanLeft )"
+    display PanRight                  = "cA( PanRight )"
+    display PanUp                     = "cA( PanUp )"
+    display PanDown                   = "cA( PanDown )"
+    display (MouseAction act tpe pos) = "cA( Mouse " <> display act <> " " <> display tpe <> " " <> display pos <> " )"
 
 
 toAction :: Event Node -> Maybe Action
--- toAction (Mouse (WithObjects mouseEvent objects)) = Nothing
 toAction (Mouse (WithObjects (Mouse.Event tpe pos button keyMods) objects)) = case button of
     3                  -> case tpe of
         Mouse.Pressed  -> case keyMods of
-           (KeyMods False False False False) -> Just (ZoomMouse StartDrag pos)
+           (KeyMods False False False False) -> Just (MouseAction Zoom StartDrag pos)
            _                                 -> Nothing
-        Mouse.Released -> Just (ZoomMouse StopDrag pos)
-        Mouse.Moved    -> Just (ZoomMouse Dragging pos)
+        Mouse.Released -> Just (MouseAction Zoom StopDrag pos)
+        Mouse.Moved    -> Just (MouseAction Zoom Dragging pos)
+    2                  -> case tpe of
+        Mouse.Pressed  -> case keyMods of
+           (KeyMods False False False False) -> Just (MouseAction Pan StartDrag pos)
+           _                                 -> Nothing
+        Mouse.Released -> Just (MouseAction Pan StopDrag pos)
+        Mouse.Moved    -> Just (MouseAction Pan Dragging pos)
     _                  -> Nothing
 toAction (Keyboard (Keyboard.Event Keyboard.Press char)) = case char of
     '='   -> Just ZoomIn
@@ -80,10 +91,10 @@ toAction (Keyboard (Keyboard.Event Keyboard.Press char)) = case char of
     '-'   -> Just ZoomOut
     _     -> Nothing
 toAction (Keyboard (Keyboard.Event Keyboard.Down char)) = case char of
-    '\37' -> Just MoveLeft
-    '\39' -> Just MoveRight
-    '\38' -> Just MoveUp
-    '\40' -> Just MoveDown
+    '\37' -> Just PanLeft
+    '\39' -> Just PanRight
+    '\38' -> Just PanUp
+    '\40' -> Just PanDown
     _     -> Nothing
 toAction _ = Nothing
 
@@ -105,29 +116,30 @@ instance ActionStateUpdater Action where
         oldDrag                        = oldState ^. Global.camera . Camera.history
         newAction                      = Just newActionCandidate
         newCamPanX                     = case newActionCandidate of
-            MoveLeft                  -> oldCamPanX - 10.0 / oldCamFactor
-            MoveRight                 -> oldCamPanX + 10.0 / oldCamFactor
-            ZoomMouse _ _             -> oldCamPanX + deltaPanX
+            PanLeft                   -> oldCamPanX - 10.0 / oldCamFactor
+            PanRight                  -> oldCamPanX + 10.0 / oldCamFactor
+            MouseAction Zoom _ _      -> oldCamPanX + deltaPanX
             _                         -> oldCamPanX
         newCamPanY                     = case newActionCandidate of
-            MoveUp                    -> oldCamPanY + 10.0 / oldCamFactor
-            MoveDown                  -> oldCamPanY - 10.0 / oldCamFactor
-            ZoomMouse _ _             -> oldCamPanY + deltaPanY
+            PanUp                     -> oldCamPanY + 10.0 / oldCamFactor
+            PanDown                   -> oldCamPanY - 10.0 / oldCamFactor
+            MouseAction Zoom _ _      -> oldCamPanY + deltaPanY
             _                         -> oldCamPanY
         newCamFactor                   = case newActionCandidate of
             ZoomIn                    -> max 0.2 $ oldCamFactor / 1.1
             ZoomOut                   -> min 2.0 $ oldCamFactor * 1.1
-            ZoomMouse _ _             -> min 2.0 . max 0.2 $ oldCamFactor * (1.0 + camDragFactorDelta)
+            MouseAction Zoom _ _      -> min 2.0 . max 0.2 $ oldCamFactor * (1.0 + camDragFactorDelta)
             _                         -> oldCamFactor
         newDrag                        = case newActionCandidate of
-            ZoomMouse tpe point       -> case tpe of
+            MouseAction act tpe point -> case tpe of
                 StartDrag             -> Just $ DragHistory point point point
                 Dragging              -> case oldDrag of
                     Just oldDragState -> Just $ DragHistory startPos prevPos point where
-                        startPos       = oldDragState ^. dragStartPos -- - ()
+                        startPos       = oldDragState ^. dragStartPos
                         prevPos        = oldDragState ^. dragCurrentPos
                     Nothing           -> Nothing
                 StopDrag              -> Nothing
+            _                         -> Nothing
         (camDragFactorDelta, deltaPanX, deltaPanY, newUpdDrag)
                                        = case newDrag of
                 Just drag             -> (camDragFactorDelta, deltaPanX, deltaPanY, newUpdDrag) where
@@ -139,7 +151,11 @@ instance ActionStateUpdater Action where
                     deltaPan           = Point (round deltaPanX) (round deltaPanY)
                     newUpdDrag         = newDrag -- Just $ drag & Camera.dragStartPos +~ deltaPan
                 Nothing               -> (0.0, 0.0, 0.0, newDrag)
-
+        (mousePanX, mousePanY)         = case newDrag of
+                Just drag             -> (mousePanX, mousePanY) where
+                    mousePanX          = 0
+                    mousePanY          = 0
+                Nothing               -> (0.0, 0.0)
 
 
 instance ActionUIUpdater Action where
@@ -155,8 +171,8 @@ instance ActionUIUpdater Action where
             camBottom   = appY cameraBottom
             hX          = appX htmlX
             hY          = appY htmlY
-            appX      f = f hScreenX cFactor cPanX
-            appY      f = f hScreenY cFactor cPanY
+            appX      f = f cFactor cPanX hScreenX
+            appY      f = f cFactor cPanY hScreenY
         updateCamera cFactor cPanX cPanY camLeft camRight camTop camBottom
         updateHtmCanvasPanPos hX hY cFactor
         updateProjectionMatrix
@@ -169,10 +185,10 @@ instance ActionUIUpdater Action where
 
 
 cameraLeft, cameraRight, cameraTop, cameraBottom, htmlX, htmlY :: Double -> Double -> Double -> Double
-cameraLeft   halfScreenX camFactor camPanX = -halfScreenX / camFactor + camPanX
-cameraRight  halfScreenX camFactor camPanX =  halfScreenX / camFactor + camPanX
-cameraTop    halfScreenY camFactor camPanY =  halfScreenY / camFactor + camPanY
-cameraBottom halfScreenY camFactor camPanY = -halfScreenY / camFactor + camPanY
-htmlX        halfScreenX camFactor camPanX =  halfScreenX - camPanX * camFactor
-htmlY        halfScreenY camFactor camPanY =  halfScreenY + camPanY * camFactor
+cameraLeft   camFactor camPanX halfScreenX = -halfScreenX / camFactor + camPanX
+cameraRight  camFactor camPanX halfScreenX =  halfScreenX / camFactor + camPanX
+cameraTop    camFactor camPanY halfScreenY =  halfScreenY / camFactor + camPanY
+cameraBottom camFactor camPanY halfScreenY = -halfScreenY / camFactor + camPanY
+htmlX        camFactor camPanX halfScreenX =  halfScreenX - camPanX * camFactor
+htmlY        camFactor camPanY halfScreenY =  halfScreenY + camPanY * camFactor
 

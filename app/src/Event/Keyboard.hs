@@ -1,20 +1,33 @@
 module Event.Keyboard where
 
 import Data.Monoid
-import Data.Typeable
 import Data.Default
 import Data.Maybe          ( catMaybes )
 import Data.List           ( intercalate )
 import Control.Lens
 import Utils.PrettyPrinter
 
-data Type = Press | Down | Up deriving (Eq, Show, Typeable)
+
+data Type = Press | Down | Up deriving (Eq, Show)
+
+data Event = Event { _tpe  :: Type
+                   , _char :: Char
+                   } deriving (Eq, Show)
+
+makeLenses ''Event
+
+instance PrettyPrinter Event where
+    display (Event t c) = show t <> " " <> show c
+
+
+
+-- others
 
 data KeyMods = KeyMods { _shift :: Bool
                        , _ctrl  :: Bool
                        , _alt   :: Bool
                        , _meta  :: Bool
-                       } deriving (Eq, Show, Typeable)
+                       } deriving (Eq, Show)
 
 makeLenses ''KeyMods
 
@@ -30,13 +43,3 @@ instance PrettyPrinter KeyMods where
                                                   , getString "alt"   $ keyMods ^. alt
                                                   , getString "meta"  $ keyMods ^. meta
                                                   ]
-
-data Event = Event { _tpe :: Type, _char :: Char } deriving (Eq, Show, Typeable)
-
-makeLenses ''Event
-
-instance PrettyPrinter Event where
-    display (Event t c) = show t <> " " <> show c
-
-newEvent :: Type -> Char -> Event
-newEvent t ch = Event t ch

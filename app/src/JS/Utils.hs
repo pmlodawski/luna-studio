@@ -3,6 +3,11 @@ module JS.Utils where
 import JS.Bindings
 
 
+-- -1      -  +1      NormalizedGl (Cartesian)
+-- -scr/2  -  +scr/2  Gl           (Cartesian)
+-- -x      -  +x      Workspace    (Cartesian possibly panned and zoomed)
+--  0      -   scr    Screen
+
 
 screenToGl :: (Double, Double) -> IO (Double, Double)
 screenToGl (x, y) = do
