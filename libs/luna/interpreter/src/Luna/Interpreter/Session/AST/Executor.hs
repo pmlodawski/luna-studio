@@ -31,7 +31,6 @@ import           Flowbox.Prelude                            as Prelude hiding (c
 import           Flowbox.Source.Location                    (loc)
 import           Flowbox.System.Log.Logger
 import           Luna.DEP.AST.ASTConvertion                 (convertAST)
-import qualified Luna.DEP.Graph.Flags                       as Flags
 import qualified Luna.DEP.Graph.Node                        as Node
 import           Luna.DEP.Graph.Node.Expr                   (NodeExpr)
 import qualified Luna.DEP.Graph.Node.Expr                   as NodeExpr
@@ -45,10 +44,8 @@ import qualified Luna.Interpreter.Session.Data.CallData     as CallData
 import           Luna.Interpreter.Session.Data.CallDataPath (CallDataPath)
 import qualified Luna.Interpreter.Session.Data.CallDataPath as CallDataPath
 import           Luna.Interpreter.Session.Data.CallPoint    (CallPoint)
-import qualified Luna.Interpreter.Session.Data.CallPoint    as CallPoint
 import           Luna.Interpreter.Session.Data.CompiledNode (CompiledNode (CompiledNode))
 import           Luna.Interpreter.Session.Data.KeyName      (KeyName (KeyName))
-import qualified Luna.Interpreter.Session.Data.KeyName      as KeyName
 import qualified Luna.Interpreter.Session.Debug             as Debug
 import qualified Luna.Interpreter.Session.Env               as Env
 import           Luna.Interpreter.Session.Error             (Error, mapError)
@@ -155,7 +152,7 @@ execute callDataPath nodeExpr keyNames = do
 
         executeAffected = do
             logger debug "processing affected node"
-            _ <- execFunction False
+            False <- execFunction False
             Invalidate.markSuccessors callDataPath CacheStatus.Affected
 
     case status of
@@ -200,13 +197,13 @@ evalFunction nodeExpr callDataPath keyNames recompile = do
                 TimeVar          -> return   "val _time"
                 Expression  name -> return   name
             catchEither (left . Error.RunError $(loc) callPointPath) $ do
-                (realNode, keyNameStr) <- Env.keyNameToString' keyName
+                keyNameStr <- Env.keyNameToString keyName
                 let createKey       = Session.runAssignment keyNameStr $ "unsafePerformIO $ hmapCreateKeyWithWitness $ " <> operation
                     createUpdate    = lift2 $ HEval.interpret $ "\\hmap -> hmapInsert " <> keyNameStr <> " (" <> operation <> ") hmap"
                     createGetValue  = HEval.interpret ("\\hmap mode time -> flip computeValue mode =<< toIOEnv (fromValue ((hmapGet " <> keyNameStr <> " hmap) hmap time))")
                     createKeyUpdate = createKey >> createUpdate
                     valErrHandler (e:: SomeException) = logger warning (show e) >> return Nothing
-                (update, rebind) <- Catch.catch ((,False) <$> createUpdate) (\(e :: SomeException) -> (,True) <$> createKeyUpdate)
+                (update, rebind) <- Catch.catch ((,False) <$> createUpdate) (\(_ :: SomeException) -> (,True) <$> createKeyUpdate)
                 getValue <- lift2 $ flip Catch.catch valErrHandler $
                     Just <$> createGetValue
                 Env.compiledInsert callPointPath $ CompiledNode update getValue
