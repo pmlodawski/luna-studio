@@ -110,7 +110,7 @@ resizeHandler = AddHandler $ \h -> do
     width  <- domWindowGetInnerWidth  window
     height <- domWindowGetInnerHeight window
     domWindowOnresize window $ do
-        liftIO . h $ Window $ Window.Event Window.Resize width height
+        liftIO . h $ Window $ Window.Event Window.Resized width height
 
 keyPressedHandler :: AddHandler (Event Dynamic)
 keyPressedHandler = AddHandler $ \h -> do

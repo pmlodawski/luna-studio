@@ -14,6 +14,7 @@ import           System.Mem
 
 import           JS.Bindings
 import           JS.Appjs
+import           JS.Utils
 
 import           Object.Object
 import qualified Object.Node    as Node     ( position )
@@ -119,11 +120,13 @@ instance ActionStateUpdater Action where
             PanLeft                   -> oldCamPanX - 10.0 / oldCamFactor
             PanRight                  -> oldCamPanX + 10.0 / oldCamFactor
             MouseAction Zoom _ _      -> oldCamPanX + deltaPanX
+            MouseAction Pan  _ _      -> oldCamPanX + mousePanX
             _                         -> oldCamPanX
         newCamPanY                     = case newActionCandidate of
             PanUp                     -> oldCamPanY + 10.0 / oldCamFactor
             PanDown                   -> oldCamPanY - 10.0 / oldCamFactor
             MouseAction Zoom _ _      -> oldCamPanY + deltaPanY
+            MouseAction Pan  _ _      -> oldCamPanY + mousePanY
             _                         -> oldCamPanY
         newCamFactor                   = case newActionCandidate of
             ZoomIn                    -> max 0.2 $ oldCamFactor / 1.1
@@ -140,6 +143,9 @@ instance ActionStateUpdater Action where
                     Nothing           -> Nothing
                 StopDrag              -> Nothing
             _                         -> Nothing
+        -- TODO: 1) name the identifiers below appropriately
+        --       2) fix deltaPan for mouse zooming
+        --       3) why it works properly even with screenSize = (0, 0)   (uninitialized initial value)
         (camDragFactorDelta, deltaPanX, deltaPanY, newUpdDrag)
                                        = case newDrag of
                 Just drag             -> (camDragFactorDelta, deltaPanX, deltaPanY, newUpdDrag) where
@@ -152,9 +158,10 @@ instance ActionStateUpdater Action where
                     newUpdDrag         = newDrag -- Just $ drag & Camera.dragStartPos +~ deltaPan
                 Nothing               -> (0.0, 0.0, 0.0, newDrag)
         (mousePanX, mousePanY)         = case newDrag of
-                Just drag             -> (mousePanX, mousePanY) where
-                    mousePanX          = 0
-                    mousePanY          = 0
+                Just drag             -> (fst prevWorkspace - fst currWorkspace, snd prevWorkspace - snd currWorkspace) where
+                    currWorkspace      = screenToWorkspace screenSize oldCamFactor (oldCamPanX, oldCamPanY) $ drag ^. dragCurrentPos
+                    prevWorkspace      = screenToWorkspace screenSize oldCamFactor (oldCamPanX, oldCamPanY) $ drag ^. dragPreviousPos
+                    screenSize         = oldState ^. Global.screenSize
                 Nothing               -> (0.0, 0.0)
 
 
