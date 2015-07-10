@@ -30,21 +30,24 @@ type Path = [Text]
 jsItemType Function    = "function"
 jsItemType (Module _)  = "module"
 
-data SearchableItem = SearchableItem { _path :: Text, _name :: Text, _tpe :: Item } deriving (Eq, Show)
+data SearchableItem = SearchableItem { _weight :: Double, _path :: Text, _name :: Text, _tpe :: Item } deriving (Eq, Show)
 
 instance Nameable SearchableItem where
-    name (SearchableItem _ n _) = n
+    name (SearchableItem _ _ n _) = n
 
-searchableItems' :: Text -> LunaModule -> [SearchableItem]
-searchableItems' prefix (LunaModule it) = Map.foldMapWithKey addItems it where
+instance Weightable SearchableItem where
+    weight (SearchableItem w _ _ _) = w
+
+searchableItems' :: Double -> Text -> LunaModule -> [SearchableItem]
+searchableItems' weight prefix (LunaModule it) = Map.foldMapWithKey addItems it where
     addItems :: Text -> Item -> [SearchableItem]
-    addItems name i@Function   = [SearchableItem prefix name i]
-    addItems name i@(Module m) = [SearchableItem prefix name i] ++ (searchableItems' (nameWithPrefix prefix name) m)
+    addItems name i@Function   = [SearchableItem weight prefix name i]
+    addItems name i@(Module m) = [SearchableItem weight prefix name i] ++ (searchableItems' (weight*0.9) (nameWithPrefix prefix name) m)
     nameWithPrefix "" name = name
     nameWithPrefix prefix name = prefix <> "." <> name
 
 searchableItems :: LunaModule -> [SearchableItem]
-searchableItems = searchableItems' ""
+searchableItems = searchableItems' 1.0 ""
 
 
 
@@ -74,7 +77,7 @@ itemsInScope root path = case moduleByPath root (pathFromText path) of
 searchInScope :: LunaModule -> Text -> [QueryResult]
 searchInScope root expr
     | (Text.length expr > 0) && (Text.last expr == '.') = maybe [] (displayModuleItems) scope
-    | otherwise                                         = fmap transformMatch $ findSuggestions items [] query
+    | otherwise                                         = fmap transformMatch $ findSuggestions items query
     where
         (prefixWithDot, query) = Text.breakOnEnd "." expr
         prefix = case prefixWithDot of
@@ -82,9 +85,7 @@ searchInScope root expr
             t  -> Text.init t
         scope = moduleByPath root $ pathFromText prefix
         items = maybe [] searchableItems scope
-        transformMatch m = case m of
-            -- ExactMatch     (SearchableItem path name tpe)    -> QueryResult path name (appendPath path name) [Highlight 0 (fromIntegral $ Text.length name)] (jsItemType tpe)
-            Match score (SearchableItem path name tpe) sm -> QueryResult path name (appendPath path name) (fmap toHighlight sm) (jsItemType tpe)
+        transformMatch (Match score (SearchableItem _ path name tpe) sm) = QueryResult path name (appendPath path name) (fmap toHighlight sm) (jsItemType tpe)
         displayModuleItems (LunaModule it) = fmap di $ Map.toList it
         di  (name, t)  = QueryResult "" name name [] (jsItemType t)
 
