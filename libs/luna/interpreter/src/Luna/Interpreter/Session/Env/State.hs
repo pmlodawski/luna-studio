@@ -61,6 +61,8 @@ import           Luna.Interpreter.Session.Data.CallPointPath   (CallPointPath)
 import           Luna.Interpreter.Session.Data.CompiledNode    (CompiledNode)
 import           Luna.Interpreter.Session.Data.DefPoint        (DefPoint (DefPoint))
 import qualified Luna.Interpreter.Session.Data.DefPoint        as DefPoint
+import           Luna.Interpreter.Session.Data.KeyName         (KeyName)
+import qualified Luna.Interpreter.Session.Data.KeyName         as KeyName
 import           Luna.Interpreter.Session.Data.Time            (Time)
 import qualified Luna.Interpreter.Session.Env.Env              as Env
 import           Luna.Interpreter.Session.Env.Session          (Session)
@@ -488,3 +490,17 @@ whenVisible callPointPath action = do
 
 cleanEnv :: Session mm ()
 cleanEnv = modify $ Env.sessionData .~ def
+
+
+--FIXME[PM] Ugly workarounds ----------------
+keyNameToString' :: KeyName -> Session mm (Bool, String)
+keyNameToString' keyName = do
+    let callPoint = last $ keyName ^. KeyName.callPointPath
+    moriginID <- view Flags.defaultNodeOriginID <$> getFlags callPoint
+    return $ case moriginID of
+                 Just originID -> (originID == callPoint ^. CallPoint.nodeID, "_" <> show originID)
+                 Nothing       -> (True, KeyName.toString keyName)
+
+keyNameToString :: KeyName -> Session mm String
+keyNameToString = fmap snd . keyNameToString'
+----------------------------------------------
