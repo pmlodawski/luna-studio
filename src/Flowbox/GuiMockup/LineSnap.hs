@@ -68,6 +68,10 @@ findStartPoint strokePointsV curvePoints originalCurveControlPoints =
         toy' :: Double -> Double 
         toy' y = ((y-dc)/(uc-dc))*(us-ds)+ds
 
+spv = V.fromList [0, 1, 2, 3, 4, V2 5 4, V2 6 4,V2 7 4] :: V.Vector (V2 Double)
+cp = V.fromList [V2 7 12, V2 9 10, 10, 11, 12] :: V.Vector (V2 Double)
+occp = [(V2 7 12,undefined, undefined),(12,undefined, undefined)] :: [ControlPoint]
+
 endsHandling :: Openness -> [CubicBezier Double] -> [ControlPoint] -> (ControlPoint, ControlPoint)
 endsHandling openness resultCurve originalCurveControlPoints = (startControlPoint, endControlPoint) where
     startControlPoint = case openness of
@@ -255,6 +259,11 @@ bezierSecondDerivative :: CubicBezier Double -> Double -> V2 Double
 bezierSecondDerivative curve t = bezierFormula formula curve t where
     formula start control1 control2 end =
         6.0*(1-t)*(control2-2*control1+start) + 6.0*(end-2*control2+control1)*t
+
+endPointsCurvature (CubicBezier p0 p1 p2 p3) = (2/3)*(pointLineDistance p2 p1 p0)/((euclidianDistance p0 p1)**2)
+
+pointLineDistance (V2 x y) (V2 x0 y0) (V2 x1 y1) = 
+    abs $ ((y0-y1)*x+(x1-x0)*y+(x0*y1-x1*y0))/(sqrt ((x1-x0)*(x1-x0)+(y1-y0)*(y1-y0)))
 
 arcLength :: CubicBezier Double -> Double
 arcLength curve =
