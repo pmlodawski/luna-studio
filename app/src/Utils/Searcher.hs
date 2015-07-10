@@ -4,6 +4,7 @@ module Utils.Searcher where
 
 import Data.Maybe
 import Data.List
+import Data.Monoid
 import Control.Applicative
 import qualified Data.Ord
 
@@ -26,13 +27,13 @@ data Match a = Match Double a [Submatch]
              deriving (Show, Eq)
 
 instance Eq t => Ord (Match t) where
-    (Match a _ _) `compare` (Match b _ _) = a `compare` b
+    (Match a _ _) `compare` (Match b _ _) = b `compare` a
 
 data Alias = Alias Text Text deriving (Eq, Show)
 
 findSuggestions :: (Nameable a, Ord (Match a), Eq (Match a)) => [a] -> [Alias] -> Text -> [Match a]
 findSuggestions index aliases query =
-    reverse $ sort $ (mapMaybe (tryMatch lowQuery) index)
+    sort $ (mapMaybe (tryMatch lowQuery) index)
     where
         lowQuery = Text.toLower query
   --   ++ (mapMaybe tryMatchAlias' aliases)
@@ -54,11 +55,18 @@ tryMatch query choice
         matches = findSubsequenceOf query (name choice)
 
 
+-- commonPrefixLength :: Text -> Text -> Int
+-- commonPrefixLength "" _  = 0
+-- commonPrefixLength _  "" = 0
+-- commonPrefixLength x y
+--     | (Text.head x) == (Text.head y) = 1 + commonPrefixLength (Text.tail x) (Text.tail y)
+--     | otherwise                      = 0
+
 commonPrefixLength :: Text -> Text -> Int
 commonPrefixLength "" _  = 0
 commonPrefixLength _  "" = 0
 commonPrefixLength x y
-    | (Text.head x) == (Text.head y) = 1 + commonPrefixLength (Text.tail x) (Text.tail y)
+    | (Text.head x) == (Text.head y) = 1
     | otherwise                      = 0
 
 findSubsequenceOf :: Text -> Text -> [[Submatch]]
@@ -66,21 +74,36 @@ findSubsequenceOf = findSubsequenceOf' 0 where
     findSubsequenceOf' :: Int -> Text -> Text -> [[Submatch]]
     findSubsequenceOf' _   ""  ""                    = [[]]
     findSubsequenceOf' _   _   ""                    = []
-    findSubsequenceOf' idx a   b  | prefixLength > 0 = takePrefix ++ skipHead
+    findSubsequenceOf' idx a   b  | prefixLength > 0 = skipHead ++ takePrefix
                                   | otherwise        = skipHead
                                   where
                                        prefixLength  = commonPrefixLength (Text.toLower a) (Text.toLower b)
                                        dropPrefix    = Text.drop . fromIntegral
                                        skipHead      = findSubsequenceOf' (idx + 1) a (Text.tail b)
-                                       takePrefix    = concatMap (\l -> fmap ((Submatch idx l):)
-                                           $ findSubsequenceOf' (idx + l) (dropPrefix l a) (dropPrefix l b)) [1..prefixLength]
+                                       -- takePrefix    = concatMap (\l -> fmap ((Submatch idx l):)
+                                       --     $ findSubsequenceOf' (idx + l + 1) (dropPrefix (l+1) a) (dropPrefix (l+1) b)) [1..prefixLength]
+                                       -- takePrefix    = fmap ((Submatch idx prefixLength):)
+                                       --     $ findSubsequenceOf' (idx + prefixLength + 1) (dropPrefix (prefixLength) a) (dropPrefix (prefixLength + 1) b)
+                                       takePrefix    = fmap ((Submatch idx 1):)
+                                           $ findSubsequenceOf' (idx + 1) (dropPrefix (1) a) (dropPrefix (1) b)
+
+
 
 compareMatches :: Text -> [Submatch] -> [Submatch] -> Ordering
-compareMatches name a b = (countWordBoundaries name a) `compare` (countWordBoundaries name b)
--- TODO `mappend` more criterions (first start offset, number of matches)
+compareMatches name a b = (compareMatchesCapitalsHit name a b) `mappend` (compareFirstPrefixStart a b)
 
--- Ranking algorithm heavily inspired on Textmate implementation: https://github.com/textmate/textmate/blob/master/Frameworks/text/src/ranker.cc
+compareMatchesCapitalsHit :: Text -> [Submatch] -> [Submatch] -> Ordering
+compareMatchesCapitalsHit name a b = ((countWordBoundaries name a) `compare` (countWordBoundaries name b))
+
+compareFirstPrefixStart :: [Submatch] -> [Submatch] -> Ordering
+compareFirstPrefixStart [] [] = EQ
+compareFirstPrefixStart [] _  = LT
+compareFirstPrefixStart _  [] = GT
+compareFirstPrefixStart (Submatch s1 _:_) (Submatch s2 _:_) = s2 `compare` s1
+
+
 rank :: Text -> Text -> [Submatch] -> Double
+-- Ranking algorithm heavily inspired on Textmate implementation: https://github.com/textmate/textmate/blob/master/Frameworks/text/src/ranker.cc
 rank choice query match
     | n == capitalsTouched = (denom - 1) / denom + penalty
     | otherwise            = let subtract = substrings * n + (n - capitalsTouched) in (denom - subtract) / denom + penalty
