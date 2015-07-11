@@ -1,7 +1,9 @@
 module JS.Utils where
 
-import JS.Bindings
+import Control.Lens
 
+import JS.Bindings
+import Object.Object
 
 -- -1      -  +1      NormalizedGl (Cartesian)
 -- -scr/2  -  +scr/2  Gl           (Cartesian)
@@ -9,36 +11,31 @@ import JS.Bindings
 --  0      -   scr    Screen
 
 
-screenToGl :: (Double, Double) -> IO (Double, Double)
-screenToGl (x, y) = do
-    screenSizeX <- getScreenSizeX
-    screenSizeY <- getScreenSizeY
-    return (x - screenSizeX / 2.0, - y + screenSizeY / 2.0)
+screenToGl :: Point -> Point -> (Double, Double)
+screenToGl (Point screenSizeX screenSizeY) (Point x y) =
+    ( fromIntegral x - (fromIntegral $ screenSizeX) / 2.0,
+     -fromIntegral y + (fromIntegral $ screenSizeY) / 2.0)
 
 
-screenToNormalizedGl :: (Double, Double) -> IO (Double, Double)
-screenToNormalizedGl (x, y) = do
-    screenSizeX <- getScreenSizeX
-    screenSizeY <- getScreenSizeY
-    return (x / screenSizeX * 2.0 - 1.0, -(y / screenSizeY) * 2.0 + 1.0)
+screenToNormalizedGl :: Point -> Point -> (Double, Double)
+screenToNormalizedGl (Point screenSizeX screenSizeY) (Point x y) =
+    ( (fromIntegral x / fromIntegral screenSizeX) * 2.0 - 1.0,
+     -(fromIntegral y / fromIntegral screenSizeY) * 2.0 + 1.0)
 
 
-glToWorkspace :: (Double, Double) -> IO (Double, Double)
-glToWorkspace (x, y) = do
-    camFactor <- getCamFactor
-    camPanX   <- getCamPanX
-    camPanY   <- getCamPanY
-    return (x / camFactor + camPanX, y / camFactor + camPanY)
+glToWorkspace :: Double -> (Double, Double) -> (Double, Double) -> (Double, Double)
+glToWorkspace camFactor (camPanX, camPanY) (x, y) =
+    (x / camFactor + camPanX,
+     y / camFactor + camPanY)
 
 
-screenToWorkspace :: (Double, Double) -> IO (Double, Double)
-screenToWorkspace (x, y) = glToWorkspace =<< screenToGl (x, y)
+screenToWorkspace :: Point -> Double -> (Double, Double) -> Point -> (Double, Double)
+screenToWorkspace screenSize camFactor camPan pos =
+    glToWorkspace camFactor camPan $ screenToGl screenSize pos
 
 
-workspaceToScreen :: (Double, Double) -> IO (Double, Double)
-workspaceToScreen (x, y) = do
-    camFactor <- getCamFactor
-    camPanX   <- getCamPanX
-    camPanY   <- getCamPanY
-    return (x / camFactor + camPanX, y / camFactor + camPanY)
+workspaceToScreen :: Double -> (Double, Double) -> (Double, Double) -> (Double, Double)
+workspaceToScreen camFactor (camPanX, camPanY) (x, y) =
+    (x / camFactor + camPanX,
+     y / camFactor + camPanY)
 

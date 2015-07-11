@@ -4,7 +4,7 @@ import Data.Monoid
 import Control.Lens
 import Utils.PrettyPrinter
 
-data Type = Resize deriving (Eq, Show)
+data Type = Resized deriving (Eq, Show)
 
 
 data Event = Event { _tpe         :: Type

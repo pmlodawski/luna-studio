@@ -26,7 +26,7 @@ import           Utils.PrettyPrinter
 
 import           Reactive.Plugins.Core.Action.Action
 import qualified Reactive.Plugins.Core.Action.Action        as Action
-import qualified Reactive.Plugins.Core.Action.Move          as Move
+import qualified Reactive.Plugins.Core.Action.General       as General
 import qualified Reactive.Plugins.Core.Action.AddRemove     as AddRemove
 import qualified Reactive.Plugins.Core.Action.Selection     as Selection
 import qualified Reactive.Plugins.Core.Action.Drag          as Drag
@@ -40,6 +40,7 @@ import           Reactive.Plugins.Core.Action.State.Global
 
 makeNetworkDescription :: forall t. Frameworks t => Moment t ()
 makeNetworkDescription = do
+    resizeE       <- fromAddHandler resizeHandler
     mouseDownE    <- fromAddHandler mouseDownHandler
     mouseUpE      <- fromAddHandler mouseUpHandler
     mouseMovedE   <- fromAddHandler mouseMovedHandler
@@ -50,22 +51,35 @@ makeNetworkDescription = do
 
     let
         anyE                         :: Event t (Event.Event Dynamic)
-        anyE                          = unions [mouseDownE, mouseUpE, mouseMovedE, keyDownE, keyPressedE, keyUpE, nodeSearcherE]
+        anyE                          = unions [ resizeE
+                                               , mouseDownE
+                                               , mouseUpE
+                                               , mouseMovedE
+                                               , keyDownE
+                                               , keyPressedE
+                                               , keyUpE
+                                               , nodeSearcherE
+                                               ]
         anyNodeE                     :: Event t (Event.Event Node)
         anyNodeE                      = unpackDynamic <$> anyE
 
         globalStateB                 :: Behavior t State
         globalStateB                  = stepper def $ globalStateReactionB <@ anyE
 
-        nodeMoveActionB               = fmap ActionST . stepper def $         Move.toAction <$> anyNodeE
+        nodeGeneralActionB            = fmap ActionST . stepper def $      General.toAction <$> anyNodeE
         nodeAddRemActionB             = fmap ActionST . stepper def $    AddRemove.toAction <$> anyNodeE
         nodeSelectionActionB          = fmap ActionST . stepper def $    Selection.toAction <$> anyNodeE
         nodeDragActionB               = fmap ActionST . stepper def $         Drag.toAction <$> anyNodeE
         cameraActionB                 = fmap ActionST . stepper def $       Camera.toAction <$> anyNodeE
         nodeSearcherActionB           = fmap ActionST . stepper def $ NodeSearcher.toAction <$> anyNodeE
 
-        allActionsPackB               = [ nodeMoveActionB
-                                        , nodeAddRemActionB, nodeSelectionActionB, nodeDragActionB, cameraActionB, nodeSearcherActionB]
+        allActionsPackB               = [ nodeGeneralActionB
+                                        , nodeAddRemActionB
+                                        , nodeSelectionActionB
+                                        , nodeDragActionB
+                                        , cameraActionB
+                                        , nodeSearcherActionB
+                                        ]
 
         (globalStateReactionB, allReactionsPackB) = execAll globalStateB allActionsPackB
 

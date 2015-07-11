@@ -26,8 +26,10 @@ function start() {
     initialize_gl();
 
     // -> HS
-    setupPanAndZoom();
+    // setupPanAndZoom();
     // createRandomNodes(1);
+    $(document).bind('contextmenu', function(){return false;}); // prevent browser context menu
+
 
     // call -> HS
     render();
@@ -63,69 +65,6 @@ function initialize_gl() {
 
 
 // -> HS
-function setupPanAndZoom() {
-  var dragMode = null;
-  var mouse = new THREE.Vector2(0,0);
-  var mouseStart = new THREE.Vector2(0,0);
-  var RMB = 3, MMB = 2;
-  $(document).bind('contextmenu', function(){return false;}); // prevent browser context menu
-
-  // $(document).mousedown(function(event) {
-  //   switch(event.which) {
-  //     case MMB: {
-  //       event.preventDefault();
-  //       dragMode = 'pan';
-  //       event.stopPropagation();
-  //       break;
-  //     }
-  //     case RMB: {
-  //       dragMode = 'zoom';
-  //       event.stopPropagation();
-  //       break;
-  //     }
-  //     default: dragMode = null;
-  //   }
-
-  //   mouse.set(event.clientX, event.clientY);
-  //   mouseStart.set(event.clientX - $$.halfScreen.x, - event.clientY + $$.halfScreen.y).divideScalar($$.camFactor.value);
-
-  // });
-
-  // $(document).mousemove(function(event) {
-  //   var delta;
-  //   switch(dragMode){
-  //     case 'pan': {
-  //       var position = utils.screenToWorkspace(event.clientX, event.clientY);
-  //       delta = utils.screenToWorkspace(mouse.x, mouse.y).sub(position);
-  //       $$.camPan.add(delta);
-  //       reconfigureCamera();
-  //       // event.stopPropagation();
-  //       break;
-  //     }
-  //     case 'zoom': {
-  //       var deltaX = (event.clientX - mouse.x);
-  //       var deltaY = -(event.clientY - mouse.y);
-  //       var factor = (deltaX+deltaY)/512;
-  //       delta = new THREE.Vector2(mouseStart.x, mouseStart.y).multiplyScalar(factor);
-  //       if(updateCamFactor($$.camFactor.value * (1+factor))) {
-  //         $$.camPan.add(delta);
-  //         mouseStart.sub(delta);
-  //       }
-  //       reconfigureCamera();
-  //       // event.stopPropagation();
-  //       break;
-  //     }
-  //   }
-  //   mouse.set(event.clientX, event.clientY);
-  // });
-
-  $(document).mouseup(function() {
-    dragMode = null;
-    // event.preventDefault();
-  });
-}
-
-// -> HS
 function setWindowSize(){
   var w = window.innerWidth;
   var h = window.innerHeight;
@@ -137,13 +76,6 @@ function setWindowSize(){
   $$.renderer.setSize( w, h );
   reconfigureCamera();
 }
-
-// -> HS
-function updateCamFactor(val) {
-  $$.camFactor.value = Math.max($$.camFactorBounds[0], Math.min($$.camFactorBounds[1], val));
-  return ($$.camFactor.value === val);
-}
-
 
 function updateHtmCanvasPanPos(x, y, factor) {
   $$.htmlCanvasPan.css({left: x, top: y});
