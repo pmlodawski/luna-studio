@@ -1,20 +1,17 @@
 "use strict";
 
-var xtend = require('xtend');
-var THREE = require('three');
-
 module.exports = function(opt) {
   opt = opt||{};
   var opacity = typeof opt.opacity === 'number' ? opt.opacity : 1;
   var alphaTest = typeof opt.alphaTest === 'number' ? opt.alphaTest : 0.06;
   var smooth = typeof opt.smooth === 'number' ? opt.smooth : 1/16;
-  return xtend({
-    uniforms: xtend({
+  return {
+    uniforms: {
       opacity: { type: 'f', value: opacity },
       smooth: { type: 'f', value: smooth },
       map: { type: 't', value: opt.map || new THREE.Texture() },
       color: { type: 'c', value: new THREE.Color(opt.color) }
-    },opt.myuniforms),
+    },
     vertexShader: [
       "attribute float page;",
       "varying vec2 vUv;",
@@ -25,7 +22,7 @@ module.exports = function(opt) {
         "gl_Position = projectionMatrix * modelViewMatrix * vec4( position.xyz, 1.0 );",
       "}"
     ].join("\n"),
-    fragmentShader: [   
+    fragmentShader: [
 
       "#define SQRT2 1.4142135623730951",
       "uniform float opacity;",
@@ -43,7 +40,7 @@ module.exports = function(opt) {
         "gl_FragColor = vec4(color, opacity * alpha);",
         "#ifdef ALPHATEST\n\n  if ( gl_FragColor.a < ALPHATEST ) discard; \n\n#endif",
       "}"
-      
+
       //       "uniform sampler2D map;",
       //       "varying vec2 vUv;",
       // "void main() {",
@@ -57,5 +54,5 @@ module.exports = function(opt) {
       "USE_MAP": "",
       "ALPHATEST": Number(alphaTest || 0).toFixed(1)
     }
-  }, opt);
+  };
 };

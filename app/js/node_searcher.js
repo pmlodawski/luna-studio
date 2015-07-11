@@ -1,12 +1,8 @@
 "use strict";
 
-var $      = require('jquery')
-  , _      = require('underscore')
-  , $$     = require('./common')
+var $$     = require('./common')
   , config = require('./config')
 ;
-
-require('malihu-custom-scrollbar-plugin')($);
 
 
 function highlightText(name, highlight) {

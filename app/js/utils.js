@@ -1,7 +1,7 @@
 "use strict";
 
-var THREE = require('three');
-var $$ = require('./common');
+// var THREE = require('three');
+var $$ = require('common');
 
 function screenToGl(a, b) {
   var vec = new THREE.Vector2(a, b);

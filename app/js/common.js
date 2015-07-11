@@ -1,8 +1,5 @@
 "use strict";
 
-var THREE = require('three');
-var $ = require('jquery');
-
 var commonUniforms =  {
   camPan: {type: 'v2',value: new THREE.Vector2(0.0, 0.0)},
   camFactor: {type: 'f',value: 1.0},

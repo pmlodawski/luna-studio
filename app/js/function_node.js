@@ -1,21 +1,17 @@
-/* globals dimple: false, d3: false */
-
 "use strict";
 
-var THREE = require('three');
-var $ = require('jquery');
-var $$ = require('./common');
-var features = require('./features');
+var $$ = require('common');
+var features = require('features');
 
-var createText = require('three-bmfont-text');
-var font = require("./font/LatoBlack-sdf");
+// var createText = require('three-bmfont-text');
+var font = require("font/LatoBlack-sdf");
 
-var fs = require('./shaders/node.frag');
-var vs = require('./shaders/node.vert');
+var fs = require('shaders/node.frag')();
+var vs = require('shaders/node.vert')();
 
 var utils = require('./utils');
 
-var textMaterial = new THREE.ShaderMaterial(require('./shaders/font')({
+var textMaterial = new THREE.ShaderMaterial(require('shaders/font')({
   map: THREE.ImageUtils.loadTexture('font/LatoBlack-sdf.png'),
   smooth: 1/12,
   side: THREE.DoubleSide,
@@ -57,8 +53,8 @@ function FunctionNode(id, position){
       new THREE.ShaderMaterial( {
         uniforms: this.uniforms,
         attributes: this.attributes,
-        vertexShader:   vs(),
-        fragmentShader: fs(),
+        vertexShader:   vs,
+        fragmentShader: fs,
         transparent: true,
         blending: THREE.NormalBlending
       })

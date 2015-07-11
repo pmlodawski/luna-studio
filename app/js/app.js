@@ -1,14 +1,15 @@
 "use strict";
 
-var $            = require('jquery'),
-    _            = require('underscore'),
-    THREE        = require('three'),
-    FunctionNode = require('./function_node').FunctionNode,
-    $$           = require('./common'),
-    config       = require('./config'),
-    utils        = require('./utils'),
-    features     = require('./features'),
-    NodeSearcher = require('./node_searcher');
+console.log("Current version {!git_commit!}");
+console.log("Build at {!date!}");
+
+
+var FunctionNode = require('function_node').FunctionNode,
+    $$           = require('common'),
+    config       = require('config'),
+    utils        = require('utils'),
+    features     = require('features'),
+    NodeSearcher = require('node_searcher');
 
 var nodes = {};    // -> HS
 $$.nodes = nodes;
@@ -22,7 +23,6 @@ var maxZ = (Math.pow(2, 31) - 1) / zOrderDiv; // -> HS
 // export to HTML
 function start() {
   $(document).ready(function(){
-    THREE = require('three');
     initialize_gl();
 
     // -> HS
@@ -32,7 +32,7 @@ function start() {
     // call -> HS
     render();
 
-    window.ghcjs();
+    require('env')();
     // if(features.node_searcher) {
     //   $$.node_searcher = new NodeSearcher();
     //   $('body').append($$.node_searcher.el);
