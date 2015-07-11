@@ -24,4 +24,4 @@ cabal.sandbox.config
 .cabal-sandbox
 public
 
-app/features.js
+app/features.local.js

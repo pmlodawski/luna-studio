@@ -9,8 +9,6 @@ var font = require("font/LatoBlack-sdf");
 var fs = require('shaders/node.frag')();
 var vs = require('shaders/node.vert')();
 
-var utils = require('./utils');
-
 var textMaterial = new THREE.ShaderMaterial(require('shaders/font')({
   map: THREE.ImageUtils.loadTexture('font/LatoBlack-sdf.png'),
   smooth: 1/12,

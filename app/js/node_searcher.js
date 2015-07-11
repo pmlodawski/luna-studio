@@ -138,7 +138,7 @@ NodeSearcher.prototype.performSearch = function() {
   var ev;
   if(this.prefix === "" && this.searchbox.val() === "") {
     this.firstColumn.removeClass('types');
-    this.clearResults()
+    this.clearResults();
     ev = new CustomEvent('ns_event', {
       detail: {
         action: 'tree',
