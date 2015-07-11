@@ -38,8 +38,10 @@ exports.config =
 
   plugins:
     ghcjs:
-      placeholder: 'app/env.ghcjs'
-      projectName: cabalProjectName
+      placeholder:  'app/env.ghcjs'
+      projectName:  cabalProjectName
+      buildCommand: 'cabal build'
+      clearScreen:  false
 
     jshint:
       pattern: /^app\/.*\.js$/
