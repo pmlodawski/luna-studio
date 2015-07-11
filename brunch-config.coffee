@@ -11,7 +11,7 @@ exports.config =
     javascripts:
       joinTo:
         'javascripts/ghcjs.js' : /^app\/.*\.ghcjs$/
-        'javascripts/app.js'   : /^app\/(js|features\.|shaders)/
+        'javascripts/app.js'   : /^app\/(js|features\.|shaders|config)/
         'javascripts/vendor.js': /^(vendor|bower_components)/
       order:
         before: []
