@@ -108,11 +108,6 @@ function reconfigureCamera() {
   $$.camera.updateProjectionMatrix();
 }
 
-function updateProMax() {
-  console.log("updateProMax");
-  $$.camera.updateProjectionMatrix();
-}
-
 function newNodeAt(i, x, y) {
     var vect = utils.screenToGl(x, y);
     // console.log("adding new node " + i + " at " + vect.x + " " + vect.y);
@@ -233,7 +228,6 @@ module.exports = {
   removeNode: removeNode,
   updateHtmCanvasPanPos: updateHtmCanvasPanPos,
   updateCamera: updateCamera,
-  updateProMax: updateProMax,
   start: start,
   createNodeSearcher: createNodeSearcher,
   destroyNodeSearcher: destroyNodeSearcher,

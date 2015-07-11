@@ -10,19 +10,20 @@ void main() {
   vec2 posN = (gl_FragCoord.xy - coords) / camFactor;
   float dist_squared = dot(posN, posN);
 
-  float mCamFactor = camFactor;
-  float bCamFactor = camFactor;
+  float camFactorDelta = camFactor - 1.0;
+  float rimCamFactor  = 1.0;
+  float blurCamFactor = 1.0;
   if (camFactor > 1.0) {
-    mCamFactor = 1.0 + ((camFactor - 1.0) / 10.0);
-    bCamFactor = 1.0 + ((camFactor - 1.0) / 2.0);
+    rimCamFactor  += camFactorDelta / 10.0;
+    blurCamFactor += camFactorDelta / 2.0;
   } else if (camFactor < 1.0) {
-    mCamFactor = 1.0 + ((camFactor - 1.0) / 1.5);
-    bCamFactor = 1.0 + ((camFactor - 1.0) / 1.1);
+    rimCamFactor  += camFactorDelta / 1.5;
+    blurCamFactor += camFactorDelta / 1.1;
   }
   float r4 = 900.0;
-  float r3 = r4 -  80.0 / bCamFactor;
-  float r1 = r4 - 310.0 / mCamFactor;
-  float r2 = r1 +  80.0 / bCamFactor;
+  float r3 = r4 -  80.0 / blurCamFactor;
+  float r1 = r4 - 310.0 /  rimCamFactor;
+  float r2 = r1 +  80.0 / blurCamFactor;
 
   float d_blur_r34 = 1.0 - (dist_squared - r3) / (r4 - r3);
   float d_blur_r12 = (dist_squared - r1) / (r2 - r1);

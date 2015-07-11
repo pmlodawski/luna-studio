@@ -86,8 +86,7 @@ data FunctionNode
 
 
 
--- foreign import javascript unsafe "common.camera.updateProjectionMatrix()"
-foreign import javascript unsafe "app.updateProMax()"
+foreign import javascript unsafe "common.camera.updateProjectionMatrix()"
     updateProjectionMatrix :: IO ()
 
 foreign import javascript unsafe "app.updateHtmCanvasPanPos($1, $2, $3)"

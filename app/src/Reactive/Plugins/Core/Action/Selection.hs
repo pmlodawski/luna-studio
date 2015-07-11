@@ -54,6 +54,7 @@ instance PrettyPrinter Action where
     display (SelectAction tpe node)  = "sA( " <> display tpe <> " " <> display node <> " )"
 
 
+-- toAction :: Event Node -> Global.State -> Maybe Action
 toAction :: Event Node -> Maybe Action
 toAction (Mouse (WithObjects (Mouse.Event tpe pos button keyMods) objects)) = case button of
     1                 -> case tpe of
@@ -73,10 +74,13 @@ toAction (Mouse (WithObjects (Mouse.Event tpe pos button keyMods) objects)) = ca
           toggleActionType = if node ^. selected then ToggleOff
                                                  else ToggleOn
 toAction (Keyboard (Keyboard.Event Keyboard.Press char)) = case char of
-    'n' -> Just SelectAll
-    'u' -> Just UnselectAll
-    _   -> Nothing
+    'A'   -> Just SelectAll
+    _     -> Nothing
+toAction (Keyboard (Keyboard.Event Keyboard.Down char)) = case char of
+    '\27' -> Just UnselectAll
+    _     -> Nothing
 toAction _ = Nothing
+
 
 updateNodeSelection :: NodeIdCollection -> Node -> Node
 updateNodeSelection selNodeIds node = let selection = elem (node ^. ident) selNodeIds in node & selected .~ selection

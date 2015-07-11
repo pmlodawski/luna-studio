@@ -62,6 +62,7 @@ makeNetworkDescription = do
                                                ]
         anyNodeE                     :: Event t (Event.Event Node)
         anyNodeE                      = unpackDynamic <$> anyE
+        -- anyNodeB                      = stepper def anyNodeE
 
         globalStateB                 :: Behavior t State
         globalStateB                  = stepper def $ globalStateReactionB <@ anyE

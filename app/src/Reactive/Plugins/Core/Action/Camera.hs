@@ -39,7 +39,8 @@ data DragType = StartDrag
 
 data MouseActionType = Zoom | Pan deriving (Eq, Show)
 
-data Action = ZoomIn
+data Action = ResetZoom
+            | ZoomIn
             | ZoomOut
             | PanLeft
             | PanRight
@@ -62,6 +63,7 @@ instance PrettyPrinter MouseActionType where
     display = show
 
 instance PrettyPrinter Action where
+    display ResetZoom                 = "cA( ResetZoom )"
     display ZoomIn                    = "cA( ZoomIn )"
     display ZoomOut                   = "cA( ZoomOut )"
     display PanLeft                   = "cA( PanLeft )"
@@ -90,6 +92,7 @@ toAction (Keyboard (Keyboard.Event Keyboard.Press char)) = case char of
     '='   -> Just ZoomIn
     '+'   -> Just ZoomIn
     '-'   -> Just ZoomOut
+    'z'   -> Just ResetZoom
     _     -> Nothing
 toAction (Keyboard (Keyboard.Event Keyboard.Down char)) = case char of
     '\37' -> Just PanLeft
@@ -132,6 +135,7 @@ instance ActionStateUpdater Action where
             MouseAction Pan  _ _      -> oldCamPanY + mousePanY
             _                         -> oldCamPanY
         newCamFactor                   = case newActionCandidate of
+            ResetZoom                 -> 1.0
             ZoomIn                    -> max minCamFactor $ oldCamFactor / 1.1
             ZoomOut                   -> min maxCamFactor $ oldCamFactor * 1.1
             MouseAction Zoom _ _      -> min maxCamFactor . max minCamFactor $ oldCamFactor * (1.0 + camDragFactorDelta)
