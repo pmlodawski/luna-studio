@@ -31,7 +31,7 @@ data State = State { _iteration    :: Integer
 makeLenses ''State
 
 instance Default State where
-    def = State def def def def def def def def def
+    def = State def (Point 400 200) def def def def def def def
 
 instance PrettyPrinter State where
     display (State iteration mousePos screenSize nodes camera addRemove selection drag nodeSearcher) =

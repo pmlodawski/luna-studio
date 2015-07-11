@@ -1,6 +1,6 @@
 #ifdef GL_ES
 precision highp float;
-#endif    
+#endif
 
 varying vec2 coords;
 uniform float camFactor;
@@ -9,11 +9,21 @@ uniform int selected;
 void main() {
   vec2 posN = (gl_FragCoord.xy - coords) / camFactor;
   float dist_squared = dot(posN, posN);
-  
+
+  float mCamFactor = camFactor;
+  float bCamFactor = camFactor;
+  if (camFactor > 1.0) {
+    mCamFactor = 1.0 + ((camFactor - 1.0) / 10.0);
+    bCamFactor = 1.0 + ((camFactor - 1.0) / 2.0);
+  } else if (camFactor < 1.0) {
+    mCamFactor = 1.0 + ((camFactor - 1.0) / 1.5);
+    bCamFactor = 1.0 + ((camFactor - 1.0) / 1.1);
+  }
   float r4 = 900.0;
-  float r3 = 820.0;
-  float r2 = 670.0;
-  float r1 = 590.0;
+  float r3 = r4 -  80.0 / bCamFactor;
+  float r1 = r4 - 310.0 / mCamFactor;
+  float r2 = r1 +  80.0 / bCamFactor;
+
   float d_blur_r34 = 1.0 - (dist_squared - r3) / (r4 - r3);
   float d_blur_r12 = (dist_squared - r1) / (r2 - r1);
 
@@ -37,7 +47,7 @@ void main() {
     gl_FragColor = vec4(mix, 1.0);
   } else if (dist_squared < r3) {
     gl_FragColor = vec4(color, 1.0);
-  } else if (dist_squared < r4) { 
+  } else if (dist_squared < r4) {
     gl_FragColor = vec4(color, d_blur_r34);
   } else {
     gl_FragColor = vec4(color_outside, 0.0);

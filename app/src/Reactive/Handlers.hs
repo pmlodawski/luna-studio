@@ -7,30 +7,8 @@ import           Data.Char           ( chr )
 import           Data.Maybe          ( fromJust )
 import           Data.Dynamic        ( Dynamic )
 import           GHCJS.DOM           ( currentWindow )
-import           GHCJS.DOM.DOMWindow ( IsDOMWindow
-                                     , domWindowOnclick
-                                     , domWindowOnmouseup
-                                     , domWindowOnkeydown
-                                     , domWindowOnkeypress
-                                     , domWindowOnkeyup
-                                     , domWindowOnmousedown
-                                     , domWindowOnmousemove
-                                     , domWindowOnresize
-                                     , domWindowGetInnerWidth
-                                     , domWindowGetInnerHeight
-                                     )
-import           GHCJS.DOM.EventM    ( EventM
-                                     , uiCharCode
-                                     , uiKeyCode
-                                     , uiWhich
-                                     , mouseClientXY
-                                     , mouseButton
-                                     , mouseShiftKey
-                                     , mouseCtrlKey
-                                     , mouseAltKey
-                                     , mouseMetaKey
-                                     --, preventDefault
-                                     )
+import           GHCJS.DOM.DOMWindow
+import           GHCJS.DOM.EventM
 import qualified GHCJS.DOM.MouseEvent
 import           Reactive.Banana.Frameworks ( AddHandler(..), liftIO )
 
@@ -107,10 +85,13 @@ mouseMovedHandler = AddHandler $ \h -> do
 resizeHandler :: AddHandler (Event Dynamic)
 resizeHandler = AddHandler $ \h -> do
     window <- fromJust <$> currentWindow
-    width  <- domWindowGetInnerWidth  window
-    height <- domWindowGetInnerHeight window
-    domWindowOnresize window $ do
-        liftIO . h $ Window $ Window.Event Window.Resized width height
+    handler domWindowOnload   h window
+    handler domWindowOnresize h window
+    where
+        handler domWindowOn h window = domWindowOn window $ liftIO $ do
+            width  <- domWindowGetInnerWidth  window
+            height <- domWindowGetInnerHeight window
+            h $ Window $ Window.Event Window.Resized width height
 
 keyPressedHandler :: AddHandler (Event Dynamic)
 keyPressedHandler = AddHandler $ \h -> do

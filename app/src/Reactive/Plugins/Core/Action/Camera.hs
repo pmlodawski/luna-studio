@@ -99,6 +99,9 @@ toAction (Keyboard (Keyboard.Event Keyboard.Down char)) = case char of
     _     -> Nothing
 toAction _ = Nothing
 
+minCamFactor = 0.2
+maxCamFactor = 4.0
+
 
 instance ActionStateUpdater Action where
     execSt newActionCandidate oldState =
@@ -129,9 +132,9 @@ instance ActionStateUpdater Action where
             MouseAction Pan  _ _      -> oldCamPanY + mousePanY
             _                         -> oldCamPanY
         newCamFactor                   = case newActionCandidate of
-            ZoomIn                    -> max 0.2 $ oldCamFactor / 1.1
-            ZoomOut                   -> min 2.0 $ oldCamFactor * 1.1
-            MouseAction Zoom _ _      -> min 2.0 . max 0.2 $ oldCamFactor * (1.0 + camDragFactorDelta)
+            ZoomIn                    -> max minCamFactor $ oldCamFactor / 1.1
+            ZoomOut                   -> min maxCamFactor $ oldCamFactor * 1.1
+            MouseAction Zoom _ _      -> min maxCamFactor . max minCamFactor $ oldCamFactor * (1.0 + camDragFactorDelta)
             _                         -> oldCamFactor
         newDrag                        = case newActionCandidate of
             MouseAction act tpe point -> case tpe of
@@ -167,28 +170,24 @@ instance ActionStateUpdater Action where
 
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = do
-        screenWidth  <- innerWidth
-        screenHeight <- innerHeight
-        let
-            hScreenX    = (fromIntegral screenWidth)  / 2.0
-            hScreenY    = (fromIntegral screenHeight) / 2.0
-            camLeft     = appX cameraLeft
-            camRight    = appX cameraRight
-            camTop      = appY cameraTop
-            camBottom   = appY cameraBottom
-            hX          = appX htmlX
-            hY          = appY htmlY
-            appX      f = f cFactor cPanX hScreenX
-            appY      f = f cFactor cPanY hScreenY
+        let cPanX        = state ^. Global.camera . Camera.camPanX
+            cPanY        = state ^. Global.camera . Camera.camPanY
+            cFactor      = state ^. Global.camera . Camera.camFactor
+            screenWidth  = state ^. Global.screenSize . x
+            screenHeight = state ^. Global.screenSize . y
+            hScreenX     = (fromIntegral screenWidth)  / 2.0
+            hScreenY     = (fromIntegral screenHeight) / 2.0
+            camLeft      = appX cameraLeft
+            camRight     = appX cameraRight
+            camTop       = appY cameraTop
+            camBottom    = appY cameraBottom
+            hX           = appX htmlX
+            hY           = appY htmlY
+            appX      f  = f cFactor cPanX hScreenX
+            appY      f  = f cFactor cPanY hScreenY
         updateCamera cFactor cPanX cPanY camLeft camRight camTop camBottom
         updateHtmCanvasPanPos hX hY cFactor
         updateProjectionMatrix
-        where
-            -- hScreenX    = state ^. Global.camera . Camera.halfScreenX
-            -- hScreenY    = state ^. Global.camera . Camera.halfScreenY
-            cPanX       = state ^. Global.camera . Camera.camPanX
-            cPanY       = state ^. Global.camera . Camera.camPanY
-            cFactor     = state ^. Global.camera . Camera.camFactor
 
 
 cameraLeft, cameraRight, cameraTop, cameraBottom, htmlX, htmlY :: Double -> Double -> Double -> Double
