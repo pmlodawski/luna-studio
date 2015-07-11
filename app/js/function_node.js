@@ -3,7 +3,7 @@
 var $$ = require('common');
 var features = require('features');
 
-// var createText = require('three-bmfont-text');
+var createText = THREE_TEXT;
 var font = require("font/LatoBlack-sdf");
 
 var fs = require('shaders/node.frag')();
