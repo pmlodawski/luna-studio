@@ -14,6 +14,7 @@ import           Event.WithObjects
 import           Utils.Vector
 import           Utils.PrettyPrinter
 import           Reactive.Plugins.Core.Action.Action
+import qualified Reactive.Plugins.Core.Action.State.Camera   as Camera
 import qualified Reactive.Plugins.Core.Action.State.Global   as Global
 
 
@@ -45,7 +46,7 @@ instance ActionStateUpdater Action where
             Moving pos    -> oldState & Global.iteration  +~ 1
                                       & Global.mousePos   .~ pos
             Resizing size -> oldState & Global.iteration  +~ 1
-                                      & Global.screenSize .~ size
+                                      & Global.camera . Camera.camera . Camera.screenSize .~ size
 
 
 instance ActionUIUpdater Action where

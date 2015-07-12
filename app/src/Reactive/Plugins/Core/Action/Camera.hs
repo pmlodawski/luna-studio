@@ -118,11 +118,11 @@ instance ActionStateUpdater Action where
         Nothing     -> ActionUI NoAction newState
         where
         newState                       = oldState &  Global.iteration +~ 1
-                                                  &  Global.camera . Camera.camPan    .~ newCamPan
-                                                  &  Global.camera . Camera.camFactor .~ newCamFactor
-                                                  &  Global.camera . Camera.history   .~ newUpdDrag
-        oldCamPan                      = oldState ^. Global.camera . Camera.camPan
-        oldCamFactor                   = oldState ^. Global.camera . Camera.camFactor
+                                                  &  Global.camera . Camera.camera . Camera.pan    .~ newCamPan
+                                                  &  Global.camera . Camera.camera . Camera.factor .~ newCamFactor
+                                                  &  Global.camera . Camera.history .~ newUpdDrag
+        oldCamPan                      = oldState ^. Global.camera . Camera.camera . Camera.pan
+        oldCamFactor                   = oldState ^. Global.camera . Camera.camera . Camera.factor
         oldDrag                        = oldState ^. Global.camera . Camera.history
         newAction                      = Just newActionCandidate
         newCamPan                      = case newActionCandidate of
@@ -170,15 +170,16 @@ instance ActionStateUpdater Action where
                 Just drag             -> prevWorkspace - currWorkspace where
                     currWorkspace      = screenToWorkspace screenSize oldCamFactor oldCamPan $ drag ^. dragCurrentPos
                     prevWorkspace      = screenToWorkspace screenSize oldCamFactor oldCamPan $ drag ^. dragPreviousPos
-                    screenSize         = oldState ^. Global.screenSize
+                    screenSize         = oldState ^. Global.camera . Camera.camera . Camera.screenSize
                 Nothing               -> Vector2 0.0 0.0
 
 
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = do
-        let cPan         = state ^. Global.camera . Camera.camPan
-            cFactor      = state ^. Global.camera . Camera.camFactor
-            screenSize   = state ^. Global.screenSize
+        let cam          = state ^. Global.camera . Camera.camera
+            cPan         = cam ^. Camera.pan
+            cFactor      = cam ^. Camera.factor
+            screenSize   = state ^. Global.camera . Camera.camera . Camera.screenSize
             hScreen      = (/ 2.0) <$> vector2FromIntegral screenSize
             camLeft      = appX cameraLeft
             camRight     = appX cameraRight

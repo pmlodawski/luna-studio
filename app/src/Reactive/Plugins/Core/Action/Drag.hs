@@ -62,7 +62,7 @@ toAction (Mouse (Mouse.Event tpe pos button keyMods)) state = case button of
         Mouse.Released -> Just (DragAction StopDrag pos)
         Mouse.Moved    -> Just (DragAction Moving   pos)
     _                  -> Nothing
-    where objects          = getNodesAt pos (state ^. Global.camera . Camera.camFactor) (state ^. Global.nodes)
+    where objects          = getNodesAt pos (state ^. Global.camera . Camera.camera . Camera.factor) (state ^. Global.nodes)
           isNoNode         = null objects
 toAction _ _ = Nothing
 
@@ -118,7 +118,7 @@ instance ActionUIUpdater Action where
 
 
 moveNodeUI :: Node -> IO ()
-moveNodeUI (Node ident _ (Vector2 x y)) = dragNode ident x y
+moveNodeUI (Node ident _ pos) = dragNode ident pos
 
 moveNodesUI :: NodeCollection -> IO ()
 moveNodesUI nodes  = mapM_ moveNodeUI nodes
