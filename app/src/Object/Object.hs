@@ -37,6 +37,13 @@ instance Num a => Num (Vector2 a) where
     signum (Vector2 x y)              = Vector2 (signum x) (signum y)
     fromInteger i                     = let val = fromInteger i in Vector2 val val
 
+instance Functor Vector2 where
+    fmap f (Vector2 x y) = Vector2 (f x) (f y)
+
+vector2FromIntegral :: (Integral a, Num b) => Vector2 a -> Vector2 b
+vector2FromIntegral (Vector2 x y) = Vector2 (fromInteger . toInteger $ x) (fromInteger . toInteger $ y)
+
+
 instance PrettyPrinter a => PrettyPrinter (Vector2 a) where
     display (Vector2 x y) = "(" <> display x <> "," <> display y <> ")"
 

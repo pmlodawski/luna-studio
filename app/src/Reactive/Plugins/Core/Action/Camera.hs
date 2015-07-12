@@ -173,18 +173,16 @@ instance ActionUIUpdater Action where
     updateUI (WithState action state) = do
         let cPan         = state ^. Global.camera . Camera.camPan
             cFactor      = state ^. Global.camera . Camera.camFactor
-            screenWidth  = state ^. Global.screenSize . x
-            screenHeight = state ^. Global.screenSize . y
-            hScreenX     = (fromIntegral screenWidth)  / 2.0
-            hScreenY     = (fromIntegral screenHeight) / 2.0
+            screenSize   = state ^. Global.screenSize
+            hScreen      = (/ 2.0) <$> vector2FromIntegral screenSize
             camLeft      = appX cameraLeft
             camRight     = appX cameraRight
             camTop       = appY cameraTop
             camBottom    = appY cameraBottom
             hX           = appX htmlX
             hY           = appY htmlY
-            appX      f  = f cFactor (cPan ^. x) hScreenX
-            appY      f  = f cFactor (cPan ^. y) hScreenY
+            appX      f  = f cFactor (cPan ^. x) (hScreen ^. x)
+            appY      f  = f cFactor (cPan ^. y) (hScreen ^. y)
         updateCamera cFactor (cPan ^. x) (cPan ^. y) camLeft camRight camTop camBottom
         updateHtmCanvasPanPos hX hY cFactor
         updateProjectionMatrix
