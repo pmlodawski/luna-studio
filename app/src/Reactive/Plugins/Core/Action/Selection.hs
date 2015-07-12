@@ -26,6 +26,7 @@ import           Event.WithObjects
 import           Utils.Wrapper
 import           Utils.PrettyPrinter
 import           Reactive.Plugins.Core.Action.Action
+import qualified Reactive.Plugins.Core.Action.State.Camera    as Camera
 import           Reactive.Plugins.Core.Action.State.Selection as Selection
 import qualified Reactive.Plugins.Core.Action.State.Global    as Global
 
@@ -54,9 +55,8 @@ instance PrettyPrinter Action where
     display (SelectAction tpe node)  = "sA( " <> display tpe <> " " <> display node <> " )"
 
 
--- toAction :: Event Node -> Global.State -> Maybe Action
-toAction :: Event Node -> Maybe Action
-toAction (Mouse (WithObjects (Mouse.Event tpe pos button keyMods) objects)) = case button of
+toAction :: Event Node -> Global.State -> Maybe Action
+toAction (Mouse (Mouse.Event tpe pos button keyMods)) state = case button of
     1                 -> case tpe of
         Mouse.Pressed -> if isNoNode then case keyMods of
                                         (KeyMods False False False False) -> Just UnselectAll
@@ -67,19 +67,20 @@ toAction (Mouse (WithObjects (Mouse.Event tpe pos button keyMods) objects)) = ca
                                         _                                 -> Nothing
         _             -> Nothing
     _                 -> Nothing
-    where isNoNode         = null objects
-          node             = unwrap . head $ objects
+    where objects          = getNodesAt pos (state ^. Global.camera . Camera.camFactor) (state ^. Global.nodes)
+          isNoNode         = null objects
+          node             = head objects
           selectActionType = if node ^. selected then Focus
                                                  else SelectNew
           toggleActionType = if node ^. selected then ToggleOff
                                                  else ToggleOn
-toAction (Keyboard (Keyboard.Event Keyboard.Press char)) = case char of
-    'A'   -> Just SelectAll
-    _     -> Nothing
-toAction (Keyboard (Keyboard.Event Keyboard.Down char)) = case char of
-    '\27' -> Just UnselectAll
-    _     -> Nothing
-toAction _ = Nothing
+toAction (Keyboard (Keyboard.Event Keyboard.Press char)) state = case char of
+    'A'     -> Just SelectAll
+    _       -> Nothing
+toAction (Keyboard (Keyboard.Event Keyboard.Down char)) state = case char of
+    '\27'   -> Just UnselectAll
+    _       -> Nothing
+toAction _ _ = Nothing
 
 
 updateNodeSelection :: NodeIdCollection -> Node -> Node

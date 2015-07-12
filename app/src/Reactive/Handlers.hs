@@ -44,11 +44,6 @@ readMousePos = --convert <$> mouseClientXY
         (x, y) <- mouseClientXY
         return $ Point x y
 
-
-newMouseWithObjects :: Mouse.Type -> Point -> Int -> Keyboard.KeyMods -> [Object Dynamic] -> Event Dynamic
-newMouseWithObjects eventType point button keyMods objects =
-    Mouse $ Mouse.newWithObjects (Mouse.newEvent eventType point button keyMods) objects
-
 mouseDownHandler :: AddHandler (Event Dynamic)
 mouseDownHandler = AddHandler $ \h -> do
     window <- fromJust <$> currentWindow
@@ -56,9 +51,7 @@ mouseDownHandler = AddHandler $ \h -> do
         mousePos <- readMousePos
         button   <- readButton
         keyMods  <- readKeyMods
-        liftIO $ do
-            objects <- getObjectsAt (mousePos ^. x) (mousePos ^. y)
-            h $ newMouseWithObjects Mouse.Pressed mousePos button keyMods objects
+        liftIO . h $ Mouse $ Mouse.Event Mouse.Pressed mousePos button keyMods
 
 mouseUpHandler :: AddHandler (Event Dynamic)
 mouseUpHandler = AddHandler $ \h -> do
@@ -67,9 +60,7 @@ mouseUpHandler = AddHandler $ \h -> do
         mousePos <- readMousePos
         button   <- readButton
         keyMods  <- readKeyMods
-        liftIO $ do
-            objects <- getObjectsAt (mousePos ^. x) (mousePos ^. y)
-            h $ newMouseWithObjects Mouse.Released mousePos button keyMods objects
+        liftIO . h $ Mouse $ Mouse.Event Mouse.Released mousePos button keyMods
 
 mouseMovedHandler :: AddHandler (Event Dynamic)
 mouseMovedHandler = AddHandler $ \h -> do
@@ -78,9 +69,7 @@ mouseMovedHandler = AddHandler $ \h -> do
         mousePos <- readMousePos
         button   <- readButton
         keyMods  <- readKeyMods
-        liftIO $ do
-            objects <- getObjectsAt (mousePos ^. x) (mousePos ^. y)
-            h $ newMouseWithObjects Mouse.Moved mousePos button keyMods objects
+        liftIO . h $ Mouse $ Mouse.Event Mouse.Moved mousePos button keyMods
 
 resizeHandler :: AddHandler (Event Dynamic)
 resizeHandler = AddHandler $ \h -> do

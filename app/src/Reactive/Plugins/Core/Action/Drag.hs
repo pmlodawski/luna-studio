@@ -24,6 +24,7 @@ import           Event.WithObjects
 import           Utils.Wrapper
 import           Utils.PrettyPrinter
 import           Reactive.Plugins.Core.Action.Action
+import qualified Reactive.Plugins.Core.Action.State.Camera   as Camera
 import           Reactive.Plugins.Core.Action.State.Drag     as Drag
 import qualified Reactive.Plugins.Core.Action.State.Global   as Global
 
@@ -50,8 +51,8 @@ instance PrettyPrinter Action where
     display (DragAction tpe point) = "dA( " <> display tpe <> " " <> display point <> " )"
 
 
-toAction :: Event Node -> Maybe Action
-toAction (Mouse (WithObjects (Mouse.Event tpe pos button keyMods) objects)) = case button of
+toAction :: Event Node -> Global.State -> Maybe Action
+toAction (Mouse (Mouse.Event tpe pos button keyMods)) state = case button of
     1                  -> case tpe of
         Mouse.Pressed  -> if isNoNode then Nothing
                                       else case keyMods of
@@ -60,8 +61,9 @@ toAction (Mouse (WithObjects (Mouse.Event tpe pos button keyMods) objects)) = ca
         Mouse.Released -> Just (DragAction StopDrag pos)
         Mouse.Moved    -> Just (DragAction Moving   pos)
     _                  -> Nothing
-    where isNoNode      = null objects
-toAction _ = Nothing
+    where objects          = getNodesAt pos (state ^. Global.camera . Camera.camFactor) (state ^. Global.nodes)
+          isNoNode         = null objects
+toAction _ _ = Nothing
 
 moveNodes :: Point -> NodeCollection -> NodeCollection
 moveNodes delta = fmap $ \node -> if node ^. selected then node & Node.position +~ delta else node

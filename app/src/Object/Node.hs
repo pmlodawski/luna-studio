@@ -9,7 +9,7 @@ import           Data.Maybe    ( isJust, catMaybes )
 import           Utils.Wrapper
 import           Utils.PrettyPrinter
 import           Object.Dynamic
-import           Object.Object ( ID, Point, Object(..), Selectable(..) )
+import           Object.Object
 
 type NodeId = ID
 
@@ -33,3 +33,11 @@ instance Selectable Node where
 
 isNode :: Object Dynamic -> Bool
 isNode obj = isJust (unpackDynamic obj :: Maybe Node)
+
+
+getNodesAt :: Point -> Double -> NodeCollection -> NodeCollection
+getNodesAt pos camFactor nodes = filter closeEnough nodes where
+    radiusSquared    = 900.0 * camFactor
+    closeEnough node = (fromIntegral distSquared) < radiusSquared where
+        distSquared  = (dist ^. x) ^ 2 + (dist ^. y) ^ 2
+        dist         = (node ^. position - pos)
