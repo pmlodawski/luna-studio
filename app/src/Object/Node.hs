@@ -6,6 +6,7 @@ import           Data.Dynamic
 import           Data.Monoid
 import           Data.Maybe    ( isJust, catMaybes )
 
+import           JS.Utils      as Utils
 import           Utils.Vector
 import           Utils.Wrapper
 import           Utils.PrettyPrinter
@@ -16,7 +17,7 @@ type NodeId = ID
 
 data Node = Node { _ident    :: NodeId
                  , _selected :: Bool
-                 , _position :: Vector2 Int
+                 , _position :: Vector2 Double
                  } deriving (Eq, Show, Typeable)
 
 type NodeCollection   = [Node]
@@ -36,9 +37,10 @@ isNode :: Object Dynamic -> Bool
 isNode obj = isJust (unpackDynamic obj :: Maybe Node)
 
 
-getNodesAt :: Vector2 Int -> Double -> NodeCollection -> NodeCollection
-getNodesAt pos camFactor nodes = filter closeEnough nodes where
-    radiusSquared    = 900.0 * camFactor
-    closeEnough node = (fromIntegral distSquared) < radiusSquared where
+getNodesAt :: Vector2 Int -> Utils.Camera -> NodeCollection -> NodeCollection
+getNodesAt posScr camera nodes = filter closeEnough nodes where
+    pos              = Utils.screenToWorkspace camera posScr
+    radiusSquared    = 900.0 * camera ^. factor
+    closeEnough node = distSquared < radiusSquared where
         distSquared  = (dist ^. x) ^ 2 + (dist ^. y) ^ 2
         dist         = (node ^. position - pos)

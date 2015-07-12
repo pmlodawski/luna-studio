@@ -67,7 +67,7 @@ toAction (Mouse (Mouse.Event tpe pos button keyMods)) state = case button of
                                         _                                 -> Nothing
         _             -> Nothing
     _                 -> Nothing
-    where objects          = getNodesAt pos (state ^. Global.camera . Camera.camera . Camera.factor) (state ^. Global.nodes)
+    where objects          = getNodesAt pos (Global.toCamera state) (state ^. Global.nodes)
           isNoNode         = null objects
           node             = head objects
           selectActionType = if node ^. selected then Focus

@@ -28,10 +28,16 @@ function workspaceToScreen(a, b) {
   return new THREE.Vector2((vec.x  - $$.camPan.x) * $$.camFactor.value + $$.halfScreen.x , (- vec.y + $$.camPan.y) * $$.camFactor.value + $$.halfScreen.y );
 }
 
+function workspaceToGl(a, b) {
+  var vec = workspaceToScreen(a,b);
+  return screenToGl(vec.x, vec.y);
+}
+
 module.exports = {
   screenToGl: screenToGl,
   screenToNormalizedGl: screenToNormalizedGl,
   screenToWorkspace: screenToWorkspace,
   glToWorkspace: glToWorkspace,
-  workspaceToScreen: workspaceToScreen
+  workspaceToScreen: workspaceToScreen,
+  workspaceToGl: workspaceToGl
 };

@@ -3,6 +3,7 @@ module Reactive.Plugins.Core.Action.Drag where
 import           Prelude       hiding       ( mapM_, forM_ )
 import           Data.Foldable              ( mapM_, forM_ )
 import           Control.Lens
+import           Control.Applicative
 import           Data.Default
 import           Data.Maybe
 import           Data.List
@@ -12,7 +13,7 @@ import           System.Mem
 
 import           JS.Bindings
 import           JS.Appjs
-import           JS.Utils
+import qualified JS.Utils       as Utils
 import           Object.Object
 import qualified Object.Node    as Node     ( position )
 import           Object.Node    hiding      ( position )
@@ -63,12 +64,15 @@ toAction (Mouse (Mouse.Event tpe pos button keyMods)) state = case button of
         Mouse.Released -> Just (DragAction StopDrag pos)
         Mouse.Moved    -> Just (DragAction Moving   pos)
     _                  -> Nothing
-    where objects          = getNodesAt pos (state ^. Global.camera . Camera.camera . Camera.factor) (state ^. Global.nodes)
+    where objects          = getNodesAt pos (Global.toCamera state) (state ^. Global.nodes)
           isNoNode         = null objects
 toAction _ _ = Nothing
 
-moveNodes :: Vector2 Int -> NodeCollection -> NodeCollection
-moveNodes delta = fmap $ \node -> if node ^. selected then node & Node.position +~ delta else node
+moveNodes :: Double -> Vector2 Int -> NodeCollection -> NodeCollection
+moveNodes factor delta = fmap $ \node -> if node ^. selected then node & Node.position +~ deltaWs else node where
+    deltaWs = (/ factor) <$> vector2FromIntegral (flipY delta)
+    flipY (Vector2 x y) = Vector2 x (-y)
+
 
 
 instance ActionStateUpdater Action where
@@ -91,7 +95,7 @@ instance ActionStateUpdater Action where
             DragAction tpe point        -> case tpe of
                 StartDrag               -> oldNodes
                 Moving                  -> case oldDrag of
-                    Just oldDragState   -> moveNodes delta oldNodes
+                    Just oldDragState   -> moveNodes (oldState ^. Global.camera . Camera.camera . Camera.factor) delta oldNodes
                         where prevPos    = oldDragState ^. dragCurrentPos
                               delta      = point - prevPos
                     Nothing             -> oldNodes
@@ -119,9 +123,9 @@ instance ActionUIUpdater Action where
                   camera         = Global.toCamera state
 
 
-moveNodeUI :: Camera -> Node -> IO ()
+moveNodeUI :: Utils.Camera -> Node -> IO ()
 moveNodeUI camera node = dragNode camera node
 
-moveNodesUI :: Camera -> NodeCollection -> IO ()
+moveNodesUI :: Utils.Camera -> NodeCollection -> IO ()
 moveNodesUI camera nodes  = mapM_ (moveNodeUI camera) nodes
                   -- >> performGC

@@ -20,8 +20,8 @@ import           GHCJS.Types         ( JSRef, JSArray, JSString )
 import           GHCJS.DOM.Types     ( UIEvent, IsDOMWindow, IsUIEvent, unUIEvent, toUIEvent )
 
 import           JS.Converters
-import           Object.Object       ( Object(..) )
-import           Object.Node         ( Node(..) )
+-- import           Object.Object       ( Object(..) )
+-- import           Object.Node         ( Node(..) )
 import           Utils.Vector
 import           Utils.PrettyPrinter
 
@@ -73,7 +73,7 @@ foreign import javascript unsafe "app.getNodeAt($1, $2)"
     getNodeAtJSArray :: Int -> Int -> IO (JSArray Int)
 
 foreign import javascript unsafe "app.newNodeAt($1, $2, $3)"
-    newNodeAt :: Int -> Int -> Int -> IO ()
+    newNodeAt :: Int -> Double -> Double -> IO ()
 
 foreign import javascript unsafe "app.removeNode($1)"
     removeNode :: Int -> IO ()
@@ -174,20 +174,22 @@ foreign import javascript unsafe "$1.renderExamplePlot()"
 
 
 
-getNodeFromTuple4 :: (Int, Int, Int, Int) -> Maybe Node
-getNodeFromTuple4 (nodeId, sel, x, y)
-    | nodeId >= 0 = Just $ Node nodeId (sel >= 1) (Vector2 x y)
-    | otherwise = Nothing
-
 (.:)  :: (x -> y) -> (a -> b -> x) -> a -> b -> y
 (.:)   = (.) . (.)
 
-getNodeAt :: Int -> Int -> IO (Maybe Node)
-getNodeAt = (fmap getNodeFromTuple4 . getTuple4FromJSArray) .: getNodeAtJSArray
 
--- temporary implementation
-getObjectsAt :: Int -> Int -> IO [Object Dynamic]
-getObjectsAt x y = getNodeAt x y >>= return . maybeToList . fmap (Object . toDyn)
+-- getNodeFromTuple4 :: (Int, Int, Int, Int) -> Maybe Node
+-- getNodeFromTuple4 (nodeId, sel, x, y)
+--     | nodeId >= 0 = Just $ Node nodeId (sel >= 1) (Vector2 x y)
+--     | otherwise = Nothing
+
+
+-- getNodeAt :: Int -> Int -> IO (Maybe Node)
+-- getNodeAt = (fmap getNodeFromTuple4 . getTuple4FromJSArray) .: getNodeAtJSArray
+
+-- -- temporary implementation
+-- getObjectsAt :: Int -> Int -> IO [Object Dynamic]
+-- getObjectsAt x y = getNodeAt x y >>= return . maybeToList . fmap (Object . toDyn)
 
 
 

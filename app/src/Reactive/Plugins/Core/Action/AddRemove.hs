@@ -73,9 +73,8 @@ instance ActionStateUpdater Action where
                                            & Global.selection . Selection.nodeIds .~ newSelIds
                                            & Global.addRemove . toRemoveIds .~ newToRemoveIds
         oldNodes                = oldState ^. Global.nodes
-        nodePos                 = oldState ^. Global.mousePos
         camera                  = Global.toCamera oldState
-        nodePosWs               = Utils.screenToWorkspace camera nodePos
+        nodePosWs               = Utils.screenToWorkspace camera $ oldState ^. Global.mousePos
         oldSelNodeIds           = oldState ^. Global.selection . Selection.nodeIds
         headNodeId              = listToMaybe oldSelNodeIds
         nextNodeId              = 1 + (maxNodeId oldNodes)
@@ -91,7 +90,7 @@ instance ActionStateUpdater Action where
             Just RemoveFocused -> drop 1 oldSelNodeIds
             _                  -> oldSelNodeIds
         newNodes                = case newActionCandidate of
-            AddAction          -> (Node nextNodeId False nodePos) : oldNodes
+            AddAction          -> (Node nextNodeId False nodePosWs) : oldNodes
             RemoveFocused      -> case headNodeId of
                 Nothing        -> oldNodes
                 Just remId     -> filter (\node -> node ^. ident /= remId) oldNodes

@@ -5,7 +5,7 @@ import           Control.Lens
 
 import           JS.Bindings
 import           JS.Converters
-import           JS.Utils
+import           JS.Utils       as Utils
 import           Object.Node
 import           Utils.Vector
 
@@ -43,7 +43,8 @@ unfocusAllNodes =
 
 dragNode :: Camera -> Node -> IO ()
 dragNode camera node = do
-    let (Vector2 wx wy) = screenToWorkspace camera $ node ^. position
+    -- let (Vector2 wx wy) = Utils.screenToWorkspace camera $ node ^. position
+    let (Vector2 wx wy) = node ^.position
     nodeRef <- getNode $ node ^. ident
     moveTo nodeRef wx wy
 

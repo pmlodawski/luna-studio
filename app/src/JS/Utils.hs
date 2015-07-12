@@ -50,7 +50,8 @@ screenToWorkspace camera pos =
 
 
 workspaceToScreen :: Camera -> Vector2 Double -> Vector2 Double
-workspaceToScreen (Camera _ pan factor) (Vector2 xWs yWs) = Vector2
-    (xWs / factor + pan ^. x)
-    (yWs / factor + pan ^. y)
+workspaceToScreen (Camera (Vector2 screenSizeX screenSizeY) pan factor) (Vector2 xWs yWs) = Vector2
+    (( xWs - pan ^. x) * factor + (fromIntegral screenSizeX) / 2.0)
+    ((-yWs + pan ^. y) * factor + (fromIntegral screenSizeY) / 2.0)
+
 

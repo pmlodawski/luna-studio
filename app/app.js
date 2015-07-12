@@ -109,7 +109,8 @@ function reconfigureCamera() {
 }
 
 function newNodeAt(i, x, y) {
-    var vect = utils.screenToGl(x, y);
+    // var vect = utils.screenToGl(x, y);
+    var vect = utils.workspaceToGl(x, y);
     // console.log("adding new node " + i + " at " + vect.x + " " + vect.y);
 
     var node = new FunctionNode(i, vect);
