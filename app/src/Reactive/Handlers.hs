@@ -6,16 +6,18 @@ import           Data.Word
 import           Data.Char           ( chr )
 import           Data.Maybe          ( fromJust )
 import           Data.Dynamic        ( Dynamic )
+import           Data.Text.Lazy (Text)
+import qualified Data.Text.Lazy as Text
+
 import           GHCJS.DOM           ( currentWindow )
 import           GHCJS.DOM.DOMWindow
 import           GHCJS.DOM.EventM
 import qualified GHCJS.DOM.MouseEvent
+import           GHCJS.Foreign
 import           Reactive.Banana.Frameworks ( AddHandler(..), liftIO )
 
 import           JS.Bindings
 import           JS.NodeSearcher
-import           GHCJS.Foreign
-
 import           Object.Object
 import qualified Event.Keyboard      as Keyboard
 import qualified Event.Mouse         as Mouse
@@ -23,9 +25,9 @@ import qualified Event.Window        as Window
 import qualified Event.NodeSearcher  as NodeSearcher
 import qualified Object.Node         ( Node )
 import           Event.Event
+import           Utils.Vector
 
-import qualified Data.Text.Lazy as Text
-import           Data.Text.Lazy (Text)
+
 
 readKeyMods :: (IsDOMWindow self) => EventM GHCJS.DOM.MouseEvent.MouseEvent self Keyboard.KeyMods
 readKeyMods = do

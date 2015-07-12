@@ -6,6 +6,7 @@ import           Data.Dynamic
 import           Data.Monoid
 import           Data.Maybe    ( isJust, catMaybes )
 
+import           Utils.Vector
 import           Utils.Wrapper
 import           Utils.PrettyPrinter
 import           Object.Dynamic

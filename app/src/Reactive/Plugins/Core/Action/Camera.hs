@@ -25,6 +25,7 @@ import           Event.Mouse    hiding      ( Event )
 import qualified Event.Mouse    as Mouse
 import           Event.Event
 import           Event.WithObjects
+import           Utils.Vector
 import           Utils.Wrapper
 import           Utils.PrettyPrinter
 import           Reactive.Plugins.Core.Action.Action
@@ -39,16 +40,19 @@ data DragType = StartDrag
 
 data MouseActionType = Zoom | Pan deriving (Eq, Show)
 
-data Action = ResetZoom
-            | ZoomIn
-            | ZoomOut
-            | PanLeft
-            | PanRight
-            | PanUp
-            | PanDown
-            | MouseAction { _actionType :: MouseActionType
-                          , _dragType   :: DragType
-                          , _zoomPos    :: Vector2 Int
+data KeyActionType = ResetZoom
+                   | ZoomIn
+                   | ZoomOut
+                   | PanLeft
+                   | PanRight
+                   | PanUp
+                   | PanDown
+                   deriving (Eq, Show)
+
+data Action = KeyAction   { _keyActionType :: KeyActionType }
+            | MouseAction { _actionType    :: MouseActionType
+                          , _dragType      :: DragType
+                          , _zoomPos       :: Vector2 Int
                           }
             deriving (Eq, Show)
 
@@ -62,14 +66,11 @@ instance PrettyPrinter DragType where
 instance PrettyPrinter MouseActionType where
     display = show
 
+instance PrettyPrinter KeyActionType where
+    display = show
+
 instance PrettyPrinter Action where
-    display ResetZoom                 = "cA( ResetZoom )"
-    display ZoomIn                    = "cA( ZoomIn )"
-    display ZoomOut                   = "cA( ZoomOut )"
-    display PanLeft                   = "cA( PanLeft )"
-    display PanRight                  = "cA( PanRight )"
-    display PanUp                     = "cA( PanUp )"
-    display PanDown                   = "cA( PanDown )"
+    display (KeyAction tpe)           = "cA( Key "   <> display tpe <> ")"
     display (MouseAction act tpe pos) = "cA( Mouse " <> display act <> " " <> display tpe <> " " <> display pos <> " )"
 
 
@@ -89,21 +90,25 @@ toAction (Mouse (Mouse.Event tpe pos button keyMods)) = case button of
         Mouse.Moved    -> Just (MouseAction Pan Dragging pos)
     _                  -> Nothing
 toAction (Keyboard (Keyboard.Event Keyboard.Press char)) = case char of
-    '='   -> Just ZoomIn
-    '+'   -> Just ZoomIn
-    '-'   -> Just ZoomOut
-    'z'   -> Just ResetZoom
+    '='   -> Just $ KeyAction ZoomIn
+    '+'   -> Just $ KeyAction ZoomIn
+    '-'   -> Just $ KeyAction ZoomOut
+    'z'   -> Just $ KeyAction ResetZoom
     _     -> Nothing
 toAction (Keyboard (Keyboard.Event Keyboard.Down char)) = case char of
-    '\37' -> Just PanLeft
-    '\39' -> Just PanRight
-    '\38' -> Just PanUp
-    '\40' -> Just PanDown
+    '\37' -> Just $ KeyAction PanLeft
+    '\39' -> Just $ KeyAction PanRight
+    '\38' -> Just $ KeyAction PanUp
+    '\40' -> Just $ KeyAction PanDown
     _     -> Nothing
 toAction _ = Nothing
 
-minCamFactor = 0.2
-maxCamFactor = 4.0
+minCamFactor = 0.14
+maxCamFactor = 8.0
+
+
+-- workspace node positions -> not changing while zooming
+
 
 
 instance ActionStateUpdater Action where
@@ -120,23 +125,23 @@ instance ActionStateUpdater Action where
         oldCamFactor                   = oldState ^. Global.camera . Camera.camFactor
         oldDrag                        = oldState ^. Global.camera . Camera.history
         newAction                      = Just newActionCandidate
-        newCamPan                      = Vector2 newCamPanX newCamPanY
-        newCamPanX                     = case newActionCandidate of
-            PanLeft                   -> oldCamPan ^. x - 10.0 / oldCamFactor
-            PanRight                  -> oldCamPan ^. x + 10.0 / oldCamFactor
-            MouseAction Zoom _ _      -> oldCamPan ^. x + deltaPan ^. x
-            MouseAction Pan  _ _      -> oldCamPan ^. x + mousePan ^. x
-            _                         -> oldCamPan ^. x
-        newCamPanY                     = case newActionCandidate of
-            PanUp                     -> oldCamPan ^. y + 10.0 / oldCamFactor
-            PanDown                   -> oldCamPan ^. y - 10.0 / oldCamFactor
-            MouseAction Zoom _ _      -> oldCamPan ^. y + deltaPan ^. y
-            MouseAction Pan  _ _      -> oldCamPan ^. y + mousePan ^. y
-            _                         -> oldCamPan ^. y
+        newCamPan                      = case newActionCandidate of
+            MouseAction Zoom _ _      -> oldCamPan + zoomPan
+            MouseAction Pan  _ _      -> oldCamPan + dragPan
+            KeyAction keyAct          -> Vector2 newCamPanX newCamPanY where
+                newCamPanX            = case keyAct of
+                    PanLeft           -> oldCamPan ^. x - 10.0 / oldCamFactor
+                    PanRight          -> oldCamPan ^. x + 10.0 / oldCamFactor
+                    _                 -> oldCamPan ^. x
+                newCamPanY             = case keyAct of
+                    PanUp             -> oldCamPan ^. y + 10.0 / oldCamFactor
+                    PanDown           -> oldCamPan ^. y - 10.0 / oldCamFactor
+                    _                 -> oldCamPan ^. y
+            _                         -> oldCamPan
         newCamFactor                   = case newActionCandidate of
-            ResetZoom                 -> 1.0
-            ZoomIn                    -> max minCamFactor $ oldCamFactor / 1.1
-            ZoomOut                   -> min maxCamFactor $ oldCamFactor * 1.1
+            KeyAction ResetZoom       -> 1.0
+            KeyAction ZoomIn          -> max minCamFactor $ oldCamFactor / 1.1
+            KeyAction ZoomOut         -> min maxCamFactor $ oldCamFactor * 1.1
             MouseAction Zoom _ _      -> min maxCamFactor . max minCamFactor $ oldCamFactor * (1.0 + camDragFactorDelta)
             _                         -> oldCamFactor
         newDrag                        = case newActionCandidate of
@@ -150,18 +155,18 @@ instance ActionStateUpdater Action where
                 StopDrag              -> Nothing
             _                         -> Nothing
         -- TODO: 1) name the identifiers below appropriately
-        --       2) fix deltaPan for mouse zooming
+        --       2) fix zoomPan for mouse zooming
         --       3) why it works properly even with screenSize = (0, 0)   (uninitialized initial value)
-        (camDragFactorDelta, deltaPan, newUpdDrag)
+        (camDragFactorDelta, zoomPan, newUpdDrag)
                                        = case newDrag of
-                Just drag             -> (camDragFactorDelta, deltaPan, newUpdDrag) where
+                Just drag             -> (camDragFactorDelta, zoomPan, newUpdDrag) where
                     camDragFactorDelta = (fromIntegral $ delta ^. x + delta ^. y) / 512.0
                     delta              = Vector2 ( drag ^. dragCurrentPos . x - drag ^. dragPreviousPos . x)
                                                  (-drag ^. dragCurrentPos . y + drag ^. dragPreviousPos . y)
-                    deltaPan           = Vector2 0.0 0.0 -- Vector2 (fromIntegral $ drag ^. dragStartPos . x) * camDragFactorDelta (fromIntegral $ drag ^. dragStartPos . y) * camDragFactorDelta
-                    newUpdDrag         = newDrag -- Just $ drag & Camera.dragStartPos +~ deltaPan
+                    zoomPan            = Vector2 0.0 0.0 -- Vector2 (fromIntegral $ drag ^. dragStartPos . x) * camDragFactorDelta (fromIntegral $ drag ^. dragStartPos . y) * camDragFactorDelta
+                    newUpdDrag         = newDrag -- Just $ drag & Camera.dragStartPos +~ zoomPan
                 Nothing               -> (0.0, Vector2 0.0 0.0, newDrag)
-        mousePan                       = case newDrag of
+        dragPan                        = case newDrag of
                 Just drag             -> prevWorkspace - currWorkspace where
                     currWorkspace      = screenToWorkspace screenSize oldCamFactor oldCamPan $ drag ^. dragCurrentPos
                     prevWorkspace      = screenToWorkspace screenSize oldCamFactor oldCamPan $ drag ^. dragPreviousPos

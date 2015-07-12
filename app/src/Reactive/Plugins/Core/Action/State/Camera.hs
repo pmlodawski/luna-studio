@@ -6,6 +6,7 @@ import           Data.Default
 import           Data.Monoid
 
 import           Object.Object
+import           Utils.Vector
 import           Utils.PrettyPrinter
 
 

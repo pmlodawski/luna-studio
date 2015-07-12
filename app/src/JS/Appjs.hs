@@ -5,7 +5,7 @@ import Control.Monad
 import           JS.Bindings
 import           JS.Converters
 import           JS.Utils
-import           Object.Object  hiding ( setSelected )
+import           Utils.Vector
 
 setNodeUnselected :: Int -> IO ()
 setNodeUnselected nodeId =

@@ -8,7 +8,6 @@ module Reactive.Plugins.Core.Action.Action where
 
 import           Data.Monoid          ( (<>) )
 import           Data.Default
--- import
 import           Data.Maybe           ( isJust )
 import           Data.Functor
 import           Control.Lens
@@ -18,7 +17,7 @@ import           Utils.PrettyPrinter
 
 data WithState act st = WithState { _action :: act
                                   , _state  :: st
-                                  } -- deriving (Show)
+                                  } deriving (Eq, Show)
 
 type WithStateMaybe act st = WithState (Maybe act) st
 

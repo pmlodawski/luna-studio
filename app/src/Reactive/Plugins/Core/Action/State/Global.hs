@@ -8,6 +8,7 @@ import           Control.Lens
 import           Object.Object
 import qualified Object.Node    as Node     ( position )
 import           Object.Node    hiding      ( position )
+import           Utils.Vector
 import           Utils.PrettyPrinter
 
 import qualified Reactive.Plugins.Core.Action.State.Camera            as Camera

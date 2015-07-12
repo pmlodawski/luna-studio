@@ -11,6 +11,7 @@ import qualified Event.Mouse    as Mouse
 import qualified Event.Window   as Window
 import           Event.Event
 import           Event.WithObjects
+import           Utils.Vector
 import           Utils.PrettyPrinter
 import           Reactive.Plugins.Core.Action.Action
 import qualified Reactive.Plugins.Core.Action.State.Global   as Global

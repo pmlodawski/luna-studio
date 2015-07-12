@@ -10,6 +10,7 @@ import           Control.Lens
 import           Object.Dynamic
 import           Object.Object
 import           Event.Keyboard       ( KeyMods(..) )
+import           Utils.Vector
 import           Utils.PrettyPrinter
 
 

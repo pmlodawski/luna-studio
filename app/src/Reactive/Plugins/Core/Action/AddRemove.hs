@@ -21,6 +21,7 @@ import qualified Event.Keyboard as Keyboard
 import           Event.Mouse    hiding      ( Event, WithObjects )
 import qualified Event.Mouse    as Mouse
 import           Event.Event
+import           Utils.Vector
 import           Utils.Wrapper
 import           Utils.PrettyPrinter
 import           Reactive.Plugins.Core.Action.Action

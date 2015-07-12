@@ -50,8 +50,8 @@ instance PrettyPrinter ActionType where
     display = show
 
 instance PrettyPrinter Action where
-    display UnselectAll = "sA( UnselectAll )"
-    display SelectAll   = "sA( SelectAll )"
+    display UnselectAll              = "sA( UnselectAll )"
+    display SelectAll                = "sA( SelectAll )"
     display (SelectAction tpe node)  = "sA( " <> display tpe <> " " <> display node <> " )"
 
 

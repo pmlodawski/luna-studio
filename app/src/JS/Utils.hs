@@ -3,7 +3,7 @@ module JS.Utils where
 import Control.Lens
 
 import JS.Bindings
-import Object.Object
+import Utils.Vector
 
 -- -1      -  +1      NormalizedGl (Cartesian)
 -- -scr/2  -  +scr/2  Gl           (Cartesian)

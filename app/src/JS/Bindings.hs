@@ -3,29 +3,29 @@
 
 module JS.Bindings where
 
-import Data.IORef         ( IORef, newIORef )
-import Data.Maybe         ( maybeToList )
-import Data.Monoid        ( (<>) )
-import Data.Dynamic
+import           Data.IORef          ( IORef, newIORef )
+import           Data.Maybe          ( maybeToList )
+import           Data.Monoid         ( (<>) )
+import           Data.Dynamic
+import           Data.Text.Lazy      ( Text )
+import qualified Data.Text.Lazy      as Text
 
-import Control.Monad.Trans ( liftIO )
+import           GHCJS.Foreign
+import           GHCJS.DOM.EventM
+import           GHCJS.DOM           ( currentDocument )
+import           GHCJS.DOM.Document  ( documentGetBody )
+import           GHCJS.DOM.Element   ( Element, IsElement )
+import           GHCJS.DOM.Node      ( nodeAppendChild )
+import           GHCJS.Types         ( JSRef, JSArray, JSString )
+import           GHCJS.DOM.Types     ( UIEvent, IsDOMWindow, IsUIEvent, unUIEvent, toUIEvent )
 
-import GHCJS.Foreign
-import GHCJS.DOM.EventM
-import GHCJS.DOM          ( currentDocument )
-import GHCJS.DOM.Document ( documentGetBody )
-import GHCJS.DOM.Element  ( Element, IsElement )
-import GHCJS.DOM.Node     ( nodeAppendChild )
-import GHCJS.Types        ( JSRef, JSArray, JSString )
-import GHCJS.DOM.Types    ( UIEvent, IsDOMWindow, IsUIEvent, unUIEvent, toUIEvent )
-import JS.Converters
+import           JS.Converters
+import           Object.Object       ( Object(..) )
+import           Object.Node         ( Node(..) )
+import           Utils.Vector
+import           Utils.PrettyPrinter
 
-import Object.Object      ( Vector2(..), Object(..) )
-import Object.Node        ( Node(..) )
-import Utils.PrettyPrinter
 
-import qualified Data.Text.Lazy as Text
-import           Data.Text.Lazy ( Text )
 
 -----------------------------------------------------------------------
 -- Enough to interact with virtual-dom
