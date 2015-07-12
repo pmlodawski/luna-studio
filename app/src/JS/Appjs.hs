@@ -5,7 +5,7 @@ import Control.Monad
 import           JS.Bindings
 import           JS.Converters
 import           JS.Utils
-import qualified Object.Object as Object
+import           Object.Object  hiding ( setSelected )
 
 setNodeUnselected :: Int -> IO ()
 setNodeUnselected nodeId =
@@ -46,6 +46,6 @@ dragNode nodeId x y = when (nodeId >= 0) $ do
     height    <- innerHeight
     camFactor <- getCamFactor
     camPan    <- getCamPan
-    let (wx, wy) = screenToWorkspace (Object.Point width height) camFactor camPan (Object.Point x y)
+    let (wx, wy) = screenToWorkspace (Vector2 width height) camFactor camPan (Vector2 x y)
     moveTo node wx wy
 

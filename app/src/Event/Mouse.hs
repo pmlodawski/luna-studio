@@ -16,7 +16,7 @@ import           Utils.PrettyPrinter
 data Type = Pressed | Released | Moved deriving (Eq, Show, Typeable)
 
 data Event = Event { _tpe      :: Type
-                   , _position :: Point
+                   , _position :: Vector2 Int
                    , _button   :: Int
                    , _keyMods  :: KeyMods
                    } deriving (Eq, Show, Typeable)

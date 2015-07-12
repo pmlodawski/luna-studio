@@ -20,12 +20,12 @@ import GHCJS.Types        ( JSRef, JSArray, JSString )
 import GHCJS.DOM.Types    ( UIEvent, IsDOMWindow, IsUIEvent, unUIEvent, toUIEvent )
 import JS.Converters
 
-import Object.Object      ( Point(..), Object(..) )
+import Object.Object      ( Vector2(..), Object(..) )
 import Object.Node        ( Node(..) )
 import Utils.PrettyPrinter
 
 import qualified Data.Text.Lazy as Text
-import           Data.Text.Lazy (Text)
+import           Data.Text.Lazy ( Text )
 
 -----------------------------------------------------------------------
 -- Enough to interact with virtual-dom
@@ -176,7 +176,7 @@ foreign import javascript unsafe "$1.renderExamplePlot()"
 
 getNodeFromTuple4 :: (Int, Int, Int, Int) -> Maybe Node
 getNodeFromTuple4 (nodeId, sel, x, y)
-    | nodeId >= 0 = Just $ Node nodeId (sel >= 1) (Point x y)
+    | nodeId >= 0 = Just $ Node nodeId (sel >= 1) (Vector2 x y)
     | otherwise = Nothing
 
 (.:)  :: (x -> y) -> (a -> b -> x) -> a -> b -> y

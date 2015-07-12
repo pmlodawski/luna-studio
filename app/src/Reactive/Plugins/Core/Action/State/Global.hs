@@ -18,8 +18,8 @@ import qualified Reactive.Plugins.Core.Action.State.NodeSearcher      as NodeSea
 
 
 data State = State { _iteration    :: Integer
-                   , _mousePos     :: Point
-                   , _screenSize   :: Point
+                   , _mousePos     :: Vector2 Int
+                   , _screenSize   :: Vector2 Int
                    , _nodes        :: NodeCollection
                    , _camera       :: Camera.State
                    , _addRemove    :: AddRemove.State
@@ -31,7 +31,7 @@ data State = State { _iteration    :: Integer
 makeLenses ''State
 
 instance Default State where
-    def = State def (Point 400 200) def def def def def def def
+    def = State def (Vector2 400 200) def def def def def def def
 
 instance PrettyPrinter State where
     display (State iteration mousePos screenSize nodes camera addRemove selection drag nodeSearcher) =

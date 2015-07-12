@@ -15,7 +15,7 @@ type NodeId = ID
 
 data Node = Node { _ident    :: NodeId
                  , _selected :: Bool
-                 , _position :: Point
+                 , _position :: Vector2 Int
                  } deriving (Eq, Show, Typeable)
 
 type NodeCollection   = [Node]
@@ -35,7 +35,7 @@ isNode :: Object Dynamic -> Bool
 isNode obj = isJust (unpackDynamic obj :: Maybe Node)
 
 
-getNodesAt :: Point -> Double -> NodeCollection -> NodeCollection
+getNodesAt :: Vector2 Int -> Double -> NodeCollection -> NodeCollection
 getNodesAt pos camFactor nodes = filter closeEnough nodes where
     radiusSquared    = 900.0 * camFactor
     closeEnough node = (fromIntegral distSquared) < radiusSquared where

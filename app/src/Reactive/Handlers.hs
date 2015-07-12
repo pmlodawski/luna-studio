@@ -38,11 +38,11 @@ readKeyMods = do
 readButton :: (IsDOMWindow self) => EventM GHCJS.DOM.MouseEvent.MouseEvent self Int
 readButton = uiWhich
 
-readMousePos :: (IsDOMWindow self) => EventM GHCJS.DOM.MouseEvent.MouseEvent self Point
+readMousePos :: (IsDOMWindow self) => EventM GHCJS.DOM.MouseEvent.MouseEvent self (Vector2 Int)
 readMousePos = --convert <$> mouseClientXY
     do
         (x, y) <- mouseClientXY
-        return $ Point x y
+        return $ Vector2 x y
 
 mouseDownHandler :: AddHandler (Event Dynamic)
 mouseDownHandler = AddHandler $ \h -> do

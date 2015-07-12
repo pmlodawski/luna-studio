@@ -11,14 +11,14 @@ import Object.Object
 --  0      -   scr    Screen
 
 
-screenToGl :: Point -> Point -> (Double, Double)
-screenToGl (Point screenSizeX screenSizeY) (Point x y) =
+screenToGl :: Vector2 Int -> Vector2 Int -> (Double, Double)
+screenToGl (Vector2 screenSizeX screenSizeY) (Vector2 x y) =
     ( fromIntegral x - (fromIntegral $ screenSizeX) / 2.0,
      -fromIntegral y + (fromIntegral $ screenSizeY) / 2.0)
 
 
-screenToNormalizedGl :: Point -> Point -> (Double, Double)
-screenToNormalizedGl (Point screenSizeX screenSizeY) (Point x y) =
+screenToNormalizedGl :: Vector2 Int -> Vector2 Int -> (Double, Double)
+screenToNormalizedGl (Vector2 screenSizeX screenSizeY) (Vector2 x y) =
     ( (fromIntegral x / fromIntegral screenSizeX) * 2.0 - 1.0,
      -(fromIntegral y / fromIntegral screenSizeY) * 2.0 + 1.0)
 
@@ -29,7 +29,7 @@ glToWorkspace camFactor (camPanX, camPanY) (x, y) =
      y / camFactor + camPanY)
 
 
-screenToWorkspace :: Point -> Double -> (Double, Double) -> Point -> (Double, Double)
+screenToWorkspace :: Vector2 Int -> Double -> (Double, Double) -> Vector2 Int -> (Double, Double)
 screenToWorkspace screenSize camFactor camPan pos =
     glToWorkspace camFactor camPan $ screenToGl screenSize pos
 

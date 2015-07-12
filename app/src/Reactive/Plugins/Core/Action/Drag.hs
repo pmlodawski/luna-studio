@@ -36,7 +36,7 @@ data ActionType = StartDrag
                 deriving (Eq, Show)
 
 data Action = DragAction { _actionType :: ActionType
-                         , _actionPos  :: Point
+                         , _actionPos  :: Vector2 Int
                          }
             deriving (Eq, Show)
 
@@ -65,7 +65,7 @@ toAction (Mouse (Mouse.Event tpe pos button keyMods)) state = case button of
           isNoNode         = null objects
 toAction _ _ = Nothing
 
-moveNodes :: Point -> NodeCollection -> NodeCollection
+moveNodes :: Vector2 Int -> NodeCollection -> NodeCollection
 moveNodes delta = fmap $ \node -> if node ^. selected then node & Node.position +~ delta else node
 
 
@@ -117,7 +117,7 @@ instance ActionUIUpdater Action where
 
 
 moveNodeUI :: Node -> IO ()
-moveNodeUI (Node ident _ (Point x y)) = dragNode ident x y
+moveNodeUI (Node ident _ (Vector2 x y)) = dragNode ident x y
 
 moveNodesUI :: NodeCollection -> IO ()
 moveNodesUI nodes  = mapM_ moveNodeUI nodes

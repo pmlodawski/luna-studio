@@ -9,9 +9,9 @@ import           Object.Object
 import           Utils.PrettyPrinter
 
 
-data DragHistory = DragHistory { _dragStartPos    :: Point
-                               , _dragPreviousPos :: Point
-                               , _dragCurrentPos  :: Point
+data DragHistory = DragHistory { _dragStartPos    :: Vector2 Int
+                               , _dragPreviousPos :: Vector2 Int
+                               , _dragCurrentPos  :: Vector2 Int
                                } deriving (Eq, Show)
 
 

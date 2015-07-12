@@ -17,8 +17,8 @@ import qualified Reactive.Plugins.Core.Action.State.Global   as Global
 
 
 
-data Action = Moving   { _pos   :: Point }
-            | Resizing { _size  :: Point }
+data Action = Moving   { _pos   :: Vector2 Int }
+            | Resizing { _size  :: Vector2 Int }
             deriving (Eq, Show)
 
 
@@ -34,7 +34,7 @@ toAction (Mouse (Mouse.Event tpe pos _ _)) = case tpe of
     Mouse.Moved     -> Just $ Moving pos
     _               -> Nothing
 toAction (Window (Window.Event tpe width height)) = case tpe of
-    Window.Resized  -> Just $ Resizing $ Point width height
+    Window.Resized  -> Just $ Resizing $ Vector2 width height
 toAction _           = Nothing
 
 

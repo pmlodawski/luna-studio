@@ -20,25 +20,28 @@ instance PrettyPrinter a => PrettyPrinter (Object a) where
 
 type ID = Int
 
-data Point = Point { _x :: Int
-                   , _y :: Int
-                   } deriving (Eq, Show, Typeable)
+data Vector2 a = Vector2 { _x :: a
+                         , _y :: a
+                         } deriving (Eq, Show)
 
-makeLenses ''Point
+makeLenses ''Vector2
 
-instance Default Point where
-    def = Point 0 0
+instance Default a => Default (Vector2 a) where
+    def = Vector2 def def
 
-instance Num Point where
-    (Point x1 y1) + (Point x2 y2) = Point (x1 + x2) (y1 + y2)
-    (Point x1 y1) - (Point x2 y2) = Point (x1 - x2) (y1 - y2)
-    (Point x1 y1) * (Point x2 y2) = Point (x1 * x2) (y1 * y2)
-    abs    (Point x y)            = Point (abs    x) (abs    y)
-    signum (Point x y)            = Point (signum x) (signum y)
-    fromInteger i                 = let val = fromInteger i in Point val val
+instance Num a => Num (Vector2 a) where
+    (Vector2 x1 y1) + (Vector2 x2 y2) = Vector2 (x1 + x2) (y1 + y2)
+    (Vector2 x1 y1) - (Vector2 x2 y2) = Vector2 (x1 - x2) (y1 - y2)
+    (Vector2 x1 y1) * (Vector2 x2 y2) = Vector2 (x1 * x2) (y1 * y2)
+    abs    (Vector2 x y)              = Vector2 (abs    x) (abs    y)
+    signum (Vector2 x y)              = Vector2 (signum x) (signum y)
+    fromInteger i                     = let val = fromInteger i in Vector2 val val
 
-instance PrettyPrinter Point where
-    display (Point x y) = "(" <> show x <> "," <> show y <> ")"
+instance PrettyPrinter a => PrettyPrinter (Vector2 a) where
+    display (Vector2 x y) = "(" <> display x <> "," <> display y <> ")"
+
+
+
 
 class Selectable a where
     setSelected       :: a -> Bool -> a

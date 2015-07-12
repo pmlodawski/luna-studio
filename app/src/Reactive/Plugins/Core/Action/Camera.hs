@@ -48,7 +48,7 @@ data Action = ResetZoom
             | PanDown
             | MouseAction { _actionType :: MouseActionType
                           , _dragType   :: DragType
-                          , _zoomPos    :: Point
+                          , _zoomPos    :: Vector2 Int
                           }
             deriving (Eq, Show)
 
@@ -161,7 +161,7 @@ instance ActionStateUpdater Action where
                     deltaY             = -drag ^. dragCurrentPos . y + drag ^. dragPreviousPos . y
                     deltaPanX          = 0 -- (fromIntegral $ drag ^. dragStartPos . x) * camDragFactorDelta
                     deltaPanY          = 0 -- (fromIntegral $ drag ^. dragStartPos . y) * camDragFactorDelta
-                    deltaPan           = Point (round deltaPanX) (round deltaPanY)
+                    deltaPan           = Vector2 (round deltaPanX) (round deltaPanY)
                     newUpdDrag         = newDrag -- Just $ drag & Camera.dragStartPos +~ deltaPan
                 Nothing               -> (0.0, 0.0, 0.0, newDrag)
         (mousePanX, mousePanY)         = case newDrag of
