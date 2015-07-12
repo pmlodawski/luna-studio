@@ -113,27 +113,26 @@ instance ActionStateUpdater Action where
         Nothing     -> ActionUI NoAction newState
         where
         newState                       = oldState &  Global.iteration +~ 1
-                                                  &  Global.camera . Camera.camPanX   .~ newCamPanX
-                                                  &  Global.camera . Camera.camPanY   .~ newCamPanY
+                                                  &  Global.camera . Camera.camPan    .~ newCamPan
                                                   &  Global.camera . Camera.camFactor .~ newCamFactor
                                                   &  Global.camera . Camera.history   .~ newUpdDrag
-        oldCamPanX                     = oldState ^. Global.camera . Camera.camPanX
-        oldCamPanY                     = oldState ^. Global.camera . Camera.camPanY
+        oldCamPan                      = oldState ^. Global.camera . Camera.camPan
         oldCamFactor                   = oldState ^. Global.camera . Camera.camFactor
         oldDrag                        = oldState ^. Global.camera . Camera.history
         newAction                      = Just newActionCandidate
+        newCamPan                      = Vector2 newCamPanX newCamPanY
         newCamPanX                     = case newActionCandidate of
-            PanLeft                   -> oldCamPanX - 10.0 / oldCamFactor
-            PanRight                  -> oldCamPanX + 10.0 / oldCamFactor
-            MouseAction Zoom _ _      -> oldCamPanX + deltaPanX
-            MouseAction Pan  _ _      -> oldCamPanX + mousePanX
-            _                         -> oldCamPanX
+            PanLeft                   -> oldCamPan ^. x - 10.0 / oldCamFactor
+            PanRight                  -> oldCamPan ^. x + 10.0 / oldCamFactor
+            MouseAction Zoom _ _      -> oldCamPan ^. x + deltaPan ^. x
+            MouseAction Pan  _ _      -> oldCamPan ^. x + mousePan ^. x
+            _                         -> oldCamPan ^. x
         newCamPanY                     = case newActionCandidate of
-            PanUp                     -> oldCamPanY + 10.0 / oldCamFactor
-            PanDown                   -> oldCamPanY - 10.0 / oldCamFactor
-            MouseAction Zoom _ _      -> oldCamPanY + deltaPanY
-            MouseAction Pan  _ _      -> oldCamPanY + mousePanY
-            _                         -> oldCamPanY
+            PanUp                     -> oldCamPan ^. y + 10.0 / oldCamFactor
+            PanDown                   -> oldCamPan ^. y - 10.0 / oldCamFactor
+            MouseAction Zoom _ _      -> oldCamPan ^. y + deltaPan ^. y
+            MouseAction Pan  _ _      -> oldCamPan ^. y + mousePan ^. y
+            _                         -> oldCamPan ^. y
         newCamFactor                   = case newActionCandidate of
             ResetZoom                 -> 1.0
             ZoomIn                    -> max minCamFactor $ oldCamFactor / 1.1
@@ -153,29 +152,26 @@ instance ActionStateUpdater Action where
         -- TODO: 1) name the identifiers below appropriately
         --       2) fix deltaPan for mouse zooming
         --       3) why it works properly even with screenSize = (0, 0)   (uninitialized initial value)
-        (camDragFactorDelta, deltaPanX, deltaPanY, newUpdDrag)
+        (camDragFactorDelta, deltaPan, newUpdDrag)
                                        = case newDrag of
-                Just drag             -> (camDragFactorDelta, deltaPanX, deltaPanY, newUpdDrag) where
-                    camDragFactorDelta = (fromIntegral $ deltaX + deltaY) / 512.0
-                    deltaX             =  drag ^. dragCurrentPos . x - drag ^. dragPreviousPos . x
-                    deltaY             = -drag ^. dragCurrentPos . y + drag ^. dragPreviousPos . y
-                    deltaPanX          = 0 -- (fromIntegral $ drag ^. dragStartPos . x) * camDragFactorDelta
-                    deltaPanY          = 0 -- (fromIntegral $ drag ^. dragStartPos . y) * camDragFactorDelta
-                    deltaPan           = Vector2 (round deltaPanX) (round deltaPanY)
+                Just drag             -> (camDragFactorDelta, deltaPan, newUpdDrag) where
+                    camDragFactorDelta = (fromIntegral $ delta ^. x + delta ^. y) / 512.0
+                    delta              = Vector2 ( drag ^. dragCurrentPos . x - drag ^. dragPreviousPos . x)
+                                                 (-drag ^. dragCurrentPos . y + drag ^. dragPreviousPos . y)
+                    deltaPan           = Vector2 0.0 0.0 -- Vector2 (fromIntegral $ drag ^. dragStartPos . x) * camDragFactorDelta (fromIntegral $ drag ^. dragStartPos . y) * camDragFactorDelta
                     newUpdDrag         = newDrag -- Just $ drag & Camera.dragStartPos +~ deltaPan
-                Nothing               -> (0.0, 0.0, 0.0, newDrag)
-        (mousePanX, mousePanY)         = case newDrag of
-                Just drag             -> (fst prevWorkspace - fst currWorkspace, snd prevWorkspace - snd currWorkspace) where
-                    currWorkspace      = screenToWorkspace screenSize oldCamFactor (oldCamPanX, oldCamPanY) $ drag ^. dragCurrentPos
-                    prevWorkspace      = screenToWorkspace screenSize oldCamFactor (oldCamPanX, oldCamPanY) $ drag ^. dragPreviousPos
+                Nothing               -> (0.0, Vector2 0.0 0.0, newDrag)
+        mousePan                       = case newDrag of
+                Just drag             -> prevWorkspace - currWorkspace where
+                    currWorkspace      = screenToWorkspace screenSize oldCamFactor oldCamPan $ drag ^. dragCurrentPos
+                    prevWorkspace      = screenToWorkspace screenSize oldCamFactor oldCamPan $ drag ^. dragPreviousPos
                     screenSize         = oldState ^. Global.screenSize
-                Nothing               -> (0.0, 0.0)
+                Nothing               -> Vector2 0.0 0.0
 
 
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = do
-        let cPanX        = state ^. Global.camera . Camera.camPanX
-            cPanY        = state ^. Global.camera . Camera.camPanY
+        let cPan         = state ^. Global.camera . Camera.camPan
             cFactor      = state ^. Global.camera . Camera.camFactor
             screenWidth  = state ^. Global.screenSize . x
             screenHeight = state ^. Global.screenSize . y
@@ -187,9 +183,9 @@ instance ActionUIUpdater Action where
             camBottom    = appY cameraBottom
             hX           = appX htmlX
             hY           = appY htmlY
-            appX      f  = f cFactor cPanX hScreenX
-            appY      f  = f cFactor cPanY hScreenY
-        updateCamera cFactor cPanX cPanY camLeft camRight camTop camBottom
+            appX      f  = f cFactor (cPan ^. x) hScreenX
+            appY      f  = f cFactor (cPan ^. y) hScreenY
+        updateCamera cFactor (cPan ^. x) (cPan ^. y) camLeft camRight camTop camBottom
         updateHtmCanvasPanPos hX hY cFactor
         updateProjectionMatrix
 

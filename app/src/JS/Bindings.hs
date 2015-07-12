@@ -111,11 +111,11 @@ foreign import javascript unsafe "common.commonUniforms.camPan.value.y"
     getCamPanY :: IO Double
 
 
-getCamPan :: IO (Double, Double)
+getCamPan :: IO (Vector2 Double)
 getCamPan = do
     panX <- getCamPanX
     panY <- getCamPanY
-    return (panX, panY)
+    return $ Vector2 panX panY
 
 foreign import javascript unsafe "common.commonUniforms.camFactor.value"
     getCamFactor :: IO Double

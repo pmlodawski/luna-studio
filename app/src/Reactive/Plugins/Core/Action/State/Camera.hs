@@ -15,8 +15,7 @@ data DragHistory = DragHistory { _dragStartPos    :: Vector2 Int
                                } deriving (Eq, Show)
 
 
-data State = State { _camPanX     :: Double
-                   , _camPanY     :: Double
+data State = State { _camPan      :: Vector2 Double
                    , _camFactor   :: Double
                    , _history     :: Maybe DragHistory
                    } deriving (Eq, Show)
@@ -26,12 +25,11 @@ makeLenses ''DragHistory
 
 
 instance Default State where
-    def = State 0.0 0.0 1.0 def
+    def = State def 1.0 def
 
 instance PrettyPrinter State where
-    display (State camPanX camPanY camFactor history) =
-                                                "cS( " <> display camPanX
-                                                <> " " <> display camPanY
+    display (State camPan camFactor history) =
+                                                "cS( " <> display camPan
                                                 <> " " <> display camFactor
                                                 <> " " <> display history
                                                 <> " )"
