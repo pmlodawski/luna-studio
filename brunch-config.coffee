@@ -90,7 +90,6 @@ exports.config =
             bundler.external('malihu-custom-scrollbar-plugin')
             bundler.require('./app/common', {expose: 'common'})
             bundler.require('./app/app', {expose: 'app'})
-            bundler.require('./app/utils', {expose: 'utils'})
             bundler.require('./app/common', {expose: 'common'})
 
 
