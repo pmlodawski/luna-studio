@@ -40,7 +40,7 @@ isNode obj = isJust (unpackDynamic obj :: Maybe Node)
 getNodesAt :: Vector2 Int -> Utils.Camera -> NodeCollection -> NodeCollection
 getNodesAt posScr camera nodes = filter closeEnough nodes where
     pos              = Utils.screenToWorkspace camera posScr
-    radiusSquared    = 900.0 * camera ^. factor
+    radiusSquared    = 900.0
     closeEnough node = distSquared < radiusSquared where
         distSquared  = (dist ^. x) ^ 2 + (dist ^. y) ^ 2
         dist         = (node ^. position - pos)
