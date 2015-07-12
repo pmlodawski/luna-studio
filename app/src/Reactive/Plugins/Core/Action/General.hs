@@ -4,6 +4,7 @@ import           Control.Lens
 import           Data.Maybe
 import           Data.Monoid
 
+import           JS.Bindings
 import           Object.Object
 import           Object.Node    hiding      ( position )
 import           Event.Mouse    hiding      ( Event, WithObjects )
@@ -14,6 +15,7 @@ import           Event.WithObjects
 import           Utils.Vector
 import           Utils.PrettyPrinter
 import           Reactive.Plugins.Core.Action.Action
+import qualified Reactive.Plugins.Core.Action.Camera         as Camera
 import qualified Reactive.Plugins.Core.Action.State.Global   as Global
 
 
@@ -49,4 +51,7 @@ instance ActionStateUpdater Action where
 
 
 instance ActionUIUpdater Action where
-    updateUI (WithState action state) = return ()
+    updateUI (WithState action state) = case action of
+        Resizing size -> Camera.syncCamera state
+                      >> updateScreenSize (size ^. x) (size ^. y)
+        _             -> return ()

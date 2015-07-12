@@ -13,17 +13,19 @@ void main() {
   float camFactorDelta = camFactor - 1.0;
   float rimCamFactor  = 1.0;
   float blurCamFactor = 1.0;
-  if (camFactor > 1.0) {
-    rimCamFactor  += camFactorDelta / 12.0;
-    blurCamFactor += camFactorDelta / 2.5;
-  } else if (camFactor < 1.0) {
-    rimCamFactor  += camFactorDelta / 1.3;
-    blurCamFactor += camFactorDelta / 1.16;
+  if (camFactorDelta > 0.0) {
+    rimCamFactor  += camFactorDelta / 50.0;
+    blurCamFactor += camFactorDelta / 1.8;
+  } else if (camFactorDelta < 0.0) {
+    rimCamFactor  += camFactorDelta / 5.0;
+    blurCamFactor += camFactorDelta / 1.0;
   }
-  float r4 = 900.0;
-  float r3 = r4 -  80.0 / blurCamFactor;
-  float r1 = r4 - 310.0 /  rimCamFactor;
-  float r2 = r1 +  80.0 / blurCamFactor;
+  float blurWidth = 60.0;
+  float rimWidth = 200.0;
+  float r3 = 840.0;
+  float r4 = r3 + blurWidth / blurCamFactor;
+  float r2 = r3 -  rimWidth /  rimCamFactor;
+  float r1 = r2 - blurWidth / blurCamFactor;
 
   float d_blur_r34 = 1.0 - (dist_squared - r3) / (r4 - r3);
   float d_blur_r12 = (dist_squared - r1) / (r2 - r1);

@@ -103,11 +103,8 @@ toAction (Keyboard (Keyboard.Event Keyboard.Down char)) = case char of
     _     -> Nothing
 toAction _ = Nothing
 
-minCamFactor = 0.14
+minCamFactor = 0.2
 maxCamFactor = 8.0
-
-
--- workspace node positions -> not changing while zooming
 
 
 
@@ -169,30 +166,33 @@ instance ActionStateUpdater Action where
                 Nothing               -> (0.0, Vector2 0.0 0.0, newDrag)
         dragPan                        = case newDrag of
                 Just drag             -> prevWorkspace - currWorkspace where
-                    camera             = Utils.Camera screenSize oldCamPan oldCamFactor
+                    camera             = Global.toCamera oldState
                     currWorkspace      = Utils.screenToWorkspace camera $ drag ^. dragCurrentPos
                     prevWorkspace      = Utils.screenToWorkspace camera $ drag ^. dragPreviousPos
-                    screenSize         = oldState ^. Global.screenSize
                 Nothing               -> Vector2 0.0 0.0
 
 
 instance ActionUIUpdater Action where
-    updateUI (WithState action state) = do
-        let cPan         = state ^. Global.camera . camera . pan
-            cFactor      = state ^. Global.camera . camera . factor
-            screenSize   = state ^. Global.screenSize
-            hScreen      = (/ 2.0) <$> vector2FromIntegral screenSize
-            camLeft      = appX cameraLeft
-            camRight     = appX cameraRight
-            camTop       = appY cameraTop
-            camBottom    = appY cameraBottom
-            hX           = appX htmlX
-            hY           = appY htmlY
-            appX      f  = f cFactor (cPan ^. x) (hScreen ^. x)
-            appY      f  = f cFactor (cPan ^. y) (hScreen ^. y)
-        updateCamera cFactor (cPan ^. x) (cPan ^. y) camLeft camRight camTop camBottom
-        updateHtmCanvasPanPos hX hY cFactor
-        updateProjectionMatrix
+    updateUI (WithState _ state) = syncCamera state
+
+
+syncCamera :: Global.State -> IO ()
+syncCamera state = do
+    let cPan         = state ^. Global.camera . camera . pan
+        cFactor      = state ^. Global.camera . camera . factor
+        screenSize   = state ^. Global.screenSize
+        hScreen      = (/ 2.0) <$> vector2FromIntegral screenSize
+        camLeft      = appX cameraLeft
+        camRight     = appX cameraRight
+        camTop       = appY cameraTop
+        camBottom    = appY cameraBottom
+        hX           = appX htmlX
+        hY           = appY htmlY
+        appX      f  = f cFactor (cPan ^. x) (hScreen ^. x)
+        appY      f  = f cFactor (cPan ^. y) (hScreen ^. y)
+    updateCamera cFactor (cPan ^. x) (cPan ^. y) camLeft camRight camTop camBottom
+    updateHtmCanvasPanPos hX hY cFactor
+    updateProjectionMatrix
 
 
 cameraLeft, cameraRight, cameraTop, cameraBottom, htmlX, htmlY :: Double -> Double -> Double -> Double

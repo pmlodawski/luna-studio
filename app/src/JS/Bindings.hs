@@ -56,9 +56,8 @@ foreign import javascript unsafe "window.innerHeight"
     innerHeight :: IO Int
 
 
-
-foreign import javascript unsafe "app.init()"
-    init :: IO ()
+foreign import javascript unsafe "app.initializeGl()"
+    initializeGl :: IO ()
 
 foreign import javascript unsafe "app.render()"
     render :: IO ()
@@ -88,6 +87,9 @@ data FunctionNode
 
 foreign import javascript unsafe "common.camera.updateProjectionMatrix()"
     updateProjectionMatrix :: IO ()
+
+foreign import javascript unsafe "app.updateScreenSize($1, $2)"
+    updateScreenSize :: Int -> Int -> IO ()
 
 foreign import javascript unsafe "app.updateHtmCanvasPanPos($1, $2, $3)"
     updateHtmCanvasPanPos :: Double -> Double -> Double -> IO ()

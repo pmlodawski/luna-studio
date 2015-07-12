@@ -100,8 +100,7 @@ instance ActionUIUpdater Action where
         AddAction          -> newNodeAt nodeId px py
             where
             node            = head $ state ^. Global.nodes
-            px              = node ^. Node.position . x
-            py              = node ^. Node.position . y
+            (Vector2 px py) = node ^. Node.position
             nodeId          = node ^. ident
         RemoveFocused      -> removeNode nodeId
                            >> mapM_ setNodeFocused topNodeId
