@@ -1,10 +1,12 @@
 module JS.Appjs where
 
-import Control.Monad
+import           Control.Monad
+import           Control.Lens
 
 import           JS.Bindings
 import           JS.Converters
 import           JS.Utils
+import           Object.Node
 import           Utils.Vector
 
 setNodeUnselected :: Int -> IO ()
@@ -39,13 +41,9 @@ unfocusAllNodes =
     getNodes >>= mapM_ setUnfocused
 
 
-dragNode :: Int -> Vector2 Int -> IO ()
-dragNode nodeId newPos = when (nodeId >= 0) $ do
-    node      <- getNode nodeId  -- TODO: take all values from state
-    width     <- innerWidth
-    height    <- innerHeight
-    camFactor <- getCamFactor
-    camPan    <- getCamPan
-    let (Vector2 wx wy) = screenToWorkspace (Vector2 width height) camFactor camPan newPos
-    moveTo node wx wy
+dragNode :: Camera -> Node -> IO ()
+dragNode camera node = do
+    let (Vector2 wx wy) = screenToWorkspace camera $ node ^. position
+    nodeRef <- getNode $ node ^. ident
+    moveTo nodeRef wx wy
 

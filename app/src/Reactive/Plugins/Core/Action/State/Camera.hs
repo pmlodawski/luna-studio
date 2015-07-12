@@ -16,8 +16,7 @@ data DragHistory = DragHistory { _dragStartPos    :: Vector2 Int
                                } deriving (Eq, Show)
 
 
-data Camera = Camera { _screenSize :: Vector2 Int
-                     , _pan        :: Vector2 Double
+data Camera = Camera { _pan        :: Vector2 Double
                      , _factor     :: Double
                      } deriving (Eq, Show)
 
@@ -31,13 +30,12 @@ makeLenses ''DragHistory
 
 
 instance Default Camera where
-    def = Camera def def 1.0
+    def = Camera def 1.0
 
 instance PrettyPrinter Camera where
-    display (Camera screenSize pan factor) = "( " <> display screenSize <>
-                                             " "  <> display factor <>
-                                             " "  <> display factor <>
-                                             " )"
+    display (Camera pan factor) = "( " <> display pan <>
+                                  " "  <> display factor <>
+                                  " )"
 
 instance Default State where
     def = State def def

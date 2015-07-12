@@ -25,7 +25,7 @@ import           Utils.Vector
 import           Utils.Wrapper
 import           Utils.PrettyPrinter
 import           Reactive.Plugins.Core.Action.Action
-import qualified Reactive.Plugins.Core.Action.State.AddRemove as AddRemove
+import           Reactive.Plugins.Core.Action.State.AddRemove
 import qualified Reactive.Plugins.Core.Action.State.Selection as Selection
 import qualified Reactive.Plugins.Core.Action.State.Global    as Global
 
@@ -70,7 +70,7 @@ instance ActionStateUpdater Action where
         newState                = oldState & Global.iteration +~ 1
                                            & Global.nodes .~ newNodes
                                            & Global.selection . Selection.nodeIds .~ newSelIds
-                                           & Global.addRemove . AddRemove.toRemoveIds .~ toRemoveIds
+                                           & Global.addRemove . toRemoveIds .~ newToRemoveIds
         oldNodes                = oldState ^. Global.nodes
         nodePos                 = oldState ^. Global.mousePos
         oldSelNodeIds           = oldState ^. Global.selection . Selection.nodeIds
@@ -81,7 +81,7 @@ instance ActionStateUpdater Action where
                 Nothing        -> Nothing
                 _              -> Just newActionCandidate
             _                  -> Just newActionCandidate
-        toRemoveIds             = case newAction of
+        newToRemoveIds          = case newAction of
             Just RemoveFocused -> maybeToList headNodeId
             _                  -> []
         newSelIds               = case newAction of
@@ -105,5 +105,5 @@ instance ActionUIUpdater Action where
                            >> mapM_ setNodeFocused topNodeId
             where
             selectedNodeIds = state ^. Global.selection . Selection.nodeIds
-            nodeId          = head $ state ^. Global.addRemove . AddRemove.toRemoveIds
+            nodeId          = head $ state ^. Global.addRemove . toRemoveIds
             topNodeId       = selectedNodeIds ^? ix 0

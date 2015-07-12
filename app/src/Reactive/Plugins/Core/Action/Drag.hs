@@ -12,6 +12,7 @@ import           System.Mem
 
 import           JS.Bindings
 import           JS.Appjs
+import           JS.Utils
 import           Object.Object
 import qualified Object.Node    as Node     ( position )
 import           Object.Node    hiding      ( position )
@@ -25,8 +26,8 @@ import           Utils.Vector
 import           Utils.Wrapper
 import           Utils.PrettyPrinter
 import           Reactive.Plugins.Core.Action.Action
+import           Reactive.Plugins.Core.Action.State.Drag
 import qualified Reactive.Plugins.Core.Action.State.Camera   as Camera
-import           Reactive.Plugins.Core.Action.State.Drag     as Drag
 import qualified Reactive.Plugins.Core.Action.State.Global   as Global
 
 
@@ -75,11 +76,11 @@ instance ActionStateUpdater Action where
         Just action -> ActionUI newAction newState
         Nothing     -> ActionUI NoAction newState
         where
-        oldDrag                          = oldState ^. Global.drag . Drag.history
+        oldDrag                          = oldState ^. Global.drag . history
         oldNodes                         = oldState ^. Global.nodes
         emptySelection                   = null oldNodes
         newState                         = oldState & Global.iteration +~ 1
-                                                    & Global.drag  . Drag.history .~ newDrag
+                                                    & Global.drag  . history .~ newDrag
                                                     & Global.nodes .~ newNodes
         newAction                        = case newActionCandidate of
             DragAction Moving pt        -> case oldDrag of
@@ -111,15 +112,17 @@ instance ActionUIUpdater Action where
         DragAction tpe pt   -> case tpe of
             StartDrag       -> return ()
             Moving          -> return ()
-            Dragging        -> moveNodesUI selectedNodes
+            Dragging        -> moveNodesUI camera selectedNodes
             StopDrag        -> return ()
-        where selectedNodes  = state ^. Global.nodes
-              topNodeId      = selectedNodes ^? ix 0 . ident
+            where selectedNodes  = state ^. Global.nodes
+                  topNodeId      = selectedNodes ^? ix 0 . ident
+                  camState       = state ^. Global.camera . Camera.camera
+                  camera         = Camera (state ^. Global.screenSize) (camState ^. Camera.pan) (camState ^. Camera.factor)
 
 
-moveNodeUI :: Node -> IO ()
-moveNodeUI (Node ident _ pos) = dragNode ident pos
+moveNodeUI :: Camera -> Node -> IO ()
+moveNodeUI camera node = dragNode camera node
 
-moveNodesUI :: NodeCollection -> IO ()
-moveNodesUI nodes  = mapM_ moveNodeUI nodes
+moveNodesUI :: Camera -> NodeCollection -> IO ()
+moveNodesUI camera nodes  = mapM_ (moveNodeUI camera) nodes
                   -- >> performGC

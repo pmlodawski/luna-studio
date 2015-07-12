@@ -26,8 +26,8 @@ import           Event.WithObjects
 import           Utils.Wrapper
 import           Utils.PrettyPrinter
 import           Reactive.Plugins.Core.Action.Action
+import           Reactive.Plugins.Core.Action.State.Selection
 import qualified Reactive.Plugins.Core.Action.State.Camera    as Camera
-import           Reactive.Plugins.Core.Action.State.Selection as Selection
 import qualified Reactive.Plugins.Core.Action.State.Global    as Global
 
 data ActionType = SelectNew
@@ -93,11 +93,11 @@ updateNodesSelection selNodeIds nodes = fmap (updateNodeSelection selNodeIds) no
 instance ActionStateUpdater Action where
     execSt newAction oldState = ActionUI newAction newState
         where
-        oldNodeIds                       = oldState ^. Global.selection . Selection.nodeIds
+        oldNodeIds                       = oldState ^. Global.selection . nodeIds
         oldNodes                         = oldState ^. Global.nodes
         newNodes                         = updateNodesSelection newNodeIds oldNodes
         newState                         = oldState & Global.iteration +~ 1
-                                                    & Global.selection . Selection.nodeIds .~ newNodeIds
+                                                    & Global.selection .  nodeIds .~ newNodeIds
                                                     & Global.nodes     .~ newNodes
         newNodeIds                       = case newAction of
             SelectAll                   -> (^. ident) <$> oldNodes
@@ -123,5 +123,5 @@ instance ActionUIUpdater Action where
         SelectAll             -> selectAllNodes
                               >> mapM_ setNodeFocused topNodeId
         UnselectAll           -> unselectAllNodes
-        where selectedNodeIds  = state ^. Global.selection . Selection.nodeIds
+        where selectedNodeIds  = state ^. Global.selection . nodeIds
               topNodeId        = selectedNodeIds ^? ix 0

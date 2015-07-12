@@ -14,7 +14,7 @@ import           System.Mem
 
 import           JS.Bindings
 import           JS.Appjs
-import           JS.Utils
+import qualified JS.Utils       as Utils
 
 import           Object.Object
 import qualified Object.Node    as Node     ( position )
@@ -29,7 +29,7 @@ import           Utils.Vector
 import           Utils.Wrapper
 import           Utils.PrettyPrinter
 import           Reactive.Plugins.Core.Action.Action
-import           Reactive.Plugins.Core.Action.State.Camera    as Camera
+import           Reactive.Plugins.Core.Action.State.Camera
 import qualified Reactive.Plugins.Core.Action.State.Global    as Global
 
 
@@ -118,12 +118,13 @@ instance ActionStateUpdater Action where
         Nothing     -> ActionUI NoAction newState
         where
         newState                       = oldState &  Global.iteration +~ 1
-                                                  &  Global.camera . Camera.camera . Camera.pan    .~ newCamPan
-                                                  &  Global.camera . Camera.camera . Camera.factor .~ newCamFactor
-                                                  &  Global.camera . Camera.history .~ newUpdDrag
-        oldCamPan                      = oldState ^. Global.camera . Camera.camera . Camera.pan
-        oldCamFactor                   = oldState ^. Global.camera . Camera.camera . Camera.factor
-        oldDrag                        = oldState ^. Global.camera . Camera.history
+                                                  &  Global.camera . camera . pan    .~ newCamPan
+                                                  &  Global.camera . camera . factor .~ newCamFactor
+                                                  &  Global.camera . history  .~ newUpdDrag
+        oldCam                         = oldState ^. Global.camera
+        oldCamPan                      = oldCam ^. camera . pan
+        oldCamFactor                   = oldCam ^. camera . factor
+        oldDrag                        = oldCam ^. history
         newAction                      = Just newActionCandidate
         newCamPan                      = case newActionCandidate of
             MouseAction Zoom _ _      -> oldCamPan + zoomPan
@@ -168,18 +169,18 @@ instance ActionStateUpdater Action where
                 Nothing               -> (0.0, Vector2 0.0 0.0, newDrag)
         dragPan                        = case newDrag of
                 Just drag             -> prevWorkspace - currWorkspace where
-                    currWorkspace      = screenToWorkspace screenSize oldCamFactor oldCamPan $ drag ^. dragCurrentPos
-                    prevWorkspace      = screenToWorkspace screenSize oldCamFactor oldCamPan $ drag ^. dragPreviousPos
-                    screenSize         = oldState ^. Global.camera . Camera.camera . Camera.screenSize
+                    camera             = Utils.Camera screenSize oldCamPan oldCamFactor
+                    currWorkspace      = Utils.screenToWorkspace camera $ drag ^. dragCurrentPos
+                    prevWorkspace      = Utils.screenToWorkspace camera $ drag ^. dragPreviousPos
+                    screenSize         = oldState ^. Global.screenSize
                 Nothing               -> Vector2 0.0 0.0
 
 
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = do
-        let cam          = state ^. Global.camera . Camera.camera
-            cPan         = cam ^. Camera.pan
-            cFactor      = cam ^. Camera.factor
-            screenSize   = state ^. Global.camera . Camera.camera . Camera.screenSize
+        let cPan         = state ^. Global.camera . camera . pan
+            cFactor      = state ^. Global.camera . camera . factor
+            screenSize   = state ^. Global.screenSize
             hScreen      = (/ 2.0) <$> vector2FromIntegral screenSize
             camLeft      = appX cameraLeft
             camRight     = appX cameraRight

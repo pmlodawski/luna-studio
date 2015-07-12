@@ -34,8 +34,8 @@ import           Utils.Vector
 import           Utils.Wrapper
 import           Utils.PrettyPrinter
 import           Reactive.Plugins.Core.Action.Action
+import           Reactive.Plugins.Core.Action.State.NodeSearcher
 import qualified Reactive.Plugins.Core.Action.State.Global          as Global
-import qualified Reactive.Plugins.Core.Action.State.NodeSearcher    as NodeSearcherState
 import qualified Reactive.Plugins.Core.Action.NodeSearcher.Mock     as Mock
 
 import qualified Data.Text.Lazy as Text
@@ -78,11 +78,11 @@ toAction _ = Nothing
 instance ActionStateUpdater Action where
     execSt newAction oldState = ActionUI newAction oldState
         -- where
-        -- oldNodeSearcher                  = oldState ^. Global.nodeSearcher . NodeSearcherState.isOpen
+        -- oldNodeSearcher                  = oldState ^. Global.nodeSearcher . isOpen
         -- newState                         = oldState ^. Global.nodeSearcher .~ newNodeSearcher
         -- newNodeSearcher                  = case newAction of
-        --     (Just OpenNodeSearcher)   -> oldNodeSearcher & NodeSearcherState.isOpen .~ True
-        --     (Just CloseNodeSearcher)  -> oldNodeSearcher & NodeSearcherState.isOpen .~ True
+        --     (Just OpenNodeSearcher)   -> oldNodeSearcher & isOpen .~ True
+        --     (Just CloseNodeSearcher)  -> oldNodeSearcher & isOpen .~ True
         -- newAction                        =  newActionCandidate
 
 
