@@ -1,4 +1,4 @@
-module Reactive.Plugins.Core.Action.Drag where
+module Reactive.Plugins.Core.Action.MultiSelection where
 
 import           Prelude       hiding       ( mapM_, forM_ )
 import           Data.Foldable              ( mapM_, forM_ )
@@ -28,21 +28,22 @@ import           Utils.Wrapper
 import           Utils.PrettyPrinter
 import           Reactive.Plugins.Core.Action.Action
 import           Reactive.Plugins.Core.Action.State.Drag
-import qualified Reactive.Plugins.Core.Action.State.Selection as Selection
-import qualified Reactive.Plugins.Core.Action.State.Camera    as Camera
-import qualified Reactive.Plugins.Core.Action.State.Global    as Global
+import qualified Reactive.Plugins.Core.Action.State.Camera   as Camera
+import qualified Reactive.Plugins.Core.Action.State.Global   as Global
 
 
-data ActionType = StartDrag
-                | Moving
-                | Dragging
-                | StopDrag
-                deriving (Eq, Show)
+data DragType = StartDrag
+              | Dragging
+              | StopDrag
+              deriving (Eq, Show)
 
-data Action = DragAction { _actionType :: ActionType
-                         , _actionPos  :: Vector2 Int
+
+data Action = DragSelect { _actionType    :: DragType
+                         , _startPos      :: Vector2 Int
                          }
               deriving (Eq, Show)
+
+
 
 
 makeLenses ''Action
@@ -55,24 +56,21 @@ instance PrettyPrinter Action where
     display (DragAction tpe point) = "dA( " <> display tpe <> " " <> display point <> " )"
 
 
-toAction :: Event Node -> NodeCollection -> Maybe Action
-toAction (Mouse (Mouse.Event tpe pos button keyMods)) nodes = case button of
+toAction :: Event Node -> Global.State -> Maybe Action
+toAction (Mouse (Mouse.Event tpe pos button keyMods)) state = case button of
     1                  -> case tpe of
-        Mouse.Pressed  -> if isNoNode then Nothing
-                                      else case keyMods of
-                                           (KeyMods False False False False) -> Just (DragAction StartDrag pos)
+        Mouse.Pressed  -> if isNode then Nothing
+                                    else case keyMods of
+                                         (KeyMods False False False False) -> Just (DragSelect StartDrag pos)
                                            _                                 -> Nothing
-        Mouse.Released -> Just (DragAction StopDrag pos)
-        Mouse.Moved    -> Just (DragAction Moving   pos)
+        Mouse.Released -> Just (DragSelect StopDrag pos)
+        Mouse.Moved    -> Just (DragSelect Dragging pos)
     _                  -> Nothing
-    where isNoNode      = null nodes
+    where objects          = getNodesAt pos (Global.toCamera state) (state ^. Global.nodes)
+          isNode           = not . null $ objects
 toAction _ _ = Nothing
 
-moveNodes :: Double -> Vector2 Int -> NodeCollection -> NodeCollection
-moveNodes factor delta = fmap $ \node -> if node ^. selected then node & Node.position +~ deltaWs else node where
-    deltaWs = (/ factor) <$> vector2FromIntegral (flipY delta)
 
-flipY (Vector2 x y) = Vector2 x (-y)
 
 
 instance ActionStateUpdater Action where
@@ -82,7 +80,6 @@ instance ActionStateUpdater Action where
         where
         oldDrag                          = oldState ^. Global.drag . history
         oldNodes                         = oldState ^. Global.nodes
-        camFactor                        = oldState ^. Global.camera . Camera.camera . Camera.factor
         emptySelection                   = null oldNodes
         newState                         = oldState & Global.iteration +~ 1
                                                     & Global.drag  . history .~ newDrag
@@ -94,14 +91,13 @@ instance ActionStateUpdater Action where
             _                           -> Just newActionCandidate
         newNodes                         = case newActionCandidate of
             DragAction tpe point        -> case tpe of
-                StopDrag                -> case oldDrag of
-                    Just oldDragState   -> moveNodes camFactor deltaSum oldNodes
+                StartDrag               -> oldNodes
+                Moving                  -> case oldDrag of
+                    Just oldDragState   -> moveNodes (oldState ^. Global.camera . Camera.camera . Camera.factor) delta oldNodes
                         where prevPos    = oldDragState ^. dragCurrentPos
-                              startPos   = oldDragState ^. dragStartPos
                               delta      = point - prevPos
-                              deltaSum   = point - startPos
                     Nothing             -> oldNodes
-                _                       -> oldNodes
+                StopDrag                -> oldNodes
         newDrag                          = case newActionCandidate of
             DragAction tpe point        -> case tpe of
                 StartDrag               -> Just $ DragHistory point point point
@@ -115,27 +111,12 @@ instance ActionStateUpdater Action where
 
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
-        DragAction tpe pt            -> case tpe of
-            StartDrag                -> return ()
-            Moving                   -> return ()
-            Dragging                 -> dragNodesUI deltaWs selNodes
-            StopDrag                 -> moveNodesUI selNodes
-            where
-                allNodes              = state ^. Global.nodes
-                selNodeIds            = state ^. Global.selection . Selection.nodeIds
-                selNodes              = filter (\node -> node ^. ident `elem` selNodeIds) allNodes
-                camFactor             = state ^. Global.camera . Camera.camera . Camera.factor
-                deltaWs               = case state ^. Global.drag . history of
-                    Just dragState   -> (/ camFactor) <$> vector2FromIntegral (flipY delta) where
-                        delta         = dragState ^. dragCurrentPos - dragState ^. dragStartPos
-                    Nothing          -> Vector2 0.0 0.0
+        DragAction tpe pt   -> case tpe of
+            StartDrag       -> return ()
+            Moving          -> return ()
+            Dragging        -> return () -- moveNodesUI camera selectedNodes
+            StopDrag        -> moveNodesUI camera selectedNodes
+            where selectedNodes  = state ^. Global.nodes
+                  topNodeId      = selectedNodes ^? ix 0 . ident
+                  camera         = Global.toCamera state
 
-
-
-
-dragNodesUI :: Vector2 Double -> NodeCollection -> IO ()
-dragNodesUI delta nodes = mapM_ (dragNode delta) nodes
-
-moveNodesUI :: NodeCollection -> IO ()
-moveNodesUI nodes = mapM_ moveNode nodes
-                  -- >> performGC

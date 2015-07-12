@@ -135,7 +135,6 @@ instance ActionStateUpdater Action where
                     PanUp             -> oldCamPan ^. y + 10.0 / oldCamFactor
                     PanDown           -> oldCamPan ^. y - 10.0 / oldCamFactor
                     _                 -> oldCamPan ^. y
-            _                         -> oldCamPan
         newCamFactor                   = case newActionCandidate of
             KeyAction ResetZoom       -> 1.0
             KeyAction ZoomIn          -> max minCamFactor $ oldCamFactor / 1.1

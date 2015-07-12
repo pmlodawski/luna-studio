@@ -56,3 +56,7 @@ instance Monoid State where
 toCamera :: State -> Utils.Camera
 toCamera state = Utils.Camera (state ^. screenSize) (camState ^. Camera.pan) (camState ^. Camera.factor) where
     camState   = state ^. camera . Camera.camera
+
+
+nodesUnderCursor :: State -> NodeCollection
+nodesUnderCursor state = getNodesAt (state ^. mousePos) (toCamera state) (state ^. nodes)

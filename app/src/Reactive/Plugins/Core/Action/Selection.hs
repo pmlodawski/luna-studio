@@ -55,8 +55,8 @@ instance PrettyPrinter Action where
     display (SelectAction tpe node)  = "sA( " <> display tpe <> " " <> display node <> " )"
 
 
-toAction :: Event Node -> Global.State -> Maybe Action
-toAction (Mouse (Mouse.Event tpe pos button keyMods)) state = case button of
+toAction :: Event Node -> NodeCollection -> Maybe Action
+toAction (Mouse (Mouse.Event tpe pos button keyMods)) nodes = case button of
     1                 -> case tpe of
         Mouse.Pressed -> if isNoNode then case keyMods of
                                         (KeyMods False False False False) -> Just UnselectAll
@@ -67,9 +67,8 @@ toAction (Mouse (Mouse.Event tpe pos button keyMods)) state = case button of
                                         _                                 -> Nothing
         _             -> Nothing
     _                 -> Nothing
-    where objects          = getNodesAt pos (Global.toCamera state) (state ^. Global.nodes)
-          isNoNode         = null objects
-          node             = head objects
+    where isNoNode         = null nodes
+          node             = head nodes
           selectActionType = if node ^. selected then Focus
                                                  else SelectNew
           toggleActionType = if node ^. selected then ToggleOff

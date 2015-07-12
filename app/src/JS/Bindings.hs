@@ -20,21 +20,14 @@ import           GHCJS.Types         ( JSRef, JSArray, JSString )
 import           GHCJS.DOM.Types     ( UIEvent, IsDOMWindow, IsUIEvent, unUIEvent, toUIEvent )
 
 import           JS.Converters
--- import           Object.Object       ( Object(..) )
--- import           Object.Node         ( Node(..) )
 import           Utils.Vector
 import           Utils.PrettyPrinter
 
 
 
------------------------------------------------------------------------
--- Enough to interact with virtual-dom
------------------------------------------------------------------------
 data VNode
 data VElement
 data Diff
-
--- === foreigns ===
 
 foreign import javascript unsafe "window.virtualDom.h($1, [$2])"
     mkNode :: JSString -> JSString -> IO (JSRef VNode)
@@ -47,6 +40,8 @@ foreign import javascript unsafe "window.virtualDom.diff($1, $2)"
 
 foreign import javascript unsafe "window.virtualDom.patch($1, $2)"
     patch :: Element -> JSRef Diff -> IO ()
+
+
 
 
 foreign import javascript unsafe "window.innerWidth"
@@ -80,11 +75,6 @@ foreign import javascript unsafe "app.removeNode($1)"
 
 
 
-data FunctionNode
-
-
-
-
 foreign import javascript unsafe "common.camera.updateProjectionMatrix()"
     updateProjectionMatrix :: IO ()
 
@@ -99,37 +89,7 @@ foreign import javascript unsafe "app.updateCamera($1, $2, $3, $4, $5, $6, $7)"
 
 
 
-
-foreign import javascript unsafe "common.commonUniforms.screenSize.value.x"
-    getScreenSizeX :: IO Double
-
-foreign import javascript unsafe "common.commonUniforms.screenSize.value.y"
-    getScreenSizeY :: IO Double
-
-foreign import javascript unsafe "common.commonUniforms.camPan.value.x"
-    getCamPanX :: IO Double
-
-foreign import javascript unsafe "common.commonUniforms.camPan.value.y"
-    getCamPanY :: IO Double
-
-
-getCamPan :: IO (Vector2 Double)
-getCamPan = do
-    panX <- getCamPanX
-    panY <- getCamPanY
-    return $ Vector2 panX panY
-
-foreign import javascript unsafe "common.commonUniforms.camFactor.value"
-    getCamFactor :: IO Double
-
-
-foreign import javascript unsafe "common.commonUniforms.samFactor.value = $1"
-    setCamFactor :: Double -> IO ()
-
-
-
-
-
+data FunctionNode
 
 foreign import javascript unsafe "app.getNode($1)"
     getNode :: Int -> IO (JSRef FunctionNode)
@@ -171,34 +131,17 @@ isUnselected = flip hasSelectionValue 0
 isSelected   = flip hasSelectionValue 1
 isFocused    = flip hasSelectionValue 2
 
+
+
 foreign import javascript unsafe "$1.renderExamplePlot()"
     renderExamplePlot :: JSRef FunctionNode -> IO ()
-
-
-
-(.:)  :: (x -> y) -> (a -> b -> x) -> a -> b -> y
-(.:)   = (.) . (.)
-
-
--- getNodeFromTuple4 :: (Int, Int, Int, Int) -> Maybe Node
--- getNodeFromTuple4 (nodeId, sel, x, y)
---     | nodeId >= 0 = Just $ Node nodeId (sel >= 1) (Vector2 x y)
---     | otherwise = Nothing
-
-
--- getNodeAt :: Int -> Int -> IO (Maybe Node)
--- getNodeAt = (fmap getNodeFromTuple4 . getTuple4FromJSArray) .: getNodeAtJSArray
-
--- -- temporary implementation
--- getObjectsAt :: Int -> Int -> IO [Object Dynamic]
--- getObjectsAt x y = getNodeAt x y >>= return . maybeToList . fmap (Object . toDyn)
 
 
 
 logAs :: PrettyPrinter a => String -> a -> IO ()
 logAs title a = putStrLn $ title <> (display a)
 
---
+
 
 data VNodePresentation = VNodePresentation (IORef (JSRef VNode)) Element
 

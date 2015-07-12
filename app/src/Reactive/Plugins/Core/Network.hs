@@ -61,10 +61,12 @@ makeNetworkDescription = do
         globalStateB                 :: Behavior t State
         globalStateB                  = stepper def $ globalStateReactionB <@ anyE
 
+        nodesUnderCursorB             = nodesUnderCursor <$> globalStateB
+
         nodeGeneralActionB            = fmap ActionST $      General.toAction <$> anyNodeB
         nodeAddRemActionB             = fmap ActionST $    AddRemove.toAction <$> anyNodeB
-        nodeSelectionActionB          = fmap ActionST $    Selection.toAction <$> anyNodeB <*> globalStateB
-        nodeDragActionB               = fmap ActionST $         Drag.toAction <$> anyNodeB <*> globalStateB
+        nodeSelectionActionB          = fmap ActionST $    Selection.toAction <$> anyNodeB <*> nodesUnderCursorB
+        nodeDragActionB               = fmap ActionST $         Drag.toAction <$> anyNodeB <*> nodesUnderCursorB
         cameraActionB                 = fmap ActionST $       Camera.toAction <$> anyNodeB
         nodeSearcherActionB           = fmap ActionST $ NodeSearcher.toAction <$> anyNodeB
 
