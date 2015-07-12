@@ -116,8 +116,7 @@ instance ActionUIUpdater Action where
             StopDrag        -> return ()
             where selectedNodes  = state ^. Global.nodes
                   topNodeId      = selectedNodes ^? ix 0 . ident
-                  camState       = state ^. Global.camera . Camera.camera
-                  camera         = Camera (state ^. Global.screenSize) (camState ^. Camera.pan) (camState ^. Camera.factor)
+                  camera         = Global.toCamera state
 
 
 moveNodeUI :: Camera -> Node -> IO ()

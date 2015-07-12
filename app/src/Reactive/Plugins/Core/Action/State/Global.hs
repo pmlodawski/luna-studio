@@ -5,6 +5,7 @@ import           Data.Monoid
 import           Data.Default
 import           Control.Lens
 
+import qualified JS.Utils       as Utils
 import           Object.Object
 import qualified Object.Node    as Node     ( position )
 import           Object.Node    hiding      ( position )
@@ -50,3 +51,8 @@ instance PrettyPrinter State where
 instance Monoid State where
     mempty = def
     a `mappend` b = if a ^. iteration > b ^.iteration then a else b
+
+
+toCamera :: State -> Utils.Camera
+toCamera state = Utils.Camera (state ^. screenSize) (camState ^. Camera.pan) (camState ^. Camera.factor) where
+    camState   = state ^. camera . Camera.camera

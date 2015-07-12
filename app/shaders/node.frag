@@ -14,11 +14,11 @@ void main() {
   float rimCamFactor  = 1.0;
   float blurCamFactor = 1.0;
   if (camFactor > 1.0) {
-    rimCamFactor  += camFactorDelta / 25.0;
+    rimCamFactor  += camFactorDelta / 12.0;
     blurCamFactor += camFactorDelta / 2.5;
   } else if (camFactor < 1.0) {
     rimCamFactor  += camFactorDelta / 1.3;
-    blurCamFactor += camFactorDelta / 1.1;
+    blurCamFactor += camFactorDelta / 1.16;
   }
   float r4 = 900.0;
   float r3 = r4 -  80.0 / blurCamFactor;
