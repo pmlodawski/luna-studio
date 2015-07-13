@@ -58,4 +58,5 @@ exports.config =
 
   overrides:
     production:
+      optimize: false # breaks "production" === "production"
       keyword: map: env: "production"
