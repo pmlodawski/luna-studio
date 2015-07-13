@@ -43,3 +43,4 @@ main = do
     eventNetwork  <- compile $ makeNetworkDescription enableLogging
     actuate eventNetwork
 
+    triggerWindowResize

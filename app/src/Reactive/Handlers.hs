@@ -76,10 +76,7 @@ mouseMovedHandler = AddHandler $ \h -> do
 resizeHandler :: AddHandler (Event Dynamic)
 resizeHandler = AddHandler $ \h -> do
     window <- fromJust <$> currentWindow
-    handler domWindowOnload   h window
-    handler domWindowOnresize h window
-    where
-        handler domWindowOn h window = domWindowOn window $ liftIO $ do
+    domWindowOnresize window $ liftIO $ do
             width  <- domWindowGetInnerWidth  window
             height <- domWindowGetInnerHeight window
             h $ Window $ Window.Event Window.Resized width height
