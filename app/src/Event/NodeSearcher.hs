@@ -17,5 +17,5 @@ data Event = Event { _action     :: Text
 makeLenses ''Event
 
 instance PrettyPrinter Event where
-    display (Event action expr) = "NSev( " <> show action <> " -> " <> show expr <> " )"
+    display (Event action expr) = "NSev(" <> show action <> " -> " <> show expr <> ")"
 

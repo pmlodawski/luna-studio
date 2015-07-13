@@ -18,4 +18,4 @@ instance Default State where
     def = State def
 
 instance PrettyPrinter State where
-    display (State nodeIds) = "sS( " <> display nodeIds <> " )"
+    display (State nodeIds) = "sS(" <> display nodeIds <> ")"

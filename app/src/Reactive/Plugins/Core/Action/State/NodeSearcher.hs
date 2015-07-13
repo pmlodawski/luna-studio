@@ -21,6 +21,6 @@ instance Default State where
     def = State False
 
 instance PrettyPrinter State where
-    display (State True)   = "nsS( True  )"
-    display (State False)  = "nsS( False )"
+    display (State True)   = "nsS(True )"
+    display (State False)  = "nsS(False)"
 

@@ -19,4 +19,4 @@ instance Default State where
     def = State def
 
 instance PrettyPrinter State where
-    display (State toRemoveIds) = "arS( " <> display toRemoveIds <> " )"
+    display (State toRemoveIds) = "arS(" <> display toRemoveIds <> ")"

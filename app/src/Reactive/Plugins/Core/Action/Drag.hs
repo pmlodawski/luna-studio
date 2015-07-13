@@ -52,7 +52,7 @@ instance PrettyPrinter ActionType where
     display = show
 
 instance PrettyPrinter Action where
-    display (DragAction tpe point) = "dA( " <> display tpe <> " " <> display point <> " )"
+    display (DragAction tpe point) = "dA(" <> display tpe <> " " <> display point <> ")"
 
 
 toAction :: Event Node -> NodeCollection -> Maybe Action

@@ -17,7 +17,7 @@ makeLenses ''Object
 instance Unwrap Object where unwrap = fromObject
 
 instance PrettyPrinter a => PrettyPrinter (Object a) where
-    display (Object o) = "o( " <> display o <> " )"
+    display (Object o) = "o(" <> display o <> ")"
 
 type ID = Int
 

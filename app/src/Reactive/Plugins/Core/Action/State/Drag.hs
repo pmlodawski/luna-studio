@@ -28,7 +28,7 @@ instance Default State where
     def = State def
 
 instance PrettyPrinter State where
-    display (State dragging) = "dS( " <> display dragging <> " )"
+    display (State dragging) = "dS(" <> display dragging <> ")"
 
 instance PrettyPrinter DragHistory where
     display (DragHistory start prev curr) = display start <> " " <> display prev <> " " <> display curr

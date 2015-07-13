@@ -39,7 +39,7 @@ instance Default State where
 
 instance PrettyPrinter State where
     display (State iteration mousePos screenSize nodes camera addRemove selection multiSelection drag nodeSearcher) =
-                                                     "gS( " <> display iteration
+                                                      "gS(" <> display iteration
                                                      <> " " <> display mousePos
                                                      <> " " <> display screenSize
                                                      <> " " <> display nodes
@@ -49,7 +49,7 @@ instance PrettyPrinter State where
                                                      <> " " <> display multiSelection
                                                      <> " " <> display drag
                                                      <> " " <> display nodeSearcher
-                                                     <> " )"
+                                                     <> ")"
 
 instance Monoid State where
     mempty = def

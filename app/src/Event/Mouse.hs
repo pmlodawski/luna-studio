@@ -28,8 +28,8 @@ instance PrettyPrinter Type where
     display = show
 
 instance PrettyPrinter Event where
-    display (Event tpe pos button keyMods) = "ev( " <> display tpe <>
-                                             " -> " <> display pos <>
-                                             " "    <> display button <>
-                                             " : "  <> display keyMods <>
-                                             " )"
+    display (Event tpe pos button keyMods) = "ev(" <> display tpe <>
+                                             " "   <> display pos <>
+                                             " "   <> display button <>
+                                             " "   <> display keyMods <>
+                                             ")"

@@ -70,8 +70,8 @@ instance PrettyPrinter KeyActionType where
     display = show
 
 instance PrettyPrinter Action where
-    display (KeyAction tpe)           = "cA( Key "   <> display tpe <> ")"
-    display (MouseAction act tpe pos) = "cA( Mouse " <> display act <> " " <> display tpe <> " " <> display pos <> " )"
+    display (KeyAction tpe)           = "cA(Key "   <> display tpe <> ")"
+    display (MouseAction act tpe pos) = "cA(Mouse " <> display act <> " " <> display tpe <> " " <> display pos <> ")"
 
 
 toAction :: Event Node -> Maybe Action

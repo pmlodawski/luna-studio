@@ -28,8 +28,8 @@ data Action = Moving   { _pos   :: Vector2 Int }
 makeLenses ''Action
 
 instance PrettyPrinter Action where
-    display (Moving point)  = "mA( " <> display point <> " )"
-    display (Resizing size) = "rA( " <> display size  <> " )"
+    display (Moving point)  = "mA(" <> display point <> ")"
+    display (Resizing size) = "rA(" <> display size  <> ")"
 
 
 toAction :: Event Node -> Maybe Action

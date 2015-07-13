@@ -29,7 +29,7 @@ instance (Default act, Default st) => Default (WithState act st) where
     def = WithState def def
 
 instance (PrettyPrinter act, PrettyPrinter st) => PrettyPrinter (WithState act st) where
-    display (WithState action state) = "na( " <> display action <> " " <> display state <> " )"
+    display (WithState action state) = "na(" <> display action <> " " <> display state <> ")"
 
 
 data ActionST = forall act. (ActionStateUpdater act, PrettyPrinter act) => ActionST act
@@ -73,10 +73,12 @@ updateAllUI [] =  return ()
 updateAllUI ((ActionUI act st):as) = updateUI (WithState act st) >> updateAllUI as
 
 logAllUI :: [ActionUI] -> IO ()
-logAllUI [] = putStrLn "-"
-logAllUI ((ActionUI act st):as) = do
-    putStrLn $ (display st) <> " <- " <> (display act)
-    logAllUI as
+logAllUI [] = return ()
+logAllUI ((ActionUI act st):as) = let actString = display act in case actString of
+    "NoAction" -> logAllUI as
+    _          -> do
+                    putStrLn $ (display st) <> " <- " <> actString
+                    logAllUI as
 
 getState :: ActionUI -> State
 getState (ActionUI _ st) = st

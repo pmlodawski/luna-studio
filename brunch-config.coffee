@@ -40,7 +40,7 @@ exports.config =
     ghcjs:
       placeholder:  'app/env.ghcjs'
       projectName:  cabalProjectName
-      buildCommand: 'cabal build'
+      buildCommand: 'cabal install'
       clearScreen:  false
 
     jshint:

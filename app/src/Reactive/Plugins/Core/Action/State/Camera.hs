@@ -33,16 +33,16 @@ instance Default Camera where
     def = Camera def 1.0
 
 instance PrettyPrinter Camera where
-    display (Camera pan factor) = "( " <> display pan <>
-                                  " "  <> display factor <>
-                                  " )"
+    display (Camera pan factor) = "(" <> display pan <>
+                                  " " <> display factor <>
+                                  ")"
 
 instance Default State where
     def = State def def
 
 instance PrettyPrinter State where
-    display (State camera history) = "cS( " <> display camera <>
-                                     " "    <> display history <>
+    display (State camera history) = "cS(" <> display camera <>
+                                     " "   <> display history <>
                                      " )"
 
 instance PrettyPrinter DragHistory where

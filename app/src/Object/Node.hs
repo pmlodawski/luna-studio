@@ -26,9 +26,9 @@ type NodeIdCollection = [NodeId]
 makeLenses ''Node
 
 instance PrettyPrinter Node where
-    display (Node ident sel pos) = "n( " <> display ident <>
-                                   " "   <> display sel <>
-                                   " "   <> display pos <> " )"
+    display (Node ident sel pos) = "n(" <> display ident <>
+                                   " "  <> display sel <>
+                                   " "  <> display pos <> ")"
 
 instance Selectable Node where
     setSelected n selected = n { _selected = selected }
@@ -47,12 +47,13 @@ updateNodesSelection :: NodeIdCollection -> NodeCollection -> NodeCollection
 updateNodesSelection selNodeIds nodes = fmap (updateNodeSelection selNodeIds) nodes
 
 
--- TODO: optimization - filter out nodes just by x and y
 getNodesAt :: Vector2 Int -> Utils.Camera -> NodeCollection -> NodeCollection
 getNodesAt posScr camera nodes = filter closeEnough nodes where
     pos              = Utils.screenToWorkspace camera posScr
     radiusSquared    = 900.0
-    closeEnough node = distSquared < radiusSquared where
+    closeEnough node = inRange && inRadius where
+        inRange      = dist ^. x < 30.0 && dist ^. y < 30.0
+        inRadius     = distSquared < radiusSquared
         distSquared  = (dist ^. x) ^ 2 + (dist ^. y) ^ 2
         dist         = (node ^. position - pos)
 

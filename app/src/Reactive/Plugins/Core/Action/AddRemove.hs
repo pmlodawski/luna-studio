@@ -47,8 +47,8 @@ instance PrettyPrinter ActionType where
     display = show
 
 instance PrettyPrinter Action where
-    display AddAction     = "arA( AddAction )"
-    display RemoveFocused = "arA( RemoveFocused )"
+    display AddAction     = "arA(AddAction)"
+    display RemoveFocused = "arA(RemoveFocused)"
 
 
 

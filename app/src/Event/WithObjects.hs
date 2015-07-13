@@ -24,4 +24,4 @@ instance Typeable obj => UnpackDynamic (WithObjects evnt Dynamic) (WithObjects e
     unpackDynamic = objects %~ unpackDynamic
 
 instance (PrettyPrinter evnt, PrettyPrinter obj) => PrettyPrinter (WithObjects evnt obj) where
-    display (WithObjects ev objs) = "wo( " <> display ev <> " " <> display objs <> " )"
+    display (WithObjects ev objs) = "wo(" <> display ev <> " " <> display objs <> ")"

@@ -10,7 +10,7 @@ class PrettyPrinter a where
     display :: a -> String
 
 instance PrettyPrinter a => PrettyPrinter [a] where
-    display xs = "[ " <> (intercalate " " $ fmap display xs) <> " ]"
+    display xs = "[" <> (intercalate " " $ fmap display xs) <> "]"
 
 instance PrettyPrinter a => PrettyPrinter (Maybe a) where
     display (Just v) = "j|" <> (display v)
