@@ -1,4 +1,4 @@
-module JS.Utils where
+module JS.Camera where
 
 import           Control.Lens
 import           Data.Monoid

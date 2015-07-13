@@ -6,7 +6,7 @@ import           Data.Dynamic
 import           Data.Monoid
 import           Data.Maybe    ( isJust, catMaybes )
 
-import           JS.Utils      as Utils
+import           JS.Camera
 import           Utils.Vector
 import           Utils.Wrapper
 import           Utils.PrettyPrinter
@@ -52,9 +52,9 @@ updateNodesSelection :: NodeIdCollection -> NodeCollection -> NodeCollection
 updateNodesSelection selNodeIds nodes = fmap (updateNodeSelection selNodeIds) nodes
 
 
-getNodesAt :: Vector2 Int -> Utils.Camera -> NodeCollection -> NodeCollection
+getNodesAt :: Vector2 Int -> Camera -> NodeCollection -> NodeCollection
 getNodesAt posScr camera nodes = filter closeEnough nodes where
-    pos              = Utils.screenToWorkspace camera posScr
+    pos              = screenToWorkspace camera posScr
     radiusSquared    = 900.0
     closeEnough node = inRange && inRadius where
         inRange      = dist ^. x < 30.0 && dist ^. y < 30.0
@@ -62,10 +62,10 @@ getNodesAt posScr camera nodes = filter closeEnough nodes where
         distSquared  = (dist ^. x) ^ 2 + (dist ^. y) ^ 2
         dist         = (node ^. position - pos)
 
-getNodeIdsIn :: Vector2 Int -> Vector2 Int -> Utils.Camera -> NodeCollection -> NodeIdCollection
+getNodeIdsIn :: Vector2 Int -> Vector2 Int -> Camera -> NodeCollection -> NodeIdCollection
 getNodeIdsIn (Vector2 x1 y1) (Vector2 x2 y2) camera nodes = (^. ident) <$> nodesInBounds where
-    leftBottom = Utils.screenToWorkspace camera $ Vector2 (min x1 x2) (max y1 y2)
-    rightTop   = Utils.screenToWorkspace camera $ Vector2 (max x1 x2) (min y1 y2)
+    leftBottom = screenToWorkspace camera $ Vector2 (min x1 x2) (max y1 y2)
+    rightTop   = screenToWorkspace camera $ Vector2 (max x1 x2) (min y1 y2)
     nodesInBounds :: NodeCollection
     nodesInBounds = filter isNodeInBounds nodes
     isNodeInBounds node = let pos = node ^. position in

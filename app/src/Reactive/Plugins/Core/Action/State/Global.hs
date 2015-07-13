@@ -5,7 +5,7 @@ import           Data.Monoid
 import           Data.Default
 import           Control.Lens
 
-import qualified JS.Utils       as Utils
+import qualified JS.Camera
 import           Object.Object
 import qualified Object.Node    as Node     ( position )
 import           Object.Node    hiding      ( position )
@@ -56,8 +56,8 @@ instance Monoid State where
     a `mappend` b = if a ^. iteration > b ^.iteration then a else b
 
 
-toCamera :: State -> Utils.Camera
-toCamera state = Utils.Camera (state ^. screenSize) (camState ^. Camera.pan) (camState ^. Camera.factor) where
+toCamera :: State -> JS.Camera.Camera
+toCamera state = JS.Camera.Camera (state ^. screenSize) (camState ^. Camera.pan) (camState ^. Camera.factor) where
     camState   = state ^. camera . Camera.camera
 
 

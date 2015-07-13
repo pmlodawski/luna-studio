@@ -10,7 +10,7 @@ import           Reactive.Banana
 import           Reactive.Banana.Frameworks
 import           Reactive.Banana.Utils
 import           Reactive.Handlers
-import           JS.Bindings
+import           JS.Appjs
 import           Object.Object
 import           Object.Dynamic             ( unpackDynamic )
 import           Object.Node                ( Node(..) )

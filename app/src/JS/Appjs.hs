@@ -2,12 +2,18 @@ module JS.Appjs where
 
 import           Control.Monad
 import           Control.Lens
+import           Data.Monoid
 
 import           JS.Bindings
 import           JS.Converters
-import           JS.Utils       as Utils
 import           Object.Node
 import           Utils.Vector
+import           Utils.PrettyPrinter
+
+
+logAs :: PrettyPrinter a => String -> a -> IO ()
+logAs title a = putStrLn $ title <> (display a)
+
 
 setNodeUnselected :: Int -> IO ()
 setNodeUnselected nodeId =
@@ -63,7 +69,5 @@ dragNode delta node = do
 
 displaySelectBox :: Vector2 Double -> Vector2 Double -> IO ()
 displaySelectBox a b = displaySelectBoxJS mx my w h where
-    mx = (a ^. x)
-    my = (a ^. y)
-    w = (b ^. x) - mx
-    h = (b ^. y) - my
+    (Vector2 mx my) = a
+    (Vector2 w  h)  = b - a

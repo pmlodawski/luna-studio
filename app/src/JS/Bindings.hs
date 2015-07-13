@@ -20,8 +20,6 @@ import           GHCJS.Types         ( JSRef, JSArray, JSString )
 import           GHCJS.DOM.Types     ( UIEvent, IsDOMWindow, IsUIEvent, unUIEvent, toUIEvent )
 
 import           JS.Converters
-import           Utils.Vector
-import           Utils.PrettyPrinter
 
 
 
@@ -140,10 +138,6 @@ isFocused    = flip hasSelectionValue 2
 foreign import javascript unsafe "$1.renderExamplePlot()"
     renderExamplePlot :: JSRef FunctionNode -> IO ()
 
-
-
-logAs :: PrettyPrinter a => String -> a -> IO ()
-logAs title a = putStrLn $ title <> (display a)
 
 
 foreign import javascript unsafe "config.logging"

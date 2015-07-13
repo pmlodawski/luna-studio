@@ -13,7 +13,7 @@ import           System.Mem
 
 import           JS.Bindings
 import           JS.Appjs
-import qualified JS.Utils       as Utils
+import qualified JS.Camera      as Camera
 import           Object.Object
 import qualified Object.Node    as Node     ( position )
 import           Object.Node    hiding      ( position )
@@ -106,10 +106,11 @@ instance ActionStateUpdater Action where
 
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
-        DragSelect Dragging _  -> displaySelectBox (currWorkspace $ dragState ^. dragStartPos) (currWorkspace $ dragState ^. dragCurrentPos)
-                               >> unselectNodes unselectedNodeIds
-                               >>   selectNodes   selectedNodeIds
-                               >> mapM_ setNodeFocused topNodeId
+        DragSelect Dragging _  -> do
+                                  displaySelectBox (currWorkspace $ dragState ^. dragStartPos) (currWorkspace $ dragState ^. dragCurrentPos)
+                                  unselectNodes unselectedNodeIds
+                                  selectNodes     selectedNodeIds
+                                  mapM_ setNodeFocused topNodeId
         DragSelect StopDrag _  -> hideSelectBox
         _                      -> return ()
         where selectedNodeIds   = state ^. Global.selection . Selection.nodeIds
@@ -117,4 +118,4 @@ instance ActionUIUpdater Action where
               topNodeId         = selectedNodeIds ^? ix 0
               dragState         = fromJust (state ^. Global.multiSelection . history)
               camera            = Global.toCamera state
-              currWorkspace     = Utils.screenToWorkspace camera
+              currWorkspace     = Camera.screenToWorkspace camera

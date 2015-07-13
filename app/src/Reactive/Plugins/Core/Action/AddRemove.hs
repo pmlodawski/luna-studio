@@ -14,7 +14,7 @@ import           System.Mem
 
 import           JS.Bindings
 import           JS.Appjs
-import           JS.Utils       as Utils
+import           JS.Camera      as Camera
 
 import           Object.Object
 import qualified Object.Node    as Node     ( position )
@@ -84,7 +84,7 @@ instance ActionStateUpdater Action where
                                            & Global.addRemove . toRemoveIds       .~ newToRemoveIds
         oldNodes                = oldState ^. Global.nodes
         camera                  = Global.toCamera oldState
-        nodePosWs               = Utils.screenToWorkspace camera $ oldState ^. Global.mousePos
+        nodePosWs               = Camera.screenToWorkspace camera $ oldState ^. Global.mousePos
         oldSelNodeIds           = oldState ^. Global.selection . Selection.nodeIds
         headNodeId              = listToMaybe oldSelNodeIds
         nextNodeId              = 1 + (maxNodeId oldNodes)

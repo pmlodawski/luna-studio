@@ -14,7 +14,7 @@ import           System.Mem
 
 import           JS.Bindings
 import           JS.Appjs
-import qualified JS.Utils       as Utils
+import qualified JS.Camera      as Camera
 
 import           Object.Object
 import qualified Object.Node    as Node     ( position )
@@ -166,8 +166,8 @@ instance ActionStateUpdater Action where
         dragPan                        = case newDrag of
                 Just drag             -> prevWorkspace - currWorkspace where
                     camera             = Global.toCamera oldState
-                    currWorkspace      = Utils.screenToWorkspace camera $ drag ^. dragCurrentPos
-                    prevWorkspace      = Utils.screenToWorkspace camera $ drag ^. dragPreviousPos
+                    currWorkspace      = Camera.screenToWorkspace camera $ drag ^. dragCurrentPos
+                    prevWorkspace      = Camera.screenToWorkspace camera $ drag ^. dragPreviousPos
                 Nothing               -> Vector2 0.0 0.0
 
 
