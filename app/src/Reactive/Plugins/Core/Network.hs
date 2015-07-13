@@ -33,8 +33,8 @@ import           Reactive.Plugins.Core.Action.State.Global
 
 
 
-makeNetworkDescription :: forall t. Frameworks t => Moment t ()
-makeNetworkDescription = do
+makeNetworkDescription :: forall t. Frameworks t => Bool -> Moment t ()
+makeNetworkDescription logging = do
     resizeE       <- fromAddHandler resizeHandler
     mouseDownE    <- fromAddHandler mouseDownHandler
     mouseUpE      <- fromAddHandler mouseUpHandler
@@ -91,8 +91,11 @@ makeNetworkDescription = do
 
     allReactionsSeqPackF <- changes allReactionsSeqPackB
     reactimate' $ (fmap updateAllUI) <$> allReactionsSeqPackF
-    reactimate' $ (fmap logAllUI)    <$> allReactionsSeqPackF
 
-    reactimate  $ (logAs "m: ")      <$> anyE
+    case logging of
+        True  -> do
+            reactimate' $ (fmap logAllUI)    <$> allReactionsSeqPackF
+            reactimate  $ (logAs "m: ")      <$> anyE
+        False -> return ()
 
     return ()

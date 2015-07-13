@@ -25,3 +25,4 @@ cabal.sandbox.config
 public
 
 app/features.local.js
+app/config.local.js

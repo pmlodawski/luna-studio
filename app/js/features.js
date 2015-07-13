@@ -1,22 +1,30 @@
 "use strict";
 
-var defaults       = require('features.default');
-var localOverrides = {};
+var release        = require('features.release');
+var features;
 
 if("{!env!}" !== "production") {
+  var local = {};
+  var debug = require('features.debug');
   try {
-    localOverrides = require('features.local');
+    local   = require('features.local');
   } catch (e) {
     // no local overrides, skipping.
   }
+  var browser =  _.chain(release)
+                  .mapObject(function(value, feature) { return localStorage.getItem(feature); })
+                  .pick     (function(value) { return value !== null; })
+                  .mapObject(function(value) { return value === "true"; })
+                  .value();
 
-  var browserOverrides = _.chain(defaults)
-                            .mapObject(function(value, feature) { return localStorage.getItem(feature); })
-                            .pick     (function(value) { return value !== null; })
-                            .mapObject(function(value) { return value === "true"; })
-                            .value();
+  features = _({}).defaults(browser, local, debug, release);
 
-  module.exports = _({}).extend(defaults, localOverrides, browserOverrides);
+  features.enable  = function(feature) { localStorage.setItem(feature, "true" ); };
+  features.disable = function(feature) { localStorage.setItem(feature, "false"); };
+  features.clear   = function()        { localStorage.clear();                   };
+  window.features  = features;
 } else {
-  module.exports = defaults;
+  features = release;
 }
+
+module.exports = features;

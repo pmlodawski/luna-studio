@@ -1,4 +1,5 @@
 module.exports = {
+  logging: false,
   backgroundColor: 0x1a1a1a,
   nodeSearcher: {
     scrollAnimationTime: 100,

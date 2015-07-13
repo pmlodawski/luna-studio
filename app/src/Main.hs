@@ -32,13 +32,14 @@ import           JS.Bindings
 
 import qualified Reactive.Plugins.Core.Network as CoreNetwork
 
-makeNetworkDescription :: forall t. Frameworks t => Moment t ()
+makeNetworkDescription :: forall t. Frameworks t => Bool -> Moment t ()
 makeNetworkDescription = CoreNetwork.makeNetworkDescription
 
 main :: IO ()
 main = do
     initializeGl
     render
-    eventNetwork <- compile makeNetworkDescription
+    enableLogging <- isLoggerEnabled
+    eventNetwork  <- compile $ makeNetworkDescription enableLogging
     actuate eventNetwork
 

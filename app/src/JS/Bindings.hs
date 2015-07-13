@@ -142,18 +142,5 @@ logAs :: PrettyPrinter a => String -> a -> IO ()
 logAs title a = putStrLn $ title <> (display a)
 
 
-
-data VNodePresentation = VNodePresentation (IORef (JSRef VNode)) Element
-
-data HTML = Text String deriving (Show)
-
-
-newTopLevelContainer :: IO VNodePresentation
-newTopLevelContainer = do
-    initialVNode <- mkNode "div" ""
-    currentVNode <- newIORef initialVNode
-    el <- createElement initialVNode
-    Just doc <- currentDocument
-    Just body <- documentGetBody doc
-    nodeAppendChild body (Just el)
-    return (VNodePresentation currentVNode el)
+foreign import javascript unsafe "config.logging"
+    isLoggerEnabled :: IO (Bool)

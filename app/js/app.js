@@ -1,14 +1,13 @@
 "use strict";
 
-console.log("Current version {!git_commit!}");
-console.log("Build at {!date!}");
-
-
 var FunctionNode = require('function_node').FunctionNode,
     $$           = require('common'),
     config       = require('config'),
     features     = require('features'),
     NodeSearcher = require('node_searcher');
+
+console.log("Current version {!env!} {!git_commit!}");
+console.log("Build at {!date!}");
 
 var nodes = {};
 $$.nodes = nodes;
