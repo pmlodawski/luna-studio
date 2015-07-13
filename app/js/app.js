@@ -6,8 +6,8 @@ var FunctionNode = require('function_node').FunctionNode,
     features     = require('features'),
     NodeSearcher = require('node_searcher');
 
-console.log("Current version {!env!} {!git_commit!}");
-console.log("Build at {!date!}");
+console.info("Current version {!env!} {!git_commit!}");
+console.info("Build at {!date!}");
 
 var nodes = {};
 $$.nodes = nodes;

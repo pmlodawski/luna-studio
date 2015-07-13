@@ -19,9 +19,30 @@ if("{!env!}" !== "production") {
 
   features = _({}).defaults(browser, local, debug, release);
 
-  features.enable  = function(feature) { localStorage.setItem(feature, "true" ); };
-  features.disable = function(feature) { localStorage.setItem(feature, "false"); };
-  features.clear   = function()        { localStorage.clear();                   };
+  var displayWarning = function(feature) {
+    console.error("Unknown feature " + feature);
+    console.error("Possible features " + Object.keys(release).join(", "));
+  };
+  features.enable  = function(feature) {
+    if (release[feature] === undefined) {
+      displayWarning(feature);
+    } else {
+      console.info("OK, enabling feature " + feature + " for you! Please reload the page.");
+      localStorage.setItem(feature, "true" );
+    }
+  };
+  features.disable = function(feature) {
+    if (release[feature] === undefined) {
+      displayWarning(feature);
+    } else {
+      console.info("OK, disabling feature " + feature + " for you! Please reload the page.");
+      localStorage.setItem(feature, "true" );
+    }
+  };
+  features.clear = function() {
+    console.info("Clearing feature overrides. Please reload the page.");
+    localStorage.clear();
+  };
   window.features  = features;
 } else {
   features = release;

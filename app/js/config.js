@@ -19,9 +19,15 @@ if("{!env!}" !== "production") {
 
   config = _({}).defaults(browser, local, debug, release);
 
-  console.log("Logging is " + (config.logging?"enabled":"disabled"));
-  window.enableLogging  = function(){ localStorage.setItem('logging', "true" ); };
-  window.disableLogging = function(){ localStorage.setItem('logging', "false"); };
+  console.info("Logging is " + (config.logging?"enabled":"disabled"));
+  window.enableLogging  = function(){
+    console.info("Logging enabled! Please reload the page.");
+    localStorage.setItem('logging', "true" );
+  };
+  window.disableLogging = function(){
+    console.info("Logging disabled! Please reload the page.");
+    localStorage.setItem('logging', "false");
+  };
 } else {
   config = release;
 }
