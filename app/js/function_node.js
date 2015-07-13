@@ -6,18 +6,21 @@ var features = require('features');
 var createText = THREE_TEXT;
 var font = require("font/LatoBlack-sdf");
 
+var vs = require('shaders/common.vert')();
 var fs = require('shaders/node.frag')();
-var vs = require('shaders/node.vert')();
 
-var textMaterial = new THREE.ShaderMaterial(require('shaders/font')({
-  map: THREE.ImageUtils.loadTexture('font/LatoBlack-sdf.png'),
-  smooth: 1/12,
-  side: THREE.DoubleSide,
+var Port = require('port');
+
+
+var textMaterial = new THREE.ShaderMaterial(require('shaders/font') ({
+  map:         THREE.ImageUtils.loadTexture('font/LatoBlack-sdf.png'),
+  smooth:      1 / 12,
+  side:        THREE.DoubleSide,
   transparent: true,
-  color: 'rgb(230, 230, 230)'
+  color:       'rgb(230, 230, 230)'
 }));
 
-function FunctionNode(id, position){
+function FunctionNode(id, position) {
   var width  = 60;
   var height = 60;
   var _this = this;
@@ -49,12 +52,12 @@ function FunctionNode(id, position){
   this.mesh = new THREE.Mesh(
       new THREE.PlaneGeometry(width, height),
       new THREE.ShaderMaterial( {
-        uniforms: this.uniforms,
-        attributes: this.attributes,
+        uniforms:       this.uniforms,
+        attributes:     this.attributes,
         vertexShader:   vs,
         fragmentShader: fs,
-        transparent: true,
-        blending: THREE.NormalBlending
+        transparent:    true,
+        blending:       THREE.NormalBlending
       })
   );
   this.mesh.userData.id = id;
@@ -64,11 +67,11 @@ function FunctionNode(id, position){
   this.htmlElements = {};
   this.moveTo(position.x, position.y);
 
-  if(features.node_labels) this.updateLabel();
+  if (features.node_labels) this.updateLabel();
 }
 
 FunctionNode.prototype.selected = function(val) {
-  if(val !== undefined) {
+  if (val !== undefined) {
     // console.log("selection state: " + val);
     this.uniforms.selected.value = val;
     if(features.label_editor) {
@@ -94,14 +97,14 @@ FunctionNode.prototype.moveTo = function(a, b) {
 };
 
 FunctionNode.prototype.zPos = function(z) {
-  if(z !== undefined)
+  if (z !== undefined)
     this.mesh.position.z = z;
   return this.mesh.position.z;
 };
 
 
 FunctionNode.prototype.label = function(text) {
-  if(text !== undefined) {
+  if (text !== undefined) {
     this.labelText = text;
     this.updateLabel();
   }
@@ -109,7 +112,7 @@ FunctionNode.prototype.label = function(text) {
 };
 
 FunctionNode.prototype.updateLabel = function() {
-  if(this.labelObject) this.mesh.remove(this.labelObject);
+  if (this.labelObject) this.mesh.remove(this.labelObject);
 
   var geom = createText({
     text: this.labelText,
@@ -130,7 +133,7 @@ FunctionNode.prototype.updateLabel = function() {
 };
 
 FunctionNode.prototype.showLabelEditor = function() {
-  if(this.htmlElements.labelEditor) return;
+  if (this.htmlElements.labelEditor) return;
   var editor = $('<input/>').css({left: -50, top: -52, width: 100, textAlign: 'center'});
   editor.val(this.labelText);
   this.htmlElements.labelEditor = editor;
@@ -155,9 +158,9 @@ FunctionNode.prototype.renderExamplePlot = function() {
       .attr("height", 250);
   var i;
   var data = [];
-  for(i = 0; i < 12; i++) {
-    data[2*i] = {"Month": i, "Unit Sales": Math.random()*30, "Channel": "direct"};
-    data[2*i+1] = {"Month": i, "Unit Sales": Math.random()*30, "Channel": "web"};
+  for (i = 0; i < 12; i++) {
+    data[2*i]   = { "Month": i, "Unit Sales": Math.random() * 30, "Channel": "direct" };
+    data[2*i+1] = { "Month": i, "Unit Sales": Math.random() * 30, "Channel": "web"    };
   }
 
   var myChart = new dimple.chart(svg, data);
