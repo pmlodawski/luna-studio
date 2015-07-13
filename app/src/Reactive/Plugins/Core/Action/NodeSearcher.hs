@@ -66,7 +66,6 @@ toAction :: Event Node -> Maybe Action
 toAction (NodeSearcher (NodeSearcher.Event tpe expr))   = case tpe of
     "query"  -> Just $ Query Search expr
     "tree"   -> Just $ Query Tree   expr
-    "create" -> Just $ CreateNode   expr
     _        -> Nothing
 
 toAction (Keyboard (Keyboard.Event Keyboard.Down char)) = case char of
@@ -95,7 +94,6 @@ instance ActionUIUpdater Action where
         (Query Tree expr)        -> do
             JS.NodeSearcher.displayTreeResults $ Mock.getItemsTree expr
             putStrLn $ display action
-        (CreateNode expr)        -> putStrLn $ display action
         OpenNodeSearcher         -> do
             putStrLn $ display action
             JS.NodeSearcher.initNodeSearcher "" (state ^. Global.mousePos . x) (state ^. Global.mousePos . y)

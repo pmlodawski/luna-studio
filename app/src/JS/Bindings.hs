@@ -66,8 +66,12 @@ foreign import javascript unsafe "app.moveToTopZ($1)"
 foreign import javascript unsafe "app.getNodeAt($1, $2)"
     getNodeAtJSArray :: Int -> Int -> IO (JSArray Int)
 
-foreign import javascript unsafe "app.newNodeAt($1, $2, $3)"
-    newNodeAt :: Int -> Double -> Double -> IO ()
+foreign import javascript unsafe "app.newNodeAt($1, $2, $3, $4)"
+    newNodeAtJS :: Int -> Double -> Double -> JSString -> IO ()
+
+newNodeAt :: Int -> Double -> Double -> Text -> IO ()
+newNodeAt nodeId px py expr = newNodeAtJS nodeId px py $ toJSString expr
+
 
 foreign import javascript unsafe "app.removeNode($1)"
     removeNode :: Int -> IO ()

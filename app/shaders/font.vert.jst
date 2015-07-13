@@ -1,0 +1,9 @@
+attribute float page;
+varying vec2 vUv;
+varying float vPage;
+
+void main() {
+  vUv = uv;
+  vPage = page;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4( position.xyz, 1.0 );
+}

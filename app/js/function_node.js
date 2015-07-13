@@ -1,14 +1,17 @@
 "use strict";
 
-var $$ = require('common');
+var $$       = require('common');
+var config   = require('config');
 var features = require('features');
 
-var createText = THREE_TEXT;
-var font = require("font/LatoBlack-sdf");
+var createText   = THREE_TEXT;
+var font         = require("font/LatoBlack-sdf");
+var textMaterial = require('font/text_material');
 
 var vs = require('shaders/common.vert')();
 var fs = require('shaders/node.frag')();
 
+<<<<<<< HEAD
 var Port = require('port');
 
 
@@ -19,6 +22,8 @@ var textMaterial = new THREE.ShaderMaterial(require('shaders/font') ({
   transparent: true,
   color:       'rgb(230, 230, 230)'
 }));
+=======
+>>>>>>> 0a2ae3252f874cdc36a2ec9d145817f41202a7cb
 
 function FunctionNode(id, position) {
   var width  = 60;
@@ -117,14 +122,14 @@ FunctionNode.prototype.updateLabel = function() {
   var geom = createText({
     text: this.labelText,
     font: font,
-    width: 100/0.35,
+    width: 150/config.fontSize,
     align: 'center'
   });
 
   var obj = new THREE.Mesh(geom, textMaterial);
   obj.rotation.x = 180 * Math.PI/180;
-  obj.scale.multiplyScalar(0.35);
-  obj.position.x = -50;
+  obj.scale.multiplyScalar(config.fontSize);
+  obj.position.x = -75;
   obj.position.z = 0.0001;
   obj.position.y = 35;
 

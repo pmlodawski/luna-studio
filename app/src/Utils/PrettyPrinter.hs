@@ -6,6 +6,9 @@ import Data.Dynamic
 import Data.Monoid ( (<>) )
 import Text.Printf
 
+import qualified Data.Text.Lazy as Text
+import           Data.Text.Lazy (Text)
+
 class PrettyPrinter a where
     display :: a -> String
 
@@ -29,6 +32,9 @@ instance PrettyPrinter Char where
     display = show
 
 instance PrettyPrinter String where
+    display = show
+
+instance PrettyPrinter Text where
     display = show
 
 instance PrettyPrinter Bool where

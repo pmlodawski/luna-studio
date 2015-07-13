@@ -105,7 +105,7 @@ instance ActionStateUpdater Action where
 
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
-        SelectAction tpe (Node nodeId _ _) -> case tpe of
+        SelectAction tpe (Node nodeId _ _ _) -> case tpe of
             SelectNew         -> unselectAllNodes
                               >> setNodeFocused nodeId
             Focus             -> setNodeFocused nodeId

@@ -13,11 +13,15 @@ import           Utils.PrettyPrinter
 import           Object.Dynamic
 import           Object.Object
 
+import qualified Data.Text.Lazy as Text
+import           Data.Text.Lazy (Text)
+
 type NodeId = ID
 
-data Node = Node { _ident    :: NodeId
-                 , _selected :: Bool
-                 , _position :: Vector2 Double
+data Node = Node { _ident      :: NodeId
+                 , _selected   :: Bool
+                 , _position   :: Vector2 Double
+                 , _expression :: Text
                  } deriving (Eq, Show, Typeable)
 
 type NodeCollection   = [Node]
@@ -26,9 +30,10 @@ type NodeIdCollection = [NodeId]
 makeLenses ''Node
 
 instance PrettyPrinter Node where
-    display (Node ident sel pos) = "n(" <> display ident <>
+    display (Node ident sel pos expr) = "n(" <> display ident <>
                                    " "  <> display sel <>
-                                   " "  <> display pos <> ")"
+                                   " "  <> display pos <>
+                                   " "  <> display expr <> ")"
 
 instance Selectable Node where
     setSelected n selected = n { _selected = selected }

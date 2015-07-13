@@ -61,10 +61,11 @@ function updateCamera(factor, camPanX, camPanY, left, right, top, bottom) {
   $$.camera.bottom   = bottom;
 }
 
-function newNodeAt(i, x, y) {
+function newNodeAt(i, x, y, expr) {
   var vect = new THREE.Vector2(x, y);
   var node = new FunctionNode(i, vect);
   nodes[i] = node;
+  node.label(expr);
   $$.scene.add(node.mesh);
 }
 
