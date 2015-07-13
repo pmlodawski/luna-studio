@@ -11,19 +11,7 @@ var textMaterial = require('font/text_material');
 var vs = require('shaders/common.vert')();
 var fs = require('shaders/node.frag')();
 
-<<<<<<< HEAD
 var Port = require('port');
-
-
-var textMaterial = new THREE.ShaderMaterial(require('shaders/font') ({
-  map:         THREE.ImageUtils.loadTexture('font/LatoBlack-sdf.png'),
-  smooth:      1 / 12,
-  side:        THREE.DoubleSide,
-  transparent: true,
-  color:       'rgb(230, 230, 230)'
-}));
-=======
->>>>>>> 0a2ae3252f874cdc36a2ec9d145817f41202a7cb
 
 function FunctionNode(id, position) {
   var width  = 60;
@@ -71,6 +59,17 @@ function FunctionNode(id, position) {
 
   this.htmlElements = {};
   this.moveTo(position.x, position.y);
+
+  // example - to remove
+  var p1 = new Port(1, 0, true);
+  var p2 = new Port(2, Math.PI, false);
+  var p3 = new Port(3, Math.PI * 3/4, false);
+  var p4 = new Port(4, Math.PI * 5/4, false);
+  this.mesh.add(p1.mesh);
+  this.mesh.add(p2.mesh);
+  this.mesh.add(p3.mesh);
+  this.mesh.add(p4.mesh);
+  // end of example - to remove
 
   if (features.node_labels) this.updateLabel();
 }

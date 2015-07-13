@@ -1,8 +1,8 @@
 "use strict";
 
-var $$       = require('common');
-var features = require('features');
-var config   = require('config');
+// var $$       = require('common');
+// var features = require('features');
+// var config   = require('config');
 
 var vs = require('shaders/common.vert')();
 var fs = require('shaders/port.frag')();
@@ -16,14 +16,14 @@ function Port(id, angle, out) {
   this.id = id;
   this.out = out;
 
-  var inputColor  = new THREE.Vector4(0.7, 0,   0, 1);
-  var outputColor = new THREE.Vector4(0,   0.5, 0, 1);
+  var inputColor = new THREE.Vector4(0,   0.5, 0, 1);
+  var outputColor= new THREE.Vector4(0.7, 0,   0, 1);
 
-  var inputPort  = [ new THREE.Vector3( magic,       0.0, 0.0),
+  var outputPort = [ new THREE.Vector3( magic,       0.0, 0.0),
                      new THREE.Vector3(-magic, 15 *  0.5, 0.0),
                      new THREE.Vector3(-magic, 15 * -0.5, 0.0)];
 
-  var outputPort = [ new THREE.Vector3( magic, 15 *  0.5, 0.0),
+  var inputPort  = [ new THREE.Vector3( magic, 15 *  0.5, 0.0),
                      new THREE.Vector3(-magic,       0.0, 0.0),
                      new THREE.Vector3( magic, 15 * -0.5, 0.0)];
 
@@ -59,6 +59,6 @@ Port.prototype.setAngle = function(angle) {
   this.mesh.position.y = Math.sin(angle) * dist;
 
   this.mesh.rotation.z = angle;
-}
+};
 
 module.exports = Port;
