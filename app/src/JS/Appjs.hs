@@ -36,6 +36,14 @@ selectAllNodes :: IO ()
 selectAllNodes =
     getNodes >>= mapM_ setSelected
 
+selectNodes :: NodeIdCollection -> IO ()
+selectNodes nodeIds =
+    mapM_ setNodeSelected nodeIds
+
+unselectNodes :: NodeIdCollection -> IO ()
+unselectNodes nodeIds =
+    mapM_ setNodeUnselected nodeIds
+
 unfocusAllNodes :: IO ()
 unfocusAllNodes =
     getNodes >>= mapM_ setUnfocused

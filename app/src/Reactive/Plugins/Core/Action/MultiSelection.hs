@@ -27,12 +27,14 @@ import           Utils.Vector
 import           Utils.Wrapper
 import           Utils.PrettyPrinter
 import           Reactive.Plugins.Core.Action.Action
-import           Reactive.Plugins.Core.Action.State.Drag
-import qualified Reactive.Plugins.Core.Action.State.Camera   as Camera
-import qualified Reactive.Plugins.Core.Action.State.Global   as Global
+import           Reactive.Plugins.Core.Action.State.MultiSelection
+import qualified Reactive.Plugins.Core.Action.State.Selection      as Selection
+import qualified Reactive.Plugins.Core.Action.State.Camera         as Camera
+import qualified Reactive.Plugins.Core.Action.State.Global         as Global
 
 
 data DragType = StartDrag
+              | Moving
               | Dragging
               | StopDrag
               deriving (Eq, Show)
@@ -43,80 +45,71 @@ data Action = DragSelect { _actionType    :: DragType
                          }
               deriving (Eq, Show)
 
-
-
-
 makeLenses ''Action
 
 
-instance PrettyPrinter ActionType where
+instance PrettyPrinter DragType where
     display = show
 
 instance PrettyPrinter Action where
-    display (DragAction tpe point) = "dA( " <> display tpe <> " " <> display point <> " )"
+    display (DragSelect tpe point) = "msA( " <> display tpe <> " " <> display point <> " )"
 
 
-toAction :: Event Node -> Global.State -> Maybe Action
-toAction (Mouse (Mouse.Event tpe pos button keyMods)) state = case button of
+toAction :: Event Node -> NodeCollection -> Maybe Action
+toAction (Mouse (Mouse.Event tpe pos button keyMods)) nodes = case button of
     1                  -> case tpe of
         Mouse.Pressed  -> if isNode then Nothing
                                     else case keyMods of
-                                         (KeyMods False False False False) -> Just (DragSelect StartDrag pos)
-                                           _                                 -> Nothing
+                                        (KeyMods False False False False) -> Just (DragSelect StartDrag pos)
+                                        _                                 -> Nothing
         Mouse.Released -> Just (DragSelect StopDrag pos)
-        Mouse.Moved    -> Just (DragSelect Dragging pos)
+        Mouse.Moved    -> Just (DragSelect Moving pos)
     _                  -> Nothing
-    where objects          = getNodesAt pos (Global.toCamera state) (state ^. Global.nodes)
-          isNode           = not . null $ objects
-toAction _ _ = Nothing
-
-
+    where isNode        = not . null $ nodes
+toAction _ _            = Nothing
 
 
 instance ActionStateUpdater Action where
     execSt newActionCandidate oldState = case newAction of
         Just action -> ActionUI newAction newState
-        Nothing     -> ActionUI NoAction newState
+        Nothing     -> ActionUI NoAction  newState
         where
-        oldDrag                          = oldState ^. Global.drag . history
+        oldDrag                          = oldState ^. Global.multiSelection . history
         oldNodes                         = oldState ^. Global.nodes
-        emptySelection                   = null oldNodes
-        newState                         = oldState & Global.iteration +~ 1
-                                                    & Global.drag  . history .~ newDrag
-                                                    & Global.nodes .~ newNodes
+        oldSelection                     = oldState ^. Global.selection . Selection.nodeIds
+        newState                         = oldState & Global.iteration                     +~ 1
+                                                    & Global.multiSelection . history      .~ newDrag
+                                                    & Global.selection . Selection.nodeIds .~ newNodeIds
+                                                    & Global.nodes                         .~ newNodes
+        newNodes                         = updateNodesSelection newNodeIds oldNodes
         newAction                        = case newActionCandidate of
-            DragAction Moving pt        -> case oldDrag of
+            DragSelect Moving pt        -> case oldDrag of
                 Nothing                 -> Nothing
-                _                       -> Just $ DragAction Dragging pt
+                _                       -> Just $ DragSelect Dragging pt
             _                           -> Just newActionCandidate
-        newNodes                         = case newActionCandidate of
-            DragAction tpe point        -> case tpe of
-                StartDrag               -> oldNodes
+        newNodeIds                       = case newActionCandidate of
+            DragSelect tpe point        -> case tpe of
                 Moving                  -> case oldDrag of
-                    Just oldDragState   -> moveNodes (oldState ^. Global.camera . Camera.camera . Camera.factor) delta oldNodes
-                        where prevPos    = oldDragState ^. dragCurrentPos
-                              delta      = point - prevPos
-                    Nothing             -> oldNodes
-                StopDrag                -> oldNodes
-        newDrag                          = case newActionCandidate of
-            DragAction tpe point        -> case tpe of
-                StartDrag               -> Just $ DragHistory point point point
-                Moving                  -> if emptySelection then Nothing else case oldDrag of
-                    Just oldDragState   -> Just $ DragHistory startPos prevPos point
+                    Just oldDragState   -> getNodeIdsIn startPos point (Global.toCamera oldState) oldNodes
                         where startPos   = oldDragState ^. dragStartPos
-                              prevPos    = oldDragState ^. dragCurrentPos
+                    Nothing             -> oldSelection
+                _                       -> oldSelection
+        newDrag                          = case newActionCandidate of
+            DragSelect tpe point        -> case tpe of
+                StartDrag               -> Just $ DragHistory point point
+                Moving                  -> case oldDrag of
+                    Just oldDragState   -> Just $ DragHistory startPos point
+                        where startPos   = oldDragState ^. dragStartPos
                     Nothing             -> Nothing
                 StopDrag                -> Nothing
 
 
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
-        DragAction tpe pt   -> case tpe of
-            StartDrag       -> return ()
-            Moving          -> return ()
-            Dragging        -> return () -- moveNodesUI camera selectedNodes
-            StopDrag        -> moveNodesUI camera selectedNodes
-            where selectedNodes  = state ^. Global.nodes
-                  topNodeId      = selectedNodes ^? ix 0 . ident
-                  camera         = Global.toCamera state
-
+        DragSelect Dragging _  -> unselectNodes unselectedNodeIds
+                               >>   selectNodes   selectedNodeIds
+                               >> mapM_ setNodeFocused topNodeId
+        _                      -> return ()
+        where selectedNodeIds   = state ^. Global.selection . Selection.nodeIds
+              unselectedNodeIds = filter (\nodeId -> not $ nodeId `elem` selectedNodeIds) $ (^. ident) <$> state ^. Global.nodes
+              topNodeId         = selectedNodeIds ^? ix 0

@@ -37,6 +37,14 @@ isNode :: Object Dynamic -> Bool
 isNode obj = isJust (unpackDynamic obj :: Maybe Node)
 
 
+updateNodeSelection :: NodeIdCollection -> Node -> Node
+updateNodeSelection selNodeIds node = let selection = (node ^. ident) `elem` selNodeIds in
+    node & selected .~ selection
+
+updateNodesSelection :: NodeIdCollection -> NodeCollection -> NodeCollection
+updateNodesSelection selNodeIds nodes = fmap (updateNodeSelection selNodeIds) nodes
+
+
 getNodesAt :: Vector2 Int -> Utils.Camera -> NodeCollection -> NodeCollection
 getNodesAt posScr camera nodes = filter closeEnough nodes where
     pos              = Utils.screenToWorkspace camera posScr
@@ -44,3 +52,13 @@ getNodesAt posScr camera nodes = filter closeEnough nodes where
     closeEnough node = distSquared < radiusSquared where
         distSquared  = (dist ^. x) ^ 2 + (dist ^. y) ^ 2
         dist         = (node ^. position - pos)
+
+getNodeIdsIn :: Vector2 Int -> Vector2 Int -> Utils.Camera -> NodeCollection -> NodeIdCollection
+getNodeIdsIn (Vector2 x1 y1) (Vector2 x2 y2) camera nodes = (^. ident) <$> nodesInBounds where
+    leftBottom = Utils.screenToWorkspace camera $ Vector2 (min x1 x2) (max y1 y2)
+    rightTop   = Utils.screenToWorkspace camera $ Vector2 (max x1 x2) (min y1 y2)
+    nodesInBounds :: NodeCollection
+    nodesInBounds = filter isNodeInBounds nodes
+    isNodeInBounds node = let pos = node ^. position in
+                          leftBottom ^. x <= pos ^. x && pos ^. x <= rightTop ^. x &&
+                          leftBottom ^. y <= pos ^. y && pos ^. y <= rightTop ^. y

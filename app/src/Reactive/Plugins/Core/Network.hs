@@ -14,18 +14,19 @@ import           JS.Bindings
 import           Object.Object
 import           Object.Dynamic             ( unpackDynamic )
 import           Object.Node                ( Node(..) )
-import qualified Object.Node                                as Node
-import qualified Event.Event                                as Event
-import qualified Event.Mouse                                as Mouse
+import qualified Object.Node                                 as Node
+import qualified Event.Event                                 as Event
+import qualified Event.Mouse                                 as Mouse
 import           Utils.PrettyPrinter
 
 import           Reactive.Plugins.Core.Action.Action
-import qualified Reactive.Plugins.Core.Action.General       as General
-import qualified Reactive.Plugins.Core.Action.AddRemove     as AddRemove
-import qualified Reactive.Plugins.Core.Action.Selection     as Selection
-import qualified Reactive.Plugins.Core.Action.Drag          as Drag
-import qualified Reactive.Plugins.Core.Action.Camera        as Camera
-import qualified Reactive.Plugins.Core.Action.NodeSearcher  as NodeSearcher
+import qualified Reactive.Plugins.Core.Action.General        as General
+import qualified Reactive.Plugins.Core.Action.Camera         as Camera
+import qualified Reactive.Plugins.Core.Action.AddRemove      as AddRemove
+import qualified Reactive.Plugins.Core.Action.Selection      as Selection
+import qualified Reactive.Plugins.Core.Action.MultiSelection as MultiSelection
+import qualified Reactive.Plugins.Core.Action.Drag           as Drag
+import qualified Reactive.Plugins.Core.Action.NodeSearcher   as NodeSearcher
 import           Reactive.Plugins.Core.Action.Executor
 
 import           Reactive.Plugins.Core.Action.State.Global
@@ -63,16 +64,18 @@ makeNetworkDescription = do
 
         nodesUnderCursorB             = nodesUnderCursor <$> globalStateB
 
-        nodeGeneralActionB            = fmap ActionST $      General.toAction <$> anyNodeB
-        nodeAddRemActionB             = fmap ActionST $    AddRemove.toAction <$> anyNodeB
-        nodeSelectionActionB          = fmap ActionST $    Selection.toAction <$> anyNodeB <*> nodesUnderCursorB
-        nodeDragActionB               = fmap ActionST $         Drag.toAction <$> anyNodeB <*> nodesUnderCursorB
-        cameraActionB                 = fmap ActionST $       Camera.toAction <$> anyNodeB
-        nodeSearcherActionB           = fmap ActionST $ NodeSearcher.toAction <$> anyNodeB
+        nodeGeneralActionB            = fmap ActionST $        General.toAction <$> anyNodeB
+        cameraActionB                 = fmap ActionST $         Camera.toAction <$> anyNodeB
+        nodeAddRemActionB             = fmap ActionST $      AddRemove.toAction <$> anyNodeB
+        nodeSelectionActionB          = fmap ActionST $      Selection.toAction <$> anyNodeB <*> nodesUnderCursorB
+        nodeMultiSelectionActionB     = fmap ActionST $ MultiSelection.toAction <$> anyNodeB <*> nodesUnderCursorB
+        nodeDragActionB               = fmap ActionST $           Drag.toAction <$> anyNodeB <*> nodesUnderCursorB
+        nodeSearcherActionB           = fmap ActionST $   NodeSearcher.toAction <$> anyNodeB
 
         allActionsPackB               = [ nodeGeneralActionB
                                         , nodeAddRemActionB
                                         , nodeSelectionActionB
+                                        , nodeMultiSelectionActionB
                                         , nodeDragActionB
                                         , cameraActionB
                                         , nodeSearcherActionB

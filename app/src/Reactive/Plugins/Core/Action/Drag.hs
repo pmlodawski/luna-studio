@@ -70,23 +70,27 @@ toAction _ _ = Nothing
 
 moveNodes :: Double -> Vector2 Int -> NodeCollection -> NodeCollection
 moveNodes factor delta = fmap $ \node -> if node ^. selected then node & Node.position +~ deltaWs else node where
-    deltaWs = (/ factor) <$> vector2FromIntegral (flipY delta)
+    deltaWs = deltaToWs factor delta
 
+deltaToWs :: Double -> Vector2 Int -> Vector2 Double
+deltaToWs factor delta = (/ factor) <$> vector2FromIntegral (flipY delta)
+
+flipY :: Num a => Vector2 a -> Vector2 a
 flipY (Vector2 x y) = Vector2 x (-y)
 
 
 instance ActionStateUpdater Action where
     execSt newActionCandidate oldState = case newAction of
         Just action -> ActionUI newAction newState
-        Nothing     -> ActionUI NoAction newState
+        Nothing     -> ActionUI NoAction  newState
         where
         oldDrag                          = oldState ^. Global.drag . history
         oldNodes                         = oldState ^. Global.nodes
         camFactor                        = oldState ^. Global.camera . Camera.camera . Camera.factor
         emptySelection                   = null oldNodes
-        newState                         = oldState & Global.iteration +~ 1
+        newState                         = oldState & Global.iteration       +~ 1
                                                     & Global.drag  . history .~ newDrag
-                                                    & Global.nodes .~ newNodes
+                                                    & Global.nodes           .~ newNodes
         newAction                        = case newActionCandidate of
             DragAction Moving pt        -> case oldDrag of
                 Nothing                 -> Nothing
@@ -124,9 +128,9 @@ instance ActionUIUpdater Action where
                 allNodes              = state ^. Global.nodes
                 selNodeIds            = state ^. Global.selection . Selection.nodeIds
                 selNodes              = filter (\node -> node ^. ident `elem` selNodeIds) allNodes
-                camFactor             = state ^. Global.camera . Camera.camera . Camera.factor
+                factor                = state ^. Global.camera . Camera.camera . Camera.factor
                 deltaWs               = case state ^. Global.drag . history of
-                    Just dragState   -> (/ camFactor) <$> vector2FromIntegral (flipY delta) where
+                    Just dragState   -> deltaToWs factor delta where
                         delta         = dragState ^. dragCurrentPos - dragState ^. dragStartPos
                     Nothing          -> Vector2 0.0 0.0
 

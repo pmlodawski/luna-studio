@@ -76,17 +76,10 @@ toAction (Mouse (Mouse.Event tpe pos button keyMods)) nodes = case button of
 toAction (Keyboard (Keyboard.Event Keyboard.Press char)) state = case char of
     'A'     -> Just SelectAll
     _       -> Nothing
-toAction (Keyboard (Keyboard.Event Keyboard.Down char)) state = case char of
+toAction (Keyboard (Keyboard.Event Keyboard.Down  char)) state = case char of
     '\27'   -> Just UnselectAll
     _       -> Nothing
 toAction _ _ = Nothing
-
-
-updateNodeSelection :: NodeIdCollection -> Node -> Node
-updateNodeSelection selNodeIds node = let selection = elem (node ^. ident) selNodeIds in node & selected .~ selection
-
-updateNodesSelection :: NodeIdCollection -> NodeCollection -> NodeCollection
-updateNodesSelection selNodeIds nodes = fmap (updateNodeSelection selNodeIds) nodes
 
 
 instance ActionStateUpdater Action where
@@ -95,9 +88,9 @@ instance ActionStateUpdater Action where
         oldNodeIds                       = oldState ^. Global.selection . nodeIds
         oldNodes                         = oldState ^. Global.nodes
         newNodes                         = updateNodesSelection newNodeIds oldNodes
-        newState                         = oldState & Global.iteration +~ 1
-                                                    & Global.selection .  nodeIds .~ newNodeIds
-                                                    & Global.nodes     .~ newNodes
+        newState                         = oldState & Global.iteration           +~ 1
+                                                    & Global.selection . nodeIds .~ newNodeIds
+                                                    & Global.nodes               .~ newNodes
         newNodeIds                       = case newAction of
             SelectAll                   -> (^. ident) <$> oldNodes
             UnselectAll                 -> []

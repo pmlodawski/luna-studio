@@ -112,12 +112,12 @@ instance ActionStateUpdater Action where
     execSt newActionCandidate oldState =
         case newAction of
         Just action -> ActionUI newAction newState
-        Nothing     -> ActionUI NoAction newState
+        Nothing     -> ActionUI NoAction  newState
         where
-        newState                       = oldState &  Global.iteration +~ 1
+        newState                       = oldState &  Global.iteration                +~ 1
                                                   &  Global.camera . camera . pan    .~ newCamPan
                                                   &  Global.camera . camera . factor .~ newCamFactor
-                                                  &  Global.camera . history  .~ newUpdDrag
+                                                  &  Global.camera . history         .~ newUpdDrag
         oldCam                         = oldState ^. Global.camera
         oldCamPan                      = oldCam ^. camera . pan
         oldCamFactor                   = oldCam ^. camera . factor

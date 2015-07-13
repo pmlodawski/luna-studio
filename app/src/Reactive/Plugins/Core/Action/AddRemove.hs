@@ -66,12 +66,12 @@ maxNodeId nodes = (view ident) $ maximumBy (on compare (view ident)) nodes
 instance ActionStateUpdater Action where
     execSt newActionCandidate oldState = case newAction of
         Just action -> ActionUI newAction newState
-        Nothing     -> ActionUI NoAction newState
+        Nothing     -> ActionUI NoAction  newState
         where
-        newState                = oldState & Global.iteration +~ 1
-                                           & Global.nodes .~ newNodes
+        newState                = oldState & Global.iteration                     +~ 1
+                                           & Global.nodes                         .~ newNodes
                                            & Global.selection . Selection.nodeIds .~ newSelIds
-                                           & Global.addRemove . toRemoveIds .~ newToRemoveIds
+                                           & Global.addRemove . toRemoveIds       .~ newToRemoveIds
         oldNodes                = oldState ^. Global.nodes
         camera                  = Global.toCamera oldState
         nodePosWs               = Utils.screenToWorkspace camera $ oldState ^. Global.mousePos
