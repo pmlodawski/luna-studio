@@ -51,21 +51,24 @@ updateNodeSelection selNodeIds node = let selection = (node ^. ident) `elem` sel
 updateNodesSelection :: NodeIdCollection -> NodeCollection -> NodeCollection
 updateNodesSelection selNodeIds nodes = fmap (updateNodeSelection selNodeIds) nodes
 
+nodeRadius    = 30.0
+radiusSquared = 900.0
+radiusShadow  = 21.0
 
 getNodesAt :: Vector2 Int -> Camera -> NodeCollection -> NodeCollection
 getNodesAt posScr camera nodes = filter closeEnough nodes where
     pos              = screenToWorkspace camera posScr
-    radiusSquared    = 900.0
     closeEnough node = inRange && inRadius where
-        inRange      = dist ^. x < 30.0 && dist ^. y < 30.0
+        inRange      = dist ^. x < nodeRadius && dist ^. y < nodeRadius
         inRadius     = distSquared < radiusSquared
         distSquared  = (dist ^. x) ^ 2 + (dist ^. y) ^ 2
         dist         = (node ^. position - pos)
 
+-- TODO: Clever algorithm taking radius into account
 getNodeIdsIn :: Vector2 Int -> Vector2 Int -> Camera -> NodeCollection -> NodeIdCollection
 getNodeIdsIn (Vector2 x1 y1) (Vector2 x2 y2) camera nodes = (^. ident) <$> nodesInBounds where
-    leftBottom = screenToWorkspace camera $ Vector2 (min x1 x2) (max y1 y2)
-    rightTop   = screenToWorkspace camera $ Vector2 (max x1 x2) (min y1 y2)
+    leftBottom = screenToWorkspace camera (Vector2 (min x1 x2) (max y1 y2)) - Vector2 radiusShadow radiusShadow
+    rightTop   = screenToWorkspace camera (Vector2 (max x1 x2) (min y1 y2)) + Vector2 radiusShadow radiusShadow
     nodesInBounds :: NodeCollection
     nodesInBounds = filter isNodeInBounds nodes
     isNodeInBounds node = let pos = node ^. position in
