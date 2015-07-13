@@ -20,7 +20,6 @@ import Foreign.Marshal.Alloc (free)
 import Foreign.Marshal.Array (peekArray, newArray)
 import Data.ByteString.Lazy (ByteString, empty, pack, unpack)
 import Language.Haskell.TH
-import Language.Haskell.TH
 import Language.Haskell.TH.Syntax (VarStrictType)
 import qualified Language.Haskell.TH.Syntax as THS
 import qualified Data.Set as Set
@@ -232,7 +231,7 @@ generateDllInterface fnames outputDir = do
 
     let globalVar = CppGlobalVariable "hsdll" clsname
 
-    writeFilePair outputDir "DllApi" $ joinParts [(CppParts includes def def [cls] [] [globalVar]), depParts]
+    writeFilePair outputDir "DllApi" $ joinParts [(CppParts includes def def [cls] [] [] [globalVar]), depParts]
     generateCppList deps outputDir
 
 
