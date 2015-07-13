@@ -95,7 +95,7 @@ makeNetworkDescription logging = do
     case logging of
         True  -> do
             reactimate' $ (fmap logAllUI)    <$> allReactionsSeqPackF
-            reactimate  $ (logAs "event: ")  <$> anyE
+            reactimate  $ (logAs "")  <$> anyE
         False -> return ()
 
     return ()

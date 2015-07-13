@@ -1,8 +1,7 @@
 "use strict";
 
 module.exports = {
-  logger:        false,
-// names reserverd for hepler functions
+// names reserverd for helper functions
   enable:        undefined,
   disable:       undefined,
   clear:         undefined,
