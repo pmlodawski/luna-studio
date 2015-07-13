@@ -21,6 +21,7 @@ function FunctionNode(id, position) {
   this.id = id;
   this.position = position;
   this.labelText = ":" + id;
+  this.ports = [];
 
   this.attributes = {
       pos: {
@@ -61,14 +62,11 @@ function FunctionNode(id, position) {
   this.moveTo(position.x, position.y);
 
   // example - to remove
-  var p1 = new Port(1, 0, true);
-  var p2 = new Port(2, Math.PI, false);
-  var p3 = new Port(3, Math.PI * 3/4, false);
-  var p4 = new Port(4, Math.PI * 5/4, false);
-  this.mesh.add(p1.mesh);
-  this.mesh.add(p2.mesh);
-  this.mesh.add(p3.mesh);
-  this.mesh.add(p4.mesh);
+  // this.addPort(1,       0,        true);
+  // this.addPort(2, Math.PI,       false);
+  // this.addPort(3, Math.PI * 3/4, false);
+  // this.addPort(4, Math.PI * 1/4, false);
+  // this.setPortAngle(4, Math.PI * 5/4, false);
   // end of example - to remove
 
   if (features.node_labels) this.updateLabel();
@@ -106,6 +104,16 @@ FunctionNode.prototype.zPos = function(z) {
   return this.mesh.position.z;
 };
 
+FunctionNode.prototype.addPort = function(id, angle, out) {
+  var p = new Port(id, angle, out);
+  this.ports.push(p);
+  this.mesh.add(p.mesh);
+}
+
+FunctionNode.prototype.setPortAngle = function(id, angle) {
+  var p = _.find(this.ports, function(port) { return port.id == id });
+  p.setAngle(angle);
+}
 
 FunctionNode.prototype.label = function(text) {
   if (text !== undefined) {
