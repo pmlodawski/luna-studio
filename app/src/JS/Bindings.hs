@@ -55,14 +55,8 @@ foreign import javascript unsafe "app.initializeGl()"
 foreign import javascript unsafe "app.render()"
     render :: IO ()
 
-foreign import javascript unsafe "app.create($1)"
-    create :: Int -> IO ()
-
 foreign import javascript unsafe "app.moveToTopZ($1)"
     moveToTopZ :: Int -> IO ()
-
-foreign import javascript unsafe "app.getNodeAt($1, $2)"
-    getNodeAtJSArray :: Int -> Int -> IO (JSArray Int)
 
 foreign import javascript unsafe "app.newNodeAt($1, $2, $3, $4)"
     newNodeAtJS :: Int -> Double -> Double -> JSString -> IO ()
