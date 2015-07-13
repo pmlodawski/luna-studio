@@ -1,6 +1,7 @@
 module.exports = {
-  logging: false,
+  logging:         false,
   backgroundColor: 0x1a1a1a,
+  fontSize:        0.45,
   nodeSearcher: {
     scrollAnimationTime: 100,
     scrollbarOptions: {

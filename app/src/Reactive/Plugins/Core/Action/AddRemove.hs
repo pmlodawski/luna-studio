@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Reactive.Plugins.Core.Action.AddRemove where
 
 import           Prelude       hiding       ( mapM_, forM_ )
@@ -26,16 +28,20 @@ import           Utils.Vector
 import           Utils.Wrapper
 import           Utils.PrettyPrinter
 import           Reactive.Plugins.Core.Action.Action
+import           Event.NodeSearcher hiding  ( Event )
+import qualified Event.NodeSearcher as NodeSearcher
 import           Reactive.Plugins.Core.Action.State.AddRemove
 import qualified Reactive.Plugins.Core.Action.State.Selection as Selection
 import qualified Reactive.Plugins.Core.Action.State.Global    as Global
 
+import qualified Data.Text.Lazy as Text
+import           Data.Text.Lazy (Text)
 
 data ActionType = Add
                 | Remove
                 deriving (Eq, Show)
 
-data Action = AddAction
+data Action = AddAction Text
             | RemoveFocused
             deriving (Eq, Show)
 
@@ -47,16 +53,20 @@ instance PrettyPrinter ActionType where
     display = show
 
 instance PrettyPrinter Action where
-    display AddAction     = "arA(AddAction)"
-    display RemoveFocused = "arA(RemoveFocused)"
-
+    display (AddAction expr) = "arA(AddAction " <> (display expr) <> ")"
+    display  RemoveFocused   = "arA(RemoveFocused)"
 
 
 toAction :: Event Node -> Maybe Action
 toAction (Keyboard (Keyboard.Event Keyboard.Press char)) = case char of
-    'a'   -> Just AddAction
+    'a'   -> Just $ AddAction ""
     'r'   -> Just RemoveFocused
     _     -> Nothing
+
+toAction (NodeSearcher (NodeSearcher.Event tpe expr))   = case tpe of
+    "create" -> Just $ AddAction expr
+    _        -> Nothing
+
 toAction _ = Nothing
 
 maxNodeId :: NodeCollection -> NodeId
@@ -90,14 +100,14 @@ instance ActionStateUpdater Action where
             Just RemoveFocused -> drop 1 oldSelNodeIds
             _                  -> oldSelNodeIds
         newNodes                = case newActionCandidate of
-            AddAction          -> (Node nextNodeId False nodePosWs) : oldNodes
+            AddAction expr     -> (Node nextNodeId False nodePosWs expr) : oldNodes
             RemoveFocused      -> case headNodeId of
                 Nothing        -> oldNodes
                 Just remId     -> filter (\node -> node ^. ident /= remId) oldNodes
 
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
-        AddAction          -> newNodeAt nodeId px py
+        AddAction expr      -> newNodeAt nodeId px py expr
             where
             node            = head $ state ^. Global.nodes
             (Vector2 px py) = node ^. Node.position

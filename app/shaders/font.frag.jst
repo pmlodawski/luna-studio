@@ -1,0 +1,18 @@
+#define SQRT2 1.4142135623730951
+
+uniform float opacity;
+uniform vec3 color;
+uniform sampler2D map;
+uniform float smooth;
+uniform float camFactor;
+varying float vPage;
+varying vec2 vUv;
+
+void main() {
+  vec4 texColor = texture2D(map, vUv);
+  float dst = texColor.a;
+  float afwidth = smooth/camFactor * SQRT2 / (2.0 * gl_FragCoord.w);
+  float alpha = smoothstep(0.5 - afwidth, 0.5 + afwidth, dst);
+
+  gl_FragColor = vec4(color, opacity * alpha);
+}
