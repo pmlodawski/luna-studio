@@ -60,3 +60,10 @@ dragNode delta node = do
     let (Vector2 wx wy) = node ^.position + delta
     nodeRef <- getNode $ node ^. ident
     moveTo nodeRef wx wy
+
+displaySelectBox :: Vector2 Double -> Vector2 Double -> IO ()
+displaySelectBox a b = displaySelectBoxJS mx my w h where
+    mx = (a ^. x)
+    my = (a ^. y)
+    w = (b ^. x) - mx
+    h = (b ^. y) - my

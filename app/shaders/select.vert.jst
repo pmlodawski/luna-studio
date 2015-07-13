@@ -1,0 +1,10 @@
+#ifdef GL_ES
+precision highp float;
+#endif
+
+uniform vec3 size;
+
+void main()
+{
+	gl_Position = projectionMatrix * modelViewMatrix * (vec4(position * size, 1.0));
+}

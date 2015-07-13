@@ -148,3 +148,10 @@ logAs title a = putStrLn $ title <> (display a)
 
 foreign import javascript unsafe "config.logging"
     isLoggerEnabled :: IO (Bool)
+
+
+foreign import javascript unsafe "app.displaySelectBox($1, $2, $3, $4)"
+    displaySelectBoxJS :: Double -> Double -> Double -> Double -> IO ()
+
+foreign import javascript unsafe "app.hideSelectBox()"
+    hideSelectBox :: IO ()

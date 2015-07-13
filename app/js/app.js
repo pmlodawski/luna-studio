@@ -30,9 +30,40 @@ function initializeGl() {
     $$.camera.position.z = 500;
     $$.renderer = new THREE.WebGLRenderer({ antialias: true });
     $$.renderer.setClearColor(config.backgroundColor, 1);
+    initSelectBox();
     $($$.renderer.domElement).addClass('renderer');
     document.body.appendChild($$.renderer.domElement);
 }
+
+function initSelectBox() {
+  var geometry = new THREE.Geometry();
+  geometry.vertices.push(
+    new THREE.Vector3(0,0,0),
+    new THREE.Vector3(1,1,0),
+    new THREE.Vector3(0,1,0),
+    new THREE.Vector3(1,0,0)
+  );
+  geometry.faces.push(new THREE.Face3(0, 2, 1), new THREE.Face3(0, 1, 3));
+  var mesh = new THREE.Mesh(
+			geometry,
+			new THREE.ShaderMaterial( {
+				uniforms: {
+					visible: { type: 'f', value: 0 },
+					size: { type: 'v3', value: new THREE.Vector3(0,0,1) },
+					color: { type: 'v4', value: new THREE.Vector4(0.85, 0.55, 0.1,0.3) }
+				},
+				vertexShader:   require('shaders/select.vert')(),
+				fragmentShader: require('shaders/color.frag')(),
+				transparent: true,
+				blending: THREE.NormalBlending,
+        side:           THREE.DoubleSide
+  	})
+	);
+  mesh.position.z = 100;
+  $$.selectBox = mesh;
+  $$.scene.add( mesh );
+}
+
 
 function render() {
   $$.renderer.render($$.scene, $$.camera);
@@ -116,6 +147,18 @@ function destroyNodeSearcher() {
   }
 }
 
+function displaySelectBox(x,y,w,h) {
+  $$.selectBox.material.uniforms.visible.value = 1;
+  $$.selectBox.position.x = x;
+  $$.selectBox.position.y = y;
+  $$.selectBox.material.uniforms.size.value.x = w;
+  $$.selectBox.material.uniforms.size.value.y = h;
+}
+
+function hideSelectBox() {
+  $$.selectBox.material.uniforms.visible.value = 0;
+}
+
 module.exports = {
   initializeGl: initializeGl,
   render: render,
@@ -134,6 +177,8 @@ module.exports = {
   start: start,
   createNodeSearcher: createNodeSearcher,
   destroyNodeSearcher: destroyNodeSearcher,
+  displaySelectBox: displaySelectBox,
+  hideSelectBox: hideSelectBox,
   nodeSearcher: function() { return $$.node_searcher; }
 };
 

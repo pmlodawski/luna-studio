@@ -59,7 +59,7 @@ instance PrettyPrinter Action where
 
 toAction :: Event Node -> Maybe Action
 toAction (Keyboard (Keyboard.Event Keyboard.Press char)) = case char of
-    'a'   -> Just $ AddAction ""
+    'a'   -> Just $ AddAction "Hello.node"
     'r'   -> Just RemoveFocused
     _     -> Nothing
 

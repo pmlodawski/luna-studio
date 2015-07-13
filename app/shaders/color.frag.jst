@@ -3,8 +3,10 @@ precision highp float;
 #endif
 
 uniform vec4 color;
+uniform float visible;
 
 void main()
 {
-    gl_FragColor = color;
+  if(visible < 1.0) discard;
+  gl_FragColor = color;
 }

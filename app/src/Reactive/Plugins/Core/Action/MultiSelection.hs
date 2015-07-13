@@ -106,10 +106,15 @@ instance ActionStateUpdater Action where
 
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
-        DragSelect Dragging _  -> unselectNodes unselectedNodeIds
+        DragSelect Dragging _  -> displaySelectBox (currWorkspace $ dragState ^. dragStartPos) (currWorkspace $ dragState ^. dragCurrentPos)
+                               >> unselectNodes unselectedNodeIds
                                >>   selectNodes   selectedNodeIds
                                >> mapM_ setNodeFocused topNodeId
+        DragSelect StopDrag _  -> hideSelectBox
         _                      -> return ()
         where selectedNodeIds   = state ^. Global.selection . Selection.nodeIds
               unselectedNodeIds = filter (\nodeId -> not $ nodeId `elem` selectedNodeIds) $ (^. ident) <$> state ^. Global.nodes
               topNodeId         = selectedNodeIds ^? ix 0
+              dragState         = fromJust (state ^. Global.multiSelection . history)
+              camera            = Global.toCamera state
+              currWorkspace     = Utils.screenToWorkspace camera
