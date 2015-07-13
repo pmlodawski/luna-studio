@@ -1,11 +1,13 @@
 module JS.Appjs where
 
-import Control.Monad
+import           Control.Monad
+import           Control.Lens
 
 import           JS.Bindings
 import           JS.Converters
-import           JS.Utils
-import qualified Object.Object as Object
+import           JS.Utils       as Utils
+import           Object.Node
+import           Utils.Vector
 
 setNodeUnselected :: Int -> IO ()
 setNodeUnselected nodeId =
@@ -34,18 +36,27 @@ selectAllNodes :: IO ()
 selectAllNodes =
     getNodes >>= mapM_ setSelected
 
+selectNodes :: NodeIdCollection -> IO ()
+selectNodes nodeIds =
+    mapM_ setNodeSelected nodeIds
+
+unselectNodes :: NodeIdCollection -> IO ()
+unselectNodes nodeIds =
+    mapM_ setNodeUnselected nodeIds
+
 unfocusAllNodes :: IO ()
 unfocusAllNodes =
     getNodes >>= mapM_ setUnfocused
 
 
-dragNode :: Int -> Int -> Int -> IO ()
-dragNode nodeId x y = when (nodeId >= 0) $ do
-    node      <- getNode nodeId
-    width     <- innerWidth
-    height    <- innerHeight
-    camFactor <- getCamFactor
-    camPan    <- getCamPan
-    let (wx, wy) = screenToWorkspace (Object.Point width height) camFactor camPan (Object.Point x y)
-    moveTo node wx wy
+moveNode :: Node -> IO ()
+moveNode node = do
+    let (Vector2 wx wy) = node ^.position
+    nodeRef <- getNode $ node ^. ident
+    moveTo nodeRef wx wy
 
+dragNode :: Vector2 Double -> Node -> IO ()
+dragNode delta node = do
+    let (Vector2 wx wy) = node ^.position + delta
+    nodeRef <- getNode $ node ^. ident
+    moveTo nodeRef wx wy

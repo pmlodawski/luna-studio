@@ -26,7 +26,8 @@ import           Event.WithObjects
 import           Utils.Wrapper
 import           Utils.PrettyPrinter
 import           Reactive.Plugins.Core.Action.Action
-import           Reactive.Plugins.Core.Action.State.Selection as Selection
+import           Reactive.Plugins.Core.Action.State.Selection
+import qualified Reactive.Plugins.Core.Action.State.Camera    as Camera
 import qualified Reactive.Plugins.Core.Action.State.Global    as Global
 
 data ActionType = SelectNew
@@ -49,13 +50,13 @@ instance PrettyPrinter ActionType where
     display = show
 
 instance PrettyPrinter Action where
-    display UnselectAll = "sA( UnselectAll )"
-    display SelectAll   = "sA( SelectAll )"
+    display UnselectAll              = "sA( UnselectAll )"
+    display SelectAll                = "sA( SelectAll )"
     display (SelectAction tpe node)  = "sA( " <> display tpe <> " " <> display node <> " )"
 
 
-toAction :: Event Node -> Maybe Action
-toAction (Mouse (WithObjects (Mouse.Event tpe pos button keyMods) objects)) = case button of
+toAction :: Event Node -> NodeCollection -> Maybe Action
+toAction (Mouse (Mouse.Event tpe pos button keyMods)) nodes = case button of
     1                 -> case tpe of
         Mouse.Pressed -> if isNoNode then case keyMods of
                                         (KeyMods False False False False) -> Just UnselectAll
@@ -66,34 +67,30 @@ toAction (Mouse (WithObjects (Mouse.Event tpe pos button keyMods) objects)) = ca
                                         _                                 -> Nothing
         _             -> Nothing
     _                 -> Nothing
-    where isNoNode         = null objects
-          node             = unwrap . head $ objects
+    where isNoNode         = null nodes
+          node             = head nodes
           selectActionType = if node ^. selected then Focus
                                                  else SelectNew
           toggleActionType = if node ^. selected then ToggleOff
                                                  else ToggleOn
-toAction (Keyboard (Keyboard.Event Keyboard.Press char)) = case char of
-    'n' -> Just SelectAll
-    'u' -> Just UnselectAll
-    _   -> Nothing
-toAction _ = Nothing
-
-updateNodeSelection :: NodeIdCollection -> Node -> Node
-updateNodeSelection selNodeIds node = let selection = elem (node ^. ident) selNodeIds in node & selected .~ selection
-
-updateNodesSelection :: NodeIdCollection -> NodeCollection -> NodeCollection
-updateNodesSelection selNodeIds nodes = fmap (updateNodeSelection selNodeIds) nodes
+toAction (Keyboard (Keyboard.Event Keyboard.Press char)) state = case char of
+    'A'     -> Just SelectAll
+    _       -> Nothing
+toAction (Keyboard (Keyboard.Event Keyboard.Down  char)) state = case char of
+    '\27'   -> Just UnselectAll
+    _       -> Nothing
+toAction _ _ = Nothing
 
 
 instance ActionStateUpdater Action where
     execSt newAction oldState = ActionUI newAction newState
         where
-        oldNodeIds                       = oldState ^. Global.selection . Selection.nodeIds
+        oldNodeIds                       = oldState ^. Global.selection . nodeIds
         oldNodes                         = oldState ^. Global.nodes
         newNodes                         = updateNodesSelection newNodeIds oldNodes
-        newState                         = oldState & Global.iteration +~ 1
-                                                    & Global.selection . Selection.nodeIds .~ newNodeIds
-                                                    & Global.nodes     .~ newNodes
+        newState                         = oldState & Global.iteration           +~ 1
+                                                    & Global.selection . nodeIds .~ newNodeIds
+                                                    & Global.nodes               .~ newNodes
         newNodeIds                       = case newAction of
             SelectAll                   -> (^. ident) <$> oldNodes
             UnselectAll                 -> []
@@ -118,5 +115,5 @@ instance ActionUIUpdater Action where
         SelectAll             -> selectAllNodes
                               >> mapM_ setNodeFocused topNodeId
         UnselectAll           -> unselectAllNodes
-        where selectedNodeIds  = state ^. Global.selection . Selection.nodeIds
+        where selectedNodeIds  = state ^. Global.selection . nodeIds
               topNodeId        = selectedNodeIds ^? ix 0

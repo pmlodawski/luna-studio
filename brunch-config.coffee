@@ -49,7 +49,6 @@ exports.config =
 
   keyword:
     filePattern: /\.(js|css|html)$/
-
     map:
       git_commit: ->
         local_changes = (shelljs.exec('git diff-index --quiet HEAD --').code == 1)

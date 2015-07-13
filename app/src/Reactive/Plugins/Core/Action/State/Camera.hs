@@ -6,35 +6,44 @@ import           Data.Default
 import           Data.Monoid
 
 import           Object.Object
+import           Utils.Vector
 import           Utils.PrettyPrinter
 
 
-data DragHistory = DragHistory { _dragStartPos    :: Point
-                               , _dragPreviousPos :: Point
-                               , _dragCurrentPos  :: Point
+data DragHistory = DragHistory { _dragStartPos    :: Vector2 Int
+                               , _dragPreviousPos :: Vector2 Int
+                               , _dragCurrentPos  :: Vector2 Int
                                } deriving (Eq, Show)
 
 
-data State = State { _camPanX     :: Double
-                   , _camPanY     :: Double
-                   , _camFactor   :: Double
-                   , _history     :: Maybe DragHistory
+data Camera = Camera { _pan        :: Vector2 Double
+                     , _factor     :: Double
+                     } deriving (Eq, Show)
+
+data State = State { _camera   :: Camera
+                   , _history  :: Maybe DragHistory
                    } deriving (Eq, Show)
 
 makeLenses ''State
+makeLenses ''Camera
 makeLenses ''DragHistory
 
 
+instance Default Camera where
+    def = Camera def 1.0
+
+instance PrettyPrinter Camera where
+    display (Camera pan factor) = "( " <> display pan <>
+                                  " "  <> display factor <>
+                                  " )"
+
 instance Default State where
-    def = State 0.0 0.0 1.0 def
+    def = State def def
 
 instance PrettyPrinter State where
-    display (State camPanX camPanY camFactor history) =
-                                                "cS( " <> display camPanX
-                                                <> " " <> display camPanY
-                                                <> " " <> display camFactor
-                                                <> " " <> display history
-                                                <> " )"
+    display (State camera history) = "cS( " <> display camera <>
+                                     " "    <> display history <>
+                                     " )"
 
 instance PrettyPrinter DragHistory where
     display (DragHistory start prev curr) = display start <> " " <> display prev <> " " <> display curr

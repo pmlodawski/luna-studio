@@ -6,38 +6,18 @@ import           Data.Word
 import           Data.Char           ( chr )
 import           Data.Maybe          ( fromJust )
 import           Data.Dynamic        ( Dynamic )
+import           Data.Text.Lazy (Text)
+import qualified Data.Text.Lazy as Text
+
 import           GHCJS.DOM           ( currentWindow )
-import           GHCJS.DOM.DOMWindow ( IsDOMWindow
-                                     , domWindowOnclick
-                                     , domWindowOnmouseup
-                                     , domWindowOnkeydown
-                                     , domWindowOnkeypress
-                                     , domWindowOnkeyup
-                                     , domWindowOnmousedown
-                                     , domWindowOnmousemove
-                                     , domWindowOnresize
-                                     , domWindowGetInnerWidth
-                                     , domWindowGetInnerHeight
-                                     )
-import           GHCJS.DOM.EventM    ( EventM
-                                     , uiCharCode
-                                     , uiKeyCode
-                                     , uiWhich
-                                     , mouseClientXY
-                                     , mouseButton
-                                     , mouseShiftKey
-                                     , mouseCtrlKey
-                                     , mouseAltKey
-                                     , mouseMetaKey
-                                     --, preventDefault
-                                     )
+import           GHCJS.DOM.DOMWindow
+import           GHCJS.DOM.EventM
 import qualified GHCJS.DOM.MouseEvent
+import           GHCJS.Foreign
 import           Reactive.Banana.Frameworks ( AddHandler(..), liftIO )
 
 import           JS.Bindings
 import           JS.NodeSearcher
-import           GHCJS.Foreign
-
 import           Object.Object
 import qualified Event.Keyboard      as Keyboard
 import qualified Event.Mouse         as Mouse
@@ -45,9 +25,9 @@ import qualified Event.Window        as Window
 import qualified Event.NodeSearcher  as NodeSearcher
 import qualified Object.Node         ( Node )
 import           Event.Event
+import           Utils.Vector
 
-import qualified Data.Text.Lazy as Text
-import           Data.Text.Lazy (Text)
+
 
 readKeyMods :: (IsDOMWindow self) => EventM GHCJS.DOM.MouseEvent.MouseEvent self Keyboard.KeyMods
 readKeyMods = do
@@ -60,16 +40,11 @@ readKeyMods = do
 readButton :: (IsDOMWindow self) => EventM GHCJS.DOM.MouseEvent.MouseEvent self Int
 readButton = uiWhich
 
-readMousePos :: (IsDOMWindow self) => EventM GHCJS.DOM.MouseEvent.MouseEvent self Point
+readMousePos :: (IsDOMWindow self) => EventM GHCJS.DOM.MouseEvent.MouseEvent self (Vector2 Int)
 readMousePos = --convert <$> mouseClientXY
     do
         (x, y) <- mouseClientXY
-        return $ Point x y
-
-
-newMouseWithObjects :: Mouse.Type -> Point -> Int -> Keyboard.KeyMods -> [Object Dynamic] -> Event Dynamic
-newMouseWithObjects eventType point button keyMods objects =
-    Mouse $ Mouse.newWithObjects (Mouse.newEvent eventType point button keyMods) objects
+        return $ Vector2 x y
 
 mouseDownHandler :: AddHandler (Event Dynamic)
 mouseDownHandler = AddHandler $ \h -> do
@@ -78,9 +53,7 @@ mouseDownHandler = AddHandler $ \h -> do
         mousePos <- readMousePos
         button   <- readButton
         keyMods  <- readKeyMods
-        liftIO $ do
-            objects <- getObjectsAt (mousePos ^. x) (mousePos ^. y)
-            h $ newMouseWithObjects Mouse.Pressed mousePos button keyMods objects
+        liftIO . h $ Mouse $ Mouse.Event Mouse.Pressed mousePos button keyMods
 
 mouseUpHandler :: AddHandler (Event Dynamic)
 mouseUpHandler = AddHandler $ \h -> do
@@ -89,9 +62,7 @@ mouseUpHandler = AddHandler $ \h -> do
         mousePos <- readMousePos
         button   <- readButton
         keyMods  <- readKeyMods
-        liftIO $ do
-            objects <- getObjectsAt (mousePos ^. x) (mousePos ^. y)
-            h $ newMouseWithObjects Mouse.Released mousePos button keyMods objects
+        liftIO . h $ Mouse $ Mouse.Event Mouse.Released mousePos button keyMods
 
 mouseMovedHandler :: AddHandler (Event Dynamic)
 mouseMovedHandler = AddHandler $ \h -> do
@@ -100,17 +71,18 @@ mouseMovedHandler = AddHandler $ \h -> do
         mousePos <- readMousePos
         button   <- readButton
         keyMods  <- readKeyMods
-        liftIO $ do
-            objects <- getObjectsAt (mousePos ^. x) (mousePos ^. y)
-            h $ newMouseWithObjects Mouse.Moved mousePos button keyMods objects
+        liftIO . h $ Mouse $ Mouse.Event Mouse.Moved mousePos button keyMods
 
 resizeHandler :: AddHandler (Event Dynamic)
 resizeHandler = AddHandler $ \h -> do
     window <- fromJust <$> currentWindow
-    width  <- domWindowGetInnerWidth  window
-    height <- domWindowGetInnerHeight window
-    domWindowOnresize window $ do
-        liftIO . h $ Window $ Window.Event Window.Resized width height
+    handler domWindowOnload   h window
+    handler domWindowOnresize h window
+    where
+        handler domWindowOn h window = domWindowOn window $ liftIO $ do
+            width  <- domWindowGetInnerWidth  window
+            height <- domWindowGetInnerHeight window
+            h $ Window $ Window.Event Window.Resized width height
 
 keyPressedHandler :: AddHandler (Event Dynamic)
 keyPressedHandler = AddHandler $ \h -> do

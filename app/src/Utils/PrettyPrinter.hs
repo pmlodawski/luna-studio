@@ -10,10 +10,10 @@ class PrettyPrinter a where
     display :: a -> String
 
 instance PrettyPrinter a => PrettyPrinter [a] where
-    display xs = "[  " <> (intercalate " " $ fmap display xs) <> " ]"
+    display xs = "[ " <> (intercalate " " $ fmap display xs) <> " ]"
 
 instance PrettyPrinter a => PrettyPrinter (Maybe a) where
-    display (Just v) = "J: " <> (display v)
+    display (Just v) = "j|" <> (display v)
     display Nothing  = "Nothing"
 
 instance PrettyPrinter Int where
@@ -23,13 +23,17 @@ instance PrettyPrinter Integer where
     display = show
 
 instance PrettyPrinter Double where
-    display v = show $ (fromIntegral (round $ v * 100000.0)) / 100000.0
+    display v = show $ (fromIntegral (round $ v * 1000.0)) / 1000.0
 
 instance PrettyPrinter Char where
     display = show
 
 instance PrettyPrinter String where
     display = show
+
+instance PrettyPrinter Bool where
+    display True  = "T"
+    display False = "F"
 
 instance PrettyPrinter Dynamic where
     display _ = "Dynamic"
