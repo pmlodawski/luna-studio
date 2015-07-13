@@ -9,7 +9,8 @@ var fs = require('shaders/port.frag')();
 
 
 var magic = 15 * Math.sqrt(3) / 4;
-var dist  = 30 + (magic / 2) + 2.24;
+var distFromRim = 4;
+var dist  = 30 + (magic / 2) + 2.24 + distFromRim;
 
 function Port(id, angle, out) {
   var geometry;

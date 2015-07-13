@@ -12,22 +12,29 @@ The website http://flowbox.io/data/preview redirects always to the newest versio
   - It allows for future faster GUI development and proper event handling
 
 * Completely new node editor
-  - fully Haskell and WebGL based
-  - displaying nodes with new shaders
-  - selecting nodes
-  - multi selection (holding alt)
-  - priority selection - remembering selection history and last selected node
-  - moving nodes
-  - pan / zoom (left and middle mouse button)
+  - Haskell / JavaScript and WebGL based
+  - Displaying nodes with new shaders
+  - Selecting nodes
+  - Toggle selection (holding alt)
+  - Focus node - remembering selection history and last selected node
+  - Moving nodes
+  - Pan / zoom (right and middle mouse button, arrows and +/-)
 
 ## v 0.3 | [13.07.2015](http://flowbox.io/data/preview/2015-07-13/)
 
 * Node editor development:
  - Create new nodes with new Node Searcher (Tab key)
  - Select multiple nodes by dragging
- - Move multiple nodes
- - Remove nodes
+ - Move multiple nodes at any panning and zoom level
+ - Remove focused node ('r')
  - Display text (node labels) in WebGL
+ - Reset zoom ('z')
+ - Select all nodes (shift 'a')
+ - Unselect nodes (Esc)
+ - Nice looking antialiasing of nodes at all zoom levels
+ - Basic port shaders
 * Under the hood
  - Major rework of GUI framework
+ - Almost all JavaScript part converted to Haskell
+ - Performance optimization
  - Feature switches in GUI aiming at Continous Delivery
