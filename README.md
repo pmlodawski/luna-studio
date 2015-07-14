@@ -30,7 +30,7 @@ Feature switches reside in `app/features.default.js`. These values are for produ
 
 ## Local `brunch-config` overrides
 
-It's possible to override some brunch settings locally by creating file `brunch-config.coffee` that exports function `transform` that modifies config. Example:
+It's possible to override some brunch settings locally by creating file `brunch-config.local.coffee` that exports function `transform` that modifies config. Example:
 
 ```coffee
 exports.transform = (config) ->
