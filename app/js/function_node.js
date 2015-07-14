@@ -108,12 +108,12 @@ FunctionNode.prototype.addPort = function(id, angle, out) {
   var p = new Port(id, angle, out);
   this.ports.push(p);
   this.mesh.add(p.mesh);
-}
+};
 
 FunctionNode.prototype.setPortAngle = function(id, angle) {
-  var p = _.find(this.ports, function(port) { return port.id == id });
+  var p = _.find(this.ports, function(port) { return port.id === id; });
   p.setAngle(angle);
-}
+};
 
 FunctionNode.prototype.label = function(text) {
   if (text !== undefined) {
