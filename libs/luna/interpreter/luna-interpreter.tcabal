@@ -32,6 +32,7 @@ Library
                     flowbox-config,
                     flowbox-serialization,
                     flowbox-utils,
+                    HMap,
                     ghc,
                     ghc-mtl,
                     luna-core,
@@ -57,7 +58,7 @@ Executable luna-interpreter-test
     Extensions:     NoImplicitPrelude
 
     Build-Depends:  base,
-                    errors,
+                    errors < 2.0,
                     flowbox-batch,
                     flowbox-config,
                     flowbox-utils,
@@ -79,7 +80,7 @@ Test-Suite tests
                       "-with-rtsopts=-N -p -s -h -i0.1 -xc"
     Extensions:     NoImplicitPrelude
     Build-Depends:  base,
-                    errors,
+                    errors < 2.0,
                     flowbox-batch,
                     flowbox-config,
                     flowbox-utils,

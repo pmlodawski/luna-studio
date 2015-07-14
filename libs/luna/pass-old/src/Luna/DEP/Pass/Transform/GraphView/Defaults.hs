@@ -17,12 +17,12 @@ import           Flowbox.Control.Error              ()
 import           Flowbox.Prelude                    hiding (empty)
 import qualified Luna.DEP.Graph.Flags               as Flags
 import qualified Luna.DEP.Graph.Node                as Node
-import           Luna.DEP.Graph.Node.Expr           (NodeExpr)
 import qualified Luna.DEP.Graph.Node.OutputName     as OutputName
 import           Luna.DEP.Graph.Properties          (Properties)
 import qualified Luna.DEP.Graph.Properties          as Properties
 import           Luna.DEP.Graph.PropertyMap         (PropertyMap)
 import qualified Luna.DEP.Graph.PropertyMap         as PropertyMap
+import           Luna.DEP.Graph.View.Default.Expr   (DefaultExpr (DefaultExpr))
 import           Luna.DEP.Graph.View.EdgeView       (EdgeView (EdgeView))
 import           Luna.DEP.Graph.View.GraphView      (GraphView)
 import qualified Luna.DEP.Graph.View.GraphView      as GraphView
@@ -30,8 +30,9 @@ import           Luna.DEP.Graph.View.PortDescriptor (PortDescriptor)
 
 
 
-generatedProperties :: Properties
-generatedProperties = def & Properties.flags . Flags.defaultNodeGenerated .~ Just True
+generateProperties :: Node.ID -> Properties
+generateProperties originID = def & Properties.flags . Flags.defaultNodeGenerated .~ Just True
+                                  & Properties.flags . Flags.defaultNodeOriginID  .~ Just originID
 
 
 addDefaults :: GraphView -> PropertyMap -> (GraphView, PropertyMap)
@@ -46,8 +47,8 @@ addNodeDefaults nodeID gp@(_, propertyMap) =
         defaults = Map.toList $ PropertyMap.getDefaultsMap nodeID propertyMap
 
 
-addNodeDefault :: Node.ID -> (PortDescriptor, (Node.ID, NodeExpr)) -> (GraphView, PropertyMap) -> (GraphView, PropertyMap)
-addNodeDefault nodeID (adstPort, (defaultNodeID, defaultValue)) (graph, propertyMap) =
+addNodeDefault :: Node.ID -> (PortDescriptor, DefaultExpr) -> (GraphView, PropertyMap) -> (GraphView, PropertyMap)
+addNodeDefault nodeID (adstPort, DefaultExpr defaultNodeID defaultOriginID defaultValue) (graph, propertyMap) =
     if GraphView.isNotAlreadyConnected graph nodeID adstPort
         then (newGraph2, newPropertyMap)
         else (graph, propertyMap)
@@ -55,7 +56,7 @@ addNodeDefault nodeID (adstPort, (defaultNodeID, defaultValue)) (graph, property
       node      = OutputName.provide (Node.Expr defaultValue "" (0, 0)) nodeID
       newGraph  = GraphView.insNode (defaultNodeID, node) graph
       newGraph2 = GraphView.insEdge (defaultNodeID, nodeID, EdgeView [] adstPort) newGraph
-      newPropertyMap = PropertyMap.insert defaultNodeID generatedProperties propertyMap
+      newPropertyMap = PropertyMap.insert defaultNodeID (generateProperties defaultOriginID) propertyMap
 
 
 isGenerated :: Node.ID -> PropertyMap -> Bool
@@ -71,4 +72,3 @@ delGenerated nodeID gp@(graph, propertyMap) = if isGenerated nodeID propertyMap
 
 removeDefaults :: GraphView -> PropertyMap -> (GraphView, PropertyMap)
 removeDefaults graph propertyMap = foldr delGenerated (graph, propertyMap) $ GraphView.nodes graph
-

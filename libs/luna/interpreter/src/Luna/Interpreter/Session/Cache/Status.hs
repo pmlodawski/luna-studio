@@ -15,3 +15,12 @@ data CacheStatus = Ready
                  | Affected
                  | NonCacheable
                  deriving (Show, Eq)
+
+merge :: CacheStatus -> CacheStatus -> CacheStatus
+merge NonCacheable _            = NonCacheable
+merge _            NonCacheable = NonCacheable
+merge Modified     _            = Modified
+merge _            Modified     = Modified
+merge Affected     _            = Affected
+merge _            Affected     = Affected
+merge Ready        Ready        = Ready

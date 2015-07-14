@@ -18,6 +18,7 @@ message Flags {
     optional FoldInfo foldInfo             = 4;
     optional bool     grouped              = 5;
     optional bool     defaultNodeGenerated = 6;
+    optional int32    defaultNodeOriginID  = 10;
     optional bool     graphViewGenerated   = 7;
     optional float    nodePositionX        = 8;
     optional float    nodePositionY        = 9;

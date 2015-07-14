@@ -14,7 +14,7 @@
 {-# LANGUAGE ScopedTypeVariables    #-}
 {-# LANGUAGE UndecidableInstances   #-}
 
-module Flowbox.Data.Hash where
+module Luna.Interpreter.Runtime.Hash where
 
 import qualified Data.Hash                         as DHash
 import           Data.Word

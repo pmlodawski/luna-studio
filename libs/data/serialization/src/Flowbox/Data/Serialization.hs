@@ -40,64 +40,64 @@ import           Generated.Proto.Data.IntData        (IntData (IntData))
 import qualified Generated.Proto.Data.IntData        as IntData
 import           Generated.Proto.Data.StringData     (StringData (StringData))
 import qualified Generated.Proto.Data.StringData     as StringData
-import           Generated.Proto.Data.Value          (Value (Value))
-import qualified Generated.Proto.Data.Value.Type     as Value
+import           Generated.Proto.Data.SValue         (SValue (SValue))
+import qualified Generated.Proto.Data.SValue.Type    as SValue
 import qualified Luna.Target.HS.Control.Error.Data   as Data
 
 
 
 class Serializable a b | a -> b where
     serialize :: a -> Mode -> IO (Maybe b)
-    data' :: a -> Key Maybe Value b
-    val   :: a -> Value.Type
+    data' :: a -> Key Maybe SValue b
+    val   :: a -> SValue.Type
 
-    toValue :: a -> Mode -> IO (Maybe Value)
+    toValue :: a -> Mode -> IO (Maybe SValue)
     toValue a mode = mkValue (data' a) (val a) <$> serialize a mode
 
 
-mkValue :: Key Maybe Value a -> Value.Type -> Maybe a -> Maybe Value
-mkValue key keytype = liftM $ \extension -> putExt key (Just extension) $ Value keytype defaultValue
+mkValue :: Key Maybe SValue a -> SValue.Type -> Maybe a -> Maybe SValue
+mkValue key keytype = liftM $ \extension -> putExt key (Just extension) $ SValue keytype defaultValue
 
 
 instance Serializable Error ErrorData where
     serialize (Error msg) _ = return . Just . ErrorData $ fromString msg
     data' _ = ErrorData.data'
-    val   _ = Value.Error
+    val   _ = SValue.Error
 
 instance Serializable () EmptyTupleData where
     serialize _  _ = return . Just $ EmptyTupleData
     data' _ = EmptyTupleData.data'
-    val   _ = Value.EmptyTuple
+    val   _ = SValue.EmptyTuple
 
 instance Serializable Int IntData where
     serialize a  _ = return . Just . IntData . fromIntegral $ a
     data' _ = IntData.data'
-    val   _ = Value.Int
+    val   _ = SValue.Int
 
 instance Serializable Char CharData where
     serialize a  _ = return . Just . CharData . fromIntegral . ord $ a
     data' _ = CharData.data'
-    val   _ = Value.Char
+    val   _ = SValue.Char
 
 instance Serializable Bool BoolData where
     serialize a  _ = return . Just . BoolData $ a
     data' _ = BoolData.data'
-    val   _ = Value.Bool
+    val   _ = SValue.Bool
 
 instance Serializable String StringData where
     serialize a  _ = return . Just . StringData $ fromString a
     data' _ = StringData.data'
-    val   _ = Value.String
+    val   _ = SValue.String
 
 instance Serializable Float FloatData where
     serialize a  _ = return . Just . FloatData $ a
     data' _ = FloatData.data'
-    val   _ = Value.Float
+    val   _ = SValue.Float
 
 instance Serializable Double DoubleData.DoubleData where
     serialize a  _ = return . Just . DoubleData $ a
     data' _ = DoubleData.data'
-    val   _ = Value.Double
+    val   _ = SValue.Double
 
 
 -- [PM] : instance below requires UndecidableInstances enabled
