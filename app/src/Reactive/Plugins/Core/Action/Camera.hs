@@ -103,9 +103,11 @@ toAction (Keyboard (Keyboard.Event Keyboard.Down char)) = case char of
     _     -> Nothing
 toAction _ = Nothing
 
-minCamFactor  = 0.2
-maxCamFactor  = 8.0
-dragZoomSpeed = 512.0
+minCamFactor   = 0.2
+maxCamFactor   = 8.0
+dragZoomSpeed  = 512.0
+panStep        = 10.0
+zoomFactorStep = 1.1
 
 restrictCamFactor = min maxCamFactor . max minCamFactor
 
@@ -129,17 +131,17 @@ instance ActionStateUpdater Action where
             MouseAction Pan  _ _      -> oldCamPan + dragPan
             KeyAction keyAct          -> Vector2 newCamPanX newCamPanY where
                 newCamPanX            = case keyAct of
-                    PanLeft           -> oldCamPan ^. x - 10.0 / oldCamFactor
-                    PanRight          -> oldCamPan ^. x + 10.0 / oldCamFactor
+                    PanLeft           -> oldCamPan ^. x - panStep / oldCamFactor
+                    PanRight          -> oldCamPan ^. x + panStep / oldCamFactor
                     _                 -> oldCamPan ^. x
                 newCamPanY             = case keyAct of
-                    PanUp             -> oldCamPan ^. y + 10.0 / oldCamFactor
-                    PanDown           -> oldCamPan ^. y - 10.0 / oldCamFactor
+                    PanUp             -> oldCamPan ^. y + panStep / oldCamFactor
+                    PanDown           -> oldCamPan ^. y - panStep / oldCamFactor
                     _                 -> oldCamPan ^. y
         newCamFactor                   = case newActionCandidate of
             KeyAction ResetZoom       -> 1.0
-            KeyAction ZoomIn          -> max minCamFactor $ oldCamFactor / 1.1
-            KeyAction ZoomOut         -> min maxCamFactor $ oldCamFactor * 1.1
+            KeyAction ZoomIn          -> max minCamFactor $ oldCamFactor / zoomFactorStep
+            KeyAction ZoomOut         -> min maxCamFactor $ oldCamFactor * zoomFactorStep
             MouseAction Zoom _ _      -> restrictCamFactor newCamFactorCandidate
             _                         -> oldCamFactor
         newDrag                        = case newActionCandidate of
@@ -156,7 +158,7 @@ instance ActionStateUpdater Action where
                 Just drag                -> (zoomPan, newCamFactorCandidate) where
                     camFactorDelta        = (delta ^. x + delta ^. y) / dragZoomSpeed
                     newCamFactorCandidate = oldCamFactor * (1.0 + camFactorDelta)
-                    delta                 = negateSnd $ fromIntegral <$> (drag ^. dragCurrentPos - drag ^. dragPreviousPos)
+                    delta                 = fromIntegral <$> (negateSnd $ drag ^. dragCurrentPos - drag ^. dragPreviousPos)
                     camera                = Global.toCamera oldState
                     oldScreen             = drag ^. fixedPointPosScreen
                     oldWorkspace          = drag ^. fixedPointPosWorkspace

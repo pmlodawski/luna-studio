@@ -45,6 +45,7 @@ executable gui
                      , mtl
                      , lens
                      , containers
+                     , fgl
   hs-source-dirs:      app/src
   default-language:    Haskell2010
 
