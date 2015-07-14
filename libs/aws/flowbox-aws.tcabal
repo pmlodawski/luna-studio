@@ -22,7 +22,7 @@ Library
 
     Exposed-modules: `findmodules('src', '.*\.(hs|sql)', exclude='.*hs-boot.*')`,
                      `findmodules('dist/gen', '.*\.(hs|sql)', exclude='.*hs-boot.*')`
-                     
+
     Build-Depends:  aws     == 0.11.1,
                     aws-sdk >= 0.12.4,
                     base,
@@ -62,7 +62,7 @@ Executable aws-test-dbpool
     Hs-Source-Dirs: test
 
     GHC-Options:    -Wall -O2 -threaded
-    
+
     Extensions:     NoImplicitPrelude
 
     Build-Depends:  aws-sdk,
@@ -79,7 +79,7 @@ Executable aws-test-querydb
     Hs-Source-Dirs: test
 
     GHC-Options:    -Wall -O2 -threaded
-    
+
     Extensions:     NoImplicitPrelude
 
     Build-Depends:  aws-sdk >= 0.12.4,
@@ -95,7 +95,7 @@ Executable aws-test-s3
     Hs-Source-Dirs: test
 
     GHC-Options:    -Wall -O2 -threaded
-    
+
     Extensions:     NoImplicitPrelude
 
     Build-Depends:  aws,
@@ -110,7 +110,7 @@ Executable aws-test-simple
     Hs-Source-Dirs: test
 
     GHC-Options:    -Wall -O2 -threaded
-    
+
     Extensions:     NoImplicitPrelude
 
     Build-Depends:  aws-sdk >= 0.12.4,
@@ -118,4 +118,3 @@ Executable aws-test-simple
                     flowbox-aws,
                     flowbox-utils,
                     text
-
