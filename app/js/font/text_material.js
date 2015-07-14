@@ -8,7 +8,7 @@ var defaults = function(){
   return {
     uniforms: {
       opacity:   { type: 'f', value: 1 },
-      smooth:    { type: 'f', value: 1/4 },
+      smooth:    { type: 'f', value: 1/5 },
       map:       { type: 't', value: THREE.ImageUtils.loadTexture('font/LatoBlack-sdf.png') },
       color:     { type: 'c', value: new THREE.Color("rgb(255, 255, 255)") },
       camFactor: { type: 'f', value: 1 }
