@@ -25,8 +25,11 @@
   height: 300px;
   z-index: 2;
 
+  display: -webkit-flex;
   display:flex;
+  -webkit-flex-direction: row;
   flex-direction: row;
+  -webkit-flex-wrap: nowrap;
   flex-wrap: nowrap;
 
 
@@ -75,6 +78,7 @@
   // layout
 
   .column {
+    -webkit-flex-shrink: 0;
     flex-shrink: 0;
     overflow: hidden;
 
