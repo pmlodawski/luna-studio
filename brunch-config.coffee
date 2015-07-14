@@ -1,4 +1,5 @@
 shelljs = require 'shelljs'
+logger = require 'loggy'
 
 cabalProjectName = "gui"
 
@@ -60,3 +61,9 @@ exports.config =
     production:
       optimize: false # breaks "production" === "production"
       keyword: map: env: "production"
+
+try
+  c = require("./brunch-config.local").transform(exports.config)
+  logger.info "Applying local overrides"
+catch
+  null # no local overrides

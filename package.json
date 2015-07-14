@@ -26,6 +26,7 @@
     "jshint-brunch": "^1.8.0",
     "keyword-brunch": "^1.7.8",
     "less-brunch": "^1.8.1",
+    "loggy": "^0.2.0",
     "shelljs": "^0.5.1",
     "uglify-js-brunch": ">= 1.0 < 1.9",
     "underscore-brunch": "^1.4.0"
