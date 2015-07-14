@@ -36,11 +36,11 @@ import           Luna.DEP.Graph.Graph                                           
 import qualified Luna.DEP.Graph.Graph                                            as Graph
 import           Luna.DEP.Graph.Node                                             (Node)
 import qualified Luna.DEP.Graph.Node                                             as Node
-import           Luna.DEP.Graph.Node.Expr                                        (NodeExpr)
 import           Luna.DEP.Graph.PropertyMap                                      (PropertyMap)
 import qualified Luna.DEP.Graph.PropertyMap                                      as PropertyMap
 import           Luna.DEP.Graph.View.Default.DefaultsMap                         (DefaultsMap)
 import qualified Luna.DEP.Graph.View.Default.DefaultsMap                         as DefaultsMap
+import           Luna.DEP.Graph.View.Default.Expr                                (DefaultExpr)
 import           Luna.DEP.Graph.View.GraphView                                   (GraphView)
 import qualified Luna.DEP.Graph.View.GraphView                                   as GraphView
 import           Luna.DEP.Graph.View.PortDescriptor                              (PortDescriptor)
@@ -145,7 +145,7 @@ getDefaultsMap nodeID libraryID projectID =
 
 
 lookupNodeDefault :: PortDescriptor -> Node.ID -> Library.ID -> Project.ID
-                  -> Batch (Maybe (Node.ID, NodeExpr))
+                  -> Batch (Maybe DefaultExpr)
 lookupNodeDefault inPort nodeID libraryID projectID =
     DefaultsMap.lookup inPort <$> getDefaultsMap nodeID libraryID projectID
 
@@ -424,4 +424,3 @@ graphViewOp bc libraryID projectID operation = do
     ((newGraphView, newPM), r) <- operation graphView propertyMap
     setGraphView (newGraphView, newPM) bc libraryID projectID
     return r
-

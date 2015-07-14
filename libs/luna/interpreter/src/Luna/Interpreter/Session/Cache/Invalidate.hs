@@ -140,7 +140,7 @@ markMatching status predicate = do
 setParentsStatus :: CacheStatus -> CallPointPath -> Session mm ()
 setParentsStatus _      []            = return ()
 setParentsStatus status callPointPath = do
-    Cache.setStatus status callPointPath
+    Cache.mergeStatus status callPointPath
     setParentsStatus status $ init callPointPath
 
 
@@ -151,4 +151,4 @@ markSuccessors callDataPath status =
 
 
 modifyCallPointPath :: CallPointPath -> Session mm ()
-modifyCallPointPath = Cache.setStatus CacheStatus.Modified
+modifyCallPointPath = Cache.mergeStatus CacheStatus.Modified

@@ -22,6 +22,7 @@ import           Luna.DEP.AST.Module                     (Module)
 import           Luna.DEP.Graph.PropertyMap              (PropertyMap)
 import qualified Luna.DEP.Graph.PropertyMap              as PropertyMap
 import qualified Luna.DEP.Graph.View.Default.DefaultsMap as DefaultsMap
+import qualified Luna.DEP.Graph.View.Default.Expr        as DefaultExpr
 import qualified Luna.DEP.Pass.Analysis.ID.ExtractIDs    as ExtractIDs
 import           Luna.DEP.Pass.Pass                      (Pass)
 import qualified Luna.DEP.Pass.Pass                      as Pass
@@ -43,12 +44,12 @@ gcIds :: Module -> PropertyMap -> GCNodePropertiesPass PropertyMap
 gcIds module_ propertyMap = do
     ids <- hoistEither =<< ExtractIDs.runModule module_
     let existingIds      = IntSet.union ids $ IntSet.map (* (-1)) ids
-        defaultsMaps     = map (flip PropertyMap.getDefaultsMap propertyMap) $ IntSet.toList existingIds
+        defaultsMaps     = map (`PropertyMap.getDefaultsMap` propertyMap) $ IntSet.toList existingIds
         defaults         = concatMap DefaultsMap.elems defaultsMaps
-        defaultsIds      = IntSet.fromList $ map fst defaults
-    defaultsContentIds <- hoistEither =<< ExtractIDs.runNodeExprs (map snd defaults)
+        defaultsIds      = IntSet.fromList $ map (view DefaultExpr.nodeID) defaults
+    defaultsContentIds <- hoistEither =<< ExtractIDs.runNodeExprs (map (view DefaultExpr.nodeExpr) defaults)
     let pmIds       = PropertyMap.keysSet propertyMap
         orphans     = pmIds \\ IntSet.unions [existingIds, defaultsContentIds, defaultsIds]
-    when (not $ IntSet.null orphans) $
+    unless (IntSet.null orphans) $
         logger warning $ concat ["GCNodePropertiesPass: found ", show $ IntSet.size orphans, " orphaned ids: ", show orphans]
     return $ foldr PropertyMap.delete propertyMap $ IntSet.toList orphans

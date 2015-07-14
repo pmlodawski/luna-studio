@@ -70,12 +70,11 @@ initialize config imports = do
                    --, GHC.verbosity = 4
                    }
     setHardcodedExtensions
-    setImports $ "Data.Word"
-               : "Flowbox.Data.Hash"
-               : "Flowbox.Serialization"
+    setImports $ "Flowbox.Serialization"
                : "Luna.Target.HS"
-               : "System.Mem"
+               : "Luna.Interpreter.Runtime"
                : imports
+    logger info "Initialization done"
 
 
 setStrFlags :: [String] -> Session mm ()

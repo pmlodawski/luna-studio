@@ -12,7 +12,8 @@
 
 module Luna.DEP.Data.Serialize.Proto.Conversion.NodeDefault where
 
-import qualified Data.Map as Map
+import qualified Data.Map   as Map
+import qualified Data.Maybe as Maybe
 
 import           Flowbox.Control.Error
 import           Flowbox.Data.Convert
@@ -23,6 +24,7 @@ import           Luna.DEP.Data.Serialize.Proto.Conversion.Graph    ()
 import qualified Luna.DEP.Graph.Node                               as Node
 import           Luna.DEP.Graph.Node.Expr                          (NodeExpr)
 import           Luna.DEP.Graph.View.Default.DefaultsMap           (DefaultsMap)
+import           Luna.DEP.Graph.View.Default.Expr                  (DefaultExpr (DefaultExpr))
 import           Luna.DEP.Graph.View.PortDescriptor                (PortDescriptor)
 
 
@@ -32,9 +34,11 @@ instance Convert DefaultsMap Gen.DefaultsMap where
     decode (Gen.DefaultsMap items) = Map.fromList <$> decode items
 
 
-instance Convert (PortDescriptor, (Node.ID, NodeExpr)) Gen.Entry where
-    encode (inPort, (nodeID, value)) = Gen.Entry (encodeP inPort) (encodePJ nodeID) (encodeJ value)
-    decode (Gen.Entry inPort mnodeID mvalue) = do
-        nodeID <- decodeP <$> mnodeID <?> "Failed to decode DefaultsMap.Entry: 'nodeID' field is missing"
-        value  <- decode  =<< mvalue  <?> "Failed to decode DefaultsMap.Entry: 'value' field is missing"
-        return (decodeP inPort, (nodeID, value))
+instance Convert (PortDescriptor, DefaultExpr) Gen.Entry where
+    encode (inPort, DefaultExpr nodeID originID value) = Gen.Entry (encodeP inPort) (encodePJ nodeID) (encodePJ originID) (encodeJ value)
+    decode (Gen.Entry inPort mnodeID moriginID mvalue) = do
+        tnodeID  <- mnodeID   <?> "Failed to decode DefaultsMap.Entry: 'nodeID' field is missing"
+        let nodeID = decodeP tnodeID
+        value    <- decode  =<< mvalue    <?> "Failed to decode DefaultsMap.Entry: 'value' field is missing"
+        let originID = decodeP $ Maybe.fromMaybe tnodeID moriginID
+        return (decodeP inPort, DefaultExpr nodeID originID value)
