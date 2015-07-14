@@ -103,10 +103,11 @@ toAction (Keyboard (Keyboard.Event Keyboard.Down char)) = case char of
     _     -> Nothing
 toAction _ = Nothing
 
-minCamFactor = 0.2
-maxCamFactor = 8.0
+minCamFactor  = 0.2
+maxCamFactor  = 8.0
+dragZoomSpeed = 512.0
 
-
+restrictCamFactor = min maxCamFactor . max minCamFactor
 
 instance ActionStateUpdater Action where
     execSt newActionCandidate oldState =
@@ -117,14 +118,14 @@ instance ActionStateUpdater Action where
         newState                       = oldState &  Global.iteration                +~ 1
                                                   &  Global.camera . camera . pan    .~ newCamPan
                                                   &  Global.camera . camera . factor .~ newCamFactor
-                                                  &  Global.camera . history         .~ newUpdDrag
+                                                  &  Global.camera . history         .~ newDrag
         oldCam                         = oldState ^. Global.camera
         oldCamPan                      = oldCam ^. camera . pan
         oldCamFactor                   = oldCam ^. camera . factor
         oldDrag                        = oldCam ^. history
         newAction                      = Just newActionCandidate
         newCamPan                      = case newActionCandidate of
-            MouseAction Zoom _ _      -> oldCamPan + zoomPan
+            MouseAction Zoom _ _      -> zoomPan
             MouseAction Pan  _ _      -> oldCamPan + dragPan
             KeyAction keyAct          -> Vector2 newCamPanX newCamPanY where
                 newCamPanX            = case keyAct of
@@ -139,36 +140,37 @@ instance ActionStateUpdater Action where
             KeyAction ResetZoom       -> 1.0
             KeyAction ZoomIn          -> max minCamFactor $ oldCamFactor / 1.1
             KeyAction ZoomOut         -> min maxCamFactor $ oldCamFactor * 1.1
-            MouseAction Zoom _ _      -> min maxCamFactor . max minCamFactor $ oldCamFactor * (1.0 + camDragFactorDelta)
+            MouseAction Zoom _ _      -> restrictCamFactor newCamFactorCandidate
             _                         -> oldCamFactor
         newDrag                        = case newActionCandidate of
             MouseAction act tpe point -> case tpe of
-                StartDrag             -> Just $ DragHistory point point point
+                StartDrag             -> Just $ DragHistory point (Camera.screenToWorkspace camera point) point point where
+                    camera = Global.toCamera oldState
                 Dragging              -> case oldDrag of
-                    Just oldDragState -> Just $ DragHistory startPos prevPos point where
-                        startPos       = oldDragState ^. dragStartPos
-                        prevPos        = oldDragState ^. dragCurrentPos
+                    Just oldDragState -> Just $ oldDragState & dragPreviousPos .~ (oldDragState ^. dragCurrentPos)
+                                                             & dragCurrentPos  .~ point
                     Nothing           -> Nothing
                 StopDrag              -> Nothing
             _                         -> Nothing
-        -- TODO: 1) name the identifiers below appropriately
-        --       2) fix zoomPan for mouse zooming
-        --       3) why it works properly even with screenSize = (0, 0)   (uninitialized initial value)
-        (camDragFactorDelta, zoomPan, newUpdDrag)
-                                       = case newDrag of
-                Just drag             -> (camDragFactorDelta, zoomPan, newUpdDrag) where
-                    camDragFactorDelta = (fromIntegral $ delta ^. x + delta ^. y) / 512.0
-                    delta              = Vector2 ( drag ^. dragCurrentPos . x - drag ^. dragPreviousPos . x)
-                                                 (-drag ^. dragCurrentPos . y + drag ^. dragPreviousPos . y)
-                    zoomPan            = Vector2 0.0 0.0 -- Vector2 (fromIntegral $ drag ^. dragStartPos . x) * camDragFactorDelta (fromIntegral $ drag ^. dragStartPos . y) * camDragFactorDelta
-                    newUpdDrag         = newDrag -- Just $ drag & Camera.dragStartPos +~ zoomPan
-                Nothing               -> (0.0, Vector2 0.0 0.0, newDrag)
-        dragPan                        = case newDrag of
-                Just drag             -> prevWorkspace - currWorkspace where
-                    camera             = Global.toCamera oldState
-                    currWorkspace      = Camera.screenToWorkspace camera $ drag ^. dragCurrentPos
-                    prevWorkspace      = Camera.screenToWorkspace camera $ drag ^. dragPreviousPos
-                Nothing               -> Vector2 0.0 0.0
+        (zoomPan, newCamFactorCandidate)  = case newDrag of
+                Just drag                -> (zoomPan, newCamFactorCandidate) where
+                    camFactorDelta        = (delta ^. x + delta ^. y) / dragZoomSpeed
+                    newCamFactorCandidate = oldCamFactor * (1.0 + camFactorDelta)
+                    delta                 = negateSnd $ fromIntegral <$> (drag ^. dragCurrentPos - drag ^. dragPreviousPos)
+                    camera                = Global.toCamera oldState
+                    oldScreen             = drag ^. fixedPointPosScreen
+                    oldWorkspace          = drag ^. fixedPointPosWorkspace
+                    newWorkspace          = Camera.screenToWorkspace nonPannedCamera oldScreen
+                    nonPannedCamera       = camera & Camera.factor .~ (restrictCamFactor newCamFactorCandidate)
+                                                   & Camera.pan    .~ Vector2 0.0 0.0
+                    zoomPan               = -newWorkspace + oldWorkspace
+                Nothing                  -> (oldCamPan, oldCamFactor)
+        dragPan                           = case newDrag of
+                Just drag                -> prevWorkspace - currWorkspace where
+                    camera                = Global.toCamera oldState
+                    currWorkspace         = Camera.screenToWorkspace camera $ drag ^. dragCurrentPos
+                    prevWorkspace         = Camera.screenToWorkspace camera $ drag ^. dragPreviousPos
+                Nothing                  -> Vector2 0.0 0.0
 
 
 instance ActionUIUpdater Action where
@@ -180,7 +182,7 @@ syncCamera state = do
     let cPan         = state ^. Global.camera . camera . pan
         cFactor      = state ^. Global.camera . camera . factor
         screenSize   = state ^. Global.screenSize
-        hScreen      = (/ 2.0) <$> vector2FromIntegral screenSize
+        hScreen      = (/ 2.0) . fromIntegral <$> screenSize
         camLeft      = appX cameraLeft
         camRight     = appX cameraRight
         camTop       = appY cameraTop

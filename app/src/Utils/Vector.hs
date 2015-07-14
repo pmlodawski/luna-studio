@@ -36,10 +36,8 @@ instance Monoid a => Monoid (Vector2 a) where
     mempty                                    = Vector2 mempty mempty
     (Vector2 x1 y1) `mappend` (Vector2 x2 y2) = Vector2 (x1 `mappend` x2) (y1 `mappend` y2)
 
-
-vector2FromIntegral :: (Integral a, Num b) => Vector2 a -> Vector2 b
-vector2FromIntegral (Vector2 x y) = Vector2 (fromInteger . toInteger $ x) (fromInteger . toInteger $ y)
-
+negateSnd :: Num a => Vector2 a -> Vector2 a
+negateSnd (Vector2 x y) = Vector2 x (-y)
 
 instance PrettyPrinter a => PrettyPrinter (Vector2 a) where
     display (Vector2 x y) = "(" <> display x <> "," <> display y <> ")"

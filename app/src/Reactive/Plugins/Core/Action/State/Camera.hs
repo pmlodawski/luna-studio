@@ -10,10 +10,12 @@ import           Utils.Vector
 import           Utils.PrettyPrinter
 
 
-data DragHistory = DragHistory { _dragStartPos    :: Vector2 Int
-                               , _dragPreviousPos :: Vector2 Int
-                               , _dragCurrentPos  :: Vector2 Int
+data DragHistory = DragHistory { _fixedPointPosScreen    :: Vector2 Int
+                               , _fixedPointPosWorkspace :: Vector2 Double
+                               , _dragPreviousPos        :: Vector2 Int
+                               , _dragCurrentPos         :: Vector2 Int
                                } deriving (Eq, Show)
+
 
 
 data Camera = Camera { _pan        :: Vector2 Double
@@ -46,4 +48,4 @@ instance PrettyPrinter State where
                                      " )"
 
 instance PrettyPrinter DragHistory where
-    display (DragHistory start prev curr) = display start <> " " <> display prev <> " " <> display curr
+    display (DragHistory fixedS fixedW prev curr) = display fixedS <> " " <> display fixedW <> " " <> display prev <> " " <> display curr
