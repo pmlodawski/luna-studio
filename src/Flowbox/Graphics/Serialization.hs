@@ -48,7 +48,7 @@ import qualified Generated.Proto.Data.ChannelDescription.ChannelID as ChID
 import qualified Generated.Proto.Data.MatrixData      as MatrixData
 import qualified Generated.Proto.Data.MatrixData.Type as MatrixData
 import qualified Generated.Proto.Data.MatrixData.Tag  as MatrixData
-import qualified Generated.Proto.Data.Value.Type      as Value
+import qualified Generated.Proto.Data.SValue.Type      as SValue
 
 import qualified Data.Array.Accelerate.CUDA as CUDA
 
@@ -156,7 +156,7 @@ pattern EmptyMode <- Mode.Mode (Seq.viewl -> EmptyL)
 --                 return $ liftM4 ViewData.ViewData red green blue (Just alpha)
 
 --     data' _ = ViewData.data'
---     val   _ = Value.View
+--     val   _ = SValue.View
 
 get :: [String] -> V.View -> Maybe [Chan.Channel]
 get names view = mapM (join . hush . V.get view) names
@@ -208,7 +208,7 @@ instance Serializable Img.Image ChanData.ChannelData where
     serialize _ _ = return Nothing
 
     data' _ = ChanData.data'
-    val   _ = Value.ChannelData
+    val   _ = SValue.ChannelData
 
 mkChanDesc :: Chan.Channel -> ChanDesc.ChannelDescription
 mkChanDesc (ChanF n a) = ChanDesc.ChannelDescription (Just MatrixData.DOUBLE) (nameToID n) (Just $ uFromString n)
