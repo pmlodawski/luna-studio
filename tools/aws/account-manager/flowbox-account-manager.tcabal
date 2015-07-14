@@ -34,9 +34,12 @@ Executable account-manager
                     flowbox-rpc,
                     flowbox-utils,
                     network,
-                    optparse-applicative < 0.10, 
+                    optparse-applicative < 0.10,
                     postgresql-simple,
                     protocol-buffers,
                     text,
-                    transformers
+                    transformers,
+                    vector < 0.11
+
 -- FIXME: update optparse-applicative to newer version
+-- [PM] vector < 0.11 is only to fix dependencies
