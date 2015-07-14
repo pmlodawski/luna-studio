@@ -1,10 +1,17 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveFoldable #-}
+{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE DeriveTraversable #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 
 module Flowbox.GuiMockup.JSInterop where
 
 import           Control.Applicative  ((<$>), (<*>))
+import           Control.Lens
+import           Data.Foldable
 import           Data.List            (intercalate)
 import qualified Data.Vector.Storable as V
 import           Foreign.Ptr
@@ -21,7 +28,10 @@ data CubicBezier a = CubicBezier { cubicC0 :: V2 a
                                  , cubicC2 :: V2 a
                                  , cubicC3 :: V2 a
                                  }
-    deriving (Eq, Show, Generic)
+    deriving (Eq, Show, Generic, Foldable, Traversable, Functor)
+
+instance Each (CubicBezier a) (CubicBezier b) a b where
+    each = traverse
 
 instance (Binary a) => Binary (CubicBezier a)
 
@@ -41,7 +51,7 @@ instance V.Storable a => V.Storable (CubicBezier a) where
         pokeElemOff ptr' 2 c2
         pokeElemOff ptr' 3 c3
 
-readPoints :: [[Float]] -> V.Vector (V2 Float)
+readPoints :: [[Double]] -> V.Vector (V2 Double)
 readPoints = V.fromList . map (\[x,y] -> V2 x y)
 
 jsifyVector :: V.Storable a => (a -> String) -> V.Vector a -> String
@@ -49,13 +59,13 @@ jsifyVector f = wrap . intercalate "," . map f . V.toList
     where
         wrap s = "[" ++ s ++ "]"
 
-jsifyBezier :: CubicBezier Float -> String
+jsifyBezier :: CubicBezier Double -> String
 jsifyBezier (CubicBezier c0 c1 c2 c3) = jsifyObject fields points
     where
         points = map jsifyV2 [c0, c1, c2, c3]
         fields = zipWith (:) (repeat 'p') $ map show [(0::Int)..]
 
-jsifyV2 :: V2 Float -> String
+jsifyV2 :: V2 Double -> String
 jsifyV2 (V2 x y) = "{\"x\": " ++ show x ++ ", \"y\": " ++ show y ++ "}"
 
 jsifyObject :: [String] -> [String] -> String

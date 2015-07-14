@@ -20,7 +20,6 @@ import Foreign.Marshal.Alloc (free)
 import Foreign.Marshal.Array (peekArray, newArray)
 import Data.ByteString.Lazy (ByteString, empty, pack, unpack)
 import Language.Haskell.TH
-import Language.Haskell.TH
 import Language.Haskell.TH.Syntax (VarStrictType)
 import qualified Language.Haskell.TH.Syntax as THS
 import qualified Data.Set as Set
@@ -201,7 +200,7 @@ runtimeCtor :: String -> CppMethod
 runtimeCtor clsname = CppMethod fun [] Usual where
     body = indent 1 $ [string|     
         int argc = 1;
-        char* argv[] = { "ghcDll", NULL }; // argv must end with NULL
+        char* argv[] = { const_cast<char *>("ghcDll"), NULL }; // argv must end with NULL
         char** args = argv;
         hs_init(&argc, &args);
         |]
@@ -232,7 +231,7 @@ generateDllInterface fnames outputDir = do
 
     let globalVar = CppGlobalVariable "hsdll" clsname
 
-    writeFilePair outputDir "DllApi" $ joinParts [(CppParts includes def def [cls] [] [globalVar]), depParts]
+    writeFilePair outputDir "DllApi" $ joinParts [(CppParts includes def def [cls] [] [] [globalVar]), depParts]
     generateCppList deps outputDir
 
 

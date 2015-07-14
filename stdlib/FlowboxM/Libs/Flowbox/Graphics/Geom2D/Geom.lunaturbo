@@ -62,3 +62,7 @@ foreign haskell class Mask a:
     Mask:
         path    :: Path a
         feather :: Maybe (Path a)
+
+foreign haskell class RotoAlgorithm:
+    GPU
+    CPU

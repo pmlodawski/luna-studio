@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE ForeignFunctionInterface #-}
 {-# LANGUAGE TemplateHaskell #-}
 
@@ -6,9 +7,14 @@ module InterfaceTest where
 import Flowbox.GuiMockup.LineSnap (guiLineSnap)
 import Flowbox.GuiMockup.LineFit (fitCurve)
 
+
+#ifdef GENERATOR
+
 import Generator.FFI
 
 $(generateDllInterface ['guiLineSnap, 'fitCurve] "DllWrappers")
+
+#endif
 
 -- adder :: Int -> Int -> IO Int  -- gratuitous use of IO
 -- adder x y = return (x+y)

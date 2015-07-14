@@ -135,7 +135,7 @@ def Image.colorCorrect self::Image
                        -> Image
 
 def Image.colorCorrectCurves self::Image
-                       curves::ColorCorrectCurves
+                       curves::(ColorCorrectCurves Float)
                        master::(ColorCC Color)
                        shadows::(ColorCC Color)
                        midtones::(ColorCC Color)
@@ -146,13 +146,13 @@ class ```HueCorrectCurves``` a:
     HueCorrectCurves:
         sat, lum, red, green, blue, rsup, gsup, bsup :: CurveGUI a
 
-def Image.hueCorrect self::Image curves::HueCorrectCurves -> Image
+def Image.hueCorrect self::Image curves::(HueCorrectCurves Float) -> Image
 
 class ```CrosstalkCurves``` a:
     CrosstalkCurves:
         red, green, blue, redGreen, redBlue, greenRed, greenBlue, blueRed, blueGreen :: CurveGUI a
 
-def Image.crosstalk self::Image curves::CrosstalkCurves -> Image
+def Image.crosstalk self::Image curves::(CrosstalkCurves Float) -> Image
 
 def Image.saturate self::Image saturation::Color -> Image
 
@@ -432,7 +432,11 @@ def nopoint self::Std
 
 def rasterizeMask self::Std w::Int h::Int m::(Mask Float) -> Image
 
-def Image.roto self::Image mask::(Mask Float) format::Format premultiply::Bool alpha::Bool -> Image
+class ```RotoAlgorithm```:
+    GPU
+    CPU
+
+def Image.roto self::Image mask::(Mask Float) format::Format premultiply::Bool alpha::Bool algorithm::RotoAlgorithm -> Image
 
 # experimental ######
 

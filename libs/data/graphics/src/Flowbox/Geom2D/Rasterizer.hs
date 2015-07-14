@@ -20,6 +20,7 @@ module Flowbox.Geom2D.Rasterizer (
     Point2(..)
 ) where
 
+import           Control.Monad                   (forM_)
 import           Data.Array.Accelerate           ((&&*), (==*), (>*), (<*), (||*))
 import qualified Data.Array.Accelerate           as A
 import           Data.Array.Accelerate.IO
@@ -171,7 +172,7 @@ pathToRGBA32 w h (Path closed points) = unsafePerformIO rasterize
               let path = fromSegments $ makeSegments closed points
                   diagram = case closed of
                       False -> path                        # translate (r2 (ox,oy)) # scaleY (-1) # translateY h' # lc white # lw (Output 1) :: Diagram Cairo R2
-                      True  -> (strokeLoop.closeLine) path # translate (r2 (ox,oy)) # scaleY (-1) # translateY h' # fc white # lw (Output 3) :: Diagram Cairo R2
+                      True  -> (strokeLoop.closeLine) path # translate (r2 (ox,oy)) # scaleY (-1) # translateY h' # fc white # lw (Output 1) :: Diagram Cairo R2
                   (_, r) = renderDia Cairo (CairoOptions "" (Dims (fromIntegral w) (fromIntegral h)) RenderOnly True) (diagram :: Diagram Cairo R2)
               surface <- createImageSurface FormatARGB32 w h
               renderWith surface r
@@ -270,7 +271,7 @@ clampedIndex2D obj (Point2 !x !y) = unsafeIndex2D obj $ Point2 ((x `min` maxX) `
 
 drawLines :: Int -> Int -> Path Float -> Path Float -> M.MImage Float -> IO ()
 drawLines width height path feather img = do
-    let array !x !y    = index2D img $ Point2 x y
+    let array !x !y    = clampedIndex2D img $ Point2 x y
         !pathCubics    = makeCubics path
         !featherCubics = makeCubics feather
     return ()
@@ -323,10 +324,10 @@ func array !pBezier !fBezier !h = do
         !lbc2 = sqrt $ (abs (fC1x - fC2x))**2 + (abs (fC1y - fC2y))**2
         !lcd2 = sqrt $ (abs (fC2x - fC3x))**2 + (abs (fC2y - fC3y))**2
         !l2   = lab2 + lbc2 + lcd2
-        !l    = (max l1 l2) * 2.1 -- magick number...
+        !l    = (max l1 l2) * 2.3 -- magick number...
         !intl = ceiling l
 
-    VU.forM_ (VU.generate intl id) $ \t' ->
+    forM_ [0..intl-1] $ \t' ->
         let !t = (fromIntegral t') / l
         in lineFunc array (cubic' t pC0x pC1x pC2x pC3x) 
                           (cubic' t pC0y pC1y pC2y pC3y) 
@@ -339,7 +340,7 @@ lineFunc array !x1 !y1 !x2 !y2 = do
         !vecyraw = y2 - y1
         !l       = sqrt $ (vecxraw)**2 + (vecyraw)**2
         !intl    = ceiling l
-    VU.forM_ (VU.generate intl id) $ \y ->
+    forM_ [0..intl-1] $ \y ->
         let !vecx    = move * vecxraw
             !vecy    = move * vecyraw
             !move    = t / l
