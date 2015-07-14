@@ -6,7 +6,7 @@ var features = require('features');
 
 var createText   = THREE_TEXT;
 var font         = require("font/LatoBlack-sdf");
-var textMaterial = require('font/text_material');
+var textMaterial = require('font/text_material').graph;
 
 var vs = require('shaders/common.vert')();
 var fs = require('shaders/node.frag')();

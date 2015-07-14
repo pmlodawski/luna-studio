@@ -25,14 +25,41 @@ function start() {
 }
 
 function initializeGl() {
-    $$.scene = new THREE.Scene();
-    $$.camera = new THREE.OrthographicCamera(-500, 500, -500, 500, 1, 1000);
-    $$.camera.position.z = 500;
-    $$.renderer = new THREE.WebGLRenderer({ antialias: true });
+    $$.scene                = new THREE.Scene();
+    $$.sceneHUD             = new THREE.Scene();
+    $$.camera               = new THREE.OrthographicCamera(-500, 500, -500, 500, 1, 1000);
+    $$.cameraHUD            = new THREE.OrthographicCamera(-500, 500, -500, 500, 1, 1000);
+    $$.camera.position.z    = 500;
+    $$.cameraHUD.position.z = 500;
+    $$.renderer             = new THREE.WebGLRenderer({ antialias: true });
+		$$.renderer.autoClear   = false;
+
+
     $$.renderer.setClearColor(config.backgroundColor, 1);
     initSelectBox();
+    addVersionToHud();
     $($$.renderer.domElement).addClass('renderer');
     document.body.appendChild($$.renderer.domElement);
+}
+
+function addVersionToHud() {
+  var createText   = THREE_TEXT;
+  var font         = require("font/LatoBlack-sdf");
+  var textMaterial = require('font/text_material').hud;
+
+  var geom = createText({
+    text: "Build at {!date!}",
+    font: font,
+    width: 5000,
+    align: 'left'
+  });
+
+  var obj = new THREE.Mesh(geom, textMaterial);
+  // obj.rotation.x = 180 * Math.PI/180;
+  obj.scale.multiplyScalar(config.fontSize);
+  obj.position.y = 20;
+
+  $$.sceneHUD.add(obj);
 }
 
 function initSelectBox() {
@@ -66,7 +93,10 @@ function initSelectBox() {
 
 
 function render() {
+  $$.renderer.clear();
   $$.renderer.render($$.scene, $$.camera);
+  $$.renderer.clearDepth();
+  $$.renderer.render($$.sceneHUD, $$.cameraHUD);
   requestAnimationFrame(render);
 }
 
@@ -82,7 +112,6 @@ function updateScreenSize(width, height) {
 }
 
 function updateCamera(factor, camPanX, camPanY, left, right, top, bottom) {
-  // console.log("fact " + factor + " " + left + " " + right + " " + top + " " + bottom);
   $$.camFactor.value = factor;
   $$.camPan.x        = camPanX;
   $$.camPan.y        = camPanY;
@@ -90,6 +119,13 @@ function updateCamera(factor, camPanX, camPanY, left, right, top, bottom) {
   $$.camera.right    = right;
   $$.camera.top      = top;
   $$.camera.bottom   = bottom;
+}
+
+function updateCameraHUD(left, right, top, bottom) {
+  $$.cameraHUD.left     = left;
+  $$.cameraHUD.right    = right;
+  $$.cameraHUD.top      = top;
+  $$.cameraHUD.bottom   = bottom;
 }
 
 function newNodeAt(i, x, y, expr) {
@@ -174,6 +210,7 @@ module.exports = {
   updateHtmCanvasPanPos: updateHtmCanvasPanPos,
   updateScreenSize: updateScreenSize,
   updateCamera: updateCamera,
+  updateCameraHUD: updateCameraHUD,
   start: start,
   createNodeSearcher: createNodeSearcher,
   destroyNodeSearcher: destroyNodeSearcher,

@@ -194,8 +194,10 @@ syncCamera state = do
         appX      f  = f cFactor (cPan ^. x) (hScreen ^. x)
         appY      f  = f cFactor (cPan ^. y) (hScreen ^. y)
     updateCamera cFactor (cPan ^. x) (cPan ^. y) camLeft camRight camTop camBottom
+    updateCameraHUD 0.0 (fromIntegral $ screenSize ^. x) 0.0 (fromIntegral $ screenSize ^. y)
     updateHtmCanvasPanPos hX hY cFactor
     updateProjectionMatrix
+    updateHUDProjectionMatrix
 
 
 cameraLeft, cameraRight, cameraTop, cameraBottom, htmlX, htmlY :: Double -> Double -> Double -> Double
