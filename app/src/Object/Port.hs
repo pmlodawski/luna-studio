@@ -18,7 +18,7 @@ data ValueType = Int | Bool deriving (Eq, Show)
 type PortId = ID
 
 data Port = Port { _portId     :: PortId
-                 , _input      :: Bool
+                 , _output     :: Bool
                  , _tpe        :: ValueType
                  , _angle      :: Double
                  } deriving (Eq, Show)
@@ -31,9 +31,10 @@ instance PrettyPrinter ValueType where
 
 
 instance PrettyPrinter Port where
-    display (Port ident input tpe angle) = "n(" <> display ident
-                                         <> " " <> display input
-                                         <> " " <> display tpe
-                                         <> " " <> display angle
-                                         <> ")"
+    display (Port ident output tpe angle)
+         = "n(" <> display ident
+         <> " " <> display output
+         <> " " <> display tpe
+         <> " " <> display angle
+         <> ")"
 

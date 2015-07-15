@@ -109,11 +109,17 @@ foreign import javascript unsafe "$1.label($2)"
     showLabel :: JSRef FunctionNode -> JSString -> IO ()
 
 
-foreign import javascript unsafe "$1.addPort($2, $3, $4)"
-    addPortJS :: JSRef FunctionNode -> Int -> Double -> Bool -> IO ()
+foreign import javascript unsafe "$1.addInputPort($2, $3)"
+    addInputPortJS :: JSRef FunctionNode -> Int -> Double -> IO ()
 
-foreign import javascript unsafe "$1.setPortAngle($2, $3)"
-    setPortAngleJS :: JSRef FunctionNode -> Int -> Double -> IO ()
+foreign import javascript unsafe "$1.addOutputPort($2, $3)"
+    addOutputPortJS :: JSRef FunctionNode -> Int -> Double -> IO ()
+
+foreign import javascript unsafe "$1.setInputPortAngle($2, $3)"
+    setInputPortAngleJS :: JSRef FunctionNode -> Int -> Double -> IO ()
+
+foreign import javascript unsafe "$1.setOutputPortAngle($2, $3)"
+    setOutputPortAngleJS :: JSRef FunctionNode -> Int -> Double -> IO ()
 
 
 

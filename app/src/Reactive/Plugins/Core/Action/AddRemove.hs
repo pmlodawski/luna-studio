@@ -5,6 +5,7 @@ module Reactive.Plugins.Core.Action.AddRemove where
 import           Prelude       hiding       ( mapM_, forM_ )
 import           Data.Foldable              ( mapM_, forM_ )
 import           Control.Lens
+import           Control.Applicative
 import           Data.Default
 import           Data.Maybe
 import           Data.List
@@ -17,6 +18,7 @@ import qualified JS.NodeGraph   as UI
 import qualified JS.Camera      as Camera
 
 import           Object.Object
+import           Object.Port
 import qualified Object.Node    as Node     ( position )
 import           Object.Node    hiding      ( position )
 import           Event.Keyboard hiding      ( Event )
@@ -36,6 +38,9 @@ import qualified Reactive.Plugins.Core.Action.State.Global    as Global
 
 import qualified Data.Text.Lazy as Text
 import           Data.Text.Lazy (Text)
+
+
+import           Debug.Trace
 
 data ActionType = Add
                 | Remove
@@ -72,14 +77,26 @@ maxNodeId []    = 0
 maxNodeId nodes = (^. nodeId) $ maximumBy (on compare (^. nodeId)) nodes
 
 -- mock helper functions
-tmpGetInputPorts expr = (ord (head expr)) `mod` 6
-tmpGetOutputPorts expr = 1 + (ord (fromMaybe 'a' $ listToMaybe (tail expr))) `mod` 3
+tmpGetInputPortsNr expr = 4 + (ord (head expr)) `mod` 6
+tmpGetOutputPortsNr expr = 1 + (ord (fromMaybe 'a' $ listToMaybe (tail expr))) `mod` 3
 -- end of mock
 
+
+angleOfPort :: PortId -> Int -> Bool -> Double
+angleOfPort portId numPorts output = (fromIntegral portId) * (pi / (fromIntegral numPorts)) + delta where
+    delta = if output then -pi / 2.0 else pi / 2.0
+
+createPort :: PortId -> Bool -> Int -> Port
+createPort ident output allPorts = Port ident output Int $ angleOfPort ident allPorts output
+
 createNode :: NodeId -> Vector2 Double -> Text -> Node
-createNode nodeId pos expr = Node nodeId False pos expr (inputPorts <> outputPorts) where
-    inputPorts      = []
-    outputPorts     = []
+createNode nodeId pos expr = trace ("inp " <> show inputPortsNum <> " outp " <> show outputPortsNum)
+    Node nodeId False pos expr (inputPorts <> outputPorts) where
+    inputPorts      = (\ident -> createPort ident False inputPortsNum) <$> take inputPortsNum idents
+    outputPorts     = (\ident -> createPort ident True outputPortsNum) <$> (take outputPortsNum $ drop inputPortsNum idents)
+    idents          = [0, 1 ..]
+    inputPortsNum   = tmpGetInputPortsNr  $ Text.unpack expr
+    outputPortsNum  = tmpGetOutputPortsNr $ Text.unpack expr
 
 
 instance ActionStateUpdater Action where

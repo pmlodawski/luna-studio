@@ -21,7 +21,8 @@ function FunctionNode(id, position) {
   this.id = id;
   this.position = position;
   this.labelText = ":" + id;
-  this.ports = [];
+  this.inputPorts  = [];
+  this.outputPorts = [];
 
   this.attributes = {
       pos: {
@@ -62,10 +63,10 @@ function FunctionNode(id, position) {
   this.moveTo(position.x, position.y);
 
   // example - to remove
-  this.addPort(1,       0,        true);
-  this.addPort(2, Math.PI,       false);
-  this.addPort(3, Math.PI * 3/4, false);
-  this.addPort(4, Math.PI * 5/4, false);
+  // this.addPort(1,       0,        true);
+  // this.addPort(2, Math.PI,       false);
+  // this.addPort(3, Math.PI * 3/4, false);
+  // this.addPort(4, Math.PI * 5/4, false);
   // this.setPortAngle(4, Math.PI * 5/4, false);
   // end of example - to remove
 
@@ -104,14 +105,25 @@ FunctionNode.prototype.zPos = function(z) {
   return this.mesh.position.z;
 };
 
-FunctionNode.prototype.addPort = function(id, angle, out) {
-  var p = new Port(id, angle, out);
-  this.ports.push(p);
+FunctionNode.prototype.addInputPort = function(id, angle) {
+  var p = new Port(id, angle, False);
+  this.inputPorts.push(p);
   this.mesh.add(p.mesh);
 };
 
-FunctionNode.prototype.setPortAngle = function(id, angle) {
-  var p = _.find(this.ports, function(port) { return port.id === id; });
+FunctionNode.prototype.addOutputPort = function(id, angle) {
+  var p = new Port(id, angle, True);
+  this.outputPorts.push(p);
+  this.mesh.add(p.mesh);
+};
+
+FunctionNode.prototype.setInputPortAngle = function(id, angle) {
+  var p = _.find(this.inputPorts, function(port) { return port.id === id; });
+  p.setAngle(angle);
+};
+
+FunctionNode.prototype.setOutputPortAngle = function(id, angle) {
+  var p = _.find(this.outputPorts, function(port) { return port.id === id; });
   p.setAngle(angle);
 };
 
