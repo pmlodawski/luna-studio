@@ -4,7 +4,6 @@
 
 foreign haskell import Data.Maybe (fromJust)
 
-
 foreign haskell class Int
 foreign haskell class Float
 foreign haskell class Char
@@ -165,4 +164,3 @@ def < a b:
 
 def > a b:
     a.> b
-

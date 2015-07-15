@@ -1,8 +1,31 @@
 #% +OrphanNames
 
+foreign haskell import FlowboxM.Libs.Flowbox.Std
+
 foreign haskell import qualified Data.Array.Accelerate as A
 
-#include Prelude/Prelude.lunaturbo
+foreign haskell import Data.Array.Accelerate (Boundary(..))
+
+foreign haskell import Flowbox.Graphics.Utils.Accelerate (variable)
+
+foreign haskell import Flowbox.Graphics.Mockup
+foreign haskell import Flowbox.Graphics.Mockup.Basic
+
+# foreign haskell class Metric:
+#     Chebyshev
+#     Euclidean
+#     Minkowski: p :: Float
+#     Taxicab
+
+foreign haskell class Boundary:
+    Clamp
+    # Mirror # WARN: does not work yet
+    Wrap
+    Constant: a :: Float
+
+foreign haskell def Float.acc:
+    liftF1 variable self
+
 #include Graphics/Geom2D/Geom.lunaturbo
 #include Graphics/Math/Math.lunaturbo
 #include Graphics/Color/Color.lunaturbo
@@ -19,6 +42,9 @@ foreign haskell import qualified Data.Array.Accelerate as A
 #include Graphics/Compo/ColorCorrect/ColorCorrection.lunaturbo
 #include Graphics/Compo/FilterTransform/FilterTransform.lunaturbo
 #include Graphics/Compo/Keying/Keying.lunaturbo
+
+
+
 
 #
 #                OTHER

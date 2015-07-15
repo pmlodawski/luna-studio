@@ -1,6 +1,0 @@
-#include Prelude.lunaturbo
-
-def main:
-    print "prelude test"
-
-    print ("asd".++ "qwe")

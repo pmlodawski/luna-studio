@@ -158,7 +158,9 @@ handlerMap prefix queueInfo crl output callback = HandlerMap.fromList $ Prefix.p
 
 
 extraImports :: [Session.Import]
-extraImports = ["FlowboxM.Libs.Flowbox.Std"]
+extraImports = ["FlowboxM.Libs.Flowbox.Std"
+               ,"FlowboxM.Libs.Flowbox.Graphics"
+               ]
 
 
 interpret :: MemoryManager MM
@@ -201,4 +203,3 @@ run cfg prefix ctx (input, output) = do
                 Pipes.fromInput input1
             >-> interpret prefix queueInfo crlRef output
             >-> Pipes.toOutput output
-
