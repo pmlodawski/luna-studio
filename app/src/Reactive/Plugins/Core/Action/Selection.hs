@@ -105,12 +105,12 @@ instance ActionStateUpdater Action where
 
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
-        SelectAction tpe (Node nodeId _ _ _) -> case tpe of
+        SelectAction tpe node -> let selNodeId = node ^. nodeId in case tpe of
             SelectNew         -> unselectAllNodes
-                              >> setNodeFocused nodeId
-            Focus             -> setNodeFocused nodeId
-            ToggleOn          -> setNodeFocused nodeId
-            ToggleOff         -> setNodeUnselected nodeId
+                              >> setNodeFocused selNodeId
+            Focus             -> setNodeFocused selNodeId
+            ToggleOn          -> setNodeFocused selNodeId
+            ToggleOff         -> setNodeUnselected selNodeId
                               >> mapM_ setNodeFocused topNodeId
         SelectAll             -> selectAllNodes
                               >> mapM_ setNodeFocused topNodeId

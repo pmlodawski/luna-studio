@@ -99,7 +99,8 @@ instance ActionStateUpdater Action where
             Just RemoveFocused -> drop 1 oldSelNodeIds
             _                  -> oldSelNodeIds
         newNodes                = case newActionCandidate of
-            AddAction expr     -> (Node nextNodeId False nodePosWs expr) : oldNodes
+            AddAction expr     -> newNode : oldNodes where
+                newNode         = Node nextNodeId False nodePosWs expr []
             RemoveFocused      -> case headNodeId of
                 Nothing        -> oldNodes
                 Just remId     -> filter (\node -> node ^. nodeId /= remId) oldNodes

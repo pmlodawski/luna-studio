@@ -31,8 +31,9 @@ instance PrettyPrinter ValueType where
 
 
 instance PrettyPrinter Port where
-    display (Port ident input tpe angle) = "n(" <> display ident <>
-                                           " "  <> display input <>
-                                           " "  <> display tpe <>
-                                           " "  <> display angle <> ")"
+    display (Port ident input tpe angle) = "n(" <> display ident
+                                         <> " " <> display input
+                                         <> " " <> display tpe
+                                         <> " " <> display angle
+                                         <> ")"
 

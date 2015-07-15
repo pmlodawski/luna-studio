@@ -9,6 +9,7 @@ import           Data.Maybe    ( isJust, catMaybes )
 import           JS.Camera
 import           Object.Dynamic
 import           Object.Object
+import           Object.Port
 import           Utils.Vector
 import           Utils.Wrapper
 import           Utils.PrettyPrinter
@@ -23,6 +24,7 @@ data Node = Node { _nodeId     :: NodeId
                  , _selected   :: Bool
                  , _position   :: Vector2 Double
                  , _expression :: Text
+                 , _ports      :: [Port]
                  } deriving (Eq, Show, Typeable)
 
 type NodeCollection   = [Node]
@@ -31,10 +33,12 @@ type NodeIdCollection = [NodeId]
 makeLenses ''Node
 
 instance PrettyPrinter Node where
-    display (Node ident sel pos expr) = "n(" <> display ident
+    display (Node ident sel pos expr ports)
+                                      = "n(" <> display ident
                                       <> " " <> display sel
                                       <> " " <> display pos
                                       <> " " <> display expr
+                                      <> " " <> display ports
                                       <> ")"
 
 instance Selectable Node where
