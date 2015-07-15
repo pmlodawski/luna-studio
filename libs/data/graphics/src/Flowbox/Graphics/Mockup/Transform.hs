@@ -14,6 +14,7 @@ module Flowbox.Graphics.Mockup.Transform (
     Skew(..),
     SkewOrder(..),
     Transform(..),
+    cornerPinLuna,
     cropLuna,
     rotateAtLuna,
     scaleAtLuna,
@@ -36,6 +37,9 @@ import qualified Flowbox.Graphics.Image.Channel         as Channel
 import           Flowbox.Graphics.Image.Matte           (Matte)
 import qualified Flowbox.Graphics.Image.Matte           as Matte
 import           Flowbox.Graphics.Image.Image           (Image)
+import           Flowbox.Graphics.Shader.Matrix         (fromMatrix)
+import           Flowbox.Graphics.Shader.Rasterizer     (rasterizer)
+import           Flowbox.Graphics.Shader.Sampler        (monosampler, nearest)
 import           Flowbox.Graphics.Shader.Shader         (Shader(..))
 import qualified Flowbox.Graphics.Shader.Shader         as Shader
 import           Flowbox.Graphics.Utils.Accelerate      (variable)
@@ -58,22 +62,21 @@ data Transform a = Transform { _translate :: V2 a
                              , _center    :: Point2 a
                              }
 
---cornerPinLuna :: Double -> Double
---              -> Double -> Double
---              -> Double -> Double
---              -> Double -> Double
---              -> Image
---              -> Image
---cornerPinLuna (variable -> p1x) (variable -> p1y)
---              (variable -> p2x) (variable -> p2y)
---              (variable -> p3x) (variable -> p3y)
---              (variable -> p4x) (variable -> p4y) img = img'
---    where img' = onEachChannel process img
---          process = rasterizer . monosampler . cornerPin (p1, p2, p3, p4) . nearest . fromMatrix (A.Constant 0)
---          p1 = Point2 p1x p1y
---          p2 = Point2 p2x p2y
---          p3 = Point2 p3x p3y
---          p4 = Point2 p4x p4y
+cornerPinLuna :: Point2 Float
+              -> Point2 Float
+              -> Point2 Float
+              -> Point2 Float
+              -> Image
+              -> Image
+cornerPinLuna (fmap variable -> p1)
+              (fmap variable -> p2)
+              (fmap variable -> p3)
+              (fmap variable -> p4) img = img'
+    where img' = onEachChannel process img
+          --process = rasterizer . monosampler . Transform.cornerPin (p1, p2, p3, p4) . nearest . fromMatrix (A.Constant 0)
+          process = \case
+              ChannelFloat name (Channel.asContinuousData 0 -> Channel.ContinuousData zeData) -> ChannelFloat name $ Channel.ContinuousData $ Transform.cornerPin (p1, p2, p3, p4) zeData
+              ChannelInt   name (Channel.asContinuousData 0 -> Channel.ContinuousData zeData) -> ChannelInt   name $ Channel.ContinuousData $ Transform.cornerPin (p1, p2, p3, p4) zeData
 
 cropLuna :: Rectangle (Exp Int) -> CropReformat -> Bool -> Image -> Image
 cropLuna rect reformat constantOutside = onEachChannel cropChannel
