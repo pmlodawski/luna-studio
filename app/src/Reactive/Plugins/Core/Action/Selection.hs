@@ -12,7 +12,7 @@ import           Data.Function
 import           System.Mem
 
 import           JS.Bindings
-import           JS.Appjs
+import qualified JS.NodeGraph   as UI
 
 import           Object.Object
 import qualified Object.Node    as Node     ( position )
@@ -106,14 +106,14 @@ instance ActionStateUpdater Action where
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
         SelectAction tpe node -> let selNodeId = node ^. nodeId in case tpe of
-            SelectNew         -> unselectAllNodes
-                              >> setNodeFocused selNodeId
-            Focus             -> setNodeFocused selNodeId
-            ToggleOn          -> setNodeFocused selNodeId
-            ToggleOff         -> setNodeUnselected selNodeId
-                              >> mapM_ setNodeFocused topNodeId
-        SelectAll             -> selectAllNodes
-                              >> mapM_ setNodeFocused topNodeId
-        UnselectAll           -> unselectAllNodes
+            SelectNew         -> UI.unselectAllNodes
+                              >> UI.setNodeFocused selNodeId
+            Focus             -> UI.setNodeFocused selNodeId
+            ToggleOn          -> UI.setNodeFocused selNodeId
+            ToggleOff         -> UI.setNodeUnselected selNodeId
+                              >> mapM_ UI.setNodeFocused topNodeId
+        SelectAll             -> UI.selectAllNodes
+                              >> mapM_ UI.setNodeFocused topNodeId
+        UnselectAll           -> UI.unselectAllNodes
         where selectedNodeIds  = state ^. Global.selection . nodeIds
               topNodeId        = selectedNodeIds ^? ix 0

@@ -13,7 +13,7 @@ import           Data.Function
 import           System.Mem
 
 import           JS.Bindings
-import           JS.Appjs
+import qualified JS.NodeGraph   as UI
 import qualified JS.Camera      as Camera
 
 import           Object.Object

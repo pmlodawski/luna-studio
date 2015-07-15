@@ -22,28 +22,22 @@ nodeSearcherOnEvent :: (IsDOMWindow self) => Signal self (EventM UIEvent self ()
 nodeSearcherOnEvent = (connect ("ns_event" :: [Char]))
 
 
-foreign import javascript unsafe "$1[\"detail\"][\"expression\"]"
-    nodesearcher_event_get_expression :: JSRef UIEvent -> IO JSString
+foreign import javascript unsafe "$2[\"detail\"][\"$1\"]"
+    nodesearcher_event_get :: JSString -> JSRef UIEvent -> IO JSString
 
-nodeSearcherEventGetExpression :: (IsUIEvent self) => self -> IO Text
-nodeSearcherEventGetExpression self = do
-    expression <- nodesearcher_event_get_expression (unUIEvent (toUIEvent self))
-    return $ fromJSString expression
+unwrapJSString :: IsUIEvent e => (JSRef UIEvent -> IO JSString) -> EventM e t Text
+unwrapJSString getFunction = event >>= (liftIO . nodeSearcherEventGet getFunction)
 
 nsExpression :: IsUIEvent e => EventM e t Text
-nsExpression = event >>= (liftIO . nodeSearcherEventGetExpression)
-
-
-foreign import javascript unsafe "$1[\"detail\"][\"action\"]"
-    nodesearcher_event_get_action :: JSRef UIEvent -> IO JSString
-
-nodeSearcherEventGetAction :: (IsUIEvent self) => self -> IO Text
-nodeSearcherEventGetAction self = do
-    action <- nodesearcher_event_get_action (unUIEvent (toUIEvent self))
-    return $ fromJSString action
+nsExpression = unwrapJSString . nodesearcher_event_get $ toJSString "expression"
 
 nsAction :: IsUIEvent e => EventM e t Text
-nsAction = event >>= (liftIO . nodeSearcherEventGetAction)
+nsAction = unwrapJSString . nodesearcher_event_get $ toJSString "action"
+
+nodeSearcherEventGet :: (IsUIEvent self) => (JSRef UIEvent -> IO JSString) -> self -> IO Text
+nodeSearcherEventGet action self = do
+    action <- action (unUIEvent (toUIEvent self))
+    return $ fromJSString action
 
 -- display results
 
@@ -62,8 +56,8 @@ data Highlight = Highlight {start :: Int, len :: Int} deriving (Show, Eq)
 data QueryResult = QueryResult {_prefix :: Text, _name :: Text, _fullname :: Text, _highlights :: [Highlight], _tpe :: Text}
 
 displayQueryResult :: QueryResult -> IO ()
-displayQueryResult (QueryResult prefix name fullname highlight tpe ) = do
-    ary     <- createJSArray
+displayQueryResult (QueryResult prefix name fullname highlight tpe) = do
+    ary <- createJSArray
     mapM_ (pushHighlight ary) highlight
     nodesearcher_add_result (toJSString prefix) (toJSString name) (toJSString fullname) ary (toJSString tpe)
 

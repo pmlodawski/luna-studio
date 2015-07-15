@@ -11,8 +11,7 @@ import           Data.Monoid
 import           Data.Function
 import           System.Mem
 
-import           JS.Bindings
-import           JS.Appjs
+import qualified JS.NodeGraph   as UI
 import           Object.Object
 import qualified Object.Node    as Node     ( position )
 import           Object.Node    hiding      ( position )
@@ -133,8 +132,8 @@ instance ActionUIUpdater Action where
 
 
 dragNodesUI :: Vector2 Double -> NodeCollection -> IO ()
-dragNodesUI delta nodes = mapM_ (dragNode delta) nodes
+dragNodesUI delta nodes = mapM_ (UI.dragNode delta) nodes
 
 moveNodesUI :: NodeCollection -> IO ()
-moveNodesUI nodes = mapM_ moveNode nodes
+moveNodesUI nodes = mapM_ UI.moveNode nodes
                   -- >> performGC

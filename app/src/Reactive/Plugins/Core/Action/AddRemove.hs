@@ -8,14 +8,13 @@ import           Control.Lens
 import           Data.Default
 import           Data.Maybe
 import           Data.List
+import           Data.Char
 import           Data.Monoid
 import           Data.Function
--- import           System.Mem
-import           System.Random
 
-import           JS.Bindings
-import           JS.Appjs
-import           JS.Camera      as Camera
+import qualified JS.Bindings    as UI
+import qualified JS.NodeGraph   as UI
+import qualified JS.Camera      as Camera
 
 import           Object.Object
 import qualified Object.Node    as Node     ( position )
@@ -29,7 +28,7 @@ import           Utils.Vector
 import           Utils.Wrapper
 import           Utils.PrettyPrinter
 import           Reactive.Plugins.Core.Action.Action
-import           Event.NodeSearcher hiding  ( Event )
+import           Event.NodeSearcher hiding  ( Event, expression )
 import qualified Event.NodeSearcher as NodeSearcher
 import           Reactive.Plugins.Core.Action.State.AddRemove
 import qualified Reactive.Plugins.Core.Action.State.Selection as Selection
@@ -54,8 +53,8 @@ instance PrettyPrinter ActionType where
     display = show
 
 instance PrettyPrinter Action where
-    display (AddAction expr) = "arA(AddAction " <> (display expr) <> ")"
-    display  RemoveFocused   = "arA(RemoveFocused)"
+    display (AddAction expr) = "arA(AddAction " <> display expr <> ")"
+    display RemoveFocused    = "arA(RemoveFocused)"
 
 
 toAction :: Event Node -> Maybe Action
@@ -63,7 +62,7 @@ toAction (Keyboard (Keyboard.Event Keyboard.Press char)) = case char of
     'a'      -> Just $ AddAction "Hello.node"
     'r'      -> Just RemoveFocused
     _        -> Nothing
-toAction (NodeSearcher (NodeSearcher.Event tpe expr))   = case tpe of
+toAction (NodeSearcher (NodeSearcher.Event tpe expr)) = case tpe of
     "create" -> Just $ AddAction expr
     _        -> Nothing
 toAction _    = Nothing
@@ -71,6 +70,17 @@ toAction _    = Nothing
 maxNodeId :: NodeCollection -> NodeId
 maxNodeId []    = 0
 maxNodeId nodes = (^. nodeId) $ maximumBy (on compare (^. nodeId)) nodes
+
+-- mock helper functions
+tmpGetInputPorts expr = (ord (head expr)) `mod` 6
+tmpGetOutputPorts expr = 1 + (ord (fromMaybe 'a' $ listToMaybe (tail expr))) `mod` 3
+-- end of mock
+
+createNode :: NodeId -> Vector2 Double -> Text -> Node
+createNode nodeId pos expr = Node nodeId False pos expr (inputPorts <> outputPorts) where
+    inputPorts      = []
+    outputPorts     = []
+
 
 instance ActionStateUpdater Action where
     execSt newActionCandidate oldState = case newAction of
@@ -100,20 +110,18 @@ instance ActionStateUpdater Action where
             _                  -> oldSelNodeIds
         newNodes                = case newActionCandidate of
             AddAction expr     -> newNode : oldNodes where
-                newNode         = Node nextNodeId False nodePosWs expr []
+                newNode         = createNode nextNodeId nodePosWs expr
             RemoveFocused      -> case headNodeId of
                 Nothing        -> oldNodes
                 Just remId     -> filter (\node -> node ^. nodeId /= remId) oldNodes
 
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
-        AddAction expr     -> createNodeWithRandomPortsAt newNodeId pos expr
+        AddAction expr     -> createNodeOnUI node
             where
             node            = head $ state ^. Global.nodes
-            pos             = node ^. Node.position
-            newNodeId       = node ^. nodeId
-        RemoveFocused      -> removeNode nodeId
-                           >> mapM_ setNodeFocused topNodeId
+        RemoveFocused      -> UI.removeNode nodeId
+                           >> mapM_ UI.setNodeFocused topNodeId
             where
             selectedNodeIds = state ^. Global.selection . Selection.nodeIds
             nodeId          = head $ state ^. Global.addRemove . toRemoveIds
@@ -121,11 +129,13 @@ instance ActionUIUpdater Action where
 
 
 
-createNodeWithRandomPortsAt :: Int -> Vector2 Double -> Text -> IO ()
-createNodeWithRandomPortsAt nodeId pos expr = do
-    inputPorts  <- randomRIO (0, 5) :: IO Int
-    outputPorts <- randomRIO (1, 3) :: IO Int
-    putStrLn $ "ports " ++ show inputPorts ++ " " ++ show outputPorts
-    createNodeAt nodeId pos expr
+createNodeOnUI :: Node ->  IO ()
+createNodeOnUI node = do
+    let
+        pos        = node ^. Node.position
+        ident      = node ^. nodeId
+        expr       = node ^. expression
+    -- putStrLn $ "ports " ++ show inputPorts ++ " " ++ show outputPorts
+    UI.createNodeAt ident pos expr
 
 

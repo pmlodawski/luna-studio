@@ -10,7 +10,7 @@ import           Reactive.Banana
 import           Reactive.Banana.Frameworks
 import           Reactive.Banana.Utils
 import           Reactive.Handlers
-import           JS.Appjs
+import qualified JS.NodeGraph                                as UI
 import           Object.Object
 import           Object.Dynamic             ( unpackDynamic )
 import           Object.Node                ( Node(..) )
@@ -95,7 +95,7 @@ makeNetworkDescription logging = do
     case logging of
         True  -> do
             reactimate' $ (fmap logAllUI) <$> allReactionsSeqPackF
-            reactimate  $ (logAs "")      <$> anyE
+            reactimate  $ (UI.logAs "")      <$> anyE
         False -> return ()
 
     return ()

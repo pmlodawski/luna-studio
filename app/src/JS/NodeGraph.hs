@@ -1,4 +1,4 @@
-module JS.Appjs where
+module JS.NodeGraph where
 
 import           Control.Monad
 import           Control.Lens

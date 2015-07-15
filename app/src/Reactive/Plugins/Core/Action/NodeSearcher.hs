@@ -14,9 +14,10 @@ import           Data.Function
 import           Data.Dynamic
 import           System.Mem
 
-import           JS.Bindings
 import           GHCJS.Foreign
-import           JS.Appjs
+
+import           JS.Bindings
+import qualified JS.NodeGraph   as UI
 import qualified JS.NodeSearcher
 
 import           Object.Object
