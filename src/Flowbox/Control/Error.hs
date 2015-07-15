@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE CPP              #-}
 {-# LANGUAGE FlexibleContexts #-}
 
 module Flowbox.Control.Error (
@@ -13,14 +14,14 @@ module Flowbox.Control.Error (
 , liftIO
 ) where
 
-import           Control.Error     as X hiding (runScript, catchEither)
+import           Control.Error     as X hiding (catchEither, runScript)
 import qualified Control.Exception as Exc
 import qualified Data.Maybe        as Maybe
 
 import Flowbox.Prelude
 
 
-
+#if MIN_VERSION_transformers(0,4,0)
 type EitherT = ExceptT
 
 runEitherT :: ExceptT e m a -> m (Either e a)
@@ -28,6 +29,8 @@ runEitherT = runExceptT
 
 left :: Monad m => e -> ExceptT e m a
 left = throwE
+#else
+#endif
 
 runScript :: Script a -> IO a
 runScript s = do
@@ -118,4 +121,8 @@ hoistEitherWith conv = hoistEither . fmapL conv
 
 
 lmapEitherT :: Functor m => (e -> a) -> EitherT e m b -> EitherT a m b
+#if MIN_VERSION_transformers(0,4,0)
 lmapEitherT = withExceptT
+#else
+lmapEitherT conf = bimapEitherT conf id
+#endif
