@@ -8,25 +8,28 @@ var vs = require('shaders/common.vert')();
 var fs = require('shaders/port.frag')();
 
 
-var magic = 15 * Math.sqrt(3) / 4;
-var distFromRim = 4;
-var dist  = 30 + (magic / 2) + 2.24 + distFromRim;
+var triangleRatio = 0.8;
+var size          = 10;
+var distFromRim   = 2.0;
+
+var magic = size * Math.sqrt(3) / 4;
+var dist  = 30 + magic - 1 + distFromRim;
 
 function Port(id, angle, out) {
   var geometry;
   this.id = id;
   this.out = out;
 
-  var inputColor = new THREE.Vector4(0,   0.5, 0, 1);
-  var outputColor= new THREE.Vector4(0.7, 0,   0, 1);
+  var inputColor = new THREE.Vector4(0,   0.5, 0, 0.8);
+  var outputColor= new THREE.Vector4(0.7, 0,   0, 0.8);
 
-  var outputPort = [ new THREE.Vector3( magic,       0.0, 0.0),
-                     new THREE.Vector3(-magic, 15 *  0.5, 0.0),
-                     new THREE.Vector3(-magic, 15 * -0.5, 0.0)];
+  var outputPort = [ new THREE.Vector3( magic,                         0.0, 0.0),
+                     new THREE.Vector3(-magic, size *  triangleRatio * 0.5, 0.0),
+                     new THREE.Vector3(-magic, size * -triangleRatio * 0.5, 0.0)];
 
-  var inputPort  = [ new THREE.Vector3( magic, 15 *  0.5, 0.0),
-                     new THREE.Vector3(-magic,       0.0, 0.0),
-                     new THREE.Vector3( magic, 15 * -0.5, 0.0)];
+  var inputPort  = [ new THREE.Vector3( magic, size *  triangleRatio * 0.5, 0.0),
+                     new THREE.Vector3(-magic,                         0.0, 0.0),
+                     new THREE.Vector3( magic, size * -triangleRatio * 0.5, 0.0)];
 
   var portVert = out ? outputPort  : inputPort;
   var color    = out ? outputColor : inputColor;

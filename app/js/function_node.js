@@ -106,13 +106,13 @@ FunctionNode.prototype.zPos = function(z) {
 };
 
 FunctionNode.prototype.addInputPort = function(id, angle) {
-  var p = new Port(id, angle, False);
+  var p = new Port(id, angle, false);
   this.inputPorts.push(p);
   this.mesh.add(p.mesh);
 };
 
 FunctionNode.prototype.addOutputPort = function(id, angle) {
-  var p = new Port(id, angle, True);
+  var p = new Port(id, angle, true);
   this.outputPorts.push(p);
   this.mesh.add(p.mesh);
 };

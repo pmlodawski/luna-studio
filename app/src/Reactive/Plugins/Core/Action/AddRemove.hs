@@ -77,13 +77,15 @@ maxNodeId []    = 0
 maxNodeId nodes = (^. nodeId) $ maximumBy (on compare (^. nodeId)) nodes
 
 -- mock helper functions
-tmpGetInputPortsNr expr = (ord (head expr) - ord '1' + 1) `mod` 6
-tmpGetOutputPortsNr expr = 1 + (ord (fromMaybe '1' $ listToMaybe (tail expr)) - ord '1') `mod` 3
+tmpMaxin  = 9
+tmpMaxOut = 5
+tmpGetInputPortsNr  expr = (ord (head expr) - ord '1' + 1) `mod` (tmpMaxin + 1)
+tmpGetOutputPortsNr expr = 1 + (ord (fromMaybe '1' $ listToMaybe (tail expr)) - ord '1') `mod` tmpMaxOut
 -- end of mock
 
 
 angleOfPort :: PortId -> Int -> Bool -> Double
-angleOfPort portId numPorts output = (fromIntegral portId) * (pi / (fromIntegral numPorts)) + delta where
+angleOfPort portId numPorts output = (1 + fromIntegral portId) * (pi / (fromIntegral $ numPorts + 1)) + delta where
     delta = if output then -pi / 2.0 else pi / 2.0
 
 createPort :: PortId -> Bool -> Int -> Port
@@ -154,6 +156,7 @@ createNodeOnUI node = do
         expr       = node ^. expression
     -- putStrLn $ "ports " ++ show inputPorts ++ " " ++ show outputPorts
     UI.createNodeAt ident pos expr
-    -- UI.
+    mapM_ (\port -> UI.addInputPort  ident (port ^. portId) (port ^. angle)) $ node ^.  inputPorts
+    mapM_ (\port -> UI.addOutputPort ident (port ^. portId) (port ^. angle)) $ node ^. outputPorts
 
 
