@@ -16,8 +16,9 @@ import           Data.Map            (Map)
 import qualified Data.Text.Lazy      as Text
 import           Data.Text.Lazy      (Text)
 
-import           Luna.Inference.Data (Data, Value, toValue, fromValue)
-import qualified Luna.Inference.Data as Data
+import           Luna.Inference.Value
+
+import qualified Luna.Inference.Function as F
 
 
 add :: Int -> Int -> Int
@@ -26,35 +27,35 @@ add = (+)
 add2 :: (Int, (Int, ())) -> Int
 add2 (a, (b, ())) = a + b
 
-type DataFunc = [Data] -> Data
+type DataFunc = [Value] -> Value
 
 testf :: (Int, (String, ())) -> (Int,String)
 testf (a,(b,())) = (a,b)
 
 unpackTest :: Object -> (Int,String)
-unpackTest = unpack
+unpackTest = unpackRawData
 
 toDataFunc :: ToRArgs args => (args -> out) -> DataFunc
-toDataFunc f = fromValue . f . toRArgs
+toDataFunc f = packRawData . f . toRArgs
 
 class ToRArgs args where
-    toRArgs :: [Data] -> args
+    toRArgs :: [Value] -> args
 
 instance ToRArgs () where
     toRArgs [] = ()
 
 instance ToRArgs as => ToRArgs (a, as) where
-    toRArgs (a:as) = (Data.unpack a, toRArgs as)
+    toRArgs (a:as) = (unpackRawData a, toRArgs as)
 
 
 
 
 
 appSimple :: DataFunc -> [Object] -> Object
-appSimple f objs = mkObject . f $ fmap unpack objs
+appSimple f objs = mkObject . f $ fmap unpackRawData objs
 
 unpackInt :: Object -> Int
-unpackInt = unpack
+unpackInt = unpackRawData
 
 main = do
     let a = mkObject (1 :: Int)

@@ -8,15 +8,20 @@ import Flowbox.Prelude
 import GHC.Prim (Any)
 import Unsafe.Coerce (unsafeCoerce)
 import Data.Repr
-import Luna.Inference.Data (Data)
-import qualified Luna.Inference.Data as Data
+import Luna.Inference.Value
+
 
 
 
 data Instance t = Instance { _tp  :: t
-                           , _val :: Data
+                           , _val :: Value
                            }
 
 makeLenses ''Instance
+
+
+instance ToValue (Instance t) where
+    toValue = view val
+
 
 

@@ -13,8 +13,8 @@ import           Luna.Inference.Instance
 import qualified Data.Map                as Map
 import           Data.Map                (Map)
 import           Data.Repr
-import qualified Luna.Inference.Data     as Data
-import           Luna.Inference.Data
+--import qualified Luna.Inference.Value    as Value
+import           Luna.Inference.Value
 
 -- === Object ===
 
@@ -23,11 +23,12 @@ type Object = Instance Record
 
 -- utils
 
-object t a = Instance t (fromValue a)
-unpack = Data.unpack . view val
+
+object :: ToValue a => a -> Object
+object a = Instance mempty (toValue a)
 
 mkObject :: a -> Object
-mkObject = object mempty
+mkObject a = Instance mempty (packRawData a)
 
 -- instances
 
@@ -48,13 +49,15 @@ instance Repr Object where
 
 data Type = Class Class
           | Func  Function
+          | Rec   Record
+          deriving (Show)
 
 
-data Function = Function { _args :: Seq Arg }
+data Function = Function { _args :: Seq Arg } deriving (Show)
 
 data Arg = Arg { _name :: Maybe Text
                , _val  :: Maybe Object
-               }
+               } deriving (Show)
 
 arg :: Text -> Arg
 arg = flip Arg def . Just
@@ -63,14 +66,13 @@ argOf :: Text -> Object -> Arg
 argOf n v = Arg (Just n) (Just v)
 
 
-data Record = Record { _fields :: Map Text Field }
-data Field = Field Type
+data Record = Record { _fields :: Map Text Field } deriving (Show)
+data Field = Field Type deriving (Show)
 
 makeLenses ''Function
 makeLenses ''Record
 
-arity :: Function -> Int
-arity = Seq.length . view args
+
 
 instance Monoid Record where
     mempty         = Record mempty
@@ -82,11 +84,3 @@ instance Monoid Record where
 instance Default Arg where
     def = Arg def def
 
--- The show instances are awkward because the Show instance
--- for Object is defined in the Object.hs file and
--- it is not imported here in order to prevent from circular dependencies
-deriving instance Show Object => Show Function
-deriving instance Show Object => Show Arg
-deriving instance Show Object => Show Type
-deriving instance Show Object => Show Record
-deriving instance Show Object => Show Field
