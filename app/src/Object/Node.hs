@@ -7,14 +7,15 @@ import           Data.Monoid
 import           Data.Maybe    ( isJust, catMaybes )
 
 import           JS.Camera
+import           Object.Dynamic
+import           Object.Object
 import           Utils.Vector
 import           Utils.Wrapper
 import           Utils.PrettyPrinter
-import           Object.Dynamic
-import           Object.Object
+
 
 import qualified Data.Text.Lazy as Text
-import           Data.Text.Lazy (Text)
+import           Data.Text.Lazy ( Text )
 
 type NodeId = ID
 

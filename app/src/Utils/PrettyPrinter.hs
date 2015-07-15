@@ -16,7 +16,7 @@ instance PrettyPrinter a => PrettyPrinter [a] where
     display xs = "[" <> (intercalate " " $ fmap display xs) <> "]"
 
 instance PrettyPrinter a => PrettyPrinter (Maybe a) where
-    display (Just v) = "j|" <> (display v)
+    display (Just v) = "J " <> (display v)
     display Nothing  = "Nothing"
 
 instance PrettyPrinter Int where

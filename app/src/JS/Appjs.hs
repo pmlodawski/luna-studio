@@ -7,6 +7,7 @@ import           Data.Monoid
 import           JS.Bindings
 import           JS.Converters
 import           Object.Node
+import           Object.Port
 import           Utils.Vector
 import           Utils.PrettyPrinter
 
@@ -15,22 +16,22 @@ logAs :: PrettyPrinter a => String -> a -> IO ()
 logAs title a = putStrLn $ title <> (display a)
 
 
-setNodeUnselected :: Int -> IO ()
+setNodeUnselected :: NodeId -> IO ()
 setNodeUnselected nodeId =
     getNode nodeId >>= setUnselected
 
-setNodeSelected :: Int -> IO ()
+setNodeSelected :: NodeId -> IO ()
 setNodeSelected nodeId = do
     getNode nodeId >>= setSelected
     moveToTopZ nodeId
 
-setNodeFocused :: Int -> IO ()
+setNodeFocused :: NodeId -> IO ()
 setNodeFocused nodeId = do
     unfocusAllNodes
     getNode nodeId >>= setFocused
     moveToTopZ nodeId
 
-setNodeUnfocused :: Int -> IO ()
+setNodeUnfocused :: NodeId -> IO ()
 setNodeUnfocused nodeId =
     getNode nodeId >>= setUnfocused
 
@@ -71,3 +72,20 @@ displaySelectBox :: Vector2 Double -> Vector2 Double -> IO ()
 displaySelectBox a b = displaySelectBoxJS mx my w h where
     (Vector2 mx my) = a
     (Vector2 w  h)  = b - a
+
+
+addPort :: NodeId -> PortId -> Double -> Bool -> IO ()
+addPort nodeId portId angle output = do
+    nodeRef <- getNode nodeId
+    addPortJS nodeRef portId angle output
+
+setPortAngle :: NodeId -> PortId -> Double -> IO ()
+setPortAngle nodeId portId angle = do
+    nodeRef <- getNode nodeId
+    setPortAngleJS nodeRef portId angle
+
+
+createNodeAt :: Int -> Vector2 Double -> Text -> IO ()
+createNodeAt nodeId (Vector2 px py) expr = do
+    newNodeAt nodeId px py expr
+

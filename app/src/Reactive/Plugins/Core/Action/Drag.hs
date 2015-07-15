@@ -72,7 +72,7 @@ moveNodes factor delta = fmap $ \node -> if node ^. selected then node & Node.po
     deltaWs = deltaToWs factor delta
 
 deltaToWs :: Double -> Vector2 Int -> Vector2 Double
-deltaToWs factor delta = (/ factor) . fromIntegral <$>  (negateSnd delta)
+deltaToWs factor delta = (/ factor) . fromIntegral <$> (negateSnd delta)
 
 instance ActionStateUpdater Action where
     execSt newActionCandidate oldState = case newAction of
