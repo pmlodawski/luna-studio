@@ -1,8 +1,0 @@
-*_old
-hpc_report
-.hpc
-py
-cpp
-playground
-tmp
-!tmp/.gitignore

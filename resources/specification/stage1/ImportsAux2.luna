@@ -1,6 +1,0 @@
-module ImportsAux2
-
-import ImportsAux1
-
-def bar x:
-  foo x x x

@@ -1,8 +1,0 @@
-import ImportsAux2 : *     # provides foo2
-import ImportsAux1 : foo1
-import ImportsAux0         # provides foo0
-
-def bar x:
-  ImportsAux0.foo0
-  foo1 x x x
-  foo2 x x x

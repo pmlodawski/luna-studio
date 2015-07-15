@@ -1,5 +1,0 @@
-import ImportsAux2
-
-def foobar:
-  tmp = 4
-  res = bar 4
