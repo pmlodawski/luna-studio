@@ -47,3 +47,6 @@
 [submodule "third-party/binary"]
 	path = third-party/binary
 	url = https://github.com/flowbox-public/binary
+[submodule "env"]
+	path = env
+	url = https://github.com/wdanilo/flowbox-env.git
