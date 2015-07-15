@@ -3,6 +3,7 @@ module JS.Appjs where
 import           Control.Monad
 import           Control.Lens
 import           Data.Monoid
+import           Data.Text.Lazy      ( Text )
 
 import           JS.Bindings
 import           JS.Converters
