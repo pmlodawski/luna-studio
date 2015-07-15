@@ -20,11 +20,12 @@ import           Data.Text.Lazy ( Text )
 
 type NodeId = ID
 
-data Node = Node { _nodeId     :: NodeId
-                 , _selected   :: Bool
-                 , _position   :: Vector2 Double
-                 , _expression :: Text
-                 , _ports      :: [Port]
+data Node = Node { _nodeId      :: NodeId
+                 , _selected    :: Bool
+                 , _position    :: Vector2 Double
+                 , _expression  :: Text
+                 , _inputPorts  :: [Port]
+                 , _outputPorts :: [Port]
                  } deriving (Eq, Show, Typeable)
 
 type NodeCollection   = [Node]
@@ -33,12 +34,13 @@ type NodeIdCollection = [NodeId]
 makeLenses ''Node
 
 instance PrettyPrinter Node where
-    display (Node ident sel pos expr ports)
+    display (Node ident sel pos expr inputPorts outputPorts)
                                       = "n(" <> display ident
                                       <> " " <> display sel
                                       <> " " <> display pos
                                       <> " " <> display expr
-                                      <> " " <> display ports
+                                      <> " " <> display inputPorts
+                                      <> " " <> display outputPorts
                                       <> ")"
 
 instance Selectable Node where

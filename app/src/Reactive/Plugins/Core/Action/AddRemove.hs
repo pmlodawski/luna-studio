@@ -77,8 +77,8 @@ maxNodeId []    = 0
 maxNodeId nodes = (^. nodeId) $ maximumBy (on compare (^. nodeId)) nodes
 
 -- mock helper functions
-tmpGetInputPortsNr expr = 4 + (ord (head expr)) `mod` 6
-tmpGetOutputPortsNr expr = 1 + (ord (fromMaybe 'a' $ listToMaybe (tail expr))) `mod` 3
+tmpGetInputPortsNr expr = (ord (head expr) - ord '1' + 1) `mod` 6
+tmpGetOutputPortsNr expr = 1 + (ord (fromMaybe '1' $ listToMaybe (tail expr)) - ord '1') `mod` 3
 -- end of mock
 
 
@@ -87,13 +87,13 @@ angleOfPort portId numPorts output = (fromIntegral portId) * (pi / (fromIntegral
     delta = if output then -pi / 2.0 else pi / 2.0
 
 createPort :: PortId -> Bool -> Int -> Port
-createPort ident output allPorts = Port ident output Int $ angleOfPort ident allPorts output
+createPort ident output allPorts = Port ident Int $ angleOfPort ident allPorts output
 
 createNode :: NodeId -> Vector2 Double -> Text -> Node
 createNode nodeId pos expr = trace ("inp " <> show inputPortsNum <> " outp " <> show outputPortsNum)
-    Node nodeId False pos expr (inputPorts <> outputPorts) where
-    inputPorts      = (\ident -> createPort ident False inputPortsNum) <$> take inputPortsNum idents
-    outputPorts     = (\ident -> createPort ident True outputPortsNum) <$> (take outputPortsNum $ drop inputPortsNum idents)
+    Node nodeId False pos expr inputPorts outputPorts where
+    inputPorts      = (\ident -> createPort ident False inputPortsNum) <$> take  inputPortsNum idents
+    outputPorts     = (\ident -> createPort ident True outputPortsNum) <$> take outputPortsNum idents
     idents          = [0, 1 ..]
     inputPortsNum   = tmpGetInputPortsNr  $ Text.unpack expr
     outputPortsNum  = tmpGetOutputPortsNr $ Text.unpack expr
@@ -154,5 +154,6 @@ createNodeOnUI node = do
         expr       = node ^. expression
     -- putStrLn $ "ports " ++ show inputPorts ++ " " ++ show outputPorts
     UI.createNodeAt ident pos expr
+    -- UI.
 
 

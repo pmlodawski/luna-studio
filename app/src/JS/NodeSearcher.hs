@@ -22,7 +22,7 @@ nodeSearcherOnEvent :: (IsDOMWindow self) => Signal self (EventM UIEvent self ()
 nodeSearcherOnEvent = (connect ("ns_event" :: [Char]))
 
 
-foreign import javascript unsafe "$2[\"detail\"][\"$1\"]"
+foreign import javascript unsafe "$2[\"detail\"][$1]"
     nodesearcher_event_get :: JSString -> JSRef UIEvent -> IO JSString
 
 unwrapJSString :: IsUIEvent e => (JSRef UIEvent -> IO JSString) -> EventM e t Text
@@ -35,9 +35,9 @@ nsAction :: IsUIEvent e => EventM e t Text
 nsAction = unwrapJSString . nodesearcher_event_get $ toJSString "action"
 
 nodeSearcherEventGet :: (IsUIEvent self) => (JSRef UIEvent -> IO JSString) -> self -> IO Text
-nodeSearcherEventGet action self = do
-    action <- action (unUIEvent (toUIEvent self))
-    return $ fromJSString action
+nodeSearcherEventGet getFunction self = do
+    result <- getFunction (unUIEvent (toUIEvent self))
+    return $ fromJSString result
 
 -- display results
 
