@@ -92,7 +92,7 @@ instance ActionStateUpdater Action where
                                                     & Global.selection . nodeIds .~ newNodeIds
                                                     & Global.nodes               .~ newNodes
         newNodeIds                       = case newAction of
-            SelectAll                   -> (^. ident) <$> oldNodes
+            SelectAll                   -> (^. nodeId) <$> oldNodes
             UnselectAll                 -> []
             SelectAction tpe node       -> case tpe of
                 SelectNew               -> [newNodeId]
@@ -100,7 +100,7 @@ instance ActionStateUpdater Action where
                 ToggleOn                -> newNodeId : oldFilteredNodeIds
                 ToggleOff               -> oldFilteredNodeIds
                 where oldFilteredNodeIds = delete newNodeId oldNodeIds
-                      newNodeId          = node ^. ident
+                      newNodeId          = node ^. nodeId
 
 
 instance ActionUIUpdater Action where

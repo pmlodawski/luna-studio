@@ -122,7 +122,7 @@ instance ActionUIUpdater Action where
             where
                 allNodes              = state ^. Global.nodes
                 selNodeIds            = state ^. Global.selection . Selection.nodeIds
-                selNodes              = filter (\node -> node ^. ident `elem` selNodeIds) allNodes
+                selNodes              = filter (\node -> node ^. nodeId `elem` selNodeIds) allNodes
                 factor                = state ^. Global.camera . Camera.camera . Camera.factor
                 deltaWs               = case state ^. Global.drag . history of
                     Just dragState   -> deltaToWs factor delta where

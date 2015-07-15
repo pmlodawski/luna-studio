@@ -114,7 +114,7 @@ instance ActionUIUpdater Action where
         DragSelect StopDrag _  -> hideSelectBox
         _                      -> return ()
         where selectedNodeIds   = state ^. Global.selection . Selection.nodeIds
-              unselectedNodeIds = filter (\nodeId -> not $ nodeId `elem` selectedNodeIds) $ (^. ident) <$> state ^. Global.nodes
+              unselectedNodeIds = filter (\nodeId -> not $ nodeId `elem` selectedNodeIds) $ (^. nodeId) <$> state ^. Global.nodes
               topNodeId         = selectedNodeIds ^? ix 0
               dragState         = fromJust (state ^. Global.multiSelection . history)
               camera            = Global.toCamera state

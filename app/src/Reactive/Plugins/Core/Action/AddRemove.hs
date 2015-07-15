@@ -10,7 +10,8 @@ import           Data.Maybe
 import           Data.List
 import           Data.Monoid
 import           Data.Function
-import           System.Mem
+-- import           System.Mem
+import           System.Random
 
 import           JS.Bindings
 import           JS.Appjs
@@ -59,19 +60,17 @@ instance PrettyPrinter Action where
 
 toAction :: Event Node -> Maybe Action
 toAction (Keyboard (Keyboard.Event Keyboard.Press char)) = case char of
-    'a'   -> Just $ AddAction "Hello.node"
-    'r'   -> Just RemoveFocused
-    _     -> Nothing
-
+    'a'      -> Just $ AddAction "Hello.node"
+    'r'      -> Just RemoveFocused
+    _        -> Nothing
 toAction (NodeSearcher (NodeSearcher.Event tpe expr))   = case tpe of
     "create" -> Just $ AddAction expr
     _        -> Nothing
-
-toAction _ = Nothing
+toAction _    = Nothing
 
 maxNodeId :: NodeCollection -> NodeId
 maxNodeId []    = 0
-maxNodeId nodes = (view ident) $ maximumBy (on compare (view ident)) nodes
+maxNodeId nodes = (^. nodeId) $ maximumBy (on compare (^. nodeId)) nodes
 
 instance ActionStateUpdater Action where
     execSt newActionCandidate oldState = case newAction of
@@ -103,18 +102,29 @@ instance ActionStateUpdater Action where
             AddAction expr     -> (Node nextNodeId False nodePosWs expr) : oldNodes
             RemoveFocused      -> case headNodeId of
                 Nothing        -> oldNodes
-                Just remId     -> filter (\node -> node ^. ident /= remId) oldNodes
+                Just remId     -> filter (\node -> node ^. nodeId /= remId) oldNodes
 
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
-        AddAction expr      -> newNodeAt nodeId px py expr
+        AddAction expr     -> createNodeWithRandomPortsAt newNodeId pos expr
             where
             node            = head $ state ^. Global.nodes
-            (Vector2 px py) = node ^. Node.position
-            nodeId          = node ^. ident
+            pos             = node ^. Node.position
+            newNodeId       = node ^. nodeId
         RemoveFocused      -> removeNode nodeId
                            >> mapM_ setNodeFocused topNodeId
             where
             selectedNodeIds = state ^. Global.selection . Selection.nodeIds
             nodeId          = head $ state ^. Global.addRemove . toRemoveIds
             topNodeId       = selectedNodeIds ^? ix 0
+
+
+
+createNodeWithRandomPortsAt :: Int -> Vector2 Double -> Text -> IO ()
+createNodeWithRandomPortsAt nodeId pos expr = do
+    inputPorts  <- randomRIO (0, 5) :: IO Int
+    outputPorts <- randomRIO (1, 3) :: IO Int
+    putStrLn $ "ports " ++ show inputPorts ++ " " ++ show outputPorts
+    createNodeAt nodeId pos expr
+
+
