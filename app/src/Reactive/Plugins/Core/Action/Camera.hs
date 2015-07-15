@@ -41,6 +41,7 @@ data DragType = StartDrag
 data MouseActionType = Zoom | Pan deriving (Eq, Show)
 
 data KeyActionType = ResetZoom
+                   | AutoZoom
                    | ZoomIn
                    | ZoomOut
                    | PanLeft
@@ -94,6 +95,7 @@ toAction (Keyboard (Keyboard.Event Keyboard.Press char)) = case char of
     '+'   -> Just $ KeyAction ZoomIn
     '-'   -> Just $ KeyAction ZoomOut
     'z'   -> Just $ KeyAction ResetZoom
+    '0'   -> Just $ KeyAction AutoZoom
     _     -> Nothing
 toAction (Keyboard (Keyboard.Event Keyboard.Down char)) = case char of
     '\37' -> Just $ KeyAction PanLeft
@@ -133,15 +135,18 @@ instance ActionStateUpdater Action where
                 newCamPanX            = case keyAct of
                     PanLeft           -> oldCamPan ^. x - panStep / oldCamFactor
                     PanRight          -> oldCamPan ^. x + panStep / oldCamFactor
+                    AutoZoom          -> autoZoomPan ^. x
                     _                 -> oldCamPan ^. x
                 newCamPanY             = case keyAct of
                     PanUp             -> oldCamPan ^. y + panStep / oldCamFactor
                     PanDown           -> oldCamPan ^. y - panStep / oldCamFactor
+                    AutoZoom          -> autoZoomPan ^. y
                     _                 -> oldCamPan ^. y
         newCamFactor                   = case newActionCandidate of
             KeyAction ResetZoom       -> 1.0
             KeyAction ZoomIn          -> max minCamFactor $ oldCamFactor / zoomFactorStep
             KeyAction ZoomOut         -> min maxCamFactor $ oldCamFactor * zoomFactorStep
+            KeyAction AutoZoom        -> restrictCamFactor autoZoomFactor
             MouseAction Zoom _ _      -> restrictCamFactor newCamFactorCandidate
             _                         -> oldCamFactor
         newDrag                        = case newActionCandidate of
@@ -154,6 +159,16 @@ instance ActionStateUpdater Action where
                     Nothing           -> Nothing
                 StopDrag              -> Nothing
             _                         -> Nothing
+        (autoZoomPan, autoZoomFactor)  = (autoZoomPan, autoZoomFactor) where
+            nodes          = oldState ^. Global.nodes
+            screenSize     = fromIntegral <$> oldState ^. Global.screenSize
+            minXY          = -padding + (Vector2 (minimum $ (^. Node.position . x) <$> nodes) (minimum $ (^. Node.position . y) <$> nodes))
+            maxXY          =  padding + (Vector2 (maximum $ (^. Node.position . x) <$> nodes) (maximum $ (^. Node.position . y) <$> nodes))
+            spanXY         = maxXY - minXY
+            zoomFactorXY   = Vector2 (screenSize ^. x / spanXY ^. x) (screenSize ^. y / spanXY ^. y)
+            autoZoomFactor = min (zoomFactorXY ^. x) (zoomFactorXY ^. y)
+            autoZoomPan    = minXY + ((/2.0) <$> spanXY)
+            padding        = Vector2 80.0 80.0
         (zoomPan, newCamFactorCandidate)  = case newDrag of
                 Just drag                -> (zoomPan, newCamFactorCandidate) where
                     camFactorDelta        = (delta ^. x + delta ^. y) / dragZoomSpeed
