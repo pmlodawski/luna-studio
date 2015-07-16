@@ -9,7 +9,7 @@ import           Data.Maybe
 import           Data.List
 import           Data.Monoid
 import           Data.Function
-import           System.Mem
+import           Debug.Trace
 
 import qualified JS.NodeGraph   as UI
 import           Object.Object
@@ -54,7 +54,7 @@ instance PrettyPrinter Action where
 
 
 toAction :: Event Node -> UnderCursor -> Maybe Action
-toAction (Mouse (Mouse.Event tpe pos button keyMods)) underCursor = case button of
+toAction (Mouse (Mouse.Event tpe pos button keyMods)) underCursor = trace ("uc " <> display underCursor) $ case button of
     1                  -> case tpe of
         Mouse.Pressed  -> if dragAllowed then case keyMods of
                                              (KeyMods False False False False) -> Just (DragAction StartDrag pos)

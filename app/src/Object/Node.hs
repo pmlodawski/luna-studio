@@ -94,6 +94,7 @@ getNodesAt posScr camera nodes = filter closeEnough nodes where
         distSquared  = (dist ^. x) ^ 2 + (dist ^. y) ^ 2
         dist         = (node ^. position - pos)
 
+-- move to PreludePlus
 (.:.) :: (x -> y) -> (a -> b -> c -> x) -> a -> b -> c -> y
 (.:.)  = (.) . (.) . (.)
 
@@ -101,19 +102,30 @@ getNodeIdsAt :: Vector2 Int -> Camera -> NodeCollection -> NodeIdCollection
 getNodeIdsAt = (fmap (^. nodeId)) .:. getNodesAt
 
 portSize          = 12.0
+portWidth         = portSize * sqrt(3.0) / 2.0
 portDistFromRim   = 2.0
 
+nodeHaloInnerRadius    = nodeRadius + portDistFromRim
+nodeHaloOuterRadius    = nodeHaloInnerRadius + portWidth
+haloInnerRadiusSquared = nodeHaloInnerRadius * nodeHaloInnerRadius
+haloOuterRadiusSquared = nodeHaloOuterRadius * nodeHaloOuterRadius
 
 
-getNodeAt :: Vector2 Int -> Camera -> NodeCollection -> Maybe Node
-getNodeAt posScr camera nodes = listToMaybe $ filter closeEnough nodes where
+
+
+getNodeHaloAt :: Vector2 Int -> Camera -> NodeCollection -> Maybe Node
+getNodeHaloAt posScr camera nodes = listToMaybe $ filter inHalo nodes where
     pos              = screenToWorkspace camera posScr
-    closeEnough node = inRange && inRadius where
-        inRange      = dist ^. x < nodeRadius && dist ^. y < nodeRadius
-        inRadius     = distSquared < radiusSquared
+    inHalo node      = inRange && betweenRadii where
+        inRange      = dist ^. x < nodeHaloOuterRadius && dist ^. y < nodeHaloOuterRadius
+        betweenRadii = haloInnerRadiusSquared < distSquared && distSquared < haloOuterRadiusSquared
         distSquared  = (dist ^. x) ^ 2 + (dist ^. y) ^ 2
         dist         = (node ^. position - pos)
 
+getPortRef :: Vector2 Int -> Camera -> NodeCollection -> Maybe PortRef
+getPortRef posScr camera nodes = maybePortRef where
+    maybePortRef  = findPort <$> getNodeHaloAt posScr camera nodes
+    findPort node = PortRef node InputPort 77
 
 
 
