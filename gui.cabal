@@ -11,7 +11,7 @@ maintainer:          data@flowbox.io
 category:            drag and drop test, all reactive
 build-type:          Simple
 -- extra-source-files:
-cabal-version:       >=1.10
+cabal-version:       >=1.22
 
 executable gui
   main-is:             Main.hs
@@ -35,7 +35,7 @@ executable gui
                       , DeriveDataTypeable
                       , ScopedTypeVariables
 
-  build-depends:       base >=4.7 && <4.8
+  build-depends:       base >= 4.8 && < 4.9
                      , data-default
                      , ghcjs-base
                      , ghcjs-dom
