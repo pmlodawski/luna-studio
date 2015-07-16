@@ -29,6 +29,7 @@ import           Reactive.Plugins.Core.Action.State.Drag
 import qualified Reactive.Plugins.Core.Action.State.Selection as Selection
 import qualified Reactive.Plugins.Core.Action.State.Camera    as Camera
 import qualified Reactive.Plugins.Core.Action.State.Global    as Global
+import           Reactive.Plugins.Core.Action.State.UnderCursor
 
 
 data ActionType = StartDrag
@@ -53,17 +54,17 @@ instance PrettyPrinter Action where
     display (DragAction tpe point) = "dA(" <> display tpe <> " " <> display point <> ")"
 
 
-toAction :: Event Node -> NodeCollection -> Maybe Action
-toAction (Mouse (Mouse.Event tpe pos button keyMods)) nodes = case button of
+toAction :: Event Node -> UnderCursor -> Maybe Action
+toAction (Mouse (Mouse.Event tpe pos button keyMods)) underCursor = case button of
     1                  -> case tpe of
-        Mouse.Pressed  -> if isNoNode then Nothing
-                                      else case keyMods of
-                                           (KeyMods False False False False) -> Just (DragAction StartDrag pos)
-                                           _                                 -> Nothing
+        Mouse.Pressed  -> if dragAllowed then case keyMods of
+                                             (KeyMods False False False False) -> Just (DragAction StartDrag pos)
+                                             _                                 -> Nothing
+                                         else Nothing
         Mouse.Released -> Just (DragAction StopDrag pos)
         Mouse.Moved    -> Just (DragAction Moving   pos)
     _                  -> Nothing
-    where isNoNode      = null nodes
+    where dragAllowed   = not . null $ underCursor ^. nodesUnderCursor
 toAction _ _ = Nothing
 
 moveNodes :: Double -> Vector2 Int -> NodeCollection -> NodeCollection

@@ -7,6 +7,7 @@ import           Control.Lens
 
 import qualified JS.Camera
 import           Object.Object
+import           Object.Port
 import qualified Object.Node    as Node     ( position )
 import           Object.Node    hiding      ( position )
 import           Utils.Vector
@@ -38,18 +39,18 @@ instance Default State where
     def = State def (Vector2 400 200) def def def def def def def def
 
 instance PrettyPrinter State where
-    display (State iteration mousePos screenSize nodes camera addRemove selection multiSelection drag nodeSearcher) =
-                                                      "gS(" <> display iteration
-                                                     <> " " <> display mousePos
-                                                     <> " " <> display screenSize
-                                                     <> " " <> display nodes
-                                                     <> " " <> display camera
-                                                     <> " " <> display addRemove
-                                                     <> " " <> display selection
-                                                     <> " " <> display multiSelection
-                                                     <> " " <> display drag
-                                                     <> " " <> display nodeSearcher
-                                                     <> ")"
+    display (State iteration mousePos screenSize nodes camera addRemove selection multiSelection drag nodeSearcher)
+        = "gS(" <> display iteration
+         <> " " <> display mousePos
+         <> " " <> display screenSize
+         <> " " <> display nodes
+         <> " " <> display camera
+         <> " " <> display addRemove
+         <> " " <> display selection
+         <> " " <> display multiSelection
+         <> " " <> display drag
+         <> " " <> display nodeSearcher
+         <> ")"
 
 instance Monoid State where
     mempty = def
@@ -59,7 +60,3 @@ instance Monoid State where
 toCamera :: State -> JS.Camera.Camera
 toCamera state = JS.Camera.Camera (state ^. screenSize) (camState ^. Camera.pan) (camState ^. Camera.factor) where
     camState   = state ^. camera . Camera.camera
-
-
-nodesUnderCursor :: State -> NodeCollection
-nodesUnderCursor state = getNodesAt (state ^. mousePos) (toCamera state) (state ^. nodes)

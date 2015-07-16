@@ -30,6 +30,7 @@ import qualified Reactive.Plugins.Core.Action.NodeSearcher   as NodeSearcher
 import           Reactive.Plugins.Core.Action.Executor
 
 import           Reactive.Plugins.Core.Action.State.Global
+import           Reactive.Plugins.Core.Action.State.UnderCursor
 
 
 
@@ -62,14 +63,15 @@ makeNetworkDescription logging = do
         globalStateB                 :: Behavior t State
         globalStateB                  = stepper def $ globalStateReactionB <@ anyE
 
-        nodesUnderCursorB             = nodesUnderCursor <$> globalStateB
+        underCursorB                 :: Behavior t UnderCursor
+        underCursorB                  = underCursor <$> globalStateB
 
         nodeGeneralActionB            = fmap ActionST $        General.toAction <$> anyNodeB
         cameraActionB                 = fmap ActionST $         Camera.toAction <$> anyNodeB
         nodeAddRemActionB             = fmap ActionST $      AddRemove.toAction <$> anyNodeB
-        nodeSelectionActionB          = fmap ActionST $      Selection.toAction <$> anyNodeB <*> nodesUnderCursorB
-        nodeMultiSelectionActionB     = fmap ActionST $ MultiSelection.toAction <$> anyNodeB <*> nodesUnderCursorB
-        nodeDragActionB               = fmap ActionST $           Drag.toAction <$> anyNodeB <*> nodesUnderCursorB
+        nodeSelectionActionB          = fmap ActionST $      Selection.toAction <$> anyNodeB <*> underCursorB
+        nodeMultiSelectionActionB     = fmap ActionST $ MultiSelection.toAction <$> anyNodeB <*> underCursorB
+        nodeDragActionB               = fmap ActionST $           Drag.toAction <$> anyNodeB <*> underCursorB
         nodeSearcherActionB           = fmap ActionST $   NodeSearcher.toAction <$> anyNodeB
 
         allActionsPackB               = [ nodeGeneralActionB

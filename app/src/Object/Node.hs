@@ -72,9 +72,16 @@ getNodesAt posScr camera nodes = filter closeEnough nodes where
         distSquared  = (dist ^. x) ^ 2 + (dist ^. y) ^ 2
         dist         = (node ^. position - pos)
 
+(.:.) :: (x -> y) -> (a -> b -> c -> x) -> a -> b -> c -> y
+(.:.)  = (.) . (.) . (.)
+
+getNodeIdsAt :: Vector2 Int -> Camera -> NodeCollection -> NodeIdCollection
+getNodeIdsAt = (fmap (^. nodeId)) .:. getNodesAt
 
 portSize          = 12.0
 portDistFromRim   = 2.0
+
+
 
 -- TODO: Clever algorithm taking radius into account
 getNodeIdsIn :: Vector2 Int -> Vector2 Int -> Camera -> NodeCollection -> NodeIdCollection

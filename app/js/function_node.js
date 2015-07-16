@@ -62,14 +62,6 @@ function FunctionNode(id, position) {
   this.htmlElements = {};
   this.moveTo(position.x, position.y);
 
-  // example - to remove
-  // this.addPort(1,       0,        true);
-  // this.addPort(2, Math.PI,       false);
-  // this.addPort(3, Math.PI * 3/4, false);
-  // this.addPort(4, Math.PI * 5/4, false);
-  // this.setPortAngle(4, Math.PI * 5/4, false);
-  // end of example - to remove
-
   if (features.node_labels) this.updateLabel();
 }
 

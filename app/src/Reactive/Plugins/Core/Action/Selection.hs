@@ -29,6 +29,8 @@ import           Reactive.Plugins.Core.Action.Action
 import           Reactive.Plugins.Core.Action.State.Selection
 import qualified Reactive.Plugins.Core.Action.State.Camera    as Camera
 import qualified Reactive.Plugins.Core.Action.State.Global    as Global
+import           Reactive.Plugins.Core.Action.State.UnderCursor
+
 
 data ActionType = SelectNew
                 | Focus
@@ -55,20 +57,20 @@ instance PrettyPrinter Action where
     display (SelectAction tpe node)  = "sA(" <> display tpe <> " " <> display node <> ")"
 
 
-toAction :: Event Node -> NodeCollection -> Maybe Action
-toAction (Mouse (Mouse.Event tpe pos button keyMods)) nodes = case button of
+toAction :: Event Node -> UnderCursor -> Maybe Action
+toAction (Mouse (Mouse.Event tpe pos button keyMods)) underCursor = case button of
     1                 -> case tpe of
-        Mouse.Pressed -> if isNoNode then case keyMods of
-                                        (KeyMods False False False False) -> Just UnselectAll
-                                        _                                 -> Nothing
-                                     else case keyMods of
+        Mouse.Pressed -> if nodeUnderCursor then case keyMods of
                                         (KeyMods False False False False) -> Just (SelectAction selectActionType node)
                                         (KeyMods False False True  False) -> Just (SelectAction toggleActionType node)
                                         _                                 -> Nothing
+                                     else case keyMods of
+                                        (KeyMods False False False False) -> Just UnselectAll
+                                        _                                 -> Nothing
         _             -> Nothing
     _                 -> Nothing
-    where isNoNode         = null nodes
-          node             = head nodes
+    where nodeUnderCursor  = not . null $ underCursor ^. nodesUnderCursor
+          node             = head $ underCursor ^. nodesUnderCursor
           selectActionType = if node ^. selected then Focus
                                                  else SelectNew
           toggleActionType = if node ^. selected then ToggleOff
