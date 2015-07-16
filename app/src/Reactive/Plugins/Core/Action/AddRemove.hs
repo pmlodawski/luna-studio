@@ -12,6 +12,7 @@ import           Data.List
 import           Data.Char
 import           Data.Monoid
 import           Data.Function
+import           Data.Fixed
 
 import qualified JS.Bindings    as UI
 import qualified JS.NodeGraph   as UI
@@ -85,8 +86,9 @@ tmpGetOutputPortsNr expr = 1 + (ord (fromMaybe '1' $ listToMaybe (tail expr)) - 
 
 
 angleOfPort :: PortId -> Int -> Bool -> Double
-angleOfPort portId numPorts output = (1 + fromIntegral portId) * (pi / (fromIntegral $ numPorts + 1)) + delta where
-    delta = if output then -pi / 2.0 else pi / 2.0
+angleOfPort portId numPorts output = angle `mod'` (2.0 * pi) where
+    angle = (1 + fromIntegral portId) * (pi / (fromIntegral $ numPorts + 1)) + delta
+    delta = if output then 3.0 * pi / 2.0 else pi / 2.0
 
 createPort :: PortId -> Bool -> Int -> Port
 createPort ident output allPorts = Port ident Int $ angleOfPort ident allPorts output

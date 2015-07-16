@@ -2,9 +2,14 @@ module Object.Node where
 
 import           Control.Applicative
 import           Control.Lens
+import           Control.Monad
 import           Data.Dynamic
 import           Data.Monoid
 import           Data.Maybe
+import           Data.Fixed
+import           Data.List
+import           Data.Function
+import           Debug.Trace
 
 import           JS.Camera
 import           Object.Dynamic
@@ -113,6 +118,14 @@ haloOuterRadiusSquared = nodeHaloOuterRadius * nodeHaloOuterRadius
 
 
 
+
+getPortRefs :: Double -> Node -> [(Double, PortRef)]
+getPortRefs refAngle node = inputs <> outputs where
+    inputs    = newAnglePort InputPort  <$> node ^. inputPorts
+    outputs   = newAnglePort OutputPort <$> node ^. outputPorts
+    newAnglePort tpe port = (angleDiff refAngle $ port ^. angle, PortRef node tpe $ port ^. portId)
+
+
 getNodeHaloAt :: Vector2 Int -> Camera -> NodeCollection -> Maybe Node
 getNodeHaloAt posScr camera nodes = listToMaybe $ filter inHalo nodes where
     pos              = screenToWorkspace camera posScr
@@ -122,10 +135,29 @@ getNodeHaloAt posScr camera nodes = listToMaybe $ filter inHalo nodes where
         distSquared  = (dist ^. x) ^ 2 + (dist ^. y) ^ 2
         dist         = (node ^. position - pos)
 
+normAngle :: Double -> Double
+normAngle a = (2 * pi + a) `mod'` (2 * pi)
+
+toRelAngle :: Double -> Double
+toRelAngle a = if a > pi then (2 * pi) - a else a
+
+angleDiff :: Double -> Double -> Double
+angleDiff a1 a2 = toRelAngle . normAngle $ a2 - a1
+
 getPortRef :: Vector2 Int -> Camera -> NodeCollection -> Maybe PortRef
 getPortRef posScr camera nodes = maybePortRef where
-    maybePortRef  = findPort <$> getNodeHaloAt posScr camera nodes
-    findPort node = PortRef node InputPort 77
+    pos                 = screenToWorkspace camera posScr
+    maybePortRef        = do
+        nodeHalo       <- getNodeHaloAt posScr camera nodes
+        let relVect     = pos - (nodeHalo ^. position)
+            posAngle    = normAngle $ atan2 (relVect ^. y) (relVect ^. x)
+            portRefs    = getPortRefs posAngle nodeHalo
+        when (null portRefs) Nothing
+        let closestPort = minimumBy (compare `on` fst) portRefs
+        when (0.12 < abs (fst closestPort)) Nothing
+        -- trace ("closest " <> display closestPort <> "\nportRefs " <> display portRefs) $
+        Just $ snd closestPort
+
 
 
 

@@ -19,6 +19,12 @@ instance PrettyPrinter a => PrettyPrinter (Maybe a) where
     display (Just v) = "J " <> (display v)
     display Nothing  = "Nothing"
 
+instance (PrettyPrinter a, PrettyPrinter b) => PrettyPrinter (a, b) where
+    display (x, y) = "(" <> display x <> "," <> display y <> ")"
+
+instance (PrettyPrinter a, PrettyPrinter b, PrettyPrinter c) => PrettyPrinter (a, b, c) where
+    display (x, y, z) = "(" <> display x <> "," <> display y <> "," <> display z <> ")"
+
 instance PrettyPrinter Int where
     display = show
 
