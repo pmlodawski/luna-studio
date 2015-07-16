@@ -11,13 +11,12 @@ import           Data.Text.Lazy      ( Text )
 import           GHCJS.Foreign
 import           GHCJS.DOM.EventM
 import           GHCJS.DOM           ( currentDocument )
-import           GHCJS.DOM.Document  ( documentGetBody )
 import           GHCJS.DOM.Element   ( Element, IsElement )
-import           GHCJS.DOM.Node      ( nodeAppendChild )
-import           GHCJS.Types         ( JSRef, JSArray, JSString )
-import           GHCJS.DOM.Types     ( UIEvent, IsDOMWindow, IsUIEvent, unUIEvent, toUIEvent )
-
-
+import           GHCJS.Types         ( JSRef, JSString )
+import           GHCJS.DOM.Types     ( UIEvent, IsUIEvent, unUIEvent, toUIEvent )
+import           JavaScript.Array    ( JSArray )
+import qualified JavaScript.Array   as JSArray
+import           Data.JSString.Text  ( lazyTextToJSString )
 
 data VNode
 data VElement
@@ -58,7 +57,7 @@ foreign import javascript unsafe "app.newNodeAt($1, $2, $3, $4)"
     newNodeAtJS :: Int -> Double -> Double -> JSString -> IO ()
 
 newNodeAt :: Int -> Double -> Double -> Text -> IO ()
-newNodeAt nodeId px py expr = newNodeAtJS nodeId px py $ toJSString expr
+newNodeAt nodeId px py expr = newNodeAtJS nodeId px py $ lazyTextToJSString expr
 
 
 foreign import javascript unsafe "app.removeNode($1)"
@@ -93,10 +92,10 @@ foreign import javascript unsafe "app.getNode($1)"
     getNode :: Int -> IO (JSRef FunctionNode)
 
 foreign import javascript unsafe "app.getNodes()"
-    getNodesJSArray :: IO (JSArray FunctionNode)
+    getNodesJSArray :: IO (JSArray)
 
 getNodes :: IO [JSRef FunctionNode]
-getNodes = getNodesJSArray >>= fromArray
+getNodes = getNodesJSArray >>= return . JSArray.toList
 
 foreign import javascript unsafe "$1.moveTo($2, $3)"
     moveTo :: JSRef FunctionNode -> Double -> Double -> IO ()

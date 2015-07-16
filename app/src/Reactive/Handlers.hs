@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 module Reactive.Handlers where
 
 import           Utils.PreludePlus
@@ -6,14 +7,17 @@ import           Utils.Vector
 import           Data.Dynamic        ( Dynamic )
 
 import           GHCJS.DOM           ( currentWindow )
-import           GHCJS.DOM.DOMWindow
 import           GHCJS.DOM.EventM
-import qualified GHCJS.DOM.MouseEvent
-import           GHCJS.Foreign
+import qualified GHCJS.DOM.Document   as Document
+import           GHCJS.DOM.Window      ( mouseDown, mouseUp, mouseMove, resize, keyPress, keyDown, keyUp, getInnerWidth, getInnerHeight )
+import qualified GHCJS.DOM.MouseEvent as MouseEvent
+import qualified GHCJS.DOM.UIEvent    as UIEvent
+
+
 import           Reactive.Banana.Frameworks ( AddHandler(..), liftIO )
 
 import           JS.Bindings
-import           JS.NodeSearcher
+import           JS.NodeSearcher      ( getAction, getExpression, nsEvent )
 import           Object.Object
 import qualified Event.Keyboard      as Keyboard
 import qualified Event.Mouse         as Mouse
@@ -22,87 +26,82 @@ import qualified Event.NodeSearcher  as NodeSearcher
 import qualified Object.Node         ( Node )
 import           Event.Event
 
-
-
-readKeyMods :: (IsDOMWindow self) => EventM GHCJS.DOM.MouseEvent.MouseEvent self Keyboard.KeyMods
 readKeyMods = do
-    shift <- mouseShiftKey
-    ctrl  <- mouseCtrlKey
-    alt   <- mouseAltKey
-    meta  <- mouseMetaKey
+    e <- event
+    shift <- MouseEvent.getShiftKey e
+    ctrl  <- MouseEvent.getCtrlKey e
+    alt   <- MouseEvent.getAltKey  e
+    meta  <- MouseEvent.getMetaKey e
     return $ Keyboard.KeyMods shift ctrl alt meta
 
-readButton :: (IsDOMWindow self) => EventM GHCJS.DOM.MouseEvent.MouseEvent self Int
-readButton = uiWhich
 
-readMousePos :: (IsDOMWindow self) => EventM GHCJS.DOM.MouseEvent.MouseEvent self (Vector2 Int)
-readMousePos = --convert <$> mouseClientXY
-    do
-        (x, y) <- mouseClientXY
-        return $ Vector2 x y
+readMousePos =  do
+    e <- event
+    x <- MouseEvent.getX e
+    y <- MouseEvent.getY e
+    return $ Vector2 x y
 
 mouseDownHandler :: AddHandler (Event Dynamic)
 mouseDownHandler = AddHandler $ \h -> do
     window <- fromJust <$> currentWindow
-    domWindowOnmousedown window $ do
+    window `on` mouseDown $ do
         mousePos <- readMousePos
-        button   <- readButton
+        button   <- uiWhich
         keyMods  <- readKeyMods
         liftIO . h $ Mouse $ Mouse.Event Mouse.Pressed mousePos button keyMods
 
 mouseUpHandler :: AddHandler (Event Dynamic)
 mouseUpHandler = AddHandler $ \h -> do
     window <- fromJust <$> currentWindow
-    domWindowOnmouseup window $ do
+    window `on` mouseUp $ do
         mousePos <- readMousePos
-        button   <- readButton
+        button   <- uiWhich
         keyMods  <- readKeyMods
         liftIO . h $ Mouse $ Mouse.Event Mouse.Released mousePos button keyMods
 
 mouseMovedHandler :: AddHandler (Event Dynamic)
 mouseMovedHandler = AddHandler $ \h -> do
     window <- fromJust <$> currentWindow
-    domWindowOnmousemove window $ do
+    window `on` mouseMove $ do
         mousePos <- readMousePos
-        button   <- readButton
+        button   <- uiWhich
         keyMods  <- readKeyMods
         liftIO . h $ Mouse $ Mouse.Event Mouse.Moved mousePos button keyMods
 
 resizeHandler :: AddHandler (Event Dynamic)
 resizeHandler = AddHandler $ \h -> do
     window <- fromJust <$> currentWindow
-    domWindowOnresize window $ liftIO $ do
-        width  <- domWindowGetInnerWidth  window
-        height <- domWindowGetInnerHeight window
+    window `on` resize $ liftIO $ do
+        width  <- getInnerWidth  window
+        height <- getInnerHeight window
         h $ Window $ Window.Event Window.Resized width height
 
 keyPressedHandler :: AddHandler (Event Dynamic)
 keyPressedHandler = AddHandler $ \h -> do
     window <- fromJust <$> currentWindow
-    domWindowOnkeypress window $ do
+    window `on` keyPress $ do
         key <- uiCharCode
         liftIO . h $ Keyboard $ Keyboard.Event Keyboard.Press $ chr key
 
 keyDownHandler :: AddHandler (Event Dynamic)
 keyDownHandler = AddHandler $ \h -> do
     window <- fromJust <$> currentWindow
-    domWindowOnkeydown window $ do
+    window `on` keyDown $  do
         key <- uiKeyCode
         liftIO . h $ Keyboard $ Keyboard.Event Keyboard.Down $ chr key
 
 keyUpHandler :: AddHandler (Event Dynamic)
 keyUpHandler = AddHandler $ \h -> do
     window <- fromJust <$> currentWindow
-    domWindowOnkeyup window $ do
+    window `on` keyUp $ do
         key <- uiKeyCode
         liftIO . h $ Keyboard $ Keyboard.Event Keyboard.Up $ chr key
 
 nodeSearcherHander :: AddHandler (Event Dynamic)
 nodeSearcherHander = AddHandler $ \h -> do
     window <- fromJust <$> currentWindow
-    nodeSearcherOnEvent window $ do
-        action <- nsAction
-        expr   <- nsExpression
-        liftIO $ do
-             h $ NodeSearcher $ NodeSearcher.Event action expr
-
+    window `on` nsEvent $ do
+        e      <- event
+        action <- getAction e
+        expr   <- getExpression e
+        liftIO . h $ NodeSearcher $ NodeSearcher.Event action expr
