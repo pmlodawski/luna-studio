@@ -1,10 +1,10 @@
 module JS.Camera where
 
-import           Control.Lens
-import           Data.Monoid
-import           JS.Bindings
+import           Utils.PreludePlus
 import           Utils.Vector
-import           Utils.PrettyPrinter
+
+import           JS.Bindings
+
 
 -- -1      -  +1      NormalizedGl (Cartesian)
 -- -scr/2  -  +scr/2  Gl           (Cartesian)

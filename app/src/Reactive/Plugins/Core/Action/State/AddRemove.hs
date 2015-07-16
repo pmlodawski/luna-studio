@@ -1,13 +1,10 @@
 module Reactive.Plugins.Core.Action.State.AddRemove where
 
 
-import           Control.Lens
-import           Data.Default
-import           Data.Monoid
+import           Utils.PreludePlus
+import           Utils.Vector
 
-import           Object.Object
 import           Object.Node
-import           Utils.PrettyPrinter
 
 data State = State { _toRemoveIds  :: NodeIdCollection
                    } deriving (Eq, Show)

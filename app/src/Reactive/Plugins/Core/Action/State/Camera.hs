@@ -1,13 +1,8 @@
 module Reactive.Plugins.Core.Action.State.Camera where
 
 
-import           Control.Lens
-import           Data.Default
-import           Data.Monoid
-
-import           Object.Object
+import           Utils.PreludePlus
 import           Utils.Vector
-import           Utils.PrettyPrinter
 
 
 data DragHistory = DragHistory { _fixedPointPosScreen    :: Vector2 Int

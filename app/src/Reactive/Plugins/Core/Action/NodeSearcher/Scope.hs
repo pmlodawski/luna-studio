@@ -2,9 +2,8 @@
 
 module Reactive.Plugins.Core.Action.NodeSearcher.Scope where
 
-import           Data.Maybe
-import           Data.List
-import           Data.Monoid
+import           Utils.PreludePlus hiding ( Item )
+
 import qualified Data.Map as Map
 import           Data.Map ( Map )
 

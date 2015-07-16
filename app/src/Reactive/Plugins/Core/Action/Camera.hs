@@ -1,16 +1,6 @@
 module Reactive.Plugins.Core.Action.Camera where
 
-import           Prelude       hiding       ( mapM_, forM_ )
-import           Data.Foldable              ( mapM_, forM_ )
-import           Control.Lens
-import           Control.Applicative
-import           Data.Default
-import           Data.Maybe
-import           Data.List
-import           Data.Char
-import           Data.Monoid
-import           Data.Function
-import           System.Mem
+import           Utils.PreludePlus
 
 import           JS.Bindings
 import qualified JS.NodeGraph   as UI

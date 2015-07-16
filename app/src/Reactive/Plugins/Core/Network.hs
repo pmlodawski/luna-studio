@@ -1,14 +1,10 @@
 module Reactive.Plugins.Core.Network where
 
-import           Control.Applicative
-import           Control.Lens
-import           Data.Default
+import           Utils.PreludePlus
 import           Data.Dynamic
-import           Data.Traversable           ( sequenceA )
 
 import           Reactive.Banana
 import           Reactive.Banana.Frameworks
-import           Reactive.Banana.Utils
 import           Reactive.Handlers
 import qualified JS.NodeGraph                                as UI
 import           Object.Object
@@ -16,8 +12,6 @@ import           Object.Dynamic             ( unpackDynamic )
 import           Object.Node                ( Node(..) )
 import qualified Object.Node                                 as Node
 import qualified Event.Event                                 as Event
-import qualified Event.Mouse                                 as Mouse
-import           Utils.PrettyPrinter
 
 import           Reactive.Plugins.Core.Action.Action
 import qualified Reactive.Plugins.Core.Action.General        as General

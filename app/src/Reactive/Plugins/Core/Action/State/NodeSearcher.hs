@@ -1,15 +1,10 @@
 module Reactive.Plugins.Core.Action.State.NodeSearcher where
 
 
-import           Control.Lens
-import           Data.Default
-import           Data.Monoid
+import           Utils.PreludePlus
+import           Utils.Vector
 
-import           Object.Node
-import           Utils.PrettyPrinter
-import           GHCJS.Types        ( JSRef )
-
-import qualified JS.NodeSearcher
+import           Object.Object
 
 
 data State = State { _isOpen :: Bool

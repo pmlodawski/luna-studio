@@ -1,11 +1,6 @@
 module Event.Keyboard where
 
-import Data.Monoid
-import Data.Default
-import Data.Maybe          ( catMaybes )
-import Data.List           ( intercalate )
-import Control.Lens
-import Utils.PrettyPrinter
+import           Utils.PreludePlus
 
 
 data Type = Press | Down | Up deriving (Eq, Show)

@@ -1,14 +1,8 @@
 module Object.Node where
 
-import           Control.Applicative
-import           Control.Lens
-import           Control.Monad
+import           Utils.PreludePlus
 import           Data.Dynamic
-import           Data.Monoid
-import           Data.Maybe
 import           Data.Fixed
-import           Data.List
-import           Data.Function
 import           Debug.Trace
 
 import           JS.Camera
@@ -99,9 +93,6 @@ getNodesAt posScr camera nodes = filter closeEnough nodes where
         distSquared  = (dist ^. x) ^ 2 + (dist ^. y) ^ 2
         dist         = (node ^. position - pos)
 
--- move to PreludePlus
-(.:.) :: (x -> y) -> (a -> b -> c -> x) -> a -> b -> c -> y
-(.:.)  = (.) . (.) . (.)
 
 getNodeIdsAt :: Vector2 Int -> Camera -> NodeCollection -> NodeIdCollection
 getNodeIdsAt = (fmap (^. nodeId)) .:. getNodesAt
@@ -114,9 +105,6 @@ nodeHaloInnerRadius    = nodeRadius + portDistFromRim
 nodeHaloOuterRadius    = nodeHaloInnerRadius + portWidth
 haloInnerRadiusSquared = nodeHaloInnerRadius * nodeHaloInnerRadius
 haloOuterRadiusSquared = nodeHaloOuterRadius * nodeHaloOuterRadius
-
-
-
 
 
 getPortRefs :: Double -> Node -> [(Double, PortRef)]
@@ -157,8 +145,6 @@ getPortRef posScr camera nodes = maybePortRef where
         when (0.12 < abs (fst closestPort)) Nothing
         -- trace ("closest " <> display closestPort <> "\nportRefs " <> display portRefs) $
         Just $ snd closestPort
-
-
 
 
 -- TODO: Clever algorithm taking radius into account

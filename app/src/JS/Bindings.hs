@@ -3,12 +3,10 @@
 
 module JS.Bindings where
 
-import           Data.IORef          ( IORef, newIORef )
-import           Data.Maybe          ( maybeToList )
-import           Data.Monoid         ( (<>) )
+import           Utils.PreludePlus
+
 import           Data.Dynamic
 import           Data.Text.Lazy      ( Text )
-import qualified Data.Text.Lazy      as Text
 
 import           GHCJS.Foreign
 import           GHCJS.DOM.EventM
@@ -18,8 +16,6 @@ import           GHCJS.DOM.Element   ( Element, IsElement )
 import           GHCJS.DOM.Node      ( nodeAppendChild )
 import           GHCJS.Types         ( JSRef, JSArray, JSString )
 import           GHCJS.DOM.Types     ( UIEvent, IsDOMWindow, IsUIEvent, unUIEvent, toUIEvent )
-
-import           JS.Converters
 
 
 

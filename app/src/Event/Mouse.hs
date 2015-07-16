@@ -1,17 +1,12 @@
 module Event.Mouse where
 
 
-import           Data.Word
-import           Data.Dynamic
-import           Data.Default
-import           Data.Monoid
-import           Control.Lens
+import           Utils.PreludePlus
 
 import           Object.Dynamic
 import           Object.Object
 import           Event.Keyboard       ( KeyMods(..) )
 import           Utils.Vector
-import           Utils.PrettyPrinter
 
 
 data Type = Pressed | Released | Moved deriving (Eq, Show, Typeable)

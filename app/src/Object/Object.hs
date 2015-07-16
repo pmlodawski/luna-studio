@@ -1,14 +1,6 @@
 module Object.Object where
 
-import Data.Dynamic
-import Data.Typeable
-import Data.Monoid
-import Data.Default
-import Control.Applicative
-import Control.Lens
-
-import Utils.Wrapper
-import Utils.PrettyPrinter
+import           Utils.PreludePlus
 
 newtype Object a = Object { fromObject :: a } deriving (Eq, Show)
 

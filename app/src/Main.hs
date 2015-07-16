@@ -26,6 +26,8 @@ module Main where
 
 -- http://www.network-science.de/ascii/
 
+import           Utils.PreludePlus
+
 import           Reactive.Banana
 import           Reactive.Banana.Frameworks ( Frameworks, actuate )
 import           JS.Bindings

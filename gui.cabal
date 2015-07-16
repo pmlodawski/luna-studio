@@ -18,6 +18,7 @@ executable gui
   -- other-modules:
   -- other-extensions:
   default-extensions:   DoAndIfThenElse
+                      , NoImplicitPrelude
                       , TemplateHaskell
                       , DeriveGeneric
                       , StandaloneDeriving
@@ -33,7 +34,6 @@ executable gui
                       , GeneralizedNewtypeDeriving
                       , DeriveDataTypeable
                       , ScopedTypeVariables
---                      , EmptyDataDecl
 
   build-depends:       base >=4.7 && <4.8
                      , data-default
@@ -47,6 +47,8 @@ executable gui
                      , containers
                      , fgl
                      , random
+                     , convertible
+                     , pretty-show
   hs-source-dirs:      app/src
   default-language:    Haskell2010
 

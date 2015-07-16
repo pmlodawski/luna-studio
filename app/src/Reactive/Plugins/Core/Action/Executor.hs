@@ -2,18 +2,13 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 
-
 module Reactive.Plugins.Core.Action.Executor where
 
-import           Data.Monoid          ( (<>) )
-import           Data.Default
-import           Data.Maybe
-import           Data.Functor
+
+import           Utils.PreludePlus
 
 import           Reactive.Banana
 import           Reactive.Banana.Frameworks
-import           Reactive.Banana.Utils
-import           Reactive.Handlers
 
 import           Reactive.Plugins.Core.Action.Action
 import           Reactive.Plugins.Core.Action.State.Global

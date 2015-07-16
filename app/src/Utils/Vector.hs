@@ -1,14 +1,6 @@
 module Utils.Vector where
 
-import Data.Dynamic
-import Data.Typeable
-import Data.Monoid
-import Data.Default
-import Control.Applicative
-import Control.Lens
-
-import Utils.Wrapper
-import Utils.PrettyPrinter
+import           Utils.PreludePlus
 
 
 data Vector2 a = Vector2 { _x :: a

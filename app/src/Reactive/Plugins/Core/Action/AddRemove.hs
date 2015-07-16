@@ -2,16 +2,7 @@
 
 module Reactive.Plugins.Core.Action.AddRemove where
 
-import           Prelude       hiding       ( mapM_, forM_ )
-import           Data.Foldable              ( mapM_, forM_ )
-import           Control.Lens
-import           Control.Applicative
-import           Data.Default
-import           Data.Maybe
-import           Data.List
-import           Data.Char
-import           Data.Monoid
-import           Data.Function
+import           Utils.PreludePlus
 import           Data.Fixed
 
 import qualified JS.Bindings    as UI

@@ -1,14 +1,6 @@
 module Reactive.Plugins.Core.Action.Connect where
 
-import           Prelude       hiding       ( mapM_, forM_ )
-import           Data.Foldable              ( mapM_, forM_ )
-import           Control.Lens
-import           Control.Applicative
-import           Data.Default
-import           Data.Maybe
-import           Data.List
-import           Data.Monoid
-import           Data.Function
+import           Utils.PreludePlus
 import           Debug.Trace
 
 import qualified JS.NodeGraph   as UI

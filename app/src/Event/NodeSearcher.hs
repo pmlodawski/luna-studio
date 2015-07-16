@@ -1,13 +1,7 @@
 module Event.NodeSearcher where
 
 
-import           Data.Monoid
-import           Control.Lens
-
-import           Utils.PrettyPrinter
-
-import qualified Data.Text.Lazy as Text
-import           Data.Text.Lazy (Text)
+import           Utils.PreludePlus
 
 
 data Event = Event { _action     :: Text

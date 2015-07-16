@@ -2,11 +2,11 @@
 
 module Reactive.Plugins.Core.Action.NodeSearcher.Mock where
 
-import           Data.List
-import qualified Data.Map as Map
-import           Data.Map ( Map )
+import           Utils.PreludePlus
 
-import qualified Data.Text.Lazy as Text
+import qualified Data.Map as Map
+import           Data.Map                   ( Map )
+
 import           Data.Text.Lazy             ( Text )
 
 import           JS.NodeSearcher

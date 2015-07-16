@@ -1,15 +1,6 @@
 module Reactive.Plugins.Core.Action.MultiSelection where
 
-import           Prelude       hiding       ( mapM_, forM_ )
-import           Data.Foldable              ( mapM_, forM_ )
-import           Control.Lens
-import           Control.Applicative
-import           Data.Default
-import           Data.Maybe
-import           Data.List
-import           Data.Monoid
-import           Data.Function
-import           System.Mem
+import           Utils.PreludePlus
 
 import qualified JS.Bindings    as UI
 import qualified JS.NodeGraph   as UI

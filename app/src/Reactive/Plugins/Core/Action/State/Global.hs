@@ -1,17 +1,14 @@
 module Reactive.Plugins.Core.Action.State.Global where
 
 
-import           Data.Monoid
-import           Data.Default
-import           Control.Lens
+import           Utils.PreludePlus
+import           Utils.Vector
 
 import qualified JS.Camera
 import           Object.Object
 import           Object.Port
 import qualified Object.Node    as Node     ( position )
 import           Object.Node    hiding      ( position )
-import           Utils.Vector
-import           Utils.PrettyPrinter
 
 import qualified Reactive.Plugins.Core.Action.State.Camera            as Camera
 import qualified Reactive.Plugins.Core.Action.State.AddRemove         as AddRemove

@@ -1,12 +1,9 @@
 module Reactive.Plugins.Core.Action.State.Selection where
 
 
-import           Control.Lens
-import           Data.Default
-import           Data.Monoid
+import           Utils.PreludePlus
 
 import           Object.Node
-import           Utils.PrettyPrinter
 
 
 data State = State { _nodeIds :: NodeIdCollection

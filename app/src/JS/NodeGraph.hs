@@ -1,16 +1,11 @@
 module JS.NodeGraph where
 
-import           Control.Monad
-import           Control.Lens
-import           Data.Monoid
-import           Data.Text.Lazy      ( Text )
+import           Utils.PreludePlus
+import           Utils.Vector
 
 import           JS.Bindings
-import           JS.Converters
 import           Object.Node
 import           Object.Port
-import           Utils.Vector
-import           Utils.PrettyPrinter
 
 
 logAs :: PrettyPrinter a => String -> a -> IO ()

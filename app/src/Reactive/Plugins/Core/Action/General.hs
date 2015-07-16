@@ -1,8 +1,6 @@
 module Reactive.Plugins.Core.Action.General where
 
-import           Control.Lens
-import           Data.Maybe
-import           Data.Monoid
+import           Utils.PreludePlus
 
 import           JS.Bindings
 import           Object.Object
@@ -13,7 +11,6 @@ import qualified Event.Window   as Window
 import           Event.Event
 import           Event.WithObjects
 import           Utils.Vector
-import           Utils.PrettyPrinter
 import           Reactive.Plugins.Core.Action.Action
 import qualified Reactive.Plugins.Core.Action.Camera         as Camera
 import qualified Reactive.Plugins.Core.Action.State.Global   as Global

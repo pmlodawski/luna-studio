@@ -1,13 +1,10 @@
 module Reactive.Plugins.Core.Action.State.Drag where
 
 
-import           Control.Lens
-import           Data.Default
-import           Data.Monoid
+import           Utils.PreludePlus
+import           Utils.Vector
 
 import           Object.Object
-import           Utils.Vector
-import           Utils.PrettyPrinter
 
 
 data DragHistory = DragHistory { _dragStartPos    :: Vector2 Int

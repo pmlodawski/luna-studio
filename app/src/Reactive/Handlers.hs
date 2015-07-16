@@ -1,13 +1,9 @@
 module Reactive.Handlers where
 
-import           Control.Applicative
-import           Control.Lens
-import           Data.Word
-import           Data.Char           ( chr )
-import           Data.Maybe          ( fromJust )
+import           Utils.PreludePlus
+import           Utils.Vector
+
 import           Data.Dynamic        ( Dynamic )
-import           Data.Text.Lazy (Text)
-import qualified Data.Text.Lazy as Text
 
 import           GHCJS.DOM           ( currentWindow )
 import           GHCJS.DOM.DOMWindow
@@ -25,7 +21,6 @@ import qualified Event.Window        as Window
 import qualified Event.NodeSearcher  as NodeSearcher
 import qualified Object.Node         ( Node )
 import           Event.Event
-import           Utils.Vector
 
 
 
@@ -109,6 +104,5 @@ nodeSearcherHander = AddHandler $ \h -> do
         action <- nsAction
         expr   <- nsExpression
         liftIO $ do
-             -- putStrLn $ "Hello from haskell world, you asked for " ++ (Text.unpack action) ++ " => " ++ (Text.unpack expr)
              h $ NodeSearcher $ NodeSearcher.Event action expr
 

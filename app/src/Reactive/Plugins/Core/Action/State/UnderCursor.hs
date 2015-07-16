@@ -1,16 +1,14 @@
 module Reactive.Plugins.Core.Action.State.UnderCursor where
 
 
-import           Data.Monoid
-import           Data.Default
-import           Control.Lens
+import           Utils.PreludePlus
+import           Utils.Vector
 
 import           Object.Object
 import           Object.Port
 import qualified Object.Node    as Node     ( position )
 import           Object.Node    hiding      ( position )
-import           Utils.Vector
-import           Utils.PrettyPrinter
+
 import           Reactive.Plugins.Core.Action.State.Global
 
 

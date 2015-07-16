@@ -6,14 +6,9 @@
 
 module Reactive.Plugins.Core.Action.Action where
 
-import           Data.Monoid          ( (<>) )
-import           Data.Default
-import           Data.Maybe           ( isJust )
-import           Data.Functor
-import           Control.Lens
+import           Utils.PreludePlus
 
 import           Reactive.Plugins.Core.Action.State.Global
-import           Utils.PrettyPrinter
 
 data WithState act st = WithState { _action :: act
                                   , _state  :: st

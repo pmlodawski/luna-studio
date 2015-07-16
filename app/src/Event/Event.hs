@@ -1,14 +1,10 @@
 module Event.Event where
 
-import Data.Monoid
-import Data.Typeable
-import Data.Dynamic
-import Data.Default
-import Control.Lens
+import           Utils.PreludePlus
 
-import Object.Object ( Object )
-import Object.Dynamic
-import Utils.PrettyPrinter
+import           Data.Dynamic
+import           Object.Object ( Object )
+import           Object.Dynamic
 
 import qualified Event.Keyboard      as Keyboard
 import qualified Event.Mouse         as Mouse

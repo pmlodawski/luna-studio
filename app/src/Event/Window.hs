@@ -1,8 +1,7 @@
 module Event.Window where
 
-import Data.Monoid
-import Control.Lens
-import Utils.PrettyPrinter
+import           Utils.PreludePlus
+
 
 data Type = Resized deriving (Eq, Show)
 

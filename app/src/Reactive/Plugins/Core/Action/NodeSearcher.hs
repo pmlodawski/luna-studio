@@ -2,17 +2,7 @@
 
 module Reactive.Plugins.Core.Action.NodeSearcher where
 
-import           Prelude       hiding       ( mapM_, forM_ )
-import           Data.Foldable              ( mapM_, forM_ )
-import           Control.Lens
-import           Control.Applicative
-import           Data.Default
-import           Data.Maybe
-import           Data.List
-import           Data.Monoid
-import           Data.Function
-import           Data.Dynamic
-import           System.Mem
+import           Utils.PreludePlus
 
 import           GHCJS.Foreign
 

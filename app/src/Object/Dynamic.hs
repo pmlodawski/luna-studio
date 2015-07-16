@@ -1,10 +1,9 @@
 module Object.Dynamic where
 
-import Data.Dynamic
-import Data.Maybe    ( catMaybes )
+import           Utils.PreludePlus
 
-import Utils.Wrapper
-import Object.Object
+import           Data.Dynamic
+import           Object.Object
 
 class UnpackDynamic a b where
     unpackDynamic :: a -> b

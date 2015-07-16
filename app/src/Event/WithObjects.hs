@@ -1,14 +1,10 @@
 module Event.WithObjects where
 
-import Data.Monoid
-import Data.Typeable
-import Data.Dynamic
-import Data.Default
-import Control.Lens
+import           Utils.PreludePlus
+import           Data.Dynamic
 
-import Object.Object ( Object )
-import Object.Dynamic
-import Utils.PrettyPrinter
+import           Object.Object ( Object )
+import           Object.Dynamic
 
 
 data WithObjects evnt obj = WithObjects { _event   :: evnt

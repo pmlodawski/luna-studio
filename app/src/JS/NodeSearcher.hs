@@ -1,13 +1,12 @@
 module JS.NodeSearcher where
 
-import Data.Foldable ( foldlM )
+import           Utils.PreludePlus
 
-import Control.Monad.Trans ( liftIO )
 
-import GHCJS.Foreign
-import GHCJS.DOM.EventM
-import GHCJS.Types        ( JSRef, JSArray, JSString )
-import GHCJS.DOM.Types    ( UIEvent, IsDOMWindow, IsUIEvent, unUIEvent, toUIEvent )
+import           GHCJS.Foreign
+import           GHCJS.DOM.EventM
+import           GHCJS.Types        ( JSRef, JSArray, JSString )
+import           GHCJS.DOM.Types    ( UIEvent, IsDOMWindow, IsUIEvent, unUIEvent, toUIEvent )
 
 import qualified Data.Text.Lazy as Text
 import           Data.Text.Lazy (Text)

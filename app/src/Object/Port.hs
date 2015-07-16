@@ -1,16 +1,10 @@
 module Object.Port where
 
-import           Control.Applicative
-import           Control.Lens
-import           Data.Dynamic
-import           Data.Monoid
-import           Data.Maybe    ( isJust, catMaybes )
+import           Utils.PreludePlus
+import           Utils.Vector
 
 import           JS.Camera
 import           Object.Object
-import           Utils.Vector
-import           Utils.Wrapper
-import           Utils.PrettyPrinter
 
 
 data ValueType = Int | Bool deriving (Eq, Show)
