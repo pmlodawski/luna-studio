@@ -13,7 +13,11 @@
 {-# LANGUAGE TypeSynonymInstances   #-}
 {-# LANGUAGE UndecidableInstances   #-}
 
-module Flowbox.Data.Serialization where
+module Flowbox.Data.Serialization (
+    module Flowbox.Data.Serialization,
+    Mode,
+    SValue,
+) where
 
 import Control.Monad
 import Data.Char                        (ord)
@@ -102,10 +106,13 @@ instance Serializable Double DoubleData.DoubleData where
 
 -- [PM] : instance below requires UndecidableInstances enabled
 instance Serializable a b => Serializable (Data.Safe a) b where
-    serialize (Data.Safe a) mode = serialize a mode
+    serialize (Data.Safe a) = serialize a
     data'     _ = data' (undefined :: a)
     val       _ = val (undefined :: a)
 
 -- TODO [PM] Instance for unsafe
 --instance Serializable a b => Serializable (Data.Unsafe a) b where
 
+
+computeValue :: Serializable a b => a -> Mode -> IO (Maybe SValue)
+computeValue = toValue
