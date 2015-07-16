@@ -70,8 +70,7 @@ initialize config imports = do
                    --, GHC.verbosity = 4
                    }
     setHardcodedExtensions
-    setImports $ "Flowbox.Serialization"
-               : "Luna.Target.HS"
+    setImports $ "Luna.Target.HS"
                : "Luna.Interpreter.Runtime"
                : imports
     logger info "Initialization done"
