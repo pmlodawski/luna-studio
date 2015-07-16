@@ -4,7 +4,7 @@ import           Control.Applicative
 import           Control.Lens
 import           Data.Dynamic
 import           Data.Monoid
-import           Data.Maybe    ( isJust, catMaybes )
+import           Data.Maybe
 
 import           JS.Camera
 import           Object.Dynamic
@@ -35,13 +35,13 @@ makeLenses ''Node
 
 instance PrettyPrinter Node where
     display (Node ident sel pos expr inputPorts outputPorts)
-                                      = "n(" <> display ident
-                                      <> " " <> display sel
-                                      <> " " <> display pos
-                                      <> " " <> display expr
-                                      <> " " <> display inputPorts
-                                      <> " " <> display outputPorts
-                                      <> ")"
+        = "n(" <> display ident
+        <> " " <> display sel
+        <> " " <> display pos
+        <> " " <> display expr
+        <> " " <> display inputPorts
+        <> " " <> display outputPorts
+        <> ")"
 
 instance Selectable Node where
     setSelected n selected = n { _selected = selected }
@@ -50,6 +50,28 @@ instance Selectable Node where
 
 isNode :: Object Dynamic -> Bool
 isNode obj = isJust (unpackDynamic obj :: Maybe Node)
+
+
+data PortType = InputPort | OutputPort deriving (Eq, Show)
+
+
+data PortRef = PortRef { _portNode   :: Node
+                       , _portType   :: PortType
+                       , _portRefId  :: PortId
+                       } deriving (Eq, Show)
+
+makeLenses ''PortRef
+
+
+instance PrettyPrinter PortType where
+    display = show
+
+instance PrettyPrinter PortRef where
+    display (PortRef portNode portType portId)
+        = "n(" <> display portNode
+        <> " " <> display portType
+        <> " " <> display portId
+        <> ")"
 
 
 updateNodeSelection :: NodeIdCollection -> Node -> Node
@@ -80,6 +102,18 @@ getNodeIdsAt = (fmap (^. nodeId)) .:. getNodesAt
 
 portSize          = 12.0
 portDistFromRim   = 2.0
+
+
+
+getNodeAt :: Vector2 Int -> Camera -> NodeCollection -> Maybe Node
+getNodeAt posScr camera nodes = listToMaybe $ filter closeEnough nodes where
+    pos              = screenToWorkspace camera posScr
+    closeEnough node = inRange && inRadius where
+        inRange      = dist ^. x < nodeRadius && dist ^. y < nodeRadius
+        inRadius     = distSquared < radiusSquared
+        distSquared  = (dist ^. x) ^ 2 + (dist ^. y) ^ 2
+        dist         = (node ^. position - pos)
+
 
 
 

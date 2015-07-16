@@ -16,7 +16,7 @@ import           Reactive.Plugins.Core.Action.State.Global
 
 
 data UnderCursor = UnderCursor { _nodesUnderCursor   :: NodeCollection
-                               , _port               :: Maybe (NodeId, Port)
+                               , _port               :: Maybe PortRef
                                } deriving (Eq, Show)
 
 

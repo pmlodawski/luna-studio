@@ -26,6 +26,7 @@ import qualified Reactive.Plugins.Core.Action.AddRemove      as AddRemove
 import qualified Reactive.Plugins.Core.Action.Selection      as Selection
 import qualified Reactive.Plugins.Core.Action.MultiSelection as MultiSelection
 import qualified Reactive.Plugins.Core.Action.Drag           as Drag
+import qualified Reactive.Plugins.Core.Action.Connect        as Connect
 import qualified Reactive.Plugins.Core.Action.NodeSearcher   as NodeSearcher
 import           Reactive.Plugins.Core.Action.Executor
 
@@ -72,6 +73,7 @@ makeNetworkDescription logging = do
         nodeSelectionActionB          = fmap ActionST $      Selection.toAction <$> anyNodeB <*> underCursorB
         nodeMultiSelectionActionB     = fmap ActionST $ MultiSelection.toAction <$> anyNodeB <*> underCursorB
         nodeDragActionB               = fmap ActionST $           Drag.toAction <$> anyNodeB <*> underCursorB
+        nodeConnectActionB            = fmap ActionST $        Connect.toAction <$> anyNodeB <*> underCursorB
         nodeSearcherActionB           = fmap ActionST $   NodeSearcher.toAction <$> anyNodeB
 
         allActionsPackB               = [ nodeGeneralActionB
@@ -80,6 +82,7 @@ makeNetworkDescription logging = do
                                         , nodeMultiSelectionActionB
                                         , nodeDragActionB
                                         , cameraActionB
+                                        , nodeConnectActionB
                                         , nodeSearcherActionB
                                         ]
 
@@ -87,8 +90,6 @@ makeNetworkDescription logging = do
 
         allReactionsSeqPackB         :: Behavior t [ActionUI]
         allReactionsSeqPackB          = sequenceA allReactionsPackB
-
-
 
 
     allReactionsSeqPackF <- changes allReactionsSeqPackB

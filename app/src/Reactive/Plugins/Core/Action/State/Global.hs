@@ -18,6 +18,7 @@ import qualified Reactive.Plugins.Core.Action.State.AddRemove         as AddRemo
 import qualified Reactive.Plugins.Core.Action.State.Selection         as Selection
 import qualified Reactive.Plugins.Core.Action.State.MultiSelection    as MultiSelection
 import qualified Reactive.Plugins.Core.Action.State.Drag              as Drag
+import qualified Reactive.Plugins.Core.Action.State.Connect           as Connect
 import qualified Reactive.Plugins.Core.Action.State.NodeSearcher      as NodeSearcher
 
 
@@ -30,16 +31,17 @@ data State = State { _iteration      :: Integer
                    , _selection      :: Selection.State
                    , _multiSelection :: MultiSelection.State
                    , _drag           :: Drag.State
+                   , _connect        :: Connect.State
                    , _nodeSearcher   :: NodeSearcher.State
                    } deriving (Eq, Show)
 
 makeLenses ''State
 
 instance Default State where
-    def = State def (Vector2 400 200) def def def def def def def def
+    def = State def (Vector2 400 200) def def def def def def def def def
 
 instance PrettyPrinter State where
-    display (State iteration mousePos screenSize nodes camera addRemove selection multiSelection drag nodeSearcher)
+    display (State iteration mousePos screenSize nodes camera addRemove selection multiSelection drag connect nodeSearcher)
         = "gS(" <> display iteration
          <> " " <> display mousePos
          <> " " <> display screenSize
@@ -49,6 +51,7 @@ instance PrettyPrinter State where
          <> " " <> display selection
          <> " " <> display multiSelection
          <> " " <> display drag
+         <> " " <> display connect
          <> " " <> display nodeSearcher
          <> ")"
 
