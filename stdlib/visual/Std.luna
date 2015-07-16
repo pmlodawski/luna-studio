@@ -387,7 +387,13 @@ def Image.skewAt self::Image point::(Point2 Float) skew::(Skew Float) reformat::
 
 def Image.transform self::Image trans::TransformF reformat::Bool matte::(Maybe (Matte Float)) -> Image
 
-def Image.cornerPin self::Image p1::(Point2 Float) p2::(Point2 Float) p3::(Point2 Float) p4::(Point2 Float) -> Image
+class ```Quadrangle``` a:
+    p0, p1, p2, p3 :: Point2 a
+
+class ```CornerPin``` a:
+    to, from_ :: Quadrangle a
+
+def Image.cornerPin self::Image points::(CornerPin a) -> Image
 
 class ```ControlPoint``` a:
     point               :: Point2 a

@@ -17,8 +17,14 @@ foreign haskell def Image.posterize colors:
 # foreign haskell def Image.bilateral psigma csigma size:
 #     liftF4 bilateral psigma csigma size self
 
-foreign haskell def Image.cornerPin p1 p2 p3 p4:
-    liftF5 cornerPinLuna p1 p2 p3 p4 self
+foreign haskell class Quadrangle a:
+    p0, p1, p2, p3 :: Point2 a
+
+foreign haskell class CornerPin a:
+    to, from_ :: Point2 a
+
+foreign haskell def Image.cornerPin points:
+    liftF2 cornerPinLuna points self
 
 foreign haskell def Image.blur kernelSize:
     liftF2 blurLuna kernelSize self
