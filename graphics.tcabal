@@ -17,7 +17,6 @@ Library
   Default-Language:       Haskell2010
 
   Exposed-modules: `findmodules('src', '.*\.(rgb|hs)')`
-                   `findmodules('dist/gen', '.*\.hs', exclude='.*hs-boot.*')`
 
   if flag(cuda)
     CPP-options:        -DACCELERATE_CUDA_BACKEND
@@ -89,13 +88,13 @@ Executable test_non_numeric
                   algebraic,
                   flowbox-utils,
                   flowbox-graphics,
-                  lens                     
+                  lens
 
 -- == HSpec tests ==
 
 Test-suite hspec_tests
   type: exitcode-stdio-1.0
-  
+
   if !flag(cuda)
     buildable: False
 
@@ -511,4 +510,3 @@ Executable test_transformations
                   QuickCheck,
                   split,
                   vector
-                  

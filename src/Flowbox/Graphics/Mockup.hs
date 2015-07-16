@@ -21,3 +21,4 @@ module Flowbox.Graphics.Mockup (
 import Linear                    (V2 (..))
 import Math.Coordinate.Cartesian (Point2 (..))
 import Math.Metric               (Chebyshev(..), Euclidean(..), Minkowski(..), Taxicab(..))
+import  Flowbox.Graphics.Serialization ()
