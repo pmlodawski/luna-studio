@@ -60,8 +60,8 @@ updateNodesSelection :: NodeIdCollection -> NodeCollection -> NodeCollection
 updateNodesSelection selNodeIds nodes = fmap (updateNodeSelection selNodeIds) nodes
 
 nodeRadius    = 30.0
-radiusSquared = 900.0
-radiusShadow  = 21.0
+radiusSquared = nodeRadius * nodeRadius
+radiusShadow  = sqrt $ radiusSquared / 2.0
 
 getNodesAt :: Vector2 Int -> Camera -> NodeCollection -> NodeCollection
 getNodesAt posScr camera nodes = filter closeEnough nodes where
@@ -71,6 +71,10 @@ getNodesAt posScr camera nodes = filter closeEnough nodes where
         inRadius     = distSquared < radiusSquared
         distSquared  = (dist ^. x) ^ 2 + (dist ^. y) ^ 2
         dist         = (node ^. position - pos)
+
+
+portSize          = 12.0
+portDistFromRim   = 2.0
 
 -- TODO: Clever algorithm taking radius into account
 getNodeIdsIn :: Vector2 Int -> Vector2 Int -> Camera -> NodeCollection -> NodeIdCollection

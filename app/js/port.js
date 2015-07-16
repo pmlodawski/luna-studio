@@ -9,7 +9,7 @@ var fs = require('shaders/port.frag')();
 
 
 var triangleRatio = 0.8;
-var size          = 10;
+var size          = 12;
 var distFromRim   = 2.0;
 
 var magic = size * Math.sqrt(3) / 4;

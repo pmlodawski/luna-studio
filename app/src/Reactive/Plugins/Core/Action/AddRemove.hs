@@ -92,11 +92,11 @@ createPort :: PortId -> Bool -> Int -> Port
 createPort ident output allPorts = Port ident Int $ angleOfPort ident allPorts output
 
 createNode :: NodeId -> Vector2 Double -> Text -> Node
-createNode nodeId pos expr = trace ("inp " <> show inputPortsNum <> " outp " <> show outputPortsNum)
-    Node nodeId False pos expr inputPorts outputPorts where
+createNode nodeId pos expr = Node nodeId False pos expr inputPorts outputPorts where
     inputPorts      = (\ident -> createPort ident False inputPortsNum) <$> take  inputPortsNum idents
     outputPorts     = (\ident -> createPort ident True outputPortsNum) <$> take outputPortsNum idents
     idents          = [0, 1 ..]
+    -- mock port numbers:
     inputPortsNum   = tmpGetInputPortsNr  $ Text.unpack expr
     outputPortsNum  = tmpGetOutputPortsNr $ Text.unpack expr
 
@@ -154,7 +154,6 @@ createNodeOnUI node = do
         pos        = node ^. Node.position
         ident      = node ^. nodeId
         expr       = node ^. expression
-    -- putStrLn $ "ports " ++ show inputPorts ++ " " ++ show outputPorts
     UI.createNodeAt ident pos expr
     mapM_ (\port -> UI.addInputPort  ident (port ^. portId) (port ^. angle)) $ node ^.  inputPorts
     mapM_ (\port -> UI.addOutputPort ident (port ^. portId) (port ^. angle)) $ node ^. outputPorts
