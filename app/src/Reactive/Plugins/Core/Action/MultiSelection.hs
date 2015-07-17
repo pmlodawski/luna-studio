@@ -1,6 +1,7 @@
 module Reactive.Plugins.Core.Action.MultiSelection where
 
 import           Utils.PreludePlus
+import           Utils.Vector
 
 import qualified JS.Bindings    as UI
 import qualified JS.NodeGraph   as UI
@@ -13,9 +14,6 @@ import           Event.Mouse    hiding      ( Event, WithObjects )
 import qualified Event.Mouse    as Mouse
 import           Event.Event
 import           Event.WithObjects
-import           Utils.Vector
-import           Utils.Wrapper
-import           Utils.PrettyPrinter
 import           Reactive.Plugins.Core.Action.Action
 import           Reactive.Plugins.Core.Action.State.MultiSelection
 import qualified Reactive.Plugins.Core.Action.State.Selection      as Selection

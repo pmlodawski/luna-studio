@@ -1,6 +1,7 @@
 module Reactive.Plugins.Core.Action.Connect where
 
 import           Utils.PreludePlus
+import           Utils.Vector
 import           Debug.Trace
 
 import           JS.Camera
@@ -14,9 +15,6 @@ import           Event.Mouse    hiding      ( Event, WithObjects )
 import qualified Event.Mouse    as Mouse
 import           Event.Event
 import           Event.WithObjects
-import           Utils.Vector
-import           Utils.Wrapper
-import           Utils.PrettyPrinter
 import           Reactive.Plugins.Core.Action.Action
 import           Reactive.Plugins.Core.Action.State.Connect
 import qualified Reactive.Plugins.Core.Action.State.Camera    as Camera

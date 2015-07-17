@@ -3,6 +3,7 @@
 module Reactive.Plugins.Core.Action.NodeSearcher where
 
 import           Utils.PreludePlus
+import           Utils.Vector
 
 import           GHCJS.Foreign
 
@@ -20,9 +21,6 @@ import           Event.Mouse    hiding      ( Event )
 import qualified Event.Mouse    as Mouse
 import           Event.Event
 import           Event.WithObjects
-import           Utils.Vector
-import           Utils.Wrapper
-import           Utils.PrettyPrinter
 import           Reactive.Plugins.Core.Action.Action
 import           Reactive.Plugins.Core.Action.State.NodeSearcher
 import qualified Reactive.Plugins.Core.Action.State.Global          as Global

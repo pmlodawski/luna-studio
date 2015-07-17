@@ -3,6 +3,7 @@
 module Reactive.Plugins.Core.Action.AddRemove where
 
 import           Utils.PreludePlus
+import           Utils.Vector
 import           Data.Fixed
 
 import qualified JS.Bindings    as UI
@@ -17,12 +18,9 @@ import qualified Event.Keyboard as Keyboard
 import           Event.Mouse    hiding      ( Event, WithObjects )
 import qualified Event.Mouse    as Mouse
 import           Event.Event
-import           Utils.Vector
-import           Utils.Wrapper
-import           Utils.PrettyPrinter
-import           Reactive.Plugins.Core.Action.Action
 import           Event.NodeSearcher hiding  ( Event, expression )
 import qualified Event.NodeSearcher as NodeSearcher
+import           Reactive.Plugins.Core.Action.Action
 import           Reactive.Plugins.Core.Action.State.AddRemove
 import qualified Reactive.Plugins.Core.Action.State.Selection as Selection
 import qualified Reactive.Plugins.Core.Action.State.Global    as Global

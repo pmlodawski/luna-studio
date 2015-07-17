@@ -1,6 +1,7 @@
 module Reactive.Plugins.Core.Action.General where
 
 import           Utils.PreludePlus
+import           Utils.Vector
 
 import           JS.Bindings
 import           Object.Object
@@ -10,7 +11,6 @@ import qualified Event.Mouse    as Mouse
 import qualified Event.Window   as Window
 import           Event.Event
 import           Event.WithObjects
-import           Utils.Vector
 import           Reactive.Plugins.Core.Action.Action
 import qualified Reactive.Plugins.Core.Action.Camera         as Camera
 import qualified Reactive.Plugins.Core.Action.State.Global   as Global
