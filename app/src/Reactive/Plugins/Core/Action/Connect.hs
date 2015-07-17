@@ -3,6 +3,7 @@ module Reactive.Plugins.Core.Action.Connect where
 import           Utils.PreludePlus
 import           Debug.Trace
 
+import           JS.Camera
 import qualified JS.NodeGraph   as UI
 import           Object.Object
 import           Object.Port
@@ -25,7 +26,7 @@ import           Reactive.Plugins.Core.Action.State.UnderCursor
 
 data ActionType = StartDrag PortRef
                 | Moving
-                | Dragging
+                | Dragging Angle
                 | StopDrag
                 deriving (Eq, Show)
 
@@ -60,7 +61,12 @@ toAction (Mouse (Mouse.Event tpe pos button keyMods)) underCursor = trace ("uc "
           draggedPort   = fromJust $ underCursor ^. port
 toAction _ _            = Nothing
 
+updateSourcePort :: PortRef -> Angle -> Node -> Node
+updateSourcePort portRef angle node = if node ^. nodeId == portRef ^. refPortNode . nodeId then newNode else node where
+    newNode = updatePortAngle portRef angle node
 
+updateSourcePortInNodes :: Angle -> PortRef -> NodeCollection -> NodeCollection
+updateSourcePortInNodes angle portRef nodes = updateSourcePort portRef angle <$> nodes
 
 instance ActionStateUpdater Action where
     execSt newActionCandidate oldState = case newAction of
@@ -68,35 +74,51 @@ instance ActionStateUpdater Action where
         Nothing     -> ActionUI  NoAction newState
         where
         oldConnecting                    = oldState ^. Global.connect . connecting
+        oldNodes                         = oldState ^. Global.nodes
         newState                         = oldState & Global.iteration            +~ 1
                                                     & Global.connect . connecting .~ newConnecting
+                                                    & Global.nodes                .~ newNodes
         newAction                        = case newActionCandidate of
             DragAction Moving pt        -> case oldConnecting of
                 Nothing                 -> Nothing
-                _                       -> Just $ DragAction Dragging pt
+                _                       -> Just $ DragAction (Dragging angle) pt
             _                           -> Just newActionCandidate
         newConnecting                    = case newActionCandidate of
             DragAction tpe point        -> case tpe of
                 StartDrag source        -> Just $ Connecting source (DragHistory point point)
                 Moving                  -> case oldConnecting of
                     Just (Connecting source oldHistory)
-                                        -> Just $ Connecting source (DragHistory startPos point)
-                        where startPos   = oldHistory ^. dragStartPos
+                                        -> Just $ Connecting source newHistory where
+                        newHistory       = oldHistory & dragCurrentPos .~ point
                     Nothing             -> Nothing
                 StopDrag                -> Nothing
-
+        newNodes                         = case newConnecting of
+            Just (Connecting source (DragHistory startPos currentPos))
+                                        -> updateSourcePortInNodes angle source oldNodes where
+            _                           -> oldNodes
+        angle                            = case newConnecting of
+            Just (Connecting source (DragHistory startPos currentPos))
+                                        -> calcAngle destinPoint sourcePoint where
+                camera                   = Global.toCamera oldState
+                sourcePoint              = source ^. refPortNode . nodePos
+                destinPoint              = screenToWorkspace camera currentPos
+            _                           -> 0.0
 
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
         DragAction tpe pt            -> case tpe of
             StartDrag portRef        -> return ()
             Moving                   -> return ()
-            Dragging                 -> print "dupa"
-                                     >> return ()
+            Dragging angle           -> forM_ maybeSourcePort $ setAnglePortRef angle
             StopDrag                 -> return ()
+        where
+            maybeSourcePort           = (^. sourcePort) <$> state ^. Global.connect . connecting
 
 
+setAnglePortRef :: Angle -> PortRef -> IO ()
+setAnglePortRef refAngle portRef = setAngle (portRef ^. refPortType) refNodeId (portRef ^. refPortId) refAngle where
+    refNodeId = portRef ^. refPortNode . nodeId
 
-setAngle :: PortType -> NodeId -> PortId -> Double -> IO ()
+setAngle :: PortType -> NodeId -> PortId -> Angle -> IO ()
 setAngle  InputPort = UI.setInputPortAngle
 setAngle OutputPort = UI.setOutputPortAngle

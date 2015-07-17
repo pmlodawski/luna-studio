@@ -1,6 +1,7 @@
 module Object.Node where
 
 import           Utils.PreludePlus
+import           Utils.Vector
 import           Data.Dynamic
 import           Data.Fixed
 import           Debug.Trace
@@ -9,9 +10,6 @@ import           JS.Camera
 import           Object.Dynamic
 import           Object.Object
 import           Object.Port
-import           Utils.Vector
-import           Utils.Wrapper
-import           Utils.PrettyPrinter
 
 
 import qualified Data.Text.Lazy as Text
@@ -84,11 +82,32 @@ getPorts :: PortType -> Node -> PortCollection
 getPorts  InputPort = (^. ports .  inputPorts)
 getPorts OutputPort = (^. ports . outputPorts)
 
+setPorts :: PortType -> Ports -> PortCollection -> Ports
+setPorts  InputPort allPorts ports = allPorts &  inputPorts .~ ports
+setPorts OutputPort allPorts ports = allPorts & outputPorts .~ ports
+
 getPort :: PortId -> PortType -> Node -> Maybe Port
 getPort ident = find (\port -> port ^. portId == ident) .: getPorts
 
 fromPortRef :: PortRef -> Maybe Port
 fromPortRef portRef = getPort (portRef ^. refPortId) (portRef ^. refPortType) (portRef ^. refPortNode)
+
+updatePortInPorts :: PortId -> Angle -> PortCollection -> PortCollection
+updatePortInPorts refPortId angle ports = tryUpdatePort refPortId angle <$> ports
+
+tryUpdatePort :: PortId -> Angle -> Port -> Port
+tryUpdatePort refPortId newAngle port = if port ^. portId == refPortId then updatedPort
+                                                                       else port
+                                        where updatedPort = port & angle .~ newAngle
+
+updatePortAngle :: PortRef -> Angle -> Node -> Node
+updatePortAngle portRef angle node = newNode where
+    newNode      = node & ports .~ newAllPorts
+    portType     = portRef ^. refPortType
+    newAllPorts  = setPorts portType (node ^. ports) newPorts
+    oldPorts     = getPorts portType node
+    newPorts     = updatePortInPorts (portRef ^. refPortId) angle oldPorts
+
 
 updateNodeSelection :: NodeIdCollection -> Node -> Node
 updateNodeSelection selNodeIds node = let selection = (node ^. nodeId) `elem` selNodeIds in
@@ -124,7 +143,7 @@ haloInnerRadiusSquared = nodeHaloInnerRadius * nodeHaloInnerRadius
 haloOuterRadiusSquared = nodeHaloOuterRadius * nodeHaloOuterRadius
 
 
-getPortRefs :: Double -> Node -> [(Double, PortRef)]
+getPortRefs :: Angle -> Node -> [(Angle, PortRef)]
 getPortRefs refAngle node = inputs <> outputs where
     inputs    = newAnglePort  InputPort <$> getPorts  InputPort node
     outputs   = newAnglePort OutputPort <$> getPorts OutputPort node
@@ -140,14 +159,18 @@ getNodeHaloAt posScr camera nodes = listToMaybe $ filter inHalo nodes where
         distSquared  = (dist ^. x) ^ 2 + (dist ^. y) ^ 2
         dist         = (node ^. nodePos - pos)
 
-normAngle :: Double -> Double
+normAngle :: Angle -> Angle
 normAngle a = (2 * pi + a) `mod'` (2 * pi)
 
-toRelAngle :: Double -> Double
+toRelAngle :: Angle -> Angle
 toRelAngle a = if a > pi then (2 * pi) - a else a
 
-angleDiff :: Double -> Double -> Double
+angleDiff :: Angle -> Angle -> Angle
 angleDiff a1 a2 = toRelAngle . normAngle $ a2 - a1
+
+calcAngle :: Vector2 Double -> Vector2 Double -> Angle
+calcAngle vecDest vecSrc = normAngle $ atan2 (vecDiff ^. y) (vecDiff ^. x) where
+    vecDiff = vecDest - vecSrc
 
 getPortRef :: Vector2 Int -> Camera -> NodeCollection -> Maybe PortRef
 getPortRef posScr camera nodes = maybePortRef where

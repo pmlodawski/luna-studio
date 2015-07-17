@@ -10,10 +10,11 @@ import           Object.Object
 data ValueType = Int | Bool deriving (Eq, Show)
 
 type PortId = ID
+type Angle  = Double
 
 data Port = Port { _portId     :: PortId
                  , _tpe        :: ValueType
-                 , _angle      :: Double
+                 , _angle      :: Angle
                  } deriving (Eq, Show)
 
 type PortCollection   = [Port]

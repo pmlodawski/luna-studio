@@ -70,22 +70,22 @@ displaySelectBox a b = displaySelectBoxJS mx my w h where
     (Vector2 w  h)  = b - a
 
 
-addInputPort :: NodeId -> PortId -> Double -> IO ()
+addInputPort :: NodeId -> PortId -> Angle -> IO ()
 addInputPort nodeId portId angle = do
     nodeRef <- getNode nodeId
     addInputPortJS nodeRef portId angle
 
-addOutputPort :: NodeId -> PortId -> Double -> IO ()
+addOutputPort :: NodeId -> PortId -> Angle -> IO ()
 addOutputPort nodeId portId angle = do
     nodeRef <- getNode nodeId
     addOutputPortJS nodeRef portId angle
 
-setInputPortAngle :: NodeId -> PortId -> Double -> IO ()
+setInputPortAngle :: NodeId -> PortId -> Angle -> IO ()
 setInputPortAngle nodeId portId angle = do
     nodeRef <- getNode nodeId
     setInputPortAngleJS nodeRef portId angle
 
-setOutputPortAngle :: NodeId -> PortId -> Double -> IO ()
+setOutputPortAngle :: NodeId -> PortId -> Angle -> IO ()
 setOutputPortAngle nodeId portId angle = do
     nodeRef <- getNode nodeId
     setOutputPortAngleJS nodeRef portId angle
