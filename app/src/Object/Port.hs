@@ -16,6 +16,8 @@ data Port = Port { _portId     :: PortId
                  , _angle      :: Double
                  } deriving (Eq, Show)
 
+type PortCollection   = [Port]
+type PortIdCollection = [PortId]
 
 makeLenses ''Port
 

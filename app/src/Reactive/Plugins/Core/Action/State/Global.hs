@@ -7,8 +7,7 @@ import           Utils.Vector
 import qualified JS.Camera
 import           Object.Object
 import           Object.Port
-import qualified Object.Node    as Node     ( position )
-import           Object.Node    hiding      ( position )
+import           Object.Node
 
 import qualified Reactive.Plugins.Core.Action.State.Camera            as Camera
 import qualified Reactive.Plugins.Core.Action.State.AddRemove         as AddRemove

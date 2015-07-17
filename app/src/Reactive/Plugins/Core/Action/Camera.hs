@@ -7,8 +7,7 @@ import qualified JS.NodeGraph   as UI
 import qualified JS.Camera      as Camera
 
 import           Object.Object
-import qualified Object.Node    as Node     ( position )
-import           Object.Node    hiding      ( position )
+import           Object.Node
 import           Event.Keyboard hiding      ( Event )
 import qualified Event.Keyboard as Keyboard
 import           Event.Mouse    hiding      ( Event )
@@ -152,8 +151,8 @@ instance ActionStateUpdater Action where
         (autoZoomPan, autoZoomFactor)  = (autoZoomPan, autoZoomFactor) where
             nodes          = oldState ^. Global.nodes
             screenSize     = fromIntegral <$> oldState ^. Global.screenSize
-            minXY          = -padding + (Vector2 (minimum $ (^. Node.position . x) <$> nodes) (minimum $ (^. Node.position . y) <$> nodes))
-            maxXY          =  padding + (Vector2 (maximum $ (^. Node.position . x) <$> nodes) (maximum $ (^. Node.position . y) <$> nodes))
+            minXY          = -padding + (Vector2 (minimum $ (^. nodePos . x) <$> nodes) (minimum $ (^. nodePos . y) <$> nodes))
+            maxXY          =  padding + (Vector2 (maximum $ (^. nodePos . x) <$> nodes) (maximum $ (^. nodePos . y) <$> nodes))
             spanXY         = maxXY - minXY
             zoomFactorXY   = Vector2 (screenSize ^. x / spanXY ^. x) (screenSize ^. y / spanXY ^. y)
             autoZoomFactor = min (zoomFactorXY ^. x) (zoomFactorXY ^. y)

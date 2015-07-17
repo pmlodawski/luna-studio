@@ -21,10 +21,10 @@ type NodeId = ID
 
 data Node = Node { _nodeId      :: NodeId
                  , _selected    :: Bool
-                 , _position    :: Vector2 Double
+                 , _nodePos     :: Vector2 Double
                  , _expression  :: Text
-                 , _inputPorts  :: [Port]
-                 , _outputPorts :: [Port]
+                 , _inputPorts  :: PortCollection
+                 , _outputPorts :: PortCollection
                  } deriving (Eq, Show, Typeable)
 
 type NodeCollection   = [Node]
@@ -54,9 +54,9 @@ isNode obj = isJust (unpackDynamic obj :: Maybe Node)
 data PortType = InputPort | OutputPort deriving (Eq, Show)
 
 
-data PortRef = PortRef { _portNode   :: Node
-                       , _portType   :: PortType
-                       , _portRefId  :: PortId
+data PortRef = PortRef { _refPortNode   :: Node
+                       , _refPortType   :: PortType
+                       , _refPortId     :: PortId
                        } deriving (Eq, Show)
 
 makeLenses ''PortRef
@@ -72,6 +72,16 @@ instance PrettyPrinter PortRef where
         <> " " <> display portId
         <> ")"
 
+
+getPorts :: PortType -> Node -> PortCollection
+getPorts  InputPort = (^.  inputPorts)
+getPorts OutputPort = (^. outputPorts)
+
+getPort :: PortId -> PortType -> Node -> Maybe Port
+getPort ident = find (\port -> port ^. portId == ident) .: getPorts
+
+fromPortRef :: PortRef -> Maybe Port
+fromPortRef portRef = getPort (portRef ^. refPortId) (portRef ^. refPortType) (portRef ^. refPortNode)
 
 updateNodeSelection :: NodeIdCollection -> Node -> Node
 updateNodeSelection selNodeIds node = let selection = (node ^. nodeId) `elem` selNodeIds in
@@ -91,7 +101,7 @@ getNodesAt posScr camera nodes = filter closeEnough nodes where
         inRange      = dist ^. x < nodeRadius && dist ^. y < nodeRadius
         inRadius     = distSquared < radiusSquared
         distSquared  = (dist ^. x) ^ 2 + (dist ^. y) ^ 2
-        dist         = (node ^. position - pos)
+        dist         = (node ^. nodePos - pos)
 
 
 getNodeIdsAt :: Vector2 Int -> Camera -> NodeCollection -> NodeIdCollection
@@ -121,7 +131,7 @@ getNodeHaloAt posScr camera nodes = listToMaybe $ filter inHalo nodes where
         inRange      = dist ^. x < nodeHaloOuterRadius && dist ^. y < nodeHaloOuterRadius
         betweenRadii = haloInnerRadiusSquared < distSquared && distSquared < haloOuterRadiusSquared
         distSquared  = (dist ^. x) ^ 2 + (dist ^. y) ^ 2
-        dist         = (node ^. position - pos)
+        dist         = (node ^. nodePos - pos)
 
 normAngle :: Double -> Double
 normAngle a = (2 * pi + a) `mod'` (2 * pi)
@@ -137,7 +147,7 @@ getPortRef posScr camera nodes = maybePortRef where
     pos                 = screenToWorkspace camera posScr
     maybePortRef        = do
         nodeHalo       <- getNodeHaloAt posScr camera nodes
-        let relVect     = pos - (nodeHalo ^. position)
+        let relVect     = pos - (nodeHalo ^. nodePos)
             posAngle    = normAngle $ atan2 (relVect ^. y) (relVect ^. x)
             portRefs    = getPortRefs posAngle nodeHalo
         when (null portRefs) Nothing
@@ -154,6 +164,6 @@ getNodeIdsIn (Vector2 x1 y1) (Vector2 x2 y2) camera nodes = (^. nodeId) <$> node
     rightTop   = screenToWorkspace camera (Vector2 (max x1 x2) (min y1 y2)) + Vector2 radiusShadow radiusShadow
     nodesInBounds :: NodeCollection
     nodesInBounds = filter isNodeInBounds nodes
-    isNodeInBounds node = let pos = node ^. position in
+    isNodeInBounds node = let pos = node ^. nodePos in
                           leftBottom ^. x <= pos ^. x && pos ^. x <= rightTop ^. x &&
                           leftBottom ^. y <= pos ^. y && pos ^. y <= rightTop ^. y

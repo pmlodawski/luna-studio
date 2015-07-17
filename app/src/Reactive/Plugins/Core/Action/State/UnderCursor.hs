@@ -6,8 +6,7 @@ import           Utils.Vector
 
 import           Object.Object
 import           Object.Port
-import qualified Object.Node    as Node     ( position )
-import           Object.Node    hiding      ( position )
+import           Object.Node
 
 import           Reactive.Plugins.Core.Action.State.Global
 

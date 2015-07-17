@@ -6,8 +6,7 @@ import           JS.Bindings
 import qualified JS.NodeGraph   as UI
 
 import           Object.Object
-import qualified Object.Node    as Node     ( position )
-import           Object.Node    hiding      ( position )
+import           Object.Node
 import           Event.Keyboard hiding      ( Event )
 import qualified Event.Keyboard as Keyboard
 import           Event.Mouse    hiding      ( Event )
@@ -61,7 +60,7 @@ toAction (Mouse (Mouse.Event tpe pos button keyMods)) underCursor = case button 
         _             -> Nothing
     _                 -> Nothing
     where nodeUnderCursor  = not . null $ underCursor ^. nodesUnderCursor
-          node             = head $ underCursor ^. nodesUnderCursor
+          node             = head       $ underCursor ^. nodesUnderCursor
           selectActionType = if node ^. selected then Focus
                                                  else SelectNew
           toggleActionType = if node ^. selected then ToggleOff

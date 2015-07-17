@@ -6,8 +6,7 @@ import qualified JS.Bindings    as UI
 import qualified JS.NodeGraph   as UI
 import qualified JS.Camera      as Camera
 import           Object.Object
-import qualified Object.Node    as Node     ( position )
-import           Object.Node    hiding      ( position )
+import           Object.Node
 import           Event.Keyboard hiding      ( Event )
 import qualified Event.Keyboard as Keyboard
 import           Event.Mouse    hiding      ( Event, WithObjects )

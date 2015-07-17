@@ -4,7 +4,7 @@ import           Utils.PreludePlus
 
 import           JS.Bindings
 import           Object.Object
-import           Object.Node    hiding      ( position )
+import           Object.Node
 import           Event.Mouse    hiding      ( Event, WithObjects )
 import qualified Event.Mouse    as Mouse
 import qualified Event.Window   as Window

@@ -5,8 +5,8 @@ import           Debug.Trace
 
 import qualified JS.NodeGraph   as UI
 import           Object.Object
-import qualified Object.Node    as Node     ( position )
-import           Object.Node    hiding      ( position )
+import           Object.Port
+import           Object.Node
 import           Event.Keyboard hiding      ( Event )
 import qualified Event.Keyboard as Keyboard
 import           Event.Mouse    hiding      ( Event, WithObjects )
@@ -23,7 +23,7 @@ import qualified Reactive.Plugins.Core.Action.State.Global    as Global
 import           Reactive.Plugins.Core.Action.State.UnderCursor
 
 
-data ActionType = StartDrag
+data ActionType = StartDrag PortRef
                 | Moving
                 | Dragging
                 | StopDrag
@@ -39,7 +39,8 @@ makeLenses ''Action
 
 
 instance PrettyPrinter ActionType where
-    display = show
+    display (StartDrag portRef) = "StartDrag(" <> display portRef <> ")"
+    display other               = show other
 
 instance PrettyPrinter Action where
     display (DragAction tpe point) = "cA(" <> display tpe <> " " <> display point <> ")"
@@ -49,14 +50,15 @@ toAction :: Event Node -> UnderCursor -> Maybe Action
 toAction (Mouse (Mouse.Event tpe pos button keyMods)) underCursor = trace ("uc " <> display underCursor) $ case button of
     1                  -> case tpe of
         Mouse.Pressed  -> if dragAllowed then case keyMods of
-                                             (KeyMods False False False False) -> Just (DragAction StartDrag pos)
+                                             (KeyMods False False False False) -> Just (DragAction (StartDrag draggedPort) pos)
                                              _                                 -> Nothing
                                          else Nothing
         Mouse.Released -> Just (DragAction StopDrag pos)
         Mouse.Moved    -> Just (DragAction Moving   pos)
     _                  -> Nothing
-    where dragAllowed   = False
-toAction _ _ = Nothing
+    where dragAllowed   = isJust   $ underCursor ^. port
+          draggedPort   = fromJust $ underCursor ^. port
+toAction _ _            = Nothing
 
 
 
@@ -75,7 +77,7 @@ instance ActionStateUpdater Action where
             _                           -> Just newActionCandidate
         newDrag                          = case newActionCandidate of
             DragAction tpe point        -> case tpe of
-                StartDrag               -> Just $ DragHistory point point
+                StartDrag _             -> Just $ DragHistory point point
                 Moving                  -> case oldDrag of
                     Just oldDragState   -> Just $ DragHistory startPos point
                         where startPos   = oldDragState ^. dragStartPos
@@ -86,9 +88,14 @@ instance ActionStateUpdater Action where
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
         DragAction tpe pt            -> case tpe of
-            StartDrag                -> return ()
+            StartDrag portRef        -> return ()
             Moving                   -> return ()
-            Dragging                 -> return ()
+            Dragging                 -> print "dupa"
+                                     >> return ()
             StopDrag                 -> return ()
 
 
+
+setAngle :: PortType -> NodeId -> PortId -> Double -> IO ()
+setAngle  InputPort = UI.setInputPortAngle
+setAngle OutputPort = UI.setOutputPortAngle

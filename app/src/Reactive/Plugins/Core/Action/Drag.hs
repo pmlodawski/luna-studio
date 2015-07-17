@@ -5,8 +5,7 @@ import           System.Mem
 
 import qualified JS.NodeGraph   as UI
 import           Object.Object
-import qualified Object.Node    as Node     ( position )
-import           Object.Node    hiding      ( position )
+import           Object.Node
 import           Event.Keyboard hiding      ( Event )
 import qualified Event.Keyboard as Keyboard
 import           Event.Mouse    hiding      ( Event, WithObjects )
@@ -60,7 +59,7 @@ toAction (Mouse (Mouse.Event tpe pos button keyMods)) underCursor = case button 
 toAction _ _ = Nothing
 
 moveNodes :: Double -> Vector2 Int -> NodeCollection -> NodeCollection
-moveNodes factor delta = fmap $ \node -> if node ^. selected then node & Node.position +~ deltaWs else node where
+moveNodes factor delta = fmap $ \node -> if node ^. selected then node & nodePos +~ deltaWs else node where
     deltaWs = deltaToWs factor delta
 
 deltaToWs :: Double -> Vector2 Int -> Vector2 Double

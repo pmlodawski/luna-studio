@@ -11,8 +11,7 @@ import qualified JS.Camera      as Camera
 
 import           Object.Object
 import           Object.Port
-import qualified Object.Node    as Node     ( position )
-import           Object.Node    hiding      ( position )
+import           Object.Node
 import           Event.Keyboard hiding      ( Event )
 import qualified Event.Keyboard as Keyboard
 import           Event.Mouse    hiding      ( Event, WithObjects )
@@ -144,11 +143,17 @@ instance ActionUIUpdater Action where
 createNodeOnUI :: Node ->  IO ()
 createNodeOnUI node = do
     let
-        pos        = node ^. Node.position
+        pos        = node ^. nodePos
         ident      = node ^. nodeId
         expr       = node ^. expression
     UI.createNodeAt ident pos expr
-    mapM_ (\port -> UI.addInputPort  ident (port ^. portId) (port ^. angle)) $ node ^.  inputPorts
-    mapM_ (\port -> UI.addOutputPort ident (port ^. portId) (port ^. angle)) $ node ^. outputPorts
+    mapM_ (addPortWith ident $ addPort  InputPort) $ node ^.  inputPorts
+    mapM_ (addPortWith ident $ addPort OutputPort) $ node ^. outputPorts
 
 
+addPortWith :: NodeId -> (NodeId -> PortId -> Double -> IO ()) -> Port -> IO ()
+addPortWith nodeId addPortFun port = addPortFun nodeId (port ^. portId) (port ^. angle)
+
+addPort :: PortType -> NodeId -> PortId -> Double -> IO ()
+addPort  InputPort = UI.addInputPort
+addPort OutputPort = UI.addOutputPort

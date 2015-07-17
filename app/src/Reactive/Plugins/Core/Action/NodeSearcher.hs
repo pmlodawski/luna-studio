@@ -11,8 +11,7 @@ import qualified JS.NodeGraph   as UI
 import qualified JS.NodeSearcher
 
 import           Object.Object
-import qualified Object.Node    as Node     ( position )
-import           Object.Node    hiding      ( position )
+import           Object.Node
 import           Event.Keyboard hiding      ( Event )
 import qualified Event.Keyboard as Keyboard
 import           Event.NodeSearcher hiding  ( Event )

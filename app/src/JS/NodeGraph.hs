@@ -54,14 +54,14 @@ unfocusAllNodes =
 
 moveNode :: Node -> IO ()
 moveNode node = do
-    let (Vector2 wx wy) = node ^.position
-    nodeRef <- getNode $ node ^. nodeId
+    let (Vector2 wx wy) = node ^. nodePos
+    nodeRef  <- getNode $ node ^. nodeId
     moveTo nodeRef wx wy
 
 dragNode :: Vector2 Double -> Node -> IO ()
 dragNode delta node = do
-    let (Vector2 wx wy) = node ^.position + delta
-    nodeRef <- getNode $ node ^. nodeId
+    let (Vector2 wx wy) = node ^. nodePos + delta
+    nodeRef  <- getNode $ node ^. nodeId
     moveTo nodeRef wx wy
 
 displaySelectBox :: Vector2 Double -> Vector2 Double -> IO ()
