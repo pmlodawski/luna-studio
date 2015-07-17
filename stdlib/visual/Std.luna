@@ -393,7 +393,7 @@ class ```Quadrangle``` a:
 class ```CornerPin``` a:
     to, from_ :: Quadrangle a
 
-def Image.cornerPin self::Image points::(CornerPin a) -> Image
+def Image.cornerPin self::Image points::(CornerPin Float) -> Image
 
 class ```ControlPoint``` a:
     point               :: Point2 a
