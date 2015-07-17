@@ -84,7 +84,7 @@ createPort :: PortId -> Bool -> Int -> Port
 createPort ident output allPorts = Port ident Int $ angleOfPort ident allPorts output
 
 createNode :: NodeId -> Vector2 Double -> Text -> Node
-createNode nodeId pos expr = Node nodeId False pos expr inputPorts outputPorts where
+createNode nodeId pos expr = Node nodeId False pos expr (Ports inputPorts outputPorts) where
     inputPorts      = (\ident -> createPort ident False inputPortsNum) <$> take  inputPortsNum idents
     outputPorts     = (\ident -> createPort ident True outputPortsNum) <$> take outputPortsNum idents
     idents          = [0, 1 ..]
@@ -96,7 +96,7 @@ createNode nodeId pos expr = Node nodeId False pos expr inputPorts outputPorts w
 instance ActionStateUpdater Action where
     execSt newActionCandidate oldState = case newAction of
         Just action -> ActionUI newAction newState
-        Nothing     -> ActionUI NoAction  newState
+        Nothing     -> ActionUI  NoAction newState
         where
         newState                = oldState & Global.iteration                     +~ 1
                                            & Global.nodes                         .~ newNodes
@@ -147,9 +147,12 @@ createNodeOnUI node = do
         ident      = node ^. nodeId
         expr       = node ^. expression
     UI.createNodeAt ident pos expr
-    mapM_ (addPortWith ident $ addPort  InputPort) $ node ^.  inputPorts
-    mapM_ (addPortWith ident $ addPort OutputPort) $ node ^. outputPorts
+    addPorts  InputPort node
+    addPorts OutputPort node
 
+
+addPorts :: PortType -> Node -> IO ()
+addPorts portType node = mapM_ (addPortWith (node ^. nodeId) $ addPort portType) $ getPorts portType node
 
 addPortWith :: NodeId -> (NodeId -> PortId -> Double -> IO ()) -> Port -> IO ()
 addPortWith nodeId addPortFun port = addPortFun nodeId (port ^. portId) (port ^. angle)

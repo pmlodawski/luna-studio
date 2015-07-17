@@ -62,7 +62,7 @@ toAction _ _            = Nothing
 instance ActionStateUpdater Action where
     execSt newActionCandidate oldState = case newAction of
         Just action -> ActionUI newAction newState
-        Nothing     -> ActionUI NoAction  newState
+        Nothing     -> ActionUI  NoAction newState
         where
         oldDrag                          = oldState ^. Global.multiSelection . history
         oldNodes                         = oldState ^. Global.nodes

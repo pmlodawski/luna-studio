@@ -68,7 +68,7 @@ deltaToWs factor delta = (/ factor) . fromIntegral <$> (negateSnd delta)
 instance ActionStateUpdater Action where
     execSt newActionCandidate oldState = case newAction of
         Just action -> ActionUI newAction newState
-        Nothing     -> ActionUI NoAction  newState
+        Nothing     -> ActionUI  NoAction newState
         where
         oldDrag                          = oldState ^. Global.drag . history
         oldNodes                         = oldState ^. Global.nodes

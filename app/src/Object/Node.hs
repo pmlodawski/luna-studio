@@ -19,27 +19,34 @@ import           Data.Text.Lazy ( Text )
 
 type NodeId = ID
 
+data Ports = Ports { _inputPorts  :: PortCollection
+                   , _outputPorts :: PortCollection
+                   } deriving (Eq, Show)
+
 data Node = Node { _nodeId      :: NodeId
                  , _selected    :: Bool
                  , _nodePos     :: Vector2 Double
                  , _expression  :: Text
-                 , _inputPorts  :: PortCollection
-                 , _outputPorts :: PortCollection
+                 , _ports       :: Ports
                  } deriving (Eq, Show, Typeable)
 
 type NodeCollection   = [Node]
 type NodeIdCollection = [NodeId]
 
+makeLenses ''Ports
 makeLenses ''Node
 
+instance PrettyPrinter Ports where
+    display (Ports input output)
+        = display input <> " " <> display output
+
 instance PrettyPrinter Node where
-    display (Node ident sel pos expr inputPorts outputPorts)
+    display (Node ident sel pos expr ports)
         = "n(" <> display ident
         <> " " <> display sel
         <> " " <> display pos
         <> " " <> display expr
-        <> " " <> display inputPorts
-        <> " " <> display outputPorts
+        <> " " <> display ports
         <> ")"
 
 instance Selectable Node where
@@ -74,8 +81,8 @@ instance PrettyPrinter PortRef where
 
 
 getPorts :: PortType -> Node -> PortCollection
-getPorts  InputPort = (^.  inputPorts)
-getPorts OutputPort = (^. outputPorts)
+getPorts  InputPort = (^. ports .  inputPorts)
+getPorts OutputPort = (^. ports . outputPorts)
 
 getPort :: PortId -> PortType -> Node -> Maybe Port
 getPort ident = find (\port -> port ^. portId == ident) .: getPorts
@@ -119,8 +126,8 @@ haloOuterRadiusSquared = nodeHaloOuterRadius * nodeHaloOuterRadius
 
 getPortRefs :: Double -> Node -> [(Double, PortRef)]
 getPortRefs refAngle node = inputs <> outputs where
-    inputs    = newAnglePort InputPort  <$> node ^. inputPorts
-    outputs   = newAnglePort OutputPort <$> node ^. outputPorts
+    inputs    = newAnglePort  InputPort <$> getPorts  InputPort node
+    outputs   = newAnglePort OutputPort <$> getPorts OutputPort node
     newAnglePort tpe port = (angleDiff refAngle $ port ^. angle, PortRef node tpe $ port ^. portId)
 
 

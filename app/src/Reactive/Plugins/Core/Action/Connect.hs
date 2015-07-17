@@ -65,22 +65,23 @@ toAction _ _            = Nothing
 instance ActionStateUpdater Action where
     execSt newActionCandidate oldState = case newAction of
         Just action -> ActionUI newAction newState
-        Nothing     -> ActionUI NoAction  newState
+        Nothing     -> ActionUI  NoAction newState
         where
-        oldDrag                          = oldState ^. Global.connect . history
-        newState                         = oldState & Global.iteration         +~ 1
-                                                    & Global.connect . history .~ newDrag
+        oldConnecting                    = oldState ^. Global.connect . connecting
+        newState                         = oldState & Global.iteration            +~ 1
+                                                    & Global.connect . connecting .~ newConnecting
         newAction                        = case newActionCandidate of
-            DragAction Moving pt        -> case oldDrag of
+            DragAction Moving pt        -> case oldConnecting of
                 Nothing                 -> Nothing
                 _                       -> Just $ DragAction Dragging pt
             _                           -> Just newActionCandidate
-        newDrag                          = case newActionCandidate of
+        newConnecting                    = case newActionCandidate of
             DragAction tpe point        -> case tpe of
-                StartDrag _             -> Just $ DragHistory point point
-                Moving                  -> case oldDrag of
-                    Just oldDragState   -> Just $ DragHistory startPos point
-                        where startPos   = oldDragState ^. dragStartPos
+                StartDrag source        -> Just $ Connecting source (DragHistory point point)
+                Moving                  -> case oldConnecting of
+                    Just (Connecting source oldHistory)
+                                        -> Just $ Connecting source (DragHistory startPos point)
+                        where startPos   = oldHistory ^. dragStartPos
                     Nothing             -> Nothing
                 StopDrag                -> Nothing
 
