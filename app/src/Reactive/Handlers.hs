@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Reactive.Handlers where
 
-import           Utils.PreludePlus
+import           Utils.PreludePlus hiding ( on )
 import           Utils.Vector
 
 import           Data.Dynamic        ( Dynamic )
