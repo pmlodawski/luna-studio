@@ -4,10 +4,11 @@ var FunctionNode = require('function_node').FunctionNode,
     $$           = require('common'),
     config       = require('config'),
     features     = require('features'),
-    NodeSearcher = require('node_searcher');
+    NodeSearcher = require('node_searcher'),
+    brunch        = require('brunch');
 
-console.info("Current version {!env!} {!git_commit!}");
-console.info("Build at {!date!}");
+console.info("Current version " + brunch.env + " " + brunch.git_commit);
+console.info("Build at " + brunch.date);
 
 var nodes = {};
 $$.nodes = nodes;
@@ -25,6 +26,11 @@ function start() {
 }
 
 function initializeGl() {
+    if(window.already_initialized) {
+        alert("Alredy initialized… it shouldn't happen");
+    }
+
+    window.already_initialized = true;
     $$.scene                = new THREE.Scene();
     $$.sceneHUD             = new THREE.Scene();
     $$.camera               = new THREE.OrthographicCamera(-500, 500, -500, 500, 1, 1000);
@@ -48,7 +54,7 @@ function addVersionToHud() {
   var textMaterial = require('font/text_material').hud;
 
   var geom = createText({
-    text: "Build at {!date!}",
+    text: "Build at " + brunch.date,
     font: font,
     width: 5000,
     align: 'left'

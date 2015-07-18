@@ -11,8 +11,8 @@ exports.config =
   files:
     javascripts:
       joinTo:
-        'javascripts/ghcjs.js' : /^app\/.*\.ghcjs$/
-        'javascripts/app.js'   : /^app\/(js|features\.|shaders|config)/
+        'javascripts/ghcjs.js' : /^app\/.*\.(ghcjs)$/
+        'javascripts/app.js'   : /^app\/(js|features\.|shaders|config|brunch\.buildenv)/
         'javascripts/vendor.js': /^(vendor|bower_components)/
       order:
         before: []
@@ -32,7 +32,11 @@ exports.config =
 
   conventions:
     assets: /(assets|vendor\/assets)/
-
+    ignored: [
+          /[\\/]_/
+          /vendor[\\/](node|j?ruby-.*|bundle)[\\/]/
+          /ghcjs-live\.js$/
+        ]
   modules:
     nameCleaner: (path) ->
       path.replace /^app\/(js\/)?/, ''
@@ -43,24 +47,34 @@ exports.config =
       projectName:  cabalProjectName
       buildCommand: 'cabal install'
       clearScreen:  false
+      interactive:  false
+      ghciCommand:  "./interactive"
+
 
     jshint:
       pattern: /^app\/.*\.js$/
       warnOnly: true
 
-  keyword:
-    filePattern: /\.(js|css|html)$/
-    map:
+    build_env:
       git_commit: ->
         local_changes = (shelljs.exec('git diff-index --quiet HEAD --').code == 1)
         git_hash      = shelljs.exec('git rev-parse HEAD', {silent:true}).output.trim()
         "#{git_hash}#{if local_changes then "-local" else ""}";
       env: "development"
+      date: -> new Date()
 
   overrides:
+    interactive:
+      conventions: ignored: [
+          /[\\/]_/
+          /vendor[\\/](node|j?ruby-.*|bundle)[\\/]/
+        ]
+      plugins:
+        ghcjs:
+          interactive: true
+        build_env: env: "interactive"
     production:
-      optimize: false # breaks "production" === "production"
-      keyword: map: env: "production"
+      plugins: build_env: env: "production"
 
 try
   c = require("./brunch-config.local").transform(exports.config)

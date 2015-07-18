@@ -1,0 +1,8 @@
+#!/bin/bash
+
+PACKAGE_DB_GLOB=$(awk -F ": " '/package-db/ {print $2}' cabal.sandbox.config)/../*-ghcjs-*-packages.conf.d
+PACKAGE_DB=$(echo $PACKAGE_DB_GLOB) # ugly force expand glob
+
+cd app/src
+ghcjs -package-db=$PACKAGE_DB --interactive -package base -package ghcjs-base -package ghcjs-dom -package reactive-banana -package text -package transformers -package mtl -package lens -package containers -package fgl -package random -XDoAndIfThenElse -XTemplateHaskell -XDeriveGeneric -XStandaloneDeriving -XFlexibleContexts -XMultiParamTypeClasses -XDefaultSignatures -XDeriveFunctor -XDeriveTraversable -XDeriveFoldable -XFlexibleInstances -XLambdaCase -XConstraintKinds -XGeneralizedNewtypeDeriving -XDeriveDataTypeable -XScopedTypeVariables Main
+

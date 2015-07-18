@@ -38,7 +38,7 @@ executable gui
   build-depends:       base >= 4.8 && < 4.9
                      , data-default
                      , ghcjs-base
-                     , ghcjs-dom
+                     , ghcjs-dom >= 0.2
                      , reactive-banana
                      , text
                      , transformers

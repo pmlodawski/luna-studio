@@ -26,3 +26,5 @@ public
 
 app/features.local.js
 app/config.local.js
+*.js_o
+*.js_hi
