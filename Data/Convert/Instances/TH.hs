@@ -45,6 +45,17 @@ numConversions =  mkConversions   [| fromIntegral                 |] integralTyp
 
 
 
+--numConversions2 =  mkConversions2   [| fromIntegral                 |] [''Int, '']  integralTypes
+               -- <> safeConversions [| fromIntegral                 |] integralTypes  floatTypes
+               -- <> mkConversions   [| truncate                     |] floatTypes     integralTypes
+               -- <> safeConversions [| realToFrac                   |] floatTypes     floatTypes
+               -- <> mkConversions   [| fromIntegral . fromEnum      |] charType       integralTypes
+               -- <> mkConversions   [| BS.singleton . unsafeConvert |] integralTypes  byteStringType
+               -- <> mkConversions   [| BS.singleton . unsafeConvert |] byteStringType integralTypes
+              -- <> wordBase
+
+
+
 --numConversions :: [Conversion]
 --numConversions = concat $ typeCons <*> fmap snd numDescs where
 --    typeCons = fmap (uncurry mkConversions) numDescs

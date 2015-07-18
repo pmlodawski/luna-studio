@@ -38,80 +38,29 @@ import Data.Typeable
 import Language.Haskell.TH hiding (Type, Safety, Safe, Unsafe)
 import Data.Monoid
 import GHC.TypeLits
+import Prelude hiding (Bounded, maxBound, minBound)
+import qualified Prelude as Prelude
 
 {- | Utility function to perform bounds checking as part of a conversion.
 
 Does this be examining the bounds of the destination type, converting to the type of
 the source via 'tryConvert', comparing to the source value.  Results in an error
 if the conversion is out of bounds. -}
-fracLowerConversion :: (Typeable a, Typeable b, Convertible a Integer, Show a)
-                    => FracBase2 -> (a -> b) -> (a -> ConvertResult b)
-fracLowerConversion dstBase func inp = if illegal then err else return result where
-    result    = func inp
-    smallest  = minFrac dstBase
-    biggest   = maxFrac dstBase
-    inp'      = convert inp :: Integer
-    illegal   = inp' < smallest || inp' > biggest
-    err       = convError ("Input value outside of bounds: " ++ show (smallest, biggest)) inp
+
+asTypeOfProxy :: a -> Proxy a -> a
+asTypeOfProxy = const
+
+data BoundError = BoundError deriving (Show)
+
+boundedConversion :: (a -> b) -> (a -> Either BoundError b)
+boundedConversion func inp = if (inp `containedIn` bounds)
+    then Right func inp
+    else Left BoundError
+    where bounds = fmap convert (bounds :: Bounds b) :: Bounds a
 
 
-boundedConversion :: ( Ord a, Bounded b, Show a, Show b, MaybeConvertible a Integer
-                     , MaybeConvertible b Integer, Typeable a, Typeable b )
-                  => (a -> b) -> (a -> ConvertResult b)
-boundedConversion func inp = if illegal then err else return result where
-    result    = func inp
-    smallest  = asTypeOf minBound result
-    biggest   = asTypeOf maxBound result
-    smallest' = unsafeConvert smallest ::Integer
-    biggest'  = unsafeConvert biggest  ::Integer
-    inp'      = unsafeConvert inp      ::Integer
-    illegal   = inp' < smallest' || inp' > biggest'
-    err       = convError ("Input value outside of bounds: " ++ show (smallest, biggest)) inp
-
-
-
-type family FracBaseOf a :: (FracBase Nat)
-
-data FracBase a = Infinite
-                | Signed   a
-                | Unsigned a
-
-type FracBaseVal = FracBase Int
-
-
-class Unlift (a :: k) (b :: *) | a -> b where
-    unlift :: Proxy a -> b
-
-instance Unlift Infinite FracBaseVal where
-    unlift _ = Infinite
-
-instance KnownNat n => Unlift (Signed n) FracBaseVal where
-    unlift _ = Signed . fromIntegral $ natVal (Proxy :: Proxy n)
-
-instance KnownNat n => Unlift (Unsigned n) FracBaseVal where
-    unlift _ = Unsigned . fromIntegral $ natVal (Proxy :: Proxy n)
-
---instance Unlift Infinite FracBase where
---    unlift _ = Infinite
-
---type instance FracBase Int8 = 32
-
-
-data FracBase2 = Signed2   Int
-               | Unsigned2 Int
-               deriving (Show)
-
-class Num a => FractionBound a where
-    minFrac :: FracBase2 -> a
-    maxFrac :: FracBase2 -> a
-
-instance Num a => FractionBound a where
-    minFrac = \case
-        Signed2   b -> - (2 ^ (b - 1))
-        Unsigned2 b -> - (2 ^ b)
-    maxFrac = \case
-        Signed2   b -> 2 ^ (b - 1) - 1
-        Unsigned2 b -> 2 ^ b - 1
+containedIn :: a -> Bounds a -> Bool
+containedIn (Value -> a) (Bounds min max) = a >= min && a <= max
 
 data BoundError = BoundError
 
@@ -119,33 +68,70 @@ data BoundError = BoundError
 --generateBoundConversions ((tpName, sorts), (tpName', sorts')) = return [] where
 --    names =
 
-data Safety = Safe
-            | Unsafe
-            deriving (Show)
 
-
-data Conversion = Conversion Safety (Q Exp) FractionType FractionType
+data Conversion = Conversion (Q Exp) Type Type
 
 instance Show Conversion where
     show (Conversion t _ a b) = "Conversion " <> show t <> " " <> name a <> " " <> name b
 
 
-data Uni t = Uni { fromfunc :: String
-                 , tp       :: t
-                 } deriving (Show, Functor)
-
-data FractionLayout  = FractionLayout Base
-                  deriving (Show)
-
-
-data ComplexLayout = ComplexLayout
-                   deriving (Show)
 
 data Type layout = Type { name   :: String
                         , layout :: layout
                         } deriving (Show)
 
-type FractionType = Type FractionLayout
+type Type = Type Layout
+
+data Layout = IntLayout Sign Int
+            | InfiniteLayout
+
+data Sign = Signed
+          | Unsigned
+          deriving (Show)
+
+instance Ord Layout where
+    compare InfiniteLayout  InfiniteLayout    = Eq
+    compare InfiniteLayout  a                 = Gt
+    compare a               InfiniteLayout    = Lt
+    compare (IntLayout s i) (IntLayout s' i') = compare (signedBase i) (signedBase i') where
+        signedBase = \case
+            Signed   -> (- 1)
+            Unsigned -> id
+
+instance Ord layout => Ord (Type layout) where
+    compare (Type _ l) (Type _ l') = compare l l'
+
+
+class Bounded a bound | a -> bound where
+    bounds :: a -> bound
+
+instance {-# OVERLAPPABLE #-} (Prelude.Bounded a, bound ~ Bounds a)
+      => Bouded a bound where
+    bounds a = Bounds (Bound $ Prelude.minBound a) (Bound $ Prelude.maxBound a)
+
+instance Bounded Float    where bounds = infiniteBounds
+instance Bounded Double   where bounds = infiniteBounds
+instance Bounded Rational where bounds = infiniteBounds
+instance Bounded Integer  where bounds = infiniteBounds
+
+
+data Value a = MinusInfinity
+             | Value a
+             | Infinity
+             deriving (Show, Functor)
+
+data Bounds a = Bounds (Value a) (Value a)
+
+infiniteBounds = Bounds MinusInfinity Infinity
+
+instance Ord a => Ord (Value a) where
+    compare MinusInfinity MinusInfinity = Eq
+    compare MinusInfinity a             = Lt
+    compare a             MinusInfinity = Gt
+    compare Infinity      Infinity      = Eq
+    compare Infinity      a             = Gt
+    compare a             Infinity      = Lt
+    compare (Value a)     (Value a')    = compare a a'
 
 --class IsType a where
 --    typeName :: a -> String
@@ -225,17 +211,17 @@ fracNames = sortNames fracSorts
 
 
 genConversion :: Conversion -> Q Dec
-genConversion c@(Conversion tp qexp t t') = undefined -- do
-    --exp <- qexp :: Q Exp
-    --let tname  = mkName $ name t
-    --    tname' = mkName $ name t'
-    --    (cname, fname, fmod) = case tp of
-    --            Safe   -> ("Convertible"     , "convert"   , id)
-    --            Unsafe -> ("MaybeConvertible", "tryConvert", AppE ([|fracLowerConversion (layout t')|]))
-    --    convf = [ValD (VarP $ mkName fname) (NormalB $ fmod exp) []]
+genConversion c@(Conversion tp qexp t t') = do
+    exp <- qexp :: Q Exp
+    let tname  = mkName $ name t
+        tname' = mkName $ name t'
+        (cname, fname, fmod) = case tp of
+                Safe   -> ("Convertible"     , "convert"   , id)
+                Unsafe -> ("MaybeConvertible", "tryConvert", AppE (mkname "boundedConversion"))
+        convf = [ValD (VarP $ mkName fname) (NormalB $ fmod exp) []]
 
-    --return $ InstanceD []
-    --         (AppT (AppT (ConT $ mkName cname) (ConT tname)) (ConT tname')) convf
+    return $ InstanceD []
+             (AppT (AppT (ConT $ mkName cname) (ConT tname)) (ConT tname')) convf
 
 --genConversion :: Conversion -> Q Dec
 --genConversion (Conversion tp qexp ident ident') = do

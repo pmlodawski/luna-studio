@@ -20,28 +20,28 @@ import GHC.TypeLits
 ------------------------------------------------------------
 import Data.ByteString (ByteString, singleton)
 
-instance Bounded ByteString where
-    minBound = singleton minBound
-    maxBound = singleton maxBound
+--instance Bounded ByteString where
+--    minBound = singleton minBound
+--    maxBound = singleton maxBound
 
 
-type instance FracBaseOf Integer = Infinite
-type instance FracBaseOf Int     = Signed 32
-type instance FracBaseOf Int8    = Signed 8
-type instance FracBaseOf Int16   = Signed 16
-type instance FracBaseOf Int32   = Signed 32
-type instance FracBaseOf Int64   = Signed 64
+--type instance FracBaseOf Integer = Infinite
+--type instance FracBaseOf Int     = Signed 32
+--type instance FracBaseOf Int8    = Signed 8
+--type instance FracBaseOf Int16   = Signed 16
+--type instance FracBaseOf Int32   = Signed 32
+--type instance FracBaseOf Int64   = Signed 64
 
-type instance FracBaseOf Word    = Unsigned 32
-type instance FracBaseOf Word8   = Unsigned 8
-type instance FracBaseOf Word16  = Unsigned 16
-type instance FracBaseOf Word32  = Unsigned 32
-type instance FracBaseOf Word64  = Unsigned 64
+--type instance FracBaseOf Word    = Unsigned 32
+--type instance FracBaseOf Word8   = Unsigned 8
+--type instance FracBaseOf Word16  = Unsigned 16
+--type instance FracBaseOf Word32  = Unsigned 32
+--type instance FracBaseOf Word64  = Unsigned 64
 
-type instance FracBaseOf Float   = Signed 32
-type instance FracBaseOf Double  = Signed 64
+--type instance FracBaseOf Float   = Signed 32
+--type instance FracBaseOf Double  = Signed 64
 
-type instance FracBaseOf Char    = Unsigned 32
+--type instance FracBaseOf Char    = Unsigned 32
 
 
 --type family FracSafety (a :: FracBase Nat) (b :: FracBase Nat) :: Bool where
@@ -67,7 +67,7 @@ type instance FracBaseOf Char    = Unsigned 32
 
 
 
---genConversions numConversions
+genConversions numConversions
 
 
 
