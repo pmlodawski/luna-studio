@@ -5,7 +5,6 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE OverlappingInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Data.String.Class (
@@ -42,6 +41,6 @@ instance ToString LText.Text where
 instance ToString Text.Text where
     toString = Text.unpack
 
-instance Show a => ToString a where
+instance {-# OVERLAPPABLE #-} Show a => ToString a where
     toString = show
 

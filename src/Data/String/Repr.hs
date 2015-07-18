@@ -5,7 +5,6 @@
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
 
-{-# LANGUAGE OverlappingInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Data.String.Repr  where
@@ -30,6 +29,6 @@ instance StrRepr String where
 instance StrRepr Char where
     strRepr a = [a]
 
-instance Show a => StrRepr a where
+instance {-# OVERLAPPABLE #-} Show a => StrRepr a where
     strRepr = show
 

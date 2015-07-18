@@ -7,7 +7,6 @@
 
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE OverlappingInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Data.Wrapper where
@@ -57,5 +56,5 @@ rewrap = wrap . unwrap
 -- Instances
 ----------------------------------------------------------------------------------
 
-instance (Wrap a, Unwrap a) => Wrapper a
-instance (WrapT a, UnwrapT a) => WrapperT a
+instance {-# OVERLAPPABLE #-} (Wrap a, Unwrap a) => Wrapper a
+instance {-# OVERLAPPABLE #-} (WrapT a, UnwrapT a) => WrapperT a
