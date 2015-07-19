@@ -10,6 +10,7 @@ import qualified Luna.Inference.Class    as Class
 import           Luna.Inference.Instance
 import qualified Data.Sequence           as Seq
 import           Luna.Inference.RawData
+import           Data.Convert
 
 
 

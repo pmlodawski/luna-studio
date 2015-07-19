@@ -15,7 +15,7 @@ import           Data.Map                (Map)
 import           Data.Repr
 --import qualified Luna.Inference.RawData    as RawData
 import           Luna.Inference.RawData
-
+import           Data.Convert
 -- === Object ===
 
 
@@ -75,7 +75,7 @@ data Object = Val Value
             deriving (Show)
 
 instance Convertible Value Object where
-    safeConvert = Right . Val
+    convert = Val
 
 -- === Type ===
 
