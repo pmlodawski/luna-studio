@@ -22,8 +22,8 @@ import           Control.Monad                      as X (MonadPlus, mplus, mzer
 import           Control.Monad.IO.Class             as X (MonadIO, liftIO)
 import           Control.Monad.Trans                as X (MonadTrans, lift)
 import           Data.Binary.Instances.Missing      ()
-import           Data.Convertible                   as X (Convertible (safeConvert), convert)
-import           Data.Convertible.Instances.Missing as X
+--import           Data.Convertible                   as X (Convertible (safeConvert), convert)
+--import           Data.Convertible.Instances.Missing as X
 import           Data.Default                       as X
 import           Data.Default.Instances.Missing     ()
 import           Data.Foldable                      as X (Foldable, traverse_)
