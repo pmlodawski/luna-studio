@@ -2,6 +2,7 @@ module Reactive.Plugins.Core.Action.Connect where
 
 import           Utils.PreludePlus
 import           Utils.Vector
+import           Utils.Angle
 import           Debug.Trace
 
 import           JS.Camera
