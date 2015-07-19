@@ -5,30 +5,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE CPP #-}
-{- |
-   Module     : Data.Convertible.Instances.Text
-   Copyright  : Copyright (C) 2011 MailRank, Inc.
-   License    : LGPL
 
-   Maintainer : John Goerzen <jgoerzen@complete.org>
-   Stability  : provisional
-   Portability: portable
-
-Text instances for Convertible.
-
-Copyright (C) 2011 MailRank, Inc. <bos@mailrank.com>
-
-All rights reserved.
-
-For license and copyright information, see the file COPYRIGHT
-
-These instances perform conversion between text-like types such as
-Text, ByteString, and the like.
-
-The instances do /not/ include conversions between ByteString and
-Text or String, since such conversions cannot safely be performed
-without knowing the encoding of the ByteString.
--}
 
 module Data.Convert.Instances.Text()
 where
