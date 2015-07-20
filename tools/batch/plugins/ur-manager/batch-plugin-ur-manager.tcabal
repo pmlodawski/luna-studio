@@ -11,33 +11,6 @@ Flag Debug
     Default:        False
 
 
-Library
-    Hs-Source-Dirs: src
-                    dist/gen
-    Other-Modules:  Paths_batch_plugin_ur_manager
-
-    GHC-Options:    -Wall -O2 -threaded
-
-    Extensions:     NoImplicitPrelude
-
-    Exposed-modules: `findmodules('src', '.*\.hs')`
-
-    Build-Depends:  base,
-                  -- constraint on blaze-markup is a temporary fix for trifectasdbnboflus
-                  bytestring,
-                  containers,
-                  exceptions < 0.7,
-                  flowbox-batch,
-                  flowbox-bus,
-                  flowbox-config,
-                  flowbox-utils,
-                  protocol-buffers,
-                  protocol-buffers-descriptor,
-                  time,
-                  transformers,
-                  utf8-string < 0.4
-
-
 Executable urm
     Hs-Source-Dirs: src
     Main-Is:        Main.hs
@@ -47,6 +20,7 @@ Executable urm
     Extensions:     NoImplicitPrelude
 
     Build-Depends:  base,
+                    batch-lib-ur-manager,
                   -- constraint on blaze-markup is a temporary fix for trifectasdbnboflus
                   bytestring,
                   containers,
