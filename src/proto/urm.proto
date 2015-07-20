@@ -1,0 +1,156 @@
+///////////////////////////////////////////////////////////////////////////
+// Copyright (C) Flowbox, Inc / All Rights Reserved
+// Unauthorized copying of this file, via any medium is strictly prohibited
+// Proprietary and confidential
+// Flowbox Team <contact@flowbox.io>, 2014
+///////////////////////////////////////////////////////////////////////////
+
+package generated.proto.urm;
+
+import "message.proto";
+
+message URM {
+    message Transaction {
+        message Begin {
+            message Request {
+                required int32  projectID   = 1;
+                required string description = 2;
+            }
+            message Status {
+                required Request request = 1;
+            }
+        }
+        message Commit {
+            message Request { 
+                required int32  projectID   = 1;
+                repeated int32  messageIDs  = 2;
+            }
+            message Status {
+                required Request request = 1;
+            }
+        }
+        message Rollback { 
+            message Request {
+                required int32  projectID   = 1;
+//                optional int32 savedPoint = 2;
+            }
+            message Status {
+                required Request request = 1;
+            }
+        }
+        // [MW] proposal
+//        message SavePoint {
+//            message Request { 
+//                required int32  projectID   = 1;
+//            }
+//            message Status {
+//                required Request request = 1;
+//                required int32 savedPoint = 2;
+//            }
+//        }
+    }
+
+    message Register {
+        message Request {
+            required generated.proto.bus.Message undoAction = 1;
+            required generated.proto.bus.Message redoAction = 2;
+            required int32  projectID = 3;
+            required string description = 4;
+        }
+        message Status {
+            required Request request = 1;
+            required bool    success = 2;
+        }
+    }
+
+    message RegisterMultiple {
+        message Request {
+            repeated generated.proto.bus.Message undoActions = 1;
+            required generated.proto.bus.Message redoActions = 2;
+            required int32  projectID = 3;
+            required string description = 4;
+        }
+        message Status {
+            required Request request = 1;
+            required bool    success = 2;
+        }
+    }
+    
+    message Undo {
+        message Request { 
+            required int32 projectID = 1;
+        }
+        message Status {
+            required Request request = 1;
+            required bool    success = 2;
+        }
+        message Descriptions {
+            message Request {
+                required int32 projectID = 1;
+            }
+            message Status {
+                required Request request = 1;
+                repeated string descriptions = 2;
+            }
+            message Added {
+                message Update {
+                    required int32 projectID = 1;
+                    required string description = 2;
+                }
+            }
+            message Removed { 
+                message Update {
+                    required int32 projectID = 1;
+                }
+            }
+        }
+    }
+
+    message Redo {
+        message Request { 
+            required int32 projectID = 1;
+        }
+        message Status {
+            required Request request = 1;
+            required bool    success = 2;
+        }
+        message Descriptions {
+            message Request {
+                required int32 projectID = 1;
+            }
+            message Status {
+                required Request request = 1;
+                repeated string descriptions = 2;
+            }
+            message Removed { 
+                message Update { 
+                    required int32 projectID = 1;
+                }
+            }
+        }
+    }
+
+    message Descriptions {
+        message Cleared { 
+            message Update { 
+                required int32 projectID = 1;
+            }
+        }
+    }
+
+    message Ping {
+        message Request { }
+        message Status {
+            required Request request = 1;
+        }
+    }
+
+    message ClearStack {
+        message Request {
+            required int32 projectID = 1;
+        }
+        message Status {
+            required Request request = 1;
+        }
+    }
+}
