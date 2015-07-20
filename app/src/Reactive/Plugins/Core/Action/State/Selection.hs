@@ -3,7 +3,7 @@ module Reactive.Plugins.Core.Action.State.Selection where
 
 import           Utils.PreludePlus
 
-import           Object.Node
+import           Object.Object
 
 
 data State = State { _nodeIds :: NodeIdCollection

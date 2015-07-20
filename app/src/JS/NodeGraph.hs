@@ -2,10 +2,11 @@ module JS.NodeGraph where
 
 import           Utils.PreludePlus
 import           Utils.Vector
+import           Utils.Angle
 
 import           JS.Bindings
+import           Object.Object
 import           Object.Node
-import           Object.Port
 
 
 logAs :: PrettyPrinter a => String -> a -> IO ()

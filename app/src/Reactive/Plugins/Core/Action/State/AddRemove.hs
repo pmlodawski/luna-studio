@@ -4,7 +4,7 @@ module Reactive.Plugins.Core.Action.State.AddRemove where
 import           Utils.PreludePlus
 import           Utils.Vector
 
-import           Object.Node
+import           Object.Object
 
 data State = State { _toRemoveIds  :: NodeIdCollection
                    } deriving (Eq, Show)

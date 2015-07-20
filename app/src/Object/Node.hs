@@ -2,8 +2,8 @@ module Object.Node where
 
 import           Utils.PreludePlus
 import           Utils.Vector
+import           Utils.Angle
 import           Data.Dynamic
-import           Data.Fixed
 import           Debug.Trace
 
 import           JS.Camera
@@ -15,7 +15,6 @@ import           Object.Port
 import qualified Data.Text.Lazy as Text
 import           Data.Text.Lazy ( Text )
 
-type NodeId = ID
 
 data Ports = Ports { _inputPorts  :: PortCollection
                    , _outputPorts :: PortCollection
@@ -28,11 +27,10 @@ data Node = Node { _nodeId      :: NodeId
                  , _ports       :: Ports
                  } deriving (Eq, Show, Typeable)
 
-type NodeCollection   = [Node]
-type NodeIdCollection = [NodeId]
-
 makeLenses ''Ports
 makeLenses ''Node
+
+type NodeCollection   = [Node]
 
 instance PrettyPrinter Ports where
     display (Ports input output)
@@ -47,16 +45,9 @@ instance PrettyPrinter Node where
         <> " " <> display ports
         <> ")"
 
-instance Selectable Node where
-    setSelected n selected = n { _selected = selected }
-    isSelected  n          = _selected n
-
 
 isNode :: Object Dynamic -> Bool
 isNode obj = isJust (unpackDynamic obj :: Maybe Node)
-
-
-data PortType = InputPort | OutputPort deriving (Eq, Show)
 
 
 data PortRef = PortRef { _refPortNode   :: Node
@@ -78,6 +69,17 @@ instance PrettyPrinter PortRef where
         <> ")"
 
 
+
+createPort :: PortType -> Int -> PortId -> Port
+createPort portType allPorts ident = Port ident Int $ portDefaultAngle portType allPorts ident
+
+createPorts :: Int -> Int -> Ports
+createPorts inputPortsNum outputPortsNum = Ports inputPorts outputPorts where
+    inputPorts  = (\ident -> createPort  InputPort  inputPortsNum ident) <$> take  inputPortsNum idents
+    outputPorts = (\ident -> createPort OutputPort outputPortsNum ident) <$> take outputPortsNum idents
+    idents      = [0, 1 ..]
+
+
 getPorts :: PortType -> Node -> PortCollection
 getPorts  InputPort = (^. ports .  inputPorts)
 getPorts OutputPort = (^. ports . outputPorts)
@@ -86,11 +88,11 @@ setPorts :: PortType -> Ports -> PortCollection -> Ports
 setPorts  InputPort allPorts ports = allPorts &  inputPorts .~ ports
 setPorts OutputPort allPorts ports = allPorts & outputPorts .~ ports
 
-getPort :: PortId -> PortType -> Node -> Maybe Port
-getPort ident = find (\port -> port ^. portId == ident) .: getPorts
+-- getPort :: PortId -> PortType -> Node -> Maybe Port
+-- getPort ident = find (\port -> port ^. portId == ident) .: getPorts
 
-fromPortRef :: PortRef -> Maybe Port
-fromPortRef portRef = getPort (portRef ^. refPortId) (portRef ^. refPortType) (portRef ^. refPortNode)
+-- fromPortRef :: PortRef -> Maybe Port
+-- fromPortRef portRef = getPort (portRef ^. refPortId) (portRef ^. refPortType) (portRef ^. refPortNode)
 
 updatePortInPorts :: PortId -> Angle -> PortCollection -> PortCollection
 updatePortInPorts refPortId angle ports = tryUpdatePort refPortId angle <$> ports
@@ -159,18 +161,6 @@ getNodeHaloAt posScr camera nodes = listToMaybe $ filter inHalo nodes where
         distSquared  = (dist ^. x) ^ 2 + (dist ^. y) ^ 2
         dist         = (node ^. nodePos - pos)
 
-normAngle :: Angle -> Angle
-normAngle a = (2 * pi + a) `mod'` (2 * pi)
-
-toRelAngle :: Angle -> Angle
-toRelAngle a = if a > pi then (2 * pi) - a else a
-
-angleDiff :: Angle -> Angle -> Angle
-angleDiff a1 a2 = toRelAngle . normAngle $ a2 - a1
-
-calcAngle :: Vector2 Double -> Vector2 Double -> Angle
-calcAngle vecDest vecSrc = normAngle $ atan2 (vecDiff ^. y) (vecDiff ^. x) where
-    vecDiff = vecDest - vecSrc
 
 getPortRef :: Vector2 Int -> Camera -> NodeCollection -> Maybe PortRef
 getPortRef posScr camera nodes = maybePortRef where

@@ -14,16 +14,10 @@ instance PrettyPrinter a => PrettyPrinter (Object a) where
 type ID = Int
 
 
-class Selectable a where
-    setSelected       :: a -> Bool -> a
-    isSelected        :: a -> Bool
-    select            :: a -> a
-    unselect          :: a -> a
-    toggleSelection   :: a -> a
-    select o          = setSelected o True
-    unselect o        = setSelected o False
-    toggleSelection o = setSelected o $ not . isSelected $ o
+type NodeId = ID
+type NodeIdCollection = [NodeId]
 
-instance Selectable a => Selectable (Object a) where
-    setSelected (Object o) = Object . setSelected o
-    isSelected  (Object o) = isSelected o
+type PortId = ID
+type PortIdCollection = [PortId]
+
+data PortType = InputPort | OutputPort deriving (Eq, Show)

@@ -72,20 +72,8 @@ tmpGetInputPortsNr  expr = (ord (head expr) - ord '1' + 1) `mod` (tmpMaxin + 1)
 tmpGetOutputPortsNr expr = 1 + (ord (fromMaybe '1' $ listToMaybe (tail expr)) - ord '1') `mod` tmpMaxOut
 -- end of mock
 
-
-angleOfPort :: PortId -> Int -> Bool -> Double
-angleOfPort portId numPorts output = angle `mod'` (2.0 * pi) where
-    angle = (1 + fromIntegral portId) * (pi / (fromIntegral $ numPorts + 1)) + delta
-    delta = if output then 3.0 * pi / 2.0 else pi / 2.0
-
-createPort :: PortId -> Bool -> Int -> Port
-createPort ident output allPorts = Port ident Int $ angleOfPort ident allPorts output
-
 createNode :: NodeId -> Vector2 Double -> Text -> Node
-createNode nodeId pos expr = Node nodeId False pos expr (Ports inputPorts outputPorts) where
-    inputPorts      = (\ident -> createPort ident False inputPortsNum) <$> take  inputPortsNum idents
-    outputPorts     = (\ident -> createPort ident True outputPortsNum) <$> take outputPortsNum idents
-    idents          = [0, 1 ..]
+createNode nodeId pos expr = Node nodeId False pos expr (createPorts inputPortsNum outputPortsNum) where
     -- mock port numbers:
     inputPortsNum   = tmpGetInputPortsNr  $ Text.unpack expr
     outputPortsNum  = tmpGetOutputPortsNr $ Text.unpack expr
