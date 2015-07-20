@@ -22,7 +22,7 @@ import           Flowbox.ProjectManager.Context                                 
 import           Flowbox.ProjectManager.RPC.Handler.Graph                                                      (mapID)
 import qualified Flowbox.ProjectManager.RPC.Topic                                                              as Topic
 import           Flowbox.System.Log.Logger
-import           Flowbox.UR.Manager.RPC.Handler.Handler                                                        (prepareResponse)
+import           Flowbox.UR.Manager.Utils                                                             (makeMsgArr, prepareResponse, serialize)
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Properties.Get.Request as GetNodeProperties
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Properties.Get.Status  as GetNodeProperties
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Properties.Set.Request as SetNodeProperties

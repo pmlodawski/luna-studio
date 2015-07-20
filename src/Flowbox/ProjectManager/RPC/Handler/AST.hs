@@ -22,7 +22,7 @@ import           Flowbox.Prelude                                                
 import           Flowbox.ProjectManager.Context                                                       (Context)
 import qualified Flowbox.ProjectManager.RPC.Topic                                                     as Topic
 import           Flowbox.System.Log.Logger
-import           Flowbox.UR.Manager.RPC.Handler.Handler                                               (makeMsgArr, prepareResponse, serialize)
+import           Flowbox.UR.Manager.Utils                                                             (makeMsgArr, prepareResponse, serialize)
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Get.Request                  as CodeGet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Get.Status                   as CodeGet
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Set.Request                  as CodeSet
