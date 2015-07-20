@@ -70,17 +70,10 @@ tmpMaxin  = 9
 tmpMaxOut = 5
 tmpGetInputPortsNr  expr = (ord (head expr) - ord '1' + 1) `mod` (tmpMaxin + 1)
 tmpGetOutputPortsNr expr = 1 + (ord (fromMaybe '1' $ listToMaybe (tail expr)) - ord '1') `mod` tmpMaxOut
-
-tmpCreatePort :: PortType -> Int -> PortId -> Port
-tmpCreatePort portType allPorts ident = Port ident Int $ portDefaultAngle portType allPorts ident
 -- end of mock
 
-
 createNode :: NodeId -> Vector2 Double -> Text -> Node
-createNode nodeId pos expr = Node nodeId False pos expr (Ports inputPorts outputPorts) where
-    inputPorts      = (\ident -> tmpCreatePort  InputPort  inputPortsNum ident) <$> take  inputPortsNum idents
-    outputPorts     = (\ident -> tmpCreatePort OutputPort outputPortsNum ident) <$> take outputPortsNum idents
-    idents          = [0, 1 ..]
+createNode nodeId pos expr = Node nodeId False pos expr (createPorts inputPortsNum outputPortsNum) where
     -- mock port numbers:
     inputPortsNum   = tmpGetInputPortsNr  $ Text.unpack expr
     outputPortsNum  = tmpGetOutputPortsNr $ Text.unpack expr

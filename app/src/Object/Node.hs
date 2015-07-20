@@ -69,6 +69,17 @@ instance PrettyPrinter PortRef where
         <> ")"
 
 
+
+createPort :: PortType -> Int -> PortId -> Port
+createPort portType allPorts ident = Port ident Int $ portDefaultAngle portType allPorts ident
+
+createPorts :: Int -> Int -> Ports
+createPorts inputPortsNum outputPortsNum = Ports inputPorts outputPorts where
+    inputPorts  = (\ident -> createPort  InputPort  inputPortsNum ident) <$> take  inputPortsNum idents
+    outputPorts = (\ident -> createPort OutputPort outputPortsNum ident) <$> take outputPortsNum idents
+    idents      = [0, 1 ..]
+
+
 getPorts :: PortType -> Node -> PortCollection
 getPorts  InputPort = (^. ports .  inputPorts)
 getPorts OutputPort = (^. ports . outputPorts)
@@ -77,11 +88,11 @@ setPorts :: PortType -> Ports -> PortCollection -> Ports
 setPorts  InputPort allPorts ports = allPorts &  inputPorts .~ ports
 setPorts OutputPort allPorts ports = allPorts & outputPorts .~ ports
 
-getPort :: PortId -> PortType -> Node -> Maybe Port
-getPort ident = find (\port -> port ^. portId == ident) .: getPorts
+-- getPort :: PortId -> PortType -> Node -> Maybe Port
+-- getPort ident = find (\port -> port ^. portId == ident) .: getPorts
 
-fromPortRef :: PortRef -> Maybe Port
-fromPortRef portRef = getPort (portRef ^. refPortId) (portRef ^. refPortType) (portRef ^. refPortNode)
+-- fromPortRef :: PortRef -> Maybe Port
+-- fromPortRef portRef = getPort (portRef ^. refPortId) (portRef ^. refPortType) (portRef ^. refPortNode)
 
 updatePortInPorts :: PortId -> Angle -> PortCollection -> PortCollection
 updatePortInPorts refPortId angle ports = tryUpdatePort refPortId angle <$> ports
