@@ -47,7 +47,6 @@ executable gui
                      , containers
                      , fgl
                      , random
-                     , convertible
                      , pretty-show
   hs-source-dirs:      app/src
   default-language:    Haskell2010
