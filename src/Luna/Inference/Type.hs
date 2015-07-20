@@ -134,15 +134,15 @@ data Type = Type deriving (Show)
     --                         , _tp     :: Type
     --                         }
 
-data Function = Function { _args :: Seq Arg } deriving (Show)
+data Function = Function { _args :: Seq Arg2 } deriving (Show)
 
     ----data Value
 
-data Arg = Arg { _name :: Maybe Text
+data Arg2 = Arg2 { _name :: Maybe Text
                , _val  :: Maybe Object
                } deriving (Show)
 
-makeLenses ''Arg
+makeLenses ''Arg2
 
 
 -- record powinien miec id!
@@ -163,6 +163,8 @@ makeLenses ''Arg
 
     ---- Instances
 
-instance Default Arg where
-    def = Arg def def
+instance Default Arg2 where
+    def = Arg2 def def
+
+
 

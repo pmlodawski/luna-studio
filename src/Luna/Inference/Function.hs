@@ -18,11 +18,11 @@ type Function = Instance Type.Function
 
 
 
---arg :: Text -> Arg
---arg = flip Arg def . Just
+--arg :: Text -> Arg2
+--arg = flip Arg2 def . Just
 
-argOf :: Text -> Object -> Arg
-argOf n v = Arg (Just n) (Just v)
+argOf :: Text -> Object -> Arg2
+argOf n v = Arg2 (Just n) (Just v)
 
 --arity :: Type.Function -> Int
 --arity = Seq.length . view args
@@ -32,13 +32,13 @@ argOf n v = Arg (Just n) (Just v)
 class ArgCons a b where
     arg :: a -> b
 
-instance ArgCons Object Arg where
+instance ArgCons Object Arg2 where
     arg v = def & Type.val .~ Just v
 
-instance Convertible s Text => ArgCons s Arg where
+instance Convertible s Text => ArgCons s Arg2 where
     arg n = def & Type.name .~ Just (convert n)
 
-instance Convertible s Text => ArgCons s (Object -> Arg) where
+instance Convertible s Text => ArgCons s (Object -> Arg2) where
     arg n v = arg n & Type.val .~ Just v
 
 
@@ -47,7 +47,7 @@ instance Convertible s Text => ArgCons s (Object -> Arg) where
 --    fromList = Seq.fromList
 --    toList   = Seq.toList
 
---mkFunction :: ToRArgs args => (args -> out) -> [Arg] -> Function
+--mkFunction :: ToRArgs args => (args -> out) -> [Arg2] -> Function
 --mkFunction f args = Instance (Type.Function (fromList args)) (packRawData $ toDataFunc f)
 
 --toDataFunc :: ToRArgs args => (args -> out) -> Repr
