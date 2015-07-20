@@ -20,10 +20,10 @@ Library
 
     Extensions:     NoImplicitPrelude
 
-    Exposed-modules: `findmodules('dist/gen', '.*\.hs', exclude='.*hs-boot.*')`, 
-                     `findmodules('src', '.*\.hs')`
+    Exposed-modules: `findmodules('src', '.*\.hs')`
 
     Build-Depends:  base,
+                    batch-lib-project-manager-api,
                     batch-plugin-ur-manager,
                     bimap,
                     binary,

@@ -58,12 +58,12 @@ def main():
         mark_modified(path)
 
 
-def is_modified(path): 
+def is_modified(path):
     fileModification = str(os.path.getmtime(path))
     lastModification = None
     timestampPath = timestamp_path(path)
     if os.path.isfile(timestampPath):
-        with open(timestampPath, 'r') as f: 
+        with open(timestampPath, 'r') as f:
             lastModification = lastModification = f.read()
     return lastModification == None or lastModification < fileModification
 
@@ -100,7 +100,7 @@ def run_protoc(proto_path):
 def gen_dir(proto_dir):
     if os.path.basename(proto_dir) != 'proto':
         return '../../../dist/gen'
-    else: 
+    else:
         return '../../dist/gen'
 
 
