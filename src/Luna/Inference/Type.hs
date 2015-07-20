@@ -42,10 +42,6 @@ import           Data.Convert
 
 
 
-data Lit = Int String
-         -- |
-         deriving (Show)
-
 
 --class Instance a where
 --    instantiate :: Lit -> a
@@ -56,67 +52,116 @@ data Lit = Int String
 
 
 
-class HasValue a where
-    value :: Simple Lens a Value
+    --class HasValue a where
+    --    value :: Simple Lens a Value
 
 
-type IsValue = Convertible Value
+    --type IsValue = Convertible Value
 
-instantiate :: IsValue a => Lit -> a
-instantiate = convert . \case
-    Int i -> Value 0 (packRawData (read i :: Int)) -- FIXME: fix the 0 to real ID
+--instantiate :: IsValue a => Lit -> a
+--instantiate = convert . \case
+--    Int i -> Value 0 (packRawData (read i :: Int)) -- FIXME: fix the 0 to real ID
 
 
 
-data Value = Value ID RawData deriving (Show) -- its type id and computed data
 
-data Object = Val Value
-            | Cat Type
-            deriving (Show)
+    --data Value = Value ID RawData
+    --           | Value Type
+    --           deriving (Show) -- its type id and computed data
 
-instance Convertible Value Object where
-    convert = Val
+    --data ObjectType = Val Value
+    --                | Var Type
+    --                deriving (Show)
+
+--data Object = Object Type ObjectType
+
+
+
+    --instance Convertible Value Object where
+    --    convert = Val
+
+
+    --data Literal = Int Int
+    --             | Float Float
+    --             deriving (Show)
 
 -- === Type ===
 
-data Type = Class Class
-          | Func  Function
-          | Rec   Record
-          deriving (Show)
+--a = Int -- Class (Record "Int")
+--b = 2   -- Value (Lit 2) (Record "Int") - NIE, powinno byc
 
-type ID = Int
+--tak: (dopisane by zauwazyc, zobacz notatki):
+--b = 2   -- Value (Lit 2) (Var ..) - bo nie zrobilismy defaultingu! Tzn na pewno jest to Int, chyba ze ktos uzyl funkcji wymuszajacej inny typ i ten typ jest jednoznaczny (nie ma 2 funkcji wymuszajacych rozne typy)
 
-data TypeDesc = TypeDesc { _typeID :: ID
-                         , _tp     :: Type
-                         }
+
+--a = 2   -- Lit 2   -   default category = Int
+--b = Int -- Rec "Int"
+
+---- <name> === qualified name
+---- {x}    === name pointer, e.g. de brougle
+
+--c = Foo 1 2 -- App (Cons <Foo>) [Lit 1, Lit 2]
+
+--c = Foo 1 bar -- App (Cons <Foo>) [Lit 1, Var {bar}]
+--              -- {bar} wskazuje na kopie grafu powiazan funkcji bar. Jezeli tu podstawimy dane, jak np. Int, tworzymy bardziej wyspecjalizowany graf, ktory cachujemy.
+
+
+--              -- {bar} moze byc pointerem na typ funkcji ktory mogl jeszcze nie byc najdokladniej przeliczony
+--              -- po najdokladniejszym przeliczeniu mozemy podstawiac zmienne. Po ich podstawieniu liczymy cache!
+--              -- tak wiec typy sa zapamietywane z roznymi rozwiazaniami - np "bar" z przekazanym Intem
+
+
+data Object = Value Type
+            | Class Type
+            deriving (Show)
+
+data Type = Type deriving (Show)
+    --data Value = Class Class
+    --           | Func  Function
+    --           | Rec   Record
+    --           | Lit   Literal
+    --           deriving (Show)
+
+
+    --data Value = Value Data Type
+
+    --data Data = Lit Literal
+    --          | Func
+
+    --type ID = Int
+
+    --data TypeDesc = TypeDesc { _typeID :: ID
+    --                         , _tp     :: Type
+    --                         }
 
 data Function = Function { _args :: Seq Arg } deriving (Show)
 
---data Value
+    ----data Value
 
 data Arg = Arg { _name :: Maybe Text
                , _val  :: Maybe Object
                } deriving (Show)
 
+makeLenses ''Arg
 
 
 -- record powinien miec id!
 -- jak aplikujemy do funkcji cos typu Object i Object jest recordem to co ?
-data Record = Record { _fields :: Map Text Field } deriving (Show)
-data Field = Field Type deriving (Show)
+    --data Record = Record { _fields :: Map Text Field } deriving (Show)
+    --data Field = Field Type deriving (Show)
 
-makeLenses ''Function
-makeLenses ''Record
-makeLenses ''Arg
-
-
-
-instance Monoid Record where
-    mempty         = Record mempty
-    o `mappend` o' = Record ( o ^. fields <> o' ^. fields )
+    --makeLenses ''Function
+    --makeLenses ''Record
+    --makeLenses ''Arg
 
 
--- Instances
+
+    --instance Monoid Record where
+    --    mempty         = Record mempty
+    --    o `mappend` o' = Record ( o ^. fields <> o' ^. fields )
+
+
+    ---- Instances
 
 instance Default Arg where
     def = Arg def def

@@ -24,8 +24,8 @@ type Function = Instance Type.Function
 argOf :: Text -> Object -> Arg
 argOf n v = Arg (Just n) (Just v)
 
-arity :: Type.Function -> Int
-arity = Seq.length . view args
+--arity :: Type.Function -> Int
+--arity = Seq.length . view args
 
 
 
