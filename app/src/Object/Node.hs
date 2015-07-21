@@ -138,6 +138,7 @@ getNodeIdsAt = (fmap (^. nodeId)) .:. getNodesAt
 portSize          = 12.0
 portWidth         = portSize * sqrt(3.0) / 2.0
 portDistFromRim   = 2.0
+portOuterBorder   = nodeRadius + portDistFromRim + portWidth
 
 nodeHaloInnerRadius    = nodeRadius + portDistFromRim
 nodeHaloOuterRadius    = nodeHaloInnerRadius + portWidth

@@ -158,5 +158,13 @@ foreign import javascript unsafe "app.displaySelectBox($1, $2, $3, $4)"
 foreign import javascript unsafe "app.hideSelectBox()"
     hideSelectBox :: IO ()
 
+
+foreign import javascript unsafe "app.displayCurrentConnection($1, $2, $3, $4)"
+    displayCurrentConnection :: Double -> Double -> Double -> Double -> IO ()
+
+foreign import javascript unsafe "app.removeCurrentConnection()"
+    removeCurrentConnection :: IO ()
+
+
 foreign import javascript unsafe "window.dispatchEvent(new Event('resize'))"
     triggerWindowResize :: IO ()

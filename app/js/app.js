@@ -5,13 +5,21 @@ var FunctionNode = require('function_node').FunctionNode,
     config       = require('config'),
     features     = require('features'),
     NodeSearcher = require('node_searcher'),
-    brunch        = require('brunch');
+    brunch       = require('brunch');
+
+var Connection = require('connection');
 
 console.info("Current version " + brunch.env + " " + brunch.git_commit);
 console.info("Build at " + brunch.date);
 
 var nodes = {};
 $$.nodes = nodes;
+
+var connections = {};
+$$.connections = connections;
+
+var currentConnection = null;
+$$.currentConnection = currentConnection;
 
 var zOrderDiv = 10000.0;
 var currentMazZ = 0.0;
@@ -47,6 +55,7 @@ function initializeGl() {
     initSelectBox();
     addVersionToHud();
     $($$.renderer.domElement).addClass('renderer');
+
     document.body.appendChild($$.renderer.domElement);
 }
 
@@ -203,6 +212,22 @@ function hideSelectBox() {
   $$.selectBox.material.uniforms.visible.value = 0;
 }
 
+function displayCurrentConnection(x1, y1, x2, y2) {
+  if ($$.currentConnection === null) {
+    $$.currentConnection = new Connection(0);
+    $$.scene.add($$.currentConnection.mesh);
+  }
+  $$.currentConnection.setPos(x1, y1, x2, y2);
+}
+
+function removeCurrentConnection() {
+  if ($$.currentConnection !== null) {
+    $$.scene.remove($$.currentConnection.mesh);
+    delete $$.currentConnection;
+    $$.currentConnection = null;
+  }
+}
+
 module.exports = {
   initializeGl: initializeGl,
   render: render,
@@ -224,6 +249,8 @@ module.exports = {
   destroyNodeSearcher: destroyNodeSearcher,
   displaySelectBox: displaySelectBox,
   hideSelectBox: hideSelectBox,
+  displayCurrentConnection: displayCurrentConnection,
+  removeCurrentConnection: removeCurrentConnection,
   nodeSearcher: function() { return $$.node_searcher; }
 };
 

@@ -6,6 +6,7 @@ import           Utils.Angle
 import           Debug.Trace
 
 import           JS.Camera
+import qualified JS.Bindings    as UI
 import qualified JS.NodeGraph   as UI
 import           Object.Object
 import           Object.Port
@@ -103,16 +104,30 @@ instance ActionStateUpdater Action where
                 destinPoint              = screenToWorkspace camera currentPos
             _                           -> 0.0
 
+distFromPort = 1.0
+
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
         DragAction tpe pt            -> case tpe of
             StartDrag portRef        -> return ()
             Moving                   -> return ()
-            Dragging angle           -> forM_ maybeSourcePort $ setAnglePortRef angle
-            StopDrag                 -> return ()
-        where
-            maybeSourcePort           = (^. sourcePort) <$> state ^. Global.connect . connecting
+            Dragging angle           -> forM_ maybeConnecting $ displayDragLine angle ptWs
+            StopDrag                 -> UI.removeCurrentConnection
+            where
+                ptWs                  = screenToWorkspace camera pt
+                camera                = Global.toCamera state
+                maybeConnecting       = state ^. Global.connect . connecting
 
+
+displayDragLine :: Angle -> Vector2 Double -> Connecting -> IO ()
+displayDragLine angle (Vector2 cx cy) connecting = do
+    let portRef = connecting ^. sourcePort
+        (Vector2 nx ny) = portRef ^. refPortNode . nodePos
+        outerPos = portOuterBorder + distFromPort
+        sx = nx + outerPos * cos angle
+        sy = ny + outerPos * sin angle
+    setAnglePortRef angle portRef
+    UI.displayCurrentConnection sx sy cx cy
 
 setAnglePortRef :: Angle -> PortRef -> IO ()
 setAnglePortRef refAngle portRef = setAngle (portRef ^. refPortType) refNodeId (portRef ^. refPortId) refAngle where

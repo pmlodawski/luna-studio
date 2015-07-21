@@ -1,9 +1,5 @@
 "use strict";
 
-// var $$       = require('common');
-// var features = require('features');
-// var config   = require('config');
-
 var vs = require('shaders/common.vert')();
 var fs = require('shaders/port.frag')();
 
