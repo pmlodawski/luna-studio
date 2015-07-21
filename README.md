@@ -13,6 +13,12 @@ npm install
 
 Run `brunch watch --server` and then navigate to [http://localhost:3333](http://localhost:3333). You may also consider using [Pow](http://pow.cx) for running webserver separately.
 
+### Running incremental linker
+
+To use GHCI mode with incremental linker (aka very fast rebuild) please run `brunch watch --server --env interactive`. This environment has major advantage: [Save] to running new code in the browser time is very short: few seconds vs. more than minute. However, it has some limitations: only one browser may be connected do GHCJSi server, when new browser connects the old one will be kicked from the session.
+
+In interactive mode, the page is reloaded upon file save, however new code is injected a couple of seconds later. In the meantime you'll see console of GHCJSi containing build log redirected to the browser.
+
 ## Building for production
 
 Run `brunch build --production`. `--production` flag enables JS minification (this will take a while). It also disables overriding feature-switches from `localStorage`.
