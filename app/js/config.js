@@ -1,9 +1,10 @@
 "use strict";
 
 var release = require('config.release');
+var brunch = require('brunch');
 var config;
 
-if("{!env!}" !== "production") {
+if(brunch.env !== "production") {
   var local = {};
   var debug = require('config.debug');
   try {

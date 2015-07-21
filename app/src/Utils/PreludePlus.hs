@@ -11,10 +11,9 @@ import           Control.Lens                       as X
 import           Control.Monad                      as X (MonadPlus, mplus, mzero, unless, void, when)
 import           Control.Monad.IO.Class             as X (MonadIO, liftIO)
 import           Control.Monad.Trans                as X (MonadTrans, lift)
-import           Data.Convertible                   as X (Convertible (safeConvert), convert)
 import           Data.Default                       as X
 import           Data.Foldable                      as X (Foldable, traverse_, forM_, mapM_, sequenceA_, foldlM)
-import           Data.List                          as X
+import           Data.List                          as X hiding (uncons)
 import           Data.Either                        as X (isLeft, isRight)
 import           Data.Monoid                        as X (Monoid, mappend, mconcat, mempty, (<>))
 import           Data.Maybe                         as X

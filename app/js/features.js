@@ -1,9 +1,10 @@
 "use strict";
 
 var release        = require('features.release');
+var brunch = require('brunch');
 var features;
 
-if("{!env!}" !== "production") {
+if(brunch.env !== "production") {
   var local = {};
   var debug = require('features.debug');
   try {
