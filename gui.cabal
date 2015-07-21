@@ -45,7 +45,6 @@ executable gui
                      , mtl
                      , lens
                      , containers
-                     , fgl
                      , random
                      , pretty-show
   hs-source-dirs:      app/src
