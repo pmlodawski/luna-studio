@@ -28,6 +28,10 @@ h$GHCJSi.socket.on('disconnect', function(msg) {
   console.error("GHCI: disconnected, possibly another browser is already connected");
 });
 
+h$GHCJSi.socket.on('error', function(msg) {
+  console.error("GHCI: socket.io error", msg);
+});
+
 function h$processMessage(msgType, msgPayload) {
   // console.log("processMessage: " + msgType);
   switch(msgType) {
@@ -60,12 +64,12 @@ function h$loadInitialCode(code) {
   // don't allow Haskell to read from stdin (fixme!)
   h$base_stdin_fd.read = function(fd, fdo, buf, buf_offset, n, c) { c(0); }
 
-  // redirect Haskell's stderr to stdout since we use stderr to communicate (fixme!)
-  h$base_stdout_fd.write = function(fd, fdo, buf, buf_offset, n, c) {
-    h$GHCJSi.out(buf.buf.slice(buf_offset, buf_offset+n));
-    c(n);
-  }
-  h$base_stderr_fd.write = h$base_stdout_fd.write;
+  // // redirect Haskell's stderr to stdout since we use stderr to communicate (fixme!)
+  // h$base_stdout_fd.write = function(fd, fdo, buf, buf_offset, n, c) {
+  //   h$GHCJSi.out(buf.buf.slice(buf_offset, buf_offset+n));
+  //   c(n);
+  // }
+  // h$base_stderr_fd.write = h$base_stdout_fd.write;
 }
 
 function h$loadCodeStr(str) {
