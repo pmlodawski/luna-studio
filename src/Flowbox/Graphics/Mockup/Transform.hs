@@ -78,12 +78,15 @@ data CornerPin a = CornerPin { _to   :: Quadrangle a
 cornerPinLuna :: CornerPin Float
               -> Image
               -> Image
-cornerPinLuna (CornerPin to _) img = img'
+cornerPinLuna (CornerPin to from) img = img'
     where img' = onEachChannel process img
-          Quadrangle p1 p2 p3 p4 = fmap variable to
+          Quadrangle p1t p2t p3t p4t = fmap variable to
+          Quadrangle p1f p2f p3f p4f = fmap variable from
           process = \case
-              ChannelFloat name (Channel.asContinuousData 0 -> Channel.ContinuousData zeData) -> ChannelFloat name $ Channel.ContinuousData $ Transform.cornerPin (p1, p2, p3, p4) zeData
-              ChannelInt   name (Channel.asContinuousData 0 -> Channel.ContinuousData zeData) -> ChannelInt   name $ Channel.ContinuousData $ Transform.cornerPin (p1, p2, p3, p4) zeData
+              ChannelFloat name (Channel.asContinuousData 0 -> Channel.ContinuousData zeData) ->
+                  ChannelFloat name $ Channel.ContinuousData $ Transform.cornerPin (p1t, p2t, p3t, p4t) $ Transform.cornerPinShaderFrom (p1f, p2f, p3f, p4f) zeData
+              ChannelInt   name (Channel.asContinuousData 0 -> Channel.ContinuousData zeData) ->
+                  ChannelInt   name $ Channel.ContinuousData $ Transform.cornerPin (p1t, p2t, p3t, p4t) $ Transform.cornerPinShaderFrom (p1f, p2f, p3f, p4f) zeData
 
 cropLuna :: Rectangle (Exp Int) -> CropReformat -> Bool -> Image -> Image
 cropLuna rect reformat constantOutside = onEachChannel cropChannel
