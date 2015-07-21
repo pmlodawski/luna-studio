@@ -169,8 +169,14 @@ cornerPin' :: forall a. (Elt a, IsFloating a, AccEpsilon a)
            => Grid (Exp a)
            -> (Point2 (Exp a), Point2 (Exp a), Point2 (Exp a), Point2 (Exp a))
            -> Point2 (Exp a) -> Point2 (Exp a)
-cornerPin' (Grid width height) (Point2 x1 y1, Point2 x2 y2, Point2 x3 y3, Point2 x4 y4) (Point2 x y) = Point2 (hx / hz) (hy / hz)
+cornerPin' (Grid width height) (Point2 x1 y1', Point2 x2 y2', Point2 x3 y3', Point2 x4 y4') (Point2 x y) = Point2 (hx / hz) (hy / hz)
     where V3 hx hy hz = matC !* V3 x y 1
+
+          y1 = height - y1'
+          y2 = height - y2'
+          y3 = height - y3'
+          y4 = height - y4'
+          
           unsafeInv33 :: M33 (Exp a) -> M33 (Exp a)
           unsafeInv33 a = let (_, lifted) = A.unlift $ inv33 (A.lift a) :: (Exp Bool, Exp (M33 a))
                           in A.unlift <$> A.unlift lifted
