@@ -32,8 +32,8 @@ import           Luna.Interpreter.Session.Data.Hash          (Hash)
 import           Luna.Interpreter.Session.Data.Time          (Time)
 import qualified Luna.Interpreter.Session.Env                as Env
 import qualified Luna.Interpreter.Session.Error              as Error
+import qualified Luna.Interpreter.Session.Profile.Profile    as Profile
 import           Luna.Interpreter.Session.Session            (Session)
-
 
 
 logger :: LoggerIO
@@ -57,7 +57,7 @@ data Status = Ready
 
 
 getWithStatus :: CallPointPath -> Time -> Session mm (Status, [ModeValue])
-getWithStatus callPointPath time = do
+getWithStatus callPointPath time =
     Env.cachedLookup callPointPath >>= \case
         Nothing        -> return (NotInCache, [])
         Just cacheInfo -> do
@@ -125,7 +125,7 @@ computeValue :: CallPointPath -> Time -> Mode -> Session mm SValue
 computeValue callPointPath time mode =
     Env.compiledLookup callPointPath >>= \case
         Just (CompiledNode _ (Just getValue)) -> do hmap <- Env.getExpressions
-                                                    liftIO $ getValue hmap mode time <??&.> "Internal error"
+                                                    Profile.computeTime callPointPath $ liftIO $ getValue hmap mode time <??&.> "Internal error"
     --lift2 $ flip Catch.catch excHandler $ do
     --    let toValueExpr = "\\m -> flip computeValue m =<< toIOEnv (fromValue (" <> VarName.toString varName <> " (" <> show time <> ")))"
     --    logger trace toValueExpr

@@ -35,7 +35,7 @@ import           Luna.Interpreter.Session.Data.DefPoint      (DefPoint)
 import           Luna.Interpreter.Session.Data.Time          (Time)
 import           Luna.Interpreter.Session.Error              (Error)
 import qualified Luna.Interpreter.Session.Memory.Config      as Memory
-import           Luna.Interpreter.Session.ProfileInfo        (ProfileInfo)
+import           Luna.Interpreter.Session.Profile.Info       (ProfileInfo)
 import           Luna.Interpreter.Session.TargetHS.Reload    (ReloadMap)
 
 

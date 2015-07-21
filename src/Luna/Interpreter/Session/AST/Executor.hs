@@ -53,7 +53,8 @@ import qualified Luna.Interpreter.Session.Error             as Error
 import qualified Luna.Interpreter.Session.Hint.Eval         as HEval
 import           Luna.Interpreter.Session.Memory.Manager    (MemoryManager)
 import qualified Luna.Interpreter.Session.Memory.Manager    as Manager
-import           Luna.Interpreter.Session.ProfileInfo       (ProfileInfo)
+import           Luna.Interpreter.Session.Profile.Info      (ProfileInfo)
+import qualified Luna.Interpreter.Session.Profile.Profile   as Profile
 import           Luna.Interpreter.Session.Session           (Session)
 import qualified Luna.Interpreter.Session.Session           as Session
 import qualified Luna.Interpreter.Session.TargetHS.TargetHS as TargetHS
@@ -96,7 +97,7 @@ processNodeIfNeeded callDataPath =
 
 
 processNode :: MemoryManager mm => CallDataPath -> Session mm ()
-processNode callDataPath = Env.debugNode (CallDataPath.toCallPointPath callDataPath) $ do
+processNode callDataPath = Profile.debugNode (CallDataPath.toCallPointPath callDataPath) $ do
     arguments <- Traverse.arguments callDataPath
     let callData  = last callDataPath
         node      = callData ^. CallData.node
@@ -142,7 +143,6 @@ execute callDataPath nodeExpr keyNames = do
     let callPointPath = CallDataPath.toCallPointPath callDataPath
     status       <- Cache.status        callPointPath
     let execFunction = evalFunction nodeExpr callDataPath keyNames
-
         executeModified = do
             logger debug "processing node"
             rebind <- execFunction True
@@ -196,7 +196,7 @@ evalFunction nodeExpr callDataPath keyNames recompile = do
                 Tuple            -> return $ "val (" <> List.intercalate "," args <> ")"
                 TimeVar          -> return   "val _time"
                 Expression  name -> return   name
-            catchEither (left . Error.RunError $(loc) callPointPath) $ do
+            Profile.compileTime callPointPath $ catchEither (left . Error.RunError $(loc) callPointPath) $ do
                 keyNameStr <- Env.keyNameToString keyName
                 let createKey       = Session.runAssignment keyNameStr $ "unsafePerformIO $ hmapCreateKeyWithWitness $ " <> operation
                     createUpdate    = lift2 $ HEval.interpret $ "\\hmap -> hmapInsert " <> keyNameStr <> " (" <> operation <> ") hmap"
