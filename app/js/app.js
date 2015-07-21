@@ -38,7 +38,9 @@ function initializeGl() {
     $$.camera.position.z    = 500;
     $$.cameraHUD.position.z = 500;
     $$.renderer             = new THREE.WebGLRenderer({ antialias: true });
-		$$.renderer.autoClear   = false;
+    $$.renderer.autoClear   = false;
+
+    $('body').append('<div id="htmlcanvas-pan"><div id="htmlcanvas"></div></div>');
 
 
     $$.renderer.setClearColor(config.backgroundColor, 1);
