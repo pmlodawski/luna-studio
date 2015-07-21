@@ -26,6 +26,8 @@ public
 
 app/features.local.js
 app/config.local.js
+brunch-config.local.coffee
+
 *.js_o
 *.js_hi
 .autoenv.zsh
