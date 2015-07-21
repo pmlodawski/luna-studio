@@ -57,7 +57,7 @@ function initializeGl() {
 }
 
 function addVersionToHud() {
-  var createText   = THREE_TEXT;
+  var createText   = require('bmfont').render;
   var font         = require("font/LatoBlack-sdf");
   var textMaterial = require('font/text_material').hud;
 
