@@ -25,35 +25,35 @@ function FunctionNode(id, position) {
   this.outputPorts = [];
 
   this.attributes = {
-      pos: {
-          type: 'v2',
-          value: [
-              position,
-              position,
-              position,
-              position
-          ]
-      }
+    pos: {
+      type: 'v2',
+      value: [
+        position,
+        position,
+        position,
+        position
+      ]
+    }
   };
 
   this.uniforms = {
-      selected: { type: "i", value: 0 }
+    selected: { type: "i", value: 0 }
   };
 
-  Object.keys($$.commonUniforms).forEach(function(k) { // copy common uniforms
+  Object.keys($$.commonUniforms).forEach(function(k) {
     _this.uniforms[k] = $$.commonUniforms[k];
   });
 
   this.mesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(width, height),
-      new THREE.ShaderMaterial( {
-        uniforms:       this.uniforms,
-        attributes:     this.attributes,
-        vertexShader:   vs,
-        fragmentShader: fs,
-        transparent:    true,
-        blending:       THREE.NormalBlending
-      })
+    new THREE.PlaneGeometry(width, height),
+    new THREE.ShaderMaterial( {
+      uniforms:       this.uniforms,
+      attributes:     this.attributes,
+      vertexShader:   vs,
+      fragmentShader: fs,
+      transparent:    true,
+      blending:       THREE.NormalBlending
+    })
   );
   this.mesh.userData.id = id;
   this.htmlContainer = $('<div/>');
@@ -67,7 +67,6 @@ function FunctionNode(id, position) {
 
 FunctionNode.prototype.selected = function(val) {
   if (val !== undefined) {
-    // console.log("selection state: " + val);
     this.uniforms.selected.value = val;
     if(features.label_editor) {
       if(val === 2) {
@@ -167,7 +166,6 @@ FunctionNode.prototype.showLabelEditor = function() {
 };
 
 FunctionNode.prototype.renderExamplePlot = function() {
-
   var svg = d3.select(this.htmlContainer[0])
       .append("svg")
       .attr("width", 400)

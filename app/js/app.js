@@ -13,9 +13,8 @@ var Connection   = require('connection'),
 console.info("Current version " + brunch.env + " " + brunch.git_commit);
 console.info("Build at " + brunch.date);
 
-$$.nodes = {};
-$$.connections = {};
-
+$$.nodes             = {};
+$$.connections       = {};
 $$.currentConnection = null;
 $$.selectionBox      = null;
 
@@ -53,6 +52,23 @@ function initializeGl() {
     addVersionToHud();
     $($$.renderer.domElement).addClass('renderer');
 
+    // var composer, dpr, effectFXAA, renderScene;
+
+    // dpr = 1;
+    // if (window.devicePixelRatio !== undefined) {
+    //   dpr = window.devicePixelRatio;
+    // }
+
+    // $$.renderScene = new THREE.RenderPass($$.scene, $$.camera);
+    // effectFXAA  = new THREE.ShaderPass(THREE.FXAAShader);
+    // effectFXAA.uniforms.resolution.value.set(1 / (window.innerWidth * dpr), 1 / (window.innerHeight * dpr));
+    // effectFXAA.renderToScreen = true;
+
+    // $$.composer = new THREE.EffectComposer($$.renderer);
+    // $$.composer.setSize(window.innerWidth * dpr, window.innerHeight * dpr);
+    // $$.composer.addPass($$.renderScene);
+    // $$.composer.addPass(effectFXAA);
+
     document.body.appendChild($$.renderer.domElement);
 }
 
@@ -87,6 +103,9 @@ function initCommonWidgets() {
 function render() {
   $$.renderer.clear();
   $$.renderer.render($$.scene, $$.camera);
+
+  // $$.composer.render();
+
   $$.renderer.clearDepth();
   $$.renderer.render($$.sceneHUD, $$.cameraHUD);
   requestAnimationFrame(render);

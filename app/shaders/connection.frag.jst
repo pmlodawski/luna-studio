@@ -4,9 +4,11 @@ precision highp float;
 
 uniform vec4 color;
 uniform float visible;
+// uniform float camFactor;
 
 void main()
 {
-  if(visible < 1.0) discard;
+  if (visible < 1.0) discard;
+
   gl_FragColor = color;
 }
