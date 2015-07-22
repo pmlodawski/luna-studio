@@ -1,0 +1,18 @@
+#ifdef GL_ES
+precision highp float;
+#endif
+
+uniform int state;
+
+void main()
+{
+    if (state == 0) {
+        gl_FragColor = vec4(0.5, 0.5, 0.5, 1.0);
+    } else if (state == 1) {
+        gl_FragColor = vec4(1.0, 0.3, 0.3, 1.0);
+    } else if (state == 2) {
+        gl_FragColor = vec4(0.3, 0.5, 0.3, 1.0);
+    } else if (state == 3) {
+        gl_FragColor = vec4(0.3, 0.3, 0.5, 1.0);
+    }
+}
