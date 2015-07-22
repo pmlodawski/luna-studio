@@ -29,17 +29,17 @@ argOf n v = Arg2 (Just n) (Just v)
 
 
 
-class ArgCons a b where
-    arg :: a -> b
+        --class ArgCons2 a b where
+        --    arg2 :: a -> b
 
-instance ArgCons Object Arg2 where
-    arg v = def & Type.val .~ Just v
+        --instance ArgCons2 Object Arg2 where
+        --    arg2 v = def & Type.val .~ Just v
 
-instance Convertible s Text => ArgCons s Arg2 where
-    arg n = def & Type.name .~ Just (convert n)
+        --instance Convertible s Text => ArgCons2 s Arg2 where
+        --    arg2 n = def & Type.name .~ Just (convert n)
 
-instance Convertible s Text => ArgCons s (Object -> Arg2) where
-    arg n v = arg n & Type.val .~ Just v
+        --instance Convertible s Text => ArgCons2 s (Object -> Arg2) where
+        --    arg2 n v = arg2 n & Type.val .~ Just v
 
 
 --instance IsList (Seq.Seq a) where

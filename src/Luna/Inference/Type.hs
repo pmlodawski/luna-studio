@@ -142,7 +142,7 @@ data Arg2 = Arg2 { _name :: Maybe Text
                , _val  :: Maybe Object
                } deriving (Show)
 
-makeLenses ''Arg2
+--makeLenses ''Arg2
 
 
 -- record powinien miec id!
