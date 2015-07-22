@@ -2,13 +2,17 @@
 precision highp float;
 #endif
 
+varying float distance;
+
 uniform vec4 color;
 uniform float visible;
-// uniform float camFactor;
+uniform float camFactor;
 
 void main()
 {
   if (visible < 1.0) discard;
-
-  gl_FragColor = color;
+  float d = 1.0 - abs(distance);
+  vec3 color_raw = vec3(color);
+  float d1 = sqrt(d);
+  gl_FragColor = vec4(color_raw, d * camFactor / 2.0);
 }

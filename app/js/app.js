@@ -53,15 +53,6 @@ function initializeGl() {
     addVersionToHud();
     $($$.renderer.domElement).addClass('renderer');
 
-    $$.renderScene = new THREE.RenderPass($$.scene, $$.camera);
-    $$.effectFXAA  = new THREE.ShaderPass(THREE.FXAAShader);
-    $$.effectFXAA.renderToScreen = true;
-
-    $$.composer = new THREE.EffectComposer($$.renderer);
-    $$.composer.addPass($$.renderScene);
-    $$.composer.addPass($$.effectFXAA);
-
-
     document.body.appendChild($$.renderer.domElement);
 
     breadcrumb.initialize();
@@ -96,10 +87,7 @@ function initCommonWidgets() {
 
 function render() {
   $$.renderer.clear();
-  // $$.renderer.render($$.scene, $$.camera);
-
-  $$.composer.render();
-
+  $$.renderer.render($$.scene, $$.camera);
   $$.renderer.clearDepth();
   $$.renderer.render($$.sceneHUD, $$.cameraHUD);
   requestAnimationFrame(render);
@@ -114,13 +102,6 @@ function updateScreenSize(width, height) {
   $$.screenSize.x = width;
   $$.screenSize.y = height;
   $$.renderer.setSize(width, height);
-
-  var dpr = 1;
-  if (window.devicePixelRatio !== undefined) {
-    dpr = window.devicePixelRatio;
-  }
-  $$.effectFXAA.uniforms.resolution.value.set(1 / (window.innerWidth * dpr), 1 / (window.innerHeight * dpr));
-  $$.composer.setSize(window.innerWidth * dpr, window.innerHeight * dpr);
 }
 
 function updateCamera(factor, camPanX, camPanY, left, right, top, bottom) {

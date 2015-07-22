@@ -15,7 +15,7 @@ void main() {
   float blurCamFactor = 1.0;
   if (camFactorDelta > 0.0) {
     rimCamFactor  += camFactorDelta / 50.0;
-    blurCamFactor += camFactorDelta / 1.8;
+    blurCamFactor += camFactorDelta / 1.5;
   } else if (camFactorDelta < 0.0) {
     rimCamFactor  += camFactorDelta / 10.0;
     blurCamFactor += camFactorDelta / 1.1;

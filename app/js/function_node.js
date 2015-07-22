@@ -8,7 +8,7 @@ var createText   = require('bmfont').render;
 var font         = require("font/LatoBlack-sdf");
 var textMaterial = require('font/text_material').graph;
 
-var vs = require('shaders/common.vert')();
+var vs = require('shaders/node.vert')();
 var fs = require('shaders/node.frag')();
 
 var Port = require('port');

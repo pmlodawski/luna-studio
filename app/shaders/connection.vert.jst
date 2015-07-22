@@ -1,0 +1,12 @@
+#ifdef GL_ES
+precision highp float;
+#endif
+
+attribute float pos;
+varying float distance;
+
+void main()
+{
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    distance = pos;
+}
