@@ -21,16 +21,14 @@ function Connection(id) {
 
   this.mesh = new THREE.Mesh(
     this.geometry,
-    new THREE.ShaderMaterial(THREE.FXAAShader)
-    // new THREE.ShaderMaterial({
-    //   uniforms:       this.uniforms,
-    //   vertexShader:   vs,
-    //   fragmentShader: fs,
-    //   transparent: true,
-    //   blending: THREE.NormalBlending
-    // })
+    new THREE.ShaderMaterial({
+      uniforms:       this.uniforms,
+      vertexShader:   vs,
+      fragmentShader: fs,
+      transparent: true,
+      blending: THREE.NormalBlending
+    })
   );
-  this.mesh.material.uniforms.tDiffuse.value = new THREE.Texture();
 
   this.mesh.scale.x = 1;
   this.mesh.rotation.z = 0;
@@ -55,11 +53,11 @@ Connection.prototype.setPos = function(x0, y0, x1, y1) {
 };
 
 Connection.prototype.show = function() {
-  // this.mesh.material.uniforms.visible.value = 1;
+  this.mesh.material.uniforms.visible.value = 1;
 };
 
 Connection.prototype.hide = function() {
-  // this.mesh.material.uniforms.visible.value = 0;
+  this.mesh.material.uniforms.visible.value = 0;
 };
 
 module.exports = Connection;

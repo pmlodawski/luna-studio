@@ -43,7 +43,7 @@ function initializeGl() {
     $$.cameraHUD            = new THREE.OrthographicCamera(-500, 500, -500, 500, 1, 1000);
     $$.camera.position.z    = 500;
     $$.cameraHUD.position.z = 500;
-    $$.renderer             = new THREE.WebGLRenderer({ antialias: true });
+    $$.renderer             = new THREE.WebGLRenderer({ antialias: false });
     $$.renderer.autoClear   = false;
 
     $('body').append('<div id="htmlcanvas-pan"><div id="htmlcanvas"></div></div>');
@@ -53,22 +53,14 @@ function initializeGl() {
     addVersionToHud();
     $($$.renderer.domElement).addClass('renderer');
 
-    // var composer, dpr, effectFXAA, renderScene;
+    $$.renderScene = new THREE.RenderPass($$.scene, $$.camera);
+    $$.effectFXAA  = new THREE.ShaderPass(THREE.FXAAShader);
+    $$.effectFXAA.renderToScreen = true;
 
-    // dpr = 1;
-    // if (window.devicePixelRatio !== undefined) {
-    //   dpr = window.devicePixelRatio;
-    // }
+    $$.composer = new THREE.EffectComposer($$.renderer);
+    $$.composer.addPass($$.renderScene);
+    $$.composer.addPass($$.effectFXAA);
 
-    // $$.renderScene = new THREE.RenderPass($$.scene, $$.camera);
-    // effectFXAA  = new THREE.ShaderPass(THREE.FXAAShader);
-    // effectFXAA.uniforms.resolution.value.set(1 / (window.innerWidth * dpr), 1 / (window.innerHeight * dpr));
-    // effectFXAA.renderToScreen = true;
-
-    // $$.composer = new THREE.EffectComposer($$.renderer);
-    // $$.composer.setSize(window.innerWidth * dpr, window.innerHeight * dpr);
-    // $$.composer.addPass($$.renderScene);
-    // $$.composer.addPass(effectFXAA);
 
     document.body.appendChild($$.renderer.domElement);
 
@@ -104,9 +96,9 @@ function initCommonWidgets() {
 
 function render() {
   $$.renderer.clear();
-  $$.renderer.render($$.scene, $$.camera);
+  // $$.renderer.render($$.scene, $$.camera);
 
-  // $$.composer.render();
+  $$.composer.render();
 
   $$.renderer.clearDepth();
   $$.renderer.render($$.sceneHUD, $$.cameraHUD);
@@ -122,6 +114,13 @@ function updateScreenSize(width, height) {
   $$.screenSize.x = width;
   $$.screenSize.y = height;
   $$.renderer.setSize(width, height);
+
+  var dpr = 1;
+  if (window.devicePixelRatio !== undefined) {
+    dpr = window.devicePixelRatio;
+  }
+  $$.effectFXAA.uniforms.resolution.value.set(1 / (window.innerWidth * dpr), 1 / (window.innerHeight * dpr));
+  $$.composer.setSize(window.innerWidth * dpr, window.innerHeight * dpr);
 }
 
 function updateCamera(factor, camPanX, camPanY, left, right, top, bottom) {
