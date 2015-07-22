@@ -30,7 +30,7 @@ import qualified Prelude as Prelude
 --            - neither can we safely convert Char to Int 8 nor vice versa.
 --            We can though make typeclasses that will find the smallest super-type for a given type pair
 --            and convert both values to that super-type
-boundedConversion :: (Bounded b, Ord a, Convertible a Rational, Convertible b Rational)
+boundedConversion :: (Bounded b, Ord a, Convertible a Rational, Convertible (Bounds b) (Bounds Rational))
                   => (a -> b) -> (a -> Either BoundError b)
 boundedConversion (func :: a -> b) inp = if (convert inp) `boundedBy` (convert (bounds :: Bounds b) :: Bounds Rational)
     then Right $ func inp
@@ -151,7 +151,7 @@ boundedBy :: Ord a => a -> Bounds a -> Bool
 boundedBy (Value -> a) (Bounds min max) = a >= min && a <= max
 
 -- instances
-instance Convertible a b => Convertible (Bounds a) (Bounds b) where
+instance {-# OVERLAPPABLE #-} Convertible a b => Convertible (Bounds a) (Bounds b) where
     convert (Bounds a b) = Bounds (convert a) (convert b)
 
 instance {-# OVERLAPPABLE #-} (Prelude.Bounded a)
