@@ -22,6 +22,7 @@ import qualified Reactive.Plugins.Core.Action.MultiSelection as MultiSelection
 import qualified Reactive.Plugins.Core.Action.Drag           as Drag
 import qualified Reactive.Plugins.Core.Action.Connect        as Connect
 import qualified Reactive.Plugins.Core.Action.NodeSearcher   as NodeSearcher
+import qualified Reactive.Plugins.Core.Action.Breadcrumb     as Breadcrumb
 import           Reactive.Plugins.Core.Action.Executor
 
 import           Reactive.Plugins.Core.Action.State.Global
@@ -69,6 +70,7 @@ makeNetworkDescription logging = do
         nodeDragActionB               = fmap ActionST $           Drag.toAction <$> anyNodeB <*> underCursorB
         nodeConnectActionB            = fmap ActionST $        Connect.toAction <$> anyNodeB <*> underCursorB
         nodeSearcherActionB           = fmap ActionST $   NodeSearcher.toAction <$> anyNodeB
+        breadcrumbActionB             = fmap ActionST $     Breadcrumb.toAction <$> anyNodeB
 
         allActionsPackB               = [ nodeGeneralActionB
                                         , nodeAddRemActionB
@@ -78,6 +80,7 @@ makeNetworkDescription logging = do
                                         , cameraActionB
                                         , nodeConnectActionB
                                         , nodeSearcherActionB
+                                        , breadcrumbActionB
                                         ]
 
         (globalStateReactionB, allReactionsPackB) = execAll globalStateB allActionsPackB

@@ -4,11 +4,12 @@ var FunctionNode = require('function_node').FunctionNode,
     $$           = require('common'),
     config       = require('config'),
     features     = require('features'),
+    brunch       = require('brunch'),
+    breadcrumb   = require('breadcrumb'),
     NodeSearcher = require('node_searcher'),
-    brunch       = require('brunch');
-
-var Connection   = require('connection'),
-    SelectionBox = require('selection_box');
+    Connection   = require('connection'),
+    SelectionBox = require('selection_box'),
+    Button       = require('button');
 
 console.info("Current version " + brunch.env + " " + brunch.git_commit);
 console.info("Build at " + brunch.date);
@@ -70,17 +71,18 @@ function initializeGl() {
     // $$.composer.addPass(effectFXAA);
 
     document.body.appendChild($$.renderer.domElement);
+
+    breadcrumb.initialize();
 }
 
 function addVersionToHud() {
-  var createText   = THREE_TEXT;
+  var createText   = require('bmfont').render;
   var font         = require("font/LatoBlack-sdf");
   var textMaterial = require('font/text_material').hud;
 
   var geom = createText({
     text: "Build at " + brunch.date,
     font: font,
-    width: 5000,
     align: 'left'
   });
 
