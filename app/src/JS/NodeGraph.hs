@@ -65,11 +65,8 @@ dragNode delta node = do
     nodeRef  <- getNode $ node ^. nodeId
     moveTo nodeRef wx wy
 
-displaySelectBox :: Vector2 Double -> Vector2 Double -> IO ()
-displaySelectBox a b = displaySelectBoxJS mx my w h where
-    (Vector2 mx my) = a
-    (Vector2 w  h)  = b - a
-
+displaySelectionBox :: Vector2 Double -> Vector2 Double -> IO ()
+displaySelectionBox (Vector2 x0 y0) (Vector2 x1 y1) = displaySelectionBoxJS x0 y0 x1 y1
 
 addInputPort :: NodeId -> PortId -> Angle -> IO ()
 addInputPort nodeId portId angle = do

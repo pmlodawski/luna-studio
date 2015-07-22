@@ -7,19 +7,17 @@ var FunctionNode = require('function_node').FunctionNode,
     NodeSearcher = require('node_searcher'),
     brunch       = require('brunch');
 
-var Connection = require('connection');
+var Connection   = require('connection'),
+    SelectionBox = require('selection_box');
 
 console.info("Current version " + brunch.env + " " + brunch.git_commit);
 console.info("Build at " + brunch.date);
 
-var nodes = {};
-$$.nodes = nodes;
+$$.nodes = {};
+$$.connections = {};
 
-var connections = {};
-$$.connections = connections;
-
-var currentConnection = null;
-$$.currentConnection = currentConnection;
+$$.currentConnection = null;
+$$.selectionBox      = null;
 
 var zOrderDiv = 10000.0;
 var currentMazZ = 0.0;
@@ -50,9 +48,8 @@ function initializeGl() {
 
     $('body').append('<div id="htmlcanvas-pan"><div id="htmlcanvas"></div></div>');
 
-
     $$.renderer.setClearColor(config.backgroundColor, 1);
-    initSelectBox();
+    initCommonWidgets();
     addVersionToHud();
     $($$.renderer.domElement).addClass('renderer');
 
@@ -79,35 +76,13 @@ function addVersionToHud() {
   $$.sceneHUD.add(obj);
 }
 
-function initSelectBox() {
-  var geometry = new THREE.Geometry();
-  geometry.vertices.push(
-    new THREE.Vector3(0,0,0),
-    new THREE.Vector3(1,1,0),
-    new THREE.Vector3(0,1,0),
-    new THREE.Vector3(1,0,0)
-  );
-  geometry.faces.push(new THREE.Face3(0, 2, 1), new THREE.Face3(0, 1, 3));
-  var mesh = new THREE.Mesh(
-			geometry,
-			new THREE.ShaderMaterial( {
-				uniforms: {
-					visible: { type: 'f', value: 0 },
-					size: { type: 'v3', value: new THREE.Vector3(0,0,1) },
-					color: { type: 'v4', value: new THREE.Vector4(0.85, 0.55, 0.1,0.3) }
-				},
-				vertexShader:   require('shaders/select.vert')(),
-				fragmentShader: require('shaders/color.frag')(),
-				transparent: true,
-				blending: THREE.NormalBlending,
-        side:           THREE.DoubleSide
-  	})
-	);
-  mesh.position.z = 100;
-  $$.selectBox = mesh;
-  $$.scene.add( mesh );
-}
+function initCommonWidgets() {
+  $$.currentConnection = new Connection(0);
+  $$.selectionBox      = new SelectionBox();
 
+  $$.scene.add($$.currentConnection.mesh);
+  $$.scene.add($$.selectionBox.mesh);
+}
 
 function render() {
   $$.renderer.clear();
@@ -148,20 +123,20 @@ function updateCameraHUD(left, right, top, bottom) {
 function newNodeAt(i, x, y, expr) {
   var vect = new THREE.Vector2(x, y);
   var node = new FunctionNode(i, vect);
-  nodes[i] = node;
+  $$.nodes[i] = node;
   node.label(expr);
   $$.scene.add(node.mesh);
 }
 
 function removeNode(i) {
-  var node = nodes[i];
+  var node = $$.nodes[i];
   $$.scene.remove(node.mesh);
-  delete nodes[i];
+  delete $$.nodes[i];
 }
 
 // -> HS
 function assignZs() {
-  var sortedNodes = _.values(nodes);
+  var sortedNodes = _.values($$.nodes);
   sortedNodes.sort(function(nodeA, nodeB) {
       return nodeA.position.z - nodeB.position.z;
   });
@@ -172,7 +147,7 @@ function assignZs() {
 
 // -> HS
 function moveToTopZ(nodeId) {
-  var node = nodes[nodeId];
+  var node = $$.nodes[nodeId];
   node.zPos(currentMazZ + 1.0 / zOrderDiv);
   currentMazZ = node.zPos();
   if (currentMazZ > maxZ)
@@ -200,58 +175,44 @@ function destroyNodeSearcher() {
   }
 }
 
-function displaySelectBox(x,y,w,h) {
-  $$.selectBox.material.uniforms.visible.value = 1;
-  $$.selectBox.position.x = x;
-  $$.selectBox.position.y = y;
-  $$.selectBox.material.uniforms.size.value.x = w;
-  $$.selectBox.material.uniforms.size.value.y = h;
+function displaySelectionBox(x0, y0, x1, y1) {
+  $$.selectionBox.setPos(x0, y0, x1, y1);
+  $$.selectionBox.show();
 }
 
-function hideSelectBox() {
-  $$.selectBox.material.uniforms.visible.value = 0;
+function hideSelectionBox() {
+  $$.selectionBox.hide();
 }
 
-function displayCurrentConnection(x1, y1, x2, y2) {
-  if ($$.currentConnection === null) {
-    $$.currentConnection = new Connection(0);
-    $$.scene.add($$.currentConnection.mesh);
-  }
-  $$.currentConnection.setPos(x1, y1, x2, y2);
+function displayCurrentConnection(x0, y0, x1, y1) {
+  $$.currentConnection.setPos(x0, y0, x1, y1);
+  $$.currentConnection.show();
 }
 
 function removeCurrentConnection() {
-  if ($$.currentConnection !== null) {
-    $$.scene.remove($$.currentConnection.mesh);
-    delete $$.currentConnection;
-    $$.currentConnection = null;
-  }
+  $$.currentConnection.hide();
 }
 
 module.exports = {
-  initializeGl: initializeGl,
-  render: render,
-  moveToTopZ: moveToTopZ,
-  getNode: function(index) {
-    return $$.nodes[index];
-  },
-  getNodes: function() {
-    return _.values($$.nodes);
-  },
-  newNodeAt: newNodeAt,
-  removeNode: removeNode,
-  updateHtmCanvasPanPos: updateHtmCanvasPanPos,
-  updateScreenSize: updateScreenSize,
-  updateCamera: updateCamera,
-  updateCameraHUD: updateCameraHUD,
-  start: start,
-  createNodeSearcher: createNodeSearcher,
-  destroyNodeSearcher: destroyNodeSearcher,
-  displaySelectBox: displaySelectBox,
-  hideSelectBox: hideSelectBox,
+  initializeGl:             initializeGl,
+  render:                   render,
+  moveToTopZ:               moveToTopZ,
+  newNodeAt:                newNodeAt,
+  removeNode:               removeNode,
+  updateHtmCanvasPanPos:    updateHtmCanvasPanPos,
+  updateScreenSize:         updateScreenSize,
+  updateCamera:             updateCamera,
+  updateCameraHUD:          updateCameraHUD,
+  start:                    start,
+  createNodeSearcher:       createNodeSearcher,
+  destroyNodeSearcher:      destroyNodeSearcher,
+  displaySelectionBox:      displaySelectionBox,
+  hideSelectionBox:         hideSelectionBox,
   displayCurrentConnection: displayCurrentConnection,
-  removeCurrentConnection: removeCurrentConnection,
-  nodeSearcher: function() { return $$.node_searcher; }
+  removeCurrentConnection:  removeCurrentConnection,
+  getNode:                  function(index) { return $$.nodes[index]; },
+  getNodes:                 function()      { return _.values($$.nodes); },
+  nodeSearcher:             function()      { return $$.node_searcher; }
 };
 
 

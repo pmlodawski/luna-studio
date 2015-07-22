@@ -152,11 +152,11 @@ foreign import javascript unsafe "config.logging"
     isLoggerEnabled :: IO Bool
 
 
-foreign import javascript unsafe "app.displaySelectBox($1, $2, $3, $4)"
-    displaySelectBoxJS :: Double -> Double -> Double -> Double -> IO ()
+foreign import javascript unsafe "app.displaySelectionBox($1, $2, $3, $4)"
+    displaySelectionBoxJS :: Double -> Double -> Double -> Double -> IO ()
 
-foreign import javascript unsafe "app.hideSelectBox()"
-    hideSelectBox :: IO ()
+foreign import javascript unsafe "app.hideSelectionBox()"
+    hideSelectionBox :: IO ()
 
 
 foreign import javascript unsafe "app.displayCurrentConnection($1, $2, $3, $4)"

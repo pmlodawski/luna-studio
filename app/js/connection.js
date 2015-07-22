@@ -1,32 +1,56 @@
 "use strict";
 
+var vs = require('shaders/common.vert')();
+var fs = require('shaders/connection.frag')();
+
+var color = new THREE.Vector4(0.8, 0.8, 0.0, 0.8);
+
 function Connection(id) {
   this.id = id;
+  this.geometry = new THREE.PlaneGeometry(1.0, 1.5);
 
-  this.geometry = new THREE.Geometry();
+  this.mesh = new THREE.Mesh(
+          this.geometry,
+          new THREE.ShaderMaterial({
+            uniforms: {
+              color: { type: 'v4', value: color },
+              visible: { type: 'f', value: 0 },
+            },
+            vertexShader:   vs,
+            fragmentShader: fs,
+            transparent: true,
+            blending: THREE.NormalBlending
+          })
+        );
 
-  this.geometry.vertices.push(new THREE.Vector3(0, 0, 0));
-  this.geometry.vertices.push(new THREE.Vector3(0, 0, 0));
-
-  this.geometry.dynamic = true;
-
-  this.material = new THREE.LineBasicMaterial({
-        color: 0x2255DD,
-        linewidth: 1.0,
-        linecap: 'round'
-    });
-
-  this.mesh = new THREE.Line(this.geometry, this.material);
-
+  this.mesh.scale.x = 1;
+  this.mesh.rotation.z = 0;
   this.mesh.position.z = 0.0001;
 }
 
-Connection.prototype.setPos = function(x1, y1, x2, y2) {
-  this.geometry.vertices[0].x = x1;
-  this.geometry.vertices[0].y = y1;
-  this.geometry.vertices[1].x = x2;
-  this.geometry.vertices[1].y = y2;
-  this.geometry.verticesNeedUpdate = true;
+Connection.prototype.setPos = function(x0, y0, x1, y1) {
+  var dist = 0;
+  var x = x1 - x0;
+  var y = y1 - y0;
+  var r = Math.sqrt(x * x + y * y);
+  var x_r = x / r;
+  var y_r = y / r;
+
+  this.mesh.scale.x = Math.max((r - 2 * dist), 0);
+  var scale = this.mesh.scale.x / 2;
+
+  this.mesh.rotation.z = Math.sign(y) * Math.acos(x / r);
+
+  this.mesh.position.x = (dist * x_r) + x0 + x_r * scale;
+  this.mesh.position.y = (dist * y_r) + y0 + y_r * scale;
+};
+
+Connection.prototype.show = function() {
+  this.mesh.material.uniforms.visible.value = 1;
+};
+
+Connection.prototype.hide = function() {
+  this.mesh.material.uniforms.visible.value = 0;
 };
 
 module.exports = Connection;

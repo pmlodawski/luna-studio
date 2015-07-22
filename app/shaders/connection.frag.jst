@@ -1,0 +1,12 @@
+#ifdef GL_ES
+precision highp float;
+#endif
+
+uniform vec4 color;
+uniform float visible;
+
+void main()
+{
+  if(visible < 1.0) discard;
+  gl_FragColor = color;
+}
