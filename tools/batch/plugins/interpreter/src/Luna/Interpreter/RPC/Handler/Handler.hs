@@ -159,7 +159,6 @@ handlerMap prefix queueInfo crl output callback = HandlerMap.fromList $ Prefix.p
 
 extraImports :: [Session.Import]
 extraImports = ["FlowboxM.Libs.Flowbox.Std"
-               ,"FlowboxM.Libs.Flowbox.Graphics"
                ]
 
 
