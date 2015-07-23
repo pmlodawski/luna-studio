@@ -13,13 +13,21 @@ module Flowbox.Control.Error (
 , liftIO
 ) where
 
-import           Control.Error     as X hiding (runScript)
+import           Control.Error     as X hiding (runScript, catchEither)
 import qualified Control.Exception as Exc
 import qualified Data.Maybe        as Maybe
 
 import Flowbox.Prelude
 
 
+
+type EitherT = ExceptT
+
+runEitherT :: ExceptT e m a -> m (Either e a)
+runEitherT = runExceptT
+
+left :: Monad m => e -> ExceptT e m a
+left = throwE
 
 runScript :: Script a -> IO a
 runScript s = do
@@ -95,7 +103,7 @@ eitherStringToM = either fail return
 eitherStringToM' :: MonadIO m => m (Either String b) -> m b
 eitherStringToM' action = action >>= eitherStringToM
 
-
+--TODO[PM]L rename to catchEitherT
 catchEither :: (MonadTrans t, Monad (t m), Monad m)
             => (e -> t m b) -> EitherT e m b -> t m b
 catchEither handler fun = do
@@ -110,4 +118,4 @@ hoistEitherWith conv = hoistEither . fmapL conv
 
 
 lmapEitherT :: Functor m => (e -> a) -> EitherT e m b -> EitherT a m b
-lmapEitherT conf = bimapEitherT conf id
+lmapEitherT = withExceptT
