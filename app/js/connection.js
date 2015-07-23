@@ -15,10 +15,15 @@ function Connection(id) {
     pos: {
       type: 'f',
       value: [
-        1,
-        1,
-        -1,
-        -1
+         1,  1,
+        -1, -1
+      ]
+    },
+    posV: {
+      type: 'f',
+      value: [
+         1, -1,
+        -1,  1
       ]
     }
   };
@@ -26,6 +31,7 @@ function Connection(id) {
   this.uniforms = {
     color:   { type: 'v4', value: color },
     visible: { type: 'f',  value: 0 },
+    len:     { type: 'f',  value: 0 }
   };
 
   Object.keys($$.commonUniforms).forEach(function(k) {
@@ -56,6 +62,8 @@ Connection.prototype.setPos = function(x0, y0, x1, y1) {
   var r = Math.sqrt(x * x + y * y);
   var x_r = x / r;
   var y_r = y / r;
+
+  this.mesh.material.uniforms.len.value = r;
 
   this.mesh.scale.x = Math.max((r - 2 * dist), 0);
   var scale = this.mesh.scale.x / 2;
