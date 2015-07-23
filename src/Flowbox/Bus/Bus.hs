@@ -15,7 +15,6 @@ module Flowbox.Bus.Bus where
 import qualified Control.Concurrent              as Concurrent
 import qualified Control.Concurrent.Async        as Async
 import           Control.Monad.State
-import           Control.Monad.Trans.Either
 import           Data.ByteString                 (ByteString)
 import           System.ZMQ4.Monadic             (ZMQ)
 import qualified System.ZMQ4.Monadic             as ZMQ
@@ -31,6 +30,7 @@ import qualified Flowbox.Bus.Data.Topic               as Topic
 import qualified Flowbox.Bus.EndPoint                 as EP
 import           Flowbox.Bus.Env                      (BusEnv (BusEnv))
 import qualified Flowbox.Bus.Env                      as Env
+import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.Text.ProtocolBuffers         as Proto
@@ -160,4 +160,3 @@ unsubscribe :: Topic -> Bus ()
 unsubscribe topic = do
     sub <- getSubSocket
     lift2 $ ZMQ.unsubscribe sub $ Topic.toByteString topic
-

@@ -12,8 +12,7 @@
 
 module Flowbox.Bus.RPC.Client where
 
-import Control.Monad.Trans.Either
-
+import Flowbox.Control.Error
 import           Flowbox.Bus.Bus               (Bus)
 import qualified Flowbox.Bus.Bus               as Bus
 import qualified Flowbox.Bus.Data.Flag         as Flag
@@ -71,4 +70,3 @@ queryRaw message = do
     return $ map (view MessageFrame.message)
            $ filter (not . isRequest)
            $ filter (isCorrelationIDValid correlationID) frames
-
