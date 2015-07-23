@@ -11,7 +11,6 @@
 module Flowbox.UR.Manager.RPC.Handler.Handler where
 
 import Control.Monad.Trans.State
-import Data.Maybe                (maybeToList)
 
 import qualified Flowbox.Batch.Project.Project              as Project
 import           Flowbox.Bus.Data.Message                   (CorrelationID, Message)
@@ -65,22 +64,3 @@ handlerMap callback = HandlerMap.fromList
                           => String -> (CorrelationID -> request -> RPC Context IO (result, [Message])) -> StateT Context IO [Message]
         respondWithAction type_ handler = callback (/+ type_) (\cid request -> do (result, action) <- handler cid request
                                                                                   return ([result], action))
-
-
-serialize :: Proto.Serializable message => Topic -> message -> Bus.Message
-serialize = (encodeP .) . Message.mk
-
-
-makeMsgArr :: (Proto.ReflectDescriptor request, Proto.Wire request) => request -> Maybe Topic -> [Message]
-makeMsgArr request = maybe [] $ return . flip Message.mk request
-
-
-prepareResponse :: (Proto.Serializable undoMessage, Proto.Serializable redoMessage, Proto.Serializable urmMessage, Monad m)
-                => Project.ID -> Topic -> undoMessage -> Topic -> redoMessage -> Maybe Topic -> String -> urmMessage -> m ([urmMessage], [Message])
-prepareResponse projectID undoTopic undoAction redoTopic redoAction urmTopic description = return . flip (,) urmMessages . return
-    where
-        urmMessages = makeMsgArr (Register.Request (serialize ("undone." ++ undoTopic) undoAction)
-                                                   (serialize ("undone." ++ redoTopic) redoAction)
-                                                   (encodeP projectID)
-                                                   (encodeP description)
-                                 ) urmTopic

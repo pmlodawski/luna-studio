@@ -69,10 +69,8 @@ import           Luna.Interpreter.Session.Env.Session          (Session)
 import           Luna.Interpreter.Session.Error                (Error)
 import qualified Luna.Interpreter.Session.Error                as Error
 import qualified Luna.Interpreter.Session.Memory.Config        as Memory
-import           Luna.Interpreter.Session.ProfileInfo          (ProfileInfo)
-import qualified Luna.Interpreter.Session.ProfileInfo          as ProfileInfo
+import           Luna.Interpreter.Session.Profile.Info         (ProfileInfo)
 import           Luna.Interpreter.Session.TargetHS.Reload      (Reload, ReloadMap)
-
 
 
 
@@ -227,16 +225,11 @@ getProfileInfos :: Session mm (MapForest CallPoint ProfileInfo)
 getProfileInfos = gets $ view $ Env.sessionData . Env.profileInfos
 
 
-insertProfileInfo :: CallPointPath -> ProfileInfo -> Session mm ()
-insertProfileInfo callPointPath info =
-    modify (Env.sessionData . Env.profileInfos %~ MapForest.insert callPointPath info)
-
-
-profile :: CallPointPath -> Session mm a -> Session mm a
-profile callPointPath action = do
-    (r, info) <- ProfileInfo.profile action
-    whenVisible callPointPath $ insertProfileInfo callPointPath info
-    return r
+mergeProfileInfo :: CallPointPath -> ProfileInfo -> Session mm ()
+mergeProfileInfo callPointPath info =
+    modify (Env.sessionData . Env.profileInfos %~ MapForest.alter mergeInfo callPointPath) where
+        mergeInfo Nothing  = Just info
+        mergeInfo (Just i) = Just $ i <> info
 
 ---- Env.compileErrors ----------------------------------------------------
 
@@ -254,16 +247,10 @@ insertCompileError callPointPath err =
 
 
 reportCompileErrors :: CallPointPath -> Session mm () -> Session mm ()
-reportCompileErrors callPointPath action = do
+reportCompileErrors callPointPath action =
     lift (runEitherT action) >>= \case
         Left err -> whenVisible callPointPath $ insertCompileError callPointPath err
         Right () -> return ()
-
-
-debugNode :: CallPointPath -> Session mm () -> Session mm ()
-debugNode callPointPath action =
-    reportCompileErrors callPointPath $
-                profile callPointPath action
 
 ---- Env.timeVar ----------------------------------------------------------
 

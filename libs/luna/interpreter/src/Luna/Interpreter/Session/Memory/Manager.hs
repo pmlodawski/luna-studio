@@ -20,8 +20,8 @@ import Luna.Interpreter.Session.Memory.Data.Status (Status)
 
 
 
-type SessionST m   = StateT (Env m) MGHC.Ghc
-type Session   m a = EitherT Error (SessionST m) a
+type SessionST m = StateT (Env m) MGHC.Ghc
+type Session   m = EitherT Error (SessionST m)
 
 
 class Default mm => MemoryManager mm where

@@ -31,8 +31,10 @@ message DefPoint {
 
 message ProfileInfo {
     required CallPointPath callPointPath = 1;
-    required double        cpuTime       = 2;
-    required int64         realTime      = 3;
+    required double        totalCpuTime  = 2;
+    required int64         totalRealTime = 3;
+    required int64         compileTime   = 4;
+    required int64         computeTime   = 5;
 }
 
 message CompileError {
@@ -176,7 +178,7 @@ message Interpreter {
         message Request {
             optional float timeValue = 1;
         }
-        message Update  { 
+        message Update  {
             required Request      request       = 1;
             repeated ProfileInfo  profileInfos  = 2;
             repeated CompileError compileErrors = 3;
@@ -202,7 +204,7 @@ message Interpreter {
     }
     message Ping {
         message Request { }
-        message Status  { 
+        message Status  {
             required Request request = 1;
         }
     }

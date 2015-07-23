@@ -33,7 +33,7 @@ Library
                   directory,
                   either,
                   filepath,
-                  lens == 4.9.1,
+                  lens >= 4.9.1,
                   luna-core,
                   luna-target-ghchs,
                   flowbox-config,

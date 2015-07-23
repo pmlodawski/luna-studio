@@ -130,12 +130,59 @@ coveringGrid f (Grid gw gh) = Grid gw' gh'
           Point2 px3 py3 = f $ Point2 gw gh
           Point2 px4 py4 = f $ Point2 0  gh
 
+cornerPinShaderFrom points gen@(Shader (asFloating -> cnv) _) = Shader.transform (cornerPinFrom' cnv points) gen
+
+-- FIXME[MM]: I know it's bad to copy this, but it's fast
+--            the only difference is srcPlane <-> dstPlane exchange
+cornerPinFrom' :: forall a. (Elt a, IsFloating a, AccEpsilon a)
+           => Grid (Exp a)
+           -> (Point2 (Exp a), Point2 (Exp a), Point2 (Exp a), Point2 (Exp a))
+           -> Point2 (Exp a) -> Point2 (Exp a)
+cornerPinFrom' (Grid width height) (Point2 x1 y1', Point2 x2 y2', Point2 x3 y3', Point2 x4 y4') (Point2 x y) = Point2 (hx / hz) (hy / hz)
+    where V3 hx hy hz = matC !* V3 x y 1
+
+          y1 = height - y1'
+          y2 = height - y2'
+          y3 = height - y3'
+          y4 = height - y4'
+
+          unsafeInv33 :: M33 (Exp a) -> M33 (Exp a)
+          unsafeInv33 a = let (_, lifted) = A.unlift $ inv33 (A.lift a) :: (Exp Bool, Exp (M33 a))
+                          in A.unlift <$> A.unlift lifted
+
+          dstPlane = V3 (V3 0 width width )
+                        (V3 0 0     height)
+                        (V3 1 1     1     )
+
+          V3 l1 u1 t1 = unsafeInv33 srcPlane !* V3 0 height 1
+          matA = srcPlane !*! V3 (V3 l1 0  0 )
+                                 (V3 0  u1 0 )
+                                 (V3 0  0  t1)
+
+          srcPlane = V3 (V3 x1 x2 x3)
+                        (V3 y1 y2 y3)
+                        (V3 1  1  1 )
+
+          V3 l2 u2 t2 = unsafeInv33 dstPlane !* V3 x4 y4 1
+
+          matB = dstPlane !*! V3 (V3 l2 0  0 )
+                                 (V3 0  u2 0 )
+                                 (V3 0  0  t2)
+
+          matC = matA !*! unsafeInv33 matB
+
 cornerPin' :: forall a. (Elt a, IsFloating a, AccEpsilon a)
            => Grid (Exp a)
            -> (Point2 (Exp a), Point2 (Exp a), Point2 (Exp a), Point2 (Exp a))
            -> Point2 (Exp a) -> Point2 (Exp a)
-cornerPin' (Grid width height) (Point2 x1 y1, Point2 x2 y2, Point2 x3 y3, Point2 x4 y4) (Point2 x y) = Point2 (hx / hz) (hy / hz)
+cornerPin' (Grid width height) (Point2 x1 y1', Point2 x2 y2', Point2 x3 y3', Point2 x4 y4') (Point2 x y) = Point2 (hx / hz) (hy / hz)
     where V3 hx hy hz = matC !* V3 x y 1
+
+          y1 = height - y1'
+          y2 = height - y2'
+          y3 = height - y3'
+          y4 = height - y4'
+          
           unsafeInv33 :: M33 (Exp a) -> M33 (Exp a)
           unsafeInv33 a = let (_, lifted) = A.unlift $ inv33 (A.lift a) :: (Exp Bool, Exp (M33 a))
                           in A.unlift <$> A.unlift lifted

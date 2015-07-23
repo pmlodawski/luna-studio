@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2013
 ---------------------------------------------------------------------------
+{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE LambdaCase    #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE ViewPatterns  #-}
@@ -14,6 +15,8 @@ module Flowbox.Graphics.Mockup.Transform (
     Skew(..),
     SkewOrder(..),
     Transform(..),
+    Quadrangle(..),
+    CornerPin(..),
     cornerPinLuna,
     cropLuna,
     rotateAtLuna,
@@ -62,21 +65,28 @@ data Transform a = Transform { _translate :: V2 a
                              , _center    :: Point2 a
                              }
 
-cornerPinLuna :: Point2 Float
-              -> Point2 Float
-              -> Point2 Float
-              -> Point2 Float
+data Quadrangle a = Quadrangle { _p0 :: Point2 a
+                               , _p1 :: Point2 a
+                               , _p2 :: Point2 a
+                               , _p3 :: Point2 a
+                               } deriving (Show, Functor)
+
+data CornerPin a = CornerPin { _to   :: Quadrangle a
+                             , _from :: Quadrangle a
+                             } deriving (Show, Functor)
+
+cornerPinLuna :: CornerPin Float
               -> Image
               -> Image
-cornerPinLuna (fmap variable -> p1)
-              (fmap variable -> p2)
-              (fmap variable -> p3)
-              (fmap variable -> p4) img = img'
+cornerPinLuna (CornerPin to from) img = img'
     where img' = onEachChannel process img
-          --process = rasterizer . monosampler . Transform.cornerPin (p1, p2, p3, p4) . nearest . fromMatrix (A.Constant 0)
+          Quadrangle p1t p2t p3t p4t = fmap variable to
+          Quadrangle p1f p2f p3f p4f = fmap variable from
           process = \case
-              ChannelFloat name (Channel.asContinuousData 0 -> Channel.ContinuousData zeData) -> ChannelFloat name $ Channel.ContinuousData $ Transform.cornerPin (p1, p2, p3, p4) zeData
-              ChannelInt   name (Channel.asContinuousData 0 -> Channel.ContinuousData zeData) -> ChannelInt   name $ Channel.ContinuousData $ Transform.cornerPin (p1, p2, p3, p4) zeData
+              ChannelFloat name (Channel.asContinuousData 0 -> Channel.ContinuousData zeData) ->
+                  ChannelFloat name $ Channel.ContinuousData $ Transform.cornerPin (p1t, p2t, p3t, p4t) $ Transform.cornerPinShaderFrom (p1f, p2f, p3f, p4f) zeData
+              ChannelInt   name (Channel.asContinuousData 0 -> Channel.ContinuousData zeData) ->
+                  ChannelInt   name $ Channel.ContinuousData $ Transform.cornerPin (p1t, p2t, p3t, p4t) $ Transform.cornerPinShaderFrom (p1f, p2f, p3f, p4f) zeData
 
 cropLuna :: Rectangle (Exp Int) -> CropReformat -> Bool -> Image -> Image
 cropLuna rect reformat constantOutside = onEachChannel cropChannel

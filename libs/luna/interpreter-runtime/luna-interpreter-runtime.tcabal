@@ -22,4 +22,5 @@ Library
     Build-Depends:  base,
                     data-hash,
                     HMap,
+                    flowbox-serialization,
                     luna-target-ghchs
