@@ -12,7 +12,6 @@
 
 module Flowbox.Data.Convert where
 
-import           Control.Monad.Trans.Either
 import           Data.ByteString.Lazy       (ByteString)
 import qualified Data.ByteString.Lazy.Char8 as ByteString
 import qualified Data.Foldable              as Foldable
