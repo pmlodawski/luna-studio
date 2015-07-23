@@ -2,17 +2,29 @@
 precision highp float;
 #endif
 
+varying vec3 pos;
+uniform vec2 size;
 uniform int state;
 
 void main()
 {
+    vec3 borderColor;
     if (state == 0) {
-        gl_FragColor = vec4(0.5, 0.5, 0.5, 1.0);
+        borderColor = vec3(1.0, 0.0, 0.0);
     } else if (state == 1) {
-        gl_FragColor = vec4(1.0, 0.3, 0.3, 1.0);
+        borderColor = vec3(1.0, 1.0, 0.3);
     } else if (state == 2) {
-        gl_FragColor = vec4(0.3, 0.5, 0.3, 1.0);
+        borderColor = vec3(0.3, 0.5, 0.3);
     } else if (state == 3) {
-        gl_FragColor = vec4(0.3, 0.3, 0.5, 1.0);
+        borderColor = vec3(0.3, 0.3, 0.5);
     }
+
+    vec2 p = vec2(pos.x * size.x, pos.y * size.y);
+
+    if(p.x < 3.0 || p.x > size.x - 3.0 || p.y < 3.0 || p.y > size.y - 3.0) {
+        gl_FragColor = vec4(borderColor, 1.0);
+    } else {
+        gl_FragColor = vec4(0.3*borderColor, 1.0);
+    }
+
 }

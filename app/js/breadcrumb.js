@@ -10,20 +10,27 @@ var $$           = require('common'),
 
 
 exports.initialize = function() {
-    $$.breadcrumb = new THREE.Group();
-    $$.sceneHUD.add($$.breadcrumb);
+    $$.breadcrumb = {
+        mesh: new THREE.Group(),
+        buttons: []
+    };
+
+    $$.sceneHUD.add($$.breadcrumb.mesh);
 };
 
 exports.addButton = function(b) {
-    $$.breadcrumb.add(b.mesh);
+    $$.breadcrumb.mesh.add(b.mesh);
+    $$.breadcrumb.buttons.push(b);
 };
 
 exports.setButtonState = function(i, state) {
-    $$.breadcrumb.children[i].material.uniforms.state.value = state;
+    console.log(i,state);
+    $$.breadcrumb.buttons[i].uniforms.state.value = state;
 }
 
 exports.clear = function() {
-    _.each(_.clone($$.breadcrumb.children), function(c) { $$.breadcrumb.remove(c); });
+    _.each($$.breadcrumb.buttons, function(c) { $$.breadcrumb.mesh.remove(c); });
+    $$.breadcrumb.buttons = [];
 };
 
 exports.calculateTextWidth = function(txt) {

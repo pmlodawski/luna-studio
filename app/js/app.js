@@ -33,7 +33,7 @@ function start() {
 
 function initializeGl() {
     if(window.already_initialized) {
-        alert("Alredy initialized… it shouldn't happen");
+        location.reload();
     }
 
     window.already_initialized = true;
@@ -73,6 +73,7 @@ function addVersionToHud() {
   // obj.rotation.x = 180 * Math.PI/180;
   obj.scale.multiplyScalar(config.fontSize);
   obj.position.y = 20;
+  obj.position.x = 500;
 
   $$.sceneHUD.add(obj);
 }

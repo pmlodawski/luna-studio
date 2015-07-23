@@ -21,11 +21,11 @@ import qualified JS.Unsafe
 
 data Button
 
-foreign import javascript unsafe "new Button($1, new THREE.Vector2($2, $3), new THREE.Vector2($4, $5), $6)"
-    createButtonJS :: Int -> Double -> Double -> Double -> Double -> JSString -> IO (JSRef Button)
+foreign import javascript unsafe "new Button($1, $2, new THREE.Vector2($3, $4), new THREE.Vector2($5, $6))"
+    createButtonJS :: JSString -> Int -> Double -> Double -> Double -> Double -> IO (JSRef Button)
 
-createButton :: Int -> Vector2 Double -> Vector2 Double-> Text -> IO (JSRef Button)
-createButton bid pos size label = createButtonJS bid (pos ^. x) (pos ^. y) (size ^. x) (size ^. y) (lazyTextToJSString label)
+createButton :: Text -> Int -> Vector2 Double -> Vector2 Double -> IO (JSRef Button)
+createButton label state pos size = createButtonJS  (lazyTextToJSString label) state (pos ^. x) (pos ^. y) (size ^. x) (size ^. y)
 
 foreign import javascript unsafe "breadcrumb.addButton($1)"
     addBreadcrumb :: JSRef Button -> IO ()

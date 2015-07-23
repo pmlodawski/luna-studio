@@ -34,4 +34,4 @@ isOver :: Button -> Vector2 Double -> Bool
 isOver (Button _ _ pos size) mouse = (posHit (pos ^. x) (size ^. x) (mouse ^. x)) && (posHit (pos ^. y) (size ^. y) (mouse ^. y))
 
 toJSButton :: Button -> IO (JSRef JS.Button)
-toJSButton (Button label state pos size) = JS.createButton (fromEnum state) pos size label
+toJSButton (Button label state pos size) = JS.createButton label (fromEnum state) pos size

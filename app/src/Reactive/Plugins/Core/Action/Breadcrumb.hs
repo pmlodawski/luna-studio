@@ -55,7 +55,7 @@ instance ActionStateUpdater Action where
         newState  = case newActionCandidate of
             MouseMoving  pos   -> oldState &  Global.breadcrumb . Breadcrumb.buttons .~ newButtons where
             NewPath      path  -> oldState & Global.breadcrumb . Breadcrumb.path    .~ path
-                                      & Global.breadcrumb . Breadcrumb.buttons .~ buttons where
+                                      & Global.breadcrumb . Breadcrumb.buttons .~ (reverse buttons) where
                                           (buttons, _) = foldl button ([], 0) path where
                                           button (xs, left) name = ((Button.Button name Button.Normal (Vector2 left 0) (Vector2 width buttonHeight)):xs, left + width + buttonSpacing ) where
                                               width = (JS.calculateTextWidth name) + 2*buttonPadding

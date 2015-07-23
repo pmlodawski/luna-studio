@@ -7,19 +7,20 @@ var createText   = require('bmfont').render;
 var font         = require("font/LatoBlack-sdf");
 var textMaterial = require('font/text_material').graph;
 
-var vs = require('shaders/common.vert')();
+var vs = require('shaders/button.vert')();
 var fs = require('shaders/button.frag')();
 
-function Button(id, position, size, label) {
+function Button(label, state, position, size) {
+    console.log(arguments);
   var _this = this;
 
-  this.id = id;
   this.position = position;
   this.labelText = label;
   this.size = size;
 
   this.uniforms = {
-      state: { type: 'i', value: 1 }
+      state: { type: 'i',  value: state },
+      size:  { type: 'v2', value: size }
   };
 
   this.attributes = {};
@@ -28,10 +29,10 @@ function Button(id, position, size, label) {
     _this.uniforms[k] = $$.commonUniforms[k];
   });
 
-  var geometry = new THREE.PlaneGeometry(size.x, size.y);
-  geometry.applyMatrix( new THREE.Matrix4().makeTranslation(size.x/2.0, size.y/2.0, 0) );
+  var geometry = new THREE.PlaneGeometry(1, 1);
+  geometry.applyMatrix( new THREE.Matrix4().makeTranslation(0.5, 0.5, 0) );
 
-  this.mesh = new THREE.Mesh(
+  this.background = new THREE.Mesh(
       geometry,
       new THREE.ShaderMaterial({
         uniforms:       this.uniforms,
@@ -43,6 +44,14 @@ function Button(id, position, size, label) {
         side:           THREE.DoubleSide
       })
   );
+
+  this.background.scale.x = size.x;
+  this.background.scale.y = size.y;
+
+
+  this.mesh = new THREE.Group();
+
+  this.mesh.add(this.background);
 
   this.moveTo(position.x, position.y);
 
