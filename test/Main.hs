@@ -11,7 +11,7 @@
 
 module Main where
 
-import Flowbox.Prelude hiding (simple, empty)
+import Flowbox.Prelude hiding (simple, empty, Indexable)
 import Data.Repr
 
 --import qualified Luna.Inference.Type as Type
@@ -42,6 +42,15 @@ import Data.GraphViz.Types.Canonical
 import Data.GraphViz.Attributes.Complete
 import Data.GraphViz.Printing (toDot)
 import Data.GraphViz.Commands
+
+import Data.Vector hiding ((++), splitAt, length, convert)
+import qualified Data.Vector as Vector
+import Data.Vector.Mutable hiding (splitAt, length, convert)
+import Data.Maybe (fromJust)
+
+import Data.Indexable
+
+import Data.Containers
 
 add :: Int -> Int -> Int
 add = (+)
@@ -90,341 +99,486 @@ data Key t = Key { fromKey :: ID } deriving (Show) -- { overKey :: Lens' Graph (
 
 --makeLenses ''Key
 
-type Connection t = Key t
 
 type Name = FastString
 
-data Expr = Var      { _name :: Name                                                      }
-          | Cons     { _name :: Name                                                      }
-          | Accessor { _name :: Name, _base :: Connection Expr                            }
-          | App      {                _base :: Connection Expr, _args :: [Arg]            }
-          deriving (Show)
 
-instance Repr Expr where
-    repr = \case
-        Var      n   -> "Var "      <> show (unpackFS n)
-        Cons     n   -> "Cons "     <> show (unpackFS n)
-        Accessor n _ -> "Accessor " <> show (unpackFS n)
-        App      {}  -> "App"
+type HExpr h = h (Expr h)
 
---data Var = Var Name deriving (Show)
+data AST h = ASTExpr (h Expr)
+         --deriving (Show)
 
-data Arg = Arg { _label :: Maybe Name, _val :: Connection Expr }
-         deriving (Show)
+data Expr h = Var      { _name :: Name                                                      }
+            | Cons     { _name :: Name                                                      }
+            | Accessor { _name :: Name, _base :: HExpr h                            }
+            | App      {                _base :: HExpr h, _args :: [Arg h]            }
+            | Lambda
+            | RecUpd
+            | Case
+            | Typed
+            -- | Assignment
+            | Decons
+            | Curry
+            -- | Meta
+            -- | Tuple
+            -- | Grouped
+            | Decl
+            | Lit
+            | Native
+            | Wildcard
+            -- | Tuple
+            -- | List
+
+data Ptr i a = Ptr i
+
+newtype Unbounded a = Unbounded a deriving (Show, Functor)
+
+--instance At (Unbounded (Vector a)) where
+    --at :: Index m -> IndexedLens' (Index m) m (Maybe (IxValue m))
+
+type instance IxValue (Unbounded a) = IxValue a
 
 
-class ArgCons a b | a -> b where
-  arg :: a -> b
+unsafeAt :: (UncheckedGetIdx m, UncheckedSetIdx m) => Index m -> Lens' m (ElementOf m)
+unsafeAt i = lens (uncheckedGetIdx i) (flip $ uncheckedSetIdx i)
 
-instance ArgCons Name (Connection Expr -> Arg) where
-  arg = Arg . Just
-
-instance ArgCons (Connection Expr) Arg where
-  arg = Arg Nothing
+--overKey (Key i) = nodes . at i . mapping hiddenLens
+--overKey (Ptr i) = nodes . at i . mapping hiddenLens
 
 
+--test :: Vector Int -> Vector Int
+--test v = v & at 5 .~ 8
+
+--class UncheckedGetIdx a where
+--    uncheckedGetIdx :: IndexType a -> a -> ElementOf a
+
+--class UncheckedSetIdx a where
+--    uncheckedSetIdx :: (IndexType a) -> (ElementOf a) -> a -> a
+
+--test :: Int -> Iso' a b
+--test i = iso (uncheckedGetIdx i) (uncheckedSetIdx i)
+
+--test =
+
+
+instance (Typeable a, Show i) => Show (Ptr i a) where
+    show (Ptr i) = "Ptr \"" <> show (typeOf (undefined :: a)) <> "\" " <> show i
+
+
+
+deriving instance Show (HExpr h) => Show (Expr h)
+
+        --instance Repr Expr where
+        --    repr = \case
+        --        Var      n   -> "Var "      <> show (unpackFS n)
+        --        Cons     n   -> "Cons "     <> show (unpackFS n)
+        --        Accessor n _ -> "Accessor " <> show (unpackFS n)
+        --        App      {}  -> "App"
+
+        ----data Var = Var Name deriving (Show)
+
+data Arg h = Arg { _label :: Maybe Name, _val :: HExpr h }
+
+deriving instance Show (HExpr h) => Show (Arg h)
+
+makeLenses ''Expr
 makeLenses ''Arg
---data Node = Node { _tp   :: ID
---                 , _expr :: Expr
---                 , _out  :: [Connection Expr]
---                 } deriving (Show)
+
+
+        --class ArgCons a b | a -> b where
+        --  arg :: a -> b
+
+        --instance ArgCons Name (Key Expr -> Arg) where
+        --  arg = Arg . Just
+
+        --instance ArgCons (Key Expr) Arg where
+        --  arg = Arg Nothing
+
+
+        ----data Node = Node { _tp   :: ID
+        ----                 , _expr :: Expr
+        ----                 , _out  :: [Key Expr]
+        ----                 } deriving (Show)
 
 
 
-----class IsNode
---class Node n where
---    inputs  :: n -> [Connection Expr]
---    outputs :: n -> [Connection Expr]
-
-
-
-
-type IsExpr a = (Show a, Typeable a, Repr a)
-
-
---instance Convertible Var Expr where
---    convert = VarE
-
-
---inputs = [0]
-
---g = empty
---  & Graph.insNode (0, Node 0 $ Input    "a"  )
---  & Graph.insNode (1, Node 1 $ Accessor "foo")
---  & Graph.insNode (2, Node 2 $ App)
---  & Graph.insNode (3, Node 3 $ Cons "Main")
---  & Graph.insNode (4, Node 4 $ Accessor "bar")
---  & Graph.insNode (5, Node 5 $ App)
-
-
---newtype Key t = Key Int
+        ------class IsNode
+        ----class Node n where
+        ----    inputs  :: n -> [Key Expr]
+        ----    outputs :: n -> [Key Expr]
 
 
 
 
-
-data Graph = Graph { _nodes       :: IntMap HiddenNode
-                   , _argNames    :: [Name]
-                   --, _edges :: IntMap (Connection Expr) -- a patterny?
-                   }
+        --type IsExpr a = (Show a, Typeable a, Repr a)
 
 
+        ----instance Convertible Var Expr where
+        ----    convert = VarE
 
 
+        ----inputs = [0]
 
-data HiddenNode where
-    HiddenNode :: (Show a, Typeable a, Repr a) => a -> HiddenNode
+        ----g = empty
+        ----  & Graph.insNode (0, Node 0 $ Input    "a"  )
+        ----  & Graph.insNode (1, Node 1 $ Accessor "foo")
+        ----  & Graph.insNode (2, Node 2 $ App)
+        ----  & Graph.insNode (3, Node 3 $ Cons "Main")
+        ----  & Graph.insNode (4, Node 4 $ Accessor "bar")
+        ----  & Graph.insNode (5, Node 5 $ App)
 
-instance Show HiddenNode where show (HiddenNode a) = show a
 
-instance Repr HiddenNode where repr (HiddenNode a) = repr a
+        ----newtype Key t = Key Int
+
+
+--- === [TOEXTRACT] Instances ===
+instance Default (Vector a) where def = mempty
+
+--- === [TOEXTRACT] GraphClass ===
+
+-- TODO: GraphClass -> Graph w module
+class GraphClass g where
+    type Node g
+
+
+--- === NodeObject ===
+
+type NodeVal a = (Show a, Typeable a, Repr a)
+
+data NodeObject where
+    NodeObject :: NodeVal a => a -> NodeObject
+
+
+fromNodeObject :: NodeObject -> a
+fromNodeObject (NodeObject a) = unsafeCoerce a
+
+hiddenLens :: NodeVal a => Iso' NodeObject a
+hiddenLens = iso fromNodeObject NodeObject
+
+-- instances
+
+instance Show NodeObject where show (NodeObject a) = show a
+instance Repr NodeObject where repr (NodeObject a) = repr a
+
+
+--- === Graph ===
+
+data Graph cont = Graph { _nodes      :: cont NodeObject
+                        , _argNames   :: [Name]
+                        }
 
 makeLenses ''Graph
 
+type NodePtr m a = Ptr (Index (m NodeObject)) a
+type NodeGraph m = (ElementOf (m NodeObject) ~ NodeObject, UncheckedSetIdx (m NodeObject), UncheckedGetIdx (m NodeObject))
 
-inputs :: Graph -> ID -> [Connection Expr]
-inputs g id = case IntMap.lookup id (g ^. nodes) of
-    Nothing -> []
-    Just n  -> exprOutputs (fromHiddenNode n)
-    where exprOutputs :: Expr -> [Connection Expr]
-          exprOutputs = \case
-              Accessor _ c  -> [c]
-              App      c as -> c : fmap (view val) as
-              _             -> []
+unsafeOverPtr :: (NodeVal a, NodeGraph m)
+              => NodePtr m a -> Lens' (Graph m) a
+unsafeOverPtr (Ptr i) = nodes . unsafeAt i . hiddenLens
+
+unsafeSet :: (NodeVal a, NodeGraph m) => NodePtr m a -> a -> Graph m -> Graph m
+unsafeSet ptr a = unsafeOverPtr ptr .~ a
+
+unsafeGet :: (NodeVal a, NodeGraph m) => NodePtr m a -> Graph m -> a
+unsafeGet ptr = view $ unsafeOverPtr ptr
 
 
 
+insert :: (Convertible a NodeObject, Appendable' m, Indexable (m (NodeObject)), ElementOf (m NodeObject) ~ NodeObject)
+       => a -> Graph m -> (Graph m, NodePtr m a)
+insert a g = (g', Ptr . lastIdx $ g' ^. nodes) where
+    g' = g & nodes %~ (flip append' (convert a))
 
-instance Show Graph where
-    show g = "Graph " <> show (g ^. argNames) <> " " <> show (g ^. nodes)
+--        ---- instances
 
-instance Default Graph where
+deriving instance Show (m NodeObject) => Show (Graph m)
+
+instance Default (m NodeObject) => Default (Graph m) where
     def = Graph def def
 
---keyBy
-
-m = mempty :: IntMap Char
 
 
-unsafeKeyByID :: ID -> Key a
-unsafeKeyByID = Key
+--- === GraphBuilder ===
 
---unsafeKeyByID :: IsExpr a => Int -> Key a
---unsafeKeyByID i = Key $ nodes . at i . mapping hiddenLens
-
-
-overKey (Key i) = nodes . at i . mapping hiddenLens
-
-hiddenLens :: IsExpr a => Iso' HiddenNode a
-hiddenLens = iso fromHiddenNode HiddenNode
-
-
-fromHiddenNode :: HiddenNode -> a
-fromHiddenNode (HiddenNode a) = unsafeCoerce a
-
---unhideExpr :: HiddenNode -> Expr
---unhideExpr (HiddenNode a) = convert a
-
-
-insert :: IsExpr a => Key a -> a -> Graph -> Graph
-insert key a = overKey key .~ (Just a)
-
-
-insertAt :: IsExpr a => Int -> a -> Graph -> Graph
-insertAt = insert . unsafeKeyByID
-
-lookup :: IsExpr a => Key a -> Graph -> Maybe a
-lookup = view . overKey
-
---lookupAt :: Int -> Graph -> Maybe Expr
---lookupAt i g = unhideExpr <$> IntMap.lookup i (view nodes g)
-
---lookupAt2 :: Int -> Graph -> Maybe Expr
---lookupAt2 i g = unhideExpr <$> IntMap.lookup i (view nodes g)
-
-convertIso :: IsoConvertible a b => Iso' a b
-convertIso = iso convert convert
-
---instance {-# OVERLAPPABLE #-} IsoConvertible a b => Convertible (Key a) (Key b) where convert (Key lens) = Key $ lens . convertIso
-
-
-
-type MonadGraphBuilder m = MonadState GraphBuilder m
-
-data GraphBuilder = GraphBuilder { _lastConnection :: Int
-                                 , _lastNode       :: Int
-                                 , _graph          :: Graph
-                                 }
-
-instance Default GraphBuilder where
-    def = GraphBuilder def def def
-
-
+data GraphBuilder c = GraphBuilder { _nodeScope :: [Int]
+                                   , _graph     :: Graph c
+                                   }
 
 makeLenses ''GraphBuilder
 
-getBuilder :: MonadGraphBuilder m => m GraphBuilder
-getBuilder = get
+type MonadGraphBuilder c s m = (MonadState s m, HasGraphBuilder s c)
 
-putBuilder :: MonadGraphBuilder m => GraphBuilder -> m ()
-putBuilder = put
+class HasGraphBuilder a c | a -> c where
+    graphBuilder :: Simple Lens a (GraphBuilder c)
 
-newConnection :: (IsExpr a, MonadGraphBuilder m) => m (Connection a)
-newConnection = do
-    bldr <- getBuilder
-    let i = bldr ^. lastConnection
-    put $ bldr & lastConnection .~ (i + 1)
-    return $ unsafeKeyByID i
+-- utils
 
+withGraphBuilder :: MonadGraphBuilder c s m => (GraphBuilder c -> GraphBuilder c) -> m ()
+withGraphBuilder f = do
+    s <- get
+    put $ s & graphBuilder %~ f
 
-newNodeKey :: (IsExpr a, MonadGraphBuilder m) => m (Key a)
-newNodeKey = do
-    bldr <- getBuilder
-    let i = bldr ^. lastNode
-    put $ bldr & lastNode .~ (i + 1)
-    return $ unsafeKeyByID i
+requestNodeID :: MonadGraphBuilder c s m => m ID
+requestNodeID = do
+    s <- get
+    let nsLens     = graphBuilder . nodeScope
+        (id : ids) = s ^. nsLens
+    put $ s & nsLens .~ ids
+    return id
 
-registerNode :: (MonadGraphBuilder m, IsExpr a) => Key a -> a -> m ()
-registerNode k a = withBuilder $ graph %~ insert k a
+releaseNodeID :: MonadGraphBuilder c s m => ID -> m ()
+releaseNodeID id = withGraphBuilder (nodeScope %~ (id:))
 
-registerInput :: MonadGraphBuilder m => Name -> m ()
-registerInput name = withBuilder $ graph . argNames %~ (<> [name])
+-- instances
 
-mkNode :: (MonadGraphBuilder m, IsExpr a) => a -> m (Key a)
-mkNode a = do
-    key <- newNodeKey
-    registerNode key a
-    return key
+instance Default (Graph c) => Default (GraphBuilder c) where
+    def = GraphBuilder def def
 
 
+--registerNode :: (MonadGraphBuilder m, IsExpr a) => Key a -> a -> m ()
+--registerNode k a = withBuilder $ graph %~ insert k a
 
-withBuilder :: MonadGraphBuilder m => (GraphBuilder -> GraphBuilder) -> m ()
-withBuilder f = do
-    bldr <- getBuilder
-    putBuilder $ f bldr
+--registerInput :: MonadGraphBuilder m => Name -> m ()
+--registerInput name = withBuilder $ graph . argNames %~ (<> [name])
 
---input :: MonadGraphBuilder m => Name -> m (Key Expr)
+--mkNode :: (MonadGraphBuilder m, IsExpr a) => a -> m (Key a)
+--mkNode a = do
+--    key <- newNodeKey
+--    registerNode key a
+--    return key
 
-var :: MonadGraphBuilder m => Name -> m (Key Expr)
-var n = mkNode $ Var n
+-------------------------------
 
-input :: MonadGraphBuilder m => Name -> m (Key Expr)
-input n = do registerInput n
-             var n
-
---var :: MonadGraphBuilder m => Name -> m (Key Expr)
---var n = mkNode $ VarE $ Var n
-
-
-cons :: MonadGraphBuilder m => Name -> m (Key Expr)
-cons n = mkNode $ Cons n
-
-
-class WithKeyLike m a where
-    withKeyLike :: a -> (Key Expr -> m (Key Expr)) -> (m (Key Expr))
-
-instance WithKeyLike m (Key Expr) where
-    withKeyLike key f = f key
-
-instance (m ~ n, Monad m) => WithKeyLike m (n (Key Expr)) where
-    withKeyLike key f = flip withKeyLike f =<< key
-
-
-
---access :: (PolyFunc1 (Key Expr) m a, MonadGraphBuilder m) => a -> Name -> m (Key Expr)
---access key name = polyFunc1 (mkNode . Accessor name) key
-
---app ::
-
-
-access :: MonadGraphBuilder m => Name -> Key Expr -> m (Key Expr)
-access name key = mkNode $ Accessor name key
-
-app :: MonadGraphBuilder m => Key Expr -> [Arg] -> m (Key Expr)
-app base args = mkNode $ App base args
-
-appArgs :: MonadGraphBuilder m => Key Expr -> [Key Expr] -> m (Key Expr)
-appArgs base = app base . fmap arg
-
-g1 :: Graph
-g1 = view graph $ flip execState def $ do
-    a    <- input "a"
-    foo  <- access "foo" a
-    b    <- foo `appArgs` [a]
-    mod  <- var "Main"
-    bar  <- access "bar" mod
-    c    <- bar `appArgs` [b]
-    plus <- access "plus" mod
-    out  <- plus `appArgs` [c, a]
-    return ()
-
+--g :: Graph (Vector NodeObject)
+--g = def
 
 main = do
-    --let a = unsafeCoerce (return (1:: Int)) :: Monad m => m Int
-        --b = unsafeCoerce a :: [Int]
-        --a = mkObject (1 :: Int)
-        --b = mkObject (2 :: Int)
-        --s = mkObject ("ala" :: String)
-        --c = appSimple add_Int [a,b]
-        --c = appSimple (toDataFunc add2) [a,b]
-        --x = appSimple (toDataFunc testf) [a,s]
-
-
-    --print $ unpackInt a
-    --print $ unpackInt b
-    --print $ unpackInt c
-    --print $ unpackTest x
-    --let ss = fmap (fromString . show) [1..10000] :: [FastString]
-    --    a  = (==) <$> ss <*> ss
-    --    b  = length $ filter (==True) a
-
-    --print $ b
-
-    print $ (unsafeCoerce $ appx (1 :: Int) $ appx (2 :: Int) f :: Int)
-    print "end"
-    print g1
-    print "=========="
-    print $ toDot (toGraphViz g1)
-    runGraphviz (toGraphViz g1) Png "/tmp/out.png"
-    --print graph
-    --print b
     --print g
+    let v = Vector.fromList $ [1,2,3] :: Vector Int
+        --v2 = Vector.modify (\v -> write v 3 0) v
+    --print v2
+    print "end"
 
 
-toGraphViz :: Graph -> DotGraph Int
-toGraphViz g = DotGraph { strictGraph     = False
-                        , directedGraph   = True
-                        , graphID         = Nothing
-                        , graphStatements = DotStmts { attrStmts = []
-                                                     , subGraphs = []
-                                                     , nodeStmts = nodeStmts
-                                                     , edgeStmts = edgeStmts
-                                                     }
-                        }
-    where elems           = IntMap.assocs $ g ^. nodes
-          nodeIds         = fmap fst elems
-          nodeLabels      = fmap (repr . snd) elems
-          labeledNode s a = DotNode a [Label . StrLabel $ fromString s]
-          nodeStmts       = fmap (uncurry labeledNode) $ zip nodeLabels nodeIds
-          nodeInEdges   n = zip (fmap fromKey $ inputs g n) $ repeat n
-          inEdges         = concat $ fmap nodeInEdges nodeIds
-          mkEdge      a b = DotEdge a b []
-          edgeStmts       = fmap (uncurry mkEdge) inEdges
 
-gv :: DotGraph String
-gv = DotGraph { strictGraph = False
-         , directedGraph = True
-         , graphID = Just (Str "G")
-         , graphStatements = DotStmts { attrStmts = []
-                                      , subGraphs = []
-                                     , nodeStmts = [ DotNode "a0" []
-                                                   , DotNode "a1" []
-                                                   , DotNode "a2" []
-                                                   , DotNode "a3" []]
-                                     , edgeStmts = [ DotEdge "a0" "a1" []
-                                                   , DotEdge "a1" "a2" []
-                                                   , DotEdge "a2" "a3" []
-                                                   , DotEdge "a3" "a0" []
-                                                   ]
-                                      }
-            }
+
+
+        --inputs :: Graph -> ID -> [Key Expr]
+        --inputs g id = case IntMap.lookup id (g ^. nodes) of
+        --    Nothing -> []
+        --    Just n  -> exprOutputs (fromNodeObject n)
+        --    where exprOutputs :: Expr -> [Key Expr]
+        --          exprOutputs = \case
+        --              Accessor _ c  -> [c]
+        --              App      c as -> c : fmap (view val) as
+        --              _             -> []
+
+
+        ----keyBy
+
+
+        --unsafeKeyByID :: ID -> Key a
+        --unsafeKeyByID = Key
+
+        ----unsafeKeyByID :: IsExpr a => Int -> Key a
+        ----unsafeKeyByID i = Key $ nodes . at i . mapping hiddenLens
+
+
+        --overKey (Key i) = nodes . at i . mapping hiddenLens
+
+        --hiddenLens :: IsExpr a => Iso' NodeObject a
+        --hiddenLens = iso fromNodeObject NodeObject
+
+
+        --fromNodeObject :: NodeObject -> a
+        --fromNodeObject (NodeObject a) = unsafeCoerce a
+
+        ----unhideExpr :: NodeObject -> Expr
+        ----unhideExpr (NodeObject a) = convert a
+
+
+        --insert :: IsExpr a => Key a -> a -> Graph -> Graph
+        --insert key a = overKey key .~ (Just a)
+
+
+        --insertAt :: IsExpr a => Int -> a -> Graph -> Graph
+        --insertAt = insert . unsafeKeyByID
+
+        --lookup :: IsExpr a => Key a -> Graph -> Maybe a
+        --lookup = view . overKey
+
+        ----lookupAt :: Int -> Graph -> Maybe Expr
+        ----lookupAt i g = unhideExpr <$> IntMap.lookup i (view nodes g)
+
+        ----lookupAt2 :: Int -> Graph -> Maybe Expr
+        ----lookupAt2 i g = unhideExpr <$> IntMap.lookup i (view nodes g)
+
+        --convertIso :: IsoConvertible a b => Iso' a b
+        --convertIso = iso convert convert
+
+        ----instance {-# OVERLAPPABLE #-} IsoConvertible a b => Convertible (Key a) (Key b) where convert (Key lens) = Key $ lens . convertIso
+
+
+
+        --type MonadGraphBuilder m = MonadState GraphBuilder m
+
+        --data GraphBuilder = GraphBuilder { _lastKey :: Int
+        --                                 , _lastNode       :: Int
+        --                                 , _graph          :: Graph
+        --                                 }
+
+        --instance Default GraphBuilder where
+        --    def = GraphBuilder def def def
+
+
+
+        --makeLenses ''GraphBuilder
+
+        --getBuilder :: MonadGraphBuilder m => m GraphBuilder
+        --getBuilder = get
+
+        --putBuilder :: MonadGraphBuilder m => GraphBuilder -> m ()
+        --putBuilder = put
+
+        --newKey :: (IsExpr a, MonadGraphBuilder m) => m (Key a)
+        --newKey = do
+        --    bldr <- getBuilder
+        --    let i = bldr ^. lastKey
+        --    put $ bldr & lastKey .~ (i + 1)
+        --    return $ unsafeKeyByID i
+
+
+        --newNodeKey :: (IsExpr a, MonadGraphBuilder m) => m (Key a)
+        --newNodeKey = do
+        --    bldr <- getBuilder
+        --    let i = bldr ^. lastNode
+        --    put $ bldr & lastNode .~ (i + 1)
+        --    return $ unsafeKeyByID i
+
+        --registerNode :: (MonadGraphBuilder m, IsExpr a) => Key a -> a -> m ()
+        --registerNode k a = withBuilder $ graph %~ insert k a
+
+        --registerInput :: MonadGraphBuilder m => Name -> m ()
+        --registerInput name = withBuilder $ graph . argNames %~ (<> [name])
+
+        --mkNode :: (MonadGraphBuilder m, IsExpr a) => a -> m (Key a)
+        --mkNode a = do
+        --    key <- newNodeKey
+        --    registerNode key a
+        --    return key
+
+
+
+        --withBuilder :: MonadGraphBuilder m => (GraphBuilder -> GraphBuilder) -> m ()
+        --withBuilder f = do
+        --    bldr <- getBuilder
+        --    putBuilder $ f bldr
+
+        ----input :: MonadGraphBuilder m => Name -> m (Key Expr)
+
+        --var :: MonadGraphBuilder m => Name -> m (Key Expr)
+        --var n = mkNode $ Var n
+
+        --input :: MonadGraphBuilder m => Name -> m (Key Expr)
+        --input n = do registerInput n
+        --             var n
+
+        ----var :: MonadGraphBuilder m => Name -> m (Key Expr)
+        ----var n = mkNode $ VarE $ Var n
+
+
+        --cons :: MonadGraphBuilder m => Name -> m (Key Expr)
+        --cons n = mkNode $ Cons n
+
+
+        --class WithKeyLike m a where
+        --    withKeyLike :: a -> (Key Expr -> m (Key Expr)) -> (m (Key Expr))
+
+        --instance WithKeyLike m (Key Expr) where
+        --    withKeyLike key f = f key
+
+        --instance (m ~ n, Monad m) => WithKeyLike m (n (Key Expr)) where
+        --    withKeyLike key f = flip withKeyLike f =<< key
+
+
+
+        ----access :: (PolyFunc1 (Key Expr) m a, MonadGraphBuilder m) => a -> Name -> m (Key Expr)
+        ----access key name = polyFunc1 (mkNode . Accessor name) key
+
+        ----app ::
+
+
+        --access :: MonadGraphBuilder m => Name -> Key Expr -> m (Key Expr)
+        --access name key = mkNode $ Accessor name key
+
+        --app :: MonadGraphBuilder m => Key Expr -> [Arg] -> m (Key Expr)
+        --app base args = mkNode $ App base args
+
+        --appArgs :: MonadGraphBuilder m => Key Expr -> [Key Expr] -> m (Key Expr)
+        --appArgs base = app base . fmap arg
+
+        --g1 :: Graph
+        --g1 = view graph $ flip execState def $ do
+        --    a    <- input "a"
+        --    foo  <- access "foo" a
+        --    b    <- foo `appArgs` [a]
+        --    mod  <- var "Main"
+        --    bar  <- access "bar" mod
+        --    c    <- bar `appArgs` [b]
+        --    plus <- access "plus" mod
+        --    out  <- plus `appArgs` [c, a]
+        --    return ()
+
+
+        --main = do
+        --    --let a = unsafeCoerce (return (1:: Int)) :: Monad m => m Int
+        --        --b = unsafeCoerce a :: [Int]
+        --        --a = mkObject (1 :: Int)
+        --        --b = mkObject (2 :: Int)
+        --        --s = mkObject ("ala" :: String)
+        --        --c = appSimple add_Int [a,b]
+        --        --c = appSimple (toDataFunc add2) [a,b]
+        --        --x = appSimple (toDataFunc testf) [a,s]
+
+
+        --    --print $ unpackInt a
+        --    --print $ unpackInt b
+        --    --print $ unpackInt c
+        --    --print $ unpackTest x
+        --    --let ss = fmap (fromString . show) [1..10000] :: [FastString]
+        --    --    a  = (==) <$> ss <*> ss
+        --    --    b  = length $ filter (==True) a
+
+        --    --print $ b
+
+        --    print $ (unsafeCoerce $ appx (1 :: Int) $ appx (2 :: Int) f :: Int)
+        --    print "end"
+        --    print g1
+        --    print "=========="
+        --    print $ toDot (toGraphViz g1)
+        --    runGraphviz (toGraphViz g1) Png "/tmp/out.png"
+        --    --print graph
+        --    --print b
+        --    --print g
+
+
+        --toGraphViz :: Graph -> DotGraph Int
+        --toGraphViz g = DotGraph { strictGraph     = False
+        --                        , directedGraph   = True
+        --                        , graphID         = Nothing
+        --                        , graphStatements = DotStmts { attrStmts = []
+        --                                                     , subGraphs = []
+        --                                                     , nodeStmts = nodeStmts
+        --                                                     , edgeStmts = edgeStmts
+        --                                                     }
+        --                        }
+        --    where elems           = IntMap.assocs $ g ^. nodes
+        --          nodeIds         = fmap fst elems
+        --          nodeLabels      = fmap (repr . snd) elems
+        --          labeledNode s a = DotNode a [Label . StrLabel $ fromString s]
+        --          nodeStmts       = fmap (uncurry labeledNode) $ zip nodeLabels nodeIds
+        --          nodeInEdges   n = zip3 [0..] (fmap fromKey $ inputs g n) (repeat n)
+        --          inEdges         = concat $ fmap nodeInEdges nodeIds
+        --          mkEdge  (n,a,b) = DotEdge a b [Label . StrLabel $ fromString $ show n]
+        --          edgeStmts       = fmap mkEdge inEdges
+
