@@ -8,7 +8,6 @@
 
 module Flowbox.ZMQ.RPC.Client where
 
-import           Control.Monad.Trans.Either
 import           System.ZMQ4.Monadic             (ZMQ)
 import qualified System.ZMQ4.Monadic             as ZMQ
 import qualified Text.ProtocolBuffers.Extensions as Extensions

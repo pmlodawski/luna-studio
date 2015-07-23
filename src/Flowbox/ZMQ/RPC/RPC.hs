@@ -7,9 +7,8 @@
 
 module Flowbox.ZMQ.RPC.RPC where
 
-import Control.Exception          (SomeException, try)
-import Control.Monad              (join)
-import Control.Monad.Trans.Either
+import Control.Exception (SomeException, try)
+import Control.Monad     (join)
 
 import Flowbox.Control.Error hiding (err)
 import Flowbox.Prelude
