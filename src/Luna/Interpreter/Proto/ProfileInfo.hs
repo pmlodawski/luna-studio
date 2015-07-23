@@ -17,12 +17,12 @@ import           Flowbox.Data.Convert
 import qualified Generated.Proto.Interpreter.ProfileInfo     as Gen
 import           Luna.Interpreter.Proto.CallPointPath        ()
 import           Luna.Interpreter.Session.Data.CallPointPath (CallPointPath)
-import           Luna.Interpreter.Session.ProfileInfo        (ProfileInfo (ProfileInfo))
+import           Luna.Interpreter.Session.Profile.Info       (ProfileInfo (ProfileInfo))
 
 
 
 instance ConvertPure ((Project.ID, CallPointPath), ProfileInfo) Gen.ProfileInfo where
-    encodeP (cpp, ProfileInfo cpuTime realTime) =
-        Gen.ProfileInfo (encodeP cpp) cpuTime (encodeP realTime)
-    decodeP (Gen.ProfileInfo cpp cpuTime realTime) =
-        (decodeP cpp, ProfileInfo cpuTime (decodeP realTime))
+    encodeP (cpp, ProfileInfo totalCpuTime totalRealTime compileTime computeTime) =
+        Gen.ProfileInfo (encodeP cpp) totalCpuTime (encodeP totalRealTime) (encodeP compileTime) (encodeP computeTime)
+    decodeP (Gen.ProfileInfo cpp totalCpuTime totalRealTime compileTime computeTime) =
+        (decodeP cpp, ProfileInfo totalCpuTime (decodeP totalRealTime) (decodeP compileTime) (decodeP computeTime))
