@@ -2,9 +2,26 @@
 precision highp float;
 #endif
 
+varying vec3 distanceL;
+varying vec3 distanceR;
+varying vec3 distanceB;
+
 uniform vec4 color;
+uniform float visible;
+uniform float camFactor;
 
 void main()
 {
-    gl_FragColor = color;
+    float factor = camFactor * 8.0;
+
+    float alphaL = min(1.0, factor * distanceL.x);
+    float alphaR = min(1.0, factor * distanceR.x);
+    float alphaB = min(1.0, factor * distanceB.x);
+
+
+    float alpha = min(alphaL, min(alphaR, alphaB));
+
+    vec4 colorShow = vec4(color.xyz, alpha);
+
+    gl_FragColor = colorShow;
 }

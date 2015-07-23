@@ -1,8 +1,8 @@
 "use strict";
 
-var vs = require('shaders/common.vert')();
+var $$ = require('common');
+var vs = require('shaders/port.vert')();
 var fs = require('shaders/port.frag')();
-
 
 var triangleRatio = 0.8;
 var size          = 12;
@@ -14,7 +14,7 @@ var halfHeight = triangleHeight / 2.0;
 var dist  = nodeRadius + halfHeight + distFromRim;
 
 function Port(id, angle, out) {
-  var geometry;
+  var _this = this;
   this.id = id;
   this.out = out;
 
@@ -25,28 +25,63 @@ function Port(id, angle, out) {
                      new THREE.Vector3(-halfHeight, size *  triangleRatio * 0.5, 0.0),
                      new THREE.Vector3(-halfHeight, size * -triangleRatio * 0.5, 0.0)];
 
-  var inputPort  = [ new THREE.Vector3( halfHeight, size *  triangleRatio * 0.5, 0.0),
-                     new THREE.Vector3(-halfHeight,                         0.0, 0.0),
-                     new THREE.Vector3( halfHeight, size * -triangleRatio * 0.5, 0.0)];
+  var inputPort  = [ new THREE.Vector3(-halfHeight,                         0.0, 0.0),
+                     new THREE.Vector3( halfHeight, size * -triangleRatio * 0.5, 0.0),
+                     new THREE.Vector3( halfHeight, size *  triangleRatio * 0.5, 0.0)];
 
   var portVert = out ? outputPort  : inputPort;
   var color    = out ? outputColor : inputColor;
 
-  geometry = new THREE.Geometry();
-  portVert.forEach( function(vert) {
-    geometry.vertices.push(vert);
+  this.attributes = {
+    posL: {
+      type: 'v3',
+      value: [
+        new THREE.Vector3(0.0, 1.0, 1.0),
+        new THREE.Vector3(0.0, 1.0, 1.0),
+        new THREE.Vector3(1.0, 1.0, 0.0)
+      ]
+    },
+    posR: {
+      type: 'v3',
+      value: [
+        new THREE.Vector3(0.0, 1.0, 1.0),
+        new THREE.Vector3(1.0, 1.0, 0.0),
+        new THREE.Vector3(0.0, 1.0, 1.0)
+      ]
+    },
+    posB: {
+      type: 'v3',
+      value: [
+        new THREE.Vector3(1.0, 1.0, 0.0),
+        new THREE.Vector3(0.0, 1.0, 1.0),
+        new THREE.Vector3(0.0, 1.0, 1.0)
+      ]
+    }
+
+  };
+
+  this.uniforms = {
+    color: { type: 'v4', value: color }
+  };
+
+  Object.keys($$.commonUniforms).forEach(function(k) {
+    _this.uniforms[k] = $$.commonUniforms[k];
   });
-  geometry.faces.push(new THREE.Face3(0, 1, 2));
+
+  this.geometry = new THREE.Geometry();
+  portVert.forEach( function(vert) {
+    _this.geometry.vertices.push(vert);
+  });
+  this.geometry.faces.push(new THREE.Face3(0, 1, 2));
   this.mesh = new THREE.Mesh(
-			geometry,
+			this.geometry,
 			new THREE.ShaderMaterial( {
-				uniforms: {
-					color: { type: 'v4', value: color }
-				},
+        uniforms:       this.uniforms,
+        attributes:     this.attributes,
 				vertexShader:   vs,
 				fragmentShader: fs,
-				transparent: true,
-				blending: THREE.NormalBlending
+				transparent:    true,
+				blending:       THREE.NormalBlending
   	})
 	);
 
