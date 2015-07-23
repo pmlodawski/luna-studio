@@ -4,12 +4,12 @@ var $$ = require('common');
 var vs = require('shaders/connection.vert')();
 var fs = require('shaders/connection.frag')();
 
-var color = new THREE.Vector4(0.8, 0.8, 0.0, 0.8);
+var color = new THREE.Vector4(1.0, 0.95, 0.05, 0.6);
 
 function Connection(id) {
   var _this = this;
   this.id = id;
-  this.geometry = new THREE.PlaneGeometry(1.0, 1.5);
+  this.geometry = new THREE.PlaneGeometry(1.0, 10.0);
 
   this.attributes = {
     pos: {
