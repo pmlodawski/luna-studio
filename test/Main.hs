@@ -11,7 +11,7 @@
 
 module Main where
 
-import Flowbox.Prelude hiding (simple, empty, Indexable)
+import Flowbox.Prelude hiding (simple, empty, Indexable, Simple)
 import Data.Repr
 
 --import qualified Luna.Inference.Type as Type
@@ -226,14 +226,14 @@ instance Node (Expr h) (HExpr h) where
 
 
 
-        --class ArgCons a b | a -> b where
-        --  arg :: a -> b
+class ArgCons a b where
+  arg :: a -> b
 
-        --instance ArgCons Name (Key Expr -> Arg) where
-        --  arg = Arg . Just
+instance ArgCons Name (HExpr h -> Arg h) where
+  arg = Arg . Just
 
-        --instance ArgCons (Key Expr) Arg where
-        --  arg = Arg Nothing
+instance ArgCons (HExpr h) (Arg h) where
+  arg = Arg Nothing
 
 
         ----data Node = Node { _tp   :: ID
@@ -371,7 +371,7 @@ class Monad m => MonadBldrState c m | m -> c where
 
 
 class HasBldrState a c | a -> c where
-    bldrState :: Simple Lens a (BldrState c)
+    bldrState :: Lens' a (BldrState c)
 
 instance HasBldrState (BldrState c) c where
     bldrState = id
@@ -449,6 +449,11 @@ instance GraphBuilderMonad c a => ASTBuilder a (GraphBuilder c) where
 
 var = add . Var
 accessor name el = add $ Accessor name el
+access = flip accessor
+
+app base args = add $ App base args
+appArgs base = app base . fmap arg
+
 
 foo :: ASTBuilder Expr m => m ()
 foo = do
@@ -476,17 +481,39 @@ runNodeBuilder = view graph . flip execState def
 g1 :: Graph (Vector NodeObject)
 g1 = runNodeBuilder foo
 
+
+g2 :: Graph (Vector NodeObject)
+g2 = runNodeBuilder $ do
+    a    <- var "a"
+    mod  <- var "Main"
+    foo  <- a    @.  "foo"
+    b    <- foo  @$$ [a]
+    bar  <- mod  @.  "bar"
+    c    <- bar  @$$ [b]
+    plus <- mod  @.  "plus"
+    out  <- plus @$$ [c, a]
+    return ()
+
+(@.)  = access
+(@$)  = app
+(@$$) = appArgs
+
 main = do
-    print g1
-    print $ toDot (toGraphViz g1)
-    runGraphviz (toGraphViz g1) Png "/tmp/out.png"
+    let g = g2
+    print g
+    print $ toDot (toGraphViz g)
+    runGraphviz (toGraphViz g) Png "/tmp/out.png"
     print "end"
 
 
-
 data Label a e = Label a e
+type Labeled l a = Label l (a (Label l))
+type LExpr l = Labeled l Expr
 
-newtype Mu f = Mu (f (Mu f))
+newtype Simple a = Simple a deriving (Show)
+type SExpr = Simple (Expr Simple)
+
+--newtype Mu f = Mu (f (Mu f))
 
 
 --inputs' :: Graph (Vector NodeObject) -> ID -> [Ptr Int (Expr (Ptr Int))]
@@ -515,222 +542,4 @@ toGraphViz g = DotGraph { strictGraph     = False
 
 
 
-        --inputs :: Graph -> ID -> [Key Expr]
-        --inputs g id = case IntMap.lookup id (g ^. nodes) of
-        --    Nothing -> []
-        --    Just n  -> exprOutputs (fromNodeObject n)
-        --    where exprOutputs :: Expr -> [Key Expr]
-        --          exprOutputs = \case
-        --              Accessor _ c  -> [c]
-        --              App      c as -> c : fmap (view val) as
-        --              _             -> []
-
-
-        ----keyBy
-
-
-        --unsafeKeyByID :: ID -> Key a
-        --unsafeKeyByID = Key
-
-        ----unsafeKeyByID :: IsExpr a => Int -> Key a
-        ----unsafeKeyByID i = Key $ nodes . at i . mapping hiddenLens
-
-
-        --overKey (Key i) = nodes . at i . mapping hiddenLens
-
-        --hiddenLens :: IsExpr a => Iso' NodeObject a
-        --hiddenLens = iso fromNodeObject NodeObject
-
-
-        --fromNodeObject :: NodeObject -> a
-        --fromNodeObject (NodeObject a) = unsafeCoerce a
-
-        ----unhideExpr :: NodeObject -> Expr
-        ----unhideExpr (NodeObject a) = convert a
-
-
-        --insert :: IsExpr a => Key a -> a -> Graph -> Graph
-        --insert key a = overKey key .~ (Just a)
-
-
-        --insertAt :: IsExpr a => Int -> a -> Graph -> Graph
-        --insertAt = insert . unsafeKeyByID
-
-        --lookup :: IsExpr a => Key a -> Graph -> Maybe a
-        --lookup = view . overKey
-
-        ----lookupAt :: Int -> Graph -> Maybe Expr
-        ----lookupAt i g = unhideExpr <$> IntMap.lookup i (view nodes g)
-
-        ----lookupAt2 :: Int -> Graph -> Maybe Expr
-        ----lookupAt2 i g = unhideExpr <$> IntMap.lookup i (view nodes g)
-
-        --convertIso :: IsoConvertible a b => Iso' a b
-        --convertIso = iso convert convert
-
-        ----instance {-# OVERLAPPABLE #-} IsoConvertible a b => Convertible (Key a) (Key b) where convert (Key lens) = Key $ lens . convertIso
-
-
-
-        --type MonadBldrState2 m = MonadState BldrState m
-
-        --data BldrState = BldrState { _lastKey :: Int
-        --                                 , _lastNode       :: Int
-        --                                 , _graph          :: Graph
-        --                                 }
-
-        --instance Default BldrState where
-        --    def = BldrState def def def
-
-
-
-        --makeLenses ''BldrState
-
-        --getBuilder :: MonadBldrState2 m => m BldrState
-        --getBuilder = get
-
-        --putBuilder :: MonadBldrState2 m => BldrState -> m ()
-        --putBuilder = put
-
-        --newKey :: (IsExpr a, MonadBldrState2 m) => m (Key a)
-        --newKey = do
-        --    bldr <- getBuilder
-        --    let i = bldr ^. lastKey
-        --    put $ bldr & lastKey .~ (i + 1)
-        --    return $ unsafeKeyByID i
-
-
-        --newNodeKey :: (IsExpr a, MonadBldrState2 m) => m (Key a)
-        --newNodeKey = do
-        --    bldr <- getBuilder
-        --    let i = bldr ^. lastNode
-        --    put $ bldr & lastNode .~ (i + 1)
-        --    return $ unsafeKeyByID i
-
-        --registerNode :: (MonadBldrState2 m, IsExpr a) => Key a -> a -> m ()
-        --registerNode k a = withBuilder $ graph %~ insert k a
-
-        --registerInput :: MonadBldrState2 m => Name -> m ()
-        --registerInput name = withBuilder $ graph . argNames %~ (<> [name])
-
-        --mkNode :: (MonadBldrState2 m, IsExpr a) => a -> m (Key a)
-        --mkNode a = do
-        --    key <- newNodeKey
-        --    registerNode key a
-        --    return key
-
-
-
-        --withBuilder :: MonadBldrState2 m => (BldrState -> BldrState) -> m ()
-        --withBuilder f = do
-        --    bldr <- getBuilder
-        --    putBuilder $ f bldr
-
-        ----input :: MonadBldrState2 m => Name -> m (Key Expr)
-
-        --var :: MonadBldrState2 m => Name -> m (Key Expr)
-        --var n = mkNode $ Var n
-
-        --input :: MonadBldrState2 m => Name -> m (Key Expr)
-        --input n = do registerInput n
-        --             var n
-
-        ----var :: MonadBldrState2 m => Name -> m (Key Expr)
-        ----var n = mkNode $ VarE $ Var n
-
-
-        --cons :: MonadBldrState2 m => Name -> m (Key Expr)
-        --cons n = mkNode $ Cons n
-
-
-        --class WithKeyLike m a where
-        --    withKeyLike :: a -> (Key Expr -> m (Key Expr)) -> (m (Key Expr))
-
-        --instance WithKeyLike m (Key Expr) where
-        --    withKeyLike key f = f key
-
-        --instance (m ~ n, Monad m) => WithKeyLike m (n (Key Expr)) where
-        --    withKeyLike key f = flip withKeyLike f =<< key
-
-
-
-        ----access :: (PolyFunc1 (Key Expr) m a, MonadBldrState2 m) => a -> Name -> m (Key Expr)
-        ----access key name = polyFunc1 (mkNode . Accessor name) key
-
-        ----app ::
-
-
-        --access :: MonadBldrState2 m => Name -> Key Expr -> m (Key Expr)
-        --access name key = mkNode $ Accessor name key
-
-        --app :: MonadBldrState2 m => Key Expr -> [Arg] -> m (Key Expr)
-        --app base args = mkNode $ App base args
-
-        --appArgs :: MonadBldrState2 m => Key Expr -> [Key Expr] -> m (Key Expr)
-        --appArgs base = app base . fmap arg
-
-        --g1 :: Graph
-        --g1 = view graph $ flip execState def $ do
-        --    a    <- input "a"
-        --    foo  <- access "foo" a
-        --    b    <- foo `appArgs` [a]
-        --    mod  <- var "Main"
-        --    bar  <- access "bar" mod
-        --    c    <- bar `appArgs` [b]
-        --    plus <- access "plus" mod
-        --    out  <- plus `appArgs` [c, a]
-        --    return ()
-
-
-        --main = do
-        --    --let a = unsafeCoerce (return (1:: Int)) :: Monad m => m Int
-        --        --b = unsafeCoerce a :: [Int]
-        --        --a = mkObject (1 :: Int)
-        --        --b = mkObject (2 :: Int)
-        --        --s = mkObject ("ala" :: String)
-        --        --c = appSimple add_Int [a,b]
-        --        --c = appSimple (toDataFunc add2) [a,b]
-        --        --x = appSimple (toDataFunc testf) [a,s]
-
-
-        --    --print $ unpackInt a
-        --    --print $ unpackInt b
-        --    --print $ unpackInt c
-        --    --print $ unpackTest x
-        --    --let ss = fmap (fromString . show) [1..10000] :: [FastString]
-        --    --    a  = (==) <$> ss <*> ss
-        --    --    b  = length $ filter (==True) a
-
-        --    --print $ b
-
-        --    print $ (unsafeCoerce $ appx (1 :: Int) $ appx (2 :: Int) f :: Int)
-        --    print "end"
-        --    print g1
-        --    print "=========="
-        --    print $ toDot (toGraphViz g1)
-        --    runGraphviz (toGraphViz g1) Png "/tmp/out.png"
-        --    --print graph
-        --    --print b
-        --    --print g
-
-
-        --toGraphViz :: Graph -> DotGraph Int
-        --toGraphViz g = DotGraph { strictGraph     = False
-        --                        , directedGraph   = True
-        --                        , graphID         = Nothing
-        --                        , graphStatements = DotStmts { attrStmts = []
-        --                                                     , subGraphs = []
-        --                                                     , nodeStmts = nodeStmts
-        --                                                     , edgeStmts = edgeStmts
-        --                                                     }
-        --                        }
-        --    where elems           = IntMap.assocs $ g ^. nodes
-        --          nodeIds         = fmap fst elems
-        --          nodeLabels      = fmap (repr . snd) elems
-        --          labeledNode s a = DotNode a [Label . StrLabel $ fromString s]
-        --          nodeStmts       = fmap (uncurry labeledNode) $ zip nodeLabels nodeIds
-        --          nodeInEdges   n = zip3 [0..] (fmap fromKey $ inputs g n) (repeat n)
-        --          inEdges         = concat $ fmap nodeInEdges nodeIds
-        --          mkEdge  (n,a,b) = DotEdge a b [Label . StrLabel $ fromString $ show n]
-        --          edgeStmts       = fmap mkEdge inEdges
 
