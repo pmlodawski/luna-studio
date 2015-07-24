@@ -13,11 +13,11 @@ var fs = require('shaders/node.frag')();
 
 var Port = require('port');
 
-var insideColor     = new THREE.Vector3(0.1, 0.1, 0.1);
-var unselectedColor = new THREE.Vector3(0.2, 0.2, 0.2);
-var overColor       = new THREE.Vector3(0.3, 0.3, 0.3);
-var selectedColor   = new THREE.Vector3(0.85, 0.55, 0.1);
-var focusedColor    = new THREE.Vector3(0.90, 0.40, 0.05);
+var insideColor     = new THREE.Color(0x1a1a1a);
+var unselectedColor = new THREE.Color(0x3a3a3a);
+var overColor       = new THREE.Color(0x505050);
+var selectedColor   = new THREE.Color(0xbb7010).multiplyScalar(0.7);
+var focusedColor    = new THREE.Color(0xcc5008).multiplyScalar(0.7);
 
 function Node(id, position) {
   var width  = 60;
@@ -43,13 +43,13 @@ function Node(id, position) {
   };
 
   this.uniforms = {
-    selected:        { type:  'i', value: 0 },
-    mouseDist:       { type:  'f', value: 100000 },
-    insideColor:     { type: 'v3', value: insideColor },
-    unselectedColor: { type: 'v3', value: unselectedColor },
-    overColor:       { type: 'v3', value: overColor },
-    selectedColor:   { type: 'v3', value: selectedColor },
-    focusedColor:    { type: 'v3', value: focusedColor }
+    selected:        { type: 'i', value: 0 },
+    mouseDist:       { type: 'f', value: 100000 },
+    insideColor:     { type: 'c', value: insideColor },
+    unselectedColor: { type: 'c', value: unselectedColor },
+    overColor:       { type: 'c', value: overColor },
+    selectedColor:   { type: 'c', value: selectedColor },
+    focusedColor:    { type: 'c', value: focusedColor }
   };
 
   Object.keys($$.commonUniforms).forEach(function(k) {
@@ -119,6 +119,25 @@ Node.prototype.updateMouse = function(x, y) {
   this.outputPorts.forEach(function(port) {
     port.updateMouseDist(mouseDist);
   });
+
+  // labels scaling: proof of concept - should be implemented differently
+  var scale = this.labelObject.scale.x;
+  var topCamFactor = 1.2;
+  var bottomCamFactor = 1.0;
+  var coef = 0.0;
+  if ($$.camFactor.value > topCamFactor) {
+    coef = Math.pow($$.camFactor.value / topCamFactor, 0.33);
+    scale = config.fontSize / coef;
+    this.labelObject.position.x = -75 / coef;
+  } else if ($$.camFactor.value < bottomCamFactor) {
+    coef = Math.pow($$.camFactor.value / bottomCamFactor, 0.8);
+    scale = config.fontSize / coef;
+    this.labelObject.position.x = -75 / coef;
+  } else {
+    scale = config.fontSize;
+    this.labelObject.position.x = -75;
+  }
+  this.labelObject.scale.set(scale, scale, scale);
 };
 
 Node.prototype.addInputPort = function(id, angle) {
@@ -169,21 +188,19 @@ Node.prototype.updateLabel = function() {
   if (this.labelObject) this.mesh.remove(this.labelObject);
 
   var geom = createText({
-    text: this.labelText,
-    font: font,
-    width: 150/config.fontSize,
+    text:  this.labelText,
+    font:  font,
+    width: 150 / config.fontSize,
     align: 'center'
   });
 
-  var obj = new THREE.Mesh(geom, textMaterial);
-  obj.rotation.x = 180 * Math.PI/180;
-  obj.scale.multiplyScalar(config.fontSize);
-  obj.position.x = -75;
-  obj.position.z = 0.0001;
-  obj.position.y = 35;
-
-  this.labelObject = obj;
-  this.mesh.add(obj);
+  this.labelObject = new THREE.Mesh(geom, textMaterial);
+  this.labelObject.scale.multiplyScalar(config.fontSize);
+  this.labelObject.rotation.x = 180 * Math.PI/180;
+  this.labelObject.position.x = -75;
+  this.labelObject.position.z = 0.0001;
+  this.labelObject.position.y = 39;
+  this.mesh.add(this.labelObject);
 };
 
 Node.prototype.showLabelEditor = function() {

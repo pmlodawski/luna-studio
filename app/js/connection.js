@@ -4,7 +4,7 @@ var $$ = require('common');
 var vs = require('shaders/connection.vert')();
 var fs = require('shaders/connection.frag')();
 
-var color = new THREE.Vector4(1.0, 0.95, 0.05, 0.6);
+var color = new THREE.Vector4(0.5, 0.5, 0.05, 0.6);
 
 function Connection(id) {
   var _this = this;
