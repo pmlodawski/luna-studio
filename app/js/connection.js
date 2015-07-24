@@ -22,8 +22,8 @@ function Connection(id) {
     posV: {
       type: 'f',
       value: [
-         1, -1,
-        -1,  1
+        1, -1,
+        1, -1
       ]
     }
   };

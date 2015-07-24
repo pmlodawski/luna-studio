@@ -8,6 +8,7 @@ varying float distanceV;
 uniform vec4 color;
 uniform float visible;
 uniform float camFactor;
+uniform float len;
 
 void main()
 {
@@ -15,6 +16,8 @@ void main()
 
   float d = abs(distance);
   float v = abs(distanceV);
+  float origAlpha = color.w;
+  vec3 colorShow = color.xyz;
 
   float camFactorDelta = camFactor - 1.0;
   float rimCamFactor  = 1.0;
@@ -35,8 +38,6 @@ void main()
   float r2 = r1 + blurWidth;
 
   float alpha = 0.0;
-  float origAlpha = color.w;
-  vec3 colorShow = vec3(color);
   if (d < r1) {
     alpha = 1.0;
   } else if (d < r2) {
@@ -46,5 +47,20 @@ void main()
     // colorShow = vec3(0.0, 1.0, 0.0); alpha = 1.0; // for test
   }
 
-  gl_FragColor = vec4(colorShow, alpha * origAlpha * v);
+  float sideWidth = 150.0 * blurWidth;
+  float vr = rimRef /  rimCamFactor;
+  float vm = len * (1.0 - v) / sideWidth;
+
+  float alphaV = 0.0;
+  if (vm > vr) {
+    alphaV = 1.0;
+  } else{
+    float mod = (vr - vm) / vr;
+    alphaV = 1.0 - mod * mod;
+    // colorShow = vec3(alphaV, 0.0, 0.0); alphaV = 1.0; // for test
+  }
+
+  float alphaShow = alpha * alphaV;
+
+  gl_FragColor = vec4(colorShow, alphaShow * origAlpha);
 }
