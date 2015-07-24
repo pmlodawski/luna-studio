@@ -88,50 +88,50 @@ foreign import javascript unsafe "app.updateMouse($1, $2)"
     updateMouse :: Double -> Double -> IO ()
 
 
-data FunctionNode
+data NodeJS
 
 foreign import javascript unsafe "app.getNode($1)"
-    getNode :: Int -> IO (JSRef FunctionNode)
+    getNode :: Int -> IO (JSRef NodeJS)
 
 foreign import javascript unsafe "app.getNodes()"
     getNodesJSArray :: IO (JSArray)
 
-getNodes :: IO [JSRef FunctionNode]
+getNodes :: IO [JSRef NodeJS]
 getNodes = getNodesJSArray >>= return . JSArray.toList
 
 foreign import javascript unsafe "$1.moveTo($2, $3)"
-    moveTo :: JSRef FunctionNode -> Double -> Double -> IO ()
+    moveTo :: JSRef NodeJS -> Double -> Double -> IO ()
 
 foreign import javascript unsafe "$1.label($2)"
-    showLabel :: JSRef FunctionNode -> JSString -> IO ()
+    showLabel :: JSRef NodeJS -> JSString -> IO ()
 
 
 foreign import javascript unsafe "$1.addInputPort($2, $3)"
-    addInputPortJS :: JSRef FunctionNode -> Int -> Double -> IO ()
+    addInputPortJS :: JSRef NodeJS -> Int -> Double -> IO ()
 
 foreign import javascript unsafe "$1.addOutputPort($2, $3)"
-    addOutputPortJS :: JSRef FunctionNode -> Int -> Double -> IO ()
+    addOutputPortJS :: JSRef NodeJS -> Int -> Double -> IO ()
 
 foreign import javascript unsafe "$1.setInputPortAngle($2, $3)"
-    setInputPortAngleJS :: JSRef FunctionNode -> Int -> Double -> IO ()
+    setInputPortAngleJS :: JSRef NodeJS -> Int -> Double -> IO ()
 
 foreign import javascript unsafe "$1.setOutputPortAngle($2, $3)"
-    setOutputPortAngleJS :: JSRef FunctionNode -> Int -> Double -> IO ()
+    setOutputPortAngleJS :: JSRef NodeJS -> Int -> Double -> IO ()
 
 foreign import javascript unsafe "$1.setInputPortColor($2, $3, $4, $5)"
-    setInputPortColor :: JSRef FunctionNode -> Int -> Int -> Int -> Int -> IO ()
+    setInputPortColor :: JSRef NodeJS -> Int -> Int -> Int -> Int -> IO ()
 
 foreign import javascript unsafe "$1.setOutputPortColor($2, $3, $4, $5)"
-    setOutputPortColor :: JSRef FunctionNode -> Int -> Int -> Int -> Int -> IO ()
+    setOutputPortColor :: JSRef NodeJS -> Int -> Int -> Int -> Int -> IO ()
 
 
 foreign import javascript unsafe "$1.uniforms.selected.value"
-    getSelectionValue :: JSRef FunctionNode -> IO Int
+    getSelectionValue :: JSRef NodeJS -> IO Int
 
 foreign import javascript unsafe "$1.uniforms.selected.value = $2"
-    setSelectionValue :: JSRef FunctionNode -> Int -> IO ()
+    setSelectionValue :: JSRef NodeJS -> Int -> IO ()
 
-setUnselected, setSelected, setFocused, setUnfocused :: JSRef FunctionNode -> IO ()
+setUnselected, setSelected, setFocused, setUnfocused :: JSRef NodeJS -> IO ()
 setUnselected = flip setSelectionValue 0
 setSelected   = flip setSelectionValue 1
 setFocused    = flip setSelectionValue 2
@@ -140,10 +140,10 @@ setUnfocused node = do
     if focused then setSelected node
                else return ()
 
-hasSelectionValue :: JSRef FunctionNode -> Int -> IO Bool
+hasSelectionValue :: JSRef NodeJS -> Int -> IO Bool
 hasSelectionValue node value = getSelectionValue node >>= return . (== value)
 
-isUnselected, isSelected, isFocused :: JSRef FunctionNode -> IO Bool
+isUnselected, isSelected, isFocused :: JSRef NodeJS -> IO Bool
 isUnselected = flip hasSelectionValue 0
 isSelected   = flip hasSelectionValue 1
 isFocused    = flip hasSelectionValue 2
@@ -151,7 +151,7 @@ isFocused    = flip hasSelectionValue 2
 
 
 foreign import javascript unsafe "$1.renderExamplePlot()"
-    renderExamplePlot :: JSRef FunctionNode -> IO ()
+    renderExamplePlot :: JSRef NodeJS -> IO ()
 
 
 

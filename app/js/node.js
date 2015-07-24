@@ -13,7 +13,13 @@ var fs = require('shaders/node.frag')();
 
 var Port = require('port');
 
-function FunctionNode(id, position) {
+var insideColor     = new THREE.Vector3(0.1, 0.1, 0.1);
+var unselectedColor = new THREE.Vector3(0.2, 0.2, 0.2);
+var overColor       = new THREE.Vector3(0.3, 0.3, 0.3);
+var selectedColor   = new THREE.Vector3(0.85, 0.55, 0.1);
+var focusedColor    = new THREE.Vector3(0.90, 0.40, 0.05);
+
+function Node(id, position) {
   var width  = 60;
   var height = 60;
   var _this = this;
@@ -37,7 +43,13 @@ function FunctionNode(id, position) {
   };
 
   this.uniforms = {
-    selected: { type: "i", value: 0 }
+    selected:        { type:  'i', value: 0 },
+    mouseDist:       { type:  'f', value: 100000 },
+    insideColor:     { type: 'v3', value: insideColor },
+    unselectedColor: { type: 'v3', value: unselectedColor },
+    overColor:       { type: 'v3', value: overColor },
+    selectedColor:   { type: 'v3', value: selectedColor },
+    focusedColor:    { type: 'v3', value: focusedColor }
   };
 
   Object.keys($$.commonUniforms).forEach(function(k) {
@@ -65,7 +77,7 @@ function FunctionNode(id, position) {
   if (features.node_labels) this.updateLabel();
 }
 
-FunctionNode.prototype.selected = function(val) {
+Node.prototype.selected = function(val) {
   if (val !== undefined) {
     this.uniforms.selected.value = val;
     if(features.label_editor) {
@@ -77,7 +89,7 @@ FunctionNode.prototype.selected = function(val) {
   return this.uniforms.selected.value;
 };
 
-FunctionNode.prototype.moveTo = function(a, b) {
+Node.prototype.moveTo = function(a, b) {
   var vec = new THREE.Vector2(a, b);
 
   this.position.x = vec.x;
@@ -90,16 +102,17 @@ FunctionNode.prototype.moveTo = function(a, b) {
   this.htmlContainer.css({left: vec.x, top: -vec.y});
 };
 
-FunctionNode.prototype.zPos = function(z) {
+Node.prototype.zPos = function(z) {
   if (z !== undefined)
     this.mesh.position.z = z;
   return this.mesh.position.z;
 };
 
-FunctionNode.prototype.updateMouse = function(x, y) {
+Node.prototype.updateMouse = function(x, y) {
   var xd = this.position.x - x;
   var yd = this.position.y - y;
   var mouseDist = Math.sqrt(xd * xd + yd * yd);
+  this.uniforms.mouseDist.value = mouseDist;
   this.inputPorts.forEach(function(port) {
     port.updateMouseDist(mouseDist);
   });
@@ -108,43 +121,43 @@ FunctionNode.prototype.updateMouse = function(x, y) {
   });
 };
 
-FunctionNode.prototype.addInputPort = function(id, angle) {
+Node.prototype.addInputPort = function(id, angle) {
   var p = new Port(id, angle, false);
   this.inputPorts.push(p);
   this.mesh.add(p.mesh);
 };
 
-FunctionNode.prototype.addOutputPort = function(id, angle) {
+Node.prototype.addOutputPort = function(id, angle) {
   var p = new Port(id, angle, true);
   this.outputPorts.push(p);
   this.mesh.add(p.mesh);
 };
 
-FunctionNode.prototype.findInputPort = function(id) {
+Node.prototype.findInputPort = function(id) {
   return _.find(this.inputPorts, function(port) { return port.id === id; });
 };
 
-FunctionNode.prototype.findOutputPort = function(id) {
+Node.prototype.findOutputPort = function(id) {
   return _.find(this.outputPorts, function(port) { return port.id === id; });
 };
 
-FunctionNode.prototype.setInputPortAngle = function(id, angle) {
+Node.prototype.setInputPortAngle = function(id, angle) {
   this.findInputPort(id).setAngle(angle);
 };
 
-FunctionNode.prototype.setOutputPortAngle = function(id, angle) {
+Node.prototype.setOutputPortAngle = function(id, angle) {
   this.findOutputPort(id).setAngle(angle);
 };
 
-FunctionNode.prototype.setInputPortColor = function(id, r, g, b, a) {
+Node.prototype.setInputPortColor = function(id, r, g, b, a) {
   this.findInputPort(id).setColor(new THREE.Vector4(r, g, b, a));
 };
 
-FunctionNode.prototype.setOutputPortColor = function(id, r, g, b, a) {
+Node.prototype.setOutputPortColor = function(id, r, g, b, a) {
   this.findOutputPort(id).setColor(new THREE.Vector4(r, g, b, a));
 };
 
-FunctionNode.prototype.label = function(text) {
+Node.prototype.label = function(text) {
   if (text !== undefined) {
     this.labelText = text;
     this.updateLabel();
@@ -152,7 +165,7 @@ FunctionNode.prototype.label = function(text) {
   return this.labelText;
 };
 
-FunctionNode.prototype.updateLabel = function() {
+Node.prototype.updateLabel = function() {
   if (this.labelObject) this.mesh.remove(this.labelObject);
 
   var geom = createText({
@@ -173,7 +186,7 @@ FunctionNode.prototype.updateLabel = function() {
   this.mesh.add(obj);
 };
 
-FunctionNode.prototype.showLabelEditor = function() {
+Node.prototype.showLabelEditor = function() {
   if (this.htmlElements.labelEditor) return;
   var editor = $('<input/>').css({left: -50, top: -52, width: 100, textAlign: 'center'});
   editor.val(this.labelText);
@@ -191,7 +204,7 @@ FunctionNode.prototype.showLabelEditor = function() {
   }, 50);
 };
 
-FunctionNode.prototype.renderExamplePlot = function() {
+Node.prototype.renderExamplePlot = function() {
   var svg = d3.select(this.htmlContainer[0])
       .append("svg")
       .attr("width", 400)
@@ -212,7 +225,7 @@ FunctionNode.prototype.renderExamplePlot = function() {
   myChart.draw();
 };
 
-FunctionNode.prototype.hideLabelEditor = function() {
+Node.prototype.hideLabelEditor = function() {
   var editor = this.htmlElements.labelEditor;
   var value = editor[0].value;
   console.log("Entered: " + value);
@@ -222,4 +235,4 @@ FunctionNode.prototype.hideLabelEditor = function() {
   return value;
 };
 
-module.exports.FunctionNode = FunctionNode;
+module.exports.Node = Node;

@@ -1,6 +1,6 @@
 "use strict";
 
-var FunctionNode = require('function_node').FunctionNode,
+var Node         = require('node').Node,
     $$           = require('common'),
     config       = require('config'),
     features     = require('features'),
@@ -130,7 +130,7 @@ function updateMouse(x, y) {
 
 function newNodeAt(i, x, y, expr) {
   var vect = new THREE.Vector2(x, y);
-  var node = new FunctionNode(i, vect);
+  var node = new Node(i, vect);
   $$.nodes[i] = node;
   node.label(expr);
   $$.scene.add(node.mesh);
