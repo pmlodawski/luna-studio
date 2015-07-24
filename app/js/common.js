@@ -16,7 +16,8 @@ module.exports = {
   renderer:       undefined,
   htmlCanvasPan:  undefined,
   htmlCanvas:     undefined,
-  node_searcher:  undefined
+  node_searcher:  undefined,
+  buttons:        {}
 };
 
 $(document).ready(function(){

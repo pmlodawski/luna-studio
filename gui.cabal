@@ -39,6 +39,7 @@ executable gui
                      , data-default
                      , ghcjs-base
                      , ghcjs-dom >= 0.2
+                     , ghcjs-prim
                      , reactive-banana
                      , text
                      , transformers

@@ -175,3 +175,13 @@ foreign import javascript unsafe "app.removeCurrentConnection()"
 
 foreign import javascript unsafe "window.dispatchEvent(new Event('resize'))"
     triggerWindowResize :: IO ()
+
+
+foreign import javascript unsafe "$$.buttons[$1]"
+    getButton :: Int -> IO (JSRef a)
+
+foreign import javascript unsafe "$$.buttons[$1] = $2"
+    putButton :: Int -> JSRef a -> IO ()
+
+foreign import javascript unsafe "delete $$.buttons[$1]"
+    removeButton :: Int -> IO ()
