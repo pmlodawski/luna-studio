@@ -122,6 +122,12 @@ function updateCameraHUD(left, right, top, bottom) {
   $$.cameraHUD.bottom   = bottom;
 }
 
+function updateMouse(x, y) {
+  _.values($$.nodes).forEach(function(node) {
+    node.updateMouse(x, y);
+  });
+}
+
 function newNodeAt(i, x, y, expr) {
   var vect = new THREE.Vector2(x, y);
   var node = new FunctionNode(i, vect);
@@ -205,6 +211,7 @@ module.exports = {
   updateScreenSize:         updateScreenSize,
   updateCamera:             updateCamera,
   updateCameraHUD:          updateCameraHUD,
+  updateMouse:              updateMouse,
   start:                    start,
   createNodeSearcher:       createNodeSearcher,
   destroyNodeSearcher:      destroyNodeSearcher,

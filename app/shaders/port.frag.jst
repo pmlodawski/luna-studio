@@ -7,8 +7,10 @@ varying vec3 distanceR;
 varying vec3 distanceB;
 
 uniform vec4 color;
+uniform vec4 colorFar;
 uniform float visible;
 uniform float camFactor;
+uniform float mouseDist;
 
 void main()
 {
@@ -29,7 +31,16 @@ void main()
         alpha = alpha * (1.0 - (disappearS - camFactor) / disappearW);
     }
 
-    vec4 colorShow = vec4(color.xyz, alpha);
+    float distMix  = 0.0;
+    float gradRange  = 120.0;
+    float colorRange =  50.0;
+    if (mouseDist < colorRange) {
+        distMix = 1.0;
+    } else if (mouseDist < gradRange) {
+        distMix = 1.0 - (mouseDist - colorRange) / (gradRange - colorRange);
+    }
 
-    gl_FragColor = colorShow;
+    vec4 colorShow = distMix * color + (1.0 - distMix) * colorFar;
+
+    gl_FragColor = vec4(colorShow.xyz, alpha * colorShow.w);
 }

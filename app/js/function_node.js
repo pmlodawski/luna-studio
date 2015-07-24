@@ -96,6 +96,18 @@ FunctionNode.prototype.zPos = function(z) {
   return this.mesh.position.z;
 };
 
+FunctionNode.prototype.updateMouse = function(x, y) {
+  var xd = this.position.x - x;
+  var yd = this.position.y - y;
+  var mouseDist = Math.sqrt(xd * xd + yd * yd);
+  this.inputPorts.forEach(function(port) {
+    port.updateMouseDist(mouseDist);
+  });
+  this.outputPorts.forEach(function(port) {
+    port.updateMouseDist(mouseDist);
+  });
+};
+
 FunctionNode.prototype.addInputPort = function(id, angle) {
   var p = new Port(id, angle, false);
   this.inputPorts.push(p);
@@ -108,14 +120,28 @@ FunctionNode.prototype.addOutputPort = function(id, angle) {
   this.mesh.add(p.mesh);
 };
 
+FunctionNode.prototype.findInputPort = function(id) {
+  return _.find(this.inputPorts, function(port) { return port.id === id; });
+};
+
+FunctionNode.prototype.findOutputPort = function(id) {
+  return _.find(this.outputPorts, function(port) { return port.id === id; });
+};
+
 FunctionNode.prototype.setInputPortAngle = function(id, angle) {
-  var p = _.find(this.inputPorts, function(port) { return port.id === id; });
-  p.setAngle(angle);
+  this.findInputPort(id).setAngle(angle);
 };
 
 FunctionNode.prototype.setOutputPortAngle = function(id, angle) {
-  var p = _.find(this.outputPorts, function(port) { return port.id === id; });
-  p.setAngle(angle);
+  this.findOutputPort(id).setAngle(angle);
+};
+
+FunctionNode.prototype.setInputPortColor = function(id, r, g, b, a) {
+  this.findInputPort(id).setColor(new THREE.Vector4(r, g, b, a));
+};
+
+FunctionNode.prototype.setOutputPortColor = function(id, r, g, b, a) {
+  this.findOutputPort(id).setColor(new THREE.Vector4(r, g, b, a));
 };
 
 FunctionNode.prototype.label = function(text) {

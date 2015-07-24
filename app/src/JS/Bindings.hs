@@ -84,6 +84,8 @@ foreign import javascript unsafe "app.updateCamera($1, $2, $3, $4, $5, $6, $7)"
 foreign import javascript unsafe "app.updateCameraHUD($1, $2, $3, $4)"
     updateCameraHUD :: Double -> Double -> Double -> Double -> IO ()
 
+foreign import javascript unsafe "app.updateMouse($1, $2)"
+    updateMouse :: Double -> Double -> IO ()
 
 
 data FunctionNode
@@ -116,6 +118,11 @@ foreign import javascript unsafe "$1.setInputPortAngle($2, $3)"
 foreign import javascript unsafe "$1.setOutputPortAngle($2, $3)"
     setOutputPortAngleJS :: JSRef FunctionNode -> Int -> Double -> IO ()
 
+foreign import javascript unsafe "$1.setInputPortColor($2, $3, $4, $5)"
+    setInputPortColor :: JSRef FunctionNode -> Int -> Int -> Int -> Int -> IO ()
+
+foreign import javascript unsafe "$1.setOutputPortColor($2, $3, $4, $5)"
+    setOutputPortColor :: JSRef FunctionNode -> Int -> Int -> Int -> Int -> IO ()
 
 
 foreign import javascript unsafe "$1.uniforms.selected.value"

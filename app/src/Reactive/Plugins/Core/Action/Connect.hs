@@ -104,8 +104,6 @@ instance ActionStateUpdater Action where
                 destinPoint              = screenToWorkspace camera currentPos
             _                           -> 0.0
 
-distFromPort = 1.0
-
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
         DragAction tpe pt            -> case tpe of

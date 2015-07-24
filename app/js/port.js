@@ -4,10 +4,15 @@ var $$ = require('common');
 var vs = require('shaders/port.vert')();
 var fs = require('shaders/port.frag')();
 
-var triangleRatio = 0.8;
-var size          = 12;
-var distFromRim   = 2.0;
+var triangleRatio = 1.5;
+var size          = 7;
+var distFromRim   = 1.5;
 var nodeRadius    = 30.0;
+
+
+var inputColor  = new THREE.Vector4(0,   0.65,   0, 0.9);
+var outputColor = new THREE.Vector4(0.85,   0,   0, 0.9);
+var colorFar    = new THREE.Vector4(0.2, 0.2, 0.2, 0.6);
 
 var triangleHeight = size * Math.sqrt(3.0) / 2.0;
 var halfHeight = triangleHeight / 2.0;
@@ -17,9 +22,6 @@ function Port(id, angle, out) {
   var _this = this;
   this.id = id;
   this.out = out;
-
-  var inputColor = new THREE.Vector4(0,   0.5, 0, 0.8);
-  var outputColor= new THREE.Vector4(0.7, 0,   0, 0.8);
 
   var outputPort = [ new THREE.Vector3( halfHeight,                         0.0, 0.0),
                      new THREE.Vector3(-halfHeight, size *  triangleRatio * 0.5, 0.0),
@@ -61,7 +63,9 @@ function Port(id, angle, out) {
   };
 
   this.uniforms = {
-    color: { type: 'v4', value: color }
+    color:     { type: 'v4', value: color },
+    colorFar:  { type: 'v4', value: colorFar },
+    mouseDist: { type: 'f',  value: 100000.0 }
   };
 
   Object.keys($$.commonUniforms).forEach(function(k) {
@@ -69,7 +73,7 @@ function Port(id, angle, out) {
   });
 
   this.geometry = new THREE.Geometry();
-  portVert.forEach( function(vert) {
+  portVert.forEach(function(vert) {
     _this.geometry.vertices.push(vert);
   });
   this.geometry.faces.push(new THREE.Face3(0, 1, 2));
@@ -96,6 +100,14 @@ Port.prototype.setAngle = function(angle) {
   this.mesh.position.y = Math.sin(angle) * dist;
 
   this.mesh.rotation.z = angle;
+};
+
+Port.prototype.setColor = function(color) {
+  this.uniforms.color.value = color;
+};
+
+Port.prototype.updateMouseDist = function(mouseDist) {
+  this.uniforms.mouseDist.value = mouseDist;
 };
 
 module.exports = Port;

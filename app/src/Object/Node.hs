@@ -68,7 +68,10 @@ instance PrettyPrinter PortRef where
         <> " " <> display portId
         <> ")"
 
-
+nodeRadius        = 30.0
+portSize          = 7.0
+portDistFromRim   = 1.5
+distFromPort      = 0.3
 
 createPort :: PortType -> Int -> PortId -> Port
 createPort portType allPorts ident = Port ident Int $ portDefaultAngle portType allPorts ident
@@ -118,7 +121,6 @@ updateNodeSelection selNodeIds node = let selection = (node ^. nodeId) `elem` se
 updateNodesSelection :: NodeIdCollection -> NodeCollection -> NodeCollection
 updateNodesSelection selNodeIds nodes = fmap (updateNodeSelection selNodeIds) nodes
 
-nodeRadius    = 30.0
 radiusSquared = nodeRadius * nodeRadius
 radiusShadow  = sqrt $ radiusSquared / 2.0
 
@@ -135,9 +137,7 @@ getNodesAt posScr camera nodes = filter closeEnough nodes where
 getNodeIdsAt :: Vector2 Int -> Camera -> NodeCollection -> NodeIdCollection
 getNodeIdsAt = (fmap (^. nodeId)) .:. getNodesAt
 
-portSize          = 12.0
 portWidth         = portSize * sqrt(3.0) / 2.0
-portDistFromRim   = 2.0
 portOuterBorder   = nodeRadius + portDistFromRim + portWidth
 
 nodeHaloInnerRadius    = nodeRadius + portDistFromRim
