@@ -118,14 +118,17 @@ instance ActionUIUpdater Action where
 
 
 displayDragLine :: Angle -> Vector2 Double -> Connecting -> IO ()
-displayDragLine angle (Vector2 cx cy) connecting = do
-    let portRef = connecting ^. sourcePort
-        (Vector2 nx ny) = portRef ^. refPortNode . nodePos
-        outerPos = portOuterBorder + distFromPort
-        sx = nx + outerPos * cos angle
-        sy = ny + outerPos * sin angle
+displayDragLine angle ptWs@(Vector2 cx cy) connecting = do
+    let portRef              = connecting ^. sourcePort
+        ndWs@(Vector2 nx ny) = portRef ^. refPortNode . nodePos
+        outerPos             = portOuterBorder + distFromPort
+        sy                   = ny + outerPos * sin angle
+        sx                   = nx + outerPos * cos angle
+        (Vector2 vx vy)      = ptWs - ndWs
+        draw                 = vx * vx + vy * vy > portOuterBorderSquared
     setAnglePortRef angle portRef
-    UI.displayCurrentConnection sx sy cx cy
+    if draw then UI.displayCurrentConnection sx sy cx cy
+            else UI.removeCurrentConnection
 
 setAnglePortRef :: Angle -> PortRef -> IO ()
 setAnglePortRef refAngle portRef = setAngle (portRef ^. refPortType) refNodeId (portRef ^. refPortId) refAngle where

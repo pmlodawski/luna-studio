@@ -73,6 +73,22 @@ portSize          = 7.0
 portDistFromRim   = 1.5
 distFromPort      = 0.3
 
+radiusSquared = nodeRadius * nodeRadius
+radiusShadow  = sqrt $ radiusSquared / 2.0
+
+
+portWidth         = portSize * sqrt(3.0) / 2.0
+portOuterBorder   = nodeRadius + portDistFromRim + portWidth
+
+portOuterBorderSquared = portOuterBorder * portOuterBorder
+
+nodeHaloInnerRadius    = nodeRadius + portDistFromRim
+nodeHaloOuterRadius    = nodeHaloInnerRadius + portWidth
+haloInnerRadiusSquared = nodeHaloInnerRadius * nodeHaloInnerRadius
+haloOuterRadiusSquared = nodeHaloOuterRadius * nodeHaloOuterRadius
+
+
+
 createPort :: PortType -> Int -> PortId -> Port
 createPort portType allPorts ident = Port ident Int $ portDefaultAngle portType allPorts ident
 
@@ -121,9 +137,6 @@ updateNodeSelection selNodeIds node = let selection = (node ^. nodeId) `elem` se
 updateNodesSelection :: NodeIdCollection -> NodeCollection -> NodeCollection
 updateNodesSelection selNodeIds nodes = fmap (updateNodeSelection selNodeIds) nodes
 
-radiusSquared = nodeRadius * nodeRadius
-radiusShadow  = sqrt $ radiusSquared / 2.0
-
 getNodesAt :: Vector2 Int -> Camera -> NodeCollection -> NodeCollection
 getNodesAt posScr camera nodes = filter closeEnough nodes where
     pos              = screenToWorkspace camera posScr
@@ -136,15 +149,6 @@ getNodesAt posScr camera nodes = filter closeEnough nodes where
 
 getNodeIdsAt :: Vector2 Int -> Camera -> NodeCollection -> NodeIdCollection
 getNodeIdsAt = (fmap (^. nodeId)) .:. getNodesAt
-
-portWidth         = portSize * sqrt(3.0) / 2.0
-portOuterBorder   = nodeRadius + portDistFromRim + portWidth
-
-nodeHaloInnerRadius    = nodeRadius + portDistFromRim
-nodeHaloOuterRadius    = nodeHaloInnerRadius + portWidth
-haloInnerRadiusSquared = nodeHaloInnerRadius * nodeHaloInnerRadius
-haloOuterRadiusSquared = nodeHaloOuterRadius * nodeHaloOuterRadius
-
 
 getPortRefs :: Angle -> Node -> [(Angle, PortRef)]
 getPortRefs refAngle node = inputs <> outputs where
