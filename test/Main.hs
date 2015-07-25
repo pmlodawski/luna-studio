@@ -566,14 +566,18 @@ g1 = do
     out  <- ref "out"  $ plus @$ [arg c, arg a]
     return ()
 
+--dorobic budowanie liniowe, nie grafowe
+--zmienne powinny odnosic sie do siebie jako debrouigle - moze warto parametryzowac Name, tak y mozna bylo wsadzic tam ID debrouiglowe?
+
 (@.)  = access
 (@$)  = app
 
 main = do
-    let g = runNodeBuilder g1
+    let g  = runNodeBuilder g1
+        gv = toGraphViz g
     print g
-    print $ toDot (toGraphViz g)
-    runGraphviz (toGraphViz g) Png "/tmp/out.png"
+    --print $ toDot gv
+    runGraphviz gv Png "/tmp/out.png"
     createProcess $ shell "open /tmp/out.png"
     print "end"
 
