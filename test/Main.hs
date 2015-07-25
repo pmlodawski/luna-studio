@@ -36,7 +36,7 @@ import           FastString (FastString, mkFastString, unpackFS)
 import qualified Data.IntMap.Lazy as IntMap
 import           Data.IntMap.Lazy (IntMap)
 import Data.Typeable       hiding (cast)
-import Control.Monad.State hiding (withState)
+import Control.Monad.State hiding (withState, mapM)
 
 
 import Data.GraphViz.Types.Canonical
@@ -54,11 +54,13 @@ import Data.Indexable
 
 import Data.Containers
 
+import System.Process
+
 --add :: Int -> Int -> Int
 --add = (+)
 
---add2 :: (Int, (Int, ())) -> Int
---add2 (a, (b, ())) = a + b
+--add :: (Int, (Int, ())) -> Int
+--add (a, (b, ())) = a + b
 
 
 --testf :: (Int, (String, ())) -> (Int,String)
@@ -226,14 +228,14 @@ instance Node (Expr h) (HExpr h) where
 
 
 
-class ArgCons a b where
-  arg :: a -> b
+--class ArgCons a b where
+--  arg :: a -> b
 
-instance ArgCons Name (HExpr h -> Arg h) where
-  arg = Arg . Just
+--instance ArgCons Name (HExpr h -> Arg h) where
+--  arg = Arg . Just
 
-instance ArgCons (HExpr h) (Arg h) where
-  arg = Arg Nothing
+--instance ArgCons (HExpr h) (Arg h) where
+--  arg = Arg Nothing
 
 
         ----data Node = Node { _tp   :: ID
@@ -408,17 +410,18 @@ releaseNodeID id = withBldrState_ (nodeScope %~ (id:))
 --add = withGraph . insert
 
 class Monad m => ASTBuilder a m where
-    add :: ASTNode m a -> Ref m a
+    mkRef :: ASTNode m a -> m (Ref m a)
 
 type ASTNode m a = a (ConnectionType m)
-type Ref m a = m (ConnectionType m (a (ConnectionType m)))
+--type Ref m a = m (ConnectionType m (a (ConnectionType m)))
+newtype Ref m a = Ref { fromRef :: ConnectionType m (a (ConnectionType m)) }
 
 type GraphBuilderMonad c a = (Appendable c, Indexable c, Castable (a (Ptr (Index c))) (ElementOf c))
 
 
 
 instance GraphBuilderMonad c a => ASTBuilder a (GraphBuilder c) where
-    add = withGraph . insert
+    mkRef = fmap Ref . withGraph . insert
 
 --add' :: el (ConnectionType bldr) -> bldr
 --add' = add
@@ -447,62 +450,131 @@ instance GraphBuilderMonad c a => ASTBuilder a (GraphBuilder c) where
 --                       MonadBldrState c m) =>
 --                      m (Ptr (Index c) (Expr h))
 
-var = add . Var
-accessor name el = add $ Accessor name el
+newtype NodeCons m a = NodeCons { runNodeCons :: m (Ref m a) }
+
+
+returnClone :: Monad m => m a -> m (m a)
+returnClone = return
+
+refToCons :: Monad m => m (Ref m a) -> m (NodeCons m a)
+refToCons = return . NodeCons
+
+--refToCons2 :: m (Ref m a) -> NodeCons m a
+--refToCons2 = NodeCons
+
+
+mkCons = NodeCons . mkRef
+
+--accessor name el = mkRef $ Accessor name el
 access = flip accessor
 
-app base args = add $ App base args
-appArgs base = app base . fmap arg
+accessor name el = mkCons . Accessor name <$> mrefRaw el
+
+mrefRaw = fmap fromRef . toMRef2
 
 
-foo :: ASTBuilder Expr m => m ()
-foo = do
-    foo <- var "foo"
-    bar <- var "bar"
-    x   <- accessor "x" foo
-    y   <- accessor "y" foo
-    return ()
 
+app base args = mkCons .: App <$> mrefRaw base <*> mapM marg args where
+    marg (ArgRef n a) = Arg n <$> fmap fromRef a
+
+
+
+
+var :: ASTBuilder Expr m => Name -> NodeCons m Expr
+var = mkCons . Var
+
+
+ref :: (Monad m, IsMVal t m (NodeCons m a)) => Name -> t -> m (Ref m a)
+ref _ = ref_
+
+ref_ :: (Monad m, IsMVal t m (NodeCons m a)) => t -> m (Ref m a)
+ref_ cons = toMVal cons >>= runNodeCons
+
+
+class IsMVal a m b | a -> m b where
+    toMVal :: a -> m b
+
+instance                      Monad m => IsMVal (NodeCons m a) m (NodeCons m a) where toMVal = return
+instance                      Monad m => IsMVal (Ref m a)      m (Ref m a)      where toMVal = return
+instance {-# OVERLAPPABLE #-} Monad m => IsMVal (m a)          m a              where toMVal = id
+
+class Monad m => ToMRef m t where
+    toMRef :: t m a -> m (Ref m a)
+
+instance Monad m => ToMRef m Ref where
+    toMRef = return
+
+instance Monad m => ToMRef m NodeCons where
+    toMRef = runNodeCons
+
+class ToMRef2 t m a | t -> m a where
+    toMRef2 :: t -> m (Ref m a)
+
+instance                      Monad m => ToMRef2 (NodeCons m a) m a where toMRef2 = runNodeCons
+instance                      Monad m => ToMRef2 (Ref m a)      m a where toMRef2 = return
+instance {-# OVERLAPPABLE #-} Monad m => ToMRef2 (m (Ref m a))  m a where toMRef2 = id
 
 instance MonadBldrState c (State (BldrState c)) where
     getBldrState = get
     putBldrState = put
 
---bar :: (Graph (Vector NodeObject))
---bar :: (Default s, Appendable c, LastIdx c, SetIdx c, GetIdx c,
---                       CheckedSetIdx c, CheckedGetIdx c, UncheckedSetIdx c,
---                       UncheckedGetIdx c, Castable (Expr h) (ElementOf c),
---                       MonadBldrState c (StateT s Identity)) =>
---                      (Ptr (Index c) (Expr h), s)
---bar = flip runState def foo
+
+
 runNodeBuilder :: GraphBuilder (Vector NodeObject) a -> Graph (Vector NodeObject)
 runNodeBuilder = view graph . flip execState def
 
-g1 :: Graph (Vector NodeObject)
-g1 = runNodeBuilder foo
+
+--g2 :: Graph (Vector NodeObject)
+--g2 = runNodeBuilder $ do
+--    a    <- var "a"
+--    mod  <- var "Main"
+--    foo  <- a    @.  "foo"
+--    b    <- foo  @$$ [a]
+--    bar  <- mod  @.  "bar"
+--    c    <- bar  @$$ [b]
+--    plus <- mod  @.  "plus"
+--    out  <- plus @$$ [c, a]
+--    return ()
+
+--data Arg h = Arg { _label :: Maybe Name, _val :: HExpr h }
 
 
-g2 :: Graph (Vector NodeObject)
-g2 = runNodeBuilder $ do
-    a    <- var "a"
-    mod  <- var "Main"
-    foo  <- a    @.  "foo"
-    b    <- foo  @$$ [a]
-    bar  <- mod  @.  "bar"
-    c    <- bar  @$$ [b]
-    plus <- mod  @.  "plus"
-    out  <- plus @$$ [c, a]
+--class Arg2 a where
+--    arg2 :: a -> b
+
+--instance Arg2 Name -> (a -> Arg a)
+
+class Named a where
+    named :: Name -> a -> a
+
+instance Named (ArgRef m a) where
+    named n (ArgRef _ ref) = ArgRef (Just n) ref
+
+data ArgRef m a = ArgRef (Maybe Name) (m (Ref m a))
+
+arg = ArgRef Nothing . toMRef2
+
+g1 :: ASTBuilder Expr m => m ()
+g1 = do
+    a    <- ref "a"    $ var "a"
+    mod  <- ref "mod"  $ var "mod"
+    foo  <- ref "foo"  $ a    @. "foo"
+    b    <- ref "b"    $ foo  @$ [arg a]
+    bar  <- ref "bar"  $ mod  @. "bar"
+    c    <- ref "c"    $ bar  @$ [arg b]
+    plus <- ref "plus" $ mod  @. "plus"
+    out  <- ref "out"  $ plus @$ [arg c, arg a]
     return ()
 
 (@.)  = access
 (@$)  = app
-(@$$) = appArgs
 
 main = do
-    let g = g2
+    let g = runNodeBuilder g1
     print g
     print $ toDot (toGraphViz g)
     runGraphviz (toGraphViz g) Png "/tmp/out.png"
+    createProcess $ shell "open /tmp/out.png"
     print "end"
 
 
