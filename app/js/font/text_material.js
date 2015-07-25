@@ -11,7 +11,8 @@ var defaults = function(){
       smooth:    { type: 'f', value: 1/6 },
       map:       { type: 't', value: THREE.ImageUtils.loadTexture('font/LatoBlack-sdf.png') },
       color:     { type: 'c', value: new THREE.Color(0x999999) },
-      camFactor: { type: 'f', value: 1 }
+      camFactor: { type: 'f', value: 1 },
+      width:     { type: 'f', value: 0 }
     },
     vertexShader:   vs,
     fragmentShader: fs,
