@@ -15,7 +15,7 @@ var Port = require('port');
 
 var insideColor     = new THREE.Color(0x1a1a1a);
 var unselectedColor = new THREE.Color(0x3a3a3a);
-var overColor       = new THREE.Color(0x505050);
+var overColor       = new THREE.Color(0x585858);
 var selectedColor   = new THREE.Color(0xb87410).multiplyScalar(0.8);
 var focusedColor    = new THREE.Color(0xc85808).multiplyScalar(0.8);
 
