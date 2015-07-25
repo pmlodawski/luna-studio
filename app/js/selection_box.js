@@ -15,21 +15,21 @@ function SelectionBox() {
   );
   geometry.faces.push(new THREE.Face3(0, 2, 1), new THREE.Face3(0, 1, 3));
   this.mesh = new THREE.Mesh(
-            geometry,
-            new THREE.ShaderMaterial( {
-                uniforms: {
-                    visible: { type: 'f', value: 0 },
-                    size:    { type: 'v3', value: new THREE.Vector3(0,0,1) },
-                    color:   { type: 'v4', value: color }
-                },
-                vertexShader:   vs,
-                fragmentShader: fs,
-                transparent: true,
-                blending: THREE.NormalBlending,
+      geometry,
+      new THREE.ShaderMaterial( {
+        uniforms: {
+          visible: { type: 'f',  value: 0 },
+          size:    { type: 'v3', value: new THREE.Vector3(0,0,1) },
+          color:   { type: 'v4', value: color }
+        },
+        vertexShader:   vs,
+        fragmentShader: fs,
+        transparent:    true,
+        blending:       THREE.NormalBlending,
         side:           THREE.DoubleSide
     })
-    );
-  this.mesh.position.z = 100;
+  );
+  this.mesh.position.z = 1;
 }
 
 SelectionBox.prototype.setPos = function(x0, y0, x1, y1) {

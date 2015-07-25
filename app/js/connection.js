@@ -52,7 +52,7 @@ function Connection(id) {
 
   this.mesh.scale.x = 1;
   this.mesh.rotation.z = 0;
-  this.mesh.position.z = 0.0001;
+  this.mesh.position.z = 0.02;
 }
 
 Connection.prototype.setPos = function(x0, y0, x1, y1) {

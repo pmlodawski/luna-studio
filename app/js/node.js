@@ -19,13 +19,14 @@ var overColor       = new THREE.Color(0x585858);
 var selectedColor   = new THREE.Color(0xb87410).multiplyScalar(0.8);
 var focusedColor    = new THREE.Color(0xc85808).multiplyScalar(0.8);
 
-function Node(id, position) {
+function Node(id, position, z) {
   var width  = 60;
   var height = 60;
   var _this = this;
 
   this.id = id;
   this.position = position;
+
   this.labelText = ":" + id;
   this.inputPorts  = [];
   this.outputPorts = [];
@@ -73,6 +74,7 @@ function Node(id, position) {
 
   this.htmlElements = {};
   this.moveTo(position.x, position.y);
+  this.zPos(z);
 
   if (features.node_labels) this.updateLabel();
 }
@@ -103,14 +105,15 @@ Node.prototype.moveTo = function(a, b) {
 };
 
 Node.prototype.zPos = function(z) {
-  if (z !== undefined)
+  if (z !== undefined) {
     this.mesh.position.z = z;
+  }
   return this.mesh.position.z;
 };
 
 Node.prototype.updateMouse = function(x, y) {
-  var xd = this.position.x - x;
-  var yd = this.position.y - y;
+  var xd = this.mesh.position.x - x;
+  var yd = this.mesh.position.y - y;
   var mouseDist = Math.sqrt(xd * xd + yd * yd);
   this.uniforms.mouseDist.value = mouseDist;
   this.inputPorts.forEach(function(port) {
@@ -122,13 +125,13 @@ Node.prototype.updateMouse = function(x, y) {
 };
 
 Node.prototype.addInputPort = function(id, angle) {
-  var p = new Port(id, angle, false);
+  var p = new Port(id, angle, false, this.mesh.position.z);
   this.inputPorts.push(p);
   this.mesh.add(p.mesh);
 };
 
 Node.prototype.addOutputPort = function(id, angle) {
-  var p = new Port(id, angle, true);
+  var p = new Port(id, angle, true, this.mesh.position.z);
   this.outputPorts.push(p);
   this.mesh.add(p.mesh);
 };
@@ -178,15 +181,14 @@ Node.prototype.updateLabel = function() {
   });
 
   textMaterial.uniforms.width.value = size;
-  var obj = new THREE.Mesh(geometry, textMaterial);
-  obj.rotation.x = 180 * Math.PI / 180;
-  obj.scale.multiplyScalar(config.fontSize);
-  obj.position.x = -75;
-  obj.position.z = 0.0001;
-  obj.position.y = 40;
+  this.labelObject = new THREE.Mesh(geometry, textMaterial);
+  this.labelObject.rotation.x = 180 * Math.PI / 180;
+  this.labelObject.scale.multiplyScalar(config.fontSize);
+  this.labelObject.position.x = -75;
+  this.labelObject.position.y = 40;
+  this.labelObject.position.z = 0;
 
-  this.labelObject = obj;
-  this.mesh.add(obj);
+  this.mesh.add(this.labelObject);
 };
 
 Node.prototype.showLabelEditor = function() {
@@ -238,4 +240,4 @@ Node.prototype.hideLabelEditor = function() {
   return value;
 };
 
-module.exports.Node = Node;
+module.exports = Node;

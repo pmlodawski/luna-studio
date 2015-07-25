@@ -90,7 +90,7 @@ function Port(id, angle, out) {
   	})
 	);
 
-  this.mesh.position.z = 0.0001;
+  this.mesh.position.z = 0;
   this.setAngle(angle);
 }
 

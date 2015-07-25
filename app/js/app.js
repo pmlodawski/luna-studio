@@ -1,11 +1,11 @@
 "use strict";
 
-var Node         = require('node').Node,
-    $$           = require('common'),
+var $$           = require('common'),
     config       = require('config'),
     features     = require('features'),
     brunch       = require('brunch'),
     breadcrumb   = require('breadcrumb'),
+    Node         = require('node'),
     NodeSearcher = require('node_searcher'),
     Connection   = require('connection'),
     SelectionBox = require('selection_box'),
@@ -19,9 +19,9 @@ $$.connections       = {};
 $$.currentConnection = null;
 $$.selectionBox      = null;
 
-var zOrderDiv = 10000.0;
-var currentMazZ = 0.0;
-var maxZ = (Math.pow(2, 31) - 1) / zOrderDiv; // -> HS
+
+var nodeZOrderStep  = 0.00001;
+var nodeZOrderStart = 0.00000;
 
 // export to HTML
 function start() {
@@ -128,10 +128,10 @@ function updateMouse(x, y) {
   });
 }
 
-function newNodeAt(i, x, y, expr) {
-  var vect = new THREE.Vector2(x, y);
-  var node = new Node(i, vect);
-  $$.nodes[i] = node;
+function newNodeAt(id, x, y, expr) {
+  var pos = new THREE.Vector2(x, y);
+  var node = new Node(id, pos, nodeZOrderStart + id * nodeZOrderStep);
+  $$.nodes[id] = node;
   node.label(expr);
   $$.scene.add(node.mesh);
 }
@@ -143,23 +143,20 @@ function removeNode(i) {
 }
 
 // -> HS
-function assignZs() {
-  var sortedNodes = _.values($$.nodes);
-  sortedNodes.sort(function(nodeA, nodeB) {
-      return nodeA.position.z - nodeB.position.z;
-  });
-  for (var i = 0; i < sortedNodes.length; i++)
-      sortedNodes[i].zPos(i / zOrderDiv);
-  currentMazZ = sortedNodes[sortedNodes.length - 1].zPos();
-}
-
-// -> HS
 function moveToTopZ(nodeId) {
-  var node = $$.nodes[nodeId];
-  node.zPos(currentMazZ + 1.0 / zOrderDiv);
-  currentMazZ = node.zPos();
-  if (currentMazZ > maxZ)
-      assignZs();
+  var nodeToTop = $$.nodes[nodeId];
+  var nodeToTopZ = nodeToTop.zPos();
+  var maxZ = nodeToTop.zPos();
+  _.values($$.nodes).forEach(function(node) {
+    var nodeZ = node.zPos();
+    if (nodeZ > nodeToTopZ) {
+      node.zPos(nodeZ - nodeZOrderStep);
+      if (nodeZ > maxZ) {
+        maxZ = nodeZ;
+      }
+    }
+  });
+  nodeToTop.zPos(maxZ);
 }
 
 function createNodeSearcher(expression, left, top) {
@@ -202,6 +199,7 @@ function removeCurrentConnection() {
 }
 
 module.exports = {
+  start:                    start,
   initializeGl:             initializeGl,
   render:                   render,
   moveToTopZ:               moveToTopZ,
@@ -212,7 +210,6 @@ module.exports = {
   updateCamera:             updateCamera,
   updateCameraHUD:          updateCameraHUD,
   updateMouse:              updateMouse,
-  start:                    start,
   createNodeSearcher:       createNodeSearcher,
   destroyNodeSearcher:      destroyNodeSearcher,
   displaySelectionBox:      displaySelectionBox,
