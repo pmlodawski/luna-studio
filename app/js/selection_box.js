@@ -1,11 +1,13 @@
 "use strict";
 
+var $$ = require('common');
 var vs = require('shaders/select.vert')();
-var fs = require('shaders/color.frag')();
+var fs = require('shaders/select.frag')();
 
-var color = new THREE.Vector4(0.85, 0.55, 0.1,0.3);
+var color = new THREE.Vector4(0.85, 0.55, 0.1, 0.15);
 
 function SelectionBox() {
+  var _this = this;
   var geometry = new THREE.Geometry();
   geometry.vertices.push(
     new THREE.Vector3(0,0,0),
@@ -14,14 +16,34 @@ function SelectionBox() {
     new THREE.Vector3(1,0,0)
   );
   geometry.faces.push(new THREE.Face3(0, 2, 1), new THREE.Face3(0, 1, 3));
+
+  this.attributes = {
+    pos: {
+      type: 'v2',
+      value: [
+        new THREE.Vector2(-1.0, -1.0),
+        new THREE.Vector2( 1.0,  1.0),
+        new THREE.Vector2(-1.0,  1.0),
+        new THREE.Vector2( 1.0, -1.0)
+      ]
+    },
+  };
+
+  this.uniforms = {
+    visible: { type: 'f',  value: 0 },
+    size:    { type: 'v3', value: new THREE.Vector3(0,0,1) },
+    color:   { type: 'v4', value: color }
+  },
+
+  Object.keys($$.commonUniforms).forEach(function(k) {
+    _this.uniforms[k] = $$.commonUniforms[k];
+  });
+
   this.mesh = new THREE.Mesh(
       geometry,
       new THREE.ShaderMaterial( {
-        uniforms: {
-          visible: { type: 'f',  value: 0 },
-          size:    { type: 'v3', value: new THREE.Vector3(0,0,1) },
-          color:   { type: 'v4', value: color }
-        },
+        uniforms:       this.uniforms,
+        attributes:     this.attributes,
         vertexShader:   vs,
         fragmentShader: fs,
         transparent:    true,
