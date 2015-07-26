@@ -95,6 +95,8 @@ instance SetIdx          (Vector a) where setIdx          i a v = if i < length 
                                                                                   else Nothing
 instance LastIdx (Vector a) where lastIdx a = Vector.length a - 1
 
+instance LastIdx [a] where lastIdx a = length a - 1
+
 -- Maps
 
 instance Ord k => GetIdx (Map k v) where getIdx       = Map.lookup

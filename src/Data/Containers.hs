@@ -56,6 +56,11 @@ class Appendable a where
 class Prependable a where
     prepend :: ElementOf a -> a -> a
 
+instance Appendable [a] where
+    append as a = as ++ [a]
+
+instance Prependable [a] where
+    prepend = (:)
 
 instance Appendable (Vector a) where
     append = Vector.snoc
