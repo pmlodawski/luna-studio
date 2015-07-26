@@ -15,7 +15,6 @@ var Port = require('port');
 
 var insideColor     = new THREE.Color(0x1a1a1a);
 var unselectedColor = new THREE.Color(0x3a3a3a);
-var overColor       = new THREE.Color(0x585858);
 var selectedColor   = new THREE.Color(0xb87410).multiplyScalar(0.8);
 var focusedColor    = new THREE.Color(0xc85808).multiplyScalar(0.8);
 
@@ -48,7 +47,6 @@ function Node(id, position, z) {
     mouseDist:       { type: 'f', value: 100000 },
     insideColor:     { type: 'c', value: insideColor },
     unselectedColor: { type: 'c', value: unselectedColor },
-    overColor:       { type: 'c', value: overColor },
     selectedColor:   { type: 'c', value: selectedColor },
     focusedColor:    { type: 'c', value: focusedColor }
   };
@@ -75,6 +73,7 @@ function Node(id, position, z) {
   this.htmlElements = {};
   this.moveTo(position.x, position.y);
   this.zPos(z);
+  this.updateMouse(position.x, position.y);
 
   if (features.node_labels) this.updateLabel();
 }
@@ -128,12 +127,14 @@ Node.prototype.addInputPort = function(id, angle) {
   var p = new Port(id, angle, false, this.mesh.position.z);
   this.inputPorts.push(p);
   this.mesh.add(p.mesh);
+  this.updateMouse(this.mesh.position.x, this.mesh.position.y);
 };
 
 Node.prototype.addOutputPort = function(id, angle) {
   var p = new Port(id, angle, true, this.mesh.position.z);
   this.outputPorts.push(p);
   this.mesh.add(p.mesh);
+  this.updateMouse(this.mesh.position.x, this.mesh.position.y);
 };
 
 Node.prototype.findInputPort = function(id) {

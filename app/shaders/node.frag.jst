@@ -9,7 +9,6 @@ uniform float mouseDist;
 
 uniform vec3 insideColor;
 uniform vec3 unselectedColor;
-uniform vec3 overColor;
 uniform vec3 selectedColor;
 uniform vec3 focusedColor;
 
@@ -39,23 +38,26 @@ void main() {
 
   float bg_gray = 0.1;
   vec3 color = unselectedColor;
+  float brighterBy = 0.7;
   if (selected == 1) {
+    brighterBy = 0.3;
     color = selectedColor;
   } else if (selected == 2) {
+    brighterBy = 0.2;
     color = focusedColor;
-  } else {
-    float distMix  = 0.0;
-    float gradRange  = 100.0;
-    float colorRange =  30.0;
-    if (mouseDist < colorRange) {
-        distMix = 1.0;
-    } else if (mouseDist < gradRange) {
-        float coef = (mouseDist - colorRange) / (gradRange - colorRange);
-        float coefR = 1.0 - coef;
-        distMix = coefR * coefR * coefR;
-    }
-    color = distMix * overColor + (1.0 - distMix) * unselectedColor;
   }
+
+  float distMix  = 0.0;
+  float gradRange  = 100.0;
+  float colorRange =  30.0;
+  if (mouseDist < colorRange) {
+      distMix = 1.0;
+  } else if (mouseDist < gradRange) {
+      float coef = (mouseDist - colorRange) / (gradRange - colorRange);
+      float coefR = 1.0 - coef;
+      distMix = coefR * coefR * coefR;
+  }
+  color *= 1.0 + distMix * brighterBy;
 
   if (dist_squared < r1) {
     gl_FragColor = vec4(insideColor, 1.0);
