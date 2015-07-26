@@ -15,7 +15,7 @@ import Flowbox.Prelude hiding (simple, empty, Indexable, Simple, cons)
 import Data.Repr
 
 --import qualified Luna.Inference.Type as Type
-import           Luna.Inference.Type
+--import           Luna.Inference.Type
 import qualified Data.Map            as Map
 import           Data.Map            (Map)
 import qualified Data.Text.Lazy      as Text
@@ -217,12 +217,12 @@ makeLenses ''Arg
 
 
 
-class Node n inp | n -> inp where
+class IsNode n inp | n -> inp where
     inputs :: n -> [inp]
 
 
 
-instance Node (Expr h) (HExpr h) where
+instance IsNode (Expr h) (HExpr h) where
     inputs = \case
         Accessor _    base -> [base]
         App      base args -> base : fmap (view val) args
@@ -231,13 +231,13 @@ instance Node (Expr h) (HExpr h) where
 
 
 
---unsafeGet :: NodeGraph m a => NodePtr m a -> Graph m -> a
+--unsafeGet :: GraphCtx m a => GraphPtr m a -> Graph m -> a
 --unsafeGet ptr = view $ unsafeOverPtr ptr
 
       --inputs :: Graph -> ID -> [Key Expr]
         --inputs g id = case IntMap.lookup id (g ^. nodes) of
         --    Nothing -> []
-        --    Just n  -> exprOutputs (fromNodeObject n)
+        --    Just n  -> exprOutputs (fromHidden n)
         --    where exprOutputs :: Expr -> [Key Expr]
         --          exprOutputs = \case
         --              Accessor _ c  -> [c]
@@ -296,12 +296,12 @@ instance Node (Expr h) (HExpr h) where
 instance Default (Vector a) where def = mempty
 
 
---- === NodeObject ===
+--- === Hidden ===
 
 type NodeVal a = (Show a, Typeable a, Repr a)
 
-data NodeObject where
-    NodeObject :: NodeVal a => a -> NodeObject
+data Hidden where
+    Hidden :: NodeVal a => a -> Hidden
 
 
 
@@ -310,14 +310,14 @@ hiddenLens = iso cast cast
 
 -- instances
 
-instance Show NodeObject where show (NodeObject a) = show a
-instance Repr NodeObject where repr (NodeObject a) = repr a
+instance Show Hidden where show (Hidden a) = show a
+instance Repr Hidden where repr (Hidden a) = repr a
 
-instance {-# OVERLAPPABLE #-} Castable NodeObject a where
-    cast (NodeObject a) = unsafeCoerce a
+instance {-# OVERLAPPABLE #-} Castable Hidden a where
+    cast (Hidden a) = unsafeCoerce a
 
-instance {-# OVERLAPPABLE #-} NodeVal a => Castable a NodeObject where
-    cast = NodeObject
+instance {-# OVERLAPPABLE #-} NodeVal a => Castable a Hidden where
+    cast = Hidden
 
 --- === Graph ===
 
@@ -331,26 +331,26 @@ class HasGraph a n | a -> n where
     graph :: Lens' a (Graph n)
 
 
-type NodePtr m a = Ptr (Index m) a
-type NodeGraph m a = (UncheckedSetIdx m, UncheckedGetIdx m, IsoCastable a (ElementOf m), NodeVal a)
+type GraphPtr m a = Ptr (Index m) a
+type GraphCtx m a = (UncheckedSetIdx m, UncheckedGetIdx m, IsoCastable a (ElementOf m), NodeVal a)
 
-unsafeOverPtr :: NodeGraph m a => NodePtr m a -> Lens' (Graph m) a
+unsafeOverPtr :: GraphCtx m a => GraphPtr m a -> Lens' (Graph m) a
 unsafeOverPtr (Ptr i) = nodes . unsafeAt i . hiddenLens
 
-unsafeSet :: NodeGraph m a => NodePtr m a -> a -> Graph m -> Graph m
+unsafeSet :: GraphCtx m a => GraphPtr m a -> a -> Graph m -> Graph m
 unsafeSet ptr a = unsafeOverPtr ptr .~ a
 
-unsafeGet :: NodeGraph m a => NodePtr m a -> Graph m -> a
+unsafeGet :: GraphCtx m a => GraphPtr m a -> Graph m -> a
 unsafeGet ptr = view $ unsafeOverPtr ptr
 
 insert :: (Castable a (ElementOf m), Appendable m, Indexable m)
-       => a -> Graph m -> (Graph m, NodePtr m a)
+       => a -> Graph m -> (Graph m, GraphPtr m a)
 insert a g = (g', Ptr . lastIdx $ g' ^. nodes) where
     g' = g & nodes %~ (flip append (cast a))
 
 
 -- FIXME (unsafe implementation)
-inputs' :: Graph (Vector NodeObject) -> ID -> [Ptr Int (Expr (Ptr Int))]
+inputs' :: Graph (Vector Hidden) -> ID -> [Ptr Int (Expr (Ptr Int))]
 inputs' g id = inputs $ unsafeGet (Ptr id :: Ptr Int (Expr (Ptr Int))) g
 
 --        ---- instances
@@ -362,83 +362,108 @@ instance Default nodes => Default (Graph nodes) where
 
 
 
---- === GraphBuilder ===
+-- === Node ===
 
-type GraphBuilder c = State (BldrState c)
+data Type a = Type a
+            | Star
+
+data Node a = Node { _tp :: Type a, _nodeval :: Value a }
+
+data Value a = Val  a
+             | BVal -- binary value
 
 
+
+--- === Builder ===
+
+
+type Builder c = State (NodeGraph c)
+
+type family Element        (m :: * -> *) (a :: (* -> *) -> *) :: (* -> *) -> *
 type family ConnectionType (m :: * -> *) :: * -> *
+type family ASTNode2 (m :: * -> *) (a :: (* -> *) -> *) :: *
 
-type instance ConnectionType (GraphBuilder c) = Ptr (Index c)
 
-data BldrState c = BldrState { _nodeScope :: [Int]
-                             , __graph     :: Graph c
+type instance ConnectionType (Builder c) = Ptr (Index c)
+type instance Element        (Builder c) a = a
+type instance ASTNode2       (Builder c) a = a (ConnectionType (Builder c))
+
+data NodeGraph c = NodeGraph { _nodeScope :: [Int]
+                             , __graph    :: Graph c
                              }
 
 
 
-makeLenses ''BldrState
+makeLenses ''NodeGraph
 
-instance Default (Graph c) => Default (BldrState c) where
-    def = BldrState def def
+instance Default (Graph c) => Default (NodeGraph c) where
+    def = NodeGraph def def
 
-instance HasGraph (BldrState c) c where
+instance HasGraph (NodeGraph c) c where
     graph = _graph
 
-class Monad m => MonadBldrState c m | m -> c where
-    getBldrState :: m (BldrState c)
-    putBldrState :: BldrState c -> m ()
+class Monad m => MonadNodeGraph c m | m -> c where
+    getNodeGraph :: m (NodeGraph c)
+    putNodeGraph :: NodeGraph c -> m ()
 
 
-class HasBldrState a c | a -> c where
-    bldrState :: Lens' a (BldrState c)
+class HasNodeGraph a c | a -> c where
+    nodeGraph :: Lens' a (NodeGraph c)
 
-instance HasBldrState (BldrState c) c where
-    bldrState = id
+instance HasNodeGraph (NodeGraph c) c where
+    nodeGraph = id
 
 -- utils
 
-withBldrState_ :: MonadBldrState c m => (BldrState c -> BldrState c) -> m ()
-withBldrState_ f = withBldrState $ fmap (,()) f
+withNodeGraph_ :: MonadNodeGraph c m => (NodeGraph c -> NodeGraph c) -> m ()
+withNodeGraph_ f = withNodeGraph $ fmap (,()) f
 
 
-withBldrState :: MonadBldrState c m => (BldrState c -> (BldrState c, a)) -> m a
-withBldrState f = do
-    bldr <- getBldrState
+withNodeGraph :: MonadNodeGraph c m => (NodeGraph c -> (NodeGraph c, a)) -> m a
+withNodeGraph f = do
+    bldr <- getNodeGraph
     let (bldr', out) = f bldr
-    putBldrState $ bldr'
+    putNodeGraph $ bldr'
     return out
 
-withGraph :: MonadBldrState c m => (Graph c -> (Graph c, a)) -> m a
-withGraph = withBldrState . mapOver graph
+withGraph :: MonadNodeGraph c m => (Graph c -> (Graph c, a)) -> m a
+withGraph = withNodeGraph . mapOver graph
 
-requestNodeID :: MonadBldrState c m => m ID
+requestNodeID :: MonadNodeGraph c m => m ID
 requestNodeID = do
-    s <- getBldrState
-    let nsLens     = bldrState . nodeScope
+    s <- getNodeGraph
+    let nsLens     = nodeGraph . nodeScope
         (id : ids) = s ^. nsLens
-    putBldrState $ s & nsLens .~ ids
+    putNodeGraph $ s & nsLens .~ ids
     return id
 
-releaseNodeID :: MonadBldrState c m => ID -> m ()
-releaseNodeID id = withBldrState_ (nodeScope %~ (id:))
+releaseNodeID :: MonadNodeGraph c m => ID -> m ()
+releaseNodeID id = withNodeGraph_ (nodeScope %~ (id:))
 
---add :: (Appendable c, Indexable c, Castable a (ElementOf c), MonadBldrState c m)
+--add :: (Appendable c, Indexable c, Castable a (ElementOf c), MonadNodeGraph c m)
 --    => a -> m (Ptr (Index c) a)
 --add = withGraph . insert
+
+
+
+-- === ASTBuilder ===
 
 class Monad m => ASTBuilder a m where
     mkRef :: ASTNode m a -> m (Ref m a)
 
+
+
+--data NodeObject
+
 type ASTNode m a = a (ConnectionType m)
 --type Ref m a = m (ConnectionType m (a (ConnectionType m)))
-newtype Ref m a = Ref { fromRef :: ConnectionType m (a (ConnectionType m)) }
+newtype Ref m a = Ref { fromRef :: ConnectionType m (ASTNode m a) }
 
-type GraphBuilderMonad c a = (Appendable c, Indexable c, Castable (a (Ptr (Index c))) (ElementOf c))
+type BuilderMonad c a = (Appendable c, Indexable c, Castable (a (Ptr (Index c))) (ElementOf c))
 
 
 
-instance GraphBuilderMonad c a => ASTBuilder a (GraphBuilder c) where
+instance BuilderMonad c a => ASTBuilder a (Builder c) where
     mkRef = fmap Ref . withGraph . insert
 
 --add' :: el (ConnectionType bldr) -> bldr
@@ -447,7 +472,7 @@ instance GraphBuilderMonad c a => ASTBuilder a (GraphBuilder c) where
 --type X =
 
 --instance (Castable a (ElementOf c), idx ~ Index c, Appendable c, Indexable c)
---      => ASTBuilder a (GraphBuilder idx c (Ptr idx a)) where
+--      => ASTBuilder a (Builder idx c (Ptr idx a)) where
 --    add' = add
 
 -- instances
@@ -461,11 +486,11 @@ instance GraphBuilderMonad c a => ASTBuilder a (GraphBuilder c) where
 
 
 
---foo :: State (BldrState (Vector NodeObject)) (Ptr Int (Expr (Ptr Int)))
+--foo :: State (NodeGraph (Vector Hidden)) (Ptr Int (Expr (Ptr Int)))
 --foo :: (Appendable c, LastIdx c, SetIdx c, GetIdx c,
 --                       CheckedSetIdx c, CheckedGetIdx c, UncheckedSetIdx c,
 --                       UncheckedGetIdx c, Castable (Expr h) (ElementOf c),
---                       MonadBldrState c m) =>
+--                       MonadNodeGraph c m) =>
 --                      m (Ptr (Index c) (Expr h))
 
 newtype NodeCons m a = NodeCons { runNodeCons :: m (Ref m a) }
@@ -534,17 +559,17 @@ instance                      Monad m => ToMRef2 (NodeCons m a) m a where toMRef
 instance                      Monad m => ToMRef2 (Ref m a)      m a where toMRef2 = return
 instance {-# OVERLAPPABLE #-} Monad m => ToMRef2 (m (Ref m a))  m a where toMRef2 = id
 
-instance MonadBldrState c (State (BldrState c)) where
-    getBldrState = get
-    putBldrState = put
+instance MonadNodeGraph c (State (NodeGraph c)) where
+    getNodeGraph = get
+    putNodeGraph = put
 
 
 
-runNodeBuilder :: GraphBuilder (Vector NodeObject) a -> Graph (Vector NodeObject)
+runNodeBuilder :: Builder (Vector Hidden) a -> Graph (Vector Hidden)
 runNodeBuilder = view graph . flip execState def
 
 
---g2 :: Graph (Vector NodeObject)
+--g2 :: Graph (Vector Hidden)
 --g2 = runNodeBuilder $ do
 --    a    <- var "a"
 --    mod  <- var "Main"
@@ -612,9 +637,9 @@ type SExpr = Simple (Expr Simple)
 --newtype Mu f = Mu (f (Mu f))
 
 
---inputs' :: Graph (Vector NodeObject) -> ID -> [Ptr Int (Expr (Ptr Int))]
+--inputs' :: Graph (Vector Hidden) -> ID -> [Ptr Int (Expr (Ptr Int))]
 
-toGraphViz :: Graph (Vector NodeObject) -> DotGraph Int
+toGraphViz :: Graph (Vector Hidden) -> DotGraph Int
 toGraphViz g = DotGraph { strictGraph     = False
                         , directedGraph   = True
                         , graphID         = Nothing
