@@ -11,7 +11,7 @@
 
 module Main where
 
-import Flowbox.Prelude hiding (simple, empty, Indexable, Simple)
+import Flowbox.Prelude hiding (simple, empty, Indexable, Simple, cons)
 import Data.Repr
 
 --import qualified Luna.Inference.Type as Type
@@ -56,6 +56,8 @@ import Data.Containers
 
 import System.Process
 
+import qualified Data.Text.AutoBuilder as Text
+
 --add :: Int -> Int -> Int
 --add = (+)
 
@@ -99,6 +101,20 @@ type ID = Int
 --data AST = ASTExpr Expr
 --         deriving (Show)
 
+
+
+-- === Literals ===
+
+data Literal = Int Int
+             | String Text.AutoBuilder
+
+
+instance IsString Literal where
+    fromString = String . fromString
+
+
+-- === Expr ===
+
 data Key t = Key { fromKey :: ID } deriving (Show) -- { overKey :: Lens' Graph (Maybe t) }
 
 --makeLenses ''Key
@@ -112,6 +128,8 @@ type HExpr h = h (Expr h)
 data AST h = ASTExpr (h Expr)
          --deriving (Show)
 
+-- wszystkie rzeczy nazwane powinny byc w slownikach w jezyku! - czyli datatypy ponizej zostaja,
+-- ale mozemy tworzyc np. Var funkcjami, ktore oczekuja konkretnego Stringa!
 data Expr h = Var      { _name :: Name                                                      }
             | Cons     { _name :: Name                                                      }
             | Accessor { _name :: Name, _base :: HExpr h                            }
@@ -483,6 +501,8 @@ app base args = mkCons .: App <$> mrefRaw base <*> mapM marg args where
 var :: ASTBuilder Expr m => Name -> NodeCons m Expr
 var = mkCons . Var
 
+cons :: ASTBuilder Expr m => Name -> NodeCons m Expr
+cons = mkCons . Cons
 
 ref :: (Monad m, IsMVal t m (NodeCons m a)) => Name -> t -> m (Ref m a)
 ref _ = ref_
@@ -557,7 +577,7 @@ arg = ArgRef Nothing . toMRef2
 g1 :: ASTBuilder Expr m => m ()
 g1 = do
     a    <- ref "a"    $ var "a"
-    mod  <- ref "mod"  $ var "mod"
+    mod  <- ref "mod"  $ cons "Mod"
     foo  <- ref "foo"  $ a    @. "foo"
     b    <- ref "b"    $ foo  @$ [arg a]
     bar  <- ref "bar"  $ mod  @. "bar"
