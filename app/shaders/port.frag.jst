@@ -12,10 +12,9 @@ uniform float visible;
 uniform float camFactor;
 uniform float mouseDist;
 
-void main()
-{
-    bool antialias = true;
+uniform int antialias;
 
+void main() {
     float alpha = 1.0;
     float disappearE = 0.5;
     float disappearS = 0.9;
@@ -23,7 +22,7 @@ void main()
     if (camFactor < disappearE) {
         alpha = 0.0;
     } else {
-        if (antialias) {
+        if (antialias != 0) {
             float factor = camFactor * 6.0;
             float alphaL = min(1.0, factor * distanceL.x);
             float alphaR = min(1.0, factor * distanceR.x);

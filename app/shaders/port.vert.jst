@@ -9,8 +9,7 @@ varying vec3 distanceL;
 varying vec3 distanceR;
 varying vec3 distanceB;
 
-void main()
-{
+void main() {
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
     distanceL = posL;
     distanceR = posR;

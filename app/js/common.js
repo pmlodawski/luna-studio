@@ -4,6 +4,7 @@ var commonUniforms =  {
   camPan:     {type: 'v2', value: new THREE.Vector2(0.0, 0.0)},
   camFactor:  {type: 'f',  value: 1.0},
   screenSize: {type: 'v2', value: new THREE.Vector2(1280.0, 800.0)},
+  antialias:  {type: 'i',  value: 1}
 };
 
 module.exports = {

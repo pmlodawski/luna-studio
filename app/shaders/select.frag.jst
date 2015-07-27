@@ -9,16 +9,15 @@ uniform vec3 size;
 
 varying vec2 distance;
 
-void main()
-{
-    if (visible < 1.0) discard;
+uniform int antialias;
 
-    bool antialias = true;
+void main() {
+    if (visible < 1.0) discard;
 
     float width = 6.0;
     float alpha = 1.0;
 
-    if (antialias) {
+    if (antialias != 0) {
         float dx = 1.0 - abs(distance.x);
         float dy = 1.0 - abs(distance.y);
 

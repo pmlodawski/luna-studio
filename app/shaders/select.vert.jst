@@ -6,8 +6,7 @@ uniform vec3 size;
 attribute vec2 pos;
 varying vec2 distance;
 
-void main()
-{
+void main() {
 	gl_Position = projectionMatrix * modelViewMatrix * (vec4(position * size, 1.0));
     distance = pos;
 }
