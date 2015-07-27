@@ -9,8 +9,8 @@ import           ThreeJS.Mesh
 
 
 instance Container Scene where
-    add    (Scene m) o = m `addJS`    (mesh o)
-    remove (Scene m) o = m `removeJS` (mesh o)
+    add    (Scene m) o = mesh o >>= addJS m
+    remove (Scene m) o = mesh o >>= removeJS m
 
 foreign import javascript unsafe "$$.scene" sceneJS :: JSRef Scene
 scene = Scene sceneJS

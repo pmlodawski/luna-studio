@@ -26,14 +26,10 @@ import qualified ThreeJS.Geometry as Geometry
 import           Utils.Vector
 import           JS.Config as Config
 
-
-type Box    = Mesh
-type Label  = Mesh
--- newtype Object = Object (JSRef ()) deriving (Typeable)
-data Button = Button Group Box Label Attribute
+newtype Button = Button { unButton :: JSObject.Object }
 
 instance Object Button where
-    mesh (Button m _ _ _) = mesh m
+    mesh b = (JSObject.getProp "mesh" $ unButton b) :: IO Mesh
 
 buildLabel text = do
     material <- getTextHUDMaterial
@@ -85,8 +81,16 @@ buildButton label pos size = do
     group `add` background
     group `add` label
 
-    p <- position (mesh group)
+    p <- (mesh group) >>= position
     p `setX` (pos ^. x)
     p `setY` (pos ^. y)
 
-    return $ Button group background label state
+
+    button <- JSObject.create
+
+    JSObject.setProp "mesh" (unGroup group) button
+    JSObject.setProp "background" background button
+    JSObject.setProp "label" label button
+    JSObject.setProp "state" (JSObject.getJSRef $ unAttribute state) button
+
+    return $ Button button

@@ -21,11 +21,13 @@ import qualified Widget.Button as Button
 import           ThreeJS.Text (calculateTextWidth)
 import qualified ThreeJS.Button as TButton
 import qualified ThreeJS.Mesh as Mesh
-import ThreeJS.Types
+import           ThreeJS.Types
 import qualified ThreeJS.Scene as Scene
 import qualified Data.Text.Lazy as Text
 import           Data.Text.Lazy (Text)
+import qualified JavaScript.Object as JSObject
 
+import           GHCJS.Prim
 
 
 data Action = NewPath     { _path  :: [Text] }
@@ -48,8 +50,9 @@ instance PrettyPrinter Action where
 
 
 toAction :: Event Node -> Maybe Action
--- toAction (Mouse (Mouse.Event tpe pos button _)) = case tpe of
---     Mouse.Moved     -> Just $ MouseMoving pos
+toAction (Mouse (Mouse.Event tpe pos button _)) = case tpe of
+    Mouse.Moved     -> Just $ MouseMoving pos
+    _ -> Nothing
 --     Mouse.Pressed   -> case button of
 --         1 -> Just $ MousePressed pos
 --         _ -> Nothing
@@ -57,7 +60,7 @@ toAction :: Event Node -> Maybe Action
 --         1 -> Just $ MouseReleased pos
 --         _ -> Nothing
 toAction (Window (Window.Event tpe width height)) = case tpe of
-    Window.Resized  -> Just $ NewPath ["Foo", "B    a    r", "foo bar foo bar ", "Ala123"]
+    Window.Resized  -> Just $ NewPath ["NodeLab", "demo", " by ", "New Byte Order"]
 toAction _           = Nothing
 
 instance ActionStateUpdater Action where
@@ -99,21 +102,25 @@ instance ActionStateUpdater Action where
         buttonUnderCursor = find (Button.isOver $ fromIntegral <$> mousePos) oldButtons
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
-        UpdateFocus   -> putStrLn "-" -- do
---             let buttons = zip [0..] $ state ^. Global.breadcrumb . Breadcrumb.buttons
---             forM_ buttons (\(i, b) -> JS.setButtonState i (fromEnum $ b ^. Button.state))
+        UpdateFocus   -> do
+            let buttons = zip [0..] $ state ^. Global.breadcrumb . Breadcrumb.buttons
+            forM_ buttons updateButton where
+                updateButton (i, b) = do
+                    bref <- (getButton $ b ^. Button.refId) >>= return . TButton.Button . JSObject.fromJSRef
+                    uniform <- JSObject.getProp "state" (TButton.unButton bref) >>= return . Attribute . JSObject.fromJSRef
+                    JSObject.setProp "value" (toJSInt $ fromEnum $ b ^. Button.state) $ unAttribute uniform
         RenderButtons toRemove   -> do
             mapM_ removeButton_ toRemove
             mapM_ addButton $ state ^. Global.breadcrumb . Breadcrumb.buttons
             where
             removeButton_ b = do
-                bref <- (getButton $ b ^. Button.refId) :: IO Mesh
+                bref <- (getButton $ b ^. Button.refId) >>= return . TButton.Button . JSObject.fromJSRef
                 removeButton  (b ^. Button.refId)
-                Scene.sceneHUD `remove` bref
+                mesh bref >>= remove Scene.sceneHUD
             addButton (Button.Button bid label state pos size) = do
                 b <- TButton.buildButton label pos size
-                putButton bid (mesh b)
-                Scene.sceneHUD `add` (mesh b)
+                putButton bid (JSObject.getJSRef $ TButton.unButton b)
+                mesh b >>= add Scene.sceneHUD
 
         ButtonPressed -> do
             putStrLn "Button pressed"

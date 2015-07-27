@@ -23,17 +23,17 @@ foreign import javascript unsafe "require('bmfont').render({text: $1, font: requ
 buildTextGeometry :: Text -> IO (JSRef TextGeometry)
 buildTextGeometry = js_buildTextGeometry . lazyTextToJSString
 
-data TextMaterial = TextMaterial (JSRef Material)
+data TextMaterial = TextMaterial Material
 
 instance IsMaterial TextMaterial where material (TextMaterial m) = m
 
 -- -> HS
 foreign import javascript unsafe "require('font/text_material').graph"
-    getTextMaterial :: IO (JSRef Material)
+    getTextMaterial :: IO Material
 
 -- -> HS
 foreign import javascript unsafe "require('font/text_material').hud"
-    getTextHUDMaterialJS :: IO (JSRef Material)
+    getTextHUDMaterialJS :: IO Material
 
 getTextHUDMaterial :: IO TextMaterial
 getTextHUDMaterial = getTextHUDMaterialJS >>= return . TextMaterial

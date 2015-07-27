@@ -24,8 +24,8 @@ foreign import javascript unsafe "$1.add($2)" addJS :: JSRef a -> JSRef b -> IO 
 foreign import javascript unsafe "$1.remove($2)" removeJS :: JSRef a -> JSRef b -> IO ()
 
 instance Container Group where
-    add    (Group m) o = m `addJS`    (mesh o)
-    remove (Group m) o = m `removeJS` (mesh o)
+    add    (Group m) o = mesh o >>= addJS m
+    remove (Group m) o = mesh o >>= removeJS m
 
 
 foreign import javascript unsafe "$1.position"

@@ -32,15 +32,15 @@ class Container a where
 
 data MeshJS
 type Mesh  = JSRef MeshJS
-data Group = Group Mesh
+data Group = Group {unGroup :: Mesh}
 data Scene = Scene (JSRef Scene)
 
 
 
-class Object a where mesh :: a -> Mesh
+class Object a where mesh :: a -> IO Mesh
 
-instance Object Mesh  where mesh a = a
-instance Object Group where mesh (Group a) = a
+instance Object Mesh  where mesh a = return a
+instance Object Group where mesh (Group a) = return a
 
 data JSVector2
 data JSVector3
@@ -60,10 +60,11 @@ foreign import javascript unsafe "$1.a = $2" setA :: JSRef a -> Double -> IO ()
 
 
 class Geometry a
-class IsMaterial a where material :: a -> JSRef Material
+class IsMaterial a where material :: a -> Material
 
 
-data Material
+data MaterialJS
+type Material = JSRef MaterialJS
 --
 -- data Uniform
 -- -- type Attribute = Uniform

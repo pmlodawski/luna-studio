@@ -23,12 +23,12 @@ data Side = FrontSide | BackSide | DoubleSide deriving (Show, Eq, Enum)
 data Shading = NoShading | FlatShading | SmoothShading deriving (Show, Eq, Enum)
 data Blending = NoBlending | NormalBlending | AdditiveBlending | SubtractiveBlending | MultiplyBlending | CustomBlending deriving (Show, Eq, Enum)
 
-data ShaderMaterial = ShaderMaterial (JSRef Material)
+data ShaderMaterial = ShaderMaterial Material
 
 instance IsMaterial ShaderMaterial where material (ShaderMaterial m) = m
 
 foreign import javascript unsafe "new THREE.ShaderMaterial({uniforms: $1, attributes: $2, vertexShader: $3, fragmentShader: $4, transparent: $5, blending: $6, side: $7})"
-    buildShaderMaterialJS :: AttributeMap -> AttributeMap -> JSString -> JSString -> Bool -> Int -> Int  -> IO (JSRef Material)
+    buildShaderMaterialJS :: AttributeMap -> AttributeMap -> JSString -> JSString -> Bool -> Int -> Int  -> IO Material
 
 buildShaderMaterial :: AttributeMap -> AttributeMap -> VertexShader -> FragmentShader -> Bool -> Blending -> Side -> IO ShaderMaterial
 buildShaderMaterial u a (VertexShader v) (FragmentShader f) t b s = do
