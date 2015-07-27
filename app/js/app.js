@@ -4,12 +4,10 @@ var $$           = require('common'),
     config       = require('config'),
     features     = require('features'),
     brunch       = require('brunch'),
-    breadcrumb   = require('breadcrumb'),
-    Node         = require('node'),
+    GraphNode    = require('node'),
     NodeSearcher = require('node_searcher'),
     Connection   = require('connection'),
-    SelectionBox = require('selection_box'),
-    Button       = require('button');
+    SelectionBox = require('selection_box');
 
 console.info("Current version " + brunch.env + " " + brunch.git_commit);
 console.info("Build at " + brunch.date);
@@ -128,7 +126,7 @@ function updateMouse(x, y) {
 
 function newNodeAt(id, x, y, expr) {
   var pos = new THREE.Vector2(x, y);
-  var node = new Node(id, pos, nodeZOrderStart + id * nodeZOrderStep);
+  var node = new GraphNode(id, pos, nodeZOrderStart + id * nodeZOrderStep);
   $$.nodes[id] = node;
   node.label(expr);
   $$.scene.add(node.mesh);

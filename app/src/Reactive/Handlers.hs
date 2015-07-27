@@ -37,8 +37,8 @@ readKeyMods = do
 
 readMousePos =  do
     e <- event
-    x <- MouseEvent.getX e
-    y <- MouseEvent.getY e
+    x <- MouseEvent.getClientX e
+    y <- MouseEvent.getClientY e
     return $ Vector2 x y
 
 mouseDownHandler :: AddHandler (Event Dynamic)

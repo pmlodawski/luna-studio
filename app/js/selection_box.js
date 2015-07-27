@@ -33,7 +33,7 @@ function SelectionBox() {
     visible: { type: 'f',  value: 0 },
     size:    { type: 'v3', value: new THREE.Vector3(0,0,1) },
     color:   { type: 'v4', value: color }
-  },
+  };
 
   Object.keys($$.commonUniforms).forEach(function(k) {
     _this.uniforms[k] = $$.commonUniforms[k];

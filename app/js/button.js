@@ -90,7 +90,7 @@ Button.prototype.updateLabel = function() {
 
 Button.prototype.setState = function(state) {
     this.uniforms.state.value = state;
-}
+};
 
 Button.prototype.label = function(text) {
   if (text !== undefined) {

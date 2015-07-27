@@ -103,19 +103,17 @@ instance ActionUIUpdater Action where
 --             let buttons = zip [0..] $ state ^. Global.breadcrumb . Breadcrumb.buttons
 --             forM_ buttons (\(i, b) -> JS.setButtonState i (fromEnum $ b ^. Button.state))
         RenderButtons toRemove   -> do
-            let removeButton_ b = do
-                let bid = b ^. Button.refId
-                b <- (getButton $ b ^. Button.refId) :: IO Mesh
-                removeButton bid
-                Scene.sceneHUD `remove` b
-
             mapM_ removeButton_ toRemove
-
-            let addButton (Button.Button bid label state pos size) = do
+            mapM_ addButton $ state ^. Global.breadcrumb . Breadcrumb.buttons
+            where
+            removeButton_ b = do
+                bref <- (getButton $ b ^. Button.refId) :: IO Mesh
+                removeButton  (b ^. Button.refId)
+                Scene.sceneHUD `remove` bref
+            addButton (Button.Button bid label state pos size) = do
                 b <- TButton.buildButton label pos size
                 putButton bid (mesh b)
                 Scene.sceneHUD `add` (mesh b)
 
-            mapM_ addButton $ state ^. Global.breadcrumb . Breadcrumb.buttons
         ButtonPressed -> do
             putStrLn "Button pressed"
