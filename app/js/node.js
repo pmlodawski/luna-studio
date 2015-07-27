@@ -186,7 +186,7 @@ Node.prototype.updateLabel = function() {
   this.labelObject.rotation.x = 180 * Math.PI / 180;
   this.labelObject.scale.multiplyScalar(config.fontSize);
   this.labelObject.position.x = -75;
-  this.labelObject.position.y = 40;
+  this.labelObject.position.y = 42;
   this.labelObject.position.z = 0;
 
   this.mesh.add(this.labelObject);

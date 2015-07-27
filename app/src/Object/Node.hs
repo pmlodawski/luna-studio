@@ -69,8 +69,8 @@ instance PrettyPrinter PortRef where
         <> ")"
 
 nodeRadius        = 30.0
-portSize          = 7.0
-portDistFromRim   = 1.5
+portSize          = 9.0
+portDistFromRim   = 3.0
 distFromPort      = 0.3
 
 radiusSquared = nodeRadius * nodeRadius

@@ -5,8 +5,8 @@ var vs = require('shaders/port.vert')();
 var fs = require('shaders/port.frag')();
 
 var triangleRatio = 1.5;
-var size          = 7;
-var distFromRim   = 1.5;
+var size          = 9;
+var distFromRim   = 3;
 var nodeRadius    = 30.0;
 
 
