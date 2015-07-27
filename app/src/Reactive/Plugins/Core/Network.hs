@@ -66,9 +66,9 @@ makeNetworkDescription logging = do
         cameraActionB                 = fmap ActionST $         Camera.toAction <$> anyNodeB
         nodeAddRemActionB             = fmap ActionST $      AddRemove.toAction <$> anyNodeB
         nodeSelectionActionB          = fmap ActionST $      Selection.toAction <$> anyNodeB <*> underCursorB
-        nodeMultiSelectionActionB     = fmap ActionST $ MultiSelection.toAction <$> anyNodeB <*> underCursorB
+        nodeMultiSelectionActionB     = fmap ActionST $ MultiSelection.toAction <$> anyNodeB <*> globalStateB <*> underCursorB
         nodeDragActionB               = fmap ActionST $           Drag.toAction <$> anyNodeB <*> underCursorB
-        nodeConnectActionB            = fmap ActionST $        Connect.toAction <$> anyNodeB <*> underCursorB
+        nodeConnectActionB            = fmap ActionST $        Connect.toAction <$> anyNodeB <*> globalStateB
         nodeSearcherActionB           = fmap ActionST $   NodeSearcher.toAction <$> anyNodeB
         breadcrumbActionB             = fmap ActionST $     Breadcrumb.toAction <$> anyNodeB
 

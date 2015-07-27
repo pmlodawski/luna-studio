@@ -82,11 +82,14 @@ portOuterBorder   = nodeRadius + portDistFromRim + portWidth
 
 portOuterBorderSquared = portOuterBorder * portOuterBorder
 
+
+haloOuterMargin        = 5.0
 nodeHaloInnerRadius    = nodeRadius + portDistFromRim
-nodeHaloOuterRadius    = nodeHaloInnerRadius + portWidth
+nodeHaloOuterRadius    = nodeHaloInnerRadius + portWidth + haloOuterMargin
 haloInnerRadiusSquared = nodeHaloInnerRadius * nodeHaloInnerRadius
 haloOuterRadiusSquared = nodeHaloOuterRadius * nodeHaloOuterRadius
 
+closenestFactor        = 0.25
 
 
 createPort :: PortType -> Int -> PortId -> Port
@@ -166,7 +169,6 @@ getNodeHaloAt posScr camera nodes = listToMaybe $ filter inHalo nodes where
         distSquared  = (dist ^. x) ^ 2 + (dist ^. y) ^ 2
         dist         = (node ^. nodePos - pos)
 
-
 getPortRef :: Vector2 Int -> Camera -> NodeCollection -> Maybe PortRef
 getPortRef posScr camera nodes = maybePortRef where
     pos                 = screenToWorkspace camera posScr
@@ -177,7 +179,7 @@ getPortRef posScr camera nodes = maybePortRef where
             portRefs    = getPortRefs posAngle nodeHalo
         when (null portRefs) Nothing
         let closestPort = minimumBy (compare `on` fst) portRefs
-        when (0.12 < abs (fst closestPort)) Nothing
+        when (closenestFactor < abs (fst closestPort)) Nothing
         -- trace ("closest " <> display closestPort <> "\nportRefs " <> display portRefs) $
         Just $ snd closestPort
 

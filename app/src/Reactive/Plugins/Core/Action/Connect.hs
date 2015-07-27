@@ -47,18 +47,20 @@ instance PrettyPrinter Action where
     display (DragAction tpe point) = "cA(" <> display tpe <> " " <> display point <> ")"
 
 
-toAction :: Event Node -> UnderCursor -> Maybe Action
-toAction (Mouse (Mouse.Event tpe pos button keyMods)) underCursor = trace ("uc " <> display underCursor) $ case button of
+toAction :: Event Node -> Global.State -> Maybe Action
+toAction (Mouse (Mouse.Event tpe pos button keyMods)) state = case button of
     1                  -> case tpe of
         Mouse.Pressed  -> if dragAllowed then case keyMods of
                                              (KeyMods False False False False) -> Just (DragAction (StartDrag draggedPort) pos)
                                              _                                 -> Nothing
                                          else Nothing
+                        where   -- TODO: switch to our RayCaster
+                            portMay       = getPortRefUnderCursor state
+                            dragAllowed   = isJust   portMay
+                            draggedPort   = fromJust portMay
         Mouse.Released -> Just (DragAction StopDrag pos)
         Mouse.Moved    -> Just (DragAction Moving   pos)
     _                  -> Nothing
-    where dragAllowed   = isJust   $ underCursor ^. port
-          draggedPort   = fromJust $ underCursor ^. port
 toAction _ _            = Nothing
 
 updateSourcePort :: PortRef -> Angle -> Node -> Node

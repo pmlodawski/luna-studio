@@ -36,4 +36,4 @@ getPortRefUnderCursor state = getPortRef (state ^. mousePos) (toCamera state) (s
 
 
 underCursor :: State -> UnderCursor
-underCursor state = UnderCursor (getNodesUnderCursor state) (getPortRefUnderCursor state)
+underCursor state = UnderCursor (getNodesUnderCursor state) Nothing -- (getPortRefUnderCursor state)
