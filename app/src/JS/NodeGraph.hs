@@ -92,4 +92,5 @@ setOutputPortAngle nodeId portId angle = do
 createNodeAt :: Int -> Vector2 Double -> Text -> IO ()
 createNodeAt nodeId (Vector2 px py) expr = do
     newNodeAt nodeId px py expr
+    putStrLn $ "nodeId " <> show nodeId
 

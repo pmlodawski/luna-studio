@@ -14,35 +14,39 @@ uniform float mouseDist;
 
 void main()
 {
-    float factor = camFactor * 6.0;
+    bool antialias = true;
 
-    float alphaL = min(1.0, factor * distanceL.x);
-    float alphaR = min(1.0, factor * distanceR.x);
-    float alphaB = min(1.0, factor * distanceB.x);
-
-    float disappearS = 0.9;
+    float alpha = 1.0;
     float disappearE = 0.5;
-    float disappearW = disappearS - disappearE;
+    float disappearS = 0.9;
 
-    float alpha = alphaL * alphaR * alphaB;
     if (camFactor < disappearE) {
         alpha = 0.0;
-    } else  if (camFactor < disappearS) {
-        alpha = alpha * (1.0 - (disappearS - camFactor) / disappearW);
+    } else {
+        if (antialias) {
+            float factor = camFactor * 6.0;
+            float alphaL = min(1.0, factor * distanceL.x);
+            float alphaR = min(1.0, factor * distanceR.x);
+            float alphaB = min(1.0, factor * distanceB.x);
+            alpha = alphaL * alphaR * alphaB;
+        }
+        if (camFactor < disappearS) {
+           float disappearW = disappearS - disappearE;
+           alpha = alpha * (1.0 - (disappearS - camFactor) / disappearW);
+        }
     }
 
-    float distMix  = 0.0;
     float gradRange  = 300.0;
     float colorRange =  60.0;
+    vec4  colorShow  = colorFar;
     if (mouseDist < colorRange) {
-        distMix = 1.0;
+        colorShow = color;
     } else if (mouseDist < gradRange) {
         float coef = (mouseDist - colorRange) / (gradRange - colorRange);
         float coefR = 1.0 - coef;
-        distMix = coefR * coefR * coefR;
+        float distMix = coefR * coefR * coefR;
+        colorShow = distMix * color + (1.0 - distMix) * colorFar;
     }
-
-    vec4 colorShow = distMix * color + (1.0 - distMix) * colorFar;
 
     gl_FragColor = vec4(colorShow.xyz, alpha * colorShow.w);
 }
