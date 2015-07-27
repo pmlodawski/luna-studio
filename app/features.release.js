@@ -8,5 +8,5 @@ module.exports = {
 // features
   node_labels:   false,
   label_editor:  false,
-  node_searcher: false
+  node_searcher: true
 };
