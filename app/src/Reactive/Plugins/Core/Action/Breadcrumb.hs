@@ -41,7 +41,6 @@ makeLenses ''Action
 
 buttonHeight  = 30
 buttonSpacing = 10
-buttonPadding = 20
 
 instance PrettyPrinter Action where
     display (NewPath path)  = "mA(" <> show path   <> ")"
@@ -58,7 +57,7 @@ toAction :: Event Node -> Maybe Action
 --         1 -> Just $ MouseReleased pos
 --         _ -> Nothing
 toAction (Window (Window.Event tpe width height)) = case tpe of
-    Window.Resized  -> Just $ NewPath ["Foo", "Bar", "to jest dluga nazwa", "Ala123"]
+    Window.Resized  -> Just $ NewPath ["Foo", "B    a    r", "foo bar foo bar ", "Ala123"]
 toAction _           = Nothing
 
 instance ActionStateUpdater Action where
@@ -79,13 +78,13 @@ instance ActionStateUpdater Action where
                                            & Global.breadcrumb . Breadcrumb.nextId  .~ nextId
                                            & Global.breadcrumb . Breadcrumb.buttons .~ (reverse buttons) where
                                                (buttons, (_, nextId)) = foldl button ([], (0, startId)) path where
-                                                   button (xs, (offset, bid)) name = (newButton:xs, (newOffset, bid+1)) where
+                                                   button (xs, (offset, bid)) name = (newButton:xs, (newOffset, bid + 1)) where
                                                        newButton = (Button.Button bid label Button.Normal pos size)
-                                                       width     = (ThreeJS.Text.calculateTextWidth name) + 2*buttonPadding
+                                                       width     = TButton.buttonWidth label
                                                        pos       = (Vector2 offset 0)
                                                        size      = (Vector2 width buttonHeight)
                                                        newOffset = offset + width + buttonSpacing
-                                                       label     = name <> idt
+                                                       label     = name
                                                        idt :: Text
                                                        idt = Text.pack $ show bid
                                                    startId = oldState ^. Global.breadcrumb . Breadcrumb.nextId

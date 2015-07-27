@@ -54,8 +54,6 @@ function initializeGl() {
     $($$.renderer.domElement).addClass('renderer');
 
     document.body.appendChild($$.renderer.domElement);
-
-    breadcrumb.initialize();
 }
 
 function addVersionToHud() {
