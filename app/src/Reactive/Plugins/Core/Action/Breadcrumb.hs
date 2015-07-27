@@ -30,14 +30,14 @@ import qualified JavaScript.Object as JSObject
 import           GHCJS.Prim
 
 
-data Action = NewPath     { _path  :: [Text] }
-            | MouseMoving { _pos   :: Vector2 Int }
+data Action = NewPath       { _path  :: [Text] }
+            | MouseMoving   { _pos   :: Vector2 Int }
             | MousePressed  { _pos   :: Vector2 Int }
             | MouseReleased { _pos   :: Vector2 Int }
             | UpdateFocus
             | ButtonPressed
             | RenderButtons { _toRemove :: [Button.Button] }
-              deriving (Eq, Show)
+            deriving (Eq, Show)
 
 makeLenses ''Action
 
@@ -45,8 +45,8 @@ buttonHeight  = 30
 buttonSpacing = 10
 
 instance PrettyPrinter Action where
-    display (NewPath path)  = "mA(" <> show path   <> ")"
-    display (MouseMoving  pos )  = "mA(" <> display pos <> ")"
+    display (NewPath path)    = "mA(" <> show path   <> ")"
+    display (MouseMoving pos) = "mA(" <> display pos <> ")"
 
 
 toAction :: Event Node -> Maybe Action
@@ -100,6 +100,7 @@ instance ActionStateUpdater Action where
                 newState = if isOver then Button.Focused else Button.Normal
                 isOver   = Button.isOver (fromIntegral <$> mousePos) b
         buttonUnderCursor = find (Button.isOver $ fromIntegral <$> mousePos) oldButtons
+
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
         UpdateFocus   -> do

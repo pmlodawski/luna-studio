@@ -24,11 +24,11 @@ instance PrettyPrinter Button where
 
 posHit :: Double -> Double -> Double -> Bool
 posHit center range position
- | position >= rangeStart && position <= rangeEnd = True
- | otherwise                                      = False
- where
-     rangeStart = center
-     rangeEnd   = center + range
+    | position >= rangeStart && position <= rangeEnd = True
+    | otherwise                                      = False
+    where
+        rangeStart = center
+        rangeEnd   = center + range
 
 isOver :: Vector2 Double -> Button -> Bool
 isOver mouse (Button _ _ _ pos size) = (posHit (pos ^. x) (size ^. x) (mouse ^. x)) && (posHit (pos ^. y) (size ^. y) (mouse ^. y))
