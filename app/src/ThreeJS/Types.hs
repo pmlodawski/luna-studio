@@ -56,9 +56,12 @@ foreign import javascript unsafe "$1.y = $2" setY :: JSRef a -> Double -> IO ()
 foreign import javascript unsafe "$1.z = $2" setZ :: JSRef a -> Double -> IO ()
 foreign import javascript unsafe "$1.a = $2" setA :: JSRef a -> Double -> IO ()
 
-class Geometry a
-class Material a
 
+class Geometry a
+class IsMaterial a where material :: a -> JSRef Material
+
+
+data Material
 
 data Uniform
 type Attribute = Uniform
@@ -76,6 +79,9 @@ instance ToUniform Double            where toUniform a = buildUniformJS (lazyTex
 instance ToUniform (JSRef JSVector2) where toUniform a = buildUniformJS (lazyTextToJSString "v2") a
 instance ToUniform (JSRef JSVector3) where toUniform a = buildUniformJS (lazyTextToJSString "v2") a
 instance ToUniform (JSRef JSVector4) where toUniform a = buildUniformJS (lazyTextToJSString "v4") a
+
+
+foreign import javascript unsafe "$1.value = $2" setValue :: JSRef Uniform -> JSRef a -> IO()
 
 
 

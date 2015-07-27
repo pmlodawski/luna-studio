@@ -41,7 +41,7 @@ makeLenses ''Action
 
 buttonHeight  = 30
 buttonSpacing = 10
-buttonPadding = 10
+buttonPadding = 20
 
 instance PrettyPrinter Action where
     display (NewPath path)  = "mA(" <> show path   <> ")"

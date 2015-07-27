@@ -9,8 +9,8 @@ import           ThreeJS.Types
 foreign import javascript unsafe "new THREE.Mesh($1, $2)"
     buildMeshJS :: JSRef a -> JSRef b -> IO Mesh
 
-buildMesh ::  (Geometry a, Material b) => JSRef a -> JSRef b -> IO Mesh
-buildMesh = buildMeshJS
+buildMesh ::  (Geometry a, IsMaterial b) => JSRef a -> b -> IO Mesh
+buildMesh g m = buildMeshJS g (material m)
 
 foreign import javascript unsafe "new THREE.Group()"
     buildGroupJS :: IO Mesh
