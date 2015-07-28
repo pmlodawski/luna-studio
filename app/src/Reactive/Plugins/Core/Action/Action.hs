@@ -7,6 +7,7 @@
 module Reactive.Plugins.Core.Action.Action where
 
 import           Utils.PreludePlus
+import           JS.Bindings
 
 import           Reactive.Plugins.Core.Action.State.Global
 
@@ -64,7 +65,7 @@ noActionUI :: State -> ActionUI
 noActionUI st = ActionUI NoAction st
 
 updateAllUI :: [ActionUI] -> IO ()
-updateAllUI [] =  return ()
+updateAllUI [] = shouldRender
 updateAllUI ((ActionUI act st):as) = updateUI (WithState act st) >> updateAllUI as
 
 logAllUI :: [ActionUI] -> IO ()

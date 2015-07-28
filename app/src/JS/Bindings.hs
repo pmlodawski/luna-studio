@@ -176,3 +176,5 @@ foreign import javascript unsafe "app.removeCurrentConnection()"
 foreign import javascript unsafe "window.dispatchEvent(new Event('resize'))"
     triggerWindowResize :: IO ()
 
+foreign import javascript unsafe "app.shouldRender()"
+    shouldRender :: IO ()
