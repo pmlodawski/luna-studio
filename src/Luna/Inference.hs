@@ -29,7 +29,6 @@ import           GHC.Prim (Any)
 import           Unsafe.Coerce (unsafeCoerce)
 import           Data.Convert
 
-import           FastString (FastString, mkFastString, unpackFS)
 
 
 import qualified Data.IntMap.Lazy as IntMap
@@ -85,8 +84,6 @@ import qualified Data.Text.AutoBuilder as Text
 --empty = def :: Graph.Gr Node ()
 
 
-instance IsString FastString where
-    fromString = mkFastString
 
 type ID = Int
 
@@ -119,7 +116,7 @@ data Key t = Key { fromKey :: ID } deriving (Show) -- { overKey :: Lens' Graph (
 --makeLenses ''Key
 
 
-type Name = FastString
+type Name = String
 
 
 type TPtr i a = Ptr i
@@ -202,9 +199,9 @@ deriving instance Show (HExpr h) => Show (Expr h)
 
 instance Repr (Expr h) where
     repr = \case
-        Var      n   -> "Var "      <> show (unpackFS n)
-        Cons     n   -> "Cons "     <> show (unpackFS n)
-        Accessor n _ -> "Accessor " <> show (unpackFS n)
+        Var      n   -> "Var "      <> show ( n)
+        Cons     n   -> "Cons "     <> show ( n)
+        Accessor n _ -> "Accessor " <> show ( n)
         App      {}  -> "App"
 
 --data Var = Var Name deriving (Show)
