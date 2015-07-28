@@ -40,26 +40,25 @@ void main() {
     float r1 =         rimRef /  rimCamFactor;
     float r2 = r1 + blurWidth;
 
-    float alpha  = 0.0;
+    float alpha  = 1.0;
     float alphaV = 1.0;
+
     if (d < r1) {
         alpha = 1.0;
-    } else if (antialias != 0) {
-        if (d < r2) {
-            alpha = (r2 - d) / blurWidth;
-            // colorShow = vec3(alpha, 0.0, 0.0); alpha = 1.0; // for test
-        } else {
-            // colorShow = vec3(0.0, 1.0, 0.0); alpha = 1.0; // for test
-        }
+    } else if (d < r2 && antialias != 0) {
+        alpha = (r2 - d) / blurWidth;
+        // colorShow = vec3(alpha, 0.0, 0.0); alpha = 1.0; // for test
+    } else {
+        alpha = 0.0;
+        // colorShow = vec3(0.0, 1.0, 0.0); alpha = 1.0; // for test
+    }
 
+    if (antialias != 0) {
         float sideWidth = 150.0 * blurWidth;
         float vr = rimRef /  rimCamFactor;
         float vm = len * (1.0 - v) / sideWidth;
 
-        alphaV = 0.0;
-        if (vm > vr) {
-            alphaV = 1.0;
-        } else {
+        if (vm <= vr) {
             float mod = (vr - vm) / vr;
             alphaV = 1.0 - mod * mod;
             // colorShow = vec3(alphaV, 0.0, 0.0); alphaV = 1.0; // for test
