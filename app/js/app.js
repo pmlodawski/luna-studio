@@ -21,6 +21,8 @@ $$.selectionBox      = null;
 var nodeZOrderStep  = 0.00001;
 var nodeZOrderStart = 0.00000;
 
+var shouldRender = true;
+
 // export to HTML
 function start() {
   $(document).ready(function(){
@@ -52,6 +54,7 @@ function initializeGl() {
     $($$.renderer.domElement).addClass('renderer');
 
     document.body.appendChild($$.renderer.domElement);
+    $('#spinner').remove();
 }
 
 function addVersionToHud() {
@@ -83,10 +86,13 @@ function initCommonWidgets() {
 }
 
 function render() {
-  $$.renderer.clear();
-  $$.renderer.render($$.scene, $$.camera);
-  $$.renderer.clearDepth();
-  $$.renderer.render($$.sceneHUD, $$.cameraHUD);
+  if(shouldRender) {
+    $$.renderer.clear();
+    $$.renderer.render($$.scene, $$.camera);
+    $$.renderer.clearDepth();
+    $$.renderer.render($$.sceneHUD, $$.cameraHUD);
+    shouldRender = false;
+  }
   requestAnimationFrame(render);
 }
 
@@ -214,7 +220,8 @@ module.exports = {
   removeCurrentConnection:  removeCurrentConnection,
   getNode:                  function(index) { return $$.nodes[index]; },
   getNodes:                 function()      { return _.values($$.nodes); },
-  nodeSearcher:             function()      { return $$.node_searcher; }
+  nodeSearcher:             function()      { return $$.node_searcher; },
+  shouldRender:             function() { shouldRender = true; }
 };
 
 

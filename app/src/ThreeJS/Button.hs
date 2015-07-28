@@ -25,6 +25,10 @@ import           ThreeJS.Text
 import qualified ThreeJS.Geometry as Geometry
 import           Utils.Vector
 import           JS.Config as Config
+import           ThreeJS.Registry
+import qualified Widget.Button as WB
+import           GHCJS.Prim
+
 
 newtype Button = Button { unButton :: JSObject.Object }
 
@@ -48,8 +52,8 @@ buttonPadding = 20
 buttonWidth text = Config.fontSize * (calculateTextWidth text) + 2 * buttonPadding
 
 
-buildButton :: Text -> Vector2 Double -> Vector2 Double -> IO Button
-buildButton label pos size = do
+buildButton :: WB.Button -> IO Button
+buildButton (WB.Button bid label state pos size) = do
     group    <- buildGroup
     state    <- toAttribute (0 :: Int)
 
@@ -94,3 +98,34 @@ buildButton label pos size = do
     JSObject.setProp "state" (JSObject.getJSRef $ unAttribute state) button
 
     return $ Button button
+
+-- instance Widget WB.Button Button where
+--     -- getFromRegistry :: WB.Button -> IO Button
+--     getFromRegistry b = (getFromRegistryJS buttonId >>= return . Button . JSObject.fromJSRef)
+--         where buttonId = b ^. WB.refId
+--
+--     -- putToRegistry :: WB.Button -> Button -> IO ()
+--     putToRegistry b u = putToRegistryJS buttonId (JSObject.getJSRef $ unButton u)
+--         where buttonId = b ^. WB.refId
+--
+--     -- removeFromRegistry :: WB.Button -> IO ()
+--     removeFromRegistry b = removeFromRegistryJS buttonId
+--         where buttonId = b ^. WB.refId
+
+getFromRegistry :: WB.Button -> IO Button
+getFromRegistry b = (getFromRegistryJS buttonId >>= return . Button . JSObject.fromJSRef)
+    where buttonId = b ^. WB.refId
+
+putToRegistry :: WB.Button -> Button -> IO ()
+putToRegistry b u = putToRegistryJS buttonId (JSObject.getJSRef $ unButton u)
+    where buttonId = b ^. WB.refId
+
+removeFromRegistry :: WB.Button -> IO ()
+removeFromRegistry b = removeFromRegistryJS buttonId
+    where buttonId = b ^. WB.refId
+
+updateState :: WB.Button -> IO ()
+updateState b = do
+    bref <- getFromRegistry b
+    uniform <- JSObject.getProp "state" (unButton bref) >>= return . Attribute . JSObject.fromJSRef
+    JSObject.setProp "value" (toJSInt $ fromEnum $ b ^. WB.state) $ unAttribute uniform

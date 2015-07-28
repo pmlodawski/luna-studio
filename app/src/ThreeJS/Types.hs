@@ -25,6 +25,7 @@ import Debug.Trace
 
 import GHCJS.Prim
 import ThreeJS.Converters
+import ThreeJS.Registry
 
 class Container a where
     add    :: (Object b) => a -> b -> IO ()

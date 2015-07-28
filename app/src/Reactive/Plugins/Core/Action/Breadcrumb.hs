@@ -26,6 +26,7 @@ import qualified ThreeJS.Scene as Scene
 import qualified Data.Text.Lazy as Text
 import           Data.Text.Lazy (Text)
 import qualified JavaScript.Object as JSObject
+import           ThreeJS.Registry
 
 import           GHCJS.Prim
 
@@ -34,10 +35,8 @@ data Action = NewPath       { _path  :: [Text] }
             | MouseMoving   { _pos   :: Vector2 Int }
             | MousePressed  { _pos   :: Vector2 Int }
             | MouseReleased { _pos   :: Vector2 Int }
-            | UpdateFocus
             | ButtonPressed
-            | RenderButtons { _toRemove :: [Button.Button] }
-            deriving (Eq, Show)
+            | ApplyUpdates { _actions :: [IO ()] }
 
 makeLenses ''Action
 
@@ -63,35 +62,47 @@ toAction (Window (Window.Event tpe width height)) = case tpe of
     Window.Resized  -> Just $ NewPath ["NodeLab", "demo", " by ", "New Byte Order"]
 toAction _           = Nothing
 
+createButtons :: [Text] -> Int -> ([Button.Button], Int)
+createButtons path startId = (reverse buttons, nextId) where
+    (buttons, (_, nextId)) = foldl button ([], (0, startId)) path
+    button (xs, (offset, bid)) name = (newButton:xs, (newOffset, bid + 1)) where
+       newButton = Button.Button bid label Button.Normal pos size
+       width     = TButton.buttonWidth label
+       pos       = Vector2 offset 0
+       size      = Vector2 width buttonHeight
+       newOffset = offset + width + buttonSpacing
+       label     = name
+       idt       = Text.pack $ show bid
+
 instance ActionStateUpdater Action where
     execSt newActionCandidate oldState = case newAction of
             Just action -> ActionUI newAction newState
             Nothing     -> ActionUI  NoAction newState
         where
         newAction = case newActionCandidate of
-            MouseMoving   _  -> if focusChanged then Just UpdateFocus else Nothing
+            MouseMoving   _  -> if focusChanged then Just $ ApplyUpdates [updateFocus] else Nothing where
+                updateFocus = forM_ newButtonsFocus TButton.updateState
             MousePressed  _  -> case buttonUnderCursor of
                 Just _  -> Just ButtonPressed
                 Nothing -> Nothing
             MouseReleased _  -> Nothing
-            NewPath _        -> Just $ RenderButtons oldButtons
+            NewPath _        -> Just $ ApplyUpdates [removeOldBreadcrumb, createNewBreadcrumb] where
+                    removeOldBreadcrumb = forM_ (oldState ^. Global.breadcrumb . Breadcrumb.buttons) $ \b -> do
+                                            bref <- TButton.getFromRegistry b
+                                            mesh bref >>= remove Scene.sceneHUD
+                                            TButton.removeFromRegistry b
+                    createNewBreadcrumb = forM_ (newState ^. Global.breadcrumb . Breadcrumb.buttons) $ \b -> do
+                                            uiButton <- TButton.buildButton b
+                                            TButton.putToRegistry b uiButton
+                                            mesh uiButton >>= add Scene.sceneHUD
+
         newState  = case newActionCandidate of
             MouseMoving  pos   -> oldState & Global.breadcrumb . Breadcrumb.buttons .~ newButtonsFocus
             NewPath      path  -> oldState & Global.breadcrumb . Breadcrumb.path    .~ path
                                            & Global.breadcrumb . Breadcrumb.nextId  .~ nextId
-                                           & Global.breadcrumb . Breadcrumb.buttons .~ (reverse buttons) where
-                                               (buttons, (_, nextId)) = foldl button ([], (0, startId)) path where
-                                                   button (xs, (offset, bid)) name = (newButton:xs, (newOffset, bid + 1)) where
-                                                       newButton = (Button.Button bid label Button.Normal pos size)
-                                                       width     = TButton.buttonWidth label
-                                                       pos       = (Vector2 offset 0)
-                                                       size      = (Vector2 width buttonHeight)
-                                                       newOffset = offset + width + buttonSpacing
-                                                       label     = name
-                                                       idt :: Text
-                                                       idt = Text.pack $ show bid
-                                                   startId = oldState ^. Global.breadcrumb . Breadcrumb.nextId
-                                               numButtons = length buttons
+                                           & Global.breadcrumb . Breadcrumb.buttons .~ newButtons where
+                                           (newButtons, nextId) = createButtons path startId
+                                           startId = oldState ^. Global.breadcrumb . Breadcrumb.nextId
         mousePos   = oldState ^. Global.mousePos
         oldButtons = oldState ^. Global.breadcrumb . Breadcrumb.buttons
         focusChanged = any (\(o, n) -> (o ^. Button.state) /= (n ^. Button.state) ) $ oldButtons `zip` newButtonsFocus
@@ -103,25 +114,6 @@ instance ActionStateUpdater Action where
 
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
-        UpdateFocus   -> do
-            let buttons = zip [0..] $ state ^. Global.breadcrumb . Breadcrumb.buttons
-            forM_ buttons updateButton where
-                updateButton (i, b) = do
-                    bref <- (getButton $ b ^. Button.refId) >>= return . TButton.Button . JSObject.fromJSRef
-                    uniform <- JSObject.getProp "state" (TButton.unButton bref) >>= return . Attribute . JSObject.fromJSRef
-                    JSObject.setProp "value" (toJSInt $ fromEnum $ b ^. Button.state) $ unAttribute uniform
-        RenderButtons toRemove   -> do
-            mapM_ removeButton_ toRemove
-            mapM_ addButton $ state ^. Global.breadcrumb . Breadcrumb.buttons
-            where
-            removeButton_ b = do
-                bref <- (getButton $ b ^. Button.refId) >>= return . TButton.Button . JSObject.fromJSRef
-                removeButton  (b ^. Button.refId)
-                mesh bref >>= remove Scene.sceneHUD
-            addButton (Button.Button bid label state pos size) = do
-                b <- TButton.buildButton label pos size
-                putButton bid (JSObject.getJSRef $ TButton.unButton b)
-                mesh b >>= add Scene.sceneHUD
-
+        ApplyUpdates actions -> sequence_ actions
         ButtonPressed -> do
             putStrLn "Button pressed"
