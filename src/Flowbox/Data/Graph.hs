@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE CPP #-}
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Flowbox.Data.Graph (
@@ -49,7 +50,11 @@ type Graph a b = DG.Gr a b
 type Vertex    = DG.Node
 type LVertex a = DG.LNode a
 
+
+#ifndef ghcjs_HOST_OS
 instance (Binary a, Binary b) => Binary (Graph a b)
+#endif
+
 instance Default (Graph a b) where
     def = DG.empty
 

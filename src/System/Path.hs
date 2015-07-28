@@ -77,7 +77,7 @@ import qualified System.Posix.Files as Posix
 import qualified System.Posix.Types as Posix
 import qualified Foreign.C.Types as C
 
-import GHC.Int (Int64)
+import GHC.Int (Int64, Int32)
 
 import qualified Control.Monad.State          as State
 import           Control.Monad.State.Generate (newState)
@@ -128,9 +128,10 @@ joinEitherT = fmap joinEither . runEitherT
 -- Platform
 ------------------------------------------------------------------------
 
-data Windows = Windows deriving (Show, Eq, Generic)
-data Linux   = Linux   deriving (Show, Eq, Generic)
-data Darwin  = Darwin  deriving (Show, Eq, Generic)
+data Windows    = Windows deriving (Show, Eq, Generic)
+data Linux      = Linux   deriving (Show, Eq, Generic)
+data Darwin     = Darwin  deriving (Show, Eq, Generic)
+data GHCJS      = GHCJS   deriving (Show, Eq, Generic)
 
 -- === utils ===
 
@@ -149,14 +150,26 @@ type Platform = Windows
 delimeter = '\\'
 #endif
 
+#ifdef ghcjs_HOST_OS
+type Platform = GHCJS
+delimeter = '/'
+#endif
+
 platform :: Platform
 platform = def
+
+#ifdef ghcjs_HOST_OS
+type PosixInt = Int32
+#else
+type PosixInt = Int64
+#endif
 
 -- === instances ===
 
 instance Default Windows where def = Windows
 instance Default Darwin  where def = Darwin
 instance Default Linux   where def = Linux
+instance Default GHCJS   where def = GHCJS
 
 ------------------------------------------------------------------------
 
@@ -319,6 +332,7 @@ class NativeToUni os where
 
 instance NativeToUni Darwin  where nativeToUni _ = convert
 instance NativeToUni Linux   where nativeToUni _ = convert
+instance NativeToUni GHCJS   where nativeToUni _ = convert
 instance NativeToUni Windows where
     nativeToUni _ (T.unpack . convert -> s) = convert varPath where
         slashPath = replace '\\' '/' s
@@ -548,6 +562,7 @@ instance OsRepr Windows where
 
 instance OsRepr Darwin where osRepr _ = osRepr Uni
 instance OsRepr Linux  where osRepr _ = osRepr Uni
+instance OsRepr GHCJS  where osRepr _ = osRepr Uni
 
 
 native :: MapPath p
@@ -775,6 +790,7 @@ type PathLike      e m p = PathJoin2 (EitherT e m Path) p
 type PathLikeEnvIO e m p = (PathLike e m p, MonadEnvIO m)
 type PathLikeEnv   e m p = (PathLike e m p, MonadEnvState m)
 
+
 size' :: PathLikeEnvIO Error m p => p -> m (Either Error Int64)
 size' = runEitherT . size
 
@@ -783,28 +799,28 @@ size p = unpack . Posix.fileSize <$> fileStatus p where
     unpack (Posix.COff a) = a
 
 
-aTime' :: PathLikeEnvIO Error m p => p -> m (Either Error Int64)
+aTime' :: PathLikeEnvIO Error m p => p -> m (Either Error PosixInt)
 aTime' = runEitherT . aTime
 
-aTime :: PathLikeEnvIO Error m p => p -> EitherT Error m Int64
+aTime :: PathLikeEnvIO Error m p => p -> EitherT Error m PosixInt
 aTime p = unpack . Posix.accessTime <$> fileStatus p where
     unpack (C.CTime a) = a
 
 
 -- TODO: change Posix.modificationTime to Posix.modificationTimeHiRes
-modTime' :: PathLikeEnvIO Error m p => p -> m (Either Error Int64)
+modTime' :: PathLikeEnvIO Error m p => p -> m (Either Error PosixInt)
 modTime' = runEitherT . modTime
 
-modTime :: PathLikeEnvIO Error m p => p -> EitherT Error m Int64
+modTime :: PathLikeEnvIO Error m p => p -> EitherT Error m PosixInt
 modTime p = unpack . Posix.modificationTime <$> fileStatus p where
     unpack (C.CTime a) = a
 
 
 
-statTime' :: PathLikeEnvIO Error m p => p -> m (Either Error Int64)
+statTime' :: PathLikeEnvIO Error m p => p -> m (Either Error PosixInt)
 statTime' = runEitherT . statTime
 
-statTime :: PathLikeEnvIO Error m p => p -> EitherT Error m Int64
+statTime :: PathLikeEnvIO Error m p => p -> EitherT Error m PosixInt
 statTime p = unpack . Posix.statusChangeTime <$> fileStatus p where
     unpack (C.CTime a) = a
 
@@ -874,8 +890,8 @@ main = do
         p1 = readPath "$HOME/a"
         p2 = readPath "/b"
         p3 = (cwd // "a") // "b"
-        p4 = aTime . upper . expand $ cwd // "a" // "B" // "$HOME"
-        p5 = aTime . upper . expand $ cwd // "a" // "B" // "$HOME"
+        -- p4 = aTime . upper . expand $ cwd // "a" // "B" // "$HOME"
+        -- p5 = aTime . upper . expand $ cwd // "a" // "B" // "$HOME"
     env <- readEnv
 
     print p
@@ -902,7 +918,7 @@ main = do
     --print =<< p3
     --print =<< expand env p3
     print "end"
-    print =<< runEitherT p4
+    -- print =<< runEitherT p4
 
     print             $ diff (fromString "/tmp/foo/b1") (fromString "/tmp/foo/bar/baz")
     print . fmap repr $ diff (fromString "/tmp/foo/b1") (fromString "/tmp/foo/bar/baz")
