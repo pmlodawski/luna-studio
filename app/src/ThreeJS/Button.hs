@@ -99,19 +99,6 @@ buildButton (WB.Button bid label state pos size) = do
 
     return $ Button button
 
--- instance Widget WB.Button Button where
---     -- getFromRegistry :: WB.Button -> IO Button
---     getFromRegistry b = (getFromRegistryJS buttonId >>= return . Button . JSObject.fromJSRef)
---         where buttonId = b ^. WB.refId
---
---     -- putToRegistry :: WB.Button -> Button -> IO ()
---     putToRegistry b u = putToRegistryJS buttonId (JSObject.getJSRef $ unButton u)
---         where buttonId = b ^. WB.refId
---
---     -- removeFromRegistry :: WB.Button -> IO ()
---     removeFromRegistry b = removeFromRegistryJS buttonId
---         where buttonId = b ^. WB.refId
-
 getFromRegistry :: WB.Button -> IO Button
 getFromRegistry b = (getFromRegistryJS buttonId >>= return . Button . JSObject.fromJSRef)
     where buttonId = b ^. WB.refId

@@ -66,44 +66,6 @@ class IsMaterial a where material :: a -> Material
 
 data MaterialJS
 type Material = JSRef MaterialJS
---
--- data Uniform
--- -- type Attribute = Uniform
--- data UniformMap
--- -- type AttributeMap = UniformMap
---
--- foreign import javascript unsafe "{type: $1, value: $2}"
---   buildUniformJS :: JSString -> JSRef a -> IO (JSRef Uniform)
---
--- class ToUniform a where
---     toUniform :: a -> IO (JSRef Uniform)
---
--- instance ToUniform Int               where toUniform a = buildUniformJS (lazyTextToJSString "i" ) (toJSInt a)
--- instance ToUniform Double            where toUniform a = buildUniformJS (lazyTextToJSString "f" ) (toJSDouble a)
--- instance ToUniform (JSRef JSVector2) where toUniform a = buildUniformJS (lazyTextToJSString "v2") a
--- instance ToUniform (JSRef JSVector3) where toUniform a = buildUniformJS (lazyTextToJSString "v2") a
--- instance ToUniform (JSRef JSVector4) where toUniform a = buildUniformJS (lazyTextToJSString "v4") a
---
---
--- foreign import javascript unsafe "$1.value = $2" setValue :: JSRef Uniform -> JSRef a -> IO()
---
---
---
--- foreign import javascript unsafe "$r = {}"
---   js_empty :: IO (JSRef a)
--- foreign import javascript unsafe "$1[$2] = $3" js_setProp :: JSRef a -> JSString -> JSRef c -> IO ()
---
---
--- toUniformMap :: [(Text, JSRef Uniform)] -> IO (JSRef UniformMap)
--- toUniformMap items = do
---     list <- js_empty
---     mapM_ (\(k, v) -> js_setProp list (lazyTextToJSString k) v) items
---     return list
---
--- -- toAttributeMap :: [(Text, JSRef Attribute)] -> IO (JSRef AttributeMap)
--- toAttributeMap = toUniformMap
-
-
 
 newtype AttributeMap = AttributeMap { unAttributeMap :: JSObject.Object }
 newtype Attribute = Attribute { unAttribute :: JSObject.Object }

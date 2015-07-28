@@ -88,13 +88,13 @@ instance ActionStateUpdater Action where
             MouseReleased _  -> Nothing
             NewPath _        -> Just $ ApplyUpdates [removeOldBreadcrumb, createNewBreadcrumb] where
                     removeOldBreadcrumb = forM_ (oldState ^. Global.breadcrumb . Breadcrumb.buttons) $ \b -> do
-                                            bref <- TButton.getFromRegistry b
-                                            mesh bref >>= remove Scene.sceneHUD
+                                            uiButton <- TButton.getFromRegistry b
+                                            Scene.sceneHUD `remove` uiButton
                                             TButton.removeFromRegistry b
                     createNewBreadcrumb = forM_ (newState ^. Global.breadcrumb . Breadcrumb.buttons) $ \b -> do
                                             uiButton <- TButton.buildButton b
                                             TButton.putToRegistry b uiButton
-                                            mesh uiButton >>= add Scene.sceneHUD
+                                            Scene.sceneHUD `add` uiButton
 
         newState  = case newActionCandidate of
             MouseMoving  pos   -> oldState & Global.breadcrumb . Breadcrumb.buttons .~ newButtonsFocus
