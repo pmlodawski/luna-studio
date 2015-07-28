@@ -9,7 +9,7 @@
 {-# LANGUAGE RankNTypes #-}
 
 
-module Main where
+module Luna.Inference where
 
 import Flowbox.Prelude hiding (simple, empty, Indexable, Simple, cons)
 import Data.Repr
@@ -29,7 +29,6 @@ import           GHC.Prim (Any)
 import           Unsafe.Coerce (unsafeCoerce)
 import           Data.Convert
 
-import qualified Data.Graph.Inductive as Graph
 import           FastString (FastString, mkFastString, unpackFS)
 
 
@@ -123,16 +122,13 @@ data Key t = Key { fromKey :: ID } deriving (Show) -- { overKey :: Lens' Graph (
 type Name = FastString
 
 
+type TPtr i a = Ptr i
+
 type HExpr h = h (Expr h)
-
-
---h (Expr h) , h = TExpr => TExpr (Expr TExpr) === Ptr Int (TExpr Type (Expr TExpr))
 
 data AST h = ASTExpr (h Expr)
          --deriving (Show)
 
-
-data Node = Node
 -- wszystkie rzeczy nazwane powinny byc w slownikach w jezyku! - czyli datatypy ponizej zostaja,
 -- ale mozemy tworzyc np. Var funkcjami, ktore oczekuja konkretnego Stringa!
 data Expr h = Var      { _name :: Name                                                      }
@@ -374,7 +370,7 @@ instance Default nodes => Default (Graph nodes) where
 data Type a = Type a
             | Star
 
---data Node a = Node { _tp :: Type a, _nodeval :: Value a }
+data Node a = Node { _tp :: Type a, _nodeval :: Value a }
 
 data Value a = Val  a
              | BVal -- binary value
@@ -389,15 +385,6 @@ type Builder c = State (NodeGraph c)
 type family Element        (m :: * -> *) (a :: (* -> *) -> *) :: (* -> *) -> *
 type family ConnectionType (m :: * -> *) :: * -> *
 type family ASTNode2       (m :: * -> *) (a :: (* -> *) -> *) :: *
-
-type family ConnectionType2 (m :: * -> *) (a :: *) :: *
-
-type family Connection (tp :: * -> *) (a :: (* -> *) -> *)
-
-type instance Connection tp Expr = tp (Expr tp)
-
---type instance Connection tp Expr = tp (Expr tp)
-
 
 
 type instance ConnectionType (Builder c) = Ptr (Index c)
@@ -497,8 +484,6 @@ newtype Ref m a = Ref { fromRef :: ConnectionType m (ASTNode m a) }
 
 newtype Ref3 m a = Ref3 { fromRef3 :: (ConnectionType m) (ASTNode3 m a) }
 
-newtype Ref4 m a = Ref4 { fromRef4 :: (ConnectionType m) (a (ConnectionType m)) }
-
 type BuilderMonad c a = (Appendable c, Indexable c, Castable (a (Ptr (Index c))) (ElementOf c))
 
 
@@ -578,8 +563,6 @@ accessor2 name el = NodeCons $ mkRef . Accessor name =<< mrefRaw el
 
 
 mrefRaw = fmap fromRef . toMRef2
-
-mrefRaw3 :: (Monad m, Functor m, ToMRef3 t) => t m a -> m (ConnectionType m (a (ConnectionType m)))
 mrefRaw3 = fmap fromRef . toMRef3
 
 
