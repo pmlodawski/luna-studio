@@ -1,15 +1,14 @@
-{-# LANGUAGE   GADTs #-} 
-{-# LANGUAGE   DeriveDataTypeable #-} 
-{-# LANGUAGE   ScopedTypeVariables #-} 
-{-# LANGUAGE   ViewPatterns #-} 
-{-# LANGUAGE   FunctionalDependencies #-} 
-{-# LANGUAGE   StandaloneDeriving #-} 
-{-# LANGUAGE   TypeFamilies #-} 
-{-# LANGUAGE   UndecidableInstances #-} 
-{-# LANGUAGE   DysfunctionalDependencies #-} 
-{-# LANGUAGE   NoMonomorphismRestriction #-} 
-{-# LANGUAGE   DeriveFunctor #-} 
-{-# LANGUAGE   DeriveTraversable #-} 
+{-# LANGUAGE   GADTs #-}
+{-# LANGUAGE   DeriveDataTypeable #-}
+{-# LANGUAGE   ScopedTypeVariables #-}
+{-# LANGUAGE   ViewPatterns #-}
+{-# LANGUAGE   FunctionalDependencies #-}
+{-# LANGUAGE   StandaloneDeriving #-}
+{-# LANGUAGE   TypeFamilies #-}
+{-# LANGUAGE   UndecidableInstances #-}
+{-# LANGUAGE   NoMonomorphismRestriction #-}
+{-# LANGUAGE   DeriveFunctor #-}
+{-# LANGUAGE   DeriveTraversable #-}
 
 module Data.HMap.Lazy (
     module Data.HMap.Lazy,
@@ -74,8 +73,8 @@ lookupBase k (H a) = Maps.lookup k a
 instance (IsKey key k v, GenMap (base a) k t, HideType v t) => GenMap (H base a) key v where
         lookup (toKey -> Key k) (H m) = (fmap revealType (Maps.lookup k m) :: Maybe v)
         {-# INLINABLE lookup #-}
-        
-        insert (toKey -> Key k) a (H m) = v `seq` H (Maps.insert k v m) 
+
+        insert (toKey -> Key k) a (H m) = v `seq` H (Maps.insert k v m)
             where v   = hideType a
         {-# INLINABLE insert #-}
 

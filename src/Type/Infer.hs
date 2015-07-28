@@ -20,7 +20,6 @@
 {-# LANGUAGE OverlappingInstances #-}
 {-# LANGUAGE IncoherentInstances #-}
 
-!{-# LANGUAGE RightSideContexts #-}
 
 module Type.Infer where
 
@@ -70,59 +69,22 @@ data Id5 t1 t2 t3 t4 t5 = Id5 deriving (Show, Typeable)
 --instance Num a <= InferType2 a a
 --instance Monad a <= InferType2 a a
 
---instance InferType2 Int Int 
+--instance InferType2 Int Int
 
---instance InferType2 (m a) (m' a') <= (InferType2 m m', InferType2 a a') 
---instance InferType2 (a :: *) b <= (b~Id0) 
+--instance InferType2 (m a) (m' a') <= (InferType2 m m', InferType2 a a')
+--instance InferType2 (a :: *) b <= (b~Id0)
 --instance InferType2 (a :: * -> *) b <= (b~Id1)
---instance InferType2 (a :: * -> * -> *) b <= (b~Id2) 
+--instance InferType2 (a :: * -> * -> *) b <= (b~Id2)
 
 
-instance Num a <= InferType a
-instance Monad a <= InferType a 
+instance InferType a => Num a
+instance (InferType a, Applicative a) => Monad a
 
-instance InferType Int 
+instance InferType Int
 
-instance InferType (m a) <= (InferType m, InferType a) 
-instance InferType (a :: *) <= (a~Id0) 
-instance InferType (a :: * -> *) <= (a~Id1)
-instance InferType (a :: * -> * -> *) <= (a~Id2) 
+instance (InferType m, InferType a) => InferType (m a)
+instance (a~Id0)                    => InferType (a :: *)
+instance (a~Id1)                    => InferType (a :: * -> *)
+instance (a~Id2)                    => InferType (a :: * -> * -> *)
 
---inferTypeBase :: InferType a => a -> a
---inferTypeBase a = inferType $ toProxy a
-
---c2 :: Monad (m a) => a -> b -> m a b
---c2 = undefined
-
---instance InferType Foo1 
---instance InferType Foo2  
-
---tm _ = 5
-
---data Foo1 a = Foo1 a deriving (Show, Typeable)
---data Foo2 a b = Foo2 a b deriving (Show, Typeable)
-
---data Y a = Y a deriving (Show)
-
-type family Testxxx x :: *
-
-type instance Testxxx a = a
-
---break2 :: a -> Testxxx a
---break2 a = unsafeCoerce a
-
-
---main = do
---    let x = 1
---        y = breakInference x
---        --x :: Int
---        --y :: Double
---    print $ typeOf $ inferType $ toProxy $ (return (5))
---    print $ typeOf $ inferType $ toProxy $ (5)
---    print $ typeOf $ inferType $ toProxy $ (Foo1 (return 5))
---    print $ typeOf $ inferType $ toProxy $ (Foo2 (return 5) (return 5))
-
---    print $ tm $ typeOf $ inferType $ toProxy $ (c2 (5 :: Int) (5 :: Int))
-
---    print "hello"
 

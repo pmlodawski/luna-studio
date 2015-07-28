@@ -27,7 +27,6 @@
 {-# LANGUAGE CPP #-}
 
 
-{-# LANGUAGE DysfunctionalDependencies            #-}
 
 
 module System.Path where
@@ -84,6 +83,7 @@ import qualified Control.Monad.State          as State
 import           Control.Monad.State.Generate (newState)
 import Control.Monad (foldM)
 import Control.Monad ((>=>))
+
 
 
 #include "ghcplatform.h"
@@ -1022,16 +1022,16 @@ type family JoinResult a b where
 
 
 
-----instance Convertible a            a    where safeConvert = Right
-instance Convertible Path     Path where safeConvert = Right
---instance Convertible Path     Path where safeConvert (Path mount segs) = Right $ Path mount $ fmap Node segs
-instance Convertible String       Path where safeConvert = Right . readPath
---instance Convertible Node         Path where safeConvert = Right . toPath . Node
---instance Convertible Node      Path where safeConvert = Right . Route Relative . return
+----instance Convertible a            a    where convert = Right
+instance Convertible Path     Path where convert = id
+--instance Convertible Path     Path where convert (Path mount segs) = Right $ Path mount $ fmap Node segs
+instance Convertible String       Path where convert = readPath
+--instance Convertible Node         Path where convert = Right . toPath . Node
+--instance Convertible Node      Path where convert = Right . Route Relative . return
 
---instance Convertible Path Path where safeConvert = Right
-instance Convertible Text Path where safeConvert = Right . readPath
---instance Convertible Node     Path where safeConvert = Right . Route Relative . return
+--instance Convertible Path Path where convert = Right
+instance Convertible Text Path where convert = readPath
+--instance Convertible Node     Path where convert = Right . Route Relative . return
 
 --instance IsText Node     where fromText   = Node
 --instance IsText Node  where fromText   = Node . fromText
@@ -1039,13 +1039,13 @@ instance Convertible Text Path where safeConvert = Right . readPath
 --instance IsText Path where fromText s = Route Relative [Node s]
 
 
-instance Monad m => Convertible String  (m Path) where safeConvert = Right . return . convert
-----instance (m ~ n) => Convertible (m Path)     (n Path) where safeConvert = Right
-----instance Monad m => Convertible Path         (m Path) where safeConvert = fmap return . safeConvert
-----instance Monad m => Convertible Path     (m Path) where safeConvert = fmap return . safeConvert
-----instance Monad m => Convertible Text       (m Path) where safeConvert = fmap return . safeConvert
-----instance Monad m => Convertible Node         (m Path) where safeConvert = fmap return . safeConvert
-----instance Monad m => Convertible Node      (m Path) where safeConvert = fmap return . safeConvert
+instance Monad m => Convertible String  (m Path) where convert = return . convert
+----instance (m ~ n) => Convertible (m Path)     (n Path) where convert = Right
+----instance Monad m => Convertible Path         (m Path) where convert = fmap return . convert
+----instance Monad m => Convertible Path     (m Path) where convert = fmap return . convert
+----instance Monad m => Convertible Text       (m Path) where convert = fmap return . convert
+----instance Monad m => Convertible Node         (m Path) where convert = fmap return . convert
+----instance Monad m => Convertible Node      (m Path) where convert = fmap return . convert
 
 
 

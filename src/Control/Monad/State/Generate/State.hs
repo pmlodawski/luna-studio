@@ -5,7 +5,7 @@
 module Control.Monad.State.Generate.State where
 
 import           Prelude
-import           Language.Haskell.TH hiding (appsE)
+import           Language.Haskell.TH hiding (appsE, classP)
 import qualified Control.Monad.Trans.State as State
 import           Control.Applicative
 
@@ -22,8 +22,8 @@ newState name el = sequence [ genDataType
                             , gen_eval
                             , gen_with
                             ]
-    
-    where 
+
+    where
         dataName  = mkName $ name
         transName = mkName $ name ++ "T"
         getName   = mkName "get"
@@ -62,9 +62,9 @@ newState name el = sequence [ genDataType
                                         , "Applicative"
                                         , "Alternative"
                                         ]
-            return $ NewtypeD [] transName 
-                        [PlainTV m,PlainTV t] 
-                        (RecC transName [(fieldName,NotStrict,appsT (ConT stateT) [elCon, VarT m, VarT t])]) 
+            return $ NewtypeD [] transName
+                        [PlainTV m,PlainTV t]
+                        (RecC transName [(fieldName,NotStrict,appsT (ConT stateT) [elCon, VarT m, VarT t])])
                         derivings
 
         -- type MyData = MyDataT Identity
@@ -76,7 +76,7 @@ newState name el = sequence [ genDataType
             m <- newName "m"
             let getFunc  = SigD getName (AppT (VarT m) elCon)
                 putFunc  = SigD putName (AppT (AppT ArrowT elCon) (AppT (VarT m) (TupleT 0)))
-                predics  = fmap (flip ClassP [VarT m]) [n_monad, n_applicative]
+                predics  = fmap (flip classP [VarT m]) [n_monad, n_applicative]
             return $ ClassD predics className [PlainTV m] [] [getFunc, putFunc]
 
 
@@ -88,7 +88,7 @@ newState name el = sequence [ genDataType
             m <- VarT <$> newName "m"
             let stateGet = mkName "State.get"
                 statePut = mkName "State.put"
-            return $ InstanceD [ClassP n_monad [m], ClassP n_functor [m]] 
+            return $ InstanceD [classP n_monad [m], classP n_functor [m]]
                          (appsT (ConT className) [AppT (ConT transName) m])
                          [ mkFunc getName []       $ appChainE (ConE transName) [VarE stateGet]
                          , mkFunc putName [VarP a] $ appChainE (ConE transName) [VarE statePut, VarE a]
@@ -104,7 +104,7 @@ newState name el = sequence [ genDataType
             m <- VarT <$> newName "m"
             let stateGet = mkName "State.get"
                 statePut = mkName "State.put"
-            return $ InstanceD [ClassP n_monadState [s, m]] 
+            return $ InstanceD [classP n_monadState [s, m]]
                          (appsT (ConT n_monadState) [s, AppT (ConT transName) m])
                          [ mkFunc getName []       $ appChainE (ConE transName) [VarE liftName, VarE stateGet]
                          , mkFunc putName [VarP a] $ appChainE (ConE transName) [VarE liftName, VarE statePut, VarE a]
@@ -119,11 +119,11 @@ newState name el = sequence [ genDataType
             s <- VarT <$> newName "s"
             m <- VarT <$> newName "m"
             let t = VarT $ mkName "t"
-                premise = [ ClassP className     [m]
-                          , ClassP n_monadTrans  [t]
-                          , ClassP n_monad       [AppT t m]
-                          , ClassP n_applicative [AppT t m]
-                          ] 
+                premise = [ classP className     [m]
+                          , classP n_monadTrans  [t]
+                          , classP n_monad       [AppT t m]
+                          , classP n_applicative [AppT t m]
+                          ]
             return $ InstanceD premise
                          (appsT (ConT className) [AppT t m])
                          [ mkFunc getName []       $ appChainE (VarE liftName) [VarE getName]
@@ -182,10 +182,10 @@ appsT b apps = foldl AppT b apps
 appChainE b as = appChainE' (b:as)
     where appChainE' = \case
               [a]    -> a
-              (a:as) -> AppE a $ appChainE' as 
+              (a:as) -> AppE a $ appChainE' as
 
 
-
+classP base = foldl AppT (ConT base)
 
 
 

@@ -31,7 +31,6 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE DatatypeContexts #-}
 
-{-# LANGUAGE DysfunctionalDependencies #-}
 
 module Flowbox.System.Variants where
 

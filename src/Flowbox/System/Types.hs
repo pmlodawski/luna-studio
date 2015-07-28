@@ -32,7 +32,6 @@
 {-# LANGUAGE DatatypeContexts #-}
 {-# LANGUAGE EmptyDataDecls #-}
 
-{-# LANGUAGE DysfunctionalDependencies #-}
 
 module Flowbox.System.Types where
 

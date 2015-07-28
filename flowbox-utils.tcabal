@@ -42,7 +42,7 @@ Library
                     directory,
                     dlist,
                     either >= 4.3.2,
-                    errors,
+                    errors < 2.0,
                     fgl,
                     filepath,
                     generic-deriving,
@@ -68,8 +68,9 @@ Library
                     QuickCheck,
                     unordered-containers,
                     cond,
-                    concrete-typerep,
-                    unix
+                    unix,
+                    vector,
+                    convert
 
   if os(windows)
     Build-Depends:  Win32
