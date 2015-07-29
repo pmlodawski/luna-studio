@@ -12,7 +12,7 @@
 
 {-# LANGUAGE DysfunctionalDependencies #-}
 
-!{-# LANGUAGE RightSideContexts #-}
+
 
 import GHC.TypeLits
 
@@ -55,13 +55,13 @@ class AppProto el fptr fptrout | el fptr -> fptrout where
 class AppNextArg val args out | val args -> out where
     appNextArg :: val -> args -> out
 
-instance AppNextArg val (NoArg name, args) (Arg name val, args') <= (args~args') where
+instance  (args~args') =>AppNextArg val (NoArg name, args) (Arg name val, args')  where
     appNextArg val (_, args) = (Arg val, args)
 
-instance AppNextArg val (DefaultArg name dval, args) (Arg name val, args') <= (args~args', val~dval) where
+instance  (args~args', val~dval) =>AppNextArg val (DefaultArg name dval, args) (Arg name val, args')  where
     appNextArg val (_, args) = (Arg val, args)
 
-instance AppNextArg val (a, args) (a', out) <= (a~a', AppNextArg val args out) where
+instance  (a~a', AppNextArg val args out) =>AppNextArg val (a, args) (a', out)  where
     appNextArg val (a, args) = (a, appNextArg val args)
 
 ----------------------------------------------------------------------------------
@@ -72,14 +72,14 @@ class AppArgByName (name :: Symbol) val args out | name val args -> out where
     appArgByName :: Proxy name -> val -> args -> out
 
 
-instance AppArgByName name val (NoArg name, args) (Arg name val, args') <= (args~args') where
+instance  (args~args') =>AppArgByName name val (NoArg name, args) (Arg name val, args')  where
     appArgByName _ val (_, args) = (Arg val, args)
 
-instance AppArgByName name val (Arg name oldval, args) (Arg name val, args') <= (args~args') where
+instance  (args~args') =>AppArgByName name val (Arg name oldval, args) (Arg name val, args')  where
     appArgByName _ val (_, args) = (Arg val, args)
 
 
-instance AppArgByName name val (a, args) (a', out) <= (a~a', AppArgByName name val args out) where
+instance  (a~a', AppArgByName name val args out) =>AppArgByName name val (a, args) (a', out)  where
     appArgByName name val (a, args) = (a, appArgByName name val args)
 
 ----------------------------------------------------------------------------------
@@ -89,10 +89,10 @@ instance AppArgByName name val (a, args) (a', out) <= (a~a', AppArgByName name v
 class ReadArgs args vals | args -> vals where
     readArgs :: args -> vals
 
-instance ReadArgs (Arg name a, args) (a, out) <= ReadArgs args out where
+instance  ReadArgs args out =>ReadArgs (Arg name a, args) (a, out)  where
     readArgs (Arg a, args) = (a, readArgs args)
 
-instance ReadArgs (DefaultArg name a, args) (a, out) <= ReadArgs args out where
+instance  ReadArgs args out =>ReadArgs (DefaultArg name a, args) (a, out)  where
     readArgs (DefaultArg a, args) = (a, readArgs args)
 
 instance ReadArgs () () where

@@ -10,7 +10,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE MagicHash #-}
 
-!{-# LANGUAGE RightSideContexts #-}
+
 
 import Data.Typeable
 import GHC.Prim (unsafeCoerce#)
@@ -40,16 +40,16 @@ class KnownVar a b | a -> b where
     markVars :: a -> b
 
 
---instance KnownVar Int out <= out~Int where
+--instance  out~Int =>KnownVar Int out  where
 --    markVars = id
 
---instance KnownVar a out <= out~UV where
+--instance  out~UV =>KnownVar a out  where
 --    markVars _ = UV
 
 instance KnownVar a (UV' a) where
     markVars = UV'
 
---instance KnownVar (V a1) out <= (out~(V a2), KnownVar a1 a2) where
+--instance  (out~(V a2), KnownVar a1 a2) =>KnownVar (V a1) out  where
 --    markVars (V a) = V $ markVars a
 
 tst :: Monad m => Proxy (V (m Int))

@@ -11,7 +11,7 @@
 
 
 
-!{-# LANGUAGE RightSideContexts #-}
+
 
 
 import Data.Typeable
@@ -34,11 +34,11 @@ data Id5 t1 t2 t3 t4 t5 = Id5 deriving (Show, Typeable)
 c2 :: Monad (m a) => a -> b -> m a b
 c2 = undefined
 
-instance Num a <= KnownType a
-instance Monad a <= KnownType a 
+instance  KnownType a=>Num a  
+instance  KnownType a =>Monad a  
 
 
-instance Test (Foo1 (m a)) <= (m ~ Id1) where
+instance  (m ~ Id1) =>Test (Foo1 (m a))  where
     test _ = 5
 
 
@@ -51,10 +51,10 @@ instance KnownType Int
 instance KnownType Foo1 
 instance KnownType Foo2 
 
-instance KnownType (m a) <= (KnownType m, KnownType a) 
-instance KnownType (a :: *) <= (a~Id0) 
-instance KnownType (a :: * -> *) <= (a~Id1)
-instance KnownType (a :: * -> * -> *) <= (a~Id2) 
+instance  (KnownType m, KnownType a) =>KnownType (m a)  
+instance  (a~Id0) =>KnownType (a :: *)  
+instance  (a~Id1)=>KnownType (a :: * -> *)  
+instance  (a~Id2) =>KnownType (a :: * -> * -> *)  
 
 
 

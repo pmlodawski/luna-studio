@@ -21,7 +21,7 @@
 
 {-# LANGUAGE DysfunctionalDependencies #-}
 
-!{-# LANGUAGE RightSideContexts #-}
+
 
 module Luna.Target.HS.Data.Func.Call where
 

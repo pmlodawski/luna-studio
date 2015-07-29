@@ -19,7 +19,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 
-!{-# LANGUAGE RightSideContexts #-}
+
 {-# LANGUAGE DysfunctionalDependencies #-}
 
 
@@ -199,7 +199,7 @@ instance HasProp "fstate" Vector (NParam "self", ()) where
 
 ---
 
-print' :: a -> MonadCtx IO () m (Value Pure (Safe ())) <= (MonadIO m, Show a)
+print' ::  (MonadIO m, Show a)=>a -> MonadCtx IO () m (Value Pure (Safe ()))  
 print' s = MonadCtx . liftIO $ fmap val $ print s
 
 

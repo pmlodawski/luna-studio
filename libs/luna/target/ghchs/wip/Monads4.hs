@@ -16,7 +16,7 @@
 {-# LANGUAGE RankNTypes #-} 
 
 
-!{-# LANGUAGE RightSideContexts #-}
+
 
 import Control.Monad.Trans
 import Control.Applicative
@@ -29,7 +29,7 @@ data Proxy a = Proxy
 print' = liftIO . print
 
 
-instance MonadIO (t m) <= (MonadIO m, MonadTrans t, Monad (t m)) where
+instance  (MonadIO m, MonadTrans t, Monad (t m)) =>MonadIO (t m)  where
     liftIO = lift . liftIO
 
 --------------------------------------------------------------------------------
@@ -102,15 +102,15 @@ class (Monad m) => MonadState s m | m -> s where
     get :: m s
     put :: s -> m ()
 
-instance MonadState s (StateT s m) <= Monad m where
+instance  Monad m =>MonadState s (StateT s m)  where
     get   = StateT $ \s -> return (s, s)
     put s = StateT $ \_ -> return ((), s)
 
-instance MonadState s (ReaderT s m) <= MonadState s m where
+instance  MonadState s m =>MonadState s (ReaderT s m)  where
     get   = lift $ get
     put s = lift $ put s
 
-instance MonadState s (t s m) <= (MonadTrans (t s), MonadState s m, Monad (t s m)) where
+instance  (MonadTrans (t s), MonadState s m, Monad (t s m)) =>MonadState s (t s m)  where
     get   = lift $ get
     put s = lift $ put s
 
@@ -128,15 +128,15 @@ class CallM0 (name :: Symbol) base out | base name -> out where
     callM0 :: Proxy name -> base -> out
 
 
-instance CallM0 "get" X1 (m a) <= MonadState a m where
+instance  MonadState a m =>CallM0 "get" X1 (m a)  where
     callM0 _ _ = get
 
 
-instance CallM0 "ask" X2 (m a) <= MonadReader a m where
+instance  MonadReader a m =>CallM0 "ask" X2 (m a)  where
     callM0 _ _ = ask
 
 
-instance CallM0 "test" V (m a) <= (MonadState a m, MonadReader t m, MonadIO m) where
+instance  (MonadState a m, MonadReader t m, MonadIO m) =>CallM0 "test" V (m a)  where
     callM0 _ _ = test
 
 

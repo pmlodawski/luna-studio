@@ -18,7 +18,7 @@
 
 {-# LANGUAGE DeriveDataTypeable #-}
 
-!{-# LANGUAGE RightSideContexts #-}
+
 {-# LANGUAGE DysfunctionalDependencies #-}
 
 
@@ -53,46 +53,46 @@ import Luna.Target.HS.Control.Context.Pipe3 hiding (main)
 import TstX
 
 
-instance Pipe3 (Req req (MonadCtx env1 set1 m1)) (MonadCtx env2 set2 m2) <= (env1~env2, m1~m2, set1~set2) where
+instance  (env1~env2, m1~m2, set1~set2) =>Pipe3 (Req req (MonadCtx env1 set1 m1)) (MonadCtx env2 set2 m2)  where
     pipe3 f = f . Req
 
 
-instance Pipe3 (Req req (MonadCtx env1 set1 m1)) (Req req2 (MonadCtx env2 set2 m2)) <= (req~req2, env1~env2, m1~m2, set1~set2) where
+instance  (req~req2, env1~env2, m1~m2, set1~set2) =>Pipe3 (Req req (MonadCtx env1 set1 m1)) (Req req2 (MonadCtx env2 set2 m2))  where
     pipe3 = ($)
 
-instance Pipe3 (Req req (MonadCtx env set m1)) (Value m2) <= (env~m2, set~Insert req Empty, m1~t m2, MonadTrans t, Monad m2) where
+instance  (env~m2, set~Insert req Empty, m1~t m2, MonadTrans t, Monad m2) =>Pipe3 (Req req (MonadCtx env set m1)) (Value m2)  where
     pipe3 f = f . Req . MonadCtx . lift . fromValue
 
     --pipe3 f = f . matchReqMonadCtx . lift . fromValue
 
 
-instance Pipe3 m1 (MonadCtx envout set2 m2) <= (m1 ~ MonadCtx envout set2 m2) where
+instance  (m1 ~ MonadCtx envout set2 m2) =>Pipe3 m1 (MonadCtx envout set2 m2)  where
     pipe3 = ($)
 
-instance Pipe3 m1 (Value m2) <= (m1 ~ Value m2) where
+instance  (m1 ~ Value m2) =>Pipe3 m1 (Value m2)  where
     pipe3 = ($)
 
 ---
 
 
---instance Pipe4 (Req req (MonadCtx env1 set1 m1) a1 -> b) (MonadCtx env2 set2 m2 a2) b <= (a1~a2, env1~env2, m1~m2, set1~set2) where
+--instance  (a1~a2, env1~env2, m1~m2, set1~set2) =>Pipe4 (Req req (MonadCtx env1 set1 m1) a1 -> b) (MonadCtx env2 set2 m2 a2) b  where
 --    pipe4 f = f . Req
 
---instance Pipe4 (Req req (MonadCtx env1 set1 m1) a1 -> b) (Req req2 (MonadCtx env2 set2 m2) a2) b <= (a1~a2, req~req2, env1~env2, m1~m2, set1~set2) where
+--instance  (a1~a2, req~req2, env1~env2, m1~m2, set1~set2) =>Pipe4 (Req req (MonadCtx env1 set1 m1) a1 -> b) (Req req2 (MonadCtx env2 set2 m2) a2) b  where
 --    pipe4 = ($)
 
---instance Pipe4 (Req req (MonadCtx env set m1) a1 -> b) (Value m2 a2) b <= (a1~a2, env~m2, set~Insert req Empty, m1~t m2, MonadTrans t, Monad m2) where
+--instance  (a1~a2, env~m2, set~Insert req Empty, m1~t m2, MonadTrans t, Monad m2) =>Pipe4 (Req req (MonadCtx env set m1) a1 -> b) (Value m2 a2) b  where
 --    pipe4 f = f . Req . MonadCtx . lift . fromValue
 
---instance Pipe4 func (MonadCtx envout set2 m2 a2) b <= (func~(m1 a1 -> b), a1~a2, m1 ~ MonadCtx envout set2 m2) where
+--instance  (func~(m1 a1 -> b), a1~a2, m1 ~ MonadCtx envout set2 m2) =>Pipe4 func (MonadCtx envout set2 m2 a2) b  where
 --    pipe4 = ($)
 
---instance Pipe4 func (Value m2 a2) b <= (func~(m1 a1 -> b), a1~a2, m1 ~ Value m2) where
+--instance  (func~(m1 a1 -> b), a1~a2, m1 ~ Value m2) =>Pipe4 func (Value m2 a2) b  where
 --    pipe4 = ($)
 
 
 
---instance Pipe3 m1 m2 <= (m1~m2) where
+--instance  (m1~m2) =>Pipe3 m1 m2  where
 --    pipe3 = ($)
 
             --class MkMonadCtx m1 req env set m | m1 req -> env set m where
@@ -101,7 +101,7 @@ instance Pipe3 m1 (Value m2) <= (m1 ~ Value m2) where
             --instance MkMonadCtx (MonadCtx env set m) req env set m where
             --    mkMonadCtx = Req
 
-            --instance MkMonadCtx (Value m) req m set (t m) <= (m1~t m, set~Insert req Empty, MonadTrans t, Monad m) where
+            --instance  (m1~t m, set~Insert req Empty, MonadTrans t, Monad m) =>MkMonadCtx (Value m) req m set (t m)  where
             --    mkMonadCtx = matchReqMonadCtx . lift . fromValue
 
             ----runStateTX2 x = mkMonadCtx x
@@ -116,7 +116,7 @@ class TuplePipe f a out | f a -> out where
 instance TuplePipe f () f where
     tuplePipe = const
 
-instance TuplePipe (w -> b) (m2 (s a2),xs) out <= (w~m1 (s a1), a1~a2, Pipe3 m1 m2, TuplePipe b xs out) where
+instance  (w~m1 (s a1), a1~a2, Pipe3 m1 m2, TuplePipe b xs out) =>TuplePipe (w -> b) (m2 (s a2),xs) out  where
     tuplePipe f (x,xs) = (f `pipe3` x) `tuplePipe` xs
 
 
@@ -126,30 +126,30 @@ class TupleApp f a out | f a -> out where
 instance TupleApp f () f where
     tupleApp = const
 
-instance TupleApp f (a,xs) out <= (f~(a->b), TupleApp b xs out) where
+instance  (f~(a->b), TupleApp b xs out) =>TupleApp f (a,xs) out  where
     tupleApp f (x,xs) = (f x) `tupleApp` xs
 
 
 class TupleApp2 f a out | f a -> out where
     tupleApp2 :: f -> a -> out
 
-instance TupleApp2 f () out <= out~f where
+instance  out~f =>TupleApp2 f () out  where
     tupleApp2 = const
 
-instance TupleApp2 f (a1,xs) out <= (f~(a2->b), a1~ma1(va1), a2~ma2(va2), va1~va2, Pipe3 ma2 ma1, TupleApp2 b xs out) where
+instance  (f~(a2->b), a1~ma1(va1), a2~ma2(va2), va1~va2, Pipe3 ma2 ma1, TupleApp2 b xs out) =>TupleApp2 f (a1,xs) out  where
     tupleApp2 f (x,xs) = (f `pipe3` x) `tupleApp2` xs
 
 
 class TupleApp3 f a out | f a -> out where
     tupleApp3 :: f -> a -> out
 
-instance TupleApp3 f () out <= out~f where
+instance  out~f =>TupleApp3 f () out  where
     tupleApp3 = const
 
-instance TupleApp3 f (a1,xs) out <= (Pipe4 f a1 f0, TupleApp3 f0 xs out) where
+instance  (Pipe4 f a1 f0, TupleApp3 f0 xs out) =>TupleApp3 f (a1,xs) out  where
     tupleApp3 f (x,xs) = (f `pipe4` x) `tupleApp3` xs
 
---instance TuplePipe func arg out <= (func~(w -> b), w~m1 (s1 a1), arg~(m2 (s2 a2),xs), s1~s2, a1~a2, Pipe3 m1 m2, TuplePipe b xs out) where
+--instance  (func~(w -> b), w~m1 (s1 a1), arg~(m2 (s2 a2),xs), s1~s2, a1~a2, Pipe3 m1 m2, TuplePipe b xs out) =>TuplePipe func arg out  where
 --    tuplePipe f (x,xs) = (f `pipe3` x) `tuplePipe` xs
 
 
@@ -159,7 +159,7 @@ instance TupleApp3 f (a1,xs) out <= (Pipe4 f a1 f0, TupleApp3 f0 xs out) where
 --instance TuplePipe f () f where
 --    tuplePipe = const
 
---instance TuplePipe f (m2 a,xs) out <= (f~(m1 a -> b), Pipe2 m1 m2, TuplePipe b xs out) where
+--instance  (f~(m1 a -> b), Pipe2 m1 m2, TuplePipe b xs out) =>TuplePipe f (m2 a,xs) out  where
 --    tuplePipe f (x,xs) = (f `pipe2` x) `tuplePipe` xs
 
 -------------------------------------------------------------------------------
@@ -183,10 +183,10 @@ type P = Proxy
 
 (~::) = ofType
 
-instance Func (PropBind prop base) args out <= Func prop (base, args) out where
+instance  Func prop (base, args) out =>Func (PropBind prop base) args out  where
     getFunc (PropBind (prop, base)) args = getFunc prop (base,args)
 
---instance Func2 (PropBind prop base) args out <= Func2 prop (base, args) out where
+--instance  Func2 prop (base, args) out =>Func2 (PropBind prop base) args out  where
 --    getFunc2 (PropBind (prop, base)) args = getFunc2 prop (base,args)
 
 -------------------------------------------------------------------------------
@@ -228,7 +228,7 @@ data Cons_Vector = Cons_Vector deriving (Show, Eq, Typeable)
 data Cons_Vector2 = Cons_Vector2 deriving (Show, Eq, Typeable)
 cons_Vector = appH Cons_Vector $ (mkArg (val (0::Int)) ~:: (u :: NDParam "x" a)) // (mkArg (val 0) :: NDParam "y" (Value Pure(Safe Int))) // (mkArg (val 0) :: NDParam "z" (Value Pure(Safe Int))) // ()
 
---instance Func Cons_Vector args out <= (args~(a,(a,(a,()))), out~(Value Pure(Safe(Vector a)))) where
+--instance  (args~(a,(a,(a,()))), out~(Value Pure(Safe(Vector a)))) =>Func Cons_Vector args out  where
 --    getFunc _ = cons_Vector_func
 
 instance (PolyApplicative (Value Pure) m7 m4,
@@ -310,10 +310,10 @@ testme2 (AppH(fptr, args)) = getFunc2 fptr (matchArgs args') where
 class MatchArg arg out where
     matchArg :: arg -> out
 
-instance MatchArg a b <= a~b where
+instance  a~b =>MatchArg a b  where
     matchArg = id
 
-instance MatchArg (MonadCtx base1 set1 m1 val1) (Req req (MonadCtx base2 set2 m2) val2) <= (base1~base2, set1~set2, m1~m2, val1~val2) where
+instance  (base1~base2, set1~set2, m1~m2, val1~val2) =>MatchArg (MonadCtx base1 set1 m1 val1) (Req req (MonadCtx base2 set2 m2) val2)  where
     matchArg = Req
 
 class MatchArgs args out where
@@ -323,7 +323,7 @@ class MatchArgs args out where
 instance MatchArgs () () where
     matchArgs = id
 
-instance MatchArgs (x,xs) (xout, xsout) <= (MatchArg x xout, MatchArgs xs xsout) where
+instance  (MatchArg x xout, MatchArgs xs xsout) =>MatchArgs (x,xs) (xout, xsout)  where
     matchArgs (x,xs) = (matchArg x, matchArgs xs)
 
 
@@ -335,7 +335,7 @@ instance MatchArgs (x,xs) (xout, xsout) <= (MatchArg x xout, MatchArgs xs xsout)
 --instance ApplyFTuple f () f where
 --    applyFTuple = const
 
---instance ApplyFTuple (x -> f) (x,xs) f <= ApplyFTuple f xs f where
+--instance  ApplyFTuple f xs f =>ApplyFTuple (x -> f) (x,xs) f  where
 --    applyFTuple f (x,xs) = applyFTuple (f x) xs
 
 
@@ -345,7 +345,7 @@ class UncurryTuple f out | f -> out where
 instance UncurryTuple (() -> a) a where
     uncurryTuple f = f ()
 
-instance UncurryTuple ((x,xs) -> f) (x -> fout) <= UncurryTuple (xs -> f) fout where
+instance  UncurryTuple (xs -> f) fout =>UncurryTuple ((x,xs) -> f) (x -> fout)  where
     uncurryTuple f = (\x -> uncurryTuple $ f . (x,))
 
 
@@ -356,7 +356,7 @@ typeArg = const
 
 --xxx args = cons_Vector_func2 args
 
---instance Func Cons_Vector2 args out <= (args~(m1 (s1 a), (m2 (s2 a), (m3 (s3 a), ()))), out~mout(sout(Vector a))) where
+--instance  (args~(m1 (s1 a), (m2 (s2 a), (m3 (s3 a), ()))), out~mout(sout(Vector a))) =>Func Cons_Vector2 args out  where
 --    getFunc _ (a,(b,(c,()))) = cons_Vector_func2' `pipe2` a `pipe2` b `pipe2` c
 
 --xxx (a,(b,(c,()))) = cons_Vector_func2' `pipe2` a `pipe2` b `pipe2` c
@@ -490,7 +490,7 @@ instance (out ~ ((t, ()) -> t)) => FuncD Prop_Vector_id out where
 
 ---
 
-print' :: a -> MonadCtx IO () m () <= (MonadIO m, Show a)
+print' ::  (MonadIO m, Show a)=>a -> MonadCtx IO () m ()  
 print' s = MonadCtx . liftIO $ print s
 
 

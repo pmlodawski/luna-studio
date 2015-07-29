@@ -17,7 +17,7 @@
 {-# LANGUAGE DysfunctionalDependencies #-}
 {-# LANGUAGE OverlappingInstances #-}
 
-!{-# LANGUAGE RightSideContexts #-}
+
 
 module Luna.Target.HS.Control.Context.Bind where
 
@@ -78,7 +78,7 @@ instance UnpackCtxWrapper (MonadCtx env set m s a) (MonadCtx env set m s a) wher
 instance UnpackCtxWrapper (Value m s a) (Value m s a) where
     unpackCtxWrapper = id
 
-instance UnpackCtxWrapper (CtxWrapper w m a) (m v) <= UnpackW w a v where
+instance  UnpackW w a v =>UnpackCtxWrapper (CtxWrapper w m a) (m v)  where
     unpackCtxWrapper = unpackW . fromCtxWrapper
 
 ---
@@ -100,10 +100,10 @@ instance UnpackW (ValCtx m s) a (Value m s a) where
 class PolyMonadCtx m1 m2 where
     (>>>~) :: m1 a -> (XArg m1 a -> m2 c) -> (XOut m1 m2 c)
 
-polyMonadCtxBind :: m1 a -> (XArg m1 a -> m2 c) -> XOut m1 m2 c <= PolyMonadCtx m1 m2
+polyMonadCtxBind ::  PolyMonadCtx m1 m2=>m1 a -> (XArg m1 a -> m2 c) -> XOut m1 m2 c  
 polyMonadCtxBind = (>>>~)
 
-polyMonadCtxBind_ :: m1 a -> m2 c -> XOut m1 m2 c <= PolyMonadCtx m1 m2
+polyMonadCtxBind_ ::  PolyMonadCtx m1 m2=>m1 a -> m2 c -> XOut m1 m2 c  
 polyMonadCtxBind_ a b = a >>>~ (\_ -> b)
 
 
@@ -159,36 +159,36 @@ instance PolyMonad IO IO IO where
 
 ----------------------------------------------
 
-instance PolyMonad (Value Pure s1) (Value Pure s2) (Value Pure s3) <= (s3 ~ MatchSafety s1 s2, MonadSafety (Value Pure) s1 s2) where
+instance  (s3 ~ MatchSafety s1 s2, MonadSafety (Value Pure) s1 s2) =>PolyMonad (Value Pure s1) (Value Pure s2) (Value Pure s3)  where
     a >>>= f = a `bindSafety` f
 
-instance PolyMonad (Value IO s1) (Value Pure s2) (Value IO s3) <= (s3 ~ MatchSafety s1 s2, MonadSafety (Value IO) s1 s2) where
+instance  (s3 ~ MatchSafety s1 s2, MonadSafety (Value IO) s1 s2) =>PolyMonad (Value IO s1) (Value Pure s2) (Value IO s3)  where
     a >>>= f = a `bindSafety` (Value . return . fromPure . fromValue . f)
 
-instance PolyMonad (Value Pure s1) (Value IO s2) (Value IO s3) <= (s3 ~ MatchSafety s1 s2, MonadSafety (Value IO) s1 s2) where
+instance  (s3 ~ MatchSafety s1 s2, MonadSafety (Value IO) s1 s2) =>PolyMonad (Value Pure s1) (Value IO s2) (Value IO s3)  where
     a >>>= f = (Value . return . fromPure . fromValue $ a) `bindSafety` f
 
-instance PolyMonad (Value IO s1) (Value IO s2) (Value IO s3) <= (s3 ~ MatchSafety s1 s2, MonadSafety (Value IO) s1 s2) where
+instance  (s3 ~ MatchSafety s1 s2, MonadSafety (Value IO) s1 s2) =>PolyMonad (Value IO s1) (Value IO s2) (Value IO s3)  where
     a >>>= f = a `bindSafety` f
 
 ---
 
-instance PolyMonad (MonadCtx env1 set1 m1 s1) (MonadCtx env2 set2 m2 s2) (MonadCtx envout setout m1 s3) <= (envout~EnvMerge3 env1 env2, s3 ~ MatchSafety s1 s2, setout ~ Union set1 set2, m1~m2, MonadSafety m2 s1 s2) where
+instance  (envout~EnvMerge3 env1 env2, s3 ~ MatchSafety s1 s2, setout ~ Union set1 set2, m1~m2, MonadSafety m2 s1 s2) =>PolyMonad (MonadCtx env1 set1 m1 s1) (MonadCtx env2 set2 m2 s2) (MonadCtx envout setout m1 s3)  where
     a >>>= f = MonadCtx $ (fromMonadCtx a) `bindSafety` (fromMonadCtx . f)
 
-instance PolyMonad (MonadCtx env set m s1) (Value Pure s2) (MonadCtx env set m s3) <= (s3 ~ MatchSafety s1 s2, MonadSafety m s1 s2, MonadTrans m, Monad s2) where
+instance  (s3 ~ MatchSafety s1 s2, MonadSafety m s1 s2, MonadTrans m, Monad s2) =>PolyMonad (MonadCtx env set m s1) (Value Pure s2) (MonadCtx env set m s3)  where
     a >>>= f = MonadCtx $ (fromMonadCtx a) `bindSafety` (lift . fromPure . fromValue . f)
 
-instance PolyMonad (MonadCtx env set m s1) (Value IO s2) (MonadCtx envout set m s3) <= (envout~EnvMerge3 env (Value IO), s3 ~ MatchSafety s1 s2, MonadSafety m s1 s2, MonadTrans m, Monad s2, LiftValue IO m, Functor s2) where
+instance  (envout~EnvMerge3 env (Value IO), s3 ~ MatchSafety s1 s2, MonadSafety m s1 s2, MonadTrans m, Monad s2, LiftValue IO m, Functor s2) =>PolyMonad (MonadCtx env set m s1) (Value IO s2) (MonadCtx envout set m s3)  where
     a >>>= f = MonadCtx $ (fromMonadCtx a) `bindSafety` (liftValue . f)
 
---instance PolyMonad (Value Pure s1) (MonadCtx env set m s2) (MonadCtx env set m s3) <= (s3 ~ MatchSafety s1 s2, MonadTrans m, MonadSafety m s1 s2, Monad s1) where
+--instance  (s3 ~ MatchSafety s1 s2, MonadTrans m, MonadSafety m s1 s2, Monad s1) =>PolyMonad (Value Pure s1) (MonadCtx env set m s2) (MonadCtx env set m s3)  where
 --    a >>>= f = MonadCtx $ (lift . fromPure $ fromValue a) `bindSafety` (fromMonadCtx . f)
 
---instance PolyMonad (Value IO s1) (MonadCtx env set m s2) (MonadCtx envout set m s3) <= (envout~EnvMerge3 (Value IO) env, s3 ~ MatchSafety s1 s2, MonadTrans m, MonadSafety m s1 s2, Monad s1, LiftValue IO m, Functor s1) where
+--instance  (envout~EnvMerge3 (Value IO) env, s3 ~ MatchSafety s1 s2, MonadTrans m, MonadSafety m s1 s2, Monad s1, LiftValue IO m, Functor s1) =>PolyMonad (Value IO s1) (MonadCtx env set m s2) (MonadCtx envout set m s3)  where
 --    a >>>= f = MonadCtx $ (liftValue a) `bindSafety` (fromMonadCtx . f)
 
-instance PolyMonad (Value base s1) (MonadCtx env set m s2) (MonadCtx envout set m s3) <= (s3~MatchSafety s1 s2, LiftValue base m, MonadSafety m s1 s2, Functor s1) where
+instance  (s3~MatchSafety s1 s2, LiftValue base m, MonadSafety m s1 s2, Functor s1) =>PolyMonad (Value base s1) (MonadCtx env set m s2) (MonadCtx envout set m s3)  where
     a >>>= f = MonadCtx $ (liftValue a) `bindSafety` (fromMonadCtx . f)
 
 ---
@@ -196,13 +196,13 @@ instance PolyMonad (Value base s1) (MonadCtx env set m s2) (MonadCtx envout set 
 --    (>>>=) :: m1 a -> (a -> m2 b) -> m3 b
 
 -- CHECKME [wd]: not sure if the implementation is ok!
---instance PolyMonad (CtxWrapper (ValCtx m1' s1') (MonadCtx env1 set1 m1 s1)) (CtxWrapper (ValCtx m2' s2') (MonadCtx env2 set2 m2 s2)) (CtxWrapper (ValCtx m2' s2') m) <= (Functor s1', Functor m1', PolyMonad (Value m1' s1') (MonadCtx env2 set2 m2 s2) m3, PolyMonad (MonadCtx env1 set1 m1 s1) m3 m) where
+--instance  (Functor s1', Functor m1', PolyMonad (Value m1' s1') (MonadCtx env2 set2 m2 s2) m3, PolyMonad (MonadCtx env1 set1 m1 s1) m3 m) =>PolyMonad (CtxWrapper (ValCtx m1' s1') (MonadCtx env1 set1 m1 s1)) (CtxWrapper (ValCtx m2' s2') (MonadCtx env2 set2 m2 s2)) (CtxWrapper (ValCtx m2' s2') m)  where
 --    a >>>= f = CtxWrapper . ValCtx $ unpackCtxWrapper a >>>= (polyJoin . fmap (unpackCtxWrapper . f))
 
-instance PolyMonad (Value base s1) (CtxWrapper (ValCtx m2' s2') (MonadCtx env2 set2 m2 s2)) (CtxWrapper (ValCtx m2' s2') (MonadCtx envout set2 m2 s3)) <= (envout~EnvMerge3 (Value base) env2, s3~MatchSafety s1 s2, MonadSafety m2 s1 s2, LiftValue base m2, Functor s1) where
+instance  (envout~EnvMerge3 (Value base) env2, s3~MatchSafety s1 s2, MonadSafety m2 s1 s2, LiftValue base m2, Functor s1) =>PolyMonad (Value base s1) (CtxWrapper (ValCtx m2' s2') (MonadCtx env2 set2 m2 s2)) (CtxWrapper (ValCtx m2' s2') (MonadCtx envout set2 m2 s3))  where
     a >>>= f = CtxWrapper . ValCtx $ a >>>= (unpackCtxWrapper . f)
 
-instance PolyMonad (Value base s1) (CtxWrapper AppCtx (MonadCtx env2 set2 m2 s2)) (CtxWrapper AppCtx (MonadCtx envout set2 m2 s3)) <= (envout~EnvMerge3 (Value base) env2, s3~MatchSafety s1 s2, MonadSafety m2 s1 s2, LiftValue base m2, Functor s1) where
+instance  (envout~EnvMerge3 (Value base) env2, s3~MatchSafety s1 s2, MonadSafety m2 s1 s2, LiftValue base m2, Functor s1) =>PolyMonad (Value base s1) (CtxWrapper AppCtx (MonadCtx env2 set2 m2 s2)) (CtxWrapper AppCtx (MonadCtx envout set2 m2 s3))  where
     a >>>= f = CtxWrapper . AppCtx $ a >>>= (unpackCtxWrapper . f)
 
 --qqq :: PolyMonad (Value m1' s1') (MonadCtx env2 set2 m2 s2) xout => CtxWrapper (ValCtx m1' s1') (MonadCtx env1 set1 m1 s1) a -> (a -> CtxWrapper (ValCtx m2' s2') (MonadCtx env2 set2 m2 s2) b) -> xox
@@ -239,33 +239,33 @@ instance PolyMonadCtx (Value IO s1) (Value IO s2) where
 
 -----
 
-instance PolyMonadCtx (MonadCtx env1 set1 m1 s1) (MonadCtx env2 set2 m2 s2) <= (m1~m2, MonadSafety m2 s1 s2) where
+instance  (m1~m2, MonadSafety m2 s1 s2) =>PolyMonadCtx (MonadCtx env1 set1 m1 s1) (MonadCtx env2 set2 m2 s2)  where
     a >>>~ f = CtxWrapper . AppCtx . MonadCtx $ (fromMonadCtx a) `bindSafety` (fromMonadCtx . f)
 
 instance PolyMonadCtx (Value Pure s1) (MonadCtx env2 set2 m2 s2) where
     a >>>~ f = f a
 
-instance PolyMonadCtx (Value IO s1) (MonadCtx env2 set2 m2 s2) <= (LiftValue2 IO m2, MonadSafety m2 Safe s2) where
+instance  (LiftValue2 IO m2, MonadSafety m2 Safe s2) =>PolyMonadCtx (Value IO s1) (MonadCtx env2 set2 m2 s2)  where
     a >>>~ f = MonadCtx $ (liftValue2 . Value . fmap (Safe . Value . Pure) . fromValue $ a) `bindSafety` (fromMonadCtx . f)
 
-instance PolyMonadCtx (MonadCtx env1 set1 m1 s1) (Value base s2) <= (MonadSafety m1 s1 Safe, LiftValue2 base m1, Functor base) where
+instance  (MonadSafety m1 s1 Safe, LiftValue2 base m1, Functor base) =>PolyMonadCtx (MonadCtx env1 set1 m1 s1) (Value base s2)  where
     a >>>~ f = CtxWrapper . ValCtx . MonadCtx $ (fromMonadCtx a) `bindSafety` (liftValue2 . Value . fmap (Safe . Value . Pure) . fromValue . f)
 
 -------
 
-instance PolyMonadCtx (CtxWrapper (ValCtx m1' s1') (MonadCtx env1 set1 m1 s1)) (CtxWrapper (ValCtx m2' s2') (MonadCtx env2 set2 m2 s2)) <= (m1~m2, MonadSafety m2 s1 s2) where
+instance  (m1~m2, MonadSafety m2 s1 s2) =>PolyMonadCtx (CtxWrapper (ValCtx m1' s1') (MonadCtx env1 set1 m1 s1)) (CtxWrapper (ValCtx m2' s2') (MonadCtx env2 set2 m2 s2))  where
     a >>>~ f = CtxWrapper . ValCtx . unpackCtxWrapper $ unpackCtxWrapper a >>>~ (unpackCtxWrapper . f)
 
-instance PolyMonadCtx (Value base s1) (CtxWrapper (ValCtx m2' s2') (MonadCtx env2 set2 m2 s2)) <= PolyMonadCtx (Value base s1) (MonadCtx env2 set2 m2 s2) where
+instance  PolyMonadCtx (Value base s1) (MonadCtx env2 set2 m2 s2) =>PolyMonadCtx (Value base s1) (CtxWrapper (ValCtx m2' s2') (MonadCtx env2 set2 m2 s2))  where
     a >>>~ f = CtxWrapper . ValCtx . unpackCtxWrapper $ a >>>~ (unpackCtxWrapper . f)
 
-instance PolyMonadCtx (CtxWrapper (ValCtx m1' s1') (MonadCtx env1 set1 m1 s1)) (Value base s2) <= PolyMonadCtx (MonadCtx env1 set1 m1 s1) (Value base s2) where
+instance  PolyMonadCtx (MonadCtx env1 set1 m1 s1) (Value base s2) =>PolyMonadCtx (CtxWrapper (ValCtx m1' s1') (MonadCtx env1 set1 m1 s1)) (Value base s2)  where
     a >>>~ f = unpackCtxWrapper a >>>~ f
 
-instance PolyMonadCtx (MonadCtx env1 set1 m1 s1) (CtxWrapper (ValCtx m2' s2') (MonadCtx env2 set2 m2 s2)) <= (m1~m2, MonadSafety m2 s1 s2) where
+instance  (m1~m2, MonadSafety m2 s1 s2) =>PolyMonadCtx (MonadCtx env1 set1 m1 s1) (CtxWrapper (ValCtx m2' s2') (MonadCtx env2 set2 m2 s2))  where
     a >>>~ f = CtxWrapper . ValCtx . unpackCtxWrapper $ a >>>~ (unpackCtxWrapper . f)
 
-instance PolyMonadCtx (CtxWrapper (ValCtx m1' s1') (MonadCtx env1 set1 m1 s1)) (MonadCtx env2 set2 m2 s2) <= (m1~m2, MonadSafety m2 s1 s2) where
+instance  (m1~m2, MonadSafety m2 s1 s2) =>PolyMonadCtx (CtxWrapper (ValCtx m1' s1') (MonadCtx env1 set1 m1 s1)) (MonadCtx env2 set2 m2 s2)  where
     a >>>~ f = (unpackCtxWrapper a) >>>~ f
 
 
@@ -281,14 +281,14 @@ instance PolyMonadCtx (CtxWrapper (ValCtx m1' s1') (MonadCtx env1 set1 m1 s1)) (
 
 
 
-instance MonadSafety (Value Pure) s1 s2 <= PolyMonad s1 s2 (MatchSafety s1 s2) where
+instance  PolyMonad s1 s2 (MatchSafety s1 s2) =>MonadSafety (Value Pure) s1 s2  where
     bindSafety m f = tst where
         f' = fromPure . fromValue . f -- :: a -> (s2 b)
         m' = fromPure $ fromValue m   -- :: (s1 a)
         tst = Value $ Pure $ m' >>>= f'
         -- PureS $ fromPureS m >>>= (fromPureS . f)
 
-instance MonadSafety (Value IO) s1 s2 <= (PolyMonad s1 s2 (MatchSafety s1 s2), Shuffle s1 IO, Functor s1) where
+instance  (PolyMonad s1 s2 (MatchSafety s1 s2), Shuffle s1 IO, Functor s1) =>MonadSafety (Value IO) s1 s2  where
     bindSafety m f = Value $ do
         m' <- fromValue m -- s1 a
         let f' = fromValue . f -- a -> IO (s2 b)

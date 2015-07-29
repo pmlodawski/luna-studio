@@ -20,7 +20,7 @@
 
 {-# LANGUAGE DeriveDataTypeable #-}
 
-!{-# LANGUAGE RightSideContexts #-}
+
 {-# LANGUAGE DysfunctionalDependencies #-}
 
 
@@ -63,20 +63,20 @@ class Pipe4 a b c | a b -> c where
     pipe4 :: a -> b -> c
 
 
-instance Pipe4 func (MonadCtx envout set2 m2 a2) b <= (func~(m1 a1 -> b), a1~a2, m1 ~ MonadCtx envout set2 m2) where
+instance  (func~(m1 a1 -> b), a1~a2, m1 ~ MonadCtx envout set2 m2) =>Pipe4 func (MonadCtx envout set2 m2 a2) b  where
     pipe4 = ($)
 
-instance Pipe4 func (Value m2 a2) b <= (func~(m1 a1 -> b), a1~a2, m1 ~ Value m2) where
+instance  (func~(m1 a1 -> b), a1~a2, m1 ~ Value m2) =>Pipe4 func (Value m2 a2) b  where
     pipe4 = ($)
 
 
-instance Pipe4 (Req req (MonadCtx env1 set1 m1) a1 -> b) (MonadCtx env2 set2 m2 a2) b <= (a1~a2, env1~env2, m1~m2, set1~set2) where
+instance  (a1~a2, env1~env2, m1~m2, set1~set2) =>Pipe4 (Req req (MonadCtx env1 set1 m1) a1 -> b) (MonadCtx env2 set2 m2 a2) b  where
     pipe4 f = f . Req
 
-instance Pipe4 (Req req (MonadCtx env1 set1 m1) a1 -> b) (Req req2 (MonadCtx env2 set2 m2) a2) b <= (a1~a2, req~req2, env1~env2, m1~m2, set1~set2) where
+instance  (a1~a2, req~req2, env1~env2, m1~m2, set1~set2) =>Pipe4 (Req req (MonadCtx env1 set1 m1) a1 -> b) (Req req2 (MonadCtx env2 set2 m2) a2) b  where
     pipe4 = ($)
 
-instance Pipe4 (Req req (MonadCtx env set m1) a1 -> b) (Value m2 a2) b <= (a1~a2, env~m2, set~Insert req Empty, m1~t m2, MonadTrans t, Monad m2) where
+instance  (a1~a2, env~m2, set~Insert req Empty, m1~t m2, MonadTrans t, Monad m2) =>Pipe4 (Req req (MonadCtx env set m1) a1 -> b) (Value m2 a2) b  where
     pipe4 f = f . Req . MonadCtx . lift . fromValue
 
 
@@ -86,13 +86,13 @@ instance Pipe4 (Req req (MonadCtx env set m1) a1 -> b) (Value m2 a2) b <= (a1~a2
 class AppMonadCtx a b c | a b -> c where
     appMonadCtx :: a -> b -> c
 
-instance AppMonadCtx (Req req (MonadCtx env1 set1 m1) a1 -> b) (MonadCtx env2 set2 m2 a2) b <= (env1~env2, set1~set2, m1~m2, a1~a2) where
+instance  (env1~env2, set1~set2, m1~m2, a1~a2) =>AppMonadCtx (Req req (MonadCtx env1 set1 m1) a1 -> b) (MonadCtx env2 set2 m2 a2) b  where
     appMonadCtx f = f . Req
 
-instance AppMonadCtx (Req req1 (MonadCtx env1 set1 m1) a1 -> b) (Req req2 (MonadCtx env2 set2 m2) a2) b <= (req1~req2, env1~env2, set1~set2, m1~m2, a1~a2) where
+instance  (req1~req2, env1~env2, set1~set2, m1~m2, a1~a2) =>AppMonadCtx (Req req1 (MonadCtx env1 set1 m1) a1 -> b) (Req req2 (MonadCtx env2 set2 m2) a2) b  where
     appMonadCtx = ($)
 
-instance AppMonadCtx (Req req (MonadCtx env set m1) a1 -> b) (Value m2 a2) b <= (a1~Value Pure a2, env~m2, set~Insert req Empty, m1~t m2, MonadTrans t, Monad m2, Functor m2) where
+instance  (a1~Value Pure a2, env~m2, set~Insert req Empty, m1~t m2, MonadTrans t, Monad m2, Functor m2) =>AppMonadCtx (Req req (MonadCtx env set m1) a1 -> b) (Value m2 a2) b  where
     appMonadCtx f = f . Req . MonadCtx . lift . (fmap (Value . Pure)) . fromValue
 
 
@@ -105,7 +105,7 @@ instance AppMonadCtx (Req req (MonadCtx env set m1) a1 -> b) (Value m2 a2) b <= 
 --instance AppMonadCtx2 (Req req (MonadCtx env set m) a) (Req req (MonadCtx env set m) a) where
 --    appMonadCtx2 = id
 
---instance AppMonadCtx2 (Value m2 a2) (Req req (MonadCtx env set m1) a1) <= (a1~Value Pure a2, env~m2, set~Insert req Empty, m1~t m2, MonadTrans t, Monad m2, Functor m2) where
+--instance  (a1~Value Pure a2, env~m2, set~Insert req Empty, m1~t m2, MonadTrans t, Monad m2, Functor m2) =>AppMonadCtx2 (Value m2 a2) (Req req (MonadCtx env set m1) a1)  where
 --    appMonadCtx2 = Req . MonadCtx . lift . (fmap (Value . Pure)) . fromValue
 
 ---------
@@ -120,7 +120,7 @@ instance AppMonadCtx2 (MonadCtx env set m a) (Req req (MonadCtx env set m) a) wh
 instance AppMonadCtx2 (Req req (MonadCtx env set m) a) (Req req (MonadCtx env set m) a) where
     appMonadCtx2 = id
 
-instance AppMonadCtx2 (Value m2 a2) (Req req (MonadCtx env set m1) a1) <= (a1~Value Pure a2, env~m2, set~Insert req Empty, m1~t m2, MonadTrans t, Monad m2, Functor m2) where
+instance  (a1~Value Pure a2, env~m2, set~Insert req Empty, m1~t m2, MonadTrans t, Monad m2, Functor m2) =>AppMonadCtx2 (Value m2 a2) (Req req (MonadCtx env set m1) a1)  where
     appMonadCtx2 = Req . MonadCtx . lift . (fmap (Value . Pure)) . fromValue
 
 

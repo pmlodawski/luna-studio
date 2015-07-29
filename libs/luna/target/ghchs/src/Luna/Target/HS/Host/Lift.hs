@@ -15,7 +15,7 @@
 --{-# LANGUAGE IncoherentInstances #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE DysfunctionalDependencies #-}
-!{-# LANGUAGE RightSideContexts #-}
+
 
 
 module Luna.Target.HS.Host.Lift where
@@ -378,25 +378,25 @@ instance AutoLift (UnsafeBase base err a) (Value Pure (UnsafeBase base err) a) w
 --instance AutoErrLift (UnsafeBase base err val) (UnsafeBase base err val) where
 --    autoErrLift = id
 
---instance AutoErrLift a out <= out~Safe a where
+--instance  out~Safe a =>AutoErrLift a out  where
 --    autoErrLift = Safe
 
 ---
 
 -- FIXME [wd]: update
---instance AutoEnvLift (IO a) (Value IO a') <= AutoErrLift a a' where
+--instance  AutoErrLift a a' =>AutoEnvLift (IO a) (Value IO a')  where
 --    autoEnvLift = Value . fmap autoErrLift
 
---instance AutoEnvLift (Pure a) (Value Pure a') <= AutoErrLift a a' where
+--instance  AutoErrLift a a' =>AutoEnvLift (Pure a) (Value Pure a')  where
 --    autoEnvLift = Value . fmap autoErrLift
 
---instance AutoEnvLift (Value m a) (Value m a') <= (AutoErrLift a a', Functor m) where
+--instance  (AutoErrLift a a', Functor m) =>AutoEnvLift (Value m a) (Value m a')  where
 --    autoEnvLift = fmap autoErrLift
 
---instance AutoEnvLift (MonadCtx base set m a) (MonadCtx base set m a') <= (AutoErrLift a a', Functor m) where
+--instance  (AutoErrLift a a', Functor m) =>AutoEnvLift (MonadCtx base set m a) (MonadCtx base set m a')  where
 --    autoEnvLift = fmap autoErrLift
 
---instance AutoEnvLift a out <= (out~Value Pure a', AutoErrLift a a') where
+--instance  (out~Value Pure a', AutoErrLift a a') =>AutoEnvLift a out  where
 --    autoEnvLift = Value . Pure . autoErrLift
 
 

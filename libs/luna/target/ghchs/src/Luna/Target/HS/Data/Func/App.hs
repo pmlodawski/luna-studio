@@ -21,7 +21,7 @@
 
 --{-# LANGUAGE DysfunctionalDependencies #-}
 
-!{-# LANGUAGE RightSideContexts #-}
+
 
 module Luna.Target.HS.Data.Func.App where
 
@@ -71,8 +71,8 @@ fromAppH (AppH a) = a
 --appNext' val fptr = fmap (appNextArg val) fptr
 
 
---instance AppNext val (AppH fptr args) (AppH fptr argsout) <= (AppNextArg val args argsout) where
+--instance  (AppNextArg val args argsout) =>AppNext val (AppH fptr args) (AppH fptr argsout)  where
 --    appNext val (AppH (fptr, args)) = AppH (fptr, appNextArg val args)
 
---instance AppNext val (LamH lam args) (LamH lam argsout) <= (AppNextArg val args argsout) where
+--instance  (AppNextArg val args argsout) =>AppNext val (LamH lam args) (LamH lam argsout)  where
 --    appNext val (LamH (lam, args)) = LamH (lam, appNextArg val args)

@@ -14,7 +14,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 
-!{-# LANGUAGE RightSideContexts #-}
+
 
 import Control.Applicative    hiding(pure)
 import Control.Monad.IO.Class
@@ -55,7 +55,7 @@ type Unsafe = UnsafeBase Safe
 
 data NOP a = NOP a deriving Show
 
-instance Functor (UnsafeBase base err) <= Functor base where
+instance  Functor base =>Functor (UnsafeBase base err)  where
   fmap f a = case a of
       Value a -> Value $ f a
       Error e -> Error e
@@ -77,7 +77,7 @@ instance Raise e (UnsafeBase base e a) (UnsafeBase base e a) where
     raise e a = Error e
 
 
-instance Raise e (UnsafeBase base be a) (UnsafeBase outBase be a) <= (Raise e (base a) (outBase a)) where
+instance  (Raise e (base a) (outBase a)) =>Raise e (UnsafeBase base be a) (UnsafeBase outBase be a)  where
     raise e base = case base of
         Value val   -> Value val
         Error err   -> Error err
@@ -104,7 +104,7 @@ instance Catch (UnsafeBase (UnsafeBase base e2) e a)  (e -> Safe a) (UnsafeBase 
         Value a -> Value a
         Error e -> Value . fromSafe $ f e
         Other o -> o
-instance Catch (UnsafeBase (UnsafeBase base e2) e3 a) (e -> Safe a) (UnsafeBase dstBase e3 a) <= (Catch (UnsafeBase base e2 a) (e -> Safe a) (dstBase a)) where
+instance  (Catch (UnsafeBase base e2 a) (e -> Safe a) (dstBase a)) =>Catch (UnsafeBase (UnsafeBase base e2) e3 a) (e -> Safe a) (UnsafeBase dstBase e3 a)  where
     catch f base = case base of
         Value a     -> Value a
         Error e     -> Error e

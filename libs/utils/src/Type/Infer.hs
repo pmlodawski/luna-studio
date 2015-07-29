@@ -20,7 +20,7 @@
 {-# LANGUAGE OverlappingInstances #-}
 {-# LANGUAGE IncoherentInstances #-}
 
-!{-# LANGUAGE RightSideContexts #-}
+
 
 module Type.Infer where
 
@@ -45,7 +45,7 @@ class InferType2 (a::k) (b::k) | a -> b where
 class BreakInference a b | a -> b where
     breakInference :: a -> b
 
---instance BreakInference a b <= (a~b) where
+--instance  (a~b) =>BreakInference a b  where
 --    breakInference a = a
 
 instance BreakInference Int String where
@@ -67,26 +67,26 @@ data Id5 t1 t2 t3 t4 t5 = Id5 deriving (Show, Typeable)
 -- Instances
 --------------------------------------------------------------------------------
 
---instance Num a <= InferType2 a a
---instance Monad a <= InferType2 a a
+--instance  InferType2 a a=>Num a  
+--instance  InferType2 a a=>Monad a  
 
 --instance InferType2 Int Int 
 
---instance InferType2 (m a) (m' a') <= (InferType2 m m', InferType2 a a') 
---instance InferType2 (a :: *) b <= (b~Id0) 
---instance InferType2 (a :: * -> *) b <= (b~Id1)
---instance InferType2 (a :: * -> * -> *) b <= (b~Id2) 
+--instance  (InferType2 m m', InferType2 a a') =>InferType2 (m a) (m' a')  
+--instance  (b~Id0) =>InferType2 (a :: *) b  
+--instance  (b~Id1)=>InferType2 (a :: * -> *) b  
+--instance  (b~Id2) =>InferType2 (a :: * -> * -> *) b  
 
 
-instance Num a <= InferType a
-instance Monad a <= InferType a 
+instance  InferType a=>Num a  
+instance  InferType a =>Monad a  
 
 instance InferType Int 
 
-instance InferType (m a) <= (InferType m, InferType a) 
-instance InferType (a :: *) <= (a~Id0) 
-instance InferType (a :: * -> *) <= (a~Id1)
-instance InferType (a :: * -> * -> *) <= (a~Id2) 
+instance  (InferType m, InferType a) =>InferType (m a)  
+instance  (a~Id0) =>InferType (a :: *)  
+instance  (a~Id1)=>InferType (a :: * -> *)  
+instance  (a~Id2) =>InferType (a :: * -> * -> *)  
 
 --inferTypeBase :: InferType a => a -> a
 --inferTypeBase a = inferType $ toProxy a

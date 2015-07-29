@@ -25,8 +25,8 @@
 {-# LANGUAGE CPP #-}
 
 
-!{-# LANGUAGE RightSideContexts #-}
-!{-# LANGUAGE Python #-}
+
+
 
 module Test.Luna.Comp.SamplesSpec where
 

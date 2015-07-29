@@ -21,7 +21,7 @@
 
 {-# LANGUAGE DysfunctionalDependencies #-}
 
-!{-# LANGUAGE RightSideContexts #-}
+
 
 module Luna.Target.HS.Control.Context.MonadCtx where
 
@@ -76,7 +76,7 @@ runMonadProto _ f ms = MonadCtx $ f (fromMonadCtx ms)
 runMonadProtoReq :: mptr -> (ma sa a -> mb sb b) -> Req mptr (MonadCtx env set ma sa) a -> MonadCtx env (Remove mptr set) mb sb b
 runMonadProtoReq mptr f ms = runMonadProto mptr f (fromReq ms)
 
-runMonad :: mptr -> (ma sa a -> mb sb b) -> Req mptr (MonadCtx env set ma sa) a -> t b <= MatchMonadClose (MonadCtx env (Remove mptr set) mb sb) t
+runMonad ::  MatchMonadClose (MonadCtx env (Remove mptr set) mb sb) t=>mptr -> (ma sa a -> mb sb b) -> Req mptr (MonadCtx env set ma sa) a -> t b  
 runMonad = matchMonadClose `dot3` runMonadProtoReq
 
 
@@ -93,10 +93,10 @@ runMonad = matchMonadClose `dot3` runMonadProtoReq
 instance MatchMonadCloseProto False m m where
     matchMonadCloseProto _ = id
 
-instance MatchMonadCloseProto True (MonadCtx env set m s) (env s) <= env~m where
+instance  env~m =>MatchMonadCloseProto True (MonadCtx env set m s) (env s)  where
     matchMonadCloseProto _ = closeMonadCtx
 
-instance MatchMonadClose (MonadCtx env set ma sa) out <= (MatchMonadCloseProto emptySet (MonadCtx env set ma sa) out, emptySet ~ IsEmpty set) where
+instance  (MatchMonadCloseProto emptySet (MonadCtx env set ma sa) out, emptySet ~ IsEmpty set) =>MatchMonadClose (MonadCtx env set ma sa) out  where
     matchMonadClose = matchMonadCloseProto (undefined :: emptySet)
 
 ---
@@ -104,6 +104,6 @@ instance MatchMonadClose (MonadCtx env set ma sa) out <= (MatchMonadCloseProto e
 instance AppMonadCtx (MonadCtx env set m s a) (Req req (MonadCtx env set m s) a) where
     appMonadCtx = Req
 
-instance AppMonadCtx (Value m2 s2 a2) (Req req (MonadCtx env set m1 s1) a1) <= (set~Insert req Empty, s1~s2, m1~t (Value m2), a1 ~ Value Pure Safe a2, LiftValue' (Value m2) s2 t, Functor s2, Functor m2) where
+instance  (set~Insert req Empty, s1~s2, m1~t (Value m2), a1 ~ Value Pure Safe a2, LiftValue' (Value m2) s2 t, Functor s2, Functor m2) =>AppMonadCtx (Value m2 s2 a2) (Req req (MonadCtx env set m1 s1) a1)  where
     appMonadCtx = Req . MonadCtx . liftValue' . (fmap (Value . Pure . Safe))
 

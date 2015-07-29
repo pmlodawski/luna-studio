@@ -11,7 +11,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE PolyKinds #-}
-!{-# LANGUAGE RightSideContexts #-}
+
 
 module Luna.Target.HS.Data.Struct.Meta {-# DEPRECATED "Not used anymore" #-} where
 
@@ -30,5 +30,5 @@ meta = Meta Proxy
 -- Instances
 ----------------------------------------------------------------------------------
 
-instance BaseType (Proxy (Meta a)) out <= out~(Proxy (Meta a)) where
+instance  out~(Proxy (Meta a)) =>BaseType (Proxy (Meta a)) out  where
     baseType = id

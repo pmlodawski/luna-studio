@@ -12,7 +12,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 --{-# LANGUAGE IncoherentInstances #-}
 
-!{-# LANGUAGE RightSideContexts #-}
+
 
 
 import Control.Applicative    hiding(pure)
@@ -169,17 +169,17 @@ test = Value $ do
 
 --instance (a1~a2, m1~m2) => Pipe (a1 :> m1 -> b) (a2 :> m2) b where pipe = undefined
 
---instance Pipe (a   :> m1 -> b) (a   :> m2)  b     <= (m1~m2)                      where pipe f a = f a
---instance Pipe (m a :> m1 -> b) (a   :> m2)  b     <= (m1~m2, Monad m, Functor m2) where pipe f a = f $ fmap return a
---instance Pipe (a   :> m1 -> b) (m a :> m2)  (m b) <= (m1~m2)                      where pipe = undefined
---instance Pipe (a1  :> m1 -> b) (a2  :> m2)  out   <= (a1~a2, Pipe (a1 :> m1 -> b) (a1 :> m2) out) where pipe = pipe
---instance Pipe (a1  :> m1 -> b) (m a2 :> m2) out   <= (a1~a2, Pipe (a1 :> m1 -> b) (m a1 :> m2) out) where pipe = undefined
+--instance  (m1~m2)                      =>Pipe (a   :> m1 -> b) (a   :> m2)  b      where pipe f a = f a
+--instance  (m1~m2, Monad m, Functor m2) =>Pipe (m a :> m1 -> b) (a   :> m2)  b      where pipe f a = f $ fmap return a
+--instance  (m1~m2)                      =>Pipe (a   :> m1 -> b) (m a :> m2)  (m b)  where pipe = undefined
+--instance  (a1~a2, Pipe (a1 :> m1 -> b) (a1 :> m2) out) =>Pipe (a1  :> m1 -> b) (a2  :> m2)  out    where pipe = pipe
+--instance  (a1~a2, Pipe (a1 :> m1 -> b) (m a1 :> m2) out) =>Pipe (a1  :> m1 -> b) (m a2 :> m2) out    where pipe = undefined
 
 
---instance Pipe (a   :> m1 -> b) (a   :> m2)  b     <= (m1~m2)                      where pipe f a = f a
---instance Pipe (m a :> m1 -> b) (a   :> m2)  b     <= (m1~m2, Monad m, Functor m2) where pipe f a = f $ fmap return a
---instance Pipe (a   :> m1 -> b) (m a :> m2)  (m b) <= (m1~m2)                      where pipe = undefined
---instance Pipe (a1  :> m1 -> b) (m a2 :> m2) out   <= (a1~a2, Pipe (a1 :> m1 -> b) (m a1 :> m2) out) where pipe = undefined
+--instance  (m1~m2)                      =>Pipe (a   :> m1 -> b) (a   :> m2)  b      where pipe f a = f a
+--instance  (m1~m2, Monad m, Functor m2) =>Pipe (m a :> m1 -> b) (a   :> m2)  b      where pipe f a = f $ fmap return a
+--instance  (m1~m2)                      =>Pipe (a   :> m1 -> b) (m a :> m2)  (m b)  where pipe = undefined
+--instance  (a1~a2, Pipe (a1 :> m1 -> b) (m a1 :> m2) out) =>Pipe (a1  :> m1 -> b) (m a2 :> m2) out    where pipe = undefined
 
 
 ----newtype IC t m v = IC { fromIC :: t m (Value m v) }
@@ -259,11 +259,11 @@ class UnFmap f where
 --tmapVal :: (TransFunctor t, MonadTrans t, Monad (t ma), Monad ma, Monad mb, Functor (t mb)) => (a :> ma -> b :> mb) -> (IC t ma a -> IC t mb b)
 --tmapVal f a = IC $ fmap (Value . return) $ tmap (\x -> fromValue $ f (Value x)) (runIC a)
 
-instance Pipe (a1  :> m1   -> b)       (a2  :> m2)   b            <= (a1~a2, m1~m2) where pipe f a = f a
+instance  (a1~a2, m1~m2) =>Pipe (a1  :> m1   -> b)       (a2  :> m2)   b             where pipe f a = f a
 
 ---- overlapping
 ---- moze da sie jednak to zrobic metoda z Advanced Overlap?
---instance Pipe (a1  :> m1   -> b)     (c (a2 :> m2) :> mc)   (c out :> mc)      <= (a1~a2, m1~m2, Monad mc, Monad c, Pipe (a1 :> m1 -> b) (a2  :> m2) out) where 
+--instance  (a1~a2, m1~m2, Monad mc, Monad c, Pipe (a1 :> m1 -> b) (a2  :> m2) out) =>Pipe (a1  :> m1   -> b)     (c (a2 :> m2) :> mc)   (c out :> mc)       where 
 --    pipe f vma = Value $ do
 --        ma <- fromValue vma
 --        return $ do
@@ -272,13 +272,13 @@ instance Pipe (a1  :> m1   -> b)       (a2  :> m2)   b            <= (a1~a2, m1~
 
 
 
-instance Pipe (IC c1 m1 a1 -> b)       (a2  :> m2)   b            <= (m1~m2, a1~a2, MonadTrans c1, Monad m2) where pipe f a = f $ liftCtx a
+instance  (m1~m2, a1~a2, MonadTrans c1, Monad m2) =>Pipe (IC c1 m1 a1 -> b)       (a2  :> m2)   b             where pipe f a = f $ liftCtx a
 
-instance Pipe (a1 :> m1    -> (b -> c)) (IC c2 m2 a2) (IC c2 m2 (b -> c)) <= (m1~Pure, a1~a2, Functor (IC c2 m2)) where 
+instance  (m1~Pure, a1~a2, Functor (IC c2 m2)) =>Pipe (a1 :> m1    -> (b -> c)) (IC c2 m2 a2) (IC c2 m2 (b -> c))  where 
     pipe f ca = fmap fn ca where
         fn = f . pureVal
 
-instance Pipe (a1 :> m1    -> b :> mb) (IC c2 m2 a2) (IC c2 mout b) <= (m1~Pure, a1~a2, MatchEnv mb m2 mout, MonadTrans c2, Monad (c2 mout), MFunctor c2, Monad m2, MatchEnv m2 mb mout, Monad mout) where 
+instance  (m1~Pure, a1~a2, MatchEnv mb m2 mout, MonadTrans c2, Monad (c2 mout), MFunctor c2, Monad m2, MatchEnv m2 mb mout, Monad mout) =>Pipe (a1 :> m1    -> b :> mb) (IC c2 m2 a2) (IC c2 mout b)  where 
     pipe f ca = IC b where
         fn = lift . (matchEnv (undefined :: m2 b)) . fromValue . f . pureVal
         a = hoist (matchEnv (undefined :: mb b)) $ fromIC ca
@@ -286,31 +286,31 @@ instance Pipe (a1 :> m1    -> b :> mb) (IC c2 m2 a2) (IC c2 mout b) <= (m1~Pure,
 
 
 
---instance Pipe (IC c1 mc1 (a1 :> m1 -> b)) (a2 :> m2) (IC c1 mc1 out) <= (Pipe (a1 :> m1 -> b) (a2 :> m2) out, Functor (IC c1 mc1)) where
+--instance  (Pipe (a1 :> m1 -> b) (a2 :> m2) out, Functor (IC c1 mc1)) =>Pipe (IC c1 mc1 (a1 :> m1 -> b)) (a2 :> m2) (IC c1 mc1 out)  where
 --    pipe f a = fmap (\g -> g `pipe` a) f
 
-instance Pipe (IC c1 mc1 (a1 :> m1 -> (b -> c))) (a2 :> m2) (IC c1 mc1 out) <= (Pipe (a1 :> m1 -> (b -> c)) (a2 :> m2) out, Functor (IC c1 mc1)) where
+instance  (Pipe (a1 :> m1 -> (b -> c)) (a2 :> m2) out, Functor (IC c1 mc1)) =>Pipe (IC c1 mc1 (a1 :> m1 -> (b -> c))) (a2 :> m2) (IC c1 mc1 out)  where
     pipe f a = fmap (\g -> g `pipe` a) f
 
 
-instance Pipe (IC c1 mc1 (a1 :> m1 -> b :> mb)) (a2 :> m2) (IC c1 mc1 outx) <= (Pipe (a1 :> m1 -> b :> mb) (a2 :> m2) out, Functor (IC c1 mc1), SquashEnv (IC c1 mc1) (Value mb) (IC c1 mc1), Pipe ((a1 :> m1) -> b :> mb) (a2 :> m2) (Value mb outx) ) where
+instance  (Pipe (a1 :> m1 -> b :> mb) (a2 :> m2) out, Functor (IC c1 mc1), SquashEnv (IC c1 mc1) (Value mb) (IC c1 mc1), Pipe ((a1 :> m1) -> b :> mb) (a2 :> m2) (Value mb outx) ) =>Pipe (IC c1 mc1 (a1 :> m1 -> b :> mb)) (a2 :> m2) (IC c1 mc1 outx)  where
     pipe f a = squashEnv $ fmap (\g -> g `pipe` a) f
 -- ^^^ dodane squashEnv !!! dorobic sygnature!
 
 
 
---instance Pipe (a1 :> m1    -> b :> mb) (IC c2 m2 a2) (IC c2 mb b) <= (m1~m2, a1~a2, MonadTrans c2, Monad (c2 mb), Monad mb, TransFunctor c2, Functor (c2 mb), Monad (c2 m2), Monad m2) where 
+--instance  (m1~m2, a1~a2, MonadTrans c2, Monad (c2 mb), Monad mb, TransFunctor c2, Functor (c2 mb), Monad (c2 m2), Monad m2) =>Pipe (a1 :> m1    -> b :> mb) (IC c2 m2 a2) (IC c2 mb b)  where 
 --    pipe f ca = IC $ fmap (Value . return) $ do 
 --        a <- runIC ca
 --        runIC . liftCtx . f $ return a
 
---instance Pipe (a1 :> m1    -> IC cb mb b) (IC c2 m2 a2) (IC cout mout b) <= (m1~m2, a1~a2) where pipe = undefined
+--instance  (m1~m2, a1~a2) =>Pipe (a1 :> m1    -> IC cb mb b) (IC c2 m2 a2) (IC cout mout b)  where pipe = undefined
 
 
 class SquashEnv m1 m2 m3 | m1 m2 -> m3 where
     squashEnv :: m1 (m2 a) -> m3 a
 
-instance SquashEnv (IC c Pure) (Value Pure) (IC c Pure) <= (Functor (c Pure)) where
+instance  (Functor (c Pure)) =>SquashEnv (IC c Pure) (Value Pure) (IC c Pure)  where
     squashEnv = fmap (fromPure . fromValue)
 
 class TestC a b where
@@ -412,10 +412,10 @@ main = do
 
 
 
---instance Pipe (a   :> m1 -> b) (a   :> m2)  b     <= (m1~m2)                      where pipe f a = f a
+--instance  (m1~m2)                      =>Pipe (a   :> m1 -> b) (a   :> m2)  b      where pipe f a = f a
 
 
---instance Pipe (a   :> m1 -> b) (a   :> m2) b     <= (m1~m2)                      where pipe f a = f a
+--instance  (m1~m2)                      =>Pipe (a   :> m1 -> b) (a   :> m2) b      where pipe f a = f a
 
 
 --instance (a1~a2)                                      => Pipe (a1 -> b)           a2             b where pipe f a = f a

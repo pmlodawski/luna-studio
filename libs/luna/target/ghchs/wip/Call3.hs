@@ -13,7 +13,7 @@
 
 --{-# LANGUAGE DysfunctionalDependencies #-}
 
-!{-# LANGUAGE RightSideContexts #-}
+
 
 import GHC.TypeLits
 
@@ -53,10 +53,10 @@ call apph@(AppH(fptr, args)) = getFunc apph args
 -- Instances
 ----------------------------------------------------------------------------------
 
-instance AppNextArg val (AppH fptr args) (AppH fptr out) <= (AppNextArg val args out) where
+instance  (AppNextArg val args out) =>AppNextArg val (AppH fptr args) (AppH fptr out)  where
     appNextArg val (AppH (fptr, args)) = AppH (fptr, appNextArg val args)
 
-instance AppArgByName name val (AppH fptr args) (AppH fptr out) <= (AppArgByName name val args out) where
+instance  (AppArgByName name val args out) =>AppArgByName name val (AppH fptr args) (AppH fptr out)  where
     appArgByName name val (AppH (fptr, args)) = AppH (fptr, appArgByName name val args)
 
 
@@ -75,14 +75,14 @@ class MatchCallProto (allArgs :: Bool) obj out | allArgs obj -> out where
 instance MatchCallProto False a a where
     matchCallProto _ = id
 
-instance MatchCallProto True (AppH fptr args) out <= (ReadArgs args margs, Func fptr margs (margs -> out)) where
+instance  (ReadArgs args margs, Func fptr margs (margs -> out)) =>MatchCallProto True (AppH fptr args) out  where
     matchCallProto _ (AppH (fptr, args)) = call $ AppH (fptr, readArgs $ args)
 
 
 class MatchCall obj out | obj -> out where
     matchCall :: obj -> out
 
-instance MatchCall (AppH fptr args) out <= (MatchCallProto flag (AppH fptr args) out, AllArgs args flag) where
+instance  (MatchCallProto flag (AppH fptr args) out, AllArgs args flag) =>MatchCall (AppH fptr args) out  where
     matchCall = matchCallProto (undefined :: Proxy flag)
 
 

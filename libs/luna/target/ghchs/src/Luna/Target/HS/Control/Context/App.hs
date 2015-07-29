@@ -16,7 +16,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE OverlappingInstances #-}
-!{-# LANGUAGE RightSideContexts #-}
+
 
 {-# LANGUAGE DysfunctionalDependencies #-}
 
@@ -50,20 +50,20 @@ instance PolyApplicative IO IO IO where
 
 -----------------------------------
 
-instance PolyApplicative (Value Pure s1) (Value Pure s2) (Value Pure s3) <= PolyApplicative s1 s2 s3 where
+instance  PolyApplicative s1 s2 s3 =>PolyApplicative (Value Pure s1) (Value Pure s2) (Value Pure s3)  where
     Value (Pure sf) <<*>> Value (Pure sa) = Value . Pure $ sf <<*>> sa
 
-instance PolyApplicative (Value IO s1) (Value Pure s2) (Value IO s3) <= PolyApplicative s1 s2 s3 where
+instance  PolyApplicative s1 s2 s3 =>PolyApplicative (Value IO s1) (Value Pure s2) (Value IO s3)  where
     Value msf <<*>> Value (Pure sa) = Value $ do
         sf <- msf
         return $ sf <<*>> sa
 
-instance PolyApplicative (Value Pure s1) (Value IO s2) (Value IO s3) <= PolyApplicative s1 s2 s3 where
+instance  PolyApplicative s1 s2 s3 =>PolyApplicative (Value Pure s1) (Value IO s2) (Value IO s3)  where
     Value (Pure sf) <<*>> Value msa = Value $ do
         sa <- msa
         return $ sf <<*>> sa
 
-instance PolyApplicative (Value IO s1) (Value IO s2) (Value IO s3) <= PolyApplicative s1 s2 s3 where
+instance  PolyApplicative s1 s2 s3 =>PolyApplicative (Value IO s1) (Value IO s2) (Value IO s3)  where
     Value msf <<*>> Value msa = Value $ do
         sf <- msf
         sa <- msa

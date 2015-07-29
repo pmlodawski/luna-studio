@@ -23,7 +23,7 @@
 {-# LANGUAGE CPP #-}
 
 
-!{-# LANGUAGE RightSideContexts #-}
+
 
 module Luna.Target.HS.Control.Context.Tests where
 

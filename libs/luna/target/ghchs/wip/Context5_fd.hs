@@ -11,7 +11,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 --{-# LANGUAGE IncoherentInstances #-}
 
-!{-# LANGUAGE RightSideContexts #-}
+
 
 
 import Control.Applicative    hiding(pure)
@@ -174,17 +174,17 @@ readImage' = liftfM1 readImage
 
 --instance (a1~a2, m1~m2) => Pipe (a1 :> m1 -> b) (a2 :> m2) b where pipe = undefined
 
---instance Pipe (a   :> m1 -> b) (a   :> m2)  b     <= (m1~m2)                      where pipe f a = f a
---instance Pipe (m a :> m1 -> b) (a   :> m2)  b     <= (m1~m2, Monad m, Functor m2) where pipe f a = f $ fmap return a
---instance Pipe (a   :> m1 -> b) (m a :> m2)  (m b) <= (m1~m2)                      where pipe = undefined
---instance Pipe (a1  :> m1 -> b) (a2  :> m2)  out   <= (a1~a2, Pipe (a1 :> m1 -> b) (a1 :> m2) out) where pipe = pipe
---instance Pipe (a1  :> m1 -> b) (m a2 :> m2) out   <= (a1~a2, Pipe (a1 :> m1 -> b) (m a1 :> m2) out) where pipe = undefined
+--instance  (m1~m2)                      =>Pipe (a   :> m1 -> b) (a   :> m2)  b      where pipe f a = f a
+--instance  (m1~m2, Monad m, Functor m2) =>Pipe (m a :> m1 -> b) (a   :> m2)  b      where pipe f a = f $ fmap return a
+--instance  (m1~m2)                      =>Pipe (a   :> m1 -> b) (m a :> m2)  (m b)  where pipe = undefined
+--instance  (a1~a2, Pipe (a1 :> m1 -> b) (a1 :> m2) out) =>Pipe (a1  :> m1 -> b) (a2  :> m2)  out    where pipe = pipe
+--instance  (a1~a2, Pipe (a1 :> m1 -> b) (m a1 :> m2) out) =>Pipe (a1  :> m1 -> b) (m a2 :> m2) out    where pipe = undefined
 
 
---instance Pipe (a   :> m1 -> b) (a   :> m2)  b     <= (m1~m2)                      where pipe f a = f a
---instance Pipe (m a :> m1 -> b) (a   :> m2)  b     <= (m1~m2, Monad m, Functor m2) where pipe f a = f $ fmap return a
---instance Pipe (a   :> m1 -> b) (m a :> m2)  (m b) <= (m1~m2)                      where pipe = undefined
---instance Pipe (a1  :> m1 -> b) (m a2 :> m2) out   <= (a1~a2, Pipe (a1 :> m1 -> b) (m a1 :> m2) out) where pipe = undefined
+--instance  (m1~m2)                      =>Pipe (a   :> m1 -> b) (a   :> m2)  b      where pipe f a = f a
+--instance  (m1~m2, Monad m, Functor m2) =>Pipe (m a :> m1 -> b) (a   :> m2)  b      where pipe f a = f $ fmap return a
+--instance  (m1~m2)                      =>Pipe (a   :> m1 -> b) (m a :> m2)  (m b)  where pipe = undefined
+--instance  (a1~a2, Pipe (a1 :> m1 -> b) (m a1 :> m2) out) =>Pipe (a1  :> m1 -> b) (m a2 :> m2) out    where pipe = undefined
 
 
 ----newtype IC t m v = IC { fromIC :: t m (Value m v) }
@@ -207,12 +207,12 @@ class UnFmap f where
 tmapVal :: (TransFunctor t, MonadTrans t, Monad (t ma), Monad ma, Monad mb, Functor (t mb)) => (a :> ma -> b :> mb) -> (IC t ma a -> IC t mb b)
 tmapVal f a = IC $ fmap (Value . return) $ tmap (\x -> fromValue $ f (Value x)) (runIC a)
 
-instance Pipe (a1  :> m1   -> b)       (a2  :> m2)   b            <= (a1~a2, m1~m2) where pipe f a = f a
-instance Pipe (IC c1 m1 a1 -> b)       (a2 :> m2)    b            <= (m1~m2, a1~a2, Monad (c1 m2)) where pipe f a = f $ liftCtx a
---instance Pipe (a1 :> m1    -> b :> mb) (IC c2 m2 a2) (IC c2 mb b) <= (m1~m2, a1~a2, MonadTrans c2, Monad (c2 mb), Monad mb, TransFunctor c2, Functor (c2 mb), Monad (c2 m2), Monad m2) where 
+instance  (a1~a2, m1~m2) =>Pipe (a1  :> m1   -> b)       (a2  :> m2)   b             where pipe f a = f a
+instance  (m1~m2, a1~a2, Monad (c1 m2)) =>Pipe (IC c1 m1 a1 -> b)       (a2 :> m2)    b             where pipe f a = f $ liftCtx a
+--instance  (m1~m2, a1~a2, MonadTrans c2, Monad (c2 mb), Monad mb, TransFunctor c2, Functor (c2 mb), Monad (c2 m2), Monad m2) =>Pipe (a1 :> m1    -> b :> mb) (IC c2 m2 a2) (IC c2 mb b)  where 
 --    pipe f ca = tmapVal f ca
 
-instance Pipe (a1 :> m1    -> b :> mb) (IC c2 m2 a2) (IC c2 mb b) <= (m1~m2, a1~a2, MonadTrans c2, Monad (c2 mb), Monad mb, TransFunctor c2, Functor (c2 mb), Monad (c2 m2), Monad m2) where 
+instance  (m1~m2, a1~a2, MonadTrans c2, Monad (c2 mb), Monad mb, TransFunctor c2, Functor (c2 mb), Monad (c2 m2), Monad m2) =>Pipe (a1 :> m1    -> b :> mb) (IC c2 m2 a2) (IC c2 mb b)  where 
     pipe f ca = do 
         let a = fromIC ca
             b = fmap f a
@@ -222,14 +222,14 @@ instance Pipe (a1 :> m1    -> b :> mb) (IC c2 m2 a2) (IC c2 mb b) <= (m1~m2, a1~
         return undefined
 
 
---instance Pipe (a1 :> m1    -> b :> mb) (IC c2 m2 a2) (IC c2 mb b) <= (m1~m2, a1~a2, MonadTrans c2, Monad (c2 mb), Monad mb, TransFunctor c2, Functor (c2 mb), Monad (c2 m2), Monad m2) where 
+--instance  (m1~m2, a1~a2, MonadTrans c2, Monad (c2 mb), Monad mb, TransFunctor c2, Functor (c2 mb), Monad (c2 m2), Monad m2) =>Pipe (a1 :> m1    -> b :> mb) (IC c2 m2 a2) (IC c2 mb b)  where 
 --    pipe f ca = IC $ fmap (Value . return) $ do 
 --        a <- runIC ca
 --        runIC . liftCtx . f $ return a
 
-instance Pipe (a1 :> m1    -> IC cb mb b) (IC c2 (IC cb mb) a2) (IC c2 (IC cb mb) b) <= (m1~m2, a1~a2) where 
+instance  (m1~m2, a1~a2) =>Pipe (a1 :> m1    -> IC cb mb b) (IC c2 (IC cb mb) a2) (IC c2 (IC cb mb) b)  where 
     pipe = undefined
---instance Pipe (a1 :> m1    -> IC cb mb b) (IC c2 m2 a2) (IC cout mout b) <= (m1~m2, a1~a2) where pipe = undefined
+--instance  (m1~m2, a1~a2) =>Pipe (a1 :> m1    -> IC cb mb b) (IC c2 m2 a2) (IC cout mout b)  where pipe = undefined
 
 
 
@@ -300,10 +300,10 @@ main = do
 
 
 
---instance Pipe (a   :> m1 -> b) (a   :> m2)  b     <= (m1~m2)                      where pipe f a = f a
+--instance  (m1~m2)                      =>Pipe (a   :> m1 -> b) (a   :> m2)  b      where pipe f a = f a
 
 
---instance Pipe (a   :> m1 -> b) (a   :> m2) b     <= (m1~m2)                      where pipe f a = f a
+--instance  (m1~m2)                      =>Pipe (a   :> m1 -> b) (a   :> m2) b      where pipe f a = f a
 
 
 --instance (a1~a2)                                      => Pipe (a1 -> b)           a2             b where pipe f a = f a

@@ -15,7 +15,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE ConstraintKinds #-}
-!{-# LANGUAGE RightSideContexts #-}
+
 
 module Data.TypeLevel.Set.Constrain where
 
