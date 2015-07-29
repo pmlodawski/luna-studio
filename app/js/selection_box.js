@@ -4,7 +4,7 @@ var $$ = require('common');
 var vs = require('shaders/select.vert')();
 var fs = require('shaders/select.frag')();
 
-var color = new THREE.Vector4(0.85, 0.55, 0.1, 0.15);
+var color = new THREE.Vector4(0.85, 0.55, 0.1, 0.2);
 
 function SelectionBox() {
   var _this = this;
