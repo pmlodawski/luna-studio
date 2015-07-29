@@ -1,0 +1,9 @@
+packages:
+- ../../../../../libs/bus
+- ../../../../../libs/config
+- ../../../../../libs/rpc
+- ../../../../../libs/utils
+- ../../../../../third-party/fgl
+- ../../../../../tools/batch/plugins/broker
+resolver: nightly-2015-07-24
+

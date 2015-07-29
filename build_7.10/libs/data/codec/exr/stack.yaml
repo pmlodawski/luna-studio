@@ -1,0 +1,4 @@
+packages:
+- ../../../../../libs/data/codec/exr
+resolver: nightly-2015-07-24
+

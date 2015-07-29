@@ -1,0 +1,8 @@
+packages:
+- ../../../../libs/aws
+- ../../../../libs/rpc
+- ../../../../libs/utils
+- ../../../../third-party/fgl
+- ../../../../tools/aws/instance-manager
+resolver: nightly-2015-07-24
+
