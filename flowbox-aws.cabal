@@ -1,0 +1,175 @@
+---------------------------------------------------
+-- This is a generated cabal configuration file. --
+-- DO NOT EDIT!                                  --
+-- Use gencabal instead.                         --
+---------------------------------------------------
+
+Name:               flowbox-aws
+Version:            0.1
+Cabal-Version:      >= 1.8
+--License-file:       LICENSE
+Author:             Flowbox <contact@flowbox.io>
+Maintainer:         Flowbox <contact@flowbox.io>
+Build-Type:         Custom
+
+Flag Debug
+    Description:      Enable debug support
+    Default:          False
+
+
+Library
+    Hs-Source-Dirs: src,
+                    dist/gen
+    Other-Modules:  Paths_flowbox_aws
+
+    GHC-Options:    -Wall -O2 -threaded
+
+    Extensions:     NoImplicitPrelude
+
+    Exposed-modules: 
+        Flowbox.AWS.AccountManager,
+        Flowbox.AWS.Region,
+        Flowbox.AWS.Tag,
+        Flowbox.AWS.Database.Database,
+        Flowbox.AWS.Database.Instance,
+        Flowbox.AWS.Database.Session,
+        Flowbox.AWS.Database.User,
+        Flowbox.AWS.Database.SQL.Schema,
+        Flowbox.AWS.Database.SQL.Instance.Add,
+        Flowbox.AWS.Database.SQL.Instance.All,
+        Flowbox.AWS.Database.SQL.Instance.Delete,
+        Flowbox.AWS.Database.SQL.Instance.Find,
+        Flowbox.AWS.Database.SQL.Instance.FindAvailable,
+        Flowbox.AWS.Database.SQL.Instance.FindFree,
+        Flowbox.AWS.Database.SQL.Instance.Update,
+        Flowbox.AWS.Database.SQL.Session.Add,
+        Flowbox.AWS.Database.SQL.Session.All,
+        Flowbox.AWS.Database.SQL.Session.Delete,
+        Flowbox.AWS.Database.SQL.Session.DeleteByID,
+        Flowbox.AWS.Database.SQL.Session.DeleteByUser,
+        Flowbox.AWS.Database.SQL.Session.Find,
+        Flowbox.AWS.Database.SQL.Session.FindByInstance,
+        Flowbox.AWS.Database.SQL.Session.FindByUser,
+        Flowbox.AWS.Database.SQL.Session.Update,
+        Flowbox.AWS.Database.SQL.User.Add,
+        Flowbox.AWS.Database.SQL.User.All,
+        Flowbox.AWS.Database.SQL.User.Find,
+        Flowbox.AWS.Database.SQL.User.Update,
+        Flowbox.AWS.EC2.EC2,
+        Flowbox.AWS.EC2.Control.DBPool.Cost,
+        Flowbox.AWS.EC2.Control.DBPool.Credit,
+        Flowbox.AWS.EC2.Control.DBPool.Instance,
+        Flowbox.AWS.EC2.Control.DBPool.Monitor,
+        Flowbox.AWS.EC2.Control.DBPool.Tag,
+        Flowbox.AWS.EC2.Control.Simple.Instance,
+        Flowbox.AWS.EC2.Control.Simple.Tag,
+        Flowbox.AWS.EC2.Instance.Instance,
+        Flowbox.AWS.EC2.Instance.Management,
+        Flowbox.AWS.EC2.Instance.Request,
+        Flowbox.AWS.EC2.Instance.Tag,
+        Flowbox.AWS.EC2.Instance.WaitTime,
+        Flowbox.AWS.S3.Directory,
+        Flowbox.AWS.S3.File,
+        Flowbox.AWS.S3.S3,
+        Flowbox.AWS.S3.Utils,
+        Flowbox.AWS.User.Password,
+        Flowbox.AWS.User.Session,
+        Flowbox.AWS.User.User,
+                     
+        
+
+    Build-Depends:  aws     == 0.11.1,
+                    aws-sdk >= 0.12.4,
+                    base,
+                    blaze-builder < 0.4,
+                    bytestring,
+                    containers,
+                    conduit >= 1.1.0,
+                    conduit-extra >= 1.1.0,
+                    directory,
+                    either,
+                    errors,
+                    exceptions,
+                    filepath,
+                    flowbox-rpc,
+                    flowbox-utils,
+                    http-conduit,
+                    iproute,
+                    MissingH,
+                    monad-control < 1.0.0.0,
+                    monad-loops,
+                    mtl,
+                    network,
+                    postgresql-simple >= 0.4.6,
+                    protocol-buffers,
+                    protocol-buffers-descriptor,
+                    resourcet >= 1.1.0,
+                    SHA,
+                    text,
+                    time,
+                    transformers
+
+-- [PM] monad-control < 1.0.0.0 and aws == 0.11.1 is added until https://github.com/worksap-ate/aws-sdk/issues/183 is resolved
+-- [PM] blaze-builder < 0.4 is a temporary dependency utnil https://github.com/aristidb/http-types/issues/49 is fixed
+
+Executable aws-test-dbpool
+    Main-Is:        DBPool.hs
+    Hs-Source-Dirs: test
+
+    GHC-Options:    -Wall -O2 -threaded
+
+    Extensions:     NoImplicitPrelude
+
+    Build-Depends:  aws-sdk,
+                    base,
+                    containers,
+                    flowbox-aws,
+                    flowbox-utils,
+                    postgresql-simple,
+                    text
+
+
+Executable aws-test-querydb
+    Main-Is:        QueryDB.hs
+    Hs-Source-Dirs: test
+
+    GHC-Options:    -Wall -O2 -threaded
+
+    Extensions:     NoImplicitPrelude
+
+    Build-Depends:  aws-sdk >= 0.12.4,
+                    base,
+                    flowbox-aws,
+                    flowbox-utils,
+                    postgresql-simple,
+                    time
+
+
+Executable aws-test-s3
+    Main-Is:        S3.hs
+    Hs-Source-Dirs: test
+
+    GHC-Options:    -Wall -O2 -threaded
+
+    Extensions:     NoImplicitPrelude
+
+    Build-Depends:  aws,
+                    base,
+                    flowbox-aws,
+                    flowbox-utils,
+                    transformers
+
+
+Executable aws-test-simple
+    Main-Is:        Simple.hs
+    Hs-Source-Dirs: test
+
+    GHC-Options:    -Wall -O2 -threaded
+
+    Extensions:     NoImplicitPrelude
+
+    Build-Depends:  aws-sdk >= 0.12.4,
+                    base,
+                    flowbox-aws,
+                    flowbox-utils,
+                    text
