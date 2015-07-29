@@ -22,7 +22,7 @@ import qualified Reactive.Plugins.Core.Action.State.Breadcrumb   as Breadcrumb
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry   as UIRegistry
 import qualified Object.Widget.Button as Button
 import           ThreeJS.Text (calculateTextWidth)
-import qualified ThreeJS.Button as TButton
+import qualified ThreeJS.Button as UIButton
 import qualified ThreeJS.Mesh as Mesh
 import           ThreeJS.Types
 import qualified ThreeJS.Scene as Scene
@@ -73,12 +73,22 @@ createButtons path startId = (reverse buttons, nextId) where
     (buttons, (_, nextId)) = foldl button ([], (0, startId)) path
     button (xs, (offset, bid)) name = (newButton:xs, (newOffset, bid + 1)) where
        newButton = Button.Button bid label Button.Normal pos size
-       width     = TButton.buttonWidth label
+       width     = UIButton.buttonWidth label
        pos       = Vector2 offset 0
        size      = Vector2 width buttonHeight
        newOffset = offset + width + buttonSpacing
        label     = name
        idt       = Text.pack $ show bid
+
+addButton b = do
+    uiButton <- UIButton.buildButton b
+    UIButton.putToRegistry b uiButton
+    Scene.sceneHUD `add` uiButton
+
+removeButton b = do
+    uiButton <- UIButton.getFromRegistry b
+    Scene.sceneHUD `remove` uiButton
+    UIButton.removeFromRegistry b
 
 instance ActionStateUpdater Action where
     execSt newActionCandidate oldState = case newAction of
@@ -87,34 +97,26 @@ instance ActionStateUpdater Action where
         where
         (newAction, newState) = case newActionCandidate of
             -- MouseMoving   _  -> if focusChanged then Just $ ApplyUpdates [updateFocus] else Nothing where
-            --     updateFocus = forM_ newButtonsFocus TButton.updateState
+            --     updateFocus = forM_ newButtonsFocus UIButton.updateState
             -- MousePressed  _  -> case buttonUnderCursor of
             --     Just _  -> Just ButtonPressed
             --     Nothing -> Nothing
             NewPath path        -> (action, state) where
                     action = Just $ ApplyUpdates [removeOldBreadcrumb, createNewBreadcrumb]
-                    createNewBreadcrumb = forM_ newButtons $ \b -> do
-                                            uiButton <- TButton.buildButton b
-                                            TButton.putToRegistry b uiButton
-                                            Scene.sceneHUD `add` uiButton
-
-                    removeOldBreadcrumb = forM_ oldButtons $ \b -> do
-                                            uiButton <- TButton.getFromRegistry b
-                                            Scene.sceneHUD `remove` uiButton
-                                            TButton.removeFromRegistry b
+                    createNewBreadcrumb = forM_ newButtons addButton
+                    removeOldBreadcrumb = forM_ oldButtons removeButton
 
                     state = oldState & Global.uiRegistry . UIRegistry.nextId  .~ nextId
                                      & Global.uiRegistry . UIRegistry.widgets .~ newWidgets
                                      & Global.breadcrumb . Breadcrumb.path    .~ path
-                                     & Global.breadcrumb . Breadcrumb.buttons .~ ((^. Button.refId) <$> newButtons)
+                                     & Global.breadcrumb . Breadcrumb.buttons .~ (objectId <$> newButtons)
                     (newButtons, nextId) = createButtons path startId
-                    oldButtons =  getFromRegistry <$> oldButtonIds
-                    getFromRegistry :: Int -> Button.Button
-                    getFromRegistry bid = fromJust $ fromCtxDynamic $ oldRegistry IntMap.! bid
+                    oldButtons =  catMaybes $ getFromRegistry <$> oldButtonIds
+                    getFromRegistry :: Int -> Maybe Button.Button
+                    getFromRegistry bid = fromCtxDynamic $ oldRegistry IntMap.! bid
                     oldRegistry = (oldState ^. Global.uiRegistry . UIRegistry.widgets)
                     oldButtonIds = oldState ^. Global.breadcrumb . Breadcrumb.buttons
-                    newWidgets = foldl merge oldRegistry newButtons where
-                        merge m b = IntMap.insert (b ^. Button.refId) (toCtxDynamic b) m
+                    newWidgets = UIRegistry.replaceAll oldRegistry oldButtons newButtons
                     startId = oldState ^. Global.uiRegistry .UIRegistry.nextId
 
             _ -> (Nothing, oldState)

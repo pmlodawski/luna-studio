@@ -7,7 +7,7 @@ import           Utils.Vector
 import           Data.Fixed
 import           GHCJS.Types (JSRef)
 
--- import           Object.Widget
+import           Object.Widget
 
 
 data State  = Normal | Focused | Disabled | Pressed deriving (Eq, Show, Enum)
@@ -32,3 +32,5 @@ posHit center range position
 isOver :: Vector2 Double -> Button -> Bool
 isOver mouse (Button  _ _ _ pos size) = (posHit (pos ^. x) (size ^. x) (mouse ^. x)) && (posHit (pos ^. y) (size ^. y) (mouse ^. y))
 
+instance HasObjectId Button where
+    objectId b = b ^. refId

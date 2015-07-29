@@ -44,9 +44,6 @@ toAction (Mouse (Mouse.Event tpe pos button _)) = case tpe of
 --         _ -> Nothing
 toAction _           = Nothing
 
-onMouseMoveCtx :: DisplayObject -> (IO(), DisplayObject)
-onMouseMoveCtx = withCtxDynamic onMouseMove
-
 instance ActionStateUpdater Action where
     execSt newActionCandidate oldState = case newAction of
             Just action -> ActionUI newAction newState
@@ -57,7 +54,7 @@ instance ActionStateUpdater Action where
         (uiUpdates, newWidgets) = IntMap.mapAccum processWidget [] oldWidgets
         processWidget actions widget = case newActionCandidate of
             MouseMoving pos -> (act:actions, newWidget)
-                            where (act, newWidget) = onMouseMoveCtx widget
+                            where (act, newWidget) = onMouseMove pos widget
             _               -> (actions, widget)
         oldWidgets = oldState ^. Global.uiRegistry . UIRegistry.widgets
 
