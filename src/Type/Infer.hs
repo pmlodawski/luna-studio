@@ -44,7 +44,7 @@ class InferType2 (a::k) (b::k) | a -> b where
 class BreakInference a b | a -> b where
     breakInference :: a -> b
 
---instance BreakInference a b <= (a~b) where
+--instance  (a~b) =>BreakInference a b  where
 --    breakInference a = a
 
 instance BreakInference Int String where
@@ -66,8 +66,8 @@ data Id5 t1 t2 t3 t4 t5 = Id5 deriving (Show, Typeable)
 -- Instances
 --------------------------------------------------------------------------------
 
---instance Num a <= InferType2 a a
---instance Monad a <= InferType2 a a
+--instance  InferType2 a a=>Num a  
+--instance  InferType2 a a=>Monad a  
 
 --instance InferType2 Int Int
 
