@@ -17,6 +17,7 @@ import qualified Reactive.Plugins.Core.Action.State.Drag              as Drag
 import qualified Reactive.Plugins.Core.Action.State.Connect           as Connect
 import qualified Reactive.Plugins.Core.Action.State.NodeSearcher      as NodeSearcher
 import qualified Reactive.Plugins.Core.Action.State.Breadcrumb        as Breadcrumb
+import qualified Reactive.Plugins.Core.Action.State.UIRegistry        as UIRegistry
 
 
 data State = State { _iteration      :: Integer
@@ -31,15 +32,16 @@ data State = State { _iteration      :: Integer
                    , _connect        :: Connect.State
                    , _nodeSearcher   :: NodeSearcher.State
                    , _breadcrumb     :: Breadcrumb.State
+                   , _uiRegistry     :: UIRegistry.State
                    } deriving (Eq, Show)
 
 makeLenses ''State
 
 instance Default State where
-    def = State def (Vector2 400 200) def def def def def def def def def def
+    def = State def (Vector2 400 200) def def def def def def def def def def def
 
 instance PrettyPrinter State where
-    display (State iteration mousePos screenSize nodes camera addRemove selection multiSelection drag connect nodeSearcher breadcrumb)
+    display (State iteration mousePos screenSize nodes camera addRemove selection multiSelection drag connect nodeSearcher breadcrumb uiRegistry)
         = "gS(" <> display iteration
          <> " " <> display mousePos
          <> " " <> display screenSize
@@ -52,6 +54,7 @@ instance PrettyPrinter State where
          <> " " <> display connect
          <> " " <> display nodeSearcher
          <> " " <> display breadcrumb
+         <> " " <> display uiRegistry
          <> ")"
 
 instance Monoid State where

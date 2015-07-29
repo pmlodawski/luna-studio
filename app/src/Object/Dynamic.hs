@@ -13,3 +13,4 @@ instance Typeable a => UnpackDynamic (Object Dynamic) (Maybe a) where
 
 instance Typeable a => UnpackDynamic [Object Dynamic] [Object a] where
     unpackDynamic = fmap Object . catMaybes . fmap unpackDynamic
+

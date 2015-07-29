@@ -26,8 +26,10 @@ import qualified ThreeJS.Geometry as Geometry
 import           Utils.Vector
 import           JS.Config as Config
 import           ThreeJS.Registry
-import qualified Widget.Button as WB
+import qualified Object.Widget.Button as WB
+import           Object.Widget ( MouseMovable, onMouseMove )
 import           GHCJS.Prim
+import           Utils.CtxDynamic
 
 
 newtype Button = Button { unButton :: JSObject.Object }
@@ -116,3 +118,8 @@ updateState b = do
     bref <- getFromRegistry b
     uniform <- JSObject.getProp "state" (unButton bref) >>= return . Attribute . JSObject.fromJSRef
     JSObject.setProp "value" (toJSInt $ fromEnum $ b ^. WB.state) $ unAttribute uniform
+
+instance MouseMovable WB.Button where
+    onMouseMove b = (action, toCtxDynamic newButton) where
+        action    = updateState newButton
+        newButton = b & WB.state .~ WB.Disabled

@@ -4,8 +4,10 @@ module Reactive.Plugins.Core.Action.Breadcrumb where
 
 import           Utils.PreludePlus
 import           Utils.Vector
+import           Utils.CtxDynamic
 
 import           Object.Object
+import           Object.Dynamic
 import           Object.Node
 import           JS.Bindings
 import           Event.Mouse    hiding      ( Event, WithObjects )
@@ -17,7 +19,8 @@ import           Reactive.Plugins.Core.Action.Action
 import qualified Reactive.Plugins.Core.Action.Camera         as Camera
 import qualified Reactive.Plugins.Core.Action.State.Global   as Global
 import qualified Reactive.Plugins.Core.Action.State.Breadcrumb   as Breadcrumb
-import qualified Widget.Button as Button
+import qualified Reactive.Plugins.Core.Action.State.UIRegistry   as UIRegistry
+import qualified Object.Widget.Button as Button
 import           ThreeJS.Text (calculateTextWidth)
 import qualified ThreeJS.Button as TButton
 import qualified ThreeJS.Mesh as Mesh
@@ -27,8 +30,11 @@ import qualified Data.Text.Lazy as Text
 import           Data.Text.Lazy (Text)
 import qualified JavaScript.Object as JSObject
 import           ThreeJS.Registry
-
+import           Object.Widget as Widget
 import           GHCJS.Prim
+import           Data.IntMap.Lazy (IntMap)
+import qualified Data.IntMap.Lazy as IntMap
+
 
 
 data Action = NewPath       { _path  :: [Text] }
@@ -50,7 +56,7 @@ instance PrettyPrinter Action where
 
 toAction :: Event Node -> Maybe Action
 toAction (Mouse (Mouse.Event tpe pos button _)) = case tpe of
-    Mouse.Moved     -> Just $ MouseMoving pos
+    -- Mouse.Moved     -> Just $ MouseMoving pos
     _ -> Nothing
 --     Mouse.Pressed   -> case button of
 --         1 -> Just $ MousePressed pos
@@ -76,44 +82,52 @@ createButtons path startId = (reverse buttons, nextId) where
 
 instance ActionStateUpdater Action where
     execSt newActionCandidate oldState = case newAction of
-            Just action -> ActionUI newAction newState
-            Nothing     -> ActionUI  NoAction newState
+        Just action -> ActionUI newAction newState
+        Nothing     -> ActionUI  NoAction newState
         where
-        newAction = case newActionCandidate of
-            MouseMoving   _  -> if focusChanged then Just $ ApplyUpdates [updateFocus] else Nothing where
-                updateFocus = forM_ newButtonsFocus TButton.updateState
-            MousePressed  _  -> case buttonUnderCursor of
-                Just _  -> Just ButtonPressed
-                Nothing -> Nothing
-            MouseReleased _  -> Nothing
-            NewPath _        -> Just $ ApplyUpdates [removeOldBreadcrumb, createNewBreadcrumb] where
-                    removeOldBreadcrumb = forM_ (oldState ^. Global.breadcrumb . Breadcrumb.buttons) $ \b -> do
-                                            uiButton <- TButton.getFromRegistry b
-                                            Scene.sceneHUD `remove` uiButton
-                                            TButton.removeFromRegistry b
-                    createNewBreadcrumb = forM_ (newState ^. Global.breadcrumb . Breadcrumb.buttons) $ \b -> do
+        (newAction, newState) = case newActionCandidate of
+            -- MouseMoving   _  -> if focusChanged then Just $ ApplyUpdates [updateFocus] else Nothing where
+            --     updateFocus = forM_ newButtonsFocus TButton.updateState
+            -- MousePressed  _  -> case buttonUnderCursor of
+            --     Just _  -> Just ButtonPressed
+            --     Nothing -> Nothing
+            NewPath path        -> (action, state) where
+                    action = Just $ ApplyUpdates [removeOldBreadcrumb, createNewBreadcrumb]
+                    createNewBreadcrumb = forM_ newButtons $ \b -> do
                                             uiButton <- TButton.buildButton b
                                             TButton.putToRegistry b uiButton
                                             Scene.sceneHUD `add` uiButton
 
-        newState  = case newActionCandidate of
-            MouseMoving  pos   -> oldState & Global.breadcrumb . Breadcrumb.buttons .~ newButtonsFocus
-            NewPath      path  -> oldState & Global.breadcrumb . Breadcrumb.path    .~ path
-                                           & Global.breadcrumb . Breadcrumb.nextId  .~ nextId
-                                           & Global.breadcrumb . Breadcrumb.buttons .~ newButtons where
-                                           (newButtons, nextId) = createButtons path startId
-                                           startId = oldState ^. Global.breadcrumb . Breadcrumb.nextId
-        mousePos   = oldState ^. Global.mousePos
-        oldButtons = oldState ^. Global.breadcrumb . Breadcrumb.buttons
-        focusChanged = any (\(o, n) -> (o ^. Button.state) /= (n ^. Button.state) ) $ oldButtons `zip` newButtonsFocus
-        newButtonsFocus = updateButton <$> oldButtons where
-            updateButton b = b & Button.state .~ newState where
-                newState = if isOver then Button.Focused else Button.Normal
-                isOver   = Button.isOver (fromIntegral <$> mousePos) b
-        buttonUnderCursor = find (Button.isOver $ fromIntegral <$> mousePos) oldButtons
+                    removeOldBreadcrumb = forM_ oldButtons $ \b -> do
+                                            uiButton <- TButton.getFromRegistry b
+                                            Scene.sceneHUD `remove` uiButton
+                                            TButton.removeFromRegistry b
+
+                    state = oldState & Global.uiRegistry . UIRegistry.nextId  .~ nextId
+                                     & Global.uiRegistry . UIRegistry.widgets .~ newWidgets
+                                     & Global.breadcrumb . Breadcrumb.path    .~ path
+                                     & Global.breadcrumb . Breadcrumb.buttons .~ ((^. Button.refId) <$> newButtons)
+                    (newButtons, nextId) = createButtons path startId
+                    oldButtons =  getFromRegistry <$> oldButtonIds
+                    getFromRegistry :: Int -> Button.Button
+                    getFromRegistry bid = fromJust $ fromCtxDynamic $ oldRegistry IntMap.! bid
+                    oldRegistry = (oldState ^. Global.uiRegistry . UIRegistry.widgets)
+                    oldButtonIds = oldState ^. Global.breadcrumb . Breadcrumb.buttons
+                    newWidgets = foldl merge oldRegistry newButtons where
+                        merge m b = IntMap.insert (b ^. Button.refId) (toCtxDynamic b) m
+                    startId = oldState ^. Global.uiRegistry .UIRegistry.nextId
+
+            _ -> (Nothing, oldState)
+
+        -- focusChanged = any (\(o, n) -> (o ^. Button.state) /= (n ^. Button.state) ) $ oldButtons `zip` newButtonsFocus
+        -- newButtonsFocus = updateButton <$> oldButtons where
+        --     updateButton b = b & Button.state .~ newState where
+        --         newState = if isOver then Button.Focused else Button.Normal
+        --         isOver   = Button.isOver (fromIntegral <$> mousePos) b
+        -- buttonUnderCursor = find (Button.isOver $ fromIntegral <$> mousePos) oldButtons
 
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
         ApplyUpdates actions -> sequence_ actions
-        ButtonPressed -> do
-            putStrLn "Button pressed"
+        -- ButtonPressed -> do
+        --     putStrLn "Button pressed"
