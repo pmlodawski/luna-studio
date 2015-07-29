@@ -204,3 +204,6 @@
 [submodule "libs/utils"]
 	path = libs/utils
 	url = git@bitbucket.org:NewByteOrder/flowbox-utils.git
+[submodule "libs/convert"]
+	path = libs/convert
+	url = git@bitbucket.org:NewByteOrder/convert.git

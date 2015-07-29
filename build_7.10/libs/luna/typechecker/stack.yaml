@@ -5,14 +5,16 @@ packages:
 - ../../../../libs/luna/target/ghchs
 - ../../../../libs/luna/typechecker
 - ../../../../libs/utils
+- ../../../../libs/convert
 - ../../../../third-party/HMap
 - ../../../../third-party/fgl
+- ../../../../third-party/graphviz-2999.17.0.2.2
 extra-deps:
-- HMap-1.2.4
 - OneTuple-0.2.1
 - assert-0.0.1.2
 - phonetic-code-0.1.1.1
 - tuple-0.3.0.2
 - zippers-0.2
+- errors-1.4.7
 resolver: nightly-2015-07-24
 
