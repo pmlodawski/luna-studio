@@ -1,4 +1,0 @@
-module ImportsAux1
-
-def foo x y z:
-  x
