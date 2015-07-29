@@ -1,0 +1,127 @@
+---------------------------------------------------
+-- This is a generated cabal configuration file. --
+-- DO NOT EDIT!                                  --
+-- Use gencabal instead.                         --
+---------------------------------------------------
+
+Name:           luna-target-ghchs
+Version:        0.1
+Cabal-Version:  >= 1.8
+--License-file:   LICENSE
+Author:         Flowbox <contact@flowbox.io>
+Maintainer:     Flowbox <contact@flowbox.io>
+Build-Type:     Simple
+
+
+Library
+  Hs-Source-Dirs: src
+  GHC-Options:    -O2
+                  -- -Wall
+                  -- -F -pgmF ./util/preprocessors/imports.py
+  Extensions:     DoAndIfThenElse,
+                  FlexibleInstances,
+                  FlexibleContexts,
+                  DeriveDataTypeable,
+                  GeneralizedNewtypeDeriving,
+                  EmptyDataDecls,
+                  LambdaCase
+
+  Exposed-modules: 
+        Main,
+        Main2,
+        Main3,
+        Luna.Target.HS,
+        Luna.Target.HS.Control,
+        Luna.Target.HS.Data,
+        Luna.Target.HS.Host,
+        Luna.Target.HS.TH,
+        Luna.Target.HS.AST.Comment,
+        Luna.Target.HS.AST.DataType,
+        Luna.Target.HS.AST.Deriving,
+        Luna.Target.HS.AST.Expr,
+        Luna.Target.HS.AST.Extension,
+        Luna.Target.HS.AST.Lit,
+        Luna.Target.HS.AST.Module,
+        Luna.Target.HS.AST.Builder.TH,
+        Luna.Target.HS.AST.Builder.Utils,
+        Luna.Target.HS.Control.Context,
+        Luna.Target.HS.Control.Error,
+        Luna.Target.HS.Control.Flow,
+        Luna.Target.HS.Control.Context.App,
+        Luna.Target.HS.Control.Context.Bind,
+        Luna.Target.HS.Control.Context.Env,
+        Luna.Target.HS.Control.Context.Monad,
+        Luna.Target.HS.Control.Context.MonadCtx,
+        Luna.Target.HS.Control.Context.Value,
+        Luna.Target.HS.Control.Error.Catch,
+        Luna.Target.HS.Control.Error.Data,
+        Luna.Target.HS.Control.Error.Inspect,
+        Luna.Target.HS.Control.Error.Raise,
+        Luna.Target.HS.Control.Flow.Env,
+        Luna.Target.HS.Control.Flow.Error,
+        Luna.Target.HS.Data.Func,
+        Luna.Target.HS.Data.Struct,
+        Luna.Target.HS.Data.Func.App,
+        Luna.Target.HS.Data.Func.Args2,
+        Luna.Target.HS.Data.Func.Args3,
+        Luna.Target.HS.Data.Func.Args4soerr,
+        Luna.Target.HS.Data.Func.Args5,
+        Luna.Target.HS.Data.Func.Args6,
+        Luna.Target.HS.Data.Func.Args7,
+        Luna.Target.HS.Data.Func.Args8,
+        Luna.Target.HS.Data.Func.Args9,
+        Luna.Target.HS.Data.Func.Call,
+        Luna.Target.HS.Data.Func.Func,
+        Luna.Target.HS.Data.Func.Lam,
+        Luna.Target.HS.Data.Func.PolyArgs1,
+        Luna.Target.HS.Data.Struct.Mem,
+        Luna.Target.HS.Data.Struct.Mem2,
+        Luna.Target.HS.Data.Struct.Meta,
+        Luna.Target.HS.Host.Lift,
+        Luna.Target.HS.Host.Naming,
+        Luna.Target.HS.Host.Naming2,
+        Luna.Target.HS.Host.NamingOld,
+        Luna.Target.HS.Host.Rebindable,
+        Luna.Target.HS.Host.Tuple,
+        Luna.Target.HS.Host.Type,
+        Luna.Target.HS.Host.Wrapper,
+        Luna.Target.HS.TH.Struct,
+        Luna.Target.HS.TH.Utils,
+        Luna.Target.HS.Utils.BaseMonads,
+        Luna.Target.HS.Utils.MonoType
+
+
+  Build-Depends:  base,
+                  --flowbox-graphics,
+                  generic-deriving,
+                  ghc-prim,
+                  hspec,
+                  OneTuple,
+                  pretty-show,
+                  template-haskell,
+                  transformers,
+                  mtl,
+                  QuickCheck,
+                  lens,
+                  flowbox-utils,
+                  tuple,
+                  text,
+                  containers
+
+
+
+
+Test-Suite tests
+  Type:           exitcode-stdio-1.0
+  Main-Is:        Spec.hs
+  Hs-Source-Dirs: test
+  GHC-Options:    -Wall -threaded -O2
+  Extensions:     NoImplicitPrelude
+  Build-Depends:  base,
+                  hspec,
+                  luna-target-ghchs,
+                  mtl,
+                  transformers,
+                  lens
+                  
+
