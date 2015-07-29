@@ -8,7 +8,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TypeFamilies #-}
 
-!{-# LANGUAGE RightSideContexts #-}
+
 
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -46,7 +46,7 @@ import Luna.Target.HS.Control.Context.Rebindable
 ------------------------------------------------------------------------------------------
 
 
-tst :: MonadCtx IO (Proxy StateT,(Proxy ReaderT, ())) m () <= (MonadIO m, MonadState s0 m, MonadReader a0 m, Num s0)
+tst ::  (MonadIO m, MonadState s0 m, MonadReader a0 m, Num s0)=>MonadCtx IO (Proxy StateT,(Proxy ReaderT, ())) m ()  
 tst = do
     Pure x <- getX
     y <- askX
@@ -54,7 +54,7 @@ tst = do
     putX (x+1)
 
 
-tst2 :: MonadCtx IO (Proxy StateT,(Proxy ReaderT, ())) m (Safe Int) <= (MonadIO m, MonadState s0 m, MonadReader a0 m)
+tst2 ::  (MonadIO m, MonadState s0 m, MonadReader a0 m)=>MonadCtx IO (Proxy StateT,(Proxy ReaderT, ())) m (Safe Int)  
 tst2 = do
     Pure x <- getX
     y <- askX
@@ -138,7 +138,7 @@ main = print $ liftf2 concatMe (Pure(Safe([1]))) (Pure(Safe([2])))
 --    x <- ask'
 --    IC2 $ lift (Pure (5::Int))
 
-----instance MonadState s (IC (t s) m) <= (MonadTrans (t s), Monad (t s m), Monad m, MonadState s (t s m)) where
+----instance  (MonadTrans (t s), Monad (t s m), Monad m, MonadState s (t s m)) =>MonadState s (IC (t s) m)  where
 --ask' = IC2 $ ask
 --get' = IC2 $ get
 --put' = IC2 . put

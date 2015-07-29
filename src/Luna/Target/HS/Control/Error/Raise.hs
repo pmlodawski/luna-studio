@@ -24,8 +24,8 @@
 {-# LANGUAGE CPP #-}
 
 
-!{-# LANGUAGE RightSideContexts #-}
-!{-# LANGUAGE Python #-}
+
+
 
 module Luna.Target.HS.Control.Error.Raise where
 
@@ -51,7 +51,7 @@ class TouchErr e a b | e a -> b where
 
 instance Raise e (Safe a)               (UnsafeBase Safe e a)     where raise e (Safe a) = Error e
 instance Raise e (UnsafeBase base e a)  (UnsafeBase base e a)     where raise e a = Error e
-instance Raise e (UnsafeBase base be a) (UnsafeBase outBase be a) <= (Raise e (base a) (outBase a)) where
+instance  (Raise e (base a) (outBase a)) =>Raise e (UnsafeBase base be a) (UnsafeBase outBase be a)  where
     raise e base = case base of
         UnsafeValue val   -> UnsafeValue val
         Error       err   -> Error err
@@ -60,7 +60,7 @@ instance Raise e (UnsafeBase base be a) (UnsafeBase outBase be a) <= (Raise e (b
 
 instance TouchErr e (Safe a)               (UnsafeBase Safe e a)     where touchErr e (Safe a) = UnsafeValue a
 instance TouchErr e (UnsafeBase base e a)  (UnsafeBase base e a)     where touchErr e a = a
-instance TouchErr e (UnsafeBase base be a) (UnsafeBase outBase be a) <= (TouchErr e (base a) (outBase a)) where
+instance  (TouchErr e (base a) (outBase a)) =>TouchErr e (UnsafeBase base be a) (UnsafeBase outBase be a)  where
     touchErr e base = case base of
         UnsafeValue val   -> UnsafeValue val
         Error       err   -> Error err

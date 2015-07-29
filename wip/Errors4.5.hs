@@ -16,8 +16,8 @@
 {-# LANGUAGE UndecidableInstances #-}
 
 
-!{-# LANGUAGE RightSideContexts #-}
-!{-# LANGUAGE Python #-}
+
+
 
 import Control.Applicative  
 import Control.Monad.IO.Class
@@ -75,20 +75,20 @@ type Unsafe = UnsafeBase Safe
 
 data NOP a = NOP a deriving Show
 
-instance Functor (UnsafeBase base err) <= Functor base where
+instance  Functor base =>Functor (UnsafeBase base err)  where
   fmap f a = case a of
       Value a -> Value $ f a
       Error e -> Error e
       Other b -> Other $ fmap f b
 
 
-instance Monad (UnsafeBase base err) <= (TransMonad base (UnsafeBase base err) (UnsafeBase base err)) where
+instance  (TransMonad base (UnsafeBase base err) (UnsafeBase base err)) =>Monad (UnsafeBase base err)  where
     return = Value
     v >>= f = v >>=~ f
 
 
 
-instance TransMonad (UnsafeBase base err) (UnsafeBase base err) (UnsafeBase base err) <= (TransMonad base (UnsafeBase base err) (UnsafeBase base err)) where
+instance  (TransMonad base (UnsafeBase base err) (UnsafeBase base err)) =>TransMonad (UnsafeBase base err) (UnsafeBase base err) (UnsafeBase base err)  where
     a >>=~ f = case a of
         Value v -> f v
         Error e -> Error e
@@ -98,7 +98,7 @@ instance TransMonad Safe (UnsafeBase base err) (UnsafeBase base err) where
     (Safe a) >>=~ f = f a
 
 
-instance TransMonad (UnsafeBase base err1) (UnsafeBase (UnsafeBase base err1) err2) (UnsafeBase (UnsafeBase base err1) err2) <= (TransMonad base (UnsafeBase (UnsafeBase base err1) err2) (UnsafeBase (UnsafeBase base err1) err2)) where
+instance  (TransMonad base (UnsafeBase (UnsafeBase base err1) err2) (UnsafeBase (UnsafeBase base err1) err2)) =>TransMonad (UnsafeBase base err1) (UnsafeBase (UnsafeBase base err1) err2) (UnsafeBase (UnsafeBase base err1) err2)  where
     ma >>=~ f = case ma of
         Value a -> f a
         Error a -> Other $ Error a
@@ -109,7 +109,7 @@ instance TransMonad (UnsafeBase base err1) (UnsafeBase (UnsafeBase base err1) er
 
 
 
-instance Applicative (UnsafeBase base err) <= (Functor base, (TransApplicative (UnsafeBase base err) base (UnsafeBase base err))) where
+instance  (Functor base, (TransApplicative (UnsafeBase base err) base (UnsafeBase base err))) =>Applicative (UnsafeBase base err)  where
     pure = Value
     a <*> b = a <*>~ b
 
@@ -117,21 +117,21 @@ instance Applicative (UnsafeBase base err) <= (Functor base, (TransApplicative (
 instance TransApplicative Safe Safe Safe where
     (Safe f) <*>~ (Safe b) = Safe $ f b
 
-instance TransApplicative Safe (UnsafeBase base err) (UnsafeBase base err) <= (TransApplicative Safe base base) where
+instance  (TransApplicative Safe base base) =>TransApplicative Safe (UnsafeBase base err) (UnsafeBase base err)  where
     func@(Safe f) <*>~ b = case b of
         Value v -> Value $ f v
         Error e -> Error e
         Other o -> Other $ func <*>~ o
 
 
-instance TransApplicative (UnsafeBase base err) Safe (UnsafeBase base err) <= (TransApplicative base Safe base)where
+instance  (TransApplicative base Safe base)=>TransApplicative (UnsafeBase base err) Safe (UnsafeBase base err)  where
     sf <*>~ arg@(Safe b) = case sf of
         Value f -> Value $ f b
         Error e -> Error e
         Other o -> Other $ o <*>~ arg
 
 
---instance TransApplicative (UnsafeBase base err) (UnsafeBase base err) (UnsafeBase base err) <= (TransApplicative (UnsafeBase base err) base base) where
+--instance  (TransApplicative (UnsafeBase base err) base base) =>TransApplicative (UnsafeBase base err) (UnsafeBase base err) (UnsafeBase base err)  where
 --    a <*>~ b = case a of
 --        func@(Value f) -> case b of
 --            Value v -> Value $ f v
@@ -139,7 +139,7 @@ instance TransApplicative (UnsafeBase base err) Safe (UnsafeBase base err) <= (T
 --            Other o -> Other $ func <*>~ o
 
 
-instance TransApplicative (UnsafeBase base err) (UnsafeBase base err) (UnsafeBase base err) <= (TransApplicative (UnsafeBase base err) base (UnsafeBase base err)) where
+instance  (TransApplicative (UnsafeBase base err) base (UnsafeBase base err)) =>TransApplicative (UnsafeBase base err) (UnsafeBase base err) (UnsafeBase base err)  where
     a <*>~ b = case a of
         func@(Value f) -> case b of
             Value v -> Value $ f v
@@ -169,7 +169,7 @@ class Raise e a b | e a -> b where
 
 instance Raise e (Safe a)               (UnsafeBase Safe e a)     where raise e (Safe a) = Error e
 instance Raise e (UnsafeBase base e a)  (UnsafeBase base e a)     where raise e a = Error e
-instance Raise e (UnsafeBase base be a) (UnsafeBase outBase be a) <= (Raise e (base a) (outBase a)) where
+instance  (Raise e (base a) (outBase a)) =>Raise e (UnsafeBase base be a) (UnsafeBase outBase be a)  where
     raise e base = case base of
         Value val   -> Value val
         Error err   -> Error err
@@ -193,7 +193,7 @@ instance Catch (UnsafeBase (UnsafeBase base e2) e a)  (e -> Safe a) (UnsafeBase 
         Value a -> Value a
         Error e -> Value . fromSafe $ f e
         Other o -> o
-instance Catch (UnsafeBase (UnsafeBase base e2) e3 a) (e -> Safe a) (UnsafeBase dstBase e3 a) <= (Catch (UnsafeBase base e2 a) (e -> Safe a) (dstBase a)) where
+instance  (Catch (UnsafeBase base e2 a) (e -> Safe a) (dstBase a)) =>Catch (UnsafeBase (UnsafeBase base e2) e3 a) (e -> Safe a) (UnsafeBase dstBase e3 a)  where
     catch f base = case base of
         Value a     -> Value a
         Error e     -> Error e
@@ -232,19 +232,19 @@ class LiftErr m1 m2 m3 | m1 m2 -> m3 where
 instance LiftErr Safe Safe Safe where
     liftErr (Safe f) (Safe a) = Safe (f a)
 
-instance LiftErr Safe (UnsafeBase base e) (UnsafeBase base e) <= Functor base where
+instance  Functor base =>LiftErr Safe (UnsafeBase base e) (UnsafeBase base e)  where
     liftErr (Safe f) b = f <$> b
 
-instance LiftErr (UnsafeBase base e) Safe (UnsafeBase base e) <= (LiftErr base Safe base) where
+instance  (LiftErr base Safe base) =>LiftErr (UnsafeBase base e) Safe (UnsafeBase base e)  where
     liftErr sf (Safe b) = case sf of
         Value f -> Value $ f b
         Error e -> Error e
         Other o -> Other $ liftErr o (Safe b)
 
---instance LiftErr (UnsafeBase base e) (UnsafeBase base e) (UnsafeBase base e) <= (Functor base, TransApplicative (UnsafeBase base e) base (UnsafeBase base e)) where
+--instance  (Functor base, TransApplicative (UnsafeBase base e) base (UnsafeBase base e)) =>LiftErr (UnsafeBase base e) (UnsafeBase base e) (UnsafeBase base e)  where
 --    liftErr f a = f <*> a
 
---instance LiftErr (UnsafeBase base e1) (UnsafeBase base e2) (UnsafeBase (UnsafeBase dstBase e2) e1) <= (LiftErr (UnsafeBase base e1) base (UnsafeBase dstBase e1), LiftErr base (UnsafeBase base e2) (UnsafeBase dstBase e2)) where
+--instance  (LiftErr (UnsafeBase base e1) base (UnsafeBase dstBase e1), LiftErr base (UnsafeBase base e2) (UnsafeBase dstBase e2)) =>LiftErr (UnsafeBase base e1) (UnsafeBase base e2) (UnsafeBase (UnsafeBase dstBase e2) e1)  where
 --    liftErr sf sa = case sf of
 --        Value f -> case sa of
 --            Value a -> Value $ f a
@@ -263,7 +263,7 @@ instance LiftErr (UnsafeBase base e) Safe (UnsafeBase base e) <= (LiftErr base S
 
 --LiftErr Safe Safe dstBase
 
-instance LiftErr (UnsafeBase base1 e) (UnsafeBase base2 e) (UnsafeBase dstBase e) <= (Monad base1, Monad base2, LiftErr base1 base2 dstBase) where
+instance  (Monad base1, Monad base2, LiftErr base1 base2 dstBase) =>LiftErr (UnsafeBase base1 e) (UnsafeBase base2 e) (UnsafeBase dstBase e)  where
     liftErr (sf :: UnsafeBase base1 e (a->b)) (sa :: UnsafeBase base2 e a) = case sf of
         Value f -> case sa of
             Value a -> Value $ f a
@@ -276,7 +276,7 @@ instance LiftErr (UnsafeBase base1 e) (UnsafeBase base2 e) (UnsafeBase dstBase e
             Other o' -> Other $ liftErr o o'
 
 
-instance LiftErr (UnsafeBase base1 e1) (UnsafeBase base2 e2) (UnsafeBase dstBase e1) <= (Monad base1, (LiftErr base1 (UnsafeBase base2 e2) dstBase)) where
+instance  (Monad base1, (LiftErr base1 (UnsafeBase base2 e2) dstBase)) =>LiftErr (UnsafeBase base1 e1) (UnsafeBase base2 e2) (UnsafeBase dstBase e1)  where
     liftErr (sf :: UnsafeBase base1 e1 (a->b)) sa = case sf of
         Value f -> case sa of
             Value a -> Value $ f a
@@ -284,7 +284,7 @@ instance LiftErr (UnsafeBase base1 e1) (UnsafeBase base2 e2) (UnsafeBase dstBase
         Error e -> Error e
 
 
-    --instance LiftErr (UnsafeBase base1 e1) (UnsafeBase base2 e2) (UnsafeBase dstBase dstE) <= (Monad base1, LiftErr base1 (UnsafeBase base2 e2) dstBase) where
+    --instance  (Monad base1, LiftErr base1 (UnsafeBase base2 e2) dstBase) =>LiftErr (UnsafeBase base1 e1) (UnsafeBase base2 e2) (UnsafeBase dstBase dstE)  where
     --    liftErr (sf :: UnsafeBase base1 e1 (a->b)) sa = case sf of
     --        Value f -> case sa of
     --            Error e -> Other $ liftErr (return f :: base1 (a->b)) sa
@@ -292,7 +292,7 @@ instance LiftErr (UnsafeBase base1 e1) (UnsafeBase base2 e2) (UnsafeBase dstBase
 
 
 
---instance LiftErr (UnsafeBase (UnsafeBase base e0) e1) (UnsafeBase Safe e2) (UnsafeBase dstBase e1) <= (LiftErr (UnsafeBase base e0) (UnsafeBase Safe e2) dstBase, LiftErr (UnsafeBase (UnsafeBase base e0) e1) Safe dstBase) where
+--instance  (LiftErr (UnsafeBase base e0) (UnsafeBase Safe e2) dstBase, LiftErr (UnsafeBase (UnsafeBase base e0) e1) Safe dstBase) =>LiftErr (UnsafeBase (UnsafeBase base e0) e1) (UnsafeBase Safe e2) (UnsafeBase dstBase e1)  where
 --    liftErr (sf :: UnsafeBase (UnsafeBase base e0) e1 (a->b)) sa = case sf of
 --        Value f -> case sa of
 --            Value a -> Value $ f a
@@ -342,7 +342,7 @@ instance MagicMerge (UnsafeBase (UnsafeBase base err) err) (UnsafeBase base err)
         Error e -> Error e
         Other o -> o
 
-instance MagicMerge (UnsafeBase (UnsafeBase base err1) err2) (UnsafeBase dstBase err1) <= (MagicMerge (UnsafeBase base err2) dstBase) where
+instance  (MagicMerge (UnsafeBase base err2) dstBase) =>MagicMerge (UnsafeBase (UnsafeBase base err1) err2) (UnsafeBase dstBase err1)  where
     magicMerge (ma :: UnsafeBase (UnsafeBase base err1) err2 a) = case ma of
         Value a -> Value a
         Error e -> Other $ magicMerge (Error e :: UnsafeBase base err2 a)

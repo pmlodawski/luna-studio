@@ -8,7 +8,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TypeFamilies #-}
 
-!{-# LANGUAGE RightSideContexts #-}
+
 
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE OverlappingInstances #-}
@@ -85,7 +85,7 @@ instance BindEnv IO IO IO where
 -- instance BindEnv (IC2 t) (IC2 t) (IC2 t) where
 --     bindEnv = undefined
 --
--- instance BindEnv (IC2 (c1 t1)) (IC2 (c2 t2)) (IC2 (c1 tx)) <= BindEnv (IC2 t1) (IC2 (c2 t2)) tx  where
+-- instance  BindEnv (IC2 t1) (IC2 (c2 t2)) tx  =>BindEnv (IC2 (c1 t1)) (IC2 (c2 t2)) (IC2 (c1 tx))  where
 --     bindEnv = undefined
 
 -- instance BindEnv t t t where
@@ -103,29 +103,29 @@ instance BindEnv IO IO IO where
     -- instance BindEnv IO Pure IO where
     --     bindEnv = undefined
     --
-    -- instance BindEnv (c1 t1) (c2 t2) (c1 tx) <= (BindEnv t1 (c2 t2) tx, Monad t1, Monad t2) where
+    -- instance  (BindEnv t1 (c2 t2) tx, Monad t1, Monad t2) =>BindEnv (c1 t1) (c2 t2) (c1 tx)  where
     --     bindEnv = undefined
     --
-    -- instance BindEnv (c1 t1) t1 out <= (Monad t1, out~(c1 t1)) where
+    -- instance  (Monad t1, out~(c1 t1)) =>BindEnv (c1 t1) t1 out  where
     --     bindEnv = undefined
     -- --
-    -- instance BindEnv t1 (c2 t1) out <= (Monad t1, out~(c2 t1))  where
+    -- instance  (Monad t1, out~(c2 t1))  =>BindEnv t1 (c2 t1) out  where
     --     bindEnv = undefined
 
--- instance BindEnv (MonadSet env1 set1) (MonadSet env2 set2) (MonadSet envout setout) <= (envout ~ EnvMerge env1 env2, setout ~ Union set1 set2) where
+-- instance  (envout ~ EnvMerge env1 env2, setout ~ Union set1 set2) =>BindEnv (MonadSet env1 set1) (MonadSet env2 set2) (MonadSet envout setout)  where
 --     bindEnv ma f = MonadSet $ (fromMS ma) >>= (fromMS . f . Pure)
 
-instance BindEnv (MonadSet env1 set1 m1) (MonadSet env2 set2 m2) (MonadSet envout setout m1) <= (envout ~ EnvMerge env1 env2, setout ~ Union set1 set2, m1~m2, Monad m1) where
+instance  (envout ~ EnvMerge env1 env2, setout ~ Union set1 set2, m1~m2, Monad m1) =>BindEnv (MonadSet env1 set1 m1) (MonadSet env2 set2 m2) (MonadSet envout setout m1)  where
     bindEnv ma f = MonadSet $ (fromMS ma) >>= (fromMS . f . Pure)
 
 
-instance BindEnv (MonadSet env set m) Pure (MonadSet envout set m) <= (envout ~ EnvMerge env Pure, Monad m) where
+instance  (envout ~ EnvMerge env Pure, Monad m) =>BindEnv (MonadSet env set m) Pure (MonadSet envout set m)  where
     bindEnv ma f = MonadSet $ (fromMS ma) >>= (return . fromPure . f . Pure)
 
 instance BindEnv Pure (MonadSet env set m) (MonadSet env set m) where
     bindEnv ma f = f ma
 
---instance BindEnv (MonadSet env set m) Pure (MonadSet envout set m) <= (envout ~ EnvMerge env Pure, Monad m) where
+--instance  (envout ~ EnvMerge env Pure, Monad m) =>BindEnv (MonadSet env set m) Pure (MonadSet envout set m)  where
 --    bindEnv ma f = MonadSet $ (fromMS ma) >>= (return . fromPure . f . Pure)
 
 -- class FindBase t base | t -> base where
@@ -136,7 +136,7 @@ instance BindEnv Pure (MonadSet env set m) (MonadSet env set m) where
 -- class RunMonad m mptr out | m mptr -> out where
 --     runMonad :: m -> mptr -> out
 --
--- instance RunMonad (MonadSet env set m) mptr out <= (Remove mptr set setout) where
+-- instance  (Remove mptr set setout) =>RunMonad (MonadSet env set m) mptr out  where
 --     runMonad = runMonad' (undefined :: IsEmpty setout)
 --
 --
@@ -144,10 +144,10 @@ instance BindEnv Pure (MonadSet env set m) (MonadSet env set m) where
 class MonadSetTrans m out | m -> out where
     liftSet :: m -> out
 
---instance MonadSetTrans (MonadSet env () m a) (m0 a0 -> t0 m0 a0) <= (MonadTrans t0, Monad m0) where
+--instance  (MonadTrans t0, Monad m0) =>MonadSetTrans (MonadSet env () m a) (m0 a0 -> t0 m0 a0)  where
 --    liftSet _ = lift
 
---instance MonadSetTrans (MonadSet env (x,xs) m a) (m0 a0 -> t0 m0 a0) <= (Monad m0, MonadTrans t0, (MonadSetTrans(MonadSet env xs m a) (t0 m0 a0 -> t0 m0 a0))) where
+--instance  (Monad m0, MonadTrans t0, (MonadSetTrans(MonadSet env xs m a) (t0 m0 a0 -> t0 m0 a0))) =>MonadSetTrans (MonadSet env (x,xs) m a) (m0 a0 -> t0 m0 a0)  where
 --    liftSet _ = (liftSet (undefined :: MonadSet env (xs) m a)) . lift
 
 --dummy
@@ -156,17 +156,17 @@ class MonadSetTrans m out | m -> out where
 
 newtype ProxyTrans m a = ProxyTrans (m a)
 
-unproxyTrans :: ProxyTrans m a -> t m a <= (MonadTrans t, Monad m)
+unproxyTrans ::  (MonadTrans t, Monad m)=>ProxyTrans m a -> t m a  
 unproxyTrans (ProxyTrans a) = lift a
 
 
 instance MonadTrans ProxyTrans where
     lift = ProxyTrans
 
-instance MonadSetTrans (MonadSet env () m a) (MonadSet env () (ProxyTrans m) a) <= (Monad m) where
+instance  (Monad m) =>MonadSetTrans (MonadSet env () m a) (MonadSet env () (ProxyTrans m) a)  where
     liftSet = MonadSet . lift . fromMS
 
-instance MonadSetTrans (MonadSet env (x,xs) m a) (MonadSet env (x,xs) mout a) <= (Monad m, MonadSetTrans(MonadSet env xs m a) (t m a -> mout a), MonadTrans t) where
+instance  (Monad m, MonadSetTrans(MonadSet env xs m a) (t m a -> mout a), MonadTrans t) =>MonadSetTrans (MonadSet env (x,xs) m a) (MonadSet env (x,xs) mout a)  where
     liftSet = MonadSet . (liftSet (undefined :: MonadSet env xs m a)) . lift . fromMS
 
 
@@ -180,21 +180,21 @@ class MatchMonadCloseProto flag m t | flag m -> t where
 instance MatchMonadCloseProto False m m where
     matchMonadCloseProto _ = id
 
-instance MatchMonadCloseProto True (MonadSet env set m) env <= (m~env) where
+instance  (m~env) =>MatchMonadCloseProto True (MonadSet env set m) env  where
     matchMonadCloseProto _ = closeMonadSet
 
 
 class MatchMonadClose m t | m -> t where
     matchMonadClose :: m a -> t a
 
-instance MatchMonadClose (MonadSet env set ma) out <= (MatchMonadCloseProto emptySet (MonadSet env set ma) out, emptySet ~ IsEmpty set) where
+instance  (MatchMonadCloseProto emptySet (MonadSet env set ma) out, emptySet ~ IsEmpty set) =>MatchMonadClose (MonadSet env set ma) out  where
     matchMonadClose = matchMonadCloseProto (undefined :: emptySet)
 
 
 runMonadProto :: mptr -> (ma a -> mb b) -> (MonadSet env set ma a) -> (MonadSet env (Remove mptr set) mb b)
 runMonadProto _ f ms = MonadSet $ f (fromMS ms)
 
-runMonad :: mptr -> (ma a -> mb b) -> MonadSet env set ma a -> t b <= MatchMonadCloseProto (IsEmpty (Remove mptr set)) (MonadSet env (Remove mptr set) mb) t 
+runMonad ::  MatchMonadCloseProto (IsEmpty (Remove mptr set)) (MonadSet env (Remove mptr set) mb) t =>mptr -> (ma a -> mb b) -> MonadSet env set ma a -> t b  
 runMonad = matchMonadClose `dot3` runMonadProto
 
 
@@ -214,10 +214,10 @@ runReaderTX = liftMonadRunner1 MReader runReaderT
 
 
 
-getX :: MonadSet Pure (Insert MState Empty) m s <= MonadState s m
+getX ::  MonadState s m=>MonadSet Pure (Insert MState Empty) m s  
 getX = MonadSet get
 
-askX :: MonadSet Pure (Insert MReader Empty) m s <= MonadReader s m
+askX ::  MonadReader s m=>MonadSet Pure (Insert MReader Empty) m s  
 askX = MonadSet ask
 
 tstM = getX `bindEnv_` askX
@@ -265,23 +265,23 @@ main = do
     print "end"
 
 
--- instance BindEnv (t1 Pure) (t2 Pure) (t1 Pure) <= (t1~t2, Monad (t2 Pure)) where
+-- instance  (t1~t2, Monad (t2 Pure)) =>BindEnv (t1 Pure) (t2 Pure) (t1 Pure)  where
 --     bindEnv ma f = do
 --         a <- ma
 --         f (Pure a)
 --
 --
--- instance BindEnv (t1 IO) (t2 IO) (t1 IO) <= (Monad (t1 IO), t1~t2) where
+-- instance  (Monad (t1 IO), t1~t2) =>BindEnv (t1 IO) (t2 IO) (t1 IO)  where
 --     bindEnv ma f = do
 --         a <- ma
 --         f (Pure a)
 --
--- instance BindEnv (t1 Pure) (t2 IO) (t1 IO) <= (Monad (t1 IO), t1~t2, MFunctor t2) where
+-- instance  (Monad (t1 IO), t1~t2, MFunctor t2) =>BindEnv (t1 Pure) (t2 IO) (t1 IO)  where
 --     bindEnv ma f = do
 --         a <- hoist morph ma
 --         f (Pure a)
 --
--- instance BindEnv (t1 IO) (t2 Pure) (t1 IO) <= (Monad (t1 IO), t1~t2, MFunctor t2) where
+-- instance  (Monad (t1 IO), t1~t2, MFunctor t2) =>BindEnv (t1 IO) (t2 Pure) (t1 IO)  where
 --     bindEnv ma f = do
 --         a <- ma
 --         hoist morph $ f (Pure a)
@@ -296,46 +296,46 @@ main = do
 --     bindEnv a f = f a
 --
 --
--- instance BindEnv IO (t Pure) (t IO) <= (Monad (t IO), MonadTrans t, MFunctor t) where
+-- instance  (Monad (t IO), MonadTrans t, MFunctor t) =>BindEnv IO (t Pure) (t IO)  where
 --     bindEnv ma f = do
 --         a <- lift ma
 --         hoist morph $ f (Pure a)
 --
 --
--- instance BindEnv IO (t IO) (t IO) <= (Monad (t IO), MonadTrans t) where
+-- instance  (Monad (t IO), MonadTrans t) =>BindEnv IO (t IO) (t IO)  where
 --     bindEnv ma f = do
 --         a <- lift ma
 --         f (Pure a)
 --
 -- -----
 --
--- instance BindEnv (t Pure) Pure (t Pure) <= Monad (t Pure) where
+-- instance  Monad (t Pure) =>BindEnv (t Pure) Pure (t Pure)  where
 --   bindEnv ma f = do
 --         a <- ma
 --         let Pure b = f (Pure a)
 --         return b
 --
 --
--- instance BindEnv (t Pure) IO (t IO) <= (Monad (t IO), MonadTrans t, MFunctor t) where
+-- instance  (Monad (t IO), MonadTrans t, MFunctor t) =>BindEnv (t Pure) IO (t IO)  where
 --     bindEnv ma f = do
 --         a <- hoist morph ma
 --         lift $ f (Pure a)
 --
 --
--- instance BindEnv (t IO) Pure (t IO) <= Monad (t IO) where
+-- instance  Monad (t IO) =>BindEnv (t IO) Pure (t IO)  where
 --     bindEnv ma f = do
 --         a <- ma
 --         let Pure b = f (Pure a)
 --         return b
 --
--- instance BindEnv (t IO) IO (t IO) <= (Monad (t IO), MonadTrans t) where
+-- instance  (Monad (t IO), MonadTrans t) =>BindEnv (t IO) IO (t IO)  where
 --     bindEnv ma f = do
 --         a <- ma
 --         lift $ f (Pure a)
 
 -------------------------------
 
-bindCtx :: ca ma a -> (Pure a -> cb mb b) -> (CtxMerge ca cb) mout b <= (BindEnv ma mb mout, Context ca, Context cb, Context(CtxMerge ca cb))
+bindCtx ::  (BindEnv ma mb mout, Context ca, Context cb, Context(CtxMerge ca cb))=>ca ma a -> (Pure a -> cb mb b) -> (CtxMerge ca cb) mout b  
 bindCtx a f = wrapCtx $ bindEnv (fromCtx a) (fromCtx . f)
 
 
@@ -404,7 +404,7 @@ testReaderPure = do
 --    get :: m s
 --    put :: s -> m ()
 
---instance MonadState s (IC (t s) m) <= (MonadTrans (t s), Monad (t s m), Monad m, MonadState s (t s m)) where
+--instance  (MonadTrans (t s), Monad (t s m), Monad m, MonadState s (t s m)) =>MonadState s (IC (t s) m)  where
 ask' = IC2 $ ask
 get' = IC2 $ get
 put' = IC2 . put

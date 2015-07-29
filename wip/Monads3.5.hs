@@ -16,7 +16,7 @@
 {-# LANGUAGE RankNTypes #-} 
 
 
-!{-# LANGUAGE RightSideContexts #-}
+
 
 import Control.Monad.State
 import Control.Monad.Reader
@@ -63,15 +63,15 @@ class (Monad m) => MonadState' s m | m -> s where
     get' :: m s
     put' :: s -> m ()
 
-instance MonadState' s (StateT' s m) <= Monad m where
+instance  Monad m =>MonadState' s (StateT' s m)  where
     get'   = StateT' $ \s -> return (s, s)
     put' s = StateT' $ \_ -> return ((), s)
 
-instance MonadState' s (ReaderT s m) <= MonadState' s m where
+instance  MonadState' s m =>MonadState' s (ReaderT s m)  where
     get'   = lift $ get'
     put' s = lift $ put' s
 
-instance MonadState' s (t s m) <= (MonadTrans (t s), MonadState' s m, Monad (t s m)) where
+instance  (MonadTrans (t s), MonadState' s m, Monad (t s m)) =>MonadState' s (t s m)  where
     get'   = lift $ get'
     put' s = lift $ put' s
 
@@ -125,18 +125,18 @@ class CallM0' (name :: Symbol) base out | base name -> out where
 
 
 
-instance CallM0' "get" X1 (m a) <= MonadState' a m where
+instance  MonadState' a m =>CallM0' "get" X1 (m a)  where
     callM0' _ _ = get'
 
 
-instance CallM0' "ask" X2 (m a) <= MonadReader a m where
+instance  MonadReader a m =>CallM0' "ask" X2 (m a)  where
     callM0' _ _ = ask
 
 
-instance CallM0' "test" V (m a) <= (MonadState' a m, MonadReader t m) where
+instance  (MonadState' a m, MonadReader t m) =>CallM0' "test" V (m a)  where
     callM0' _ _ = test
 
---instance CallM0' "get" X1 (t m a) <= (Monad m, MonadTrans t, CallM0' "get" X1 (m a)) where
+--instance  (Monad m, MonadTrans t, CallM0' "get" X1 (m a)) =>CallM0' "get" X1 (t m a)  where
 --    callM0' name base = lift $ callM0' name base
 
 
@@ -146,31 +146,31 @@ test = do
     --print' "hello"
     return x
 
-    --instance CallM0' "get" X1 (StateT' a m a) <= Monad m where
+    --instance  Monad m =>CallM0' "get" X1 (StateT' a m a)  where
     --    callM0' _ _ = StateT' $ \s -> return (s, s)
 
 
-    --instance CallM0' "ask" X2 (t m a) <= (Monad m, MonadTrans t, CallM0' "ask" X2 (m a)) where
+    --instance  (Monad m, MonadTrans t, CallM0' "ask" X2 (m a)) =>CallM0' "ask" X2 (t m a)  where
     --    callM0' name base = lift $ callM0' name base
 
-    --instance CallM0' "ask" X2 (ReaderT a m a) <= Monad m where
+    --instance  Monad m =>CallM0' "ask" X2 (ReaderT a m a)  where
     --    callM0' _ _ = ask
 
 
 class CallMe (name :: Symbol) base out where
     callMe :: Proxy name -> base -> out
 
-instance CallMe "get" X1 (t m a) <= (Monad m, MonadTrans t, CallMe "get" X1 (m a)) where
+instance  (Monad m, MonadTrans t, CallMe "get" X1 (m a)) =>CallMe "get" X1 (t m a)  where
     callMe name base = lift $ callMe name base
 
-instance CallMe "get" X1 (StateT' a m a) <= Monad m where
+instance  Monad m =>CallMe "get" X1 (StateT' a m a)  where
     callMe _ _ = StateT' $ \s -> return (s, s)
 
 
-instance CallMe "ask" X2 (t m a) <= (Monad m, MonadTrans t, CallMe "ask" X2 (m a)) where
+instance  (Monad m, MonadTrans t, CallMe "ask" X2 (m a)) =>CallMe "ask" X2 (t m a)  where
     callMe name base = lift $ callMe name base
 
-instance CallMe "ask" X2 (ReaderT a m a) <= Monad m where
+instance  Monad m =>CallMe "ask" X2 (ReaderT a m a)  where
     callMe _ _ = ask
 
 
@@ -205,20 +205,20 @@ main = do
     --    callM0 :: Proxy name -> base -> m a
 
 
-    --instance CallM0 "get" X1 a (StateT' a m) <= Monad m where
+    --instance  Monad m =>CallM0 "get" X1 a (StateT' a m)  where
     --    callM0 _ _ = StateT' $ \s -> return (s, s)
 
-    --instance CallM0 "get" X1 a (t m) <= (Monad m, MonadTrans t, CallM0 "get" X1 a m) where
+    --instance  (Monad m, MonadTrans t, CallM0 "get" X1 a m) =>CallM0 "get" X1 a (t m)  where
     --    callM0 name base = lift $ callM0 name base
 
 
-    --instance CallM0 "ask" X2 a (t m) <= (Monad m, MonadTrans t, CallM0 "ask" X2 a m) where
+    --instance  (Monad m, MonadTrans t, CallM0 "ask" X2 a m) =>CallM0 "ask" X2 a (t m)  where
     --    callM0 name base = lift $ callM0 name base
 
-    --instance CallM0 "ask" X2 a (ReaderT a m) <= Monad m where
+    --instance  Monad m =>CallM0 "ask" X2 a (ReaderT a m)  where
     --    callM0 _ _ = ask
 
---instance CallM0 "ask" X2 a m <= MonadReader a m where
+--instance  MonadReader a m =>CallM0 "ask" X2 a m  where
 --    callM0 _ _ = ask
 
 --instance CallM0 (name :: Symbol) base m a where
@@ -226,7 +226,7 @@ main = do
 
 --xxx name base = lift $ callM0 name base
 
---instance CallM0 name X1 out <= (CallM0 name Identity out) where
+--instance  (CallM0 name Identity out) =>CallM0 name X1 out  where
 --    callM0 name = lift $ callM0 name
 
 

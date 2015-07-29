@@ -19,7 +19,7 @@
 {-# LANGUAGE OverlappingInstances #-}
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE TypeFamilies #-}
-!{-# LANGUAGE RightSideContexts #-}
+
 
 module Luna.Target.HS.Control.Context.Value where
 

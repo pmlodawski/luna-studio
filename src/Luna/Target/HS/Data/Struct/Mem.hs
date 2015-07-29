@@ -20,7 +20,7 @@
 {-# LANGUAGE TypeFamilies #-}
 
 
-!{-# LANGUAGE RightSideContexts #-}
+
 
 module Luna.Target.HS.Data.Struct.Mem where
 
@@ -51,7 +51,7 @@ proxyType _ = Proxy
 
 data Mem obj (name :: Symbol) = Mem obj (Proxy name) deriving (Typeable)
 
-instance Show (Mem obj name) <= (Typeable obj, KnownSymbol name) where
+instance  (Typeable obj, KnownSymbol name) =>Show (Mem obj name)  where
     show (Mem obj name) = "Mem " ++ show (typeOf obj) ++ " " ++ show (symbolVal name)
 
 ----------------------------------------------------------------------------------
@@ -66,7 +66,7 @@ class MemberProvider obj name argRep f | obj name argRep -> f where
 
 
 
---objPtr :: m base s a -> out <= (Env base, Safety s, BaseType (Proxy a) out, out~Proxy b)
+--objPtr ::  (Env base, Safety s, BaseType (Proxy a) out, out~Proxy b)=>m base s a -> out  
 --objPtr el = Proxy
 
 objPtr :: forall m base s a out. (Env base, Safety s) => m base s a -> (Proxy (ProxyType a))

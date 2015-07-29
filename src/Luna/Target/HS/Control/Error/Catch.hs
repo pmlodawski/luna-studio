@@ -20,7 +20,7 @@
 {-# LANGUAGE DysfunctionalDependencies #-}
 
 
-!{-# LANGUAGE RightSideContexts #-}
+
 
 module Luna.Target.HS.Control.Error.Catch where
 
@@ -55,15 +55,15 @@ class Catch2 e fix val out | e fix val -> out where
 
 -- === basic catching === --
 
-instance Catch e (m ea) (Safe a) (Safe a) <= (ea~a) where catch _ = id
+instance  (ea~a) =>Catch e (m ea) (Safe a) (Safe a)  where catch _ = id
 
-instance Catch e (Safe ea) (UnsafeBase base e a) out <= (a~ea, Catch e (Safe a) (base a) (mout a), Monad mout, out~mout a) where
+instance  (a~ea, Catch e (Safe a) (base a) (mout a), Monad mout, out~mout a) =>Catch e (Safe ea) (UnsafeBase base e a) out  where
     catch f a = case a of
         UnsafeValue a -> return a
         Error       e -> return . fromSafe $ f e
         UnsafeOther o -> catch f o
 
-instance Catch e1 (Safe ea) (UnsafeBase base e2 a) out <= (a~ea, Catch e1 (Safe a) (base a) (dstBase a), out~UnsafeBase dstBase e2 a) where
+instance  (a~ea, Catch e1 (Safe a) (base a) (dstBase a), out~UnsafeBase dstBase e2 a) =>Catch e1 (Safe ea) (UnsafeBase base e2 a) out  where
     catch f sa = case sa of
         UnsafeValue a -> UnsafeValue a
         Error       e -> Error e
@@ -71,27 +71,27 @@ instance Catch e1 (Safe ea) (UnsafeBase base e2 a) out <= (a~ea, Catch e1 (Safe 
 
 -- === re-raising === --
 
-instance Catch e1 (ReRaise ea) (UnsafeBase base e2 a) (UnsafeBase base e2 a) <= (a~ea) where
+instance  (a~ea) =>Catch e1 (ReRaise ea) (UnsafeBase base e2 a) (UnsafeBase base e2 a)  where
     catch _ = id
 
 
 ---- === nested raising ===
 
-instance Catch e1 (UnsafeBase base e2 ea) (UnsafeBase base e1 a) out <= (ea~a, out~UnsafeBase base e2 a) where
+instance  (ea~a, out~UnsafeBase base e2 a) =>Catch e1 (UnsafeBase base e2 ea) (UnsafeBase base e1 a) out  where
     catch f sa = case sa of
         UnsafeValue a -> UnsafeValue a
         Error       e -> f e
         UnsafeOther o -> UnsafeOther o
 
 
-instance Catch e1 (UnsafeBase base e2 ea) (UnsafeBase base e3 a) out <= (ea~a, Catch e1 (UnsafeBase base e2 a) (base a) (dstBase a), out~UnsafeBase dstBase e3 a) where
+instance  (ea~a, Catch e1 (UnsafeBase base e2 a) (base a) (dstBase a), out~UnsafeBase dstBase e3 a) =>Catch e1 (UnsafeBase base e2 ea) (UnsafeBase base e3 a) out  where
     catch f sa = case sa of
         UnsafeValue a -> UnsafeValue a
         Error       e -> Error e
         UnsafeOther o -> UnsafeOther $ catch f o
 
 
-instance Catch e1 (UnsafeBase base2 e2 ea) (UnsafeBase base3 e1 a) out <= (ea~a, out~UnsafeBase dstBase e2 a, PolyApplicative (UnsafeBase base3 e2) (UnsafeBase base2 e2) (UnsafeBase dstBase e2)) where
+instance  (ea~a, out~UnsafeBase dstBase e2 a, PolyApplicative (UnsafeBase base3 e2) (UnsafeBase base2 e2) (UnsafeBase dstBase e2)) =>Catch e1 (UnsafeBase base2 e2 ea) (UnsafeBase base3 e1 a) out  where
     catch f sa = case sa of
         UnsafeValue a -> UnsafeValue a
         Error       e -> (UnsafeValue id :: UnsafeBase base3 e2 (a->a)) <<*>> (f e :: (UnsafeBase base2 e2 a))
@@ -100,7 +100,7 @@ instance Catch e1 (UnsafeBase base2 e2 ea) (UnsafeBase base3 e1 a) out <= (ea~a,
 class PolyApplicative' m1 m2 m3 | m1 m2 -> m3 where
     (<<*>>~) :: m1 (a -> b) -> m2 a -> m3 b
 
---instance Catch e1 (UnsafeBase base2 e2 ea) (UnsafeBase base3 e3 a) out <= (ea~a, Catch e1 (UnsafeBase base e2 a) (base a) (dstBase a), out~UnsafeBase dstBase e3 a) where
+--instance  (ea~a, Catch e1 (UnsafeBase base e2 a) (base a) (dstBase a), out~UnsafeBase dstBase e3 a) =>Catch e1 (UnsafeBase base2 e2 ea) (UnsafeBase base3 e3 a) out  where
 --    catch f sa = case sa of
 --        UnsafeValue a -> UnsafeValue a
 --        Error       e -> Error e
@@ -115,15 +115,15 @@ class Unify m1 m2 where
     --instance Unify Safe (UnsafeBase base e) where
     --    unify = UnsafeValue . fromSafe
 
-    ----instance Unify (UnsafeBase Safe NoError a1) (UnsafeBase base e a2) <= (a1~a2) where
+    ----instance  (a1~a2) =>Unify (UnsafeBase Safe NoError a1) (UnsafeBase base e a2)  where
     ----    unify (UnsafeValue a) = UnsafeValue a
 
-    ----instance Unify (UnsafeBase (UnsafeBase s1 e1) NoError a1) (UnsafeBase base e a2) <= (a1~a2, Unify (UnsafeBase s1 e1 a2) (UnsafeBase base e a2)) where
+    ----instance  (a1~a2, Unify (UnsafeBase s1 e1 a2) (UnsafeBase base e a2)) =>Unify (UnsafeBase (UnsafeBase s1 e1) NoError a1) (UnsafeBase base e a2)  where
     ----    unify sa = case sa of
     ----        UnsafeValue a -> UnsafeValue a
     ----        UnsafeOther o -> unify o
 
-    ----instance Unify (UnsafeBase base e a1) (Safe a2) <= (a1~a2) where
+    ----instance  (a1~a2) =>Unify (UnsafeBase base e a1) (Safe a2)  where
     ----    unify = 
 
     --data NoError = NoError deriving Show
@@ -131,14 +131,14 @@ class Unify m1 m2 where
     --instance Catch2 e1 x (Safe a) (UnsafeBase Safe NoError a) where
     --    catch2 _ = UnsafeValue . fromSafe
 
-    --instance Catch2 e1 (m1 a1) (UnsafeBase base e1 a2) out <= (a1~a2, out~mout a1, Monad mout, Unify m1 mout, Catch2 e1 (m1 a1) (base a2) (mout a2)) where
+    --instance  (a1~a2, out~mout a1, Monad mout, Unify m1 mout, Catch2 e1 (m1 a1) (base a2) (mout a2)) =>Catch2 e1 (m1 a1) (UnsafeBase base e1 a2) out  where
     --    catch2 f sa = case sa of
     --        UnsafeValue a -> return a
     --        Error       e -> unify $ f e
     --        UnsafeOther o -> catch2 f o
 
 
-    --instance Catch2 e1 x (UnsafeBase base e2 a) out <= (Catch2 e1 x (base a) (base0 a), out~UnsafeBase base0 e2 a) where
+    --instance  (Catch2 e1 x (base a) (base0 a), out~UnsafeBase base0 e2 a) =>Catch2 e1 x (UnsafeBase base e2 a) out  where
     --    catch2 f sa = case sa of
     --        UnsafeValue a -> UnsafeValue a
     --        Error       e -> Error e

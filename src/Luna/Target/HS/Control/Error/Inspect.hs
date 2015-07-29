@@ -11,7 +11,7 @@
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE FlexibleContexts #-}
 
-!{-# LANGUAGE RightSideContexts #-}
+
 
 module Luna.Target.HS.Control.Error.Inspect where
 
@@ -54,7 +54,7 @@ instance HandleError (Safe a) a where
     handleError (Safe a) = CheckOK a
 
 
-instance HandleError (UnsafeBase base err val) val <= (HandleError (base val) val, Show err) where
+instance  (HandleError (base val) val, Show err) =>HandleError (UnsafeBase base err val) val  where
     handleError a = case a of
         UnsafeValue val -> CheckOK val
         Error e         -> CheckFail e

@@ -12,7 +12,7 @@
 {-# LANGUAGE UndecidableInstances #-} 
 
 
-!{-# LANGUAGE RightSideContexts #-}
+
 
 import Control.Monad.State
 import Control.Monad.Reader
@@ -110,22 +110,22 @@ class CallM0 (name :: Symbol) base a m | m -> a where
     callM0 :: Proxy name -> base -> m a
 
 
-instance CallM0 "get" X1 a (StateT' a m) <= Monad m where
+instance  Monad m =>CallM0 "get" X1 a (StateT' a m)  where
     callM0 _ _ = StateT' $ \s -> return (s, s)
 
-instance CallM0 "get" X1 a (t m) <= (Monad m, MonadTrans t, CallM0 "get" X1 a m) where
+instance  (Monad m, MonadTrans t, CallM0 "get" X1 a m) =>CallM0 "get" X1 a (t m)  where
     callM0 base a = lift $ callM0 base a
 
---instance CallM0 "ask" X2 a (StateT' a m) <= (Monad m, CallM0 "ask" X2 a m) where
+--instance  (Monad m, CallM0 "ask" X2 a m) =>CallM0 "ask" X2 a (StateT' a m)  where
 --    callM0 base a = lift $ callM0 base a
 
-instance CallM0 "ask" X2 a (t m) <= (Monad m, MonadTrans t, CallM0 "ask" X2 a m) where
+instance  (Monad m, MonadTrans t, CallM0 "ask" X2 a m) =>CallM0 "ask" X2 a (t m)  where
     callM0 base a = lift $ callM0 base a
 
-instance CallM0 "ask" X2 a (ReaderT a m) <= Monad m where
+instance  Monad m =>CallM0 "ask" X2 a (ReaderT a m)  where
     callM0 _ _ = ask
 
---instance CallM0 "ask" X2 a m <= MonadReader a m where
+--instance  MonadReader a m =>CallM0 "ask" X2 a m  where
 --    callM0 _ _ = ask
 
 --instance CallM0 (name :: Symbol) base m a where
@@ -133,7 +133,7 @@ instance CallM0 "ask" X2 a (ReaderT a m) <= Monad m where
 
 --xxx name base = lift $ callM0 name base
 
---instance CallM0 name X1 out <= (CallM0 name Identity out) where
+--instance  (CallM0 name Identity out) =>CallM0 name X1 out  where
 --    callM0 name = lift $ callM0 name
 
 

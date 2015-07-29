@@ -10,7 +10,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
-!{-# LANGUAGE RightSideContexts #-}
+
 
 
 module Luna.Target.HS.Control.Flow.Error (
@@ -26,14 +26,14 @@ import Luna.Target.HS.Control.Context
 ----------------------------------------------------------------------------------
 
 -- FIXME [wd]: update
---instance Catch e (Value base1 a1) (Value base2 a2) (Value base3 a3) <= Catch e (base1 a1) (base2 a2) (base3 a3) where
+--instance  Catch e (base1 a1) (base2 a2) (base3 a3) =>Catch e (Value base1 a1) (Value base2 a2) (Value base3 a3)  where
 --    catch f a = Value $ catch (fromValue . f) (fromValue a)
 
-instance Catch e (Pure a1) (Pure a2) (Pure a3) <= Catch e a1 a2 a3 where
+instance  Catch e a1 a2 a3 =>Catch e (Pure a1) (Pure a2) (Pure a3)  where
     catch f a = Pure $ catch (fromPure . f) (fromPure a)
 
 -- FIXME [wd]: update
---instance Raise e (Value base a) (Value base a') <= (Raise e a a', Functor base) where
+--instance  (Raise e a a', Functor base) =>Raise e (Value base a) (Value base a')  where
 --    raise = fmap . raise
 
 -- FIXME: we need other instances for catching here! For IO and MonadCtx

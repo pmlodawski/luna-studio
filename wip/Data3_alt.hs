@@ -9,7 +9,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-!{-# LANGUAGE RightSideContexts #-}
+
 
 module Data3_alt where
 
@@ -21,12 +21,12 @@ import Control.Monad.Trans
 import Luna.Target.HS.Utils.BaseMonads
 
 
---instance MonadState s (IC (StateT s) m) <= Monad m where
+--instance  Monad m =>MonadState s (IC (StateT s) m)  where
 --    get   = IC $ StateT $ \s -> return (s, s)
 --    put s = IC $ StateT $ \_ -> return ((), s)
 
 
-instance MonadState s (IC a m) <= (MonadState s (a m), Monad m, MonadTrans a) where
+instance  (MonadState s (a m), Monad m, MonadTrans a) =>MonadState s (IC a m)  where
     get   = IC $ get
     put s = IC $ put s
 

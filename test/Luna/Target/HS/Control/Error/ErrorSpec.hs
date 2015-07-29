@@ -25,8 +25,8 @@
 {-# LANGUAGE CPP #-}
 
 
-!{-# LANGUAGE RightSideContexts #-}
-!{-# LANGUAGE Python #-}
+
+
 
 module Luna.Target.HS.Control.Error.ErrorSpec where
 

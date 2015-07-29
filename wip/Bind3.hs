@@ -7,7 +7,7 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TypeFamilies #-}
 
-!{-# LANGUAGE RightSideContexts #-}
+
 
 --{-# LANGUAGE UndecidableInstances #-}
 --{-# LANGUAGE OverlappingInstances #-}
@@ -72,23 +72,23 @@ instance BindEnv IO IO IO where
 -----
 
 
-instance BindEnv (t1 Pure) (t2 Pure) (t1 Pure) <= (Monad (t1 Pure), t1~t2) where
+instance  (Monad (t1 Pure), t1~t2) =>BindEnv (t1 Pure) (t2 Pure) (t1 Pure)  where
     bindEnv ma f = do
         a <- ma
         f (Pure a)
 
 
-instance BindEnv (t1 IO) (t2 IO) (t1 IO) <= (Monad (t1 IO), t1~t2) where
+instance  (Monad (t1 IO), t1~t2) =>BindEnv (t1 IO) (t2 IO) (t1 IO)  where
     bindEnv ma f = do
         a <- ma
         f (Pure a)
 
-instance BindEnv (t1 Pure) (t2 IO) (t1 IO) <= (Monad (t1 IO), t1~t2, MFunctor t2) where
+instance  (Monad (t1 IO), t1~t2, MFunctor t2) =>BindEnv (t1 Pure) (t2 IO) (t1 IO)  where
     bindEnv ma f = do
         a <- hoist morph ma
         f (Pure a)
 
-instance BindEnv (t1 IO) (t2 Pure) (t1 IO) <= (Monad (t1 IO), t1~t2, MFunctor t2) where
+instance  (Monad (t1 IO), t1~t2, MFunctor t2) =>BindEnv (t1 IO) (t2 Pure) (t1 IO)  where
     bindEnv ma f = do
         a <- ma
         hoist morph $ f (Pure a)
@@ -103,46 +103,46 @@ instance BindEnv Pure (t IO) (t IO) where
     bindEnv a f = f a
 
 
-instance BindEnv IO (t Pure) (t IO) <= (Monad (t IO), MonadTrans t, MFunctor t) where
+instance  (Monad (t IO), MonadTrans t, MFunctor t) =>BindEnv IO (t Pure) (t IO)  where
     bindEnv ma f = do
         a <- lift ma
         hoist morph $ f (Pure a)
 
 
-instance BindEnv IO (t IO) (t IO) <= (Monad (t IO), MonadTrans t) where
+instance  (Monad (t IO), MonadTrans t) =>BindEnv IO (t IO) (t IO)  where
     bindEnv ma f = do
         a <- lift ma
         f (Pure a)
 
 -----
 
-instance BindEnv (t Pure) Pure (t Pure) <= Monad (t Pure) where
+instance  Monad (t Pure) =>BindEnv (t Pure) Pure (t Pure)  where
   bindEnv ma f = do
         a <- ma
         let Pure b = f (Pure a)
         return b
 
 
-instance BindEnv (t Pure) IO (t IO) <= (Monad (t IO), MonadTrans t, MFunctor t) where
+instance  (Monad (t IO), MonadTrans t, MFunctor t) =>BindEnv (t Pure) IO (t IO)  where
     bindEnv ma f = do
         a <- hoist morph ma
         lift $ f (Pure a)
 
 
-instance BindEnv (t IO) Pure (t IO) <= Monad (t IO) where
+instance  Monad (t IO) =>BindEnv (t IO) Pure (t IO)  where
     bindEnv ma f = do
         a <- ma
         let Pure b = f (Pure a)
         return b
 
-instance BindEnv (t IO) IO (t IO) <= (Monad (t IO), MonadTrans t) where
+instance  (Monad (t IO), MonadTrans t) =>BindEnv (t IO) IO (t IO)  where
     bindEnv ma f = do
         a <- ma
         lift $ f (Pure a)
 
 -------------------------------
 
-bindCtx :: ca ma a -> (Pure a -> cb mb b) -> (CtxMerge ca cb) mout b <= (BindEnv ma mb mout, Context ca, Context cb, Context(CtxMerge ca cb))
+bindCtx ::  (BindEnv ma mb mout, Context ca, Context cb, Context(CtxMerge ca cb))=>ca ma a -> (Pure a -> cb mb b) -> (CtxMerge ca cb) mout b  
 bindCtx a f = wrapCtx $ bindEnv (fromCtx a) (fromCtx . f)
 
 
@@ -208,7 +208,7 @@ tstM = do
 --    get :: m s
 --    put :: s -> m ()
 
---instance MonadState s (IC (t s) m) <= (MonadTrans (t s), Monad (t s m), Monad m, MonadState s (t s m)) where
+--instance  (MonadTrans (t s), Monad (t s m), Monad m, MonadState s (t s m)) =>MonadState s (IC (t s) m)  where
 ask' = IC2 $ ask
 get' = IC2 $ get
 put' = IC2 . put

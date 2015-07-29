@@ -11,7 +11,7 @@
 
 {-# LANGUAGE DysfunctionalDependencies #-}
 
-!{-# LANGUAGE RightSideContexts #-}
+
 
 import GHC.TypeLits
 
@@ -50,13 +50,13 @@ class AppProto el fptr fptrout | el fptr -> fptrout where
     app :: el -> fptr -> fptrout
 
 
-instance AppProto el (Arg a) out <= AppProto el (AppH (Arg a) ()) out where
+instance  AppProto el (AppH (Arg a) ()) out =>AppProto el (Arg a) out  where
     app el fptr = app el $ appH fptr ()
 
 instance AppProto el (AppH (Arg (Arg fptr)) args) (AppH (Arg fptr) (el, args)) where
     app el (AppH (Arg fptr, args)) = appH fptr (el, args)
 
-instance AppProto el (AppH (Arg (FPtr fptr)) args) out <= Call fptr (el, args) out where
+instance  Call fptr (el, args) out =>AppProto el (AppH (Arg (FPtr fptr)) args) out  where
     app el (AppH (Arg fptr, args)) = call $ appH fptr (el, args)
 
 class Call fptr args out | fptr args -> out where

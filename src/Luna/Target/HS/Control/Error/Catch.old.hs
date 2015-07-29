@@ -13,7 +13,7 @@
 {-# LANGUAGE IncoherentInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-!{-# LANGUAGE RightSideContexts #-}
+
 
 module Luna.Target.HS.Control.Error.Catch.old where
 
@@ -37,13 +37,13 @@ class Catch value e h result | value e h -> result where
 
 instance Catch Safe a m Safe where catch _ = id
 
-instance Catch (UnsafeBase base e) e Safe out <= (Monad out, Catch base e Safe out) where
+instance  (Monad out, Catch base e Safe out) =>Catch (UnsafeBase base e) e Safe out  where
     catch f a = case a of
         UnsafeValue a -> return a
         Error       e -> return . fromSafe $ f e
         UnsafeOther o -> catch f o
 
-instance Catch (UnsafeBase base e1) e2 Safe (UnsafeBase dstBase e1) <= (Catch base e2 Safe dstBase) where
+instance  (Catch base e2 Safe dstBase) =>Catch (UnsafeBase base e1) e2 Safe (UnsafeBase dstBase e1)  where
     catch f sa = case sa of
         UnsafeValue a -> UnsafeValue a
         Error       e -> Error e
@@ -58,7 +58,7 @@ instance Catch (UnsafeBase base e1) e2 ReRaise (UnsafeBase base e1) where
 
 -- === nested raising ===
 
-instance Catch (UnsafeBase base e1) e2 (UnsafeBase base e1) (UnsafeBase dstBase e1) <= (Catch base e2 (UnsafeBase base e1) dstBase) where
+instance  (Catch base e2 (UnsafeBase base e1) dstBase) =>Catch (UnsafeBase base e1) e2 (UnsafeBase base e1) (UnsafeBase dstBase e1)  where
     catch f sa = case sa of
         UnsafeValue a -> UnsafeValue a
         Error       e -> Error e
@@ -80,7 +80,7 @@ instance Catch (UnsafeBase base e1) e1 (UnsafeBase base e1) (UnsafeBase base e1)
 
 
 
-instance Catch (UnsafeBase base e1) e2 (UnsafeBase base e3) (UnsafeBase dstBase e1) <= (Catch base e2 (UnsafeBase base e3) dstBase) where
+instance  (Catch base e2 (UnsafeBase base e3) dstBase) =>Catch (UnsafeBase base e1) e2 (UnsafeBase base e3) (UnsafeBase dstBase e1)  where
     catch f sa = case sa of
         UnsafeValue a -> UnsafeValue a
         Error       e -> Error e

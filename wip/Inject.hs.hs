@@ -18,8 +18,8 @@
 {-# LANGUAGE CPP #-}
 
 
-!{-# LANGUAGE RightSideContexts #-}
-!{-# LANGUAGE Python #-}
+
+
 
 import Control.Applicative  
 import Control.Monad.IO.Class
@@ -82,14 +82,14 @@ type Unsafe = UnsafeBase Safe
 
 data NOP a = NOP a deriving Show
 
-instance Functor (UnsafeBase base err) <= Functor base where
+instance  Functor base =>Functor (UnsafeBase base err)  where
   fmap f a = case a of
       Value a -> Value $ f a
       Error e -> Error e
       Other b -> Other $ fmap f b
 
 
-instance Monad (UnsafeBase base err) <= (TransMonad base (UnsafeBase base err) (UnsafeBase base err)) where
+instance  (TransMonad base (UnsafeBase base err) (UnsafeBase base err)) =>Monad (UnsafeBase base err)  where
     return = Value
     v >>= f = v >>=~ f
 
@@ -97,7 +97,7 @@ instance Monad (UnsafeBase base err) <= (TransMonad base (UnsafeBase base err) (
 
 
 
-instance TransMonad (UnsafeBase base err) (UnsafeBase base err) (UnsafeBase base err) <= (TransMonad base (UnsafeBase base err) (UnsafeBase base err)) where
+instance  (TransMonad base (UnsafeBase base err) (UnsafeBase base err)) =>TransMonad (UnsafeBase base err) (UnsafeBase base err) (UnsafeBase base err)  where
     a >>=~ f = case a of
         Value v -> f v
         Error e -> Error e
@@ -107,7 +107,7 @@ instance TransMonad Safe (UnsafeBase base err) (UnsafeBase base err) where
     (Safe a) >>=~ f = f a
 
 
---instance TransMonad (UnsafeBase base err1) (UnsafeBase (UnsafeBase base err1) err2) (UnsafeBase (UnsafeBase base err1) err2) <= (TransMonad base (UnsafeBase (UnsafeBase base err1) err2) (UnsafeBase (UnsafeBase base err1) err2)) where
+--instance  (TransMonad base (UnsafeBase (UnsafeBase base err1) err2) (UnsafeBase (UnsafeBase base err1) err2)) =>TransMonad (UnsafeBase base err1) (UnsafeBase (UnsafeBase base err1) err2) (UnsafeBase (UnsafeBase base err1) err2)  where
 --    ma >>=~ f = case ma of
 --        Value a -> f a
 --        Error a -> Other $ Error a
@@ -134,7 +134,7 @@ instance TransMonad (UnsafeBase base err1) a a where
 
 
 
-instance Applicative (UnsafeBase base err) <= (Functor base, (TransApplicative (UnsafeBase base err) base (UnsafeBase base err))) where
+instance  (Functor base, (TransApplicative (UnsafeBase base err) base (UnsafeBase base err))) =>Applicative (UnsafeBase base err)  where
     pure = Value
     a <*> b = a <*>~ b
 
@@ -142,21 +142,21 @@ instance Applicative (UnsafeBase base err) <= (Functor base, (TransApplicative (
 instance TransApplicative Safe Safe Safe where
     (Safe f) <*>~ (Safe b) = Safe $ f b
 
-instance TransApplicative Safe (UnsafeBase base err) (UnsafeBase base err) <= (TransApplicative Safe base base) where
+instance  (TransApplicative Safe base base) =>TransApplicative Safe (UnsafeBase base err) (UnsafeBase base err)  where
     func@(Safe f) <*>~ b = case b of
         Value v -> Value $ f v
         Error e -> Error e
         Other o -> Other $ func <*>~ o
 
 
-instance TransApplicative (UnsafeBase base err) Safe (UnsafeBase base err) <= (TransApplicative base Safe base)where
+instance  (TransApplicative base Safe base)=>TransApplicative (UnsafeBase base err) Safe (UnsafeBase base err)  where
     sf <*>~ arg@(Safe b) = case sf of
         Value f -> Value $ f b
         Error e -> Error e
         Other o -> Other $ o <*>~ arg
 
 
---instance TransApplicative (UnsafeBase base err) (UnsafeBase base err) (UnsafeBase base err) <= (TransApplicative (UnsafeBase base err) base base) where
+--instance  (TransApplicative (UnsafeBase base err) base base) =>TransApplicative (UnsafeBase base err) (UnsafeBase base err) (UnsafeBase base err)  where
 --    a <*>~ b = case a of
 --        func@(Value f) -> case b of
 --            Value v -> Value $ f v
@@ -164,7 +164,7 @@ instance TransApplicative (UnsafeBase base err) Safe (UnsafeBase base err) <= (T
 --            Other o -> Other $ func <*>~ o
 
 
-instance TransApplicative (UnsafeBase base err) (UnsafeBase base err) (UnsafeBase base err) <= (TransApplicative (UnsafeBase base err) base (UnsafeBase base err)) where
+instance  (TransApplicative (UnsafeBase base err) base (UnsafeBase base err)) =>TransApplicative (UnsafeBase base err) (UnsafeBase base err) (UnsafeBase base err)  where
     a <*>~ b = case a of
         func@(Value f) -> case b of
             Value v -> Value $ f v
@@ -199,7 +199,7 @@ instance MagicMerge (UnsafeBase (UnsafeBase base err) err) (UnsafeBase base err)
         Error e -> Error e
         Other o -> o
 
-instance MagicMerge (UnsafeBase (UnsafeBase base err1) err2) (UnsafeBase dstBase err1) <= (MagicMerge (UnsafeBase base err2) dstBase) where
+instance  (MagicMerge (UnsafeBase base err2) dstBase) =>MagicMerge (UnsafeBase (UnsafeBase base err1) err2) (UnsafeBase dstBase err1)  where
     magicMerge (ma :: UnsafeBase (UnsafeBase base err1) err2 a) = case ma of
         Value a -> Value a
         Error e -> Other $ magicMerge (Error e :: UnsafeBase base err2 a)
@@ -238,13 +238,13 @@ instance InjectType (UnsafeBase base e) Safe (UnsafeBase base e) where
 --instance InjectType (UnsafeBase base e) (UnsafeBase base e) (UnsafeBase base e) where
 --    injectType a i = a
 
-instance InjectType (UnsafeBase base1 e) (UnsafeBase base2 e) (UnsafeBase baseOut e) <= (InjectType base1 base2 baseOut) where
+instance  (InjectType base1 base2 baseOut) =>InjectType (UnsafeBase base1 e) (UnsafeBase base2 e) (UnsafeBase baseOut e)  where
     injectType a (i :: UnsafeBase base2 e a) = case a of
         Value a -> Value a
         Error e -> Error e
         Other o -> Other $ injectType o (undefined :: base2 a)
 
-instance InjectType (UnsafeBase base1 e1) (UnsafeBase base2 e2) out <= (InjectType base1 (UnsafeBase Safe e2) dstBase, InjectType (UnsafeBase dstBase e1) base2 out) where
+instance  (InjectType base1 (UnsafeBase Safe e2) dstBase, InjectType (UnsafeBase dstBase e1) base2 out) =>InjectType (UnsafeBase base1 e1) (UnsafeBase base2 e2) out  where
     injectType a (i :: UnsafeBase base2 e2 a) = injectType (injectType a (undefined :: UnsafeBase Safe e2 a)) (undefined :: base2 a) 
 
 ----------------------------------------------------------------------------
