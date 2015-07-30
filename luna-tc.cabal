@@ -54,3 +54,42 @@ Library
                   mtl,
                   text,
                   convert
+
+
+Executable tc-test
+  Main-Is:        Main4.hs
+  Hs-Source-Dirs: test
+
+  GHC-Options:    -Wall -O2
+
+  Extensions:     DoAndIfThenElse,
+                  NoImplicitPrelude,
+                  TemplateHaskell,
+                  OverloadedStrings,
+                  DeriveGeneric,
+                  StandaloneDeriving,
+                  FlexibleContexts,
+                  MultiParamTypeClasses,
+                  DefaultSignatures,
+                  DeriveFunctor,
+                  DeriveTraversable,
+                  DeriveFoldable,
+                  FlexibleInstances,
+                  LambdaCase,
+                  ConstraintKinds,
+                  GeneralizedNewtypeDeriving,
+                  DeriveDataTypeable,
+                  EmptyDataDecls
+
+  Build-Depends:  base,
+                  ghc-prim,
+                  flowbox-utils,
+                  containers >= 0.5.6.2,
+                  lens,
+                  process,
+                  vector,
+                  graphviz >= 2999.17.0.2.2,
+                  mtl,
+                  text,
+                  convert,
+                  luna-tc

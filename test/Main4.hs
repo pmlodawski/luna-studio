@@ -22,14 +22,15 @@ import           Data.Map            (Map)
 import qualified Data.Text.Lazy      as Text
 import           Data.Text.Lazy      (Text)
 
-import           Luna.Inference.RawData
+--import           Luna.Inference.RawData
+
 
 
 import           GHC.Prim (Any)
 import           Unsafe.Coerce (unsafeCoerce)
 import           Data.Convert
 
-import qualified Data.Graph.Inductive as Graph
+--import qualified Data.Graph.Inductive as Graph
 --import           FastString (FastString, mkFastString, unpackFS)
 
 
@@ -146,7 +147,7 @@ data Expr h = Var      Name
             | App      (HExpr h) [Arg h]
             | Lambda
             | RecUpd
-            | Match    (Pattern h)
+            | Match    (Pattern h) (HExpr h)
             | Case
             | Typed
             -- | Assignment
@@ -155,20 +156,20 @@ data Expr h = Var      Name
             -- | Meta
             -- | Tuple
             -- | Grouped
-            | Decl
+            -- | Decl
             | Lit
-            | Native
             | Wildcard
             -- | Tuple
             -- | List
 
-data Pattern h = PCons (HExpr h) [Arg h]
-               | PVar  (HExpr h) -- do tego HExpra laczymy w grafie inne edge!
+type Pattern h = HExpr h
+--data Pattern h = PCons (HExpr h) [Arg h]
+--               | PVar  (HExpr h) -- do tego HExpra laczymy w grafie inne edge!
 
 
 deriving instance Show (HExpr h) => Show (Arg h)
 deriving instance Show (HExpr h) => Show (Expr h)
-deriving instance Show (HExpr h) => Show (Pattern h)
+--deriving instance Show (HExpr h) => Show (Pattern h)
 
 makeLenses ''Expr
 makeLenses ''Arg
@@ -201,7 +202,7 @@ instance IsPtr (Ptr i) i    where mkPtr = Ptr
 
 
 instance (Typeable a, Show i) => Show (Ptr i a) where
-    show (Ptr i) = "Ptr \"" <> show (typeOf (undefined :: a)) <> "\" " <> show i
+    show (Ptr i) = "Ptr " <> show i <> " (" <> show (typeOf (undefined :: a)) <> ")"
 
 class    HasPtr t         i a | t -> i a where ptr :: Lens' t (Ptr i a)
 instance HasPtr (Ptr i a) i a            where ptr = id
@@ -412,7 +413,7 @@ popOrphan = withOrphans $ \case
 
 ---- === Ref ===
 
-newtype Ref       h a = Ref (h (a h))
+newtype Ref       h a = Ref     { fromRef    :: h (a h) }
 newtype RefCons m h a = RefCons { runRefCons :: m (Ref h a) }
 
 class ToMRef t m h a | t -> h a where
@@ -450,6 +451,21 @@ ref name t = do
     ref <- toMRef t
     registerRef name ref
     return ref
+
+mrefRaw :: (ToMRef t m h a, Functor m) => t -> m (h (a h))
+mrefRaw = fmap fromRef . toMRef
+
+accessor :: (RefBuilder m h Expr, ToMRef t m h Expr) => Name -> t -> RefCons m h Expr
+accessor name el = RefCons $ mkRef . Accessor name =<< mrefRaw el
+
+
+match :: (ToMRef t1 m h Expr, ToMRef t2 m h Expr, RefBuilder m h Expr, Monad m)
+      => t1 -> t2 -> RefCons m h Expr
+match a b = RefCons $ do
+    ra <- mrefRaw a
+    rb <- mrefRaw b
+    mkRef $ Match ra rb
+
 
 
 ---- === RefBuilder ===
@@ -513,7 +529,8 @@ fck = buildFunction g1
 g1 :: ASTBuilder m NodePtr Expr => m (Ref NodePtr Expr)
 g1 = do
     a    <- ref "foo" $ var "a"
-    b    <- ref "bar" $ var "b"
+    b    <- ref "bar" $ accessor "foo" (var "b")
+    c    <- ref "baz" $ match (var "a") (var "b")
     return a
     --mod  <- var "Main"
     --foo  <- a    @.  "foo"
