@@ -9,7 +9,7 @@ import           Data.Dynamic        ( Dynamic )
 import           GHCJS.DOM           ( currentWindow )
 import           GHCJS.DOM.EventM
 import qualified GHCJS.DOM.Document   as Document
-import           GHCJS.DOM.Window      ( mouseDown, mouseUp, mouseMove, resize, keyPress, keyDown, keyUp, getInnerWidth, getInnerHeight )
+import           GHCJS.DOM.Window      ( mouseDown, mouseUp, mouseMove, resize, keyPress, keyDown, keyUp, getInnerWidth, getInnerHeight, click, dblClick )
 import qualified GHCJS.DOM.MouseEvent as MouseEvent
 import qualified GHCJS.DOM.UIEvent    as UIEvent
 
@@ -41,12 +41,14 @@ readMousePos =  do
     y <- MouseEvent.getClientY e
     return $ Vector2 x y
 
+uiWhichButton = mouseButton >>= return . Mouse.toMouseButton
+
 mouseDownHandler :: AddHandler (Event Dynamic)
 mouseDownHandler = AddHandler $ \h -> do
     window <- fromJust <$> currentWindow
     window `on` mouseDown $ do
         mousePos <- readMousePos
-        button   <- uiWhich
+        button   <- uiWhichButton
         keyMods  <- readKeyMods
         liftIO . h $ Mouse $ Mouse.Event Mouse.Pressed mousePos button keyMods
 
@@ -55,7 +57,7 @@ mouseUpHandler = AddHandler $ \h -> do
     window <- fromJust <$> currentWindow
     window `on` mouseUp $ do
         mousePos <- readMousePos
-        button   <- uiWhich
+        button   <- uiWhichButton
         keyMods  <- readKeyMods
         liftIO . h $ Mouse $ Mouse.Event Mouse.Released mousePos button keyMods
 
@@ -64,9 +66,27 @@ mouseMovedHandler = AddHandler $ \h -> do
     window <- fromJust <$> currentWindow
     window `on` mouseMove $ do
         mousePos <- readMousePos
-        button   <- uiWhich
+        button   <- uiWhichButton
         keyMods  <- readKeyMods
         liftIO . h $ Mouse $ Mouse.Event Mouse.Moved mousePos button keyMods
+
+mouseClickHandler :: AddHandler (Event Dynamic)
+mouseClickHandler = AddHandler $ \h -> do
+    window <- fromJust <$> currentWindow
+    window `on` click $ do
+        mousePos <- readMousePos
+        button   <- uiWhichButton
+        keyMods  <- readKeyMods
+        liftIO . h $ Mouse $ Mouse.Event Mouse.Clicked mousePos button keyMods
+
+mouseDblClickHandler :: AddHandler (Event Dynamic)
+mouseDblClickHandler = AddHandler $ \h -> do
+    window <- fromJust <$> currentWindow
+    window `on` dblClick $ do
+        mousePos <- readMousePos
+        button   <- uiWhichButton
+        keyMods  <- readKeyMods
+        liftIO . h $ Mouse $ Mouse.Event Mouse.DblClicked mousePos button keyMods
 
 resizeHandler :: AddHandler (Event Dynamic)
 resizeHandler = AddHandler $ \h -> do

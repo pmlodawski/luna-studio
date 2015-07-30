@@ -45,13 +45,14 @@ instance PrettyPrinter Action where
 
 toAction :: Event Node -> UnderCursor -> Maybe Action
 toAction (Mouse (Mouse.Event tpe pos button keyMods)) underCursor = case button of
-    1                  -> case tpe of
+    Mouse.LeftButton   -> case tpe of
         Mouse.Pressed  -> if dragAllowed then case keyMods of
                                              (KeyMods False False False False) -> Just (DragAction StartDrag pos)
                                              _                                 -> Nothing
                                          else Nothing
         Mouse.Released -> Just (DragAction StopDrag pos)
         Mouse.Moved    -> Just (DragAction Moving   pos)
+        _              -> Nothing
     _                  -> Nothing
     where dragAllowed   = not . null $ underCursor ^. nodesUnderCursor
 toAction _ _ = Nothing

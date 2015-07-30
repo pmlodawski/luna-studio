@@ -33,14 +33,16 @@ import           Reactive.Plugins.Core.Action.State.UnderCursor
 
 makeNetworkDescription :: forall t. Frameworks t => Bool -> Moment t ()
 makeNetworkDescription logging = do
-    resizeE       <- fromAddHandler resizeHandler
-    mouseDownE    <- fromAddHandler mouseDownHandler
-    mouseUpE      <- fromAddHandler mouseUpHandler
-    mouseMovedE   <- fromAddHandler mouseMovedHandler
-    keyDownE      <- fromAddHandler keyDownHandler
-    keyPressedE   <- fromAddHandler keyPressedHandler
-    keyUpE        <- fromAddHandler keyUpHandler
-    nodeSearcherE <- fromAddHandler nodeSearcherHander
+    resizeE        <- fromAddHandler resizeHandler
+    mouseDownE     <- fromAddHandler mouseDownHandler
+    mouseUpE       <- fromAddHandler mouseUpHandler
+    mouseMovedE    <- fromAddHandler mouseMovedHandler
+    mouseClickE    <- fromAddHandler mouseClickHandler
+    mouseDblClickE <- fromAddHandler mouseDblClickHandler
+    keyDownE       <- fromAddHandler keyDownHandler
+    keyPressedE    <- fromAddHandler keyPressedHandler
+    keyUpE         <- fromAddHandler keyUpHandler
+    nodeSearcherE  <- fromAddHandler nodeSearcherHander
 
     let
         anyE                         :: Event t (Event.Event Dynamic)
@@ -48,6 +50,8 @@ makeNetworkDescription logging = do
                                                , mouseDownE
                                                , mouseUpE
                                                , mouseMovedE
+                                               , mouseClickE
+                                               , mouseDblClickE
                                                , keyDownE
                                                , keyPressedE
                                                , keyUpE

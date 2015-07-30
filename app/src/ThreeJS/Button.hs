@@ -27,7 +27,7 @@ import           Utils.Vector
 import           JS.Config as Config
 import           ThreeJS.Registry
 import qualified Object.Widget.Button as WB
-import           Object.Widget.Types ( HandlesMouseOver, HandlesMouseOut, onMouseOver, onMouseOut )
+import           Object.Widget.Types -- ( HandlesMouseOver, HandlesMouseOut, HandlesMouseMove, onMouseOver, onMouseOut, onMouseMove, Clickable, onClick )
 import           GHCJS.Prim
 import           Utils.CtxDynamic
 
@@ -92,12 +92,16 @@ buildButton (WB.Button bid label state pos size) = do
     p `setY` (pos ^. y)
 
 
+    uniforms <- JSObject.create
+    JSObject.setProp "state" (JSObject.getJSRef $ unAttribute state) uniforms
+
+
     button <- JSObject.create
 
     JSObject.setProp "mesh" (unGroup group) button
     JSObject.setProp "background" background button
     JSObject.setProp "label" label button
-    JSObject.setProp "state" (JSObject.getJSRef $ unAttribute state) button
+    JSObject.setProp "uniforms" (JSObject.getJSRef uniforms) button
 
     return $ Button button
 
@@ -113,11 +117,22 @@ removeFromRegistry :: WB.Button -> IO ()
 removeFromRegistry b = removeFromRegistryJS buttonId
     where buttonId = b ^. WB.refId
 
+setUniform :: Text -> JSRef a -> WB.Button -> IO ()
+setUniform n v w = do
+    bref     <- getFromRegistry w
+    uniforms <- JSObject.getProp "uniforms" (unButton bref) >>= return . JSObject.fromJSRef
+    uniform  <- JSObject.getProp (lazyTextToJSString n) uniforms >>= return . Attribute . JSObject.fromJSRef
+    setValue uniform v
+
+
 updateState :: WB.Button -> IO ()
 updateState b = do
-    bref <- getFromRegistry b
-    uniform <- JSObject.getProp "state" (unButton bref) >>= return . Attribute . JSObject.fromJSRef
-    JSObject.setProp "value" (toJSInt $ fromEnum $ b ^. WB.state) $ unAttribute uniform
+    setUniform "state" (toJSInt $ fromEnum $ b ^. WB.state) b
+
+instance HandlesMouseMove WB.Button where
+    onMouseMove pos b = (Just action, toCtxDynamic b) where
+        action    = do
+            putStrLn "moved"
 
 instance HandlesMouseOver WB.Button where
     onMouseOver pos b = (Just action, toCtxDynamic newButton) where
@@ -128,3 +143,13 @@ instance HandlesMouseOut WB.Button where
     onMouseOut pos b = (Just action, toCtxDynamic newButton) where
         action    = updateState newButton
         newButton = b & WB.state .~ WB.Normal
+
+instance Clickable WB.Button where
+    onClick pos b = (Just action, toCtxDynamic newButton) where
+        action    = updateState newButton
+        newButton = b & WB.state .~ WB.Pressed
+
+instance DblClickable WB.Button where
+    onDblClick pos b = (Just action, toCtxDynamic newButton) where
+        action    = updateState newButton
+        newButton = b & WB.state .~ WB.Disabled

@@ -38,10 +38,6 @@ import qualified Data.IntMap.Lazy as IntMap
 
 
 data Action = NewPath       { _path  :: [Text] }
-            | MouseMoving   { _pos   :: Vector2 Int }
-            | MousePressed  { _pos   :: Vector2 Int }
-            | MouseReleased { _pos   :: Vector2 Int }
-            | ButtonPressed
             | ApplyUpdates { _actions :: [IO ()] }
 
 makeLenses ''Action
@@ -50,20 +46,9 @@ buttonHeight  = 30
 buttonSpacing = 10
 
 instance PrettyPrinter Action where
-    display (NewPath path)    = "mA(" <> show path   <> ")"
-    display (MouseMoving pos) = "mA(" <> display pos <> ")"
+    display (NewPath path)    = "mA(" <> show path <> ")"
+    display (ApplyUpdates u)  = "mA(upd)"
 
-
-toAction :: Event Node -> Maybe Action
-toAction (Mouse (Mouse.Event tpe pos button _)) = case tpe of
-    -- Mouse.Moved     -> Just $ MouseMoving pos
-    _ -> Nothing
---     Mouse.Pressed   -> case button of
---         1 -> Just $ MousePressed pos
---         _ -> Nothing
---     Mouse.Released   -> case button of
---         1 -> Just $ MouseReleased pos
---         _ -> Nothing
 toAction (Window (Window.Event tpe width height)) = case tpe of
     Window.Resized  -> Just $ NewPath ["NodeLab", "demo", " by ", "New Byte Order"]
 toAction _           = Nothing

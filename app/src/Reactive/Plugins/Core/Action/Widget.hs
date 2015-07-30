@@ -24,9 +24,7 @@ import           Utils.CtxDynamic
 import           Data.Set (Set)
 import qualified Data.Set as Set
 
-data Action = MouseMoving   { _pos   :: MousePosition }
-            | MousePressed  { _pos   :: MousePosition, _button :: MouseButton }
-            | MouseReleased { _pos   :: MousePosition, _button :: MouseButton }
+data Action = MouseAction   { _event :: Mouse.Event }
             | ApplyUpdates  { _actions :: [WidgetUIUpdate] }
 
 makeLenses ''Action
@@ -35,39 +33,37 @@ instance PrettyPrinter Action where
     display _ = "WidgetAction"
 
 toAction :: Event Node -> Maybe Action
-toAction (Mouse (Mouse.Event tpe pos button _)) = case tpe of
-    Mouse.Moved     -> Just $ MouseMoving   pos
-    Mouse.Pressed   -> Just $ MousePressed  pos $ toMouseButton button
-    Mouse.Released  -> Just $ MouseReleased pos $ toMouseButton button
-toAction _           = Nothing
+toAction (Mouse m@(Mouse.Event tpe pos button _)) = Just $ MouseAction m
+toAction _                                        = Nothing
 
 
 onlyIfOver :: MousePosition -> DisplayObject -> (MousePosition -> DisplayObject -> WidgetUpdate) -> WidgetUpdate
 onlyIfOver pos widget f = if isOver pos widget then f pos widget else (Nothing, widget)
 
-handleEvents :: Action -> [WidgetUIUpdate] -> DisplayObject -> ([WidgetUIUpdate], DisplayObject)
-handleEvents action uiUpdates widget = (uiUpdate:uiUpdates, newWidget) where
-    (uiUpdate, newWidget) = case action of
-        MouseMoving   pos        -> onlyIfOver pos widget onMouseMove
-        MousePressed  pos button -> onlyIfOver pos widget $ onMousePressed  button
-        MouseReleased pos button -> onlyIfOver pos widget $ onMouseReleased button
-
+handleEvents :: Mouse.Event -> [WidgetUIUpdate] -> DisplayObject -> ([WidgetUIUpdate], DisplayObject)
+handleEvents mouseEvent uiUpdates widget = (uiUpdate:uiUpdates, newWidget) where
+    (uiUpdate, newWidget) = case mouseEvent of
+        Mouse.Event Mouse.Moved      pos _      _ -> onlyIfOver pos widget $ onMouseMove
+        Mouse.Event Mouse.Pressed    pos button _ -> onlyIfOver pos widget $ onMousePress   button
+        Mouse.Event Mouse.Released   pos button _ -> onlyIfOver pos widget $ onMouseRelease button
+        Mouse.Event Mouse.Clicked    pos _      _ -> onlyIfOver pos widget $ onClick
+        Mouse.Event Mouse.DblClicked pos _      _ -> onlyIfOver pos widget $ onDblClick
 
 instance ActionStateUpdater Action where
-    execSt newActionCandidate oldState = case newAction of
+    execSt (MouseAction mouseEvent) oldState = case newAction of
             Just action -> ActionUI newAction newState
             Nothing     -> ActionUI  NoAction newState
         where
         newAction               = Just $ ApplyUpdates uiUpdates
         newState                = oldState & Global.uiRegistry . UIRegistry.widgets .~ newWidgets
                                            & Global.uiRegistry . UIRegistry.widgetOver .~ widgetOver
-        (uiUpdates', newWidgets') = IntMap.mapAccum (handleEvents newActionCandidate) [] oldWidgets
+        (uiUpdates', newWidgets') = IntMap.mapAccum (handleEvents mouseEvent) [] oldWidgets
         oldWidgetOver          = oldState ^. Global.uiRegistry . UIRegistry.widgetOver
         widgetOver :: Maybe UIRegistry.WidgetId
         uiUpdates :: [WidgetUIUpdate]
         newWidgets :: UIRegistry.WidgetMap
-        (uiUpdates, newWidgets, widgetOver) = case newActionCandidate of
-            MouseMoving pos -> (uiOutOverUpdates, newOutOverWidgets, widgetOver) where
+        (uiUpdates, newWidgets, widgetOver) = case mouseEvent of
+            Mouse.Event Mouse.Moved pos _ _ -> (uiOutOverUpdates, newOutOverWidgets, widgetOver) where
                 maybeOver :: Maybe DisplayObject
                 maybeOver = find (isOver pos) (IntMap.elems newWidgets')
                 widgetOver :: Maybe UIRegistry.WidgetId
@@ -93,8 +89,4 @@ instance ActionStateUpdater Action where
 
 
 instance ActionUIUpdater Action where
-    updateUI (WithState action state) = case action of
-        ApplyUpdates actions -> do
-            putStrLn $ "len " <> (show $ length actions)
-            putStrLn $ show $ IntMap.size $ state ^. Global.uiRegistry . UIRegistry.widgets
-            sequence_ $ catMaybes actions
+    updateUI (WithState (ApplyUpdates actions) state) = sequence_ $ catMaybes actions

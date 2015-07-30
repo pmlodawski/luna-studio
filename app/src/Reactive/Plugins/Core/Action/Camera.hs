@@ -64,18 +64,20 @@ instance PrettyPrinter Action where
 
 toAction :: Event Node -> Maybe Action
 toAction (Mouse (Mouse.Event tpe pos button keyMods)) = case button of
-    3                  -> case tpe of
+    Mouse.RightButton  -> case tpe of
         Mouse.Pressed  -> case keyMods of
            (KeyMods False False False False) -> Just (MouseAction Zoom StartDrag pos)
            _                                 -> Nothing
         Mouse.Released -> Just (MouseAction Zoom StopDrag pos)
         Mouse.Moved    -> Just (MouseAction Zoom Dragging pos)
-    2                  -> case tpe of
+        _              -> Nothing
+    Mouse.MiddleButton                  -> case tpe of
         Mouse.Pressed  -> case keyMods of
            (KeyMods False False False False) -> Just (MouseAction Pan StartDrag pos)
            _                                 -> Nothing
         Mouse.Released -> Just (MouseAction Pan StopDrag pos)
         Mouse.Moved    -> Just (MouseAction Pan Dragging pos)
+        _              -> Nothing
     _                  -> Nothing
 toAction (Keyboard (Keyboard.Event Keyboard.Press char)) = case char of
     '='   -> Just $ KeyAction ZoomIn

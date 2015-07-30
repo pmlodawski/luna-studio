@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FunctionalDependencies #-}
 
 module ThreeJS.Types where
 
@@ -76,8 +77,9 @@ buildAttributeMap = JSObject.create >>= return . AttributeMap
 setValue :: Attribute -> JSRef a -> IO ()
 setValue o v = JSObject.setProp (JSString.pack "value") v (unAttribute o)
 
-class ToAttribute a where
-    toAttribute :: a -> IO Attribute
+class ToAttribute a b | a -> b where
+    toAttribute      :: a -> IO Attribute
+    toAttributeValue :: a -> JSRef b
 
 
 buildAttribute :: Text -> JSRef a -> IO (Attribute)
@@ -89,11 +91,21 @@ buildAttribute t v = do
     JSObject.setProp (JSString.pack "value") v o
     return $ Attribute o
 
-instance ToAttribute Int               where toAttribute a = buildAttribute "i"  (toJSInt a)
-instance ToAttribute Double            where toAttribute a = buildAttribute "f"  (toJSDouble a)
-instance ToAttribute (JSRef JSVector2) where toAttribute a = buildAttribute "v2" a
-instance ToAttribute (JSRef JSVector3) where toAttribute a = buildAttribute "v2" a
-instance ToAttribute (JSRef JSVector4) where toAttribute a = buildAttribute "v4" a
+instance ToAttribute Int Int where
+    toAttribute      a = buildAttribute "i"  (toJSInt a)
+    toAttributeValue a = (toJSInt a)
+instance ToAttribute Double Double where
+    toAttribute      a = buildAttribute "f"  (toJSDouble a)
+    toAttributeValue a = (toJSDouble a)
+instance ToAttribute (JSRef JSVector2) JSVector2 where
+    toAttribute      a = buildAttribute "v2" a
+    toAttributeValue a = a
+instance ToAttribute (JSRef JSVector3) JSVector3 where
+    toAttribute      a = buildAttribute "v2" a
+    toAttributeValue a = a
+instance ToAttribute (JSRef JSVector4) JSVector4 where
+    toAttribute      a = buildAttribute "v4" a
+    toAttributeValue a = a
 
 setAttribute :: AttributeMap -> Text -> Attribute -> IO ()
 setAttribute m a v = JSObject.setProp (lazyTextToJSString a) (JSObject.getJSRef $ unAttribute v) (unAttributeMap m)

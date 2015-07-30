@@ -47,7 +47,7 @@ instance PrettyPrinter Action where
 
 toAction :: Event Node -> UnderCursor -> Maybe Action
 toAction (Mouse (Mouse.Event tpe pos button keyMods)) underCursor = case button of
-    1                 -> case tpe of
+    Mouse.LeftButton  -> case tpe of
         Mouse.Pressed -> if nodeUnderCursor then case keyMods of
                                         (KeyMods False False False False) -> Just (SelectAction selectActionType node)
                                         (KeyMods False False True  False) -> Just (SelectAction toggleActionType node)
