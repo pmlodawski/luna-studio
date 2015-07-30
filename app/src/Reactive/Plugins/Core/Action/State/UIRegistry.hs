@@ -5,10 +5,14 @@ import           Utils.PreludePlus
 import           Utils.Vector
 
 import           Object.Object
-import           Object.Widget
+import           Object.Widget hiding (objectId)
+import           Object.Widget.Types (objectId)
 
 import           Data.IntMap.Lazy (IntMap)
 import qualified Data.IntMap.Lazy as IntMap
+
+import           Data.Set (Set)
+import qualified Data.Set as Set
 
 import           Utils.CtxDynamic
 
@@ -16,8 +20,9 @@ import           Utils.CtxDynamic
 type WidgetId  = Int
 type WidgetMap = IntMap DisplayObject
 
-data State = State { _widgets  :: WidgetMap
-                   , _nextId   :: WidgetId
+data State = State { _widgets     :: WidgetMap
+                   , _nextId      :: WidgetId
+                   , _widgetOver  :: Maybe WidgetId
                    }
 
 makeLenses ''State
@@ -30,10 +35,10 @@ instance Show State where
 
 
 instance Default State where
-    def = State def def
+    def = State def def def
 
 instance PrettyPrinter State where
-    display (State widgets nid) = "dWd(" <> show nid <> " / " <> (show $ IntMap.size widgets) <> ")"
+    display (State widgets nid wover) = "dWd(" <> show nid <> " / " <> (show $ IntMap.size widgets) <> " over: " <> (show wover) <> ")"
 
 
 register :: DisplayObjectClass a => WidgetMap -> a -> WidgetMap

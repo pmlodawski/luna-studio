@@ -27,7 +27,7 @@ import           Utils.Vector
 import           JS.Config as Config
 import           ThreeJS.Registry
 import qualified Object.Widget.Button as WB
-import           Object.Widget.Types ( MouseMovable, onMouseMove )
+import           Object.Widget.Types ( HandlesMouseOver, HandlesMouseOut, onMouseOver, onMouseOut )
 import           GHCJS.Prim
 import           Utils.CtxDynamic
 
@@ -119,7 +119,12 @@ updateState b = do
     uniform <- JSObject.getProp "state" (unButton bref) >>= return . Attribute . JSObject.fromJSRef
     JSObject.setProp "value" (toJSInt $ fromEnum $ b ^. WB.state) $ unAttribute uniform
 
-instance MouseMovable WB.Button where
-    onMouseMove pos b = (action, toCtxDynamic newButton) where
+instance HandlesMouseOver WB.Button where
+    onMouseOver pos b = (Just action, toCtxDynamic newButton) where
         action    = updateState newButton
-        newButton = b & WB.state .~ WB.Disabled
+        newButton = b & WB.state .~ WB.Focused
+
+instance HandlesMouseOut WB.Button where
+    onMouseOut pos b = (Just action, toCtxDynamic newButton) where
+        action    = updateState newButton
+        newButton = b & WB.state .~ WB.Normal

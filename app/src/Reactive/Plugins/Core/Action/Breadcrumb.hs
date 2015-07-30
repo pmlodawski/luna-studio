@@ -109,7 +109,7 @@ instance ActionStateUpdater Action where
                     state = oldState & Global.uiRegistry . UIRegistry.nextId  .~ nextId
                                      & Global.uiRegistry . UIRegistry.widgets .~ newWidgets
                                      & Global.breadcrumb . Breadcrumb.path    .~ path
-                                     & Global.breadcrumb . Breadcrumb.buttons .~ (objectId <$> newButtons)
+                                     & Global.breadcrumb . Breadcrumb.buttons .~ ((^. Button.refId) <$> newButtons)
                     (newButtons, nextId) = createButtons path startId
                     oldButtons =  catMaybes $ getFromRegistry <$> oldButtonIds
                     getFromRegistry :: Int -> Maybe Button.Button
