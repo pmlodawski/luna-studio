@@ -24,14 +24,13 @@ import           Data.Text.Lazy      (Text)
 
 import           Luna.Inference.RawData
 
-import           Luna.Inference.Function
 
 import           GHC.Prim (Any)
 import           Unsafe.Coerce (unsafeCoerce)
 import           Data.Convert
 
 import qualified Data.Graph.Inductive as Graph
-import           FastString (FastString, mkFastString, unpackFS)
+--import           FastString (FastString, mkFastString, unpackFS)
 
 
 import qualified Data.IntMap.Lazy as IntMap
@@ -59,6 +58,8 @@ import System.Process
 
 import qualified Data.Text.AutoBuilder as Text
 
+import Data.Map (Map)
+import qualified Data.Map as Map
 --add :: Int -> Int -> Int
 --add = (+)
 
@@ -87,8 +88,8 @@ import qualified Data.Text.AutoBuilder as Text
 --empty = def :: Graph.Gr Node ()
 
 
-instance IsString FastString where
-    fromString = mkFastString
+--instance IsString FastString where
+--    fromString = mkFastString
 
 type ID = Int
 
@@ -121,7 +122,7 @@ data Key t = Key { fromKey :: ID } deriving (Show) -- { overKey :: Lens' Graph (
 --makeLenses ''Key
 
 
-type Name = FastString
+type Name = String
 
 
 type HExpr h = h (Expr h)
@@ -139,12 +140,13 @@ data Arg h = Arg { _label :: Maybe Name, _val :: HExpr h }
 
 -- wszystkie rzeczy nazwane powinny byc w slownikach w jezyku! - czyli datatypy ponizej zostaja,
 -- ale mozemy tworzyc np. Var funkcjami, ktore oczekuja konkretnego Stringa!
-data Expr h = Var      { _name :: Name                                                      }
-            | Cons     { _name :: Name                                                      }
-            | Accessor { _name :: Name, _base :: HExpr h                            }
-            | App      {                _base :: HExpr h, _args :: [Arg h]            }
+data Expr h = Var      Name
+            | Cons     Name
+            | Accessor Name (HExpr h)
+            | App      (HExpr h) [Arg h]
             | Lambda
             | RecUpd
+            | Match    (Pattern h)
             | Case
             | Typed
             -- | Assignment
@@ -160,10 +162,13 @@ data Expr h = Var      { _name :: Name                                          
             -- | Tuple
             -- | List
 
+data Pattern h = PCons (HExpr h) [Arg h]
+               | PVar  (HExpr h) -- do tego HExpra laczymy w grafie inne edge!
 
 
 deriving instance Show (HExpr h) => Show (Arg h)
 deriving instance Show (HExpr h) => Show (Expr h)
+deriving instance Show (HExpr h) => Show (Pattern h)
 
 makeLenses ''Expr
 makeLenses ''Arg
@@ -171,9 +176,9 @@ makeLenses ''Arg
 
 instance Repr (Expr h) where
     repr = \case
-        Var      n   -> "Var "      <> show (unpackFS n)
-        Cons     n   -> "Cons "     <> show (unpackFS n)
-        Accessor n _ -> "Accessor " <> show (unpackFS n)
+        Var      n   -> "Var "      <> show n
+        Cons     n   -> "Cons "     <> show n
+        Accessor n _ -> "Accessor " <> show n
         App      {}  -> "App"
 
 --type Foo1 i = Expr (TPtr i)
@@ -190,30 +195,21 @@ data    Tp     a = Tp Typex a
 
 
 newtype Ptr  i a = Ptr  i
-newtype TPtr i a = TPtr { __ptr :: Ptr i (Tp a) } deriving (Show)
+
+class    IsPtr p i | p -> i where mkPtr :: i -> p a
+instance IsPtr (Ptr i) i    where mkPtr = Ptr
+
 
 instance (Typeable a, Show i) => Show (Ptr i a) where
     show (Ptr i) = "Ptr \"" <> show (typeOf (undefined :: a)) <> "\" " <> show i
 
-makeLenses ''TPtr
+class    HasPtr t         i a | t -> i a where ptr :: Lens' t (Ptr i a)
+instance HasPtr (Ptr i a) i a            where ptr = id
 
 
-class HasPtr t i a | t -> i a where
-    ptr :: Lens' t (Ptr i a)
-
-instance HasPtr (Ptr i a) i a where
-    ptr = id
-
-instance HasPtr (TPtr i a) i (Tp a) where
-    ptr = _ptr
 
 
-class FromPtr i a p | p -> i a where
-    fromPtr :: Ptr i a -> p
-
-instance FromPtr i a      (Ptr i a)  where fromPtr = id
-instance FromPtr i (Tp a) (TPtr i a) where fromPtr = TPtr
-
+--instance IsPtr TPtr where mkPtr = TPtr . Ptr
 
 
 ---------- ?
@@ -263,8 +259,8 @@ data Hidden where
 
 
 
-hiddenLens :: IsoCastable a b => Iso' a b
-hiddenLens = iso cast cast
+castableLens :: IsoCastable a b => Iso' a b
+castableLens = iso cast cast
 
 -- instances
 
@@ -280,48 +276,45 @@ instance {-# OVERLAPPABLE #-} NodeVal a => Castable a Hidden where
 
 
 
---- === Graph ===
+--- === HContainer ===
 
-data Graph nodes = Graph { _nodes      :: nodes
-                         , _argNames   :: [Name]
-                         }
+data HContainer elems = HContainer { _elems :: elems }
 
-makeLenses ''Graph
+makeLenses ''HContainer
 
-class HasGraph a n | a -> n where
-    graph :: Lens' a (Graph n)
+class HasHContainer a n | a -> n where
+    hContainer :: Lens' a (HContainer n)
 
 
-type OverGraph m ptr a = (UncheckedSetIdx m, UncheckedGetIdx m, IsoCastable a (ElementOf m), HasPtr ptr (Index m) a)
+type OverHContainer m ptr a = (UncheckedSetIdx m, UncheckedGetIdx m, IsoCastable a (ElementOf m), HasPtr ptr (Index m) a)
 
-unsafeOverPtr :: OverGraph m ptr a => ptr -> Lens' (Graph m) a
-unsafeOverPtr (view ptr -> Ptr i) = nodes . unsafeAt i . hiddenLens
+unsafeOverPtr :: OverHContainer m ptr a => ptr -> Lens' (HContainer m) a
+unsafeOverPtr (view ptr -> Ptr i) = elems . unsafeAt i . castableLens
 
-unsafeSet :: OverGraph m ptr a => ptr -> a -> Graph m -> Graph m
+unsafeSet :: OverHContainer m ptr a => ptr -> a -> HContainer m -> HContainer m
 unsafeSet ptr a = unsafeOverPtr ptr .~ a
 
-unsafeGet :: OverGraph m ptr a => ptr -> Graph m -> a
+unsafeGet :: OverHContainer m ptr a => ptr -> HContainer m -> a
 unsafeGet ptr = view $ unsafeOverPtr ptr
 
-insert :: (Appendable nodes, Indexable nodes, Castable a (ElementOf nodes), FromPtr (Index nodes) a t)
-       => a -> Graph nodes -> (Graph nodes, t)
-insert a g = (g', mkPtr . lastIdx $ g' ^. nodes) where
-    g' = g & nodes %~ (flip append (cast a))
+insert :: (Appendable elems, Indexable elems, Castable a (ElementOf elems), IsPtr ptr (Index elems))
+       => a -> HContainer elems -> (HContainer elems, ptr a)
+insert a g = (g', mkPtr . lastIdx $ g' ^. elems) where
+    g' = g & elems %~ (flip append $ cast a)
 
 
-mkPtr :: FromPtr i a b => i -> b
-mkPtr = fromPtr . Ptr
+
 
 -- FIXME (unsafe implementation)
-inputs' :: Graph (Vector Hidden) -> ID -> [Ptr Int (Expr (Ptr Int))]
+inputs' :: HContainer (Vector Hidden) -> ID -> [Ptr Int (Expr (Ptr Int))]
 inputs' g id = inputs $ unsafeGet (Ptr id :: Ptr Int (Expr (Ptr Int))) g
 
 -- instances
 
-deriving instance Show nodes => Show (Graph nodes)
+deriving instance Show elems => Show (HContainer elems)
 
-instance Default nodes => Default (Graph nodes) where
-    def = Graph def def
+instance Default elems => Default (HContainer elems) where
+    def = HContainer def
 
 
 
@@ -339,258 +332,234 @@ data Value a = Val  a
 
 --- === Builder ===
 
-newtype PolyContainer c a = PolyContainer (c a)
+newtype NodePtr  a = NodePtr  { __ptr  :: Ptr Int a      } deriving (Show)
+newtype NodeTPtr a = NodeTPtr { __tptr :: Ptr Int (Tp a) } deriving (Show)
 
-type Builder c = State (NodeGraph c)
+makeLenses ''NodePtr
+makeLenses ''NodeTPtr
 
-data NodeGraph c = NodeGraph { _orphans :: [Index c]
-                             , __graph  :: Graph c
-                             }
+instance HasPtr (NodePtr a)  Int a      where ptr = _ptr
+instance HasPtr (NodeTPtr a) Int (Tp a) where ptr = _tptr
 
-makeLenses ''NodeGraph
+instance IsPtr NodePtr  Int where mkPtr = NodePtr  . Ptr
+instance IsPtr NodeTPtr Int where mkPtr = NodeTPtr . Ptr
 
---instance Default (Graph c) => Default (NodeGraph c) where
---    def = NodeGraph def def
+--
 
---instance HasGraph (NodeGraph c) c where
---    graph = _graph
+newtype Graph = Graph { _reg :: HContainer (Vector Hidden) } deriving (Show, Default)
 
---class Monad m => MonadNodeGraph c m | m -> c where
---    getNodeGraph :: m (NodeGraph c)
---    putNodeGraph :: NodeGraph c -> m ()
+makeClassy ''Graph
 
 
---class HasNodeGraph a c | a -> c where
---    nodeGraph :: Lens' a (NodeGraph c)
+type GraphBuilder m = StateT BldrState m
 
---instance HasNodeGraph (NodeGraph c) c where
---    nodeGraph = id
+data BldrState = BldrState { _orphans :: [Int]
+                           , __graph  :: Graph
+                           }
 
----- utils
+makeClassy ''BldrState
 
---withNodeGraph_ :: MonadNodeGraph c m => (NodeGraph c -> NodeGraph c) -> m ()
---withNodeGraph_ f = withNodeGraph $ fmap (,()) f
 
+class Monad m => MonadBldrState m where
+    getBldrState :: m BldrState
+    putBldrState :: BldrState -> m ()
 
---withNodeGraph :: MonadNodeGraph c m => (NodeGraph c -> (NodeGraph c, a)) -> m a
---withNodeGraph f = do
---    bldr <- getNodeGraph
---    let (bldr', out) = f bldr
---    putNodeGraph $ bldr'
---    return out
 
---withGraph :: MonadNodeGraph c m => (Graph c -> (Graph c, a)) -> m a
---withGraph = withNodeGraph . mapOver graph
+instance Default BldrState where
+    def = BldrState def def
 
-----withOrphans ::
---withOrphans f = do
---    s <- getNodeGraph
---    let orphLens    = nodeGraph . orphans
---        (a, norphs) = f (s ^. orphLens)
---    putNodeGraph $ s & orphLens .~ norphs
---    return a
+instance HasGraph BldrState where graph = _graph
 
---requestNodeID :: MonadNodeGraph c m => m (Maybe ID)
---requestNodeID = withOrphans $ \case
---    []         -> (Nothing, [])
---    (id : ids) -> (Just id, ids)
+instance Monad m => MonadBldrState (GraphBuilder m) where
+    getBldrState = get
+    putBldrState = put
 
----- fixme: we should delete the elements
-----releaseNodeID :: MonadNodeGraph c m => ID -> m ()
-----releaseNodeID id = withNodeGraph_ (nodeScope %~ (id:))
+instance (IsPtr ptr Int, Show (a ptr), Typeable a, Typeable ptr, Monad m)
+      => RefBuilder (GraphBuilder m) ptr a where
+    mkRef a = fmap Ref . withGraph . mapOver reg $ insert a
 
-------add :: (Appendable c, Indexable c, Castable a (ElementOf c), MonadNodeGraph c m)
-------    => a -> m (Ptr (Index c) a)
-------add = withGraph . insert
+-- utils
 
+withBldrState_ :: MonadBldrState m => (BldrState -> BldrState) -> m ()
+withBldrState_ f = withBldrState $ fmap (,()) f
 
 
----- === ASTBuilder ===
+withBldrState :: MonadBldrState m => (BldrState -> (BldrState, a)) -> m a
+withBldrState f = do
+    bldr <- getBldrState
+    let (bldr', out) = f bldr
+    putBldrState $ bldr'
+    return out
 
---class Monad m => ASTBuilder a m where
---    mkRef :: ASTNode m a -> m (Ref m a)
 
---class Monad m => ASTBuilder3 a m where
---    mkRef3 :: ASTNode3 m a -> m (Ref3 m a)
+withGraph :: MonadBldrState m => (Graph -> (Graph, a)) -> m a
+withGraph = withBldrState . mapOver graph
 
+withOrphans :: MonadBldrState m => ([Int] -> (a, [Int])) -> m a
+withOrphans f = do
+    s <- getBldrState
+    let orphLens    = bldrState . orphans
+        (a, norphs) = f (s ^. orphLens)
+    putBldrState $ s & orphLens .~ norphs
+    return a
 
+popOrphan :: MonadBldrState m => m (Maybe Int)
+popOrphan = withOrphans $ \case
+    []         -> (Nothing, [])
+    (id : ids) -> (Just id, ids)
 
-----class ASTData a where
---    --type family DataLayout (a :: (* -> *) -> *) (h :: * -> *) :: *
 
---    ----type Bar a = DataLayout a
---    --type instance DataLayout Expr h = Expr h
 
---    --type ASTNode3 m a = DataLayout a (ConnectionType m)
+---- === Ref ===
 
---type family Foo (a :: (* -> *) -> *) (h :: * -> *) :: * -> *
+newtype Ref       h a = Ref (h (a h))
+newtype RefCons m h a = RefCons { runRefCons :: m (Ref h a) }
 
---type instance Foo Expr h = h
+class ToMRef t m h a | t -> h a where
+    toMRef :: t -> m (Ref h a)
 
-----data NodeObject
-----zmieniamy astnode w taki sposob by mozna bylo polimorficznie je dostawac.
-----Moze zamiast parametryzowac m -> NodeType (tak jak node z typem) powinnismy m w to nie mieszac,
-----bo grqf builder to graf builder i zwracac polimorficzny wynik ?
+instance                      (m ~ n, Monad m) => ToMRef    (RefCons m h a) n h a where toMRef = runRefCons
+instance                             (Monad m) => ToMRef    (Ref h a)        m h a where toMRef = return
+instance {-# OVERLAPPABLE #-} (m ~ n, Monad m) => ToMRef (m (Ref h a))       n h a where toMRef = id
 
---type ASTNode m a = a (ConnectionType m)
+deriving instance Show (h (a h)) => Show (Ref h a)
 
---type ASTNode3 m a = a (Foo a (ConnectionType m))
-----type Ref m a = m (ConnectionType m (a (ConnectionType m)))
---newtype Ref m a = Ref { fromRef :: ConnectionType m (ASTNode m a) }
+---- === RefBuilder ===
 
---newtype Ref3 m a = Ref3 { fromRef3 :: (ConnectionType m) (ASTNode3 m a) }
+class Monad m => RefBuilder m h a where
+    mkRef :: a h -> m (Ref h a)
 
---newtype Ref4 m a = Ref4 { fromRef4 :: (ConnectionType m) (a (ConnectionType m)) }
+class Monad m => RefHandler m h a | m -> h a where
+    registerRef :: Name -> Ref h a -> m ()
 
---type BuilderMonad c a = (Appendable c, Indexable c, Castable (a (Ptr (Index c))) (ElementOf c))
+type ASTBuilder m h a = (RefBuilder m h a, RefHandler m h a)
 
+--
 
-----type GraphPtr m a = Ptr (Index m) a
+mkCons :: RefBuilder m h a => a h -> RefCons m h a
+mkCons = RefCons . mkRef
 
-----insert :: (Castable a (ElementOf m), Appendable m, Indexable m)
-----       => a -> Graph m -> (Graph m, GraphPtr m a)
-----insert a g = (g', Ptr . lastIdx $ g' ^. nodes) where
-----    g' = g & nodes %~ (flip append (cast a))
+var :: RefBuilder m h Expr => Name -> RefCons m h Expr
+var = mkCons . Var
 
+cons :: RefBuilder m h Expr => Name -> RefCons m h Expr
+cons = mkCons . Cons
 
-----withGraph :: MonadNodeGraph c m => (Graph c -> (Graph c, a)) -> m a
-----withGraph = withNodeGraph . mapOver graph
+ref :: (RefHandler m h a, ToMRef t m h a) => Name -> t -> m (Ref h a)
+ref name t = do
+    ref <- toMRef t
+    registerRef name ref
+    return ref
 
---instance (BuilderMonad c a) => ASTBuilder a (Builder c) where
---    mkRef = fmap Ref . withGraph . insert
 
---instance (Appendable c, Indexable c, Castable (ASTNode3 (Builder c) a) (ElementOf c)) => ASTBuilder3 a (Builder c) where
---    mkRef3 = fmap Ref3 . withGraph . insert
+---- === RefBuilder ===
 
-----add' :: el (ConnectionType bldr) -> bldr
-----add' = add
 
-----type X =
+--def foo [x,y] : ...
 
-----instance (Castable a (ElementOf c), idx ~ Index c, Appendable c, Indexable c)
-----      => ASTBuilder a (Builder idx c (Ptr idx a)) where
-----    add' = add
+data Function body = Function { -- _args   :: [Name] -- tu powinny byc patterny
+                               _body   :: body
+                              , _fgraph :: Graph
+                              } deriving (Show)
 
----- instances
+type NodeFunction ptr = Function (GFBody ptr)
 
-----Expr (Ptr Int)
+type GFBody ptr = Map String (Ref ptr Expr)
 
-----data Nu f=forall a.Nu a (a->f a)
-----newtype Mu f = Mu (f (Mu f))
+instance Default body => Default (Function body) where def = Function def def
 
-----a = undefined :: Mu ()
+makeLenses ''Function
+---- === Examples ===
 
 
+runGraphBuilder :: Monad m => GraphBuilder m a -> m Graph
+runGraphBuilder gb = view graph <$> execStateT gb def
 
-----foo :: State (NodeGraph (Vector Hidden)) (Ptr Int (Expr (Ptr Int)))
-----foo :: (Appendable c, LastIdx c, SetIdx c, GetIdx c,
-----                       CheckedSetIdx c, CheckedGetIdx c, UncheckedSetIdx c,
-----                       UncheckedGetIdx c, Castable (Expr h) (ElementOf c),
-----                       MonadNodeGraph c m) =>
-----                      m (Ptr (Index c) (Expr h))
+runFunctionBuilder :: (Default body, Monad m) => FunctionBuilder body m a -> m (a, Function body)
+runFunctionBuilder fb = runStateT fb def
 
-----type ConvertibleNode a m b = Convertible (a (ConnectionType m)) (b (ConnectionType m))
+type FunctionBuilder body m = StateT (Function body) m
 
---newtype NodeCons m a = NodeCons { runNodeCons :: m (Ref m a) }
---newtype NodeCons3 m a = NodeCons3 { runNodeCons3 :: m (Ref3 m a) }
+class MonadFunctionBuilder body m | m -> body where
+    getFunction :: m (Function body)
+    putFunction :: Function body -> m ()
 
+instance Monad m => MonadFunctionBuilder body (FunctionBuilder body m) where
+    getFunction = get
+    putFunction = put
 
---returnClone :: Monad m => m a -> m (m a)
---returnClone = return
 
---refToCons :: Monad m => m (Ref m a) -> m (NodeCons m a)
---refToCons = return . NodeCons
+--class Monad m => RefHandler m h a | m -> h a where
+--    registerRef :: Name -> Ref h a -> m ()
 
-----refToCons2 :: m (Ref m a) -> NodeCons m a
-----refToCons2 = NodeCons
+instance {-# OVERLAPPABLE #-} (MonadTrans t, RefHandler m h a, Monad (t m)) => RefHandler (t m) h a where
+    registerRef name ref = lift $ registerRef name ref
 
+instance Monad m => RefHandler (FunctionBuilder (GFBody h) m) h Expr where
+    registerRef name ref = do
+        func <- getFunction
+        putFunction $ func & body %~ Map.insert name ref
 
---mkCons = NodeCons . mkRef
---mkCons3 = NodeCons3 . mkRef3
 
-----accessor name el = mkRef $ Accessor name el
---access = flip accessor
+--foo :: _
+buildFunction desc = f & fgraph .~ g where
+    (g,f) = runIdentity $ runFunctionBuilder $ runGraphBuilder desc
 
---accessor name el = mkCons . Accessor name <$> mrefRaw el
 
---accessor2 :: (ASTBuilder Expr m, ToMRef2 t m Expr) => Name -> t -> NodeCons m Expr
---accessor2 name el = NodeCons $ mkRef . Accessor name =<< mrefRaw el
+--tst :: (Graph, Function (GFBody NodePtr))
+fck :: Function (GFBody NodePtr)
+fck = buildFunction g1
 
-----testx :: _
-----testx name el = return . convertM . Accessor name =<< mrefRaw3 el
+g1 :: ASTBuilder m NodePtr Expr => m (Ref NodePtr Expr)
+g1 = do
+    a    <- ref "foo" $ var "a"
+    b    <- ref "bar" $ var "b"
+    return a
+    --mod  <- var "Main"
+    --foo  <- a    @.  "foo"
+    --b    <- foo  @$$ [a]
+    --bar  <- mod  @.  "bar"
+    --c    <- bar  @$$ [b]
+    --plus <- mod  @.  "plus"
+    --out  <- plus @$$ [c, a]
+    --return ()
 
+main = do
+    let m = fck & view body
+        g = fck & view fgraph
+        Just (Ref p1) = Map.lookup "foo" m
+        r = g ^. reg
+        e = unsafeGet p1 r
 
---mrefRaw = fmap fromRef . toMRef2
+    print fck
+    print e
 
---mrefRaw3 :: (Monad m, Functor m, ToMRef3 t) => t m a -> m (ConnectionType m (a (ConnectionType m)))
---mrefRaw3 = fmap fromRef . toMRef3
 
-
-
---app base args = mkCons .: App <$> mrefRaw base <*> mapM marg args where
---    marg (ArgRef n a) = Arg n <$> fmap fromRef a
-
-
-----convert1 :: (Convertible (m a) (n a)) => m a -> n (a :: * -> *)
-----convert1 = convert
-
---var2 :: (ASTBuilder a m, ConvertibleM Expr a) => Name -> NodeCons m a --var2 :: (ASTBuilder Expr m, Convertible (Expr x) a) => Name -> NodeCons m a
---var2 = mkCons . convertM . Var
-
---cons2 :: (ASTBuilder a m, ConvertibleM Expr a) => Name -> NodeCons m a
---cons2 = mkCons . convertM . Cons
-
---var :: ASTBuilder Expr m => Name -> NodeCons m Expr
---var = mkCons . Var
-
---cons :: ASTBuilder Expr m => Name -> NodeCons m Expr
---cons = mkCons . Cons
-
---ref :: (Monad m, IsMVal t m (NodeCons m a)) => Name -> t -> m (Ref m a)
---ref _ = ref_
-
---ref_ :: (Monad m, IsMVal t m (NodeCons m a)) => t -> m (Ref m a)
---ref_ cons = toMVal cons >>= runNodeCons
-
-----ref2_ :: (ToMRef3 t, Monad m) => t m a -> m (Ref m a)
---ref2_ = toMRef2
-
---class IsMVal a m b | a -> m b where
---    toMVal :: a -> m b
-
---instance                      Monad m => IsMVal (NodeCons m a) m (NodeCons m a) where toMVal = return
---instance                      Monad m => IsMVal (Ref m a)      m (Ref m a)      where toMVal = return
---instance {-# OVERLAPPABLE #-} Monad m => IsMVal (m a)          m a              where toMVal = id
-
---class Monad m => ToMRef m t where
---    toMRef :: t m a -> m (Ref m a)
-
---instance Monad m => ToMRef m Ref where
---    toMRef = return
-
---instance Monad m => ToMRef m NodeCons where
---    toMRef = runNodeCons
-
---class ToMRef2 t m a | t -> m a where
---    toMRef2 :: t -> m (Ref m a)
-
---instance                      Monad m => ToMRef2 (NodeCons m a) m a where toMRef2 = runNodeCons
---instance                      Monad m => ToMRef2 (Ref m a)      m a where toMRef2 = return
---instance {-# OVERLAPPABLE #-} Monad m => ToMRef2 (m (Ref m a))  m a where toMRef2 = id
+----g1 :: RefBuilder Expr m => m ()
+--g1 = do
+--    a    <- ref "a" $ var "a"
+--    mod  <- ref "mod"  $ cons "Mod"
+--    foo  <- ref "foo"  $ a    @. "foo"
+--    b    <- ref "b"    $ foo  @$ [arg a]
+--    bar  <- ref "bar"  $ mod  @. "bar"
+--    c    <- ref "c"    $ bar  @$ [arg b]
+--    plus <- ref "plus" $ mod  @. "plus"
+--    out  <- ref "out"  $ plus @$ [arg c, arg a]
+--    return ()
 
 
 --class ToMRef3 t where
 --    toMRef3 :: Monad m => t m a -> m (Ref m a)
 
---instance ToMRef3 NodeCons where toMRef3 = runNodeCons
+--instance ToMRef3 RefCons where toMRef3 = runRefCons
 --instance ToMRef3 Ref      where toMRef3 = return
 
 
 
 
---instance MonadNodeGraph c (State (NodeGraph c)) where
---    getNodeGraph = get
---    putNodeGraph = put
+--instance MonadBldrState c (State (BldrState c)) where
+--    getBldrState = get
+--    putBldrState = put
 
 
 
@@ -631,12 +600,12 @@ makeLenses ''NodeGraph
 ----data Node = Node
 
 
---g2 :: (ConvertibleM Expr a, Monad m, ASTBuilder a m) => m (Ref m a)
+--g2 :: (ConvertibleM Expr a, Monad m, RefBuilder a m) => m (Ref m a)
 --g2 = do
 --    a <- ref2_ $ var2 "a"
 --    return a
 
-----g1 :: ASTBuilder Expr m => m ()
+----g1 :: RefBuilder Expr m => m ()
 --g1 = do
 --    a    <- ref "a" $ var "a"
 --    mod  <- ref "mod"  $ cons "Mod"
