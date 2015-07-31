@@ -39,7 +39,7 @@ import qualified Data.IntMap.Lazy as IntMap
 
 data Action = NewPath       { _path     :: [Text] }
             | ApplyUpdates  { _actions  :: [IO ()] }
-            | ButtonClicked       { _buttonId :: Int }
+            | ButtonClicked { _buttonId :: Int }
 
 makeLenses ''Action
 
@@ -51,14 +51,18 @@ instance PrettyPrinter Action where
     display (ApplyUpdates u)  = "mA(upd)"
     display (ButtonClicked bid)  = "mA(bclck " <> show bid <> ")"
 
+justIf :: Bool -> a -> Maybe a
+justIf True val = Just val
+justIf False  _ = Nothing
+
 toAction (Window (Window.Event Window.Resized width height)) _ = Just $ NewPath ["NodeLab", "demo", " by ", "New Byte Order"]
 toAction (Mouse (Mouse.Event Mouse.Clicked pos Mouse.LeftButton _)) state = isButtonOver where
     buttonIds  = state ^. Global.breadcrumb . Breadcrumb.buttons
     isButtonOver = do
         widgetOver <- state ^. Global.uiRegistry . UIRegistry.widgetOver
-        if (widgetOver `elem` buttonIds) then return $ ButtonClicked widgetOver else Nothing
+        justIf (widgetOver `elem` buttonIds) $ ButtonClicked widgetOver
 
-toAction _ _          = Nothing
+toAction _ _ = Nothing
 
 createButtons :: [Text] -> Int -> ([Button.Button], Int)
 createButtons path startId = (reverse buttons, nextId) where
@@ -70,7 +74,6 @@ createButtons path startId = (reverse buttons, nextId) where
        size      = Vector2 width buttonHeight
        newOffset = offset + width + buttonSpacing
        label     = name
-       idt       = Text.pack $ show bid
 
 addButton b = do
     uiButton <- UIButton.buildButton b
@@ -105,18 +108,9 @@ instance ActionStateUpdater Action where
                     oldButtonIds = oldState ^. Global.breadcrumb . Breadcrumb.buttons
                     newWidgets = UIRegistry.replaceAll oldRegistry oldButtons newButtons
                     startId = oldState ^. Global.uiRegistry .UIRegistry.nextId
-            ButtonClicked bid -> (Just $ ApplyUpdates $ ([putStrLn $ show bid]), oldState)
+            ButtonClicked bid -> (Just $ ApplyUpdates [putStrLn $ show bid], oldState)
             _ -> (Nothing, oldState)
-
-        -- focusChanged = any (\(o, n) -> (o ^. Button.state) /= (n ^. Button.state) ) $ oldButtons `zip` newButtonsFocus
-        -- newButtonsFocus = updateButton <$> oldButtons where
-        --     updateButton b = b & Button.state .~ newState where
-        --         newState = if isOver then Button.Focused else Button.Normal
-        --         isOver   = Button.isOver (fromIntegral <$> mousePos) b
-        -- buttonUnderCursor = find (Button.isOver $ fromIntegral <$> mousePos) oldButtons
 
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
         ApplyUpdates actions -> sequence_ actions
-        -- ButtonPressed -> do
-        --     putStrLn "Button pressed"

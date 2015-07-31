@@ -64,15 +64,26 @@ foreign import javascript unsafe "$1.a = $2" setA :: JSRef a -> Double -> IO ()
 class Geometry a
 class IsMaterial a where material :: a -> Material
 
-
 data MaterialJS
 type Material = JSRef MaterialJS
 
 newtype AttributeMap = AttributeMap { unAttributeMap :: JSObject.Object }
-newtype Attribute = Attribute { unAttribute :: JSObject.Object }
+newtype Attribute    = Attribute    { unAttribute    :: JSObject.Object }
 
-buildAttributeMap :: IO (AttributeMap)
+buildAttributeMap :: IO AttributeMap
 buildAttributeMap = JSObject.create >>= return . AttributeMap
+
+setAttribute :: AttributeMap -> Text -> Attribute -> IO ()
+setAttribute m a v = JSObject.setProp (lazyTextToJSString a) (JSObject.getJSRef $ unAttribute v) (unAttributeMap m)
+
+
+buildAttribute :: Text -> JSRef a -> IO Attribute
+buildAttribute t v = do
+    o <- JSObject.create
+    let x = JSString.getJSRef $ lazyTextToJSString t
+    JSObject.setProp (JSString.pack "type") x o
+    JSObject.setProp (JSString.pack "value") v o
+    return $ Attribute o
 
 setValue :: Attribute -> JSRef a -> IO ()
 setValue o v = JSObject.setProp (JSString.pack "value") v (unAttribute o)
@@ -80,16 +91,6 @@ setValue o v = JSObject.setProp (JSString.pack "value") v (unAttribute o)
 class ToAttribute a b | a -> b where
     toAttribute      :: a -> IO Attribute
     toAttributeValue :: a -> JSRef b
-
-
-buildAttribute :: Text -> JSRef a -> IO (Attribute)
-buildAttribute t v = do
-    o <- JSObject.create
-
-    let x = JSString.getJSRef $ lazyTextToJSString t
-    JSObject.setProp (JSString.pack "type") x o
-    JSObject.setProp (JSString.pack "value") v o
-    return $ Attribute o
 
 instance ToAttribute Int Int where
     toAttribute      a = buildAttribute "i"  (toJSInt a)
@@ -106,6 +107,3 @@ instance ToAttribute (JSRef JSVector3) JSVector3 where
 instance ToAttribute (JSRef JSVector4) JSVector4 where
     toAttribute      a = buildAttribute "v4" a
     toAttributeValue a = a
-
-setAttribute :: AttributeMap -> Text -> Attribute -> IO ()
-setAttribute m a v = JSObject.setProp (lazyTextToJSString a) (JSObject.getJSRef $ unAttribute v) (unAttributeMap m)

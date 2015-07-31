@@ -41,16 +41,12 @@ instance PrettyPrinter State where
     display (State widgets nid wover) = "dWd(" <> show nid <> " / " <> (show $ IntMap.size widgets) <> " over: " <> (show wover) <> ")"
 
 
-register :: DisplayObjectClass a => WidgetMap -> a -> WidgetMap
-register m a = IntMap.insert (objectId a) (toCtxDynamic a) m
-
-registerAll :: DisplayObjectClass a => WidgetMap -> [a] -> WidgetMap
-registerAll = foldl register
-
-unregister :: DisplayObjectClass a => WidgetMap -> a -> WidgetMap
+register, unregister :: DisplayObjectClass a => WidgetMap -> a -> WidgetMap
+register   m a = IntMap.insert (objectId a) (toCtxDynamic a) m
 unregister m a = IntMap.delete (objectId a) m
 
-unregisterAll :: DisplayObjectClass a => WidgetMap -> [a] -> WidgetMap
+registerAll, unregisterAll :: DisplayObjectClass a => WidgetMap -> [a] -> WidgetMap
+registerAll   = foldl register
 unregisterAll = foldl unregister
 
 replaceAll :: DisplayObjectClass a => WidgetMap -> [a] -> [a] -> WidgetMap
@@ -59,7 +55,7 @@ replaceAll m r = registerAll $ unregisterAll m r
 
 sequenceUpdates :: [Maybe (WidgetMap -> Maybe (WidgetUIUpdate, WidgetMap))] -> WidgetMap -> ([WidgetUIUpdate], WidgetMap)
 sequenceUpdates ops input = foldl applyOp ([], input) ops where
-    applyOp (updates, input) op = maybe (updates, input) id $ do
-        justOp <- op
+    applyOp (updates, input) op = fromMaybe (updates, input) $ do
+        justOp           <- op
         (update, output) <- justOp input
         return (update:updates, output)

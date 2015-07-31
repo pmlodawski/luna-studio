@@ -94,7 +94,7 @@ foreign import javascript unsafe "app.getNode($1)"
     getNode :: Int -> IO (JSRef NodeJS)
 
 foreign import javascript unsafe "app.getNodes()"
-    getNodesJSArray :: IO (JSArray)
+    getNodesJSArray :: IO JSArray
 
 getNodes :: IO [JSRef NodeJS]
 getNodes = getNodesJSArray >>= return . JSArray.toList

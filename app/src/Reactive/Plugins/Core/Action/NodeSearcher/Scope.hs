@@ -71,7 +71,7 @@ itemsInScope root path = case moduleByPath root (pathFromText path) of
 
 searchInScope :: LunaModule -> Text -> [QueryResult]
 searchInScope root expr
-    | (Text.length expr > 0) && (Text.last expr == '.') = maybe [] (displayModuleItems) scope
+    | (Text.length expr > 0) && (Text.last expr == '.') = maybe [] displayModuleItems scope
     | otherwise                                         = fmap transformMatch $ findSuggestions items query
     where
         (prefixWithDot, query) = Text.breakOnEnd "." expr
