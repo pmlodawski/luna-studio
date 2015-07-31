@@ -10,6 +10,8 @@ import           Object.Node
 
 import           Reactive.Plugins.Core.Action.State.Global
 
+import           Object.Widget
+
 
 
 data UnderCursor = UnderCursor { _nodesUnderCursor   :: NodeCollection

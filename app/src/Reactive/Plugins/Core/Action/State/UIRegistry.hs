@@ -55,3 +55,11 @@ unregisterAll = foldl unregister
 
 replaceAll :: DisplayObjectClass a => WidgetMap -> [a] -> [a] -> WidgetMap
 replaceAll m r = registerAll $ unregisterAll m r
+
+
+sequenceUpdates :: [Maybe (WidgetMap -> Maybe (WidgetUIUpdate, WidgetMap))] -> WidgetMap -> ([WidgetUIUpdate], WidgetMap)
+sequenceUpdates ops input = foldl applyOp ([], input) ops where
+    applyOp (updates, input) op = maybe (updates, input) id $ do
+        justOp <- op
+        (update, output) <- justOp input
+        return (update:updates, output)

@@ -15,6 +15,7 @@ import           Event.Event
 import           Event.WithObjects
 import           Reactive.Plugins.Core.Action.Action
 import qualified Reactive.Plugins.Core.Action.State.Global       as Global
+import           Reactive.Plugins.Core.Action.State.UIRegistry   ( WidgetMap, WidgetId )
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry   as UIRegistry
 import qualified Object.Widget.Button as Button
 import           GHCJS.Prim
@@ -33,21 +34,23 @@ instance PrettyPrinter Action where
     display _ = "WidgetAction"
 
 toAction :: Event Node -> Maybe Action
-toAction (Mouse m@(Mouse.Event tpe pos button _)) = Just $ MouseAction m
+toAction (Mouse m@(Mouse.Event _ _ _ _)) = Just $ MouseAction m
 toAction _                                        = Nothing
 
-
-onlyIfOver :: MousePosition -> DisplayObject -> (MousePosition -> DisplayObject -> WidgetUpdate) -> WidgetUpdate
-onlyIfOver pos widget f = if isOver pos widget then f pos widget else (Nothing, widget)
-
-handleEvents :: Mouse.Event -> [WidgetUIUpdate] -> DisplayObject -> ([WidgetUIUpdate], DisplayObject)
-handleEvents mouseEvent uiUpdates widget = (uiUpdate:uiUpdates, newWidget) where
-    (uiUpdate, newWidget) = case mouseEvent of
-        Mouse.Event Mouse.Moved      pos _      _ -> onlyIfOver pos widget $ onMouseMove
-        Mouse.Event Mouse.Pressed    pos button _ -> onlyIfOver pos widget $ onMousePress   button
-        Mouse.Event Mouse.Released   pos button _ -> onlyIfOver pos widget $ onMouseRelease button
-        Mouse.Event Mouse.Clicked    pos _      _ -> onlyIfOver pos widget $ onClick
-        Mouse.Event Mouse.DblClicked pos _      _ -> onlyIfOver pos widget $ onDblClick
+handleOther :: Mouse.Event -> Maybe WidgetId -> WidgetMap -> Maybe (WidgetUIUpdate, WidgetMap)
+handleOther mouseEvent Nothing m = Nothing
+handleOther mouseEvent mWidget m = do
+    widgetId <- mWidget
+    widget <- IntMap.lookup widgetId m
+    let pos  = mouseEvent ^. Mouse.position
+    (uiUpdate, newWidget) <- return $ case mouseEvent of
+        Mouse.Event Mouse.Moved      pos _      _ -> onMouseMove           pos widget
+        Mouse.Event Mouse.Pressed    pos button _ -> onMousePress   button pos widget
+        Mouse.Event Mouse.Released   pos button _ -> onMouseRelease button pos widget
+        Mouse.Event Mouse.Clicked    pos _      _ -> onClick               pos widget
+        Mouse.Event Mouse.DblClicked pos _      _ -> onDblClick            pos widget
+    let newM = IntMap.insert (objectId widget) newWidget m
+    return (uiUpdate, newM) where
 
 instance ActionStateUpdater Action where
     execSt (MouseAction mouseEvent) oldState = case newAction of
@@ -55,38 +58,35 @@ instance ActionStateUpdater Action where
             Nothing     -> ActionUI  NoAction newState
         where
         newAction               = Just $ ApplyUpdates uiUpdates
-        newState                = oldState & Global.uiRegistry . UIRegistry.widgets .~ newWidgets
-                                           & Global.uiRegistry . UIRegistry.widgetOver .~ widgetOver
-        (uiUpdates', newWidgets') = IntMap.mapAccum (handleEvents mouseEvent) [] oldWidgets
-        oldWidgetOver          = oldState ^. Global.uiRegistry . UIRegistry.widgetOver
-        widgetOver :: Maybe UIRegistry.WidgetId
-        uiUpdates :: [WidgetUIUpdate]
-        newWidgets :: UIRegistry.WidgetMap
-        (uiUpdates, newWidgets, widgetOver) = case mouseEvent of
-            Mouse.Event Mouse.Moved pos _ _ -> (uiOutOverUpdates, newOutOverWidgets, widgetOver) where
-                maybeOver :: Maybe DisplayObject
-                maybeOver = find (isOver pos) (IntMap.elems newWidgets')
-                widgetOver :: Maybe UIRegistry.WidgetId
-                widgetOver =  objectId <$> maybeOver
-                (uiOutOverUpdates, newOutOverWidgets)      = if oldWidgetOver /= widgetOver then (ooUpdates, ooWidgets)
-                                                                                              else (uiUpdates', newWidgets') where
-                                                                                                   (newUIUpdates, newOutWidgets) = maybe (uiUpdates', newWidgets') id $ do
-                                                                                                       oid <- oldWidgetOver
-                                                                                                       oldOut <- IntMap.lookup oid newWidgets'
-                                                                                                       (a, w) <- Just $ onMouseOut pos oldOut
-                                                                                                       Just (a:uiUpdates', IntMap.insert oid w newWidgets')
-                                                                                                   (ooUpdates, ooWidgets) = maybe (newUIUpdates, newOutWidgets) id $ do
-                                                                                                       oid <- widgetOver
-                                                                                                       oldOver <- IntMap.lookup oid newOutWidgets
-                                                                                                       (a, w) <- Just $ onMouseOver pos oldOver
-                                                                                                       Just (a:newUIUpdates, IntMap.insert oid w newOutWidgets)
-
-            _               -> (uiUpdates', newWidgets', oldWidgetOver)
-
-
+        newState                = oldState &  Global.uiRegistry . UIRegistry.widgets    .~ newWidgets
+                                           &  Global.uiRegistry . UIRegistry.widgetOver .~ widgetOver
+        oldWidgetOver           = oldState ^. Global.uiRegistry . UIRegistry.widgetOver
         oldWidgets              = oldState ^. Global.uiRegistry . UIRegistry.widgets
+        (uiUpdates, newWidgets) = UIRegistry.sequenceUpdates [ handleMouseOut
+                                                             , handleMouseOver
+                                                             , Just $ (handleOther mouseEvent widgetOver)
+                                                             ] oldWidgets
+        (handleMouseOver, handleMouseOut, widgetOver) = case mouseEvent of
+            Mouse.Event Mouse.Moved pos _ _ -> (handleMouseOver', handleMouseOut', widgetOver) where
+                maybeOver  = find (isOver pos) (IntMap.elems oldWidgets)
+                widgetOver = objectId <$> maybeOver
+                widgetOverChanged = oldWidgetOver /= widgetOver
+                handleMouseOver' = case widgetOverChanged of
+                    True  -> Just $ \m -> do
+                        oid <- oldWidgetOver
+                        oldOut <- IntMap.lookup oid m
+                        (a, w) <- Just $ onMouseOut pos oldOut
+                        Just (a, IntMap.insert oid w m)
 
-
+                    False -> Nothing
+                handleMouseOut' = case widgetOverChanged of
+                    True  -> Just $ \m -> do
+                        oid <- widgetOver
+                        oldOver <- IntMap.lookup oid m
+                        (a, w) <- Just $ onMouseOver pos oldOver
+                        Just (a, IntMap.insert oid w m)
+                    False -> Nothing
+            _               -> (Nothing, Nothing, oldWidgetOver)
 
 instance ActionUIUpdater Action where
     updateUI (WithState (ApplyUpdates actions) state) = sequence_ $ catMaybes actions

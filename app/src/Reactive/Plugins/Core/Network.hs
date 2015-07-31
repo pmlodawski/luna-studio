@@ -67,6 +67,7 @@ makeNetworkDescription logging = do
         underCursorB                 :: Behavior t UnderCursor
         underCursorB                  = underCursor <$> globalStateB
 
+        widgetActionB                 = fmap ActionST $         Widget.toAction <$> anyNodeB
         nodeGeneralActionB            = fmap ActionST $        General.toAction <$> anyNodeB
         cameraActionB                 = fmap ActionST $         Camera.toAction <$> anyNodeB
         nodeAddRemActionB             = fmap ActionST $      AddRemove.toAction <$> anyNodeB
@@ -76,9 +77,9 @@ makeNetworkDescription logging = do
         nodeConnectActionB            = fmap ActionST $        Connect.toAction <$> anyNodeB <*> globalStateB
         nodeSearcherActionB           = fmap ActionST $   NodeSearcher.toAction <$> anyNodeB
         breadcrumbActionB             = fmap ActionST $     Breadcrumb.toAction <$> anyNodeB
-        widgetActionB                 = fmap ActionST $         Widget.toAction <$> anyNodeB
 
         allActionsPackB               = [ nodeGeneralActionB
+                                        , widgetActionB
                                         , nodeAddRemActionB
                                         , nodeSelectionActionB
                                         , nodeMultiSelectionActionB
@@ -87,7 +88,6 @@ makeNetworkDescription logging = do
                                         , nodeConnectActionB
                                         , nodeSearcherActionB
                                         , breadcrumbActionB
-                                        , widgetActionB
                                         ]
 
         (globalStateReactionB, allReactionsPackB) = execAll globalStateB allActionsPackB
