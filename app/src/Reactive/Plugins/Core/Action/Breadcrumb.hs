@@ -37,8 +37,9 @@ import qualified Data.IntMap.Lazy as IntMap
 
 
 
-data Action = NewPath       { _path  :: [Text] }
-            | ApplyUpdates { _actions :: [IO ()] }
+data Action = NewPath       { _path     :: [Text] }
+            | ApplyUpdates  { _actions  :: [IO ()] }
+            | ButtonClicked       { _buttonId :: Int }
 
 makeLenses ''Action
 
@@ -48,10 +49,16 @@ buttonSpacing = 10
 instance PrettyPrinter Action where
     display (NewPath path)    = "mA(" <> show path <> ")"
     display (ApplyUpdates u)  = "mA(upd)"
+    display (ButtonClicked bid)  = "mA(bclck " <> show bid <> ")"
 
-toAction (Window (Window.Event tpe width height)) = case tpe of
-    Window.Resized  -> Just $ NewPath ["NodeLab", "demo", " by ", "New Byte Order"]
-toAction _           = Nothing
+toAction (Window (Window.Event Window.Resized width height)) _ = Just $ NewPath ["NodeLab", "demo", " by ", "New Byte Order"]
+toAction (Mouse (Mouse.Event Mouse.Clicked pos Mouse.LeftButton _)) state = isButtonOver where
+    buttonIds  = state ^. Global.breadcrumb . Breadcrumb.buttons
+    isButtonOver = do
+        widgetOver <- state ^. Global.uiRegistry . UIRegistry.widgetOver
+        if (widgetOver `elem` buttonIds) then return $ ButtonClicked widgetOver else Nothing
+
+toAction _ _          = Nothing
 
 createButtons :: [Text] -> Int -> ([Button.Button], Int)
 createButtons path startId = (reverse buttons, nextId) where
@@ -81,11 +88,6 @@ instance ActionStateUpdater Action where
         Nothing     -> ActionUI  NoAction newState
         where
         (newAction, newState) = case newActionCandidate of
-            -- MouseMoving   _  -> if focusChanged then Just $ ApplyUpdates [updateFocus] else Nothing where
-            --     updateFocus = forM_ newButtonsFocus UIButton.updateState
-            -- MousePressed  _  -> case buttonUnderCursor of
-            --     Just _  -> Just ButtonPressed
-            --     Nothing -> Nothing
             NewPath path        -> (action, state) where
                     action = Just $ ApplyUpdates [removeOldBreadcrumb, createNewBreadcrumb]
                     createNewBreadcrumb = forM_ newButtons addButton
@@ -103,7 +105,7 @@ instance ActionStateUpdater Action where
                     oldButtonIds = oldState ^. Global.breadcrumb . Breadcrumb.buttons
                     newWidgets = UIRegistry.replaceAll oldRegistry oldButtons newButtons
                     startId = oldState ^. Global.uiRegistry .UIRegistry.nextId
-
+            ButtonClicked bid -> (Just $ ApplyUpdates $ ([putStrLn $ show bid]), oldState)
             _ -> (Nothing, oldState)
 
         -- focusChanged = any (\(o, n) -> (o ^. Button.state) /= (n ^. Button.state) ) $ oldButtons `zip` newButtonsFocus

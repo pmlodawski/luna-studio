@@ -76,7 +76,7 @@ makeNetworkDescription logging = do
         nodeDragActionB               = fmap ActionST $           Drag.toAction <$> anyNodeB <*> underCursorB
         nodeConnectActionB            = fmap ActionST $        Connect.toAction <$> anyNodeB <*> globalStateB
         nodeSearcherActionB           = fmap ActionST $   NodeSearcher.toAction <$> anyNodeB
-        breadcrumbActionB             = fmap ActionST $     Breadcrumb.toAction <$> anyNodeB
+        breadcrumbActionB             = fmap ActionST $     Breadcrumb.toAction <$> anyNodeB <*> globalStateB
 
         allActionsPackB               = [ nodeGeneralActionB
                                         , widgetActionB
