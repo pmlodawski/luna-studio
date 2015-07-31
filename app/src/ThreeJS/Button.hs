@@ -129,11 +129,6 @@ updateState :: WB.Button -> IO ()
 updateState b = do
     setUniform "state" (toJSInt $ fromEnum $ b ^. WB.state) b
 
-instance HandlesMouseMove WB.Button where
-    onMouseMove pos b = (Just action, toCtxDynamic b) where
-        action    = do
-            putStrLn "moved"
-
 instance HandlesMouseOver WB.Button where
     onMouseOver pos b = (Just action, toCtxDynamic newButton) where
         action    = updateState newButton
