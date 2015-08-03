@@ -19,15 +19,17 @@ import           Luna.Inference hiding (main)
 import qualified Luna.Inference as TC
 import qualified Data.Map       as Map
 
-
 funck :: Function (GFBody NodePtr)
 funck = buildFunction gra1
 
-gra1 :: ASTBuilder m NodePtr Expr => m (Ref NodePtr Expr)
+-- gra1 :: ASTBuilder m NodePtr Expr => m (Ref NodePtr Expr)
+-- gra1 = do .... return a
+gra1 :: ASTBuilder m NodePtr Expr => m ()
 gra1 = do
-    a    <- ref "foo" $ var "a"
-    b    <- ref "bar" $ var "b"
-    return a
+    -- a    <- ref "foo" $ var "a"
+    -- b    <- ref "bar" $ var "b"
+    -- c    <- ref "baz" $ var "c"
+    -- return ()
     --mod  <- var "Main"
     --foo  <- a    @.  "foo"
     --b    <- foo  @$$ [a]
@@ -40,14 +42,32 @@ gra1 = do
 tctest :: IO ()
 tctest = do
     putStrLn "Testing typechecker"
-    let m = fck & view body
-        g = fck & view fgraph
-        Just (Ref p1) = Map.lookup "foo" m
-        r = g ^. reg
-        e = unsafeGet p1 r
+    let bodyF  = funck & view body
+        graphF = funck & view fgraph
+        Just (Ref ptrF) = Map.lookup "Main" bodyF
+        regF = graphF ^. reg
+        varF = unsafeGet ptrF regF
 
-    print fck
-    print e
+    print funck
+    print regF
+    print varF
+
+
+-- Function {
+--             _body = fromList [
+--                 ("bar",Ref (NodePtr {__ptr = Ptr "Expr NodePtr" 1})),
+--                 ("baz",Ref (NodePtr {__ptr = Ptr "Expr NodePtr" 2})),
+--                 ("foo",Ref (NodePtr {__ptr = Ptr "Expr NodePtr" 0}))],
+--             _fgraph = Graph {
+--                 _reg = HContainer {
+--                     _elems = fromList [
+--                         Var {_name = "a"},
+--                         Var {_name = "b"},
+--                         Var {_name = "c"}]
+--                     }
+--                 }
+--
+
 
 #else
 tctest :: IO ()
