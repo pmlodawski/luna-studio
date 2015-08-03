@@ -38,6 +38,7 @@ library
   Exposed-Modules: Data.Convert,
                    Data.Convert.Base,
                    Data.Convert.Bound,
+                   Data.Convert.Errors,
                    Data.Convert.Instances,
                    Data.Convert.Instances.Map,
                    Data.Convert.Instances.Num,
