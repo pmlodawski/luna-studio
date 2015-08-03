@@ -1,8 +1,8 @@
 "use strict";
 
 var $$ = require('common');
-var vs = require('shaders/port.vert')();
-var fs = require('shaders/port.frag')();
+var vs = require('shaders/triangle_port.vert')();
+var fs = require('shaders/triangle_port.frag')();
 
 var triangleRatio = 1.5;
 var size          = 9;
@@ -13,7 +13,7 @@ var nodeRadius    = 30.0;
 // var inputColor  = new THREE.Vector4(0xFF, 0x99, 0x33, 0xAA).divideScalar(0xFF);
 var inputColor   = new THREE.Vector4(0x00, 0x99, 0x99, 0xAA).divideScalar(0xFF);
 var outputColor  = new THREE.Vector4(0xBB, 0x33, 0x00, 0xAA).divideScalar(0xFF);
-var colorFar     = new THREE.Vector4(0.8, 0.2, 0.2, 0.6);
+var colorFar     = new THREE.Vector4(0.2, 0.2, 0.2, 0.6);
 
 var triangleHeight = size * Math.sqrt(3.0) / 2.0;
 var halfHeight = triangleHeight / 2.0;

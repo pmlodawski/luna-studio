@@ -11,7 +11,8 @@ var textMaterial = require('font/text_material').graph;
 var vs = require('shaders/node.vert')();
 var fs = require('shaders/node.frag')();
 
-var Port = require('port');
+// var Port = require('port');
+var Port = require('triangle_port');
 
 var insideColor     = new THREE.Color(0x1a1a1a);
 var unselectedColor = new THREE.Color(0x3a3a3a);

@@ -2,16 +2,14 @@
 precision highp float;
 #endif
 
-attribute vec3 posL;
-attribute vec3 posR;
-attribute vec3 posB;
-varying vec3 distanceL;
-varying vec3 distanceR;
-varying vec3 distanceB;
+attribute vec2 pos;
+varying vec2 coords;
+
+uniform float camFactor;
+uniform vec2 camPan;
+uniform vec2 screenSize;
 
 void main() {
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    distanceL = posL;
-    distanceR = posR;
-    distanceB = posB;
+    coords = (pos - camPan) * camFactor + screenSize / 2.0;
 }
