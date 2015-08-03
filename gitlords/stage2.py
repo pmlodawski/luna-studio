@@ -54,6 +54,7 @@ def install_requirements():
 
         # noinspection PyUnresolvedReferences
         try:
+            # noinspection PyUnresolvedReferences
             import pip
         except ImportError as e:
             raise Exception("No `pip` available. Strange.") from e

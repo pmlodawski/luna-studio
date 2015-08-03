@@ -1,7 +1,5 @@
-from functools import wraps
 import inspect
 import sys
-import shutil
 
 
 def eprint(*args, **kwargs):
@@ -15,53 +13,6 @@ def try_colour(x, colour):
         puts(getattr(colored, colour)(x))
     except ImportError:
         print(x)
-
-
-def with_stage_header(*, colour='cyan', description_override=None):
-    """ Prints nice header info from function's docstring.
-
-    :param colour: The colour of the header or no colour if 'None'.
-
-    :type colour: String | None
-    """
-
-    try:
-        from clint.textui import colored, puts
-    except ImportError:
-        colour = None
-
-    def aux(stage_fun):
-        """
-        :param stage_fun: The function to wrap. Takes one argument: the ArgumentParser result.
-
-        :type stage_fun: (Any) -> None
-        :rtype: None
-        """
-
-        descr = description_override or stage_fun.__doc__ or ""
-        descr = [x.lstrip() for x in descr.splitlines()]
-        if descr[-1] == "":
-            descr.pop()
-        descr = '\n# '.join(descr)
-
-        terminal_width = shutil.get_terminal_size((80, 20)).columns
-
-        header = "\n" \
-                 "{:#^{width}}\n" \
-                 "# {descr}\n" \
-                 "".format("#", width=terminal_width, descr=descr)
-
-        @wraps(stage_fun)
-        def wrapper():
-            if not colour:
-                print(header)
-            else:
-                puts(getattr(colored, colour)(header))
-
-            return stage_fun()
-        return wrapper
-
-    return aux
 
 
 def fprint(x=None, *, parent=None, notrunc=False, colour=None, **kwargs):
@@ -87,7 +38,7 @@ def fprint(x=None, *, parent=None, notrunc=False, colour=None, **kwargs):
     :param parent: The stack frame to look up for variables. 'None' means: take from the caller.
     :param notrunc: Usually, we truncate left spaces so multi-line \"\"\" look ok!
     :param kwargs: Optional arguments passed to 'print'.
-    :param colour: Name of the colour
+    :param colour: Name of the colour.
 
     :type x: String
     :type parent: Any
@@ -98,8 +49,6 @@ def fprint(x=None, *, parent=None, notrunc=False, colour=None, **kwargs):
 
     if not parent:
         parent = inspect.stack()[1][0]
-
-
 
     if x and not notrunc:
         x_lines = [
@@ -126,8 +75,9 @@ def fprint(x=None, *, parent=None, notrunc=False, colour=None, **kwargs):
 
     try:
         if not kwargs and colour:
+            # noinspection PyUnresolvedReferences
             from clint.textui import colored, puts
-            kwargs or puts(getattr(colored, colour)(x))
+            puts(getattr(colored, colour)(x))
     except ImportError:
         print(x)
     else:
