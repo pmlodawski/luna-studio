@@ -29,3 +29,12 @@ Therefore, this script basically:
 4. builds ``stack`` with new logic using ``stack`` with old logic,
 5. copies the resulting binary to current dir,
 6. cleans up temporary files.
+
+
+Initialize repository; GitLord scripts & hooks
+==============================================
+
+TL;DR
+-----
+
+Don't touch this repo. Use ``initialize.py`` from your repository.
