@@ -33,6 +33,8 @@ def get_installation_list():
                                       descr="Required for cooperating with `stack` tool.")
     yield from yield_unless_installed('logbook',
                                       descr="Docbook allows better logging. And this often gets handy…")
+    yield from yield_unless_installed('plumbum',
+                                      descr="Nice interfacing with OS commands.")
 
 
 # noinspection PyUnusedLocal
@@ -75,14 +77,18 @@ def install_requirements():
 
 def jump_to_next_stage():
     python_in_env = ".git/flowbox/pyenv/bin/python"
-    script_to_call = "-V"
+    script_to_call = "stage3.py"
     subprocess.check_call([python_in_env, script_to_call])
 
 
 def main():
+    install_requirements()
+    jump_to_next_stage()
+
+
+if __name__ == '__main__':
     try:
-        install_requirements()
-        jump_to_next_stage()
+        main()
     except Exception as e:
         # noinspection PyBroadException
         try:
@@ -93,7 +99,3 @@ def main():
             print("######################################################################")
         print("Stage 2 got exception:")
         raise e
-
-
-if __name__ == '__main__':
-    main()
