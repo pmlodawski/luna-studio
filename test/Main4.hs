@@ -597,6 +597,19 @@ type family PtrOf (a :: (* -> *) -> *) :: * -> *
 type instance PtrOf Expr     = BasePtr
 type instance PtrOf (Node a) = NodePtr
 
+type family PtrOf2 (a :: (* -> *) -> *) :: *
+type instance PtrOf2 (Node a) = NodePtr (a NodePtr)
+
+type family PtrOf3 a
+type instance PtrOf3 (Node a h) = NodePtr (a h)
+
+
+type family ValOf (a :: (* -> *) -> *) :: *
+type instance ValOf (Node a) = (a NodePtr)
+
+type family ValOf3 a :: *
+type instance ValOf3 (Node a h) = (a h)
+
 --type family PtrOf2 (a :: (* -> *) -> *) b :: *
 --type instance PtrOf2 (Node a) = NodePtr a
 
@@ -711,20 +724,23 @@ withGraph = withBldrState . mapOver graph
 --RefVal (Node Expr)
 --IPtr (Val (Node Expr))
 --IPtr (Node Expr NodePtr)
+type instance PtrOf2 (Node a) = NodePtr (a NodePtr)
+--type instance PtrOf2 (Expr ) = NodePtr (a NodePtr)
+type instance ValOf (Node a) = (a NodePtr)
 
-
-type    Val         a = a (PtrOf a)
+--type    Val         a = a (PtrOf a)
 type    RefVal      a = Ptr Int (Val a)
+type    Val         a = a (PtrOf a)
+--type    RefVal      a = PtrOf3 a
 newtype Ref         a = Ref { fromRef :: RefVal a }
         --newtype RefCons m h a = RefCons { runRefCons :: m (Ref h a) }
         --newtype RefCons2 m a  = RefCons2 { runRefCons2 :: m (Ref a) }
 
-        --class ToMRef t m h a | t -> h a where
-        --    toMRef :: t -> m (Ref h a)
+class ToMRef t m a | t -> a where
+    toMRef :: t -> m (Ref a)
 
-        --instance                      (m ~ n, Monad m) => ToMRef    (RefCons m h a) n h a where toMRef = runRefCons
-        --instance                             (Monad m) => ToMRef    (Ref h a)        m h a where toMRef = return
-        --instance {-# OVERLAPPABLE #-} (m ~ n, Monad m) => ToMRef (m (Ref h a))       n h a where toMRef = id
+instance                             (Monad m) => ToMRef    (Ref a)  m a where toMRef = return
+instance {-# OVERLAPPABLE #-} (m ~ n, Monad m) => ToMRef (m (Ref a)) n a where toMRef = id
 
         --deriving instance Show (h (a h)) => Show (Ref h a)
 
@@ -746,8 +762,8 @@ class Monad m => RefBuilder m a where
         --mkCons2 = RefCons2 . mkRef
 
 
-var :: (ASTConvertible Expr a, RefBuilder m a) => Name -> m (Ref a)
-var = mkRef . convertAST . Var
+--var :: (ASTConvertible Expr a, RefBuilder m a) => Name -> m (Ref a)
+--var = mkRef . convertAST . Var
 
         ----test :: RefBuilder
 
@@ -762,11 +778,11 @@ var = mkRef . convertAST . Var
         --    registerRef name ref
         --    return ref
 
-        --mrefRaw :: (ToMRef t m h a, Functor m) => t -> m (h (a h))
-        --mrefRaw = fmap fromRef . toMRef
+--mrefRaw :: (ToMRef t m a, Functor m) => t -> m (RefVal a)
+--mrefRaw = fmap fromRef . toMRef
 
-        --accessor :: (RefBuilder m h Expr, ToMRef t m h Expr) => Name -> t -> RefCons m h Expr
-        --accessor name el = RefCons $ mkRef . Accessor name =<< mrefRaw el
+--accessor :: (RefBuilder m Expr, ToMRef t m Expr) => Name -> t -> m (Ref Expr)
+--accessor name el = mkRef . convertAST . Accessor name =<< mrefRaw el
 
 
         --match :: (ToMRef t1 m h Expr, ToMRef t2 m h Expr, RefBuilder m h Expr, Monad m)
@@ -802,6 +818,9 @@ var = mkRef . convertAST . Var
 runGraphBuilder :: (Monad m, Default g) => GraphBuilder g m a -> m g
 runGraphBuilder gb = view graph <$> execStateT gb def
 
+--runHomoGraphBuilder :: Monad m => GraphBuilder HomoGraph m a -> m HomoGraph
+--runHomoGraphBuilder gb = view graph <$> execStateT gb def
+
         --runFunctionBuilder :: (Default body, Monad m) => FunctionBuilder body m a -> m (a, Function body)
         --runFunctionBuilder fb = runStateT fb def
 
@@ -832,30 +851,32 @@ runGraphBuilder gb = view graph <$> execStateT gb def
         ----buildFunction desc = f & fgraph .~ g where
         ----    (g,f) = runIdentity $ runFunctionBuilder $ runGraphBuilder desc
 
-tst :: HeteroGraph
-tst = runIdentity $ runGraphBuilder g1
+--tst :: HomoGraph (Node Expr NodePtr)
+--tst = runIdentity $ runGraphBuilder g1
         ----tst :: (Graph, Function (GFBody BasePtr))
         ----fck :: Function (GFBody BasePtr)
         ----fck = buildFunction g1
 
-g1 :: _ => m (Ref (Node Expr))
-g1 = do
-    a <- var "a"
-    --a    <- ref "foo" $ var "a"
-    --b    <- ref "bar" $ accessor "foo" (var "b")
-    --c    <- ref "baz" $ match (var "a") (var "b")
-    return a
-    --mod  <- var "Main"
-    --foo  <- a    @.  "foo"
-    --b    <- foo  @$$ [a]
-    --bar  <- mod  @.  "bar"
-    --c    <- bar  @$$ [b]
-    --plus <- mod  @.  "plus"
-    --out  <- plus @$$ [c, a]
-    --return ()
+--g1 :: _ => m (Ref (Node Expr))
+
+--g1 :: HomoGraph (Node Expr NodePtr)
+--g1 = runIdentity $ runGraphBuilder $ do
+--    a <- var "a"
+--    --a    <- ref "foo" $ var "a"
+--    --b    <- ref "bar" $ accessor "foo" (var "b")
+--    --c    <- ref "baz" $ match (var "a") (var "b")
+--    return ()
+--    --mod  <- var "Main"
+--    --foo  <- a    @.  "foo"
+--    --b    <- foo  @$$ [a]
+--    --bar  <- mod  @.  "bar"
+--    --c    <- bar  @$$ [b]
+--    --plus <- mod  @.  "plus"
+--    --out  <- plus @$$ [c, a]
+--    --return ()
 
 main = do
-    print tst
+    --print g1
     --let m = fck & view body
     --    g = fck & view fgraph
     --    Just (Ref p1) = Map.index "foo" m
