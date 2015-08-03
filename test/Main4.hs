@@ -597,6 +597,11 @@ type family PtrOf (a :: (* -> *) -> *) :: * -> *
 type instance PtrOf Expr     = BasePtr
 type instance PtrOf (Node a) = NodePtr
 
+--type family PtrOf2 (a :: (* -> *) -> *) b :: *
+--type instance PtrOf2 (Node a) = NodePtr a
+
+
+
 makeLenses ''BasePtr
 makeLenses ''TPtr
 --makeLenses ''NodePtr
@@ -693,8 +698,23 @@ withGraph = withBldrState . mapOver graph
 
 ---- === Ref ===
 
+--RefVal (Node Expr)
+--PtrOf (Node Expr) (Val (Node Expr))
+--IPtr (Node Expr IPtr)
+
+
+--RefVal (Node Expr)
+--PtrOf (Node Expr) (Val (Node Expr))
+--NodePtr (Node Expr NodePtr)
+
+--Ref (Node Expr)
+--RefVal (Node Expr)
+--IPtr (Val (Node Expr))
+--IPtr (Node Expr NodePtr)
+
+
 type    Val         a = a (PtrOf a)
-type    RefVal      a = (PtrOf a) (Val a)
+type    RefVal      a = Ptr Int (Val a)
 newtype Ref         a = Ref { fromRef :: RefVal a }
         --newtype RefCons m h a = RefCons { runRefCons :: m (Ref h a) }
         --newtype RefCons2 m a  = RefCons2 { runRefCons2 :: m (Ref a) }
@@ -835,7 +855,7 @@ g1 = do
     --return ()
 
 main = do
-    --print tst
+    print tst
     --let m = fck & view body
     --    g = fck & view fgraph
     --    Just (Ref p1) = Map.index "foo" m
