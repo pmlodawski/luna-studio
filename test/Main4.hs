@@ -568,6 +568,8 @@ newtype TPtr     a = TPtr     { __tptr :: Ptr Int (Tp a)   } deriving (Show)
 
 data NodePtr t where NodePtr :: (Ptr Int (Node a h)) -> NodePtr (a h)
 
+--data HPtr m t where HPtr :: (Ptr Int (m a h)) -> HPtr (a h)
+
 deriving instance (t ~ a (h :: * -> *), Typeable a, Typeable h) => Show (NodePtr t)
 
 --instance Convertible (Ptr i (Node a h))
@@ -579,6 +581,8 @@ setPtr :: NodePtr (a h) -> Ptr Int (Node a h) -> NodePtr (a h)
 setPtr _ p = NodePtr p
 
 data Node a (h :: * -> *) = Node Typex (Ctx (a h)) [Ctx (a h)] (a h) deriving (Show)
+
+data Node2 a = Node2 Typex (Ctx a) [Ctx a] a deriving (Show)
 
 --instance ConvertibleM m (Node m) where
 --    convertM a = Node Typex Pure [] a
@@ -597,23 +601,35 @@ type family PtrOf (a :: (* -> *) -> *) :: * -> *
 type instance PtrOf Expr     = BasePtr
 type instance PtrOf (Node a) = NodePtr
 
-type family PtrOf2 (a :: (* -> *) -> *) :: *
-type instance PtrOf2 (Node a) = NodePtr (a NodePtr)
+--type family PtrOf2 (a :: (* -> *) -> *) :: *
+--type instance PtrOf2 (Node a) = NodePtr (a NodePtr)
 
 type family PtrOf3 a
 type instance PtrOf3 (Node a h) = NodePtr (a h)
+type instance PtrOf3 (Expr h) = BasePtr (Expr h)
 
 
 type family ValOf (a :: (* -> *) -> *) :: *
 type instance ValOf (Node a) = (a NodePtr)
 
 type family ValOf3 a :: *
-type instance ValOf3 (Node a h) = (a h)
+type instance ValOf3 (NodePtr (a h)) = (Node a h)
 
 --type family PtrOf2 (a :: (* -> *) -> *) b :: *
 --type instance PtrOf2 (Node a) = NodePtr a
 
+type family ASTType (a :: (* -> *) -> *) :: (* -> *) -> *
+type instance ASTType (Node a) = a
+type instance ASTType Expr = Expr
 
+type family ASTType2 (a :: *) :: (* -> *) -> *
+type instance ASTType2 (Node a h) = a
+type instance ASTType2 (Expr h) = Expr
+
+
+type family ChildType (h :: * -> *) (ast :: (* -> *) -> *) :: (* -> *) -> *
+type instance ChildType NodePtr Expr = Node Expr
+type instance ChildType BasePtr Expr = Expr
 
 makeLenses ''BasePtr
 makeLenses ''TPtr
@@ -677,6 +693,43 @@ instance (Monad m, Convertible idx (RefVal a), HasContainer g cont, Appendable2 
     mkRef a = fmap (Ref . convert) . withGraph . mapOver container $ append2 a
 
 
+mkRef3x :: (Convertible idx (h (a h)), HasContainer g cont, Appendable2 (ChildOf h a) idx cont, MonadBldrState g m)
+        => ChildOf h a -> m (Ref3 h a)
+mkRef3x a = fmap (Ref3 . convert) . withGraph . mapOver container $ append2 a
+
+
+--instance (Monad m, Convertible idx (RefVal a), HasContainer g cont, Appendable2 (Val a) idx cont)
+--      => RefBuilder3 (GraphBuilder g m) a where
+--    mkRef a = fmap (Ref . convert) . withGraph . mapOver container $ append2 a
+
+
+--class Monad m => RefBuilder3 m h a where
+--    mkRef3 :: ChildOf h a -> m (Ref3 h a)
+
+
+instance (Convertible idx (h (a h)), HasContainer g cont, Appendable2 (ChildOf h a) idx cont, Monad m)
+      => RefBuilder3 (GraphBuilder g m) h a where
+    mkRef3 a = fmap (Ref3 . convert) . withGraph . mapOver container $ append2 a
+
+
+var :: (ASTConvertible Expr (ChildType h a), RefBuilder3 m h a) => Name -> m (Ref3 h a)
+var = mkRef3 . convertAST . Var
+
+xx :: _ => m (Ref3 NodePtr Expr)
+xx = var "foo"
+
+--instance (Monad m, Convertible idx (RefVal a), HasContainer g cont, Appendable2 (Val a) idx cont)
+--      => RefBuilder2 (GraphBuilder g m) a where
+
+--mkRef2x :: (Convertible idx (PtrOf3 a), HasContainer g cont, Appendable2 el idx cont, MonadBldrState g f)
+--        => el -> f (Ref2 a)
+--mkRef2x a = fmap (Ref2 . convert) . withGraph . mapOver container $ append2 a
+
+--x :: PtrOf3 a ~ Expr h => Ref2 a
+--x = Ref2 $ Var "a"
+--var :: (ASTConvertible Expr a, RefBuilder m a) => Name -> m (Ref a)
+--var2 = mkRef2x . convertAST . Var
+
 
 
 withBldrState_ :: MonadBldrState g m => (BldrState g -> BldrState g) -> m ()
@@ -724,15 +777,29 @@ withGraph = withBldrState . mapOver graph
 --RefVal (Node Expr)
 --IPtr (Val (Node Expr))
 --IPtr (Node Expr NodePtr)
-type instance PtrOf2 (Node a) = NodePtr (a NodePtr)
---type instance PtrOf2 (Expr ) = NodePtr (a NodePtr)
-type instance ValOf (Node a) = (a NodePtr)
 
 --type    Val         a = a (PtrOf a)
 type    RefVal      a = Ptr Int (Val a)
 type    Val         a = a (PtrOf a)
 --type    RefVal      a = PtrOf3 a
 newtype Ref         a = Ref { fromRef :: RefVal a }
+
+newtype Ref2        a = Ref2 { fromRef2 :: RefVal2 a }
+type    RefVal2     a = PtrOf3 a
+
+type    Val2        a = a (PtrOf a)
+
+newtype Ref3 h a = Ref3 (h (a h))
+
+--newtype Ref4 a = Ref4 (h (a h))
+
+
+--xx :: _ => m (Ref3 NodePtr Expr)
+--xx = var "foo"
+
+
+--Ref4 (Node Expr)
+
         --newtype RefCons m h a = RefCons { runRefCons :: m (Ref h a) }
         --newtype RefCons2 m a  = RefCons2 { runRefCons2 :: m (Ref a) }
 
@@ -746,9 +813,21 @@ instance {-# OVERLAPPABLE #-} (m ~ n, Monad m) => ToMRef (m (Ref a)) n a where t
 
 -- === RefBuilder ===
 
+class Monad m => RefBuilder2 m a where
+    mkRef2 :: a h -> m (h (ASTType a h))
 
 class Monad m => RefBuilder m a where
     mkRef :: Val a -> m (Ref a)
+
+class Monad m => RefBuilder3 m h a where
+    mkRef3 :: ChildOf h a -> m (Ref3 h a)
+
+type ChildOf h a = ChildType h a h
+
+
+--mkRef3x :: (Convertible idx (PtrOf3 a), HasContainer g cont, Appendable2 el idx cont, MonadBldrState g f)
+--        => el -> f (Ref2 a)
+
 
         --class Monad m => RefHandler m h a | m -> h a where
         --    registerRef :: Name -> Ref h a -> m ()
