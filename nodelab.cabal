@@ -1,19 +1,19 @@
-name:                gui
+name:                nodelab
 version:             0.1.0.0
-synopsis:            Flowbox Data GUI
+synopsis:            NodeLab
 -- description:
-homepage:            data.flowbox.io
+homepage:            www.nodelab.io
 --license:             AllRightsReserved
 --license-file:        LICENSE
-author:              Flowbox Data
-maintainer:          data@flowbox.io
+author:              New Byte Order
+maintainer:          contact@nodelab.io
 -- copyright:
 category:            drag and drop test, all reactive
 build-type:          Simple
 -- extra-source-files:
 cabal-version:       >=1.22
 
-executable gui
+executable nodelab
   main-is:             Main.hs
   -- other-modules:
   -- other-extensions:

@@ -12,7 +12,7 @@ import           Utils.PreludePlus
 
 
 #ifdef TYPECHECKER_TEST
--- Necessary to pull changes on __flowbox project__, switch to typechecker branch and from flowbox-gui run:
+-- Necessary to pull changes on __flowbox project__, switch to typechecker branch and from nodelab run:
 -- cabal install ../flowbox/libs/convert ../flowbox/libs/utils ../flowbox/third-party/graphviz-2999.17.0.2.2 ../flowbox/libs/luna/typechecker --ghcjs
 -- where ../flowbox - __flowbox project__
 import           Luna.Inference hiding (main)

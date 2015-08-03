@@ -1,7 +1,7 @@
 shelljs = require 'shelljs'
 logger = require 'loggy'
 
-cabalProjectName = "gui"
+cabalProjectName = "nodelab"
 
 exports.config =
   paths:
