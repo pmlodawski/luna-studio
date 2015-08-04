@@ -226,8 +226,8 @@ def stage3_create_virtualenv():
 
 
 def stage4_jump_to_virtualenv():
-    script_to_call = "stage2.py"
     python_in_env = PYENV_BIN_PYTHON
+    script_to_call = sys.argv[0][:-4] + "2.py"  # run the second script
     subprocess.check_call([python_in_env, script_to_call])
 
 

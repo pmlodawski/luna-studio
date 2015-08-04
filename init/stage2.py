@@ -89,8 +89,8 @@ def install_requirements():
 
 
 def jump_to_next_stage():
-    script_to_call = "stage3.py"
     python_in_env = FLOWBOX_PYENV_BIN_PYTHON
+    script_to_call = sys.argv[0][:-4] + "3.py"  # run the second script
     subprocess.check_call([python_in_env, script_to_call])
 
 
