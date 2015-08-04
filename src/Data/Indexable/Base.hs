@@ -14,7 +14,7 @@ import           Data.Map            (Map)
 import qualified Data.IntMap         as IntMap
 import           Data.IntMap         (IntMap)
 import           Control.Lens        (Index)
-import           Data.Containers
+import           Data.Containers     (ElementOf)
 
 
 

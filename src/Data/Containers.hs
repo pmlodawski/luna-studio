@@ -1,11 +1,12 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Data.Containers where
+module Data.Containers (
+    module Data.Containers,
+    module X
+) where
 
-import Prelude
-
-import           Control.Lens
+import           Flowbox.Prelude hiding (Indexable, index)
 
 import           Data.Map    (Map)
 import qualified Data.Map    as Map
@@ -15,70 +16,52 @@ import           Data.Vector (Vector)
 import qualified Data.Vector as Vector
 
 import           Data.Maybe (fromJust)
+import           Data.Containers.Class as X hiding ( size, elems, indexes, append, append_, prepend, prepend_
+                                                   , update, insert, unsafeInsert, uncheckedInsert, index
+                                                   , unsafeIndex, uncheckedIndex
+                                                   )
+import qualified Data.Containers.Class as Class
+import           Data.Containers.Instances ()
 
 
--- === ElementOf ===
-type family ElementOf a
+size :: (HasContainer a cont, Measurable cont, Integral i) => a -> i
+size = Class.size . view container
 
--- instances
-type instance ElementOf [a] = a
-type instance ElementOf (Map k v) = v
-type instance ElementOf (Vector a) = a
-type instance ElementOf (IntMap a) = a
+elems :: (HasContainer a cont, Container cont idx el) => a -> [el]
+elems = Class.elems . view container
 
+indexes :: (HasContainer a cont, Container cont idx el) => a -> [idx]
+indexes = Class.indexes . view container
 
--- === HasSize ===
+append :: (Appendable cont idx el, HasContainer a cont) => el -> a -> (a, idx)
+append el = mapOver container $ Class.append el
 
-class HasSize a where
-    size :: a -> Int
+prepend :: (Prependable cont idx el, HasContainer a cont) => el -> a -> (a, idx)
+prepend el = mapOver container $ Class.prepend el
 
+append_ :: (Appendable cont idx el, HasContainer a cont) => el -> a -> a
+append_ el = container %~ Class.append_ el
 
--- instances
+prepend_ :: (Prependable cont idx el, HasContainer a cont) => el -> a -> a
+prepend_ el = container %~ Class.prepend_ el
 
-instance HasSize [a] where
-    size = length
+update :: (Updatable cont idx el, HasContainer a cont) => idx -> el -> a -> Maybe a
+update idx el = container $ Class.update idx el
 
-instance HasSize (Vector a) where
-    size = Vector.length
+insert :: (Insertable cont idx el, HasContainer a cont) => idx -> el -> a -> a
+insert idx el = container %~ Class.insert idx el
 
-instance HasSize (Map k v) where
-    size = Map.size
+unsafeInsert :: (UnsafeInsertable cont idx el, HasContainer a cont) => idx -> el -> a -> a
+unsafeInsert idx el = container %~ Class.unsafeInsert idx el
 
-instance HasSize (IntMap v) where
-    size = IntMap.size
+uncheckedInsert :: (UncheckedInsertable cont idx el, HasContainer a cont) => idx -> el -> a -> a
+uncheckedInsert idx el = container %~ Class.uncheckedInsert idx el
 
+index :: (Indexable cont idx el, HasContainer a cont) => idx -> a -> Maybe el
+index idx cont = Class.index idx $ cont ^. container
 
--- === Appendable ===
+unsafeIndex :: (UnsafeIndexable cont idx el, HasContainer a cont) => idx -> a -> el
+unsafeIndex idx cont = Class.unsafeIndex idx $ cont ^. container
 
-class Appendable a where
-    append :: a -> ElementOf a -> a
-
-class Prependable a where
-    prepend :: ElementOf a -> a -> a
-
-instance Appendable [a] where
-    append as a = as ++ [a]
-
-instance Prependable [a] where
-    prepend = (:)
-
-instance Appendable (Vector a) where
-    append = Vector.snoc
-
-instance Prependable (Vector a) where
-    prepend = Vector.cons
-
-
-
-class Appendable' m where
-    append' :: m a -> a -> m a
-
-class Prependable' m where
-    prepend' :: a -> m a -> m a
-
-
-instance Appendable' Vector where
-    append' = Vector.snoc
-
-instance Prependable' Vector where
-    prepend' = Vector.cons
+uncheckedIndex :: (UncheckedIndexable cont idx el, HasContainer a cont) => idx -> a -> el
+uncheckedIndex idx cont = Class.uncheckedIndex idx $ cont ^. container

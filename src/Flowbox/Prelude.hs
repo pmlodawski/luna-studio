@@ -9,6 +9,7 @@
 {-# LANGUAGE LambdaCase                #-}
 {-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Flowbox.Prelude(
     module Flowbox.Prelude,
@@ -177,3 +178,7 @@ foldlDef :: (a -> a -> a) -> a -> [a] -> a
 foldlDef f d = \case
     []     -> d
     (x:xs) -> foldl f x xs
+
+mapOver :: (Lens' b a) -> (a -> (a, x)) -> (b -> (b, x))
+mapOver lens f s = (s & lens .~ a, out) where
+    (a, out) = f $ s ^. lens
