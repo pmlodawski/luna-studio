@@ -15,10 +15,6 @@ var inputColor   = new THREE.Vector4(0x00, 0x99, 0x99, 0xAA).divideScalar(0xFF);
 var outputColor  = new THREE.Vector4(0xBB, 0x33, 0x00, 0xAA).divideScalar(0xFF);
 var colorFar     = new THREE.Vector4(0.2, 0.2, 0.2, 0.6);
 
-// var triangleHeight = size * Math.sqrt(3.0) / 2.0;
-// var halfHeight = triangleHeight / 2.0;
-// var dist  = nodeRadius + halfHeight + distFromRim;
-
 var height = 12.0;
 var width  = 12.0;
 var halfWidth = width / 2.0;
