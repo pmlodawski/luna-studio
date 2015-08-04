@@ -27,7 +27,7 @@ import           Utils.Vector
 import           JS.Config as Config
 import           ThreeJS.Registry
 import qualified Object.Widget.Button as WB
-import           Object.Widget.Types -- ( HandlesMouseOver, HandlesMouseOut, HandlesMouseMove, onMouseOver, onMouseOut, onMouseMove, Clickable, onClick )
+import           Object.Widget.Types
 import           GHCJS.Prim
 import           Utils.CtxDynamic
 
