@@ -35,6 +35,9 @@ def get_installation_list():
                                       descr="Docbook allows better logging. And this often gets handy…")
     yield from yield_unless_installed('plumbum',
                                       descr="Nice interfacing with OS commands.")
+    yield from yield_unless_installed('gitpython',
+                                      import_name='git',
+                                      descr="Git interfacing.")
 
 
 # noinspection PyUnusedLocal
