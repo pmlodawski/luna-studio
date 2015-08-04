@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# coding=utf-8
 
 # ##### Bootstrapping the repository. Stage 1. #####
 # Stage 1: run in alien environment, prepare virtualenv and call stage 2 within that.
@@ -26,7 +27,7 @@ import platform
 #                         __/ |
 #                        |___/
 import shutil
-import traceback
+
 
 FLOWBOX_GIT = os.path.join(".git", "flowbox")
 PYENV = os.path.join(FLOWBOX_GIT, "pyenv")
