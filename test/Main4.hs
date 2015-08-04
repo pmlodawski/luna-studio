@@ -12,7 +12,7 @@
 
 module Main where
 
-import Flowbox.Prelude hiding (simple, empty, Indexable, Simple, cons, lookup, index)
+import Flowbox.Prelude hiding (simple, empty, Indexable, Simple, cons, lookup, index, Wrapped)
 import Data.Repr
 
 --import qualified Luna.Inference.Type as Type
@@ -109,113 +109,10 @@ type ID = Int
 
 
 
--- === Literals ===
-
-data Literal = Int Int
-             | String Text.AutoBuilder
-
-
-instance IsString Literal where
-    fromString = String . fromString
-
-
--- === Expr ===
-
-data Key t = Key { fromKey :: ID } deriving (Show) -- { overKey :: Lens' Graph (Maybe t) }
-
---makeLenses ''Key
-
-
-type Name = String
-
-
-type HExpr h = h (Expr h)
-
-
---h (Expr h) , h = TExpr => TExpr (Expr TExpr) === Ptr Int (TExpr Type (Expr TExpr))
-
-data AST h = ASTExpr (h Expr)
-         --deriving (Show)
---data Node = Node
-
-
--- === Expr ===
-data Arg h = Arg { _label :: Maybe Name, _arg :: HExpr h }
-
--- wszystkie rzeczy nazwane powinny byc w slownikach w jezyku! - czyli datatypy ponizej zostaja,
--- ale mozemy tworzyc np. Var funkcjami, ktore oczekuja konkretnego Stringa!
-data Expr h = Var      Name
-            | Cons     Name
-            | Accessor Name (HExpr h)
-            | App      (HExpr h) [Arg h]
-            | Lambda
-            | RecUpd
-            | Match    (Pattern h) (HExpr h)
-            | Case
-            | Typed
-            -- | Assignment
-            | Decons
-            | Curry
-            -- | Meta
-            -- | Tuple
-            -- | Grouped
-            -- | Decl
-            | Lit
-            | Wildcard
-            -- | Tuple
-            -- | List
-            | Unsafe [Name] (HExpr h)
-
-type Pattern h = HExpr h
---data Pattern h = PCons (HExpr h) [Arg h]
---               | PVar  (HExpr h) -- do tego HExpra laczymy w grafie inne edge!
-
-
-deriving instance Show (HExpr h) => Show (Arg h)
-deriving instance Show (HExpr h) => Show (Expr h)
---deriving instance Show (HExpr h) => Show (Pattern h)
-
-makeLenses ''Expr
-makeLenses ''Arg
-
-
-instance Repr (Expr h) where
-    repr = \case
-        Var      n   -> "Var "      <> show n
-        Cons     n   -> "Cons "     <> show n
-        Accessor n _ -> "Accessor " <> show n
-        App      {}  -> "App"
-
---type Foo1 i = Expr (TPtr i)
---type Foo2 i = Expr (Ptr i)
-
-
--- === Ptr ===
-
-
-data Label l a = Label l a
 
 
 
-newtype Ptr  i a = Ptr  i
 
-
-class    IsPtr2 i p a | p -> i where mkPtr2 :: i -> p a
-class    IsPtr p i | p -> i where mkPtr :: i -> p a
-instance IsPtr (Ptr i) i    where mkPtr = Ptr
-
-
-instance (Typeable a, Show i) => Show (Ptr i a) where
-    show (Ptr i) = "Ptr " <> show i <> " (" <> show (typeOf (undefined :: a)) <> ")"
-
-class    HasPtr t         i a | t -> i a where ptr :: Lens' t (Ptr i a)
-instance HasPtr (Ptr i a) i a            where ptr = id
-
-
-instance Convertible i (Ptr i a) where convert = Ptr
-instance Convertible (Ptr i a) i where convert (Ptr i) = i
-
---instance IsPtr TPtr where mkPtr = TPtr . Ptr
 
 
 ---------- ?
@@ -231,39 +128,34 @@ mapOver lens f s = (s & lens .~ a, out) where
 
 
 
+--- === Voids ===
 
+data Void = Void deriving (Show)
+class    Void1 t1
+instance Void1 t1
+class    Void2 t1 t2
+instance Void2 t1 t2
+class    Void3 t1 t2 t3
+instance Void3 t1 t2 t3
+class    Void4 t1 t2 t3 t4
+instance Void4 t1 t2 t3 t4
+class    Void5 t1 t2 t3 t4 t5
+instance Void5 t1 t2 t3 t4 t5
+class    Void6 t1 t2 t3 t4 t5 t6
+instance Void6 t1 t2 t3 t4 t5 t6
+class    Void7 t1 t2 t3 t4 t5 t6 t7
+instance Void7 t1 t2 t3 t4 t5 t6 t7
+class    Void8 t1 t2 t3 t4 t5 t6 t7 t8
+instance Void8 t1 t2 t3 t4 t5 t6 t7 t8
+class    Void9 t1 t2 t3 t4 t5 t6 t7 t8 t9
+instance Void9 t1 t2 t3 t4 t5 t6 t7 t8 t9
 
-
-class IsNode n inp | n -> inp where
-    inputs :: n -> [inp]
-
-instance IsNode (Expr h) (HExpr h) where
-    inputs = \case
-        Accessor _    base -> [base]
-        App      base args -> base : fmap (view arg) args
-        _                  -> []
-
-
-
-
+-- where
 
 
 
 --- === [TOEXTRACT] Instances ===
 instance Default (Vector a) where def = mempty
-
-
-
-
-
---- === Hidden ===
-
-type NodeVal a = (Show a, Typeable a, Repr a)
-
-data Hidden where
-    Hidden :: NodeVal a => a -> Hidden
-
-
 
 castableLens :: IsoCastable a b => Iso' a b
 castableLens = iso cast cast
@@ -271,17 +163,17 @@ castableLens = iso cast cast
 convertibleLens :: IsoConvertible a b => Iso' a b
 convertibleLens = iso convert convert
 
--- instances
 
-instance Show Hidden where show (Hidden a) = show a
-instance Repr Hidden where repr (Hidden a) = repr a
 
-instance {-# OVERLAPPABLE #-} Castable Hidden a where
-    cast (Hidden a) = unsafeCoerce a
 
-instance {-# OVERLAPPABLE #-} NodeVal a => Castable a Hidden where
-    cast = Hidden
 
+--- === HasContainer ===
+
+class HasContainer a cont | a -> cont where
+    container :: Lens' a cont
+
+instance HasContainer [a]           [a]           where container = id
+instance HasContainer (Vector a)    (Vector a)    where container = id
 
 
 --- === Containers ===
@@ -314,25 +206,48 @@ append_ = fst .: append2
 prepend_ :: Prependable2 el idx cont => el -> cont -> cont
 prepend_ = fst .: prepend2
 
-type instance IndexOf el [a]                    = Int
-type instance IndexOf el (Vector a)             = Int
-type instance IndexOf el (HeteroContainer cont) = Ptr (Index cont) el
+-- generalized funcs -- TODO: extract
 
-type instance ElementByIdx idx [a]                    = a
-type instance ElementByIdx idx (Vector a)             = a
-type instance ElementByIdx idx (HeteroContainer cont) = IdxType idx
+append2' :: (Appendable2 el idx cont, HasContainer a cont) => el -> a -> (a, idx)
+append2' el = mapOver container $ append2 el
 
-type instance IdxType (Ptr i a) = a
+prepend2' :: (Prependable2 el idx cont, HasContainer a cont) => el -> a -> (a, idx)
+prepend2' el = mapOver container $ prepend2 el
+
+append_' :: (Appendable2 el idx cont, HasContainer a cont) => el -> a -> a
+append_' el = container %~ append_ el
+
+prepend_' :: (Prependable2 el idx cont, HasContainer a cont) => el -> a -> a
+prepend_' el = container %~ prepend_ el
+
+update' :: (Updatable el idx cont, HasContainer a cont) => idx -> el -> a -> Maybe a
+update' idx el = container $ update idx el
+
+insert' :: (Insertable el idx cont, HasContainer a cont) => idx -> el -> a -> a
+insert' idx el = container %~ insert idx el
+
+unsafeInsert' :: (UnsafeInsertable el idx cont, HasContainer a cont) => idx -> el -> a -> a
+unsafeInsert' idx el = container %~ unsafeInsert idx el
+
+uncheckedInsert' :: (UncheckedInsertable el idx cont, HasContainer a cont) => idx -> el -> a -> a
+uncheckedInsert' idx el = container %~ uncheckedInsert idx el
+
+index' :: (Indexable2 el idx cont, HasContainer a cont) => idx -> a -> Maybe el
+index' idx cont = index idx $ cont ^. container
+
+unsafeIndex' :: (UnsafeIndexable el idx cont, HasContainer a cont) => idx -> a -> el
+unsafeIndex' idx cont = unsafeIndex idx $ cont ^. container
+
+uncheckedIndex' :: (UncheckedIndexable el idx cont, HasContainer a cont) => idx -> a -> el
+uncheckedIndex' idx cont = uncheckedIndex idx $ cont ^. container
 
 
 
---- === Voids ===
+type instance IndexOf el [a]              = Int
+type instance IndexOf el (Vector a)       = Int
 
-data Void = Void deriving (Show)
-class Void1 a
-instance Void1 a
--- where
-
+type instance ElementByIdx idx [a]        = a
+type instance ElementByIdx idx (Vector a) = a
 
 
 --- === Unified values ===
@@ -359,13 +274,32 @@ instance {-# OVERLAPPABLE #-} (ctx a, UnifiedEl a) => Castable a (Unified ctx) w
 
 
 
---- === HasContainer ===
+-- === Ptr ===
 
-class HasContainer a cont | a -> cont where
-    container :: Lens' a cont
+newtype Ptr  i   a = Ptr i
+newtype HPtr i m a = HPtr (Ptr i (m a)) deriving (Show)
 
-instance HasContainer [a]           [a]           where container = id
-instance HasContainer (Vector a)    (Vector a)    where container = id
+-- injective TF
+class    PtrTarget (a :: * -> *) (b :: (* -> *) -> *) c | a b -> c, c -> a b --where
+instance PtrTarget (HPtr i h) a {- = -} (h (a (HPtr i h)))
+instance PtrTarget (Ptr  i)   a {- = -} (a (Ptr i))
+
+-- instances
+
+instance (Typeable a, Show i) => Show (Ptr i a) where
+    show (Ptr i) = "Ptr " <> show i <> " (" <> show (typeOf (undefined :: a)) <> ")"
+
+type instance IdxType (Ptr  i   a) = a
+type instance IdxType (HPtr i m a) = a
+
+instance Convertible i (Ptr i a)    where convert = Ptr
+instance Convertible (Ptr i a) i    where convert = ptrIdx
+instance Convertible i (HPtr i m a) where convert = HPtr . convert
+instance Convertible (HPtr i m a) i where convert = ptrIdx
+
+class    PtrIdx p i | p -> i    where ptrIdx :: p -> i
+instance PtrIdx (Ptr  i   a) i  where ptrIdx (Ptr i)  = i
+instance PtrIdx (HPtr i m a) i  where ptrIdx (HPtr p) = ptrIdx p
 
 
 
@@ -383,8 +317,8 @@ makeLenses ''HeteroContainer
 
 -- instances
 
---type instance Hetero ctx cont = HeteroContainer (cont (Unified ctx))
-instance HasContainer (HeteroContainer cont) cont where container = cont
+
+instance HasContainer (HeteroContainer c) (HeteroContainer c) where container = id
 
 
 instance Default cont => Default (HeteroContainer cont) where
@@ -400,6 +334,9 @@ type HeteroTransCtx idx ctx a cont idx' el = ( Container idx a (HeteroContainer 
                                              , ctx a, UnifiedEl a
                                              , IsoConvertible idx idx'
                                              )
+
+type instance IndexOf el (HeteroContainer cont) = Ptr (Index cont) el
+type instance ElementByIdx idx (HeteroContainer cont) = IdxType idx
 
 instance (HeteroTransCtx idx ctx a cont idx' el, Appendable2 el idx' cont)
       => Appendable2 a idx (HeteroContainer cont) where
@@ -471,73 +408,8 @@ instance (a ~ b) => Updatable    a Int [b] where update   idx a l = case (idx, l
                                                                         _           -> Nothing
 
 
---- === HContainer ===
-
-data HContainer elems = HContainer { _elems :: elems }
-
-makeLenses ''HContainer
-
-class HasHContainer a n | a -> n where
-    hContainer :: Lens' a (HContainer n)
 
 
-type OverHContainer m ptr a = (UncheckedSetIdx m, UncheckedGetIdx m, IsoCastable a (ElementOf m), HasPtr ptr (Index m) a)
-
-unsafeOverPtr :: OverHContainer m ptr a => ptr -> Lens' (HContainer m) a
-unsafeOverPtr (view ptr -> Ptr i) = elems . unsafeAt i . castableLens
-
-unsafeSet :: OverHContainer m ptr a => ptr -> a -> HContainer m -> HContainer m
-unsafeSet ptr a = unsafeOverPtr ptr .~ a
-
-unsafeGet :: OverHContainer m ptr a => ptr -> HContainer m -> a
-unsafeGet ptr = view $ unsafeOverPtr ptr
-
---append2 :: (Appendable elems, Indexable elems, Castable a (ElementOf elems), IsPtr2 (Index elems) ptr (a ptr))
---       => a -> HContainer elems -> (HContainer elems, ptr a)
---append2 a g = (g', mkPtr . lastIdx $ g' ^. elems) where
---    g' = g & elems %~ (flip append $ cast a)
-
-insertx :: (Appendable elems, LastIdx elems, Castable a (ElementOf elems), IsPtr2 (Index elems) p a)
-        => a -> HContainer elems -> (HContainer elems, p a)
-insertx a g = (g', mkPtr2 . lastIdx $ g' ^. elems) where
-    g' = g & elems %~ (flip append $ cast a)
-
-insert2 :: (Appendable elems, LastIdx elems, IsPtr2 (Index elems) p el, el ~ ElementOf elems)
-        => el -> HContainer elems -> (HContainer elems, p el)
-insert2 a g = (g', mkPtr2 . lastIdx $ g' ^. elems) where
-    g' = g & elems %~ (flip append a)
-
-type instance Index     (HContainer elems) = Index     elems
-type instance ElementOf (HContainer elems) = ElementOf elems
-
-
-
---instance Appendable2 (HContainer elems) where
---    append2 el c = (c', Ptr . lastIdx $ c' ^. elems) where
---        c' = c & elems %~ (flip append el)
-
--- FIXME (unsafe implementation)
-inputs' :: HContainer (Vector Hidden) -> ID -> [Ptr Int (Expr (Ptr Int))]
-inputs' g id = inputs $ unsafeGet (Ptr id :: Ptr Int (Expr (Ptr Int))) g
-
--- instances
-
-deriving instance Show elems => Show (HContainer elems)
-
-instance Default elems => Default (HContainer elems) where
-    def = HContainer def
-
-
-
--- === Node ===
-
-data Type a = Type a
-            | Star
-
---data Node a = Node { _tp :: Type a, _nodeval :: Value a }
-
---data Value a = Val  a
---             | BVal -- binary value
 
 
 
@@ -549,110 +421,93 @@ data Ctx a = Pure
            | Ctx Name (Maybe a)
            deriving (Show)
 
---data Val a = Val { _ctx   :: Ctx a
---                 , _trans :: [Ctx a]
---                 , _val   :: a
---                 }
+-- === Literals ===
+
+data Literal = Int Int
+             | String Text.AutoBuilder
+
+
+instance IsString Literal where
+    fromString = String . fromString
+
+
+-- === Expr ===
+
+
+type Name = String
+
+
+type HExpr h = h (Expr h)
+
+
+data Arg h = Arg { _label :: Maybe Name, _arg :: HExpr h }
+
+-- wszystkie rzeczy nazwane powinny byc w slownikach w jezyku! - czyli datatypy ponizej zostaja,
+-- ale mozemy tworzyc np. Var funkcjami, ktore oczekuja konkretnego Stringa!
+data Expr h = Var      Name
+            | Cons     Name
+            | Accessor Name (HExpr h)
+            | App      (HExpr h) [Arg h]
+            | Lambda
+            | RecUpd
+            | Match    (Pattern h) (HExpr h)
+            | Case
+            | Typed
+            -- | Assignment
+            | Decons
+            | Curry
+            -- | Meta
+            -- | Tuple
+            -- | Grouped
+            -- | Decl
+            | Lit
+            | Wildcard
+            -- | Tuple
+            -- | List
+            | Unsafe [Name] (HExpr h)
+
+type Pattern h = HExpr h
+
+data Typex = Typex deriving (Show) -- fixme
+
+data Val a = Val Typex (Ctx a) [Ctx a] a deriving (Show)
+
+
+deriving instance Show (HExpr h) => Show (Arg h)
+deriving instance Show (HExpr h) => Show (Expr h)
+--deriving instance Show (HExpr h) => Show (Pattern h)
+
+makeLenses ''Expr
+makeLenses ''Arg
+
+
+instance Repr (Expr h) where
+    repr = \case
+        Var      n   -> "Var "      <> show n
+        Cons     n   -> "Cons "     <> show n
+        Accessor n _ -> "Accessor " <> show n
+        App      {}  -> "App"
+
+
+class IsNode n inp | n -> inp where
+    inputs :: n -> [inp]
+
+instance IsNode (Expr h) (HExpr h) where
+    inputs = \case
+        Accessor _    base -> [base]
+        App      base args -> base : fmap (view arg) args
+        _                  -> []
+
+
+instance Convertible' (Expr h) (Val (Expr h)) where convert' = Val Typex Pure []
+instance Convertible' (Expr h) (Expr h)       where convert' = id
+
+
+
+
 
 
 --- === Builder ===
-
-
-data Typex = Typex deriving (Show) -- fixme
-data Tp a  = Tp Typex a
-
-newtype BasePtr  a = BasePtr  { __ptr  :: Ptr Int a        } deriving (Show)
-newtype TPtr     a = TPtr     { __tptr :: Ptr Int (Tp a)   } deriving (Show)
---newtype NodePtr  a = NodePtr  { __nptr :: Ptr Int (Node a) } deriving (Show)
---newtype NodePtr  (m a) = NodePtr  { __nptr :: Ptr Int (Node a) } deriving (Show)
-
-data NodePtr t where NodePtr :: (Ptr Int (Node a h)) -> NodePtr (a h)
-
---data HPtr m t where HPtr :: (Ptr Int (m a h)) -> HPtr (a h)
-
-deriving instance (t ~ a (h :: * -> *), Typeable a, Typeable h) => Show (NodePtr t)
-
---instance Convertible (Ptr i (Node a h))
-
-getPtr :: NodePtr (a h) -> Ptr Int (Node a h)
-getPtr (NodePtr p) = p
-
-setPtr :: NodePtr (a h) -> Ptr Int (Node a h) -> NodePtr (a h)
-setPtr _ p = NodePtr p
-
-data Node a (h :: * -> *) = Node Typex (Ctx (a h)) [Ctx (a h)] (a h) deriving (Show)
-
-data Node2 a = Node2 Typex (Ctx a) [Ctx a] a deriving (Show)
-
---instance ConvertibleM m (Node m) where
---    convertM a = Node Typex Pure [] a
-
-class ASTConvertible m n where
-    convertAST :: m h -> n (h :: * -> *)
-
-instance {-# OVERLAPPABLE #-} ASTConvertible a a where convertAST = id
-
-instance ASTConvertible Expr (Node Expr) where
-    convertAST = Node Typex (Unknown Nothing) []
-
-
-
-type family PtrOf (a :: (* -> *) -> *) :: * -> *
-type instance PtrOf Expr     = BasePtr
-type instance PtrOf (Node a) = NodePtr
-
---type family PtrOf2 (a :: (* -> *) -> *) :: *
---type instance PtrOf2 (Node a) = NodePtr (a NodePtr)
-
-type family PtrOf3 a
-type instance PtrOf3 (Node a h) = NodePtr (a h)
-type instance PtrOf3 (Expr h) = BasePtr (Expr h)
-
-
-type family ValOf (a :: (* -> *) -> *) :: *
-type instance ValOf (Node a) = (a NodePtr)
-
-type family ValOf3 a :: *
-type instance ValOf3 (NodePtr (a h)) = (Node a h)
-
---type family PtrOf2 (a :: (* -> *) -> *) b :: *
---type instance PtrOf2 (Node a) = NodePtr a
-
-type family ASTType (a :: (* -> *) -> *) :: (* -> *) -> *
-type instance ASTType (Node a) = a
-type instance ASTType Expr = Expr
-
-type family ASTType2 (a :: *) :: (* -> *) -> *
-type instance ASTType2 (Node a h) = a
-type instance ASTType2 (Expr h) = Expr
-
-
-type family ChildType (h :: * -> *) (ast :: (* -> *) -> *) :: (* -> *) -> *
-type instance ChildType NodePtr Expr = Node Expr
-type instance ChildType BasePtr Expr = Expr
-
-makeLenses ''BasePtr
-makeLenses ''TPtr
---makeLenses ''NodePtr
-
-instance HasPtr (BasePtr a)     Int a          where ptr = _ptr
-instance HasPtr (TPtr a)        Int (Tp a)     where ptr = _tptr
-instance HasPtr (NodePtr (a h)) Int (Node a h) where ptr = lens getPtr setPtr
-
-instance IsPtr BasePtr  Int where mkPtr = BasePtr . Ptr
-instance IsPtr TPtr     Int where mkPtr = TPtr    . Ptr
-
-instance IsPtr2 Int BasePtr  a                where mkPtr2 = BasePtr . Ptr
-instance IsPtr2 Int TPtr     a                where mkPtr2 = TPtr    . Ptr
-instance IsPtr2 Int NodePtr (a (h :: * -> *)) where mkPtr2 = NodePtr . Ptr
-
---Expr h = ... (h Expr)
-
-
-
---instance IsPtr (Ptr i) i    where mkPtr = Ptr
-
---
 
 newtype HeteroGraph   = HeteroGraph { __hetReg :: Hetero' Vector } deriving (Show, Default)
 newtype HomoGraph   a = HomoGraph   { __homReg :: Vector a       } deriving (Show, Default)
@@ -664,8 +519,8 @@ instance HasContainer HeteroGraph   (Hetero' Vector) where container = _hetReg
 instance HasContainer (HomoGraph a) (Vector a)       where container = _homReg
 
 
-
-type GraphBuilder g m = StateT (BldrState g) m
+type GraphBuilderT g m = StateT (BldrState g) m
+type GraphBuilder  g   = GraphBuilderT g Identity
 
 data BldrState g = BldrState { _orphans :: [Int]
                              , _graph   :: g
@@ -678,59 +533,14 @@ class Monad m => MonadBldrState g m | m -> g where
     getBldrState :: m (BldrState g)
     putBldrState :: (BldrState g) -> m ()
 
-
 instance Default g => Default (BldrState g) where
     def = BldrState def def
 
-
-instance Monad m => MonadBldrState g (GraphBuilder g m) where
+instance Monad m => MonadBldrState g (GraphBuilderT g m) where
     getBldrState = get
     putBldrState = put
 
-
-instance (Monad m, Convertible idx (RefVal a), HasContainer g cont, Appendable2 (Val a) idx cont)
-      => RefBuilder (GraphBuilder g m) a where
-    mkRef a = fmap (Ref . convert) . withGraph . mapOver container $ append2 a
-
-
-mkRef3x :: (Convertible idx (h (a h)), HasContainer g cont, Appendable2 (ChildOf h a) idx cont, MonadBldrState g m)
-        => ChildOf h a -> m (Ref3 h a)
-mkRef3x a = fmap (Ref3 . convert) . withGraph . mapOver container $ append2 a
-
-
---instance (Monad m, Convertible idx (RefVal a), HasContainer g cont, Appendable2 (Val a) idx cont)
---      => RefBuilder3 (GraphBuilder g m) a where
---    mkRef a = fmap (Ref . convert) . withGraph . mapOver container $ append2 a
-
-
---class Monad m => RefBuilder3 m h a where
---    mkRef3 :: ChildOf h a -> m (Ref3 h a)
-
-
-instance (Convertible idx (h (a h)), HasContainer g cont, Appendable2 (ChildOf h a) idx cont, Monad m)
-      => RefBuilder3 (GraphBuilder g m) h a where
-    mkRef3 a = fmap (Ref3 . convert) . withGraph . mapOver container $ append2 a
-
-
-var :: (ASTConvertible Expr (ChildType h a), RefBuilder3 m h a) => Name -> m (Ref3 h a)
-var = mkRef3 . convertAST . Var
-
-xx :: _ => m (Ref3 NodePtr Expr)
-xx = var "foo"
-
---instance (Monad m, Convertible idx (RefVal a), HasContainer g cont, Appendable2 (Val a) idx cont)
---      => RefBuilder2 (GraphBuilder g m) a where
-
---mkRef2x :: (Convertible idx (PtrOf3 a), HasContainer g cont, Appendable2 el idx cont, MonadBldrState g f)
---        => el -> f (Ref2 a)
---mkRef2x a = fmap (Ref2 . convert) . withGraph . mapOver container $ append2 a
-
---x :: PtrOf3 a ~ Expr h => Ref2 a
---x = Ref2 $ Var "a"
---var :: (ASTConvertible Expr a, RefBuilder m a) => Name -> m (Ref a)
---var2 = mkRef2x . convertAST . Var
-
-
+-- utils
 
 withBldrState_ :: MonadBldrState g m => (BldrState g -> BldrState g) -> m ()
 withBldrState_ f = withBldrState $ fmap (,()) f
@@ -743,219 +553,111 @@ withBldrState f = do
     putBldrState $ bldr'
     return out
 
-
 withGraph :: MonadBldrState g m => (g -> (g, a)) -> m a
 withGraph = withBldrState . mapOver graph
 
-        --withOrphans :: MonadBldrState m => ([Int] -> (a, [Int])) -> m a
-        --withOrphans f = do
-        --    s <- getBldrState
-        --    let orphLens    = bldrState . orphans
-        --        (a, norphs) = f (s ^. orphLens)
-        --    putBldrState $ s & orphLens .~ norphs
-        --    return a
+runGraphBuilderT :: (Monad m, Default g) => GraphBuilderT g m a -> m (a, g)
+runGraphBuilderT gb = over _2 (view graph) <$> runStateT gb def
 
-        --popOrphan :: MonadBldrState m => m (Maybe Int)
-        --popOrphan = withOrphans $ \case
-        --    []         -> (Nothing, [])
-        --    (id : ids) -> (Just id, ids)
+execGraphBuilderT :: (Monad m, Default g) => GraphBuilderT g m a -> m g
+execGraphBuilderT gb = snd <$> runGraphBuilderT gb
 
+evalGraphBuilderT :: (Monad m, Default g) => GraphBuilderT g m a -> m a
+evalGraphBuilderT gb = fst <$> runGraphBuilderT gb
+
+runGraphBuilder :: Default g => GraphBuilder g a -> (a, g)
+runGraphBuilder = runIdentity . runGraphBuilderT
+
+execGraphBuilder :: Default g => GraphBuilder g a -> g
+execGraphBuilder = runIdentity . execGraphBuilderT
+
+evalGraphBuilder :: Default g => GraphBuilder g a -> a
+evalGraphBuilder = runIdentity . evalGraphBuilderT
 
 
 ---- === Ref ===
 
---RefVal (Node Expr)
---PtrOf (Node Expr) (Val (Node Expr))
---IPtr (Node Expr IPtr)
+newtype Ref     h a = Ref (h (a h))
+type    Wrapped m a = m (a (HPtr Int m))
+type    Simple    a = a (Ptr Int)
+
+-- utils
+
+class ToMRef t m h a | t -> h a where
+    toMRef :: t -> m (Ref h a)
+
+-- instances
+
+instance                             (Monad m) => ToMRef    (Ref h a)  m h a where toMRef = return
+instance {-# OVERLAPPABLE #-} (m ~ n, Monad m) => ToMRef (m (Ref h a)) n h a where toMRef = id
 
 
---RefVal (Node Expr)
---PtrOf (Node Expr) (Val (Node Expr))
---NodePtr (Node Expr NodePtr)
-
---Ref (Node Expr)
---RefVal (Node Expr)
---IPtr (Val (Node Expr))
---IPtr (Node Expr NodePtr)
-
---type    Val         a = a (PtrOf a)
-type    RefVal      a = Ptr Int (Val a)
-type    Val         a = a (PtrOf a)
---type    RefVal      a = PtrOf3 a
-newtype Ref         a = Ref { fromRef :: RefVal a }
-
-newtype Ref2        a = Ref2 { fromRef2 :: RefVal2 a }
-type    RefVal2     a = PtrOf3 a
-
-type    Val2        a = a (PtrOf a)
-
-newtype Ref3 h a = Ref3 (h (a h))
-
---newtype Ref4 a = Ref4 (h (a h))
-
-
---xx :: _ => m (Ref3 NodePtr Expr)
---xx = var "foo"
-
-
---Ref4 (Node Expr)
-
-        --newtype RefCons m h a = RefCons { runRefCons :: m (Ref h a) }
-        --newtype RefCons2 m a  = RefCons2 { runRefCons2 :: m (Ref a) }
-
-class ToMRef t m a | t -> a where
-    toMRef :: t -> m (Ref a)
-
-instance                             (Monad m) => ToMRef    (Ref a)  m a where toMRef = return
-instance {-# OVERLAPPABLE #-} (m ~ n, Monad m) => ToMRef (m (Ref a)) n a where toMRef = id
-
-        --deriving instance Show (h (a h)) => Show (Ref h a)
 
 -- === RefBuilder ===
 
-class Monad m => RefBuilder2 m a where
-    mkRef2 :: a h -> m (h (ASTType a h))
-
-class Monad m => RefBuilder m a where
-    mkRef :: Val a -> m (Ref a)
-
-class Monad m => RefBuilder3 m h a where
-    mkRef3 :: ChildOf h a -> m (Ref3 h a)
-
-type ChildOf h a = ChildType h a h
+class (Monad m, PtrTarget h a el) => RefBuilder el m h a where
+    mkRef :: el -> m (Ref h a)
 
 
---mkRef3x :: (Convertible idx (PtrOf3 a), HasContainer g cont, Appendable2 el idx cont, MonadBldrState g f)
---        => el -> f (Ref2 a)
+instance (Convertible idx (h (a h)), HasContainer g cont, Appendable2 el idx cont, Monad m, PtrTarget h a el)
+      => RefBuilder el (GraphBuilderT g m) h a where
+    mkRef a = fmap (Ref . convert) . withGraph . mapOver container $ append2 a
 
 
-        --class Monad m => RefHandler m h a | m -> h a where
-        --    registerRef :: Name -> Ref h a -> m ()
+-- utils
 
-        --type ASTBuilder m h a = (RefBuilder m h a, RefHandler m h a)
-
-        ----
-
-
-        --mkCons2 :: RefBuilder m a => a (PtrOf a) -> RefCons2 m a
-        --mkCons2 = RefCons2 . mkRef
-
-
---var :: (ASTConvertible Expr a, RefBuilder m a) => Name -> m (Ref a)
---var = mkRef . convertAST . Var
-
-        ----test :: RefBuilder
-
-        ----dorobic SeqBuidler i pozenic z grafami - seq builder moze budowac body funkcji i laczyc je z kontekstami!
-
-        --cons :: RefBuilder m h Expr => Name -> RefCons m h Expr
-        --cons = mkCons . Cons
-
-        --ref :: (RefHandler m h a, ToMRef t m h a) => Name -> t -> m (Ref h a)
-        --ref name t = do
-        --    ref <- toMRef t
-        --    registerRef name ref
-        --    return ref
-
---mrefRaw :: (ToMRef t m a, Functor m) => t -> m (RefVal a)
---mrefRaw = fmap fromRef . toMRef
-
---accessor :: (RefBuilder m Expr, ToMRef t m Expr) => Name -> t -> m (Ref Expr)
---accessor name el = mkRef . convertAST . Accessor name =<< mrefRaw el
-
-
-        --match :: (ToMRef t1 m h Expr, ToMRef t2 m h Expr, RefBuilder m h Expr, Monad m)
-        --      => t1 -> t2 -> RefCons m h Expr
-        --match a b = RefCons $ do
-        --    ra <- mrefRaw a
-        --    rb <- mrefRaw b
-        --    mkRef $ Match ra rb
+mkASTRef :: (Convertible' (a h) el, RefBuilder el m h a) => a h -> m (Ref h a)
+mkASTRef = mkRef . convert'
 
 
 
-        ------ === RefBuilder ===
+
+data Function body = Function { _body :: body } deriving (Show)
+
+type FunctionGraph = Function (HomoGraph (Wrapped Val Expr))
+
+runFunctionBuilderT :: (Monad m, Default g) => GraphBuilderT g m a -> m (Function g)
+runFunctionBuilderT gb = do
+    (a, g) <- runGraphBuilderT gb
+    return $ Function g
+
+runFunctionBuilder :: Default g => GraphBuilder g a -> Function g
+runFunctionBuilder = runIdentity . runFunctionBuilderT
 
 
-        ----def foo [x,y] : ...
+var = mkASTRef . Var
 
-        --data Function body   = Function { -- _args   :: [Pattern h]
-        --                                  _body   :: body
-        --                                } deriving (Show)
+f :: FunctionGraph
+f = runFunctionBuilder $ do
+    a <- var "a"
+    return ()
 
-        --type NodeFunction ptr = Function (GFBody ptr)
-
-        --type GFBody ptr = Map String (Ref ptr Expr)
-
-        --instance Default body => Default (Function body) where def = Function def
-
-        ----deriving instance Show (Function body h)
-
-        --makeLenses ''Function
-        ------ === Examples ===
+g1 :: HomoGraph (Wrapped Val Expr)
+--g1 :: HomoGraph (Simple Expr)
+g1 = execGraphBuilder $ do
+    a <- var "a"
+    --return a
+    return ()
 
 
-runGraphBuilder :: (Monad m, Default g) => GraphBuilder g m a -> m g
-runGraphBuilder gb = view graph <$> execStateT gb def
-
---runHomoGraphBuilder :: Monad m => GraphBuilder HomoGraph m a -> m HomoGraph
---runHomoGraphBuilder gb = view graph <$> execStateT gb def
-
-        --runFunctionBuilder :: (Default body, Monad m) => FunctionBuilder body m a -> m (a, Function body)
-        --runFunctionBuilder fb = runStateT fb def
-
-        --type FunctionBuilder body m = StateT (Function body) m
-
-        --class MonadFunctionBuilder body m | m -> body where
-        --    getFunction :: m (Function body)
-        --    putFunction :: Function body -> m ()
-
-        --instance Monad m => MonadFunctionBuilder body (FunctionBuilder body m) where
-        --    getFunction = get
-        --    putFunction = put
-
-
-        ----class Monad m => RefHandler m h a | m -> h a where
-        ----    registerRef :: Name -> Ref h a -> m ()
-
-        --instance {-# OVERLAPPABLE #-} (MonadTrans t, RefHandler m h a, Monad (t m)) => RefHandler (t m) h a where
-        --    registerRef name ref = lift $ registerRef name ref
-
-        --instance Monad m => RefHandler (FunctionBuilder (GFBody h) m) h Expr where
-        --    registerRef name ref = do
-        --        func <- getFunction
-        --        putFunction $ func & body %~ Map.insert name ref
-
-
-        ----foo :: _
-        ----buildFunction desc = f & fgraph .~ g where
-        ----    (g,f) = runIdentity $ runFunctionBuilder $ runGraphBuilder desc
-
---tst :: HomoGraph (Node Expr NodePtr)
---tst = runIdentity $ runGraphBuilder g1
-        ----tst :: (Graph, Function (GFBody BasePtr))
-        ----fck :: Function (GFBody BasePtr)
-        ----fck = buildFunction g1
-
---g1 :: _ => m (Ref (Node Expr))
-
---g1 :: HomoGraph (Node Expr NodePtr)
+--g1 :: HomoGraph _
 --g1 = runIdentity $ runGraphBuilder $ do
---    a <- var "a"
---    --a    <- ref "foo" $ var "a"
---    --b    <- ref "bar" $ accessor "foo" (var "b")
---    --c    <- ref "baz" $ match (var "a") (var "b")
+--    a <- var4
+----    --a    <- ref "foo" $ var "a"
+----    --b    <- ref "bar" $ accessor "foo" (var "b")
+----    --c    <- ref "baz" $ match (var "a") (var "b")
+----    return ()
+----    --mod  <- var "Main"
+----    --foo  <- a    @.  "foo"
+----    --b    <- foo  @$$ [a]
+----    --bar  <- mod  @.  "bar"
+----    --c    <- bar  @$$ [b]
+----    --plus <- mod  @.  "plus"
+----    --out  <- plus @$$ [c, a]
 --    return ()
---    --mod  <- var "Main"
---    --foo  <- a    @.  "foo"
---    --b    <- foo  @$$ [a]
---    --bar  <- mod  @.  "bar"
---    --c    <- bar  @$$ [b]
---    --plus <- mod  @.  "plus"
---    --out  <- plus @$$ [c, a]
---    --return ()
 
 main = do
-    --print g1
+    print f
     --let m = fck & view body
     --    g = fck & view fgraph
     --    Just (Ref p1) = Map.index "foo" m
@@ -991,11 +693,11 @@ main = do
 --    return ()
 
 
---class ToMRef3 t where
---    toMRef3 :: Monad m => t m a -> m (Ref m a)
+--class ToMRef t where
+--    toMRef :: Monad m => t m a -> m (Ref m a)
 
---instance ToMRef3 RefCons where toMRef3 = runRefCons
---instance ToMRef3 Ref      where toMRef3 = return
+--instance ToMRef RefCons where toMRef = runRefCons
+--instance ToMRef Ref      where toMRef = return
 
 
 
