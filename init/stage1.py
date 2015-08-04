@@ -28,6 +28,11 @@ import platform
 import shutil
 import traceback
 
+FLOWBOX_GIT = os.path.join(".git", "flowbox")
+PYENV = os.path.join(FLOWBOX_GIT, "pyenv")
+PYENV_BIN_PYTHON = os.path.join(PYENV, "bin", "python")
+
+
 required_executables = {
     "git": {
         'msg': "Bro, do you even git?",
@@ -191,37 +196,37 @@ def stage2_verify_programs_fuzzy():
 
 def stage3_create_virtualenv():
     try:
-        print("INFO: ensuring repo-local flowbox directory '.git/flowbox' exists")
-        os.makedirs(".git/flowbox")
+        print("INFO: ensuring repo-local flowbox directory '%s' exists" % (FLOWBOX_GIT, ))
+        os.makedirs(FLOWBOX_GIT)
     except OSError:
         pass
 
-    if os.path.isfile(".git/flowbox/pyenv/bin/python"):
+    if os.path.isfile(PYENV_BIN_PYTHON):
         # noinspection PyCallingNonCallable
-        if not required_executables_fuzzy["python3"]['check'](".git/flowbox/pyenv/bin/python"):
-            raise Exception("Whoops, something is not right. '.git/flowbox/pyenv/bin/python' does not "
-                            "pass the self-tests. Please, verify that")
+        if not required_executables_fuzzy["python3"]['check'](PYENV_BIN_PYTHON):
+            raise Exception("Whoops, something is not right. '%s' does not "
+                            "pass the self-tests. Please, verify that" % (PYENV_BIN_PYTHON, ))
 
         print("INFO: looks like Python virtualenv is already there, all looks ok")
     else:
         print("INFO: looks like Python virtualenv is not there yet, allow me to make it")
         selected_python = required_executables_fuzzy["python3"]['result']
 
-        if os.path.exists(".git/flowbox/pyenv"):
+        if os.path.exists(PYENV):
             try:
-                shutil.rmtree(".git/flowbox/pyenv")
+                shutil.rmtree(PYENV)
             except OSError:
                 try:
-                    os.remove(".git/flowbox/pyenv")
+                    os.remove(PYENV)
                 except OSError:
-                    raise Exception("ERROR: could not remove '.git/flowbox/pyenv'. Clean that up and restart")
+                    raise Exception("ERROR: could not remove '%s'. Clean that up and restart" % (PYENV, ))
 
-        call("virtualenv --no-site-packages -p '%s' .git/flowbox/pyenv" % (selected_python, ), shell=True)
+        call("virtualenv --no-site-packages -p '%s' %s" % (selected_python, PYENV), shell=True)
 
 
 def stage4_jump_to_virtualenv():
-    python_in_env = ".git/flowbox/pyenv/bin/python"
     script_to_call = "stage2.py"
+    python_in_env = PYENV_BIN_PYTHON
     subprocess.check_call([python_in_env, script_to_call])
 
 

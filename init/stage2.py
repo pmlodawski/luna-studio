@@ -10,7 +10,10 @@ import importlib
 import shutil
 import subprocess
 
+import sys
 from gitlord.io_utils import fprint
+
+FLOWBOX_PYENV_BIN_PYTHON = ".git/flowbox/pyenv/bin/python"
 
 
 def yield_unless_installed(pkg_name, *, import_name=None, descr=""):
@@ -71,8 +74,13 @@ def install_requirements():
             raise Exception("Some error occured during installation. Strange.") from e
 
         try:
-            verify_argv = [".git/flowbox/pyenv/bin/python", "stage2_postverify.py"]
+            python_in_env = FLOWBOX_PYENV_BIN_PYTHON
+            # run the second script "stage2_postverify.py"
+            script_to_call = script_to_call = sys.argv[0][:-4] + "2_postverify.py"
+
+            verify_argv = [python_in_env, script_to_call]
             verify_argv.extend(import_name for pkg, descr, import_name in installation_list)
+
             subprocess.check_call(verify_argv)
         except subprocess.CalledProcessError as e:
             raise Exception("It seems that installation of python modules was not successful.") from e
@@ -81,8 +89,8 @@ def install_requirements():
 
 
 def jump_to_next_stage():
-    python_in_env = ".git/flowbox/pyenv/bin/python"
     script_to_call = "stage3.py"
+    python_in_env = FLOWBOX_PYENV_BIN_PYTHON
     subprocess.check_call([python_in_env, script_to_call])
 
 
