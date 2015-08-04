@@ -6,5 +6,9 @@ varying vec2 pos;
 
 void main() {
     pos = uv;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    vec2 posM = vec2(position.x, position.y);
+    if (position.x > 0.0) {
+        posM = vec2(posM.x, posM.y * sqrt(2.0));
+    }
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(posM, 0.0, 1.0);
 }

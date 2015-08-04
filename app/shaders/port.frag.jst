@@ -17,6 +17,7 @@ uniform int antialias;
 void main() {
 
     float coef = nodeSize / portSize;
+    // vec2 posS = pos;
     vec2 posS = vec2(pos.x, pos.y * 2.0 - 1.0);
     vec2 posN = vec2(posS.x * portSize + nodeSize, posS.y * portSize / 2.0);
     float dist_squared = dot(posN, posN);
@@ -63,6 +64,7 @@ void main() {
 
     if (dist_squared < r1) {
         discard;
+        // alpha *= 0.2;
     } else if (dist_squared < r2) {
         alpha *= d_blur_r12;
     } else if (dist_squared < r3) {
@@ -70,6 +72,7 @@ void main() {
         alpha *= d_blur_r34;
     } else {
         discard;
+        // alpha *= 0.2;
     }
 
     float disappearE = 0.5;
