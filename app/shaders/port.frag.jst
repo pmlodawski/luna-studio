@@ -14,7 +14,16 @@ uniform vec4 color;
 
 uniform int antialias;
 
+uniform int objectMap;
+uniform int objectId;
+
+
 void main() {
+
+    if (objectMap == 1) {
+        gl_FragColor = vec4(float(objectId) / 256.0, float(objectId) / 256.0, float(objectId) / 256.0, 1.0);
+        return;
+    }
 
     float coef = nodeSize / portSize;
     vec2 posS = pos;

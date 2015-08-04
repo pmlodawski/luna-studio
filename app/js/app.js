@@ -23,7 +23,6 @@ var nodeZOrderStart = 0.00000;
 
 var shouldRender = true;
 
-// export to HTML
 function start() {
   $(document).ready(function(){
     $(document).bind('contextmenu', function() { return false; });
@@ -37,23 +36,30 @@ function initializeGl() {
     }
 
     window.already_initialized = true;
-    $$.scene                = new THREE.Scene();
-    $$.sceneHUD             = new THREE.Scene();
-    $$.camera               = new THREE.OrthographicCamera(-500, 500, -500, 500, 1, 1000);
-    $$.cameraHUD            = new THREE.OrthographicCamera(-500, 500, -500, 500, 1, 1000);
-    $$.camera.position.z    = 500;
-    $$.cameraHUD.position.z = 500;
-    $$.renderer             = new THREE.WebGLRenderer({ antialias: false });
-    $$.renderer.autoClear   = false;
+    $$.scene                   = new THREE.Scene();
+    $$.sceneHUD                = new THREE.Scene();
+    $$.camera                  = new THREE.OrthographicCamera(-500, 500, -500, 500, 1, 1000);
+    $$.cameraHUD               = new THREE.OrthographicCamera(-500, 500, -500, 500, 1, 1000);
+    $$.camera.position.z       = 500;
+    $$.cameraHUD.position.z    = 500;
+    $$.renderer                = new THREE.WebGLRenderer({ antialias: false });
+    $$.renderer.autoClear      = false;
+    $$.rendererMap             = new THREE.WebGLRenderer({ antialias: false, preserveDrawingBuffer: true });
+    $$.rendererMap.autoClear   = false;
 
     $('body').append('<div id="htmlcanvas-pan"><div id="htmlcanvas"></div></div>');
 
     $$.renderer.setClearColor(config.backgroundColor, 1);
-    initCommonWidgets();
-    addVersionToHud();
+    $$.rendererMap.setClearColor(new THREE.Color("black"), 1);
     $($$.renderer.domElement).addClass('renderer');
+    $($$.rendererMap.domElement).addClass('renderer').css({zIndex: 100, opacity: 0.5});
 
     document.body.appendChild($$.renderer.domElement);
+    // document.body.appendChild($$.rendererMap.domElement);
+
+    initCommonWidgets();
+    addVersionToHud();
+
     $('#spinner').remove();
 }
 
@@ -69,7 +75,6 @@ function addVersionToHud() {
   });
 
   var obj = new THREE.Mesh(geom, textMaterial);
-  // obj.rotation.x = 180 * Math.PI/180;
   obj.scale.multiplyScalar(config.fontSize);
   obj.position.y = 20;
   obj.position.x = 500;
@@ -87,13 +92,35 @@ function initCommonWidgets() {
 
 function render() {
   if(shouldRender) {
+    $$.commonUniforms.objectMap.value = 0;
+    $$.commonUniforms.antialias.value = 1;
+
     $$.renderer.clear();
     $$.renderer.render($$.scene, $$.camera);
     $$.renderer.clearDepth();
     $$.renderer.render($$.sceneHUD, $$.cameraHUD);
+
+    renderMap();
     shouldRender = false;
   }
   requestAnimationFrame(render);
+}
+function renderMap() {
+  $$.commonUniforms.objectMap.value = 1;
+  $$.commonUniforms.antialias.value = 0;
+  $$.rendererMap.clear();
+  $$.rendererMap.render($$.scene, $$.camera);
+  $$.rendererMap.clearDepth();
+  $$.rendererMap.render($$.sceneHUD, $$.cameraHUD);
+}
+
+function getMapPixelAt(x, y) {
+  var buf = new Uint8Array(4);
+  var ctx = $$.rendererMap.getContext();
+  y = $$.screenSize.y - y;
+  console.log(x,y);
+  ctx.readPixels(x, y, 1, 1, ctx.RGBA, ctx.UNSIGNED_BYTE, buf);
+  return buf;
 }
 
 function updateHtmCanvasPanPos(x, y, factor) {
@@ -105,6 +132,7 @@ function updateScreenSize(width, height) {
   $$.screenSize.x = width;
   $$.screenSize.y = height;
   $$.renderer.setSize(width, height);
+  $$.rendererMap.setSize(width, height);
 }
 
 function updateCamera(factor, camPanX, camPanY, left, right, top, bottom) {
@@ -218,6 +246,7 @@ module.exports = {
   hideSelectionBox:         hideSelectionBox,
   displayCurrentConnection: displayCurrentConnection,
   removeCurrentConnection:  removeCurrentConnection,
+  getMapPixelAt:               getMapPixelAt,
   getNode:                  function(index) { return $$.nodes[index]; },
   getNodes:                 function()      { return _.values($$.nodes); },
   nodeSearcher:             function()      { return $$.node_searcher; },

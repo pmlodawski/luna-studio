@@ -4,8 +4,14 @@ precision highp float;
 
 uniform vec4 color;
 uniform float visible;
+uniform int objectMap;
+uniform int objectId;
 
 void main() {
     if (visible < 1.0) discard;
-    gl_FragColor = color;
+    if (objectMap == 0) {
+        gl_FragColor = color;
+    } else {
+        gl_FragColor = vec4(float(objectId) / 256.0, float(objectId) / 256.0, float(objectId) / 256.0, 1.0);
+    }
 }

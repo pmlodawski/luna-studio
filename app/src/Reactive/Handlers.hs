@@ -25,6 +25,9 @@ import qualified Event.Window        as Window
 import qualified Event.NodeSearcher  as NodeSearcher
 import qualified Object.Node         ( Node )
 import           Event.Event
+import           GHCJS.Marshal
+import           JavaScript.Array ( JSArray )
+import qualified JavaScript.Array as JSArray
 
 readKeyMods = do
     e <- event
@@ -40,6 +43,14 @@ readMousePos =  do
     x <- MouseEvent.getClientX e
     y <- MouseEvent.getClientY e
     return $ Vector2 x y
+
+readObjectId pos = do
+    liftIO $ do
+        pixel <- getMapPixelAtJS (pos ^. x) (pos ^. y)
+        r <- (fromJSRefUnchecked $ JSArray.index 0 pixel) :: IO (Int)
+        --         [r:g:b:_] <- mapM (fromJSRefUnchecked . flip . JSArray.index pixel) [0,1,2,3] :: IO ([Int])
+        putStrLn $ "R=" <> (show r)
+    return 42
 
 uiWhichButton = mouseButton >>= return . Mouse.toMouseButton
 
@@ -75,6 +86,7 @@ mouseClickHandler = AddHandler $ \h -> do
     window <- fromJust <$> currentWindow
     window `on` click $ do
         mousePos <- readMousePos
+        objectId <- readObjectId mousePos
         button   <- uiWhichButton
         keyMods  <- readKeyMods
         liftIO . h $ Mouse $ Mouse.Event Mouse.Clicked mousePos button keyMods

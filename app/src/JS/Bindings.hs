@@ -178,3 +178,7 @@ foreign import javascript unsafe "window.dispatchEvent(new Event('resize'))"
 
 foreign import javascript unsafe "app.shouldRender()"
     shouldRender :: IO ()
+
+foreign import javascript unsafe "app.getMapPixelAt($1, $2)"
+    getMapPixelAtJS :: Int -> Int -> IO JSArray
+

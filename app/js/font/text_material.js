@@ -12,7 +12,8 @@ var defaults = function(){
       map:       { type: 't', value: THREE.ImageUtils.loadTexture('font/LatoBlack-sdf.png') },
       color:     { type: 'c', value: new THREE.Color(0x999999) },
       camFactor: { type: 'f', value: 1 },
-      width:     { type: 'f', value: 0 }
+      width:     { type: 'f', value: 0 },
+      objectMap: $$.commonUniforms.objectMap
     },
     vertexShader:   vs,
     fragmentShader: fs,

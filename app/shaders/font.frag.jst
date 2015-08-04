@@ -8,7 +8,13 @@ uniform float camFactor;
 varying float vPage;
 varying vec2 vUv;
 
+uniform int objectMap;
+uniform int objectId;
+
+
 void main() {
+    if (objectMap == 1) discard;
+
     vec4 texColor = texture2D(map, vUv);
     float dst = texColor.a;
     float modFactor = (camFactor - 1.0) * 0.3 + 1.0;

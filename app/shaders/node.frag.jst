@@ -16,6 +16,10 @@ uniform vec3 focusedColor;
 
 uniform int antialias;
 
+uniform int objectMap;
+uniform int objectId;
+
+
 void main() {
     vec2 posN = pos * nodeSize;
     float dist_squared = dot(posN, posN);
@@ -69,17 +73,25 @@ void main() {
         d_blur_r12 = (dist_squared - r1) / (r2 - r1);
     }
 
-    if (dist_squared < r1) {
-        colorShow = vec4(insideColor, 1.0);
-    } else if (dist_squared < r2) {
-        vec3 mix = insideColor * (1.0 - d_blur_r12) + color * (d_blur_r12);
-        colorShow = vec4(mix, 1.0);
-    } else if (dist_squared < r3) {
-        colorShow = vec4(color, 1.0);
-    } else if (dist_squared < r4) {
-        colorShow = vec4(color, d_blur_r34);
+    if (objectMap == 0) {
+        if (dist_squared < r1) {
+            colorShow = vec4(insideColor, 1.0);
+        } else if (dist_squared < r2) {
+            vec3 mix = insideColor * (1.0 - d_blur_r12) + color * (d_blur_r12);
+            colorShow = vec4(mix, 1.0);
+        } else if (dist_squared < r3) {
+            colorShow = vec4(color, 1.0);
+        } else if (dist_squared < r4) {
+            colorShow = vec4(color, d_blur_r34);
+        } else {
+            colorShow = vec4(color, 0.0);
+        }
     } else {
-        colorShow = vec4(color, 0.0);
+        if (dist_squared < r4) {
+            colorShow = vec4(float(objectId) / 256.0, float(objectId) / 256.0, float(objectId) / 256.0, 1.0);
+        } else {
+            discard;
+        }
     }
 
     gl_FragColor = colorShow;

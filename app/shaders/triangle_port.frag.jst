@@ -14,6 +14,10 @@ uniform float mouseDist;
 
 uniform int antialias;
 
+uniform int objectMap;
+uniform int objectId;
+
+
 void main() {
     float alpha = 1.0;
     float disappearE = 0.5;
@@ -47,5 +51,9 @@ void main() {
         colorShow = distMix * color + (1.0 - distMix) * colorFar;
     }
 
-    gl_FragColor = vec4(colorShow.xyz, alpha * colorShow.w);
+    if (objectMap == 0) {
+        gl_FragColor = vec4(colorShow.xyz, alpha * colorShow.w);
+    } else {
+        gl_FragColor = vec4(float(objectId) / 256.0, float(objectId) / 256.0, float(objectId) / 256.0, 1.0);
+    }
 }
