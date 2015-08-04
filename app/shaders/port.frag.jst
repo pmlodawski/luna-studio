@@ -17,8 +17,7 @@ uniform int antialias;
 void main() {
 
     float coef = nodeSize / portSize;
-    // vec2 posS = pos;
-    vec2 posS = vec2(pos.x, pos.y * 2.0 - 1.0);
+    vec2 posS = pos;
     vec2 posN = vec2(posS.x * portSize + nodeSize, posS.y * portSize / 2.0);
     float dist_squared = dot(posN, posN);
 
