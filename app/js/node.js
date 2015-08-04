@@ -31,25 +31,14 @@ function Node(id, position, z) {
   this.inputPorts  = [];
   this.outputPorts = [];
 
-  this.attributes = {
-    pos: {
-      type: 'v2',
-      value: [
-        position,
-        position,
-        position,
-        position
-      ]
-    }
-  };
-
   this.uniforms = {
     selected:        { type: 'i', value: 0 },
     mouseDist:       { type: 'f', value: 100000 },
     insideColor:     { type: 'c', value: insideColor },
     unselectedColor: { type: 'c', value: unselectedColor },
     selectedColor:   { type: 'c', value: selectedColor },
-    focusedColor:    { type: 'c', value: focusedColor }
+    focusedColor:    { type: 'c', value: focusedColor },
+    nodeSize:        { type: 'f', value: 30.0 }
   };
 
   Object.keys($$.commonUniforms).forEach(function(k) {
@@ -60,7 +49,7 @@ function Node(id, position, z) {
     new THREE.PlaneGeometry(width, height),
     new THREE.ShaderMaterial( {
       uniforms:       this.uniforms,
-      attributes:     this.attributes,
+      // attributes:     this.attributes,
       vertexShader:   vs,
       fragmentShader: fs,
       transparent:    true,
@@ -100,7 +89,7 @@ Node.prototype.moveTo = function(a, b) {
   this.mesh.position.x = vec.x;
   this.mesh.position.y = vec.y;
 
-  this.attributes.pos.needsUpdate = true;
+  // this.attributes.pos.needsUpdate = true;
   this.htmlContainer.css({left: vec.x, top: -vec.y});
 };
 

@@ -2,10 +2,12 @@
 precision highp float;
 #endif
 
-varying vec2 coords;
+varying vec2 pos;
+
 uniform float camFactor;
-uniform int selected;
+uniform int   selected;
 uniform float mouseDist;
+uniform float nodeSize;
 
 uniform vec3 insideColor;
 uniform vec3 unselectedColor;
@@ -15,7 +17,8 @@ uniform vec3 focusedColor;
 uniform int antialias;
 
 void main() {
-    vec2 posN = (gl_FragCoord.xy - coords) / camFactor;
+    vec2 posS = pos * 2.0 - vec2(1.0, 1.0);
+    vec2 posN = posS * nodeSize;
     float dist_squared = dot(posN, posN);
 
     float bg_gray = 0.1;
