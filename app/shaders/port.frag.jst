@@ -2,96 +2,39 @@
 precision highp float;
 #endif
 
-varying vec2 coords;
-// varying vec3 distanceL;
-// varying vec3 distanceR;
-// varying vec3 distanceB;
+varying vec2 pos;
 
-uniform vec4 color;
+uniform float camFactor;
+uniform float mouseDist;
+uniform float nodeSize;
+uniform float portSize;
+
 uniform vec4 colorFar;
-uniform float visible;
-uniform float camFactor;
-uniform float mouseDist;
-
-uniform int antialias;
-
-// void main() {
-//     float alpha = 1.0;
-//     float disappearE = 0.5;
-//     float disappearS = 0.9;
-
-//     if (camFactor < disappearE) {
-//         alpha = 0.0;
-//     } else {
-//         if (antialias != 0) {
-//             float factor = camFactor * 6.0;
-//             float alphaL = min(1.0, factor * distanceL.x);
-//             float alphaR = min(1.0, factor * distanceR.x);
-//             float alphaB = min(1.0, factor * distanceB.x);
-//             alpha = alphaL * alphaR * alphaB;
-//         }
-//         if (camFactor < disappearS) {
-//            float disappearW = disappearS - disappearE;
-//            alpha = alpha * (1.0 - (disappearS - camFactor) / disappearW);
-//         }
-//     }
-
-//     float gradRange  = 300.0;
-//     float colorRange =  60.0;
-//     vec4  colorShow  = colorFar;
-//     if (mouseDist < colorRange) {
-//         colorShow = color;
-//     } else if (mouseDist < gradRange) {
-//         float coef = (mouseDist - colorRange) / (gradRange - colorRange);
-//         float coefR = 1.0 - coef;
-//         float distMix = coefR * coefR * coefR;
-//         colorShow = distMix * color + (1.0 - distMix) * colorFar;
-//     }
-
-//     gl_FragColor = vec4(colorShow.xyz, alpha * colorShow.w);
-// }
-
-
-varying vec2 coords;
-uniform float camFactor;
-uniform int selected;
-uniform float mouseDist;
-
-uniform vec3 insideColor;
-uniform vec3 unselectedColor;
-uniform vec3 selectedColor;
-uniform vec3 focusedColor;
+uniform vec4 color;
 
 uniform int antialias;
 
 void main() {
-    vec2 posN = (gl_FragCoord.xy - coords) / camFactor;
+
+    float coef = nodeSize / portSize;
+    vec2 posS = vec2(pos.x, pos.y * 2.0 - 1.0);
+    vec2 posP = vec2(posS.x * portSize + nodeSize, posS.y * portSize / 2.0);
+    vec2 posN = posP;
     float dist_squared = dot(posN, posN);
 
-    float bg_gray = 0.1;
-    vec3 color = unselectedColor;
-    float brighterBy = 0.7;
-    if (selected == 1) {
-        brighterBy = 0.3;
-        color = selectedColor;
-    } else if (selected == 2) {
-        brighterBy = 0.2;
-        color = focusedColor;
-    }
+    float alpha = 1.0;
 
-    float distMix  = 0.0;
-    float gradRange  = 60.0;
-    float colorRange = 27.0;
+    float gradRange  = 300.0;
+    float colorRange =  60.0;
+    vec4  colorShow  = colorFar;
     if (mouseDist < colorRange) {
-        distMix = 1.0;
+        colorShow = color;
     } else if (mouseDist < gradRange) {
         float coef = (mouseDist - colorRange) / (gradRange - colorRange);
         float coefR = 1.0 - coef;
-        distMix = coefR * coefR * coefR;
+        float distMix = coefR * coefR * coefR;
+        colorShow = distMix * color + (1.0 - distMix) * colorFar;
     }
-    color *= 1.0 + distMix * brighterBy;
-
-    vec4 colorShow = vec4(color, 1.0);
 
     float camFactorDelta = camFactor - 1.0;
     float rimCamFactor  = 1.0;
@@ -104,8 +47,9 @@ void main() {
         blurCamFactor += camFactorDelta / 1.1;
     }
     float blurWidth = 60.0;
-    float rimWidth = 200.0;
-    float r4 = 900.0;
+    float rimWidth = 120.0;
+    float size = nodeSize + rimWidth / 32.0;
+    float r4 = dot(size, size);
     float r3 = r4 - blurWidth / blurCamFactor;
     float r2 = r3 -  rimWidth /  rimCamFactor;
     float r1 = r2 - blurWidth / blurCamFactor;
@@ -118,17 +62,25 @@ void main() {
     }
 
     if (dist_squared < r1) {
-        colorShow = vec4(insideColor, 1.0);
+        discard;
     } else if (dist_squared < r2) {
-        vec3 mix = insideColor * (1.0 - d_blur_r12) + color * (d_blur_r12);
-        colorShow = vec4(mix, 1.0);
+        alpha = d_blur_r12;
     } else if (dist_squared < r3) {
-        colorShow = vec4(color, 1.0);
     } else if (dist_squared < r4) {
-        colorShow = vec4(color, d_blur_r34);
+        alpha = d_blur_r34;
     } else {
-        colorShow = vec4(color, 0.0);
+        discard;
     }
 
-    gl_FragColor = colorShow;
+    float disappearE = 0.5;
+    float disappearS = 0.9;
+    if (camFactor < disappearE) {
+        alpha = 0.0;
+    } else if (camFactor < disappearS) {
+       float disappearW = disappearS - disappearE;
+       alpha = alpha * (1.0 - (disappearS - camFactor) / disappearW);
+    }
+
+
+    gl_FragColor = vec4(colorShow.xyz, alpha * colorShow.w);;
 }
