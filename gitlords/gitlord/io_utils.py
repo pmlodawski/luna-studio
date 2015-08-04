@@ -81,7 +81,8 @@ def fprint(x=None, *, parent=None, notrunc=False, colour=None, **kwargs):
     except ImportError:
         print(x)
     else:
-        print(x, **kwargs)
+        if kwargs or not colour:
+            print(x, **kwargs)
 
 
 def fmt(x, *, parent=None):
