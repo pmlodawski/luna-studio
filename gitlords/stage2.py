@@ -82,13 +82,9 @@ def jump_to_next_stage():
 
 
 def main():
-    install_requirements()
-    jump_to_next_stage()
-
-
-if __name__ == '__main__':
     try:
-        main()
+        install_requirements()
+        jump_to_next_stage()
     except Exception as e:
         # noinspection PyBroadException
         try:
@@ -99,3 +95,8 @@ if __name__ == '__main__':
             print("######################################################################")
         print("Stage 2 got exception:")
         raise e
+
+
+if __name__ == '__main__':
+    main()
+

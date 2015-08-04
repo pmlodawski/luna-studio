@@ -24,19 +24,17 @@ def configure_repo():
 
 
 def main():
-    bind_gitmodules()
-    update_gitmodules()
-
-    bind_git_hooks()
-
-    configure_repo()
-
-if __name__ == '__main__':
     try:
-        main()
+        bind_gitmodules()
+        update_gitmodules()
+        bind_git_hooks()
+        configure_repo()
     except Exception as e:
         terminal_width = shutil.get_terminal_size((80, 20)).columns
         hash_sign = "#"
         fprint("{hash_sign:#^{terminal_width}}", colour='cyan')
         print("Stage 3 got exception:")
         raise e
+
+if __name__ == '__main__':
+    main()

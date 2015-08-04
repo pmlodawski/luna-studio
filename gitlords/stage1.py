@@ -226,16 +226,16 @@ def stage4_jump_to_virtualenv():
 
 
 def main():
-    stage1_verify_programs()
-    stage2_verify_programs_fuzzy()
-    stage3_create_virtualenv()
-    stage4_jump_to_virtualenv()
-
-
-if __name__ == '__main__':
     try:
-        main()
+        stage1_verify_programs()
+        stage2_verify_programs_fuzzy()
+        stage3_create_virtualenv()
+        stage4_jump_to_virtualenv()
     except Exception as e:  # TODO: not compatible with Python 2.5 :<
         print("######################################################################")
         print("Stage 1 got exception:")
         raise e
+
+
+if __name__ == '__main__':
+    main()
