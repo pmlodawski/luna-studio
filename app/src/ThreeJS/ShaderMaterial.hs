@@ -27,7 +27,7 @@ data ShaderMaterial = ShaderMaterial Material
 
 instance IsMaterial ShaderMaterial where material (ShaderMaterial m) = m
 
-foreign import javascript unsafe "new THREE.ShaderMaterial({uniforms: $1, attributes: $2, vertexShader: $3, fragmentShader: $4, transparent: $5, blending: $6, side: $7})"
+foreign import javascript unsafe "new THREE.ShaderMaterial({uniforms: $1, vertexShader: $3, fragmentShader: $4, transparent: $5, blending: $6, side: $7})"
     buildShaderMaterialJS :: AttributeMap -> AttributeMap -> JSString -> JSString -> Bool -> Int -> Int  -> IO Material
 
 buildShaderMaterial :: AttributeMap -> AttributeMap -> VertexShader -> FragmentShader -> Bool -> Blending -> Side -> IO ShaderMaterial

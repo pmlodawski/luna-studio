@@ -8,26 +8,9 @@ var color = new THREE.Vector4(0.85, 0.55, 0.1, 0.2);
 
 function SelectionBox() {
   var _this = this;
-  var geometry = new THREE.Geometry();
-  geometry.vertices.push(
-    new THREE.Vector3(0,0,0),
-    new THREE.Vector3(1,1,0),
-    new THREE.Vector3(0,1,0),
-    new THREE.Vector3(1,0,0)
-  );
-  geometry.faces.push(new THREE.Face3(0, 2, 1), new THREE.Face3(0, 1, 3));
+  var geometry = new THREE.PlaneBufferGeometry(1,1);
 
-  this.attributes = {
-    pos: {
-      type: 'v2',
-      value: [
-        new THREE.Vector2(-1.0, -1.0),
-        new THREE.Vector2( 1.0,  1.0),
-        new THREE.Vector2(-1.0,  1.0),
-        new THREE.Vector2( 1.0, -1.0)
-      ]
-    },
-  };
+  geometry.applyMatrix( new THREE.Matrix4().makeTranslation(0.5, 0.5, 0.0) );
 
   this.uniforms = {
     visible: { type: 'f',  value: 0 },
@@ -43,7 +26,6 @@ function SelectionBox() {
       geometry,
       new THREE.ShaderMaterial( {
         uniforms:       this.uniforms,
-        attributes:     this.attributes,
         vertexShader:   vs,
         fragmentShader: fs,
         transparent:    true,

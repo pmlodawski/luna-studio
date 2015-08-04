@@ -2,13 +2,11 @@
 precision highp float;
 #endif
 
-attribute float pos;
-attribute float posV;
 varying float distance;
 varying float distanceV;
 
 void main() {
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-    distance = pos;
-    distanceV = posV;
+    distance  = uv.y * 2.0 - 1.0;
+    distanceV = uv.x * 2.0 - 1.0;
 }

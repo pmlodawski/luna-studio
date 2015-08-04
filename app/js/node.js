@@ -19,9 +19,12 @@ var unselectedColor = new THREE.Color(0x3a3a3a);
 var selectedColor   = new THREE.Color(0xb87410).multiplyScalar(0.8);
 var focusedColor    = new THREE.Color(0xc85808).multiplyScalar(0.8);
 
+var width  = 60;
+var height = 60;
+
+var nodeGeometry    = new THREE.PlaneBufferGeometry(width, height);
+
 function Node(id, position, z) {
-  var width  = 60;
-  var height = 60;
   var _this = this;
 
   this.id = id;
@@ -46,10 +49,9 @@ function Node(id, position, z) {
   });
 
   this.mesh = new THREE.Mesh(
-    new THREE.PlaneGeometry(width, height),
+    nodeGeometry,
     new THREE.ShaderMaterial( {
       uniforms:       this.uniforms,
-      // attributes:     this.attributes,
       vertexShader:   vs,
       fragmentShader: fs,
       transparent:    true,

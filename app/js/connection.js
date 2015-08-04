@@ -9,24 +9,7 @@ var color = new THREE.Vector4(0.5, 0.5, 0.05, 0.6);
 function Connection(id) {
   var _this = this;
   this.id = id;
-  this.geometry = new THREE.PlaneGeometry(1.0, 10.0);
-
-  this.attributes = {
-    pos: {
-      type: 'f',
-      value: [
-         1,  1,
-        -1, -1
-      ]
-    },
-    posV: {
-      type: 'f',
-      value: [
-        1, -1,
-        1, -1
-      ]
-    }
-  };
+  this.geometry = new THREE.PlaneBufferGeometry(1.0, 10.0);
 
   this.uniforms = {
     color:   { type: 'v4', value: color },
@@ -42,7 +25,6 @@ function Connection(id) {
     this.geometry,
     new THREE.ShaderMaterial({
       uniforms:       this.uniforms,
-      attributes:     this.attributes,
       vertexShader:   vs,
       fragmentShader: fs,
       transparent: true,

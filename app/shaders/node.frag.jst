@@ -17,8 +17,7 @@ uniform vec3 focusedColor;
 uniform int antialias;
 
 void main() {
-    vec2 posS = pos * 2.0 - vec2(1.0, 1.0);
-    vec2 posN = posS * nodeSize;
+    vec2 posN = pos * nodeSize;
     float dist_squared = dot(posN, posN);
 
     float bg_gray = 0.1;
