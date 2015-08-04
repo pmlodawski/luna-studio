@@ -3,17 +3,19 @@
 # ##### Bootstrapping the repository. Stage 3. #####
 # Stage 3: prepare the repository.
 #
-from itertools import zip_longest
-from operator import itemgetter
 
+from operator import itemgetter
 import shutil
-import git
 from configparser import NoSectionError, NoOptionError
-from pathlib import Path
-import plumbum as plumbum
-from gitlord.io_utils import fprint
+
+from io_utils import fprint
+# noinspection PyUnresolvedReferences
+import git
+# noinspection PyUnresolvedReferences
 from clint.textui import puts, colored
+# noinspection PyUnresolvedReferences
 from plumbum import local
+# noinspection PyUnresolvedReferences
 import plumbum
 
 

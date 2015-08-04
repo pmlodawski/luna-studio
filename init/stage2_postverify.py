@@ -5,7 +5,8 @@
 #
 import shutil
 import sys
-from gitlord.io_utils import fprint
+
+from io_utils import fprint
 
 
 def main():

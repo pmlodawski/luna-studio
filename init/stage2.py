@@ -9,9 +9,9 @@
 import importlib
 import shutil
 import subprocess
-
 import sys
-from gitlord.io_utils import fprint
+
+from io_utils import fprint
 
 FLOWBOX_PYENV_BIN_PYTHON = ".git/flowbox/pyenv/bin/python"
 
