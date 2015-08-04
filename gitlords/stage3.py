@@ -25,6 +25,7 @@ def configure_repo():
 
 def main():
     try:
+        print("##############################" + colored.blue(" STAGE: 3 ") + "##############################")
         bind_gitmodules()
         update_gitmodules()
         bind_git_hooks()

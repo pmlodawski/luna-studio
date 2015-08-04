@@ -85,6 +85,7 @@ def jump_to_next_stage():
 
 def main():
     try:
+        print('############################## STAGE: 2 ##############################')
         install_requirements()
         jump_to_next_stage()
     except Exception as e:

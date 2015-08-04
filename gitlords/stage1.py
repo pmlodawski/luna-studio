@@ -227,6 +227,7 @@ def stage4_jump_to_virtualenv():
 
 def main():
     try:
+        print('############################## STAGE: 1 ##############################')
         stage1_verify_programs()
         stage2_verify_programs_fuzzy()
         stage3_create_virtualenv()
