@@ -67,12 +67,14 @@ def install_requirements():
         except Exception as e:
             raise Exception("Some error occured during installation. Strange.") from e
 
-        fprint("""
-        Modules installed, though checking if it was successful is very buggy. "Buggy" as in the sentence
-        "there is some race condition, once in a while the same program is okay, but more often it yields
-        exceptions".
-        Assuming all is okay then.
-        """)
+        try:
+            verify_argv = [".git/flowbox/pyenv/bin/python", "stage2_postverify.py"]
+            verify_argv.extend(import_name for pkg, descr, import_name in installation_list)
+            subprocess.check_call(verify_argv)
+        except subprocess.CalledProcessError as e:
+            raise Exception("It seems that installation of python modules was not successful.") from e
+        else:
+            fprint("Installation of python modules seems to completed successfully.")
 
 
 def jump_to_next_stage():
