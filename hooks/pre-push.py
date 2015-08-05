@@ -52,7 +52,7 @@ def main():
                     raise ShtackHookAbort("Submodule {submodule} points to commits that are not on remote.")
     except ShtackHookAbort as e:
         fprint(e.args[0], colour='red')
-        traceback.print_exc()
+        traceback.print_stack()
         sys.exit(1)
 
 
