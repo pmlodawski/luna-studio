@@ -17,7 +17,7 @@ uniform vec3 focusedColor;
 uniform int antialias;
 
 uniform int objectMap;
-uniform int objectId;
+uniform vec3 objectId;
 
 
 void main() {
@@ -88,7 +88,7 @@ void main() {
         }
     } else {
         if (dist_squared < r4) {
-            colorShow = vec4(float(objectId) / 256.0, float(objectId) / 256.0, float(objectId) / 256.0, 1.0);
+            colorShow = vec4(objectId, 1.0);
         } else {
             discard;
         }

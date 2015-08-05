@@ -15,17 +15,11 @@ import           Data.JSString.Text  ( lazyTextToJSString )
 
 
 
-foreign import javascript unsafe "$$.buttons[$1]"
+foreign import javascript unsafe "$$.registry[$1]"
     getFromRegistryJS :: Int -> IO (JSRef a)
 
-foreign import javascript unsafe "$$.buttons[$1] = $2"
+foreign import javascript unsafe "$$.registry[$1] = $2"
     putToRegistryJS :: Int -> JSRef a -> IO ()
 
-foreign import javascript unsafe "delete $$.buttons[$1]"
+foreign import javascript unsafe "delete $$.registry[$1]"
     removeFromRegistryJS :: Int -> IO ()
-
-
--- class Widget a b where
---     getFromRegistry    :: a -> IO b
---     putToRegistry      :: a -> b -> IO ()
---     removeFromRegistry :: a -> IO ()

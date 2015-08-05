@@ -21,12 +21,14 @@ import           Utils.CtxDynamic
 import qualified Object.Widget.Types as T
 import           Event.Mouse (MouseButton)
 
-onMouseMove, onMouseOver, onMouseOut, onClick, onDblClick :: T.MousePosition -> T.DisplayObject -> T.WidgetUpdate
+onMouseMove, onClick, onDblClick :: T.MousePosition -> T.DisplayObject -> T.WidgetUpdate
 onMouseMove pos = withCtxDynamic (T.onMouseMove pos)
-onMouseOver pos = withCtxDynamic (T.onMouseOver pos)
-onMouseOut  pos = withCtxDynamic (T.onMouseOut  pos)
 onClick     pos = withCtxDynamic (T.onClick     pos)
 onDblClick  pos = withCtxDynamic (T.onDblClick  pos)
+
+onMouseOver, onMouseOut :: T.DisplayObject -> T.WidgetUpdate
+onMouseOver     = withCtxDynamic  T.onMouseOver
+onMouseOut      = withCtxDynamic  T.onMouseOut
 
 onMousePress, onMouseRelease :: MouseButton -> T.MousePosition -> T.DisplayObject -> T.WidgetUpdate
 onMousePress   button pos = withCtxDynamic (T.onMousePressed  button pos)

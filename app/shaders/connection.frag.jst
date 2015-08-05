@@ -13,7 +13,7 @@ uniform float len;
 uniform int antialias;
 
 uniform int objectMap;
-uniform int objectId;
+uniform vec3 objectId;
 
 void main() {
     if (visible < 1.0) discard;
@@ -69,7 +69,7 @@ void main() {
     }
     alphaShow = alpha * alphaV;
     if (objectMap == 1) {
-        gl_FragColor = vec4(float(objectId) / 256.0, float(objectId) / 256.0, float(objectId) / 256.0, 1.0);
+        gl_FragColor = vec4(objectId, 1.0);
     } else  {
         gl_FragColor = vec4(colorShow, alphaShow * origAlpha);
     }

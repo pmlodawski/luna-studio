@@ -41,16 +41,16 @@ type MousePosition = Vector2 Int
 class HandlesMouseMove     a where onMouseMove     ::                MousePosition -> a -> WidgetUpdate
 class HandlesMousePressed  a where onMousePressed  :: MouseButton -> MousePosition -> a -> WidgetUpdate
 class HandlesMouseReleased a where onMouseReleased :: MouseButton -> MousePosition -> a -> WidgetUpdate
-class HandlesMouseOver     a where onMouseOver     ::                MousePosition -> a -> WidgetUpdate
-class HandlesMouseOut      a where onMouseOut      ::                MousePosition -> a -> WidgetUpdate
+class HandlesMouseOver     a where onMouseOver     ::                                 a -> WidgetUpdate
+class HandlesMouseOut      a where onMouseOut      ::                                 a -> WidgetUpdate
 class Clickable            a where onClick         ::                MousePosition -> a -> WidgetUpdate
 class DblClickable         a where onDblClick      ::                MousePosition -> a -> WidgetUpdate
 
 instance {-# OVERLAPPABLE #-} DisplayObjectClass a => HandlesMouseMove     a where onMouseMove       _ = noUpdate
 instance {-# OVERLAPPABLE #-} DisplayObjectClass a => HandlesMousePressed  a where onMousePressed  _ _ = noUpdate
 instance {-# OVERLAPPABLE #-} DisplayObjectClass a => HandlesMouseReleased a where onMouseReleased _ _ = noUpdate
-instance {-# OVERLAPPABLE #-} DisplayObjectClass a => HandlesMouseOver     a where onMouseOver       _ = noUpdate
-instance {-# OVERLAPPABLE #-} DisplayObjectClass a => HandlesMouseOut      a where onMouseOut        _ = noUpdate
+instance {-# OVERLAPPABLE #-} DisplayObjectClass a => HandlesMouseOver     a where onMouseOver         = noUpdate
+instance {-# OVERLAPPABLE #-} DisplayObjectClass a => HandlesMouseOut      a where onMouseOut          = noUpdate
 instance {-# OVERLAPPABLE #-} DisplayObjectClass a => Clickable            a where onClick           _ = noUpdate
 instance {-# OVERLAPPABLE #-} DisplayObjectClass a => DblClickable         a where onDblClick        _ = noUpdate
 

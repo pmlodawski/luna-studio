@@ -182,3 +182,6 @@ foreign import javascript unsafe "app.shouldRender()"
 foreign import javascript unsafe "app.getMapPixelAt($1, $2)"
     getMapPixelAtJS :: Int -> Int -> IO JSArray
 
+foreign import javascript unsafe "app.toWidgetLocal($1, $2, $3)"
+    toWidgetLocal :: Int -> Int -> Int -> IO JSArray
+

@@ -45,60 +45,44 @@ readMousePos =  do
     return $ Vector2 x y
 
 readObjectId pos = do
-    liftIO $ do
-        pixel <- getMapPixelAtJS (pos ^. x) (pos ^. y)
-        r <- (fromJSRefUnchecked $ JSArray.index 0 pixel) :: IO (Int)
-        --         [r:g:b:_] <- mapM (fromJSRefUnchecked . flip . JSArray.index pixel) [0,1,2,3] :: IO ([Int])
-        putStrLn $ "R=" <> (show r)
-    return 42
+    pixel <- getMapPixelAtJS (pos ^. x) (pos ^. y)
+    let read i = fromJSRefUnchecked $ JSArray.index i pixel :: IO (Int)
+    r <- read 0
+    g <- read 1
+    b <- read 2
+    a <- read 3
+    let oid = r + 256 * g + 256 * 256 * b
+    if oid == 0 then return $ Nothing
+                else return $ Just oid
+
+readLocalPos :: Maybe Int -> Vector2 Int -> IO (Maybe (Vector2 Int))
+
+readLocalPos (Just oid) pos = do
+    localArr <- toWidgetLocal oid (pos ^. x) (pos ^. y)
+    let read i = fromJSRefUnchecked $ JSArray.index i localArr :: IO (Int)
+    x <- read 0
+    y <- read 1
+    return $ Just $ Vector2 x y
+readLocalPos _ _ = return Nothing
 
 uiWhichButton = mouseButton >>= return . Mouse.toMouseButton
 
-mouseDownHandler :: AddHandler (Event Dynamic)
-mouseDownHandler = AddHandler $ \h -> do
-    window <- fromJust <$> currentWindow
-    window `on` mouseDown $ do
+genericMouseHandler event tag =
+    AddHandler $ \h -> do
+       window <- fromJust <$> currentWindow
+       window `on` event $ do
         mousePos <- readMousePos
         button   <- uiWhichButton
         keyMods  <- readKeyMods
-        liftIO . h $ Mouse $ Mouse.Event Mouse.Pressed mousePos button keyMods
+        objectId <- liftIO $ readObjectId mousePos
+        localPos <- liftIO $ readLocalPos objectId mousePos
+        liftIO . h $ Mouse $ Mouse.Event tag mousePos button keyMods objectId localPos
 
-mouseUpHandler :: AddHandler (Event Dynamic)
-mouseUpHandler = AddHandler $ \h -> do
-    window <- fromJust <$> currentWindow
-    window `on` mouseUp $ do
-        mousePos <- readMousePos
-        button   <- uiWhichButton
-        keyMods  <- readKeyMods
-        liftIO . h $ Mouse $ Mouse.Event Mouse.Released mousePos button keyMods
-
-mouseMovedHandler :: AddHandler (Event Dynamic)
-mouseMovedHandler = AddHandler $ \h -> do
-    window <- fromJust <$> currentWindow
-    window `on` mouseMove $ do
-        mousePos <- readMousePos
-        button   <- uiWhichButton
-        keyMods  <- readKeyMods
-        liftIO . h $ Mouse $ Mouse.Event Mouse.Moved mousePos button keyMods
-
-mouseClickHandler :: AddHandler (Event Dynamic)
-mouseClickHandler = AddHandler $ \h -> do
-    window <- fromJust <$> currentWindow
-    window `on` click $ do
-        mousePos <- readMousePos
-        objectId <- readObjectId mousePos
-        button   <- uiWhichButton
-        keyMods  <- readKeyMods
-        liftIO . h $ Mouse $ Mouse.Event Mouse.Clicked mousePos button keyMods
-
-mouseDblClickHandler :: AddHandler (Event Dynamic)
-mouseDblClickHandler = AddHandler $ \h -> do
-    window <- fromJust <$> currentWindow
-    window `on` dblClick $ do
-        mousePos <- readMousePos
-        button   <- uiWhichButton
-        keyMods  <- readKeyMods
-        liftIO . h $ Mouse $ Mouse.Event Mouse.DblClicked mousePos button keyMods
+mouseDownHandler     = genericMouseHandler mouseDown  Mouse.Pressed
+mouseUpHandler       = genericMouseHandler mouseUp    Mouse.Released
+mouseMovedHandler    = genericMouseHandler mouseMove  Mouse.Moved
+mouseClickHandler    = genericMouseHandler click      Mouse.Clicked
+mouseDblClickHandler = genericMouseHandler dblClick   Mouse.DblClicked
 
 resizeHandler :: AddHandler (Event Dynamic)
 resizeHandler = AddHandler $ \h -> do

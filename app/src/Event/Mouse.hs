@@ -21,10 +21,12 @@ toMouseButton   _  = NoButton
 
 data Type = Pressed | Released | Moved | Clicked | DblClicked deriving (Eq, Show, Typeable)
 
-data Event = Event { _tpe      :: Type
-                   , _position :: Vector2 Int
-                   , _button   :: MouseButton
-                   , _keyMods  :: KeyMods
+data Event = Event { _tpe         :: Type
+                   , _position    :: Vector2 Int
+                   , _button      :: MouseButton
+                   , _keyMods     :: KeyMods
+                   , _widgetId    :: Maybe Int
+                   , _relativePos :: Maybe (Vector2 Int)
                    } deriving (Eq, Show, Typeable)
 
 makeLenses ''Event
@@ -36,8 +38,10 @@ instance PrettyPrinter Type where
     display = show
 
 instance PrettyPrinter Event where
-    display (Event tpe pos button keyMods) = "ev(" <> display tpe <>
-                                             " "   <> display pos <>
-                                             " "   <> display button <>
-                                             " "   <> display keyMods <>
-                                             ")"
+    display (Event tpe pos button keyMods widget relpos) = "ev(" <> display tpe <>
+                                                           " "   <> display pos     <>
+                                                           " "   <> display button  <>
+                                                           " "   <> display keyMods <>
+                                                           " "   <> display widget  <>
+                                                           " "   <> display relpos  <>
+                                                           ")"

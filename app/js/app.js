@@ -52,7 +52,7 @@ function initializeGl() {
     $$.renderer.setClearColor(config.backgroundColor, 1);
     $$.rendererMap.setClearColor(new THREE.Color("black"), 1);
     $($$.renderer.domElement).addClass('renderer');
-    $($$.rendererMap.domElement).addClass('renderer').css({zIndex: 100, opacity: 0.5});
+    $($$.rendererMap.domElement).addClass('renderer').css({zIndex: 100});
 
     document.body.appendChild($$.renderer.domElement);
     // document.body.appendChild($$.rendererMap.domElement);
@@ -118,9 +118,36 @@ function getMapPixelAt(x, y) {
   var buf = new Uint8Array(4);
   var ctx = $$.rendererMap.getContext();
   y = $$.screenSize.y - y;
-  console.log(x,y);
   ctx.readPixels(x, y, 1, 1, ctx.RGBA, ctx.UNSIGNED_BYTE, buf);
   return buf;
+}
+
+function toWidgetLocal(id, x, y) {
+  var getTopParent = function (w) {
+    var p = w;
+    while (p !== undefined) {
+      w = p;
+      p = w.parent;
+    }
+    return w;
+  };
+
+  var widget = $$.registry[id];
+  var vec;
+  if (widget) {
+    if (getTopParent(widget.mesh) !== $$.sceneHUD) {
+      // screen to workspace
+      x =  x - $$.screenSize.x / 2.0;
+      y = -y + $$.screenSize.y / 2.0;
+
+      x = x / $$.camFactor.value + $$.camPan.x;
+      y = y / $$.camFactor.value + $$.camPan.y;
+    }
+    vec = widget.mesh.worldToLocal(new THREE.Vector3(x, y, 0.0));
+    return [vec.x, vec.y];
+  } else {
+    return null;
+  }
 }
 
 function updateHtmCanvasPanPos(x, y, factor) {
@@ -164,12 +191,14 @@ function newNodeAt(id, x, y, expr) {
   $$.nodes[id] = node;
   node.label(expr);
   $$.scene.add(node.mesh);
+  $$.registry[1000 + id] = node;
 }
 
 function removeNode(i) {
   var node = $$.nodes[i];
   $$.scene.remove(node.mesh);
   delete $$.nodes[i];
+  delete $$.registry[1000 + i];
 }
 
 // -> HS
@@ -246,11 +275,12 @@ module.exports = {
   hideSelectionBox:         hideSelectionBox,
   displayCurrentConnection: displayCurrentConnection,
   removeCurrentConnection:  removeCurrentConnection,
-  getMapPixelAt:               getMapPixelAt,
-  getNode:                  function(index) { return $$.nodes[index]; },
+  getMapPixelAt:            getMapPixelAt,
+  toWidgetLocal:            toWidgetLocal,
+  getNode:                  function(index) { return $$.nodes[index];    },
   getNodes:                 function()      { return _.values($$.nodes); },
-  nodeSearcher:             function()      { return $$.node_searcher; },
-  shouldRender:             function() { shouldRender = true; }
+  nodeSearcher:             function()      { return $$.node_searcher;   },
+  shouldRender:             function()      { shouldRender = true;       }
 };
 
 

@@ -65,10 +65,12 @@ buildButton (WB.Button bid label state pos size) = do
         uniforms <- buildAttributeMap
         color    <- buildVector4 1.0 0.0 1.0 1.0 >>= toAttribute
         sizeU    <- buildVector2 (size ^. x) (size ^. y) >>= toAttribute
+        objectId <- buildVector3 ((fromIntegral $ bid `mod` 256) / 255.0) ((fromIntegral $ bid `div` 256) / 255.0) 0.0 >>= toAttribute
         geom     <- buildPlaneGeometry 1.0 1.0
         setAttribute uniforms "color" color
         setAttribute uniforms "size" sizeU
         setAttribute uniforms "state" state
+        setAttribute uniforms "objectId" objectId
         Geometry.translate geom 0.5 0.5 0.0
         material <- buildShaderMaterial uniforms attributes vs fs True NormalBlending DoubleSide
         mesh     <- buildMesh geom material
@@ -93,8 +95,7 @@ buildButton (WB.Button bid label state pos size) = do
 
 
     uniforms <- JSObject.create
-    JSObject.setProp "state" (JSObject.getJSRef $ unAttribute state) uniforms
-
+    JSObject.setProp "state"    (JSObject.getJSRef $ unAttribute state) uniforms
 
     button <- JSObject.create
 
@@ -130,12 +131,12 @@ updateState b = do
     setUniform "state" (toJSInt $ fromEnum $ b ^. WB.state) b
 
 instance HandlesMouseOver WB.Button where
-    onMouseOver pos b = (Just action, toCtxDynamic newButton) where
+    onMouseOver b = (Just action, toCtxDynamic newButton) where
         action    = updateState newButton
         newButton = b & WB.state .~ WB.Focused
 
 instance HandlesMouseOut WB.Button where
-    onMouseOut pos b = (Just action, toCtxDynamic newButton) where
+    onMouseOut b = (Just action, toCtxDynamic newButton) where
         action    = updateState newButton
         newButton = b & WB.state .~ WB.Normal
 

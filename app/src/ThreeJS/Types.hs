@@ -50,7 +50,7 @@ data JSVector4
 
 foreign import javascript unsafe "new THREE.Vector2($1, $2)"
     buildVector2 :: Double -> Double -> IO (JSRef JSVector2)
-foreign import javascript unsafe "new THREE.Vector2($1, $2, $3)"
+foreign import javascript unsafe "new THREE.Vector3($1, $2, $3)"
     buildVector3 :: Double -> Double -> Double -> IO (JSRef JSVector3)
 foreign import javascript unsafe "new THREE.Vector4($1, $2, $3, $4)"
     buildVector4 :: Double -> Double -> Double -> Double -> IO (JSRef JSVector4)
@@ -71,7 +71,13 @@ newtype AttributeMap = AttributeMap { unAttributeMap :: JSObject.Object }
 newtype Attribute    = Attribute    { unAttribute    :: JSObject.Object }
 
 buildAttributeMap :: IO AttributeMap
-buildAttributeMap = JSObject.create >>= return . AttributeMap
+buildAttributeMap = do
+    m <- JSObject.create
+    copyCommonUniforms $ JSObject.getJSRef m
+    return $ AttributeMap m
+
+foreign import javascript unsafe "for(var k in $$.commonUniforms) {$1[k] = $$.commonUniforms[k]; };" copyCommonUniforms :: JSRef a -> IO ()
+
 
 setAttribute :: AttributeMap -> Text -> Attribute -> IO ()
 setAttribute m a v = JSObject.setProp (lazyTextToJSString a) (JSObject.getJSRef $ unAttribute v) (unAttributeMap m)
@@ -102,7 +108,7 @@ instance ToAttribute (JSRef JSVector2) JSVector2 where
     toAttribute      a = buildAttribute "v2" a
     toAttributeValue a = a
 instance ToAttribute (JSRef JSVector3) JSVector3 where
-    toAttribute      a = buildAttribute "v2" a
+    toAttribute      a = buildAttribute "v3" a
     toAttributeValue a = a
 instance ToAttribute (JSRef JSVector4) JSVector4 where
     toAttribute      a = buildAttribute "v4" a

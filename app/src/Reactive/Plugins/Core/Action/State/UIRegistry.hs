@@ -35,7 +35,7 @@ instance Show State where
 
 
 instance Default State where
-    def = State def def def
+    def = State def 1 def
 
 instance PrettyPrinter State where
     display (State widgets nid wover) = "dWd(" <> show nid <> " / " <> (show $ IntMap.size widgets) <> " over: " <> (show wover) <> ")"

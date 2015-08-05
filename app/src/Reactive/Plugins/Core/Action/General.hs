@@ -31,7 +31,7 @@ instance PrettyPrinter Action where
 
 
 toAction :: Event Node -> Maybe Action
-toAction (Mouse (Mouse.Event tpe pos _ _)) = case tpe of
+toAction (Mouse (Mouse.Event tpe pos _ _ _ _ )) = case tpe of
     Mouse.Moved     -> Just $ Moving pos
     _               -> Nothing
 toAction (Window (Window.Event tpe width height)) = case tpe of
