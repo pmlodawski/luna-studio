@@ -225,7 +225,12 @@ def stage3_create_virtualenv():
         call("virtualenv --no-site-packages -p '%s' %s" % (selected_python, PYENV), shell=True)
 
 
-def stage4_jump_to_virtualenv():
+def stage4_initial_gitmodules_update():
+    print("INFO: bootstrapping git-modules: obtaining repo-management scripts")
+    subprocess.check_call(["git", "submodule", "update", "--init"])
+
+
+def stage5_jump_to_virtualenv():
     python_in_env = PYENV_BIN_PYTHON
     script_to_call = sys.argv[0][:-4] + "2.py"  # run the second script
     subprocess.check_call([python_in_env, script_to_call])
@@ -237,7 +242,8 @@ def main():
         stage1_verify_programs()
         stage2_verify_programs_fuzzy()
         stage3_create_virtualenv()
-        stage4_jump_to_virtualenv()
+        stage4_initial_gitmodules_update()
+        stage5_jump_to_virtualenv()
     except Exception as e:  # TODO: not compatible with Python 2.5 :<
         print("######################################################################")
         print("Stage 1 got exception:")
