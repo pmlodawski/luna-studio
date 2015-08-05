@@ -12,7 +12,7 @@
 
 module Main where
 
-import Flowbox.Prelude hiding (simple, empty, Indexable, Simple, cons, lookup, index, Wrapped)
+import Flowbox.Prelude hiding (simple, empty, Indexable, Simple, cons, lookup, index, Wrapped, children)
 import Data.Repr
 
 --import qualified Luna.Inference.Type as Type
@@ -84,7 +84,7 @@ data Ctx a = Pure
 
 data Literal = Int Int
              | String Text.AutoBuilder
-
+             deriving (Show)
 
 instance IsString Literal where
     fromString = String . fromString
@@ -99,7 +99,7 @@ type Name = String
 type HExpr h = h (Expr h)
 
 
-data Arg h = Arg { _label :: Maybe Name, _arg :: HExpr h }
+data Arg h = Arg { _label :: Maybe Name, _expr :: HExpr h }
 
 -- wszystkie rzeczy nazwane powinny byc w slownikach w jezyku! - czyli datatypy ponizej zostaja,
 -- ale mozemy tworzyc np. Var funkcjami, ktore oczekuja konkretnego Stringa!
@@ -109,23 +109,23 @@ data Expr h = Var      Name
             | App      (HExpr h) [Arg h]
             | Lambda
             | RecUpd
-            | Match    (Pattern h) (HExpr h)
+            | Unify    (HExpr h) (HExpr h)
             | Case
             | Typed
             -- | Assignment
-            | Decons
+            -- x | Decons
             | Curry
             -- | Meta
             -- | Tuple
             -- | Grouped
             -- | Decl
-            | Lit
+            | Lit      Literal
             | Wildcard
             -- | Tuple
             -- | List
             | Unsafe [Name] (HExpr h)
 
-type Pattern h = HExpr h
+--type Pattern h = HExpr h
 
 data Typex = Typex deriving (Show) -- fixme
 
@@ -139,6 +139,23 @@ deriving instance Show (HExpr h) => Show (Expr h)
 makeLenses ''Expr
 makeLenses ''Arg
 
+class HasAST a ast (h :: * -> *) | a -> ast h where
+    ast :: a -> ast h
+
+instance HasAST (Expr h) Expr h where
+    ast = id
+
+instance HasAST a ast h => HasAST (Val a) ast h where
+    ast (Val _ _ _ a) = ast a
+
+class AST a where
+    children :: a h -> [h (a h)]
+
+instance AST Expr where
+    children = \case
+        Accessor _ base    -> [base]
+        App      base args -> base : fmap (view expr) args
+        _                  -> []
 
 instance Repr (Expr h) where
     repr = \case
@@ -147,15 +164,17 @@ instance Repr (Expr h) where
         Accessor n _ -> "Accessor " <> show n
         App      {}  -> "App"
 
+instance Repr a => Repr (Val a) where
+    repr (Val _ _ _ a) = repr a
 
-class IsNode n inp | n -> inp where
-    inputs :: n -> [inp]
+--class IsNode n inp | n -> inp where
+--    inputs :: n -> [inp]
 
-instance IsNode (Expr h) (HExpr h) where
-    inputs = \case
-        Accessor _    base -> [base]
-        App      base args -> base : fmap (view arg) args
-        _                  -> []
+--instance IsNode (Expr h) (HExpr h) where
+--    inputs = \case
+--        Accessor _    base -> [base]
+--        App      base args -> base : fmap (view arg) args
+--        _                  -> []
 
 
 instance Convertible' (Expr h) (Val (Expr h)) where convert' = Val Typex Pure []
@@ -239,7 +258,7 @@ instance Monad m => MonadBldrState g (GraphBuilderT g m) where
 
 ---- === Ref ===
 
-newtype Ref     h a = Ref (h (a h))
+newtype Ref     h a = Ref { fromRef :: h (a h) }
 type    Wrapped m a = m (a (HPtr Int m))
 type    Simple    a = a (Ptr Int)
 
@@ -258,11 +277,11 @@ instance {-# OVERLAPPABLE #-} (m ~ n, Monad m) => ToMRef (m (Ref h a)) n h a whe
 
 -- === RefBuilder ===
 
-class (Monad m, PtrTarget h a el) => RefBuilder el m h a where
+class (Monad m, PtrTarget h a el, Convertible' (a h) el) => RefBuilder el m h a where
     mkRef :: el -> m (Ref h a)
 
 
-instance (Convertible idx (h (a h)), HasContainer g cont, Appendable cont idx el, Monad m, PtrTarget h a el)
+instance (Convertible idx (h (a h)), HasContainer g cont, Appendable cont idx el, Monad m, PtrTarget h a el, Convertible' (a h) el)
       => RefBuilder el (GraphBuilderT g m) h a where
     mkRef = fmap (Ref . convert) . withGraph . append
 
@@ -297,25 +316,58 @@ instance HasContainer body c => HasContainer (Function body) c where
     container = body . container
 
 
+toRawMRef :: (Functor m, ToMRef t m h a) => t -> m (h (a h))
+toRawMRef = fmap fromRef . toMRef
 
 
 
-
-
+var :: RefBuilder el m h Expr => Name -> m (Ref h Expr)
 var = mkASTRef . Var
+
+accessor :: (RefBuilder el m h Expr, ToMRef t m h Expr) => Name -> t -> m (Ref h Expr)
+accessor n r = mkASTRef . Accessor n =<< toRawMRef r
+
+app :: (RefBuilder el m h Expr, ToMRef t m h Expr) => t -> [ArgRef m h Expr] -> m (Ref h Expr)
+app base args = do
+    baseRef <- toRawMRef base
+    argRefs <- mapM readArgRef args
+    mkASTRef $ App baseRef argRefs
+    where readArgRef (ArgRef n mref) = Arg n . fromRef <$> mref
+
+--data Arg h = Arg { _label :: Maybe Name, _expr :: HExpr h }
+
+--class Named a where
+--    named :: Name -> a -> a
+
+--instance Named (ArgRef h a) where
+--    named n (ArgRef _ ref) = ArgRef (Just n) ref
+
+data ArgRef m h a = ArgRef (Maybe Name) (m (Ref h a))
+
+arg = ArgRef Nothing . toMRef
+
+
 
 f :: FunctionGraph
 f = runFunctionBuilder $ do
     a <- var "a"
+    x <- var "x" @. "foo"
+    y <- x @$ [arg a]
+
     return ()
 
 g1 :: HomoGraph (Wrapped Val Expr)
 --g1 :: HomoGraph (Simple Expr)
 g1 = execGraphBuilder $ do
     a <- var "a"
+    x <- var "x" @. "foo"
+    y <- x @$ [arg a]
     --return a
     return ()
 
+
+(@.) = flip accessor
+(@$) = app
 
 --g1 :: HomoGraph _
 --g1 = runIdentity $ runGraphBuilder $ do
@@ -336,6 +388,9 @@ g1 = execGraphBuilder $ do
 main = do
     print f
     print $ elems f
+    let gv = toGraphViz (view body f)
+    runGraphviz gv Png "/tmp/out.png"
+    createProcess $ shell "open /tmp/out.png"
     --let m = fck & view body
     --    g = fck & view fgraph
     --    Just (Ref p1) = Map.index "foo" m
@@ -357,6 +412,35 @@ main = do
     --    print (c', p')
     --    print c''
     --    print $ uncheckedIndex (Ptr 0 :: Ptr Int Int) c'
+
+--main = do
+--    let g  = runNodeBuilder g1
+--        gv = toGraphViz g
+--    print g
+--    --print $ toDot gv
+--    runGraphviz gv Png "/tmp/out.png"
+--    createProcess $ shell "open /tmp/out.png"
+--    print "end"
+
+toGraphViz :: HomoGraph (Wrapped Val Expr) -> DotGraph Int
+toGraphViz g = DotGraph { strictGraph     = False
+                        , directedGraph   = True
+                        , graphID         = Nothing
+                        , graphStatements = DotStmts { attrStmts = []
+                                                     , subGraphs = []
+                                                     , nodeStmts = nodeStmts
+                                                     , edgeStmts = edgeStmts
+                                                     }
+                        }
+    where nodes           = elems g
+          nodeIds         = indexes g
+          nodeLabels      = fmap repr nodes
+          labeledNode s a = DotNode a [GV.Label . StrLabel $ fromString s]
+          nodeStmts       = fmap (uncurry labeledNode) $ zip nodeLabels nodeIds
+          nodeInEdges   n = zip3 [0..] (fmap ptrIdx . children . ast $ unsafeIndex n g) (repeat n)
+          inEdges         = concat $ fmap nodeInEdges nodeIds
+          mkEdge  (n,a,b) = DotEdge a b [GV.Label . StrLabel $ fromString $ show n]
+          edgeStmts       = fmap mkEdge inEdges
 
 ----g1 :: RefBuilder Expr m => m ()
 --g1 = do
