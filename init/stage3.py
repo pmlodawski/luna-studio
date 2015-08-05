@@ -11,7 +11,6 @@ from configparser import NoSectionError, NoOptionError
 import sys
 from pathlib import Path
 
-from io_utils import fprint
 from io_utils import fprint, fmt
 # noinspection PyUnresolvedReferences
 import git
@@ -41,7 +40,25 @@ def update_gitmodules():
 
 
 def bind_git_hooks():
-    pass
+    this_script_p = Path(sys.argv[0])
+    hooks_p = this_script_p.parent.parent / 'hooks'
+
+    git_hooks_p = Path(".git", "hooks")
+
+    fprint(colored.blue("INFO: ") + "symlinking '{hooks_p}' to your '{git_hooks_p}'")
+
+    try:
+        if git_hooks_p.is_dir() or git_hooks_p.is_symlink():
+            shutil.rmtree(str(git_hooks_p),
+                          onerror=lambda exc_fun, path, exc_ifo: os.unlink(path))
+    except OSError as e:
+        fprint("""
+        Caveat (Windows): Microsoft thinks you're an ugly, dirty hacker because you want symlinks. zOMG…
+                          Rerun this script as root or add yourself 'SeCreateSymbolicLinkPrivilege'.
+        """, colour='yellow')
+        raise Exception(fmt("ERROR: tried to remove current '{git_hooks_p}' but failed.")) from e
+
+    git_hooks_p.symlink_to(Path('..') / hooks_p, target_is_directory=True)
 
 
 def configure_repo():
@@ -51,9 +68,9 @@ def configure_repo():
 def main():
     try:
         print("##############################" + colored.blue(" STAGE: 3 ") + "##############################")
+        bind_git_hooks()
         bind_gitmodules()
         update_gitmodules()
-        bind_git_hooks()
         configure_repo()
     except Exception as e:
         terminal_width = shutil.get_terminal_size((80, 20)).columns
