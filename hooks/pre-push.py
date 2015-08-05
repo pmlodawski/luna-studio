@@ -45,7 +45,7 @@ def main():
             if submod_repo.head.commit.hexsha != submodule.hexsha:
                 fprint("Submodule {submodule} has changes.", colour='yellow')
             if submod_repo.head.ref.tracking_branch().commit.hexsha != submod_repo.head.ref.commit.hexsha:
-                # print("\n\n\n\n\n")
+                fprint("Submodule {submodule} points to commits that are not on remote.", colour='red')
                 raise Exception("nope")
 
 
