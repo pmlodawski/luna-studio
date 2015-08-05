@@ -18,30 +18,25 @@ from io_utils import fprint
 from shtack_exceptions import ShtackHookAbort
 
 
+
 def main():
-    try:
-        args = docopt(__doc__)
-        print("example pre-push: " + str(args))
+    args = docopt(__doc__)
+    print("example pre-push: " + str(args))
 
-        this_repo = git.Repo(str(Path('.').resolve()))
+    this_repo = git.Repo(str(Path('.').resolve()))
 
-        # for remote in this_repo.remotes:
-        #     remote.update()
+    # for remote in this_repo.remotes:
+    #     remote.update()
 
-        with releasing(this_repo.config_reader()) as cfg:
-            for submodule in this_repo.submodules:
-                submod_repo = git.Repo(submodule.name)
+    with releasing(this_repo.config_reader()) as cfg:
+        for submodule in this_repo.submodules:
+            submod_repo = git.Repo(submodule.name)
 
-                if submod_repo.head.commit.hexsha != submodule.hexsha:
-                    fprint("Submodule {submodule} has changes.", colour='yellow')
+            if submod_repo.head.commit.hexsha != submodule.hexsha:
+                fprint("Submodule {submodule} has changes.", colour='yellow')
 
-                if submod_repo.head.ref.tracking_branch().commit.hexsha != submod_repo.head.ref.commit.hexsha:
-                    raise ShtackHookAbort("Submodule {submodule} points to commits that are not on remote.")
-
-    except ShtackHookAbort as e:
-        fprint(e.args[0], colour='red')
-        sys.exit(1)
-
+            if submod_repo.head.ref.tracking_branch().commit.hexsha != submod_repo.head.ref.commit.hexsha:
+                raise ShtackHookAbort("Submodule {submodule} points to commits that are not on remote.")
 
 if __name__ == '__main__':
     main()

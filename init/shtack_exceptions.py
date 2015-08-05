@@ -1,5 +1,7 @@
 import inspect
 from io_utils import fmt
+# noinspection PyUnresolvedReferences
+from clint.textui import colored
 
 
 class ShtackExceptions(Exception):
@@ -10,7 +12,7 @@ class ShtackExceptions(Exception):
         fmt_args = kwargs.copy()
         fmt_args['parent'] = parent
 
-        super().__init__(fmt(*args, **fmt_args))
+        super().__init__(colored.red(fmt(args[0], **fmt_args)))
 
 
 class ShtackHookAbort(ShtackExceptions):
