@@ -50,6 +50,34 @@ def fprint(x=None, *, parent=None, notrunc=False, colour=None, **kwargs):
     if not parent:
         parent = inspect.stack()[1][0]
 
+    x = fmt(x, parent=parent, notrunc=notrunc)
+
+    try:
+        if not kwargs and colour:
+            # noinspection PyUnresolvedReferences
+            from clint.textui import colored, puts
+            puts(getattr(colored, colour)(x))
+    except ImportError:
+        print(x)
+    else:
+        if kwargs or not colour:
+            print(x, **kwargs)
+
+
+def fmt(x, *, parent=None, notrunc=False):
+    """ Format the string Ruby-like.
+
+    :param x: The string to format.
+    :param parent: The stack frame to look up for variables. 'None' means: take from the caller.
+
+    :type x: String
+    :type parent: Any
+    :rtype: String
+    """
+
+    if not parent:
+        parent = inspect.stack()[1][0]
+
     if x and not notrunc:
         x_lines = [
             line.expandtabs(tabsize=4)
@@ -71,35 +99,16 @@ def fprint(x=None, *, parent=None, notrunc=False, colour=None, **kwargs):
 
     if not x:
         x = ""
-    x = fmt(x, parent=parent)
-
-    try:
-        if not kwargs and colour:
-            # noinspection PyUnresolvedReferences
-            from clint.textui import colored, puts
-            puts(getattr(colored, colour)(x))
-    except ImportError:
-        print(x)
-    else:
-        if kwargs or not colour:
-            print(x, **kwargs)
-
-
-def fmt(x, *, parent=None):
-    """ Format the string Ruby-like.
-
-    :param x: The string to format.
-    :param parent: The stack frame to look up for variables. 'None' means: take from the caller.
-
-    :type x: String
-    :type parent: Any
-    :rtype: String
-    """
-
-    if not parent:
-        parent = inspect.stack()[1][0]
 
     var = parent.f_globals
     var.update(parent.f_locals)
 
     return x.format(**var)
+
+
+def fwarning(x, *, parent=None):
+    if not parent:
+        parent = inspect.stack()[1][0]
+
+    fprint(x, colour='yellow', parent=parent)
+
