@@ -42,9 +42,12 @@ instance PrettyPrinter ActionType where
 instance PrettyPrinter Action where
     display (DragAction tpe point) = "dA(" <> display tpe <> " " <> display point <> ")"
 
+isNodeId :: Maybe Int -> Bool
+isNodeId (Just nid) = (nid `div` 65536) == 1
+isNodeId _          = False
 
 toAction :: Event Node -> UnderCursor -> Maybe Action
-toAction (Mouse (Mouse.Event tpe pos button keyMods _ _)) underCursor = case button of
+toAction (Mouse (Mouse.Event tpe pos button keyMods nid _)) underCursor = case button of
     Mouse.LeftButton   -> case tpe of
         Mouse.Pressed  -> if dragAllowed then case keyMods of
                                              (KeyMods False False False False) -> Just (DragAction StartDrag pos)
@@ -54,7 +57,7 @@ toAction (Mouse (Mouse.Event tpe pos button keyMods _ _)) underCursor = case but
         Mouse.Moved    -> Just (DragAction Moving   pos)
         _              -> Nothing
     _                  -> Nothing
-    where dragAllowed   = not . null $ underCursor ^. nodesUnderCursor
+    where dragAllowed   = isNodeId nid
 toAction _ _ = Nothing
 
 moveNodes :: Double -> Vector2 Int -> NodeCollection -> NodeCollection

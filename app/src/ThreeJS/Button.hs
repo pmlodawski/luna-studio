@@ -125,7 +125,6 @@ setUniform n v w = do
     uniform  <- JSObject.getProp (lazyTextToJSString n) uniforms >>= return . Attribute . JSObject.fromJSRef
     setValue uniform v
 
-
 updateState :: WB.Button -> IO ()
 updateState b = do
     setUniform "state" (toJSInt $ fromEnum $ b ^. WB.state) b

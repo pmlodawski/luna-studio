@@ -34,7 +34,7 @@ function Node(id, position, z) {
   this.inputPorts  = [];
   this.outputPorts = [];
 
-  var _id = 1000 + id;
+  var _id = 65536 + id;
 
   this.uniforms = {
     selected:        { type: 'i',  value: 0 },
@@ -44,7 +44,7 @@ function Node(id, position, z) {
     selectedColor:   { type: 'c',  value: selectedColor },
     focusedColor:    { type: 'c',  value: focusedColor },
     nodeSize:        { type: 'f',  value: 30.0 },
-    objectId:        { type: 'v3', value: new THREE.Vector3((_id % 256) / 255.0, Math.floor(_id / 256) / 255.0, 0.0) }
+    objectId:        { type: 'v3', value: new THREE.Vector3((_id % 256) / 255.0, Math.floor(Math.floor(_id % 65536) / 256) / 255.0, Math.floor(_id / 65536) / 255.0) }
   };
 
   Object.keys($$.commonUniforms).forEach(function(k) {

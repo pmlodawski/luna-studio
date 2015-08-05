@@ -191,14 +191,14 @@ function newNodeAt(id, x, y, expr) {
   $$.nodes[id] = node;
   node.label(expr);
   $$.scene.add(node.mesh);
-  $$.registry[1000 + id] = node;
+  $$.registry[65536 + id] = node;
 }
 
 function removeNode(i) {
   var node = $$.nodes[i];
   $$.scene.remove(node.mesh);
   delete $$.nodes[i];
-  delete $$.registry[1000 + i];
+  delete $$.registry[65536 + i];
 }
 
 // -> HS
