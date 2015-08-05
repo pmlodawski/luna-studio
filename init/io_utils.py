@@ -106,9 +106,36 @@ def fmt(x, *, parent=None, notrunc=False):
     return x.format(**var)
 
 
-def fwarning(x, *, parent=None):
+def fwarning(x, *, parent=None, **kwargs):
     if not parent:
         parent = inspect.stack()[1][0]
 
-    fprint(x, colour='yellow', parent=parent)
+    fprint(x, colour='yellow', parent=parent, **kwargs)
 
+
+def finfo(x, *, parent=None, **kwargs):
+    if not parent:
+        parent = inspect.stack()[1][0]
+
+    # noinspection PyUnresolvedReferences
+    from clint.textui import colored, puts
+    print(colored.blue("INFO: ") + fmt(x, parent=parent, **kwargs))
+
+
+def getinfo(ob):
+    ob_s = str(ob)
+    tob = type(ob).__name__
+    fprint("{ob_s:<32} :: {tob}", colour='blue')
+    for dob_e in dir(ob):
+        if dob_e.startswith("_"):
+            pass
+        else:
+            try:
+                dob_eo = getattr(ob, dob_e)
+                dob_et = type(dob_eo).__name__
+            except:
+                dob_et = "???"
+            if dob_et == 'method':
+                fprint("  > {dob_e:30} :: {dob_et:15}")
+            else:
+                fprint("  > {dob_e:30} :: {dob_et:15} = {dob_eo}")

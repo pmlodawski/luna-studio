@@ -4,10 +4,8 @@
 # Stage 3: prepare the repository.
 #
 
-from operator import itemgetter
 import os
 import shutil
-from configparser import NoSectionError, NoOptionError
 import sys
 from pathlib import Path
 from git_utils import releasing
@@ -24,7 +22,7 @@ import plumbum
 
 
 def bind_gitmodules():
-    this_repo = git.Repo(str(Path('.').resolve()))
+    this_repo = git.Repo('.')
 
     if len(this_repo.submodules) == 1:
         fprint(colored.blue("INFO: ") + "overwriting .gitmodules with _gitmodules")
@@ -81,12 +79,19 @@ def bind_git_hooks():
 
 
 def configure_repo():
-    this_repo = git.Repo(str(Path('.').resolve()))
+    this_repo = git.Repo('.')
 
     with releasing(this_repo.config_writer()) as cfg:
         cfg.set_value("status", "submoduleSummary", "true")
         cfg.set_value("diff", "submodule", "log")
         cfg.set_value("fetch", "recurseSubmodules", "on-demand")
+
+
+def create_aliases():
+    this_repo = git.Repo('.')
+
+    with releasing(this_repo.config_writer()) as cfg:
+        cfg.set_value("alias", "commit-all", "!./.git/hooks/_commit-all")
 
 
 def main():
@@ -96,6 +101,7 @@ def main():
         bind_gitmodules()
         update_gitmodules()
         configure_repo()
+        create_aliases()
     except Exception as e:
         terminal_width = shutil.get_terminal_size((80, 20)).columns
         hash_sign = "#"
