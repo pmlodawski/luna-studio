@@ -5,10 +5,14 @@
 #
 
 from operator import itemgetter
+import os
 import shutil
 from configparser import NoSectionError, NoOptionError
+import sys
+from pathlib import Path
 
 from io_utils import fprint
+from io_utils import fprint, fmt
 # noinspection PyUnresolvedReferences
 import git
 # noinspection PyUnresolvedReferences
@@ -20,51 +24,12 @@ import plumbum
 
 
 def bind_gitmodules():
-    fprint(colored.blue("INFO: ") + "checking if _gitmodules and .gitmodules match")
+    fprint(colored.blue("INFO: ") + "overwriting .gitmodules with _gitmodules")
 
-    old_config = git.config.GitConfigParser('.gitmodules')
-    new_config = git.config.GitConfigParser('_gitmodules')
-
-    def test_match(conf_a, conf_b, section_a, *, show_mismatch=True, name_a, name_b):
-        is_ok = True
-
-        for a_key, a_val in sorted(conf_a.items(section_a),
-                                   key=itemgetter(0)):
-            try:
-                b_val = conf_b.get_value(section_a, a_key)
-                if show_mismatch:
-                    if b_val != a_val:
-                        fprint("""
-                        COMPARISON: value mismatch.
-                            {name_a}:{section_a}:{a_key} = {a_val}
-                            {name_b}:{section_a}:{a_key} = {b_val}
-                        """, colour='red')
-
-            except NoSectionError:
-                fprint("COMPARISON: {name_a}:{section_a} has no equivalent in {name_b}",
-                       colour='red')
-                return False
-
-            except NoOptionError:
-                fprint("MISMATCH: option {section_a}:{a_key} in {name_a} does not exist in the other",
-                       colour='red')
-                is_ok = False
-
-        return is_ok
-
-    configs_isomorphic = True
-
-    for old_section in old_config.keys():
-        test_res = test_match(old_config, new_config, old_section, name_a="OLD", name_b="NEW")
-        configs_isomorphic = configs_isomorphic and test_res
-
-    for new_section in new_config.keys():
-        test_res = test_match(new_config, old_config, new_section, name_a="NEW", name_b="OLD", show_mismatch=False)
-        configs_isomorphic = configs_isomorphic and test_res
-
-    if not configs_isomorphic:
-        raise Exception("Sorry, there is mismatch b/w .gitmodules and _gitmodules. Please fix that")
-        # TODO: tools to help with the above?
+    with open("_gitmodules", 'r') as config_source:
+        with open(".gitmodules", 'w') as config_dest:
+            for line in config_source:
+                config_dest.write(line)
 
 
 def update_gitmodules():
