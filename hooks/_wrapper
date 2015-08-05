@@ -20,4 +20,5 @@ if __name__ == '__main__':
     env = os.environ.copy()
     env["PYTHONPATH"] = "repo_manager/init:" + env.get("PYTHONPATH", "")
 
-    subprocess.check_call(argv, env=env)
+    ret = subprocess.call(argv, env=env)
+    sys.exit(ret)
