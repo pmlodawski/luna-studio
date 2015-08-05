@@ -102,6 +102,8 @@ def main():
         fprint("{hash_sign:#^{terminal_width}}", colour='red')
         print("Stage 3 got exception:")
         raise e
+    else:
+        print(colored.blue("INFO: ") + "all seems okay")
 
 if __name__ == '__main__':
     main()

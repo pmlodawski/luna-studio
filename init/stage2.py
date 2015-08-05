@@ -98,6 +98,7 @@ def main():
     try:
         print('############################## STAGE: 2 ##############################')
         install_requirements()
+        print("INFO: all seems okay")
         jump_to_next_stage()
     except Exception as e:
         # noinspection PyBroadException

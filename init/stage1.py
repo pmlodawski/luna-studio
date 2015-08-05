@@ -237,6 +237,7 @@ def main():
         stage1_verify_programs()
         stage2_verify_programs_fuzzy()
         stage3_create_virtualenv()
+        print("INFO: all seems okay")
         stage4_jump_to_virtualenv()
     except Exception as e:  # TODO: not compatible with Python 2.5 :<
         print("######################################################################")
