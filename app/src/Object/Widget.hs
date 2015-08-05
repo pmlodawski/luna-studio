@@ -7,7 +7,6 @@ module Object.Widget ( T.DisplayObject(..)
                      , onMouseMove
                      , onMousePress
                      , onMouseRelease
-                     , isOver
                      , onMouseOver
                      , onMouseOut
                      , onClick
@@ -33,9 +32,6 @@ onMouseOut  = withCtxDynamic T.onMouseOut
 onMousePress, onMouseRelease :: MouseButton -> T.MousePosition -> T.DisplayObject -> T.WidgetUpdate
 onMousePress   button pos = withCtxDynamic (T.onMousePressed  button pos)
 onMouseRelease button pos = withCtxDynamic (T.onMouseReleased button pos)
-
-isOver :: T.MousePosition -> T.DisplayObject -> Bool
-isOver pos = withCtxDynamic (T.isOver pos)
 
 objectId :: T.DisplayObject -> Int
 objectId = withCtxDynamic T.objectId

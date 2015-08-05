@@ -22,18 +22,5 @@ data Button = Button { _refId   :: Int
 
 makeLenses ''Button
 
-posHit :: Double -> Double -> Double -> Bool
-posHit center range position
-    | position >= rangeStart && position <= rangeEnd = True
-    | otherwise                                      = False
-    where
-        rangeStart = center
-        rangeEnd   = center + range
-
-
 instance IsDisplayObject Button where
     objectId       b = b ^. refId
-    isOver   mouse b = (posHit (pos' ^. x) (size' ^. x) (mouse' ^. x)) && (posHit (pos' ^. y) (size' ^. y) (mouse' ^. y)) where
-        pos'  = b ^. pos
-        size' = b ^. size
-        mouse' = fromIntegral <$> mouse

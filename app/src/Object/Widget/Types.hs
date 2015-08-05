@@ -34,7 +34,6 @@ type WidgetUpdate = (WidgetUIUpdate, DisplayObject)
 
 class IsDisplayObject a where
     objectId :: a -> Int
-    isOver   :: MousePosition -> a -> Bool
 
 type MousePosition = Vector2 Int
 
