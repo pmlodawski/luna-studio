@@ -53,7 +53,7 @@ def fprint(x=None, *, parent=None, notrunc=False, colour=None, **kwargs):
     if x and not notrunc:
         x_lines = [
             line.expandtabs(tabsize=4)
-            for line in x.splitlines()
+            for line in str(x).splitlines()
         ]
         if not x_lines[0].rstrip():
             x_lines = x_lines[1:]

@@ -10,9 +10,14 @@ HOOK_DIR = os.path.join(".git", "hooks")
 
 if __name__ == '__main__':
     python_in_env = HOOK_DIR
+
     argv = [
         PYENV_BIN_PYTHON,
         os.path.join(sys.argv[0] + ".py")
     ]
     argv.extend(sys.argv[1:])
-    subprocess.check_call(argv)
+
+    env = os.environ.copy()
+    env["PYTHONPATH"] = "repo_manager/init:" + env.get("PYTHONPATH", "")
+
+    subprocess.check_call(argv, env=env)
