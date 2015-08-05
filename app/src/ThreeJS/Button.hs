@@ -136,7 +136,7 @@ instance HandlesMouseOver WB.Button where
         newButton = b & WB.state .~ WB.Focused
 
 instance HandlesMouseOut WB.Button where
-    onMouseOut b = (Just action, toCtxDynamic newButton) where
+    onMouseOut  b = (Just action, toCtxDynamic newButton) where
         action    = updateState newButton
         newButton = b & WB.state .~ WB.Normal
 

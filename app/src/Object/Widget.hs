@@ -27,8 +27,8 @@ onClick     pos = withCtxDynamic (T.onClick     pos)
 onDblClick  pos = withCtxDynamic (T.onDblClick  pos)
 
 onMouseOver, onMouseOut :: T.DisplayObject -> T.WidgetUpdate
-onMouseOver     = withCtxDynamic  T.onMouseOver
-onMouseOut      = withCtxDynamic  T.onMouseOut
+onMouseOver = withCtxDynamic T.onMouseOver
+onMouseOut  = withCtxDynamic T.onMouseOut
 
 onMousePress, onMouseRelease :: MouseButton -> T.MousePosition -> T.DisplayObject -> T.WidgetUpdate
 onMousePress   button pos = withCtxDynamic (T.onMousePressed  button pos)
