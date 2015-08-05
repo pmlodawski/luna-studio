@@ -29,7 +29,7 @@ def main():
                 tracking_branch_headref = str(submod_repo.head.ref)
                 tracking_branch_str = str(tracking_branch)
                 raise ShtackHookAbort("""
-                Submodule {submodule} points to commits that are not on remote.
+                Submodule {submodule} points to commit that's different from remote's branch.
                   Submodule branch                : {submod_repo.head.ref}
                   Submodule remote tracking branch: {tracking_branch}
                     {tracking_branch_headref:<15} -> {submodule.hexsha}
