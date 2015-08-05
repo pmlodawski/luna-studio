@@ -93,7 +93,7 @@ def main():
     except Exception as e:
         terminal_width = shutil.get_terminal_size((80, 20)).columns
         hash_sign = "#"
-        fprint("{hash_sign:#^{terminal_width}}", colour='cyan')
+        fprint("{hash_sign:#^{terminal_width}}", colour='red')
         print("Stage 3 got exception:")
         raise e
 
