@@ -81,7 +81,12 @@ def bind_git_hooks():
 
 
 def configure_repo():
-    pass
+    this_repo = git.Repo(str(Path('.').resolve()))
+
+    with releasing(this_repo.config_writer()) as cfg:
+        cfg.set_value("status", "submoduleSummary", "true")
+        cfg.set_value("diff", "submodule", "log")
+        cfg.set_value("fetch", "recurseSubmodules", "on-demand")
 
 
 def main():
