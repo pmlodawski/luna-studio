@@ -38,7 +38,7 @@ def main():
             fprint("        " + "submod_repo.head.commit = {submod_repo.head.commit}")
             fprint("        " + "submod_repo.head.reference = {submod_repo.head.reference}")
 
-            if submod_repo.head.commit != submodule.hexsha:
+            if submod_repo.head.commit.hexsha != submodule.hexsha:
                 raise Exception("nope")
 
 if __name__ == '__main__':
