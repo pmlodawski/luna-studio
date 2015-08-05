@@ -40,7 +40,6 @@ def main():
 
     except ShtackHookAbort as e:
         fprint(e.args[0], colour='red')
-        traceback.print_stack()
         sys.exit(1)
 
 
