@@ -10,6 +10,7 @@ import shutil
 from configparser import NoSectionError, NoOptionError
 import sys
 from pathlib import Path
+from git_utils import releasing
 
 from io_utils import fprint, fmt
 # noinspection PyUnresolvedReferences
@@ -23,12 +24,30 @@ import plumbum
 
 
 def bind_gitmodules():
-    fprint(colored.blue("INFO: ") + "overwriting .gitmodules with _gitmodules")
+    this_repo = git.Repo(str(Path('.').resolve()))
 
-    with open("_gitmodules", 'r') as config_source:
-        with open(".gitmodules", 'w') as config_dest:
-            for line in config_source:
-                config_dest.write(line)
+    if len(this_repo.submodules) == 1:
+        fprint(colored.blue("INFO: ") + "overwriting .gitmodules with _gitmodules")
+
+        with releasing(this_repo.submodules[0].config_reader()) as old_submod_cfg:
+            submod_branch = old_submod_cfg.get_value('branch')
+
+        with open("_gitmodules", 'r') as config_source:
+            with open(".gitmodules", 'w') as config_dest:
+                for line in config_source:
+                    config_dest.write(line)
+
+        for subrepo in this_repo.submodules:
+            if subrepo.name == "repo_manager":
+                with releasing(subrepo.config_writer()) as new_submod_cfg:
+                    new_submod_cfg.set_value('branch', submod_branch).release()
+                break
+        else:
+            raise Exception("Whoops, _gitmodules do not have repo_manager as a subrepo?")
+
+    else:
+        fprint(colored.blue("INFO: ") + "seems like git-modules were already initialised.")
+        fprint("      If it's not the case, overwrite .gitmodules with .gitmodules.origin and re-run this script.")
 
 
 def update_gitmodules():
