@@ -7,13 +7,14 @@ import           Object.Widget.Button ( Button )
 
 data State = State { _buttons :: [Int]
                    , _path :: [Text]
+                   , _slider :: Maybe Int
                    } deriving (Eq, Show)
 
 makeLenses ''State
 
 
 instance Default State where
-    def = State def def
+    def = State def def def
 
 instance PrettyPrinter State where
-    display (State buttons path) = "cBc(" <> display path <> " )"
+    display (State _ path _) = "cBc(" <> display path <> " )"

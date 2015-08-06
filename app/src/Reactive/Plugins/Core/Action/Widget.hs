@@ -18,6 +18,7 @@ import qualified Reactive.Plugins.Core.Action.State.Global       as Global
 import           Reactive.Plugins.Core.Action.State.UIRegistry   ( WidgetMap, WidgetId )
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry   as UIRegistry
 import qualified Object.Widget.Button as Button
+import qualified Object.Widget.Slider as Slider
 import           GHCJS.Prim
 import           Data.IntMap.Lazy (IntMap)
 import qualified Data.IntMap.Lazy as IntMap

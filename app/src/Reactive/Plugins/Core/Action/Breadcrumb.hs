@@ -16,13 +16,15 @@ import qualified Event.Window   as Window
 import           Event.Event
 import           Event.WithObjects
 import           Reactive.Plugins.Core.Action.Action
-import qualified Reactive.Plugins.Core.Action.Camera         as Camera
-import qualified Reactive.Plugins.Core.Action.State.Global   as Global
+import qualified Reactive.Plugins.Core.Action.Camera             as Camera
+import qualified Reactive.Plugins.Core.Action.State.Global       as Global
 import qualified Reactive.Plugins.Core.Action.State.Breadcrumb   as Breadcrumb
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry   as UIRegistry
 import qualified Object.Widget.Button as Button
+import qualified Object.Widget.Slider as Slider
 import           ThreeJS.Text (calculateTextWidth)
 import qualified ThreeJS.Button as UIButton
+import qualified ThreeJS.Slider as UISlider
 import qualified ThreeJS.Mesh as Mesh
 import           ThreeJS.Types
 import qualified ThreeJS.Scene as Scene
@@ -78,10 +80,20 @@ addButton b = do
     UIButton.putToRegistry b uiButton
     Scene.sceneHUD `add` uiButton
 
+addSlider b = do
+    slider <- UISlider.buildSlider b
+    UISlider.putToRegistry b slider
+    Scene.scene `add` slider
+
 removeButton b = do
     uiButton <- UIButton.getFromRegistry b
     Scene.sceneHUD `remove` uiButton
     UIButton.removeFromRegistry b
+
+removeSlider b = do
+    uiButton <- UISlider.getFromRegistry b
+    Scene.scene `remove` uiButton
+    UISlider.removeFromRegistry b
 
 instance ActionStateUpdater Action where
     execSt newActionCandidate oldState = case newAction of
@@ -90,22 +102,28 @@ instance ActionStateUpdater Action where
         where
         (newAction, newState) = case newActionCandidate of
             NewPath path        -> (action, state) where
-                    action = Just $ ApplyUpdates [removeOldBreadcrumb, createNewBreadcrumb]
+                    action = Just $ ApplyUpdates [removeOldBreadcrumb, createNewBreadcrumb, removeSliders, addSliders]
                     createNewBreadcrumb = forM_ newButtons addButton
                     removeOldBreadcrumb = forM_ oldButtons removeButton
+                    removeSliders       = forM_ oldSlider removeSlider
+                    addSliders          = addSlider slider
 
                     state = oldState & Global.uiRegistry . UIRegistry.nextId  .~ nextId
                                      & Global.uiRegistry . UIRegistry.widgets .~ newWidgets
                                      & Global.breadcrumb . Breadcrumb.path    .~ path
+                                     & Global.breadcrumb . Breadcrumb.slider  .~ (Just $ startId)
                                      & Global.breadcrumb . Breadcrumb.buttons .~ ((^. Button.refId) <$> newButtons)
-                    (newButtons, nextId) = createButtons path startId
+                    (newButtons, nextId) = createButtons path (startId + 1)
                     oldButtons =  catMaybes $ getFromRegistry <$> oldButtonIds
                     getFromRegistry :: Int -> Maybe Button.Button
                     getFromRegistry bid = fromCtxDynamic $ oldRegistry IntMap.! bid
                     oldRegistry = (oldState ^. Global.uiRegistry . UIRegistry.widgets)
                     oldButtonIds = oldState ^. Global.breadcrumb . Breadcrumb.buttons
-                    newWidgets = UIRegistry.replaceAll oldRegistry oldButtons newButtons
-                    startId = oldState ^. Global.uiRegistry .UIRegistry.nextId
+                    newWidgets = UIRegistry.replaceAll nw (maybeToList oldSlider) [slider] where
+                        nw = UIRegistry.replaceAll oldRegistry oldButtons newButtons
+                    startId = oldState ^. Global.uiRegistry . UIRegistry.nextId
+                    oldSlider = maybe Nothing (\x -> fromCtxDynamic $ oldRegistry IntMap.! x) (oldState ^. Global.breadcrumb . Breadcrumb.slider)
+                    slider = Slider.Slider startId (Vector2 0 0) (Vector2 100 30) 0.0 100.0 50.0
             ButtonClicked bid -> (Just $ ApplyUpdates [putStrLn $ show bid], oldState)
             _ -> (Nothing, oldState)
 
