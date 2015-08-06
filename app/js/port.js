@@ -15,8 +15,8 @@ var inputColor   = new THREE.Vector4(0x00, 0x99, 0x99, 0xAA).divideScalar(0xFF);
 var outputColor  = new THREE.Vector4(0xBB, 0x33, 0x00, 0xAA).divideScalar(0xFF);
 var colorFar     = new THREE.Vector4(0.2, 0.2, 0.2, 0.6);
 
-var height = 12.0;
-var width  = 12.0;
+var height = 30.0;
+var width  = 30.0;
 var halfWidth = width / 2.0;
 var margin = 0.0;
 var dist = nodeRadius + halfWidth + margin;
