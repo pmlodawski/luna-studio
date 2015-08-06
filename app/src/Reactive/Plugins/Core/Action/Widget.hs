@@ -43,7 +43,7 @@ handleOther mouseEvent mWidget m = do
     widgetId <- mWidget
     widget   <- IntMap.lookup widgetId m
     (uiUpdate, newWidget) <- return $ case mouseEvent of
-        Mouse.Event Mouse.Moved      _ _      _ (Just _) (Just pos) -> onMouseMove           pos widget
+        Mouse.Event Mouse.Moved      _ button _ (Just _) (Just pos) -> onMouseMove    button pos widget
         Mouse.Event Mouse.Pressed    _ button _ (Just _) (Just pos) -> onMousePress   button pos widget
         Mouse.Event Mouse.Released   _ button _ (Just _) (Just pos) -> onMouseRelease button pos widget
         Mouse.Event Mouse.Clicked    _ _      _ (Just _) (Just pos) -> onClick               pos widget
