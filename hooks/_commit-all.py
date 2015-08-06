@@ -9,6 +9,8 @@ from pathlib import Path
 from git_utils import releasing
 from io_utils import getinfo, fprint, finfo, fmt
 from shtack_exceptions import ShtackHookAbort
+# noinspection PyUnresolvedReferences
+from plumbum import local
 
 
 def main():
@@ -37,7 +39,7 @@ def main():
         multi:
         #  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         #  1st line shouldn't be longer than 50 characters
-        #
+        
         # Coordinated multi-commit for git-submodules:
         #
         # - """ + '\n    # - '.join(str(x) for x in submodules_to_commit) + """
@@ -56,10 +58,11 @@ def main():
             for submodule in submodules_to_commit
         ]
         for submodule in submodules_to_commit:
-            this_repo.index.add([submodule.path])
+            git_cmd = local["git"]
+            git_cmd["add", submodule.path]()
+            # this_repo.index.add([submodule])
 
         message_suffix = """
-
 
         Changed submodules:
 
