@@ -60,6 +60,7 @@ def main():
 
         message_suffix = """
 
+
         Changed submodules:
 
         - """ + '\n    - '.join(fmt("{submodule} @ {comm.hexsha}") for submodule, comm in zip(submodules_to_commit, submodule_commits) )
