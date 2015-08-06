@@ -47,7 +47,7 @@ def main():
     #  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     #  1st line shouldn't be longer than 50 characters
     #
-    # Coordinated commit for git-submodules:
+    # Coordinated multi-commit for git-submodules:
     #
     # - """ + '\n    # - '.join(str(x) for x in submodules_to_commit) + """
     #
@@ -56,34 +56,50 @@ def main():
     #  listings.
     #  _____________________________________________________________________
     """
-    initial_message = fmt(initial_message)
 
+    message = user_edit(fmt(initial_message),
+                        editor=editor)
+
+    # for submodule in submodules_to_commit:
+    #     submod_repo = git.Repo(submodule.name)
+    #     # TODO: add the thing
+    submodule_commits = [git.Repo(submodule.name).index.commit(message) for submodule in submodules_to_commit]
+
+    message_suffix = """
+
+    Changed submodules:
+
+    - """ + '\n    - '.join(fmt("{submodule} @ {comm.hexsha}") for submodule, comm in zip(submodules_to_commit, submodule_commits) )
+
+    this_message = user_edit(message + fmt(message_suffix),
+                             editor=editor)
+
+    this_repo.index.commit(this_message)
+
+
+def user_edit(initial, *, editor):
     commit_file = Path('.git', "FLOWBOX_SHTACK_COMMIT")
     with commit_file.open(mode='w') as fh:
-        fh.write(initial_message)
+        fh.write(initial)
 
-    # try:
-    #     subprocess.call([editor, fh.name])
-    # except subprocess.CalledProcessError as e:
-    #     raise ShtackHookAbort("""
-    #     The EDITOR ({editor}) quit with error code {e.returncode}.
-    #     """)
-    #
-    # with commit_file.open() as fh:
-    #     message = fh.read()
+    try:
+        subprocess.call([editor, fh.name])
+    except subprocess.CalledProcessError as e:
+        raise ShtackHookAbort("""
+        The EDITOR ({editor}) quit with error code {e.returncode}.
+        """)
 
-    message = initial_message
+    with commit_file.open() as fh:
+        message = fh.read()
 
-    message_lines = [x.strip() for x in message.splitlines()]
-    if all(not x or x.startswith('#') for x in message.splitlines()):
+    if all(not x or x.startswith('#')
+           for x in (x.strip()
+                     for x in message.splitlines())):
         raise ShtackHookAbort("""
         Empty commit message.
         """)
 
-    
-
-    commit_file.unlink()
-
+    return message
 
 
 if __name__ == '__main__':
