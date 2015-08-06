@@ -9,17 +9,15 @@ import           Event.Keyboard       ( KeyMods(..) )
 import           Utils.Vector
 
 
-data MouseButton =  NoButton | LeftButton | MiddleButton | RightButton deriving (Show, Eq)
+data MouseButton = NoButton | LeftButton | MiddleButton | RightButton deriving (Show, Eq)
 
-toMouseButton :: Word -> MouseButton
-toMouseButton (-1) = NoButton
-toMouseButton   0  = LeftButton
-toMouseButton   1  = MiddleButton
-toMouseButton   2  = RightButton
+toMouseButton :: Int -> MouseButton
+toMouseButton   1  = LeftButton
+toMouseButton   2  = MiddleButton
+toMouseButton   3  = RightButton
 toMouseButton   _  = NoButton
 
-
-data Type = Pressed | Released | Moved | Clicked | DblClicked deriving (Eq, Show, Typeable)
+data Type = Pressed | Released | Moved | Clicked | DblClicked deriving (Eq, Show)
 
 data Event = Event { _tpe         :: Type
                    , _position    :: Vector2 Int

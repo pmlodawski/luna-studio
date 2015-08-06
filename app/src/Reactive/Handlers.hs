@@ -65,7 +65,7 @@ readLocalPos (Just oid) pos = do
     return $ Just $ Vector2 x y
 readLocalPos _ _ = return Nothing
 
-uiWhichButton = mouseButton >>= return . Mouse.toMouseButton
+uiWhichButton = uiWhich >>= return . Mouse.toMouseButton
 
 genericMouseHandler event tag =
     AddHandler $ \h -> do
