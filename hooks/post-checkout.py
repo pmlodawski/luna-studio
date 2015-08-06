@@ -6,7 +6,7 @@ from io_utils import finfo
 
 
 def main():
-    finfo("post-checkout")
+    finfo("post-checkout (master branch)")
     this_repo = git.Repo('.')
     this_repo.submodule_update(recursive=True)
 
