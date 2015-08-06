@@ -4,10 +4,9 @@
 import git
 import os
 import subprocess
-import tempfile
 from pathlib import Path
 from git_utils import releasing
-from io_utils import getinfo, fprint, finfo, fmt
+from io_utils import finfo, fmt
 from shtack_exceptions import ShtackHookAbort
 # noinspection PyUnresolvedReferences
 from plumbum import local
@@ -39,7 +38,7 @@ def main():
         multi:
         #  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
         #  1st line shouldn't be longer than 50 characters
-        
+
         # Coordinated multi-commit for git-submodules:
         #
         # - """ + '\n    # - '.join(str(x) for x in submodules_to_commit) + """

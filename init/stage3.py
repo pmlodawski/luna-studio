@@ -92,6 +92,7 @@ def create_aliases():
 
     with releasing(this_repo.config_writer()) as cfg:
         cfg.set_value("alias", "commit-all", "!./.git/hooks/_commit-all")
+        cfg.set_value("alias", "shtack-update", "!./.git/hooks/_shtack-update")
 
 
 def main():
