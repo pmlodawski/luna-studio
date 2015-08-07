@@ -100,6 +100,24 @@ instance IsString Literal where
     fromString = String . fromString
 
 
+---- === Ref ===
+
+newtype Ref     h a = Ref { fromRef :: h (a h) }
+type    Wrapped m a = m (a (HPtr Int m))
+type    Simple    a = a (Ptr Int)
+
+-- utils
+
+class ToMRef t m h a | t -> h a where
+    toMRef :: t -> m (Ref h a)
+
+-- instances
+
+instance                             (Monad m) => ToMRef    (Ref h a)  m h a where toMRef = return
+instance {-# OVERLAPPABLE #-} (m ~ n, Monad m) => ToMRef (m (Ref h a)) n h a where toMRef = id
+
+
+
 -- === Expr ===
 
 
@@ -137,11 +155,6 @@ data Expr h = Var      Name
 
 --type Pattern h = HExpr h
 
-data Typex = Typex deriving (Show) -- fixme
-
-data Val a = Val Typex Ctx a deriving (Show)
-
-
 deriving instance Show (HExpr h) => Show (Arg h)
 deriving instance Show (HExpr h) => Show (Expr h)
 --deriving instance Show (HExpr h) => Show (Pattern h)
@@ -156,7 +169,7 @@ instance HasAST (Expr h) Expr h where
     ast = id
 
 instance HasAST a ast h => HasAST (Val a) ast h where
-    ast (Val _ _ a) = ast a
+    ast (Val _ _ _ a) = ast a
 
 class AST a where
     children :: a h -> [h (a h)]
@@ -175,7 +188,7 @@ instance Repr (Expr h) where
         App      {}  -> "App"
 
 instance Repr a => Repr (Val a) where
-    repr (Val _ _ a) = repr a
+    repr (Val _ _ _ a) = repr a
 
 --class IsNode n inp | n -> inp where
 --    inputs :: n -> [inp]
@@ -187,7 +200,32 @@ instance Repr a => Repr (Val a) where
 --        _                  -> []
 
 
-instance Convertible' (Expr h) (Val (Expr h)) where convert' = Val Typex UnknownCtx
+-- === Vals and Metas ===
+
+data Typex = Typex deriving (Show) -- fixme
+
+data Val a = Val Typex Ctx Meta a deriving (Show)
+
+data Meta = Meta deriving (Show)
+
+class IsMeta m where
+    setMeta :: Meta -> m -> m
+
+instance Default Meta where
+    def = Meta
+
+instance IsMeta (h (a h)) => IsMeta (Ref h a) where
+    setMeta m (Ref a) = Ref $ setMeta m a
+
+instance IsMeta (Val a) where
+    setMeta m (Val t c _ a) = Val t c m a
+
+--varMeta :: (RefBuilder el m h Expr, IsMeta (Ref h Expr))  => Name -> Meta -> m (Ref h Expr)
+--varMeta n m = setMeta m <$> var n
+
+withMeta m ref = setMeta m <$> toMRef ref
+
+instance Convertible' (Expr h) (Val (Expr h)) where convert' = Val Typex UnknownCtx def
 instance Convertible' (Expr h) (Expr h)       where convert' = id
 
 
@@ -266,23 +304,6 @@ instance Monad m => MonadBldrState g (GraphBuilderT g m) where
 
 
 
----- === Ref ===
-
-newtype Ref     h a = Ref { fromRef :: h (a h) }
-type    Wrapped m a = m (a (HPtr Int m))
-type    Simple    a = a (Ptr Int)
-
--- utils
-
-class ToMRef t m h a | t -> h a where
-    toMRef :: t -> m (Ref h a)
-
--- instances
-
-instance                             (Monad m) => ToMRef    (Ref h a)  m h a where toMRef = return
-instance {-# OVERLAPPABLE #-} (m ~ n, Monad m) => ToMRef (m (Ref h a)) n h a where toMRef = id
-
-
 
 
 -- === RefBuilder ===
@@ -300,7 +321,7 @@ instance (Convertible idx (h (a h)), HasContainer g cont, Appendable cont idx el
 mkASTRef :: (Convertible' (a h) el, RefBuilder el m h a) => a h -> m (Ref h a)
 mkASTRef = mkRef . convert'
 
-
+mkASTRefMeta m = mkRef . setMeta m . convert'
 
 -- === Function ===
 
@@ -329,10 +350,11 @@ instance HasContainer body c => HasContainer (Function body) c where
 toRawMRef :: (Functor m, ToMRef t m h a) => t -> m (h (a h))
 toRawMRef = fmap fromRef . toMRef
 
-
-
 var :: RefBuilder el m h Expr => Name -> m (Ref h Expr)
 var = mkASTRef . Var
+
+metaVar :: (RefBuilder el m h Expr, IsMeta el) => Name -> Meta -> m (Ref h Expr)
+metaVar n m = mkASTRefMeta m $ Var n
 
 accessor :: (RefBuilder el m h Expr, ToMRef t m h Expr) => Name -> t -> m (Ref h Expr)
 accessor n r = mkASTRef . Accessor n =<< toRawMRef r
@@ -360,11 +382,12 @@ arg = ArgRef Nothing . toMRef
 
 f :: FunctionGraph
 f = runFunctionBuilder $ do
-    a <- var "a"
+    a <- metaVar "a" Meta
     x <- var "x" @. "foo"
     y <- x @$ [arg a]
 
     return ()
+
 
 g1 :: HomoGraph (Wrapped Val Expr)
 --g1 :: HomoGraph (Simple Expr)
