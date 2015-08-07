@@ -15,7 +15,7 @@ import           Event.Event
 import           Event.WithObjects
 import           Reactive.Plugins.Core.Action.Action
 import qualified Reactive.Plugins.Core.Action.State.Global       as Global
-import           Reactive.Plugins.Core.Action.State.UIRegistry   ( WidgetMap, WidgetId )
+import           Reactive.Plugins.Core.Action.State.UIRegistry   ( WidgetMap )
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry   as UIRegistry
 import qualified Object.Widget.Button as Button
 import qualified Object.Widget.Slider as Slider
@@ -35,21 +35,20 @@ instance PrettyPrinter Action where
     display _ = "WidgetAction"
 
 toAction :: Event Node -> Maybe Action
-toAction (Mouse m@(Mouse.Event _ _ _ _ _ _)) = Just $ MouseAction m
+toAction (Mouse m) = Just $ MouseAction m
 toAction _                                   = Nothing
 
 handleOther :: Mouse.Event -> Maybe WidgetId -> WidgetMap -> Maybe (WidgetUIUpdate, WidgetMap)
 handleOther mouseEvent Nothing m = Nothing
-handleOther mouseEvent mWidget m = do
-    widgetId <- mWidget
+handleOther mouseEvent (Just widgetId) m = do
     widget   <- IntMap.lookup widgetId m
     (uiUpdate, newWidget) <- return $ case mouseEvent of
-        Mouse.Event Mouse.Moved      _ button _ (Just _) (Just pos) -> onMouseMove    button pos widget
-        Mouse.Event Mouse.Pressed    _ button _ (Just _) (Just pos) -> onMousePress   button pos widget
-        Mouse.Event Mouse.Released   _ button _ (Just _) (Just pos) -> onMouseRelease button pos widget
-        Mouse.Event Mouse.Clicked    _ _      _ (Just _) (Just pos) -> onClick               pos widget
-        Mouse.Event Mouse.DblClicked _ _      _ (Just _) (Just pos) -> onDblClick            pos widget
-        _                                                           -> (Nothing, widget)
+        Mouse.Event Mouse.Moved      _ button _ (Just (EventWidget _ pos)) -> onMouseMove    button pos widget
+        Mouse.Event Mouse.Pressed    _ button _ (Just (EventWidget _ pos)) -> onMousePress   button pos widget
+        Mouse.Event Mouse.Released   _ button _ (Just (EventWidget _ pos)) -> onMouseRelease button pos widget
+        Mouse.Event Mouse.Clicked    _ _      _ (Just (EventWidget _ pos)) -> onClick               pos widget
+        Mouse.Event Mouse.DblClicked _ _      _ (Just (EventWidget _ pos)) -> onDblClick            pos widget
+        _                                                                  -> (Nothing, widget)
     let newM = IntMap.insert (objectId widget) newWidget m
     return (uiUpdate, newM) where
 
@@ -68,7 +67,8 @@ instance ActionStateUpdater Action where
                                                              , Just $ (handleOther mouseEvent widgetOver)
                                                              ] oldWidgets
         (handleMouseOver, handleMouseOut, widgetOver) = case mouseEvent of
-            Mouse.Event Mouse.Moved _ _ _ bid _ -> (handleMouseOver', handleMouseOut', widgetOver) where
+            Mouse.Event Mouse.Moved _ _ _ evWd -> (handleMouseOver', handleMouseOut', widgetOver) where
+                bid = maybe Nothing (\x -> Just $ x ^. Mouse.widgetId) evWd
                 widgetOver = bid
                 widgetOverChanged = oldWidgetOver /= widgetOver
                 handleMouseOver' = case widgetOverChanged of

@@ -63,7 +63,7 @@ instance PrettyPrinter Action where
 
 
 toAction :: Event Node -> Maybe Action
-toAction (Mouse (Mouse.Event tpe pos button keyMods _ _)) = case button of
+toAction (Mouse (Mouse.Event tpe pos button keyMods _)) = case button of
     Mouse.RightButton  -> case tpe of
         Mouse.Pressed  -> case keyMods of
            (KeyMods False False False False) -> Just (MouseAction Zoom StartDrag pos)

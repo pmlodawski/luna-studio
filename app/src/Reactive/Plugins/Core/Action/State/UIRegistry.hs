@@ -6,18 +6,18 @@ import           Utils.Vector
 
 import           Object.Object
 import           Object.Widget hiding (objectId)
-import           Object.Widget.Types (objectId)
+import           Object.Widget.Types  (objectId)
 
 import           Data.IntMap.Lazy (IntMap)
 import qualified Data.IntMap.Lazy as IntMap
+
+import           Event.Mouse (WidgetId)
 
 import           Data.Set (Set)
 import qualified Data.Set as Set
 
 import           Utils.CtxDynamic
 
-
-type WidgetId  = Int
 type WidgetMap = IntMap DisplayObject
 
 data State = State { _widgets     :: WidgetMap
@@ -51,7 +51,6 @@ unregisterAll = foldl unregister
 
 replaceAll :: DisplayObjectClass a => WidgetMap -> [a] -> [a] -> WidgetMap
 replaceAll m r = registerAll $ unregisterAll m r
-
 
 sequenceUpdates :: [Maybe (WidgetMap -> Maybe (WidgetUIUpdate, WidgetMap))] -> WidgetMap -> ([WidgetUIUpdate], WidgetMap)
 sequenceUpdates ops input = foldl applyOp ([], input) ops where

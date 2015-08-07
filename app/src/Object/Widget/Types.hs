@@ -7,7 +7,7 @@ module Object.Widget.Types where
 import           Utils.PreludePlus
 import           Utils.Vector
 import           Utils.CtxDynamic
-import           Event.Mouse (MouseButton)
+import           Event.Mouse (MouseButton, MousePosition, WidgetId)
 
 type DisplayObject = CtxDynamic DisplayObjectClass
 
@@ -30,12 +30,10 @@ class    DisplayObjectCtx a => DisplayObjectClass a
 instance DisplayObjectCtx a => DisplayObjectClass a
 
 type WidgetUIUpdate = Maybe (IO ())
-type WidgetUpdate = (WidgetUIUpdate, DisplayObject)
+type WidgetUpdate   = (WidgetUIUpdate, DisplayObject)
 
 class IsDisplayObject a where
-    objectId :: a -> Int
-
-type MousePosition = Vector2 Int
+    objectId :: a -> WidgetId
 
 class HandlesMouseMove     a where onMouseMove     :: MouseButton -> MousePosition -> a -> WidgetUpdate
 class HandlesMousePressed  a where onMousePressed  :: MouseButton -> MousePosition -> a -> WidgetUpdate

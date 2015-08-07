@@ -76,7 +76,10 @@ genericMouseHandler event tag =
         keyMods  <- readKeyMods
         objectId <- liftIO $ readObjectId mousePos
         localPos <- liftIO $ readLocalPos objectId mousePos
-        liftIO . h $ Mouse $ Mouse.Event tag mousePos button keyMods objectId localPos
+        let maybeWidget = do justObjectId <- objectId
+                             justLocalPos <- localPos
+                             return $ Mouse.EventWidget justObjectId justLocalPos
+        liftIO . h $ Mouse $ Mouse.Event tag mousePos button keyMods maybeWidget
 
 mouseDownHandler     = genericMouseHandler mouseDown  Mouse.Pressed
 mouseUpHandler       = genericMouseHandler mouseUp    Mouse.Released

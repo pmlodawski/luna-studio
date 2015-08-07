@@ -58,7 +58,7 @@ justIf True val = Just val
 justIf False  _ = Nothing
 
 toAction (Window (Window.Event Window.Resized width height)) _ = Just $ NewPath ["NodeLab", "demo", " by ", "New Byte Order"]
-toAction (Mouse (Mouse.Event Mouse.Clicked _ Mouse.LeftButton _ (Just bid) _)) state = isButtonOver where
+toAction (Mouse (Mouse.Event Mouse.Clicked _ Mouse.LeftButton _ (Just (EventWidget bid _)))) state = isButtonOver where
     buttonIds  = state ^. Global.breadcrumb . Breadcrumb.buttons
     isButtonOver = justIf (bid `elem` buttonIds) $ ButtonClicked bid
 
