@@ -1,7 +1,6 @@
 "use strict";
 
-var $$           = require('common'),
-    config       = require('config');
+var $$           = require('common');
 
 function renderMap() {
   $$.commonUniforms.objectMap.value = 1;
@@ -27,7 +26,7 @@ function getTopParent(w) {
     p = w.parent;
   }
   return w;
-};
+}
 
 function screenToWorkspace(vec) {
   var x, y;
@@ -61,4 +60,4 @@ module.exports = {
   renderMap:     renderMap,
   getMapPixelAt: getMapPixelAt,
   toWidgetLocal: toWidgetLocal
-}
+};
