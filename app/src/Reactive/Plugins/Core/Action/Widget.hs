@@ -8,14 +8,14 @@ import           Utils.Vector
 import           Object.Object
 import           Object.Widget
 import           Object.Node
-import           Event.Mouse    hiding      ( Event, WithObjects )
+import           Event.Mouse    hiding      (Event, WithObjects)
 import qualified Event.Mouse    as Mouse
 import qualified Event.Window   as Window
 import           Event.Event
 import           Event.WithObjects
 import           Reactive.Plugins.Core.Action.Action
 import qualified Reactive.Plugins.Core.Action.State.Global       as Global
-import           Reactive.Plugins.Core.Action.State.UIRegistry   ( WidgetMap )
+import           Reactive.Plugins.Core.Action.State.UIRegistry   (WidgetMap)
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry   as UIRegistry
 import qualified Object.Widget.Button as Button
 import qualified Object.Widget.Slider as Slider
@@ -26,7 +26,7 @@ import           Utils.CtxDynamic
 import           Data.Set (Set)
 import qualified Data.Set as Set
 
-data Action = MouseAction   { _event :: Mouse.Event }
+data Action = MouseAction   { _event   :: Mouse.Event }
             | ApplyUpdates  { _actions :: [WidgetUIUpdate] }
 
 makeLenses ''Action
@@ -36,7 +36,7 @@ instance PrettyPrinter Action where
 
 toAction :: Event Node -> Maybe Action
 toAction (Mouse m) = Just $ MouseAction m
-toAction _                                   = Nothing
+toAction _         = Nothing
 
 handleOther :: Mouse.Event -> Maybe WidgetId -> WidgetMap -> Maybe (WidgetUIUpdate, WidgetMap)
 handleOther mouseEvent Nothing m = Nothing

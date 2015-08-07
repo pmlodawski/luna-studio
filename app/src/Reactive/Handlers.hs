@@ -47,7 +47,7 @@ readMousePos = do
 
 readObjectId :: Vector2 Int -> IO (Maybe Mouse.WidgetId)
 readObjectId pos = do
-    pixel <- getMapPixelAtJS (pos ^. x) (pos ^. y)
+    pixel <- getMapPixelAt pos
     let read i = fromJSRef $ JSArray.index i pixel :: IO (Maybe Int)
     maybeR <- read 0
     maybeG <- read 1

@@ -38,7 +38,11 @@ instance Default State where
     def = State def 1 def
 
 instance PrettyPrinter State where
-    display (State widgets nid wover) = "dWd(" <> show nid <> " / " <> (show $ IntMap.size widgets) <> " over: " <> (show wover) <> ")"
+    display (State widgets nid wover) =
+           "dWd("    <> show nid
+        <> " / "     <> show (IntMap.size widgets)
+        <> " over: " <> show wover
+        <> ")"
 
 
 register, unregister :: DisplayObjectClass a => WidgetMap -> a -> WidgetMap
@@ -52,7 +56,8 @@ unregisterAll = foldl unregister
 replaceAll :: DisplayObjectClass a => WidgetMap -> [a] -> [a] -> WidgetMap
 replaceAll m r = registerAll $ unregisterAll m r
 
-sequenceUpdates :: [Maybe (WidgetMap -> Maybe (WidgetUIUpdate, WidgetMap))] -> WidgetMap -> ([WidgetUIUpdate], WidgetMap)
+sequenceUpdates :: [Maybe (WidgetMap -> Maybe (WidgetUIUpdate, WidgetMap))]
+                -> WidgetMap -> ([WidgetUIUpdate], WidgetMap)
 sequenceUpdates ops input = foldl applyOp ([], input) ops where
     applyOp (updates, input) op = fromMaybe (updates, input) $ do
         justOp           <- op

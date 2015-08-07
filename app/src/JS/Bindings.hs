@@ -4,19 +4,20 @@
 module JS.Bindings where
 
 import           Utils.PreludePlus
+import           Utils.Vector
 
 import           Data.Dynamic
-import           Data.Text.Lazy      ( Text )
+import           Data.Text.Lazy      (Text)
 
 import           GHCJS.Foreign
 import           GHCJS.DOM.EventM
-import           GHCJS.DOM           ( currentDocument )
-import           GHCJS.DOM.Element   ( Element, IsElement )
-import           GHCJS.Types         ( JSRef, JSString )
-import           GHCJS.DOM.Types     ( UIEvent, IsUIEvent, unUIEvent, toUIEvent )
-import           JavaScript.Array    ( JSArray )
-import qualified JavaScript.Array   as JSArray
-import           Data.JSString.Text  ( lazyTextToJSString )
+import           GHCJS.DOM           (currentDocument)
+import           GHCJS.DOM.Element   (Element, IsElement)
+import           GHCJS.Types         (JSRef, JSString)
+import           GHCJS.DOM.Types     (UIEvent, IsUIEvent, unUIEvent, toUIEvent)
+import           JavaScript.Array    (JSArray )
+import qualified JavaScript.Array    as JSArray
+import           Data.JSString.Text  (lazyTextToJSString)
 
 data VNode
 data VElement
@@ -181,6 +182,10 @@ foreign import javascript unsafe "app.shouldRender()"
 
 foreign import javascript unsafe "app.getMapPixelAt($1, $2)"
     getMapPixelAtJS :: Int -> Int -> IO JSArray
+
+getMapPixelAt :: Vector2 Int -> IO JSArray
+getMapPixelAt (Vector2 x y) = getMapPixelAtJS x y
+
 
 foreign import javascript unsafe "app.toWidgetLocal($1, $2, $3)"
     toWidgetLocal :: Int -> Int -> Int -> IO JSArray
