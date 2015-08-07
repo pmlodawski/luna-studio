@@ -63,7 +63,7 @@ readObjectId pos = do
 
 readLocalPos :: Maybe Int -> Vector2 Int -> IO (Maybe Mouse.MousePosition)
 readLocalPos (Just oid) pos = do
-    localArr <- toWidgetLocal oid (pos ^. x) (pos ^. y)
+    localArr <- toWidgetLocal oid pos
     let read i = fromJSRef $ JSArray.index i localArr :: IO (Maybe Int)
     maybeX <- read 0
     maybeY <- read 1

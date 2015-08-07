@@ -180,13 +180,14 @@ foreign import javascript unsafe "window.dispatchEvent(new Event('resize'))"
 foreign import javascript unsafe "app.shouldRender()"
     shouldRender :: IO ()
 
-foreign import javascript unsafe "app.getMapPixelAt($1, $2)"
+foreign import javascript unsafe "raycaster.getMapPixelAt($1, $2)"
     getMapPixelAtJS :: Int -> Int -> IO JSArray
 
 getMapPixelAt :: Vector2 Int -> IO JSArray
-getMapPixelAt (Vector2 x y) = getMapPixelAtJS x y
+getMapPixelAt pos = getMapPixelAtJS (pos ^. x) (pos ^. y)
 
+foreign import javascript unsafe "raycaster.toWidgetLocal($1, $2, $3)"
+    toWidgetLocalJS :: Int -> Int -> Int -> IO JSArray
 
-foreign import javascript unsafe "app.toWidgetLocal($1, $2, $3)"
-    toWidgetLocal :: Int -> Int -> Int -> IO JSArray
-
+toWidgetLocal :: Int -> Vector2 Int -> IO JSArray
+toWidgetLocal oid pos = toWidgetLocalJS oid (pos ^. x) (pos ^. y)

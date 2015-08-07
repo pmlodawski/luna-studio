@@ -4,6 +4,7 @@ var $$           = require('common'),
     config       = require('config'),
     features     = require('features'),
     brunch       = require('brunch'),
+    raycaster    = require('raycaster'),
     GraphNode    = require('node'),
     NodeSearcher = require('node_searcher'),
     Connection   = require('connection'),
@@ -100,54 +101,10 @@ function render() {
     $$.renderer.clearDepth();
     $$.renderer.render($$.sceneHUD, $$.cameraHUD);
 
-    renderMap();
+    raycaster.renderMap();
     shouldRender = false;
   }
   requestAnimationFrame(render);
-}
-function renderMap() {
-  $$.commonUniforms.objectMap.value = 1;
-  $$.commonUniforms.antialias.value = 0;
-  $$.rendererMap.clear();
-  $$.rendererMap.render($$.scene, $$.camera);
-  $$.rendererMap.clearDepth();
-  $$.rendererMap.render($$.sceneHUD, $$.cameraHUD);
-}
-
-function getMapPixelAt(x, y) {
-  var buf = new Uint8Array(4);
-  var ctx = $$.rendererMap.getContext();
-  y = $$.screenSize.y - y;
-  ctx.readPixels(x, y, 1, 1, ctx.RGBA, ctx.UNSIGNED_BYTE, buf);
-  return buf;
-}
-
-function toWidgetLocal(id, x, y) {
-  var getTopParent = function (w) {
-    var p = w;
-    while (p !== undefined) {
-      w = p;
-      p = w.parent;
-    }
-    return w;
-  };
-
-  var widget = $$.registry[id];
-  var vec;
-  if (widget) {
-    if (getTopParent(widget.mesh) !== $$.sceneHUD) {
-      // screen to workspace
-      x =  x - $$.screenSize.x / 2.0;
-      y = -y + $$.screenSize.y / 2.0;
-
-      x = x / $$.camFactor.value + $$.camPan.x;
-      y = y / $$.camFactor.value + $$.camPan.y;
-    }
-    vec = widget.mesh.worldToLocal(new THREE.Vector3(x, y, 0.0));
-    return [vec.x, vec.y];
-  } else {
-    return null;
-  }
 }
 
 function updateHtmCanvasPanPos(x, y, factor) {
@@ -275,8 +232,6 @@ module.exports = {
   hideSelectionBox:         hideSelectionBox,
   displayCurrentConnection: displayCurrentConnection,
   removeCurrentConnection:  removeCurrentConnection,
-  getMapPixelAt:            getMapPixelAt,
-  toWidgetLocal:            toWidgetLocal,
   getNode:                  function(index) { return $$.nodes[index];    },
   getNodes:                 function()      { return _.values($$.nodes); },
   nodeSearcher:             function()      { return $$.node_searcher;   },
