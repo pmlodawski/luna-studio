@@ -31,11 +31,13 @@ instance PrettyPrinter UnderCursor where
 
 
 getNodesUnderCursor :: State -> NodeCollection
-getNodesUnderCursor state = maybeToList node where
-    node = do
-        widgetId <- state ^. uiRegistry . UIRegistry.widgetOver
-        if (widgetId `div` 65536) == 1 then find (\x -> (x ^. nodeId) == (widgetId - 65536)) (state ^. nodes)
-                                       else Nothing
+getNodesUnderCursor state = getNodesAt (state ^. mousePos) (toCamera state) (state ^. nodes)
+--
+-- getNodesUnderCursor state = maybeToList node where
+--     node = do
+--         widgetId <- state ^. uiRegistry . UIRegistry.widgetOver
+--         if (widgetId `div` 65536) == 1 then find (\x -> (x ^. nodeId) == (widgetId - 65536)) (state ^. nodes)
+--                                        else Nothing
 
 
 getPortRefUnderCursor :: State -> Maybe PortRef
