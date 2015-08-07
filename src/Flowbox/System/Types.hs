@@ -200,21 +200,29 @@ type family And a b where
     And True True = True
     And a    b    = False
 
+type family InsertNatRep val (set :: k) :: k
+type instance InsertNatRep v ()    = (v,())
+type instance InsertNatRep v (a,b) = Case (CmpNatRep v a)
+                                         [ EQ :-> (v,b)
+                                         , GT :-> (a, InsertNatRep v b)
+                                         , LT :-> (v, (a,b))
+                                         ]
+
+
+type instance InsertNatRep v '[]      = '[v]
+type instance InsertNatRep v (a ': b) = Case (CmpNatRep v a)
+                                            [ EQ :-> v ': b
+                                            , GT :-> a ': InsertNatRep v b
+                                            , LT :-> v ': (a ': b)
+                                            ]
+
 type family Insert val (set :: k) :: k
-type instance Insert v ()    = (v,())
-type instance Insert v (a,b) = Case (CmpNatRep v a)
-                                   [ EQ :-> (v,b)
-                                   , GT :-> (a, Insert v b)
-                                   , LT :-> (v, (a,b))
-                                   ]
-
-
 type instance Insert v '[]      = '[v]
-type instance Insert v (a ': b) = Case (CmpNatRep v a)
-                                      [ EQ :-> v ': b
-                                      , GT :-> a ': Insert v b
-                                      , LT :-> v ': (a ': b)
+type instance Insert v (a ': b) = Case (v :== a)
+                                      [ True  :-> a ': b
+                                      , False :-> a ': Insert v b
                                       ]
+
 
 type family IsSubset (set :: k) (superset :: k) :: Bool
 type instance IsSubset '[] sset = True

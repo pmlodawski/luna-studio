@@ -48,7 +48,7 @@ class Container cont idx el => Indexable           cont idx el where index      
 class Container cont idx el => UnsafeIndexable     cont idx el where unsafeIndex     :: idx -> cont -> el
 class Container cont idx el => UncheckedIndexable  cont idx el where uncheckedIndex  :: idx -> cont -> el
 
-instance {-# OVERLAPPABLE #-} Indexable       cont idx el => UnsafeIndexable     cont idx el where unsafeIndex     = fromJust .: index
+instance {-# OVERLAPPABLE #-} Indexable        cont idx el => UnsafeIndexable     cont idx el where unsafeIndex     = fromJust .: index
 instance {-# OVERLAPPABLE #-} UnsafeIndexable  cont idx el => UncheckedIndexable  cont idx el where uncheckedIndex  = unsafeIndex
 instance {-# OVERLAPPABLE #-} Updatable        cont idx el => UnsafeInsertable    cont idx el where unsafeInsert    = fromJust .:. update
 instance {-# OVERLAPPABLE #-} UnsafeInsertable cont idx el => UncheckedInsertable cont idx el where uncheckedInsert = unsafeInsert
