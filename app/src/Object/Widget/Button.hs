@@ -8,8 +8,6 @@ import           Data.Fixed
 import           GHCJS.Types (JSRef)
 
 import           Object.Widget
-import qualified Object.Widget.Types as T
-
 
 data State  = Normal | Focused | Disabled | Pressed deriving (Eq, Show, Enum)
 

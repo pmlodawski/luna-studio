@@ -27,7 +27,7 @@ import           Utils.Vector
 import           JS.Config as Config
 import           ThreeJS.Registry
 import qualified Object.Widget.Button as WB
-import           Object.Widget.Types
+import           Object.Widget
 import           GHCJS.Prim
 import           Utils.CtxDynamic
 
@@ -121,7 +121,7 @@ removeFromRegistry b = removeFromRegistryJS buttonId
 setUniform :: Text -> JSRef a -> WB.Button -> IO ()
 setUniform n v w = do
     bref     <- getFromRegistry w
-    uniforms <- JSObject.getProp "uniforms" (unButton bref) >>= return . JSObject.fromJSRef
+    uniforms <- JSObject.getProp "uniforms" (unButton bref)      >>= return .             JSObject.fromJSRef
     uniform  <- JSObject.getProp (lazyTextToJSString n) uniforms >>= return . Attribute . JSObject.fromJSRef
     setValue uniform v
 

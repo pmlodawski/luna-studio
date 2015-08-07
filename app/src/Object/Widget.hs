@@ -1,36 +1,68 @@
-module Object.Widget ( T.DisplayObject(..)
-                     , T.DisplayObjectClass
-                     , T.IsDisplayObject
-                     , T.WidgetUpdate
-                     , T.WidgetUIUpdate
-                     , onMouseMove
-                     , onMousePress
-                     , onMouseRelease
-                     , onMouseOver
-                     , onMouseOut
-                     , onClick
-                     , onDblClick
-                     , objectId
-                     ) where
+{-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
+
+module Object.Widget where
 
 import           Utils.PreludePlus
 import           Utils.Vector
 import           Utils.CtxDynamic
-import qualified Object.Widget.Types as T
 import           Event.Mouse (MouseButton, MousePosition, WidgetId)
 
-onClick, onDblClick :: MousePosition -> T.DisplayObject -> T.WidgetUpdate
-onClick     pos = withCtxDynamic (T.onClick     pos)
-onDblClick  pos = withCtxDynamic (T.onDblClick  pos)
+type DisplayObject = CtxDynamic DisplayObjectClass
 
-onMouseOver, onMouseOut :: T.DisplayObject -> T.WidgetUpdate
-onMouseOver = withCtxDynamic T.onMouseOver
-onMouseOut  = withCtxDynamic T.onMouseOut
+showObject :: DisplayObject -> String
+showObject = withCtxDynamic show
 
-onMouseMove, onMousePress, onMouseRelease :: MouseButton -> MousePosition -> T.DisplayObject -> T.WidgetUpdate
-onMouseMove    button pos = withCtxDynamic (T.onMouseMove     button pos)
-onMousePress   button pos = withCtxDynamic (T.onMousePressed  button pos)
-onMouseRelease button pos = withCtxDynamic (T.onMouseReleased button pos)
+type DisplayObjectCtx a =   ( Show a
+                            , Typeable a
+                            , IsDisplayObject a
+                            , HandlesMouseMove a
+                            , HandlesMousePressed a
+                            , HandlesMouseReleased a
+                            , HandlesMouseOver a
+                            , HandlesMouseOut a
+                            , Clickable a
+                            , DblClickable a
+                            )
 
-objectId :: T.DisplayObject -> WidgetId
-objectId = withCtxDynamic T.objectId
+class    DisplayObjectCtx a => DisplayObjectClass a
+instance DisplayObjectCtx a => DisplayObjectClass a
+
+type WidgetUIUpdate = Maybe (IO ())
+type WidgetUpdate   = (WidgetUIUpdate, DisplayObject)
+
+class IsDisplayObject a where objectId :: a -> WidgetId
+
+instance IsDisplayObject DisplayObject where objectId (CtxDynamic _ a) = objectId a
+
+class HandlesMouseMove     a where onMouseMove     :: MouseButton -> MousePosition -> a -> WidgetUpdate
+class HandlesMousePressed  a where onMousePress    :: MouseButton -> MousePosition -> a -> WidgetUpdate
+class HandlesMouseReleased a where onMouseRelease  :: MouseButton -> MousePosition -> a -> WidgetUpdate
+class HandlesMouseOver     a where onMouseOver     ::                                 a -> WidgetUpdate
+class HandlesMouseOut      a where onMouseOut      ::                                 a -> WidgetUpdate
+class Clickable            a where onClick         ::                MousePosition -> a -> WidgetUpdate
+class DblClickable         a where onDblClick      ::                MousePosition -> a -> WidgetUpdate
+
+instance {-# OVERLAPPABLE #-} DisplayObjectClass a => HandlesMouseMove     a where onMouseMove     _ _ = noUpdate
+instance {-# OVERLAPPABLE #-} DisplayObjectClass a => HandlesMousePressed  a where onMousePress    _ _ = noUpdate
+instance {-# OVERLAPPABLE #-} DisplayObjectClass a => HandlesMouseReleased a where onMouseRelease  _ _ = noUpdate
+instance {-# OVERLAPPABLE #-} DisplayObjectClass a => HandlesMouseOver     a where onMouseOver         = noUpdate
+instance {-# OVERLAPPABLE #-} DisplayObjectClass a => HandlesMouseOut      a where onMouseOut          = noUpdate
+instance {-# OVERLAPPABLE #-} DisplayObjectClass a => Clickable            a where onClick           _ = noUpdate
+instance {-# OVERLAPPABLE #-} DisplayObjectClass a => DblClickable         a where onDblClick        _ = noUpdate
+
+instance HandlesMouseMove     DisplayObject where onMouseMove     mb mp (CtxDynamic _ a) = onMouseMove     mb mp a
+instance HandlesMousePressed  DisplayObject where onMousePress    mb mp (CtxDynamic _ a) = onMousePress    mb mp a
+instance HandlesMouseReleased DisplayObject where onMouseRelease  mb mp (CtxDynamic _ a) = onMouseRelease  mb mp a
+instance HandlesMouseOver     DisplayObject where onMouseOver           (CtxDynamic _ a) = onMouseOver           a
+instance HandlesMouseOut      DisplayObject where onMouseOut            (CtxDynamic _ a) = onMouseOut            a
+instance Clickable            DisplayObject where onClick            mp (CtxDynamic _ a) = onClick            mp a
+instance DblClickable         DisplayObject where onDblClick         mp (CtxDynamic _ a) = onDblClick         mp a
+
+noUIUpdate :: WidgetUIUpdate
+noUIUpdate = Nothing
+
+noUpdate :: DisplayObjectClass a => a -> WidgetUpdate
+noUpdate w = (noUIUpdate, toCtxDynamic w)
+

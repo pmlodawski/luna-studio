@@ -19,12 +19,14 @@ import           Reactive.Plugins.Core.Action.State.UIRegistry   (WidgetMap)
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry   as UIRegistry
 import qualified Object.Widget.Button as Button
 import qualified Object.Widget.Slider as Slider
+import           ThreeJS.Button ()
 import           GHCJS.Prim
 import           Data.IntMap.Lazy (IntMap)
 import qualified Data.IntMap.Lazy as IntMap
 import           Utils.CtxDynamic
 import           Data.Set (Set)
 import qualified Data.Set as Set
+import           Debug.Trace
 
 data Action = MouseAction   { _event   :: Mouse.Event }
             | ApplyUpdates  { _actions :: [WidgetUIUpdate] }
@@ -38,55 +40,54 @@ toAction :: Event Node -> Maybe Action
 toAction (Mouse m) = Just $ MouseAction m
 toAction _         = Nothing
 
-handleOther :: Mouse.Event -> Maybe WidgetId -> WidgetMap -> Maybe (WidgetUIUpdate, WidgetMap)
-handleOther mouseEvent Nothing m = Nothing
-handleOther mouseEvent (Just widgetId) m = do
-    widget   <- IntMap.lookup widgetId m
-    (uiUpdate, newWidget) <- return $ case mouseEvent of
-        Mouse.Event Mouse.Moved      _ button _ (Just (EventWidget _ pos)) -> onMouseMove    button pos widget
-        Mouse.Event Mouse.Pressed    _ button _ (Just (EventWidget _ pos)) -> onMousePress   button pos widget
-        Mouse.Event Mouse.Released   _ button _ (Just (EventWidget _ pos)) -> onMouseRelease button pos widget
-        Mouse.Event Mouse.Clicked    _ _      _ (Just (EventWidget _ pos)) -> onClick               pos widget
-        Mouse.Event Mouse.DblClicked _ _      _ (Just (EventWidget _ pos)) -> onDblClick            pos widget
-        _                                                                  -> (Nothing, widget)
-    let newM = IntMap.insert (objectId widget) newWidget m
-    return (uiUpdate, newM) where
+handleOther :: Mouse.Event -> UIRegistry.State -> Maybe (WidgetUIUpdate, UIRegistry.State)
+handleOther (Mouse.Event eventType _ button _ (Just (EventWidget widgetId pos))) registry = do
+    widget                <- (UIRegistry.lookup widgetId registry) :: Maybe DisplayObject
+    (uiUpdate, newWidget) <- return $ case eventType of
+        Mouse.Moved       -> onMouseMove    button pos widget
+        Mouse.Pressed     -> onMousePress   button pos widget
+        Mouse.Released    -> onMouseRelease button pos widget
+        Mouse.Clicked     -> onClick               pos widget
+        Mouse.DblClicked  -> onDblClick            pos widget
+    let newRegistry = UIRegistry.update newWidget registry
+    return (uiUpdate, registry)
+handleOther _  _        = Nothing
 
 instance ActionStateUpdater Action where
     execSt (MouseAction mouseEvent) oldState = case newAction of
             Just action -> ActionUI newAction newState
             Nothing     -> ActionUI  NoAction newState
         where
-        newAction               = Just $ ApplyUpdates uiUpdates
-        newState                = oldState &  Global.uiRegistry . UIRegistry.widgets    .~ newWidgets
-                                           &  Global.uiRegistry . UIRegistry.widgetOver .~ widgetOver
-        oldWidgetOver           = oldState ^. Global.uiRegistry . UIRegistry.widgetOver
-        oldWidgets              = oldState ^. Global.uiRegistry . UIRegistry.widgets
-        (uiUpdates, newWidgets) = UIRegistry.sequenceUpdates [ handleMouseOut
-                                                             , handleMouseOver
-                                                             , Just $ (handleOther mouseEvent widgetOver)
-                                                             ] oldWidgets
+        newAction                = Just $ ApplyUpdates uiUpdates
+        newState                 = oldState &  Global.uiRegistry .~ (newRegistry & UIRegistry.widgetOver .~ widgetOver)
+        oldWidgetOver            = oldState ^. Global.uiRegistry . UIRegistry.widgetOver
+        oldRegistry              = oldState ^. Global.uiRegistry
+        (uiUpdates, newRegistry) = UIRegistry.sequenceUpdates [ handleMouseOut
+                                                              , handleMouseOver
+                                                              , Just $ (handleOther mouseEvent)
+                                                              ] oldRegistry
         (handleMouseOver, handleMouseOut, widgetOver) = case mouseEvent of
             Mouse.Event Mouse.Moved _ _ _ evWd -> (handleMouseOver', handleMouseOut', widgetOver) where
-                bid = maybe Nothing (\x -> Just $ x ^. Mouse.widgetId) evWd
-                widgetOver = bid
+                widgetOver = maybe Nothing (\x -> Just $ x ^. Mouse.widgetId) evWd
                 widgetOverChanged = oldWidgetOver /= widgetOver
-                handleMouseOver' = case widgetOverChanged of
-                    True  -> Just $ \m -> do
-                        oid <- oldWidgetOver
-                        oldOut <- IntMap.lookup oid m
-                        (a, w) <- Just $ onMouseOut oldOut
-                        Just (a, IntMap.insert oid w m)
-
-                    False -> Nothing
                 handleMouseOut' = case widgetOverChanged of
                     True  -> Just $ \m -> do
+                        oid <- oldWidgetOver
+                        oldOut <- UIRegistry.lookup oid m
+                        (a, w) <- Just $ onMouseOut oldOut
+                        Just (a, UIRegistry.update w m)
+
+                    False -> Nothing
+                handleMouseOver' = case widgetOverChanged of
+                    True  -> Just $ \m -> do
                         oid <- widgetOver
-                        oldOver <- IntMap.lookup oid m
+                        oldOver <- UIRegistry.lookup oid m
                         (a, w) <- Just $ onMouseOver oldOver
-                        Just (a, IntMap.insert oid w m)
+                        Just (a, UIRegistry.update w m)
                     False -> Nothing
             _               -> (Nothing, Nothing, oldWidgetOver)
 
 instance ActionUIUpdater Action where
-    updateUI (WithState (ApplyUpdates actions) state) = sequence_ $ catMaybes actions
+    updateUI (WithState (ApplyUpdates actions) state) = do
+        putStrLn $ "Actions" <> show (length $ catMaybes actions)
+        sequence_ $ catMaybes actions

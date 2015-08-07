@@ -5,8 +5,7 @@ import           Utils.PreludePlus
 import           Utils.Vector
 
 import           Object.Object
-import           Object.Widget hiding (objectId)
-import           Object.Widget.Types  (objectId)
+import           Object.Widget
 
 import           Data.IntMap.Lazy (IntMap)
 import qualified Data.IntMap.Lazy as IntMap
@@ -17,47 +16,62 @@ import           Data.Set (Set)
 import qualified Data.Set as Set
 
 import           Utils.CtxDynamic
+import           Debug.Trace
 
 type WidgetMap = IntMap DisplayObject
 
 data State = State { _widgets     :: WidgetMap
-                   , _nextId      :: WidgetId
                    , _widgetOver  :: Maybe WidgetId
                    }
 
 makeLenses ''State
 
 instance Eq State where
-    a == b = (a ^. nextId) == (b ^. nextId)
+    a == b = (IntMap.size $ a ^. widgets) == (IntMap.size $ a ^. widgets)
 instance Show State where
-    show a = show $ a ^. nextId
-
-
+    show a = show $ IntMap.size $ a ^. widgets
 
 instance Default State where
-    def = State def 1 def
+    def = State def def
 
 instance PrettyPrinter State where
-    display (State widgets nid wover) =
-           "dWd("    <> show nid
-        <> " / "     <> show (IntMap.size widgets)
+    display (State widgets wover) =
+           "dWd("    <> show (IntMap.keys widgets)
         <> " over: " <> show wover
         <> ")"
 
+lookup :: WidgetId -> State -> Maybe DisplayObject
+lookup idx state = IntMap.lookup idx oldWidgets where
+        oldWidgets = state ^. widgets
 
-register, unregister :: DisplayObjectClass a => WidgetMap -> a -> WidgetMap
-register   m a = IntMap.insert (objectId a) (toCtxDynamic a) m
-unregister m a = IntMap.delete (objectId a) m
+register, unregister :: DisplayObjectClass a => a -> State -> State
+register a state = state & widgets .~ newWidgets where
+    newWidgets = IntMap.insert (objectId a) (toCtxDynamic a) oldWidgets
+    oldWidgets = state ^. widgets
 
-registerAll, unregisterAll :: DisplayObjectClass a => WidgetMap -> [a] -> WidgetMap
-registerAll   = foldl register
-unregisterAll = foldl unregister
+update :: DisplayObject -> State -> State
+update a state = state & widgets .~ newWidgets where
+    newWidgets = IntMap.insert (objectId a) a oldWidgets
+    oldWidgets = state ^. widgets
 
-replaceAll :: DisplayObjectClass a => WidgetMap -> [a] -> [a] -> WidgetMap
-replaceAll m r = registerAll $ unregisterAll m r
+unregister a state = state & widgets .~ newWidgets where
+    newWidgets = IntMap.delete (objectId a) oldWidgets
+    oldWidgets = state ^. widgets
 
-sequenceUpdates :: [Maybe (WidgetMap -> Maybe (WidgetUIUpdate, WidgetMap))]
-                -> WidgetMap -> ([WidgetUIUpdate], WidgetMap)
+registerAll, unregisterAll :: DisplayObjectClass a => [a] -> State -> State
+registerAll   a state = foldl (flip   register) state a
+unregisterAll a state = foldl (flip unregister) state a
+
+generateIds :: Int -> State -> [WidgetId]
+generateIds count state = [startId..startId + count] where
+    startId = if IntMap.size (state ^. widgets) == 0 then 1
+                                                     else startId where (startId, _) = IntMap.findMax (state ^. widgets)
+
+replaceAll :: DisplayObjectClass a => [a] -> [a] -> State -> State
+replaceAll remove add state = registerAll add $ unregisterAll remove state
+
+sequenceUpdates :: [Maybe (State -> Maybe (WidgetUIUpdate, State))]
+                -> State -> ([WidgetUIUpdate], State)
 sequenceUpdates ops input = foldl applyOp ([], input) ops where
     applyOp (updates, input) op = fromMaybe (updates, input) $ do
         justOp           <- op

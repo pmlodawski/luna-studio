@@ -8,7 +8,6 @@ import           Data.Fixed
 import           GHCJS.Types (JSRef)
 
 import           Object.Widget
-import qualified Object.Widget.Types as T
 
 
 data Slider = Slider { _refId    :: Int

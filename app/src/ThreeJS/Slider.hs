@@ -27,7 +27,7 @@ import qualified ThreeJS.Geometry as Geometry
 import           Utils.Vector
 import           ThreeJS.Registry
 import qualified Object.Widget.Slider as WB
-import           Object.Widget.Types
+import           Object.Widget
 import           GHCJS.Prim
 import           Utils.CtxDynamic
 
