@@ -74,11 +74,21 @@ type ID = Int
 
 --- === Ctx ===
 
-data Ctx a = Pure
-           | IO       (Maybe a)
-           | Unknown  (Maybe a)
-           | Ctx Name (Maybe a)
-           deriving (Show)
+--data Ctx a = Pure
+--           | IO       (Maybe a)
+--           | Unknown  (Maybe a)
+--           | Ctx Name (Maybe a)
+--           deriving (Show)
+
+data Base = Pure
+          | IO
+          deriving (Show)
+
+--data Ctx = Ctx Name deriving (Show)
+
+data Ctx = KnownCtx Base [Name]
+         | UnknownCtx
+         deriving (Show)
 
 -- === Literals ===
 
@@ -129,7 +139,7 @@ data Expr h = Var      Name
 
 data Typex = Typex deriving (Show) -- fixme
 
-data Val a = Val Typex (Ctx a) [Ctx a] a deriving (Show)
+data Val a = Val Typex Ctx a deriving (Show)
 
 
 deriving instance Show (HExpr h) => Show (Arg h)
@@ -146,7 +156,7 @@ instance HasAST (Expr h) Expr h where
     ast = id
 
 instance HasAST a ast h => HasAST (Val a) ast h where
-    ast (Val _ _ _ a) = ast a
+    ast (Val _ _ a) = ast a
 
 class AST a where
     children :: a h -> [h (a h)]
@@ -165,7 +175,7 @@ instance Repr (Expr h) where
         App      {}  -> "App"
 
 instance Repr a => Repr (Val a) where
-    repr (Val _ _ _ a) = repr a
+    repr (Val _ _ a) = repr a
 
 --class IsNode n inp | n -> inp where
 --    inputs :: n -> [inp]
@@ -177,7 +187,7 @@ instance Repr a => Repr (Val a) where
 --        _                  -> []
 
 
-instance Convertible' (Expr h) (Val (Expr h)) where convert' = Val Typex Pure []
+instance Convertible' (Expr h) (Val (Expr h)) where convert' = Val Typex UnknownCtx
 instance Convertible' (Expr h) (Expr h)       where convert' = id
 
 

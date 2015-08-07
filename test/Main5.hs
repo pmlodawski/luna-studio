@@ -9,10 +9,12 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE PartialTypeSignatures #-}
+{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeOperators #-}
 
-module Luna.Inference where
+module Main where
 
-import Flowbox.Prelude hiding (simple, empty, Indexable, Simple, cons, lookup, index, Wrapped, children)
+import Flowbox.Prelude hiding (simple, empty, Indexable, Simple, cons, lookup, index, Wrapped, children, Cons)
 import Data.Repr
 
 --import qualified Luna.Inference.Type as Type
@@ -67,7 +69,8 @@ import Data.Constraint
 import Control.Error.Util (hush)
 import Data.Convert.Errors (TypeMismatch (TypeMismatch))
 import Data.Constraint.Void
-
+--import Data.Variant
+import qualified Data.Variant as V
 
 type ID = Int
 
@@ -92,103 +95,155 @@ data Ctx = KnownCtx Base [Name]
 
 -- === Literals ===
 
-data Literal = Int Int
-             | String Text.AutoBuilder
-             deriving (Show)
+data Lit = Int Int
+         | String Text.AutoBuilder
+         deriving (Show)
 
-instance IsString Literal where
+instance IsString Lit where
     fromString = String . fromString
 
 
--- === Expr ===
+-- === Term ===
 
 
 type Name = String
 
 
-type HExpr h = h (Expr h)
+--type HTerm h = h (Term h)
 
 
-data Arg h = Arg { _label :: Maybe Name, _expr :: HExpr h }
+--data Arg h = Arg { _label :: Maybe Name, _term :: HTerm h }
 
 -- wszystkie rzeczy nazwane powinny byc w slownikach w jezyku! - czyli datatypy ponizej zostaja,
 -- ale mozemy tworzyc np. Var funkcjami, ktore oczekuja konkretnego Stringa!
-data Expr h = Var      Name
-            | Cons     Name
-            | Accessor Name (HExpr h)
-            | App      (HExpr h) [Arg h]
-            | Lambda
-            | RecUpd
-            | Unify    (HExpr h) (HExpr h)
-            | Case
-            | Typed
-            -- | Assignment
-            -- x | Decons
-            | Curry
-            -- | Meta
-            -- | Tuple
-            -- | Grouped
-            -- | Decl
-            | Lit      Literal
-            | Wildcard
-            -- | Tuple
-            -- | List
-            | Unsafe [Name] (HExpr h)
-
---type Pattern h = HExpr h
-
-data Typex = Typex deriving (Show) -- fixme
-
-data Val a = Val Typex Ctx a deriving (Show)
+--data Term h = Var      Name
+--            | Cons     Name
+--            | Accessor Name (HTerm h)
+--            | App      (HTerm h) [Arg h]
+--            | Lambda
+--            | RecUpd
+--            | Unify    (HTerm h) (HTerm h)
+--            | Case
+--            | Typed
+--            -- | Assignment
+--            -- x | Decons
+--            | Curry
+--            -- | Meta
+--            -- | Tuple
+--            -- | Grouped
+--            -- | Decl
+--            | Lit      Lit
+--            | Wildcard
+--            -- | Tuple
+--            -- | List
+--            | Unsafe [Name] (HTerm h)
 
 
-deriving instance Show (HExpr h) => Show (Arg h)
-deriving instance Show (HExpr h) => Show (Expr h)
---deriving instance Show (HExpr h) => Show (Pattern h)
 
-makeLenses ''Expr
-makeLenses ''Arg
 
-class HasAST a ast (h :: * -> *) | a -> ast h where
-    ast :: a -> ast h
+type Rec a h = h (a h)
 
-instance HasAST (Expr h) Expr h where
-    ast = id
 
-instance HasAST a ast h => HasAST (Val a) ast h where
-    ast (Val _ _ a) = ast a
+-- Component types
 
-class AST a where
-    children :: a h -> [h (a h)]
+      --newtype Var        = Var      Name      deriving (Show)
+      --newtype Cons       = Cons     Name      deriving (Show)
+      --data    Accessor a = Accessor Name a    deriving (Show)
+      --data    App      a = App      a (Arg a) deriving (Show)
 
-instance AST Expr where
-    children = \case
-        Accessor _ base    -> [base]
-        App      base args -> base : fmap (view expr) args
-        _                  -> []
+      --data    Arg      a = Arg (Maybe Name) a deriving (Show)
 
-instance Repr (Expr h) where
-    repr = \case
-        Var      n   -> "Var "      <> show n
-        Cons     n   -> "Cons "     <> show n
-        Accessor n _ -> "Accessor " <> show n
-        App      {}  -> "App"
 
-instance Repr a => Repr (Val a) where
-    repr (Val _ _ a) = repr a
+      --termCons :: ConsOf Term a => a -> Term
+      --termCons = cons
 
---class IsNode n inp | n -> inp where
---    inputs :: n -> [inp]
+      --tst = cons $ Var "foo" :: HTerm h
 
---instance IsNode (Expr h) (HExpr h) where
---    inputs = \case
---        Accessor _    base -> [base]
---        App      base args -> base : fmap (view arg) args
+      ---- Type sets
+
+      --type ValTypes a = Lit
+      --               ': '[]
+
+      --type ConstTermTypes a = Accessor a
+      --                     ': App      a
+      --                     ': ValTypes a
+
+      --type TermTypes a = '[Var]
+      --                -- ': ConstTermTypes a
+
+
+      ---- Record types
+
+      --newtype Term    = Term  { __termRec  :: Record (TermTypes Term)          }
+      --newtype Val     = Val   { __valRec   :: Record (ValTypes  Val)           }
+      --newtype HTerm h = HTerm { __htermRec :: Record (TermTypes (Rec HTerm h)) }
+      --newtype HVal  h = HVal  { __hvalRec  :: Record (ValTypes  (Rec HVal  h)) }
+
+
+      --data Node h = ValNode  (Record (ValTypes  (Rec HVal h)))
+      --            | TermNode (Record (TermTypes (Rec Node h)))
+
+
+      --makeLenses ''Term
+      --makeLenses ''Val
+      --makeLenses ''HTerm
+      --makeLenses ''HVal
+
+      ---- instances
+
+      --deriving instance (Show (Rec Node h), Show (Rec HVal h)) => Show (Node h)
+
+      --type instance VariantsOf Val       = ValTypes  Val
+      --type instance VariantsOf Term      = TermTypes Term
+      --type instance VariantsOf (HTerm h) = TermTypes (Rec HTerm h)
+
+
+      --instance IsVariant Term      where variant = Term
+      --                                   record  = _termRec
+      --instance IsVariant (HTerm h) where variant = HTerm
+      --                                   record  = _htermRec
+
+      ----instance Convertible (HVal h) (Node h) where convert = ValNode
+
+      --data Typex = Typex deriving (Show) -- fixme
+
+      --data CTVal a = CTVal Typex Ctx a deriving (Show)
+
+main = V.main
+
+--class HasAST a ast (h :: * -> *) | a -> ast h where
+--    ast :: a -> ast h
+
+--instance HasAST (Term h) Term h where
+--    ast = id
+
+--instance HasAST a ast h => HasAST (Val a) ast h where
+--    ast (Val _ _ a) = ast a
+
+--class AST a where
+--    children :: a h -> [h (a h)]
+
+--instance AST Term where
+--    children = \case
+--        Accessor _ base    -> [base]
+--        App      base args -> base : fmap (view term) args
 --        _                  -> []
 
 
-instance Convertible' (Expr h) (Val (Expr h)) where convert' = Val Typex UnknownCtx
-instance Convertible' (Expr h) (Expr h)       where convert' = id
+--instance Repr (Term h) where
+--    repr = \case
+--        Var      n   -> "Var "      <> show n
+--        Cons     n   -> "Cons "     <> show n
+--        Accessor n _ -> "Accessor " <> show n
+--        App      {}  -> "App"
+
+--instance Repr a => Repr (Val a) where
+--    repr (Val _ _ a) = repr a
+
+
+
+--instance Convertible' (Term h) (Val (Term h)) where convert' = Val Typex UnknownCtx
+--instance Convertible' (Term h) (Term h)       where convert' = id
 
 
 
@@ -302,157 +357,167 @@ mkASTRef = mkRef . convert'
 
 
 
--- === Function ===
+---- === Function ===
 
-data Function body = Function { _body :: body } deriving (Show)
+--data Function body = Function { _body :: body } deriving (Show)
 
-type FunctionGraph = Function (HomoGraph (Wrapped Val Expr))
+--type FunctionGraph = Function (HomoGraph (Wrapped Val Term))
 
-makeLenses ''Function
+--makeLenses ''Function
 
--- utils
+---- utils
 
-runFunctionBuilderT :: (Monad m, Default g) => GraphBuilderT g m a -> m (Function g)
-runFunctionBuilderT gb = do
-    (a, g) <- runGraphBuilderT gb
-    return $ Function g
+--runFunctionBuilderT :: (Monad m, Default g) => GraphBuilderT g m a -> m (Function g)
+--runFunctionBuilderT gb = do
+--    (a, g) <- runGraphBuilderT gb
+--    return $ Function g
 
-runFunctionBuilder :: Default g => GraphBuilder g a -> Function g
-runFunctionBuilder = runIdentity . runFunctionBuilderT
+--runFunctionBuilder :: Default g => GraphBuilder g a -> Function g
+--runFunctionBuilder = runIdentity . runFunctionBuilderT
 
--- instances
+---- instances
 
-instance HasContainer body c => HasContainer (Function body) c where
-    container = body . container
-
-
-toRawMRef :: (Functor m, ToMRef t m h a) => t -> m (h (a h))
-toRawMRef = fmap fromRef . toMRef
+--instance HasContainer body c => HasContainer (Function body) c where
+--    container = body . container
 
 
-
-var :: RefBuilder el m h Expr => Name -> m (Ref h Expr)
-var = mkASTRef . Var
-
-accessor :: (RefBuilder el m h Expr, ToMRef t m h Expr) => Name -> t -> m (Ref h Expr)
-accessor n r = mkASTRef . Accessor n =<< toRawMRef r
-
-app :: (RefBuilder el m h Expr, ToMRef t m h Expr) => t -> [ArgRef m h Expr] -> m (Ref h Expr)
-app base args = do
-    baseRef <- toRawMRef base
-    argRefs <- mapM readArgRef args
-    mkASTRef $ App baseRef argRefs
-    where readArgRef (ArgRef n mref) = Arg n . fromRef <$> mref
-
---data Arg h = Arg { _label :: Maybe Name, _expr :: HExpr h }
-
---class Named a where
---    named :: Name -> a -> a
-
---instance Named (ArgRef h a) where
---    named n (ArgRef _ ref) = ArgRef (Just n) ref
-
-data ArgRef m h a = ArgRef (Maybe Name) (m (Ref h a))
-
-arg = ArgRef Nothing . toMRef
+--toRawMRef :: (Functor m, ToMRef t m h a) => t -> m (h (a h))
+--toRawMRef = fmap fromRef . toMRef
 
 
 
-f :: FunctionGraph
-f = runFunctionBuilder $ do
-    a <- var "a"
-    x <- var "x" @. "foo"
-    y <- x @$ [arg a]
+--var :: RefBuilder el m h Term => Name -> m (Ref h Term)
+--var = mkASTRef . Var
 
-    return ()
+--accessor :: (RefBuilder el m h Term, ToMRef t m h Term) => Name -> t -> m (Ref h Term)
+--accessor n r = mkASTRef . Accessor n =<< toRawMRef r
 
-g1 :: HomoGraph (Wrapped Val Expr)
---g1 :: HomoGraph (Simple Expr)
-g1 = execGraphBuilder $ do
-    a <- var "a"
-    x <- var "x" @. "foo"
-    y <- x @$ [arg a]
-    --return a
-    return ()
+--app :: (RefBuilder el m h Term, ToMRef t m h Term) => t -> [ArgRef m h Term] -> m (Ref h Term)
+--app base args = do
+--    baseRef <- toRawMRef base
+--    argRefs <- mapM readArgRef args
+--    mkASTRef $ App baseRef argRefs
+--    where readArgRef (ArgRef n mref) = Arg n . fromRef <$> mref
+
+----data Arg h = Arg { _label :: Maybe Name, _term :: HTerm h }
+
+----class Named a where
+----    named :: Name -> a -> a
+
+----instance Named (ArgRef h a) where
+----    named n (ArgRef _ ref) = ArgRef (Just n) ref
+
+--data ArgRef m h a = ArgRef (Maybe Name) (m (Ref h a))
+
+--arg = ArgRef Nothing . toMRef
 
 
-(@.) = flip accessor
-(@$) = app
 
---g1 :: HomoGraph _
---g1 = runIdentity $ runGraphBuilder $ do
---    a <- var4
-----    --a    <- ref "foo" $ var "a"
-----    --b    <- ref "bar" $ accessor "foo" (var "b")
-----    --c    <- ref "baz" $ match (var "a") (var "b")
-----    return ()
-----    --mod  <- var "Main"
-----    --foo  <- a    @.  "foo"
-----    --b    <- foo  @$$ [a]
-----    --bar  <- mod  @.  "bar"
-----    --c    <- bar  @$$ [b]
-----    --plus <- mod  @.  "plus"
-----    --out  <- plus @$$ [c, a]
+--f :: FunctionGraph
+--f = runFunctionBuilder $ do
+--    a <- var "a"
+--    x <- var "x" @. "foo"
+--    y <- x @$ [arg a]
+
 --    return ()
 
-main = do
-    print f
-    print $ elems f
-    let gv = toGraphViz (view body f)
-    runGraphviz gv Png "/tmp/out.png"
-    createProcess $ shell "open /tmp/out.png"
-    --let m = fck & view body
-    --    g = fck & view fgraph
-    --    Just (Ref p1) = Map.index "foo" m
-    --    r = g ^. reg
-    --    e = unsafeGet p1 r
-
-    --print fck
-    --print e
-    print "end"
+--g1 :: HomoGraph (Wrapped Val Term)
+----g1 :: HomoGraph (Simple Term)
+--g1 = execGraphBuilder $ do
+--    a <- var "a"
+--    x <- var "x" @. "foo"
+--    y <- x @$ [arg a]
+--    --return a
+--    return ()
 
 
-    --c = mempty :: Hetero' Vector
+--(@.) = flip accessor
+--(@$) = app
 
-    --(c', p') = append ('a') c -- :: (Hetero' Vector, Ptr Int Char)
-    --c'' = prepend_ 'o' c'
-
-    --main = do
-    --    print "end"
-    --    print (c', p')
-    --    print c''
-    --    print $ uncheckedIndex (Ptr 0 :: Ptr Int Int) c'
+----g1 :: HomoGraph _
+----g1 = runIdentity $ runGraphBuilder $ do
+----    a <- var4
+------    --a    <- ref "foo" $ var "a"
+------    --b    <- ref "bar" $ accessor "foo" (var "b")
+------    --c    <- ref "baz" $ match (var "a") (var "b")
+------    return ()
+------    --mod  <- var "Main"
+------    --foo  <- a    @.  "foo"
+------    --b    <- foo  @$$ [a]
+------    --bar  <- mod  @.  "bar"
+------    --c    <- bar  @$$ [b]
+------    --plus <- mod  @.  "plus"
+------    --out  <- plus @$$ [c, a]
+----    return ()
 
 --main = do
---    let g  = runNodeBuilder g1
---        gv = toGraphViz g
---    print g
---    --print $ toDot gv
+--    print f
+--    print $ elems f
+--    let gv = toGraphViz (view body f)
 --    runGraphviz gv Png "/tmp/out.png"
 --    createProcess $ shell "open /tmp/out.png"
+--    --let m = fck & view body
+--    --    g = fck & view fgraph
+--    --    Just (Ref p1) = Map.index "foo" m
+--    --    r = g ^. reg
+--    --    e = unsafeGet p1 r
+
+--    --print fck
+--    --print e
 --    print "end"
 
-toGraphViz :: HomoGraph (Wrapped Val Expr) -> DotGraph Int
-toGraphViz g = DotGraph { strictGraph     = False
-                        , directedGraph   = True
-                        , graphID         = Nothing
-                        , graphStatements = DotStmts { attrStmts = []
-                                                     , subGraphs = []
-                                                     , nodeStmts = nodeStmts
-                                                     , edgeStmts = edgeStmts
-                                                     }
-                        }
-    where nodes           = elems g
-          nodeIds         = indexes g
-          nodeLabels      = fmap repr nodes
-          labeledNode s a = DotNode a [GV.Label . StrLabel $ fromString s]
-          nodeStmts       = fmap (uncurry labeledNode) $ zip nodeLabels nodeIds
-          nodeInEdges   n = zip3 [0..] (fmap ptrIdx . children . ast $ unsafeIndex n g) (repeat n)
-          inEdges         = concat $ fmap nodeInEdges nodeIds
-          mkEdge  (n,a,b) = DotEdge a b [GV.Label . StrLabel $ fromString $ show n]
-          edgeStmts       = fmap mkEdge inEdges
 
-----g1 :: RefBuilder Expr m => m ()
+--    --c = mempty :: Hetero' Vector
+
+--    --(c', p') = append ('a') c -- :: (Hetero' Vector, Ptr Int Char)
+--    --c'' = prepend_ 'o' c'
+
+--    --main = do
+--    --    print "end"
+--    --    print (c', p')
+--    --    print c''
+--    --    print $ uncheckedIndex (Ptr 0 :: Ptr Int Int) c'
+
+----main = do
+----    let g  = runNodeBuilder g1
+----        gv = toGraphViz g
+----    print g
+----    --print $ toDot gv
+----    runGraphviz gv Png "/tmp/out.png"
+----    createProcess $ shell "open /tmp/out.png"
+----    print "end"
+
+--toGraphViz :: HomoGraph (Wrapped Val Term) -> DotGraph Int
+--toGraphViz g = DotGraph { strictGraph     = False
+--                        , directedGraph   = True
+--                        , graphID         = Nothing
+--                        , graphStatements = DotStmts { attrStmts = []
+--                                                     , subGraphs = []
+--                                                     , nodeStmts = nodeStmts
+--                                                     , edgeStmts = edgeStmts
+--                                                     }
+--                        }
+--    where nodes           = elems g
+--          nodeIds         = indexes g
+--          nodeLabels      = fmap repr nodes
+--          labeledNode s a = DotNode a [GV.Label . StrLabel $ fromString s]
+--          nodeStmts       = fmap (uncurry labeledNode) $ zip nodeLabels nodeIds
+--          nodeInEdges   n = zip3 [0..] (fmap ptrIdx . children . ast $ unsafeIndex n g) (repeat n)
+--          inEdges         = concat $ fmap nodeInEdges nodeIds
+--          mkEdge  (n,a,b) = DotEdge a b [GV.Label . StrLabel $ fromString $ show n]
+--          edgeStmts       = fmap mkEdge inEdges
+
+
+
+
+
+
+
+
+
+
+
+----g1 :: RefBuilder Term m => m ()
 --g1 = do
 --    a    <- ref "a" $ var "a"
 --    mod  <- ref "mod"  $ cons "Mod"
@@ -496,7 +561,7 @@ toGraphViz g = DotGraph { strictGraph     = False
 ----    out  <- plus @$$ [c, a]
 ----    return ()
 
-----data Arg h = Arg { _label :: Maybe Name, _val :: HExpr h }
+----data Arg h = Arg { _label :: Maybe Name, _val :: HTerm h }
 
 
 ----class Arg2 a where
@@ -517,12 +582,12 @@ toGraphViz g = DotGraph { strictGraph     = False
 ----data Node = Node
 
 
---g2 :: (ConvertibleM Expr a, Monad m, RefBuilder a m) => m (Ref m a)
+--g2 :: (ConvertibleM Term a, Monad m, RefBuilder a m) => m (Ref m a)
 --g2 = do
 --    a <- ref_ $ var2 "a"
 --    return a
 
-----g1 :: RefBuilder Expr m => m ()
+----g1 :: RefBuilder Term m => m ()
 --g1 = do
 --    a    <- ref "a" $ var "a"
 --    mod  <- ref "mod"  $ cons "Mod"
@@ -552,15 +617,15 @@ toGraphViz g = DotGraph { strictGraph     = False
 
 --data Label a e = Label a e
 --type Labeled l a = Label l (a (Label l))
---type LExpr l = Labeled l Expr
+--type LTerm l = Labeled l Term
 
 --newtype Simple a = Simple a deriving (Show)
---type SExpr = Simple (Expr Simple)
+--type STerm = Simple (Term Simple)
 
 ----newtype Mu f = Mu (f (Mu f))
 
 
-----inputs' :: Graph (Vector Hidden) -> ID -> [Ptr Int (Expr (Ptr Int))]
+----inputs' :: Graph (Vector Hidden) -> ID -> [Ptr Int (Term (Ptr Int))]
 
 --toGraphViz :: Graph (Vector Hidden) -> DotGraph Int
 --toGraphViz g = DotGraph { strictGraph     = False
