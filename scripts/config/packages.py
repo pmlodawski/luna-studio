@@ -102,7 +102,7 @@ corePkgDb = \
        { 'libs/batch/batch'                    : HProject   ('flowbox-batch'                , os.path.join ('libs' , 'batch', 'batch')                      , 'libs'    , ['libs/config', 'libs/luna/core', 'libs/luna/distribution-old', 'libs/luna/initializer', 'libs/luna/pass-old', 'libs/luna/protobuf-old', 'libs/utils', "libs/convert"])
        , 'libs/luna/core'                      : HProject   ('luna-core'                    , os.path.join ('libs' , 'luna', 'core')                        , 'libs'    , ['libs/utils', "libs/convert"])
        , 'libs/utils'                          : HProject   ('flowbox-utils'                , os.path.join ('libs' , 'utils')                               , 'libs'    , ['third-party/fgl', "libs/convert"])
-       , 'libs/luna/typechecker'               : HProject   ('luna-typechecker'             , os.path.join ('libs' , 'luna', 'typechecker')                 , 'libs'    , ['libs/utils', 'libs/luna/core', 'libs/luna/pass', "libs/convert"])
+       , 'libs/luna/typechecker'               : HProject   ('luna-tc'             , os.path.join ('libs' , 'luna', 'typechecker')                 , 'libs'    , ['libs/utils', 'libs/luna/core', 'libs/luna/pass', "libs/convert", 'third-party/graphviz-2999.17.0.2.2'])
        }
 
 pkgDb = dict(corePkgDb, **{
@@ -160,14 +160,15 @@ pkgDb = dict(corePkgDb, **{
        , 'tools/wrappers'                      : HProject   ('flowbox-wrappers'             , os.path.join ('tools', 'wrappers')                            , 'wrappers', ['libs/config', "libs/convert"])
 
        , 'third-party/algebraic'               : HProject   ('algebraic'                    , os.path.join ('third-party', 'algebraic')                     , 'third-party', ['third-party/accelerate', "libs/convert"])
-       , 'third-party/accelerate'              : HProject   ('accelerate'                   , os.path.join ('third-party', 'accelerate')                    , 'third-party', ["libs/convert"])
-       , 'third-party/accelerate-cuda'         : HProject   ('accelerate-cuda'              , os.path.join ('third-party', 'accelerate-cuda')               , 'third-party', ['third-party/mainland-pretty'], flags=Flags([Flag('-fdebug'), "libs/convert"])) # [KL] accelerate debug flag is necessary to dump generated CUDA kernels
-       , 'third-party/accelerate-fft'          : HProject   ('accelerate-fft'               , os.path.join ('third-party', 'accelerate-fft')                , 'third-party', ["libs/convert"])
-       , 'third-party/accelerate-io'           : HProject   ('accelerate-io'                , os.path.join ('third-party', 'accelerate-io')                 , 'third-party', ["libs/convert"])
-       , 'third-party/binary'                  : HProject   ('binary'                       , os.path.join ('third-party', 'binary')                        , 'third-party', ["libs/convert"])
-       , 'third-party/fgl'                     : HProject   ('fgl'                          , os.path.join ('third-party', 'fgl')                           , 'third-party', ["libs/convert"]) # [PM] temporary fix until https://github.com/haskell/fgl/pull/7 is merged
-       , 'third-party/HMap'                    : HProject   ('HMap'                         , os.path.join ('third-party', 'HMap')                          , 'third-party', ["libs/convert"]) # [PM] temporary fix
-       , 'third-party/imagemagick'             : HProject   ('imagemagick'                  , os.path.join ('third-party', 'imagemagick')                   , 'third-party', ["libs/convert"]) # [KL] temporary fix until imagemagick is fixed
-       , 'third-party/linear-accelerate'       : HProject   ('linear-accelerate'            , os.path.join ('third-party', 'linear-accelerate')             , 'third-party', ['third-party/accelerate', "libs/convert"]) # [MM] not so temporary fix, included because of too strict upper bound on accelerate
-       , 'third-party/mainland-pretty'         : HProject   ('mainland-pretty'              , os.path.join ('third-party', 'mainland-pretty')               , 'third-party', ["libs/convert"]) # [MM] temporary fix until mainland-pretty relaxes upper bound on text to allow version 1.2
+       , 'third-party/accelerate'              : HProject   ('accelerate'                   , os.path.join ('third-party', 'accelerate')                    , 'third-party', [])
+       , 'third-party/accelerate-cuda'         : HProject   ('accelerate-cuda'              , os.path.join ('third-party', 'accelerate-cuda')               , 'third-party', ['third-party/mainland-pretty'], flags=Flags([Flag('-fdebug')])) # [KL] accelerate debug flag is necessary to dump generated CUDA kernels
+       , 'third-party/accelerate-fft'          : HProject   ('accelerate-fft'               , os.path.join ('third-party', 'accelerate-fft')                , 'third-party', [])
+       , 'third-party/accelerate-io'           : HProject   ('accelerate-io'                , os.path.join ('third-party', 'accelerate-io')                 , 'third-party', [])
+       , 'third-party/binary'                  : HProject   ('binary'                       , os.path.join ('third-party', 'binary')                        , 'third-party', [])
+       , 'third-party/fgl'                     : HProject   ('fgl'                          , os.path.join ('third-party', 'fgl')                           , 'third-party', []) # [PM] temporary fix until https://github.com/haskell/fgl/pull/7 is merged
+       , 'third-party/HMap'                    : HProject   ('HMap'                         , os.path.join ('third-party', 'HMap')                          , 'third-party', []) # [PM] temporary fix
+       , 'third-party/imagemagick'             : HProject   ('imagemagick'                  , os.path.join ('third-party', 'imagemagick')                   , 'third-party', []) # [KL] temporary fix until imagemagick is fixed
+       , 'third-party/linear-accelerate'       : HProject   ('linear-accelerate'            , os.path.join ('third-party', 'linear-accelerate')             , 'third-party', ['third-party/accelerate']) # [MM] not so temporary fix, included because of too strict upper bound on accelerate
+       , 'third-party/mainland-pretty'         : HProject   ('mainland-pretty'              , os.path.join ('third-party', 'mainland-pretty')               , 'third-party', []) # [MM] temporary fix until mainland-pretty relaxes upper bound on text to allow version 1.2
+       , 'third-party/graphviz-2999.17.0.2.2'  : HProject   ('graphviz'                     , os.path.join ('third-party', 'graphviz-2999.17.0.2.2')        , 'third-party', [])
        })
