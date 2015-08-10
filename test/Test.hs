@@ -8,19 +8,53 @@ newtype Mu f = Mu (f (Mu f))
 
 newtype MuH f h = MuH (f (h (MuH f h)))
 
+--data Arg a = Arg a
+
 -------------------------------------------------------------
 
---data Expr e = Cons     Name
---            | Accessor Name e
---            | App      e e
+--data Val   a = Lit
+--             | Cons     Name [a]
 
---data Stat e = Var  Name
---            | Expr (Expr e)
+--data Const a = Accessor Name a
+--             | App      a a
+--             | Val      (Val a)
+
+--data Term  a = Var      Name
+--             | Const    (Const a)
 
 
---data Node h = Val  (MuH Expr h)
---            | Stat (Stat (h (Node h)))
 
+--nizej datatypy sa zle - NodeTerm nie uwzglednia rekurencyjnych node termow
+
+--data NodeConstTerm = Value    (Mu Val)
+--                   | Constant (Const NodeConstTerm)
+
+--data NodeTerm = NodeConstTerm NodeConstTerm
+--              | Expr     (Term NodeTerm)
+
+
+--v1 = Constant $ App (Constant (Val Lit)) (Constant (Val Lit)) :: NodeConstTerm
+--v2 = App (NodeConstTerm (Constant (Val Lit))) (Expr (Var "foo")) :: _
+
+data Lit = Int Int
+         | String String
+         deriving (Show)
+
+newtype Var        = Var      Name      deriving (Show, Eq)
+data    Cons     a = Cons     Name [a]  deriving (Show)
+data    Accessor a = Accessor Name a    deriving (Show)
+data    App      a = App      a [Arg a] deriving (Show)
+
+
+
+data Val = LitV Lit
+         | ConsV (Cons Val)
+         deriving (Show)
+
+data ConstTerm = CLit Lit
+               | CCons
+--v1 = (Constant (Val Lit))
+--v2 = Const $ App (Const (Val Lit)) (Var "Foo")
 
 --data LabelH l a = LabelH l (a (LabelH l a))
 
@@ -43,18 +77,18 @@ newtype MuH f h = MuH (f (h (MuH f h)))
 
 -------------------------------------------------------------
 
-data Expr e h = Cons     Name
-              | Accessor Name (h (e h))
-              | App      (h (e h)) (h (e h))
+--data Expr e h = Cons     Name
+--              | Accessor Name (h (e h))
+--              | App      (h (e h)) (h (e h))
 
-data Stat e h = Var  Name
-              | Expr (Expr e h)
+--data Stat e h = Var  Name
+--              | Expr (Expr e h)
 
 
-data MuX e h = MuX (e (e (MuX e h))) ...
--- TODO
-data Node h = Val  (Expr h)
-            -- | Stat (Stat (h (Node h)))
+--data MuX e h = MuX (e (e (MuX e h))) ...
+---- TODO
+--data Node h = Val  (Expr h)
+--            -- | Stat (Stat (h (Node h)))
 
 
 

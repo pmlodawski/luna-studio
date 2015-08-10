@@ -44,7 +44,7 @@ import Control.Monad.State hiding (withState, mapM)
 
 
 import Data.GraphViz.Types.Canonical
-import Data.GraphViz.Attributes.Complete hiding (Label)
+import Data.GraphViz.Attributes.Complete hiding (Label, Int)
 import qualified Data.GraphViz.Attributes.Complete as GV
 import Data.GraphViz.Printing (toDot)
 import Data.GraphViz.Commands
@@ -70,7 +70,9 @@ import Control.Error.Util (hush)
 import Data.Convert.Errors (TypeMismatch (TypeMismatch))
 import Data.Constraint.Void
 --import Data.Variant
+import Data.Variant
 import qualified Data.Variant as V
+import Flowbox.System.Types
 
 type ID = Int
 
@@ -89,9 +91,9 @@ data Base = Pure
 
 --data Ctx = Ctx Name deriving (Show)
 
-data Ctx = KnownCtx Base [Name]
-         | UnknownCtx
-         deriving (Show)
+--data Ctx = KnownCtx Base [Name]
+--         | UnknownCtx
+--         deriving (Show)
 
 -- === Literals ===
 
@@ -109,20 +111,20 @@ instance IsString Lit where
 type Name = String
 
 
---type HTerm h = h (Term h)
+--type Term h = h (Term h)
 
 
---data Arg h = Arg { _label :: Maybe Name, _term :: HTerm h }
+--data Arg h = Arg { _label :: Maybe Name, _term :: Term h }
 
 -- wszystkie rzeczy nazwane powinny byc w slownikach w jezyku! - czyli datatypy ponizej zostaja,
 -- ale mozemy tworzyc np. Var funkcjami, ktore oczekuja konkretnego Stringa!
 --data Term h = Var      Name
 --            | Cons     Name
---            | Accessor Name (HTerm h)
---            | App      (HTerm h) [Arg h]
+--            | Accessor Name (Term h)
+--            | App      (Term h) [Arg h]
 --            | Lambda
 --            | RecUpd
---            | Unify    (HTerm h) (HTerm h)
+--            | Unify    (Term h) (Term h)
 --            | Case
 --            | Typed
 --            -- | Assignment
@@ -136,80 +138,340 @@ type Name = String
 --            | Wildcard
 --            -- | Tuple
 --            -- | List
---            | Unsafe [Name] (HTerm h)
+--            | Unsafe [Name] (Term h)
 
 
 
 
-type Rec a h = h (a h)
+--type Rec a h = h (a h)
 
 
 -- Component types
 
-      --newtype Var        = Var      Name      deriving (Show)
-      --newtype Cons       = Cons     Name      deriving (Show)
-      --data    Accessor a = Accessor Name a    deriving (Show)
-      --data    App      a = App      a (Arg a) deriving (Show)
+newtype Var        = Var      Name      deriving (Show, Eq)
+data    Cons     a = Cons     Name [a]  deriving (Show)
+data    Accessor a = Accessor Name a    deriving (Show)
+data    App      a = App      a [Arg a] deriving (Show)
 
-      --data    Arg      a = Arg (Maybe Name) a deriving (Show)
+data    Arg      a = Arg { __aname :: Maybe Name , __arec :: a } deriving (Show)
 
 
       --termCons :: ConsOf Term a => a -> Term
       --termCons = cons
 
-      --tst = cons $ Var "foo" :: HTerm h
+instance Repr a => Repr (App a) where
+    repr (App a args) = "App (" <> repr a <> ") " <> repr args
 
-      ---- Type sets
-
-      --type ValTypes a = Lit
-      --               ': '[]
-
-      --type ConstTermTypes a = Accessor a
-      --                     ': App      a
-      --                     ': ValTypes a
-
-      --type TermTypes a = '[Var]
-      --                -- ': ConstTermTypes a
+instance Repr a => Repr (Arg a) where
+    repr (Arg n a) = "Arg (" <> repr n <> ") (" <> repr a <> ")"
 
 
-      ---- Record types
+-- Type sets
 
-      --newtype Term    = Term  { __termRec  :: Record (TermTypes Term)          }
-      --newtype Val     = Val   { __valRec   :: Record (ValTypes  Val)           }
-      --newtype HTerm h = HTerm { __htermRec :: Record (TermTypes (Rec HTerm h)) }
-      --newtype HVal  h = HVal  { __hvalRec  :: Record (ValTypes  (Rec HVal  h)) }
+type TermElems      a = Var
+                     ': ConstTermElems a
 
+type ConstTermElems a = Accessor a
+                     ': App      a
+                     ': ValElems a
 
-      --data Node h = ValNode  (Record (ValTypes  (Rec HVal h)))
-      --            | TermNode (Record (TermTypes (Rec Node h)))
-
-
-      --makeLenses ''Term
-      --makeLenses ''Val
-      --makeLenses ''HTerm
-      --makeLenses ''HVal
-
-      ---- instances
-
-      --deriving instance (Show (Rec Node h), Show (Rec HVal h)) => Show (Node h)
-
-      --type instance VariantsOf Val       = ValTypes  Val
-      --type instance VariantsOf Term      = TermTypes Term
-      --type instance VariantsOf (HTerm h) = TermTypes (Rec HTerm h)
+type ValElems       a = Lit
+                     ': Cons a
+                     ': '[]
 
 
-      --instance IsVariant Term      where variant = Term
-      --                                   record  = _termRec
-      --instance IsVariant (HTerm h) where variant = HTerm
-      --                                   record  = _htermRec
+-- Record types
 
-      ----instance Convertible (HVal h) (Node h) where convert = ValNode
+--newtype Val       a = Val       { __valRec       :: Record (ValElems  a)      } deriving (Show)
+--newtype ConstTerm a = ConstTerm { __constTermRec :: Record (ConstTermElems a) } deriving (Show)
+--newtype Term      a = Term      { __termRec      :: Record (TermElems a)      } deriving (Show)
+
+
+--newtype ConstTerm a = ConstTerm (Record (ConstTermElems a))
+--newtype Term      a = Term      (Record (TermElems a))
+
+--newtype Foo = Foo (Record '[Val, ConstTerm Foo])
+--newtype Bar = Bar (Record '[Val, ConstTerm Foo, Term Bar])
+
+type ValTypes       h = ValElems (h (Val h))
+type ConstTermTypes h = (Val h) ': ConstTermElems (h (ConstTerm h))
+type TermTypes      h = (Val h) ': (ConstTerm h) ': TermElems (h (Term h))
+
+newtype Val       h = Val       { __vrecH :: Record (ValTypes h) }
+newtype ConstTerm h = ConstTerm { __crecH :: Record (ConstTermTypes h) }
+newtype Term      h = Term      { __trecH :: Record (TermTypes h) }
+
+
+deriving instance (Show (h (Val h)))                                            => Show (Val h)
+deriving instance (Show (h (Val h)), Show (h (ConstTerm h)))                    => Show (ConstTerm h)
+deriving instance (Show (h (Val h)), Show (h (ConstTerm h)), Show (h (Term h))) => Show (Term h)
+
+
+type instance Variants (Val h)       = ValTypes       h
+type instance Variants (ConstTerm h) = ConstTermTypes h
+type instance Variants (Term h)      = TermTypes      h
+
+
+makeLenses ''Val
+makeLenses ''ConstTerm
+makeLenses ''Term
+
+instance IsVariant (Val h)       where record  = _vrecH
+                                       variant = Val
+
+instance IsVariant (ConstTerm h) where record  = _crecH
+                                       variant = ConstTerm
+
+instance IsVariant (Term h)      where record  = _trecH
+                                       variant = Term
+
+--class IsVariant a where
+--    variant :: Record (Variants a) -> a
+--    record  :: Lens' a (Record (Variants a))
+
+
+    --type ValTypes       = ValElems Val
+    --type ConstTermTypes = Val ': ConstTermElems ConstTerm
+    --type TermTypes      = Val ': ConstTerm ': TermElems Term
+
+    --newtype Val       = Val       { __vrec :: Record ValTypes       } deriving (Show)
+    --newtype ConstTerm = ConstTerm { __crec :: Record ConstTermTypes } deriving (Show)
+    --newtype Term      = Term      { __trec :: Record TermTypes      } deriving (Show)
+
+    --type instance Variants Val       = ValTypes
+    --type instance Variants ConstTerm = ConstTermTypes
+    --type instance Variants Term      = TermTypes
+    --type instance Variants (Arg a)   = Variants a
+
+    --makeLenses ''Val
+    --makeLenses ''ConstTerm
+    --makeLenses ''Term
+    --makeLenses ''Arg
+
+    --instance IsVariant Val       where record  = _vrec
+    --                                   variant = Val
+
+    --instance IsVariant ConstTerm where record  = _crec
+    --                                   variant = ConstTerm
+
+    --instance IsVariant Term      where record  = _trec
+    --                                   variant = Term
+
+
+
+    --instance Repr Val       where repr (Val a)       = "Val ("       <> repr a <> ")"
+    --instance Repr ConstTerm where repr (ConstTerm a) = "ConstTerm (" <> repr a <> ")"
+    --instance Repr      Term where repr (Term a)      = "Term ("      <> repr a <> ")"
+
+--instance IsVariant a => IsVariant (Arg a) where record = _arec . record
+
+--newtype Val         = Val       (Record (ValTypes Val))
+--newtype Foo2        = Foo2      (Record (ConstTermTypes Foo2))
+
+data Label l a = Label { _lab :: l, _el :: a } deriving (Show)
+
+makeLenses ''Label
+
+--val :: Constructor a Val => a -> Val
+--val = cons
+
+val :: Constructor a (Val h) => a -> (Val h)
+val = cons
+
+--val ::
+
+--val :: Constructor a (Val h) => a -> Val h
+--val = cons
+
+--x = val (Int 0) :: Label (Val Label)
+
+
+
+--class Specialize a where
+--    specialize :: Specialization a -> a
+
+
+class IsConstTerm a b | b -> a where
+    constTerm' :: a -> b
+
+--constTerm :: Constructor a ConstTerm => a -> ConstTerm
+--constTerm = cons
+
+--int :: forall a b. (Constructor Lit (ValOf a), Constructor (ValOf a) a, Convertible' a b) => Int -> b
+--int i = convert' $ cons (cons $ Int i :: ValOf a)
+
+
+intCons :: forall a h. Constructor (Val h) (a h) => Int -> a h
+intCons i = cons (cons $ Int i :: Val h)
+
+--int = mkASTRef . intCons
+
+--x = intCons 5 :: Term Label
+--y = cons $ Int 5 :: Term Label
+
+
+--var :: RecBuilder el m h Term => Name -> m (Ref h Term)
+--var = mkASTRef . Var
+
+--newtype Ref     h a = Ref { fromRef :: h (a h) }
+
+
+
+--x = int 5 :: Label Val
+
+--instance Convertible' Val Val where convert' = id
+instance Convertible' (Val h) (Val h) where convert' = id
+instance Convertible' (Term h) (Term h) where convert' = id
+--instance Convertible' a (Label a) where convert' = Label
+--instance Convertible a (Label a) where convert = Label
+--int = cons . val . Int
+
+type family ConstTermOf a
+type family ValOf a
+
+--type instance ValOf Val = Val
+type instance ValOf (Val h) = Val h
+type instance ValOf (Term h) = Val h
+
+--type instance ConstTermOf Term = ConstTerm
+type instance ConstTermOf (Term h) = ConstTerm h
+
+--app :: Constructor (App a) a => a -> [Arg a] -> a
+--app :: (Constructor (ConstTermOf a) a) => ConstTermOf a -> [Arg (ConstTermOf a)] -> a
+--app :: forall a. (Constructor (App (ConstTermOf a)) (ConstTermOf a), Constructor (ConstTermOf a) a) => ConstTermOf a -> [Arg (ConstTermOf a)] -> a
+--app a args = cons $ (cons $ (App a args :: App (ConstTermOf a)) :: ConstTermOf a)
+
+--app a args = constTerm $ (App a args)
+
+--x :: Term Label
+--x = app (int 1) [arg $ int 2]
+
+--instance IsConstTerm (App Term) Term where
+--    constTerm' a = cons (cons a :: ConstTerm)
+
+--class SmartConstructor a b where
+--    smartCons :: a -> b
+
+--instance SmartConstructor a a where
+--    smartCons = id
+
+----instance
+
+class AsConstructor t a b where
+    consAs :: Proxy t -> a -> b
+
+instance {-# OVERLAPPABLE #-} Constructor a t => AsConstructor t a t where
+    consAs _ = cons
+
+instance {-# OVERLAPPABLE #-} (Constructor a t, Constructor t b) => AsConstructor t a b where
+    consAs _ a = cons (cons a :: t)
+
+
+
+
+
+--var :: Constructor Var a => Name -> a
+
+--x = var "foo" :: Val
+
+--int :: Constructor Lit a => Int -> a
+--int = cons . Int
+
+----int :: Int -> Val
+--int i = cons (cons $ Int i :: Val)
+
+--recCons :: (Constructor (Record (Variants a)) a) => Record (Variants a) -> a
+--recCons = cons
+----app :: Constructor (App a) a => a -> Arg a -> a
+--app :: Constructor (App a) a => a -> [Arg a] -> a
+--app a args = (cons $ App a args)
+
+----v :: _ => _
+--v = app (int 1) [arg $ int 2]
+
+----app2 = recCons .: App
+
+--acc = cons .: Accessor
+
+--type instance Variants Val
+arg = Arg Nothing
+
+--tx :: Constructor Var a => App a
+--tx = App (var "foo") [arg $ var "bar"]
+
+--ty :: _ => _
+--ty = app (var "foo") [arg $ var "bar"]
+--t1 :: Constructor Lit a => Arg a
+--t1 = (arg $ int 6)
+
+--v = ty :: Term
+
+
+--t2 = Term $ app (int 5) [arg $ int 6]
+
+--t1 = Term $ var "foo"
+
+--v1 = Var "name"
+
+--ConstTermNode = Record '[ValTypes]
+
+--type
+
+--newtype Val     = Val   { __valRec   :: Record (ValTypes  Val)           } deriving (Show)
+--newtype Term h = Term { __termRec :: Record (TermTypes (Rec Term h)) }
+--newtype Val  h = Val  { __valRec  :: Record (ValTypes  (Rec Val  h)) }
+
+
+--data Node h = ValNode       (Record (ValTypes       (Rec Val h)))
+--            | ConstTermNode (Record (ConstTermTypes (Rec Node h)))
+--            | TermNode      (Record (TermTypes      (Rec Node h)))
+
+
+
+    --newtype Term    = Term  { __termRec  :: Record (TermTypes Term)          } deriving (Show)
+    --newtype Val     = Val   { __valRec   :: Record (ValTypes  Val)           } deriving (Show)
+    --newtype Term h = Term { __termRec :: Record (TermTypes (Rec Term h)) }
+    --newtype Val  h = Val  { __valRec  :: Record (ValTypes  (Rec Val  h)) }
+
+
+    --data Node h = ValNode       (Record (ValTypes       (Rec Val h)))
+    --            | ConstTermNode (Record (ConstTermTypes (Rec Node h)))
+    --            | TermNode      (Record (TermTypes      (Rec Node h)))
+
+
+    --makeLenses ''Term
+    --makeLenses ''Val
+    --makeLenses ''Term
+    --makeLenses ''Val
+
+    ---- instances
+
+    ----deriving instance (Show (Rec Node h), Show (Rec Val h)) => Show (Node h)
+
+    --type instance Variants Val       = ValTypes  Val
+    --type instance Variants Term      = TermTypes Term
+    --type instance Variants (Term h) = TermTypes (Rec Term h)
+
+
+    --instance IsVariant Term      where variant = Term
+    --                                   record  = _termRec
+
+    --instance IsVariant (Term h) where variant = Term
+    --                                   record  = _termRec
+
+    --instance IsVariant Val       where variant = Val
+    --                                   record  = _valRec
+
+--instance IsVariant (Term h) where variant = Term
+--                                   record  = _termRec
+
+      ----instance Convertible (Val h) (Node h) where convert = ValNode
 
       --data Typex = Typex deriving (Show) -- fixme
 
       --data CTVal a = CTVal Typex Ctx a deriving (Show)
 
-main = V.main
+--main = V.main
 
 --class HasAST a ast (h :: * -> *) | a -> ast h where
 --    ast :: a -> ast h
@@ -323,38 +585,119 @@ instance Monad m => MonadBldrState g (GraphBuilderT g m) where
 
 ---- === Ref ===
 
-newtype Ref     h a = Ref { fromRef :: h (a h) }
+newtype Rec     h a = Rec { fromRec :: h (a h) }
 type    Wrapped m a = m (a (HPtr Int m))
 type    Simple    a = a (Ptr Int)
 
 -- utils
 
-class ToMRef t m h a | t -> h a where
-    toMRef :: t -> m (Ref h a)
+class Monad m => ToMRef t m l a | t -> l a where
+    toMRef :: t -> m (Ref l a)
 
 -- instances
 
-instance                             (Monad m) => ToMRef    (Ref h a)  m h a where toMRef = return
-instance {-# OVERLAPPABLE #-} (m ~ n, Monad m) => ToMRef (m (Ref h a)) n h a where toMRef = id
+instance                             (Monad m) => ToMRef    (Ref l a)  m l a where toMRef = return
+instance {-# OVERLAPPABLE #-} (m ~ n, Monad m) => ToMRef (m (Ref l a)) n l a where toMRef = id
+
+
+deriving instance Show (h (a h)) => Show (Rec h a)
+
+
+
+-- === RecBuilder ===
+
+class Monad m => RecBuilder m h a where
+    mkRec :: a h -> m (Rec h a)
+
+
+instance (Convertible idx (h (a h)), HasContainer g cont, Appendable cont idx el, Monad m, PtrTarget h a el, MkEl (a h) m el)
+      => RecBuilder (GraphBuilderT g m) h a where
+    mkRec a = do
+        el <- lift $ mkEl a
+        fmap (Rec . convert) . withGraph . append $ (el :: el)
+
+type NetRecBuilder m l a = RecBuilder m (GraphPtr l) a
+type GraphConstructor base l a = Constructor base (GraphNode l a)
+
+
+mkRef :: NetRecBuilder m l a => GraphNode l a -> m (Ref l a)
+mkRef = fmap Ref . mkRec
+
+class MkEl a m b where
+    mkEl :: a -> m b
+
+
+instance {-# OVERLAPPABLE #-} (Applicative m, LabBuilder m l) => MkEl a m (Label l a) where
+    mkEl a = Label <$> mkLabel <*> pure a
+
+class LabBuilder m l where
+    mkLabel :: m l
+
+instance {-# OVERLAPPABLE #-} (Monad m, Default a) => LabBuilder m a where
+    mkLabel = return def
 
 
 
 
--- === RefBuilder ===
-
-class (Monad m, PtrTarget h a el, Convertible' (a h) el) => RefBuilder el m h a where
-    mkRef :: el -> m (Ref h a)
+int :: (NetRecBuilder m l a, GraphConstructor Lit l a) => Int -> m (Ref l a)
+int = mkRef . cons . Int
 
 
-instance (Convertible idx (h (a h)), HasContainer g cont, Appendable cont idx el, Monad m, PtrTarget h a el, Convertible' (a h) el)
-      => RefBuilder el (GraphBuilderT g m) h a where
-    mkRef = fmap (Ref . convert) . withGraph . append
+app :: (NetRecBuilder m l a, HConstructor App l a, ToMRef t m l a) => t -> [ArgRef m l a] -> m (Ref l a)
+app base args = do
+    baseRef <- toRawMRef base
+    argRefs <- mapM readArgRef args
+    mkRef . cons $ App baseRef argRefs
+    where readArgRef (Arg n mref) = Arg n . fromRec . fromRef <$> mref
+
+
+type HConstructor base l a = Constructor (base ((GraphPtr l) (GraphNode l a))) (GraphNode l a)
+
+--x :: (HConstructor App h a, Constructor Lit (a h), RecBuilder m h a) => m (Ref h a)
+
+
+x2 :: (NetRecBuilder m l Term) => m (Ref l Term)
+x2 = app (int 5) [arg $ int 6]
+
+newtype Ref l a = Ref { fromRef :: Rec (GraphPtr l) a } deriving (Show)
+
+type GraphPtr  l   = HPtr Int (Label l)
+type GraphNode l a = a (GraphPtr l)
+type HomoNet   l a = HomoGraph ((Label l) (GraphNode l a))
+type HeteroNet     = HeteroGraph
+
+
+y :: (Ref Ctx Term, HomoNet Ctx Term)
+y = runGraphBuilder x2
+
+(a,b) = y
+
+c = elems b
+
+data Ctx = Ctx deriving (Show)
+instance Default Ctx where def = Ctx
+--y = runIdentity $ runStateT x def
+
+--z2 :: (Ref (HPtr Int Label) Term, HeteroGraph)
+--z2 = runGraphBuilder z
+--z :: (Ref (HPtr Int Label) Term, HeteroGraph)
+----z :: _ => (_, HomoGraph (Term h))
+--z = runGraphBuilder y
+
+main = do
+    putStrLn $ repr y
+    print c
+    return ()
 
 -- utils
 
-mkASTRef :: (Convertible' (a h) el, RefBuilder el m h a) => a h -> m (Ref h a)
-mkASTRef = mkRef . convert'
+--mkASTRef2 :: (RecBuilder m h a) => a h -> m (Ref h a)
+--mkASTRef2 = mkRec
 
+--toRawMRef :: ToMRef t m h a => t -> m (h (a h))
+toRawMRef = fmap (fromRec . fromRef) . toMRef
+
+type ArgRef m l a = Arg (m (Ref l a))
 
 
 ---- === Function ===
@@ -386,20 +729,26 @@ mkASTRef = mkRef . convert'
 
 
 
---var :: RefBuilder el m h Term => Name -> m (Ref h Term)
+--var :: RecBuilder el m h Term => Name -> m (Ref h Term)
 --var = mkASTRef . Var
 
---accessor :: (RefBuilder el m h Term, ToMRef t m h Term) => Name -> t -> m (Ref h Term)
+--var :: Constructor Var a => Name -> a
+--var = cons . Var
+
+--var' :: Name -> Term h
+--var' = cons . Var
+
+--accessor :: (RecBuilder el m h Term, ToMRef t m h Term) => Name -> t -> m (Ref h Term)
 --accessor n r = mkASTRef . Accessor n =<< toRawMRef r
 
---app :: (RefBuilder el m h Term, ToMRef t m h Term) => t -> [ArgRef m h Term] -> m (Ref h Term)
+--app :: (RecBuilder el m h Term, ToMRef t m h Term) => t -> [ArgRef m h Term] -> m (Ref h Term)
 --app base args = do
 --    baseRef <- toRawMRef base
 --    argRefs <- mapM readArgRef args
 --    mkASTRef $ App baseRef argRefs
 --    where readArgRef (ArgRef n mref) = Arg n . fromRef <$> mref
 
-----data Arg h = Arg { _label :: Maybe Name, _term :: HTerm h }
+----data Arg h = Arg { _label :: Maybe Name, _term :: Term h }
 
 ----class Named a where
 ----    named :: Name -> a -> a
@@ -517,7 +866,7 @@ mkASTRef = mkRef . convert'
 
 
 
-----g1 :: RefBuilder Term m => m ()
+----g1 :: RecBuilder Term m => m ()
 --g1 = do
 --    a    <- ref "a" $ var "a"
 --    mod  <- ref "mod"  $ cons "Mod"
@@ -561,7 +910,7 @@ mkASTRef = mkRef . convert'
 ----    out  <- plus @$$ [c, a]
 ----    return ()
 
-----data Arg h = Arg { _label :: Maybe Name, _val :: HTerm h }
+----data Arg h = Arg { _label :: Maybe Name, _val :: Term h }
 
 
 ----class Arg2 a where
@@ -582,12 +931,12 @@ mkASTRef = mkRef . convert'
 ----data Node = Node
 
 
---g2 :: (ConvertibleM Term a, Monad m, RefBuilder a m) => m (Ref m a)
+--g2 :: (ConvertibleM Term a, Monad m, RecBuilder a m) => m (Ref m a)
 --g2 = do
 --    a <- ref_ $ var2 "a"
 --    return a
 
-----g1 :: RefBuilder Term m => m ()
+----g1 :: RecBuilder Term m => m ()
 --g1 = do
 --    a    <- ref "a" $ var "a"
 --    mod  <- ref "mod"  $ cons "Mod"
