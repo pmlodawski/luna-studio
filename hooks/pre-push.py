@@ -9,17 +9,14 @@ from shtack_exceptions import ShtackHookAbort
 def main():
     this_repo = git.Repo('.')
 
-    finfo("Updating remotes")
-    for remote in this_repo.remotes:
-        remote.update()
-
     finfo("Verifying submodules")
     for submodule in this_repo.submodules:
+        if submodule.name.startswith("third-party"):
+            continue
+
         submod_repo = git.Repo(submodule.name)
 
-        finfo("  …updating {submodule} remotes", notrunc=True)
-        for remote in this_repo.remotes:
-            remote.update()
+        finfo("  …checking {submodule}", notrunc=True)
 
         if submod_repo.head.commit.hexsha != submodule.hexsha:
             fwarning("""
