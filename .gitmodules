@@ -1,6 +1,6 @@
 [submodule "tools/graphics/webghci"]
     path = tools/graphics/webghci
-    url = https://github.com/flowbox-public/WebGHCI.git
+    url = git@github.com:flowbox-public/WebGHCI.git
 [submodule "third-party/cufft"]
     path = third-party/cufft
     url = https://github.com/flowbox-public/cufft.git
@@ -52,158 +52,219 @@
 	url = https://github.com/flowbox-public/binary
 	branch = master
 [submodule "libs/luna/pass"]
+    branch = typechecker
 	path = libs/luna/pass
 	url = git@bitbucket.org:NewByteOrder/luna-pass.git
 [submodule "libs/luna/interpreter-old"]
+    branch = develop
 	path = libs/luna/interpreter-old
 	url = git@bitbucket.org:NewByteOrder/luna-interpreter-old.git
 [submodule "libs/luna/core"]
+    branch = typechecker
 	path = libs/luna/core
 	url = git@bitbucket.org:NewByteOrder/luna-core.git
 [submodule "libs/luna/protobuf"]
+    branch = develop
 	path = libs/luna/protobuf
 	url = git@bitbucket.org:NewByteOrder/luna-protobuf.git
 [submodule "libs/luna/typechecker"]
+    branch = typechecker
 	path = libs/luna/typechecker
 	url = git@bitbucket.org:NewByteOrder/luna-typechecker.git
 [submodule "libs/batch/plugins/file-manager"]
+    branch = develop
 	path = libs/batch/plugins/file-manager
 	url = git@bitbucket.org:NewByteOrder/batch-lib-file-manager.git
 [submodule "tools/aws/account-manager"]
+    branch = develop
 	path = tools/aws/account-manager
 	url = git@bitbucket.org:NewByteOrder/flowbox-account-manager.git
 [submodule "libs/rpc"]
+    branch = develop
 	path = libs/rpc
 	url = git@bitbucket.org:NewByteOrder/flowbox-rpc.git
 [submodule "libs/luna/target/ghchs"]
+    branch = typechecker
 	path = libs/luna/target/ghchs
 	url = git@bitbucket.org:NewByteOrder/luna-target-ghchs.git
 [submodule "libs/data/serialization"]
+    branch = develop
 	path = libs/data/serialization
 	url = git@bitbucket.org:NewByteOrder/flowbox-serialization.git
 [submodule "tools/lunac"]
+    branch = develop
 	path = tools/lunac
 	url = git@bitbucket.org:NewByteOrder/luna-compiler.git
 [submodule "libs/doc/markup"]
+    branch = develop
 	path = libs/doc/markup
 	url = git@bitbucket.org:NewByteOrder/doc-markup.git
 [submodule "libs/data/accelerate/thrust"]
+    branch = develop
 	path = libs/data/accelerate/thrust
 	url = git@bitbucket.org:NewByteOrder/accelerate-thrust.git
 [submodule "libs/batch/batch"]
+    branch = develop
 	path = libs/batch/batch
 	url = git@bitbucket.org:NewByteOrder/flowbox-batch.git
 [submodule "libs/aws"]
+    branch = develop
 	path = libs/aws
 	url = git@bitbucket.org:NewByteOrder/flowbox-aws.git
 [submodule "libs/bus"]
+    branch = develop
 	path = libs/bus
 	url = git@bitbucket.org:NewByteOrder/flowbox-bus.git
 [submodule "tools/batch/plugins/parser"]
+    branch = develop
 	path = tools/batch/plugins/parser
 	url = git@bitbucket.org:NewByteOrder/batch-plugin-parser.git
 [submodule "libs/ws-connector"]
+    branch = develop
 	path = libs/ws-connector
 	url = git@bitbucket.org:NewByteOrder/flowbox-ws-connector.git
 [submodule "tools/batch/plugins/file-manager"]
+    branch = develop
 	path = tools/batch/plugins/file-manager
 	url = git@bitbucket.org:NewByteOrder/batch-plugin-file-manager.git
 [submodule "libs/gui-mockup"]
+    branch = develop
 	path = libs/gui-mockup
 	url = git@bitbucket.org:NewByteOrder/flowbox-gui-mockup.git
 [submodule "libs/luna/parser2-old"]
+    branch = develop
 	path = libs/luna/parser2-old
 	url = git@bitbucket.org:NewByteOrder/luna-parser2-old.git
 [submodule "libs/batch/plugins/ur-manager"]
+    branch = develop
 	path = libs/batch/plugins/ur-manager
 	url = git@bitbucket.org:NewByteOrder/batch-lib-ur-manager.git
 [submodule "tools/batch/plugins/s3-file-manager"]
+    branch = develop
 	path = tools/batch/plugins/s3-file-manager
 	url = git@bitbucket.org:NewByteOrder/batch-plugin-s3-file-manager.git
 [submodule "libs/task-queue"]
+    branch = develop
 	path = libs/task-queue
 	url = git@bitbucket.org:NewByteOrder/task-queue.git
 [submodule "tools/batch/plugins/plugin-manager"]
+    branch = develop
 	path = tools/batch/plugins/plugin-manager
 	url = git@bitbucket.org:NewByteOrder/batch-plugin-plugin-manager.git
 [submodule "libs/luna/distribution"]
+    branch = develop
 	path = libs/luna/distribution
 	url = git@bitbucket.org:NewByteOrder/luna-distribution.git
 [submodule "libs/data/dynamics/particles"]
+    branch = develop
 	path = libs/data/dynamics/particles
 	url = git@bitbucket.org:NewByteOrder/particle.git
 [submodule "tools/batch/plugins/project-manager"]
+    branch = develop
 	path = tools/batch/plugins/project-manager
 	url = git@bitbucket.org:NewByteOrder/batch-plugin-project-manager.git
 [submodule "libs/data/codec/exr"]
+    branch = develop
 	path = libs/data/codec/exr
 	url = git@bitbucket.org:NewByteOrder/openexr.git
 [submodule "libs/luna/initializer"]
+    branch = develop
 	path = libs/luna/initializer
 	url = git@bitbucket.org:NewByteOrder/luna-initializer.git
 [submodule "tools/batch/plugins/broker"]
+    branch = develop
 	path = tools/batch/plugins/broker
 	url = git@bitbucket.org:NewByteOrder/batch-plugin-broker.git
 [submodule "tools/wrappers"]
+    branch = develop
 	path = tools/wrappers
 	url = git@bitbucket.org:NewByteOrder/flowbox-wrappers.git
 [submodule "libs/luna/distribution-old"]
+    branch = develop
 	path = libs/luna/distribution-old
 	url = git@bitbucket.org:NewByteOrder/luna-distribution-old.git
 [submodule "tools/batch/plugins/ur-manager"]
+    branch = develop
 	path = tools/batch/plugins/ur-manager
 	url = git@bitbucket.org:NewByteOrder/batch-plugin-ur-manager.git
 [submodule "libs/luna/build"]
+    branch = develop
 	path = libs/luna/build
 	url = git@bitbucket.org:NewByteOrder/luna-build.git
 [submodule "tools/initializer"]
+    branch = develop
 	path = tools/initializer
 	url = git@bitbucket.org:NewByteOrder/flowbox-initializer-cli.git
 [submodule "libs/data/graphics"]
+    branch = develop
 	path = libs/data/graphics
 	url = git@bitbucket.org:NewByteOrder/flowbox-graphics.git
 [submodule "tools/aws/instance-manager"]
+    branch = develop
 	path = tools/aws/instance-manager
 	url = git@bitbucket.org:NewByteOrder/flowbox-instance-manager.git
 [submodule "tools/batch/plugins/interpreter"]
+    branch = develop
 	path = tools/batch/plugins/interpreter
 	url = git@bitbucket.org:NewByteOrder/batch-plugin-interpreter.git
 [submodule "tools/aws/account-manager-mock"]
+    branch = develop
 	path = tools/aws/account-manager-mock
 	url = git@bitbucket.org:NewByteOrder/flowbox-account-manager-mock.git
 [submodule "libs/config"]
+    branch = develop
 	path = libs/config
 	url = git@bitbucket.org:NewByteOrder/flowbox-config.git
 [submodule "libs/batch/plugins/project-manager"]
+    branch = develop
 	path = libs/batch/plugins/project-manager
 	url = git@bitbucket.org:NewByteOrder/batch-lib-project-manager.git
 [submodule "libs/luna/interpreter"]
+    branch = develop
 	path = libs/luna/interpreter
 	url = git@bitbucket.org:NewByteOrder/luna-interpreter.git
 [submodule "libs/repo-manager"]
+    branch = develop
 	path = libs/repo-manager
 	url = git@bitbucket.org:NewByteOrder/flowbox-repo-manager.git
 [submodule "libs/luna/protobuf-old"]
+    branch = develop
 	path = libs/luna/protobuf-old
 	url = git@bitbucket.org:NewByteOrder/luna-protobuf-old.git
 [submodule "tools/batch/plugins/bus-logger"]
+    branch = develop
 	path = tools/batch/plugins/bus-logger
 	url = git@bitbucket.org:NewByteOrder/batch-plugin-bus-logger.git
 [submodule "libs/luna/interpreter-runtime"]
+    branch = develop
 	path = libs/luna/interpreter-runtime
 	url = git@bitbucket.org:NewByteOrder/luna-interpreter-runtime.git
 [submodule "libs/luna/pass-old"]
+    branch = develop
 	path = libs/luna/pass-old
 	url = git@bitbucket.org:NewByteOrder/luna-pass-old.git
 [submodule "libs/num-conversion"]
+    branch = develop
 	path = libs/num-conversion
 	url = git@bitbucket.org:NewByteOrder/num-conversion.git
 [submodule "libs/batch/plugins/project-manager-api"]
+    branch = develop
 	path = libs/batch/plugins/project-manager-api
 	url = git@bitbucket.org:NewByteOrder/batch-lib-project-manager-api.git
 [submodule "libs/utils"]
+    branch = typechecker
 	path = libs/utils
 	url = git@bitbucket.org:NewByteOrder/flowbox-utils.git
 [submodule "libs/convert"]
 	path = libs/convert
 	url = git@bitbucket.org:NewByteOrder/convert.git
+[submodule "repo_manager"]
+    branch = master
+	path = repo_manager
+	url = git@bitbucket.org:NewByteOrder/shtack.git
+[submodule "env"]
+	path = env
+	url = git@github.com:wdanilo/flowbox-env.git
+[submodule "third-party/HaskellBooster"]
+	path = third-party/HaskellBooster
+	url = git@github.com:wdanilo/HaskellBooster.git
