@@ -262,3 +262,6 @@
     branch = master
 	path = repo_manager
 	url = git@bitbucket.org:NewByteOrder/shtack.git
+[submodule "env"]
+	path = env
+	url = git@github.com:wdanilo/flowbox-env.git
