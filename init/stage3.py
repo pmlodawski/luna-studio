@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 from git_utils import releasing
 
-from io_utils import fprint, fmt
+from io_utils import fprint, fmt, finfo
 # noinspection PyUnresolvedReferences
 import git
 # noinspection PyUnresolvedReferences
@@ -24,29 +24,10 @@ import plumbum
 def bind_gitmodules():
     this_repo = git.Repo('.')
 
-    if len(this_repo.submodules) == 1:
-        fprint(colored.blue("INFO: ") + "overwriting .gitmodules with _gitmodules")
-
-        with releasing(this_repo.submodules[0].config_reader()) as old_submod_cfg:
-            submod_branch = old_submod_cfg.get_value('branch')
-
-        with open("_gitmodules", 'r') as config_source:
-            with open(".gitmodules", 'w') as config_dest:
-                for line in config_source:
-                    config_dest.write(line)
-
-        for subrepo in this_repo.submodules:
-            if subrepo.name == "repo_manager":
-                with releasing(subrepo.config_writer()) as new_submod_cfg:
-                    new_submod_cfg.set_value('branch', submod_branch).release()
-                break
-        else:
-            raise Exception("Whoops, _gitmodules do not have repo_manager as a subrepo?")
-
-    else:
-        fprint(colored.blue("INFO: ") + "seems like git-modules were already initialised.")
-        fprint("      If it's not the case, overwrite .gitmodules with .gitmodules.origin and re-run this script.")
-
+    finfo("""
+    assuming that everybody knows that one *needs* ./init_repo.py before doing any
+          work. Is that right?
+    """)
 
 def update_gitmodules():
     fprint(colored.blue("INFO: ") + "initialising git-modules")
