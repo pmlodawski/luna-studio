@@ -40,8 +40,8 @@ toAction :: Event Node -> Maybe Action
 toAction (Mouse m) = Just $ MouseAction m
 toAction _         = Nothing
 
-handleOther :: Mouse.Event -> UIRegistry.State -> Maybe (WidgetUIUpdate, UIRegistry.State)
-handleOther (Mouse.Event eventType _ button _ (Just (EventWidget widgetId pos))) registry = do
+handleGeneric :: Mouse.Event -> UIRegistry.State -> Maybe (WidgetUIUpdate, UIRegistry.State)
+handleGeneric (Mouse.Event eventType _ button _ (Just (EventWidget widgetId pos))) registry = do
     widget                <- (UIRegistry.lookup widgetId registry) :: Maybe DisplayObject
     (uiUpdate, newWidget) <- return $ case eventType of
         Mouse.Moved       -> onMouseMove    button pos widget
@@ -51,7 +51,16 @@ handleOther (Mouse.Event eventType _ button _ (Just (EventWidget widgetId pos)))
         Mouse.DblClicked  -> onDblClick            pos widget
     let newRegistry = UIRegistry.update newWidget registry
     return (uiUpdate, registry)
-handleOther _  _        = Nothing
+handleGeneric _  _        = Nothing
+
+triggerHandler :: Maybe WidgetId -> (DisplayObject -> WidgetUpdate) -> UIRegistry.State -> Maybe (WidgetUIUpdate, UIRegistry.State)
+triggerHandler maybeOid handler state = do
+    oid                     <- maybeOid
+    oldWidget               <- UIRegistry.lookup oid state
+    let (action, newWidget) = handler oldWidget
+    let newState            = UIRegistry.update newWidget state
+    return (action, newState)
+
 
 instance ActionStateUpdater Action where
     execSt (MouseAction mouseEvent) oldState = case newAction of
@@ -59,35 +68,27 @@ instance ActionStateUpdater Action where
             Nothing     -> ActionUI  NoAction newState
         where
         newAction                = Just $ ApplyUpdates uiUpdates
-        newState                 = oldState &  Global.uiRegistry .~ (newRegistry & UIRegistry.widgetOver .~ widgetOver)
-        oldWidgetOver            = oldState ^. Global.uiRegistry . UIRegistry.widgetOver
+        newState                 = oldState &  Global.uiRegistry .~ newRegistry
         oldRegistry              = oldState ^. Global.uiRegistry
-        (uiUpdates, newRegistry) = UIRegistry.sequenceUpdates [ handleMouseOut
+        oldWidgetOver            = oldState ^. Global.uiRegistry . UIRegistry.widgetOver
+        (uiUpdates, newRegistry) = UIRegistry.sequenceUpdates [ Just $ setWidgetOver
+                                                              , handleMouseOut
                                                               , handleMouseOver
-                                                              , Just $ (handleOther mouseEvent)
+                                                              , Just $ (handleGeneric mouseEvent)
                                                               ] oldRegistry
-        (handleMouseOver, handleMouseOut, widgetOver) = case mouseEvent of
-            Mouse.Event Mouse.Moved _ _ _ evWd -> (handleMouseOver', handleMouseOut', widgetOver) where
-                widgetOver = maybe Nothing (\x -> Just $ x ^. Mouse.widgetId) evWd
-                widgetOverChanged = oldWidgetOver /= widgetOver
-                handleMouseOut' = case widgetOverChanged of
-                    True  -> Just $ \m -> do
-                        oid <- oldWidgetOver
-                        oldOut <- UIRegistry.lookup oid m
-                        (a, w) <- Just $ onMouseOut oldOut
-                        Just (a, UIRegistry.update w m)
-
-                    False -> Nothing
-                handleMouseOver' = case widgetOverChanged of
-                    True  -> Just $ \m -> do
-                        oid <- widgetOver
-                        oldOver <- UIRegistry.lookup oid m
-                        (a, w) <- Just $ onMouseOver oldOver
-                        Just (a, UIRegistry.update w m)
-                    False -> Nothing
-            _               -> (Nothing, Nothing, oldWidgetOver)
+        (handleMouseOver, handleMouseOut) = case mouseEvent of
+            Mouse.Event Mouse.Moved _ _ _ evWd -> case widgetOverChanged of
+                                        True   -> (Just $ triggerHandler oldWidgetOver onMouseOut
+                                                  ,Just $ triggerHandler newWidgetOver onMouseOver
+                                                  )
+                                        False  -> (Nothing, Nothing)
+            _             -> (Nothing, Nothing)
+        widgetOverChanged = oldWidgetOver /= newWidgetOver
+        newWidgetOver     = case mouseEvent of
+            Mouse.Event Mouse.Moved _ _ _ evWd -> (^. Mouse.widgetId) <$> evWd
+            _                                  -> oldWidgetOver
+        setWidgetOver state = Just $ (Nothing, state & UIRegistry.widgetOver .~ newWidgetOver)
 
 instance ActionUIUpdater Action where
     updateUI (WithState (ApplyUpdates actions) state) = do
-        putStrLn $ "Actions" <> show (length $ catMaybes actions)
         sequence_ $ catMaybes actions
