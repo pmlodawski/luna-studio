@@ -30,7 +30,8 @@ library
                  mtl,
                  text >= 0.8,
                  either,
-                 template-haskell
+                 template-haskell,
+                 lens
 
   GHC-Options: -O2 -Wall -fno-warn-orphans
 

@@ -5,6 +5,7 @@
 
 module Data.Convert.Base where
 
+import Control.Lens
 
 ----------------------------------------------------------------------
 -- Conversions
@@ -19,6 +20,7 @@ class MaybeConvertible' a e b | b -> a e where
 class Convertible a b where
     convert :: a -> b
 
+-- Maybe we should change the name to Specializable and specialize?
 class Convertible' a b | b -> a where
     convert' :: a -> b
 
