@@ -61,6 +61,7 @@ instance Convertible i (Ptr i a)    where convert = Ptr
 instance Convertible (Ptr i a) i    where convert = ptrIdx
 instance Convertible i (HPtr i m a) where convert = HPtr . convert
 instance Convertible (HPtr i m a) i where convert = ptrIdx
+instance Convertible (Ptr i (m a)) (HPtr i m a) where convert = HPtr
 
 class    PtrIdx p i | p -> i    where ptrIdx :: p -> i
 instance PtrIdx (Ptr  i   a) i  where ptrIdx (Ptr i)  = i
@@ -81,6 +82,7 @@ makeLenses ''HeteroContainer
 -- basic instances
 
 type instance ElementByIdx idx (HeteroContainer cont) = IdxType idx
+type instance IndexOf      el  (HeteroContainer cont) = Ptr (IndexOf el cont) el
 
 instance HasContainer (HeteroContainer c) (HeteroContainer c) where
     container = id
@@ -101,6 +103,15 @@ type HeteroTransCtx idx ctx a cont idx' el = ( Container (HeteroContainer cont) 
                                              , IsoConvertible idx idx'
                                              )
 
+
+--class (IndexOf el cont ~ idx, ElementByIdx idx cont ~ el, Measurable cont) => Container cont idx el where
+--    elems   :: cont -> [el]
+--    indexes :: cont -> [idx]
+
+instance (idx ~ Ptr (IndexOf a cont) a) => Container (HeteroContainer cont) idx a
+
+instance Measurable (HeteroContainer cont)
+-- TODO: TO END ^^^
 
 instance (HeteroTransCtx idx ctx a cont idx' el, Appendable cont idx' el)
       => Appendable (HeteroContainer cont) idx a where
