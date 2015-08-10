@@ -20,8 +20,9 @@ import           Debug.Trace
 
 type WidgetMap = IntMap DisplayObject
 
-data State = State { _widgets     :: WidgetMap
-                   , _widgetOver  :: Maybe WidgetId
+data State = State { _widgets         :: WidgetMap
+                   , _widgetOver      :: Maybe WidgetId
+                   , _widgetDragging  :: Maybe WidgetId
                    }
 
 makeLenses ''State
@@ -32,12 +33,13 @@ instance Show State where
     show a = show $ IntMap.size $ a ^. widgets
 
 instance Default State where
-    def = State def def
+    def = State def def def
 
 instance PrettyPrinter State where
-    display (State widgets wover) =
-           "dWd("    <> show (IntMap.keys widgets)
-        <> " over: " <> show wover
+    display (State widgets wover dragging) =
+           "dWd("        <> show (IntMap.keys widgets)
+        <> " over: "     <> show wover
+        <> " dragging: " <> show dragging
         <> ")"
 
 lookup :: WidgetId -> State -> Maybe DisplayObject
@@ -65,7 +67,7 @@ unregisterAll a state = foldl (flip unregister) state a
 generateIds :: Int -> State -> [WidgetId]
 generateIds count state = [startId..startId + count] where
     startId = if IntMap.size (state ^. widgets) == 0 then 1
-                                                     else startId where (startId, _) = IntMap.findMax (state ^. widgets)
+                                                     else maxId + 1 where (maxId, _) = IntMap.findMax (state ^. widgets)
 
 replaceAll :: DisplayObjectClass a => [a] -> [a] -> State -> State
 replaceAll remove add state = registerAll add $ unregisterAll remove state

@@ -20,6 +20,7 @@ import qualified Reactive.Plugins.Core.Action.State.UIRegistry   as UIRegistry
 import qualified Object.Widget.Button as Button
 import qualified Object.Widget.Slider as Slider
 import           ThreeJS.Button ()
+import           ThreeJS.Slider ()
 import           GHCJS.Prim
 import           Data.IntMap.Lazy (IntMap)
 import qualified Data.IntMap.Lazy as IntMap
@@ -61,6 +62,19 @@ triggerHandler maybeOid handler state = do
     let newState            = UIRegistry.update newWidget state
     return (action, newState)
 
+handleDragStart widgetId button relPos state = do
+    oldWidget   <- UIRegistry.lookup widgetId state
+    let shouldDrag  = mayDrag button relPos oldWidget
+    let newState    = if shouldDrag then state & UIRegistry.widgetDragging .~ Just widgetId
+                                    else state
+    return $ (Nothing, newState)
+
+handleDragMove widgetId absPos relPos state = triggerHandler widgetId (onDragMove absPos relPos) state
+
+handleDragEnd widgetId absPos relPos state = do
+    (actions, newState') <- triggerHandler widgetId (onDragEnd  absPos relPos) state
+    let newState          = newState' & UIRegistry.widgetDragging .~ Nothing
+    return $ (actions, newState)
 
 instance ActionStateUpdater Action where
     execSt (MouseAction mouseEvent) oldState = case newAction of
@@ -75,6 +89,7 @@ instance ActionStateUpdater Action where
                                                               , handleMouseOut
                                                               , handleMouseOver
                                                               , Just $ (handleGeneric mouseEvent)
+                                                              , handleDrag
                                                               ] oldRegistry
         (handleMouseOver, handleMouseOut) = case mouseEvent of
             Mouse.Event Mouse.Moved _ _ _ evWd -> case widgetOverChanged of
@@ -83,6 +98,13 @@ instance ActionStateUpdater Action where
                                                   )
                                         False  -> (Nothing, Nothing)
             _             -> (Nothing, Nothing)
+        handleDrag = case mouseEvent of
+            Mouse.Event Mouse.Pressed  _ button _ (Just (EventWidget widgetId relPos)) -> Just $ handleDragStart widgetId button relPos
+            Mouse.Event Mouse.Moved    pos _ _ _ -> Just $ handleDragMove widgetDragging pos pos
+            Mouse.Event Mouse.Released pos _ _ _ -> Just $ handleDragEnd  widgetDragging pos pos
+            _              -> Nothing
+        isDragging        = isJust $ oldRegistry ^. UIRegistry.widgetDragging
+        widgetDragging    = oldRegistry ^. UIRegistry.widgetDragging
         widgetOverChanged = oldWidgetOver /= newWidgetOver
         newWidgetOver     = case mouseEvent of
             Mouse.Event Mouse.Moved _ _ _ evWd -> (^. Mouse.widgetId) <$> evWd
@@ -90,5 +112,4 @@ instance ActionStateUpdater Action where
         setWidgetOver state = Just $ (Nothing, state & UIRegistry.widgetOver .~ newWidgetOver)
 
 instance ActionUIUpdater Action where
-    updateUI (WithState (ApplyUpdates actions) state) = do
-        sequence_ $ catMaybes actions
+    updateUI (WithState (ApplyUpdates actions) state) = sequence_ $ catMaybes actions
