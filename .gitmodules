@@ -265,3 +265,6 @@
 [submodule "env"]
 	path = env
 	url = git@github.com:wdanilo/flowbox-env.git
+[submodule "third-party/HaskellBooster"]
+	path = third-party/HaskellBooster
+	url = git@github.com:wdanilo/HaskellBooster.git
