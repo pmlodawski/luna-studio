@@ -19,6 +19,23 @@ To use GHCI mode with incremental linker (aka very fast rebuild) please run `bru
 
 In interactive mode, the page is reloaded upon file save, however new code is injected a couple of seconds later. In the meantime you'll see console of GHCJSi containing build log redirected to the browser.
 
+## Typeckecker integration
+
+Follow instructions:
+```
+cd ..
+git clone git@bitbucket.org:NewByteOrder/new_byte_order.git
+cd new_byte_order
+git checkout typechecker
+git submodule init
+git submodule update --recursive
+cd ../nodelab
+cabal install ../new_update_order/libs/convert --ghcjs
+cabal install ../new_update_order/libs/utils --ghcjs
+cabal install ../new_update_order/third-party/graphviz-2999.17.0.2.2 --ghcjs
+cabal install ../new_update_order/libs/luna/typechecker --ghcjs
+```
+
 ## Building for production
 
 Run `brunch build --production`. `--production` flag enables JS minification (this will take a while). It also disables overriding feature-switches from `localStorage`.
