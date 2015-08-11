@@ -18,7 +18,7 @@ from utils.colors      import print_info, print_error, putInfo
 from utils.errors      import fatal
 from utils.net         import download
 from utils.system      import platformFix
-from utils.process     import ask
+from utils.process     import ask, askCont, response
 from utils.env         import checkCabalVersion, checkGHCVersion
 import argparse
 import tempfile
@@ -50,19 +50,27 @@ def checkAvailable(name):
         return True
 
 def checkCabalPkg(name, version="", installUsing=None, check=None):
+    def action(name,version,installUsing):
+        pkg = name
+        if version: pkg += "-%s" % version
+        if installUsing == None:
+            installUsing = "cd && cabal install %s" % pkg
+        if not issubclass (type(installUsing), str):
+            installUsing = "cd && cabal install %s" % installUsing(name, version)
+        try_call(installUsing)
     if check == None:
         check = name
     if not checkAvailable(check):
-        if ask ("Cabal binary '%s' is not available. Should I install it?" % name, SILENTINSTALL):
-            pkg = name
-            if version: pkg += "-%s" % version
-            if installUsing == None:
-                installUsing = "cd && cabal install %s" % pkg
-            if not issubclass (type(installUsing), str):
-                installUsing = "cd && cabal install %s" % installUsing(name, version)
-            try_call(installUsing)
+        return askAction ("Cabal binary '%s' is not available. Should I install it?" % name, SILENTINSTALL, lambda:action(name,version,installUsing))
+    return True
 
-        else: fatal ()
+def askAction (msg, silent, f):
+    rsp = askCont (msg, silent)
+    if   rsp == response.YES:
+        f()
+        return True
+    elif rsp == response.NO:        fatal()
+    elif rsp == response.CONTINUE:  return False
 
 def checkCabalVersion():
     minv = '1.19.1'
@@ -212,11 +220,10 @@ def main():
 
     checkCabalPkg("gtk2hs-buildtools", installUsing=install_alex_happy, check="gtk2hsC2hs")
 
-    checkCabalPkg("hprotoc-fork", check="hprotoc") # FIXME [KL]: Temporary fix for hprotoc
-
-    print_info ("Generating Protocol Buffers files using genproto")
-    path = os.path.join(rootPath, 'scripts', 'genproto')
-    try_call ('python2.7 %s' % path)
+    if checkCabalPkg("hprotoc-fork", check="hprotoc"): # FIXME [KL]: Temporary fix for hprotoc
+        print_info ("Generating Protocol Buffers files using genproto")
+        path = os.path.join(rootPath, 'scripts', 'genproto')
+        try_call ('python2.7 %s' % path)
 
     print_info ("Generating cabal configs using gencabal")
     path = os.path.join(rootPath, 'scripts', 'gencabal')
