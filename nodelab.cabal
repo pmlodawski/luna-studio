@@ -48,6 +48,14 @@ executable nodelab
                      , containers
                      , random
                      , pretty-show
+                     , flowbox-utils
+                     , convert
+                     , process
+                     , constraints
+                     , errors
+                     , graphviz
+                     , vector
+                     , luna-tc
   hs-source-dirs:      app/src
   default-language:    Haskell2010
 

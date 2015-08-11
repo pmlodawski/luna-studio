@@ -34,14 +34,14 @@ import           JS.Bindings
 
 import qualified Reactive.Plugins.Core.Network as CoreNetwork
 
-import qualified Tmp.TypecheckerTest as TypecheckerTest -- TODO: Remove
+import qualified Tmp.TypecheckerTest2 as TypecheckerTest -- TODO: Remove
 
 makeNetworkDescription :: forall t. Frameworks t => Bool -> Moment t ()
 makeNetworkDescription = CoreNetwork.makeNetworkDescription
 
 main :: IO ()
 main = do
-    TypecheckerTest.tctest  -- TODO: Remove
+    TypecheckerTest.main  -- TODO: Remove
 
     initializeGl
     render
