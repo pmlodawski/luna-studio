@@ -50,6 +50,7 @@ Feature switches reside in `app/features.default.js`. These values are for produ
 * You may want to change `plugins.ghcjs.buildCommand` to `cabal build` to speedup compilation (at least it speeds on my Mac). `plugins.ghcjs.clearScreen` may ba also useful – it clears terminal when building Haskell sources. This is useful in combination with iTerm2 CMD+Click on file path in error messages.
 * JS dependencies are managed by Bower (at least one present in bower repos)
 * `three-bmfont-text` is designed to be NPM/browserify package. I've built dist package with `cjsify index.js --export THREE_TEXT --ignore-missing > three-bmfont-text-cjs.js`
+* GHCJS should be installed with following instructions: https://gist.github.com/kfigiela/b908c44d6203b72e3739#file-install-ghcjs-sh
 
 ## Local `brunch-config` overrides
 
