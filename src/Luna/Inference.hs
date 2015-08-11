@@ -607,6 +607,12 @@ deriving instance Show (h (a h)) => Show (Ref h a)
 
 -- === RecBuilder ===
 
+class HasAST a ast | a -> ast where
+    ast :: Lens' a ast
+
+
+-- === RecBuilder ===
+
 class Monad m => RecBuilder m h a where
     mkRec :: a h -> m (Ref h a)
 
