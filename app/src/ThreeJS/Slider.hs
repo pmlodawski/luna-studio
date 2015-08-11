@@ -99,24 +99,24 @@ setUniform n v w = do
 updateValue :: WB.Slider -> IO ()
 updateValue s = setUniform "value" (toJSDouble $ WB.sliderPosition s) s
 
-instance Clickable WB.Slider where
-    onClick pos b = (Just action, toCtxDynamic newSlider) where
-        action    = do
-            updateValue newSlider
-            putStrLn $ show value
-
-        newSlider = b & WB.value .~ value
-        normValue = (fromIntegral $ pos ^. x) / (b ^. WB.size . x)
-        value     = b ^. WB.minValue + normValue * (b ^. WB.maxValue - b ^. WB.minValue )
-
-instance HandlesMouseMove WB.Slider where
-    onMouseMove Mouse.LeftButton pos = onClick pos
-    onMouseMove _ _ = noUpdate
+-- instance Clickable WB.Slider where
+--     onClick pos b = (Just action, toCtxDynamic newSlider) where
+--         action    = do
+--             updateValue newSlider
+--             putStrLn $ show value
+--
+--         newSlider = b & WB.value .~ value
+--         normValue = (fromIntegral $ pos ^. x) / (b ^. WB.size . x)
+--         value     = b ^. WB.minValue + normValue * (b ^. WB.maxValue - b ^. WB.minValue )
+--
+-- instance HandlesMouseMove WB.Slider where
+--     onMouseMove Mouse.LeftButton pos = onClick pos
+--     onMouseMove _ _ = noUpdate
 
 instance Draggable        WB.Slider where
     mayDrag         Mouse.LeftButton _ _ = True
-    onDragEnd       _ _        b =  (Just $ putStrLn "Dragend", toCtxDynamic b) where
-    onDragMove      _ pos      b =  (Just action, toCtxDynamic newSlider) where
+    onDragEnd       _ _   ds b =  (Just $ putStrLn "Dragend", toCtxDynamic b        ) where
+    onDragMove      _ pos ds b =  (Just action,               toCtxDynamic newSlider) where
         action       = do
             updateValue newSlider
             putStrLn $ "I am dragging!"
@@ -124,8 +124,8 @@ instance Draggable        WB.Slider where
 
         newSlider    = b & WB.value .~ value
         normValue    = (fromIntegral $ pos ^. x) / (b ^. WB.size . x)
-        boundedValue = max 1.0 $ min 1.0 normValue
-        value        = b ^. WB.minValue + normValue * (b ^. WB.maxValue - b ^. WB.minValue )
+        boundedValue = max 0.0 $ min 1.0 normValue
+        value        = b ^. WB.minValue + boundedValue * (b ^. WB.maxValue - b ^. WB.minValue )
 
 
 

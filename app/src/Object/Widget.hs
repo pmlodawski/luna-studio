@@ -45,9 +45,9 @@ class HandlesMouseOut      a where onMouseOut      ::                           
 class Clickable            a where onClick         ::                MousePosition -> a -> WidgetUpdate
 class DblClickable         a where onDblClick      ::                MousePosition -> a -> WidgetUpdate
 class Draggable            a where
-    mayDrag         :: MouseButton   -> MousePosition -> a -> Bool
-    onDragMove      :: MousePosition -> MousePosition -> a -> WidgetUpdate
-    onDragEnd       :: MousePosition -> MousePosition -> a -> WidgetUpdate
+    mayDrag         :: MouseButton   -> MousePosition ->              a -> Bool
+    onDragMove      :: MousePosition -> MousePosition -> DragState -> a -> WidgetUpdate
+    onDragEnd       :: MousePosition -> MousePosition -> DragState -> a -> WidgetUpdate
 
 instance {-# OVERLAPPABLE #-} DisplayObjectClass a => HandlesMouseMove     a where onMouseMove     _ _ = noUpdate
 instance {-# OVERLAPPABLE #-} DisplayObjectClass a => HandlesMousePressed  a where onMousePress    _ _ = noUpdate
@@ -57,23 +57,32 @@ instance {-# OVERLAPPABLE #-} DisplayObjectClass a => HandlesMouseOut      a whe
 instance {-# OVERLAPPABLE #-} DisplayObjectClass a => Clickable            a where onClick           _ = noUpdate
 instance {-# OVERLAPPABLE #-} DisplayObjectClass a => DblClickable         a where onDblClick        _ = noUpdate
 instance {-# OVERLAPPABLE #-} DisplayObjectClass a => Draggable            a where mayDrag       _ _ _ = False
-                                                                                   onDragMove      _ _ = noUpdate
-                                                                                   onDragEnd       _ _ = noUpdate
+                                                                                   onDragMove    _ _ _ = noUpdate
+                                                                                   onDragEnd     _ _ _ = noUpdate
 
-instance HandlesMouseMove     DisplayObject where onMouseMove     mb mp (CtxDynamic _ a) = onMouseMove     mb mp a
-instance HandlesMousePressed  DisplayObject where onMousePress    mb mp (CtxDynamic _ a) = onMousePress    mb mp a
-instance HandlesMouseReleased DisplayObject where onMouseRelease  mb mp (CtxDynamic _ a) = onMouseRelease  mb mp a
-instance HandlesMouseOver     DisplayObject where onMouseOver           (CtxDynamic _ a) = onMouseOver           a
-instance HandlesMouseOut      DisplayObject where onMouseOut            (CtxDynamic _ a) = onMouseOut            a
-instance Clickable            DisplayObject where onClick            mp (CtxDynamic _ a) = onClick            mp a
-instance DblClickable         DisplayObject where onDblClick         mp (CtxDynamic _ a) = onDblClick         mp a
-instance Draggable            DisplayObject where mayDrag         mb mr (CtxDynamic _ a) = mayDrag         mb mr a
-                                                  onDragMove      ma mr (CtxDynamic _ a) = onDragMove      ma mr a
-                                                  onDragEnd       ma mr (CtxDynamic _ a) = onDragEnd       ma mr a
+instance HandlesMouseMove     DisplayObject where onMouseMove     mb mp    (CtxDynamic _ a) = onMouseMove     mb mp    a
+instance HandlesMousePressed  DisplayObject where onMousePress    mb mp    (CtxDynamic _ a) = onMousePress    mb mp    a
+instance HandlesMouseReleased DisplayObject where onMouseRelease  mb mp    (CtxDynamic _ a) = onMouseRelease  mb mp    a
+instance HandlesMouseOver     DisplayObject where onMouseOver              (CtxDynamic _ a) = onMouseOver              a
+instance HandlesMouseOut      DisplayObject where onMouseOut               (CtxDynamic _ a) = onMouseOut               a
+instance Clickable            DisplayObject where onClick            mp    (CtxDynamic _ a) = onClick            mp    a
+instance DblClickable         DisplayObject where onDblClick         mp    (CtxDynamic _ a) = onDblClick         mp    a
+instance Draggable            DisplayObject where mayDrag         mb mr    (CtxDynamic _ a) = mayDrag         mb mr    a
+                                                  onDragMove      ma mr ds (CtxDynamic _ a) = onDragMove      ma mr ds a
+                                                  onDragEnd       ma mr ds (CtxDynamic _ a) = onDragEnd       ma mr ds a
 
 noUIUpdate :: WidgetUIUpdate
 noUIUpdate = Nothing
 
 noUpdate :: DisplayObjectClass a => a -> WidgetUpdate
 noUpdate w = (noUIUpdate, toCtxDynamic w)
+
+data DragState = DragState { _widgetId       :: WidgetId
+                           , _button         :: MouseButton
+                           , _startPosAbs    :: Vector2 Double
+                           , _startPosRel    :: Vector2 Double
+                           , _lastPosAbs     :: Vector2 Double
+                           , _lastPosRel     :: Vector2 Double
+                           } deriving (Show, Eq)
+makeLenses ''DragState
 

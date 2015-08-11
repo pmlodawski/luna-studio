@@ -7,6 +7,7 @@ import           Utils.Vector
 
 import           Object.Object
 import           Object.Widget
+import qualified Object.Widget as Widget
 import           Object.Node
 import           Event.Mouse    hiding      (Event, WithObjects)
 import qualified Event.Mouse    as Mouse
@@ -62,19 +63,31 @@ triggerHandler maybeOid handler state = do
     let newState            = UIRegistry.update newWidget state
     return (action, newState)
 
-handleDragStart widgetId button relPos state = do
+handleDragStart widgetId button absPos relPos state = do
     oldWidget   <- UIRegistry.lookup widgetId state
     let shouldDrag  = mayDrag button relPos oldWidget
-    let newState    = if shouldDrag then state & UIRegistry.widgetDragging .~ Just widgetId
+    let dragState   = DragState widgetId button pos' relPos' pos' relPos' where
+            pos'    = fromIntegral <$> absPos
+            relPos' = fromIntegral <$> relPos
+    let newState    = if shouldDrag then state & UIRegistry.dragState .~ Just dragState
                                     else state
     return $ (Nothing, newState)
 
-handleDragMove widgetId absPos relPos state = triggerHandler widgetId (onDragMove absPos relPos) state
+handleDragMove absPos relPos state = case (state ^. UIRegistry.dragState) of
+    Just dragState -> triggerHandler widgetId (onDragMove absPos relPos dragState) state' where
+        widgetId           = Just $ dragState ^. Widget.widgetId
+        state'             = state     &  UIRegistry.dragState .~ (Just newDragState)
+        newDragState       = dragState &  lastPosAbs .~ (fromIntegral <$> absPos)
+                                       &  lastPosRel .~ (fromIntegral <$> relPos)
+    otherwise      -> Nothing
 
-handleDragEnd widgetId absPos relPos state = do
-    (actions, newState') <- triggerHandler widgetId (onDragEnd  absPos relPos) state
-    let newState          = newState' & UIRegistry.widgetDragging .~ Nothing
-    return $ (actions, newState)
+handleDragEnd absPos relPos state = case (state ^. UIRegistry.dragState) of
+    Just dragState -> do
+        let widgetId = (dragState ^. Widget.widgetId)
+        (actions, newState') <- triggerHandler (Just $ widgetId) (onDragEnd absPos relPos dragState) state
+        let newState          = newState' & UIRegistry.dragState .~ Nothing
+        return $ (actions, newState)
+    otherwise      -> Nothing
 
 instance ActionStateUpdater Action where
     execSt (MouseAction mouseEvent) oldState = case newAction of
@@ -99,12 +112,12 @@ instance ActionStateUpdater Action where
                                         False  -> (Nothing, Nothing)
             _             -> (Nothing, Nothing)
         handleDrag = case mouseEvent of
-            Mouse.Event Mouse.Pressed  _ button _ (Just (EventWidget widgetId relPos)) -> Just $ handleDragStart widgetId button relPos
-            Mouse.Event Mouse.Moved    pos _ _ _ -> Just $ handleDragMove widgetDragging pos pos
-            Mouse.Event Mouse.Released pos _ _ _ -> Just $ handleDragEnd  widgetDragging pos pos
+            Mouse.Event Mouse.Pressed  pos button _ (Just (EventWidget widgetId relPos)) -> Just $ handleDragStart widgetId button pos relPos
+            Mouse.Event Mouse.Moved    pos _ _ _ -> Just $ handleDragMove  pos pos
+            Mouse.Event Mouse.Released pos _ _ _ -> Just $ handleDragEnd   pos pos
             _              -> Nothing
-        isDragging        = isJust $ oldRegistry ^. UIRegistry.widgetDragging
-        widgetDragging    = oldRegistry ^. UIRegistry.widgetDragging
+        isDragging        = isJust $ oldDragState
+        oldDragState      = oldRegistry ^. UIRegistry.dragState
         widgetOverChanged = oldWidgetOver /= newWidgetOver
         newWidgetOver     = case mouseEvent of
             Mouse.Event Mouse.Moved _ _ _ evWd -> (^. Mouse.widgetId) <$> evWd

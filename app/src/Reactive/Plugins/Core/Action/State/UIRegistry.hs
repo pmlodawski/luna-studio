@@ -10,7 +10,7 @@ import           Object.Widget
 import           Data.IntMap.Lazy (IntMap)
 import qualified Data.IntMap.Lazy as IntMap
 
-import           Event.Mouse (WidgetId)
+import           Event.Mouse (WidgetId, MouseButton)
 
 import           Data.Set (Set)
 import qualified Data.Set as Set
@@ -22,7 +22,7 @@ type WidgetMap = IntMap DisplayObject
 
 data State = State { _widgets         :: WidgetMap
                    , _widgetOver      :: Maybe WidgetId
-                   , _widgetDragging  :: Maybe WidgetId
+                   , _dragState       :: Maybe DragState
                    }
 
 makeLenses ''State
