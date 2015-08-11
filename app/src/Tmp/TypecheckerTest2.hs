@@ -680,23 +680,22 @@ type HomoNet   l a = HomoGraph ((Label l) (GraphNode l a))
 type HeteroNet     = HeteroGraph
 
 
-y :: (GraphRef Ctx Term, HomoNet Ctx Term)
-y = runGraphBuilder x2
+-- y :: (GraphRef Ctx Term, HomoNet Ctx Term)
+-- y = runGraphBuilder x2
 
-(a,b) = y
+-- (a,b) = y
 
-c = elems b
+-- c = elems b
 
 data Ctx = Ctx Int deriving (Show)
-instance Default Ctx where def = Ctx 5
+instance Default Ctx where def = Ctx 1
 
-instance Monad m => LabBuilder m Ctx where
-    mkLabel = return $ Ctx 3
+-- instance Monad m => LabBuilder m Ctx where
+--     mkLabel = return $ Ctx 3
 
+instance (MonadState Ctx m) => LabBuilder m Ctx where
+    mkLabel = get
 
-main = do
-    putStrLn $ repr y
-    return ()
 
 toRawMRef = fmap (fromRef . fromGraphRef) . toMRef
 
@@ -728,13 +727,37 @@ instance HasContainer body c => HasContainer (Function body) c where
 
 
 f :: FunctionGraph
-f = runFunctionBuilder $ do
+f = runIdentity $ flip evalStateT (Ctx 0) $ runFunctionBuilderT $ do
+    lift $ put $ Ctx 2
     a <- var "a"
+    lift $ put $ Ctx 3
+    -- b <- withCtx (Ctx 7) $ var "b"
     x <- var "x" @. "foo"
+    lift $ put $ Ctx 4
     y <- x @$ [arg a]
 
     return ()
 
+    -- a <- withCtx 11 $ app (withCtx 12 $ var "a") (withCtx 13 $ var "b")
+
+withCtx id f = do
+    ctx <- get
+    put id
+    out <- f
+    put ctx
+    return out
+
+
+main = do
+    -- putStrLn $ repr y
+    putStrLn $ repr f
+    return ()
+
+
+
+
+    -- put 2
+    -- a <- withID 2 $ var "a"
 
 --main = do
 --    print f
