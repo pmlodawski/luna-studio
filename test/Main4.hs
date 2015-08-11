@@ -86,11 +86,11 @@ data Base = Pure
 
 --data Ctx = Ctx Name deriving (Show)
 
-data Ctx = KnownCtx Base [Name]
-         | UnknownCtx
+data Ctx = KnownCtx Bas         | UnknownCtx
          deriving (Show)
 
 -- === Literals ===
+e [Name]
 
 data Literal = Int Int
              | String Text.AutoBuilder

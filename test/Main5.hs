@@ -143,7 +143,7 @@ type Name = String
 
 
 
---type Rec a h = h (a h)
+--type Ref a h = h (a h)
 
 
 -- Component types
@@ -313,7 +313,7 @@ intCons i = cons (cons $ Int i :: Val h)
 --var :: RecBuilder el m h Term => Name -> m (Ref h Term)
 --var = mkASTRef . Var
 
---newtype Ref     h a = Ref { fromRef :: h (a h) }
+--newtype Ref     h a = Ref { fromGraphRef :: h (a h) }
 
 
 
@@ -394,7 +394,6 @@ instance {-# OVERLAPPABLE #-} (Constructor a t, Constructor t b) => AsConstructo
 --acc = cons .: Accessor
 
 --type instance Variants Val
-arg = Arg Nothing
 
 --tx :: Constructor Var a => App a
 --tx = App (var "foo") [arg $ var "bar"]
@@ -418,25 +417,25 @@ arg = Arg Nothing
 --type
 
 --newtype Val     = Val   { __valRec   :: Record (ValTypes  Val)           } deriving (Show)
---newtype Term h = Term { __termRec :: Record (TermTypes (Rec Term h)) }
---newtype Val  h = Val  { __valRec  :: Record (ValTypes  (Rec Val  h)) }
+--newtype Term h = Term { __termRec :: Record (TermTypes (Ref Term h)) }
+--newtype Val  h = Val  { __valRec  :: Record (ValTypes  (Ref Val  h)) }
 
 
---data Node h = ValNode       (Record (ValTypes       (Rec Val h)))
---            | ConstTermNode (Record (ConstTermTypes (Rec Node h)))
---            | TermNode      (Record (TermTypes      (Rec Node h)))
+--data Node h = ValNode       (Record (ValTypes       (Ref Val h)))
+--            | ConstTermNode (Record (ConstTermTypes (Ref Node h)))
+--            | TermNode      (Record (TermTypes      (Ref Node h)))
 
 
 
     --newtype Term    = Term  { __termRec  :: Record (TermTypes Term)          } deriving (Show)
     --newtype Val     = Val   { __valRec   :: Record (ValTypes  Val)           } deriving (Show)
-    --newtype Term h = Term { __termRec :: Record (TermTypes (Rec Term h)) }
-    --newtype Val  h = Val  { __valRec  :: Record (ValTypes  (Rec Val  h)) }
+    --newtype Term h = Term { __termRec :: Record (TermTypes (Ref Term h)) }
+    --newtype Val  h = Val  { __valRec  :: Record (ValTypes  (Ref Val  h)) }
 
 
-    --data Node h = ValNode       (Record (ValTypes       (Rec Val h)))
-    --            | ConstTermNode (Record (ConstTermTypes (Rec Node h)))
-    --            | TermNode      (Record (TermTypes      (Rec Node h)))
+    --data Node h = ValNode       (Record (ValTypes       (Ref Val h)))
+    --            | ConstTermNode (Record (ConstTermTypes (Ref Node h)))
+    --            | TermNode      (Record (TermTypes      (Ref Node h)))
 
 
     --makeLenses ''Term
@@ -446,11 +445,11 @@ arg = Arg Nothing
 
     ---- instances
 
-    ----deriving instance (Show (Rec Node h), Show (Rec Val h)) => Show (Node h)
+    ----deriving instance (Show (Ref Node h), Show (Ref Val h)) => Show (Node h)
 
     --type instance Variants Val       = ValTypes  Val
     --type instance Variants Term      = TermTypes Term
-    --type instance Variants (Term h) = TermTypes (Rec Term h)
+    --type instance Variants (Term h) = TermTypes (Ref Term h)
 
 
     --instance IsVariant Term      where variant = Term
@@ -585,43 +584,45 @@ instance Monad m => MonadBldrState g (GraphBuilderT g m) where
 
 ---- === Ref ===
 
-newtype Rec     h a = Rec { fromRec :: h (a h) }
+type Rec h a = h (a h)
+
+newtype Ref     h a = Ref { fromRef :: Rec h a }
 type    Wrapped m a = m (a (HPtr Int m))
 type    Simple    a = a (Ptr Int)
 
 -- utils
 
 class Monad m => ToMRef t m l a | t -> l a where
-    toMRef :: t -> m (Ref l a)
+    toMRef :: t -> m (GraphRef l a)
 
 -- instances
 
-instance                             (Monad m) => ToMRef    (Ref l a)  m l a where toMRef = return
-instance {-# OVERLAPPABLE #-} (m ~ n, Monad m) => ToMRef (m (Ref l a)) n l a where toMRef = id
+instance                             (Monad m) => ToMRef    (GraphRef l a)  m l a where toMRef = return
+instance {-# OVERLAPPABLE #-} (m ~ n, Monad m) => ToMRef (m (GraphRef l a)) n l a where toMRef = id
 
 
-deriving instance Show (h (a h)) => Show (Rec h a)
+deriving instance Show (h (a h)) => Show (Ref h a)
 
 
 
 -- === RecBuilder ===
 
 class Monad m => RecBuilder m h a where
-    mkRec :: a h -> m (Rec h a)
+    mkRec :: a h -> m (Ref h a)
 
 
 instance (Convertible idx (h (a h)), HasContainer g cont, Appendable cont idx el, Monad m, PtrTarget h a el, MkEl (a h) m el)
       => RecBuilder (GraphBuilderT g m) h a where
     mkRec a = do
         el <- lift $ mkEl a
-        fmap (Rec . convert) . withGraph . append $ (el :: el)
+        fmap (Ref . convert) . withGraph . append $ (el :: el)
 
 type NetRecBuilder m l a = RecBuilder m (GraphPtr l) a
 type GraphConstructor base l a = Constructor base (GraphNode l a)
 
 
-mkRef :: NetRecBuilder m l a => GraphNode l a -> m (Ref l a)
-mkRef = fmap Ref . mkRec
+mkRef :: NetRecBuilder m l a => GraphNode l a -> m (GraphRef l a)
+mkRef = fmap GraphRef . mkRec
 
 class MkEl a m b where
     mkEl :: a -> m b
@@ -637,29 +638,41 @@ instance {-# OVERLAPPABLE #-} (Monad m, Default a) => LabBuilder m a where
     mkLabel = return def
 
 
+var :: (NetRecBuilder m l a, GraphConstructor Var l a) => Name -> m (GraphRef l a)
+var = mkRef . cons . Var
 
 
-int :: (NetRecBuilder m l a, GraphConstructor Lit l a) => Int -> m (Ref l a)
+int :: (NetRecBuilder m l a, GraphConstructor Lit l a) => Int -> m (GraphRef l a)
 int = mkRef . cons . Int
 
 
-app :: (NetRecBuilder m l a, HConstructor App l a, ToMRef t m l a) => t -> [ArgRef m l a] -> m (Ref l a)
+app :: (NetRecBuilder m l a, HConstructor App l a, ToMRef t m l a) => t -> [ArgRef m l a] -> m (GraphRef l a)
 app base args = do
     baseRef <- toRawMRef base
     argRefs <- mapM readArgRef args
     mkRef . cons $ App baseRef argRefs
-    where readArgRef (Arg n mref) = Arg n . fromRec . fromRef <$> mref
+    where readArgRef (Arg n mref) = Arg n . fromRef . fromGraphRef <$> mref
 
+
+accessor :: (NetRecBuilder m l a, HConstructor Accessor l a, ToMRef t m l a) => Name -> t -> m (GraphRef l a)
+accessor n r = mkRef . cons . Accessor n =<< toRawMRef r
 
 type HConstructor base l a = Constructor (base ((GraphPtr l) (GraphNode l a))) (GraphNode l a)
+
+
+(@.) = flip accessor
+(@$) = app
+
+arg = Arg Nothing . toMRef
+
 
 --x :: (HConstructor App h a, Constructor Lit (a h), RecBuilder m h a) => m (Ref h a)
 
 
-x2 :: (NetRecBuilder m l Term) => m (Ref l Term)
+x2 :: (NetRecBuilder m l Term) => m (GraphRef l Term)
 x2 = app (int 5) [arg $ int 6]
 
-newtype Ref l a = Ref { fromRef :: Rec (GraphPtr l) a } deriving (Show)
+newtype GraphRef l a = GraphRef { fromGraphRef :: Ref (GraphPtr l) a } deriving (Show)
 
 type GraphPtr  l   = HPtr Int (Label l)
 type GraphNode l a = a (GraphPtr l)
@@ -667,7 +680,7 @@ type HomoNet   l a = HomoGraph ((Label l) (GraphNode l a))
 type HeteroNet     = HeteroGraph
 
 
-y :: (Ref Ctx Term, HomoNet Ctx Term)
+y :: (GraphRef Ctx Term, HomoNet Ctx Term)
 y = runGraphBuilder x2
 
 (a,b) = y
@@ -676,128 +689,50 @@ c = elems b
 
 data Ctx = Ctx deriving (Show)
 instance Default Ctx where def = Ctx
---y = runIdentity $ runStateT x def
 
---z2 :: (Ref (HPtr Int Label) Term, HeteroGraph)
---z2 = runGraphBuilder z
---z :: (Ref (HPtr Int Label) Term, HeteroGraph)
-----z :: _ => (_, HomoGraph (Term h))
---z = runGraphBuilder y
+
 
 main = do
     putStrLn $ repr y
-    print c
     return ()
+
+toRawMRef = fmap (fromRef . fromGraphRef) . toMRef
+
+type ArgRef m l a = Arg (m (GraphRef l a))
+
+
+-- === Function ===
+
+data Function body = Function { _body :: body } deriving (Show)
+
+type FunctionGraph = Function (HomoNet Ctx Term)
+
+makeLenses ''Function
 
 -- utils
 
---mkASTRef2 :: (RecBuilder m h a) => a h -> m (Ref h a)
---mkASTRef2 = mkRec
+runFunctionBuilderT :: (Monad m, Default g) => GraphBuilderT g m a -> m (Function g)
+runFunctionBuilderT gb = do
+    (a, g) <- runGraphBuilderT gb
+    return $ Function g
 
---toRawMRef :: ToMRef t m h a => t -> m (h (a h))
-toRawMRef = fmap (fromRec . fromRef) . toMRef
+runFunctionBuilder :: Default g => GraphBuilder g a -> Function g
+runFunctionBuilder = runIdentity . runFunctionBuilderT
 
-type ArgRef m l a = Arg (m (Ref l a))
+-- instances
 
-
----- === Function ===
-
---data Function body = Function { _body :: body } deriving (Show)
-
---type FunctionGraph = Function (HomoGraph (Wrapped Val Term))
-
---makeLenses ''Function
-
----- utils
-
---runFunctionBuilderT :: (Monad m, Default g) => GraphBuilderT g m a -> m (Function g)
---runFunctionBuilderT gb = do
---    (a, g) <- runGraphBuilderT gb
---    return $ Function g
-
---runFunctionBuilder :: Default g => GraphBuilder g a -> Function g
---runFunctionBuilder = runIdentity . runFunctionBuilderT
-
----- instances
-
---instance HasContainer body c => HasContainer (Function body) c where
---    container = body . container
+instance HasContainer body c => HasContainer (Function body) c where
+    container = body . container
 
 
---toRawMRef :: (Functor m, ToMRef t m h a) => t -> m (h (a h))
---toRawMRef = fmap fromRef . toMRef
+f :: FunctionGraph
+f = runFunctionBuilder $ do
+    a <- var "a"
+    x <- var "x" @. "foo"
+    y <- x @$ [arg a]
 
+    return ()
 
-
---var :: RecBuilder el m h Term => Name -> m (Ref h Term)
---var = mkASTRef . Var
-
---var :: Constructor Var a => Name -> a
---var = cons . Var
-
---var' :: Name -> Term h
---var' = cons . Var
-
---accessor :: (RecBuilder el m h Term, ToMRef t m h Term) => Name -> t -> m (Ref h Term)
---accessor n r = mkASTRef . Accessor n =<< toRawMRef r
-
---app :: (RecBuilder el m h Term, ToMRef t m h Term) => t -> [ArgRef m h Term] -> m (Ref h Term)
---app base args = do
---    baseRef <- toRawMRef base
---    argRefs <- mapM readArgRef args
---    mkASTRef $ App baseRef argRefs
---    where readArgRef (ArgRef n mref) = Arg n . fromRef <$> mref
-
-----data Arg h = Arg { _label :: Maybe Name, _term :: Term h }
-
-----class Named a where
-----    named :: Name -> a -> a
-
-----instance Named (ArgRef h a) where
-----    named n (ArgRef _ ref) = ArgRef (Just n) ref
-
---data ArgRef m h a = ArgRef (Maybe Name) (m (Ref h a))
-
---arg = ArgRef Nothing . toMRef
-
-
-
---f :: FunctionGraph
---f = runFunctionBuilder $ do
---    a <- var "a"
---    x <- var "x" @. "foo"
---    y <- x @$ [arg a]
-
---    return ()
-
---g1 :: HomoGraph (Wrapped Val Term)
-----g1 :: HomoGraph (Simple Term)
---g1 = execGraphBuilder $ do
---    a <- var "a"
---    x <- var "x" @. "foo"
---    y <- x @$ [arg a]
---    --return a
---    return ()
-
-
---(@.) = flip accessor
---(@$) = app
-
-----g1 :: HomoGraph _
-----g1 = runIdentity $ runGraphBuilder $ do
-----    a <- var4
-------    --a    <- ref "foo" $ var "a"
-------    --b    <- ref "bar" $ accessor "foo" (var "b")
-------    --c    <- ref "baz" $ match (var "a") (var "b")
-------    return ()
-------    --mod  <- var "Main"
-------    --foo  <- a    @.  "foo"
-------    --b    <- foo  @$$ [a]
-------    --bar  <- mod  @.  "bar"
-------    --c    <- bar  @$$ [b]
-------    --plus <- mod  @.  "plus"
-------    --out  <- plus @$$ [c, a]
-----    return ()
 
 --main = do
 --    print f
@@ -836,7 +771,7 @@ type ArgRef m l a = Arg (m (Ref l a))
 ----    createProcess $ shell "open /tmp/out.png"
 ----    print "end"
 
---toGraphViz :: HomoGraph (Wrapped Val Term) -> DotGraph Int
+--toGraphViz :: HomoGraph (HomoNet Ctx Term) -> DotGraph Int
 --toGraphViz g = DotGraph { strictGraph     = False
 --                        , directedGraph   = True
 --                        , graphID         = Nothing
