@@ -22,7 +22,7 @@ type MousePosition = Vector2 Int
 
 data Type = Pressed | Released | Moved | Clicked | DblClicked deriving (Eq, Show)
 
-data EventWidget = EventWidget { _widgetId :: WidgetId, _relativePos :: Vector2 Int } deriving (Show, Eq)
+data EventWidget = EventWidget { _widgetId :: WidgetId, _relativePos :: Vector2 Int, _worldMatrix :: [Double] } deriving (Show, Eq)
 
 makeLenses ''EventWidget
 

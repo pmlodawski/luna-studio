@@ -186,8 +186,11 @@ foreign import javascript unsafe "raycaster.getMapPixelAt($1, $2)"
 getMapPixelAt :: Vector2 Int -> IO JSArray
 getMapPixelAt pos = getMapPixelAtJS (pos ^. x) (pos ^. y)
 
-foreign import javascript unsafe "raycaster.toWidgetLocal($1, $2, $3)"
-    toWidgetLocalJS :: Int -> Int -> Int -> IO JSArray
+foreign import javascript unsafe "raycaster.widgetMatrix($1)"
+    widgetMatrix :: Int -> IO JSArray
 
-toWidgetLocal :: Int -> Vector2 Int -> IO JSArray
-toWidgetLocal oid pos = toWidgetLocalJS oid (pos ^. x) (pos ^. y)
+foreign import javascript unsafe "raycaster.isWorkspace($1)"
+    isWorkspace :: Int -> IO Bool
+
+foreign import javascript unsafe "$('#htmlcanvas-pan').css({cursor: $1})"
+    setCursor :: JSString -> IO ()

@@ -28,29 +28,34 @@ function getTopParent(w) {
   return w;
 }
 
-function screenToWorkspace(vec) {
-  var x, y;
-  x = vec.x;
-  y = vec.y;
+// function screenToWorkspace(vec) {
+//   var x, y;
+//   x = vec.x;
+//   y = vec.y;
+//
+//   x =  x - $$.screenSize.x / 2.0;
+//   y = -y + $$.screenSize.y / 2.0;
+//
+//   x = x / $$.camFactor.value + $$.camPan.x;
+//   y = y / $$.camFactor.value + $$.camPan.y;
+//   return new THREE.Vector2(x, y);
+// }
 
-  x =  x - $$.screenSize.x / 2.0;
-  y = -y + $$.screenSize.y / 2.0;
-
-  x = x / $$.camFactor.value + $$.camPan.x;
-  y = y / $$.camFactor.value + $$.camPan.y;
-  return new THREE.Vector2(x, y);
+function isWorkspace(id) {
+  var widget = $$.registry[id];
+  if (widget) {
+    return (getTopParent(widget.mesh) !== $$.sceneHUD);
+  } else {
+    return false;
+  }
 }
 
-function toWidgetLocal(id, x, y) {
+function widgetMatrix(id) {
   var widget = $$.registry[id];
-  var pos = new THREE.Vector2(x, y);
-  var vec;
+  var m = new THREE.Matrix4();
   if (widget) {
-    if (getTopParent(widget.mesh) !== $$.sceneHUD) {
-      pos = screenToWorkspace(pos);
-    }
-    vec = widget.mesh.worldToLocal(new THREE.Vector3(pos.x, pos.y, 0.0));
-    return [vec.x, vec.y];
+    m.getInverse(widget.mesh.matrixWorld);
+    return m.elements;
   } else {
     return null;
   }
@@ -59,5 +64,6 @@ function toWidgetLocal(id, x, y) {
 module.exports = {
   renderMap:     renderMap,
   getMapPixelAt: getMapPixelAt,
-  toWidgetLocal: toWidgetLocal
+  widgetMatrix:  widgetMatrix,
+  isWorkspace:   isWorkspace
 };

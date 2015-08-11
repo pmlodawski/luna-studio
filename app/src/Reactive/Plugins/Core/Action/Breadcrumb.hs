@@ -21,7 +21,6 @@ import qualified Reactive.Plugins.Core.Action.State.Global       as Global
 import qualified Reactive.Plugins.Core.Action.State.Breadcrumb   as Breadcrumb
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry   as UIRegistry
 import qualified Object.Widget.Button                            as Button
-import qualified Object.Widget.Slider                            as Slider
 import           ThreeJS.Text                                    (calculateTextWidth)
 import qualified ThreeJS.Button                                  as UIButton
 import qualified ThreeJS.Slider                                  as UISlider
@@ -58,8 +57,8 @@ justIf True val = Just val
 justIf False  _ = Nothing
 
 toAction (Window (Window.Event Window.Resized width height)) _ = Just $ NewPath ["NodeLab", "demo", " by ", "New Byte Order"]
-toAction (Mouse (Mouse.Event Mouse.Clicked _ Mouse.LeftButton _ (Just (EventWidget bid _)))) state = isButtonOver where
-    buttonIds  = state ^. Global.breadcrumb . Breadcrumb.buttons
+toAction (Mouse (Mouse.Event Mouse.Clicked _ Mouse.LeftButton _ (Just (EventWidget bid _ _)))) state = isButtonOver where
+    buttonIds    = state ^. Global.breadcrumb . Breadcrumb.buttons
     isButtonOver = justIf (bid `elem` buttonIds) $ ButtonClicked bid
 
 toAction _ _ = Nothing
@@ -80,20 +79,10 @@ addButton b = do
     UIButton.putToRegistry b uiButton
     Scene.sceneHUD `add` uiButton
 
--- addSlider b = do
---     slider <- UISlider.buildSlider b
---     UISlider.putToRegistry b slider
---     Scene.scene `add` slider
-
 removeButton b = do
     uiButton <- UIButton.getFromRegistry b
     Scene.sceneHUD `remove` uiButton
     UIButton.removeFromRegistry b
-
--- removeSlider b = do
---     uiButton <- UISlider.getFromRegistry b
---     Scene.scene `remove` uiButton
---     UISlider.removeFromRegistry b
 
 instance ActionStateUpdater Action where
     execSt newActionCandidate oldState = case newAction of
@@ -105,12 +94,9 @@ instance ActionStateUpdater Action where
                     action = Just $ ApplyUpdates [removeOldBreadcrumb, createNewBreadcrumb]
                     createNewBreadcrumb = forM_ newButtons addButton
                     removeOldBreadcrumb = forM_ oldButtons removeButton
-                    -- removeSliders       = forM_ oldSlider removeSlider
-                    -- addSliders          = addSlider slider
 
                     state = oldState & Global.uiRegistry                      .~ newRegistry
                                      & Global.breadcrumb . Breadcrumb.path    .~ path
-                                     -- & Global.breadcrumb . Breadcrumb.slider  .~ (Just $ startId)
                                      & Global.breadcrumb . Breadcrumb.buttons .~ ((^. Button.refId) <$> newButtons)
                     newButtons   = createButtons (buttonIds `zip` path)
                     oldButtons   =  catMaybes $ getFromRegistry <$> oldButtonIds
@@ -122,8 +108,6 @@ instance ActionStateUpdater Action where
                     oldButtonIds = oldState ^. Global.breadcrumb . Breadcrumb.buttons
                     newRegistry  = UIRegistry.replaceAll oldButtons newButtons oldRegistry
                     buttonIds    = UIRegistry.generateIds (length path) oldRegistry
-                    -- oldSlider   = maybe Nothing (\x -> fromCtxDynamic $ oldRegistry IntMap.! x) (oldState ^. Global.breadcrumb . Breadcrumb.slider)
-                    -- slider      = Slider.Slider startId (Vector2 0 0) (Vector2 100 30) 0.0 100.0 50.0
             ButtonClicked bid -> (Just $ ApplyUpdates [putStrLn $ "Clicked " <> (show bid)], oldState)
             _ -> (Nothing, oldState)
 

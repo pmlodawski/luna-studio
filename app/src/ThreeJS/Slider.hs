@@ -30,6 +30,7 @@ import qualified Object.Widget.Slider as WB
 import           Object.Widget
 import           GHCJS.Prim
 import           Utils.CtxDynamic
+import           JS.Bindings (setCursor)
 
 
 newtype Slider = Slider { unSlider :: JSObject.Object }
@@ -92,49 +93,28 @@ removeFromRegistry b = removeFromRegistryJS sliderId
 setUniform :: Text -> JSRef a -> WB.Slider -> IO ()
 setUniform n v w = do
     bref     <- getFromRegistry w
-    uniforms <- JSObject.getProp "uniforms" (unSlider bref) >>= return . JSObject.fromJSRef
-    uniform  <- JSObject.getProp (lazyTextToJSString n) uniforms >>= return . Attribute . JSObject.fromJSRef
+    uniforms <- JSObject.getProp "uniforms"            (unSlider bref) >>= return . JSObject.fromJSRef
+    uniform  <- JSObject.getProp (lazyTextToJSString n) uniforms       >>= return . Attribute . JSObject.fromJSRef
     setValue uniform v
 
 updateValue :: WB.Slider -> IO ()
 updateValue s = setUniform "value" (toJSDouble $ WB.sliderPosition s) s
 
--- instance Clickable WB.Slider where
---     onClick pos b = (Just action, toCtxDynamic newSlider) where
---         action    = do
---             updateValue newSlider
---             putStrLn $ show value
---
---         newSlider = b & WB.value .~ value
---         normValue = (fromIntegral $ pos ^. x) / (b ^. WB.size . x)
---         value     = b ^. WB.minValue + normValue * (b ^. WB.maxValue - b ^. WB.minValue )
---
--- instance HandlesMouseMove WB.Slider where
---     onMouseMove Mouse.LeftButton pos = onClick pos
---     onMouseMove _ _ = noUpdate
-
 instance Draggable        WB.Slider where
-    mayDrag         Mouse.LeftButton _ _ = True
-    onDragEnd       _ _   ds b =  (Just $ putStrLn "Dragend", toCtxDynamic b        ) where
-    onDragMove      _ pos ds b =  (Just action,               toCtxDynamic newSlider) where
-        action       = do
-            updateValue newSlider
-            putStrLn $ "I am dragging!"
-            putStrLn $ show value
-
-        newSlider    = b & WB.value .~ value
-        normValue    = (fromIntegral $ pos ^. x) / (b ^. WB.size . x)
-        boundedValue = max 0.0 $ min 1.0 normValue
-        value        = b ^. WB.minValue + boundedValue * (b ^. WB.maxValue - b ^. WB.minValue )
-
-
-
--- instance Clickable WB.Button where
---     onClick pos b = (Just action, toCtxDynamic newButton) where
---         action    = updateState newButton
---         newButton = b & WB.state .~ WB.Pressed
---
--- instance DblClickable WB.Button where
---     onDblClick pos b = (Just action, toCtxDynamic newButton) where
---         action    = updateState newButton
---         newButton = b & WB.state .~ WB.Disabled
+    mayDrag Mouse.LeftButton _ _ = True
+    onDragStart                  = onDragMove
+    onDragMove state slider      = (Just action, toCtxDynamic newSlider) where
+                pos           = worldToLocal (state ^. currentPos) (state ^. widgetMatrix)
+                newSlider     = slider & WB.value .~ value
+                normValue     = (pos ^. x) / (slider ^. WB.size . x)
+                boundedValue  = max 0.0 $ min 1.0 normValue
+                value         = slider ^. WB.minValue + boundedValue * (slider ^. WB.maxValue - slider ^. WB.minValue)
+                action        = do
+                    updateValue newSlider
+                    putStrLn $ "I am dragging!"
+                    putStrLn $ show value
+                    setCursor "pointer"
+    onDragEnd  state slider = (Just $ action, toCtxDynamic slider) where
+        action = do
+            putStrLn "Dragend"
+            setCursor "default"
