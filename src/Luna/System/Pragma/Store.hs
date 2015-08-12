@@ -18,7 +18,7 @@
 module Luna.System.Pragma.Store where
 
 import           Flowbox.Prelude     as P hiding (noneOf, lookup)
-aq
+
 import qualified Luna.System.Pragma           as Pragma
 import           Luna.System.Pragma           hiding (lookup, isEnabled)
 import qualified Control.Monad.State          as State
