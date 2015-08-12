@@ -40,7 +40,8 @@ import           Data.Convert
 import qualified Data.IntMap.Lazy as IntMap
 import           Data.IntMap.Lazy (IntMap)
 import Data.Typeable       hiding (cast)
-import Control.Monad.State hiding (withState, mapM)
+import qualified Control.Monad.State as State
+--import Control.Monad.State hiding (withState, mapM)
 
 
 import Data.GraphViz.Types.Canonical
@@ -72,7 +73,8 @@ import Data.Constraint.Void
 --import Data.Variant
 import Data.Variant
 import qualified Data.Variant as V
-import Flowbox.System.Types
+import Flowbox.System.Types hiding ((.:))
+import           Control.Monad.State.Generate (newState)
 
 type ID = Int
 
@@ -230,26 +232,6 @@ instance Monad m => ASTGen (Term h)      m (Term h)      where genAST = return
 
 
 
--- === Label ===
-
-data Label l a = Label { _lab :: l, _el :: a } deriving (Show)
-
-class LabBuilder m l where
-    mkLabel :: m l
-
-makeLenses ''Label
-
--- instances
-
-instance HasAST a ast => HasAST (Label l a) ast where
-    ast = el . ast
-
-instance {-# OVERLAPPABLE #-} (Monad m, Default a) => LabBuilder m a where
-    mkLabel = return def
-
-instance {-# OVERLAPPABLE #-} (Applicative m, LabBuilder m l, ASTGen ast m el) => ASTGen ast m (Label l el) where
-    genAST a = Label <$> mkLabel <*> genAST a
-
 
 
 --- === Graph ===
@@ -266,10 +248,12 @@ instance HasContainer (HomoGraph a) (Vector a)       where container = _homReg
 
 newtype GraphRef l a = GraphRef { fromGraphRef :: Ref (GraphPtr l) a } deriving (Show)
 
-type GraphPtr  l   = HPtr Int (Label l)
+type GraphPtr  l   = HPtr Int l
 type GraphNode l a = a (GraphPtr l)
-type HomoNet   l a = HomoGraph ((Label l) (GraphNode l a))
+type HomoNet   l a = HomoGraph (l (GraphNode l a))
 type HeteroNet     = HeteroGraph
+
+type ArgRef  m l a = Arg (m (GraphRef l a))
 
 
 
@@ -304,57 +288,93 @@ class Monad m => RefBuilder el m ref | el m -> ref, ref m -> el where
 
 --- === Graph builders ===
 
-type GraphBuilderT g m = StateT (BldrState g) m
-type GraphBuilder  g   = GraphBuilderT g Identity
 
 data BldrState g = BldrState { _orphans :: [Int]
                              , _graph   :: g
                              }
 
-makeClassy ''BldrState
+makeLenses ''BldrState
 
-type GraphRefBuilder el m l a = RefBuilder el m (Ref (GraphPtr l) a)
+class HasBldrState g m | m -> g where
+    bldrState :: Lens' m (BldrState g)
+
+
+type GraphRefBuilder  el m l a     = RefBuilder el m (Ref (GraphPtr l) a)
 type GraphConstructor base l a ast = Constructor (base (Rec (GraphPtr l) a)) ast
 
-class Monad m => MonadBldrState g m | m -> g where
-    getBldrState :: m (BldrState g)
-    putBldrState :: (BldrState g) -> m ()
+-- TODO: template haskellize
+-- >->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->
+
+newtype GraphBuilderT g m a = GraphBuilderT { fromGraphBuilderT :: State.StateT (BldrState g) m a }
+                             deriving (Functor, Monad, Applicative, MonadIO, MonadPlus, MonadTrans, Alternative)
+
+type GraphBuilder g = GraphBuilderT g Identity
+
+class Monad m => MonadGraphBuilder g m | m -> g where
+    get :: m (BldrState g)
+    put :: BldrState g -> m ()
+
+instance Monad m => MonadGraphBuilder g (GraphBuilderT g m) where
+    get = GraphBuilderT State.get
+    put = GraphBuilderT . State.put
+
+instance State.MonadState s m => State.MonadState s (GraphBuilderT g m) where
+    get = GraphBuilderT (lift State.get)
+    put = GraphBuilderT . lift . State.put
+
+instance {-# OVERLAPPABLE #-} (MonadGraphBuilder g m, MonadTrans t, Monad (t m)) => MonadGraphBuilder g (t m) where
+    get = lift get
+
+runT  ::            GraphBuilderT g m a -> BldrState g -> m (a, BldrState g)
+evalT :: Monad m => GraphBuilderT g m a -> BldrState g -> m a
+execT :: Monad m => GraphBuilderT g m a -> BldrState g -> m (BldrState g)
+
+runT  = State.runStateT  . fromGraphBuilderT
+evalT = State.evalStateT . fromGraphBuilderT
+execT = State.execStateT . fromGraphBuilderT
+
+
+run  :: GraphBuilder g a -> BldrState g -> (a, BldrState g)
+eval :: GraphBuilder g a -> BldrState g -> a
+exec :: GraphBuilder g a -> BldrState g -> (BldrState g)
+
+run   = runIdentity .: runT
+eval  = runIdentity .: evalT
+exec  = runIdentity .: execT
+
+with :: MonadGraphBuilder g m => (BldrState g -> BldrState g) -> m b -> m b
+with f m = do
+    s <- get
+    put $ f s
+    out <- m
+    put s
+    return out
+
+modify :: MonadGraphBuilder g m => (BldrState g -> (BldrState g, a)) -> m a
+modify f = do
+    s <- get
+    let (s', a) = f s
+    put $ s'
+    return a
+
+modify_ :: MonadGraphBuilder g m => (BldrState g -> BldrState g) -> m ()
+modify_ = modify . fmap (,())
+
+-- <-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<
 
 -- graph utils
+
+runGraphT :: Functor m => GraphBuilderT g m a -> BldrState g -> m (a, g)
+runGraphT = fmap (over _2 $ view graph) .: runT
+
+runGraph :: GraphBuilder g a -> BldrState g -> (a, g)
+runGraph  = runIdentity .: runGraphT
 
 mkGraphRef :: GraphRefBuilder el m l a => el -> m (GraphRef l a)
 mkGraphRef = fmap GraphRef . mkRef
 
-withBldrState_ :: MonadBldrState g m => (BldrState g -> BldrState g) -> m ()
-withBldrState_ f = withBldrState $ fmap (,()) f
-
-withBldrState :: MonadBldrState g m => (BldrState g -> (BldrState g, a)) -> m a
-withBldrState f = do
-    bldr <- getBldrState
-    let (bldr', out) = f bldr
-    putBldrState $ bldr'
-    return out
-
-withGraph :: MonadBldrState g m => (g -> (g, a)) -> m a
-withGraph = withBldrState . mapOver graph
-
-runGraphBuilderT :: (Monad m, Default g) => GraphBuilderT g m a -> m (a, g)
-runGraphBuilderT gb = over _2 (view graph) <$> runStateT gb def
-
-execGraphBuilderT :: (Monad m, Default g) => GraphBuilderT g m a -> m g
-execGraphBuilderT gb = snd <$> runGraphBuilderT gb
-
-evalGraphBuilderT :: (Monad m, Default g) => GraphBuilderT g m a -> m a
-evalGraphBuilderT gb = fst <$> runGraphBuilderT gb
-
-runGraphBuilder :: Default g => GraphBuilder g a -> (a, g)
-runGraphBuilder = runIdentity . runGraphBuilderT
-
-execGraphBuilder :: Default g => GraphBuilder g a -> g
-execGraphBuilder = runIdentity . execGraphBuilderT
-
-evalGraphBuilder :: Default g => GraphBuilder g a -> a
-evalGraphBuilder = runIdentity . evalGraphBuilderT
+withGraph :: MonadGraphBuilder g m => (g -> (g, a)) -> m a
+withGraph = modify . mapOver graph
 
 -- instances
 
@@ -365,10 +385,6 @@ instance (Convertible idx (h (a h)), HasContainer g cont, Appendable cont idx el
 instance Default g => Default (BldrState g) where
     def = BldrState def def
 
-instance Monad m => MonadBldrState g (GraphBuilderT g m) where
-    getBldrState = get
-    putBldrState = put
-
 
 
 
@@ -376,9 +392,11 @@ instance Monad m => MonadBldrState g (GraphBuilderT g m) where
 
 -- generic builders
 
+toRawMRef :: ToMRef t m l a => t -> m (Rec (GraphPtr l) a)
+toRawMRef = fmap (fromRef . fromGraphRef) . toMRef
+
 mkASTRefWith :: (Constructor variant ast, GraphRefBuilder el m l a) => (ast -> m el) -> variant -> m (GraphRef l a)
 mkASTRefWith f a = mkGraphRef =<< f (cons a)
-
 
 varWith :: (Constructor Var ast, GraphRefBuilder el m l a) => (ast -> m el) -> Name -> m (GraphRef l a)
 varWith f = mkASTRefWith f . Var
@@ -426,7 +444,87 @@ arg = Arg Nothing . toMRef
 
 
 
+-- === Label ===
+
+data Label l a = Label { _lab :: l, _el :: a } deriving (Show)
+
+class LabBuilder m l where
+    mkLabel :: m l
+
+makeLenses ''Label
+
+-- instances
+
+instance HasAST a ast => HasAST (Label l a) ast where
+    ast = el . ast
+
+instance {-# OVERLAPPABLE #-} (Monad m, Default a) => LabBuilder m a where
+    mkLabel = return def
+
+instance {-# OVERLAPPABLE #-} (Applicative m, LabBuilder m l, ASTGen ast m el) => ASTGen ast m (Label l el) where
+    genAST a = Label <$> mkLabel <*> genAST a
+
+
+
+
+-- === Function ===
+
+--
+data Ctx = Ctx deriving (Show)
+instance Default Ctx where def = Ctx
+--
+
+data Function body = Function { _body :: body } deriving (Show)
+
+type FunctionGraph = Function (HomoNet (Label Ctx) Term)
+
+makeLenses ''Function
+
+-- utils
+
+evalFunctionBuilderT :: Monad m => GraphBuilderT g m a -> BldrState g -> m a
+execFunctionBuilderT :: Monad m => GraphBuilderT g m a -> BldrState g -> m (Function g)
+runFunctionBuilderT  :: Monad m => GraphBuilderT g m a -> BldrState g -> m (a, Function g)
+
+evalFunctionBuilderT bldr s = fst <$> runFunctionBuilderT bldr s
+execFunctionBuilderT bldr s = snd <$> runFunctionBuilderT bldr s
+runFunctionBuilderT  bldr s = do
+    (a, g) <- runGraphT bldr s
+    return $ (a, Function g)
+
+
+evalFunctionBuilder :: GraphBuilder g a -> BldrState g -> a
+execFunctionBuilder :: GraphBuilder g a -> BldrState g -> Function g
+runFunctionBuilder  :: GraphBuilder g a -> BldrState g -> (a, Function g)
+
+evalFunctionBuilder = runIdentity .: evalFunctionBuilderT
+execFunctionBuilder = runIdentity .: execFunctionBuilderT
+runFunctionBuilder  = runIdentity .: runFunctionBuilderT
+
+
+rebuild f = BldrState [] $ f ^. body
+
+-- instances
+
+instance HasContainer body c => HasContainer (Function body) c where
+    container = body . container
+
 -- ===================================================================
+
+
+f :: FunctionGraph
+f = flip execFunctionBuilder def $ do
+    a <- var "a"
+    x <- var "x" @. "foo"
+    y <- x @$ [arg a]
+
+    return ()
+
+f' = flip execFunctionBuilder (rebuild f) $ do
+    b <- var "b"
+    return ()
+
+
 
 
 --x2 :: _ => m (GraphRef l Term)
@@ -434,27 +532,26 @@ x2 = app (int 5) [arg $ int 6]
 
 --x3 :: (Constructor Lit ast, GraphRefBuilder el m Ctx Term, ASTGen ast m el, m ~ (GraphBuilderT (HomoNet Ctx Term) Identity))
 --   => GraphBuilderT (HomoNet Ctx Term) Identity) (GraphRef Ctx Term)
-x3 :: (Constructor Lit ast, ASTGen ast m el, RefBuilder el m (Ref (GraphPtr Ctx) Term)) => m (GraphRef Ctx Term)
+x3 :: (Constructor Lit ast, ASTGen ast m el, RefBuilder el m (Ref (GraphPtr (Label Ctx)) Term)) => m (GraphRef (Label Ctx) Term)
 x3 = int 3
 
---x4 :: GraphBuilderT (HomoNet Ctx Term) Identity (GraphRef Ctx Term)
+--x4 :: GraphBuilderT (HomoNet (Label Ctx) Term) Identity (GraphRef (Label Ctx) Term)
 x4 = int 3
 
 
 
 
-y :: (GraphRef Ctx Term, HomoNet Ctx Term)
-y = runGraphBuilder x2
+y :: (GraphRef (Label Ctx) Term, HomoNet (Label Ctx) Term)
+y = runGraph x2 def
 
-y3 :: (GraphRef Ctx Term, HomoNet Ctx Term)
-y3 = runGraphBuilder x4
+y3 :: (GraphRef (Label Ctx) Term, HomoNet (Label Ctx) Term)
+y3 = runGraph x4 def
 
 (a,b) = y
 
 c = elems b
 
-data Ctx = Ctx deriving (Show)
-instance Default Ctx where def = Ctx
+
 
 
 
@@ -462,42 +559,7 @@ main = do
     putStrLn $ repr y
     return ()
 
-toRawMRef = fmap (fromRef . fromGraphRef) . toMRef
 
-type ArgRef m l a = Arg (m (GraphRef l a))
-
-
--- === Function ===
-
-data Function body = Function { _body :: body } deriving (Show)
-
-type FunctionGraph = Function (HomoNet Ctx Term)
-
-makeLenses ''Function
-
--- utils
-
-runFunctionBuilderT :: (Monad m, Default g) => GraphBuilderT g m a -> m (Function g)
-runFunctionBuilderT gb = do
-    (a, g) <- runGraphBuilderT gb
-    return $ Function g
-
-runFunctionBuilder :: Default g => GraphBuilder g a -> Function g
-runFunctionBuilder = runIdentity . runFunctionBuilderT
-
--- instances
-
-instance HasContainer body c => HasContainer (Function body) c where
-    container = body . container
-
-
---f :: FunctionGraph
---f = runFunctionBuilder $ do
---    a <- var "a"
---    x <- var "x" @. "foo"
---    y <- x @$ [arg a]
-
---    return ()
 
 
 --main = do
