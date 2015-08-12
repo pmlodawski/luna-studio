@@ -1,6 +1,50 @@
 #!/bin/bash
 
-PACKAGE_DB_GLOB=$(awk -F ": " '/package-db/ {print $2}' cabal.sandbox.config)/../*-ghcjs-*-packages.conf.d
-PACKAGE_DB=$(echo $PACKAGE_DB_GLOB) # ugly force expand glob
+SNAPSHOT_DB=$(stack path | awk -F ": " '/snapshot-pkg-db:/ {print $2}')
+LOCAL_DB=$(stack path | awk -F ": " '/local-pkg-db:/ {print $2}')
 
-ghcjs -package-db=$PACKAGE_DB -iapp/src/ --interactive -package base -package ghcjs-base -package ghcjs-dom -package reactive-banana -package text -package transformers -package mtl -package lens -package containers -package random -package pretty-show -package flowbox-utils -package convert -package process -package constraints -package errors -package graphviz -package vector -package luna-tc -XNoImplicitPrelude -XDoAndIfThenElse -XTemplateHaskell -XDeriveGeneric -XStandaloneDeriving -XFlexibleContexts -XMultiParamTypeClasses -XDefaultSignatures -XDeriveFunctor -XDeriveTraversable -XDeriveFoldable -XFlexibleInstances -XLambdaCase -XConstraintKinds -XGeneralizedNewtypeDeriving -XDeriveDataTypeable -XScopedTypeVariables Main  -odir ../../dist/ghcjs -hidir ../../dist/ghcjs
+
+
+ghcjs  -package-db $SNAPSHOT_DB \
+       -package-db $LOCAL_DB \
+       -iapp/src/ \
+       --interactive \
+       -package base \
+       -package ghcjs-base \
+       -package ghcjs-dom \
+       -package reactive-banana \
+       -package text \
+       -package transformers \
+       -package mtl \
+       -package lens \
+       -package containers \
+       -package random \
+       -package pretty-show \
+       -package flowbox-utils \
+       -package convert \
+       -package process \
+       -package constraints \
+       -package errors \
+       -package graphviz \
+       -package vector \
+       -package luna-tc \
+       -XNoImplicitPrelude \
+       -XDoAndIfThenElse \
+       -XTemplateHaskell \
+       -XDeriveGeneric \
+       -XStandaloneDeriving \
+       -XFlexibleContexts \
+       -XMultiParamTypeClasses \
+       -XDefaultSignatures \
+       -XDeriveFunctor \
+       -XDeriveTraversable \
+       -XDeriveFoldable \
+       -XFlexibleInstances \
+       -XLambdaCase \
+       -XConstraintKinds \
+       -XGeneralizedNewtypeDeriving \
+       -XDeriveDataTypeable \
+       -XScopedTypeVariables \
+       -odir ../../dist/ghcjs \
+       -hidir ../../dist/ghcjs \
+       Main

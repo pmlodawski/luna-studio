@@ -1,3 +1,9 @@
+---------------------------------------------------
+-- This is a generated cabal configuration file. --
+-- DO NOT EDIT!                                  --
+-- Use gencabal instead.                         --
+---------------------------------------------------
+
 name:                nodelab
 version:             0.1.0.0
 synopsis:            NodeLab
@@ -15,7 +21,86 @@ cabal-version:       >=1.22
 
 executable nodelab
   main-is:             Main.hs
-  -- other-modules:
+  other-modules:       
+        Event.Event,
+        Event.Keyboard,
+        Event.Mouse,
+        Event.NodeSearcher,
+        Event.Window,
+        Event.WithObjects,
+        JS.Bindings,
+        JS.Camera,
+        JS.Config,
+        JS.NodeGraph,
+        JS.NodeSearcher,
+        Object.Dynamic,
+        Object.Graph,
+        Object.Node,
+        Object.Object,
+        Object.Port,
+        Object.Widget,
+        Object.Widget.Button,
+        Object.Widget.Slider,
+        Reactive.Handlers,
+        Reactive.Plugins.Core.Network,
+        Reactive.Plugins.Core.Action.Action,
+        Reactive.Plugins.Core.Action.AddRemove,
+        Reactive.Plugins.Core.Action.Breadcrumb,
+        Reactive.Plugins.Core.Action.Camera,
+        Reactive.Plugins.Core.Action.Connect,
+        Reactive.Plugins.Core.Action.Drag,
+        Reactive.Plugins.Core.Action.Executor,
+        Reactive.Plugins.Core.Action.General,
+        Reactive.Plugins.Core.Action.MultiSelection,
+        Reactive.Plugins.Core.Action.NodeSearcher,
+        Reactive.Plugins.Core.Action.Sandbox,
+        Reactive.Plugins.Core.Action.Selection,
+        Reactive.Plugins.Core.Action.Widget,
+        Reactive.Plugins.Core.Action.NodeSearcher.Mock,
+        Reactive.Plugins.Core.Action.NodeSearcher.Scope,
+        Reactive.Plugins.Core.Action.NodeSearcher.Searcher,
+        Reactive.Plugins.Core.Action.State.AddRemove,
+        Reactive.Plugins.Core.Action.State.Breadcrumb,
+        Reactive.Plugins.Core.Action.State.Camera,
+        Reactive.Plugins.Core.Action.State.Connect,
+        Reactive.Plugins.Core.Action.State.Drag,
+        Reactive.Plugins.Core.Action.State.Global,
+        Reactive.Plugins.Core.Action.State.MultiSelection,
+        Reactive.Plugins.Core.Action.State.NodeSearcher,
+        Reactive.Plugins.Core.Action.State.Sandbox,
+        Reactive.Plugins.Core.Action.State.Selection,
+        Reactive.Plugins.Core.Action.State.UIRegistry,
+        Reactive.Plugins.Core.Action.State.UnderCursor,
+        ThreeJS.Button,
+        ThreeJS.Converters,
+        ThreeJS.Geometry,
+        ThreeJS.Mesh,
+        ThreeJS.PlaneGeometry,
+        ThreeJS.Raycaster,
+        ThreeJS.Registry,
+        ThreeJS.Scene,
+        ThreeJS.ShaderMaterial,
+        ThreeJS.Slider,
+        ThreeJS.Text,
+        ThreeJS.Types,
+        Tmp.ClassWrappers,
+        Tmp.DynamicImplementation,
+        Tmp.DynamicUsage,
+        Tmp.Existential,
+        Tmp.Existential2,
+        Tmp.Existential3,
+        Tmp.Graph,
+        Tmp.Hmap,
+        Tmp.TypecheckerTest,
+        Tmp.TypecheckerTest2,
+        Utils.Angle,
+        Utils.CtxDynamic,
+        Utils.Flags,
+        Utils.PreludePlus,
+        Utils.PrettyPrinter,
+        Utils.Selectable,
+        Utils.Vector,
+        Utils.Wrapper
   -- other-extensions:
   default-extensions:   DoAndIfThenElse
                       , NoImplicitPrelude
@@ -38,7 +123,7 @@ executable nodelab
   build-depends:       base >= 4.8 && < 4.9
                      , data-default
                      , ghcjs-base
-                     , ghcjs-dom >= 0.2
+                     , ghcjs-dom >=0.2 && <0.3
                      , ghcjs-prim
                      , reactive-banana
                      , text

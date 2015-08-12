@@ -31,3 +31,4 @@ brunch-config.local.coffee
 *.js_o
 *.js_hi
 .autoenv.zsh
+.stack-work
