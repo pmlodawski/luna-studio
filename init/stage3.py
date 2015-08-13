@@ -27,7 +27,7 @@ import plumbum
 
 
 def bind_git_hooks():
-    this_script_p = Path(sys.argv[0])
+    this_script_p = Path(sys.argv[0])  # making conflicts!
     hooks_p = this_script_p.parent.parent / 'hooks'
 
     git_hooks_p = Path(".git", "hooks")
