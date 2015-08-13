@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 from git_utils import releasing
 
-from io_utils import fprint, fmt, finfo
+from io_utils import fprint, fmt
 # noinspection PyUnresolvedReferences
 import git
 # noinspection PyUnresolvedReferences
@@ -19,22 +19,6 @@ from clint.textui import puts, colored
 from plumbum import local
 # noinspection PyUnresolvedReferences
 import plumbum
-
-
-def bind_gitmodules():
-    this_repo = git.Repo('.')
-
-    finfo("""
-    assuming that everybody knows that one *needs* ./init_repo.py before doing any
-          work. Is that right?
-    """)
-
-def update_gitmodules():
-    fprint(colored.blue("INFO: ") + "initialising git-modules")
-    git_command = local["git"]
-    git_command["submodule", "init"]()
-    git_command["submodule", "sync", "--recursive"]()
-    git_command["submodule", "update", "--recursive"]()
 
 
 def bind_git_hooks():
@@ -81,8 +65,6 @@ def main():
     try:
         print("##############################" + colored.blue(" STAGE: 3 ") + "##############################")
         bind_git_hooks()
-        bind_gitmodules()
-        update_gitmodules()
         configure_repo()
         create_aliases()
     except Exception as e:
