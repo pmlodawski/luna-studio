@@ -207,8 +207,8 @@ syncCamera state = do
 cameraLeft, cameraRight, cameraTop, cameraBottom, htmlX, htmlY :: Double -> Double -> Double -> Double
 cameraLeft   camFactor camPanX halfScreenX = -halfScreenX / camFactor + camPanX
 cameraRight  camFactor camPanX halfScreenX =  halfScreenX / camFactor + camPanX
-cameraTop    camFactor camPanY halfScreenY =  halfScreenY / camFactor + camPanY
-cameraBottom camFactor camPanY halfScreenY = -halfScreenY / camFactor + camPanY
+cameraTop    camFactor camPanY halfScreenY = -halfScreenY / camFactor + camPanY
+cameraBottom camFactor camPanY halfScreenY =  halfScreenY / camFactor + camPanY
 htmlX        camFactor camPanX halfScreenX =  halfScreenX - camPanX * camFactor
-htmlY        camFactor camPanY halfScreenY =  halfScreenY + camPanY * camFactor
+htmlY        camFactor camPanY halfScreenY =  halfScreenY - camPanY * camFactor
 

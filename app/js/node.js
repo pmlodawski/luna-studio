@@ -178,10 +178,9 @@ Node.prototype.updateLabel = function() {
 
   textMaterial.uniforms.width.value = size;
   this.labelObject = new THREE.Mesh(geometry, textMaterial);
-  this.labelObject.rotation.x = 180 * Math.PI / 180;
   this.labelObject.scale.multiplyScalar(config.fontSize);
   this.labelObject.position.x = -75;
-  this.labelObject.position.y = 42;
+  this.labelObject.position.y = -42;
   this.labelObject.position.z = 0;
 
   this.mesh.add(this.labelObject);
