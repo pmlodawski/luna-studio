@@ -258,10 +258,6 @@
 [submodule "libs/convert"]
 	path = libs/convert
 	url = git@bitbucket.org:NewByteOrder/convert.git
-[submodule "repo_manager"]
-    branch = master
-	path = repo_manager
-	url = git@bitbucket.org:NewByteOrder/shtack.git
 [submodule "third-party/HaskellBooster"]
 	path = third-party/HaskellBooster
 	url = git@github.com:wdanilo/HaskellBooster.git
