@@ -178,26 +178,26 @@ Benchmark graphviz-printparse {
         GHC-Prof-Options: -auto-all -caf-all -rtsopts
 }
 
-Executable graphviz-testparsing {
-        Default-Language: Haskell2010
-
-        if flag(test-parsing)
-           Buildable:     True
-        else
-           Buildable:     False
-
-        hs-Source-Dirs:   utils
-
-        Main-Is:          TestParsing.hs
-
-        Build-Depends:    base,
-                          graphviz,
-                          bytestring,
-                          directory,
-                          filepath,
-                          text
-
-        Ghc-Options: -O -Wall
-
-        GHC-Prof-Options: -auto-all -caf-all -rtsopts
-}
+-- Executable graphviz-testparsing {
+--         Default-Language: Haskell2010
+--
+--         if flag(test-parsing)
+--            Buildable:     True
+--         else
+--            Buildable:     False
+--
+--         hs-Source-Dirs:   utils
+--
+--         Main-Is:          TestParsing.hs
+--
+--         Build-Depends:    base,
+--                           graphviz,
+--                           bytestring,
+--                           directory,
+--                           filepath,
+--                           text
+--
+--         Ghc-Options: -O -Wall
+--
+--         GHC-Prof-Options: -auto-all -caf-all -rtsopts
+-- }
