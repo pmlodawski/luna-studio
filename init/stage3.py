@@ -78,6 +78,8 @@ def get_stack():
     this_system = platform.system()
     if this_system == 'Darwin':
         bootstrapping_stack_os_abbrev = 'osx'
+    elif this_system == 'Linux':
+        bootstrapping_stack_os_abbrev = 'linux'
     else:
         ferror("I can't get `stack` for you, your system '{this_system}' is not supported :(")
         return
