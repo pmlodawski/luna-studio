@@ -27,8 +27,9 @@ function Connection(id) {
       uniforms:       this.uniforms,
       vertexShader:   vs,
       fragmentShader: fs,
-      transparent: true,
-      blending: THREE.NormalBlending
+      transparent:    true,
+      blending:       THREE.NormalBlending,
+      side:           THREE.DoubleSide
     })
   );
 

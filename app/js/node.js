@@ -58,7 +58,8 @@ function Node(id, position, z) {
       vertexShader:   vs,
       fragmentShader: fs,
       transparent:    true,
-      blending:       THREE.NormalBlending
+      blending:       THREE.NormalBlending,
+      side:           THREE.DoubleSide
     })
   );
   this.mesh.userData.id = id;
@@ -95,7 +96,7 @@ Node.prototype.moveTo = function(a, b) {
   this.mesh.position.y = vec.y;
 
   // this.attributes.pos.needsUpdate = true;
-  this.htmlContainer.css({left: vec.x, top: -vec.y});
+  this.htmlContainer.css({left: vec.x, top: vec.y});
 };
 
 Node.prototype.zPos = function(z) {

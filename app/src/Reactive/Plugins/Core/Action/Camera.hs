@@ -127,8 +127,8 @@ instance ActionStateUpdater Action where
                     AutoZoom          -> autoZoomPan ^. x
                     _                 -> oldCamPan ^. x
                 newCamPanY             = case keyAct of
-                    PanUp             -> oldCamPan ^. y + panStep / oldCamFactor
-                    PanDown           -> oldCamPan ^. y - panStep / oldCamFactor
+                    PanUp             -> oldCamPan ^. y - panStep / oldCamFactor
+                    PanDown           -> oldCamPan ^. y + panStep / oldCamFactor
                     AutoZoom          -> autoZoomPan ^. y
                     _                 -> oldCamPan ^. y
         newCamFactor                   = case newActionCandidate of
