@@ -133,8 +133,8 @@ instance ActionStateUpdater Action where
                     _                 -> oldCamPan ^. y
         newCamFactor                   = case newActionCandidate of
             KeyAction ResetZoom       -> 1.0
-            KeyAction ZoomIn          -> max minCamFactor $ oldCamFactor / zoomFactorStep
-            KeyAction ZoomOut         -> min maxCamFactor $ oldCamFactor * zoomFactorStep
+            KeyAction ZoomIn          -> max minCamFactor $ oldCamFactor * zoomFactorStep
+            KeyAction ZoomOut         -> min maxCamFactor $ oldCamFactor / zoomFactorStep
             KeyAction AutoZoom        -> restrictCamFactor autoZoomFactor
             MouseAction Zoom _ _      -> restrictCamFactor newCamFactorCandidate
             _                         -> oldCamFactor
