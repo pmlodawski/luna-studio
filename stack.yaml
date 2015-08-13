@@ -2,11 +2,11 @@ resolver: ghc-7.10
 use-ghcjs: true
 packages:
   - .
-  - ../new_byte_order/libs/utils
-  - ../new_byte_order/libs/convert
-  - ../new_byte_order/libs/luna/typechecker
-  - ../new_byte_order/third-party/fgl
-  - ../new_byte_order/third-party/graphviz-2999.17.0.2.2
+  - ../libs/utils
+  - ../libs/convert
+  - ../libs/luna/typechecker
+  - ../third-party/fgl
+  - ../third-party/graphviz-2999.17.0.2.2
 extra-deps:
   - HUnit-1.2.5.2
   - MissingH-1.3.0.1
