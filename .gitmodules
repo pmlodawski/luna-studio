@@ -262,9 +262,9 @@
     branch = master
 	path = repo_manager
 	url = git@bitbucket.org:NewByteOrder/shtack.git
-[submodule "env"]
-	path = env
-	url = git@github.com:wdanilo/flowbox-env.git
 [submodule "third-party/HaskellBooster"]
 	path = third-party/HaskellBooster
 	url = git@github.com:wdanilo/HaskellBooster.git
+[submodule "nodelab"]
+	path = nodelab
+	url = git@bitbucket.org:NewByteOrder/nodelab.git
