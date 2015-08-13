@@ -7,6 +7,7 @@ import           Object.Dynamic
 import           Object.Object
 import           Event.Keyboard  ( KeyMods(..) )
 import           Utils.Vector
+import           ThreeJS.Types
 
 type WidgetId    = Int
 
@@ -22,7 +23,7 @@ type MousePosition = Vector2 Int
 
 data Type = Pressed | Released | Moved | Clicked | DblClicked deriving (Eq, Show)
 
-data EventWidget = EventWidget { _widgetId :: WidgetId, _relativePos :: Vector2 Int, _worldMatrix :: [Double] } deriving (Show, Eq)
+data EventWidget = EventWidget { _widgetId :: WidgetId, _worldMatrix :: [Double], _scene :: SceneType } deriving (Show, Eq)
 
 makeLenses ''EventWidget
 

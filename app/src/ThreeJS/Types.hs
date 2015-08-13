@@ -113,3 +113,5 @@ instance ToAttribute (JSRef JSVector3) JSVector3 where
 instance ToAttribute (JSRef JSVector4) JSVector4 where
     toAttribute      a = buildAttribute "v4" a
     toAttributeValue a = a
+
+data SceneType = HUD | Workspace deriving (Show, Eq, Enum)

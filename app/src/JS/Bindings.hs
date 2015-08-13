@@ -180,17 +180,6 @@ foreign import javascript unsafe "window.dispatchEvent(new Event('resize'))"
 foreign import javascript unsafe "app.shouldRender()"
     shouldRender :: IO ()
 
-foreign import javascript unsafe "raycaster.getMapPixelAt($1, $2)"
-    getMapPixelAtJS :: Int -> Int -> IO JSArray
-
-getMapPixelAt :: Vector2 Int -> IO JSArray
-getMapPixelAt pos = getMapPixelAtJS (pos ^. x) (pos ^. y)
-
-foreign import javascript unsafe "raycaster.widgetMatrix($1)"
-    widgetMatrix :: Int -> IO JSArray
-
-foreign import javascript unsafe "raycaster.isWorkspace($1)"
-    isWorkspace :: Int -> IO Bool
 
 foreign import javascript unsafe "$('#htmlcanvas-pan').css({cursor: $1})"
     setCursor :: JSString -> IO ()

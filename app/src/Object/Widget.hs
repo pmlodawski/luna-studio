@@ -8,6 +8,10 @@ import           Utils.PreludePlus
 import           Utils.Vector
 import           Utils.CtxDynamic
 import           Event.Mouse (MouseButton, MousePosition, WidgetId)
+import           Reactive.Plugins.Core.Action.State.Camera (Camera)
+import qualified Reactive.Plugins.Core.Action.State.Camera as Camera
+import qualified JS.Camera as JSCamera
+import           ThreeJS.Types
 
 type DisplayObject = CtxDynamic DisplayObjectClass
 
@@ -42,8 +46,8 @@ type Position = Vector2 Double
 class HandlesMouseMove     a where onMouseMove     :: MouseButton -> Position -> a -> WidgetUpdate
 class HandlesMousePressed  a where onMousePress    :: MouseButton -> Position -> a -> WidgetUpdate
 class HandlesMouseReleased a where onMouseRelease  :: MouseButton -> Position -> a -> WidgetUpdate
-class HandlesMouseOver     a where onMouseOver     ::                                 a -> WidgetUpdate
-class HandlesMouseOut      a where onMouseOut      ::                                 a -> WidgetUpdate
+class HandlesMouseOver     a where onMouseOver     ::                            a -> WidgetUpdate
+class HandlesMouseOut      a where onMouseOut      ::                            a -> WidgetUpdate
 class Clickable            a where onClick         ::                Position -> a -> WidgetUpdate
 class DblClickable         a where onDblClick      ::                Position -> a -> WidgetUpdate
 class Draggable            a where
@@ -84,6 +88,7 @@ noUpdate w = (noUIUpdate, toCtxDynamic w)
 
 data DragState = DragState { _widgetId       :: WidgetId
                            , _widgetMatrix   :: [Double]
+                           , _scene          :: SceneType
                            , _button         :: MouseButton
                            , _startPos       :: Vector2 Double
                            , _previousPos    :: Vector2 Double
@@ -91,13 +96,14 @@ data DragState = DragState { _widgetId       :: WidgetId
                            } deriving (Show, Eq)
 makeLenses ''DragState
 
-worldToLocal :: Vector2 Double -> [Double] -> Vector2 Double
-worldToLocal (Vector2 x y) [aa, ab, ac, ad
+sceneToLocal :: Vector2 Double -> [Double] -> Vector2 Double
+sceneToLocal (Vector2 x y) [aa, ab, ac, ad
                            ,ba, bb, bc, bd
                            ,ca, cb, cc, cd
                            ,da, db, dc, dd] = Vector2 x' y' where
                                          x' = aa * x + ba * y + da
                                          y' = ab * x + bb * y + db
 
-
-
+screenToLocal :: JSCamera.Camera -> Vector2 Int -> [Double]  -> Vector2 Double
+screenToLocal cam mousePos widgetMatrix = sceneToLocal workspacePos widgetMatrix where
+    workspacePos = JSCamera.screenToWorkspace cam mousePos

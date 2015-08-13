@@ -40,25 +40,26 @@ instance PrettyPrinter Action where
 toAction (Window (Window.Event Window.Resized width height)) _ = Just $ InitApp
 toAction _ _        = Nothing
 
+sandboxScene = Scene.scene
 
 addButton b = do
     uiButton <- UIButton.buildButton b
     UIButton.putToRegistry b uiButton
-    Scene.sceneHUD `add` uiButton
+    sandboxScene `add` uiButton
 
 addSlider b = do
     slider <- UISlider.buildSlider b
     UISlider.putToRegistry b slider
-    Scene.sceneHUD `add` slider
+    sandboxScene `add` slider
 
 removeButton b = do
     uiButton <- UIButton.getFromRegistry b
-    Scene.sceneHUD `remove` uiButton
+    sandboxScene `remove` uiButton
     UIButton.removeFromRegistry b
 
 removeSlider b = do
     uiButton <- UISlider.getFromRegistry b
-    Scene.sceneHUD `remove` uiButton
+    sandboxScene `remove` uiButton
     UISlider.removeFromRegistry b
 
 instance ActionStateUpdater Action where

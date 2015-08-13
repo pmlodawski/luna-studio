@@ -102,9 +102,10 @@ updateValue s = setUniform "value" (toJSDouble $ WB.sliderPosition s) s
 
 instance Draggable        WB.Slider where
     mayDrag Mouse.LeftButton _ _ = True
+    mayDrag _                _ _ = False
     onDragStart                  = onDragMove
     onDragMove state slider      = (Just action, toCtxDynamic newSlider) where
-                pos           = worldToLocal (state ^. currentPos) (state ^. widgetMatrix)
+                pos           = state ^. currentPos
                 newSlider     = slider & WB.value .~ value
                 normValue     = (pos ^. x) / (slider ^. WB.size . x)
                 boundedValue  = max 0.0 $ min 1.0 normValue

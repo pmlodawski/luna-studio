@@ -17,6 +17,7 @@ import qualified GHCJS.DOM.UIEvent    as UIEvent
 import           Reactive.Banana.Frameworks ( AddHandler(..), liftIO )
 
 import           JS.Bindings
+import           ThreeJS.Raycaster
 import           JS.NodeSearcher      ( getAction, getExpression, nsEvent )
 import           Object.Object
 import qualified Object.Widget       as Widget
@@ -46,42 +47,6 @@ readMousePos = do
     y <- MouseEvent.getClientY e
     return $ Vector2 x y
 
-readObjectId :: Vector2 Int -> IO (Maybe Mouse.WidgetId)
-readObjectId pos = do
-    pixel <- getMapPixelAt pos
-    let read i = fromJSRef $ JSArray.index i pixel :: IO (Maybe Int)
-    maybeR <- read 0
-    maybeG <- read 1
-    maybeB <- read 2
-    -- maybeA <- read 3
-    return $ do
-        r <- maybeR
-        g <- maybeG
-        b <- maybeB
-        let oid = r + 256 * g + 256 * 256 * b
-        if oid == 0 then Nothing
-                    else Just oid
-
--- readLocalPos :: Maybe Int -> Vector2 Int -> IO (Maybe Mouse.MousePosition)
--- readLocalPos (Just oid) pos = do
---     localArr <- worldMatrix oid
---     let read i = fromJSRef $ JSArray.index i localArr :: IO (Maybe Int)
---     maybeX <- read 0
---     maybeY <- read 1
---     return $ do
---         x <- maybeX
---         y <- maybeY
---         return $ Vector2 x y
--- readLocalPos _ _ = return Nothing
-
-readWidgetMatrix :: Maybe Int -> IO (Maybe [Double])
-readWidgetMatrix (Just oid) = do
-    worldMatrix <- widgetMatrix oid
-    let read i = fromJSRef $ JSArray.index i worldMatrix :: IO (Maybe Double)
-    elems <- mapM read [0..15]
-    return $ Just $ catMaybes elems
-
-readWidgetMatrix  Nothing   = return Nothing
 
 uiWhichButton :: (UIEvent.IsUIEvent e) => EventM t e Mouse.MouseButton
 uiWhichButton = uiWhich >>= return . Mouse.toMouseButton
@@ -91,15 +56,17 @@ mouseHandler event tag =
     AddHandler $ \h -> do
        window <- fromJust <$> currentWindow
        window `on` event $ do
-        mousePos <- readMousePos
-        button   <- uiWhichButton
-        keyMods  <- readKeyMods
-        objectId <- liftIO $ readObjectId mousePos
-        widgetMatrix <- liftIO $ readWidgetMatrix objectId
-        let maybeWidget = do justObjectId     <- objectId
-                             justWidgetMatrix <- widgetMatrix
-                             let localPos = Widget.worldToLocal (fromIntegral <$> mousePos) justWidgetMatrix
-                             return $ Mouse.EventWidget justObjectId (round <$> localPos) justWidgetMatrix
+        mousePos        <- readMousePos
+        button          <- uiWhichButton
+        keyMods         <- readKeyMods
+        objectId        <- liftIO $ readObjectId     mousePos
+        scene           <- liftIO $ whichScene       objectId
+        widgetMatrix    <- liftIO $ readWidgetMatrix objectId
+        let maybeWidget  = do justObjectId     <- objectId
+                              justWidgetMatrix <- widgetMatrix
+                              justScene        <- scene
+                              return $ Mouse.EventWidget justObjectId justWidgetMatrix justScene
+
         liftIO . h $ Mouse $ Mouse.Event tag mousePos button keyMods maybeWidget
 
 mouseDownHandler     = mouseHandler mouseDown  Mouse.Pressed

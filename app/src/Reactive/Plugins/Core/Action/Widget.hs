@@ -20,6 +20,7 @@ import           Reactive.Plugins.Core.Action.State.UIRegistry   (WidgetMap)
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry   as UIRegistry
 import qualified Object.Widget.Button as Button
 import qualified Object.Widget.Slider as Slider
+import           ThreeJS.Types (SceneType(..))
 import           ThreeJS.Button ()
 import           ThreeJS.Slider ()
 import           GHCJS.Prim
@@ -28,6 +29,9 @@ import qualified Data.IntMap.Lazy as IntMap
 import           Utils.CtxDynamic
 import           Data.Set (Set)
 import qualified Data.Set as Set
+import qualified JS.Camera      as Camera
+import           Debug.Trace
+
 
 data Action = MouseAction   { _event   :: Mouse.Event }
             | ApplyUpdates  { _actions :: [WidgetUIUpdate] }
@@ -41,19 +45,24 @@ toAction :: Event Node -> Maybe Action
 toAction (Mouse m) = Just $ MouseAction m
 toAction _         = Nothing
 
-handleGeneric :: Mouse.Event -> UIRegistry.State -> Maybe (WidgetUIUpdate, UIRegistry.State)
-handleGeneric (Mouse.Event eventType _ button _ (Just (EventWidget widgetId pos _))) registry = do
+absPosToRel :: SceneType -> Camera.Camera -> [Double] -> Vector2 Double -> Vector2 Double
+absPosToRel HUD       _      mat pos = Widget.sceneToLocal pos          mat
+absPosToRel Workspace camera mat pos = Widget.sceneToLocal workspacePos mat where
+    workspacePos = Camera.screenToWorkspace camera (round <$> pos)
+
+handleGeneric :: Mouse.Event -> Camera.Camera -> UIRegistry.State -> Maybe (WidgetUIUpdate, UIRegistry.State)
+handleGeneric (Mouse.Event eventType absPos button _ (Just (EventWidget widgetId mat scene))) camera registry = do
     widget                <- (UIRegistry.lookup widgetId registry) :: Maybe DisplayObject
-    let pos' = fromIntegral <$> pos
+    let pos                = absPosToRel scene camera mat (fromIntegral <$> absPos)
     (uiUpdate, newWidget) <- return $ case eventType of
-        Mouse.Moved       -> onMouseMove    button pos' widget
-        Mouse.Pressed     -> onMousePress   button pos' widget
-        Mouse.Released    -> onMouseRelease button pos' widget
-        Mouse.Clicked     -> onClick               pos' widget
-        Mouse.DblClicked  -> onDblClick            pos' widget
+        Mouse.Moved       -> onMouseMove    button pos widget
+        Mouse.Pressed     -> onMousePress   button pos widget
+        Mouse.Released    -> onMouseRelease button pos widget
+        Mouse.Clicked     -> onClick               pos widget
+        Mouse.DblClicked  -> onDblClick            pos widget
     let newRegistry = UIRegistry.update newWidget registry
     return (uiUpdate, registry)
-handleGeneric _  _        = Nothing
+handleGeneric _ _ _        = Nothing
 
 triggerHandler :: Maybe WidgetId -> (DisplayObject -> WidgetUpdate) -> UIRegistry.State -> Maybe (WidgetUIUpdate, UIRegistry.State)
 triggerHandler maybeOid handler state = do
@@ -63,29 +72,29 @@ triggerHandler maybeOid handler state = do
     let newState            = UIRegistry.update newWidget state
     return (action, newState)
 
-handleDragStart widgetId mat button absPos state = do
-    oldWidget   <- UIRegistry.lookup widgetId state
-    let relPos      = Widget.worldToLocal absPos mat
-    let shouldDrag  = mayDrag button relPos oldWidget
-    let dragState   = DragState widgetId mat button absPos absPos absPos where
+handleDragStart (EventWidget widgetId mat scene) button absPos camera state = do
+    oldWidget      <- UIRegistry.lookup widgetId state
+    let pos         = absPosToRel scene camera mat absPos
+    let shouldDrag  = mayDrag button pos oldWidget
+    let dragState   = DragState widgetId mat scene button pos pos pos where
     let newState    = if shouldDrag then state & UIRegistry.dragState .~ Just dragState
                                     else state
     return $ (Nothing, newState)
 
-handleDragMove absPos state = case (state ^. UIRegistry.dragState) of
+handleDragMove absPos camera state = case (state ^. UIRegistry.dragState) of
     Just dragState -> triggerHandler widgetId (onDragMove newDragState) state' where
         widgetId           = Just $ dragState ^. Widget.widgetId
         state'             = state     & UIRegistry.dragState .~ (Just newDragState)
         newDragState       = dragState & Widget.previousPos .~ (dragState ^. currentPos)
-                                       & Widget.currentPos  .~ absPos
-        relPos             = Widget.worldToLocal absPos (dragState ^. widgetMatrix)
+                                       & Widget.currentPos  .~ relPos
+        relPos             = absPosToRel (dragState ^. Widget.scene) camera (dragState ^. widgetMatrix) absPos
 
     otherwise      -> Nothing
 
-handleDragEnd absPos state = case (state ^. UIRegistry.dragState) of
+handleDragEnd absPos camera state = case (state ^. UIRegistry.dragState) of
     Just dragState -> do
         let widgetId = (dragState ^. Widget.widgetId)
-        let relPos   = Widget.worldToLocal absPos (dragState ^. widgetMatrix)
+        let relPos   = absPosToRel (dragState ^. Widget.scene) camera (dragState ^. widgetMatrix) absPos
         (actions, newState') <- triggerHandler (Just $ widgetId) (onDragEnd dragState) state
         let newState          = newState' & UIRegistry.dragState .~ Nothing
         return $ (actions, newState)
@@ -100,10 +109,11 @@ instance ActionStateUpdater Action where
         newState                 = oldState &  Global.uiRegistry .~ newRegistry
         oldRegistry              = oldState ^. Global.uiRegistry
         oldWidgetOver            = oldState ^. Global.uiRegistry . UIRegistry.widgetOver
+        camera                   = Global.toCamera oldState
         (uiUpdates, newRegistry) = UIRegistry.sequenceUpdates [ Just $ setWidgetOver
                                                               , handleMouseOut
                                                               , handleMouseOver
-                                                              , Just $ (handleGeneric mouseEvent)
+                                                              , Just $ (handleGeneric mouseEvent camera)
                                                               , handleDrag
                                                               ] oldRegistry
         (handleMouseOver, handleMouseOut) = case mouseEvent of
@@ -114,9 +124,9 @@ instance ActionStateUpdater Action where
                                         False  -> (Nothing, Nothing)
             _             -> (Nothing, Nothing)
         handleDrag = case mouseEvent of
-            Mouse.Event Mouse.Pressed  pos button _ (Just (EventWidget widgetId relPos mat)) -> Just $ handleDragStart widgetId mat button (fromIntegral <$> pos)
-            Mouse.Event Mouse.Moved    pos _ _ _ -> Just $ handleDragMove  (fromIntegral <$> pos)
-            Mouse.Event Mouse.Released pos _ _ _ -> Just $ handleDragEnd   (fromIntegral <$> pos)
+            Mouse.Event Mouse.Pressed  pos button _ (Just evWd) -> Just $ handleDragStart evWd button (fromIntegral <$> pos) camera
+            Mouse.Event Mouse.Moved    pos _ _ _ -> Just $ handleDragMove (fromIntegral <$> pos) camera
+            Mouse.Event Mouse.Released pos _ _ _ -> Just $ handleDragEnd  (fromIntegral <$> pos) camera
             _              -> Nothing
         isDragging        = isJust $ oldDragState
         oldDragState      = oldRegistry ^. UIRegistry.dragState
