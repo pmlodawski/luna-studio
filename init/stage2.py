@@ -103,7 +103,9 @@ def main():
     except Exception as e:
         # noinspection PyBroadException
         try:
+            # noinspection PyUnusedLocal
             terminal_width = shutil.get_terminal_size((80, 20)).columns
+            # noinspection PyUnusedLocal
             hash_sign = "#"
             fprint("{hash_sign:#^{terminal_width}}", colour='red')
         except:
@@ -114,4 +116,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

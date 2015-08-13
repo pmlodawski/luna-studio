@@ -56,6 +56,7 @@ def bind_git_hooks():
         """, colour='yellow')
         raise Exception(fmt("ERROR: tried to remove current '{git_hooks_p}' but failed.")) from e
 
+    # noinspection PyTypeChecker
     git_hooks_p.symlink_to(Path('..') / hooks_p, target_is_directory=True)
 
 
@@ -85,7 +86,9 @@ def main():
         configure_repo()
         create_aliases()
     except Exception as e:
+        # noinspection PyUnusedLocal
         terminal_width = shutil.get_terminal_size((80, 20)).columns
+        # noinspection PyUnusedLocal
         hash_sign = "#"
         fprint("{hash_sign:#^{terminal_width}}", colour='red')
         print("Stage 3 got exception:")
