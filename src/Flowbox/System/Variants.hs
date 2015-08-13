@@ -543,46 +543,46 @@ type Foo2' = MkRecord '[B,A]
 ofType :: a -> a -> a
 ofType = const
 
-main = do
-    let x1 = cons (A 1) :: Foo1
-        x2 = cons (B 1) :: Foo2
-        x3 = cons (C 1) :: Foo3
-        x4 = cons (A 1) :: Maybe Foo3
-        x5 = cons (C 1) :: Maybe Foo3
-        x6 = cons (C 1) :: Maybe Foo1
-
-        --x7 = cons (B 1) :: Foo1
-
-
-    print $ x1
-    print $ x2
-    print $ x3
-    print $ x4
-    print $ x5
-    print $ x6
-    print "---"
-
-    let y1 = cast x1 :: Foo1
-        y2 = cast x2 :: Foo3
-        y3 = cast x2 :: Maybe Foo1
-        --y4 = cast x2 :: Foo1
-
-    print $ y1
-    print $ y2
-    print $ y3
-    print "---"
-
-    let x1'  = specificCons (A 1) :: Foo1
-        x1'' = wrappedCons (A 1) :: Found Foo1
-        x2'' = wrappedCons (B 1) :: NotFound Foo1
-
-
-    let tst = cons (B 1) :: Foo2
-        tst' = tst :: Foo2'
-
-    print $ case' tst $ do
-        match $ \(A a) -> "a"
-        --match $ \(B a) -> "b"
-        match $ \ANY   -> "x"
-    print "==="
-    putStrLn ""
+-- main = do
+--     let x1 = cons (A 1) :: Foo1
+--         x2 = cons (B 1) :: Foo2
+--         x3 = cons (C 1) :: Foo3
+--         x4 = cons (A 1) :: Maybe Foo3
+--         x5 = cons (C 1) :: Maybe Foo3
+--         x6 = cons (C 1) :: Maybe Foo1
+--
+--         --x7 = cons (B 1) :: Foo1
+--
+--
+--     print $ x1
+--     print $ x2
+--     print $ x3
+--     print $ x4
+--     print $ x5
+--     print $ x6
+--     print "---"
+--
+--     let y1 = cast x1 :: Foo1
+--         y2 = cast x2 :: Foo3
+--         y3 = cast x2 :: Maybe Foo1
+--         --y4 = cast x2 :: Foo1
+--
+--     print $ y1
+--     print $ y2
+--     print $ y3
+--     print "---"
+--
+--     let x1'  = specificCons (A 1) :: Foo1
+--         x1'' = wrappedCons (A 1) :: Found Foo1
+--         x2'' = wrappedCons (B 1) :: NotFound Foo1
+--
+--
+--     let tst = cons (B 1) :: Foo2
+--         tst' = tst :: Foo2'
+--
+--     print $ case' tst $ do
+--         match $ \(A a) -> "a"
+--         --match $ \(B a) -> "b"
+--         match $ \ANY   -> "x"
+--     print "==="
+--     putStrLn ""
