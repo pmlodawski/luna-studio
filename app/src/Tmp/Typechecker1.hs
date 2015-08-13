@@ -12,7 +12,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
 
-module Tmp.TypecheckerTest2 where
+module Tmp.Typechecker1 where
 
 import Flowbox.Prelude hiding (simple, empty, Indexable, Simple, cons, lookup, index, Wrapped, children, Cons)
 import Data.Repr

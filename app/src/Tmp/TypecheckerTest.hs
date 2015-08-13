@@ -1,75 +1,55 @@
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE UndecidableInstances #-}
 
-
--- TODO: Remove entire file
 module Tmp.TypecheckerTest where
 
 import           Utils.PreludePlus
 
+import qualified Luna.Inference as Luna
+import           Luna.Inference hiding (get, put)
+import           Control.Monad.State
+import           Data.Repr
 
 
--- #define TYPECHECKER_TEST
 
 
-#ifdef TYPECHECKER_TEST
--- Necessary to pull changes on __flowbox project__, switch to typechecker branch and from nodelab run:
--- cabal install ../flowbox/libs/convert ../flowbox/libs/utils ../flowbox/third-party/graphviz-2999.17.0.2.2 ../flowbox/libs/luna/typechecker --ghcjs
--- where ../flowbox - __flowbox project__
-import           Luna.Inference hiding (main)
-import qualified Luna.Inference as TC
-import qualified Data.Map       as Map
 
-funck :: Function (GFBody NodePtr)
-funck = buildFunction gra1
+data Meta = Meta Int String deriving (Show)
+instance Default Meta where def = Meta 0 ""
 
--- gra1 :: ASTBuilder m NodePtr Expr => m (Ref NodePtr Expr)
--- gra1 = do .... return a
-gra1 :: ASTBuilder m NodePtr Expr => m ()
-gra1 = do
-    -- a    <- ref "foo" $ var "a"
-    -- b    <- ref "bar" $ var "b"
-    -- c    <- ref "baz" $ var "c"
-    -- return ()
-    --mod  <- var "Main"
-    --foo  <- a    @.  "foo"
-    --b    <- foo  @$$ [a]
-    --bar  <- mod  @.  "bar"
-    --c    <- bar  @$$ [b]
-    --plus <- mod  @.  "plus"
-    --out  <- plus @$$ [c, a]
-    --return ()
-
-tctest :: IO ()
-tctest = do
-    putStrLn "Testing typechecker"
-    let bodyF  = funck & view body
-        graphF = funck & view fgraph
-        Just (Ref ptrF) = Map.lookup "Main" bodyF
-        regF = graphF ^. reg
-        varF = unsafeGet ptrF regF
-
-    print funck
-    print regF
-    print varF
+instance (MonadState Meta m) => LabBuilder m Meta where
+    mkLabel = get
 
 
--- Function {
---             _body = fromList [
---                 ("bar",Ref (NodePtr {__ptr = Ptr "Expr NodePtr" 1})),
---                 ("baz",Ref (NodePtr {__ptr = Ptr "Expr NodePtr" 2})),
---                 ("foo",Ref (NodePtr {__ptr = Ptr "Expr NodePtr" 0}))],
---             _fgraph = Graph {
---                 _reg = HContainer {
---                     _elems = fromList [
---                         Var {_name = "a"},
---                         Var {_name = "b"},
---                         Var {_name = "c"}]
---                     }
---                 }
---
+
+type FunctionGraphMeta = Function (HomoNet (Label Meta) Term)
 
 
-#else
-tctest :: IO ()
-tctest = putStrLn "Testing typechecker disabled"
-#endif
+-- ▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄▀▄
+
+
+af :: FunctionGraphMeta
+af = runIdentity $ flip evalStateT def $ flip execFunctionBuilderT def $ do
+    a <- withMeta (Meta 7 "g") $ var "a"
+    put $ Meta 1 "a"
+    b <- var "b"
+    put $ Meta 2 "b"
+    x <- var "x" @. "foo"
+    put $ Meta 3 "c"
+    y <- x @$ [arg a]
+    return ()
+
+
+
+withMeta meta f = do
+    old <- get
+    put meta
+    out <- f
+    put old
+    return out
+
+
+main :: IO ()
+main = do
+    putStrLn "Typeckecker test:"
+    putStrLn $ repr af
+    return ()
