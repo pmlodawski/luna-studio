@@ -89,3 +89,4 @@ stdlib/FlowboxM/Libs/Flowbox/Std.luna
 test.html
 report.html
 build_*/**/.stack-work
+.autoenv.zsh
