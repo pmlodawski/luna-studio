@@ -63,7 +63,7 @@ buildValueLabel w = do
     s `setX` (Config.fontSize * 0.8)
     s `setY` (Config.fontSize * 0.8)
 
-    let width = Config.fontSize * (calculateTextWidth text)
+    let width = Config.fontSize * 0.8 * (calculateTextWidth text)
     p <- position mesh
     p `setY` (5.0 + w ^. WB.size ^. y / 2.0)
     p `setX` (sliderWidth - width - 5.0)
