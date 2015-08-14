@@ -187,8 +187,8 @@ getPortRef posScr camera nodes = maybePortRef where
 -- TODO: Clever algorithm taking radius into account
 getNodeIdsIn :: Vector2 Int -> Vector2 Int -> Camera -> NodeCollection -> NodeIdCollection
 getNodeIdsIn (Vector2 x1 y1) (Vector2 x2 y2) camera nodes = (^. nodeId) <$> nodesInBounds where
-    leftBottom = screenToWorkspace camera (Vector2 (min x1 x2) (max y1 y2)) - Vector2 radiusShadow radiusShadow
-    rightTop   = screenToWorkspace camera (Vector2 (max x1 x2) (min y1 y2)) + Vector2 radiusShadow radiusShadow
+    leftBottom = screenToWorkspace camera (Vector2 (min x1 x2) (min y1 y2)) - Vector2 radiusShadow radiusShadow
+    rightTop   = screenToWorkspace camera (Vector2 (max x1 x2) (max y1 y2)) + Vector2 radiusShadow radiusShadow
     nodesInBounds :: NodeCollection
     nodesInBounds = filter isNodeInBounds nodes
     isNodeInBounds node = let pos = node ^. nodePos in
