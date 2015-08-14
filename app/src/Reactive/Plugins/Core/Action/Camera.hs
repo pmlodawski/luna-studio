@@ -162,7 +162,7 @@ instance ActionStateUpdater Action where
                 Just drag                -> (zoomPan, newCamFactorCandidate) where
                     camFactorDelta        = (delta ^. x + delta ^. y) / dragZoomSpeed
                     newCamFactorCandidate = oldCamFactor * (1.0 + camFactorDelta)
-                    delta                 = fromIntegral <$> (negateSnd $ drag ^. dragCurrentPos - drag ^. dragPreviousPos)
+                    delta                 = fromIntegral <$> (drag ^. dragCurrentPos - drag ^. dragPreviousPos)
                     camera                = Global.toCamera oldState
                     oldScreen             = drag ^. fixedPointPosScreen
                     oldWorkspace          = drag ^. fixedPointPosWorkspace
