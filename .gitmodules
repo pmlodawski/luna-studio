@@ -252,7 +252,7 @@
 	path = libs/batch/plugins/project-manager-api
 	url = git@bitbucket.org:NewByteOrder/batch-lib-project-manager-api.git
 [submodule "libs/utils"]
-    branch = typechecker
+  branch = master
 	path = libs/utils
 	url = git@bitbucket.org:NewByteOrder/flowbox-utils.git
 [submodule "libs/convert"]
@@ -262,9 +262,10 @@
     branch = master
 	path = repo_manager
 	url = git@bitbucket.org:NewByteOrder/shtack.git
-[submodule "env"]
-	path = env
-	url = git@github.com:wdanilo/flowbox-env.git
 [submodule "third-party/HaskellBooster"]
 	path = third-party/HaskellBooster
 	url = git@github.com:wdanilo/HaskellBooster.git
+[submodule "nodelab"]
+	path = nodelab
+	url = git@bitbucket.org:NewByteOrder/nodelab.git
+  branch = master
