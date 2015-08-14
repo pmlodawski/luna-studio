@@ -127,8 +127,8 @@ instance ActionStateUpdater Action where
                     AutoZoom          -> autoZoomPan ^. x
                     _                 -> oldCamPan ^. x
                 newCamPanY             = case keyAct of
-                    PanUp             -> oldCamPan ^. y + panStep / oldCamFactor
-                    PanDown           -> oldCamPan ^. y - panStep / oldCamFactor
+                    PanUp             -> oldCamPan ^. y - panStep / oldCamFactor
+                    PanDown           -> oldCamPan ^. y + panStep / oldCamFactor
                     AutoZoom          -> autoZoomPan ^. y
                     _                 -> oldCamPan ^. y
         newCamFactor                   = case newActionCandidate of
@@ -197,7 +197,7 @@ syncCamera state = do
         hY           = appY htmlY
         appX      f  = f cFactor (cPan ^. x) (hScreen ^. x)
         appY      f  = f cFactor (cPan ^. y) (hScreen ^. y)
-    updateCamera cFactor (cPan ^. x) (cPan ^. y) camLeft camRight camTop camBottom
+    updateCamera cFactor camLeft camRight camTop camBottom
     updateCameraHUD 0.0 (fromIntegral $ screenSize ^. x) 0.0 (fromIntegral $ screenSize ^. y)
     updateHtmCanvasPanPos hX hY cFactor
     updateProjectionMatrix

@@ -4,7 +4,6 @@ module Reactive.Plugins.Core.Action.State.UIRegistry where
 import           Utils.PreludePlus
 import           Utils.Vector
 
-import           Object.Object
 import           Object.Widget
 
 import           Data.IntMap.Lazy (IntMap)
@@ -12,11 +11,7 @@ import qualified Data.IntMap.Lazy as IntMap
 
 import           Event.Mouse (WidgetId, MouseButton)
 
-import           Data.Set (Set)
-import qualified Data.Set as Set
-
 import           Utils.CtxDynamic
-import           Debug.Trace
 
 type WidgetMap = IntMap DisplayObject
 

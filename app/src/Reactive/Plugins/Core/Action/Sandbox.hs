@@ -69,15 +69,19 @@ instance ActionStateUpdater Action where
             newState              = if wasInited then oldState
                                                  else oldState & Global.sandbox    . Sandbox.button .~ button
                                                                & Global.sandbox    . Sandbox.slider .~ slider
+                                                               & Global.sandbox    . Sandbox.slider2 .~ slider2
+                                                               & Global.sandbox    . Sandbox.slider3 .~ slider3
                                                                & Global.uiRegistry                  .~ newRegistry
 
             button                = (oldState ^. Global.sandbox . Sandbox.button) & Button.refId .~ buttonId
             slider                = (oldState ^. Global.sandbox . Sandbox.slider) & Slider.refId .~ sliderId
+            slider2                = (oldState ^. Global.sandbox . Sandbox.slider2) & Slider.refId .~ sliderId2
+            slider3                = (oldState ^. Global.sandbox . Sandbox.slider3) & Slider.refId .~ sliderId3
             oldRegistry           = oldState ^. Global.uiRegistry
-            newRegistry           = UIRegistry.register button (UIRegistry.register slider oldRegistry)
+            newRegistry           = UIRegistry.register button $ UIRegistry.register slider $ UIRegistry.register slider2 $ UIRegistry.register slider3 oldRegistry
 
-            (buttonId:sliderId:_) = UIRegistry.generateIds 2 oldRegistry
-            newAction             = if wasInited then ApplyUpdates [] else ApplyUpdates [Just $ addButton button, Just $ addSlider slider]
+            (buttonId:sliderId:sliderId2:sliderId3:_) = UIRegistry.generateIds 4 oldRegistry
+            newAction             = if wasInited then ApplyUpdates [] else ApplyUpdates [Just $ addButton button, Just $ addSlider slider, Just $ addSlider slider2, Just $ addSlider slider3]
 
 
 instance ActionUIUpdater Action where

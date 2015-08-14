@@ -19,24 +19,6 @@ import           JavaScript.Array    (JSArray )
 import qualified JavaScript.Array    as JSArray
 import           Data.JSString.Text  (lazyTextToJSString)
 
-data VNode
-data VElement
-data Diff
-
-foreign import javascript unsafe "window.virtualDom.h($1, [$2])"
-    mkNode :: JSString -> JSString -> IO (JSRef VNode)
-
-foreign import javascript unsafe "window.virtualDom.create($1)"
-    createElement :: JSRef VNode -> IO Element
-
-foreign import javascript unsafe "window.virtualDom.diff($1, $2)"
-    diff :: JSRef VNode -> JSRef VNode -> IO (JSRef Diff)
-
-foreign import javascript unsafe "window.virtualDom.patch($1, $2)"
-    patch :: Element -> JSRef Diff -> IO ()
-
-
-
 
 foreign import javascript unsafe "window.innerWidth"
     innerWidth :: IO Int
@@ -79,8 +61,8 @@ foreign import javascript unsafe "app.updateScreenSize($1, $2)"
 foreign import javascript unsafe "app.updateHtmCanvasPanPos($1, $2, $3)"
     updateHtmCanvasPanPos :: Double -> Double -> Double -> IO ()
 
-foreign import javascript unsafe "app.updateCamera($1, $2, $3, $4, $5, $6, $7)"
-    updateCamera :: Double -> Double -> Double -> Double -> Double -> Double -> Double -> IO ()
+foreign import javascript unsafe "app.updateCamera($1, $2, $3, $4, $5)"
+    updateCamera :: Double -> Double -> Double -> Double -> Double -> IO ()
 
 foreign import javascript unsafe "app.updateCameraHUD($1, $2, $3, $4)"
     updateCameraHUD :: Double -> Double -> Double -> Double -> IO ()

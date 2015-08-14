@@ -37,7 +37,7 @@ screenToGl (Vector2 screenSizeX screenSizeY) (Vector2 x y) = Vector2
 screenToNormalizedGl :: Vector2 Int -> Vector2 Int -> Vector2 Double
 screenToNormalizedGl (Vector2 screenSizeX screenSizeY) (Vector2 x y) = Vector2
     ( (fromIntegral x / fromIntegral screenSizeX) * 2.0 - 1.0)
-    ( (fromIntegral y / fromIntegral screenSizeY) * 2.0 - 1.0)
+    (-(fromIntegral y / fromIntegral screenSizeY) * 2.0 + 1.0)
 
 
 glToWorkspace :: Camera -> Vector2 Double -> Vector2 Double

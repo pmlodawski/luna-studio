@@ -6,31 +6,21 @@ import           Utils.PreludePlus
 import           Utils.Vector
 
 import           Object.Object
+import           Object.Node     (Node)
 import           Object.Widget
-import qualified Object.Widget as Widget
-import           Object.Node
-import           Event.Mouse    hiding      (Event, WithObjects)
-import qualified Event.Mouse    as Mouse
-import qualified Event.Window   as Window
+import qualified Object.Widget  as Widget
 import           Event.Event
-import           Event.WithObjects
+import           Event.Mouse    (EventWidget(..), WidgetId)
+import qualified Event.Mouse    as Mouse
 import           Reactive.Plugins.Core.Action.Action
 import qualified Reactive.Plugins.Core.Action.State.Global       as Global
 import           Reactive.Plugins.Core.Action.State.UIRegistry   (WidgetMap)
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry   as UIRegistry
-import qualified Object.Widget.Button as Button
-import qualified Object.Widget.Slider as Slider
 import           ThreeJS.Types (SceneType(..))
 import           ThreeJS.Button ()
 import           ThreeJS.Slider ()
-import           GHCJS.Prim
-import           Data.IntMap.Lazy (IntMap)
-import qualified Data.IntMap.Lazy as IntMap
 import           Utils.CtxDynamic
-import           Data.Set (Set)
-import qualified Data.Set as Set
 import qualified JS.Camera      as Camera
-import           Debug.Trace
 
 
 data Action = MouseAction   { _event   :: Mouse.Event }

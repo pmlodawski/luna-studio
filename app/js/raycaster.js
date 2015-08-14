@@ -14,7 +14,7 @@ function renderMap() {
 function getMapPixelAt(x, y) {
   var buf = new Uint8Array(4);
   var ctx = $$.rendererMap.getContext();
-  y = $$.screenSize.y - y;
+  y = $$.rendererMap.domElement.height - y;
   ctx.readPixels(x, y, 1, 1, ctx.RGBA, ctx.UNSIGNED_BYTE, buf);
   return buf;
 }
@@ -27,19 +27,6 @@ function getTopParent(w) {
   }
   return w;
 }
-
-// function screenToWorkspace(vec) {
-//   var x, y;
-//   x = vec.x;
-//   y = vec.y;
-//
-//   x =  x - $$.screenSize.x / 2.0;
-//   y = -y + $$.screenSize.y / 2.0;
-//
-//   x = x / $$.camFactor.value + $$.camPan.x;
-//   y = y / $$.camFactor.value + $$.camPan.y;
-//   return new THREE.Vector2(x, y);
-// }
 
 function isWorkspace(id) {
   var widget = $$.registry[id];

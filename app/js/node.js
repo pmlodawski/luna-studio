@@ -37,13 +37,13 @@ function Node(id, position, z) {
   var _id = 65536 + id;
 
   this.uniforms = {
-    selected:        { type: 'i',  value: 0 },
-    mouseDist:       { type: 'f',  value: 100000 },
-    insideColor:     { type: 'c',  value: insideColor },
+    selected:        { type: 'i',  value:             0   },
+    mouseDist:       { type: 'f',  value:        100000.0 },
+    nodeSize:        { type: 'f',  value:            30.0 },
+    insideColor:     { type: 'c',  value:     insideColor },
     unselectedColor: { type: 'c',  value: unselectedColor },
-    selectedColor:   { type: 'c',  value: selectedColor },
-    focusedColor:    { type: 'c',  value: focusedColor },
-    nodeSize:        { type: 'f',  value: 30.0 },
+    selectedColor:   { type: 'c',  value:   selectedColor },
+    focusedColor:    { type: 'c',  value:    focusedColor },
     objectId:        { type: 'v3', value: new THREE.Vector3((_id % 256) / 255.0, Math.floor(Math.floor(_id % 65536) / 256) / 255.0, Math.floor(_id / 65536) / 255.0) }
   };
 
@@ -58,7 +58,8 @@ function Node(id, position, z) {
       vertexShader:   vs,
       fragmentShader: fs,
       transparent:    true,
-      blending:       THREE.NormalBlending
+      blending:       THREE.NormalBlending,
+      side:           THREE.DoubleSide
     })
   );
   this.mesh.userData.id = id;
@@ -95,7 +96,7 @@ Node.prototype.moveTo = function(a, b) {
   this.mesh.position.y = vec.y;
 
   // this.attributes.pos.needsUpdate = true;
-  this.htmlContainer.css({left: vec.x, top: -vec.y});
+  this.htmlContainer.css({left: vec.x, top: vec.y});
 };
 
 Node.prototype.zPos = function(z) {
