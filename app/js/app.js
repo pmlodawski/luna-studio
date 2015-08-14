@@ -113,16 +113,12 @@ function updateHtmCanvasPanPos(x, y, factor) {
 }
 
 function updateScreenSize(width, height) {
-  $$.screenSize.x = width;
-  $$.screenSize.y = height;
   $$.renderer.setSize(width, height);
   $$.rendererMap.setSize(width, height);
 }
 
-function updateCamera(factor, camPanX, camPanY, left, right, top, bottom) {
+function updateCamera(factor, left, right, top, bottom) {
   $$.camFactor.value = factor;
-  $$.camPan.x        = camPanX;
-  $$.camPan.y        = camPanY;
   $$.camera.left     = left;
   $$.camera.right    = right;
   $$.camera.top      = top;
