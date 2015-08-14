@@ -252,7 +252,7 @@
 	path = libs/batch/plugins/project-manager-api
 	url = git@bitbucket.org:NewByteOrder/batch-lib-project-manager-api.git
 [submodule "libs/utils"]
-    branch = typechecker
+  branch = master
 	path = libs/utils
 	url = git@bitbucket.org:NewByteOrder/flowbox-utils.git
 [submodule "libs/convert"]
