@@ -41,6 +41,7 @@ import           Data.Wrapper                       as X (Unwrap (unwrap), Unwra
 import           GHC.Exts                           as X (IsList, Item, fromList, fromListN, toList)
 import           GHC.Generics                       as X (Generic)
 import           Control.Conditional                as X (ifM, unless, unlessM, when, whenM)
+import           Data.Repr                          as X
 import           Prelude                            hiding (mapM, mapM_, print, putStr, putStrLn, (++), (.))
 import qualified Prelude
 import           Text.Show.Pretty                   (ppShow)
