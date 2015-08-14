@@ -60,8 +60,8 @@ buildValueLabel w = do
     geom     <- buildTextGeometry text
     mesh     <- buildMesh geom material
     s <- scale mesh
-    s `setX` Config.fontSize
-    s `setY` Config.fontSize
+    s `setX` (Config.fontSize * 0.8)
+    s `setY` (Config.fontSize * 0.8)
 
     let width = Config.fontSize * (calculateTextWidth text)
     p <- position mesh
