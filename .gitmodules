@@ -268,3 +268,4 @@
 [submodule "nodelab"]
 	path = nodelab
 	url = git@bitbucket.org:NewByteOrder/nodelab.git
+  branch = master
