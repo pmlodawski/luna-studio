@@ -53,11 +53,13 @@ Library
                   graphviz >= 2999.17.0.2.2,
                   mtl,
                   text,
-                  convert
+                  convert,
+                  errors,
+                  constraints
 
 
 Executable tc-test
-  Main-Is:        Main4.hs
+  Main-Is:        Main5.hs
   Hs-Source-Dirs: test
 
   GHC-Options:    -Wall -O2
@@ -92,4 +94,6 @@ Executable tc-test
                   mtl,
                   text,
                   convert,
-                  luna-tc
+                  luna-tc,
+                  errors,
+                  constraints
