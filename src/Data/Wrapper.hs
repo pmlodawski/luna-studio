@@ -13,6 +13,7 @@ module Data.Wrapper where
 
 import Control.Monad.Trans
 import Prelude
+import Control.Lens
 
 
 ----------------------------------------------------------------------------------
@@ -29,8 +30,6 @@ class Unwrap m where
     unwrap :: m a -> a
 
 class (Wrap m, Unwrap m) => Wrapper m
-
-
 
 class WrapT t where
     wrapT :: m a -> t m a
@@ -51,6 +50,8 @@ class (WrapT t, UnwrapT t) => WrapperT t
 rewrap :: (Unwrap m, Wrap n) => m a -> n a
 rewrap = wrap . unwrap
 
+content :: Wrapper m => Lens' (m a) a
+content = lens unwrap (const wrap)
 
 ----------------------------------------------------------------------------------
 -- Instances

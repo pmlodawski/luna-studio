@@ -92,7 +92,8 @@ import           GHC.Exts
 --data Record a where
 --    Record :: Eq (RecordTemplate a) => (RecordTemplate a) -> Record a
 
-data Record a = Record (RecordTemplate a)
+data Record        a = Record (RecordTemplate a)
+type VariantRecord a = Record (Variants a)
 
 --deriving instance Eq (Record a)
 

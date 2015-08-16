@@ -37,7 +37,7 @@ import           Data.Text.Class                    as X (FromText (fromText), I
 import           Data.Text.Lazy                     as X (Text)
 import qualified Data.Traversable                   as Traversable
 import           Data.Typeable                      as X (Typeable)
-import           Data.Wrapper                       as X (Unwrap (unwrap), UnwrapT (unwrapT), Wrap (wrap), WrapT (wrapT), Wrapper, WrapperT, rewrap)
+import           Data.Wrapper                       as X (Unwrap (unwrap), UnwrapT (unwrapT), Wrap (wrap), WrapT (wrapT), Wrapper, WrapperT, rewrap, content)
 import           GHC.Exts                           as X (IsList, Item, fromList, fromListN, toList)
 import           GHC.Generics                       as X (Generic)
 import           Control.Conditional                as X (ifM, unless, unlessM, when, whenM)
@@ -180,6 +180,11 @@ foldlDef f d = \case
     []     -> d
     (x:xs) -> foldl f x xs
 
-mapOver :: (Lens' b a) -> (a -> (a, x)) -> (b -> (b, x))
+
+mapOver :: (Lens' b a) -> (a -> (a, out)) -> (b -> (b, out))
 mapOver lens f s = (s & lens .~ a, out) where
     (a, out) = f $ s ^. lens
+
+--mapOver :: (Lens' b a) -> (a -> (out, a)) -> (b -> (out, b))
+--mapOver lens f s = (out, s & lens .~ a) where
+--    (out, a) = f $ s ^. lens
