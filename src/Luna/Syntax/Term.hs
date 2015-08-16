@@ -9,7 +9,83 @@ import Luna.Syntax.Lit
 import Luna.Syntax.Arg
 import Luna.Syntax.Name
 
+
 -- === Terms ===
+
+-- Component types
+
+newtype Var        = Var      Name      deriving (Show, Eq)
+data    Cons     t = Cons     Name [t]  deriving (Show)
+data    Accessor t = Accessor Name t    deriving (Show)
+data    App      t = App      t [Arg t] deriving (Show)
+
+-- Type sets
+
+type TermElems  t = Var
+                 ': ThunkElems t
+
+type ThunkElems t = Accessor t
+                 ': App      t
+                 ': ValElems t
+
+type ValElems   t = Lit
+                 ': Cons t
+                 ': '[]
+
+-- Record types
+
+type H a h = h (a h)
+type HRecord a (h :: * -> *) = VariantRecord (a h)
+
+newtype Val   h = Val   { __valRec   :: HRecord Val   h }
+newtype Thunk h = Thunk { __thunkRec :: HRecord Thunk h }
+newtype Term  h = Term  { __termRec  :: HRecord Term  h }
+
+--data TT a (h :: * -> *) = TT (a h)
+
+--deriving instance Show (a h) => Show (TT a h)
+
+type instance Variants (Val   h) =                         ValElems   (H Val   h)
+type instance Variants (Thunk h) = (Val h) ':              ThunkElems (H Thunk h)
+type instance Variants (Term  h) = (Val h) ': (Thunk h) ': TermElems  (H Term  h)
+
+makeLenses ''Val
+makeLenses ''Thunk
+makeLenses ''Term
+--TODO[wd]: makeClassyInstances (dla HasRecord etc)
+
+-- instances
+
+deriving instance (Show (H Val h))                                    => Show (Val   h)
+deriving instance (Show (H Val h), Show (H Thunk h))                  => Show (Thunk h)
+deriving instance (Show (H Val h), Show (H Thunk h), Show (H Term h)) => Show (Term  h)
+
+instance IsVariant (Val h)   where record  = _valRec
+                                   variant = Val
+
+instance IsVariant (Thunk h) where record  = _thunkRec
+                                   variant = Thunk
+
+instance IsVariant (Term h)  where record  = _termRec
+                                   variant = Term
+
+-- Name instances
+
+--TODO[wd]: makeClassyInstances ''Cons
+instance HasName Var          where name = lens (\(Var n)        -> n) (\(Var _) n         -> Var n)
+instance HasName (Cons a)     where name = lens (\(Cons n _)     -> n) (\(Cons _ t1) n     -> Cons n t1)
+instance HasName (Accessor a) where name = lens (\(Accessor n _) -> n) (\(Accessor _ t1) n -> Accessor n t1)
+
+-- Repr instances
+
+instance Repr a => Repr (App a) where
+    repr (App a args) = "App (" <> repr a <> ") " <> repr args
+
+instance Repr a => Repr (Arg a) where
+    repr (Arg n a) = "Arg (" <> repr n <> ") (" <> repr a <> ")"
+
+
+
 
 
 
@@ -45,67 +121,3 @@ import Luna.Syntax.Name
 
 
 
-
--- Component types
-
-newtype Var        = Var      Name      deriving (Show, Eq)
-data    Cons     a = Cons     Name [a]  deriving (Show)
-data    Accessor a = Accessor Name a    deriving (Show)
-data    App      a = App      a [Arg a] deriving (Show)
-
-
-
--- Type sets
-
-type TermElems      a = Var
-                     ': ConstTermElems a
-
-type ConstTermElems a = Accessor a
-                     ': App      a
-                     ': ValElems a
-
-type ValElems       a = Lit
-                     ': Cons a
-                     ': '[]
-
-
--- Record types
-
-type ValTypes       h = ValElems (h (Val h))
-type ConstTermTypes h = (Val h) ': ConstTermElems (h (ConstTerm h))
-type TermTypes      h = (Val h) ': (ConstTerm h) ': TermElems (h (Term h))
-
-newtype Val       h = Val       { __vrecH :: Record (ValTypes h) }
-newtype ConstTerm h = ConstTerm { __crecH :: Record (ConstTermTypes h) }
-newtype Term      h = Term      { __trecH :: Record (TermTypes h) }
-
-makeLenses ''Val
-makeLenses ''ConstTerm
-makeLenses ''Term
-
--- instances
-
-deriving instance (Show (h (Val h)))                                            => Show (Val h)
-deriving instance (Show (h (Val h)), Show (h (ConstTerm h)))                    => Show (ConstTerm h)
-deriving instance (Show (h (Val h)), Show (h (ConstTerm h)), Show (h (Term h))) => Show (Term h)
-
-type instance Variants (Val h)       = ValTypes       h
-type instance Variants (ConstTerm h) = ConstTermTypes h
-type instance Variants (Term h)      = TermTypes      h
-
-instance IsVariant (Val h)       where record  = _vrecH
-                                       variant = Val
-
-instance IsVariant (ConstTerm h) where record  = _crecH
-                                       variant = ConstTerm
-
-instance IsVariant (Term h)      where record  = _trecH
-                                       variant = Term
-
--- Repr instances
-
-instance Repr a => Repr (App a) where
-    repr (App a args) = "App (" <> repr a <> ") " <> repr args
-
-instance Repr a => Repr (Arg a) where
-    repr (Arg n a) = "Arg (" <> repr n <> ") (" <> repr a <> ")"

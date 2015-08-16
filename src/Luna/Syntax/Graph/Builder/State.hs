@@ -1,7 +1,7 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Luna.Syntax.Graph.Builder.Class where
+module Luna.Syntax.Graph.Builder.State where
 
 
 import Flowbox.Prelude

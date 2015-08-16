@@ -5,7 +5,7 @@ module Luna.Syntax.Graph.Builder where
 import Flowbox.Prelude hiding (cons)
 import Data.Variant
 
-import Luna.Syntax.Graph.Builder.Class
+import Luna.Syntax.Graph.Builder.State
 import Luna.Syntax.Graph
 import Luna.Syntax.Arg
 import Luna.Syntax.AST
@@ -29,7 +29,7 @@ mkGraphRef = fmap GraphRef . mkRef
 
 
 
---- === AST builders ===
+--- === Term builders ===
 
 -- generic builders
 

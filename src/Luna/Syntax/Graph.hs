@@ -50,7 +50,11 @@ deriving instance Show (h (a h)) => Show (Ref h a)
 instance                             (Monad m) => ToMRef    (GraphRef l a)  m l a where toMRef = return
 instance {-# OVERLAPPABLE #-} (m ~ n, Monad m) => ToMRef (m (GraphRef l a)) n l a where toMRef = id
 
+instance (Typeable a, Typeable l) => Repr (GraphRef l a) where
+    repr = repr . fromGraphRef
 
+instance Repr (Rec h a) => Repr (Ref h a) where
+    repr = repr . fromRef
 
 -- === RefBuilder ===
 
