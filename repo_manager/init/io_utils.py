@@ -113,6 +113,15 @@ def fwarning(x, *, parent=None, **kwargs):
     fprint(x, colour='yellow', parent=parent, **kwargs)
 
 
+def ferror(x, *, parent=None, **kwargs):
+    if not parent:
+        parent = inspect.stack()[1][0]
+
+    # noinspection PyUnresolvedReferences
+    from clint.textui import colored, puts
+    print(colored.red("ERROR: ") + fmt(x, parent=parent, **kwargs))
+
+
 def finfo(x, *, parent=None, **kwargs):
     if not parent:
         parent = inspect.stack()[1][0]
