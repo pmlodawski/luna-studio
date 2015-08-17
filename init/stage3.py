@@ -24,6 +24,7 @@ from clint.textui import puts, colored
 from plumbum import local
 # noinspection PyUnresolvedReferences
 import plumbum
+from init.shtack_exceptions import ShtackWrongStackVersion
 
 
 def bind_git_hooks():
@@ -67,22 +68,8 @@ def create_aliases():
 
 
 def get_stack():
-    # try:
-    #     local["stack"]["--version"]()
-    # except plumbum.CommandNotFound:
-    #     finfo("it seems that you don't have `stack` installed. I'll get it for you")
-    # else:
-    #     finfo("it seems that you already have `stack` installed. Good!")
-    #     return
 
-    this_system = platform.system()
-    if this_system == 'Darwin':
-        bootstrapping_stack_os_abbrev = 'osx'
-    elif this_system == 'Linux':
-        bootstrapping_stack_os_abbrev = 'linux'
-    else:
-        ferror("I can't get `stack` for you, your system '{this_system}' is not supported :(")
-        return
+    # customizables
 
     bootstrapping_stack_version = '0.1.2.0'
     bootstrapping_stack_arch = 'x86_64'
@@ -96,6 +83,30 @@ def get_stack():
                                   "-{bootstrapping_stack_os_abbrev}.gz")
 
     stack_gitrepo = 'git@github.com:commercialhaskell/stack.git'
+
+    # logic
+
+    try:
+        curr_ver = local["stack"]["--version"]()
+        curr_ver = curr_ver.split()[-1]
+        if curr_ver != target_stack_gitsha:
+            raise ShtackWrongStackVersion
+    except plumbum.CommandNotFound:
+        finfo("it seems that you don't have `stack` installed. I'll get it for you")
+    except ShtackWrongStackVersion:
+        finfo("it seems that you have `stack` installed but it's in wrong version. I'll get it for you")
+    else:
+        finfo("it seems that you already have `stack` installed and in correct version. Good!")
+        return
+
+    this_system = platform.system()
+    if this_system == 'Darwin':
+        bootstrapping_stack_os_abbrev = 'osx'
+    elif this_system == 'Linux':
+        bootstrapping_stack_os_abbrev = 'linux'
+    else:
+        ferror("I can't get `stack` for you, your system '{this_system}' is not supported :(")
+        return
 
     fprint("""
     To give you `stack`, I will get the following for you (in order):
@@ -149,6 +160,7 @@ def main():
         bind_git_hooks()
         configure_repo()
         create_aliases()
+        get_stack()
     except Exception as e:
         # noinspection PyUnusedLocal
         terminal_width = shutil.get_terminal_size((80, 20)).columns
