@@ -97,12 +97,13 @@ data DragState = DragState { _widgetId       :: WidgetId
 makeLenses ''DragState
 
 sceneToLocal :: Vector2 Double -> [Double] -> Vector2 Double
-sceneToLocal (Vector2 x y) [aa, ab, ac, ad
-                           ,ba, bb, bc, bd
-                           ,ca, cb, cc, cd
-                           ,da, db, dc, dd] = Vector2 x' y' where
-                                         x' = aa * x + ba * y + da
-                                         y' = ab * x + bb * y + db
+sceneToLocal (Vector2 x y) [ aa, ab, ac, ad
+                           , ba, bb, bc, bd
+                           , ca, cb, cc, cd
+                           , da, db, dc, dd
+                           ] = Vector2 x' y' where
+                               x' = aa * x + ba * y + da
+                               y' = ab * x + bb * y + db
 
 screenToLocal :: JSCamera.Camera -> Vector2 Int -> [Double]  -> Vector2 Double
 screenToLocal cam mousePos widgetMatrix = sceneToLocal workspacePos widgetMatrix where
