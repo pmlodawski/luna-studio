@@ -1,0 +1,155 @@
+#!/usr/bin/env python3
+"""Gencabal.
+
+Usage:
+  gencabal.py
+  gencabal.py <infile>
+  gencabal.py <infile> <outfile>
+"""
+
+
+
+###########################################################################
+# Copyright (C) Flowbox, Inc / All Rights Reserved
+# Unauthorized copying of this file, via any medium is strictly prohibited
+# Proprietary and confidential
+# Flowbox Team <contact@flowbox.io>, 2015
+###########################################################################
+from contextlib import contextmanager
+
+import os
+import re
+from pathlib import Path
+from docopt import docopt
+
+
+@contextmanager
+def suppress(*args):
+    try:
+        yield
+    except args:
+        pass
+
+
+@contextmanager
+def cwd(newpath):
+    oldpath = os.getcwd()
+    try:
+        os.chdir(newpath)
+        yield
+    finally:
+        os.chdir(oldpath)
+
+
+def overwrite_if_changed(path, s):
+    with suppress(IOError):
+        with path.open("r") as fh:
+            if fh.read() == s:
+                return
+
+    with path.open("w") as fh:
+        fh.write(s)
+
+
+def process_tcabal_files(infile=None, outfile=None):
+
+    header = '''\
+    ---------------------------------------------------
+    -- This is a generated cabal configuration file. --
+    -- DO NOT EDIT!                                  --
+    -- Use gencabal instead.                         --
+    ---------------------------------------------------
+
+    '''
+    header = "\n".join(
+        line.lstrip()
+        for line in header.splitlines()
+    )
+
+    if not infile:
+        for tcabal_path in Path(".").glob("**/*.tcabal"):
+            with tcabal_path.open("r") as fh:
+                tcabal = fh.read()
+            cabal = header + process(tcabal_path.parent, tcabal)
+
+            cabal_path = tcabal_path.with_suffix('.cabal')
+
+            overwrite_if_changed(cabal_path, cabal)
+    else:
+        tcabal_path = Path(infile)
+
+        if outfile:
+            cabal_path = Path(outfile)
+        else:
+            cabal_path = tcabal_path.with_suffix('.cabal')
+
+        with tcabal_path.open("r") as fh:
+            tcabal = fh.read()
+
+        cabal = header + process(tcabal_path.parent, tcabal)
+        overwrite_if_changed(cabal_path, cabal)
+
+
+def find_regex(basepath, regex=r'.*', exclude=r'_^'):
+    files = []
+    obj = re.compile(regex)
+    obj_excl = re.compile(exclude)
+    for path, _, filenames in os.walk(basepath):
+        relpath = os.path.relpath(path, basepath)
+        for filename in filenames:
+            filerelpath = os.path.join(relpath, filename)
+            filerelpath = filerelpath.replace(os.path.sep, '/')  # srindows
+            #                                                      ^-- this comment is too beautiful to be removed :D
+            if filerelpath[:2] == './':
+                filerelpath = filerelpath[2:]
+            if obj.match(filerelpath) and not obj_excl.match(filerelpath):
+                files.append(filerelpath)
+    return files
+
+
+indent = 4 * ' '
+
+
+def dropext(path):
+    out, _ = os.path.splitext(path)
+    return out
+
+
+def mkident(i):
+    return i * indent
+
+
+def fields(l):
+    return '\n' + mkident(2) + (',\n' + mkident(2)).join(l)
+
+
+def findmodules(basepath, regex=r'.*', exclude=r'_^'):
+    paths = find_regex(basepath, regex, exclude)
+    module_files = [dropext(path) for path in paths]
+    modules = [name.replace('/', '.') for name in module_files]
+
+    return fields(modules)
+
+
+def runcode(path, code):
+    with cwd(str(path)):
+        return eval(code)
+
+
+def runmatch(path):
+    def rundec(matchobj):
+        code = matchobj.group(0)[1:-1]
+        return runcode(path, code)
+    return rundec
+
+
+def process(path, config):
+    match = re.compile(r'`[^`]*`')
+    return match.sub(runmatch(path), config)
+
+
+if __name__ == '__main__':
+    dargs = docopt(__doc__, version='The script')
+    # print(dargs)
+
+    process_tcabal_files(infile=dargs.get("<infile>"), outfile=dargs.get("<outfile>"))

@@ -1,0 +1,98 @@
+#ifdef GL_ES
+precision highp float;
+#endif
+
+varying vec2 pos;
+varying vec2 posUV;
+
+uniform float camFactor;
+uniform float mouseDist;
+uniform float nodeSize;
+uniform float portSize;
+
+uniform vec4 colorFar;
+uniform vec4 color;
+
+uniform int antialias;
+
+uniform int objectMap;
+uniform vec3 objectId;
+
+
+void main() {
+
+    if (objectMap == 1) {
+        gl_FragColor = vec4(objectId, 1.0);
+        return;
+    }
+
+    float coef = nodeSize / portSize;
+    vec2 posS = pos;
+    vec2 posN = vec2(posS.x * portSize + nodeSize, posS.y * portSize / 2.0);
+    float dist_squared = dot(posN, posN);
+
+    float alpha = 1.0;
+    alpha *= min(1.0, 1.0 - pow(posUV.y, 60.0));
+
+    float gradRange  = 300.0;
+    float colorRange =  60.0;
+    vec4  colorShow  = colorFar;
+    if (mouseDist < colorRange) {
+        colorShow = color;
+    } else if (mouseDist < gradRange) {
+        float coef = (mouseDist - colorRange) / (gradRange - colorRange);
+        float coefR = 1.0 - coef;
+        float distMix = coefR * coefR * coefR;
+        colorShow = distMix * color + (1.0 - distMix) * colorFar;
+    }
+
+    float camFactorDelta = camFactor - 1.0;
+    float rimCamFactor  = 1.0;
+    float blurCamFactor = 1.0;
+    if (camFactorDelta > 0.0) {
+        rimCamFactor  += camFactorDelta / 50.0;
+        blurCamFactor += camFactorDelta / 1.5;
+    } else if (camFactorDelta < 0.0) {
+        rimCamFactor  += camFactorDelta / 10.0;
+        blurCamFactor += camFactorDelta / 1.1;
+    }
+    float blurWidth = 60.0;
+    float rimWidth = 120.0;
+    float size = nodeSize + rimWidth / 32.0;
+    float r4 = dot(size, size);
+    float r3 = r4 - blurWidth / blurCamFactor;
+    float r2 = r3 -  rimWidth /  rimCamFactor;
+    float r1 = r2 - blurWidth / blurCamFactor;
+
+    float d_blur_r34 = 1.0;
+    float d_blur_r12 = 0.0;
+    if (antialias != 0) {
+        d_blur_r34 = 1.0 - (dist_squared - r3) / (r4 - r3);
+        d_blur_r12 = (dist_squared - r1) / (r2 - r1);
+    }
+
+    if (dist_squared < r1) {
+        discard;
+        // alpha *= 0.2;
+    } else if (dist_squared < r2) {
+        alpha *= d_blur_r12;
+    } else if (dist_squared < r3) {
+    } else if (dist_squared < r4) {
+        alpha *= d_blur_r34;
+    } else {
+        discard;
+        // alpha *= 0.2;
+    }
+
+    float disappearE = 0.5;
+    float disappearS = 0.9;
+    if (camFactor < disappearE) {
+        alpha = 0.0;
+    } else if (camFactor < disappearS) {
+       float disappearW = disappearS - disappearE;
+       alpha *= 1.0 - (disappearS - camFactor) / disappearW;
+    }
+
+
+    gl_FragColor = vec4(colorShow.xyz, alpha * colorShow.w);;
+}

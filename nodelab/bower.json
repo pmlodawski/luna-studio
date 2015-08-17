@@ -1,0 +1,21 @@
+{
+  "name": "Flowbox Data GUI",
+  "version": "0.0.0",
+  "authors": [
+    "Kamil Figiela <kamil.figiela@gmail.com>"
+  ],
+  "license": "properitary",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "~2.1.4",
+    "malihu-custom-scrollbar-plugin": "~3.0.9",
+    "three.js": "https://github.com/mrdoob/three.js.git#a6305636a3c855c64dc53c1ff67a9c46e63597ba",
+    "underscore": "~1.8.3"
+  }
+}
