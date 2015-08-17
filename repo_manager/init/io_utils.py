@@ -106,6 +106,15 @@ def fmt(x, *, parent=None, notrunc=False):
     return x.format(**var)
 
 
+def ferror(x, *, parent=None, **kwargs):
+    if not parent:
+        parent = inspect.stack()[1][0]
+
+    # noinspection PyUnresolvedReferences
+    from clint.textui import colored, puts
+    print(colored.red("ERROR: ") + fmt(x, parent=parent, **kwargs))
+
+
 def fwarning(x, *, parent=None, **kwargs):
     if not parent:
         parent = inspect.stack()[1][0]

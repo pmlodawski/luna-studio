@@ -6,6 +6,7 @@
 
 import os
 import shutil
+import stat
 import sys
 from pathlib import Path
 from git_utils import releasing
@@ -19,7 +20,13 @@ from clint.textui import puts, colored
 from plumbum import local
 # noinspection PyUnresolvedReferences
 import plumbum
-from init.shtack_exceptions import ShtackWrongStackVersion
+from shtack_exceptions import ShtackWrongStackVersion
+import multiprocessing
+import tempfile
+import urllib
+import urllib.request
+from io_utils import ferror
+import platform
 
 
 def bind_git_hooks():
@@ -70,12 +77,6 @@ def get_stack():
     target_stack_gitsha = '5461d3e071bf4478b40ea9946e4c425f4669c46c'
     number_of_jobs = multiprocessing.cpu_count()
 
-    bootstrapping_stack_url = fmt("https://github.com/commercialhaskell/stack/releases/download/"
-                                  "v{bootstrapping_stack_version}/stack"
-                                  "-{bootstrapping_stack_version}"
-                                  "-{bootstrapping_stack_arch}"
-                                  "-{bootstrapping_stack_os_abbrev}.gz")
-
     stack_gitrepo = 'git@github.com:commercialhaskell/stack.git'
 
     # logic
@@ -101,6 +102,12 @@ def get_stack():
     else:
         ferror("I can't get `stack` for you, your system '{this_system}' is not supported :(")
         return
+
+    bootstrapping_stack_url = fmt("https://github.com/commercialhaskell/stack/releases/download/"
+                                  "v{bootstrapping_stack_version}/stack"
+                                  "-{bootstrapping_stack_version}"
+                                  "-{bootstrapping_stack_arch}"
+                                  "-{bootstrapping_stack_os_abbrev}.gz")
 
     fprint("""
     To give you `stack`, I will get the following for you (in order):
