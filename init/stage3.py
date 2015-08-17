@@ -86,7 +86,7 @@ def get_stack():
 
     bootstrapping_stack_version = '0.1.2.0'
     bootstrapping_stack_arch = 'x86_64'
-    target_stack_gitsha = '164d3ab1e7cf511d37657e620bfa207ad3e3b783'
+    target_stack_gitsha = '5461d3e071bf4478b40ea9946e4c425f4669c46c'
     number_of_jobs = multiprocessing.cpu_count()
 
     bootstrapping_stack_url = fmt("https://github.com/commercialhaskell/stack/releases/download/"
