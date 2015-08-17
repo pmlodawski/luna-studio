@@ -33,6 +33,8 @@ import           Object.Widget
 import           GHCJS.Prim
 import           Utils.CtxDynamic
 import           JS.Bindings (setCursor)
+import           ThreeJS.Uniform (Uniform(..), UniformMap(..), toUniform)
+import qualified ThreeJS.Uniform as Uniform
 
 
 newtype Slider = Slider { unSlider :: JSObject.Object }
@@ -73,8 +75,8 @@ buildValueLabel w = do
 buildSlider :: WB.Slider -> IO Slider
 buildSlider s@(WB.Slider bid pos size labelText minValue maxValue value) = do
     group    <- buildGroup
-    sliderPos <- toAttribute $ WB.sliderPosition s
-    focus     <- toAttribute (0 :: Int)
+    sliderPos <- toUniform $ WB.sliderPosition s
+    focus     <- toUniform (0 :: Int)
 
     label <- do
         (mesh, width) <-  buildLabel labelText
@@ -86,17 +88,16 @@ buildSlider s@(WB.Slider bid pos size labelText minValue maxValue value) = do
 
     background <- do
         let (vs, fs) = loadShaders "slider"
-        attributes <- buildAttributeMap
-        uniforms   <- buildAttributeMap
-        sizeU     <- buildVector2 (size ^. x) (size ^. y) >>= toAttribute
-        objectId  <- buildVector3 ((fromIntegral $ bid `mod` 256) / 255.0) ((fromIntegral $ bid `div` 256) / 255.0) 0.0 >>= toAttribute
+        uniforms  <- Uniform.buildUniformMap
+        sizeU     <- buildVector2 (size ^. x) (size ^. y) >>= toUniform
+        objectId  <- buildVector3 ((fromIntegral $ bid `mod` 256) / 255.0) ((fromIntegral $ bid `div` 256) / 255.0) 0.0 >>= toUniform
         geom      <- buildPlaneGeometry 1.0 1.0
-        setAttribute uniforms "size" sizeU
-        setAttribute uniforms "objectId" objectId
-        setAttribute uniforms "value" sliderPos
-        setAttribute uniforms "focus" focus
+        Uniform.setUniform uniforms "size" sizeU
+        Uniform.setUniform uniforms "objectId" objectId
+        Uniform.setUniform uniforms "value" sliderPos
+        Uniform.setUniform uniforms "focus" focus
         Geometry.translate geom 0.5 0.5 0.0
-        material <- buildShaderMaterial uniforms attributes vs fs True NormalBlending DoubleSide
+        material <- buildShaderMaterial uniforms vs fs True NormalBlending DoubleSide
         mesh     <- buildMesh geom material
         s        <- scale mesh
         s     `setX` (size ^. x)
@@ -114,8 +115,8 @@ buildSlider s@(WB.Slider bid pos size labelText minValue maxValue value) = do
     p `setY` (pos ^. y)
 
     uniforms <- JSObject.create
-    JSObject.setProp "value"    (JSObject.getJSRef $ unAttribute sliderPos) uniforms
-    JSObject.setProp "focus"    (JSObject.getJSRef $ unAttribute focus    ) uniforms
+    JSObject.setProp "value"    (JSObject.getJSRef $ unUniform sliderPos) uniforms
+    JSObject.setProp "focus"    (JSObject.getJSRef $ unUniform focus    ) uniforms
 
     slider <- JSObject.create
 
@@ -142,9 +143,9 @@ removeFromRegistry b = removeFromRegistryJS sliderId
 setUniform :: Text -> JSRef a -> WB.Slider -> IO ()
 setUniform n v w = do
     bref     <- getFromRegistry w
-    uniforms <- JSObject.getProp "uniforms"             (unSlider bref) >>= return . JSObject.fromJSRef
-    uniform  <- JSObject.getProp (lazyTextToJSString n)  uniforms       >>= return . Attribute . JSObject.fromJSRef
-    setValue uniform v
+    uniforms <- JSObject.getProp "uniforms"             (unSlider bref) >>= return .           JSObject.fromJSRef
+    uniform  <- JSObject.getProp (lazyTextToJSString n)  uniforms       >>= return . Uniform . JSObject.fromJSRef
+    Uniform.setValue uniform v
 
 setValueLabel :: WB.Slider -> IO ()
 setValueLabel w = do
