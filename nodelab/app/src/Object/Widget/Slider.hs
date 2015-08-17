@@ -10,6 +10,7 @@ import qualified Data.Text.Lazy as Text
 import           Data.Text.Lazy (Text)
 
 import           Object.Widget
+import           Numeric
 
 
 data Slider = Slider { _refId    :: Int
@@ -34,3 +35,13 @@ setValueNorm :: Double -> Slider -> Slider
 setValueNorm normVal slider = slider & value .~ val where
     boundedValue  = max 0.0 $ min 1.0 normVal
     val           = slider ^. minValue + boundedValue * (slider ^. maxValue - slider ^. minValue)
+
+displayValue s = showFFloat (Just $ sliderPrecision s) (s ^. value) ""
+
+sliderPrecision :: Slider -> Int
+sliderPrecision s = displayPrecision (s ^. minValue) (s ^. maxValue)
+
+displayPrecision :: Double -> Double -> Int
+displayPrecision minV maxV = numDigits $ ceiling $ max (alog10 minV) (alog10 maxV) where
+    alog10 n               = logBase 10 $ abs n
+    numDigits n            = max (2 - n) 0 where

@@ -57,7 +57,7 @@ buildLabel text = do
 buildValueLabel w = do
     let value = w ^. WB.value
     let sliderWidth = w ^. WB.size ^. x
-    let text = Text.pack $ display value
+    let text =  Text.pack $ WB.displayValue w
     material <- getTextHUDMaterial
     geom     <- buildTextGeometry text
     mesh     <- buildMesh geom material
