@@ -5,12 +5,17 @@
 #
 
 import os
+import platform
 import shutil
+import stat
 import sys
 from pathlib import Path
+import multiprocessing
+import tempfile
+import urllib.request
 from git_utils import releasing
 
-from io_utils import fprint, fmt, finfo
+from io_utils import fprint, fmt, ferror, finfo
 # noinspection PyUnresolvedReferences
 import git
 # noinspection PyUnresolvedReferences
@@ -41,6 +46,7 @@ def bind_git_hooks():
         """, colour='yellow')
         raise Exception(fmt("ERROR: tried to remove current '{git_hooks_p}' but failed.")) from e
 
+    # noinspection PyTypeChecker
     git_hooks_p.symlink_to(Path('..') / hooks_p, target_is_directory=True)
 
 
