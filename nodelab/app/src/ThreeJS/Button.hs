@@ -30,6 +30,8 @@ import qualified Object.Widget.Button as WB
 import           Object.Widget
 import           GHCJS.Prim
 import           Utils.CtxDynamic
+import           ThreeJS.Uniform (Uniform(..), UniformMap(..), toUniform)
+import qualified ThreeJS.Uniform as Uniform
 
 
 newtype Button = Button { unButton :: JSObject.Object }
@@ -57,22 +59,21 @@ buttonWidth text = Config.fontSize * (calculateTextWidth text) + 2 * buttonPaddi
 buildButton :: WB.Button -> IO Button
 buildButton (WB.Button bid label state pos size) = do
     group    <- buildGroup
-    state    <- toAttribute (0 :: Int)
+    state    <- toUniform (0 :: Int)
 
     background <- do
         let (vs, fs) = loadShaders "button"
-        attributes <- buildAttributeMap
-        uniforms <- buildAttributeMap
-        color    <- buildVector4 1.0 0.0 1.0 1.0 >>= toAttribute
-        sizeU    <- buildVector2 (size ^. x) (size ^. y) >>= toAttribute
-        objectId <- buildVector3 ((fromIntegral $ bid `mod` 256) / 255.0) ((fromIntegral $ bid `div` 256) / 255.0) 0.0 >>= toAttribute
+        uniforms <- Uniform.buildUniformMap
+        color    <- buildVector4 1.0 0.0 1.0 1.0 >>= toUniform
+        sizeU    <- buildVector2 (size ^. x) (size ^. y) >>= toUniform
+        objectId <- buildVector3 ((fromIntegral $ bid `mod` 256) / 255.0) ((fromIntegral $ bid `div` 256) / 255.0) 0.0 >>= toUniform
         geom     <- buildPlaneGeometry 1.0 1.0
-        setAttribute uniforms "color" color
-        setAttribute uniforms "size" sizeU
-        setAttribute uniforms "state" state
-        setAttribute uniforms "objectId" objectId
+        Uniform.setUniform uniforms "color"    color
+        Uniform.setUniform uniforms "size"     sizeU
+        Uniform.setUniform uniforms "state"    state
+        Uniform.setUniform uniforms "objectId" objectId
         Geometry.translate geom 0.5 0.5 0.0
-        material <- buildShaderMaterial uniforms attributes vs fs True NormalBlending DoubleSide
+        material <- buildShaderMaterial uniforms vs fs True NormalBlending DoubleSide
         mesh     <- buildMesh geom material
         s        <- scale mesh
         s     `setX` (size ^. x)
@@ -95,7 +96,7 @@ buildButton (WB.Button bid label state pos size) = do
 
 
     uniforms <- JSObject.create
-    JSObject.setProp "state"    (JSObject.getJSRef $ unAttribute state) uniforms
+    JSObject.setProp "state"    (JSObject.getJSRef $ unUniform state) uniforms
 
     button <- JSObject.create
 
@@ -121,9 +122,9 @@ removeFromRegistry b = removeFromRegistryJS buttonId
 setUniform :: Text -> JSRef a -> WB.Button -> IO ()
 setUniform n v w = do
     bref     <- getFromRegistry w
-    uniforms <- JSObject.getProp "uniforms" (unButton bref)      >>= return .             JSObject.fromJSRef
-    uniform  <- JSObject.getProp (lazyTextToJSString n) uniforms >>= return . Attribute . JSObject.fromJSRef
-    setValue uniform v
+    uniforms <- JSObject.getProp "uniforms" (unButton bref)      >>= return .           JSObject.fromJSRef
+    uniform  <- JSObject.getProp (lazyTextToJSString n) uniforms >>= return . Uniform . JSObject.fromJSRef
+    Uniform.setValue uniform v
 
 updateState :: WB.Button -> IO ()
 updateState b = do

@@ -29,7 +29,7 @@ instance IsMaterial TextMaterial where material (TextMaterial m) = m
 
 -- -> HS
 foreign import javascript unsafe "require('font/text_material').graph"
-    getTextMaterial :: IO Material
+    getTextMaterialJS :: IO Material
 
 -- -> HS
 foreign import javascript unsafe "require('font/text_material').hud"
@@ -37,6 +37,9 @@ foreign import javascript unsafe "require('font/text_material').hud"
 
 getTextHUDMaterial :: IO TextMaterial
 getTextHUDMaterial = getTextHUDMaterialJS >>= return . TextMaterial
+
+getTextMaterial :: IO TextMaterial
+getTextMaterial = getTextMaterialJS >>= return . TextMaterial
 
 
 foreign import javascript unsafe "breadcrumb.calculateTextWidth($1)"

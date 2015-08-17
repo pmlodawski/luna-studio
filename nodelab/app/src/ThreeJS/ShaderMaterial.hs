@@ -17,6 +17,8 @@ import qualified JavaScript.Array as JSArray
 import qualified Data.Text.Lazy as Text
 import           Data.Text.Lazy (Text)
 import           ThreeJS.Types
+import           ThreeJS.Uniform (Uniform(..), UniformMap(..))
+import qualified ThreeJS.Uniform as Uniform
 
 
 data Side = FrontSide | BackSide | DoubleSide deriving (Show, Eq, Enum)
@@ -27,12 +29,12 @@ data ShaderMaterial = ShaderMaterial Material
 
 instance IsMaterial ShaderMaterial where material (ShaderMaterial m) = m
 
-foreign import javascript unsafe "new THREE.ShaderMaterial({uniforms: $1, vertexShader: $3, fragmentShader: $4, transparent: $5, blending: $6, side: $7})"
-    buildShaderMaterialJS :: AttributeMap -> AttributeMap -> JSString -> JSString -> Bool -> Int -> Int  -> IO Material
+foreign import javascript unsafe "new THREE.ShaderMaterial({uniforms: $1, vertexShader: $2, fragmentShader: $3, transparent: $4, blending: $5, side: $6})"
+    buildShaderMaterialJS :: UniformMap -> JSString -> JSString -> Bool -> Int -> Int  -> IO Material
 
-buildShaderMaterial :: AttributeMap -> AttributeMap -> VertexShader -> FragmentShader -> Bool -> Blending -> Side -> IO ShaderMaterial
-buildShaderMaterial u a (VertexShader v) (FragmentShader f) t b s = do
-    buildShaderMaterialJS u a (lazyTextToJSString v) (lazyTextToJSString f) t (fromEnum b) (fromEnum s) >>= return . ShaderMaterial
+buildShaderMaterial :: UniformMap -> VertexShader -> FragmentShader -> Bool -> Blending -> Side -> IO ShaderMaterial
+buildShaderMaterial u (VertexShader v) (FragmentShader f) t b s = do
+    buildShaderMaterialJS u (lazyTextToJSString v) (lazyTextToJSString f) t (fromEnum b) (fromEnum s) >>= return . ShaderMaterial
 
 
 
