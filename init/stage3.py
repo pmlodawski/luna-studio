@@ -124,12 +124,12 @@ def get_stack():
 
                 finfo("extracting & making executable")
                 local["gunzip"]["stack.gz"]()
-                bootstrapping_stack_pth = Path("./stack")
-                st = os.stat(str(bootstrapping_stack_pth))
-                os.chmod(str(bootstrapping_stack_pth), st.st_mode | stat.S_IEXEC)
+
+                st = os.stat("./stack")
+                os.chmod("./stack", st.st_mode | stat.S_IEXEC)
 
                 finfo("getting GHC if required")
-                bootstrapping_stack_cmd = local[str(bootstrapping_stack_pth)]
+                bootstrapping_stack_cmd = local["./stack"]
                 bootstrapping_stack_cmd["setup"]()
 
                 finfo("building proper stack")
