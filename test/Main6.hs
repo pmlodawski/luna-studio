@@ -150,19 +150,19 @@ type FunctionGraph = Function (HomoNet (Label Foo) Term)
 --                deriving (Show)
 -- Thunk
 
-data Typed a = Typed { _typedData :: a
-                     } deriving (Show)
+        --data Typed a = Typed { _typedData :: a
+        --                     } deriving (Show)
 
-makeLenses ''Typed
+        --makeLenses ''Typed
 
-instance HasContainer a c => HasContainer (Typed a) c where
-    container = typedData . container
+        --instance HasContainer a c => HasContainer (Typed a) c where
+        --    container = typedData . container
 
-instance HasAST a ast => HasAST (Typed a) ast where
-    ast = typedData . ast
+        --instance HasAST a ast => HasAST (Typed a) ast where
+        --    ast = typedData . ast
 
-instance {-# OVERLAPPABLE #-} (ASTGen ast m a, Functor m) => ASTGen ast m (Typed a) where
-    genAST a = Typed <$> genAST a
+        --instance {-# OVERLAPPABLE #-} (ASTGen ast m a, Functor m) => ASTGen ast m (Typed a) where
+        --    genAST a = Typed <$> genAST a
 
 -- ===================================================================
 
@@ -261,6 +261,7 @@ y = runGraph x2 def
 
 main = do
     putStrLn $ repr y
+    print c'
     --print $ take 1000 names
     return ()
 

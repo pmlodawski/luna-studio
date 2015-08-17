@@ -1,5 +1,6 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 
 module Luna.Syntax.Term where
 
@@ -9,6 +10,7 @@ import Luna.Syntax.Lit
 import Luna.Syntax.Arg
 import Luna.Syntax.Name
 
+import Data.Cata
 
 -- === Terms ===
 
@@ -41,9 +43,87 @@ newtype Val   h = Val   { __valRec   :: HRecord Val   h }
 newtype Thunk h = Thunk { __thunkRec :: HRecord Thunk h }
 newtype Term  h = Term  { __termRec  :: HRecord Term  h }
 
---data TT a (h :: * -> *) = TT (a h)
+-----------------------------------------------------------------------------------------------
+
+newtype Val'   t = Val'   (Record (ValElems   t))
+newtype Thunk' t = Thunk' (Record (ThunkElems t))
+newtype Term'  t = Term'  (Record (TermElems  t))
+
+
+
+
+
+data Cat a = Cat { _ci :: Int, _ca :: a } deriving (Functor)
+
+makeLenses ''Cat
+
+mkRec c i = Mu (c i $ mkRec c (i + 1))
+c = mkRec Cat 0 :: Mu Cat
+
+c' = cata (\a -> if (view ci a < 10) then view ca a else (view ci a)) c
+
+
+
+
+
+data Type a = Star
+            | Type a
+
+data Typed a t = Typed t (a t)
+
+data Labeled' a t = Labeled' (a t)
+
+type F1 h = MuH h Val'
+
+type F2 h = MuH h (Labeled' (Typed Val'))
+type F3   = Mu  (Labeled' (Typed Val'))
+type F4 h = MuH h (Typed Val')
+type F5   = Mu (Typed Val')
+
+data Han a = Han
+
+xt1 = toMu (Typed Han (Val' undefined)) :: F4 Han
+xt2 = toMu (Typed (toMu (Typed undefined undefined)) undefined) :: F5
+
+newtype ValT  h = ValT  { __valTRec  :: Record (ValElems (h (T h (Val (T h))))) }
+
+
+-- mozna type sets zamienic na Typed, np:
+-- ValElems t = Typed t Lit
+--            : Typed t (Cons t)
+--            : ...
+
+
+newtype Val2 h = Val2 { __valRec2   :: Record (ValElems (h (Val2 h))) }
+
+data Typed2 a h = Typed2 (a (Typed2 a)) -- (h (a (Typed2 a)))
+
+--Typed2 Val
+
+    --newtype Val2 h = Val2 { __valRec2   :: Record (ValElems (h (Val2 h))) }
+
+    --data Typed2   h a = Typed2   (h a) a
+    --data Labeled2 h a = Labeled2 (h a)
+
+    --type TVal h = Val2 (Typed2 h)
+
+
+    --Record (ValElems (h (Val2 h)))
+
+
+--type TVal h = Val2 (Labeled2 (Typed2 h))
+
+data T h a = T a (h a)
+newtype TT (h :: * -> *) a = TT (h (T h a))
+
+
+--h (Val h)
+
+type Foo1 h = TT h (Val (TT h))
 
 --deriving instance Show (a h) => Show (TT a h)
+-----------------------------------------------------------------------------------------------
+
 
 type instance Variants (Val   h) =                         ValElems   (H Val   h)
 type instance Variants (Thunk h) = (Val h) ':              ThunkElems (H Thunk h)
