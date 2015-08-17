@@ -22,7 +22,7 @@ def main():
     print('############################## STAGE: 0 ##############################')
     print("INFO: bootstrapping gitmodules to obtain repo-management scripts")
     subprocess.check_call([
-        "git", "submodule", "update", "--init", "--remote", "--merge"
+        "git", "submodule", "update", "--init"
     ])
     subprocess.check_call([
         "git", "submodule", "foreach", "-q", "--recursive",

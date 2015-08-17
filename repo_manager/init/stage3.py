@@ -19,22 +19,7 @@ from clint.textui import puts, colored
 from plumbum import local
 # noinspection PyUnresolvedReferences
 import plumbum
-
-
-def bind_gitmodules():
-    this_repo = git.Repo('.')
-
-    finfo("""
-    assuming that everybody knows that one *needs* ./init_repo.py before doing any
-          work. Is that right?
-    """)
-
-def update_gitmodules():
-    fprint(colored.blue("INFO: ") + "initialising git-modules")
-    git_command = local["git"]
-    git_command["submodule", "init"]()
-    git_command["submodule", "sync", "--recursive"]()
-    git_command["submodule", "update", "--recursive"]()
+from init.shtack_exceptions import ShtackWrongStackVersion
 
 
 def bind_git_hooks():
@@ -76,16 +61,104 @@ def create_aliases():
         cfg.set_value("alias", "shtack-update", "!./.git/hooks/_shtack-update")
 
 
+def get_stack():
+
+    # customizables
+
+    bootstrapping_stack_version = '0.1.2.0'
+    bootstrapping_stack_arch = 'x86_64'
+    target_stack_gitsha = '5461d3e071bf4478b40ea9946e4c425f4669c46c'
+    number_of_jobs = multiprocessing.cpu_count()
+
+    bootstrapping_stack_url = fmt("https://github.com/commercialhaskell/stack/releases/download/"
+                                  "v{bootstrapping_stack_version}/stack"
+                                  "-{bootstrapping_stack_version}"
+                                  "-{bootstrapping_stack_arch}"
+                                  "-{bootstrapping_stack_os_abbrev}.gz")
+
+    stack_gitrepo = 'git@github.com:commercialhaskell/stack.git'
+
+    # logic
+
+    try:
+        curr_ver = local["stack"]["--version"]()
+        curr_ver = curr_ver.split()[-1]
+        if curr_ver != target_stack_gitsha:
+            raise ShtackWrongStackVersion
+    except plumbum.CommandNotFound:
+        finfo("it seems that you don't have `stack` installed. I'll get it for you")
+    except ShtackWrongStackVersion:
+        finfo("it seems that you have `stack` installed but it's in wrong version. I'll get it for you")
+    else:
+        finfo("it seems that you already have `stack` installed and in correct version. Good!")
+        return
+
+    this_system = platform.system()
+    if this_system == 'Darwin':
+        bootstrapping_stack_os_abbrev = 'osx'
+    elif this_system == 'Linux':
+        bootstrapping_stack_os_abbrev = 'linux'
+    else:
+        ferror("I can't get `stack` for you, your system '{this_system}' is not supported :(")
+        return
+
+    fprint("""
+    To give you `stack`, I will get the following for you (in order):
+      - download stack used to build stack:
+        version:     {bootstrapping_stack_version}
+        arch:        {bootstrapping_stack_arch}
+        OS:          {bootstrapping_stack_os_abbrev}
+      - build proper stack with stack:
+        git-version: {target_stack_gitsha}
+        build jobs:  {number_of_jobs}
+    """)
+
+    target_stack_localtion_pth = local.cwd / "stack"
+
+    with tempfile.TemporaryDirectory(prefix="flowbox_shtack_") as tmpdir:
+        with local.cwd(tmpdir):
+            finfo("cloning stack git")
+            git_cmd = local["git"]
+            git_cmd["clone", stack_gitrepo]()
+
+            with local.cwd(local.cwd / "stack"):
+                git_cmd["checkout", target_stack_gitsha]()
+
+                finfo("downloading bootstrapping stack from {bootstrapping_stack_url}")
+                urllib.request.urlretrieve(bootstrapping_stack_url, "stack.gz")
+
+                finfo("extracting & making executable")
+                local["gunzip"]["stack.gz"]()
+
+                st = os.stat("./stack")
+                os.chmod("./stack", st.st_mode | stat.S_IEXEC)
+
+                finfo("getting GHC if required")
+                bootstrapping_stack_cmd = local["./stack"]
+                bootstrapping_stack_cmd["setup"]()
+
+                finfo("building proper stack")
+                bootstrapping_stack_cmd["build", "-j", str(number_of_jobs)]()
+
+                finfo("copying stack to '{target_stack_localtion_pth}'")
+                [target_stack_pth] = Path(fmt(".stack-work/install/{bootstrapping_stack_arch}-{bootstrapping_stack_os_abbrev}/lts-2.17/"))\
+                    .glob("*/bin/stack")
+                shutil.move(str(target_stack_pth), str(target_stack_localtion_pth))
+
+                finfo("stack is fresh & ready. Put it somewhere in your PATH")
+
+
 def main():
     try:
         print("##############################" + colored.blue(" STAGE: 3 ") + "##############################")
         bind_git_hooks()
-        bind_gitmodules()
-        update_gitmodules()
         configure_repo()
         create_aliases()
+        get_stack()
     except Exception as e:
+        # noinspection PyUnusedLocal
         terminal_width = shutil.get_terminal_size((80, 20)).columns
+        # noinspection PyUnusedLocal
         hash_sign = "#"
         fprint("{hash_sign:#^{terminal_width}}", colour='red')
         print("Stage 3 got exception:")
