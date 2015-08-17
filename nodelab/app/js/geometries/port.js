@@ -36,7 +36,7 @@ pos[3] = halfHeight;
 pos[4] = size *  triangleRatio * 0.5;
 pos[5] = 0.0;
 pos[6] = halfHeight;
-pos[7] = size * -triangleRatio * 0.5
+pos[7] = size * -triangleRatio * 0.5;
 pos[8] = 0.0;
 
 var position = new THREE.BufferAttribute(pos, 3);
