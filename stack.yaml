@@ -1,5 +1,4 @@
-resolver: ghc-7.10
-use-ghcjs: true
+resolver: ghcjs-0.1.0_ghc-7.10.2
 packages:
   - .
   - ../libs/utils
