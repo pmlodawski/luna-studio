@@ -1,0 +1,76 @@
+#ifdef GL_ES
+precision highp float;
+#endif
+
+varying float distance;
+varying float distanceV;
+
+uniform vec4 color;
+uniform float visible;
+uniform float camFactor;
+uniform float len;
+
+uniform int antialias;
+
+uniform int objectMap;
+uniform vec3 objectId;
+
+void main() {
+    if (visible < 1.0) discard;
+
+    float origAlpha = color.w;
+    vec3  colorShow = color.xyz;
+    float alphaShow = 1.0;
+
+    float d = abs(distance);
+    float v = abs(distanceV);
+
+    float camFactorDelta = camFactor - 1.0;
+    float rimCamFactor  = 1.0;
+    float blurCamFactor = 1.0;
+    if (camFactorDelta > 0.0) {
+      rimCamFactor  += camFactorDelta / 25.0;
+      blurCamFactor += camFactorDelta / 1.0;
+    } else if (camFactorDelta < 0.0) {
+      rimCamFactor  += camFactorDelta / 5.0;
+      blurCamFactor += camFactorDelta / 1.0;
+    }
+
+    float blurRef = 0.25;
+    float  rimRef = 0.18;
+
+    float blurWidth = blurRef / blurCamFactor;
+    float r1 =         rimRef /  rimCamFactor;
+    float r2 = r1 + blurWidth;
+
+    float alpha  = 1.0;
+    float alphaV = 1.0;
+
+    if (d < r1) {
+        alpha = 1.0;
+    } else if (d < r2 && antialias != 0) {
+        alpha = (r2 - d) / blurWidth;
+        // colorShow = vec3(alpha, 0.0, 0.0); alpha = 1.0; // for test
+    } else {
+        alpha = 0.0;
+        // colorShow = vec3(0.0, 1.0, 0.0); alpha = 1.0; // for test
+    }
+
+    if (antialias != 0) {
+        float sideWidth = 150.0 * blurWidth;
+        float vr = rimRef /  rimCamFactor;
+        float vm = len * (1.0 - v) / sideWidth;
+
+        if (vm <= vr) {
+            float mod = (vr - vm) / vr;
+            alphaV = 1.0 - mod * mod;
+            // colorShow = vec3(alphaV, 0.0, 0.0); alphaV = 1.0; // for test
+        }
+    }
+    alphaShow = alpha * alphaV;
+    if (objectMap == 1) {
+        gl_FragColor = vec4(objectId, 1.0);
+    } else  {
+        gl_FragColor = vec4(colorShow, alphaShow * origAlpha);
+    }
+}

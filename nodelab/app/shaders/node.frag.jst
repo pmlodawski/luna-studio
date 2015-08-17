@@ -1,0 +1,98 @@
+#ifdef GL_ES
+precision highp float;
+#endif
+
+varying vec2 pos;
+
+uniform float camFactor;
+uniform int   selected;
+uniform float mouseDist;
+uniform float nodeSize;
+
+uniform vec3 insideColor;
+uniform vec3 unselectedColor;
+uniform vec3 selectedColor;
+uniform vec3 focusedColor;
+
+uniform int antialias;
+
+uniform int objectMap;
+uniform vec3 objectId;
+
+
+void main() {
+    vec2 posN = pos * nodeSize;
+    float dist_squared = dot(posN, posN);
+
+    float bg_gray = 0.1;
+    vec3 color = unselectedColor;
+    float brighterBy = 0.7;
+    if (selected == 1) {
+        brighterBy = 0.3;
+        color = selectedColor;
+    } else if (selected == 2) {
+        brighterBy = 0.2;
+        color = focusedColor;
+    }
+
+    float distMix  = 0.0;
+    float gradRange  = 60.0;
+    float colorRange = 27.0;
+    if (mouseDist < colorRange) {
+        distMix = 1.0;
+    } else if (mouseDist < gradRange) {
+        float coef = (mouseDist - colorRange) / (gradRange - colorRange);
+        float coefR = 1.0 - coef;
+        distMix = coefR * coefR * coefR;
+    }
+    color *= 1.0 + distMix * brighterBy;
+
+    vec4 colorShow = vec4(color, 1.0);
+
+    float camFactorDelta = camFactor - 1.0;
+    float rimCamFactor  = 1.0;
+    float blurCamFactor = 1.0;
+    if (camFactorDelta > 0.0) {
+        rimCamFactor  += camFactorDelta / 50.0;
+        blurCamFactor += camFactorDelta / 1.5;
+    } else if (camFactorDelta < 0.0) {
+        rimCamFactor  += camFactorDelta / 10.0;
+        blurCamFactor += camFactorDelta / 1.1;
+    }
+    float blurWidth = 60.0;
+    float rimWidth = 200.0;
+    float r4 = 900.0;
+    float r3 = r4 - blurWidth / blurCamFactor;
+    float r2 = r3 -  rimWidth /  rimCamFactor;
+    float r1 = r2 - blurWidth / blurCamFactor;
+
+    float d_blur_r34 = 1.0;
+    float d_blur_r12 = 0.0;
+    if (antialias != 0) {
+        d_blur_r34 = 1.0 - (dist_squared - r3) / (r4 - r3);
+        d_blur_r12 = (dist_squared - r1) / (r2 - r1);
+    }
+
+    if (objectMap == 0) {
+        if (dist_squared < r1) {
+            colorShow = vec4(insideColor, 1.0);
+        } else if (dist_squared < r2) {
+            vec3 mix = insideColor * (1.0 - d_blur_r12) + color * (d_blur_r12);
+            colorShow = vec4(mix, 1.0);
+        } else if (dist_squared < r3) {
+            colorShow = vec4(color, 1.0);
+        } else if (dist_squared < r4) {
+            colorShow = vec4(color, d_blur_r34);
+        } else {
+            colorShow = vec4(color, 0.0);
+        }
+    } else {
+        if (dist_squared < r4) {
+            colorShow = vec4(objectId, 1.0);
+        } else {
+            discard;
+        }
+    }
+
+    gl_FragColor = colorShow;
+}
