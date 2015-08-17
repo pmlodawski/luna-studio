@@ -28,3 +28,7 @@ class ShtackHookAbort(ShtackExceptions):
 
         super().__init__("Aborted: " + fmt(args[0], **fmt_args),
                          noformat=True)
+
+
+class ShtackWrongStackVersion(Exception):
+    pass
