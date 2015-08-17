@@ -13,9 +13,17 @@ def main():
     git_cmd[
         "submodule", "update", "--init"
     ]()
+    # git_cmd[
+    #    "submodule", "foreach", "-q", "--recursive",
+    #    """branch="$(cd $toplevel; git ls-tree @ $name | awk '{print $3}' )"; git reset $branch"""
+    # ]()
+    # git_cmd[
+    #    "submodule", "foreach", "-q", "--recursive",
+    #    """git clean -fdx"""
+    # ]()
     git_cmd[
         "submodule", "foreach", "-q", "--recursive",
-        'branch="$(git config -f $toplevel/.gitmodules submodule.$name.branch)"; git checkout $branch'
+        """branch="$(git config -f $toplevel/.gitmodules submodule.$name.branch)"; git checkout $branch"""
     ]()
 
 
