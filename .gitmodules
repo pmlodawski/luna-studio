@@ -1,6 +1,7 @@
 [submodule "tools/graphics/webghci"]
     path = tools/graphics/webghci
     url = git@github.com:flowbox-public/WebGHCI.git
+    branch = typechecker
 [submodule "third-party/cufft"]
     path = third-party/cufft
     url = https://github.com/flowbox-public/cufft.git
@@ -258,6 +259,7 @@
 [submodule "libs/convert"]
 	path = libs/convert
 	url = git@bitbucket.org:NewByteOrder/convert.git
+  branch = master
 [submodule "third-party/HaskellBooster"]
 	path = third-party/HaskellBooster
 	url = git@github.com:wdanilo/HaskellBooster.git
