@@ -147,9 +147,13 @@ def get_stack():
                 bootstrapping_stack_cmd["build", "-j", str(number_of_jobs)]()
 
                 finfo("copying stack to '{target_stack_localtion_pth}'")
-                [target_stack_pth] = Path(fmt(".stack-work/install/{bootstrapping_stack_arch}-{bootstrapping_stack_os_abbrev}/lts-2.17/"))\
-                    .glob("*/bin/stack")
-                shutil.move(str(target_stack_pth), str(target_stack_localtion_pth))
+                target_stack_pths = Path(
+                    fmt(
+                        ".stack-work/install/{bootstrapping_stack_arch}-{bootstrapping_stack_os_abbrev}/lts-2.17/")
+                    ).glob("*/bin/stack")
+                [target_stack_pth] = target_stack_pths
+                shutil.move(str(target_stack_pth),
+                            str(target_stack_localtion_pth))
 
                 finfo("stack is fresh & ready. Put it somewhere in your PATH")
 
