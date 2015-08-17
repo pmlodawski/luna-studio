@@ -54,7 +54,7 @@ import           Text.Read          (readMaybe)
 import System.IO.Unsafe (unsafePerformIO)
 import Data.IORef
 import Unsafe.Coerce (unsafeCoerce)
-import Flowbox.Prelude hiding (expand, lookup, splitAt)
+import Flowbox.Prelude hiding (expand, lookup, splitAt, repr)
 import GHC.TypeLits
 
 import Control.Monad.Shuffle (deepBind, (>>>=), ($>>=))
