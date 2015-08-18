@@ -90,3 +90,6 @@ test.html
 report.html
 build_*/**/.stack-work
 .autoenv.zsh
+
+temp
+stack
