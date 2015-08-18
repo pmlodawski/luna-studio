@@ -190,26 +190,6 @@ instance Draggable        WB.Slider where
             setCursor "default"
         (otherAction, newSlider) = onDragMove state slider
 
--- instance Draggable        WB.Slider where
---     mayDrag Mouse.LeftButton _ _ = True
---     mayDrag _                _ _ = False
---     onDragStart                  = onDragMove
---     onDragMove state slider      = (Just action, toCtxDynamic newSlider) where
---                 pos           = state ^. currentPos
---                 normValue     = (pos ^. x) / (slider ^. WB.size . x)
---                 newSlider     = WB.setValueNorm normValue slider
---                 action        = do
---                     updateValue newSlider
---                     putStrLn $ "I am dragging!"
---                     putStrLn $ show $ newSlider ^. WB.value
---                     setCursor "pointer"
---     onDragEnd  state slider = (Just $ action, newSlider) where
---         action = do
---             fromMaybe (return ()) otherAction
---             putStrLn "Dragend"
---             setCursor "default"
---         (otherAction, newSlider) = onDragMove state slider
-
 instance HandlesMouseOver WB.Slider where
     onMouseOver b = (Just action, toCtxDynamic b) where
         action    = do
