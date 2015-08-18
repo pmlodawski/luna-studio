@@ -108,8 +108,8 @@ instance ActionStateUpdater Action where
                                                               ] oldRegistry
         (handleMouseOver, handleMouseOut) = case mouseEvent of
             Mouse.Event Mouse.Moved _ _ _ evWd -> case widgetOverChanged of
-                                        True   -> (Just $ triggerHandler oldWidgetOver onMouseOut
-                                                  ,Just $ triggerHandler newWidgetOver onMouseOver
+                                        True   -> ( Just $ triggerHandler oldWidgetOver onMouseOut
+                                                  , Just $ triggerHandler newWidgetOver onMouseOver
                                                   )
                                         False  -> (Nothing, Nothing)
             _             -> (Nothing, Nothing)
