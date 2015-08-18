@@ -79,7 +79,11 @@ def get_editor():
     if not editor:
         this_repo = git.Repo('.')
         with releasing(this_repo.config_reader()) as cfg:
-            editor = cfg.get_value('core', 'editor', default=None)
+            try:
+                editor = cfg.get_value('core', 'editor', default=None)
+            except:  # TODO kgadek: potencjalnie to jest issue w pythongit,
+                     # configparser.NoOptionError poleciał
+                editor = None
     if not editor:
         editor = os.environ.get('VISUAL', None)
     if not editor:
