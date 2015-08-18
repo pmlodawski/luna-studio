@@ -115,8 +115,8 @@ instance ActionStateUpdater Action where
             _             -> (Nothing, Nothing)
         handleDrag = case mouseEvent of
             Mouse.Event Mouse.Pressed  pos button _ (Just evWd) -> Just $ handleDragStart evWd button (fromIntegral <$> pos) camera
-            Mouse.Event Mouse.Moved    pos _ _ _ -> Just $ handleDragMove (fromIntegral <$> pos) camera
-            Mouse.Event Mouse.Released pos _ _ _ -> Just $ handleDragEnd  (fromIntegral <$> pos) camera
+            Mouse.Event Mouse.Moved    pos _      _  _          -> Just $ handleDragMove              (fromIntegral <$> pos) camera
+            Mouse.Event Mouse.Released pos _      _  _          -> Just $ handleDragEnd               (fromIntegral <$> pos) camera
             _              -> Nothing
         isDragging        = isJust $ oldDragState
         oldDragState      = oldRegistry ^. UIRegistry.dragState
