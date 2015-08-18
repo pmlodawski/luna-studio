@@ -31,7 +31,7 @@ void main() {
         // }
 
         float val = size.x * value;
-        if (p.x > val) {
+        if (p.x >= val) {
             gl_FragColor = vec4(background, 1.0);
         } else if (p.x < val) {
             gl_FragColor = vec4(foreground, 1.0);
