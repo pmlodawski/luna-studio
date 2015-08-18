@@ -17,7 +17,8 @@ import qualified JavaScript.Object as JSObject
 
 import qualified Data.Text.Lazy as Text
 import           Data.Text.Lazy (Text)
-import qualified Event.Mouse as Mouse
+import qualified Event.Mouse    as Mouse
+import qualified Event.Keyboard as Keyboard
 import           ThreeJS.Types
 import           ThreeJS.Mesh
 import           ThreeJS.PlaneGeometry
@@ -173,7 +174,9 @@ instance Draggable        WB.Slider where
                           action = setCursor "pointer"
     onDragMove  state slider     = (Just action, toCtxDynamic newSlider) where
                     delta        = -diff ^. x / divider + diff ^. y / (4.0 * divider)
-                    divider      = slider ^. WB.size . x
+                    width        = slider ^. WB.size . x
+                    divider      = if state ^. keyMods . Keyboard.shift then width * 4.0
+                                                                        else width
                     diff         = state ^. currentPos - state ^. previousPos
                     newNormValue = (WB.normValue slider) - delta
                     newSlider    = WB.setValueNorm newNormValue slider
