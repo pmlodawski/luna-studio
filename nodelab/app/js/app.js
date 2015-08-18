@@ -50,6 +50,9 @@ function initializeGl() {
 
     $('body').append('<div id="htmlcanvas-pan"><div id="htmlcanvas"></div></div>');
 
+    $$.htmlCanvasPan = $("#htmlcanvas-pan");
+    $$.htmlCanvas    = $("#htmlcanvas");
+
     $$.renderer.setClearColor(config.backgroundColor, 1);
     $$.rendererMap.setClearColor(new THREE.Color("black"), 1);
     $($$.renderer.domElement).addClass('renderer');

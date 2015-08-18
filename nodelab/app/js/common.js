@@ -18,9 +18,4 @@ module.exports = {
   registry:       {}
 };
 
-$(document).ready(function(){
-  module.exports.htmlCanvasPan = $("#htmlcanvas-pan");
-  module.exports.htmlCanvas    = $("#htmlcanvas");
-});
-
 window.$$ = module.exports;
