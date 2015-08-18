@@ -186,7 +186,6 @@ instance Draggable        WB.Slider where
     onDragEnd  state slider = (Just $ action, newSlider) where
         action = do
             fromMaybe (return ()) otherAction
-            putStrLn "Dragend"
             setCursor "default"
         (otherAction, newSlider) = onDragMove state slider
 
