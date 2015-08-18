@@ -3,30 +3,27 @@
 # ##### Bootstrapping the repository. Stage 3. #####
 # Stage 3: prepare the repository.
 #
-
+from contextlib import contextmanager, suppress
 import os
 import shutil
 import stat
 import sys
 from pathlib import Path
-from git_utils import releasing
-
-from io_utils import fprint, fmt, finfo
-# noinspection PyUnresolvedReferences
-import git
-# noinspection PyUnresolvedReferences
-from clint.textui import puts, colored
-# noinspection PyUnresolvedReferences
-from plumbum import local
-# noinspection PyUnresolvedReferences
-import plumbum
-from shtack_exceptions import ShtackWrongStackVersion
 import multiprocessing
-import tempfile
 import urllib
 import urllib.request
-from io_utils import ferror
 import platform
+
+import git
+from clint.textui import colored
+from plumbum import local
+import plumbum
+from plumbum.commands.processes import ProcessExecutionError
+
+from git_utils import releasing
+from io_utils import fprint, fmt, finfo
+from shtack_exceptions import ShtackWrongStackVersion
+from io_utils import ferror
 
 
 def bind_git_hooks():
@@ -48,6 +45,7 @@ def bind_git_hooks():
         """, colour='yellow')
         raise Exception(fmt("ERROR: tried to remove current '{git_hooks_p}' but failed.")) from e
 
+    # noinspection PyTypeChecker
     git_hooks_p.symlink_to(Path('..') / hooks_p, target_is_directory=True)
 
 
@@ -138,11 +136,16 @@ def get_stack():
 
     target_stack_localtion_pth = local.cwd / "stack"
 
-    with tempfile.TemporaryDirectory(prefix="flowbox_shtack_") as tmpdir:
+    with tempdir_debuggable(root_pth='temp', name='stack', preserve=True) as (tmpdir, already_existed):
         with local.cwd(tmpdir):
-            finfo("cloning stack git")
+            suppress_exception_list = not already_existed and [ProcessExecutionError] or []
+
             git_cmd = local["git"]
-            git_cmd["clone", stack_gitrepo]()
+
+            finfo("cloning stack git")
+            with suppress_callback(*suppress_exception_list,
+                                   on_caugth_exc=lambda: finfo("There was an error but this could happen. Assuming nothing interesting happened, moving along.")):
+                git_cmd["clone", stack_gitrepo]()
 
             with local.cwd(local.cwd / "stack"):
                 git_cmd["checkout", target_stack_gitsha]()
@@ -166,13 +169,69 @@ def get_stack():
                 finfo("copying stack to '{target_stack_localtion_pth}'")
                 target_stack_pths = Path(
                     fmt(
-                        ".stack-work/install/{bootstrapping_stack_arch}-{bootstrapping_stack_os_abbrev}/lts-2.17/")
-                    ).glob("*/bin/stack")
-                [target_stack_pth] = target_stack_pths
-                shutil.move(str(target_stack_pth),
-                            str(target_stack_localtion_pth))
+                        ".stack-work/install/{bootstrapping_stack_arch}-{bootstrapping_stack_os_abbrev}/")
+                    ).glob("lts-*/*/bin/stack")
+                target_stack_pths = list(target_stack_pths)
+                try:
+                    [target_stack_pth] = target_stack_pths
+                    shutil.move(str(target_stack_pth),
+                                str(target_stack_localtion_pth))
 
-                finfo("stack is fresh & ready. Put it somewhere in your PATH")
+                    finfo("stack is fresh & ready. Put it somewhere in your PATH")
+                except ValueError as e:
+                    ferror("Glob pattern found more or less than one entry that match.")
+                    fprint("Found:")
+                    if target_stack_pths:
+                        for target_stack_pth in target_stack_pths:
+                            fprint("- {target_stack_pth}")
+                    else:
+                        fprint(" (nothing found)")
+
+                    raise e
+
+
+@contextmanager
+def suppress_callback(*exc, on_caugth_exc=None):
+    try:
+        yield
+    except exc:
+        try:
+            if on_caugth_exc:
+                on_caugth_exc()
+        except TypeError as e:
+            ferror("There was a problem with callback")
+            raise e
+
+
+@contextmanager
+def tempdir_debuggable(*, root_pth, name, preserve=False):
+    """Works in a similar way to tempfile.TemporaryDirectory but on exception does NOT remove the dir, only displays
+    the path, to allow debugging."""
+
+    name_pth = Path(root_pth) / name
+
+    already_existed = name_pth.is_dir() or name_pth.is_symlink()
+
+    if already_existed:
+        if preserve:
+            finfo("'{name_pth}' already exists, preseving")
+        else:
+            finfo("'{name_pth}' already exists, removing")
+            shutil.rmtree(str(name_pth),
+                          onerror=lambda exc_fun, path, exc_ifo: os.unlink(str(name_pth)))
+
+    else:
+        finfo("Creating '{name_pth}'")
+        name_pth.mkdir(parents=True)
+
+    try:
+        yield str(name_pth), already_existed
+    except Exception as e:
+        ferror("Not removing temp directory '{name_pth}' since some error occured, please investigate")
+        raise e
+    else:
+        finfo("Removing temp dir '{name_pth}'")
+        shutil.rmtree(str(name_pth))
 
 
 def main():
