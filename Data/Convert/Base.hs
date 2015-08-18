@@ -3,6 +3,11 @@
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE RankNTypes #-}
 
+{-# LANGUAGE CPP #-}
+#if __GLASGOW_HASKELL__ == 708
+{-# LANGUAGE OverlappingInstances #-}
+#endif
+
 module Data.Convert.Base where
 
 import Control.Lens

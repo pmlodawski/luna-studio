@@ -14,6 +14,7 @@ module Data.Convert.Bound where
 
 import Data.Convert.Base
 import Data.Typeable
+import Control.Applicative
 import Language.Haskell.TH hiding (Type, Safety, Safe, Unsafe)
 import Data.Monoid
 import GHC.TypeLits
