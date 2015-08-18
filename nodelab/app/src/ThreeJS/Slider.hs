@@ -189,6 +189,13 @@ instance Draggable        WB.Slider where
             setCursor "default"
         (otherAction, newSlider) = onDragMove state slider
 
+instance DblClickable   WB.Slider where
+    onDblClick pos slider     = (Just action, toCtxDynamic newSlider) where
+                normValue     = (pos ^. x) / (slider ^. WB.size . x)
+                newSlider     = WB.setValueNorm normValue slider
+                action        = do
+                    updateValue newSlider
+
 instance HandlesMouseOver WB.Slider where
     onMouseOver b = (Just action, toCtxDynamic b) where
         action    = do
