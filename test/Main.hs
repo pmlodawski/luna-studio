@@ -44,7 +44,7 @@ testLogger = runLogger $ do
 f :: String -> String
 f x = x
 
-main = Path.main
+main = return ()
 
 --main :: IO ()
 --main = do

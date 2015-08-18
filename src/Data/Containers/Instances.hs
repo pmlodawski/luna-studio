@@ -1,5 +1,10 @@
 {-# LANGUAGE TypeFamilies #-}
 
+{-# LANGUAGE CPP #-}
+#if __GLASGOW_HASKELL__ < 710
+{-# LANGUAGE OverlappingInstances #-}
+#endif
+
 module Data.Containers.Instances where
 
 import           Flowbox.Prelude hiding (Indexable, index)
@@ -34,7 +39,7 @@ type instance IndexOf      el  (Vector a) = Int
 instance            Measurable          (Vector a)       where size                    = fromIntegral . Vector.length
 instance            Container           (Vector a) Int a where elems                   = Vector.toList
                                                                indexes               v = [0 .. size v - 1]
-instance (a ~ b) => Appendable          (Vector b) Int a where append              a v = (v', length v' - 1) where v' = Vector.snoc v a
+instance (a ~ b) => Appendable          (Vector b) Int a where append              a v = (v', Vector.length v' - 1) where v' = Vector.snoc v a
 instance (a ~ b) => Prependable         (Vector b) Int a where prepend             a v = (v', 0)             where v' = Vector.cons a v
 instance (a ~ b) => Indexable           (Vector b) Int a where index           idx   v = (Vector.!?)          v idx
 instance (a ~ b) => UnsafeIndexable     (Vector b) Int a where unsafeIndex     idx   v = (Vector.!)           v idx

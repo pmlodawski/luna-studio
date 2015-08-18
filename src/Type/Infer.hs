@@ -25,6 +25,7 @@ module Type.Infer where
 
 import Data.Typeable
 import Data.Proxy.Utils
+import Control.Applicative
 import Unsafe.Coerce
 import Prelude
 
