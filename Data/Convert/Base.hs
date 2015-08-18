@@ -4,7 +4,7 @@
 {-# LANGUAGE RankNTypes #-}
 
 {-# LANGUAGE CPP #-}
-#if __GLASGOW_HASKELL__ == 708
+#if __GLASGOW_HASKELL__ < 710
 {-# LANGUAGE OverlappingInstances #-}
 #endif
 
