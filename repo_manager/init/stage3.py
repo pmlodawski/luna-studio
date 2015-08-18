@@ -68,6 +68,22 @@ def create_aliases():
         cfg.set_value("alias", "shtack-update", "!./.git/hooks/_shtack-update")
 
 
+def get_submodules():
+    finfo("Initialising submodules; if there are changes already, perform (recursive) merge")
+    git_cmd = local["git"]
+    git_cmd[
+        "submodule", "update", "--init"
+    ]()
+    git_cmd[
+        "submodule", "foreach", "-q", "--recursive",
+        """branch="$(git config -f $toplevel/.gitmodules submodule.$name.branch)"; git checkout $branch"""
+    ]()
+    git_cmd[
+       "submodule", "foreach", "-q", "--recursive",
+       """commsha="$(cd $toplevel; git ls-tree @ $name | awk '{print $3}' )"; git merge $commsha"""
+    ]()
+
+
 def get_stack():
 
     # customizables
@@ -165,6 +181,7 @@ def main():
         bind_git_hooks()
         configure_repo()
         create_aliases()
+        get_submodules()
         get_stack()
     except Exception as e:
         # noinspection PyUnusedLocal
