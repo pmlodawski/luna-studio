@@ -62,21 +62,22 @@ triggerHandler maybeOid handler state = do
     let newState            = UIRegistry.update newWidget state
     return (action, newState)
 
-handleDragStart (EventWidget widgetId mat scene) button absPos camera state = do
+handleDragStart (EventWidget widgetId mat scene) button keyMods absPos camera state = do
     oldWidget      <- UIRegistry.lookup widgetId state
     let pos         = absPosToRel scene camera mat absPos
     let shouldDrag  = mayDrag button pos oldWidget
-    let dragState   = DragState widgetId mat scene button pos pos pos where
+    let dragState   = DragState widgetId mat scene button keyMods pos pos pos where
     let newState    = if shouldDrag then state & UIRegistry.dragState .~ Just dragState
                                     else state
     return $ (Nothing, newState)
 
-handleDragMove absPos camera state = case (state ^. UIRegistry.dragState) of
+handleDragMove keyMods absPos camera state = case (state ^. UIRegistry.dragState) of
     Just dragState -> triggerHandler widgetId (onDragMove newDragState) state' where
         widgetId           = Just $ dragState ^. Widget.widgetId
         state'             = state     & UIRegistry.dragState .~ (Just newDragState)
         newDragState       = dragState & Widget.previousPos .~ (dragState ^. currentPos)
                                        & Widget.currentPos  .~ relPos
+                                       & Widget.keyMods     .~ keyMods
         relPos             = absPosToRel (dragState ^. Widget.scene) camera (dragState ^. widgetMatrix) absPos
 
     otherwise      -> Nothing
@@ -114,9 +115,9 @@ instance ActionStateUpdater Action where
                                         False  -> (Nothing, Nothing)
             _             -> (Nothing, Nothing)
         handleDrag = case mouseEvent of
-            Mouse.Event Mouse.Pressed  pos button _ (Just evWd) -> Just $ handleDragStart evWd button (fromIntegral <$> pos) camera
-            Mouse.Event Mouse.Moved    pos _      _  _          -> Just $ handleDragMove              (fromIntegral <$> pos) camera
-            Mouse.Event Mouse.Released pos _      _  _          -> Just $ handleDragEnd               (fromIntegral <$> pos) camera
+            Mouse.Event Mouse.Pressed  pos button keyMods (Just evWd) -> Just $ handleDragStart evWd button keyMods (fromIntegral <$> pos) camera
+            Mouse.Event Mouse.Moved    pos _      keyMods  _          -> Just $ handleDragMove              keyMods (fromIntegral <$> pos) camera
+            Mouse.Event Mouse.Released pos _      _        _          -> Just $ handleDragEnd                       (fromIntegral <$> pos) camera
             _              -> Nothing
         isDragging        = isJust $ oldDragState
         oldDragState      = oldRegistry ^. UIRegistry.dragState

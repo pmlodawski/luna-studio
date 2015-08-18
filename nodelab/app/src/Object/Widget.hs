@@ -7,7 +7,8 @@ module Object.Widget where
 import           Utils.PreludePlus
 import           Utils.Vector
 import           Utils.CtxDynamic
-import           Event.Mouse (MouseButton, MousePosition, WidgetId)
+import           Event.Mouse    (MouseButton, MousePosition, WidgetId)
+import           Event.Keyboard (KeyMods)
 import           Reactive.Plugins.Core.Action.State.Camera (Camera)
 import qualified Reactive.Plugins.Core.Action.State.Camera as Camera
 import qualified JS.Camera as JSCamera
@@ -90,6 +91,7 @@ data DragState = DragState { _widgetId       :: WidgetId
                            , _widgetMatrix   :: [Double]
                            , _scene          :: SceneType
                            , _button         :: MouseButton
+                           , _keyMods        :: KeyMods
                            , _startPos       :: Vector2 Double
                            , _previousPos    :: Vector2 Double
                            , _currentPos     :: Vector2 Double
