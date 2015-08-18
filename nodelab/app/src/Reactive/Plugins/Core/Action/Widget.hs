@@ -51,7 +51,7 @@ handleGeneric (Mouse.Event eventType absPos button _ (Just (EventWidget widgetId
         Mouse.Clicked     -> onClick               pos widget
         Mouse.DblClicked  -> onDblClick            pos widget
     let newRegistry = UIRegistry.update newWidget registry
-    return (uiUpdate, registry)
+    return (uiUpdate, newRegistry)
 handleGeneric _ _ _        = Nothing
 
 triggerHandler :: Maybe WidgetId -> (DisplayObject -> WidgetUpdate) -> UIRegistry.State -> Maybe (WidgetUIUpdate, UIRegistry.State)
