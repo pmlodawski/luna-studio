@@ -31,20 +31,24 @@ test2 = runIdentity $ flip evalStateT def $ flip execFunctionBuilderT def $ do
     return ()
 
 n1 :: StateGraphMeta -> FunctionGraphMeta
-n1 bldrState = runIdentity $ flip evalStateT def $ flip execFunctionBuilderT bldrState $ do
+n1 bldrState = flip execFunctionBuilderState bldrState $ do
     a <- withMeta (Meta 1 "a") $ var "a"
     return ()
 
 n2 :: StateGraphMeta -> FunctionGraphMeta
-n2 bldrState = runIdentity $ flip evalStateT def $ flip execFunctionBuilderT bldrState $ do
+n2 bldrState = flip execFunctionBuilderState bldrState $ do
     a <- withMeta (Meta 2 "b") $ var "b"
     return ()
+
+
+
 
 main :: IO ()
 main = do
     let a = n1 def
         b = n2 $ rebuild a
     putStrLn "Typeckecker test:"
-    putStrLn $ repr a
     putStrLn $ repr b
+    -- let c =
+
     return ()

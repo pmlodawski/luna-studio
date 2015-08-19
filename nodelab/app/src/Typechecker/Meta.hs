@@ -29,9 +29,3 @@ withMeta meta f = do
     out <- f
     put old
     return out
-
-
-type GraphMeta         = HomoNet (Label Meta) Term
-type FunctionGraphMeta = Function  GraphMeta
-type StateGraphMeta    = BldrState GraphMeta
-
