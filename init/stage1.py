@@ -33,6 +33,9 @@ FLOWBOX_GIT = os.path.join(".git", "flowbox")
 PYENV = os.path.join(FLOWBOX_GIT, "pyenv")
 PYENV_BIN_PYTHON = os.path.join(PYENV, "bin", "python")
 
+SUBMODULE_LOCATION = "repo_manager"
+STEP2_LOCATION = os.path.join(SUBMODULE_LOCATION, "init", "stage2.py")
+
 
 required_executables = {
     "git": {
@@ -226,9 +229,7 @@ def stage3_create_virtualenv():
 
 
 def stage4_jump_to_virtualenv():
-    python_in_env = PYENV_BIN_PYTHON
-    script_to_call = sys.argv[0][:-4] + "2.py"  # run the second script
-    subprocess.check_call([python_in_env, script_to_call])
+    subprocess.check_call([PYENV_BIN_PYTHON, STEP2_LOCATION])
 
 
 def main():
