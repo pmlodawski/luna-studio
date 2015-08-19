@@ -9,6 +9,9 @@
 #
 # Please note that this script is intended to work on both py2 and py3.
 #
+# As a final, small detail, this script does not use any of the tools from shtacklib. However, it modifies the
+# PYTHONPATH for stage2 so the mentioned library will be available.
+#
 
 from __future__ import print_function
 import os
@@ -16,6 +19,7 @@ import subprocess
 import sys
 import re
 import platform
+import shutil
 
 
 #                   __ _
@@ -26,8 +30,6 @@ import platform
 #  \___\___/|_| |_|_| |_|\__, |
 #                         __/ |
 #                        |___/
-import shutil
-
 
 FLOWBOX_GIT = os.path.join(".git", "flowbox")
 PYENV = os.path.join(FLOWBOX_GIT, "pyenv")
@@ -229,7 +231,10 @@ def stage3_create_virtualenv():
 
 
 def stage4_jump_to_virtualenv():
-    subprocess.check_call([PYENV_BIN_PYTHON, STEP2_LOCATION])
+    env = os.environ.copy()
+    env["PYTHONPATH"] = "repo_manager/shtacklib:" + env.get("PYTHONPATH", "")
+    subprocess.check_call([PYENV_BIN_PYTHON, STEP2_LOCATION],
+                          env=env)
 
 
 def main():

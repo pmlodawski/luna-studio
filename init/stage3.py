@@ -3,7 +3,8 @@
 # ##### Bootstrapping the repository. Stage 3. #####
 # Stage 3: prepare the repository.
 #
-from contextlib import contextmanager, suppress
+from contextlib import contextmanager
+import logging
 import os
 import shutil
 import stat
@@ -18,12 +19,13 @@ import git
 from clint.textui import colored
 from plumbum import local
 import plumbum
+
 from plumbum.commands.processes import ProcessExecutionError
 
-from git_utils import releasing
-from io_utils import fprint, fmt, finfo
-from shtack_exceptions import ShtackWrongStackVersion
-from io_utils import ferror
+from ctx_managers import releasing, caveat
+from exceptions import ShtackWrongStackVersion
+from io_utils import ferror, finfo, fprint, fmt
+from log_config import init_logger, main_logger
 
 
 def bind_git_hooks():
@@ -35,14 +37,15 @@ def bind_git_hooks():
     fprint(colored.blue("INFO: ") + "symlinking '{hooks_p}' to your '{git_hooks_p}'")
 
     try:
-        if git_hooks_p.is_dir() or git_hooks_p.is_symlink():
-            shutil.rmtree(str(git_hooks_p),
-                          onerror=lambda exc_fun, path, exc_ifo: os.unlink(path))
+        cav = """
+        Caveat: Microsoft thinks you're an ugly, dirty hacker because you want symlinks. zOMG…
+                Rerun this script as root or add yourself 'SeCreateSymbolicLinkPrivilege'.
+        """
+        with caveat(cav, OSError, platforms='Windows'):
+            if git_hooks_p.is_dir() or git_hooks_p.is_symlink():
+                shutil.rmtree(str(git_hooks_p),
+                              onerror=lambda exc_fun, path, exc_ifo: os.unlink(path))
     except OSError as e:
-        fprint("""
-        Caveat (Windows): Microsoft thinks you're an ugly, dirty hacker because you want symlinks. zOMG…
-                          Rerun this script as root or add yourself 'SeCreateSymbolicLinkPrivilege'.
-        """, colour='yellow')
         raise Exception(fmt("ERROR: tried to remove current '{git_hooks_p}' but failed.")) from e
 
     # noinspection PyTypeChecker
@@ -237,6 +240,10 @@ def tempdir_debuggable(*, root_pth, name, preserve=False):
 def main():
     try:
         print("##############################" + colored.blue(" STAGE: 3 ") + "##############################")
+
+        init_logger()
+        log = main_logger()
+
         bind_git_hooks()
         configure_repo()
         create_aliases()
