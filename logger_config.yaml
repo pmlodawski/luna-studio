@@ -2,7 +2,7 @@ version: 1
 
 formatters:
   simple:
-    datefmt: '%H:%M:%S'
+    datefmt: '%H:%M:%S:'
     style: '{'
     '()': 'log_config.CustomFormatter'
 

@@ -3,6 +3,8 @@ import inspect
 import logging
 import logging.config
 from pathlib import Path
+import sys
+import traceback
 import yaml
 from io_utils import fmt
 from clint.textui import colored
@@ -10,7 +12,10 @@ from clint.textui import colored
 BASE_CONFIG = Path('repo_manager/logger_config.yaml')
 
 
-def main_logger():
+def main_logger(init=False):
+    if init:
+        init_logger()
+
     parent = inspect.stack()[1][0]
     return logging.getLogger(parent.f_globals["__file__"])
 
@@ -23,9 +28,45 @@ def init_logger():
 
 class CustomAdapter(logging.LoggerAdapter):
     def process(self, msg, kwargs):
-        action_name = colored.cyan(self.extra['action_name'])  # + ': ' + msg
+        action_name = colored.cyan(self.extra['action_name'])
         msg = fmt("({action_name}) {msg}")
         return msg, kwargs
+
+    def _common(self, method, msg, *args, **kwargs):
+        parent = inspect.stack()[2][0]
+        msg = fmt(msg, parent=parent)
+
+        if 'exc_info' in kwargs:
+            tb = traceback.format_exception(*sys.exc_info())
+            tb = ''.join(tb)
+            tb = colored.black(tb)
+            msg = msg + '\n' + tb
+
+            kwargs = kwargs.copy()
+            del kwargs['exc_info']
+
+        return getattr(self.logger, method)(msg, *args, **kwargs)
+
+    def debug(self, msg, *args, **kwargs):
+        self._common('debug', msg, *args, **kwargs)
+
+    def info(self, msg, *args, **kwargs):
+        self._common('info', msg, *args, **kwargs)
+
+    def warning(self, msg, *args, **kwargs):
+        self._common('warning', msg, *args, **kwargs)
+
+    def warn(self, msg, *args, **kwargs):
+        self._common('warn', msg, *args, **kwargs)
+
+    def error(self, msg, *args, **kwargs):
+        self._common('error', msg, *args, **kwargs)
+
+    def critical(self, msg, *args, **kwargs):
+        self._common('critical', msg, *args, **kwargs)
+
+    def exception(self, msg, *args, **kwargs):
+        self._common('error', msg, *args, **kwargs)
 
 
 @contextmanager
@@ -64,5 +105,8 @@ class CustomFormatter(logging.Formatter):
         if record.levelno >= logging.ERROR:
             supermsg = colored.red(supermsg)
 
-        return fmt("{level_name} {name} {fmttime}: {supermsg}")
+        if record.levelno == logging.DEBUG:
+            supermsg = colored.black(supermsg)
+
+        return fmt("{level_name} {name} {fmttime} {supermsg}")
 
