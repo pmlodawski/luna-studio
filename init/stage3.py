@@ -3,7 +3,6 @@
 # ##### Bootstrapping the repository. Stage 3. #####
 # Stage 3: prepare the repository.
 #
-from contextlib import contextmanager
 import logging
 import os
 import shutil
@@ -19,14 +18,12 @@ import git
 from clint.textui import colored
 from plumbum import local
 import plumbum
-
 from plumbum.commands.processes import ProcessExecutionError
 
 from ctx_managers import releasing, caveat, suppress_callback, tempdir_debuggable
-from exceptions import ShtackWrongStackVersion, ShtackHookAbort
+from exceptions import ShtackWrongStackVersion
 from io_utils import fmt
 from log_config import main_logger, logging_action
-
 
 if __name__ == '__main__':
     log = main_logger(init=True)
@@ -62,6 +59,7 @@ def bind_git_hooks():
 
 
 def configure_repo():
+    # noinspection PyUnresolvedReferences
     this_repo = git.Repo('.')
 
     with releasing(this_repo.config_writer()) as cfg:
@@ -71,6 +69,7 @@ def configure_repo():
 
 
 def create_aliases():
+    # noinspection PyUnresolvedReferences
     this_repo = git.Repo('.')
 
     with releasing(this_repo.config_writer()) as cfg:
@@ -97,8 +96,8 @@ def get_submodules():
 
         log.debug("merging with HEAD")
         git_cmd[
-           "submodule", "foreach", "-q", "--recursive",
-           """commsha="$(cd $toplevel; git ls-tree @ $name | awk '{print $3}' )"; git merge $commsha"""
+            "submodule", "foreach", "-q", "--recursive",
+            """commsha="$(cd $toplevel; git ls-tree @ $name | awk '{print $3}' )"; git merge $commsha"""
         ]()
 
 
