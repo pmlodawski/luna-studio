@@ -162,11 +162,11 @@ def get_stack():
 
         with tempdir_debuggable(root_pth='temp', name='stack', preserve=True) as (tmpdir, already_existed):
             with local.cwd(tmpdir):
-                suppress_exception_list = not already_existed and [ProcessExecutionError] or []
+                suppress_exception_list = already_existed and [ProcessExecutionError] or []
 
                 git_cmd = local["git"]
 
-                log.debug("cloning stack git")
+                log.info("cloning stack git")
                 with suppress_callback(*suppress_exception_list,
                                        on_caugth_exc=lambda: log.info("There was an error but this could happen. "
                                                                       "Assuming nothing interesting happened, "
@@ -177,11 +177,15 @@ def get_stack():
                 with local.cwd(local.cwd / "stack"):
                     git_cmd["checkout", target_stack_gitsha]()
 
-                    log.debug("downloading bootstrapping stack from {bootstrapping_stack_url}")
+                    log.info("downloading bootstrapping stack from {bootstrapping_stack_url}")
                     urllib.request.urlretrieve(bootstrapping_stack_url, "stack.gz")
 
-                    log.debug("extracting & making executable")
-                    local["gunzip"]["stack.gz"]()
+                    log.info("extracting & making executable")
+                    with suppress_callback(ProcessExecutionError,
+                                           on_caugth_exc=lambda: log.info("Gunzip error, but this could happen because "
+                                                                          "file already exists. Moving along.",
+                                                                          exc_info=True)):
+                        local["gunzip"]["stack.gz"]()
 
                     st = os.stat("./stack")
                     os.chmod("./stack", st.st_mode | stat.S_IEXEC)
@@ -190,12 +194,13 @@ def get_stack():
                     bootstrapping_stack_cmd = local["./stack"]
                     bootstrapping_stack_cmd["setup"]()
 
-                    stack_build_logfile = "temp/stack_build.log"
-                    log.info("building proper stack, this can take a while. Build progress: `{stack_build_logfile}`")
+                    stack_build_logfile = "stack_build.log"
+                    log.info("building proper stack, this can take a while. Build progress: "
+                             "`{local.cwd}/{stack_build_logfile}`")
                     # noinspection PyCallingNonCallable
                     (bootstrapping_stack_cmd["build", "-j", str(number_of_jobs)] > stack_build_logfile)()
 
-                    log.debug("copying stack to '{target_stack_localtion_pth}'")
+                    log.info("copying stack to '{target_stack_localtion_pth}'")
                     target_stack_pths = Path(
                         fmt(
                             ".stack-work/install/{bootstrapping_stack_arch}-{bootstrapping_stack_os_abbrev}/")
