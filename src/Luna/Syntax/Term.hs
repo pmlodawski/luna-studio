@@ -155,8 +155,8 @@ instance IsVariant (Term h)  where record  = _termRec
 -- Name instances
 
 --TODO[wd]: makeClassyInstances ''Cons
-instance HasName Var          where name = lens (\(Var n)        -> n) (\(Var _) n         -> Var n)
-instance HasName (Cons a)     where name = lens (\(Cons n _)     -> n) (\(Cons _ t1) n     -> Cons n t1)
+instance HasName Var          where name = lens (\(Var      n  ) -> n) (\(Var      _   ) n -> Var      n   )
+instance HasName (Cons     a) where name = lens (\(Cons     n _) -> n) (\(Cons     _ t1) n -> Cons     n t1)
 instance HasName (Accessor a) where name = lens (\(Accessor n _) -> n) (\(Accessor _ t1) n -> Accessor n t1)
 
 -- Repr instances

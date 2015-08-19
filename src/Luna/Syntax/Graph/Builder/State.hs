@@ -18,7 +18,7 @@ data BldrState g = BldrState { _orphans :: [Int]
                              , _graph   :: g
                              }
 
-type GraphRefBuilder  el m l a     = RefBuilder el m (Ref (GraphPtr l) a)
+type GraphRefBuilder  el m l a     = RefBuilder   el m (Ref (GraphPtr l) a)
 type GraphConstructor base l a ast = Constructor (base (Rec (GraphPtr l) a)) ast
 
 makeLenses ''BldrState
@@ -31,7 +31,7 @@ class HasBldrState g m | m -> g where
 -- >->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->
 
 newtype GraphBuilderT g m a = GraphBuilderT { fromGraphBuilderT :: State.StateT (BldrState g) m a }
-                             deriving (Functor, Monad, Applicative, MonadIO, MonadPlus, MonadTrans, Alternative)
+                              deriving (Functor, Monad, Applicative, MonadIO, MonadPlus, MonadTrans, Alternative)
 
 type GraphBuilder g = GraphBuilderT g Identity
 

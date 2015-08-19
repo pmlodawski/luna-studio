@@ -5,7 +5,7 @@ import qualified Data.Text.AutoBuilder as Text
 
 
 
-data Lit = Int Int
+data Lit = Int    Int
          | String Text.AutoBuilder
          deriving (Show)
 
