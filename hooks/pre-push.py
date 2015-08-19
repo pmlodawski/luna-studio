@@ -3,7 +3,7 @@
 # noinspection PyUnresolvedReferences
 import git
 from io_utils import fwarning, finfo
-from shtack_exceptions import ShtackHookAbort
+from exceptions import ShtackHookAbort
 
 
 def main():
