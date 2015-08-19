@@ -17,7 +17,8 @@ import qualified JavaScript.Object as JSObject
 
 import qualified Data.Text.Lazy as Text
 import           Data.Text.Lazy (Text)
-import qualified Event.Mouse as Mouse
+import qualified Event.Mouse    as Mouse
+import qualified Event.Keyboard as Keyboard
 import           ThreeJS.Types
 import           ThreeJS.Mesh
 import           ThreeJS.PlaneGeometry
@@ -169,27 +170,38 @@ updateValue s = do
 instance Draggable        WB.Slider where
     mayDrag Mouse.LeftButton _ _ = True
     mayDrag _                _ _ = False
-    onDragStart                  = onDragMove
-    onDragMove state slider      = (Just action, toCtxDynamic newSlider) where
-                pos           = state ^. currentPos
+    onDragStart state slider     = (Just action, toCtxDynamic slider) where
+                          action = setCursor "pointer"
+    onDragMove  state slider     = (Just action, toCtxDynamic newSlider) where
+                    delta        = -diff ^. x / divider + diff ^. y / (4.0 * divider)
+                    width        = slider ^. WB.size . x
+                    divider      = if state ^. keyMods . Keyboard.shift then width * 4.0
+                                                                        else width
+                    diff         = state ^. currentPos - state ^. previousPos
+                    newNormValue = (WB.normValue slider) - delta
+                    newSlider    = WB.setValueNorm newNormValue slider
+                    action       = do
+                        setCursor "-webkit-grabbing"
+                        updateValue newSlider
+    onDragEnd  state slider = (Just $ action, newSlider) where
+        action = do
+            fromMaybe (return ()) otherAction
+            setCursor "default"
+        (otherAction, newSlider) = onDragMove state slider
+
+instance DblClickable   WB.Slider where
+    onDblClick pos slider     = (Just action, toCtxDynamic newSlider) where
                 normValue     = (pos ^. x) / (slider ^. WB.size . x)
                 newSlider     = WB.setValueNorm normValue slider
                 action        = do
                     updateValue newSlider
-                    putStrLn $ "I am dragging!"
-                    putStrLn $ show $ newSlider ^. WB.value
-                    setCursor "pointer"
-    onDragEnd  state slider = (Just $ action, newSlider) where
-        action = do
-            fromMaybe (return ()) otherAction
-            putStrLn "Dragend"
-            setCursor "default"
-        (otherAction, newSlider) = onDragMove state slider
 
 instance HandlesMouseOver WB.Slider where
     onMouseOver b = (Just action, toCtxDynamic b) where
-        action    = setUniform "focus" (toJSInt 1) b
+        action    = do
+            setUniform "focus" (toJSInt 1) b
 
 instance HandlesMouseOut WB.Slider where
     onMouseOut  b = (Just action, toCtxDynamic b) where
-        action    = setUniform "focus" (toJSInt 0) b
+        action    = do
+            setUniform "focus" (toJSInt 0) b
