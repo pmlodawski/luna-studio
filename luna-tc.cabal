@@ -41,7 +41,17 @@ Library
                   EmptyDataDecls
 
   Exposed-modules:
-        Luna.Inference
+        Luna.Syntax.Decl.Function,
+        Luna.Syntax.Graph.Builder,
+        Luna.Syntax.Graph.Builder.State,
+        Luna.Syntax.Name.Pool
+        Luna.Syntax.AST,
+        Luna.Syntax.Arg,
+        Luna.Syntax.Decl,
+        Luna.Syntax.Graph,
+        Luna.Syntax.Lit,
+        Luna.Syntax.Name,
+        Luna.Syntax.Term
 
   Build-Depends:  base,
                   ghc-prim,
