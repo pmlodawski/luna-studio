@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 import inspect
 import logging
 import logging.config
@@ -18,6 +19,18 @@ def init_logger():
     with BASE_CONFIG.open() as fh:
         cfg = yaml.load(fh)
         logging.config.dictConfig(cfg)
+
+
+class CustomAdapter(logging.LoggerAdapter):
+    def process(self, msg, kwargs):
+        action_name = colored.cyan(self.extra['action_name'])  # + ': ' + msg
+        msg = fmt("({action_name}) {msg}")
+        return msg, kwargs
+
+
+@contextmanager
+def logging_action(log, action_name):
+    yield CustomAdapter(log, {'action_name': action_name})
 
 
 class CustomFormatter(logging.Formatter):

@@ -25,7 +25,7 @@ from plumbum.commands.processes import ProcessExecutionError
 from ctx_managers import releasing, caveat
 from exceptions import ShtackWrongStackVersion
 from io_utils import ferror, finfo, fprint, fmt
-from log_config import init_logger, main_logger
+from log_config import init_logger, main_logger, logging_action
 
 
 def bind_git_hooks():
