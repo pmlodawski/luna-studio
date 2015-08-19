@@ -97,7 +97,7 @@ def get_stack():
 
     try:
         curr_ver = local["stack"]["--version"]()
-        curr_ver = curr_ver.split()[-1]
+        curr_ver = curr_ver.split()[4]
         if curr_ver != target_stack_gitsha:
             raise ShtackWrongStackVersion
     except plumbum.CommandNotFound:
