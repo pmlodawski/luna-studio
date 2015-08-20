@@ -35,30 +35,27 @@ test2 = runIdentity $ flip evalStateT def $ flip execFunctionBuilderT def $ do
     return ()
 
 varA :: StateGraphMeta -> RefFunctionGraphMeta
-varA bldrState = flip runFunctionBuilderState bldrState $ do
-    a <- withMeta (Meta 1 "a") $ var "a"
-    return a
+varA bldrState = flip runFunctionBuilderState bldrState $
+    withMeta (Meta 1 "a") $ var "a"
 
 varB :: StateGraphMeta -> RefFunctionGraphMeta
-varB bldrState = flip runFunctionBuilderState bldrState $ do
-    b <- withMeta (Meta 2 "b") $ var "b"
-    return b
+varB bldrState = flip runFunctionBuilderState bldrState $
+    withMeta (Meta 2 "b") $ var "b"
 
 accA :: GraphRefMeta -> StateGraphMeta -> RefFunctionGraphMeta
-accA rv1 bldrState = flip runFunctionBuilderState bldrState $ do
-    f <- withMeta (Meta 3 "c") $ rv1 @. "foo"
-    return f
+accA rv1 bldrState = flip runFunctionBuilderState bldrState $
+    withMeta (Meta 3 "c") $ rv1 @. "foo"
 
 funA :: GraphRefMeta -> GraphRefMeta -> GraphRefMeta -> StateGraphMeta -> RefFunctionGraphMeta
-funA rf rv1 rv2 bldrState = flip runFunctionBuilderState bldrState $ do
-    x <- withMeta (Meta 4 "d") $ rf @$ [arg rv1, arg rv2]
-    return x
+funA rf rv1 rv2 bldrState = flip runFunctionBuilderState bldrState $
+    withMeta (Meta 4 "d") $ rf @$ [arg rv1, arg rv2]
 
 funB :: GraphRefMeta -> [ArgRef (GraphBuilderT GraphMeta (StateT Meta Identity)) (Label Meta) Term] -> StateGraphMeta -> RefFunctionGraphMeta
-funB rf args bldrState = flip runFunctionBuilderState bldrState $ do
-    x <- withMeta (Meta 4 "d") $ rf @$ args
-    return x
+funB rf args bldrState = flip runFunctionBuilderState bldrState $
+    withMeta (Meta 4 "d") $ rf @$ args
 
+
+-- TODO: map id -> ref (GraphRefMeta)
 
 main :: IO ()
 main = do
