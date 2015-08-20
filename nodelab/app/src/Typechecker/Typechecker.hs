@@ -20,18 +20,18 @@ import           Typechecker.Meta  as X
 
 
 
-type GraphMeta         = HomoNet (Label Meta) Term
-type FunctionGraphMeta = Function  GraphMeta
-type StateGraphMeta    = BldrState GraphMeta
+type GraphMeta            = HomoNet  (Label Meta) Term
+type GraphRefMeta         = GraphRef (Label Meta) Term
+
+type FunctionGraphMeta    = Function  GraphMeta
+type StateGraphMeta       = BldrState GraphMeta
+
+type RefFunctionGraphMeta = (GraphRefMeta, FunctionGraphMeta)
 
 
 evalFunctionBuilderState :: Default s => GraphBuilderT g (StateT s Identity) a -> BldrState g -> a
 execFunctionBuilderState :: Default s => GraphBuilderT g (StateT s Identity) a -> BldrState g -> Function g
 runFunctionBuilderState  :: Default s => GraphBuilderT g (StateT s Identity) a -> BldrState g -> (a, Function g)
-
--- evalFunctionBuilderState bldr s = runIdentity $ flip evalStateT def $ evalFunctionBuilderT bldr s
--- execFunctionBuilderState bldr s = runIdentity $ flip evalStateT def $ execFunctionBuilderT bldr s
--- runFunctionBuilderState  bldr s = runIdentity $ flip evalStateT def $ runFunctionBuilderT  bldr s
 
 evalFunctionBuilderState = (runIdentity . flip evalStateT def) .: evalFunctionBuilderT
 execFunctionBuilderState = (runIdentity . flip evalStateT def) .: execFunctionBuilderT
