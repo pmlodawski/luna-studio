@@ -25,7 +25,7 @@ def main():
         call_args.extend(sys.argv[1:])
 
         env = os.environ.copy()
-        env["PYTHONPATH"] = "repo_manager/init:" + env.get("PYTHONPATH", "")
+        env["PYTHONPATH"] = "repo_manager/shtacklib:" + env.get("PYTHONPATH", "")
 
         ret = subprocess.call(call_args, env=env)
 

@@ -7,14 +7,6 @@ def eprint(*args, **kwargs):
     print(*args, **dict(kwargs, file=sys.stderr))
 
 
-def try_colour(x, colour):
-    try:
-        from clint.textui import colored, puts
-        puts(getattr(colored, colour)(x))
-    except ImportError:
-        print(x)
-
-
 def fprint(x=None, *, parent=None, notrunc=False, colour=None, **kwargs):
     """ Format the string and print to stdout.
 
