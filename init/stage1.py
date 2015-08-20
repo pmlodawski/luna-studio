@@ -18,7 +18,6 @@ import os
 import subprocess
 import sys
 import re
-import platform
 import shutil
 
 
@@ -130,10 +129,6 @@ def call(cmd, *args, **kwargs):
 # |___/\__\___| .__/|___/
 #             | |
 #             |_|
-
-
-current_system = platform.system()
-this_is_windows = current_system == 'Windows' or current_system.startswith("CYGWIN_NT")
 
 
 def stage1_verify_programs():
