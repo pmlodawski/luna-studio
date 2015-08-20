@@ -22,6 +22,6 @@ Library
   Exposed-modules: `findmodules('dist/gen', '.*\.hs', exclude='.*hs-boot.*')`
 
   Build-Depends:  base,
-                  luna-protobuf-old,
+                  luna-protobuf-old-gen,
                   protocol-buffers,
                   protocol-buffers-descriptor
