@@ -115,16 +115,20 @@ def get_stack():
         # logic
 
         try:
-            curr_ver = local["stack"]["--version"]()
+            stack_cmd = local["stack"]  # path to stack or None
+            stack_ok = True             # is stack avail. and is it ok for our needs?
+            curr_ver = stack_cmd["--version"]()
             curr_ver_sha = curr_ver.split()[4]
             if curr_ver_sha != target_stack_gitsha:
                 raise ShtackWrongStackVersion
         except plumbum.CommandNotFound:
             logStack.info("it seems that you don't have `stack` installed. I'll get it for you")
+            stack_cmd, stack_ok = None, False
         except ShtackWrongStackVersion:
             logStack.info("it seems that you have `stack` installed but it's in wrong version. I'll get it for you")
             logStack.debug("stack reported version: {curr_ver}")
             logStack.debug("stack reported version - extracted SHA1: {curr_ver_sha}")
+            stack_ok = False
         else:
             logStack.info("it seems that you already have `stack` installed and in correct version. Good!")
             return
@@ -166,26 +170,32 @@ def get_stack():
                 logStack.info("cloning stack git")
                 with suppress_callback(*suppress_exception_list,
                                        on_caugth_exc=lambda: logStack.info("There was an error but this could happen. "
-                                                                      "Assuming nothing interesting happened, "
-                                                                      "moving along.",
-                                                                      exc_info=True)):
+                                                                           "Assuming nothing interesting happened, "
+                                                                           "moving on.",
+                                                                           exc_info=True)):
                     git_cmd["clone", stack_gitrepo]()
 
                 with local.cwd(local.cwd / "stack"):
                     git_cmd["checkout", target_stack_gitsha]()
 
-                    logStack.info("downloading bootstrapping stack from {bootstrapping_stack_url}")
-                    urllib.request.urlretrieve(bootstrapping_stack_url, "stack.gz")
+                    if stack_ok:
+                        logStack.info("using your current `stack`")
+                    else:
+                        logStack.info("downloading bootstrapping stack from {bootstrapping_stack_url}")
+                        urllib.request.urlretrieve(bootstrapping_stack_url, "stack.gz")
 
-                    logStack.info("extracting & making executable")
-                    with suppress_callback(ProcessExecutionError,
-                                           on_caugth_exc=lambda: logStack.info("Gunzip error, but this could happen because "
-                                                                          "file already exists. Moving along.",
-                                                                          exc_info=True)):
-                        local["gunzip"]["stack.gz"]()
+                        logStack.info("extracting & making executable")
+                        with suppress_callback(ProcessExecutionError,
+                                               on_caugth_exc=lambda: logStack.info("Gunzip error, but this could happen"
+                                                                                   "because file already exists. "
+                                                                                   "Moving on.",
+                                                                                   exc_info=True)):
+                            local["gunzip"]["stack.gz"]()
 
-                    st = os.stat("./stack")
-                    os.chmod("./stack", st.st_mode | stat.S_IEXEC)
+                        st = os.stat("./stack")
+                        os.chmod("./stack", st.st_mode | stat.S_IEXEC)
+
+                        stack_cmd = local["./stack"]
 
                     logStack.info("stack is getting GHC for you if required")
                     bootstrapping_stack_cmd = local["./stack"]
@@ -193,7 +203,7 @@ def get_stack():
 
                     stack_build_logfile = "stack_build.log"
                     logStack.info("building proper stack, this can take a while. Build progress: "
-                             "`{local.cwd}/{stack_build_logfile}`")
+                                  "`{local.cwd}/{stack_build_logfile}`")
                     # noinspection PyCallingNonCallable
                     (bootstrapping_stack_cmd["build", "-j", str(number_of_jobs)] > stack_build_logfile)()
 
