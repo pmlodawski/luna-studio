@@ -12,8 +12,7 @@ Flag Debug
 
 
 Library
-  Hs-Source-Dirs: dist/gen,
-                  src
+  Hs-Source-Dirs: src
   Other-Modules:  Paths_luna_protobuf_old
   if flag(debug)
     GHC-Options:  -csacc
@@ -22,8 +21,7 @@ Library
   Extensions:     DoAndIfThenElse,
                   NoImplicitPrelude
 
-  Exposed-modules: `findmodules('dist/gen', '.*\.hs', exclude='.*hs-boot.*')`,
-                   `findmodules('src', '.*\.hs')`
+  Exposed-modules: `findmodules('src', '.*\.hs')`
 
   Build-Depends:  base,
                   bytestring,
@@ -32,6 +30,7 @@ Library
                   flowbox-utils,
                   luna-core,
                   luna-distribution-old,
+                  luna-protobuf-old-gen,
                   protocol-buffers,
                   protocol-buffers-descriptor
 
