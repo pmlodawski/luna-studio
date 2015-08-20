@@ -28,13 +28,15 @@ def init_logger():
 
 class CustomAdapter(logging.LoggerAdapter):
     def process(self, msg, kwargs):
-        action_name = colored.cyan(self.extra['action_name'])
-        msg = fmt("({action_name}) {msg}")
+        action_name = colored.cyan(fmt("({self.extra[action_name]})"))
+        msg = fmt("{action_name} {msg}")
         return msg, kwargs
 
     def _common(self, method, msg, *args, **kwargs):
         parent = inspect.stack()[2][0]
         msg = fmt(msg, parent=parent)
+
+        msg, _ = self.process(msg, kwargs)
 
         if 'exc_info' in kwargs:
             tb = traceback.format_exception(*sys.exc_info())

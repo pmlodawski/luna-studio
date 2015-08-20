@@ -33,13 +33,13 @@ else:
 
 def bind_git_hooks():
     global log
-    with logging_action(log, 'binding git hooks') as log:
+    with logging_action(log, 'binding git hooks') as logHooks:
         this_script_p = Path(sys.argv[0])
         hooks_p = this_script_p.parent.parent / 'hooks'
 
         git_hooks_p = Path(".git", "hooks")
 
-        log.info("symlinking '{hooks_p}' to your '{git_hooks_p}'")
+        logHooks.info("symlinking '{hooks_p}' to your '{git_hooks_p}'")
 
         try:
             cav = """
@@ -51,7 +51,7 @@ def bind_git_hooks():
                     shutil.rmtree(str(git_hooks_p),
                                   onerror=lambda exc_fun, path, exc_ifo: os.unlink(path))
         except OSError as e:
-            log.error("tried to remove current '{git_hooks_p}' but failed.")
+            logHooks.error("tried to remove current '{git_hooks_p}' but failed.")
             raise e
 
         # noinspection PyTypeChecker
@@ -78,23 +78,22 @@ def create_aliases():
 
 
 def get_submodules():
-    global log
-    with logging_action(log, 'preparing submodules') as log:
-        log.info("getting submodules")
+    with logging_action(log, 'preparing submodules') as logSubm:
+        logSubm.info("getting submodules")
         git_cmd = local["git"]
 
-        log.debug("initialising; if there are changes already, perform (recursive) merge")
+        logSubm.debug("initialising; if there are changes already, perform (recursive) merge")
         git_cmd[
             "submodule", "update", "--init"
         ]()
 
-        log.debug("checking out branches")
+        logSubm.debug("checking out branches")
         git_cmd[
             "submodule", "foreach", "-q", "--recursive",
             """branch="$(git config -f $toplevel/.gitmodules submodule.$name.branch)"; git checkout $branch"""
         ]()
 
-        log.debug("merging with HEAD")
+        logSubm.debug("merging with HEAD")
         git_cmd[
             "submodule", "foreach", "-q", "--recursive",
             """commsha="$(cd $toplevel; git ls-tree @ $name | awk '{print $3}' )"; git merge $commsha"""
@@ -102,8 +101,7 @@ def get_submodules():
 
 
 def get_stack():
-    global log
-    with logging_action(log, 'obtaining `stack`') as log:
+    with logging_action(log, 'obtaining `stack`') as logStack:
 
         # customizables
 
@@ -122,13 +120,13 @@ def get_stack():
             if curr_ver_sha != target_stack_gitsha:
                 raise ShtackWrongStackVersion
         except plumbum.CommandNotFound:
-            log.info("it seems that you don't have `stack` installed. I'll get it for you")
+            logStack.info("it seems that you don't have `stack` installed. I'll get it for you")
         except ShtackWrongStackVersion:
-            log.info("it seems that you have `stack` installed but it's in wrong version. I'll get it for you")
-            log.debug("stack reported version: {curr_ver}")
-            log.debug("stack reported version - extracted SHA1: {curr_ver_sha}")
+            logStack.info("it seems that you have `stack` installed but it's in wrong version. I'll get it for you")
+            logStack.debug("stack reported version: {curr_ver}")
+            logStack.debug("stack reported version - extracted SHA1: {curr_ver_sha}")
         else:
-            log.info("it seems that you already have `stack` installed and in correct version. Good!")
+            logStack.info("it seems that you already have `stack` installed and in correct version. Good!")
             return
 
         this_system = platform.system()
@@ -137,7 +135,7 @@ def get_stack():
         elif this_system == 'Linux':
             bootstrapping_stack_os_abbrev = 'linux'
         else:
-            log.error("I can't get `stack` for you, your system '{this_system}' is not supported :(")
+            logStack.error("I can't get `stack` for you, your system '{this_system}' is not supported :(")
             return
 
         bootstrapping_stack_url = fmt("https://github.com/commercialhaskell/stack/releases/download/"
@@ -146,7 +144,7 @@ def get_stack():
                                       "-{bootstrapping_stack_arch}"
                                       "-{bootstrapping_stack_os_abbrev}.gz")
 
-        log.info("""
+        logStack.info("""
         To give you `stack`, I will get the following for you (in order):
            - download stack used to build stack:
              version:     {bootstrapping_stack_version}
@@ -165,9 +163,9 @@ def get_stack():
 
                 git_cmd = local["git"]
 
-                log.info("cloning stack git")
+                logStack.info("cloning stack git")
                 with suppress_callback(*suppress_exception_list,
-                                       on_caugth_exc=lambda: log.info("There was an error but this could happen. "
+                                       on_caugth_exc=lambda: logStack.info("There was an error but this could happen. "
                                                                       "Assuming nothing interesting happened, "
                                                                       "moving along.",
                                                                       exc_info=True)):
@@ -176,12 +174,12 @@ def get_stack():
                 with local.cwd(local.cwd / "stack"):
                     git_cmd["checkout", target_stack_gitsha]()
 
-                    log.info("downloading bootstrapping stack from {bootstrapping_stack_url}")
+                    logStack.info("downloading bootstrapping stack from {bootstrapping_stack_url}")
                     urllib.request.urlretrieve(bootstrapping_stack_url, "stack.gz")
 
-                    log.info("extracting & making executable")
+                    logStack.info("extracting & making executable")
                     with suppress_callback(ProcessExecutionError,
-                                           on_caugth_exc=lambda: log.info("Gunzip error, but this could happen because "
+                                           on_caugth_exc=lambda: logStack.info("Gunzip error, but this could happen because "
                                                                           "file already exists. Moving along.",
                                                                           exc_info=True)):
                         local["gunzip"]["stack.gz"]()
@@ -189,17 +187,17 @@ def get_stack():
                     st = os.stat("./stack")
                     os.chmod("./stack", st.st_mode | stat.S_IEXEC)
 
-                    log.info("stack is getting GHC for you if required")
+                    logStack.info("stack is getting GHC for you if required")
                     bootstrapping_stack_cmd = local["./stack"]
                     bootstrapping_stack_cmd["setup"]()
 
                     stack_build_logfile = "stack_build.log"
-                    log.info("building proper stack, this can take a while. Build progress: "
+                    logStack.info("building proper stack, this can take a while. Build progress: "
                              "`{local.cwd}/{stack_build_logfile}`")
                     # noinspection PyCallingNonCallable
                     (bootstrapping_stack_cmd["build", "-j", str(number_of_jobs)] > stack_build_logfile)()
 
-                    log.info("copying stack to '{target_stack_localtion_pth}'")
+                    logStack.info("copying stack to '{target_stack_localtion_pth}'")
                     target_stack_pths = Path(
                         fmt(
                             ".stack-work/install/{bootstrapping_stack_arch}-{bootstrapping_stack_os_abbrev}/")
@@ -210,9 +208,9 @@ def get_stack():
                         shutil.move(str(target_stack_pth),
                                     str(target_stack_localtion_pth))
 
-                        log.info("stack is fresh & ready! Put it somewhere in your PATH")
+                        logStack.info("stack is fresh & ready! Put it somewhere in your PATH")
                     except ValueError as e:
-                        log.error("Glob pattern found more or less than one entry that match.")
+                        logStack.error("Glob pattern found more or less than one entry that match.")
 
                         dbg = ["Found:"]
                         if target_stack_pths:
@@ -221,7 +219,7 @@ def get_stack():
                         else:
                             dbg.append(" (nothing found)")
 
-                        log.debug('\n'.join(dbg))
+                        logStack.debug('\n'.join(dbg))
 
                         raise e
 
