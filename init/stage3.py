@@ -178,7 +178,7 @@ def get_stack():
                 with local.cwd(local.cwd / "stack"):
                     git_cmd["checkout", target_stack_gitsha]()
 
-                    if stack_ok:
+                    if stack_cmd:
                         logStack.info("using your current `stack`")
                     else:
                         logStack.info("downloading bootstrapping stack from {bootstrapping_stack_url}")
