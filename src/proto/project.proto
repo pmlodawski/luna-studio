@@ -1,0 +1,21 @@
+///////////////////////////////////////////////////////////////////////////
+// Copyright (C) Flowbox, Inc / All Rights Reserved
+// Unauthorized copying of this file, via any medium is strictly prohibited
+// Proprietary and confidential
+// Flowbox Team <contact@flowbox.io>, 2014
+///////////////////////////////////////////////////////////////////////////
+
+package generated.proto.project;
+
+import "dep/attributes.proto";
+import "dep/library.proto";
+
+
+message Project {
+    optional string name     = 1;
+    required string path     = 2;
+    repeated string libPaths = 3;
+    required generated.proto.dep.library.LibManager    libManager = 6;
+    required generated.proto.dep.attributes.Attributes attributes = 4;
+    required int32  id       = 5;
+}
