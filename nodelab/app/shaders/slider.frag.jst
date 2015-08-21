@@ -19,16 +19,16 @@ void main() {
     if (objectMap == 0) {
         vec2 p = vec2(pos.x * size.x, pos.y * size.y);
 
-        // float r = size.y / 2.0;
-        // if (p.x < r) {
-        //     vec2 vec = vec2(r - p.x, r - p.y);
-        //     if (dot(vec, vec) > r * r) discard;
-        // }
-        //
-        // if (p.x > size.x - r) {
-        //     vec2 vec = vec2(size.x - r - p.x, r - p.y);
-        //     if (dot(vec, vec) > r * r) discard;
-        // }
+        float r = size.y / 2.0;
+        if (p.x < r) {
+            vec2 vec = vec2(r - p.x, r - p.y);
+            if (dot(vec, vec) > r * r) discard;
+        }
+
+        if (p.x > size.x - r) {
+            vec2 vec = vec2(size.x - r - p.x, r - p.y);
+            if (dot(vec, vec) > r * r) discard;
+        }
 
         float val = size.x * value;
         if (p.x >= val) {
