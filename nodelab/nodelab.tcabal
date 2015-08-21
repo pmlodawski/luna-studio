@@ -1,0 +1,61 @@
+name:                nodelab
+version:             0.1.0.0
+synopsis:            NodeLab
+-- description:
+homepage:            www.nodelab.io
+--license:             AllRightsReserved
+--license-file:        LICENSE
+author:              New Byte Order
+maintainer:          contact@nodelab.io
+-- copyright:
+category:            drag and drop test, all reactive
+build-type:          Simple
+-- extra-source-files:
+cabal-version:       >=1.22
+
+executable nodelab
+  main-is:             Main.hs
+  other-modules:       `findmodules('app/src', '.*\.hs$', exclude='(.*Main\.hs)')`
+  -- other-extensions:
+  default-extensions:   DoAndIfThenElse
+                      , NoImplicitPrelude
+                      , TemplateHaskell
+                      , DeriveGeneric
+                      , StandaloneDeriving
+                      , FlexibleContexts
+                      , MultiParamTypeClasses
+                      , DefaultSignatures
+                      , DeriveFunctor
+                      , DeriveTraversable
+                      , DeriveFoldable
+                      , FlexibleInstances
+                      , LambdaCase
+                      , ConstraintKinds
+                      , GeneralizedNewtypeDeriving
+                      , DeriveDataTypeable
+                      , ScopedTypeVariables
+
+  build-depends:       base >= 4.8 && < 4.9
+                     , data-default
+                     , ghcjs-base
+                     , ghcjs-dom >=0.2 && <0.3
+                     , ghcjs-prim
+                     , reactive-banana
+                     , text
+                     , transformers
+                     , mtl
+                     , lens
+                     , containers
+                     , random
+                     , pretty-show
+                     , flowbox-utils
+                     , convert
+                     , process
+                     , constraints
+                     , errors
+                     , graphviz
+                     , vector
+                     , luna-tc
+  hs-source-dirs:      app/src
+  default-language:    Haskell2010
+

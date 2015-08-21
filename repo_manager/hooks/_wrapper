@@ -1,0 +1,36 @@
+#!/usr/bin/env python
+import os
+import subprocess
+import sys
+
+FLOWBOX_GIT = os.path.join(".git", "flowbox")
+PYENV = os.path.join(FLOWBOX_GIT, "pyenv")
+PYENV_BIN_PYTHON = os.path.join(PYENV, "bin", "python")
+HOOK_DIR = os.path.join(".git", "hooks")
+
+
+def main():
+    this_script_path = sys.argv[0]
+
+    hook_disable_envvar_name = "GIT_NO_HOOK_" + this_script_path.split('/')[-1].replace('-', '_').upper()
+
+    if any(os.environ.get(x) for x in ['GIT_NO_HOOKS', hook_disable_envvar_name]):
+        sys.exit(0)
+
+    else:
+        call_args = [
+            PYENV_BIN_PYTHON,
+            os.path.join(this_script_path + ".py")
+        ]
+        call_args.extend(sys.argv[1:])
+
+        env = os.environ.copy()
+        env["PYTHONPATH"] = "repo_manager/shtacklib:" + env.get("PYTHONPATH", "")
+
+        ret = subprocess.call(call_args, env=env)
+
+        sys.exit(ret)
+
+
+if __name__ == '__main__':
+    main()
