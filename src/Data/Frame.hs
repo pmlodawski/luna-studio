@@ -332,11 +332,13 @@ instance (FromNullable t, FillNA' base ts, Constructor (Vector t) (Column base),
         where caseRes = caseS c $ do match $ \(vec :: Vector (Nullable t)) -> (V.map fromNullable vec)
 
 
-fillNACol :: forall types. (FillNA' types types) => Column (Nullables types) -> Maybe (Column types)
+fillNACol :: forall types. (FillNA' types types)
+             => Column (Nullables types) -> Maybe (Column types)
 fillNACol column = fillNA' (Proxy :: Proxy types) (Proxy :: Proxy types) column
 
 
-fillNA :: forall types. (FillNA' types types) => DataFrame (Nullables types) -> Maybe (DataFrame types)
+fillNA :: forall types. (FillNA' types types)
+          => DataFrame (Nullables types) -> Maybe (DataFrame types)
 fillNA frame = case newData of Just d  -> Just $ frame & frameData .~ d
                                Nothing -> Nothing
     where newData = frame ^. frameData & V.map fillNACol & V.sequence
@@ -346,51 +348,55 @@ fillNA frame = case newData of Just d  -> Just $ frame & frameData .~ d
 -- Adding columns
 -------------------------------------------------------------------------
 
-class AppendEl (el :: *) (cont :: [*]) (cont' :: [*]) | el cont -> cont' where
-    appendEl :: Proxy el -> Proxy cont -> Proxy cont'
+class AppendT (el :: *) (cont :: [*]) (cont' :: [*]) | el cont -> cont' where
+    appendT :: Proxy el -> Proxy cont -> Proxy cont'
 
-class AppendEl' (inplace :: Bool) (el :: *) (cont :: [*]) (cont' :: [*]) | inplace el cont -> cont' where
-    appendEl' :: Proxy inplace -> Proxy el -> Proxy cont -> Proxy cont'
-
-
-instance (inplace ~ Elem el cont, AppendEl' inplace el cont cont') => AppendEl el cont cont' where
-    appendEl _ _ = appendEl' (Proxy :: Proxy inplace) (Proxy :: Proxy el) (Proxy :: Proxy cont)
-
-instance AppendEl' 'True el cont cont where
-    appendEl' _ _ _ = Proxy :: Proxy cont
-
-instance AppendEl' 'False el cont (el ': cont) where
-    appendEl' _ _ _ = Proxy :: Proxy (el ': cont)
+class AppendT' (inplace :: Bool) (el :: *) (cont :: [*]) (cont' :: [*]) | inplace el cont -> cont' where
+    appendT' :: Proxy inplace -> Proxy el -> Proxy cont -> Proxy cont'
 
 
+instance (inplace ~ Elem el cont, AppendT' inplace el cont cont') => AppendT el cont cont' where
+    appendT _ _ = appendT' (Proxy :: Proxy inplace) (Proxy :: Proxy el) (Proxy :: Proxy cont)
 
---addCol :: forall types t. Vector t -> DataFrame
+instance AppendT' 'True el cont cont where
+    appendT' _ _ _ = Proxy :: Proxy cont
 
----------------------------------------------------------------------------------
----------------------------------------------------------------------------------
+instance AppendT' 'False el cont (el ': cont) where
+    appendT' _ _ _ = Proxy :: Proxy (el ': cont)
 
 
-toCol :: forall types t tout. (AppendEl t types tout, Constructor (Vector t) (Column tout))
-                         => Proxy types -> Vector t -> Column tout
+toCol :: forall types t tout. (AppendT t types tout, Constructor (Vector t) (Column tout))
+         => Proxy types -> Vector t -> Column tout
 toCol _ vec = cons vec
 
 
 castCol :: forall tsFrom tsTo.
           (WrappedCast (Record (VectorsOf tsFrom)) (CastOutput (IsSecureCast (Record (VectorsOf tsFrom)) (Record (VectorsOf tsTo)))) (Record (VectorsOf tsTo)),
-           UnpackCast  (CastOutput (IsSecureCast (Record (VectorsOf tsFrom)) (Record (VectorsOf tsTo))) (Record (VectorsOf tsTo))) (Record (VectorsOf tsTo)))
+           UnpackCast  (CastOutput (IsSecureCast (Record (VectorsOf tsFrom)) (Record (VectorsOf tsTo)))  (Record (VectorsOf tsTo)))  (Record (VectorsOf tsTo)))
           => Proxy tsTo -> Column tsFrom -> Column tsTo
 castCol _ col = Column castRes
     where cdata   = col ^. record :: Record (VectorsOf tsFrom)
           castRes = cast cdata    :: Record (VectorsOf tsTo)
 
---addCol :: forall types t. (Constructor (Vector t) (Column (t ': types)))
---                         => Vector t -> DataFrame types -> DataFrame (t ': types)
---addCol vec frame =
---    where newCol = toCol (Proxy :: Proxy types) vec
+
+castFrame :: forall tsFrom tsTo.
+          (WrappedCast (Record (VectorsOf tsFrom)) (CastOutput (IsSecureCast (Record (VectorsOf tsFrom)) (Record (VectorsOf tsTo)))) (Record (VectorsOf tsTo)),
+           UnpackCast  (CastOutput (IsSecureCast (Record (VectorsOf tsFrom)) (Record (VectorsOf tsTo)))  (Record (VectorsOf tsTo)))  (Record (VectorsOf tsTo)))
+          => Proxy tsTo -> DataFrame tsFrom -> DataFrame tsTo
+castFrame _ frame = frame & frameData %~ casts
+    where casts   = V.map (\col -> (castCol (Proxy :: Proxy tsTo) col :: Column tsTo))
 
 
---addCol :: forall types t. Vector t -> DataFrame types -> DataFrame (t ': types)
---addCol
+addCol :: forall tsFrom tsTo t.
+          (AppendT t tsFrom tsTo, Constructor (Vector t) (Column tsTo),
+           WrappedCast (Record (VectorsOf tsFrom)) (CastOutput (IsSecureCast (Record (VectorsOf tsFrom)) (Record (VectorsOf tsTo)))) (Record (VectorsOf tsTo)),
+           UnpackCast  (CastOutput (IsSecureCast (Record (VectorsOf tsFrom)) (Record (VectorsOf tsTo)))  (Record (VectorsOf tsTo)))  (Record (VectorsOf tsTo)))
+          => Vector t -> DataFrame tsFrom -> DataFrame tsTo
+addCol vec frame = newFrame & frameData %~ (flip V.snoc col)
+    where col      = toCol   (Proxy :: Proxy tsFrom) vec                :: Column tsTo
+          prx      = appendT (Proxy :: Proxy t) (Proxy :: Proxy tsFrom) :: Proxy tsTo
+          newFrame = castFrame prx frame
+
 
 -------------------------------------------------------------------------
 -- Reading frames from CSV
