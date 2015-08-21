@@ -267,3 +267,7 @@
 	path = libs/luna/protobuf-old-gen
 	url = git@bitbucket.org:NewByteOrder/protobuf-old-gen.git
 	branch = proto-split
+[submodule "libs/batch/batch-protobuf"]
+	path = libs/batch/batch-protobuf
+	url = git@bitbucket.org:NewByteOrder/batch-protobuf.git
+	branch = proto-split
