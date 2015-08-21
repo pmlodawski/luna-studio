@@ -8,6 +8,8 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE EmptyDataDecls     #-}
 {-# LANGUAGE TypeFamilies       #-}
+{-# LANGUAGE TypeOperators      #-}
+{-# LANGUAGE PolyKinds          #-}
 
 module Data.TypeLevel.Bool where
 
@@ -15,7 +17,7 @@ import           Data.Typeable
 import qualified Prelude       as P
 
 
-data True deriving Typeable
+data True  deriving Typeable
 data False deriving Typeable
 
 
@@ -40,6 +42,10 @@ type family And a b where
   And True True = True
   And a    b    = False
 
-type family If cond a b where
+type family If cond (a :: k) (b :: k) :: k where
   If True  a b = a
   If False a b = b
+
+type family (:==) a b where
+    a :== a = True
+    a :== b = False

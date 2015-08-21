@@ -35,7 +35,7 @@ Library
                   StandaloneDeriving,
                   LambdaCase
 
-    Exposed-modules: 
+    Exposed-modules:
         Control.PolyApplicative,
         Control.PolyMonad,
         Control.Category.Dot,
@@ -48,6 +48,7 @@ Library
         Control.PolyApplicative.App.TH,
         Data.Cata,
         Data.Containers,
+        Data.Frame,
         Data.Indexable,
         Data.IntConvertibleMap,
         Data.IntConvertibleSet,
@@ -87,6 +88,7 @@ Library
         Data.Tuple.Modify,
         Data.Type.Hide,
         Data.TypeLevel.Bool,
+        Data.TypeLevel.Containers,
         Data.TypeLevel.FlatContainers,
         Data.TypeLevel.List,
         Data.TypeLevel.Map,
@@ -155,6 +157,7 @@ Library
                     base,
                     binary,
                     bytestring,
+                    cassava,
                     containers,
                     convertible >= 1.1.1.0,
                     data-default,
@@ -165,6 +168,7 @@ Library
                     fgl,
                     filepath,
                     generic-deriving,
+                    ghc-prim,
                     hashable,
                     hslogger,
                     hspec,
