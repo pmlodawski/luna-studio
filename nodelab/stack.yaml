@@ -4,6 +4,9 @@ packages:
   - ../libs/utils
   - ../libs/convert
   - ../libs/luna/typechecker
+  - ../libs/luna/protobuf-old-gen
+  - ../libs/batch/batch-protobuf
+  - ../libs/batch/plugins/project-manager-api
   - ../third-party/fgl
   - ../third-party/graphviz-2999.17.0.2.2
 extra-deps:
@@ -58,6 +61,7 @@ extra-deps:
   - pretty-show-1.6.8.2
   - profunctors-5.1.1
   - protocol-buffers-2.1.4
+  - protocol-buffers-descriptor-2.1.4
   - psqueues-0.2.0.2
   - quickcheck-io-0.1.1
   - random-1.1

@@ -49,6 +49,9 @@ executable nodelab
                      , random
                      , pretty-show
                      , flowbox-utils
+                     , luna-protobuf-old-gen
+                     , flowbox-batch-protobuf
+                     , batch-lib-project-manager-api
                      , convert
                      , process
                      , constraints
