@@ -12,23 +12,22 @@ Flag Debug
 
 
 Library
-  Hs-Source-Dirs: dist/gen,
-                  src
+  Hs-Source-Dirs: src
   Other-Modules:  Paths_flowbox_batch
 
   GHC-Options:    -Wall -O2 -threaded
 
   Extensions:     NoImplicitPrelude
 
-  Exposed-modules: `findmodules('dist/gen', '.*\.hs', exclude='.*hs-boot.*')`, 
-                   `findmodules('src', '.*\.hs')`
-                   
+  Exposed-modules: `findmodules('src', '.*\.hs')`
+
   Build-Depends:  base,
                   bimap,
                   bytestring,
                   containers,
                   either,
                   flowbox-config,
+                  flowbox-batch-protobuf,
                   luna-core,
                   luna-distribution-old,
                   luna-initializer,
