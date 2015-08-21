@@ -229,7 +229,7 @@
 	path = libs/repo-manager
 	url = git@bitbucket.org:NewByteOrder/flowbox-repo-manager.git
 [submodule "libs/luna/protobuf-old"]
-    branch = develop
+    branch = proto-split
 	path = libs/luna/protobuf-old
 	url = git@bitbucket.org:NewByteOrder/luna-protobuf-old.git
 [submodule "tools/batch/plugins/bus-logger"]
@@ -263,3 +263,7 @@
 [submodule "third-party/HaskellBooster"]
 	path = third-party/HaskellBooster
 	url = git@github.com:wdanilo/HaskellBooster.git
+[submodule "libs/luna/protobuf-old-gen"]
+	path = libs/luna/protobuf-old-gen
+	url = git@bitbucket.org:NewByteOrder/protobuf-old-gen.git
+	branch = proto-split
