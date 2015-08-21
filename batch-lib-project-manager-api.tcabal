@@ -23,7 +23,7 @@ Library
     Exposed-modules: `findmodules('dist/gen', '.*\.hs', exclude='.*hs-boot.*')`
 
     Build-Depends:  base,
-                    flowbox-batch,
-                    luna-protobuf-old,
+                    flowbox-batch-protobuf,
+                    luna-protobuf-old-gen,
                     protocol-buffers,
                     protocol-buffers-descriptor
