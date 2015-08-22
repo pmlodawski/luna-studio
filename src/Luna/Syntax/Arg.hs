@@ -4,4 +4,4 @@ import Flowbox.Prelude
 import Luna.Syntax.Name
 
 
-data    Arg      a = Arg { __aname :: Maybe Name , __arec :: a } deriving (Show)
+data Arg a = Arg { __aname :: Maybe Name , __arec :: a } deriving (Show, Eq)

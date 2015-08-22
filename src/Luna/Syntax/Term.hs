@@ -2,24 +2,128 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module Luna.Syntax.Term where
 
-import Flowbox.Prelude hiding (Cons)
-import Data.Variant
+import Flowbox.Prelude hiding (Cons, cons)
+import Data.Variants   hiding (Cons)
+
 import Luna.Syntax.Lit
 import Luna.Syntax.Arg
 import Luna.Syntax.Name
 
 import Data.Cata
+import Data.Containers.Hetero
+import Luna.Syntax.Graph
 
 -- === Terms ===
 
 -- Component types
 
+data    Star       = Star               deriving (Show, Eq)
 newtype Var        = Var      Name      deriving (Show, Eq)
-data    Cons     t = Cons     Name [t]  deriving (Show)
-data    Accessor t = Accessor Name t    deriving (Show)
-data    App      t = App      t [Arg t] deriving (Show)
+data    Cons     t = Cons     Name [t]  deriving (Show, Eq)
+data    Accessor t = Accessor Name t    deriving (Show, Eq)
+data    App      t = App      t [Arg t] deriving (Show, Eq)
+
+
+        --data CTop      = CTop
+        --data CTarget t = CTarget t
+        --data CName     = CName
+
+        ----data CVar    = CVar  (Record '[CName])
+        --data CAccessor t = CAccessor (Record '[CName, CTarget t])
+        --data CTerm     t = CTerm     (Record '[CAccessor t])
+
+
+        --type family PathsOf a :: [*]
+        --type instance PathsOf (Accessor t) = '[CTarget (Record (PathsOf t))]
+
+
+        --data Crumb t a = Crumb a
+
+
+        --type CX = Mu CTerm
+
+        ----c1 = Mu (CTerm $ cons $ CAccessor $ undefined) :: CX
+
+        --cx = CAccessor $ cons CName :: CAccessor (Mu CTerm)
+
+        --cy = CTerm $ cons cx :: CTerm (Mu CTerm)
+
+        --cz = Mu (CTerm $ cons cx) :: CX
+--data CTerm t = CTerm (Record '[Accessor t])
+
+--c1 = cons CName :: CAccessor
+
+
+    --type instance Variants (CAccessor t) = '[CName, CTarget (Record (PathsOf t))]
+
+    --instance IsVariant (CAccessor t) where
+    --    variant = CAccessor
+    --    record  = undefined
+
+    ----class IsVariant a where
+    ----    variant :: Record (Variants a) -> a
+    ----    record  :: Lens' a (Record (Variants a))
+
+    --type family CrumbOf a
+    --type instance CrumbOf (Mu a) = CrumbOf (a (Mu a))
+    --type instance CrumbOf (Accessor t) = CAccessor t
+    --type instance CrumbOf (Term' t) = CTerm t
+
+
+    --type family PathsOf a :: [*]
+
+    --type instance PathsOf (Accessor t) = '[CTarget (Record (PathsOf t))]
+
+    --class HasTarget t a | a -> t where
+    --    target :: Lens' a t
+
+    --instance HasTarget t (Accessor t) where
+    --    target = lens (\(Accessor _ t) -> t) (\(Accessor n _) t -> Accessor n t)
+
+    --instance HasTarget (CAccessor t) (CTop (Accessor t)) where
+    --    target = lens (const $ cons (CTarget :: CTarget (Record (PathsOf t)))) undefined
+
+    --instance c ~ CrumbOf a => HasTarget c (CTop a) where
+
+    --v = Mu (Term' $ cons $ Accessor "foo" (Mu $ Term' $ cons $ Var "foo")) :: Mu Term'
+
+    --vc = CTop v :: CTop (Mu Term')
+
+    --vc' :: CTerm (Mu Term')
+    --vc' = view target vc
+
+--instance HasTarget a t => HasTarget (Crumb a) where
+--    target = lens (const $ Crumb CTarget) const - - - tu jest zle
+    -- trzebaby dorobic MapVariants lub WithVariants - przy dodawaniu nowego breadcrumba
+
+--------------------
+
+--v = Crumb CTop :: Crumb CTop (Accessor Int)
+--v' = view target v :: _
+
+
+
+-- breadcrumby moga byc po prostu lensami Lens' a t
+-- lub czyms podobnym pozwalajacym na rozlaczanie (!)
+
+--data CTop    = CTop
+--data CTarget = CTarget
+
+--data Crumb a b = Crumb a b
+
+-- ...
+
+--instance HasTarget CTarget (Crumb a (Accessor t)) where
+--    target = lens (const CTarget) const
+
+-- najlepsze jest chyba reczne odwzorowanie struktury z lensami, przy cyzm nawet stale Lensy takie jak HasName przerobic na takie jak wyzej,
+-- by dzialaly z breadcrumbami
+
 
 -- Type sets
 
@@ -31,13 +135,14 @@ type ThunkElems t = Accessor t
                  ': ValElems t
 
 type ValElems   t = Lit
-                 ': Cons t
+                 ': Cons t -- todo[wd]: Add "[t]"
+                 ': Star
                  ': '[]
 
 -- Record types
 
 type H a h = h (a h)
-type HRecord a (h :: * -> *) = VariantRecord (a h)
+type HRecord a (h :: * -> *) = VariantRec (a h)
 
 newtype Val   h = Val   { __valRec   :: HRecord Val   h }
 newtype Thunk h = Thunk { __thunkRec :: HRecord Thunk h }
@@ -45,85 +150,27 @@ newtype Term  h = Term  { __termRec  :: HRecord Term  h }
 
 -----------------------------------------------------------------------------------------------
 
-newtype Val'   t = Val'   (Record (ValElems   t))
-newtype Thunk' t = Thunk' (Record (ThunkElems t))
-newtype Term'  t = Term'  (Record (TermElems  t))
+newtype Val'   t = Val'   (VariantRec (Val'   t)) deriving (Show)
+newtype Thunk' t = Thunk' (VariantRec (Thunk' t)) deriving (Show)
+newtype Term'  t = Term'  (VariantRec (Term'  t)) deriving (Show)
+
+type instance Variants (Val'   t) =                           ValElems   t
+type instance Variants (Thunk' t) = (Val' t) ':               ThunkElems t
+type instance Variants (Term'  t) = (Val' t) ': (Thunk' t) ': TermElems  t
 
 
+instance Record (Val'   h) where mkRecord = Val'
+instance Record (Thunk' h) where mkRecord = Thunk'
+instance Record (Term'  h) where mkRecord = Term'
 
+--instance IsVariant (Val' h)   where record  = lens (\(Val' r) -> r) (const Val')
+--                                    variant = Val'
 
+--instance IsVariant (Thunk' h) where record  = lens (\(Thunk' r) -> r) (const Thunk')
+--                                    variant = Thunk'
 
-data Cat a = Cat { _ci :: Int, _ca :: a } deriving (Functor)
-
-makeLenses ''Cat
-
-mkRec c i = Mu (c i $ mkRec c (i + 1))
-c = mkRec Cat 0 :: Mu Cat
-
-c' = cata (\a -> if (view ci a < 10) then view ca a else (view ci a)) c
-
-
-
-
-
-data Type a = Star
-            | Type a
-
-data Typed a t = Typed t (a t)
-
-data Labeled' a t = Labeled' (a t)
-
-type F1 h = MuH h Val'
-
-type F2 h = MuH h (Labeled' (Typed Val'))
-type F3   = Mu  (Labeled' (Typed Val'))
-type F4 h = MuH h (Typed Val')
-type F5   = Mu (Typed Val')
-
-data Han a = Han
-
-xt1 = toMu (Typed Han (Val' undefined)) :: F4 Han
-xt2 = toMu (Typed (toMu (Typed undefined undefined)) undefined) :: F5
-
-newtype ValT  h = ValT  { __valTRec  :: Record (ValElems (h (T h (Val (T h))))) }
-
-
--- mozna type sets zamienic na Typed, np:
--- ValElems t = Typed t Lit
---            : Typed t (Cons t)
---            : ...
-
-
-newtype Val2 h = Val2 { __valRec2   :: Record (ValElems (h (Val2 h))) }
-
-data Typed2 a h = Typed2 (a (Typed2 a)) -- (h (a (Typed2 a)))
-
---Typed2 Val
-
-    --newtype Val2 h = Val2 { __valRec2   :: Record (ValElems (h (Val2 h))) }
-
-    --data Typed2   h a = Typed2   (h a) a
-    --data Labeled2 h a = Labeled2 (h a)
-
-    --type TVal h = Val2 (Typed2 h)
-
-
-    --Record (ValElems (h (Val2 h)))
-
-
---type TVal h = Val2 (Labeled2 (Typed2 h))
-
-data T h a = T a (h a)
-newtype TT (h :: * -> *) a = TT (h (T h a))
-
-
---h (Val h)
-
-type Foo1 h = TT h (Val (TT h))
-
---deriving instance Show (a h) => Show (TT a h)
------------------------------------------------------------------------------------------------
-
+--instance IsVariant (Term' h)  where record  = lens (\(Term' r) -> r) (const Term')
+--                                    variant = Term'
 
 type instance Variants (Val   h) =                         ValElems   (H Val   h)
 type instance Variants (Thunk h) = (Val h) ':              ThunkElems (H Thunk h)
@@ -140,14 +187,14 @@ deriving instance (Show (H Val h))                                    => Show (V
 deriving instance (Show (H Val h), Show (H Thunk h))                  => Show (Thunk h)
 deriving instance (Show (H Val h), Show (H Thunk h), Show (H Term h)) => Show (Term  h)
 
-instance IsVariant (Val h)   where record  = _valRec
-                                   variant = Val
+--instance IsVariant (Val h)   where record  = _valRec
+--                                   variant = Val
 
-instance IsVariant (Thunk h) where record  = _thunkRec
-                                   variant = Thunk
+--instance IsVariant (Thunk h) where record  = _thunkRec
+--                                   variant = Thunk
 
-instance IsVariant (Term h)  where record  = _termRec
-                                   variant = Term
+--instance IsVariant (Term h)  where record  = _termRec
+--                                   variant = Term
 
 -- Name instances
 
