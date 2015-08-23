@@ -28,6 +28,9 @@ ghcjs  -package-db $SNAPSHOT_DB \
        -package graphviz \
        -package vector \
        -package luna-tc \
+       -package luna-protobuf-old-gen \
+       -package flowbox-batch-protobuf \
+       -package batch-lib-project-manager-api \
        -XNoImplicitPrelude \
        -XDoAndIfThenElse \
        -XTemplateHaskell \
