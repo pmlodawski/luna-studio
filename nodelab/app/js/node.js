@@ -63,7 +63,7 @@ function Node(id, position, z) {
     })
   );
   this.mesh.userData.id = id;
-  this.htmlContainer = $('<div/>');
+  this.htmlContainer = document.createElement("div");
   $$.htmlCanvas.append(this.htmlContainer);
 
   this.htmlElements = {};
@@ -96,7 +96,7 @@ Node.prototype.moveTo = function(a, b) {
   this.mesh.position.y = vec.y;
 
   // this.attributes.pos.needsUpdate = true;
-  this.htmlContainer.css({left: vec.x, top: vec.y});
+  $(this.htmlContainer).css({left: vec.x, top: vec.y});
 };
 
 Node.prototype.zPos = function(z) {

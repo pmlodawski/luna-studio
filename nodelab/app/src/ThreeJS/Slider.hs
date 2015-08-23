@@ -173,9 +173,10 @@ instance Draggable        WB.Slider where
     onDragStart state slider     = (Just action, toCtxDynamic slider) where
                           action = setCursor "pointer"
     onDragMove  state slider     = (Just action, toCtxDynamic newSlider) where
-                    delta        = -diff ^. x / divider + diff ^. y / (4.0 * divider)
+                    delta        = if (abs $ diff ^. x) > (abs $ diff ^. y) then -diff ^. x / divider
+                                                                            else  diff ^. y / (divider * 10.0)
                     width        = slider ^. WB.size . x
-                    divider      = if state ^. keyMods . Keyboard.shift then width * 4.0
+                    divider      = if state ^. keyMods . Keyboard.shift then width * 10.0
                                                                         else width
                     diff         = state ^. currentPos - state ^. previousPos
                     newNormValue = (WB.normValue slider) - delta
