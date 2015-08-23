@@ -13,35 +13,62 @@ import           Object.Widget
 import           Numeric
 
 
-data Slider = Slider { _refId    :: Int
-                     , _pos      :: Vector2 Double
-                     , _size     :: Vector2 Double
-                     , _label    :: Text
-                     , _minValue :: Double
-                     , _maxValue :: Double
-                     , _value    :: Double
-                     } deriving (Eq, Show, Typeable)
+data Slider a =  Slider { _refId     :: Int
+                        , _pos       :: Vector2 Double
+                        , _size      :: Vector2 Double
+                        , _label     :: Text
+                        , _minValue  :: a
+                        , _maxValue  :: a
+                        , _normValue :: Double
+                        } deriving (Eq, Show, Typeable)
 
 makeLenses ''Slider
 
-instance IsDisplayObject Slider where
+class (Num a, Show a, Typeable a) => IsSlider a where
+    displayValue ::           Slider a -> String
+    value        ::           Slider a -> a
+    setValue     :: a      -> Slider a -> Slider a
+
+instance IsDisplayObject (Slider a) where
     objectId       b = b ^. refId
 
 
-sliderPosition :: Slider -> Double
-sliderPosition (Slider _ _ _ _ minv maxv v) = (v - minv) / (maxv - minv)
 
-setValueNorm :: Double -> Slider -> Slider
-setValueNorm normVal slider = slider & value .~ val where
-    boundedValue  = max 0.0 $ min 1.0 normVal
-    val           = slider ^. minValue + boundedValue * (slider ^. maxValue - slider ^. minValue)
 
-normValue :: Slider -> Double
-normValue slider = (slider ^. value - slider ^. minValue) / (slider ^. maxValue - slider ^. minValue)
 
-displayValue s = showFFloat (Just $ sliderPrecision s) (s ^. value) ""
+instance IsSlider Double where
+    displayValue slider = showFFloat (Just $ precision) val "" where
+        val       = value slider
+        precision = sliderPrecision slider
+    value slider = min + val * range where
+            min   = slider ^. minValue
+            max   = slider ^. maxValue
+            val   = slider ^. normValue
+            range = max - min
+    setValue val slider = slider & normValue .~ newVal where
+            newVal = (val - min) / range
+            min    = slider ^. minValue
+            max    = slider ^. maxValue
+            range  = max - min
 
-sliderPrecision :: Slider -> Int
+setNormValue :: Double -> Slider a -> Slider a
+setNormValue val slider = slider & normValue .~ boundedVal where
+    boundedVal = max 0.0 $ min 1.0 val
+
+instance IsSlider Int where
+    displayValue s = show $ value s
+    value        slider = round $ min + val * range where
+            min   = fromIntegral $ slider ^. minValue
+            max   = fromIntegral $ slider ^. maxValue
+            val   = slider ^. normValue
+            range = max - min
+    setValue val slider = slider & normValue .~ newVal where
+            newVal = ((fromIntegral val) - min) / range
+            min    = fromIntegral $ slider ^. minValue
+            max    = fromIntegral $ slider ^. maxValue
+            range  = max - min
+
+sliderPrecision :: Slider Double -> Int
 sliderPrecision s = displayPrecision (s ^. minValue) (s ^. maxValue)
 
 displayPrecision :: Double -> Double -> Int

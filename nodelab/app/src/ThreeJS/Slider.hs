@@ -56,7 +56,6 @@ buildLabel text = do
     return (mesh, width)
 
 buildValueLabel w = do
-    let value = w ^. WB.value
     let sliderWidth = w ^. WB.size ^. x
     let text =  Text.pack $ WB.displayValue w
     material <- getTextHUDMaterial
@@ -73,14 +72,18 @@ buildValueLabel w = do
     p `setZ` 0.001
     return mesh
 
-buildSlider :: WB.Slider -> IO Slider
-buildSlider s@(WB.Slider bid pos size labelText minValue maxValue value) = do
-    group    <- buildGroup
-    sliderPos <- toUniform $ WB.sliderPosition s
+buildSlider :: (WB.IsSlider a) => WB.Slider a -> IO Slider
+buildSlider s = do
+    let bid  = objectId s
+    let pos  = s ^. WB.pos
+    let size = s ^. WB.size
+
+    group     <- buildGroup
+    sliderPos <- toUniform $ s ^. WB.normValue
     focus     <- toUniform (0 :: Int)
 
     label <- do
-        (mesh, width) <-  buildLabel labelText
+        (mesh, width) <-  buildLabel (s ^. WB.label)
         position      <-  position mesh
         position   `setY` (5.0 + size ^. y / 2.0)
         position   `setX` 4.0
@@ -129,26 +132,26 @@ buildSlider s@(WB.Slider bid pos size labelText minValue maxValue value) = do
 
     return $ Slider slider
 
-getFromRegistry :: WB.Slider -> IO Slider
+getFromRegistry :: WB.Slider a -> IO Slider
 getFromRegistry b = (getFromRegistryJS sliderId >>= return . Slider . JSObject.fromJSRef)
     where sliderId = b ^. WB.refId
 
-putToRegistry :: WB.Slider -> Slider -> IO ()
+putToRegistry :: WB.Slider a -> Slider -> IO ()
 putToRegistry b u = putToRegistryJS sliderId (JSObject.getJSRef $ unSlider u)
     where sliderId = b ^. WB.refId
 
-removeFromRegistry :: WB.Slider -> IO ()
+removeFromRegistry :: WB.Slider a -> IO ()
 removeFromRegistry b = removeFromRegistryJS sliderId
     where sliderId = b ^. WB.refId
 
-setUniform :: Text -> JSRef a -> WB.Slider -> IO ()
+setUniform :: Text -> JSRef a -> WB.Slider a -> IO ()
 setUniform n v w = do
     bref     <- getFromRegistry w
     uniforms <- JSObject.getProp "uniforms"             (unSlider bref) >>= return .           JSObject.fromJSRef
     uniform  <- JSObject.getProp (lazyTextToJSString n)  uniforms       >>= return . Uniform . JSObject.fromJSRef
     Uniform.setValue uniform v
 
-setValueLabel :: WB.Slider -> IO ()
+setValueLabel :: (WB.IsSlider a) => WB.Slider a -> IO ()
 setValueLabel w = do
     ref        <- getFromRegistry w
     group      <- JSObject.getProp "mesh"        (unSlider ref) >>= return . Group
@@ -162,12 +165,12 @@ setValueLabel w = do
 
 
 
-updateValue :: WB.Slider -> IO ()
+updateValue :: (WB.IsSlider a) => WB.Slider a -> IO ()
 updateValue s = do
-    setUniform "value" (toJSDouble $ WB.sliderPosition s) s
+    setUniform "value" (toJSDouble $ s ^. WB.normValue) s
     setValueLabel s
 
-instance Draggable        WB.Slider where
+instance (WB.IsSlider a) => Draggable (WB.Slider a) where
     mayDrag Mouse.LeftButton _ _ = True
     mayDrag _                _ _ = False
     onDragStart state slider     = (Just action, toCtxDynamic slider) where
@@ -179,8 +182,8 @@ instance Draggable        WB.Slider where
                     divider      = if state ^. keyMods . Keyboard.shift then width * 10.0
                                                                         else width
                     diff         = state ^. currentPos - state ^. previousPos
-                    newNormValue = (WB.normValue slider) - delta
-                    newSlider    = WB.setValueNorm newNormValue slider
+                    newNormValue = (slider ^. WB.normValue) - delta
+                    newSlider    = WB.setNormValue newNormValue slider
                     action       = do
                         setCursor "-webkit-grabbing"
                         updateValue newSlider
@@ -190,19 +193,19 @@ instance Draggable        WB.Slider where
             setCursor "default"
         (otherAction, newSlider) = onDragMove state slider
 
-instance DblClickable   WB.Slider where
+instance  (WB.IsSlider a) => DblClickable   (WB.Slider a) where
     onDblClick pos slider     = (Just action, toCtxDynamic newSlider) where
                 normValue     = (pos ^. x) / (slider ^. WB.size . x)
-                newSlider     = WB.setValueNorm normValue slider
+                newSlider     = WB.setNormValue normValue slider
                 action        = do
                     updateValue newSlider
 
-instance HandlesMouseOver WB.Slider where
+instance  (WB.IsSlider a) => HandlesMouseOver (WB.Slider a) where
     onMouseOver b = (Just action, toCtxDynamic b) where
         action    = do
             setUniform "focus" (toJSInt 1) b
 
-instance HandlesMouseOut WB.Slider where
+instance  (WB.IsSlider a) => HandlesMouseOut (WB.Slider a) where
     onMouseOut  b = (Just action, toCtxDynamic b) where
         action    = do
             setUniform "focus" (toJSInt 0) b

@@ -16,10 +16,10 @@ import           Object.Widget.Chart (Chart(..))
 import qualified Object.Widget.Chart as Chart
 
 data State = State { _button  :: Button
-                   , _slider  :: Slider
-                   , _slider2 :: Slider
-                   , _slider3 :: Slider
-                   , _slider4 :: Slider
+                   , _slider  :: Slider Int
+                   , _slider2 :: Slider Double
+                   , _slider3 :: Slider Double
+                   , _slider4 :: Slider Double
                    , _toggle  :: Toggle
                    , _chart   :: Chart
                    } deriving (Show, Eq)
@@ -29,10 +29,10 @@ makeLenses ''State
 instance Default State where
     def = State button slider slider2 slider3 slider4 toggle chart where
         button  = Button 0 "Click me!" Button.Normal (Vector2 100 100) (Vector2 100 50)
-        slider  = Slider 1 (Vector2 100 200) (Vector2 200  25) "Cutoff" 100.0 20000.0 1000.0
-        slider2 = Slider 2 (Vector2 100 230) (Vector2 200  25) "Resonance" 0.0 100.0 30.0
-        slider3 = Slider 3 (Vector2 100 260) (Vector2 200  25) "Noise" 0.0 1.0 0.1
-        slider4 = Slider 4 (Vector2 100 290) (Vector2 200  25) "Gamma" 0.0000001 0.000001 0.0000005
+        slider  = Slider 1 (Vector2 100 200) (Vector2 200  25) "Cutoff"    100      20000        0.1
+        slider2 = Slider 2 (Vector2 100 230) (Vector2 200  25) "Resonance"   0.0      100.0      0.3
+        slider3 = Slider 3 (Vector2 100 260) (Vector2 200  25) "Noise"       0.0        1.0      0.1
+        slider4 = Slider 4 (Vector2 100 290) (Vector2 200  25) "Gamma"       0.0000001  0.000001 0.9
         toggle  = Toggle 5 (Vector2 100 320) (Vector2 200  25) "Inverse" False
         chart   = Chart  6 (Vector2 100 380) (Vector2 300 200) Chart.Bar "Brand" Chart.Category "Unit Sales" Chart.Linear
 
