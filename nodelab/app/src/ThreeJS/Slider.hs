@@ -19,6 +19,7 @@ import qualified Data.Text.Lazy as Text
 import           Data.Text.Lazy (Text)
 import qualified Event.Mouse    as Mouse
 import qualified Event.Keyboard as Keyboard
+import           Event.Keyboard (KeyMods(..))
 import           ThreeJS.Types
 import           ThreeJS.Mesh
 import           ThreeJS.PlaneGeometry
@@ -170,6 +171,13 @@ updateValue s = do
     setUniform "value" (toJSDouble $ s ^. WB.normValue) s
     setValueLabel s
 
+
+keyModMult :: KeyMods -> Double
+keyModMult mods = case mods of
+    KeyMods True True  _ _ -> 100.0
+    KeyMods True False _ _ ->  10.0
+    otherwise              ->   1.0
+
 instance (WB.IsSlider a) => Draggable (WB.Slider a) where
     mayDrag Mouse.LeftButton _ _ = True
     mayDrag _                _ _ = False
@@ -179,8 +187,7 @@ instance (WB.IsSlider a) => Draggable (WB.Slider a) where
                     delta        = if (abs $ diff ^. x) > (abs $ diff ^. y) then -diff ^. x / divider
                                                                             else  diff ^. y / (divider * 10.0)
                     width        = slider ^. WB.size . x
-                    divider      = if state ^. keyMods . Keyboard.shift then width * 10.0
-                                                                        else width
+                    divider      = width * keyModMult $ state ^. keyMods
                     diff         = state ^. currentPos - state ^. previousPos
                     newNormValue = (slider ^. WB.normValue) - delta
                     newSlider    = WB.setNormValue newNormValue slider
