@@ -1,6 +1,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Luna.Syntax.Decl.Function where
+module Luna.Syntax.AST.Decl.Function where
 
 import Flowbox.Prelude
 import Data.Containers

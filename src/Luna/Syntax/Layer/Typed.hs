@@ -2,12 +2,13 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Luna.Inference.Type where
+module Luna.Syntax.Layer.Typed where
 
 import Flowbox.Prelude
 
 import Luna.Syntax.AST
-import Luna.Syntax.Graph.Builder
+import Luna.Syntax.Builder
+import Luna.Syntax.Layer
 import Data.Cata
 
 -- === Typed ===

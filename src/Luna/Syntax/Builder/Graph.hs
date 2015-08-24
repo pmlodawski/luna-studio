@@ -1,22 +1,46 @@
+{-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
 
-module Luna.Syntax.Graph.Builder.Class where
 
+module Luna.Syntax.Builder.Graph where
 
 import Flowbox.Prelude
+import Data.Vector            hiding (convert, modify)
+import Data.Containers
+import Data.Containers.Hetero
+import Data.Cata
+import Control.Monad.Fix
 
 import qualified Control.Monad.State as State
-import           Control.Monad.Fix
-import           Data.Containers.Hetero
-import           Luna.Syntax.Graph
-import           Data.Variants
-import           Data.Containers
 
-import Data.Cata
+import Luna.Syntax.AST.Decl
 
-import Control.Monad.Trans.Identity
+--- === Graph ===
+
+newtype HeteroVectorGraph   = HeteroVectorGraph { __hetReg :: Hetero' Vector } deriving (Show, Default)
+newtype VectorGraph       a = VectorGraph       { __homReg :: Vector a       } deriving (Show, Default)
+
+makeLenses ''HeteroVectorGraph
+makeLenses ''VectorGraph
+
+instance HasContainer HeteroVectorGraph   (Hetero' Vector) where container = _hetReg
+instance HasContainer (VectorGraph a) (Vector a)       where container = _homReg
+
+
+---- === Ref ===
+
+type HomoGraph ref t = VectorGraph (t (Mu (ref t)))
+type ArcPtr          = Ref Int
+type Arc           a = Mu (ArcPtr a)
+
+newtype Ref i a t = Ref { fromRef :: Ptr i (a t) } deriving (Show)
+
+
+
+------------------------------------------
+
 
 data BldrState g = BldrState { _orphans :: [Int]
                              , _graph   :: g

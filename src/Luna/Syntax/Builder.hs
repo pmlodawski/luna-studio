@@ -2,22 +2,22 @@
 {-# LANGUAGE RecursiveDo #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Luna.Syntax.Graph.Builder where
+module Luna.Syntax.Builder where
 
 import Flowbox.Prelude hiding (cons)
 import Data.Variants
 import Control.Monad.Fix
 
-import           Luna.Syntax.Graph.Builder.Star (StarBuilder, StarBuilderT, MonadStarBuilder)
-import qualified Luna.Syntax.Graph.Builder.Star as StarBuilder
-import           Luna.Syntax.Graph.Builder.Class
-import           Luna.Syntax.Graph
-import           Luna.Syntax.Arg
-import           Luna.Syntax.AST
+import           Luna.Syntax.Builder.Star (StarBuilder, StarBuilderT, MonadStarBuilder)
+import qualified Luna.Syntax.Builder.Star as StarBuilder
+import           Luna.Syntax.Builder.Graph
 import           Luna.Syntax.Name
-import           Luna.Syntax.Term
-import           Luna.Syntax.Lit
-import           Luna.Syntax.Decl
+import           Luna.Syntax.AST
+import           Luna.Syntax.AST.Arg
+import           Luna.Syntax.AST.Term
+import           Luna.Syntax.AST.Lit
+import           Luna.Syntax.AST.Decl
+import           Luna.Syntax.Layer
 
 import Data.Cata
 
@@ -48,8 +48,8 @@ type MuArg m t = Arg (m (Mu t))
 mkASTRefWith :: (SpecificCons variant ast, MuBuilder a m t) => (ast -> m (a (Mu t))) -> variant -> m (Mu t)
 mkASTRefWith f a = buildMu =<< f (specificCons a)
 
-arg :: ToMRef a m t => a -> Arg (m (Mu t))
-arg = Arg Nothing . toMRef
+arg :: ToMuM a m t => a -> Arg (m (Mu t))
+arg = Arg Nothing . toMuM
 
 var :: LayeredASTCons Var m t => Name -> m (Mu t)
 var = layeredASTCons . Var
@@ -71,11 +71,11 @@ getStar = do
 
 --
 
-accessor :: (ToMRef a m t, LayeredASTMuCons Accessor m t) => Name -> a -> m (Mu t)
-accessor n r = layeredASTCons . Accessor n =<< toMRef r
+accessor :: (ToMuM a m t, LayeredASTMuCons Accessor m t) => Name -> a -> m (Mu t)
+accessor n r = layeredASTCons . Accessor n =<< toMuM r
 
-app :: (ToMRef a m t, LayeredASTMuCons App m t) => a -> [MuArg m t] -> m (Mu t)
-app base args = layeredASTCons =<< (App <$> toMRef base <*> (sequence . fmap sequence) args)
+app :: (ToMuM a m t, LayeredASTMuCons App m t) => a -> [MuArg m t] -> m (Mu t)
+app base args = layeredASTCons =<< (App <$> toMuM base <*> (sequence . fmap sequence) args)
 
 -- operators
 

@@ -18,10 +18,10 @@ import Data.Cata
 import Data.Containers
 import Data.Containers.Hetero
 
-import Luna.Syntax.Term
-import Luna.Syntax.Graph
+import Luna.Syntax.AST.Term
+import Luna.Syntax.Builder.Graph
 import Luna.Syntax.AST
-import Luna.Inference.Type
+import Luna.Syntax.Layer.Typed
 
 import System.Process (createProcess, shell)
 

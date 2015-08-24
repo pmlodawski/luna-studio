@@ -1,4 +1,4 @@
-module Luna.Syntax.Arg where
+module Luna.Syntax.AST.Arg where
 
 import Flowbox.Prelude
 import Luna.Syntax.Name

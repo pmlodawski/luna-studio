@@ -8,18 +8,17 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Luna.Syntax.Term where
+module Luna.Syntax.AST.Term where
 
 import Flowbox.Prelude hiding (Cons, cons)
 import Data.Variants   hiding (Cons)
 
-import Luna.Syntax.Lit
-import Luna.Syntax.Arg
+import Luna.Syntax.AST.Lit
+import Luna.Syntax.AST.Arg
 import Luna.Syntax.Name
 
 import Data.Cata
 import Data.Containers.Hetero
-import Luna.Syntax.Graph
 
 import Data.Typeable
 

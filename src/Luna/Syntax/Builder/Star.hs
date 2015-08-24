@@ -1,7 +1,7 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Luna.Syntax.Graph.Builder.Star where
+module Luna.Syntax.Builder.Star where
 
 import           Flowbox.Prelude
 import qualified Control.Monad.State as State

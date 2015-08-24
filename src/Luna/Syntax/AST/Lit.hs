@@ -1,4 +1,4 @@
-module Luna.Syntax.Lit where
+module Luna.Syntax.AST.Lit where
 
 import           Flowbox.Prelude
 import qualified Data.Text.AutoBuilder as Text
