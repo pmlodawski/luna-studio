@@ -1,6 +1,9 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE DataKinds #-}
+
 
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -179,7 +182,6 @@ inputs = foldr (:) []
 
 --v = Crumb CTop :: Crumb CTop (Accessor Int)
 --v' = view target v :: _
-
 
 
 -- breadcrumby moga byc po prostu lensami Lens' a t
