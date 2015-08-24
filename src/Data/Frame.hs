@@ -11,7 +11,6 @@
 {-# LANGUAGE MultiParamTypeClasses     #-}
 {-# LANGUAGE OverloadedStrings         #-}
 {-# LANGUAGE FunctionalDependencies    #-}
--- {-# LANGUAGE AllowAmbiguousTypes       #-}
 
 
 module Data.Frame where
@@ -387,16 +386,62 @@ castFrame _ frame = frame & frameData %~ casts
     where casts   = V.map (\col -> (castCol (Proxy :: Proxy tsTo) col :: Column tsTo))
 
 
-addCol :: forall tsFrom tsTo t.
-          (AppendT t tsFrom tsTo, Constructor (Vector t) (Column tsTo),
-           WrappedCast (Record (VectorsOf tsFrom)) (CastOutput (IsSecureCast (Record (VectorsOf tsFrom)) (Record (VectorsOf tsTo)))) (Record (VectorsOf tsTo)),
-           UnpackCast  (CastOutput (IsSecureCast (Record (VectorsOf tsFrom)) (Record (VectorsOf tsTo)))  (Record (VectorsOf tsTo)))  (Record (VectorsOf tsTo)))
-          => Vector t -> DataFrame tsFrom -> DataFrame tsTo
-addCol vec frame = newFrame & frameData %~ (flip V.snoc col)
+addColVec :: forall tsFrom tsTo t.
+             (AppendT t tsFrom tsTo, Constructor (Vector t) (Column tsTo),
+              WrappedCast (Record (VectorsOf tsFrom)) (CastOutput (IsSecureCast (Record (VectorsOf tsFrom)) (Record (VectorsOf tsTo)))) (Record (VectorsOf tsTo)),
+              UnpackCast  (CastOutput (IsSecureCast (Record (VectorsOf tsFrom)) (Record (VectorsOf tsTo)))  (Record (VectorsOf tsTo)))  (Record (VectorsOf tsTo)))
+             => String -> Vector t -> DataFrame tsFrom -> DataFrame tsTo
+addColVec lab vec frame = newFrame & frameData %~ (flip V.snoc col)
+                                   & schema    %~ (fromSchema %~ M.insert lab idx)
+                                   & cols      %~ (+1)
     where col      = toCol   (Proxy :: Proxy tsFrom) vec                :: Column tsTo
           prx      = appendT (Proxy :: Proxy t) (Proxy :: Proxy tsFrom) :: Proxy tsTo
           newFrame = castFrame prx frame
+          idx      = frame ^. frameData & V.length
 
+
+addCol :: forall tsFrom tsTo t.
+          (WrappedCast (Record (VectorsOf tsFrom)) (CastOutput (IsSecureCast (Record (VectorsOf tsFrom)) (Record (VectorsOf tsTo)))) (Record (VectorsOf tsTo)),
+           UnpackCast  (CastOutput (IsSecureCast (Record (VectorsOf tsFrom)) (Record (VectorsOf tsTo)))  (Record (VectorsOf tsTo)))  (Record (VectorsOf tsTo)))
+          => String -> Column tsTo -> DataFrame tsFrom -> DataFrame tsTo
+addCol lab col frame = newFrame & frameData %~ (flip V.snoc col)
+                                & schema    %~ (fromSchema %~ M.insert lab idx)
+                                & cols      %~ (+1)
+    where prx      = Proxy :: Proxy tsTo
+          newFrame = castFrame prx frame
+          idx      = frame ^. frameData & V.length
+
+-------------------------------------------------------------------------
+-- Column operations
+-------------------------------------------------------------------------
+
+liftVec :: (a -> b) -> (Vector a -> Vector b)
+liftVec f = V.map f
+
+
+mapColumn' :: forall types types' a b.
+              (AppendT b types types',
+               VariantMap  (Vector a) (Vector b) (Record (VectorsOf types)),
+               Constructor (Vector b) (Record (VectorsOf types')))
+              => (a -> b) -> Column types -> Maybe (Column types')
+mapColumn' f col = Column <$> rec'
+    where vf   = liftVec f         :: Vector a -> Vector b
+          rec  = col ^. record     :: Record (VectorsOf types)
+          vec  = mapVariant vf rec :: Maybe  (Vector b)
+          rec' = case vec of Just v  -> Just $ cons v
+                             Nothing -> Nothing  :: Maybe (Record (VectorsOf types'))
+
+
+mapColumn :: forall types types' a b.
+             (AppendT b types types',
+              VariantMap  (Vector a) (Vector b) (Record (VectorsOf types)),
+              Constructor (Vector b) (Record (VectorsOf types')),
+              WrappedCast (Record (VectorsOf types)) (CastOutput (IsSecureCast (Record (VectorsOf types)) (Record (VectorsOf types')))) (Record (VectorsOf types')),
+              UnpackCast  (CastOutput (IsSecureCast (Record (VectorsOf types)) (Record (VectorsOf types')))  (Record (VectorsOf types')))  (Record (VectorsOf types')))
+             => String -> (a -> b) -> String -> DataFrame types -> Maybe (DataFrame types')
+mapColumn lab f newLab frame = (addCol newLab) <$> newCol <*> (pure frame)
+    where col    = colByLabel lab frame :: Maybe (Column types)
+          newCol = mapColumn' f =<< col :: Maybe (Column types')
 
 -------------------------------------------------------------------------
 -- Reading frames from CSV
