@@ -11,7 +11,7 @@ import qualified Data.ByteString.Base64.Lazy as B64
 import           Data.Text.Lazy.Encoding     (decodeUtf8)
 import           Utils.PreludePlus           hiding (Text)
 
-data WSMessage = WSMessage { _topic :: String
+data WSMessage = WSMessage { _topic   :: String
                            , _message :: ByteString
                            } deriving (Show, Generic)
 
@@ -19,6 +19,9 @@ instance Binary.Binary WSMessage
 
 serialize :: WSMessage -> JSString
 serialize = lazyTextToJSString . decodeUtf8 . B64.encode . Binary.encode
+
+deserialize :: String -> WSMessage
+deserialize = Binary.decode . B64.decodeLenient . pack
 
 sendMsg :: WebSocket -> WSMessage -> IO ()
 sendMsg conn msg = sendString conn $ serialize msg

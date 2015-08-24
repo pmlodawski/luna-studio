@@ -25,15 +25,16 @@ import qualified Reactive.Plugins.Core.Action.NodeSearcher   as NodeSearcher
 import qualified Reactive.Plugins.Core.Action.Breadcrumb     as Breadcrumb
 import qualified Reactive.Plugins.Core.Action.Widget         as Widget
 import qualified Reactive.Plugins.Core.Action.Sandbox        as Sandbox
+import qualified Reactive.Plugins.Core.Action.WSConnection   as WSConnection
 import           Reactive.Plugins.Core.Action.Executor
 
 import           Reactive.Plugins.Core.Action.State.Global
 import           Reactive.Plugins.Core.Action.State.UnderCursor
 
+import           GHCJS.DOM.WebSocket (WebSocket)
 
-
-makeNetworkDescription :: forall t. Frameworks t => Bool -> Moment t ()
-makeNetworkDescription logging = do
+makeNetworkDescription :: forall t. Frameworks t => WebSocket -> Bool -> Moment t ()
+makeNetworkDescription conn logging = do
     resizeE        <- fromAddHandler resizeHandler
     mouseDownE     <- fromAddHandler mouseDownHandler
     mouseUpE       <- fromAddHandler mouseUpHandler
@@ -44,6 +45,7 @@ makeNetworkDescription logging = do
     keyPressedE    <- fromAddHandler keyPressedHandler
     keyUpE         <- fromAddHandler keyUpHandler
     nodeSearcherE  <- fromAddHandler nodeSearcherHander
+    webSocketE     <- fromAddHandler $ webSocketHandler conn
 
     let
         anyE                         :: Event t (Event.Event Dynamic)
@@ -57,6 +59,7 @@ makeNetworkDescription logging = do
                                                , keyPressedE
                                                , keyUpE
                                                , nodeSearcherE
+                                               , webSocketE
                                                ]
         anyNodeE                     :: Event t (Event.Event Node)
         anyNodeE                      = unpackDynamic <$> anyE
@@ -79,6 +82,7 @@ makeNetworkDescription logging = do
         nodeSearcherActionB           = fmap ActionST $   NodeSearcher.toAction <$> anyNodeB
         breadcrumbActionB             = fmap ActionST $     Breadcrumb.toAction <$> anyNodeB <*> globalStateB
         sandboxActionB                = fmap ActionST $        Sandbox.toAction <$> anyNodeB <*> globalStateB
+        webSocketActionB              = fmap ActionST $   WSConnection.toAction <$> anyNodeB
 
         allActionsPackB               = [ nodeGeneralActionB
                                         , widgetActionB
@@ -91,6 +95,7 @@ makeNetworkDescription logging = do
                                         , nodeSearcherActionB
                                         , breadcrumbActionB
                                         , sandboxActionB
+                                        , webSocketActionB
                                         ]
 
         (globalStateReactionB, allReactionsPackB) = execAll globalStateB allActionsPackB
