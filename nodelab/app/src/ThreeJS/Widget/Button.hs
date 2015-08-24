@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module ThreeJS.Button where
+module ThreeJS.Widget.Button where
 
 import           Utils.PreludePlus
 

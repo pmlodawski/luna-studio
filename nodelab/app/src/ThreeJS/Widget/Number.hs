@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module ThreeJS.Number where
+module ThreeJS.Widget.Number where
 
 import           Utils.PreludePlus
 
@@ -37,7 +37,7 @@ import           Utils.CtxDynamic
 import           JS.Bindings (setCursor)
 import           ThreeJS.Uniform (Uniform(..), UniformMap(..), toUniform)
 import qualified ThreeJS.Uniform as Uniform
-import qualified ThreeJS.Slider  as Slider
+import qualified ThreeJS.Widget.Slider  as Slider
 
 
 newtype Number = Number { unNumber :: JSObject.Object }

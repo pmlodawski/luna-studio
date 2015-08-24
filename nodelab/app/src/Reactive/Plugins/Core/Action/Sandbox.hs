@@ -24,10 +24,10 @@ import qualified Object.Widget.Toggle                            as Toggle
 import qualified Object.Widget.Number                            as Number
 import qualified Object.Widget.Chart                             as Chart
 import           ThreeJS.Types
-import qualified ThreeJS.Button                                  as UIButton
-import qualified ThreeJS.Slider                                  as UISlider
-import qualified ThreeJS.Toggle                                  as UIToggle
-import qualified ThreeJS.Number                                  as UINumber
+import qualified ThreeJS.Widget.Button                                  as UIButton
+import qualified ThreeJS.Widget.Slider                                  as UISlider
+import qualified ThreeJS.Widget.Toggle                                  as UIToggle
+import qualified ThreeJS.Widget.Number                                  as UINumber
 import qualified Dimple.Render                                   as UIChart
 import qualified ThreeJS.Scene                                   as Scene
 

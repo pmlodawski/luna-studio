@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module ThreeJS.Slider where
+module ThreeJS.Widget.Slider where
 
 import           Utils.PreludePlus
 
