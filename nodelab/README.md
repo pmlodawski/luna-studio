@@ -40,8 +40,9 @@ cabal install ../new_update_order/libs/luna/typechecker --ghcjs
 
 Before building the app for the first time, you need to generate protocol buffers definitions.
 1. Install [Protobuf](https://github.com/google/protobuf) and [hprotoc](https://hackage.haskell.org/package/hprotoc). Make sure the `protoc` and `hprotoc` binaries are available on the `$PATH`.
-2. Run `./scripts/genproto`
-3. Run `./scripts/gencabal` (the order of `genproto` and `gencabal` matters!)
+2. Ensure `git submodule init` and `git submodule update` were performed.
+3. Run `./scripts/genproto`.
+4. Run `./scripts/gencabal` (the order of `genproto` and `gencabal` matters!).
 
 ## Building for production
 
