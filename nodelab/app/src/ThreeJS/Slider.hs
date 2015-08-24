@@ -174,9 +174,10 @@ updateValue s = do
 
 keyModMult :: KeyMods -> Double
 keyModMult mods = case mods of
-    KeyMods True True  _ _ -> 100.0
-    KeyMods True False _ _ ->  10.0
-    otherwise              ->   1.0
+    KeyMods True  True  _ _ -> 1000.0
+    KeyMods False True  _ _ ->  100.0
+    KeyMods True  False _ _ ->   10.0
+    otherwise               ->    1.0
 
 instance (WB.IsSlider a) => Draggable (WB.Slider a) where
     mayDrag Mouse.LeftButton _ _ = True
