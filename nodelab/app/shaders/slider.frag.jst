@@ -1,0 +1,42 @@
+#ifdef GL_ES
+precision highp float;
+#endif
+
+varying vec2 pos;
+uniform vec2 size;
+uniform float value;
+uniform int focus;
+uniform int objectMap;
+uniform vec3 objectId;
+
+void main() {
+
+    vec3 background   = vec3(0.15, 0.15, 0.15);
+    vec3 foreground   = vec3(0.25, 0.25, 0.25);
+    vec3 slider       = vec3(0.58, 0.21, 0.05);
+    vec3 sliderFocus  = vec3(0.73, 0.26, 0.07);
+
+    if (objectMap == 0) {
+        vec2 p = vec2(pos.x * size.x, pos.y * size.y);
+
+        float r = size.y / 2.0;
+        if (p.x < r) {
+            vec2 vec = vec2(r - p.x, r - p.y);
+            if (dot(vec, vec) > r * r) discard;
+        }
+
+        if (p.x > size.x - r) {
+            vec2 vec = vec2(size.x - r - p.x, r - p.y);
+            if (dot(vec, vec) > r * r) discard;
+        }
+
+        float val = size.x * value;
+        if (p.x >= val) {
+            gl_FragColor = vec4(background, 1.0);
+        } else if (p.x < val) {
+            gl_FragColor = vec4(foreground, 1.0);
+        }
+    } else {
+        gl_FragColor = vec4(objectId, 1.0);
+    }
+}

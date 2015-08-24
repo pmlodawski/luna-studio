@@ -9,13 +9,16 @@
 #
 # Please note that this script is intended to work on both py2 and py3.
 #
+# As a final, small detail, this script does not use any of the tools from shtacklib. However, it modifies the
+# PYTHONPATH for stage2 so the mentioned library will be available.
+#
 
 from __future__ import print_function
 import os
 import subprocess
 import sys
 import re
-import platform
+import shutil
 
 
 #                   __ _
@@ -26,12 +29,13 @@ import platform
 #  \___\___/|_| |_|_| |_|\__, |
 #                         __/ |
 #                        |___/
-import shutil
-
 
 FLOWBOX_GIT = os.path.join(".git", "flowbox")
 PYENV = os.path.join(FLOWBOX_GIT, "pyenv")
 PYENV_BIN_PYTHON = os.path.join(PYENV, "bin", "python")
+
+SUBMODULE_LOCATION = "repo_manager"
+STEP2_LOCATION = os.path.join(SUBMODULE_LOCATION, "init", "stage2.py")
 
 
 required_executables = {
@@ -125,10 +129,6 @@ def call(cmd, *args, **kwargs):
 # |___/\__\___| .__/|___/
 #             | |
 #             |_|
-
-
-current_system = platform.system()
-this_is_windows = current_system == 'Windows' or current_system.startswith("CYGWIN_NT")
 
 
 def stage1_verify_programs():
@@ -226,9 +226,10 @@ def stage3_create_virtualenv():
 
 
 def stage4_jump_to_virtualenv():
-    python_in_env = PYENV_BIN_PYTHON
-    script_to_call = sys.argv[0][:-4] + "2.py"  # run the second script
-    subprocess.check_call([python_in_env, script_to_call])
+    env = os.environ.copy()
+    env["PYTHONPATH"] = "repo_manager/shtacklib:" + env.get("PYTHONPATH", "")
+    subprocess.check_call([PYENV_BIN_PYTHON, STEP2_LOCATION],
+                          env=env)
 
 
 def main():

@@ -65,6 +65,7 @@ def install_requirements():
             # noinspection PyUnresolvedReferences
             import pip
         except ImportError as e:
+            # Caveat: this could mean that virtualenv is broken (e.g. Ctrl-C during creation).
             raise Exception("No `pip` available. Strange.") from e
 
         try:

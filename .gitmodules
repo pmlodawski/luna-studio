@@ -1,6 +1,7 @@
 [submodule "tools/graphics/webghci"]
     path = tools/graphics/webghci
     url = git@github.com:flowbox-public/WebGHCI.git
+    branch = typechecker
 [submodule "third-party/cufft"]
     path = third-party/cufft
     url = https://github.com/flowbox-public/cufft.git
@@ -228,7 +229,7 @@
 	path = libs/repo-manager
 	url = git@bitbucket.org:NewByteOrder/flowbox-repo-manager.git
 [submodule "libs/luna/protobuf-old"]
-    branch = develop
+    branch = proto-split
 	path = libs/luna/protobuf-old
 	url = git@bitbucket.org:NewByteOrder/luna-protobuf-old.git
 [submodule "tools/batch/plugins/bus-logger"]
@@ -252,16 +253,21 @@
 	path = libs/batch/plugins/project-manager-api
 	url = git@bitbucket.org:NewByteOrder/batch-lib-project-manager-api.git
 [submodule "libs/utils"]
-  branch = master
+    branch = master
 	path = libs/utils
 	url = git@bitbucket.org:NewByteOrder/flowbox-utils.git
 [submodule "libs/convert"]
 	path = libs/convert
 	url = git@bitbucket.org:NewByteOrder/convert.git
+  branch = master
 [submodule "third-party/HaskellBooster"]
 	path = third-party/HaskellBooster
 	url = git@github.com:wdanilo/HaskellBooster.git
-[submodule "nodelab"]
-	path = nodelab
-	url = git@bitbucket.org:NewByteOrder/nodelab.git
-  branch = master
+[submodule "libs/luna/protobuf-old-gen"]
+	path = libs/luna/protobuf-old-gen
+	url = git@bitbucket.org:NewByteOrder/protobuf-old-gen.git
+	branch = proto-split
+[submodule "libs/batch/batch-protobuf"]
+	path = libs/batch/batch-protobuf
+	url = git@bitbucket.org:NewByteOrder/batch-protobuf.git
+	branch = proto-split
