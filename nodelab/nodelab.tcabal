@@ -36,6 +36,9 @@ executable nodelab
                       , ScopedTypeVariables
 
   build-depends:       base >= 4.8 && < 4.9
+                     , bytestring
+                     , base64-bytestring
+                     , binary
                      , data-default
                      , ghcjs-base
                      , ghcjs-dom >=0.2 && <0.3
@@ -49,6 +52,7 @@ executable nodelab
                      , random
                      , pretty-show
                      , flowbox-utils
+                     , protocol-buffers
                      , luna-protobuf-old-gen
                      , flowbox-batch-protobuf
                      , batch-lib-project-manager-api
