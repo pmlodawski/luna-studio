@@ -31,7 +31,7 @@ import           Utils.PreludePlus
 import           Reactive.Banana
 import           Reactive.Banana.Frameworks ( Frameworks, actuate )
 import           JS.Bindings
-import           GHCJS.DOM.WebSocket (WebSocket, newWebSocket)
+import           JS.WebSocket
 import           BatchConnector.Commands
 
 import qualified Reactive.Plugins.Core.Network as CoreNetwork
@@ -43,12 +43,13 @@ makeNetworkDescription = CoreNetwork.makeNetworkDescription
 
 main :: IO ()
 main = do
+    socket <- getWebSocket
+    connect socket "ws://0.0.0.0:8088"
     Typechecker.main  -- TODO: Remove
-    sock <- newWebSocket "ws://0.0.0.0:8088" $ Just ([]::[String])
     initializeGl
     render
     enableLogging <- isLoggerEnabled
-    eventNetwork  <- compile $ makeNetworkDescription sock enableLogging
+    eventNetwork  <- compile $ makeNetworkDescription socket enableLogging
     actuate eventNetwork
 
     triggerWindowResize

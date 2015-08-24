@@ -13,8 +13,7 @@ import qualified GHCJS.DOM.Document     as Document
 import           GHCJS.DOM.Window       ( Window, mouseDown, mouseUp, mouseMove, resize, keyPress, keyDown, keyUp, getInnerWidth, getInnerHeight, click, dblClick )
 import qualified GHCJS.DOM.MouseEvent   as MouseEvent
 import qualified GHCJS.DOM.UIEvent      as UIEvent
-import qualified GHCJS.DOM.MessageEvent as MessageEvent
-import qualified GHCJS.DOM.WebSocket    as DOMWebSocket
+import qualified JS.WebSocket           as WebSocket
 
 import           Reactive.Banana.Frameworks ( AddHandler(..), liftIO )
 
@@ -27,7 +26,7 @@ import qualified Event.Keyboard      as Keyboard
 import qualified Event.Mouse         as Mouse
 import qualified Event.Window        as Window
 import qualified Event.NodeSearcher  as NodeSearcher
-import qualified Event.WebSocket     as WebSocket
+import qualified Event.WebSocket     as WSEvent
 import qualified Object.Node         ( Node )
 import           Event.Event
 import           GHCJS.Marshal
@@ -118,12 +117,11 @@ nodeSearcherHander = AddHandler $ \h -> do
         expr   <- getExpression e
         liftIO . h $ NodeSearcher $ NodeSearcher.Event action expr
 
-webSocketHandler :: DOMWebSocket.WebSocket -> AddHandler (Event Dynamic)
+webSocketHandler :: WebSocket.WebSocket -> AddHandler (Event Dynamic)
 webSocketHandler conn = AddHandler $ \h -> do
-    conn `on` DOMWebSocket.open $ do
-        liftIO . h $ WebSocket WebSocket.Opened
-    conn `on` DOMWebSocket.message $ do
-        e <- event
-        payload <- MessageEvent.getData e
+    WebSocket.onOpen conn $ do
+        liftIO . h $ WebSocket WSEvent.Opened
+    WebSocket.onMessage conn $ \event -> do
+        payload <- WebSocket.getData event
         let msg = Connection.deserialize $ fromJSString payload
-        liftIO . h $ WebSocket $ WebSocket.Message msg
+        liftIO . h $ WebSocket $ WSEvent.Message msg

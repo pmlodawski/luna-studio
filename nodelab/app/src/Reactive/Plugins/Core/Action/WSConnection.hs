@@ -23,7 +23,7 @@ toAction (WebSocket event) = Just $ case event of
 toAction _                 = Nothing
 
 instance ActionStateUpdater Action where
-    execSt (MessageAction msg) = ActionUI $ ApplyUpdates [print $ msg]
+    execSt (MessageAction msg) = ActionUI $ ApplyUpdates [print msg]
     execSt OpenedAction        = ActionUI $ ApplyUpdates [putStrLn "Connection Opened!"]
 
 instance ActionUIUpdater Action where

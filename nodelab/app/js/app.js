@@ -8,7 +8,8 @@ var $$           = require('common'),
     GraphNode    = require('node'),
     NodeSearcher = require('node_searcher'),
     Connection   = require('connection'),
-    SelectionBox = require('selection_box');
+    SelectionBox = require('selection_box'),
+    websocket    = require('websocket');
 
 console.info("Current version " + brunch.env + " " + brunch.git_commit);
 console.info("Build at " + brunch.date);
@@ -17,6 +18,7 @@ $$.nodes             = {};
 $$.connections       = {};
 $$.currentConnection = null;
 $$.selectionBox      = null;
+$$.websocket         = websocket();
 
 
 var nodeZOrderStep  = 0.00001;
@@ -231,6 +233,7 @@ module.exports = {
   hideSelectionBox:         hideSelectionBox,
   displayCurrentConnection: displayCurrentConnection,
   removeCurrentConnection:  removeCurrentConnection,
+  websocket:                $$.websocket,
   getNode:                  function(index) { return $$.nodes[index];    },
   getNodes:                 function()      { return _.values($$.nodes); },
   nodeSearcher:             function()      { return $$.node_searcher;   },

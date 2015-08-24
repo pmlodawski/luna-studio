@@ -15,6 +15,7 @@ module.exports = {
   htmlCanvasPan:  undefined,
   htmlCanvas:     undefined,
   node_searcher:  undefined,
+  websocket:      undefined,
   registry:       {}
 };
 

@@ -31,7 +31,7 @@ import           Reactive.Plugins.Core.Action.Executor
 import           Reactive.Plugins.Core.Action.State.Global
 import           Reactive.Plugins.Core.Action.State.UnderCursor
 
-import           GHCJS.DOM.WebSocket (WebSocket)
+import           JS.WebSocket (WebSocket)
 
 makeNetworkDescription :: forall t. Frameworks t => WebSocket -> Bool -> Moment t ()
 makeNetworkDescription conn logging = do
