@@ -21,11 +21,13 @@ import qualified Reactive.Plugins.Core.Action.State.UIRegistry   as UIRegistry
 import qualified Object.Widget.Button                            as Button
 import qualified Object.Widget.Slider                            as Slider
 import qualified Object.Widget.Toggle                            as Toggle
+import qualified Object.Widget.Number                            as Number
 import qualified Object.Widget.Chart                             as Chart
 import           ThreeJS.Types
 import qualified ThreeJS.Button                                  as UIButton
 import qualified ThreeJS.Slider                                  as UISlider
 import qualified ThreeJS.Toggle                                  as UIToggle
+import qualified ThreeJS.Number                                  as UINumber
 import qualified Dimple.Render                                   as UIChart
 import qualified ThreeJS.Scene                                   as Scene
 
@@ -63,6 +65,11 @@ addToggle b = do
     UIToggle.putToRegistry b toggle
     sandboxScene `add` toggle
 
+addNumber b = do
+    number <- UINumber.buildNumber b
+    UINumber.putToRegistry b number
+    sandboxScene `add` number
+
 addChart b = do
     UIChart.displayChart b
 
@@ -88,6 +95,7 @@ instance ActionStateUpdater Action where
                                                                 & Global.sandbox    . Sandbox.slider4 .~ slider4
                                                                 & Global.sandbox    . Sandbox.toggle  .~ toggle
                                                                 & Global.sandbox    . Sandbox.chart   .~ chart
+                                                                & Global.sandbox    . Sandbox.number  .~ number
                                                                 & Global.uiRegistry                   .~ newRegistry
 
              button                = (oldState ^. Global.sandbox . Sandbox.button)  & Button.refId .~ buttonId
@@ -96,12 +104,13 @@ instance ActionStateUpdater Action where
              slider3               = (oldState ^. Global.sandbox . Sandbox.slider3) & Slider.refId .~ sliderId3
              slider4               = (oldState ^. Global.sandbox . Sandbox.slider4) & Slider.refId .~ sliderId4
              toggle                = (oldState ^. Global.sandbox . Sandbox.toggle)  & Toggle.refId .~ toggleId
-             chart                 = (oldState ^. Global.sandbox . Sandbox.chart )  & Chart.refId .~ chartId
+             chart                 = (oldState ^. Global.sandbox . Sandbox.chart)   &  Chart.refId .~  chartId
+             number                = (oldState ^. Global.sandbox . Sandbox.number)  & Number.refId .~ numberId
              oldRegistry           = oldState ^. Global.uiRegistry
-             newRegistry           = UIRegistry.register button $ UIRegistry.register slider $ UIRegistry.register slider2 $ UIRegistry.register slider3 $ UIRegistry.register slider4 $ UIRegistry.register toggle $ UIRegistry.register chart oldRegistry
+             newRegistry           = UIRegistry.register button $ UIRegistry.register slider $ UIRegistry.register slider2 $ UIRegistry.register slider3 $ UIRegistry.register slider4 $ UIRegistry.register toggle $ UIRegistry.register chart $ UIRegistry.register number oldRegistry
 
-             (buttonId:sliderId:sliderId2:sliderId3:sliderId4:toggleId:chartId:_) = UIRegistry.generateIds 7 oldRegistry
-             newAction             = if wasInited then ApplyUpdates [] else ApplyUpdates [Just $ addButton button, Just $ addSlider slider, Just $ addSlider slider2, Just $ addSlider slider3, Just $ addSlider slider4, Just $ addToggle toggle, Just $ addChart chart]
+             (buttonId:sliderId:sliderId2:sliderId3:sliderId4:toggleId:chartId:numberId:_) = UIRegistry.generateIds 7 oldRegistry
+             newAction             = if wasInited then ApplyUpdates [] else ApplyUpdates [Just $ addButton button, Just $ addSlider slider, Just $ addSlider slider2, Just $ addSlider slider3, Just $ addSlider slider4, Just $ addToggle toggle, Just $ addChart chart, Just $ addNumber number]
     execSt (WidgetClicked bid) oldState = ActionUI  newAction newState where
         oldRegistry           = oldState ^. Global.uiRegistry
         widget                = UIRegistry.lookup bid oldRegistry
