@@ -187,7 +187,7 @@ instance (WB.IsSlider a) => Draggable (WB.Slider a) where
                     delta        = if (abs $ diff ^. x) > (abs $ diff ^. y) then -diff ^. x / divider
                                                                             else  diff ^. y / (divider * 10.0)
                     width        = slider ^. WB.size . x
-                    divider      = width * keyModMult $ state ^. keyMods
+                    divider      = width * (keyModMult $ state ^. keyMods)
                     diff         = state ^. currentPos - state ^. previousPos
                     newNormValue = (slider ^. WB.normValue) - delta
                     newSlider    = WB.setNormValue newNormValue slider
