@@ -1,5 +1,6 @@
-{-# LANGUAGE TypeFamilies         #-}
-{-# LANGUAGE RankNTypes           #-}
+{-# LANGUAGE TypeFamilies           #-}
+{-# LANGUAGE RankNTypes             #-}
+{-# LANGUAGE FunctionalDependencies #-}
 
 -- UndecidableInstances are used only for Show instances
 {-# LANGUAGE UndecidableInstances #-}
@@ -10,6 +11,17 @@ import Prelude
 import Control.Lens
 import Control.Monad (join)
 import Data.Repr
+import Control.Monad.Trans.Identity
+
+class    Monad m => MuBuilder a m             t | t m -> a where buildMu :: a (Mu t) -> m (Mu t)
+instance Monad m => MuBuilder a (IdentityT m) a            where buildMu = return . Mu
+instance            MuBuilder a Identity      a            where buildMu = return . Mu
+
+class     Monad m           => ToMuM a          m t | a -> t where toMuM :: a -> m (Mu t)
+instance  Monad m           => ToMuM    (Mu t)  m t          where toMuM = return
+instance (Monad m, (m ~ n)) => ToMuM (n (Mu t)) m t          where toMuM = id
+
+type MuData' a = a (Mu a)
 
 -- === Catamorphisms ===
 
@@ -24,7 +36,7 @@ type Algebra        f a = f a -> a
 type MuGenLayout    mu f a = f (MuData mu a)
 type MuLayout       mu f   = MuGenLayout mu f (mu f)
 
-type MuMap          mu f   c = (mu f -> c)   -> MuLayout mu f -> MuGenLayout mu f c
+type MuMap          mu f   c = (mu f ->   c) -> MuLayout mu f ->    MuGenLayout mu f c
 type MuMapM         mu f m c = (mu f -> m c) -> MuLayout mu f -> m (MuGenLayout mu f c)
 
 class IsMu mu where

@@ -8,6 +8,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE EmptyDataDecls     #-}
 {-# LANGUAGE TypeFamilies       #-}
+{-# LANGUAGE PolyKinds          #-}
 
 module Data.TypeLevel.Bool where
 
@@ -40,6 +41,6 @@ type family And a b where
   And True True = True
   And a    b    = False
 
-type family If cond a b where
+type family If cond (a :: k) (b :: k) :: k where
   If True  a b = a
   If False a b = b

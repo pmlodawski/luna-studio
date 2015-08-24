@@ -31,6 +31,15 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE DatatypeContexts #-}
 
+-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-- Obsolete, will be deleted
+-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 module Data.Variant where
 
@@ -84,6 +93,7 @@ import           GHC.Exts
 #include "ghcplatform.h"
 
 
+-- [WD] - dopisac classe NoVariantsDefined gdy nie zostana znalezione Varianty
 
 ------------------------------------------------------------------------
 -- Records
@@ -132,7 +142,6 @@ instance Repr (RecordTemplate a) => Repr (Record a) where
 
 type CheckConsByVariant variant m cons = ( MaybeConsByIdx (Index variant (Variants cons)) variant m (RecordTemplate (Variants cons))
                                          , IsVariant cons
-                                         , Functor m
                                          )
 
 type MaybeConsByVariant variant m cons  = (CheckConsByVariant variant m cons, ToMaybe m)
@@ -187,7 +196,7 @@ class SpecificCons variant cons where
 
 -- MaybeConsByIdx
 
-class MaybeConsByIdx (idx :: Maybe Nat) variant m cons | idx -> m where
+class Functor m => MaybeConsByIdx (idx :: Maybe Nat) variant m cons | idx -> m where
     maybeConsByIdx :: Proxy idx -> variant -> m cons
 
 instance (m ~ NotFound) => MaybeConsByIdx Nothing a m cons where
@@ -204,6 +213,11 @@ class ConsByIdx (idx :: Nat) variant cons where
 instance (ConsByIdx n a tmpl, tmpl ~ RecordTemplate r)
       => ConsByIdx n a (Record r) where
     consByIdx = Record .: consByIdx
+
+---- CataConsByIdx
+
+--class CataConsByIdx (idx :: Nat) variant cons where
+--    cataConsByIdx :: Proxy idx -> variant t -> cons t
 
 -- SpecificCons
 
@@ -460,6 +474,77 @@ data R9 t1 t2 t3 t4 t5 t6 t7 t8 t9
    | R9_V8 t8
    | R9_V9 t9
    deriving (Show, Eq)
+
+--data CR1 t1 a = CR1_V1 (t1 a)
+--    deriving (Show, Eq)
+
+--data CR2 t1 t2 a
+--    = CR2_V1 (t1 a)
+--    | CR2_V2 (t2 a)
+--    deriving (Show, Eq)
+
+--data CR3 t1 t2 t3 a
+--    = CR3_V1 (t1 a)
+--    | CR3_V2 (t2 a)
+--    | CR3_V3 (t3 a)
+--    deriving (Show, Eq)
+
+--data CR4 t1 t2 t3 t4 a
+--   = CR4_V1 (t1 a)
+--   | CR4_V2 (t2 a)
+--   | CR4_V3 (t3 a)
+--   | CR4_V4 (t4 a)
+--   deriving (Show, Eq)
+
+--data CR5 t1 t2 t3 t4 t5 a
+--   = CR5_V1 (t1 a)
+--   | CR5_V2 (t2 a)
+--   | CR5_V3 (t3 a)
+--   | CR5_V4 (t4 a)
+--   | CR5_V5 (t5 a)
+--   deriving (Show, Eq)
+
+--data CR6 t1 t2 t3 t4 t5 t6 a
+--   = CR6_V1 (t1 a)
+--   | CR6_V2 (t2 a)
+--   | CR6_V3 (t3 a)
+--   | CR6_V4 (t4 a)
+--   | CR6_V5 (t5 a)
+--   | CR6_V6 (t6 a)
+--   deriving (Show, Eq)
+
+--data CR7 t1 t2 t3 t4 t5 t6 t7 a
+--   = CR7_V1 (t1 a)
+--   | CR7_V2 (t2 a)
+--   | CR7_V3 (t3 a)
+--   | CR7_V4 (t4 a)
+--   | CR7_V5 (t5 a)
+--   | CR7_V6 (t6 a)
+--   | CR7_V7 (t7 a)
+--   deriving (Show, Eq)
+
+--data CR8 t1 t2 t3 t4 t5 t6 t7 t8 a
+--   = CR8_V1 (t1 a)
+--   | CR8_V2 (t2 a)
+--   | CR8_V3 (t3 a)
+--   | CR8_V4 (t4 a)
+--   | CR8_V5 (t5 a)
+--   | CR8_V6 (t6 a)
+--   | CR8_V7 (t7 a)
+--   | CR8_V8 (t8 a)
+--   deriving (Show, Eq)
+
+--data CR9 t1 t2 t3 t4 t5 t6 t7 t8 t9 a
+--   = CR9_V1 (t1 a)
+--   | CR9_V2 (t2 a)
+--   | CR9_V3 (t3 a)
+--   | CR9_V4 (t4 a)
+--   | CR9_V5 (t5 a)
+--   | CR9_V6 (t6 a)
+--   | CR9_V7 (t7 a)
+--   | CR9_V8 (t8 a)
+--   | CR9_V9 (t9 a)
+--   deriving (Show, Eq)
 
 
 -- === Instances ===

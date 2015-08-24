@@ -41,8 +41,14 @@ instance {-# OVERLAPPABLE #-} (ctx a, UnifiedEl a) => Castable a (Unified ctx) w
 
 -- === Ptr ===
 
-newtype Ptr  i   a = Ptr i
+newtype Ptr  i   a = Ptr i              deriving (Show)
 newtype HPtr i m a = HPtr (Ptr i (m a)) deriving (Show)
+
+class PtrFrom p i | p -> i where
+    ptrFrom :: p -> Ptr i a
+
+--class (Container cont (Ptr i a) a, Container cont p a) => IsPtr cont p i a where
+--    ptr :: cont -> p -> Ptr i a
 
 -- injective TF
 class    PtrTarget (a :: * -> *) (b :: (* -> *) -> *) c | a b -> c, c -> a b --where
@@ -51,11 +57,8 @@ instance PtrTarget (Ptr  i)   a {- = -} (a (Ptr i))
 
 -- instances
 
-instance (Typeable a, Show i) => Show (Ptr i a) where
-    show (Ptr i) = "Ptr " <> show i <> " (" <> show (typeOf (undefined :: a)) <> ")"
-
 instance (Typeable a, Repr i, Typeable m) => Repr (HPtr i m a) where repr (HPtr p) = "HPtr (" <> repr p <> ")"
-instance (Typeable a, Repr i)             => Repr (Ptr i a)    where repr (Ptr i)  = "Ptr " <> repr i <> " (" <> show (typeOf (undefined :: a)) <> ")"
+instance (Typeable a, Repr i)             => Repr (Ptr i a)    where repr (Ptr i)  = "Ptr " <> repr i <> " -> " <> show (typeOf (undefined :: a))
 
 type instance IdxType (Ptr  i   a) = a
 type instance IdxType (HPtr i m a) = a
@@ -70,7 +73,8 @@ class    PtrIdx p i | p -> i    where ptrIdx :: p -> i
 instance PtrIdx (Ptr  i   a) i  where ptrIdx (Ptr i)  = i
 instance PtrIdx (HPtr i m a) i  where ptrIdx (HPtr p) = ptrIdx p
 
-
+instance {-# OVERLAPPABLE #-} (p ~ i) => PtrFrom p         i where ptrFrom = Ptr
+instance                                 PtrFrom (Ptr i a) i where ptrFrom (Ptr i) = Ptr i
 
 --- === Hetero Containers ===
 

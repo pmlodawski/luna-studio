@@ -34,7 +34,8 @@ type family IdxType      idx
 
 class Measurable a where size :: Integral i => a -> i
 
-class (IndexOf el cont ~ idx, ElementByIdx idx cont ~ el, Measurable cont) => Container cont idx el where
+-- GHC BUG [WD]: we can remove fundeps here when it will be fixed: https://ghc.haskell.org/trac/ghc/ticket/10778
+class (IndexOf el cont ~ idx, ElementByIdx idx cont ~ el, Measurable cont) => Container cont idx el | el cont -> idx, idx cont -> el where
     elems   :: cont -> [el]
     indexes :: cont -> [idx]
 
