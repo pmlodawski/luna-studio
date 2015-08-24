@@ -2,7 +2,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Luna.Syntax.Graph.Builder.State where
+module Luna.Syntax.Graph.Builder.Class where
 
 
 import Flowbox.Prelude
@@ -14,13 +14,13 @@ import           Luna.Syntax.Graph
 import           Data.Variants
 import           Data.Containers
 
+import Data.Cata
+
+import Control.Monad.Trans.Identity
 
 data BldrState g = BldrState { _orphans :: [Int]
                              , _graph   :: g
                              }
-
---type GraphRefBuilder  el m l a     = RefBuilder el m (Ref (GraphPtr l) a)
-type GraphConstructor base l a ast = Variant (base (Recx (GraphPtr l) a)) ast
 
 makeLenses ''BldrState
 
@@ -92,42 +92,22 @@ modify_ = modify . fmap (,())
 withGraph :: MonadGraphBuilder g m => (g -> (g, a)) -> m a
 withGraph = modify . mapOver graph
 
-runGraphT :: Functor m => GraphBuilderT g m a -> BldrState g -> m (a, g)
-runGraphT = fmap (over _2 $ view graph) .: runT
+
+runBuilderT  :: Functor m => GraphBuilderT g m a -> BldrState g -> m (a, g)
+execBuilderT :: Monad   m => GraphBuilderT g m a -> BldrState g -> m g
+evalBuilderT :: Monad   m => GraphBuilderT g m a -> BldrState g -> m a
+
+runBuilderT  = fmap (over _2 $ view graph) .: runT
+execBuilderT = fmap (view graph) .: execT
+evalBuilderT = evalT
 
 
---instance (Convertible idx (h (a h)), HasContainer g cont, Appendable cont idx el, Monad m, PtrTarget h a el)
---      => RefBuilder el (GraphBuilderT g m) (Ref h a) where
---    mkRef el = fmap (Ref . convert) . withGraph . append $ el
 
 instance Default g => Default (BldrState g) where
     def = BldrState def def
 
 
 
---instance (Convertible idx (ref (a t)), Appendable cont idx (a t), HasContainer g cont, Monad m)
---      => RefBuilder2 a t (GraphBuilderT g m) (Ref' ref) where
---    mkRef2 el = fmap (Ref' . convert) . withGraph . append $ el
-
-
-instance (PtrFrom idx i, Appendable cont idx a, HasContainer g cont, Monad m, IndexOf a cont ~ idx, ElementByIdx i cont ~ a)
-      => RefBuilder3 (GraphBuilderT g m) (Ptr i) a where
-    mkRef3 a = fmap ptrFrom . withGraph . append $ a
-
-
---mkGraphRef :: RefBuilder3 a m (Ptr Int) => a -> m (Ptr Int a)
---mkGraphRef = mkRef3
-
-
---class (IndexOf a cont ~ idx, ElementByIdx idx cont ~ a, Measurable cont) => Container cont idx a where
---class Container cont idx a => Appendable          cont idx a where append          :: a -> cont -> (cont, idx)
-
-
-
---mkRef3x :: (PtrFrom (IndexOf a cont) i, Appendable cont (IndexOf a cont) a, HasContainer g cont, MonadGraphBuilder g m) => a -> m (Ptr i a)
---mkRef3x el = fmap ptrFrom . withGraph . append $ el
-
-
-
---class Monad m => RefBuilder3 m ref a | m ref -> a, a m -> ref where
---    mkRef3 :: a -> m (ref a)
+instance (t ~ Ref i a, Monad m, Appendable cont idx (a (Mu t)), HasContainer g cont, PtrFrom idx i)
+      => MuBuilder a (GraphBuilderT g m) t where
+    buildMu a = fmap (Mu . Ref . ptrFrom) . withGraph . append $ a

@@ -1,3 +1,4 @@
+{-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -15,73 +16,29 @@ import Luna.Syntax.Decl
 
 --- === Graph ===
 
-newtype HeteroGraph   = HeteroGraph { __hetReg :: Hetero' Vector } deriving (Show, Default)
-newtype HomoGraph   a = HomoGraph   { __homReg :: Vector a       } deriving (Show, Default)
+newtype HeteroVectorGraph   = HeteroVectorGraph { __hetReg :: Hetero' Vector } deriving (Show, Default)
+newtype VectorGraph       a = VectorGraph       { __homReg :: Vector a       } deriving (Show, Default)
 
-makeLenses ''HeteroGraph
-makeLenses ''HomoGraph
+makeLenses ''HeteroVectorGraph
+makeLenses ''VectorGraph
 
-instance HasContainer HeteroGraph   (Hetero' Vector) where container = _hetReg
-instance HasContainer (HomoGraph a) (Vector a)       where container = _homReg
-
-
-newtype GraphRef l a = GraphRef { fromGraphRef :: Ref (GraphPtr l) a } deriving (Show)
-
-type GraphPtr  l   = HPtr Int l
-type GraphNode l a = a (GraphPtr l)
-type HomoNet   l a = HomoGraph (l (GraphNode l a))
-type HeteroNet     = HeteroGraph
-
-type MuRefBuilder m ref a = RefBuilder3 m ref (MuRefData ref a)
+instance HasContainer HeteroVectorGraph   (Hetero' Vector) where container = _hetReg
+instance HasContainer (VectorGraph a) (Vector a)       where container = _homReg
 
 
 ---- === Ref ===
 
-type Recx h a = h (a h)
+type HomoGraph ref t = VectorGraph (t (Mu (ref t)))
+type ArcPtr          = Ref Int
+type Arc           a = Mu (ArcPtr a)
 
-newtype Ref     h a = Ref { fromRef :: Recx h a }
-type    Wrapped m a = m (a (HPtr Int m))
-type    Simple    a = a (Ptr Int)
+newtype Ref i a t = Ref { fromRef :: Ptr i (a t) } deriving (Show)
 
-data Ref'      ref a t =     Ref' (ref (a t)) deriving (Show)
-type MuRef     ref a   = Mu (Ref' ref a)
-type MuRefData ref a   = a (MuRef ref a)
+class     Monad m           => ToMRef a          m t | a -> t where toMRef :: a -> m (Mu t)
+instance  Monad m           => ToMRef    (Mu t)  m t          where toMRef = return
+instance (Monad m, (m ~ n)) => ToMRef (n (Mu t)) m t          where toMRef = id
 
--- utils
+-- === MuBuilder ===
 
-class Monad m => ToMRef t m l a | t -> l a where
-    toMRef :: t -> m (GraphRef l a)
-
--- instances
-
-deriving instance Show (h (a h)) => Show (Ref h a)
-
-instance Repr (ref (a t)) => Repr (Ref' ref a t) where repr (Ref' r) = "Ref (" <> repr r <> ")"
-
-instance                             (Monad m) => ToMRef    (GraphRef l a)  m l a where toMRef = return
-instance {-# OVERLAPPABLE #-} (m ~ n, Monad m) => ToMRef (m (GraphRef l a)) n l a where toMRef = id
-
-instance (Typeable a, Typeable l) => Repr (GraphRef l a) where
-    repr = repr . fromGraphRef
-
-instance Repr (Recx h a) => Repr (Ref h a) where
-    repr = repr . fromRef
-
--- === RefBuilder ===
-
---class Monad m => RefBuilder el m ref | el m -> ref, ref m -> el where
---    mkRef :: el -> m ref
-
-
---class Monad m => RefBuilder2 a t m ptr | m -> ptr where
---    mkRef2 :: a t -> m (ptr a t)
-
-
-class Monad m => RefBuilder3 m ref a | a m -> ref where -- FIXME? [WD]: usunac a z fundepow?
-    mkRef3 :: a -> m (ref a)
-
-
-mkMuRef :: MuRefBuilder m ref a => a (MuRef ref a) -> m (MuRef ref a)
-mkMuRef = fmap (Mu . Ref') . mkRef3
-
+type MuData' a = a (Mu a)
 
