@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module ThreeJS.Toggle where
+module ThreeJS.Widget.Toggle where
 
 import           Utils.PreludePlus
 

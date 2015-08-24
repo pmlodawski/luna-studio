@@ -36,6 +36,14 @@ cabal install ../new_update_order/third-party/graphviz-2999.17.0.2.2 --ghcjs
 cabal install ../new_update_order/libs/luna/typechecker --ghcjs
 ```
 
+## Protocol buffers
+
+Before building the app for the first time, you need to generate protocol buffers definitions.
+1. Install [Protobuf](https://github.com/google/protobuf) and [hprotoc](https://hackage.haskell.org/package/hprotoc). Make sure the `protoc` and `hprotoc` binaries are available on the `$PATH`.
+2. Ensure `git submodule init` and `git submodule update` were performed.
+3. Run `./scripts/genproto`.
+4. Run `./scripts/gencabal` (the order of `genproto` and `gencabal` matters!).
+
 ## Building for production
 
 Run `brunch build --production`. `--production` flag enables JS minification (this will take a while). It also disables overriding feature-switches from `localStorage`.

@@ -15,7 +15,7 @@ import           GHCJS.DOM           (currentDocument)
 import           GHCJS.DOM.Element   (Element, IsElement)
 import           GHCJS.Types         (JSRef, JSString)
 import           GHCJS.DOM.Types     (UIEvent, IsUIEvent, unUIEvent, toUIEvent)
-import           JavaScript.Array    (JSArray )
+import           JavaScript.Array    (JSArray)
 import qualified JavaScript.Array    as JSArray
 import           Data.JSString.Text  (lazyTextToJSString)
 
@@ -114,6 +114,9 @@ foreign import javascript unsafe "$1.uniforms.selected.value"
 foreign import javascript unsafe "$1.uniforms.selected.value = $2"
     setSelectionValue :: JSRef NodeJS -> Int -> IO ()
 
+foreign import javascript unsafe "$1.htmlContainer"
+    getHTMLContainer :: JSRef NodeJS -> IO Element
+
 setUnselected, setSelected, setFocused, setUnfocused :: JSRef NodeJS -> IO ()
 setUnselected = flip setSelectionValue 0
 setSelected   = flip setSelectionValue 1
@@ -165,3 +168,6 @@ foreign import javascript unsafe "app.shouldRender()"
 
 foreign import javascript unsafe "$('#htmlcanvas-pan').css({cursor: $1})"
     setCursor :: JSString -> IO ()
+
+foreign import javascript unsafe "require('exampleData')" getExampleData :: IO JSArray
+

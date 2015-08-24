@@ -22,8 +22,8 @@ import qualified Reactive.Plugins.Core.Action.State.Breadcrumb   as Breadcrumb
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry   as UIRegistry
 import qualified Object.Widget.Button                            as Button
 import           ThreeJS.Text                                    (calculateTextWidth)
-import qualified ThreeJS.Button                                  as UIButton
-import qualified ThreeJS.Slider                                  as UISlider
+import qualified ThreeJS.Widget.Button                                  as UIButton
+import qualified ThreeJS.Widget.Slider                                  as UISlider
 import qualified ThreeJS.Mesh                                    as Mesh
 import           ThreeJS.Types
 import qualified ThreeJS.Scene                                   as Scene

@@ -4,32 +4,37 @@ module Reactive.Handlers where
 import           Utils.PreludePlus hiding ( on )
 import           Utils.Vector
 
-import           Data.Dynamic        ( Dynamic )
+import           Data.Dynamic           ( Dynamic )
 
-import           GHCJS.DOM           ( currentWindow )
+import           GHCJS.DOM              ( currentWindow )
 import           GHCJS.DOM.EventM
-import qualified GHCJS.DOM.Document   as Document
-import           GHCJS.DOM.Window      ( Window, mouseDown, mouseUp, mouseMove, resize, keyPress, keyDown, keyUp, getInnerWidth, getInnerHeight, click, dblClick )
-import qualified GHCJS.DOM.MouseEvent as MouseEvent
-import qualified GHCJS.DOM.UIEvent    as UIEvent
-
+import           GHCJS.Prim             ( fromJSString )
+import qualified GHCJS.DOM.Document     as Document
+import           GHCJS.DOM.Window       ( Window, mouseDown, mouseUp, mouseMove, resize, keyPress, keyDown, keyUp, getInnerWidth, getInnerHeight, click, dblClick )
+import qualified GHCJS.DOM.MouseEvent   as MouseEvent
+import qualified GHCJS.DOM.UIEvent      as UIEvent
+import qualified GHCJS.DOM.MessageEvent as MessageEvent
+import qualified GHCJS.DOM.WebSocket    as DOMWebSocket
 
 import           Reactive.Banana.Frameworks ( AddHandler(..), liftIO )
 
 import           JS.Bindings
 import           ThreeJS.Raycaster
-import           JS.NodeSearcher      ( getAction, getExpression, nsEvent )
+import           JS.NodeSearcher     ( getAction, getExpression, nsEvent )
 import           Object.Object
 import qualified Object.Widget       as Widget
 import qualified Event.Keyboard      as Keyboard
 import qualified Event.Mouse         as Mouse
 import qualified Event.Window        as Window
 import qualified Event.NodeSearcher  as NodeSearcher
+import qualified Event.WebSocket     as WebSocket
 import qualified Object.Node         ( Node )
 import           Event.Event
 import           GHCJS.Marshal
 import           JavaScript.Array ( JSArray )
 import qualified JavaScript.Array as JSArray
+
+import qualified BatchConnector.Connection as Connection
 
 readKeyMods :: (MouseEvent.IsMouseEvent e) => EventM t e Keyboard.KeyMods
 readKeyMods = do
@@ -112,3 +117,13 @@ nodeSearcherHander = AddHandler $ \h -> do
         action <- getAction e
         expr   <- getExpression e
         liftIO . h $ NodeSearcher $ NodeSearcher.Event action expr
+
+webSocketHandler :: DOMWebSocket.WebSocket -> AddHandler (Event Dynamic)
+webSocketHandler conn = AddHandler $ \h -> do
+    conn `on` DOMWebSocket.open $ do
+        liftIO . h $ WebSocket WebSocket.Opened
+    conn `on` DOMWebSocket.message $ do
+        e <- event
+        payload <- MessageEvent.getData e
+        let msg = Connection.deserialize $ fromJSString payload
+        liftIO . h $ WebSocket $ WebSocket.Message msg
