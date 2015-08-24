@@ -34,7 +34,8 @@ import           Data.IntMap.Lazy (IntMap)
 import qualified Data.IntMap.Lazy as IntMap
 
 data Action = InitApp
-            | ApplyUpdates  { _actions :: [WidgetUIUpdate] }
+            | ApplyUpdates  { _actions  :: [WidgetUIUpdate] }
+            | WidgetClicked { _buttonId :: WidgetId }
 
 makeLenses ''Action
 
@@ -42,6 +43,7 @@ instance PrettyPrinter Action where
     display _ = "SandboxAction"
 
 toAction (Window (Window.Event Window.Resized width height)) _ = Just $ InitApp
+toAction (Mouse (Mouse.Event Mouse.Clicked _ Mouse.LeftButton _ (Just (EventWidget bid _ _)))) state = Just $ WidgetClicked bid
 toAction _ _        = Nothing
 
 sandboxScene = Scene.scene
@@ -76,31 +78,39 @@ removeSlider b = do
 
 instance ActionStateUpdater Action where
     execSt InitApp oldState = ActionUI  newAction newState
-            where
-            wasInited             = oldState ^. Global.sandbox . Sandbox.button . Button.refId /= 0
-            newState              = if wasInited then oldState
-                                                 else oldState & Global.sandbox    . Sandbox.button  .~ button
-                                                               & Global.sandbox    . Sandbox.slider  .~ slider
-                                                               & Global.sandbox    . Sandbox.slider2 .~ slider2
-                                                               & Global.sandbox    . Sandbox.slider3 .~ slider3
-                                                               & Global.sandbox    . Sandbox.slider4 .~ slider4
-                                                               & Global.sandbox    . Sandbox.toggle  .~ toggle
-                                                               & Global.sandbox    . Sandbox.chart   .~ chart
-                                                               & Global.uiRegistry                   .~ newRegistry
+             where
+             wasInited             = oldState ^. Global.sandbox . Sandbox.button . Button.refId /= 0
+             newState              = if wasInited then oldState
+                                                  else oldState & Global.sandbox    . Sandbox.button  .~ button
+                                                                & Global.sandbox    . Sandbox.slider  .~ slider
+                                                                & Global.sandbox    . Sandbox.slider2 .~ slider2
+                                                                & Global.sandbox    . Sandbox.slider3 .~ slider3
+                                                                & Global.sandbox    . Sandbox.slider4 .~ slider4
+                                                                & Global.sandbox    . Sandbox.toggle  .~ toggle
+                                                                & Global.sandbox    . Sandbox.chart   .~ chart
+                                                                & Global.uiRegistry                   .~ newRegistry
 
-            button                = (oldState ^. Global.sandbox . Sandbox.button)  & Button.refId .~ buttonId
-            slider                = (oldState ^. Global.sandbox . Sandbox.slider)  & Slider.refId .~ sliderId
-            slider2               = (oldState ^. Global.sandbox . Sandbox.slider2) & Slider.refId .~ sliderId2
-            slider3               = (oldState ^. Global.sandbox . Sandbox.slider3) & Slider.refId .~ sliderId3
-            slider4               = (oldState ^. Global.sandbox . Sandbox.slider4) & Slider.refId .~ sliderId4
-            toggle                = (oldState ^. Global.sandbox . Sandbox.toggle)  & Toggle.refId .~ toggleId
-            chart                 = (oldState ^. Global.sandbox . Sandbox.chart )  & Chart.refId .~ chartId
-            oldRegistry           = oldState ^. Global.uiRegistry
-            newRegistry           = UIRegistry.register button $ UIRegistry.register slider $ UIRegistry.register slider2 $ UIRegistry.register slider3 $ UIRegistry.register slider4 $ UIRegistry.register toggle $ UIRegistry.register chart oldRegistry
+             button                = (oldState ^. Global.sandbox . Sandbox.button)  & Button.refId .~ buttonId
+             slider                = (oldState ^. Global.sandbox . Sandbox.slider)  & Slider.refId .~ sliderId
+             slider2               = (oldState ^. Global.sandbox . Sandbox.slider2) & Slider.refId .~ sliderId2
+             slider3               = (oldState ^. Global.sandbox . Sandbox.slider3) & Slider.refId .~ sliderId3
+             slider4               = (oldState ^. Global.sandbox . Sandbox.slider4) & Slider.refId .~ sliderId4
+             toggle                = (oldState ^. Global.sandbox . Sandbox.toggle)  & Toggle.refId .~ toggleId
+             chart                 = (oldState ^. Global.sandbox . Sandbox.chart )  & Chart.refId .~ chartId
+             oldRegistry           = oldState ^. Global.uiRegistry
+             newRegistry           = UIRegistry.register button $ UIRegistry.register slider $ UIRegistry.register slider2 $ UIRegistry.register slider3 $ UIRegistry.register slider4 $ UIRegistry.register toggle $ UIRegistry.register chart oldRegistry
 
-            (buttonId:sliderId:sliderId2:sliderId3:sliderId4:toggleId:chartId:_) = UIRegistry.generateIds 7 oldRegistry
-            newAction             = if wasInited then ApplyUpdates [] else ApplyUpdates [Just $ addButton button, Just $ addSlider slider, Just $ addSlider slider2, Just $ addSlider slider3, Just $ addSlider slider4, Just $ addToggle toggle, Just $ addChart chart]
-
+             (buttonId:sliderId:sliderId2:sliderId3:sliderId4:toggleId:chartId:_) = UIRegistry.generateIds 7 oldRegistry
+             newAction             = if wasInited then ApplyUpdates [] else ApplyUpdates [Just $ addButton button, Just $ addSlider slider, Just $ addSlider slider2, Just $ addSlider slider3, Just $ addSlider slider4, Just $ addToggle toggle, Just $ addChart chart]
+    execSt (WidgetClicked bid) oldState = ActionUI  newAction newState where
+        oldRegistry           = oldState ^. Global.uiRegistry
+        widget                = UIRegistry.lookup bid oldRegistry
+        newRegistry           = oldRegistry -- tu mozna np. zrobis UIRegistry.update, etc.
+        newState              = oldState & Global.uiRegistry .~ newRegistry
+        wasHelloButtonClicked = bid == oldState ^. Global.sandbox . Sandbox.button . Button.refId
+        newAction             = if wasHelloButtonClicked then ApplyUpdates [Just $ putStrLn "HelloWorld"]
+                                                            -- tu tablica Maybe (IO ()), np aktualizacja stanu widgeta
+                                                         else ApplyUpdates []
 
 instance ActionUIUpdater Action where
     updateUI (WithState (ApplyUpdates actions) state) = sequence_ $ catMaybes actions
