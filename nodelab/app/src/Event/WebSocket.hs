@@ -3,9 +3,12 @@ module Event.WebSocket where
 import Utils.PreludePlus
 import BatchConnector.Connection (WSMessage)
 
-data Event = Event { _message :: WSMessage } deriving (Show, Typeable)
+data Event = Message { _message :: WSMessage }
+           | Opened
+             deriving (Show, Typeable)
 
 makeLenses ''Event
 
 instance PrettyPrinter Event where
-    display e = show (e ^. message)
+    display (Message m) = show m
+    display Opened      = "Opened"

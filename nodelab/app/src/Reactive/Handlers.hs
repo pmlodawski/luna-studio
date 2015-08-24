@@ -120,8 +120,10 @@ nodeSearcherHander = AddHandler $ \h -> do
 
 webSocketHandler :: DOMWebSocket.WebSocket -> AddHandler (Event Dynamic)
 webSocketHandler conn = AddHandler $ \h -> do
+    conn `on` DOMWebSocket.open $ do
+        liftIO . h $ WebSocket WebSocket.Opened
     conn `on` DOMWebSocket.message $ do
         e <- event
         payload <- MessageEvent.getData e
         let msg = Connection.deserialize $ fromJSString payload
-        liftIO . h $ WebSocket $ WebSocket.Event msg
+        liftIO . h $ WebSocket $ WebSocket.Message msg
