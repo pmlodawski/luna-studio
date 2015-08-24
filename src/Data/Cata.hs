@@ -7,7 +7,7 @@
 
 module Data.Cata where
 
-import Prelude
+import Flowbox.Prelude
 import Control.Lens
 import Control.Monad (join)
 import Data.Repr
@@ -54,13 +54,13 @@ class MuTraversable mu where
 mu :: IsMu mu => Lens' (mu f) (MuLayout mu f)
 mu = lens fromMu (const toMu)
 
-cata  :: (IsMu mu, MuFunctor     mu, Functor     f         ) => (MuGenLayout mu f c ->   c) -> mu f ->   c
-cataM :: (IsMu mu, MuTraversable mu, Traversable f, Monad m) => (MuGenLayout mu f c -> m c) -> mu f -> m c
+cata  :: (IsMu mu, MuFunctor     mu, Functor     f                    ) => (MuGenLayout mu f c ->   c) -> mu f ->   c
+cataM :: (IsMu mu, MuTraversable mu, Traversable f, Monad m, Functor m) => (MuGenLayout mu f c -> m c) -> mu f -> m c
 cata  = cataOver  mumap
 cataM = cataOverM mumapM
 
-cataOver  :: (IsMu mu         ) => MuMap  mu f   c -> (MuGenLayout mu f c ->   c) -> mu f ->   c
-cataOverM :: (IsMu mu, Monad m) => MuMapM mu f m c -> (MuGenLayout mu f c -> m c) -> mu f -> m c
+cataOver  :: (IsMu mu                    ) => MuMap  mu f   c -> (MuGenLayout mu f c ->   c) -> mu f ->   c
+cataOverM :: (IsMu mu, Monad m, Functor m) => MuMapM mu f m c -> (MuGenLayout mu f c -> m c) -> mu f -> m c
 cataOver  g f =             f . g (cataOver  g f) . view mu
 cataOverM g f = join . fmap f . g (cataOverM g f) . view mu
 

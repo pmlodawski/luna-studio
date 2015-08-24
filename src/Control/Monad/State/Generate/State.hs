@@ -2,7 +2,11 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
+{-# LANGUAGE CPP #-}
+
 module Control.Monad.State.Generate.State where
+
+#if __GLASGOW_HASKELL__ >= 710
 
 import           Prelude
 import           Language.Haskell.TH hiding (appsE, classP)
@@ -187,21 +191,4 @@ appChainE b as = appChainE' (b:as)
 
 classP base = foldl AppT (ConT base)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#endif

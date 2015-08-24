@@ -1,6 +1,11 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
 
+{-# LANGUAGE CPP #-}
+#if __GLASGOW_HASKELL__ < 710
+{-# LANGUAGE OverlappingInstances #-}
+#endif
+
 module Data.Indexable.Base where
 
 import Prelude
@@ -91,8 +96,8 @@ instance UncheckedSetIdx (Vector a) where uncheckedSetIdx i a v = Vector.unsafeU
 instance CheckedGetIdx   (Vector a) where checkedGetIdx   i v   = (Vector.!) v i
 instance CheckedSetIdx   (Vector a) where checkedSetIdx   i a v = (Vector.//) v [(i,a)]
 instance GetIdx          (Vector a) where getIdx          i v   = (Vector.!?) v i
-instance SetIdx          (Vector a) where setIdx          i a v = if i < length v then Just $ uncheckedSetIdx i a v
-                                                                                  else Nothing
+instance SetIdx          (Vector a) where setIdx          i a v = if i < Vector.length v then Just $ uncheckedSetIdx i a v
+                                                                                         else Nothing
 instance LastIdx (Vector a) where lastIdx a = Vector.length a - 1
 
 instance LastIdx [a] where lastIdx a = length a - 1

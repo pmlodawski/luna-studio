@@ -28,8 +28,9 @@
 
 
 
-
 module System.Path where
+
+#if __GLASGOW_HASKELL__ >= 710
 
 --import           Control.Monad      ((>=>))
 import           Data.Binary        (Binary)
@@ -54,7 +55,7 @@ import           Text.Read          (readMaybe)
 import System.IO.Unsafe (unsafePerformIO)
 import Data.IORef
 import Unsafe.Coerce (unsafeCoerce)
-import Flowbox.Prelude hiding (expand, lookup, splitAt)
+import Flowbox.Prelude hiding (expand, lookup, splitAt, repr)
 import GHC.TypeLits
 
 import Control.Monad.Shuffle (deepBind, (>>>=), ($>>=))
@@ -1063,6 +1064,4 @@ instance Monad m => Convertible String  (m Path) where convert = return . conver
 ----instance Monad m => Convertible Node         (m Path) where convert = fmap return . convert
 ----instance Monad m => Convertible Node      (m Path) where convert = fmap return . convert
 
-
-
-
+#endif

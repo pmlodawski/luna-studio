@@ -1,5 +1,10 @@
 {-# LANGUAGE TypeFamilies #-}
 
+{-# LANGUAGE CPP #-}
+#if __GLASGOW_HASKELL__ < 710
+{-# LANGUAGE OverlappingInstances #-}
+#endif
+
 module Data.Containers.Instances where
 
 import           Flowbox.Prelude hiding (Indexable, index)
