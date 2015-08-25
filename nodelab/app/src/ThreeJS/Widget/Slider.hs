@@ -29,7 +29,7 @@ import           ThreeJS.Text
 import qualified ThreeJS.Geometry as Geometry
 import           JS.Config as Config
 import           Utils.Vector
-import           ThreeJS.Registry
+import           ThreeJS.Registry as Registry
 import qualified Object.Widget.Slider as WB
 import           Object.Widget
 import           GHCJS.Prim
@@ -37,12 +37,17 @@ import           Utils.CtxDynamic
 import           JS.Bindings (setCursor)
 import           ThreeJS.Uniform (Uniform(..), UniformMap(..), toUniform)
 import qualified ThreeJS.Uniform as Uniform
+import           Object.UITypes
 
 
 newtype Slider = Slider { unSlider :: JSObject.Object }
 
 instance Object Slider where
     mesh b = (JSObject.getProp "mesh" $ unSlider b) :: IO Mesh
+
+instance Registry.UIWidget (WB.Slider a) Slider where
+    lookup   = Registry.genericLookup     Slider
+    register = Registry.genericRegister unSlider
 
 buildLabel text = do
     material <- getTextHUDMaterial
@@ -133,28 +138,17 @@ buildSlider s = do
 
     return $ Slider slider
 
-getFromRegistry :: WB.Slider a -> IO Slider
-getFromRegistry b = (getFromRegistryJS sliderId >>= return . Slider . JSObject.fromJSRef)
-    where sliderId = b ^. WB.refId
-
-putToRegistry :: WB.Slider a -> Slider -> IO ()
-putToRegistry b u = putToRegistryJS sliderId (JSObject.getJSRef $ unSlider u)
-    where sliderId = b ^. WB.refId
-
-removeFromRegistry :: WB.Slider a -> IO ()
-removeFromRegistry b = removeFromRegistryJS sliderId
-    where sliderId = b ^. WB.refId
 
 setUniform :: Text -> JSRef a -> WB.Slider a -> IO ()
 setUniform n v w = do
-    bref     <- getFromRegistry w
+    bref     <- Registry.lookup w
     uniforms <- JSObject.getProp "uniforms"             (unSlider bref) >>= return .           JSObject.fromJSRef
     uniform  <- JSObject.getProp (lazyTextToJSString n)  uniforms       >>= return . Uniform . JSObject.fromJSRef
     Uniform.setValue uniform v
 
 setValueLabel :: (WB.IsSlider a) => WB.Slider a -> IO ()
 setValueLabel w = do
-    ref        <- getFromRegistry w
+    ref        <- Registry.lookup w
     group      <- JSObject.getProp "mesh"        (unSlider ref) >>= return . Group
     valueLabel <- JSObject.getProp "valueLabel"  (unSlider ref) :: IO (JSRef MeshJS)
     group `remove` valueLabel
@@ -180,8 +174,8 @@ keyModMult mods = case mods of
     otherwise               ->    1.0
 
 instance (WB.IsSlider a) => Draggable (WB.Slider a) where
-    mayDrag Mouse.LeftButton _ _ = True
-    mayDrag _                _ _ = False
+    mayDrag LeftButton _ _       = True
+    mayDrag _          _ _       = False
     onDragStart state slider     = (Just action, toCtxDynamic slider) where
                           action = setCursor "pointer"
     onDragMove  state slider     = (Just action, toCtxDynamic newSlider) where

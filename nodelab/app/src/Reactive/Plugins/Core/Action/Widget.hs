@@ -5,18 +5,17 @@ module Reactive.Plugins.Core.Action.Widget where
 import           Utils.PreludePlus
 import           Utils.Vector
 
-import           Object.Object
 import           Object.Node     (Node)
 import           Object.Widget
 import qualified Object.Widget  as Widget
 import           Event.Event
-import           Event.Mouse    (EventWidget(..), WidgetId)
+import           Event.Mouse    (EventWidget(..))
 import qualified Event.Mouse    as Mouse
+import           Object.UITypes
 import           Reactive.Plugins.Core.Action.Action
 import qualified Reactive.Plugins.Core.Action.State.Global       as Global
 import           Reactive.Plugins.Core.Action.State.UIRegistry   (WidgetMap)
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry   as UIRegistry
-import           ThreeJS.Types (SceneType(..))
 import           ThreeJS.Widget.Button ()
 import           ThreeJS.Widget.Slider ()
 import           Utils.CtxDynamic

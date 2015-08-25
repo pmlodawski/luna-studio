@@ -10,6 +10,7 @@ import           JavaScript.Array    (JSArray)
 import qualified JavaScript.Array    as JSArray
 import           GHCJS.Marshal
 import           ThreeJS.Types
+import           Object.UITypes
 
 
 
@@ -23,7 +24,7 @@ foreign import javascript unsafe "raycaster.widgetMatrix($1)"
     widgetMatrix :: Int -> IO JSArray
 
 
-readObjectId :: Vector2 Int -> IO (Maybe Mouse.WidgetId)
+readObjectId :: Vector2 Int -> IO (Maybe WidgetId)
 readObjectId pos = do
     pixel <- getMapPixelAt pos
     let read i = fromJSRef $ JSArray.index i pixel :: IO (Maybe Int)
@@ -39,7 +40,7 @@ readObjectId pos = do
         if oid == 0 then Nothing
                     else Just oid
 
-readWidgetMatrix :: Maybe Mouse.WidgetId -> IO (Maybe [Double])
+readWidgetMatrix :: Maybe WidgetId -> IO (Maybe [Double])
 readWidgetMatrix (Just oid) = do
     worldMatrix <- widgetMatrix oid
     let read i = fromJSRef $ JSArray.index i worldMatrix :: IO (Maybe Double)
@@ -50,7 +51,7 @@ readWidgetMatrix  Nothing   = return Nothing
 foreign import javascript unsafe "raycaster.isWorkspace($1)"
     whichSceneJS :: Int -> IO Bool
 
-whichScene :: Maybe Mouse.WidgetId -> IO (Maybe SceneType)
+whichScene :: Maybe WidgetId -> IO (Maybe SceneType)
 whichScene (Just oid) = do
     sceneType <- whichSceneJS oid
     return $ Just $ if sceneType then Workspace else HUD

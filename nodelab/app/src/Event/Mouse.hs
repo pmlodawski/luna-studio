@@ -7,11 +7,7 @@ import           Object.Dynamic
 import           Object.Object
 import           Event.Keyboard  ( KeyMods(..) )
 import           Utils.Vector
-import           ThreeJS.Types
-
-type WidgetId    = Int
-
-data MouseButton = NoButton | LeftButton | MiddleButton | RightButton deriving (Show, Eq)
+import           Object.UITypes
 
 toMouseButton :: Int -> MouseButton
 toMouseButton   1  = LeftButton

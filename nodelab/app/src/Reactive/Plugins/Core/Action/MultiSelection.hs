@@ -6,20 +6,24 @@ import           Utils.Vector
 import qualified JS.Bindings    as UI
 import qualified JS.NodeGraph   as UI
 import qualified JS.Camera      as Camera
+
 import           Object.Object
 import           Object.Node
-import           Event.Keyboard hiding      ( Event )
+import           Object.UITypes
+
+import           Event.Keyboard hiding      (Event)
 import qualified Event.Keyboard as Keyboard
-import           Event.Mouse    hiding      ( Event, WithObjects )
+import           Event.Mouse    hiding      (Event, WithObjects)
 import qualified Event.Mouse    as Mouse
 import           Event.Event
 import           Event.WithObjects
+
 import           Reactive.Plugins.Core.Action.Action
 import           Reactive.Plugins.Core.Action.State.MultiSelection
+import           Reactive.Plugins.Core.Action.State.UnderCursor
 import qualified Reactive.Plugins.Core.Action.State.Selection      as Selection
 import qualified Reactive.Plugins.Core.Action.State.Camera         as Camera
 import qualified Reactive.Plugins.Core.Action.State.Global         as Global
-import           Reactive.Plugins.Core.Action.State.UnderCursor
 
 data DragType = StartDrag
               | Moving
@@ -45,7 +49,7 @@ instance PrettyPrinter Action where
 
 toAction :: Event Node -> Global.State -> UnderCursor -> Maybe Action
 toAction (Mouse (Mouse.Event tpe pos button keyMods evWdgt)) state underCursor = case button of
-    Mouse.LeftButton   -> case tpe of
+    LeftButton   -> case tpe of
         Mouse.Pressed  -> if dragAllowed then case keyMods of
                                              (KeyMods False False False False) -> Just (DragSelect StartDrag pos)
                                              _                                 -> Nothing

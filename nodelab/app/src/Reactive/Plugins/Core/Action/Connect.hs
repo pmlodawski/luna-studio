@@ -15,6 +15,7 @@ import           Event.Keyboard hiding      ( Event )
 import qualified Event.Keyboard as Keyboard
 import           Event.Mouse    hiding      ( Event, WithObjects )
 import qualified Event.Mouse    as Mouse
+import           Object.UITypes
 import           Event.Event
 import           Event.WithObjects
 import           Reactive.Plugins.Core.Action.Action
@@ -49,7 +50,7 @@ instance PrettyPrinter Action where
 
 toAction :: Event Node -> Global.State -> Maybe Action
 toAction (Mouse (Mouse.Event tpe pos button keyMods _)) state = case button of
-    Mouse.LeftButton   -> case tpe of
+    LeftButton         -> case tpe of
         Mouse.Pressed  -> if dragAllowed then case keyMods of
                                              (KeyMods False False False False) -> Just (DragAction (StartDrag draggedPort) pos)
                                              _                                 -> Nothing

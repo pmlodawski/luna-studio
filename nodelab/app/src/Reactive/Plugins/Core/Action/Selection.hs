@@ -5,12 +5,12 @@ import           Utils.PreludePlus
 import           JS.Bindings
 import qualified JS.NodeGraph   as UI
 
-import           Object.Object
 import           Object.Node
 import           Event.Keyboard hiding      ( Event )
 import qualified Event.Keyboard as Keyboard
 import           Event.Mouse    hiding      ( Event )
 import qualified Event.Mouse    as Mouse
+import           Object.UITypes
 import           Event.Event
 import           Event.WithObjects
 import           Reactive.Plugins.Core.Action.Action
@@ -47,7 +47,7 @@ instance PrettyPrinter Action where
 
 toAction :: Event Node -> UnderCursor -> Maybe Action
 toAction (Mouse (Mouse.Event tpe pos button keyMods _)) underCursor = case button of
-    Mouse.LeftButton  -> case tpe of
+    LeftButton  -> case tpe of
         Mouse.Pressed -> if nodeUnderCursor then case keyMods of
                                         (KeyMods False False False False) -> Just (SelectAction selectActionType node)
                                         (KeyMods False False True  False) -> Just (SelectAction toggleActionType node)

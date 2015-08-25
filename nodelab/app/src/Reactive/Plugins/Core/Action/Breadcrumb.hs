@@ -9,6 +9,7 @@ import           Utils.CtxDynamic
 import           Object.Object
 import           Object.Dynamic
 import           Object.Node
+import           Object.UITypes
 import           JS.Bindings
 import           Event.Mouse                                     hiding (Event, WithObjects)
 import qualified Event.Mouse                                     as Mouse
@@ -30,7 +31,7 @@ import qualified ThreeJS.Scene                                   as Scene
 import qualified Data.Text.Lazy                                  as Text
 import           Data.Text.Lazy                                  (Text)
 import qualified JavaScript.Object                               as JSObject
-import           ThreeJS.Registry
+import           ThreeJS.Registry                                as WidgetRegistry
 import           Object.Widget                                   as Widget
 import           GHCJS.Prim
 import           Data.IntMap.Lazy                                (IntMap)
@@ -57,7 +58,7 @@ justIf True val = Just val
 justIf False  _ = Nothing
 
 toAction (Window (Window.Event Window.Resized width height)) _ = Just $ NewPath ["NodeLab", "demo", " by ", "New Byte Order"]
-toAction (Mouse (Mouse.Event Mouse.Clicked _ Mouse.LeftButton _ (Just (EventWidget bid _ _)))) state = isButtonOver where
+toAction (Mouse (Mouse.Event Mouse.Clicked _ LeftButton _ (Just (EventWidget bid _ _)))) state = isButtonOver where
     buttonIds    = state ^. Global.breadcrumb . Breadcrumb.buttons
     isButtonOver = justIf (bid `elem` buttonIds) $ ButtonClicked bid
 
@@ -76,13 +77,13 @@ createButtons path = reverse buttons where
 
 addButton b = do
     uiButton <- UIButton.buildButton b
-    UIButton.putToRegistry b uiButton
+    WidgetRegistry.register b uiButton
     Scene.sceneHUD `add` uiButton
 
 removeButton b = do
-    uiButton <- UIButton.getFromRegistry b
+    uiButton <- WidgetRegistry.lookup b
     Scene.sceneHUD `remove` uiButton
-    UIButton.removeFromRegistry b
+    WidgetRegistry.unregister b
 
 instance ActionStateUpdater Action where
     execSt newActionCandidate oldState = case newAction of

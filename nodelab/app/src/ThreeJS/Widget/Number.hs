@@ -29,7 +29,7 @@ import           ThreeJS.Text
 import qualified ThreeJS.Geometry as Geometry
 import           JS.Config as Config
 import           Utils.Vector
-import           ThreeJS.Registry
+import           ThreeJS.Registry as Registry
 import qualified Object.Widget.Number as WB
 import           Object.Widget
 import           GHCJS.Prim
@@ -44,6 +44,10 @@ newtype Number = Number { unNumber :: JSObject.Object }
 
 instance Object Number where
     mesh b = (JSObject.getProp "mesh" $ unNumber b) :: IO Mesh
+
+instance Registry.UIWidget (WB.Number a) Number where
+    lookup   = Registry.genericLookup     Number
+    register = Registry.genericRegister unNumber
 
 buildValueLabel w = do
     let sliderWidth = w ^. WB.size ^. x
@@ -120,15 +124,3 @@ buildNumber s = do
     JSObject.setProp "uniforms"   (JSObject.getJSRef uniforms) number
 
     return $ Number number
-
-getFromRegistry :: WB.Number a -> IO Number
-getFromRegistry b = (getFromRegistryJS sliderId >>= return . Number . JSObject.fromJSRef)
-    where sliderId = b ^. WB.refId
-
-putToRegistry :: WB.Number a -> Number -> IO ()
-putToRegistry b u = putToRegistryJS sliderId (JSObject.getJSRef $ unNumber u)
-    where sliderId = b ^. WB.refId
-
-removeFromRegistry :: WB.Number a -> IO ()
-removeFromRegistry b = removeFromRegistryJS sliderId
-    where sliderId = b ^. WB.refId

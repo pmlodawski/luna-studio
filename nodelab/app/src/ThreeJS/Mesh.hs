@@ -5,6 +5,7 @@ import           Utils.PreludePlus
 import           GHCJS.Foreign
 import           GHCJS.Types      ( JSRef, JSString )
 import           ThreeJS.Types
+import           Utils.Vector
 
 foreign import javascript unsafe "new THREE.Mesh($1, $2)"
     buildMeshJS :: JSRef a -> JSRef b -> IO Mesh
@@ -33,4 +34,17 @@ foreign import javascript unsafe "$1.position"
 
 foreign import javascript unsafe "$1.scale"
     scale :: Mesh -> IO (JSRef JSVector2)
+
+
+moveTo :: Vector2 Double -> Mesh -> IO ()
+moveTo pos mesh = do
+    p <- position mesh
+    p `setY` (pos ^. x)
+    p `setX` (pos ^. y)
+
+scaleBy :: Double -> Mesh -> IO ()
+scaleBy factor mesh = do
+    s <- scale mesh
+    s `setX` factor
+    s `setY` factor
 

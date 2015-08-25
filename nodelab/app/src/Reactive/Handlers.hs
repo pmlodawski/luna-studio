@@ -24,6 +24,7 @@ import           Object.Object
 import qualified Object.Widget       as Widget
 import qualified Event.Keyboard      as Keyboard
 import qualified Event.Mouse         as Mouse
+import           Object.UITypes      as Mouse
 import qualified Event.Window        as Window
 import qualified Event.NodeSearcher  as NodeSearcher
 import qualified Event.WebSocket     as WSEvent
@@ -37,12 +38,12 @@ import qualified BatchConnector.Connection as Connection
 
 readKeyMods :: (MouseEvent.IsMouseEvent e) => EventM t e Keyboard.KeyMods
 readKeyMods = do
-    e <- event
-    shift <- MouseEvent.getShiftKey e
-    ctrl  <- MouseEvent.getCtrlKey e
-    alt   <- MouseEvent.getAltKey  e
-    meta  <- MouseEvent.getMetaKey e
-    return $ Keyboard.KeyMods shift ctrl alt meta
+    e      <- event
+    shift  <- MouseEvent.getShiftKey e
+    ctrl   <- MouseEvent.getCtrlKey e
+    alt    <- MouseEvent.getAltKey  e
+    meta   <- MouseEvent.getMetaKey e
+    return $  Keyboard.KeyMods shift ctrl alt meta
 
 readMousePos :: (MouseEvent.IsMouseEvent e) => EventM t e Mouse.MousePosition
 readMousePos = do
@@ -51,27 +52,25 @@ readMousePos = do
     y <- MouseEvent.getClientY e
     return $ Vector2 x y
 
-
-uiWhichButton :: (UIEvent.IsUIEvent e) => EventM t e Mouse.MouseButton
+uiWhichButton :: (UIEvent.IsUIEvent e) => EventM t e MouseButton
 uiWhichButton = uiWhich >>= return . Mouse.toMouseButton
 
-mouseHandler :: EventName Window MouseEvent.MouseEvent -> Mouse.Type ->  AddHandler (Event Dynamic)
+mouseHandler :: EventName Window MouseEvent.MouseEvent -> Mouse.Type -> AddHandler (Event Dynamic)
 mouseHandler event tag =
     AddHandler $ \h -> do
-       window <- fromJust <$> currentWindow
-       window `on` event $ do
-        mousePos        <- readMousePos
-        button          <- uiWhichButton
-        keyMods         <- readKeyMods
-        objectId        <- liftIO $ readObjectId     mousePos
-        scene           <- liftIO $ whichScene       objectId
-        widgetMatrix    <- liftIO $ readWidgetMatrix objectId
-        let maybeWidget  = do justObjectId     <- objectId
-                              justWidgetMatrix <- widgetMatrix
-                              justScene        <- scene
-                              return $ Mouse.EventWidget justObjectId justWidgetMatrix justScene
-
-        liftIO . h $ Mouse $ Mouse.Event tag mousePos button keyMods maybeWidget
+        window <- fromJust <$> currentWindow
+        window `on` event $ do
+            mousePos        <- readMousePos
+            button          <- uiWhichButton
+            keyMods         <- readKeyMods
+            objectId        <- liftIO $ readObjectId     mousePos
+            scene           <- liftIO $ whichScene       objectId
+            widgetMatrix    <- liftIO $ readWidgetMatrix objectId
+            let maybeWidget  = do justObjectId        <- objectId
+                                  justWidgetMatrix    <- widgetMatrix
+                                  justScene           <- scene
+                                  return $ Mouse.EventWidget justObjectId justWidgetMatrix justScene
+            liftIO . h $ Mouse $ Mouse.Event tag mousePos button keyMods maybeWidget
 
 mouseDownHandler     = mouseHandler mouseDown  Mouse.Pressed
 mouseUpHandler       = mouseHandler mouseUp    Mouse.Released

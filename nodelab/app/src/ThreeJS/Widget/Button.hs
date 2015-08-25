@@ -25,7 +25,7 @@ import           ThreeJS.Text
 import qualified ThreeJS.Geometry as Geometry
 import           Utils.Vector
 import           JS.Config as Config
-import           ThreeJS.Registry
+import qualified ThreeJS.Registry as Registry
 import qualified Object.Widget.Button as WB
 import           Object.Widget
 import           GHCJS.Prim
@@ -38,6 +38,10 @@ newtype Button = Button { unButton :: JSObject.Object }
 
 instance Object Button where
     mesh b = (JSObject.getProp "mesh" $ unButton b) :: IO Mesh
+
+instance Registry.UIWidget WB.Button Button where
+    lookup   = Registry.genericLookup     Button
+    register = Registry.genericRegister unButton
 
 buildLabel text = do
     material <- getTextHUDMaterial
@@ -107,21 +111,10 @@ buildButton (WB.Button bid label state pos size) = do
 
     return $ Button button
 
-getFromRegistry :: WB.Button -> IO Button
-getFromRegistry b = (getFromRegistryJS buttonId >>= return . Button . JSObject.fromJSRef)
-    where buttonId = b ^. WB.refId
-
-putToRegistry :: WB.Button -> Button -> IO ()
-putToRegistry b u = putToRegistryJS buttonId (JSObject.getJSRef $ unButton u)
-    where buttonId = b ^. WB.refId
-
-removeFromRegistry :: WB.Button -> IO ()
-removeFromRegistry b = removeFromRegistryJS buttonId
-    where buttonId = b ^. WB.refId
 
 setUniform :: Text -> JSRef a -> WB.Button -> IO ()
 setUniform n v w = do
-    bref     <- getFromRegistry w
+    bref     <- Registry.lookup w
     uniforms <- JSObject.getProp "uniforms" (unButton bref)      >>= return .           JSObject.fromJSRef
     uniform  <- JSObject.getProp (lazyTextToJSString n) uniforms >>= return . Uniform . JSObject.fromJSRef
     Uniform.setValue uniform v

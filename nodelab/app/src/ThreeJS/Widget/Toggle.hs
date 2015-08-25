@@ -28,7 +28,7 @@ import           ThreeJS.Text
 import qualified ThreeJS.Geometry as Geometry
 import           JS.Config as Config
 import           Utils.Vector
-import           ThreeJS.Registry
+import           ThreeJS.Registry as Registry
 import qualified Object.Widget.Toggle as WB
 import           Object.Widget
 import           GHCJS.Prim
@@ -42,6 +42,10 @@ newtype Toggle = Toggle { unToggle :: JSObject.Object }
 
 instance Object Toggle where
     mesh b = (JSObject.getProp "mesh" $ unToggle b) :: IO Mesh
+
+instance Registry.UIWidget WB.Toggle Toggle where
+    lookup   = Registry.genericLookup     Toggle
+    register = Registry.genericRegister unToggle
 
 buildLabel text = do
     material <- getTextHUDMaterial

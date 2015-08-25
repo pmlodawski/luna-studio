@@ -9,8 +9,7 @@ import           Object.Widget
 import           Data.IntMap.Lazy (IntMap)
 import qualified Data.IntMap.Lazy as IntMap
 
-import           Event.Mouse (WidgetId, MouseButton)
-
+import           Object.UITypes
 import           Utils.CtxDynamic
 
 type WidgetMap = IntMap DisplayObject

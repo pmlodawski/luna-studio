@@ -7,12 +7,12 @@ import           JS.Bindings
 import qualified JS.NodeGraph   as UI
 import qualified JS.Camera      as Camera
 
-import           Object.Object
 import           Object.Node
 import           Event.Keyboard hiding      ( Event )
 import qualified Event.Keyboard as Keyboard
 import           Event.Mouse    hiding      ( Event )
 import qualified Event.Mouse    as Mouse
+import           Object.UITypes
 import           Event.Event
 import           Event.WithObjects
 import           Reactive.Plugins.Core.Action.Action
@@ -64,14 +64,14 @@ instance PrettyPrinter Action where
 
 toAction :: Event Node -> Maybe Action
 toAction (Mouse (Mouse.Event tpe pos button keyMods _)) = case button of
-    Mouse.RightButton  -> case tpe of
+    RightButton        -> case tpe of
         Mouse.Pressed  -> case keyMods of
            (KeyMods False False False False) -> Just (MouseAction Zoom StartDrag pos)
            _                                 -> Nothing
         Mouse.Released -> Just (MouseAction Zoom StopDrag pos)
         Mouse.Moved    -> Just (MouseAction Zoom Dragging pos)
         _              -> Nothing
-    Mouse.MiddleButton                  -> case tpe of
+    MiddleButton       -> case tpe of
         Mouse.Pressed  -> case keyMods of
            (KeyMods False False False False) -> Just (MouseAction Pan StartDrag pos)
            _                                 -> Nothing
@@ -94,11 +94,11 @@ toAction (Keyboard (Keyboard.Event Keyboard.Down char)) = case char of
     _     -> Nothing
 toAction _ = Nothing
 
-minCamFactor   = 0.2
-maxCamFactor   = 8.0
+minCamFactor   =   0.2
+maxCamFactor   =   8.0
 dragZoomSpeed  = 512.0
-panStep        = 10.0
-zoomFactorStep = 1.1
+panStep        =  10.0
+zoomFactorStep =   1.1
 
 restrictCamFactor = min maxCamFactor . max minCamFactor
 

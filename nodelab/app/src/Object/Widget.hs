@@ -7,12 +7,13 @@ module Object.Widget where
 import           Utils.PreludePlus
 import           Utils.Vector
 import           Utils.CtxDynamic
-import           Event.Mouse    (MouseButton, MousePosition, WidgetId)
+import           Event.Mouse    (MousePosition)
+import           Object.UITypes
 import           Event.Keyboard (KeyMods)
 import           Reactive.Plugins.Core.Action.State.Camera (Camera)
 import qualified Reactive.Plugins.Core.Action.State.Camera as Camera
 import qualified JS.Camera as JSCamera
-import           ThreeJS.Types
+import           Object.UITypes
 
 type DisplayObject = CtxDynamic DisplayObjectClass
 
@@ -110,3 +111,5 @@ sceneToLocal (Vector2 x y) [ aa, ab, ac, ad
 screenToLocal :: JSCamera.Camera -> Vector2 Int -> [Double]  -> Vector2 Double
 screenToLocal cam mousePos widgetMatrix = sceneToLocal workspacePos widgetMatrix where
     workspacePos = JSCamera.screenToWorkspace cam mousePos
+
+
