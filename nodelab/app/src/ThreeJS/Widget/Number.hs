@@ -72,43 +72,28 @@ buildValueLabel w = do
     return mesh
 
 buildNumber :: (Show a) => WB.Number a -> IO Number
-buildNumber s = do
-    let bid  = objectId s
-    let pos  = s ^. WB.pos
-    let size = s ^. WB.size
+buildNumber widget = do
+    let bid  = objectId widget
+    let pos  = widget ^. WB.pos
+    let size = widget ^. WB.size
 
     group     <- buildGroup
     focus     <- toUniform (0 :: Int)
 
     label <- do
-        (mesh, width) <-  buildLabel 1.0 AlignLeft (s ^. WB.label)
+        (mesh, width) <-  buildLabel 1.0 AlignLeft (widget ^. WB.label)
         position      <-  position mesh
         position   `setY` (5.0 + size ^. y / 2.0)
         position   `setX` 4.0
         position   `setZ` 0.001
         return mesh
 
-    background <- do
-        let (vs, fs) = loadShaders "slider"
-        uniforms  <- Uniform.buildUniformMap
-        sliderPos <- toUniform (0 :: Double)
-        sizeU     <- toUniform size
-        objectId  <- buildVector3 ((fromIntegral $ bid `mod` 256) / 255.0) ((fromIntegral $ bid `div` 256) / 255.0) 0.0 >>= toUniform
+    sliderPos <- toUniform (0.0 :: Double)
+    background <- buildBackground "slider" widget [ (Value    , sliderPos )
+                                                  , (Focus    , focus     )
+                                                  ]
 
-        geom      <- buildNormalizedPlaneGeometry
-
-        material <- buildShaderMaterial vs fs True NormalBlending DoubleSide
-        setUniforms material [ (Size     , sizeU     )
-                             , (ObjectId , objectId  )
-                             , (Value    , sliderPos )
-                             , (Focus    , focus     )
-                             ]
-        mesh     <- buildMesh geom material
-        scaleBy size mesh
-
-        return mesh
-
-    valueLabel <- buildValueLabel s
+    valueLabel <- buildValueLabel widget
 
     group `add` background
     group `add` label

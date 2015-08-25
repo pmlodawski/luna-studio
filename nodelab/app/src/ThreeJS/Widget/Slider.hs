@@ -30,7 +30,7 @@ import qualified ThreeJS.Geometry as Geometry
 import           JS.Config as Config
 import           Utils.Vector
 import           ThreeJS.Registry as Registry
-import qualified Object.Widget.Slider as WB
+import qualified Object.Widget.Slider as Model
 import           Object.Widget
 import           GHCJS.Prim
 import           Utils.CtxDynamic
@@ -44,7 +44,7 @@ import           Object.UITypes
 newtype Slider = Slider { unSlider :: JSObject.Object }
 
 
-data Uniforms = Size | ObjectId | Value | Focus deriving (Show, Eq, Enum)
+data Uniforms = Value | Focus deriving (Show, Eq, Enum)
 
 instance Object Slider where
     mesh b = (JSObject.getProp "mesh" $ unSlider b) :: IO Mesh
@@ -53,120 +53,66 @@ instance Registry.UIWidget Slider where
     wrapWidget = Slider
     unwrapWidget = unSlider
 
-instance Registry.UIWidgetBinding (WB.Slider a) Slider
---
--- buildLabel text = do
---     material <- getTextHUDMaterial
---     geom     <- buildTextGeometry text
---     mesh     <- buildMesh geom material
---     s <- scale mesh
---     s `setX` Config.fontSize
---     s `setY` Config.fontSize
---     p <- position mesh
---     p `setY` (4.0 + 10.0)
---     let width = Config.fontSize * (calculateTextWidth text)
---     return (mesh, width)
+instance Registry.UIWidgetBinding (Model.Slider a) Slider
 
-buildValueLabel w = do
-    let sliderWidth = w ^. WB.size ^. x
-    let text =  Text.pack $ WB.displayValue w
-    material <- getTextHUDMaterial
-    geom     <- buildTextGeometry text
-    mesh     <- buildMesh geom material
-    s <- scale mesh
-    s `setX` (Config.fontSize * 0.8)
-    s `setY` (Config.fontSize * 0.8)
-
-    let width = Config.fontSize * 0.8 * (calculateTextWidth text)
-    p <- position mesh
-    p `setY` (5.0 + w ^. WB.size ^. y / 2.0)
-    p `setX` (sliderWidth - width - 5.0)
-    p `setZ` 0.001
+buildValueLabel :: (Model.IsSlider a) => Model.Slider a -> IO Mesh
+buildValueLabel s = do
+    (mesh, width) <- buildLabel 0.8 AlignRight (Text.pack $ Model.displayValue s)
+    moveBy (Vector2 (s ^. Model.size . x - 5.0) (5.0 + s ^. Model.size . y / 2.0)) mesh
     return mesh
 
-buildSlider :: (WB.IsSlider a) => WB.Slider a -> IO Slider
-buildSlider s = do
-    let bid  = objectId s
-    let pos  = s ^. WB.pos
-    let size = s ^. WB.size
+buildSlider :: (Model.IsSlider a) => Model.Slider a -> IO Slider
+buildSlider widget = do
+    let bid  = objectId widget
+    let pos  = widget ^. Model.pos
+    let size = widget ^. Model.size
 
     group     <- buildGroup
-    sliderPos <- toUniform $ s ^. WB.normValue
+    sliderPos <- toUniform $ widget ^. Model.normValue
     focus     <- toUniform (0 :: Int)
 
     label <- do
-        (mesh, width) <- buildLabel 1.0 AlignLeft (s ^. WB.label)
+        (mesh, width) <- buildLabel 1.0 AlignLeft (widget ^. Model.label)
         moveBy (Vector2 4.0 (5.0 + size ^. y / 2.0)) mesh
         return mesh
 
-    background <- do
-        let (vs, fs) = loadShaders "slider"
-        sizeU     <- toUniform size
-        objectId  <- objectIdToUniform $ objectId s
+    valueLabel <- buildValueLabel widget
 
-        geom      <- buildNormalizedPlaneGeometry
-        material  <- buildShaderMaterial vs fs True NormalBlending DoubleSide
-
-        setUniforms material [ (Size     , sizeU     )
-                             , (ObjectId , objectId  )
-                             , (Value    , sliderPos )
-                             , (Focus    , focus     )
-                             ]
-
-        mesh      <- buildMesh geom material
-        scaleBy size mesh
-        pos <- position mesh
-        pos `setZ` (-0.0001)
-        return mesh
-
-    valueLabel <- buildValueLabel s
-
+    background <- buildBackground "slider" widget [ (Value    , sliderPos )
+                                                  , (Focus    , focus     )
+                                                  ]
     group `add` background
     group `add` label
     group `add` valueLabel
 
-    mesh group >>= moveTo pos
+    mesh   <- mesh group
+    moveTo pos mesh
 
-    uniforms <- JSObject.create
-    JSObject.setProp "value"    (JSObject.getJSRef $ unUniform sliderPos) uniforms
-    JSObject.setProp "focus"    (JSObject.getJSRef $ unUniform focus    ) uniforms
+    (slider, uniforms) <- buildSkeleton mesh
+    Uniform.setUniform uniforms Value sliderPos
+    Uniform.setUniform uniforms Focus focus
 
-    slider <- JSObject.create
+    JSObject.setProp "label"      label                        (unSlider slider)
+    JSObject.setProp "valueLabel" valueLabel                   (unSlider slider)
+    JSObject.setProp "background" background                   (unSlider slider)
 
-    JSObject.setProp "mesh"       (unGroup group)              slider
-    JSObject.setProp "label"      label                        slider
-    JSObject.setProp "valueLabel" valueLabel                   slider
-    JSObject.setProp "background" background                   slider
-    JSObject.setProp "uniforms"   (JSObject.getJSRef uniforms) slider
+    return slider
 
-    return $ Slider slider
-
-
-setUniform :: Text -> JSRef a -> WB.Slider a -> IO ()
-setUniform n v w = do
-    bref     <- Registry.lookup w
-    uniforms <- JSObject.getProp "uniforms"             (unSlider bref) >>= return .           JSObject.fromJSRef
-    uniform  <- JSObject.getProp (lazyTextToJSString n)  uniforms       >>= return . Uniform . JSObject.fromJSRef
-    Uniform.setValue uniform v
-
-setValueLabel :: (WB.IsSlider a) => WB.Slider a -> IO ()
-setValueLabel w = do
-    ref        <- Registry.lookup w
+setValueLabel :: (Model.IsSlider a) => Model.Slider a -> IO ()
+setValueLabel widget = do
+    ref        <- Registry.lookup widget
     group      <- JSObject.getProp "mesh"        (unSlider ref) >>= return . Group
     valueLabel <- JSObject.getProp "valueLabel"  (unSlider ref) :: IO (JSRef MeshJS)
     group `remove` valueLabel
 
-    valueLabel' <- buildValueLabel w
-
+    valueLabel' <- buildValueLabel widget
     group `add` valueLabel'
     JSObject.setProp "valueLabel" valueLabel'    (unSlider ref)
 
-
-
-updateValue :: (WB.IsSlider a) => WB.Slider a -> IO ()
-updateValue s = do
-    setUniform "value" (toJSDouble $ s ^. WB.normValue) s
-    setValueLabel s
+updateValue :: (Model.IsSlider a) => Model.Slider a -> IO ()
+updateValue widget = do
+    updateUniformValue Value (toJSDouble $ widget ^. Model.normValue) widget
+    setValueLabel widget
 
 
 keyModMult :: KeyMods -> Double
@@ -176,7 +122,7 @@ keyModMult mods = case mods of
     KeyMods True  False _ _ ->   10.0
     otherwise               ->    1.0
 
-instance (WB.IsSlider a) => Draggable (WB.Slider a) where
+instance (Model.IsSlider a) => Draggable (Model.Slider a) where
     mayDrag LeftButton _ _       = True
     mayDrag _          _ _       = False
     onDragStart state slider     = (Just action, toCtxDynamic slider) where
@@ -184,11 +130,11 @@ instance (WB.IsSlider a) => Draggable (WB.Slider a) where
     onDragMove  state slider     = (Just action, toCtxDynamic newSlider) where
                     delta        = if (abs $ diff ^. x) > (abs $ diff ^. y) then -diff ^. x / divider
                                                                             else  diff ^. y / (divider * 10.0)
-                    width        = slider ^. WB.size . x
+                    width        = slider ^. Model.size . x
                     divider      = width * (keyModMult $ state ^. keyMods)
                     diff         = state ^. currentPos - state ^. previousPos
-                    newNormValue = (slider ^. WB.normValue) - delta
-                    newSlider    = WB.setNormValue newNormValue slider
+                    newNormValue = (slider ^. Model.normValue) - delta
+                    newSlider    = Model.setNormValue newNormValue slider
                     action       = do
                         setCursor "-webkit-grabbing"
                         updateValue newSlider
@@ -198,19 +144,19 @@ instance (WB.IsSlider a) => Draggable (WB.Slider a) where
             setCursor "default"
         (otherAction, newSlider) = onDragMove state slider
 
-instance  (WB.IsSlider a) => DblClickable   (WB.Slider a) where
+instance  (Model.IsSlider a) => DblClickable   (Model.Slider a) where
     onDblClick pos slider     = (Just action, toCtxDynamic newSlider) where
-                normValue     = (pos ^. x) / (slider ^. WB.size . x)
-                newSlider     = WB.setNormValue normValue slider
+                normValue     = (pos ^. x) / (slider ^. Model.size . x)
+                newSlider     = Model.setNormValue normValue slider
                 action        = do
                     updateValue newSlider
 
-instance  (WB.IsSlider a) => HandlesMouseOver (WB.Slider a) where
+instance  (Model.IsSlider a) => HandlesMouseOver (Model.Slider a) where
     onMouseOver b = (Just action, toCtxDynamic b) where
         action    = do
-            setUniform "focus" (toJSInt 1) b
+            updateUniformValue Focus (toJSInt 1) b
 
-instance  (WB.IsSlider a) => HandlesMouseOut (WB.Slider a) where
+instance  (Model.IsSlider a) => HandlesMouseOut (Model.Slider a) where
     onMouseOut  b = (Just action, toCtxDynamic b) where
         action    = do
-            setUniform "focus" (toJSInt 0) b
+            updateUniformValue Focus (toJSInt 0) b

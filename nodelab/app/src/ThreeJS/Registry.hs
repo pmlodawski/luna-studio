@@ -10,6 +10,7 @@ import           GHCJS.Foreign
 import           GHCJS.Types         (JSRef)
 import           Object.Widget
 import qualified JavaScript.Object as JSObject
+import qualified Data.JSString as JSString
 import           ThreeJS.Types
 import           ThreeJS.Uniform
 
@@ -26,15 +27,6 @@ class (Object b) => UIWidget b where
     wrapWidget   :: JSObject.Object -> b
     unwrapWidget :: b               -> JSObject.Object
 
-class (IsDisplayObject a, UIWidget b) => UIWidgetBinding a b | a -> b where
-    lookup       :: a               -> IO b
-    lookup widget = (getFromRegistryJS oid >>= return . wrapWidget . JSObject.fromJSRef) where oid = objectId widget
-
-    register     :: a -> b          -> IO ()
-    register widget uiWidget = putToRegistryJS oid uiref where
-        oid   = objectId widget
-        uiref = (JSObject.getJSRef $ unwrapWidget uiWidget)
-
     buildSkeleton :: Mesh -> IO (b, UniformMap)
     buildSkeleton m = do
         widget     <- JSObject.create
@@ -45,5 +37,23 @@ class (IsDisplayObject a, UIWidget b) => UIWidgetBinding a b | a -> b where
 
         return (wrapWidget widget, uniforms)
 
+class (IsDisplayObject a, UIWidget b) => UIWidgetBinding a b | a -> b where
+    lookup       :: a               -> IO b
+    lookup widget = (getFromRegistryJS oid >>= return . wrapWidget . JSObject.fromJSRef) where oid = objectId widget
+
+    register     :: a -> b          -> IO ()
+    register widget uiWidget = putToRegistryJS oid uiref where
+        oid   = objectId widget
+        uiref = (JSObject.getJSRef $ unwrapWidget uiWidget)
+
+    updateUniformValue :: (Enum d, Show d) => d -> JSRef c -> a -> IO ()
+    updateUniformValue n v w = do
+        bref     <- ThreeJS.Registry.lookup w
+        uniforms <- JSObject.getProp "uniforms"                         (unwrapWidget bref) >>= return .           JSObject.fromJSRef
+        uniform  <- JSObject.getProp (JSString.pack $ locaseFirst $ show n)  uniforms       >>= return . Uniform . JSObject.fromJSRef
+        setValue uniform v
+
+
 unregister :: (IsDisplayObject a) => a -> IO ()
 unregister widget  = removeFromRegistryJS $ objectId widget
+

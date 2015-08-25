@@ -31,10 +31,8 @@ class (Num a, Show a, Typeable a) => IsSlider a where
 
 instance IsDisplayObject (Slider a) where
     objectId       b = b ^. refId
-
-
-
-
+    objectPosition b = b ^. pos
+    objectSize     b = b ^. size
 
 instance IsSlider Double where
     displayValue slider = showFFloat (Just $ precision) val "" where

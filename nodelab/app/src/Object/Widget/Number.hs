@@ -29,6 +29,8 @@ makeLenses ''Number
 
 instance IsDisplayObject (Number a) where
     objectId       b = b ^. refId
+    objectPosition b = b ^. pos
+    objectSize     b = b ^. size
 
 -- instance IsSlider Double where
 --     displayValue slider = showFFloat (Just $ precision) val "" where

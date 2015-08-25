@@ -59,6 +59,7 @@ buildUniform t v = do
 setValue :: Uniform -> JSRef a -> IO ()
 setValue o v = JSObject.setProp (JSString.pack "value") v (unUniform o)
 
+
 class ToUniform a b | a -> b where
     toUniform      :: a -> IO Uniform
 
