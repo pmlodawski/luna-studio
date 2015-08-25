@@ -153,6 +153,7 @@ Library
         Flowbox.Text.ProtocolBuffers,
         Flowbox.Text.Show.Hs,
         Flowbox.Text.Show.Pretty,
+        System.Platform,
         System.Path,
         Type.BaseType,
         Type.List,
