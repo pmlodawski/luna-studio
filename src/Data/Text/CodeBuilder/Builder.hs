@@ -37,7 +37,7 @@ class (Monad m, Applicative m) => MonadTokBuilder s m | m -> s where
     getStyle :: m s
     putStyle :: s -> m ()
 
-runBuilder :: Builder s a -> s -> a 
+runBuilder :: Builder s a -> s -> a
 runBuilder = evalState . unBuilder
 
 

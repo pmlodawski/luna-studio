@@ -12,22 +12,29 @@ Library
 
     GHC-Options:    -Wall -O2
 
-    Extensions:   ConstraintKinds,
-                  DefaultSignatures,
-                  DeriveFoldable,
-                  DeriveFunctor,
-                  DeriveGeneric,
-                  DeriveTraversable,
-                  DoAndIfThenElse,
-                  FlexibleContexts,
-                  FlexibleInstances,
-                  GeneralizedNewtypeDeriving,
-                  MultiParamTypeClasses,
-                  NoImplicitPrelude,
-                  TemplateHaskell,
-                  OverloadedStrings,
-                  StandaloneDeriving,
+    Extensions:   ConstraintKinds
+                  DataKinds
+                  DefaultSignatures
+                  DeriveDataTypeable
+                  DeriveFoldable
+                  DeriveFunctor
+                  DeriveGeneric
+                  DeriveTraversable
+                  DoAndIfThenElse
+                  EmptyDataDecls
+                  FlexibleContexts
+                  FlexibleInstances
+                  GeneralizedNewtypeDeriving
+                  InstanceSigs
                   LambdaCase
+                  MultiParamTypeClasses
+                  NoImplicitPrelude
+                  OverloadedStrings
+                  StandaloneDeriving
+                  TemplateHaskell
+                  TupleSections
+                  TypeOperators
+                  ViewPatterns
 
     Exposed-modules: `findmodules('src', '.*\.hs', exclude='System.Logging')`
 

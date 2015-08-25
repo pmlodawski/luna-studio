@@ -18,24 +18,31 @@ Library
 
     GHC-Options:    -Wall -O2
 
-    Extensions:   ConstraintKinds,
-                  DefaultSignatures,
-                  DeriveFoldable,
-                  DeriveFunctor,
-                  DeriveGeneric,
-                  DeriveTraversable,
-                  DoAndIfThenElse,
-                  FlexibleContexts,
-                  FlexibleInstances,
-                  GeneralizedNewtypeDeriving,
-                  MultiParamTypeClasses,
-                  NoImplicitPrelude,
-                  TemplateHaskell,
-                  OverloadedStrings,
-                  StandaloneDeriving,
+    Extensions:   ConstraintKinds
+                  DataKinds
+                  DefaultSignatures
+                  DeriveDataTypeable
+                  DeriveFoldable
+                  DeriveFunctor
+                  DeriveGeneric
+                  DeriveTraversable
+                  DoAndIfThenElse
+                  EmptyDataDecls
+                  FlexibleContexts
+                  FlexibleInstances
+                  GeneralizedNewtypeDeriving
+                  InstanceSigs
                   LambdaCase
+                  MultiParamTypeClasses
+                  NoImplicitPrelude
+                  OverloadedStrings
+                  StandaloneDeriving
+                  TemplateHaskell
+                  TupleSections
+                  TypeOperators
+                  ViewPatterns
 
-    Exposed-modules:
+    Exposed-modules: 
         Control.PolyApplicative,
         Control.PolyMonad,
         Control.Category.Dot,
@@ -48,7 +55,6 @@ Library
         Control.PolyApplicative.App.TH,
         Data.Cata,
         Data.Containers,
-        Data.Frame,
         Data.Indexable,
         Data.IntConvertibleMap,
         Data.IntConvertibleSet,
@@ -60,7 +66,7 @@ Library
         Data.RTuple,
         Data.TupleList,
         Data.TypeLevel,
-        Data.Variant,
+        Data.Variants,
         Data.Wrapper,
         Data.Binary.Instances.Missing,
         Data.Char.Class,
