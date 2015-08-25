@@ -26,7 +26,7 @@ makeLenses ''HeteroVectorGraph
 makeLenses ''VectorGraph
 
 instance HasContainer HeteroVectorGraph   (Hetero' Vector) where container = _hetReg
-instance HasContainer (VectorGraph a) (Vector a)       where container = _homReg
+instance HasContainer (VectorGraph a)     (Vector a)       where container = _homReg
 
 
 ---- === Ref ===
@@ -37,6 +37,7 @@ type Arc           a = Mu (ArcPtr a)
 
 newtype Ref i a t = Ref { fromRef :: Ptr i (a t) } deriving (Show)
 
+instance Repr s i => Repr s (Ref i a t) where repr = repr . fromRef
 
 
 ------------------------------------------

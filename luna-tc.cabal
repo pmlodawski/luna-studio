@@ -53,6 +53,7 @@ Library
 
     Exposed-modules: 
         Luna.Diagnostic.AST,
+        Luna.Repr.Styles,
         Luna.Syntax.AST,
         Luna.Syntax.Builder,
         Luna.Syntax.Layer,

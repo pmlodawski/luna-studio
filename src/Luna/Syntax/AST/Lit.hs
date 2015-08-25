@@ -11,3 +11,5 @@ data Lit = Int    Int
 
 instance IsString Lit where
     fromString = String . fromString
+
+instance Repr s Lit where repr = fromString . show

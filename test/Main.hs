@@ -16,7 +16,7 @@
 module Main where
 
 import Flowbox.Prelude hiding (simple, empty, Indexable, Simple, cons, lookup, index, Wrapped, children, Cons)
-import Data.Repr
+--import Data.Repr
 
 import qualified Data.Map            as Map
 import           Data.Map            (Map)
@@ -70,6 +70,7 @@ import Luna.Syntax.Layer.Labeled
 --import Data.Text.CodeBuilder.Builder
 import Data.Text.CodeBuilder.Builder as CB
 
+
 -- === HomoBuilder ===
 
 newtype HomoG (t :: * -> *) m a = HomoG { fromHomoG :: IdentityT m a } deriving (MonadFix, Monad, Functor, Applicative, MonadTrans)
@@ -110,7 +111,7 @@ nytst2f = flip runFunctionBuilder def $ do
 
 main = do
     --putStrLn $ repr y
-    putStrLn $ repr $ nytst2
+    print $ repr $ nytst2
     --putStrLn $ repr $ nytst3
     --print c'
     --print $ take 1000 names
@@ -118,16 +119,18 @@ main = do
     let gv = toGraphViz (snd nytst2)
     print gv
     display gv
-    V.test
+    --V.test
     --print tstc
     return ()
 
 
 
 
---data HSIndent  = HSIndent  deriving (Show)
+data HSIndent  = HSIndent  deriving (Show)
 
 
---runMeI = renderCode HSIndent
+runMeI = renderCode HSIndent
 
---tstc = runMeI (CB.app "o" (CB.app "ala" "ola"))
+--tstc = runMeI ("o" <+> ("ala" <+> "ola"))
+
+instance Repr s (VectorGraph a) where repr _ = "mu"

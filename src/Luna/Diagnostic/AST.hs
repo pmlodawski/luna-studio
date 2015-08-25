@@ -1,4 +1,5 @@
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE PartialTypeSignatures #-}
 
 module Luna.Diagnostic.AST where
 
@@ -13,6 +14,7 @@ import           Data.GraphViz.Commands
 import qualified Data.GraphViz.Attributes.Colors     as GVC
 import qualified Data.GraphViz.Attributes.Colors.X11 as GVC
 import           Data.GraphViz.Printing              (PrintDot)
+import           Luna.Repr.Styles (HeaderOnly(..), Simple(..))
 
 import Data.Cata
 import Data.Containers
@@ -26,7 +28,7 @@ import Luna.Syntax.Layer.Labeled
 
 import System.Process (createProcess, shell)
 
-toGraphViz :: (GenEdges (a (Mu (ArcPtr a))), HasAST a ast, Repr (ast (Mu (ArcPtr a)))) => HomoGraph ArcPtr a -> DotGraph Int
+toGraphViz :: _ => HomoGraph ArcPtr a -> DotGraph Int
 toGraphViz g = DotGraph { strictGraph     = False
                         , directedGraph   = True
                         , graphID         = Nothing
@@ -38,7 +40,7 @@ toGraphViz g = DotGraph { strictGraph     = False
                         }
     where nodes           = elems g
           nodeIds         = indexes g
-          nodeLabels      = fmap (repr . view ast) nodes
+          nodeLabels      = fmap (reprStyled HeaderOnly . view ast) nodes
           labeledNode s a = DotNode a [GV.Label . StrLabel $ fromString s]
           nodeStmts       = fmap (uncurry labeledNode) $ zip nodeLabels nodeIds
           nodeInEdges   n = zip3 [0..] (genEdges $ unsafeIndex n g) (repeat n)

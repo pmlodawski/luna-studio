@@ -21,6 +21,7 @@ import Data.Cata
 import Data.Containers.Hetero
 
 import Data.Typeable
+import Luna.Repr.Styles (HeaderOnly)
 
 -- === Terms ===
 
@@ -88,13 +89,25 @@ instance Traversable Val   where traverse = recordTraverse
 instance Traversable Thunk where traverse = recordTraverse
 instance Traversable Term  where traverse = recordTraverse
 
--- Repr instances
+-- === Representations ===
 
-instance Repr a => Repr (App a) where
-    repr (App a args) = "App (" <> repr a <> ") " <> repr args
+instance             Repr s Star         where repr = fromString . show
+instance             Repr s Var          where repr (Var      n  ) = "Var"      <+> repr n
+instance Repr s t => Repr s (Cons     t) where repr (Cons     n t) = "Cons"     <+> repr n <+> repr t
+instance Repr s t => Repr s (Accessor t) where repr (Accessor n t) = "Accessor" <+> repr n <+> repr t
+instance Repr s t => Repr s (App      t) where repr (App      n t) = "App"      <+> repr n <+> repr t
 
-instance Repr a => Repr (Arg a) where
-    repr (Arg n a) = "Arg (" <> repr n <> ") (" <> repr a <> ")"
+instance VariantReprs s (Val   t) => Repr s (Val   t) where repr (Val   t) = "Val"   <+> repr t
+instance VariantReprs s (Thunk t) => Repr s (Thunk t) where repr (Thunk t) = "Thunk" <+> repr t
+instance VariantReprs s (Term  t) => Repr s (Term  t) where repr (Term  t) = "Term"  <+> repr t
+
+-- HeaderOnly
+
+instance {-# OVERLAPPING #-} Repr HeaderOnly Star         where repr _ = "Star"
+instance {-# OVERLAPPING #-} Repr HeaderOnly Var          where repr a = "Var"      <+> repr (a ^. name)
+instance {-# OVERLAPPING #-} Repr HeaderOnly (Cons     t) where repr a = "Cons"     <+> repr (a ^. name)
+instance {-# OVERLAPPING #-} Repr HeaderOnly (Accessor t) where repr a = "Accessor" <+> repr (a ^. name)
+instance {-# OVERLAPPING #-} Repr HeaderOnly (App      t) where repr _ = "App"
 
 
 -- === Inputs ===
