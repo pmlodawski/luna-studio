@@ -43,6 +43,7 @@ Library
                   ViewPatterns
 
     Exposed-modules: 
+        Prologue,
         Control.PolyApplicative,
         Control.PolyMonad,
         Control.Category.Dot,
@@ -153,6 +154,7 @@ Library
         Flowbox.Text.ProtocolBuffers,
         Flowbox.Text.Show.Hs,
         Flowbox.Text.Show.Pretty,
+        Prologue.Class,
         System.Path,
         Type.BaseType,
         Type.Infer,

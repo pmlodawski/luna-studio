@@ -1,5 +1,6 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE GADTs                     #-}
 
 -----------------------------------------------------------------------------
 -- |
@@ -14,13 +15,15 @@
 module Data.Text.CodeBuilder.Builder where
 
 import Prelude ()
-import Flowbox.Prelude
+import Prologue.Class
 
 import qualified Data.Text.CodeBuilder.Tok as Tok
 import           Data.Text.CodeBuilder.Tok (Tok(Tok), Prec, doc, precParens)
 import qualified Data.Text.CodeBuilder.Doc as Doc
 import           Data.Text.CodeBuilder.Doc (Doc)
+import qualified Data.Text.Lazy            as Text
 import qualified Data.Text.Lazy.Builder    as Text
+import           Data.Text.Lazy.Builder    (toLazyText)
 
 import Control.Monad.State
 
@@ -40,6 +43,11 @@ class (Monad m, Applicative m) => MonadTokBuilder s m | m -> s where
 runBuilder :: Builder s a -> s -> a
 runBuilder = evalState . unBuilder
 
+data SimpleStyle = SimpleStyle deriving (Show)
+
+instance {-# OVERLAPPABLE #-} (s ~ SimpleStyle) => Show (Builder s Tok) where
+    show = Text.unpack . toLazyText . renderCode SimpleStyle
+
 
 ----------------------------------------------------------------------
 -- Render styles
@@ -54,8 +62,12 @@ renderStyled p = do
 class Render style a where
     render :: style -> a -> Tok
 
+
 renderCode :: s -> Builder s Tok -> Text.Builder
 renderCode style f = Doc.render . view doc $ runBuilder f style
+
+renderStr :: s -> Builder s Tok -> String
+renderStr s = Text.unpack . toLazyText . renderCode s
 
 ----------------------------------------------------------------------
 -- Combinators
@@ -96,6 +108,7 @@ tuple, list :: [Builder s Tok] -> Builder s Tok
 tuple items = parensed $ fmap (mjoin ", ") $ sequence items
 list  items = bracked  $ fmap (mjoin ", ") $ sequence items
 
+(<+>) = app
 
 ----------------------------------------------------------------------
 -- Instances

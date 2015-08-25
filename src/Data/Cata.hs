@@ -99,8 +99,8 @@ instance                  MuTraversable Mu      where mumapM = mapM
 instance Traversable h => MuTraversable (MuH h) where mumapM = mapM . mapM
 
 -- Repr
-instance Repr (MuLayout Mu      f) => Repr (Mu f)    where repr = repr . view mu
-instance Repr (MuLayout (MuH h) f) => Repr (MuH h f) where repr = repr . view mu
+instance Repr s (MuLayout Mu      f) => Repr s (Mu f)    where repr = repr . view mu
+instance Repr s (MuLayout (MuH h) f) => Repr s (MuH h f) where repr = repr . view mu
 
 -- Show
 deriving instance Show (MuLayout Mu      f) => Show (Mu f)

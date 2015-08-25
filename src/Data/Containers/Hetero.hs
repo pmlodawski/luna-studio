@@ -62,8 +62,8 @@ instance PtrTarget (Ptr  i)   a {- = -} (a (Ptr i))
 
 -- instances
 
-instance (Typeable a, Repr i, Typeable m) => Repr (HPtr i m a) where repr (HPtr p) = "HPtr (" <> repr p <> ")"
-instance (Typeable a, Repr i)             => Repr (Ptr i a)    where repr (Ptr i)  = "Ptr " <> repr i <> " -> " <> show (typeOf (undefined :: a))
+instance Repr s i => Repr s (HPtr i m a) where repr (HPtr p) = "HPtr" <+> repr p
+instance Repr s i => Repr s (Ptr i a)    where repr (Ptr i)  = "Ptr " <+> repr i
 
 type instance IdxType (Ptr  i   a) = a
 type instance IdxType (HPtr i m a) = a

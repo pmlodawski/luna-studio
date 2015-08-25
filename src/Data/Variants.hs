@@ -7,18 +7,17 @@
 {-# LANGUAGE OverlappingInstances       #-}
 {-# LANGUAGE UndecidableInstances       #-}
 {-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE NoOverloadedStrings        #-}
 
 
 module Data.Variants where
 
 import Flowbox.Prelude hiding (cons, Index, cast, Variant, Castable)
 
-import           Flowbox.System.Types (ToMaybe, toMaybe, IsSubset, orElse, withState, ToSet, Index, In)
+import Flowbox.System.Types (ToMaybe, toMaybe, IsSubset, orElse, withState, ToSet, Index, In)
 
-import           Data.Typeable          hiding (cast)
-import           Data.Maybe             (fromJust)
-import           Control.Monad.State    hiding (withState)
+import Data.Typeable          hiding (cast)
+import Data.Maybe             (fromJust)
+import Control.Monad.State    hiding (withState)
 
 
 ------------------------------------------------------------------------
@@ -110,6 +109,15 @@ instance (Show t, Show (Rec ts)) => Show (Rec (t ': ts)) where
         where app_prec = 10
 
 
+instance                                Repr s (Rec '[]      ) where repr _ = "EmptyRec"
+instance (Repr s t, Repr s (Rec ts)) => Repr s (Rec (t ': ts)) where
+    repr = \case
+        Data t -> repr t
+        Rec  r -> repr r
+
+-- Repr
+
+type VariantReprs s a = Reprs s (Variants a)
 
 ------------------------------------------------------------------------
 -- Record bulk processing
