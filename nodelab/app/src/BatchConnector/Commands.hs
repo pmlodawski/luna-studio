@@ -11,9 +11,9 @@ import           Generated.Proto.Dep.Attributes.Attributes
 
 import           BatchConnector.Connection
 
-createProject :: String -> String -> WSMessage
-createProject name path = WSMessage "project.create.request" $ messagePut body where
+createProject :: String -> String -> WebMessage
+createProject name path = WebMessage "project.create.request" $ messagePut body where
     body = Create.Request (Just $ Utf8 $ pack name) (Utf8 $ pack path) (Attributes S.empty)
 
-listProjects :: WSMessage
-listProjects = WSMessage "project.list.request" $ messagePut List.Request
+listProjects :: WebMessage
+listProjects = WebMessage "project.list.request" $ messagePut List.Request

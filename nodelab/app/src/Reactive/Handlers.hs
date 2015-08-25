@@ -27,12 +27,12 @@ import qualified Event.Mouse         as Mouse
 import           Object.UITypes      as Mouse
 import qualified Event.Window        as Window
 import qualified Event.NodeSearcher  as NodeSearcher
-import qualified Event.WebSocket     as WSEvent
+import qualified Event.Backend       as Backend
 import qualified Object.Node         ( Node )
 import           Event.Event
 import           GHCJS.Marshal
-import           JavaScript.Array ( JSArray )
-import qualified JavaScript.Array as JSArray
+import           JavaScript.Array    ( JSArray )
+import qualified JavaScript.Array    as JSArray
 
 import qualified BatchConnector.Connection as Connection
 
@@ -119,8 +119,8 @@ nodeSearcherHander = AddHandler $ \h -> do
 webSocketHandler :: WebSocket.WebSocket -> AddHandler (Event Dynamic)
 webSocketHandler conn = AddHandler $ \h -> do
     WebSocket.onOpen conn $ do
-        liftIO . h $ WebSocket WSEvent.Opened
+        h $ Backend Backend.Opened
     WebSocket.onMessage conn $ \event -> do
         payload <- WebSocket.getData event
         let msg = Connection.deserialize $ fromJSString payload
-        liftIO . h $ WebSocket $ WSEvent.Message msg
+        h $ Backend $ Backend.Message msg

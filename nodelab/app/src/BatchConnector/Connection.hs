@@ -2,7 +2,6 @@ module BatchConnector.Connection where
 
 import qualified Data.Binary                 as Binary
 import           GHC.Generics                (Generic)
-import           GHCJS.DOM.WebSocket
 import           GHCJS.Types (JSString)
 import           Data.JSString.Text
 import           Data.Text (Text)
@@ -11,17 +10,14 @@ import qualified Data.ByteString.Base64.Lazy as B64
 import           Data.Text.Lazy.Encoding     (decodeUtf8)
 import           Utils.PreludePlus           hiding (Text)
 
-data WSMessage = WSMessage { _topic   :: String
-                           , _message :: ByteString
-                           } deriving (Show, Generic)
+data WebMessage = WebMessage { _topic   :: String
+                             , _message :: ByteString
+                             } deriving (Show, Generic)
 
-instance Binary.Binary WSMessage
+instance Binary.Binary WebMessage
 
-serialize :: WSMessage -> JSString
+serialize :: WebMessage -> JSString
 serialize = lazyTextToJSString . decodeUtf8 . B64.encode . Binary.encode
 
-deserialize :: String -> WSMessage
+deserialize :: String -> WebMessage
 deserialize = Binary.decode . B64.decodeLenient . pack
-
-sendMsg :: WebSocket -> WSMessage -> IO ()
-sendMsg conn msg = sendString conn $ serialize msg

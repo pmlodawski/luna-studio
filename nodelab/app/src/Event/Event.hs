@@ -11,7 +11,7 @@ import qualified Event.Mouse         as Mouse
 import qualified Event.Window        as Window
 import qualified Event.NodeSearcher  as NodeSearcher
 import qualified Event.WithObjects   as WithObjects
-import qualified Event.WebSocket     as WebSocket
+import qualified Event.Backend       as Backend
 
 
 data Event obj = Init
@@ -19,7 +19,7 @@ data Event obj = Init
                | Keyboard     Keyboard.Event
                | Mouse        Mouse.Event
                | NodeSearcher NodeSearcher.Event
-               | WebSocket    WebSocket.Event
+               | Backend      Backend.Event
 
 
 makeLenses ''Event
@@ -33,7 +33,7 @@ instance Typeable obj => UnpackDynamic (Event Dynamic) (Event obj) where
     unpackDynamic (Keyboard     ev) = Keyboard ev
     unpackDynamic (Mouse        ev) = Mouse ev
     unpackDynamic (NodeSearcher ev) = NodeSearcher ev
-    unpackDynamic (WebSocket    ev) = WebSocket ev
+    unpackDynamic (Backend      ev) = Backend ev
 
 instance PrettyPrinter obj => PrettyPrinter (Event obj) where
     display Init              = "InitEv"
@@ -41,4 +41,4 @@ instance PrettyPrinter obj => PrettyPrinter (Event obj) where
     display (Keyboard     ev) = "KeyEv(" <> display ev <> ")"
     display (Mouse        ev) = "MouEv(" <> display ev <> ")"
     display (NodeSearcher ev) = "NoSEv(" <> display ev <> ")"
-    display (WebSocket    ev) = "WSEv("  <> display ev <> ")"
+    display (Backend      ev) = "BacEv(" <> display ev <> ")"

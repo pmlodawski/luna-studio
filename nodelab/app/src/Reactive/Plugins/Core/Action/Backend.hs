@@ -1,25 +1,25 @@
-module Reactive.Plugins.Core.Action.WSConnection where
+module Reactive.Plugins.Core.Action.Backend where
 
 import           Utils.PreludePlus
 import           Reactive.Plugins.Core.Action.Action
 import           Event.Event
 import           Object.Node
-import           BatchConnector.Connection (WSMessage)
-import qualified Event.WebSocket as WSEvent
+import           BatchConnector.Connection (WebMessage)
+import qualified Event.Backend as Backend
 
-data Action = MessageAction { _event   :: WSMessage }
+data Action = MessageAction { _msg   :: WebMessage }
             | OpenedAction
             | ApplyUpdates  { _actions :: [IO ()] }
 
 makeLenses ''Action
 
 instance PrettyPrinter Action where
-    display _ = "WebSocketAction"
+    display _ = "BackendAction"
 
 toAction :: Event Node -> Maybe Action
-toAction (WebSocket event) = Just $ case event of
-    WSEvent.Message msg -> MessageAction msg
-    WSEvent.Opened      -> OpenedAction
+toAction (Backend event) = Just $ case event of
+    Backend.Message msg -> MessageAction msg
+    Backend.Opened      -> OpenedAction
 toAction _                 = Nothing
 
 instance ActionStateUpdater Action where

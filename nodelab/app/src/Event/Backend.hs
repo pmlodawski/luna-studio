@@ -1,9 +1,9 @@
-module Event.WebSocket where
+module Event.Backend where
 
 import Utils.PreludePlus
-import BatchConnector.Connection (WSMessage)
+import BatchConnector.Connection (WebMessage)
 
-data Event = Message { _message :: WSMessage }
+data Event = Message { _message :: WebMessage }
            | Opened
              deriving (Show, Typeable)
 
