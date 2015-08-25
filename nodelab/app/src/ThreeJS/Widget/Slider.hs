@@ -63,7 +63,6 @@ buildValueLabel s = do
 
 buildSlider :: (Model.IsSlider a) => Model.Slider a -> IO Slider
 buildSlider widget = do
-    let bid  = objectId widget
     let pos  = widget ^. Model.pos
     let size = widget ^. Model.size
 
