@@ -38,6 +38,7 @@ import           JS.Bindings (setCursor)
 import           ThreeJS.Uniform (Uniform(..), UniformMap(..), toUniform)
 import qualified ThreeJS.Uniform as Uniform
 import qualified ThreeJS.Widget.Slider  as Slider
+import           ThreeJS.Widget.Common
 
 
 newtype Number = Number { unNumber :: JSObject.Object }
@@ -80,7 +81,7 @@ buildNumber s = do
     focus     <- toUniform (0 :: Int)
 
     label <- do
-        (mesh, width) <-  Slider.buildLabel (s ^. WB.label)
+        (mesh, width) <-  buildLabel 1.0 AlignLeft (s ^. WB.label)
         position      <-  position mesh
         position   `setY` (5.0 + size ^. y / 2.0)
         position   `setX` 4.0
@@ -91,10 +92,11 @@ buildNumber s = do
         let (vs, fs) = loadShaders "slider"
         uniforms  <- Uniform.buildUniformMap
         sliderPos <- toUniform (0 :: Double)
-        sizeU     <- buildVector2 (size ^. x) (size ^. y) >>= toUniform
+        sizeU     <- toUniform size
         objectId  <- buildVector3 ((fromIntegral $ bid `mod` 256) / 255.0) ((fromIntegral $ bid `div` 256) / 255.0) 0.0 >>= toUniform
-        geom      <- buildPlaneGeometry 1.0 1.0
-        Geometry.translate geom 0.5 0.5 0.0
+
+        geom      <- buildNormalizedPlaneGeometry
+
         material <- buildShaderMaterial vs fs True NormalBlending DoubleSide
         setUniforms material [ (Size     , sizeU     )
                              , (ObjectId , objectId  )
@@ -102,9 +104,8 @@ buildNumber s = do
                              , (Focus    , focus     )
                              ]
         mesh     <- buildMesh geom material
-        s        <- scale mesh
-        s     `setX` (size ^. x)
-        s     `setY` (size ^. y)
+        scaleBy size mesh
+
         return mesh
 
     valueLabel <- buildValueLabel s

@@ -39,12 +39,19 @@ foreign import javascript unsafe "$1.scale"
 moveTo :: Vector2 Double -> Mesh -> IO ()
 moveTo pos mesh = do
     p <- position mesh
-    p `setY` (pos ^. x)
-    p `setX` (pos ^. y)
+    p `setX` (pos ^. x)
+    p `setY` (pos ^. y)
 
-scaleBy :: Double -> Mesh -> IO ()
+moveBy :: Vector2 Double -> Mesh -> IO ()
+moveBy pos mesh = do
+    p <- position mesh
+    p `addX` (pos ^. x)
+    p `addY` (pos ^. y)
+
+
+scaleBy :: Vector2 Double -> Mesh -> IO ()
 scaleBy factor mesh = do
     s <- scale mesh
-    s `setX` factor
-    s `setY` factor
+    s `setX` (factor ^. x)
+    s `setY` (factor ^. y)
 

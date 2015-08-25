@@ -81,19 +81,18 @@ buildToggle w = do
 
     background <- do
         let (vs, fs) = loadShaders "toggle"
-        sizeU     <- buildVector2 (size ^. x) (size ^. y) >>= toUniform
+        sizeU     <- toUniform size
         objectId  <- buildVector3 ((fromIntegral $ oid `mod` 256) / 255.0) ((fromIntegral $ oid `div` 256) / 255.0) 0.0 >>= toUniform
-        geom      <- buildPlaneGeometry 1.0 1.0
-        Geometry.translate geom 0.5 0.5 0.0
+        geom      <- buildNormalizedPlaneGeometry
+
         material <- buildShaderMaterial vs fs True NormalBlending DoubleSide
         setUniforms material [ (Size     , sizeU    )
                              , (ObjectId , objectId )
                              , (Value    , value    )
                              ]
         mesh     <- buildMesh geom material
-        s        <- scale mesh
-        s     `setX` (size ^. x)
-        s     `setY` (size ^. y)
+        scaleBy size mesh
+
         return mesh
 
 

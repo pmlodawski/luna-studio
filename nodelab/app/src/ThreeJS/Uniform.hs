@@ -4,6 +4,7 @@
 module ThreeJS.Uniform where
 
 import           Utils.PreludePlus
+import           Utils.Vector
 import qualified GHCJS.Prim.Internal.Build as Build
 
 import           GHCJS.Foreign
@@ -60,20 +61,19 @@ setValue o v = JSObject.setProp (JSString.pack "value") v (unUniform o)
 
 class ToUniform a b | a -> b where
     toUniform      :: a -> IO Uniform
-    toUniformValue :: a -> JSRef b
 
 instance ToUniform Int Int where
     toUniform      a = buildUniform "i"  (toJSInt a)
-    toUniformValue a = (toJSInt a)
 instance ToUniform Double Double where
     toUniform      a = buildUniform "f"  (toJSDouble a)
-    toUniformValue a = (toJSDouble a)
 instance ToUniform (JSRef JSVector2) JSVector2 where
     toUniform      a = buildUniform "v2" a
-    toUniformValue a = a
+instance ToUniform (Vector2 Double) JSVector2 where
+    toUniform      a = do
+        vec <- buildVector2 (a ^. x) (a ^.y)
+        buildUniform "v2" vec
+
 instance ToUniform (JSRef JSVector3) JSVector3 where
     toUniform      a = buildUniform "v3" a
-    toUniformValue a = a
 instance ToUniform (JSRef JSVector4) JSVector4 where
     toUniform      a = buildUniform "v4" a
-    toUniformValue a = a

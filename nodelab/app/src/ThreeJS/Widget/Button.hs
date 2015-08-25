@@ -72,10 +72,11 @@ buildButton (WB.Button bid label state pos size) = do
     background <- do
         let (vs, fs) = loadShaders "button"
         color    <- buildVector4 1.0 0.0 1.0 1.0 >>= toUniform
-        sizeU    <- buildVector2 (size ^. x) (size ^. y) >>= toUniform
+        sizeU    <- toUniform size
         objectId <- buildVector3 ((fromIntegral $ bid `mod` 256) / 255.0) ((fromIntegral $ bid `div` 256) / 255.0) 0.0 >>= toUniform
-        geom     <- buildPlaneGeometry 1.0 1.0
-        Geometry.translate geom 0.5 0.5 0.0
+
+        geom      <- buildNormalizedPlaneGeometry
+
         material <- buildShaderMaterial vs fs True NormalBlending DoubleSide
         setUniforms material [ (Color    , color    )
                              , (Size     , sizeU    )
@@ -83,9 +84,9 @@ buildButton (WB.Button bid label state pos size) = do
                              , (ObjectId , objectId )
                              ]
         mesh     <- buildMesh geom material
-        s        <- scale mesh
-        s     `setX` (size ^. x)
-        s     `setY` (size ^. y)
+
+        scaleBy size mesh
+
         return mesh
 
     label <- do

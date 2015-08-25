@@ -37,6 +37,7 @@ import           Utils.CtxDynamic
 import           JS.Bindings (setCursor)
 import           ThreeJS.Uniform (Uniform(..), UniformMap(..), toUniform)
 import qualified ThreeJS.Uniform as Uniform
+import           ThreeJS.Widget.Common
 import           Object.UITypes
 
 
@@ -53,18 +54,18 @@ instance Registry.UIWidget Slider where
     unwrapWidget = unSlider
 
 instance Registry.UIWidgetBinding (WB.Slider a) Slider
-
-buildLabel text = do
-    material <- getTextHUDMaterial
-    geom     <- buildTextGeometry text
-    mesh     <- buildMesh geom material
-    s <- scale mesh
-    s `setX` Config.fontSize
-    s `setY` Config.fontSize
-    p <- position mesh
-    p `setY` (4.0 + 10.0)
-    let width = Config.fontSize * (calculateTextWidth text)
-    return (mesh, width)
+--
+-- buildLabel text = do
+--     material <- getTextHUDMaterial
+--     geom     <- buildTextGeometry text
+--     mesh     <- buildMesh geom material
+--     s <- scale mesh
+--     s `setX` Config.fontSize
+--     s `setY` Config.fontSize
+--     p <- position mesh
+--     p `setY` (4.0 + 10.0)
+--     let width = Config.fontSize * (calculateTextWidth text)
+--     return (mesh, width)
 
 buildValueLabel w = do
     let sliderWidth = w ^. WB.size ^. x
@@ -94,31 +95,28 @@ buildSlider s = do
     focus     <- toUniform (0 :: Int)
 
     label <- do
-        (mesh, width) <-  buildLabel (s ^. WB.label)
-        position      <-  position mesh
-        position   `setY` (5.0 + size ^. y / 2.0)
-        position   `setX` 4.0
-        position   `setZ` 0.001
+        (mesh, width) <- buildLabel 1.0 AlignLeft (s ^. WB.label)
+        moveBy (Vector2 4.0 (5.0 + size ^. y / 2.0)) mesh
         return mesh
 
     background <- do
         let (vs, fs) = loadShaders "slider"
-        sizeU     <- buildVector2 (size ^. x) (size ^. y) >>= toUniform
-        objectId  <- buildVector3 ((fromIntegral $ bid `mod` 256) / 255.0) ((fromIntegral $ bid `div` 256) / 255.0) 0.0 >>= toUniform
-        geom      <- buildPlaneGeometry 1.0 1.0
-        Geometry.translate geom 0.5 0.5 0.0
+        sizeU     <- toUniform size
+        objectId  <- objectIdToUniform $ objectId s
 
-        material <- buildShaderMaterial vs fs True NormalBlending DoubleSide
+        geom      <- buildNormalizedPlaneGeometry
+        material  <- buildShaderMaterial vs fs True NormalBlending DoubleSide
+
         setUniforms material [ (Size     , sizeU     )
                              , (ObjectId , objectId  )
                              , (Value    , sliderPos )
                              , (Focus    , focus     )
                              ]
 
-        mesh     <- buildMesh geom material
-        s        <- scale mesh
-        s     `setX` (size ^. x)
-        s     `setY` (size ^. y)
+        mesh      <- buildMesh geom material
+        scaleBy size mesh
+        pos <- position mesh
+        pos `setZ` (-0.0001)
         return mesh
 
     valueLabel <- buildValueLabel s
@@ -127,9 +125,7 @@ buildSlider s = do
     group `add` label
     group `add` valueLabel
 
-    p <- (mesh group) >>= position
-    p `setX` (pos ^. x)
-    p `setY` (pos ^. y)
+    mesh group >>= moveTo pos
 
     uniforms <- JSObject.create
     JSObject.setProp "value"    (JSObject.getJSRef $ unUniform sliderPos) uniforms

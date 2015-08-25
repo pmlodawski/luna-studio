@@ -38,6 +38,11 @@ foreign import javascript unsafe "$1.y = $2" setY :: JSRef a -> Double -> IO ()
 foreign import javascript unsafe "$1.z = $2" setZ :: JSRef a -> Double -> IO ()
 foreign import javascript unsafe "$1.a = $2" setA :: JSRef a -> Double -> IO ()
 
+foreign import javascript unsafe "$1.x += $2" addX :: JSRef a -> Double -> IO ()
+foreign import javascript unsafe "$1.y += $2" addY :: JSRef a -> Double -> IO ()
+foreign import javascript unsafe "$1.z += $2" addZ :: JSRef a -> Double -> IO ()
+foreign import javascript unsafe "$1.a += $2" addA :: JSRef a -> Double -> IO ()
+
 class Geometry a
 class IsMaterial a where material :: a -> Material
 
