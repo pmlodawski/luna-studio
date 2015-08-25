@@ -26,6 +26,7 @@ import Luna.Syntax.AST
 import Luna.Syntax.Layer.Typed
 import Luna.Syntax.Layer.Labeled
 
+import System.Platform
 import System.Process (createProcess, shell)
 
 toGraphViz :: _ => HomoGraph ArcPtr a -> DotGraph Int
@@ -67,8 +68,17 @@ instance t ~ Mu (Ref Int a) => GenEdges (Term t) where
 class Displayable m a where
     display :: a -> m ()
 
+class OpenPictureUtility p where
+    openPictureUtility :: p -> String
+
+instance OpenPictureUtility Darwin  where openPictureUtility = const "open"
+instance OpenPictureUtility Linux   where openPictureUtility = const "xdg-open"
+
+openPicture picture = liftIO . createProcess . shell $ openPictureUtility platform <> " " <> picture
+
 instance (MonadIO m, Ord a, PrintDot a) => Displayable m (DotGraph a) where
     display gv = do
-        liftIO $ runGraphviz gv Png "/tmp/out.png"
-        liftIO $ createProcess $ shell "open /tmp/out.png"
+        let picture = "/tmp/out.png"
+        liftIO $ runGraphviz gv Png picture
+        openPicture picture
         return ()
