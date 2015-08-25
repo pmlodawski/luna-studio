@@ -7,10 +7,13 @@ import           Utils.PreludePlus
 import           Data.Repr
 import           Control.Monad.State
 
-import           Luna.Syntax.Graph.Builder.State hiding (get, put)
-import           Luna.Syntax.Graph.Builder
-import           Luna.Syntax.Graph
-import           Luna.Syntax.Term
+import           Luna.Syntax.Builder.Graph hiding (get, put)
+import           Luna.Syntax.Builder
+
+import Luna.Syntax.Layer.Typed
+import Luna.Syntax.Layer.Labeled
+import Luna.Syntax.AST.Term
+import Luna.Syntax.AST.Decl
 
 import           Typechecker.Typechecker
 
@@ -34,6 +37,18 @@ test2 = runIdentity $ flip evalStateT def $ flip execFunctionBuilderT def $ do
     y <- withMeta (Meta 4 "d") $ x @$ [arg a]
     return ()
 
+
+nytst2f :: RefFunctionGraphMeta
+nytst2f = flip runFunctionBuilderState def $ do
+    v1 <- var "foo"
+    v2 <- var "bar"
+    s  <- star
+    a  <- v1 @. "x"
+    x  <- v1 @$ [arg v2]
+    y  <- x @. "y"
+    return v1
+
+
 varA :: StateGraphMeta -> RefFunctionGraphMeta
 varA bldrState = flip runFunctionBuilderState bldrState $
     withMeta (Meta 1 "a") $ var "a"
@@ -50,22 +65,25 @@ funA :: GraphRefMeta -> GraphRefMeta -> GraphRefMeta -> StateGraphMeta -> RefFun
 funA rf rv1 rv2 bldrState = flip runFunctionBuilderState bldrState $
     withMeta (Meta 4 "d") $ rf @$ [arg rv1, arg rv2]
 
-funB :: GraphRefMeta -> [ArgRef (GraphBuilderT GraphMeta (StateT Meta Identity)) (Label Meta) Term] -> StateGraphMeta -> RefFunctionGraphMeta
-funB rf args bldrState = flip runFunctionBuilderState bldrState $
-    withMeta (Meta 4 "d") $ rf @$ args
+-- funB :: GraphRefMeta -> _ -> StateGraphMeta -> RefFunctionGraphMeta
+-- funB rf args bldrState = flip runFunctionBuilderState bldrState $
+--     withMeta (Meta 4 "d") $ rf @$ args
+-- -- example: (rv4, e) = funB rf1 [arg rv1, arg rv2] $ rebuild d
 
 
 -- TODO: map id -> ref (GraphRefMeta)
 
+rebuild :: Function g -> BldrState g
+rebuild f = BldrState [] $ f ^. body
+
 main :: IO ()
 main = do
     let (rv1, a) = varA def
-        (rv2, b) = varB $ rebuild a
+        (rv2, b) = varB (rebuild a)
         (rf1, c) = accA rv1 $ rebuild b
         (rv3, d) = funA rf1 rv1 rv2 $ rebuild c
-        (rv4, e) = funB rf1 [arg rv1, arg rv2] $ rebuild d
     putStrLn "Typeckecker test:"
-    putStrLn $ repr e
+    putStrLn $ repr d
     -- putStrLn $ show rv1
     -- putStrLn $ show rv2
     -- putStrLn $ show rf1

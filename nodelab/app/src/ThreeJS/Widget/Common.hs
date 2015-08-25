@@ -32,20 +32,51 @@ import           Utils.Vector
 import           ThreeJS.Registry
 import qualified Object.Widget.Slider as WB
 import           Object.Widget
+import           Object.UITypes
 import           GHCJS.Prim
 import           Utils.CtxDynamic
 import           ThreeJS.Uniform (Uniform(..), UniformMap(..), toUniform)
 import qualified ThreeJS.Uniform as Uniform
 
-data TextAlignment = Left | Center | Right deriving (Show, Eq)
+data TextAlignment = AlignLeft | AlignCenter | AlignRight deriving (Show, Eq)
 
-buildLabel :: FontSize -> TextAlignment -> Text -> IO Mesh
+buildLabel :: Double -> TextAlignment -> Text -> IO (Mesh, Double)
 buildLabel fontSize align text = do
     let width = Config.fontSize * fontSize * (calculateTextWidth text)
     material <- getTextHUDMaterial
     geom     <- buildTextGeometry text
     mesh     <- buildMesh geom material
-    scaleBy (Config.fontSize * fontSize) mesh
-    moveTo (Vector2 (5.0 + w ^. WB.size ^. y / 2.0) (sliderWidth - width - 5.0)) mesh
+    scaleBy (pure $ Config.fontSize * fontSize) mesh
+    let offsetX = (case align of
+                    AlignLeft   ->  0.0
+                    AlignCenter ->  width / 2.0
+                    AlignRight  -> -width)
+    moveBy (Vector2 offsetX 0.0) mesh
 
+    return (mesh, width)
+
+objectIdToUniform :: WidgetId -> IO Uniform
+objectIdToUniform oid = buildVector3 ((fromIntegral $ oid `mod` 256) / 255.0) ((fromIntegral $ oid `div` 256) / 255.0) 0.0 >>= toUniform
+-- TODO: support > 2^16 ids
+
+data GenericUniforms = Size | ObjectId deriving (Show, Eq, Enum)
+
+buildBackground :: (Enum a, Show a, IsDisplayObject b) => Text -> b -> [(a, Uniform)] -> IO Mesh
+buildBackground shader widget uniforms = do
+    let (vs, fs) = loadShaders shader
+    sizeU     <- toUniform $ objectSize widget
+    objectId  <- objectIdToUniform $ objectId widget
+
+    geom      <- buildNormalizedPlaneGeometry
+    material  <- buildShaderMaterial vs fs True NormalBlending DoubleSide
+
+    setUniforms material [ (Size     , sizeU     )
+                         , (ObjectId , objectId  )
+                         ]
+    setUniforms material uniforms
+
+    mesh      <- buildMesh geom material
+    scaleBy (objectSize widget) mesh
+    pos       <- position mesh
+    pos `setZ` (-0.0001)
     return mesh

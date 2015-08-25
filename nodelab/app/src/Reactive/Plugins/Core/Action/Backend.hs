@@ -1,11 +1,14 @@
 module Reactive.Plugins.Core.Action.Backend where
 
-import           Utils.PreludePlus
-import           Reactive.Plugins.Core.Action.Action
+import qualified Event.Backend as Backend
 import           Event.Event
 import           Object.Node
-import           BatchConnector.Connection (WebMessage)
-import qualified Event.Backend as Backend
+import           Utils.PreludePlus
+import           BatchConnector.Connection
+import           BatchConnector.Commands
+import           BatchConnector.Updates
+import           Batch.Project
+import           Reactive.Plugins.Core.Action.Action
 
 data Action = MessageAction { _msg   :: WebMessage }
             | OpenedAction
@@ -23,8 +26,25 @@ toAction (Backend event) = Just $ case event of
 toAction _                 = Nothing
 
 instance ActionStateUpdater Action where
-    execSt (MessageAction msg) = ActionUI $ ApplyUpdates [print msg]
-    execSt OpenedAction        = ActionUI $ ApplyUpdates [putStrLn "Connection Opened!"]
+    execSt (MessageAction msg) = ActionUI $ ApplyUpdates [ handleMessage msg ]
+    execSt OpenedAction        = ActionUI $ ApplyUpdates [ putStrLn "Connection Opened!"
+                                                         , sendMessage listProjects
+                                                         ]
+
+handleMessage :: WebMessage -> IO ()
+handleMessage (WebMessage topic bytes) = case topic of
+    "project.list.status"   -> ensureProjectExists $ parseProjectsList bytes
+    "project.create.update" -> print $ parseProjectCreateUpdate bytes
+    _                       -> return ()
+
+ensureProjectExists :: Maybe [Project] -> IO ()
+ensureProjectExists Nothing         = putStrLn "Message parse error!"
+ensureProjectExists (Just projects) = if   null projects
+                                      then createFirstProject >> putStrLn "Creating project!"
+                                      else putStrLn "Projects exist!" >> print projects
+
+createFirstProject :: IO ()
+createFirstProject  = sendMessage $ createProject "myFirstProject" "some/path"
 
 instance ActionUIUpdater Action where
     updateUI (WithState (ApplyUpdates updates) state) = sequence_ updates

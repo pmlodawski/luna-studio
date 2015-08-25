@@ -4,6 +4,7 @@
 module ThreeJS.Uniform where
 
 import           Utils.PreludePlus
+import           Utils.Vector
 import qualified GHCJS.Prim.Internal.Build as Build
 
 import           GHCJS.Foreign
@@ -20,11 +21,10 @@ import qualified Data.Text.Lazy as Text
 import           Data.Text.Lazy (Text)
 import qualified JavaScript.Object as JSObject
 
-import Unsafe.Coerce
-
-import GHCJS.Prim
-import ThreeJS.Converters
-import ThreeJS.Types
+import           GHCJS.Prim
+import           ThreeJS.Converters
+import           ThreeJS.Types
+import qualified Data.Char as Char
 
 
 newtype UniformMap = UniformMap { unUniformMap :: JSObject.Object }
@@ -39,8 +39,13 @@ buildUniformMap = do
 foreign import javascript unsafe "for(var k in $$.commonUniforms) {$1[k] = $$.commonUniforms[k]; };" copyCommonUniforms :: JSRef a -> IO ()
 
 
-setUniform :: UniformMap -> Text -> Uniform -> IO ()
-setUniform m a v = JSObject.setProp (lazyTextToJSString a) (JSObject.getJSRef $ unUniform v) (unUniformMap m)
+locaseFirst :: String -> String
+locaseFirst (head:tail) = Char.toLower head : tail
+locaseFirst [] = []
+
+
+setUniform :: (Enum a, Show a) => UniformMap -> a -> Uniform -> IO ()
+setUniform m a v = JSObject.setProp (JSString.pack $ locaseFirst $ show a) (JSObject.getJSRef $ unUniform v) (unUniformMap m)
 
 
 buildUniform :: Text -> JSRef a -> IO Uniform
@@ -54,22 +59,22 @@ buildUniform t v = do
 setValue :: Uniform -> JSRef a -> IO ()
 setValue o v = JSObject.setProp (JSString.pack "value") v (unUniform o)
 
+
 class ToUniform a b | a -> b where
     toUniform      :: a -> IO Uniform
-    toUniformValue :: a -> JSRef b
 
 instance ToUniform Int Int where
     toUniform      a = buildUniform "i"  (toJSInt a)
-    toUniformValue a = (toJSInt a)
 instance ToUniform Double Double where
     toUniform      a = buildUniform "f"  (toJSDouble a)
-    toUniformValue a = (toJSDouble a)
 instance ToUniform (JSRef JSVector2) JSVector2 where
     toUniform      a = buildUniform "v2" a
-    toUniformValue a = a
+instance ToUniform (Vector2 Double) JSVector2 where
+    toUniform      a = do
+        vec <- buildVector2 (a ^. x) (a ^.y)
+        buildUniform "v2" vec
+
 instance ToUniform (JSRef JSVector3) JSVector3 where
     toUniform      a = buildUniform "v3" a
-    toUniformValue a = a
 instance ToUniform (JSRef JSVector4) JSVector4 where
     toUniform      a = buildUniform "v4" a
-    toUniformValue a = a

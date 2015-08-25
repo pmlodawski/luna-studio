@@ -19,11 +19,26 @@ import           Data.Text.Lazy (Text)
 import           ThreeJS.Types
 import           ThreeJS.Uniform (Uniform(..), UniformMap(..))
 import qualified ThreeJS.Uniform as Uniform
+import qualified JavaScript.Object as JSObject
 
 
-data Side = FrontSide | BackSide | DoubleSide deriving (Show, Eq, Enum)
-data Shading = NoShading | FlatShading | SmoothShading deriving (Show, Eq, Enum)
-data Blending = NoBlending | NormalBlending | AdditiveBlending | SubtractiveBlending | MultiplyBlending | CustomBlending deriving (Show, Eq, Enum)
+data Side     = FrontSide
+              | BackSide
+              | DoubleSide
+              deriving (Show, Eq, Enum)
+
+data Shading  = NoShading
+              | FlatShading
+              | SmoothShading
+              deriving (Show, Eq, Enum)
+
+data Blending = NoBlending
+              | NormalBlending
+              | AdditiveBlending
+              | SubtractiveBlending
+              | MultiplyBlending
+              | CustomBlending
+              deriving (Show, Eq, Enum)
 
 data ShaderMaterial = ShaderMaterial Material
 
@@ -31,12 +46,19 @@ instance IsMaterial ShaderMaterial where material (ShaderMaterial m) = m
 
 foreign import javascript unsafe "new THREE.ShaderMaterial({uniforms: $1, vertexShader: $2, fragmentShader: $3, transparent: $4, blending: $5, side: $6})"
     buildShaderMaterialJS :: UniformMap -> JSString -> JSString -> Bool -> Int -> Int  -> IO Material
+foreign import javascript unsafe "$1.uniforms"
+    readUniformsJS :: Material -> IO (JSRef ())
 
-buildShaderMaterial :: UniformMap -> VertexShader -> FragmentShader -> Bool -> Blending -> Side -> IO ShaderMaterial
-buildShaderMaterial u (VertexShader v) (FragmentShader f) t b s = do
-    buildShaderMaterialJS u (lazyTextToJSString v) (lazyTextToJSString f) t (fromEnum b) (fromEnum s) >>= return . ShaderMaterial
+buildShaderMaterial :: VertexShader -> FragmentShader -> Bool -> Blending -> Side -> IO ShaderMaterial
+buildShaderMaterial (VertexShader v) (FragmentShader f) t b s = do
+    uniforms <- Uniform.buildUniformMap
+    buildShaderMaterialJS uniforms (lazyTextToJSString v) (lazyTextToJSString f) t (fromEnum b) (fromEnum s) >>= return . ShaderMaterial
 
 
+setUniforms :: (Enum a, Show a) => ShaderMaterial -> [(a, Uniform)] -> IO ()
+setUniforms (ShaderMaterial m) uniforms = do
+    u <- readUniformsJS m >>= return . UniformMap . JSObject.fromJSRef
+    mapM_ (\(a, v) -> Uniform.setUniform u a v) uniforms
 
 data   VertexShader =   VertexShader Text
 data FragmentShader = FragmentShader Text

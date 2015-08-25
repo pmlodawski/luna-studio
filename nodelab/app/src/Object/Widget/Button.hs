@@ -22,3 +22,5 @@ makeLenses ''Button
 
 instance IsDisplayObject Button where
     objectId       b = b ^. refId
+    objectPosition b = b ^. pos
+    objectSize     b = b ^. size

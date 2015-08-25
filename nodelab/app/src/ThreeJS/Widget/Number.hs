@@ -30,7 +30,7 @@ import qualified ThreeJS.Geometry as Geometry
 import           JS.Config as Config
 import           Utils.Vector
 import           ThreeJS.Registry as Registry
-import qualified Object.Widget.Number as WB
+import qualified Object.Widget.Number as Model
 import           Object.Widget
 import           GHCJS.Prim
 import           Utils.CtxDynamic
@@ -38,89 +38,63 @@ import           JS.Bindings (setCursor)
 import           ThreeJS.Uniform (Uniform(..), UniformMap(..), toUniform)
 import qualified ThreeJS.Uniform as Uniform
 import qualified ThreeJS.Widget.Slider  as Slider
+import           ThreeJS.Widget.Common
 
 
 newtype Number = Number { unNumber :: JSObject.Object }
 
+data Uniforms = Size | ObjectId | Value | Focus deriving (Show, Enum, Eq)
+
 instance Object Number where
     mesh b = (JSObject.getProp "mesh" $ unNumber b) :: IO Mesh
 
-instance Registry.UIWidget (WB.Number a) Number where
-    lookup   = Registry.genericLookup     Number
-    register = Registry.genericRegister unNumber
+instance Registry.UIWidget Number where
+    wrapWidget = Number
+    unwrapWidget = unNumber
 
-buildValueLabel w = do
-    let sliderWidth = w ^. WB.size ^. x
-    let text =  Text.pack $ show $ w ^. WB.value
-    material <- getTextHUDMaterial
-    geom     <- buildTextGeometry text
-    mesh     <- buildMesh geom material
-    s <- scale mesh
-    s `setX` (Config.fontSize * 0.8)
-    s `setY` (Config.fontSize * 0.8)
+instance Registry.UIWidgetBinding (Model.Number a) Number
 
-    let width = Config.fontSize * 0.8 * (calculateTextWidth text)
-    p <- position mesh
-    p `setY` (5.0 + w ^. WB.size ^. y / 2.0)
-    p `setX` (sliderWidth - width - 5.0)
-    p `setZ` 0.001
+buildValueLabel :: (Show a) => Model.Number a -> IO Mesh
+buildValueLabel s = do
+    (mesh, width) <- buildLabel 0.8 AlignRight (Text.pack $ show s)
+    moveBy (Vector2 (s ^. Model.size . x - 5.0) (5.0 + s ^. Model.size . y / 2.0)) mesh
     return mesh
 
-buildNumber :: (Show a) => WB.Number a -> IO Number
-buildNumber s = do
-    let bid  = objectId s
-    let pos  = s ^. WB.pos
-    let size = s ^. WB.size
+buildNumber :: (Show a) => Model.Number a -> IO Number
+buildNumber widget = do
+    let pos  = widget ^. Model.pos
+    let size = widget ^. Model.size
 
     group     <- buildGroup
     focus     <- toUniform (0 :: Int)
 
     label <- do
-        (mesh, width) <-  Slider.buildLabel (s ^. WB.label)
+        (mesh, width) <-  buildLabel 1.0 AlignLeft (widget ^. Model.label)
         position      <-  position mesh
         position   `setY` (5.0 + size ^. y / 2.0)
         position   `setX` 4.0
         position   `setZ` 0.001
         return mesh
 
-    background <- do
-        let (vs, fs) = loadShaders "slider"
-        uniforms  <- Uniform.buildUniformMap
-        sliderPos <- toUniform (0 :: Double)
-        sizeU     <- buildVector2 (size ^. x) (size ^. y) >>= toUniform
-        objectId  <- buildVector3 ((fromIntegral $ bid `mod` 256) / 255.0) ((fromIntegral $ bid `div` 256) / 255.0) 0.0 >>= toUniform
-        geom      <- buildPlaneGeometry 1.0 1.0
-        Uniform.setUniform uniforms "size" sizeU
-        Uniform.setUniform uniforms "objectId" objectId
-        Uniform.setUniform uniforms "value" sliderPos
-        Uniform.setUniform uniforms "focus" focus
-        Geometry.translate geom 0.5 0.5 0.0
-        material <- buildShaderMaterial uniforms vs fs True NormalBlending DoubleSide
-        mesh     <- buildMesh geom material
-        s        <- scale mesh
-        s     `setX` (size ^. x)
-        s     `setY` (size ^. y)
-        return mesh
+    sliderPos <- toUniform (0.0 :: Double)
+    background <- buildBackground "slider" widget [ (Value    , sliderPos )
+                                                  , (Focus    , focus     )
+                                                  ]
 
-    valueLabel <- buildValueLabel s
+    valueLabel <- buildValueLabel widget
 
     group `add` background
     group `add` label
     group `add` valueLabel
 
-    p <- (mesh group) >>= position
-    p `setX` (pos ^. x)
-    p `setY` (pos ^. y)
+    mesh   <- mesh group
+    moveTo pos mesh
 
-    uniforms <- JSObject.create
-    JSObject.setProp "focus"    (JSObject.getJSRef $ unUniform focus) uniforms
+    (number, uniforms) <- buildSkeleton mesh
+    Uniform.setUniform uniforms Focus focus
 
-    number <- JSObject.create
+    JSObject.setProp "label"      label      (unNumber number)
+    JSObject.setProp "valueLabel" valueLabel (unNumber number)
+    JSObject.setProp "background" background (unNumber number)
 
-    JSObject.setProp "mesh"       (unGroup group)              number
-    JSObject.setProp "label"      label                        number
-    JSObject.setProp "valueLabel" valueLabel                   number
-    JSObject.setProp "background" background                   number
-    JSObject.setProp "uniforms"   (JSObject.getJSRef uniforms) number
-
-    return $ Number number
+    return number

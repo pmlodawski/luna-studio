@@ -39,9 +39,15 @@ instance DisplayObjectCtx a => DisplayObjectClass a
 type WidgetUIUpdate = Maybe (IO ())
 type WidgetUpdate   = (WidgetUIUpdate, DisplayObject)
 
-class IsDisplayObject a where objectId :: a -> WidgetId
+class IsDisplayObject a where
+    objectId :: a -> WidgetId
+    objectPosition :: a -> Vector2 Double
+    objectSize     :: a -> Vector2 Double
 
-instance IsDisplayObject DisplayObject where objectId (CtxDynamic _ a) = objectId a
+instance IsDisplayObject DisplayObject where
+    objectId       (CtxDynamic _ a) = objectId       a
+    objectPosition (CtxDynamic _ a) = objectPosition a
+    objectSize     (CtxDynamic _ a) = objectSize     a
 
 type Position = Vector2 Double
 

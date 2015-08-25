@@ -10,7 +10,7 @@ import           Utils.Vector
 foreign import javascript unsafe "new THREE.Mesh($1, $2)"
     buildMeshJS :: JSRef a -> JSRef b -> IO Mesh
 
-buildMesh ::  (Geometry a, IsMaterial b) => JSRef a -> b -> IO Mesh
+buildMesh :: (Geometry a, IsMaterial b) => JSRef a -> b -> IO Mesh
 buildMesh g m = buildMeshJS g (material m)
 
 foreign import javascript unsafe "new THREE.Group()"
@@ -21,7 +21,7 @@ foreign import javascript unsafe "new THREE.Group()"
 buildGroup :: IO Group
 buildGroup = buildGroupJS >>= return . Group
 
-foreign import javascript unsafe "$1.add($2)" addJS :: JSRef a -> JSRef b -> IO ()
+foreign import javascript unsafe "$1.add($2)"       addJS :: JSRef a -> JSRef b -> IO ()
 foreign import javascript unsafe "$1.remove($2)" removeJS :: JSRef a -> JSRef b -> IO ()
 
 instance Container Group where
@@ -39,12 +39,19 @@ foreign import javascript unsafe "$1.scale"
 moveTo :: Vector2 Double -> Mesh -> IO ()
 moveTo pos mesh = do
     p <- position mesh
-    p `setY` (pos ^. x)
-    p `setX` (pos ^. y)
+    p `setX` (pos ^. x)
+    p `setY` (pos ^. y)
 
-scaleBy :: Double -> Mesh -> IO ()
+moveBy :: Vector2 Double -> Mesh -> IO ()
+moveBy pos mesh = do
+    p <- position mesh
+    p `addX` (pos ^. x)
+    p `addY` (pos ^. y)
+
+
+scaleBy :: Vector2 Double -> Mesh -> IO ()
 scaleBy factor mesh = do
     s <- scale mesh
-    s `setX` factor
-    s `setY` factor
+    s `setX` (factor ^. x)
+    s `setY` (factor ^. y)
 

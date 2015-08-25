@@ -4,15 +4,10 @@ module Typechecker.Meta where
 
 import           Utils.PreludePlus
 
-
-import           Luna.Syntax.Graph.Builder.State (BldrState(..))
-import           Luna.Syntax.Graph.Builder
-import           Luna.Syntax.Graph
-import           Luna.Syntax.Decl
-import           Luna.Syntax.Term
+import           Luna.Syntax.Builder
+import           Luna.Syntax.Layer.Labeled
 
 import           Control.Monad.State
-import           Typechecker.Label
 
 data Meta = Meta Int String deriving (Show)
 
