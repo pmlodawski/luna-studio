@@ -13,7 +13,8 @@ import           BatchConnector.Connection
 
 createProject :: String -> String -> WebMessage
 createProject name path = WebMessage "project.create.request" $ messagePut body where
-    body = Create.Request (Just $ Utf8 $ pack name) (Utf8 $ pack path) (Attributes Seq.empty)
+    body         = Create.Request (Just $ stringToUtf8 name) (stringToUtf8 path) (Attributes Seq.empty)
+    stringToUtf8 = Utf8 . pack
 
 listProjects :: WebMessage
 listProjects  = WebMessage "project.list.request" $ messagePut List.Request

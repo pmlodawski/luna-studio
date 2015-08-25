@@ -5,7 +5,7 @@ module BatchConnector.Conversion where
 import           Utils.PreludePlus
 import           Text.ProtocolBuffers
 import           Text.ProtocolBuffers.WireMessage
-import           Text.ProtocolBuffers.Basic
+import           Text.ProtocolBuffers.Basic       (uToString)
 
 import           Batch.Project
 
@@ -16,5 +16,5 @@ class (Wire m, ReflectDescriptor m) => ProtoSerializable m n | m -> n where
 
 instance ProtoSerializable ProtoProject.Project Project where
     deserialize proj = Project (fmap uToString $ ProtoProject.name proj)
-                               (uToString $ ProtoProject.path proj)
+                               (uToString      $ ProtoProject.path proj)
                                (ProtoProject.id proj)
