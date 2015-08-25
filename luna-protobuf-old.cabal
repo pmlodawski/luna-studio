@@ -18,8 +18,7 @@ Flag Debug
 
 
 Library
-  Hs-Source-Dirs: dist/gen,
-                  src
+  Hs-Source-Dirs: src
   Other-Modules:  Paths_luna_protobuf_old
   if flag(debug)
     GHC-Options:  -csacc
@@ -29,8 +28,6 @@ Library
                   NoImplicitPrelude
 
   Exposed-modules: 
-        ,
-                   
         Luna.DEP.Data.Serialize.Proto.Library,
         Luna.DEP.Data.Serialize.Proto.Conversion.Attributes,
         Luna.DEP.Data.Serialize.Proto.Conversion.Crumb,
@@ -57,6 +54,7 @@ Library
                   flowbox-utils,
                   luna-core,
                   luna-distribution-old,
+                  luna-protobuf-old-gen,
                   protocol-buffers,
                   protocol-buffers-descriptor
 
