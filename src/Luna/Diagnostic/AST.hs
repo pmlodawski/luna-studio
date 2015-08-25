@@ -22,10 +22,11 @@ import Luna.Syntax.AST.Term
 import Luna.Syntax.Builder.Graph
 import Luna.Syntax.AST
 import Luna.Syntax.Layer.Typed
+import Luna.Syntax.Layer.Labeled
 
 import System.Process (createProcess, shell)
 
-toGraphViz :: HomoGraph ArcPtr (Typed Term) -> DotGraph Int
+toGraphViz :: (GenEdges (a (Mu (ArcPtr a))), HasAST a ast, Repr (ast (Mu (ArcPtr a)))) => HomoGraph ArcPtr a -> DotGraph Int
 toGraphViz g = DotGraph { strictGraph     = False
                         , directedGraph   = True
                         , graphID         = Nothing
@@ -48,6 +49,9 @@ toGraphViz g = DotGraph { strictGraph     = False
 
 class GenEdges a where
     genEdges :: a -> [(Int, [GV.Attribute])]
+
+instance GenEdges (a t) => GenEdges (Labeled l a t) where
+    genEdges (Labeled _ a) = genEdges a
 
 instance (t ~ Mu (Ref Int a), GenEdges (Term t)) => GenEdges (Typed Term t) where
     genEdges (Typed t a) = [(ptrIdx . fromRef . fromMu $ t, [GV.color GVC.Red])] <> genEdges a

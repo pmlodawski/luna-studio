@@ -4,12 +4,6 @@
 -- Use gencabal instead.                         --
 ---------------------------------------------------
 
----------------------------------------------------
--- This is a generated cabal configuration file. --
--- DO NOT EDIT!                                  --
--- Use gencabal instead.                         --
----------------------------------------------------
-
 Name:           luna-tc
 Version:        0.1
 Cabal-Version:  >= 1.8
@@ -51,22 +45,7 @@ Library
                   TypeOperators
                   ViewPatterns
 
-    Exposed-modules: 
-        Luna.Diagnostic.AST,
-        Luna.Syntax.AST,
-        Luna.Syntax.Builder,
-        Luna.Syntax.Layer,
-        Luna.Syntax.Name,
-        Luna.Syntax.AST.Arg,
-        Luna.Syntax.AST.Decl,
-        Luna.Syntax.AST.Lit,
-        Luna.Syntax.AST.Term,
-        Luna.Syntax.AST.Decl.Function,
-        Luna.Syntax.Builder.Graph,
-        Luna.Syntax.Builder.Star,
-        Luna.Syntax.Layer.Labeled,
-        Luna.Syntax.Layer.Typed,
-        Luna.Syntax.Name.Pool
+    Exposed-modules: `findmodules('src', '.*\.hs', exclude='System.Logging')`
 
     Build-Depends:  base,
                     ghc-prim,

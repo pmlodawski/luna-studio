@@ -23,11 +23,13 @@ import Data.Cata
 
 --- === Graph builders ===
 
+type GraphStarBuilderT s g m a = GraphBuilderT g (StarBuilderT (Maybe s) m) a
+type GraphStarBuilder  s g   a = GraphStarBuilderT s g Identity a
 
-runGraph :: GraphBuilderT g (StarBuilder (Maybe s)) a -> BldrState g -> (a, g)
+runGraph :: GraphStarBuilder s g a -> BldrState g -> (a, g)
 runGraph = runIdentity .: runGraphT
 
-runGraphT :: Monad m => GraphBuilderT g (StarBuilderT (Maybe s) m) a -> BldrState g -> m (a, g)
+runGraphT :: Monad m => GraphStarBuilderT s g m a -> BldrState g -> m (a, g)
 runGraphT g gs = flip StarBuilder.evalT Nothing $ runBuilderT g gs
 
 --- === Term builders ===
@@ -85,24 +87,21 @@ app base args = layeredASTCons =<< (App <$> toMuM base <*> (sequence . fmap sequ
 
 -- === Function ===
 
---evalFunctionBuilderT :: Monad m => GraphBuilderT g m a -> BldrState g -> m a
---execFunctionBuilderT :: Monad m => GraphBuilderT g m a -> BldrState g -> m (Function g)
---runFunctionBuilderT  :: Monad m => GraphBuilderT g m a -> BldrState g -> m (a, Function g)
+evalFunctionBuilderT :: Monad m => GraphStarBuilderT s g m a -> BldrState g -> m a
+execFunctionBuilderT :: Monad m => GraphStarBuilderT s g m a -> BldrState g -> m (Function g)
+runFunctionBuilderT  :: Monad m => GraphStarBuilderT s g m a -> BldrState g -> m (a, Function g)
 
---evalFunctionBuilderT bldr s = fst <$> runFunctionBuilderT bldr s
---execFunctionBuilderT bldr s = snd <$> runFunctionBuilderT bldr s
---runFunctionBuilderT  bldr s = do
---    (a, g) <- runGraphT bldr s
---    return $ (a, Function g)
+evalFunctionBuilderT bldr s = fst <$> runFunctionBuilderT bldr s
+execFunctionBuilderT bldr s = snd <$> runFunctionBuilderT bldr s
+runFunctionBuilderT  bldr s = do
+    (a, g) <- runGraphT bldr s
+    return $ (a, Function g)
 
 
---evalFunctionBuilder :: GraphBuilder g a -> BldrState g -> a
---execFunctionBuilder :: GraphBuilder g a -> BldrState g -> Function g
---runFunctionBuilder  :: GraphBuilder g a -> BldrState g -> (a, Function g)
+evalFunctionBuilder :: GraphStarBuilder s g a -> BldrState g -> a
+execFunctionBuilder :: GraphStarBuilder s g a -> BldrState g -> Function g
+runFunctionBuilder  :: GraphStarBuilder s g a -> BldrState g -> (a, Function g)
 
---evalFunctionBuilder = runIdentity .: evalFunctionBuilderT
---execFunctionBuilder = runIdentity .: execFunctionBuilderT
---runFunctionBuilder  = runIdentity .: runFunctionBuilderT
-
----- TODO: generalize
---rebuild f = BldrState [] $ f ^. body
+evalFunctionBuilder = runIdentity .: evalFunctionBuilderT
+execFunctionBuilder = runIdentity .: execFunctionBuilderT
+runFunctionBuilder  = runIdentity .: runFunctionBuilderT

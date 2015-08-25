@@ -64,7 +64,11 @@ import qualified Luna.Syntax.Builder.Star as StarBuilder
 import Control.Monad.Trans.Identity
 import Luna.Diagnostic.AST (toGraphViz, display)
 import Luna.Syntax.Layer.Typed
+import Luna.Syntax.Layer.Labeled
 
+
+--import Data.Text.CodeBuilder.Builder
+import Data.Text.CodeBuilder.Builder as CB
 
 -- === HomoBuilder ===
 
@@ -79,8 +83,8 @@ instance (MuBuilder a m t, t ~ t') => MuBuilder a (HomoG t m) t' where
 
 -------------------------------------------------------------
 
-nytst2 :: (Arc (Typed Term), HomoGraph ArcPtr (Typed Term))
-nytst2 = flip runGraph def  $ do
+nytst2 :: (Arc (Labeled Int (Typed Term)), HomoGraph ArcPtr (Labeled Int (Typed Term)))
+nytst2 = flip runGraph def $ do
     v1 <- var "foo"
     v2 <- var "bar"
     s  <- star
@@ -94,6 +98,16 @@ nytst3 = flip StarBuilder.eval Nothing $ runIdentityT $ do
     v1 <- var "foo"
     return v1
 
+nytst2f :: (Arc (Labeled Int (Typed Term)), Function (HomoGraph ArcPtr (Labeled Int (Typed Term))))
+nytst2f = flip runFunctionBuilder def $ do
+    v1 <- var "foo"
+    v2 <- var "bar"
+    s  <- star
+    a  <- v1 @. "x"
+    x  <- v1 @$ [arg v2]
+    y  <- x @. "y"
+    return v1
+
 main = do
     --putStrLn $ repr y
     putStrLn $ repr $ nytst2
@@ -105,5 +119,15 @@ main = do
     print gv
     display gv
     V.test
+    --print tstc
     return ()
 
+
+
+
+--data HSIndent  = HSIndent  deriving (Show)
+
+
+--runMeI = renderCode HSIndent
+
+--tstc = runMeI (CB.app "o" (CB.app "ala" "ola"))

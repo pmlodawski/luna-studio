@@ -1,8 +1,13 @@
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE TypeFamilies #-}
 
 module Luna.Syntax.Layer.Labeled where
 
 import Flowbox.Prelude
 import Luna.Syntax.Layer
+import Luna.Syntax.AST
+import Data.Variants
 
 data Labeled l a t = Labeled l (a t)
 type instance ASTOf (Labeled l a) = ASTOf a
