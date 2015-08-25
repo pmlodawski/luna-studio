@@ -4,8 +4,10 @@ import           Utils.PreludePlus
 import           Reactive.Plugins.Core.Action.Action
 import           Event.Event
 import           Object.Node
-import           BatchConnector.Connection (WebMessage)
+import           BatchConnector.Connection
+import           BatchConnector.Commands
 import qualified Event.Backend as Backend
+import           BatchConnector.Updates
 
 data Action = MessageAction { _msg   :: WebMessage }
             | OpenedAction
@@ -23,8 +25,17 @@ toAction (Backend event) = Just $ case event of
 toAction _                 = Nothing
 
 instance ActionStateUpdater Action where
-    execSt (MessageAction msg) = ActionUI $ ApplyUpdates [print msg]
-    execSt OpenedAction        = ActionUI $ ApplyUpdates [putStrLn "Connection Opened!"]
+    execSt (MessageAction msg) = ActionUI $ ApplyUpdates [ print msg
+                                                         , handleMessage msg
+                                                         ]
+    execSt OpenedAction        = ActionUI $ ApplyUpdates [ putStrLn "Connection Opened!"
+                                                         , sendMessage listProjects
+                                                         ]
+
+handleMessage :: WebMessage -> IO ()
+handleMessage (WebMessage topic bytes) = case topic of
+    "project.list.status" -> print $ parseProjectsList bytes
+    _                     -> return ()
 
 instance ActionUIUpdater Action where
     updateUI (WithState (ApplyUpdates updates) state) = sequence_ updates
