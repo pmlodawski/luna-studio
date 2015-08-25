@@ -20,11 +20,10 @@ import qualified Data.Text.Lazy as Text
 import           Data.Text.Lazy (Text)
 import qualified JavaScript.Object as JSObject
 
-import Unsafe.Coerce
-
-import GHCJS.Prim
-import ThreeJS.Converters
-import ThreeJS.Types
+import           GHCJS.Prim
+import           ThreeJS.Converters
+import           ThreeJS.Types
+import qualified Data.Char as Char
 
 
 newtype UniformMap = UniformMap { unUniformMap :: JSObject.Object }
@@ -39,8 +38,13 @@ buildUniformMap = do
 foreign import javascript unsafe "for(var k in $$.commonUniforms) {$1[k] = $$.commonUniforms[k]; };" copyCommonUniforms :: JSRef a -> IO ()
 
 
-setUniform :: UniformMap -> Text -> Uniform -> IO ()
-setUniform m a v = JSObject.setProp (lazyTextToJSString a) (JSObject.getJSRef $ unUniform v) (unUniformMap m)
+locaseFirst :: String -> String
+locaseFirst (head:tail) = Char.toLower head : tail
+locaseFirst [] = []
+
+
+setUniform :: (Enum a, Show a) => UniformMap -> a -> Uniform -> IO ()
+setUniform m a v = JSObject.setProp (JSString.pack $ locaseFirst $ show a) (JSObject.getJSRef $ unUniform v) (unUniformMap m)
 
 
 buildUniform :: Text -> JSRef a -> IO Uniform

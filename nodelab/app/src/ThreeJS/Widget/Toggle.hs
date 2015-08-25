@@ -40,12 +40,16 @@ import qualified ThreeJS.Uniform as Uniform
 
 newtype Toggle = Toggle { unToggle :: JSObject.Object }
 
+data Uniforms = Size | ObjectId | Value deriving (Show, Enum)
+
 instance Object Toggle where
     mesh b = (JSObject.getProp "mesh" $ unToggle b) :: IO Mesh
 
-instance Registry.UIWidget WB.Toggle Toggle where
-    lookup   = Registry.genericLookup     Toggle
-    register = Registry.genericRegister unToggle
+instance Registry.UIWidget Toggle where
+    wrapWidget   = Toggle
+    unwrapWidget = unToggle
+
+instance Registry.UIWidgetBinding WB.Toggle Toggle
 
 buildLabel text = do
     material <- getTextHUDMaterial
@@ -77,15 +81,15 @@ buildToggle w = do
 
     background <- do
         let (vs, fs) = loadShaders "toggle"
-        uniforms  <- Uniform.buildUniformMap
         sizeU     <- buildVector2 (size ^. x) (size ^. y) >>= toUniform
         objectId  <- buildVector3 ((fromIntegral $ oid `mod` 256) / 255.0) ((fromIntegral $ oid `div` 256) / 255.0) 0.0 >>= toUniform
         geom      <- buildPlaneGeometry 1.0 1.0
-        Uniform.setUniform uniforms "size" sizeU
-        Uniform.setUniform uniforms "objectId" objectId
-        Uniform.setUniform uniforms "value" value
         Geometry.translate geom 0.5 0.5 0.0
-        material <- buildShaderMaterial uniforms vs fs True NormalBlending DoubleSide
+        material <- buildShaderMaterial vs fs True NormalBlending DoubleSide
+        setUniforms material [ (Size     , sizeU    )
+                             , (ObjectId , objectId )
+                             , (Value    , value    )
+                             ]
         mesh     <- buildMesh geom material
         s        <- scale mesh
         s     `setX` (size ^. x)

@@ -42,12 +42,16 @@ import qualified ThreeJS.Widget.Slider  as Slider
 
 newtype Number = Number { unNumber :: JSObject.Object }
 
+data Uniforms = Size | ObjectId | Value | Focus deriving (Show, Enum, Eq)
+
 instance Object Number where
     mesh b = (JSObject.getProp "mesh" $ unNumber b) :: IO Mesh
 
-instance Registry.UIWidget (WB.Number a) Number where
-    lookup   = Registry.genericLookup     Number
-    register = Registry.genericRegister unNumber
+instance Registry.UIWidget Number where
+    wrapWidget = Number
+    unwrapWidget = unNumber
+
+instance Registry.UIWidgetBinding (WB.Number a) Number
 
 buildValueLabel w = do
     let sliderWidth = w ^. WB.size ^. x
@@ -90,12 +94,13 @@ buildNumber s = do
         sizeU     <- buildVector2 (size ^. x) (size ^. y) >>= toUniform
         objectId  <- buildVector3 ((fromIntegral $ bid `mod` 256) / 255.0) ((fromIntegral $ bid `div` 256) / 255.0) 0.0 >>= toUniform
         geom      <- buildPlaneGeometry 1.0 1.0
-        Uniform.setUniform uniforms "size" sizeU
-        Uniform.setUniform uniforms "objectId" objectId
-        Uniform.setUniform uniforms "value" sliderPos
-        Uniform.setUniform uniforms "focus" focus
         Geometry.translate geom 0.5 0.5 0.0
-        material <- buildShaderMaterial uniforms vs fs True NormalBlending DoubleSide
+        material <- buildShaderMaterial vs fs True NormalBlending DoubleSide
+        setUniforms material [ (Size     , sizeU     )
+                             , (ObjectId , objectId  )
+                             , (Value    , sliderPos )
+                             , (Focus    , focus     )
+                             ]
         mesh     <- buildMesh geom material
         s        <- scale mesh
         s     `setX` (size ^. x)

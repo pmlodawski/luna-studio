@@ -36,12 +36,16 @@ import qualified ThreeJS.Uniform as Uniform
 
 newtype Button = Button { unButton :: JSObject.Object }
 
+data Uniforms = Color | Size | State | ObjectId deriving (Show, Eq, Enum)
+
 instance Object Button where
     mesh b = (JSObject.getProp "mesh" $ unButton b) :: IO Mesh
 
-instance Registry.UIWidget WB.Button Button where
-    lookup   = Registry.genericLookup     Button
-    register = Registry.genericRegister unButton
+instance Registry.UIWidget Button where
+    wrapWidget   = Button
+    unwrapWidget = unButton
+
+instance Registry.UIWidgetBinding WB.Button Button
 
 buildLabel text = do
     material <- getTextHUDMaterial
@@ -67,17 +71,17 @@ buildButton (WB.Button bid label state pos size) = do
 
     background <- do
         let (vs, fs) = loadShaders "button"
-        uniforms <- Uniform.buildUniformMap
         color    <- buildVector4 1.0 0.0 1.0 1.0 >>= toUniform
         sizeU    <- buildVector2 (size ^. x) (size ^. y) >>= toUniform
         objectId <- buildVector3 ((fromIntegral $ bid `mod` 256) / 255.0) ((fromIntegral $ bid `div` 256) / 255.0) 0.0 >>= toUniform
         geom     <- buildPlaneGeometry 1.0 1.0
-        Uniform.setUniform uniforms "color"    color
-        Uniform.setUniform uniforms "size"     sizeU
-        Uniform.setUniform uniforms "state"    state
-        Uniform.setUniform uniforms "objectId" objectId
         Geometry.translate geom 0.5 0.5 0.0
-        material <- buildShaderMaterial uniforms vs fs True NormalBlending DoubleSide
+        material <- buildShaderMaterial vs fs True NormalBlending DoubleSide
+        setUniforms material [ (Color    , color    )
+                             , (Size     , sizeU    )
+                             , (State    , state    )
+                             , (ObjectId , objectId )
+                             ]
         mesh     <- buildMesh geom material
         s        <- scale mesh
         s     `setX` (size ^. x)

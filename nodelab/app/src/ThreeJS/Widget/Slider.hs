@@ -42,12 +42,17 @@ import           Object.UITypes
 
 newtype Slider = Slider { unSlider :: JSObject.Object }
 
+
+data Uniforms = Size | ObjectId | Value | Focus deriving (Show, Eq, Enum)
+
 instance Object Slider where
     mesh b = (JSObject.getProp "mesh" $ unSlider b) :: IO Mesh
 
-instance Registry.UIWidget (WB.Slider a) Slider where
-    lookup   = Registry.genericLookup     Slider
-    register = Registry.genericRegister unSlider
+instance Registry.UIWidget Slider where
+    wrapWidget = Slider
+    unwrapWidget = unSlider
+
+instance Registry.UIWidgetBinding (WB.Slider a) Slider
 
 buildLabel text = do
     material <- getTextHUDMaterial
@@ -98,16 +103,18 @@ buildSlider s = do
 
     background <- do
         let (vs, fs) = loadShaders "slider"
-        uniforms  <- Uniform.buildUniformMap
         sizeU     <- buildVector2 (size ^. x) (size ^. y) >>= toUniform
         objectId  <- buildVector3 ((fromIntegral $ bid `mod` 256) / 255.0) ((fromIntegral $ bid `div` 256) / 255.0) 0.0 >>= toUniform
         geom      <- buildPlaneGeometry 1.0 1.0
-        Uniform.setUniform uniforms "size" sizeU
-        Uniform.setUniform uniforms "objectId" objectId
-        Uniform.setUniform uniforms "value" sliderPos
-        Uniform.setUniform uniforms "focus" focus
         Geometry.translate geom 0.5 0.5 0.0
-        material <- buildShaderMaterial uniforms vs fs True NormalBlending DoubleSide
+
+        material <- buildShaderMaterial vs fs True NormalBlending DoubleSide
+        setUniforms material [ (Size     , sizeU     )
+                             , (ObjectId , objectId  )
+                             , (Value    , sliderPos )
+                             , (Focus    , focus     )
+                             ]
+
         mesh     <- buildMesh geom material
         s        <- scale mesh
         s     `setX` (size ^. x)
