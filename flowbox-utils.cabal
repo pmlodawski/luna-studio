@@ -156,6 +156,7 @@ Library
         Flowbox.Text.Show.Pretty,
         Prologue.Class,
         System.Path,
+        System.Platform,
         Type.BaseType,
         Type.Infer,
         Type.List

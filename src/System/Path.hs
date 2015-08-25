@@ -52,23 +52,23 @@ import           Data.Binary        hiding (get, put)
 import           Text.Read          (readMaybe)
 --import           Flowbox.Prelude                    hiding (empty, fromList, toList)
 --import qualified Flowbox.System.Directory.Locations as Directory
-import System.IO.Unsafe (unsafePerformIO)
-import Data.IORef
-import Unsafe.Coerce (unsafeCoerce)
-import Flowbox.Prelude hiding (expand, lookup, splitAt, repr)
-import GHC.TypeLits
+import           System.IO.Unsafe (unsafePerformIO)
+import           Data.IORef
+import           Unsafe.Coerce (unsafeCoerce)
+import           Flowbox.Prelude hiding (expand, lookup, splitAt, repr)
+import           GHC.TypeLits
 
-import Control.Monad.Shuffle (deepBind, (>>>=), ($>>=))
-import Data.Foldable (fold)
-import Data.Traversable (sequenceA)
-import Data.Maybe (fromMaybe)
---import Data.ConcreteTypeRep
+import           Control.Monad.Shuffle (deepBind, (>>>=), ($>>=))
+import           Data.Foldable (fold)
+import           Data.Traversable (sequenceA)
+import           Data.Maybe (fromMaybe)
+--import           Data.ConcreteTypeRep
 
 import qualified Data.Map as Map
-import Control.Monad.Trans.Either
-import Data.List (intercalate)
-import System.Directory as Dir
-import Data.Text.Lazy (Text)
+import           Control.Monad.Trans.Either
+import           Data.List (intercalate)
+import           System.Directory as Dir
+import           Data.Text.Lazy (Text)
 import qualified Data.Text.Lazy as T
 import qualified Data.Text.Internal.Lazy.Fusion as TF
 import qualified Data.Text.Internal.Fusion.Common as TF
@@ -78,17 +78,14 @@ import qualified System.Posix.Files as Posix
 import qualified System.Posix.Types as Posix
 import qualified Foreign.C.Types as C
 
-import GHC.Int (Int64, Int32)
+import           GHC.Int (Int64, Int32)
 
 import qualified Control.Monad.State          as State
 import           Control.Monad.State.Generate (newState)
-import Control.Monad (foldM)
-import Control.Monad ((>=>))
+import           Control.Monad (foldM)
+import           Control.Monad ((>=>))
 
-
-
-#include "ghcplatform.h"
-
+import           System.Platform
 
 
 
@@ -125,54 +122,6 @@ joinEither = \case
 joinEitherT :: Functor m => EitherT a m a -> m a
 joinEitherT = fmap joinEither . runEitherT
 
-------------------------------------------------------------------------
--- Platform
-------------------------------------------------------------------------
-
-data Windows    = Windows deriving (Show, Eq, Generic)
-data Linux      = Linux   deriving (Show, Eq, Generic)
-data Darwin     = Darwin  deriving (Show, Eq, Generic)
-data GHCJS      = GHCJS   deriving (Show, Eq, Generic)
-
--- === utils ===
-
-#ifdef darwin_HOST_OS
-type Platform = Darwin
-delimeter = '/'
-#endif
-
-#ifdef linux_HOST_OS
-type Platform = Linux
-delimeter = '/'
-#endif
-
-#ifdef mingw32_HOST_OS
-type Platform = Windows
-delimeter = '\\'
-#endif
-
-#ifdef ghcjs_HOST_OS
-type Platform = GHCJS
-delimeter = '/'
-#endif
-
-platform :: Platform
-platform = def
-
-#ifdef ghcjs_HOST_OS
-type PosixInt = Int32
-#else
-type PosixInt = Int64
-#endif
-
--- === instances ===
-
-instance Default Windows where def = Windows
-instance Default Darwin  where def = Darwin
-instance Default Linux   where def = Linux
-instance Default GHCJS   where def = GHCJS
-
-------------------------------------------------------------------------
 
 data Uni  = Uni  deriving (Show, Eq, Generic)
 
