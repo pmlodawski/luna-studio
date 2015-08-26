@@ -76,13 +76,21 @@ varB :: StateGraphMeta -> RefFunctionGraphMeta
 varB bldrState = flip runFunctionBuilderState bldrState $
     withMeta (Meta 2 "b") $ var "b"
 
+varF :: StateGraphMeta -> RefFunctionGraphMeta
+varF bldrState = flip runFunctionBuilderState bldrState $
+    withMeta (Meta 1 "f") $ var "f"
+
 accA :: GraphRefMeta -> StateGraphMeta -> RefFunctionGraphMeta
 accA rv1 bldrState = flip runFunctionBuilderState bldrState $
     withMeta (Meta 3 "c") $ rv1 @. "foo"
 
-funA :: GraphRefMeta -> GraphRefMeta -> GraphRefMeta -> StateGraphMeta -> RefFunctionGraphMeta
-funA rf rv1 rv2 bldrState = flip runFunctionBuilderState bldrState $
-    withMeta (Meta 4 "d") $ rf @$ [arg rv1, arg rv2]
+appA :: GraphRefMeta -> GraphRefMeta -> GraphRefMeta -> StateGraphMeta -> RefFunctionGraphMeta
+appA rf rv1 rv2 bldrState = flip runFunctionBuilderState bldrState $
+    withMeta (Meta 4 "app1") $ rf @$ [arg rv1, arg rv2]
+
+appB :: GraphRefMeta -> GraphRefMeta -> StateGraphMeta -> RefFunctionGraphMeta
+appB rf rv1 bldrState = flip runFunctionBuilderState bldrState $
+    withMeta (Meta 4 "app2") $ rf @$ [arg rv1]
 
 -- funB :: GraphRefMeta -> _ -> StateGraphMeta -> RefFunctionGraphMeta
 -- funB rf args bldrState = flip runFunctionBuilderState bldrState $
@@ -96,39 +104,19 @@ funA rf rv1 rv2 bldrState = flip runFunctionBuilderState bldrState $
 rebuild :: Function g -> BldrState g
 rebuild f = BldrState [] $ f ^. body
 
-
--- instance PrintDot FunctionGraphMeta where
---     unqtDot a = unqtText "dupa"
-
--- instance Eq FunctionGraphMeta where
---     a == b = False
-
--- instance Ord FunctionGraphMeta where
---     a <= b = True
-
-
 main :: IO ()
 main = do
     let (rv1, a) = varA def
-        (rv2, b) = varB (rebuild a)
+        (rv2, b) = varB $ rebuild a
         (rf1, c) = accA rv1 $ rebuild b
-        (rv3, d) = funA rf1 rv1 rv2 $ rebuild c
+        (rv3, d) = appA rf1 rv1 rv2 $ rebuild c
+        (rf2, e) = varF $ rebuild d
+        (rv5, f) = appB rf2 rv3 $ rebuild e
+        out      = f
     putStrLn "Typeckecker test:"
-    print $ repr $ d
+    print $ repr out
 
-    -- liftIO $ runGraphviz gv Png "/tmp/nodelab.png"
-
-    let gv = Diag.toGraphViz $ d ^. body
-    -- putStrLn $ show $ toDot gv
-
+    let gv = Diag.toGraphViz $ out ^. body
     displayGraph $ printIt gv
-
-
-    -- Diag.display gv
-
-    -- putStrLn $ show rv1
-    -- putStrLn $ show rv2
-    -- putStrLn $ show rf1
-    -- putStrLn $ show rv3
 
     return ()
