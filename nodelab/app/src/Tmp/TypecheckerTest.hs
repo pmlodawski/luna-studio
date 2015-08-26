@@ -10,10 +10,10 @@ import           Control.Monad.State
 import           Luna.Syntax.Builder.Graph hiding (get, put)
 import           Luna.Syntax.Builder
 
-import Luna.Syntax.Layer.Typed
-import Luna.Syntax.Layer.Labeled
-import Luna.Syntax.AST.Term
-import Luna.Syntax.AST.Decl
+import           Luna.Syntax.Layer.Typed
+import           Luna.Syntax.Layer.Labeled
+import           Luna.Syntax.AST.Term
+import           Luna.Syntax.AST.Decl
 
 import           Typechecker.Typechecker
 
@@ -83,7 +83,7 @@ main = do
         (rf1, c) = accA rv1 $ rebuild b
         (rv3, d) = funA rf1 rv1 rv2 $ rebuild c
     putStrLn "Typeckecker test:"
-    putStrLn $ repr d
+    print $ repr $ a
     -- putStrLn $ show rv1
     -- putStrLn $ show rv2
     -- putStrLn $ show rf1

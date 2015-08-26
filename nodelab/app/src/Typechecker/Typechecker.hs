@@ -5,7 +5,8 @@ module Typechecker.Typechecker (
     module X
 ) where
 
-import           Utils.PreludePlus
+
+import           Flowbox.Prelude hiding (Cons, cons)
 
 import           Control.Monad.State
 
@@ -15,6 +16,7 @@ import           Luna.Syntax.Layer.Labeled
 import           Luna.Syntax.Layer.Typed
 import           Luna.Syntax.AST.Term
 import           Luna.Syntax.AST.Decl.Function
+import           Luna.Repr.Styles
 
 import           Typechecker.Meta  as X
 
@@ -28,6 +30,8 @@ type StateGraphMeta       = BldrState GraphMeta
 
 type RefFunctionGraphMeta = (GraphRefMeta, FunctionGraphMeta)
 
+
+instance             Repr s FunctionGraphMeta         where repr = fromString . show
 
 evalFunctionBuilderState :: Default d => GraphStarBuilderT s g (StateT d Identity) a -> BldrState g -> a
 execFunctionBuilderState :: Default d => GraphStarBuilderT s g (StateT d Identity) a -> BldrState g -> Function g
