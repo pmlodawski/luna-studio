@@ -30,6 +30,7 @@ import           Luna.Syntax.AST.Term
 import           Luna.Syntax.AST.Decl
 import qualified Luna.Diagnostic.AST as Diag
 
+import qualified Data.Text.Lazy as Text
 
 import           Typechecker.Typechecker
 
@@ -116,8 +117,12 @@ main = do
     -- liftIO $ runGraphviz gv Png "/tmp/nodelab.png"
 
     let gv = Diag.toGraphViz $ d ^. body
-    print $ toDot gv
-    Diag.display gv
+    -- putStrLn $ show $ toDot gv
+
+    putStrLn $ Text.unpack $ printIt gv
+
+
+    -- Diag.display gv
 
     -- putStrLn $ show rv1
     -- putStrLn $ show rv2
