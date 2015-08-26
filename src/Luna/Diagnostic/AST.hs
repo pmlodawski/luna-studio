@@ -71,8 +71,10 @@ class Displayable m a where
 class OpenPictureUtility p where
     openPictureUtility :: p -> String
 
+instance OpenPictureUtility Windows where openPictureUtility = const "start"
 instance OpenPictureUtility Darwin  where openPictureUtility = const "open"
 instance OpenPictureUtility Linux   where openPictureUtility = const "xdg-open"
+instance OpenPictureUtility GHCJS   where openPictureUtility = const "open"
 
 openPicture picture = liftIO . createProcess . shell $ openPictureUtility platform <> " " <> picture
 
