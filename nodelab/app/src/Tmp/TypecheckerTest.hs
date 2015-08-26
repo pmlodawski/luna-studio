@@ -34,6 +34,8 @@ import qualified Data.Text.Lazy as Text
 
 import           Typechecker.Typechecker
 
+import           Tmp.Viz
+
 
 test1 :: FunctionGraphMeta
 test1 = runIdentity $ flip evalStateT def $ flip execFunctionBuilderT def $ do
@@ -119,7 +121,7 @@ main = do
     let gv = Diag.toGraphViz $ d ^. body
     -- putStrLn $ show $ toDot gv
 
-    putStrLn $ Text.unpack $ printIt gv
+    displayGraph $ printIt gv
 
 
     -- Diag.display gv
