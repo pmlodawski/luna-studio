@@ -1,8 +1,22 @@
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE OverloadedStrings #-}
+
 
 module Tmp.TypecheckerTest where
 
 import           Utils.PreludePlus
+
+import           Data.GraphViz.Types.Canonical
+import           Data.GraphViz.Types
+import           Data.GraphViz.Attributes.Complete   hiding (Label, Int)
+import qualified Data.GraphViz.Attributes.Complete   as GV
+import qualified Data.GraphViz.Attributes            as GV
+import           Data.GraphViz.Printing              (toDot)
+import           Data.GraphViz.Commands
+import qualified Data.GraphViz.Attributes.Colors     as GVC
+import qualified Data.GraphViz.Attributes.Colors.X11 as GVC
+import           Data.GraphViz.Printing
+import           Luna.Repr.Styles (HeaderOnly(..), Simple(..))
 
 import           Data.Repr
 import           Control.Monad.State
@@ -14,6 +28,8 @@ import           Luna.Syntax.Layer.Typed
 import           Luna.Syntax.Layer.Labeled
 import           Luna.Syntax.AST.Term
 import           Luna.Syntax.AST.Decl
+import qualified Luna.Diagnostic.AST as Diag
+
 
 import           Typechecker.Typechecker
 
@@ -73,8 +89,20 @@ funA rf rv1 rv2 bldrState = flip runFunctionBuilderState bldrState $
 
 -- TODO: map id -> ref (GraphRefMeta)
 
+
 rebuild :: Function g -> BldrState g
 rebuild f = BldrState [] $ f ^. body
+
+
+-- instance PrintDot FunctionGraphMeta where
+--     unqtDot a = unqtText "dupa"
+
+-- instance Eq FunctionGraphMeta where
+--     a == b = False
+
+-- instance Ord FunctionGraphMeta where
+--     a <= b = True
+
 
 main :: IO ()
 main = do
@@ -83,7 +111,14 @@ main = do
         (rf1, c) = accA rv1 $ rebuild b
         (rv3, d) = funA rf1 rv1 rv2 $ rebuild c
     putStrLn "Typeckecker test:"
-    print $ repr $ a
+    print $ repr $ d
+
+    -- liftIO $ runGraphviz gv Png "/tmp/nodelab.png"
+
+    let gv = Diag.toGraphViz $ d ^. body
+    print $ toDot gv
+    Diag.display gv
+
     -- putStrLn $ show rv1
     -- putStrLn $ show rv2
     -- putStrLn $ show rf1

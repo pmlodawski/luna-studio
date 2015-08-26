@@ -31,7 +31,7 @@ type StateGraphMeta       = BldrState GraphMeta
 type RefFunctionGraphMeta = (GraphRefMeta, FunctionGraphMeta)
 
 
-instance             Repr s FunctionGraphMeta         where repr = fromString . show
+instance Repr s FunctionGraphMeta where repr = fromString . show
 
 evalFunctionBuilderState :: Default d => GraphStarBuilderT s g (StateT d Identity) a -> BldrState g -> a
 execFunctionBuilderState :: Default d => GraphStarBuilderT s g (StateT d Identity) a -> BldrState g -> Function g
