@@ -1,5 +1,5 @@
 {-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE NoOverloadedStrings #-}
 
 
 module Tmp.TypecheckerTest where
@@ -32,77 +32,42 @@ import qualified Luna.Diagnostic.AST as Diag
 
 import qualified Data.Text.Lazy as Text
 
-import           Typechecker.Typechecker
+import           AST.AST
 
-import           Tmp.Viz
+import           Utils.Viz
 
-
-test1 :: FunctionGraphMeta
-test1 = runIdentity $ flip evalStateT def $ flip execFunctionBuilderT def $ do
-    a <- withMeta (Meta 7 "g") $ var "a"
-    put $ Meta 1 "a"
-    b <- var "b"
-    put $ Meta 2 "b"
-    x <- var "x" @. "foo"
-    put $ Meta 3 "c"
-    y <- x @$ [arg a]
-    return ()
-
-test2 :: FunctionGraphMeta
-test2 = runIdentity $ flip evalStateT def $ flip execFunctionBuilderT def $ do
-    a <- withMeta (Meta 1 "a") $ var "a"
-    b <- withMeta (Meta 2 "b") $ var "b"
-    x <- withMeta (Meta 3 "c") $ var "x" @. "foo"
-    y <- withMeta (Meta 4 "d") $ x @$ [arg a]
-    return ()
-
-
-nytst2f :: RefFunctionGraphMeta
-nytst2f = flip runFunctionBuilderState def $ do
-    v1 <- var "foo"
-    v2 <- var "bar"
-    s  <- star
-    a  <- v1 @. "x"
-    x  <- v1 @$ [arg v2]
-    y  <- x @. "y"
-    return v1
 
 
 varA :: StateGraphMeta -> RefFunctionGraphMeta
-varA bldrState = flip runFunctionBuilderState bldrState $
+varA bldrState = flip runGraphState bldrState $
     withMeta (Meta 1 "a") $ var "a"
 
 varB :: StateGraphMeta -> RefFunctionGraphMeta
-varB bldrState = flip runFunctionBuilderState bldrState $
+varB bldrState = flip runGraphState bldrState $
     withMeta (Meta 2 "b") $ var "b"
 
 varF :: StateGraphMeta -> RefFunctionGraphMeta
-varF bldrState = flip runFunctionBuilderState bldrState $
+varF bldrState = flip runGraphState bldrState $
     withMeta (Meta 1 "f") $ var "f"
 
 accA :: GraphRefMeta -> StateGraphMeta -> RefFunctionGraphMeta
-accA rv1 bldrState = flip runFunctionBuilderState bldrState $
+accA rv1 bldrState = flip runGraphState bldrState $
     withMeta (Meta 3 "c") $ rv1 @. "foo"
 
 appA :: GraphRefMeta -> GraphRefMeta -> GraphRefMeta -> StateGraphMeta -> RefFunctionGraphMeta
-appA rf rv1 rv2 bldrState = flip runFunctionBuilderState bldrState $
+appA rf rv1 rv2 bldrState = flip runGraphState bldrState $
     withMeta (Meta 4 "app1") $ rf @$ [arg rv1, arg rv2]
 
 appB :: GraphRefMeta -> GraphRefMeta -> StateGraphMeta -> RefFunctionGraphMeta
-appB rf rv1 bldrState = flip runFunctionBuilderState bldrState $
+appB rf rv1 bldrState = flip runGraphState bldrState $
     withMeta (Meta 4 "app2") $ rf @$ [arg rv1]
-
--- funB :: GraphRefMeta -> _ -> StateGraphMeta -> RefFunctionGraphMeta
--- funB rf args bldrState = flip runFunctionBuilderState bldrState $
---     withMeta (Meta 4 "d") $ rf @$ args
--- -- example: (rv4, e) = funB rf1 [arg rv1, arg rv2] $ rebuild d
 
 
 -- TODO: map id -> ref (GraphRefMeta)
 
 
-rebuild :: Function g -> BldrState g
-rebuild f = BldrState [] $ f ^. body
+rebuild :: g -> BldrState g
+rebuild f = BldrState [] $ f
 
 main :: IO ()
 main = do
@@ -112,11 +77,11 @@ main = do
         (rv3, d) = appA rf1 rv1 rv2 $ rebuild c
         (rf2, e) = varF $ rebuild d
         (rv5, f) = appB rf2 rv3 $ rebuild e
-        out      = f
+        out      = c
     putStrLn "Typeckecker test:"
     print $ repr out
 
-    let gv = Diag.toGraphViz $ out ^. body
+    let gv = Diag.toGraphViz $ out
     displayGraph $ printIt gv
 
     return ()
