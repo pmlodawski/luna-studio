@@ -6,7 +6,7 @@ import           GHCJS.Types (JSString)
 import           Data.JSString.Text
 import           Data.Text (Text)
 import           Data.ByteString.Lazy.Char8  (ByteString, pack, toStrict)
-import qualified Data.ByteString.Base64.Lazy as B64
+import qualified Data.ByteString.Base64.Lazy as Base64
 import           Data.Text.Lazy.Encoding     (decodeUtf8)
 import           Utils.PreludePlus           hiding (Text)
 import           JS.WebSocket
@@ -18,10 +18,10 @@ data WebMessage = WebMessage { _topic   :: String
 instance Binary.Binary WebMessage
 
 serialize :: WebMessage -> JSString
-serialize = lazyTextToJSString . decodeUtf8 . B64.encode . Binary.encode
+serialize = lazyTextToJSString . decodeUtf8 . Base64.encode . Binary.encode
 
 deserialize :: String -> WebMessage
-deserialize = Binary.decode . B64.decodeLenient . pack
+deserialize = Binary.decode . Base64.decodeLenient . pack
 
 sendMessage :: WebMessage -> IO ()
 sendMessage msg = do

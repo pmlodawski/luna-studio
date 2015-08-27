@@ -5,21 +5,28 @@ import           Data.ByteString.Lazy
 import qualified Data.Sequence             as Seq
 import           Text.ProtocolBuffers
 import           Batch.Project
-import           BatchConnector.Conversion
+import           Batch.Library
+import           BatchConnector.Conversion (decode)
 
-import qualified Generated.Proto.ProjectManager.Project.List.Status   as ProjectsList
-import qualified Generated.Proto.ProjectManager.Project.Create.Update as ProjectCreated
+import qualified Generated.Proto.ProjectManager.Project.List.Status         as ProjectsList
+import qualified Generated.Proto.ProjectManager.Project.Create.Update       as ProjectCreated
+import qualified Generated.Proto.ProjectManager.Project.Library.List.Status as LibsList
 
 parseMessage :: (Wire m, ReflectDescriptor m) => ByteString -> Maybe m
 parseMessage bytes = case messageGet bytes of
-    Left _ -> Nothing
+    Left  _        -> Nothing
     Right (msg, _) -> Just msg
 
-deserializeProjectsStatus :: ProjectsList.Status -> [Project]
-deserializeProjectsStatus  = (fmap deserialize) . toList . ProjectsList.projects
+pluckProjects :: ProjectsList.Status -> Maybe [Project]
+pluckProjects  = decode . ProjectsList.projects
 
 parseProjectsList :: ByteString -> Maybe [Project]
-parseProjectsList  = (fmap deserializeProjectsStatus) . parseMessage
+parseProjectsList bytes = (parseMessage bytes) >>= pluckProjects
 
 parseProjectCreateUpdate :: ByteString -> Maybe Project
-parseProjectCreateUpdate  = (fmap $ deserialize . ProjectCreated.project) . parseMessage
+parseProjectCreateUpdate bytes = (parseMessage bytes) >>= getProject where
+    getProject = decode . ProjectCreated.project
+
+parseLibrariesListResponse :: ByteString -> Maybe [Library]
+parseLibrariesListResponse bytes = (parseMessage bytes) >>= getLibs where
+    getLibs = decode . LibsList.libraries

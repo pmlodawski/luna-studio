@@ -9,6 +9,7 @@ import           Object.Object
 import           Object.Port
 import           Object.Node
 
+import           Batch.Project
 import qualified Reactive.Plugins.Core.Action.State.Camera            as Camera
 import qualified Reactive.Plugins.Core.Action.State.AddRemove         as AddRemove
 import qualified Reactive.Plugins.Core.Action.State.Selection         as Selection
@@ -19,6 +20,7 @@ import qualified Reactive.Plugins.Core.Action.State.NodeSearcher      as NodeSea
 import qualified Reactive.Plugins.Core.Action.State.Breadcrumb        as Breadcrumb
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry        as UIRegistry
 import qualified Reactive.Plugins.Core.Action.State.Sandbox           as Sandbox
+import qualified Reactive.Plugins.Core.Action.State.Backend           as Backend
 
 
 data State = State { _iteration      :: Integer
@@ -34,16 +36,18 @@ data State = State { _iteration      :: Integer
                    , _nodeSearcher   :: NodeSearcher.State
                    , _breadcrumb     :: Breadcrumb.State
                    , _uiRegistry     :: UIRegistry.State
-                   , _sandbox     :: Sandbox.State
+                   , _sandbox        :: Sandbox.State
+                   , _backend        :: Backend.State
+                   , _project        :: Maybe Project
                    } deriving (Eq, Show)
 
 makeLenses ''State
 
 instance Default State where
-    def = State def (Vector2 400 200) def def def def def def def def def def def def
+    def = State def (Vector2 400 200) def def def def def def def def def def def def def def
 
 instance PrettyPrinter State where
-    display (State iteration mousePos screenSize nodes camera addRemove selection multiSelection drag connect nodeSearcher breadcrumb uiRegistry sandbox)
+    display (State iteration mousePos screenSize nodes camera addRemove selection multiSelection drag connect nodeSearcher breadcrumb uiRegistry sandbox backend project)
         = "gS(" <> display iteration
          <> " " <> display mousePos
          <> " " <> display screenSize
@@ -58,6 +62,8 @@ instance PrettyPrinter State where
          <> " " <> display breadcrumb
          <> " " <> display uiRegistry
          <> " " <> display sandbox
+         <> " " <> display backend
+         <> " " <> "project(" <> show project <> ")"
          <> ")"
 
 instance Monoid State where
