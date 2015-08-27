@@ -28,14 +28,14 @@ foreign import javascript unsafe "app.websocket"
 foreign import javascript unsafe "$1.onOpen($2)"
     onOpen' :: WebSocket -> Callback (IO ()) -> IO ()
 
-foreign import javascript unsafe "$1.unOnOpen()"
-    unOnOpen' :: WebSocket -> IO ()
+foreign import javascript unsafe "$1.unOnOpen($2)"
+    unOnOpen' :: WebSocket -> Callback (IO ()) -> IO ()
 
 foreign import javascript unsafe "$1.onMessage($2)"
     onMessage' :: WebSocket -> Callback (JSRef WSMessageEvent -> IO ()) -> IO ()
 
 foreign import javascript unsafe "$1.unOnMessage()"
-    unOnMessage' :: WebSocket -> IO ()
+    unOnMessage' :: WebSocket -> Callback (JSRef WSMessageEvent -> IO ()) -> IO ()
 
 foreign import javascript unsafe "$1.send($2)"
     send :: WebSocket -> JSString -> IO ()
@@ -50,11 +50,11 @@ onOpen :: WebSocket -> IO () -> IO (IO ())
 onOpen ws callback = do
     wrappedCallback <- asyncCallback callback
     onOpen' ws wrappedCallback
-    return $ unOnOpen' ws >> releaseCallback wrappedCallback
+    return $ unOnOpen' ws wrappedCallback >> releaseCallback wrappedCallback
 
 onMessage :: WebSocket -> (JSRef WSMessageEvent -> IO ()) -> IO (IO ())
 onMessage ws callback = do
     wrappedCallback <- asyncCallback1 callback
     onMessage' ws wrappedCallback
-    return $ unOnMessage' ws >> releaseCallback wrappedCallback
+    return $ unOnMessage' ws wrappedCallback >> releaseCallback wrappedCallback
 

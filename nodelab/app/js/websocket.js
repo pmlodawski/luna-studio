@@ -1,34 +1,45 @@
 "use strict";
 
 module.exports = function () {
-  var connection = {};
+  var connection = {
+    addEventListener: function () {}
+  };
 
   var listeners = {
-    onOpen: undefined,
-    onMessage: undefined
+    onOpen: [],
+    onMessage: []
   };
 
   var attachListeners = function () {
-    connection.onopen = listeners.onOpen;
-    connection.onmessage = listeners.onOmessage;
+    listeners.onOpen.forEach(function (listener) {
+      connection.addEventListener("open", listener);
+    });
+    listeners.onMessage.forEach(function (listener) {
+      connection.addEventListener("message", listener);
+    });
+  };
+
+  var removeFromArray = function (array, elt) {
+    var index = array.indexOf(elt);
+    array.splice(index, 1);
   };
 
   return {
     onOpen: function (listener) {
-      listeners.onOpen = listener;
-      connection.onopen = listener;
+      listeners.onOpen.push(listener);
+      connection.addEventListener("open", listener);
     },
-    unOnOpen: function () {
-      listeners.onOpen = undefined;
-      connection.onmessage = undefined;
+    unOnOpen: function (listener) {
+      removeFromArray(listeners.onOpen, listener);
+      connection.removeEventListener("open", listener);
     },
     onMessage: function (listener) {
-      listeners.onMessage = listener;
-      connection.onmessage = listener;
+      listeners.onMessage.push(listener);
+      connection.addEventListener("message", listener);
     },
-    unOnMessage: function () {
-      listeners.onMessage = undefined;
-      connection.onmessage = undefined;
+    unOnMessage: function (listener) {
+      removeFromArray(listeners.onMessage, listener);
+      connection.removeEventListener("open", listener);
     },
     connect: function (addr) {
       connection = new WebSocket(addr);
