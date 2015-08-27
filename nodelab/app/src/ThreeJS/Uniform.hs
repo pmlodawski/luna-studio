@@ -30,6 +30,10 @@ import qualified Data.Char as Char
 newtype UniformMap = UniformMap { unUniformMap :: JSObject.Object }
 newtype Uniform    = Uniform    { unUniform    :: JSObject.Object }
 
+class (Show a) => UniformKey a where
+    uniformName :: a -> String
+    uniformName a = locaseFirst $ show a
+
 buildUniformMap :: IO UniformMap
 buildUniformMap = do
     m <- JSObject.create
@@ -44,8 +48,8 @@ locaseFirst (head:tail) = Char.toLower head : tail
 locaseFirst [] = []
 
 
-setUniform :: (Enum a, Show a) => UniformMap -> a -> Uniform -> IO ()
-setUniform m a v = JSObject.setProp (JSString.pack $ locaseFirst $ show a) (JSObject.getJSRef $ unUniform v) (unUniformMap m)
+setUniform :: (UniformKey a) => UniformMap -> a -> Uniform -> IO ()
+setUniform m a v = JSObject.setProp (JSString.pack $ uniformName a) (JSObject.getJSRef $ unUniform v) (unUniformMap m)
 
 
 buildUniform :: Text -> JSRef a -> IO Uniform

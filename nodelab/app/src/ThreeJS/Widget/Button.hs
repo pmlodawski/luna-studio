@@ -21,7 +21,7 @@ import           ThreeJS.Types
 import           ThreeJS.Mesh
 import           ThreeJS.PlaneGeometry
 import           ThreeJS.ShaderMaterial
-import           ThreeJS.Text
+import           ThreeJS.Text (calculateTextWidth)
 import qualified ThreeJS.Geometry as Geometry
 import           Utils.Vector
 import           JS.Config as Config
@@ -32,12 +32,17 @@ import           GHCJS.Prim
 import           Utils.CtxDynamic
 import           ThreeJS.Uniform (Uniform(..), UniformMap(..), toUniform)
 import qualified ThreeJS.Uniform as Uniform
-import           ThreeJS.Widget.Common hiding (buildLabel)
+import qualified ThreeJS.Registry as Registry
+import           ThreeJS.Widget.Common
 
 
 newtype Button = Button { unButton :: JSObject.Object }
 
-data Uniforms = Color | State  deriving (Show, Eq, Enum)
+data Uniforms = Color | State  deriving (Show)
+instance Uniform.UniformKey Uniforms
+
+data Components = Background | Label deriving (Show)
+instance Registry.ComponentKey Components
 
 instance Object Button where
     mesh b = (JSObject.getProp "mesh" $ unButton b) :: IO Mesh
@@ -48,66 +53,57 @@ instance UIWidget Button where
 
 instance UIWidgetBinding Model.Button Button
 
-buildLabel text = do
-    material <- getTextHUDMaterial
-    geom     <- buildTextGeometry text
-    mesh     <- buildMesh geom material
-    s <- scale mesh
-    s `setX` Config.fontSize
-    s `setY` Config.fontSize
-    p <- position mesh
-    p `setY` (4.0 + 10.0)
-    let width = Config.fontSize * (calculateTextWidth text)
-    return (mesh, width)
-
-
 buttonPadding = 20
 buttonWidth text = Config.fontSize * (calculateTextWidth text) + 2 * buttonPadding
 
 
 buildButton :: Model.Button -> IO Button
-buildButton (Model.Button bid label state pos size) = do
+buildButton widget = do
     group    <- buildGroup
     state    <- toUniform (0 :: Int)
 
     background <- do
         let (vs, fs) = loadShaders "button"
         color    <- buildVector4 1.0 0.0 1.0 1.0 >>= toUniform
-        sizeU    <- toUniform size
-        objectId <- buildVector3 ((fromIntegral $ bid `mod` 256) / 255.0) ((fromIntegral $ bid `div` 256) / 255.0) 0.0 >>= toUniform
+        sizeU     <- toUniform $ objectSize widget
+        objectId  <- objectIdToUniform $ objectId widget
 
-        geom     <- buildNormalizedPlaneGeometry
+        geom      <- buildNormalizedPlaneGeometry
+        material  <- buildShaderMaterial vs fs True NormalBlending DoubleSide
 
-        material <- buildShaderMaterial vs fs True NormalBlending DoubleSide
-        setUniforms material [ (Color    , color    )
-                             , (State    , state    )
+        setUniforms material [ (Size     , sizeU     )
+                             , (ObjectId , objectId  )
                              ]
-        setUniforms material [ (Size     , sizeU    ) ]
-        mesh     <- buildMesh geom material
+        setUniforms material [ (Color, color)
+                             , (State, state)
+                             ]
 
-        scaleBy size mesh
+        mesh      <- buildMesh geom material
+        scaleBy (objectSize widget) mesh
+        pos       <- position mesh
+        pos `setZ` (-0.0001)
 
         return mesh
 
     label <- do
-        (l, width) <- buildLabel label
-        p          <- position l
-        p       `setY` (4.0 + size ^. y / 2.0)
-        p       `setX` ((size ^. x - width) / 2.0)
-        return l
+        (mesh, width) <- buildLabel 1.0 AlignCenter (widget ^. Model.label)
+        moveBy (Vector2 (widget ^. Model.size . x / 2.0) (5.0 + widget ^. Model.size . y / 2.0)) mesh
+        return mesh
+
 
     group `add` background
     group `add` label
 
     mesh   <- mesh group
-    moveTo pos mesh
+    moveTo (widget ^. Model.pos) mesh
 
 
     (button, uniforms) <- buildSkeleton mesh
     Uniform.setUniform uniforms State state
 
-    JSObject.setProp "background" background (unButton button)
-    JSObject.setProp "label"      label      (unButton button)
+    addComponents button [ (Label, label)
+                         , (Background, background)
+                         ]
 
     return button
 
@@ -116,21 +112,21 @@ updateState b = do
     updateUniformValue State (toJSInt $ fromEnum $ b ^. Model.state) b
 
 instance HandlesMouseOver Model.Button where
-    onMouseOver b = (Just action, toCtxDynamic neModelutton) where
-        action    = updateState neModelutton
-        neModelutton = b & Model.state .~ Model.Focused
+    onMouseOver b = (Just action, toCtxDynamic newButton) where
+        action    = updateState newButton
+        newButton = b & Model.state .~ Model.Focused
 
 instance HandlesMouseOut Model.Button where
-    onMouseOut  b = (Just action, toCtxDynamic neModelutton) where
-        action    = updateState neModelutton
-        neModelutton = b & Model.state .~ Model.Normal
+    onMouseOut  b = (Just action, toCtxDynamic newButton) where
+        action    = updateState newButton
+        newButton = b & Model.state .~ Model.Normal
 
 instance Clickable Model.Button where
-    onClick pos b = (Just action, toCtxDynamic neModelutton) where
-        action    = updateState neModelutton
-        neModelutton = b & Model.state .~ Model.Pressed
+    onClick pos b = (Just action, toCtxDynamic newButton) where
+        action    =  updateState newButton
+        newButton = b & Model.state .~ Model.Pressed
 
 instance DblClickable Model.Button where
-    onDblClick pos b = (Just action, toCtxDynamic neModelutton) where
-        action    = updateState neModelutton
-        neModelutton = b & Model.state .~ Model.Disabled
+    onDblClick pos b = (Just action, toCtxDynamic newButton) where
+        action    = updateState newButton
+        newButton = b & Model.state .~ Model.Disabled

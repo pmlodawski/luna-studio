@@ -23,6 +23,8 @@ foreign import javascript unsafe "$$.registry[$1] = $2"
 foreign import javascript unsafe "delete $$.registry[$1]"
     removeFromRegistryJS :: Int -> IO ()
 
+class (Show a) => ComponentKey a
+
 class (Object b) => UIWidget b where
     wrapWidget   :: JSObject.Object -> b
     unwrapWidget :: b               -> JSObject.Object
@@ -36,6 +38,15 @@ class (Object b) => UIWidget b where
         JSObject.setProp "uniforms"   (JSObject.getJSRef $ unUniformMap uniforms) widget
 
         return (wrapWidget widget, uniforms)
+    addComponent :: (ComponentKey a) => b -> a -> JSRef c -> IO ()
+    addComponent w k v = JSObject.setProp (JSString.pack $ show k) v (unwrapWidget w)
+    addComponents :: (ComponentKey a) => b -> [(a, JSRef c)] -> IO ()
+    addComponents w l = mapM_ (\(k,v) -> addComponent w k v) l
+
+    readComponent :: (ComponentKey a) => a -> b -> IO (JSRef c)
+    readComponent k w = JSObject.getProp (JSString.pack $ show k)  (unwrapWidget w)
+    readContainer :: b -> IO Group
+    readContainer w =  JSObject.getProp "mesh"  (unwrapWidget w) >>= return . Group
 
 class (IsDisplayObject a, UIWidget b) => UIWidgetBinding a b | a -> b where
     lookup       :: a               -> IO b
@@ -46,11 +57,11 @@ class (IsDisplayObject a, UIWidget b) => UIWidgetBinding a b | a -> b where
         oid   = objectId widget
         uiref = (JSObject.getJSRef $ unwrapWidget uiWidget)
 
-    updateUniformValue :: (Enum d, Show d) => d -> JSRef c -> a -> IO ()
+    updateUniformValue :: (UniformKey d) => d -> JSRef c -> a -> IO ()
     updateUniformValue n v w = do
         bref     <- ThreeJS.Registry.lookup w
-        uniforms <- JSObject.getProp "uniforms"                         (unwrapWidget bref) >>= return .           JSObject.fromJSRef
-        uniform  <- JSObject.getProp (JSString.pack $ locaseFirst $ show n)  uniforms       >>= return . Uniform . JSObject.fromJSRef
+        uniforms <- JSObject.getProp "uniforms"                  (unwrapWidget bref) >>= return .           JSObject.fromJSRef
+        uniform  <- JSObject.getProp (JSString.pack $ uniformName n)  uniforms       >>= return . Uniform . JSObject.fromJSRef
         setValue uniform v
 
 

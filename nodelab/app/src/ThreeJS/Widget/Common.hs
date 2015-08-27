@@ -49,7 +49,7 @@ buildLabel fontSize align text = do
     scaleBy (pure $ Config.fontSize * fontSize) mesh
     let offsetX = (case align of
                     AlignLeft   ->  0.0
-                    AlignCenter ->  width / 2.0
+                    AlignCenter -> -width / 2.0
                     AlignRight  -> -width)
     moveBy (Vector2 offsetX 0.0) mesh
 
@@ -59,9 +59,10 @@ objectIdToUniform :: WidgetId -> IO Uniform
 objectIdToUniform oid = buildVector3 ((fromIntegral $ oid `mod` 256) / 255.0) ((fromIntegral $ oid `div` 256) / 255.0) 0.0 >>= toUniform
 -- TODO: support > 2^16 ids
 
-data GenericUniforms = Size | ObjectId deriving (Show, Eq, Enum)
+data GenericUniforms = Size | ObjectId deriving (Show)
+instance Uniform.UniformKey GenericUniforms
 
-buildBackground :: (Enum a, Show a, IsDisplayObject b) => Text -> b -> [(a, Uniform)] -> IO Mesh
+buildBackground :: (Uniform.UniformKey a, IsDisplayObject b) => Text -> b -> [(a, Uniform)] -> IO Mesh
 buildBackground shader widget uniforms = do
     let (vs, fs) = loadShaders shader
     sizeU     <- toUniform $ objectSize widget

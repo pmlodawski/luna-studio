@@ -43,7 +43,11 @@ import           ThreeJS.Widget.Common
 
 newtype Number = Number { unNumber :: JSObject.Object }
 
-data Uniforms = Size | ObjectId | Value | Focus deriving (Show, Enum, Eq)
+data Uniforms = Size | ObjectId | Value | Focus deriving (Show)
+instance Uniform.UniformKey Uniforms
+
+data Components = Background | Label | ValueLabel deriving (Show)
+instance Registry.ComponentKey Components
 
 instance Object Number where
     mesh b = (JSObject.getProp "mesh" $ unNumber b) :: IO Mesh
@@ -90,8 +94,9 @@ buildNumber widget = do
     (number, uniforms) <- buildSkeleton mesh
     Uniform.setUniform uniforms Focus focus
 
-    JSObject.setProp "label"      label      (unNumber number)
-    JSObject.setProp "valueLabel" valueLabel (unNumber number)
-    JSObject.setProp "background" background (unNumber number)
+    addComponents number [ (Label, label)
+                         , (Background, background)
+                         , (ValueLabel, valueLabel)
+                         ]
 
     return number

@@ -11,14 +11,11 @@ import           GHCJS.DOM.EventTargetClosures (EventName, unsafeEventName)
 import           Data.JSString.Text ( lazyTextFromJSString, lazyTextToJSString )
 import qualified Data.JSString as JSString
 
-import           JavaScript.Array ( JSArray )
-import qualified JavaScript.Array  as JSArray
 import qualified JavaScript.Object as JSObject
 
 import qualified Data.Text.Lazy as Text
 import           Data.Text.Lazy (Text)
 import qualified Event.Mouse    as Mouse
-import qualified Event.Keyboard as Keyboard
 import           Event.Keyboard (KeyMods(..))
 import           ThreeJS.Types
 import           ThreeJS.Mesh
@@ -27,7 +24,6 @@ import           ThreeJS.ShaderMaterial
 import           ThreeJS.Converters
 import           ThreeJS.Text
 import qualified ThreeJS.Geometry as Geometry
-import           JS.Config as Config
 import           Utils.Vector
 import           ThreeJS.Registry as Registry
 import qualified Object.Widget.Slider as Model
@@ -44,7 +40,11 @@ import           Object.UITypes
 newtype Slider = Slider { unSlider :: JSObject.Object }
 
 
-data Uniforms = Value | Focus deriving (Show, Eq, Enum)
+data Uniforms = Value | Focus deriving (Show)
+instance Uniform.UniformKey Uniforms
+
+data Components = Background | Label | ValueLabel deriving (Show)
+instance Registry.ComponentKey Components
 
 instance Object Slider where
     mesh b = (JSObject.getProp "mesh" $ unSlider b) :: IO Mesh
@@ -91,22 +91,23 @@ buildSlider widget = do
     Uniform.setUniform uniforms Value sliderPos
     Uniform.setUniform uniforms Focus focus
 
-    JSObject.setProp "label"      label                        (unSlider slider)
-    JSObject.setProp "valueLabel" valueLabel                   (unSlider slider)
-    JSObject.setProp "background" background                   (unSlider slider)
+    addComponents slider [ (Label, label)
+                         , (Background, background)
+                         , (ValueLabel, valueLabel)
+                         ]
 
     return slider
 
 setValueLabel :: (Model.IsSlider a) => Model.Slider a -> IO ()
 setValueLabel widget = do
     ref        <- Registry.lookup widget
-    group      <- JSObject.getProp "mesh"        (unSlider ref) >>= return . Group
-    valueLabel <- JSObject.getProp "valueLabel"  (unSlider ref) :: IO (JSRef MeshJS)
+    group      <- Registry.readContainer ref
+    valueLabel <- Registry.readComponent ValueLabel ref :: IO Mesh
     group `remove` valueLabel
 
     valueLabel' <- buildValueLabel widget
     group `add` valueLabel'
-    JSObject.setProp "valueLabel" valueLabel'    (unSlider ref)
+    addComponent ref ValueLabel valueLabel'
 
 updateValue :: (Model.IsSlider a) => Model.Slider a -> IO ()
 updateValue widget = do
@@ -127,7 +128,7 @@ instance (Model.IsSlider a) => Draggable (Model.Slider a) where
     onDragStart state slider     = (Just action, toCtxDynamic slider) where
                           action = setCursor "pointer"
     onDragMove  state slider     = (Just action, toCtxDynamic newSlider) where
-                    delta        = if (abs $ diff ^. x) > (abs $ diff ^. y) then -diff ^. x / divider
+                    delta        = if (abs $ diff ^. x) > (abs $ diff ^. y) then -diff ^. x /  divider
                                                                             else  diff ^. y / (divider * 10.0)
                     width        = slider ^. Model.size . x
                     divider      = width * (keyModMult $ state ^. keyMods)
@@ -152,10 +153,8 @@ instance  (Model.IsSlider a) => DblClickable   (Model.Slider a) where
 
 instance  (Model.IsSlider a) => HandlesMouseOver (Model.Slider a) where
     onMouseOver b = (Just action, toCtxDynamic b) where
-        action    = do
-            updateUniformValue Focus (toJSInt 1) b
+        action    = updateUniformValue Focus (toJSInt 1) b
 
 instance  (Model.IsSlider a) => HandlesMouseOut (Model.Slider a) where
     onMouseOut  b = (Just action, toCtxDynamic b) where
-        action    = do
-            updateUniformValue Focus (toJSInt 0) b
+        action    = updateUniformValue Focus (toJSInt 0) b

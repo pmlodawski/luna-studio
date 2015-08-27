@@ -55,7 +55,7 @@ buildShaderMaterial (VertexShader v) (FragmentShader f) t b s = do
     buildShaderMaterialJS uniforms (lazyTextToJSString v) (lazyTextToJSString f) t (fromEnum b) (fromEnum s) >>= return . ShaderMaterial
 
 
-setUniforms :: (Enum a, Show a) => ShaderMaterial -> [(a, Uniform)] -> IO ()
+setUniforms :: (Uniform.UniformKey a) => ShaderMaterial -> [(a, Uniform)] -> IO ()
 setUniforms (ShaderMaterial m) uniforms = do
     u <- readUniformsJS m >>= return . UniformMap . JSObject.fromJSRef
     mapM_ (\(a, v) -> Uniform.setUniform u a v) uniforms
