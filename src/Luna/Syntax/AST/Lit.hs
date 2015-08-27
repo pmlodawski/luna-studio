@@ -12,4 +12,7 @@ data Lit = Int    Int
 instance IsString Lit where
     fromString = String . fromString
 
-instance Repr s Lit where repr = fromString . show
+instance Repr s Lit where
+    repr = \case
+        Int    i -> "Int"    <+> repr i
+        String s -> "String" <+> fromString (show s)

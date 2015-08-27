@@ -12,6 +12,7 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE RecursiveDo #-}
+{-# LANGUAGE NoOverloadedStrings #-}
 
 module Main where
 
@@ -65,6 +66,7 @@ import Control.Monad.Trans.Identity
 import Luna.Diagnostic.AST (toGraphViz, display)
 import Luna.Syntax.Layer.Typed
 import Luna.Syntax.Layer.Labeled
+import qualified Type.BaseType as BT
 
 
 --import Data.Text.CodeBuilder.Builder
@@ -86,28 +88,28 @@ instance (MuBuilder a m t, t ~ t') => MuBuilder a (HomoG t m) t' where
 
 nytst2 :: (Arc (Labeled Int (Typed Term)), HomoGraph ArcPtr (Labeled Int (Typed Term)))
 nytst2 = flip runGraph def $ do
+    genTopStar
     v1 <- var "foo"
     v2 <- var "bar"
-    s  <- star
     a  <- v1 @. "x"
     x  <- v1 @$ [arg v2]
     y  <- x @. "y"
     return v1
 
-nytst3 :: Mu (Typed Term)
-nytst3 = flip StarBuilder.eval Nothing $ runIdentityT $ do
-    v1 <- var "foo"
-    return v1
+--nytst3 :: Mu (Typed Term)
+--nytst3 = flip StarBuilder.eval Nothing $ runIdentityT $ do
+--    v1 <- var "foo"
+--    return v1
 
-nytst2f :: (Arc (Labeled Int (Typed Term)), Function (HomoGraph ArcPtr (Labeled Int (Typed Term))))
-nytst2f = flip runFunctionBuilder def $ do
-    v1 <- var "foo"
-    v2 <- var "bar"
-    s  <- star
-    a  <- v1 @. "x"
-    x  <- v1 @$ [arg v2]
-    y  <- x @. "y"
-    return v1
+--nytst2f :: (Arc (Labeled Int (Typed Term)), Function (HomoGraph ArcPtr (Labeled Int (Typed Term))))
+--nytst2f = flip runFunctionBuilder def $ do
+--    v1 <- var "foo"
+--    v2 <- var "bar"
+--    s  <- star
+--    a  <- v1 @. "x"
+--    x  <- v1 @$ [arg v2]
+--    y  <- x @. "y"
+--    return v1
 
 main = do
     --putStrLn $ repr y
@@ -117,9 +119,10 @@ main = do
     --print $ take 1000 names
 
     let gv = toGraphViz (snd nytst2)
-    print gv
+    print   gv
     display gv
     --V.test
+    --BT.test
     --print tstc
     return ()
 
@@ -133,4 +136,4 @@ runMeI = renderCode HSIndent
 
 --tstc = runMeI ("o" <+> ("ala" <+> "ola"))
 
-instance Repr s (VectorGraph a) where repr _ = "mu"
+instance Repr s (VectorGraph a) where repr _ = fromString "mu"

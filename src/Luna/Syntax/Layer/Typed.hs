@@ -7,6 +7,7 @@ module Luna.Syntax.Layer.Typed where
 import Flowbox.Prelude
 
 import Luna.Syntax.AST
+import Luna.Syntax.AST.Term
 import Luna.Syntax.Builder
 import Luna.Syntax.Layer
 import Data.Cata
@@ -24,5 +25,16 @@ instance HasAST a ast => HasAST (Typed a) ast where ast = inner . ast
 instance Layer Typed where
     inner = lens (\(Typed _ a) -> a) (\(Typed t _) a -> Typed t a)
 
-instance (LayeredStarBuilder m t, LayerGen (Mu t) m a) => LayerGen (Mu t) m (Typed a) where
-    genLayers a = Typed <$> getStar <*> genLayers a
+--instance (LayeredStarBuilder m t, LayerGen (Mu t) m a) => LayerGen (Mu t) m (Typed a) where
+--    genLayers a = Typed <$> getStar <*> genLayers a
+
+
+instance (TypeGenerator m (Mu t), LayerGen (Mu t) m a) => LayerGen (Mu t) m (Typed a) where
+    genLayers a = Typed <$> genType <*> genLayers a
+
+
+class TypeGenerator m t where
+    genType :: m t
+
+instance (LayeredStarBuilder m t, LayeredASTMuCons Var m t) => TypeGenerator m (Mu t) where
+    genType = getStar

@@ -6,7 +6,7 @@
 
 module Luna.Syntax.Builder.Graph where
 
-import Flowbox.Prelude
+import Prologue
 import Data.Vector            hiding (convert, modify)
 import Data.Containers
 import Data.Containers.Hetero
@@ -39,6 +39,9 @@ newtype Ref i a t = Ref { fromRef :: Ptr i (a t) } deriving (Show)
 
 instance Repr s i => Repr s (Ref i a t) where repr = repr . fromRef
 
+
+instance Content (Ref i a t) (Ref i' a' t') (Ptr i (a t)) (Ptr i' (a' t')) where
+    content = lens fromRef (const Ref)
 
 ------------------------------------------
 

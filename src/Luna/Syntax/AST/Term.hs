@@ -27,15 +27,21 @@ import Luna.Repr.Styles (HeaderOnly)
 
 -- Component types
 
-data    Star       = Star               deriving (Show, Eq, Ord)
-newtype Var        = Var      Name      deriving (Show, Eq, Ord)
-data    Cons     t = Cons     Name [t]  deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
-data    Accessor t = Accessor Name t    deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
-data    App      t = App      t [Arg t] deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
+-- LEGEND
+-- N   - Name
+-- S   - Source
+-- A/P - Args / Params
+
+-- Layout                     N S A/P
+data    Star       = Star                 deriving (Show, Eq, Ord)
+newtype Var      t = Var      t           deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
+data    Cons     t = Cons     t   [t]     deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
+data    Accessor t = Accessor t t         deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
+data    App      t = App        t [Arg t] deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
 
 -- Type sets
 
-type TermElems  t = Var
+type TermElems  t = Var        t
                  ': ThunkElems t
 
 type ThunkElems t = Accessor t
@@ -70,10 +76,22 @@ instance HasRecord (Term  t) (Term  t') where record = lens (\(Term  a) -> a) (c
 
 -- Name instances
 
+class                          m ~ Maybe            => MaybeNamedVariant v     m     a where checkVariantName :: v -> m a
+instance {-# OVERLAPPABLE #-} (a ~ t, MaybeNamed v) => MaybeNamedVariant (v t) Maybe a where checkVariantName = checkName
+instance {-# OVERLAPPABLE #-}                          MaybeNamedVariant v     Maybe a where checkVariantName = const Nothing
+
+instance MaybeNamed Val   where checkName = withVariantsM (Proxy :: Proxy MaybeNamedVariant) checkVariantName . view record
+instance MaybeNamed Thunk where checkName = withVariantsM (Proxy :: Proxy MaybeNamedVariant) checkVariantName . view record
+instance MaybeNamed Term  where checkName = withVariantsM (Proxy :: Proxy MaybeNamedVariant) checkVariantName . view record
+
+
 --TODO[wd]: makeClassyInstances ''Cons
-instance HasName Var          where name = lens (\(Var n)        -> n) (\(Var _) n         -> Var n)
-instance HasName (Cons a)     where name = lens (\(Cons n _)     -> n) (\(Cons _ t1) n     -> Cons n t1)
-instance HasName (Accessor a) where name = lens (\(Accessor n _) -> n) (\(Accessor _ t1) n -> Accessor n t1)
+instance MaybeNamed Var
+instance MaybeNamed Cons
+instance MaybeNamed Accessor
+instance HasName    Var      where name = lens (\(Var n)        -> n) (\(Var _) n         -> Var n)
+instance HasName    Cons     where name = lens (\(Cons n _)     -> n) (\(Cons _ t1) n     -> Cons n t1)
+instance HasName    Accessor where name = lens (\(Accessor n _) -> n) (\(Accessor _ t1) n -> Accessor n t1)
 
 -- Utils intances
 
@@ -92,7 +110,7 @@ instance Traversable Term  where traverse = recordTraverse
 -- === Representations ===
 
 instance             Repr s Star         where repr = fromString . show
-instance             Repr s Var          where repr (Var      n  ) = "Var"      <+> repr n
+instance Repr s t => Repr s (Var      t) where repr (Var      n  ) = "Var"      <+> repr n
 instance Repr s t => Repr s (Cons     t) where repr (Cons     n t) = "Cons"     <+> repr n <+> repr t
 instance Repr s t => Repr s (Accessor t) where repr (Accessor n t) = "Accessor" <+> repr n <+> repr t
 instance Repr s t => Repr s (App      t) where repr (App      n t) = "App"      <+> repr n <+> repr t
@@ -104,16 +122,21 @@ instance VariantReprs s (Term  t) => Repr s (Term  t) where repr (Term  t) = "Te
 -- HeaderOnly
 
 instance {-# OVERLAPPING #-} Repr HeaderOnly Star         where repr _ = "Star"
-instance {-# OVERLAPPING #-} Repr HeaderOnly Var          where repr a = "Var"      <+> repr (a ^. name)
-instance {-# OVERLAPPING #-} Repr HeaderOnly (Cons     t) where repr a = "Cons"     <+> repr (a ^. name)
-instance {-# OVERLAPPING #-} Repr HeaderOnly (Accessor t) where repr a = "Accessor" <+> repr (a ^. name)
 instance {-# OVERLAPPING #-} Repr HeaderOnly (App      t) where repr _ = "App"
+instance {-# OVERLAPPING #-} Repr HeaderOnly (Var      t) where repr a = "Var"
+instance {-# OVERLAPPING #-} Repr HeaderOnly (Cons     t) where repr a = "Cons"
+instance {-# OVERLAPPING #-} Repr HeaderOnly (Accessor t) where repr a = "Accessor"
 
 
 -- === Inputs ===
 
 inputs :: Foldable t => t a -> [a]
 inputs = foldr (:) []
+
+
+-- === Ideas ===
+
+-- Termy takie jak Val pobieraja Stringa, ale powinny pobierac Term, otypowany implicite jako String lub Interface
 
 -- === Breadcrumbs ===
 

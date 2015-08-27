@@ -1,6 +1,8 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE RecursiveDo #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE GADTs #-}
 
 module Luna.Syntax.Builder where
 
@@ -23,14 +25,15 @@ import Data.Cata
 
 --- === Graph builders ===
 
-type GraphStarBuilderT s g m a = GraphBuilderT g (StarBuilderT (Maybe s) m) a
-type GraphStarBuilder  s g   a = GraphStarBuilderT s g Identity a
+type GraphStarBuilderT s g m = StarBuilderT (Maybe s) (GraphBuilderT g m)
+type GraphStarBuilder  s g   = GraphStarBuilderT s g Identity
 
 runGraph :: GraphStarBuilder s g a -> BldrState g -> (a, g)
 runGraph = runIdentity .: runGraphT
 
 runGraphT :: Monad m => GraphStarBuilderT s g m a -> BldrState g -> m (a, g)
-runGraphT g gs = flip StarBuilder.evalT Nothing $ runBuilderT g gs
+runGraphT g gs = flip runBuilderT gs $ flip StarBuilder.evalT Nothing $ g
+
 
 --- === Term builders ===
 
@@ -47,14 +50,41 @@ instance                                    LayeredASTCons variant Impossible t 
 
 type MuArg m t = Arg (m (Mu t))
 
+
+class     Monad m                          => ToMuM' a           m t where toMuM' :: a -> m (Mu t)
+instance (Monad m         , t ~ t'       ) => ToMuM'    (Mu t')  m t where toMuM' = return
+instance (Monad m, (m ~ n), t ~ t'       ) => ToMuM' (n (Mu t')) m t where toMuM' = id
+instance (Monad m, LayeredASTCons Lit m t) => ToMuM' String      m t where toMuM' = string
+instance (Monad m, LayeredASTCons Lit m t) => ToMuM' Int         m t where toMuM' = int
+
+--instance (Monad m, (m ~ n)) => ToMuM' String     m t where toMuM' = string
+--instance LayeredASTCons Lit m t => ToMuM String m t where toMuM = string
+
+--class     Monad m           => ToMuM a          m t | a -> t where toMuM :: a -> m (Mu t)
+
+
+-- Utils
+
 mkASTRefWith :: (SpecificCons variant ast, MuBuilder a m t) => (ast -> m (a (Mu t))) -> variant -> m (Mu t)
 mkASTRefWith f a = buildMu =<< f (specificCons a)
+
+-- Literals
+
+string :: LayeredASTCons Lit m t => String -> m (Mu t)
+string = layeredASTCons . String . fromString
+
+int :: LayeredASTCons Lit m t => Int -> m (Mu t)
+int = layeredASTCons . Int
+
+-- Arg
 
 arg :: ToMuM a m t => a -> Arg (m (Mu t))
 arg = Arg Nothing . toMuM
 
-var :: LayeredASTCons Var m t => Name -> m (Mu t)
-var = layeredASTCons . Var
+-- Terms
+
+var :: forall name m t. (ToMuM' name m t, LayeredASTMuCons Var m t) => name -> m (Mu t)
+var n = layeredASTCons . Var =<< (toMuM' n :: m (Mu t))
 
 star :: LayeredASTCons Star m t => m (Mu t)
 star = layeredASTCons Star
@@ -68,13 +98,21 @@ getStar = do
     where newStar = mdo oldstar <- StarBuilder.get
                         StarBuilder.put (Just ref)
                         ref <- star
-                        --StarBuilder.put oldstar
+                        StarBuilder.put oldstar
                         return ref
+
+genTopStar :: LayeredStarBuilder m t => m ()
+genTopStar = do
+    s <- getStar
+    StarBuilder.put (Just s)
 
 --
 
-accessor :: (ToMuM a m t, LayeredASTMuCons Accessor m t) => Name -> a -> m (Mu t)
-accessor n r = layeredASTCons . Accessor n =<< toMuM r
+accessor :: forall name src m t. (ToMuM' name m t, ToMuM' src m t, LayeredASTMuCons Accessor m t) => name -> src -> m (Mu t)
+accessor n r = do
+    mn <- toMuM' n :: m (Mu t)
+    mr <- toMuM' r :: m (Mu t)
+    layeredASTCons $ Accessor mn mr
 
 app :: (ToMuM a m t, LayeredASTMuCons App m t) => a -> [MuArg m t] -> m (Mu t)
 app base args = layeredASTCons =<< (App <$> toMuM base <*> (sequence . fmap sequence) args)
@@ -87,21 +125,21 @@ app base args = layeredASTCons =<< (App <$> toMuM base <*> (sequence . fmap sequ
 
 -- === Function ===
 
-evalFunctionBuilderT :: Monad m => GraphStarBuilderT s g m a -> BldrState g -> m a
-execFunctionBuilderT :: Monad m => GraphStarBuilderT s g m a -> BldrState g -> m (Function g)
-runFunctionBuilderT  :: Monad m => GraphStarBuilderT s g m a -> BldrState g -> m (a, Function g)
+--evalFunctionBuilderT :: Monad m => GraphStarBuilderT s g m a -> BldrState g -> m a
+--execFunctionBuilderT :: Monad m => GraphStarBuilderT s g m a -> BldrState g -> m (Function g)
+--runFunctionBuilderT  :: Monad m => GraphStarBuilderT s g m a -> BldrState g -> m (a, Function g)
 
-evalFunctionBuilderT bldr s = fst <$> runFunctionBuilderT bldr s
-execFunctionBuilderT bldr s = snd <$> runFunctionBuilderT bldr s
-runFunctionBuilderT  bldr s = do
-    (a, g) <- runGraphT bldr s
-    return $ (a, Function g)
+--evalFunctionBuilderT bldr s = fst <$> runFunctionBuilderT bldr s
+--execFunctionBuilderT bldr s = snd <$> runFunctionBuilderT bldr s
+--runFunctionBuilderT  bldr s = do
+--    (a, g) <- runGraphT bldr s
+--    return $ (a, Function g)
 
 
-evalFunctionBuilder :: GraphStarBuilder s g a -> BldrState g -> a
-execFunctionBuilder :: GraphStarBuilder s g a -> BldrState g -> Function g
-runFunctionBuilder  :: GraphStarBuilder s g a -> BldrState g -> (a, Function g)
+--evalFunctionBuilder :: GraphStarBuilder s g a -> BldrState g -> a
+--execFunctionBuilder :: GraphStarBuilder s g a -> BldrState g -> Function g
+--runFunctionBuilder  :: GraphStarBuilder s g a -> BldrState g -> (a, Function g)
 
-evalFunctionBuilder = runIdentity .: evalFunctionBuilderT
-execFunctionBuilder = runIdentity .: execFunctionBuilderT
-runFunctionBuilder  = runIdentity .: runFunctionBuilderT
+--evalFunctionBuilder = runIdentity .: evalFunctionBuilderT
+--execFunctionBuilder = runIdentity .: execFunctionBuilderT
+--runFunctionBuilder  = runIdentity .: runFunctionBuilderT

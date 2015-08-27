@@ -1,9 +1,11 @@
+{-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE PartialTypeSignatures #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Luna.Diagnostic.AST where
 
-import Flowbox.Prelude
+import Prologue
 
 import           Data.GraphViz.Types.Canonical
 import           Data.GraphViz.Attributes.Complete   hiding (Label, Int)
@@ -23,6 +25,7 @@ import Data.Containers.Hetero
 import Luna.Syntax.AST.Term
 import Luna.Syntax.Builder.Graph
 import Luna.Syntax.AST
+import Luna.Syntax.Name
 import Luna.Syntax.Layer.Typed
 import Luna.Syntax.Layer.Labeled
 
@@ -59,8 +62,17 @@ instance (t ~ Mu (Ref Int a), GenEdges (Term t)) => GenEdges (Typed Term t) wher
     genEdges (Typed t a) = [(ptrIdx . fromRef . fromMu $ t, [GV.color GVC.Red])] <> genEdges a
 
 instance t ~ Mu (Ref Int a) => GenEdges (Term t) where
-    genEdges a = zip (fmap (ptrIdx . fromRef . fromMu) . inputs $ a) $ fmap ((:[]) . genLabel) [0..]
-        where genLabel = GV.Label . StrLabel . fromString . show
+    genEdges a = ($ inEdges) $ case checkName a of
+        Nothing -> id
+        Just  t -> fmap addColor
+            where tidx = getIdx t
+                  addColor (idx, attrs) = if idx == tidx then (idx, GV.color GVC.Blue : attrs)
+                                                         else (idx, attrs)
+        where genLabel  = GV.Label . StrLabel . fromString . show
+              ins       = inputs a
+              getIdx    = ptrIdx . view content
+              inIdxs    = getIdx <$> ins
+              inEdges   = zipWith (,) inIdxs $ fmap ((:[]) . genLabel) [0..]
 
 
 
