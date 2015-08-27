@@ -82,6 +82,7 @@ buildButton (Model.Button bid label state pos size) = do
         setUniforms material [ (Color    , color    )
                              , (State    , state    )
                              ]
+        setUniforms material [ (Size     , sizeU    ) ]
         mesh     <- buildMesh geom material
 
         scaleBy size mesh

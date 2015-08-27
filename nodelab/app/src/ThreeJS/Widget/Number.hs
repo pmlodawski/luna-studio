@@ -56,8 +56,8 @@ instance Registry.UIWidgetBinding (Model.Number a) Number
 
 buildValueLabel :: (Show a) => Model.Number a -> IO Mesh
 buildValueLabel s = do
-    (mesh, width) <- buildLabel 0.8 AlignRight (Text.pack $ show s)
-    moveBy (Vector2 (s ^. Model.size . x - 5.0) (5.0 + s ^. Model.size . y / 2.0)) mesh
+    (mesh, width) <- buildLabel 0.8 AlignRight (Text.pack $ show $ s ^. Model.value)
+    moveBy (Vector2 (s ^. Model.size . x - 4.0) (5.0 + s ^. Model.size . y / 2.0)) mesh
     return mesh
 
 buildNumber :: (Show a) => Model.Number a -> IO Number
@@ -69,16 +69,13 @@ buildNumber widget = do
     focus     <- toUniform (0 :: Int)
 
     label <- do
-        (mesh, width) <-  buildLabel 1.0 AlignLeft (widget ^. Model.label)
-        position      <-  position mesh
-        position   `setY` (5.0 + size ^. y / 2.0)
-        position   `setX` 4.0
-        position   `setZ` 0.001
+        (mesh, width) <- buildLabel 1.0 AlignLeft (widget ^. Model.label)
+        moveBy (Vector2 4.0 (5.0 + size ^. y / 2.0)) mesh
         return mesh
 
-    sliderPos <- toUniform (0.0 :: Double)
-    background <- buildBackground "slider" widget [ (Value    , sliderPos )
-                                                  , (Focus    , focus     )
+    sliderPos  <- toUniform (0.0 :: Double)
+    background <- buildBackground "slider" widget [ (Value, sliderPos)
+                                                  , (Focus, focus    )
                                                   ]
 
     valueLabel <- buildValueLabel widget
