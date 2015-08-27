@@ -13,39 +13,24 @@
 
 module Data.TypeLevel.Bool where
 
-import           Data.Typeable
-import qualified Prelude       as P
-
-
-data True  deriving Typeable
-data False deriving Typeable
+import Data.Typeable
+import Prelude
 
 
 --------------------------------------------------------------------------------
 -- Instances
 --------------------------------------------------------------------------------
 
-class Bool a where
-  toBool :: a -> P.Bool
 
-instance Bool True where
-  toBool _ = P.True
-
-instance Bool False where
-  toBool _ = P.False
-
-type family Eq a b where
-    Eq a a = True
-    Eq a b = False
 
 type family And a b where
   And True True = True
   And a    b    = False
 
-type family If cond (a :: k) (b :: k) :: k where
+type family If (cond :: Bool) (a :: k) (b :: k) :: k where
   If True  a b = a
   If False a b = b
 
-type family (:==) a b where
+type family (:==) (a :: k) (b :: l) where
     a :== a = True
     a :== b = False

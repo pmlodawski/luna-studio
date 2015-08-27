@@ -18,7 +18,8 @@ import Flowbox.System.Types (ToMaybe, toMaybe, IsSubset, orElse, withState, ToSe
 import Data.Typeable          hiding (cast)
 import Data.Maybe             (fromJust)
 import Control.Monad.State    hiding (withState)
-
+import Type.BaseType
+import Data.TypeLevel.Bool    ((:==))
 
 ------------------------------------------------------------------------
 -- Errors
@@ -286,14 +287,20 @@ data ANY = ANY deriving (Show, Typeable)
 class (m ~ Maybe, b~out) => MaybeMap' a b v m out where
     tryMap' :: (a -> b) -> v -> m out
 
-instance MaybeMap' a   out a Maybe out where tryMap' f a = Just $ f a
-instance MaybeMap' a   out b Maybe out where tryMap' _ _ = Nothing
+instance (BaseType (Proxy a) pba, BaseType (Proxy b) pbb, ok ~ (pba :== pbb), MaybeMapHelper ok a b out)
+      => MaybeMap' a   out b Maybe out where tryMap'     = tryMapHelper (Proxy :: Proxy ok)
 instance MaybeMap' ANY out b Maybe out where tryMap' f _ = Just $ f ANY
 
-type VariantMap a b rec = WithVariantsM (MaybeMap' a b) rec Maybe b
+class             MaybeMapHelper (ok :: Bool) a v b where tryMapHelper :: Proxy ok -> (a -> b) -> v -> Maybe b
+instance          MaybeMapHelper False        a v b where tryMapHelper _ _ _ = Nothing
+instance a ~ v => MaybeMapHelper True         a v b where tryMapHelper _ f v = Just $ f v
 
-tryMap :: VariantMap a b rec => (a -> b) -> Rec rec -> Maybe b
+type VariantMap a rec b = WithVariantsM (MaybeMap' a b) rec Maybe b
+
+tryMap :: VariantMap a rec b => (a -> b) -> Rec rec -> Maybe b
 tryMap (f :: (a -> b)) = withVariantsM (Proxy :: Proxy (MaybeMap' a b)) (tryMap' f)
+
+
 
 ------------------------------------------------------------------------
 -- Functors, Foldables and Traversables
@@ -352,7 +359,7 @@ newtype Match rec out = Match { runMatch :: Rec rec -> Maybe out } deriving (Typ
 
 instance (Typeable rec, Typeable out) => Show (Match rec out) where show _ = show (typeOf (undefined :: Match rec out))
 
-type MatchMonad v rec out = VariantMap v out rec
+type MatchMonad v rec out = VariantMap v rec out
 
 --- === MatchSet ===
 
@@ -364,9 +371,9 @@ class IsMatchSet matches a out | matches -> a out where
 
 instance Show (MatchSet rec out) where show _ = "MatchSet"
 
-instance IsMatchSet (MatchSet rec out)    rec out  where toMatchSet     = id
-instance IsMatchSet [MatchSet rec out]    rec out  where toMatchSet lst = sequence lst *> pure ()
-instance IsMatchSet [Match rec out]       rec out  where toMatchSet     = put
+instance IsMatchSet (MatchSet rec out) rec out where toMatchSet     = id
+instance IsMatchSet [MatchSet rec out] rec out where toMatchSet lst = sequence lst *> pure ()
+instance IsMatchSet [Match    rec out] rec out where toMatchSet     = put
 
 -- === Utils ===
 
@@ -384,7 +391,9 @@ secureCase rec matches = runCase rec $ toMatchSet matches
 
 unsecureCase :: IsMatchSet matches rec out
               => Rec rec -> matches -> out
-unsecureCase = fromJust .: secureCase
+unsecureCase rec matches = case secureCase rec matches of
+    Just  a -> a
+    Nothing -> error "*** Exception: Non-exhaustive patterns in variant case"
 
 case' :: Case a matches out => a -> matches -> out
 case' = unsecureCase . view record
@@ -420,16 +429,16 @@ makeLenses ''Y
 makeLenses ''XD
 --recordMap :: (OverVariants (VariantFunctor a b) (Variants (r a)) (Variants (r b)), HasRecord (r a) (r b)) => (a -> b) -> r a -> r b
 
-type instance Variants X     = '[A]
-type instance Variants (Y a) = Variants a
+type instance Variants X      = '[A]
+type instance Variants (Y a)  = Variants a
 type instance Variants (XD a) = Variants (FooD a)
 
 instance             Record X      where mkRecord = X
 instance Record a => Record (Y a)  where mkRecord = Y . mkRecord
 instance             Record (XD a) where mkRecord = XD
 
-instance                  HasRecord X     X     where record = xrec
-instance HasRecord a b => HasRecord (Y a) (Y b) where record = yrec . record
+instance                  HasRecord X     X       where record = xrec
+instance HasRecord a b => HasRecord (Y a) (Y b)   where record = yrec . record
 instance                  HasRecord (XD a) (XD b) where record = drec
 
 
@@ -493,14 +502,23 @@ test = do
 
     print $ case' tst $ do
         match $ \(A a) -> "a"
-        --match $ \(B a) -> "b"
+        match $ \(B a) -> "b"
         match $ \ANY   -> "x"
 
     print $ case' t1 $ do
         match $ \(A a) -> "a"
         match $ \(B a) -> "b"
         match $ \ANY   -> "x"
-    print "==="
+
+    putStrLn "---"
+    putStrLn ""
+
+    let p1 = cons (D (5 :: Int)) :: XD Int
+    print $ case' p1 $ do
+        match $ \(D a) -> ("foo" :: String)
+        match $ \ANY -> "x"
+
+    putStrLn "==="
     putStrLn ""
 
 

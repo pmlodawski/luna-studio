@@ -50,8 +50,8 @@ class (WrapT t, UnwrapT t) => WrapperT t
 rewrap :: (Unwrap m, Wrap n) => m a -> n a
 rewrap = wrap . unwrap
 
-content :: Wrapper m => Lens (m a) (m b) a b
-content = lens unwrap (const wrap)
+wrapped :: Wrapper m => Lens (m a) (m b) a b
+wrapped = lens unwrap (const wrap)
 
 ----------------------------------------------------------------------------------
 -- Instances

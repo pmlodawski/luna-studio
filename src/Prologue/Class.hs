@@ -36,7 +36,7 @@ import           Control.Conditional                as X (ifM, unless, unlessM, 
 import           Control.Monad                      as X (MonadPlus, mplus, mzero, void)
 import           Control.Monad.IO.Class             as X (MonadIO, liftIO)
 import           Control.Monad.Trans                as X (MonadTrans, lift)
-import           Data.Wrapper                       as X (Unwrap (unwrap), UnwrapT (unwrapT), Wrap (wrap), WrapT (wrapT), Wrapper, WrapperT, rewrap, content)
+import           Data.Wrapper                       as X (Unwrap (unwrap), UnwrapT (unwrapT), Wrap (wrap), WrapT (wrapT), Wrapper, WrapperT, rewrap, wrapped)
 import           Data.Foldable                      as X (Foldable, traverse_)
 import           Data.Monoid                        as X (Monoid, mappend, mconcat, mempty, (<>))
 import           Data.String.Repr                   as X (StrRepr, strRepr)
@@ -45,6 +45,7 @@ import           Data.Text.Lazy                     as X (Text)
 import           Data.Typeable                      as X (Typeable)
 import           GHC.Exts                           as X (IsList, Item, fromList, fromListN, toList)
 import           GHC.Generics                       as X (Generic)
+import           Data.Content                       as X (Content, Content', content)
 
 -- Monoids
 

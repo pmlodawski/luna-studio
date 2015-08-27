@@ -7,7 +7,7 @@
 
 module Data.Cata where
 
-import Flowbox.Prelude
+import Prologue
 import Control.Lens
 import Control.Monad (join)
 import Data.Repr
@@ -17,11 +17,17 @@ class    Monad m => MuBuilder a m             t | t m -> a where buildMu :: a (M
 instance Monad m => MuBuilder a (IdentityT m) a            where buildMu = return . Mu
 instance            MuBuilder a Identity      a            where buildMu = return . Mu
 
+instance {-# OVERLAPPABLE #-} (MonadTrans t, MuBuilder a m k, Monad (t m)) => MuBuilder a (t m) k where
+    buildMu = lift . buildMu
+
 class     Monad m           => ToMuM a          m t | a -> t where toMuM :: a -> m (Mu t)
 instance  Monad m           => ToMuM    (Mu t)  m t          where toMuM = return
 instance (Monad m, (m ~ n)) => ToMuM (n (Mu t)) m t          where toMuM = id
 
 type MuData' a = a (Mu a)
+
+instance Content (MuData' f) (MuData' g) c c' => Content (Mu f) (Mu g) c c' where
+    content = lens fromMu (const toMu) . content
 
 -- === Catamorphisms ===
 

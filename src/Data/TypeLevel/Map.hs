@@ -28,7 +28,7 @@ import Data.Typeable
 import Data.TypeLevel.Bool
 --import Data.TypeLevel.FlatContainers as X
 import Prelude hiding (lookup, Eq, head, tail)
-import Flowbox.Utils 
+import Flowbox.Utils
 
 type Empty = ()
 empty = ()
@@ -57,11 +57,11 @@ class Tail lst els | lst -> els where
 
 type family Insert k v dict where
   Insert k v ()        = ((k,v),())
-  Insert k v (idx,x)   = If (Eq k (RecKey idx)) ((k,v),x) (idx,Insert k v x)
+  Insert k v (idx,x)   = If (k :== (RecKey idx)) ((k,v),x) (idx,Insert k v x)
 
 type family Remove k dict where
   Remove k ()        = ()
-  Remove k (idx,x)   = If (Eq k (RecKey idx)) x (idx,Remove k x)
+  Remove k (idx,x)   = If (k :== (RecKey idx)) x (idx,Remove k x)
 
 
 class InsertClass k v dict out | k v dict -> out where
@@ -93,12 +93,12 @@ instance RemoveClass k x out => RemoveClass k ((j,w),x) ((j,w),out) where
 class RemoveClass2 k dict out | k dict -> out where
     remove2 :: k -> dict -> out
 
-instance (Record idx ik iv, RemoveFirstIf matchel (idx, x) out, matchel ~ Eq k ik) 
+instance (Record idx ik iv, RemoveFirstIf matchel (idx, x) out, matchel ~ (k :== ik))
       => RemoveClass2 k (idx, x) out where
-    remove2 key dict = removeFirstIf (undefined :: matchel) dict
+    remove2 key dict = removeFirstIf (Proxy :: Proxy matchel) dict
 
-class RemoveFirstIf cond dict out | cond dict -> out where
-    removeFirstIf :: cond -> dict -> out
+class RemoveFirstIf (cond :: Bool) dict out | cond dict -> out where
+    removeFirstIf :: Proxy cond -> dict -> out
 
 instance RemoveFirstIf False dict dict where
     removeFirstIf _ = id

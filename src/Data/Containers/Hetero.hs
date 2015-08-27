@@ -81,6 +81,7 @@ instance PtrIdx (HPtr i m a) i  where ptrIdx (HPtr p) = ptrIdx p
 instance {-# OVERLAPPABLE #-} (p ~ i) => PtrFrom p         i where ptrFrom = Ptr
 instance                                 PtrFrom (Ptr i a) i where ptrFrom (Ptr i) = Ptr i
 
+
 --- === Hetero Containers ===
 
 type Hetero ctx cont = HeteroContainer (cont (Unified ctx))

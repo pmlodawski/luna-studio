@@ -37,7 +37,7 @@ import           Data.Text.Class                    as X (FromText (fromText), I
 import           Data.Text.Lazy                     as X (Text)
 import qualified Data.Traversable                   as Traversable
 import           Data.Typeable                      as X (Typeable)
-import           Data.Wrapper                       as X (Unwrap (unwrap), UnwrapT (unwrapT), Wrap (wrap), WrapT (wrapT), Wrapper, WrapperT, rewrap, content)
+import           Data.Wrapper                       as X (Unwrap (unwrap), UnwrapT (unwrapT), Wrap (wrap), WrapT (wrapT), Wrapper, WrapperT, rewrap)
 import           GHC.Exts                           as X (IsList, Item, fromList, fromListN, toList)
 import           GHC.Generics                       as X (Generic)
 import           Control.Conditional                as X (ifM, unless, unlessM, when, whenM)
