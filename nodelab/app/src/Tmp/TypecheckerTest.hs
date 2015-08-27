@@ -80,8 +80,68 @@ main = do
         out      = c
     putStrLn "Typeckecker test:"
     print $ repr out
+    print $ rv2                     -- Mu (Ref {fromRef = Ptr 7})
 
     let gv = Diag.toGraphViz $ out
     displayGraph $ printIt gv
 
     return ()
+
+-- connection kinds
+
+-- how to:
+-- 1. disconnect accessor
+-- 2. disconnect app
+-- 3. access label (meta data)
+-- 5. figure out number of in/out ports
+
+
+
+-- VectorGraph {
+--   __homReg=fromList[
+--     Labeled(Meta1"a")(Typed(Mu(Ref{
+--       fromRef=Ptr0
+--     }))(Term(RecStar))),
+--     Labeled(Meta1"a")(Typed(Mu(Ref{
+--       fromRef=Ptr0
+--     }))(Term(Rec(String"a")))),
+--     Labeled(Meta1"a")(Typed(Mu(Ref{
+--       fromRef=Ptr2
+--     }))(Term(RecStar))),
+--     Labeled(Meta1"a")(Typed(Mu(Ref{
+--       fromRef=Ptr2
+--     }))(Term(Rec(Var(Mu(Ref{
+--       fromRef=Ptr1
+--     })))))),
+--     Labeled(Meta2"b")(Typed(Mu(Ref{
+--       fromRef=Ptr4
+--     }))(Term(RecStar))),
+--     Labeled(Meta2"b")(Typed(Mu(Ref{
+--       fromRef=Ptr4
+--     }))(Term(Rec(String"b")))),
+--     Labeled(Meta2"b")(Typed(Mu(Ref{
+--       fromRef=Ptr6
+--     }))(Term(RecStar))),
+--     Labeled(Meta2"b")(Typed(Mu(Ref{
+--       fromRef=Ptr6
+--     }))(Term(Rec(Var(Mu(Ref{
+--       fromRef=Ptr5
+--     })))))),
+--     Labeled(Meta3"c")(Typed(Mu(Ref{
+--       fromRef=Ptr8
+--     }))(Term(RecStar))),
+--     Labeled(Meta3"c")(Typed(Mu(Ref{
+--       fromRef=Ptr8
+--     }))(Term(Rec(String"foo")))),
+--     Labeled(Meta3"c")(Typed(Mu(Ref{
+--       fromRef=Ptr10
+--     }))(Term(RecStar))),
+--     Labeled(Meta3"c")(Typed(Mu(Ref{
+--       fromRef=Ptr10
+--     }))(Term(Rec(Accessor(Mu(Ref{
+--       fromRef=Ptr9
+--     }))(Mu(Ref{
+--       fromRef=Ptr3
+--     }))))))
+--   ]
+-- }
