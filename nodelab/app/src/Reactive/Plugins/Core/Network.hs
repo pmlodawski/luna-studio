@@ -25,7 +25,6 @@ import qualified Reactive.Plugins.Core.Action.NodeSearcher   as NodeSearcher
 import qualified Reactive.Plugins.Core.Action.Breadcrumb     as Breadcrumb
 import qualified Reactive.Plugins.Core.Action.Widget         as Widget
 import qualified Reactive.Plugins.Core.Action.Sandbox        as Sandbox
-import qualified Reactive.Plugins.Core.Action.Backend        as Backend
 import           Reactive.Plugins.Core.Action.Executor
 
 import           Reactive.Plugins.Core.Action.State.Global
@@ -82,7 +81,6 @@ makeNetworkDescription conn logging = do
         nodeSearcherActionB           = fmap ActionST $   NodeSearcher.toAction <$> anyNodeB
         breadcrumbActionB             = fmap ActionST $     Breadcrumb.toAction <$> anyNodeB <*> globalStateB
         sandboxActionB                = fmap ActionST $        Sandbox.toAction <$> anyNodeB <*> globalStateB
-        webSocketActionB              = fmap ActionST $        Backend.toAction <$> anyNodeB
 
         allActionsPackB               = [ nodeGeneralActionB
                                         , widgetActionB
@@ -95,7 +93,6 @@ makeNetworkDescription conn logging = do
                                         , nodeSearcherActionB
                                         , breadcrumbActionB
                                         , sandboxActionB
-                                        , webSocketActionB
                                         ]
 
         (globalStateReactionB, allReactionsPackB) = execAll globalStateB allActionsPackB

@@ -17,8 +17,21 @@ if(brunch.env !== "production") {
   if(localStorage.getItem('logging') !== null) {
     browser.logging = (localStorage.getItem('logging') === "true");
   }
+  if (localStorage.getItem("backend") !== null) {
+    browser.backend = (localStorage.getItem("backend") === "true");
+  }
 
   config = _({}).defaults(browser, local, debug, release);
+
+  console.info("Backend connection is " + (config.backend ? "enabled" : "disabled"));
+  window.enableBackend = function  () {
+    console.info("Backend connection enabled! Please reload the page.");
+    localStorage.setItem('backend', "true");
+  };
+  window.disableBackend = function () {
+    console.info("Backend connection disabled! Please reload the page.");
+    localStorage.setItem('backend', "false");
+  };
 
   console.info("Logging is " + (config.logging?"enabled":"disabled"));
   window.enableLogging  = function(){

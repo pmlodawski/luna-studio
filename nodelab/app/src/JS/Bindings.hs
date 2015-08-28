@@ -144,6 +144,8 @@ foreign import javascript unsafe "$1.renderExamplePlot()"
 foreign import javascript unsafe "config.logging"
     isLoggerEnabled :: IO Bool
 
+foreign import javascript unsafe "config.backend"
+    isBackendEnabled :: IO Bool
 
 foreign import javascript unsafe "app.displaySelectionBox($1, $2, $3, $4)"
     displaySelectionBoxJS :: Double -> Double -> Double -> Double -> IO ()

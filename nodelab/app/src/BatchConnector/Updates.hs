@@ -8,9 +8,10 @@ import           Batch.Project
 import           Batch.Library
 import           BatchConnector.Conversion (decode)
 
-import qualified Generated.Proto.ProjectManager.Project.List.Status         as ProjectsList
-import qualified Generated.Proto.ProjectManager.Project.Create.Update       as ProjectCreated
-import qualified Generated.Proto.ProjectManager.Project.Library.List.Status as LibsList
+import qualified Generated.Proto.ProjectManager.Project.List.Status           as ProjectsList
+import qualified Generated.Proto.ProjectManager.Project.Create.Update         as ProjectCreated
+import qualified Generated.Proto.ProjectManager.Project.Library.List.Status   as LibsList
+import qualified Generated.Proto.ProjectManager.Project.Library.Create.Update as LibCreated
 
 parseMessage :: (Wire m, ReflectDescriptor m) => ByteString -> Maybe m
 parseMessage bytes = case messageGet bytes of
@@ -30,3 +31,7 @@ parseProjectCreateUpdate bytes = (parseMessage bytes) >>= getProject where
 parseLibrariesListResponse :: ByteString -> Maybe [Library]
 parseLibrariesListResponse bytes = (parseMessage bytes) >>= getLibs where
     getLibs = decode . LibsList.libraries
+
+parseLibraryCreateResponse :: ByteString -> Maybe Library
+parseLibraryCreateResponse bytes = (parseMessage bytes) >>= getLib where
+    getLib = decode . LibCreated.library
