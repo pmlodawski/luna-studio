@@ -21,7 +21,7 @@ import           Luna.Repr.Styles
 import           AST.Meta  as X
 
 
-type LabeledMeta          = Labeled Meta (Typed Term)
+type LabeledMeta          = Labeled Meta (Typed Draft)
 type GraphMeta            = HomoGraph ArcPtr LabeledMeta
 type GraphRefMeta         = Arc              LabeledMeta
 

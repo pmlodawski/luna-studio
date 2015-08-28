@@ -37,9 +37,13 @@ import           AST.AST
 import           Utils.Viz
 
 
+-- initA :: RefFunctionGraphMeta
+-- initA = flip runGraphState def $
+--     genTopStar
 
 varA :: StateGraphMeta -> RefFunctionGraphMeta
-varA bldrState = flip runGraphState bldrState $
+varA bldrState = flip runGraphState bldrState $ do
+    genTopStar
     withMeta (Meta 1 "a") $ var "a"
 
 varB :: StateGraphMeta -> RefFunctionGraphMeta
@@ -77,7 +81,8 @@ main = do
         (rv3, d) = appA rf1 rv1 rv2 $ rebuild c
         (rf2, e) = varF $ rebuild d
         (rv5, f) = appB rf2 rv3 $ rebuild e
-        out      = c
+        (rv6, g) = appA rf1 rv5 rv3 $ rebuild f
+        out      = g
     putStrLn "Typeckecker test:"
     print $ repr out
     print $ rv2                     -- Mu (Ref {fromRef = Ptr 7})
@@ -89,11 +94,10 @@ main = do
 
 -- connection kinds
 
--- how to:
 -- 1. disconnect accessor
 -- 2. disconnect app
--- 3. access label (meta data)
--- 5. figure out number of in/out ports
+-- 3. access label (meta data)  -- lookup and label fun
+-- 5. figure out number of in/out ports -- add ports on request
 
 
 
