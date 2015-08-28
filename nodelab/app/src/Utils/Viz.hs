@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE JavaScriptFFI #-}
 
-module Tmp.Viz where
+module Utils.Viz where
 
 import           Utils.PreludePlus
 import           Data.Text.Lazy      (Text)

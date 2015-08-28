@@ -1,6 +1,6 @@
 {-# LANGUAGE UndecidableInstances #-}
 
-module Typechecker.Meta where
+module AST.Meta where
 
 import           Utils.PreludePlus
 
