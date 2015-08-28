@@ -176,9 +176,14 @@ foldlDef f d = \case
     (x:xs) -> foldl f x xs
 
 
-mapOver :: (Lens' b a) -> (a -> (a, out)) -> (b -> (b, out))
+mapOver :: (Lens' a b) -> (b -> (b, out)) -> (a -> (a, out))
 mapOver lens f s = (s & lens .~ a, out) where
     (a, out) = f $ s ^. lens
+
+mapOverM :: Monad m => (Lens' a b) -> (b -> m (b, out)) -> (a -> m (a, out))
+mapOverM lens f a = do
+    (b, out) <- f $ a ^. lens
+    return $ (a & lens .~ b, out)
 
 --mapOver :: (Lens' b a) -> (a -> (out, a)) -> (b -> (out, b))
 --mapOver lens f s = (out, s & lens .~ a) where
