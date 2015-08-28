@@ -59,10 +59,10 @@ class GenEdges a where
 instance GenEdges (a t) => GenEdges (Labeled l a t) where
     genEdges (Labeled _ a) = genEdges a
 
-instance (t ~ Mu (Ref Int a), GenEdges (Term t)) => GenEdges (Typed Term t) where
+instance (t ~ Mu (Ref Int a), GenEdges (Draft t)) => GenEdges (Typed Draft t) where
     genEdges (Typed t a) = [(ptrIdx . fromRef . fromMu $ t, [GV.color GVC.Red])] <> genEdges a
 
-instance t ~ Mu (Ref Int a) => GenEdges (Term t) where
+instance t ~ Mu (Ref Int a) => GenEdges (Draft t) where
     genEdges a = ($ inEdges) $ case checkName a of
         Nothing -> id
         Just  t -> fmap addColor

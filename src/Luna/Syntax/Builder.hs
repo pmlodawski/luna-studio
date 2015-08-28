@@ -106,8 +106,6 @@ genTopStar = do
     s <- getStar
     StarBuilder.put (Just s)
 
---
-
 accessor :: forall name src m t. (ToMuM' name m t, ToMuM' src m t, LayeredASTMuCons Accessor m t) => name -> src -> m (Mu t)
 accessor n r = do
     mn <- toMuM' n :: m (Mu t)
@@ -116,6 +114,12 @@ accessor n r = do
 
 app :: (ToMuM a m t, LayeredASTMuCons App m t) => a -> [MuArg m t] -> m (Mu t)
 app base args = layeredASTCons =<< (App <$> toMuM base <*> (sequence . fmap sequence) args)
+
+-- Drafts
+
+blank :: LayeredASTCons Blank m t => m (Mu t)
+blank = layeredASTCons Blank
+
 
 -- operators
 

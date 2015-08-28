@@ -15,6 +15,7 @@ type family ASTOf (a :: * -> *) :: * -> *
 type instance ASTOf Val   = Val
 type instance ASTOf Thunk = Thunk
 type instance ASTOf Term  = Term
+type instance ASTOf Draft = Draft
 
 -- === HasAST ===
 
@@ -24,5 +25,6 @@ class HasAST l ast | l -> ast where
 instance HasAST Val   Val   where ast = id
 instance HasAST Thunk Thunk where ast = id
 instance HasAST Term  Term  where ast = id
+instance HasAST Draft Draft where ast = id
 
 

@@ -14,3 +14,4 @@ class Monad m => LayerGen t m l where
 instance Monad m => LayerGen t m Val   where genLayers = return
 instance Monad m => LayerGen t m Thunk where genLayers = return
 instance Monad m => LayerGen t m Term  where genLayers = return
+instance Monad m => LayerGen t m Draft where genLayers = return

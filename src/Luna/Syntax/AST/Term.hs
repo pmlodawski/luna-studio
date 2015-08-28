@@ -32,14 +32,17 @@ import Luna.Repr.Styles (HeaderOnly)
 -- S   - Source
 -- A/P - Args / Params
 
--- Layout                     N S A/P
 data    Star       = Star                 deriving (Show, Eq, Ord)
-newtype Var      t = Var      t           deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
 data    Cons     t = Cons     t   [t]     deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
 data    Accessor t = Accessor t t         deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
 data    App      t = App        t [Arg t] deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
+newtype Var      t = Var      t           deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
+data    Blank      = Blank                deriving (Show, Eq, Ord)
 
 -- Type sets
+
+type DraftElems t = Blank
+                 ': TermElems t
 
 type TermElems  t = Var        t
                  ': ThunkElems t
@@ -58,10 +61,12 @@ type ValElems   t = Lit
 newtype Val   t = Val   (VariantRec (Val   t)) deriving (Show)
 newtype Thunk t = Thunk (VariantRec (Thunk t)) deriving (Show)
 newtype Term  t = Term  (VariantRec (Term  t)) deriving (Show)
+newtype Draft t = Draft (VariantRec (Draft t)) deriving (Show)
 
-type instance Variants (Val   t) =                         ValElems   t
-type instance Variants (Thunk t) = (Val t) ':              ThunkElems t
-type instance Variants (Term  t) = (Val t) ': (Thunk t) ': TermElems  t
+type instance Variants (Val   t) =                                     ValElems   t
+type instance Variants (Thunk t) = (Val t) ':                          ThunkElems t
+type instance Variants (Term  t) = (Val t) ': (Thunk t) ':             TermElems  t
+type instance Variants (Draft t) = (Val t) ': (Thunk t) ': (Term t) ': DraftElems t
 
 
 -- Record & variant instances
@@ -69,10 +74,12 @@ type instance Variants (Term  t) = (Val t) ': (Thunk t) ': TermElems  t
 instance Record (Val   h) where mkRecord = Val
 instance Record (Thunk h) where mkRecord = Thunk
 instance Record (Term  h) where mkRecord = Term
+instance Record (Draft h) where mkRecord = Draft
 
 instance HasRecord (Val   t) (Val   t') where record = lens (\(Val   a) -> a) (const Val  )
 instance HasRecord (Thunk t) (Thunk t') where record = lens (\(Thunk a) -> a) (const Thunk)
 instance HasRecord (Term  t) (Term  t') where record = lens (\(Term  a) -> a) (const Term )
+instance HasRecord (Draft t) (Draft t') where record = lens (\(Draft a) -> a) (const Draft)
 
 -- Name instances
 
@@ -83,6 +90,7 @@ instance {-# OVERLAPPABLE #-}                          MaybeNamedVariant v     M
 instance MaybeNamed Val   where checkName = withVariantsM (Proxy :: Proxy MaybeNamedVariant) checkVariantName . view record
 instance MaybeNamed Thunk where checkName = withVariantsM (Proxy :: Proxy MaybeNamedVariant) checkVariantName . view record
 instance MaybeNamed Term  where checkName = withVariantsM (Proxy :: Proxy MaybeNamedVariant) checkVariantName . view record
+instance MaybeNamed Draft where checkName = withVariantsM (Proxy :: Proxy MaybeNamedVariant) checkVariantName . view record
 
 
 --TODO[wd]: makeClassyInstances ''Cons
@@ -98,17 +106,21 @@ instance HasName    Accessor where name = lens (\(Accessor n _) -> n) (\(Accesso
 instance Functor     Val   where fmap = recordMap
 instance Functor     Thunk where fmap = recordMap
 instance Functor     Term  where fmap = recordMap
+instance Functor     Draft where fmap = recordMap
 
 instance Foldable    Val   where foldr = recordFoldr
 instance Foldable    Thunk where foldr = recordFoldr
 instance Foldable    Term  where foldr = recordFoldr
+instance Foldable    Draft where foldr = recordFoldr
 
 instance Traversable Val   where traverse = recordTraverse
 instance Traversable Thunk where traverse = recordTraverse
 instance Traversable Term  where traverse = recordTraverse
+instance Traversable Draft where traverse = recordTraverse
 
 -- === Representations ===
 
+instance             Repr s Blank        where repr = fromString . show
 instance             Repr s Star         where repr = fromString . show
 instance Repr s t => Repr s (Var      t) where repr (Var      n  ) = "Var"      <+> repr n
 instance Repr s t => Repr s (Cons     t) where repr (Cons     n t) = "Cons"     <+> repr n <+> repr t
@@ -118,9 +130,11 @@ instance Repr s t => Repr s (App      t) where repr (App      n t) = "App"      
 instance VariantReprs s (Val   t) => Repr s (Val   t) where repr (Val   t) = "Val"   <+> repr t
 instance VariantReprs s (Thunk t) => Repr s (Thunk t) where repr (Thunk t) = "Thunk" <+> repr t
 instance VariantReprs s (Term  t) => Repr s (Term  t) where repr (Term  t) = "Term"  <+> repr t
+instance VariantReprs s (Draft t) => Repr s (Draft t) where repr (Draft t) = "Draft" <+> repr t
 
 -- HeaderOnly
 
+instance {-# OVERLAPPING #-} Repr HeaderOnly Blank        where repr _ = "Blank"
 instance {-# OVERLAPPING #-} Repr HeaderOnly Star         where repr _ = "Star"
 instance {-# OVERLAPPING #-} Repr HeaderOnly (App      t) where repr _ = "App"
 instance {-# OVERLAPPING #-} Repr HeaderOnly (Var      t) where repr a = "Var"

@@ -20,7 +20,7 @@ import Luna.Syntax.AST.Decl
 --- === Graph ===
 
 newtype HeteroVectorGraph   = HeteroVectorGraph { __hetReg :: Hetero' Vector } deriving (Show, Default)
-newtype VectorGraph       a = VectorGraph       { __homReg :: Vector a       } deriving (Show, Default)
+newtype VectorGraph       a = VectorGraph       { __homReg :: Vector a       } deriving (Show, Default, Functor, Foldable, Traversable)
 
 makeLenses ''HeteroVectorGraph
 makeLenses ''VectorGraph
@@ -106,9 +106,12 @@ with f m = do
     return out
 
 modify :: MonadGraphBuilder g m => (BldrState g -> (BldrState g, a)) -> m a
-modify f = do
+modify = modifyM . fmap return
+
+modifyM :: MonadGraphBuilder g m => (BldrState g -> m (BldrState g, a)) -> m a
+modifyM f = do
     s <- get
-    let (s', a) = f s
+    (s', a) <- f s
     put $ s'
     return a
 
@@ -118,8 +121,16 @@ modify_ = modify . fmap (,())
 -- <-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<
 
 withGraph :: MonadGraphBuilder g m => (g -> (g, a)) -> m a
-withGraph = modify . mapOver graph
+withGraph = withGraphM . fmap return
 
+withGraph_ :: MonadGraphBuilder g m => (g -> g) -> m ()
+withGraph_ = withGraph . fmap (,())
+
+withGraphM :: MonadGraphBuilder g m => (g -> m (g, a)) -> m a
+withGraphM = modifyM . mapOverM graph
+
+withGraphM_ :: MonadGraphBuilder g m => (g -> m g) -> m ()
+withGraphM_ = withGraphM . (fmap . fmap) (,())
 
 runBuilderT  :: Functor m => GraphBuilderT g m a -> BldrState g -> m (a, g)
 execBuilderT :: Monad   m => GraphBuilderT g m a -> BldrState g -> m g
