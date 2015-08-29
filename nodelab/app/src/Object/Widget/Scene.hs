@@ -15,10 +15,10 @@ data Scene = Scene { _refId :: WidgetId } deriving (Show)
 makeLenses ''Scene
 
 instance IsDisplayObject Scene where
-    objectId i = i ^. refId
+    objectId i     = i ^. refId
     objectPosition = undefined
-    objectSize = undefined
-    idLens = refId
+    objectSize     = undefined
+    objectIdLens   = refId
 
 instance DisplayObjectContainer Scene
 

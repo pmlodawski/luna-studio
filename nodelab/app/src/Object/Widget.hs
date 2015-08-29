@@ -46,12 +46,13 @@ class IsDisplayObject a where
     objectId       :: a -> WidgetId
     objectPosition :: a -> Vector2 Double
     objectSize     :: a -> Vector2 Double
-    idLens         :: Functor f => (Int -> f Int) -> a -> f a
+    objectIdLens   :: Functor f => (Int -> f Int) -> a -> f a
 
 instance IsDisplayObject DisplayObject where
     objectId       (CtxDynamic _ a) = objectId       a
     objectPosition (CtxDynamic _ a) = objectPosition a
     objectSize     (CtxDynamic _ a) = objectSize     a
+    objectIdLens                    = undefined
 
 type Position = Vector2 Double
 

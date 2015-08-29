@@ -36,4 +36,4 @@ instance IsDisplayObject Chart where
     objectId       b = b ^. refId
     objectPosition b = b ^. pos
     objectSize     b = b ^. size
-    idLens = refId
+    objectIdLens     = refId
