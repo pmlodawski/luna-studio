@@ -63,6 +63,9 @@ class (IsDisplayObject a, UIWidget b) => UIWidgetBinding a b | a -> b where
         uniforms <- JSObject.getProp "uniforms"                  (unwrapWidget bref) >>= return .           JSObject.fromJSRef
         uniform  <- JSObject.getProp (JSString.pack $ uniformName n)  uniforms       >>= return . Uniform . JSObject.fromJSRef
         setValue uniform v
+    
+    build :: a -> IO b
+    
 
 
 unregister :: (IsDisplayObject a) => a -> IO ()

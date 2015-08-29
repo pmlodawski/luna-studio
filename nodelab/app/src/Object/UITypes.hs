@@ -3,6 +3,7 @@ module Object.UITypes where
 import Utils.PreludePlus
 
 type WidgetId    = Int
+
 data MouseButton = NoButton
                  | LeftButton
                  | MiddleButton
@@ -11,3 +12,5 @@ data MouseButton = NoButton
 data SceneType   = HUD
                  | Workspace
                  deriving (Show, Eq, Enum)
+
+

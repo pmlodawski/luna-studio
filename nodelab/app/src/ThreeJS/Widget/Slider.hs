@@ -53,7 +53,6 @@ instance Registry.UIWidget Slider where
     wrapWidget = Slider
     unwrapWidget = unSlider
 
-instance Registry.UIWidgetBinding (Model.Slider a) Slider
 
 buildValueLabel :: (Model.IsSlider a) => Model.Slider a -> IO Mesh
 buildValueLabel s = do
@@ -61,42 +60,42 @@ buildValueLabel s = do
     moveBy (Vector2 (s ^. Model.size . x - 5.0) (5.0 + s ^. Model.size . y / 2.0)) mesh
     return mesh
 
-buildSlider :: (Model.IsSlider a) => Model.Slider a -> IO Slider
-buildSlider widget = do
-    let pos  = widget ^. Model.pos
-    let size = widget ^. Model.size
+instance (Model.IsSlider a) => Registry.UIWidgetBinding (Model.Slider a) Slider where
+    build widget = do
+        let pos  = widget ^. Model.pos
+        let size = widget ^. Model.size
 
-    group     <- buildGroup
-    sliderPos <- toUniform $ widget ^. Model.normValue
-    focus     <- toUniform (0 :: Int)
+        group     <- buildGroup
+        sliderPos <- toUniform $ widget ^. Model.normValue
+        focus     <- toUniform (0 :: Int)
 
-    label <- do
-        (mesh, width) <- buildLabel 1.0 AlignLeft (widget ^. Model.label)
-        moveBy (Vector2 4.0 (5.0 + size ^. y / 2.0)) mesh
-        return mesh
+        label <- do
+            (mesh, width) <- buildLabel 1.0 AlignLeft (widget ^. Model.label)
+            moveBy (Vector2 4.0 (5.0 + size ^. y / 2.0)) mesh
+            return mesh
 
-    valueLabel <- buildValueLabel widget
+        valueLabel <- buildValueLabel widget
 
-    background <- buildBackground "slider" widget [ (Value    , sliderPos )
-                                                  , (Focus    , focus     )
-                                                  ]
-    group `add` background
-    group `add` label
-    group `add` valueLabel
+        background <- buildBackground "slider" widget [ (Value    , sliderPos )
+                                                      , (Focus    , focus     )
+                                                      ]
+        group `add` background
+        group `add` label
+        group `add` valueLabel
 
-    mesh   <- mesh group
-    moveTo pos mesh
+        mesh   <- mesh group
+        moveTo pos mesh
 
-    (slider, uniforms) <- buildSkeleton mesh
-    Uniform.setUniform uniforms Value sliderPos
-    Uniform.setUniform uniforms Focus focus
+        (slider, uniforms) <- buildSkeleton mesh
+        Uniform.setUniform uniforms Value sliderPos
+        Uniform.setUniform uniforms Focus focus
 
-    addComponents slider [ (Label, label)
-                         , (Background, background)
-                         , (ValueLabel, valueLabel)
-                         ]
+        addComponents slider [ (Label, label)
+                             , (Background, background)
+                             , (ValueLabel, valueLabel)
+                             ]
 
-    return slider
+        return slider
 
 setValueLabel :: (Model.IsSlider a) => Model.Slider a -> IO ()
 setValueLabel widget = do

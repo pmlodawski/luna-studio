@@ -33,6 +33,7 @@ import           Data.Text.Lazy                                  (Text)
 import qualified JavaScript.Object                               as JSObject
 import           ThreeJS.Registry                                as WidgetRegistry
 import           Object.Widget                                   as Widget
+import           Object.Widget.Scene (sceneInterfaceId, sceneGraphId)
 import           GHCJS.Prim
 import           Data.IntMap.Lazy                                (IntMap)
 import qualified Data.IntMap.Lazy                                as IntMap
@@ -64,11 +65,11 @@ toAction (Mouse (Mouse.Event Mouse.Clicked _ LeftButton _ (Just (EventWidget bid
 
 toAction _ _ = Nothing
 
-createButtons :: [(Int, Text)] -> [Button.Button]
+createButtons :: [Text] -> [Button.Button]
 createButtons path = reverse buttons where
     (buttons, _) = foldl button ([], 0) path
-    button (xs, offset) (bid, name) = (newButton:xs, newOffset) where
-       newButton = Button.Button bid label Button.Normal pos size
+    button (xs, offset) name = (newButton:xs, newOffset) where
+       newButton = Button.Button 42 label Button.Normal pos size
        width     = UIButton.buttonWidth label
        pos       = Vector2 offset 0
        size      = Vector2 width buttonHeight
@@ -76,7 +77,7 @@ createButtons path = reverse buttons where
        label     = name
 
 addButton b = do
-    uiButton <- UIButton.buildButton b
+    uiButton <- WidgetRegistry.build b
     WidgetRegistry.register b uiButton
     Scene.sceneHUD `add` uiButton
 
@@ -93,13 +94,13 @@ instance ActionStateUpdater Action where
         (newAction, newState) = case newActionCandidate of
             NewPath path        -> (action, state) where
                     action = Just $ ApplyUpdates [removeOldBreadcrumb, createNewBreadcrumb]
-                    createNewBreadcrumb = forM_ newButtons addButton
-                    removeOldBreadcrumb = forM_ oldButtons removeButton
+                    createNewBreadcrumb = forM_ newButtons' addButton
+                    removeOldBreadcrumb = forM_ oldButtons  removeButton
+                    newButtons   = createButtons path
 
                     state = oldState & Global.uiRegistry                      .~ newRegistry
                                      & Global.breadcrumb . Breadcrumb.path    .~ path
-                                     & Global.breadcrumb . Breadcrumb.buttons .~ ((^. Button.refId) <$> newButtons)
-                    newButtons   = createButtons (buttonIds `zip` path)
+                                     & Global.breadcrumb . Breadcrumb.buttons .~ ((^. Button.refId) <$> newButtons')
                     oldButtons   =  catMaybes $ getFromRegistry <$> oldButtonIds
                     getFromRegistry :: Int -> Maybe Button.Button
                     getFromRegistry bid = case UIRegistry.lookup bid oldRegistry of
@@ -107,8 +108,7 @@ instance ActionStateUpdater Action where
                         _      -> Nothing
                     oldRegistry  = oldState ^. Global.uiRegistry
                     oldButtonIds = oldState ^. Global.breadcrumb . Breadcrumb.buttons
-                    newRegistry  = UIRegistry.replaceAll oldButtons newButtons oldRegistry
-                    buttonIds    = UIRegistry.generateIds (length path) oldRegistry
+                    (newButtons', newRegistry)  = UIRegistry.replaceAll sceneInterfaceId oldButtons newButtons oldRegistry
             ButtonClicked bid -> (Just $ ApplyUpdates [putStrLn $ "Clicked " <> (show bid)], oldState)
             _ -> (Nothing, oldState)
 

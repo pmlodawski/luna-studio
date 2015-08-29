@@ -56,7 +56,6 @@ instance Registry.UIWidget Number where
     wrapWidget = Number
     unwrapWidget = unNumber
 
-instance Registry.UIWidgetBinding (Model.Number a) Number
 
 buildValueLabel :: (Show a) => Model.Number a -> IO Mesh
 buildValueLabel s = do
@@ -64,39 +63,39 @@ buildValueLabel s = do
     moveBy (Vector2 (s ^. Model.size . x - 4.0) (5.0 + s ^. Model.size . y / 2.0)) mesh
     return mesh
 
-buildNumber :: (Show a) => Model.Number a -> IO Number
-buildNumber widget = do
-    let pos  = widget ^. Model.pos
-    let size = widget ^. Model.size
+instance (Show a) => Registry.UIWidgetBinding (Model.Number a) Number where
+    build widget = do
+        let pos  = widget ^. Model.pos
+        let size = widget ^. Model.size
 
-    group     <- buildGroup
-    focus     <- toUniform (0 :: Int)
+        group     <- buildGroup
+        focus     <- toUniform (0 :: Int)
 
-    label <- do
-        (mesh, width) <- buildLabel 1.0 AlignLeft (widget ^. Model.label)
-        moveBy (Vector2 4.0 (5.0 + size ^. y / 2.0)) mesh
-        return mesh
+        label <- do
+            (mesh, width) <- buildLabel 1.0 AlignLeft (widget ^. Model.label)
+            moveBy (Vector2 4.0 (5.0 + size ^. y / 2.0)) mesh
+            return mesh
 
-    sliderPos  <- toUniform (0.0 :: Double)
-    background <- buildBackground "slider" widget [ (Value, sliderPos)
-                                                  , (Focus, focus    )
-                                                  ]
+        sliderPos  <- toUniform (0.0 :: Double)
+        background <- buildBackground "slider" widget [ (Value, sliderPos)
+                                                      , (Focus, focus    )
+                                                      ]
 
-    valueLabel <- buildValueLabel widget
+        valueLabel <- buildValueLabel widget
 
-    group `add` background
-    group `add` label
-    group `add` valueLabel
+        group `add` background
+        group `add` label
+        group `add` valueLabel
 
-    mesh   <- mesh group
-    moveTo pos mesh
+        mesh   <- mesh group
+        moveTo pos mesh
 
-    (number, uniforms) <- buildSkeleton mesh
-    Uniform.setUniform uniforms Focus focus
+        (number, uniforms) <- buildSkeleton mesh
+        Uniform.setUniform uniforms Focus focus
 
-    addComponents number [ (Label, label)
-                         , (Background, background)
-                         , (ValueLabel, valueLabel)
-                         ]
+        addComponents number [ (Label, label)
+                             , (Background, background)
+                             , (ValueLabel, valueLabel)
+                             ]
 
-    return number
+        return number

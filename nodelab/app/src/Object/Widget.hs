@@ -36,13 +36,17 @@ type DisplayObjectCtx a =   ( Show a
 class    DisplayObjectCtx a => DisplayObjectClass a
 instance DisplayObjectCtx a => DisplayObjectClass a
 
+class DisplayObjectClass a => DisplayObjectContainer a
+
+
 type WidgetUIUpdate = Maybe (IO ())
 type WidgetUpdate   = (WidgetUIUpdate, DisplayObject)
 
 class IsDisplayObject a where
-    objectId :: a -> WidgetId
+    objectId       :: a -> WidgetId
     objectPosition :: a -> Vector2 Double
     objectSize     :: a -> Vector2 Double
+    idLens         :: Functor f => (Int -> f Int) -> a -> f a
 
 instance IsDisplayObject DisplayObject where
     objectId       (CtxDynamic _ a) = objectId       a

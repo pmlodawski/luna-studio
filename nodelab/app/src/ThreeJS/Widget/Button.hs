@@ -51,61 +51,60 @@ instance UIWidget Button where
     wrapWidget   = Button
     unwrapWidget = unButton
 
-instance UIWidgetBinding Model.Button Button
 
 buttonPadding = 20
 buttonWidth text = Config.fontSize * (calculateTextWidth text) + 2 * buttonPadding
 
 
-buildButton :: Model.Button -> IO Button
-buildButton widget = do
-    group    <- buildGroup
-    state    <- toUniform (0 :: Int)
+instance UIWidgetBinding Model.Button Button where
+    build widget = do
+        group    <- buildGroup
+        state    <- toUniform (0 :: Int)
 
-    background <- do
-        let (vs, fs) = loadShaders "button"
-        color    <- buildVector4 1.0 0.0 1.0 1.0 >>= toUniform
-        sizeU     <- toUniform $ objectSize widget
-        objectId  <- objectIdToUniform $ objectId widget
+        background <- do
+            let (vs, fs) = loadShaders "button"
+            color    <- buildVector4 1.0 0.0 1.0 1.0 >>= toUniform
+            sizeU     <- toUniform $ objectSize widget
+            objectId  <- objectIdToUniform $ objectId widget
 
-        geom      <- buildNormalizedPlaneGeometry
-        material  <- buildShaderMaterial vs fs True NormalBlending DoubleSide
+            geom      <- buildNormalizedPlaneGeometry
+            material  <- buildShaderMaterial vs fs True NormalBlending DoubleSide
 
-        setUniforms material [ (Size     , sizeU     )
-                             , (ObjectId , objectId  )
+            setUniforms material [ (Size     , sizeU     )
+                                 , (ObjectId , objectId  )
+                                 ]
+            setUniforms material [ (Color, color)
+                                 , (State, state)
+                                 ]
+
+            mesh      <- buildMesh geom material
+            scaleBy (objectSize widget) mesh
+            pos       <- position mesh
+            pos `setZ` (-0.0001)
+
+            return mesh
+
+        label <- do
+            (mesh, width) <- buildLabel 1.0 AlignCenter (widget ^. Model.label)
+            moveBy (Vector2 (widget ^. Model.size . x / 2.0) (5.0 + widget ^. Model.size . y / 2.0)) mesh
+            return mesh
+
+
+        group `add` background
+        group `add` label
+
+        mesh   <- mesh group
+        moveTo (widget ^. Model.pos) mesh
+
+
+        (button, uniforms) <- buildSkeleton mesh
+        Uniform.setUniform uniforms State state
+
+        addComponents button [ (Label, label)
+                             , (Background, background)
                              ]
-        setUniforms material [ (Color, color)
-                             , (State, state)
-                             ]
 
-        mesh      <- buildMesh geom material
-        scaleBy (objectSize widget) mesh
-        pos       <- position mesh
-        pos `setZ` (-0.0001)
-
-        return mesh
-
-    label <- do
-        (mesh, width) <- buildLabel 1.0 AlignCenter (widget ^. Model.label)
-        moveBy (Vector2 (widget ^. Model.size . x / 2.0) (5.0 + widget ^. Model.size . y / 2.0)) mesh
-        return mesh
-
-
-    group `add` background
-    group `add` label
-
-    mesh   <- mesh group
-    moveTo (widget ^. Model.pos) mesh
-
-
-    (button, uniforms) <- buildSkeleton mesh
-    Uniform.setUniform uniforms State state
-
-    addComponents button [ (Label, label)
-                         , (Background, background)
-                         ]
-
-    return button
+        return button
 
 updateState :: Model.Button -> IO ()
 updateState b = do

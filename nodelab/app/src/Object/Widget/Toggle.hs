@@ -4,10 +4,6 @@ module Object.Widget.Toggle where
 
 import           Utils.PreludePlus
 import           Utils.Vector
-import           Data.Fixed
-import           GHCJS.Types (JSRef)
-import qualified Data.Text.Lazy as Text
-import           Data.Text.Lazy (Text)
 
 import           Object.Widget
 import           Numeric
@@ -26,3 +22,4 @@ instance IsDisplayObject Toggle where
     objectId       b = b ^. refId
     objectPosition b = b ^. pos
     objectSize     b = b ^. size
+    idLens = refId

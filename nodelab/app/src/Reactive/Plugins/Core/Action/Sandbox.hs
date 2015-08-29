@@ -27,15 +27,22 @@ import qualified Object.Widget.Toggle                            as Toggle
 import qualified Object.Widget.Number                            as Number
 import qualified Object.Widget.Chart                             as Chart
 
+import           Object.Widget.Button                            (Button(..))
+import           Object.Widget.Slider                            (Slider(..))
+import           Object.Widget.Toggle                            (Toggle(..))
+import           Object.Widget.Number                            (Number(..))
+import           Object.Widget.Chart                             (Chart(..))
+
 import           ThreeJS.Types
-import qualified ThreeJS.Registry                                as Registry
+import qualified ThreeJS.Registry                                as JSRegistry
 import qualified ThreeJS.Widget.Button                           as UIButton
 import qualified ThreeJS.Widget.Slider                           as UISlider
 import qualified ThreeJS.Widget.Toggle                           as UIToggle
 import qualified ThreeJS.Widget.Number                           as UINumber
 import qualified ThreeJS.Scene                                   as Scene
 import qualified Dimple.Render                                   as UIChart
-
+import qualified Control.Monad.State as MState
+import           Object.Widget.Scene (sceneInterfaceId, sceneGraphId)
 
 data Action = InitApp
             | ApplyUpdates  { _actions  :: [WidgetUIUpdate] }
@@ -52,63 +59,53 @@ toAction _ _        = Nothing
 
 sandboxScene = Scene.scene
 
-addButton b = do
-    uiButton <- UIButton.buildButton b
-    Registry.register b uiButton
-    sandboxScene `add` uiButton
+addWidget b = do
+    widget <- JSRegistry.build b
+    JSRegistry.register b widget
+    sandboxScene `add` widget
 
-addSlider b = do
-    slider <- UISlider.buildSlider b
-    Registry.register b slider
-    sandboxScene `add` slider
-
-addToggle b = do
-    toggle <- UIToggle.buildToggle b
-    Registry.register b toggle
-    sandboxScene `add` toggle
-
-addNumber b = do
-    number <- UINumber.buildNumber b
-    Registry.register b number
-    sandboxScene `add` number
 
 addChart b = do
     UIChart.displayChart b
 
+
+
 instance ActionStateUpdater Action where
     execSt InitApp oldState = ActionUI  newAction newState
              where
-             wasInited             = oldState ^. Global.sandbox . Sandbox.button . Button.refId /= 0
+             wasInited             = oldState ^. Global.sandbox . Sandbox.button  /= 0
              newState              = if wasInited then oldState
-                                                  else oldState & Global.sandbox    . Sandbox.button  .~ button
-                                                                & Global.sandbox    . Sandbox.slider  .~ slider
-                                                                & Global.sandbox    . Sandbox.slider2 .~ slider2
-                                                                & Global.sandbox    . Sandbox.slider3 .~ slider3
-                                                                & Global.sandbox    . Sandbox.slider4 .~ slider4
-                                                                & Global.sandbox    . Sandbox.toggle  .~ toggle
-                                                                & Global.sandbox    . Sandbox.chart   .~ chart
-                                                                & Global.sandbox    . Sandbox.number  .~ number
+                                                  else oldState & Global.sandbox    . Sandbox.button  .~ (objectId button)
+                                                                & Global.sandbox    . Sandbox.slider  .~ (objectId slider)
+                                                                & Global.sandbox    . Sandbox.slider2 .~ (objectId slider2)
+                                                                & Global.sandbox    . Sandbox.slider3 .~ (objectId slider3)
+                                                                & Global.sandbox    . Sandbox.slider4 .~ (objectId slider4)
+                                                                & Global.sandbox    . Sandbox.toggle  .~ (objectId toggle)
+                                                                & Global.sandbox    . Sandbox.chart   .~ (objectId chart)
+                                                                & Global.sandbox    . Sandbox.number  .~ (objectId number)
                                                                 & Global.uiRegistry                   .~ newRegistry
 
-             button                = (oldState ^. Global.sandbox . Sandbox.button)  & Button.refId .~ buttonId
-             slider                = (oldState ^. Global.sandbox . Sandbox.slider)  & Slider.refId .~ sliderId
-             slider2               = (oldState ^. Global.sandbox . Sandbox.slider2) & Slider.refId .~ sliderId2
-             slider3               = (oldState ^. Global.sandbox . Sandbox.slider3) & Slider.refId .~ sliderId3
-             slider4               = (oldState ^. Global.sandbox . Sandbox.slider4) & Slider.refId .~ sliderId4
-             toggle                = (oldState ^. Global.sandbox . Sandbox.toggle)  & Toggle.refId .~ toggleId
-             chart                 = (oldState ^. Global.sandbox . Sandbox.chart)   &  Chart.refId .~  chartId
-             number                = (oldState ^. Global.sandbox . Sandbox.number)  & Number.refId .~ numberId
              oldRegistry           = oldState ^. Global.uiRegistry
-             newRegistry           = UIRegistry.register button $ UIRegistry.register slider $ UIRegistry.register slider2 $ UIRegistry.register slider3 $ UIRegistry.register slider4 $ UIRegistry.register toggle $ UIRegistry.register chart $ UIRegistry.register number oldRegistry
+             registerWidgets :: MState.State UIRegistry.State (Button.Button, Slider.Slider Int, Slider.Slider Double, Slider.Slider Double, Slider.Slider Double, Toggle.Toggle, Chart.Chart, Number.Number Int)
+             registerWidgets        = do
+                 button  <- UIRegistry.registerM sceneGraphId $  Button 0 "Click me!" Button.Normal (Vector2 100 100) (Vector2 100 50)
+                 slider  <- UIRegistry.registerM sceneGraphId $ (Slider 0 (Vector2 100 200) (Vector2 200  25) "Cutoff"    100      20000        0.1 :: Slider Int)
+                 slider2 <- UIRegistry.registerM sceneGraphId $ (Slider 0 (Vector2 100 230) (Vector2 200  25) "Resonance"   0.0      100.0      0.3 :: Slider Double)
+                 slider3 <- UIRegistry.registerM sceneGraphId $ (Slider 0 (Vector2 100 260) (Vector2 200  25) "Noise"       0.0        1.0      0.1 :: Slider Double)
+                 slider4 <- UIRegistry.registerM sceneGraphId $ (Slider 0 (Vector2 100 290) (Vector2 200  25) "Gamma"       0.0000001  0.000001 0.9 :: Slider Double)
+                 toggle  <- UIRegistry.registerM sceneGraphId $  Toggle 0 (Vector2 100 320) (Vector2 200  25) "Inverse" False
+                 chart   <- UIRegistry.registerM sceneGraphId $  Chart  0 (Vector2 100 380) (Vector2 300 200) Chart.Bar "Brand" Chart.Category "Unit Sales" Chart.Linear
+                 number  <- UIRegistry.registerM sceneGraphId $  Number 0 (Vector2 100 160) (Vector2 300  25) "Count" 12312313
+                 return (button, slider, slider2, slider3, slider4, toggle, chart, number)
+             ((button, slider, slider2, slider3, slider4, toggle, chart, number), newRegistry) = MState.runState registerWidgets oldRegistry
 
-             (buttonId:sliderId:sliderId2:sliderId3:sliderId4:toggleId:chartId:numberId:_) = UIRegistry.generateIds 7 oldRegistry
-             newAction             = if wasInited then ApplyUpdates [] else ApplyUpdates [Just $ addButton button, Just $ addSlider slider, Just $ addSlider slider2, Just $ addSlider slider3, Just $ addSlider slider4, Just $ addToggle toggle, Just $ addChart chart, Just $ addNumber number]
+             newAction             = if wasInited then ApplyUpdates [] else ApplyUpdates [Just $ addWidget button, Just $ addWidget slider, Just $ addWidget slider2, Just $ addWidget slider3, Just $ addWidget slider4, Just $ addWidget toggle, Just $ addChart chart, Just $ addWidget number]
     execSt (WidgetClicked bid) oldState = ActionUI  newAction newState where
         oldRegistry           = oldState ^. Global.uiRegistry
         widget                = UIRegistry.lookup bid oldRegistry
         newRegistry           = oldRegistry -- tu mozna np. zrobis UIRegistry.update, etc.
         newState              = oldState & Global.uiRegistry .~ newRegistry
-        wasHelloButtonClicked = bid == oldState ^. Global.sandbox . Sandbox.button . Button.refId
+        wasHelloButtonClicked = bid == oldState ^. Global.sandbox . Sandbox.button
         newAction             = if wasHelloButtonClicked then ApplyUpdates [Just $ putStrLn "HelloWorld"]
                                                             -- tu tablica Maybe (IO ()), np aktualizacja stanu widgeta
                                                          else ApplyUpdates []

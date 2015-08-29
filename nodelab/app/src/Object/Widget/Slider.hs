@@ -5,10 +5,6 @@ module Object.Widget.Slider where
 import           Utils.PreludePlus
 import           Utils.Vector
 import           Data.Fixed
-import           GHCJS.Types (JSRef)
-import qualified Data.Text.Lazy as Text
-import           Data.Text.Lazy (Text)
-
 import           Object.Widget
 import           Numeric
 
@@ -33,7 +29,7 @@ instance IsDisplayObject (Slider a) where
     objectId       b = b ^. refId
     objectPosition b = b ^. pos
     objectSize     b = b ^. size
-
+    idLens = refId
 instance IsSlider Double where
     displayValue slider = showFFloat (Just $ precision) val "" where
         val       = value slider

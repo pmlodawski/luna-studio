@@ -45,40 +45,39 @@ instance Registry.UIWidget Toggle where
     wrapWidget   = Toggle
     unwrapWidget = unToggle
 
-instance Registry.UIWidgetBinding Model.Toggle Toggle
 
 
 intValue :: Model.Toggle -> Int
 intValue widget = fromBool $ widget ^. Model.value
 
-buildToggle :: Model.Toggle -> IO Toggle
-buildToggle widget = do
-    let size = widget ^. Model.size
-    let pos  = widget ^. Model.pos
+instance Registry.UIWidgetBinding Model.Toggle Toggle where
+    build widget = do
+        let size = widget ^. Model.size
+        let pos  = widget ^. Model.pos
 
-    group    <- buildGroup
-    value    <- toUniform $ intValue widget
+        group    <- buildGroup
+        value    <- toUniform $ intValue widget
 
-    label <- do
-        (mesh, width) <- buildLabel 1.0 AlignLeft (widget ^. Model.label)
-        moveBy (Vector2 4.0 (5.0 + size ^. y / 2.0)) mesh
-        return mesh
+        label <- do
+            (mesh, width) <- buildLabel 1.0 AlignLeft (widget ^. Model.label)
+            moveBy (Vector2 4.0 (5.0 + size ^. y / 2.0)) mesh
+            return mesh
 
-    background <- buildBackground "toggle" widget [(Value, value)]
+        background <- buildBackground "toggle" widget [(Value, value)]
 
-    group `add` background
-    group `add` label
+        group `add` background
+        group `add` label
 
-    mesh   <- mesh group
-    moveTo pos mesh
+        mesh   <- mesh group
+        moveTo pos mesh
 
-    (toggle, uniforms) <- buildSkeleton mesh
-    Uniform.setUniform uniforms Value value
+        (toggle, uniforms) <- buildSkeleton mesh
+        Uniform.setUniform uniforms Value value
 
-    addComponents toggle [ (Label     , label      )
-                         , (Background, background )
-                         ]
-    return toggle
+        addComponents toggle [ (Label     , label      )
+                             , (Background, background )
+                             ]
+        return toggle
 
 
 updateValue :: Model.Toggle -> IO ()
