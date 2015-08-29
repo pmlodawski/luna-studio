@@ -62,7 +62,7 @@ register parent a state = (aWithId, state & widgets .~ newWidgets') where
     aWithId       = a & idLens .~ newId
     oldWidgets    = state ^. widgets
     (Just oldParent) = IntMap.lookup parent oldWidgets
-    newParent     = oldWidgets & children .~ (newId:(oldParent ^. children))
+    newParent     = oldParent & children .~ (newId:(oldParent ^. children))
     wfile         = WidgetFile (toCtxDynamic aWithId) (Just parent) []
 
 -- registerM :: DisplayObjectClass a => WidgetId -> a -> State -> MState.State State a
