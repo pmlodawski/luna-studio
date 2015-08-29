@@ -13,9 +13,8 @@ function renderMap() {
 
 function getMapPixelAt(x, y) {
   var buf = new Uint8Array(4);
-  var ctx = $$.rendererMap.getContext();
   y = $$.rendererMap.domElement.height - y;
-  ctx.readPixels(x, y, 1, 1, ctx.RGBA, ctx.UNSIGNED_BYTE, buf);
+  $$.rendererMapCtx.readPixels(x, y, 1, 1, $$.rendererMapCtx.RGBA, $$.rendererMapCtx.UNSIGNED_BYTE, buf);
   return buf;
 }
 

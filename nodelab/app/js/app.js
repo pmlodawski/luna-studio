@@ -39,16 +39,18 @@ function initializeGl() {
     }
 
     window.already_initialized = true;
-    $$.scene                   = new THREE.Scene();
-    $$.sceneHUD                = new THREE.Scene();
-    $$.camera                  = new THREE.OrthographicCamera(-500, 500, -500, 500, 1, 1000);
-    $$.cameraHUD               = new THREE.OrthographicCamera(-500, 500, -500, 500, 1, 1000);
-    $$.camera.position.z       = 500;
-    $$.cameraHUD.position.z    = 500;
-    $$.renderer                = new THREE.WebGLRenderer({ antialias: false });
-    $$.renderer.autoClear      = false;
-    $$.rendererMap             = new THREE.WebGLRenderer({ antialias: false, preserveDrawingBuffer: true });
-    $$.rendererMap.autoClear   = false;
+    $$.scene                 = new THREE.Scene();
+    $$.sceneHUD              = new THREE.Scene();
+    $$.camera                = new THREE.OrthographicCamera(-500, 500, -500, 500, 1, 1000);
+    $$.cameraHUD             = new THREE.OrthographicCamera(-500, 500, -500, 500, 1, 1000);
+    $$.camera.position.z     = 500;
+    $$.cameraHUD.position.z  = 500;
+    $$.renderer              = new THREE.WebGLRenderer({ antialias: false });
+    $$.renderer.autoClear    = false;
+    $$.rendererMap           = new THREE.WebGLRenderer({ antialias: false, preserveDrawingBuffer: true });
+    $$.rendererMap.autoClear = false;
+    $$.rendererMapCtx        = $$.rendererMap.getContext();
+
 
     $('body').append('<div id="htmlcanvas-pan"><div id="htmlcanvas"></div></div>');
 
