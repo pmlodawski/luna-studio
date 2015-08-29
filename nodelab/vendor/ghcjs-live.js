@@ -36,15 +36,15 @@ function h$processMessage(msgType, msgPayload) {
   // console.log("processMessage: " + msgType);
   switch(msgType) {
   case 0: // load initial code/rts and init
-    h$loadInitialCode(h$decodeUtf8(h$wrapBuffer(msgPayload)));
+    h$loadInitialCode(msgPayload);
     h$GHCJSi.msg(0);
     break;
   case 1: // load code
-    h$loadCodeStr(h$decodeUtf8(h$wrapBuffer(msgPayload)));
+    h$loadCodeStr(msgPayload);
     h$GHCJSi.msg(0);
     break;
   case 2: // run action
-    var symb = h$decodeUtf8(h$wrapBuffer(msgPayload));
+    var symb = msgPayload;
     h$GHCJSi.current = h$main(h$GHCJSi.loadedSymbols[symb]);
     break;
   case 3: // abort
