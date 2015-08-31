@@ -271,3 +271,7 @@
 	path = libs/batch/batch-protobuf
 	url = git@bitbucket.org:NewByteOrder/batch-protobuf.git
 	branch = proto-split
+[submodule "tools/batch/plugins/interpreter-api"]
+	path = tools/batch/plugins/interpreter-api
+	url = git@bitbucket.org:NewByteOrder/batch-plugin-interpreter-api.git
+  branch = master
