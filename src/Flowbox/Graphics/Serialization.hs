@@ -35,6 +35,7 @@ import           Text.ProtocolBuffers.Basic        (uFromString, uToString)
 
 import qualified Flowbox.Data.Mode                    as Mode (Mode(..))
 import           Flowbox.Data.Serialization           (Serializable (..))
+import           Luna.Interpreter.Runtime.Serialization
 import qualified Flowbox.Graphics.Image.Channel       as Chan
 import qualified Flowbox.Graphics.Image.Image         as Img
 import qualified Flowbox.Graphics.Image.View          as V
