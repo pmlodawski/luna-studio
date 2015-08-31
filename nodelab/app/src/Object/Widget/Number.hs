@@ -46,3 +46,4 @@ instance IsDisplayObject (Number a) where
 --             min    = slider ^. minValue
 --             max    = slider ^. maxValue
 --             range  = max - min
+

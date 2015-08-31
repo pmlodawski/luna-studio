@@ -99,3 +99,41 @@ instance (Show a) => Registry.UIWidgetBinding (Model.Number a) Number where
                              ]
 
         return number
+
+setValueLabel :: (Show a) => Model.Number a -> IO ()
+setValueLabel widget = do
+    ref        <- Registry.lookup widget
+    group      <- Registry.readContainer ref
+    valueLabel <- Registry.readComponent ValueLabel ref :: IO Mesh
+    group `remove` valueLabel
+
+    valueLabel' <- buildValueLabel widget
+    group `add` valueLabel'
+    addComponent ref ValueLabel valueLabel'
+
+
+instance Focusable (Model.Number a) where
+    mayFocus _ _ _  = True
+
+bumpValue :: Int -> Model.Number Int -> WidgetUpdate
+bumpValue amount widget = (Just action, toCtxDynamic newWidget) where
+                currVal      = widget ^. Model.value
+                newWidget    = widget &  Model.value .~ (currVal + amount)
+                action       = setValueLabel newWidget
+
+instance HandlesKeyUp (Model.Number Int) where
+    onKeyUp 'Q' = bumpValue  100000
+    onKeyUp 'W' = bumpValue   10000
+    onKeyUp 'E' = bumpValue    1000
+    onKeyUp 'R' = bumpValue     100
+    onKeyUp 'T' = bumpValue      10
+    onKeyUp 'Y' = bumpValue       1
+
+    onKeyUp 'A' = bumpValue (-100000)
+    onKeyUp 'S' = bumpValue ( -10000)
+    onKeyUp 'D' = bumpValue (  -1000)
+    onKeyUp 'F' = bumpValue (   -100)
+    onKeyUp 'G' = bumpValue (    -10)
+    onKeyUp 'H' = bumpValue (     -1)
+
+    onKeyUp _   = noUpdate

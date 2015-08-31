@@ -144,11 +144,10 @@ instance (Model.IsSlider a) => Draggable (Model.Slider a) where
         (otherAction, newSlider) = onDragMove state slider
 
 instance  (Model.IsSlider a) => DblClickable   (Model.Slider a) where
-    onDblClick pos slider     = (Just action, toCtxDynamic newSlider) where
-                normValue     = (pos ^. x) / (slider ^. Model.size . x)
-                newSlider     = Model.setNormValue normValue slider
-                action        = do
-                    updateValue newSlider
+    onDblClick pos slider    = (Just action, toCtxDynamic newSlider) where
+                normValue    = (pos ^. x) / (slider ^. Model.size . x)
+                newSlider    = Model.setNormValue normValue slider
+                action       = updateValue newSlider
 
 instance  (Model.IsSlider a) => HandlesMouseOver (Model.Slider a) where
     onMouseOver b = (Just action, toCtxDynamic b) where
@@ -157,3 +156,17 @@ instance  (Model.IsSlider a) => HandlesMouseOver (Model.Slider a) where
 instance  (Model.IsSlider a) => HandlesMouseOut (Model.Slider a) where
     onMouseOut  b = (Just action, toCtxDynamic b) where
         action    = updateUniformValue Focus (toJSInt 0) b
+
+instance (Model.IsSlider a) => Focusable (Model.Slider a) where
+    mayFocus _ _ _  = True
+
+instance (Model.IsSlider a) => HandlesKeyUp (Model.Slider a) where
+    onKeyUp 'W' slider  = (Just action, toCtxDynamic newSlider) where
+                currVal      = slider ^. Model.normValue
+                newSlider    = Model.setNormValue (currVal + 0.1) slider
+                action       = updateValue newSlider
+    onKeyUp 'Q' slider  = (Just action, toCtxDynamic newSlider) where
+                currVal      = slider ^. Model.normValue
+                newSlider    = Model.setNormValue (currVal - 0.1) slider
+                action       = updateValue newSlider
+    onKeyUp _   slider       = (Nothing, toCtxDynamic slider)
