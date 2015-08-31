@@ -8,6 +8,7 @@ packages:
   - ../libs/batch/batch-protobuf
   - ../libs/data/serialization
   - ../libs/batch/plugins/project-manager-api
+  - ../tools/batch/plugins/interpreter-api
   - ../third-party/fgl
   - ../third-party/graphviz-2999.17.0.2.2
 extra-deps:

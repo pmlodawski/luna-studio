@@ -57,6 +57,7 @@ executable nodelab
                      , luna-protobuf-old-gen
                      , flowbox-batch-protobuf
                      , batch-lib-project-manager-api
+                     , batch-plugin-interpreter-api
                      , convert
                      , process
                      , constraints
