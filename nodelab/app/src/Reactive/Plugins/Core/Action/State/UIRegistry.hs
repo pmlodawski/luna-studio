@@ -65,11 +65,12 @@ register parent a state = (aWithId, state & widgets .~ newWidgets') where
     newParent     = oldParent & children .~ (newId:(oldParent ^. children))
     wfile         = WidgetFile (toCtxDynamic aWithId) (Just parent) []
 
--- registerM :: DisplayObjectClass a => WidgetId -> a -> State -> MState.State State a
+type UIState a = MState.State (State, [Maybe (IO ())]) a
+
 registerM parent widget = do
-    st <- MState.get
+    (st, acts) <- MState.get
     let (widget', st') = register parent widget st
-    MState.put st'
+    MState.put (st', acts)
     return widget'
 
 update :: DisplayObject -> State -> State
