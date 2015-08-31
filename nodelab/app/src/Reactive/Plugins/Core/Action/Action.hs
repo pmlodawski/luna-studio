@@ -10,6 +10,7 @@ import           Utils.PreludePlus
 import           JS.Bindings
 
 import           Reactive.Plugins.Core.Action.State.Global
+import qualified Reactive.Plugins.Core.Action.State.UIRegistry as UIRegistry
 
 data WithState act st = WithState { _action :: act
                                   , _state  :: st
@@ -78,3 +79,8 @@ logAllUI ((ActionUI act st):as) = let actString = display act in case actString 
 
 getState :: ActionUI -> State
 getState (ActionUI _ st) = st
+
+ifNoneFocused :: State -> Maybe a -> Maybe a
+ifNoneFocused st a = case st ^. uiRegistry . UIRegistry.focusedWidget of
+    Just _  -> Nothing
+    Nothing -> a

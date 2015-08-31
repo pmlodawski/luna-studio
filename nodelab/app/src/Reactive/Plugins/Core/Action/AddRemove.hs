@@ -52,15 +52,15 @@ instance PrettyPrinter Action where
     display RemoveFocused    = "arA(RemoveFocused)"
 
 
-toAction :: Event Node -> Maybe Action
-toAction (Keyboard (Keyboard.Event Keyboard.Press char)) = case char of
+toAction :: Event Node -> Global.State -> Maybe Action
+toAction (Keyboard (Keyboard.Event Keyboard.Press char)) state = ifNoneFocused state $ case char of
     'a'      -> Just $ AddAction "Hello.node"
     'r'      -> Just RemoveFocused
     _        -> Nothing
-toAction (NodeSearcher (NodeSearcher.Event tpe expr)) = case tpe of
+toAction (NodeSearcher (NodeSearcher.Event tpe expr)) _ = case tpe of
     "create" -> Just $ AddAction expr
     _        -> Nothing
-toAction _    = Nothing
+toAction _  _  = Nothing
 
 maxNodeId :: NodeCollection -> NodeId
 maxNodeId []    = 0
