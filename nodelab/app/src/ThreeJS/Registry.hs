@@ -60,12 +60,12 @@ class (IsDisplayObject a, UIWidget b) => UIWidgetBinding a b | a -> b where
     updateUniformValue :: (UniformKey d) => d -> JSRef c -> a -> IO ()
     updateUniformValue n v w = do
         bref     <- ThreeJS.Registry.lookup w
-        uniforms <- JSObject.getProp "uniforms"                  (unwrapWidget bref) >>= return .           JSObject.fromJSRef
-        uniform  <- JSObject.getProp (JSString.pack $ uniformName n)  uniforms       >>= return . Uniform . JSObject.fromJSRef
+        uniforms <- JSObject.getProp "uniforms"            (unwrapWidget bref) >>= return .           JSObject.fromJSRef
+        uniform  <- JSObject.getProp (JSString.pack $ uniformName n)  uniforms >>= return . Uniform . JSObject.fromJSRef
         setValue uniform v
-    
+
     build :: a -> IO b
-    
+
 
 
 unregister :: (IsDisplayObject a) => a -> IO ()
