@@ -1,0 +1,28 @@
+Name:               batch-plugin-interpreter-api
+Version:            0.1
+Cabal-Version:      >= 1.8
+--License-file:       LICENSE
+Author:             Flowbox <contact@flowbox.io>
+Maintainer:         Flowbox <contact@flowbox.io>
+Build-Type:         Simple
+
+Flag Debug
+    Description:    Enable debug support
+    Default:        False
+
+
+Library
+    Hs-Source-Dirs: dist/gen
+    Other-Modules:  Paths_batch_plugin_interpreter_api
+    GHC-Options:    -Wall -O2 -threaded
+    Extensions:     NoImplicitPrelude
+
+    Exposed-modules: `findmodules('dist/gen', '.*\.hs')`
+
+    Build-Depends:  base,
+                    batch-lib-project-manager-api,
+                    flowbox-batch-protobuf,
+                    flowbox-serialization,
+                    luna-protobuf-old-gen,
+                    protocol-buffers,
+                    protocol-buffers-descriptor
