@@ -28,7 +28,6 @@ Library
                   data-hash,
                   errors,
                   flowbox-utils,
-                  luna-target-ghchs,
                   MissingH,
                   protocol-buffers,
                   protocol-buffers-descriptor

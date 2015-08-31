@@ -46,9 +46,6 @@ import           Generated.Proto.Data.StringData     (StringData (StringData))
 import qualified Generated.Proto.Data.StringData     as StringData
 import           Generated.Proto.Data.SValue         (SValue (SValue))
 import qualified Generated.Proto.Data.SValue.Type    as SValue
-import qualified Luna.Target.HS.Control.Error.Data   as Data
-
-
 
 class Serializable a b | a -> b where
     serialize :: a -> Mode -> IO (Maybe b)
@@ -102,17 +99,6 @@ instance Serializable Double DoubleData.DoubleData where
     serialize a  _ = return . Just . DoubleData $ a
     data' _ = DoubleData.data'
     val   _ = SValue.Double
-
-
--- [PM] : instance below requires UndecidableInstances enabled
-instance Serializable a b => Serializable (Data.Safe a) b where
-    serialize (Data.Safe a) = serialize a
-    data'     _ = data' (undefined :: a)
-    val       _ = val (undefined :: a)
-
--- TODO [PM] Instance for unsafe
---instance Serializable a b => Serializable (Data.Unsafe a) b where
-
 
 computeValue :: Serializable a b => a -> Mode -> IO (Maybe SValue)
 computeValue = toValue
