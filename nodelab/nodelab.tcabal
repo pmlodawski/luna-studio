@@ -52,6 +52,7 @@ executable nodelab
                      , random
                      , pretty-show
                      , flowbox-utils
+                     , flowbox-serialization
                      , protocol-buffers
                      , luna-protobuf-old-gen
                      , flowbox-batch-protobuf
