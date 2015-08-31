@@ -30,7 +30,17 @@ type StateGraphMeta       = BldrState GraphMeta
 type RefFunctionGraphMeta = (GraphRefMeta, GraphMeta)
 
 
-instance Repr s GraphMeta where repr = fromString . show
+-- instance Eq a => Eq (VectorGraph a) where
+--     a == b = (a ^. _homReg) == (b ^. _homReg)
+
+-- instance Eq g => Eq (BldrState g) where
+--     a == b = (a ^. orphans) == (b ^. orphans) && (a ^. graph) == (b ^. graph)
+
+instance Show g => Show (BldrState g) where
+    show g = show (g ^. orphans) <> " " <> show (g ^. graph)
+
+instance Repr s GraphMeta where
+    repr = fromString . show
 
 type GraphStarBuilderState s g d = GraphStarBuilderT s g (StateT d Identity)
 

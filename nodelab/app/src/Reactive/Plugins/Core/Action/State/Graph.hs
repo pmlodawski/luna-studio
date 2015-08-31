@@ -11,6 +11,8 @@ import           Object.Object
 import           Object.Port
 import           Object.Node
 
+import           Luna.Syntax.Builder.Graph hiding (get, put)
+import           Luna.Syntax.Builder
 import           AST.AST
 
 
@@ -19,21 +21,26 @@ type NodesMap = IntMap Meta
 
 data State = State { _nodeList  :: NodeCollection
                    , _nodes     :: NodesMap
-                   } deriving (Eq, Show)
+                   , _bldrState :: BldrState GraphMeta
+                   } deriving (Show)
+
+makeLenses ''State
 
 
 -- instance Show State where
 --     show a = show $ IntMap.size $ a ^. nodes
 
-makeLenses ''State
+instance Eq State where
+    a == b = (a ^. nodeList) == (b ^. nodeList) && (a ^. nodes) == (b ^. nodes)
 
 instance Default State where
-    def = State def def
+    def = State def def def
 
 instance PrettyPrinter State where
-    display (State nodesList nodes) =
-           "nM("        <> show nodesList
-        <> ", "         <> show (IntMap.keys nodes)
+    display (State nodesList nodes bldrState) =
+           "nM(" <> show nodesList
+        <> ", "  <> show (IntMap.keys nodes)
+        <> ", "  <> show bldrState
         <> ")"
 
 

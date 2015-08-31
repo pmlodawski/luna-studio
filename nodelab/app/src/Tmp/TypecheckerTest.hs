@@ -71,6 +71,7 @@ appB rf rv1 bldrState = flip runGraphState bldrState $
 
 
 rebuild :: g -> BldrState g
+-- rebuild :: GraphMeta -> BldrState GraphMeta
 rebuild f = BldrState [] $ f
 
 main :: IO ()
