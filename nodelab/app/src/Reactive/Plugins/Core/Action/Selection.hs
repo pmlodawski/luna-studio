@@ -46,8 +46,8 @@ instance PrettyPrinter Action where
     display (SelectAction tpe node)  = "sA(" <> display tpe <> " " <> display node <> ")"
 
 
-toAction :: Event Node -> UnderCursor -> Maybe Action
-toAction (Mouse (Mouse.Event tpe pos button keyMods _)) underCursor = case button of
+toAction :: Event Node -> Global.State -> UnderCursor -> Maybe Action
+toAction (Mouse (Mouse.Event tpe pos button keyMods _)) _ underCursor = case button of
     LeftButton  -> case tpe of
         Mouse.Pressed -> if nodeUnderCursor then case keyMods of
                                         (KeyMods False False False False) -> Just (SelectAction selectActionType node)
@@ -64,13 +64,13 @@ toAction (Mouse (Mouse.Event tpe pos button keyMods _)) underCursor = case butto
                                                  else SelectNew
           toggleActionType = if node ^. selected then ToggleOff
                                                  else ToggleOn
-toAction (Keyboard (Keyboard.Event Keyboard.Press char)) state = case char of
+toAction (Keyboard (Keyboard.Event Keyboard.Press char)) state _ = ifNoneFocused state $ case char of
     'A'     -> Just SelectAll
     _       -> Nothing
-toAction (Keyboard (Keyboard.Event Keyboard.Down  char)) state = case char of
+toAction (Keyboard (Keyboard.Event Keyboard.Down  char)) state _ = ifNoneFocused state $ case char of
     '\27'   -> Just UnselectAll
     _       -> Nothing
-toAction _ _ = Nothing
+toAction _ _ _ = Nothing
 
 
 instance ActionStateUpdater Action where

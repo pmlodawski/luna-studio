@@ -63,8 +63,8 @@ instance PrettyPrinter Action where
     display (MouseAction act tpe pos) = "cA(Mouse " <> display act <> " " <> display tpe <> " " <> display pos <> ")"
 
 
-toAction :: Event Node -> Maybe Action
-toAction (Mouse (Mouse.Event tpe pos button keyMods _)) = case button of
+toAction :: Event Node -> Global.State -> Maybe Action
+toAction (Mouse (Mouse.Event tpe pos button keyMods _)) _ = case button of
     RightButton        -> case tpe of
         Mouse.Pressed  -> case keyMods of
            (KeyMods False False False False) -> Just (MouseAction Zoom StartDrag pos)
@@ -80,20 +80,20 @@ toAction (Mouse (Mouse.Event tpe pos button keyMods _)) = case button of
         Mouse.Moved    -> Just (MouseAction Pan Dragging pos)
         _              -> Nothing
     _                  -> Nothing
-toAction (Keyboard (Keyboard.Event Keyboard.Press char)) = case char of
+toAction (Keyboard (Keyboard.Event Keyboard.Press char)) state = ifNoneFocused state $ case char of
     '='   -> Just $ KeyAction ZoomIn
     '+'   -> Just $ KeyAction ZoomIn
     '-'   -> Just $ KeyAction ZoomOut
     'z'   -> Just $ KeyAction ResetZoom
     '0'   -> Just $ KeyAction AutoZoom
     _     -> Nothing
-toAction (Keyboard (Keyboard.Event Keyboard.Down char)) = case char of
+toAction (Keyboard (Keyboard.Event Keyboard.Down char)) state = ifNoneFocused state $ case char of
     '\37' -> Just $ KeyAction PanLeft
     '\39' -> Just $ KeyAction PanRight
     '\38' -> Just $ KeyAction PanUp
     '\40' -> Just $ KeyAction PanDown
     _     -> Nothing
-toAction _ = Nothing
+toAction _ _ = Nothing
 
 minCamFactor   =   0.2
 maxCamFactor   =   8.0

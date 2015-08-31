@@ -72,9 +72,9 @@ makeNetworkDescription conn logging = do
 
         widgetActionB                 = fmap ActionST $         Widget.toAction <$> anyNodeB
         nodeGeneralActionB            = fmap ActionST $        General.toAction <$> anyNodeB
-        cameraActionB                 = fmap ActionST $         Camera.toAction <$> anyNodeB
+        cameraActionB                 = fmap ActionST $         Camera.toAction <$> anyNodeB <*> globalStateB
         nodeAddRemActionB             = fmap ActionST $      AddRemove.toAction <$> anyNodeB <*> globalStateB
-        nodeSelectionActionB          = fmap ActionST $      Selection.toAction <$> anyNodeB <*> underCursorB
+        nodeSelectionActionB          = fmap ActionST $      Selection.toAction <$> anyNodeB <*> globalStateB <*> underCursorB 
         nodeMultiSelectionActionB     = fmap ActionST $ MultiSelection.toAction <$> anyNodeB <*> globalStateB <*> underCursorB
         nodeDragActionB               = fmap ActionST $           Drag.toAction <$> anyNodeB <*> underCursorB
         nodeConnectActionB            = fmap ActionST $        Connect.toAction <$> anyNodeB <*> globalStateB
