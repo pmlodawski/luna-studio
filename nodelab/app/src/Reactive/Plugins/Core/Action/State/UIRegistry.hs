@@ -27,6 +27,7 @@ type WidgetMap = IntMap WidgetFile
 data State = State { _widgets         :: WidgetMap
                    , _widgetOver      :: Maybe WidgetId
                    , _dragState       :: Maybe DragState
+                   , _focusedWidget   :: Maybe WidgetId
                    }
 
 makeLenses ''State
@@ -41,13 +42,14 @@ defaultWidgets = [(sceneInterfaceId, sceneInterface), (sceneInterfaceId, sceneGr
     sceneGraph     = WidgetFile (toCtxDynamic $ Scene sceneGraphId    ) Nothing []
 
 instance Default State where
-    def = State (fromList defaultWidgets) def def
+    def = State (fromList defaultWidgets) def def def
 
 instance PrettyPrinter State where
-    display (State widgets wover dragging) =
+    display (State widgets wover dragging focus) =
            "dWd("        <> show (IntMap.keys widgets)
         <> " over: "     <> show wover
         <> " dragging: " <> show dragging
+        <> " focus: "    <> show focus
         <> ")"
 
 lookup :: WidgetId -> State -> Maybe DisplayObject

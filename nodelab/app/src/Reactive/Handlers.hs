@@ -1,19 +1,20 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Reactive.Handlers where
 
-import           Utils.PreludePlus hiding ( on )
+import           Utils.PreludePlus hiding (on)
 import           Utils.Vector
 
-import           Data.Dynamic           ( Dynamic )
+import           Data.Dynamic           (Dynamic)
 
-import           GHCJS.DOM              ( currentWindow )
+import           GHCJS.DOM              (currentWindow)
 import           GHCJS.DOM.EventM
-import           GHCJS.Prim             ( fromJSString )
-import qualified GHCJS.DOM.Document     as Document
-import           GHCJS.DOM.Window       ( Window, mouseDown, mouseUp, mouseMove, resize, keyPress, keyDown, keyUp, getInnerWidth, getInnerHeight, click, dblClick )
-import qualified GHCJS.DOM.MouseEvent   as MouseEvent
-import qualified GHCJS.DOM.UIEvent      as UIEvent
-import qualified JS.WebSocket           as WebSocket
+import           GHCJS.Prim             (fromJSString)
+import qualified GHCJS.DOM.Document      as Document
+import           GHCJS.DOM.Window       (Window, mouseDown, mouseUp, mouseMove, resize, keyPress, keyDown, keyUp, getInnerWidth, getInnerHeight, click, dblClick)
+import qualified GHCJS.DOM.MouseEvent    as MouseEvent
+import qualified GHCJS.DOM.KeyboardEvent as KeyboardEvent
+import qualified GHCJS.DOM.UIEvent       as UIEvent
+import qualified JS.WebSocket            as WebSocket
 
 import           Reactive.Banana.Frameworks ( AddHandler(..), liftIO )
 
@@ -78,6 +79,18 @@ mouseMovedHandler    = mouseHandler mouseMove  Mouse.Moved
 mouseClickHandler    = mouseHandler click      Mouse.Clicked
 mouseDblClickHandler = mouseHandler dblClick   Mouse.DblClicked
 
+-- keyHandler :: EventName Window KeyboardEvent.KeyboardEvent -> Keyboard.Type -> AddHandler (Event Dynamic)
+keyHandler event getter tag = AddHandler $ \h -> do
+    window <- fromJust <$> currentWindow
+    window `on` event $ do
+        key <- getter
+        liftIO . h $ Keyboard $ Keyboard.Event tag $ chr key
+
+keyPressedHandler :: AddHandler (Event Dynamic)
+keyPressedHandler = keyHandler keyPress uiCharCode Keyboard.Press
+keyDownHandler    = keyHandler keyDown  uiKeyCode Keyboard.Down
+keyUpHandler      = keyHandler keyUp    uiKeyCode Keyboard.Up
+
 resizeHandler :: AddHandler (Event Dynamic)
 resizeHandler = AddHandler $ \h -> do
     window <- fromJust <$> currentWindow
@@ -85,27 +98,6 @@ resizeHandler = AddHandler $ \h -> do
         width  <- getInnerWidth  window
         height <- getInnerHeight window
         h $ Window $ Window.Event Window.Resized width height
-
-keyPressedHandler :: AddHandler (Event Dynamic)
-keyPressedHandler = AddHandler $ \h -> do
-    window <- fromJust <$> currentWindow
-    window `on` keyPress $ do
-        key <- uiCharCode
-        liftIO . h $ Keyboard $ Keyboard.Event Keyboard.Press $ chr key
-
-keyDownHandler :: AddHandler (Event Dynamic)
-keyDownHandler = AddHandler $ \h -> do
-    window <- fromJust <$> currentWindow
-    window `on` keyDown $  do
-        key <- uiKeyCode
-        liftIO . h $ Keyboard $ Keyboard.Event Keyboard.Down $ chr key
-
-keyUpHandler :: AddHandler (Event Dynamic)
-keyUpHandler = AddHandler $ \h -> do
-    window <- fromJust <$> currentWindow
-    window `on` keyUp $ do
-        key <- uiKeyCode
-        liftIO . h $ Keyboard $ Keyboard.Event Keyboard.Up $ chr key
 
 nodeSearcherHander :: AddHandler (Event Dynamic)
 nodeSearcherHander = AddHandler $ \h -> do
