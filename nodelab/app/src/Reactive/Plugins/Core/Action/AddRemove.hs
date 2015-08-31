@@ -4,7 +4,11 @@ module Reactive.Plugins.Core.Action.AddRemove where
 
 import           Utils.PreludePlus
 import           Utils.Vector
+
 import           Data.Fixed
+import qualified Data.Text.Lazy as Text
+import           Data.Text.Lazy (Text)
+import           Debug.Trace
 
 import qualified JS.Bindings    as UI
 import qualified JS.NodeGraph   as UI
@@ -22,14 +26,11 @@ import           Event.NodeSearcher hiding  ( Event, expression )
 import qualified Event.NodeSearcher as NodeSearcher
 import           Reactive.Plugins.Core.Action.Action
 import           Reactive.Plugins.Core.Action.State.AddRemove
+import qualified Reactive.Plugins.Core.Action.State.Graph     as Graph
 import qualified Reactive.Plugins.Core.Action.State.Selection as Selection
 import qualified Reactive.Plugins.Core.Action.State.Global    as Global
 
-import qualified Data.Text.Lazy as Text
-import           Data.Text.Lazy (Text)
 
-
-import           Debug.Trace
 
 data ActionType = Add
                 | Remove
@@ -85,10 +86,12 @@ instance ActionStateUpdater Action where
         Nothing     -> ActionUI  NoAction newState
         where
         newState                = oldState & Global.iteration                     +~ 1
-                                           & Global.nodes                         .~ newNodes
+                                           & Global.graph                         .~ newGraph
                                            & Global.selection . Selection.nodeIds .~ newSelIds
                                            & Global.addRemove . toRemoveIds       .~ newToRemoveIds
-        oldNodes                = oldState ^. Global.nodes
+        oldGraph                = oldState ^. Global.graph
+        oldNodes                = Graph.getNodes oldGraph
+        newGraph                = Graph.updateNodes newNodes oldGraph
         camera                  = Global.toCamera oldState
         nodePosWs               = Camera.screenToWorkspace camera $ oldState ^. Global.mousePos
         oldSelNodeIds           = oldState ^. Global.selection . Selection.nodeIds
@@ -116,7 +119,7 @@ instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
         AddAction expr     -> createNodeOnUI node
             where
-            node            = head $ state ^. Global.nodes
+            node            = head . Graph.getNodes $ state ^. Global.graph
         RemoveFocused      -> UI.removeNode nodeId
                            >> mapM_ UI.setNodeFocused topNodeId
             where

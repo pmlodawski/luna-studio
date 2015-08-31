@@ -9,7 +9,7 @@ import           Luna.Syntax.Layer.Labeled
 
 import           Control.Monad.State
 
-data Meta = Meta Int String deriving (Show)
+data Meta = Meta Int String deriving (Eq, Show)
 
 instance Default Meta where def = Meta 0 ""
 

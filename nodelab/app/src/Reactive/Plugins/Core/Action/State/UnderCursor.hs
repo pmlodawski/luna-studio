@@ -9,6 +9,7 @@ import           Object.Port
 import           Object.Node
 
 import           Reactive.Plugins.Core.Action.State.Global
+import qualified Reactive.Plugins.Core.Action.State.Graph      as Graph
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry as UIRegistry
 
 import           Object.Widget
@@ -31,7 +32,7 @@ instance PrettyPrinter UnderCursor where
 
 
 getNodesUnderCursor :: State -> NodeCollection
-getNodesUnderCursor state = getNodesAt (state ^. mousePos) (toCamera state) (state ^. nodes)
+getNodesUnderCursor state = getNodesAt (state ^. mousePos) (toCamera state) (Graph.getNodes $ state ^. graph)
 --
 -- getNodesUnderCursor state = maybeToList node where
 --     node = do
@@ -41,7 +42,7 @@ getNodesUnderCursor state = getNodesAt (state ^. mousePos) (toCamera state) (sta
 
 
 getPortRefUnderCursor :: State -> Maybe PortRef
-getPortRefUnderCursor state = getPortRef (state ^. mousePos) (toCamera state) (state ^. nodes)
+getPortRefUnderCursor state = getPortRef (state ^. mousePos) (toCamera state) (Graph.getNodes $ state ^. graph)
 
 
 underCursor :: State -> UnderCursor

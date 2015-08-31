@@ -17,6 +17,7 @@ import           Event.Event
 import           Event.WithObjects
 import           Reactive.Plugins.Core.Action.Action
 import           Reactive.Plugins.Core.Action.State.Camera
+import qualified Reactive.Plugins.Core.Action.State.Graph     as Graph
 import qualified Reactive.Plugins.Core.Action.State.Global    as Global
 
 
@@ -149,7 +150,7 @@ instance ActionStateUpdater Action where
                 StopDrag              -> Nothing
             _                         -> Nothing
         (autoZoomPan, autoZoomFactor)  = (autoZoomPan, autoZoomFactor) where
-            nodes          = oldState ^. Global.nodes
+            nodes          = oldState ^. Global.graph . Graph.nodeList
             screenSize     = fromIntegral <$> oldState ^. Global.screenSize
             minXY          = -padding + (Vector2 (minimum $ (^. nodePos . x) <$> nodes) (minimum $ (^. nodePos . y) <$> nodes))
             maxXY          =  padding + (Vector2 (maximum $ (^. nodePos . x) <$> nodes) (maximum $ (^. nodePos . y) <$> nodes))

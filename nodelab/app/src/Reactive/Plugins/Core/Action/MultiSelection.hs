@@ -21,6 +21,7 @@ import           Event.WithObjects
 import           Reactive.Plugins.Core.Action.Action
 import           Reactive.Plugins.Core.Action.State.MultiSelection
 import           Reactive.Plugins.Core.Action.State.UnderCursor
+import qualified Reactive.Plugins.Core.Action.State.Graph          as Graph
 import qualified Reactive.Plugins.Core.Action.State.Selection      as Selection
 import qualified Reactive.Plugins.Core.Action.State.Camera         as Camera
 import qualified Reactive.Plugins.Core.Action.State.Global         as Global
@@ -70,12 +71,14 @@ instance ActionStateUpdater Action where
         Nothing     -> ActionUI  NoAction newState
         where
         oldDrag                          = oldState ^. Global.multiSelection . history
-        oldNodes                         = oldState ^. Global.nodes
+        oldGraph                         = oldState ^. Global.graph
+        oldNodes                         = Graph.getNodes oldGraph
+        newGraph                         = Graph.updateNodes newNodes oldGraph
         oldSelection                     = oldState ^. Global.selection . Selection.nodeIds
         newState                         = oldState & Global.iteration                     +~ 1
                                                     & Global.multiSelection . history      .~ newDrag
                                                     & Global.selection . Selection.nodeIds .~ newNodeIds
-                                                    & Global.nodes                         .~ newNodes
+                                                    & Global.graph                         .~ newGraph
         newNodes                         = updateNodesSelection newNodeIds oldNodes
         newAction                        = case newActionCandidate of
             DragSelect Moving pt        -> case oldDrag of
@@ -109,7 +112,8 @@ instance ActionUIUpdater Action where
         DragSelect StopDrag _  -> UI.hideSelectionBox
         _                      -> return ()
         where selectedNodeIds   = state ^. Global.selection . Selection.nodeIds
-              unselectedNodeIds = filter (\nodeId -> not $ nodeId `elem` selectedNodeIds) $ (^. nodeId) <$> state ^. Global.nodes
+              nodeList          = Graph.getNodes $ state ^. Global.graph
+              unselectedNodeIds = filter (\nodeId -> not $ nodeId `elem` selectedNodeIds) $ (^. nodeId) <$> nodeList
               topNodeId         = selectedNodeIds ^? ix 0
               dragState         = fromJust (state ^. Global.multiSelection . history)
               camera            = Global.toCamera state

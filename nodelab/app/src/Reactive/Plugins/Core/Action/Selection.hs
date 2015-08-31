@@ -15,6 +15,7 @@ import           Event.Event
 import           Event.WithObjects
 import           Reactive.Plugins.Core.Action.Action
 import           Reactive.Plugins.Core.Action.State.Selection
+import qualified Reactive.Plugins.Core.Action.State.Graph     as Graph
 import qualified Reactive.Plugins.Core.Action.State.Camera    as Camera
 import qualified Reactive.Plugins.Core.Action.State.Global    as Global
 import           Reactive.Plugins.Core.Action.State.UnderCursor
@@ -76,11 +77,13 @@ instance ActionStateUpdater Action where
     execSt newAction oldState = ActionUI newAction newState
         where
         oldNodeIds                       = oldState ^. Global.selection . nodeIds
-        oldNodes                         = oldState ^. Global.nodes
+        oldGraph                         = oldState ^. Global.graph
+        oldNodes                         = Graph.getNodes oldGraph
+        newGraph                         = Graph.updateNodes newNodes oldGraph
         newNodes                         = updateNodesSelection newNodeIds oldNodes
         newState                         = oldState & Global.iteration           +~ 1
                                                     & Global.selection . nodeIds .~ newNodeIds
-                                                    & Global.nodes               .~ newNodes
+                                                    & Global.graph               .~ newGraph
         newNodeIds                       = case newAction of
             SelectAll                   -> (^. nodeId) <$> oldNodes
             UnselectAll                 -> []

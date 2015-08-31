@@ -20,6 +20,7 @@ import           Event.Event
 import           Event.WithObjects
 import           Reactive.Plugins.Core.Action.Action
 import           Reactive.Plugins.Core.Action.State.Connect
+import qualified Reactive.Plugins.Core.Action.State.Graph     as Graph
 import qualified Reactive.Plugins.Core.Action.State.Camera    as Camera
 import qualified Reactive.Plugins.Core.Action.State.Global    as Global
 import           Reactive.Plugins.Core.Action.State.UnderCursor
@@ -78,10 +79,12 @@ instance ActionStateUpdater Action where
         Nothing     -> ActionUI  NoAction newState
         where
         oldConnecting                    = oldState ^. Global.connect . connecting
-        oldNodes                         = oldState ^. Global.nodes
+        oldGraph                         = oldState ^. Global.graph
+        oldNodes                         = Graph.getNodes oldGraph
+        newGraph                         = Graph.updateNodes newNodes oldGraph
         newState                         = oldState & Global.iteration            +~ 1
                                                     & Global.connect . connecting .~ newConnecting
-                                                    & Global.nodes                .~ newNodes
+                                                    & Global.graph                .~ newGraph
         newAction                        = case newActionCandidate of
             DragAction Moving pt        -> case oldConnecting of
                 Nothing                 -> Nothing

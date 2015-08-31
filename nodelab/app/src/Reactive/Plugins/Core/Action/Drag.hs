@@ -18,6 +18,7 @@ import           Event.WithObjects
 
 import           Reactive.Plugins.Core.Action.Action
 import           Reactive.Plugins.Core.Action.State.Drag
+import qualified Reactive.Plugins.Core.Action.State.Graph     as Graph
 import qualified Reactive.Plugins.Core.Action.State.Selection as Selection
 import qualified Reactive.Plugins.Core.Action.State.Camera    as Camera
 import qualified Reactive.Plugins.Core.Action.State.Global    as Global
@@ -73,12 +74,14 @@ instance ActionStateUpdater Action where
         Nothing     -> ActionUI  NoAction newState
         where
         oldDrag                          = oldState ^. Global.drag . history
-        oldNodes                         = oldState ^. Global.nodes
+        oldGraph                         = oldState ^. Global.graph
+        oldNodes                         = Graph.getNodes oldGraph
+        newGraph                         = Graph.updateNodes newNodes oldGraph
         camFactor                        = oldState ^. Global.camera . Camera.camera . Camera.factor
         emptySelection                   = null oldNodes
         newState                         = oldState & Global.iteration       +~ 1
                                                     & Global.drag  . history .~ newDrag
-                                                    & Global.nodes           .~ newNodes
+                                                    & Global.graph           .~ newGraph
         newAction                        = case newActionCandidate of
             DragAction Moving pt        -> case oldDrag of
                 Nothing                 -> Nothing
@@ -113,7 +116,7 @@ instance ActionUIUpdater Action where
             Dragging                 -> dragNodesUI deltaWs selNodes
             StopDrag                 -> moveNodesUI selNodes
             where
-                allNodes              = state ^. Global.nodes
+                allNodes              = Graph.getNodes $ state ^. Global.graph
                 selNodeIds            = state ^. Global.selection . Selection.nodeIds
                 selNodes              = filter (\node -> node ^. nodeId `elem` selNodeIds) allNodes
                 factor                = state ^. Global.camera . Camera.camera . Camera.factor

@@ -5,12 +5,11 @@ import           Utils.PreludePlus
 import           Utils.Vector
 
 import qualified JS.Camera
-import           Object.Object
-import           Object.Port
-import           Object.Node
+
 
 import           Batch.Project
 import qualified Reactive.Plugins.Core.Action.State.Camera            as Camera
+import qualified Reactive.Plugins.Core.Action.State.Graph             as Graph
 import qualified Reactive.Plugins.Core.Action.State.AddRemove         as AddRemove
 import qualified Reactive.Plugins.Core.Action.State.Selection         as Selection
 import qualified Reactive.Plugins.Core.Action.State.MultiSelection    as MultiSelection
@@ -24,7 +23,7 @@ import qualified Reactive.Plugins.Core.Action.State.Sandbox           as Sandbox
 data State = State { _iteration      :: Integer
                    , _mousePos       :: Vector2 Int
                    , _screenSize     :: Vector2 Int
-                   , _nodes          :: NodeCollection
+                   , _graph          :: Graph.State
                    , _camera         :: Camera.State
                    , _addRemove      :: AddRemove.State
                    , _selection      :: Selection.State
@@ -40,15 +39,17 @@ data State = State { _iteration      :: Integer
 
 makeLenses ''State
 
+initialScreenSize = Vector2 400 200
+
 instance Default State where
-    def = State def (Vector2 400 200) def def def def def def def def def def def def def
+    def = State def initialScreenSize def def def def def def def def def def def def def
 
 instance PrettyPrinter State where
-    display (State iteration mousePos screenSize nodes camera addRemove selection multiSelection drag connect nodeSearcher breadcrumb uiRegistry sandbox project)
+    display (State iteration mousePos screenSize graph camera addRemove selection multiSelection drag connect nodeSearcher breadcrumb uiRegistry sandbox project)
         = "gS(" <> display iteration
          <> " " <> display mousePos
          <> " " <> display screenSize
-         <> " " <> display nodes
+         <> " " <> display graph
          <> " " <> display camera
          <> " " <> display addRemove
          <> " " <> display selection
