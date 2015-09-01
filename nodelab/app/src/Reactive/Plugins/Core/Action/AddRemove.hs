@@ -76,8 +76,8 @@ tmpGetOutputPortsNr expr = 1 + (ord (fromMaybe '1' $ listToMaybe (tail expr)) - 
 createNode :: NodeId -> Vector2 Double -> Text -> Node
 createNode nodeId pos expr = Node nodeId False pos expr (createPorts inputPortsNum outputPortsNum) where
     -- mock port numbers:
-    inputPortsNum   = tmpGetInputPortsNr  $ Text.unpack expr
-    outputPortsNum  = tmpGetOutputPortsNr $ Text.unpack expr
+    inputPortsNum   = 1 -- tmpGetInputPortsNr  $ Text.unpack expr
+    outputPortsNum  = 1 -- tmpGetOutputPortsNr $ Text.unpack expr
 
 
 instance ActionStateUpdater Action where

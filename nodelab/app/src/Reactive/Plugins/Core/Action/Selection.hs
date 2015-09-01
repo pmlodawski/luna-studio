@@ -79,8 +79,7 @@ instance ActionStateUpdater Action where
         oldNodeIds                       = oldState ^. Global.selection . nodeIds
         oldGraph                         = oldState ^. Global.graph
         oldNodes                         = Graph.getNodes oldGraph
-        newGraph                         = Graph.updateNodes newNodes oldGraph
-        newNodes                         = updateNodesSelection newNodeIds oldNodes
+        newGraph                         = Graph.selectNodes newNodeIds oldGraph
         newState                         = oldState & Global.iteration           +~ 1
                                                     & Global.selection . nodeIds .~ newNodeIds
                                                     & Global.graph               .~ newGraph

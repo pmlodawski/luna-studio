@@ -73,13 +73,12 @@ instance ActionStateUpdater Action where
         oldDrag                          = oldState ^. Global.multiSelection . history
         oldGraph                         = oldState ^. Global.graph
         oldNodes                         = Graph.getNodes oldGraph
-        newGraph                         = Graph.updateNodes newNodes oldGraph
+        newGraph                         = Graph.selectNodes newNodeIds oldGraph
         oldSelection                     = oldState ^. Global.selection . Selection.nodeIds
         newState                         = oldState & Global.iteration                     +~ 1
                                                     & Global.multiSelection . history      .~ newDrag
                                                     & Global.selection . Selection.nodeIds .~ newNodeIds
                                                     & Global.graph                         .~ newGraph
-        newNodes                         = updateNodesSelection newNodeIds oldNodes
         newAction                        = case newActionCandidate of
             DragSelect Moving pt        -> case oldDrag of
                 Nothing                 -> Nothing
