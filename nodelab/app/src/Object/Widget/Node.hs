@@ -7,16 +7,23 @@ import           Utils.Vector
 import           Data.Fixed
 
 import           Object.Widget
+import           Utils.CtxDynamic
 
 
-data Number a =  Node   { _refId     :: Int
-                        , _nodeId    :: Int
-                        } deriving (Eq, Show, Typeable)
+data Node = Node { _refId     :: Int
+                 , _nodeId    :: Int
+                 } deriving (Eq, Show, Typeable)
 
 makeLenses ''Node
 
-instance IsDisplayObject (Number a) where
+instance IsDisplayObject Node where
     objectId       b = b ^. refId
+    objectIdLens     = refId
     objectPosition   = undefined
     objectSize       = undefined
-    objectIdLens     = undefined
+
+
+instance Clickable Node where
+    onClick pos n = (Just action, toCtxDynamic n) where
+        action    = do
+            putStrLn $ "Clicked node: " <> show (n ^. refId) <> " / " <> show (n ^. nodeId)

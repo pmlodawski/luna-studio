@@ -24,7 +24,7 @@ var height = 60;
 
 var nodeGeometry    = new THREE.PlaneBufferGeometry(width, height);
 
-function Node(id, position, z) {
+function Node(id, position, z, widgetId) {
   var _this = this;
 
   this.id = id;
@@ -34,7 +34,6 @@ function Node(id, position, z) {
   this.inputPorts  = [];
   this.outputPorts = [];
 
-  var _id = 65536 + id;
 
   this.uniforms = {
     selected:        { type: 'i',  value:             0   },
@@ -44,7 +43,7 @@ function Node(id, position, z) {
     unselectedColor: { type: 'c',  value: unselectedColor },
     selectedColor:   { type: 'c',  value:   selectedColor },
     focusedColor:    { type: 'c',  value:    focusedColor },
-    objectId:        { type: 'v3', value: new THREE.Vector3((_id % 256) / 255.0, Math.floor(Math.floor(_id % 65536) / 256) / 255.0, Math.floor(_id / 65536) / 255.0) }
+    objectId:        { type: 'v3', value: new THREE.Vector3((widgetId % 256) / 255.0, Math.floor(Math.floor(widgetId % 65536) / 256) / 255.0, Math.floor(widgetId / 65536) / 255.0) }
   };
 
   Object.keys($$.commonUniforms).forEach(function(k) {

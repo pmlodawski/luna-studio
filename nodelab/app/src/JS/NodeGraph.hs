@@ -89,8 +89,8 @@ setOutputPortAngle nodeId portId angle = do
     setOutputPortAngleJS nodeRef portId angle
 
 
-createNodeAt :: Int -> Vector2 Double -> Text -> IO ()
-createNodeAt nodeId (Vector2 px py) expr = do
-    newNodeAt nodeId px py expr
+createNodeAt :: Int -> Vector2 Double -> Text -> Int -> IO ()
+createNodeAt nodeId (Vector2 px py) expr wid = do
+    newNodeAt nodeId px py expr wid
     putStrLn $ "nodeId " <> show nodeId
 

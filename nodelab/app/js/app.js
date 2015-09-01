@@ -145,20 +145,20 @@ function updateMouse(x, y) {
   });
 }
 
-function newNodeAt(id, x, y, expr) {
+function newNodeAt(id, x, y, expr, widgetId) {
   var pos = new THREE.Vector2(x, y);
-  var node = new GraphNode(id, pos, nodeZOrderStart + id * nodeZOrderStep);
+  var node = new GraphNode(id, pos, nodeZOrderStart + id * nodeZOrderStep, widgetId);
   $$.nodes[id] = node;
   node.label(expr);
   $$.scene.add(node.mesh);
-  $$.registry[65536 + id] = node;
+  $$.registry[widgetId] = node;
 }
 
 function removeNode(i) {
   var node = $$.nodes[i];
   $$.scene.remove(node.mesh);
   delete $$.nodes[i];
-  delete $$.registry[65536 + i];
+  // delete $$.registry[65536 + i];
 }
 
 // -> HS

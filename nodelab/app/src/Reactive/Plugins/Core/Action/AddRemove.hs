@@ -17,6 +17,9 @@ import qualified JS.Camera      as Camera
 import           Object.Object
 import           Object.Port
 import           Object.Node
+import           Object.Widget
+import qualified Object.Widget.Node as WNode
+import           Object.Widget.Scene (sceneGraphId)
 import           Event.Keyboard hiding      ( Event )
 import qualified Event.Keyboard as Keyboard
 import           Event.Mouse    hiding      ( Event, WithObjects )
@@ -26,9 +29,10 @@ import           Event.NodeSearcher hiding  ( Event, expression )
 import qualified Event.NodeSearcher as NodeSearcher
 import           Reactive.Plugins.Core.Action.Action
 import           Reactive.Plugins.Core.Action.State.AddRemove
-import qualified Reactive.Plugins.Core.Action.State.Graph     as Graph
-import qualified Reactive.Plugins.Core.Action.State.Selection as Selection
-import qualified Reactive.Plugins.Core.Action.State.Global    as Global
+import qualified Reactive.Plugins.Core.Action.State.Graph      as Graph
+import qualified Reactive.Plugins.Core.Action.State.Selection  as Selection
+import qualified Reactive.Plugins.Core.Action.State.Global     as Global
+import qualified Reactive.Plugins.Core.Action.State.UIRegistry as UIRegistry
 
 
 
@@ -38,6 +42,7 @@ data ActionType = Add
 
 data Action = AddAction Text
             | RemoveFocused
+            | AddActionUI Node WNode.Node
             deriving (Eq, Show)
 
 
@@ -81,7 +86,25 @@ createNode nodeId pos expr = Node nodeId False pos expr (createPorts inputPortsN
 
 
 instance ActionStateUpdater Action where
-    execSt newActionCandidate oldState = case newAction of
+    execSt (AddAction expr) oldState = ActionUI newAction newState
+        where
+        newAction               = AddActionUI newNode newWNode
+        newState                = oldState & Global.iteration                     +~ 1
+                                           & Global.graph                         .~ newGraph
+                                           & Global.uiRegistry                    .~ newRegistry
+        oldGraph                = oldState ^. Global.graph
+        oldNodes                = Graph.getNodes oldGraph
+        camera                  = Global.toCamera oldState
+        nodePosWs               = Camera.screenToWorkspace camera $ oldState ^. Global.mousePos
+        oldSelNodeIds           = oldState ^. Global.selection . Selection.nodeIds
+        oldRegistry             = oldState ^. Global.uiRegistry
+        nextNodeId              = 1 + (maxNodeId oldNodes)
+        newGraph                = Graph.addNode newNode oldGraph
+        newNode                 = createNode nextNodeId nodePosWs expr
+        (newWNode, newRegistry) = UIRegistry.register sceneGraphId widget oldRegistry where
+            widget = WNode.Node def nextNodeId
+
+    execSt RemoveFocused oldState = case newAction of
         Just action -> ActionUI newAction newState
         Nothing     -> ActionUI  NoAction newState
         where
@@ -96,29 +119,18 @@ instance ActionStateUpdater Action where
         oldSelNodeIds           = oldState ^. Global.selection . Selection.nodeIds
         headNodeId              = listToMaybe oldSelNodeIds
         nextNodeId              = 1 + (maxNodeId oldNodes)
-        newAction               = case newActionCandidate of
-            RemoveFocused      -> case headNodeId of
-                Nothing        -> Nothing
-                _              -> Just newActionCandidate
-            _                  -> Just newActionCandidate
-        newToRemoveIds          = case newAction of
-            Just RemoveFocused -> maybeToList headNodeId
-            _                  -> []
-        newSelIds               = case newAction of
-            Just RemoveFocused -> drop 1 oldSelNodeIds
-            _                  -> oldSelNodeIds
-        newGraph                = case newActionCandidate of
-            AddAction expr     -> Graph.addNode newNode oldGraph where
-                newNode         = createNode nextNodeId nodePosWs expr
-            RemoveFocused      -> case headNodeId of
-                Just remId     -> Graph.removeNode remId oldGraph
-                Nothing        -> oldGraph
+        newAction               = case headNodeId of
+            Nothing        -> Nothing
+            _              -> Just RemoveFocused
+        newToRemoveIds          = maybeToList headNodeId
+        newSelIds               = drop 1 oldSelNodeIds
+        newGraph                = case headNodeId of
+            Just remId     -> Graph.removeNode remId oldGraph
+            Nothing        -> oldGraph
 
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
-        AddAction expr     -> createNodeOnUI node
-            where
-            node            = head . Graph.getNodes $ state ^. Global.graph
+        AddActionUI node wnode  -> createNodeOnUI node wnode
         RemoveFocused      -> UI.removeNode nodeId
                            >> mapM_ UI.setNodeFocused topNodeId
             where
@@ -128,13 +140,13 @@ instance ActionUIUpdater Action where
 
 
 
-createNodeOnUI :: Node ->  IO ()
-createNodeOnUI node = do
+createNodeOnUI :: Node -> WNode.Node -> IO ()
+createNodeOnUI node wnode = do
     let
         pos        = node ^. nodePos
         ident      = node ^. nodeId
         expr       = node ^. expression
-    UI.createNodeAt ident pos expr
+    UI.createNodeAt ident pos expr (objectId wnode)
     addPorts  InputPort node
     addPorts OutputPort node
 

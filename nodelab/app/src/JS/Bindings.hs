@@ -36,11 +36,11 @@ foreign import javascript unsafe "app.render()"
 foreign import javascript unsafe "app.moveToTopZ($1)"
     moveToTopZ :: Int -> IO ()
 
-foreign import javascript unsafe "app.newNodeAt($1, $2, $3, $4)"
-    newNodeAtJS :: Int -> Double -> Double -> JSString -> IO ()
+foreign import javascript unsafe "app.newNodeAt($1, $2, $3, $4, $5)"
+    newNodeAtJS :: Int -> Double -> Double -> JSString -> Int -> IO ()
 
-newNodeAt :: Int -> Double -> Double -> Text -> IO ()
-newNodeAt nodeId px py expr = newNodeAtJS nodeId px py $ lazyTextToJSString expr
+newNodeAt :: Int -> Double -> Double -> Text -> Int -> IO ()
+newNodeAt nodeId px py expr widgetId = newNodeAtJS nodeId px py (lazyTextToJSString expr) widgetId
 
 
 foreign import javascript unsafe "app.removeNode($1)"
