@@ -57,8 +57,8 @@ void main() {
         blurCamFactor += camFactorDelta / 1.1;
     }
     float blurWidth = 60.0;
-    float rimWidth = 120.0;
-    float size = nodeSize + rimWidth / 32.0;
+    float rimWidth = 240.0;
+    float size = nodeSize + rimWidth / 48.0;
     float r4 = dot(size, size);
     float r3 = r4 - blurWidth / blurCamFactor;
     float r2 = r3 -  rimWidth /  rimCamFactor;
