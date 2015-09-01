@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Object.Node where
 
 import           Utils.PreludePlus
@@ -31,6 +33,12 @@ makeLenses ''Ports
 makeLenses ''Node
 
 type NodeCollection   = [Node]
+
+instance Default Ports where
+    def = Ports [] []
+
+instance Default Node where
+    def = Node (-1) False def "" def
 
 instance PrettyPrinter Ports where
     display (Ports input output)

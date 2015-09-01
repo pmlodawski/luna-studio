@@ -37,34 +37,57 @@ import           AST.AST
 import           Utils.Viz
 
 
--- initA :: RefFunctionGraphMeta
+
+
+data TestMeta = TestMeta Int String deriving (Eq, Show)
+
+instance Default TestMeta where def = TestMeta 0 ""
+
+-- instance {-# OVERLAPPABLE #-} (MonadState TestMeta m) => LabBuilder m TestMeta where
+--     mkLabel = get
+
+
+type LabeledTestMeta          = Labeled TestMeta (Typed Draft)
+type GraphTestMeta            = HomoGraph ArcPtr LabeledTestMeta
+type GraphRefTestMeta         = Arc              LabeledTestMeta
+
+type StateGraphTestMeta       = BldrState GraphTestMeta
+
+type RefFunctionGraphTestMeta = (GraphRefTestMeta, GraphTestMeta)
+
+instance Repr s GraphTestMeta where
+    repr = fromString . show
+
+
+
+-- initA :: RefFunctionGraphTestMeta
 -- initA = flip runGraphState def $
 --     genTopStar
 
-varA :: StateGraphMeta -> RefFunctionGraphMeta
+varA :: StateGraphTestMeta -> RefFunctionGraphTestMeta
 varA bldrState = flip runGraphState bldrState $ do
     genTopStar
-    withMeta (Meta 1 "a") $ var "a"
+    withMeta (TestMeta 1 "a") $ var "a"
 
-varB :: StateGraphMeta -> RefFunctionGraphMeta
+varB :: StateGraphTestMeta -> RefFunctionGraphTestMeta
 varB bldrState = flip runGraphState bldrState $
-    withMeta (Meta 2 "b") $ var "b"
+    withMeta (TestMeta 2 "b") $ var "b"
 
-varF :: StateGraphMeta -> RefFunctionGraphMeta
+varF :: StateGraphTestMeta -> RefFunctionGraphTestMeta
 varF bldrState = flip runGraphState bldrState $
-    withMeta (Meta 1 "f") $ var "f"
+    withMeta (TestMeta 1 "f") $ var "f"
 
-accA :: GraphRefMeta -> StateGraphMeta -> RefFunctionGraphMeta
+accA :: GraphRefTestMeta -> StateGraphTestMeta -> RefFunctionGraphTestMeta
 accA rv1 bldrState = flip runGraphState bldrState $
-    withMeta (Meta 3 "c") $ rv1 @. "foo"
+    withMeta (TestMeta 3 "c") $ rv1 @. "foo"
 
-appA :: GraphRefMeta -> GraphRefMeta -> GraphRefMeta -> StateGraphMeta -> RefFunctionGraphMeta
+appA :: GraphRefTestMeta -> GraphRefTestMeta -> GraphRefTestMeta -> StateGraphTestMeta -> RefFunctionGraphTestMeta
 appA rf rv1 rv2 bldrState = flip runGraphState bldrState $
-    withMeta (Meta 4 "app1") $ rf @$ [arg rv1, arg rv2]
+    withMeta (TestMeta 4 "app1") $ rf @$ [arg rv1, arg rv2]
 
-appB :: GraphRefMeta -> GraphRefMeta -> StateGraphMeta -> RefFunctionGraphMeta
+appB :: GraphRefTestMeta -> GraphRefTestMeta -> StateGraphTestMeta -> RefFunctionGraphTestMeta
 appB rf rv1 bldrState = flip runGraphState bldrState $
-    withMeta (Meta 4 "app2") $ rf @$ [arg rv1]
+    withMeta (TestMeta 4 "app2") $ rf @$ [arg rv1]
 
 
 -- TODO: map id -> ref (GraphRefMeta)
@@ -84,7 +107,7 @@ main = do
         (rv5, f) = appB rf2 rv3 $ rebuild e
         (rv6, g) = appA rf1 rv5 rv3 $ rebuild f
         out      = g
-    putStrLn "Typeckecker test:"
+    putStrLn "Typeckecker test with meta:"
     print $ repr out
     print $ rv2                     -- Mu (Ref {fromRef = Ptr 7})
 
