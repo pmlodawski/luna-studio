@@ -53,8 +53,7 @@ instance PrettyPrinter State where
         <> ")"
 
 lookup :: WidgetId -> State -> Maybe DisplayObject
-lookup idx state = (^. widget) <$> IntMap.lookup idx oldWidgets where
-        oldWidgets = state ^. widgets
+lookup idx state = (^. widget) <$> IntMap.lookup idx (state ^. widgets)
 
 register :: DisplayObjectClass a => WidgetId -> a -> State -> (a, State)
 register parent a state = (aWithId, state & widgets .~ newWidgets') where

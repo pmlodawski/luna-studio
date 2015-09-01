@@ -7,12 +7,14 @@ import           Utils.Vector
 import           Object.Object
 import           Object.Port
 import           Object.Node
+import qualified Object.Widget.Node as WNode
 
 import           Reactive.Plugins.Core.Action.State.Global
 import qualified Reactive.Plugins.Core.Action.State.Graph      as Graph
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry as UIRegistry
 
 import           Object.Widget
+import           Utils.CtxDynamic
 
 
 
@@ -30,15 +32,18 @@ instance PrettyPrinter UnderCursor where
         <> " " <> display port
         <> ")"
 
-
 getNodesUnderCursor :: State -> NodeCollection
-getNodesUnderCursor state = getNodesAt (state ^. mousePos) (toCamera state) (Graph.getNodes $ state ^. graph)
---
--- getNodesUnderCursor state = maybeToList node where
---     node = do
---         widgetId <- state ^. uiRegistry . UIRegistry.widgetOver
---         if (widgetId `div` 65536) == 1 then find (\x -> (x ^. nodeId) == (widgetId - 65536)) (state ^. nodes)
---                                        else Nothing
+-- getNodesUnderCursor state = getNodesAt (state ^. mousePos) (toCamera state) (Graph.getNodes $ state ^. graph)
+-- --
+getNodesUnderCursor state = maybeToList node where
+    registry = state ^. uiRegistry
+    nodes    = Graph.getNodes $ state ^. graph
+    node = do
+        widgetId    <- registry ^. UIRegistry.widgetOver
+        maybeWidget <- UIRegistry.lookup widgetId registry
+        widget      <- (fromCtxDynamic maybeWidget) :: Maybe WNode.Node
+        let nid = widget ^. WNode.nodeId
+        find (\n -> (n ^. nodeId) == nid) nodes
 
 
 getPortRefUnderCursor :: State -> Maybe PortRef
