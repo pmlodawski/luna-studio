@@ -19,7 +19,7 @@ import           AST.AST
 type NodesMap = IntMap Meta
 
 
-data State = State { _nodeList  :: NodeCollection
+data State = State { _nodeList  :: NodeCollection    -- don't access it directly!
                    , _nodes     :: NodesMap
                    , _bldrState :: BldrState GraphMeta
                    } deriving (Show)
@@ -38,9 +38,9 @@ instance Default State where
 
 instance PrettyPrinter State where
     display (State nodesList nodes bldrState) =
-           "nM(" <> show nodesList
-        <> ", "  <> show (IntMap.keys nodes)
-        <> ", "  <> show bldrState
+          "nM(" <> show nodesList
+        <> " "  <> show (IntMap.keys nodes)
+        <> " "  <> show bldrState
         <> ")"
 
 
@@ -49,3 +49,13 @@ getNodes = (^. nodeList)
 
 updateNodes :: NodeCollection -> State -> State
 updateNodes newNodeList state = state & nodeList .~ newNodeList
+
+
+addNode :: Node -> State -> State
+addNode newNode state = state & nodeList .~ newNodeList where
+    newNodeList = newNode : state ^. nodeList
+
+
+removeNode :: NodeId -> State -> State
+removeNode remNodeId state = state & nodeList .~ newNodeList where
+    newNodeList = filter (\node -> node ^. nodeId /= remNodeId) $ state ^. nodeList

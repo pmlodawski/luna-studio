@@ -6,16 +6,20 @@ module Tmp.TypecheckerTest where
 
 import           Utils.PreludePlus
 
-import           Data.GraphViz.Types.Canonical
-import           Data.GraphViz.Types
-import           Data.GraphViz.Attributes.Complete   hiding (Label, Int)
-import qualified Data.GraphViz.Attributes.Complete   as GV
-import qualified Data.GraphViz.Attributes            as GV
-import           Data.GraphViz.Printing              (toDot)
-import           Data.GraphViz.Commands
-import qualified Data.GraphViz.Attributes.Colors     as GVC
-import qualified Data.GraphViz.Attributes.Colors.X11 as GVC
-import           Data.GraphViz.Printing
+-- import           Data.GraphViz.Types.Canonical
+-- import           Data.GraphViz.Types
+-- import           Data.GraphViz.Attributes.Complete   hiding (Label, Int)
+-- import qualified Data.GraphViz.Attributes.Complete   as GV
+-- import qualified Data.GraphViz.Attributes            as GV
+-- import           Data.GraphViz.Printing              (toDot)
+-- import           Data.GraphViz.Commands
+-- import qualified Data.GraphViz.Attributes.Colors     as GVC
+-- import qualified Data.GraphViz.Attributes.Colors.X11 as GVC
+-- import           Data.GraphViz.Printing
+
+-- import           Utils.Viz
+
+
 import           Luna.Repr.Styles (HeaderOnly(..), Simple(..))
 
 import           Data.Repr
@@ -33,8 +37,6 @@ import qualified Luna.Diagnostic.AST as Diag
 import qualified Data.Text.Lazy as Text
 
 import           AST.AST
-
-import           Utils.Viz
 
 
 
@@ -111,8 +113,8 @@ main = do
     print $ repr out
     print $ rv2                     -- Mu (Ref {fromRef = Ptr 7})
 
-    let gv = Diag.toGraphViz $ out
-    displayGraph $ printIt gv
+    -- let gv = Diag.toGraphViz $ out
+    -- displayGraph $ printIt gv
 
     return ()
 

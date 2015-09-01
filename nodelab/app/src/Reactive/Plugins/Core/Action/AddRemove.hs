@@ -91,7 +91,6 @@ instance ActionStateUpdater Action where
                                            & Global.addRemove . toRemoveIds       .~ newToRemoveIds
         oldGraph                = oldState ^. Global.graph
         oldNodes                = Graph.getNodes oldGraph
-        newGraph                = Graph.updateNodes newNodes oldGraph
         camera                  = Global.toCamera oldState
         nodePosWs               = Camera.screenToWorkspace camera $ oldState ^. Global.mousePos
         oldSelNodeIds           = oldState ^. Global.selection . Selection.nodeIds
@@ -108,12 +107,12 @@ instance ActionStateUpdater Action where
         newSelIds               = case newAction of
             Just RemoveFocused -> drop 1 oldSelNodeIds
             _                  -> oldSelNodeIds
-        newNodes                = case newActionCandidate of
-            AddAction expr     -> newNode : oldNodes where
+        newGraph                = case newActionCandidate of
+            AddAction expr     -> Graph.addNode newNode oldGraph where
                 newNode         = createNode nextNodeId nodePosWs expr
             RemoveFocused      -> case headNodeId of
-                Nothing        -> oldNodes
-                Just remId     -> filter (\node -> node ^. nodeId /= remId) oldNodes
+                Just remId     -> Graph.removeNode remId oldGraph
+                Nothing        -> oldGraph
 
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
