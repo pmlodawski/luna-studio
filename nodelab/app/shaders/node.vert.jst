@@ -5,6 +5,13 @@ precision highp float;
 varying vec2 pos;
 
 void main() {
+    vec3 posV = position;
     pos = uv * 2.0 - vec2(1.0, 1.0);
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    // if(posV.x > 0.0) {
+    //     posV.x *= 5.0;
+    // }
+    // if(posV.y > 0.0) {
+    //     posV.y *= 5.0;
+    // }
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(posV, 1.0);
 }

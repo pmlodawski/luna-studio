@@ -39,6 +39,7 @@ function Node(id, position, z, widgetId) {
     selected:        { type: 'i',  value:             0   },
     mouseDist:       { type: 'f',  value:        100000.0 },
     nodeSize:        { type: 'f',  value:            30.0 },
+    radius:          { type: 'f',  value:            10.0 },
     insideColor:     { type: 'c',  value:     insideColor },
     unselectedColor: { type: 'c',  value: unselectedColor },
     selectedColor:   { type: 'c',  value:   selectedColor },
