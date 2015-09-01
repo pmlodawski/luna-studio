@@ -110,7 +110,7 @@ instance ActionStateUpdater Action where
                 chart   <- UIRegistry.registerM sceneGraphId $  Chart  0 (Vector2 100 380) (Vector2 300 200) Chart.Bar "Brand" Chart.Category "Unit Sales" Chart.Linear
                 uiAction $ addChart chart
 
-                number  <- UIRegistry.registerM sceneGraphId $  Number 0 (Vector2 100 160) (Vector2 300  25) "Count" 12312313
+                number  <- UIRegistry.registerM sceneGraphId $  Number 0 (Vector2 100 170) (Vector2 200  25) "Count" 4096
                 uiAction $ addWidget number
 
                 return (button, slider, slider2, slider3, slider4, toggle, chart, number)
