@@ -5,7 +5,7 @@
 
 module Luna.Diagnostic.AST where
 
-import Prologue
+import Prologue  hiding (index)
 
 import           Data.GraphViz.Types.Canonical
 import           Data.GraphViz.Attributes.Complete   hiding (Label, Int)
@@ -33,24 +33,25 @@ import System.Platform
 import System.Process (createProcess, shell)
 
 toGraphViz :: _ => HomoGraph ArcPtr a -> DotGraph Int
-toGraphViz g = DotGraph { strictGraph     = False
-                        , directedGraph   = True
-                        , graphID         = Nothing
-                        , graphStatements = DotStmts { attrStmts = []
-                                                     , subGraphs = []
-                                                     , nodeStmts = nodeStmts
-                                                     , edgeStmts = edgeStmts
-                                                     }
-                        }
-    where nodes           = elems g
-          nodeIds         = indexes g
-          nodeLabels      = fmap (reprStyled HeaderOnly . view ast) nodes
-          labeledNode s a = DotNode a [GV.Label . StrLabel $ fromString s]
-          nodeStmts       = fmap (uncurry labeledNode) $ zip nodeLabels nodeIds
-          nodeInEdges   n = zip3 [0..] (genEdges $ unsafeIndex n g) (repeat n)
-          inEdges         = concat $ fmap nodeInEdges nodeIds
-          mkEdge  (n,(a,attrs),b) = DotEdge a b attrs
-          edgeStmts       = fmap mkEdge inEdges
+toGraphViz = undefined
+--toGraphViz g = DotGraph { strictGraph     = False
+--                        , directedGraph   = True
+--                        , graphID         = Nothing
+--                        , graphStatements = DotStmts { attrStmts = []
+--                                                     , subGraphs = []
+--                                                     , nodeStmts = nodeStmts
+--                                                     , edgeStmts = edgeStmts
+--                                                     }
+--                        }
+--    where nodes           = elems g
+--          nodeIds         = indexes g
+--          nodeLabels      = fmap (reprStyled HeaderOnly . view ast) nodes
+--          labeledNode s a = DotNode a [GV.Label . StrLabel $ fromString s]
+--          nodeStmts       = fmap (uncurry labeledNode) $ zip nodeLabels nodeIds
+--          nodeInEdges   n = zip3 [0..] (genEdges $ index n g) (repeat n)
+--          inEdges         = concat $ fmap nodeInEdges nodeIds
+--          mkEdge  (n,(a,attrs),b) = DotEdge a b attrs
+--          edgeStmts       = fmap mkEdge inEdges
 
 
 class GenEdges a where

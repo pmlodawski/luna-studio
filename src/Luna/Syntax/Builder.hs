@@ -35,6 +35,13 @@ runGraphT :: Monad m => GraphStarBuilderT s g m a -> BldrState g -> m (a, g)
 runGraphT g gs = flip runBuilderT gs $ flip StarBuilder.evalT Nothing $ g
 
 
+buildGraph :: Maybe s -> BldrState g -> GraphStarBuilder s g a -> (a, g)
+buildGraph = runIdentity .:. buildGraphT
+
+buildGraphT :: Monad m => Maybe s -> BldrState g -> GraphStarBuilderT s g m a -> m (a, g)
+buildGraphT s gs g = flip runBuilderT gs $ flip StarBuilder.evalT s $ g
+
+
 --- === Term builders ===
 
 type LayeredStarBuilder m t = (MonadFix m, MonadStarBuilder (Maybe (Mu t)) m, LayeredASTCons Star m t)
@@ -62,6 +69,7 @@ instance (Monad m, LayeredASTCons Lit m t) => ToMuM' Int         m t where toMuM
 
 --class     Monad m           => ToMuM a          m t | a -> t where toMuM :: a -> m (Mu t)
 
+--val = layeredASTCons
 
 -- Utils
 
@@ -101,16 +109,23 @@ getStar = do
                         StarBuilder.put oldstar
                         return ref
 
-genTopStar :: LayeredStarBuilder m t => m ()
+genTopStar :: LayeredStarBuilder m t => m (Mu t)
 genTopStar = do
     s <- getStar
     StarBuilder.put (Just s)
+    return s
 
 accessor :: forall name src m t. (ToMuM' name m t, ToMuM' src m t, LayeredASTMuCons Accessor m t) => name -> src -> m (Mu t)
 accessor n r = do
     mn <- toMuM' n :: m (Mu t)
     mr <- toMuM' r :: m (Mu t)
     layeredASTCons $ Accessor mn mr
+
+unify :: forall a b m t. (ToMuM' a m t, ToMuM' b m t, LayeredASTMuCons Unify m t) => a -> b -> m (Mu t)
+unify n r = do
+    mn <- toMuM' n :: m (Mu t)
+    mr <- toMuM' r :: m (Mu t)
+    layeredASTCons $ Unify mn mr
 
 app :: (ToMuM a m t, LayeredASTMuCons App m t) => a -> [MuArg m t] -> m (Mu t)
 app base args = layeredASTCons =<< (App <$> toMuM base <*> (sequence . fmap sequence) args)

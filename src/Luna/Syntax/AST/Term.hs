@@ -32,11 +32,13 @@ import Luna.Repr.Styles (HeaderOnly)
 -- S   - Source
 -- A/P - Args / Params
 
+-- Layout                     N S A/P
 data    Star       = Star                 deriving (Show, Eq, Ord)
 data    Cons     t = Cons     t   [t]     deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
 data    Accessor t = Accessor t t         deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
 data    App      t = App        t [Arg t] deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
 newtype Var      t = Var      t           deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
+data    Unify    t = Unify      t t       deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
 data    Blank      = Blank                deriving (Show, Eq, Ord)
 
 -- Type sets
@@ -45,15 +47,16 @@ type DraftElems t = Blank
                  ': TermElems t
 
 type TermElems  t = Var        t
+                 ': Unify      t
                  ': ThunkElems t
 
 type ThunkElems t = Accessor t
                  ': App      t
                  ': ValElems t
 
-type ValElems   t = Lit
+type ValElems   t = Star
+                 ': Lit
                  ': Cons t
-                 ': Star
                  ': '[]
 
 -- Record types
@@ -121,8 +124,9 @@ instance Traversable Draft where traverse = recordTraverse
 -- === Representations ===
 
 instance             Repr s Blank        where repr = fromString . show
-instance             Repr s Star         where repr = fromString . show
+instance             Repr s Star         where repr _              = "*"
 instance Repr s t => Repr s (Var      t) where repr (Var      n  ) = "Var"      <+> repr n
+instance Repr s t => Repr s (Unify    t) where repr (Unify    n t) = "Unify"    <+> repr n <+> repr t
 instance Repr s t => Repr s (Cons     t) where repr (Cons     n t) = "Cons"     <+> repr n <+> repr t
 instance Repr s t => Repr s (Accessor t) where repr (Accessor n t) = "Accessor" <+> repr n <+> repr t
 instance Repr s t => Repr s (App      t) where repr (App      n t) = "App"      <+> repr n <+> repr t
@@ -134,10 +138,11 @@ instance VariantReprs s (Draft t) => Repr s (Draft t) where repr (Draft t) = "Dr
 
 -- HeaderOnly
 
+instance {-# OVERLAPPING #-} Repr HeaderOnly Star         where repr _ = "*"
 instance {-# OVERLAPPING #-} Repr HeaderOnly Blank        where repr _ = "Blank"
-instance {-# OVERLAPPING #-} Repr HeaderOnly Star         where repr _ = "Star"
 instance {-# OVERLAPPING #-} Repr HeaderOnly (App      t) where repr _ = "App"
 instance {-# OVERLAPPING #-} Repr HeaderOnly (Var      t) where repr a = "Var"
+instance {-# OVERLAPPING #-} Repr HeaderOnly (Unify    t) where repr a = "Unify"
 instance {-# OVERLAPPING #-} Repr HeaderOnly (Cons     t) where repr a = "Cons"
 instance {-# OVERLAPPING #-} Repr HeaderOnly (Accessor t) where repr a = "Accessor"
 

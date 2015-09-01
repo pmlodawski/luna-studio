@@ -145,6 +145,6 @@ evalBuilderT = evalT
 instance Default g => Default (BldrState g) where
     def = BldrState def def
 
-instance (t ~ Ref i a, Monad m, Appendable cont idx (a (Mu t)), HasContainer g cont, PtrFrom idx i)
-      => MuBuilder a (GraphBuilderT g m) t where
-    buildMu a = fmap (Mu . Ref . ptrFrom) . withGraph . append $ a
+--instance (t ~ Ref i a, Monad m, Appendable' cont idx (a (Mu t)), HasContainer g cont, PtrFrom idx i)
+--      => MuBuilder a (GraphBuilderT g m) t where
+--    buildMu a = fmap (Mu . Ref . ptrFrom) . withGraph . append' $ a
