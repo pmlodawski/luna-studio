@@ -21,6 +21,9 @@ import Control.Monad.State    hiding (withState)
 import Type.BaseType
 import Data.TypeLevel.Bool    ((:==))
 
+import qualified Data.Vector as V
+import              Data.Vector (Vector)
+
 ------------------------------------------------------------------------
 -- Errors
 ------------------------------------------------------------------------
@@ -416,6 +419,8 @@ type Foo1 = Rec '[A]
 type Foo2 = Rec '[A,B]
 type Foo3 = Rec '[A,B,C]
 type FooD a = Rec '[A,B,C,D a]
+type FooIS = Rec '[Int,String]
+
 
 type Foo2' = Rec '[B,A]
 
@@ -453,6 +458,8 @@ test = do
         x4 = cons (A 1) :: Maybe Foo3
         x5 = cons (C 1) :: Maybe Foo3
         x6 = cons (C 1) :: Maybe Foo1
+        x7 = cons (7 :: Int) :: FooIS
+        x8 = cons ("yo"::String) :: FooIS
 
         t1 = cons (A 1) :: X
 
@@ -523,3 +530,54 @@ test = do
 
 
 --main = test
+
+
+------------------ Przyklad --------------------
+--caseS :: Case a matches out => a -> matches -> Maybe out
+--caseS = secureCase . view record
+
+--type family VectorsOf (lst :: [*]) :: [*] where
+--    VectorsOf '[]       = '[]
+--    VectorsOf (a ': as) = (Vector a ': VectorsOf as)
+
+--data Bar types = Bar { _barData :: Rec (VectorsOf types) }
+--makeLenses ''Bar
+
+--type instance Variants (Bar types) = VectorsOf types
+--instance Record (Bar types) where mkRecord = Bar
+--instance HasRecord (Bar types) (Bar types') where record = barData
+
+--class ShowBarType' base (t :: [*]) where
+--    showBarType' :: Proxy base -> Proxy t -> Bar base -> Maybe String
+
+--instance ShowBarType' base '[] where
+--    showBarType' _ _ _ = Nothing
+
+
+--instance (Typeable t, ShowBarType' base ts, WithVariantsM (MaybeMap' (Vector t) String) (VectorsOf base) Maybe String)
+--      => ShowBarType' base (t ': ts) where
+--    showBarType' _ _ bar = undefined -- case caseRes of Just str -> Just str
+--                                           --Nothing  -> showBarType' (Proxy :: Proxy base) (Proxy :: Proxy ts) bar
+--        --where caseRes = caseS bar $ do match $ \(el :: Vector t) -> show (typeOf el)
+
+
+--showBarType :: forall types. (ShowBarType' types types) => Bar types -> Maybe String
+--showBarType bar = showBarType' (Proxy :: Proxy types) (Proxy :: Proxy types) bar
+
+
+--test2 :: IO ()
+--test2 = do
+--    let v1  = V.fromList ["ala", "ma", "kota"] :: Vector String
+--        --v2  = V.fromList [1,2,3,4,5]           :: Vector Int
+--        b1  = cons v1                          :: Bar '[Int, String]
+--        --b2  = cons v2                          :: Bar '[Int, String]
+--        tp1 = showBarType b1
+--        --tp2 = showBarType b2
+
+--    --case tp1 of Nothing -> putStrLn "Nic"
+--    --            Just t  -> putStrLn t
+
+--    --case tp2 of Nothing -> putStrLn "Nic2"
+--    --            Just t  -> putStrLn t
+
+--    return ()

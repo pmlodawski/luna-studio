@@ -65,8 +65,8 @@ instance PtrTarget (Ptr  i)   a {- = -} (a (Ptr i))
 instance Repr s i => Repr s (HPtr i m a) where repr (HPtr p) = "HPtr" <+> repr p
 instance Repr s i => Repr s (Ptr i a)    where repr (Ptr i)  = "Ptr " <+> repr i
 
-type instance IdxType (Ptr  i   a) = a
-type instance IdxType (HPtr i m a) = a
+type instance IxType (Ptr  i   a) = a
+type instance IxType (HPtr i m a) = a
 
 instance Convertible i (Ptr i a)    where convert = Ptr
 instance Convertible (Ptr i a) i    where convert = ptrIdx
@@ -94,8 +94,8 @@ makeLenses ''HeteroContainer
 
 -- basic instances
 
-type instance ElementByIdx idx (HeteroContainer cont) = IdxType idx
-type instance IndexOf      el  (HeteroContainer cont) = Ptr (IndexOf el cont) el
+type instance ElementByIx idx (HeteroContainer cont) = IxType idx
+type instance IndexOf     el  (HeteroContainer cont) = Ptr (IndexOf el cont) el
 
 instance HasContainer (HeteroContainer c) (HeteroContainer c) where
     container = id
@@ -117,49 +117,41 @@ type HeteroTransCtx idx ctx a cont idx' el = ( Container (HeteroContainer cont) 
                                              )
 
 
---class (IndexOf el cont ~ idx, ElementByIdx idx cont ~ el, Measurable cont) => Container cont idx el where
---    elems   :: cont -> [el]
---    indexes :: cont -> [idx]
+----class (IndexOf el cont ~ idx, ElementByIx idx cont ~ el, Measurable cont) => Container cont idx el where
+----    elems   :: cont -> [el]
+----    indexes :: cont -> [idx]
 
-instance (idx ~ Ptr (IndexOf a cont) a) => Container (HeteroContainer cont) idx a
+--instance (idx ~ Ptr (IndexOf a cont) a) => Container (HeteroContainer cont) idx a
 
-instance Measurable (HeteroContainer cont)
--- TODO: TO END ^^^
+--instance Measurable (HeteroContainer cont)
+---- TODO: TO END ^^^
 
-instance (HeteroTransCtx idx ctx a cont idx' el, Appendable cont idx' el)
-      => Appendable (HeteroContainer cont) idx a where
-    append a (HeteroContainer cont) = (HeteroContainer cont', convert idx') where
-        (cont', idx') = append (Unified a :: Unified ctx) cont
+--instance (HeteroTransCtx idx ctx a cont idx' el, Appendable' cont idx' el)
+--      => Appendable' (HeteroContainer cont) idx a where
+--    append' a (HeteroContainer cont) = (HeteroContainer cont', convert idx') where
+--        (cont', idx') = append' (Unified a :: Unified ctx) cont
 
-instance (HeteroTransCtx idx ctx a cont idx' el, Prependable cont idx' el)
-      => Prependable (HeteroContainer cont) idx a where
-    prepend a (HeteroContainer cont) = (HeteroContainer cont', convert idx') where
-        (cont', idx') = prepend (Unified a :: Unified ctx) cont
+--instance (HeteroTransCtx idx ctx a cont idx' el, Prependable cont idx' el)
+--      => Prependable (HeteroContainer cont) idx a where
+--    prepend' a (HeteroContainer cont) = (HeteroContainer cont', convert idx') where
+--        (cont', idx') = prepend' (Unified a :: Unified ctx) cont
 
-instance (HeteroTransCtx idx ctx a cont idx' el, Updatable cont idx' el)
-      => Updatable (HeteroContainer cont) idx a where
-    update idx a = mapM $ update (convert idx) (Unified a :: Unified ctx)
+--instance (HeteroTransCtx idx ctx a cont idx' el, Updatable cont idx' el)
+--      => Updatable (HeteroContainer cont) idx a where
+--    update idx a = fmap $ update (convert idx) (Unified a :: Unified ctx)
 
-instance (HeteroTransCtx idx ctx a cont idx' el, Insertable cont idx' el)
-      => Insertable (HeteroContainer cont) idx a where
-    insert idx a = fmap $ insert (convert idx) (Unified a :: Unified ctx)
+--instance (HeteroTransCtx idx ctx a cont idx' el, Insertable cont idx' el)
+--      => Insertable (HeteroContainer cont) idx a where
+--    insert       idx a = fmap $ insert       (convert idx) (Unified a :: Unified ctx)
+--    unsafeInsert idx a = fmap $ unsafeInsert (convert idx) (Unified a :: Unified ctx)
 
-instance (HeteroTransCtx idx ctx a cont idx' el, UnsafeInsertable cont idx' el)
-      => UnsafeInsertable (HeteroContainer cont) idx a where
-    unsafeInsert idx a = fmap $ unsafeInsert (convert idx) (Unified a :: Unified ctx)
+--instance (HeteroTransCtx idx ctx a cont idx' el, Indexable cont idx' el, Convertible (Unified ctx) a)
+--      => Indexable (HeteroContainer cont) idx a where
+--    index       idx (HeteroContainer cont) = convert (index       (convert idx) cont :: Unified ctx)
 
-instance (HeteroTransCtx idx ctx a cont idx' el, UncheckedInsertable cont idx' el)
-      => UncheckedInsertable (HeteroContainer cont) idx a where
-    uncheckedInsert idx a = fmap $ uncheckedInsert (convert idx) (Unified a :: Unified ctx)
+--instance (HeteroTransCtx idx ctx a cont idx' el, Indexable (Unsafe cont) idx' el, Convertible (Unified ctx) a)
+--      => Indexable (Unsafe (HeteroContainer cont)) idx a where
+--    index idx (unwrap -> (HeteroContainer cont)) = cast $ (unsafely (index $ convert idx) cont :: Unified ctx)
 
-instance (HeteroTransCtx idx ctx a cont idx' el, Indexable cont idx' el, MaybeConvertible (Unified ctx) e a)
-      => Indexable (HeteroContainer cont) idx a where
-    index idx (HeteroContainer cont) = hush . tryConvert =<< (index (convert idx) cont :: Maybe (Unified ctx))
 
-instance (HeteroTransCtx idx ctx a cont idx' el, UnsafeIndexable cont idx' el, Castable (Unified ctx) a)
-      => UnsafeIndexable (HeteroContainer cont) idx a where
-    unsafeIndex idx (HeteroContainer cont) = cast $ (unsafeIndex (convert idx) cont :: (Unified ctx))
-
-instance (HeteroTransCtx idx ctx a cont idx' el, UncheckedIndexable cont idx' el, Castable (Unified ctx) a)
-      => UncheckedIndexable (HeteroContainer cont) idx a where
-    uncheckedIndex idx (HeteroContainer cont) = cast $ (uncheckedIndex (convert idx) cont :: (Unified ctx))
+--instance (Indexable2  opts a idx el) => Indexable2  opts (Resizable s a) idx el where index2 opts idx = index2 opts idx . unwrap

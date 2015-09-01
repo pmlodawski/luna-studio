@@ -26,17 +26,18 @@ import           Data.List                          (intersperse)
 import           Prelude                            hiding (mapM, mapM_, print, putStr, putStrLn, (++), (.))
 import qualified Prelude
 import           Text.Show.Pretty                   (ppShow)
-import           Data.Maybe                         as X (mapMaybe)
 
+import           Data.Function                      as X (on)
+import           Data.Maybe                         as X (mapMaybe)
 import           Data.Default                       as X
-import           Control.Lens                       as X
+import           Control.Lens                       as X hiding (Wrapped)
 import           Data.String.Class                  as X (IsString (fromString), ToString (toString))
 import           Control.Applicative                as X
 import           Control.Conditional                as X (ifM, unless, unlessM, when, whenM)
 import           Control.Monad                      as X (MonadPlus, mplus, mzero, void)
 import           Control.Monad.IO.Class             as X (MonadIO, liftIO)
 import           Control.Monad.Trans                as X (MonadTrans, lift)
-import           Data.Wrapper                       as X (Unwrap (unwrap), UnwrapT (unwrapT), Wrap (wrap), WrapT (wrapT), Wrapper, WrapperT, rewrap, wrapped)
+import           Data.Wrapper                       as X (Unwrap (unwrap), UnwrapT (unwrapT), Wrap (wrap), WrapT (wrapT), Wrapper, WrapperT, rewrap, wrapped, Wrapped)
 import           Data.Foldable                      as X (Foldable, traverse_)
 import           Data.Monoid                        as X (Monoid, mappend, mconcat, mempty, (<>))
 import           Data.String.Repr                   as X (StrRepr, strRepr)
@@ -188,3 +189,6 @@ mapOverM lens f a = do
 --mapOver :: (Lens' b a) -> (a -> (out, a)) -> (b -> (out, b))
 --mapOver lens f s = (out, s & lens .~ a) where
 --    (out, a) = f $ s ^. lens
+
+ifElseId :: Bool -> (a -> a) -> (a -> a)
+ifElseId cond a = if cond then a else id

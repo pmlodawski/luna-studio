@@ -5,6 +5,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 
+{-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE DefaultSignatures #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -13,7 +14,10 @@ module Data.Wrapper where
 
 import Control.Monad.Trans
 import Prelude
-import Control.Lens
+import Control.Lens hiding (Wrapped)
+
+--FIXME[wd]: change name from Wrapp* to , because it overlaps with Lens' Wrapped
+-- or leave them as is, because are sometimes more powerful
 
 
 ----------------------------------------------------------------------------------
@@ -42,6 +46,11 @@ class UnwrapT t where
 
 class (WrapT t, UnwrapT t) => WrapperT t
 
+class Wrapped a where
+    wrapped :: Lens (a t) (a t') t t'
+
+instance {-# OVERLAPPABLE #-} (Wrap a, Unwrap a) => Wrapped a where
+    wrapped = lens unwrap (const wrap)
 
 ----------------------------------------------------------------------------------
 -- Utils
@@ -50,8 +59,9 @@ class (WrapT t, UnwrapT t) => WrapperT t
 rewrap :: (Unwrap m, Wrap n) => m a -> n a
 rewrap = wrap . unwrap
 
-wrapped :: Wrapper m => Lens (m a) (m b) a b
-wrapped = lens unwrap (const wrap)
+--wrapped = "d"
+--wrapped :: Wrapper m => Lens (m a) (m b) a b
+--wrapped = lens unwrap (const wrap)
 
 ----------------------------------------------------------------------------------
 -- Instances
