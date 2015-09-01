@@ -15,7 +15,7 @@ import           Object.Port
 
 
 import qualified Data.Text.Lazy as Text
-import           Data.Text.Lazy ( Text )
+import           Data.Text.Lazy (Text)
 
 
 data Ports = Ports { _inputPorts  :: PortCollection
@@ -85,7 +85,7 @@ radiusSquared = nodeRadius * nodeRadius
 radiusShadow  = sqrt $ radiusSquared / 2.0
 
 
-portWidth         = 3.0
+portWidth         = 4.0
 portOuterBorder   = nodeRadius + portDistFromRim + portWidth
 
 portOuterBorderSquared = portOuterBorder * portOuterBorder
@@ -139,6 +139,14 @@ updatePortAngle portRef angle node = newNode where
     newAllPorts  = setPorts portType (node ^. ports) newPorts
     oldPorts     = getPorts portType node
     newPorts     = updatePortInPorts (portRef ^. refPortId) angle oldPorts
+
+
+updateSourcePort :: PortRef -> Angle -> Node -> Node
+updateSourcePort portRef angle node = if node ^. nodeId == portRef ^. refPortNode . nodeId then newNode else node where
+    newNode = updatePortAngle portRef angle node
+
+updateSourcePortInNodes :: Angle -> PortRef -> NodeCollection -> NodeCollection
+updateSourcePortInNodes angle portRef nodes = updateSourcePort portRef angle <$> nodes
 
 
 updateNodeSelection :: NodeIdCollection -> Node -> Node

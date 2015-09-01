@@ -66,13 +66,6 @@ toAction (Mouse (Mouse.Event tpe pos button keyMods _)) state = case button of
     _                  -> Nothing
 toAction _ _            = Nothing
 
-updateSourcePort :: PortRef -> Angle -> Node -> Node
-updateSourcePort portRef angle node = if node ^. nodeId == portRef ^. refPortNode . nodeId then newNode else node where
-    newNode = updatePortAngle portRef angle node
-
-updateSourcePortInNodes :: Angle -> PortRef -> NodeCollection -> NodeCollection
-updateSourcePortInNodes angle portRef nodes = updateSourcePort portRef angle <$> nodes
-
 instance ActionStateUpdater Action where
     execSt newActionCandidate oldState = case newAction of
         Just action -> ActionUI newAction newState

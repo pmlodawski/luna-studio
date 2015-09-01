@@ -25,3 +25,6 @@ type GraphStarBuilderState s g d = GraphStarBuilderT s g (StateT d Identity)
 
 runGraphState  :: Default d => GraphStarBuilderState s g d a -> BldrState g -> (a, g)
 runGraphState  = (runIdentity . flip evalStateT def) .: runGraphT
+
+rebuild :: g -> BldrState g
+rebuild f = BldrState [] $ f

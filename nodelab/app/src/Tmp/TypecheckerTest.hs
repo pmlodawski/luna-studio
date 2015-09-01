@@ -95,10 +95,6 @@ appB rf rv1 bldrState = flip runGraphState bldrState $
 -- TODO: map id -> ref (GraphRefMeta)
 
 
-rebuild :: g -> BldrState g
--- rebuild :: GraphMeta -> BldrState GraphMeta
-rebuild f = BldrState [] $ f
-
 main :: IO ()
 main = do
     let (rv1, a) = varA def
