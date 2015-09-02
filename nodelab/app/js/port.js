@@ -27,11 +27,11 @@ function Port(id, angle, out) {
   var color    = out ? outputColor : inputColor;
 
   this.uniforms = {
-    color:     { type: 'v4', value: color },
+    color:     { type: 'v4', value: color    },
     colorFar:  { type: 'v4', value: colorFar },
     mouseDist: { type: 'f',  value: 100000.0 },
     nodeSize:  { type: 'f',  value: nodeSize },
-    portSize:  { type: 'f',  value: height }
+    portSize:  { type: 'f',  value: height   }
   };
 
   Object.keys($$.commonUniforms).forEach(function(k) {
@@ -62,6 +62,12 @@ Port.prototype.setAngle = function(angle) {
 
   this.mesh.rotation.z = angle;
 };
+
+Port.prototype.setExpandedPosition = function(left, top) {
+  this.mesh.rotation.z = 0;
+  this.mesh.position.x = left;
+  this.mesh.position.y = top;
+}
 
 Port.prototype.setColor = function(color) {
   this.uniforms.color.value = color;

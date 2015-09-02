@@ -66,6 +66,8 @@ function Node(id, position, z, widgetId) {
       side:           THREE.DoubleSide
     })
   );
+  this.node.position.x = -30;
+  this.node.position.y = -30;
   this.mesh.add(this.node);
   this.mesh.userData.id = id;
   this.htmlContainer = document.createElement("div");
@@ -129,8 +131,8 @@ Node.prototype.zPos = function(z) {
 };
 
 Node.prototype.updateMouse = function(x, y) {
-  var xd = (this.mesh.position.x + this.mesh.scale.x / 2.0)- x;
-  var yd = (this.mesh.position.y + this.mesh.scale.y / 2.0)- y;
+  var xd = (this.mesh.position.x - this.mesh.scale.x / 2.0)- x;
+  var yd = (this.mesh.position.y - this.mesh.scale.y / 2.0)- y;
   var mouseDist = Math.sqrt(xd * xd + yd * yd);
   this.uniforms.mouseDist.value = mouseDist;
   this.inputPorts.forEach(function(port) {
@@ -202,8 +204,8 @@ Node.prototype.updateLabel = function() {
   textMaterial.uniforms.width.value = size;
   this.labelObject = new THREE.Mesh(geometry, textMaterial);
   this.labelObject.scale.multiplyScalar(config.fontSize);
-  this.labelObject.position.x = -45;
-  this.labelObject.position.y = -12;
+  this.labelObject.position.x = -45 - 30;
+  this.labelObject.position.y = -12 - 30;
   this.labelObject.position.z =   0;
 
   this.mesh.add(this.labelObject);
