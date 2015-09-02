@@ -44,6 +44,9 @@ import qualified Dimple.Render                                   as UIChart
 import qualified Control.Monad.State as MState
 import           Object.Widget.Scene (sceneInterfaceId, sceneGraphId)
 
+import           BatchConnector.Commands
+import           BatchConnector.Connection
+
 data Action = InitApp
             | ApplyUpdates  { _actions  :: [WidgetUIUpdate] }
             | WidgetClicked { _buttonId :: WidgetId }
@@ -89,7 +92,7 @@ instance ActionStateUpdater Action where
             oldRegistry           = oldState ^. Global.uiRegistry
             registerWidgets :: UIRegistry.UIState (Button.Button, Slider.Slider Int, Slider.Slider Double, Slider.Slider Double, Slider.Slider Double, Toggle.Toggle, Chart.Chart, Number.Number Int)
             registerWidgets        = do
-                button  <- UIRegistry.registerM sceneGraphId $  Button 0 "Click me!" Button.Normal (Vector2 100 100) (Vector2 100 50)
+                button  <- UIRegistry.registerM sceneGraphId $  Button 0 "Run!" Button.Normal (Vector2 100 100) (Vector2 100 50)
                 uiAction $ addWidget button
 
                 slider  <- UIRegistry.registerM sceneGraphId $ (Slider 0 (Vector2 100 200) (Vector2 200  25) "Cutoff"    100      20000        0.1 :: Slider Int)
@@ -124,7 +127,7 @@ instance ActionStateUpdater Action where
         newRegistry           = oldRegistry -- tu mozna np. zrobis UIRegistry.update, etc.
         newState              = oldState & Global.uiRegistry .~ newRegistry
         wasHelloButtonClicked = bid == oldState ^. Global.sandbox . Sandbox.button
-        newAction             = if wasHelloButtonClicked then ApplyUpdates [Just $ putStrLn "HelloWorld"]
+        newAction             = if wasHelloButtonClicked then ApplyUpdates [Just $ putStrLn "HelloWorld", Just $ sendMessage runMain]
                                                             -- tu tablica Maybe (IO ()), np aktualizacja stanu widgeta
                                                          else ApplyUpdates []
 

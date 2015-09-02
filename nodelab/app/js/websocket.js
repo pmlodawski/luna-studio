@@ -2,7 +2,9 @@
 
 module.exports = function () {
   var connection = {
-    addEventListener: function () {}
+    addEventListener: function () {},
+    removeEventListener: function () {},
+    send: function () {}
   };
 
   var listeners = {
@@ -39,7 +41,7 @@ module.exports = function () {
     },
     unOnMessage: function (listener) {
       removeFromArray(listeners.onMessage, listener);
-      connection.removeEventListener("open", listener);
+      connection.removeEventListener("message", listener);
     },
     connect: function (addr) {
       connection = new WebSocket(addr);
