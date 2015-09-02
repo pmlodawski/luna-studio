@@ -14,11 +14,12 @@ import           BatchConnector.Conversion
 
 import           Batch.Function
 
-import qualified Generated.Proto.ProjectManager.Project.List.Request                     as ListProjects
-import qualified Generated.Proto.ProjectManager.Project.Create.Request                   as CreateProject
-import qualified Generated.Proto.ProjectManager.Project.Library.Create.Request           as CreateLibrary
-import qualified Generated.Proto.ProjectManager.Project.Library.List.Request             as ListLibraries
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Add.Request as AddFunction
+import qualified Generated.Proto.ProjectManager.Project.List.Request                           as ListProjects
+import qualified Generated.Proto.ProjectManager.Project.Create.Request                         as CreateProject
+import qualified Generated.Proto.ProjectManager.Project.Library.Create.Request                 as CreateLibrary
+import qualified Generated.Proto.ProjectManager.Project.Library.List.Request                   as ListLibraries
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Add.Request       as AddFunction
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Get.Request as GetGraph
 import           Generated.Proto.Dep.Version.Version
 import           Generated.Proto.Dep.Attributes.Attributes
 import           Generated.Proto.Dep.Module.Module
@@ -69,3 +70,10 @@ setMainPtr proj lib crumbs = WebMessage "interpreter.setmainptr.request" $ messa
     defPoint = DefPoint.DefPoint (proj ^. Project.id)
                                  (lib  ^. Library.id)
                                  (encode crumbs)
+
+getGraph :: Breadcrumbs -> Project -> Library -> WebMessage
+getGraph crumbs proj lib = WebMessage "project.library.ast.function.graph.get.request" $ messagePut body where
+    body = GetGraph.Request (encode crumbs)
+                            (lib  ^. Library.id)
+                            (proj ^. Project.id)
+                            1

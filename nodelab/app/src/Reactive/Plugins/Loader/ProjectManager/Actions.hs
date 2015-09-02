@@ -1,4 +1,4 @@
-module Reactive.Plugins.Loader.Action.Backend where
+module Reactive.Plugins.Loader.ProjectManager.Actions where
 
 import           Data.Dynamic
 import           Event.Event
@@ -10,25 +10,7 @@ import           BatchConnector.Connection
 import           Data.ByteString.Lazy      (ByteString)
 import qualified Batch.Project             as Project
 
-data ConnectionState = AwaitingConnection
-                     | AwaitingProject
-                     | AwaitingLibs
-                     | Ready
-                     | AfterInitialize
-                     | Fail
-                     deriving (Eq, Show)
-
-instance Default ConnectionState where
-    def = AwaitingConnection
-
-data State = State { _connection :: ConnectionState
-                   , _project    :: Maybe Project.Project
-                   } deriving (Eq, Show)
-
-instance Default State where
-    def = State def def
-
-makeLenses ''State
+import           Reactive.Plugins.Loader.ProjectManager.State
 
 type Action = (IO (), State)
 

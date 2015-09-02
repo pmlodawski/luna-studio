@@ -11,11 +11,13 @@ import           Batch.Breadcrumbs
 
 import           BatchConnector.Conversion (decode)
 
+import qualified Generated.Proto.Dep.Graphview.GraphView                      as GraphView
 import qualified Generated.Proto.ProjectManager.Project.List.Status           as ProjectsList
 import qualified Generated.Proto.ProjectManager.Project.Create.Update         as ProjectCreated
 import qualified Generated.Proto.ProjectManager.Project.Library.List.Status   as LibsList
 import qualified Generated.Proto.ProjectManager.Project.Library.Create.Update as LibCreated
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Add.Update as FunctionCreated
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Add.Update       as FunctionCreated
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Get.Status as GraphViewResponse
 
 parseMessage :: (Wire m, ReflectDescriptor m) => ByteString -> Maybe m
 parseMessage bytes = case messageGet bytes of
@@ -43,3 +45,6 @@ parseLibraryCreateResponse bytes = (parseMessage bytes) >>= getLib where
 parseFunctionCreateResponse :: ByteString -> Maybe Breadcrumbs
 parseFunctionCreateResponse bytes = (parseMessage bytes) >>= getBreadcrumbs where
     getBreadcrumbs = decode . FunctionCreated.bc
+
+parseGraphViewResponse :: ByteString -> Maybe GraphView.GraphView
+parseGraphViewResponse bytes = GraphViewResponse.graph <$> (parseMessage bytes)

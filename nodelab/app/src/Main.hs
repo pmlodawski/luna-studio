@@ -35,9 +35,8 @@ import           JS.WebSocket
 import           BatchConnector.Commands
 
 import qualified Reactive.Plugins.Core.Network   as CoreNetwork
-import qualified Reactive.Plugins.Loader.Network as LoaderNetwork
-
-import qualified Tmp.TypecheckerTest as Typechecker -- TODO: Remove
+import qualified Tmp.TypecheckerTest             as Typechecker -- TODO: Remove
+import           Reactive.Plugins.Loader.Loader
 
 makeNetworkDescription :: forall t. Frameworks t => WebSocket -> Bool -> Moment t ()
 makeNetworkDescription = CoreNetwork.makeNetworkDescription
@@ -52,15 +51,8 @@ runMainNetwork socket = do
     actuate eventNetwork
     triggerWindowResize
 
-runLoaderNetwork :: WebSocket -> IO ()
-runLoaderNetwork socket = do
-    connect socket "ws://0.0.0.0:8088"
-    loaderNetwork <- compile $ LoaderNetwork.makeNetworkDescription (runMainNetwork socket) socket
-    actuate loaderNetwork
-
-
 main :: IO ()
 main = do
     socket <- getWebSocket
     enableBackend <- isBackendEnabled
-    if enableBackend then runLoaderNetwork socket else runMainNetwork socket
+    if enableBackend then runLoader socket (runMainNetwork socket) else runMainNetwork socket
