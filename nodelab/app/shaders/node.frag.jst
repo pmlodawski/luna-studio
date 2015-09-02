@@ -7,7 +7,7 @@ varying vec2 pos;
 uniform float camFactor;
 uniform int   selected;
 uniform float mouseDist;
-uniform float nodeSize;
+uniform vec2 nodeSize;
 
 uniform vec3 insideColor;
 uniform vec3 unselectedColor;
@@ -67,19 +67,20 @@ void main() {
     vec2  posN         = pos * nodeSize;
     float dist_squared = dot(posN, posN);
 
-    float r            = nodeSize - max(abs(posN.x), abs(posN.y));
+    float r            = min(min(posN.x, posN.y), min(nodeSize.x - posN.x, nodeSize.y - posN.y));
 
-    if(abs(posN.x) > nodeSize - radius && abs(posN.y) > nodeSize - radius) {
-        vec2 posE;
-        if(posN.x < 0.0 && posN.y < 0.0) {
-            posE = posN + vec2( nodeSize - radius,  nodeSize - radius);
-        } else if(posN.x < 0.0 && posN.y > 0.0) {
-            posE = posN + vec2( nodeSize - radius, -nodeSize + radius);
-        } else if(posN.x > 0.0 && posN.y < 0.0) {
-            posE = posN + vec2(-nodeSize + radius,  nodeSize - radius);
-        } else if(posN.x > 0.0 && posN.y > 0.0) {
-            posE = posN + vec2(-nodeSize + radius, -nodeSize + radius);
-        }
+    vec2 posE;
+    if(posN.x < radius && posN.y < radius) { // TOP LEFT
+        posE = posN + vec2(-radius , -radius);
+        r = radius - sqrt(dot(posE, posE));
+    } else if(posN.x < radius && posN.y > nodeSize.y - radius) { // BOTTOM LEFT
+        posE = posN + vec2(-radius, -nodeSize.y + radius);
+        r = radius - sqrt(dot(posE, posE));
+    } else if(posN.x > nodeSize.x - radius && posN.y < radius) { // TOP RIGHT
+        posE = posN + vec2(-nodeSize.x + radius, - radius);
+        r = radius - sqrt(dot(posE, posE));
+    } else if(posN.x > nodeSize.x - radius && posN.y > nodeSize.y - radius) { // BOTTOM RIGHT
+        posE = posN + vec2(-nodeSize.x + radius, -nodeSize.y + radius);
         r = radius - sqrt(dot(posE, posE));
     }
 
@@ -112,6 +113,7 @@ void main() {
         } else if (r > r4) {
             colorShow = vec4(color, d_blur_r34);
         } else {
+            // colorShow = vec4(0.1, 0.1, 0.0, 1.0);
             discard;
         }
     } else {

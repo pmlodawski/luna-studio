@@ -19,10 +19,12 @@ var unselectedColor = new THREE.Color(0x3a3a3a);
 var selectedColor   = new THREE.Color(0xb87410).multiplyScalar(0.8);
 var focusedColor    = new THREE.Color(0xc85808).multiplyScalar(0.8);
 
-var width  = 60;
-var height = 60;
+var nodeGeometry    = new THREE.PlaneBufferGeometry(1.0, 1.0);
+nodeGeometry.applyMatrix( new THREE.Matrix4().makeTranslation(0.5, 0.5, 0.0) );
 
-var nodeGeometry    = new THREE.PlaneBufferGeometry(width, height);
+
+var expandedRadius  = 10.0;
+var collapsedRadius = 30.0
 
 function Node(id, position, z, widgetId) {
   var _this = this;
@@ -36,22 +38,24 @@ function Node(id, position, z, widgetId) {
 
 
   this.uniforms = {
-    selected:        { type: 'i',  value:             0   },
-    mouseDist:       { type: 'f',  value:        100000.0 },
-    nodeSize:        { type: 'f',  value:            30.0 },
-    radius:          { type: 'f',  value:            10.0 },
-    insideColor:     { type: 'c',  value:     insideColor },
-    unselectedColor: { type: 'c',  value: unselectedColor },
-    selectedColor:   { type: 'c',  value:   selectedColor },
-    focusedColor:    { type: 'c',  value:    focusedColor },
-    objectId:        { type: 'v3', value: new THREE.Vector3((widgetId % 256) / 255.0, Math.floor(Math.floor(widgetId % 65536) / 256) / 255.0, Math.floor(widgetId / 65536) / 255.0) }
+    selected:          { type: 'i',  value:                            0    },
+    mouseDist:         { type: 'f',  value:                       100000.0  },
+    expanded:          { type: 'f',  value:                             0.0 },
+    nodeSize:          { type: 'v2', value: new THREE.Vector2( 60.0,  60.0) },
+    radius:            { type: 'f',  value:                            30.0 },
+    insideColor:       { type: 'c',  value:                     insideColor },
+    unselectedColor:   { type: 'c',  value:                 unselectedColor },
+    selectedColor:     { type: 'c',  value:                   selectedColor },
+    focusedColor:      { type: 'c',  value:                    focusedColor },
+    objectId:          { type: 'v3', value: new THREE.Vector3((widgetId % 256) / 255.0, Math.floor(Math.floor(widgetId % 65536) / 256) / 255.0, Math.floor(widgetId / 65536) / 255.0) }
   };
 
   Object.keys($$.commonUniforms).forEach(function(k) {
     _this.uniforms[k] = $$.commonUniforms[k];
   });
 
-  this.mesh = new THREE.Mesh(
+  this.mesh = new THREE.Group();
+  this.node = new THREE.Mesh(
     nodeGeometry,
     new THREE.ShaderMaterial( {
       uniforms:       this.uniforms,
@@ -62,6 +66,7 @@ function Node(id, position, z, widgetId) {
       side:           THREE.DoubleSide
     })
   );
+  this.mesh.add(this.node);
   this.mesh.userData.id = id;
   this.htmlContainer = document.createElement("div");
   $$.htmlCanvas.append(this.htmlContainer);
@@ -71,8 +76,26 @@ function Node(id, position, z, widgetId) {
   this.zPos(z);
   this.updateMouse(position.x, position.y);
 
+  this.collapsedNodeSize = new THREE.Vector2( 2 * collapsedRadius,  2 * collapsedRadius);
+  this.expandedNodeSize  = new THREE.Vector2(200.0, 200.0);
+
   if (features.node_labels) this.updateLabel();
+
+  this.setExpandedState(0.0);
 }
+
+Node.prototype.setExpandedState = function(expanded) {
+  var nodeSize = new THREE.Vector2();
+  nodeSize.x = (1.0 - expanded) * this.collapsedNodeSize.x + expanded * this.expandedNodeSize.x;
+  nodeSize.y = (1.0 - expanded) * this.collapsedNodeSize.y + expanded * this.expandedNodeSize.y;
+
+  var radius = (1.0 - expanded) * collapsedRadius + expanded * expandedRadius;
+  this.uniforms.nodeSize.value.x = nodeSize.x;
+  this.uniforms.nodeSize.value.y = nodeSize.y;
+  this.uniforms.radius.value = radius;
+  this.node.scale.x = nodeSize.x;
+  this.node.scale.y = nodeSize.y;
+};
 
 Node.prototype.selected = function(val) {
   if (val !== undefined) {
@@ -95,7 +118,6 @@ Node.prototype.moveTo = function(a, b) {
   this.mesh.position.x = vec.x;
   this.mesh.position.y = vec.y;
 
-  // this.attributes.pos.needsUpdate = true;
   $(this.htmlContainer).css({left: vec.x, top: vec.y});
 };
 
@@ -107,8 +129,8 @@ Node.prototype.zPos = function(z) {
 };
 
 Node.prototype.updateMouse = function(x, y) {
-  var xd = this.mesh.position.x - x;
-  var yd = this.mesh.position.y - y;
+  var xd = (this.mesh.position.x + this.mesh.scale.x / 2.0)- x;
+  var yd = (this.mesh.position.y + this.mesh.scale.y / 2.0)- y;
   var mouseDist = Math.sqrt(xd * xd + yd * yd);
   this.uniforms.mouseDist.value = mouseDist;
   this.inputPorts.forEach(function(port) {
@@ -180,9 +202,9 @@ Node.prototype.updateLabel = function() {
   textMaterial.uniforms.width.value = size;
   this.labelObject = new THREE.Mesh(geometry, textMaterial);
   this.labelObject.scale.multiplyScalar(config.fontSize);
-  this.labelObject.position.x = -75;
-  this.labelObject.position.y = -42;
-  this.labelObject.position.z = 0;
+  this.labelObject.position.x = -45;
+  this.labelObject.position.y = -12;
+  this.labelObject.position.z =   0;
 
   this.mesh.add(this.labelObject);
 };
