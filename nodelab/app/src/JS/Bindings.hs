@@ -47,8 +47,6 @@ foreign import javascript unsafe "app.removeNode($1)"
     removeNode :: Int -> IO ()
 
 
-
-
 foreign import javascript unsafe "common.camera.updateProjectionMatrix()"
     updateProjectionMatrix :: IO ()
 
@@ -107,6 +105,8 @@ foreign import javascript unsafe "$1.setInputPortColor($2, $3, $4, $5)"
 foreign import javascript unsafe "$1.setOutputPortColor($2, $3, $4, $5)"
     setOutputPortColor :: JSRef NodeJS -> Int -> Int -> Int -> Int -> IO ()
 
+foreign import javascript unsafe "$1.toggleExpandState()"
+    toggleExpandState :: JSRef NodeJS -> IO ()
 
 foreign import javascript unsafe "$1.uniforms.selected.value"
     getSelectionValue :: JSRef NodeJS -> IO Int

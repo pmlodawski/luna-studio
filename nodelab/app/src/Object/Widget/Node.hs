@@ -5,6 +5,7 @@ module Object.Widget.Node where
 import           Utils.PreludePlus
 import           Utils.Vector
 import           Data.Fixed
+import           JS.Bindings
 
 import           Object.Widget
 import           Utils.CtxDynamic
@@ -23,7 +24,9 @@ instance IsDisplayObject Node where
     objectSize       = undefined
 
 
-instance Clickable Node where
-    onClick pos n = (Just action, toCtxDynamic n) where
+instance DblClickable Node where
+    onDblClick pos n = (Just action, toCtxDynamic n) where
         action    = do
+            node <- getNode (n ^. nodeId)
+            toggleExpandState node
             putStrLn $ "Clicked node: " <> show (n ^. refId) <> " / " <> show (n ^. nodeId)

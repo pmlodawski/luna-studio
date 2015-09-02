@@ -83,10 +83,13 @@ function Node(id, position, z, widgetId) {
 
   if (features.node_labels) this.updateLabel();
 
+  this.expandedState = 0.0
   this.setExpandedState(0.0);
 }
 
 Node.prototype.setExpandedState = function(expanded) {
+  this.expandedState = expanded;
+
   var nodeSize = new THREE.Vector2();
   nodeSize.x = (1.0 - expanded) * this.collapsedNodeSize.x + expanded * this.expandedNodeSize.x;
   nodeSize.y = (1.0 - expanded) * this.collapsedNodeSize.y + expanded * this.expandedNodeSize.y;
@@ -97,6 +100,14 @@ Node.prototype.setExpandedState = function(expanded) {
   this.uniforms.radius.value = radius;
   this.node.scale.x = nodeSize.x;
   this.node.scale.y = nodeSize.y;
+};
+
+Node.prototype.toggleExpandState = function() {
+  if(this.expandedState == 0) {
+    this.setExpandedState(1.0);
+  } else {
+    this.setExpandedState(0.0);
+  }
 };
 
 Node.prototype.selected = function(val) {
