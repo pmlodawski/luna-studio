@@ -35,6 +35,7 @@ import qualified Reactive.Plugins.Core.Action.State.Global     as Global
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry as UIRegistry
 
 
+import           AST.GraphToViz
 
 data ActionType = Add
                 | Remove
@@ -131,6 +132,8 @@ instance ActionStateUpdater Action where
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
         AddActionUI node wnode  -> createNodeOnUI node wnode
+                                >> putStrLn (display $ state ^. Global.graph) -- debug
+                                >> graphToViz (state ^. Global.graph . Graph.graphMeta)
         RemoveFocused      -> UI.removeNode nodeId
                            >> mapM_ UI.setNodeFocused topNodeId
             where
