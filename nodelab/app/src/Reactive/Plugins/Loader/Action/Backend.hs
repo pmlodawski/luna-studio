@@ -14,6 +14,7 @@ data ConnectionState = AwaitingConnection
                      | AwaitingProject
                      | AwaitingLibs
                      | Ready
+                     | AfterInitialize
                      | Fail
                      deriving (Eq, Show)
 
@@ -48,6 +49,8 @@ reactToMessage (WebMessage topic bytes) state = handler state bytes where
         (AwaitingProject, "project.create.update")         -> handleProjectCreatedResponse
         (AwaitingLibs,    "project.library.list.status")   -> handleLibrariesListResponse
         (AwaitingLibs,    "project.library.create.update") -> handleLibraryCreateResponse
+        (Ready,           _)                               -> \st _ -> (return (), st & connection .~ AfterInitialize)
+        (AfterInitialize, _)                               -> \st _ -> (return (), st)
         _                                                  -> \st _ -> (print $ "Unexpected msg: " <> topic, st)
 
 reactToOpening :: State -> Action
@@ -94,7 +97,7 @@ createFirstProject  = do
     sendMessage $ createProject "myFirstProject" "some/path"
 
 createFirstLibrary :: Project.Project -> IO ()
-createFirstLibrary  = sendMessage . (createLibrary "myFirstLib" "some/path")
+createFirstLibrary  = sendMessage . (createLibrary "Main" "some/path")
 
 die :: State -> Action
 die state = (putStrLn "Something went terribly wrong", state & connection .~ Fail)

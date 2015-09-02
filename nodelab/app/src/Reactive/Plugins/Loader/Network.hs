@@ -5,10 +5,11 @@ import Utils.PreludePlus
 import           Reactive.Banana
 import           Reactive.Banana.Frameworks
 import           Reactive.Handlers
-import qualified Event.Event                            as Event
-import           JS.WebSocket                           (WebSocket)
-import           Reactive.Plugins.Loader.Action.Backend as Backend
+import qualified Event.Event                             as Event
+import           JS.WebSocket                            (WebSocket)
+import           Reactive.Plugins.Loader.Action.Backend  as Backend
 import           Batch.Project
+import           Reactive.Plugins.Loader.InterpreterTest
 
 isReady :: Backend.State -> Bool
 isReady state = state ^. Backend.connection == Backend.Ready
@@ -29,6 +30,7 @@ makeNetworkDescription callback conn = do
     let project :: Event t Project
         project  = filterJust $ fmap (^. Backend.project) readyStates
 
+    reactimate $ testInterpreter conn <$> project
     reactimate $ fst <$> actions
     reactimate $ print <$> project
     reactimate $ callback <$ project
