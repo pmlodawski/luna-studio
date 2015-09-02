@@ -19,6 +19,9 @@ import           Reactive.Plugins.Core.Action.State.UIRegistry   (WidgetMap)
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry   as UIRegistry
 import           ThreeJS.Widget.Button ()
 import           ThreeJS.Widget.Slider ()
+import           ThreeJS.Widget.Number ()
+import           ThreeJS.Widget.Node   ()
+import           ThreeJS.Widget.Toggle ()
 import           Utils.CtxDynamic
 import qualified JS.Camera      as Camera
 import           Debug.Trace

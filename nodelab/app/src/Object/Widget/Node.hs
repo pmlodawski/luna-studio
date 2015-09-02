@@ -5,11 +5,11 @@ module Object.Widget.Node where
 import           Utils.PreludePlus
 import           Utils.Vector
 import           Data.Fixed
-import           JS.Bindings
 
 import           Object.Widget
 import           Utils.CtxDynamic
 
+import JS.Bindings
 
 data Node = Node { _refId     :: Int
                  , _nodeId    :: Int
