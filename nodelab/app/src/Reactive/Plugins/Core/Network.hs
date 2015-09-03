@@ -30,10 +30,14 @@ import           Reactive.Plugins.Core.Action.Executor
 import           Reactive.Plugins.Core.Action.State.Global
 import           Reactive.Plugins.Core.Action.State.UnderCursor
 
+import           Reactive.Plugins.EventProcessors.AddNode    (getAddNode)
+
 import           JS.WebSocket (WebSocket)
 
-makeNetworkDescription :: forall t. Frameworks t => WebSocket -> Bool -> Moment t ()
-makeNetworkDescription conn logging = do
+import           Batch.Workspace
+
+makeNetworkDescription :: forall t. Frameworks t => WebSocket -> Bool -> Workspace -> Moment t ()
+makeNetworkDescription conn logging workspace = do
     resizeE        <- fromAddHandler resizeHandler
     mouseDownE     <- fromAddHandler mouseDownHandler
     mouseUpE       <- fromAddHandler mouseUpHandler
@@ -47,6 +51,9 @@ makeNetworkDescription conn logging = do
     webSocketE     <- fromAddHandler $ webSocketHandler conn
 
     let
+        addNodeE                     :: Event t (Event.Event Dynamic)
+        addNodeE                      = getAddNode webSocketE
+
         anyE                         :: Event t (Event.Event Dynamic)
         anyE                          = unions [ resizeE
                                                , mouseDownE
@@ -58,7 +65,7 @@ makeNetworkDescription conn logging = do
                                                , keyPressedE
                                                , keyUpE
                                                , nodeSearcherE
-                                               , webSocketE
+                                               , addNodeE
                                                ]
         anyNodeE                     :: Event t (Event.Event Node)
         anyNodeE                      = unpackDynamic <$> anyE
@@ -70,17 +77,17 @@ makeNetworkDescription conn logging = do
         underCursorB                 :: Behavior t UnderCursor
         underCursorB                  = underCursor <$> globalStateB
 
-        widgetActionB                 = fmap ActionST $         Widget.toAction <$> anyNodeB
-        nodeGeneralActionB            = fmap ActionST $        General.toAction <$> anyNodeB
-        cameraActionB                 = fmap ActionST $         Camera.toAction <$> anyNodeB <*> globalStateB
-        nodeAddRemActionB             = fmap ActionST $      AddRemove.toAction <$> anyNodeB <*> globalStateB
-        nodeSelectionActionB          = fmap ActionST $      Selection.toAction <$> anyNodeB <*> globalStateB <*> underCursorB 
-        nodeMultiSelectionActionB     = fmap ActionST $ MultiSelection.toAction <$> anyNodeB <*> globalStateB <*> underCursorB
-        nodeDragActionB               = fmap ActionST $           Drag.toAction <$> anyNodeB <*> underCursorB
-        nodeConnectActionB            = fmap ActionST $        Connect.toAction <$> anyNodeB <*> globalStateB
-        nodeSearcherActionB           = fmap ActionST $   NodeSearcher.toAction <$> anyNodeB
-        breadcrumbActionB             = fmap ActionST $     Breadcrumb.toAction <$> anyNodeB <*> globalStateB
-        sandboxActionB                = fmap ActionST $        Sandbox.toAction <$> anyNodeB <*> globalStateB
+        widgetActionB                 = fmap ActionST $              Widget.toAction <$> anyNodeB
+        nodeGeneralActionB            = fmap ActionST $             General.toAction <$> anyNodeB
+        cameraActionB                 = fmap ActionST $              Camera.toAction <$> anyNodeB <*> globalStateB
+        nodeAddRemActionB             = fmap ActionST $ AddRemove.toAction workspace <$> anyNodeB <*> globalStateB
+        nodeSelectionActionB          = fmap ActionST $           Selection.toAction <$> anyNodeB <*> globalStateB <*> underCursorB 
+        nodeMultiSelectionActionB     = fmap ActionST $      MultiSelection.toAction <$> anyNodeB <*> globalStateB <*> underCursorB
+        nodeDragActionB               = fmap ActionST $                Drag.toAction <$> anyNodeB <*> underCursorB
+        nodeConnectActionB            = fmap ActionST $             Connect.toAction <$> anyNodeB <*> globalStateB
+        nodeSearcherActionB           = fmap ActionST $        NodeSearcher.toAction <$> anyNodeB
+        breadcrumbActionB             = fmap ActionST $          Breadcrumb.toAction <$> anyNodeB <*> globalStateB
+        sandboxActionB                = fmap ActionST $             Sandbox.toAction <$> anyNodeB <*> globalStateB
 
         allActionsPackB               = [ nodeGeneralActionB
                                         , widgetActionB

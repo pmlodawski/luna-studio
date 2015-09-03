@@ -13,12 +13,15 @@ import           Data.Map                   as Map
 import           BatchConnector.Conversion
 
 import           Batch.Function
+import           Batch.Workspace
+import           Object.Node
 
 import qualified Generated.Proto.ProjectManager.Project.List.Request                           as ListProjects
 import qualified Generated.Proto.ProjectManager.Project.Create.Request                         as CreateProject
 import qualified Generated.Proto.ProjectManager.Project.Library.Create.Request                 as CreateLibrary
 import qualified Generated.Proto.ProjectManager.Project.Library.List.Request                   as ListLibraries
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Add.Request       as AddFunction
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Get.Request           as GetCode
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Get.Request as GetGraph
 import           Generated.Proto.Dep.Version.Version
 import           Generated.Proto.Dep.Attributes.Attributes
@@ -28,6 +31,13 @@ import qualified Generated.Proto.Interpreter.Interpreter.SetProjectID.Request as
 import qualified Generated.Proto.Interpreter.Interpreter.Run.Request          as Run
 import qualified Generated.Proto.Interpreter.Interpreter.SetMainPtr.Request   as SetMainPtr
 import qualified Generated.Proto.Interpreter.DefPoint                         as DefPoint
+
+import qualified Generated.Proto.Dep.Graph.Node.Cls     as NodeCls
+import qualified Generated.Proto.Dep.Graph.Node         as GenNode
+import qualified Generated.Proto.Dep.Graph.NodeExpr     as GenExpr
+import qualified Generated.Proto.Dep.Graph.NodeExpr.Cls as ExprCls
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Add.Request as AddNode
+
 
 createProject :: String -> String -> WebMessage
 createProject name path = WebMessage "project.create.request" $ messagePut body where
@@ -56,7 +66,7 @@ setProjectId project = WebMessage "interpreter.setprojectid.request" $ messagePu
 createMainFunction :: Project -> Library -> WebMessage
 createMainFunction project library = WebMessage "project.library.ast.function.add.request" $ messagePut body where
     body = AddFunction.Request emptyFunctionExpr
-                               (ProtoBreadcrumbs.Breadcrumbs $ Seq.fromList [moduleCrumb "Main"])
+                               (encode $ moduleBreadcrumbs "Main")
                                (library ^. Library.id)
                                (project ^. Project.id)
                                1
@@ -71,9 +81,24 @@ setMainPtr proj lib crumbs = WebMessage "interpreter.setmainptr.request" $ messa
                                  (lib  ^. Library.id)
                                  (encode crumbs)
 
-getGraph :: Breadcrumbs -> Project -> Library -> WebMessage
-getGraph crumbs proj lib = WebMessage "project.library.ast.function.graph.get.request" $ messagePut body where
+getGraph :: Project -> Library -> Breadcrumbs -> WebMessage
+getGraph proj lib crumbs = WebMessage "project.library.ast.function.graph.get.request" $ messagePut body where
     body = GetGraph.Request (encode crumbs)
                             (lib  ^. Library.id)
                             (proj ^. Project.id)
                             1
+
+getCode :: Project -> Library -> Breadcrumbs -> WebMessage
+getCode proj lib crumbs = WebMessage "project.library.ast.code.get.request" $ messagePut body where
+    body = GetCode.Request (encode crumbs)
+                           (lib  ^. Library.id)
+                           (proj ^. Project.id)
+                           1
+
+addNode :: Workspace -> Node -> WebMessage
+addNode workspace node = WebMessage "project.library.ast.function.graph.node.add.request" $ messagePut body where
+    body = AddNode.Request (encode node)
+                           (encode $ workspace ^. breadcrumbs)
+                           (workspace ^. project . Project.id)
+                           (workspace ^. library . Library.id)
+                           1

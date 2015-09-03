@@ -12,6 +12,7 @@ import qualified Event.Window        as Window
 import qualified Event.NodeSearcher  as NodeSearcher
 import qualified Event.WithObjects   as WithObjects
 import qualified Event.Backend       as Backend
+import qualified Event.AddNode       as AddNode
 
 
 data Event obj = Init
@@ -20,6 +21,7 @@ data Event obj = Init
                | Mouse        Mouse.Event
                | NodeSearcher NodeSearcher.Event
                | Backend      Backend.Event
+               | AddNode      AddNode.Event
 
 
 makeLenses ''Event
@@ -34,6 +36,7 @@ instance Typeable obj => UnpackDynamic (Event Dynamic) (Event obj) where
     unpackDynamic (Mouse        ev) = Mouse ev
     unpackDynamic (NodeSearcher ev) = NodeSearcher ev
     unpackDynamic (Backend      ev) = Backend ev
+    unpackDynamic (AddNode      ev) = AddNode ev
 
 instance PrettyPrinter obj => PrettyPrinter (Event obj) where
     display Init              = "InitEv"
@@ -42,3 +45,4 @@ instance PrettyPrinter obj => PrettyPrinter (Event obj) where
     display (Mouse        ev) = "MouEv(" <> display ev <> ")"
     display (NodeSearcher ev) = "NoSEv(" <> display ev <> ")"
     display (Backend      ev) = "BacEv(" <> display ev <> ")"
+    display (AddNode      ev) = "AddNo(" <> display ev <> ")"

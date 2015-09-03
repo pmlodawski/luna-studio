@@ -24,6 +24,7 @@ import           Event.Keyboard hiding      ( Event )
 import qualified Event.Keyboard as Keyboard
 import           Event.Mouse    hiding      ( Event, WithObjects )
 import qualified Event.Mouse    as Mouse
+import qualified Event.AddNode  as AddNode
 import           Event.Event
 import           Event.NodeSearcher hiding  ( Event, expression )
 import qualified Event.NodeSearcher as NodeSearcher
@@ -34,6 +35,10 @@ import qualified Reactive.Plugins.Core.Action.State.Selection  as Selection
 import qualified Reactive.Plugins.Core.Action.State.Global     as Global
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry as UIRegistry
 
+import           Batch.Workspace
+import           BatchConnector.Commands   (addNode)
+import           BatchConnector.Connection (sendMessage)
+
 
 import           AST.GraphToViz
 
@@ -41,9 +46,11 @@ data ActionType = Add
                 | Remove
                 deriving (Eq, Show)
 
-data Action = AddAction Text
+data Action = AddAction Node
+            | RegisterNodeAction Text Workspace
             | RemoveFocused
             | AddActionUI Node WNode.Node
+            | RegisterActionUI Node Workspace
             deriving (Eq, Show)
 
 
@@ -54,19 +61,20 @@ instance PrettyPrinter ActionType where
     display = show
 
 instance PrettyPrinter Action where
-    display (AddAction expr) = "arA(AddAction " <> display expr <> ")"
-    display RemoveFocused    = "arA(RemoveFocused)"
+    display (AddAction node)            = "arA(AddAction "      <> display node <> ")"
+    display (RegisterNodeAction expr _) = "arA(RegisterAction " <> display expr <> ")"
+    display RemoveFocused               = "arA(RemoveFocused)"
 
-
-toAction :: Event Node -> Global.State -> Maybe Action
-toAction (Keyboard (Keyboard.Event Keyboard.Press char)) state = ifNoneFocused state $ case char of
-    'a'      -> Just $ AddAction "Hello.node"
+toAction :: Workspace -> Event Node -> Global.State -> Maybe Action
+toAction _ (AddNode (AddNode.AddNode node)) state = Just $ AddAction node
+toAction workspace (Keyboard (Keyboard.Event Keyboard.Press char)) state = ifNoneFocused state $ case char of
+    'a'      -> Just $ RegisterNodeAction "Hello.node" workspace
     'r'      -> Just RemoveFocused
     _        -> Nothing
-toAction (NodeSearcher (NodeSearcher.Event tpe expr)) _ = case tpe of
-    "create" -> Just $ AddAction expr
+toAction workspace (NodeSearcher (NodeSearcher.Event tpe expr)) _ = case tpe of
+    "create" -> Just $ RegisterNodeAction expr workspace
     _        -> Nothing
-toAction _  _  = Nothing
+toAction _ _ _  = Nothing
 
 maxNodeId :: NodeCollection -> NodeId
 maxNodeId []    = 0
@@ -85,25 +93,30 @@ createNode nodeId pos expr = Node nodeId False pos expr (createPorts inputPortsN
     inputPortsNum   = 1 -- tmpGetInputPortsNr  $ Text.unpack expr
     outputPortsNum  = 1 -- tmpGetOutputPortsNr $ Text.unpack expr
 
-
 instance ActionStateUpdater Action where
-    execSt (AddAction expr) oldState = ActionUI newAction newState
+    -- The logic of computing nodeId is needed only for offline mode
+    -- once everyone has the backend running, batch will handle that
+    execSt (RegisterNodeAction expr workspace) state = ActionUI registerNode state
         where
-        newAction               = AddActionUI newNode newWNode
+        registerNode = RegisterActionUI node workspace
+        node         = createNode nextId nodePosWs expr
+        camera       = Global.toCamera state
+        oldNodes     = Graph.getNodes graph
+        graph        = state ^. Global.graph
+        nextId       = 1 + (maxNodeId oldNodes)
+        nodePosWs    = Camera.screenToWorkspace camera $ state ^. Global.mousePos
+
+    execSt (AddAction node) oldState = ActionUI newAction newState
+        where
+        newAction               = AddActionUI node newWNode
         newState                = oldState & Global.iteration                     +~ 1
                                            & Global.graph                         .~ newGraph
                                            & Global.uiRegistry                    .~ newRegistry
         oldGraph                = oldState ^. Global.graph
-        oldNodes                = Graph.getNodes oldGraph
-        camera                  = Global.toCamera oldState
-        nodePosWs               = Camera.screenToWorkspace camera $ oldState ^. Global.mousePos
-        oldSelNodeIds           = oldState ^. Global.selection . Selection.nodeIds
         oldRegistry             = oldState ^. Global.uiRegistry
-        nextNodeId              = 1 + (maxNodeId oldNodes)
-        newGraph                = Graph.addNode newNode oldGraph
-        newNode                 = createNode nextNodeId nodePosWs expr
+        newGraph                = Graph.addNode node oldGraph
         (newWNode, newRegistry) = UIRegistry.register sceneGraphId widget oldRegistry where
-            widget = WNode.Node def nextNodeId
+            widget = WNode.Node def (node ^. nodeId)
 
     execSt RemoveFocused oldState = case newAction of
         Just action -> ActionUI newAction newState
@@ -131,6 +144,8 @@ instance ActionStateUpdater Action where
 
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
+        RegisterActionUI node workspace -> sendMessage $ addNode workspace node
+
         AddActionUI node wnode  -> createNodeOnUI node wnode
                                 >> putStrLn (display $ state ^. Global.graph) -- debug
                                 >> graphToViz (state ^. Global.graph . Graph.graphMeta)

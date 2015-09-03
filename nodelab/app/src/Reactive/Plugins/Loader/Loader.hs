@@ -6,8 +6,9 @@ import qualified Reactive.Plugins.Loader.ProjectManager.Network as ProjectManage
 import qualified Reactive.Plugins.Loader.Interpreter.Network    as Interpreter
 import           Reactive.Banana
 import           Reactive.Banana.Frameworks
+import           Batch.Workspace
 
-runLoader :: WebSocket -> IO () -> IO ()
+runLoader :: WebSocket -> (Workspace -> IO ()) -> IO ()
 runLoader socket callback = do
     connect socket "ws://0.0.0.0:8088"
     let interpreterCallback = Interpreter.run socket callback

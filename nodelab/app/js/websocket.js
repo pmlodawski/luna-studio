@@ -1,11 +1,35 @@
 "use strict";
 
-module.exports = function () {
-  var connection = {
-    addEventListener: function () {},
-    removeEventListener: function () {},
-    send: function () {}
+var removeFromArray = function (array, elt) {
+  var index = array.indexOf(elt);
+  array.splice(index, 1);
+};
+
+var mockSocket = function () {
+  var listeners = [];
+
+  return {
+    addEventListener: function (type, lst) {
+      if (type === "message")
+        listeners.push(lst);
+    },
+    removeEventListener: function (type, lst) {
+      if (type === "message")
+        removeFromArray(listeners, lst);
+    },
+    send: function (data) {
+      var decoded = atob(data);
+      var replaced = decoded.replace("request", "fakeres");
+      var fakeResponse = { data: btoa(replaced) };
+      listeners.forEach(function (listener) {
+        listener.call(null, fakeResponse);
+      });
+    }
   };
+};
+
+module.exports = function () {
+  var connection = mockSocket();
 
   var listeners = {
     onOpen: [],
@@ -19,11 +43,6 @@ module.exports = function () {
     listeners.onMessage.forEach(function (listener) {
       connection.addEventListener("message", listener);
     });
-  };
-
-  var removeFromArray = function (array, elt) {
-    var index = array.indexOf(elt);
-    array.splice(index, 1);
   };
 
   return {
