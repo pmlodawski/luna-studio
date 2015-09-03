@@ -68,6 +68,7 @@ register parent a state = (aWithId, state & widgets .~ newWidgets') where
 
 type UIState a = MState.State (State, [Maybe (IO ())]) a
 
+registerM :: DisplayObjectClass a => WidgetId -> a -> UIState a
 registerM parent widget = do
     (st, acts) <- MState.get
     let (widget', st') = register parent widget st
@@ -81,6 +82,17 @@ update a state = state & widgets .~ newWidgets where
         Just file -> IntMap.insert (objectId a) (file & widget .~ a) oldWidgets
         Nothing   -> oldWidgets
     oldWidgets = state ^. widgets
+
+updateM :: DisplayObjectClass a => a -> UIState ()
+updateM widget = do
+    (st, acts) <- MState.get
+    let st' = update (toCtxDynamic widget) st
+    MState.put (st', acts)
+    return ()
+
+uiAction act = do
+    (st, acts) <- MState.get
+    MState.put (st, (Just act):acts)
 
 unregister :: DisplayObjectClass a => a -> State -> State
 unregister a state = state & widgets .~ newWidgets where

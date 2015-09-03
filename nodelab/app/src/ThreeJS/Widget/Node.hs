@@ -52,3 +52,16 @@ instance Registry.UIWidget Node where
 
 instance UIWidgetBinding Model.Node Node where
     build = undefined
+
+
+containerMesh :: Node -> IO Mesh
+containerMesh b = (JSObject.getProp "expandedNode" $ unNode b) :: IO Mesh
+
+
+instance Container Node where
+    add    m o = do mo <- mesh o
+                    mm <- containerMesh m
+                    addJS mm mo
+    remove m o = do mo <- mesh o
+                    mm <- containerMesh m
+                    removeJS mm mo

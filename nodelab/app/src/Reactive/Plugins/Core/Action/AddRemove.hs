@@ -34,6 +34,21 @@ import qualified Reactive.Plugins.Core.Action.State.Graph      as Graph
 import qualified Reactive.Plugins.Core.Action.State.Selection  as Selection
 import qualified Reactive.Plugins.Core.Action.State.Global     as Global
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry as UIRegistry
+import qualified ThreeJS.Registry                              as JSRegistry
+import qualified ThreeJS.Scene                                 as Scene
+import qualified Control.Monad.State                           as MState
+
+import           Object.Widget.Slider                              (Slider(..))
+import qualified Object.Widget.Slider                            as Slider
+import           ThreeJS.Types
+import qualified ThreeJS.Registry                                as JSRegistry
+import qualified ThreeJS.Widget.Button                           as UIButton
+import qualified ThreeJS.Widget.Slider                           as UISlider
+import qualified ThreeJS.Widget.Toggle                           as UIToggle
+import qualified ThreeJS.Widget.Number                           as UINumber
+import qualified ThreeJS.Widget.Node                             as UINode
+
+import           Object.Widget.Scene (sceneInterfaceId, sceneGraphId)
 
 import           Batch.Workspace
 import           BatchConnector.Commands   (addNode)
@@ -49,9 +64,8 @@ data ActionType = Add
 data Action = AddAction Node
             | RegisterNodeAction Text Workspace
             | RemoveFocused
-            | AddActionUI Node WNode.Node
             | RegisterActionUI Node Workspace
-            deriving (Eq, Show)
+            | AddActionUI Node WNode.Node [Maybe (IO ())]
 
 
 makeLenses ''Action
@@ -64,6 +78,7 @@ instance PrettyPrinter Action where
     display (AddAction node)            = "arA(AddAction "      <> display node <> ")"
     display (RegisterNodeAction expr _) = "arA(RegisterAction " <> display expr <> ")"
     display RemoveFocused               = "arA(RemoveFocused)"
+    display (AddActionUI _ _ _)         = "arA(AddActionUI)"
 
 toAction :: Workspace -> Event Node -> Global.State -> Maybe Action
 toAction _ (AddNode (AddNode.AddNode node)) state = Just $ AddAction node
@@ -75,6 +90,18 @@ toAction workspace (NodeSearcher (NodeSearcher.Event tpe expr)) _ = case tpe of
     "create" -> Just $ RegisterNodeAction expr workspace
     _        -> Nothing
 toAction _ _ _  = Nothing
+
+addWidget b = do
+    widget <- JSRegistry.build b
+    JSRegistry.register b widget
+    Scene.scene `add` widget
+
+addWidgetToNode node b = do
+    node   <- JSRegistry.lookup node :: IO UINode.Node
+    widget <- JSRegistry.build b
+    JSRegistry.register b widget
+    node `add` widget
+
 
 maxNodeId :: NodeCollection -> NodeId
 maxNodeId []    = 0
@@ -108,15 +135,33 @@ instance ActionStateUpdater Action where
 
     execSt (AddAction node) oldState = ActionUI newAction newState
         where
-        newAction               = AddActionUI node newWNode
+        newAction               = AddActionUI node newWNode actions
         newState                = oldState & Global.iteration                     +~ 1
                                            & Global.graph                         .~ newGraph
                                            & Global.uiRegistry                    .~ newRegistry
         oldGraph                = oldState ^. Global.graph
         oldRegistry             = oldState ^. Global.uiRegistry
         newGraph                = Graph.addNode node oldGraph
-        (newWNode, newRegistry) = UIRegistry.register sceneGraphId widget oldRegistry where
-            widget = WNode.Node def (node ^. nodeId)
+        (newWNode, (newRegistry, actions)) = MState.runState registerWidgets (oldRegistry, [])
+        registerWidgets         = do
+            widget <- UIRegistry.registerM sceneGraphId $ WNode.Node def (node ^. nodeId) []
+            UIRegistry.uiAction $ createNodeOnUI node widget
+
+            slider_a <- UIRegistry.registerM (objectId widget) $ (Slider 0 (Vector2 10  75) (Vector2 180 25) "Cutoff"     100.0        25000.0      0.4 :: Slider Double)
+            UIRegistry.uiAction $ addWidgetToNode widget slider_a
+
+            slider_b <- UIRegistry.registerM (objectId widget) $ (Slider 0 (Vector2 10 105) (Vector2 180 25) "Resonance"  0.0        1.0      0.2 :: Slider Double)
+            UIRegistry.uiAction $ addWidgetToNode widget slider_b
+
+            slider_c <- UIRegistry.registerM (objectId widget) $ (Slider 0 (Vector2 10 135) (Vector2 180 25) "Amount"     0.0        1.0      0.6 :: Slider Double)
+            UIRegistry.uiAction $ addWidgetToNode widget slider_c
+
+            slider_d <- UIRegistry.registerM (objectId widget) $ (Slider 0 (Vector2 10 165) (Vector2 180 25) "Gain"       0.0        2.0      0.5 :: Slider Double)
+            UIRegistry.uiAction $ addWidgetToNode widget slider_d
+
+            UIRegistry.updateM (widget & WNode.controls .~ [objectId slider_a, objectId slider_b, objectId slider_c, objectId slider_d])
+
+            return widget
 
     execSt RemoveFocused oldState = case newAction of
         Just action -> ActionUI newAction newState
@@ -145,10 +190,9 @@ instance ActionStateUpdater Action where
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
         RegisterActionUI node workspace -> sendMessage $ addNode workspace node
-
-        AddActionUI node wnode  -> createNodeOnUI node wnode
-                                >> putStrLn (display $ state ^. Global.graph) -- debug
-                                >> graphToViz (state ^. Global.graph . Graph.graphMeta)
+        AddActionUI node wnode actions  -> (sequence_ $ reverse $ catMaybes actions)
+                                        >> putStrLn (display $ state ^. Global.graph) -- debug
+                                        >> graphToViz (state ^. Global.graph . Graph.graphMeta)
         RemoveFocused      -> UI.removeNode nodeId
                            >> mapM_ UI.setNodeFocused topNodeId
             where

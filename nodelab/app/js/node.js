@@ -11,11 +11,15 @@ var textMaterial = require('font/text_material').graph;
 var vs = require('shaders/node.vert')();
 var fs = require('shaders/node.frag')();
 
+var evs = require('shaders/expandedNode.vert')();
+var efs = require('shaders/expandedNode.frag')();
+
 var Port = require('port');
 // var Port = require('triangle_port');
 
 var insideColor     = new THREE.Color(0x1a1a1a);
 var unselectedColor = new THREE.Color(0x3a3a3a);
+var expandedColor   = new THREE.Color(0x202020);
 var selectedColor   = new THREE.Color(0xb87410).multiplyScalar(0.8);
 var focusedColor    = new THREE.Color(0xc85808).multiplyScalar(0.8);
 
@@ -23,7 +27,7 @@ var nodeGeometry    = new THREE.PlaneBufferGeometry(1.0, 1.0);
 nodeGeometry.applyMatrix( new THREE.Matrix4().makeTranslation(0.5, 0.5, 0.0) );
 
 
-var expandedRadius  = 10.0;
+var expandedRadius  = 22.5;
 var collapsedRadius = 30.0
 
 function Node(id, position, z, widgetId) {
@@ -41,13 +45,24 @@ function Node(id, position, z, widgetId) {
     selected:          { type: 'i',  value:                            0    },
     mouseDist:         { type: 'f',  value:                       100000.0  },
     expanded:          { type: 'f',  value:                             0.0 },
-    nodeSize:          { type: 'v2', value: new THREE.Vector2( 60.0,  60.0) },
-    radius:            { type: 'f',  value:                            30.0 },
+    nodeSize:          { type: 'v2', value: new THREE.Vector2( 2 * collapsedRadius, 2 * collapsedRadius) },
+    radiusTop:         { type: 'f',  value:                            collapsedRadius },
+    radiusBottom:      { type: 'f',  value:                            collapsedRadius },
     insideColor:       { type: 'c',  value:                     insideColor },
     unselectedColor:   { type: 'c',  value:                 unselectedColor },
     selectedColor:     { type: 'c',  value:                   selectedColor },
     focusedColor:      { type: 'c',  value:                    focusedColor },
     objectId:          { type: 'v3', value: new THREE.Vector3((widgetId % 256) / 255.0, Math.floor(Math.floor(widgetId % 65536) / 256) / 255.0, Math.floor(widgetId / 65536) / 255.0) }
+  };
+
+  this.expandedUniforms = {
+    selected: this.uniforms.selected,
+    expanded: this.uniforms.expanded,
+    nodeSize: { type: 'v2', value: new THREE.Vector2( 60.0,  60.0) },
+    expandedColor: { type: 'c', value: expandedColor},
+    objectId: this.uniforms.objectId,
+    radiusTop:         { type: 'f',  value:                            collapsedRadius },
+    radiusBottom:      { type: 'f',  value:                            collapsedRadius },
   };
 
   Object.keys($$.commonUniforms).forEach(function(k) {
@@ -66,9 +81,27 @@ function Node(id, position, z, widgetId) {
       side:           THREE.DoubleSide
     })
   );
-  this.node.position.x = -30;
-  this.node.position.y = -30;
+  this.node.position.set(-30, -30, -0.0001);
+
+  this.expandedNode = new THREE.Group();
+
+  this.expandedNodeBkg = new THREE.Mesh(
+    nodeGeometry,
+    new THREE.ShaderMaterial( {
+      uniforms:       this.expandedUniforms,
+      vertexShader:   evs,
+      fragmentShader: efs,
+      transparent:    true,
+      blending:       THREE.NormalBlending,
+      side:           THREE.DoubleSide
+    })
+  );
+  this.expandedNode.position.set(-30, -30, 0);
+  this.expandedNodeBkg.position.set(0, 0, -0.0005);
+
   this.mesh.add(this.node);
+  this.mesh.add(this.expandedNode);
+  this.expandedNode.add(this.expandedNodeBkg);
   this.mesh.userData.id = id;
   this.htmlContainer = document.createElement("div");
   $$.htmlCanvas.append(this.htmlContainer);
@@ -81,25 +114,29 @@ function Node(id, position, z, widgetId) {
   this.collapsedNodeSize = new THREE.Vector2( 2 * collapsedRadius,  2 * collapsedRadius);
   this.expandedNodeSize  = new THREE.Vector2(200.0, 200.0);
 
+  this.node.scale.x = this.collapsedNodeSize.x;
+  this.node.scale.y = this.collapsedNodeSize.y;
+
   if (features.node_labels) this.updateLabel();
 
-  this.expandedState = 0.0
-  this.setExpandedState(0.0);
+  this.expandedState = 1.0
+  this.setExpandedState(1.0);
 }
 
 Node.prototype.setExpandedState = function(expanded) {
   this.expandedState = expanded;
+  this.expandedNode.visible = (expanded > 0.0);
 
   var nodeSize = new THREE.Vector2();
   nodeSize.x = (1.0 - expanded) * this.collapsedNodeSize.x + expanded * this.expandedNodeSize.x;
   nodeSize.y = (1.0 - expanded) * this.collapsedNodeSize.y + expanded * this.expandedNodeSize.y;
 
   var radius = (1.0 - expanded) * collapsedRadius + expanded * expandedRadius;
-  this.uniforms.nodeSize.value.x = nodeSize.x;
-  this.uniforms.nodeSize.value.y = nodeSize.y;
-  this.uniforms.radius.value = radius;
-  this.node.scale.x = nodeSize.x;
-  this.node.scale.y = nodeSize.y;
+  this.expandedUniforms.nodeSize.value.copy(nodeSize);
+  this.expandedUniforms.radiusTop.value    = collapsedRadius;
+  this.expandedUniforms.radiusBottom.value = radius;
+  this.expandedNodeBkg.scale.x = nodeSize.x;
+  this.expandedNodeBkg.scale.y = nodeSize.y;
 };
 
 Node.prototype.toggleExpandState = function() {

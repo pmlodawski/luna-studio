@@ -4,6 +4,7 @@ module Object.Widget.Node where
 
 import           Utils.PreludePlus
 import           Utils.Vector
+import           Object.UITypes
 import           Data.Fixed
 
 import           Object.Widget
@@ -13,6 +14,7 @@ import JS.Bindings
 
 data Node = Node { _refId     :: Int
                  , _nodeId    :: Int
+                 , _controls  :: [WidgetId]
                  } deriving (Eq, Show, Typeable)
 
 makeLenses ''Node

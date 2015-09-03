@@ -2,37 +2,36 @@
 precision highp float;
 #endif
 
-varying vec2 pos;
+varying vec2  pos;
 
 uniform float camFactor;
 uniform int   selected;
 uniform float mouseDist;
-uniform vec2 nodeSize;
+uniform vec2  nodeSize;
 
-uniform vec3 insideColor;
-uniform vec3 unselectedColor;
-uniform vec3 selectedColor;
-uniform vec3 focusedColor;
+uniform vec3  insideColor;
+uniform vec3  unselectedColor;
+uniform vec3  selectedColor;
+uniform vec3  focusedColor;
 
-uniform int antialias;
+uniform float radiusTop;
+uniform float radiusBottom;
 
-uniform int objectMap;
-uniform vec3 objectId;
-uniform float radius;
+uniform int   antialias;
+uniform int   objectMap;
+uniform vec3  objectId;
 
 void main() {
-    float bg_gray = 0.1;
-
-    vec3 color = unselectedColor;
-
+    float bg_gray    = 0.1;
+    vec3  color      = unselectedColor;
     float brighterBy = 0.7;
 
     if (selected == 1) {
         brighterBy = 0.3;
-        color = selectedColor;
+        color      = selectedColor;
     } else if (selected == 2) {
         brighterBy = 0.2;
-        color = focusedColor;
+        color      = focusedColor;
     }
 
     float distMix    =  0.0;
@@ -42,7 +41,7 @@ void main() {
     if (mouseDist < colorRange) {
         distMix = 1.0;
     } else if (mouseDist < gradRange) {
-        float coef = (mouseDist - colorRange) / (gradRange - colorRange);
+        float coef  = (mouseDist - colorRange) / (gradRange - colorRange);
         float coefR = 1.0 - coef;
         distMix = coefR * coefR * coefR;
     }
@@ -53,8 +52,8 @@ void main() {
     // node geometry starts here
 
     float camFactorDelta = camFactor - 1.0;
-    float rimCamFactor  = 1.0;
-    float blurCamFactor = 1.0;
+    float rimCamFactor   = 1.0;
+    float blurCamFactor  = 1.0;
 
     if (camFactorDelta > 0.0) {
         rimCamFactor  += camFactorDelta / 50.0;
@@ -70,27 +69,26 @@ void main() {
     float r            = min(min(posN.x, posN.y), min(nodeSize.x - posN.x, nodeSize.y - posN.y));
 
     vec2 posE;
-    if(posN.x < radius && posN.y < radius) { // TOP LEFT
-        posE = posN + vec2(-radius , -radius);
-        r = radius - sqrt(dot(posE, posE));
-    } else if(posN.x < radius && posN.y > nodeSize.y - radius) { // BOTTOM LEFT
-        posE = posN + vec2(-radius, -nodeSize.y + radius);
-        r = radius - sqrt(dot(posE, posE));
-    } else if(posN.x > nodeSize.x - radius && posN.y < radius) { // TOP RIGHT
-        posE = posN + vec2(-nodeSize.x + radius, - radius);
-        r = radius - sqrt(dot(posE, posE));
-    } else if(posN.x > nodeSize.x - radius && posN.y > nodeSize.y - radius) { // BOTTOM RIGHT
-        posE = posN + vec2(-nodeSize.x + radius, -nodeSize.y + radius);
-        r = radius - sqrt(dot(posE, posE));
+    if(posN.x < radiusTop && posN.y < radiusTop) { // TOP LEFT
+        posE = posN + vec2(-radiusTop , -radiusTop);
+        r    = radiusTop - sqrt(dot(posE, posE));
+    } else if(posN.x < radiusBottom && posN.y > nodeSize.y - radiusBottom) { // BOTTOM LEFT
+        posE = posN + vec2(-radiusBottom, -nodeSize.y + radiusBottom);
+        r    = radiusBottom - sqrt(dot(posE, posE));
+    } else if(posN.x > nodeSize.x - radiusTop && posN.y < radiusTop) { // TOP RIGHT
+        posE = posN + vec2(-nodeSize.x + radiusTop, - radiusTop);
+        r    = radiusTop - sqrt(dot(posE, posE));
+    } else if(posN.x > nodeSize.x - radiusBottom && posN.y > nodeSize.y - radiusBottom) { // BOTTOM RIGHT
+        posE = posN + vec2(-nodeSize.x + radiusBottom, -nodeSize.y + radiusBottom);
+        r    = radiusBottom - sqrt(dot(posE, posE));
     }
 
-
-    float blurWidth =  1.0;
-    float rimWidth  =  5.0;
-    float r4        =  0.0;
-    float r3        =      blurWidth / blurCamFactor;
-    float r2        = r3 +  rimWidth /  rimCamFactor;
-    float r1        = r2 + blurWidth / blurCamFactor;
+    float blurWidth  =  1.0;
+    float rimWidth   =  5.0;
+    float r4         =  0.0;
+    float r3         =      blurWidth / blurCamFactor;
+    float r2         = r3 +  rimWidth /  rimCamFactor;
+    float r1         = r2 + blurWidth / blurCamFactor;
 
     float d_blur_r34 = 1.0;
     float d_blur_r12 = 0.0;
