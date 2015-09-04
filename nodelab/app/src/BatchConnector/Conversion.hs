@@ -9,6 +9,7 @@ import           Text.ProtocolBuffers.WireMessage
 import           GHC.Float                        (float2Double, double2Float)
 import           Text.ProtocolBuffers.Basic       (uToString, uFromString, Utf8(..))
 import qualified Data.Sequence                    as Seq
+import           Data.Int
 import           Data.Text.Lazy.Encoding          (encodeUtf8, decodeUtf8)
 import           Utils.Vector                     (Vector2(..), x, y)
 
@@ -33,6 +34,14 @@ import           Generated.Proto.Dep.Version.Version
 class ProtoSerializable m n | m -> n, n -> m where
     decode :: m -> Maybe n
     encode :: n -> m
+
+instance ProtoSerializable Utf8 Text where
+    decode = Just . decodeUtf8 . utf8
+    encode = Utf8 . encodeUtf8
+
+instance ProtoSerializable Int32 Int where
+    decode = Just . fromIntegral
+    encode = fromIntegral
 
 instance (ProtoSerializable m n) => ProtoSerializable (Seq m) [n] where
     decode = sequence . (fmap decode) . toList
@@ -67,10 +76,6 @@ instance ProtoSerializable ProtoLibrary.Library Library where
 instance ProtoSerializable ProtoBreadcrumbs.Breadcrumbs Breadcrumbs where
     decode crumbs = Just $ Breadcrumbs crumbs
     encode        = unBreadcrumbs
-
-instance ProtoSerializable Utf8 Text where
-    decode = Just . decodeUtf8 . utf8
-    encode = Utf8 . encodeUtf8
 
 instance ProtoSerializable ProtoNode.Node Node where
     decode node = Node <$> id <*> pure False <*> nodePos <*> expr <*> pure ports where

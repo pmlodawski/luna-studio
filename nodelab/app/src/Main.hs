@@ -32,6 +32,7 @@ import           Reactive.Banana
 import           Reactive.Banana.Frameworks ( Frameworks, actuate )
 import           JS.Bindings
 import           JS.WebSocket
+import           JS.ConnectNodesInBackend   ( setConnectNodeCallback ) -- TODO: Remove
 import           BatchConnector.Commands
 import           Batch.Workspace
 
@@ -45,6 +46,7 @@ makeNetworkDescription = CoreNetwork.makeNetworkDescription
 
 runMainNetwork :: WebSocket -> Workspace -> IO ()
 runMainNetwork socket workspace = do
+    setConnectNodeCallback workspace  -- TODO: Remove
     Typechecker.main  -- TODO: Remove
     initializeGl
     render

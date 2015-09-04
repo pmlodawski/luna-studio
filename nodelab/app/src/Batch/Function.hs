@@ -13,7 +13,7 @@ import           Batch.Breadcrumbs
 
 import qualified Generated.Proto.Dep.Type.Type       as GenType
 import qualified Generated.Proto.Dep.Type.Type.Cls   as TypeCls
-import qualified Generated.Proto.Dep.Type.Unknown    as TypeUnknown
+import qualified Generated.Proto.Dep.Type.Tuple      as TypeTuple
 
 import qualified Generated.Proto.Dep.Name.Name       as GenName
 import           Text.ProtocolBuffers.Basic          (uFromString)
@@ -29,7 +29,7 @@ emptyFunction :: GenFunction.Function
 emptyFunction  = GenFunction.Function Seq.empty
                                       (Just mainName)
                                       Seq.empty
-                                      (Just unknownType)
+                                      (Just returnType)
                                       Seq.empty
 
 mainName :: GenName.Name
@@ -45,6 +45,6 @@ moduleCrumb name = putExt CrumbModule.ext (Just $ moduleCrumbExt name)
 moduleBreadcrumbs :: String -> Breadcrumbs
 moduleBreadcrumbs name = Breadcrumbs $ GenBreadcrumbs.Breadcrumbs $ Seq.fromList [moduleCrumb name]
 
-unknownType :: GenType.Type
-unknownType  = putExt TypeUnknown.ext (Just TypeUnknown.Unknown)
-             $ GenType.Type TypeCls.Unknown Nothing $ ExtField Map.empty
+returnType :: GenType.Type
+returnType  = putExt TypeTuple.ext (Just $ TypeTuple.Tuple Seq.empty)
+             $ GenType.Type TypeCls.Tuple Nothing $ ExtField Map.empty

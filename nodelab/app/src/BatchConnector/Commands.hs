@@ -37,6 +37,7 @@ import qualified Generated.Proto.Dep.Graph.Node         as GenNode
 import qualified Generated.Proto.Dep.Graph.NodeExpr     as GenExpr
 import qualified Generated.Proto.Dep.Graph.NodeExpr.Cls as ExprCls
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Add.Request as AddNode
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Connect.Request  as Connect
 
 
 createProject :: String -> String -> WebMessage
@@ -101,4 +102,15 @@ addNode workspace node = WebMessage "project.library.ast.function.graph.node.add
                            (encode $ workspace ^. breadcrumbs)
                            (workspace ^. project . Project.id)
                            (workspace ^. library . Library.id)
+                           1
+
+connectNodes :: Workspace -> Int -> [Int] -> Int -> [Int] -> WebMessage
+connectNodes workspace srcNode srcPorts dstNode dstPorts = WebMessage "project.library.ast.function.graph.connect.request" $ messagePut body where
+    body = Connect.Request (encode srcNode)
+                           (encode srcPorts)
+                           (encode dstNode)
+                           (encode dstPorts)
+                           (encode $ workspace ^. breadcrumbs)
+                           (workspace ^. library . Library.id)
+                           (workspace ^. project . Project.id)
                            1
