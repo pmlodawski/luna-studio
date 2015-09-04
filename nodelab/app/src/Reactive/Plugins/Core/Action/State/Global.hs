@@ -6,6 +6,8 @@ import           Utils.Vector
 
 import qualified JS.Camera
 
+import           Object.Object
+
 
 import           Batch.Project
 import qualified Reactive.Plugins.Core.Action.State.Camera            as Camera
@@ -69,3 +71,7 @@ instance Monoid State where
 toCamera :: State -> JS.Camera.Camera
 toCamera state = JS.Camera.Camera (state ^. screenSize) (camState ^. Camera.pan) (camState ^. Camera.factor) where
     camState   = state ^. camera . Camera.camera
+
+
+genId :: State -> NodeId
+genId state = Graph.genId $ state ^. graph

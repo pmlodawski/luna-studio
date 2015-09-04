@@ -54,6 +54,14 @@ instance PrettyPrinter State where
         <> ")"
 
 
+maxNodeId :: NodeCollection -> NodeId
+maxNodeId []    = 0
+maxNodeId nodes = (^. nodeId) $ maximumBy (on compare (^. nodeId)) nodes
+
+genId :: State -> NodeId
+genId state = 1 + (maxNodeId $ state ^. nodeList)
+
+
 getNodes :: State -> NodeCollection
 getNodes = (^. nodeList)
 
@@ -89,10 +97,25 @@ addAccessor sourceId destId state =
         sourceRefMay = IntMap.lookup sourceId refMap
         destRefMay   = IntMap.lookup destId   refMap
     in case (sourceRefMay, destRefMay) of
-        (Just sourceRef, Just destRef) -> state
-            where (ref, newGraphMeta) = makeAcc sourceRef destRef $ rebuild $ state ^. graphMeta
-                  newNodeRefs         = IntMap.insert (newNode ^. nodeId) ref $ state ^. nodeRefs
-                  newNode             = def -- TODO
+        (Just sourceRef, Just destRef) -> state & graphMeta    .~ newGraphMeta
+                                                & nodeRefs     .~ newNodeRefs
+            where (ref, newGraphMeta) = makeAcc newNode sourceRef destRef $ rebuild $ state ^. graphMeta
+                  newNodeRefs         = IntMap.insert (newNode ^. hiddenNodeId) ref $ state ^. nodeRefs
+                  newNode             = HiddenNode Accessor 0
+        (_, _) -> state
+
+
+addApplication :: NodeId -> NodeId -> State -> State
+addApplication funId argId state =
+    let refMap = state ^. nodeRefs
+        funRefMay = IntMap.lookup funId refMap
+        argRefMay = IntMap.lookup argId refMap
+    in case (funRefMay, argRefMay) of
+        (Just funRef, Just argRef) -> state & graphMeta    .~ newGraphMeta
+                                            & nodeRefs     .~ newNodeRefs
+            where (ref, newGraphMeta) = makeApp1 newNode funRef argRef $ rebuild $ state ^. graphMeta
+                  newNodeRefs         = IntMap.insert (newNode ^. hiddenNodeId) ref $ state ^. nodeRefs
+                  newNode             = HiddenNode Application 0
         (_, _) -> state
 
 
@@ -105,12 +128,15 @@ addAccessor sourceId destId state =
 makeVar :: Node -> StateGraphMeta -> RefFunctionGraphMeta
 makeVar node bldrState = flip runGraphState bldrState $ do
     genTopStar
-    withMeta (Meta node) $ var $ Text.unpack $ node ^. expression
+    withMeta (MetaNode node) $ var $ Text.unpack $ node ^. expression
 
-makeAcc :: GraphRefMeta -> GraphRefMeta -> StateGraphMeta -> RefFunctionGraphMeta
-makeAcc sourceRef destRef bldrState = flip runGraphState bldrState $
-    -- withMeta (Meta node) $
-    sourceRef @. destRef
+makeAcc :: HiddenNode -> GraphRefMeta -> GraphRefMeta -> StateGraphMeta -> RefFunctionGraphMeta
+makeAcc node sourceRef destRef bldrState = flip runGraphState bldrState $
+    withMeta (MetaHiddenNode node) $ sourceRef @. destRef
+
+makeApp1 :: HiddenNode -> GraphRefMeta -> GraphRefMeta -> StateGraphMeta -> RefFunctionGraphMeta
+makeApp1 node funRef argRef bldrState = flip runGraphState bldrState $
+    withMeta (MetaHiddenNode node) $ funRef @$ [arg argRef]
 
 
 -- main :: IO ()

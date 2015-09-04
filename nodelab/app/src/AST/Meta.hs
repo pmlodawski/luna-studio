@@ -5,6 +5,7 @@ module AST.Meta where
 import           Flowbox.Prelude hiding (Cons, cons)
 
 import           Control.Monad.State
+import           Control.Lens
 
 import           Luna.Syntax.Builder.Graph hiding (get, put)
 import           Luna.Syntax.Builder
@@ -14,12 +15,25 @@ import           Luna.Syntax.AST.Term
 import           Luna.Syntax.AST.Decl.Function
 import           Luna.Repr.Styles
 
+import           Object.Object
 import           Object.Node
 
 
-data Meta = Meta Node deriving (Eq, Show)
+data HiddenNodeType = Accessor | Application deriving (Eq, Show)
 
-instance Default Meta where def = Meta def
+data HiddenNode = HiddenNode { _hiddenNodeType :: HiddenNodeType
+                             , _hiddenNodeId   :: NodeId
+                             } deriving (Eq, Show)
+
+makeLenses ''HiddenNode
+
+instance Default HiddenNode where
+    def = HiddenNode Application 0
+
+data Meta = MetaNode       Node
+          | MetaHiddenNode HiddenNode deriving (Eq, Show)
+
+instance Default Meta where def = MetaHiddenNode def
 
 instance {-# OVERLAPPABLE #-} (MonadState Meta m) => LabBuilder m Meta where
     mkLabel = get

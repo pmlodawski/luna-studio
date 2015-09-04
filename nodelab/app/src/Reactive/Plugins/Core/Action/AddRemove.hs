@@ -102,11 +102,6 @@ addWidgetToNode node b = do
     JSRegistry.register b widget
     node `add` widget
 
-
-maxNodeId :: NodeCollection -> NodeId
-maxNodeId []    = 0
-maxNodeId nodes = (^. nodeId) $ maximumBy (on compare (^. nodeId)) nodes
-
 -- mock helper functions
 tmpMaxin  = 9
 tmpMaxOut = 5
@@ -130,7 +125,7 @@ instance ActionStateUpdater Action where
         camera       = Global.toCamera state
         oldNodes     = Graph.getNodes graph
         graph        = state ^. Global.graph
-        nextId       = 1 + (maxNodeId oldNodes)
+        nextId       = Global.genId state
         nodePosWs    = Camera.screenToWorkspace camera $ state ^. Global.mousePos
 
     execSt (AddAction node) oldState = ActionUI newAction newState
@@ -177,7 +172,6 @@ instance ActionStateUpdater Action where
         nodePosWs               = Camera.screenToWorkspace camera $ oldState ^. Global.mousePos
         oldSelNodeIds           = oldState ^. Global.selection . Selection.nodeIds
         headNodeId              = listToMaybe oldSelNodeIds
-        nextNodeId              = 1 + (maxNodeId oldNodes)
         newAction               = case headNodeId of
             Nothing        -> Nothing
             _              -> Just RemoveFocused
