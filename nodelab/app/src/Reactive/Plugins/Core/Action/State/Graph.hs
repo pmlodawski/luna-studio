@@ -39,11 +39,17 @@ instance Eq State where
 instance Default State where
     def = State def def def def
 
+instance PrettyPrinter NodesMap where
+    display nodes =
+        "map(" <> show (IntMap.keys nodes)
+        <> " " <> show (IntMap.assocs nodes)
+        <> ")"
+
 instance PrettyPrinter State where
     display (State nodesList nodes focusedNodeId bldrState) =
-          "graph(" <> show nodesList
-        <> " "     <> show (IntMap.keys nodes)
-        <> " "     <> show focusedNodeId
+          "graph(" <> display nodesList
+        <> " "     <> display nodes
+        <> " "     <> display focusedNodeId
         <> " "     <> show bldrState
         <> ")"
 
@@ -56,30 +62,55 @@ updateNodes newNodeList state = state & nodeList .~ newNodeList
 
 
 addNode :: Node -> State -> State
-addNode newNode state  = trace ("graphMeta " <> show newGraphMeta <> " ref " <> show ref) $ state & nodeList     .~ newNodeList
+addNode newNode state  = state & nodeList     .~ newNodeList
                                & graphMeta    .~ newGraphMeta
                                & nodeRefs     .~ newNodeRefs
-    where newNodeList         = newNode : state ^. nodeList
-          (ref, newGraphMeta) = makeVar newNode $ rebuild $ state ^. graphMeta
+    where (ref, newGraphMeta) = makeVar newNode $ rebuild $ state ^. graphMeta
           newNodeRefs         = IntMap.insert (newNode ^. nodeId) ref $ state ^. nodeRefs
-
-
-makeVar :: Node -> StateGraphMeta -> RefFunctionGraphMeta
-makeVar node bldrState = flip runGraphState bldrState $ do
-    genTopStar
-    withMeta (Meta node) $ var $ show $ node ^. expression
+          newNodeList         = newNode : state ^. nodeList
 
 
 
+-- TODO: nodeRefs and graphMeta
 removeNode :: NodeId -> State -> State
 removeNode remNodeId state = state & nodeList .~ newNodeList
     where newNodeList = filter (\node -> node ^. nodeId /= remNodeId) $ state ^. nodeList
 
 
-
+-- TODO: nodeRefs and graphMeta
 selectNodes :: NodeIdCollection -> State -> State
 selectNodes nodeIds state = state & nodeList .~ newNodeList
     where newNodeList = updateNodesSelection nodeIds $ state ^. nodeList
+
+
+addAccessor :: NodeId -> NodeId -> State -> State
+addAccessor sourceId destId state =
+    let refMap = state ^. nodeRefs
+        sourceRefMay = IntMap.lookup sourceId refMap
+        destRefMay   = IntMap.lookup destId   refMap
+    in case (sourceRefMay, destRefMay) of
+        (Just sourceRef, Just destRef) -> state
+            where (ref, newGraphMeta) = makeAcc sourceRef destRef $ rebuild $ state ^. graphMeta
+                  newNodeRefs         = IntMap.insert (newNode ^. nodeId) ref $ state ^. nodeRefs
+                  newNode             = def -- TODO
+        (_, _) -> state
+
+
+
+
+
+
+-- helpers
+
+makeVar :: Node -> StateGraphMeta -> RefFunctionGraphMeta
+makeVar node bldrState = flip runGraphState bldrState $ do
+    genTopStar
+    withMeta (Meta node) $ var $ Text.unpack $ node ^. expression
+
+makeAcc :: GraphRefMeta -> GraphRefMeta -> StateGraphMeta -> RefFunctionGraphMeta
+makeAcc sourceRef destRef bldrState = flip runGraphState bldrState $
+    -- withMeta (Meta node) $
+    sourceRef @. destRef
 
 
 -- main :: IO ()

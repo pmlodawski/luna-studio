@@ -6,19 +6,6 @@ module Tmp.TypecheckerTest where
 
 import           Utils.PreludePlus
 
--- import           Data.GraphViz.Types.Canonical
--- import           Data.GraphViz.Types
--- import           Data.GraphViz.Attributes.Complete   hiding (Label, Int)
--- import qualified Data.GraphViz.Attributes.Complete   as GV
--- import qualified Data.GraphViz.Attributes            as GV
--- import           Data.GraphViz.Printing              (toDot)
--- import           Data.GraphViz.Commands
--- import qualified Data.GraphViz.Attributes.Colors     as GVC
--- import qualified Data.GraphViz.Attributes.Colors.X11 as GVC
--- import           Data.GraphViz.Printing
-
--- import           Utils.Viz
-
 
 import           Luna.Repr.Styles (HeaderOnly(..), Simple(..))
 
@@ -27,7 +14,6 @@ import           Control.Monad.State
 
 import           Luna.Syntax.Builder.Graph hiding (get, put)
 import           Luna.Syntax.Builder
-
 import           Luna.Syntax.Layer.Typed
 import           Luna.Syntax.Layer.Labeled
 import           Luna.Syntax.AST.Term
@@ -37,7 +23,7 @@ import qualified Luna.Diagnostic.AST as Diag
 import qualified Data.Text.Lazy as Text
 
 import           AST.AST
-
+import           AST.GraphToViz
 
 
 
@@ -109,8 +95,7 @@ main = do
     print $ repr out
     print $ rv2                     -- Mu (Ref {fromRef = Ptr 7})
 
-    -- let gv = Diag.toGraphViz $ out
-    -- displayGraph $ printIt gv
+    graphToViz out
 
     return ()
 

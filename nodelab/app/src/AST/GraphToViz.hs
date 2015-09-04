@@ -12,7 +12,7 @@ import           AST.AST
 
 #ifndef GRAPH_VIZ
 
-graphToViz :: GraphMeta -> IO ()
+graphToViz :: Show a => HomoGraph ArcPtr (Labeled a (Typed Draft)) -> IO ()
 graphToViz out = putStrLn $ "GraphViz disabled\n" <> show out
 
 #else
@@ -30,13 +30,19 @@ import           Data.GraphViz.Printing
 
 import           Utils.Viz
 
+
 import qualified Luna.Diagnostic.AST as Diag
+import           Luna.Syntax.Builder.Graph hiding (get, put)
+import           Luna.Syntax.Builder
+import           Luna.Syntax.Layer.Typed
+import           Luna.Syntax.Layer.Labeled
+import           Luna.Syntax.AST.Term
+import           Luna.Syntax.AST.Decl
 
 import qualified Data.Text.Lazy as Text
 
 
-
-graphToViz :: GraphMeta -> IO ()
+graphToViz :: Show a => HomoGraph ArcPtr (Labeled a (Typed Draft)) -> IO ()
 graphToViz out = do
     let gv = Diag.toGraphViz out
     displayGraph $ printIt gv

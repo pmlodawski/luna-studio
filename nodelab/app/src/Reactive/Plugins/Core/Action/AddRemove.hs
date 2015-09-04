@@ -191,7 +191,7 @@ instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
         RegisterActionUI node workspace -> sendMessage $ addNode workspace node
         AddActionUI node wnode actions  -> (sequence_ $ reverse $ catMaybes actions)
-                                        >> putStrLn (display $ state ^. Global.graph) -- debug
+                                        >> putStrLn (display $ state ^. Global.graph . Graph.nodeRefs) -- debug
                                         >> graphToViz (state ^. Global.graph . Graph.graphMeta)
         RemoveFocused      -> UI.removeNode nodeId
                            >> mapM_ UI.setNodeFocused topNodeId
