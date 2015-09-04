@@ -6,6 +6,14 @@ module AST.GraphToViz where
 
 import           Utils.PreludePlus
 
+import qualified Luna.Diagnostic.AST as Diag
+import           Luna.Syntax.Builder.Graph hiding (get, put)
+import           Luna.Syntax.Builder
+import           Luna.Syntax.Layer.Typed
+import           Luna.Syntax.Layer.Labeled
+import           Luna.Syntax.AST.Term
+import           Luna.Syntax.AST.Decl
+
 import           AST.AST
 
 -- #define GRAPH_VIZ
@@ -29,15 +37,6 @@ import qualified Data.GraphViz.Attributes.Colors.X11 as GVC
 import           Data.GraphViz.Printing
 
 import           Utils.Viz
-
-
-import qualified Luna.Diagnostic.AST as Diag
-import           Luna.Syntax.Builder.Graph hiding (get, put)
-import           Luna.Syntax.Builder
-import           Luna.Syntax.Layer.Typed
-import           Luna.Syntax.Layer.Labeled
-import           Luna.Syntax.AST.Term
-import           Luna.Syntax.AST.Decl
 
 import qualified Data.Text.Lazy as Text
 
