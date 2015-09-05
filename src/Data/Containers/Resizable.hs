@@ -1,91 +1,148 @@
+{-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE PolyKinds #-}
 
 module Data.Containers.Resizable where
 
 import Prologue              hiding (Indexable, index, Bounded)
 import Data.Containers.Class
 import Data.Typeable
-
-data Resizable s a = Resizable { _style :: !s, _cont :: !a} deriving (Show)
-
-makeLenses ''Resizable
-
-
-instance Unwrap (Resizable s) where unwrap = view cont
-
-instance HasContainer (Resizable s a) (Resizable s a) where container = id
+import qualified Data.Containers.Interface as I
+import           Data.Containers.Poly {- x -}
+import           Data.TypeLevel.List (In)
 
 
-type instance ElementOf       (Resizable s a) = ElementOf a
-type instance ElementByIx idx (Resizable s a) = ElementByIx idx a
-type instance IndexOf     el  (Resizable s a) = IndexOf el a
+type Result q s = Result2' q (Resizable s)
 
-instance Bounded a idx => Bounded (Resizable s a) idx where
-    minBoundIdx = minBoundIdx . unwrap
-    maxBoundIdx = maxBoundIdx . unwrap
+
+
+-- === Resizable wrapper
+
+data Resizable style a = Resizable !style !a deriving (Show)
+
+instance              Unwrap  (Resizable s) where  unwrap (Resizable _ a) = a
+instance Default s => Wrap    (Resizable s) where    wrap = Resizable def
+instance              Wrapped (Resizable s) where wrapped = lens unwrap $ \(Resizable s _) a -> Resizable s a
+
 
 instance (Default s, Monoid a) => Monoid (Resizable s a) where
     mempty                                   = Resizable def mempty
     mappend (Resizable s a) (Resizable _ a') = Resizable s (a <> a')
 
-instance Measurable a       =>           Measurable          (Resizable s a)        where size             = size    . unwrap
-instance Container a idx el =>           Container           (Resizable s a) idx el where elems            = elems   . unwrap
-                                                                                          indexes          = indexes . unwrap
+instance (Default s, Monoid a) => Default (Resizable s a) where
+    def = Resizable def mempty
 
-instance Appendable'         a  idx el                      => Appendable'        (Resizable s a)  idx el where append'       = mapOver cont . append'
-instance Prependable         a  idx el                      => Prependable        (Resizable s a)  idx el where prepend'      = mapOver cont . prepend'
-
-instance (Indexable2  opts a idx el) => Indexable2  opts (Resizable s a) idx el where index2 opts idx = index2 opts idx . unwrap
-
-instance (Insertable          a  idx el, Resize s         a  idx)                     => Insertable          (Resizable s a)  idx el where insert       idx el = (cont %~ insert idx el) . resize idx
-instance (Insertable  (Unsafe a) idx el, Resize s (Unsafe a) idx, Container a idx el) => Insertable  (Unsafe (Resizable s a)) idx el where insert       idx el = (cont $ unsafely (insert idx el)) . unwrap
-                                                                                                            --unsafeInsert idx el = cont %~ unsafeInsert idx el
-instance (Updatable           a idx el                ) => Updatable           (Resizable s a) idx el where update       idx el = cont %~ update idx el
+instance (IsList a, Default s) => IsList (Resizable s a) where
+    type Item (Resizable s a) = Item a
+    fromList = Resizable def . fromList
 
 
 
-instance                      Growable' a idx                          => Expandable'        (Resizable Minimal   a) idx where expand'       c    = (c & cont .~ a, ixs) where
-                                                                                                                                                    (a, ixs) = unsafeGrow' 1 (c ^. cont)
-instance                      (Growable' a idx, Measurable a)          => Expandable'        (Resizable Duplicate a) idx where expand'       c    = (c & cont .~ a, ixs) where
-                                                                                                                                                    (a, ixs) = unsafeGrow' (checkBaseSize $ size c) (c ^. cont)
-instance {-# OVERLAPPABLE #-} (Growable a              )               => Expandable          (Resizable Minimal   a)     where expand                = grow 1
-instance                      (Growable a, Measurable a)               => Expandable          (Resizable Duplicate a)     where expand           cont = grow (size cont) cont
-instance                      (Growable   a                          ) => Growable            (Resizable s         a)     where unsafeGrow     i      = cont %~ unsafeGrow i
-instance                      (Allocable  a, Default s               ) => Allocable           (Resizable s         a)     where unsafeAlloc           = Resizable def . unsafeAlloc
+-- === TF Instances ===
 
-instance (Erasable' a idx el)                                          => Erasable            (Resizable s a) idx
-instance (Erasable' a idx el)                                          => Erasable'           (Resizable s a) idx el      where unsafeErase' idx     c = (c & cont .~ a, el) where
-                                                                                                                                                         (a, el) = unsafeErase' idx $ c ^. cont
+instance HasContainer (Resizable s a) (Resizable s a) where container = id
+
+type instance ElementOf        (Resizable s a) = ElementOf       a
+type instance ElementByIx  idx (Resizable s a) = ElementByIx idx a
+type instance IndexOf      el  (Resizable s a) = IndexOf     el  a
 
 
---class Container cont idx el => Erasable'           cont idx el where                                                              unsafeErase' :: idx -> cont -> (cont, el)
+type instance ModsOf (Resizable s a) inst = '[]
+
+-- === Finite ===
+
+-- [+] Measurable
+-- [+] MinIndexed
+-- [+] MaxIndexed
+
+instance I.MeasurableT q a size => Measurable q mods (Resizable s a) size where size     spec = size     (polySpecX spec) . unwrap
+instance I.MinIndexedT q a idx  => MinIndexed q mods (Resizable s a) idx  where minIndex spec = minIndex (polySpecX spec) . unwrap
+instance I.MaxIndexedT q a idx  => MaxIndexed q mods (Resizable s a) idx  where maxIndex spec = maxIndex (polySpecX spec) . unwrap
+
+---- === Construction ===
+
+---- [+] Singleton
+---- [+] Allocable
+---- [+] Growable
+---- [+] Expandable
+
+instance (Default s, I.SingletonT  q a el)                       => Singleton  q mods (Resizable s a) el  where singleton spec   = wrap . singleton (polySpecX spec)
+instance (Default s, I.AllocableT  q a   )                       => Allocable  q mods (Resizable s a)     where alloc     spec   = wrap . alloc     (polySpecX spec)
+instance (I.GrowableT q a a', Result q s a' out)                 => Growable   q mods (Resizable s a) out where grow      spec   = runWrapped1 spec grow
+instance (I.GrowableT q a a', Result q s a' out, ResizeStep s a) => Expandable q mods (Resizable s a) out where expand    spec c = grow (rebaseSpecX spec) (resizeStep c) c
 
 
-data Minimal   = Minimal   deriving (Show)
-data Duplicate = Duplicate deriving (Show)
 
-instance Default Minimal   where def = Minimal
-instance Default Duplicate where def = Duplicate
+---- === Concatenation ===
+---- [+] Appendable
+---- [+] Prependable
+---- [+] Addable
+---- [+] Removable
 
-class                                                          Resize style     cont idx where resize :: idx -> Resizable style cont -> Resizable style cont
-instance (Growable cont, Bounded cont idx                 ) => Resize Minimal   cont idx where resize idx cont = ifElseId (isOverBounds idx cont) (grow $ ((-) `on` fromEnum) idx $ maxBoundIdx cont) cont
-instance (Growable cont, Bounded cont idx, Measurable cont) => Resize Duplicate cont idx where resize idx cont = ifElseId (isOverBounds idx cont) (grow $ dupCheckSize (fromEnum idx) (size cont) - size cont) cont
+--instance (AppendableX q (LstIn (ModsOf a AppendableX) q) a el, Result2 (In I.Ixed q) (Resizable s) (MonoResultEl q a el) (MonoResultEl q (Resizable s a) el) ) => AppendableX  q mods (Resizable s a) el where appendx spec = runWrapped1 spec appendx
 
 
-checkBaseSize size = if size == 0 then 1 else size
-dupCheckSize i size = dupSize i $ if size == 0 then 1
-                                               else size
+instance (I.AppendableT  q a el a', Result q s a' out) => Appendable  q mods (Resizable s a) el out where append  spec = runWrapped1 spec append
+instance (I.PrependableT q a el a', Result q s a' out) => Prependable q mods (Resizable s a) el out where prepend spec = runWrapped1 spec prepend
+instance (I.AddableT     q a el a', Result q s a' out) => Addable     q mods (Resizable s a) el out where add     spec = runWrapped1 spec add
+instance (I.RemovableT   q a el a', Result q s a' out) => Removable   q mods (Resizable s a) el out where remove  spec = runWrapped1 spec remove
+
+
+-- === Modification ===
+
+-- [+] Indexable
+-- [+] Insertable
+-- [ ] Reservable
+-- [ ] Releasable
+
+instance  I.IndexableT  q a idx el                                                      => Indexable  q mods (Resizable s a) idx el     where index  spec idx   = index (polySpecX spec) idx . unwrap
+instance (I.InsertableT q a idx el a', Resize s a idx, Result2' q (Resizable s) a' out) => Insertable q mods (Resizable s a) idx el out where insert spec idx a = runWrapped2 spec insert idx a . resize idx
+
+
+-- === Indexing ===
+
+-- [+] TracksElems
+-- [+] TracksIxes
+-- [-] TracksFreeIxes
+-- [-] TracksUsedIxes
+
+instance I.TracksElemsT q a elems => TracksElems q mods (Resizable s a) elems where elems   spec = elems   (polySpecX spec) . unwrap
+instance I.TracksIxesT  q a ixes  => TracksIxes  q mods (Resizable s a) ixes  where indexes spec = indexes (polySpecX spec) . unwrap
+
+
+----------------------------------
+
+
+data Minimal     = Minimal   deriving (Show)
+data Exponential = Exponential deriving (Show)
+
+instance Default Minimal     where def = Minimal
+instance Default Exponential where def = Exponential
+
+--class Resize2 style cont where
+--    resizeAmount :: Proxy style -> cont -> Int
+
+class                                                                                               Resize style       cont idx where resize     :: idx -> Resizable style cont -> Resizable style cont
+instance (                       I.MaxIndexed cont idx, I.Growable cont cont, Enum idx, Ord idx) => Resize Minimal     cont idx where resize idx c = if isOverBounds idx c then flip I.grow c $ ((-) `on` fromEnum) idx $ I.maxIndex c else c
+instance (I.Measurable cont Int, I.MaxIndexed cont idx, I.Growable cont cont, Enum idx, Ord idx) => Resize Exponential cont idx where resize idx c = if isOverBounds idx c then flip I.grow c $ dupCheckSize (fromEnum idx) (I.size c) - I.size c else c
+
+class                             ResizeStep style       cont where resizeStep :: Resizable style cont -> Int
+instance                          ResizeStep Minimal     cont where resizeStep c = 1
+instance I.Measurable cont Int => ResizeStep Exponential cont where resizeStep c = checkZeroSize $ I.size c
+
+
+checkZeroSize s = if s == 0 then 1 else s
+
+dupCheckSize i = dupSize i . checkZeroSize
 
 dupSize i size = if i >= size then dupSize i (2 * size)
                               else size
 
 
-isOverBounds :: Bounded cont idx => idx -> cont -> Bool
-isOverBounds idx cont = idx > maxBoundIdx cont
-
-
-dots :: [a -> a] -> (a -> a)
-dots (f:[]) = f
-dots (f:fs) = f . dots fs
+isOverBounds :: (Ord idx, I.MaxIndexed cont idx, HasContainer t cont) => idx -> t -> Bool
+isOverBounds idx cont = idx > I.maxIndex cont

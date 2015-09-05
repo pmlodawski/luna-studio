@@ -48,9 +48,9 @@ class (WrapT t, UnwrapT t) => WrapperT t
 
 class Wrapped a where
     wrapped :: Lens (a t) (a t') t t'
-
-instance {-# OVERLAPPABLE #-} (Wrap a, Unwrap a) => Wrapped a where
+    default wrapped :: (Wrap a, Unwrap a) => Lens (a t) (a t') t t'
     wrapped = lens unwrap (const wrap)
+
 
 ----------------------------------------------------------------------------------
 -- Utils

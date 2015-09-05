@@ -87,3 +87,9 @@ instance (f~(a -> f'), App f' as out ) => App f (a,as) out where
 main = do
     let a = (1,(2,(3,())))
     print $ buildEnd $ buildStart 1 2 3
+
+
+type family In a lst where
+    In a (a ': ls) = True
+    In a (l ': ls) = In a ls
+    In a '[]       = False
