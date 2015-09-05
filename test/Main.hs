@@ -14,9 +14,10 @@
 {-# LANGUAGE RecursiveDo #-}
 {-# LANGUAGE NoOverloadedStrings #-}
 
+
 module Main where
 
-import Flowbox.Prelude hiding (simple, empty, Indexable, Simple, cons, lookup, index, Wrapped, children, Cons)
+import Flowbox.Prelude hiding (simple, empty, Indexable, Simple, cons, lookup, index, Wrapped, children, Cons, Ixed)
 --import Data.Repr
 
 import qualified Data.Map            as Map
@@ -70,10 +71,11 @@ import Luna.Diagnostic.AST (toGraphViz, display)
 import Luna.Syntax.Layer.Typed
 import Luna.Syntax.Layer.Labeled
 import qualified Type.BaseType as BT
-
+import Data.Containers.Interface
 
 --import Data.Text.CodeBuilder.Builder
 import Data.Text.CodeBuilder.Builder as CB
+import           Data.Containers.Poly {- x -} hiding (append)
 
 import Data.Vector.Dynamic as VD
 
@@ -247,40 +249,54 @@ valCons = cons
 --    return (Labeled l t)
 
 --type AutoVector a = Reusable (Resizable Duplicate (Vector a))
-type AutoVector a = Reusable (Resizable Duplicate (Vector a))
+--type AutoVector a = Reusable (Resizable Duplicate (Vector a))
 
-main = do
-    --putStrLn $ repr y
-        --print $ repr $ nytst2
-    --putStrLn $ repr $ nytst3
-    --print c'
-    --print $ take 1000 names
+    --main = do
+    --    --putStrLn $ repr y
+    --        --print $ repr $ nytst2
+    --    --putStrLn $ repr $ nytst3
+    --    --print c'
+    --    --print $ take 1000 names
 
-    --let gv = toGraphViz gr3
-    --print   gv
-    --display gv
+    --    --let gv = toGraphViz gr3
+    --    --print   gv
+    --    --display gv
 
-    VD.tst
+    --    VD.tst
 
-    --V.test
-    --BT.test
-    --print tstc
-    let xa  = alloc 4 :: AutoVector Int
-        --i  = 600000
-        --xb = add (1::Int) xa
-        --xc = add (1::Int) xb
-        --xd = add (1::Int) xc
-        --xe = add (1::Int) xd
-        --xf = add (1::Int) xe
-        --xg = unsafeErase 2 xf
-        --xb = insert i 1 v
-    --print $ length $ freeIxs xb
-    --print $ freeIxs xg
-    --print $ xxx 2 xf
-    --print $ size xb
-    return ()
+    --    --V.test
+    --    --BT.test
+    --    --print tstc
+    --    let xa  = alloc 4 :: AutoVector Int
+    --        v = mempty :: Vector Int
+    --        --i  = 600000
+    --        --xb = add (1::Int) xa
+    --        --xc = add (1::Int) xb
+    --        --xd = add (1::Int) xc
+    --        --xe = add (1::Int) xd
+    --        --xf = add (1::Int) xe
+    --        --xg = unsafeErase 2 xf
+    --        --xb = insert i 1 v
+    --    --print $ length $ freeIxs xb
+    --    --print $ freeIxs xg
+    --    --print $ xxx 2 xf
+    --    --print $ size xb
+    --    print v
+    --    print $ append2 (Mods :: Mods '[Ixed]) 1 v
 
---unsafe2 f opts = f (Opts :: Opts '[Unsafe2])
+
+--class                          Appendable2 opts cont     el out | opts cont el -> out where append2 :: Mods opts -> el -> cont -> out
+
+    --return ()
+--foo :: _ => _
+--foo = append2 (Mods :: Mods '[Ixed])
+--ixed append 5 c
+
+--unsafeAppend 5 c
+
+--unsafe append 5 c
+
+--unsafe f opts = f (Mods :: Mods '[Unsafe])
 --data
 --Trans [Unsafe, Ixed]
 
@@ -294,3 +310,62 @@ runMeI = renderCode HSIndent
 --tstc = runMeI ("o" <+> ("ala" <+> "ola"))
 
 instance Repr s (VectorGraph a) where repr _ = fromString "mu"
+
+
+
+
+
+
+
+--xxx :: _ => _
+--xxx v = append v
+
+--unsafeAppend :: Inst Appendable cont mods el out => ModFunc '[Unsafe] mods (cont -> el -> out)
+--unsafeAppend = unsafe append
+
+
+
+
+
+
+--type family Foo (x :: Bool) a b where
+--    Foo False a b = a
+--    Foo True  a b = b
+
+--type family Bar a
+
+--type instance Bar Int = Int
+
+--xt = undefined :: Foo False Int (Bar String)
+
+--xv = fromList [1,2,3] :: (Resizable Exponential (Vector Int))
+xv = alloc 5 :: Reusable (Resizable Exponential (Vector Int))
+--xv = fromList [1,2,3] :: Vector Int
+--cont        -> el -> out
+
+
+--xv2 = append (4 :: Int) xv
+--xv2 = index (2 :: Int) xv
+--xv2 = add 1 xv
+--xv2 = ixed append 2 xv
+--xv2 = maxIndex xv
+
+xv2 = add 1 xv
+xv3 = add 1 xv2
+xv4 = add 1 xv3
+xv5 = add 1 xv4
+xv6 = add 1 xv5
+xv7 = add 1 xv6
+
+main = do
+    print $ freeIxes xv
+    print $ freeIxes xv2
+    print $ freeIxes xv3
+    print $ freeIxes xv4
+    print $ freeIxes xv5
+    print $ freeIxes xv6
+    print $ freeIxes xv7
+    --print $ freeIxes xv2
+    --print $ xt
+    print "end"
+

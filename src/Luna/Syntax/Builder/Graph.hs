@@ -6,7 +6,7 @@
 
 module Luna.Syntax.Builder.Graph where
 
-import Prologue
+import Prologue               hiding (Ixed)
 import Data.Vector            hiding (convert, modify)
 import Data.Containers
 import Data.Containers.Hetero
@@ -123,6 +123,9 @@ modify_ = modify . fmap (,())
 withGraph :: MonadGraphBuilder g m => (g -> (g, a)) -> m a
 withGraph = withGraphM . fmap return
 
+withGraph' :: MonadGraphBuilder g m => (g -> (a, g)) -> m a
+withGraph' = withGraphM . fmap (return . switch')
+
 withGraph_ :: MonadGraphBuilder g m => (g -> g) -> m ()
 withGraph_ = withGraph . fmap (,())
 
@@ -141,10 +144,21 @@ execBuilderT = fmap (view graph) .: execT
 evalBuilderT = evalT
 
 
+--class Appendable     q m cont     el cont' | q m cont     el -> cont' where append    :: InstModsX Appendable      q m cont ->        el -> cont -> cont'
 
 instance Default g => Default (BldrState g) where
     def = BldrState def def
 
+--instance (t ~ Ref i a, Monad m, AppendableT '[Ixed] g (a (Mu t)) (idx, g), HasContainer g cont, PtrFrom idx i)
+--      => MuBuilder a (GraphBuilderT g m) t where
+--    buildMu a = fmap (Mu . Ref . ptrFrom) . withGraph' . ixed append $ a
+
+
+
 --instance (t ~ Ref i a, Monad m, Appendable' cont idx (a (Mu t)), HasContainer g cont, PtrFrom idx i)
 --      => MuBuilder a (GraphBuilderT g m) t where
 --    buildMu a = fmap (Mu . Ref . ptrFrom) . withGraph . append' $ a
+
+foo = ixed append
+
+switch' (a,b) = (b,a)
