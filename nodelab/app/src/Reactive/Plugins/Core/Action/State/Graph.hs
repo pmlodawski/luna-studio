@@ -59,7 +59,9 @@ maxNodeId []    = 0
 maxNodeId nodes = (^. nodeId) $ maximumBy (on compare (^. nodeId)) nodes
 
 genId :: State -> NodeId
-genId state = 1 + (maxNodeId $ state ^. nodeList)
+genId state = let refs = state ^. nodeRefs in
+    if IntMap.null refs then 0
+                        else 1 + (fst $ IntMap.findMax refs)
 
 
 getNodes :: State -> NodeCollection
@@ -101,7 +103,7 @@ addAccessor sourceId destId state =
                                                 & nodeRefs     .~ newNodeRefs
             where (ref, newGraphMeta) = makeAcc newNode sourceRef destRef $ rebuild $ state ^. graphMeta
                   newNodeRefs         = IntMap.insert (newNode ^. hiddenNodeId) ref $ state ^. nodeRefs
-                  newNode             = HiddenNode Accessor 0
+                  newNode             = HiddenNode Accessor $ genId state
         (_, _) -> state
 
 
@@ -115,7 +117,7 @@ addApplication funId argId state =
                                             & nodeRefs     .~ newNodeRefs
             where (ref, newGraphMeta) = makeApp1 newNode funRef argRef $ rebuild $ state ^. graphMeta
                   newNodeRefs         = IntMap.insert (newNode ^. hiddenNodeId) ref $ state ^. nodeRefs
-                  newNode             = HiddenNode Application 0
+                  newNode             = HiddenNode Application $ genId state
         (_, _) -> state
 
 

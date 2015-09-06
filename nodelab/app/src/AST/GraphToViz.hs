@@ -16,7 +16,7 @@ import           Luna.Syntax.AST.Decl
 
 import           AST.AST
 
--- #define GRAPH_VIZ
+#define GRAPH_VIZ
 
 #ifndef GRAPH_VIZ
 
