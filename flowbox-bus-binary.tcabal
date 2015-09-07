@@ -1,4 +1,4 @@
-Name:               flowbox-bus
+Name:               flowbox-bus-binary
 Version:            0.1
 Cabal-Version:      >= 1.8
 --License-file:       LICENSE
@@ -21,7 +21,7 @@ Library
   Extensions:     NoImplicitPrelude
 
   Exposed-modules: `findmodules('src', '.*\.hs')`
-                   
+
   Build-Depends:  async,
                   base,
                   binary,
@@ -54,7 +54,7 @@ Executable bus-test
   Build-Depends:  base,
                   bytestring,
                   either,
-                  flowbox-bus,
+                  flowbox-bus-binary,
                   flowbox-rpc,
                   flowbox-utils,
                   mtl,
@@ -62,4 +62,3 @@ Executable bus-test
                   protocol-buffers-descriptor,
                   transformers,
                   zeromq4-haskell
-
