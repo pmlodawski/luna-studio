@@ -1,7 +1,9 @@
+{-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+-- {-# LANGUAGE PolyKinds #-}
 
 {-# LANGUAGE CPP #-}
 #if __GLASGOW_HASKELL__ < 710
@@ -10,7 +12,7 @@
 
 module Data.Containers.Instances.Vector.Lazy where
 
-import           Flowbox.Prelude hiding (Indexable, index, Bounded, Ixed, switch)
+import           Flowbox.Prelude hiding (Indexable, index, Bounded, Ixed, switch, Simple, simple)
 import           Data.Containers.Class
 
 import           Data.Map    (Map)
@@ -31,6 +33,7 @@ import GHC.Prim
 
 -- === TF Instances ===
 
+type instance ContainerOf (V.Vector a) = V.Vector a
 instance HasContainer (V.Vector a) (V.Vector a) where container = id
 
 type instance ElementOf        (V.Vector a) = a
@@ -45,13 +48,13 @@ type instance IndexOf      el  (V.Vector a) = Int
 -- [+] MinBounded
 -- [+] MaxBounded
 
-type instance ModsOf (V.Vector a) Measurable  = '[]
-type instance ModsOf (V.Vector a) MinIndexed  = '[]
-type instance ModsOf (V.Vector a) MaxIndexed  = '[]
+--type instance ModsOf (V.Vector a) Measurable  = '[]
+--type instance ModsOf (V.Vector a) MinIndexed  = '[]
+--type instance ModsOf (V.Vector a) MaxIndexed  = '[]
 
-instance      Measurable  q mods (V.Vector a) Int where size _ = V.length
-instance      MinIndexed  q mods (V.Vector a) Int where minIndex _ _ = 0
-instance      MaxIndexed  q mods (V.Vector a) Int where maxIndex _ c = I.size c - 1
+--instance      Measurable  q mods (V.Vector a) Int where size _ = V.length
+--instance      MinIndexed  q mods (V.Vector a) Int where minIndex _ _ = 0
+--instance      MaxIndexed  q mods (V.Vector a) Int where maxIndex _ c = I.size c - 1
 
 
 
@@ -62,23 +65,34 @@ instance      MaxIndexed  q mods (V.Vector a) Int where maxIndex _ c = I.size c 
 -- [+] Growable
 -- [+] Expandable
 
-type instance ModsOf (V.Vector a) Singleton   = '[]
-instance                a ~ a' => Singleton   q mods         (V.Vector a) a' where singleton _ = V.singleton
+--type instance ModsOf (V.Vector a) Singleton   = '[]
+--instance                a ~ a' => Singleton   q mods         (V.Vector a) a' where singleton _ = V.singleton
 
--- FIXME[wd]: We should check if the Unchecked flag is on and check for the negative number
-type instance ModsOf (V.Vector a) Allocable   = '[Unchecked]
-instance                          Allocable   q mods         (V.Vector a)    where alloc _ i = runST $ V.unsafeFreeze =<< MV.unsafeNew i
+---- FIXME[wd]: We should check if the Unchecked flag is on and check for the negative number
+--type instance ModsOf (V.Vector a) Allocable   = '[Unchecked]
+--instance                          Allocable   q mods         (V.Vector a)    where alloc _ i = runST $ V.unsafeFreeze =<< MV.unsafeNew i
 
--- FIXME[wd]: We should check if the Unchecked flag is on and check for the negative number
-type instance ModsOf (V.Vector a) Growable = '[Unchecked, Ixed]
-instance Growable q '[u, True ] (V.Vector a) ([Int], V.Vector a) where grow _ i c  = ([I.size c .. I.size c + i - 1], unchecked I.grow i c)
-instance Growable q '[u, False] (V.Vector a)        (V.Vector a) where grow _ i c  = runST $ V.unsafeFreeze =<< flip MV.unsafeGrow i =<< V.unsafeThaw c
+---- FIXME[wd]: We should check if the Unchecked flag is on and check for the negative number
+--type instance ModsOf (V.Vector a) Growable = '[Unchecked, Ixed]
+--instance Growable q '[u, True ] (V.Vector a) ([Int], V.Vector a) where grow _ i c  = ([I.size c .. I.size c + i - 1], unchecked I.grow i c)
+--instance Growable q '[u, False] (V.Vector a)        (V.Vector a) where grow _ i c  = runST $ V.unsafeFreeze =<< flip MV.unsafeGrow i =<< V.unsafeThaw c
 
-type instance ModsOf (V.Vector a) Expandable = ModsOf (V.Vector a) Growable
-instance I.GrowableT q (V.Vector a) out => Expandable q mods (V.Vector a) out where expand spec = grow (rebaseSpecX spec) 1
+--type instance ModsOf (V.Vector a) Expandable = ModsOf (V.Vector a) Growable
+--instance I.GrowableT q (V.Vector a) out => Expandable q mods (V.Vector a) out where expand spec = grow (rebaseSpecX spec) 1
+
+----type CheckResult
+----class ExpandableF    q s cont m        where expandF    :: Query q s -> Info ExpandableF cont NA NA ->               cont -> m (ResultF q (Info ExpandableF cont NA NA) cont)
 
 
 
+----instance ResultF q (ExpandableInfo (V.Vector a)) ~ Simple => ExpandableF q s (V.Vector a) m where expandF _ _ v = return (Simple v)
+----instance SimpleResult q (RawInfo ExpandableF (V.Vector a)) => ExpandableF q s (V.Vector a) m where expandF _ _ v = return (Simple v)
+
+
+----instance SimpleRawResult ExpandableF q (V.Vector a) => ExpandableF q s (V.Vector a) m where expandF _ _ v = simple $ runST $ V.unsafeFreeze =<< flip MV.unsafeGrow 1 =<< V.unsafeThaw v
+
+type instance ModsOf ExpandableF' (V.Vector a)   = '[Ixed ]
+instance Monad m  => ExpandableF' (V.Vector a) m q '[False] where expandF' _ _ v = simple $ runST $ V.unsafeFreeze =<< flip MV.unsafeGrow 1 =<< V.unsafeThaw v
 
 -- === Concatenation ===
 -- [+] Appendable
@@ -86,27 +100,27 @@ instance I.GrowableT q (V.Vector a) out => Expandable q mods (V.Vector a) out wh
 -- [+] Addable
 -- [ ] Removable
 
-type instance ModsOf (V.Vector a) Appendable  = '[Ixed ]
-type instance ModsOf (V.Vector a) Prependable = '[Ixed ]
-type instance ModsOf (V.Vector a) Addable     = '[Ixed ]
+--type instance ModsOf (V.Vector a) Appendable  = '[Ixed ]
+--type instance ModsOf (V.Vector a) Prependable = '[Ixed ]
+--type instance ModsOf (V.Vector a) Addable     = '[Ixed ]
 
---class AppendableX    q m cont     el where appendx    :: InstModsX AppendableX      q m cont ->        el -> cont -> ElResult q cont el
+----class AppendableX    q m cont     el where appendx    :: InstModsX AppendableX      q m cont ->        el -> cont -> ElResult q cont el
 
-type SimpleElResult q cont     el = MonoResultEl q cont el ~ cont
-type IxedElResult   q cont idx el = MonoResultEl q cont el ~ (idx, cont)
+--type SimpleElResult q cont     el = MonoResultEl q cont el ~ cont
+--type IxedElResult   q cont idx el = MonoResultEl q cont el ~ (idx, cont)
 
-instance (a ~ a', IxedElResult   q (V.Vector a) Int a) => AppendableX  q '[True ] (V.Vector a) a' where appendx _ a c = (V.length c' - 1, c') where c' = V.snoc c a
-instance (a ~ a', SimpleElResult q (V.Vector a)     a) => AppendableX  q '[False] (V.Vector a) a' where appendx _ a c = V.snoc c a
+--instance (a ~ a', IxedElResult   q (V.Vector a) Int a) => AppendableX  q '[True ] (V.Vector a) a' where appendx _ a c = (V.length c' - 1, c') where c' = V.snoc c a
+--instance (a ~ a', SimpleElResult q (V.Vector a)     a) => AppendableX  q '[False] (V.Vector a) a' where appendx _ a c = V.snoc c a
 
 
 
-instance a ~ a' => Appendable  q '[True ] (V.Vector a) a' (Int, V.Vector a) where append _ a c = (V.length c' - 1, c') where c' = V.snoc c a
-instance a ~ a' => Appendable  q '[False] (V.Vector a) a'      (V.Vector a) where append _ a c = V.snoc c a
+--instance a ~ a' => Appendable  q '[True ] (V.Vector a) a' (Int, V.Vector a) where append _ a c = (V.length c' - 1, c') where c' = V.snoc c a
+--instance a ~ a' => Appendable  q '[False] (V.Vector a) a'      (V.Vector a) where append _ a c = V.snoc c a
 
-instance a ~ a' => Prependable q '[True ] (V.Vector a) a' (Int, V.Vector a) where prepend _ a c = (0, V.cons a c)
-instance a ~ a' => Prependable q '[False] (V.Vector a) a'      (V.Vector a) where prepend _ a c = V.cons a c
+--instance a ~ a' => Prependable q '[True ] (V.Vector a) a' (Int, V.Vector a) where prepend _ a c = (0, V.cons a c)
+--instance a ~ a' => Prependable q '[False] (V.Vector a) a'      (V.Vector a) where prepend _ a c = V.cons a c
 
-instance (I.AppendableT q (V.Vector a) el out) => Addable q mods (V.Vector a) el out where add = append . rebaseSpecX
+--instance (I.AppendableT q (V.Vector a) el out) => Addable q mods (V.Vector a) el out where add = append . rebaseSpecX
 
 
 
@@ -117,14 +131,14 @@ instance (I.AppendableT q (V.Vector a) el out) => Addable q mods (V.Vector a) el
 -- [ ] Reservable
 -- [ ] Releasable
 
-type instance ModsOf (V.Vector a) Indexable   = '[Unchecked]
-type instance ModsOf (V.Vector a) Insertable  = '[Unchecked]
+--type instance ModsOf (V.Vector a) Indexable   = '[Unchecked]
+--type instance ModsOf (V.Vector a) Insertable  = '[Unchecked]
 
-instance (a ~ a', idx ~ Int) => Indexable   q '[False] (V.Vector a) idx a' where index  _ idx   c = (V.!)           c idx
-instance (a ~ a', idx ~ Int) => Indexable   q '[True ] (V.Vector a) idx a' where index  _ idx   c = (V.unsafeIndex) c idx
+--instance (a ~ a', idx ~ Int) => Indexable   q '[False] (V.Vector a) idx a' where index  _ idx   c = (V.!)           c idx
+--instance (a ~ a', idx ~ Int) => Indexable   q '[True ] (V.Vector a) idx a' where index  _ idx   c = (V.unsafeIndex) c idx
 
-instance (a ~ a', idx ~ Int) => Insertable  q '[False] (V.Vector a) Int a' (V.Vector a) where insert _ idx a c = (V.//)        c [(idx,a)]
-instance (a ~ a', idx ~ Int) => Insertable  q '[True ] (V.Vector a) Int a' (V.Vector a) where insert _ idx a c = (V.unsafeUpd) c [(idx,a)]
+--instance (a ~ a', idx ~ Int) => Insertable  q '[False] (V.Vector a) Int a' (V.Vector a) where insert _ idx a c = (V.//)        c [(idx,a)]
+--instance (a ~ a', idx ~ Int) => Insertable  q '[True ] (V.Vector a) Int a' (V.Vector a) where insert _ idx a c = (V.unsafeUpd) c [(idx,a)]
 
 
 
@@ -135,11 +149,11 @@ instance (a ~ a', idx ~ Int) => Insertable  q '[True ] (V.Vector a) Int a' (V.Ve
 -- [-] TracksFreeIxes
 -- [-] TracksUsedIxes
 
-type instance ModsOf (V.Vector a) TracksElems = '[]
-type instance ModsOf (V.Vector a) TracksIxes  = '[]
+type instance ModsOf TracksElems (V.Vector a) = '[]
+type instance ModsOf TracksIxes  (V.Vector a) = '[]
 
-instance TracksElems q mods (V.Vector a) [a]   where elems   _   = V.toList
-instance TracksIxes  q mods (V.Vector a) [Int] where indexes _ c = [0 .. I.size c -1]
+--instance TracksElems q mods (V.Vector a) [a]   where elems   _   = V.toList
+--instance TracksIxes  q mods (V.Vector a) [Int] where indexes _ c = [0 .. I.size c -1]
 
 
 

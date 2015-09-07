@@ -5,12 +5,12 @@
 {-# LANGUAGE ScopedTypeVariables      #-}
 {-# LANGUAGE RankNTypes      #-}
 
-{-# LANGUAGE PolyKinds      #-}
+--{-# LANGUAGE PolyKinds      #-}
 
 
 module Data.Containers.Class where
 
-import           Prologue        hiding (Indexable, index, Bounded, Ixed)
+import           Prologue        hiding (Indexable, index, Bounded, Ixed, Simple, Indexed)
 import           Data.Maybe             (fromJust)
 import           Data.Typeable
 
@@ -25,6 +25,7 @@ import           Data.TypeLevel.List (In)
 import Data.TypeLevel.Bool
 
 import Data.Containers.Poly
+import GHC.Prim
 
 --- === Bounded ===
 
@@ -44,6 +45,7 @@ import Data.Containers.Poly
 class HasContainer a cont | a -> cont where
     container :: Lens' a cont
 
+
 instance HasContainer [a]           [a]           where container = id
 
 type IsContainer a = HasContainer a a
@@ -51,12 +53,7 @@ type IsContainer a = HasContainer a a
 
 --- === Containers ===
 
-type family ElementOf        cont
-type family IndexOf      el  cont
-type family ElementByIx idx cont
-type family IxType      idx
 
-type IndexOf' cont = IndexOf (ElementOf cont) cont
 
 --class Measurable a where size :: Integral i => a -> i
 
@@ -77,22 +74,171 @@ class Allocable      q m cont                                         where allo
 class Growable       q m cont        cont' | q m cont        -> cont' where grow      :: InstModsX Growable        q m cont -> Int ->       cont -> cont'
 class Expandable     q m cont        cont' | q m cont        -> cont' where expand    :: InstModsX Expandable      q m cont ->              cont -> cont'
 
--- === Concatenation ===
 
-type family   MonoResultEl (q :: [*])       cont el
-type instance MonoResultEl '[]              cont el = cont
-type instance MonoResultEl (Ixed      ': q) cont el = (IndexOf el cont, MonoResultEl q cont el)
-type instance MonoResultEl (Unchecked ': q) cont el = MonoResultEl q cont el
+--class ExpandableF    q s cont m        where expandF    :: Monad m => Query q s -> ExpandableInfo cont ->               cont -> m (ResultByQuery q (ExpandableInfo cont) cont)
 
-type family   MonoResult (q :: [*])       cont
-type instance MonoResult '[]              cont = cont
-type instance MonoResult (Ixed      ': q) cont = (IndexOf' cont, MonoResult q cont)
-type instance MonoResult (Unchecked ': q) cont = MonoResult q cont
+--type ResultByQuery' = ResultByQuery (Selected s (ModsOf cont ExpandableF')) (ExpandableInfo cont) cont
+--type ResultByQuery' info s = ResultByQuery (Selected s (ModsOf (InfoCont info) (InfoCls info))) (ExpandableInfo (InfoCont info)) (InfoCont info)
+--type family ResultByQuery' info s :: * -> * where ResultByQuery' (Info idx el cls cont) s = ResultByQuery (Selected s (ModsOf cont cls)) (cls cont)
 
-type family   PolyResultEl (q :: [*])       cont el
-type instance PolyResultEl '[]              cont el = cont
-type instance PolyResultEl (Ixed      ': q) cont el = ([IndexOf el cont], PolyResultEl q cont el)
-type instance PolyResultEl (Unchecked ': q) cont el = PolyResultEl q cont el
+--class AppendableX    q m cont     el where appendx  :: InstModsX AppendableX      q m cont ->        el -> cont -> MonoResultEl q cont el
+--class Singleton      q m cont     el                                  where singleton :: InstModsX Singleton       q m cont ->        el -> cont
+
+
+type ExpandableInfo    = RawInfo ExpandableF'
+type AppendableInfo el = ElInfo el AppendableF'
+
+
+class ExpandableF'               cont m q s where expandF'    :: info ~ RawInfo    ExpandableF' cont => Query q s -> info ->       cont -> m (ResultBySel info s cont)
+class AppendableF'            el cont m q s where appendF'    :: info ~ ElInfo  el AppendableF' cont => Query q s -> info -> el -> cont -> m (ResultBySel info s cont)
+class SingletonF'             el cont m q s where singletonF' :: info ~ ElInfo  el SingletonF'  cont => Query q s -> info -> el         -> m (ResultBySel info s cont)
+
+--class ExpandableF'               cont m q s where expandF'   :: (Monad m, info ~ (RawInfo ExpandableF' cont)) => Query q s -> ExpandableInfo cont -> cont -> m (ResultBySel info s cont)
+
+--class ExpandableF'               cont m q s where expandF'   :: Monad m => Query q s -> ExpandableInfo cont ->              cont -> m (ResultByQuery' (ExpandableInfo cont) s cont)
+
+
+--foo :: (cls ~ ExpandableF', Monad m, info ~ ExpandableInfo cont, CheckQuery info q s, cls cont m q s) => Query q s -> info -> InfoCont info -> m (ResultByQuery info q (InfoCont info))
+--foo = expandF'
+
+--class Monad m => Bar q s cont info m where bar :: Query q s -> info ->              cont -> m (ResultByQuery (Selected s (ModsOf cont (InfoCls info))) info cont)
+
+
+--class Monad m => Delayed  q s info m where fx  :: Query q s -> info -> (InfoCont info) -> m (ResultByQuery info q (InfoCont info))
+instance (Monad m, cls ~ ExpandableF', CheckQuery (ExpandableInfo cont) q s, cls cont m q s) => Delayed (q :: [*]) s (ExpandableInfo cont) m where delayed = expandF'
+--instance (Monad m, cls ~ ExpandableF', CheckQuery (ExpandableInfo cont) q s, cls cont m q s) => Delayed (q :: [*]) s (ExpandableInfo cont) m where delayed = expandF'
+
+--type CheckQuery q s info cont cls = ResultByQuery i q ~ ResultBySel i s
+
+--class Monad m => ContOp   q s info m out | info -> out where contOp  :: Query q s -> info ->                InfoCont info -> m (ResultByQuery info q out)
+
+--instance (Monad m, cls ~ ExpandableF', CheckQuery (ExpandableInfo    cont) q s, cls    cont m q s) => ContOp   (q :: [*]) s (ExpandableInfo    cont) m cont where contOp   = expandF'
+--instance (Monad m, cls ~ AppendableF', CheckQuery (AppendableInfo el cont) q s, cls el cont m q s) => ElContOp (q :: [*]) s (AppendableInfo el cont) m cont where elcontOp = appendF'
+--instance (Monad m, cls ~ ExpandableF', CheckQuery (ExpandableInfo cont) q s, cls cont m q s) => ContOp (q :: [*]) s (ExpandableInfo cont) m cont where contOp = expandF'
+
+
+--class Monad m => ElContOp q s info m out | info -> out where elcontOp :: Query q s -> info -> InfoEl info -> InfoCont info -> m (ResultByQuery info q out)
+
+
+
+
+type ExpandableFX q s cont m = Delayed q s (ExpandableInfo cont) m
+
+
+
+newtype NestedFunctor m n a = NestedFunctor { fromNestedFunctor :: m (n a)} deriving (Show)
+instance (Functor m, Functor n) => Functor (NestedFunctor m n) where fmap f = NestedFunctor . (fmap $ fmap f) . fromNestedFunctor
+
+nestedLens :: (Functor m, Functor n) => Lens a b c d -> (c -> m (n d)) -> (a -> m (n b))
+nestedLens l f = fromNestedFunctor . l (fmap NestedFunctor f)
+
+
+expandFX :: (info ~ (ExpandableInfo cont), ResultByQuery (ExpandableInfo cont) q ~ ResultByQuery (Info NA NA ExpandableF' cont) (Selected s (ModsOf ExpandableF' cont)), ExpandableF' cont m q s) => Query q s -> info ->               cont -> m (ResultByQuery info q cont)
+expandFX = expandF'
+
+--expandFX' :: (Delayed q s info m) info ~ (ExpandableInfo cont)) => Query q s -> info ->               cont -> m (ResultByQuery info q cont)
+--expandFX' = fx
+
+expandFX' :: (Delayed q s info m, info ~ (ExpandableInfo (ContainerOf t)), HasContainer2 t, Functor (ResultByQuery info q)) => Query q s -> info ->               t -> m (ResultByQuery info q t)
+expandFX' q i = fromNestedFunctor . container2 (fmap NestedFunctor $ delayed q i)
+
+--monadLens :: Monad f => Lens (f a) (f a') a a'
+--monadLens = lens undefined (const return) -- (\a x -> fmap (const a) x)
+
+--expandFX' :: (Delayed q s info m, info ~ (ExpandableInfo cont)) => Query q s -> info ->               cont -> m (ResultByQuery info q cont)
+--expandFX' q i c = do where
+--    f <- expandFX q i (view container c)
+
+--type ExpandableInfo cont = RawInfo ExpandableF cont
+
+class (Monad m, Operation q info m) => Operation2 (q :: [*]) info m -- where
+instance (Monad m, Operation q info m) => Operation2 q info m
+
+
+type Ixed' op = InsertQuery Ixed op
+
+type ExpandableFinalT (q :: [*]) = RawOperation q ExpandableF'
+type ExpandableFinal             = ExpandableFinalT '[]
+
+--mytst :: Operation2 '[] (ExpandableInfo cont) m => cont -> m (Simple cont)
+--mytst = runModsF (Proxy :: Proxy '[]) expandFX'
+mytst :: ExpandableFinal t m => t -> m (Simple t)
+mytst = transFunc $ buildFunc $ flip runModsF expandFX'
+
+--mytst2 :: ExpandableFinalT '[Ixed] cont m => cont -> m (NA, cont)
+mytst2 :: Ixed' ExpandableFinal t m => t -> m (IndexOf' (ContainerOf t), t)
+mytst2 = ixed $ transFunc $ buildSchemeF expandFX'
+
+mytst3 :: ExpandableFinal t m => t -> m (Simple t)
+mytst3 = runModsF (Proxy :: Proxy '[]) expandFX'
+
+
+mytst4 :: (HasContainer2 t, ContOperation q info m, info ~ (RawInfo ExpandableF' (ContainerOf t))) => Proxy (q :: [*]) -> t -> m (ResultByQuery info q t)
+mytst4 = flip runModsF expandFX'
+
+mytst4' :: (ContOperation q info m, info ~ (RawInfo ExpandableF' t), ResultByQuery (Info NA NA ExpandableF' t) (Selected (LstIn (ModsOf ExpandableF' t) q) (ModsOf ExpandableF' t)) ~ ResultByQuery (RawInfo ExpandableF' t) q, ExpandableF' t m q (LstIn (ModsOf ExpandableF' t) q)) => Proxy (q :: [*]) -> t -> m (ResultByQuery info q t)
+mytst4' = flip runModsF expandFX
+
+mytst5 :: (HasContainer2 t, ContOperation q info m, info ~ (RawInfo ExpandableF' (ContainerOf t)), FuncBuilder (Proxy (q :: [*]) -> t -> m (ResultByQuery info q t)) f) => f
+mytst5 = buildFunc $ flip runModsF expandFX'
+
+
+type OptBuilderBase = OptBuilder '[]
+type FuncTransBase  = FuncTrans  '[]
+
+mytst6 :: (HasContainer2 t, ContOperation q info m, info ~ (RawInfo ExpandableF' (ContainerOf t))) => OptBuilderBase (Proxy (q :: [*]) -> t -> m (ResultByQuery info q t))
+mytst6 = OptBuilder $ flip runModsF expandFX'
+
+type Func' q info m t = (HasContainer2 t, tinfo ~ info (ContainerOf t), ContOperation q tinfo m, FuncTransBase (Proxy (q :: [*]) -> t -> m (ResultByQuery tinfo q t)) f) => f
+
+mytst7 :: Func' q ExpandableInfo m t
+mytst7 = transFunc $ mytst6
+
+mytst7' :: ExpandableFinal t m => t -> m (Simple t)
+mytst7' v = mytst7 v
+--class FuncBuilder f a | a -> f where
+--    buildFunc :: f -> a
+
+--class FuncTrans opts f a | a opts -> f where
+--    transFunc :: OptBuilder opts f -> a
+
+
+--class    (Monad m, HasContainer2 t, Operation q (RawInfo cls (ContainerOf t)) m) => RawOperation (q :: [*]) (cls :: k) t m -- where
+
+
+--modFuncF a = transFunc $ buildSchemeF a
+
+--buildSchemeF f = buildFunc (flip runModsF f)
+
+--mytst2 = mytst2
+
+runModsX :: (LstIn (ModsOf inst cont) query ~ matches) => Mods query -> (InstModsX inst query matches cont -> sig) -> sig
+runModsX _ f = f InstModsX
+
+
+--sf a = a
+
+--sft :: _ => _
+--sft = modFuncF sf
+
+
+
+
+
+--type family ResultByQuery (inst :: Constraint)
+--type instance ResultByQuery (ExpandableF q m cont) = ResultByQuery_C q cont
+
+--type family ResultByQuery_C (q :: [*]) cont
+--type instance ResultByQuery_C '[]              cont = cont
+--type instance ResultByQuery_C (Ixed      ': q) cont = ([IndexOf' cont], ResultByQuery_C q cont)
+--type instance ResultByQuery_C (Unchecked ': q) cont = ResultByQuery_C q cont
+
+
+
+
+
+
+--ResultZ Class.Expandable q t
 
 
 class AppendableX    q m cont     el where appendx  :: InstModsX AppendableX      q m cont ->        el -> cont -> MonoResultEl q cont el
@@ -136,7 +282,7 @@ class TracksUsedIxes q m cont        ixes  | q m cont        -> ixes  where used
 
 
 
-runMods :: (LstIn (ModsOf cont inst) mods ~ matches) => Mods mods -> (InstMods inst matches -> cont -> out) -> cont -> out
+runMods :: (LstIn (ModsOf inst cont) mods ~ matches) => Mods mods -> (InstMods inst matches -> cont -> out) -> cont -> out
 runMods _ f = f InstMods
 
 
@@ -251,9 +397,7 @@ ixed = modConstraint (Proxy :: Proxy Ixed)
 
 
 
-data Safe      = Safe
-data Unchecked = Unchecked
-data Ixed      = Ixed
+
 
 
 
@@ -301,7 +445,7 @@ runWrapped3 s f = wrappedResult (query s) .:. f (polySpecX s)
 runWrapped4 s f = wrappedResult (query s) .:: f (polySpecX s)
 
 
---type InstFunc2 (inst :: [Bool] -> * -> k) mods cont sig = InstMods2 inst (LstIn (ModsOf cont inst) mods) cont -> sig
+--type InstFunc2 (inst :: [Bool] -> * -> k) mods cont sig = InstMods2 inst (LstIn (ModsOf inst cont) mods) cont -> sig
 --type SchemeBuilder2 cont mods sig scheme = FuncBuilder (Mods mods -> sig) scheme => InstFunc2 inst mods cont sig -> scheme
 
 
@@ -315,10 +459,10 @@ runWrapped4 s f = wrappedResult (query s) .:: f (polySpecX s)
 
 
 
---type InstFunc2 (inst :: [Bool] -> * -> k) mods cont sig = InstMods2 inst (LstIn (ModsOf cont inst) mods) cont -> sig
+--type InstFunc2 (inst :: [Bool] -> * -> k) mods cont sig = InstMods2 inst (LstIn (ModsOf inst cont) mods) cont -> sig
 
---type InstFunc2 inst mods cont sig = InstMods2 inst (LstIn (ModsOf cont inst) mods) cont -> sig
+--type InstFunc2 inst mods cont sig = InstMods2 inst (LstIn (ModsOf inst cont) mods) cont -> sig
 
---buildScheme2 :: (FuncBuilder (Mods mods -> sig) a) => (InstMods2 inst (LstIn (ModsOf cont inst) mods) cont -> sig) -> a
+--buildScheme2 :: (FuncBuilder (Mods mods -> sig) a) => (InstMods2 inst (LstIn (ModsOf inst cont) mods) cont -> sig) -> a
 --buildScheme2 :: SchemeBuilder2 cont mods sig scheme
 

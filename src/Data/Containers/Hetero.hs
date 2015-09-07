@@ -20,7 +20,7 @@ import Data.Constraint.Void
 import Data.Convert.Errors   (TypeMismatch (TypeMismatch))
 import Data.Typeable         hiding (cast)
 import Unsafe.Coerce         (unsafeCoerce)
-
+import Data.Containers.Poly
 
 --- === Unified values ===
 

@@ -42,8 +42,8 @@ instance IsList a => IsList (HeteroReusable idx a) where
 
 -- Utils
 
-freeAllIxes :: I.TracksIxes a [idx] => HeteroReusable t a -> HeteroReusable idx a
-freeAllIxes (HeteroReusable _ a) = HeteroReusable (I.indexes a) a
+--freeAllIxes :: I.TracksIxes a [idx] => HeteroReusable t a -> HeteroReusable idx a
+--freeAllIxes (HeteroReusable _ a) = HeteroReusable (I.indexes a) a
 
 
 
@@ -53,9 +53,9 @@ freeAllIxes (HeteroReusable _ a) = HeteroReusable (I.indexes a) a
 -- [+] MinIndexed
 -- [+] MaxIndexed
 
-instance I.MeasurableT q a size => Measurable q mods (HeteroReusable idx a) size where size     spec = size     (polySpecX spec) . unwrap
-instance I.MinIndexedT q a idx  => MinIndexed q mods (HeteroReusable idx a) idx  where minIndex spec = minIndex (polySpecX spec) . unwrap
-instance I.MaxIndexedT q a idx  => MaxIndexed q mods (HeteroReusable idx a) idx  where maxIndex spec = maxIndex (polySpecX spec) . unwrap
+--instance I.MeasurableT q a size => Measurable q mods (HeteroReusable idx a) size where size     spec = size     (polySpecX spec) . unwrap
+--instance I.MinIndexedT q a idx  => MinIndexed q mods (HeteroReusable idx a) idx  where minIndex spec = minIndex (polySpecX spec) . unwrap
+--instance I.MaxIndexedT q a idx  => MaxIndexed q mods (HeteroReusable idx a) idx  where maxIndex spec = maxIndex (polySpecX spec) . unwrap
 
 
 -- === Construction ===
@@ -65,15 +65,15 @@ instance I.MaxIndexedT q a idx  => MaxIndexed q mods (HeteroReusable idx a) idx 
 -- [+] Growable
 -- [ ] Expandable
 
-instance (I.SingletonT  q a el, I.TracksIxes a [idx]) => Singleton  q mods (HeteroReusable idx a) el                         where singleton spec   = freeAllIxes . wrap . singleton (polySpecX spec)
-instance (I.AllocableT  q a   , I.TracksIxes a [idx]) => Allocable  q mods (HeteroReusable idx a)                            where alloc     spec   = freeAllIxes . wrap . alloc     (polySpecX spec)
+--instance (I.SingletonT  q a el, I.TracksIxes a [idx]) => Singleton  q mods (HeteroReusable idx a) el                         where singleton spec   = freeAllIxes . wrap . singleton (polySpecX spec)
+--instance (I.AllocableT  q a   , I.TracksIxes a [idx]) => Allocable  q mods (HeteroReusable idx a)                            where alloc     spec   = freeAllIxes . wrap . alloc     (polySpecX spec)
 
-type instance ModsOf (HeteroReusable idx a)     Growable = '[Ixed ]
-instance (I.GrowableT '[Ixed] a ([idx], a'), IsContainer a) => Growable q '[False] (HeteroReusable idx a)           (HeteroReusable idx a') where grow      spec i (HeteroReusable ixs a) = (HeteroReusable (ixs <> ixs') a') where
-                                                                                                                                                                                            (ixs', a') = ixed I.grow i a
+--type instance ModsOf (HeteroReusable idx a)     Growable = '[Ixed ]
+--instance (I.GrowableT '[Ixed] a ([idx], a'), IsContainer a) => Growable q '[False] (HeteroReusable idx a)           (HeteroReusable idx a') where grow      spec i (HeteroReusable ixs a) = (HeteroReusable (ixs <> ixs') a') where
+--                                                                                                                                                                                            (ixs', a') = ixed I.grow i a
 
-instance (I.GrowableT '[Ixed] a ([idx], a'), IsContainer a) => Growable q '[True ] (HeteroReusable idx a)    ([idx], HeteroReusable idx a') where grow      spec i (HeteroReusable ixs a) = (ixs', HeteroReusable (ixs <> ixs') a') where
-                                                                                                                                                                                            (ixs', a') = ixed I.grow i a
+--instance (I.GrowableT '[Ixed] a ([idx], a'), IsContainer a) => Growable q '[True ] (HeteroReusable idx a)    ([idx], HeteroReusable idx a') where grow      spec i (HeteroReusable ixs a) = (ixs', HeteroReusable (ixs <> ixs') a') where
+--                                                                                                                                                                                            (ixs', a') = ixed I.grow i a
 
 
 -- === Concatenation ===
@@ -87,10 +87,10 @@ instance (I.GrowableT '[Ixed] a ([idx], a'), IsContainer a) => Growable q '[True
 --instance I.AddableT     q a el a' => Addable     q mods (HeteroReusable idx a) el (HeteroReusable idx a') where add     spec el = wrapped %~ add     (polySpecX spec) el
 --instance I.RemovableT   q a el a' => Removable   q mods (HeteroReusable idx a) el (HeteroReusable idx a') where remove  spec el = wrapped %~ remove  (polySpecX spec) el
 
-instance (I.Insertable a idx el a', I.ExpandableT '[Ixed] a ([idx], a), IsContainer a) => Addable q mods (HeteroReusable idx a) el (HeteroReusable idx a') where
-    add spec el (HeteroReusable ixs a) = case ixs of (x:xs) -> HeteroReusable xs  $ I.insert x  el a
-                                                     []     -> HeteroReusable xs' $ I.insert x' el a' where
-                                                               (x':xs', a') = ixed I.expand a
+--instance (I.Insertable a idx el a', I.ExpandableT '[Ixed] a ([idx], a), IsContainer a) => Addable q mods (HeteroReusable idx a) el (HeteroReusable idx a') where
+--    add spec el (HeteroReusable ixs a) = case ixs of (x:xs) -> HeteroReusable xs  $ I.insert x  el a
+--                                                     []     -> HeteroReusable xs' $ I.insert x' el a' where
+--                                                               (x':xs', a') = ixed I.expand a
 
 
 -- === Modification ===
