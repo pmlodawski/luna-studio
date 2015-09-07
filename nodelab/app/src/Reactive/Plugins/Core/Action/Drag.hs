@@ -91,14 +91,14 @@ instance ActionStateUpdater Action where
             _                           -> Just newActionCandidate
         newNodes                         = case newActionCandidate of
             DragAction tpe point        -> case tpe of
+                Moving                  -> case oldDrag of
+                    Just oldDragState   -> moveNodes camFactor (delta oldDragState) oldNodes
+                    Nothing             -> oldNodes
                 StopDrag                -> case oldDrag of
-                    Just oldDragState   -> moveNodes camFactor deltaSum oldNodes
-                        where prevPos    = oldDragState ^. dragCurrentPos
-                              startPos   = oldDragState ^. dragStartPos
-                              delta      = point - prevPos
-                              deltaSum   = point - startPos
+                    Just oldDragState   -> moveNodes camFactor (delta oldDragState) oldNodes
                     Nothing             -> oldNodes
                 _                       -> oldNodes
+                where delta oldDragState = point - (oldDragState ^. dragCurrentPos)
         newDrag                          = case newActionCandidate of
             DragAction tpe point        -> case tpe of
                 StartDrag               -> Just $ DragHistory point point point
@@ -115,10 +115,9 @@ instance ActionUIUpdater Action where
         DragAction tpe pt            -> case tpe of
             StartDrag                -> return ()
             Moving                   -> return ()
-            Dragging                 -> dragNodesUI deltaWs selNodes
+            Dragging                 -> moveNodesUI selNodes
                                      >> displayConnections nodes connections
-            StopDrag                 -> moveNodesUI selNodes
-                                     >> displayConnections nodes connections
+            StopDrag                 -> return ()
             where
                 nodes                 = Graph.getNodes       $ state ^. Global.graph
                 connections           = Graph.getConnections $ state ^. Global.graph
@@ -131,10 +130,6 @@ instance ActionUIUpdater Action where
                     Nothing          -> Vector2 0.0 0.0
 
 
-
-
-dragNodesUI :: Vector2 Double -> NodeCollection -> IO ()
-dragNodesUI delta nodes = mapM_ (UI.dragNode delta) nodes
 
 moveNodesUI :: NodeCollection -> IO ()
 moveNodesUI nodes = mapM_ UI.moveNode nodes

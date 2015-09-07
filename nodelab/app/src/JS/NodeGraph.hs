@@ -61,12 +61,6 @@ moveNode node = do
     nodeRef  <- getNode $ node ^. nodeId
     moveTo nodeRef wx wy
 
-dragNode :: Vector2 Double -> Node -> IO ()
-dragNode delta node = do
-    let (Vector2 wx wy) = node ^. nodePos + delta
-    nodeRef  <- getNode $ node ^. nodeId
-    moveTo nodeRef wx wy
-
 displaySelectionBox :: Vector2 Double -> Vector2 Double -> IO ()
 displaySelectionBox (Vector2 x0 y0) (Vector2 x1 y1) = displaySelectionBoxJS x0 y0 x1 y1
 
