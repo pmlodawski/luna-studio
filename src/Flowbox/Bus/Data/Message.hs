@@ -14,14 +14,13 @@ import Data.ByteString (ByteString)
 import           Flowbox.Bus.Data.Topic        (Topic, (/+))
 import qualified Flowbox.Bus.Data.Topic        as Topic
 import           Flowbox.Prelude
-import qualified Flowbox.Text.ProtocolBuffers  as Proto
 import qualified Flowbox.Bus.RPC.RPC           as RPC
 import           Flowbox.Bus.RPC.Types
 
 
 
 
-type ID = Proto.Int32
+type ID = Int
 
 type RequestID = ID
 type ClientID  = ID

@@ -35,10 +35,6 @@ import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import qualified Flowbox.Text.ProtocolBuffers         as Proto
 import qualified Flowbox.ZMQ.RPC.Client               as Client
-import qualified Generated.Proto.Bus.ID.Create.Args   as ID_Create
-import qualified Generated.Proto.Bus.ID.Create.Result as ID_Create
-import           Generated.Proto.Bus.Request          (Request (Request))
-import qualified Generated.Proto.Bus.Request.Method   as Method
 
 
 

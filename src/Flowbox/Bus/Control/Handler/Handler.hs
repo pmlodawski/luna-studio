@@ -9,15 +9,13 @@
 
 module Flowbox.Bus.Control.Handler.Handler where
 
-import Control.Monad              (join)
-import Control.Monad.Trans.Either (eitherT, hoistEither, runEitherT)
+import Control.Monad.Trans.Either (eitherT, hoistEither)
 import Data.Binary                (Binary)
 import Data.ByteString            (ByteString)
 import System.ZMQ4.Monadic        (ZMQ)
 
 import           Flowbox.Bus.Control.BusCtx     (BusCtx)
 import           Flowbox.Bus.Control.Handler.ID as HandlerID
-import           Flowbox.Bus.Data.Message       as Message
 import           Flowbox.Bus.RPC.RPC            as RPC (messageGet', messagePut')
 import           Flowbox.Bus.RPC.Types
 import           Flowbox.Prelude                hiding (error)

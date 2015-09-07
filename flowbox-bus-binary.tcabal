@@ -14,7 +14,7 @@ Flag Debug
 Library
   Hs-Source-Dirs: dist/gen,
                   src
-  Other-Modules:  Paths_flowbox_bus
+  Other-Modules:  Paths_flowbox_bus_binary
 
   GHC-Options:    -Wall -O2 -threaded
 
