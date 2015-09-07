@@ -116,14 +116,14 @@ instance ActionUIUpdater Action where
             StartDrag                -> return ()
             Moving                   -> return ()
             Dragging                 -> dragNodesUI deltaWs selNodes
-                                     >> displayConnections connections
+                                     >> displayConnections nodes connections
             StopDrag                 -> moveNodesUI selNodes
-                                     >> displayConnections connections
+                                     >> displayConnections nodes connections
             where
-                allNodes              = Graph.getNodes       $ state ^. Global.graph
+                nodes                 = Graph.getNodes       $ state ^. Global.graph
                 connections           = Graph.getConnections $ state ^. Global.graph
                 selNodeIds            = state ^. Global.selection . Selection.nodeIds
-                selNodes              = filter (\node -> node ^. nodeId `elem` selNodeIds) allNodes
+                selNodes              = filter (\node -> node ^. nodeId `elem` selNodeIds) nodes
                 factor                = state ^. Global.camera . Camera.camera . Camera.factor
                 deltaWs               = case state ^. Global.drag . history of
                     Just dragState   -> deltaToWs factor delta where
@@ -142,21 +142,26 @@ moveNodesUI nodes = mapM_ UI.moveNode nodes
 
 
 
-displayConnections :: Graph.ConnectionsCollections -> IO ()
-displayConnections connections = mapM_ displayConnectionLine $ zip [0..] connections
+displayConnections :: NodeCollection -> Graph.ConnectionsCollections -> IO ()
+displayConnections nodes connections = mapM_ (displayConnectionLine nodes) $ zip [0..] connections
 
 -- TODO: Extract to a module
-displayConnectionLine :: (Int, (PortRef, PortRef)) -> IO ()
-displayConnectionLine (lineId, (srcPortRef, dstPortRef)) = do
-    let srcWs@(Vector2 xSrcN ySrcN) = srcPortRef ^. refPortNode . nodePos
-        dstWs@(Vector2 xDstN yDstN) = dstPortRef ^. refPortNode . nodePos
+getNodePos :: NodeCollection -> NodeId -> Vector2 Double
+getNodePos nodes findNodeId = case find (\node -> (node ^. nodeId) == findNodeId) nodes of
+    Just node -> node ^. nodePos
+    Nothing   -> error $ "Node " <> show findNodeId <> " not found"
+
+displayConnectionLine :: NodeCollection -> (Int, (PortRef, PortRef)) -> IO ()
+displayConnectionLine nodes (lineId, (srcPortRef, dstPortRef)) = do
+    let srcWs@(Vector2 xSrcN ySrcN) = getNodePos nodes $ getNodeIdFromPortRef srcPortRef
+        dstWs@(Vector2 xDstN yDstN) = getNodePos nodes $ getNodeIdFromPortRef dstPortRef
         outerPos             = portOuterBorder + distFromPort
-        angleSrc             = calcAngle srcWs dstWs
-        angleDst             = calcAngle dstWs srcWs
-        xSrc                 = xSrcN + outerPos * sin angleSrc
-        ySrc                 = ySrcN + outerPos * cos angleSrc
-        xDst                 = xDstN - outerPos * sin angleDst
-        yDst                 = yDstN - outerPos * cos angleDst
+        angleSrc             = calcAngle dstWs srcWs
+        angleDst             = calcAngle srcWs dstWs
+        ySrc                 = ySrcN + outerPos * sin angleSrc
+        xSrc                 = xSrcN + outerPos * cos angleSrc
+        yDst                 = yDstN + outerPos * sin angleDst
+        xDst                 = xDstN + outerPos * cos angleDst
         -- (Vector2 vx vy)      = srcWs - ndWs
         -- draw                 = vx * vx + vy * vy > portOuterBorderSquared
     setAnglePortRef angleSrc srcPortRef
