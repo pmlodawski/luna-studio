@@ -32,7 +32,7 @@ instance Binary Request
 
 
 create :: BusCtx -> Request -> RPC Int
-create ctx ID_Create = do
+create ctx IDCreate = do
     logger info "called ID::create"
     let senderID = BusCtx.nextSenderID ctx
     liftIO $ IORef.atomicModifyIORef senderID

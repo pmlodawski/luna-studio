@@ -33,7 +33,7 @@ handler :: String -> BusCtx -> RPCHandler
 handler methodName ctx encodedRequest = eitherT handleError handleResult eResult
     where handleError  = responseError methodName
           handleResult request = case request of
-            ID_Create -> call request $ HandlerID.create ctx
+            IDCreate -> call request $ HandlerID.create ctx
           eResult = hoistEither (RPC.messageGet' encodedRequest) >>= val
           val (Request _ value) = unpackValue value
           call request foo = do

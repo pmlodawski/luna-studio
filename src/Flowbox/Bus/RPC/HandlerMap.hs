@@ -36,6 +36,7 @@ import           Control.Monad.Writer       (MonadWriter)
 import           Data.Binary                (Binary)
 import           Data.Map                   as X
 import qualified Data.Map                   as Map
+import           Data.Maybe
 
 import Flowbox.Bus.Data.Message  (CorrelationID)
 import Flowbox.Bus.RPC.RPC       (RPC)
