@@ -68,6 +68,7 @@ function initializeGl() {
     initCommonWidgets();
     addVersionToHud();
 
+    $('#log').remove()
     $('#spinner').remove();
 }
 
