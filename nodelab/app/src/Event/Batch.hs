@@ -5,6 +5,7 @@ import           Utils.PreludePlus
 import           Batch.Project
 import           Batch.Library
 import           Batch.Breadcrumbs
+import           Batch.Value
 import           Object.Node
 import qualified Generated.Proto.Interpreter.Interpreter.Value.Update as Value
 
@@ -14,7 +15,7 @@ data Event = ProjectsList [Project]
            | LibraryCreated Library
            | WorkspaceCreated Breadcrumbs
            | NodeAdded Node
-           | ValueUpdate Value.Update
+           | ValueUpdate Int Value
            | UnknownEvent String
            | ParseError String
            deriving (Eq, Show)

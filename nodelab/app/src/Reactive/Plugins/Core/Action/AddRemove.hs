@@ -74,10 +74,10 @@ instance PrettyPrinter ActionType where
     display = show
 
 instance PrettyPrinter Action where
-    display (AddAction node)            = "arA(AddAction "      <> display node <> ")"
-    display (RegisterNodeAction expr)   = "arA(RegisterAction " <> display expr <> ")"
-    display RemoveFocused               = "arA(RemoveFocused)"
-    display (AddActionUI _ _ _)         = "arA(AddActionUI)"
+    display (AddAction node)          = "arA(AddAction "      <> display node <> ")"
+    display (RegisterNodeAction expr) = "arA(RegisterAction " <> display expr <> ")"
+    display RemoveFocused             = "arA(RemoveFocused)"
+    display (AddActionUI _ _ _)       = "arA(AddActionUI)"
 
 toAction :: Event Node -> Global.State -> Maybe Action
 toAction (Batch (Batch.NodeAdded node)) state = Just $ AddAction node

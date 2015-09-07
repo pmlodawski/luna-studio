@@ -9,6 +9,7 @@ import           Text.ProtocolBuffers.Basic (uToString)
 import           Batch.Project
 import           Batch.Library
 import           Batch.Breadcrumbs
+import           Batch.Value
 import           Object.Node
 
 import           BatchConnector.Conversion  (decode)
@@ -18,11 +19,14 @@ import qualified Generated.Proto.ProjectManager.Project.List.Status           as
 import qualified Generated.Proto.ProjectManager.Project.Create.Update         as ProjectCreated
 import qualified Generated.Proto.ProjectManager.Project.Library.List.Status   as LibsList
 import qualified Generated.Proto.ProjectManager.Project.Library.Create.Update as LibCreated
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Add.Update            as FunctionCreated
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Get.Status      as GraphViewResponse
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Get.Status                as GetCode
-import qualified Generated.Proto.Interpreter.Interpreter.Value.Update                              as Value
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Add.Update as AddNode
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Add.Update             as FunctionCreated
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Get.Status       as GraphViewResponse
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Get.Status                 as GetCode
+import qualified Generated.Proto.Interpreter.Interpreter.Value.Update                               as Value
+import qualified Generated.Proto.Interpreter.CallPointPath                                          as CallPointPath
+import qualified Generated.Proto.Interpreter.CallPoint                                              as CallPoint
+import qualified Generated.Proto.Mode.ModeValue                                                     as ModeValue
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Add.Update  as AddNode
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Add.Request as AddNodeReq
 
 parseMessage :: (Wire m, ReflectDescriptor m) => ByteString -> Maybe m
@@ -56,8 +60,18 @@ parseGraphViewResponse bytes = GraphViewResponse.graph <$> (parseMessage bytes)
 parseGetCodeResponse :: ByteString -> Maybe String
 parseGetCodeResponse bytes = (uToString . GetCode.code) <$> (parseMessage bytes)
 
-parseValueUpdate :: ByteString -> Maybe Value.Update
-parseValueUpdate bytes = parseMessage bytes
+parseValueUpdate :: ByteString -> Maybe (Int, Value)
+parseValueUpdate bytes = do
+    response    <- parseMessage bytes
+    nodeId      <- case (toList $ CallPointPath.calls $ Value.callPointPath response) of
+        []              -> Nothing
+        (callpoint : _) -> decode $ CallPoint.nodeID callpoint
+    modeValue   <- case (toList $ Value.modeValue response) of
+        []        -> Nothing
+        (val : _) -> Just val
+    svalue      <- ModeValue.value modeValue
+    decodedValue <- decode svalue
+    return (nodeId, decodedValue)
 
 parseAddNodeResponse :: ByteString -> Maybe Node
 parseAddNodeResponse bytes = (parseMessage bytes) >>= getNode where

@@ -30,7 +30,7 @@ react _       _                   = Nothing
 
 reactToBatchEvent :: Project -> Batch.Event -> Action
 reactToBatchEvent project (WorkspaceCreated crumbs) = handleWorkspaceCreation project crumbs
-reactToBatchEvent project (ValueUpdate val)         = (print val, Nothing)
+reactToBatchEvent project (ValueUpdate node val)    = (print $ (show node) ++ " " ++ (show val), Nothing)
 reactToBatchEvent _       _                         = (return (), Nothing)
 
 handleWorkspaceCreation :: Project -> Breadcrumbs -> Action

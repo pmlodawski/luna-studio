@@ -19,7 +19,7 @@ processMessage (WebMessage topic bytes) = rescueParseError topic $ case topic of
     "project.library.list.status"                         -> LibrariesList <$> parseLibrariesListResponse bytes
     "project.library.create.update"                       -> LibraryCreated <$> parseLibraryCreateResponse bytes
     "project.library.ast.function.add.update"             -> WorkspaceCreated <$> parseFunctionCreateResponse bytes
-    "interpreter.value.update"                            -> ValueUpdate <$> parseValueUpdate bytes
+    "interpreter.value.update"                            -> uncurry ValueUpdate <$> parseValueUpdate bytes
     "project.library.ast.function.graph.node.add.update"  -> NodeAdded <$> parseAddNodeResponse bytes
     "project.library.ast.function.graph.node.add.fakeres" -> NodeAdded <$> parseAddNodeFakeResponse bytes
     _                                                     -> Just $ UnknownEvent topic
