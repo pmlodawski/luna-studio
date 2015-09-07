@@ -20,21 +20,23 @@ import           System.ZMQ4.Monadic             (ZMQ)
 import qualified System.ZMQ4.Monadic             as ZMQ
 import qualified Text.ProtocolBuffers.Extensions as Extensions
 
-import           Flowbox.Bus.Data.Flag                (Flag)
-import           Flowbox.Bus.Data.Message             (Message)
-import qualified Flowbox.Bus.Data.Message             as Message
-import           Flowbox.Bus.Data.MessageFrame        (MessageFrame (MessageFrame))
-import qualified Flowbox.Bus.Data.MessageFrame        as MessageFrame
-import           Flowbox.Bus.Data.Topic               (Topic)
-import qualified Flowbox.Bus.Data.Topic               as Topic
-import qualified Flowbox.Bus.EndPoint                 as EP
-import           Flowbox.Bus.Env                      (BusEnv (BusEnv))
-import qualified Flowbox.Bus.Env                      as Env
+import           Flowbox.Bus.Control.Handler.ID (Request (..))
+import           Flowbox.Bus.Data.Flag          (Flag)
+import           Flowbox.Bus.Data.Message       (Message)
+import qualified Flowbox.Bus.Data.Message       as Message
+import           Flowbox.Bus.Data.MessageFrame  (MessageFrame (MessageFrame))
+import qualified Flowbox.Bus.Data.MessageFrame  as MessageFrame
+import           Flowbox.Bus.Data.Topic         (Topic)
+import qualified Flowbox.Bus.Data.Topic         as Topic
+import qualified Flowbox.Bus.EndPoint           as EP
+import           Flowbox.Bus.Env                (BusEnv (BusEnv))
+import qualified Flowbox.Bus.Env                as Env
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.Text.ProtocolBuffers         as Proto
-import qualified Flowbox.ZMQ.RPC.Client               as Client
+import qualified Flowbox.Text.ProtocolBuffers   as Proto
+import qualified Flowbox.ZMQ.RPC.Client         as Client
+import qualified Flowbox.ZMQ.RPC.Types          as FbZMQ
 
 
 
@@ -53,11 +55,9 @@ requestClientID :: EP.EndPoint -> EitherT Error (ZMQ z) Message.ClientID
 requestClientID addr = do
     socket <- lift $ ZMQ.socket ZMQ.Req
     lift $ ZMQ.connect socket addr
-    let request = Extensions.putExt ID_Create.req (Just ID_Create.Args)
-                $ Request Method.ID_Create Proto.mkExtField
-    response <- Client.query socket request ID_Create.rsp
+    response <- Client.query socket IDCreate
     lift $ ZMQ.close socket
-    return $ ID_Create.id response
+    return $ FbZMQ.id response
 
 
 runBus :: MonadIO m => EP.BusEndPoints -> Bus a -> m (Either Error a)

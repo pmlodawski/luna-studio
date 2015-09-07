@@ -20,7 +20,7 @@ import           Flowbox.Bus.RPC.RPC            as RPC (messageGet', messagePut'
 import           Flowbox.Bus.RPC.Types
 import           Flowbox.Prelude                hiding (error)
 import           Flowbox.System.Log.Logger
-import           Flowbox.ZMQ.RPC.Handler        (RPCHandler (..))
+import           Flowbox.ZMQ.RPC.Handler        (RPCHandler)
 import qualified Flowbox.ZMQ.RPC.RPC            as RPC
 
 
@@ -29,14 +29,12 @@ loggerIO :: LoggerIO
 loggerIO = getLoggerIO $moduleName
 
 
-handler :: String -> BusCtx -> RPCHandler HandlerID.Request
-handler methodName ctx = Binary handler
-    where handler :: ByteString -> ZMQ z ByteString
-          handler encodedRequest = eitherT handleError handleResult $ eResult encodedRequest
-          handleError  = responseError methodName
+handler :: String -> BusCtx -> RPCHandler
+handler methodName ctx encodedRequest = eitherT handleError handleResult eResult
+    where handleError  = responseError methodName
           handleResult request = case request of
             ID_Create -> call request $ HandlerID.create ctx
-          eResult encodedRequest = (hoistEither $ RPC.messageGet' encodedRequest) >>= val
+          eResult = hoistEither (RPC.messageGet' encodedRequest) >>= val
           val (Request _ value) = unpackValue value
           call request foo = do
             result <- RPC.run $ do loggerIO debug $ show request

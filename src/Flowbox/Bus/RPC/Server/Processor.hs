@@ -4,20 +4,19 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell     #-}
 
 module Flowbox.Bus.RPC.Server.Processor where
 
 import           Control.Monad              (liftM)
-import           Control.Monad.Trans.Either (eitherT, hoistEither)
+import           Control.Monad.Trans.Either (EitherT, eitherT, hoistEither)
 import           Data.Either                as Either
 import qualified Data.Maybe                 as Maybe
 --import           Data.Typeable
 import qualified Control.Monad.Catch       as Catch
 import           Control.Monad.Trans.State (StateT)
 import           Data.Binary               (Binary)
-import Control.Monad.Trans.Either          (EitherT)
 
 import           Flowbox.Bus.Data.Message   (CorrelationID, Message)
 import qualified Flowbox.Bus.Data.Message   as Message
@@ -57,8 +56,7 @@ process handlerMap correlationID msg = either handleError (\message -> do
     ) handleMessage
     where
         call :: (Catch.MonadCatch m, MonadIO m, Functor m) => HandlerMap.Callback s m
-        call method = do
-            eitherT errorHandler applyArgs deserializeMsg
+        call method = eitherT errorHandler applyArgs deserializeMsg
             where
                 deserializeMsg :: (Binary a, Typeable a) => EitherT String (StateT s m) a
                 deserializeMsg = do

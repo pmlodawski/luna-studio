@@ -94,9 +94,9 @@ recurBuildName :: TypeRep -> String
 recurBuildName rep = buildQualifiedName con <> rArgs
     where con  = typeRepTyCon rep
           args = typeRepArgs  rep
-          rArgs = if args == [] then "" else "[" <> L.intercalate ", " (map recurBuildName args) <> "]"
+          rArgs = if null args then "" else "[" <> L.intercalate ", " (map recurBuildName args) <> "]"
 
 
 buildQualifiedName :: TyCon -> String
-buildQualifiedName tyCon = concat $ L.intersperse "." fullPath
+buildQualifiedName tyCon = L.intercalate "." fullPath
     where fullPath = [tyConModule, tyConName] <*> [tyCon]

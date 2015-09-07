@@ -25,7 +25,7 @@ logger = getLoggerIO $moduleName
 
 -------- public api -------------------------------------------------
 
-data Request = ID_Create
+data Request = IDCreate
              deriving (Generic, Show, Typeable)
 
 instance Binary Request
@@ -38,4 +38,3 @@ create ctx ID_Create = do
     liftIO $ IORef.atomicModifyIORef senderID
                                      (\i -> let newID = i + 1
                                             in (newID, newID))
-

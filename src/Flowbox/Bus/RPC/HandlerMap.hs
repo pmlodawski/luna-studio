@@ -68,11 +68,10 @@ type HandlerMap s m = Callback s m -> Map FunctionName (StateT s m (Result, [Val
 
 
 lookupAndCall :: MonadIO m => HandlerMap s m -> Callback s m -> FunctionName -> StateT s m (Result, [Value])
-lookupAndCall handlerMap callback functionName = case Map.lookup functionName $ handlerMap callback of
-    Just action -> action
-    Nothing     -> do let errMsg = "Unknown function: " ++ show functionName
-                      logger error errMsg
-                      return $ (ErrorResult errMsg, [])
+lookupAndCall handlerMap callback functionName = fromMaybe errorHandler $ Map.lookup functionName $ handlerMap callback
+    where errorHandler = do let errMsg = "Unknown function: " ++ show functionName
+                            logger error errMsg
+                            return (ErrorResult errMsg, [])
 
 
 runBatchWriter :: (Binary arg, Typeable arg, Binary res, Typeable res)
@@ -82,7 +81,7 @@ runBatchWriter callback method = callback (\cid arg -> runWriterT $ runBatchT $ 
 
 topics :: Monad m => String -> HandlerMap s m -> [FunctionName]
 topics pluginName handlerMap = Flowbox.Prelude.map (mkTopic pluginName) $ Map.keys $ handlerMap emptyCallback
-    where 
+    where
         emptyCallback :: Monad m => Callback s m
         emptyCallback = const $ return (ErrorResult "", [])
 
