@@ -37,6 +37,7 @@ function Node(id, position, z, widgetId) {
   this.position = position;
 
   this.labelText = ":" + id;
+  this.valueText = "";
   this.inputPorts  = [];
   this.outputPorts = [];
 
@@ -118,6 +119,7 @@ function Node(id, position, z, widgetId) {
   this.node.scale.y = this.collapsedNodeSize.y;
 
   if (features.node_labels) this.updateLabel();
+  this.updateValue();
 
   this.expandedState = 1.0
   this.setExpandedState(1.0);
@@ -257,6 +259,34 @@ Node.prototype.updateLabel = function() {
   this.labelObject.position.z =   0;
 
   this.mesh.add(this.labelObject);
+};
+
+Node.prototype.setValue = function(text) {
+  this.valueText = text;
+  this.updateValue();
+  return this.valueText;
+};
+
+Node.prototype.updateValue = function() {
+  if (this.valueObject) this.mesh.remove(this.valueObject);
+
+  var size = 150 / config.fontSize;
+
+  var geometry = createText({
+    text:  this.valueText,
+    font:  font,
+    width: size,
+    align: 'center'
+  });
+
+  textMaterial.uniforms.width.value = size;
+  this.valueObject = new THREE.Mesh(geometry, textMaterial);
+  this.valueObject.scale.multiplyScalar(config.fontSize);
+  this.valueObject.position.x = -45 - 30;
+  this.valueObject.position.y = 12 + 30;
+  this.valueObject.position.z = 0;
+
+  this.mesh.add(this.valueObject);
 };
 
 Node.prototype.showLabelEditor = function() {

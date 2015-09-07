@@ -86,6 +86,8 @@ foreign import javascript unsafe "$1.moveTo($2, $3)"
 foreign import javascript unsafe "$1.label($2)"
     showLabel :: JSRef NodeJS -> JSString -> IO ()
 
+foreign import javascript unsafe "$1.setValue($2)"
+    setValue :: JSRef NodeJS -> JSString -> IO ()
 
 foreign import javascript unsafe "$1.addInputPort($2, $3)"
     addInputPortJS :: JSRef NodeJS -> Int -> Double -> IO ()

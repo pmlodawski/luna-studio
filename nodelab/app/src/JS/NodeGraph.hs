@@ -8,6 +8,8 @@ import           JS.Bindings
 import           Object.Object
 import           Object.Node
 
+import           Data.JSString (pack)
+
 
 logAs :: PrettyPrinter a => String -> a -> IO ()
 logAs title a = putStrLn $ title <> (display a)
@@ -88,6 +90,10 @@ setOutputPortAngle nodeId portId angle = do
     nodeRef <- getNode nodeId
     setOutputPortAngleJS nodeRef portId angle
 
+setComputedValue :: NodeId -> String -> IO ()
+setComputedValue nodeId value = do
+    nodeRef <- getNode nodeId
+    setValue nodeRef $ pack value
 
 createNodeAt :: Int -> Vector2 Double -> Text -> Int -> IO ()
 createNodeAt nodeId (Vector2 px py) expr wid = do
