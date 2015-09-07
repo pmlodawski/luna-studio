@@ -5,6 +5,8 @@ module Reactive.Plugins.Core.Action.Sandbox where
 import           Utils.PreludePlus
 import           Utils.Vector
 
+import           JS.Config
+
 import           Object.Widget
 import           Object.Node
 import           Object.UITypes
@@ -77,7 +79,7 @@ instance ActionStateUpdater Action where
     execSt InitApp oldState = ActionUI  newAction newState
             where
             wasInited             = oldState ^. Global.sandbox . Sandbox.button  /= 0
-            newState              = if wasInited then oldState
+            newState              = if wasInited || not widgetSandboxEnabled then oldState
                                                  else oldState & Global.sandbox    . Sandbox.button  .~ (objectId button)
                                                                & Global.sandbox    . Sandbox.slider  .~ (objectId slider)
                                                                & Global.sandbox    . Sandbox.slider2 .~ (objectId slider2)
@@ -88,9 +90,9 @@ instance ActionStateUpdater Action where
                                                                & Global.sandbox    . Sandbox.number  .~ (objectId number)
                                                                & Global.uiRegistry                   .~ newRegistry
 
-            oldRegistry           = oldState ^. Global.uiRegistry
+            oldRegistry     = oldState ^. Global.uiRegistry
             registerWidgets :: UIRegistry.UIState (Button.Button, Slider.Slider Int, Slider.Slider Double, Slider.Slider Double, Slider.Slider Double, Toggle.Toggle, Chart.Chart, Number.Number Int) Global.State
-            registerWidgets        = do
+            registerWidgets = do
                 button  <- UIRegistry.registerM sceneGraphId (Button 0 "Run!" Button.Normal (Vector2 100 100) (Vector2 100 50)) def
                 UIRegistry.uiAction $ addWidget button
 
@@ -119,7 +121,7 @@ instance ActionStateUpdater Action where
 
             ((button, slider, slider2, slider3, slider4, toggle, chart, number), (newRegistry, actions)) = MState.runState registerWidgets (oldRegistry, [])
 
-            newAction             = if wasInited then ApplyUpdates [] else ApplyUpdates actions
+            newAction             = if wasInited || not widgetSandboxEnabled then ApplyUpdates [] else ApplyUpdates actions
     execSt (WidgetClicked bid) oldState = ActionUI  newAction newState where
         oldRegistry           = oldState ^. Global.uiRegistry
         widget                = UIRegistry.lookup bid oldRegistry
