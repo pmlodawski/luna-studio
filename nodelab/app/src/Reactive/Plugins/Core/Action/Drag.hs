@@ -19,6 +19,7 @@ import           Event.Event
 import           Event.WithObjects
 
 import           Reactive.Plugins.Core.Action.Action
+import           Reactive.Plugins.Core.Action.Common
 import           Reactive.Plugins.Core.Action.State.Drag
 import qualified Reactive.Plugins.Core.Action.State.Graph     as Graph
 import qualified Reactive.Plugins.Core.Action.State.Selection as Selection
@@ -117,7 +118,8 @@ instance ActionUIUpdater Action where
             Moving                   -> return ()
             Dragging                 -> moveNodesUI selNodes
                                      >> displayConnections nodes connections
-            StopDrag                 -> return ()
+            StopDrag                 -> moveNodesUI selNodes
+                                     >> displayConnections nodes connections
             where
                 nodes                 = Graph.getNodes       $ state ^. Global.graph
                 connections           = Graph.getConnections $ state ^. Global.graph
@@ -134,42 +136,3 @@ instance ActionUIUpdater Action where
 moveNodesUI :: NodeCollection -> IO ()
 moveNodesUI nodes = mapM_ UI.moveNode nodes
                   -- >> performGC
-
-
-
-displayConnections :: NodeCollection -> Graph.ConnectionsCollections -> IO ()
-displayConnections nodes connections = mapM_ (displayConnectionLine nodes) $ zip [0..] connections
-
--- TODO: Extract to a module
-getNodePos :: NodeCollection -> NodeId -> Vector2 Double
-getNodePos nodes findNodeId = case find (\node -> (node ^. nodeId) == findNodeId) nodes of
-    Just node -> node ^. nodePos
-    Nothing   -> error $ "Node " <> show findNodeId <> " not found"
-
-displayConnectionLine :: NodeCollection -> (Int, (PortRef, PortRef)) -> IO ()
-displayConnectionLine nodes (lineId, (srcPortRef, dstPortRef)) = do
-    let srcWs@(Vector2 xSrcN ySrcN) = getNodePos nodes $ getNodeIdFromPortRef srcPortRef
-        dstWs@(Vector2 xDstN yDstN) = getNodePos nodes $ getNodeIdFromPortRef dstPortRef
-        outerPos             = portOuterBorder + distFromPort
-        angleSrc             = calcAngle dstWs srcWs
-        angleDst             = calcAngle srcWs dstWs
-        ySrc                 = ySrcN + outerPos * sin angleSrc
-        xSrc                 = xSrcN + outerPos * cos angleSrc
-        yDst                 = yDstN + outerPos * sin angleDst
-        xDst                 = xDstN + outerPos * cos angleDst
-        -- (Vector2 vx vy)      = srcWs - ndWs
-        -- draw                 = vx * vx + vy * vy > portOuterBorderSquared
-    setAnglePortRef angleSrc srcPortRef
-    setAnglePortRef angleDst dstPortRef
-    print $ "lineId " <> show lineId <> " " <> show xSrc <> " " <> show ySrc <> "->" <> show xDst <> " " <> show yDst
-    UI.displayConnection lineId xSrc ySrc xDst yDst
-    print "done!"
-
-
-setAnglePortRef :: Angle -> PortRef -> IO ()
-setAnglePortRef refAngle portRef = setAngle (portRef ^. refPortType) refNodeId (portRef ^. refPortId) refAngle where
-    refNodeId = portRef ^. refPortNode . nodeId
-
-setAngle :: PortType -> NodeId -> PortId -> Angle -> IO ()
-setAngle  InputPort = UI.setInputPortAngle
-setAngle OutputPort = UI.setOutputPortAngle

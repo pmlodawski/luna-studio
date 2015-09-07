@@ -20,6 +20,9 @@ instance Num a => Num (Vector2 a) where
     signum (Vector2 x y)              = Vector2 (signum x) (signum y)
     fromInteger i                     = let val = fromInteger i in Vector2 val val
 
+lengthSquared :: Num a => Vector2 a -> a
+lengthSquared (Vector2 x y) = x * x + y * y
+
 instance Applicative Vector2 where
     pure v                          = Vector2 v v
     (Vector2 f g) <*> (Vector2 x y) = Vector2 (f x) (g y)

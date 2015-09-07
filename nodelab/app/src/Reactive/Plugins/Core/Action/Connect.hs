@@ -8,17 +8,21 @@ import           Debug.Trace
 import           JS.Camera
 import qualified JS.Bindings    as UI
 import qualified JS.NodeGraph   as UI
+
 import           Object.Object
 import           Object.Port
 import           Object.Node
+import           Object.UITypes
+
 import           Event.Keyboard hiding      ( Event )
 import qualified Event.Keyboard as Keyboard
 import           Event.Mouse    hiding      ( Event, WithObjects )
 import qualified Event.Mouse    as Mouse
-import           Object.UITypes
 import           Event.Event
 import           Event.WithObjects
+
 import           Reactive.Plugins.Core.Action.Action
+import           Reactive.Plugins.Core.Action.Common
 import           Reactive.Plugins.Core.Action.State.Connect
 import qualified Reactive.Plugins.Core.Action.State.Graph     as Graph
 import qualified Reactive.Plugins.Core.Action.State.Camera    as Camera
@@ -96,11 +100,12 @@ instance ActionStateUpdater Action where
                                         -> Just $ Connecting source Nothing newHistory where
                         newHistory       = oldHistory & dragCurrentPos .~ point
                     Nothing             -> Nothing
-                ConnectPort destination -> case oldConnecting of
-                    Just (Connecting source _ oldHistory)
-                                        -> Just $ Connecting source (Just destination) newHistory where
-                        newHistory       = oldHistory & dragCurrentPos .~ point
-                    Nothing             -> Nothing
+                ConnectPort destination -> Nothing
+                -- case oldConnecting of
+                --     Just (Connecting source _ oldHistory)
+                --                         -> Just $ Connecting source (Just destination) newHistory where
+                --         newHistory       = oldHistory & dragCurrentPos .~ point
+                --     Nothing             -> Nothing
                 StopDrag                -> Nothing
         newGraph                         = case newActionCandidate of
             DragAction tpe point        -> case tpe of
@@ -133,38 +138,17 @@ instance ActionUIUpdater Action where
             Moving                   -> return ()
             Dragging angle           -> forM_ maybeConnecting $ displayDragLine angle ptWs
             StopDrag                 -> UI.removeCurrentConnection
-            ConnectPort dstPort      -> return ()
+            ConnectPort dstPort      -> UI.removeCurrentConnection
+                                     >> displayConnections nodes connections
                                      >> sendMessage (connectNodes workspace srcPort dstPort)
                                      >> putStrLn (display $ state ^. Global.graph . Graph.nodeRefs) -- debug
                                      >> putStrLn (display $ state ^. Global.graph . Graph.connections) -- debug
                                      >> graphToViz (state ^. Global.graph . Graph.graphMeta)
             where
+                nodes                 = Graph.getNodes       $ state ^. Global.graph
+                connections           = Graph.getConnections $ state ^. Global.graph
                 ptWs                  = screenToWorkspace camera pt
                 camera                = Global.toCamera state
                 maybeConnecting       = state ^. Global.connect . connecting
                 srcPort               = (fromJust maybeConnecting) ^. sourcePort
                 workspace             = state ^. Global.workspace
-
-
-
--- TODO: Extract to a module
-displayDragLine :: Angle -> Vector2 Double -> Connecting -> IO ()
-displayDragLine angle ptWs@(Vector2 cx cy) connecting = do
-    let portRef              = connecting ^. sourcePort
-        ndWs@(Vector2 nx ny) = portRef ^. refPortNode . nodePos
-        outerPos             = portOuterBorder + distFromPort
-        sy                   = ny + outerPos * sin angle
-        sx                   = nx + outerPos * cos angle
-        (Vector2 vx vy)      = ptWs - ndWs
-        draw                 = vx * vx + vy * vy > portOuterBorderSquared
-    setAnglePortRef angle portRef
-    if draw then UI.displayCurrentConnection sx sy cx cy
-            else UI.removeCurrentConnection
-
-setAnglePortRef :: Angle -> PortRef -> IO ()
-setAnglePortRef refAngle portRef = setAngle (portRef ^. refPortType) refNodeId (portRef ^. refPortId) refAngle where
-    refNodeId = portRef ^. refPortNode . nodeId
-
-setAngle :: PortType -> NodeId -> PortId -> Angle -> IO ()
-setAngle  InputPort = UI.setInputPortAngle
-setAngle OutputPort = UI.setOutputPortAngle
