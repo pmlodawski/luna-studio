@@ -91,7 +91,7 @@ function addVersionToHud() {
 }
 
 function initCommonWidgets() {
-  $$.currentConnection = new Connection(0);
+  $$.currentConnection = new Connection(-1);
   $$.selectionBox      = new SelectionBox();
 
   $$.scene.add($$.currentConnection.mesh);
@@ -217,6 +217,20 @@ function removeCurrentConnection() {
   $$.currentConnection.hide();
 }
 
+function displayConnection(id, x0, y0, x1, y1) {
+  if ($$.connections[id] === undefined) {
+    var connection = new Connection(id);
+    $$.connections[id] = connection;
+    $$.scene.add(connection.mesh);
+  }
+  $$.connections[id].setPos(x0, y0, x1, y1);
+  $$.connections[id].show();
+}
+
+function removeConnection(id) {
+  $$.connections[id].hide();
+}
+
 module.exports = {
   start:                    start,
   initializeGl:             initializeGl,
@@ -235,6 +249,8 @@ module.exports = {
   hideSelectionBox:         hideSelectionBox,
   displayCurrentConnection: displayCurrentConnection,
   removeCurrentConnection:  removeCurrentConnection,
+  displayConnection:        displayConnection,
+  removeConnection:         removeConnection,
   websocket:                $$.websocket,
   getNode:                  function(index) { return $$.nodes[index];    },
   getNodes:                 function()      { return _.values($$.nodes); },

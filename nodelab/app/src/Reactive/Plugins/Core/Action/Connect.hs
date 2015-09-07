@@ -25,6 +25,7 @@ import qualified Reactive.Plugins.Core.Action.State.Camera    as Camera
 import qualified Reactive.Plugins.Core.Action.State.Global    as Global
 import           Reactive.Plugins.Core.Action.State.UnderCursor
 
+import           AST.GraphToViz
 
 data ActionType = StartDrag PortRef
                 | Moving
@@ -102,9 +103,11 @@ instance ActionStateUpdater Action where
             DragAction tpe point        -> case tpe of
                 ConnectPort destination -> case oldConnecting of
                     Just (Connecting source destinationMay (DragHistory startPos currentPos))
-                                        -> Graph.updateNodes newNodes oldGraph where
+                                        -> appGraph where
                         newNodes         = updateSourcePortInNodes angle source oldNodes
                         oldNodes         = Graph.getNodes oldGraph
+                        updSourceGraph   = Graph.updateNodes newNodes oldGraph
+                        appGraph         = Graph.addApplication destination source updSourceGraph
                     _                   -> oldGraph
                 _                       -> case newConnecting of
                     Just (Connecting source destinationMay (DragHistory startPos currentPos))
@@ -128,12 +131,17 @@ instance ActionUIUpdater Action where
             Dragging angle           -> forM_ maybeConnecting $ displayDragLine angle ptWs
             StopDrag                 -> UI.removeCurrentConnection
             ConnectPort portRef      -> return ()
+                                     >> putStrLn (display $ state ^. Global.graph . Graph.nodeRefs) -- debug
+                                     >> putStrLn (display $ state ^. Global.graph . Graph.connections) -- debug
+                                     >> graphToViz (state ^. Global.graph . Graph.graphMeta)
             where
                 ptWs                  = screenToWorkspace camera pt
                 camera                = Global.toCamera state
                 maybeConnecting       = state ^. Global.connect . connecting
 
 
+
+-- TODO: Extract to a module
 displayDragLine :: Angle -> Vector2 Double -> Connecting -> IO ()
 displayDragLine angle ptWs@(Vector2 cx cy) connecting = do
     let portRef              = connecting ^. sourcePort

@@ -21,7 +21,10 @@ import           AST.AST
 type NodesMap = IntMap GraphRefMeta
 
 
+type ConnectionsCollections = [(PortRef, PortRef)]
+
 data State = State { _nodeList      :: NodeCollection  -- don't access it directly from outside this file!
+                   , _connections   :: ConnectionsCollections -- don't access it directly
                    , _nodeRefs      :: NodesMap
                    , _focusedNodeId :: NodeId
                    , _graphMeta     :: GraphMeta
@@ -37,7 +40,7 @@ instance Eq State where
     a == b = (a ^. nodeList) == (b ^. nodeList)
 
 instance Default State where
-    def = State def def def def
+    def = State def def def def def
 
 instance PrettyPrinter NodesMap where
     display nodes =
@@ -46,9 +49,10 @@ instance PrettyPrinter NodesMap where
         <> ")"
 
 instance PrettyPrinter State where
-    display (State nodesList nodes focusedNodeId bldrState) =
+    display (State nodesList nodes connections focusedNodeId bldrState) =
           "graph(" <> display nodesList
         <> " "     <> display nodes
+        <> " "     <> display connections
         <> " "     <> display focusedNodeId
         <> " "     <> show bldrState
         <> ")"
@@ -66,6 +70,9 @@ genId state = let refs = state ^. nodeRefs in
 
 getNodes :: State -> NodeCollection
 getNodes = (^. nodeList)
+
+getConnections :: State -> ConnectionsCollections
+getConnections = (^. connections)
 
 updateNodes :: NodeCollection -> State -> State
 updateNodes newNodeList state = state & nodeList .~ newNodeList
@@ -107,17 +114,21 @@ addAccessor sourceId destId state =
         (_, _) -> state
 
 
-addApplication :: NodeId -> NodeId -> State -> State
-addApplication funId argId state =
-    let refMap = state ^. nodeRefs
+addApplication :: PortRef -> PortRef -> State -> State
+addApplication funPortRef argPortRef state =
+    let refMap    = state ^. nodeRefs
+        funId     = funPortRef ^. refPortNode . nodeId
+        argId     = argPortRef ^. refPortNode . nodeId
         funRefMay = IntMap.lookup funId refMap
         argRefMay = IntMap.lookup argId refMap
     in case (funRefMay, argRefMay) of
         (Just funRef, Just argRef) -> state & graphMeta    .~ newGraphMeta
                                             & nodeRefs     .~ newNodeRefs
+                                            & connections  .~ newConnections
             where (ref, newGraphMeta) = makeApp1 newNode funRef argRef $ rebuild $ state ^. graphMeta
                   newNodeRefs         = IntMap.insert (newNode ^. hiddenNodeId) ref $ state ^. nodeRefs
                   newNode             = HiddenNode Application $ genId state
+                  newConnections      = (funPortRef, argPortRef) : (state ^. connections) -- TODO: move to AST
         (_, _) -> state
 
 

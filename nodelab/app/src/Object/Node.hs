@@ -65,6 +65,9 @@ data PortRef = PortRef { _refPortNode   :: Node
 
 makeLenses ''PortRef
 
+getNodeIdFromPortRef :: PortRef -> NodeId
+getNodeIdFromPortRef portRef = portRef ^. refPortNode . nodeId
+
 
 instance PrettyPrinter PortType where
     display = show

@@ -2,7 +2,9 @@ module Reactive.Plugins.Core.Action.Drag where
 
 import           Utils.PreludePlus
 import           Utils.Vector
+import           Utils.Angle
 
+import qualified JS.Bindings    as UI
 import qualified JS.NodeGraph   as UI
 
 import           Object.Object
@@ -114,9 +116,12 @@ instance ActionUIUpdater Action where
             StartDrag                -> return ()
             Moving                   -> return ()
             Dragging                 -> dragNodesUI deltaWs selNodes
+                                     >> displayConnections connections
             StopDrag                 -> moveNodesUI selNodes
+                                     >> displayConnections connections
             where
-                allNodes              = Graph.getNodes $ state ^. Global.graph
+                allNodes              = Graph.getNodes       $ state ^. Global.graph
+                connections           = Graph.getConnections $ state ^. Global.graph
                 selNodeIds            = state ^. Global.selection . Selection.nodeIds
                 selNodes              = filter (\node -> node ^. nodeId `elem` selNodeIds) allNodes
                 factor                = state ^. Global.camera . Camera.camera . Camera.factor
@@ -134,3 +139,37 @@ dragNodesUI delta nodes = mapM_ (UI.dragNode delta) nodes
 moveNodesUI :: NodeCollection -> IO ()
 moveNodesUI nodes = mapM_ UI.moveNode nodes
                   -- >> performGC
+
+
+
+displayConnections :: Graph.ConnectionsCollections -> IO ()
+displayConnections connections = mapM_ displayConnectionLine $ zip [0..] connections
+
+-- TODO: Extract to a module
+displayConnectionLine :: (Int, (PortRef, PortRef)) -> IO ()
+displayConnectionLine (lineId, (srcPortRef, dstPortRef)) = do
+    let srcWs@(Vector2 xSrcN ySrcN) = srcPortRef ^. refPortNode . nodePos
+        dstWs@(Vector2 xDstN yDstN) = dstPortRef ^. refPortNode . nodePos
+        outerPos             = portOuterBorder + distFromPort
+        angleSrc             = calcAngle srcWs dstWs
+        angleDst             = calcAngle dstWs srcWs
+        xSrc                 = xSrcN + outerPos * sin angleSrc
+        ySrc                 = ySrcN + outerPos * cos angleSrc
+        xDst                 = xDstN - outerPos * sin angleDst
+        yDst                 = yDstN - outerPos * cos angleDst
+        -- (Vector2 vx vy)      = srcWs - ndWs
+        -- draw                 = vx * vx + vy * vy > portOuterBorderSquared
+    setAnglePortRef angleSrc srcPortRef
+    setAnglePortRef angleDst dstPortRef
+    print $ "lineId " <> show lineId <> " " <> show xSrc <> " " <> show ySrc <> "->" <> show xDst <> " " <> show yDst
+    UI.displayConnection lineId xSrc ySrc xDst yDst
+    print "done!"
+
+
+setAnglePortRef :: Angle -> PortRef -> IO ()
+setAnglePortRef refAngle portRef = setAngle (portRef ^. refPortType) refNodeId (portRef ^. refPortId) refAngle where
+    refNodeId = portRef ^. refPortNode . nodeId
+
+setAngle :: PortType -> NodeId -> PortId -> Angle -> IO ()
+setAngle  InputPort = UI.setInputPortAngle
+setAngle OutputPort = UI.setOutputPortAngle
