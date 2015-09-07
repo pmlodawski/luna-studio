@@ -1,14 +1,17 @@
 module Reactive.Plugins.Loader.ProjectManager.Actions where
 
-import           Data.Dynamic
-import           Event.Event
-import qualified Event.Backend             as Backend
 import           Utils.PreludePlus
-import           BatchConnector.Updates
+import           Data.Dynamic
+import           Data.ByteString.Lazy      (ByteString)
+
+import qualified Event.Event               as Event
+import qualified Event.Connection          as Connection
+import           Event.Batch               as Batch
+
 import           BatchConnector.Commands
 import           BatchConnector.Connection
-import           Data.ByteString.Lazy      (ByteString)
-import qualified Batch.Project             as Project
+import           Batch.Project
+import           Batch.Library
 
 import           Reactive.Plugins.Loader.ProjectManager.State
 
@@ -17,69 +20,44 @@ type Action = (IO (), State)
 makeReaction :: (State -> Action) -> Action -> Action
 makeReaction f (_, state) = f state
 
-react :: Event Dynamic -> Maybe (Action -> Action)
-react (Backend event) = fmap makeReaction $ case event of
-    Backend.Message msg -> Just $ reactToMessage msg
-    Backend.Opened      -> Just $ reactToOpening
-    _                   -> Nothing
-react _               = Nothing
-
-reactToMessage :: WebMessage -> State -> Action
-reactToMessage (WebMessage topic bytes) state = handler state bytes where
-    handler = case (state ^. connection, topic) of
-        (AwaitingProject, "project.list.status")           -> handleProjectsListResponse
-        (AwaitingProject, "project.create.update")         -> handleProjectCreatedResponse
-        (AwaitingLibs,    "project.library.list.status")   -> handleLibrariesListResponse
-        (AwaitingLibs,    "project.library.create.update") -> handleLibraryCreateResponse
-        (Ready,           _)                               -> \st _ -> (return (), st & connection .~ AfterInitialize)
-        (AfterInitialize, _)                               -> \st _ -> (return (), st)
-        _                                                  -> \st _ -> (print $ "Unexpected msg: " <> topic, st)
+react :: Event.Event Dynamic -> Maybe (Action -> Action)
+react event = makeReaction <$> handler event where
+    handler (Event.Connection Connection.Opened) = Just $ reactToOpening
+    handler (Event.Batch event)                  = Just $ reactToBatchEvent event
+    handler _                                    = Nothing
 
 reactToOpening :: State -> Action
-reactToOpening state = (sendMessage listProjects, state & connection .~ AwaitingProject)
+reactToOpening state = (sendMessage listProjects, AwaitingProject)
 
-handleProjectsListResponse :: State -> ByteString -> Action
-handleProjectsListResponse state bytes = case parseProjectsList bytes of
-    Nothing            -> die state
-    Just []            -> (createFirstProject, state & connection .~ AwaitingProject)
-    Just (project : _) -> startLibsFlow project state
+reactToBatchEvent :: Batch.Event -> State -> Action
+reactToBatchEvent event state = handler state where
+    handler = case (state, event) of
+        (AwaitingProject,   ProjectsList projects)  -> handleProjectsListResponse projects
+        (AwaitingProject,   ProjectCreated project) -> handleProjectCreatedResponse project
+        (AwaitingLibs proj, LibrariesList libs)     -> handleLibrariesListResponse libs proj
+        (AwaitingLibs proj, LibraryCreated lib)     -> handleLibraryCreatedResponse lib proj
+        (Ready _,           _)                      -> \st -> (return (), AfterInitialize)
+        _                                           -> \st -> (return (), st)
 
-handleProjectCreatedResponse :: State -> ByteString -> Action
-handleProjectCreatedResponse state bytes = case parseProjectCreateUpdate bytes of
-    Nothing      -> die state
-    Just project -> startLibsFlow project state
+handleProjectsListResponse :: [Project] -> State -> Action
+handleProjectsListResponse []            state = (createFirstProject, state)
+handleProjectsListResponse (project : _) state = startLibsFlow project state
 
-handleLibrariesListResponse state bytes = case (libs, currentProject) of
-    (Nothing,        _)         -> die state
-    (_,              Nothing)   -> die state
-    (Just [],        Just proj) -> (createFirstLibrary proj, state)
-    (Just libraries, Just proj) -> (return (), state & (connection .~ Ready)
-                                                     . (project    ?~ (proj & Project.libs .~ libraries)))
-    where
-        libs           = parseLibrariesListResponse bytes
-        currentProject = state ^. project
+handleProjectCreatedResponse :: Project -> State -> Action
+handleProjectCreatedResponse = startLibsFlow
 
-handleLibraryCreateResponse :: State -> ByteString -> Action
-handleLibraryCreateResponse state bytes = case (lib, currentProject) of
-    (Nothing,      _)         -> die state
-    (_,            Nothing)   -> die state
-    (Just library, Just proj) -> (return (), state & (connection .~ Ready)
-                                                   . (project    ?~ (proj & Project.libs .~ [library])))
-    where
-        lib            = parseLibraryCreateResponse bytes
-        currentProject = state ^. project
+handleLibrariesListResponse :: [Library] -> Project -> State -> Action
+handleLibrariesListResponse []        proj state = (createFirstLibrary proj, state)
+handleLibrariesListResponse libraries proj state = (return (), Ready $ (proj & libs .~ libraries))
 
-startLibsFlow :: Project.Project -> State -> Action
-startLibsFlow proj state = (sendMessage $ fetchLibraries proj, state & (connection .~ AwaitingLibs)
-                                                                     . (project    ?~ proj))
+handleLibraryCreatedResponse :: Library -> Project -> State -> Action
+handleLibraryCreatedResponse lib proj state = (return (), Ready $ (proj & libs .~ [lib]))
+
+startLibsFlow :: Project -> State -> Action
+startLibsFlow project state = (sendMessage $ fetchLibraries project, AwaitingLibs project)
 
 createFirstProject :: IO ()
-createFirstProject  = do
-    putStrLn "Creating project!"
-    sendMessage $ createProject "myFirstProject" "some/path"
+createFirstProject  = sendMessage $ createProject "myFirstProject" "some/path"
 
-createFirstLibrary :: Project.Project -> IO ()
-createFirstLibrary  = sendMessage . (createLibrary "Main" "some/path")
-
-die :: State -> Action
-die state = (putStrLn "Something went terribly wrong", state & connection .~ Fail)
+createFirstLibrary :: Project -> IO ()
+createFirstLibrary project = sendMessage $ createLibrary "Main" "some/path" project

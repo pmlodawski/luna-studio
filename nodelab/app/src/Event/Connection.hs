@@ -1,4 +1,4 @@
-module Event.Backend where
+module Event.Connection where
 
 import Utils.PreludePlus
 import BatchConnector.Connection (WebMessage)

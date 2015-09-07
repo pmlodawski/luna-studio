@@ -28,7 +28,7 @@ import qualified Event.Mouse         as Mouse
 import           Object.UITypes      as Mouse
 import qualified Event.Window        as Window
 import qualified Event.NodeSearcher  as NodeSearcher
-import qualified Event.Backend       as Backend
+import qualified Event.Connection    as Connection
 import qualified Object.Node         ( Node )
 import           Event.Event
 import           GHCJS.Marshal
@@ -111,8 +111,8 @@ nodeSearcherHander = AddHandler $ \h -> do
 webSocketHandler :: WebSocket.WebSocket -> AddHandler (Event Dynamic)
 webSocketHandler conn = AddHandler $ \h -> do
     WebSocket.onOpen conn $ do
-        h $ Backend Backend.Opened
+        h $ Connection Connection.Opened
     WebSocket.onMessage conn $ \event -> do
         payload <- WebSocket.getData event
         let msg = Connection.deserialize $ fromJSString payload
-        h $ Backend $ Backend.Message msg
+        h $ Connection $ Connection.Message msg

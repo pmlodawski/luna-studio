@@ -12,6 +12,7 @@ import           Object.Dynamic             ( unpackDynamic )
 import           Object.Node                ( Node(..) )
 import qualified Object.Node                                 as Node
 import qualified Event.Event                                 as Event
+import qualified Event.Processors.Batch                      as BatchEventProcessor
 
 import           Reactive.Plugins.Core.Action.Action
 import qualified Reactive.Plugins.Core.Action.General        as General
@@ -30,8 +31,6 @@ import           Reactive.Plugins.Core.Action.Executor
 
 import           Reactive.Plugins.Core.Action.State.Global
 import           Reactive.Plugins.Core.Action.State.UnderCursor
-
-import           Reactive.Plugins.EventProcessors.AddNode    (getAddNode)
 
 import           JS.WebSocket (WebSocket)
 
@@ -52,8 +51,8 @@ makeNetworkDescription conn logging workspace = do
     webSocketE     <- fromAddHandler $ webSocketHandler conn
 
     let
-        addNodeE                     :: Event t (Event.Event Dynamic)
-        addNodeE                      = getAddNode webSocketE
+        batchE                       :: Event t (Event.Event Dynamic)
+        batchE                        = filterJust $ BatchEventProcessor.process <$> webSocketE
 
         anyE                         :: Event t (Event.Event Dynamic)
         anyE                          = unions [ resizeE
@@ -66,7 +65,7 @@ makeNetworkDescription conn logging workspace = do
                                                , keyPressedE
                                                , keyUpE
                                                , nodeSearcherE
-                                               , addNodeE
+                                               , batchE
                                                ]
         anyNodeE                     :: Event t (Event.Event Node)
         anyNodeE                      = unpackDynamic <$> anyE

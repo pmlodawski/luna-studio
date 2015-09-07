@@ -11,8 +11,8 @@ import qualified Event.Mouse         as Mouse
 import qualified Event.Window        as Window
 import qualified Event.NodeSearcher  as NodeSearcher
 import qualified Event.WithObjects   as WithObjects
-import qualified Event.Backend       as Backend
-import qualified Event.AddNode       as AddNode
+import qualified Event.Connection    as Connection
+import qualified Event.Batch         as Batch
 
 
 data Event obj = Init
@@ -20,8 +20,8 @@ data Event obj = Init
                | Keyboard     Keyboard.Event
                | Mouse        Mouse.Event
                | NodeSearcher NodeSearcher.Event
-               | Backend      Backend.Event
-               | AddNode      AddNode.Event
+               | Connection   Connection.Event
+               | Batch        Batch.Event
 
 
 makeLenses ''Event
@@ -35,8 +35,8 @@ instance Typeable obj => UnpackDynamic (Event Dynamic) (Event obj) where
     unpackDynamic (Keyboard     ev) = Keyboard ev
     unpackDynamic (Mouse        ev) = Mouse ev
     unpackDynamic (NodeSearcher ev) = NodeSearcher ev
-    unpackDynamic (Backend      ev) = Backend ev
-    unpackDynamic (AddNode      ev) = AddNode ev
+    unpackDynamic (Connection   ev) = Connection ev
+    unpackDynamic (Batch        ev) = Batch ev
 
 instance PrettyPrinter obj => PrettyPrinter (Event obj) where
     display Init              = "InitEv"
@@ -44,5 +44,5 @@ instance PrettyPrinter obj => PrettyPrinter (Event obj) where
     display (Keyboard     ev) = "KeyEv(" <> display ev <> ")"
     display (Mouse        ev) = "MouEv(" <> display ev <> ")"
     display (NodeSearcher ev) = "NoSEv(" <> display ev <> ")"
-    display (Backend      ev) = "BacEv(" <> display ev <> ")"
-    display (AddNode      ev) = "AddNo(" <> display ev <> ")"
+    display (Connection   ev) = "ConEv(" <> display ev <> ")"
+    display (Batch        ev) = "BchEv(" <> display ev <> ")"

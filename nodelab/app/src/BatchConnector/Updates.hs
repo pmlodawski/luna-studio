@@ -30,11 +30,9 @@ parseMessage bytes = case messageGet bytes of
     Left  _        -> Nothing
     Right (msg, _) -> Just msg
 
-pluckProjects :: ProjectsList.Status -> Maybe [Project]
-pluckProjects  = decode . ProjectsList.projects
-
-parseProjectsList :: ByteString -> Maybe [Project]
-parseProjectsList bytes = (parseMessage bytes) >>= pluckProjects
+parseProjectsListResponse :: ByteString -> Maybe [Project]
+parseProjectsListResponse bytes = (parseMessage bytes) >>= pluckProjects where
+    pluckProjects  = decode . ProjectsList.projects
 
 parseProjectCreateUpdate :: ByteString -> Maybe Project
 parseProjectCreateUpdate bytes = (parseMessage bytes) >>= getProject where

@@ -24,7 +24,7 @@ import           Event.Keyboard hiding      ( Event )
 import qualified Event.Keyboard as Keyboard
 import           Event.Mouse    hiding      ( Event, WithObjects )
 import qualified Event.Mouse    as Mouse
-import qualified Event.AddNode  as AddNode
+import qualified Event.Batch    as Batch
 import           Event.Event
 import           Event.NodeSearcher hiding  ( Event, expression )
 import qualified Event.NodeSearcher as NodeSearcher
@@ -81,7 +81,7 @@ instance PrettyPrinter Action where
     display (AddActionUI _ _ _)         = "arA(AddActionUI)"
 
 toAction :: Workspace -> Event Node -> Global.State -> Maybe Action
-toAction _ (AddNode (AddNode.AddNode node)) state = Just $ AddAction node
+toAction _ (Batch (Batch.NodeAdded node)) state = Just $ AddAction node
 toAction workspace (Keyboard (Keyboard.Event Keyboard.Press char)) state = ifNoneFocused state $ case char of
     'a'      -> Just $ RegisterNodeAction "Hello.node" workspace
     'r'      -> Just RemoveFocused
