@@ -50,7 +50,6 @@ import qualified ThreeJS.Widget.Node                             as UINode
 
 import           Object.Widget.Scene (sceneInterfaceId, sceneGraphId)
 
-import           Batch.Workspace
 import           BatchConnector.Commands   (addNode)
 import           BatchConnector.Connection (sendMessage)
 
@@ -62,9 +61,9 @@ data ActionType = Add
                 deriving (Eq, Show)
 
 data Action = AddAction Node
-            | RegisterNodeAction Text Workspace
+            | RegisterNodeAction Text
             | RemoveFocused
-            | RegisterActionUI Node Workspace
+            | RegisterActionUI Node
             | AddActionUI Node WNode.Node [Maybe (IO ())]
 
 
@@ -76,20 +75,20 @@ instance PrettyPrinter ActionType where
 
 instance PrettyPrinter Action where
     display (AddAction node)            = "arA(AddAction "      <> display node <> ")"
-    display (RegisterNodeAction expr _) = "arA(RegisterAction " <> display expr <> ")"
+    display (RegisterNodeAction expr)   = "arA(RegisterAction " <> display expr <> ")"
     display RemoveFocused               = "arA(RemoveFocused)"
     display (AddActionUI _ _ _)         = "arA(AddActionUI)"
 
-toAction :: Workspace -> Event Node -> Global.State -> Maybe Action
-toAction _ (Batch (Batch.NodeAdded node)) state = Just $ AddAction node
-toAction workspace (Keyboard (Keyboard.Event Keyboard.Press char)) state = ifNoneFocused state $ case char of
-    'a'      -> Just $ RegisterNodeAction "Hello.node" workspace
+toAction :: Event Node -> Global.State -> Maybe Action
+toAction (Batch (Batch.NodeAdded node)) state = Just $ AddAction node
+toAction (Keyboard (Keyboard.Event Keyboard.Press char)) state = ifNoneFocused state $ case char of
+    'a'      -> Just $ RegisterNodeAction "Hello.node"
     'r'      -> Just RemoveFocused
     _        -> Nothing
-toAction workspace (NodeSearcher (NodeSearcher.Event tpe expr)) _ = case tpe of
-    "create" -> Just $ RegisterNodeAction expr workspace
+toAction (NodeSearcher (NodeSearcher.Event tpe expr)) _ = case tpe of
+    "create" -> Just $ RegisterNodeAction expr
     _        -> Nothing
-toAction _ _ _  = Nothing
+toAction _ _  = Nothing
 
 addWidget b = do
     widget <- JSRegistry.build b
@@ -118,9 +117,9 @@ createNode nodeId pos expr = Node nodeId False pos expr (createPorts inputPortsN
 instance ActionStateUpdater Action where
     -- The logic of computing nodeId is needed only for offline mode
     -- once everyone has the backend running, batch will handle that
-    execSt (RegisterNodeAction expr workspace) state = ActionUI registerNode state
+    execSt (RegisterNodeAction expr) state = ActionUI registerNode state
         where
-        registerNode = RegisterActionUI node workspace
+        registerNode = RegisterActionUI node
         node         = createNode nextId nodePosWs expr
         camera       = Global.toCamera state
         oldNodes     = Graph.getNodes graph
@@ -183,7 +182,9 @@ instance ActionStateUpdater Action where
 
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
-        RegisterActionUI node workspace -> sendMessage $ addNode workspace node
+        RegisterActionUI node -> sendMessage $ addNode workspace node
+            where
+            workspace       = state ^. Global.workspace
         AddActionUI node wnode actions  -> (sequence_ $ reverse $ catMaybes actions)
                                         >> putStrLn (display $ state ^. Global.graph . Graph.nodeRefs) -- debug
                                         >> graphToViz (state ^. Global.graph . Graph.graphMeta)

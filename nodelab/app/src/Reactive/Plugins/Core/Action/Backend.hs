@@ -9,9 +9,9 @@ import           Batch.Workspace
 import           BatchConnector.Commands
 import           BatchConnector.Connection
 import           Reactive.Plugins.Core.Action.Action
-import           Reactive.Plugins.Core.Action.State.Global
+import qualified Reactive.Plugins.Core.Action.State.Global as Global
 
-data Action = InsertSerializationMode Node Workspace deriving (Show, Eq)
+data Action = InsertSerializationMode Node deriving (Show, Eq)
 
 data Reaction = PerformIO (IO ())
 
@@ -21,13 +21,14 @@ instance PrettyPrinter Reaction where
 instance PrettyPrinter Action where
     display _ = "backend(InsertSerializationMode)"
 
-toAction :: Workspace -> Event Node -> Maybe Action
-toAction workspace (Batch (Batch.NodeAdded node)) = Just $ InsertSerializationMode node workspace
-toAction _ _ = Nothing
+toAction :: Event Node -> Maybe Action
+toAction (Batch (Batch.NodeAdded node)) = Just $ InsertSerializationMode node
+toAction _ = Nothing
 
 instance ActionStateUpdater Action where
-    execSt (InsertSerializationMode node workspace) state = ActionUI (PerformIO action) state where
+    execSt (InsertSerializationMode node) state = ActionUI (PerformIO action) state where
         action = sendMessage $ insertSerializationMode workspace node
+        workspace = state ^. Global.workspace
 
 instance ActionUIUpdater Reaction where
     updateUI (WithState (PerformIO act) st) = act

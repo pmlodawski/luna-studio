@@ -72,7 +72,7 @@ makeNetworkDescription conn logging workspace = do
         anyNodeB                      = stepper def anyNodeE
 
         globalStateB                 :: Behavior t State
-        globalStateB                  = stepper def $ globalStateReactionB <@ anyE
+        globalStateB                  = stepper (initialState workspace) $ globalStateReactionB <@ anyE
 
         underCursorB                 :: Behavior t UnderCursor
         underCursorB                  = underCursor <$> globalStateB
@@ -80,7 +80,7 @@ makeNetworkDescription conn logging workspace = do
         widgetActionB                 = fmap ActionST $              Widget.toAction <$> anyNodeB
         nodeGeneralActionB            = fmap ActionST $             General.toAction <$> anyNodeB
         cameraActionB                 = fmap ActionST $              Camera.toAction <$> anyNodeB <*> globalStateB
-        nodeAddRemActionB             = fmap ActionST $ AddRemove.toAction workspace <$> anyNodeB <*> globalStateB
+        nodeAddRemActionB             = fmap ActionST $           AddRemove.toAction <$> anyNodeB <*> globalStateB
         nodeSelectionActionB          = fmap ActionST $           Selection.toAction <$> anyNodeB <*> globalStateB <*> underCursorB 
         nodeMultiSelectionActionB     = fmap ActionST $      MultiSelection.toAction <$> anyNodeB <*> globalStateB <*> underCursorB
         nodeDragActionB               = fmap ActionST $                Drag.toAction <$> anyNodeB <*> underCursorB
@@ -88,7 +88,7 @@ makeNetworkDescription conn logging workspace = do
         nodeSearcherActionB           = fmap ActionST $        NodeSearcher.toAction <$> anyNodeB
         breadcrumbActionB             = fmap ActionST $          Breadcrumb.toAction <$> anyNodeB <*> globalStateB
         sandboxActionB                = fmap ActionST $             Sandbox.toAction <$> anyNodeB <*> globalStateB
-        backendActionB                = fmap ActionST $   Backend.toAction workspace <$> anyNodeB
+        backendActionB                = fmap ActionST $             Backend.toAction <$> anyNodeB
 
         allActionsPackB               = [ nodeGeneralActionB
                                         , widgetActionB

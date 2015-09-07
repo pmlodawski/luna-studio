@@ -25,6 +25,9 @@ import qualified Reactive.Plugins.Core.Action.State.Camera    as Camera
 import qualified Reactive.Plugins.Core.Action.State.Global    as Global
 import           Reactive.Plugins.Core.Action.State.UnderCursor
 
+import           BatchConnector.Commands   (connectNodes)
+import           BatchConnector.Connection (sendMessage)
+
 import           AST.GraphToViz
 
 data ActionType = StartDrag PortRef
@@ -130,7 +133,8 @@ instance ActionUIUpdater Action where
             Moving                   -> return ()
             Dragging angle           -> forM_ maybeConnecting $ displayDragLine angle ptWs
             StopDrag                 -> UI.removeCurrentConnection
-            ConnectPort portRef      -> return ()
+            ConnectPort dstPort      -> return ()
+                                     >> sendMessage (connectNodes workspace srcPort dstPort)
                                      >> putStrLn (display $ state ^. Global.graph . Graph.nodeRefs) -- debug
                                      >> putStrLn (display $ state ^. Global.graph . Graph.connections) -- debug
                                      >> graphToViz (state ^. Global.graph . Graph.graphMeta)
@@ -138,6 +142,8 @@ instance ActionUIUpdater Action where
                 ptWs                  = screenToWorkspace camera pt
                 camera                = Global.toCamera state
                 maybeConnecting       = state ^. Global.connect . connecting
+                srcPort               = (fromJust maybeConnecting) ^. sourcePort
+                workspace             = state ^. Global.workspace
 
 
 

@@ -9,7 +9,7 @@ import qualified JS.Camera
 import           Object.Object
 
 
-import           Batch.Project
+import           Batch.Workspace
 import qualified Reactive.Plugins.Core.Action.State.Camera            as Camera
 import qualified Reactive.Plugins.Core.Action.State.Graph             as Graph
 import qualified Reactive.Plugins.Core.Action.State.AddRemove         as AddRemove
@@ -36,17 +36,18 @@ data State = State { _iteration      :: Integer
                    , _breadcrumb     :: Breadcrumb.State
                    , _uiRegistry     :: UIRegistry.State
                    , _sandbox        :: Sandbox.State
+                   , _workspace      :: Workspace
                    } deriving (Eq, Show)
 
 makeLenses ''State
 
 initialScreenSize = Vector2 400 200
 
-instance Default State where
-    def = State def initialScreenSize def def def def def def def def def def def def
+initialState :: Workspace -> State
+initialState workspace = State def initialScreenSize def def def def def def def def def def def def workspace
 
 instance PrettyPrinter State where
-    display (State iteration mousePos screenSize graph camera addRemove selection multiSelection drag connect nodeSearcher breadcrumb uiRegistry sandbox)
+    display (State iteration mousePos screenSize graph camera addRemove selection multiSelection drag connect nodeSearcher breadcrumb uiRegistry sandbox workspace)
         = "gS(" <> display iteration
          <> " " <> display mousePos
          <> " " <> display screenSize
@@ -61,12 +62,8 @@ instance PrettyPrinter State where
          <> " " <> display breadcrumb
          <> " " <> display uiRegistry
          <> " " <> display sandbox
+         <> " " <> display workspace
          <> ")"
-
-instance Monoid State where
-    mempty = def
-    a `mappend` b = if a ^. iteration > b ^.iteration then a else b
-
 
 toCamera :: State -> JS.Camera.Camera
 toCamera state = JS.Camera.Camera (state ^. screenSize) (camState ^. Camera.pan) (camState ^. Camera.factor) where

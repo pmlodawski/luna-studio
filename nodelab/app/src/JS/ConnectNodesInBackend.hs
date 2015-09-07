@@ -38,7 +38,7 @@ connect workspace cmd = do
     let srcPorts = fromJSInt <$> srcPortsJS
     let dstPorts = fromJSInt <$> dstPortsJS
 
-    sendMessage $ connectNodes workspace srcNode srcPorts dstNode dstPorts
+    sendMessage $ connectNodes' workspace srcNode srcPorts dstNode dstPorts
 
 setConnectNodeCallback :: Workspace -> IO ()
 setConnectNodeCallback workspace = do

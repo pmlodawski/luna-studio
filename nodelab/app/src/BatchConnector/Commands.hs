@@ -109,8 +109,16 @@ addNode workspace node = WebMessage "project.library.ast.function.graph.node.add
                            (workspace ^. library . Library.id)
                            1
 
-connectNodes :: Workspace -> Int -> [Int] -> Int -> [Int] -> WebMessage
-connectNodes workspace srcNode srcPorts dstNode dstPorts = WebMessage "project.library.ast.function.graph.connect.request" $ messagePut body where
+connectNodes :: Workspace -> PortRef -> PortRef -> WebMessage
+connectNodes workspace src dst = connectNodes' workspace
+                                               (src ^. refPortNode . nodeId)
+                                               []
+                                               (dst ^. refPortNode . nodeId)
+                                               [dst ^. refPortId]
+
+-- TODO: Remove - low level debug interface
+connectNodes' :: Workspace -> Int -> [Int] -> Int -> [Int] -> WebMessage
+connectNodes' workspace srcNode srcPorts dstNode dstPorts = WebMessage "project.library.ast.function.graph.connect.request" $ messagePut body where
     body = Connect.Request (encode srcNode)
                            (encode srcPorts)
                            (encode dstNode)
