@@ -20,8 +20,7 @@ Library
 
   Extensions:     NoImplicitPrelude
 
-  Exposed-modules: `findmodules('dist/gen', '.*\.hs', exclude='.*hs-boot.*')`, 
-                   `findmodules('src', '.*\.hs')`
+  Exposed-modules: `findmodules('src', '.*\.hs')`
                    
   Build-Depends:  async,
                   base,
