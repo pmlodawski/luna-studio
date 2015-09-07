@@ -34,7 +34,7 @@ data State = State { _iteration      :: Integer
                    , _connect        :: Connect.State
                    , _nodeSearcher   :: NodeSearcher.State
                    , _breadcrumb     :: Breadcrumb.State
-                   , _uiRegistry     :: UIRegistry.State
+                   , _uiRegistry     :: UIRegistry.State State
                    , _sandbox        :: Sandbox.State
                    , _workspace      :: Workspace
                    } deriving (Eq, Show)

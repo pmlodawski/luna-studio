@@ -138,19 +138,19 @@ instance ActionStateUpdater Action where
         newGraph                = Graph.addNode node oldGraph
         (newWNode, (newRegistry, actions)) = MState.runState registerWidgets (oldRegistry, [])
         registerWidgets         = do
-            widget <- UIRegistry.registerM sceneGraphId $ WNode.Node def (node ^. nodeId) []
+            widget <- UIRegistry.registerM sceneGraphId (WNode.Node def (node ^. nodeId) []) def
             UIRegistry.uiAction $ createNodeOnUI node widget
 
-            slider_a <- UIRegistry.registerM (objectId widget) $ (Slider 0 (Vector2 10  75) (Vector2 180 25) "Cutoff"     100.0        25000.0      0.4 :: Slider Double)
+            slider_a <- UIRegistry.registerM (objectId widget) (Slider 0 (Vector2 10  75) (Vector2 180 25) "Cutoff"     100.0        25000.0      0.4 :: Slider Double) def 
             UIRegistry.uiAction $ addWidgetToNode widget slider_a
 
-            slider_b <- UIRegistry.registerM (objectId widget) $ (Slider 0 (Vector2 10 105) (Vector2 180 25) "Resonance"  0.0        1.0      0.2 :: Slider Double)
+            slider_b <- UIRegistry.registerM (objectId widget) (Slider 0 (Vector2 10 105) (Vector2 180 25) "Resonance"  0.0        1.0      0.2 :: Slider Double) def 
             UIRegistry.uiAction $ addWidgetToNode widget slider_b
 
-            slider_c <- UIRegistry.registerM (objectId widget) $ (Slider 0 (Vector2 10 135) (Vector2 180 25) "Amount"     0.0        1.0      0.6 :: Slider Double)
+            slider_c <- UIRegistry.registerM (objectId widget) (Slider 0 (Vector2 10 135) (Vector2 180 25) "Amount"     0.0        1.0      0.6 :: Slider Double) def
             UIRegistry.uiAction $ addWidgetToNode widget slider_c
 
-            slider_d <- UIRegistry.registerM (objectId widget) $ (Slider 0 (Vector2 10 165) (Vector2 180 25) "Gain"       0.0        2.0      0.5 :: Slider Double)
+            slider_d <- UIRegistry.registerM (objectId widget) (Slider 0 (Vector2 10 165) (Vector2 180 25) "Gain"       0.0        2.0      0.5 :: Slider Double) def
             UIRegistry.uiAction $ addWidgetToNode widget slider_d
 
             UIRegistry.updateM (widget & WNode.controls .~ [objectId slider_a, objectId slider_b, objectId slider_c, objectId slider_d])

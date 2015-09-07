@@ -46,7 +46,7 @@ absPosToRel HUD       _      mat pos = Widget.sceneToLocal pos          mat
 absPosToRel Workspace camera mat pos = Widget.sceneToLocal workspacePos mat where
     workspacePos = Camera.screenToWorkspace camera (round <$> pos)
 
-handleGeneric :: Mouse.Event -> Camera.Camera -> UIRegistry.State -> Maybe (WidgetUIUpdate, UIRegistry.State)
+handleGeneric :: Mouse.Event -> Camera.Camera -> UIRegistry.State a -> Maybe (WidgetUIUpdate, UIRegistry.State a)
 handleGeneric (Mouse.Event eventType absPos button _ (Just (EventWidget widgetId mat scene))) camera registry = do
     widget                <- (UIRegistry.lookup widgetId registry) :: Maybe DisplayObject
     let pos                = absPosToRel scene camera mat (fromIntegral <$> absPos)
@@ -60,7 +60,7 @@ handleGeneric (Mouse.Event eventType absPos button _ (Just (EventWidget widgetId
     return (uiUpdate, newRegistry)
 handleGeneric _ _ _        = Nothing
 
-triggerHandler :: Maybe WidgetId -> (DisplayObject -> WidgetUpdate) -> UIRegistry.State -> Maybe (WidgetUIUpdate, UIRegistry.State)
+triggerHandler :: Maybe WidgetId -> (DisplayObject -> WidgetUpdate) -> UIRegistry.State a -> Maybe (WidgetUIUpdate, UIRegistry.State a)
 triggerHandler maybeOid handler state = do
     oid                     <- maybeOid
     oldWidget               <- UIRegistry.lookup oid state
@@ -108,11 +108,11 @@ changeFocus (EventWidget widgetId mat scene) button keyMods absPos camera state 
 loseFocus state = Just $ (Nothing, newState) where newState = state & UIRegistry.focusedWidget .~ Nothing
 
 
-handleKeyEvents :: Keyboard.Event -> UIRegistry.State -> Maybe (WidgetUIUpdate, UIRegistry.State)
-handleKeyEvents (Keyboard.Event tpe ch) registry = case registry ^. UIRegistry.focusedWidget of
+handleKeyEvents :: Keyboard.Event -> UIRegistry.State a -> Maybe (WidgetUIUpdate, UIRegistry.State a)
+handleKeyEvents (Keyboard.Event eventType ch) registry = case registry ^. UIRegistry.focusedWidget of
     Just widgetId  -> do
         widget                <- (UIRegistry.lookup widgetId registry) :: Maybe DisplayObject
-        (uiUpdate, newWidget) <- return $ case tpe of
+        (uiUpdate, newWidget) <- return $ case eventType of
             Keyboard.Up      -> onKeyUp      ch widget
             Keyboard.Down    -> onKeyDown    ch widget
             Keyboard.Press   -> onKeyPressed ch widget
@@ -120,21 +120,47 @@ handleKeyEvents (Keyboard.Event tpe ch) registry = case registry ^. UIRegistry.f
         return (uiUpdate, newRegistry)
     Nothing -> Just $ (Nothing, registry)
 
+applyHandlers :: [Global.State -> (Global.State, IO ())] -> Global.State -> (Global.State, [IO ()])
+applyHandlers handlers st = foldr apply (st, mempty) handlers where
+    apply h (st, acts) = (st', act:acts) where (st', act) = h st
+
+customMouseHandlers :: Mouse.Event -> Camera.Camera -> UIRegistry.State Global.State -> [Global.State -> (Global.State, IO ())]
+customMouseHandlers (Mouse.Event eventType absPos button _ (Just (EventWidget widgetId mat scene))) camera registry = case UIRegistry.lookupHandlers widgetId registry of
+    Just handlers -> case eventType of
+            Mouse.Moved       -> fmap (\a -> a button pos) (handlers ^. UIRegistry.mouseMove    )
+            Mouse.Pressed     -> fmap (\a -> a button pos) (handlers ^. UIRegistry.mousePressed )
+            Mouse.Released    -> fmap (\a -> a button pos) (handlers ^. UIRegistry.mouseReleased)
+            Mouse.Clicked     -> fmap (\a -> a        pos) (handlers ^. UIRegistry.click        )
+            Mouse.DblClicked  -> fmap (\a -> a        pos) (handlers ^. UIRegistry.dblClick     )
+        where pos             = absPosToRel scene camera mat (fromIntegral <$> absPos)
+    Nothing -> []
+customMouseHandlers _ _ _  = []
+
+customKeyboardHandlers :: Keyboard.Event -> UIRegistry.State Global.State -> [Global.State -> (Global.State, IO ())]
+customKeyboardHandlers (Keyboard.Event eventType ch) registry = case registry ^. UIRegistry.focusedWidget of
+    Just widgetId -> case eventType of
+        Keyboard.Up       -> fmap (\a -> a ch) (handlers ^. UIRegistry.keyUp     )
+        Keyboard.Down     -> fmap (\a -> a ch) (handlers ^. UIRegistry.keyDown   )
+        Keyboard.Press    -> fmap (\a -> a ch) (handlers ^. UIRegistry.keyPressed)
+        where
+            (Just handlers) = UIRegistry.lookupHandlers widgetId registry
+    Nothing -> []
 
 instance ActionStateUpdater Action where
-    execSt (MouseAction mouseEvent) oldState = ActionUI newAction newState where
-        newAction                = ApplyUpdates uiUpdates
-        newState                 = oldState &  Global.uiRegistry .~ newRegistry
-        oldRegistry              = oldState ^. Global.uiRegistry
-        oldWidgetOver            = oldState ^. Global.uiRegistry . UIRegistry.widgetOver
-        camera                   = Global.toCamera oldState
-        (uiUpdates, newRegistry) = UIRegistry.sequenceUpdates [ Just $ setWidgetOver
-                                                              , handleMouseOut
-                                                              , handleMouseOver
-                                                              , handleFocus
-                                                              , Just $ (handleGeneric mouseEvent camera)
-                                                              , handleDrag
-                                                              ] oldRegistry
+    execSt (MouseAction mouseEvent) oldState = ActionUI newAction newState' where
+        newAction                    = ApplyUpdates $ uiUpdates <> (Just <$> customUIUpdates)
+        newState                     = oldState &  Global.uiRegistry .~ newRegistry
+        (newState', customUIUpdates) = applyHandlers (customMouseHandlers mouseEvent camera newRegistry) newState
+        oldRegistry                  = oldState ^. Global.uiRegistry
+        oldWidgetOver                = oldState ^. Global.uiRegistry . UIRegistry.widgetOver
+        camera                       = Global.toCamera oldState
+        (uiUpdates, newRegistry)     = UIRegistry.sequenceUpdates [ Just $ setWidgetOver
+                                                                  , handleMouseOut
+                                                                  , handleMouseOver
+                                                                  , handleFocus
+                                                                  , Just $ (handleGeneric mouseEvent camera)
+                                                                  , handleDrag
+                                                                  ] oldRegistry
         handleFocus = case mouseEvent of
             Mouse.Event Mouse.Pressed pos button keyMods (Just evWd) -> Just $ changeFocus evWd button keyMods (fromIntegral <$> pos) camera
             Mouse.Event Mouse.Pressed _   _      _        Nothing    -> Just $ loseFocus
@@ -159,11 +185,12 @@ instance ActionStateUpdater Action where
             _                                  -> oldWidgetOver
         setWidgetOver state = Just $ (Nothing, state & UIRegistry.widgetOver .~ newWidgetOver)
 
-    execSt (KeyboardAction keyboardEvent) oldState = ActionUI newAction newState where
-        newAction                = ApplyUpdates uiUpdates
-        newState                 = oldState &  Global.uiRegistry .~ newRegistry
-        oldRegistry              = oldState ^. Global.uiRegistry
-        (uiUpdates, newRegistry) = UIRegistry.sequenceUpdates [ Just $ handleKeyEvents keyboardEvent
+    execSt (KeyboardAction keyboardEvent) oldState = ActionUI newAction newState' where
+        newAction                    = ApplyUpdates $ uiUpdates <> (Just <$> customUIUpdates)
+        newState                     = oldState &  Global.uiRegistry .~ newRegistry
+        oldRegistry                  = oldState ^. Global.uiRegistry
+        (newState', customUIUpdates) = applyHandlers (customKeyboardHandlers keyboardEvent newRegistry) newState
+        (uiUpdates, newRegistry)     = UIRegistry.sequenceUpdates [ Just $ handleKeyEvents keyboardEvent
                                                               ] oldRegistry
 
 instance ActionUIUpdater Action where
