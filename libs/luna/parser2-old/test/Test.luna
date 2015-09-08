@@ -1,0 +1,4 @@
+import Flowbox:Std
+
+def main:
+    a = [x..y]
