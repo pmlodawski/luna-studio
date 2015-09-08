@@ -1,0 +1,91 @@
+Name:               flowbox-repo-manager
+Version:            0.1
+Cabal-Version:      >= 1.8
+--License-file:       LICENSE
+Author:             Flowbox <contact@flowbox.io>
+Maintainer:         Flowbox <contact@flowbox.io>
+Build-Type:         Simple
+
+Flag Debug
+    Description:      Enable debug support
+    Default:          False
+
+
+Library
+    Hs-Source-Dirs: dist/gen,
+                    src
+    Other-Modules:  Paths_flowbox_repo_manager
+
+    GHC-Options:    -Wall -O2 -threaded
+
+    Extensions:     NoImplicitPrelude
+
+    Exposed-modules: `findmodules('src', '.*\.hs')`
+                     
+    Build-Depends:  array,
+                    base,
+                    binary,
+                    bytestring,
+                    Cabal,
+                    configurator,
+                    containers,
+                    directory-tree,
+                    --either,
+                    errors,
+                    filepath,
+                    flowbox-config,
+                    --flowbox-rpc,
+                    flowbox-utils,
+                    http-conduit,
+                    lens,
+                    --MissingH,
+                    mtl,
+                    network,
+                    network-uri,
+                    --protocol-buffers,
+                    --protocol-buffers-descriptor,
+                    process,
+                    regex-posix,
+                    SHA,
+                    split,
+                    text,
+                    transformers,
+                    unix
+                    --zeromq4-haskell >= 0.4,
+
+
+Executable repo-manager-test
+    Main-Is:        Main.hs
+    Hs-Source-Dirs: test
+
+    GHC-Options:    -Wall -O2
+
+    Extensions:     NoImplicitPrelude
+
+    Build-Depends:  base,
+                    binary,
+                    bytestring,
+                    Cabal,
+                    configurator,
+                    containers,
+                    directory-tree,
+                    either,
+                    filepath,
+                    flowbox-bus,
+                    flowbox-repo-manager,
+                    flowbox-rpc,
+                    flowbox-utils,
+                    http-conduit,
+                    lens,
+                    mtl,
+                    network,
+                    process,
+                    protocol-buffers,
+                    protocol-buffers-descriptor,
+                    regex-posix,
+                    SHA,
+                    split,
+                    text,
+                    transformers,
+                    unix,
+                    zeromq4-haskell >= 0.4
