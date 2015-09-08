@@ -8,7 +8,6 @@ import GHCJS.Foreign.Callback
 import Data.Int
 import GHCJS.Prim
 import Batch.Workspace
-import BatchConnector.Connection
 import BatchConnector.Commands
 
 data ConnectCmd
@@ -38,7 +37,7 @@ connect workspace cmd = do
     let srcPorts = fromJSInt <$> srcPortsJS
     let dstPorts = fromJSInt <$> dstPortsJS
 
-    sendMessage $ connectNodes' workspace srcNode srcPorts dstNode dstPorts
+    connectNodes' workspace srcNode srcPorts dstNode dstPorts
 
 setConnectNodeCallback :: Workspace -> IO ()
 setConnectNodeCallback workspace = do

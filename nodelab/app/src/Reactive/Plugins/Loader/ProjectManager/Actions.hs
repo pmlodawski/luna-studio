@@ -8,8 +8,7 @@ import qualified Event.Event               as Event
 import qualified Event.Connection          as Connection
 import           Event.Batch               as Batch
 
-import           BatchConnector.Commands
-import           BatchConnector.Connection
+import           BatchConnector.Commands   as BatchCmd
 import           Batch.Project
 import           Batch.Library
 
@@ -27,7 +26,7 @@ react event = makeReaction <$> handler event where
     handler _                                    = Nothing
 
 reactToOpening :: State -> Action
-reactToOpening state = (sendMessage listProjects, AwaitingProject)
+reactToOpening state = (BatchCmd.listProjects, AwaitingProject)
 
 reactToBatchEvent :: Batch.Event -> State -> Action
 reactToBatchEvent event state = handler state where
@@ -54,10 +53,10 @@ handleLibraryCreatedResponse :: Library -> Project -> State -> Action
 handleLibraryCreatedResponse lib proj state = (return (), Ready $ (proj & libs .~ [lib]))
 
 startLibsFlow :: Project -> State -> Action
-startLibsFlow project state = (sendMessage $ fetchLibraries project, AwaitingLibs project)
+startLibsFlow project state = (BatchCmd.fetchLibraries project, AwaitingLibs project)
 
 createFirstProject :: IO ()
-createFirstProject  = sendMessage $ createProject "myFirstProject" "some/path"
+createFirstProject  = BatchCmd.createProject "myFirstProject" "some/path"
 
 createFirstLibrary :: Project -> IO ()
-createFirstLibrary project = sendMessage $ createLibrary "Main" "some/path" project
+createFirstLibrary project = BatchCmd.createLibrary "Main" "some/path" project

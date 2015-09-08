@@ -51,8 +51,6 @@ import qualified ThreeJS.Widget.Node                             as UINode
 import           Object.Widget.Scene (sceneInterfaceId, sceneGraphId)
 
 import           BatchConnector.Commands   (addNode)
-import           BatchConnector.Connection (sendMessage)
-
 
 import           AST.GraphToViz
 
@@ -182,7 +180,7 @@ instance ActionStateUpdater Action where
 
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
-        RegisterActionUI node -> sendMessage $ addNode workspace node
+        RegisterActionUI node -> addNode workspace node
             where
             workspace       = state ^. Global.workspace
         AddActionUI node wnode actions  -> (sequence_ $ reverse $ catMaybes actions)

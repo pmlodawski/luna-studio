@@ -7,8 +7,7 @@ import qualified Event.Batch        as Batch
 import           Batch.Workspace
 import           Batch.Value
 
-import           BatchConnector.Commands
-import           BatchConnector.Connection
+import qualified BatchConnector.Commands                   as BatchCmd
 import           Reactive.Plugins.Core.Action.Action
 import qualified Reactive.Plugins.Core.Action.State.Global as Global
 import           JS.NodeGraph                              (setComputedValue)
@@ -37,15 +36,15 @@ toAction _ = Nothing
 
 instance ActionStateUpdater Action where
     execSt RequestCode state = ActionUI (PerformIO action) state where
-        action    = sendMessage $ getCode workspace
+        action    = BatchCmd.getCode workspace
         workspace = state ^. Global.workspace
     execSt (ShowCode code) state = ActionUI (PerformIO action) state where
         action = TextIO.putStr code
     execSt (InsertSerializationMode node) state = ActionUI (PerformIO action) state where
         action = do
             let workspace = state ^. Global.workspace
-            sendMessage $ insertSerializationMode workspace node
-            sendMessage $ getCode workspace
+            BatchCmd.insertSerializationMode workspace node
+            BatchCmd.getCode workspace
     execSt (SetComputedValue nodeId value) state = ActionUI (PerformIO action) state where
         action = setComputedValue nodeId (show value)
 

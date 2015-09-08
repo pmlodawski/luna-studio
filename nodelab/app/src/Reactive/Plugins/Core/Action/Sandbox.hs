@@ -46,8 +46,7 @@ import qualified Dimple.Render                                   as UIChart
 import qualified Control.Monad.State                             as MState
 import           Object.Widget.Scene (sceneInterfaceId, sceneGraphId)
 
-import           BatchConnector.Commands
-import           BatchConnector.Connection
+import qualified BatchConnector.Commands as BatchCmd
 
 data Action = InitApp
             | ApplyUpdates  { _actions  :: [WidgetUIUpdate] }
@@ -128,7 +127,7 @@ instance ActionStateUpdater Action where
         newRegistry           = oldRegistry -- tu mozna np. zrobis UIRegistry.update, etc.
         newState              = oldState & Global.uiRegistry .~ newRegistry
         wasHelloButtonClicked = bid == oldState ^. Global.sandbox . Sandbox.button
-        newAction             = if wasHelloButtonClicked then ApplyUpdates [Just $ putStrLn "HelloWorld", Just $ sendMessage runMain]
+        newAction             = if wasHelloButtonClicked then ApplyUpdates [Just $ putStrLn "HelloWorld", Just BatchCmd.runMain]
                                                             -- tu tablica Maybe (IO ()), np aktualizacja stanu widgeta
                                                          else ApplyUpdates []
 

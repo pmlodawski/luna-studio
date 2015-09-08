@@ -29,8 +29,7 @@ import qualified Reactive.Plugins.Core.Action.State.Camera    as Camera
 import qualified Reactive.Plugins.Core.Action.State.Global    as Global
 import           Reactive.Plugins.Core.Action.State.UnderCursor
 
-import           BatchConnector.Commands   (connectNodes)
-import           BatchConnector.Connection (sendMessage)
+import qualified BatchConnector.Commands as BatchCmd
 
 import           AST.GraphToViz
 
@@ -143,7 +142,7 @@ instance ActionUIUpdater Action where
             StopDrag                 -> UI.removeCurrentConnection
             ConnectPorts src dst     -> UI.removeCurrentConnection
                                      >> displayConnections nodes connections
-                                     >> sendMessage (connectNodes workspace src dst)
+                                     >> BatchCmd.connectNodes workspace src dst
                                      >> putStrLn (display $ state ^. Global.graph . Graph.nodeRefs) -- debug
                                      >> putStrLn (display $ state ^. Global.graph . Graph.connections) -- debug
                                      >> graphToViz (state ^. Global.graph . Graph.graphMeta)

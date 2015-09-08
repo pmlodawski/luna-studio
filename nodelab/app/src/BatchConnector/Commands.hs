@@ -5,12 +5,13 @@ import           Utils.PreludePlus
 import qualified Data.Sequence              as Seq
 import           Text.ProtocolBuffers       (Utf8(..), messagePut)
 import           Text.ProtocolBuffers.Basic (uFromString)
-import           BatchConnector.Connection
+import           BatchConnector.Connection  (sendMessage, WebMessage(..))
 import           Batch.Project              as Project
 import           Batch.Library              as Library
 import           Batch.Breadcrumbs
 import           Data.Map                   as Map
 import           BatchConnector.Conversion
+import           Data.Int
 
 import           Batch.Function
 import           Batch.Workspace
@@ -44,72 +45,85 @@ import qualified Generated.Proto.Dep.Graph.Node         as GenNode
 import qualified Generated.Proto.Dep.Graph.NodeExpr     as GenExpr
 import qualified Generated.Proto.Dep.Graph.NodeExpr.Cls as ExprCls
 
+uselessLegacyArgument :: Int32
+uselessLegacyArgument = 42
 
-createProject :: String -> String -> WebMessage
-createProject name path = WebMessage "project.create.request" $ messagePut body where
+createProject :: String -> String -> IO ()
+createProject name path = sendMessage msg where
+    msg  = WebMessage "project.create.request" $ messagePut body
     body = CreateProject.Request (Just $ uFromString name)
                                  (uFromString path)
                                  (Attributes Seq.empty)
 
-listProjects :: WebMessage
-listProjects  = WebMessage "project.list.request" $ messagePut ListProjects.Request
+listProjects :: IO ()
+listProjects  = sendMessage msg where
+    msg = WebMessage "project.list.request" $ messagePut ListProjects.Request
 
-createLibrary :: String -> String -> Project -> WebMessage
-createLibrary name path project = WebMessage "project.library.create.request" $ messagePut body where
+createLibrary :: String -> String -> Project -> IO ()
+createLibrary name path project = sendMessage msg where
+    msg  = WebMessage "project.library.create.request" $ messagePut body
     body = CreateLibrary.Request (uFromString name)
                                  (Version Seq.empty Seq.empty)
                                  (uFromString path)
                                  (project ^. Project.id)
 
-fetchLibraries :: Project -> WebMessage
-fetchLibraries project = WebMessage "project.library.list.request" $ messagePut body where
+fetchLibraries :: Project -> IO ()
+fetchLibraries project = sendMessage msg where
+    msg  = WebMessage "project.library.list.request" $ messagePut body
     body = ListLibraries.Request (project ^. Project.id)
 
-setProjectId :: Project -> WebMessage
-setProjectId project = WebMessage "interpreter.setprojectid.request" $ messagePut body where
+setProjectId :: Project -> IO ()
+setProjectId project = sendMessage msg where
+    msg  = WebMessage "interpreter.setprojectid.request" $ messagePut body
     body = SetProjectId.Request (project ^. Project.id)
 
-createMainFunction :: Project -> Library -> WebMessage
-createMainFunction project library = WebMessage "project.library.ast.function.add.request" $ messagePut body where
+createMainFunction :: Project -> Library -> IO ()
+createMainFunction project library = sendMessage msg where
+    msg  = WebMessage "project.library.ast.function.add.request" $ messagePut body
     body = AddFunction.Request emptyFunctionExpr
                                (encode $ moduleBreadcrumbs "Main")
                                (library ^. Library.id)
                                (project ^. Project.id)
-                               1
+                               uselessLegacyArgument
 
-runMain :: WebMessage
-runMain  = WebMessage "interpreter.run.request" $ messagePut $ Run.Request Nothing
+runMain :: IO ()
+runMain  = sendMessage msg where
+    msg  = WebMessage "interpreter.run.request" $ messagePut $ Run.Request Nothing
 
-setMainPtr :: Project -> Library -> Breadcrumbs -> WebMessage
-setMainPtr proj lib crumbs = WebMessage "interpreter.setmainptr.request" $ messagePut body where
+setMainPtr :: Workspace -> IO ()
+setMainPtr workspace = sendMessage msg where
+    msg      = WebMessage "interpreter.setmainptr.request" $ messagePut body
     body     = SetMainPtr.Request defPoint
-    defPoint = DefPoint.DefPoint (proj ^. Project.id)
-                                 (lib  ^. Library.id)
-                                 (encode crumbs)
+    defPoint = DefPoint.DefPoint (workspace ^. project . Project.id)
+                                 (workspace ^. library . Library.id)
+                                 (encode $ workspace ^. breadcrumbs)
 
-getGraph :: Project -> Library -> Breadcrumbs -> WebMessage
-getGraph proj lib crumbs = WebMessage "project.library.ast.function.graph.get.request" $ messagePut body where
-    body = GetGraph.Request (encode crumbs)
-                            (lib  ^. Library.id)
-                            (proj ^. Project.id)
-                            1
+getGraph :: Workspace -> IO ()
+getGraph workspace = sendMessage msg where
+    msg  = WebMessage "project.library.ast.function.graph.get.request" $ messagePut body
+    body = GetGraph.Request (encode $ workspace ^. breadcrumbs)
+                            (workspace ^. library . Library.id)
+                            (workspace ^. project . Project.id)
+                            uselessLegacyArgument
 
-getCode :: Workspace -> WebMessage
-getCode workspace = WebMessage "project.library.ast.code.get.request" $ messagePut body where
+getCode :: Workspace -> IO ()
+getCode workspace = sendMessage msg where
+    msg  = WebMessage "project.library.ast.code.get.request" $ messagePut body
     body = GetCode.Request (encode $ workspace ^. breadcrumbs)
                            (workspace ^. library . Library.id)
                            (workspace ^. project . Project.id)
-                           1
+                           uselessLegacyArgument
 
-addNode :: Workspace -> Node -> WebMessage
-addNode workspace node = WebMessage "project.library.ast.function.graph.node.add.request" $ messagePut body where
+addNode :: Workspace -> Node -> IO ()
+addNode workspace node = sendMessage msg where
+    msg  = WebMessage "project.library.ast.function.graph.node.add.request" $ messagePut body
     body = AddNode.Request (encode node)
                            (encode $ workspace ^. breadcrumbs)
                            (workspace ^. project . Project.id)
                            (workspace ^. library . Library.id)
-                           1
+                           uselessLegacyArgument
 
-connectNodes :: Workspace -> PortRef -> PortRef -> WebMessage
+connectNodes :: Workspace -> PortRef -> PortRef -> IO ()
 connectNodes workspace src dst = connectNodes' workspace
                                                (src ^. refPortNode . nodeId)
                                                []
@@ -117,8 +131,9 @@ connectNodes workspace src dst = connectNodes' workspace
                                                [dst ^. refPortId]
 
 -- TODO: Remove - low level debug interface
-connectNodes' :: Workspace -> Int -> [Int] -> Int -> [Int] -> WebMessage
-connectNodes' workspace srcNode srcPorts dstNode dstPorts = WebMessage "project.library.ast.function.graph.connect.request" $ messagePut body where
+connectNodes' :: Workspace -> Int -> [Int] -> Int -> [Int] -> IO ()
+connectNodes' workspace srcNode srcPorts dstNode dstPorts = sendMessage msg where
+    msg  = WebMessage "project.library.ast.function.graph.connect.request" $ messagePut body
     body = Connect.Request (encode srcNode)
                            (encode srcPorts)
                            (encode dstNode)
@@ -126,10 +141,11 @@ connectNodes' workspace srcNode srcPorts dstNode dstPorts = WebMessage "project.
                            (encode $ workspace ^. breadcrumbs)
                            (workspace ^. library . Library.id)
                            (workspace ^. project . Project.id)
-                           1
+                           uselessLegacyArgument
 
-insertSerializationMode :: Workspace -> Node -> WebMessage
-insertSerializationMode workspace node = WebMessage "interpreter.serializationmode.insert.request" $ messagePut body where
+insertSerializationMode :: Workspace -> Node -> IO ()
+insertSerializationMode workspace node = sendMessage msg where
+    msg           = WebMessage "interpreter.serializationmode.insert.request" $ messagePut body
     body          = InsertSerializationMode.Request callPointPath (Seq.fromList [mode])
     callPointPath = CallPointPath (workspace ^. project . Project.id) (Seq.fromList [callPoint])
     callPoint     = CallPoint (workspace ^. library . Library.id) (encode $ node ^. nodeId)
