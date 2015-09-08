@@ -1,0 +1,25 @@
+///////////////////////////////////////////////////////////////////////////
+// Copyright (C) Flowbox, Inc / All Rights Reserved
+// Unauthorized copying of this file, via any medium is strictly prohibited
+// Proprietary and confidential
+// Flowbox Team <contact@flowbox.io>, 2014
+///////////////////////////////////////////////////////////////////////////
+
+package generated.proto.dep.module;
+
+import "dep/expr.proto";
+import "dep/type.proto";
+
+
+
+message Module {
+    optional int32 id = 1 [default = -1];
+    optional generated.proto.dep.type.Type type        = 2;
+    repeated generated.proto.dep.expr.Expr imports     = 3;
+    repeated generated.proto.dep.expr.Expr classes     = 4;
+    repeated generated.proto.dep.expr.Expr typeAliases = 5;
+    repeated generated.proto.dep.expr.Expr typeDEfs    = 6;
+    repeated generated.proto.dep.expr.Expr fields      = 7;
+    repeated generated.proto.dep.expr.Expr methods     = 8;
+    repeated Module modules                        = 9;
+}
