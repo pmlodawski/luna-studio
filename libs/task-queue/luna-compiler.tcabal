@@ -1,0 +1,55 @@
+Name:           luna-compiler
+Version:        0.1
+Stability:      Alpha
+Cabal-Version:  >= 1.8
+--License-file:   LICENSE
+Author:         Flowbox <contact@flowbox.io>
+Maintainer:     Flowbox <contact@flowbox.io>
+Build-Type:     Simple
+
+Flag Debug
+  Description: Enable debug support
+  Default:     False
+
+
+Executable luna
+  Main-Is:        Main.hs
+  Hs-Source-Dirs: src
+  Other-Modules:  Paths_luna_compiler
+
+  if flag(debug)
+    GHC-Options:  -csacc
+  GHC-Options:    -Wall -O2
+
+  Extensions:     DoAndIfThenElse
+                  NoImplicitPrelude
+  Build-Depends:  base,
+                  containers,
+                  flowbox-config,
+                  flowbox-utils,
+                  luna-build,
+                  luna-core,
+                  luna-pass,
+                  luna-distribution,
+                  luna-initializer,
+                  MissingH,
+                  optparse-applicative,
+                  timeit
+
+
+Test-Suite tests
+  Type:           exitcode-stdio-1.0
+  Main-Is:        Spec.hs
+  Hs-Source-Dirs: src, test
+  GHC-Options:    -Wall -threaded -O2
+  Extensions:     NoImplicitPrelude
+  Build-Depends:  base,
+                  flowbox-config,
+                  flowbox-utils,
+                  hspec,
+                  luna-build,
+                  luna-core,
+                  luna-initializer,
+                  luna-pass,
+                  process,
+                  raw-strings-qq
