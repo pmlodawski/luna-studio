@@ -1,0 +1,43 @@
+Name:           doc-markup
+Version:        0.1
+Stability:      Alpha
+Cabal-Version:  >= 1.8
+Author:         Flowbox <contact@flowbox.io>
+Maintainer:     Flowbox <contact@flowbox.io>
+Build-Type:     Simple
+
+Library
+  Hs-Source-Dirs: src
+  GHC-Options:    -Wall -O2
+  Extensions:     DoAndIfThenElse
+
+  Exposed-modules: Text.Doc.Markup
+
+  Other-modules: Text.Doc.Parser,
+                 Text.Doc.Lexer,
+                 Text.Doc.Utils
+
+  Build-Depends:  base,
+                  containers,
+                  parsec,
+                  blaze-html,
+                  blaze-markup,
+                  bytestring,
+                  data-default,
+                  lens
+
+Executable markup
+  Main-Is:        Main.hs
+  Hs-Source-Dirs: src
+
+  GHC-Options:    -Wall -O2
+
+  Extensions:     DoAndIfThenElse
+  Build-Depends:  base,
+                  containers,
+                  parsec,
+                  blaze-html,
+                  blaze-markup,
+                  bytestring,
+                  data-default,
+                  lens
