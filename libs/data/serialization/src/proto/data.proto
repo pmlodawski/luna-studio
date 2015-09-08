@@ -1,0 +1,201 @@
+///////////////////////////////////////////////////////////////////////////
+// Copyright (C) Flowbox, Inc / All Rights Reserved
+// Unauthorized copying of this file, via any medium is strictly prohibited
+// Proprietary and confidential
+// Flowbox Team <contact@flowbox.io>, 2014
+///////////////////////////////////////////////////////////////////////////
+
+package generated.proto.data;
+
+import "enums-type.proto";
+
+
+
+message SValue {
+    enum Type {
+        EmptyTuple  = 0;
+        Int         = 1;
+        Char        = 2;
+        Bool        = 3;
+        String      = 4;
+        Float       = 5;
+        Double      = 6;
+        Matrix      = 7;
+        View        = 8;
+        Point       = 9;
+        Tangent     = 10;
+        Vertex      = 11;
+        Curve       = 12;
+        Error       = 13;
+        ChannelData = 14;
+    }
+
+    required Type type = 1;
+    extensions 100 to max;
+}
+
+
+message ErrorData {
+    extend SValue {
+        optional ErrorData data = 114;
+    }
+    required string message = 1;
+}
+
+message EmptyTupleData {
+    extend SValue {
+        optional EmptyTupleData data = 100;
+    }
+}
+
+message IntData {
+    extend SValue {
+        optional IntData data = 101;
+    }
+
+    required int32 Svalue = 1;
+}
+
+message CharData {
+    extend SValue {
+        optional CharData data = 102;
+    }
+
+    required int32 Svalue = 1;
+}
+
+message BoolData {
+    extend SValue {
+        optional BoolData data = 103;
+    }
+
+    required bool Svalue = 1;
+}
+
+message StringData {
+    extend SValue {
+        optional StringData data = 104;
+    }
+
+    required string Svalue = 1;
+}
+
+message FloatData {
+    extend SValue {
+        optional FloatData data = 105;
+    }
+
+    required float Svalue = 1;
+}
+
+message DoubleData {
+    extend SValue {
+        optional DoubleData data = 106;
+    }
+
+    required double Svalue = 1;
+}
+
+message MatrixData {
+    enum Type {
+        INT     = 0;
+        FLOAT   = 1;
+        DOUBLE  = 2;
+        BOOL    = 3;
+    }
+
+    enum Tag {
+        BINARY  = 0;
+        POINTER = 1;
+    }
+
+    extend SValue {
+        optional MatrixData data = 107;
+    }
+
+    optional bytes  Svalue   = 1;
+    optional uint64 ptr     = 2;
+    required uint32 width   = 3;
+    required uint32 height  = 4;
+    required Type precision = 5;
+    required Tag  tag       = 6;
+}
+
+message ViewData {
+    extend SValue {
+        optional ViewData data = 108;
+    }
+
+    required MatrixData red   = 1;
+    required MatrixData green = 2;
+    required MatrixData blue  = 3;
+    optional MatrixData alpha = 4;
+}
+
+message ChannelDescription {
+	enum ChannelID {
+		Other = 5;
+		RGBA = 6;
+		Red = 1;
+		Green = 2;
+		Blue = 3;
+		Alpha = 4;
+	}
+
+	optional MatrixData.Type dataType = 1;
+	required ChannelID id = 2;
+	optional string name = 3;
+}
+
+message Channel {
+	required ChannelDescription description = 1;
+	required MatrixData data = 2;
+}
+
+message ChannelData {
+	extend SValue {
+		optional ChannelData data = 113;
+	}
+
+	repeated Channel channels = 1;
+}
+
+// ===   GUI Curve Model   ===
+
+message PointData {
+    extend SValue {
+        optional PointData data = 109;
+    }
+
+    optional double x = 1;
+    optional double y = 2;
+}
+
+message TangentData {
+    extend SValue {
+        optional TangentData data = 110;
+    }
+
+    optional double weight   = 1;
+    optional double angle    = 2;
+    optional bool   isLinear = 3;
+}
+
+message VertexData {
+    extend SValue {
+        optional VertexData data = 111;
+    }
+
+    optional PointData point      = 1;
+    optional TangentData handleIn  = 2;
+    optional TangentData handleOut = 3;
+}
+
+message CurveData {
+    extend SValue {
+        optional CurveData data = 112;
+    }
+
+    repeated VertexData vertices = 1;
+}
+
