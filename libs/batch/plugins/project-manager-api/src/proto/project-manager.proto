@@ -1,0 +1,829 @@
+///////////////////////////////////////////////////////////////////////////
+// Copyright (C) Flowbox, Inc / All Rights Reserved
+// Unauthorized copying of this file, via any medium is strictly prohibited
+// Proprietary and confidential
+// Flowbox Team <contact@flowbox.io>, 2014
+///////////////////////////////////////////////////////////////////////////
+
+package generated.proto.projectManager;
+
+import "dep/attributes.proto";
+import "dep/crumb.proto";
+import "dep/expr.proto";
+import "dep/focus.proto";
+import "dep/graph.proto";
+import "dep/graphview.proto";
+import "dep/library.proto";
+import "dep/module.proto";
+import "dep/name.proto";
+import "dep/nodedefault.proto";
+import "project.proto";
+import "dep/type.proto";
+import "dep/version.proto";
+
+
+
+message Project {
+    message List {
+        message Request { }
+        message Status {
+            required Request request = 1;
+            repeated generated.proto.project.Project projects = 2;
+        }
+    }
+    message Lookup {
+        message Request {
+            required int32 projectID = 1;
+        }
+        message Status {
+            required Request request = 1;
+            required generated.proto.project.Project project = 2;
+        }
+    }
+    message Create {
+        message Request {
+            optional string name = 1;
+            required string path = 2;
+            required generated.proto.dep.attributes.Attributes attributes = 3;
+        }
+        message Update {
+            required Request request = 1;
+            required generated.proto.project.Project project = 2;
+            required int32 updateNo  = 3;
+        }
+    }
+    message Open {
+        message Request {
+            required string path = 1;
+        }
+        message Update {
+            required Request request = 1;
+            required generated.proto.project.Project project = 2;
+            required int32 updateNo  = 3;
+        }
+    }
+    message Modify {
+        message Request {
+            required generated.proto.project.Project project = 1;
+        }
+        message Update {
+            required Request request = 1;
+            required int32 updateNo  = 2;
+        }
+    }
+    message Close {
+        message Request {
+            required int32 projectID = 1;
+        }
+        message Update {
+            required Request request = 1;
+            required int32 updateNo  = 2;
+        }
+    }
+    message Store {
+        message Request {
+            required int32 projectID = 1;
+            repeated int32 libIDs    = 2;
+            optional string path     = 3;
+        }
+        message Status {
+            required Request request = 1;
+        }
+    }
+    message Library {
+        message List {
+            message Request {
+                required int32 projectID = 1;
+            }
+            message Status {
+                required Request request = 1;
+                repeated generated.proto.dep.library.Library libraries = 2;
+            }
+        }
+        message Lookup {
+            message Request {
+                required int32 libraryID = 1;
+                required int32 projectID = 2;
+            }
+            message Status {
+                required Request request = 1;
+                required generated.proto.dep.library.Library library = 2;
+            }
+        }
+        message Create {
+            message Request {
+                required string name      = 1;
+                required generated.proto.dep.version.Version version = 4;
+                required string path      = 2;
+                required int32  projectID = 3;
+            }
+            message Update {
+                required Request request = 1;
+                required generated.proto.dep.library.Library library = 2;
+                required int32 updateNo  = 3;
+            }
+        }
+        message Modify {
+            message Request {
+                required generated.proto.dep.library.Library library = 1;
+                required int32 projectID = 2;
+            }
+            message Update {
+                required Request request = 1;
+                required int32 updateNo  = 2;
+            }
+        }
+        message Load {
+            message Request {
+                required string path      = 1;
+                required int32  projectID = 2;
+            }
+            message Update {
+                required Request request = 1;
+                required generated.proto.dep.library.Library library = 2;
+                required int32 updateNo  = 3;
+            }
+        }
+        message Unload {
+            message Request {
+                required int32 libraryID = 1;
+                required int32 projectID = 2;
+            }
+            message Update {
+                required Request request = 1;
+                required int32 updateNo  = 2;
+            }
+        }
+        message Store {
+            message Request {
+                required int32  libraryID = 1;
+                required int32  projectID = 2;
+                optional string path      = 3;
+            }
+            message Status {
+                required Request request = 1;
+            }
+        }
+
+        message AST {
+            message Get {
+                message Request {
+                    optional int32 maxDepth  = 1;
+                    required generated.proto.dep.crumb.Breadcrumbs bc = 2;
+                    required int32 libraryID = 3;
+                    required int32 projectID = 4;
+                    required int32 _astID    = 5;
+                }
+                message Status {
+                    required Request request = 1;
+                    required generated.proto.dep.focus.Focus focus = 2;
+                }
+            }
+            message Module {
+                message Add {
+                    message Request {
+                        required generated.proto.dep.module.Module module = 1;
+                        required generated.proto.dep.crumb.Breadcrumbs parentbc = 2;
+                        required int32 libraryID = 3;
+                        required int32 projectID = 4;
+                        required int32 _astID    = 5;
+                    }
+                    message Update {
+                        required Request request = 1;
+                        required generated.proto.dep.module.Module module = 2;
+                        required generated.proto.dep.crumb.Breadcrumbs bc = 3;
+                        required int32 updateNo  = 4;
+                    }
+                }
+                message Modify {
+                    message Cls {
+                        message Request {
+                            required generated.proto.dep.type.Type cls        = 1;
+                            required generated.proto.dep.crumb.Breadcrumbs bc = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                            required int32 _astID    = 5;
+                        }
+                        message Update {
+                            required Request request = 1;
+                            required int32 updateNo  = 2;
+                        }
+                    }
+                    message Imports {
+                        message Request {
+                            repeated generated.proto.dep.expr.Expr imports    = 1;
+                            required generated.proto.dep.crumb.Breadcrumbs bc = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                            required int32 _astID    = 5;
+                        }
+                        message Update {
+                            required Request request = 1;
+                            required int32 updateNo  = 2;
+                        }
+                    }
+                    message TypeAliases {
+                        message Request {
+                            repeated generated.proto.dep.expr.Expr typeAliases = 1;
+                            required generated.proto.dep.crumb.Breadcrumbs bc  = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                            required int32 _astID    = 5;
+                        }
+                        message Update {
+                            required Request request = 1;
+                            required int32 updateNo  = 2;
+                        }
+                    }
+                    message TypeDefs {
+                        message Request {
+                            repeated generated.proto.dep.expr.Expr typeDefs   = 1;
+                            required generated.proto.dep.crumb.Breadcrumbs bc = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                            required int32 _astID    = 5;
+                        }
+                        message Update {
+                            required Request request = 1;
+                            required int32 updateNo  = 2;
+                        }
+                    }
+                    message Fields {
+                        message Request {
+                            repeated generated.proto.dep.expr.Expr fields     = 1;
+                            required generated.proto.dep.crumb.Breadcrumbs bc = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                            required int32 _astID    = 5;
+                        }
+                        message Update {
+                            required Request request = 1;
+                            required int32 updateNo  = 2;
+                        }
+                    }
+                }
+            } // Project.Library.AST.Module
+            message Data {
+                message Add {
+                    message Request {
+                        required generated.proto.dep.expr.Expr data_ = 1;
+                        required generated.proto.dep.crumb.Breadcrumbs parentbc = 2;
+                        required int32 libraryID = 3;
+                        required int32 projectID = 4;
+                        required int32 _astID    = 5;
+                    }
+                    message Update {
+                        required Request request = 1;
+                        required generated.proto.dep.expr.Expr data_      = 2;
+                        required generated.proto.dep.crumb.Breadcrumbs bc = 3;
+                        required int32 updateNo  = 4;
+                    }
+                }
+                message Con_ {
+                    message Add {
+                        message Request {
+                            required generated.proto.dep.expr.Expr con        = 1;
+                            required generated.proto.dep.crumb.Breadcrumbs bc = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                            required int32 _astID    = 5;
+                        }
+                        message Update {
+                            required Request request = 1;
+                            required int32 conID     = 3;
+                            required int32 updateNo  = 2;
+                        }
+                    }
+                    message Delete {
+                        message Request {
+                            required int32 conID     = 1;
+                            required generated.proto.dep.crumb.Breadcrumbs bc = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                            required int32 _astID    = 5;
+                        }
+                        message Update {
+                            required Request request = 1;
+                            required int32 updateNo  = 2;
+                        }
+                    }
+                    message Modify {
+                        message Request {
+                            required generated.proto.dep.expr.Expr con        = 1;
+                            required int32 conID     = 2;
+                            required generated.proto.dep.crumb.Breadcrumbs bc = 3;
+                            required int32 libraryID = 4;
+                            required int32 projectID = 5;
+                            required int32 _astID    = 6;
+                        }
+                        message Update {
+                            required Request request = 1;
+                            required int32 updateNo  = 2;
+                        }
+                    }
+                    message Field {
+                        message Add {
+                            message Request {
+                                required generated.proto.dep.expr.Expr field      = 1;
+                                required int32 conID     = 2;
+                                required generated.proto.dep.crumb.Breadcrumbs bc = 3;
+                                required int32 libraryID = 4;
+                                required int32 projectID = 5;
+                                required int32 _astID    = 6;
+                            }
+                            message Update {
+                                required Request request = 1;
+                                required int32 fieldID   = 3;
+                                required int32 updateNo  = 2;
+                            }
+                        }
+                        message Delete {
+                            message Request {
+                                required int32 fieldID   = 1;
+                                required int32 conID     = 2;
+                                required generated.proto.dep.crumb.Breadcrumbs bc = 3;
+                                required int32 libraryID = 4;
+                                required int32 projectID = 5;
+                                required int32 _astID    = 6;
+                            }
+                            message Update {
+                                required Request request = 1;
+                                required int32 updateNo  = 2;
+                            }
+                        }
+                        message Modify {
+                            message Request {
+                                required generated.proto.dep.expr.Expr field = 1;
+                                required int32 fieldID   = 2;
+                                required int32 conID     = 3;
+                                required generated.proto.dep.crumb.Breadcrumbs bc = 4;
+                                required int32 libraryID = 5;
+                                required int32 projectID = 6;
+                                required int32 _astID    = 7;
+                            }
+                            message Update {
+                                required Request request = 1;
+                                required int32 updateNo  = 2;
+                            }
+                        }
+                        /*message Value {
+                            message Set {
+                                message Request {
+                                    required generated.proto.dep.expr.Expr value = 1;
+                                    required int32 fieldID   = 2;
+                                    required int32 conID     = 3;
+                                    required generated.proto.dep.crumb.Breadcrumbs bc = 4;
+                                    required int32 libraryID = 5;
+                                    required int32 projectID = 6;
+                                    required int32 _astID    = 7;
+                                }
+                                message Update {
+                                    required Request request = 1;
+                                    required int32 updateNo  = 2;
+                                }
+                            }
+                            message Unset {
+                                message Request {
+                                    required int32 fieldID   = 1;
+                                    required int32 conID     = 2;
+                                    required generated.proto.dep.crumb.Breadcrumbs bc = 3;
+                                    required int32 libraryID = 4;
+                                    required int32 projectID = 5;
+                                    required int32 _astID    = 6;
+                                }
+                                message Update {
+                                    required Request request = 1;
+                                    required int32 updateNo  = 2;
+                                }
+                            }
+                        }*/
+                    }
+                }
+                message Modify {
+                    message Cls {
+                        message Request {
+                            required generated.proto.dep.type.Type cls        = 1;
+                            required generated.proto.dep.crumb.Breadcrumbs bc = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                            required int32 _astID    = 5;
+                        }
+                        message Update {
+                            required Request request = 1;
+                            required int32 updateNo  = 2;
+                        }
+                    }
+                    message Cons {
+                        message Request {
+                            repeated generated.proto.dep.expr.Expr cons       = 1;
+                            required generated.proto.dep.crumb.Breadcrumbs bc = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                            required int32 _astID    = 5;
+                        }
+                        message Update {
+                            required Request request = 1;
+                            required int32 updateNo  = 2;
+                        }
+                    }
+                    message Classes {
+                        message Request {
+                            repeated generated.proto.dep.expr.Expr classes    = 1;
+                            required generated.proto.dep.crumb.Breadcrumbs bc = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                            required int32 _astID    = 5;
+                        }
+                        message Update {
+                            required Request request = 1;
+                            required int32 updateNo  = 2;
+                        }
+                    }
+                    message Methods {
+                        message Request {
+                            repeated generated.proto.dep.expr.Expr methods    = 1;
+                            required generated.proto.dep.crumb.Breadcrumbs bc = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                            required int32 _astID    = 5;
+                        }
+                        message Update {
+                            required Request request = 1;
+                            required int32 updateNo  = 2;
+                        }
+                    }
+
+                }
+            } // Project.Library.AST.Data
+            message Function {
+                message Add {
+                    message Request {
+                        required generated.proto.dep.expr.Expr function = 1;
+                        required generated.proto.dep.crumb.Breadcrumbs parentbc = 2;
+                        required int32 libraryID = 3;
+                        required int32 projectID = 4;
+                        required int32 _astID    = 5;
+                    }
+                    message Update {
+                        required Request request = 1;
+                        required generated.proto.dep.expr.Expr function   = 2;
+                        required generated.proto.dep.crumb.Breadcrumbs bc = 3;
+                        required int32 updateNo  = 4;
+                    }
+                }
+                message Modify {
+                    message Name {
+                        message Request {
+                            required generated.proto.dep.name.Name         name = 1;
+                            required generated.proto.dep.crumb.Breadcrumbs bc   = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                            required int32 _astID    = 5;
+                        }
+                        message Update {
+                            required Request request = 1;
+                            required int32 updateNo  = 2;
+                        }
+                    }
+                    message Path {
+                        message Request {
+                            repeated string path     = 1;
+                            required generated.proto.dep.crumb.Breadcrumbs bc = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                            required int32 _astID    = 5;
+                        }
+                        message Update {
+                            required Request request = 1;
+                            required int32 updateNo  = 2;
+                        }
+                    }
+                    message Inputs {
+                        message Request {
+                            repeated generated.proto.dep.expr.Expr inputs     = 1;
+                            required generated.proto.dep.crumb.Breadcrumbs bc = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                            required int32 _astID    = 5;
+                        }
+                        message Update {
+                            required Request request = 1;
+                            required int32 updateNo  = 2;
+                        }
+                    }
+                    message Output {
+                        message Request {
+                            required generated.proto.dep.type.Type output     = 1;
+                            required generated.proto.dep.crumb.Breadcrumbs bc = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                            required int32 _astID    = 5;
+                        }
+                        message Update {
+                            required Request request = 1;
+                            required int32 updateNo  = 2;
+                        }
+                    }
+                } // Project.Library.AST.Function.Modify
+                message Graph {
+                    message Get {
+                        message Request {
+                            required generated.proto.dep.crumb.Breadcrumbs bc = 1;
+                            required int32 libraryID = 2;
+                            required int32 projectID = 3;
+                            required int32 _astID    = 4;
+                        }
+                        message Status {
+                            required Request request = 1;
+                            required generated.proto.dep.graphview.GraphView graph = 2;
+                        }
+                    }
+                    message Lookup {
+                        message Request {
+                            required int32 nodeID    = 1;
+                            required generated.proto.dep.crumb.Breadcrumbs bc = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                            required int32 _astID    = 5;
+                        }
+                        message Status {
+                            required Request request = 1;
+                            required generated.proto.dep.graph.Node node = 2;
+                        }
+                    }
+                    message LookupMany {
+                        message Request {
+                            repeated int32 nodeIDs   = 1;
+                            required generated.proto.dep.crumb.Breadcrumbs bc = 2;
+                            required int32 libraryID = 3;
+                            required int32 projectID = 4;
+                            required int32 _astID    = 5;
+                        }
+                        message Status {
+                            required Request request = 1;
+                            repeated generated.proto.dep.graph.Node found    = 2;
+                            repeated int32                      notFound = 3;
+                        }
+                    }
+                    message Node {
+                        message Add {
+                            message Request {
+                                required generated.proto.dep.graph.Node node      = 1;
+                                required generated.proto.dep.crumb.Breadcrumbs bc = 2;
+                                required int32 libraryID = 3;
+                                required int32 projectID = 4;
+                                required int32 _astID    = 5;
+                            }
+                            message Update {
+                                required Request request = 1;
+                                required generated.proto.dep.graph.Node node = 2;
+                                required int32 updateNo  = 3;
+                            }
+                        }
+                        message Modify {
+                            message Request {
+                                required generated.proto.dep.graph.Node node      = 1;
+                                required generated.proto.dep.crumb.Breadcrumbs bc = 2;
+                                required int32 libraryID = 3;
+                                required int32 projectID = 4;
+                                required int32 _astID    = 5;
+                            }
+                            message Update {
+                                required Request request = 1;
+                                required generated.proto.dep.graph.Node node = 2;
+                                required int32 updateNo  = 3;
+                            }
+                        }
+                        message ModifyInPlace {
+                            message Request {
+                                required generated.proto.dep.graph.Node node      = 1;
+                                required generated.proto.dep.crumb.Breadcrumbs bc = 2;
+                                required int32 libraryID = 3;
+                                required int32 projectID = 4;
+                                required int32 _astID    = 5;
+                            }
+                            message Update {
+                                required Request request = 1;
+                                required int32 updateNo  = 2;
+                            }
+                        }
+                        message Remove {
+                            message Request {
+                                repeated int32 nodeIDs   = 1;
+                                required generated.proto.dep.crumb.Breadcrumbs bc = 2;
+                                required int32 libraryID = 3;
+                                required int32 projectID = 4;
+                                required int32 _astID    = 5;
+                            }
+                            message Update {
+                                required Request request = 1;
+                                required int32 updateNo  = 2;
+                            }
+                        }
+                        message Default {
+                            message Get {
+                                message Request {
+                                    required int32 nodeID    = 1;
+                                    required generated.proto.dep.crumb.Breadcrumbs bc = 2;
+                                    required int32 libraryID = 3;
+                                    required int32 projectID = 4;
+                                    required int32 _astID    = 5;
+                                }
+                                message Status {
+                                    required Request request = 1;
+                                    required generated.proto.dep.nodedefault.DefaultsMap defaultsMap = 2;
+                                }
+                            }
+                            message Set {
+                                message Request {
+                                    repeated int32 inPort    = 1;
+                                    required generated.proto.dep.graph.NodeExpr value = 2;
+                                    required int32 nodeID    = 3;
+                                    required generated.proto.dep.crumb.Breadcrumbs bc = 4;
+                                    required int32 libraryID = 5;
+                                    required int32 projectID = 6;
+                                    required int32 _astID    = 7;
+                                }
+                                message Update {
+                                    required Request request = 1;
+                                    required int32 updateNo  = 2;
+                                }
+                            }
+                            message Remove {
+                                message Request {
+                                    repeated int32 inPort    = 1;
+                                    required int32 nodeID    = 2;
+                                    required generated.proto.dep.crumb.Breadcrumbs bc = 3;
+                                    required int32 libraryID = 4;
+                                    required int32 projectID = 5;
+                                    required int32 _astID    = 6;
+                                }
+                                message Update {
+                                    required Request request = 1;
+                                    required int32 updateNo  = 2;
+                                }
+                            }
+                        } // Project.Library.AST.Function.Graph.Node.Default
+                        message Properties {
+                            message Get {
+                                message Request   {
+                                    required int32 nodeID    = 1;
+                                    required generated.proto.dep.crumb.Breadcrumbs bc = 2;
+                                    required int32 libraryID = 3;
+                                    required int32 projectID = 4;
+                                    required int32 _astID    = 5;
+                                }
+                                message Status {
+                                    required Request request = 1;
+                                    required generated.proto.dep.attributes.Properties properties = 2;
+                                }
+                            }
+                            message Set {
+                                message Request   {
+                                    required generated.proto.dep.attributes.Properties properties = 1;
+                                    required int32 nodeID    = 2;
+                                    required generated.proto.dep.crumb.Breadcrumbs bc = 3;
+                                    required int32 libraryID = 4;
+                                    required int32 projectID = 5;
+                                    required int32 _astID    = 6;
+                                }
+                                message Update {
+                                    required Request request = 1;
+                                    required int32 updateNo  = 2;
+                                }
+                            }
+                        } // Project.Library.AST.Function.Graph.Node.Properties
+                    } // Project.Library.AST.Function.Graph.Node
+                    message Connect {
+                        message Request {
+                            required int32 srcNodeID = 1;
+                            repeated int32 srcPort   = 2;
+                            required int32 dstNodeID = 3;
+                            repeated int32 dstPort   = 4;
+                            required generated.proto.dep.crumb.Breadcrumbs bc = 5;
+                            required int32 libraryID = 6;
+                            required int32 projectID = 7;
+                            required int32 _astID    = 8;
+                        }
+                        message Update {
+                            required Request request = 1;
+                            required int32 updateNo  = 2;
+                        }
+                    } // Project.Library.AST.Function.Graph.Connect
+                    message Disconnect {
+                        message Request {
+                            required int32 srcNodeID = 1;
+                            repeated int32 srcPort   = 2;
+                            required int32 dstNodeID = 3;
+                            repeated int32 dstPort   = 4;
+                            required generated.proto.dep.crumb.Breadcrumbs bc = 5;
+                            required int32 libraryID = 6;
+                            required int32 projectID = 7;
+                            required int32 _astID    = 8;
+                        }
+                        message Update {
+                            required Request request = 1;
+                            required int32 updateNo  = 2;
+                        }
+                    } // Project.Library.AST.Function.Graph.Disconnect
+                } // Project.Library.AST.Function.Graph
+            } // Project.Library.AST.Function
+            message Remove {
+                message Request {
+                    required generated.proto.dep.crumb.Breadcrumbs bc = 1;
+                    required int32 libraryID = 2;
+                    required int32 projectID = 3;
+                    required int32 _astID    = 4;
+                }
+                message Update {
+                    required Request request = 1;
+                    required int32 updateNo  = 2;
+                }
+            } // Project.Library.AST.Remove
+            message Resolve {
+                message Request {
+                    required string name = 1;
+                    required generated.proto.dep.crumb.Breadcrumbs parentbc = 2;
+                    required int32 libraryID = 3;
+                    required int32 projectID = 4;
+                    required int32 _astID    = 5;
+                }
+                message Status {
+                    required Request request = 1;
+                    repeated generated.proto.dep.crumb.ASTPtr astptr = 2;
+                }
+            } // Project.Library.AST.Resolve
+            message Code {
+                message Get {
+                    message Request {
+                        required generated.proto.dep.crumb.Breadcrumbs bc = 1;
+                        required int32 libraryID = 2;
+                        required int32 projectID = 3;
+                        required int32 _astID    = 4;
+                    }
+                    message Status {
+                        required Request request = 1;
+                        required string  code    = 2;
+                    }
+                }
+                message Set {
+                    message Request {
+                        required string code = 1;
+                        required generated.proto.dep.crumb.Breadcrumbs bc = 2;
+                        required int32 libraryID = 3;
+                        required int32 projectID = 4;
+                        required int32 _astID    = 5;
+                    }
+                    message Update {
+                        required Request request = 1;
+                    }
+                }
+            } // Project.Library.AST.Code
+            message Properties {
+                message Get {
+                    message Request   {
+                        required int32 nodeID    = 1;
+                        required int32 libraryID = 2;
+                        required int32 projectID = 3;
+                    }
+                    message Status {
+                        required Request request = 1;
+                        required generated.proto.dep.attributes.Properties properties = 2;
+                    }
+                }
+                message Set {
+                    message Request   {
+                        required generated.proto.dep.attributes.Properties properties = 1;
+                        required int32 nodeID    = 2;
+                        required int32 libraryID = 3;
+                        required int32 projectID = 4;
+                    }
+                    message Update {
+                        required Request request = 1;
+                        required int32 updateNo =  2;
+                    }
+                }
+            } // Project.Library.AST.Properties
+        } // Project.Library.AST
+    } // Project.Library
+} // Project
+
+message ProjectManager {
+    message Ping {
+        message Request {}
+        message Status {
+            required Request request = 1;
+        }
+    }
+
+    message Sync {
+        message Get {
+            message Request { }
+            message Status {
+                required Request request = 1;
+                required string data     = 2;
+                required int32 updateNo  = 3;
+            }
+        }
+    }
+}
