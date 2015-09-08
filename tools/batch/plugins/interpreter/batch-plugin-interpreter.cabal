@@ -1,0 +1,139 @@
+---------------------------------------------------
+-- This is a generated cabal configuration file. --
+-- DO NOT EDIT!                                  --
+-- Use gencabal instead.                         --
+---------------------------------------------------
+
+Name:               batch-plugin-interpreter
+Version:            0.1
+Cabal-Version:      >= 1.8
+--License-file:       LICENSE
+Author:             Flowbox <contact@flowbox.io>
+Maintainer:         Flowbox <contact@flowbox.io>
+Build-Type:         Simple
+
+Flag Debug
+    Description:    Enable debug support
+    Default:        False
+
+
+Library
+    Hs-Source-Dirs: dist/gen
+                    src
+    Other-Modules:  Paths_batch_plugin_interpreter
+    GHC-Options:    -Wall -O2 -threaded -fPIC
+    Extensions:     NoImplicitPrelude
+
+    Exposed-modules: 
+        Main,
+        Luna.Interpreter.Cmd,
+        Luna.Interpreter.Config,
+        Luna.Interpreter.Version,
+        Luna.Interpreter.Proto.CallPoint,
+        Luna.Interpreter.Proto.CallPointPath,
+        Luna.Interpreter.Proto.CompileError,
+        Luna.Interpreter.Proto.DefPoint,
+        Luna.Interpreter.Proto.ProfileInfo,
+        Luna.Interpreter.Proto.Status,
+        Luna.Interpreter.RPC.QueueInfo,
+        Luna.Interpreter.RPC.Topic,
+        Luna.Interpreter.RPC.Handler.Abort,
+        Luna.Interpreter.RPC.Handler.ASTWatch,
+        Luna.Interpreter.RPC.Handler.Cache,
+        Luna.Interpreter.RPC.Handler.Handler,
+        Luna.Interpreter.RPC.Handler.Interpreter,
+        Luna.Interpreter.RPC.Handler.Lift,
+        Luna.Interpreter.RPC.Handler.Preprocess,
+        Luna.Interpreter.RPC.Handler.Renderer,
+        Luna.Interpreter.RPC.Handler.Sync,
+        Luna.Interpreter.RPC.Handler.Value,
+        Luna.Interpreter.RPC.Handler.Var,
+        Luna.Renderer.Proto.FrameCompileError,
+        Luna.Renderer.Proto.FrameRange
+                     
+        
+
+    Build-Depends:  base,
+                    batch-lib-project-manager,
+                    batch-lib-project-manager-api,
+                    bytestring,
+                    containers,
+                    either,
+                    errors,
+                    exceptions,
+                    flowbox-batch,
+                    flowbox-batch-protobuf,
+                    flowbox-bus,
+                    flowbox-config,
+                    luna-core,
+                    luna-distribution-old,
+                    luna-initializer,
+                    luna-interpreter,
+                    luna-pass-old,
+                    luna-protobuf-old,
+                    luna-protobuf-old-gen,
+                    flowbox-utils,
+                    flowbox-serialization,
+                    MissingH,
+                    mmorph,
+                    multiset,
+                    mtl,
+                    optparse-applicative,
+                    pipes,
+                    pipes-concurrency >= 2.0.3,
+                    pipes-safe,
+                    protocol-buffers,
+                    protocol-buffers-descriptor,
+                    transformers,
+                    zeromq4-haskell >= 0.4
+
+  if !os(windows)
+    Build-Depends:  ekg
+
+
+Executable interpreter
+    Hs-Source-Dirs: dist/gen
+                    src
+    Other-Modules:  Paths_batch_plugin_interpreter
+    Main-Is:        Main.hs
+
+    GHC-Options:    -Wall -O2 -threaded -with-rtsopts=-T
+    GHC-Prof-Options: -fprof-auto
+                      "-with-rtsopts=-N -p -s -h -i0.1 -xc"
+    Extensions:     NoImplicitPrelude
+
+    Build-Depends:  base,
+                    batch-lib-project-manager,
+                    batch-lib-project-manager-api,
+                    bytestring,
+                    containers,
+                    either,
+                    errors,
+                    exceptions,
+                    flowbox-batch,
+                    flowbox-batch-protobuf,
+                    flowbox-bus,
+                    flowbox-config,
+                    luna-core,
+                    luna-distribution-old,
+                    luna-initializer,
+                    luna-interpreter,
+                    luna-pass-old,
+                    luna-protobuf-old,
+                    luna-protobuf-old-gen,
+                    flowbox-utils,
+                    flowbox-serialization,
+                    MissingH,
+                    mmorph,
+                    multiset,
+                    mtl,
+                    optparse-applicative,
+                    pipes,
+                    pipes-concurrency,
+                    pipes-safe,
+                    protocol-buffers,
+                    transformers,
+                    zeromq4-haskell >= 0.4
+
+  if !os(windows)
+    Build-Depends:  ekg
