@@ -1,0 +1,62 @@
+---------------------------------------------------
+-- This is a generated cabal configuration file. --
+-- DO NOT EDIT!                                  --
+-- Use gencabal instead.                         --
+---------------------------------------------------
+
+Name:           luna-protobuf
+Version:        0.1
+Cabal-Version:  >= 1.8
+--License-file:   LICENSE
+Author:         Flowbox <contact@flowbox.io>
+Maintainer:     Flowbox <contact@flowbox.io>
+Build-Type:     Simple
+
+Flag Debug
+  Description: Enable debug support
+  Default:     False
+
+
+Library
+  Hs-Source-Dirs: dist/gen,
+                  src
+  Other-Modules:  Paths_luna_protobuf
+  if flag(debug)
+    GHC-Options:  -csacc
+  GHC-Options:    -Wall -O2 -threaded
+                  -- -F -pgmF ./util/preprocessors/imports.py
+  Extensions:     DoAndIfThenElse,
+                  NoImplicitPrelude
+
+  Exposed-modules: 
+        ,
+                   
+        Luna.Data.Serialize.Proto.Library,
+        Luna.Data.Serialize.Proto.Conversion.Attributes,
+        Luna.Data.Serialize.Proto.Conversion.Crumb,
+        Luna.Data.Serialize.Proto.Conversion.Expr,
+        Luna.Data.Serialize.Proto.Conversion.Focus,
+        Luna.Data.Serialize.Proto.Conversion.Graph,
+        Luna.Data.Serialize.Proto.Conversion.GraphView,
+        Luna.Data.Serialize.Proto.Conversion.Library,
+        Luna.Data.Serialize.Proto.Conversion.Lit,
+        Luna.Data.Serialize.Proto.Conversion.Module,
+        Luna.Data.Serialize.Proto.Conversion.Name,
+        Luna.Data.Serialize.Proto.Conversion.NodeDefault,
+        Luna.Data.Serialize.Proto.Conversion.Pat,
+        Luna.Data.Serialize.Proto.Conversion.Type,
+        Luna.Data.Serialize.Proto.Conversion.Version,
+        Luna.Lib.Env,
+        Luna.Lib.Loader,
+        Luna.Lib.Path
+
+  Build-Depends:  base,
+                  bytestring,
+                  containers,
+                  filepath,
+                  flowbox-utils,
+                  luna-core,
+                  luna-distribution,
+                  protocol-buffers,
+                  protocol-buffers-descriptor
+
