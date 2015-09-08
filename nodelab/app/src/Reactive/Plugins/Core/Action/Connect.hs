@@ -38,7 +38,7 @@ data ActionType = StartDrag PortRef
                 | Moving
                 | Dragging Angle
                 | StopDrag
-                | ConnectPort PortRef
+                | ConnectPorts PortRef PortRef
                 deriving (Eq, Show)
 
 data Action = DragAction { _actionType :: ActionType
@@ -69,9 +69,12 @@ toAction (Mouse (Mouse.Event tpe pos button keyMods _)) state = case button of
                             portMay       = getPortRefUnderCursor state
                             dragAllowed   = isJust   portMay
                             draggedPort   = fromJust portMay
-        Mouse.Released -> case getPortRefUnderCursor state of
-                            Just draggedPort -> Just $ DragAction (ConnectPort draggedPort) pos
-                            Nothing          -> Just $ DragAction StopDrag pos
+        Mouse.Released -> case (sourcePortRef, dstPortRef) of
+                            (Just source, Just destination) -> Just $ DragAction (ConnectPorts source destination) pos
+                            (_,           _)                -> Just $ DragAction StopDrag pos
+                        where
+                            sourcePortRef = state ^? Global.connect . connecting . _Just . sourcePort
+                            dstPortRef    = getPortRefUnderCursor state
         Mouse.Moved    -> Just $ DragAction Moving pos
         _              -> Nothing
     _                  -> Nothing
@@ -100,7 +103,7 @@ instance ActionStateUpdater Action where
                                         -> Just $ Connecting source Nothing newHistory where
                         newHistory       = oldHistory & dragCurrentPos .~ point
                     Nothing             -> Nothing
-                ConnectPort destination -> Nothing
+                ConnectPorts _ _        -> Nothing
                 -- case oldConnecting of
                 --     Just (Connecting source _ oldHistory)
                 --                         -> Just $ Connecting source (Just destination) newHistory where
@@ -109,13 +112,13 @@ instance ActionStateUpdater Action where
                 StopDrag                -> Nothing
         newGraph                         = case newActionCandidate of
             DragAction tpe point        -> case tpe of
-                ConnectPort destination -> case oldConnecting of
+                ConnectPorts src dst    -> case oldConnecting of
                     Just (Connecting source destinationMay (DragHistory startPos currentPos))
                                         -> appGraph where
                         newNodes         = updateSourcePortInNodes angle source oldNodes
                         oldNodes         = Graph.getNodes oldGraph
                         updSourceGraph   = Graph.updateNodes newNodes oldGraph
-                        appGraph         = Graph.addApplication destination source updSourceGraph
+                        appGraph         = Graph.addApplication dst source updSourceGraph
                     _                   -> oldGraph
                 _                       -> case newConnecting of
                     Just (Connecting source destinationMay (DragHistory startPos currentPos))
@@ -138,9 +141,9 @@ instance ActionUIUpdater Action where
             Moving                   -> return ()
             Dragging angle           -> forM_ maybeConnecting $ displayDragLine angle ptWs
             StopDrag                 -> UI.removeCurrentConnection
-            ConnectPort dstPort      -> UI.removeCurrentConnection
+            ConnectPorts src dst     -> UI.removeCurrentConnection
                                      >> displayConnections nodes connections
-                                     >> sendMessage (connectNodes workspace srcPort dstPort)
+                                     >> sendMessage (connectNodes workspace src dst)
                                      >> putStrLn (display $ state ^. Global.graph . Graph.nodeRefs) -- debug
                                      >> putStrLn (display $ state ^. Global.graph . Graph.connections) -- debug
                                      >> graphToViz (state ^. Global.graph . Graph.graphMeta)
@@ -150,5 +153,4 @@ instance ActionUIUpdater Action where
                 ptWs                  = screenToWorkspace camera pt
                 camera                = Global.toCamera state
                 maybeConnecting       = state ^. Global.connect . connecting
-                srcPort               = (fromJust maybeConnecting) ^. sourcePort
                 workspace             = state ^. Global.workspace
