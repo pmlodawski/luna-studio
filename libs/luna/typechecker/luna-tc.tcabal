@@ -1,0 +1,109 @@
+---------------------------------------------------
+-- This is a generated cabal configuration file. --
+-- DO NOT EDIT!                                  --
+-- Use gencabal instead.                         --
+---------------------------------------------------
+
+Name:           luna-tc
+Version:        0.1
+Cabal-Version:  >= 1.8
+--License-file:   LICENSE
+Author:         Flowbox <contact@flowbox.io>
+Maintainer:     Flowbox <contact@flowbox.io>
+Build-Type:     Simple
+
+Flag Debug
+  Description: Enable debug support
+  Default:     False
+
+
+Library
+    Hs-Source-Dirs: src
+    GHC-Options:    -Wall -O2 -threaded
+                    -- -F -pgmF ./util/preprocessors/imports.py
+    Extensions:   ConstraintKinds
+                  DataKinds
+                  DefaultSignatures
+                  DeriveDataTypeable
+                  DeriveFoldable
+                  DeriveFunctor
+                  DeriveGeneric
+                  DeriveTraversable
+                  DoAndIfThenElse
+                  EmptyDataDecls
+                  FlexibleContexts
+                  FlexibleInstances
+                  GeneralizedNewtypeDeriving
+                  InstanceSigs
+                  LambdaCase
+                  MultiParamTypeClasses
+                  NoImplicitPrelude
+                  OverloadedStrings
+                  StandaloneDeriving
+                  TemplateHaskell
+                  TupleSections
+                  TypeOperators
+                  ViewPatterns
+
+    Exposed-modules: `findmodules('src', '.*\.hs', exclude='System.Logging')`
+
+    Build-Depends:  base,
+                    ghc-prim,
+                    flowbox-utils,
+                    containers >= 0.5.6.2,
+                    lens,
+                    process,
+                    vector,
+                    graphviz >= 2999.17.0.2.2,
+                    mtl,
+                    text,
+                    convert,
+                    errors,
+                    constraints
+
+
+Executable tc-test
+    Main-Is:        Main.hs
+    Hs-Source-Dirs: test
+
+    GHC-Options:    -Wall -O2
+
+    Extensions:   ConstraintKinds
+                  DataKinds
+                  DefaultSignatures
+                  DeriveDataTypeable
+                  DeriveFoldable
+                  DeriveFunctor
+                  DeriveGeneric
+                  DeriveTraversable
+                  DoAndIfThenElse
+                  EmptyDataDecls
+                  FlexibleContexts
+                  FlexibleInstances
+                  GeneralizedNewtypeDeriving
+                  InstanceSigs
+                  LambdaCase
+                  MultiParamTypeClasses
+                  NoImplicitPrelude
+                  OverloadedStrings
+                  StandaloneDeriving
+                  TemplateHaskell
+                  TupleSections
+                  TypeOperators
+                  ViewPatterns
+
+    Build-Depends:  base,
+                    ghc-prim,
+                    flowbox-utils,
+                    containers >= 0.5.6.2,
+                    lens,
+                    process,
+                    vector,
+                    graphviz >= 2999.17.0.2.2,
+                    mtl,
+                    text,
+                    convert,
+                    luna-tc,
+                    errors,
+                    constraints,
+                    transformers
