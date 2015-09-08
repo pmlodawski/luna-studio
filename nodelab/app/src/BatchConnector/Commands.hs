@@ -94,11 +94,11 @@ getGraph proj lib crumbs = WebMessage "project.library.ast.function.graph.get.re
                             (proj ^. Project.id)
                             1
 
-getCode :: Project -> Library -> Breadcrumbs -> WebMessage
-getCode proj lib crumbs = WebMessage "project.library.ast.code.get.request" $ messagePut body where
-    body = GetCode.Request (encode crumbs)
-                           (lib  ^. Library.id)
-                           (proj ^. Project.id)
+getCode :: Workspace -> WebMessage
+getCode workspace = WebMessage "project.library.ast.code.get.request" $ messagePut body where
+    body = GetCode.Request (encode $ workspace ^. breadcrumbs)
+                           (workspace ^. library . Library.id)
+                           (workspace ^. project . Project.id)
                            1
 
 addNode :: Workspace -> Node -> WebMessage

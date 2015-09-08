@@ -22,6 +22,8 @@ processMessage (WebMessage topic bytes) = rescueParseError topic $ case topic of
     "interpreter.value.update"                            -> uncurry ValueUpdate <$> parseValueUpdate bytes
     "project.library.ast.function.graph.node.add.update"  -> NodeAdded <$> parseAddNodeResponse bytes
     "project.library.ast.function.graph.node.add.fakeres" -> NodeAdded <$> parseAddNodeFakeResponse bytes
+    "project.library.ast.code.get.status"                 -> CodeUpdate <$> parseGetCodeResponse bytes
+    "interpreter.run.update"                              -> Just $ RunFinished
     _                                                     -> Just $ UnknownEvent topic
 
 rescueParseError :: String -> Maybe Batch.Event -> Batch.Event

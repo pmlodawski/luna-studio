@@ -35,6 +35,9 @@ import qualified Generated.Proto.Data.SValue               as SValue
 import qualified Generated.Proto.Data.SValue.Type          as SValueType
 import qualified Generated.Proto.Data.IntData              as IntData
 import qualified Generated.Proto.Data.FloatData            as FloatData
+import qualified Generated.Proto.Data.StringData           as StringData
+import qualified Generated.Proto.Data.CharData             as CharData
+import qualified Generated.Proto.Data.BoolData             as BoolData
 
 import           Generated.Proto.Dep.Attributes.Attributes
 import           Generated.Proto.Dep.Version.Version
@@ -118,9 +121,25 @@ instance ProtoSerializable SValue.SValue Value where
             floatData <- maybeGetExt FloatData.data' msg
             let value =  FloatData.svalue floatData
             return $ FloatValue value
-        _              -> Nothing
+        SValueType.String -> do
+            stringData <- maybeGetExt StringData.data' msg
+            let value  =  StringData.svalue stringData
+            return $ StringValue $ uToString value
+        SValueType.Char -> do
+            charData  <- maybeGetExt CharData.data' msg
+            let value =  CharData.svalue charData
+            return $ CharValue $ chr $ fromIntegral value
+        SValueType.Bool -> do
+            boolData <- maybeGetExt BoolData.data' msg
+            let value = BoolData.svalue boolData
+            return $ BoolValue value
+        _ -> Nothing
+
     encode value = case value of
-        FloatValue val -> makeSValue SValueType.Float FloatData.data' $ Just $ FloatData.FloatData $ val
-        IntValue val   -> makeSValue SValueType.Int IntData.data' $ Just $ IntData.IntData $ encode val
+        FloatValue val  -> makeSValue SValueType.Float FloatData.data' $ Just $ FloatData.FloatData $ val
+        IntValue val    -> makeSValue SValueType.Int IntData.data' $ Just $ IntData.IntData $ encode val
+        StringValue val -> makeSValue SValueType.String StringData.data' $ Just $ StringData.StringData $ uFromString val
+        CharValue val   -> makeSValue SValueType.Char CharData.data' $ Just $ CharData.CharData $ fromIntegral $ ord val
+        BoolValue val   -> makeSValue SValueType.Bool BoolData.data' $ Just $ BoolData.BoolData val
         where
             makeSValue tpe key ext = putExt key ext $ SValue.SValue tpe $ ExtField Map.empty

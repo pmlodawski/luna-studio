@@ -7,7 +7,7 @@ import           Batch.Library
 import           Batch.Breadcrumbs
 import           Batch.Value
 import           Object.Node
-import qualified Generated.Proto.Interpreter.Interpreter.Value.Update as Value
+import           Data.Text.Lazy    (Text)
 
 data Event = ProjectsList [Project]
            | ProjectCreated Project
@@ -16,6 +16,8 @@ data Event = ProjectsList [Project]
            | WorkspaceCreated Breadcrumbs
            | NodeAdded Node
            | ValueUpdate Int Value
+           | CodeUpdate Text
+           | RunFinished
            | UnknownEvent String
            | ParseError String
            deriving (Eq, Show)

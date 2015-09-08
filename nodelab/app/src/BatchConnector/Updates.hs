@@ -3,6 +3,7 @@ module BatchConnector.Updates where
 import           Utils.PreludePlus
 import           Data.ByteString.Lazy
 import qualified Data.Sequence              as Seq
+import           Data.Text.Lazy             (Text)
 import           Text.ProtocolBuffers
 import           Text.ProtocolBuffers.Basic (uToString)
 
@@ -57,8 +58,8 @@ parseFunctionCreateResponse bytes = (parseMessage bytes) >>= getBreadcrumbs wher
 parseGraphViewResponse :: ByteString -> Maybe GraphView.GraphView
 parseGraphViewResponse bytes = GraphViewResponse.graph <$> (parseMessage bytes)
 
-parseGetCodeResponse :: ByteString -> Maybe String
-parseGetCodeResponse bytes = (uToString . GetCode.code) <$> (parseMessage bytes)
+parseGetCodeResponse :: ByteString -> Maybe Text
+parseGetCodeResponse bytes = (parseMessage bytes) >>= (decode . GetCode.code)
 
 parseValueUpdate :: ByteString -> Maybe (Int, Value)
 parseValueUpdate bytes = do
