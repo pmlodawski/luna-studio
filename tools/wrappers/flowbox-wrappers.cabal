@@ -1,0 +1,67 @@
+---------------------------------------------------
+-- This is a generated cabal configuration file. --
+-- DO NOT EDIT!                                  --
+-- Use gencabal instead.                         --
+---------------------------------------------------
+
+name:               flowbox-wrappers
+version:            0.1.0.0
+build-type:         Simple
+cabal-version:      >=1.8
+
+
+executable cabal
+  hs-source-dirs:   src
+  main-is:          Cabal.hs
+  ghc-options:      -O2 -Wall -main-is Cabal
+  build-depends:    base,
+                    flowbox-config,
+                    flowbox-utils,
+                    process,
+                    system-filepath,
+                    text
+
+executable ghc
+  hs-source-dirs:   src
+  main-is:          Ghc.hs
+  ghc-options:      -O2 -Wall -main-is Ghc
+  build-depends:    base,
+                    flowbox-config,
+                    flowbox-utils,
+                    process,
+                    system-filepath,
+                    text
+
+executable ghci
+  hs-source-dirs:   src
+  main-is:          Ghci.hs
+  ghc-options:      -O2 -Wall -main-is Ghci
+  build-depends:    base,
+                    flowbox-config,
+                    flowbox-utils,
+                    process,
+                    system-filepath,
+                    text
+
+executable ghc-pkg
+  hs-source-dirs:   src
+  main-is:          GhcPkg.hs
+  ghc-options:      -O2 -Wall -main-is GhcPkg
+  build-depends:    base,
+                    flowbox-config,
+                    flowbox-utils,
+                    MissingH,
+                    process,
+                    system-filepath,
+                    text
+
+executable hsc2hs
+  hs-source-dirs:   src
+  main-is:          Hsc2Hs.hs
+  ghc-options:      -O2 -Wall -main-is Hsc2Hs
+  build-depends:    base,
+                    flowbox-config,
+                    flowbox-utils,
+                    process,
+                    system-filepath,
+                    text
