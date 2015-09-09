@@ -16,11 +16,12 @@ import qualified Flowbox.Bus.Data.Topic        as Topic
 import           Flowbox.Prelude
 import qualified Flowbox.Bus.RPC.RPC           as RPC
 import           Flowbox.Bus.RPC.Types
+import qualified Flowbox.Text.ProtocolBuffers  as Proto
 
 
 
 
-type ID = Int
+type ID = Proto.Int32
 
 type RequestID = ID
 type ClientID  = ID

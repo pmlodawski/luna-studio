@@ -18,9 +18,8 @@ import           Control.Monad.State
 import           Data.ByteString                 (ByteString)
 import           System.ZMQ4.Monadic             (ZMQ)
 import qualified System.ZMQ4.Monadic             as ZMQ
-import qualified Text.ProtocolBuffers.Extensions as Extensions
 
-import           Flowbox.Bus.Control.Handler.ID (Request (..))
+--import           Flowbox.Bus.Control.Handler.ID (Request (..))
 import           Flowbox.Bus.Data.Flag          (Flag)
 import           Flowbox.Bus.Data.Message       (Message)
 import qualified Flowbox.Bus.Data.Message       as Message
@@ -34,9 +33,14 @@ import qualified Flowbox.Bus.Env                as Env
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.Text.ProtocolBuffers   as Proto
 import qualified Flowbox.ZMQ.RPC.Client         as Client
-import qualified Flowbox.ZMQ.RPC.Types          as FbZMQ
+--import qualified Flowbox.ZMQ.RPC.Types          as FbZMQ
+import qualified Generated.Proto.Bus.ID.Create.Args   as ID_Create
+import qualified Generated.Proto.Bus.ID.Create.Result as ID_Create
+import qualified Text.ProtocolBuffers.Extensions as Extensions
+import           Generated.Proto.Bus.Request          (Request (Request))
+import qualified Generated.Proto.Bus.Request.Method   as Method
+import qualified Flowbox.Text.ProtocolBuffers         as Proto
 
 
 
@@ -55,9 +59,13 @@ requestClientID :: EP.EndPoint -> EitherT Error (ZMQ z) Message.ClientID
 requestClientID addr = do
     socket <- lift $ ZMQ.socket ZMQ.Req
     lift $ ZMQ.connect socket addr
-    response <- Client.query socket IDCreate
+    let request = Extensions.putExt ID_Create.req (Just ID_Create.Args)
+                $ Request Method.ID_Create Proto.mkExtField
+    response <- Client.query socket request ID_Create.rsp
+    --response <- Client.query socket IDCreate
     lift $ ZMQ.close socket
-    return $ FbZMQ.id response
+    return $ ID_Create.id response
+    --return $ FbZMQ.id response
 
 
 runBus :: MonadIO m => EP.BusEndPoints -> Bus a -> m (Either Error a)

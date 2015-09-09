@@ -11,7 +11,6 @@
 
 module Flowbox.Bus.Data.Exception where
 
-import           Flowbox.Data.Convert
 import           Flowbox.Prelude
 
 

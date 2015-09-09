@@ -15,9 +15,12 @@ import qualified Data.IORef  as IORef
 
 import           Flowbox.Bus.Control.BusCtx (BusCtx)
 import qualified Flowbox.Bus.Control.BusCtx as BusCtx
+import           Flowbox.Data.Convert
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 import           Flowbox.ZMQ.RPC.RPC        (RPC)
+import qualified Generated.Proto.Bus.ID.Create.Args   as ID_Create
+import qualified Generated.Proto.Bus.ID.Create.Result as ID_Create
 
 
 logger :: LoggerIO
@@ -25,16 +28,24 @@ logger = getLoggerIO $moduleName
 
 -------- public api -------------------------------------------------
 
-data Request = IDCreate
-             deriving (Generic, Show, Typeable)
-
-instance Binary Request
-
-
-create :: BusCtx -> Request -> RPC Int
-create ctx IDCreate = do
+create :: BusCtx -> ID_Create.Args -> RPC ID_Create.Result
+create ctx ID_Create.Args = do
     logger info "called ID::create"
     let senderID = BusCtx.nextSenderID ctx
     liftIO $ IORef.atomicModifyIORef senderID
                                      (\i -> let newID = i + 1
-                                            in (newID, newID))
+                                            in (newID, ID_Create.Result $ encodeP newID))
+
+--data Request = IDCreate
+--             deriving (Generic, Show, Typeable)
+
+--instance Binary Request
+
+
+--create :: BusCtx -> Request -> RPC Int
+--create ctx IDCreate = do
+--    logger info "called ID::create"
+--    let senderID = BusCtx.nextSenderID ctx
+--    liftIO $ IORef.atomicModifyIORef senderID
+--                                     (\i -> let newID = i + 1
+--                                            in (newID, newID))
