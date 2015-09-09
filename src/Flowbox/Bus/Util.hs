@@ -23,6 +23,7 @@ import qualified Flowbox.Bus.RPC.Client       as Client
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger    as L
 
+import Debug.Trace as T
 
 
 logger :: LoggerIO
@@ -41,8 +42,12 @@ exists pluginName (Ping topic request result) = do
     let topicBase = Topic.base topic
     logger info "Testing for duplicates..."
     Bus.withTimeout (Client.query pluginName topic request) 1000000 >>= \case
-        Left  _ -> Bus.unsubscribe topicBase >> return False
-        Right r -> ofSameType r [result] $ return True
+        Left  _ -> do
+            T.trace "KD!!" $ return ()
+            Bus.unsubscribe topicBase >> return False
+        Right r -> do
+            T.trace "DK" $ return ()
+            ofSameType r [result] $ return True
     where
         ofSameType :: a -> a -> b -> b
         ofSameType _ _ = id

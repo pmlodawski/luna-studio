@@ -42,6 +42,7 @@ import           Generated.Proto.Bus.Request          (Request (Request))
 import qualified Generated.Proto.Bus.Request.Method   as Method
 import qualified Flowbox.Text.ProtocolBuffers         as Proto
 
+import qualified Debug.Trace as T
 
 
 logger :: LoggerIO
@@ -128,8 +129,12 @@ receive' = MessageFrame.fromByteString <$> receiveByteString
 withTimeout :: Bus' z a -> Int -> Bus' z (Either Error a)
 withTimeout action timeout = runEitherT $ do
     state' <- get
+    T.trace (show timeout) $ return ()
     task <- lift3 $ ZMQ.async $ runEitherT $ runStateT action state'
-    wait <- liftIO $ Async.async $ do Concurrent.threadDelay timeout
+    wait <- liftIO $ Async.async $ do T.trace "asd" $ return ()
+                                      T.trace (show timeout) $ return ()
+                                      Concurrent.threadDelay timeout
+                                      T.trace "dsa" $ return ()
                                       return "Timeout reached"
     r <- liftIO $ Async.waitEitherCancel wait task
     (result, newState) <- hoistEither $ join r
