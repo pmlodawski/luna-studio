@@ -1,20 +1,17 @@
-module Reactive.Plugins.Core.Action.Backend where
+module Reactive.Plugins.Core.Action.Backend.Backend where
 
 import           Utils.PreludePlus
 import           Object.Node
 import           Event.Event
 import qualified Event.Batch        as Batch
 import           Batch.Workspace
-import           Batch.Value
 
 import qualified BatchConnector.Commands                   as BatchCmd
 import           Reactive.Plugins.Core.Action.Action
 import qualified Reactive.Plugins.Core.Action.State.Global as Global
-import           JS.NodeGraph                              (setComputedValue)
 import           Data.Text.Lazy.IO                         as TextIO
 
 data Action = InsertSerializationMode Node
-            | SetComputedValue Int Value
             | ShowCode Text
             | RequestCode
             deriving (Show, Eq)
@@ -29,7 +26,6 @@ instance PrettyPrinter Action where
 
 toAction :: Event Node -> Maybe Action
 toAction (Batch (Batch.NodeAdded node)) = Just $ InsertSerializationMode node
-toAction (Batch (Batch.ValueUpdate nodeId value)) = Just $ SetComputedValue nodeId value
 toAction (Batch (Batch.CodeUpdate code)) = Just $ ShowCode code
 toAction (Batch Batch.RunFinished) = Just $ RequestCode
 toAction _ = Nothing
@@ -45,8 +41,6 @@ instance ActionStateUpdater Action where
             let workspace = state ^. Global.workspace
             BatchCmd.insertSerializationMode workspace node
             BatchCmd.getCode workspace
-    execSt (SetComputedValue nodeId value) state = ActionUI (PerformIO action) state where
-        action = setComputedValue nodeId (show value)
 
 instance ActionUIUpdater Reaction where
     updateUI (WithState (PerformIO act) st) = act

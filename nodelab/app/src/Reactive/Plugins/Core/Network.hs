@@ -15,18 +15,19 @@ import qualified Event.Event                                 as Event
 import qualified Event.Processors.Batch                      as BatchEventProcessor
 
 import           Reactive.Plugins.Core.Action.Action
-import qualified Reactive.Plugins.Core.Action.General        as General
-import qualified Reactive.Plugins.Core.Action.Camera         as Camera
-import qualified Reactive.Plugins.Core.Action.AddRemove      as AddRemove
-import qualified Reactive.Plugins.Core.Action.Selection      as Selection
-import qualified Reactive.Plugins.Core.Action.MultiSelection as MultiSelection
-import qualified Reactive.Plugins.Core.Action.Drag           as Drag
-import qualified Reactive.Plugins.Core.Action.Connect        as Connect
-import qualified Reactive.Plugins.Core.Action.NodeSearcher   as NodeSearcher
-import qualified Reactive.Plugins.Core.Action.Breadcrumb     as Breadcrumb
-import qualified Reactive.Plugins.Core.Action.Widget         as Widget
-import qualified Reactive.Plugins.Core.Action.Sandbox        as Sandbox
-import qualified Reactive.Plugins.Core.Action.Backend        as Backend
+import qualified Reactive.Plugins.Core.Action.General         as General
+import qualified Reactive.Plugins.Core.Action.Camera          as Camera
+import qualified Reactive.Plugins.Core.Action.AddRemove       as AddRemove
+import qualified Reactive.Plugins.Core.Action.Selection       as Selection
+import qualified Reactive.Plugins.Core.Action.MultiSelection  as MultiSelection
+import qualified Reactive.Plugins.Core.Action.Drag            as Drag
+import qualified Reactive.Plugins.Core.Action.Connect         as Connect
+import qualified Reactive.Plugins.Core.Action.NodeSearcher    as NodeSearcher
+import qualified Reactive.Plugins.Core.Action.Breadcrumb      as Breadcrumb
+import qualified Reactive.Plugins.Core.Action.Widget          as Widget
+import qualified Reactive.Plugins.Core.Action.Sandbox         as Sandbox
+import qualified Reactive.Plugins.Core.Action.Backend.Backend as Backend
+import qualified Reactive.Plugins.Core.Action.Backend.Runner  as Runner
 import           Reactive.Plugins.Core.Action.Executor
 
 import           Reactive.Plugins.Core.Action.State.Global
@@ -89,6 +90,7 @@ makeNetworkDescription conn logging workspace = do
         breadcrumbActionB             = fmap ActionST $          Breadcrumb.toAction <$> anyNodeB <*> globalStateB
         sandboxActionB                = fmap ActionST $             Sandbox.toAction <$> anyNodeB <*> globalStateB
         backendActionB                = fmap ActionST $             Backend.toAction <$> anyNodeB
+        runnerActionB                 = fmap ActionST $              Runner.toAction <$> anyNodeB
 
         allActionsPackB               = [ nodeGeneralActionB
                                         , widgetActionB
@@ -102,6 +104,7 @@ makeNetworkDescription conn logging workspace = do
                                         , breadcrumbActionB
                                         , sandboxActionB
                                         , backendActionB
+                                        , runnerActionB
                                         ]
 
         (globalStateReactionB, allReactionsPackB) = execAll globalStateB allActionsPackB

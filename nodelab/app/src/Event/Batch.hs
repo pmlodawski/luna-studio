@@ -15,6 +15,7 @@ data Event = ProjectsList [Project]
            | LibraryCreated Library
            | WorkspaceCreated Breadcrumbs
            | NodeAdded Node
+           | NodesConnected
            | ValueUpdate Int Value
            | CodeUpdate Text
            | RunFinished
