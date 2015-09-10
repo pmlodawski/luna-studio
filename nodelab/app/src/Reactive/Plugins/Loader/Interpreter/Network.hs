@@ -27,16 +27,37 @@ react _       _                   = Nothing
 
 reactToBatchEvent :: Project -> Batch.Event -> Action
 reactToBatchEvent project (WorkspaceCreated crumbs) = handleWorkspaceCreation project crumbs
+reactToBatchEvent project ASTElementExists          = handleWorkspaceCreation project mainBreadcrumbs
+reactToBatchEvent project ASTElementDoesNotExist    = (createMain project, Nothing)
+reactToBatchEvent project (GraphViewFetched graph)  = (print graph, Nothing)
 reactToBatchEvent _       _                         = (return (), Nothing)
 
 handleWorkspaceCreation :: Project -> Breadcrumbs -> Action
-handleWorkspaceCreation project crumbs = (setMain project crumbs, Just crumbs)
+handleWorkspaceCreation project crumbs = (action, Just crumbs) where
+    action = do
+        setMain project crumbs
+        fetchGraph project crumbs
+
+fetchGraph :: Project -> Breadcrumbs -> IO ()
+fetchGraph project crumbs = do
+    let lib       = head $ project ^. libs
+        workspace = Workspace project lib crumbs
+    BatchCmd.getGraph workspace
 
 setMain :: Project -> Breadcrumbs -> IO ()
 setMain project crumbs = do
     let lib       = head $ project ^. libs
         workspace = Workspace project lib crumbs
     BatchCmd.setMainPtr workspace
+
+mainBreadcrumbs :: Breadcrumbs
+mainBreadcrumbs = Breadcrumbs [Module "Main", Function "main"]
+
+createMain :: Project -> IO ()
+createMain project = BatchCmd.createFunction project
+                                             (head $ project ^. libs)
+                                             (Breadcrumbs [Module "Main"])
+                                             "main"
 
 makeNetworkDescription :: forall t. Frameworks t => Project -> WebSocket -> (Workspace -> IO ()) -> Moment t ()
 makeNetworkDescription project socket callback = do
@@ -47,12 +68,13 @@ makeNetworkDescription project socket callback = do
         crumbs    = filterJust $ snd <$> actions
         workspace = Workspace project (head $ project ^. libs) <$> crumbs
 
-    reactimate $ fst <$> actions
+    reactimate $ print    <$> workspace
+    reactimate $ fst      <$> actions
     reactimate $ callback <$> workspace
 
 run :: WebSocket -> (Workspace -> IO ()) -> Project -> IO ()
 run socket callback project = do
     BatchCmd.setProjectId project
-    BatchCmd.createMainFunction project (head $ project ^. libs)
+    BatchCmd.getAST project (head $ project ^. libs) mainBreadcrumbs
     net <- compile $ makeNetworkDescription project socket callback
     actuate net

@@ -15,6 +15,7 @@ import           Data.Int
 
 import           Batch.Function
 import           Batch.Workspace
+import           Batch.Breadcrumbs
 import           Object.Node
 
 import qualified Generated.Proto.ProjectManager.Project.List.Request                                as ListProjects
@@ -26,9 +27,9 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Get.Req
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Get.Request      as GetGraph
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Add.Request as AddNode
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Connect.Request  as Connect
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Get.Request as GetAST
 import           Generated.Proto.Dep.Version.Version
 import           Generated.Proto.Dep.Attributes.Attributes
-import           Generated.Proto.Dep.Module.Module
 import           Generated.Proto.Mode.Mode
 import qualified Generated.Proto.Dep.Crumb.Breadcrumbs                        as ProtoBreadcrumbs
 import qualified Generated.Proto.Interpreter.Interpreter.SetProjectID.Request as SetProjectId
@@ -77,11 +78,11 @@ setProjectId project = sendMessage msg where
     msg  = WebMessage "interpreter.setprojectid.request" $ messagePut body
     body = SetProjectId.Request (project ^. Project.id)
 
-createMainFunction :: Project -> Library -> IO ()
-createMainFunction project library = sendMessage msg where
+createFunction :: Project -> Library -> Breadcrumbs -> String -> IO ()
+createFunction project library parent name = sendMessage msg where
     msg  = WebMessage "project.library.ast.function.add.request" $ messagePut body
-    body = AddFunction.Request emptyFunctionExpr
-                               (encode $ moduleBreadcrumbs "Main")
+    body = AddFunction.Request (emptyFunctionExpr name)
+                               (encode parent)
                                (library ^. Library.id)
                                (project ^. Project.id)
                                uselessLegacyArgument
@@ -150,3 +151,12 @@ insertSerializationMode workspace node = sendMessage msg where
     callPointPath = CallPointPath (workspace ^. project . Project.id) (Seq.fromList [callPoint])
     callPoint     = CallPoint (workspace ^. library . Library.id) (encode $ node ^. nodeId)
     mode          = Mode Seq.empty
+
+getAST :: Project -> Library -> Breadcrumbs -> IO ()
+getAST proj lib crumbs = sendMessage msg where
+    msg  = WebMessage "project.library.ast.get.request" $ messagePut body
+    body = GetAST.Request Nothing
+                          (encode crumbs)
+                          (lib ^. Library.id)
+                          (proj ^. Project.id)
+                          uselessLegacyArgument

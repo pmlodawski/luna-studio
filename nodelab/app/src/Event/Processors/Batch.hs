@@ -24,7 +24,10 @@ processMessage (WebMessage topic bytes) = rescueParseError topic $ case topic of
     "project.library.ast.function.graph.node.add.fakeres" -> NodeAdded <$> parseAddNodeFakeResponse bytes
     "project.library.ast.code.get.status"                 -> CodeUpdate <$> parseGetCodeResponse bytes
     "project.library.ast.function.graph.connect.update"   -> Just $ NodesConnected
-    "interpreter.run.update"                              -> Just $ RunFinished
+    "project.library.ast.get.status"                      -> Just ASTElementExists
+    "project.library.ast.get.error"                       -> Just ASTElementDoesNotExist
+    "interpreter.run.update"                              -> Just RunFinished
+    "project.library.ast.function.graph.get.status"       -> GraphViewFetched <$> parseGraphViewResponse bytes
     _                                                     -> Just $ UnknownEvent topic
 
 rescueParseError :: String -> Maybe Batch.Event -> Batch.Event

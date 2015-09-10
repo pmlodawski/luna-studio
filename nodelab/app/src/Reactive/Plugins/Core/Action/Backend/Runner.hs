@@ -25,13 +25,13 @@ instance PrettyPrinter Reaction where
     display _ = "runner(PerfomIO)"
 
 toAction :: Event Node -> Maybe Action
-toAction (Batch (Batch.NodeAdded _)) = Just RequestRerun
-toAction (Batch Batch.NodesConnected) = Just RequestRerun
+toAction (Batch (Batch.NodeAdded _))              = Just RequestRerun
+toAction (Batch  Batch.NodesConnected)            = Just RequestRerun
 toAction (Batch (Batch.ValueUpdate nodeId value)) = Just $ UpdateValue nodeId value
-toAction _ = Nothing
+toAction _                                        = Nothing
 
 instance ActionStateUpdater Action where
-    execSt RequestRerun state = ActionUI (PerformIO BatchCmd.runMain) state
+    execSt RequestRerun state               = ActionUI (PerformIO BatchCmd.runMain) state
     execSt (UpdateValue nodeId value) state = ActionUI (PerformIO $ setComputedValue nodeId $ show value) state
 
 instance ActionUIUpdater Reaction where

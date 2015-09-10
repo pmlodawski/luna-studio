@@ -17,7 +17,7 @@ fakeProject  = Project (Just "FAKE PROJECT")
                        [fakeLibrary]
 
 fakeCrumbs :: Breadcrumbs
-fakeCrumbs = moduleBreadcrumbs "FAKEMODULE"
+fakeCrumbs = Breadcrumbs [Module "FAKEMODULE"]
 
 fakeWorkspace :: Workspace
 fakeWorkspace = Workspace fakeProject fakeLibrary fakeCrumbs

@@ -8,14 +8,18 @@ import           Batch.Breadcrumbs
 import           Batch.Value
 import           Object.Node
 import           Data.Text.Lazy    (Text)
+import qualified Generated.Proto.Dep.Graphview.GraphView as GraphView
 
 data Event = ProjectsList [Project]
            | ProjectCreated Project
            | LibrariesList [Library]
            | LibraryCreated Library
+           | ASTElementExists
+           | ASTElementDoesNotExist
            | WorkspaceCreated Breadcrumbs
            | NodeAdded Node
            | NodesConnected
+           | GraphViewFetched GraphView.GraphView
            | ValueUpdate Int Value
            | CodeUpdate Text
            | RunFinished

@@ -24,7 +24,13 @@ import           Object.Node
 import qualified Generated.Proto.Project.Project           as ProtoProject
 import qualified Generated.Proto.Dep.Library.Library       as ProtoLibrary
 import qualified Generated.Proto.Dep.Library.LibManager    as ProtoLibManager
+
 import qualified Generated.Proto.Dep.Crumb.Breadcrumbs     as ProtoBreadcrumbs
+import qualified Generated.Proto.Dep.Crumb.Crumb           as ProtoCrumb
+import qualified Generated.Proto.Dep.Crumb.Crumb.Cls       as CrumbCls
+import qualified Generated.Proto.Dep.Crumb.Module          as ModuleCrumb
+import qualified Generated.Proto.Dep.Crumb.Function        as FunctionCrumb
+import qualified Generated.Proto.Dep.Name.Name             as ProtoName
 
 import qualified Generated.Proto.Dep.Graph.Node            as ProtoNode
 import qualified Generated.Proto.Dep.Graph.NodeExpr        as ProtoExpr
@@ -89,9 +95,30 @@ instance ProtoSerializable ProtoLibrary.Library Library where
                                       Nothing
                                       (lib ^. Library.id)
 
+instance ProtoSerializable ProtoCrumb.Crumb Crumb where
+    decode crumb@(ProtoCrumb.Crumb cls _) = case cls of
+        CrumbCls.Function -> do
+            functionCrumb <- maybeGetExt FunctionCrumb.ext crumb
+            name          <- FunctionCrumb.name functionCrumb
+            baseName      <- ProtoName.base name
+            return $ Function $ uToString baseName
+        CrumbCls.Module -> do
+            moduleCrumb <- maybeGetExt ModuleCrumb.ext crumb
+            name        <- ModuleCrumb.name moduleCrumb
+            return $ Module $ uToString name
+        _ -> Nothing
+    encode crumb = case crumb of
+        Module name   -> makeCrumb CrumbCls.Module ModuleCrumb.ext $
+                         Just $ ModuleCrumb.Module $ Just $ uFromString name
+        Function name -> makeCrumb CrumbCls.Function FunctionCrumb.ext $
+                         Just $ FunctionCrumb.Function (Just $ ProtoName.Name (Just $ uFromString name) Seq.empty)
+                                                       Seq.empty
+        where
+            makeCrumb tpe key ext = putExt key ext $ ProtoCrumb.Crumb tpe $ ExtField Map.empty
+
 instance ProtoSerializable ProtoBreadcrumbs.Breadcrumbs Breadcrumbs where
-    decode crumbs = Just $ Breadcrumbs crumbs
-    encode        = unBreadcrumbs
+    decode (ProtoBreadcrumbs.Breadcrumbs crumbs) = Breadcrumbs <$> decode crumbs
+    encode (Breadcrumbs crumbs) = ProtoBreadcrumbs.Breadcrumbs $ encode crumbs
 
 instance ProtoSerializable ProtoNode.Node Node where
     decode node = Node <$> id <*> pure False <*> nodePos <*> expr <*> pure ports where
@@ -143,3 +170,4 @@ instance ProtoSerializable SValue.SValue Value where
         BoolValue val   -> makeSValue SValueType.Bool BoolData.data' $ Just $ BoolData.BoolData val
         where
             makeSValue tpe key ext = putExt key ext $ SValue.SValue tpe $ ExtField Map.empty
+

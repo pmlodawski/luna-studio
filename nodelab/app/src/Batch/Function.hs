@@ -21,29 +21,19 @@ import           Text.ProtocolBuffers.Extensions     (ExtField(..), putExt)
 import qualified Data.Sequence                       as Seq
 import qualified Data.Map                            as Map
 
-emptyFunctionExpr :: Gen.Expr
-emptyFunctionExpr  = putExt GenFunction.ext (Just emptyFunction)
-                   $ Gen.Expr GenCls.Function Nothing $ ExtField Map.empty
+emptyFunction :: String -> GenFunction.Function
+emptyFunction name = GenFunction.Function Seq.empty
+                                          (Just $ wrapName name)
+                                          Seq.empty
+                                          (Just returnType)
+                                          Seq.empty
 
-emptyFunction :: GenFunction.Function
-emptyFunction  = GenFunction.Function Seq.empty
-                                      (Just mainName)
-                                      Seq.empty
-                                      (Just returnType)
-                                      Seq.empty
+emptyFunctionExpr :: String -> Gen.Expr
+emptyFunctionExpr name = putExt GenFunction.ext (Just $ emptyFunction name)
+                       $ Gen.Expr GenCls.Function Nothing $ ExtField Map.empty
 
-mainName :: GenName.Name
-mainName  = GenName.Name (Just $ uFromString "main") Seq.empty
-
-moduleCrumbExt :: String -> CrumbModule.Module
-moduleCrumbExt name = CrumbModule.Module $ Just $ uFromString name
-
-moduleCrumb :: String -> GenCrumb.Crumb
-moduleCrumb name = putExt CrumbModule.ext (Just $ moduleCrumbExt name)
-                 $ GenCrumb.Crumb CrumbCls.Module $ ExtField Map.empty
-
-moduleBreadcrumbs :: String -> Breadcrumbs
-moduleBreadcrumbs name = Breadcrumbs $ GenBreadcrumbs.Breadcrumbs $ Seq.fromList [moduleCrumb name]
+wrapName :: String -> GenName.Name
+wrapName name = GenName.Name (Just $ uFromString name) Seq.empty
 
 returnType :: GenType.Type
 returnType  = putExt TypeTuple.ext (Just $ TypeTuple.Tuple Seq.empty)
