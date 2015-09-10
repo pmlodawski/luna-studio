@@ -18,15 +18,16 @@ import           Batch.Workspace
 import           Batch.Breadcrumbs
 import           Object.Node
 
-import qualified Generated.Proto.ProjectManager.Project.List.Request                                as ListProjects
-import qualified Generated.Proto.ProjectManager.Project.Create.Request                              as CreateProject
-import qualified Generated.Proto.ProjectManager.Project.Library.Create.Request                      as CreateLibrary
-import qualified Generated.Proto.ProjectManager.Project.Library.List.Request                        as ListLibraries
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Add.Request            as AddFunction
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Get.Request                as GetCode
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Get.Request      as GetGraph
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Add.Request as AddNode
-import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Connect.Request  as Connect
+import qualified Generated.Proto.ProjectManager.Project.List.Request                                   as ListProjects
+import qualified Generated.Proto.ProjectManager.Project.Create.Request                                 as CreateProject
+import qualified Generated.Proto.ProjectManager.Project.Library.Create.Request                         as CreateLibrary
+import qualified Generated.Proto.ProjectManager.Project.Library.List.Request                           as ListLibraries
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Add.Request               as AddFunction
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Get.Request                   as GetCode
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Get.Request         as GetGraph
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Add.Request    as AddNode
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Request as RemoveNode
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Connect.Request     as Connect
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Get.Request as GetAST
 import           Generated.Proto.Dep.Version.Version
 import           Generated.Proto.Dep.Attributes.Attributes
@@ -160,3 +161,12 @@ getAST proj lib crumbs = sendMessage msg where
                           (lib ^. Library.id)
                           (proj ^. Project.id)
                           uselessLegacyArgument
+
+removeNodeById :: Workspace -> Int -> IO ()
+removeNodeById workspace nodeId = sendMessage msg where
+    msg  = WebMessage "project.library.ast.function.graph.node.remove.request" $ messagePut body
+    body = RemoveNode.Request (encode [nodeId])
+                              (encode $ workspace ^. breadcrumbs)
+                              (workspace ^. library . Library.id)
+                              (workspace ^. project . Project.id)
+                              uselessLegacyArgument

@@ -40,7 +40,6 @@ instance ActionStateUpdater Action where
         action = do
             let workspace = state ^. Global.workspace
             BatchCmd.insertSerializationMode workspace node
-            BatchCmd.getCode workspace
 
 instance ActionUIUpdater Reaction where
     updateUI (WithState (PerformIO act) st) = act

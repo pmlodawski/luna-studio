@@ -50,7 +50,7 @@ import qualified ThreeJS.Widget.Node                             as UINode
 
 import           Object.Widget.Scene (sceneInterfaceId, sceneGraphId)
 
-import           BatchConnector.Commands   (addNode)
+import qualified BatchConnector.Commands as BatchCmd
 
 import           AST.GraphToViz
 
@@ -180,13 +180,14 @@ instance ActionStateUpdater Action where
 
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
-        RegisterActionUI node -> addNode workspace node
+        RegisterActionUI node -> BatchCmd.addNode workspace node
             where
             workspace       = state ^. Global.workspace
         AddActionUI node wnode actions  -> (sequence_ $ reverse $ catMaybes actions)
                                         >> putStrLn (display $ state ^. Global.graph . Graph.nodeRefs) -- debug
                                         >> graphToViz (state ^. Global.graph . Graph.graphMeta)
         RemoveFocused      -> UI.removeNode nodeId
+                           >> BatchCmd.removeNodeById (state ^. Global.workspace) nodeId
                            >> mapM_ UI.setNodeFocused topNodeId
             where
             selectedNodeIds = state ^. Global.selection . Selection.nodeIds
