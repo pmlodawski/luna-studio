@@ -25,8 +25,8 @@ Library
 
     Exposed-modules: 
         Luna.Interpreter.Runtime,
-        Luna.Interpreter.Runtime.Hash,
-        Luna.Interpreter.Runtime.HMap
+        Luna.Interpreter.Runtime.HMap,
+        Luna.Interpreter.Runtime.Hash
 
     Build-Depends:  base,
                     data-hash,

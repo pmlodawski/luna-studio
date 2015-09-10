@@ -22,14 +22,14 @@ Library
   extra-libraries:    stdc++
   cc-options:         -Wall -O2 -std=c++11 -Werror -g
   Exposed-modules:    
-        Main,
         Flowbox.Codec.EXR,
         Flowbox.Codec.EXR.Channels,
         Flowbox.Codec.EXR.Internal.Attributes,
         Flowbox.Codec.EXR.Internal.Bindings,
         Flowbox.Codec.EXR.Internal.Debug,
         Flowbox.Codec.EXR.Internal.IO,
-        Flowbox.Codec.EXR.Internal.Types
+        Flowbox.Codec.EXR.Internal.Types,
+        Main
 
   Build-Depends:  base >= 4.6,
                   split,

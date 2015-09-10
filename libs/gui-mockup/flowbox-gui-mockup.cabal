@@ -20,12 +20,12 @@ Library
     GHC-Options:    -dynamic
 
   Exposed-modules:    
-        InterfaceTest,
         Flowbox.GuiMockup.IStraw,
         Flowbox.GuiMockup.JSInterop,
         Flowbox.GuiMockup.LineFit,
         Flowbox.GuiMockup.LineSnap,
-        Flowbox.GuiMockup.ShortStraw
+        Flowbox.GuiMockup.ShortStraw,
+        InterfaceTest
   default-language:   Haskell2010
 
   Build-Depends:  base >= 4.6,

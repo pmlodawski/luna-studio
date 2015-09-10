@@ -33,21 +33,18 @@ Library
                   LambdaCase
 
   Exposed-modules: 
-        Luna.Pass.Import,
-        Luna.Pass.Analysis.Imports,
-        Luna.Pass.Analysis.Struct,
         Luna.Pass.Analysis.Find.Find,
         Luna.Pass.Analysis.Find.State,
         Luna.Pass.Analysis.ID.ExtractIDs,
         Luna.Pass.Analysis.ID.MaxID,
         Luna.Pass.Analysis.ID.MinID,
         Luna.Pass.Analysis.ID.State,
+        Luna.Pass.Analysis.Imports,
+        Luna.Pass.Analysis.Struct,
+        Luna.Pass.Import,
         Luna.Pass.Target.HS.HASTGen,
-        Luna.Pass.Target.HS.HSC,
         Luna.Pass.Target.HS.HASTGen.State,
-        Luna.Pass.Transform.Hash,
-        Luna.Pass.Transform.SSA,
-        Luna.Pass.Transform.StdInsert,
+        Luna.Pass.Target.HS.HSC,
         Luna.Pass.Transform.Desugar.ImplicitCalls,
         Luna.Pass.Transform.Desugar.ImplicitScopes,
         Luna.Pass.Transform.Desugar.ImplicitSelf,
@@ -56,8 +53,11 @@ Library
         Luna.Pass.Transform.Graph.Builder.State,
         Luna.Pass.Transform.Graph.Parser.Parser,
         Luna.Pass.Transform.Graph.Parser.State,
+        Luna.Pass.Transform.Hash,
         Luna.Pass.Transform.Parse.Stage1,
-        Luna.Pass.Transform.Parse.Stage2
+        Luna.Pass.Transform.Parse.Stage2,
+        Luna.Pass.Transform.SSA,
+        Luna.Pass.Transform.StdInsert
 
   Build-Depends:  base,
                   containers,

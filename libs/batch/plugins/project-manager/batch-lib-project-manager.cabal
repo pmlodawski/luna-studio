@@ -29,8 +29,6 @@ Library
     Exposed-modules: 
         Flowbox.ProjectManager.Config,
         Flowbox.ProjectManager.Context,
-        Flowbox.ProjectManager.Version,
-        Flowbox.ProjectManager.RPC.Topic,
         Flowbox.ProjectManager.RPC.Handler.AST,
         Flowbox.ProjectManager.RPC.Handler.Graph,
         Flowbox.ProjectManager.RPC.Handler.Handler,
@@ -41,7 +39,9 @@ Library
         Flowbox.ProjectManager.RPC.Handler.Project,
         Flowbox.ProjectManager.RPC.Handler.Project2,
         Flowbox.ProjectManager.RPC.Handler.Properties,
-        Flowbox.ProjectManager.RPC.Handler.Sync
+        Flowbox.ProjectManager.RPC.Handler.Sync,
+        Flowbox.ProjectManager.RPC.Topic,
+        Flowbox.ProjectManager.Version
 
     Build-Depends:  base,
                     batch-lib-project-manager-api,

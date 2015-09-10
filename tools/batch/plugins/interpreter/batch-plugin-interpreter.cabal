@@ -25,20 +25,16 @@ Library
     Extensions:     NoImplicitPrelude
 
     Exposed-modules: 
-        Main,
         Luna.Interpreter.Cmd,
         Luna.Interpreter.Config,
-        Luna.Interpreter.Version,
         Luna.Interpreter.Proto.CallPoint,
         Luna.Interpreter.Proto.CallPointPath,
         Luna.Interpreter.Proto.CompileError,
         Luna.Interpreter.Proto.DefPoint,
         Luna.Interpreter.Proto.ProfileInfo,
         Luna.Interpreter.Proto.Status,
-        Luna.Interpreter.RPC.QueueInfo,
-        Luna.Interpreter.RPC.Topic,
-        Luna.Interpreter.RPC.Handler.Abort,
         Luna.Interpreter.RPC.Handler.ASTWatch,
+        Luna.Interpreter.RPC.Handler.Abort,
         Luna.Interpreter.RPC.Handler.Cache,
         Luna.Interpreter.RPC.Handler.Handler,
         Luna.Interpreter.RPC.Handler.Interpreter,
@@ -48,8 +44,12 @@ Library
         Luna.Interpreter.RPC.Handler.Sync,
         Luna.Interpreter.RPC.Handler.Value,
         Luna.Interpreter.RPC.Handler.Var,
+        Luna.Interpreter.RPC.QueueInfo,
+        Luna.Interpreter.RPC.Topic,
+        Luna.Interpreter.Version,
         Luna.Renderer.Proto.FrameCompileError,
-        Luna.Renderer.Proto.FrameRange
+        Luna.Renderer.Proto.FrameRange,
+        Main
                      
         
 

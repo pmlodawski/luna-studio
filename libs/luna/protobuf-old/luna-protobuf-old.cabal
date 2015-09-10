@@ -28,7 +28,6 @@ Library
                   NoImplicitPrelude
 
   Exposed-modules: 
-        Luna.DEP.Data.Serialize.Proto.Library,
         Luna.DEP.Data.Serialize.Proto.Conversion.Attributes,
         Luna.DEP.Data.Serialize.Proto.Conversion.Crumb,
         Luna.DEP.Data.Serialize.Proto.Conversion.Expr,
@@ -43,6 +42,7 @@ Library
         Luna.DEP.Data.Serialize.Proto.Conversion.Pat,
         Luna.DEP.Data.Serialize.Proto.Conversion.Type,
         Luna.DEP.Data.Serialize.Proto.Conversion.Version,
+        Luna.DEP.Data.Serialize.Proto.Library,
         Luna.DEP.Lib.Env,
         Luna.DEP.Lib.Loader,
         Luna.DEP.Lib.Path

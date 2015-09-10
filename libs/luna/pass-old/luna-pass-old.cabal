@@ -30,8 +30,6 @@ Library
                   OverloadedStrings
 
   Exposed-modules: 
-        Luna.DEP.Pass.Pass,
-        Luna.DEP.Pass.Analysis.NameResolver,
         Luna.DEP.Pass.Analysis.Alias.Alias,
         Luna.DEP.Pass.Analysis.Alias.State,
         Luna.DEP.Pass.Analysis.CallGraph.CallGraph,
@@ -43,6 +41,7 @@ Library
         Luna.DEP.Pass.Analysis.ID.MinID,
         Luna.DEP.Pass.Analysis.ID.State,
         Luna.DEP.Pass.Analysis.ID.Traverse,
+        Luna.DEP.Pass.Analysis.NameResolver,
         Luna.DEP.Pass.Build.Build,
         Luna.DEP.Pass.Build.BuildConfig,
         Luna.DEP.Pass.Build.Diagnostics,
@@ -51,9 +50,9 @@ Library
         Luna.DEP.Pass.CodeGen.Cabal.Store,
         Luna.DEP.Pass.CodeGen.HSC.HSC,
         Luna.DEP.Pass.General.Luna.Luna,
+        Luna.DEP.Pass.Pass,
         Luna.DEP.Pass.Source.File.Reader,
         Luna.DEP.Pass.Source.File.Writer,
-        Luna.DEP.Pass.Transform.AST.Shrink,
         Luna.DEP.Pass.Transform.AST.DepSort.DepSort,
         Luna.DEP.Pass.Transform.AST.Desugar.General.State,
         Luna.DEP.Pass.Transform.AST.Desugar.ImplicitCalls.ImplicitCalls,
@@ -66,6 +65,7 @@ Library
         Luna.DEP.Pass.Transform.AST.IDFixer.IDFixer,
         Luna.DEP.Pass.Transform.AST.IDFixer.State,
         Luna.DEP.Pass.Transform.AST.SSA.SSA,
+        Luna.DEP.Pass.Transform.AST.Shrink,
         Luna.DEP.Pass.Transform.AST.TxtParser.TxtParser,
         Luna.DEP.Pass.Transform.Graph.Builder.Builder,
         Luna.DEP.Pass.Transform.Graph.Builder.State,

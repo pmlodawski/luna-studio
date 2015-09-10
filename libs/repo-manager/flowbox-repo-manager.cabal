@@ -27,13 +27,8 @@ Library
     Extensions:     NoImplicitPrelude
 
     Exposed-modules: 
-        Flowbox.RepoManager.Testing,
         Flowbox.RepoManager.Data.Dependency,
         Flowbox.RepoManager.Data.Environment,
-        Flowbox.RepoManager.Data.RepoConfig,
-        Flowbox.RepoManager.Data.Repository,
-        Flowbox.RepoManager.Data.Types,
-        Flowbox.RepoManager.Data.Version,
         Flowbox.RepoManager.Data.Hooks.Download,
         Flowbox.RepoManager.Data.Hooks.Install,
         Flowbox.RepoManager.Data.Hooks.Resolution,
@@ -43,9 +38,14 @@ Library
         Flowbox.RepoManager.Data.Package.Flag,
         Flowbox.RepoManager.Data.Package.InstalledPackage,
         Flowbox.RepoManager.Data.Package.Package,
+        Flowbox.RepoManager.Data.RepoConfig,
+        Flowbox.RepoManager.Data.Repository,
+        Flowbox.RepoManager.Data.Types,
+        Flowbox.RepoManager.Data.Version,
+        Flowbox.RepoManager.Testing,
         Flowbox.RepoManager.Utils.Utils,
-        Flowbox.RepoManager.VCS.VCS,
-        Flowbox.RepoManager.VCS.Git.Git
+        Flowbox.RepoManager.VCS.Git.Git,
+        Flowbox.RepoManager.VCS.VCS
                      
     Build-Depends:  array,
                     base,
