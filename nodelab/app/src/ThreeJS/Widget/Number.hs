@@ -29,6 +29,7 @@ import           ThreeJS.Text
 import qualified ThreeJS.Geometry as Geometry
 import           JS.Config as Config
 import           Utils.Vector
+import           Object.UITypes
 import           ThreeJS.Registry as Registry
 import qualified Object.Widget.Number as Model
 import           Object.Widget
@@ -64,24 +65,24 @@ buildValueLabel s = do
     return mesh
 
 instance (Show a) => Registry.UIWidgetBinding (Model.Number a) Number where
-    build widget = do
-        let pos  = widget ^. Model.pos
-        let size = widget ^. Model.size
+    build oid model = do
+        let pos  = model ^. Model.pos
+        let size = model ^. Model.size
 
         group     <- buildGroup
         focus     <- toUniform (0 :: Int)
 
         label <- do
-            (mesh, width) <- buildLabel 1.0 AlignLeft (widget ^. Model.label)
+            (mesh, width) <- buildLabel 1.0 AlignLeft (model ^. Model.label)
             moveBy (Vector2 4.0 (5.0 + size ^. y / 2.0)) mesh
             return mesh
 
         sliderPos  <- toUniform (0.0 :: Double)
-        background <- buildBackground "slider" widget [ (Value, sliderPos)
-                                                      , (Focus, focus    )
-                                                      ]
+        background <- buildBackground "slider" oid model [ (Value, sliderPos)
+                                                         , (Focus, focus    )
+                                                         ]
 
-        valueLabel <- buildValueLabel widget
+        valueLabel <- buildValueLabel model
 
         group `add` background
         group `add` label
@@ -100,9 +101,9 @@ instance (Show a) => Registry.UIWidgetBinding (Model.Number a) Number where
 
         return number
 
-setValueLabel :: (Show a) => Model.Number a -> IO ()
-setValueLabel widget = do
-    ref        <- Registry.lookup widget
+setValueLabel :: (Show a) => WidgetId -> Model.Number a -> IO ()
+setValueLabel oid widget = do
+    ref        <- Registry.lookup oid :: IO Number
     group      <- Registry.readContainer ref
     valueLabel <- Registry.readComponent ValueLabel ref :: IO Mesh
     group `remove` valueLabel
@@ -113,13 +114,13 @@ setValueLabel widget = do
 
 
 instance Focusable (Model.Number a) where
-    mayFocus _ _ _  = True
+    mayFocus _ _ _ _ = True
 
-bumpValue :: Int -> Model.Number Int -> WidgetUpdate
-bumpValue amount widget = (Just action, toCtxDynamic newWidget) where
+bumpValue :: Int -> WidgetFile s DisplayObject -> Model.Number Int -> WidgetUpdate
+bumpValue amount file widget = (Just action, toCtxDynamic newWidget) where
                 currVal      = widget ^. Model.value
                 newWidget    = widget &  Model.value .~ (currVal + amount)
-                action       = setValueLabel newWidget
+                action       = setValueLabel (file ^. objectId) newWidget
 
 instance HandlesKeyUp (Model.Number Int) where
     onKeyUp 'Q' = bumpValue  100000

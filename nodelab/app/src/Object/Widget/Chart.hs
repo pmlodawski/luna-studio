@@ -20,8 +20,7 @@ data AxisType  = Linear
                | Time
                deriving (Show, Eq)
 
-data Chart = Chart   { _refId     :: Int
-                     , _pos       :: Vector2 Double
+data Chart = Chart   { _pos       :: Vector2 Double
                      , _size      :: Vector2 Double
                      , _tpe       :: ChartType
                      , _xMeasure  :: Text
@@ -33,7 +32,5 @@ data Chart = Chart   { _refId     :: Int
 makeLenses ''Chart
 
 instance IsDisplayObject Chart where
-    objectId       b = b ^. refId
     objectPosition b = b ^. pos
     objectSize     b = b ^. size
-    objectIdLens     = refId

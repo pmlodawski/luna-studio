@@ -12,23 +12,20 @@ import           Utils.CtxDynamic
 
 import JS.Bindings
 
-data Node = Node { _refId     :: Int
-                 , _nodeId    :: Int
+data Node = Node { _nodeId    :: Int
                  , _controls  :: [WidgetId]
                  } deriving (Eq, Show, Typeable)
 
 makeLenses ''Node
 
 instance IsDisplayObject Node where
-    objectId       b = b ^. refId
-    objectIdLens     = refId
     objectPosition   = undefined
     objectSize       = undefined
 
 
 instance DblClickable Node where
-    onDblClick pos n = (Just action, toCtxDynamic n) where
+    onDblClick pos file model = (Just action, toCtxDynamic model) where
         action    = do
-            node <- getNode (n ^. nodeId)
+            node <- getNode (model ^. nodeId)
             toggleExpandState node
-            putStrLn $ "Clicked node: " <> show (n ^. refId) <> " / " <> show (n ^. nodeId)
+            putStrLn $ "Clicked node: " <> show (model ^. nodeId)

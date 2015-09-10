@@ -13,6 +13,7 @@ import qualified JavaScript.Object as JSObject
 import qualified Data.JSString as JSString
 import           ThreeJS.Types
 import           ThreeJS.Uniform
+import           Object.UITypes
 
 foreign import javascript unsafe "$$.registry[$1]"
     getFromRegistryJS :: Int -> IO (JSRef a)
@@ -48,26 +49,25 @@ class (Object b) => UIWidget b where
     readContainer :: b -> IO Group
     readContainer w =  JSObject.getProp "mesh"  (unwrapWidget w) >>= return . Group
 
-class (IsDisplayObject a, UIWidget b) => UIWidgetBinding a b | a -> b where
-    lookup       :: a               -> IO b
-    lookup widget = (getFromRegistryJS oid >>= return . wrapWidget . JSObject.fromJSRef) where oid = objectId widget
+    lookup       :: WidgetId -> IO b
+    lookup oid    = (getFromRegistryJS oid >>= return . wrapWidget . JSObject.fromJSRef)
 
-    register     :: a -> b          -> IO ()
-    register widget uiWidget = putToRegistryJS oid uiref where
-        oid   = objectId widget
+    register     :: WidgetId  -> b          -> IO ()
+    register oid uiWidget = putToRegistryJS oid uiref where
         uiref = (JSObject.getJSRef $ unwrapWidget uiWidget)
 
-    updateUniformValue :: (UniformKey d) => d -> JSRef c -> a -> IO ()
-    updateUniformValue n v w = do
-        bref     <- ThreeJS.Registry.lookup w
-        uniforms <- JSObject.getProp "uniforms"            (unwrapWidget bref) >>= return .           JSObject.fromJSRef
-        uniform  <- JSObject.getProp (JSString.pack $ uniformName n)  uniforms >>= return . Uniform . JSObject.fromJSRef
-        setValue uniform v
 
-    build :: a -> IO b
+class (IsDisplayObject a, UIWidget b) => UIWidgetBinding a b | a -> b where
+    build :: WidgetId -> a -> IO b
 
 
+unregister :: WidgetId -> IO ()
+unregister oid  = removeFromRegistryJS oid
 
-unregister :: (IsDisplayObject a) => a -> IO ()
-unregister widget  = removeFromRegistryJS $ objectId widget
 
+updateUniformValue :: (UniformKey d) => d -> JSRef c -> WidgetId -> IO ()
+updateUniformValue n v oid = do
+    bref     <- getFromRegistryJS oid >>= return . JSObject.fromJSRef
+    uniforms <- JSObject.getProp "uniforms"                          bref >>= return .           JSObject.fromJSRef
+    uniform  <- JSObject.getProp (JSString.pack $ uniformName n)  uniforms >>= return . Uniform . JSObject.fromJSRef
+    setValue uniform v

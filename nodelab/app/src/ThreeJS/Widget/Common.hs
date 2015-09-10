@@ -62,11 +62,11 @@ objectIdToUniform oid = buildVector3 ((fromIntegral $ oid `mod` 256) / 255.0) ((
 data GenericUniforms = Size | ObjectId deriving (Show)
 instance Uniform.UniformKey GenericUniforms
 
-buildBackground :: (Uniform.UniformKey a, IsDisplayObject b) => Text -> b -> [(a, Uniform)] -> IO Mesh
-buildBackground shader widget uniforms = do
+buildBackground :: (Uniform.UniformKey a, IsDisplayObject b) => Text -> WidgetId -> b -> [(a, Uniform)] -> IO Mesh
+buildBackground shader oid model uniforms = do
     let (vs, fs) = loadShaders shader
-    sizeU     <- toUniform $ objectSize widget
-    objectId  <- objectIdToUniform $ objectId widget
+    sizeU     <- toUniform $ objectSize model
+    objectId  <- objectIdToUniform $ oid
 
     geom      <- buildNormalizedPlaneGeometry
     material  <- buildShaderMaterial vs fs True NormalBlending DoubleSide
@@ -77,7 +77,7 @@ buildBackground shader widget uniforms = do
     setUniforms material uniforms
 
     mesh      <- buildMesh geom material
-    scaleBy (objectSize widget) mesh
+    scaleBy (objectSize $ model) mesh
     pos       <- position mesh
     pos `setZ` (-0.0001)
     return mesh

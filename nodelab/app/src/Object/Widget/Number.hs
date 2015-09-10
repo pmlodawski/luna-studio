@@ -13,8 +13,7 @@ import           Object.Widget
 import           Numeric
 
 
-data Number a =  Number { _refId     :: Int
-                        , _pos       :: Vector2 Double
+data Number a =  Number { _pos       :: Vector2 Double
                         , _size      :: Vector2 Double
                         , _label     :: Text
                         , _value     :: a
@@ -28,10 +27,8 @@ makeLenses ''Number
 --     setValue     :: a      -> Slider a -> Slider a
 
 instance IsDisplayObject (Number a) where
-    objectId       b = b ^. refId
     objectPosition b = b ^. pos
     objectSize     b = b ^. size
-    objectIdLens     = refId
 -- instance IsSlider Double where
 --     displayValue slider = showFFloat (Just $ precision) val "" where
 --         val       = value slider

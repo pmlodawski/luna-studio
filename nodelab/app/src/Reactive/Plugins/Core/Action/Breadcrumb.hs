@@ -69,48 +69,49 @@ createButtons :: [Text] -> [Button.Button]
 createButtons path = reverse buttons where
     (buttons, _) = foldl button ([], 0) path
     button (xs, offset) name = (newButton:xs, newOffset) where
-       newButton = Button.Button 42 label Button.Normal pos size
+       newButton = Button.Button label Button.Normal pos size
        width     = UIButton.buttonWidth label
        pos       = Vector2 offset 0
        size      = Vector2 width buttonHeight
        newOffset = offset + width + buttonSpacing
        label     = name
 
-addButton b = do
-    uiButton <- WidgetRegistry.build b
-    WidgetRegistry.register b uiButton
+addButton file = do
+    uiButton <- WidgetRegistry.build (file ^. objectId) (file ^. Widget.widget)
+    WidgetRegistry.register (file ^. objectId)  uiButton
     Scene.sceneHUD `add` uiButton
 
-removeButton b = do
-    uiButton <- WidgetRegistry.lookup b
+removeButton file = do
+    uiButton <- WidgetRegistry.lookup (file ^. objectId) :: IO UIButton.Button
     Scene.sceneHUD `remove` uiButton
-    WidgetRegistry.unregister b
+    WidgetRegistry.unregister (file ^. objectId)
 
 instance ActionStateUpdater Action where
     execSt newActionCandidate oldState = case newAction of
         Just action -> ActionUI newAction newState
         Nothing     -> ActionUI  NoAction newState
         where
-        (newAction, newState) = case newActionCandidate of
-            NewPath path        -> (action, state) where
-                    action = Just $ ApplyUpdates [removeOldBreadcrumb, createNewBreadcrumb]
-                    createNewBreadcrumb = forM_ newButtons' addButton
-                    removeOldBreadcrumb = forM_ oldButtons  removeButton
-                    newButtons   = createButtons path
-
-                    state = oldState & Global.uiRegistry                      .~ newRegistry
-                                     & Global.breadcrumb . Breadcrumb.path    .~ path
-                                     & Global.breadcrumb . Breadcrumb.buttons .~ ((^. Button.refId) <$> newButtons')
-                    oldButtons   =  catMaybes $ getFromRegistry <$> oldButtonIds
-                    getFromRegistry :: Int -> Maybe Button.Button
-                    getFromRegistry bid = case UIRegistry.lookup bid oldRegistry of
-                        Just x -> (fromCtxDynamic x) :: Maybe Button.Button
-                        _      -> Nothing
-                    oldRegistry  = oldState ^. Global.uiRegistry
-                    oldButtonIds = oldState ^. Global.breadcrumb . Breadcrumb.buttons
-                    (newButtons', newRegistry)  = UIRegistry.replaceAll sceneInterfaceId oldButtons newButtons oldRegistry
-            ButtonClicked bid -> (Just $ ApplyUpdates [putStrLn $ "Clicked " <> (show bid)], oldState)
-            _ -> (Nothing, oldState)
+        (newAction, newState) = (Just $ ApplyUpdates [] , oldState)
+-- case newActionCandidate of
+--             NewPath path        -> (action, state) where
+--                     action = Just $ ApplyUpdates [removeOldBreadcrumb, createNewBreadcrumb]
+--                     createNewBreadcrumb = forM_ newButtons' addButton
+--                     removeOldBreadcrumb = forM_ oldButtons  removeButton
+--                     newButtons   = createButtons path
+--
+--                     state = oldState & Global.uiRegistry                      .~ newRegistry
+--                                      & Global.breadcrumb . Breadcrumb.path    .~ path
+--                                      & Global.breadcrumb . Breadcrumb.buttons .~ ((^. objectId) <$> newButtons')
+--                     oldButtons   =  catMaybes $ getFromRegistry <$> oldButtonIds
+--                     getFromRegistry :: Int -> Maybe (WidgetFile a DisplayObject)
+--                     getFromRegistry bid = case UIRegistry.lookup bid oldRegistry of
+--                         Just x -> (fromCtxDynamic x) :: Maybe Button.Button
+--                         _      -> Nothing
+--                     oldRegistry  = oldState ^. Global.uiRegistry
+--                     oldButtonIds = oldState ^. Global.breadcrumb . Breadcrumb.buttons
+--                     (newButtons', newRegistry)  = UIRegistry.replaceAll sceneInterfaceId oldButtons newButtons oldRegistry
+            -- ButtonClicked bid -> (Just $ ApplyUpdates [putStrLn $ "Clicked " <> (show bid)], oldState)
+            -- _ -> (Nothing, oldState)
 
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of

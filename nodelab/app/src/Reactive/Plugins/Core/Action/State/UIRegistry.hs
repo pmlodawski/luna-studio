@@ -15,30 +15,8 @@ import           Utils.CtxDynamic
 
 import qualified Control.Monad.State as MState
 
-type MouseMoveHandler     a = MouseButton -> Position -> a -> (a, IO ())
-type MousePressedHandler  a = MouseButton -> Position -> a -> (a, IO ())
-type MouseReleasedHandler a = MouseButton -> Position -> a -> (a, IO ())
-type MouseOverHandler     a =                            a -> (a, IO ())
-type MouseOutHandler      a =                            a -> (a, IO ())
-type ClickHandler         a =                Position -> a -> (a, IO ())
-type DblClickHandler      a =                Position -> a -> (a, IO ())
-type KeyUpHandler         a = Char                    -> a -> (a, IO ())
-type KeyDownHandler       a = Char                    -> a -> (a, IO ())
-type KeyPressedHandler    a = Char                    -> a -> (a, IO ())
+import Debug.Trace
 
-data UIHandlers a  = UIHandlers { _mouseMove     :: [MouseMoveHandler      a]
-                                , _mousePressed  :: [MousePressedHandler   a]
-                                , _mouseReleased :: [MouseReleasedHandler  a]
-                                , _mouseOver     :: [MouseOverHandler      a]
-                                , _mouseOut      :: [MouseOutHandler       a]
-                                , _click         :: [ClickHandler          a]
-                                , _dblClick      :: [DblClickHandler       a]
-                                , _keyUp         :: [KeyUpHandler          a]
-                                , _keyDown       :: [KeyDownHandler        a]
-                                , _keyPressed    :: [KeyPressedHandler     a]
-                                }
-
-makeLenses ''UIHandlers
 
 instance Default (UIHandlers a) where def = UIHandlers [] [] [] [] [] [] [] [] [] []
 
@@ -55,16 +33,7 @@ instance Monoid  (UIHandlers a) where
                                                                     (h <> h')
                                                                     (i <> i')
                                                                     (j <> j')
-
-data WidgetFile a  = WidgetFile { _widget   :: DisplayObject
-                                , _parent   :: Maybe WidgetId
-                                , _children :: [WidgetId]
-                                , _handlers :: UIHandlers a
-                                }
-
-makeLenses ''WidgetFile
-
-type WidgetMap a = IntMap (WidgetFile a)
+type WidgetMap a = IntMap (WidgetFile a DisplayObject)
 
 data State a = State { _widgets         :: WidgetMap a
                      , _widgetOver      :: Maybe WidgetId
@@ -79,10 +48,10 @@ instance Eq (State a) where
 instance Show (State a) where
     show a = show $ IntMap.size $ a ^. widgets
 
-defaultWidgets :: [(WidgetId, WidgetFile a)]
-defaultWidgets = [(sceneInterfaceId, sceneInterface), (sceneInterfaceId, sceneGraph)] where
-    sceneInterface = WidgetFile (toCtxDynamic $ Scene sceneInterfaceId) Nothing [] def
-    sceneGraph     = WidgetFile (toCtxDynamic $ Scene sceneGraphId    ) Nothing [] def
+defaultWidgets :: [(WidgetId, WidgetFile a DisplayObject)]
+defaultWidgets = [(sceneInterfaceId, sceneInterface), (sceneGraphId, sceneGraph)] where
+    sceneInterface = WidgetFile sceneInterfaceId (toCtxDynamic $ Scene) Nothing [] def
+    sceneGraph     = WidgetFile sceneGraphId     (toCtxDynamic $ Scene) Nothing [] def
 
 instance Default (State a) where
     def = State (fromList defaultWidgets) def def def
@@ -95,41 +64,42 @@ instance PrettyPrinter (State a) where
         <> " focus: "    <> show focus
         <> ")"
 
-lookup :: WidgetId -> (State a) -> Maybe DisplayObject
-lookup idx state = (^. widget) <$> IntMap.lookup idx (state ^. widgets)
+lookup :: WidgetId -> (State a) -> Maybe (WidgetFile a DisplayObject)
+lookup idx state = IntMap.lookup idx (state ^. widgets)
 
 lookupHandlers :: WidgetId -> (State a) -> Maybe (UIHandlers a)
 lookupHandlers idx state = (^. handlers) <$> IntMap.lookup idx (state ^. widgets)
 
-register :: DisplayObjectClass a => WidgetId -> a -> UIHandlers b -> State b -> (a, State b)
-register parent a handlers state = (aWithId, state & widgets .~ newWidgets') where
-    newWidgets'   = IntMap.insert parent newParent newWidgets
-    newWidgets    = IntMap.insert newId  wfile     oldWidgets
+register :: DisplayObjectClass a => WidgetId -> a -> UIHandlers b -> State b -> (WidgetFile b a, State b)
+register parent a handlers state = (widgetFile, state & widgets .~ newWidgets') where
+    newWidgets'   = IntMap.insert parent newParent   newWidgets
+    newWidgets    = IntMap.insert newId  dynamicFile oldWidgets
     newId         = generateId state
-    aWithId       = a & objectIdLens .~ newId
     oldWidgets    = state ^. widgets
-    (Just oldParent) = IntMap.lookup parent oldWidgets
+    (Just oldParent) = trace (show parent) $ IntMap.lookup parent oldWidgets
     newParent     = oldParent & children .~ (newId:(oldParent ^. children))
-    wfile         = WidgetFile (toCtxDynamic aWithId) (Just parent) [] handlers
+    dynamicFile   = WidgetFile newId (toCtxDynamic a) (Just parent) [] handlers
+    widgetFile    = WidgetFile newId a (Just parent) [] handlers
 
 type UIState a b = MState.State (State b, [Maybe (IO ())]) a
 
-registerM :: DisplayObjectClass a => WidgetId -> a -> UIHandlers b -> UIState a b
+registerM :: DisplayObjectClass a => WidgetId -> a -> UIHandlers b -> UIState (WidgetFile b a) b
 registerM parent widget handlers = do
     (st, acts) <- MState.get
     let (widget', st') = register parent widget handlers st
     MState.put (st', acts)
     return widget'
 
-update :: DisplayObject -> State a -> State a
-update a state = state & widgets .~ newWidgets where
-    oldFile       = IntMap.lookup (objectId a) oldWidgets
-    newWidgets    = case oldFile of
-        Just file -> IntMap.insert (objectId a) (file & widget .~ a) oldWidgets
+update :: WidgetFile a b -> DisplayObject -> State a -> State a -- redefine in context of updateFile
+update wf a state  = state & widgets .~ newWidgets where
+    oldFile        = IntMap.lookup oid oldWidgets
+    newWidgets     = case oldFile of
+        Just file -> IntMap.insert oid (file & widget .~ a) oldWidgets
         Nothing   -> oldWidgets
-    oldWidgets = state ^. widgets
+    oldWidgets     = state ^. widgets
+    oid            = wf ^. objectId
 
-updateFile :: WidgetId -> (WidgetFile a -> WidgetFile a) -> State a -> State a
+updateFile :: WidgetId -> (WidgetFile a DisplayObject -> WidgetFile a DisplayObject) -> State a -> State a
 updateFile oid mutator state = state & widgets .~ newWidgets where
     oldFile       = IntMap.lookup oid oldWidgets
     newWidgets    = case oldFile of
@@ -137,10 +107,10 @@ updateFile oid mutator state = state & widgets .~ newWidgets where
         Nothing   -> oldWidgets
     oldWidgets = state ^. widgets
 
-updateM :: DisplayObjectClass a => a -> UIState () b
-updateM widget = do
+updateM :: DisplayObjectClass a => WidgetFile b a -> a -> UIState () b
+updateM file widget = do
     (st, acts) <- MState.get
-    let st' = update (toCtxDynamic widget) st
+    let st' = update file (toCtxDynamic widget) st
     MState.put (st', acts)
     return ()
 
@@ -152,17 +122,17 @@ registerHandler :: WidgetId -> (UIHandlers a -> UIHandlers a) -> State a -> Stat
 registerHandler oid mutator state = updateFile oid fileMutator state where
     fileMutator file = file & handlers %~ mutator
 
-unregister :: DisplayObjectClass a => a -> State b -> State b -- TODO: Remove children from parent
+unregister :: WidgetFile b a -> State b -> State b -- TODO: Remove children from parent
 unregister a state = state & widgets .~ newWidgets where
-    newWidgets = IntMap.delete (objectId a) oldWidgets
+    newWidgets = IntMap.delete (a ^. objectId) oldWidgets
     oldWidgets = state ^. widgets
 
-registerAll :: DisplayObjectClass a => WidgetId -> [a] -> State b -> ([a], State b)
+registerAll :: DisplayObjectClass a => WidgetId -> [a] -> State b -> ([WidgetFile b a], State b)
 registerAll parent a state = foldl reg ([], state) a where
     reg (acc, st) a = (newA:acc, newSt) where
         (newA, newSt) = register parent a def st
 
-unregisterAll :: DisplayObjectClass a => [a] -> State b -> State b
+unregisterAll :: [WidgetFile b a] -> State b -> State b
 unregisterAll a state = foldl (flip unregister) state a
 
 generateIds :: Int -> State b -> [WidgetId]
@@ -173,7 +143,7 @@ generateId :: State b -> WidgetId
 generateId state = if IntMap.size (state ^. widgets) == 0 then 1
                                                           else maxId + 1 where (maxId, _) = IntMap.findMax (state ^. widgets)
 
-replaceAll :: DisplayObjectClass a => WidgetId -> [a] -> [a] -> State b -> ([a], State b)
+replaceAll :: DisplayObjectClass a => WidgetId -> [WidgetFile b a] -> [a] -> State b -> ([WidgetFile b a], State b)
 replaceAll parent remove add state = registerAll parent add $ unregisterAll remove state
 
 sequenceUpdates :: [Maybe (State b -> Maybe (WidgetUIUpdate, State b))]

@@ -22,7 +22,7 @@ import qualified Object.Widget.Node as WNode
 import           Object.Widget.Scene (sceneGraphId)
 import           Event.Keyboard hiding      ( Event )
 import qualified Event.Keyboard as Keyboard
-import           Event.Mouse    hiding      ( Event, WithObjects )
+import           Event.Mouse    hiding      ( Event, WithObjects, widget )
 import qualified Event.Mouse    as Mouse
 import qualified Event.Batch    as Batch
 import           Event.Event
@@ -50,7 +50,7 @@ import qualified ThreeJS.Widget.Node                             as UINode
 
 import           Object.Widget.Scene (sceneInterfaceId, sceneGraphId)
 
-import qualified BatchConnector.Commands as BatchCmd
+import           BatchConnector.Commands   (addNode)
 
 import           AST.GraphToViz
 
@@ -89,14 +89,14 @@ toAction (NodeSearcher (NodeSearcher.Event tpe expr)) _ = case tpe of
 toAction _ _  = Nothing
 
 addWidget b = do
-    widget <- JSRegistry.build b
-    JSRegistry.register b widget
-    Scene.scene `add` widget
+    w <- JSRegistry.build (b ^. objectId) (b ^. widget)
+    JSRegistry.register (b ^. objectId) w
+    Scene.scene `add` w
 
 addWidgetToNode node b = do
     node   <- JSRegistry.lookup node :: IO UINode.Node
-    widget <- JSRegistry.build b
-    JSRegistry.register b widget
+    widget <- JSRegistry.build (b ^. objectId) (b ^. widget)
+    JSRegistry.register (b ^. objectId) widget
     node `add` widget
 
 -- mock helper functions
@@ -127,7 +127,7 @@ instance ActionStateUpdater Action where
 
     execSt (AddAction node) oldState = ActionUI newAction newState
         where
-        newAction               = AddActionUI node newWNode actions
+        newAction               = AddActionUI node (newWNode ^. widget) actions
         newState                = oldState & Global.iteration                     +~ 1
                                            & Global.graph                         .~ newGraph
                                            & Global.uiRegistry                    .~ newRegistry
@@ -136,24 +136,26 @@ instance ActionStateUpdater Action where
         newGraph                = Graph.addNode node oldGraph
         (newWNode, (newRegistry, actions)) = MState.runState registerWidgets (oldRegistry, [])
         registerWidgets         = do
-            widget <- UIRegistry.registerM sceneGraphId (WNode.Node def (node ^. nodeId) []) def
-            UIRegistry.uiAction $ createNodeOnUI node widget
+            file <- UIRegistry.registerM sceneGraphId (WNode.Node (node ^. nodeId) []) def
+            UIRegistry.uiAction $ createNodeOnUI node file
 
-            slider_a <- UIRegistry.registerM (objectId widget) (Slider 0 (Vector2 10  75) (Vector2 180 25) "Cutoff"     100.0        25000.0      0.4 :: Slider Double) def
-            UIRegistry.uiAction $ addWidgetToNode widget slider_a
+            let rootId = file ^. objectId
 
-            slider_b <- UIRegistry.registerM (objectId widget) (Slider 0 (Vector2 10 105) (Vector2 180 25) "Resonance"  0.0        1.0      0.2 :: Slider Double) def
-            UIRegistry.uiAction $ addWidgetToNode widget slider_b
+            slider_a <- UIRegistry.registerM rootId (Slider (Vector2 10  75) (Vector2 180 25) "Cutoff"     100.0        25000.0      0.4 :: Slider Double) def
+            UIRegistry.uiAction $ addWidgetToNode rootId slider_a
 
-            slider_c <- UIRegistry.registerM (objectId widget) (Slider 0 (Vector2 10 135) (Vector2 180 25) "Amount"     0.0        1.0      0.6 :: Slider Double) def
-            UIRegistry.uiAction $ addWidgetToNode widget slider_c
+            slider_b <- UIRegistry.registerM rootId (Slider (Vector2 10 105) (Vector2 180 25) "Resonance"  0.0        1.0      0.2 :: Slider Double) def
+            UIRegistry.uiAction $ addWidgetToNode rootId slider_b
 
-            slider_d <- UIRegistry.registerM (objectId widget) (Slider 0 (Vector2 10 165) (Vector2 180 25) "Gain"       0.0        2.0      0.5 :: Slider Double) def
-            UIRegistry.uiAction $ addWidgetToNode widget slider_d
+            slider_c <- UIRegistry.registerM rootId (Slider (Vector2 10 135) (Vector2 180 25) "Amount"     0.0        1.0      0.6 :: Slider Double) def
+            UIRegistry.uiAction $ addWidgetToNode rootId slider_c
 
-            UIRegistry.updateM (widget & WNode.controls .~ [objectId slider_a, objectId slider_b, objectId slider_c, objectId slider_d])
+            slider_d <- UIRegistry.registerM rootId (Slider (Vector2 10 165) (Vector2 180 25) "Gain"       0.0        2.0      0.5 :: Slider Double) def
+            UIRegistry.uiAction $ addWidgetToNode rootId slider_d
 
-            return widget
+            UIRegistry.updateM file ((file ^. widget) & WNode.controls .~ ((^. objectId) <$> [slider_a, slider_b, slider_c, slider_d]))
+
+            return file
 
     execSt RemoveFocused oldState = case newAction of
         Just action -> ActionUI newAction newState
@@ -180,14 +182,13 @@ instance ActionStateUpdater Action where
 
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
-        RegisterActionUI node -> BatchCmd.addNode workspace node
+        RegisterActionUI node -> addNode workspace node
             where
             workspace       = state ^. Global.workspace
         AddActionUI node wnode actions  -> (sequence_ $ reverse $ catMaybes actions)
                                         >> putStrLn (display $ state ^. Global.graph . Graph.nodesRefsMap) -- debug
                                         >> graphToViz (state ^. Global.graph . Graph.graphMeta)
         RemoveFocused      -> UI.removeNode nodeId
-                           >> BatchCmd.removeNodeById (state ^. Global.workspace) nodeId
                            >> mapM_ UI.setNodeFocused topNodeId
             where
             selectedNodeIds = state ^. Global.selection . Selection.nodeIds
@@ -196,13 +197,13 @@ instance ActionUIUpdater Action where
 
 
 
-createNodeOnUI :: Node -> WNode.Node -> IO ()
-createNodeOnUI node wnode = do
+createNodeOnUI :: Node -> WidgetFile s WNode.Node -> IO ()
+createNodeOnUI node file = do
     let
         pos        = node ^. nodePos
         ident      = node ^. nodeId
         expr       = node ^. expression
-    UI.createNodeAt ident pos expr (objectId wnode)
+    UI.createNodeAt ident pos expr (file ^. objectId)
     addPorts  InputPort node
     addPorts OutputPort node
 

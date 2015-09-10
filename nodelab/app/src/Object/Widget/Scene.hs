@@ -10,15 +10,13 @@ import           Object.Widget
 import           Numeric
 
 
-data Scene = Scene { _refId :: WidgetId } deriving (Show)
+data Scene = Scene deriving (Show)
 
 makeLenses ''Scene
 
 instance IsDisplayObject Scene where
-    objectId i     = i ^. refId
     objectPosition = undefined
     objectSize     = undefined
-    objectIdLens   = refId
 
 instance DisplayObjectContainer Scene
 

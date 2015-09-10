@@ -9,8 +9,7 @@ import           Object.Widget
 import           Numeric
 
 
-data Toggle = Toggle { _refId    :: Int
-                     , _pos      :: Vector2 Double
+data Toggle = Toggle { _pos      :: Vector2 Double
                      , _size     :: Vector2 Double
                      , _label    :: Text
                      , _value    :: Bool
@@ -19,7 +18,5 @@ data Toggle = Toggle { _refId    :: Int
 makeLenses ''Toggle
 
 instance IsDisplayObject Toggle where
-    objectId       b = b ^. refId
     objectPosition b = b ^. pos
     objectSize     b = b ^. size
-    objectIdLens     = refId

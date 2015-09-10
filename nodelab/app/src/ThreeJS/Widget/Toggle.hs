@@ -11,6 +11,7 @@ import           GHCJS.Types      ( JSRef, JSString )
 import           JavaScript.Array ( JSArray )
 import qualified JavaScript.Object as JSObject
 
+import           Object.UITypes
 import           ThreeJS.Types
 import           ThreeJS.Mesh
 import           ThreeJS.PlaneGeometry
@@ -51,19 +52,19 @@ intValue :: Model.Toggle -> Int
 intValue widget = fromBool $ widget ^. Model.value
 
 instance Registry.UIWidgetBinding Model.Toggle Toggle where
-    build widget = do
-        let size = widget ^. Model.size
-        let pos  = widget ^. Model.pos
+    build oid model = do
+        let size = model ^. Model.size
+        let pos  = model ^. Model.pos
 
         group    <- buildGroup
-        value    <- toUniform $ intValue widget
+        value    <- toUniform $ intValue model
 
         label <- do
-            (mesh, width) <- buildLabel 1.0 AlignLeft (widget ^. Model.label)
+            (mesh, width) <- buildLabel 1.0 AlignLeft (model ^. Model.label)
             moveBy (Vector2 4.0 (5.0 + size ^. y / 2.0)) mesh
             return mesh
 
-        background <- buildBackground "toggle" widget [(Value, value)]
+        background <- buildBackground "toggle" oid model [(Value, value)]
 
         group `add` background
         group `add` label
@@ -80,11 +81,11 @@ instance Registry.UIWidgetBinding Model.Toggle Toggle where
         return toggle
 
 
-updateValue :: Model.Toggle -> IO ()
-updateValue widget = updateUniformValue Value (toJSInt $ intValue widget) widget
+updateValue :: WidgetId -> Model.Toggle -> IO ()
+updateValue oid widget = updateUniformValue Value (toJSInt $ intValue widget) oid
 
 instance Clickable Model.Toggle where
-    onClick _ toggle = (Just action, toCtxDynamic newToggle) where
-        newToggle = toggle & Model.value .~ (not $ toggle ^. Model.value)
-        action    = updateValue newToggle
+    onClick _ file model = (Just action, toCtxDynamic newModel) where
+        newModel = model & Model.value .~ (not $ model ^. Model.value)
+        action   = updateValue (file ^. objectId) newModel
 

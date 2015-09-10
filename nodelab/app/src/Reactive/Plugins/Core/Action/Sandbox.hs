@@ -11,7 +11,7 @@ import           Object.Widget
 import           Object.Node
 import           Object.UITypes
 
-import           Event.Mouse    hiding      (Event, WithObjects)
+import           Event.Mouse    hiding      (Event, WithObjects, widget)
 import qualified Event.Mouse    as Mouse
 import qualified Event.Window   as Window
 import           Event.Event
@@ -64,12 +64,12 @@ toAction _ _        = Nothing
 sandboxScene = Scene.scene
 
 addWidget b = do
-    widget <- JSRegistry.build b
-    JSRegistry.register b widget
-    sandboxScene `add` widget
+    w <- JSRegistry.build (b ^. objectId) (b ^. widget)
+    JSRegistry.register (b ^. objectId) w
+    sandboxScene `add` w
 
 addChart b = do
-    UIChart.displayChart b
+    UIChart.displayChart (b ^. widget)
 
 sampleHandler pos st = (st, putStrLn "Hello Handler")
 
@@ -79,41 +79,45 @@ instance ActionStateUpdater Action where
             where
             wasInited             = oldState ^. Global.sandbox . Sandbox.button  /= 0
             newState              = if wasInited || not widgetSandboxEnabled then oldState
-                                                 else oldState & Global.sandbox    . Sandbox.button  .~ (objectId button)
-                                                               & Global.sandbox    . Sandbox.slider  .~ (objectId slider)
-                                                               & Global.sandbox    . Sandbox.slider2 .~ (objectId slider2)
-                                                               & Global.sandbox    . Sandbox.slider3 .~ (objectId slider3)
-                                                               & Global.sandbox    . Sandbox.slider4 .~ (objectId slider4)
-                                                               & Global.sandbox    . Sandbox.toggle  .~ (objectId toggle)
-                                                               & Global.sandbox    . Sandbox.chart   .~ (objectId chart)
-                                                               & Global.sandbox    . Sandbox.number  .~ (objectId number)
+                                                 else oldState & Global.sandbox    . Sandbox.button  .~ (button  ^. objectId)
+                                                               & Global.sandbox    . Sandbox.slider  .~ (slider  ^. objectId)
+                                                               & Global.sandbox    . Sandbox.slider2 .~ (slider2 ^. objectId)
+                                                               & Global.sandbox    . Sandbox.slider3 .~ (slider3 ^. objectId)
+                                                               & Global.sandbox    . Sandbox.slider4 .~ (slider4 ^. objectId)
+                                                               & Global.sandbox    . Sandbox.toggle  .~ (toggle  ^. objectId)
+                                                               & Global.sandbox    . Sandbox.chart   .~ (chart   ^. objectId)
+                                                               & Global.sandbox    . Sandbox.number  .~ (number  ^. objectId)
                                                                & Global.uiRegistry                   .~ newRegistry
 
             oldRegistry     = oldState ^. Global.uiRegistry
-            registerWidgets :: UIRegistry.UIState (Button.Button, Slider.Slider Int, Slider.Slider Double, Slider.Slider Double, Slider.Slider Double, Toggle.Toggle, Chart.Chart, Number.Number Int) Global.State
+            -- registerWidgets :: UIRegistry.UIState (Button.Button, Slider.Slider Int, Slider.Slider Double, Slider.Slider Double, Slider.Slider Double, Toggle.Toggle, Chart.Chart, Number.Number Int) Global.State
             registerWidgets = do
-                button  <- UIRegistry.registerM sceneGraphId (Button 0 "Run!" Button.Normal (Vector2 100 100) (Vector2 100 50)) def
+                button  <- UIRegistry.registerM sceneGraphId
+                           (Button "Run!" Button.Normal (Vector2 100 100) (Vector2 100 50))
+                           def
                 UIRegistry.uiAction $ addWidget button
 
-                slider  <- UIRegistry.registerM sceneGraphId (Slider 0 (Vector2 100 200) (Vector2 200  25) "Cutoff"    100      20000        0.1 :: Slider Int) (def & UIRegistry.click .~ [sampleHandler])
+                slider  <- UIRegistry.registerM sceneGraphId
+                           (Slider (Vector2 100 200) (Vector2 200  25) "Cutoff"    100      20000        0.1 :: Slider Int)
+                           (def & click .~ [sampleHandler])
                 UIRegistry.uiAction $ addWidget slider
 
-                slider2 <- UIRegistry.registerM sceneGraphId (Slider 0 (Vector2 100 230) (Vector2 200  25) "Resonance"   0.0      100.0      0.3 :: Slider Double) def
+                slider2 <- UIRegistry.registerM sceneGraphId (Slider (Vector2 100 230) (Vector2 200  25) "Resonance"   0.0      100.0      0.3 :: Slider Double) def
                 UIRegistry.uiAction $ addWidget slider2
 
-                slider3 <- UIRegistry.registerM sceneGraphId (Slider 0 (Vector2 100 260) (Vector2 200  25) "Noise"       0.0        1.0      0.1 :: Slider Double) def
+                slider3 <- UIRegistry.registerM sceneGraphId (Slider (Vector2 100 260) (Vector2 200  25) "Noise"       0.0        1.0      0.1 :: Slider Double) def
                 UIRegistry.uiAction $ addWidget slider3
 
-                slider4 <- UIRegistry.registerM sceneGraphId (Slider 0 (Vector2 100 290) (Vector2 200  25) "Gamma"       0.0000001  0.000001 0.9 :: Slider Double) def
+                slider4 <- UIRegistry.registerM sceneGraphId (Slider (Vector2 100 290) (Vector2 200  25) "Gamma"       0.0000001  0.000001 0.9 :: Slider Double) def
                 UIRegistry.uiAction $ addWidget slider4
 
-                toggle  <- UIRegistry.registerM sceneGraphId (Toggle 0 (Vector2 100 320) (Vector2 200  25) "Inverse" False) def
+                toggle  <- UIRegistry.registerM sceneGraphId (Toggle (Vector2 100 320) (Vector2 200  25) "Inverse" False) def
                 UIRegistry.uiAction $ addWidget toggle
 
-                chart   <- UIRegistry.registerM sceneGraphId (Chart  0 (Vector2 100 380) (Vector2 300 200) Chart.Bar "Brand" Chart.Category "Unit Sales" Chart.Linear) def
+                chart   <- UIRegistry.registerM sceneGraphId (Chart  (Vector2 100 380) (Vector2 300 200) Chart.Bar "Brand" Chart.Category "Unit Sales" Chart.Linear) def
                 UIRegistry.uiAction $ addChart chart
 
-                number  <- UIRegistry.registerM sceneGraphId (Number 0 (Vector2 100 170) (Vector2 200  25) "Count" 4096) def
+                number  <- UIRegistry.registerM sceneGraphId (Number (Vector2 100 170) (Vector2 200  25) "Count" 4096 :: Number Int) def
                 UIRegistry.uiAction $ addWidget number
 
                 return (button, slider, slider2, slider3, slider4, toggle, chart, number)

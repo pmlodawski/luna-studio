@@ -41,7 +41,7 @@ getNodesUnderCursor state = maybeToList node where
     node     = do
         widgetId    <- registry ^. UIRegistry.widgetOver
         maybeWidget <- UIRegistry.lookup widgetId registry
-        widget      <- (fromCtxDynamic maybeWidget) :: Maybe WNode.Node
+        widget      <- (fromCtxDynamic (maybeWidget ^. widget)) :: Maybe WNode.Node
         let nid = widget ^. WNode.nodeId
         find (\n -> (n ^. nodeId) == nid) nodes
 

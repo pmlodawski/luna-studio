@@ -61,7 +61,7 @@ buildValueLabel s = do
     return mesh
 
 instance (Model.IsSlider a) => Registry.UIWidgetBinding (Model.Slider a) Slider where
-    build widget = do
+    build oid widget = do
         let pos  = widget ^. Model.pos
         let size = widget ^. Model.size
 
@@ -76,9 +76,9 @@ instance (Model.IsSlider a) => Registry.UIWidgetBinding (Model.Slider a) Slider 
 
         valueLabel <- buildValueLabel widget
 
-        background <- buildBackground "slider" widget [ (Value    , sliderPos )
-                                                      , (Focus    , focus     )
-                                                      ]
+        background <- buildBackground "slider" oid widget [ (Value    , sliderPos )
+                                                          , (Focus    , focus     )
+                                                          ]
         group `add` background
         group `add` label
         group `add` valueLabel
@@ -97,9 +97,9 @@ instance (Model.IsSlider a) => Registry.UIWidgetBinding (Model.Slider a) Slider 
 
         return slider
 
-setValueLabel :: (Model.IsSlider a) => Model.Slider a -> IO ()
-setValueLabel widget = do
-    ref        <- Registry.lookup widget
+setValueLabel :: (Model.IsSlider a) => WidgetId -> Model.Slider a -> IO ()
+setValueLabel oid widget = do
+    ref        <- Registry.lookup oid :: IO Slider
     group      <- Registry.readContainer ref
     valueLabel <- Registry.readComponent ValueLabel ref :: IO Mesh
     group `remove` valueLabel
@@ -108,10 +108,10 @@ setValueLabel widget = do
     group `add` valueLabel'
     addComponent ref ValueLabel valueLabel'
 
-updateValue :: (Model.IsSlider a) => Model.Slider a -> IO ()
-updateValue widget = do
-    updateUniformValue Value (toJSDouble $ widget ^. Model.normValue) widget
-    setValueLabel widget
+updateValue :: (Model.IsSlider a) => WidgetId -> Model.Slider a -> IO ()
+updateValue oid widget = do
+    updateUniformValue Value (toJSDouble $ widget ^. Model.normValue) oid
+    setValueLabel oid widget
 
 
 keyModMult :: KeyMods -> Double
@@ -122,51 +122,51 @@ keyModMult mods = case mods of
     otherwise               ->    1.0
 
 instance (Model.IsSlider a) => Draggable (Model.Slider a) where
-    mayDrag LeftButton _ _       = True
-    mayDrag _          _ _       = False
-    onDragStart state slider     = (Just action, toCtxDynamic slider) where
+    mayDrag LeftButton _ _ _     = True
+    mayDrag _          _ _ _     = False
+    onDragStart state file model = (Just action, toCtxDynamic model) where
                           action = setCursor "pointer"
-    onDragMove  state slider     = (Just action, toCtxDynamic newSlider) where
+    onDragMove  state file model = (Just action, toCtxDynamic newModel) where
                     delta        = if (abs $ diff ^. x) > (abs $ diff ^. y) then -diff ^. x /  divider
                                                                             else  diff ^. y / (divider * 10.0)
-                    width        = slider ^. Model.size . x
+                    width        = model ^. Model.size . x
                     divider      = width * (keyModMult $ state ^. keyMods)
                     diff         = state ^. currentPos - state ^. previousPos
-                    newNormValue = (slider ^. Model.normValue) - delta
-                    newSlider    = Model.setNormValue newNormValue slider
+                    newNormValue = (model ^. Model.normValue) - delta
+                    newModel     = Model.setNormValue newNormValue model
                     action       = do
                         setCursor "-webkit-grabbing"
-                        updateValue newSlider
-    onDragEnd  state slider = (Just $ action, newSlider) where
+                        updateValue (file ^. objectId) newModel
+    onDragEnd  state file model  = (Just $ action, newModel) where
         action = do
             fromMaybe (return ()) otherAction
             setCursor "default"
-        (otherAction, newSlider) = onDragMove state slider
+        (otherAction, newModel) = onDragMove state file model
 
 instance  (Model.IsSlider a) => DblClickable   (Model.Slider a) where
-    onDblClick pos slider    = (Just action, toCtxDynamic newSlider) where
-                normValue    = (pos ^. x) / (slider ^. Model.size . x)
-                newSlider    = Model.setNormValue normValue slider
-                action       = updateValue newSlider
+    onDblClick pos file model = (Just action, toCtxDynamic newModel) where
+                normValue     = (pos ^. x) / (model ^. Model.size . x)
+                newModel      = Model.setNormValue normValue model
+                action        = updateValue (file ^. objectId) newModel
 
 instance  (Model.IsSlider a) => HandlesMouseOver (Model.Slider a) where
-    onMouseOver b = (Just action, toCtxDynamic b) where
-        action    = updateUniformValue Focus (toJSInt 1) b
+    onMouseOver file model = (Just action, toCtxDynamic model) where
+                 action    = updateUniformValue Focus (toJSInt 1) $ file ^. objectId
 
 instance  (Model.IsSlider a) => HandlesMouseOut (Model.Slider a) where
-    onMouseOut  b = (Just action, toCtxDynamic b) where
-        action    = updateUniformValue Focus (toJSInt 0) b
+    onMouseOut  file model = (Just action, toCtxDynamic model) where
+                 action    = updateUniformValue Focus (toJSInt 0) $ file ^. objectId
 
 instance (Model.IsSlider a) => Focusable (Model.Slider a) where
-    mayFocus _ _ _  = True
+    mayFocus _ _ _ _  = True
 
 instance (Model.IsSlider a) => HandlesKeyUp (Model.Slider a) where
-    onKeyUp 'W' slider  = (Just action, toCtxDynamic newSlider) where
-                currVal      = slider ^. Model.normValue
-                newSlider    = Model.setNormValue (currVal + 0.1) slider
-                action       = updateValue newSlider
-    onKeyUp 'Q' slider  = (Just action, toCtxDynamic newSlider) where
-                currVal      = slider ^. Model.normValue
-                newSlider    = Model.setNormValue (currVal - 0.1) slider
-                action       = updateValue newSlider
-    onKeyUp _   slider       = (Nothing, toCtxDynamic slider)
+    onKeyUp 'W' file model   = (Just action, toCtxDynamic newModel) where
+                currVal      = model ^. Model.normValue
+                newModel     = Model.setNormValue (currVal + 0.1) model
+                action       = updateValue (file ^. objectId) newModel
+    onKeyUp 'Q' file model   = (Just action, toCtxDynamic newModel) where
+                currVal      = model ^. Model.normValue
+                newModel     = Model.setNormValue (currVal - 0.1) model
+                action       = updateValue (file ^. objectId) newModel
+    onKeyUp _   _    model   = (Nothing, toCtxDynamic model)

@@ -30,6 +30,7 @@ import qualified Object.Widget.Button as Model
 import           Object.Widget
 import           GHCJS.Prim
 import           Utils.CtxDynamic
+import           Object.UITypes
 import           ThreeJS.Uniform (Uniform(..), UniformMap(..), toUniform)
 import qualified ThreeJS.Uniform as Uniform
 import qualified ThreeJS.Registry as Registry
@@ -57,15 +58,15 @@ buttonWidth text = Config.fontSize * (calculateTextWidth text) + 2 * buttonPaddi
 
 
 instance UIWidgetBinding Model.Button Button where
-    build widget = do
+    build oid model = do
         group    <- buildGroup
         state    <- toUniform (0 :: Int)
 
         background <- do
             let (vs, fs) = loadShaders "button"
-            color    <- buildVector4 1.0 0.0 1.0 1.0 >>= toUniform
-            sizeU     <- toUniform $ objectSize widget
-            objectId  <- objectIdToUniform $ objectId widget
+            color     <- buildVector4 1.0 0.0 1.0 1.0 >>= toUniform
+            sizeU     <- toUniform $ objectSize model
+            objectId  <- objectIdToUniform oid
 
             geom      <- buildNormalizedPlaneGeometry
             material  <- buildShaderMaterial vs fs True NormalBlending DoubleSide
@@ -78,15 +79,15 @@ instance UIWidgetBinding Model.Button Button where
                                  ]
 
             mesh      <- buildMesh geom material
-            scaleBy (objectSize widget) mesh
+            scaleBy (objectSize model) mesh
             pos       <- position mesh
             pos `setZ` (-0.0001)
 
             return mesh
 
         label <- do
-            (mesh, width) <- buildLabel 1.0 AlignCenter (widget ^. Model.label)
-            moveBy (Vector2 (widget ^. Model.size . x / 2.0) (5.0 + widget ^. Model.size . y / 2.0)) mesh
+            (mesh, width) <- buildLabel 1.0 AlignCenter (model ^. Model.label)
+            moveBy (Vector2 (model ^. Model.size . x / 2.0) (5.0 + model ^. Model.size . y / 2.0)) mesh
             return mesh
 
 
@@ -94,7 +95,7 @@ instance UIWidgetBinding Model.Button Button where
         group `add` label
 
         mesh   <- mesh group
-        moveTo (widget ^. Model.pos) mesh
+        moveTo (model ^. Model.pos) mesh
 
 
         (button, uniforms) <- buildSkeleton mesh
@@ -106,26 +107,27 @@ instance UIWidgetBinding Model.Button Button where
 
         return button
 
-updateState :: Model.Button -> IO ()
-updateState b = do
-    updateUniformValue State (toJSInt $ fromEnum $ b ^. Model.state) b
+updateState :: WidgetId -> Model.Button -> IO ()
+updateState oid model = do
+    updateUniformValue State (toJSInt $ fromEnum $ model ^. Model.state) oid
 
 instance HandlesMouseOver Model.Button where
-    onMouseOver b = (Just action, toCtxDynamic newButton) where
-        action    = updateState newButton
-        newButton = b & Model.state .~ Model.Focused
+    onMouseOver file model = (Just action, toCtxDynamic newModel) where
+                  action   = updateState (file ^. objectId) newModel
+                  newModel = model & Model.state .~ Model.Focused
 
 instance HandlesMouseOut Model.Button where
-    onMouseOut  b = (Just action, toCtxDynamic newButton) where
-        action    = updateState newButton
-        newButton = b & Model.state .~ Model.Normal
+    onMouseOut  file model = (Just action, toCtxDynamic newModel) where
+                  action   = updateState (file ^. objectId) newModel
+                  newModel = model & Model.state .~ Model.Normal
 
 instance Clickable Model.Button where
-    onClick pos b = (Just action, toCtxDynamic newButton) where
-        action    =  updateState newButton
-        newButton = b & Model.state .~ Model.Pressed
+    onClick pos file model = (Just action, toCtxDynamic newModel) where
+                  action   = updateState (file ^. objectId) newModel
+                  newModel = model & Model.state .~ Model.Pressed
 
 instance DblClickable Model.Button where
-    onDblClick pos b = (Just action, toCtxDynamic newButton) where
-        action    = updateState newButton
-        newButton = b & Model.state .~ Model.Disabled
+    onDblClick pos  file model = (Just action, toCtxDynamic newModel) where
+                  action   = updateState (file ^. objectId) newModel
+                  newModel = model & Model.state .~ Model.Disabled
+

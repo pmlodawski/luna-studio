@@ -9,8 +9,7 @@ import           Object.Widget
 import           Numeric
 
 
-data Slider a =  Slider { _refId     :: Int
-                        , _pos       :: Vector2 Double
+data Slider a =  Slider { _pos       :: Vector2 Double
                         , _size      :: Vector2 Double
                         , _label     :: Text
                         , _minValue  :: a
@@ -26,10 +25,8 @@ class (Num a, Show a, Typeable a) => IsSlider a where
     setValue     :: a      -> Slider a -> Slider a
 
 instance IsDisplayObject (Slider a) where
-    objectId       b = b ^. refId
     objectPosition b = b ^. pos
     objectSize     b = b ^. size
-    objectIdLens     = refId
 
 instance IsSlider Double where
     displayValue slider = showFFloat (Just $ precision) val "" where

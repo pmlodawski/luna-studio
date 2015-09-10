@@ -11,8 +11,7 @@ import           Object.Widget
 
 data State  = Normal | Focused | Disabled | Pressed deriving (Eq, Show, Enum)
 
-data Button = Button { _refId   :: Int
-                     , _label   :: Text
+data Button = Button { _label   :: Text
                      , _state   :: State
                      , _pos     :: Vector2 Double
                      , _size    :: Vector2 Double
@@ -21,7 +20,5 @@ data Button = Button { _refId   :: Int
 makeLenses ''Button
 
 instance IsDisplayObject Button where
-    objectId       b = b ^. refId
     objectPosition b = b ^. pos
     objectSize     b = b ^. size
-    objectIdLens     = refId

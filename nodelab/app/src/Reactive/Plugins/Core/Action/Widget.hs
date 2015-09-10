@@ -50,31 +50,32 @@ absPosToRel Workspace camera mat pos = Widget.sceneToLocal workspacePos mat wher
 
 handleGeneric :: Mouse.Event -> Camera.Camera -> UIRegistryState -> Maybe UIRegistryUpdate
 handleGeneric (Mouse.Event eventType absPos button _ (Just (EventWidget widgetId mat scene))) camera registry = do
-    widget                <- (UIRegistry.lookup widgetId registry) :: Maybe DisplayObject
+    file                  <- (UIRegistry.lookup widgetId registry) :: Maybe (WidgetFile Global.State DisplayObject)
+    let dynamicWidget      = file ^. widget
     let pos                = absPosToRel scene camera mat (fromIntegral <$> absPos)
     (uiUpdate, newWidget) <- return $ case eventType of
-        Mouse.Moved       -> onMouseMove    button pos widget
-        Mouse.Pressed     -> onMousePress   button pos widget
-        Mouse.Released    -> onMouseRelease button pos widget
-        Mouse.Clicked     -> onClick               pos widget
-        Mouse.DblClicked  -> onDblClick            pos widget
-    let newRegistry = UIRegistry.update newWidget registry
+        Mouse.Moved       -> onMouseMove    button pos file dynamicWidget
+        Mouse.Pressed     -> onMousePress   button pos file dynamicWidget
+        Mouse.Released    -> onMouseRelease button pos file dynamicWidget
+        Mouse.Clicked     -> onClick               pos file dynamicWidget
+        Mouse.DblClicked  -> onDblClick            pos file dynamicWidget
+    let newRegistry = UIRegistry.update file newWidget registry
     return (uiUpdate, newRegistry)
 handleGeneric _ _ _        = Nothing
 
-triggerHandler :: Maybe WidgetId -> (DisplayObject -> WidgetUpdate) -> UIRegistryState -> Maybe UIRegistryUpdate
+triggerHandler :: Maybe WidgetId -> (WidgetFile Global.State DisplayObject -> DisplayObject -> WidgetUpdate) -> UIRegistryState -> Maybe UIRegistryUpdate
 triggerHandler maybeOid handler state = do
     oid                     <- maybeOid
-    oldWidget               <- UIRegistry.lookup oid state
-    let (action, newWidget)  = handler oldWidget
-    let newState             = UIRegistry.update newWidget state
+    file                    <- UIRegistry.lookup oid state
+    let (action, newWidget)  = handler file (file ^. widget)
+    let newState             = UIRegistry.update file newWidget state
     return (action, newState)
 
 handleDragStart :: EventWidget -> MouseButton -> Keyboard.KeyMods -> Vector2 Double -> Camera.Camera -> UIRegistryState -> Maybe UIRegistryUpdate
 handleDragStart (EventWidget widgetId mat scene) button keyMods absPos camera state = do
-    oldWidget      <- UIRegistry.lookup widgetId state
+    file           <- UIRegistry.lookup widgetId state
     let pos         = absPosToRel scene camera mat absPos
-    let shouldDrag  = mayDrag button pos oldWidget
+    let shouldDrag  = mayDrag button pos file (file ^. widget)
     let dragState   = DragState widgetId mat scene button keyMods pos pos pos where
     let newState    = if shouldDrag then state & UIRegistry.dragState .~ Just dragState
                                     else state
@@ -104,9 +105,9 @@ handleDragEnd absPos camera state = case (state ^. UIRegistry.dragState) of
 
 changeFocus :: EventWidget -> MouseButton -> Keyboard.KeyMods -> Vector2 Double -> Camera.Camera -> UIRegistryState -> Maybe UIRegistryUpdate
 changeFocus (EventWidget widgetId mat scene) button keyMods absPos camera state = do
-    oldWidget      <- UIRegistry.lookup widgetId state
+    file           <- UIRegistry.lookup widgetId state
     let pos         = absPosToRel scene camera mat absPos
-    let shouldFocus = mayFocus button pos oldWidget
+    let shouldFocus = mayFocus button pos file (file ^. widget)
     let newState    = if shouldFocus then state & UIRegistry.focusedWidget .~ Just widgetId
                                      else state
     return $ (Nothing, newState)
@@ -117,12 +118,12 @@ loseFocus state = Just $ (Nothing, newState) where newState = state & UIRegistry
 handleKeyEvents :: Keyboard.Event -> UIRegistryState -> Maybe UIRegistryUpdate
 handleKeyEvents (Keyboard.Event eventType ch) registry = case registry ^. UIRegistry.focusedWidget of
     Just widgetId  -> do
-        widget                <- (UIRegistry.lookup widgetId registry) :: Maybe DisplayObject
+        file                  <- (UIRegistry.lookup widgetId registry) :: Maybe (WidgetFile Global.State DisplayObject)
         (uiUpdate, newWidget) <- return $ case eventType of
-            Keyboard.Up       -> onKeyUp      ch widget
-            Keyboard.Down     -> onKeyDown    ch widget
-            Keyboard.Press    -> onKeyPressed ch widget
-        let newRegistry = UIRegistry.update newWidget registry
+            Keyboard.Up       -> onKeyUp      ch file (file ^. widget)
+            Keyboard.Down     -> onKeyDown    ch file (file ^. widget)
+            Keyboard.Press    -> onKeyPressed ch file (file ^. widget)
+        let newRegistry = UIRegistry.update file newWidget registry
         return (uiUpdate, newRegistry)
     Nothing -> Just $ (Nothing, registry)
 
@@ -133,11 +134,11 @@ applyHandlers handlers st = foldr apply (st, mempty) handlers where
 customMouseHandlers :: Mouse.Event -> Camera.Camera -> UIRegistryState -> [Global.State -> (Global.State, IO ())]
 customMouseHandlers (Mouse.Event eventType absPos button _ (Just (EventWidget widgetId mat scene))) camera registry = case UIRegistry.lookupHandlers widgetId registry of
     Just handlers -> case eventType of
-            Mouse.Moved       -> fmap (\a -> a button pos) (handlers ^. UIRegistry.mouseMove    )
-            Mouse.Pressed     -> fmap (\a -> a button pos) (handlers ^. UIRegistry.mousePressed )
-            Mouse.Released    -> fmap (\a -> a button pos) (handlers ^. UIRegistry.mouseReleased)
-            Mouse.Clicked     -> fmap (\a -> a        pos) (handlers ^. UIRegistry.click        )
-            Mouse.DblClicked  -> fmap (\a -> a        pos) (handlers ^. UIRegistry.dblClick     )
+            Mouse.Moved       -> fmap (\a -> a button pos) (handlers ^. mouseMove    )
+            Mouse.Pressed     -> fmap (\a -> a button pos) (handlers ^. mousePressed )
+            Mouse.Released    -> fmap (\a -> a button pos) (handlers ^. mouseReleased)
+            Mouse.Clicked     -> fmap (\a -> a        pos) (handlers ^. click        )
+            Mouse.DblClicked  -> fmap (\a -> a        pos) (handlers ^. dblClick     )
         where pos              = absPosToRel scene camera mat (fromIntegral <$> absPos)
     Nothing -> []
 customMouseHandlers _ _ _  = []
@@ -146,9 +147,9 @@ customKeyboardHandlers :: Keyboard.Event -> UIRegistryState -> [Global.State -> 
 customKeyboardHandlers (Keyboard.Event eventType ch) registry = case registry ^. UIRegistry.focusedWidget of
     Just widgetId -> case UIRegistry.lookupHandlers widgetId registry of
         Just handlers -> case eventType of
-            Keyboard.Up       -> fmap (\a -> a ch) (handlers ^. UIRegistry.keyUp     )
-            Keyboard.Down     -> fmap (\a -> a ch) (handlers ^. UIRegistry.keyDown   )
-            Keyboard.Press    -> fmap (\a -> a ch) (handlers ^. UIRegistry.keyPressed)
+            Keyboard.Up       -> fmap (\a -> a ch) (handlers ^. keyUp     )
+            Keyboard.Down     -> fmap (\a -> a ch) (handlers ^. keyDown   )
+            Keyboard.Press    -> fmap (\a -> a ch) (handlers ^. keyPressed)
         Nothing -> []
     Nothing -> []
 
