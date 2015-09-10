@@ -41,16 +41,17 @@ exists :: String -> Ping -> Bus Bool
 exists pluginName (Ping topic request result) = do
     let topicBase = Topic.base topic
     logger info "Testing for duplicates..."
-    Bus.withTimeout (Client.query pluginName topic request) 1000000 >>= \case
-        Left  _ -> do
-            T.trace "KD!!" $ return ()
-            Bus.unsubscribe topicBase >> return False
-        Right r -> do
-            T.trace "DK" $ return ()
-            ofSameType r [result] $ return True
-    where
-        ofSameType :: a -> a -> b -> b
-        ofSameType _ _ = id
+    return False
+    --Bus.withTimeout (Client.query pluginName topic request) 1000000 >>= \case
+    --    Left  _ -> do
+    --        T.trace "KD!!" $ return ()
+    --        Bus.unsubscribe topicBase >> return False
+    --    Right r -> do
+    --        T.trace "DK" $ return ()
+    --        ofSameType r [result] $ return True
+    --where
+    --    ofSameType :: a -> a -> b -> b
+    --    ofSameType _ _ = id
 
 
 quitIfExists :: String -> Ping -> Bus ()
