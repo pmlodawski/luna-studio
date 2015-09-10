@@ -114,22 +114,22 @@ instance ActionStateUpdater Action where
                 ConnectPorts src dst    -> case oldConnecting of
                     Just (Connecting source destinationMay (DragHistory startPos currentPos))
                                         -> appGraph where
-                        newNodes         = updateSourcePortInNodes angle source oldNodes
-                        oldNodes         = Graph.getNodes oldGraph
-                        updSourceGraph   = Graph.updateNodes newNodes oldGraph
+                        newNodesMap      = updateSourcePortInNodes angle source oldNodesMap
+                        oldNodesMap      = Graph.getNodesMap oldGraph
+                        updSourceGraph   = Graph.updateNodes newNodesMap oldGraph
                         appGraph         = Graph.addApplication dst source updSourceGraph
                     _                   -> oldGraph
                 _                       -> case newConnecting of
                     Just (Connecting source destinationMay (DragHistory startPos currentPos))
-                                        -> Graph.updateNodes newNodes oldGraph where
-                        newNodes         = updateSourcePortInNodes angle source oldNodes
-                        oldNodes         = Graph.getNodes oldGraph
+                                        -> Graph.updateNodes newNodesMap oldGraph where
+                        newNodesMap      = updateSourcePortInNodes angle source oldNodesMap
+                        oldNodesMap      = Graph.getNodesMap oldGraph
                     _                   -> oldGraph
         angle                            = case newConnecting of
             Just (Connecting source destinationMay (DragHistory startPos currentPos))
                                         -> calcAngle destinPoint sourcePoint where
                 camera                   = Global.toCamera oldState
-                sourcePoint              = source ^. refPortNode . nodePos
+                sourcePoint              = getNodePos (Graph.getNodes oldGraph) $ source ^. refPortNodeId
                 destinPoint              = screenToWorkspace camera currentPos
             _                           -> 0.0
 
@@ -138,12 +138,12 @@ instance ActionUIUpdater Action where
         DragAction tpe pt            -> case tpe of
             StartDrag portRef        -> return ()
             Moving                   -> return ()
-            Dragging angle           -> forM_ maybeConnecting $ displayDragLine angle ptWs
+            Dragging angle           -> forM_ maybeConnecting $ displayDragLine nodes angle ptWs
             StopDrag                 -> UI.removeCurrentConnection
             ConnectPorts src dst     -> UI.removeCurrentConnection
                                      >> displayConnections nodes connections
                                      >> BatchCmd.connectNodes workspace src dst
-                                     >> putStrLn (display $ state ^. Global.graph . Graph.nodeRefs) -- debug
+                                     >> putStrLn (display $ state ^. Global.graph . Graph.nodesRefsMap) -- debug
                                      >> putStrLn (display $ state ^. Global.graph . Graph.connections) -- debug
                                      >> graphToViz (state ^. Global.graph . Graph.graphMeta)
             where

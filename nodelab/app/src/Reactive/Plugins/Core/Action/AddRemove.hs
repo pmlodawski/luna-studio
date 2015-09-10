@@ -139,10 +139,10 @@ instance ActionStateUpdater Action where
             widget <- UIRegistry.registerM sceneGraphId (WNode.Node def (node ^. nodeId) []) def
             UIRegistry.uiAction $ createNodeOnUI node widget
 
-            slider_a <- UIRegistry.registerM (objectId widget) (Slider 0 (Vector2 10  75) (Vector2 180 25) "Cutoff"     100.0        25000.0      0.4 :: Slider Double) def 
+            slider_a <- UIRegistry.registerM (objectId widget) (Slider 0 (Vector2 10  75) (Vector2 180 25) "Cutoff"     100.0        25000.0      0.4 :: Slider Double) def
             UIRegistry.uiAction $ addWidgetToNode widget slider_a
 
-            slider_b <- UIRegistry.registerM (objectId widget) (Slider 0 (Vector2 10 105) (Vector2 180 25) "Resonance"  0.0        1.0      0.2 :: Slider Double) def 
+            slider_b <- UIRegistry.registerM (objectId widget) (Slider 0 (Vector2 10 105) (Vector2 180 25) "Resonance"  0.0        1.0      0.2 :: Slider Double) def
             UIRegistry.uiAction $ addWidgetToNode widget slider_b
 
             slider_c <- UIRegistry.registerM (objectId widget) (Slider 0 (Vector2 10 135) (Vector2 180 25) "Amount"     0.0        1.0      0.6 :: Slider Double) def
@@ -184,7 +184,7 @@ instance ActionUIUpdater Action where
             where
             workspace       = state ^. Global.workspace
         AddActionUI node wnode actions  -> (sequence_ $ reverse $ catMaybes actions)
-                                        >> putStrLn (display $ state ^. Global.graph . Graph.nodeRefs) -- debug
+                                        >> putStrLn (display $ state ^. Global.graph . Graph.nodesRefsMap) -- debug
                                         >> graphToViz (state ^. Global.graph . Graph.graphMeta)
         RemoveFocused      -> UI.removeNode nodeId
                            >> BatchCmd.removeNodeById (state ^. Global.workspace) nodeId

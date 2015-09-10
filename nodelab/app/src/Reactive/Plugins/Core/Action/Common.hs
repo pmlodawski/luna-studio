@@ -26,8 +26,8 @@ getNodePos nodes findNodeId = case find (\node -> (node ^. nodeId) == findNodeId
 
 displayConnectionLine :: NodeCollection -> (Int, (PortRef, PortRef)) -> IO ()
 displayConnectionLine nodes (lineId, (srcPortRef, dstPortRef)) = do
-    let srcNWs@(Vector2 xSrcN ySrcN) = getNodePos nodes $ getNodeIdFromPortRef srcPortRef
-        dstNWs@(Vector2 xDstN yDstN) = getNodePos nodes $ getNodeIdFromPortRef dstPortRef
+    let srcNWs@(Vector2 xSrcN ySrcN) = getNodePos nodes $ srcPortRef ^. refPortNodeId
+        dstNWs@(Vector2 xDstN yDstN) = getNodePos nodes $ dstPortRef ^. refPortNodeId
         outerPos                     = portOuterBorder + distFromPort
         angleSrc                     = calcAngle dstNWs srcNWs
         angleDst                     = calcAngle srcNWs dstNWs
@@ -41,10 +41,10 @@ displayConnectionLine nodes (lineId, (srcPortRef, dstPortRef)) = do
             else UI.removeConnection lineId
 
 
-displayDragLine :: Angle -> Vector2 Double -> Connect.Connecting -> IO ()
-displayDragLine angle ptWs@(Vector2 cx cy) connecting = do
+displayDragLine :: NodeCollection -> Angle -> Vector2 Double -> Connect.Connecting -> IO ()
+displayDragLine nodes angle ptWs@(Vector2 cx cy) connecting = do
     let portRef              = connecting ^. Connect.sourcePort
-        ndWs@(Vector2 nx ny) = portRef ^. refPortNode . nodePos
+        ndWs@(Vector2 nx ny) = getNodePos nodes $ portRef ^. refPortNodeId
         outerPos             = portOuterBorder + distFromPort
         sy                   = ny + outerPos * sin angle
         sx                   = nx + outerPos * cos angle
@@ -55,10 +55,25 @@ displayDragLine angle ptWs@(Vector2 cx cy) connecting = do
             else UI.removeCurrentConnection
 
 
+-- displayDragLine :: NodeCollection -> PortRef -> Vector2 Double -> IO ()
+-- displayDragLine nodes portRef ptWs@(Vector2 cx cy) = do
+--     let angle = calcAngle ptWs ndWs
+--     -- let portRef              = connecting ^. Connect.sourcePort
+--         ndWs@(Vector2 nx ny) = getNodePos nodes $ portRef ^. refPortNodeId
+--         outerPos             = portOuterBorder + distFromPort
+--         sy                   = ny + outerPos * sin angle
+--         sx                   = nx + outerPos * cos angle
+--         (Vector2 vx vy)      = ptWs - ndWs
+--         draw                 = vx * vx + vy * vy > portOuterBorderSquared
+--     setAnglePortRef angle portRef
+--     if draw then UI.displayCurrentConnection sx sy cx cy
+--             else UI.removeCurrentConnection
 
 setAnglePortRef :: Angle -> PortRef -> IO ()
-setAnglePortRef refAngle portRef = setAngle (portRef ^. refPortType) refNodeId (portRef ^. refPortId) refAngle where
-    refNodeId = portRef ^. refPortNode . nodeId
+setAnglePortRef refAngle portRef = setAngle (portRef ^. refPortType)
+                                            (portRef ^. refPortNodeId)
+                                            (portRef ^. refPortId)
+                                            refAngle
 
 setAngle :: PortType -> NodeId -> PortId -> Angle -> IO ()
 setAngle  InputPort = UI.setInputPortAngle

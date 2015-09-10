@@ -14,8 +14,10 @@ import           Object.Object
 import           Object.Port
 
 
-import qualified Data.Text.Lazy as Text
-import           Data.Text.Lazy (Text)
+import qualified Data.Text.Lazy   as Text
+import           Data.Text.Lazy   (Text)
+import qualified Data.IntMap.Lazy as IntMap
+import           Data.IntMap.Lazy (IntMap)
 
 
 data Ports = Ports { _inputPorts  :: PortCollection
@@ -33,6 +35,7 @@ makeLenses ''Ports
 makeLenses ''Node
 
 type NodeCollection   = [Node]
+type NodesMap         = IntMap Node
 
 instance Default Ports where
     def = Ports [] []
@@ -58,23 +61,20 @@ isNode :: Object Dynamic -> Bool
 isNode obj = isJust (unpackDynamic obj :: Maybe Node)
 
 
-data PortRef = PortRef { _refPortNode   :: Node
+data PortRef = PortRef { _refPortNodeId :: NodeId
                        , _refPortType   :: PortType
                        , _refPortId     :: PortId
                        } deriving (Eq, Show)
 
 makeLenses ''PortRef
 
-getNodeIdFromPortRef :: PortRef -> NodeId
-getNodeIdFromPortRef portRef = portRef ^. refPortNode . nodeId
-
 
 instance PrettyPrinter PortType where
     display = show
 
 instance PrettyPrinter PortRef where
-    display (PortRef portNode portType portId)
-        = "n(" <> display portNode
+    display (PortRef portNodeId portType portId)
+        = "n(" <> display portNodeId
         <> " " <> display portType
         <> " " <> display portId
         <> ")"
@@ -145,19 +145,19 @@ updatePortAngle portRef angle node = newNode where
 
 
 updateSourcePort :: PortRef -> Angle -> Node -> Node
-updateSourcePort portRef angle node = if node ^. nodeId == portRef ^. refPortNode . nodeId then newNode else node where
+updateSourcePort portRef angle node = if node ^. nodeId == portRef ^. refPortNodeId then newNode else node where
     newNode = updatePortAngle portRef angle node
 
-updateSourcePortInNodes :: Angle -> PortRef -> NodeCollection -> NodeCollection
+updateSourcePortInNodes :: Angle -> PortRef -> NodesMap -> NodesMap
 updateSourcePortInNodes angle portRef nodes = updateSourcePort portRef angle <$> nodes
 
 
-updateNodeSelection :: NodeIdCollection -> Node -> Node
-updateNodeSelection selNodeIds node = let selection = (node ^. nodeId) `elem` selNodeIds in
-    node & selected .~ selection
+-- updateNodeSelection :: NodeIdCollection -> Node -> Node
+-- updateNodeSelection selNodeIds node = let selection = (node ^. nodeId) `elem` selNodeIds in
+--     node & selected .~ selection
 
-updateNodesSelection :: NodeIdCollection -> NodeCollection -> NodeCollection
-updateNodesSelection selNodeIds nodes = fmap (updateNodeSelection selNodeIds) nodes
+-- updateNodesSelection :: NodeIdCollection -> NodeCollection -> NodeCollection
+-- updateNodesSelection selNodeIds nodes = fmap (updateNodeSelection selNodeIds) nodes
 
 getNodesAt :: Vector2 Int -> Camera -> NodeCollection -> NodeCollection
 getNodesAt posScr camera nodes = filter closeEnough nodes where
@@ -176,7 +176,7 @@ getPortRefs :: Angle -> Node -> [(Angle, PortRef)]
 getPortRefs refAngle node = inputs <> outputs where
     inputs    = newAnglePort  InputPort <$> getPorts  InputPort node
     outputs   = newAnglePort OutputPort <$> getPorts OutputPort node
-    newAnglePort tpe port = (angleDiff refAngle $ port ^. angle, PortRef node tpe $ port ^. portId)
+    newAnglePort tpe port = (angleDiff refAngle $ port ^. angle, PortRef (node ^. nodeId) tpe $ port ^. portId)
 
 
 getNodeHaloAt :: Vector2 Int -> Camera -> NodeCollection -> Maybe Node

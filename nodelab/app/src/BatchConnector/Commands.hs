@@ -127,9 +127,9 @@ addNode workspace node = sendMessage msg where
 
 connectNodes :: Workspace -> PortRef -> PortRef -> IO ()
 connectNodes workspace src dst = connectNodes' workspace
-                                               (src ^. refPortNode . nodeId)
+                                               (src ^. refPortNodeId)
                                                []
-                                               (dst ^. refPortNode . nodeId)
+                                               (dst ^. refPortNodeId)
                                                [dst ^. refPortId]
 
 -- TODO: Remove - low level debug interface

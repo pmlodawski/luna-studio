@@ -38,7 +38,7 @@ getNodesUnderCursor :: State -> NodeCollection
 getNodesUnderCursor state = maybeToList node where
     registry = state ^. uiRegistry
     nodes    = Graph.getNodes $ state ^. graph
-    node = do
+    node     = do
         widgetId    <- registry ^. UIRegistry.widgetOver
         maybeWidget <- UIRegistry.lookup widgetId registry
         widget      <- (fromCtxDynamic maybeWidget) :: Maybe WNode.Node

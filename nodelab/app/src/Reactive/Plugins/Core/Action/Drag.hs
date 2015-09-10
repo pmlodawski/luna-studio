@@ -27,6 +27,7 @@ import qualified Reactive.Plugins.Core.Action.State.Camera    as Camera
 import qualified Reactive.Plugins.Core.Action.State.Global    as Global
 import           Reactive.Plugins.Core.Action.State.UnderCursor
 
+import qualified Data.IntMap.Lazy as IntMap
 
 data ActionType = StartDrag
                 | Moving
@@ -64,7 +65,7 @@ toAction (Mouse (Mouse.Event tpe pos button keyMods _)) underCursor = case butto
     where dragAllowed   = not . null $ underCursor ^. nodesUnderCursor
 toAction _ _ = Nothing
 
-moveNodes :: Double -> Vector2 Int -> NodeCollection -> NodeCollection
+moveNodes :: Double -> Vector2 Int -> NodesMap -> NodesMap
 moveNodes factor delta = fmap $ \node -> if node ^. selected then node & nodePos +~ deltaWs else node where
     deltaWs = deltaToWs factor delta
 
@@ -78,10 +79,10 @@ instance ActionStateUpdater Action where
         where
         oldDrag                          = oldState ^. Global.drag . history
         oldGraph                         = oldState ^. Global.graph
-        oldNodes                         = Graph.getNodes oldGraph
-        newGraph                         = Graph.updateNodes newNodes oldGraph
+        oldNodesMap                      = Graph.getNodesMap oldGraph
+        newGraph                         = Graph.updateNodes newNodesMap oldGraph
         camFactor                        = oldState ^. Global.camera . Camera.camera . Camera.factor
-        emptySelection                   = null oldNodes
+        emptySelection                   = IntMap.null oldNodesMap
         newState                         = oldState & Global.iteration       +~ 1
                                                     & Global.drag  . history .~ newDrag
                                                     & Global.graph           .~ newGraph
@@ -90,15 +91,15 @@ instance ActionStateUpdater Action where
                 Nothing                 -> Nothing
                 _                       -> Just $ DragAction Dragging pt
             _                           -> Just newActionCandidate
-        newNodes                         = case newActionCandidate of
+        newNodesMap                      = case newActionCandidate of
             DragAction tpe point        -> case tpe of
                 Moving                  -> case oldDrag of
-                    Just oldDragState   -> moveNodes camFactor (delta oldDragState) oldNodes
-                    Nothing             -> oldNodes
+                    Just oldDragState   -> moveNodes camFactor (delta oldDragState) oldNodesMap
+                    Nothing             -> oldNodesMap
                 StopDrag                -> case oldDrag of
-                    Just oldDragState   -> moveNodes camFactor (delta oldDragState) oldNodes
-                    Nothing             -> oldNodes
-                _                       -> oldNodes
+                    Just oldDragState   -> moveNodes camFactor (delta oldDragState) oldNodesMap
+                    Nothing             -> oldNodesMap
+                _                       -> oldNodesMap
                 where delta oldDragState = point - (oldDragState ^. dragCurrentPos)
         newDrag                          = case newActionCandidate of
             DragAction tpe point        -> case tpe of

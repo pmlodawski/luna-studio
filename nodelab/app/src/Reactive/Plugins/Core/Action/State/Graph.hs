@@ -18,14 +18,14 @@ import           Luna.Syntax.Builder
 import           AST.AST
 
 
-type NodesMap = IntMap GraphRefMeta
-
+type NodesRefsMap = IntMap GraphRefMeta
 
 type ConnectionsCollections = [(PortRef, PortRef)]
 
-data State = State { _nodeList      :: NodeCollection  -- don't access it directly from outside this file!
+data State = State { _nodesMap      :: NodesMap
+                   -- , _nodeList      :: NodeCollection  -- don't access it directly from outside this file!
                    , _connections   :: ConnectionsCollections -- don't access it directly
-                   , _nodeRefs      :: NodesMap
+                   , _nodesRefsMap  :: NodesRefsMap
                    , _focusedNodeId :: NodeId
                    , _graphMeta     :: GraphMeta
                    } deriving (Show)
@@ -33,100 +33,95 @@ data State = State { _nodeList      :: NodeCollection  -- don't access it direct
 makeLenses ''State
 
 
--- instance Show State where
---     show a = show $ IntMap.size $ a ^. nodes
 
+-- TODO: Implement in full
 instance Eq State where
-    a == b = (a ^. nodeList) == (b ^. nodeList)
+    a == b = (a ^. nodesMap) == (b ^. nodesMap)
 
 instance Default State where
     def = State def def def def def
 
-instance PrettyPrinter NodesMap where
+instance PrettyPrinter NodesRefsMap where
     display nodes =
         "map(" <> show (IntMap.keys nodes)
         <> " " <> show (IntMap.assocs nodes)
         <> ")"
 
 instance PrettyPrinter State where
-    display (State nodesList nodes connections focusedNodeId bldrState) =
-          "graph(" <> display nodesList
-        <> " "     <> display nodes
+    display (State nodesMap connections nodesRefsMap focusedNodeId bldrState) =
+          "graph(" <> show nodesMap
         <> " "     <> display connections
+        <> " "     <> display nodesRefsMap
         <> " "     <> display focusedNodeId
         <> " "     <> show bldrState
         <> ")"
 
 
-maxNodeId :: NodeCollection -> NodeId
-maxNodeId []    = 0
-maxNodeId nodes = (^. nodeId) $ maximumBy (on compare (^. nodeId)) nodes
-
 genId :: State -> NodeId
-genId state = let refs = state ^. nodeRefs in
+genId state = let refs = state ^. nodesRefsMap in
     if IntMap.null refs then 0
                         else 1 + (fst $ IntMap.findMax refs)
 
+getNode :: State -> NodeId -> Node
+getNode state nodeId = IntMap.findWithDefault (error $ "Node " <> show nodeId <> " not found") nodeId $ state ^. nodesMap
 
 getNodes :: State -> NodeCollection
-getNodes = (^. nodeList)
+getNodes state = IntMap.elems $ state ^. nodesMap
+
+getNodesMap :: State -> NodesMap
+getNodesMap = (^. nodesMap)
 
 getConnections :: State -> ConnectionsCollections
 getConnections = (^. connections)
 
-updateNodes :: NodeCollection -> State -> State
-updateNodes newNodeList state = state & nodeList .~ newNodeList
+updateNodes :: NodesMap -> State -> State
+updateNodes newNodesMap state = state & nodesMap .~ newNodesMap
 
 
 addNode :: Node -> State -> State
-addNode newNode state  = state & nodeList     .~ newNodeList
+addNode newNode state  = state & nodesMap     %~ IntMap.insert (newNode ^. nodeId) newNode
                                & graphMeta    .~ newGraphMeta
-                               & nodeRefs     .~ newNodeRefs
+                               & nodesRefsMap %~ IntMap.insert (newNode ^. nodeId) ref
     where (ref, newGraphMeta) = makeVar newNode $ rebuild $ state ^. graphMeta
-          newNodeRefs         = IntMap.insert (newNode ^. nodeId) ref $ state ^. nodeRefs
-          newNodeList         = newNode : state ^. nodeList
-
 
 
 -- TODO: nodeRefs and graphMeta
 removeNode :: NodeId -> State -> State
-removeNode remNodeId state = state & nodeList .~ newNodeList
-    where newNodeList = filter (\node -> node ^. nodeId /= remNodeId) $ state ^. nodeList
+removeNode remNodeId state = state & nodesMap %~ IntMap.delete remNodeId
 
+updateNodeSelection :: NodeIdCollection -> Node -> Node
+updateNodeSelection selNodeIds node = node & selected .~ ((node ^. nodeId) `elem` selNodeIds)
 
 -- TODO: nodeRefs and graphMeta
 selectNodes :: NodeIdCollection -> State -> State
-selectNodes nodeIds state = state & nodeList .~ newNodeList
-    where newNodeList = updateNodesSelection nodeIds $ state ^. nodeList
+selectNodes selNodeIds state = state & nodesMap %~ fmap (updateNodeSelection selNodeIds)
 
 
 addAccessor :: NodeId -> NodeId -> State -> State
 addAccessor sourceId destId state =
-    let refMap = state ^. nodeRefs
-        sourceRefMay = IntMap.lookup sourceId refMap
-        destRefMay   = IntMap.lookup destId   refMap
+    let refsMap      = state ^. nodesRefsMap
+        sourceRefMay = IntMap.lookup sourceId refsMap
+        destRefMay   = IntMap.lookup destId   refsMap
     in case (sourceRefMay, destRefMay) of
         (Just sourceRef, Just destRef) -> state & graphMeta    .~ newGraphMeta
-                                                & nodeRefs     .~ newNodeRefs
+                                                & nodesRefsMap %~ IntMap.insert (newNode ^. hiddenNodeId) ref
             where (ref, newGraphMeta) = makeAcc newNode sourceRef destRef $ rebuild $ state ^. graphMeta
-                  newNodeRefs         = IntMap.insert (newNode ^. hiddenNodeId) ref $ state ^. nodeRefs
                   newNode             = HiddenNode Accessor $ genId state
         (_, _) -> state
 
 
 addApplication :: PortRef -> PortRef -> State -> State
 addApplication funPortRef argPortRef state =
-    let refMap    = state ^. nodeRefs
-        funId     = funPortRef ^. refPortNode . nodeId
-        argId     = argPortRef ^. refPortNode . nodeId
-        funRefMay = IntMap.lookup funId refMap
-        argRefMay = IntMap.lookup argId refMap
+    let refsMap   = state ^. nodesRefsMap
+        funId     = funPortRef ^. refPortNodeId
+        argId     = argPortRef ^. refPortNodeId
+        funRefMay = IntMap.lookup funId refsMap
+        argRefMay = IntMap.lookup argId refsMap
     in case (funRefMay, argRefMay) of
         (Just funRef, Just argRef) -> state & graphMeta    .~ newGraphMeta
-                                            & nodeRefs     .~ newNodeRefs
+                                            & nodesRefsMap %~ IntMap.insert (newNode ^. hiddenNodeId) ref
                                             & connections  .~ newConnections
             where (ref, newGraphMeta) = makeApp1 newNode funRef argRef $ rebuild $ state ^. graphMeta
-                  newNodeRefs         = IntMap.insert (newNode ^. hiddenNodeId) ref $ state ^. nodeRefs
                   newNode             = HiddenNode Application $ genId state
                   newConnections      = (funPortRef, argPortRef) : (state ^. connections) -- TODO: move to AST
         (_, _) -> state
