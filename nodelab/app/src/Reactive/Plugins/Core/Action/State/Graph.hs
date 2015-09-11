@@ -96,6 +96,8 @@ updateNodeSelection selNodeIds node = node & selected .~ ((node ^. nodeId) `elem
 selectNodes :: NodeIdCollection -> State -> State
 selectNodes selNodeIds state = state & nodesMap %~ fmap (updateNodeSelection selNodeIds)
 
+addConnection :: PortRef -> PortRef -> State -> State
+addConnection  = addApplication
 
 addAccessor :: NodeId -> NodeId -> State -> State
 addAccessor sourceId destId state =
