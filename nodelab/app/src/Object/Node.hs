@@ -56,6 +56,11 @@ instance PrettyPrinter Node where
         <> " " <> display ports
         <> ")"
 
+instance PrettyPrinter NodesMap where
+    display nodes =
+        "map(" <> show (IntMap.keys nodes)
+        <> " " <> show (IntMap.assocs nodes)
+        <> ")"
 
 isNode :: Object Dynamic -> Bool
 isNode obj = isJust (unpackDynamic obj :: Maybe Node)
@@ -106,11 +111,13 @@ closenestFactor        = 0.25
 createPort :: PortType -> Int -> PortId -> Port
 createPort portType allPorts ident = Port ident Int $ portDefaultAngle portType allPorts ident
 
-createPorts :: Int -> Ports
-createPorts inputPortsNum = Ports inputPorts outputPorts where
-    inputPorts  = (\ident -> createPort  InputPort  inputPortsNum ident) <$> take  inputPortsNum idents
-    outputPorts = [createPort OutputPort 1 AllPorts]
-    idents      = PortNum <$> [0, 1 ..]
+createPorts :: Int -> Int -> Ports
+createPorts inputPortsNum outputPortsNum = Ports inputPorts outputPorts where
+    inputPorts   = (\ident -> createPort InputPort  inputPortsNum  ident) <$> take inputPortsNum  inputIdents
+    outputPorts  = (\ident -> createPort OutputPort outputPortsNum ident) <$> take outputPortsNum outputIdents
+    idents       = PortNum <$> [0, 1 ..]
+    inputIdents  = idents
+    outputIdents = AllPorts : idents
 
 
 getPorts :: PortType -> Node -> PortCollection

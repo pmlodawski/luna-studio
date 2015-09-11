@@ -14,6 +14,7 @@ import qualified Data.Map                         as Map
 import           Data.Int
 import           Data.Text.Lazy.Encoding          (encodeUtf8, decodeUtf8)
 import           Utils.Vector                     (Vector2(..), x, y)
+import qualified Utils.MockHelper as MockHelper
 
 import           Batch.Project                    as Project
 import           Batch.Library                    as Library
@@ -126,7 +127,7 @@ instance ProtoSerializable ProtoNode.Node Node where
         nodePos = Vector2 <$> (float2Double <$> ProtoNode.x node)
                           <*> (float2Double <$> ProtoNode.y node)
         expr    = (ProtoNode.expr node) >>= ProtoExpr.str >>= decode
-        ports   = createPorts 1
+        ports   = MockHelper.createPortsMay expr
     encode node = ProtoNode.Node NodeCls.Expr
                                  (Just $ fromIntegral $ node ^. nodeId)
                                  (Just expr)

@@ -4,10 +4,9 @@ module Reactive.Plugins.Core.Action.AddRemove where
 
 import           Utils.PreludePlus
 import           Utils.Vector
+import qualified Utils.MockHelper as MockHelper
 
 import           Data.Fixed
-import qualified Data.Text.Lazy as Text
-import           Data.Text.Lazy (Text)
 
 import qualified JS.Bindings    as UI
 import qualified JS.NodeGraph   as UI
@@ -77,17 +76,8 @@ toAction (NodeSearcher (NodeSearcher.Event tpe expr)) _ = case tpe of
     _        -> Nothing
 toAction _ _  = Nothing
 
--- mock helper functions
-tmpMaxin  = 9
-tmpMaxOut = 5
-tmpGetInputPortsNr  expr = (ord (head expr) - ord '1' + 1) `mod` (tmpMaxin + 1)
-tmpGetOutputPortsNr expr = 1 + (ord (fromMaybe '1' $ listToMaybe (tail expr)) - ord '1') `mod` tmpMaxOut
--- end of mock
-
 createNode :: NodeId -> Vector2 Double -> Text -> Node
-createNode nodeId pos expr = Node nodeId False pos expr (createPorts inputPortsNum) where
-    -- mock port numbers:
-    inputPortsNum   = 1 -- tmpGetInputPortsNr  $ Text.unpack expr
+createNode nodeId pos expr = Node nodeId False pos expr $ MockHelper.createPorts expr
 
 instance ActionStateUpdater Action where
     -- The logic of computing nodeId is needed only for offline mode
@@ -130,11 +120,12 @@ instance ActionStateUpdater Action where
 
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
-        RegisterActionUI node -> addNode workspace node
+        RegisterActionUI node -> addNode workspace node >> putStrLn ("added " <> display node)
             where
             workspace       = state ^. Global.workspace
         AddActionUI node action -> action
                                 >> putStrLn (display $ state ^. Global.graph . Graph.nodesRefsMap) -- debug
+                                >> putStrLn (display $ state ^. Global.graph . Graph.nodesMap)     -- debug
                                 >> graphToViz (state ^. Global.graph . Graph.graphMeta)
         RemoveFocused      -> UI.removeNode nodeId
                            >> mapM_ UI.setNodeFocused topNodeId

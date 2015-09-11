@@ -6,7 +6,7 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE OverlappingInstances #-}
 
-module Flags where
+module Utils.Flags where
 
 import Data.Bits
 
