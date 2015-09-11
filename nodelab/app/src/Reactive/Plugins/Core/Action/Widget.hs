@@ -59,7 +59,7 @@ handleGeneric (Mouse.Event eventType absPos button _ (Just (EventWidget widgetId
         Mouse.Released    -> onMouseRelease button pos file dynamicWidget
         Mouse.Clicked     -> onClick               pos file dynamicWidget
         Mouse.DblClicked  -> onDblClick            pos file dynamicWidget
-    let newRegistry = UIRegistry.update file newWidget registry
+    let newRegistry = UIRegistry.update widgetId newWidget registry
     return (uiUpdate, newRegistry)
 handleGeneric _ _ _        = Nothing
 
@@ -68,7 +68,7 @@ triggerHandler maybeOid handler state = do
     oid                     <- maybeOid
     file                    <- UIRegistry.lookup oid state
     let (action, newWidget)  = handler file (file ^. widget)
-    let newState             = UIRegistry.update file newWidget state
+    let newState             = UIRegistry.update oid newWidget state
     return (action, newState)
 
 handleDragStart :: EventWidget -> MouseButton -> Keyboard.KeyMods -> Vector2 Double -> Camera.Camera -> UIRegistryState -> Maybe UIRegistryUpdate
@@ -123,7 +123,7 @@ handleKeyEvents (Keyboard.Event eventType ch) registry = case registry ^. UIRegi
             Keyboard.Up       -> onKeyUp      ch file (file ^. widget)
             Keyboard.Down     -> onKeyDown    ch file (file ^. widget)
             Keyboard.Press    -> onKeyPressed ch file (file ^. widget)
-        let newRegistry = UIRegistry.update file newWidget registry
+        let newRegistry = UIRegistry.update widgetId newWidget registry
         return (uiUpdate, newRegistry)
     Nothing -> Just $ (Nothing, registry)
 

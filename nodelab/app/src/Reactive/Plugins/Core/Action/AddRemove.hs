@@ -153,7 +153,7 @@ instance ActionStateUpdater Action where
             slider_d <- UIRegistry.registerM rootId (Slider (Vector2 10 165) (Vector2 180 25) "Gain"       0.0        2.0      0.5 :: Slider Double) def
             UIRegistry.uiAction $ addWidgetToNode rootId slider_d
 
-            UIRegistry.updateM file ((file ^. widget) & WNode.controls .~ ((^. objectId) <$> [slider_a, slider_b, slider_c, slider_d]))
+            UIRegistry.updateM (file ^. objectId) ((file ^. widget) & WNode.controls .~ ((^. objectId) <$> [slider_a, slider_b, slider_c, slider_d]))
 
             return file
 

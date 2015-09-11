@@ -90,14 +90,13 @@ registerM parent widget handlers = do
     MState.put (st', acts)
     return widget'
 
-update :: WidgetFile a b -> DisplayObject -> State a -> State a -- redefine in context of updateFile
-update wf a state  = state & widgets .~ newWidgets where
+update :: WidgetId -> DisplayObject -> State a -> State a -- redefine in context of updateFile
+update oid a state  = state & widgets .~ newWidgets where
     oldFile        = IntMap.lookup oid oldWidgets
     newWidgets     = case oldFile of
         Just file -> IntMap.insert oid (file & widget .~ a) oldWidgets
         Nothing   -> oldWidgets
     oldWidgets     = state ^. widgets
-    oid            = wf ^. objectId
 
 updateFile :: WidgetId -> (WidgetFile a DisplayObject -> WidgetFile a DisplayObject) -> State a -> State a
 updateFile oid mutator state = state & widgets .~ newWidgets where
@@ -107,10 +106,10 @@ updateFile oid mutator state = state & widgets .~ newWidgets where
         Nothing   -> oldWidgets
     oldWidgets = state ^. widgets
 
-updateM :: DisplayObjectClass a => WidgetFile b a -> a -> UIState () b
-updateM file widget = do
+updateM :: DisplayObjectClass a => WidgetId -> a -> UIState () b
+updateM oid widget = do
     (st, acts) <- MState.get
-    let st' = update file (toCtxDynamic widget) st
+    let st' = update oid (toCtxDynamic widget) st
     MState.put (st', acts)
     return ()
 
@@ -122,9 +121,9 @@ registerHandler :: WidgetId -> (UIHandlers a -> UIHandlers a) -> State a -> Stat
 registerHandler oid mutator state = updateFile oid fileMutator state where
     fileMutator file = file & handlers %~ mutator
 
-unregister :: WidgetFile b a -> State b -> State b -- TODO: Remove children from parent
-unregister a state = state & widgets .~ newWidgets where
-    newWidgets = IntMap.delete (a ^. objectId) oldWidgets
+unregister :: WidgetId -> State b -> State b -- TODO: Remove children from parent
+unregister oid state = state & widgets .~ newWidgets where
+    newWidgets = IntMap.delete oid oldWidgets
     oldWidgets = state ^. widgets
 
 registerAll :: DisplayObjectClass a => WidgetId -> [a] -> State b -> ([WidgetFile b a], State b)
@@ -132,7 +131,7 @@ registerAll parent a state = foldl reg ([], state) a where
     reg (acc, st) a = (newA:acc, newSt) where
         (newA, newSt) = register parent a def st
 
-unregisterAll :: [WidgetFile b a] -> State b -> State b
+unregisterAll :: [WidgetId] -> State b -> State b
 unregisterAll a state = foldl (flip unregister) state a
 
 generateIds :: Int -> State b -> [WidgetId]
@@ -143,7 +142,7 @@ generateId :: State b -> WidgetId
 generateId state = if IntMap.size (state ^. widgets) == 0 then 1
                                                           else maxId + 1 where (maxId, _) = IntMap.findMax (state ^. widgets)
 
-replaceAll :: DisplayObjectClass a => WidgetId -> [WidgetFile b a] -> [a] -> State b -> ([WidgetFile b a], State b)
+replaceAll :: DisplayObjectClass a => WidgetId -> [WidgetId] -> [a] -> State b -> ([WidgetFile b a], State b)
 replaceAll parent remove add state = registerAll parent add $ unregisterAll remove state
 
 sequenceUpdates :: [Maybe (State b -> Maybe (WidgetUIUpdate, State b))]
