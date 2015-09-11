@@ -112,6 +112,7 @@ addAccessor sourcePortRef destPortRef state =
     in case (sourceRefMay, destRefMay) of
         (Just sourceRef, Just destRef) -> state & graphMeta    .~ newGraphMeta
                                                 & nodesRefsMap %~ IntMap.insert (newNode ^. hiddenNodeId) ref
+                                                & connections  %~ (:) (sourcePortRef, destPortRef)
             where (ref, newGraphMeta) = makeAcc newNode sourceRef destRef $ rebuild $ state ^. graphMeta
                   newNode             = HiddenNode Accessor $ genId state
         (_, _) -> state
@@ -124,13 +125,12 @@ addApplication argPortRef funPortRef state =
         funId     = funPortRef ^. refPortNodeId
         argRefMay = IntMap.lookup argId refsMap
         funRefMay = IntMap.lookup funId refsMap
-    in case (funRefMay, argRefMay) of
-        (Just funRef, Just argRef) -> state & graphMeta    .~ newGraphMeta
+    in case (argRefMay, funRefMay) of
+        (Just argRef, Just funRef) -> state & graphMeta    .~ newGraphMeta
                                             & nodesRefsMap %~ IntMap.insert (newNode ^. hiddenNodeId) ref
-                                            & connections  .~ newConnections
+                                            & connections  %~ (:) (argPortRef, funPortRef)
             where (ref, newGraphMeta) = makeApp1 newNode funRef argRef $ rebuild $ state ^. graphMeta
                   newNode             = HiddenNode Application $ genId state
-                  newConnections      = (funPortRef, argPortRef) : (state ^. connections) -- TODO: move to AST
         (_, _) -> state
 
 
