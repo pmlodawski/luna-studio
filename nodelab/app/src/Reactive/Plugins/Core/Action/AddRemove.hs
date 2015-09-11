@@ -122,7 +122,6 @@ instance ActionStateUpdater Action where
         registerNode = RegisterActionUI node
         node         = createNode nextId nodePosWs expr
         camera       = Global.toCamera state
-        oldNodes     = Graph.getNodes graph
         graph        = state ^. Global.graph
         nextId       = Global.genId state
         nodePosWs    = Camera.screenToWorkspace camera $ state ^. Global.mousePos
@@ -170,7 +169,6 @@ instance ActionStateUpdater Action where
                                            & Global.selection . Selection.nodeIds .~ newSelIds
                                            & Global.addRemove . toRemoveIds       .~ newToRemoveIds
         oldGraph                = oldState ^. Global.graph
-        oldNodes                = Graph.getNodes oldGraph
         camera                  = Global.toCamera oldState
         nodePosWs               = Camera.screenToWorkspace camera $ oldState ^. Global.mousePos
         oldSelNodeIds           = oldState ^. Global.selection . Selection.nodeIds

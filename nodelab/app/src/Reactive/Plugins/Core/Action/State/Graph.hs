@@ -22,8 +22,7 @@ type NodesRefsMap = IntMap GraphRefMeta
 
 type ConnectionsCollections = [(PortRef, PortRef)]
 
-data State = State { _nodesMap      :: NodesMap
-                   -- , _nodeList      :: NodeCollection  -- don't access it directly from outside this file!
+data State = State { _nodesMap      :: NodesMap               -- don't access it directly
                    , _connections   :: ConnectionsCollections -- don't access it directly
                    , _nodesRefsMap  :: NodesRefsMap
                    , _focusedNodeId :: NodeId
@@ -96,8 +95,10 @@ updateNodeSelection selNodeIds node = node & selected .~ ((node ^. nodeId) `elem
 selectNodes :: NodeIdCollection -> State -> State
 selectNodes selNodeIds state = state & nodesMap %~ fmap (updateNodeSelection selNodeIds)
 
+
 addConnection :: PortRef -> PortRef -> State -> State
-addConnection  = addApplication
+addConnection funPortRef argPortRef state = addApplication funPortRef argPortRef state
+
 
 addAccessor :: NodeId -> NodeId -> State -> State
 addAccessor sourceId destId state =

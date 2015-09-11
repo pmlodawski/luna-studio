@@ -103,11 +103,6 @@ instance ActionStateUpdater Action where
                         newHistory       = oldHistory & dragCurrentPos .~ point
                     Nothing             -> Nothing
                 ConnectPorts _ _        -> Nothing
-                -- case oldConnecting of
-                --     Just (Connecting source _ oldHistory)
-                --                         -> Just $ Connecting source (Just destination) newHistory where
-                --         newHistory       = oldHistory & dragCurrentPos .~ point
-                --     Nothing             -> Nothing
                 StopDrag                -> Nothing
         newGraph                         = case newActionCandidate of
             DragAction tpe point        -> case tpe of

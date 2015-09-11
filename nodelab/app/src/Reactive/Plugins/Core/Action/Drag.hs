@@ -123,10 +123,9 @@ instance ActionUIUpdater Action where
                                      >> displayConnections nodesMap connections
             where
                 nodesMap              = Graph.getNodesMap    $ state ^. Global.graph
-                nodes                 = Graph.getNodes       $ state ^. Global.graph
                 connections           = Graph.getConnections $ state ^. Global.graph
                 selNodeIds            = state ^. Global.selection . Selection.nodeIds
-                selNodes              = filter (\node -> node ^. nodeId `elem` selNodeIds) nodes
+                selNodes              = IntMap.filter (\node -> node ^. nodeId `elem` selNodeIds) nodesMap
                 factor                = state ^. Global.camera . Camera.camera . Camera.factor
                 deltaWs               = case state ^. Global.drag . history of
                     Just dragState   -> deltaToWs factor delta where
@@ -135,6 +134,6 @@ instance ActionUIUpdater Action where
 
 
 
-moveNodesUI :: NodeCollection -> IO ()
-moveNodesUI nodes = mapM_ UI.moveNode nodes
+moveNodesUI :: NodesMap -> IO ()
+moveNodesUI nodesMap = mapM_ UI.moveNode $ IntMap.elems nodesMap
                   -- >> performGC
