@@ -97,12 +97,16 @@ selectNodes selNodeIds state = state & nodesMap %~ fmap (updateNodeSelection sel
 
 
 addConnection :: PortRef -> PortRef -> State -> State
-addConnection funPortRef argPortRef state = addApplication funPortRef argPortRef state
+addConnection sourcePortRef destPortRef = let attachToSelf = (destPortRef ^. refPortId) == PortNum 0 in
+    if attachToSelf then addApplication sourcePortRef destPortRef
+                    else addAccessor    sourcePortRef destPortRef
 
 
-addAccessor :: NodeId -> NodeId -> State -> State
-addAccessor sourceId destId state =
+addAccessor :: PortRef -> PortRef -> State -> State
+addAccessor sourcePortRef destPortRef state =
     let refsMap      = state ^. nodesRefsMap
+        sourceId     = sourcePortRef ^. refPortNodeId
+        destId       = destPortRef   ^. refPortNodeId
         sourceRefMay = IntMap.lookup sourceId refsMap
         destRefMay   = IntMap.lookup destId   refsMap
     in case (sourceRefMay, destRefMay) of
@@ -114,12 +118,12 @@ addAccessor sourceId destId state =
 
 
 addApplication :: PortRef -> PortRef -> State -> State
-addApplication funPortRef argPortRef state =
+addApplication argPortRef funPortRef state =
     let refsMap   = state ^. nodesRefsMap
-        funId     = funPortRef ^. refPortNodeId
         argId     = argPortRef ^. refPortNodeId
-        funRefMay = IntMap.lookup funId refsMap
+        funId     = funPortRef ^. refPortNodeId
         argRefMay = IntMap.lookup argId refsMap
+        funRefMay = IntMap.lookup funId refsMap
     in case (funRefMay, argRefMay) of
         (Just funRef, Just argRef) -> state & graphMeta    .~ newGraphMeta
                                             & nodesRefsMap %~ IntMap.insert (newNode ^. hiddenNodeId) ref
@@ -128,9 +132,6 @@ addApplication funPortRef argPortRef state =
                   newNode             = HiddenNode Application $ genId state
                   newConnections      = (funPortRef, argPortRef) : (state ^. connections) -- TODO: move to AST
         (_, _) -> state
-
-
-
 
 
 

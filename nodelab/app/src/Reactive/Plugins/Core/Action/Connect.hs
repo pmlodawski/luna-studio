@@ -112,7 +112,7 @@ instance ActionStateUpdater Action where
                         newNodesMap      = updateSourcePortInNodes angle source oldNodesMap
                         oldNodesMap      = Graph.getNodesMap oldGraph
                         updSourceGraph   = Graph.updateNodes newNodesMap oldGraph
-                        appGraph         = Graph.addApplication dst source updSourceGraph
+                        appGraph         = Graph.addConnection source dst updSourceGraph
                     _                   -> oldGraph
                 _                       -> case newConnecting of
                     Just (Connecting source destinationMay (DragHistory startPos currentPos))
