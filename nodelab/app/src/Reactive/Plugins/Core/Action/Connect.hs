@@ -129,7 +129,7 @@ instance ActionStateUpdater Action where
             Just (Connecting source destinationMay (DragHistory startPos currentPos))
                                         -> calcAngle destinPoint sourcePoint where
                 camera                   = Global.toCamera oldState
-                sourcePoint              = getNodePos (Graph.getNodes oldGraph) $ source ^. refPortNodeId
+                sourcePoint              = getNodePos (Graph.getNodesMap oldGraph) $ source ^. refPortNodeId
                 destinPoint              = screenToWorkspace camera currentPos
             _                           -> 0.0
 
@@ -138,16 +138,16 @@ instance ActionUIUpdater Action where
         DragAction tpe pt            -> case tpe of
             StartDrag portRef        -> return ()
             Moving                   -> return ()
-            Dragging angle           -> forM_ maybeConnecting $ displayDragLine nodes angle ptWs
+            Dragging angle           -> forM_ maybeConnecting $ displayDragLine nodesMap angle ptWs
             StopDrag                 -> UI.removeCurrentConnection
             ConnectPorts src dst     -> UI.removeCurrentConnection
-                                     >> displayConnections nodes connections
+                                     >> displayConnections nodesMap connections
                                      >> BatchCmd.connectNodes workspace src dst
                                      >> putStrLn (display $ state ^. Global.graph . Graph.nodesRefsMap) -- debug
                                      >> putStrLn (display $ state ^. Global.graph . Graph.connections) -- debug
                                      >> graphToViz (state ^. Global.graph . Graph.graphMeta)
             where
-                nodes                 = Graph.getNodes       $ state ^. Global.graph
+                nodesMap              = Graph.getNodesMap    $ state ^. Global.graph
                 connections           = Graph.getConnections $ state ^. Global.graph
                 ptWs                  = screenToWorkspace camera pt
                 camera                = Global.toCamera state

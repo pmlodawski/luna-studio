@@ -118,10 +118,11 @@ instance ActionUIUpdater Action where
             StartDrag                -> return ()
             Moving                   -> return ()
             Dragging                 -> moveNodesUI selNodes
-                                     >> displayConnections nodes connections
+                                     >> displayConnections nodesMap connections
             StopDrag                 -> moveNodesUI selNodes
-                                     >> displayConnections nodes connections
+                                     >> displayConnections nodesMap connections
             where
+                nodesMap              = Graph.getNodesMap    $ state ^. Global.graph
                 nodes                 = Graph.getNodes       $ state ^. Global.graph
                 connections           = Graph.getConnections $ state ^. Global.graph
                 selNodeIds            = state ^. Global.selection . Selection.nodeIds

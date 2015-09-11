@@ -5,6 +5,8 @@ import           Utils.PreludePlus
 import           Utils.Vector
 import           Utils.Angle
 
+import qualified Data.IntMap.Lazy as IntMap
+
 import           Object.Object
 import           Object.Node
 
@@ -16,18 +18,17 @@ import qualified Reactive.Plugins.Core.Action.State.Graph     as Graph
 import qualified Reactive.Plugins.Core.Action.State.Connect   as Connect
 
 
-displayConnections :: NodeCollection -> Graph.ConnectionsCollections -> IO ()
-displayConnections nodes connections = mapM_ (displayConnectionLine nodes) $ zip [0..] connections
+displayConnections :: NodesMap -> Graph.ConnectionsCollections -> IO ()
+displayConnections nodesMap connections = mapM_ (displayConnectionLine nodesMap) $ zip [0..] connections
 
-getNodePos :: NodeCollection -> NodeId -> Vector2 Double
-getNodePos nodes findNodeId = case find (\node -> (node ^. nodeId) == findNodeId) nodes of
-    Just node -> node ^. nodePos
-    Nothing   -> error $ "Node " <> show findNodeId <> " not found"
+getNodePos :: NodesMap -> NodeId -> Vector2 Double
+getNodePos nodesMap nodeId = node ^. nodePos where
+    node = IntMap.findWithDefault (error $ "Node " <> show nodeId <> " not found") nodeId nodesMap
 
-displayConnectionLine :: NodeCollection -> (Int, (PortRef, PortRef)) -> IO ()
-displayConnectionLine nodes (lineId, (srcPortRef, dstPortRef)) = do
-    let srcNWs@(Vector2 xSrcN ySrcN) = getNodePos nodes $ srcPortRef ^. refPortNodeId
-        dstNWs@(Vector2 xDstN yDstN) = getNodePos nodes $ dstPortRef ^. refPortNodeId
+displayConnectionLine :: NodesMap -> (Int, (PortRef, PortRef)) -> IO ()
+displayConnectionLine nodesMap (lineId, (srcPortRef, dstPortRef)) = do
+    let srcNWs@(Vector2 xSrcN ySrcN) = getNodePos nodesMap $ srcPortRef ^. refPortNodeId
+        dstNWs@(Vector2 xDstN yDstN) = getNodePos nodesMap $ dstPortRef ^. refPortNodeId
         outerPos                     = portOuterBorder + distFromPort
         angleSrc                     = calcAngle dstNWs srcNWs
         angleDst                     = calcAngle srcNWs dstNWs
@@ -41,10 +42,10 @@ displayConnectionLine nodes (lineId, (srcPortRef, dstPortRef)) = do
             else UI.removeConnection lineId
 
 
-displayDragLine :: NodeCollection -> Angle -> Vector2 Double -> Connect.Connecting -> IO ()
-displayDragLine nodes angle ptWs@(Vector2 cx cy) connecting = do
+displayDragLine :: NodesMap -> Angle -> Vector2 Double -> Connect.Connecting -> IO ()
+displayDragLine nodesMap angle ptWs@(Vector2 cx cy) connecting = do
     let portRef              = connecting ^. Connect.sourcePort
-        ndWs@(Vector2 nx ny) = getNodePos nodes $ portRef ^. refPortNodeId
+        ndWs@(Vector2 nx ny) = getNodePos nodesMap $ portRef ^. refPortNodeId
         outerPos             = portOuterBorder + distFromPort
         sy                   = ny + outerPos * sin angle
         sx                   = nx + outerPos * cos angle
@@ -55,11 +56,11 @@ displayDragLine nodes angle ptWs@(Vector2 cx cy) connecting = do
             else UI.removeCurrentConnection
 
 
--- displayDragLine :: NodeCollection -> PortRef -> Vector2 Double -> IO ()
--- displayDragLine nodes portRef ptWs@(Vector2 cx cy) = do
+-- displayDragLine :: NodesMap -> PortRef -> Vector2 Double -> IO ()
+-- displayDragLine nodesMap portRef ptWs@(Vector2 cx cy) = do
 --     let angle = calcAngle ptWs ndWs
 --     -- let portRef              = connecting ^. Connect.sourcePort
---         ndWs@(Vector2 nx ny) = getNodePos nodes $ portRef ^. refPortNodeId
+--         ndWs@(Vector2 nx ny) = getNodePos nodesMap $ portRef ^. refPortNodeId
 --         outerPos             = portOuterBorder + distFromPort
 --         sy                   = ny + outerPos * sin angle
 --         sx                   = nx + outerPos * cos angle
