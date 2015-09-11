@@ -29,20 +29,11 @@ reactToBatchEvent :: Project -> Batch.Event -> Action
 reactToBatchEvent project (WorkspaceCreated crumbs) = handleWorkspaceCreation project crumbs
 reactToBatchEvent project ASTElementExists          = handleWorkspaceCreation project mainBreadcrumbs
 reactToBatchEvent project ASTElementDoesNotExist    = (createMain project, Nothing)
-reactToBatchEvent project (GraphViewFetched graph)  = (print graph, Nothing)
 reactToBatchEvent _       _                         = (return (), Nothing)
 
 handleWorkspaceCreation :: Project -> Breadcrumbs -> Action
 handleWorkspaceCreation project crumbs = (action, Just crumbs) where
-    action = do
-        setMain project crumbs
-        fetchGraph project crumbs
-
-fetchGraph :: Project -> Breadcrumbs -> IO ()
-fetchGraph project crumbs = do
-    let lib       = head $ project ^. libs
-        workspace = Workspace project lib crumbs
-    BatchCmd.getGraph workspace
+    action = setMain project crumbs
 
 setMain :: Project -> Breadcrumbs -> IO ()
 setMain project crumbs = do

@@ -66,7 +66,7 @@ instance ProtoSerializable Int32 Int where
     encode = fromIntegral
 
 instance (ProtoSerializable m n) => ProtoSerializable (Seq m) [n] where
-    decode = sequence . (fmap decode) . toList
+    decode = Just . catMaybes . (fmap decode) . toList
     encode = Seq.fromList . (fmap encode)
 
 instance ProtoSerializable ProtoProject.Project Project where

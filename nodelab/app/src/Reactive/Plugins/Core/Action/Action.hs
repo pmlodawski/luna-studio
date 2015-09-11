@@ -41,13 +41,29 @@ instance ActionStateUpdater act => ActionStateUpdater (Maybe act) where
 instance ActionStateUpdater ActionST where
     execSt (ActionST act) state = execSt act state
 
+instance ActionStateUpdater act => ActionStateUpdater [act] where
+    execSt [] state = ActionUI NoAction state
+    execSt (first : rest) state = case execSt first state of
+        ActionUI firstAct newState -> case execSt rest newState of
+            ActionUI lastAct finalState -> ActionUI (SequenceUI firstAct lastAct) finalState
+
 
 
 
 data ActionUI = forall act. (ActionUIUpdater act, PrettyPrinter act) => ActionUI act State
 
+data SequenceUI = forall a1 a2. (ActionUIUpdater a1, PrettyPrinter a1,
+                                 ActionUIUpdater a2, PrettyPrinter a2) => SequenceUI a1 a2
+
+instance PrettyPrinter SequenceUI where
+    display (SequenceUI a1 a2) = "seq(" <> display a1 <> ", " <> display a2 <> ")"
+
 class ActionUIUpdater act where
     updateUI :: WithState act State -> IO ()
+
+instance ActionUIUpdater SequenceUI where
+    updateUI (WithState (SequenceUI a1 a2) state) = updateUI (WithState a1 state)
+                                                 >> updateUI (WithState a2 state)
 
 instance ActionUIUpdater act => ActionUIUpdater (Maybe act) where
     updateUI (WithState (Just action) state) = updateUI (WithState action state)

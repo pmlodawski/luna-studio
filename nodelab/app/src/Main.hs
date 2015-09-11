@@ -33,7 +33,7 @@ import           Reactive.Banana.Frameworks ( Frameworks, actuate )
 import           JS.Bindings
 import           JS.WebSocket
 import           JS.ConnectNodesInBackend   ( setConnectNodeCallback ) -- TODO: Remove
-import           BatchConnector.Commands
+import qualified BatchConnector.Commands    as BatchCmd
 import           Batch.Workspace
 
 import qualified Reactive.Plugins.Core.Network   as CoreNetwork
@@ -54,6 +54,7 @@ runMainNetwork socket workspace = do
     eventNetwork  <- compile $ makeNetworkDescription socket enableLogging workspace
     actuate eventNetwork
     triggerWindowResize
+    BatchCmd.getGraph workspace
 
 main :: IO ()
 main = do

@@ -14,6 +14,7 @@ import           Data.Text.Lazy.IO                         as TextIO
 data Action = InsertSerializationMode Node
             | ShowCode Text
             | RequestCode
+            | PrintGraph [Node]
             deriving (Show, Eq)
 
 data Reaction = PerformIO (IO ())
@@ -25,9 +26,10 @@ instance PrettyPrinter Action where
     display = show
 
 toAction :: Event Node -> Maybe Action
-toAction (Batch (Batch.NodeAdded node)) = Just $ InsertSerializationMode node
-toAction (Batch (Batch.CodeUpdate code)) = Just $ ShowCode code
-toAction (Batch Batch.RunFinished) = Just $ RequestCode
+toAction (Batch (Batch.NodeAdded node))         = Just $ InsertSerializationMode node
+toAction (Batch (Batch.CodeUpdate code))        = Just $ ShowCode code
+toAction (Batch Batch.RunFinished)              = Just $ RequestCode
+toAction (Batch (Batch.GraphViewFetched graph)) = Just $ PrintGraph graph
 toAction _ = Nothing
 
 instance ActionStateUpdater Action where
@@ -36,6 +38,7 @@ instance ActionStateUpdater Action where
         workspace = state ^. Global.workspace
     execSt (ShowCode code) state = ActionUI (PerformIO action) state where
         action = TextIO.putStr code
+    execSt (PrintGraph g) state = ActionUI (PerformIO $ print g) state
     execSt (InsertSerializationMode node) state = ActionUI (PerformIO action) state where
         action = do
             let workspace = state ^. Global.workspace

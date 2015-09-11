@@ -59,6 +59,7 @@ data ActionType = Add
                 deriving (Eq, Show)
 
 data Action = AddAction Node
+            | BulkAdd [Node]
             | RegisterNodeAction Text
             | RemoveFocused
             | RegisterActionUI Node
@@ -72,13 +73,15 @@ instance PrettyPrinter ActionType where
     display = show
 
 instance PrettyPrinter Action where
-    display (AddAction node)          = "arA(AddAction "      <> display node <> ")"
-    display (RegisterNodeAction expr) = "arA(RegisterAction " <> display expr <> ")"
+    display (AddAction node)          = "arA(AddAction "      <> display node  <> ")"
+    display (BulkAdd nodes)           = "arA(BulkAdd "        <> display nodes <> ")"
+    display (RegisterNodeAction expr) = "arA(RegisterAction " <> display expr  <> ")"
     display RemoveFocused             = "arA(RemoveFocused)"
     display (AddActionUI _ _ _)       = "arA(AddActionUI)"
 
 toAction :: Event Node -> Global.State -> Maybe Action
 toAction (Batch (Batch.NodeAdded node)) state = Just $ AddAction node
+toAction (Batch (Batch.GraphViewFetched nodes)) state = Just $ BulkAdd nodes
 toAction (Keyboard (Keyboard.Event Keyboard.Press char)) state = ifNoneFocused state $ case char of
     'a'      -> Just $ RegisterNodeAction "Hello.node"
     'r'      -> Just RemoveFocused
@@ -123,6 +126,8 @@ instance ActionStateUpdater Action where
         graph        = state ^. Global.graph
         nextId       = Global.genId state
         nodePosWs    = Camera.screenToWorkspace camera $ state ^. Global.mousePos
+
+    execSt (BulkAdd nodes) state = execSt (AddAction <$> nodes) state
 
     execSt (AddAction node) oldState = ActionUI newAction newState
         where

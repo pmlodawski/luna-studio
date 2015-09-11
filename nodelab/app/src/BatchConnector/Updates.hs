@@ -13,6 +13,8 @@ import           Batch.Breadcrumbs
 import           Batch.Value
 import           Object.Node
 
+import           Debug.Trace
+
 import           BatchConnector.Conversion  (decode)
 
 import qualified Generated.Proto.Dep.Graphview.GraphView                      as GraphView
@@ -55,8 +57,11 @@ parseFunctionCreateResponse :: ByteString -> Maybe Breadcrumbs
 parseFunctionCreateResponse bytes = (parseMessage bytes) >>= getBreadcrumbs where
     getBreadcrumbs = decode . FunctionCreated.bc
 
-parseGraphViewResponse :: ByteString -> Maybe GraphView.GraphView
-parseGraphViewResponse bytes = GraphViewResponse.graph <$> (parseMessage bytes)
+parseGraphViewResponse :: ByteString -> Maybe [Node]
+parseGraphViewResponse bytes = do
+    parsed    <- parseMessage bytes
+    let graph =  GraphViewResponse.graph parsed
+    decode $ GraphView.nodes graph
 
 parseGetCodeResponse :: ByteString -> Maybe Text
 parseGetCodeResponse bytes = (parseMessage bytes) >>= (decode . GetCode.code)
