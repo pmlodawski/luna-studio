@@ -13,8 +13,6 @@ import           Batch.Breadcrumbs
 import           Batch.Value
 import           Object.Node
 
-import           Debug.Trace
-
 import           BatchConnector.Conversion  (decode)
 
 import qualified Generated.Proto.Dep.Graphview.GraphView                      as GraphView

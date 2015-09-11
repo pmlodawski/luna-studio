@@ -113,6 +113,7 @@ updateM oid widget = do
     MState.put (st', acts)
     return ()
 
+uiAction :: IO () -> UIState () b
 uiAction act = do
     (st, acts) <- MState.get
     MState.put (st, (Just act):acts)
