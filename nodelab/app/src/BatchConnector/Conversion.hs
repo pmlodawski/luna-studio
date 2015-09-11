@@ -126,7 +126,7 @@ instance ProtoSerializable ProtoNode.Node Node where
         nodePos = Vector2 <$> (float2Double <$> ProtoNode.x node)
                           <*> (float2Double <$> ProtoNode.y node)
         expr    = (ProtoNode.expr node) >>= ProtoExpr.str >>= decode
-        ports   = createPorts 1 1
+        ports   = createPorts 1
     encode node = ProtoNode.Node NodeCls.Expr
                                  (Just $ fromIntegral $ node ^. nodeId)
                                  (Just expr)

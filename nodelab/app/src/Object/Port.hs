@@ -42,7 +42,8 @@ instance PrettyPrinter Port where
 
 portDefaultAngle :: PortType -> Int -> PortId -> Angle
 portDefaultAngle portType numPorts portId = angle `mod'` (2.0 * pi) where
-    angle = (1 + fromIntegral portId) * (pi / (fromIntegral $ numPorts + 1)) + delta
+    angle = (1 + fromIntegral portNum) * (pi / (fromIntegral $ numPorts + 1)) + delta
+    portNum = portIdToNum portId
     delta = case portType of
         InputPort  ->       pi / 2.0
         OutputPort -> 3.0 * pi / 2.0

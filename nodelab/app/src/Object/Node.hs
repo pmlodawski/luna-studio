@@ -106,11 +106,11 @@ closenestFactor        = 0.25
 createPort :: PortType -> Int -> PortId -> Port
 createPort portType allPorts ident = Port ident Int $ portDefaultAngle portType allPorts ident
 
-createPorts :: Int -> Int -> Ports
-createPorts inputPortsNum outputPortsNum = Ports inputPorts outputPorts where
+createPorts :: Int -> Ports
+createPorts inputPortsNum = Ports inputPorts outputPorts where
     inputPorts  = (\ident -> createPort  InputPort  inputPortsNum ident) <$> take  inputPortsNum idents
-    outputPorts = (\ident -> createPort OutputPort outputPortsNum ident) <$> take outputPortsNum idents
-    idents      = [0, 1 ..]
+    outputPorts = [createPort OutputPort 1 AllPorts]
+    idents      = PortNum <$> [0, 1 ..]
 
 
 getPorts :: PortType -> Node -> PortCollection

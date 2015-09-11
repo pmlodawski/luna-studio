@@ -17,6 +17,7 @@ import           Batch.Function
 import           Batch.Workspace
 import           Batch.Breadcrumbs
 import           Object.Node
+import           Object.Object
 
 import qualified Generated.Proto.ProjectManager.Project.List.Request                                   as ListProjects
 import qualified Generated.Proto.ProjectManager.Project.Create.Request                                 as CreateProject
@@ -125,12 +126,16 @@ addNode workspace node = sendMessage msg where
                            (workspace ^. library . Library.id)
                            uselessLegacyArgument
 
+portRefToList :: PortId -> [Int]
+portRefToList AllPorts     = []
+portRefToList (PortNum id) = [id]
+
 connectNodes :: Workspace -> PortRef -> PortRef -> IO ()
 connectNodes workspace src dst = connectNodes' workspace
                                                (src ^. refPortNodeId)
-                                               []
+                                               (portRefToList $ src ^. refPortId)
                                                (dst ^. refPortNodeId)
-                                               [dst ^. refPortId]
+                                               (portRefToList $ dst ^. refPortId)
 
 -- TODO: Remove - low level debug interface
 connectNodes' :: Workspace -> Int -> [Int] -> Int -> [Int] -> IO ()

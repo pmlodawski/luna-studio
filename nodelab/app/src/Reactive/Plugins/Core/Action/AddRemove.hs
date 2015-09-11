@@ -107,10 +107,9 @@ tmpGetOutputPortsNr expr = 1 + (ord (fromMaybe '1' $ listToMaybe (tail expr)) - 
 -- end of mock
 
 createNode :: NodeId -> Vector2 Double -> Text -> Node
-createNode nodeId pos expr = Node nodeId False pos expr (createPorts inputPortsNum outputPortsNum) where
+createNode nodeId pos expr = Node nodeId False pos expr (createPorts inputPortsNum) where
     -- mock port numbers:
     inputPortsNum   = 1 -- tmpGetInputPortsNr  $ Text.unpack expr
-    outputPortsNum  = 1 -- tmpGetOutputPortsNr $ Text.unpack expr
 
 instance ActionStateUpdater Action where
     -- The logic of computing nodeId is needed only for offline mode

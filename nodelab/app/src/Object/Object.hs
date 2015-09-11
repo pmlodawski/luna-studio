@@ -17,7 +17,17 @@ type ID = Int
 type NodeId = ID
 type NodeIdCollection = [NodeId]
 
-type PortId = ID
+data PortId = AllPorts
+            | PortNum ID
+            deriving (Eq, Show)
+
+portIdToNum :: PortId -> Int
+portIdToNum AllPorts    = 0
+portIdToNum (PortNum n) = n
+
 type PortIdCollection = [PortId]
 
 data PortType = InputPort | OutputPort deriving (Eq, Show)
+
+instance PrettyPrinter PortId where
+    display portId = "pId(" <> show portId <> ")"

@@ -67,22 +67,26 @@ displaySelectionBox (Vector2 x0 y0) (Vector2 x1 y1) = displaySelectionBoxJS x0 y
 addInputPort :: NodeId -> PortId -> Angle -> IO ()
 addInputPort nodeId portId angle = do
     nodeRef <- getNode nodeId
-    addInputPortJS nodeRef portId angle
+    let portIdNum = portIdToNum portId
+    addInputPortJS nodeRef portIdNum angle
 
 addOutputPort :: NodeId -> PortId -> Angle -> IO ()
 addOutputPort nodeId portId angle = do
     nodeRef <- getNode nodeId
-    addOutputPortJS nodeRef portId angle
+    let portIdNum = portIdToNum portId
+    addOutputPortJS nodeRef portIdNum angle
 
 setInputPortAngle :: NodeId -> PortId -> Angle -> IO ()
 setInputPortAngle nodeId portId angle = do
     nodeRef <- getNode nodeId
-    setInputPortAngleJS nodeRef portId angle
+    let portIdNum = portIdToNum portId
+    setInputPortAngleJS nodeRef portIdNum angle
 
 setOutputPortAngle :: NodeId -> PortId -> Angle -> IO ()
 setOutputPortAngle nodeId portId angle = do
     nodeRef <- getNode nodeId
-    setOutputPortAngleJS nodeRef portId angle
+    let portIdNum = portIdToNum portId
+    setOutputPortAngleJS nodeRef portIdNum angle
 
 setComputedValue :: NodeId -> String -> IO ()
 setComputedValue nodeId value = do
