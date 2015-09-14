@@ -124,12 +124,12 @@ instance ProtoSerializable ProtoBreadcrumbs.Breadcrumbs Breadcrumbs where
     encode (Breadcrumbs crumbs) = ProtoBreadcrumbs.Breadcrumbs $ encode crumbs
 
 instance ProtoSerializable ProtoNode.Node Node where
-    decode node = Node <$> id <*> pure False <*> nodePos <*> expr <*> pure ports where
+    decode node = Node <$> id <*> pure False <*> nodePos <*> expr <*> ports where
         id      = fromIntegral <$> ProtoNode.id node
         nodePos = Vector2 <$> (float2Double <$> ProtoNode.x node)
                           <*> (float2Double <$> ProtoNode.y node)
         expr    = (ProtoNode.expr node) >>= ProtoExpr.str >>= decode
-        ports   = MockHelper.createPortsMay expr
+        ports   = MockHelper.createPorts <$> expr
     encode node = ProtoNode.Node NodeCls.Expr
                                  (Just $ fromIntegral $ node ^. nodeId)
                                  (Just expr)
