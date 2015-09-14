@@ -14,6 +14,8 @@ html, body, input {
   right: 0;
   bottom: 0;
   left: 0;
+  -webkit-user-select: none;
+  cursor: default;
 }
 #htmlcanvas-pan {
   position: fixed;
@@ -22,11 +24,15 @@ html, body, input {
   bottom: 0;
   left: 0;
   z-index: 10;
+  -webkit-user-select: none;
+
+  cursor: default;
+
 }
 #htmlcanvas {
   position: absolute;
   -webkit-user-select: none;
-  cursor: pointer;
+  cursor: default;
 }
 #htmlcanvas > div {
   position:absolute;
@@ -45,4 +51,3 @@ html, body, input {
   background: white;
   border-radius: 5px;
 }
-
