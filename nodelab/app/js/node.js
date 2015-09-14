@@ -98,7 +98,7 @@ function Node(id, position, z, widgetId) {
     })
   );
   this.expandedNode.position.set(-30, -30, 0);
-  this.expandedNodeBkg.position.set(0, 0, -0.0005);
+  this.expandedNodeBkg.position.set(0, 0, -0.000005);
 
   this.mesh.add(this.node);
   this.mesh.add(this.expandedNode);

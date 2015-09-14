@@ -79,5 +79,5 @@ buildBackground shader oid model uniforms = do
     mesh      <- buildMesh geom material
     scaleBy (objectSize $ model) mesh
     pos       <- position mesh
-    pos `setZ` (-0.0001)
+    pos `setZ` (-0.000002)
     return mesh
