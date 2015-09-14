@@ -24,7 +24,7 @@ instance IsDisplayObject Node where
 
 
 instance DblClickable Node where
-    onDblClick pos file model = (Just action, toCtxDynamic model) where
+    onDblClick pos file model = (action, toCtxDynamic model) where
         action    = do
             node <- getNode (model ^. nodeId)
             toggleExpandState node

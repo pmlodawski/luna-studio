@@ -85,7 +85,7 @@ updateValue :: WidgetId -> Model.Toggle -> IO ()
 updateValue oid widget = updateUniformValue Value (toJSInt $ intValue widget) oid
 
 instance Clickable Model.Toggle where
-    onClick _ file model = (Just action, toCtxDynamic newModel) where
+    onClick _ file model = (action, toCtxDynamic newModel) where
         newModel = model & Model.value .~ (not $ model ^. Model.value)
         action   = updateValue (file ^. objectId) newModel
 

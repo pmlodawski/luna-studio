@@ -81,7 +81,7 @@ register parent a handlers state = (widgetFile, state & widgets .~ newWidgets') 
     dynamicFile   = WidgetFile newId (toCtxDynamic a) (Just parent) [] handlers
     widgetFile    = WidgetFile newId a (Just parent) [] handlers
 
-type UIState a b = MState.State (State b, [Maybe (IO ())]) a
+type UIState a b = MState.State (State b, IO ()) a
 
 registerM :: DisplayObjectClass a => WidgetId -> a -> UIHandlers b -> UIState (WidgetFile b a) b
 registerM parent widget handlers = do
@@ -116,7 +116,7 @@ updateM oid widget = do
 uiAction :: IO () -> UIState () b
 uiAction act = do
     (st, acts) <- MState.get
-    MState.put (st, (Just act):acts)
+    MState.put (st, acts >> act)
 
 registerHandler :: WidgetId -> (UIHandlers a -> UIHandlers a) -> State a -> State a
 registerHandler oid mutator state = updateFile oid fileMutator state where
@@ -147,9 +147,9 @@ replaceAll :: DisplayObjectClass a => WidgetId -> [WidgetId] -> [a] -> State b -
 replaceAll parent remove add state = registerAll parent add $ unregisterAll remove state
 
 sequenceUpdates :: [Maybe (State b -> Maybe (WidgetUIUpdate, State b))]
-                -> State b -> ([WidgetUIUpdate], State b)
-sequenceUpdates ops input = foldl applyOp ([], input) ops where
+                -> State b -> (WidgetUIUpdate, State b)
+sequenceUpdates ops input = foldl applyOp (return (), input) ops where
     applyOp (updates, input) op = fromMaybe (updates, input) $ do
         justOp           <- op
         (update, output) <- justOp input
-        return (update:updates, output)
+        return (updates >> update, output)

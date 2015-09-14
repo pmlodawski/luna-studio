@@ -117,7 +117,7 @@ instance Focusable (Model.Number a) where
     mayFocus _ _ _ _ = True
 
 bumpValue :: Int -> WidgetFile s DisplayObject -> Model.Number Int -> WidgetUpdate
-bumpValue amount file widget = (Just action, toCtxDynamic newWidget) where
+bumpValue amount file widget = (action, toCtxDynamic newWidget) where
                 currVal      = widget ^. Model.value
                 newWidget    = widget &  Model.value .~ (currVal + amount)
                 action       = setValueLabel (file ^. objectId) newWidget

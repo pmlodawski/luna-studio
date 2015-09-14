@@ -25,9 +25,9 @@ import           ThreeJS.Widget.Toggle ()
 import qualified JS.Camera      as Camera
 
 
-data Action = MouseAction    { _event   :: Mouse.Event }
-            | KeyboardAction { _keyEvent   :: Keyboard.Event }
-            | ApplyUpdates   { _actions :: [WidgetUIUpdate] }
+data Action = MouseAction    { _event    :: Mouse.Event    }
+            | KeyboardAction { _keyEvent :: Keyboard.Event }
+            | ApplyUpdates   { _actions  :: WidgetUIUpdate }
 
 makeLenses ''Action
 
@@ -79,7 +79,7 @@ handleDragStart (EventWidget widgetId mat scene) button keyMods absPos camera st
     let dragState   = DragState widgetId mat scene button keyMods pos pos pos where
     let newState    = if shouldDrag then state & UIRegistry.dragState .~ Just dragState
                                     else state
-    return $ (Nothing, newState)
+    return $ (noUIUpdate, newState)
 
 handleDragMove :: Keyboard.KeyMods -> Vector2 Double -> Camera.Camera -> UIRegistryState -> Maybe UIRegistryUpdate
 handleDragMove keyMods absPos camera state = case (state ^. UIRegistry.dragState) of
@@ -110,10 +110,10 @@ changeFocus (EventWidget widgetId mat scene) button keyMods absPos camera state 
     let shouldFocus = mayFocus button pos file (file ^. widget)
     let newState    = if shouldFocus then state & UIRegistry.focusedWidget .~ Just widgetId
                                      else state
-    return $ (Nothing, newState)
+    return $ (noUIUpdate, newState)
 
 loseFocus :: UIRegistryState -> Maybe UIRegistryUpdate
-loseFocus state = Just $ (Nothing, newState) where newState = state & UIRegistry.focusedWidget .~ Nothing
+loseFocus state = Just $ (noUIUpdate, newState) where newState = state & UIRegistry.focusedWidget .~ Nothing
 
 handleKeyEvents :: Keyboard.Event -> UIRegistryState -> Maybe UIRegistryUpdate
 handleKeyEvents (Keyboard.Event eventType ch) registry = case registry ^. UIRegistry.focusedWidget of
@@ -125,11 +125,11 @@ handleKeyEvents (Keyboard.Event eventType ch) registry = case registry ^. UIRegi
             Keyboard.Press    -> onKeyPressed ch file (file ^. widget)
         let newRegistry = UIRegistry.update widgetId newWidget registry
         return (uiUpdate, newRegistry)
-    Nothing -> Just $ (Nothing, registry)
+    Nothing -> Just $ (noUIUpdate, registry)
 
-applyHandlers :: [Global.State -> (Global.State, IO ())] -> Global.State -> (Global.State, [IO ()])
-applyHandlers handlers st = foldr apply (st, mempty) handlers where
-    apply h (st, acts) = (st', act:acts) where (st', act) = h st
+applyHandlers :: [Global.State -> (Global.State, IO ())] -> Global.State -> (Global.State, IO ())
+applyHandlers handlers st = foldr apply (st, noUIUpdate) handlers where
+    apply h (st, acts) = (st', acts >> act) where (st', act) = h st
 
 customMouseHandlers :: Mouse.Event -> Camera.Camera -> UIRegistryState -> [Global.State -> (Global.State, IO ())]
 customMouseHandlers (Mouse.Event eventType absPos button _ (Just (EventWidget widgetId mat scene))) camera registry = case UIRegistry.lookupHandlers widgetId registry of
@@ -155,7 +155,7 @@ customKeyboardHandlers (Keyboard.Event eventType ch) registry = case registry ^.
 
 instance ActionStateUpdater Action where
     execSt (MouseAction mouseEvent) oldState = ActionUI newAction newState' where
-        newAction                    = ApplyUpdates $ uiUpdates <> (Just <$> customUIUpdates)
+        newAction                    = ApplyUpdates $ uiUpdates >> customUIUpdates
         newState                     = oldState &  Global.uiRegistry .~ newRegistry
         (newState', customUIUpdates) = applyHandlers (customMouseHandlers mouseEvent camera newRegistry) newState
         oldRegistry                  = oldState ^. Global.uiRegistry
@@ -197,14 +197,14 @@ instance ActionStateUpdater Action where
                 Mouse.Event Mouse.Moved _ _ _ evWd -> (^. Mouse.widgetId) <$> evWd
                 _                                  -> oldWidgetOver
             setWidgetOver :: UIRegistryHandler
-            setWidgetOver state = Just $ (Nothing, state & UIRegistry.widgetOver .~ newWidgetOver)
+            setWidgetOver state = Just $ (noUIUpdate, state & UIRegistry.widgetOver .~ newWidgetOver)
 
     execSt (KeyboardAction keyboardEvent) oldState = ActionUI newAction newState' where
-        newAction                    = ApplyUpdates $ uiUpdates <> (Just <$> customUIUpdates)
+        newAction                    = ApplyUpdates $ uiUpdates >> customUIUpdates
         newState                     = oldState &  Global.uiRegistry .~ newRegistry
         oldRegistry                  = oldState ^. Global.uiRegistry
         (newState', customUIUpdates) = applyHandlers (customKeyboardHandlers keyboardEvent newRegistry) newState
         (uiUpdates, newRegistry)     = UIRegistry.sequenceUpdates [ Just $ handleKeyEvents keyboardEvent ] oldRegistry
 
 instance ActionUIUpdater Action where
-    updateUI (WithState (ApplyUpdates actions) state) = sequence_ $ catMaybes actions
+    updateUI (WithState (ApplyUpdates actions) state) = actions

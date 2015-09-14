@@ -26,15 +26,15 @@ import qualified ThreeJS.Widget.Slider                         as UISlider
 import           ThreeJS.Types                                 (add)
 
 addNode :: Node -> Global.State -> (State, IO ())
-addNode node oldState = (newState, sequence_ $ reverse $ catMaybes actions) where
+addNode node oldState = (newState, actions) where
     newState                = oldState & Global.iteration  +~ 1
                                        & Global.graph      .~ newGraph
                                        & Global.uiRegistry .~ newRegistry
     newGraph                = Graph.addNode node (oldState ^. Global.graph)
     (newRegistry, actions)  = registerNode  node (oldState ^. Global.uiRegistry)
 
-registerNode :: Node -> UIRegistry.State a -> (UIRegistry.State a, [Maybe (IO ())])
-registerNode node oldRegistry = flip MState.execState (oldRegistry, []) $ do
+registerNode :: Node -> UIRegistry.State a -> (UIRegistry.State a, IO ())
+registerNode node oldRegistry = flip MState.execState (oldRegistry, return ()) $ do
     file <- UIRegistry.registerM sceneGraphId (WNode.Node (node ^. nodeId) []) def
     UIRegistry.uiAction $ createNodeOnUI node file
     let rootId     = file ^. objectId

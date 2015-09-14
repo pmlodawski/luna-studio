@@ -50,7 +50,7 @@ data WidgetFile a b = WidgetFile { _objectId :: WidgetId
                                  , _handlers :: UIHandlers a
                                  }
 
-type WidgetUIUpdate = Maybe (IO ())
+type WidgetUIUpdate = IO ()
 type WidgetUpdate   = (WidgetUIUpdate, DisplayObject)
 
 class IsDisplayObject a where
@@ -113,7 +113,7 @@ instance HandlesKeyDown       DisplayObject where onKeyDown          ch wf (CtxD
 instance HandlesKeyPressed    DisplayObject where onKeyPressed       ch wf (CtxDynamic _ a) = onKeyPressed       ch wf a
 
 noUIUpdate :: WidgetUIUpdate
-noUIUpdate = Nothing
+noUIUpdate = return ()
 
 noUpdate :: DisplayObjectClass a => WidgetFile s DisplayObject -> a -> WidgetUpdate
 noUpdate _ w = (noUIUpdate, toCtxDynamic w)

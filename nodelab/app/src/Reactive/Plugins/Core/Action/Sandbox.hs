@@ -49,7 +49,7 @@ import           Object.Widget.Scene (sceneInterfaceId, sceneGraphId)
 import qualified BatchConnector.Commands as BatchCmd
 
 data Action = InitApp
-            | ApplyUpdates  { _actions  :: [WidgetUIUpdate] }
+            | ApplyUpdates  { _actions  :: WidgetUIUpdate }
             | WidgetClicked { _buttonId :: WidgetId }
 
 makeLenses ''Action
@@ -122,18 +122,18 @@ instance ActionStateUpdater Action where
 
                 return (button, slider, slider2, slider3, slider4, toggle, chart, number)
 
-            ((button, slider, slider2, slider3, slider4, toggle, chart, number), (newRegistry, actions)) = MState.runState registerWidgets (oldRegistry, [])
+            ((button, slider, slider2, slider3, slider4, toggle, chart, number), (newRegistry, actions)) = MState.runState registerWidgets (oldRegistry, return ())
 
-            newAction             = if wasInited || not widgetSandboxEnabled then ApplyUpdates [] else ApplyUpdates actions
+            newAction             = if wasInited || not widgetSandboxEnabled then ApplyUpdates (return ()) else ApplyUpdates actions
     execSt (WidgetClicked bid) oldState = ActionUI  newAction newState where
         oldRegistry           = oldState ^. Global.uiRegistry
         widget                = UIRegistry.lookup bid oldRegistry
         newRegistry           = oldRegistry -- tu mozna np. zrobis UIRegistry.update, etc.
         newState              = oldState & Global.uiRegistry .~ newRegistry
         wasHelloButtonClicked = bid == oldState ^. Global.sandbox . Sandbox.button
-        newAction             = if wasHelloButtonClicked then ApplyUpdates [Just $ putStrLn "HelloWorld", Just BatchCmd.runMain]
+        newAction             = if wasHelloButtonClicked then ApplyUpdates $ (putStrLn "HelloWorld") >> BatchCmd.runMain
                                                             -- tu tablica Maybe (IO ()), np aktualizacja stanu widgeta
-                                                         else ApplyUpdates []
+                                                         else ApplyUpdates (return ())
 
 instance ActionUIUpdater Action where
-    updateUI (WithState (ApplyUpdates actions) state) = sequence_ $ catMaybes actions
+    updateUI (WithState (ApplyUpdates actions) state) = actions

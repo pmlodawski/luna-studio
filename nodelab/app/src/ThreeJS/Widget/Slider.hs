@@ -124,9 +124,9 @@ keyModMult mods = case mods of
 instance (Model.IsSlider a) => Draggable (Model.Slider a) where
     mayDrag LeftButton _ _ _     = True
     mayDrag _          _ _ _     = False
-    onDragStart state file model = (Just action, toCtxDynamic model) where
+    onDragStart state file model = (action, toCtxDynamic model) where
                           action = setCursor "pointer"
-    onDragMove  state file model = (Just action, toCtxDynamic newModel) where
+    onDragMove  state file model = (action, toCtxDynamic newModel) where
                     delta        = if (abs $ diff ^. x) > (abs $ diff ^. y) then -diff ^. x /  divider
                                                                             else  diff ^. y / (divider * 10.0)
                     width        = model ^. Model.size . x
@@ -137,36 +137,36 @@ instance (Model.IsSlider a) => Draggable (Model.Slider a) where
                     action       = do
                         setCursor "-webkit-grabbing"
                         updateValue (file ^. objectId) newModel
-    onDragEnd  state file model  = (Just $ action, newModel) where
+    onDragEnd  state file model  = (action, newModel) where
         action = do
-            fromMaybe (return ()) otherAction
+            otherAction
             setCursor "default"
         (otherAction, newModel) = onDragMove state file model
 
 instance  (Model.IsSlider a) => DblClickable   (Model.Slider a) where
-    onDblClick pos file model = (Just action, toCtxDynamic newModel) where
+    onDblClick pos file model = (action, toCtxDynamic newModel) where
                 normValue     = (pos ^. x) / (model ^. Model.size . x)
                 newModel      = Model.setNormValue normValue model
                 action        = updateValue (file ^. objectId) newModel
 
 instance  (Model.IsSlider a) => HandlesMouseOver (Model.Slider a) where
-    onMouseOver file model = (Just action, toCtxDynamic model) where
+    onMouseOver file model = (action, toCtxDynamic model) where
                  action    = updateUniformValue Focus (toJSInt 1) $ file ^. objectId
 
 instance  (Model.IsSlider a) => HandlesMouseOut (Model.Slider a) where
-    onMouseOut  file model = (Just action, toCtxDynamic model) where
+    onMouseOut  file model = (action, toCtxDynamic model) where
                  action    = updateUniformValue Focus (toJSInt 0) $ file ^. objectId
 
 instance (Model.IsSlider a) => Focusable (Model.Slider a) where
     mayFocus _ _ _ _  = True
 
 instance (Model.IsSlider a) => HandlesKeyUp (Model.Slider a) where
-    onKeyUp 'W' file model   = (Just action, toCtxDynamic newModel) where
+    onKeyUp 'W' file model   = (action, toCtxDynamic newModel) where
                 currVal      = model ^. Model.normValue
                 newModel     = Model.setNormValue (currVal + 0.1) model
                 action       = updateValue (file ^. objectId) newModel
-    onKeyUp 'Q' file model   = (Just action, toCtxDynamic newModel) where
+    onKeyUp 'Q' file model   = (action, toCtxDynamic newModel) where
                 currVal      = model ^. Model.normValue
                 newModel     = Model.setNormValue (currVal - 0.1) model
                 action       = updateValue (file ^. objectId) newModel
-    onKeyUp _   _    model   = (Nothing, toCtxDynamic model)
+    onKeyUp _   _    model   = (return (), toCtxDynamic model)
