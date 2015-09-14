@@ -35,11 +35,13 @@ import           Generated.Proto.Dep.Attributes.Attributes
 import           Generated.Proto.Mode.Mode
 import qualified Generated.Proto.Dep.Crumb.Breadcrumbs                        as ProtoBreadcrumbs
 import qualified Generated.Proto.Interpreter.Interpreter.SetProjectID.Request as SetProjectId
+import qualified Generated.Proto.Interpreter.Interpreter.GetProjectID.Request as GetProjectId
 import qualified Generated.Proto.Interpreter.Interpreter.Run.Request          as Run
 import qualified Generated.Proto.Interpreter.Interpreter.SetMainPtr.Request   as SetMainPtr
 import qualified Generated.Proto.Interpreter.DefPoint                         as DefPoint
 import           Generated.Proto.Interpreter.CallPoint                        (CallPoint(..))
 import           Generated.Proto.Interpreter.CallPointPath                    (CallPointPath(..))
+import qualified Generated.Proto.Interpreter.Interpreter.Value.Request        as Value
 
 import qualified Generated.Proto.Interpreter.Interpreter.SerializationMode.Insert.Request as InsertSerializationMode
 
@@ -80,6 +82,10 @@ setProjectId project = sendMessage msg where
     msg  = WebMessage "interpreter.setprojectid.request" $ messagePut body
     body = SetProjectId.Request (project ^. Project.id)
 
+getProjectId :: IO ()
+getProjectId  = sendMessage msg where
+    msg  = WebMessage "interpreter.getprojectid.request" $ messagePut GetProjectId.Request
+
 createFunction :: Project -> Library -> Breadcrumbs -> String -> IO ()
 createFunction project library parent name = sendMessage msg where
     msg  = WebMessage "project.library.ast.function.add.request" $ messagePut body
@@ -91,7 +97,7 @@ createFunction project library parent name = sendMessage msg where
 
 runMain :: IO ()
 runMain  = sendMessage msg where
-    msg  = WebMessage "interpreter.run.request" $ messagePut $ Run.Request Nothing
+    msg  = WebMessage "interpreter.run.request" $ messagePut $ Run.Request (Just 0.0)
 
 setMainPtr :: Workspace -> IO ()
 setMainPtr workspace = sendMessage msg where
@@ -150,12 +156,21 @@ connectNodes' workspace srcNode srcPorts dstNode dstPorts = sendMessage msg wher
                            (workspace ^. project . Project.id)
                            uselessLegacyArgument
 
+nodeToCallPointPath :: Workspace -> Node -> CallPointPath
+nodeToCallPointPath workspace node = CallPointPath projectId (Seq.fromList [callPoint]) where
+    projectId     = workspace ^. project . Project.id
+    callPoint     = CallPoint (workspace ^. library . Library.id) (encode $ node ^. nodeId)
+
+requestValue :: Workspace -> Node -> IO ()
+requestValue workspace node = sendMessage msg where
+    msg  = WebMessage "interpreter.value.request" $ messagePut body
+    body = Value.Request (nodeToCallPointPath workspace node) 0.0
+
 insertSerializationMode :: Workspace -> Node -> IO ()
 insertSerializationMode workspace node = sendMessage msg where
     msg           = WebMessage "interpreter.serializationmode.insert.request" $ messagePut body
     body          = InsertSerializationMode.Request callPointPath (Seq.fromList [mode])
-    callPointPath = CallPointPath (workspace ^. project . Project.id) (Seq.fromList [callPoint])
-    callPoint     = CallPoint (workspace ^. library . Library.id) (encode $ node ^. nodeId)
+    callPointPath = nodeToCallPointPath workspace node
     mode          = Mode Seq.empty
 
 getAST :: Project -> Library -> Breadcrumbs -> IO ()

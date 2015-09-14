@@ -229,7 +229,9 @@ function displayConnection(id, x0, y0, x1, y1) {
 }
 
 function removeConnection(id) {
-  $$.connections[id].hide();
+  if ($$.connections[id]) {
+    $$.connections[id].hide();
+  }
 }
 
 module.exports = {

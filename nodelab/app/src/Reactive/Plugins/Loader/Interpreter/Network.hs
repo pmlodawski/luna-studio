@@ -18,28 +18,44 @@ import           Event.Processors.Batch    (process)
 import           BatchConnector.Updates
 import           Batch.Workspace
 import           Batch.Breadcrumbs
+import           Data.Int
 
-type Action = (IO (), Maybe Breadcrumbs)
+data State = AwaitingWorkspace
+           | InterpreterSetup Workspace
+           | Ready Workspace
+           | AfterInitialize
 
-react :: Project -> Event.Event Dynamic -> Maybe Action
-react project (Event.Batch event) = Just $ reactToBatchEvent project event
-react _       _                   = Nothing
+type Action = (IO (), State)
 
-reactToBatchEvent :: Project -> Batch.Event -> Action
-reactToBatchEvent project (WorkspaceCreated crumbs) = handleWorkspaceCreation project crumbs
-reactToBatchEvent project ASTElementExists          = handleWorkspaceCreation project mainBreadcrumbs
-reactToBatchEvent project ASTElementDoesNotExist    = (createMain project, Nothing)
-reactToBatchEvent _       _                         = (return (), Nothing)
+makeReaction :: (State -> Action) -> Action -> Action
+makeReaction f (_, state) = f state
+
+react :: Project -> Event.Event Dynamic -> Maybe (Action -> Action)
+react project event = makeReaction <$> handler event where
+    handler (Event.Batch event) = Just $ reactToBatchEvent project event
+    handler _                   = Nothing
+
+reactToBatchEvent :: Project -> Batch.Event -> State -> Action
+reactToBatchEvent project event state = case (state, event) of
+    (AwaitingWorkspace,          WorkspaceCreated crumbs)    -> handleWorkspaceCreation project crumbs
+    (AwaitingWorkspace,          ASTElementExists)           -> handleWorkspaceCreation project mainBreadcrumbs
+    (AwaitingWorkspace,          ASTElementDoesNotExist)     -> (createMain project, AwaitingWorkspace)
+    (InterpreterSetup workspace, InterpreterGotProjectId id) -> handleProjectIdResponse workspace id
+    (Ready _,                    _)                          -> (return (), AfterInitialize)
+    (state,                      _)                          -> (return (), state)
 
 handleWorkspaceCreation :: Project -> Breadcrumbs -> Action
-handleWorkspaceCreation project crumbs = (action, Just crumbs) where
-    action = setMain project crumbs
+handleWorkspaceCreation project crumbs = (action, InterpreterSetup workspace) where
+    action    = getProjectId
+    workspace = Workspace project (head $ project ^. libs) crumbs
 
-setMain :: Project -> Breadcrumbs -> IO ()
-setMain project crumbs = do
-    let lib       = head $ project ^. libs
-        workspace = Workspace project lib crumbs
-    BatchCmd.setMainPtr workspace
+handleProjectIdResponse :: Workspace -> Maybe Int32 -> Action
+handleProjectIdResponse workspace Nothing = (setupInterpreter workspace, Ready workspace)
+handleProjectIdResponse workspace _       = (return (),                  Ready workspace)
+
+setupInterpreter :: Workspace -> IO ()
+setupInterpreter workspace =  BatchCmd.setProjectId (workspace ^. project)
+                           >> BatchCmd.setMainPtr workspace
 
 mainBreadcrumbs :: Breadcrumbs
 mainBreadcrumbs = Breadcrumbs [Module "Main", Function "main"]
@@ -50,14 +66,19 @@ createMain project = BatchCmd.createFunction project
                                              (Breadcrumbs [Module "Main"])
                                              "main"
 
+readyWorkspace :: State -> Maybe Workspace
+readyWorkspace (Ready workspace) = Just workspace
+readyWorkspace _                 = Nothing
+
 makeNetworkDescription :: forall t. Frameworks t => Project -> WebSocket -> (Workspace -> IO ()) -> Moment t ()
 makeNetworkDescription project socket callback = do
     webSocketE <- fromAddHandler $ webSocketHandler socket
 
     let batchE    = filterJust $ process <$> webSocketE
-        actions   = filterJust $ react project <$> batchE
-        crumbs    = filterJust $ snd <$> actions
-        workspace = Workspace project (head $ project ^. libs) <$> crumbs
+        updates   = filterJust $ react project <$> batchE
+        actions   = accumE (return (), AwaitingWorkspace) updates
+        states    = snd <$> actions
+        workspace = filterJust $ readyWorkspace <$> states
 
     reactimate $ print    <$> workspace
     reactimate $ fst      <$> actions
@@ -65,7 +86,6 @@ makeNetworkDescription project socket callback = do
 
 run :: WebSocket -> (Workspace -> IO ()) -> Project -> IO ()
 run socket callback project = do
-    BatchCmd.setProjectId project
     BatchCmd.getAST project (head $ project ^. libs) mainBreadcrumbs
     net <- compile $ makeNetworkDescription project socket callback
     actuate net

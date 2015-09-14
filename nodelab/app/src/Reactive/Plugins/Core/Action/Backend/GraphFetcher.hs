@@ -12,6 +12,8 @@ import           Reactive.Plugins.Core.Action.State.Graph
 import qualified Reactive.Plugins.Core.Action.State.Global      as Global
 import qualified Reactive.Plugins.Core.Action.Executors.AddNode as AddNode
 
+import qualified BatchConnector.Commands as BatchCmd
+
 data Action = AddSingleNode Node
             | AddSingleEdge (PortRef, PortRef)
             | AddNodes      [Node]
@@ -37,11 +39,15 @@ instance ActionStateUpdater Action where
     execSt (AddSingleEdge (src, dst)) state = ActionUI NoOp newState where
       newState    = state & Global.graph %~ (addConnection src dst)
 
-    execSt (AddSingleNode node) state = ActionUI (PerformIO action) newState where
-      (newState, action) = AddNode.addNode node state
+    execSt (AddSingleNode node) state = ActionUI (PerformIO addAndRequestValue) newState where
+      (newState, addAction) = AddNode.addNode node state
+      addAndRequestValue    =  addAction
+                            >> BatchCmd.requestValue workspace node
+      workspace             = state ^. Global.workspace
 
     execSt DisplayEdges state = ActionUI (PerformIO draw) state where
-      draw        = displayConnections nodesMap connections
+      draw        =  displayConnections nodesMap connections
+                  >> BatchCmd.runMain
       nodesMap    = state ^. Global.graph & getNodesMap
       connections = state ^. Global.graph & getConnections
 

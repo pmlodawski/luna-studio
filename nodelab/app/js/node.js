@@ -122,7 +122,7 @@ function Node(id, position, z, widgetId) {
   this.updateValue();
 
   this.expandedState = 1.0
-  this.setExpandedState(1.0);
+  this.setExpandedState(0.0);
 }
 
 Node.prototype.setExpandedState = function(expanded) {

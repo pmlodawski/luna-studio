@@ -30,6 +30,7 @@ import qualified Generated.Proto.Interpreter.CallPoint                          
 import qualified Generated.Proto.Mode.ModeValue                                                     as ModeValue
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Add.Update  as AddNode
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Add.Request as AddNodeReq
+import qualified Generated.Proto.Interpreter.Interpreter.GetProjectID.Status                        as GetProjectId
 
 parseMessage :: (Wire m, ReflectDescriptor m) => ByteString -> Maybe m
 parseMessage bytes = case messageGet bytes of
@@ -83,6 +84,9 @@ parseValueUpdate bytes = do
 parseAddNodeResponse :: ByteString -> Maybe Node
 parseAddNodeResponse bytes = (parseMessage bytes) >>= getNode where
     getNode = decode . AddNode.node
+
+parseProjectIdStatus :: ByteString -> Maybe (Maybe Int32)
+parseProjectIdStatus bytes = GetProjectId.projectID <$> parseMessage bytes
 
 -- TODO[MK]: REMOVE! This is needed for without-backend mode, not a production code
 parseAddNodeFakeResponse :: ByteString -> Maybe Node

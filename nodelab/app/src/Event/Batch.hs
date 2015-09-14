@@ -1,13 +1,14 @@
 module Event.Batch where
 
-import           Utils.PreludePlus
+import Utils.PreludePlus
 
-import           Batch.Project
-import           Batch.Library
-import           Batch.Breadcrumbs
-import           Batch.Value
-import           Object.Node
-import           Data.Text.Lazy    (Text)
+import Batch.Project
+import Batch.Library
+import Batch.Breadcrumbs
+import Batch.Value
+import Object.Node
+import Data.Text.Lazy    (Text)
+import Data.Int
 
 data Event = ProjectsList [Project]
            | ProjectCreated Project
@@ -19,6 +20,7 @@ data Event = ProjectsList [Project]
            | NodeAdded Node
            | NodesConnected
            | GraphViewFetched [Node] [(PortRef, PortRef)]
+           | InterpreterGotProjectId (Maybe Int32)
            | ValueUpdate Int Value
            | CodeUpdate Text
            | RunFinished
