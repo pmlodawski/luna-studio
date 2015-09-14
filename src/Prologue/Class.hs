@@ -128,12 +128,12 @@ whenRight' :: (Monad m) => Either a b -> m () -> m ()
 whenRight' e f = whenRight e $ const f
 
 -- trenary operator
-data Cond a = a :? a
+data TenaryCond a = a :? a
 
 infixl 0 ?
 infixl 1 :?
 
-(?) :: Bool -> Cond a -> a
+(?) :: Bool -> TenaryCond a -> a
 True  ? (x :? _) = x
 False ? (_ :? y) = y
 -- / trenaru operator

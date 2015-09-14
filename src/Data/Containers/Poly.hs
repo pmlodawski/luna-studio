@@ -171,7 +171,7 @@ type EmptyPolyLst = ('[] :: [k])
 
 
 
-newtype OptBuilder (opts :: [*]) a = OptBuilder a
+newtype OptBuilder (opts :: [*]) a = OptBuilder a deriving (Functor)
 
 class FuncBuilder f a | a -> f where
     buildFunc :: f -> a
@@ -182,8 +182,8 @@ class FuncTrans opts f a | a opts -> f where
 instance {-# OVERLAPPABLE #-} (f ~ a, g ~ b)             => FuncBuilder (f -> g)            (a -> b)            where buildFunc = id
 instance {-# OVERLAPPABLE #-} (t ~ (f -> g), opts ~ '[]) => FuncBuilder (f -> g)            (OptBuilder opts t) where buildFunc = OptBuilder
 
-instance                                    (opts ~ opts')       => FuncTrans opts f  (OptBuilder opts' f) where transFunc = id
-instance                          (f ~ (Proxy opts -> a -> b))   => FuncTrans opts f  (a -> b)             where transFunc (OptBuilder f) = f Proxy
+instance                            (opts ~ opts', f ~ f')       => FuncTrans opts f  (OptBuilder opts' f') where transFunc = id
+instance                          (f ~ (Proxy opts -> a -> b))   => FuncTrans opts f  (a -> b)              where transFunc (OptBuilder f) = f Proxy
 
 
 
@@ -199,9 +199,7 @@ type EmptyStarLst = ('[] :: [*])
 --type ResultByQuery' (s :: [Bool]) (cont :: *) (info :: *) (cls :: k) = ResultByQuery (Selected s (ModsOf cls cont)) info cont
 
 
-type family ResultByQuery' (info :: *) (s :: [Bool]) where ResultByQuery' (Info idx el cls cont) s = ResultByQuery (Info idx el cls cont) (Selected s (ModsOf cls cont)) cont
 
-type family ResultBySel (info :: *) (s :: [Bool]) where ResultBySel (Info idx el cls cont) s = ResultByQuery (Info idx el cls cont) (Selected s (ModsOf cls cont))
 
 --------------
 
@@ -267,7 +265,7 @@ type IndexOf' cont = IndexOf (ElementOf cont) cont
 
 -- === Results ===
 
-data Simple  a = Simple a deriving (Functor)
+newtype Simple  a = Simple a deriving (Show, Functor)
 type Indexed i = (,) i
 
 simple :: Monad m => a -> m (Simple a)
@@ -285,15 +283,30 @@ type instance PrependTuple i ((,,,,,) t1 t2 t3 t4 t5) = (,,,,,,) i t1 t2 t3 t4 t
 type family   ResultByQuery info (q :: [*]) :: * -> *
 type instance ResultByQuery (Info idx el cls cont) '[]              = Simple
 type instance ResultByQuery (Info idx el cls cont) (Unchecked ': q) = ResultByQuery (Info idx el cls cont) q
-type instance ResultByQuery (Info idx el cls cont) (Ixed      ': q) = If (idx :== NA) (
-                                                                          If (el :== NA)
-                                                                              (PrependResultTupleidx q cls cont (IndexOf' cont)   el)
-                                                                              (PrependResultTupleidx q cls cont (IndexOf el cont) el)
-                                                                          ) (PrependResultTupleidx q cls cont idx el)
+type instance ResultByQuery (Info idx el cls cont) (Ixed      ': q) = If (idx :== NA)
+                                                                         (PrependResultTupleidx q cls cont (IxedData cls (IndexOf' cont))   el)
+                                                                          --If (el :== NA)
+                                                                          --    (PrependResultTupleidx q cls cont (IndexOf' cont)   el)
+                                                                          --    (PrependResultTupleidx q cls cont (IndexOf el cont) el))
+                                                                         (PrependResultTupleidx q cls cont (IxedData cls idx) el)
+type instance ResultByQuery (Info idx el cls cont) (Try       ': q) = Maybed (ResultByQuery (Info idx el cls cont) q)
+
+newtype Maybed a t = Maybed (Maybe (a t)) deriving (Show, Functor)
+
+type IxedData cls idx = If (IxedMode cls :== Single) idx [idx]
 
 type PrependResultTupleidx q cls cont idx el = (PrependTuple idx (ResultByQuery (Info idx el cls cont) q))
 
 
+type family ResultByQuery' (info :: *) (s :: [Bool]) where ResultByQuery' (Info idx el cls cont) s = ResultByQuery (Info idx el cls cont) (Selected s (ModsOf cls cont)) cont
+
+type family ResultBySel (info :: *) (s :: [Bool]) where ResultBySel (Info idx el cls cont) s = ResultByQuery (Info idx el cls cont) (Selected s (FilterMutable (ModsOf cls cont)))
+
+
+
+type family FilterMutable (lst :: [*]) :: [*] where
+    FilterMutable '[] = '[]
+    FilterMutable (l ': ls) = If (Mutable l) (l ': FilterMutable ls) (FilterMutable ls)
 
 type family ResultMod q base info
 type instance ResultMod Unchecked b i = b
@@ -307,6 +320,8 @@ type SimpleRawResult cls q cont = SimpleResult q (RawInfo cls cont)
 
 
 
+type ComputeSelection (cls :: k) (cont :: *) (q :: [*]) = LstIn (ModsOf cls cont) q
+
 type CheckQuery i q s = ResultByQuery i q ~ ResultBySel i s
 
 type MatchResults i s i' q' = (ResultBySel i s ~ ResultByQuery i' q')
@@ -315,6 +330,7 @@ type SubOperation i s i' q' m = (MatchResults i s i' q', ContOperation q' i' m)
 
 type ContOperation q info m = (Monad m, Operation q info m, Functor (ResultByQuery info q))
 
+type MatchResultsCls i t t' s q = MatchResults (i t) s (i (ContainerOf t')) q
 
 
 
@@ -322,8 +338,8 @@ runModsF :: LstIn (ModsOf cls cont) q ~ s => (Proxy (q :: [*])) -> (Query q s ->
 runModsF _ f = f Query Info
 
 
---type family Happy op where
---    Happy (RawOperation q cls) = RawOperation (Ixed ': q) cls
+runModsF' = flip runModsF
+
 
 type family InsertQuery a op where
     InsertQuery a (RawOperation q cls) = RawOperation (a ': q) cls
@@ -340,6 +356,22 @@ class HasContainer2 a where
 
 --data Info idx el (cls :: k) cont = Info
 
+type ConstraintQuery info q = CheckQuery info q (InfoSelection info q)
+
+type family InfoSelection i q where InfoSelection (Info idx el cls cont) q = ComputeSelection cls cont q
+
+
+-- superinst powinien instancjonowac na podstawie N/A !
+type family SuperInst info q m where SuperInst (Info NA  NA cls cont) q m = cls        cont m q (ComputeSelection cls cont q)
+                                     SuperInst (Info NA  el cls cont) q m = cls     el cont m q (ComputeSelection cls cont q)
+                                     SuperInst (Info idx NA cls cont) q m = cls idx    cont m q (ComputeSelection cls cont q)
+                                     SuperInst (Info idx el cls cont) q m = cls idx el cont m q (ComputeSelection cls cont q)
+
+type family SuperInst2 info q m w where SuperInst2 (Info NA  NA cls cont) q m w = cls        cont m q (ComputeSelection cls cont q) w
+                                        SuperInst2 (Info NA  el cls cont) q m w = cls     el cont m q (ComputeSelection cls cont q) w
+                                        SuperInst2 (Info idx NA cls cont) q m w = cls idx    cont m q (ComputeSelection cls cont q) w
+                                        SuperInst2 (Info idx el cls cont) q m w = cls idx el cont m q (ComputeSelection cls cont q) w
+
 
 
 ----
@@ -349,6 +381,18 @@ class HasContainer2 a where
 data Safe      = Safe
 data Unchecked = Unchecked
 data Ixed      = Ixed
+data Try       = Try
+
+
+type family Mutable a :: Bool
+type instance Mutable Ixed      = True
+type instance Mutable Unchecked = False
+type instance Mutable Try       = True
+
+
+
+type family IxedX (op :: k) :: l where IxedX (cls q (m ::  * -> *) :: * -> Constraint) = cls (Ixed ': q) m
+                                       IxedX (cls q    :: (* -> *) -> * -> Constraint) = cls (Ixed ': q)
 
 
 
@@ -379,3 +423,16 @@ type family   ResultZ2 (inst :: [*] -> [Bool] -> * -> k) (q :: [*]) t t'
 --type instance ResultZ2 inst '[]              t t' = t'
 --type instance ResultZ2 inst (Ixed      ': q) t t' = ([IndexOf' t], ResultZ2 inst q t t')
 --type instance ResultZ2 inst (Unchecked ': q) t t' = ResultZ2 inst q t t'
+
+
+
+
+
+
+
+
+type family IxedMode (a :: k) :: IxedType
+
+data IxedType = Multi
+              | Single
+              deriving (Show)
