@@ -92,7 +92,7 @@ makeNetworkDescription conn logging workspace = do
         sandboxActionB                = fmap ActionST $             Sandbox.toAction <$> anyNodeB <*> globalStateB
         backendActionB                = fmap ActionST $             Backend.toAction <$> anyNodeB
         runnerActionB                 = fmap ActionST $              Runner.toAction <$> anyNodeB
-        graphFetcherActionB           = fmap ActionST $        GraphFetcher.toAction <$> anyNodeB
+        graphFetcherActionB           = fmap ActionST $        GraphFetcher.toAction <$> anyNodeB <*> globalStateB
 
         allActionsPackB               = [ nodeGeneralActionB
                                         , widgetActionB

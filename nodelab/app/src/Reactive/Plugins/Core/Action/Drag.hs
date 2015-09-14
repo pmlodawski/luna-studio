@@ -27,7 +27,9 @@ import qualified Reactive.Plugins.Core.Action.State.Camera    as Camera
 import qualified Reactive.Plugins.Core.Action.State.Global    as Global
 import           Reactive.Plugins.Core.Action.State.UnderCursor
 
-import qualified Data.IntMap.Lazy as IntMap
+import qualified Data.IntMap.Lazy        as IntMap
+import qualified BatchConnector.Commands as BatchCmd
+import           Batch.Workspace         (Workspace)
 
 data ActionType = StartDrag
                 | Moving
@@ -120,8 +122,10 @@ instance ActionUIUpdater Action where
             Dragging                 -> moveNodesUI selNodes
                                      >> displayConnections nodesMap connections
             StopDrag                 -> moveNodesUI selNodes
+                                     >> updateNodesBatch workspace selNodes
                                      >> displayConnections nodesMap connections
             where
+                workspace             = state ^. Global.workspace
                 nodesMap              = Graph.getNodesMap    $ state ^. Global.graph
                 connections           = Graph.getConnections $ state ^. Global.graph
                 selNodeIds            = state ^. Global.selection . Selection.nodeIds
@@ -133,6 +137,8 @@ instance ActionUIUpdater Action where
                     Nothing          -> Vector2 0.0 0.0
 
 
+updateNodesBatch :: Workspace -> NodesMap -> IO ()
+updateNodesBatch workspace nodesMap = mapM_ (BatchCmd.updateNode workspace) $ IntMap.elems nodesMap
 
 moveNodesUI :: NodesMap -> IO ()
 moveNodesUI nodesMap = mapM_ UI.moveNode $ IntMap.elems nodesMap

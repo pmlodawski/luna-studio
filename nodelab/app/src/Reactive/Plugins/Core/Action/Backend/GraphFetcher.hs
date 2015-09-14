@@ -31,9 +31,11 @@ data Reaction = PerformIO (IO ())
 instance PrettyPrinter Reaction where
     display _ = "GraphFetcherReaction"
 
-toAction :: Event Node -> Maybe Action
-toAction (Batch (Batch.GraphViewFetched nodes edges)) = Just $ GraphFetched nodes edges
-toAction _ = Nothing
+toAction :: Event Node -> Global.State -> Maybe Action
+toAction (Batch (Batch.GraphViewFetched nodes edges)) state = case getNodes $ state ^. Global.graph of
+    [] -> Just $ GraphFetched nodes edges
+    _  -> Nothing
+toAction _ _ = Nothing
 
 instance ActionStateUpdater Action where
     execSt (AddSingleEdge (src, dst)) state = ActionUI NoOp newState where
