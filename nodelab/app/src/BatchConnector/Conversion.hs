@@ -21,6 +21,7 @@ import           Batch.Library                    as Library
 import           Batch.Breadcrumbs
 import           Batch.Value
 import           Object.Node
+import           Object.Object                    (PortId(..), PortType(..))
 
 import qualified Generated.Proto.Project.Project           as ProtoProject
 import qualified Generated.Proto.Dep.Library.Library       as ProtoLibrary
@@ -37,6 +38,7 @@ import qualified Generated.Proto.Dep.Graph.Node            as ProtoNode
 import qualified Generated.Proto.Dep.Graph.NodeExpr        as ProtoExpr
 import qualified Generated.Proto.Dep.Graph.Node.Cls        as NodeCls
 import qualified Generated.Proto.Dep.Graph.NodeExpr.Cls    as ExprCls
+import qualified Generated.Proto.Dep.Graphview.EdgeView    as ProtoEdge
 
 import qualified Generated.Proto.Data.SValue               as SValue
 import qualified Generated.Proto.Data.SValue.Type          as SValueType
@@ -137,6 +139,26 @@ instance ProtoSerializable ProtoNode.Node Node where
         where
             expr       = ProtoExpr.NodeExpr ExprCls.String (Just $ encodedStr) Nothing
             encodedStr = encode $ node ^. expression
+
+instance ProtoSerializable ProtoEdge.EdgeView (PortRef, PortRef) where
+    decode edge = do
+        sourceNodeId      <- fromIntegral   <$> ProtoEdge.nodeSrc edge
+        destinationNodeId <- fromIntegral   <$> ProtoEdge.nodeDst edge
+        sourcePort        <- portIdFromList <$> (decode $ ProtoEdge.portSrc edge)
+        destinationPort   <- portIdFromList <$> (decode $ ProtoEdge.portDst edge)
+        return (PortRef sourceNodeId OutputPort sourcePort,
+                PortRef destinationNodeId InputPort destinationPort)
+        where
+            portIdFromList []       = AllPorts
+            portIdFromList (x : xs) = PortNum $ fromIntegral x
+
+    encode ((PortRef srcNode _ srcPort), (PortRef dstNode _ dstPort)) = ProtoEdge.EdgeView (Just $ fromIntegral srcNode)
+                                                                                           (Just $ fromIntegral dstNode)
+                                                                                           (encode $ portIdToList srcPort)
+                                                                                           (encode $ portIdToList dstPort)
+        where
+            portIdToList AllPorts    = []
+            portIdToList (PortNum x) = [x]
 
 instance ProtoSerializable SValue.SValue Value where
     decode msg@(SValue.SValue tpe _) = case tpe of

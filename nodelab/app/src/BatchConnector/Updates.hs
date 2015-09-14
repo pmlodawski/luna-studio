@@ -12,6 +12,7 @@ import           Batch.Library
 import           Batch.Breadcrumbs
 import           Batch.Value
 import           Object.Node
+import           Object.Object              (PortId(..))
 
 import           BatchConnector.Conversion  (decode)
 
@@ -55,11 +56,13 @@ parseFunctionCreateResponse :: ByteString -> Maybe Breadcrumbs
 parseFunctionCreateResponse bytes = (parseMessage bytes) >>= getBreadcrumbs where
     getBreadcrumbs = decode . FunctionCreated.bc
 
-parseGraphViewResponse :: ByteString -> Maybe [Node]
+parseGraphViewResponse :: ByteString -> Maybe ([Node], [(PortRef, PortRef)])
 parseGraphViewResponse bytes = do
     parsed    <- parseMessage bytes
     let graph =  GraphViewResponse.graph parsed
-    decode $ GraphView.nodes graph
+    nodes <- decode $ GraphView.nodes graph
+    edges <- decode $ GraphView.edges graph
+    return (nodes, edges)
 
 parseGetCodeResponse :: ByteString -> Maybe Text
 parseGetCodeResponse bytes = (parseMessage bytes) >>= (decode . GetCode.code)

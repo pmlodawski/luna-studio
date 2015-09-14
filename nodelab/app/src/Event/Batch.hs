@@ -18,7 +18,7 @@ data Event = ProjectsList [Project]
            | WorkspaceCreated Breadcrumbs
            | NodeAdded Node
            | NodesConnected
-           | GraphViewFetched [Node]
+           | GraphViewFetched [Node] [(PortRef, PortRef)]
            | ValueUpdate Int Value
            | CodeUpdate Text
            | RunFinished
