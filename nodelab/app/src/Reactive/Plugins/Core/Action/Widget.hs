@@ -63,7 +63,11 @@ handleGeneric (Mouse.Event eventType absPos button _ (Just (EventWidget widgetId
     return (uiUpdate, newRegistry)
 handleGeneric _ _ _        = Nothing
 
-triggerHandler :: Maybe WidgetId -> (WidgetFile Global.State DisplayObject -> DisplayObject -> WidgetUpdate) -> UIRegistryState -> Maybe UIRegistryUpdate
+triggerHandler :: Maybe WidgetId
+               -> (WidgetFile Global.State DisplayObject
+               -> DisplayObject -> WidgetUpdate)
+               -> UIRegistryState
+               -> Maybe UIRegistryUpdate
 triggerHandler maybeOid handler state = do
     oid                     <- maybeOid
     file                    <- UIRegistry.lookup oid state
@@ -71,7 +75,13 @@ triggerHandler maybeOid handler state = do
     let newState             = UIRegistry.update oid newWidget state
     return (action, newState)
 
-handleDragStart :: EventWidget -> MouseButton -> Keyboard.KeyMods -> Vector2 Double -> Camera.Camera -> UIRegistryState -> Maybe UIRegistryUpdate
+handleDragStart :: EventWidget
+                -> MouseButton
+                -> Keyboard.KeyMods
+                -> Vector2 Double
+                -> Camera.Camera
+                -> UIRegistryState
+                -> Maybe UIRegistryUpdate
 handleDragStart (EventWidget widgetId mat scene) button keyMods absPos camera state = do
     file           <- UIRegistry.lookup widgetId state
     let pos         = absPosToRel scene camera mat absPos
@@ -103,7 +113,13 @@ handleDragEnd absPos camera state = case (state ^. UIRegistry.dragState) of
         return $ (actions, newState)
     otherwise      -> Nothing
 
-changeFocus :: EventWidget -> MouseButton -> Keyboard.KeyMods -> Vector2 Double -> Camera.Camera -> UIRegistryState -> Maybe UIRegistryUpdate
+changeFocus :: EventWidget
+            -> MouseButton
+            -> Keyboard.KeyMods
+            -> Vector2 Double
+            -> Camera.Camera
+            -> UIRegistryState
+            -> Maybe UIRegistryUpdate
 changeFocus (EventWidget widgetId mat scene) button keyMods absPos camera state = do
     file           <- UIRegistry.lookup widgetId state
     let pos         = absPosToRel scene camera mat absPos
@@ -132,15 +148,16 @@ applyHandlers handlers st = foldr apply (st, noUIUpdate) handlers where
     apply h (st, acts) = (st', acts >> act) where (st', act) = h st
 
 customMouseHandlers :: Mouse.Event -> Camera.Camera -> UIRegistryState -> [Global.State -> (Global.State, IO ())]
-customMouseHandlers (Mouse.Event eventType absPos button _ (Just (EventWidget widgetId mat scene))) camera registry = case UIRegistry.lookupHandlers widgetId registry of
-    Just handlers -> case eventType of
-            Mouse.Moved       -> fmap (\a -> a button pos) (handlers ^. mouseMove    )
-            Mouse.Pressed     -> fmap (\a -> a button pos) (handlers ^. mousePressed )
-            Mouse.Released    -> fmap (\a -> a button pos) (handlers ^. mouseReleased)
-            Mouse.Clicked     -> fmap (\a -> a        pos) (handlers ^. click        )
-            Mouse.DblClicked  -> fmap (\a -> a        pos) (handlers ^. dblClick     )
-        where pos              = absPosToRel scene camera mat (fromIntegral <$> absPos)
-    Nothing -> []
+customMouseHandlers (Mouse.Event eventType absPos button _ (Just (EventWidget widgetId mat scene))) camera registry =
+    case UIRegistry.lookupHandlers widgetId registry of
+        Just handlers -> case eventType of
+                Mouse.Moved       -> fmap (\a -> a button pos) (handlers ^. mouseMove    )
+                Mouse.Pressed     -> fmap (\a -> a button pos) (handlers ^. mousePressed )
+                Mouse.Released    -> fmap (\a -> a button pos) (handlers ^. mouseReleased)
+                Mouse.Clicked     -> fmap (\a -> a        pos) (handlers ^. click        )
+                Mouse.DblClicked  -> fmap (\a -> a        pos) (handlers ^. dblClick     )
+            where pos              = absPosToRel scene camera mat (fromIntegral <$> absPos)
+        Nothing -> []
 customMouseHandlers _ _ _  = []
 
 customKeyboardHandlers :: Keyboard.Event -> UIRegistryState -> [Global.State -> (Global.State, IO ())]
