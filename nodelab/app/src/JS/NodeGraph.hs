@@ -7,9 +7,9 @@ import           Utils.Angle
 import           JS.Bindings
 import           Object.Object
 import           Object.Node
+import           Object.UITypes
 
 import           Data.JSString (pack)
-
 
 logAs :: PrettyPrinter a => String -> a -> IO ()
 logAs title a = putStrLn $ title <> (display a)
@@ -64,17 +64,17 @@ moveNode node = do
 displaySelectionBox :: Vector2 Double -> Vector2 Double -> IO ()
 displaySelectionBox (Vector2 x0 y0) (Vector2 x1 y1) = displaySelectionBoxJS x0 y0 x1 y1
 
-addInputPort :: NodeId -> PortId -> Angle -> IO ()
-addInputPort nodeId portId angle = do
+addInputPort :: NodeId -> WidgetId -> PortId -> Angle -> IO ()
+addInputPort nodeId widgetId portId angle = do
     nodeRef <- getNode nodeId
     let portIdNum = portIdToNum portId
-    addInputPortJS nodeRef portIdNum angle
+    addInputPortJS nodeRef widgetId portIdNum angle
 
-addOutputPort :: NodeId -> PortId -> Angle -> IO ()
-addOutputPort nodeId portId angle = do
+addOutputPort :: NodeId -> WidgetId ->  PortId -> Angle -> IO ()
+addOutputPort nodeId widgetId portId angle = do
     nodeRef <- getNode nodeId
     let portIdNum = portIdToNum portId
-    addOutputPortJS nodeRef portIdNum angle
+    addOutputPortJS nodeRef widgetId portIdNum angle
 
 setInputPortAngle :: NodeId -> PortId -> Angle -> IO ()
 setInputPortAngle nodeId portId angle = do

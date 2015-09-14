@@ -19,7 +19,7 @@ var dist = nodeRadius + halfWidth + margin;
 
 var nodeSize = 30.0;
 
-function Port(id, angle, out) {
+function Port(id, widgetId, angle, out) {
   var _this = this;
   this.id = id;
   this.out = out;
@@ -31,7 +31,8 @@ function Port(id, angle, out) {
     colorFar:  { type: 'v4', value: colorFar },
     mouseDist: { type: 'f',  value: 100000.0 },
     nodeSize:  { type: 'f',  value: nodeSize },
-    portSize:  { type: 'f',  value: height   }
+    portSize:  { type: 'f',  value: height   },
+    objectId:  { type: 'v3', value: new THREE.Vector3((widgetId % 256) / 255.0, Math.floor(Math.floor(widgetId % 65536) / 256) / 255.0, Math.floor(widgetId / 65536) / 255.0) }
   };
 
   Object.keys($$.commonUniforms).forEach(function(k) {

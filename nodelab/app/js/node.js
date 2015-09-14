@@ -193,18 +193,20 @@ Node.prototype.updateMouse = function(x, y) {
   });
 };
 
-Node.prototype.addInputPort = function(id, angle) {
-  var p = new Port(id, angle, false, this.mesh.position.z);
+Node.prototype.addInputPort = function(oid, id, angle) {
+  var p = new Port(id, oid, angle, false, this.mesh.position.z);
   this.inputPorts.push(p);
   this.mesh.add(p.mesh);
   this.updateMouse(this.mesh.position.x, this.mesh.position.y);
+  $$.registry[oid] = p;
 };
 
-Node.prototype.addOutputPort = function(id, angle) {
-  var p = new Port(id, angle, true, this.mesh.position.z);
+Node.prototype.addOutputPort = function(oid, id, angle) {
+  var p = new Port(id, oid, angle, true, this.mesh.position.z);
   this.outputPorts.push(p);
   this.mesh.add(p.mesh);
   this.updateMouse(this.mesh.position.x, this.mesh.position.y);
+  $$.registry[oid] = p;
 };
 
 Node.prototype.findInputPort = function(id) {

@@ -14,6 +14,7 @@ import JS.Bindings
 
 data Node = Node { _nodeId    :: Int
                  , _controls  :: [WidgetId]
+                 , _ports     :: [WidgetId]
                  } deriving (Eq, Show, Typeable)
 
 makeLenses ''Node

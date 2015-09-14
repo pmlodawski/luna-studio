@@ -10,6 +10,7 @@ import           Object.Port
 import           Object.Widget
 import           Object.UITypes                                (WidgetId)
 import qualified Object.Widget.Node                            as WNode
+import qualified Object.Widget.Port                            as WPort
 import           Reactive.Plugins.Core.Action.Action
 import qualified Reactive.Plugins.Core.Action.State.Global     as Global
 import           Reactive.Plugins.Core.Action.State.Global     (State)
@@ -35,8 +36,12 @@ addNode node oldState = (newState, actions) where
 
 registerNode :: Node -> UIRegistry.State a -> (UIRegistry.State a, IO ())
 registerNode node oldRegistry = flip MState.execState (oldRegistry, return ()) $ do
-    file <- UIRegistry.registerM sceneGraphId (WNode.Node (node ^. nodeId) []) def
+    file <- UIRegistry.registerM sceneGraphId (WNode.Node (node ^. nodeId) [] []) def
     UIRegistry.uiAction $ createNodeOnUI node file
+
+    registerPorts (file ^. objectId) InputPort node
+    registerPorts (file ^. objectId) OutputPort node
+
     let rootId     = file ^. objectId
         nodeWidget = file ^. widget
         sliders    = [ Slider (Vector2 10   75) (Vector2 180 25) "Cutoff"    100.0 25000.0 0.4
@@ -67,15 +72,22 @@ createNodeOnUI node file = do
         ident = node ^. nodeId
         expr  = node ^. expression
     UI.createNodeAt ident pos expr (file ^. objectId)
-    addPorts  InputPort node
-    addPorts OutputPort node
 
-addPorts :: PortType -> Node -> IO ()
-addPorts portType node = mapM_ (addPortWith (node ^. nodeId) $ addPort portType) $ getPorts portType node
 
-addPortWith :: NodeId -> (NodeId -> PortId -> Double -> IO ()) -> Port -> IO ()
-addPortWith nodeId addPortFun port = addPortFun nodeId (port ^. portId) (port ^. angle)
+registerPorts :: WidgetId -> PortType -> Node -> UIRegistry.UIState () b
+registerPorts nodeWidgetId portType node = do
+    let registerPort p = do file <- UIRegistry.registerM nodeWidgetId (WPort.Port $ PortRef (node ^. nodeId) portType (p ^. portId)) def
+                            return (file, p)
+    let inPorts = getPorts portType node
+    ins  <- mapM registerPort inPorts
 
-addPort :: PortType -> NodeId -> PortId -> Double -> IO ()
+    forM_ ins $ \(w, p) -> UIRegistry.uiAction $ (addPort portType) (node ^. nodeId) (w ^. objectId) (p ^. portId) (p ^. angle)
+
+    outs <- mapM registerPort inPorts
+
+    return ()
+
+
+addPort :: PortType -> NodeId -> WidgetId -> PortId -> Double -> IO ()
 addPort  InputPort = UI.addInputPort
 addPort OutputPort = UI.addOutputPort

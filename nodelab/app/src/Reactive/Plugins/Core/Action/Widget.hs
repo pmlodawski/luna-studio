@@ -22,6 +22,7 @@ import           ThreeJS.Widget.Slider ()
 import           ThreeJS.Widget.Number ()
 import           ThreeJS.Widget.Node   ()
 import           ThreeJS.Widget.Toggle ()
+import           Object.Widget.Port   ()
 import qualified JS.Camera      as Camera
 
 

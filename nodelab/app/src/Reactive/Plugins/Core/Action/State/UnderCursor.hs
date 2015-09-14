@@ -8,6 +8,7 @@ import           Object.Object
 import           Object.Port
 import           Object.Node
 import qualified Object.Widget.Node as WNode
+import qualified Object.Widget.Port as WPort
 
 import           Reactive.Plugins.Core.Action.State.Global
 import qualified Reactive.Plugins.Core.Action.State.Graph      as Graph
@@ -47,7 +48,14 @@ getNodesUnderCursor state = maybeToList node where
 
 
 getPortRefUnderCursor :: State -> Maybe PortRef
-getPortRefUnderCursor state = getPortRef (state ^. mousePos) (toCamera state) (Graph.getNodes $ state ^. graph)
+getPortRefUnderCursor state = do
+    let registry = state ^. uiRegistry
+    widgetId    <- registry ^. UIRegistry.widgetOver
+    maybeWidget <- UIRegistry.lookup widgetId registry
+    widget      <- (fromCtxDynamic (maybeWidget ^. widget)) :: Maybe WPort.Port
+    return $ widget ^. WPort.portRef
+
+    -- getPortRef (state ^. mousePos) (toCamera state) (Graph.getNodes $ state ^. graph)
 
 
 underCursor :: State -> UnderCursor
