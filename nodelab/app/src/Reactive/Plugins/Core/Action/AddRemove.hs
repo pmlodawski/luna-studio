@@ -35,7 +35,7 @@ import qualified Reactive.Plugins.Core.Action.State.Global      as Global
 import qualified Reactive.Plugins.Core.Action.Executors.AddNode as AddNode
 
 import           ThreeJS.Types
-import           BatchConnector.Commands   (addNode)
+import qualified BatchConnector.Commands as BatchCmd
 
 import           AST.GraphToViz
 
@@ -115,7 +115,7 @@ instance ActionStateUpdater Action where
 
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
-        RegisterActionUI node -> addNode workspace node >> putStrLn ("added " <> display node)
+        RegisterActionUI node -> BatchCmd.addNode workspace node >> putStrLn ("added " <> display node)
             where
             workspace       = state ^. Global.workspace
         AddActionUI node action -> action
@@ -123,8 +123,10 @@ instance ActionUIUpdater Action where
                                 >> putStrLn (display $ state ^. Global.graph . Graph.nodesMap)     -- debug
                                 >> graphToViz (state ^. Global.graph . Graph.graphMeta)
         RemoveFocused      -> UI.removeNode nodeId
+                           >> BatchCmd.removeNodeById workspace nodeId
                            >> mapM_ UI.setNodeFocused topNodeId
             where
             selectedNodeIds = state ^. Global.selection . Selection.nodeIds
             nodeId          = head $ state ^. Global.addRemove . toRemoveIds
             topNodeId       = selectedNodeIds ^? ix 0
+            workspace       = state ^. Global.workspace
