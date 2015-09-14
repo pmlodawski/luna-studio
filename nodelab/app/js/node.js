@@ -121,7 +121,6 @@ function Node(id, position, z, widgetId) {
   if (features.node_labels) this.updateLabel();
   this.updateValue();
 
-  this.expandedState = 1.0
   this.setExpandedState(0.0);
 }
 
