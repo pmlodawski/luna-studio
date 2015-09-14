@@ -44,10 +44,10 @@ registerNode node oldRegistry = flip MState.execState (oldRegistry, return ()) $
 
     let rootId     = file ^. objectId
         nodeWidget = file ^. widget
-        sliders    = [ Slider (Vector2 10   75) (Vector2 180 25) "Cutoff"    100.0 25000.0 0.4
-                     , Slider (Vector2 10  105) (Vector2 180 25) "Resonance" 0.0   1.0     0.2
-                     , Slider (Vector2 10  135) (Vector2 180 25) "Amount"    0.0   1.0     0.4
-                     , Slider (Vector2 10  165) (Vector2 180 25) "Gain"      0.0   1.0     0.4
+        sliders    = [ Slider (Vector2 10   75) (Vector2 180 20) "Cutoff"    100.0 25000.0 0.4
+                     , Slider (Vector2 10  100) (Vector2 180 20) "Resonance" 0.0   1.0     0.2
+                     , Slider (Vector2 10  125) (Vector2 180 20) "Amount"    0.0   1.0     0.4
+                     , Slider (Vector2 10  150) (Vector2 180 20) "Gain"      0.0   1.0     0.4
                      ]
     sliderIds <- sequence $ addSliderToNode rootId <$> sliders
     UIRegistry.updateM rootId (nodeWidget & WNode.controls .~ sliderIds)

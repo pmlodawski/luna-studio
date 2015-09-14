@@ -57,7 +57,7 @@ instance Registry.UIWidget Slider where
 buildValueLabel :: (Model.IsSlider a) => Model.Slider a -> IO Mesh
 buildValueLabel s = do
     (mesh, width) <- buildLabel 0.8 AlignRight (Text.pack $ Model.displayValue s)
-    moveBy (Vector2 (s ^. Model.size . x - 12.5) (5.0 + s ^. Model.size . y / 2.0)) mesh
+    moveBy (Vector2 (s ^. Model.size . x - 10.0) (5.0 + s ^. Model.size . y / 2.0)) mesh
     return mesh
 
 instance (Model.IsSlider a) => Registry.UIWidgetBinding (Model.Slider a) Slider where
@@ -71,7 +71,7 @@ instance (Model.IsSlider a) => Registry.UIWidgetBinding (Model.Slider a) Slider 
 
         label <- do
             (mesh, width) <- buildLabel 1.0 AlignLeft (widget ^. Model.label)
-            moveBy (Vector2 12.5 (5.0 + size ^. y / 2.0)) mesh
+            moveBy (Vector2 10 (5.0 + size ^. y / 2.0)) mesh
             return mesh
 
         valueLabel <- buildValueLabel widget

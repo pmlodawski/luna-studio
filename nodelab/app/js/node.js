@@ -27,7 +27,7 @@ var nodeGeometry    = new THREE.PlaneBufferGeometry(1.0, 1.0);
 nodeGeometry.applyMatrix( new THREE.Matrix4().makeTranslation(0.5, 0.5, 0.0) );
 
 
-var expandedRadius  = 22.5;
+var expandedRadius  = 20.0;
 var collapsedRadius = 30.0
 
 function Node(id, position, z, widgetId) {
@@ -82,7 +82,7 @@ function Node(id, position, z, widgetId) {
       side:           THREE.DoubleSide
     })
   );
-  this.node.position.set(-30, -30, -0.0001);
+  this.node.position.set(-30, -30, 0);
 
   this.expandedNode = new THREE.Group();
 
@@ -113,7 +113,7 @@ function Node(id, position, z, widgetId) {
   this.updateMouse(position.x, position.y);
 
   this.collapsedNodeSize = new THREE.Vector2( 2 * collapsedRadius,  2 * collapsedRadius);
-  this.expandedNodeSize  = new THREE.Vector2(200.0, 200.0);
+  this.expandedNodeSize  = new THREE.Vector2(200.0, 180.0);
 
   this.node.scale.x = this.collapsedNodeSize.x;
   this.node.scale.y = this.collapsedNodeSize.y;
