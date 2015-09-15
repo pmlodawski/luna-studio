@@ -30,6 +30,9 @@ deserialize :: String -> Frame
 deserialize = Binary.decode . Base64.decodeLenient . pack
 
 sendMessage :: WebMessage -> IO ()
-sendMessage msg = do
+sendMessage msg = sendMany [msg]
+
+sendMany :: [WebMessage] -> IO ()
+sendMany msgs = do
     socket <- getWebSocket
-    send socket $ serialize $ Frame [msg]
+    send socket $ serialize $ Frame msgs

@@ -5,7 +5,7 @@ import           Utils.PreludePlus
 import qualified Data.Sequence              as Seq
 import           Text.ProtocolBuffers       (Utf8(..), messagePut)
 import           Text.ProtocolBuffers.Basic (uFromString)
-import           BatchConnector.Connection  (sendMessage, WebMessage(..))
+import           BatchConnector.Connection  (sendMessage, sendMany, WebMessage(..))
 import           Batch.Project              as Project
 import           Batch.Library              as Library
 import           Batch.Breadcrumbs
@@ -134,14 +134,18 @@ addNode workspace node = sendMessage msg where
                            (workspace ^. library . Library.id)
                            uselessLegacyArgument
 
-updateNode :: Workspace -> Node -> IO ()
-updateNode workspace node = sendMessage msg where
-    msg  = WebMessage "project.library.ast.function.graph.node.modifyinplace.request" $ messagePut body
-    body = ModifyNode.Request (encode node)
-                              (encode $ workspace ^. breadcrumbs)
-                              (workspace ^. library . Library.id)
-                              (workspace ^. project . Project.id)
-                              uselessLegacyArgument
+
+updateNodeMessage :: Workspace -> Node -> WebMessage
+updateNodeMessage workspace node = WebMessage topic $ messagePut body where
+    topic = "project.library.ast.function.graph.node.modifyinplace.request"
+    body  = ModifyNode.Request (encode node)
+                               (encode $ workspace ^. breadcrumbs)
+                               (workspace ^. library . Library.id)
+                               (workspace ^. project . Project.id)
+                               uselessLegacyArgument
+
+updateNodes :: Workspace -> [Node] -> IO ()
+updateNodes workspace nodes = sendMany $ (updateNodeMessage workspace) <$> nodes
 
 portRefToList :: PortId -> [Int]
 portRefToList AllPorts     = []

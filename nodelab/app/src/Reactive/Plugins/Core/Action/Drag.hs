@@ -139,7 +139,7 @@ instance ActionUIUpdater Action where
 
 
 updateNodesBatch :: Workspace -> NodesMap -> IO ()
-updateNodesBatch workspace nodesMap = mapM_ (BatchCmd.updateNode workspace) $ IntMap.elems nodesMap
+updateNodesBatch workspace nodesMap = BatchCmd.updateNodes workspace $ IntMap.elems nodesMap
 
 moveNodesUI :: NodesMap -> IO ()
 moveNodesUI nodesMap = mapM_ UI.moveNode $ IntMap.elems nodesMap
