@@ -53,19 +53,20 @@ instance PrettyPrinter Action where
     display (DragAction tpe point) = "dA(" <> display tpe <> " " <> display point <> ")"
 
 
-toAction :: Event Node -> UnderCursor -> Maybe Action
-toAction (Mouse (Mouse.Event tpe pos button keyMods _)) underCursor = case button of
+toAction :: Event Node -> Global.State -> UnderCursor -> Maybe Action
+toAction (Mouse (Mouse.Event tpe pos button keyMods _)) state underCursor = case button of
     LeftButton         -> case tpe of
         Mouse.Pressed  -> if dragAllowed then case keyMods of
                                              (KeyMods False False False False) -> Just (DragAction StartDrag pos)
                                              _                                 -> Nothing
                                          else Nothing
-        Mouse.Released -> Just (DragAction StopDrag pos)
-        Mouse.Moved    -> Just (DragAction Moving   pos)
+        Mouse.Released -> if isDragging then Just (DragAction StopDrag pos) else Nothing
+        Mouse.Moved    -> if isDragging then Just (DragAction Moving   pos) else Nothing
         _              -> Nothing
     _                  -> Nothing
     where dragAllowed   = not . null $ underCursor ^. nodesUnderCursor
-toAction _ _ = Nothing
+          isDragging    = isJust $ state ^. Global.drag . history
+toAction _ _ _ = Nothing
 
 moveNodes :: Double -> Vector2 Int -> NodesMap -> NodesMap
 moveNodes factor delta = fmap $ \node -> if node ^. selected then node & nodePos +~ deltaWs else node where
