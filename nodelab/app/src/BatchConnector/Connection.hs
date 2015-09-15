@@ -15,15 +15,21 @@ data WebMessage = WebMessage { _topic   :: String
                              , _message :: ByteString
                              } deriving (Show, Generic)
 
+makeLenses ''WebMessage
 instance Binary.Binary WebMessage
 
-serialize :: WebMessage -> JSString
+data Frame = Frame { _messages :: [WebMessage] } deriving (Show, Generic)
+
+makeLenses ''Frame
+instance Binary.Binary Frame
+
+serialize :: Frame -> JSString
 serialize = lazyTextToJSString . decodeUtf8 . Base64.encode . Binary.encode
 
-deserialize :: String -> WebMessage
+deserialize :: String -> Frame
 deserialize = Binary.decode . Base64.decodeLenient . pack
 
 sendMessage :: WebMessage -> IO ()
 sendMessage msg = do
     socket <- getWebSocket
-    send socket $ serialize msg
+    send socket $ serialize $ Frame [msg]

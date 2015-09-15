@@ -114,5 +114,5 @@ webSocketHandler conn = AddHandler $ \h -> do
         h $ Connection Connection.Opened
     WebSocket.onMessage conn $ \event -> do
         payload <- WebSocket.getData event
-        let msg = Connection.deserialize $ fromJSString payload
-        h $ Connection $ Connection.Message msg
+        let frame = Connection.deserialize $ fromJSString payload
+        mapM_ (h . Connection . Connection.Message) $ frame ^. Connection.messages
