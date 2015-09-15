@@ -20,13 +20,20 @@ import           AST.AST
 
 type NodesRefsMap = IntMap GraphRefMeta
 
-type ConnectionsCollections = [(PortRef, PortRef)]
+data Connection = Connection { _connId      :: ConnectionId
+                             , _source      :: PortRef
+                             , _destination :: PortRef
+                             } deriving (Eq, Show)
 
-data State = State { _nodesMap      :: NodesMap               -- don't access it directly
-                   , _connections   :: ConnectionsCollections -- don't access it directly
-                   , _nodesRefsMap  :: NodesRefsMap
-                   , _focusedNodeId :: NodeId
-                   , _graphMeta     :: GraphMeta
+makeLenses ''Connection
+
+type ConnectionsMap = IntMap Connection
+
+data State = State { _nodesMap       :: NodesMap       -- don't access it directly
+                   , _connectionsMap :: ConnectionsMap -- don't access it directly
+                   , _nodesRefsMap   :: NodesRefsMap
+                   , _focusedNodeId  :: NodeId
+                   , _graphMeta      :: GraphMeta
                    } deriving (Show)
 
 makeLenses ''State
@@ -40,12 +47,6 @@ instance Eq State where
 instance Default State where
     def = State def def def def def
 
-instance PrettyPrinter NodesRefsMap where
-    display nodes =
-        "map(" <> show (IntMap.keys nodes)
-        <> " " <> show (IntMap.assocs nodes)
-        <> ")"
-
 instance PrettyPrinter State where
     display (State nodesMap connections nodesRefsMap focusedNodeId bldrState) =
           "graph(" <> show nodesMap
@@ -56,10 +57,16 @@ instance PrettyPrinter State where
         <> ")"
 
 
-genId :: State -> NodeId
-genId state = let refs = state ^. nodesRefsMap in
-    if IntMap.null refs then 0
-                        else 1 + (fst $ IntMap.findMax refs)
+genId :: IntMap a -> ID
+genId intMap = if IntMap.null intMap then 0
+                                     else 1 + (fst $ IntMap.findMax intMap)
+
+
+genNodeId :: State -> NodeId
+genNodeId state = genId $ state ^. nodesRefsMap
+
+genConnectionId :: State -> NodeId
+genConnectionId state = genId $ state ^. connectionsMap
 
 getNode :: State -> NodeId -> Node
 getNode state nodeId = IntMap.findWithDefault (error $ "Node " <> show nodeId <> " not found") nodeId $ state ^. nodesMap
@@ -70,8 +77,8 @@ getNodes state = IntMap.elems $ state ^. nodesMap
 getNodesMap :: State -> NodesMap
 getNodesMap = (^. nodesMap)
 
-getConnections :: State -> ConnectionsCollections
-getConnections = (^. connections)
+getConnectionsMap :: State -> ConnectionsMap
+getConnectionsMap = (^. connectionsMap)
 
 updateNodes :: NodesMap -> State -> State
 updateNodes newNodesMap state = state & nodesMap .~ newNodesMap
@@ -110,11 +117,12 @@ addAccessor destPortRef sourcePortRef state =
         destRefMay   = IntMap.lookup destId   refsMap
         sourceRefMay = IntMap.lookup sourceId refsMap
     in case (destRefMay, sourceRefMay) of
-        (Just destRef, Just sourceRef) -> state & graphMeta    .~ newGraphMeta
-                                                & nodesRefsMap %~ IntMap.insert (newNode ^. hiddenNodeId) ref
-                                                & connections  %~ (:) (sourcePortRef, destPortRef)
+        (Just destRef, Just sourceRef) -> state & graphMeta      .~ newGraphMeta
+                                                & nodesRefsMap   %~ IntMap.insert (newNode ^. hiddenNodeId) ref
+                                                & connectionsMap %~ IntMap.insert (newConnection ^. connId) newConnection
             where (ref, newGraphMeta) = makeAcc newNode destRef sourceRef $ rebuild $ state ^. graphMeta
-                  newNode             = HiddenNode Accessor $ genId state
+                  newNode             = HiddenNode Accessor $ genNodeId state
+                  newConnection       = Connection (genConnectionId state) sourcePortRef destPortRef
         (_, _) -> state
 
 
@@ -126,11 +134,12 @@ addApplication1 funPortRef argPortRef  state =
         funRefMay = IntMap.lookup funId refsMap
         argRefMay = IntMap.lookup argId refsMap
     in case (funRefMay, argRefMay) of
-        (Just funRef, Just argRef) -> state & graphMeta    .~ newGraphMeta
-                                            & nodesRefsMap %~ IntMap.insert (newNode ^. hiddenNodeId) ref
-                                            & connections  %~ (:) (argPortRef, funPortRef)
+        (Just funRef, Just argRef) -> state & graphMeta      .~ newGraphMeta
+                                            & nodesRefsMap   %~ IntMap.insert (newNode ^. hiddenNodeId) ref
+                                            & connectionsMap %~ IntMap.insert (newConnection ^. connId) newConnection
             where (ref, newGraphMeta) = makeApp1 newNode argRef funRef $ rebuild $ state ^. graphMeta
-                  newNode             = HiddenNode Application $ genId state
+                  newNode             = HiddenNode Application $ genNodeId state
+                  newConnection       = Connection (genConnectionId state) argPortRef funPortRef
         (_, _) -> state
 
 
@@ -143,12 +152,15 @@ addApplication funPortRef argPortRefs state =
         argRefs    = catMaybes $ (flip IntMap.lookup refsMap) <$> argIds
         funRefMay  = IntMap.lookup funId refsMap
     in case funRefMay of
-        Just funRef -> state & graphMeta    .~ newGraphMeta
-                             & nodesRefsMap %~ IntMap.insert (newNode ^. hiddenNodeId) ref
-                             & connections  .~ newConnections
+        Just funRef -> state & graphMeta      .~ newGraphMeta
+                             & nodesRefsMap   %~ IntMap.insert (newNode ^. hiddenNodeId) ref
+                             & connectionsMap %~ IntMap.union newConnections
             where (ref, newGraphMeta) = makeApp newNode funRef argRefs $ rebuild $ state ^. graphMeta
-                  newNode             = HiddenNode Application $ genId state
-                  newConnections      = ((\argPortRef -> (argPortRef, funPortRef)) <$> argPortRefs) <> (state ^. connections)
+                  newNode             = HiddenNode Application $ genNodeId state
+                  availConnectionId   = genConnectionId state
+                  availConnectionIds  = [availConnectionId..]
+                  newConnections      = IntMap.fromList $
+                        (\(connId, argPortRef) -> (connId, Connection connId argPortRef funPortRef)) <$> (zip availConnectionIds argPortRefs)
         _ -> state
 
 

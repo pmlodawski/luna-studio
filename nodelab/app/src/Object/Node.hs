@@ -56,12 +56,6 @@ instance PrettyPrinter Node where
         <> " " <> display ports
         <> ")"
 
-instance PrettyPrinter NodesMap where
-    display nodes =
-        "map(" <> show (IntMap.keys nodes)
-        <> " " <> show (IntMap.assocs nodes)
-        <> ")"
-
 isNode :: Object Dynamic -> Bool
 isNode obj = isJust (unpackDynamic obj :: Maybe Node)
 

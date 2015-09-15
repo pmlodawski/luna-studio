@@ -1,13 +1,15 @@
 module Utils.PrettyPrinter where
 
 import           Prelude
-import           Data.List      ( intercalate )
+import           Data.List      (intercalate)
 import           Data.Maybe
 import           Data.Dynamic
-import           Data.Monoid    ( (<>) )
+import           Data.Monoid    ((<>))
 import           Text.Printf
 
-import           Data.Text.Lazy ( Text )
+import           Data.Text.Lazy   (Text)
+import           Data.IntMap.Lazy (IntMap)
+import qualified Data.IntMap.Lazy as IntMap
 
 class PrettyPrinter a where
     display :: a -> String
@@ -24,6 +26,9 @@ instance (PrettyPrinter a, PrettyPrinter b) => PrettyPrinter (a, b) where
 
 instance (PrettyPrinter a, PrettyPrinter b, PrettyPrinter c) => PrettyPrinter (a, b, c) where
     display (x, y, z) = "(" <> display x <> "," <> display y <> "," <> display z <> ")"
+
+instance (PrettyPrinter a, PrettyPrinter b, PrettyPrinter c, PrettyPrinter d) => PrettyPrinter (a, b, c, d) where
+    display (x, y, z, w) = "(" <> display x <> "," <> display y <> "," <> display z <> "," <> display w <> ")"
 
 instance PrettyPrinter Int where
     display = show
@@ -50,5 +55,8 @@ instance PrettyPrinter Bool where
 instance PrettyPrinter Dynamic where
     display _ = "Dynamic"
 
-instance (PrettyPrinter a, PrettyPrinter b, PrettyPrinter c, PrettyPrinter d) => PrettyPrinter (a, b, c, d) where
-    display (a, b, c, d) = "(" <> display a <> "," <> display b <> "," <> display c <> "," <> display d <> ")"
+instance Show a => PrettyPrinter (IntMap a) where
+    display intMap =
+        "map(" <> show (IntMap.keys   intMap)
+        <> " " <> show (IntMap.assocs intMap)
+        <> ")"

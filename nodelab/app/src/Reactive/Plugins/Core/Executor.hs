@@ -2,7 +2,7 @@
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE TypeSynonymInstances #-}
 
-module Reactive.Plugins.Core.Action.Executor where
+module Reactive.Plugins.Core.Executor where
 
 
 import           Utils.PreludePlus
@@ -10,7 +10,7 @@ import           Utils.PreludePlus
 import           Reactive.Banana
 import           Reactive.Banana.Frameworks
 
-import           Reactive.Plugins.Core.Action.Action
+import           Reactive.Plugins.Core.Action
 import           Reactive.Plugins.Core.Action.State.Global
 
 

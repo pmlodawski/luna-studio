@@ -15,6 +15,8 @@ type ID = Int
 
 
 type NodeId = ID
+type ConnectionId = ID
+
 type NodeIdCollection = [NodeId]
 
 data PortId = AllPorts

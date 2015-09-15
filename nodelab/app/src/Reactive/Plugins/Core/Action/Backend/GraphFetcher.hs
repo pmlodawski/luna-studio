@@ -6,8 +6,8 @@ import           Object.Node
 import           Event.Event
 import qualified Event.Batch as Batch
 
-import           Reactive.Plugins.Core.Action.Action
-import           Reactive.Plugins.Core.Action.Common            (displayConnections)
+import           Reactive.Plugins.Core.Action
+import           Reactive.Plugins.Core.Action.Executors.Graph   (displayConnections)
 import           Reactive.Plugins.Core.Action.State.Graph
 import qualified Reactive.Plugins.Core.Action.State.Global      as Global
 import qualified Reactive.Plugins.Core.Action.Executors.AddNode as AddNode
@@ -48,10 +48,10 @@ instance ActionStateUpdater Action where
       workspace             = state ^. Global.workspace
 
     execSt DisplayEdges state = ActionUI (PerformIO draw) state where
-      draw        =  displayConnections nodesMap connections
+      draw        =  displayConnections nodesMap connectionsMap
                   >> BatchCmd.runMain
-      nodesMap    = state ^. Global.graph & getNodesMap
-      connections = state ^. Global.graph & getConnections
+      nodesMap       = state ^. Global.graph & getNodesMap
+      connectionsMap = state ^. Global.graph & getConnectionsMap
 
     execSt (AddNodes nodes) state = execSt (AddSingleNode <$> nodes) state
 

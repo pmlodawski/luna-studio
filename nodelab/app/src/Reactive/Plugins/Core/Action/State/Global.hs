@@ -70,5 +70,5 @@ toCamera state = JS.Camera.Camera (state ^. screenSize) (camState ^. Camera.pan)
     camState   = state ^. camera . Camera.camera
 
 
-genId :: State -> NodeId
-genId state = Graph.genId $ state ^. graph
+genNodeId :: State -> NodeId
+genNodeId state = Graph.genNodeId $ state ^. graph

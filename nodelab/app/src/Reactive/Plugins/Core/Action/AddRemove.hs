@@ -27,7 +27,7 @@ import qualified Event.Batch        as Batch
 import           Event.NodeSearcher hiding  (Event, expression)
 import qualified Event.NodeSearcher as NodeSearcher
 
-import           Reactive.Plugins.Core.Action.Action
+import           Reactive.Plugins.Core.Action
 import           Reactive.Plugins.Core.Action.State.AddRemove
 import qualified Reactive.Plugins.Core.Action.State.Graph       as Graph
 import qualified Reactive.Plugins.Core.Action.State.Selection   as Selection
@@ -85,7 +85,7 @@ instance ActionStateUpdater Action where
         node         = createNode nextId nodePosWs expr
         camera       = Global.toCamera state
         graph        = state ^. Global.graph
-        nextId       = Global.genId state
+        nextId       = Global.genNodeId state
         nodePosWs    = Camera.screenToWorkspace camera $ state ^. Global.mousePos
 
     execSt (AddAction node) state = ActionUI (AddActionUI node action) newState where

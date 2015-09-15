@@ -9,8 +9,8 @@ import           Batch.Workspace
 import           Batch.Value
 import           JS.NodeGraph            (setComputedValue)
 
+import           Reactive.Plugins.Core.Action
 import           Reactive.Plugins.Core.Action.State.Global as Global
-import           Reactive.Plugins.Core.Action.Action
 
 data Action = RequestRerun
             | UpdateValue Int Value

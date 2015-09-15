@@ -7,7 +7,7 @@ import qualified Event.Batch        as Batch
 import           Batch.Workspace
 
 import qualified BatchConnector.Commands                   as BatchCmd
-import           Reactive.Plugins.Core.Action.Action
+import           Reactive.Plugins.Core.Action
 import qualified Reactive.Plugins.Core.Action.State.Global as Global
 import           Data.Text.Lazy.IO                         as TextIO
 

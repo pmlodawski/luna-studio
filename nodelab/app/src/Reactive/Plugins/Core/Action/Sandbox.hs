@@ -17,7 +17,7 @@ import qualified Event.Window   as Window
 import           Event.Event
 import           Event.WithObjects
 
-import           Reactive.Plugins.Core.Action.Action
+import           Reactive.Plugins.Core.Action
 import qualified Reactive.Plugins.Core.Action.State.Global       as Global
 import qualified Reactive.Plugins.Core.Action.State.Sandbox      as Sandbox
 import           Reactive.Plugins.Core.Action.State.UIRegistry   (WidgetMap)

@@ -11,7 +11,7 @@ import           Object.Widget
 import           Object.UITypes                                (WidgetId)
 import qualified Object.Widget.Node                            as WNode
 import qualified Object.Widget.Port                            as WPort
-import           Reactive.Plugins.Core.Action.Action
+import           Reactive.Plugins.Core.Action
 import qualified Reactive.Plugins.Core.Action.State.Global     as Global
 import           Reactive.Plugins.Core.Action.State.Global     (State)
 import qualified Reactive.Plugins.Core.Action.State.Graph      as Graph

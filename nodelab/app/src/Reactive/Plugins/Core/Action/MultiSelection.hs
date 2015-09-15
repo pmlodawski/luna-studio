@@ -18,7 +18,7 @@ import qualified Event.Mouse    as Mouse
 import           Event.Event
 import           Event.WithObjects
 
-import           Reactive.Plugins.Core.Action.Action
+import           Reactive.Plugins.Core.Action
 import           Reactive.Plugins.Core.Action.State.MultiSelection
 import           Reactive.Plugins.Core.Action.State.UnderCursor
 import qualified Reactive.Plugins.Core.Action.State.Graph          as Graph

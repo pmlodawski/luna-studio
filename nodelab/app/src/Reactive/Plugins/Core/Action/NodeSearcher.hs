@@ -21,7 +21,7 @@ import           Event.Mouse    hiding      ( Event )
 import qualified Event.Mouse    as Mouse
 import           Event.Event
 import           Event.WithObjects
-import           Reactive.Plugins.Core.Action.Action
+import           Reactive.Plugins.Core.Action
 import           Reactive.Plugins.Core.Action.State.NodeSearcher
 import qualified Reactive.Plugins.Core.Action.State.Global          as Global
 import qualified Reactive.Plugins.Core.Action.NodeSearcher.Mock     as Mock

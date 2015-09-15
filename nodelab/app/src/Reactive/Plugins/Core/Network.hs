@@ -14,7 +14,7 @@ import qualified Object.Node                                 as Node
 import qualified Event.Event                                 as Event
 import qualified Event.Processors.Batch                      as BatchEventProcessor
 
-import           Reactive.Plugins.Core.Action.Action
+import           Reactive.Plugins.Core.Action
 import qualified Reactive.Plugins.Core.Action.General              as General
 import qualified Reactive.Plugins.Core.Action.Camera               as Camera
 import qualified Reactive.Plugins.Core.Action.AddRemove            as AddRemove
@@ -29,7 +29,7 @@ import qualified Reactive.Plugins.Core.Action.Sandbox              as Sandbox
 import qualified Reactive.Plugins.Core.Action.Backend.Backend      as Backend
 import qualified Reactive.Plugins.Core.Action.Backend.Runner       as Runner
 import qualified Reactive.Plugins.Core.Action.Backend.GraphFetcher as GraphFetcher
-import           Reactive.Plugins.Core.Action.Executor
+import           Reactive.Plugins.Core.Executor
 
 import           Reactive.Plugins.Core.Action.State.Global
 import           Reactive.Plugins.Core.Action.State.UnderCursor
@@ -83,7 +83,7 @@ makeNetworkDescription conn logging workspace = do
         nodeGeneralActionB            = fmap ActionST $             General.toAction <$> anyNodeB
         cameraActionB                 = fmap ActionST $              Camera.toAction <$> anyNodeB <*> globalStateB
         nodeAddRemActionB             = fmap ActionST $           AddRemove.toAction <$> anyNodeB <*> globalStateB
-        nodeSelectionActionB          = fmap ActionST $           Selection.toAction <$> anyNodeB <*> globalStateB <*> underCursorB 
+        nodeSelectionActionB          = fmap ActionST $           Selection.toAction <$> anyNodeB <*> globalStateB <*> underCursorB
         nodeMultiSelectionActionB     = fmap ActionST $      MultiSelection.toAction <$> anyNodeB <*> globalStateB <*> underCursorB
         nodeDragActionB               = fmap ActionST $                Drag.toAction <$> anyNodeB <*> globalStateB <*> underCursorB
         nodeConnectActionB            = fmap ActionST $             Connect.toAction <$> anyNodeB <*> globalStateB

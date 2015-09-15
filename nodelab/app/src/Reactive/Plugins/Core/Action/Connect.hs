@@ -21,8 +21,8 @@ import qualified Event.Mouse    as Mouse
 import           Event.Event
 import           Event.WithObjects
 
-import           Reactive.Plugins.Core.Action.Action
-import           Reactive.Plugins.Core.Action.Common
+import           Reactive.Plugins.Core.Action
+import           Reactive.Plugins.Core.Action.Executors.Graph
 import           Reactive.Plugins.Core.Action.State.Connect
 import qualified Reactive.Plugins.Core.Action.State.Graph     as Graph
 import qualified Reactive.Plugins.Core.Action.State.Camera    as Camera
@@ -136,14 +136,14 @@ instance ActionUIUpdater Action where
             Dragging angle           -> forM_ maybeConnecting $ displayDragLine nodesMap angle ptWs
             StopDrag                 -> UI.removeCurrentConnection
             ConnectPorts src dst     -> UI.removeCurrentConnection
-                                     >> displayConnections nodesMap connections
+                                     >> displayConnections nodesMap connectionsMap
                                      >> BatchCmd.connectNodes workspace src dst
                                      >> putStrLn (display $ state ^. Global.graph . Graph.nodesRefsMap) -- debug
-                                     >> putStrLn (display $ state ^. Global.graph . Graph.connections) -- debug
+                                     >> putStrLn (display $ state ^. Global.graph . Graph.connectionsMap) -- debug
                                      >> graphToViz (state ^. Global.graph . Graph.graphMeta)
             where
-                nodesMap              = Graph.getNodesMap    $ state ^. Global.graph
-                connections           = Graph.getConnections $ state ^. Global.graph
+                nodesMap              = Graph.getNodesMap       $ state ^. Global.graph
+                connectionsMap        = Graph.getConnectionsMap $ state ^. Global.graph
                 ptWs                  = screenToWorkspace camera pt
                 camera                = Global.toCamera state
                 maybeConnecting       = state ^. Global.connect . connecting

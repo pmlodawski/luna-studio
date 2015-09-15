@@ -18,8 +18,8 @@ import qualified Event.Mouse    as Mouse
 import           Event.Event
 import           Event.WithObjects
 
-import           Reactive.Plugins.Core.Action.Action
-import           Reactive.Plugins.Core.Action.Common
+import           Reactive.Plugins.Core.Action
+import           Reactive.Plugins.Core.Action.Executors.Graph
 import           Reactive.Plugins.Core.Action.State.Drag
 import qualified Reactive.Plugins.Core.Action.State.Graph     as Graph
 import qualified Reactive.Plugins.Core.Action.State.Selection as Selection
@@ -121,14 +121,14 @@ instance ActionUIUpdater Action where
             StartDrag                -> return ()
             Moving                   -> return ()
             Dragging                 -> moveNodesUI selNodes
-                                     >> displayConnections nodesMap connections
+                                     >> displayConnections nodesMap connectionsMap
             StopDrag                 -> moveNodesUI selNodes
                                      >> updateNodesBatch workspace selNodes
-                                     >> displayConnections nodesMap connections
+                                     >> displayConnections nodesMap connectionsMap
             where
                 workspace             = state ^. Global.workspace
-                nodesMap              = Graph.getNodesMap    $ state ^. Global.graph
-                connections           = Graph.getConnections $ state ^. Global.graph
+                nodesMap              = Graph.getNodesMap       $ state ^. Global.graph
+                connectionsMap        = Graph.getConnectionsMap $ state ^. Global.graph
                 selNodeIds            = state ^. Global.selection . Selection.nodeIds
                 selNodes              = IntMap.filter (\node -> node ^. nodeId `elem` selNodeIds) nodesMap
                 factor                = state ^. Global.camera . Camera.camera . Camera.factor

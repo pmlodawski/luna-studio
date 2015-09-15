@@ -1,4 +1,4 @@
-module Reactive.Plugins.Core.Action.Common where
+module Reactive.Plugins.Core.Action.Executors.Graph where
 
 
 import           Utils.PreludePlus
@@ -14,19 +14,20 @@ import qualified JS.Bindings    as UI
 import qualified JS.NodeGraph   as UI
 
 
-import qualified Reactive.Plugins.Core.Action.State.Graph     as Graph
+import           Reactive.Plugins.Core.Action.State.Graph
 import qualified Reactive.Plugins.Core.Action.State.Connect   as Connect
 
 
-displayConnections :: NodesMap -> Graph.ConnectionsCollections -> IO ()
-displayConnections nodesMap connections = mapM_ (displayConnectionLine nodesMap) $ zip [0..] connections
+displayConnections :: NodesMap -> ConnectionsMap -> IO ()
+displayConnections nodesMap connectionsMap = mapM_ (displayConnectionLine nodesMap) $ IntMap.elems connectionsMap
 
 getNodePos :: NodesMap -> NodeId -> Vector2 Double
 getNodePos nodesMap nodeId = node ^. nodePos where
     node = IntMap.findWithDefault (error $ "Node " <> show nodeId <> " not found") nodeId nodesMap
 
-displayConnectionLine :: NodesMap -> (Int, (PortRef, PortRef)) -> IO ()
-displayConnectionLine nodesMap (lineId, (srcPortRef, dstPortRef)) = do
+-- displayConnectionLine :: NodesMap -> (Int, (PortRef, PortRef)) -> IO ()
+displayConnectionLine :: NodesMap -> Connection -> IO ()
+displayConnectionLine nodesMap (Connection lineId srcPortRef dstPortRef) = do
     let srcNWs@(Vector2 xSrcN ySrcN) = getNodePos nodesMap $ srcPortRef ^. refPortNodeId
         dstNWs@(Vector2 xDstN yDstN) = getNodePos nodesMap $ dstPortRef ^. refPortNodeId
         outerPos                     = portOuterBorder + distFromPort

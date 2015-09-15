@@ -4,7 +4,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Reactive.Plugins.Core.Action.Action where
+module Reactive.Plugins.Core.Action where
 
 import           Utils.PreludePlus
 import           JS.Bindings

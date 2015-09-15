@@ -13,7 +13,7 @@ import           Event.Mouse    (EventWidget(..))
 import qualified Event.Mouse    as Mouse
 import qualified Event.Keyboard as Keyboard
 import           Object.UITypes
-import           Reactive.Plugins.Core.Action.Action
+import           Reactive.Plugins.Core.Action
 import qualified Reactive.Plugins.Core.Action.State.Global       as Global
 import           Reactive.Plugins.Core.Action.State.UIRegistry   (WidgetMap)
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry   as UIRegistry
