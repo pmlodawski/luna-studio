@@ -152,20 +152,12 @@ portRefToList AllPorts     = []
 portRefToList (PortNum id) = [id]
 
 connectNodes :: Workspace -> PortRef -> PortRef -> IO ()
-connectNodes workspace src dst = connectNodes' workspace
-                                               (src ^. refPortNodeId)
-                                               (portRefToList $ src ^. refPortId)
-                                               (dst ^. refPortNodeId)
-                                               (portRefToList $ dst ^. refPortId)
-
--- TODO: Remove - low level debug interface
-connectNodes' :: Workspace -> Int -> [Int] -> Int -> [Int] -> IO ()
-connectNodes' workspace srcNode srcPorts dstNode dstPorts = sendMessage msg where
+connectNodes workspace src dst = sendMessage msg where
     msg  = WebMessage "project.library.ast.function.graph.connect.request" $ messagePut body
-    body = Connect.Request (encode srcNode)
-                           (encode srcPorts)
-                           (encode dstNode)
-                           (encode dstPorts)
+    body = Connect.Request (encode $ src ^. refPortNodeId)
+                           (encode . portRefToList $ src ^. refPortId)
+                           (encode $ dst ^. refPortNodeId)
+                           (encode . portRefToList $ dst ^. refPortId)
                            (encode $ workspace ^. breadcrumbs)
                            (workspace ^. library . Library.id)
                            (workspace ^. project . Project.id)
