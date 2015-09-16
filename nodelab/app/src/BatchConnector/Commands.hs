@@ -168,10 +168,15 @@ nodeToCallPointPath workspace node = CallPointPath projectId (Seq.fromList [call
     projectId     = workspace ^. project . Project.id
     callPoint     = CallPoint (workspace ^. library . Library.id) (encode $ node ^. nodeId)
 
-requestValue :: Workspace -> Node -> IO ()
-requestValue workspace node = sendMessage msg where
-    msg  = WebMessage "interpreter.value.request" $ messagePut body
+requestValueMessage :: Workspace -> Node -> WebMessage
+requestValueMessage workspace node = WebMessage "interpreter.value.request" $ messagePut body where
     body = Value.Request (nodeToCallPointPath workspace node) 0.0
+
+requestValue :: Workspace -> Node -> IO ()
+requestValue = sendMessage .: requestValueMessage
+
+requestValues :: Workspace -> [Node] -> IO ()
+requestValues workspace nodes = sendMany $ (requestValueMessage workspace) <$> nodes
 
 insertSerializationMode :: Workspace -> Node -> IO ()
 insertSerializationMode workspace node = sendMessage msg where

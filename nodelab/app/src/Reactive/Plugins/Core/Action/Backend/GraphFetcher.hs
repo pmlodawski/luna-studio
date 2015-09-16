@@ -19,6 +19,7 @@ data Action = AddSingleNode Node
             | AddNodes      [Node]
             | AddEdges      [(PortRef, PortRef)]
             | DisplayEdges
+            | RequestValues [Node]
             | GraphFetched  [Node] [(PortRef, PortRef)]
             deriving (Show, Eq)
 
@@ -39,25 +40,25 @@ toAction _ _ = Nothing
 
 instance ActionStateUpdater Action where
     execSt (AddSingleEdge (src, dst)) state = ActionUI NoOp newState where
-      newState    = state & Global.graph %~ (addConnection src dst)
+        newState    = state & Global.graph %~ (addConnection src dst)
 
-    execSt (AddSingleNode node) state = ActionUI (PerformIO addAndRequestValue) newState where
-      (newState, addAction) = AddNode.addNode node state
-      addAndRequestValue    =  addAction
-                            >> BatchCmd.requestValue workspace node
-      workspace             = state ^. Global.workspace
+    execSt (AddSingleNode node) state = ActionUI (PerformIO addAction) newState where
+        (newState, addAction) = AddNode.addNode node state
 
     execSt DisplayEdges state = ActionUI (PerformIO draw) state where
-      draw        =  displayConnections nodesMap connectionsMap
-                  >> BatchCmd.runMain
-      nodesMap       = state ^. Global.graph & getNodesMap
-      connectionsMap = state ^. Global.graph & getConnectionsMap
+        draw        =  displayConnections nodesMap connectionsMap
+                    >> BatchCmd.runMain
+        nodesMap       = state ^. Global.graph & getNodesMap
+        connectionsMap = state ^. Global.graph & getConnectionsMap
+
+    execSt (RequestValues nodes) state = ActionUI (PerformIO $ BatchCmd.requestValues workspace nodes) state where
+        workspace = state ^. Global.workspace
 
     execSt (AddNodes nodes) state = execSt (AddSingleNode <$> nodes) state
 
     execSt (AddEdges edges) state = execSt (AddSingleEdge <$> edges) state
 
-    execSt (GraphFetched nodes edges) state = execSt [AddNodes nodes, AddEdges edges, DisplayEdges] state
+    execSt (GraphFetched nodes edges) state = execSt [AddNodes nodes, AddEdges edges, DisplayEdges, RequestValues nodes] state
 
 instance ActionUIUpdater Reaction where
     updateUI (WithState (PerformIO action) _) = action
