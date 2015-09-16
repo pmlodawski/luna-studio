@@ -42,6 +42,9 @@ instance (IsList a, Default l) => IsList (Resizable l a) where
     type Item (Resizable l a) = Item a
     fromList = Resizable def . fromList
 
+instance HasDataStore a => HasDataStore (Resizable l a) where dataStore = wrapped . dataStore
+instance (IsDataStore a, Default l) => IsDataStore (Resizable l a) where fromDataStore = Resizable def . fromDataStore
+
 
 
 -- === TF Instances ===
@@ -58,7 +61,7 @@ type instance ElementOf        (Resizable l a) = ElementOf       a
 type instance ElementByIx  idx (Resizable l a) = ElementByIx idx a
 type instance IndexOf      el  (Resizable l a) = IndexOf     el  a
 
-
+type instance DataStoreOf (Resizable l a) = DataStoreOf a
 --type instance ModsOf (Resizable l a) inst = '[]
 
 
@@ -72,9 +75,26 @@ type instance ModsOf MeasurableQSM (Resizable l a) = ModsOf MeasurableQSM a
 type instance ModsOf MinIndexedQSM (Resizable l a) = ModsOf MinIndexedQSM a
 type instance ModsOf MaxIndexedQSM (Resizable l a) = ModsOf MaxIndexedQSM a
 
-instance (MeasurableQM q m a, MatchResultsCls MeasurableInfo (Resizable l a) a s q)                                        => MeasurableQSM (Resizable l a) m q s where sizeQSM     _ _ = queried (Proxy :: Proxy q) sizeM'     . unwrap
-instance (MinIndexedQM q m a, MatchResultsCls MinIndexedInfo (Resizable l a) a s q, IndexOf' (ContainerOf a) ~ IndexOf' a) => MinIndexedQSM (Resizable l a) m q s where minIndexQSM _ _ = queried (Proxy :: Proxy q) minIndexM' . unwrap
-instance (MaxIndexedQM q m a, MatchResultsCls MaxIndexedInfo (Resizable l a) a s q, IndexOf' (ContainerOf a) ~ IndexOf' a) => MaxIndexedQSM (Resizable l a) m q s where maxIndexQSM _ _ = queried (Proxy :: Proxy q) maxIndexM' . unwrap
+instance MeasurableQM q m a => MeasurableQSM (Resizable l a) m q s where sizeQSM     _ _ = queried (Proxy :: Proxy q) sizeM'     . unwrap
+instance MinIndexedQM q m a => MinIndexedQSM (Resizable l a) m q s where minIndexQSM _ _ = queried (Proxy :: Proxy q) minIndexM' . unwrap
+instance MaxIndexedQM q m a => MaxIndexedQSM (Resizable l a) m q s where maxIndexQSM _ _ = queried (Proxy :: Proxy q) maxIndexM' . unwrap
+
+
+
+-- === Construction ===
+
+-- [+] Singleton
+-- [ ] Allocable
+-- [ ] Expandable
+-- [ ] Growable
+
+type instance ModsOf SingletonQSM (Resizable l a) = ModsOf SingletonQSM a
+instance (SingletonQM el q m a, Default l) => SingletonQSM el (Resizable l a) m q s where singletonQSM _ _    = (fmap . fmap) wrap . queried (Proxy :: Proxy q) singletonM'
+
+
+
+
+
 
 --instance Monad m  => MinIndexed (Resizable l a) m q s where minIndex _ _ _ = simple 0
 --instance Monad m  => MaxIndexed (Resizable l a) m q s where maxIndex _ _   = (fmap.fmap) pred . sizeM
@@ -127,8 +147,8 @@ instance (MaxIndexedQM q m a, MatchResultsCls MaxIndexedInfo (Resizable l a) a s
 --type family ResultBySel (info :: *) (s :: [Bool]) where ResultBySel (Info idx el cls cont) s = ResultByQuery (Info idx el cls cont) (Selected s (FilterMutable (ModsOf cls cont)))
 --type MatchResults i s i' q' = (ResultBySel i s ~ ResultByQuery i' q')
 
-type instance ModsOf ExpandableQSM (Resizable l a) = ModsOf ExpandableQSM a
-instance (ExpandableFinalT q m a, MatchResultsCls ExpandableInfo (Resizable l a) a s q) => ExpandableQSM (Resizable l a) m q s where expandQSM q i = nestedLens wrapped $ queried (Proxy :: Proxy q) expandM
+        --type instance ModsOf ExpandableQSM (Resizable l a) = ModsOf ExpandableQSM a
+        --instance (ExpandableFinalT q m a, MatchResultsCls ExpandableInfo (Resizable l a) a s q) => ExpandableQSM (Resizable l a) m q s where expandQSM q i = nestedLens wrapped $ queried (Proxy :: Proxy q) expandM
 
 
 --expandM :: (ExpandableFinalT q m t, Simplified ExpandableInfo q t a) => Func' q (t -> m a)

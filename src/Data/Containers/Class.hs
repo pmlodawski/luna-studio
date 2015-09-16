@@ -125,78 +125,196 @@ type GrowableFinalT q = Operation2 q  GrowableInfo
 
 
 data Impossible    = Impossible  deriving (Show)
-data ImpossibleM a = ImpossibleM deriving (Show)
+data ImpossibleM a = ImpossibleM deriving (Show, Functor)
 
 
 --instance Meas
     --MeasurableFinalT q m t => Proxy q -> t -> m (ResultByQuery (MeasurableInfo (ContainerOf t)) q Int)
 
+
+type OpCtx i q (m :: * -> *) t = ( IsDataStore    t
+                                 , TransDataStore t
+                                 , AssertQuery (i (DataStoreOf t)) q
+                                 , SuperInst   (i (DataStoreOf t)) q m
+                                 , Functor m
+                                 , Functor (ResultByQuery (i (DataStoreOf t)) q)
+                                 )
+
+type TransDataStore t = DataStoreOf (DataStoreOf t) ~ DataStoreOf t
+
+type AssertQuery i q = CheckQuery i q (InfoSelection i q)
+
+type AssertQuery' i q = CheckQuery (DataStoreInfo i) q (InfoSelection i q)
+
+
+type TransDataStore2 t = DataStoreOf (ContainerOf t) ~ DataStoreOf t
+
+
+
+type OpCtx2 i q (m :: * -> *) t = ( SuperInst (i (ContainerOf t)) q m
+                                  , AssertQuery2 (i (ContainerOf t)) q
+                                  , IsContainer t
+                                  , Functor m
+                                  , Functor (ResultBySel' (i (ContainerOf t)) (InfoSelection (i (ContainerOf t)) q))
+                                  , TransDataStore2 t
+                                  )
+
+
 impossible = error "Impossible happened."
+
+type Result''   info q t = ResultByQuery (info (DataStoreOf (ContainerOf t))) q
+
 
 -- === Finite ===
 
-class MeasurableQSM cont m q s where sizeQSM      :: info ~ MeasurableInfo cont => Query q s -> info -> cont -> m (ResultBySel info s Int)
-class MinIndexedQSM cont m q s where minIndexQSM  :: info ~ MinIndexedInfo cont => Query q s -> info -> cont -> m (ResultBySel info s (IndexOf' cont))
-class MaxIndexedQSM cont m q s where maxIndexQSM  :: info ~ MaxIndexedInfo cont => Query q s -> info -> cont -> m (ResultBySel info s (IndexOf' cont))
 
--- types
+class MeasurableQSM cont m q s where sizeQSM      :: (CheckQuery' info q s, info ~ MeasurableInfo cont) => Query q s -> info -> cont -> m (ResultBySel' info s Int)
+class MinIndexedQSM cont m q s where minIndexQSM  :: (CheckQuery' info q s, info ~ MinIndexedInfo cont) => Query q s -> info -> cont -> m (ResultBySel' info s (IndexOf' (DataStoreOf cont)))
+class MaxIndexedQSM cont m q s where maxIndexQSM  :: (CheckQuery' info q s, info ~ MaxIndexedInfo cont) => Query q s -> info -> cont -> m (ResultBySel' info s (IndexOf' (DataStoreOf cont)))
 
-class                                                            MeasurableQM q m t           where sizeQM :: Proxy q -> t -> m (Result MeasurableInfo q t Int)
-instance {-# OVERLAPPABLE #-} Operation2 q MeasurableInfo m t => MeasurableQM q m t           where sizeQM q = runModsF' sizeQSM q . view container2
-instance {-# OVERLAPPABLE #-}                                    MeasurableQM q m Impossible  where sizeQM q = impossible
-instance {-# OVERLAPPABLE #-}                                    MeasurableQM q ImpossibleM t where sizeQM q = impossible
+class                         OpCtx2 MeasurableInfo q m t           => MeasurableQM q m t           where sizeQM :: Proxy q -> t -> m (Result'' MeasurableInfo q t Int)
+instance {-# OVERLAPPABLE #-} OpCtx2 MeasurableInfo q m t           => MeasurableQM q m t           where sizeQM q = runModsF' sizeQSM q . view container2
+instance {-# OVERLAPPABLE #-} OpCtx2 MeasurableInfo q ImpossibleM t => MeasurableQM q ImpossibleM t where sizeQM   = impossible
+instance {-# OVERLAPPABLE #-} OpCtx2 MeasurableInfo q m Impossible  => MeasurableQM q m Impossible  where sizeQM   = impossible
 type MeasurableInfo = RawInfo MeasurableQSM
 type MeasurableQ q  = MeasurableQM q Identity
 type MeasurableM    = MeasurableQM '[]
 type Measurable     = MeasurableM Identity
 
-class                                                            MinIndexedQM q m t           where minIndexQM :: Proxy q -> t -> m (Result MinIndexedInfo q t (IndexOf' (ContainerOf t)))
-instance {-# OVERLAPPABLE #-} Operation2 q MinIndexedInfo m t => MinIndexedQM q m t           where minIndexQM q = runModsF' minIndexQSM q . view container2
-instance {-# OVERLAPPABLE #-}                                    MinIndexedQM q m Impossible  where minIndexQM q = impossible
-instance {-# OVERLAPPABLE #-}                                    MinIndexedQM q ImpossibleM t where minIndexQM q = impossible
+class                         OpCtx2 MinIndexedInfo q m t           => MinIndexedQM q m t           where minIndexQM :: Proxy q -> t -> m (Result'' MinIndexedInfo q t (IndexOf' (DataStoreOf t)))
+instance {-# OVERLAPPABLE #-} OpCtx2 MinIndexedInfo q m t           => MinIndexedQM q m t           where minIndexQM q = runModsF' minIndexQSM q . view container2
+instance {-# OVERLAPPABLE #-} OpCtx2 MinIndexedInfo q m Impossible  => MinIndexedQM q m Impossible  where minIndexQM   = impossible
+instance {-# OVERLAPPABLE #-} OpCtx2 MinIndexedInfo q ImpossibleM t => MinIndexedQM q ImpossibleM t where minIndexQM   = impossible
 type MinIndexedInfo = RawInfo MinIndexedQSM
 type MinIndexedQ  q = MinIndexedQM q Identity
 type MinIndexedM    = MinIndexedQM '[]
 type MinIndexed     = MinIndexedM Identity
 
-class                                                            MaxIndexedQM q m t           where maxIndexQM :: Proxy q -> t -> m (Result MaxIndexedInfo q t (IndexOf' (ContainerOf t)))
-instance {-# OVERLAPPABLE #-} Operation2 q MaxIndexedInfo m t => MaxIndexedQM q m t           where maxIndexQM q = runModsF' maxIndexQSM q . view container2
-instance {-# OVERLAPPABLE #-}                                    MaxIndexedQM q m Impossible  where maxIndexQM q = impossible
-instance {-# OVERLAPPABLE #-}                                    MaxIndexedQM q ImpossibleM t where maxIndexQM q = impossible
+class                         OpCtx2 MaxIndexedInfo q m t           => MaxIndexedQM q m t           where maxIndexQM :: Proxy q -> t -> m (Result'' MaxIndexedInfo q t (IndexOf' (DataStoreOf t)))
+instance {-# OVERLAPPABLE #-} OpCtx2 MaxIndexedInfo q m t           => MaxIndexedQM q m t           where maxIndexQM q = runModsF' maxIndexQSM q . view container2
+instance {-# OVERLAPPABLE #-} OpCtx2 MaxIndexedInfo q m Impossible  => MaxIndexedQM q m Impossible  where maxIndexQM   = impossible
+instance {-# OVERLAPPABLE #-} OpCtx2 MaxIndexedInfo q ImpossibleM t => MaxIndexedQM q ImpossibleM t where maxIndexQM   = impossible
 type MaxIndexedInfo = RawInfo MaxIndexedQSM
 type MaxIndexedQ  q = MaxIndexedQM q Identity
 type MaxIndexedM    = MaxIndexedQM '[]
 type MaxIndexed     = MaxIndexedM Identity
 
+-- size
+
+sizeM' :: MeasurableQM q m t => Func' q (t -> m (Result'' MeasurableInfo q t Int))
+sizeM' = transFunc $ optBuilder sizeQM
+
+sizeM :: (MeasurableQM q m t, Simplified'' MeasurableInfo q t Int out, Functor m) => Func' q (t -> m out)
+sizeM = withTransFunc (fmap3 simplify) sizeM'
+
+size :: (MeasurableQ q t, Simplified'' MeasurableInfo q t Int out) => Func' q (t -> out)
+size = withTransFunc (fmap2 runIdentity) sizeM
+
+-- minIndex
+
+minIndexM' :: MinIndexedQM q m t => Func' q (t -> m (Result'' MinIndexedInfo q t (IndexOf' (DataStoreOf t))))
+minIndexM' = transFunc $ optBuilder minIndexQM
+
+minIndexM :: (MinIndexedQM q m t, Simplified'' MinIndexedInfo q t (IndexOf' (DataStoreOf t)) out, Functor m) => Func' q (t -> m out)
+minIndexM = withTransFunc (fmap3 simplify) minIndexM'
+
+minIndex :: (MinIndexedQM q Identity t, Simplified'' MinIndexedInfo q t (IndexOf' (DataStoreOf t)) out) => Func' q (t -> out)
+minIndex = withTransFunc (fmap2 runIdentity) minIndexM
+
+-- maxIndex
+
+maxIndexM' :: MaxIndexedQM q m t => Func' q (t -> m (Result'' MaxIndexedInfo q t (IndexOf' (DataStoreOf t))))
+maxIndexM' = transFunc $ optBuilder maxIndexQM
+
+maxIndexM :: (MaxIndexedQM q m t, Simplified'' MaxIndexedInfo q t (IndexOf' (DataStoreOf t)) out, Functor m) => Func' q (t -> m out)
+maxIndexM = withTransFunc (fmap3 simplify) maxIndexM'
+
+maxIndex :: (MaxIndexedQM q Identity t, Simplified'' MaxIndexedInfo q t (IndexOf' (DataStoreOf t)) out) => Func' q (t -> out)
+maxIndex = withTransFunc (fmap2 runIdentity) maxIndexM
+
 
 
 -- === Construction ===
 
-class SingletonQSM           el cont m q s where singletonQSM :: info ~ SingletonInfo  el cont => Query q s -> info -> el          -> m (ResultBySel info s cont)
-class AllocableQSM              cont m q s where allocQSM     :: info ~ AllocableInfo     cont => Query q s -> info -> Int         -> m (ResultBySel info s cont)
-class ExpandableQSM             cont m q s where expandQSM    :: info ~ ExpandableInfo    cont => Query q s -> info ->        cont -> m (ResultBySel info s cont)
-class GrowableQSM               cont m q s where growQSM      :: info ~ GrowableInfo      cont => Query q s -> info -> Int -> cont -> m (ResultBySel info s cont)
+
+class ExpandableQSM2            cont m q s where expandQSM2   :: (CheckQuery' info q s, info ~ ExpandableInfo   cont) => Query q s -> info ->        cont -> m (ResultBySel' info s cont)
+
+
+class SingletonQSM           el cont m q s where singletonQSM :: (CheckQuery' info q s, info ~ SingletonInfo el cont) => Query q s -> info -> el          -> m (ResultBySel' info s cont)
+class AllocableQSM              cont m q s where allocQSM     :: (CheckQuery' info q s, info ~ AllocableInfo    cont) => Query q s -> info -> Int         -> m (ResultBySel' info s cont)
+class ExpandableQSM             cont m q s where expandQSM    :: (CheckQuery' info q s, info ~ ExpandableInfo   cont) => Query q s -> info ->        cont -> m (ResultBySel' info s cont)
+class GrowableQSM               cont m q s where growQSM      :: (CheckQuery' info q s, info ~ GrowableInfo     cont) => Query q s -> info -> Int -> cont -> m (ResultBySel' info s cont)
 
 type instance IxedMode SingletonQSM  = Single
 type instance IxedMode AllocableQSM  = Multi
 type instance IxedMode ExpandableQSM = Multi
 type instance IxedMode GrowableQSM   = Multi
 
---class                                                            MeasurableQM q m t           where sizeQM :: Proxy q -> t -> m (Result MeasurableInfo q t Int)
---instance {-# OVERLAPPABLE #-} Operation2 q MeasurableInfo m t => MeasurableQM q m t           where sizeQM q = runModsF' sizeQSM q . view container2
---instance {-# OVERLAPPABLE #-}                                    MeasurableQM q m Impossible  where sizeQM q = impossible
---instance {-# OVERLAPPABLE #-}                                    MeasurableQM q ImpossibleM t where sizeQM q = impossible
---type MeasurableInfo = RawInfo MeasurableQSM
---type MeasurableQ q  = MeasurableQM q Identity
---type MeasurableM    = MeasurableQM '[]
---type Measurable     = MeasurableM Identity
+class                         OpCtx2 (SingletonInfo el) q m t           => SingletonQM el q m t           where singletonQM :: Proxy q -> el -> m (Result'' (SingletonInfo el) q t t)
+instance {-# OVERLAPPABLE #-} OpCtx2 (SingletonInfo el) q m t           => SingletonQM el q m t           where singletonQM = (fmap . fmap) fromContainer .: runModsF' singletonQSM
+instance {-# OVERLAPPABLE #-} OpCtx2 (SingletonInfo el) q m Impossible  => SingletonQM el q m Impossible  where singletonQM = impossible
+instance {-# OVERLAPPABLE #-} OpCtx2 (SingletonInfo el) q ImpossibleM t => SingletonQM el q ImpossibleM t where singletonQM = impossible
+type SingletonInfo el   = ElInfo el SingletonQSM
+type SingletonQ    el q = SingletonQM el q Identity
+type SingletonM    el   = SingletonQM el '[]
+type Singleton     el   = SingletonM  el Identity
+
+class                         OpCtx2 AllocableInfo q m t           => AllocableQM q m t           where allocQM :: Proxy q -> Int -> m (Result'' AllocableInfo q t t)
+instance {-# OVERLAPPABLE #-} OpCtx2 AllocableInfo q m t           => AllocableQM q m t           where allocQM = (fmap . fmap) fromContainer .: runModsF' allocQSM
+instance {-# OVERLAPPABLE #-} OpCtx2 AllocableInfo q m Impossible  => AllocableQM q m Impossible  where allocQM = impossible
+instance {-# OVERLAPPABLE #-} OpCtx2 AllocableInfo q ImpossibleM t => AllocableQM q ImpossibleM t where allocQM = impossible
+type AllocableInfo = RawInfo AllocableQSM
+type AllocableQ  q = AllocableQM q Identity
+type AllocableM    = AllocableQM '[]
+type Allocable     = AllocableM Identity
+
+class                         OpCtx2 ExpandableInfo q m t           => ExpandableQM q m t           where expandQM :: Proxy q -> t -> m (Result'' ExpandableInfo q t t)
+instance {-# OVERLAPPABLE #-} OpCtx2 ExpandableInfo q m t           => ExpandableQM q m t           where expandQM q = nestedLens container2 (runModsF' expandQSM q)
+instance {-# OVERLAPPABLE #-} OpCtx2 ExpandableInfo q m Impossible  => ExpandableQM q m Impossible  where expandQM   = impossible
+instance {-# OVERLAPPABLE #-} OpCtx2 ExpandableInfo q ImpossibleM t => ExpandableQM q ImpossibleM t where expandQM   = impossible
+type ExpandableInfo = RawInfo ExpandableQSM
+type ExpandableQ  q = ExpandableQM q Identity
+type ExpandableM    = ExpandableQM '[]
+type Expandable     = ExpandableM Identity
 
 
 
-type SingletonInfo  el = ElInfo  el SingletonQSM
-type AllocableInfo     = RawInfo    AllocableQSM
 type GrowableInfo      = RawInfo    GrowableQSM
-type ExpandableInfo    = RawInfo    ExpandableQSM
+--type ExpandableInfo    = RawInfo    ExpandableQSM
+
+
+-- singleton
+
+singletonM' :: SingletonQM el q m t => Func' q (el -> m (Result'' (SingletonInfo el) q t t))
+singletonM' = transFunc $ optBuilder singletonQM
+
+singletonM :: (SingletonQM el q m t, Simplified'' (SingletonInfo el) q t t out, Functor m) => Func' q (el -> m out)
+singletonM = withTransFunc (fmap3 simplify) singletonM'
+
+singleton :: (SingletonQ el q t, Simplified'' (SingletonInfo el) q t t out) => Func' q (el -> out)
+singleton = withTransFunc (fmap2 runIdentity) singletonM
+
+-- allocable
+
+allocM' :: AllocableQM q m t => Func' q (Int -> m (Result'' AllocableInfo q t t))
+allocM' = transFunc $ optBuilder allocQM
+
+allocM :: (AllocableQM q m t, Simplified'' AllocableInfo q t t out, Functor m) => Func' q (Int -> m out)
+allocM = withTransFunc (fmap3 simplify) allocM'
+
+alloc :: (AllocableQ q t, Simplified'' AllocableInfo q t t out) => Func' q (Int -> out)
+alloc = withTransFunc (fmap2 runIdentity) allocM
+
+-- expandable
+
+expandM' :: ExpandableQM q m t => Func' q (t -> m (Result'' ExpandableInfo q t t))
+expandM' = transFunc $ optBuilder expandQM
+
+expandM :: (ExpandableQM q m t, Simplified'' ExpandableInfo q t t out, Functor m) => Func' q (t -> m out)
+expandM = withTransFunc (fmap3 simplify) expandM'
+
+expand :: (ExpandableQ q t, Simplified'' ExpandableInfo q t t out) => Func' q (t -> out)
+expand = withTransFunc (fmap2 runIdentity) expandM
 
 
 
@@ -222,70 +340,35 @@ type instance IxedMode MeasurableQSM   = Single
 
 
 type Result     info q t = ResultByQuery (info (ContainerOf t)) q
+type Result'    info q t = ResultByQuery (info (DataStoreOf t)) q
 type Simplified info q t = Simplify (Result info q t)
+type Simplified' info q t = Simplify (Result' info q t)
+type Simplified'' info q t = Simplify (Result'' info q t)
 
 
 
--- === Finite ===
-
--- size
-
-sizeM' :: MeasurableQM q m t => Func' q (t -> m (Result MeasurableInfo q t Int))
-sizeM' = transFunc $ optBuilder sizeQM
-
-sizeM :: (MeasurableQM q m t, Simplified MeasurableInfo q t Int out, Functor m) => Func' q (t -> m out)
-sizeM = withTransFunc (fmap3 simplify) sizeM'
-
-size :: (MeasurableQ q t, Simplified MeasurableInfo q t Int out) => Func' q (t -> out)
-size = withTransFunc (fmap2 runIdentity) sizeM
-
--- minIndex
-
-minIndexM' :: MinIndexedQM q m t => Func' q (t -> m (Result MinIndexedInfo q t (IndexOf' (ContainerOf t))))
-minIndexM' = transFunc $ optBuilder minIndexQM
-
-minIndexM :: (MinIndexedQM q m t, Simplified MinIndexedInfo q t (IndexOf' (ContainerOf t)) out, Functor m) => Func' q (t -> m out)
-minIndexM = withTransFunc (fmap3 simplify) minIndexM'
-
-minIndex :: (MinIndexedQM q Identity t, Simplified MinIndexedInfo q t (IndexOf' (ContainerOf t)) out) => Func' q (t -> out)
-minIndex = withTransFunc (fmap2 runIdentity) minIndexM
-
--- maxIndex
-
-maxIndexM' :: MaxIndexedQM q m t => Func' q (t -> m (Result MaxIndexedInfo q t (IndexOf' (ContainerOf t))))
-maxIndexM' = transFunc $ optBuilder maxIndexQM
-
-maxIndexM :: (MaxIndexedQM q m t, Simplified MaxIndexedInfo q t (IndexOf' (ContainerOf t)) out, Functor m) => Func' q (t -> m out)
-maxIndexM = withTransFunc (fmap3 simplify) maxIndexM'
-
-maxIndex :: (MaxIndexedQM q Identity t, Simplified MaxIndexedInfo q t (IndexOf' (ContainerOf t)) out) => Func' q (t -> out)
-maxIndex = withTransFunc (fmap2 runIdentity) maxIndexM
-
-
-xxx :: IxedX Measurable t => t -> (IndexOf' (ContainerOf t), Int)
-xxx q = ixed size q
 
 
 
---maxIndexM' :: MaxIndexedFinalT q m t => Func' q (t -> m (ResultByQuery (MaxIndexedInfo (ContainerOf t)) q (IndexOf' (ContainerOf t))))
---maxIndexM' = transFunc $ optBuilder $ \q -> runModsF' maxIndexQSM q . view container2
-
---minIndexM' :: MinIndexedFinalT q m t => Func' q (t -> m (ResultByQuery (MinIndexedInfo (ContainerOf t)) q (IndexOf' (ContainerOf t))))
---minIndexM' = transFunc $ optBuilder $ \q -> runModsF' minIndexQSM q . view container2
+--xxx :: IxedX Measurable t => t -> (IndexOf' (ContainerOf t), Int)
+--xxx q = ixed size q
 
 --
 
-singletonM :: SingletonFinalT q el m t => Func' q (el -> m (ResultByQuery (SingletonInfo el (ContainerOf t)) q t))
-singletonM = transFunc $ optBuilder $ \q el -> (fmap . fmap) fromContainer $ runModsF' singletonQSM q el
+--singletonM :: SingletonFinalT q el m t => Func' q (el -> m (ResultByQuery (SingletonInfo el (ContainerOf t)) q t))
+--singletonM = transFunc $ optBuilder $ \q el -> (fmap . fmap) fromContainer $ runModsF' singletonQSM q el
 
-allocM :: AllocableFinalT q m t => Func' q (Int -> m (ResultByQuery (AllocableInfo (ContainerOf t)) q t))
-allocM = transFunc $ optBuilder $ \q i -> (fmap . fmap) fromContainer $ runModsF' allocQSM q i
+--singletonM :: SingletonFinalT q el m t => Func' q (el -> m (ResultByQuery (SingletonInfo el (ContainerOf t)) q t))
+--singletonM = transFunc $ optBuilder $ \q el -> (fmap . fmap) fromContainer $ runModsF' singletonQSM q el
 
-expandM :: ExpandableFinalT q m t => Func' q (t -> m (ResultByQuery (ExpandableInfo (ContainerOf t)) q t))
-expandM = transFunc $ optBuilder $ \q -> nestedLens container2 (runModsF' expandQSM q)
+--allocM :: AllocableFinalT q m t => Func' q (Int -> m (ResultByQuery (AllocableInfo (ContainerOf t)) q t))
+--allocM = transFunc $ optBuilder $ \q i -> (fmap . fmap) fromContainer $ runModsF' allocQSM q i
 
-growM :: GrowableFinalT q m t => Func' q (Int -> t -> m (ResultByQuery (GrowableInfo (ContainerOf t)) q t))
-growM = transFunc $ optBuilder $ \q i -> nestedLens container2 (runModsF' growQSM q i)
+--expandM :: ExpandableFinalT q m t => Func' q (t -> m (ResultByQuery (ExpandableInfo (ContainerOf t)) q t))
+--expandM = transFunc $ optBuilder $ \q -> nestedLens container2 (runModsF' expandQSM q)
+
+--growM :: GrowableFinalT q m t => Func' q (Int -> t -> m (ResultByQuery (GrowableInfo (ContainerOf t)) q t))
+--growM = transFunc $ optBuilder $ \q i -> nestedLens container2 (runModsF' growQSM q i)
 
 --
 
@@ -306,10 +389,10 @@ removeM = transFunc $ optBuilder $ \q el -> nestedLens container2 (runModsF' rem
 --maxIndexM  = withTransFunc (fmap3 simplify) maxIndexM'
 --minIndexM  = withTransFunc (fmap3 simplify) minIndexM'
 
-singletonM2 = withTransFunc (fmap3 simplify) singletonM
-allocM2     = withTransFunc (fmap3 simplify) allocM
-expandM2    = withTransFunc (fmap3 simplify) expandM
-growM2      = withTransFunc (fmap4 simplify) growM
+--singletonM2 = withTransFunc (fmap3 simplify) singletonM
+--allocM2     = withTransFunc (fmap3 simplify) allocM
+--expandM2    = withTransFunc (fmap3 simplify) expandM
+--growM2      = withTransFunc (fmap4 simplify) growM
 
 appendM2    = withTransFunc (fmap4 simplify) appendM
 prependM2   = withTransFunc (fmap4 simplify) prependM
@@ -342,6 +425,8 @@ type MyOperation info q (m :: * -> *) = (ConstraintQuery info q, SuperInst info 
 --type MyOperation info q (m :: * -> *) w = (ConstraintQuery info q, SuperInst2 info q m w)
 type MyOperationCont q info (m :: * -> *) = (ConstraintQuery info q, SuperInst info q m, Functor m, Functor (ResultByQuery info q))
 
+
+type     OperationCtx' q info m t = (MyOperationCont q (info (DataStoreOf (ContainerOf t))) m, IsContainer t)
 
 type     OperationCtx q info m t = (MyOperationCont q (info (ContainerOf t)) m, IsContainer t)
 class    OperationCtx q info m t => Operation2 (q :: [*]) (info :: * -> *) (m :: * -> *) t -- where

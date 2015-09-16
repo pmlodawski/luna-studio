@@ -301,6 +301,7 @@ type PrependResultTupleidx q cls cont idx el = (PrependTuple idx (ResultByQuery 
 type family ResultByQuery' (info :: *) (s :: [Bool]) where ResultByQuery' (Info idx el cls cont) s = ResultByQuery (Info idx el cls cont) (Selected s (ModsOf cls cont)) cont
 
 type family ResultBySel (info :: *) (s :: [Bool]) where ResultBySel (Info idx el cls cont) s = ResultByQuery (Info idx el cls cont) (Selected s (FilterMutable (ModsOf cls cont)))
+type family ResultBySel' (info :: *) (s :: [Bool]) where ResultBySel' (Info idx el cls cont) s = ResultByQuery (Info idx el cls (DataStoreOf cont)) (Selected s (FilterMutable (ModsOf cls cont)))
 
 
 
@@ -324,6 +325,8 @@ type ComputeSelection (cls :: k) (cont :: *) (q :: [*]) = LstIn (ModsOf cls cont
 
 type CheckQuery i q s = ResultByQuery i q ~ ResultBySel i s
 
+type CheckQuery' i q s = ResultByQuery (DataStoreInfo i) q ~ ResultBySel' i s
+
 type MatchResults i s i' q' = (ResultBySel i s ~ ResultByQuery i' q')
 
 type SubOperation i s i' q' m = (MatchResults i s i' q', ContOperation q' i' m)
@@ -334,7 +337,7 @@ type MatchResultsCls i t t' s q = MatchResults (i t) s (i (ContainerOf t')) q
 
 
 
-runModsF :: LstIn (ModsOf cls cont) q ~ s => (Proxy (q :: [*])) -> (Query q s -> Info idx el cls cont -> sig) -> sig
+runModsF :: ComputeSelection cls cont q ~ s => (Proxy (q :: [*])) -> (Query q s -> Info idx el cls cont -> sig) -> sig
 runModsF _ f = f Query Info
 
 
@@ -354,11 +357,20 @@ type family ContainerOf a
 class HasContainer2 a where
     container2 :: Lens' a (ContainerOf a)
 
+type family DataStoreOf a
+
+class HasDataStore a where
+    dataStore :: Lens' a (DataStoreOf a)
+
+class HasDataStore a => IsDataStore a where
+    fromDataStore :: DataStoreOf a -> a
+
 --data Info idx el (cls :: k) cont = Info
 
 type ConstraintQuery info q = CheckQuery info q (InfoSelection info q)
 
 type family InfoSelection i q where InfoSelection (Info idx el cls cont) q = ComputeSelection cls cont q
+type family DataStoreInfo i   where DataStoreInfo (Info idx el cls cont)   = Info idx el cls (DataStoreOf cont)
 
 
 -- superinst powinien instancjonowac na podstawie N/A !
@@ -372,6 +384,10 @@ type family SuperInst2 info q m w where SuperInst2 (Info NA  NA cls cont) q m w 
                                         SuperInst2 (Info idx NA cls cont) q m w = cls idx    cont m q (ComputeSelection cls cont q) w
                                         SuperInst2 (Info idx el cls cont) q m w = cls idx el cont m q (ComputeSelection cls cont q) w
 
+
+
+
+type family AssertQuery2 i q where AssertQuery2 (Info idx el cls cont) q = ResultByQuery (Info idx el cls (DataStoreOf cont)) q ~ ResultByQuery (Info idx el cls (DataStoreOf cont)) (Selected (LstIn (ModsOf cls cont) q) (FilterMutable (ModsOf cls cont)))
 
 
 ----

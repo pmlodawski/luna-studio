@@ -27,6 +27,11 @@ type instance ElementOf        (HReusable idx a) = ElementOf       a
 type instance ElementByIx  idx (HReusable idx a) = ElementByIx idx a
 type instance IndexOf      el  (HReusable idx a) = IndexOf     el  a
 
+type instance DataStoreOf (HReusable idx a) = DataStoreOf a
+instance HasDataStore a => HasDataStore (HReusable idx a) where dataStore = wrapped . dataStore
+instance IsDataStore a => IsDataStore (HReusable idx a) where fromDataStore = HReusable def . fromDataStore
+
+
 -- Wrappers
 
 instance Unwrap (HReusable idx) where unwrap (HReusable _ cont) = cont
@@ -58,10 +63,33 @@ type instance ModsOf MeasurableQSM (HReusable idx a) = ModsOf MeasurableQSM a
 type instance ModsOf MinIndexedQSM (HReusable idx a) = ModsOf MinIndexedQSM a
 type instance ModsOf MaxIndexedQSM (HReusable idx a) = ModsOf MaxIndexedQSM a
 
-instance (MeasurableQM q m a, MatchResultsCls MeasurableInfo (HReusable idx a) a s q)                                        => MeasurableQSM (HReusable idx a) m q s where sizeQSM     _ _ = queried (Proxy :: Proxy q) sizeM'     . unwrap
-instance (MinIndexedQM q m a, MatchResultsCls MinIndexedInfo (HReusable idx a) a s q, IndexOf' (ContainerOf a) ~ IndexOf' a) => MinIndexedQSM (HReusable idx a) m q s where minIndexQSM _ _ = queried (Proxy :: Proxy q) minIndexM' . unwrap
-instance (MaxIndexedQM q m a, MatchResultsCls MaxIndexedInfo (HReusable idx a) a s q, IndexOf' (ContainerOf a) ~ IndexOf' a) => MaxIndexedQSM (HReusable idx a) m q s where maxIndexQSM _ _ = queried (Proxy :: Proxy q) maxIndexM' . unwrap
+instance MeasurableQM q m a => MeasurableQSM (HReusable idx a) m q s where sizeQSM     _ _ = queried (Proxy :: Proxy q) sizeM'     . unwrap
+instance MinIndexedQM q m a => MinIndexedQSM (HReusable idx a) m q s where minIndexQSM _ _ = queried (Proxy :: Proxy q) minIndexM' . unwrap
+instance MaxIndexedQM q m a => MaxIndexedQSM (HReusable idx a) m q s where maxIndexQSM _ _ = queried (Proxy :: Proxy q) maxIndexM' . unwrap
 
+
+
+
+-- === Construction ===
+
+-- [+] Singleton
+-- [ ] Allocable
+-- [ ] Expandable
+-- [ ] Growable
+
+type family Foo (a :: [*]) :: [*]
+
+type instance ModsOf SingletonQSM (HReusable idx a) = ModsOf SingletonQSM a
+instance SingletonQM el q m a => SingletonQSM el (HReusable idx a) m q s where singletonQSM _ _    = (fmap . fmap) wrap . queried (Proxy :: Proxy q) singletonM'
+--instance SingletonQM el q m a => SingletonQSM el (HReusable idx a) m q s where singletonQSM _ _    = (fmap . fmap) wrap . queried (Proxy :: Proxy q) singletonM'
+
+--tstf :: (SingletonQM q opts m t) => Proxy opts
+--                 -> q
+--                 -> m (ResultByQuery
+--                         (Info NA q SingletonQSM (DataStoreOf (ContainerOf t))) opts t)
+--tstf :: (SingletonQM el opts m t) => Proxy opts -> el -> m (ResultByQuery (SingletonInfo el (DataStoreOf (ContainerOf t))) opts t)
+--tstf :: _ => Proxy (opts :: [*]) -> el -> m (a,b)
+--tstf q v = (ixed . queried q) singletonM' v
 
 
 -- Utils

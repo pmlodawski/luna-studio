@@ -43,6 +43,10 @@ type instance ElementByIx  idx (V.Vector a) = a
 type instance IndexOf      el  (V.Vector a) = Int
 
 
+type instance DataStoreOf (V.Vector a) = V.Vector a
+instance HasDataStore (V.Vector a) where dataStore = id
+instance IsDataStore (V.Vector a) where fromDataStore = id
+
 
 -- === Finite ===
 
@@ -111,46 +115,46 @@ instance Monad m  => MaxIndexedQSM (V.Vector a) m q s where maxIndexQSM _ _   = 
 -- [+] Expandable
 -- [+] Growable
 
-type instance          ModsOf SingletonQSM   (V.Vector a)   = '[Ixed ]
-instance          Monad m  => SingletonQSM a (V.Vector a) m q '[False]            where singletonQSM _ _    = simple . V.singleton
-instance          Monad m  => SingletonQSM a (V.Vector a) m q '[True ]            where singletonQSM _ _ el = return (0, V.singleton el)
+type instance          ModsOf SingletonQSM    (V.Vector a)   = '[Ixed ]
+instance (Monad m, a ~ a') => SingletonQSM a' (V.Vector a) m q '[False]            where singletonQSM _ _    = simple . V.singleton
+instance (Monad m, a ~ a') => SingletonQSM a' (V.Vector a) m q '[True ]            where singletonQSM _ _ el = return (0, V.singleton el)
 
-type instance          ModsOf AllocableQSM   (V.Vector a)   = '[Ixed , Unchecked]
-instance (Monad m, Cond u) => AllocableQSM   (V.Vector a) m q '[False, u        ] where allocQSM _ _ i = checkedSizeIf (Proxy :: Proxy u) i $ simple $ runST $ V.unsafeFreeze =<< MV.unsafeNew i
-instance (Monad m, Cond u) => AllocableQSM   (V.Vector a) m q '[True , u        ] where allocQSM _ _ i = checkedSizeIf (Proxy :: Proxy u) i $ ([0 .. i - 1],) <$> unchecked allocM2 i
+type instance          ModsOf AllocableQSM    (V.Vector a)   = '[Ixed , Unchecked]
+instance (Monad m, Cond u) => AllocableQSM    (V.Vector a) m q '[False, u        ] where allocQSM _ _ i = checkedSizeIf (Proxy :: Proxy u) i $ simple $ runST $ V.unsafeFreeze =<< MV.unsafeNew i
+instance (Monad m, Cond u) => AllocableQSM    (V.Vector a) m q '[True , u        ] where allocQSM _ _ i = checkedSizeIf (Proxy :: Proxy u) i $ ([0 .. i - 1],) <$> unchecked allocM i
 
-type instance          ModsOf ExpandableQSM  (V.Vector a)   = '[Ixed ]
-instance          Monad m  => ExpandableQSM  (V.Vector a) m q '[False]            where expandQSM _ _ v = simple $ runST $ V.unsafeThaw v >>= flip MV.unsafeGrow 1 >>= V.unsafeFreeze
-instance          Monad m  => ExpandableQSM  (V.Vector a) m q '[True ]            where expandQSM _ _ v = (,) <$> ((:[]) <$> sizeM v) <*> expandM2 v
+type instance          ModsOf ExpandableQSM   (V.Vector a)   = '[Ixed ]
+instance          Monad m  => ExpandableQSM   (V.Vector a) m q '[False]            where expandQSM _ _ v = simple $ runST $ V.unsafeThaw v >>= flip MV.unsafeGrow 1 >>= V.unsafeFreeze
+instance          Monad m  => ExpandableQSM   (V.Vector a) m q '[True ]            where expandQSM _ _ v = (,) <$> ((:[]) <$> sizeM v) <*> expandM v
 
-type instance          ModsOf GrowableQSM    (V.Vector a)   = '[Ixed , Unchecked]
-instance (Monad m, Cond u) => GrowableQSM    (V.Vector a) m q '[False, u        ] where growQSM _ _ i v = checkedIdxIf (Proxy :: Proxy u) i $ simple $ runST $ V.unsafeThaw v >>= flip MV.unsafeGrow i >>= V.unsafeFreeze
-instance (Monad m, Cond u) => GrowableQSM    (V.Vector a) m q '[True , u        ] where growQSM _ _ i v = checkedIdxIf (Proxy :: Proxy u) i $ (\s c -> ([s .. s + i - 1], c)) <$> sizeM v <*> unchecked growM2 i v
+--type instance          ModsOf GrowableQSM     (V.Vector a)   = '[Ixed , Unchecked]
+--instance (Monad m, Cond u) => GrowableQSM     (V.Vector a) m q '[False, u        ] where growQSM _ _ i v = checkedIdxIf (Proxy :: Proxy u) i $ simple $ runST $ V.unsafeThaw v >>= flip MV.unsafeGrow i >>= V.unsafeFreeze
+--instance (Monad m, Cond u) => GrowableQSM     (V.Vector a) m q '[True , u        ] where growQSM _ _ i v = checkedIdxIf (Proxy :: Proxy u) i $ (\s c -> ([s .. s + i - 1], c)) <$> sizeM v <*> unchecked growM2 i v
 
 
--- === Concatenation ===
--- [+] Appendable
--- [+] Prependable
--- [+] Addable
--- [+] Removable
+---- === Concatenation ===
+---- [+] Appendable
+---- [+] Prependable
+---- [+] Addable
+---- [+] Removable
 
-type instance                ModsOf AppendableQSM     (V.Vector a)   = '[Ixed ]
-instance (a ~ a', Monad m)       => AppendableQSM  a' (V.Vector a) m q '[False]        where appendQSM  _ _ el v = simple $ V.snoc v el
-instance (a ~ a', Monad m)       => AppendableQSM  a' (V.Vector a) m q '[True ]        where appendQSM  _ _ el v = (,) <$> sizeM v <*> appendM2 el v
+--type instance                ModsOf AppendableQSM     (V.Vector a)   = '[Ixed ]
+--instance (a ~ a', Monad m)       => AppendableQSM  a' (V.Vector a) m q '[False]        where appendQSM  _ _ el v = simple $ V.snoc v el
+--instance (a ~ a', Monad m)       => AppendableQSM  a' (V.Vector a) m q '[True ]        where appendQSM  _ _ el v = (,) <$> sizeM v <*> appendM2 el v
 
-type instance                ModsOf PrependableQSM    (V.Vector a)   = '[Ixed ]
-instance (a ~ a', Monad m)       => PrependableQSM a' (V.Vector a) m q '[False]        where prependQSM _ _ el v = simple $ V.cons el v
-instance (a ~ a', Monad m)       => PrependableQSM a' (V.Vector a) m q '[True ]        where prependQSM _ _ el v = (0,) <$> prependM2 el v
+--type instance                ModsOf PrependableQSM    (V.Vector a)   = '[Ixed ]
+--instance (a ~ a', Monad m)       => PrependableQSM a' (V.Vector a) m q '[False]        where prependQSM _ _ el v = simple $ V.cons el v
+--instance (a ~ a', Monad m)       => PrependableQSM a' (V.Vector a) m q '[True ]        where prependQSM _ _ el v = (0,) <$> prependM2 el v
 
-type instance                ModsOf AddableQSM        (V.Vector a)   = '[Ixed ]
-instance (a ~ a', Monad m)       => AddableQSM     a' (V.Vector a) m q '[False]        where addQSM     _ _ el v = simple $ V.snoc v el
-instance (a ~ a', Monad m)       => AddableQSM     a' (V.Vector a) m q '[True ]        where addQSM     _ _ el v = (,) <$> sizeM v <*> addM2 el v
+--type instance                ModsOf AddableQSM        (V.Vector a)   = '[Ixed ]
+--instance (a ~ a', Monad m)       => AddableQSM     a' (V.Vector a) m q '[False]        where addQSM     _ _ el v = simple $ V.snoc v el
+--instance (a ~ a', Monad m)       => AddableQSM     a' (V.Vector a) m q '[True ]        where addQSM     _ _ el v = (,) <$> sizeM v <*> addM2 el v
 
-type instance                ModsOf RemovableQSM      (V.Vector a)   = '[Try  , Ixed ]
-instance (a ~ a', Eq a, Monad m) => RemovableQSM   a' (V.Vector a) m q '[False, False] where removeQSM  _ _ el v = Simple . maybe v id <$> try removeM2 el v
-instance (a ~ a', Eq a, Monad m) => RemovableQSM   a' (V.Vector a) m q '[True , False] where removeQSM  _ _ el v = Maybed . fmap (Simple . snd) <$> (try . ixed) removeM2 el v
-instance (a ~ a', Eq a, Monad m) => RemovableQSM   a' (V.Vector a) m q '[True , True ] where removeQSM  _ _ el v = maybed $ flip fmap (V.findIndex (== el) v)
-                                                                                                                          $ \i -> let (l,r) = V.splitAt i v in (i,) $ l <> V.unsafeDrop 1 r
+--type instance                ModsOf RemovableQSM      (V.Vector a)   = '[Try  , Ixed ]
+--instance (a ~ a', Eq a, Monad m) => RemovableQSM   a' (V.Vector a) m q '[False, False] where removeQSM  _ _ el v = Simple . maybe v id <$> try removeM2 el v
+--instance (a ~ a', Eq a, Monad m) => RemovableQSM   a' (V.Vector a) m q '[True , False] where removeQSM  _ _ el v = Maybed . fmap (Simple . snd) <$> (try . ixed) removeM2 el v
+--instance (a ~ a', Eq a, Monad m) => RemovableQSM   a' (V.Vector a) m q '[True , True ] where removeQSM  _ _ el v = maybed $ flip fmap (V.findIndex (== el) v)
+--                                                                                                                          $ \i -> let (l,r) = V.splitAt i v in (i,) $ l <> V.unsafeDrop 1 r
 
 --instance          Monad m  => Removable a (V.Vector a) m q '[True ]               where addQSM _ _ el v = do s <- sizeM v
                                                                                                         --(s,) <$> addM2 el v
