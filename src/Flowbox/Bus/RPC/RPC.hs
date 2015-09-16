@@ -9,21 +9,21 @@
 {-# LANGUAGE TupleSections   #-}
 module Flowbox.Bus.RPC.RPC where
 
-import           Control.Exception          (SomeException)
-import qualified Control.Monad.Catch        as Catch
-import           Control.Monad.Trans.Either
+import           Control.Exception         (SomeException)
+import qualified Control.Monad.Catch       as Catch
 import           Control.Monad.Trans.State
-import           Data.Binary                (decode, encode)
-import qualified Data.ByteString            as B
-import qualified Data.ByteString.Lazy       as BL
+import           Data.Binary               (decode, encode)
+import qualified Data.ByteString           as B
+import qualified Data.ByteString.Lazy      as BL
 
 import Flowbox.Bus.RPC.Types     (Request, Response)
+import Flowbox.Control.Error
 import Flowbox.Prelude
 import Flowbox.System.Log.Logger
 
 
 
-type RPC s m a = EitherT Error (StateT s m) a
+type RPC s m a = ExceptT Error (StateT s m) a
 
 -- FIXME[PM]: to powinno byc newtypem bysmy mogli zaimplementowac instancje dla MonadState by moc uzywac "get"
 --            wtedy kazdy RPC zachowuje sie jak get. Nie mozemy zrobic tego w przypadku EitherT bo nie chcemy by KAZDY EitherT tak sie zachowywal
@@ -50,14 +50,14 @@ run rpc = do
     s <- get
     let handler :: Monad m => SomeException -> m (Either String a)
         handler ex = return $ Left $ "Unhandled exception: " ++ show ex
-    result <- lift $ Catch.catch (Right <$> runStateT (runEitherT rpc) s) handler
+    result <- lift $ Catch.catch (Right <$> runStateT (runExceptT rpc) s) handler
     case result of
         Left   err      -> {-put s  >> -} return (Left err)
         Right (res, s') -> put s' >> return res
 
 
 interceptErrors :: (MonadIO m, Monoid r) => RPC c m r -> RPC c m r
-interceptErrors rpc = lift (runEitherT rpc) >>= \case
+interceptErrors rpc = lift (runExceptT rpc) >>= \case
     Left err -> logger warning err >> return mempty
     Right r  -> return r
 

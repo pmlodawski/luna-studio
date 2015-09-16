@@ -29,7 +29,6 @@ module Flowbox.Bus.RPC.HandlerMap (
 ) where
 
 import           Control.Monad.State        (MonadState)
-import           Control.Monad.Trans.Either (EitherT)
 import           Control.Monad.Trans.State  (StateT)
 import           Control.Monad.Trans.Writer (WriterT, runWriterT, tell)
 import           Control.Monad.Writer       (MonadWriter)
@@ -38,6 +37,7 @@ import           Data.Map                   as X
 import qualified Data.Map                   as Map
 import           Data.Maybe                 (fromMaybe)
 
+import Flowbox.Control.Error
 import Flowbox.Bus.Data.Message  (CorrelationID)
 import Flowbox.Bus.RPC.RPC       (RPC)
 import Flowbox.Bus.RPC.Types

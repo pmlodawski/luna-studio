@@ -4,30 +4,29 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE RankNTypes      #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE RankNTypes #-}
 
 module Flowbox.Bus.Control.Handler.Handler where
 
-import Control.Monad.Trans.Either (eitherT, hoistEither)
-import Data.Binary                (Binary)
-import Data.ByteString            (ByteString)
-import System.ZMQ4.Monadic        (ZMQ)
+-- import Control.Monad.Trans.Either (eitherT, hoistEither)
+-- import Data.Binary                (Binary)
+-- import Data.ByteString            (ByteString)
+-- import System.ZMQ4.Monadic        (ZMQ)
 
-import           Flowbox.Bus.Control.BusCtx     (BusCtx)
---import           Flowbox.Bus.Control.Handler.ID as HandlerID
-import           Flowbox.Bus.RPC.RPC            as RPC (messageGet', messagePut')
---import           Flowbox.Bus.RPC.Types
-import           Flowbox.Prelude                hiding (error)
-import           Flowbox.System.Log.Logger
-import           Flowbox.ZMQ.RPC.Handler        (RPCHandler)
-import qualified Flowbox.ZMQ.RPC.RPC            as RPC
+import           Flowbox.Bus.Control.BusCtx           (BusCtx)
+import           Flowbox.Bus.Control.Handler.ID       as HandlerID
+import           Flowbox.ZMQ.RPC.Handler              (RPCHandler)
+import qualified Generated.Proto.Bus.ID.Create.Args   as ID_Create
+import qualified Generated.Proto.Bus.ID.Create.Result as ID_Create
 import           Generated.Proto.Bus.Request          (Request)
 import qualified Generated.Proto.Bus.Request          as Request
 import qualified Generated.Proto.Bus.Request.Method   as Method
-import qualified Generated.Proto.Bus.ID.Create.Args   as ID_Create
-import qualified Generated.Proto.Bus.ID.Create.Result as ID_Create
-import Flowbox.Bus.Control.Handler.ID as HandlerID
+--import           Flowbox.Bus.Control.Handler.ID as HandlerID
+-- import           Flowbox.Bus.RPC.RPC            as RPC (messageGet', messagePut')
+--import           Flowbox.Bus.RPC.Types
+-- import           Flowbox.Prelude                hiding (error)
+-- import           Flowbox.System.Log.Logger
+-- import qualified Flowbox.ZMQ.RPC.RPC            as RPC
 
 
 handler :: BusCtx -> RPCHandler Request

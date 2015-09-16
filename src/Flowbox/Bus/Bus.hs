@@ -12,37 +12,35 @@
 
 module Flowbox.Bus.Bus where
 
-import qualified Control.Concurrent              as Concurrent
-import qualified Control.Concurrent.Async        as Async
+import qualified Control.Concurrent       as Concurrent
+import qualified Control.Concurrent.Async as Async
 import           Control.Monad.State
-import           Data.ByteString                 (ByteString)
-import           System.ZMQ4.Monadic             (ZMQ)
-import qualified System.ZMQ4.Monadic             as ZMQ
+import           Data.ByteString          (ByteString)
+import           System.ZMQ4.Monadic      (ZMQ)
+import qualified System.ZMQ4.Monadic      as ZMQ
 
---import           Flowbox.Bus.Control.Handler.ID (Request (..))
-import           Flowbox.Bus.Data.Flag          (Flag)
-import           Flowbox.Bus.Data.Message       (Message)
-import qualified Flowbox.Bus.Data.Message       as Message
-import           Flowbox.Bus.Data.MessageFrame  (MessageFrame (MessageFrame))
-import qualified Flowbox.Bus.Data.MessageFrame  as MessageFrame
-import           Flowbox.Bus.Data.Topic         (Topic)
-import qualified Flowbox.Bus.Data.Topic         as Topic
-import qualified Flowbox.Bus.EndPoint           as EP
-import           Flowbox.Bus.Env                (BusEnv (BusEnv))
-import qualified Flowbox.Bus.Env                as Env
+import qualified Debug.Trace                          as T
+import           Flowbox.Bus.Data.Flag                (Flag)
+import           Flowbox.Bus.Data.Message             (Message)
+import qualified Flowbox.Bus.Data.Message             as Message
+import           Flowbox.Bus.Data.MessageFrame        (MessageFrame (MessageFrame))
+import qualified Flowbox.Bus.Data.MessageFrame        as MessageFrame
+import           Flowbox.Bus.Data.Topic               (Topic)
+import qualified Flowbox.Bus.Data.Topic               as Topic
+import qualified Flowbox.Bus.EndPoint                 as EP
+import           Flowbox.Bus.Env                      (BusEnv (BusEnv))
+import qualified Flowbox.Bus.Env                      as Env
 import           Flowbox.Control.Error
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.ZMQ.RPC.Client         as Client
---import qualified Flowbox.ZMQ.RPC.Types          as FbZMQ
+import qualified Flowbox.Text.ProtocolBuffers         as Proto
+import qualified Flowbox.ZMQ.RPC.Client               as Client
 import qualified Generated.Proto.Bus.ID.Create.Args   as ID_Create
 import qualified Generated.Proto.Bus.ID.Create.Result as ID_Create
-import qualified Text.ProtocolBuffers.Extensions as Extensions
 import           Generated.Proto.Bus.Request          (Request (Request))
 import qualified Generated.Proto.Bus.Request.Method   as Method
-import qualified Flowbox.Text.ProtocolBuffers         as Proto
+import qualified Text.ProtocolBuffers.Extensions      as Extensions
 
-import qualified Debug.Trace as T
 
 
 logger :: LoggerIO
@@ -53,10 +51,10 @@ type Error = String
 
 
 type Bus    a = forall z. Bus' z a
-type Bus' z a = StateT (BusEnv z) (EitherT Error (ZMQ z)) a
+type Bus' z a = StateT (BusEnv z) (ExceptT Error (ZMQ z)) a
 
 
-requestClientID :: EP.EndPoint -> EitherT Error (ZMQ z) Message.ClientID
+requestClientID :: EP.EndPoint -> ExceptT Error (ZMQ z) Message.ClientID
 requestClientID addr = do
     socket <- lift $ ZMQ.socket ZMQ.Req
     lift $ ZMQ.connect socket addr
@@ -70,7 +68,7 @@ requestClientID addr = do
 
 
 runBus :: MonadIO m => EP.BusEndPoints -> Bus a -> m (Either Error a)
-runBus endPoints fun = ZMQ.runZMQ $ runEitherT $ do
+runBus endPoints fun = ZMQ.runZMQ $ runExceptT $ do
     logger trace "Connecting to bus..."
     clientID   <- requestClientID $ EP.controlEndPoint endPoints
     subSocket  <- lift $ ZMQ.socket ZMQ.Sub
@@ -127,10 +125,10 @@ receive' = MessageFrame.fromByteString <$> receiveByteString
 
 
 withTimeout :: Bus' z a -> Int -> Bus' z (Either Error a)
-withTimeout action timeout = runEitherT $ do
+withTimeout action timeout = runExceptT $ do
     state' <- get
     T.trace (show timeout) $ return ()
-    task <- lift3 $ ZMQ.async $ runEitherT $ runStateT action state'
+    task <- lift3 $ ZMQ.async $ runExceptT $ runStateT action state'
     wait <- liftIO $ Async.async $ do T.trace "asd" $ return ()
                                       T.trace (show timeout) $ return ()
                                       Concurrent.threadDelay timeout

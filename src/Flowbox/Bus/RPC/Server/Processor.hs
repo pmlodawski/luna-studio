@@ -9,10 +9,9 @@
 
 module Flowbox.Bus.RPC.Server.Processor where
 
-import           Control.Monad              (liftM)
-import           Control.Monad.Trans.Either (EitherT, eitherT, hoistEither)
-import           Data.Either                as Either
-import qualified Data.Maybe                 as Maybe
+import           Control.Monad (liftM)
+import           Data.Either   as Either
+import qualified Data.Maybe    as Maybe
 --import           Data.Typeable
 import qualified Control.Monad.Catch       as Catch
 import           Control.Monad.Trans.State (StateT)
@@ -25,6 +24,7 @@ import           Flowbox.Bus.RPC.HandlerMap (HandlerMap)
 import qualified Flowbox.Bus.RPC.HandlerMap as HandlerMap
 import qualified Flowbox.Bus.RPC.RPC        as RPC
 import           Flowbox.Bus.RPC.Types
+import           Flowbox.Control.Error
 import           Flowbox.Prelude            hiding (error)
 import           Flowbox.System.Log.Logger
 
@@ -56,9 +56,9 @@ process handlerMap correlationID msg = either handleError (\message -> do
     ) handleMessage
     where
         call :: (Catch.MonadCatch m, MonadIO m, Functor m) => HandlerMap.Callback s m
-        call method = eitherT errorHandler applyArgs deserializeMsg
+        call method = exceptT errorHandler applyArgs deserializeMsg
             where
-                deserializeMsg :: (Binary a, Typeable a) => EitherT String (StateT s m) a
+                deserializeMsg :: (Binary a, Typeable a) => ExceptT String (StateT s m) a
                 deserializeMsg = do
                     req    <- hoistEither request
                     unpackValue $ req ^. arguments
@@ -89,4 +89,3 @@ process handlerMap correlationID msg = either handleError (\message -> do
             let hmap = HandlerMap.lookupAndCall handlerMap call :: FunctionName -> StateT s m (Result, [Value])
             f <- mkResponse
             (fmap . fmap) (respond . f) $ hmap . functionName
-
