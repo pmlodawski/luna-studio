@@ -37,10 +37,10 @@ import           Data.Map                   as X
 import qualified Data.Map                   as Map
 import           Data.Maybe                 (fromMaybe)
 
-import Flowbox.Control.Error
 import Flowbox.Bus.Data.Message  (CorrelationID)
 import Flowbox.Bus.RPC.RPC       (RPC)
 import Flowbox.Bus.RPC.Types
+import Flowbox.Control.Error
 import Flowbox.Prelude           hiding (error)
 import Flowbox.System.Log.Logger
 import Language.Haskell.TH
@@ -59,7 +59,7 @@ deriving instance MonadWriter [Value] m => MonadWriter [Value] (BatchT s m)
 instance MonadTrans (BatchT s) where
     lift = BatchT
 
-type BatchWriter s m a = BatchT s (WriterT [Value] (EitherT String (StateT s m))) a
+type BatchWriter s m a = BatchT s (WriterT [Value] (ExceptT String (StateT s m))) a
 
 
 type Callback s m = (Binary arg, Typeable arg, Binary res, Typeable res) => (CorrelationID -> arg -> RPC s m (res, [Value])) -> StateT s m (Result, [Value])

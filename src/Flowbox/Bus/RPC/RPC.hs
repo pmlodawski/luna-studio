@@ -26,8 +26,8 @@ import Flowbox.System.Log.Logger
 type RPC s m a = ExceptT Error (StateT s m) a
 
 -- FIXME[PM]: to powinno byc newtypem bysmy mogli zaimplementowac instancje dla MonadState by moc uzywac "get"
---            wtedy kazdy RPC zachowuje sie jak get. Nie mozemy zrobic tego w przypadku EitherT bo nie chcemy by KAZDY EitherT tak sie zachowywal
---newtype RPC s m a = RPC (EitherT Error (StateT s m) a)
+--            wtedy kazdy RPC zachowuje sie jak get. Nie mozemy zrobic tego w przypadku ExceptT bo nie chcemy by KAZDY ExceptT tak sie zachowywal
+--newtype RPC s m a = RPC (ExceptT Error (StateT s m) a)
 --                  deriving (Functor, Monad, Foldable, Traversable, Generics, MonadEither)
 
 --instance MonadState s (RPC s m) ...
