@@ -20,10 +20,14 @@ if(brunch.env !== "production") {
   if (localStorage.getItem("backend") !== null) {
     browser.backend = (localStorage.getItem("backend") === "true");
   }
+  browser.backendAddress = localStorage.getItem("backendAddress") || "ws://127.0.0.1:8088"
 
   config = _({}).defaults(browser, local, debug, release);
 
+  console.info("Backend address is " + browser.backendAddress);
+
   console.info("Backend connection is " + (config.backend ? "enabled" : "disabled"));
+
   window.enableBackend = function  () {
     console.info("Backend connection enabled! Please reload the page.");
     localStorage.setItem('backend', "true");
@@ -32,8 +36,13 @@ if(brunch.env !== "production") {
     console.info("Backend connection disabled! Please reload the page.");
     localStorage.setItem('backend', "false");
   };
+  window.setBackendAddress = function (addr) {
+    console.log("Backend address set to: " + addr + ". Refresh the page to use your new backend.");
+    localStorage.setItem('backendAddress', addr);
+  }
 
   console.info("Logging is " + (config.logging?"enabled":"disabled"));
+
   window.enableLogging  = function(){
     console.info("Logging enabled! Please reload the page.");
     localStorage.setItem('logging', "true" );

@@ -18,6 +18,7 @@ import           GHCJS.DOM.Types     (UIEvent, IsUIEvent, unUIEvent, toUIEvent)
 import           JavaScript.Array    (JSArray)
 import qualified JavaScript.Array    as JSArray
 import           Data.JSString.Text  (lazyTextToJSString)
+import           Data.JSString       (unpack)
 
 
 foreign import javascript unsafe "window.innerWidth"
@@ -148,6 +149,12 @@ foreign import javascript unsafe "config.logging"
 
 foreign import javascript unsafe "config.backend"
     isBackendEnabled :: IO Bool
+
+foreign import javascript unsafe "config.backendAddress"
+    getBackendAddress' :: IO JSString
+
+getBackendAddress :: IO String
+getBackendAddress  = unpack <$> getBackendAddress'
 
 foreign import javascript unsafe "app.displaySelectionBox($1, $2, $3, $4)"
     displaySelectionBoxJS :: Double -> Double -> Double -> Double -> IO ()

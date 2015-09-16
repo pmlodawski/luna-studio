@@ -2,6 +2,7 @@ module Reactive.Plugins.Loader.Loader where
 
 import           Utils.PreludePlus
 import           JS.WebSocket
+import           JS.Bindings        (getBackendAddress)
 import qualified Reactive.Plugins.Loader.ProjectManager.Network as ProjectManager
 import qualified Reactive.Plugins.Loader.Interpreter.Network    as Interpreter
 import           Reactive.Banana
@@ -10,7 +11,8 @@ import           Batch.Workspace
 
 runLoader :: WebSocket -> (Workspace -> IO ()) -> IO ()
 runLoader socket callback = do
-    connect socket "ws://0.0.0.0:8088"
+    backendAddr <- getBackendAddress
+    connect socket backendAddr
     let interpreterCallback = Interpreter.run socket callback
     loaderNetwork <- compile $ ProjectManager.makeNetworkDescription interpreterCallback socket
     actuate loaderNetwork
