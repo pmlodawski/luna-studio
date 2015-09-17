@@ -8,8 +8,8 @@ import qualified Event.Event               as Event
 import qualified Event.Connection          as Connection
 import           Event.Batch               as Batch
 
-import           BatchConnector.Commands   as BatchCmd
-import           Batch.Project
+import qualified BatchConnector.Commands   as BatchCmd
+import           Batch.Project             as Project
 import           Batch.Library
 
 import           Reactive.Plugins.Loader.ProjectManager.State
@@ -26,24 +26,29 @@ react event = makeReaction <$> handler event where
     handler _                                    = Nothing
 
 reactToOpening :: State -> Action
-reactToOpening state = (BatchCmd.listProjects, AwaitingProject)
+reactToOpening state = (BatchCmd.listProjects, state)
 
 reactToBatchEvent :: Batch.Event -> State -> Action
 reactToBatchEvent event state = handler state where
     handler = case (state, event) of
-        (AwaitingProject,   ProjectsList projects)  -> handleProjectsListResponse projects
-        (AwaitingProject,   ProjectCreated project) -> handleProjectCreatedResponse project
-        (AwaitingLibs proj, LibrariesList libs)     -> handleLibrariesListResponse libs proj
-        (AwaitingLibs proj, LibraryCreated lib)     -> handleLibraryCreatedResponse lib proj
-        (Ready _,           _)                      -> \st -> (return (), AfterInitialize)
-        _                                           -> \st -> (return (), st)
+        (AwaitingProject name, ProjectsList projects)  -> handleProjectsListResponse projects name
+        (AwaitingProject name, ProjectCreated project) -> handleProjectCreatedResponse project
+        (AwaitingLibs proj,    LibrariesList libs)     -> handleLibrariesListResponse libs proj
+        (AwaitingLibs proj,    LibraryCreated lib)     -> handleLibraryCreatedResponse lib proj
+        (Ready _,              _)                      -> \st -> (return (), AfterInitialize)
+        _                                              -> \st -> (return (), st)
 
-handleProjectsListResponse :: [Project] -> State -> Action
-handleProjectsListResponse []            state = (createFirstProject, state)
-handleProjectsListResponse (project : _) state = startLibsFlow project state
+handleProjectsListResponse :: [Project] -> String -> State -> Action
+handleProjectsListResponse []       name state = (createProject name, state)
+handleProjectsListResponse projects name state = case findProjectByName projects name of
+    Nothing        -> (createProject name, state)
+    (Just project) -> startLibsFlow project
+
+findProjectByName :: [Project] -> String -> Maybe Project
+findProjectByName projects name = find (\project -> Just name == project ^. Project.name) projects
 
 handleProjectCreatedResponse :: Project -> State -> Action
-handleProjectCreatedResponse = startLibsFlow
+handleProjectCreatedResponse project _ = startLibsFlow project
 
 handleLibrariesListResponse :: [Library] -> Project -> State -> Action
 handleLibrariesListResponse []        proj state = (createFirstLibrary proj, state)
@@ -52,11 +57,11 @@ handleLibrariesListResponse libraries proj state = (return (), Ready $ (proj & l
 handleLibraryCreatedResponse :: Library -> Project -> State -> Action
 handleLibraryCreatedResponse lib proj state = (return (), Ready $ (proj & libs .~ [lib]))
 
-startLibsFlow :: Project -> State -> Action
-startLibsFlow project state = (BatchCmd.fetchLibraries project, AwaitingLibs project)
+startLibsFlow :: Project -> Action
+startLibsFlow project = (BatchCmd.fetchLibraries project, AwaitingLibs project)
 
-createFirstProject :: IO ()
-createFirstProject  = BatchCmd.createProject "myFirstProject" "some/path"
+createProject :: String -> IO ()
+createProject name = BatchCmd.createProject name $ "projects/" ++ name
 
 createFirstLibrary :: Project -> IO ()
 createFirstLibrary project = BatchCmd.createLibrary "Main" "some/path" project

@@ -5,9 +5,14 @@ import Batch.Project
 import Batch.Library
 import Batch.Breadcrumbs
 
-data Workspace = Workspace { _project     :: Project
-                           , _library     :: Library
-                           , _breadcrumbs :: Breadcrumbs
+data InterpreterState = Fresh
+                      | AllSet
+                      deriving (Show, Eq)
+
+data Workspace = Workspace { _project          :: Project
+                           , _library          :: Library
+                           , _breadcrumbs      :: Breadcrumbs
+                           , _interpreterState :: InterpreterState
                            } deriving (Show, Eq)
 
 makeLenses ''Workspace

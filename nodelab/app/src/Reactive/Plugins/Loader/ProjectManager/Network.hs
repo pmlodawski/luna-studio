@@ -16,8 +16,8 @@ readyProject :: State -> Maybe Project
 readyProject (Ready project) = Just project
 readyProject _               = Nothing
 
-makeNetworkDescription :: forall t. Frameworks t => (Project -> IO ()) -> WebSocket -> Moment t ()
-makeNetworkDescription callback conn = do
+makeNetworkDescription :: forall t. Frameworks t => (Project -> IO ()) -> String -> WebSocket -> Moment t ()
+makeNetworkDescription callback projectName conn = do
     webSocketE <- fromAddHandler $ webSocketHandler conn
     let batchE = filterJust $ process <$> webSocketE
 
@@ -25,7 +25,7 @@ makeNetworkDescription callback conn = do
         updates  = filterJust $ react <$> unions [batchE, webSocketE]
 
     let actions :: Event t Action
-        actions  = accumE (return (), def) updates
+        actions  = accumE (return (), AwaitingProject projectName) updates
 
     let states :: Event t State
         states  = snd <$> actions

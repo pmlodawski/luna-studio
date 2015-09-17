@@ -130,10 +130,9 @@ addNode workspace node = sendMessage msg where
     msg  = WebMessage "project.library.ast.function.graph.node.add.request" $ messagePut body
     body = AddNode.Request (encode node)
                            (encode $ workspace ^. breadcrumbs)
-                           (workspace ^. project . Project.id)
                            (workspace ^. library . Library.id)
+                           (workspace ^. project . Project.id)
                            uselessLegacyArgument
-
 
 updateNodeMessage :: Workspace -> Node -> WebMessage
 updateNodeMessage workspace node = WebMessage topic $ messagePut body where
@@ -178,12 +177,18 @@ requestValue = sendMessage .: requestValueMessage
 requestValues :: Workspace -> [Node] -> IO ()
 requestValues workspace nodes = sendMany $ (requestValueMessage workspace) <$> nodes
 
-insertSerializationMode :: Workspace -> Node -> IO ()
-insertSerializationMode workspace node = sendMessage msg where
-    msg           = WebMessage "interpreter.serializationmode.insert.request" $ messagePut body
+insertSerializationModeMessage :: Workspace -> Node -> WebMessage
+insertSerializationModeMessage workspace node = WebMessage topic $ messagePut body where
+    topic         = "interpreter.serializationmode.insert.request"
     body          = InsertSerializationMode.Request callPointPath (Seq.fromList [mode])
     callPointPath = nodeToCallPointPath workspace node
     mode          = Mode Seq.empty
+
+insertSerializationMode :: Workspace -> Node -> IO ()
+insertSerializationMode workspace node = sendMessage $ insertSerializationModeMessage workspace node
+
+insertSerializationModes :: Workspace -> [Node] -> IO ()
+insertSerializationModes workspace nodes = sendMany $ insertSerializationModeMessage workspace <$> nodes
 
 getAST :: Project -> Library -> Breadcrumbs -> IO ()
 getAST proj lib crumbs = sendMessage msg where

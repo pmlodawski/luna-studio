@@ -34,6 +34,7 @@ import           JS.Bindings
 import           JS.WebSocket
 import qualified BatchConnector.Commands    as BatchCmd
 import           Batch.Workspace
+import           Utils.URIParser
 
 import qualified Reactive.Plugins.Core.Network   as CoreNetwork
 import qualified Tmp.TypecheckerTest             as Typechecker -- TODO: Remove
@@ -58,4 +59,6 @@ main :: IO ()
 main = do
     socket <- getWebSocket
     enableBackend <- isBackendEnabled
-    if enableBackend then runLoader socket (runMainNetwork socket) else runMainNetwork socket fakeWorkspace
+    maybeProjectName <- getProjectName
+    let projectName = maybe "myFirstProject" id maybeProjectName
+    if enableBackend then runLoader projectName socket (runMainNetwork socket) else runMainNetwork socket fakeWorkspace

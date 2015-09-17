@@ -1,20 +1,20 @@
 module Reactive.Plugins.Loader.Interpreter.Network where
 
 import Utils.PreludePlus
-import Batch.Project
-import Batch.Breadcrumbs
-import BatchConnector.Commands as BatchCmd
 
 import Reactive.Banana
 import Reactive.Banana.Frameworks
 import Reactive.Handlers
 
 import           Data.Dynamic
-import           Data.ByteString.Lazy      (ByteString)
+import           Data.ByteString.Lazy    (ByteString)
 import           JS.WebSocket
-import qualified Event.Event               as Event
-import           Event.Batch               as Batch
-import           Event.Processors.Batch    (process)
+import qualified Event.Event             as Event
+import           Event.Batch             as Batch
+import           Event.Processors.Batch  (process)
+import qualified BatchConnector.Commands as BatchCmd
+import           Batch.Project           as Project
+import           Batch.Breadcrumbs
 import           BatchConnector.Updates
 import           Batch.Workspace
 import           Batch.Breadcrumbs
@@ -46,12 +46,17 @@ reactToBatchEvent project event state = case (state, event) of
 
 handleWorkspaceCreation :: Project -> Breadcrumbs -> Action
 handleWorkspaceCreation project crumbs = (action, InterpreterSetup workspace) where
-    action    = getProjectId
-    workspace = Workspace project (head $ project ^. libs) crumbs
+    action    = BatchCmd.getProjectId
+    workspace = Workspace project (head $ project ^. libs) crumbs Fresh
 
 handleProjectIdResponse :: Workspace -> Maybe Int32 -> Action
-handleProjectIdResponse workspace Nothing = (setupInterpreter workspace, Ready workspace)
-handleProjectIdResponse workspace _       = (return (),                  Ready workspace)
+handleProjectIdResponse workspace Nothing = setupInterpreterAction workspace
+handleProjectIdResponse workspace (Just id)
+    | id == (workspace ^. project . Project.id) = (return (), Ready $ workspace & interpreterState .~ AllSet)
+    | otherwise                                 = setupInterpreterAction workspace
+
+setupInterpreterAction :: Workspace -> Action
+setupInterpreterAction workspace = (setupInterpreter workspace, Ready $ workspace & interpreterState .~ Fresh)
 
 setupInterpreter :: Workspace -> IO ()
 setupInterpreter workspace =  BatchCmd.setProjectId (workspace ^. project)

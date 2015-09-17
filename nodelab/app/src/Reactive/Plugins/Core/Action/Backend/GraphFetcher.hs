@@ -4,6 +4,7 @@ import           Utils.PreludePlus
 
 import           Object.Node
 import           Event.Event
+import           Batch.Workspace
 import qualified Event.Batch as Batch
 
 import           Reactive.Plugins.Core.Action
@@ -19,7 +20,7 @@ data Action = AddSingleNode Node
             | AddNodes      [Node]
             | AddEdges      [(PortRef, PortRef)]
             | DisplayEdges
-            | RequestValues [Node]
+            | PrepareValues [Node]
             | GraphFetched  [Node] [(PortRef, PortRef)]
             deriving (Show, Eq)
 
@@ -47,18 +48,20 @@ instance ActionStateUpdater Action where
 
     execSt DisplayEdges state = ActionUI (PerformIO draw) state where
         draw        =  displayConnections nodesMap connectionsMap
-                    >> BatchCmd.runMain
         nodesMap       = state ^. Global.graph & getNodesMap
         connectionsMap = state ^. Global.graph & getConnectionsMap
 
-    execSt (RequestValues nodes) state = ActionUI (PerformIO $ BatchCmd.requestValues workspace nodes) state where
-        workspace = state ^. Global.workspace
+    execSt (PrepareValues nodes) state = ActionUI (PerformIO prepareValues) state where
+        workspace     = state ^. Global.workspace
+        prepareValues = case workspace ^. interpreterState of
+            Fresh  -> BatchCmd.insertSerializationModes workspace nodes
+            AllSet -> BatchCmd.requestValues workspace nodes
 
     execSt (AddNodes nodes) state = execSt (AddSingleNode <$> nodes) state
 
     execSt (AddEdges edges) state = execSt (AddSingleEdge <$> edges) state
 
-    execSt (GraphFetched nodes edges) state = execSt [AddNodes nodes, AddEdges edges, DisplayEdges, RequestValues nodes] state
+    execSt (GraphFetched nodes edges) state = execSt [AddNodes nodes, AddEdges edges, DisplayEdges, PrepareValues nodes] state
 
 instance ActionUIUpdater Reaction where
     updateUI (WithState (PerformIO action) _) = action
