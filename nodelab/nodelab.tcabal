@@ -47,6 +47,7 @@ executable nodelab
                      , text
                      , transformers
                      , mtl
+                     , split
                      , lens
                      , containers
                      , random
