@@ -6,6 +6,7 @@ import           Utils.Vector
 
 import           Object.Widget
 import           Object.Widget.Scene
+import           Object.Widget.Connection
 
 import           Data.IntMap.Lazy (IntMap)
 import qualified Data.IntMap.Lazy as IntMap
@@ -17,6 +18,10 @@ import qualified Control.Monad.State as MState
 
 import Debug.Trace
 
+sceneInterfaceId, sceneGraphId, currentConnectionId :: Int
+sceneInterfaceId    = 1
+sceneGraphId        = 2
+currentConnectionId = 3
 
 instance Default (UIHandlers a) where def = UIHandlers [] [] [] [] [] [] [] [] [] []
 
@@ -49,9 +54,13 @@ instance Show (State a) where
     show a = show $ IntMap.size $ a ^. widgets
 
 defaultWidgets :: [(WidgetId, WidgetFile a DisplayObject)]
-defaultWidgets = [(sceneInterfaceId, sceneInterface), (sceneGraphId, sceneGraph)] where
-    sceneInterface = WidgetFile sceneInterfaceId (toCtxDynamic $ Scene) Nothing [] def
-    sceneGraph     = WidgetFile sceneGraphId     (toCtxDynamic $ Scene) Nothing [] def
+defaultWidgets = [ (sceneInterfaceId,     sceneInterface)
+                 , (sceneGraphId,         sceneGraph)
+                 , (currentConnectionId,  currentConnection)
+                 ] where
+    sceneInterface    = WidgetFile sceneInterfaceId    (toCtxDynamic $ Scene) Nothing [] def
+    sceneGraph        = WidgetFile sceneGraphId        (toCtxDynamic $ Scene) Nothing [] def
+    currentConnection = WidgetFile currentConnectionId (toCtxDynamic $ CurrentConnection) Nothing [] def
 
 instance Default (State a) where
     def = State (fromList defaultWidgets) def def def

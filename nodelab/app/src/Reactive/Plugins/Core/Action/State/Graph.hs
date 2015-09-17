@@ -103,13 +103,13 @@ selectNodes :: NodeIdCollection -> State -> State
 selectNodes selNodeIds state = state & nodesMap %~ fmap (updateNodeSelection selNodeIds)
 
 
-addConnection :: PortRef -> PortRef -> State -> State
+addConnection :: PortRef -> PortRef -> State -> (Maybe ConnectionId, State)
 addConnection destPortRef = let attachToSelf = (destPortRef ^. refPortId) == PortNum 0 in
     if attachToSelf then addApplication1 destPortRef
                     else addAccessor     destPortRef
 
 
-addAccessor :: PortRef -> PortRef -> State -> State
+addAccessor :: PortRef -> PortRef -> State -> (Maybe ConnectionId, State)
 addAccessor destPortRef sourcePortRef state =
     let refsMap      = state ^. nodesRefsMap
         destId       = destPortRef   ^. refPortNodeId
@@ -117,16 +117,18 @@ addAccessor destPortRef sourcePortRef state =
         destRefMay   = IntMap.lookup destId   refsMap
         sourceRefMay = IntMap.lookup sourceId refsMap
     in case (destRefMay, sourceRefMay) of
-        (Just destRef, Just sourceRef) -> state & graphMeta      .~ newGraphMeta
+        (Just destRef, Just sourceRef) -> (Just newConnId, newState)
+            where newState = state & graphMeta .~ newGraphMeta
                                                 & nodesRefsMap   %~ IntMap.insert (newNode ^. hiddenNodeId) ref
                                                 & connectionsMap %~ IntMap.insert (newConnection ^. connId) newConnection
-            where (ref, newGraphMeta) = makeAcc newNode destRef sourceRef $ rebuild $ state ^. graphMeta
+                  (ref, newGraphMeta) = makeAcc newNode destRef sourceRef $ rebuild $ state ^. graphMeta
                   newNode             = HiddenNode Accessor $ genNodeId state
-                  newConnection       = Connection (genConnectionId state) sourcePortRef destPortRef
-        (_, _) -> state
+                  newConnection       = Connection newConnId sourcePortRef destPortRef
+                  newConnId           = genConnectionId state
+        (_, _) -> (Nothing, state)
 
 
-addApplication1 :: PortRef -> PortRef -> State -> State
+addApplication1 :: PortRef -> PortRef -> State -> (Maybe ConnectionId, State)
 addApplication1 funPortRef argPortRef  state =
     let refsMap   = state ^. nodesRefsMap
         funId     = funPortRef ^. refPortNodeId
@@ -134,16 +136,18 @@ addApplication1 funPortRef argPortRef  state =
         funRefMay = IntMap.lookup funId refsMap
         argRefMay = IntMap.lookup argId refsMap
     in case (funRefMay, argRefMay) of
-        (Just funRef, Just argRef) -> state & graphMeta      .~ newGraphMeta
-                                            & nodesRefsMap   %~ IntMap.insert (newNode ^. hiddenNodeId) ref
-                                            & connectionsMap %~ IntMap.insert (newConnection ^. connId) newConnection
-            where (ref, newGraphMeta) = makeApp1 newNode argRef funRef $ rebuild $ state ^. graphMeta
+        (Just funRef, Just argRef) -> (Just newConnId, newState)
+            where newState = state & graphMeta  .~ newGraphMeta
+                                                 & nodesRefsMap   %~ IntMap.insert (newNode ^. hiddenNodeId) ref
+                                                 & connectionsMap %~ IntMap.insert (newConnection ^. connId) newConnection
+                  (ref, newGraphMeta) = makeApp1 newNode argRef funRef $ rebuild $ state ^. graphMeta
                   newNode             = HiddenNode Application $ genNodeId state
-                  newConnection       = Connection (genConnectionId state) argPortRef funPortRef
-        (_, _) -> state
+                  newConnection       = Connection newConnId argPortRef funPortRef
+                  newConnId           = genConnectionId state
+        (_, _) -> (Nothing, state)
 
 
-addApplication :: PortRef -> [PortRef] -> State -> State
+addApplication :: PortRef -> [PortRef] -> State -> State -- TODO: return ([ConnectionId], State)
 addApplication funPortRef argPortRefs state =
     let refsMap    = state ^. nodesRefsMap
         argIds :: [NodeId]

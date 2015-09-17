@@ -20,6 +20,7 @@ import           Reactive.Plugins.Core.Action
 import qualified Reactive.Plugins.Core.Action.Camera             as Camera
 import qualified Reactive.Plugins.Core.Action.State.Global       as Global
 import qualified Reactive.Plugins.Core.Action.State.Breadcrumb   as Breadcrumb
+import           Reactive.Plugins.Core.Action.State.UIRegistry   (sceneInterfaceId, sceneGraphId)
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry   as UIRegistry
 import qualified Object.Widget.Button                            as Button
 import           ThreeJS.Text                                    (calculateTextWidth)
@@ -33,7 +34,6 @@ import           Data.Text.Lazy                                  (Text)
 import qualified JavaScript.Object                               as JSObject
 import           ThreeJS.Registry                                as WidgetRegistry
 import           Object.Widget                                   as Widget
-import           Object.Widget.Scene (sceneInterfaceId, sceneGraphId)
 import           GHCJS.Prim
 import           Data.IntMap.Lazy                                (IntMap)
 import qualified Data.IntMap.Lazy                                as IntMap

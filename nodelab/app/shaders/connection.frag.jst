@@ -9,6 +9,7 @@ uniform vec4 color;
 uniform float visible;
 uniform float camFactor;
 uniform float len;
+uniform int connecting;
 
 uniform int antialias;
 
@@ -17,6 +18,7 @@ uniform vec3 objectId;
 
 void main() {
     if (visible < 1.0) discard;
+    if (objectMap == 1 && connecting == 1) discard;
 
     float origAlpha = color.w;
     vec3  colorShow = color.xyz;

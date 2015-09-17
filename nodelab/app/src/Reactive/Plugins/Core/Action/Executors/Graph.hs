@@ -39,7 +39,7 @@ displayConnectionLine nodesMap (Connection lineId srcPortRef dstPortRef) = do
         draw                         = lengthSquared delta > 4 * portOuterBorderSquared
     setAnglePortRef angleSrc srcPortRef
     setAnglePortRef angleDst dstPortRef
-    if draw then UI.displayConnection lineId xSrc ySrc xDst yDst
+    if draw then UI.displayConnection 0 lineId xSrc ySrc xDst yDst
             else UI.removeConnection lineId
 
 

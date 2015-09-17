@@ -42,7 +42,8 @@ toAction _ _ = Nothing
 
 instance ActionStateUpdater Action where
     execSt (AddSingleEdge (src, dst)) state = ActionUI NoOp newState where
-        newState    = state & Global.graph %~ (addConnection src dst)
+      addConnection' s d st = st' where (_, st') = addConnection s d st
+      newState    = state & Global.graph %~ (addConnection' src dst)
 
     execSt (AddSingleNode node) state = ActionUI (PerformIO addAction) newState where
         (newState, addAction) = AddNode.addNode node state

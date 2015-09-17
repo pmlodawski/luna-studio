@@ -20,7 +20,7 @@ import           Event.WithObjects
 import           Reactive.Plugins.Core.Action
 import qualified Reactive.Plugins.Core.Action.State.Global       as Global
 import qualified Reactive.Plugins.Core.Action.State.Sandbox      as Sandbox
-import           Reactive.Plugins.Core.Action.State.UIRegistry   (WidgetMap)
+import           Reactive.Plugins.Core.Action.State.UIRegistry   (WidgetMap, sceneInterfaceId, sceneGraphId)
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry   as UIRegistry
 
 import qualified Object.Widget.Button                            as Button
@@ -44,7 +44,6 @@ import qualified ThreeJS.Widget.Number                           as UINumber
 import qualified ThreeJS.Scene                                   as Scene
 import qualified Dimple.Render                                   as UIChart
 import qualified Control.Monad.State                             as MState
-import           Object.Widget.Scene (sceneInterfaceId, sceneGraphId)
 
 import qualified BatchConnector.Commands as BatchCmd
 import qualified Batch.Workspace         as Workspace

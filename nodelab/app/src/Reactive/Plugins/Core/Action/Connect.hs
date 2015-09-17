@@ -79,54 +79,73 @@ toAction (Mouse (Mouse.Event tpe pos button keyMods _)) state = case button of
     _                  -> Nothing
 toAction _ _            = Nothing
 
+
+-- angle :: Camera.Camera -> Graph -> Maybe Connecting -> Double
+calculateAngle camera oldGraph (Just (Connecting source destinationMay (DragHistory startPos currentPos))) = calcAngle destinPoint sourcePoint where
+    sourcePoint = getNodePos (Graph.getNodesMap oldGraph) $ source ^. refPortNodeId
+    destinPoint = screenToWorkspace camera currentPos
+calculateAngle _ _ Nothing = 0.0
+
+
 instance ActionStateUpdater Action where
-    execSt newActionCandidate oldState = case newAction of
+    execSt action@(DragAction (StartDrag source) point) oldState = ActionUI action newState where
+        oldGraph                             = oldState ^. Global.graph
+        newState                             = oldState & Global.iteration            +~ 1
+                                                        & Global.connect . connecting .~ newConnecting
+                                                        & Global.graph                .~ newGraph
+        newConnecting                        = Just $ Connecting source Nothing (DragHistory point point)
+        newGraph                             = Graph.updateNodes newNodesMap oldGraph where
+            newNodesMap                      = updateSourcePortInNodes angle source oldNodesMap
+            oldNodesMap                      = Graph.getNodesMap oldGraph
+            angle                            = calculateAngle camera oldGraph newConnecting
+            camera                           = Global.toCamera oldState
+
+    execSt action@(DragAction Moving point) oldState = case newAction of
         Just action -> ActionUI newAction newState
         Nothing     -> ActionUI  NoAction newState
         where
-        oldConnecting                    = oldState ^. Global.connect . connecting
-        oldGraph                         = oldState ^. Global.graph
-        newState                         = oldState & Global.iteration            +~ 1
-                                                    & Global.connect . connecting .~ newConnecting
-                                                    & Global.graph                .~ newGraph
-        newAction                        = case newActionCandidate of
-            DragAction Moving pt        -> case oldConnecting of
-                Nothing                 -> Nothing
-                _                       -> Just $ DragAction (Dragging angle) pt
-            _                           -> Just newActionCandidate
-        newConnecting                    = case newActionCandidate of
-            DragAction tpe point        -> case tpe of
-                StartDrag source        -> Just $ Connecting source Nothing (DragHistory point point)
-                Moving                  -> case oldConnecting of
-                    Just (Connecting source _ oldHistory)
-                                        -> Just $ Connecting source Nothing newHistory where
-                        newHistory       = oldHistory & dragCurrentPos .~ point
-                    Nothing             -> Nothing
-                ConnectPorts _ _        -> Nothing
-                StopDrag                -> Nothing
-        newGraph                         = case newActionCandidate of
-            DragAction tpe point        -> case tpe of
-                ConnectPorts src dst    -> case oldConnecting of
-                    Just (Connecting source destinationMay (DragHistory startPos currentPos))
-                                        -> appGraph where
-                        newNodesMap      = updateSourcePortInNodes angle source oldNodesMap
-                        oldNodesMap      = Graph.getNodesMap oldGraph
-                        updSourceGraph   = Graph.updateNodes newNodesMap oldGraph
-                        appGraph         = Graph.addConnection source dst updSourceGraph
-                    _                   -> oldGraph
-                _                       -> case newConnecting of
-                    Just (Connecting source destinationMay (DragHistory startPos currentPos))
-                                        -> Graph.updateNodes newNodesMap oldGraph where
-                        newNodesMap      = updateSourcePortInNodes angle source oldNodesMap
-                        oldNodesMap      = Graph.getNodesMap oldGraph
-                    _                   -> oldGraph
-        angle                            = case newConnecting of
+        oldConnecting                        = oldState ^. Global.connect . connecting
+        oldGraph                             = oldState ^. Global.graph
+        newState                             = oldState & Global.iteration            +~ 1
+                                                        & Global.connect . connecting .~ newConnecting
+                                                        & Global.graph                .~ newGraph
+        newAction                            = (DragAction (Dragging angle) point) <$ oldConnecting
+        angle                                = calculateAngle camera oldGraph newConnecting
+        camera                               = Global.toCamera oldState
+
+        newConnecting                        = case oldConnecting of
+            Just (Connecting source _ oldHistory)
+                                            -> Just $ Connecting source Nothing newHistory where
+                newHistory                   = oldHistory & dragCurrentPos .~ point
+            Nothing                         -> Nothing
+        newGraph                             = case newConnecting of
             Just (Connecting source destinationMay (DragHistory startPos currentPos))
-                                        -> calcAngle destinPoint sourcePoint where
-                camera                   = Global.toCamera oldState
-                sourcePoint              = getNodePos (Graph.getNodesMap oldGraph) $ source ^. refPortNodeId
-                destinPoint              = screenToWorkspace camera currentPos
-            _                           -> 0.0
+                                            -> Graph.updateNodes newNodesMap oldGraph where
+                newNodesMap                  = updateSourcePortInNodes angle source oldNodesMap
+                oldNodesMap                  = Graph.getNodesMap oldGraph
+            _                               -> oldGraph
+
+    execSt action@(DragAction StopDrag point) oldState = ActionUI action newState
+        where
+        newState                             = oldState & Global.iteration            +~ 1
+                                                        & Global.connect . connecting .~ Nothing
+
+    execSt action@(DragAction (ConnectPorts src dst) point) oldState = ActionUI action newState
+        where
+        oldConnecting                        = oldState ^. Global.connect . connecting
+        oldGraph                             = oldState ^. Global.graph
+        newState                             = oldState & Global.iteration            +~ 1
+                                                        & Global.connect . connecting .~ Nothing
+                                                        & Global.graph                .~ newGraph
+        newConnecting                        = Nothing
+        newGraph                             = case oldConnecting of
+                    Just (Connecting source destinationMay (DragHistory startPos currentPos))
+                                            -> appGraph where
+                        newNodesMap          = updateSourcePortInNodes 0.0 source oldNodesMap
+                        oldNodesMap          = Graph.getNodesMap oldGraph
+                        updSourceGraph       = Graph.updateNodes newNodesMap oldGraph
+                        (connId, appGraph)   = Graph.addConnection source dst updSourceGraph
+                    _                       -> oldGraph
 
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
@@ -138,7 +157,7 @@ instance ActionUIUpdater Action where
             ConnectPorts src dst     -> UI.removeCurrentConnection
                                      >> displayConnections nodesMap connectionsMap
                                      >> BatchCmd.connectNodes workspace src dst
-                                     >> putStrLn (display $ state ^. Global.graph . Graph.nodesRefsMap) -- debug
+                                     >> putStrLn (display $ state ^. Global.graph . Graph.nodesRefsMap)   -- debug
                                      >> putStrLn (display $ state ^. Global.graph . Graph.connectionsMap) -- debug
                                      >> graphToViz (state ^. Global.graph . Graph.graphMeta)
             where

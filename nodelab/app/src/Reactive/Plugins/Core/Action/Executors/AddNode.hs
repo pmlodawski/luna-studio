@@ -15,12 +15,12 @@ import           Reactive.Plugins.Core.Action
 import qualified Reactive.Plugins.Core.Action.State.Global     as Global
 import           Reactive.Plugins.Core.Action.State.Global     (State)
 import qualified Reactive.Plugins.Core.Action.State.Graph      as Graph
+import           Reactive.Plugins.Core.Action.State.UIRegistry (sceneGraphId)
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry as UIRegistry
 import           Reactive.Plugins.Core.Action.State.UIRegistry (UIState)
 import qualified ThreeJS.Registry                              as JSRegistry
 import qualified Control.Monad.State                           as MState
 import           Object.Widget.Slider                          (Slider(..))
-import           Object.Widget.Scene                           (sceneGraphId)
 import qualified JS.NodeGraph                                  as UI
 import qualified ThreeJS.Widget.Node                           as UINode
 import qualified ThreeJS.Widget.Slider                         as UISlider

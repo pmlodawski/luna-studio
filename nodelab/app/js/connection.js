@@ -6,7 +6,7 @@ var fs = require('shaders/connection.frag')();
 
 var color = new THREE.Vector4(0.5, 0.5, 0.05, 0.6);
 
-function Connection(id) {
+function Connection(widgetId, id) {
   var _this = this;
   this.id = id;
   this.geometry = new THREE.PlaneBufferGeometry(1.0, 10.0);
@@ -14,7 +14,10 @@ function Connection(id) {
   this.uniforms = {
     color:   { type: 'v4', value: color },
     visible: { type: 'f',  value: 0 },
-    len:     { type: 'f',  value: 0 }
+    connecting: { type: 'i',  value: (widgetId == 3?1:0) },
+    len:     { type: 'f',  value: 0 },
+    objectId:  { type: 'v3', value: new THREE.Vector3((widgetId % 256) / 255.0, Math.floor(Math.floor(widgetId % 65536) / 256) / 255.0, Math.floor(widgetId / 65536) / 255.0) }
+
   };
 
   Object.keys($$.commonUniforms).forEach(function(k) {

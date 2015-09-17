@@ -19,7 +19,3 @@ instance IsDisplayObject Scene where
     objectSize     = undefined
 
 instance DisplayObjectContainer Scene
-
-sceneInterfaceId, sceneGraphId :: Int
-sceneInterfaceId = 1
-sceneGraphId     = 2

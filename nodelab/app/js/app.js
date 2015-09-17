@@ -92,7 +92,7 @@ function addVersionToHud() {
 }
 
 function initCommonWidgets() {
-  $$.currentConnection = new Connection(-1);
+  $$.currentConnection = new Connection(3, -1);
   $$.selectionBox      = new SelectionBox();
 
   $$.scene.add($$.currentConnection.mesh);
@@ -218,9 +218,9 @@ function removeCurrentConnection() {
   $$.currentConnection.hide();
 }
 
-function displayConnection(id, x0, y0, x1, y1) {
+function displayConnection(widgetId, id, x0, y0, x1, y1) {
   if ($$.connections[id] === undefined) {
-    var connection = new Connection(id);
+    var connection = new Connection(widgetId, id);
     $$.connections[id] = connection;
     $$.scene.add(connection.mesh);
   }
