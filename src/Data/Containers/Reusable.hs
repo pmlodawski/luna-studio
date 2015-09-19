@@ -50,8 +50,17 @@ instance IsList a => IsList (HReusable idx a) where
     type Item (HReusable idx a) = Item a
     fromList = HReusable mempty . fromList
 
+-- Utils
 
+withIxes_ :: ([idx] -> (r, [idx'])) -> HReusable idx a -> (r, HReusable idx' a)
+withIxes_ f (HReusable ixs a) = (out, HReusable ixs' a) where
+    (out, ixs') = f ixs
 
+withIxes :: ([idx] -> [idx']) -> HReusable idx a -> HReusable idx' a
+withIxes = flattenMod withIxes_
+
+withIxes' :: ([idx] -> [idx]) -> HReusable idx a -> HReusable idx a
+withIxes' = withIxes
 
 -- === Finite ===
 
@@ -90,6 +99,20 @@ instance SingletonQM el q m a => SingletonQSM el (HReusable idx a) m q s where s
 --tstf :: (SingletonQM el opts m t) => Proxy opts -> el -> m (ResultByQuery (SingletonInfo el (DataStoreOf (ContainerOf t))) opts t)
 --tstf :: _ => Proxy (opts :: [*]) -> el -> m (a,b)
 --tstf q v = (ixed . queried q) singletonM' v
+
+
+
+    --type instance ModsOf ExpandableQSM2 (HReusable idx a) = ModsOf ExpandableQSM2 a
+    --instance (Monad m, ExpandableQM2 (Ixed ': q) m a, idx ~ IndexOf' (DataStoreOf a)) => ExpandableQSM2 (HReusable idx a) m q s where
+    --    expandQSM2 _ _ c = do
+    --        (ixs, r) <- splitResData <$> nestedLens wrapped ((ixed . queried (Proxy :: Proxy q)) expandM2') c
+    --        return $ fmap (withIxes' (<> ixs)) r
+
+
+--withIxes :: ([idx] -> [idx']) -> HReusable idx a -> HReusable idx' a
+
+
+--splitResData :: ResW (d,ds) r -> (d, ResW ds r)
 
 
 -- Utils

@@ -4,6 +4,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Data.Containers.Poly where
 
@@ -15,6 +16,11 @@ import GHC.Prim
 import Data.TypeLevel.Bool
 
 
+
+
+
+type family AppendLst a lst where AppendLst a '[]       = '[a]
+                                  AppendLst a (l ': ls) = l ': AppendLst a ls
 
 
 
@@ -37,11 +43,71 @@ type instance Remove (a :: k) '[]                = '[]
 
 
 type family ModsOf (inst :: k) cont :: [*]
+type ResultMods (cls :: k) cont = WithResult (ModsOf cls cont)
+
 data Mods (opts :: [*]) = Mods
 --data Mods (mods :: [Bool]) = Mods
 data InstMods (inst :: k) (mods :: [Bool]) = InstMods
 data InstMods2 (inst :: k) (mods :: [Bool]) (cont :: *) = InstMods2
 data InstModsX (inst :: k) (query :: [*]) (mods :: [Bool]) (cont :: *) = InstModsX
+
+
+
+
+
+
+
+
+newtype Tagged t a = Tagged { fromTag :: a } deriving (Show)
+
+tagged :: Proxy t -> a -> Tagged t a
+tagged _ = Tagged
+
+type family FillData (layout :: [*]) datas where FillData (t ': ts) datas = (GetData t datas, FillData ts datas)
+                                                 FillData '[]       datas = ()
+
+type family GetData (tag :: *) datas where GetData tag (Tagged tag  a, ds) = a
+                                           GetData tag (Tagged tag' a, ds) = GetData tag ds
+
+type family   TaggedCont (tags :: [*]) a
+type instance TaggedCont '[]       ()     = ()
+type instance TaggedCont (t ': ts) (a,as) = (Tagged t a, TaggedCont ts as)
+
+class Taggable tags cont where
+    taggedCont :: Proxy tags -> cont -> TaggedCont tags cont
+
+instance {-# OVERLAPPABLE #-}                   Taggable '[]       ()     where taggedCont _ _ = ()
+instance {-# OVERLAPPABLE #-} Taggable ts as => Taggable (t ': ts) (a,as) where taggedCont _ (a,as) = (Tagged a, taggedCont (Proxy :: Proxy ts) as)
+
+class                                                                          DataFillable (layout :: [*]) datas where fillData :: Proxy layout -> datas -> FillData layout datas
+instance {-# OVERLAPPABLE #-} (DataGettable t datas, DataFillable ts datas) => DataFillable (t ': ts) datas where fillData _ ds = (getData (Proxy :: Proxy t) ds, fillData (Proxy :: Proxy ts) ds)
+instance {-# OVERLAPPABLE #-}                                                  DataFillable '[]       datas where fillData _ _  = ()
+
+class                                                                                                    DataGettable tag datas               where getData :: Proxy tag -> datas -> GetData tag datas
+instance {-# OVERLAPPABLE #-}                                                                            DataGettable tag (Tagged tag  a, ds) where getData _ = fromTag . fst
+instance {-# OVERLAPPABLE #-} (DataGettable tag ds, GetData tag (Tagged tag' a, ds) ~ GetData tag ds) => DataGettable tag (Tagged tag' a, ds) where getData t = getData t . snd
+
+type TaggedResult (cls :: k) cont res = TaggedCont (ResultMods cls cont) res
+
+
+type family   MappedByTag tag a l
+type instance MappedByTag t a ()                 = ()
+type instance MappedByTag t a (Tagged t' a', ls) = If (t :== t') (Tagged t  a , MappedByTag t a ls)
+                                                                 (Tagged t' a', MappedByTag t a ls)
+
+class                                                                                                                       MapByTag  t a b l       | t l -> a where mapByTag  :: Proxy t -> (a -> b) -> l -> MappedByTag t b l
+class                                                                                                                       MapByTag' t a b l                  where mapByTag' :: Proxy t -> (a -> b) -> l -> MappedByTag t b l
+instance {-# OVERLAPPABLE #-} (MapByTag' t a b l, a ~ a')                                                                => MapByTag  t a b (Tagged t  a', l ) where mapByTag  t f (Tagged a, l) = (Tagged $ f a, mapByTag' t f l)
+instance {-# OVERLAPPABLE #-} (MapByTag  t a b l, MappedByTag t b (Tagged t' a', l) ~ (Tagged t' a', MappedByTag t b l)) => MapByTag  t a b (Tagged t' a', l ) where mapByTag  t f (ta      , l) = (ta          , mapByTag  t f l)
+instance {-# OVERLAPPABLE #-} (MapByTag' t a b l, a ~ a')                                                                => MapByTag' t a b (Tagged t  a', l ) where mapByTag' t f (Tagged a, l) = (Tagged $ f a, mapByTag' t f l)
+instance {-# OVERLAPPABLE #-} (MapByTag' t a b l, MappedByTag t b (Tagged t' a', l) ~ (Tagged t' a', MappedByTag t b l)) => MapByTag' t a b (Tagged t' a', l ) where mapByTag' t f (ta      , l) = (ta          , mapByTag' t f l)
+instance                                                                                                                    MapByTag' t a b ()                 where mapByTag' _ _ _ = ()
+
+
+type MappedResult t (cls :: k) res = MappedByTag R t (TaggedResult cls (ContainerOf t) res)
+
+
+
 
 type I = InstMods2
 type I2X = InstModsX
@@ -303,11 +369,30 @@ type family ResultByQuery' (info :: *) (s :: [Bool]) where ResultByQuery' (Info 
 type family ResultBySel (info :: *) (s :: [Bool]) where ResultBySel (Info idx el cls cont) s = ResultByQuery (Info idx el cls cont) (Selected s (FilterMutable (ModsOf cls cont)))
 type family ResultBySel' (info :: *) (s :: [Bool]) where ResultBySel' (Info idx el cls cont) s = ResultByQuery (Info idx el cls (DataStoreOf cont)) (Selected s (FilterMutable (ModsOf cls cont)))
 
+type family ResultBySelX (info :: *) (s :: [Bool]) where ResultBySelX (Info idx el cls cont) s = ResultX (Info idx el cls (DataStoreOf cont)) (Selected s (FilterMutable (ModsOf cls cont)))
+
+type WithResult a = AppendLst R a
 
 
 type family FilterMutable (lst :: [*]) :: [*] where
     FilterMutable '[] = '[]
     FilterMutable (l ': ls) = If (Mutable l) (l ': FilterMutable ls) (FilterMutable ls)
+
+type family ResultX info (query :: [*]) where
+    ResultX info '[]       = ()
+    ResultX info (q ': qs) = (ResultXOf q info, ResultX info qs)
+
+type family ResultXOf q info
+
+type instance ResultXOf Ixed (Info idx el cls cont) = IxedData cls (
+    If (idx :== NA) (
+        If (el :== NA)
+            (IndexOf' cont)
+            (IndexOf el cont)
+    ) idx
+ )
+
+--type instance ResultXOf R (Info idx el cls cont) res = res
 
 type family ResultMod q base info
 type instance ResultMod Unchecked b i = b
@@ -326,6 +411,9 @@ type ComputeSelection (cls :: k) (cont :: *) (q :: [*]) = LstIn (ModsOf cls cont
 type CheckQuery i q s = ResultByQuery i q ~ ResultBySel i s
 
 type CheckQuery' i q s = ResultByQuery (DataStoreInfo i) q ~ ResultBySel' i s
+type AssumeQuery i q s = ResultX (DataStoreInfo i) (FilterMutable q) ~ ResultBySelX i s
+
+--ResultBySelX (ExpandableInfo2 a) s ~ ResultX (ExpandableInfo2 (DataStoreOf a)) q
 
 type MatchResults i s i' q' = (ResultBySel i s ~ ResultByQuery i' q')
 
@@ -334,6 +422,12 @@ type SubOperation i s i' q' m = (MatchResults i s i' q', ContOperation q' i' m)
 type ContOperation q info m = (Monad m, Operation q info m, Functor (ResultByQuery info q))
 
 type MatchResultsCls i t t' s q = MatchResults (i t) s (i (ContainerOf t')) q
+
+
+--type CheckFilledResult info q t mappedTc = ResultX (DataStoreInfo info) (WithResult q) t ~ FillData (WithResult q) mappedTc
+
+--type family CheckFilledResult2 info q t res where CheckFilledResult2 (Info idx el cls cont) q t res = CheckFilledResult (Info idx el cls cont) q t (MappedResult t cls res)
+
 
 
 
@@ -369,8 +463,12 @@ class HasDataStore a => IsDataStore a where
 
 type ConstraintQuery info q = CheckQuery info q (InfoSelection info q)
 
-type family InfoSelection i q where InfoSelection (Info idx el cls cont) q = ComputeSelection cls cont q
-type family DataStoreInfo i   where DataStoreInfo (Info idx el cls cont)   = Info idx el cls (DataStoreOf cont)
+type family InfoSelection i q where InfoSelection   (Info idx el cls cont) q = ComputeSelection cls cont q
+type family DataStoreInfo i   where DataStoreInfo   (Info idx el cls cont)   = Info idx el cls (DataStoreOf cont)
+type family ContaineredInfo i where ContaineredInfo (Info idx el cls cont)   = Info idx el cls (ContainerOf cont)
+
+type ComputeSelectionR (cls :: k) (cont :: *) (q :: [*]) = LstIn (ModsOf cls cont) (WithResult q)
+type family InfoSelectionR i q where InfoSelectionR (Info idx el cls cont) q = ComputeSelectionR cls cont q
 
 
 -- superinst powinien instancjonowac na podstawie N/A !
@@ -396,6 +494,7 @@ type family AssertQuery2 i q where AssertQuery2 (Info idx el cls cont) q = Resul
 
 data Safe      = Safe
 data Unchecked = Unchecked
+data R         = R
 data Ixed      = Ixed
 data Try       = Try
 
@@ -403,7 +502,7 @@ data Try       = Try
 type family Mutable a :: Bool
 type instance Mutable Ixed      = True
 type instance Mutable Unchecked = False
-type instance Mutable Try       = True
+type instance Mutable Try       = False
 
 
 

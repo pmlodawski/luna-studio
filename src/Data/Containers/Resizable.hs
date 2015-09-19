@@ -10,12 +10,15 @@
 
 module Data.Containers.Resizable where
 
-import Prologue              hiding (Indexable, index, Bounded, Simple)
+import Prologue              hiding (Indexable, index, Bounded, Simple, Ixed)
 import Data.Containers.Class
 import Data.Typeable
 import qualified Data.Containers.Interface as I
 import           Data.Containers.Poly {- x -}
 import           Data.TypeLevel.List (In)
+
+
+import           Data.Vector         (Vector)
 
 
 --type Result q s = Result2' q (Resizable s)
@@ -92,6 +95,34 @@ type instance ModsOf SingletonQSM (Resizable l a) = ModsOf SingletonQSM a
 instance (SingletonQM el q m a, Default l) => SingletonQSM el (Resizable l a) m q s where singletonQSM _ _    = (fmap . fmap) wrap . queried (Proxy :: Proxy q) singletonM'
 
 
+--type AssumeQuery i q s = ResultX (DataStoreInfo i) q ~ ResultBySelX i s
+
+
+type instance ModsOf ExpandableQSM2 (Resizable l a) = ModsOf ExpandableQSM2 a
+instance ExpandableQM2 q m a => ExpandableQSM2 (Resizable l a) m q s where expandQSM2 _ _    = nestedLens wrapped $ queried (Proxy :: Proxy q) expandM2'
+--instance ExpandableQM2 q m a =>            ExpandableQSM2 (Resizable l a) m q s where expandQSM2 _ _    = nestedLens wrapped $ queried (Proxy :: Proxy q) expandM2'
+
+-- AssumeQuery (ExpandableInfo2 a) q s
+        --instance ExpandableQSM2 (Resizable l a) m q s where expandQSM2 _ _ (Resizable l a) = do
+        --                                                                                                                                                            exp <- queried (Proxy :: Proxy q) expandM2' a
+        --                                                                                                                                                            return $ fmap (Resizable l) exp
+
+--type family ResultBySelX (info :: *) (s :: [Bool]) where ResultBySelX (Info idx el cls cont) s = ResultX (Info idx el cls (DataStoreOf cont)) (Selected s (FilterMutable (ModsOf cls cont)))
+
+--    FillData q (TaggedCont
+--        (Selected
+--            (LstIn (ModsOf ExpandableQSM2 (ContainerOf t)) q)
+--            (FilterMutable (ModsOf ExpandableQSM2 (ContainerOf t))))
+--        (ResultX
+--            (ExpandableInfo2 (DataStoreOf (ContainerOf t)))
+--            (Selected
+--                (LstIn (ModsOf ExpandableQSM2 (ContainerOf t)) q)
+--                (FilterMutable (ModsOf ExpandableQSM2 (ContainerOf t))))))
+--    ~ ResultX (ExpandableInfo2 (DataStoreOf (ContainerOf t))) q
+
+--expxx =
+
+--class ExpandableQSM2            cont m q s where expandQSM2   :: (info ~ ExpandableInfo2  cont) => Query q s -> info ->        cont -> m (ResultBySelX info s cont)
 
 
 

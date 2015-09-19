@@ -127,6 +127,13 @@ type instance          ModsOf ExpandableQSM   (V.Vector a)   = '[Ixed ]
 instance          Monad m  => ExpandableQSM   (V.Vector a) m q '[False]            where expandQSM _ _ v = simple $ runST $ V.unsafeThaw v >>= flip MV.unsafeGrow 1 >>= V.unsafeFreeze
 instance          Monad m  => ExpandableQSM   (V.Vector a) m q '[True ]            where expandQSM _ _ v = (,) <$> ((:[]) <$> sizeM v) <*> expandM v
 
+type instance          ModsOf ExpandableQSM2  (V.Vector Int)   = '[Ixed ]
+instance          Monad m  => ExpandableQSM2  (V.Vector Int) m q '[False]          where expandQSM2 _ _ v = return . (ResW ())        $ V.snoc v 8
+instance          Monad m  => ExpandableQSM2  (V.Vector Int) m q '[True ]          where expandQSM2 _ _ v = return . (ResW ([11],())) $ V.snoc v 7
+--instance          Monad m  => ExpandableQSM2  (V.Vector a) m q '[True ]            where expandQSM2 _ _ v = (\i v -> (i,(v,()))) <$> ((:[]) <$> sizeM v) <*> expandM v
+
+--class ExpandableQSM2            cont m q s where expandQSM2   :: (CheckQuery' info q s, info ~ ExpandableInfo   cont) => Query q s -> info ->        cont -> m (ResultBySelX info s cont)
+
 --type instance          ModsOf GrowableQSM     (V.Vector a)   = '[Ixed , Unchecked]
 --instance (Monad m, Cond u) => GrowableQSM     (V.Vector a) m q '[False, u        ] where growQSM _ _ i v = checkedIdxIf (Proxy :: Proxy u) i $ simple $ runST $ V.unsafeThaw v >>= flip MV.unsafeGrow i >>= V.unsafeFreeze
 --instance (Monad m, Cond u) => GrowableQSM     (V.Vector a) m q '[True , u        ] where growQSM _ _ i v = checkedIdxIf (Proxy :: Proxy u) i $ (\s c -> ([s .. s + i - 1], c)) <$> sizeM v <*> unchecked growM2 i v

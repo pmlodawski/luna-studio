@@ -5,6 +5,7 @@
 {-# LANGUAGE ScopedTypeVariables      #-}
 {-# LANGUAGE RankNTypes      #-}
 
+{-# LANGUAGE PartialTypeSignatures #-}
 --{-# LANGUAGE PolyKinds      #-}
 
 
@@ -26,6 +27,25 @@ import Data.TypeLevel.Bool
 
 import Data.Containers.Poly
 import GHC.Prim
+
+
+type Unique lst = Reverse (Unique' lst '[])
+
+type family Unique' lst reg where
+  Unique' '[]       reg = reg
+  Unique' (l ': ls) reg = Unique' ls (If (l `In` reg) reg (l ': reg))
+
+type Reverse lst = Reverse' lst '[]
+
+type family Reverse' lst lst' where
+  Reverse' '[]       lst = lst
+  Reverse' (l ': ls) lst = Reverse' ls (l ': lst)
+
+uniqueProxy :: Proxy a -> Proxy (Unique a)
+uniqueProxy _ = Proxy
+
+filterMutable :: Proxy a -> Proxy (FilterMutable a)
+filterMutable _ = Proxy
 
 --- === Bounded ===
 
@@ -234,10 +254,271 @@ maxIndex = withTransFunc (fmap2 runIdentity) maxIndexM
 
 
 
+
+--(FilterMutable (ModsOf ExpandableQSM2 cont)))
+
+
+--type MyResult info q t = ResultX (info (DataStoreOf (ContainerOf t))) q
+type MyResult info q t = ResultX (info (DataStoreOf (ContainerOf t))) (FilterMutable q)
+
+
+
+includeResult :: Proxy q -> Proxy (AppendLst R q)
+includeResult _ = Proxy
+
+
+--s ~ ComputeSelection cls cont q
+
+
+foo (q :: Proxy (q :: [*])) (tc :: cont) = out where
+    tc2 = runModsF' expandQSM2 (uniqueProxy (filterMutable q)) tc
+    tc3 = withFlipped (fmap $ taggedCont (Proxy :: Proxy (Selected (ComputeSelection ExpandableQSM2 cont q) (FilterMutable (ModsOf ExpandableQSM2 cont))) )) <$> tc2
+    out = tc3
+
+
+--bar :: ( Functor m
+--       , HasContainer2 t
+--       , SuperInstR info q m
+--       , MapResult (ContainerOf t) t (TaggedResult cls (ContainerOf t) (ContRes info q t))
+--       , info     ~ ExpandableInfo2 (ContainerOf t)
+
+--       , cls      ~ ExpandableQSM2
+
+--       , DataFillable (WithResult q) (MappedResult t cls (ContRes info q t))
+--       , Taggable (ResultMods cls (ContainerOf t)) (ContRes info q t)
+--       , CheckFilledResult2 info q t (ContRes info q t)
+--       ) => Proxy q -> t -> m (MyResult ExpandableInfo2 q t t)
+
+
+--type Res info q cont = ResultBySelX info (InfoSelectionR info q) cont
+
+
+--type ContRes info q t = Res info q (ContainerOf t)
+--type CheckFilledMappedResult =
+
+--type MappedInfoResul
+
+type SuperInstR info q (m :: * -> *) = (SuperInst info (WithResult q) m :: Constraint)
+
+type MapResult = MapByTag R
+
+
+newtype Flipped t a b = Flipped { fromFlipped :: t b a } deriving Show
+
+instance Functor (Flipped ResW r) where fmap f (Flipped (ResW d r)) = Flipped (ResW (f d) r)
+
+
+withFlipped f = fromFlipped . f . Flipped
+
+type CTXO q m t = ((Functor m,
+                                               HasContainer2 t,
+                                               DataFillable
+                                                 q
+                                                 (TaggedCont
+                                                    (Selected
+                                                       (LstIn
+                                                          (ModsOf ExpandableQSM2 (ContainerOf t)) q)
+                                                       (FilterMutable
+                                                          (ModsOf ExpandableQSM2 (ContainerOf t))))
+                                                    (ResultX
+                                                       (Info
+                                                          NA
+                                                          NA
+                                                          ExpandableQSM2
+                                                          (DataStoreOf (ContainerOf t)))
+                                                       (Selected
+                                                          (LstIn
+                                                             (ModsOf ExpandableQSM2 (ContainerOf t))
+                                                             (Reverse'
+                                                                (Unique' (FilterMutable q) '[])
+                                                                '[]))
+                                                          (FilterMutable
+                                                             (ModsOf
+                                                                ExpandableQSM2 (ContainerOf t)))))),
+                                               Taggable
+                                                 (Selected
+                                                    (LstIn
+                                                       (ModsOf ExpandableQSM2 (ContainerOf t)) q)
+                                                    (FilterMutable
+                                                       (ModsOf ExpandableQSM2 (ContainerOf t))))
+                                                 (ResultX
+                                                    (Info
+                                                       NA
+                                                       NA
+                                                       ExpandableQSM2
+                                                       (DataStoreOf (ContainerOf t)))
+                                                    (Selected
+                                                       (LstIn
+                                                          (ModsOf ExpandableQSM2 (ContainerOf t))
+                                                          (Reverse'
+                                                             (Unique' (FilterMutable q) '[]) '[]))
+                                                       (FilterMutable
+                                                          (ModsOf
+                                                             ExpandableQSM2 (ContainerOf t))))),
+                                               ExpandableQSM2
+                                                 (ContainerOf t)
+                                                 m
+                                                 (Reverse' (Unique' (FilterMutable q) '[]) '[])
+                                                 (LstIn
+                                                    (ModsOf ExpandableQSM2 (ContainerOf t))
+                                                    (Reverse' (Unique' (FilterMutable q) '[]) '[])),
+                                               ResultX
+                                                 (Info
+                                                    NA
+                                                    NA
+                                                    ExpandableQSM2
+                                                    (DataStoreOf (ContainerOf t)))
+                                                 (Reverse' (Unique' (FilterMutable q) '[]) '[])
+                                               ~ ResultX
+                                                   (Info
+                                                      NA
+                                                      NA
+                                                      ExpandableQSM2
+                                                      (DataStoreOf (ContainerOf t)))
+                                                   (Selected
+                                                      (LstIn
+                                                         (ModsOf ExpandableQSM2 (ContainerOf t))
+                                                         (Reverse'
+                                                            (Unique' (FilterMutable q) '[]) '[]))
+                                                      (FilterMutable
+                                                         (ModsOf ExpandableQSM2 (ContainerOf t)))),
+                                               ResultX
+                                                 (ExpandableInfo2 (DataStoreOf (ContainerOf t)))
+                                                 (FilterMutable q)
+                                               ~ FillData
+                                                   q
+                                                   (TaggedCont
+                                                      (Selected
+                                                         (LstIn
+                                                            (ModsOf ExpandableQSM2 (ContainerOf t))
+                                                            q)
+                                                         (FilterMutable
+                                                            (ModsOf
+                                                               ExpandableQSM2 (ContainerOf t))))
+                                                      (ResultX
+                                                         (Info
+                                                            NA
+                                                            NA
+                                                            ExpandableQSM2
+                                                            (DataStoreOf (ContainerOf t)))
+                                                         (Selected
+                                                            (LstIn
+                                                               (ModsOf
+                                                                  ExpandableQSM2 (ContainerOf t))
+                                                               (Reverse'
+                                                                  (Unique' (FilterMutable q) '[])
+                                                                  '[]))
+                                                            (FilterMutable
+                                                               (ModsOf
+                                                                  ExpandableQSM2
+                                                                  (ContainerOf t))))))),
+
+                                                                  -- manual
+                                                                  DataStoreOf (ContainerOf t) ~ DataStoreOf t,
+                                                                  (ResultX (ExpandableInfo2 (DataStoreOf t)) (FilterMutable q) ~ ResultX (ExpandableInfo2 (DataStoreOf t)) (FilterMutable q)))
+
+bar :: CTXO q m t => Proxy q -> t -> m (ResW (MyResult ExpandableInfo2 q t) t)
+bar q t = out where
+    cont  = view container2 t
+    tgdr  = foo q cont
+    tgdr' = (fmap . fmap) (\c -> t & container2 .~ c) tgdr
+    out   = withFlipped (fmap (fillData q)) <$> tgdr'
+
+
+
+--bar2 :: _ => Proxy q -> t -> m (ResW (MyResult2 ExpandableInfo2 q t) t)
+--bar2 q t = out where
+--    cont  = view container2 t
+--    tgdr  = foo q cont
+--    tgdr' = (fmap . fmap) (\c -> t & container2 .~ c) tgdr
+--    out   = withFlipped (fmap (fillData q)) <$> tgdr'
+
+
+
+data ResW d r = ResW d r deriving (Show, Functor)
+
+withResData :: (d -> (out, d')) -> ResW d r -> (out, ResW d' r)
+withResData f (ResW d r) = (out, ResW d' r) where
+  (out, d') = f d
+
+withResData_ :: (d -> d') -> ResW d r -> ResW d' r
+withResData_ = flattenMod withResData
+
+splitResData :: ResW (d,ds) r -> (d, ResW ds r)
+splitResData = withResData id
+
+flattenMod :: Functor f => (f ((), a) -> b -> (x, c)) -> f a -> b -> c
+flattenMod f = snd .: (f . fmap ((),))
+
+--bar :: _ => Proxy q -> t -> m (MyResult ExpandableInfo q t t)
+--bar q t = t' where
+--    cont = view container2 t
+--    r    = foo q cont
+--    t'   = fmap (fmapRTup $ \x -> (t & container2 .~ x)) r
+
+
 -- === Construction ===
 
+type family MappedRTup a tup where
+    MappedRTup a (t, ()) = (a, ())
+    MappedRTup a (t, ts) = (t, MappedRTup a ts)
 
-class ExpandableQSM2            cont m q s where expandQSM2   :: (CheckQuery' info q s, info ~ ExpandableInfo   cont) => Query q s -> info ->        cont -> m (ResultBySel' info s cont)
+class                                                                                              RTupFunctor a b tup    where fmapRTup :: (a -> b) -> tup -> MappedRTup b tup
+instance {-# OVERLAPPABLE #-} (a ~ t)                                                           => RTupFunctor a b (t,()) where fmapRTup f (t,()) = (f t,())
+instance {-# OVERLAPPABLE #-} (RTupFunctor a b ts, MappedRTup b (t, ts) ~ (t, MappedRTup b ts)) => RTupFunctor a b (t,ts) where fmapRTup f (t,ts) = (t, fmapRTup f ts)
+
+
+type family AppendedRTup a rt where
+    AppendedRTup a ()     = (a,())
+    AppendedRTup a (t,ts) = (t,AppendedRTup a ts)
+
+class                       AppendRTup a rt     where appendRTup :: a -> rt -> AppendedRTup a rt
+instance                    AppendRTup a ()     where appendRTup a _      = (a,())
+instance AppendRTup a ts => AppendRTup a (t,ts) where appendRTup a (t,ts) = (t,appendRTup a ts)
+
+
+type family   AsTup a
+type instance AsTup () = ()
+type instance AsTup (t1,()) = t1
+type instance AsTup (t1,(t2,())) = (t1,t2)
+type instance AsTup (t1,(t2,(t3,()))) = (t1,t2,t3)
+type instance AsTup (t1,(t2,(t3,(t4,())))) = (t1,t2,t3,t4)
+type instance AsTup (t1,(t2,(t3,(t4,(t5,()))))) = (t1,t2,t3,t4,t5)
+type instance AsTup (t1,(t2,(t3,(t4,(t5,(t6,())))))) = (t1,t2,t3,t4,t5,t6)
+type instance AsTup (t1,(t2,(t3,(t4,(t5,(t6,(t7,()))))))) = (t1,t2,t3,t4,t5,t6,t7)
+type instance AsTup (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,())))))))) = (t1,t2,t3,t4,t5,t6,t7,t8)
+type instance AsTup (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,(t9,()))))))))) = (t1,t2,t3,t4,t5,t6,t7,t8,t9)
+
+class    ToTup a  where toTup :: a -> AsTup a
+instance ToTup () where toTup _ = ()
+instance ToTup (t1,()) where toTup (t1,()) = t1
+instance ToTup (t1,(t2,())) where toTup (t1,(t2,())) = (t1,t2)
+instance ToTup (t1,(t2,(t3,()))) where toTup (t1,(t2,(t3,()))) = (t1,t2,t3)
+instance ToTup (t1,(t2,(t3,(t4,())))) where toTup (t1,(t2,(t3,(t4,())))) = (t1,t2,t3,t4)
+instance ToTup (t1,(t2,(t3,(t4,(t5,()))))) where toTup (t1,(t2,(t3,(t4,(t5,()))))) = (t1,t2,t3,t4,t5)
+instance ToTup (t1,(t2,(t3,(t4,(t5,(t6,())))))) where toTup (t1,(t2,(t3,(t4,(t5,(t6,())))))) = (t1,t2,t3,t4,t5,t6)
+instance ToTup (t1,(t2,(t3,(t4,(t5,(t6,(t7,()))))))) where toTup (t1,(t2,(t3,(t4,(t5,(t6,(t7,()))))))) = (t1,t2,t3,t4,t5,t6,t7)
+instance ToTup (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,())))))))) where toTup (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,())))))))) = (t1,t2,t3,t4,t5,t6,t7,t8)
+instance ToTup (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,(t9,()))))))))) where toTup (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,(t9,()))))))))) = (t1,t2,t3,t4,t5,t6,t7,t8,t9)
+
+
+
+class ExpandableQSM2            cont m q s where expandQSM2   :: (AssumeQuery info q s, info ~ ExpandableInfo2  cont) => Query q s -> info ->        cont -> m (ResW (ResultBySelX info s) cont)
+--ComputeSelection cls cont q
+class                                                  CTXO q m t           => ExpandableQM2 q m t           where expandQM2 :: Proxy q -> t -> m (ResW (MyResult ExpandableInfo2 q t) t)
+instance {-# OVERLAPPABLE #-}                          CTXO q m t           => ExpandableQM2 q m t           where expandQM2 = bar
+instance {-# OVERLAPPABLE #-}                          CTXO q m Impossible  => ExpandableQM2 q m Impossible  where expandQM2 = impossible
+instance {-# OVERLAPPABLE #-}                          CTXO q ImpossibleM t => ExpandableQM2 q ImpossibleM t where expandQM2 = impossible
+
+
+type instance IxedMode ExpandableQSM2 = Multi
+
+type ExpandableInfo2 = RawInfo ExpandableQSM2
+--type ExpandableQ  q = ExpandableQM q Identity
+--type ExpandableM    = ExpandableQM '[]
+--type Expandable     = ExpandableM Identity
+
+
 
 
 class SingletonQSM           el cont m q s where singletonQSM :: (CheckQuery' info q s, info ~ SingletonInfo el cont) => Query q s -> info -> el          -> m (ResultBySel' info s cont)
@@ -316,7 +597,21 @@ expandM = withTransFunc (fmap3 simplify) expandM'
 expand :: (ExpandableQ q t, Simplified'' ExpandableInfo q t t out) => Func' q (t -> out)
 expand = withTransFunc (fmap2 runIdentity) expandM
 
+-- expandable2
 
+--expandM' :: ExpandableQM q m t => Func' q (t -> m (Result'' ExpandableInfo q t t))
+expandM2' = transFunc $ optBuilder expandQM2
+
+--expandM :: (ExpandableQM q m t, Simplified'' ExpandableInfo q t t out, Functor m) => Func' q (t -> m out)
+idsimplify = id
+expandM2 = withTransFunc (fmap3 simplify2) expandM2'
+
+--expand :: (ExpandableQ q t, Simplified'' ExpandableInfo q t t out) => Func' q (t -> out)
+expand2  = withTransFunc (fmap2 runIdentity) expandM2
+expand2' = withTransFunc (fmap2 runIdentity) expandM2'
+
+
+simplify2 (ResW d r) = toTup $ appendRTup r d
 
 -- === Concatenation ===
 class AppendableQSM          el cont m q s where appendQSM    :: info ~ AppendableInfo  el cont => Query q s -> info -> el -> cont -> m (ResultBySel info s cont)
