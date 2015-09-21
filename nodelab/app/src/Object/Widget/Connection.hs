@@ -12,6 +12,8 @@ import           Object.Widget
 import           Object.Node
 
 data Connection = Connection { _connectionId :: ConnectionId
+                             , _from         :: Vector2 Double
+                             , _to           :: Vector2 Double
                              } deriving (Eq, Show, Typeable)
 
 makeLenses ''Connection

@@ -23,13 +23,19 @@ data PortId = AllPorts
             | PortNum ID
             deriving (Eq, Show)
 
+instance Ord PortId where
+    AllPorts    `compare` AllPorts    = EQ
+    AllPorts    `compare` _           = LT
+    _           `compare` AllPorts    = GT
+    (PortNum a) `compare` (PortNum b) = a `compare` b
+
 portIdToNum :: PortId -> Int
 portIdToNum AllPorts    = 0
 portIdToNum (PortNum n) = n
 
 type PortIdCollection = [PortId]
 
-data PortType = InputPort | OutputPort deriving (Eq, Show)
+data PortType = InputPort | OutputPort deriving (Ord, Eq, Show)
 
 instance PrettyPrinter PortId where
     display portId = "pId(" <> show portId <> ")"

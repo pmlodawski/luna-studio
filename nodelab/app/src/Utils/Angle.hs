@@ -18,3 +18,6 @@ angleDiff a1 a2 = toRelAngle . normAngle $ a2 - a1
 calcAngle :: Vector2 Double -> Vector2 Double -> Angle
 calcAngle vecDest vecSrc = normAngle $ atan2 (vecDiff ^. y) (vecDiff ^. x) where
     vecDiff = vecDest - vecSrc
+
+toAngle :: Vector2 Double -> Angle
+toAngle vec = normAngle $ atan2 (vec ^. y) (vec ^. x)

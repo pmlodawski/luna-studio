@@ -13,10 +13,12 @@ import           Object.Object
 import           Object.Port
 import           Object.Node
 import           Object.UITypes
+import           Object.Widget
+import qualified Object.Widget.Connection as UIConnection
 
 import           Event.Keyboard hiding      ( Event )
 import qualified Event.Keyboard as Keyboard
-import           Event.Mouse    hiding      ( Event, WithObjects )
+import           Event.Mouse    hiding      ( Event, WithObjects, widget )
 import qualified Event.Mouse    as Mouse
 import           Event.Event
 import           Event.WithObjects
@@ -24,9 +26,10 @@ import           Event.WithObjects
 import           Reactive.Plugins.Core.Action
 import           Reactive.Plugins.Core.Action.Executors.Graph
 import           Reactive.Plugins.Core.Action.State.Connect
-import qualified Reactive.Plugins.Core.Action.State.Graph     as Graph
-import qualified Reactive.Plugins.Core.Action.State.Camera    as Camera
-import qualified Reactive.Plugins.Core.Action.State.Global    as Global
+import qualified Reactive.Plugins.Core.Action.State.Graph          as Graph
+import qualified Reactive.Plugins.Core.Action.State.UIRegistry     as UIRegistry
+import qualified Reactive.Plugins.Core.Action.State.Camera         as Camera
+import qualified Reactive.Plugins.Core.Action.State.Global         as Global
 import           Reactive.Plugins.Core.Action.State.UnderCursor
 
 import qualified BatchConnector.Commands as BatchCmd
@@ -37,21 +40,24 @@ data ActionType = StartDrag PortRef
                 | Moving
                 | Dragging Angle
                 | StopDrag
-                | ConnectPorts PortRef PortRef
-                deriving (Eq, Show)
+                | ConnectPorts   PortRef PortRef
+                | ConnectPortsUI PortRef PortRef (IO ())
 
 data Action = DragAction { _actionType :: ActionType
                          , _actionPos  :: Vector2 Int
                          }
-              deriving (Eq, Show)
 
 
 makeLenses ''Action
 
 
 instance PrettyPrinter ActionType where
-    display (StartDrag portRef) = "StartDrag(" <> display portRef <> ")"
-    display other               = show other
+    display (StartDrag portRef)        = "StartDrag(" <> display portRef <> ")"
+    display Moving                     = "Moving"
+    display (Dragging angle)           = "Dragging(" <> display angle <> ")"
+    display StopDrag                   = "StopDrag"
+    display (ConnectPorts src dst)     = "Connect(" <> display src <> ", " <> display dst <> ")"
+    display (ConnectPortsUI src dst _) = "ConnectUI(" <> display src <> ", " <> display dst <> ")"
 
 instance PrettyPrinter Action where
     display (DragAction tpe point) = "cA(" <> display tpe <> " " <> display point <> ")"
@@ -130,40 +136,33 @@ instance ActionStateUpdater Action where
         newState                             = oldState & Global.iteration            +~ 1
                                                         & Global.connect . connecting .~ Nothing
 
-    execSt action@(DragAction (ConnectPorts src dst) point) oldState = ActionUI action newState
+    execSt action@(DragAction (ConnectPorts src dst) point) oldState = ActionUI (DragAction (ConnectPortsUI src dst uiUpdate) point) newState''
         where
         oldConnecting                        = oldState ^. Global.connect . connecting
-        oldGraph                             = oldState ^. Global.graph
-        newState                             = oldState & Global.iteration            +~ 1
+        newState''                           = updateConnections $ updatePortAngles newState'
+        newState'                            = newState & Global.iteration            +~ 1
                                                         & Global.connect . connecting .~ Nothing
-                                                        & Global.graph                .~ newGraph
-        newConnecting                        = Nothing
-        newGraph                             = case oldConnecting of
-                    Just (Connecting source destinationMay (DragHistory startPos currentPos))
-                                            -> appGraph where
-                        newNodesMap          = updateSourcePortInNodes 0.0 source oldNodesMap
-                        oldNodesMap          = Graph.getNodesMap oldGraph
-                        updSourceGraph       = Graph.updateNodes newNodesMap oldGraph
-                        (connId, appGraph)   = Graph.addConnection source dst updSourceGraph
-                    _                       -> oldGraph
+        (uiUpdate, newState)              = case oldConnecting of
+            Just (Connecting _ _ (DragHistory _ _)) -> connectNodes src dst oldState
+            _                                       -> (return (), oldState)
 
 instance ActionUIUpdater Action where
-    updateUI (WithState action state) = case action of
-        DragAction tpe pt            -> case tpe of
-            StartDrag portRef        -> return ()
-            Moving                   -> return ()
-            Dragging angle           -> forM_ maybeConnecting $ displayDragLine nodesMap angle ptWs
-            StopDrag                 -> UI.removeCurrentConnection
-            ConnectPorts src dst     -> UI.removeCurrentConnection
-                                     >> displayConnections nodesMap connectionsMap
-                                     >> BatchCmd.connectNodes workspace src dst
-                                     >> putStrLn (display $ state ^. Global.graph . Graph.nodesRefsMap)   -- debug
-                                     >> putStrLn (display $ state ^. Global.graph . Graph.connectionsMap) -- debug
-                                     >> graphToViz (state ^. Global.graph . Graph.graphMeta)
-            where
-                nodesMap              = Graph.getNodesMap       $ state ^. Global.graph
-                connectionsMap        = Graph.getConnectionsMap $ state ^. Global.graph
-                ptWs                  = screenToWorkspace camera pt
-                camera                = Global.toCamera state
-                maybeConnecting       = state ^. Global.connect . connecting
-                workspace             = state ^. Global.workspace
+    updateUI (WithState (DragAction tpe pt) state) = case tpe of
+        Dragging angle                   -> forM_ maybeConnecting $ displayDragLine nodesMap angle ptWs
+        StopDrag                         -> UI.removeCurrentConnection
+        ConnectPortsUI src dst uiUpdate  -> UI.removeCurrentConnection
+                                         >> uiUpdate
+                                         >> updatePortAnglesUI  state
+                                         >> updateConnectionsUI state
+                                         >> BatchCmd.connectNodes workspace src dst
+                                         >> putStrLn (display $ state ^. Global.graph . Graph.nodesRefsMap)   -- debug
+                                         >> putStrLn (display $ state ^. Global.graph . Graph.connectionsMap) -- debug
+                                         >> graphToViz (state ^. Global.graph . Graph.graphMeta)
+        _                                -> return ()
+        where
+            nodesMap                      = Graph.getNodesMap       $ state ^. Global.graph
+            connectionsMap                = Graph.getConnectionsMap $ state ^. Global.graph
+            ptWs                          = screenToWorkspace camera pt
+            camera                        = Global.toCamera state
+            maybeConnecting               = state ^. Global.connect . connecting
+            workspace                     = state ^. Global.workspace

@@ -162,3 +162,10 @@ sequenceUpdates ops input = foldl applyOp (return (), input) ops where
         justOp           <- op
         (update, output) <- justOp input
         return (updates >> update, output)
+
+lookupAll :: DisplayObjectClass a => State b -> [WidgetFile b a]
+lookupAll state = foldl process mempty objects where
+    process acc obj = case fromCtxDynamic $ obj ^. widget of
+        Just model -> (obj & widget .~ model):acc
+        Nothing    -> acc
+    objects = IntMap.elems $ state ^. widgets

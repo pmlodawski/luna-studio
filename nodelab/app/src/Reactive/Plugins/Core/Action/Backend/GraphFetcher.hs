@@ -8,9 +8,10 @@ import           Batch.Workspace
 import qualified Event.Batch as Batch
 
 import           Reactive.Plugins.Core.Action
-import           Reactive.Plugins.Core.Action.Executors.Graph   (displayConnections)
+import qualified Reactive.Plugins.Core.Action.Executors.Graph   as Executor
 import           Reactive.Plugins.Core.Action.State.Graph
 import qualified Reactive.Plugins.Core.Action.State.Global      as Global
+import qualified Reactive.Plugins.Core.Action.State.UIRegistry  as UIRegistry
 import qualified Reactive.Plugins.Core.Action.Executors.AddNode as AddNode
 
 import qualified BatchConnector.Commands as BatchCmd
@@ -41,23 +42,23 @@ toAction (Batch (Batch.GraphViewFetched nodes edges)) state = case getNodes $ st
 toAction _ _ = Nothing
 
 instance ActionStateUpdater Action where
-    execSt (AddSingleEdge (src, dst)) state = ActionUI NoOp newState where
-      addConnection' s d st = st' where (_, st') = addConnection s d st
-      newState    = state & Global.graph %~ (addConnection' src dst)
+    execSt (AddSingleEdge (src, dst)) state = ActionUI (PerformIO draw) newState where
+      (draw, newState) = Executor.connectNodes src dst state
 
     execSt (AddSingleNode node) state = ActionUI (PerformIO addAction) newState where
         (newState, addAction) = AddNode.addNode node state
-
-    execSt DisplayEdges state = ActionUI (PerformIO draw) state where
-        draw        =  displayConnections nodesMap connectionsMap
-        nodesMap       = state ^. Global.graph & getNodesMap
-        connectionsMap = state ^. Global.graph & getConnectionsMap
 
     execSt (PrepareValues nodes) state = ActionUI (PerformIO prepareValues) state where
         workspace     = state ^. Global.workspace
         prepareValues = case workspace ^. interpreterState of
             Fresh  -> BatchCmd.insertSerializationModes workspace nodes
             AllSet -> BatchCmd.requestValues workspace nodes
+
+    execSt DisplayEdges state = ActionUI (PerformIO draw) newState where
+        draw        = Executor.updatePortAnglesUI  newState
+                   >> Executor.updateConnectionsUI newState
+        newState    = Executor.updateConnections $ Executor.updatePortAngles state
+
 
     execSt (AddNodes nodes) state = execSt (AddSingleNode <$> nodes) state
 

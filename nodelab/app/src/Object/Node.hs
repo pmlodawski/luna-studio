@@ -78,6 +78,11 @@ instance PrettyPrinter PortRef where
         <> " " <> display portId
         <> ")"
 
+instance Ord PortRef where
+    (PortRef anid apt apid) `compare` (PortRef bnid bpt bpid)  = anid `compare` bnid
+                                                              <> apt  `compare` bpt
+                                                              <> apid `compare` bpid
+
 nodeRadius        = 30.0
 portSize          = 3.0
 portDistFromRim   = 1.0

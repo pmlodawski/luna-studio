@@ -77,8 +77,8 @@ deltaToWs factor delta = (/ factor) . fromIntegral <$> delta
 
 instance ActionStateUpdater Action where
     execSt newActionCandidate oldState = case newAction of
-        Just action -> ActionUI newAction newState
-        Nothing     -> ActionUI  NoAction newState
+        Just action -> ActionUI newAction newState'
+        Nothing     -> ActionUI  NoAction newState'
         where
         oldDrag                          = oldState ^. Global.drag . history
         oldGraph                         = oldState ^. Global.graph
@@ -89,6 +89,7 @@ instance ActionStateUpdater Action where
         newState                         = oldState & Global.iteration       +~ 1
                                                     & Global.drag  . history .~ newDrag
                                                     & Global.graph           .~ newGraph
+        newState'                        = updateConnections $ updatePortAngles newState
         newAction                        = case newActionCandidate of
             DragAction Moving pt        -> case oldDrag of
                 Nothing                 -> Nothing
@@ -121,10 +122,12 @@ instance ActionUIUpdater Action where
             StartDrag                -> return ()
             Moving                   -> return ()
             Dragging                 -> moveNodesUI selNodes
-                                     >> displayConnections nodesMap connectionsMap
+                                     >> updatePortAnglesUI state
+                                     >> updateConnectionsUI state
             StopDrag                 -> moveNodesUI selNodes
                                      >> updateNodesBatch workspace selNodes
-                                     >> displayConnections nodesMap connectionsMap
+                                     >> updatePortAnglesUI state
+                                     >> updateConnectionsUI state
             where
                 workspace             = state ^. Global.workspace
                 nodesMap              = Graph.getNodesMap       $ state ^. Global.graph
