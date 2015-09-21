@@ -189,3 +189,5 @@ foreign import javascript unsafe "$('#htmlcanvas-pan').css({cursor: $1})"
 
 foreign import javascript unsafe "require('exampleData')" getExampleData :: IO JSArray
 
+foreign import javascript unsafe "app.displayRejectedMessage()"
+    displayRejectedMessage :: IO ()

@@ -27,6 +27,8 @@ data Event = ProjectsList [Project]
            | RunFinished
            | UnknownEvent String
            | ParseError String
+           | DuplicateConnectionRefused
+           | ConnectionOpened
            deriving (Eq, Show)
 
 instance PrettyPrinter Event where

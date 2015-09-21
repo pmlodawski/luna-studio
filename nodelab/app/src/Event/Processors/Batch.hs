@@ -5,7 +5,7 @@ import qualified Event.Event               as Event
 import           Event.Connection          as Connection
 import           Event.Batch               as Batch
 import           Data.Dynamic
-import           BatchConnector.Connection (WebMessage(..))
+import           BatchConnector.Connection (WebMessage(..), ControlCode(..))
 import           BatchConnector.Updates
 
 process :: Event.Event Dynamic -> Maybe (Event.Event Dynamic)
@@ -31,6 +31,8 @@ processMessage (WebMessage topic bytes) = rescueParseError topic $ case topic of
     "interpreter.getprojectid.status"                     -> InterpreterGotProjectId <$> parseProjectIdStatus bytes
     "interpreter.serializationmode.insert.update"         -> Just $ SerializationModeInserted
     _                                                     -> Just $ UnknownEvent topic
+processMessage (ControlMessage ConnectionAlreadyExists) = DuplicateConnectionRefused
+processMessage (ControlMessage Welcome)                 = ConnectionOpened
 
 rescueParseError :: String -> Maybe Batch.Event -> Batch.Event
 rescueParseError _     (Just ev) = ev

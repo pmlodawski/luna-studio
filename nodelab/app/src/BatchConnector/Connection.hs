@@ -11,9 +11,17 @@ import           Data.Text.Lazy.Encoding     (decodeUtf8)
 import           Utils.PreludePlus           hiding (Text)
 import           JS.WebSocket
 
+data ControlCode = ConnectionAlreadyExists
+                 | Welcome
+                 deriving (Show, Generic)
+
+instance Binary.Binary ControlCode
+
 data WebMessage = WebMessage { _topic   :: String
                              , _message :: ByteString
-                             } deriving (Show, Generic)
+                             }
+                | ControlMessage ControlCode
+                deriving (Show, Generic)
 
 makeLenses ''WebMessage
 instance Binary.Binary WebMessage

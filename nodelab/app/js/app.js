@@ -68,7 +68,7 @@ function initializeGl() {
     initCommonWidgets();
     addVersionToHud();
 
-    $('#log').remove()
+    $('#log').remove();
     $('#spinner').remove();
 }
 
@@ -234,6 +234,11 @@ function removeConnection(id) {
   }
 }
 
+var displayRejectedMessage = function () {
+  $("#spinner").remove();
+  $("#rejected").show();
+}
+
 module.exports = {
   start:                    start,
   initializeGl:             initializeGl,
@@ -255,6 +260,7 @@ module.exports = {
   displayConnection:        displayConnection,
   removeConnection:         removeConnection,
   websocket:                $$.websocket,
+  displayRejectedMessage:   displayRejectedMessage,
   getNode:                  function(index) { return $$.nodes[index];    },
   getNodes:                 function()      { return _.values($$.nodes); },
   nodeSearcher:             function()      { return $$.node_searcher;   },

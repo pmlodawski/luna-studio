@@ -3,6 +3,7 @@ module Reactive.Plugins.Loader.ProjectManager.Actions where
 import           Utils.PreludePlus
 import           Data.Dynamic
 import           Data.ByteString.Lazy      (ByteString)
+import           JS.Bindings               (displayRejectedMessage)
 
 import qualified Event.Event               as Event
 import qualified Event.Connection          as Connection
@@ -21,22 +22,23 @@ makeReaction f (_, state) = f state
 
 react :: Event.Event Dynamic -> Maybe (Action -> Action)
 react event = makeReaction <$> handler event where
-    handler (Event.Connection Connection.Opened) = Just $ reactToOpening
     handler (Event.Batch event)                  = Just $ reactToBatchEvent event
     handler _                                    = Nothing
-
-reactToOpening :: State -> Action
-reactToOpening state = (BatchCmd.listProjects, state)
 
 reactToBatchEvent :: Batch.Event -> State -> Action
 reactToBatchEvent event state = handler state where
     handler = case (state, event) of
-        (AwaitingProject name, ProjectsList projects)  -> handleProjectsListResponse projects name
-        (AwaitingProject name, ProjectCreated project) -> handleProjectCreatedResponse project
-        (AwaitingLibs proj,    LibrariesList libs)     -> handleLibrariesListResponse libs proj
-        (AwaitingLibs proj,    LibraryCreated lib)     -> handleLibraryCreatedResponse lib proj
-        (Ready _,              _)                      -> \st -> (return (), AfterInitialize)
-        _                                              -> \st -> (return (), st)
+        (AwaitingProject name, ConnectionOpened)           -> handleOpening
+        (AwaitingProject name, ProjectsList projects)      -> handleProjectsListResponse projects name
+        (AwaitingProject name, ProjectCreated project)     -> handleProjectCreatedResponse project
+        (AwaitingLibs proj,    LibrariesList libs)         -> handleLibrariesListResponse libs proj
+        (AwaitingLibs proj,    LibraryCreated lib)         -> handleLibraryCreatedResponse lib proj
+        (Ready _,              _)                          -> \st -> (return (), AfterInitialize)
+        (_,                    DuplicateConnectionRefused) -> \st -> (displayRejectedMessage, AfterInitialize)
+        _                                                  -> \st -> (return (), st)
+
+handleOpening :: State -> Action
+handleOpening state = (BatchCmd.listProjects, state)
 
 handleProjectsListResponse :: [Project] -> String -> State -> Action
 handleProjectsListResponse []       name state = (createProject name, state)
