@@ -20,6 +20,7 @@ data Action = AddSingleNode Node
             | AddNodes      [Node]
             | AddEdges      [(PortRef, PortRef)]
             | DisplayEdges
+            | RequestRun
             | PrepareValues [Node]
             | GraphFetched  [Node] [(PortRef, PortRef)]
             deriving (Show, Eq)
@@ -61,7 +62,9 @@ instance ActionStateUpdater Action where
 
     execSt (AddEdges edges) state = execSt (AddSingleEdge <$> edges) state
 
-    execSt (GraphFetched nodes edges) state = execSt [AddNodes nodes, AddEdges edges, DisplayEdges, PrepareValues nodes] state
+    execSt RequestRun state = ActionUI (PerformIO BatchCmd.runMain) state
+
+    execSt (GraphFetched nodes edges) state = execSt [AddNodes nodes, AddEdges edges, DisplayEdges, PrepareValues nodes, RequestRun] state
 
 instance ActionUIUpdater Reaction where
     updateUI (WithState (PerformIO action) _) = action

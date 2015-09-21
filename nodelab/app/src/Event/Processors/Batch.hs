@@ -16,6 +16,8 @@ processMessage :: WebMessage -> Batch.Event
 processMessage (WebMessage topic bytes) = rescueParseError topic $ case topic of
     "project.list.status"                                 -> ProjectsList <$> parseProjectsListResponse bytes
     "project.create.update"                               -> ProjectCreated <$> parseProjectCreateUpdate bytes
+    "project.open.update"                                 -> ProjectOpened <$> parseProjectOpenUpdate bytes
+    "project.open.error"                                  -> Just $ ProjectDoesNotExist
     "project.library.list.status"                         -> LibrariesList <$> parseLibrariesListResponse bytes
     "project.library.create.update"                       -> LibraryCreated <$> parseLibraryCreateResponse bytes
     "project.library.ast.function.add.update"             -> WorkspaceCreated <$> parseFunctionCreateResponse bytes

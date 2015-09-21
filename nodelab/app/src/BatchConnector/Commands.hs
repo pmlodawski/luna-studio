@@ -21,6 +21,8 @@ import           Object.Object
 
 import qualified Generated.Proto.ProjectManager.Project.List.Request                 as ListProjects
 import qualified Generated.Proto.ProjectManager.Project.Create.Request               as CreateProject
+import qualified Generated.Proto.ProjectManager.Project.Store.Request                as StoreProject
+import qualified Generated.Proto.ProjectManager.Project.Open.Request                 as OpenProject
 import qualified Generated.Proto.ProjectManager.Project.Library.List.Request         as ListLibraries
 import qualified Generated.Proto.ProjectManager.Project.Library.Create.Request       as CreateLibrary
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Get.Request      as GetAST
@@ -96,6 +98,18 @@ createFunction project library parent name = sendMessage msg where
                                (library ^. Library.id)
                                (project ^. Project.id)
                                uselessLegacyArgument
+
+openProject :: String -> IO ()
+openProject path = sendMessage msg where
+    msg  = WebMessage "project.open.request" $ messagePut body
+    body = OpenProject.Request (uFromString path)
+
+storeProject :: Project -> IO ()
+storeProject project = sendMessage msg where
+    msg  = WebMessage "project.store.request" $ messagePut body
+    body = StoreProject.Request (project ^. Project.id)
+                                (Seq.fromList $ (view Library.id) <$> project ^. libs)
+                                (Just $ uFromString $ project ^. Project.path)
 
 runMain :: IO ()
 runMain  = sendMessage msg where

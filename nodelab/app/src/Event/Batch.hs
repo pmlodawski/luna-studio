@@ -12,6 +12,8 @@ import Data.Int
 
 data Event = ProjectsList [Project]
            | ProjectCreated Project
+           | ProjectOpened Project
+           | ProjectDoesNotExist
            | LibrariesList [Library]
            | LibraryCreated Library
            | ASTElementExists

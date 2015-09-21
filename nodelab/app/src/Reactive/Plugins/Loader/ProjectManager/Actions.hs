@@ -30,7 +30,9 @@ reactToBatchEvent event state = handler state where
     handler = case (state, event) of
         (AwaitingProject name, ConnectionOpened)           -> handleOpening
         (AwaitingProject name, ProjectsList projects)      -> handleProjectsListResponse projects name
-        (AwaitingProject name, ProjectCreated project)     -> handleProjectCreatedResponse project
+        (AwaitingProject name, ProjectCreated project)     -> handleProject project
+        (AwaitingProject name, ProjectOpened project)      -> handleProject project
+        (AwaitingProject name, ProjectDoesNotExist)        -> \st -> (createProject name, st)
         (AwaitingLibs proj,    LibrariesList libs)         -> handleLibrariesListResponse libs proj
         (AwaitingLibs proj,    LibraryCreated lib)         -> handleLibraryCreatedResponse lib proj
         (Ready _,              _)                          -> \st -> (return (), AfterInitialize)
@@ -41,16 +43,19 @@ handleOpening :: State -> Action
 handleOpening state = (BatchCmd.listProjects, state)
 
 handleProjectsListResponse :: [Project] -> String -> State -> Action
-handleProjectsListResponse []       name state = (createProject name, state)
+handleProjectsListResponse []       name state = openProject name
 handleProjectsListResponse projects name state = case findProjectByName projects name of
-    Nothing        -> (createProject name, state)
+    Nothing        -> openProject name
     (Just project) -> startLibsFlow project
+
+openProject :: String -> Action
+openProject name = (BatchCmd.openProject $ "projects/" ++ name, AwaitingProject name)
 
 findProjectByName :: [Project] -> String -> Maybe Project
 findProjectByName projects name = find (\project -> Just name == project ^. Project.name) projects
 
-handleProjectCreatedResponse :: Project -> State -> Action
-handleProjectCreatedResponse project _ = startLibsFlow project
+handleProject :: Project -> State -> Action
+handleProject project _ = startLibsFlow project
 
 handleLibrariesListResponse :: [Library] -> Project -> State -> Action
 handleLibrariesListResponse []        proj state = (createFirstLibrary proj, state)
@@ -66,4 +71,4 @@ createProject :: String -> IO ()
 createProject name = BatchCmd.createProject name $ "projects/" ++ name
 
 createFirstLibrary :: Project -> IO ()
-createFirstLibrary project = BatchCmd.createLibrary "Main" "some/path" project
+createFirstLibrary project = BatchCmd.createLibrary "Main" (project ^. Project.path ++ "/Main") project

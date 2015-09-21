@@ -47,6 +47,7 @@ import qualified Control.Monad.State                             as MState
 import           Object.Widget.Scene (sceneInterfaceId, sceneGraphId)
 
 import qualified BatchConnector.Commands as BatchCmd
+import qualified Batch.Workspace         as Workspace
 
 data Action = InitApp
             | ApplyUpdates  { _actions  :: WidgetUIUpdate }
@@ -93,7 +94,7 @@ instance ActionStateUpdater Action where
             -- registerWidgets :: UIRegistry.UIState (Button.Button, Slider.Slider Int, Slider.Slider Double, Slider.Slider Double, Slider.Slider Double, Toggle.Toggle, Chart.Chart, Number.Number Int) Global.State
             registerWidgets = do
                 button  <- UIRegistry.registerM sceneGraphId
-                           (Button "Run!" Button.Normal (Vector2 100 100) (Vector2 100 50))
+                           (Button "Save" Button.Normal (Vector2 100 100) (Vector2 100 50))
                            def
                 UIRegistry.uiAction $ addWidget button
 
@@ -130,8 +131,8 @@ instance ActionStateUpdater Action where
         widget                = UIRegistry.lookup bid oldRegistry
         newRegistry           = oldRegistry -- tu mozna np. zrobis UIRegistry.update, etc.
         newState              = oldState & Global.uiRegistry .~ newRegistry
-        wasHelloButtonClicked = bid == oldState ^. Global.sandbox . Sandbox.button
-        newAction             = if wasHelloButtonClicked then ApplyUpdates $ (putStrLn "HelloWorld") >> BatchCmd.runMain
+        wasSaveButtonClicked  = bid == oldState ^. Global.sandbox . Sandbox.button
+        newAction             = if wasSaveButtonClicked then ApplyUpdates $ BatchCmd.storeProject (oldState ^. Global.workspace . Workspace.project)
                                                             -- tu tablica Maybe (IO ()), np aktualizacja stanu widgeta
                                                          else ApplyUpdates (return ())
 

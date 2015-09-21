@@ -19,6 +19,7 @@ import           BatchConnector.Conversion  (decode)
 import qualified Generated.Proto.Dep.Graphview.GraphView                      as GraphView
 import qualified Generated.Proto.ProjectManager.Project.List.Status           as ProjectsList
 import qualified Generated.Proto.ProjectManager.Project.Create.Update         as ProjectCreated
+import qualified Generated.Proto.ProjectManager.Project.Open.Update           as ProjectOpened
 import qualified Generated.Proto.ProjectManager.Project.Library.List.Status   as LibsList
 import qualified Generated.Proto.ProjectManager.Project.Library.Create.Update as LibCreated
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Add.Update             as FunctionCreated
@@ -44,6 +45,10 @@ parseProjectsListResponse bytes = (parseMessage bytes) >>= pluckProjects where
 parseProjectCreateUpdate :: ByteString -> Maybe Project
 parseProjectCreateUpdate bytes = (parseMessage bytes) >>= getProject where
     getProject = decode . ProjectCreated.project
+
+parseProjectOpenUpdate :: ByteString -> Maybe Project
+parseProjectOpenUpdate bytes = (parseMessage bytes) >>= getProject where
+    getProject = decode . ProjectOpened.project
 
 parseLibrariesListResponse :: ByteString -> Maybe [Library]
 parseLibrariesListResponse bytes = (parseMessage bytes) >>= getLibs where
