@@ -36,7 +36,7 @@ reactToBatchEvent event state = handler state where
         (AwaitingLibs proj,    LibrariesList libs)         -> handleLibrariesListResponse libs proj
         (AwaitingLibs proj,    LibraryCreated lib)         -> handleLibraryCreatedResponse lib proj
         (Ready _,              _)                          -> \st -> (return (), AfterInitialize)
-        (_,                    DuplicateConnectionRefused) -> \st -> (displayRejectedMessage, AfterInitialize)
+        (_,                    ConnectionDropped)          -> \st -> (displayRejectedMessage, AfterInitialize)
         _                                                  -> \st -> (return (), st)
 
 handleOpening :: State -> Action

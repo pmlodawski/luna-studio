@@ -33,8 +33,8 @@ processMessage (WebMessage topic bytes) = rescueParseError topic $ case topic of
     "interpreter.getprojectid.status"                     -> InterpreterGotProjectId <$> parseProjectIdStatus bytes
     "interpreter.serializationmode.insert.update"         -> Just $ SerializationModeInserted
     _                                                     -> Just $ UnknownEvent topic
-processMessage (ControlMessage ConnectionAlreadyExists) = DuplicateConnectionRefused
-processMessage (ControlMessage Welcome)                 = ConnectionOpened
+processMessage (ControlMessage ConnectionTakeover) = ConnectionDropped
+processMessage (ControlMessage Welcome)            = ConnectionOpened
 
 rescueParseError :: String -> Maybe Batch.Event -> Batch.Event
 rescueParseError _     (Just ev) = ev

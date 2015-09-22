@@ -235,6 +235,8 @@ function removeConnection(id) {
 }
 
 var displayRejectedMessage = function () {
+  $("canvas").remove();
+  $("#htmlcanvas-pan").remove();
   $("#spinner").remove();
   $("#rejected").show();
 }

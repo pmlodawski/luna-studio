@@ -9,6 +9,7 @@ import Reactive.Handlers
 import           Data.Dynamic
 import           Data.ByteString.Lazy    (ByteString)
 import           JS.WebSocket
+import           JS.Bindings             (displayRejectedMessage)
 import qualified Event.Event             as Event
 import           Event.Batch             as Batch
 import           Event.Processors.Batch  (process)
@@ -42,6 +43,7 @@ reactToBatchEvent project event state = case (state, event) of
     (AwaitingWorkspace,          ASTElementDoesNotExist)     -> (createMain project, AwaitingWorkspace)
     (InterpreterSetup workspace, InterpreterGotProjectId id) -> handleProjectIdResponse workspace id
     (Ready _,                    _)                          -> (return (), AfterInitialize)
+    (state,                      ConnectionDropped)          -> (displayRejectedMessage, AfterInitialize)
     (state,                      _)                          -> (return (), state)
 
 handleWorkspaceCreation :: Project -> Breadcrumbs -> Action

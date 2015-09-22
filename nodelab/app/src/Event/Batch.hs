@@ -29,7 +29,7 @@ data Event = ProjectsList [Project]
            | RunFinished
            | UnknownEvent String
            | ParseError String
-           | DuplicateConnectionRefused
+           | ConnectionDropped
            | ConnectionOpened
            deriving (Eq, Show)
 

@@ -11,7 +11,7 @@ import           Data.Text.Lazy.Encoding     (decodeUtf8)
 import           Utils.PreludePlus           hiding (Text)
 import           JS.WebSocket
 
-data ControlCode = ConnectionAlreadyExists
+data ControlCode = ConnectionTakeover
                  | Welcome
                  deriving (Show, Generic)
 
