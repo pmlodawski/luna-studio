@@ -3,6 +3,7 @@
 module Utils.MockHelper where
 
 import           Utils.PreludePlus
+import           Object.Port
 
 import qualified Data.Text.Lazy as Text
 import           Data.Text.Lazy (Text)
@@ -46,3 +47,29 @@ knownFunctions  = [ ("+",        (2, 1))
                   , ("floor",    (1, 1))
                   , ("celing",   (1, 1))
                   ]
+
+
+data FunctionDef = FunDef { _name    :: Text
+                          , _inputs  :: [ValueType]
+                          , _outputs :: [ValueType]
+                          } deriving (Eq, Show)
+
+makeLenses ''FunctionDef
+
+knownFunctions2 :: [FunctionDef]
+knownFunctions2 = [ FunDef "+"        [Float,  Float]  [Float]
+                  , FunDef "-"        [Float,  Float]  [Float]
+                  , FunDef "+"        [Float,  Float]  [Float]
+                  , FunDef "/"        [Float,  Float]  [Float]
+                  , FunDef ">"        [Float,  Float]  [Bool]
+                  , FunDef "=="       [Float,  Float]  [Bool]
+                  , FunDef "<="       [Float,  Float]  [Bool]
+                  , FunDef ">="       [Float,  Float]  [Bool]
+                  , FunDef "++"       [String, String] [String]
+                  , FunDef "toString" [Float] [String]
+                  , FunDef "truncate" [Float] [Float]
+                  , FunDef "round"    [Float] [Float]
+                  , FunDef "floor"    [Float] [Float]
+                  , FunDef "celing"   [Float] [Float]
+                  ]
+

@@ -9,7 +9,7 @@ import           JS.Camera
 import           Object.Object
 
 
-data ValueType = Int | Bool deriving (Eq, Show)
+data ValueType = Int | Float | Char | Bool | String deriving (Eq, Show)
 
 
 
@@ -20,7 +20,7 @@ data Location = Default
               deriving (Eq, Show)
 
 data Port = Port { _portId     :: PortId
-                 , _tpe        :: ValueType
+                 , _portType   :: ValueType
                  , _angle      :: Angle
                  } deriving (Eq, Show)
 
