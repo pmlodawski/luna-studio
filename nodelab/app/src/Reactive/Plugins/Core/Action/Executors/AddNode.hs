@@ -8,23 +8,26 @@ import           Object.Object
 import           Object.Node
 import           Object.Port
 import           Object.Widget
-import           Object.UITypes                                (WidgetId)
-import qualified Object.Widget.Node                            as WNode
-import qualified Object.Widget.Port                            as WPort
+import           Object.UITypes       (WidgetId)
+import qualified Object.Widget.Node   as WNode
+import qualified Object.Widget.Port   as WPort
+import           Object.Widget.Slider (Slider(..))
+
 import           Reactive.Plugins.Core.Action
-import qualified Reactive.Plugins.Core.Action.State.Global     as Global
-import           Reactive.Plugins.Core.Action.State.Global     (State)
-import qualified Reactive.Plugins.Core.Action.State.Graph      as Graph
-import           Reactive.Plugins.Core.Action.State.UIRegistry (sceneGraphId)
-import qualified Reactive.Plugins.Core.Action.State.UIRegistry as UIRegistry
-import           Reactive.Plugins.Core.Action.State.UIRegistry (UIState)
-import qualified ThreeJS.Registry                              as JSRegistry
-import qualified Control.Monad.State                           as MState
-import           Object.Widget.Slider                          (Slider(..))
-import qualified JS.NodeGraph                                  as UI
-import qualified ThreeJS.Widget.Node                           as UINode
-import qualified ThreeJS.Widget.Slider                         as UISlider
-import           ThreeJS.Types                                 (add)
+import qualified Reactive.Plugins.Core.Action.State.Global        as Global
+import           Reactive.Plugins.Core.Action.State.Global        (State)
+import qualified Reactive.Plugins.Core.Action.State.Graph         as Graph
+import           Reactive.Plugins.Core.Action.State.UIRegistry    (sceneGraphId)
+import qualified Reactive.Plugins.Core.Action.State.UIRegistry    as UIRegistry
+import           Reactive.Plugins.Core.Action.State.UIRegistry    (UIState)
+import           Reactive.Plugins.Core.Action.Executors.EnterNode (enterNode)
+
+import qualified Control.Monad.State   as MState
+import qualified JS.NodeGraph          as UI
+import qualified ThreeJS.Registry      as JSRegistry
+import qualified ThreeJS.Widget.Node   as UINode
+import qualified ThreeJS.Widget.Slider as UISlider
+import           ThreeJS.Types         (add)
 
 addNode :: Node -> Global.State -> (State, IO ())
 addNode node oldState = (newState, actions) where
@@ -34,9 +37,12 @@ addNode node oldState = (newState, actions) where
     newGraph                = Graph.addNode node (oldState ^. Global.graph)
     (newRegistry, actions)  = registerNode  node (oldState ^. Global.uiRegistry)
 
-registerNode :: Node -> UIRegistry.State a -> (UIRegistry.State a, IO ())
+registerNode :: Node -> UIRegistry.State State -> (UIRegistry.State State, IO ())
 registerNode node oldRegistry = flip MState.execState (oldRegistry, return ()) $ do
-    file <- UIRegistry.registerM sceneGraphId (WNode.Node (node ^. nodeId) [] []) def
+    file <- UIRegistry.registerM sceneGraphId
+                                 (WNode.Node (node ^. nodeId) [] [])
+                                 (nodeHandlers node)
+
     UIRegistry.uiAction $ createNodeOnUI node file
 
     registerPorts (file ^. objectId) InputPort node
@@ -52,6 +58,9 @@ registerNode node oldRegistry = flip MState.execState (oldRegistry, return ()) $
     sliderIds <- sequence $ addSliderToNode rootId <$> sliders
     UIRegistry.updateM rootId (nodeWidget & WNode.controls .~ sliderIds)
     return file
+
+nodeHandlers :: Node -> UIHandlers State
+nodeHandlers node = def & dblClick .~ [enterNode node]
 
 addSliderToNode :: WidgetId -> Slider Double -> UIState WidgetId b
 addSliderToNode nodeId slider = do

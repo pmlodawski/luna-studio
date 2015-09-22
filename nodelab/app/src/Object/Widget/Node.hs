@@ -23,10 +23,14 @@ instance IsDisplayObject Node where
     objectPosition   = undefined
     objectSize       = undefined
 
+instance Focusable Node where
+    mayFocus LeftButton _ _ _ = True
+    mayFocus _          _ _ _ = False
 
-instance DblClickable Node where
-    onDblClick pos file model = (action, toCtxDynamic model) where
-        action    = do
-            node <- getNode (model ^. nodeId)
-            toggleExpandState node
-            putStrLn $ "Clicked node: " <> show (model ^. nodeId)
+instance HandlesKeyPressed Node where
+    onKeyPressed char file model = (action, toCtxDynamic model) where
+        action = case char of
+            '\r' -> do
+                node <- getNode (model ^. nodeId)
+                toggleExpandState node
+            _    -> return ()
