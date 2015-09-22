@@ -28,7 +28,6 @@ import qualified Reactive.Plugins.Core.Action.State.Global         as Global
 
 data DragType = StartDrag
               | Moving
-              | Dragging
               | StopDrag
               deriving (Eq, Show)
 
@@ -66,44 +65,28 @@ toAction _ _  _         = Nothing
 
 
 instance ActionStateUpdater Action where
-    execSt newActionCandidate oldState = case newAction of
-        Just action -> ActionUI newAction newState
-        Nothing     -> ActionUI  NoAction newState
-        where
-        oldDrag                          = oldState ^. Global.multiSelection . history
-        oldGraph                         = oldState ^. Global.graph
-        oldNodes                         = Graph.getNodes oldGraph
-        newGraph                         = Graph.selectNodes newNodeIds oldGraph
-        oldSelection                     = oldState ^. Global.selection . Selection.nodeIds
-        newState                         = oldState & Global.iteration                     +~ 1
-                                                    & Global.multiSelection . history      .~ newDrag
-                                                    & Global.selection . Selection.nodeIds .~ newNodeIds
-                                                    & Global.graph                         .~ newGraph
-        newAction                        = case newActionCandidate of
-            DragSelect Moving pt        -> case oldDrag of
-                Nothing                 -> Nothing
-                _                       -> Just $ DragSelect Dragging pt
-            _                           -> Just newActionCandidate
-        newNodeIds                       = case newActionCandidate of
-            DragSelect tpe point        -> case tpe of
-                Moving                  -> case oldDrag of
-                    Just oldDragState   -> getNodeIdsIn startPos point (Global.toCamera oldState) oldNodes
-                        where startPos   = oldDragState ^. dragStartPos
-                    Nothing             -> oldSelection
-                _                       -> oldSelection
-        newDrag                          = case newActionCandidate of
-            DragSelect tpe point        -> case tpe of
-                StartDrag               -> Just $ DragHistory point point
-                Moving                  -> case oldDrag of
-                    Just oldDragState   -> Just $ DragHistory startPos point
-                        where startPos   = oldDragState ^. dragStartPos
-                    Nothing             -> Nothing
-                StopDrag                -> Nothing
+    execSt action@(DragSelect StartDrag coord) state = ActionUI action newState where
+        newState = state & Global.multiSelection . history ?~ (DragHistory coord coord)
 
+    execSt action@(DragSelect Moving coord) state = ActionUI newAction newState where
+        dragHistory    = state ^. Global.multiSelection . history
+        nodes          = state ^. Global.graph . Graph.nodes
+        selection      = state ^. Global.selection . Selection.nodeIds
+        newAction      = action <$ dragHistory
+        newState       = state & Global.multiSelection . history           .~ newDragHistory
+                               & Global.selection      . Selection.nodeIds .~ newSelection
+                               & Global.graph %~ (Graph.selectNodes newSelection)
+        newDragHistory = (dragCurrentPos .~ coord) <$> dragHistory
+        newSelection   = case newDragHistory of
+            Just (DragHistory start current) -> getNodeIdsIn start current (Global.toCamera state) nodes
+            _                                -> selection
+
+    execSt action@(DragSelect StopDrag coord) state = ActionUI action newState where
+        newState = state & Global.multiSelection . history .~ Nothing
 
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
-        DragSelect Dragging _  -> do
+        DragSelect Moving   _  -> do
                                   UI.displaySelectionBox startSelectionBox endSelectionBox
                                   UI.unselectNodes unselectedNodeIds
                                   UI.selectNodes     selectedNodeIds
@@ -111,7 +94,7 @@ instance ActionUIUpdater Action where
         DragSelect StopDrag _  -> UI.hideSelectionBox
         _                      -> return ()
         where selectedNodeIds   = state ^. Global.selection . Selection.nodeIds
-              nodeList          = Graph.getNodes $ state ^. Global.graph
+              nodeList          = state ^. Global.graph . Graph.nodes
               unselectedNodeIds = filter (\nodeId -> not $ nodeId `elem` selectedNodeIds) $ (^. nodeId) <$> nodeList
               topNodeId         = selectedNodeIds ^? ix 0
               dragState         = fromJust (state ^. Global.multiSelection . history)

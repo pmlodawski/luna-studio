@@ -9,7 +9,7 @@ import qualified Event.Batch as Batch
 
 import           Reactive.Plugins.Core.Action
 import qualified Reactive.Plugins.Core.Action.Executors.Graph   as Executor
-import           Reactive.Plugins.Core.Action.State.Graph
+import           Reactive.Plugins.Core.Action.State.Graph       as Graph
 import qualified Reactive.Plugins.Core.Action.State.Global      as Global
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry  as UIRegistry
 import qualified Reactive.Plugins.Core.Action.Executors.AddNode as AddNode
@@ -36,7 +36,7 @@ instance PrettyPrinter Reaction where
     display _ = "GraphFetcherReaction"
 
 toAction :: Event Node -> Global.State -> Maybe Action
-toAction (Batch (Batch.GraphViewFetched nodes edges)) state = case getNodes $ state ^. Global.graph of
+toAction (Batch (Batch.GraphViewFetched nodes edges)) state = case state ^. Global.graph . Graph.nodes of
     [] -> Just $ GraphFetched nodes edges
     _  -> Nothing
 toAction _ _ = Nothing

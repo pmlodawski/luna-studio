@@ -38,7 +38,7 @@ getNodesUnderCursor :: State -> NodeCollection
 -- --
 getNodesUnderCursor state = maybeToList node where
     registry = state ^. uiRegistry
-    nodes    = Graph.getNodes $ state ^. graph
+    nodes    = state ^. graph . Graph.nodes
     node     = do
         widgetId    <- registry ^. UIRegistry.widgetOver
         maybeWidget <- UIRegistry.lookup widgetId registry
@@ -54,9 +54,6 @@ getPortRefUnderCursor state = do
     maybeWidget <- UIRegistry.lookup widgetId registry
     widget      <- (fromCtxDynamic (maybeWidget ^. widget)) :: Maybe WPort.Port
     return $ widget ^. WPort.portRef
-
-    -- getPortRef (state ^. mousePos) (toCamera state) (Graph.getNodes $ state ^. graph)
-
 
 underCursor :: State -> UnderCursor
 underCursor state = UnderCursor (getNodesUnderCursor state) Nothing -- (getPortRefUnderCursor state)

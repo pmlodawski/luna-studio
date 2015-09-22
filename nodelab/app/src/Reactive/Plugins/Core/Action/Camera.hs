@@ -150,7 +150,7 @@ instance ActionStateUpdater Action where
                 StopDrag              -> Nothing
             _                         -> Nothing
         (autoZoomPan, autoZoomFactor)  = (autoZoomPan, autoZoomFactor) where
-            nodes          = Graph.getNodes $ oldState ^. Global.graph
+            nodes          = oldState ^. Global.graph . Graph.nodes
             screenSize     = fromIntegral <$> oldState ^. Global.screenSize
             minXY          = -padding + (Vector2 (minimum $ (^. nodePos . x) <$> nodes) (minimum $ (^. nodePos . y) <$> nodes))
             maxXY          =  padding + (Vector2 (maximum $ (^. nodePos . x) <$> nodes) (maximum $ (^. nodePos . y) <$> nodes))

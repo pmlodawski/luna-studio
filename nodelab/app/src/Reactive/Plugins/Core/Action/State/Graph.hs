@@ -71,6 +71,9 @@ genConnectionId state = genId $ state ^. connectionsMap
 getNode :: State -> NodeId -> Node
 getNode state nodeId = IntMap.findWithDefault (error $ "Node " <> show nodeId <> " not found") nodeId $ state ^. nodesMap
 
+nodes :: Getter State NodeCollection
+nodes = to getNodes
+
 getNodes :: State -> NodeCollection
 getNodes state = IntMap.elems $ state ^. nodesMap
 
