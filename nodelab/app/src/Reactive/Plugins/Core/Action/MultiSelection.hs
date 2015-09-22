@@ -1,3 +1,5 @@
+{-# LANGUAGE ScopedTypeVariables #-}
+
 module Reactive.Plugins.Core.Action.MultiSelection where
 
 import           Utils.PreludePlus
@@ -10,6 +12,9 @@ import qualified JS.Camera      as Camera
 import           Object.Object
 import           Object.Node
 import           Object.UITypes
+import           Object.Widget
+import qualified Object.Widget.Node as WNode
+import qualified Object.Widget      as Widget
 
 import           Event.Keyboard hiding      (Event)
 import qualified Event.Keyboard as Keyboard
@@ -24,6 +29,7 @@ import           Reactive.Plugins.Core.Action.State.UnderCursor
 import qualified Reactive.Plugins.Core.Action.State.Graph          as Graph
 import qualified Reactive.Plugins.Core.Action.State.Selection      as Selection
 import qualified Reactive.Plugins.Core.Action.State.Camera         as Camera
+import qualified Reactive.Plugins.Core.Action.State.UIRegistry     as UIRegistry
 import qualified Reactive.Plugins.Core.Action.State.Global         as Global
 
 data DragType = StartDrag
@@ -69,17 +75,19 @@ instance ActionStateUpdater Action where
         newState = state & Global.multiSelection . history ?~ (DragHistory coord coord)
 
     execSt action@(DragSelect Moving coord) state = ActionUI newAction newState where
-        dragHistory    = state ^. Global.multiSelection . history
-        nodes          = state ^. Global.graph . Graph.nodes
-        selection      = state ^. Global.selection . Selection.nodeIds
-        newAction      = action <$ dragHistory
-        newState       = state & Global.multiSelection . history           .~ newDragHistory
-                               & Global.selection      . Selection.nodeIds .~ newSelection
-                               & Global.graph %~ (Graph.selectNodes newSelection)
-        newDragHistory = (dragCurrentPos .~ coord) <$> dragHistory
-        newSelection   = case newDragHistory of
+        dragHistory     = state ^. Global.multiSelection . history
+        nodes           = state ^. Global.graph . Graph.nodes
+        selection       = state ^. Global.selection . Selection.nodeIds
+        newAction       = action <$ dragHistory
+        newState        = state & Global.multiSelection . history                  .~ newDragHistory
+                                & Global.selection      . Selection.nodeIds        .~ newSelection
+                                & Global.uiRegistry     . UIRegistry.focusedWidget .~ focusedWidgetId
+                                & Global.graph %~ (Graph.selectNodes newSelection)
+        newDragHistory  = (dragCurrentPos .~ coord) <$> dragHistory
+        newSelection    = case newDragHistory of
             Just (DragHistory start current) -> getNodeIdsIn start current (Global.toCamera state) nodes
             _                                -> selection
+        focusedWidgetId = (newSelection ^? ix 0) >>= (nodeIdToWidgetId $ state ^. Global.uiRegistry)
 
     execSt action@(DragSelect StopDrag coord) state = ActionUI action newState where
         newState = state & Global.multiSelection . history .~ Nothing
@@ -102,3 +110,9 @@ instance ActionUIUpdater Action where
               currWorkspace     = Camera.screenToWorkspace camera
               startSelectionBox = currWorkspace $ dragState ^. dragStartPos
               endSelectionBox   = currWorkspace $ dragState ^. dragCurrentPos
+
+nodeIdToWidgetId :: forall a. UIRegistry.State a -> NodeId -> Maybe WidgetId
+nodeIdToWidgetId state nodeId = (view Widget.objectId) <$> matching where
+    files   :: [WidgetFile a WNode.Node]
+    files    = UIRegistry.lookupAll state
+    matching = find (\file -> (file ^. Widget.widget . WNode.nodeId) == nodeId) files
