@@ -6,29 +6,30 @@ import           Data.Dynamic
 import           Reactive.Banana
 import           Reactive.Banana.Frameworks
 import           Reactive.Handlers
-import qualified JS.NodeGraph                                as UI
+import qualified JS.NodeGraph                                       as UI
 import           Object.Object
 import           Object.Dynamic             ( unpackDynamic )
 import           Object.Node                ( Node(..) )
-import qualified Object.Node                                 as Node
-import qualified Event.Event                                 as Event
-import qualified Event.Processors.Batch                      as BatchEventProcessor
+import qualified Object.Node                                        as Node
+import qualified Event.Event                                        as Event
+import qualified Event.Processors.Batch                             as BatchEventProcessor
 
 import           Reactive.Plugins.Core.Action
-import qualified Reactive.Plugins.Core.Action.General              as General
-import qualified Reactive.Plugins.Core.Action.Camera               as Camera
-import qualified Reactive.Plugins.Core.Action.AddRemove            as AddRemove
-import qualified Reactive.Plugins.Core.Action.Selection            as Selection
-import qualified Reactive.Plugins.Core.Action.MultiSelection       as MultiSelection
-import qualified Reactive.Plugins.Core.Action.Drag                 as Drag
-import qualified Reactive.Plugins.Core.Action.Connect              as Connect
-import qualified Reactive.Plugins.Core.Action.NodeSearcher         as NodeSearcher
-import qualified Reactive.Plugins.Core.Action.Breadcrumb           as Breadcrumb
-import qualified Reactive.Plugins.Core.Action.Widget               as Widget
-import qualified Reactive.Plugins.Core.Action.Sandbox              as Sandbox
-import qualified Reactive.Plugins.Core.Action.Backend.Backend      as Backend
-import qualified Reactive.Plugins.Core.Action.Backend.Runner       as Runner
-import qualified Reactive.Plugins.Core.Action.Backend.GraphFetcher as GraphFetcher
+import qualified Reactive.Plugins.Core.Action.General               as General
+import qualified Reactive.Plugins.Core.Action.Camera                as Camera
+import qualified Reactive.Plugins.Core.Action.AddRemove             as AddRemove
+import qualified Reactive.Plugins.Core.Action.Selection             as Selection
+import qualified Reactive.Plugins.Core.Action.MultiSelection        as MultiSelection
+import qualified Reactive.Plugins.Core.Action.Drag                  as Drag
+import qualified Reactive.Plugins.Core.Action.Connect               as Connect
+import qualified Reactive.Plugins.Core.Action.NodeSearcher          as NodeSearcher
+import qualified Reactive.Plugins.Core.Action.Breadcrumb            as Breadcrumb
+import qualified Reactive.Plugins.Core.Action.Widget                as Widget
+import qualified Reactive.Plugins.Core.Action.Sandbox               as Sandbox
+import qualified Reactive.Plugins.Core.Action.Backend.Backend       as Backend
+import qualified Reactive.Plugins.Core.Action.Backend.Runner        as Runner
+import qualified Reactive.Plugins.Core.Action.Backend.GraphFetcher  as GraphFetcher
+import qualified Reactive.Plugins.Core.Action.ConnectionPen         as ConnectionPen
 import           Reactive.Plugins.Core.Executor
 
 import           Reactive.Plugins.Core.Action.State.Global
@@ -51,6 +52,7 @@ makeNetworkDescription conn logging workspace = do
     keyUpE         <- fromAddHandler keyUpHandler
     nodeSearcherE  <- fromAddHandler nodeSearcherHander
     webSocketE     <- fromAddHandler $ webSocketHandler conn
+    connectionPenE <- fromAddHandler connectionPenHandler
 
     let
         batchE                       :: Event t (Event.Event Dynamic)
@@ -68,6 +70,7 @@ makeNetworkDescription conn logging workspace = do
                                                , keyUpE
                                                , nodeSearcherE
                                                , batchE
+                                               , connectionPenE
                                                ]
         anyNodeE                     :: Event t (Event.Event Node)
         anyNodeE                      = unpackDynamic <$> anyE
@@ -93,6 +96,7 @@ makeNetworkDescription conn logging workspace = do
         backendActionB                = fmap ActionST $             Backend.toAction <$> anyNodeB
         runnerActionB                 = fmap ActionST $              Runner.toAction <$> anyNodeB
         graphFetcherActionB           = fmap ActionST $        GraphFetcher.toAction <$> anyNodeB <*> globalStateB
+        connectionPenActionB          = fmap ActionST $       ConnectionPen.toAction <$> anyNodeB <*> globalStateB
 
         allActionsPackB               = [ nodeGeneralActionB
                                         , widgetActionB
@@ -108,6 +112,7 @@ makeNetworkDescription conn logging workspace = do
                                         , backendActionB
                                         , runnerActionB
                                         , graphFetcherActionB
+                                        , connectionPenActionB
                                         ]
 
         (globalStateReactionB, allReactionsPackB) = execAll globalStateB allActionsPackB

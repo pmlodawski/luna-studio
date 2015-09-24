@@ -1,7 +1,7 @@
 module Reactive.Plugins.Core.Action.State.UIRegistry where
 
 
-import           Utils.PreludePlus hiding (children)
+import           Utils.PreludePlus hiding (children, lookup)
 import           Utils.Vector
 
 import           Object.Widget
@@ -169,3 +169,9 @@ lookupAll state = foldl process mempty objects where
         Just model -> (obj & widget .~ model):acc
         Nothing    -> acc
     objects = IntMap.elems $ state ^. widgets
+
+lookupTyped :: DisplayObjectClass a => WidgetId -> State b -> Maybe (WidgetFile b a)
+lookupTyped idx state = do
+    object  <- lookup idx state
+    model   <- fromCtxDynamic $ object ^. widget
+    return $ object & widget .~ model

@@ -20,6 +20,8 @@ import qualified Reactive.Plugins.Core.Action.State.Connect           as Connect
 import qualified Reactive.Plugins.Core.Action.State.NodeSearcher      as NodeSearcher
 import qualified Reactive.Plugins.Core.Action.State.Breadcrumb        as Breadcrumb
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry        as UIRegistry
+import qualified Reactive.Plugins.Core.Action.State.ConnectionPen     as ConnectionPen
+
 import qualified Reactive.Plugins.Core.Action.State.Sandbox           as Sandbox
 
 data State = State { _iteration      :: Integer
@@ -36,6 +38,7 @@ data State = State { _iteration      :: Integer
                    , _breadcrumb     :: Breadcrumb.State
                    , _uiRegistry     :: UIRegistry.State State
                    , _sandbox        :: Sandbox.State
+                   , _connectionPen  :: ConnectionPen.State
                    , _workspace      :: Workspace
                    } deriving (Eq, Show)
 
@@ -44,10 +47,10 @@ makeLenses ''State
 initialScreenSize = Vector2 400 200
 
 initialState :: Workspace -> State
-initialState workspace = State def initialScreenSize def def def def def def def def def def def def workspace
+initialState workspace = State def initialScreenSize def def def def def def def def def def def def def workspace
 
 instance PrettyPrinter State where
-    display (State iteration mousePos screenSize graph camera addRemove selection multiSelection drag connect nodeSearcher breadcrumb uiRegistry sandbox workspace)
+    display (State iteration mousePos screenSize graph camera addRemove selection multiSelection drag connect nodeSearcher breadcrumb uiRegistry sandbox pen workspace)
         = "gS(" <> display iteration
          <> " " <> display mousePos
          <> " " <> display screenSize
@@ -62,6 +65,7 @@ instance PrettyPrinter State where
          <> " " <> display breadcrumb
          <> " " <> display uiRegistry
          <> " " <> display sandbox
+         <> " " <> display pen
          <> " " <> display workspace
          <> ")"
 

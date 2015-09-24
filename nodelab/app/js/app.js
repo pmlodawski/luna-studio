@@ -1,15 +1,16 @@
 "use strict";
 
-var $$           = require('common'),
-    config       = require('config'),
-    features     = require('features'),
-    brunch       = require('brunch'),
-    raycaster    = require('raycaster'),
-    GraphNode    = require('node'),
-    NodeSearcher = require('node_searcher'),
-    Connection   = require('connection'),
-    SelectionBox = require('selection_box'),
-    websocket    = require('websocket');
+var $$             = require('common'),
+    config         = require('config'),
+    features       = require('features'),
+    brunch         = require('brunch'),
+    raycaster      = require('raycaster'),
+    GraphNode      = require('node'),
+    NodeSearcher   = require('node_searcher'),
+    Connection     = require('connection'),
+    SelectionBox   = require('selection_box'),
+    websocket      = require('websocket'),
+    connectionPen  = require('connection_pen');
 
 console.info("Current version " + brunch.env + " " + brunch.git_commit);
 console.info("Build at " + brunch.date);
@@ -62,7 +63,13 @@ function initializeGl() {
     $($$.renderer.domElement).addClass('renderer');
     $($$.rendererMap.domElement).addClass('renderer').css({zIndex: 100});
 
+
+    $$.canvas2D = $('<canvas id="canvas2d">')[0];
+    document.body.appendChild($$.canvas2D);
+    $$.canvas2DCtx = $$.canvas2D.getContext('2d');
+
     document.body.appendChild($$.renderer.domElement);
+
     // document.body.appendChild($$.rendererMap.domElement);
 
     initCommonWidgets();
@@ -112,6 +119,7 @@ function render() {
     raycaster.renderMap();
     shouldRender = false;
   }
+  connectionPen.fadeCanvas();
   requestAnimationFrame(render);
 }
 
@@ -123,6 +131,8 @@ function updateHtmCanvasPanPos(x, y, factor) {
 function updateScreenSize(width, height) {
   $$.renderer.setSize(width, height);
   $$.rendererMap.setSize(width, height);
+  $$.canvas2D.width  = width;
+  $$.canvas2D.height = height;
 }
 
 function updateCamera(factor, left, right, top, bottom) {

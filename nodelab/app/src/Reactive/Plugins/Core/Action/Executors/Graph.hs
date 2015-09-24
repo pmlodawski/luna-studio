@@ -67,7 +67,7 @@ getPortByRef portRef nodesMap = port where
     ports' = case portRef ^. refPortType of
         InputPort  -> node ^. ports . inputPorts
         OutputPort -> node ^. ports . outputPorts
-    port   = fromJust $ find (\p -> p ^. portId == portRef ^. refPortId) ports' -- FIXME unsafe
+    port   = fromMaybe (error $ "Port " <> show portRef <> "  not found") $ find (\p -> p ^. portId == portRef ^. refPortId) ports' -- FIXME unsafe
 
 getPortAngle :: PortRef -> NodesMap -> Double
 getPortAngle portRef nodesMap = getPortByRef portRef nodesMap ^. angle

@@ -18,6 +18,28 @@ function getMapPixelAt(x, y) {
   return buf;
 }
 
+var cachedMap = null;
+var cachedWidth = 0;
+var cachedHeight = 0;
+
+function cacheMap() {
+  var width  = $$.rendererMap.domElement.width,
+      height = $$.rendererMap.domElement.height;
+  cachedWidth  = width;
+  cachedHeight = height;
+  cachedMap = new Uint8Array(4 * width * height);
+  $$.rendererMapCtx.readPixels(0, 0, width, height, $$.rendererMapCtx.RGBA, $$.rendererMapCtx.UNSIGNED_BYTE, cachedMap);
+}
+
+function getMapPixelAtCached(x, y) {
+  var offset = 4 * (cachedWidth * (cachedHeight - y) + x);
+  return [ cachedMap[offset + 0]
+         , cachedMap[offset + 1]
+         , cachedMap[offset + 2]
+         , cachedMap[offset + 3]
+         ];
+}
+
 function getTopParent(w) {
   var p = w;
   while (p !== undefined) {
@@ -49,7 +71,9 @@ function widgetMatrix(id) {
 
 module.exports = {
   renderMap:     renderMap,
+  cacheMap: cacheMap,
   getMapPixelAt: getMapPixelAt,
+  getMapPixelAtCached: getMapPixelAtCached,
   widgetMatrix:  widgetMatrix,
   isWorkspace:   isWorkspace
 };

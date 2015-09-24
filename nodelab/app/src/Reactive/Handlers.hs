@@ -15,6 +15,7 @@ import qualified GHCJS.DOM.MouseEvent    as MouseEvent
 import qualified GHCJS.DOM.KeyboardEvent as KeyboardEvent
 import qualified GHCJS.DOM.UIEvent       as UIEvent
 import qualified JS.WebSocket            as WebSocket
+import qualified JS.ConnectionPen        as ConnectionPen
 
 import           Reactive.Banana.Frameworks ( AddHandler(..), liftIO )
 
@@ -29,6 +30,7 @@ import           Object.UITypes      as Mouse
 import qualified Event.Window        as Window
 import qualified Event.NodeSearcher  as NodeSearcher
 import qualified Event.Connection    as Connection
+import qualified Event.ConnectionPen as ConnectionPen
 import qualified Object.Node         ( Node )
 import           Event.Event
 import           GHCJS.Marshal
@@ -116,3 +118,10 @@ webSocketHandler conn = AddHandler $ \h -> do
         payload <- WebSocket.getData event
         let frame = Connection.deserialize $ fromJSString payload
         mapM_ (h . Connection . Connection.Message) $ frame ^. Connection.messages
+
+connectionPenHandler :: AddHandler (Event Dynamic)
+connectionPenHandler  = AddHandler $ \h -> do
+    ConnectionPen.registerCallback $ \widgets -> do
+        arr       <- return $ JSArray.toList (ConnectionPen.toJSArray widgets)
+        widgetIds <- mapM fromJSRefUnchecked arr :: IO [WidgetId]
+        liftIO $ h $ ConnectionPen $ ConnectionPen.Segment widgetIds

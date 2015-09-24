@@ -1,0 +1,123 @@
+module Reactive.Plugins.Core.Action.ConnectionPen where
+
+
+import           Utils.PreludePlus
+import           Utils.Vector
+import           Utils.Angle
+
+import qualified JS.Bindings        as UI
+import qualified JS.ConnectionPen   as UI
+
+import           Object.Object
+import           Object.Node
+import qualified Object.Widget.Node as UINode
+import qualified Object.Widget.Connection as UIConnection
+import           Object.UITypes
+import           Object.Widget
+
+import           Event.Keyboard hiding      ( Event )
+import qualified Event.Keyboard as Keyboard
+import           Event.Mouse    hiding      ( Event, WithObjects, widget )
+import qualified Event.Mouse    as Mouse
+import           Event.Event
+import qualified Event.ConnectionPen as ConnectionPen
+import           Event.WithObjects
+
+import           Reactive.Plugins.Core.Action
+import           Reactive.Plugins.Core.Action.State.Graph
+import qualified Reactive.Plugins.Core.Action.State.Global        as Global
+import qualified Reactive.Plugins.Core.Action.State.UIRegistry    as UIRegistry
+import qualified Reactive.Plugins.Core.Action.Executors.AddNode   as AddNode
+import qualified Reactive.Plugins.Core.Action.State.ConnectionPen as ConnectionPen
+
+import Debug.Trace
+
+
+data Action = BeginDrawing  (Vector2 Int) ConnectionPen.DrawingType
+            | NextPoint     (Vector2 Int)
+            | NextPointData [NodeId] [ConnectionId]
+            | FinishDrawing (Vector2 Int)
+            deriving (Show, Eq)
+
+instance PrettyPrinter Action where
+    display v = "gCP(" <> show v <> ")"
+
+data Reaction = PerformIO (IO ())
+              | NoOp
+
+instance PrettyPrinter Reaction where
+    display _ = "ConnectionPenReaction"
+
+toAction :: Event Node -> Global.State -> Maybe Action
+toAction (Mouse (Mouse.Event tpe pos LeftButton keyMods _)) state = case tpe of
+    Mouse.Pressed  -> case keyMods of
+        (KeyMods False True False False)  -> Just (BeginDrawing pos ConnectionPen.Connecting)
+        (KeyMods True  True False False)  -> Just (BeginDrawing pos ConnectionPen.Disconnecting)
+        _                                 -> Nothing
+    Mouse.Released -> if isDrawing then Just (FinishDrawing pos) else Nothing
+    Mouse.Moved    -> if isDrawing then Just (NextPoint     pos) else Nothing
+    _              -> Nothing
+    where isDrawing = isJust $ state ^. Global.connectionPen . ConnectionPen.drawing
+toAction (ConnectionPen (ConnectionPen.Segment widgets)) state = if isJust drawing then pushEvent else Nothing where
+    drawing     = state ^. Global.connectionPen . ConnectionPen.drawing
+    pushEvent   = if (null nodes) && (null connections) then Nothing else Just $ NextPointData nodes connections
+    nodes       = catMaybes $ fmap (^. widget . UINode.nodeId) <$> lookupNode <$> widgets
+    connections = catMaybes $ fmap (^. widget . UIConnection.connectionId) <$> lookupConnection <$> widgets
+    lookupNode :: WidgetId -> Maybe (WidgetFile Global.State UINode.Node)
+    lookupNode widgetId = UIRegistry.lookupTyped widgetId registry
+    lookupConnection :: WidgetId -> Maybe (WidgetFile Global.State UIConnection.Connection)
+    lookupConnection widgetId = UIRegistry.lookupTyped widgetId registry
+    registry    = state ^. Global.uiRegistry
+
+toAction _ _ = Nothing
+
+remdups               :: (Eq a) => [a] -> [a]
+remdups (x : xx : xs) =  if x == xx then remdups (x : xs) else x : remdups (xx : xs)
+remdups xs            = xs
+
+zipAdj x = zip x $ tail x
+
+instance ActionStateUpdater Action where
+    execSt (BeginDrawing pos tpe) state = ActionUI (PerformIO draw) newState where
+        draw     = UI.beginPath pos (tpe == ConnectionPen.Connecting)
+        newState = state & Global.connectionPen . ConnectionPen.drawing .~ Just (ConnectionPen.Drawing pos tpe Nothing [])
+
+    execSt (NextPoint pos) state = ActionUI (PerformIO requestNodesBetween) newState where
+        newState        = state  & Global.connectionPen . ConnectionPen.drawing .~ Just newPen
+        (Just oldPen)   = state ^. Global.connectionPen . ConnectionPen.drawing
+        newPen          = oldPen & ConnectionPen.previousPos  .~ pos
+
+        requestNodesBetween = do
+            UI.drawSegment pos
+            UI.requestWidgetsBetween ((fromJust $ state ^. Global.connectionPen . ConnectionPen.drawing) ^. ConnectionPen.previousPos) pos
+
+
+    execSt (NextPointData nodes connections) state = case (fromJust $ state ^. Global.connectionPen . ConnectionPen.drawing) ^. ConnectionPen.drawingType of
+        ConnectionPen.Connecting -> ActionUI (PerformIO draw) newState' where
+            newState        = state  & Global.connectionPen . ConnectionPen.drawing .~ Just newPen
+            newState'       = newState -- TODO: Connect nodes
+            (Just oldPen)   = state ^. Global.connectionPen . ConnectionPen.drawing
+            pos             = oldPen ^. ConnectionPen.previousPos
+            newPen          = oldPen & ConnectionPen.visitedNodes %~ (++ nodes)
+                                     & ConnectionPen.lastNode     .~ (Just $ last nodes)
+            nodesToConnect  = zipAdj path where
+                path = remdups $ (maybeToList $ oldPen ^. ConnectionPen.lastNode) ++ nodes
+                                     -- & ConnectionPen.lastNodes    .~ ...
+                                     -- & ConnectionPen.lastNodes    +~ ...
+            draw = do
+                putStrLn $ "connectNodes " <> show nodesToConnect
+                -- TODO: connecting nodes UI actions
+        ConnectionPen.Disconnecting -> ActionUI (PerformIO draw) newState' where
+            newState'       = state -- TODO: Disconnect nodes
+            (Just oldPen)   = state ^. Global.connectionPen . ConnectionPen.drawing
+            pos             = oldPen ^. ConnectionPen.previousPos
+            draw = do
+                putStrLn $ "disconnecting " <> show connections
+                -- TODO: connecting nodes UI actions
+
+    execSt (FinishDrawing _) state = ActionUI (PerformIO draw) newState where
+        newState      = state  & Global.connectionPen . ConnectionPen.drawing .~ Nothing
+        draw          = UI.endPath
+instance ActionUIUpdater Reaction where
+    updateUI (WithState (PerformIO action) _) = action
+    updateUI (WithState NoOp _)               = return ()
