@@ -107,16 +107,18 @@ haloOuterRadiusSquared = nodeHaloOuterRadius * nodeHaloOuterRadius
 closenestFactor        = 0.25
 
 
-createPort :: PortType -> Int -> PortId -> Port
-createPort portType allPorts ident = Port ident Int $ portDefaultAngle portType allPorts ident
+createPort :: PortType -> ValueType -> Int -> PortId -> Port
+createPort portType valueType allPorts ident = Port ident valueType $ portDefaultAngle portType allPorts ident
 
-createPorts :: Int -> Int -> Ports
-createPorts inputPortsNum outputPortsNum = Ports inputPorts outputPorts where
-    inputPorts   = (\ident -> createPort InputPort  inputPortsNum  ident) <$> take inputPortsNum  inputIdents
-    outputPorts  = (\ident -> createPort OutputPort outputPortsNum ident) <$> take outputPortsNum outputIdents
-    idents       = PortNum <$> [0, 1 ..]
-    inputIdents  = idents
-    outputIdents = AllPorts : idents
+
+
+createPorts :: [ValueType] -> [ValueType] -> Ports
+createPorts inputPortTypes outputPortTypes = Ports inputPorts outputPorts where
+    inputPortsNum = length inputPortTypes
+    outputPortsNum = length outputPortTypes
+    inputPorts   = (\num -> createPort InputPort  (inputPortTypes  !! num) inputPortsNum  $ createInputPortId  num) <$> take inputPortsNum  nat
+    outputPorts  = (\num -> createPort OutputPort (outputPortTypes !! num) outputPortsNum $ createOutputPortId num) <$> take outputPortsNum nat
+    nat          = [0, 1..]
 
 
 getPorts :: PortType -> Node -> PortCollection

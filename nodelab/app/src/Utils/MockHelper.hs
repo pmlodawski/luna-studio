@@ -10,66 +10,48 @@ import           Data.Text.Lazy (Text)
 
 import qualified Object.Node as Node
 
+
+data PortTypes = PortTypes { _inputs  :: [ValueType]
+                           , _outputs :: [ValueType]
+                           } deriving (Eq, Show)
+
+makeLenses ''PortTypes
+
 portsMaxin  = 9
 portsMaxOut = 9
 
 getInputPortsNr  expr = (ord (head expr) - ord '1' + 1) `mod` (portsMaxin + 1)
 getOutputPortsNr expr = 1 + (ord (fromMaybe '1' $ listToMaybe (tail expr)) - ord '1') `mod` portsMaxOut
 
-tryFormat :: Text -> (Int, Int)
+tryFormat :: Text -> PortTypes
 tryFormat expr = if   head pref == '#'
-                 then (getInputPortsNr lastTwo, getOutputPortsNr lastTwo)
-                 else (0, 1)
+                 then PortTypes (replicate inputPortsNum Float) (replicate outputPortsNum Float)
+                 else PortTypes [] [Float]
     where
-    pref    = Text.unpack $ Text.takeEnd 3 expr
-    lastTwo = Text.unpack $ Text.takeEnd 2 expr
+    pref           = Text.unpack $ Text.takeEnd 3 expr
+    lastTwo        = Text.unpack $ Text.takeEnd 2 expr
+    inputPortsNum  = getInputPortsNr lastTwo
+    outputPortsNum = getOutputPortsNr lastTwo
 
 createPorts :: Text -> Node.Ports
-createPorts expr = Node.createPorts inputPortsNum outputPortsNum where
-    (inputPortsNum, outputPortsNum) = case lookup expr knownFunctions of
+createPorts expr = Node.createPorts inputs outputs where
+    PortTypes inputs outputs = case lookup expr knownFunctions of
         Just ports -> ports
         Nothing    -> tryFormat expr
 
-knownFunctions :: [(Text, (Int, Int))]
-knownFunctions  = [ ("+",        (2, 1))
-                  , ("-",        (2, 1))
-                  , ("*",        (2, 1))
-                  , ("/",        (2, 1))
-                  , (">",        (2, 1))
-                  , ("==",       (2, 1))
-                  , ("<",        (2, 1))
-                  , ("<=",       (2, 1))
-                  , (">=",       (2, 1))
-                  , ("++",       (2, 1))
-                  , ("toString", (1, 1))
-                  , ("truncate", (1, 1))
-                  , ("round",    (1, 1))
-                  , ("floor",    (1, 1))
-                  , ("celing",   (1, 1))
+knownFunctions  = [ ("+",        PortTypes [Float,   Float]  [Float])
+                  , ("-",        PortTypes [Float,   Float]  [Float])
+                  , ("*",        PortTypes [Float,   Float]  [Float])
+                  , ("/",        PortTypes [Float,   Float]  [Float])
+                  , (">",        PortTypes [Float,   Float]  [Bool])
+                  , ("==",       PortTypes [Float,   Float]  [Bool])
+                  , ("<",        PortTypes [Float,   Float]  [Bool])
+                  , ("<=",       PortTypes [Float,   Float]  [Bool])
+                  , (">=",       PortTypes [Float,   Float]  [Bool])
+                  , ("++",       PortTypes [String,  String] [String])
+                  , ("toString", PortTypes [Float]  [String])
+                  , ("truncate", PortTypes [Float]  [Float])
+                  , ("round",    PortTypes [Float]  [Float])
+                  , ("floor",    PortTypes [Float]  [Float])
+                  , ("celing",   PortTypes [Float]  [Float])
                   ]
-
-
-data FunctionDef = FunDef { _name    :: Text
-                          , _inputs  :: [ValueType]
-                          , _outputs :: [ValueType]
-                          } deriving (Eq, Show)
-
-makeLenses ''FunctionDef
-
-knownFunctions2 :: [FunctionDef]
-knownFunctions2 = [ FunDef "+"        [Float,  Float]  [Float]
-                  , FunDef "-"        [Float,  Float]  [Float]
-                  , FunDef "+"        [Float,  Float]  [Float]
-                  , FunDef "/"        [Float,  Float]  [Float]
-                  , FunDef ">"        [Float,  Float]  [Bool]
-                  , FunDef "=="       [Float,  Float]  [Bool]
-                  , FunDef "<="       [Float,  Float]  [Bool]
-                  , FunDef ">="       [Float,  Float]  [Bool]
-                  , FunDef "++"       [String, String] [String]
-                  , FunDef "toString" [Float] [String]
-                  , FunDef "truncate" [Float] [Float]
-                  , FunDef "round"    [Float] [Float]
-                  , FunDef "floor"    [Float] [Float]
-                  , FunDef "celing"   [Float] [Float]
-                  ]
-

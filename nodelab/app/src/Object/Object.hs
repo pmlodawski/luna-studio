@@ -33,6 +33,14 @@ portIdToNum :: PortId -> Int
 portIdToNum AllPorts    = 0
 portIdToNum (PortNum n) = n
 
+createInputPortId :: Int -> PortId
+createInputPortId num = PortNum num
+
+createOutputPortId :: Int -> PortId
+createOutputPortId 0   = AllPorts
+createOutputPortId num = PortNum (num - 1)
+
+
 type PortIdCollection = [PortId]
 
 data PortType = InputPort | OutputPort deriving (Ord, Eq, Show)
