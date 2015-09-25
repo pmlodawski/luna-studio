@@ -127,6 +127,7 @@ instance ActionStateUpdater Action where
     execSt (FinishDrawing _) state = ActionUI (PerformIO draw) newState where
         newState      = state  & Global.connectionPen . ConnectionPen.drawing .~ Nothing
         draw          = UI.endPath
+
 instance ActionUIUpdater Reaction where
     updateUI (WithState (PerformIO action) _) = action
     updateUI (WithState NoOp _)               = return ()

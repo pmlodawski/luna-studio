@@ -103,7 +103,7 @@ getConnectionLine nodesMap (Connection lineId srcPortRef dstPortRef) = UIConnect
 sortAndGroup assocs = Map.fromListWith (++) [(k, [v]) | (k, v) <- assocs]
 
 connectionVector :: NodesMap -> PortRef -> PortRef -> Vector2 Double
-connectionVector nodesMap src dst  = normalize (dstNWs - srcNWs) where
+connectionVector nodesMap src dst  = explode (dstNWs - srcNWs) where
     srcNWs@(Vector2 xSrcN ySrcN) = getNodePos nodesMap $ src ^. refPortNodeId
     dstNWs@(Vector2 xDstN yDstN) = getNodePos nodesMap $ dst ^. refPortNodeId
 
