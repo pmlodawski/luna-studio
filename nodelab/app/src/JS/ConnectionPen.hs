@@ -14,7 +14,7 @@ beginPath :: Vector2 Int -> Bool -> IO ()
 beginPath (Vector2 x y) tpe = beginPath' x y tpe
 
 foreign import javascript unsafe "connectionPen.endPath()"             endPath      :: IO ()
-foreign import javascript unsafe "connectionPen.clearCanvas()"         clearCavnas  :: IO ()
+foreign import javascript unsafe "connectionPen.clearCanvas()"         clearCanvas  :: IO ()
 foreign import javascript unsafe "connectionPen.drawSegment($1, $2)"   drawSegment' :: Int -> Int -> IO ()
 
 drawSegment :: Vector2 Int -> IO ()

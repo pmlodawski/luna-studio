@@ -8,6 +8,7 @@ var tempCanvas = document.createElement('canvas');
 var type = false;
 var map  = null;
 
+
 function clearCanvas() {
   $$.canvas2DCtx.clearRect(0, 0, $$.canvas2D.width, $$.canvas2D.height);
 };
@@ -18,11 +19,11 @@ function beginPath(x, y, _type) {
   $$.canvas2DCtx.moveTo(x, y);
   raycaster.cacheMap()
   iterations = -1;
-};
+  $$.canvas2DCtx.strokeStyle = (type ? "#00ff00" : "#ff0000");
+  $$.canvas2DCtx.lineCap = 'round';
+  $$.canvas2DCtx.globalAlpha = 1.0;};
 
 function drawSegment(x, y) {
-  $$.canvas2DCtx.strokeStyle = (type ? "#00ff00" : "#ff0000");
-  $$.canvas2DCtx.globalAlpha = 1.0;
   $$.canvas2DCtx.lineTo(x, y);
   $$.canvas2DCtx.stroke();
 }
