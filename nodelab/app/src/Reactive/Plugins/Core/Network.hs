@@ -30,6 +30,7 @@ import qualified Reactive.Plugins.Core.Action.Backend.Backend       as Backend
 import qualified Reactive.Plugins.Core.Action.Backend.Runner        as Runner
 import qualified Reactive.Plugins.Core.Action.Backend.GraphFetcher  as GraphFetcher
 import qualified Reactive.Plugins.Core.Action.ConnectionPen         as ConnectionPen
+import qualified Reactive.Plugins.Core.Action.TextEditor            as TextEditor
 import           Reactive.Plugins.Core.Executor
 
 import           Reactive.Plugins.Core.Action.State.Global
@@ -97,6 +98,7 @@ makeNetworkDescription conn logging workspace = do
         runnerActionB                 = fmap ActionST $              Runner.toAction <$> anyNodeB
         graphFetcherActionB           = fmap ActionST $        GraphFetcher.toAction <$> anyNodeB <*> globalStateB
         connectionPenActionB          = fmap ActionST $       ConnectionPen.toAction <$> anyNodeB <*> globalStateB
+        textEditorActionB             = fmap ActionST $          TextEditor.toAction <$> anyNodeB
 
         allActionsPackB               = [ nodeGeneralActionB
                                         , widgetActionB
@@ -113,6 +115,7 @@ makeNetworkDescription conn logging workspace = do
                                         , runnerActionB
                                         , graphFetcherActionB
                                         , connectionPenActionB
+                                        , textEditorActionB
                                         ]
 
         (globalStateReactionB, allReactionsPackB) = execAll globalStateB allActionsPackB

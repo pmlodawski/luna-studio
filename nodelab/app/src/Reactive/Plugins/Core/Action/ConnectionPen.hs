@@ -58,16 +58,24 @@ toAction (Mouse (Mouse.Event tpe pos LeftButton keyMods _)) state = case tpe of
     Mouse.Moved    -> if isDrawing then Just (NextPoint     pos) else Nothing
     _              -> Nothing
     where isDrawing = isJust $ state ^. Global.connectionPen . ConnectionPen.drawing
-toAction (ConnectionPen (ConnectionPen.Segment widgets)) state = if isJust drawing then pushEvent else Nothing where
-    drawing     = state ^. Global.connectionPen . ConnectionPen.drawing
-    pushEvent   = if (null nodes) && (null connections) then Nothing else Just $ NextPointData nodes connections
-    nodes       = catMaybes $ fmap (^. widget . UINode.nodeId) <$> lookupNode <$> widgets
-    connections = catMaybes $ fmap (^. widget . UIConnection.connectionId) <$> lookupConnection <$> widgets
-    lookupNode :: WidgetId -> Maybe (WidgetFile Global.State UINode.Node)
-    lookupNode widgetId = UIRegistry.lookupTyped widgetId registry
-    lookupConnection :: WidgetId -> Maybe (WidgetFile Global.State UIConnection.Connection)
-    lookupConnection widgetId = UIRegistry.lookupTyped widgetId registry
-    registry    = state ^. Global.uiRegistry
+toAction (ConnectionPen (ConnectionPen.Segment widgets)) state = case state ^. Global.connectionPen . ConnectionPen.drawing of
+    Just drawing                     -> case drawing ^. ConnectionPen.drawingType of
+        ConnectionPen.Connecting     -> pushEvent where
+            pushEvent                 = if null nodes then Nothing
+                                                      else Just $ NextPointData nodes []
+            nodes                     = catMaybes $ fmap (^. widget . UINode.nodeId) <$> lookupNode <$> widgets
+            lookupNode :: WidgetId   -> Maybe (WidgetFile Global.State UINode.Node)
+            lookupNode widgetId       = UIRegistry.lookupTyped widgetId registry
+        ConnectionPen.Disconnecting  -> pushEvent where
+            pushEvent                 = if null connections then Nothing
+                                                            else Just $ NextPointData [] connections
+            connections               = catMaybes $ fmap (^. widget . UIConnection.connectionId) <$> lookupConnection <$> widgets
+            lookupConnection :: WidgetId -> Maybe (WidgetFile Global.State UIConnection.Connection)
+            lookupConnection widgetId = UIRegistry.lookupTyped widgetId registry
+        where
+        registry                      = state ^. Global.uiRegistry
+
+    Nothing -> Nothing
 
 toAction _ _ = Nothing
 
@@ -76,6 +84,9 @@ remdups (x : xx : xs) =  if x == xx then remdups (x : xs) else x : remdups (xx :
 remdups xs            = xs
 
 zipAdj x = zip x $ tail x
+
+maybeLast [] = Nothing
+maybeLast xs = Just $ last xs
 
 instance ActionStateUpdater Action where
     execSt (BeginDrawing pos tpe) state = ActionUI (PerformIO draw) newState where
@@ -88,6 +99,7 @@ instance ActionStateUpdater Action where
         newPen          = oldPen & ConnectionPen.previousPos  .~ pos
 
         requestNodesBetween = do
+            UI.clearCanvas
             UI.drawSegment pos
             UI.requestWidgetsBetween ((fromJust $ state ^. Global.connectionPen . ConnectionPen.drawing) ^. ConnectionPen.previousPos) pos
 
@@ -99,20 +111,17 @@ instance ActionStateUpdater Action where
             (Just oldPen)   = state ^. Global.connectionPen . ConnectionPen.drawing
             pos             = oldPen ^. ConnectionPen.previousPos
             newPen          = oldPen & ConnectionPen.visitedNodes %~ (++ nodes)
-                                     & ConnectionPen.lastNode     .~ (Just $ last nodes)
-            nodesToConnect  = zipAdj path where
-                path = remdups $ (maybeToList $ oldPen ^. ConnectionPen.lastNode) ++ nodes
-                                     -- & ConnectionPen.lastNodes    .~ ...
-                                     -- & ConnectionPen.lastNodes    +~ ...
-            draw = do
-                putStrLn $ "connectNodes " <> show nodesToConnect
+                                     & ConnectionPen.lastNode     .~ (maybeLast path)
+            path            = remdups $ (maybeToList $ oldPen ^. ConnectionPen.lastNode) ++ nodes
+            nodesToConnect  = zipAdj path
+            draw            = if null nodesToConnect then return ()
+                                                     else putStrLn $ "connectNodes " <> show nodesToConnect
                 -- TODO: connecting nodes UI actions
         ConnectionPen.Disconnecting -> ActionUI (PerformIO draw) newState' where
             newState'       = state -- TODO: Disconnect nodes
             (Just oldPen)   = state ^. Global.connectionPen . ConnectionPen.drawing
             pos             = oldPen ^. ConnectionPen.previousPos
-            draw = do
-                putStrLn $ "disconnecting " <> show connections
+            draw            = putStrLn $ "disconnecting " <> show connections
                 -- TODO: connecting nodes UI actions
 
     execSt (FinishDrawing _) state = ActionUI (PerformIO draw) newState where
