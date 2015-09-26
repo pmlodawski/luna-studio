@@ -31,7 +31,7 @@ type family CmpLst (lst :: [k]) (lst' :: [k']) :: [Bool] where
             CmpLst (l ': ls)    (l' ': ls')     = (False ': CmpLst ls ls')
             CmpLst '[]          '[]             = '[]
 
-type family LstIn (lst :: [k]) (lst' :: [k']) :: [Bool] where
+type family LstIn (lst :: [*]) (lst' :: [*]) :: [Bool] where
             LstIn (l ': ls) lst = In l lst ': LstIn ls (Remove l lst)
             LstIn ls        '[] = '[]
             LstIn '[]       lst = '[]
@@ -43,10 +43,7 @@ type instance Remove (a :: k) '[]                = '[]
 
 
 type family ModsOf (inst :: k) cont :: [*]
-type ResultMods (cls :: k) cont = WithResult (ModsOf cls cont)
 
-data Mods (opts :: [*]) = Mods
---data Mods (mods :: [Bool]) = Mods
 data InstMods (inst :: k) (mods :: [Bool]) = InstMods
 data InstMods2 (inst :: k) (mods :: [Bool]) (cont :: *) = InstMods2
 data InstModsX (inst :: k) (query :: [*]) (mods :: [Bool]) (cont :: *) = InstModsX
@@ -87,7 +84,6 @@ class                                                                           
 instance {-# OVERLAPPABLE #-}                                                                            DataGettable tag (Tagged tag  a, ds) where getData _ = fromTag . fst
 instance {-# OVERLAPPABLE #-} (DataGettable tag ds, GetData tag (Tagged tag' a, ds) ~ GetData tag ds) => DataGettable tag (Tagged tag' a, ds) where getData t = getData t . snd
 
-type TaggedResult (cls :: k) cont res = TaggedCont (ResultMods cls cont) res
 
 
 type family   MappedByTag tag a l
@@ -104,9 +100,6 @@ instance {-# OVERLAPPABLE #-} (MapByTag' t a b l, MappedByTag t b (Tagged t' a',
 instance                                                                                                                    MapByTag' t a b ()                 where mapByTag' _ _ _ = ()
 
 
-type MappedResult t (cls :: k) res = MappedByTag R t (TaggedResult cls (ContainerOf t) res)
-
-
 
 
 type I = InstMods2
@@ -117,24 +110,6 @@ type family UpdateQuery instMods guery where
 
 
 
-type family Foxo inst query where
-    Foxo (inst query mods cont) query' = inst query' (LstIn (ModsOf inst cont) query') cont
-
-type family Lolo a inst where
-    Lolo a ((inst :: [*] -> [Bool] -> * -> k) query mods cont) = (inst (a ': query) (LstIn (ModsOf inst cont) (a ': query)) cont)
-
-type family Lolo2 a inst where
-    Lolo2 a ((inst :: [*] -> [Bool] -> * -> k) query mods cont) = (inst (a ': query) (LstIn (ModsOf inst cont) (a ': query)) cont)
-
-    --Lolo ((inst :: [*] -> [Bool] -> * -> k) query mods cont) a = inst query mods cont
-    --Lolo ((inst :: [*] -> [Bool] -> * -> k) query mods cont) a = inst (a ': query) (LstIn (ModsOf inst cont) (a ': query)) cont
-
-
-polyspec :: InstMods2 inst mods cont -> InstMods2 inst mods cont'
-polyspec _ = InstMods2
-
-rebaseSpec :: InstMods2 inst mods cont -> InstMods2 inst' mods cont
-rebaseSpec _ = InstMods2
 
 
 rebaseSpecX :: InstModsX inst q mods cont -> InstModsX inst' q (LstIn (ModsOf inst' cont) q) cont
@@ -145,95 +120,20 @@ polySpecX _ = InstModsX
 --type family Rebase mods base where Rebase (InstMods2 inst mods old) new = InstMods2 inst mods new
 
 type family InstQuery (inst :: * -> Constraint) :: [*]
-type family InstFunc' (inst :: * -> Constraint) :: *
 
 query :: InstModsX inst q mods cont -> Proxy q
 query _ = Proxy
 
-type family Falses (lst :: [k]) :: [Bool] where
-    Falses (a ': as) = False ': Falses as
-    Falses '[]       = '[]
 
 
 
---class Expandable     q m cont        cont' | q m cont        -> cont' where expand    :: InstModsX Expandable      q m cont ->              cont -> cont'
---class ExpandableF'               cont m q s where expandF'   :: Monad m => Query q s -> ExpandableInfo' cont ->              cont -> m (ResultByQuery (Selected s (ModsOf cont ExpandableF')) (ExpandableInfo' cont) cont)
 
 
 
-type ProxyInst inst = Proxy (inst :: [*] -> [Bool] -> * -> k)
--- FIXME[wd]: Inst' nie dziala - np. w Resizable.hs
-type Inst'     (inst :: [Bool] -> * -> k)      cont     = Inst inst ('[] :: [Bool]) cont
-type Inst      (inst :: [Bool] -> * -> k) mods cont     =          inst (LstIn (ModsOf inst cont) mods)    cont
-type InstFunc  (inst :: [Bool] -> * -> k) mods cont out = InstMods inst (LstIn (ModsOf inst cont) mods) -> cont -> out
-type InstFunc2 (inst :: [Bool] -> * -> k) mods cont sig = InstMods2 inst (LstIn (ModsOf inst cont) mods) cont -> sig
+optBuilder :: a -> OptBuilderBase a
+optBuilder = OptBuilder
 
-type InstX     (inst :: [*] -> [Bool] -> * -> k) mods cont     = inst mods (LstIn (ModsOf inst cont) mods)    cont
-type InstFuncX (inst :: [*] -> [Bool] -> * -> k) mods cont sig = InstModsX inst mods (LstIn (ModsOf inst cont) mods) cont -> sig
-
-type InstX3      (inst :: [Bool] -> * -> k) mods cont     =          inst (LstIn (ModsOf inst cont) mods)    cont
-
-
-type InstX2    (inst :: [*] -> [Bool] -> * -> k) mods     = inst mods '[]
-
-
-
-type SchemeBuilder2 cont mods sig scheme = forall inst. FuncBuilder (Mods mods -> sig) scheme => InstFunc2 inst mods cont sig -> scheme
-
-
-type DOO mods c a inst cont = (FuncBuilder (Mods mods -> sig) a) => (InstMods2 inst (LstIn (ModsOf inst cont) mods) cont -> sig) -> a
-
-type DOOX query c a inst cont = (FuncBuilder (Mods query -> sig) a) => (InstModsX inst query (LstIn (ModsOf inst cont) query) cont -> sig) -> a
-
-buildScheme2 :: DOO mods c a inst cont
-buildScheme2 f = buildFunc (flip runMods2 f)
-
-buildSchemeX :: DOOX query c a inst cont
-buildSchemeX f = buildFunc (flip runModsX f)
-
---modFuncX :: (FuncTrans '[] (Mods query -> sig) b) => (InstModsX inst query (LstIn (ModsOf inst cont) query) cont -> sig) -> b
-modFuncX :: InstFuncX inst mods cont sig -> Func mods sig
-modFuncX = transFunc . buildSchemeX
-
-buildSchemeF f = buildFunc (flip runModsF f)
-modFuncF a = transFunc $ buildSchemeF a
-
-modFunc2 :: InstFunc2 inst mods cont sig -> Func mods sig
-modFunc2 = transFunc . buildScheme2
-
---modFunc2' :: _ => _
---modFunc2' = transFunc . buildScheme2
-
-
-runMods2 :: (LstIn (ModsOf inst cont) mods ~ matches) => Mods mods -> (InstMods2 inst matches cont -> sig) -> sig
-runMods2 _ f = f InstMods2
-
-runModsX :: (LstIn (ModsOf inst cont) query ~ matches) => Mods query -> (InstModsX inst query matches cont -> sig) -> sig
-runModsX _ f = f InstModsX
-
-type Scheme               sig = FuncBuilder                 sig  f => f
-type ModFunc     sel mods sig = FuncTrans sel (Mods mods -> sig) f => f
-type Func            mods sig = ModFunc   '[]       mods    sig
-
-
-
-type SchemeBuilder inst cont mods out scheme = FuncBuilder (Mods mods -> cont -> out) scheme => InstFunc inst mods cont out -> scheme
-
-
-buildScheme :: SchemeBuilder inst cont mods out scheme
-buildScheme f = undefined
-
-modFunc :: InstFunc inst mods cont sig -> Func mods (cont -> sig)
-modFunc = transFunc . buildScheme
-
-
-
-emptyOpts = Mods :: Mods '[]
-
-
-
-type EmptyPolyLst = ('[] :: [k])
-
+type OptBuilderBase = OptBuilder '[]
 
 
 
@@ -254,15 +154,9 @@ instance                          (f ~ (Proxy opts -> a -> b))   => FuncTrans op
 
 
 
-type EmptyStarLst = ('[] :: [*])
 
-
-
---type family Foo (lst (a :: k) where
---    Foo
-
-
---type ResultByQuery' (s :: [Bool]) (cont :: *) (info :: *) (cls :: k) = ResultByQuery (Selected s (ModsOf cls cont)) info cont
+extendOptBuilder :: Proxy opt -> Proxy opts' -> OptBuilder opts a -> OptBuilder (opt ': (Concat opts' opts)) a
+extendOptBuilder _ _ (OptBuilder a) = OptBuilder a
 
 
 
@@ -270,10 +164,14 @@ type EmptyStarLst = ('[] :: [*])
 --------------
 
 
+type Concat lst lst' = Concat' (Reverse lst) lst'
+
+type family Concat' lst lst' where
+    Concat' (x ': xs) lst = Concat' xs (x ': lst)
+    Concat' '[]       lst = lst
 
 
-
-type family Selected (b :: [Bool]) (lst :: [k]) :: [k] where
+type family Selected (b :: [Bool]) (lst :: [*]) :: [*] where
     Selected ('True  ': b) (l ': ls) = l ': Selected b ls
     Selected ('False ': b) (l ': ls) =      Selected b ls
     Selected '[]           lst       =      '[]
@@ -281,39 +179,16 @@ type family Selected (b :: [Bool]) (lst :: [k]) :: [k] where
 
 
 
-data NA = NA
-data Info (idx :: *) (el :: *) (cls :: k) (cont :: *) = Info
 data Query (q :: [*]) (m :: [Bool]) = Query
 
-freeQuery :: Query q s -> Query q s'
-freeQuery _ = Query
 
-freeInfo :: Info idx el cls cont -> Info idx el cls cont'
-freeInfo _ = Info
+data NA = NA
+data Info (idx :: *) (el :: *) (cls :: k) (cont :: *) = Info
 
 type family InfoIdx  i where InfoIdx  (Info idx el cls cont) = idx
 type family InfoEl   i where InfoEl   (Info idx el cls cont) = el
 type family InfoCls  i where InfoCls  (Info idx el cls cont) = cls
 type family InfoCont i where InfoCont (Info idx el cls cont) = cont
-
-
-type family Operation (q :: [*]) info where Operation q (Info idx el cls cont) = Delayed q (LstIn (ModsOf cls cont) q) (Info idx el cls cont)
-
-
-
-class Monad m => Delayed  q s info m where delayed  :: Query q s -> info -> InfoCont info -> m (ResultByQuery info q (InfoCont info))
-class Monad m => Delayed2 q s info m where delayed2 :: Query q s -> info                  -> m (ResultByQuery info q (InfoCont info))
-
-
---class Monad m => GenOp    q s info m out | info -> out where genOp    :: Query q s -> info ->                InfoCont info -> m (ResultByQuery info q (InfoCont info))
---class Monad m => ContOp   q s info m out | info -> out where contOp   :: Query q s -> info ->                InfoCont info -> m (ResultByQuery info q out)
---class Monad m => ElContOp q s info m out | info -> out where elcontOp :: Query q s -> info -> InfoEl info -> InfoCont info -> m (ResultByQuery info q out)
-
-
---class Monad m => FX2  q s info m where fx2  :: Query q s -> info -> (InfoCont info) -> m (ResultByQuery q info (InfoCont info))
-
-
-type CheckSelection q s cont info mods = ResultByQuery info q ~ ResultByQuery info (Selected s mods)
 
 type RawInfo           = Info NA  NA
 type IxedInfo   idx    = Info idx NA
@@ -331,102 +206,41 @@ type IndexOf' cont = IndexOf (ElementOf cont) cont
 
 -- === Results ===
 
-newtype Simple  a = Simple a deriving (Show, Functor)
-type Indexed i = (,) i
-
-simple :: Monad m => a -> m (Simple a)
-simple = return . Simple
-
-type family PrependTuple i (a :: * -> *) :: * -> *
-type instance PrependTuple i Simple = (,) i
-type instance PrependTuple i ((,) t1) = (,,) i t1
-type instance PrependTuple i ((,,) t1 t2) = (,,,) i t1 t2
-type instance PrependTuple i ((,,,) t1 t2 t3) = (,,,,) i t1 t2 t3
-type instance PrependTuple i ((,,,,) t1 t2 t3 t4) = (,,,,,) i t1 t2 t3 t4
-type instance PrependTuple i ((,,,,,) t1 t2 t3 t4 t5) = (,,,,,,) i t1 t2 t3 t4 t5
 
 
-type family   ResultByQuery info (q :: [*]) :: * -> *
-type instance ResultByQuery (Info idx el cls cont) '[]              = Simple
-type instance ResultByQuery (Info idx el cls cont) (Unchecked ': q) = ResultByQuery (Info idx el cls cont) q
-type instance ResultByQuery (Info idx el cls cont) (Ixed      ': q) = If (idx :== NA)
-                                                                         (PrependResultTupleidx q cls cont (IxedData cls (IndexOf' cont))   el)
-                                                                          --If (el :== NA)
-                                                                          --    (PrependResultTupleidx q cls cont (IndexOf' cont)   el)
-                                                                          --    (PrependResultTupleidx q cls cont (IndexOf el cont) el))
-                                                                         (PrependResultTupleidx q cls cont (IxedData cls idx) el)
-type instance ResultByQuery (Info idx el cls cont) (Try       ': q) = Maybed (ResultByQuery (Info idx el cls cont) q)
+type family SelTags (info :: *) (s :: [Bool]) where SelTags (Info idx el cls cont) s = QueryTags (Info idx el cls (DataStoreOf cont)) (Selected s (FilterMutable (ModsOf cls cont)))
 
-newtype Maybed a t = Maybed (Maybe (a t)) deriving (Show, Functor)
-
-type IxedData cls idx = If (IxedMode cls :== Single) idx [idx]
-
-type PrependResultTupleidx q cls cont idx el = (PrependTuple idx (ResultByQuery (Info idx el cls cont) q))
-
-
-type family ResultByQuery' (info :: *) (s :: [Bool]) where ResultByQuery' (Info idx el cls cont) s = ResultByQuery (Info idx el cls cont) (Selected s (ModsOf cls cont)) cont
-
-type family ResultBySel (info :: *) (s :: [Bool]) where ResultBySel (Info idx el cls cont) s = ResultByQuery (Info idx el cls cont) (Selected s (FilterMutable (ModsOf cls cont)))
-type family ResultBySel' (info :: *) (s :: [Bool]) where ResultBySel' (Info idx el cls cont) s = ResultByQuery (Info idx el cls (DataStoreOf cont)) (Selected s (FilterMutable (ModsOf cls cont)))
-
-type family ResultBySelX (info :: *) (s :: [Bool]) where ResultBySelX (Info idx el cls cont) s = ResultX (Info idx el cls (DataStoreOf cont)) (Selected s (FilterMutable (ModsOf cls cont)))
-
-type WithResult a = AppendLst R a
 
 
 type family FilterMutable (lst :: [*]) :: [*] where
     FilterMutable '[] = '[]
     FilterMutable (l ': ls) = If (Mutable l) (l ': FilterMutable ls) (FilterMutable ls)
 
-type family ResultX info (query :: [*]) where
-    ResultX info '[]       = ()
-    ResultX info (q ': qs) = (ResultXOf q info, ResultX info qs)
 
-type family ResultXOf q info
 
-type instance ResultXOf Ixed (Info idx el cls cont) = IxedData cls (
+
+
+type IxedData cls idx = If (IxedMode cls :== Single) idx [idx]
+
+type family QueryTags (info :: *) (query :: [*]) :: * where
+    QueryTags info '[]       = ()
+    QueryTags info (q ': qs) = (ModTags q info, QueryTags info qs)
+
+type family   ModTags q info
+type instance ModTags Ixed (Info idx el cls cont) = IxedData cls (
     If (idx :== NA) (
-        If (el :== NA)
+        --If (el :== NA)
             (IndexOf' cont)
-            (IndexOf el cont)
+          --  (IndexOf el cont)
     ) idx
  )
 
---type instance ResultXOf R (Info idx el cls cont) res = res
 
-type family ResultMod q base info
-type instance ResultMod Unchecked b i = b
-
-type instance ResultMod Ixed      b (Info idx el cls cont) = b
-
-type ResultCheck     q info r   = ResultByQuery  info q ~ r
-type SimpleResult    q info     = ResultCheck  q info Simple
-type IxedResult      q info i   = ResultCheck  q info (Indexed i)
-type SimpleRawResult cls q cont = SimpleResult q (RawInfo cls cont)
 
 
 
 type ComputeSelection (cls :: k) (cont :: *) (q :: [*]) = LstIn (ModsOf cls cont) q
-
-type CheckQuery i q s = ResultByQuery i q ~ ResultBySel i s
-
-type CheckQuery' i q s = ResultByQuery (DataStoreInfo i) q ~ ResultBySel' i s
-type AssumeQuery i q s = ResultX (DataStoreInfo i) (FilterMutable q) ~ ResultBySelX i s
-
---ResultBySelX (ExpandableInfo2 a) s ~ ResultX (ExpandableInfo2 (DataStoreOf a)) q
-
-type MatchResults i s i' q' = (ResultBySel i s ~ ResultByQuery i' q')
-
-type SubOperation i s i' q' m = (MatchResults i s i' q', ContOperation q' i' m)
-
-type ContOperation q info m = (Monad m, Operation q info m, Functor (ResultByQuery info q))
-
-type MatchResultsCls i t t' s q = MatchResults (i t) s (i (ContainerOf t')) q
-
-
---type CheckFilledResult info q t mappedTc = ResultX (DataStoreInfo info) (WithResult q) t ~ FillData (WithResult q) mappedTc
-
---type family CheckFilledResult2 info q t res where CheckFilledResult2 (Info idx el cls cont) q t res = CheckFilledResult (Info idx el cls cont) q t (MappedResult t cls res)
+type AssumeQuery i q s = QueryTags (DataStoreInfo i) (FilterMutable q) ~ SelTags i s
 
 
 
@@ -438,18 +252,10 @@ runModsF _ f = f Query Info
 runModsF' = flip runModsF
 
 
-type family InsertQuery a op where
-    InsertQuery a (RawOperation q cls) = RawOperation (a ': q) cls
-
-
-class    (Monad m, HasContainer2 t, Operation q (RawInfo cls (ContainerOf t)) m) => RawOperation (q :: [*]) (cls :: k) t m -- where
-instance (Monad m, HasContainer2 t, Operation q (RawInfo cls (ContainerOf t)) m) => RawOperation  q          cls       t m
-
-
 
 type family ContainerOf a
-class HasContainer2 a where
-    container2 :: Lens' a (ContainerOf a)
+class HasContainer a where
+    container :: Lens' a (ContainerOf a)
 
 type family DataStoreOf a
 
@@ -459,33 +265,22 @@ class HasDataStore a where
 class HasDataStore a => IsDataStore a where
     fromDataStore :: DataStoreOf a -> a
 
---data Info idx el (cls :: k) cont = Info
 
-type ConstraintQuery info q = CheckQuery info q (InfoSelection info q)
 
 type family InfoSelection i q where InfoSelection   (Info idx el cls cont) q = ComputeSelection cls cont q
 type family DataStoreInfo i   where DataStoreInfo   (Info idx el cls cont)   = Info idx el cls (DataStoreOf cont)
-type family ContaineredInfo i where ContaineredInfo (Info idx el cls cont)   = Info idx el cls (ContainerOf cont)
-
-type ComputeSelectionR (cls :: k) (cont :: *) (q :: [*]) = LstIn (ModsOf cls cont) (WithResult q)
-type family InfoSelectionR i q where InfoSelectionR (Info idx el cls cont) q = ComputeSelectionR cls cont q
 
 
--- superinst powinien instancjonowac na podstawie N/A !
-type family SuperInst info q m where SuperInst (Info NA  NA cls cont) q m = cls        cont m q (ComputeSelection cls cont q)
-                                     SuperInst (Info NA  el cls cont) q m = cls     el cont m q (ComputeSelection cls cont q)
-                                     SuperInst (Info idx NA cls cont) q m = cls idx    cont m q (ComputeSelection cls cont q)
-                                     SuperInst (Info idx el cls cont) q m = cls idx el cont m q (ComputeSelection cls cont q)
 
-type family SuperInst2 info q m w where SuperInst2 (Info NA  NA cls cont) q m w = cls        cont m q (ComputeSelection cls cont q) w
-                                        SuperInst2 (Info NA  el cls cont) q m w = cls     el cont m q (ComputeSelection cls cont q) w
-                                        SuperInst2 (Info idx NA cls cont) q m w = cls idx    cont m q (ComputeSelection cls cont q) w
-                                        SuperInst2 (Info idx el cls cont) q m w = cls idx el cont m q (ComputeSelection cls cont q) w
+type family InfoInst info q m :: Constraint where
+    InfoInst (Info NA  NA cls cont) q m = cls        cont m q (ComputeSelection cls cont q)
+    InfoInst (Info NA  el cls cont) q m = cls     el cont m q (ComputeSelection cls cont q)
+    InfoInst (Info idx NA cls cont) q m = cls idx    cont m q (ComputeSelection cls cont q)
+    InfoInst (Info idx el cls cont) q m = cls idx el cont m q (ComputeSelection cls cont q)
 
 
 
 
-type family AssertQuery2 i q where AssertQuery2 (Info idx el cls cont) q = ResultByQuery (Info idx el cls (DataStoreOf cont)) q ~ ResultByQuery (Info idx el cls (DataStoreOf cont)) (Selected (LstIn (ModsOf cls cont) q) (FilterMutable (ModsOf cls cont)))
 
 
 ----
@@ -494,7 +289,6 @@ type family AssertQuery2 i q where AssertQuery2 (Info idx el cls cont) q = Resul
 
 data Safe      = Safe
 data Unchecked = Unchecked
-data R         = R
 data Ixed      = Ixed
 data Try       = Try
 
@@ -514,31 +308,6 @@ type family IxedX (op :: k) :: l where IxedX (cls q (m ::  * -> *) :: * -> Const
 
 -- === Concatenation ===
 
-type family   MonoResultEl (q :: [*])       cont el
---type instance MonoResultEl '[]              cont el = cont
---type instance MonoResultEl (Ixed      ': q) cont el = (IndexOf el cont, MonoResultEl q cont el)
---type instance MonoResultEl (Unchecked ': q) cont el = MonoResultEl q cont el
-
-type family   MonoResult (q :: [*])       cont
---type instance MonoResult '[]              cont = cont
---type instance MonoResult (Ixed      ': q) cont = (IndexOf' cont, MonoResult q cont)
---type instance MonoResult (Unchecked ': q) cont = MonoResult q cont
-
-type family   PolyResultEl (q :: [*])       cont el
---type instance PolyResultEl '[]              cont el = cont
---type instance PolyResultEl (Ixed      ': q) cont el = ([IndexOf el cont], PolyResultEl q cont el)
---type instance PolyResultEl (Unchecked ': q) cont el = PolyResultEl q cont el
-
-type family   ResultZ (inst :: [*] -> [Bool] -> * -> k) (q :: [*]) cont
---type instance ResultZ inst '[]              cont = cont
---type instance ResultZ inst (Ixed      ': q) cont = ([IndexOf' cont], ResultZ inst q cont)
---type instance ResultZ inst (Unchecked ': q) cont = ResultZ inst q cont
-
-type family   ResultZ2 (inst :: [*] -> [Bool] -> * -> k) (q :: [*]) t t'
---type instance ResultZ2 inst '[]              t t' = t'
---type instance ResultZ2 inst (Ixed      ': q) t t' = ([IndexOf' t], ResultZ2 inst q t t')
---type instance ResultZ2 inst (Unchecked ': q) t t' = ResultZ2 inst q t t'
-
 
 
 
@@ -551,3 +320,195 @@ type family IxedMode (a :: k) :: IxedType
 data IxedType = Multi
               | Single
               deriving (Show)
+
+
+
+
+
+--------------------------------
+
+
+class HasContainer a => IsContainer a where
+    fromContainer :: ContainerOf a -> a
+
+
+
+
+newtype NestedFunctor m n a = NestedFunctor { fromNestedFunctor :: m (n a)} deriving (Show)
+instance (Functor m, Functor n) => Functor (NestedFunctor m n) where fmap f = NestedFunctor . (fmap $ fmap f) . fromNestedFunctor
+
+
+nestedLens :: (Functor m, Functor n) => Lens a b c d -> (c -> m (n d)) -> (a -> m (n b))
+nestedLens l f = fromNestedFunctor . l (fmap NestedFunctor f)
+
+
+
+
+
+data Result d r = Result d r deriving (Show, Functor)
+
+withResData :: (d -> (out, d')) -> Result d r -> (out, Result d' r)
+withResData f (Result d r) = (out, Result d' r) where
+  (out, d') = f d
+
+withResData_ :: (d -> d') -> Result d r -> Result d' r
+withResData_ = flattenMod withResData
+
+splitResData :: Result (d,ds) r -> (d, Result ds r)
+splitResData = withResData id
+
+flattenMod :: Functor f => (f ((), a) -> b -> (x, c)) -> f a -> b -> c
+flattenMod f = snd .: (f . fmap ((),))
+
+
+
+type Unique lst = Reverse (Unique' lst '[])
+
+type family Unique' (lst :: [*]) (reg :: [*]) where
+  Unique' '[]       reg = reg
+  Unique' (l ': ls) reg = Unique' ls (If (l `In` reg) reg (l ': reg))
+
+type Reverse lst = Reverse' lst '[]
+
+type family Reverse' (lst :: [*]) (lst' :: [*]) where
+  Reverse' '[]       lst = lst
+  Reverse' (l ': ls) lst = Reverse' ls (l ': lst)
+
+uniqueProxy :: Proxy a -> Proxy (Unique a)
+uniqueProxy _ = Proxy
+
+filterMutable :: Proxy a -> Proxy (FilterMutable a)
+filterMutable _ = Proxy
+
+
+
+
+newtype Flipped t a b = Flipped { fromFlipped :: t b a } deriving Show
+
+instance Functor (Flipped Result r) where fmap f (Flipped (Result d r)) = Flipped (Result (f d) r)
+
+
+withFlipped f = fromFlipped . f . Flipped
+
+
+
+foo f (info :: Proxy (cls :: k)) (q :: Proxy (q :: [*])) (tc :: cont) = out where
+    tc2 = runModsF' f (uniqueProxy q) tc
+    tc3 = withFlipped (fmap $ taggedCont (Proxy :: Proxy (Selected (ComputeSelection cls cont q) (FilterMutable (ModsOf cls cont))) )) <$> tc2
+    out = tc3
+
+--bar :: CTXOO ExpandableInfo2 q m t => Proxy q -> t -> m (Result (MyResult ExpandableInfo2 q t) t)
+bar f info q t = out where
+    q'    = filterMutable q
+    cont  = view container t
+    tgdr  = foo f info q cont
+    tgdr' = (fmap . fmap) (\c -> t & container .~ c) tgdr
+    out   = withFlipped (fmap (fillData q')) <$> tgdr'
+
+
+barTx f (cls :: Proxy (cls :: k)) (q :: Proxy (q :: [*])) (t :: t) = withFlipped (fmap (fillData (filterMutable q))) <$> nestedLens container tgdr t where
+    tgdr c  = withFlipped (fmap $ taggedCont (Proxy :: Proxy (Selected (ComputeSelection cls (ContainerOf t) q) (FilterMutable (ModsOf cls (ContainerOf t)))) )) <$> f (uniqueProxy q) c
+
+
+barTy f (cls :: Proxy (cls :: k)) (q :: Proxy (q :: [*])) (t :: t) = withFlipped (fmap (fillData (filterMutable q))) <$> tgdr (view container t) where
+    tgdr c  = withFlipped (fmap $ taggedCont (Proxy :: Proxy (Selected (ComputeSelection cls (ContainerOf t) q) (FilterMutable (ModsOf cls (ContainerOf t)))) )) <$> f (uniqueProxy q) c
+
+--bar2z f (cls :: Proxy (cls :: k)) (q :: Proxy (q :: [*])) (t :: t) = withFlipped (fmap (fillData (filterMutable q))) <$> tgdr (view container t) where
+--    tgdr c  = withFlipped (fmap $ taggedCont (Proxy :: Proxy (Selected (ComputeSelection cls (ContainerOf t) q) (FilterMutable (ModsOf cls (ContainerOf t)))) )) <$> f (uniqueProxy q) c
+
+
+
+
+type family CTXOO info q m t where CTXOO (Info idx el cls) q m t = ((Functor m,
+                                               HasContainer t,
+                                               DataFillable
+                                                 (FilterMutable q)
+                                                 (TaggedCont
+                                                    (Selected
+                                                       (LstIn
+                                                          (ModsOf cls (ContainerOf t)) q)
+                                                       (FilterMutable
+                                                          (ModsOf cls (ContainerOf t))))
+                                                    (QueryTags
+                                                       (Info idx el cls (DataStoreOf t))
+                                                       (Selected
+                                                          (LstIn
+                                                             (ModsOf cls (ContainerOf t))
+                                                             (Unique q))
+                                                          (FilterMutable
+                                                             (ModsOf
+                                                                cls (ContainerOf t)))))),
+                                               Taggable
+                                                 (Selected
+                                                    (LstIn
+                                                       (ModsOf cls (ContainerOf t)) q)
+                                                    (FilterMutable
+                                                       (ModsOf cls (ContainerOf t))))
+                                                 (QueryTags
+                                                    (Info idx el cls (DataStoreOf t))
+                                                    (Selected
+                                                       (LstIn
+                                                          (ModsOf cls (ContainerOf t))
+                                                          (Unique q))
+                                                       (FilterMutable
+                                                          (ModsOf
+                                                             cls (ContainerOf t))))),
+                                               QueryTags
+                                                 (Info idx el cls (DataStoreOf t))
+                                                 (FilterMutable (Unique q))
+                                               ~ QueryTags
+                                                   (Info idx el cls (DataStoreOf t))
+                                                   (Selected
+                                                      (LstIn
+                                                         (ModsOf cls (ContainerOf t))
+                                                         (Unique q))
+                                                      (FilterMutable
+                                                         (ModsOf cls (ContainerOf t)))),
+                                               QueryTags
+                                                 (Info idx el cls (DataStoreOf t))
+                                                 (FilterMutable q)
+                                               ~ FillData
+                                                   (FilterMutable q)
+                                                   (TaggedCont
+                                                      (Selected
+                                                         (LstIn
+                                                            (ModsOf cls (ContainerOf t))
+                                                            q)
+                                                         (FilterMutable
+                                                            (ModsOf
+                                                               cls (ContainerOf t))))
+                                                      (QueryTags
+                                                         (Info idx el cls (DataStoreOf t))
+                                                         (Selected
+                                                            (LstIn
+                                                               (ModsOf
+                                                                  cls (ContainerOf t))
+                                                               (Unique q))
+                                                            (FilterMutable
+                                                               (ModsOf
+                                                                  cls
+                                                                  (ContainerOf t))))))),
+
+                                                                  -- manual
+                                                                  IsContainer t,
+                                                                  InfoInst (Info idx el cls (ContainerOf t)) (Unique q) m,
+                                                                  DataStoreOf (ContainerOf t) ~ DataStoreOf t,
+                                                                  (QueryTags (Info idx el cls (DataStoreOf t)) (FilterMutable q) ~ QueryTags (Info idx el cls (DataStoreOf t)) (FilterMutable q)))
+
+
+type family TransCheck q info info' t where
+    TransCheck q (Info idx el cls) info' t = (FillData
+                        (FilterMutable q)
+                        (TaggedCont
+                           (Selected
+                              (LstIn (ModsOf cls (ContainerOf t)) q)
+                              (FilterMutable (ModsOf cls (ContainerOf t))))
+                           (QueryTags
+                              (Info idx el cls (DataStoreOf t))
+                              (Selected
+                                 (LstIn
+                                    (ModsOf cls (ContainerOf t))
+                                    (Unique q))
+                                 (FilterMutable (ModsOf cls (ContainerOf t))))))
+                      ~ QueryTags
+                          (info' (DataStoreOf t)) (FilterMutable q))

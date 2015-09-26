@@ -15,7 +15,7 @@ module Data.Containers.Interface ( module Data.Containers.Interface
 import Prologue hiding (Indexable, Ixed)
 
 import qualified Data.Containers.Class as Class
-import           Data.Containers.Class as X   (HasContainer, container, simplify, withTransFunc, optBuilder, Func')
+import           Data.Containers.Class as X   (withTransFunc)
 import           Data.Containers.Poly {- x -}
 import           Data.Typeable
 
@@ -25,10 +25,6 @@ import           GHC.Prim
 
 
 
-fmap2 = fmap.fmap
-fmap3 = fmap.fmap2
-fmap4 = fmap.fmap3
-fmap5 = fmap.fmap4
 
 
 --sizeM :: MeasurableM q t m => Func' q (t -> m (ResultByQuery (Class.MeasurableInfo (ContainerOf t)) q Int))

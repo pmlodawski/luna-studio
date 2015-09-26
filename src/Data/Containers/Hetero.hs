@@ -97,8 +97,8 @@ makeLenses ''HeteroContainer
 type instance ElementByIx idx (HeteroContainer cont) = IxType idx
 type instance IndexOf     el  (HeteroContainer cont) = Ptr (IndexOf el cont) el
 
-instance HasContainer (HeteroContainer c) (HeteroContainer c) where
-    container = id
+--instance HasContainer (HeteroContainer c) (HeteroContainer c) where
+--    container = id
 
 instance Default cont => Default (HeteroContainer cont) where
     def = HeteroContainer def
@@ -109,8 +109,7 @@ instance Monoid cont => Monoid (HeteroContainer cont) where
 
 -- container instances
 
-type HeteroTransCtx idx ctx a cont idx' el = ( Container (HeteroContainer cont) idx a
-                                             , ElementOf cont ~ el
+type HeteroTransCtx idx ctx a cont idx' el = ( ElementOf cont ~ el
                                              , el ~ Unified ctx
                                              , ctx a, UnifiedEl a
                                              , IsoConvertible idx idx'

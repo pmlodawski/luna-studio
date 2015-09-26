@@ -16,12 +16,11 @@ import           Data.Containers.Poly {- x -}
 data HReusable idx a = HReusable [idx]       !a deriving (Show)
 type Reusable      a = HReusable (IndexOf' a) a
 
-instance HasContainer (HReusable idx a) (HReusable idx a) where container = id
 
 type instance ContainerOf (HReusable idx a) = HReusable idx a
 
 instance IsContainer (HReusable idx a) where fromContainer = id
-instance HasContainer2 (HReusable idx a) where container2 = id
+instance HasContainer (HReusable idx a) where container = id
 
 type instance ElementOf        (HReusable idx a) = ElementOf       a
 type instance ElementByIx  idx (HReusable idx a) = ElementByIx idx a
@@ -62,11 +61,14 @@ withIxes = flattenMod withIxes_
 withIxes' :: ([idx] -> [idx]) -> HReusable idx a -> HReusable idx a
 withIxes' = withIxes
 
+
+
 -- === Finite ===
 
 -- [+] Measurable
 -- [+] MinBounded
 -- [+] MaxBounded
+
 
 type instance ModsOf MeasurableQSM (HReusable idx a) = ModsOf MeasurableQSM a
 type instance ModsOf MinIndexedQSM (HReusable idx a) = ModsOf MinIndexedQSM a
@@ -77,118 +79,59 @@ instance MinIndexedQM q m a => MinIndexedQSM (HReusable idx a) m q s where minIn
 instance MaxIndexedQM q m a => MaxIndexedQSM (HReusable idx a) m q s where maxIndexQSM _ _ = queried (Proxy :: Proxy q) maxIndexM' . unwrap
 
 
-
-
 -- === Construction ===
 
 -- [+] Singleton
 -- [ ] Allocable
--- [ ] Expandable
--- [ ] Growable
-
-type family Foo (a :: [*]) :: [*]
-
-type instance ModsOf SingletonQSM (HReusable idx a) = ModsOf SingletonQSM a
-instance SingletonQM el q m a => SingletonQSM el (HReusable idx a) m q s where singletonQSM _ _    = (fmap . fmap) wrap . queried (Proxy :: Proxy q) singletonM'
---instance SingletonQM el q m a => SingletonQSM el (HReusable idx a) m q s where singletonQSM _ _    = (fmap . fmap) wrap . queried (Proxy :: Proxy q) singletonM'
-
---tstf :: (SingletonQM q opts m t) => Proxy opts
---                 -> q
---                 -> m (ResultByQuery
---                         (Info NA q SingletonQSM (DataStoreOf (ContainerOf t))) opts t)
---tstf :: (SingletonQM el opts m t) => Proxy opts -> el -> m (ResultByQuery (SingletonInfo el (DataStoreOf (ContainerOf t))) opts t)
---tstf :: _ => Proxy (opts :: [*]) -> el -> m (a,b)
---tstf q v = (ixed . queried q) singletonM' v
-
-
-
-    --type instance ModsOf ExpandableQSM2 (HReusable idx a) = ModsOf ExpandableQSM2 a
-    --instance (Monad m, ExpandableQM2 (Ixed ': q) m a, idx ~ IndexOf' (DataStoreOf a)) => ExpandableQSM2 (HReusable idx a) m q s where
-    --    expandQSM2 _ _ c = do
-    --        (ixs, r) <- splitResData <$> nestedLens wrapped ((ixed . queried (Proxy :: Proxy q)) expandM2') c
-    --        return $ fmap (withIxes' (<> ixs)) r
-
-
---withIxes :: ([idx] -> [idx']) -> HReusable idx a -> HReusable idx' a
-
-
---splitResData :: ResW (d,ds) r -> (d, ResW ds r)
-
-
--- Utils
-
---freeAllIxes :: I.TracksIxes a [idx] => HReusable t a -> HReusable idx a
---freeAllIxes (HReusable _ a) = HReusable (I.indexes a) a
-
-
-
--- === Finite ===
-
--- [+] Measurable
--- [+] MinIndexed
--- [+] MaxIndexed
-
---instance I.MeasurableT q a size => Measurable q mods (HReusable idx a) size where size     spec = size     (polySpecX spec) . unwrap
---instance I.MinIndexedT q a idx  => MinIndexed q mods (HReusable idx a) idx  where minIndex spec = minIndex (polySpecX spec) . unwrap
---instance I.MaxIndexedT q a idx  => MaxIndexed q mods (HReusable idx a) idx  where maxIndex spec = maxIndex (polySpecX spec) . unwrap
-
-
--- === Construction ===
-
--- [+] Singleton
--- [+] Allocable
+-- [+] Expandable
 -- [+] Growable
--- [ ] Expandable
 
---instance (I.SingletonT  q a el, I.TracksIxes a [idx]) => Singleton  q mods (HReusable idx a) el                         where singleton spec   = freeAllIxes . wrap . singleton (polySpecX spec)
---instance (I.AllocableT  q a   , I.TracksIxes a [idx]) => Allocable  q mods (HReusable idx a)                            where alloc     spec   = freeAllIxes . wrap . alloc     (polySpecX spec)
+type instance ModsOf SingletonQSM  (HReusable idx a) = ModsOf SingletonQSM a
+type instance ModsOf ExpandableQSM (HReusable idx a) = ModsOf ExpandableQSM a
+type instance ModsOf GrowableQSM   (HReusable idx a) = ModsOf GrowableQSM a
 
---type instance ModsOf (HReusable idx a)     Growable = '[Ixed ]
---instance (I.GrowableT '[Ixed] a ([idx], a'), IsContainer a) => Growable q '[False] (HReusable idx a)           (HReusable idx a') where grow      spec i (HReusable ixs a) = (HReusable (ixs <> ixs') a') where
---                                                                                                                                                                                            (ixs', a') = ixed I.grow i a
+instance SingletonQM el q m a => SingletonQSM el (HReusable idx a) m q s where singletonQSM _ _    = (fmap . fmap) wrap . queried (Proxy :: Proxy q) singletonM'
 
---instance (I.GrowableT '[Ixed] a ([idx], a'), IsContainer a) => Growable q '[True ] (HReusable idx a)    ([idx], HReusable idx a') where grow      spec i (HReusable ixs a) = (ixs', HReusable (ixs <> ixs') a') where
---                                                                                                                                                                                            (ixs', a') = ixed I.grow i a
+instance (Monad m, ExpandableQM (Ixed ': q) m a, idx ~ IndexOf' (DataStoreOf a)) => ExpandableQSM (HReusable idx a) m q s where
+    expandQSM _ _ c = do
+        (ixs, r) <- splitResData <$> nestedLens wrapped ((ixed . queried (Proxy :: Proxy q)) expandM') c
+        return $ fmap (withIxes' (<> ixs)) r
 
-
--- === Concatenation ===
--- [+] Appendable
--- [ ] Prependable
--- [ ] Addable
--- [ ] Removable
-
---instance I.AppendableT  q a el a' => Appendable  q mods (HReusable idx a) el (HReusable idx a') where append  spec el = wrapped %~ append  (polySpecX spec) el
---instance I.PrependableT q a el a' => Prependable q mods (HReusable idx a) el (HReusable idx a') where prepend spec el = wrapped %~ prepend (polySpecX spec) el
---instance I.AddableT     q a el a' => Addable     q mods (HReusable idx a) el (HReusable idx a') where add     spec el = wrapped %~ add     (polySpecX spec) el
---instance I.RemovableT   q a el a' => Removable   q mods (HReusable idx a) el (HReusable idx a') where remove  spec el = wrapped %~ remove  (polySpecX spec) el
-
---instance (I.Insertable a idx el a', I.ExpandableT '[Ixed] a ([idx], a), IsContainer a) => Addable q mods (HReusable idx a) el (HReusable idx a') where
---    add spec el (HReusable ixs a) = case ixs of (x:xs) -> HReusable xs  $ I.insert x  el a
---                                                     []     -> HReusable xs' $ I.insert x' el a' where
---                                                               (x':xs', a') = ixed I.expand a
+instance (Monad m, GrowableQM (Ixed ': q) m a, idx ~ IndexOf' (DataStoreOf a)) => GrowableQSM (HReusable idx a) m q s where
+    growQSM _ _ i c = do
+        (ixs, r) <- splitResData <$> nestedLens wrapped ((ixed . queried (Proxy :: Proxy q)) growM' i) c
+        return $ fmap (withIxes' (<> ixs)) r
 
 
 -- === Modification ===
 
--- [+] Indexable
+-- [+] Appendable
+-- [ ] Prependable
+-- [ ] Addable
+-- [ ] Removable
 -- [+] Insertable
--- [ ] Reservable
--- [ ] Releasable
 
---instance  I.IndexableT  q a idx el                     => Indexable  q mods (HReusable idx a) idx el                  where index  spec idx   = index (polySpecX spec) idx . unwrap
---instance (I.InsertableT q a idx el a', Resize s a idx) => Insertable q mods (HReusable idx a) idx el (HReusable idx a') where insert spec idx a = (wrapped %~ insert (polySpecX spec) idx a) . resize idx
+type instance ModsOf AppendableQSM (HReusable idx a) = ModsOf AppendableQSM a
+type instance ModsOf AddableQSM    (HReusable idx a) = ModsOf InsertableQSM a
+
+instance AppendableQM el q m a => AppendableQSM el (HReusable idx a) m q s where appendQSM _ _ el c = nestedLens wrapped (queried (Proxy :: Proxy q) appendM' el) c
+
+instance (AddableQM el q m (HReusable idx a), InsertableQM idx el q m a, TransCheck q (InsertableInfo idx el) (AddableInfo el) a, Expandable (HReusable idx a)) => AddableQSM el (HReusable idx a) m q s where
+    addQSM q i el c@(HReusable ixs a) = case ixs of (x:xs) -> fmap2 (withIxes tail) $ nestedLens wrapped (queried (Proxy :: Proxy q) insertM' x el) c
+                                                    []     -> queried (Proxy :: Proxy q) addM' el $ expand c
 
 
--- === Indexing ===
+---- === Indexing ===
 
--- [-] TracksElems
--- [+] TracksIxes
+-- [+] Indexable
+-- [ ] TracksElems
+-- [ ] TracksIxes
 -- [+] TracksFreeIxes
--- [-] TracksUsedIxes
-
---instance I.TracksElemsT q a elems => TracksElems q mods (HReusable idx a) elems where elems   spec = elems   (polySpecX spec) . unwrap
---instance I.TracksIxesT  q a ixes  => TracksIxes     q mods (HReusable idx a) ixes  where indexes  spec                     = indexes (polySpecX spec) . unwrap
---instance           (ixes ~ [idx]) => TracksFreeIxes q mods (HReusable idx a) ixes  where freeIxes _ (HReusable ixs _) = ixs
+-- [ ] TracksUsedIxes
 
 
+type instance ModsOf IndexableQSM      (HReusable idx a) = ModsOf IndexableQSM a
+type instance ModsOf TracksFreeIxesQSM (HReusable idx a) = '[]
 
+instance (idx' ~ idx, IndexableQM idx el q m a) => IndexableQSM      idx' el (HReusable idx a) m q s where indexQSM    _ _ idx = queried (Proxy :: Proxy q) indexM' idx . unwrap
+instance (idx' ~ idx, Monad m)                  => TracksFreeIxesQSM idx'    (HReusable idx a) m q s where freeIxesQSM _ _ (HReusable ixs _) = return $ Result () ixs

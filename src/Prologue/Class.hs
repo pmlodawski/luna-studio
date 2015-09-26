@@ -192,3 +192,14 @@ mapOverM lens f a = do
 
 ifElseId :: Bool -> (a -> a) -> (a -> a)
 ifElseId cond a = if cond then a else id
+
+
+
+fmap2 = fmap.fmap
+fmap3 = fmap.fmap2
+fmap4 = fmap.fmap3
+fmap5 = fmap.fmap4
+fmap6 = fmap.fmap5
+fmap7 = fmap.fmap6
+fmap8 = fmap.fmap7
+fmap9 = fmap.fmap8

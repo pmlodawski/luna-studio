@@ -6,7 +6,7 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE PolyKinds #-}
-{-# LANGUAGE PartialTypeSignatures #-}
+-- {-# LANGUAGE PartialTypeSignatures #-}
 
 module Data.Containers.Resizable where
 
@@ -55,10 +55,8 @@ instance (IsDataStore a, Default l) => IsDataStore (Resizable l a) where fromDat
 type instance ContainerOf (Resizable l a) = Resizable l a
 
 instance IsContainer (Resizable l a) where fromContainer = id
-instance HasContainer2 (Resizable l a) where container2 = id
+instance HasContainer (Resizable l a) where container = id
 
-
-instance HasContainer (Resizable l a) (Resizable l a) where container = id
 
 type instance ElementOf        (Resizable l a) = ElementOf       a
 type instance ElementByIx  idx (Resizable l a) = ElementByIx idx a
@@ -74,6 +72,7 @@ type instance DataStoreOf (Resizable l a) = DataStoreOf a
 -- [+] MinBounded
 -- [+] MaxBounded
 
+
 type instance ModsOf MeasurableQSM (Resizable l a) = ModsOf MeasurableQSM a
 type instance ModsOf MinIndexedQSM (Resizable l a) = ModsOf MinIndexedQSM a
 type instance ModsOf MaxIndexedQSM (Resizable l a) = ModsOf MaxIndexedQSM a
@@ -83,191 +82,54 @@ instance MinIndexedQM q m a => MinIndexedQSM (Resizable l a) m q s where minInde
 instance MaxIndexedQM q m a => MaxIndexedQSM (Resizable l a) m q s where maxIndexQSM _ _ = queried (Proxy :: Proxy q) maxIndexM' . unwrap
 
 
-
 -- === Construction ===
 
 -- [+] Singleton
--- [ ] Allocable
--- [ ] Expandable
--- [ ] Growable
+-- [+] Allocable
+-- [+] Expandable
+-- [+] Growable
 
 type instance ModsOf SingletonQSM (Resizable l a) = ModsOf SingletonQSM a
 instance (SingletonQM el q m a, Default l) => SingletonQSM el (Resizable l a) m q s where singletonQSM _ _    = (fmap . fmap) wrap . queried (Proxy :: Proxy q) singletonM'
 
+type instance ModsOf AllocableQSM (Resizable l a) = ModsOf AllocableQSM a
+instance (AllocableQM q m a, Default l) => AllocableQSM (Resizable l a) m q s where allocQSM _ _    = (fmap . fmap) wrap . queried (Proxy :: Proxy q) allocM'
 
---type AssumeQuery i q s = ResultX (DataStoreInfo i) q ~ ResultBySelX i s
+type instance ModsOf ExpandableQSM (Resizable l a) = ModsOf GrowableQSM a
+instance (GrowableQM q m a, TransCheck q GrowableInfo ExpandableInfo a, ResizeStep l a) => ExpandableQSM (Resizable l a) m q s where expandQSM _ _ c = nestedLens wrapped (queried (Proxy :: Proxy q) growM' (resizeStep c)) c
 
-
-type instance ModsOf ExpandableQSM2 (Resizable l a) = ModsOf ExpandableQSM2 a
-instance ExpandableQM2 q m a => ExpandableQSM2 (Resizable l a) m q s where expandQSM2 _ _    = nestedLens wrapped $ queried (Proxy :: Proxy q) expandM2'
---instance ExpandableQM2 q m a =>            ExpandableQSM2 (Resizable l a) m q s where expandQSM2 _ _    = nestedLens wrapped $ queried (Proxy :: Proxy q) expandM2'
-
--- AssumeQuery (ExpandableInfo2 a) q s
-        --instance ExpandableQSM2 (Resizable l a) m q s where expandQSM2 _ _ (Resizable l a) = do
-        --                                                                                                                                                            exp <- queried (Proxy :: Proxy q) expandM2' a
-        --                                                                                                                                                            return $ fmap (Resizable l) exp
-
---type family ResultBySelX (info :: *) (s :: [Bool]) where ResultBySelX (Info idx el cls cont) s = ResultX (Info idx el cls (DataStoreOf cont)) (Selected s (FilterMutable (ModsOf cls cont)))
-
---    FillData q (TaggedCont
---        (Selected
---            (LstIn (ModsOf ExpandableQSM2 (ContainerOf t)) q)
---            (FilterMutable (ModsOf ExpandableQSM2 (ContainerOf t))))
---        (ResultX
---            (ExpandableInfo2 (DataStoreOf (ContainerOf t)))
---            (Selected
---                (LstIn (ModsOf ExpandableQSM2 (ContainerOf t)) q)
---                (FilterMutable (ModsOf ExpandableQSM2 (ContainerOf t))))))
---    ~ ResultX (ExpandableInfo2 (DataStoreOf (ContainerOf t))) q
-
---expxx =
-
---class ExpandableQSM2            cont m q s where expandQSM2   :: (info ~ ExpandableInfo2  cont) => Query q s -> info ->        cont -> m (ResultBySelX info s cont)
+type instance ModsOf GrowableQSM (Resizable l a) = ModsOf GrowableQSM a
+instance GrowableQM q m a => GrowableQSM (Resizable l a) m q s where growQSM _ _    = nestedLens wrapped . queried (Proxy :: Proxy q) growM'
 
 
+-- === Modification ===
 
+-- [+] Appendable
+-- [ ] Prependable
+-- [ ] Addable
+-- [ ] Removable
 
---instance Monad m  => MinIndexed (Resizable l a) m q s where minIndex _ _ _ = simple 0
---instance Monad m  => MaxIndexed (Resizable l a) m q s where maxIndex _ _   = (fmap.fmap) pred . sizeM
+type instance ModsOf AppendableQSM (Resizable l a) = ModsOf AppendableQSM a
+type instance ModsOf InsertableQSM (Resizable l a) = ModsOf InsertableQSM a
 
+instance   AppendableQM     el q m a => AppendableQSM     el (Resizable l a) m q s where appendQSM _ _ = nestedLens wrapped .  queried (Proxy :: Proxy q) appendM'
+instance   InsertableQM idx el q m a => InsertableQSM idx el (Resizable l a) m q s where insertQSM _ _ = nestedLens wrapped .: queried (Proxy :: Proxy q) insertM'
 
---class Measurable               cont m q s where sizeQSM      :: info ~ MeasurableInfo    cont => Query q s -> info ->       cont -> m (ResultBySel info s Int)
-
---xxx :: forall info cont q s m. info ~ MeasurableInfo cont => Query q s -> info -> cont -> m (ResultBySel info s Int)
---xxx _ _ = queried (Proxy :: Proxy q) sizeM
-
---yyy :: forall q t m s info. (MeasurableFinalT q m t) => Query q s -> info -> t -> m (ResultByQuery (MeasurableInfo (ContainerOf t)) q Int)
---yyy _ _ = queried (Proxy :: Proxy q) sizeM
----- === Finite ===
-
----- [+] Measurable
----- [+] MinIndexed
----- [+] MaxIndexed
-
---instance I.MeasurableT q a sizeQSM => Measurable q mods (Resizable l a) sizeQSM where sizeQSM     spec = sizeQSM     (polySpecX spec) . unwrap
---instance I.MinIndexedT q a idx  => MinIndexed q mods (Resizable l a) idx  where minIndex spec = minIndex (polySpecX spec) . unwrap
---instance I.MaxIndexedT q a idx  => MaxIndexed q mods (Resizable l a) idx  where maxIndex spec = maxIndex (polySpecX spec) . unwrap
-
------- === Construction ===
-
------- [+] Singleton
------- [+] Allocable
------- [+] Growable
------- [+] Expandable
-
---instance (Default s, I.SingletonT  q a el)                       => Singleton  q mods (Resizable l a) el  where singleton spec   = wrap . singleton (polySpecX spec)
---instance (Default s, I.AllocableT  q a   )                       => Allocable  q mods (Resizable l a)     where alloc     spec   = wrap . alloc     (polySpecX spec)
---instance (I.GrowableT q a a', Result q s a' out)                 => Growable   q mods (Resizable l a) out where growQSM      spec   = runWrapped1 spec growQSM
---instance (I.GrowableT q a a', Result q s a' out, ResizeStep s a) => Expandable q mods (Resizable l a) out where expand    spec c = growQSM (rebaseSpecX spec) (resizeStep c) c
-
-
---class ExpandableF'               cont m q s where expandF'   :: (Monad m, info ~ (RawInfo ExpandableF' cont)) => Query q s -> ExpandableInfo' cont -> cont -> m (ResultF' info s)
---nestedLens :: (Functor m, Functor n) => Lens a b c d -> (c -> m (n d)) -> (a -> m (n b))
-
---type instance ModsOf (Resizable l a) ExpandableF' = ModsOf a ExpandableF'
---instance ExpandableF' (Resizable l a) m q s where expandF' q i = nestedLens wrapped $ expandF' (freeQuery q) (freeInfo i)
---instance ExpandableF' a m q s => ExpandableF' (Resizable l a) m q s where expandF' q i (Resizable l a) = expandF' (Query) Info a
---instance ExpandableF' a m q s => ExpandableF' (Resizable l a) m q s where expandF' q i = nestedLens wrapped $ runModsF (Proxy :: Proxy q) expandFX i
-
---type instance ModsOf ExpandableF' (V.Vector a)   = '[Ixed ]
---instance Monad m  => ExpandableF' (V.Vector a) m q '[False] where expandF' _ _ v = simple $ runST $ V.unsafeFreeze =<< flip MV.unsafeGrow 1 =<< V.unsafeThaw v
---expandM :: ExpandableFinalT q m t => Func' q (t -> m (ResultByQuery (ExpandableInfo (ContainerOf t)) q t))
-
---type family ResultBySel (info :: *) (s :: [Bool]) where ResultBySel (Info idx el cls cont) s = ResultByQuery (Info idx el cls cont) (Selected s (ModsOf cls cont))
-
---type family ResultBySel (info :: *) (s :: [Bool]) where ResultBySel (Info idx el cls cont) s = ResultByQuery (Info idx el cls cont) (Selected s (FilterMutable (ModsOf cls cont)))
---type MatchResults i s i' q' = (ResultBySel i s ~ ResultByQuery i' q')
-
-        --type instance ModsOf ExpandableQSM (Resizable l a) = ModsOf ExpandableQSM a
-        --instance (ExpandableFinalT q m a, MatchResultsCls ExpandableInfo (Resizable l a) a s q) => ExpandableQSM (Resizable l a) m q s where expandQSM q i = nestedLens wrapped $ queried (Proxy :: Proxy q) expandM
-
-
---expandM :: (ExpandableFinalT q m t, Simplified ExpandableInfo q t a) => Func' q (t -> m a)
-
-
---m (ResultBySel (ExpandableInfo (Resizable l a)) s (Resizable l a))
-
---class Expandable               cont m q s where expand    :: info ~ ExpandableInfo    cont => Query q s -> info ->       cont -> m (ResultBySel info s cont)
-
-
---class ExpandableF'               cont m q s where expandF'    :: info ~ ExpandableInfo    cont => Query q s -> info ->       cont -> m (ResultBySel info s cont)
---class AppendableF'            el cont m q s where appendF'    :: info ~ AppendableInfo el cont => Query q s -> info -> el -> cont -> m (ResultBySel info s cont)
---class SingletonF'             el cont m q s where singletonF' :: info ~ SingletonInfo  el cont => Query q s -> info -> el         -> m (ResultBySel info s cont)
-
---type XXX l a m q s = SubOperation (RawInfo Expandable (l a)) s (RawInfo Expandable a) q m
-
---instance (MatchResults (RawInfo ExpandableF' (Resizable l a)) s (RawInfo ExpandableF' a) q m) => ExpandableF' (Resizable l a) m q s where expandF' q i = nestedLens wrapped $ mytst4' (Proxy :: Proxy q)
---instance XXX (Resizable l) a m q s => ExpandableF' (Resizable l a) m q s where expandF' q i = nestedLens wrapped $ mytst4' (Proxy :: Proxy q)
-
---type family ResultF' (info :: *) (s :: [Bool]) where ResultF' (Info idx el cls cont) s = ResultF (Selected s (ModsOf cont cls)) (Info idx el cls cont) cont
-                                                  --m (ResultF' (RawInfo ExpandableF' cont) s)
-
-                                                  --m (ResultF (Selected s (ModsOf cont ExpandableF')) (ExpandableInfo' (Resizable l a)) (Resizable l a))
---tstx :: _ => Query q s -> i -> (Resizable l a) -> m (ResultF q                                       (ExpandableInfo' a)               (Resizable l a))
---tstx :: (Monad m, s' ~ LstIn mods q, mods ~ ModsOf a ExpandableF', ainfo ~ ExpandableInfo' a, aresult ~ ResultF q ainfo, Functor aresult, ExpandableF' a m q s', ResultF (Selected s' mods) ainfo ~ aresult, ResultF (Selected s mods) (RawInfo ExpandableF' (Resizable l a)) ~ aresult)
---     => Query q s -> ExpandableInfo' (Resizable l a) -> (Resizable l a) -> m (ResultF' (RawInfo ExpandableF' (Resizable l a)) s)
-                                                                       --m (ResultF' (RawInfo ExpandableF' (Resizable l a)) s)
-
---ResultF' (Info idx el cls cont) s = ResultF (Selected s (ModsOf cont cls)) (Info idx el cls cont) cont
-
---mytst4' :: (ContOperation q info m, info ~ (RawInfo ExpandableF' t)) => Proxy (q :: [*]) -> t -> m (ResultF q info t)
---mytst4' = flip runModsF expandFX
-
---tstx ::                                                                                    Query q s -> ExpandableInfo' t -> t             -> m (ResultF' info s)
---tstx ::                                                                                    Query q s -> ExpandableInfo' t -> t             -> m (ResultF (Selected s (ModsOf cont cls)) (Info idx el cls cont) cont)
-
-
---type MatchResults i s q' i' m c = (ResultF' i s ~ ResultF q' i' c, ContOperation q' i' m)
---tstx :: (MatchResults i s q' (RawInfo ExpandableF' a) m (Resizable l a)) => Proxy (q' :: [*]) -> Query q s -> i                 -> Resizable l a -> m (ResultF' i s)
-
-
---type MatchResults i s q' i' c = (ResultF' i s ~ ResultF q' i' c)
---tstx :: (ContOperation q' i' m, i' ~ (RawInfo ExpandableF' a), result ~ ResultF' i s, result' ~ ResultF q' i' (Resizable l a), result ~ result') => Proxy (q' :: [*]) -> Query q s -> i                 -> Resizable l a -> m result
-
---class ExpandableF'               cont m q s where expandF'   :: (Monad m, info ~ (RawInfo ExpandableF' cont)) => Query q s -> ExpandableInfo' cont -> cont -> m (ResultF' info s)
-
-
- --(Monad m, info ~ (RawInfo ExpandableF' (c a))) =>                                                  Query q s  -> ExpandableInfo' (c a) -> (c a) -> m (ResultF' info s)
-
---tstx  :: (i' ~ (RawInfo ExpandableF' a), Wrapped c, MatchResults i s i' q', ContOperation q' i' m) => Proxy (q' :: [*]) -> (Query q s) -> i                     -> (c a) -> m (ResultBySel i s (c a))
---tstx q' q i = nestedLens wrapped $ mytst4' q'
---tstx q' (q :: Query q s) i = nestedLens wrapped $ flip runModsF expandFX q'
---runModsF (Proxy :: Proxy '[]) expandFX'
------- === Concatenation ===
------- [+] Appendable
------- [+] Prependable
------- [+] Addable
------- [+] Removable
-
-----instance (AppendableX q (LstIn (ModsOf a AppendableX) q) a el, Result2 (In I.Ixed q) (Resizable s) (MonoResultEl q a el) (MonoResultEl q (Resizable l a) el) ) => AppendableX  q mods (Resizable l a) el where appendx spec = runWrapped1 spec appendx
-
-
---instance (I.AppendableT  q a el a', Result q s a' out) => Appendable  q mods (Resizable l a) el out where append  spec = runWrapped1 spec append
---instance (I.PrependableT q a el a', Result q s a' out) => Prependable q mods (Resizable l a) el out where prepend spec = runWrapped1 spec prepend
---instance (I.AddableT     q a el a', Result q s a' out) => Addable     q mods (Resizable l a) el out where add     spec = runWrapped1 spec add
---instance (I.RemovableT   q a el a', Result q s a' out) => Removable   q mods (Resizable l a) el out where remove  spec = runWrapped1 spec remove
-
-
----- === Modification ===
-
----- [+] Indexable
----- [+] Insertable
----- [ ] Reservable
----- [ ] Releasable
-
---instance  I.IndexableT  q a idx el                                                      => Indexable  q mods (Resizable l a) idx el     where index  spec idx   = index (polySpecX spec) idx . unwrap
---instance (I.InsertableT q a idx el a', Resize s a idx, Result2' q (Resizable s) a' out) => Insertable q mods (Resizable l a) idx el out where insert spec idx a = runWrapped2 spec insert idx a . resize idx
 
 
 ---- === Indexing ===
 
----- [+] TracksElems
----- [+] TracksIxes
----- [-] TracksFreeIxes
----- [-] TracksUsedIxes
+-- [+] Indexable
+-- [ ] TracksElems
+-- [ ] TracksIxes
+-- [ ] TracksFreeIxes
+-- [ ] TracksUsedIxes
 
---instance I.TracksElemsT q a elems => TracksElems q mods (Resizable l a) elems where elems   spec = elems   (polySpecX spec) . unwrap
---instance I.TracksIxesT  q a ixes  => TracksIxes  q mods (Resizable l a) ixes  where indexes spec = indexes (polySpecX spec) . unwrap
+
+type instance ModsOf IndexableQSM (Resizable l a) = ModsOf IndexableQSM a
+
+instance   IndexableQM idx el q m a => IndexableQSM idx el (Resizable l a) m q s where indexQSM _ _ idx = queried (Proxy :: Proxy q) indexM' idx . unwrap
+
 
 
 ------------------------------------
@@ -290,8 +152,12 @@ instance Default Exponential where def = Exponential
 --instance                          ResizeStep Minimal     cont where resizeStep c = 1
 --instance I.Measurable cont Int => ResizeStep Exponential cont where resizeStep c = checkZeroSize $ I.sizeQSM c
 
+class                                                              ResizeStep style       cont where resizeStep :: Resizable style cont -> Int
+instance                                                           ResizeStep Minimal     cont where resizeStep _ = 1
+instance MeasurableQM '[] Identity (Resizable Exponential cont) => ResizeStep Exponential cont where resizeStep   = checkZeroSize . size
 
---checkZeroSize s = if s == 0 then 1 else s
+
+checkZeroSize s = if s == 0 then 1 else s
 
 --dupCheckSize i = dupSize i . checkZeroSize
 
@@ -301,3 +167,41 @@ instance Default Exponential where def = Exponential
 
 --isOverBounds :: (Ord idx, I.MaxIndexed cont idx, HasContainer t cont) => idx -> t -> Bool
 --isOverBounds idx cont = idx > I.maxIndex cont
+
+
+
+
+
+
+
+-- ---- TODO ----
+-- after doing it we could be able to optimize the premise of ResizeStep Exponential and make inference nicer
+--
+-- -- Optimize following use cases:
+--
+-- xxx :: (MeasurableQM2 '[] Identity t, (ResultX
+--                         (Info NA NA MeasurableQSM2 (DataStoreOf t))
+--                         (Selected
+--                            (LstIn (ModsOf MeasurableQSM2 t) '[])
+--                            (FilterMutable (ModsOf MeasurableQSM2 t)))
+--                       ~ ()),
+--
+-- DataFillable
+--                                 '[]
+--                                 (TaggedCont
+--                                    (Selected
+--                                       (LstIn (ModsOf MeasurableQSM2 t) '[])
+--                                       (FilterMutable (ModsOf MeasurableQSM2 t)))
+--                                    ()), (Taggable
+--                         (Selected
+--                            (LstIn (ModsOf MeasurableQSM2 t) '[])
+--                            (FilterMutable (ModsOf MeasurableQSM2 t)))
+--                         ())) => Resizable style t -> Int
+--
+-- --- in particular:
+--
+-- (Selected
+--                            (LstIn (ModsOf MeasurableQSM2 t) '[])
+--                            (FilterMutable (ModsOf MeasurableQSM2 t)))
+--
+-- -- should always return []
