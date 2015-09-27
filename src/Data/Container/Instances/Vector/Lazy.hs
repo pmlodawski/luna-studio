@@ -10,10 +10,10 @@
 {-# LANGUAGE OverlappingInstances #-}
 #endif
 
-module Data.Containers.Instances.Vector.Lazy where
+module Data.Container.Instances.Vector.Lazy where
 
-import           Prologue hiding (Indexable, index, Bounded, Ixed, switch, Simple, simple)
-import           Data.Containers.Class
+import           Prologue hiding (Indexable, index, Bounded, switch)
+import           Data.Container.Class
 
 import           Data.Map    (Map)
 import qualified Data.Map    as Map
@@ -25,10 +25,12 @@ import qualified Data.Vector.Unboxed         as UV
 import qualified Data.Vector.Unboxed.Mutable as UMV
 import           Control.Monad.ST
 import           Data.Typeable
-import qualified Data.Containers.Interface as I
-import           Data.Containers.Poly {- x -}
+import qualified Data.Container.Interface as I
+import           Data.Container.Poly {- x -}
 import           Data.Maybe (fromJust)
 import GHC.Prim
+
+import qualified Data.Container.Mods as M
 
 import Data.TypeLevel.List (In)
 
@@ -46,6 +48,8 @@ type instance IndexOf      el  (V.Vector a) = Int
 type instance DataStoreOf  (V.Vector a) = V.Vector a
 instance      HasDataStore (V.Vector a) where dataStore     = id
 instance      IsDataStore  (V.Vector a) where fromDataStore = id
+
+type instance HomoIndexOf V.Vector = Int
 
 
 -- === Finite ===
@@ -71,21 +75,21 @@ instance Monad m => MaxIndexedQSM (V.Vector a) m q s where maxIndexQSM _ _   = s
 -- [+] Growable
 
 
-type instance          ModsOf SingletonQSM    (V.Vector a)   = '[Ixed ]
-instance (Monad m, a ~ a') => SingletonQSM a' (V.Vector a) m q '[False] where singletonQSM _ _ = simpleM . V.singleton
-instance (Monad m, a ~ a') => SingletonQSM a' (V.Vector a) m q '[True ] where singletonQSM _ _ = resM 0  . singleton
+type instance          ModsOf SingletonQSM    (V.Vector a)   = '[M.Ixed]
+instance (Monad m, a ~ a') => SingletonQSM a' (V.Vector a) m q '[False ] where singletonQSM _ _ = simpleM . V.singleton
+instance (Monad m, a ~ a') => SingletonQSM a' (V.Vector a) m q '[True  ] where singletonQSM _ _ = resM 0  . singleton
 
-type instance          ModsOf AllocableQSM    (V.Vector a)   = '[Ixed ]
-instance           Monad m => AllocableQSM    (V.Vector a) m q '[False] where allocQSM _ _ i   = simpleM $ runST $ V.unsafeFreeze =<< MV.unsafeNew i
-instance           Monad m => AllocableQSM    (V.Vector a) m q '[True ] where allocQSM _ _ i   = resM [0..i-1] $ alloc i
+type instance          ModsOf AllocableQSM    (V.Vector a)   = '[M.Ixed]
+instance           Monad m => AllocableQSM    (V.Vector a) m q '[False ] where allocQSM _ _ i   = simpleM $ runST $ V.unsafeFreeze =<< MV.unsafeNew i
+instance           Monad m => AllocableQSM    (V.Vector a) m q '[True  ] where allocQSM _ _ i   = resM [0..i-1] $ alloc i
 
 type instance          ModsOf ExpandableQSM   (V.Vector a)   = ModsOf GrowableQSM (V.Vector a)
 instance          (Monad m, GrowableQM q m (V.Vector a), TransCheck q GrowableInfo ExpandableInfo (V.Vector a))
                            => ExpandableQSM   (V.Vector a) m q s        where expandQSM _ _    = queried (Proxy :: Proxy q) growM' 1
 
-type instance          ModsOf GrowableQSM     (V.Vector a)   = '[Ixed ]
-instance          Monad m  => GrowableQSM     (V.Vector a) m q '[False] where growQSM _ _ i v  = simpleM $ runST $ V.unsafeThaw v >>= flip MV.unsafeGrow i >>= V.unsafeFreeze
-instance          Monad m  => GrowableQSM     (V.Vector a) m q '[True ] where growQSM _ _ i v  = resM [size v .. size v + i - 1] $ grow i v
+type instance          ModsOf GrowableQSM     (V.Vector a)   = '[M.Ixed]
+instance          Monad m  => GrowableQSM     (V.Vector a) m q '[False ] where growQSM _ _ i v  = simpleM $ runST $ V.unsafeThaw v >>= flip MV.unsafeGrow i >>= V.unsafeFreeze
+instance          Monad m  => GrowableQSM     (V.Vector a) m q '[True  ] where growQSM _ _ i v  = resM [size v .. size v + i - 1] $ grow i v
 
 
 
@@ -97,13 +101,13 @@ instance          Monad m  => GrowableQSM     (V.Vector a) m q '[True ] where gr
 -- [+] Insertable
 
 
-type instance            ModsOf AppendableQSM    (V.Vector a)   = '[Ixed ]
-instance   (a ~ a', Monad m) => AppendableQSM a' (V.Vector a) m q '[False] where appendQSM _ _ el v  = simpleM       $ V.snoc v el
-instance   (a ~ a', Monad m) => AppendableQSM a' (V.Vector a) m q '[True ] where appendQSM _ _ el v  = resM (size v) $ append el v
+type instance            ModsOf AppendableQSM    (V.Vector a)   = '[M.Ixed]
+instance   (a ~ a', Monad m) => AppendableQSM a' (V.Vector a) m q '[False ] where appendQSM _ _ el v  = simpleM       $ V.snoc v el
+instance   (a ~ a', Monad m) => AppendableQSM a' (V.Vector a) m q '[True  ] where appendQSM _ _ el v  = resM (size v) $ append el v
 
-type instance                       ModsOf InsertableQSM        (V.Vector a)   = '[Ixed ]
-instance   (a ~ a', idx ~ Int, Monad m) => InsertableQSM idx a' (V.Vector a) m q '[False] where insertQSM _ _ idx el v = simpleM  $ (V.//) v [(idx,el)]
-instance   (a ~ a', idx ~ Int, Monad m) => InsertableQSM idx a' (V.Vector a) m q '[True ] where insertQSM _ _ idx      = resM idx .: insert idx
+type instance                       ModsOf InsertableQSM        (V.Vector a)   = '[M.Ixed]
+instance   (a ~ a', idx ~ Int, Monad m) => InsertableQSM idx a' (V.Vector a) m q '[False ] where insertQSM _ _ idx el v = simpleM  $ (V.//) v [(idx,el)]
+instance   (a ~ a', idx ~ Int, Monad m) => InsertableQSM idx a' (V.Vector a) m q '[True  ] where insertQSM _ _ idx      = resM idx .: insert idx
 
 
 ---- === Indexing ===
@@ -115,8 +119,8 @@ instance   (a ~ a', idx ~ Int, Monad m) => InsertableQSM idx a' (V.Vector a) m q
 -- [ ] TracksUsedIxes
 
 
-type instance                                                 ModsOf IndexableQSM        (V.Vector a)   = '[Unchecked, Try]
-instance   (a ~ a', idx ~ Int, Cond unchecked, Cond try, Monad m) => IndexableQSM idx a' (V.Vector a) m q '[unchecked, try] where indexQSM _ _ idx v = simple' <$> checkedBoundsIfM (Proxy :: Proxy unchecked) (Proxy :: Proxy try) idx v (V.unsafeIndex v idx)
+type instance                                                 ModsOf IndexableQSM        (V.Vector a)   = '[M.Unchecked, M.Try]
+instance   (a ~ a', idx ~ Int, Cond unchecked, Cond try, Monad m) => IndexableQSM idx a' (V.Vector a) m q '[  unchecked,   try] where indexQSM _ _ idx v = simple' <$> checkedBoundsIfM (Proxy :: Proxy unchecked) (Proxy :: Proxy try) idx v (V.unsafeIndex v idx)
 
 
 --type instance                                                 ModsOf TrackIxesQSM        (V.Vector a)   = '[Unchecked, Try]

@@ -10,17 +10,17 @@
 {-# LANGUAGE OverlappingInstances #-}
 #endif
 
-module Data.Containers.Hetero where
+module Data.Container.Hetero where
 
 import Flowbox.Prelude       hiding (Indexable, index)
 
 import Control.Error.Util    (hush)
-import Data.Containers.Class
+import Data.Container.Class
 import Data.Constraint.Void
 import Data.Convert.Errors   (TypeMismatch (TypeMismatch))
 import Data.Typeable         hiding (cast)
 import Unsafe.Coerce         (unsafeCoerce)
-import Data.Containers.Poly
+import Data.Container.Poly
 
 --- === Unified values ===
 

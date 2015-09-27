@@ -6,7 +6,7 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Data.Containers.Poly where
+module Data.Container.Poly where
 
 import Prologue hiding (Ixed, Indexed, Simple)
 import           Data.TypeLevel.List (In)
@@ -14,7 +14,8 @@ import Data.TypeLevel.Bool
 import Data.Typeable
 import GHC.Prim
 import Data.TypeLevel.Bool
-
+import qualified Data.Container.Mods as Mods
+import           Data.Container.Mods (FilterMutable, filterMutable)
 
 
 
@@ -199,6 +200,7 @@ type IxedElInfo idx el = Info idx el
 
 type family ElementOf        cont
 type family IndexOf      el  cont
+type family HomoIndexOf (m :: * -> *) :: *
 type family ElementByIx idx cont
 type family IxType      idx
 
@@ -212,9 +214,7 @@ type family SelTags (info :: *) (s :: [Bool]) where SelTags (Info idx el cls con
 
 
 
-type family FilterMutable (lst :: [*]) :: [*] where
-    FilterMutable '[] = '[]
-    FilterMutable (l ': ls) = If (Mutable l) (l ': FilterMutable ls) (FilterMutable ls)
+
 
 
 
@@ -227,7 +227,7 @@ type family QueryTags (info :: *) (query :: [*]) :: * where
     QueryTags info (q ': qs) = (ModTags q info, QueryTags info qs)
 
 type family   ModTags q info
-type instance ModTags Ixed (Info idx el cls cont) = IxedData cls (
+type instance ModTags Mods.Ixed (Info idx el cls cont) = IxedData cls (
     If (idx :== NA) (
         --If (el :== NA)
             (IndexOf' cont)
@@ -287,21 +287,16 @@ type family InfoInst info q m :: Constraint where
 
 
 
-data Safe      = Safe
-data Unchecked = Unchecked
-data Ixed      = Ixed
-data Try       = Try
-
-
-type family Mutable a :: Bool
-type instance Mutable Ixed      = True
-type instance Mutable Unchecked = False
-type instance Mutable Try       = False
 
 
 
-type family IxedX (op :: k) :: l where IxedX (cls q (m ::  * -> *) :: * -> Constraint) = cls (Ixed ': q) m
-                                       IxedX (cls q    :: (* -> *) -> * -> Constraint) = cls (Ixed ': q)
+type family Ixed (op :: k) :: k where Ixed (cls q (m ::  * -> *) :: * -> Constraint) = cls (AppendLst Mods.Ixed q) m
+                                      Ixed (cls q    :: (* -> *) -> * -> Constraint) = cls (AppendLst Mods.Ixed q)
+
+
+
+type family Unchecked (op :: k) :: k where Unchecked (cls q (m ::  * -> *) :: * -> Constraint) = cls (AppendLst Mods.Unchecked q) m
+                                           Unchecked (cls q    :: (* -> *) -> * -> Constraint) = cls (AppendLst Mods.Unchecked q)
 
 
 
@@ -377,8 +372,7 @@ type family Reverse' (lst :: [*]) (lst' :: [*]) where
 uniqueProxy :: Proxy a -> Proxy (Unique a)
 uniqueProxy _ = Proxy
 
-filterMutable :: Proxy a -> Proxy (FilterMutable a)
-filterMutable _ = Proxy
+
 
 
 
@@ -397,7 +391,7 @@ foo f (info :: Proxy (cls :: k)) (q :: Proxy (q :: [*])) (tc :: cont) = out wher
     tc3 = withFlipped (fmap $ taggedCont (Proxy :: Proxy (Selected (ComputeSelection cls cont q) (FilterMutable (ModsOf cls cont))) )) <$> tc2
     out = tc3
 
---bar :: CTXOO ExpandableInfo2 q m t => Proxy q -> t -> m (Result (MyResult ExpandableInfo2 q t) t)
+--bar :: OpCtx ExpandableInfo2 q m t => Proxy q -> t -> m (Result (MyResult ExpandableInfo2 q t) t)
 bar f info q t = out where
     q'    = filterMutable q
     cont  = view container t
@@ -418,8 +412,9 @@ barTy f (cls :: Proxy (cls :: k)) (q :: Proxy (q :: [*])) (t :: t) = withFlipped
 
 
 
+type family AssumeRtupConv q t :: Constraint where AssumeRtupConv q t = IfCtx (Mods.FilterMutable q :== '[]) (AsRTup t ~ (t,())) ()
 
-type family CTXOO info q m t where CTXOO (Info idx el cls) q m t = ((Functor m,
+type family OpCtx info q m t where OpCtx (Info idx el cls) q m t = ((Functor m,
                                                HasContainer t,
                                                DataFillable
                                                  (FilterMutable q)
@@ -490,6 +485,8 @@ type family CTXOO info q m t where CTXOO (Info idx el cls) q m t = ((Functor m,
                                                                   (ContainerOf t))))))),
 
                                                                   -- manual
+                                                                  Functor m,
+                                                                  AssumeRtupConv q t,
                                                                   IsContainer t,
                                                                   InfoInst (Info idx el cls (ContainerOf t)) (Unique q) m,
                                                                   DataStoreOf (ContainerOf t) ~ DataStoreOf t,
@@ -512,3 +509,81 @@ type family TransCheck q info info' t where
                                  (FilterMutable (ModsOf cls (ContainerOf t))))))
                       ~ QueryTags
                           (info' (DataStoreOf t)) (FilterMutable q))
+
+
+
+--type family Test (a :: k) where Test a = (If a :== (t1,t2)) True True
+
+
+--type family Match
+
+class IsTuple a (is :: Bool) | a -> is
+
+instance {-# OVERLAPPABLE #-} is ~ False => IsTuple a is
+instance                                    IsTuple () True
+instance                                    IsTuple (t1,t2) True
+instance                                    IsTuple (t1,t2,t3) True
+instance                                    IsTuple (t1,t2,t3,t4) True
+instance                                    IsTuple (t1,t2,t3,t4,t5) True
+instance                                    IsTuple (t1,t2,t3,t4,t5,t6) True
+instance                                    IsTuple (t1,t2,t3,t4,t5,t6,t7) True
+instance                                    IsTuple (t1,t2,t3,t4,t5,t6,t7,t8) True
+instance                                    IsTuple (t1,t2,t3,t4,t5,t6,t7,t8,t9) True
+
+-- FIXME [WD]: below ToTupCtx* refer to need of AssumeRtupConv function, which adds special case context when we are returning only single value from Rtuple (t,())
+-- It is not seen properly byGHC though
+--type family ToTupCtx a :: Constraint where
+--  ToTupCtx (t,()) = (AsRTup t ~ (t,()))
+--  ToTupCtx t      = ()
+
+--type family ToTupCtx2 a :: Constraint where
+--  ToTupCtx2 (t1,t2) = ()
+--  ToTupCtx2 (t1,t2,t3) = ()
+--  ToTupCtx2 (t1,t2,t3,t4) = ()
+--  ToTupCtx2 (t1,t2,t3,t4,t5) = ()
+--  ToTupCtx2 (t1,t2,t3,t4,t5,t6) = ()
+--  ToTupCtx2 (t1,t2,t3,t4,t5,t6,t7) = ()
+--  ToTupCtx2 (t1,t2,t3,t4,t5,t6,t7,t8) = ()
+--  ToTupCtx2 (t1,t2,t3,t4,t5,t6,t7,t8,t9) = ()
+--  ToTupCtx2 t = (AsRTup t ~ (t,()))
+
+  ---- Utils
+
+type family   AsTup a
+type instance AsTup () = ()
+type instance AsTup (t1,()) = t1
+type instance AsTup (t1,(t2,())) = (t1,t2)
+type instance AsTup (t1,(t2,(t3,()))) = (t1,t2,t3)
+type instance AsTup (t1,(t2,(t3,(t4,())))) = (t1,t2,t3,t4)
+type instance AsTup (t1,(t2,(t3,(t4,(t5,()))))) = (t1,t2,t3,t4,t5)
+type instance AsTup (t1,(t2,(t3,(t4,(t5,(t6,())))))) = (t1,t2,t3,t4,t5,t6)
+type instance AsTup (t1,(t2,(t3,(t4,(t5,(t6,(t7,()))))))) = (t1,t2,t3,t4,t5,t6,t7)
+type instance AsTup (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,())))))))) = (t1,t2,t3,t4,t5,t6,t7,t8)
+type instance AsTup (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,(t9,()))))))))) = (t1,t2,t3,t4,t5,t6,t7,t8,t9)
+
+type family   AsRTup a where
+    AsRTup () = ()
+    AsRTup (t1,t2) = (t1,(t2,()))
+    AsRTup (t1,t2,t3) = (t1,(t2,(t3,())))
+    AsRTup (t1,t2,t3,t4) = (t1,(t2,(t3,(t4,()))))
+    AsRTup (t1,t2,t3,t4,t5) = (t1,(t2,(t3,(t4,(t5,())))))
+    AsRTup (t1,t2,t3,t4,t5,t6) = (t1,(t2,(t3,(t4,(t5,(t6,()))))))
+    AsRTup (t1,t2,t3,t4,t5,t6,t7) = (t1,(t2,(t3,(t4,(t5,(t6,(t7,())))))))
+    AsRTup (t1,t2,t3,t4,t5,t6,t7,t8) = (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,()))))))))
+    AsRTup (t1,t2,t3,t4,t5,t6,t7,t8,t9) = (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,(t9,())))))))))
+    AsRTup a = (a,())
+
+
+class    a ~ AsRTup (AsTup a) => ToTup a  where toTup :: a -> AsTup a
+instance ToTup () where toTup _ = ()
+instance AsRTup t1 ~ (t1,()) => ToTup (t1,()) where toTup (t1,()) = t1
+instance ToTup (t1,(t2,())) where toTup (t1,(t2,())) = (t1,t2)
+instance ToTup (t1,(t2,(t3,()))) where toTup (t1,(t2,(t3,()))) = (t1,t2,t3)
+instance ToTup (t1,(t2,(t3,(t4,())))) where toTup (t1,(t2,(t3,(t4,())))) = (t1,t2,t3,t4)
+instance ToTup (t1,(t2,(t3,(t4,(t5,()))))) where toTup (t1,(t2,(t3,(t4,(t5,()))))) = (t1,t2,t3,t4,t5)
+instance ToTup (t1,(t2,(t3,(t4,(t5,(t6,())))))) where toTup (t1,(t2,(t3,(t4,(t5,(t6,())))))) = (t1,t2,t3,t4,t5,t6)
+instance ToTup (t1,(t2,(t3,(t4,(t5,(t6,(t7,()))))))) where toTup (t1,(t2,(t3,(t4,(t5,(t6,(t7,()))))))) = (t1,t2,t3,t4,t5,t6,t7)
+instance ToTup (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,())))))))) where toTup (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,())))))))) = (t1,t2,t3,t4,t5,t6,t7,t8)
+instance ToTup (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,(t9,()))))))))) where toTup (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,(t9,()))))))))) = (t1,t2,t3,t4,t5,t6,t7,t8,t9)
+
+type SimpleRes a = AsRTup a ~ (a, ())

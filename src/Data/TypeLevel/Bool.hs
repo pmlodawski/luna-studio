@@ -14,7 +14,7 @@
 module Data.TypeLevel.Bool where
 
 import Data.Typeable
-import Prelude
+import Prologue
 
 
 --------------------------------------------------------------------------------
@@ -30,6 +30,10 @@ type family And a b where
 type family If (cond :: Bool) (a :: k) (b :: k) :: k where
   If True  a b = a
   If False a b = b
+
+type family IfCtx (cond :: Bool) (a :: Constraint) (b :: Constraint) :: Constraint where
+  IfCtx True  a b = a
+  IfCtx False a b = b
 
 type family (:==) (a :: k) (b :: l) where
     a :== a = True

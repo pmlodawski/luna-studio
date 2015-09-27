@@ -47,7 +47,7 @@ import           Data.Typeable                      as X (Typeable)
 import           GHC.Exts                           as X (IsList, Item, fromList, fromListN, toList)
 import           GHC.Generics                       as X (Generic)
 import           Data.Content                       as X (Content, Content', content)
-
+import           GHC.Exts                           as X (Constraint)
 -- Monoids
 
 (++) :: Monoid a => a -> a -> a

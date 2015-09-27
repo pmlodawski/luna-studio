@@ -2,19 +2,22 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Data.Containers.Reusable where
+module Data.Container.Reusable where
 
 import Prologue              hiding (Indexable, index, Bounded, Ixed)
-import Data.Containers.Class
+import Data.Container.Class
 import Data.Typeable
-import qualified Data.Containers.Interface as I
-import           Data.Containers.Poly {- x -}
+import qualified Data.Container.Interface as I
+import           Data.Container.Poly {- x -}
+import qualified Data.Container.Mods as Mods
 
+import Data.Container.Parametrized
 
 -- Types
 
-data HReusable idx a = HReusable [idx]       !a deriving (Show)
-type Reusable      a = HReusable (IndexOf' a) a
+data HReusable idx a = HReusable [idx] !a deriving (Show, Functor, Traversable, Foldable)
+type Reusable  m a   = Parametrized (HReusable (HomoIndexOf m)) m a
+
 
 
 type instance ContainerOf (HReusable idx a) = HReusable idx a
@@ -42,7 +45,7 @@ instance Wrapped (HReusable idx) where
 -- Instances
 
 instance Monoid a => Monoid (HReusable idx a) where
-    mempty                                                    = HReusable mempty mempty
+    mempty                                          = HReusable mempty mempty
     mappend (HReusable idxs a) (HReusable idxs' a') = HReusable (idxs <> idxs') (a <> a')
 
 instance IsList a => IsList (HReusable idx a) where
@@ -92,12 +95,12 @@ type instance ModsOf GrowableQSM   (HReusable idx a) = ModsOf GrowableQSM a
 
 instance SingletonQM el q m a => SingletonQSM el (HReusable idx a) m q s where singletonQSM _ _    = (fmap . fmap) wrap . queried (Proxy :: Proxy q) singletonM'
 
-instance (Monad m, ExpandableQM (Ixed ': q) m a, idx ~ IndexOf' (DataStoreOf a)) => ExpandableQSM (HReusable idx a) m q s where
+instance (Monad m, ExpandableQM (Mods.Ixed ': q) m a, idx ~ IndexOf' (DataStoreOf a)) => ExpandableQSM (HReusable idx a) m q s where
     expandQSM _ _ c = do
         (ixs, r) <- splitResData <$> nestedLens wrapped ((ixed . queried (Proxy :: Proxy q)) expandM') c
         return $ fmap (withIxes' (<> ixs)) r
 
-instance (Monad m, GrowableQM (Ixed ': q) m a, idx ~ IndexOf' (DataStoreOf a)) => GrowableQSM (HReusable idx a) m q s where
+instance (Monad m, GrowableQM (Mods.Ixed ': q) m a, idx ~ IndexOf' (DataStoreOf a)) => GrowableQSM (HReusable idx a) m q s where
     growQSM _ _ i c = do
         (ixs, r) <- splitResData <$> nestedLens wrapped ((ixed . queried (Proxy :: Proxy q)) growM' i) c
         return $ fmap (withIxes' (<> ixs)) r

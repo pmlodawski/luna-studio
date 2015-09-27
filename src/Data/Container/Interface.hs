@@ -8,15 +8,15 @@
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-module Data.Containers.Interface ( module Data.Containers.Interface
+module Data.Container.Interface ( module Data.Container.Interface
                                  , module X
                                  ) where
 
 import Prologue hiding (Indexable, Ixed)
 
-import qualified Data.Containers.Class as Class
-import           Data.Containers.Class as X   (withTransFunc)
-import           Data.Containers.Poly {- x -}
+import qualified Data.Container.Class as Class
+import           Data.Container.Class as X   (withTransFunc)
+import           Data.Container.Poly {- x -}
 import           Data.Typeable
 
 import           Data.TypeLevel.List (In)

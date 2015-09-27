@@ -1,8 +1,8 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Data.Containers (
-    module Data.Containers,
+module Data.Container (
+    module Data.Container,
     module X
 ) where
 
@@ -16,13 +16,13 @@ import           Data.Vector (Vector)
 import qualified Data.Vector as Vector
 
 import           Data.Maybe (fromJust)
---import           Data.Containers.Class as X -- hiding ( size, elems, indexes, append', append, prepend', prepend
+--import           Data.Container.Class as X -- hiding ( size, elems, indexes, append', append, prepend', prepend
 ----                                                   , update, insert, unsafeInsert, index
 ----                                                   , unsafeIndex
 ----                                                   )
---import qualified Data.Containers.Class as Class
-import           Data.Containers.Instances ()
-import           Data.Containers.Interface as X
+--import qualified Data.Container.Class as Class
+import           Data.Container.Instances ()
+import           Data.Container.Interface as X
 
 
 --size :: (HasContainer a cont, Measurable cont, Integral i) => a -> i
