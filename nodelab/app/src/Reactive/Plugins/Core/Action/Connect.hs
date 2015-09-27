@@ -150,14 +150,15 @@ instance ActionUIUpdater Action where
     updateUI (WithState (DragAction tpe pt) state) = case tpe of
         Dragging angle                   -> forM_ maybeConnecting $ displayDragLine nodesMap angle ptWs
         StopDrag                         -> UI.removeCurrentConnection
-        ConnectPortsUI src dst uiUpdate  -> UI.removeCurrentConnection
-                                         >> uiUpdate
-                                         >> updatePortAnglesUI  state
-                                         >> updateConnectionsUI state
-                                         >> BatchCmd.connectNodes workspace src dst
-                                         >> putStrLn (display $ state ^. Global.graph . Graph.nodesRefsMap)   -- debug
-                                         >> putStrLn (display $ state ^. Global.graph . Graph.connectionsMap) -- debug
-                                         >> graphToViz (state ^. Global.graph . Graph.graphMeta)
+        ConnectPortsUI src dst uiUpdate  -> do
+                                                UI.removeCurrentConnection
+                                                uiUpdate
+                                                updatePortAnglesUI  state
+                                                updateConnectionsUI state
+                                                BatchCmd.connectNodes workspace src dst
+                                                putStrLn (display $ state ^. Global.graph . Graph.nodesRefsMap)   -- debug
+                                                putStrLn (display $ state ^. Global.graph . Graph.connectionsMap) -- debug
+                                                graphToViz (state ^. Global.graph . Graph.graphMeta)
         _                                -> return ()
         where
             nodesMap                      = Graph.getNodesMap       $ state ^. Global.graph

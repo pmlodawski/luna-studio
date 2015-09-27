@@ -143,7 +143,3 @@ instance ActionUIUpdater Action where
 
 updateNodesBatch :: Workspace -> NodesMap -> IO ()
 updateNodesBatch workspace nodesMap = BatchCmd.updateNodes workspace $ IntMap.elems nodesMap
-
-moveNodesUI :: NodesMap -> IO ()
-moveNodesUI nodesMap = mapM_ UI.moveNode $ IntMap.elems nodesMap
-                  -- >> performGC

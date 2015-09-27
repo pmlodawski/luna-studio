@@ -173,3 +173,8 @@ setAnglePortRef refAngle portRef = setAngle (portRef ^. refPortType)
 setAngle :: PortType -> NodeId -> PortId -> Angle -> IO ()
 setAngle  InputPort = UI.setInputPortAngle
 setAngle OutputPort = UI.setOutputPortAngle
+
+
+moveNodesUI :: NodesMap -> IO ()
+moveNodesUI nodesMap = mapM_ UI.moveNode $ IntMap.elems nodesMap
+                  -- >> performGC

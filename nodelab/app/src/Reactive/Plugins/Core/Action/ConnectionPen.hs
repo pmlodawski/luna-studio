@@ -1,3 +1,5 @@
+{-# LANGUAGE TupleSections #-}
+
 module Reactive.Plugins.Core.Action.ConnectionPen where
 
 
@@ -9,6 +11,7 @@ import qualified JS.Bindings        as UI
 import qualified JS.ConnectionPen   as UI
 
 import           Object.Object
+import           Object.Port
 import           Object.Node
 import qualified Object.Widget.Node as UINode
 import qualified Object.Widget.Connection as UIConnection
@@ -30,6 +33,8 @@ import qualified Reactive.Plugins.Core.Action.State.Global        as Global
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry    as UIRegistry
 import qualified Reactive.Plugins.Core.Action.Executors.AddNode   as AddNode
 import qualified Reactive.Plugins.Core.Action.State.ConnectionPen as ConnectionPen
+
+import qualified BatchConnector.Commands as BatchCmd
 
 import Debug.Trace
 
@@ -107,30 +112,73 @@ instance ActionStateUpdater Action where
 
     execSt (NextPointData nodes connections) state = case (fromJust $ state ^. Global.connectionPen . ConnectionPen.drawing) ^. ConnectionPen.drawingType of
         ConnectionPen.Connecting -> ActionUI (PerformIO draw) newState' where
-            newState        = state  & Global.connectionPen . ConnectionPen.drawing .~ Just newPen
-            newState'       = newState -- TODO: Connect nodes
-            (Just oldPen)   = state ^. Global.connectionPen . ConnectionPen.drawing
-            pos             = oldPen ^. ConnectionPen.previousPos
-            newPen          = oldPen & ConnectionPen.visitedNodes %~ (++ nodes)
-                                     & ConnectionPen.lastNode     .~ (maybeLast path)
-            path            = remdups $ (maybeToList $ oldPen ^. ConnectionPen.lastNode) ++ nodes
-            nodesToConnect  = zipAdj path
-            draw            = if null nodesToConnect then return ()
-                                                     else putStrLn $ "connectNodes " <> show nodesToConnect
+            newState          = state  & Global.connectionPen . ConnectionPen.drawing .~ Just newPen
+            (Just oldPen)     = state ^. Global.connectionPen . ConnectionPen.drawing
+            pos               = oldPen ^. ConnectionPen.previousPos
+            newPen            = oldPen & ConnectionPen.visitedNodes %~ (++ nodes)
+                                       & ConnectionPen.lastNode     .~ (maybeLast path)
+            path              = remdups $ (maybeToList $ oldPen ^. ConnectionPen.lastNode) ++ nodes
+            nodesToConnect    = zipAdj path
+            (draw, newState') = if null nodesToConnect then (return (), newState)
+                                                       else (fullUI, st) where
+                                                            (ui, st) = autoConnectAll nodesToConnect newState
+                                                            fullUI   = do ui
+                                                                          moveNodesUI $ getNodesMap $ state ^. Global.graph
+                                                                          updatePortAnglesUI st
+                                                                          updateConnectionsUI st
+                                                                          putStrLn $ "connectNodes " <> show nodesToConnect
+
+
                 -- TODO: connecting nodes UI actions
         ConnectionPen.Disconnecting -> ActionUI (PerformIO draw) newState' where
             newState'       = state & Global.graph %~ removeConnections connections
             (Just oldPen)   = state ^. Global.connectionPen . ConnectionPen.drawing
             pos             = oldPen ^. ConnectionPen.previousPos
             draw            = do  -- TODO: remove from UIRegistry
-                                updateConnectionsUI newState'
-                                UI.removeConnections connections
-                                putStrLn $ "disconnecting " <> show connections
+                                  updateConnectionsUI newState'
+                                  UI.removeConnections connections
+                                  putStrLn $ "disconnecting " <> show connections
 
     execSt (FinishDrawing _) state = ActionUI (PerformIO draw) newState where
         newState      = state  & Global.connectionPen . ConnectionPen.drawing .~ Nothing
         draw          = UI.endPath
 
+
+autoConnectAll :: [(Int, Int)] -> Global.State -> (IO (), Global.State)
+autoConnectAll nodes = autoConnect $ head nodes -- TODO: forall - foldr
+
+autoConnect :: (Int, Int) -> Global.State -> (IO (), Global.State)
+autoConnect (srcNodeId, dstNodeId) oldState = (uiUpdate, newState) where
+    graph                            = oldState ^. Global.graph
+    workspace                        = oldState ^. Global.workspace
+    srcNode                          = getNode graph srcNodeId
+    dstNode                          = getNode graph dstNodeId
+    srcPorts                         = srcNode ^. ports . outputPorts
+    dstPorts                         = dstNode ^. ports . inputPorts
+    connection                       = findConnectionForAll dstPorts srcPorts
+    (uiUpdate, newState)             = case connection of
+        Just (srcPortId, dstPortId) -> (do
+                                            connectUI
+                                            BatchCmd.connectNodes workspace srcPortRef dstPortRef
+                                        , st)
+                                       where
+            (connectUI, st)          = connectNodes srcPortRef dstPortRef oldState
+            srcPortRef               = PortRef srcNodeId OutputPort srcPortId
+            dstPortRef               = PortRef dstNodeId InputPort  dstPortId
+        Nothing                     -> (return (), oldState)
+
+findConnectionForAll :: PortCollection -> PortCollection -> Maybe (PortId, PortId)
+findConnectionForAll dstPorts srcPorts = listToMaybe . catMaybes $ findConnection dstPorts <$> srcPorts
+
+findConnection :: PortCollection -> Port -> Maybe (PortId, PortId)
+findConnection dstPorts srcPort = (srcPort ^. portId,) <$> dstPortId where
+    dstPortId = fmap (^. portId) $ find (\port -> port ^. portType == srcPort ^. portType) dstPorts
+
+
 instance ActionUIUpdater Reaction where
-    updateUI (WithState (PerformIO action) _) = action
-    updateUI (WithState NoOp _)               = return ()
+    updateUI (WithState (PerformIO action) state) = do
+                                                        action
+                                                        moveNodesUI $ getNodesMap $ state ^. Global.graph
+                                                        updatePortAnglesUI state -- TODO: does not work...
+                                                        updateConnectionsUI state
+    updateUI (WithState NoOp state)               = return ()
