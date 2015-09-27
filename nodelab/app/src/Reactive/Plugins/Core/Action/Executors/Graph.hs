@@ -54,7 +54,7 @@ updateConnectionsUI state = updateWidgets where
 
 displayConnectionWidget :: WidgetId -> UIConnection.Connection -> IO ()
 displayConnectionWidget widgetId connection = UI.displayConnection widgetId connId fromX fromY toX toY where
-        UIConnection.Connection connId (Vector2 fromX fromY) (Vector2 toX toY) = connection
+    UIConnection.Connection connId (Vector2 fromX fromY) (Vector2 toX toY) = connection
 
 getNodePos :: NodesMap -> NodeId -> Vector2 Double
 getNodePos nodesMap nodeId = node ^. nodePos where

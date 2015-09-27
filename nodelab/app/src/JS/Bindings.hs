@@ -176,6 +176,9 @@ foreign import javascript unsafe "app.displayConnection($1, $2, $3, $4, $5, $6)"
 foreign import javascript unsafe "app.removeConnection($1)"
     removeConnection :: Int -> IO ()
 
+removeConnections :: [Int] -> IO ()
+removeConnections = mapM_ removeConnection
+
 
 foreign import javascript unsafe "window.dispatchEvent(new Event('resize'))"
     triggerWindowResize :: IO ()

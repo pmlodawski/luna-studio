@@ -79,7 +79,7 @@ function initializeGl() {
 
     $('#log').remove();
     $('#spinner').remove();
-    
+
 }
 
 function addVersionToHud() {

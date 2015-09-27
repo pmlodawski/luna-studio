@@ -24,6 +24,7 @@ import qualified Event.ConnectionPen as ConnectionPen
 import           Event.WithObjects
 
 import           Reactive.Plugins.Core.Action
+import           Reactive.Plugins.Core.Action.Executors.Graph
 import           Reactive.Plugins.Core.Action.State.Graph
 import qualified Reactive.Plugins.Core.Action.State.Global        as Global
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry    as UIRegistry
@@ -118,11 +119,13 @@ instance ActionStateUpdater Action where
                                                      else putStrLn $ "connectNodes " <> show nodesToConnect
                 -- TODO: connecting nodes UI actions
         ConnectionPen.Disconnecting -> ActionUI (PerformIO draw) newState' where
-            newState'       = state -- TODO: Disconnect nodes
+            newState'       = state & Global.graph %~ removeConnections connections
             (Just oldPen)   = state ^. Global.connectionPen . ConnectionPen.drawing
             pos             = oldPen ^. ConnectionPen.previousPos
-            draw            = putStrLn $ "disconnecting " <> show connections
-                -- TODO: connecting nodes UI actions
+            draw            = do  -- TODO: remove from UIRegistry
+                                updateConnectionsUI newState'
+                                UI.removeConnections connections
+                                putStrLn $ "disconnecting " <> show connections
 
     execSt (FinishDrawing _) state = ActionUI (PerformIO draw) newState where
         newState      = state  & Global.connectionPen . ConnectionPen.drawing .~ Nothing
