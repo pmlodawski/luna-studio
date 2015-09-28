@@ -25,3 +25,4 @@ instance Show (m a) => Show (Auto m a) where
             showString "Auto " . showsPrec (app_prec+1) (view (parametrized . wrapped . parametrized . wrapped) a)
          where app_prec = 10
 
+instance Default (m a) => Default (Auto m a) where def = Auto def

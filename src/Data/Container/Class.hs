@@ -252,7 +252,7 @@ instance {-# OVERLAPPABLE #-} OpCtx (AddableInfo el) q m Impossible  => AddableQ
 instance {-# OVERLAPPABLE #-} OpCtx (AddableInfo el) q ImpossibleM t => AddableQM el q ImpossibleM t where addQM = impossible
 
 type instance IxedMode AddableQSM     = Single
-type AddableInfo el   = ElInfo       el AddableQSM
+type AddableInfo el   = ElInfo    el AddableQSM
 type AddableQ    el q = AddableQM el q Identity
 type AddableM    el   = AddableQM el '[]
 type Addable     el   = AddableM  el Identity

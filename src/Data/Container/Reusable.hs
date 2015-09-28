@@ -33,6 +33,7 @@ type instance DataStoreOf (HReusable idx a) = DataStoreOf a
 instance HasDataStore a => HasDataStore (HReusable idx a) where dataStore = wrapped . dataStore
 instance IsDataStore a => IsDataStore (HReusable idx a) where fromDataStore = HReusable def . fromDataStore
 
+instance Default a => Default (HReusable idx a) where def = HReusable def def
 
 -- Wrappers
 

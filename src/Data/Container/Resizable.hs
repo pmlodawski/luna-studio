@@ -38,8 +38,8 @@ instance (Default l, Monoid a) => Monoid (HResizable l a) where
     mempty                                   = HResizable def mempty
     mappend (HResizable l a) (HResizable _ a') = HResizable l (a <> a')
 
-instance (Default l, Monoid a) => Default (HResizable l a) where
-    def = HResizable def mempty
+instance (Default l, Default a) => Default (HResizable l a) where
+    def = HResizable def def
 
 instance (IsList a, Default l) => IsList (HResizable l a) where
     type Item (HResizable l a) = Item a
@@ -47,7 +47,6 @@ instance (IsList a, Default l) => IsList (HResizable l a) where
 
 instance HasDataStore a => HasDataStore (HResizable l a) where dataStore = wrapped . dataStore
 instance (IsDataStore a, Default l) => IsDataStore (HResizable l a) where fromDataStore = HResizable def . fromDataStore
-
 
 
 -- === TF Instances ===

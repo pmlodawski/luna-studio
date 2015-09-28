@@ -26,3 +26,5 @@ type instance IndexOf el (Parametrized t m a) = IndexOf el (t (m a))
 
 
 type instance HomoIndexOf (Parametrized t m) = HomoIndexOf m
+
+instance Default (t (m a)) => Default (Parametrized t m a) where def = Parametrized def
