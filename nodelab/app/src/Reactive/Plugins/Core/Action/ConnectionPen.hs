@@ -7,6 +7,8 @@ import           Utils.PreludePlus
 import           Utils.Vector
 import           Utils.Angle
 
+import qualified Data.IntMap.Lazy as IntMap
+
 import qualified JS.Bindings        as UI
 import qualified JS.ConnectionPen   as UI
 
@@ -155,6 +157,7 @@ autoConnect (srcNodeId, dstNodeId) oldState = (uiUpdate, newState) where
     dstNode                          = getNode graph dstNodeId
     srcPorts                         = srcNode ^. ports . outputPorts
     dstPorts                         = dstNode ^. ports . inputPorts
+    -- dstPorts                         = filterConnectedInputPorts graph dstNodeId $ dstNode ^. ports . inputPorts
     connection                       = findConnectionForAll dstPorts srcPorts
     (uiUpdate, newState)             = case connection of
         Just (srcPortId, dstPortId) -> (do
@@ -166,6 +169,11 @@ autoConnect (srcNodeId, dstNodeId) oldState = (uiUpdate, newState) where
             srcPortRef               = PortRef srcNodeId OutputPort srcPortId
             dstPortRef               = PortRef dstNodeId InputPort  dstPortId
         Nothing                     -> (return (), oldState)
+
+filterConnectedInputPorts :: State -> NodeId -> PortCollection -> PortCollection
+filterConnectedInputPorts state nodeId ports = filter isConnected ports where
+    destinationPortRefs = fmap (^. destination) $ getConnections state
+    isConnected port = PortRef nodeId InputPort (port ^. portId) `elem` destinationPortRefs
 
 findConnectionForAll :: PortCollection -> PortCollection -> Maybe (PortId, PortId)
 findConnectionForAll dstPorts srcPorts = listToMaybe . catMaybes $ findConnection dstPorts <$> srcPorts

@@ -75,10 +75,13 @@ nodes :: Getter State NodeCollection
 nodes = to getNodes
 
 getNodes :: State -> NodeCollection
-getNodes state = IntMap.elems $ state ^. nodesMap
+getNodes = IntMap.elems . getNodesMap
 
 getNodesMap :: State -> NodesMap
 getNodesMap = (^. nodesMap)
+
+getConnections :: State -> [Connection]
+getConnections = IntMap.elems . getConnectionsMap
 
 getConnectionsMap :: State -> ConnectionsMap
 getConnectionsMap = (^. connectionsMap)
