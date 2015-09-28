@@ -132,7 +132,8 @@ instance ActionStateUpdater Action where
 
 
                 -- TODO: connecting nodes UI actions
-        ConnectionPen.Disconnecting -> ActionUI (PerformIO draw) newState' where
+        ConnectionPen.Disconnecting -> ActionUI (PerformIO draw) newState'' where
+            newState''      = updateConnections $ updatePortAngles newState'
             newState'       = state & Global.graph %~ removeConnections connections
             (Just oldPen)   = state ^. Global.connectionPen . ConnectionPen.drawing
             pos             = oldPen ^. ConnectionPen.previousPos
@@ -150,7 +151,7 @@ autoConnectAll :: [(Int, Int)] -> Global.State -> (IO (), Global.State)
 autoConnectAll nodes = autoConnect $ head nodes -- TODO: forall - foldr
 
 autoConnect :: (Int, Int) -> Global.State -> (IO (), Global.State)
-autoConnect (srcNodeId, dstNodeId) oldState = (uiUpdate, newState) where
+autoConnect (srcNodeId, dstNodeId) oldState = (uiUpdate, newState') where
     graph                            = oldState ^. Global.graph
     workspace                        = oldState ^. Global.workspace
     srcNode                          = getNode graph srcNodeId
@@ -159,6 +160,7 @@ autoConnect (srcNodeId, dstNodeId) oldState = (uiUpdate, newState) where
     dstPorts                         = dstNode ^. ports . inputPorts
     -- dstPorts                         = filterConnectedInputPorts graph dstNodeId $ dstNode ^. ports . inputPorts
     connection                       = findConnectionForAll dstPorts srcPorts
+    newState'                        = updateConnections $ updatePortAngles newState
     (uiUpdate, newState)             = case connection of
         Just (srcPortId, dstPortId) -> (do
                                             connectUI
