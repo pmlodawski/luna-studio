@@ -8,10 +8,13 @@ module Luna.Syntax.Builder.Graph where
 
 import Prologue               hiding (Ixed)
 import Data.Vector            hiding (convert, modify)
-import Data.Containers
-import Data.Containers.Hetero
+import Data.Container
+import Data.Container.Hetero
 import Data.Cata
 import Control.Monad.Fix
+import Data.Container.Class
+import Data.Container.Poly
+import Data.Container.Auto
 
 import qualified Control.Monad.State as State
 
@@ -19,14 +22,20 @@ import Luna.Syntax.AST.Decl
 
 --- === Graph ===
 
-newtype HeteroVectorGraph   = HeteroVectorGraph { __hetReg :: Hetero' Vector } deriving (Show, Default)
-newtype VectorGraph       a = VectorGraph       { __homReg :: Vector a       } deriving (Show, Default, Functor, Foldable, Traversable)
+--newtype HeteroVectorGraph   = HeteroVectorGraph { __hetReg :: Hetero' Vector } deriving (Show, Default)
+newtype VectorGraph       a = VectorGraph       { __homReg :: Auto Vector a       } deriving (Show, Default, Functor, Foldable, Traversable)
 
-makeLenses ''HeteroVectorGraph
+type instance DataStoreOf (VectorGraph a) = DataStoreOf (Auto Vector a)
+type instance ContainerOf (VectorGraph a) = ContainerOf (Auto Vector a)
+
+instance IsContainer  (VectorGraph a) where fromContainer = VectorGraph . fromContainer
+instance HasContainer (VectorGraph a) where container     = lens (\(VectorGraph a) -> a) (const VectorGraph) . container
+
+--makeLenses ''HeteroVectorGraph
 makeLenses ''VectorGraph
 
-instance HasContainer HeteroVectorGraph   (Hetero' Vector) where container = _hetReg
-instance HasContainer (VectorGraph a)     (Vector a)       where container = _homReg
+--instance HasContainer HeteroVectorGraph   (Hetero' Vector) where container = _hetReg
+--instance HasContainer (VectorGraph a)     (Vector a)       where container = _homReg
 
 
 ---- === Ref ===
@@ -149,9 +158,9 @@ evalBuilderT = evalT
 instance Default g => Default (BldrState g) where
     def = BldrState def def
 
---instance (t ~ Ref i a, Monad m, AppendableT '[Ixed] g (a (Mu t)) (idx, g), HasContainer g cont, PtrFrom idx i)
---      => MuBuilder a (GraphBuilderT g m) t where
---    buildMu a = fmap (Mu . Ref . ptrFrom) . withGraph' . ixed append $ a
+instance (t ~ Ref i a, Monad m, Ixed (Addable (a (Mu t))) g, PtrFrom idx i, idx ~ IndexOf' (DataStoreOf (ContainerOf g)))
+      => MuBuilder a (GraphBuilderT g m) t where
+    buildMu a = fmap (Mu . Ref . ptrFrom) . withGraph' . ixed add $ a
 
 
 
@@ -159,6 +168,6 @@ instance Default g => Default (BldrState g) where
 --      => MuBuilder a (GraphBuilderT g m) t where
 --    buildMu a = fmap (Mu . Ref . ptrFrom) . withGraph . append' $ a
 
-foo = ixed append
+--foo = ixed append
 
 switch' (a,b) = (b,a)

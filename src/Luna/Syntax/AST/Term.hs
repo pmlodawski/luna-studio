@@ -18,7 +18,7 @@ import Luna.Syntax.AST.Arg
 import Luna.Syntax.Name
 
 import Data.Cata
-import Data.Containers.Hetero
+import Data.Container.Hetero
 
 import Data.Typeable
 import Luna.Repr.Styles (HeaderOnly)

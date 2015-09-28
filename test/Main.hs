@@ -14,10 +14,11 @@
 {-# LANGUAGE RecursiveDo #-}
 {-# LANGUAGE NoOverloadedStrings #-}
 
+{-# LANGUAGE PolyKinds #-}
 
 module Main where
 
-import Flowbox.Prelude hiding (simple, empty, Indexable, Simple, cons, lookup, index, Wrapped, children, Cons, Ixed)
+import Prologue hiding (simple, empty, Indexable, Simple, cons, lookup, index, children, Cons, Ixed)
 --import Data.Repr
 
 import qualified Data.Map            as Map
@@ -36,10 +37,6 @@ import Data.Vector (Vector)
 import qualified Data.Vector as Vector
 import Data.Vector.Mutable ()
 import Data.Maybe (fromJust)
-import Data.Containers
-import Data.Containers.Hetero
-import Data.Containers.Resizable
-import Data.Containers.Reusable
 import System.Process
 import qualified Data.Text.AutoBuilder as Text
 import Data.Map (Map)
@@ -71,14 +68,22 @@ import Luna.Diagnostic.AST (toGraphViz, display)
 import Luna.Syntax.Layer.Typed
 import Luna.Syntax.Layer.Labeled
 import qualified Type.BaseType as BT
-import Data.Containers.Interface
-
+--import Data.Container
+--import Data.Container.Hetero
+import Data.Container.Resizable
+import Data.Container.Reusable
+--import Data.Container.Interface
+--import           Data.Container.Poly {- x -} hiding (append)
+import Data.Container.Class
+import Data.Container.Poly -- (Ixed)
 --import Data.Text.CodeBuilder.Builder
 import Data.Text.CodeBuilder.Builder as CB
-import           Data.Containers.Poly {- x -} hiding (append)
 
 import Data.Vector.Dynamic as VD
 
+import Data.Container.Parametrized
+import Data.Container.Auto
+import qualified Data.Container.Mods as Mods
 
 -- === HomoBuilder ===
 
@@ -93,15 +98,15 @@ instance (MuBuilder a m t, t ~ t') => MuBuilder a (HomoG t m) t' where
 
 -------------------------------------------------------------
 
-        --nytst2 :: (Arc (Labeled Int (Typed Draft)), HomoGraph ArcPtr (Labeled Int (Typed Draft)))
-        --nytst2 = flip runGraph def $ do
-        --    s    <- genTopStar
+nytst2 :: (Arc (Labeled Int (Typed Draft)), HomoGraph ArcPtr (Labeled Int (Typed Draft)))
+nytst2 = flip runGraph def $ do
+    s    <- genTopStar
 
-        --    i1   <- int 1
-        --    i2   <- blank
-        --    plus <- i1 @. "+"
-        --    sum  <- plus @$ [arg i1, arg i2]
-        --    return s
+    i1   <- int 1
+    i2   <- blank
+    plus <- i1 @. "+"
+    sum  <- plus @$ [arg i1, arg i2]
+    return s
 
 --nytst3 :: Mu (Typed Draft)
 --nytst3 = flip StarBuilder.eval Nothing $ runIdentityT $ do
@@ -118,73 +123,73 @@ instance (MuBuilder a m t, t ~ t') => MuBuilder a (HomoG t m) t' where
 --    y  <- x @. "y"
 --    return v1
 
-            --viewGraph = view graph <$> GraphBuilder.get
-            --mapMGraph f = do
-            --    g   <- viewGraph
-            --    mapM f g
+viewGraph = view graph <$> GraphBuilder.get
+mapMGraph f = do
+    g   <- viewGraph
+    mapM f g
 
-            --(s, gr) = nytst2
+(s, gr) = nytst2
 
-            --unifyLit = \case
-            --    _ -> do
-            --        (s :: Arc (Labeled Int (Typed Draft))) <- string "foo"
-            --        return ()
+unifyLit = \case
+    _ -> do
+        (s :: Arc (Labeled Int (Typed Draft))) <- string "foo"
+        return ()
 
-            --data Constraint a = ConstraintType a a
+data Constraint a = ConstraintType a a
 
-            ----withType t = do
-            --typed a t = StarBuilder.with (const $ Just t) a
+--withType t = do
+typed a t = StarBuilder.with (const $ Just t) a
 
-        --pass2 :: ([Arc (Labeled Int (Typed Draft))], HomoGraph ArcPtr (Labeled Int (Typed Draft)))
-        --pass2 = buildGraph (Just s) (BldrState [] gr) $ do
-        --    g <- viewGraph
-        --    let ptrs = indexes g :: [Int]
-        --    unis <- fmap concat . flip mapM ptrs $ \ptr -> do
-        --        g <- viewGraph
-        --        let (Labeled l (Typed t ast)) = index ptr g
-        --        out <- case' ast $ do
-        --            match $ \case
-        --                Int i -> do
-        --                    (i :: _) <- string "Int"
-        --                    s <- star `typed` i
-        --                    u <- unify (Mu (Ref (Ptr ptr))) s
-        --                    return [u]
-        --                String s -> return []
-        --            match $ \ANY -> return []
-        --        return out
-        --    return unis
+    --pass2 :: ([Arc (Labeled Int (Typed Draft))], HomoGraph ArcPtr (Labeled Int (Typed Draft)))
+    --pass2 = buildGraph (Just s) (BldrState [] gr) $ do
+    --    g <- viewGraph
+    --    let ptrs = indexes g :: [Int]
+    --    unis <- fmap concat . flip mapM ptrs $ \ptr -> do
+    --        g <- viewGraph
+    --        let (Labeled l (Typed t ast)) = index ptr g
+    --        out <- case' ast $ do
+    --            match $ \case
+    --                Int i -> do
+    --                    (i :: _) <- string "Int"
+    --                    s <- star `typed` i
+    --                    u <- unify (Mu (Ref (Ptr ptr))) s
+    --                    return [u]
+    --                String s -> return []
+    --            match $ \ANY -> return []
+    --        return out
+    --    return unis
 
-        --(unis2, gr2) = pass2
+    --(unis2, gr2) = pass2
 
-        --class Union m a where
-        --    union :: a -> a -> m ()
+    --class Union m a where
+    --    union :: a -> a -> m ()
 
-        --pass3 :: ((), HomoGraph ArcPtr (Labeled Int (Typed Draft)))
-        --pass3 = buildGraph (Just s) (BldrState [] gr2) $ do
-        --    BldrState x g <- GraphBuilder.get
-        --    flip mapM unis2 $ \uni -> do
-        --        let cptr                     = ptrIdx . fromRef . fromMu
-        --            Labeled l (Typed t ast') = index (cptr uni) g
-        --        case' ast' $ match $ \(Unify pa pb) -> do
-        --            let ptra = cptr pa
-        --                ptrb = cptr pb
-        --                Labeled la (Typed ta asta) = index ptra g
-        --                Labeled lb (Typed tb astb) = index ptrb g
-        --            case' astb $ do
-        --                match $ \Star -> do
-        --                    let Labeled lta (Typed tta astta) = index (cptr ta) g
-        --                    case' astta $ do
-        --                        match $ \Star -> do
-        --                            let g' = insert ptra (Labeled la (Typed tb asta)) g
-        --                            GraphBuilder.put $ BldrState x g'
-        --                            return ()
-        --                    --string "fooooooo"
+    --pass3 :: ((), HomoGraph ArcPtr (Labeled Int (Typed Draft)))
+    --pass3 = buildGraph (Just s) (BldrState [] gr2) $ do
+    --    BldrState x g <- GraphBuilder.get
+    --    flip mapM unis2 $ \uni -> do
+    --        let cptr                     = ptrIdx . fromRef . fromMu
+    --            Labeled l (Typed t ast') = index (cptr uni) g
+    --        case' ast' $ match $ \(Unify pa pb) -> do
+    --            let ptra = cptr pa
+    --                ptrb = cptr pb
+    --                Labeled la (Typed ta asta) = index ptra g
+    --                Labeled lb (Typed tb astb) = index ptrb g
+    --            case' astb $ do
+    --                match $ \Star -> do
+    --                    let Labeled lta (Typed tta astta) = index (cptr ta) g
+    --                    case' astta $ do
+    --                        match $ \Star -> do
+    --                            let g' = insert ptra (Labeled la (Typed tb asta)) g
+    --                            GraphBuilder.put $ BldrState x g'
+    --                            return ()
+    --                    --string "fooooooo"
 
-        --            return ()
-        --        return ()
-        --    return ()
+    --            return ()
+    --        return ()
+    --    return ()
 
-        --gr3 = snd pass3
+    --gr3 = snd pass3
 
 valCons :: Variant a (Val t) => a -> Val t
 valCons = cons
@@ -314,58 +319,20 @@ instance Repr s (VectorGraph a) where repr _ = fromString "mu"
 
 
 
+c = singleton 0 :: Auto Vector Int
 
+
+xxx :: Ixed (Addable el) t => el -> t -> (IndexOf' (DataStoreOf (ContainerOf t)),t)
+xxx v = ixed add v
+
+--xxx :: Unchecked (Ixed Expandable) t => t -> (_,t)
+--xxx v = unchecked ixed expand v
+
+main = do
+    print $ fmap (+1) $ add 6 $ add 6 $ add 6 $ add 5 c
+
+    print "end"
 
 
 --xxx :: _ => _
---xxx v = append v
-
---unsafeAppend :: Inst Appendable cont mods el out => ModFunc '[Unsafe] mods (cont -> el -> out)
---unsafeAppend = unsafe append
-
-
-
-
-
-
---type family Foo (x :: Bool) a b where
---    Foo False a b = a
---    Foo True  a b = b
-
---type family Bar a
-
---type instance Bar Int = Int
-
---xt = undefined :: Foo False Int (Bar String)
-
---xv = fromList [1,2,3] :: (Resizable Exponential (Vector Int))
-xv = alloc 5 :: Reusable (Resizable Exponential (Vector Int))
---xv = fromList [1,2,3] :: Vector Int
---cont        -> el -> out
-
-
---xv2 = append (4 :: Int) xv
---xv2 = index (2 :: Int) xv
---xv2 = add 1 xv
---xv2 = ixed append 2 xv
---xv2 = maxIndex xv
-
-xv2 = add 1 xv
-xv3 = add 1 xv2
-xv4 = add 1 xv3
-xv5 = add 1 xv4
-xv6 = add 1 xv5
-xv7 = add 1 xv6
-
-main = do
-    print $ freeIxes xv
-    print $ freeIxes xv2
-    print $ freeIxes xv3
-    print $ freeIxes xv4
-    print $ freeIxes xv5
-    print $ freeIxes xv6
-    print $ freeIxes xv7
-    --print $ freeIxes xv2
-    --print $ xt
-    print "end"
-
+--xxx v = unchecked try index (10 :: Int) v

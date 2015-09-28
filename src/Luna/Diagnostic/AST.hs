@@ -19,8 +19,8 @@ import           Data.GraphViz.Printing              (PrintDot)
 import           Luna.Repr.Styles (HeaderOnly(..), Simple(..))
 
 import Data.Cata
-import Data.Containers
-import Data.Containers.Hetero
+import Data.Container
+import Data.Container.Hetero
 
 import Luna.Syntax.AST.Term
 import Luna.Syntax.Builder.Graph
