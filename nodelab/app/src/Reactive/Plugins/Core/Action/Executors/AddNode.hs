@@ -14,13 +14,14 @@ import qualified Object.Widget.Port   as WPort
 import           Object.Widget.Slider (Slider(..))
 
 import           Reactive.Plugins.Core.Action
-import qualified Reactive.Plugins.Core.Action.State.Global        as Global
-import           Reactive.Plugins.Core.Action.State.Global        (State)
-import qualified Reactive.Plugins.Core.Action.State.Graph         as Graph
-import           Reactive.Plugins.Core.Action.State.UIRegistry    (sceneGraphId)
-import qualified Reactive.Plugins.Core.Action.State.UIRegistry    as UIRegistry
-import           Reactive.Plugins.Core.Action.State.UIRegistry    (UIState)
-import           Reactive.Plugins.Core.Action.Executors.EnterNode (enterNode)
+import qualified Reactive.Plugins.Core.Action.State.Global         as Global
+import           Reactive.Plugins.Core.Action.State.Global         (State)
+import qualified Reactive.Plugins.Core.Action.State.Graph          as Graph
+import           Reactive.Plugins.Core.Action.State.UIRegistry     (sceneGraphId)
+import qualified Reactive.Plugins.Core.Action.State.UIRegistry     as UIRegistry
+import           Reactive.Plugins.Core.Action.State.UIRegistry     (UIState)
+import           Reactive.Plugins.Core.Action.Executors.EnterNode  (enterNode)
+import           Reactive.Plugins.Core.Action.Executors.RemoveNode (removeNode)
 
 import qualified Control.Monad.State   as MState
 import qualified JS.NodeGraph          as UI
@@ -60,7 +61,8 @@ registerNode node oldRegistry = flip MState.execState (oldRegistry, return ()) $
     return file
 
 nodeHandlers :: Node -> UIHandlers State
-nodeHandlers node = def & dblClick .~ [enterNode node]
+nodeHandlers node = def & dblClick   .~ [const $ enterNode node]
+                        & keyPressed .~ [removeNode node]
 
 addSliderToNode :: WidgetId -> Slider Double -> UIState WidgetId b
 addSliderToNode nodeId slider = do

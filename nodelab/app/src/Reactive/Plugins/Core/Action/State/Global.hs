@@ -12,7 +12,6 @@ import           Object.Object
 import           Batch.Workspace
 import qualified Reactive.Plugins.Core.Action.State.Camera            as Camera
 import qualified Reactive.Plugins.Core.Action.State.Graph             as Graph
-import qualified Reactive.Plugins.Core.Action.State.AddRemove         as AddRemove
 import qualified Reactive.Plugins.Core.Action.State.Selection         as Selection
 import qualified Reactive.Plugins.Core.Action.State.MultiSelection    as MultiSelection
 import qualified Reactive.Plugins.Core.Action.State.Drag              as Drag
@@ -29,7 +28,6 @@ data State = State { _iteration      :: Integer
                    , _screenSize     :: Vector2 Int
                    , _graph          :: Graph.State
                    , _camera         :: Camera.State
-                   , _addRemove      :: AddRemove.State
                    , _selection      :: Selection.State
                    , _multiSelection :: MultiSelection.State
                    , _drag           :: Drag.State
@@ -47,16 +45,15 @@ makeLenses ''State
 initialScreenSize = Vector2 400 200
 
 initialState :: Workspace -> State
-initialState workspace = State def initialScreenSize def def def def def def def def def def def def def workspace
+initialState workspace = State def initialScreenSize def def def def def def def def def def def def workspace
 
 instance PrettyPrinter State where
-    display (State iteration mousePos screenSize graph camera addRemove selection multiSelection drag connect nodeSearcher breadcrumb uiRegistry sandbox pen workspace)
+    display (State iteration mousePos screenSize graph camera selection multiSelection drag connect nodeSearcher breadcrumb uiRegistry sandbox pen workspace)
         = "gS(" <> display iteration
          <> " " <> display mousePos
          <> " " <> display screenSize
          <> " " <> display graph
          <> " " <> display camera
-         <> " " <> display addRemove
          <> " " <> display selection
          <> " " <> display multiSelection
          <> " " <> display drag
