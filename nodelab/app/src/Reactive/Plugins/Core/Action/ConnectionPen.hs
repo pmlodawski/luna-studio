@@ -134,17 +134,26 @@ instance ActionStateUpdater Action where
                 -- TODO: connecting nodes UI actions
         ConnectionPen.Disconnecting -> ActionUI (PerformIO draw) newState'' where
             newState''      = updateConnections $ updatePortAngles newState'
-            newState'       = state & Global.graph %~ removeConnections connections
+            newState'       = state & Global.graph      %~ removeConnections connections
+                                    & Global.uiRegistry %~ UIRegistry.unregisterAll widgetIds
             (Just oldPen)   = state ^. Global.connectionPen . ConnectionPen.drawing
             pos             = oldPen ^. ConnectionPen.previousPos
+            widgetIds       = connectionToWidgetId connections (state ^. Global.uiRegistry)
             draw            = do  -- TODO: remove from UIRegistry
                                   updateConnectionsUI newState'
-                                  UI.removeConnections connections
+                                  UI.removeConnections widgetIds
                                   putStrLn $ "disconnecting " <> show connections
 
     execSt (FinishDrawing _) state = ActionUI (PerformIO draw) newState where
         newState      = state  & Global.connectionPen . ConnectionPen.drawing .~ Nothing
         draw          = UI.endPath
+
+
+connectionToWidgetId :: [ConnectionId] -> UIRegistry.State Global.State -> [WidgetId]
+connectionToWidgetId connections state = widgetIds where
+    widgetIds = catMaybes $ ((flip IntMap.lookup) idsMap) <$> connections
+    idsMap    = IntMap.fromList $ (\w -> (w ^. widget . UIConnection.connectionId, w ^. objectId)) <$> widgets
+    widgets   = UIRegistry.lookupAll state :: [WidgetFile Global.State UIConnection.Connection]
 
 
 autoConnectAll :: [(Int, Int)] -> Global.State -> (IO (), Global.State)

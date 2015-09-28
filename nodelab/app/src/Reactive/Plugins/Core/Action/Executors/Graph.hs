@@ -47,14 +47,18 @@ updateConnectionsUI :: Global.State -> IO ()
 updateConnectionsUI state = updateWidgets where
     oldRegistry        = state ^. Global.uiRegistry
     updateWidgets      = forM_ allConnections updateWidget
-    updateWidget file  = UI.displayConnection (file ^. objectId) connId fromX fromY toX toY where
+    updateWidget file  = UI.updateConnection (file ^. objectId) fromX fromY toX toY where
         UIConnection.Connection connId (Vector2 fromX fromY) (Vector2 toX toY) = file ^. widget
     allConnections     = UIRegistry.lookupAll oldRegistry :: [WidgetFile Global.State UIConnection.Connection]
 
 
-displayConnectionWidget :: WidgetId -> UIConnection.Connection -> IO ()
-displayConnectionWidget widgetId connection = UI.displayConnection widgetId connId fromX fromY toX toY where
-    UIConnection.Connection connId (Vector2 fromX fromY) (Vector2 toX toY) = connection
+createConnectionWidget :: WidgetId -> UIConnection.Connection -> IO ()
+createConnectionWidget widgetId connection = UI.createConnection widgetId connId where
+    UIConnection.Connection connId _ _ = connection
+
+updateConnectionWidget :: WidgetId -> UIConnection.Connection -> IO ()
+updateConnectionWidget widgetId connection = UI.updateConnection widgetId fromX fromY toX toY where
+    UIConnection.Connection _ (Vector2 fromX fromY) (Vector2 toX toY) = connection
 
 getNodePos :: NodesMap -> NodeId -> Vector2 Double
 getNodePos nodesMap nodeId = node ^. nodePos where
@@ -78,7 +82,7 @@ connectNodes src dst state = (uiUpdate, newState) where
         oldRegistry                          = state ^. Global.uiRegistry
         newState                             = state  & Global.graph      .~ newGraph
                                                       & Global.uiRegistry .~ newRegistry
-        uiUpdate                     = forM_ file $ \f -> displayConnectionWidget (f ^. objectId) (f ^. widget)
+        uiUpdate                     = forM_ file $ \f -> createConnectionWidget (f ^. objectId) (f ^. widget)
         newNodesMap                  = updateSourcePortInNodes 0.0 src oldNodesMap
         oldNodesMap                  = Graph.getNodesMap oldGraph
         updSourceGraph               = Graph.updateNodes newNodesMap oldGraph

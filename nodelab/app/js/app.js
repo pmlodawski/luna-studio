@@ -17,7 +17,6 @@ console.info("Current version " + brunch.env + " " + brunch.git_commit);
 console.info("Build at " + brunch.date);
 
 $$.nodes             = {};
-$$.connections       = {};
 $$.currentConnection = null;
 $$.selectionBox      = null;
 $$.websocket         = websocket();
@@ -231,20 +230,22 @@ function removeCurrentConnection() {
   $$.currentConnection.hide();
 }
 
-function displayConnection(widgetId, id, x0, y0, x1, y1) {
-  if ($$.connections[id] === undefined) {
-    var connection = new Connection(widgetId, id);
-    $$.connections[id] = connection;
-    $$.scene.add(connection.mesh);
-  }
-  $$.connections[id].setPos(x0, y0, x1, y1);
-  $$.connections[id].show();
+
+function createConnection(widgetId, id) {
+  var connection = new Connection(widgetId, id);
+  $$.scene.add(connection.mesh);
+  $$.registry[widgetId] = connection;
 }
 
-function removeConnection(id) {
-  if ($$.connections[id]) {
-    $$.connections[id].hide();
-  }
+function updateConnection(widgetId, x0, y0, x1, y1) {
+  $$.registry[widgetId].setPos(x0, y0, x1, y1);
+  $$.registry[widgetId].show();
+}
+
+function removeConnection(widgetId) {
+  var connection = $$.registry[widgetId];
+  connection.mesh.parent.remove(connection.mesh);
+  $$.registry[widgetId] = undefined;
 }
 
 var displayRejectedMessage = function () {
@@ -272,7 +273,9 @@ module.exports = {
   hideSelectionBox:         hideSelectionBox,
   displayCurrentConnection: displayCurrentConnection,
   removeCurrentConnection:  removeCurrentConnection,
-  displayConnection:        displayConnection,
+
+  createConnection:         createConnection,
+  updateConnection:         updateConnection,
   removeConnection:         removeConnection,
   websocket:                $$.websocket,
   displayRejectedMessage:   displayRejectedMessage,
