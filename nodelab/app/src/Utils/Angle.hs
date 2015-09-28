@@ -20,4 +20,5 @@ calcAngle vecDest vecSrc = normAngle $ atan2 (vecDiff ^. y) (vecDiff ^. x) where
     vecDiff = vecDest - vecSrc
 
 toAngle :: Vector2 Double -> Angle
-toAngle vec = normAngle $ atan2 (vec ^. y) (vec ^. x)
+toAngle (Vector2 0.0 0.0) = 0.0
+toAngle (Vector2 x y) = normAngle $ atan2 y x

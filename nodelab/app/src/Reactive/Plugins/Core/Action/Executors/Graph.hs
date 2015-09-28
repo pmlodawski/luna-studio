@@ -128,7 +128,7 @@ updatePortAngles state = newState where
                             , (conn ^. destination, conn ^. source     ) ]
     connections           = IntMap.elems $ Graph.getConnectionsMap $ state ^. Global.graph
     portsMap              = sortAndGroup . concat $ connectionTuples <$> connections
-    calculateAngle portRef targets = toAngle . normalize . foldl (+) (Vector2 0.0 0.0) $ connectionVector oldNodes portRef <$> targets
+    calculateAngle portRef targets = toAngle . foldl (+) (Vector2 0.0 0.0) $ connectionVector oldNodes portRef <$> targets
     angles                = Map.toList $ Map.mapWithKey calculateAngle portsMap
 
 
