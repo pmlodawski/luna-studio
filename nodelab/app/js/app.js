@@ -237,9 +237,13 @@ function createConnection(widgetId, id) {
   $$.registry[widgetId] = connection;
 }
 
-function updateConnection(widgetId, x0, y0, x1, y1) {
+function updateConnection(widgetId, visible, x0, y0, x1, y1) {
   $$.registry[widgetId].setPos(x0, y0, x1, y1);
-  $$.registry[widgetId].show();
+  if(visible) {
+    $$.registry[widgetId].show();
+  } else {
+    $$.registry[widgetId].hide();
+  }
 }
 
 function removeConnection(widgetId) {

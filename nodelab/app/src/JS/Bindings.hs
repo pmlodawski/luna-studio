@@ -173,8 +173,8 @@ foreign import javascript unsafe "app.removeCurrentConnection()"
 foreign import javascript unsafe "app.createConnection($1, $2)"
     createConnection :: Int -> Int -> IO ()
 
-foreign import javascript unsafe "app.updateConnection($1, $2, $3, $4, $5)"
-    updateConnection :: Int -> Double -> Double -> Double -> Double -> IO ()
+foreign import javascript unsafe "app.updateConnection($1, $2, $3, $4, $5, $6)"
+    updateConnection :: Int -> Bool -> Double -> Double -> Double -> Double -> IO ()
 
 foreign import javascript unsafe "app.removeConnection($1)"
     removeConnection :: Int -> IO ()

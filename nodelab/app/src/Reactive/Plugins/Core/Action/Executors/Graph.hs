@@ -47,18 +47,17 @@ updateConnectionsUI :: Global.State -> IO ()
 updateConnectionsUI state = updateWidgets where
     oldRegistry        = state ^. Global.uiRegistry
     updateWidgets      = forM_ allConnections updateWidget
-    updateWidget file  = UI.updateConnection (file ^. objectId) fromX fromY toX toY where
-        UIConnection.Connection connId (Vector2 fromX fromY) (Vector2 toX toY) = file ^. widget
+    updateWidget file  = UI.updateConnection (file ^. objectId) visible fromX fromY toX toY where
+        UIConnection.Connection connId visible (Vector2 fromX fromY) (Vector2 toX toY) = file ^. widget
     allConnections     = UIRegistry.lookupAll oldRegistry :: [WidgetFile Global.State UIConnection.Connection]
 
 
 createConnectionWidget :: WidgetId -> UIConnection.Connection -> IO ()
-createConnectionWidget widgetId connection = UI.createConnection widgetId connId where
-    UIConnection.Connection connId _ _ = connection
+createConnectionWidget widgetId connection = UI.createConnection widgetId (connection ^. UIConnection.connectionId)
 
 updateConnectionWidget :: WidgetId -> UIConnection.Connection -> IO ()
-updateConnectionWidget widgetId connection = UI.updateConnection widgetId fromX fromY toX toY where
-    UIConnection.Connection _ (Vector2 fromX fromY) (Vector2 toX toY) = connection
+updateConnectionWidget widgetId connection = UI.updateConnection widgetId visible fromX fromY toX toY where
+    UIConnection.Connection _ visible (Vector2 fromX fromY) (Vector2 toX toY) = connection
 
 getNodePos :: NodesMap -> NodeId -> Vector2 Double
 getNodePos nodesMap nodeId = node ^. nodePos where
@@ -94,7 +93,7 @@ connectNodes src dst state = (uiUpdate, newState) where
             Nothing                 -> (Nothing, oldRegistry)
 
 getConnectionLine :: NodesMap -> Connection -> UIConnection.Connection
-getConnectionLine nodesMap (Connection lineId srcPortRef dstPortRef) = UIConnection.Connection lineId srcWs dstWs
+getConnectionLine nodesMap (Connection lineId srcPortRef dstPortRef) = UIConnection.Connection lineId visible srcWs dstWs
     where
     srcNWs@(Vector2 xSrcN ySrcN) = getNodePos nodesMap $ srcPortRef ^. refPortNodeId
     dstNWs@(Vector2 xDstN yDstN) = getNodePos nodesMap $ dstPortRef ^. refPortNodeId
@@ -103,6 +102,9 @@ getConnectionLine nodesMap (Connection lineId srcPortRef dstPortRef) = UIConnect
     angleDst                     = getPortAngle dstPortRef nodesMap
     srcWs                        = Vector2 (xSrcN + outerPos * cos angleSrc) (ySrcN + outerPos * sin angleSrc)
     dstWs                        = Vector2 (xDstN + outerPos * cos angleDst) (yDstN + outerPos * sin angleDst)
+    delta                        = dstNWs - srcNWs
+    visible                      = lengthSquared delta > 4 * portOuterBorderSquared
+
 
 sortAndGroup assocs = Map.fromListWith (++) [(k, [v]) | (k, v) <- assocs]
 
