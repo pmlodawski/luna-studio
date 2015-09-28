@@ -129,6 +129,10 @@ setPorts :: PortType -> Ports -> PortCollection -> Ports
 setPorts  InputPort allPorts ports = allPorts &  inputPorts .~ ports
 setPorts OutputPort allPorts ports = allPorts & outputPorts .~ ports
 
+isDef :: Node -> Bool
+isDef node = exprPrefix == "def " where
+    exprPrefix = Text.unpack $ Text.take 4 $ node ^. expression
+
 -- getPort :: PortId -> PortType -> Node -> Maybe Port
 -- getPort ident = find (\port -> port ^. portId == ident) .: getPorts
 

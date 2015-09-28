@@ -5,4 +5,6 @@ import Reactive.Plugins.Core.Action.State.Global (State)
 import Object.Node
 
 enterNode :: Node -> State -> (State, IO ())
-enterNode node state = (state, print $ "would enter: " ++ (show node))
+enterNode node state = if   isDef node
+                       then (state, print $ "would enter: " ++ (show node))
+                       else (state, print "would not enter")
