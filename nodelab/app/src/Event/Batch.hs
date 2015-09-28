@@ -20,6 +20,7 @@ data Event = ProjectsList [Project]
            | ASTElementDoesNotExist
            | WorkspaceCreated Breadcrumbs
            | NodeAdded Node
+           | NodeRemoved
            | NodesConnected
            | GraphViewFetched [Node] [(PortRef, PortRef)]
            | InterpreterGotProjectId (Maybe Int32)

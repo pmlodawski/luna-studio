@@ -14,25 +14,26 @@ process _                                = Nothing
 
 processMessage :: WebMessage -> Batch.Event
 processMessage (WebMessage topic bytes) = rescueParseError topic $ case topic of
-    "project.list.status"                                 -> ProjectsList <$> parseProjectsListResponse bytes
-    "project.create.update"                               -> ProjectCreated <$> parseProjectCreateUpdate bytes
-    "project.open.update"                                 -> ProjectOpened <$> parseProjectOpenUpdate bytes
-    "project.open.error"                                  -> Just $ ProjectDoesNotExist
-    "project.library.list.status"                         -> LibrariesList <$> parseLibrariesListResponse bytes
-    "project.library.create.update"                       -> LibraryCreated <$> parseLibraryCreateResponse bytes
-    "project.library.ast.function.add.update"             -> WorkspaceCreated <$> parseFunctionCreateResponse bytes
-    "interpreter.value.update"                            -> uncurry ValueUpdate <$> parseValueUpdate bytes
-    "project.library.ast.function.graph.node.add.update"  -> NodeAdded <$> parseAddNodeResponse bytes
-    "project.library.ast.function.graph.node.add.fakeres" -> NodeAdded <$> parseAddNodeFakeResponse bytes
-    "project.library.ast.code.get.status"                 -> CodeUpdate <$> parseGetCodeResponse bytes
-    "project.library.ast.function.graph.connect.update"   -> Just $ NodesConnected
-    "project.library.ast.get.status"                      -> Just ASTElementExists
-    "project.library.ast.get.error"                       -> Just ASTElementDoesNotExist
-    "interpreter.run.update"                              -> Just RunFinished
-    "project.library.ast.function.graph.get.status"       -> uncurry GraphViewFetched <$> parseGraphViewResponse bytes
-    "interpreter.getprojectid.status"                     -> InterpreterGotProjectId <$> parseProjectIdStatus bytes
-    "interpreter.serializationmode.insert.update"         -> Just $ SerializationModeInserted
-    _                                                     -> Just $ UnknownEvent topic
+    "project.list.status"                                   -> ProjectsList <$> parseProjectsListResponse bytes
+    "project.create.update"                                 -> ProjectCreated <$> parseProjectCreateUpdate bytes
+    "project.open.update"                                   -> ProjectOpened <$> parseProjectOpenUpdate bytes
+    "project.open.error"                                    -> Just $ ProjectDoesNotExist
+    "project.library.list.status"                           -> LibrariesList <$> parseLibrariesListResponse bytes
+    "project.library.create.update"                         -> LibraryCreated <$> parseLibraryCreateResponse bytes
+    "project.library.ast.function.add.update"               -> WorkspaceCreated <$> parseFunctionCreateResponse bytes
+    "interpreter.value.update"                              -> uncurry ValueUpdate <$> parseValueUpdate bytes
+    "project.library.ast.function.graph.node.add.update"    -> NodeAdded <$> parseAddNodeResponse bytes
+    "project.library.ast.function.graph.node.remove.update" -> Just NodeRemoved
+    "project.library.ast.function.graph.node.add.fakeres"   -> NodeAdded <$> parseAddNodeFakeResponse bytes
+    "project.library.ast.code.get.status"                   -> CodeUpdate <$> parseGetCodeResponse bytes
+    "project.library.ast.function.graph.connect.update"     -> Just $ NodesConnected
+    "project.library.ast.get.status"                        -> Just ASTElementExists
+    "project.library.ast.get.error"                         -> Just ASTElementDoesNotExist
+    "interpreter.run.update"                                -> Just RunFinished
+    "project.library.ast.function.graph.get.status"         -> uncurry GraphViewFetched <$> parseGraphViewResponse bytes
+    "interpreter.getprojectid.status"                       -> InterpreterGotProjectId <$> parseProjectIdStatus bytes
+    "interpreter.serializationmode.insert.update"           -> Just $ SerializationModeInserted
+    _                                                       -> Just $ UnknownEvent topic
 processMessage (ControlMessage ConnectionTakeover) = ConnectionDropped
 processMessage (ControlMessage Welcome)            = ConnectionOpened
 

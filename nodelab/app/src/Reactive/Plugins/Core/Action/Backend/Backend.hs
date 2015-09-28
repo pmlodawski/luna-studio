@@ -41,7 +41,7 @@ instance ActionStateUpdater Action where
     execSt (ShowCode code) state = ActionUI (PerformIO action) state where
         action = TextIO.putStr code
 
-    execSt ConnectionTakeover state = ActionUI (PerformIO displayRejectedMessage) state where
+    execSt ConnectionTakeover state = ActionUI (PerformIO displayRejectedMessage) state
 
     execSt (InsertSerializationMode node) state = ActionUI (PerformIO action) state where
         action = do
