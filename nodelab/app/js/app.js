@@ -64,7 +64,7 @@ function initializeGl() {
     $($$.rendererMap.domElement).addClass('renderer').css({zIndex: 100});
 
 
-    $$.canvas2D = $('<canvas id="canvas2d">')[0];
+    $$.canvas2D = $('<canvas id="canvas2d" tabindex="0">')[0];
     document.body.appendChild($$.canvas2D);
     $$.canvas2DCtx = $$.canvas2D.getContext('2d');
 

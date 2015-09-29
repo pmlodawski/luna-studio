@@ -6,11 +6,12 @@ import           Utils.Vector
 
 import           Data.Dynamic           (Dynamic)
 
-import           GHCJS.DOM              (currentWindow)
+import           GHCJS.DOM              (currentWindow, currentDocument)
 import           GHCJS.DOM.EventM
 import           GHCJS.Prim             (fromJSString)
 import qualified GHCJS.DOM.Document      as Document
-import           GHCJS.DOM.Window       (Window, mouseDown, mouseUp, mouseMove, resize, keyPress, keyDown, keyUp, getInnerWidth, getInnerHeight, click, dblClick)
+import           GHCJS.DOM.Element       (Element, mouseDown, mouseUp, mouseMove, keyPress, keyDown, keyUp, click, dblClick)
+import           GHCJS.DOM.Window        (resize, getInnerWidth, getInnerHeight)
 import qualified GHCJS.DOM.MouseEvent    as MouseEvent
 import qualified GHCJS.DOM.KeyboardEvent as KeyboardEvent
 import qualified GHCJS.DOM.UIEvent       as UIEvent
@@ -31,11 +32,15 @@ import qualified Event.Window        as Window
 import qualified Event.NodeSearcher  as NodeSearcher
 import qualified Event.Connection    as Connection
 import qualified Event.ConnectionPen as ConnectionPen
+import qualified Event.TextEditor    as TextEditor
 import qualified Object.Node         ( Node )
 import           Event.Event
 import           GHCJS.Marshal
 import           JavaScript.Array    ( JSArray )
 import qualified JavaScript.Array    as JSArray
+import           Data.JSString.Text ( lazyTextFromJSString, lazyTextToJSString )
+import qualified Data.JSString as JSString
+
 
 import qualified BatchConnector.Connection as Connection
 
@@ -58,10 +63,15 @@ readMousePos = do
 uiWhichButton :: (UIEvent.IsUIEvent e) => EventM t e MouseButton
 uiWhichButton = uiWhich >>= return . Mouse.toMouseButton
 
-mouseHandler :: EventName Window MouseEvent.MouseEvent -> Mouse.Type -> AddHandler (Event Dynamic)
+eventObject :: IO (Maybe Element)
+eventObject = do
+    doc <- fromJust <$> currentDocument
+    Document.getElementById doc (JSString.pack "canvas2d")
+
+mouseHandler :: EventName Element MouseEvent.MouseEvent -> Mouse.Type -> AddHandler (Event Dynamic)
 mouseHandler event tag =
     AddHandler $ \h -> do
-        window <- fromJust <$> currentWindow
+        window <- fromJust <$> eventObject
         window `on` event $ do
             mousePos        <- readMousePos
             button          <- uiWhichButton
@@ -83,7 +93,7 @@ mouseDblClickHandler = mouseHandler dblClick   Mouse.DblClicked
 
 -- keyHandler :: EventName Window KeyboardEvent.KeyboardEvent -> Keyboard.Type -> AddHandler (Event Dynamic)
 keyHandler event getter tag = AddHandler $ \h -> do
-    window <- fromJust <$> currentWindow
+    window <- fromJust <$> eventObject
     window `on` event $ do
         key <- getter
         liftIO . h $ Keyboard $ Keyboard.Event tag $ chr key
@@ -99,7 +109,7 @@ resizeHandler = AddHandler $ \h -> do
     window `on` resize $ liftIO $ do
         width  <- getInnerWidth  window
         height <- getInnerHeight window
-        h $ Window $ Window.Event Window.Resized width height
+        h $ Window $ Window.Event Window.Resized (floor $ 0.7 * (fromIntegral width)) height
 
 nodeSearcherHander :: AddHandler (Event Dynamic)
 nodeSearcherHander = AddHandler $ \h -> do

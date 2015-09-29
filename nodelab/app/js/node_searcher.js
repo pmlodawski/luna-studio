@@ -505,6 +505,7 @@ NodeSearcher.prototype.onKeyPgDn = function(ev) {
 
 NodeSearcher.prototype.destroy = function() {
   this.el.remove();
+  $('#canvas2d').focus();
   $$.node_searcher = undefined;
 };
 
