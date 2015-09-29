@@ -70,7 +70,7 @@ function initializeGl() {
 
     document.body.appendChild($$.renderer.domElement);
 
-    // document.body.appendChild($$.rendererMap.domElement);
+    window.displayObjectMap = function() { document.body.appendChild($$.rendererMap.domElement) };
 
     initCommonWidgets();
     addVersionToHud();
