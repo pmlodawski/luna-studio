@@ -27,6 +27,7 @@ import qualified Generated.Proto.ProjectManager.Project.Library.List.Request    
 import qualified Generated.Proto.ProjectManager.Project.Library.Create.Request       as CreateLibrary
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Get.Request      as GetAST
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Get.Request as GetCode
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Set.Request as SetCode
 
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Add.Request                      as AddFunction
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Get.Request                as GetGraph
@@ -221,3 +222,12 @@ removeNodeById workspace nodeId = sendMessage msg where
                               (workspace ^. library . Library.id)
                               (workspace ^. project . Project.id)
                               uselessLegacyArgument
+
+setCode :: Workspace -> Text -> IO ()
+setCode workspace code = sendMessage msg where
+    msg  = WebMessage "project.library.ast.function.code.set.request" $ messagePut body
+    body = SetCode.Request (encode code)
+                           (encode $ workspace ^. breadcrumbs)
+                           (workspace ^. library . Library.id)
+                           (workspace ^. project . Project.id)
+                           uselessLegacyArgument
