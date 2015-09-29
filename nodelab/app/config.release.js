@@ -1,4 +1,6 @@
 module.exports = {
+  backend: true,
+  backendAddress: "wss://demo.nodelab.io/backend",
   logging:         false,
   backgroundColor: 0x1a1a1a,
   fontSize:        0.45,
