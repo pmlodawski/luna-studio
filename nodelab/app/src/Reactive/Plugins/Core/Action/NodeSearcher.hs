@@ -78,12 +78,9 @@ instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
         (Query Search expr)      -> do
             JS.NodeSearcher.displayQueryResults $ Mock.getItemsSearch expr
-            putStrLn $ display action
         (Query Tree expr)        -> do
             JS.NodeSearcher.displayTreeResults $ Mock.getItemsTree expr
-            putStrLn $ display action
         OpenNodeSearcher         -> do
-            putStrLn $ display action
             JS.NodeSearcher.initNodeSearcher "" (state ^. Global.mousePos . x) (state ^. Global.mousePos . y)
         -- CloseNodeSearcher      -> do
         --     putStrLn $ display action

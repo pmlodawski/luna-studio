@@ -96,5 +96,4 @@ setComputedValue nodeId value = do
 createNodeAt :: Int -> Vector2 Double -> Text -> Int -> IO ()
 createNodeAt nodeId (Vector2 px py) expr wid = do
     newNodeAt nodeId px py expr wid
-    putStrLn $ "nodeId " <> show nodeId
 
