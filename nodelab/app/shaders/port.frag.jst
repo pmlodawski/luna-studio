@@ -13,6 +13,8 @@ uniform float portSize;
 uniform vec4 colorFar;
 uniform vec4 color;
 
+uniform int focused;
+
 uniform int antialias;
 
 uniform int objectMap;
@@ -80,8 +82,11 @@ void main() {
     } else if (dist_squared < r4) {
         alpha *= d_blur_r34;
     } else {
-        discard;
-        // alpha *= 0.2;
+        if(focused == 0) {
+            discard;
+        } else {
+            alpha *= 0.2;
+        }
     }
 
     float disappearE = 0.5;

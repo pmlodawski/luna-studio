@@ -188,3 +188,7 @@ foreign import javascript unsafe "require('exampleData')" getExampleData :: IO J
 
 foreign import javascript unsafe "app.displayRejectedMessage()"
     displayRejectedMessage :: IO ()
+
+
+foreign import javascript unsafe "$$.registry[$1].setFocused($2)"
+    setPortFocused :: Int -> Bool -> IO ()

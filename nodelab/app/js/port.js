@@ -29,6 +29,7 @@ function Port(id, widgetId, angle, out) {
   this.uniforms = {
     color:     { type: 'v4', value: color    },
     colorFar:  { type: 'v4', value: colorFar },
+    focused:   { type: 'i',  value: 0        },
     mouseDist: { type: 'f',  value: 100000.0 },
     nodeSize:  { type: 'f',  value: nodeSize },
     portSize:  { type: 'f',  value: height   },
@@ -77,5 +78,10 @@ Port.prototype.setColor = function(color) {
 Port.prototype.updateMouseDist = function(mouseDist) {
   this.uniforms.mouseDist.value = mouseDist;
 };
+
+Port.prototype.setFocused = function(focused) {
+  this.uniforms.focused.value = focused ? 1 : 0;
+};
+
 
 module.exports = Port;
