@@ -135,7 +135,7 @@ instance ActionStateUpdater Action where
         ConnectionPen.Disconnecting -> ActionUI (PerformIO draw) newState'' where
             newState''      = updateConnections $ updatePortAngles newState'
             newState'       = state & Global.graph      %~ removeConnections connections
-                                    & Global.uiRegistry %~ UIRegistry.unregisterAll widgetIds
+                                    & Global.uiRegistry %~ UIRegistry.unregisterAll_ widgetIds
             (Just oldPen)   = state ^. Global.connectionPen . ConnectionPen.drawing
             pos             = oldPen ^. ConnectionPen.previousPos
             widgetIds       = connectionToWidgetId connections (state ^. Global.uiRegistry)

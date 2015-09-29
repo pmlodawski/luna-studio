@@ -14,7 +14,9 @@ import qualified Data.IntMap.Lazy as IntMap
 import           Object.UITypes
 import           Utils.CtxDynamic
 
-import qualified Control.Monad.State as MState
+import qualified Control.Monad.State     as MState
+import qualified Control.Monad.Trans.RWS as RWS
+import           Control.Monad.Trans.RWS (RWS)
 
 import Debug.Trace
 
@@ -131,18 +133,28 @@ registerHandler :: WidgetId -> (UIHandlers a -> UIHandlers a) -> State a -> Stat
 registerHandler oid mutator state = updateFile oid fileMutator state where
     fileMutator file = file & handlers %~ mutator
 
-unregister :: WidgetId -> State b -> State b -- TODO: Remove children from parent
-unregister oid state = state & widgets .~ newWidgets where
-    newWidgets = IntMap.delete oid oldWidgets
-    oldWidgets = state ^. widgets
+unregisterRWS :: WidgetId -> RWS () [WidgetId] (State a) ()
+unregisterRWS oid = do
+    widget <- RWS.gets $ lookup oid
+    case widget of
+        Just file -> sequence_ $ unregisterRWS <$> (file ^. children)
+        Nothing   -> return ()
+    RWS.modify (widgets %~ IntMap.delete oid)
+    RWS.tell [oid]
+
+unregister :: WidgetId -> State b -> (State b, [WidgetId])
+unregister oid = RWS.execRWS (unregisterRWS oid) ()
 
 registerAll :: DisplayObjectClass a => WidgetId -> [a] -> State b -> ([WidgetFile b a], State b)
 registerAll parent a state = foldl reg ([], state) a where
     reg (acc, st) a = (newA:acc, newSt) where
         (newA, newSt) = register parent a def st
 
-unregisterAll :: [WidgetId] -> State b -> State b
-unregisterAll a state = foldl (flip unregister) state a
+unregisterAll :: [WidgetId] -> State b -> (State b, [WidgetId])
+unregisterAll oids = RWS.execRWS (sequence $ unregisterRWS <$> oids) ()
+
+unregisterAll_ :: [WidgetId] -> State b -> State b
+unregisterAll_ = fst .: unregisterAll
 
 generateIds :: Int -> State b -> [WidgetId]
 generateIds count state = [startId..startId + count] where
@@ -153,7 +165,7 @@ generateId state = if IntMap.size (state ^. widgets) == 0 then 1
                                                           else maxId + 1 where (maxId, _) = IntMap.findMax (state ^. widgets)
 
 replaceAll :: DisplayObjectClass a => WidgetId -> [WidgetId] -> [a] -> State b -> ([WidgetFile b a], State b)
-replaceAll parent remove add state = registerAll parent add $ unregisterAll remove state
+replaceAll parent remove add state = registerAll parent add (fst $ unregisterAll remove state)
 
 sequenceUpdates :: [Maybe (State b -> Maybe (WidgetUIUpdate, State b))]
                 -> State b -> (WidgetUIUpdate, State b)
