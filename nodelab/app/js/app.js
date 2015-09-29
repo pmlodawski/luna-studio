@@ -167,13 +167,6 @@ function newNodeAt(id, x, y, expr, widgetId) {
   $$.registry[widgetId] = node;
 }
 
-function removeNode(i) {
-  var node = $$.nodes[i];
-  $$.scene.remove(node.mesh);
-  delete $$.nodes[i];
-  // delete $$.registry[65536 + i];
-}
-
 // -> HS
 function moveToTopZ(nodeId) {
   var nodeToTop = $$.nodes[nodeId];
@@ -246,10 +239,14 @@ function updateConnection(widgetId, visible, x0, y0, x1, y1) {
   }
 }
 
-function removeConnection(widgetId) {
-  var connection = $$.registry[widgetId];
-  connection.mesh.parent.remove(connection.mesh);
-  $$.registry[widgetId] = undefined;
+function removeWidget(widgetId) {
+  var widget = $$.registry[widgetId];
+  if (!widget) {
+    console.error("RemoveWidget: widget " + widgetId + " does not exist.");
+    return;
+  }
+  widget.mesh.parent.remove(widget.mesh);
+  delete $$.registry[widgetId];
 }
 
 var displayRejectedMessage = function () {
@@ -265,7 +262,6 @@ module.exports = {
   render:                   render,
   moveToTopZ:               moveToTopZ,
   newNodeAt:                newNodeAt,
-  removeNode:               removeNode,
   updateHtmCanvasPanPos:    updateHtmCanvasPanPos,
   updateScreenSize:         updateScreenSize,
   updateCamera:             updateCamera,
@@ -277,10 +273,9 @@ module.exports = {
   hideSelectionBox:         hideSelectionBox,
   displayCurrentConnection: displayCurrentConnection,
   removeCurrentConnection:  removeCurrentConnection,
-
   createConnection:         createConnection,
   updateConnection:         updateConnection,
-  removeConnection:         removeConnection,
+  removeWidget:             removeWidget,
   websocket:                $$.websocket,
   displayRejectedMessage:   displayRejectedMessage,
   getNode:                  function(index) { return $$.nodes[index];    },

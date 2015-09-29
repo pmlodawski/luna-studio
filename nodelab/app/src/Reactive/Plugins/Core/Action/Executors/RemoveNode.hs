@@ -20,7 +20,7 @@ removeNode node key state = case key of
 
 performRemoval :: Node -> State -> (State, IO ())
 performRemoval node state = (newState, action) where
-    action       =  UI.removeNode (node ^. nodeId)
+    action       =  maybe (return ()) UI.removeWidget nodeWidgetId
                  >> BatchCmd.removeNodeById (state ^. Global.workspace) (node ^. nodeId)
                  >> mapM_ UIGraph.setNodeFocused topNodeId
     newState     = state & Global.graph      .~ newGraph
@@ -29,4 +29,6 @@ performRemoval node state = (newState, action) where
     newGraph     = Graph.removeNode (node ^. nodeId) (state ^. Global.graph)
     newSelection = (state ^. Global.selection) & Selection.nodeIds %~ drop 1
     topNodeId    = newSelection ^? Selection.nodeIds . ix 0
-    topWidgetId  = topNodeId >>= (nodeIdToWidgetId $ state ^. Global.uiRegistry)
+    topWidgetId  = topNodeId >>= nodeIdToWidgetId uiRegistry
+    uiRegistry   = state ^. Global.uiRegistry
+    nodeWidgetId = nodeIdToWidgetId uiRegistry $ node ^. nodeId

@@ -43,11 +43,6 @@ foreign import javascript unsafe "app.newNodeAt($1, $2, $3, $4, $5)"
 newNodeAt :: Int -> Double -> Double -> Text -> Int -> IO ()
 newNodeAt nodeId px py expr widgetId = newNodeAtJS nodeId px py (lazyTextToJSString expr) widgetId
 
-
-foreign import javascript unsafe "app.removeNode($1)"
-    removeNode :: Int -> IO ()
-
-
 foreign import javascript unsafe "common.camera.updateProjectionMatrix()"
     updateProjectionMatrix :: IO ()
 
@@ -176,12 +171,8 @@ foreign import javascript unsafe "app.createConnection($1, $2)"
 foreign import javascript unsafe "app.updateConnection($1, $2, $3, $4, $5, $6)"
     updateConnection :: Int -> Bool -> Double -> Double -> Double -> Double -> IO ()
 
-foreign import javascript unsafe "app.removeConnection($1)"
-    removeConnection :: Int -> IO ()
-
-removeConnections :: [Int] -> IO ()
-removeConnections = mapM_ removeConnection
-
+foreign import javascript unsafe "app.removeWidget($1)"
+    removeWidget :: Int -> IO ()
 
 foreign import javascript unsafe "window.dispatchEvent(new Event('resize'))"
     triggerWindowResize :: IO ()

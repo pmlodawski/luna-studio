@@ -141,7 +141,7 @@ instance ActionStateUpdater Action where
             widgetIds       = connectionToWidgetId connections (state ^. Global.uiRegistry)
             draw            = do  -- TODO: remove from UIRegistry
                                   updateConnectionsUI newState'
-                                  UI.removeConnections widgetIds
+                                  mapM_ UI.removeWidget widgetIds
                                   putStrLn $ "disconnecting " <> show connections
 
     execSt (FinishDrawing _) state = ActionUI (PerformIO draw) newState where
