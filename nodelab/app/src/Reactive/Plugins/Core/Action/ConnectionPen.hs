@@ -38,7 +38,7 @@ import qualified Reactive.Plugins.Core.Action.State.ConnectionPen as ConnectionP
 
 import qualified BatchConnector.Commands as BatchCmd
 
-import Debug.Trace
+import           Debug.Trace
 
 
 data Action = BeginDrawing  (Vector2 Int) ConnectionPen.DrawingType
@@ -167,11 +167,15 @@ autoConnect (srcNodeId, dstNodeId) oldState = (uiUpdate, newState') where
     dstNode                          = getNode graph dstNodeId
     srcPorts                         = srcNode ^. ports . outputPorts
     dstPorts                         = dstNode ^. ports . inputPorts
-    -- dstPorts                         = filterConnectedInputPorts graph dstNodeId $ dstNode ^. ports . inputPorts
-    connection                       = findConnectionForAll dstPorts srcPorts
+    dstPortsFiltered                 = filterConnectedInputPorts graph dstNodeId $ dstNode ^. ports . inputPorts
+    connection                       = findConnectionForAll dstPortsFiltered srcPorts
     newState'                        = updateConnections $ updatePortAngles newState
     (uiUpdate, newState)             = case connection of
         Just (srcPortId, dstPortId) -> (do
+                                            putStrLn $ "connections      " <> (display $ getConnections graph)
+                                            putStrLn $ "srcPorts         " <> display srcPorts
+                                            putStrLn $ "dstPorts         " <> display dstPorts
+                                            putStrLn $ "dstPortsFiltered " <> display dstPortsFiltered
                                             connectUI
                                             BatchCmd.connectNodes workspace srcPortRef dstPortRef
                                         , st)
@@ -184,7 +188,7 @@ autoConnect (srcNodeId, dstNodeId) oldState = (uiUpdate, newState') where
 filterConnectedInputPorts :: State -> NodeId -> PortCollection -> PortCollection
 filterConnectedInputPorts state nodeId ports = filter isConnected ports where
     destinationPortRefs = fmap (^. destination) $ getConnections state
-    isConnected port = PortRef nodeId InputPort (port ^. portId) `elem` destinationPortRefs
+    isConnected port = not $ PortRef nodeId InputPort (port ^. portId) `elem` destinationPortRefs
 
 findConnectionForAll :: PortCollection -> PortCollection -> Maybe (PortId, PortId)
 findConnectionForAll dstPorts srcPorts = listToMaybe . catMaybes $ findConnection dstPorts <$> srcPorts
@@ -197,7 +201,7 @@ findConnection dstPorts srcPort = (srcPort ^. portId,) <$> dstPortId where
 instance ActionUIUpdater Reaction where
     updateUI (WithState (PerformIO action) state) = do
                                                         action
-                                                        moveNodesUI $ getNodesMap $ state ^. Global.graph
-                                                        updatePortAnglesUI state -- TODO: does not work...
-                                                        updateConnectionsUI state
+                                                        -- moveNodesUI $ getNodesMap $ state ^. Global.graph
+                                                        -- updatePortAnglesUI state -- TODO: does not work...
+                                                        -- updateConnectionsUI state
     updateUI (WithState NoOp state)               = return ()

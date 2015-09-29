@@ -85,7 +85,7 @@ connectNodes src dst state = (uiUpdate, newState) where
         newNodesMap                  = updateSourcePortInNodes 0.0 src oldNodesMap
         oldNodesMap                  = Graph.getNodesMap oldGraph
         updSourceGraph               = Graph.updateNodes newNodesMap oldGraph
-        (connId, newGraph)           = Graph.addConnection src dst updSourceGraph
+        (connId, newGraph)           = Graph.addConnection dst src updSourceGraph
         (file, newRegistry)          = case connId of
             Just connId             -> (Just widget, newRegistry) where
                 (widget, newRegistry)= UIRegistry.register UIRegistry.sceneGraphId uiConnection def oldRegistry

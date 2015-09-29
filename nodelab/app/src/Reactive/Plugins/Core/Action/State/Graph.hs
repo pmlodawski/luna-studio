@@ -47,6 +47,13 @@ instance Eq State where
 instance Default State where
     def = State def def def def def
 
+instance PrettyPrinter Connection where
+    display (Connection connId source destination) =
+          "conn("  <> display connId
+        <> " "     <> display source
+        <> " "     <> display destination
+        <> ")"
+
 instance PrettyPrinter State where
     display (State nodesMap connections nodesRefsMap focusedNodeId bldrState) =
           "graph(" <> show nodesMap
