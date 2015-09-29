@@ -55,6 +55,7 @@ makeNetworkDescription conn logging workspace = do
     nodeSearcherE  <- fromAddHandler nodeSearcherHander
     webSocketE     <- fromAddHandler $ webSocketHandler conn
     connectionPenE <- fromAddHandler connectionPenHandler
+    textEditorE    <- fromAddHandler textEditorHandler
 
     let
         batchE                       :: Event t (Event.Event Dynamic)
@@ -73,6 +74,7 @@ makeNetworkDescription conn logging workspace = do
                                                , nodeSearcherE
                                                , batchE
                                                , connectionPenE
+                                               , textEditorE
                                                ]
         anyNodeE                     :: Event t (Event.Event Node)
         anyNodeE                      = unpackDynamic <$> anyE

@@ -17,6 +17,7 @@ import qualified GHCJS.DOM.KeyboardEvent as KeyboardEvent
 import qualified GHCJS.DOM.UIEvent       as UIEvent
 import qualified JS.WebSocket            as WebSocket
 import qualified JS.ConnectionPen        as ConnectionPen
+import qualified JS.TextEditor           as TextEditor
 
 import           Reactive.Banana.Frameworks ( AddHandler(..), liftIO )
 
@@ -135,3 +136,9 @@ connectionPenHandler  = AddHandler $ \h -> do
         arr       <- return $ JSArray.toList (ConnectionPen.toJSArray widgets)
         widgetIds <- mapM fromJSRefUnchecked arr :: IO [WidgetId]
         liftIO $ h $ ConnectionPen $ ConnectionPen.Segment widgetIds
+
+textEditorHandler :: AddHandler (Event Dynamic)
+textEditorHandler  = AddHandler $ \h -> do
+    TextEditor.registerCallback $ \code -> do
+        codeStr <- return $ TextEditor.toJSString code
+        liftIO $ h $ TextEditor $ TextEditor.CodeModified $ lazyTextFromJSString codeStr

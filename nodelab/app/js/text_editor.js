@@ -13,17 +13,11 @@ function init() {
   editor.setTheme("ace/theme/twilight");
   editor.getSession().setMode("ace/mode/ruby");
   $$.editor = editor;
-  editor.setReadOnly(true);
 
-  var noPropagate = function(ev) { ev.stopPropagation(); };
-  $$.editorContainer.on('keydown',   noPropagate);
-  $$.editorContainer.on('keyup',     noPropagate);
-  $$.editorContainer.on('keypress',  noPropagate);
-  $$.editorContainer.on('mousedown', noPropagate);
-  $$.editorContainer.on('mouseup',   noPropagate);
-  $$.editorContainer.on('mousemove', noPropagate);
-  $$.editorContainer.on('click',     noPropagate);
-  $$.editorContainer.on('dblclick',  noPropagate);
+  $$.editor.getSession().on('change', _.debounce(function(e){
+    console.log(e);
+    module.exports.callback($$.editor.getValue());
+  }, 500));
 };
 
 function setText(text) {
@@ -32,5 +26,6 @@ function setText(text) {
 
 module.exports = {
   init: init,
-  setText: setText
+  setText: setText,
+  callback: function(t) { console.error("TextEditor callback not registered"); }
 }
