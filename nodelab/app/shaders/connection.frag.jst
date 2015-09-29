@@ -18,14 +18,20 @@ uniform vec3 objectId;
 
 void main() {
     if (visible < 1.0) discard;
-    if (objectMap == 1 && connecting == 1) discard;
+
+    float v = abs(distanceV);
+
+    if (objectMap == 1) {
+        if (connecting == 1) discard;
+        if (v * len > (len - 25.0)) discard;
+    }
 
     float origAlpha = color.w;
     vec3  colorShow = color.xyz;
     float alphaShow = 1.0;
 
     float d = abs(distance);
-    float v = abs(distanceV);
+
 
     float camFactorDelta = camFactor - 1.0;
     float rimCamFactor  = 1.0;
