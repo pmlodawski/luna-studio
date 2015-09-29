@@ -29,7 +29,7 @@ processMessage (WebMessage topic bytes) = rescueParseError topic $ case topic of
     "project.library.ast.function.graph.connect.update"     -> Just $ NodesConnected
     "project.library.ast.get.status"                        -> Just ASTElementExists
     "project.library.ast.get.error"                         -> Just ASTElementDoesNotExist
-    "interpreter.run.update"                                -> Just RunFinished
+    "interpreter.run.update"                                -> RunFinished <$> parseRunStatus bytes
     "project.library.ast.function.graph.get.status"         -> uncurry GraphViewFetched <$> parseGraphViewResponse bytes
     "interpreter.getprojectid.status"                       -> InterpreterGotProjectId <$> parseProjectIdStatus bytes
     "interpreter.serializationmode.insert.update"           -> Just $ SerializationModeInserted

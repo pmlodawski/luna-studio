@@ -6,6 +6,7 @@ import Batch.Project
 import Batch.Library
 import Batch.Breadcrumbs
 import Batch.Value
+import Batch.RunStatus
 import Object.Node
 import Data.Text.Lazy    (Text)
 import Data.Int
@@ -27,7 +28,7 @@ data Event = ProjectsList [Project]
            | SerializationModeInserted
            | ValueUpdate Int Value
            | CodeUpdate Text
-           | RunFinished
+           | RunFinished RunStatus
            | UnknownEvent String
            | ParseError String
            | ConnectionDropped

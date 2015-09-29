@@ -11,11 +11,13 @@ import qualified BatchConnector.Commands                   as BatchCmd
 import           Reactive.Plugins.Core.Action
 import qualified Reactive.Plugins.Core.Action.State.Global as Global
 import           Data.Text.Lazy.IO                         as TextIO
+import           Batch.RunStatus
 
 data Action = InsertSerializationMode Node
             | ShowCode Text
             | RequestCode
             | ConnectionTakeover
+            | ShowProfilingInfo RunStatus
             deriving (Show, Eq)
 
 data Reaction = PerformIO (IO ())
@@ -29,7 +31,7 @@ instance PrettyPrinter Action where
 toAction :: Event Node -> Maybe Action
 toAction (Batch (Batch.NodeAdded node))         = Just $ InsertSerializationMode node
 toAction (Batch (Batch.CodeUpdate code))        = Just $ ShowCode code
-toAction (Batch Batch.RunFinished)              = Just $ RequestCode
+toAction (Batch (Batch.RunFinished status))     = Just $ ShowProfilingInfo status
 toAction (Batch Batch.ConnectionDropped)        = Just $ ConnectionTakeover
 toAction _ = Nothing
 
@@ -40,6 +42,12 @@ instance ActionStateUpdater Action where
 
     execSt (ShowCode code) state = ActionUI (PerformIO action) state where
         action = TextIO.putStr code
+
+    execSt (ShowProfilingInfo status) state = ActionUI (PerformIO action) state where
+        action    = do
+            BatchCmd.getCode workspace
+            print status
+        workspace = state ^. Global.workspace
 
     execSt ConnectionTakeover state = ActionUI (PerformIO displayRejectedMessage) state
 

@@ -11,6 +11,7 @@ import           Batch.Project
 import           Batch.Library
 import           Batch.Breadcrumbs
 import           Batch.Value
+import           Batch.RunStatus
 import           Object.Node
 import           Object.Object              (PortId(..))
 
@@ -26,12 +27,11 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Add
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Get.Status       as GraphViewResponse
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Get.Status                 as GetCode
 import qualified Generated.Proto.Interpreter.Interpreter.Value.Update                               as Value
-import qualified Generated.Proto.Interpreter.CallPointPath                                          as CallPointPath
-import qualified Generated.Proto.Interpreter.CallPoint                                              as CallPoint
 import qualified Generated.Proto.Mode.ModeValue                                                     as ModeValue
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Add.Update  as AddNode
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Add.Request as AddNodeReq
 import qualified Generated.Proto.Interpreter.Interpreter.GetProjectID.Status                        as GetProjectId
+import qualified Generated.Proto.Interpreter.Interpreter.Run.Update                                 as ProtoRunStatus
 
 parseMessage :: (Wire m, ReflectDescriptor m) => ByteString -> Maybe m
 parseMessage bytes = case messageGet bytes of
@@ -76,9 +76,7 @@ parseGetCodeResponse bytes = (parseMessage bytes) >>= (decode . GetCode.code)
 parseValueUpdate :: ByteString -> Maybe (Int, Value)
 parseValueUpdate bytes = do
     response    <- parseMessage bytes
-    nodeId      <- case (toList $ CallPointPath.calls $ Value.callPointPath response) of
-        []              -> Nothing
-        (callpoint : _) -> decode $ CallPoint.nodeID callpoint
+    nodeId      <- decode $ Value.callPointPath response
     modeValue   <- case (toList $ Value.modeValue response) of
         []        -> Nothing
         (val : _) -> Just val
@@ -97,3 +95,6 @@ parseProjectIdStatus bytes = GetProjectId.projectID <$> parseMessage bytes
 parseAddNodeFakeResponse :: ByteString -> Maybe Node
 parseAddNodeFakeResponse bytes = (parseMessage bytes) >>= getNode where
     getNode = decode . AddNodeReq.node
+
+parseRunStatus :: ByteString -> Maybe RunStatus
+parseRunStatus bytes = (parseMessage bytes :: Maybe ProtoRunStatus.Update) >>= decode

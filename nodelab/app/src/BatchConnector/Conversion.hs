@@ -16,12 +16,13 @@ import           Data.Text.Lazy.Encoding          (encodeUtf8, decodeUtf8)
 import           Utils.Vector                     (Vector2(..), x, y)
 import qualified Utils.MockHelper as MockHelper
 
-import           Batch.Project                    as Project
-import           Batch.Library                    as Library
+import           Batch.Project     as Project
+import           Batch.Library     as Library
 import           Batch.Breadcrumbs
 import           Batch.Value
+import           Batch.RunStatus   hiding (nodeId)
 import           Object.Node
-import           Object.Object                    (PortId(..), PortType(..))
+import           Object.Object     (PortId(..), PortType(..))
 
 import qualified Generated.Proto.Project.Project           as ProtoProject
 import qualified Generated.Proto.Dep.Library.Library       as ProtoLibrary
@@ -51,33 +52,48 @@ import qualified Generated.Proto.Data.BoolData             as BoolData
 import           Generated.Proto.Dep.Attributes.Attributes
 import           Generated.Proto.Dep.Version.Version
 
+import qualified Generated.Proto.Interpreter.ProfileInfo            as ProtoProfile
+import qualified Generated.Proto.Interpreter.CallPoint              as ProtoCallPoint
+import qualified Generated.Proto.Interpreter.CallPointPath          as ProtoCallPointPath
+import qualified Generated.Proto.Interpreter.Interpreter.Run.Update as ProtoRunStatus
+
 maybeGetExt :: Key Maybe msg ext -> msg -> Maybe ext
 maybeGetExt key msg = case getExt key msg of
     Left  _   -> Nothing
     Right val -> val
 
-class ProtoSerializable m n | m -> n, n -> m where
+class ProtoReadable m n | m -> n where
     decode :: m -> Maybe n
+
+class ProtoWritable m n | n -> m where
     encode :: n -> m
 
-instance ProtoSerializable Utf8 Text where
+instance ProtoReadable Utf8 Text where
     decode = Just . decodeUtf8 . utf8
+
+instance ProtoWritable Utf8 Text where
     encode = Utf8 . encodeUtf8
 
-instance ProtoSerializable Int32 Int where
+instance ProtoReadable Int32 Int where
     decode = Just . fromIntegral
+
+instance ProtoWritable Int32 Int where
     encode = fromIntegral
 
-instance (ProtoSerializable m n) => ProtoSerializable (Seq m) [n] where
+instance (ProtoReadable m n) => ProtoReadable (Seq m) [n] where
     decode = Just . catMaybes . (fmap decode) . toList
+
+instance (ProtoWritable m n) => ProtoWritable (Seq m) [n] where
     encode = Seq.fromList . (fmap encode)
 
-instance ProtoSerializable ProtoProject.Project Project where
+instance ProtoReadable ProtoProject.Project Project where
     decode proj = Project name path id <$> libs where
         name = fmap uToString $ ProtoProject.name proj
         path = uToString      $ ProtoProject.path proj
         id   = ProtoProject.id proj
         libs = decode $ ProtoLibManager.libraries $ ProtoProject.libManager proj
+
+instance ProtoWritable ProtoProject.Project Project where
     encode proj = ProtoProject.Project (fmap uFromString $ proj ^. Project.name)
                                        (uFromString $ proj ^. Project.path)
                                        Seq.empty
@@ -85,11 +101,13 @@ instance ProtoSerializable ProtoProject.Project Project where
                                        (Attributes Seq.empty)
                                        (proj ^. Project.id)
 
-instance ProtoSerializable ProtoLibrary.Library Library where
+instance ProtoReadable ProtoLibrary.Library Library where
     decode lib = Library <$> name <*> path <*> id where
         name = uToString <$> ProtoLibrary.name lib
         path = uToString <$> ProtoLibrary.path lib
         id   = ProtoLibrary.id lib
+
+instance ProtoWritable ProtoLibrary.Library Library where
     encode lib = ProtoLibrary.Library (Just $ lib ^. Library.id)
                                       (Just $ uFromString $ lib ^. Library.name)
                                       (Just $ Version Seq.empty Seq.empty)
@@ -98,7 +116,7 @@ instance ProtoSerializable ProtoLibrary.Library Library where
                                       Nothing
                                       (lib ^. Library.id)
 
-instance ProtoSerializable ProtoCrumb.Crumb Crumb where
+instance ProtoReadable ProtoCrumb.Crumb Crumb where
     decode crumb@(ProtoCrumb.Crumb cls _) = case cls of
         CrumbCls.Function -> do
             functionCrumb <- maybeGetExt FunctionCrumb.ext crumb
@@ -110,6 +128,8 @@ instance ProtoSerializable ProtoCrumb.Crumb Crumb where
             name        <- ModuleCrumb.name moduleCrumb
             return $ Module $ uToString name
         _ -> Nothing
+
+instance ProtoWritable ProtoCrumb.Crumb Crumb where
     encode crumb = case crumb of
         Module name   -> makeCrumb CrumbCls.Module ModuleCrumb.ext $
                          Just $ ModuleCrumb.Module $ Just $ uFromString name
@@ -119,17 +139,21 @@ instance ProtoSerializable ProtoCrumb.Crumb Crumb where
         where
             makeCrumb tpe key ext = putExt key ext $ ProtoCrumb.Crumb tpe $ ExtField Map.empty
 
-instance ProtoSerializable ProtoBreadcrumbs.Breadcrumbs Breadcrumbs where
+instance ProtoReadable ProtoBreadcrumbs.Breadcrumbs Breadcrumbs where
     decode (ProtoBreadcrumbs.Breadcrumbs crumbs) = Breadcrumbs <$> decode crumbs
+
+instance ProtoWritable ProtoBreadcrumbs.Breadcrumbs Breadcrumbs where
     encode (Breadcrumbs crumbs) = ProtoBreadcrumbs.Breadcrumbs $ encode crumbs
 
-instance ProtoSerializable ProtoNode.Node Node where
+instance ProtoReadable ProtoNode.Node Node where
     decode node = Node <$> id <*> pure False <*> nodePos <*> expr <*> ports where
         id      = fromIntegral <$> ProtoNode.id node
         nodePos = Vector2 <$> (float2Double <$> ProtoNode.x node)
                           <*> (float2Double <$> ProtoNode.y node)
         expr    = (ProtoNode.expr node) >>= ProtoExpr.str >>= decode
         ports   = MockHelper.createPorts <$> expr
+
+instance ProtoWritable ProtoNode.Node Node where
     encode node = ProtoNode.Node NodeCls.Expr
                                  (Just $ fromIntegral $ node ^. nodeId)
                                  (Just expr)
@@ -140,7 +164,7 @@ instance ProtoSerializable ProtoNode.Node Node where
             expr       = ProtoExpr.NodeExpr ExprCls.String (Just $ encodedStr) Nothing
             encodedStr = encode $ node ^. expression
 
-instance ProtoSerializable ProtoEdge.EdgeView (PortRef, PortRef) where
+instance ProtoReadable ProtoEdge.EdgeView (PortRef, PortRef) where
     decode edge = do
         sourceNodeId      <- fromIntegral   <$> ProtoEdge.nodeSrc edge
         destinationNodeId <- fromIntegral   <$> ProtoEdge.nodeDst edge
@@ -152,6 +176,7 @@ instance ProtoSerializable ProtoEdge.EdgeView (PortRef, PortRef) where
             portIdFromList []       = AllPorts
             portIdFromList (x : xs) = PortNum $ fromIntegral x
 
+instance ProtoWritable ProtoEdge.EdgeView (PortRef, PortRef) where
     encode ((PortRef srcNode _ srcPort), (PortRef dstNode _ dstPort)) = ProtoEdge.EdgeView (Just $ fromIntegral srcNode)
                                                                                            (Just $ fromIntegral dstNode)
                                                                                            (encode $ portIdToList srcPort)
@@ -160,7 +185,7 @@ instance ProtoSerializable ProtoEdge.EdgeView (PortRef, PortRef) where
             portIdToList AllPorts    = []
             portIdToList (PortNum x) = [x]
 
-instance ProtoSerializable SValue.SValue Value where
+instance ProtoReadable SValue.SValue Value where
     decode msg@(SValue.SValue tpe _) = case tpe of
         SValueType.Int -> do
             intData   <- maybeGetExt IntData.data' msg
@@ -185,6 +210,7 @@ instance ProtoSerializable SValue.SValue Value where
             return $ BoolValue value
         _ -> Nothing
 
+instance ProtoWritable SValue.SValue Value where
     encode value = case value of
         FloatValue val  -> makeSValue SValueType.Float FloatData.data' $ Just $ FloatData.FloatData $ val
         IntValue val    -> makeSValue SValueType.Int IntData.data' $ Just $ IntData.IntData $ encode val
@@ -194,3 +220,24 @@ instance ProtoSerializable SValue.SValue Value where
         where
             makeSValue tpe key ext = putExt key ext $ SValue.SValue tpe $ ExtField Map.empty
 
+
+instance ProtoReadable ProtoProfile.ProfileInfo ProfileInfo where
+    decode profileInfo = case decode $ ProtoProfile.callPointPath profileInfo of
+        Just id -> Just $ ProfileInfo id
+                                      (ProtoProfile.totalCpuTime  profileInfo)
+                                      (ProtoProfile.totalRealTime profileInfo)
+                                      (ProtoProfile.compileTime   profileInfo)
+                                      (ProtoProfile.executeTime   profileInfo)
+                                      (ProtoProfile.computeTime   profileInfo)
+        Nothing -> Nothing
+
+instance ProtoReadable ProtoCallPoint.CallPoint Int where
+    decode callpoint = decode $ ProtoCallPoint.nodeID callpoint
+
+instance ProtoReadable ProtoCallPointPath.CallPointPath Int where
+    decode callpointPath = case (toList $ ProtoCallPointPath.calls callpointPath) of
+        []              -> Nothing
+        (callpoint : _) -> decode callpoint
+
+instance ProtoReadable ProtoRunStatus.Update RunStatus where
+    decode status = RunStatus <$> decode (ProtoRunStatus.profileInfos status)
