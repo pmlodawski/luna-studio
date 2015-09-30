@@ -15,7 +15,7 @@ function init() {
   $$.editor = editor;
 
   $$.editor.getSession().on('change', _.debounce(function(e){
-    module.exports.callback($$.editor.getValue());
+    //module.exports.callback($$.editor.getValue());
   }, 500));
 };
 
