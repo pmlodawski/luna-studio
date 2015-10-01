@@ -39,7 +39,7 @@ function Connection(widgetId, id) {
 
   this.mesh.scale.x = 1;
   this.mesh.rotation.z = 0;
-  this.mesh.position.z = 0.02;
+  this.mesh.position.z = 100;
 }
 
 Connection.prototype.setPos = function(x0, y0, x1, y1) {
