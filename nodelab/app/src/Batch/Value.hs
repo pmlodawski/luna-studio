@@ -10,7 +10,7 @@ data Value = FloatValue  Float
            deriving (Eq, Show)
 
 instance PrettyPrinter Value where
-    display (FloatValue  v) = "float "  <> show v
+    display (FloatValue  v) = "float "  <> display v
     display (IntValue    v) = "int "    <> show v
     display (StringValue v) = "string " <> show v
     display (CharValue   v) = "char "   <> show v

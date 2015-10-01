@@ -36,6 +36,9 @@ instance PrettyPrinter Int where
 instance PrettyPrinter Integer where
     display = show
 
+instance PrettyPrinter Float where
+    display v = show $ (fromIntegral (round $ v * 1000.0)) / 1000.0
+
 instance PrettyPrinter Double where
     display v = show $ (fromIntegral (round $ v * 1000.0)) / 1000.0
 
