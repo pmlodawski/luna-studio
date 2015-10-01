@@ -63,6 +63,8 @@ exports.config =
       env: "development"
       date: -> new Date()
 
+  optimize: no
+
   overrides:
     interactive:
       conventions: ignored: [
