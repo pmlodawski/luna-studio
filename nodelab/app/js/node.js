@@ -284,7 +284,7 @@ Node.prototype.updateValue = function() {
   this.valueObject = new THREE.Mesh(geometry, textMaterial);
   this.valueObject.scale.multiplyScalar(config.fontSize);
   this.valueObject.position.x = -45 - 30;
-  this.valueObject.position.y = 12 + 30;
+  this.valueObject.position.y = 12 + 30 + 10;
   this.valueObject.position.z = 0;
 
   this.mesh.add(this.valueObject);
