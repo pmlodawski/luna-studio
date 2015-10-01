@@ -75,22 +75,28 @@ getPortByRef portRef nodesMap = port where
 getPortAngle :: PortRef -> NodesMap -> Double
 getPortAngle portRef nodesMap = getPortByRef portRef nodesMap ^. angle
 
+tryGetSrcDst :: PortRef -> PortRef -> Maybe (PortRef, PortRef)
+tryGetSrcDst portRef1 portRef2 = case (portRef1 ^. refPortType, portRef2 ^. refPortType) of
+    (OutputPort, InputPort)  -> Just (portRef1, portRef2)
+    (InputPort,  OutputPort) -> Just (portRef2, portRef1)
+    _                        -> Nothing
+
 connectNodes :: PortRef -> PortRef -> Global.State -> (IO (), Global.State)
 connectNodes src dst state = (uiUpdate, newState) where
-        oldGraph                             = state ^. Global.graph
-        oldRegistry                          = state ^. Global.uiRegistry
-        newState                             = state  & Global.graph      .~ newGraph
-                                                      & Global.uiRegistry .~ newRegistry
-        uiUpdate                     = forM_ file $ \f -> createConnectionWidget (f ^. objectId) (f ^. widget)
-        newNodesMap                  = updateSourcePortInNodes 0.0 src oldNodesMap
-        oldNodesMap                  = Graph.getNodesMap oldGraph
-        updSourceGraph               = Graph.updateNodes newNodesMap oldGraph
-        (connId, newGraph)           = Graph.addConnection dst src updSourceGraph
-        (file, newRegistry)          = case connId of
-            Just connId             -> (Just widget, newRegistry) where
-                (widget, newRegistry)= UIRegistry.register UIRegistry.sceneGraphId uiConnection def oldRegistry
-                uiConnection         = getConnectionLine newNodesMap $ Graph.Connection connId src dst
-            Nothing                 -> (Nothing, oldRegistry)
+    oldGraph                     = state ^. Global.graph
+    oldRegistry                  = state ^. Global.uiRegistry
+    newState                     = state  & Global.graph      .~ newGraph
+                                          & Global.uiRegistry .~ newRegistry
+    uiUpdate                     = forM_ file $ \f -> createConnectionWidget (f ^. objectId) (f ^. widget)
+    newNodesMap = oldNodesMap
+    oldNodesMap                  = Graph.getNodesMap oldGraph
+    updSourceGraph               = Graph.updateNodes newNodesMap oldGraph
+    (connId, newGraph)           = Graph.addConnection src dst updSourceGraph
+    (file, newRegistry)          = case connId of
+        Just connId             -> (Just widget, newRegistry) where
+            (widget, newRegistry)= UIRegistry.register UIRegistry.sceneGraphId uiConnection def oldRegistry
+            uiConnection         = getConnectionLine newNodesMap $ Graph.Connection connId src dst
+        Nothing                 -> (Nothing, oldRegistry)
 
 getConnectionLine :: NodesMap -> Connection -> UIConnection.Connection
 getConnectionLine nodesMap (Connection lineId srcPortRef dstPortRef) = UIConnection.Connection lineId visible srcWs dstWs

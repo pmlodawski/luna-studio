@@ -136,15 +136,17 @@ instance ActionStateUpdater Action where
         newState                             = oldState & Global.iteration            +~ 1
                                                         & Global.connect . connecting .~ Nothing
 
-    execSt action@(DragAction (ConnectPorts src dst) point) oldState = ActionUI (DragAction (ConnectPortsUI src dst uiUpdate) point) newState''
-        where
-        oldConnecting                        = oldState ^. Global.connect . connecting
-        newState''                           = updateConnections $ updatePortAngles newState'
-        newState'                            = newState & Global.iteration            +~ 1
-                                                        & Global.connect . connecting .~ Nothing
-        (uiUpdate, newState)              = case oldConnecting of
-            Just (Connecting _ _ (DragHistory _ _)) -> connectNodes src dst oldState
-            _                                       -> (return (), oldState)
+    execSt action@(DragAction (ConnectPorts port1 port2) point) oldState = case tryGetSrcDst port1 port2 of
+        Nothing                             -> ActionUI (DragAction StopDrag point) oldState
+        Just (src, dst)                     -> ActionUI (DragAction (ConnectPortsUI src dst uiUpdate) point) newState''
+            where
+                oldConnecting                = oldState ^. Global.connect . connecting
+                newState''                   = updateConnections $ updatePortAngles newState'
+                newState'                    = newState & Global.iteration            +~ 1
+                                                                & Global.connect . connecting .~ Nothing
+                (uiUpdate, newState)         = case oldConnecting of
+                    Just (Connecting _ _ (DragHistory _ _)) -> connectNodes src dst oldState
+                    _                                       -> (return (), oldState)
 
 instance ActionUIUpdater Action where
     updateUI (WithState (DragAction tpe pt) state) = case tpe of

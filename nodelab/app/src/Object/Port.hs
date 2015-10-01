@@ -19,9 +19,9 @@ data Location = Default
               | Connected NodeIdCollection DraggingTo
               deriving (Eq, Show)
 
-data Port = Port { _portId     :: PortId
-                 , _portType   :: ValueType
-                 , _angle      :: Angle
+data Port = Port { _portId        :: PortId
+                 , _portValueType :: ValueType
+                 , _angle         :: Angle
                  } deriving (Eq, Show)
 
 makeLenses ''Port

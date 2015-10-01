@@ -200,7 +200,7 @@ findConnectionForAll dstPorts srcPorts = listToMaybe . catMaybes $ findConnectio
 
 findConnection :: PortCollection -> Port -> Maybe (PortId, PortId)
 findConnection dstPorts srcPort = (srcPort ^. portId,) <$> dstPortId where
-    dstPortId = fmap (^. portId) $ find (\port -> port ^. portType == srcPort ^. portType) dstPorts
+    dstPortId = fmap (^. portId) $ find (\port -> port ^. portValueType == srcPort ^. portValueType) dstPorts
 
 
 instance ActionUIUpdater Reaction where
