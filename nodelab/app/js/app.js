@@ -253,6 +253,7 @@ var displayRejectedMessage = function () {
   $("canvas").remove();
   $("#htmlcanvas-pan").remove();
   $("#spinner").remove();
+  $("#editor").remove();
   $("#rejected").show();
 }
 
