@@ -129,9 +129,6 @@ instance ActionStateUpdater Action where
                                                                           updatePortAnglesUI st
                                                                           updateConnectionsUI st
                                                                           putStrLn $ "connectNodes " <> show nodesToConnect
-
-
-                -- TODO: connecting nodes UI actions
         ConnectionPen.Disconnecting -> ActionUI (PerformIO draw) newState'' where
             newState''      = updateConnections $ updatePortAngles newState'
             newState'       = state & Global.graph      %~ removeConnections connections
@@ -165,7 +162,14 @@ autoConnectAll :: [(Int, Int)] -> Global.State -> (IO (), Global.State)
 autoConnectAll nodes = autoConnect $ head nodes -- TODO: forall - foldr
 
 autoConnect :: (Int, Int) -> Global.State -> (IO (), Global.State)
-autoConnect (srcNodeId, dstNodeId) oldState = (uiUpdate, newState') where
+autoConnect (srcNodeId, dstNodeId) oldState = case tryAutoConnect (srcNodeId, dstNodeId) oldState of
+    Just result     -> result
+    Nothing         -> case tryAutoConnect (dstNodeId, srcNodeId) oldState of
+        Just result -> result
+        Nothing     -> (return(), oldState)
+
+tryAutoConnect :: (Int, Int) -> Global.State -> Maybe (IO (), Global.State)
+tryAutoConnect (srcNodeId, dstNodeId) oldState = result where
     graph                            = oldState ^. Global.graph
     workspace                        = oldState ^. Global.workspace
     srcNode                          = getNode graph srcNodeId
@@ -174,21 +178,20 @@ autoConnect (srcNodeId, dstNodeId) oldState = (uiUpdate, newState') where
     dstPorts                         = dstNode ^. ports . inputPorts
     dstPortsFiltered                 = filterConnectedInputPorts graph dstNodeId $ dstNode ^. ports . inputPorts
     connection                       = findConnectionForAll dstPortsFiltered srcPorts
-    newState'                        = updateConnections $ updatePortAngles newState
-    (uiUpdate, newState)             = case connection of
-        Just (srcPortId, dstPortId) -> (do
+    result                           = case connection of
+        Just (srcPortId, dstPortId) -> Just (do
                                             putStrLn $ "connections      " <> (display $ getConnections graph)
                                             putStrLn $ "srcPorts         " <> display srcPorts
                                             putStrLn $ "dstPorts         " <> display dstPorts
                                             putStrLn $ "dstPortsFiltered " <> display dstPortsFiltered
                                             connectUI
                                             BatchCmd.connectNodes workspace srcPortRef dstPortRef
-                                        , st)
+                                        , updateConnections $ updatePortAngles st)
                                        where
             (connectUI, st)          = connectNodes srcPortRef dstPortRef oldState
             srcPortRef               = PortRef srcNodeId OutputPort srcPortId
             dstPortRef               = PortRef dstNodeId InputPort  dstPortId
-        Nothing                     -> (return (), oldState)
+        Nothing                     -> Nothing
 
 filterConnectedInputPorts :: State -> NodeId -> PortCollection -> PortCollection
 filterConnectedInputPorts state nodeId ports = filter isConnected ports where
