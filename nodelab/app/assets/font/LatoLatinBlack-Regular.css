@@ -1,9 +1,9 @@
 /* Webfont: LatoLatinBlack-Regular */@font-face {
     font-family: 'LatoLatinBlack';
-    src: url('/font/LatoLatinBlack-Regular.eot'); /* IE9 Compat Modes */
-    src: url('/font/LatoLatinBlack-Regular.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
-         url('/font/LatoLatinBlack-Regular.woff') format('woff'), /* Modern Browsers */
-         url('/font/LatoLatinBlack-Regular.ttf') format('truetype');
+    src: url('LatoLatinBlack-Regular.eot'); /* IE9 Compat Modes */
+    src: url('LatoLatinBlack-Regular.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+         url('LatoLatinBlack-Regular.woff') format('woff'), /* Modern Browsers */
+         url('LatoLatinBlack-Regular.ttf') format('truetype');
     font-style: normal;
     font-weight: normal;
     text-rendering: optimizeLegibility;
