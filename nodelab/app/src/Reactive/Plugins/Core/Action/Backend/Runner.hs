@@ -34,7 +34,7 @@ toAction _                                        = Nothing
 
 instance ActionStateUpdater Action where
     execSt RequestRerun state               = ActionUI (PerformIO BatchCmd.runMain) state
-    execSt (UpdateValue nodeId value) state = ActionUI (PerformIO $ (setComputedValue nodeId $ show value)) state
+    execSt (UpdateValue nodeId value) state = ActionUI (PerformIO $ (setComputedValue nodeId $ display value)) state
 
 instance ActionUIUpdater Reaction where
     updateUI (WithState (PerformIO act) st) = act
