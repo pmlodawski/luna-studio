@@ -94,8 +94,6 @@ registerPorts nodeWidgetId portType node = do
 
     forM_ ins $ \(w, p) -> UIRegistry.uiAction $ (addPort portType) (node ^. nodeId) (w ^. objectId) (p ^. portId) (p ^. angle)
 
-    outs <- mapM registerPort inPorts
-
     return ()
 
 
