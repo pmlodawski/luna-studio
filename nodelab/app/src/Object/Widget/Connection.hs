@@ -11,6 +11,9 @@ import           Object.Object
 import           Object.Widget
 import           Object.Node
 
+import           JS.Bindings
+import           Utils.CtxDynamic
+
 data Connection = Connection { _connectionId :: ConnectionId
                              , _visible      :: Bool
                              , _from         :: Vector2 Double
@@ -32,3 +35,11 @@ makeLenses ''CurrentConnection
 instance IsDisplayObject CurrentConnection where
     objectPosition   = undefined
     objectSize       = undefined
+
+instance HandlesMouseOver Connection where
+    onMouseOver file model = (action, toCtxDynamic model) where
+                  action   = setWidgetFocused (file ^. objectId) True
+
+instance HandlesMouseOut Connection where
+    onMouseOut  file model = (action, toCtxDynamic model) where
+                  action   = setWidgetFocused (file ^. objectId) False

@@ -5,16 +5,17 @@ precision highp float;
 varying float distance;
 varying float distanceV;
 
-uniform vec4 color;
+uniform vec4  color;
 uniform float visible;
 uniform float camFactor;
 uniform float len;
-uniform int connecting;
+uniform int   connecting;
 
-uniform int antialias;
+uniform int   antialias;
+uniform int   focused;
 
-uniform int objectMap;
-uniform vec3 objectId;
+uniform int   objectMap;
+uniform vec3  objectId;
 
 void main() {
     if (visible < 1.0) discard;
@@ -28,14 +29,19 @@ void main() {
 
     float origAlpha = color.w;
     vec3  colorShow = color.xyz;
+
+    if (focused == 1) {
+        colorShow *= 1.3;
+    }
+
     float alphaShow = 1.0;
 
     float d = abs(distance);
 
-
     float camFactorDelta = camFactor - 1.0;
     float rimCamFactor  = 1.0;
     float blurCamFactor = 1.0;
+
     if (camFactorDelta > 0.0) {
       rimCamFactor  += camFactorDelta / 25.0;
       blurCamFactor += camFactorDelta / 1.0;

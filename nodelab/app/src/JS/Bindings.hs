@@ -191,4 +191,4 @@ foreign import javascript unsafe "app.displayRejectedMessage()"
 
 
 foreign import javascript unsafe "$$.registry[$1].setFocused($2)"
-    setPortFocused :: Int -> Bool -> IO ()
+    setWidgetFocused :: Int -> Bool -> IO ()

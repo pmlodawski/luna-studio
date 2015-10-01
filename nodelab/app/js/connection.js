@@ -16,6 +16,7 @@ function Connection(widgetId, id) {
     visible:    { type: 'f',  value: 0 },
     connecting: { type: 'i',  value: (widgetId == 3?1:0) },
     len:        { type: 'f',  value: 0 },
+    focused:    { type: 'i',  value: 0 },
     objectId:   { type: 'v3', value: new THREE.Vector3((widgetId % 256) / 255.0, Math.floor(Math.floor(widgetId % 65536) / 256) / 255.0, Math.floor(widgetId / 65536) / 255.0) }
 
   };
@@ -67,5 +68,10 @@ Connection.prototype.show = function() {
 Connection.prototype.hide = function() {
   this.mesh.material.uniforms.visible.value = 0;
 };
+
+Connection.prototype.setFocused = function(focused) {
+  this.uniforms.focused.value = focused ? 1 : 0;
+};
+
 
 module.exports = Connection;

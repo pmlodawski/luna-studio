@@ -25,8 +25,8 @@ instance IsDisplayObject Port where
 
 instance HandlesMouseOver Port where
     onMouseOver file model = (action, toCtxDynamic model) where
-                  action   = setPortFocused (file ^. objectId) True
+                  action   = setWidgetFocused (file ^. objectId) True
 
 instance HandlesMouseOut Port where
     onMouseOut  file model = (action, toCtxDynamic model) where
-                  action   = setPortFocused (file ^. objectId) False
+                  action   = setWidgetFocused (file ^. objectId) False

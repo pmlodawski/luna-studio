@@ -85,7 +85,12 @@ void main() {
         if(focused == 0) {
             discard;
         } else {
-            alpha *= 0.2;
+            if(posUV.x < 0.7) {
+                alpha *= 0.3;
+            } else {
+                float z = 1.0 - (posUV.x - 0.7) / 0.3;
+                alpha *= 0.3 * z;
+            }
         }
     }
 
