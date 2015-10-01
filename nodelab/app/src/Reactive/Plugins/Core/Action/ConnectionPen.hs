@@ -139,8 +139,13 @@ instance ActionStateUpdater Action where
             (Just oldPen)   = state ^. Global.connectionPen . ConnectionPen.drawing
             pos             = oldPen ^. ConnectionPen.previousPos
             widgetIds       = connectionToWidgetId connections (state ^. Global.uiRegistry)
+            graph           = state ^. Global.graph
+            conns           = catMaybes $ lookUpConnection graph <$> connections
+            connectionRefs  = connectionToRefs <$> conns
+            workspace       = state ^. Global.workspace
             draw            = do  -- TODO: remove from UIRegistry
                                   updateConnectionsUI newState'
+                                  BatchCmd.disconnectNodes workspace connectionRefs
                                   mapM_ UI.removeWidget widgetIds
                                   putStrLn $ "disconnecting " <> show connections
 

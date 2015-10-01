@@ -32,6 +32,7 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Set.Req
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Add.Request                      as AddFunction
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Get.Request                as GetGraph
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Connect.Request            as Connect
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Disconnect.Request         as Disconnect
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Add.Request           as AddNode
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Request        as RemoveNode
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.ModifyInPlace.Request as ModifyNode
@@ -176,6 +177,21 @@ connectNodes workspace src dst = sendMessage msg where
                            (workspace ^. library . Library.id)
                            (workspace ^. project . Project.id)
                            uselessLegacyArgument
+
+disconnectMessage :: Workspace -> (PortRef, PortRef) -> WebMessage
+disconnectMessage workspace (srcRef, dstRef) = WebMessage topic $ messagePut body where
+    topic = "project.library.ast.function.graph.disconnect.request"
+    body  = Disconnect.Request (encode $ srcRef ^. refPortNodeId)
+                               (encode . portRefToList $ srcRef ^. refPortId)
+                               (encode $ dstRef ^. refPortNodeId)
+                               (encode . portRefToList $ dstRef ^. refPortId)
+                               (encode $ workspace ^. breadcrumbs)
+                               (workspace ^. library . Library.id)
+                               (workspace ^. project . Project.id)
+                               uselessLegacyArgument
+
+disconnectNodes :: Workspace -> [(PortRef, PortRef)] -> IO ()
+disconnectNodes workspace connections = sendMany $ (disconnectMessage workspace) <$> connections
 
 nodeToCallPointPath :: Workspace -> Node -> CallPointPath
 nodeToCallPointPath workspace node = CallPointPath projectId (Seq.fromList [callPoint]) where

@@ -64,6 +64,9 @@ instance PrettyPrinter State where
         <> ")"
 
 
+connectionToRefs :: Connection -> (PortRef, PortRef)
+connectionToRefs conn = (conn ^. source, conn ^. destination)
+
 genId :: IntMap a -> ID
 genId intMap = if IntMap.null intMap then 0
                                      else 1 + (fst $ IntMap.findMax intMap)
@@ -126,6 +129,9 @@ removeConnections connIds state = foldr removeConnection state connIds
 
 removeConnection :: ConnectionId -> State -> State
 removeConnection connId state = state & connectionsMap %~ IntMap.delete connId
+
+lookUpConnection :: State -> ConnectionId -> Maybe Connection
+lookUpConnection state connId = IntMap.lookup connId $ getConnectionsMap state
 
 addAccessor :: PortRef -> PortRef -> State -> (Maybe ConnectionId, State)
 addAccessor destPortRef sourcePortRef state =

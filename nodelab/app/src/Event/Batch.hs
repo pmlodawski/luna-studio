@@ -23,6 +23,7 @@ data Event = ProjectsList [Project]
            | NodeAdded Node
            | NodeRemoved
            | NodesConnected
+           | NodesDisconnected
            | GraphViewFetched [Node] [(PortRef, PortRef)]
            | InterpreterGotProjectId (Maybe Int32)
            | SerializationModeInserted
