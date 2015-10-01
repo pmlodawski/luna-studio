@@ -5,11 +5,12 @@ var $$ = require('common')
   , vs = require('shaders/font.vert')();
 
 var defaults = function(){
+  THREE.ImageUtils.crossOrigin = '';
   return {
     uniforms: {
       opacity:   { type: 'f', value: 1 },
       smooth:    { type: 'f', value: 1/6 },
-      map:       { type: 't', value: THREE.ImageUtils.loadTexture('../font/LatoBlack-sdf.png') },
+      map:       { type: 't', value: THREE.ImageUtils.loadTexture(window.resourcesPath + '/font/LatoBlack-sdf.png') },
       color:     { type: 'c', value: new THREE.Color(0x999999) },
       width:     { type: 'f', value: 0 },
       objectMap: $$.commonUniforms.objectMap,
