@@ -19,6 +19,8 @@ import qualified Control.Monad.State     as MState
 import qualified Control.Monad.Trans.RWS as RWS
 import           Control.Monad.Trans.RWS (RWS)
 
+import           Reactive.Plugins.Core.Action.Commands.Command (Command)
+
 import Debug.Trace
 
 sceneInterfaceId, sceneGraphId, currentConnectionId :: Int
@@ -154,7 +156,7 @@ registerAll parent a state = foldl reg ([], state) a where
 unregisterAll :: [WidgetId] -> State b -> ([WidgetId], State b)
 unregisterAll oids = swap . RWS.execRWS (sequence $ unregisterRWS <$> oids) ()
 
-unregisterAllM :: [WidgetId] -> MState.State (State b) [WidgetId]
+unregisterAllM :: [WidgetId] -> Command (State b) [WidgetId]
 unregisterAllM = MState.state . unregisterAll
 
 unregisterAll_ :: [WidgetId] -> State b -> State b

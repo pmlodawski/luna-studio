@@ -17,7 +17,7 @@ import           Reactive.Plugins.Core.Action
 import qualified Reactive.Plugins.Core.Action.State.Global       as Global
 import           Reactive.Plugins.Core.Action.State.UIRegistry   (WidgetMap)
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry   as UIRegistry
-import           Reactive.Plugins.Core.Action.Commands.Command   (Command, runCommand)
+import           Reactive.Plugins.Core.Action.Commands.Command   (Command, execCommand)
 import           ThreeJS.Widget.Button ()
 import           ThreeJS.Widget.Slider ()
 import           ThreeJS.Widget.Number ()
@@ -146,11 +146,11 @@ handleKeyEvents (Keyboard.Event eventType ch) registry = case registry ^. UIRegi
         return (uiUpdate, newRegistry)
     Nothing -> Just $ (noUIUpdate, registry)
 
-applyHandlers :: [Command Global.State] -> Global.State -> (IO (), Global.State)
+applyHandlers :: [Command Global.State ()] -> Global.State -> (IO (), Global.State)
 applyHandlers handlers st = foldr apply (noUIUpdate, st) handlers where
-    apply h (acts, st) = (acts >> act, st') where (act, st') = runCommand h st
+    apply h (acts, st) = (acts >> act, st') where (act, st') = execCommand h st
 
-customMouseHandlers :: Mouse.Event -> Camera.Camera -> UIRegistryState -> [Command Global.State]
+customMouseHandlers :: Mouse.Event -> Camera.Camera -> UIRegistryState -> [Command Global.State ()]
 customMouseHandlers (Mouse.Event eventType absPos button _ (Just (EventWidget widgetId mat scene))) camera registry =
     case UIRegistry.lookupHandlers widgetId registry of
         Just handlers -> case eventType of
@@ -164,7 +164,7 @@ customMouseHandlers (Mouse.Event eventType absPos button _ (Just (EventWidget wi
         Nothing -> []
 customMouseHandlers _ _ _  = []
 
-customKeyboardHandlers :: Keyboard.Event -> UIRegistryState -> [Command Global.State]
+customKeyboardHandlers :: Keyboard.Event -> UIRegistryState -> [Command Global.State ()]
 customKeyboardHandlers (Keyboard.Event eventType ch) registry = case registry ^. UIRegistry.focusedWidget of
     Just widgetId -> case UIRegistry.lookupHandlers widgetId registry of
         Just handlers -> case eventType of

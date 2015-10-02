@@ -11,7 +11,7 @@ import           Reactive.Plugins.Core.Action
 import qualified Reactive.Plugins.Core.Action.State.Graph       as Graph
 import qualified Reactive.Plugins.Core.Action.State.Global      as Global
 import qualified Reactive.Plugins.Core.Action.Commands.AddNode  as AddNode
-import           Reactive.Plugins.Core.Action.Commands.Command  (runCommand)
+import           Reactive.Plugins.Core.Action.Commands.Command  (execCommand)
 
 import           AST.GraphToViz
 
@@ -31,7 +31,7 @@ toAction _ _ = Nothing
 
 instance ActionStateUpdater Action where
     execSt (AddAction node) state = ActionUI (PerformIO action) newState where
-        (action, newState) = runCommand (AddNode.addNode node) state
+        (action, newState) = execCommand (AddNode.addNode node) state
 
 instance ActionUIUpdater Reaction where
     updateUI (WithState action state) = case action of

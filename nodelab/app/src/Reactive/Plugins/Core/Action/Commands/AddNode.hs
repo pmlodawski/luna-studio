@@ -22,7 +22,7 @@ import qualified Reactive.Plugins.Core.Action.State.UIRegistry     as UIRegistry
 import           Reactive.Plugins.Core.Action.State.UIRegistry     (UIState)
 import           Reactive.Plugins.Core.Action.Commands.EnterNode   (enterNode)
 import           Reactive.Plugins.Core.Action.Commands.RemoveNode  (removeNode)
-import           Reactive.Plugins.Core.Action.Commands.Command     (Command)
+import           Reactive.Plugins.Core.Action.Commands.Command     (Command, performIO)
 
 import qualified Control.Monad.State   as MState
 import qualified JS.NodeGraph          as UI
@@ -31,15 +31,15 @@ import qualified ThreeJS.Widget.Node   as UINode
 import qualified ThreeJS.Widget.Slider as UISlider
 import           ThreeJS.Types         (add)
 
-addNode :: Node -> Command State
+addNode :: Node -> Command State ()
 addNode node = do
     graph    <- use Global.graph
     registry <- use Global.uiRegistry
     let newGraph              = Graph.addNode node graph
         (newRegistry, action) = registerNode node registry
+    performIO action
     Global.graph      .= newGraph
     Global.uiRegistry .= newRegistry
-    return action
 
 registerNode :: Node -> UIRegistry.State State -> (UIRegistry.State State, IO ())
 registerNode node oldRegistry = flip MState.execState (oldRegistry, return ()) $ do

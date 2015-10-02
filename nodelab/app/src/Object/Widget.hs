@@ -142,16 +142,16 @@ screenToLocal :: JSCamera.Camera -> Vector2 Int -> [Double]  -> Vector2 Double
 screenToLocal cam mousePos widgetMatrix = sceneToLocal workspacePos widgetMatrix where
     workspacePos = JSCamera.screenToWorkspace cam mousePos
 
-type MouseMoveHandler     s = MouseButton -> Position -> Command s
-type MousePressedHandler  s = MouseButton -> Position -> Command s
-type MouseReleasedHandler s = MouseButton -> Position -> Command s
-type MouseOverHandler     s =                            Command s
-type MouseOutHandler      s =                            Command s
-type ClickHandler         s =                Position -> Command s
-type DblClickHandler      s =                Position -> Command s
-type KeyUpHandler         s = Char                    -> Command s
-type KeyDownHandler       s = Char                    -> Command s
-type KeyPressedHandler    s = Char                    -> Command s
+type MouseMoveHandler     s = MouseButton -> Position -> Command s ()
+type MousePressedHandler  s = MouseButton -> Position -> Command s ()
+type MouseReleasedHandler s = MouseButton -> Position -> Command s ()
+type MouseOverHandler     s =                            Command s ()
+type MouseOutHandler      s =                            Command s ()
+type ClickHandler         s =                Position -> Command s ()
+type DblClickHandler      s =                Position -> Command s ()
+type KeyUpHandler         s = Char                    -> Command s ()
+type KeyDownHandler       s = Char                    -> Command s ()
+type KeyPressedHandler    s = Char                    -> Command s ()
 
 
 data UIHandlers a  = UIHandlers { _mouseMove     :: [MouseMoveHandler      a]

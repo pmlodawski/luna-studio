@@ -13,7 +13,7 @@ import           Reactive.Plugins.Core.Action.State.Graph      as Graph
 import qualified Reactive.Plugins.Core.Action.State.Global     as Global
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry as UIRegistry
 import qualified Reactive.Plugins.Core.Action.Commands.AddNode as AddNode
-import           Reactive.Plugins.Core.Action.Commands.Command (runCommand)
+import           Reactive.Plugins.Core.Action.Commands.Command (execCommand)
 
 import qualified BatchConnector.Commands as BatchCmd
 
@@ -47,7 +47,7 @@ instance ActionStateUpdater Action where
       (draw, newState) = Executor.connectNodes src dst state
 
     execSt (AddSingleNode node) state = ActionUI (PerformIO addAction) newState where
-        (addAction, newState) = runCommand (AddNode.addNode node) state
+        (addAction, newState) = execCommand (AddNode.addNode node) state
 
     execSt (PrepareValues nodes) state = ActionUI (PerformIO prepareValues) state where
         workspace     = state ^. Global.workspace
