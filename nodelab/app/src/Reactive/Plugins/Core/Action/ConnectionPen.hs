@@ -32,9 +32,11 @@ import           Event.WithObjects
 import           Reactive.Plugins.Core.Action
 import           Reactive.Plugins.Core.Action.Commands.Graph
 import           Reactive.Plugins.Core.Action.State.Graph
-import qualified Reactive.Plugins.Core.Action.State.Global        as Global
-import qualified Reactive.Plugins.Core.Action.State.UIRegistry    as UIRegistry
-import qualified Reactive.Plugins.Core.Action.Commands.AddNode    as AddNode
+import qualified Reactive.Plugins.Core.Action.State.Global             as Global
+import qualified Reactive.Plugins.Core.Action.State.UIRegistry         as UIRegistry
+import           Reactive.Plugins.Core.Action.Commands.Command         (execCommand)
+import           Reactive.Plugins.Core.Action.Commands.DisconnectNodes (disconnectAll)
+
 import qualified Reactive.Plugins.Core.Action.State.ConnectionPen as ConnectionPen
 
 import qualified BatchConnector.Commands as BatchCmd
@@ -130,33 +132,12 @@ instance ActionStateUpdater Action where
                                                                           updatePortAnglesUI st
                                                                           updateConnectionsUI st
                                                                           putStrLn $ "connectNodes " <> show nodesToConnect
-        ConnectionPen.Disconnecting -> ActionUI (PerformIO draw) newState'' where
-            newState''      = updateConnections $ updatePortAngles newState'
-            newState'       = state & Global.graph      %~ removeConnections connections
-                                    & Global.uiRegistry %~ UIRegistry.unregisterAll_ widgetIds
-            (Just oldPen)   = state ^. Global.connectionPen . ConnectionPen.drawing
-            pos             = oldPen ^. ConnectionPen.previousPos
-            widgetIds       = connectionToWidgetId connections (state ^. Global.uiRegistry)
-            graph           = state ^. Global.graph
-            conns           = catMaybes $ lookUpConnection graph <$> connections
-            connectionRefs  = connectionToRefs <$> conns
-            workspace       = state ^. Global.workspace
-            draw            = do  -- TODO: remove from UIRegistry
-                                  updateConnectionsUI newState'
-                                  BatchCmd.disconnectNodes workspace connectionRefs
-                                  mapM_ UI.removeWidget widgetIds
-                                  putStrLn $ "disconnecting " <> show connections
+        ConnectionPen.Disconnecting -> ActionUI (PerformIO action) newState where
+            (action, newState) = execCommand (disconnectAll connections) state
 
     execSt (FinishDrawing _) state = ActionUI (PerformIO draw) newState where
         newState      = state  & Global.connectionPen . ConnectionPen.drawing .~ Nothing
         draw          = UI.endPath
-
-
-connectionToWidgetId :: [ConnectionId] -> UIRegistry.State Global.State -> [WidgetId]
-connectionToWidgetId connections state = widgetIds where
-    widgetIds = catMaybes $ ((flip IntMap.lookup) idsMap) <$> connections
-    idsMap    = IntMap.fromList $ (\w -> (w ^. widget . UIConnection.connectionId, w ^. objectId)) <$> widgets
-    widgets   = UIRegistry.lookupAll state :: [WidgetFile Global.State UIConnection.Connection]
 
 
 autoConnectAll :: [(Int, Int)] -> Global.State -> (IO (), Global.State)
