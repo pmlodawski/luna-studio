@@ -10,9 +10,10 @@ import           GHCJS.DOM              (currentWindow, currentDocument)
 import           GHCJS.DOM.EventM
 import           GHCJS.Prim             (fromJSString)
 import qualified GHCJS.DOM.Document      as Document
-import           GHCJS.DOM.Element       (Element, mouseDown, mouseUp, mouseMove, keyPress, keyDown, keyUp, click, dblClick)
+import           GHCJS.DOM.Element       (Element, mouseDown, mouseUp, mouseMove, keyPress, keyDown, keyUp, click, dblClick, wheel)
 import           GHCJS.DOM.Window        (resize, getInnerWidth, getInnerHeight)
 import qualified GHCJS.DOM.MouseEvent    as MouseEvent
+import qualified GHCJS.DOM.WheelEvent    as WheelEvent
 import qualified GHCJS.DOM.KeyboardEvent as KeyboardEvent
 import qualified GHCJS.DOM.UIEvent       as UIEvent
 import qualified JS.WebSocket            as WebSocket
@@ -91,6 +92,33 @@ mouseUpHandler       = mouseHandler mouseUp    Mouse.Released
 mouseMovedHandler    = mouseHandler mouseMove  Mouse.Moved
 mouseClickHandler    = mouseHandler click      Mouse.Clicked
 mouseDblClickHandler = mouseHandler dblClick   Mouse.DblClicked
+
+mouseWheelHandler :: AddHandler (Event Dynamic)
+mouseWheelHandler =
+    AddHandler $ \h -> do
+        window <- fromJust <$> eventObject
+        window `on` wheel $ do
+            preventDefault
+            mousePos        <- readMousePos
+            button          <- uiWhichButton
+            keyMods         <- readKeyMods
+
+            objectId        <- liftIO $ readObjectId     mousePos
+            scene           <- liftIO $ whichScene       objectId
+            widgetMatrix    <- liftIO $ readWidgetMatrix objectId
+            -- TODO: prevetnDefualt
+            delta <- do
+                e <- event
+                x <- WheelEvent.getDeltaX e
+                y <- WheelEvent.getDeltaY e
+                return $ Vector2 x y
+
+
+            let maybeWidget  = do justObjectId        <- objectId
+                                  justWidgetMatrix    <- widgetMatrix
+                                  justScene           <- scene
+                                  return $ Mouse.EventWidget justObjectId justWidgetMatrix justScene
+            liftIO . h $ Mouse $ Mouse.Event (Mouse.Wheel delta) mousePos button keyMods maybeWidget
 
 -- keyHandler :: EventName Window KeyboardEvent.KeyboardEvent -> Keyboard.Type -> AddHandler (Event Dynamic)
 keyHandler event getter tag = AddHandler $ \h -> do

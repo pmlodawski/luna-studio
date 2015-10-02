@@ -17,7 +17,7 @@ toMouseButton   _  = NoButton
 
 type MousePosition = Vector2 Int
 
-data Type = Pressed | Released | Moved | Clicked | DblClicked deriving (Eq, Show)
+data Type = Pressed | Released | Moved | Clicked | DblClicked | Wheel (Vector2 Double) deriving (Eq, Show)
 
 data EventWidget = EventWidget { _widgetId :: WidgetId, _worldMatrix :: [Double], _scene :: SceneType } deriving (Show, Eq)
 

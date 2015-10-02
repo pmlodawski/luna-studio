@@ -49,6 +49,7 @@ makeNetworkDescription conn logging workspace = do
     mouseMovedE    <- fromAddHandler mouseMovedHandler
     mouseClickE    <- fromAddHandler mouseClickHandler
     mouseDblClickE <- fromAddHandler mouseDblClickHandler
+    mouseWheeelE   <- fromAddHandler mouseWheelHandler
     keyDownE       <- fromAddHandler keyDownHandler
     keyPressedE    <- fromAddHandler keyPressedHandler
     keyUpE         <- fromAddHandler keyUpHandler
@@ -68,6 +69,7 @@ makeNetworkDescription conn logging workspace = do
                                                , mouseMovedE
                                                , mouseClickE
                                                , mouseDblClickE
+                                               , mouseWheeelE
                                                , keyDownE
                                                , keyPressedE
                                                , keyUpE

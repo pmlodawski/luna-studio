@@ -51,6 +51,7 @@ absPosToRel Workspace camera mat pos = Widget.sceneToLocal workspacePos mat wher
     workspacePos = Camera.screenToWorkspace camera (round <$> pos)
 
 handleGeneric :: Mouse.Event -> Camera.Camera -> UIRegistryState -> Maybe UIRegistryUpdate
+handleGeneric (Mouse.Event (Mouse.Wheel _) _ _ _ _) _ _ = Nothing
 handleGeneric (Mouse.Event eventType absPos button _ (Just (EventWidget widgetId mat scene))) camera registry = do
     file                  <- (UIRegistry.lookup widgetId registry) :: Maybe (WidgetFile Global.State DisplayObject)
     let dynamicWidget      = file ^. widget
@@ -158,6 +159,7 @@ customMouseHandlers (Mouse.Event eventType absPos button _ (Just (EventWidget wi
                 Mouse.Released    -> fmap (\a -> a button pos) (handlers ^. mouseReleased)
                 Mouse.Clicked     -> fmap (\a -> a        pos) (handlers ^. click        )
                 Mouse.DblClicked  -> fmap (\a -> a        pos) (handlers ^. dblClick     )
+                _                 -> []
             where pos              = absPosToRel scene camera mat (fromIntegral <$> absPos)
         Nothing -> []
 customMouseHandlers _ _ _  = []

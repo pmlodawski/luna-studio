@@ -43,6 +43,10 @@ data Action = KeyAction   { _keyActionType :: KeyActionType }
                           , _dragType      :: DragType
                           , _zoomPos       :: Vector2 Int
                           }
+            | WheelAction { _wheelActionType :: MouseActionType
+                          , _mousePos        :: Vector2 Int
+                          , _delta           :: Vector2 Double
+                          }
             deriving (Eq, Show)
 
 
@@ -64,6 +68,10 @@ instance PrettyPrinter Action where
 
 
 toAction :: Event Node -> Global.State -> Maybe Action
+toAction (Mouse (Mouse.Event (Mouse.Wheel delta) pos button keyMods _)) _ = case keyMods of
+    Keyboard.KeyMods False True  False False -> Just $ WheelAction Zoom pos delta
+    Keyboard.KeyMods False False False False -> Just $ WheelAction Pan  pos delta
+    otherwise                                -> Nothing
 toAction (Mouse (Mouse.Event tpe pos button keyMods _)) _ = case button of
     RightButton        -> case tpe of
         Mouse.Pressed  -> case keyMods of
@@ -98,19 +106,40 @@ toAction _ _ = Nothing
 minCamFactor   =   0.2
 maxCamFactor   =   8.0
 dragZoomSpeed  = 512.0
-panStep        =  10.0
+wheelZoomSpeed =  64.0
+panStep        =  50.0
 zoomFactorStep =   1.1
 
 restrictCamFactor = min maxCamFactor . max minCamFactor
 
 instance ActionStateUpdater Action where
+    execSt action@(WheelAction Pan  pos delta) oldState = ActionUI action newState where
+        newState                       = oldState &  Global.camera . camera . pan    +~ delta
+
+    execSt action@(WheelAction Zoom pos delta) oldState = ActionUI action newState where
+        newState                       = oldState &  Global.camera . camera . pan    .~ zoomPan
+                                                  &  Global.camera . camera . factor .~ (restrictCamFactor newCamFactor)
+
+        camFactorDelta        = (- delta ^. x - delta ^. y) / wheelZoomSpeed
+        newCamFactor          = oldCamFactor * (1.0 + camFactorDelta)
+        oldCamera             = Global.toCamera oldState
+        oldCam                = oldState ^. Global.camera
+        oldCamFactor          = oldCam ^. camera . factor
+
+        oldScreen             = pos
+        oldWorkspace          = Camera.screenToWorkspace oldCamera pos
+        newWorkspace          = Camera.screenToWorkspace nonPannedCamera oldScreen
+
+        nonPannedCamera       = oldCamera & Camera.factor .~ (restrictCamFactor newCamFactor)
+                                          & Camera.pan    .~ Vector2 0.0 0.0
+        zoomPan               = -newWorkspace + oldWorkspace
+
     execSt newActionCandidate oldState =
         case newAction of
         Just action -> ActionUI newAction newState
         Nothing     -> ActionUI  NoAction newState
         where
-        newState                       = oldState &  Global.iteration                +~ 1
-                                                  &  Global.camera . camera . pan    .~ newCamPan
+        newState                       = oldState &  Global.camera . camera . pan    .~ newCamPan
                                                   &  Global.camera . camera . factor .~ newCamFactor
                                                   &  Global.camera . history         .~ newDrag
         oldCam                         = oldState ^. Global.camera
