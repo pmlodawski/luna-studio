@@ -8,11 +8,12 @@ import           Batch.Workspace
 import qualified Event.Batch as Batch
 
 import           Reactive.Plugins.Core.Action
-import qualified Reactive.Plugins.Core.Action.Executors.Graph   as Executor
-import           Reactive.Plugins.Core.Action.State.Graph       as Graph
-import qualified Reactive.Plugins.Core.Action.State.Global      as Global
-import qualified Reactive.Plugins.Core.Action.State.UIRegistry  as UIRegistry
-import qualified Reactive.Plugins.Core.Action.Executors.AddNode as AddNode
+import qualified Reactive.Plugins.Core.Action.Commands.Graph   as Executor
+import           Reactive.Plugins.Core.Action.State.Graph      as Graph
+import qualified Reactive.Plugins.Core.Action.State.Global     as Global
+import qualified Reactive.Plugins.Core.Action.State.UIRegistry as UIRegistry
+import qualified Reactive.Plugins.Core.Action.Commands.AddNode as AddNode
+import           Reactive.Plugins.Core.Action.Commands.Command (runCommand)
 
 import qualified BatchConnector.Commands as BatchCmd
 
@@ -46,7 +47,7 @@ instance ActionStateUpdater Action where
       (draw, newState) = Executor.connectNodes src dst state
 
     execSt (AddSingleNode node) state = ActionUI (PerformIO addAction) newState where
-        (newState, addAction) = AddNode.addNode node state
+        (addAction, newState) = runCommand (AddNode.addNode node) state
 
     execSt (PrepareValues nodes) state = ActionUI (PerformIO prepareValues) state where
         workspace     = state ^. Global.workspace

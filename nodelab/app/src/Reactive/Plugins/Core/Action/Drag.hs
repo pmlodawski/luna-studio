@@ -19,7 +19,7 @@ import           Event.Event
 import           Event.WithObjects
 
 import           Reactive.Plugins.Core.Action
-import           Reactive.Plugins.Core.Action.Executors.Graph
+import           Reactive.Plugins.Core.Action.Commands.Graph
 import           Reactive.Plugins.Core.Action.State.Drag
 import qualified Reactive.Plugins.Core.Action.State.Graph     as Graph
 import qualified Reactive.Plugins.Core.Action.State.Selection as Selection

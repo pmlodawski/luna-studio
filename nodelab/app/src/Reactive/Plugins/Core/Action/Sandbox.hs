@@ -71,8 +71,6 @@ addWidget b = do
 addChart b = do
     UIChart.displayChart (b ^. widget)
 
-sampleHandler pos st = (st, putStrLn "Hello Handler")
-
 
 instance ActionStateUpdater Action where
     execSt InitApp oldState = ActionUI  newAction newState
@@ -97,9 +95,7 @@ instance ActionStateUpdater Action where
                            def
                 UIRegistry.uiAction $ addWidget button
 
-                slider  <- UIRegistry.registerM sceneGraphId
-                           (Slider (Vector2 100 200) (Vector2 200  25) "Cutoff"    100      20000        0.1 :: Slider Int)
-                           (def & click .~ [sampleHandler])
+                slider  <- UIRegistry.registerM sceneGraphId (Slider (Vector2 100 200) (Vector2 200  25) "Cutoff"    100      20000        0.1 :: Slider Int) def
                 UIRegistry.uiAction $ addWidget slider
 
                 slider2 <- UIRegistry.registerM sceneGraphId (Slider (Vector2 100 230) (Vector2 200  25) "Resonance"   0.0      100.0      0.3 :: Slider Double) def

@@ -10,6 +10,7 @@ import           Object.Widget.Connection
 
 import           Data.IntMap.Lazy (IntMap)
 import qualified Data.IntMap.Lazy as IntMap
+import           Data.Tuple       (swap)
 
 import           Object.UITypes
 import           Utils.CtxDynamic
@@ -142,19 +143,22 @@ unregisterRWS oid = do
     RWS.modify (widgets %~ IntMap.delete oid)
     RWS.tell [oid]
 
-unregister :: WidgetId -> State b -> (State b, [WidgetId])
-unregister oid = RWS.execRWS (unregisterRWS oid) ()
+unregister :: WidgetId -> State b -> ([WidgetId], State b)
+unregister oid = swap . RWS.execRWS (unregisterRWS oid) ()
 
 registerAll :: DisplayObjectClass a => WidgetId -> [a] -> State b -> ([WidgetFile b a], State b)
 registerAll parent a state = foldl reg ([], state) a where
     reg (acc, st) a = (newA:acc, newSt) where
         (newA, newSt) = register parent a def st
 
-unregisterAll :: [WidgetId] -> State b -> (State b, [WidgetId])
-unregisterAll oids = RWS.execRWS (sequence $ unregisterRWS <$> oids) ()
+unregisterAll :: [WidgetId] -> State b -> ([WidgetId], State b)
+unregisterAll oids = swap . RWS.execRWS (sequence $ unregisterRWS <$> oids) ()
+
+unregisterAllM :: [WidgetId] -> MState.State (State b) [WidgetId]
+unregisterAllM = MState.state . unregisterAll
 
 unregisterAll_ :: [WidgetId] -> State b -> State b
-unregisterAll_ = fst .: unregisterAll
+unregisterAll_ = snd .: unregisterAll
 
 generateIds :: Int -> State b -> [WidgetId]
 generateIds count state = [startId..startId + count] where
@@ -165,7 +169,7 @@ generateId state = if IntMap.size (state ^. widgets) == 0 then 1
                                                           else maxId + 1 where (maxId, _) = IntMap.findMax (state ^. widgets)
 
 replaceAll :: DisplayObjectClass a => WidgetId -> [WidgetId] -> [a] -> State b -> ([WidgetFile b a], State b)
-replaceAll parent remove add state = registerAll parent add (fst $ unregisterAll remove state)
+replaceAll parent remove add state = registerAll parent add (unregisterAll_ remove state)
 
 sequenceUpdates :: [Maybe (State b -> Maybe (WidgetUIUpdate, State b))]
                 -> State b -> (WidgetUIUpdate, State b)

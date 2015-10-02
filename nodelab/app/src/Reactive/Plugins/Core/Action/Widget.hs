@@ -17,6 +17,7 @@ import           Reactive.Plugins.Core.Action
 import qualified Reactive.Plugins.Core.Action.State.Global       as Global
 import           Reactive.Plugins.Core.Action.State.UIRegistry   (WidgetMap)
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry   as UIRegistry
+import           Reactive.Plugins.Core.Action.Commands.Command   (Command, runCommand)
 import           ThreeJS.Widget.Button ()
 import           ThreeJS.Widget.Slider ()
 import           ThreeJS.Widget.Number ()
@@ -144,11 +145,11 @@ handleKeyEvents (Keyboard.Event eventType ch) registry = case registry ^. UIRegi
         return (uiUpdate, newRegistry)
     Nothing -> Just $ (noUIUpdate, registry)
 
-applyHandlers :: [Global.State -> (Global.State, IO ())] -> Global.State -> (Global.State, IO ())
-applyHandlers handlers st = foldr apply (st, noUIUpdate) handlers where
-    apply h (st, acts) = (st', acts >> act) where (st', act) = h st
+applyHandlers :: [Command Global.State] -> Global.State -> (IO (), Global.State)
+applyHandlers handlers st = foldr apply (noUIUpdate, st) handlers where
+    apply h (acts, st) = (acts >> act, st') where (act, st') = runCommand h st
 
-customMouseHandlers :: Mouse.Event -> Camera.Camera -> UIRegistryState -> [Global.State -> (Global.State, IO ())]
+customMouseHandlers :: Mouse.Event -> Camera.Camera -> UIRegistryState -> [Command Global.State]
 customMouseHandlers (Mouse.Event eventType absPos button _ (Just (EventWidget widgetId mat scene))) camera registry =
     case UIRegistry.lookupHandlers widgetId registry of
         Just handlers -> case eventType of
@@ -161,7 +162,7 @@ customMouseHandlers (Mouse.Event eventType absPos button _ (Just (EventWidget wi
         Nothing -> []
 customMouseHandlers _ _ _  = []
 
-customKeyboardHandlers :: Keyboard.Event -> UIRegistryState -> [Global.State -> (Global.State, IO ())]
+customKeyboardHandlers :: Keyboard.Event -> UIRegistryState -> [Command Global.State]
 customKeyboardHandlers (Keyboard.Event eventType ch) registry = case registry ^. UIRegistry.focusedWidget of
     Just widgetId -> case UIRegistry.lookupHandlers widgetId registry of
         Just handlers -> case eventType of
@@ -175,7 +176,7 @@ instance ActionStateUpdater Action where
     execSt (MouseAction mouseEvent) oldState = ActionUI newAction newState' where
         newAction                    = ApplyUpdates $ uiUpdates >> customUIUpdates
         newState                     = oldState &  Global.uiRegistry .~ newRegistry
-        (newState', customUIUpdates) = applyHandlers (customMouseHandlers mouseEvent camera newRegistry) newState
+        (customUIUpdates, newState') = applyHandlers (customMouseHandlers mouseEvent camera newRegistry) newState
         oldRegistry                  = oldState ^. Global.uiRegistry
         oldWidgetOver                = oldState ^. Global.uiRegistry . UIRegistry.widgetOver
         camera                       = Global.toCamera oldState
@@ -221,7 +222,7 @@ instance ActionStateUpdater Action where
         newAction                    = ApplyUpdates $ uiUpdates >> customUIUpdates
         newState                     = oldState &  Global.uiRegistry .~ newRegistry
         oldRegistry                  = oldState ^. Global.uiRegistry
-        (newState', customUIUpdates) = applyHandlers (customKeyboardHandlers keyboardEvent newRegistry) newState
+        (customUIUpdates, newState') = applyHandlers (customKeyboardHandlers keyboardEvent newRegistry) newState
         (uiUpdates, newRegistry)     = UIRegistry.sequenceUpdates [ Just $ handleKeyEvents keyboardEvent ] oldRegistry
 
 instance ActionUIUpdater Action where

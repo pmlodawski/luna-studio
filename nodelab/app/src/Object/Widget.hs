@@ -10,8 +10,9 @@ import           Utils.CtxDynamic
 import           Event.Mouse    (MousePosition)
 import           Object.UITypes
 import qualified Event.Keyboard as Keyboard
-import           Reactive.Plugins.Core.Action.State.Camera (Camera)
-import qualified Reactive.Plugins.Core.Action.State.Camera as Camera
+import           Reactive.Plugins.Core.Action.State.Camera     (Camera)
+import qualified Reactive.Plugins.Core.Action.State.Camera     as Camera
+import           Reactive.Plugins.Core.Action.Commands.Command (Command)
 import qualified JS.Camera as JSCamera
 import           Object.UITypes
 
@@ -141,16 +142,16 @@ screenToLocal :: JSCamera.Camera -> Vector2 Int -> [Double]  -> Vector2 Double
 screenToLocal cam mousePos widgetMatrix = sceneToLocal workspacePos widgetMatrix where
     workspacePos = JSCamera.screenToWorkspace cam mousePos
 
-type MouseMoveHandler     s = MouseButton -> Position -> s -> (s, IO ())
-type MousePressedHandler  s = MouseButton -> Position -> s -> (s, IO ())
-type MouseReleasedHandler s = MouseButton -> Position -> s -> (s, IO ())
-type MouseOverHandler     s =                            s -> (s, IO ())
-type MouseOutHandler      s =                            s -> (s, IO ())
-type ClickHandler         s =                Position -> s -> (s, IO ())
-type DblClickHandler      s =                Position -> s -> (s, IO ())
-type KeyUpHandler         s = Char                    -> s -> (s, IO ())
-type KeyDownHandler       s = Char                    -> s -> (s, IO ())
-type KeyPressedHandler    s = Char                    -> s -> (s, IO ())
+type MouseMoveHandler     s = MouseButton -> Position -> Command s
+type MousePressedHandler  s = MouseButton -> Position -> Command s
+type MouseReleasedHandler s = MouseButton -> Position -> Command s
+type MouseOverHandler     s =                            Command s
+type MouseOutHandler      s =                            Command s
+type ClickHandler         s =                Position -> Command s
+type DblClickHandler      s =                Position -> Command s
+type KeyUpHandler         s = Char                    -> Command s
+type KeyDownHandler       s = Char                    -> Command s
+type KeyPressedHandler    s = Char                    -> Command s
 
 
 data UIHandlers a  = UIHandlers { _mouseMove     :: [MouseMoveHandler      a]

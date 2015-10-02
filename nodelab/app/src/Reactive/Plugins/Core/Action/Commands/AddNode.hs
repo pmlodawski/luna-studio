@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Reactive.Plugins.Core.Action.Executors.AddNode (addNode) where
+module Reactive.Plugins.Core.Action.Commands.AddNode (addNode) where
 
 import           Utils.PreludePlus
 import           Utils.Vector
@@ -20,8 +20,9 @@ import qualified Reactive.Plugins.Core.Action.State.Graph          as Graph
 import           Reactive.Plugins.Core.Action.State.UIRegistry     (sceneGraphId)
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry     as UIRegistry
 import           Reactive.Plugins.Core.Action.State.UIRegistry     (UIState)
-import           Reactive.Plugins.Core.Action.Executors.EnterNode  (enterNode)
-import           Reactive.Plugins.Core.Action.Executors.RemoveNode (removeNode)
+import           Reactive.Plugins.Core.Action.Commands.EnterNode   (enterNode)
+import           Reactive.Plugins.Core.Action.Commands.RemoveNode  (removeNode)
+import           Reactive.Plugins.Core.Action.Commands.Command     (Command)
 
 import qualified Control.Monad.State   as MState
 import qualified JS.NodeGraph          as UI
@@ -30,13 +31,15 @@ import qualified ThreeJS.Widget.Node   as UINode
 import qualified ThreeJS.Widget.Slider as UISlider
 import           ThreeJS.Types         (add)
 
-addNode :: Node -> Global.State -> (State, IO ())
-addNode node oldState = (newState, actions) where
-    newState                = oldState & Global.iteration  +~ 1
-                                       & Global.graph      .~ newGraph
-                                       & Global.uiRegistry .~ newRegistry
-    newGraph                = Graph.addNode node (oldState ^. Global.graph)
-    (newRegistry, actions)  = registerNode  node (oldState ^. Global.uiRegistry)
+addNode :: Node -> Command State
+addNode node = do
+    graph    <- use Global.graph
+    registry <- use Global.uiRegistry
+    let newGraph              = Graph.addNode node graph
+        (newRegistry, action) = registerNode node registry
+    Global.graph      .= newGraph
+    Global.uiRegistry .= newRegistry
+    return action
 
 registerNode :: Node -> UIRegistry.State State -> (UIRegistry.State State, IO ())
 registerNode node oldRegistry = flip MState.execState (oldRegistry, return ()) $ do

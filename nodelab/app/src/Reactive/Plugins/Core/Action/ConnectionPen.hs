@@ -30,11 +30,11 @@ import qualified Event.ConnectionPen as ConnectionPen
 import           Event.WithObjects
 
 import           Reactive.Plugins.Core.Action
-import           Reactive.Plugins.Core.Action.Executors.Graph
+import           Reactive.Plugins.Core.Action.Commands.Graph
 import           Reactive.Plugins.Core.Action.State.Graph
 import qualified Reactive.Plugins.Core.Action.State.Global        as Global
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry    as UIRegistry
-import qualified Reactive.Plugins.Core.Action.Executors.AddNode   as AddNode
+import qualified Reactive.Plugins.Core.Action.Commands.AddNode    as AddNode
 import qualified Reactive.Plugins.Core.Action.State.ConnectionPen as ConnectionPen
 
 import qualified BatchConnector.Commands as BatchCmd
