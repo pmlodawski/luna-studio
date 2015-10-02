@@ -136,23 +136,12 @@ instance ActionStateUpdater Action where
                 oldNodesMap                  = Graph.getNodesMap oldGraph
             _                               -> oldGraph
 
-    execSt action@(DragAction (StopDrag sourceRef) point) oldState = ActionUI action newState
-        where
-        newState                             = oldState & Global.iteration            +~ 1
-                                                        & Global.connect . connecting .~ Nothing
-                                                        & Global.graph                .~ newGraph
-        oldGraph                             = oldState ^. Global.graph
-        newGraph                             = Graph.updateNodes newNodesMap oldGraph
-        oldNodesMap                          = Graph.getNodesMap oldGraph
-        srcPortMay                           = oldState ^? Global.connect . connecting . _Just . sourcePort
-        newNodesMap                          = case srcPortMay of
-            (Just srcPort)                  -> updateSourcePortInNodes (srcPort ^. angle) sourceRef oldNodesMap
-            Nothing                         -> oldNodesMap
+    execSt action@(DragAction (StopDrag sourceRef) point) oldState = ActionUI action $ stopDrag sourceRef oldState
 
     execSt action@(DragAction NoDrag point) oldState = ActionUI action oldState
 
     execSt action@(DragAction (ConnectPorts port1 port2) point) oldState = case tryGetSrcDst port1 port2 of
-        Nothing                             -> ActionUI (DragAction (StopDrag port1) point) oldState
+        Nothing                             -> ActionUI (DragAction (StopDrag port1) point) $ stopDrag port1 oldState
         Just (src, dst)                     -> ActionUI (DragAction (ConnectPortsUI src dst uiUpdate) point) newState''
             where
                 oldConnecting                = oldState ^. Global.connect . connecting
@@ -161,7 +150,20 @@ instance ActionStateUpdater Action where
                                                         & Global.connect . connecting .~ Nothing
                 (uiUpdate, newState)         = case oldConnecting of
                     Just (Connecting _ _ _ (DragHistory _ _)) -> connectNodes src dst oldState
-                    _                                       -> (return (), oldState)
+                    _                                         -> (return (), oldState)
+
+stopDrag :: PortRef -> Global.State -> Global.State
+stopDrag sourceRef oldState = newState
+    where
+    newState                             = oldState & Global.connect . connecting .~ Nothing
+                                                    & Global.graph                .~ newGraph
+    oldGraph                             = oldState ^. Global.graph
+    newGraph                             = Graph.updateNodes newNodesMap oldGraph
+    oldNodesMap                          = Graph.getNodesMap oldGraph
+    srcPortMay                           = oldState ^? Global.connect . connecting . _Just . sourcePort
+    newNodesMap                          = case srcPortMay of
+        (Just srcPort)                  -> updateSourcePortInNodes (srcPort ^. angle) sourceRef oldNodesMap
+        Nothing                         -> oldNodesMap
 
 instance ActionUIUpdater Action where
     updateUI (WithState (DragAction tpe pt) state) = case tpe of
