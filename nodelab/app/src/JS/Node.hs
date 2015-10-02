@@ -74,7 +74,7 @@ foreign import javascript unsafe "$1.toggleExpandState()"
 foreign import javascript unsafe "$1.uniforms.selected.value"
     getSelectionValue :: JSRef NodeJS -> IO Int
 
-foreign import javascript unsafe "console.log($1); $1.uniforms.selected.value = $2"
+foreign import javascript unsafe "$1.uniforms.selected.value = $2"
     setSelectionValue :: JSRef NodeJS -> Int -> IO ()
 
 foreign import javascript unsafe "$1.htmlContainer"
