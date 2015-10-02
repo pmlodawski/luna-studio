@@ -99,6 +99,11 @@ getConnectionsMap = (^. connectionsMap)
 updateNodes :: NodesMap -> State -> State
 updateNodes newNodesMap state = state & nodesMap .~ newNodesMap
 
+getPort :: State -> PortRef -> Port
+getPort state portRef = fromMaybe err $ find (\port -> port ^. portId == portRef ^. refPortId) ports where
+    node  = getNode state $ portRef ^. refPortNodeId
+    ports = getPorts (portRef ^. refPortType) node
+    err   = error $ "Port " <> show (portRef ^. refPortId) <> " not found"
 
 addNode :: Node -> State -> State
 addNode newNode state  = state & nodesMap     %~ IntMap.insert (newNode ^. nodeId) newNode

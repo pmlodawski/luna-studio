@@ -5,12 +5,14 @@ import           Utils.PreludePlus
 import           Utils.Vector
 
 import           Object.Node
+import           Object.Port
 
 data DragHistory = DragHistory { _dragStartPos    :: Vector2 Int
                                , _dragCurrentPos  :: Vector2 Int
                                } deriving (Eq, Show)
 
-data Connecting = Connecting { _sourcePort         :: PortRef
+data Connecting = Connecting { _sourcePortRef      :: PortRef
+                             , _sourcePort         :: Port
                              , _destinationPortMay :: Maybe PortRef
                              , _history            :: DragHistory
                              } deriving (Eq, Show)
@@ -31,10 +33,11 @@ instance PrettyPrinter State where
     display (State dragging) = "dS(" <> display dragging <> ")"
 
 instance PrettyPrinter Connecting where
-    display (Connecting source destinationMay history)
-        = display source
-        <> "->" <> display destinationMay
-        <> "|"  <> display history
+    display (Connecting sourceRef source destinationMay history)
+        = "conn(" <> display sourceRef
+        <> ":"    <> display source
+        <> "->"   <> display destinationMay
+        <> "|"    <> display history
 
 instance PrettyPrinter DragHistory where
     display (DragHistory start curr) = display start <> " " <> display curr

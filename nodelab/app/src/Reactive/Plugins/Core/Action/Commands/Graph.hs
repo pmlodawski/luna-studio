@@ -151,7 +151,7 @@ updatePortAnglesUI state = mapM_ processNode nodes where
 
 displayDragLine :: NodesMap -> Angle -> Vector2 Double -> Connect.Connecting -> IO ()
 displayDragLine nodesMap angle ptWs@(Vector2 cx cy) connecting = do
-    let portRef              = connecting ^. Connect.sourcePort
+    let portRef              = connecting ^. Connect.sourcePortRef
         ndWs@(Vector2 nx ny) = getNodePos nodesMap $ portRef ^. refPortNodeId
         outerPos             = portOuterBorder + distFromPort
         sy                   = ny + outerPos * sin angle
