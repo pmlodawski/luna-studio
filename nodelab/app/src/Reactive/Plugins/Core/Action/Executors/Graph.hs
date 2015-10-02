@@ -15,6 +15,7 @@ import           Object.Widget
 import qualified Object.Widget.Connection as UIConnection
 
 import qualified JS.Bindings    as UI
+import qualified JS.Connection  as UI
 import qualified JS.NodeGraph   as UI
 
 

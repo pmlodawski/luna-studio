@@ -9,6 +9,7 @@ import qualified Reactive.Plugins.Core.Action.State.Graph      as Graph
 
 import qualified BatchConnector.Commands as BatchCmd
 import qualified JS.Bindings             as UI
+import qualified JS.Widget               as UI
 import qualified JS.NodeGraph            as UIGraph
 import           Object.Node
 import           Object.Widget.Helpers   (nodeIdToWidgetId)

@@ -11,7 +11,7 @@ import           Object.Object
 import           Object.Widget
 import           Object.Node
 
-import           JS.Bindings
+import qualified JS.Widget as UI
 import           Utils.CtxDynamic
 
 data Connection = Connection { _connectionId :: ConnectionId
@@ -38,8 +38,8 @@ instance IsDisplayObject CurrentConnection where
 
 instance HandlesMouseOver Connection where
     onMouseOver file model = (action, toCtxDynamic model) where
-                  action   = setWidgetFocused (file ^. objectId) True
+                  action   = UI.setWidgetFocused (file ^. objectId) True
 
 instance HandlesMouseOut Connection where
     onMouseOut  file model = (action, toCtxDynamic model) where
-                  action   = setWidgetFocused (file ^. objectId) False
+                  action   = UI.setWidgetFocused (file ^. objectId) False

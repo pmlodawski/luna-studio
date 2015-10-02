@@ -11,7 +11,7 @@ import           Object.Widget
 import           Object.Node
 import           Utils.CtxDynamic
 
-import JS.Bindings
+import qualified JS.Widget as UI
 
 data Port = Port { _portRef :: PortRef
                  } deriving (Eq, Show, Typeable)
@@ -25,8 +25,8 @@ instance IsDisplayObject Port where
 
 instance HandlesMouseOver Port where
     onMouseOver file model = (action, toCtxDynamic model) where
-                  action   = setWidgetFocused (file ^. objectId) True
+                  action   = UI.setWidgetFocused (file ^. objectId) True
 
 instance HandlesMouseOut Port where
     onMouseOut  file model = (action, toCtxDynamic model) where
-                  action   = setWidgetFocused (file ^. objectId) False
+                  action   = UI.setWidgetFocused (file ^. objectId) False

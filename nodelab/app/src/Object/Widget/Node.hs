@@ -10,7 +10,7 @@ import           Data.Fixed
 import           Object.Widget
 import           Utils.CtxDynamic
 
-import JS.Bindings
+import qualified JS.Node as UI
 
 data Node = Node { _nodeId    :: Int
                  , _controls  :: [WidgetId]
@@ -31,6 +31,6 @@ instance HandlesKeyPressed Node where
     onKeyPressed char file model = (action, toCtxDynamic model) where
         action = case char of
             '\r' -> do
-                node <- getNode (model ^. nodeId)
-                toggleExpandState node
+                node <- UI.getNode (model ^. nodeId)
+                UI.toggleExpandState node
             _    -> return ()

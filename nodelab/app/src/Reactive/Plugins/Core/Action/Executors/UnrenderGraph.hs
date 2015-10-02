@@ -8,7 +8,7 @@ import qualified Reactive.Plugins.Core.Action.State.UIRegistry as UIRegistry
 import Object.Widget            (WidgetFile, objectId)
 import Object.Widget.Node       (Node)
 import Object.Widget.Connection (Connection)
-import JS.Bindings              (removeWidget)
+import JS.Widget                (removeWidget)
 
 unrender :: State -> (State, IO ())
 unrender state = (newState, action) where

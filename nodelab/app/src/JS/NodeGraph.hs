@@ -5,6 +5,7 @@ import           Utils.Vector
 import           Utils.Angle
 
 import           JS.Bindings
+import           JS.Node
 import           Object.Object
 import           Object.Node
 import           Object.UITypes

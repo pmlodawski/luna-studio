@@ -10,6 +10,7 @@ import           Utils.Angle
 import qualified Data.IntMap.Lazy as IntMap
 
 import qualified JS.Bindings        as UI
+import qualified JS.Widget          as UI
 import qualified JS.ConnectionPen   as UI
 
 import           Object.Object

@@ -2,7 +2,7 @@ module Reactive.Plugins.Loader.Loader where
 
 import           Utils.PreludePlus
 import           JS.WebSocket
-import           JS.Bindings        (getBackendAddress)
+import           JS.Config        (getBackendAddress)
 import qualified Reactive.Plugins.Loader.ProjectManager.Network as ProjectManager
 import qualified Reactive.Plugins.Loader.Interpreter.Network    as Interpreter
 import           Reactive.Banana
