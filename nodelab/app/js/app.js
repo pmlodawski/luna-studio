@@ -73,31 +73,11 @@ function initializeGl() {
     window.displayObjectMap = function() { document.body.appendChild($$.rendererMap.domElement) };
 
     initCommonWidgets();
-    addVersionToHud();
     textEditor.init();
 
     $('#log').remove();
     $('#spinner').remove();
 
-}
-
-function addVersionToHud() {
-  var createText   = require('bmfont').render;
-  var font         = require("font/LatoBlack-sdf");
-  var textMaterial = require('font/text_material').hud;
-
-  var geom = createText({
-    text: "Build at " + brunch.date,
-    font: font,
-    align: 'left'
-  });
-
-  var obj = new THREE.Mesh(geom, textMaterial);
-  obj.scale.multiplyScalar(config.fontSize);
-  obj.position.y = 20;
-  obj.position.x = 500;
-
-  $$.sceneHUD.add(obj);
 }
 
 function initCommonWidgets() {
