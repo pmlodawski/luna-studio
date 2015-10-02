@@ -136,6 +136,11 @@ instance ActionStateUpdater Action where
         where
         newState                             = oldState & Global.iteration            +~ 1
                                                         & Global.connect . connecting .~ Nothing
+                                                        & Global.graph                .~ newGraph
+        newGraph                             = oldGraph
+        oldGraph                             = oldState ^. Global.graph
+        -- newGraph                             = Graph.updateNodes newNodesMap oldGraph
+        -- newNodesMap                          = updateSourcePortInNodes angle source oldNodesMap
 
     execSt action@(DragAction (ConnectPorts port1 port2) point) oldState = case tryGetSrcDst port1 port2 of
         Nothing                             -> ActionUI (DragAction StopDrag point) oldState
@@ -152,7 +157,11 @@ instance ActionStateUpdater Action where
 instance ActionUIUpdater Action where
     updateUI (WithState (DragAction tpe pt) state) = case tpe of
         Dragging angle                   -> forM_ maybeConnecting $ displayDragLine nodesMap angle ptWs
-        StopDrag                         -> UI.removeCurrentConnection
+        StopDrag                         -> do
+                                                UI.removeCurrentConnection
+                                                -- moveNodesUI nodesMap
+                                                -- updatePortAnglesUI  state
+                                                -- updateConnectionsUI state
         ConnectPortsUI src dst uiUpdate  -> do
                                                 UI.removeCurrentConnection
                                                 uiUpdate

@@ -121,13 +121,15 @@ instance ActionUIUpdater Action where
         DragAction tpe pt            -> case tpe of
             StartDrag                -> return ()
             Moving                   -> return ()
-            Dragging                 -> moveNodesUI selNodes
-                                     >> updatePortAnglesUI state
-                                     >> updateConnectionsUI state
-            StopDrag                 -> moveNodesUI selNodes
-                                     >> updateNodesBatch workspace selNodes
-                                     >> updatePortAnglesUI state
-                                     >> updateConnectionsUI state
+            Dragging                 -> do
+                                            moveNodesUI selNodes
+                                            updatePortAnglesUI state
+                                            updateConnectionsUI state
+            StopDrag                 -> do
+                                            moveNodesUI selNodes
+                                            updateNodesBatch workspace selNodes
+                                            updatePortAnglesUI state
+                                            updateConnectionsUI state
             where
                 workspace             = state ^. Global.workspace
                 nodesMap              = Graph.getNodesMap       $ state ^. Global.graph
