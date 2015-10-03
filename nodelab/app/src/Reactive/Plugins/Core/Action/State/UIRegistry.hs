@@ -19,7 +19,7 @@ import qualified Control.Monad.State     as MState
 import qualified Control.Monad.Trans.RWS as RWS
 import           Control.Monad.Trans.RWS (RWS)
 
-import           Reactive.Plugins.Core.Action.Commands.Command (Command)
+import           Reactive.Plugins.Core.Action.Commands.Command (Command, performIO)
 
 import Debug.Trace
 

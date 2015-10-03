@@ -6,6 +6,8 @@ import qualified Reactive.Plugins.Core.Action.State.Global     as Global
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry as UIRegistry
 import           Reactive.Plugins.Core.Action.Commands.Command (Command, performIO)
 
+import           Reactive.Plugins.Core.Action.Commands.UIRegistry.RemoveWidget (removeWidgets)
+
 import Object.Widget            (WidgetFile, objectId)
 import Object.Widget.Node       (Node)
 import Object.Widget.Connection (Connection)
@@ -18,5 +20,5 @@ unrender = do
     let nodeWidgets  = UIRegistry.lookupAll uiRegistry :: [WidgetFile State Node]
         connWidgets  = UIRegistry.lookupAll uiRegistry :: [WidgetFile State Connection]
         allWidgetIds = (view objectId <$> nodeWidgets) ++ (view objectId <$> connWidgets)
-    idsToRemove <- zoom Global.uiRegistry $ UIRegistry.unregisterAllM allWidgetIds
-    performIO $ sequence_ $ removeWidget <$> idsToRemove
+
+    zoom Global.uiRegistry $ removeWidgets allWidgetIds

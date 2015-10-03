@@ -8,8 +8,8 @@ import           Reactive.Plugins.Core.Action.Commands.Command (Command, perform
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry as UIRegistry
 import           Reactive.Plugins.Core.Action.Commands.Graph   (updateConnections, updatePortAngles, updateConnectionsUI)
 
-import           JS.Widget               (removeWidget)
-import           JS.NodeGraph            (setComputedValue)
+import           Reactive.Plugins.Core.Action.Commands.UIRegistry.RemoveWidget (removeWidgets)
+
 import           Object.Object           (ConnectionId)
 import           Object.Widget.Helpers   (connectionIdToWidgetId)
 
@@ -21,13 +21,15 @@ localDisconnectAll connectionIds = do
     uiRegistry        <- use Global.uiRegistry
     let widgetIds     =  catMaybes $ connectionIdToWidgetId uiRegistry <$> connectionIds
 
-    Global.uiRegistry %= UIRegistry.unregisterAll_ widgetIds
+    zoom Global.uiRegistry $ removeWidgets widgetIds
     Global.graph      %= Graph.removeConnections connectionIds
     modify $ updateConnections . updatePortAngles
+
+    gets $ performIO . updateConnectionsUI
+
     state <- get
     performIO $ do
         updateConnectionsUI state
-        mapM_ removeWidget widgetIds
 
 disconnectAll :: [ConnectionId] -> Command State ()
 disconnectAll connectionIds = do
