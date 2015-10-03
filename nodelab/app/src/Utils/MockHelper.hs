@@ -36,7 +36,7 @@ getOutputPortsNr expr = 1 + (ord (fromMaybe '1' $ listToMaybe (tail expr)) - ord
 
 
 tryVal :: Text -> Maybe NodeType
-tryVal _ = Just $ NodeType 1 []
+tryVal _ = Just $ NodeType 0 []
 
 
 tryDef :: Text -> Maybe NodeType
@@ -79,14 +79,12 @@ knownFunctions  = [ ("+",        twoOpNum  )
                   ]
 
 
-
-
-
 -- yes, we do the same computation twice -- that's a workaround right here, don't mind :)
 getNodeType :: Text -> NodeType
 getNodeType expr = case msum $ ($ expr) <$> [tryKnown, tryDef, tryFormat, tryVal] of
     Just portType -> portType
-    Nothing    -> NodeType 0 []
+    Nothing       -> NodeType 0 []
+
 
 ----------------------------------------------------------------------------------------
 -- Type utils
