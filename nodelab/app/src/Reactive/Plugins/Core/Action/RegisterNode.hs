@@ -42,7 +42,7 @@ toAction (NodeSearcher (NodeSearcher.Event "create" expr)) _  = Just $ RegisterN
 toAction _ _  = Nothing
 
 createNode :: NodeId -> Vector2 Double -> Text -> Node
-createNode nodeId pos expr = Node nodeId False pos expr $ MockHelper.createPorts expr
+createNode nodeId pos expr = Node nodeId False pos expr $ createPorts expr
 
 instance ActionStateUpdater Action where
     execSt (RegisterNodeAction expr) state = ActionUI registerNode state where

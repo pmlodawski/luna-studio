@@ -9,8 +9,16 @@ import           JS.Camera
 import           Object.Object
 
 
-data ValueType = Int | Float | Char | Bool | String deriving (Eq, Show)
-
+data ValueType = VTBool
+               | VTInt
+               | VTChar
+               | VTFloat
+               | VTString
+               | VTVector ValueType
+               | VTMaybe ValueType
+               | VTNumeric
+               | VTAny
+               deriving (Ord, Eq, Show)
 
 
 data DraggingTo = DraggingTo { _draggingTo :: Maybe (Vector2 Double) } deriving (Eq, Show)

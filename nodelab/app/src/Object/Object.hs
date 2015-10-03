@@ -21,13 +21,13 @@ type NodeIdCollection = [NodeId]
 
 data PortId = AllPorts
             | PortNum ID
-            deriving (Eq, Show)
+            deriving (Ord, Eq, Show)
 
-instance Ord PortId where
-    AllPorts    `compare` AllPorts    = EQ
-    AllPorts    `compare` _           = LT
-    _           `compare` AllPorts    = GT
-    (PortNum a) `compare` (PortNum b) = a `compare` b
+--instance Ord PortId where
+--    AllPorts    `compare` AllPorts    = EQ
+--    AllPorts    `compare` _           = LT
+--    _           `compare` AllPorts    = GT
+--    (PortNum a) `compare` (PortNum b) = a `compare` b
 
 portIdToNum :: PortId -> Int
 portIdToNum AllPorts    = 0

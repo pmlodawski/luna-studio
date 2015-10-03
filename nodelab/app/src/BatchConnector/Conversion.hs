@@ -151,7 +151,7 @@ instance ProtoReadable ProtoNode.Node Node where
         nodePos = Vector2 <$> (float2Double <$> ProtoNode.x node)
                           <*> (float2Double <$> ProtoNode.y node)
         expr    = (ProtoNode.expr node) >>= ProtoExpr.str >>= decode
-        ports   = MockHelper.createPorts <$> expr
+        ports   = createPorts <$> expr
 
 instance ProtoWritable ProtoNode.Node Node where
     encode node = ProtoNode.Node NodeCls.Expr

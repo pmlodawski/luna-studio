@@ -2,9 +2,13 @@
 
 module Object.Node where
 
+import           Control.Monad (msum)
+
 import           Utils.PreludePlus
 import           Utils.Vector
 import           Utils.Angle
+import           Utils.MockHelper (NodeType)
+import qualified Utils.MockHelper as MHelper
 import           Data.Dynamic
 import           Debug.Trace
 
@@ -36,6 +40,7 @@ makeLenses ''Node
 
 type NodeCollection   = [Node]
 type NodesMap         = IntMap Node
+type NodeTypesMap     = IntMap NodeType
 
 instance Default Ports where
     def = Ports [] []
@@ -112,13 +117,22 @@ createPort portType valueType allPorts ident = Port ident valueType $ portDefaul
 
 
 
-createPorts :: [ValueType] -> [ValueType] -> Ports
-createPorts inputPortTypes outputPortTypes = Ports inputPorts outputPorts where
+createPorts' :: [ValueType] -> [ValueType] -> Ports
+createPorts' inputPortTypes outputPortTypes = Ports inputPorts outputPorts where
     inputPortsNum = length inputPortTypes
     outputPortsNum = length outputPortTypes
     inputPorts   = (\num -> createPort InputPort  (inputPortTypes  !! num) inputPortsNum  $ createInputPortId  num) <$> take inputPortsNum  nat
     outputPorts  = (\num -> createPort OutputPort (outputPortTypes !! num) outputPortsNum $ createOutputPortId num) <$> take outputPortsNum nat
     nat          = [0, 1..]
+
+
+createPorts :: Text -> Ports
+createPorts expr = createPorts' inputs outputs
+    where inputs  = replicate pc VTAny
+          outputs = [VTAny]
+          MHelper.NodeType pc constrs = case msum $ ($ expr) <$> [MHelper.tryKnown, MHelper.tryDef, MHelper.tryFormat, MHelper.tryVal] of
+              Just portType -> portType
+              Nothing    -> MHelper.NodeType 0 []
 
 
 getPorts :: PortType -> Node -> PortCollection

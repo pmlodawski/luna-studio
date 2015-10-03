@@ -175,6 +175,7 @@ tryAutoConnect (srcNodeId, dstNodeId) oldState = result where
             dstPortRef               = PortRef dstNodeId InputPort  dstPortId
         Nothing                     -> Nothing
 
+
 filterConnectedInputPorts :: State -> NodeId -> PortCollection -> PortCollection
 filterConnectedInputPorts state nodeId ports = filter isConnected ports where
     destinationPortRefs = fmap (^. destination) $ getConnections state
@@ -190,8 +191,8 @@ findConnection dstPorts srcPort = (srcPort ^. portId,) <$> dstPortId where
 
 instance ActionUIUpdater Reaction where
     updateUI (WithState (PerformIO action) state) = do
-                                                        action
-                                                        -- moveNodesUI $ getNodesMap $ state ^. Global.graph
-                                                        -- updatePortAnglesUI state -- TODO: does not work...
-                                                        -- updateConnectionsUI state
+        action
+        -- moveNodesUI $ getNodesMap $ state ^. Global.graph
+        -- updatePortAnglesUI state -- TODO: does not work...
+        -- updateConnectionsUI state
     updateUI (WithState NoOp state)               = return ()
