@@ -138,6 +138,14 @@ removeConnection connId state = state & connectionsMap %~ IntMap.delete connId
 lookUpConnection :: State -> ConnectionId -> Maybe Connection
 lookUpConnection state connId = IntMap.lookup connId $ getConnectionsMap state
 
+endsWith :: NodeId -> Connection -> Bool
+endsWith id conn = (conn ^. source . refPortNodeId == id)
+                  || (conn ^. destination . refPortNodeId == id)
+
+connectionsEndingWith :: NodeId -> State -> [ConnectionId]
+connectionsEndingWith id state = view connId <$> filter (endsWith id) connections where
+    connections = getConnections state
+
 addAccessor :: PortRef -> PortRef -> State -> (Maybe ConnectionId, State)
 addAccessor sourcePortRef destPortRef state =
     let refsMap      = state ^. nodesRefsMap
