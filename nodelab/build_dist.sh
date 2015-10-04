@@ -24,7 +24,11 @@ do
 	gzip -c $i > $tmp/$i
 done
 
-s3cmd sync --progress --acl-public --reduced-redundancy --verbose --add-header 'Content-Encoding: gzip' $tmp/www/* $s3_path --exclude '*.*'    --include '*.html' --include '*.js'  --include '*.css'  --include '*.woff' --include '*.ttf' --include '*.eot'
-s3cmd sync --progress --acl-public --reduced-redundancy --verbose                                        www/*     $s3_path                    --exclude '*.html' --exclude '*.js'   --exclude '*.css' --exclude '*.woff' --exclude '*.ttf' --exclude '*.eot'
+s3cmd sync --progress --acl-public --reduced-redundancy --verbose --add-header 'Cache-Control: max-age=604800' \
+  --add-header 'Content-Encoding: gzip' --add-header 'Cache-Control: max-age=604800' $tmp/www/* $s3_path       \
+  --exclude '*.*' --include '*.html' --include '*.js'  --include '*.css'  --include '*.woff' --include '*.ttf' --include '*.eot'
+s3cmd sync --progress --acl-public --reduced-redundancy --verbose --add-header 'Cache-Control: max-age=604800' \
+                                        --add-header 'Cache-Control: max-age=604800'  www/*     $s3_path       \
+  --exclude '*.html' --exclude '*.js'   --exclude '*.css' --exclude '*.woff' --exclude '*.ttf' --exclude '*.eot'
 
 rm -rf $tmp
