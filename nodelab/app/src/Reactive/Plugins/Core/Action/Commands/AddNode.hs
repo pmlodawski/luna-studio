@@ -95,11 +95,11 @@ registerPorts nodeWidgetId portType node = do
     let inPorts = getPorts portType node
     ins  <- mapM registerPort inPorts
 
-    forM_ ins $ \(w, p) -> UIRegistry.uiAction $ (addPort portType) (node ^. nodeId) (w ^. objectId) (p ^. portId) (p ^. angle)
+    forM_ ins $ \(w, p) -> UIRegistry.uiAction $ (addPort portType) (node ^. nodeId) (w ^. objectId) (p ^. portId) (colorVT $ p ^. portValueType) (p ^. angle)
 
     return ()
 
 
-addPort :: PortType -> NodeId -> WidgetId -> PortId -> Double -> IO ()
+addPort :: PortType -> NodeId -> WidgetId -> PortId -> ColorNum -> Double -> IO ()
 addPort  InputPort = UI.addInputPort
 addPort OutputPort = UI.addOutputPort

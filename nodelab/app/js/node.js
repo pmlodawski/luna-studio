@@ -192,17 +192,17 @@ Node.prototype.updateMouse = function(x, y) {
   });
 };
 
-Node.prototype.addInputPort = function(oid, id, angle) {
-  var p = new Port(id, oid, angle, false, this.mesh.position.z);
-  this.inputPorts.push(p);
-  this.mesh.add(p.mesh);
-  this.updateMouse(this.mesh.position.x, this.mesh.position.y);
-  $$.registry[oid] = p;
+Node.prototype.addInputPort = function(oid, id, colorId, angle) {
+  this.addPort(this.inputPorts, false, oid, id, colorId, angle);
 };
 
-Node.prototype.addOutputPort = function(oid, id, angle) {
-  var p = new Port(id, oid, angle, true, this.mesh.position.z);
-  this.outputPorts.push(p);
+Node.prototype.addOutputPort = function(oid, id, colorId, angle) {
+  this.addPort(this.outputPorts, true, oid, id, colorId, angle);
+};
+
+Node.prototype.addPort = function(ports, out, oid, id, colorId, angle) {
+  var p = new Port(id, oid, colorId, angle, out);
+  ports.push(p);
   this.mesh.add(p.mesh);
   this.updateMouse(this.mesh.position.x, this.mesh.position.y);
   $$.registry[oid] = p;

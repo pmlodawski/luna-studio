@@ -1,15 +1,13 @@
 "use strict";
 
 var $$ = require('common');
+var colors = require('colors');
 var vs = require('shaders/port.vert')();
 var fs = require('shaders/port.frag')();
 
 var nodeRadius    = 30.0;
 
-// var inputColor  = new THREE.Vector4(0xFF, 0x99, 0x33, 0xAA).divideScalar(0xFF);
-var inputColor   = new THREE.Vector4(0x00, 0x99, 0x99, 0xAA).divideScalar(0xFF);
-var outputColor  = new THREE.Vector4(0xBB, 0x33, 0x00, 0xAA).divideScalar(0xFF);
-var colorFar     = new THREE.Vector4(0.2, 0.2, 0.2, 0.6);
+var colorFar     = colors[2];
 
 var height = 30.0;
 var width  = 30.0;
@@ -19,12 +17,12 @@ var dist = nodeRadius + halfWidth + margin;
 
 var nodeSize = 30.0;
 
-function Port(id, widgetId, angle, out) {
+function Port(id, widgetId, colorId, angle, out) {
   var _this = this;
   this.id = id;
   this.out = out;
 
-  var color    = out ? outputColor : inputColor;
+  var color = colors[colorId];
 
   this.uniforms = {
     color:     { type: 'v4', value: color    },

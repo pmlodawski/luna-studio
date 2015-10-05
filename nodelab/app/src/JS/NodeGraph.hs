@@ -7,6 +7,7 @@ import           Utils.Angle
 import           JS.Bindings
 import           JS.Node
 import           Object.Object
+import           Object.Port
 import           Object.Node
 import           Object.UITypes
 
@@ -65,17 +66,19 @@ moveNode node = do
 displaySelectionBox :: Vector2 Double -> Vector2 Double -> IO ()
 displaySelectionBox (Vector2 x0 y0) (Vector2 x1 y1) = displaySelectionBoxJS x0 y0 x1 y1
 
-addInputPort :: NodeId -> WidgetId -> PortId -> Angle -> IO ()
-addInputPort nodeId widgetId portId angle = do
+addInputPort :: NodeId -> WidgetId -> PortId -> ColorNum -> Angle -> IO ()
+addInputPort nodeId widgetId portId color angle = do
+    putStrLn $ "input color " <> show color
     nodeRef <- getNode nodeId
     let portIdNum = portIdToNum portId
-    addInputPortJS nodeRef widgetId portIdNum angle
+    addInputPortJS nodeRef widgetId portIdNum color angle
 
-addOutputPort :: NodeId -> WidgetId ->  PortId -> Angle -> IO ()
-addOutputPort nodeId widgetId portId angle = do
+addOutputPort :: NodeId -> WidgetId ->  PortId -> ColorNum -> Angle -> IO ()
+addOutputPort nodeId widgetId portId color angle = do
+    putStrLn $ "output color " <> show color
     nodeRef <- getNode nodeId
     let portIdNum = portIdToNum portId
-    addOutputPortJS nodeRef widgetId portIdNum angle
+    addOutputPortJS nodeRef widgetId portIdNum color angle
 
 setInputPortAngle :: NodeId -> PortId -> Angle -> IO ()
 setInputPortAngle nodeId portId angle = do

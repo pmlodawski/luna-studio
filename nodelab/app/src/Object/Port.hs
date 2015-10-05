@@ -20,6 +20,19 @@ data ValueType = VTBool
                | VTAny
                deriving (Ord, Eq, Show)
 
+type ColorNum = Int
+
+colorVT :: ValueType -> ColorNum
+colorVT VTBool = 0
+colorVT VTInt = 5
+colorVT VTChar = 6
+colorVT VTFloat = 3
+colorVT VTString = 4
+colorVT (VTVector _) = 0
+colorVT (VTMaybe _) = 0
+colorVT VTNumeric = 7
+colorVT VTAny = 8
+
 
 data DraggingTo = DraggingTo { _draggingTo :: Maybe (Vector2 Double) } deriving (Eq, Show)
 

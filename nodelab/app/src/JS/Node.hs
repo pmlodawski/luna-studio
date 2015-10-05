@@ -50,11 +50,11 @@ foreign import javascript unsafe "$1.label($2)"
 foreign import javascript unsafe "$1.setValue($2)"
     setValue :: JSRef NodeJS -> JSString -> IO ()
 
-foreign import javascript unsafe "$1.addInputPort($2, $3, $4)"
-    addInputPortJS :: JSRef NodeJS -> Int -> Int -> Double -> IO ()
+foreign import javascript unsafe "$1.addInputPort($2, $3, $4, $5)"
+    addInputPortJS :: JSRef NodeJS -> Int -> Int -> Int -> Double -> IO ()
 
-foreign import javascript unsafe "$1.addOutputPort($2, $3, $4)"
-    addOutputPortJS :: JSRef NodeJS -> Int -> Int -> Double -> IO ()
+foreign import javascript unsafe "$1.addOutputPort($2, $3, $4, $5)"
+    addOutputPortJS :: JSRef NodeJS -> Int -> Int -> Int -> Double -> IO ()
 
 foreign import javascript unsafe "$1.setInputPortAngle($2, $3)"
     setInputPortAngleJS :: JSRef NodeJS -> Int -> Double -> IO ()
