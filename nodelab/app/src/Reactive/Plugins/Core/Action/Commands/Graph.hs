@@ -25,10 +25,11 @@ import qualified Reactive.Plugins.Core.Action.State.Graph          as Graph
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry     as UIRegistry
 import qualified Reactive.Plugins.Core.Action.State.Camera         as Camera
 import qualified Reactive.Plugins.Core.Action.State.Global         as Global
+import           Reactive.Plugins.Core.Action.Commands.Command     (Command, command, pureCommand, ioCommand)
 import qualified Control.Monad.State                               as MState
 
-updateConnections :: Global.State -> Global.State
-updateConnections state = newState where
+updateConnections :: Command Global.State ()
+updateConnections = pureCommand $ \state -> let
     newState           = state & Global.uiRegistry .~ newRegistry
     oldRegistry        = state ^. Global.uiRegistry
     updateWidgets      = forM_ allConnections updateWidget
@@ -43,14 +44,16 @@ updateConnections state = newState where
     allConnections     = UIRegistry.lookupAll oldRegistry :: [WidgetFile Global.State UIConnection.Connection]
     nodesMap           = Graph.getNodesMap       $ state ^. Global.graph
     connectionsMap     = Graph.getConnectionsMap $ state ^. Global.graph
+    in newState
 
-updateConnectionsUI :: Global.State -> IO ()
-updateConnectionsUI state = updateWidgets where
+updateConnectionsUI :: Command Global.State ()
+updateConnectionsUI = ioCommand $ \state -> let
     oldRegistry        = state ^. Global.uiRegistry
     updateWidgets      = forM_ allConnections updateWidget
     updateWidget file  = UI.updateConnection (file ^. objectId) visible fromX fromY toX toY where
         UIConnection.Connection connId visible (Vector2 fromX fromY) (Vector2 toX toY) = file ^. widget
     allConnections     = UIRegistry.lookupAll oldRegistry :: [WidgetFile Global.State UIConnection.Connection]
+    in updateWidgets
 
 
 createConnectionWidget :: WidgetId -> UIConnection.Connection -> IO ()
@@ -82,8 +85,8 @@ tryGetSrcDst portRef1 portRef2 = case (portRef1 ^. refPortType, portRef2 ^. refP
     (InputPort,  OutputPort) -> Just (portRef2, portRef1)
     _                        -> Nothing
 
-connectNodes :: PortRef -> PortRef -> Global.State -> (IO (), Global.State)
-connectNodes src dst state = (uiUpdate, newState) where
+connectNodes :: PortRef -> PortRef -> Command Global.State ()
+connectNodes src dst = command $ \state -> let
     oldGraph                     = state ^. Global.graph
     oldRegistry                  = state ^. Global.uiRegistry
     newState                     = state  & Global.graph      .~ newGraph
@@ -98,6 +101,7 @@ connectNodes src dst state = (uiUpdate, newState) where
             (widget, newRegistry)= UIRegistry.register UIRegistry.sceneGraphId uiConnection def oldRegistry
             uiConnection         = getConnectionLine newNodesMap $ Graph.Connection connId src dst
         Nothing                 -> (Nothing, oldRegistry)
+    in (uiUpdate, newState)
 
 getConnectionLine :: NodesMap -> Connection -> UIConnection.Connection
 getConnectionLine nodesMap (Connection lineId srcPortRef dstPortRef) = UIConnection.Connection lineId visible srcWs dstWs
@@ -121,8 +125,8 @@ connectionVector nodesMap src dst  = explode (dstNWs - srcNWs) where
     dstNWs@(Vector2 xDstN yDstN) = getNodePos nodesMap $ dst ^. refPortNodeId
 
 
-updatePortAngles :: Global.State -> Global.State
-updatePortAngles state = newState where
+updatePortAngles :: Command Global.State ()
+updatePortAngles = pureCommand $ \state -> let
     newState              = state & Global.graph %~ updateNodes newNodes
     oldNodes              = getNodesMap $ state ^. Global.graph
     newNodes              = foldl processPort oldNodes angles
@@ -137,16 +141,18 @@ updatePortAngles state = newState where
     portsMap              = sortAndGroup . concat $ connectionTuples <$> connections
     calculateAngle portRef targets = toAngle . foldl (+) (Vector2 0.0 0.0) $ connectionVector oldNodes portRef <$> targets
     angles                = Map.toList $ Map.mapWithKey calculateAngle portsMap
+    in newState
 
 
-updatePortAnglesUI :: Global.State -> IO ()
-updatePortAnglesUI state = mapM_ processNode nodes where
+updatePortAnglesUI :: Command Global.State ()
+updatePortAnglesUI = ioCommand $ \state -> let
     processNode node = mapM_ (processPort InputPort ) (getPorts InputPort  node)
                     >> mapM_ (processPort OutputPort) (getPorts OutputPort node)
         where
         processPort :: PortType -> Port -> IO ()
         processPort tpe port = setAngle tpe (node ^. nodeId) (port ^. portId) (port ^. angle)
     nodes   = getNodes $ state ^. Global.graph
+    in mapM_ processNode nodes
 
 
 displayDragLine :: NodesMap -> Angle -> Vector2 Double -> Connect.Connecting -> IO ()

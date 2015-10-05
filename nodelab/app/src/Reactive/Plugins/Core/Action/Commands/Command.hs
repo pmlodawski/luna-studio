@@ -22,6 +22,18 @@ type instance Zoomed (Command a) = Focusing (Writer IOAction)
 instance Zoom (Command s) (Command t) s t where
     zoom l (Command m) = Command (zoom l m)
 
+command :: (a -> (IO (), a)) -> Command a ()
+command f = do
+    (action, state) <- gets f
+    performIO action
+    put state
+
+pureCommand :: (a -> a) -> Command a ()
+pureCommand = modify
+
+ioCommand :: (a -> IO ()) -> Command a ()
+ioCommand f = gets f >>= performIO
+
 runCommand :: Command a b -> a -> (b, IO (), a)
 runCommand cmd state = case runWriter (runStateT (unCommand cmd) state) of
     ((res, state), IOAction act) -> (res, act, state)

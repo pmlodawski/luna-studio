@@ -26,6 +26,7 @@ import           Event.WithObjects
 
 import           Reactive.Plugins.Core.Action
 import           Reactive.Plugins.Core.Action.Commands.Graph
+import           Reactive.Plugins.Core.Action.Commands.Command     (execCommand)
 import           Reactive.Plugins.Core.Action.State.Connect
 import qualified Reactive.Plugins.Core.Action.State.Graph          as Graph
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry     as UIRegistry
@@ -145,11 +146,11 @@ instance ActionStateUpdater Action where
         Just (src, dst)                     -> ActionUI (DragAction (ConnectPortsUI src dst uiUpdate) point) newState''
             where
                 oldConnecting                = oldState ^. Global.connect . connecting
-                newState''                   = updateConnections $ updatePortAngles newState'
+                newState''                   = snd $ execCommand (updatePortAngles >> updateConnections) newState'
                 newState'                    = newState & Global.iteration            +~ 1
                                                         & Global.connect . connecting .~ Nothing
                 (uiUpdate, newState)         = case oldConnecting of
-                    Just (Connecting _ _ _ (DragHistory _ _)) -> connectNodes src dst oldState
+                    Just (Connecting _ _ _ (DragHistory _ _)) -> execCommand (connectNodes src dst) oldState
                     _                                         -> (return (), oldState)
 
 stopDrag :: PortRef -> Global.State -> Global.State
@@ -171,13 +172,13 @@ instance ActionUIUpdater Action where
         StopDrag src                     -> do
                                                 UI.removeCurrentConnection
                                                 -- moveNodesUI nodesMap
-                                                updatePortAnglesUI state
+                                                fst $ execCommand updatePortAnglesUI state
                                                 -- updateConnectionsUI state
         ConnectPortsUI src dst uiUpdate  -> do
                                                 UI.removeCurrentConnection
                                                 uiUpdate
-                                                updatePortAnglesUI  state
-                                                updateConnectionsUI state
+                                                fst $ execCommand updatePortAnglesUI  state
+                                                fst $ execCommand updateConnectionsUI state
                                                 BatchCmd.connectNodes workspace src dst
                                                 putStrLn (display $ state ^. Global.graph . Graph.nodesRefsMap)   -- debug
                                                 putStrLn (display $ state ^. Global.graph . Graph.connectionsMap) -- debug

@@ -20,11 +20,12 @@ import           Event.WithObjects
 
 import           Reactive.Plugins.Core.Action
 import           Reactive.Plugins.Core.Action.Commands.Graph
+import           Reactive.Plugins.Core.Action.Commands.Command (execCommand)
 import           Reactive.Plugins.Core.Action.State.Drag
-import qualified Reactive.Plugins.Core.Action.State.Graph     as Graph
-import qualified Reactive.Plugins.Core.Action.State.Selection as Selection
-import qualified Reactive.Plugins.Core.Action.State.Camera    as Camera
-import qualified Reactive.Plugins.Core.Action.State.Global    as Global
+import qualified Reactive.Plugins.Core.Action.State.Graph      as Graph
+import qualified Reactive.Plugins.Core.Action.State.Selection  as Selection
+import qualified Reactive.Plugins.Core.Action.State.Camera     as Camera
+import qualified Reactive.Plugins.Core.Action.State.Global     as Global
 import           Reactive.Plugins.Core.Action.State.UnderCursor
 
 import qualified Data.IntMap.Lazy        as IntMap
@@ -89,7 +90,7 @@ instance ActionStateUpdater Action where
         newState                         = oldState & Global.iteration       +~ 1
                                                     & Global.drag  . history .~ newDrag
                                                     & Global.graph           .~ newGraph
-        newState'                        = updateConnections $ updatePortAngles newState
+        (_, newState')                   = execCommand (updatePortAngles >> updateConnections) newState
         newAction                        = case newActionCandidate of
             DragAction Moving pt        -> case oldDrag of
                 Nothing                 -> Nothing
@@ -123,13 +124,13 @@ instance ActionUIUpdater Action where
             Moving                   -> return ()
             Dragging                 -> do
                                             moveNodesUI selNodes
-                                            updatePortAnglesUI state
-                                            updateConnectionsUI state
+                                            fst $ execCommand updatePortAnglesUI state
+                                            fst $ execCommand updateConnectionsUI state
             StopDrag                 -> do
                                             moveNodesUI selNodes
                                             updateNodesBatch workspace selNodes
-                                            updatePortAnglesUI state
-                                            updateConnectionsUI state
+                                            fst $ execCommand updatePortAnglesUI state
+                                            fst $ execCommand updateConnectionsUI state
             where
                 workspace             = state ^. Global.workspace
                 nodesMap              = Graph.getNodesMap       $ state ^. Global.graph

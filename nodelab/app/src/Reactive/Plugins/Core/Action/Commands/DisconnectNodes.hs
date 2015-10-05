@@ -23,13 +23,9 @@ localDisconnectAll connectionIds = do
 
     zoom Global.uiRegistry $ removeWidgets widgetIds
     Global.graph      %= Graph.removeConnections connectionIds
-    modify $ updateConnections . updatePortAngles
-
-    gets $ performIO . updateConnectionsUI
-
-    state <- get
-    performIO $ do
-        updateConnectionsUI state
+    updatePortAngles
+    updateConnections
+    updateConnectionsUI
 
 disconnectAll :: [ConnectionId] -> Command State ()
 disconnectAll connectionIds = do

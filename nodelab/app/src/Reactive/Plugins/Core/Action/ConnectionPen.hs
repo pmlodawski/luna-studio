@@ -129,8 +129,8 @@ instance ActionStateUpdater Action where
                                                             (ui, st) = autoConnectAll nodesToConnect newState
                                                             fullUI   = do ui
                                                                           moveNodesUI $ getNodesMap $ state ^. Global.graph
-                                                                          updatePortAnglesUI st
-                                                                          updateConnectionsUI st
+                                                                          fst $ execCommand updatePortAnglesUI st
+                                                                          fst $ execCommand updateConnectionsUI st
                                                                           putStrLn $ "connectNodes " <> show nodesToConnect
         ConnectionPen.Disconnecting -> ActionUI (PerformIO action) newState where
             (action, newState) = execCommand (disconnectAll connections) state
@@ -168,9 +168,9 @@ tryAutoConnect (srcNodeId, dstNodeId) oldState = result where
                                             putStrLn $ "dstPortsFiltered " <> display dstPortsFiltered
                                             connectUI
                                             BatchCmd.connectNodes workspace srcPortRef dstPortRef
-                                        , updateConnections $ updatePortAngles st)
+                                        , snd $ execCommand (updatePortAngles >> updateConnections) st)
                                        where
-            (connectUI, st)          = connectNodes srcPortRef dstPortRef oldState
+            (connectUI, st)          = execCommand (connectNodes srcPortRef dstPortRef) oldState
             srcPortRef               = PortRef srcNodeId OutputPort srcPortId
             dstPortRef               = PortRef dstNodeId InputPort  dstPortId
         Nothing                     -> Nothing
