@@ -2,7 +2,7 @@ module JS.NodeSearcher where
 
 import           Utils.PreludePlus
 
-
+import           Utils.Vector
 import           GHCJS.Foreign
 import           GHCJS.DOM.EventM
 import           GHCJS.Types      ( JSRef, JSString )
@@ -22,7 +22,10 @@ import           GHCJS.DOM.Types  ( UIEvent, Window, IsUIEvent, unUIEvent, toUIE
 
 
 foreign import javascript unsafe "app.createNodeSearcher($1, $2, $3)"
-    initNodeSearcher :: JSString -> Int -> Int-> IO ()
+    initNodeSearcher' :: JSString -> Int -> Int-> IO ()
+
+initNodeSearcher :: Text -> Vector2 Int -> IO ()
+initNodeSearcher expr pos = initNodeSearcher' (lazyTextToJSString expr) (pos ^. x) (pos ^. y)
 
 foreign import javascript unsafe "app.destroyNodeSearcher()"
     destroyNodeSearcher :: IO ()
