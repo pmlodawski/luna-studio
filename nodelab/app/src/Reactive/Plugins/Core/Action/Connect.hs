@@ -179,7 +179,7 @@ instance ActionUIUpdater Action where
                                                 uiUpdate
                                                 fst $ execCommand updatePortAnglesUI  state
                                                 fst $ execCommand updateConnectionsUI state
-                                                BatchCmd.connectNodes workspace src dst
+                                                -- (TC MOCK) BatchCmd.connectNodes workspace src dst
                                                 putStrLn (display $ state ^. Global.graph . Graph.nodesRefsMap)   -- debug
                                                 putStrLn (display $ state ^. Global.graph . Graph.connectionsMap) -- debug
                                                 graphToViz (state ^. Global.graph . Graph.graphMeta)

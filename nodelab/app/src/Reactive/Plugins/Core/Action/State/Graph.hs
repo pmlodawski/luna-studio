@@ -30,7 +30,6 @@ makeLenses ''Connection
 type ConnectionsMap = IntMap Connection
 
 data State = State { _nodesMap       :: NodesMap       -- don't access it directly
-                   , _nodeTypesMap   :: NodeTypesMap   -- TC - Mock
                    , _connectionsMap :: ConnectionsMap -- don't access it directly
                    , _nodesRefsMap   :: NodesRefsMap
                    , _focusedNodeId  :: NodeId
@@ -46,7 +45,7 @@ instance Eq State where
     a == b = (a ^. nodesMap) == (b ^. nodesMap)
 
 instance Default State where
-    def = State def def def def def def
+    def = State def def def def def
 
 instance PrettyPrinter Connection where
     display (Connection connId source destination) =
@@ -56,7 +55,7 @@ instance PrettyPrinter Connection where
         <> ")"
 
 instance PrettyPrinter State where
-    display (State nodesMap _ connections nodesRefsMap focusedNodeId bldrState) =
+    display (State nodesMap connections nodesRefsMap focusedNodeId bldrState) =
           "graph(" <> show nodesMap
         <> " "     <> display connections
         <> " "     <> display nodesRefsMap

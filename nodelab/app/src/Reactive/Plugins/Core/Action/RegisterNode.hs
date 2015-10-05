@@ -12,7 +12,7 @@ import qualified JS.Camera      as Camera
 
 import           Object.Object
 import           Object.Port
-import           Object.Node
+import           Object.Node    as Node
 import           Object.Widget
 import qualified Object.Widget.Node as WNode
 
@@ -22,6 +22,8 @@ import qualified Event.NodeSearcher as NodeSearcher
 
 import           Reactive.Plugins.Core.Action
 import qualified Reactive.Plugins.Core.Action.State.Global      as Global
+
+import qualified Utils.MockHelper   as MockHelper
 
 import qualified BatchConnector.Commands as BatchCmd
 
@@ -42,7 +44,7 @@ toAction (NodeSearcher (NodeSearcher.Event "create" expr)) _  = Just $ RegisterN
 toAction _ _  = Nothing
 
 createNode :: NodeId -> Vector2 Double -> Text -> Node
-createNode nodeId pos expr = Node nodeId False pos expr $ createPorts expr
+createNode nodeId pos expr = Node nodeId False pos expr (Node.createPorts expr) (MockHelper.getNodeType expr)
 
 instance ActionStateUpdater Action where
     execSt (RegisterNodeAction expr) state = ActionUI registerNode state where

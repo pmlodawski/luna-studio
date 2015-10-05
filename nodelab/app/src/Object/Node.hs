@@ -7,7 +7,7 @@ import           Control.Monad (msum)
 import           Utils.PreludePlus
 import           Utils.Vector
 import           Utils.Angle
-import           Utils.MockHelper (NodeType)
+import           Utils.MockHelper (NodeType(NodeType))
 import qualified Utils.MockHelper as MHelper
 import           Data.Dynamic
 import           Debug.Trace
@@ -23,6 +23,8 @@ import           Data.Text.Lazy   (Text)
 import qualified Data.IntMap.Lazy as IntMap
 import           Data.IntMap.Lazy (IntMap)
 
+import System.IO.Unsafe (unsafePerformIO)
+
 
 data Ports = Ports { _inputPorts  :: PortCollection
                    , _outputPorts :: PortCollection
@@ -33,6 +35,7 @@ data Node = Node { _nodeId      :: NodeId
                  , _nodePos     :: Vector2 Double
                  , _expression  :: Text
                  , _ports       :: Ports
+                 , _nodeType    :: NodeType
                  } deriving (Eq, Show, Typeable)
 
 makeLenses ''Ports
@@ -40,20 +43,19 @@ makeLenses ''Node
 
 type NodeCollection   = [Node]
 type NodesMap         = IntMap Node
-type NodeTypesMap     = IntMap NodeType
 
 instance Default Ports where
     def = Ports [] []
 
 instance Default Node where
-    def = Node (-1) False def "" def
+    def = Node (-1) False def "" def (NodeType 0 [])
 
 instance PrettyPrinter Ports where
     display (Ports input output)
         = display input <> " " <> display output
 
 instance PrettyPrinter Node where
-    display (Node ident sel pos expr ports)
+    display (Node ident sel pos expr ports _)
         = "n(" <> display ident
         <> " " <> display sel
         <> " " <> display pos
@@ -116,7 +118,6 @@ createPort :: PortType -> ValueType -> Int -> PortId -> Port
 createPort portType valueType allPorts ident = Port ident valueType $ portDefaultAngle portType allPorts ident
 
 
-
 createPorts' :: [ValueType] -> [ValueType] -> Ports
 createPorts' inputPortTypes outputPortTypes = Ports inputPorts outputPorts where
     inputPortsNum = length inputPortTypes
@@ -127,12 +128,10 @@ createPorts' inputPortTypes outputPortTypes = Ports inputPorts outputPorts where
 
 
 createPorts :: Text -> Ports
-createPorts expr = createPorts' inputs outputs
-    where inputs  = replicate pc VTAny
-          outputs = [VTAny]
-          MHelper.NodeType pc constrs = case msum $ ($ expr) <$> [MHelper.tryKnown, MHelper.tryDef, MHelper.tryFormat, MHelper.tryVal] of
-              Just portType -> portType
-              Nothing    -> MHelper.NodeType 0 []
+createPorts expr = seq (unsafePerformIO $ print outputs)createPorts' inputs outputs
+    where nodeType = MHelper.getNodeType   expr
+          inputs   = MHelper.getInputTypes nodeType
+          outputs  = MHelper.getOutputType nodeType
 
 
 getPorts :: PortType -> Node -> PortCollection

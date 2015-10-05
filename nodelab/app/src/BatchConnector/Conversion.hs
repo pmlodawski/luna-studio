@@ -14,7 +14,7 @@ import qualified Data.Map                         as Map
 import           Data.Int
 import           Data.Text.Lazy.Encoding          (encodeUtf8, decodeUtf8)
 import           Utils.Vector                     (Vector2(..), x, y)
-import qualified Utils.MockHelper as MockHelper
+import qualified Utils.MockHelper  as MockHelper
 
 import           Batch.Project     as Project
 import           Batch.Library     as Library
@@ -146,12 +146,13 @@ instance ProtoWritable ProtoBreadcrumbs.Breadcrumbs Breadcrumbs where
     encode (Breadcrumbs crumbs) = ProtoBreadcrumbs.Breadcrumbs $ encode crumbs
 
 instance ProtoReadable ProtoNode.Node Node where
-    decode node = Node <$> id <*> pure False <*> nodePos <*> expr <*> ports where
-        id      = fromIntegral <$> ProtoNode.id node
-        nodePos = Vector2 <$> (float2Double <$> ProtoNode.x node)
+    decode node = Node <$> id <*> pure False <*> nodePos <*> expr <*> ports <*> nodeType where
+        id       = fromIntegral <$> ProtoNode.id node
+        nodePos  = Vector2 <$> (float2Double <$> ProtoNode.x node)
                           <*> (float2Double <$> ProtoNode.y node)
-        expr    = (ProtoNode.expr node) >>= ProtoExpr.str >>= decode
-        ports   = createPorts <$> expr
+        expr     = (ProtoNode.expr node) >>= ProtoExpr.str >>= decode
+        ports    = createPorts <$> expr
+        nodeType = MockHelper.getNodeType <$> expr
 
 instance ProtoWritable ProtoNode.Node Node where
     encode node = ProtoNode.Node NodeCls.Expr

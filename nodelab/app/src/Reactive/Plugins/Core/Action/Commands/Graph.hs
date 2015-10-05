@@ -4,6 +4,7 @@ module Reactive.Plugins.Core.Action.Commands.Graph where
 import           Utils.PreludePlus
 import           Utils.Vector
 import           Utils.Angle
+import qualified Utils.MockTC as MockTC
 
 import qualified Data.IntMap.Lazy as IntMap
 import qualified Data.Map as Map
@@ -27,6 +28,8 @@ import qualified Reactive.Plugins.Core.Action.State.Camera         as Camera
 import qualified Reactive.Plugins.Core.Action.State.Global         as Global
 import           Reactive.Plugins.Core.Action.Commands.Command     (Command, command, pureCommand, ioCommand)
 import qualified Control.Monad.State                               as MState
+
+import qualified BatchConnector.Commands                           as BatchCmd
 
 updateConnections :: Command Global.State ()
 updateConnections = pureCommand $ \state -> let
@@ -76,8 +79,17 @@ getPortByRef portRef nodesMap = port where
         OutputPort -> node ^. ports . outputPorts
     port   = fromMaybe (error $ "Port " <> show portRef <> "  not found") $ find (\p -> p ^. portId == portRef ^. refPortId) ports' -- FIXME unsafe
 
+
+getNodeByRef :: PortRef -> NodesMap -> Node
+getNodeByRef portRef nodesMap = node where
+    nodeId  = portRef ^. refPortNodeId
+    nodeErr = error $ "Node " <> show nodeId <> " not found"
+    node    = IntMap.findWithDefault nodeErr nodeId nodesMap
+
+
 getPortAngle :: PortRef -> NodesMap -> Double
 getPortAngle portRef nodesMap = getPortByRef portRef nodesMap ^. angle
+
 
 tryGetSrcDst :: PortRef -> PortRef -> Maybe (PortRef, PortRef)
 tryGetSrcDst portRef1 portRef2 = case (portRef1 ^. refPortType, portRef2 ^. refPortType) of
@@ -85,15 +97,30 @@ tryGetSrcDst portRef1 portRef2 = case (portRef1 ^. refPortType, portRef2 ^. refP
     (InputPort,  OutputPort) -> Just (portRef2, portRef1)
     _                        -> Nothing
 
+
+enableTC :: Bool
+enableTC = False
+
+
 connectNodes :: PortRef -> PortRef -> Command Global.State ()
-connectNodes src dst = command $ \state -> let
+connectNodes = if enableTC then connectNodesTC else connectNodesNoTc
+
+
+connectNodesTC :: PortRef -> PortRef -> Command Global.State ()
+connectNodesTC src dst = command $ \state -> let
+    batchConnect                 = BatchCmd.connectNodes (state ^. Global.workspace) src dst
     oldGraph                     = state ^. Global.graph
     oldRegistry                  = state ^. Global.uiRegistry
     newState                     = state  & Global.graph      .~ newGraph
                                           & Global.uiRegistry .~ newRegistry
     valueType                    = view portValueType $ getPort oldGraph src
     uiUpdate                     = forM_ file $ \f -> createConnectionWidget (f ^. objectId) (f ^. widget) (colorVT valueType)
-    newNodesMap = oldNodesMap
+    portFrom                     = getPortByRef src oldNodesMap
+    portTo                       = getPortByRef dst oldNodesMap
+    nodeTo                       = getNodeByRef dst oldNodesMap
+    tcResult                     = MockTC.connect portFrom portTo nodeTo
+    newNodesMap                  = oldNodesMap -- case tcResult of Nothing      -> oldNodesMap
+                                               --                Just newNode -> IntMap.adjust (const newNode) (newNode ^. nodeId) oldNodesMap
     oldNodesMap                  = Graph.getNodesMap oldGraph
     updSourceGraph               = Graph.updateNodes newNodesMap oldGraph
     (connId, newGraph)           = Graph.addConnection src dst updSourceGraph
@@ -102,7 +129,30 @@ connectNodes src dst = command $ \state -> let
             (widget, newRegistry)= UIRegistry.register UIRegistry.sceneGraphId uiConnection def oldRegistry
             uiConnection         = getConnectionLine newNodesMap $ Graph.Connection connId src dst
         Nothing                 -> (Nothing, oldRegistry)
-    in (uiUpdate, newState)
+    in case tcResult of Just _  -> (uiUpdate >> batchConnect, newState)
+                        Nothing -> (return (), state)
+
+
+connectNodesNoTc :: PortRef -> PortRef -> Command Global.State ()
+connectNodesNoTc src dst = command $ \state -> let
+    batchConnect                 = BatchCmd.connectNodes (state ^. Global.workspace) src dst
+    oldGraph                     = state ^. Global.graph
+    oldRegistry                  = state ^. Global.uiRegistry
+    newState                     = state  & Global.graph      .~ newGraph
+                                          & Global.uiRegistry .~ newRegistry
+    valueType                    = view portValueType $ getPort oldGraph src
+    uiUpdate                     = forM_ file $ \f -> createConnectionWidget (f ^. objectId) (f ^. widget) (colorVT valueType)
+    newNodesMap                  = oldNodesMap
+    oldNodesMap                  = Graph.getNodesMap oldGraph
+    updSourceGraph               = Graph.updateNodes newNodesMap oldGraph
+    (connId, newGraph)           = Graph.addConnection src dst updSourceGraph
+    (file, newRegistry)          = case connId of
+        Just connId             -> (Just widget, newRegistry) where
+            (widget, newRegistry)= UIRegistry.register UIRegistry.sceneGraphId uiConnection def oldRegistry
+            uiConnection         = getConnectionLine newNodesMap $ Graph.Connection connId src dst
+        Nothing                 -> (Nothing, oldRegistry)
+    in (uiUpdate >> batchConnect, newState)
+
 
 getConnectionLine :: NodesMap -> Connection -> UIConnection.Connection
 getConnectionLine nodesMap (Connection lineId srcPortRef dstPortRef) = UIConnection.Connection lineId visible srcWs dstWs

@@ -7,7 +7,7 @@ import           Control.Monad
 
 import           Data.Char         (isDigit)
 import           Data.List         (all)
-import           Data.Maybe        (fromJust)
+import           Data.Maybe        (fromJust, fromMaybe)
 import qualified Data.Text.Lazy as Text
 import           Data.Text.Lazy (Text)
 
@@ -36,7 +36,7 @@ getOutputPortsNr expr = 1 + (ord (fromMaybe '1' $ listToMaybe (tail expr)) - ord
 
 
 tryVal :: Text -> Maybe NodeType
-tryVal _ = Just $ NodeType 0 []
+tryVal expr = Just . constant . readType $ expr
 
 
 tryDef :: Text -> Maybe NodeType
@@ -71,7 +71,7 @@ knownFunctions  = [ ("+",        twoOpNum  )
                   , ("<=",       twoOpLogic)
                   , (">=",       twoOpLogic)
                   , ("++",       twoOpMono VTString)
-                  , ("toString", NodeType 1 [PortConstraint [AllPorts] VTString])
+                  , ("toString", NodeType 1 [PortConstraint [AllPorts] VTString, PortConstraint [PortNum 1] VTAny])
                   , ("truncate", oneOpMono VTFloat)
                   , ("round",    oneOpMono VTFloat)
                   , ("floor",    oneOpMono VTFloat)
@@ -84,6 +84,20 @@ getNodeType :: Text -> NodeType
 getNodeType expr = case msum $ ($ expr) <$> [tryKnown, tryDef, tryFormat, tryVal] of
     Just portType -> portType
     Nothing       -> NodeType 0 []
+
+
+
+getInputTypes :: NodeType -> [ValueType]
+getInputTypes (NodeType pc constrs) = map inputType [1..pc]
+    where containsPortId id pconstr = elem (PortNum id) (pconstr ^. portNums)
+          inputTypeM id             = (view portsType) <$> find (containsPortId id) constrs
+          inputType  id             = fromMaybe VTAny $ inputTypeM id
+
+
+getOutputType :: NodeType -> [ValueType]
+getOutputType (NodeType _ constrs) = [fromMaybe VTAny outputTypeM]
+    where containsOut pconstr = elem AllPorts $ pconstr ^. portNums
+          outputTypeM         = (view portsType) <$> find containsOut constrs
 
 
 ----------------------------------------------------------------------------------------
@@ -113,31 +127,35 @@ typePromote VTFloat        VTNumeric      = Just VTFloat
 typePromote tp             VTAny          = Just tp
 typePromote (VTVector tp1) (VTVector tp2) = VTVector <$> typePromote tp1 tp2
 typePromote (VTMaybe  tp1) (VTMaybe  tp2) = VTMaybe  <$> typePromote tp1 tp2
-typePromote _              _              = Nothing
+typePromote tp1             tp2           = if tp1 == tp2 then Just tp1 else Nothing
 
-    
+
 -- common port types:
+constant :: ValueType -> NodeType
+constant vt = NodeType 0 [PortConstraint [AllPorts] vt]
+
+
 oneOpPoly, twoOpPoly, threeOpPoly :: NodeType
-oneOpPoly   = NodeType 1 [PortConstraint [AllPorts, PortNum 1]                     VTAny]
-twoOpPoly   = NodeType 2 [PortConstraint [AllPorts, PortNum 1, PortNum 2]           VTAny]
+oneOpPoly   = NodeType 1 [PortConstraint [AllPorts, PortNum 1]                       VTAny]
+twoOpPoly   = NodeType 2 [PortConstraint [AllPorts, PortNum 1, PortNum 2]            VTAny]
 threeOpPoly = NodeType 3 [PortConstraint [AllPorts, PortNum 1, PortNum 2, PortNum 3] VTAny]
 
 
 oneOpNum, twoOpNum, threeOpNum :: NodeType
-oneOpNum   = NodeType 1 [PortConstraint [AllPorts, PortNum 1]                     VTNumeric]
-twoOpNum   = NodeType 2 [PortConstraint [AllPorts, PortNum 1, PortNum 2]           VTNumeric]
+oneOpNum   = NodeType 1 [PortConstraint [AllPorts, PortNum 1]                       VTNumeric]
+twoOpNum   = NodeType 2 [PortConstraint [AllPorts, PortNum 1, PortNum 2]            VTNumeric]
 threeOpNum = NodeType 3 [PortConstraint [AllPorts, PortNum 1, PortNum 2, PortNum 3] VTNumeric]
 
 
 oneOpMono, twoOpMono, threeOpMono :: ValueType -> NodeType
-oneOpMono vt   = NodeType 1 [PortConstraint [AllPorts, PortNum 1]                     vt]
-twoOpMono vt   = NodeType 2 [PortConstraint [AllPorts, PortNum 1, PortNum 2]           vt]
+oneOpMono vt   = NodeType 1 [PortConstraint [AllPorts, PortNum 1]                       vt]
+twoOpMono vt   = NodeType 2 [PortConstraint [AllPorts, PortNum 1, PortNum 2]            vt]
 threeOpMono vt = NodeType 3 [PortConstraint [AllPorts, PortNum 1, PortNum 2, PortNum 3] vt]
 
 
 oneOpLogic, twoOpLogic, threeOpLogic :: NodeType
-oneOpLogic   = NodeType 1 [PortConstraint [AllPorts] VTBool                                                     ]
-twoOpLogic   = NodeType 2 [PortConstraint [AllPorts] VTBool, PortConstraint [PortNum 1, PortNum 2]    VTAny       ]
+oneOpLogic   = NodeType 1 [PortConstraint [AllPorts] VTBool                                                        ]
+twoOpLogic   = NodeType 2 [PortConstraint [AllPorts] VTBool, PortConstraint [PortNum 1, PortNum 2]            VTAny]
 threeOpLogic = NodeType 3 [PortConstraint [AllPorts] VTBool, PortConstraint [PortNum 1, PortNum 2, PortNum 3] VTAny]
 
 
