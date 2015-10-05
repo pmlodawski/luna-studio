@@ -16,12 +16,11 @@ import qualified JS.NodeGraph            as UIGraph
 import           Object.Node             (Node, nodeId)
 import           Object.Widget.Helpers   (nodeIdToWidgetId)
 
-backspace = 8
-
 removeNode :: Node -> Char -> Command State ()
 removeNode node key = case key of
-    backspace  -> performRemoval node
-    _          -> return ()
+    '\x08' -> performRemoval node
+    '\x2e' -> performRemoval node
+    _         -> return ()
 
 performRemoval :: Node -> Command State ()
 performRemoval node = do
@@ -34,7 +33,7 @@ performRemoval node = do
     topNodeId  <- preuse $ Global.selection . Selection.nodeIds . ix 0
     workspace  <- use Global.workspace
 
-    let topWidgetId = topNodeId >>= nodeIdToWidgetId uiRegistry
+    let  topWidgetId = topNodeId >>= nodeIdToWidgetId uiRegistry
     let nodeWidgetId = maybeToList $ nodeIdToWidgetId uiRegistry $ node ^. nodeId
 
     zoom Global.uiRegistry $ removeWidgets nodeWidgetId
