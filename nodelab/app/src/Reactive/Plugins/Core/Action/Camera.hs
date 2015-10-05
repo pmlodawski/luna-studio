@@ -114,7 +114,10 @@ restrictCamFactor = min maxCamFactor . max minCamFactor
 
 instance ActionStateUpdater Action where
     execSt action@(WheelAction Pan  pos delta) oldState = ActionUI action newState where
-        newState                       = oldState &  Global.camera . camera . pan    +~ delta
+        newState                       = oldState &  Global.camera . camera . pan    +~ ((/oldCamFactor) <$> delta)
+        oldCam                         = oldState ^. Global.camera
+        oldCamFactor                   = oldCam ^. camera . factor
+
 
     execSt action@(WheelAction Zoom pos delta) oldState = ActionUI action newState where
         newState                       = oldState &  Global.camera . camera . pan    .~ zoomPan
