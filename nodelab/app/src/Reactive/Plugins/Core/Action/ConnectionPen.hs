@@ -144,11 +144,12 @@ autoConnectAll :: [(Int, Int)] -> Global.State -> (IO (), Global.State)
 autoConnectAll nodes = autoConnect $ head nodes -- TODO: forall - foldr
 
 autoConnect :: (Int, Int) -> Global.State -> (IO (), Global.State)
-autoConnect (srcNodeId, dstNodeId) oldState = case tryAutoConnect (srcNodeId, dstNodeId) oldState of
-    Just result     -> result
-    Nothing         -> case tryAutoConnect (dstNodeId, srcNodeId) oldState of
-        Just result -> result
-        Nothing     -> (return(), oldState)
+autoConnect (srcNodeId, dstNodeId) oldState =
+    fromMaybe (return (), oldState) $ tryAutoConnect (srcNodeId, dstNodeId) oldState
+
+autoConnectBackwards :: (Int, Int) -> Global.State -> (IO (), Global.State)
+autoConnectBackwards (srcNodeId, dstNodeId) oldState =
+    fromMaybe (return (), oldState) $ tryAutoConnect (dstNodeId, srcNodeId) oldState
 
 tryAutoConnect :: (Int, Int) -> Global.State -> Maybe (IO (), Global.State)
 tryAutoConnect (srcNodeId, dstNodeId) oldState = result where
