@@ -6,6 +6,7 @@ module Reactive.Plugins.Core.Action.ConnectionPen where
 import           Utils.PreludePlus
 import           Utils.Vector
 import           Utils.Angle
+import qualified Utils.MockHelper as MockHelper
 
 import qualified Data.IntMap.Lazy as IntMap
 
@@ -187,7 +188,8 @@ findConnectionForAll dstPorts srcPorts = listToMaybe . catMaybes $ findConnectio
 
 findConnection :: PortCollection -> Port -> Maybe (PortId, PortId)
 findConnection dstPorts srcPort = (srcPort ^. portId,) <$> dstPortId where
-    dstPortId = fmap (^. portId) $ find (\port -> port ^. portValueType == srcPort ^. portValueType) dstPorts
+    dstPortId = fmap (^. portId) $
+        find (\port -> MockHelper.typesEq (port ^. portValueType) (srcPort ^. portValueType)) dstPorts
 
 
 instance ActionUIUpdater Reaction where
