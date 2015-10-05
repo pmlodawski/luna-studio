@@ -10,14 +10,17 @@ import           JS.Bindings        (displayRejectedMessage)
 import qualified BatchConnector.Commands                   as BatchCmd
 import           Reactive.Plugins.Core.Action
 import qualified Reactive.Plugins.Core.Action.State.Global as Global
-import           Data.Text.Lazy.IO                         as TextIO
+import qualified Data.Text.Lazy.IO                         as TextIO
 import           Batch.RunStatus
+import           Reactive.Plugins.Core.Action.Commands.Command      (execCommand)
+import           Reactive.Plugins.Core.Action.Commands.RefreshGraph (refreshGraph)
 
 data Action = InsertSerializationMode Node
             | ShowCode Text
             | RequestCode
             | ConnectionTakeover
             | ShowProfilingInfo RunStatus
+            | RefreshGraph
             deriving (Show, Eq)
 
 data Reaction = PerformIO (IO ())
@@ -33,6 +36,7 @@ toAction (Batch (Batch.NodeAdded node))         = Just $ InsertSerializationMode
 toAction (Batch (Batch.CodeUpdate code))        = Just $ ShowCode code
 toAction (Batch (Batch.RunFinished status))     = Just $ ShowProfilingInfo status
 toAction (Batch Batch.ConnectionDropped)        = Just $ ConnectionTakeover
+toAction (Batch Batch.CodeSet)                  = Just RefreshGraph
 toAction _ = Nothing
 
 instance ActionStateUpdater Action where
@@ -55,6 +59,9 @@ instance ActionStateUpdater Action where
         action = do
             let workspace = state ^. Global.workspace
             BatchCmd.insertSerializationMode workspace node
+
+    execSt RefreshGraph state = ActionUI (PerformIO action) newState where
+        (action, newState) = execCommand refreshGraph state
 
 instance ActionUIUpdater Reaction where
     updateUI (WithState (PerformIO act) st) = act

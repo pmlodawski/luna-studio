@@ -29,6 +29,7 @@ data Event = ProjectsList [Project]
            | SerializationModeInserted
            | ValueUpdate Int Value
            | CodeUpdate Text
+           | CodeSet
            | RunFinished RunStatus
            | UnknownEvent String
            | ParseError String

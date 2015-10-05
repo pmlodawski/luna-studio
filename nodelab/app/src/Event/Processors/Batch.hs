@@ -26,14 +26,15 @@ processMessage (WebMessage topic bytes) = rescueParseError topic $ case topic of
     "project.library.ast.function.graph.node.remove.update" -> Just NodeRemoved
     "project.library.ast.function.graph.node.add.fakeres"   -> NodeAdded <$> parseAddNodeFakeResponse bytes
     "project.library.ast.code.get.status"                   -> CodeUpdate <$> parseGetCodeResponse bytes
-    "project.library.ast.function.graph.connect.update"     -> Just $ NodesConnected
-    "project.library.ast.function.graph.disconnect.update"  -> Just $ NodesDisconnected
+    "project.library.ast.code.set.update"                   -> Just CodeSet
+    "project.library.ast.function.graph.connect.update"     -> Just NodesConnected
+    "project.library.ast.function.graph.disconnect.update"  -> Just NodesDisconnected
     "project.library.ast.get.status"                        -> Just ASTElementExists
     "project.library.ast.get.error"                         -> Just ASTElementDoesNotExist
     "interpreter.run.update"                                -> RunFinished <$> parseRunStatus bytes
     "project.library.ast.function.graph.get.status"         -> uncurry GraphViewFetched <$> parseGraphViewResponse bytes
     "interpreter.getprojectid.status"                       -> InterpreterGotProjectId <$> parseProjectIdStatus bytes
-    "interpreter.serializationmode.insert.update"           -> Just $ SerializationModeInserted
+    "interpreter.serializationmode.insert.update"           -> Just SerializationModeInserted
     _                                                       -> Just $ UnknownEvent topic
 processMessage (ControlMessage ConnectionTakeover) = ConnectionDropped
 processMessage (ControlMessage Welcome)            = ConnectionOpened
