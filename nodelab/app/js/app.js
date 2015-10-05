@@ -101,7 +101,8 @@ function initTerminal() {
 }
 
 function initCommonWidgets() {
-  $$.currentConnection = new Connection(3, -1);
+  var colorId = 10;
+  $$.currentConnection = new Connection(3, -1, colorId);
   $$.selectionBox      = new SelectionBox();
 
   $$.scene.add($$.currentConnection.mesh);
@@ -224,8 +225,8 @@ function removeCurrentConnection() {
 }
 
 
-function createConnection(widgetId, id) {
-  var connection = new Connection(widgetId, id);
+function createConnection(widgetId, id, colorId) {
+  var connection = new Connection(widgetId, id, colorId);
   $$.scene.add(connection.mesh);
   $$.registry[widgetId] = connection;
 }

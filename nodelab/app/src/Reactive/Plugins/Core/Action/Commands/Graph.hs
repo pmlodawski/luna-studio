@@ -56,8 +56,8 @@ updateConnectionsUI = ioCommand $ \state -> let
     in updateWidgets
 
 
-createConnectionWidget :: WidgetId -> UIConnection.Connection -> IO ()
-createConnectionWidget widgetId connection = UI.createConnection widgetId (connection ^. UIConnection.connectionId)
+createConnectionWidget :: WidgetId -> UIConnection.Connection -> ColorNum -> IO ()
+createConnectionWidget widgetId connection color = UI.createConnection widgetId (connection ^. UIConnection.connectionId) color
 
 updateConnectionWidget :: WidgetId -> UIConnection.Connection -> IO ()
 updateConnectionWidget widgetId connection = UI.updateConnection widgetId visible fromX fromY toX toY where
@@ -91,7 +91,8 @@ connectNodes src dst = command $ \state -> let
     oldRegistry                  = state ^. Global.uiRegistry
     newState                     = state  & Global.graph      .~ newGraph
                                           & Global.uiRegistry .~ newRegistry
-    uiUpdate                     = forM_ file $ \f -> createConnectionWidget (f ^. objectId) (f ^. widget)
+    valueType                    = view portValueType $ getPort oldGraph src
+    uiUpdate                     = forM_ file $ \f -> createConnectionWidget (f ^. objectId) (f ^. widget) (colorVT valueType)
     newNodesMap = oldNodesMap
     oldNodesMap                  = Graph.getNodesMap oldGraph
     updSourceGraph               = Graph.updateNodes newNodesMap oldGraph
