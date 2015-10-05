@@ -1,12 +1,12 @@
 module Event.Processors.Batch where
 
 import           Utils.PreludePlus
-import qualified Event.Event               as Event
-import           Event.Connection          as Connection
-import           Event.Batch               as Batch
+import qualified Event.Event                as Event
+import           Event.Connection           as Connection
+import           Event.Batch                as Batch
 import           Data.Dynamic
-import           BatchConnector.Connection (WebMessage(..), ControlCode(..))
 import           BatchConnector.Updates
+import           BatchConnector.Connection  (WebMessage(..), ControlCode(..))
 
 process :: Event.Event Dynamic -> Maybe (Event.Event Dynamic)
 process (Event.Connection (Message msg)) = Just $ Event.Batch $ processMessage msg
@@ -27,6 +27,7 @@ processMessage (WebMessage topic bytes) = rescueParseError topic $ case topic of
     "project.library.ast.function.graph.node.add.fakeres"   -> NodeAdded <$> parseAddNodeFakeResponse bytes
     "project.library.ast.code.get.status"                   -> CodeUpdate <$> parseGetCodeResponse bytes
     "project.library.ast.code.set.update"                   -> Just CodeSet
+    "project.library.ast.code.set.error"                    -> Just $ CodeSetError $ parseErrorMsg bytes
     "project.library.ast.function.graph.connect.update"     -> Just NodesConnected
     "project.library.ast.function.graph.disconnect.update"  -> Just NodesDisconnected
     "project.library.ast.get.status"                        -> Just ASTElementExists

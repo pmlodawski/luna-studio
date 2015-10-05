@@ -5,7 +5,7 @@ import           Object.Node
 import           Event.Event
 import qualified Event.Batch        as Batch
 import           Batch.Workspace
-import           JS.Bindings        (displayRejectedMessage)
+import           JS.Bindings        (displayRejectedMessage, writeToTerminal)
 
 import qualified BatchConnector.Commands                   as BatchCmd
 import           Reactive.Plugins.Core.Action
@@ -21,6 +21,7 @@ data Action = InsertSerializationMode Node
             | ConnectionTakeover
             | ShowProfilingInfo RunStatus
             | RefreshGraph
+            | DisplayError String
             deriving (Show, Eq)
 
 data Reaction = PerformIO (IO ())
@@ -32,11 +33,12 @@ instance PrettyPrinter Action where
     display = show
 
 toAction :: Event Node -> Maybe Action
-toAction (Batch (Batch.NodeAdded node))         = Just $ InsertSerializationMode node
-toAction (Batch (Batch.CodeUpdate code))        = Just $ ShowCode code
-toAction (Batch (Batch.RunFinished status))     = Just $ ShowProfilingInfo status
-toAction (Batch Batch.ConnectionDropped)        = Just $ ConnectionTakeover
-toAction (Batch Batch.CodeSet)                  = Just RefreshGraph
+toAction (Batch (Batch.NodeAdded node))     = Just $ InsertSerializationMode node
+toAction (Batch (Batch.CodeUpdate code))    = Just $ ShowCode code
+toAction (Batch (Batch.RunFinished status)) = Just $ ShowProfilingInfo status
+toAction (Batch Batch.ConnectionDropped)    = Just $ ConnectionTakeover
+toAction (Batch Batch.CodeSet)              = Just RefreshGraph
+toAction (Batch (Batch.CodeSetError msg))   = Just $ DisplayError msg
 toAction _ = Nothing
 
 instance ActionStateUpdater Action where
@@ -62,6 +64,9 @@ instance ActionStateUpdater Action where
 
     execSt RefreshGraph state = ActionUI (PerformIO action) newState where
         (action, newState) = execCommand refreshGraph state
+
+    execSt (DisplayError msg) state = ActionUI (PerformIO action) state where
+        action = writeToTerminal msg
 
 instance ActionUIUpdater Reaction where
     updateUI (WithState (PerformIO act) st) = act

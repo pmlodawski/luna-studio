@@ -1,11 +1,13 @@
 module BatchConnector.Updates where
 
 import           Utils.PreludePlus
-import           Data.ByteString.Lazy
+import           Data.ByteString.Lazy       (ByteString)
 import qualified Data.Sequence              as Seq
 import           Data.Text.Lazy             (Text)
 import           Text.ProtocolBuffers
 import           Text.ProtocolBuffers.Basic (uToString)
+import qualified Data.ByteString.Lazy.Char8 as ByteString
+import           Data.String.Utils          (replace)
 
 import           Batch.Project
 import           Batch.Library
@@ -98,3 +100,8 @@ parseAddNodeFakeResponse bytes = (parseMessage bytes) >>= getNode where
 
 parseRunStatus :: ByteString -> Maybe RunStatus
 parseRunStatus bytes = (parseMessage bytes :: Maybe ProtoRunStatus.Update) >>= decode
+
+-- TODO[MK]: YEAH, I'm not proud of it... For now that's the shortest solution without
+--           importing Flowbox.Bus...
+parseErrorMsg :: ByteString -> String
+parseErrorMsg = (replace "\n" "\r\n") . (drop 3) . ByteString.unpack

@@ -30,6 +30,7 @@ data Event = ProjectsList [Project]
            | ValueUpdate Int Value
            | CodeUpdate Text
            | CodeSet
+           | CodeSetError String
            | RunFinished RunStatus
            | UnknownEvent String
            | ParseError String

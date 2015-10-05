@@ -18,7 +18,7 @@ import           GHCJS.DOM.Types     (UIEvent, IsUIEvent, unUIEvent, toUIEvent)
 import           JavaScript.Array    (JSArray)
 import qualified JavaScript.Array    as JSArray
 import           Data.JSString.Text  (lazyTextToJSString)
-import           Data.JSString       (unpack)
+import           Data.JSString       (unpack, pack)
 
 
 foreign import javascript unsafe "window.innerWidth"
@@ -82,5 +82,5 @@ foreign import javascript unsafe "app.displayRejectedMessage()"
 foreign import javascript unsafe "common.term.write($1)"
     writeToTerminal' :: JSString -> IO ()
 
-writeToTerminal :: Text -> IO ()
-writeToTerminal = writeToTerminal' . lazyTextToJSString
+writeToTerminal :: String -> IO ()
+writeToTerminal = writeToTerminal' . pack
