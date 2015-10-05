@@ -41,10 +41,12 @@ function NodeSearcher() {
 }
 
 NodeSearcher.prototype.init = function() {
+  var self = this;
   this.prefix = "";
   this.initSearchbox();
   this.setExpression("");
   this.searchbox.focus();
+  setTimeout(function(){ self.searchbox.focus();}, 30);
 };
 
 NodeSearcher.prototype.initSearchbox = function() {
