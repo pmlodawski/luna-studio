@@ -65,7 +65,7 @@ registerNode node oldRegistry = flip MState.execState (oldRegistry, return ()) $
 
 nodeHandlers :: Node -> UIHandlers State
 nodeHandlers node = def & dblClick   .~ [const $ enterNode node]
-                        & keyPressed .~ [removeNode node]
+                        & keyDown    .~ [removeNode node]
 
 addSliderToNode :: WidgetId -> Slider Double -> UIState WidgetId b
 addSliderToNode nodeId slider = do

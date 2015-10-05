@@ -16,10 +16,12 @@ import qualified JS.NodeGraph            as UIGraph
 import           Object.Node             (Node, nodeId)
 import           Object.Widget.Helpers   (nodeIdToWidgetId)
 
+backspace = 8
+
 removeNode :: Node -> Char -> Command State ()
 removeNode node key = case key of
-    'r' -> performRemoval node
-    _   -> return ()
+    backspace  -> performRemoval node
+    _          -> return ()
 
 performRemoval :: Node -> Command State ()
 performRemoval node = do

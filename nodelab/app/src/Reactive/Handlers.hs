@@ -106,7 +106,6 @@ mouseWheelHandler =
             objectId        <- liftIO $ readObjectId     mousePos
             scene           <- liftIO $ whichScene       objectId
             widgetMatrix    <- liftIO $ readWidgetMatrix objectId
-            -- TODO: prevetnDefualt
             delta <- do
                 e <- event
                 x <- WheelEvent.getDeltaX e
@@ -120,10 +119,11 @@ mouseWheelHandler =
                                   return $ Mouse.EventWidget justObjectId justWidgetMatrix justScene
             liftIO . h $ Mouse $ Mouse.Event (Mouse.Wheel delta) mousePos button keyMods maybeWidget
 
--- keyHandler :: EventName Window KeyboardEvent.KeyboardEvent -> Keyboard.Type -> AddHandler (Event Dynamic)
+-- keyHandler :: EventName Element KeyboardEvent.KeyboardEvent -> AddHandler (Event Dynamic)
 keyHandler event getter tag = AddHandler $ \h -> do
     window <- fromJust <$> eventObject
     window `on` event $ do
+        preventDefault
         key <- getter
         liftIO . h $ Keyboard $ Keyboard.Event tag $ chr key
 
