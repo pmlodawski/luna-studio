@@ -28,8 +28,8 @@ colorVT VTInt = 5
 colorVT VTChar = 6
 colorVT VTFloat = 3
 colorVT VTString = 4
-colorVT (VTVector _) = 0
-colorVT (VTMaybe _) = 0
+colorVT (VTVector _) = 9
+colorVT (VTMaybe _) = 9
 colorVT VTNumeric = 7
 colorVT VTAny = 8
 
