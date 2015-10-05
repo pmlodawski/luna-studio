@@ -80,7 +80,12 @@ function initializeGl() {
 
     $('#editorContainer').append('<div id="term"></div>');
     initTerminal();
-    $(document).unbind('keydown').bind('keydown', function (event) { event.preventDefault(); event.stopPropagation(); });
+    $(document).unbind('keydown').bind('keydown', function (event) {
+      if(event.keyCode == 8) {
+        event.preventDefault();
+        event.stopPropagation();
+      };
+    });
 
 }
 
