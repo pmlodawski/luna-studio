@@ -12,6 +12,7 @@ import           Object.Node
 import           Object.UITypes
 
 import           Data.JSString (pack)
+import           Data.JSString.Text  (lazyTextToJSString)
 
 logAs :: PrettyPrinter a => String -> a -> IO ()
 logAs title a = putStrLn $ title <> (display a)
@@ -62,6 +63,11 @@ moveNode node = do
     let (Vector2 wx wy) = node ^. nodePos
     nodeRef  <- getNode $ node ^. nodeId
     moveTo nodeRef wx wy
+
+updateLabel :: Node -> IO ()
+updateLabel node = do
+    nodeRef  <- getNode $ node ^. nodeId
+    showLabel nodeRef (lazyTextToJSString $ node ^. expression)
 
 displaySelectionBox :: Vector2 Double -> Vector2 Double -> IO ()
 displaySelectionBox (Vector2 x0 y0) (Vector2 x1 y1) = displaySelectionBoxJS x0 y0 x1 y1

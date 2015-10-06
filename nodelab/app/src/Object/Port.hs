@@ -33,6 +33,9 @@ colorVT (VTMaybe _) = 9
 colorVT VTNumeric = 10
 colorVT VTAny = 8
 
+colorError :: ColorNum
+colorError = 13
+
 
 data DraggingTo = DraggingTo { _draggingTo :: Maybe (Vector2 Double) } deriving (Eq, Show)
 
