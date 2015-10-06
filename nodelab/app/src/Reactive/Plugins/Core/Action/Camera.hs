@@ -88,19 +88,19 @@ toAction (Mouse (Mouse.Event tpe pos button keyMods _)) _ = case button of
         Mouse.Moved    -> Just (MouseAction Pan Dragging pos)
         _              -> Nothing
     _                  -> Nothing
-toAction (Keyboard (Keyboard.Event Keyboard.Press char _)) state = ifNoneFocused state $ case char of
+toAction (Keyboard (Keyboard.Event Keyboard.Press char mods)) state = case char of
     '='   -> Just $ KeyAction ZoomIn
     '+'   -> Just $ KeyAction ZoomIn
     '-'   -> Just $ KeyAction ZoomOut
-    'z'   -> Just $ KeyAction ResetZoom
-    '0'   -> Just $ KeyAction AutoZoom
+    '0'   -> Just $ KeyAction $ if mods ^. ctrl then ResetZoom else AutoZoom
     _     -> Nothing
-toAction (Keyboard (Keyboard.Event Keyboard.Down char _)) state = ifNoneFocused state $ case char of
-    '\37' -> Just $ KeyAction PanLeft
-    '\39' -> Just $ KeyAction PanRight
-    '\38' -> Just $ KeyAction PanUp
-    '\40' -> Just $ KeyAction PanDown
-    _     -> Nothing
+toAction (Keyboard (Keyboard.Event Keyboard.Down char mods)) state = if mods ^. ctrl then action else Nothing where
+    action = case char of
+        '\37' -> Just $ KeyAction PanLeft
+        '\39' -> Just $ KeyAction PanRight
+        '\38' -> Just $ KeyAction PanUp
+        '\40' -> Just $ KeyAction PanDown
+        _     -> Nothing
 toAction _ _ = Nothing
 
 minCamFactor   =   0.2
