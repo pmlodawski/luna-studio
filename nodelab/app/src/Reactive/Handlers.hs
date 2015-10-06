@@ -128,7 +128,7 @@ mouseWheelHandler =
                                   return $ Mouse.EventWidget justObjectId justWidgetMatrix justScene
             liftIO . h $ Mouse $ Mouse.Event (Mouse.Wheel delta) mousePos button keyMods maybeWidget
 
--- keyHandler :: EventName Element KeyboardEvent.KeyboardEvent -> AddHandler (Event Dynamic)
+keyHandler :: EventName Element KeyboardEvent.KeyboardEvent -> EventM Element KeyboardEvent.KeyboardEvent Int -> Keyboard.Type -> AddHandler (Event Dynamic)
 keyHandler event getter tag = AddHandler $ \h -> do
     window <- fromJust <$> eventObject
     window `on` event $ do
@@ -138,8 +138,8 @@ keyHandler event getter tag = AddHandler $ \h -> do
 
 keyPressedHandler :: AddHandler (Event Dynamic)
 keyPressedHandler = keyHandler keyPress uiCharCode Keyboard.Press
-keyDownHandler    = keyHandler keyDown  uiKeyCode Keyboard.Down
-keyUpHandler      = keyHandler keyUp    uiKeyCode Keyboard.Up
+keyDownHandler    = keyHandler keyDown  uiKeyCode  Keyboard.Down
+keyUpHandler      = keyHandler keyUp    uiKeyCode  Keyboard.Up
 
 resizeHandler :: AddHandler (Event Dynamic)
 resizeHandler = AddHandler $ \h -> do
