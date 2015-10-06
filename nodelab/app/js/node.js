@@ -129,9 +129,10 @@ Node.prototype.setExpandedState = function(expanded) {
   this.expandedState = expanded;
   this.expandedNode.visible = (expanded > 0.0);
 
+  var params = this.inputPorts.length;
   var nodeSize = new THREE.Vector2();
   nodeSize.x = (1.0 - expanded) * this.collapsedNodeSize.x + expanded * this.expandedNodeSize.x;
-  nodeSize.y = (1.0 - expanded) * this.collapsedNodeSize.y + expanded * this.expandedNodeSize.y;
+  nodeSize.y = (1.0 - expanded) * this.collapsedNodeSize.y + expanded * this.expandedNodeSize.y + params * 25 - 75;
 
   var radius = (1.0 - expanded) * collapsedRadius + expanded * expandedRadius;
   this.expandedUniforms.nodeSize.value.copy(nodeSize);

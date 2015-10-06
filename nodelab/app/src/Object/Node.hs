@@ -120,11 +120,11 @@ createPort portType valueType allPorts ident = Port ident valueType $ portDefaul
 
 createPorts' :: [ValueType] -> [ValueType] -> Ports
 createPorts' inputPortTypes outputPortTypes = Ports inputPorts outputPorts where
-    inputPortsNum = length inputPortTypes
+    inputPortsNum  = length inputPortTypes
     outputPortsNum = length outputPortTypes
-    inputPorts   = (\num -> createPort InputPort  (inputPortTypes  !! num) inputPortsNum  $ createInputPortId  num) <$> take inputPortsNum  nat
-    outputPorts  = (\num -> createPort OutputPort (outputPortTypes !! num) outputPortsNum $ createOutputPortId num) <$> take outputPortsNum nat
-    nat          = [0, 1..]
+    inputPorts     = (\num -> createPort InputPort  (inputPortTypes  !! num) inputPortsNum  $ createInputPortId  num) <$> take inputPortsNum  nat
+    outputPorts    = (\num -> createPort OutputPort (outputPortTypes !! num) outputPortsNum $ createOutputPortId num) <$> take outputPortsNum nat
+    nat            = [0..]
 
 
 createPorts :: Text -> Ports

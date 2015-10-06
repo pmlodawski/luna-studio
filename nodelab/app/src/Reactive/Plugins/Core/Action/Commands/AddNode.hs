@@ -4,14 +4,18 @@ module Reactive.Plugins.Core.Action.Commands.AddNode (addNode) where
 
 import           Utils.PreludePlus
 import           Utils.Vector
+
+import qualified Data.Text.Lazy        as Text
+import qualified Control.Monad.State   as MState
+
 import           Object.Object
 import           Object.Node
 import           Object.Port
 import           Object.Widget
-import           Object.UITypes       (WidgetId)
-import qualified Object.Widget.Node   as WNode
-import qualified Object.Widget.Port   as WPort
-import           Object.Widget.Slider (Slider(..))
+import           Object.UITypes        (WidgetId)
+import qualified Object.Widget.Node    as WNode
+import qualified Object.Widget.Port    as WPort
+import           Object.Widget.Slider  (Slider(..))
 
 import           Reactive.Plugins.Core.Action
 import qualified Reactive.Plugins.Core.Action.State.Global         as Global
@@ -24,8 +28,8 @@ import           Reactive.Plugins.Core.Action.Commands.EnterNode   (enterNode)
 import           Reactive.Plugins.Core.Action.Commands.RemoveNode  (removeNode)
 import           Reactive.Plugins.Core.Action.Commands.Command     (Command, performIO)
 
-import qualified Control.Monad.State   as MState
 import qualified JS.NodeGraph          as UI
+
 import qualified ThreeJS.Registry      as JSRegistry
 import qualified ThreeJS.Widget.Node   as UINode
 import qualified ThreeJS.Widget.Slider as UISlider
@@ -54,11 +58,10 @@ registerNode node oldRegistry = flip MState.execState (oldRegistry, return ()) $
 
     let rootId     = file ^. objectId
         nodeWidget = file ^. widget
-        sliders    = [ Slider (Vector2 10   75) (Vector2 180 20) "Cutoff"    100.0 25000.0 0.4
-                     , Slider (Vector2 10  100) (Vector2 180 20) "Resonance" 0.0   1.0     0.2
-                     , Slider (Vector2 10  125) (Vector2 180 20) "Amount"    0.0   1.0     0.4
-                     , Slider (Vector2 10  150) (Vector2 180 20) "Gain"      0.0   1.0     0.4
-                     ]
+        inPorts    = getPorts InputPort node
+        nat        = [1..] :: [Int]
+        sliders    = (\(i, port) -> Slider (Vector2 10 (75 + (fromIntegral i) * 25)) (Vector2 180 20)
+                                           (Text.pack $ "param " <> show i) 0.0 1.0 0.2) <$> (zip nat inPorts)
     sliderIds <- sequence $ addSliderToNode rootId <$> sliders
     UIRegistry.updateM rootId (nodeWidget & WNode.controls .~ sliderIds)
     return file
