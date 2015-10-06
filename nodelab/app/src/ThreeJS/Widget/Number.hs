@@ -123,18 +123,18 @@ bumpValue amount file widget = (action, toCtxDynamic newWidget) where
                 action       = setValueLabel (file ^. objectId) newWidget
 
 instance HandlesKeyUp (Model.Number Int) where
-    onKeyUp 'Q' = bumpValue  100000
-    onKeyUp 'W' = bumpValue   10000
-    onKeyUp 'E' = bumpValue    1000
-    onKeyUp 'R' = bumpValue     100
-    onKeyUp 'T' = bumpValue      10
-    onKeyUp 'Y' = bumpValue       1
+    onKeyUp 'Q' _ = bumpValue  100000
+    onKeyUp 'W' _ = bumpValue   10000
+    onKeyUp 'E' _ = bumpValue    1000
+    onKeyUp 'R' _ = bumpValue     100
+    onKeyUp 'T' _ = bumpValue      10
+    onKeyUp 'Y' _ = bumpValue       1
 
-    onKeyUp 'A' = bumpValue (-100000)
-    onKeyUp 'S' = bumpValue ( -10000)
-    onKeyUp 'D' = bumpValue (  -1000)
-    onKeyUp 'F' = bumpValue (   -100)
-    onKeyUp 'G' = bumpValue (    -10)
-    onKeyUp 'H' = bumpValue (     -1)
+    onKeyUp 'A' _ = bumpValue (-100000)
+    onKeyUp 'S' _ = bumpValue ( -10000)
+    onKeyUp 'D' _ = bumpValue (  -1000)
+    onKeyUp 'F' _ = bumpValue (   -100)
+    onKeyUp 'G' _ = bumpValue (    -10)
+    onKeyUp 'H' _ = bumpValue (     -1)
 
-    onKeyUp _   = noUpdate
+    onKeyUp _   _ = noUpdate

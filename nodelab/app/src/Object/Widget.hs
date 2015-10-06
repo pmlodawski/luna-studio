@@ -10,6 +10,7 @@ import           Utils.CtxDynamic
 import           Event.Mouse    (MousePosition)
 import           Object.UITypes
 import qualified Event.Keyboard as Keyboard
+import           Event.Keyboard (KeyMods)
 import           Reactive.Plugins.Core.Action.State.Camera     (Camera)
 import qualified Reactive.Plugins.Core.Action.State.Camera     as Camera
 import           Reactive.Plugins.Core.Action.Commands.Command (Command)
@@ -77,9 +78,9 @@ class Draggable            a where mayDrag         :: MouseButton -> Position ->
                                    onDragMove      ::               DragState -> WidgetFile s DisplayObject -> a -> WidgetUpdate
                                    onDragEnd       ::               DragState -> WidgetFile s DisplayObject -> a -> WidgetUpdate
 
-class HandlesKeyUp         a where onKeyUp         :: Char                    -> WidgetFile s DisplayObject -> a -> WidgetUpdate
-class HandlesKeyDown       a where onKeyDown       :: Char                    -> WidgetFile s DisplayObject -> a -> WidgetUpdate
-class HandlesKeyPressed    a where onKeyPressed    :: Char                    -> WidgetFile s DisplayObject -> a -> WidgetUpdate
+class HandlesKeyUp         a where onKeyUp         :: Char        ->  KeyMods -> WidgetFile s DisplayObject -> a -> WidgetUpdate
+class HandlesKeyDown       a where onKeyDown       :: Char        ->  KeyMods -> WidgetFile s DisplayObject -> a -> WidgetUpdate
+class HandlesKeyPressed    a where onKeyPressed    :: Char        ->  KeyMods -> WidgetFile s DisplayObject -> a -> WidgetUpdate
 
 instance {-# OVERLAPPABLE #-} DisplayObjectClass a => HandlesMouseMove     a where onMouseMove       _ _ = noUpdate
 instance {-# OVERLAPPABLE #-} DisplayObjectClass a => HandlesMousePressed  a where onMousePress      _ _ = noUpdate
@@ -93,9 +94,9 @@ instance {-# OVERLAPPABLE #-} DisplayObjectClass a => Draggable            a whe
                                                                                    onDragStart         _ = noUpdate
                                                                                    onDragMove          _ = noUpdate
                                                                                    onDragEnd           _ = noUpdate
-instance {-# OVERLAPPABLE #-} DisplayObjectClass a => HandlesKeyUp         a where onKeyUp             _ = noUpdate
-instance {-# OVERLAPPABLE #-} DisplayObjectClass a => HandlesKeyDown       a where onKeyDown           _ = noUpdate
-instance {-# OVERLAPPABLE #-} DisplayObjectClass a => HandlesKeyPressed    a where onKeyPressed        _ = noUpdate
+instance {-# OVERLAPPABLE #-} DisplayObjectClass a => HandlesKeyUp         a where onKeyUp           _ _ = noUpdate
+instance {-# OVERLAPPABLE #-} DisplayObjectClass a => HandlesKeyDown       a where onKeyDown         _ _ = noUpdate
+instance {-# OVERLAPPABLE #-} DisplayObjectClass a => HandlesKeyPressed    a where onKeyPressed      _ _ = noUpdate
 
 instance HandlesMouseMove     DisplayObject where onMouseMove     mb mp wf (CtxDynamic _ a) = onMouseMove     mb mp wf a
 instance HandlesMousePressed  DisplayObject where onMousePress    mb mp wf (CtxDynamic _ a) = onMousePress    mb mp wf a
@@ -109,9 +110,9 @@ instance Draggable            DisplayObject where mayDrag         mb mr wf (CtxD
                                                   onDragStart        ds wf (CtxDynamic _ a) = onDragStart        ds wf a
                                                   onDragMove         ds wf (CtxDynamic _ a) = onDragMove         ds wf a
                                                   onDragEnd          ds wf (CtxDynamic _ a) = onDragEnd          ds wf a
-instance HandlesKeyUp         DisplayObject where onKeyUp            ch wf (CtxDynamic _ a) = onKeyUp            ch wf a
-instance HandlesKeyDown       DisplayObject where onKeyDown          ch wf (CtxDynamic _ a) = onKeyDown          ch wf a
-instance HandlesKeyPressed    DisplayObject where onKeyPressed       ch wf (CtxDynamic _ a) = onKeyPressed       ch wf a
+instance HandlesKeyUp         DisplayObject where onKeyUp         ch km wf (CtxDynamic _ a) = onKeyUp         ch km wf a
+instance HandlesKeyDown       DisplayObject where onKeyDown       ch km wf (CtxDynamic _ a) = onKeyDown       ch km wf a
+instance HandlesKeyPressed    DisplayObject where onKeyPressed    ch km wf (CtxDynamic _ a) = onKeyPressed    ch km wf a
 
 noUIUpdate :: WidgetUIUpdate
 noUIUpdate = return ()
@@ -149,9 +150,9 @@ type MouseOverHandler     s =                            Command s ()
 type MouseOutHandler      s =                            Command s ()
 type ClickHandler         s =                Position -> Command s ()
 type DblClickHandler      s =                Position -> Command s ()
-type KeyUpHandler         s = Char                    -> Command s ()
-type KeyDownHandler       s = Char                    -> Command s ()
-type KeyPressedHandler    s = Char                    -> Command s ()
+type KeyUpHandler         s = Char        -> KeyMods  -> Command s ()
+type KeyDownHandler       s = Char        -> KeyMods  -> Command s ()
+type KeyPressedHandler    s = Char        -> KeyMods  -> Command s ()
 
 
 data UIHandlers a  = UIHandlers { _mouseMove     :: [MouseMoveHandler      a]

@@ -64,10 +64,10 @@ toAction (Mouse (Mouse.Event tpe pos button keyMods _)) _ underCursor = case but
                                                  else SelectNew
           toggleActionType = if node ^. selected then ToggleOff
                                                  else ToggleOn
-toAction (Keyboard (Keyboard.Event Keyboard.Press char)) state _ = ifNoneFocused state $ case char of
+toAction (Keyboard (Keyboard.Event Keyboard.Press char _)) state _ = ifNoneFocused state $ case char of
     'A'     -> Just SelectAll
     _       -> Nothing
-toAction (Keyboard (Keyboard.Event Keyboard.Down  char)) state _ = ifNoneFocused state $ case char of
+toAction (Keyboard (Keyboard.Event Keyboard.Down  char _)) state _ = ifNoneFocused state $ case char of
     '\27'   -> Just UnselectAll
     _       -> Nothing
 toAction _ _ _ = Nothing

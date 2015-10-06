@@ -38,9 +38,9 @@ instance PrettyPrinter Reaction where
     display (RegisterNodeIO node) = "arA(RegisterIO " <> display node  <> ")"
 
 toAction :: Event Node -> Global.State -> Maybe Action
-toAction (Keyboard (Keyboard.Event Keyboard.Press 'a')) state = ifNoneFocused state action where
+toAction (Keyboard (Keyboard.Event Keyboard.Press 'a' _)) state = ifNoneFocused state action where
     action = Just $ RegisterNodeAction "Hello.node"
-toAction (NodeSearcher (NodeSearcher.Event "create" expr)) _  = Just $ RegisterNodeAction expr
+toAction (NodeSearcher (NodeSearcher.Event "create" expr Nothing)) _  = Just $ RegisterNodeAction expr
 toAction _ _  = Nothing
 
 createNode :: NodeId -> Vector2 Double -> Text -> Node

@@ -24,7 +24,7 @@ import           Reactive.Banana.Frameworks ( AddHandler(..), liftIO )
 
 import           JS.Bindings
 import           ThreeJS.Raycaster
-import           JS.NodeSearcher     ( getAction, getExpression, nsEvent )
+import           JS.NodeSearcher     ( getAction, getExpression, getNode, nsEvent )
 import           Object.Object
 import qualified Object.Widget       as Widget
 import qualified Event.Keyboard      as Keyboard
@@ -50,9 +50,18 @@ readKeyMods :: (MouseEvent.IsMouseEvent e) => EventM t e Keyboard.KeyMods
 readKeyMods = do
     e      <- event
     shift  <- MouseEvent.getShiftKey e
-    ctrl   <- MouseEvent.getCtrlKey e
-    alt    <- MouseEvent.getAltKey  e
-    meta   <- MouseEvent.getMetaKey e
+    ctrl   <- MouseEvent.getCtrlKey  e
+    alt    <- MouseEvent.getAltKey   e
+    meta   <- MouseEvent.getMetaKey  e
+    return $  Keyboard.KeyMods shift ctrl alt meta
+
+readKeyMods' :: EventM t KeyboardEvent.KeyboardEvent Keyboard.KeyMods
+readKeyMods' = do
+    e      <- event
+    shift  <- KeyboardEvent.getShiftKey e
+    ctrl   <- KeyboardEvent.getCtrlKey  e
+    alt    <- KeyboardEvent.getAltKey   e
+    meta   <- KeyboardEvent.getMetaKey  e
     return $  Keyboard.KeyMods shift ctrl alt meta
 
 readMousePos :: (MouseEvent.IsMouseEvent e) => EventM t e Mouse.MousePosition
@@ -124,8 +133,9 @@ keyHandler event getter tag = AddHandler $ \h -> do
     window <- fromJust <$> eventObject
     window `on` event $ do
         preventDefault
-        key <- getter
-        liftIO . h $ Keyboard $ Keyboard.Event tag $ chr key
+        key     <- getter
+        keyMods <- readKeyMods'
+        liftIO . h $ Keyboard $ Keyboard.Event tag (chr key) keyMods
 
 keyPressedHandler :: AddHandler (Event Dynamic)
 keyPressedHandler = keyHandler keyPress uiCharCode Keyboard.Press
@@ -147,7 +157,9 @@ nodeSearcherHander = AddHandler $ \h -> do
         e      <- event
         action <- getAction e
         expr   <- getExpression e
-        liftIO . h $ NodeSearcher $ NodeSearcher.Event action expr
+        node   <- getNode e
+        let maybeNode = if node == 0 then Nothing else Just node
+        liftIO . h $ NodeSearcher $ NodeSearcher.Event action expr maybeNode
 
 webSocketHandler :: WebSocket.WebSocket -> AddHandler (Event Dynamic)
 webSocketHandler conn = AddHandler $ \h -> do

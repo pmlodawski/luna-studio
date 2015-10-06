@@ -5,26 +5,22 @@ import           Utils.PreludePlus
 
 data Type = Press | Down | Up deriving (Eq, Show)
 
-data Event = Event { _tpe  :: Type
-                   , _char :: Char
-                   } deriving (Eq, Show)
-
-makeLenses ''Event
-
-instance PrettyPrinter Event where
-    display (Event t c) = show t <> " " <> show c
-
-
-
--- others
-
 data KeyMods = KeyMods { _shift :: Bool
                        , _ctrl  :: Bool
                        , _alt   :: Bool
                        , _meta  :: Bool
                        } deriving (Eq, Show)
 
+data Event = Event { _tpe     :: Type
+                   , _char    :: Char
+                   , _keyMods :: KeyMods
+                   } deriving (Eq, Show)
+
+makeLenses ''Event
 makeLenses ''KeyMods
+
+instance PrettyPrinter Event where
+    display (Event t c m) = show t <> " " <> show c <> " " <> show m
 
 instance Default KeyMods where
     def = KeyMods False False False False

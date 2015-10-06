@@ -28,7 +28,7 @@ instance Focusable Node where
     mayFocus _          _ _ _ = False
 
 instance HandlesKeyPressed Node where
-    onKeyPressed char file model = (action, toCtxDynamic model) where
+    onKeyPressed char _ file model = (action, toCtxDynamic model) where
         action = case char of
             '\r' -> do
                 node <- UI.getNode (model ^. nodeId)

@@ -135,13 +135,13 @@ loseFocus :: UIRegistryState -> Maybe UIRegistryUpdate
 loseFocus state = Just $ (noUIUpdate, newState) where newState = state & UIRegistry.focusedWidget .~ Nothing
 
 handleKeyEvents :: Keyboard.Event -> UIRegistryState -> Maybe UIRegistryUpdate
-handleKeyEvents (Keyboard.Event eventType ch) registry = case registry ^. UIRegistry.focusedWidget of
+handleKeyEvents (Keyboard.Event eventType ch mods) registry = case registry ^. UIRegistry.focusedWidget of
     Just widgetId  -> do
         file                  <- (UIRegistry.lookup widgetId registry) :: Maybe (WidgetFile Global.State DisplayObject)
         (uiUpdate, newWidget) <- return $ case eventType of
-            Keyboard.Up       -> onKeyUp      ch file (file ^. widget)
-            Keyboard.Down     -> onKeyDown    ch file (file ^. widget)
-            Keyboard.Press    -> onKeyPressed ch file (file ^. widget)
+            Keyboard.Up       -> onKeyUp      ch mods file (file ^. widget)
+            Keyboard.Down     -> onKeyDown    ch mods file (file ^. widget)
+            Keyboard.Press    -> onKeyPressed ch mods file (file ^. widget)
         let newRegistry = UIRegistry.update widgetId newWidget registry
         return (uiUpdate, newRegistry)
     Nothing -> Just $ (noUIUpdate, registry)
@@ -165,12 +165,12 @@ customMouseHandlers (Mouse.Event eventType absPos button _ (Just (EventWidget wi
 customMouseHandlers _ _ _  = []
 
 customKeyboardHandlers :: Keyboard.Event -> UIRegistryState -> [Command Global.State ()]
-customKeyboardHandlers (Keyboard.Event eventType ch) registry = case registry ^. UIRegistry.focusedWidget of
+customKeyboardHandlers (Keyboard.Event eventType ch mods) registry = case registry ^. UIRegistry.focusedWidget of
     Just widgetId -> case UIRegistry.lookupHandlers widgetId registry of
         Just handlers -> case eventType of
-            Keyboard.Up       -> fmap (\a -> a ch) (handlers ^. keyUp     )
-            Keyboard.Down     -> fmap (\a -> a ch) (handlers ^. keyDown   )
-            Keyboard.Press    -> fmap (\a -> a ch) (handlers ^. keyPressed)
+            Keyboard.Up       -> fmap (\a -> a ch mods) (handlers ^. keyUp     )
+            Keyboard.Down     -> fmap (\a -> a ch mods) (handlers ^. keyDown   )
+            Keyboard.Press    -> fmap (\a -> a ch mods) (handlers ^. keyPressed)
         Nothing -> []
     Nothing -> []
 
