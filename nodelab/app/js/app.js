@@ -225,9 +225,9 @@ function hideSelectionBox() {
   $$.selectionBox.hide();
 }
 
-function displayCurrentConnection(x0, y0, x1, y1) {
+function displayCurrentConnection(colorId, x0, y0, x1, y1) {
   $$.currentConnection.setPos(x0, y0, x1, y1);
-  $$.currentConnection.show();
+  $$.currentConnection.show(colorId);
 }
 
 function removeCurrentConnection() {

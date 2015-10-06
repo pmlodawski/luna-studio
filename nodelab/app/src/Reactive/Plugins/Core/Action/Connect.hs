@@ -171,9 +171,7 @@ instance ActionUIUpdater Action where
         Dragging angle                   -> forM_ maybeConnecting $ displayDragLine nodesMap angle ptWs
         StopDrag src                     -> do
                                                 UI.removeCurrentConnection
-                                                -- moveNodesUI nodesMap
                                                 fst $ execCommand updatePortAnglesUI state
-                                                -- updateConnectionsUI state
         ConnectPortsUI src dst uiUpdate  -> do
                                                 UI.removeCurrentConnection
                                                 uiUpdate

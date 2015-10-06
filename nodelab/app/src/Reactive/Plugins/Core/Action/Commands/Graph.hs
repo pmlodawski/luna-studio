@@ -209,6 +209,8 @@ updatePortAnglesUI = ioCommand $ \state -> let
 displayDragLine :: NodesMap -> Angle -> Vector2 Double -> Connect.Connecting -> IO ()
 displayDragLine nodesMap angle ptWs@(Vector2 cx cy) connecting = do
     let portRef              = connecting ^. Connect.sourcePortRef
+        port                 = connecting ^. Connect.sourcePort
+        color                = colorVT $ port ^. portValueType
         ndWs@(Vector2 nx ny) = getNodePos nodesMap $ portRef ^. refPortNodeId
         outerPos             = portOuterBorder + distFromPort
         sy                   = ny + outerPos * sin angle
@@ -216,7 +218,7 @@ displayDragLine nodesMap angle ptWs@(Vector2 cx cy) connecting = do
         (Vector2 vx vy)      = ptWs - ndWs
         draw                 = vx * vx + vy * vy > portOuterBorderSquared
     setAnglePortRef angle portRef
-    if draw then UI.displayCurrentConnection sx sy cx cy
+    if draw then UI.displayCurrentConnection color sx sy cx cy
             else UI.removeCurrentConnection
 
 

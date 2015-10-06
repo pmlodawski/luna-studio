@@ -11,8 +11,8 @@ import           Data.Text.Lazy      (Text)
 import           GHCJS.Foreign
 
 
-foreign import javascript unsafe "app.displayCurrentConnection($1, $2, $3, $4)"
-    displayCurrentConnection :: Double -> Double -> Double -> Double -> IO ()
+foreign import javascript unsafe "app.displayCurrentConnection($1, $2, $3, $4, $5)"
+    displayCurrentConnection :: Int -> Double -> Double -> Double -> Double -> IO ()
 
 foreign import javascript unsafe "app.removeCurrentConnection()"
     removeCurrentConnection :: IO ()

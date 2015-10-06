@@ -64,7 +64,10 @@ Connection.prototype.setPos = function(x0, y0, x1, y1) {
   this.mesh.position.y = (dist * y_r) + y0 + y_r * scale;
 };
 
-Connection.prototype.show = function() {
+Connection.prototype.show = function(colorId) {
+  if (colorId !== undefined) {
+    this.uniforms.color.value = colors[colorId];
+  }
   this.mesh.material.uniforms.visible.value = 1;
 };
 
