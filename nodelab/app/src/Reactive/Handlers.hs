@@ -132,7 +132,6 @@ mouseWheelHandler =
 keyHandler event getter tag = AddHandler $ \h -> do
     window <- fromJust <$> eventObject
     window `on` event $ do
-        preventDefault
         key     <- getter
         keyMods <- readKeyMods'
         liftIO . h $ Keyboard $ Keyboard.Event tag (chr key) keyMods
