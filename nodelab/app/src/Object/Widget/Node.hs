@@ -29,6 +29,10 @@ instance IsDisplayObject Node where
     objectPosition   = undefined
     objectSize       = undefined
 
+instance IsDisplayObject PendingNode where
+    objectPosition n = n ^. position
+    objectSize _     = Vector2 60.0 60.0
+
 instance Focusable Node where
     mayFocus LeftButton _ _ _ = True
     mayFocus _          _ _ _ = False
