@@ -40,9 +40,10 @@ function NodeSearcher() {
   this.el = $('<div/>').addClass('node-searcher');
 }
 
-NodeSearcher.prototype.init = function() {
+NodeSearcher.prototype.init = function(nodeId) {
   var self = this;
   this.prefix = "";
+  this.nodeId = nodeId;
   this.initSearchbox();
   this.setExpression("");
   this.searchbox.focus();
@@ -213,7 +214,8 @@ NodeSearcher.prototype.createNode = function() {
   var ev = new CustomEvent('ns_event', {
     detail: {
       action: 'create',
-      expression: this.expression()
+      expression: this.expression(),
+      node: this.nodeId
     }
   });
   window.dispatchEvent(ev);

@@ -21,17 +21,20 @@ import           GHCJS.DOM.Types  ( UIEvent, Window, IsUIEvent, unUIEvent, toUIE
 
 
 
-foreign import javascript unsafe "app.createNodeSearcher($1, $2, $3)"
-    initNodeSearcher' :: JSString -> Int -> Int-> IO ()
+foreign import javascript unsafe "app.createNodeSearcher($1, $2, $3, $4)"
+    initNodeSearcher' :: JSString -> Int -> Int -> Int-> IO ()
 
-initNodeSearcher :: Text -> Vector2 Int -> IO ()
-initNodeSearcher expr pos = initNodeSearcher' (lazyTextToJSString expr) (pos ^. x) (pos ^. y)
+initNodeSearcher :: Text -> Int -> Vector2 Int -> IO ()
+initNodeSearcher expr nodeId pos = initNodeSearcher' (lazyTextToJSString expr) nodeId (pos ^. x) (pos ^. y)
 
 foreign import javascript unsafe "app.destroyNodeSearcher()"
     destroyNodeSearcher :: IO ()
 
 foreign import javascript unsafe "$2[\"detail\"][$1]"
     nodesearcher_event_get :: JSString -> JSRef UIEvent -> IO JSString
+
+foreign import javascript unsafe "$1[\"detail\"][\"node\"]"
+    nodesearcher_event_get_node :: JSRef UIEvent -> IO Int
 
 nsEvent :: EventName Window UIEvent
 nsEvent = (unsafeEventName (JSString.pack "ns_event"))
@@ -43,8 +46,16 @@ getKey key self = liftIO $ do
 
 getExpression :: (MonadIO m, IsUIEvent self) => self -> m Text
 getExpression = getKey "expression"
+
 getAction :: (MonadIO m, IsUIEvent self) => self -> m Text
 getAction     = getKey "action"
+
+
+getNode :: (MonadIO m, IsUIEvent self) => self -> m Int
+getNode self = liftIO $ do
+    node <- nodesearcher_event_get_node (unUIEvent (toUIEvent self))
+    return node
+
 
 -- display results
 

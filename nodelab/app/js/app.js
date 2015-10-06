@@ -185,14 +185,14 @@ function moveToTopZ(nodeId) {
   nodeToTop.zPos(maxZ);
 }
 
-function createNodeSearcher(expression, left, top) {
+function createNodeSearcher(expression, nodeId, left, top) {
   var ns;
   if (features.node_searcher) {
     destroyNodeSearcher();
     ns = new NodeSearcher();
     $$.node_searcher = ns;
     $('body').append(ns.el);
-    ns.init();
+    ns.init(nodeId);
     ns.el.css({left: left, top: top});
     if(expression)
       ns.setExpression(expression);

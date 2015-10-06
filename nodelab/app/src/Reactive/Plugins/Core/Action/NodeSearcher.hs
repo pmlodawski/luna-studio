@@ -3,7 +3,7 @@
 module Reactive.Plugins.Core.Action.NodeSearcher where
 
 import           Utils.PreludePlus
-import           Utils.Vector
+import           Utils.Vector hiding (shift)
 
 import           GHCJS.Foreign
 
@@ -16,10 +16,7 @@ import           Event.Keyboard hiding      ( Event )
 import qualified Event.Keyboard as Keyboard
 import           Event.NodeSearcher hiding  ( Event )
 import qualified Event.NodeSearcher as NodeSearcher
-import           Event.Mouse    hiding      ( Event )
-import qualified Event.Mouse    as Mouse
 import           Event.Event
-import           Event.WithObjects
 import           Reactive.Plugins.Core.Action
 import           Reactive.Plugins.Core.Action.State.NodeSearcher
 import qualified Reactive.Plugins.Core.Action.State.Global          as Global
@@ -37,7 +34,8 @@ data Action = Query      { _tpe        :: QueryType
                          , _expression :: Text
                          }
             | CreateNode { _expression :: Text }
-            | OpenNodeSearcher
+            | OpenToCreate
+            | OpenToEdit
             deriving (Eq, Show)
 
 
@@ -47,17 +45,18 @@ instance PrettyPrinter Action where
     display (Query Search expr) = "ns(query ["     ++ (Text.unpack expr) ++ "])"
     display (Query Tree   expr) = "ns(treequery [" ++ (Text.unpack expr) ++ "])"
     display (CreateNode   expr) = "ns(create ["    ++ (Text.unpack expr) ++ "])"
-    display OpenNodeSearcher    = "ns(open )"
+    display OpenToCreate        = "ns(openCreate)"
+    display OpenToEdit          = "ns(openEdit)"
 
 
 toAction :: Event Node.Node -> Maybe Action
-toAction (NodeSearcher (NodeSearcher.Event tpe expr))   = case tpe of
+toAction (NodeSearcher (NodeSearcher.Event tpe expr _))   = case tpe of
     "query"  -> Just $ Query Search expr
     "tree"   -> Just $ Query Tree   expr
     _        -> Nothing
 
-toAction (Keyboard (Keyboard.Event Keyboard.Down char)) = case char of
-    '\t'   -> Just $ OpenNodeSearcher
+toAction (Keyboard (Keyboard.Event Keyboard.Down char mods)) = case char of
+    '\t'   -> Just $ if mods ^. shift then OpenToEdit else OpenToCreate
     _      -> Nothing
 
 toAction _ = Nothing
@@ -69,11 +68,14 @@ instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
         (Query Search expr)      -> UI.displayQueryResults $ Mock.getItemsSearch expr
         (Query Tree expr)        -> UI.displayTreeResults  $ Mock.getItemsTree   expr
-        OpenNodeSearcher         -> UI.initNodeSearcher expr (state ^. Global.mousePos)
-                                    where
-                                    expr    = maybe "" (^. Node.expression) node
-                                    node    = Graph.getNode (state ^. Global.graph) <$> nodeId
-                                    nodeId  = state ^? Global.selection . Selection.nodeIds . ix 0
+        OpenToCreate             -> UI.initNodeSearcher ""   0      (state ^. Global.mousePos)
+        OpenToEdit               -> case nodeId of
+                     Just nodeId -> UI.initNodeSearcher expr nodeId (state ^. Global.mousePos)
+                     Nothing     -> return ()
+                     where
+                        expr    = maybe "" (^. Node.expression) node
+                        node    = Graph.getNode (state ^. Global.graph) <$> nodeId
+                        nodeId  = state ^? Global.selection . Selection.nodeIds . ix 0
 
 
 
