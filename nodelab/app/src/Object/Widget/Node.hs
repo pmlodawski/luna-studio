@@ -20,7 +20,7 @@ data Node = Node { _nodeId    :: Int
 makeLenses ''Node
 
 data PendingNode = PendingNode { _position   :: Vector2 Double
-                               , _expression:: Text
+                               , _expression :: Text
                                } deriving (Eq, Show, Typeable)
 
 makeLenses ''PendingNode
