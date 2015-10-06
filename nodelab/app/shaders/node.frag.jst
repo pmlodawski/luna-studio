@@ -21,6 +21,8 @@ uniform int   antialias;
 uniform int   objectMap;
 uniform vec3  objectId;
 
+uniform float  alpha;
+
 void main() {
     float bg_gray    = 0.1;
     vec3  color      = unselectedColor;
@@ -122,5 +124,5 @@ void main() {
         }
     }
 
-    gl_FragColor = colorShow;
+    gl_FragColor = vec4(colorShow.xyz, colorShow.w * alpha);
 }

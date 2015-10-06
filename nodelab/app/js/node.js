@@ -53,6 +53,7 @@ function Node(id, position, z, widgetId) {
     unselectedColor:   { type: 'c',  value:                 unselectedColor },
     selectedColor:     { type: 'c',  value:                   selectedColor },
     focusedColor:      { type: 'c',  value:                    focusedColor },
+    alpha:             { type: 'f',  value: 1.0 },
     objectId:          { type: 'v3', value: new THREE.Vector3((widgetId % 256) / 255.0, Math.floor(Math.floor(widgetId % 65536) / 256) / 255.0, Math.floor(widgetId / 65536) / 255.0) }
   };
 
@@ -63,7 +64,7 @@ function Node(id, position, z, widgetId) {
     expandedColor: { type: 'c', value: expandedColor},
     objectId: this.uniforms.objectId,
     radiusTop:         { type: 'f',  value:                            collapsedRadius },
-    radiusBottom:      { type: 'f',  value:                            collapsedRadius },
+    radiusBottom:      { type: 'f',  value:                            collapsedRadius }
   };
 
   Object.keys($$.commonUniforms).forEach(function(k) {
@@ -140,6 +141,9 @@ Node.prototype.setExpandedState = function(expanded) {
   this.expandedNodeBkg.scale.y = nodeSize.y;
 };
 
+Node.prototype.setPending = function() {
+  this.uniforms.alpha.value = 0.2;
+};
 Node.prototype.toggleExpandState = function() {
   if(this.expandedState == 0) {
     this.setExpandedState(1.0);
@@ -251,9 +255,10 @@ Node.prototype.updateLabel = function() {
     width: size,
     align: 'center'
   });
-
-  textMaterial.uniforms.width.value = size;
-  this.labelObject = new THREE.Mesh(geometry, textMaterial);
+  var material = textMaterial();
+  material.uniforms.width.value = size;
+  material.uniforms.opacity = this.uniforms.alpha;
+  this.labelObject = new THREE.Mesh(geometry, material);
   this.labelObject.scale.multiplyScalar(config.fontSize);
   this.labelObject.position.x = -45 - 30;
   this.labelObject.position.y = -12 - 30;
@@ -279,9 +284,9 @@ Node.prototype.updateValue = function() {
     width: size,
     align: 'center'
   });
-
-  textMaterial.uniforms.width.value = size;
-  this.valueObject = new THREE.Mesh(geometry, textMaterial);
+  var material = textMaterial();
+  material.uniforms.width.value = size;
+  this.valueObject = new THREE.Mesh(geometry, material);
   this.valueObject.scale.multiplyScalar(config.fontSize);
   this.valueObject.position.x = -45 - 30;
   this.valueObject.position.y = 12 + 30 + 10;

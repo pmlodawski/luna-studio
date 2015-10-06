@@ -27,12 +27,10 @@ data TextMaterial = TextMaterial Material
 
 instance IsMaterial TextMaterial where material (TextMaterial m) = m
 
--- -> HS
-foreign import javascript unsafe "require('font/text_material').graph"
+foreign import javascript unsafe "require('font/text_material').graph()"
     getTextMaterialJS :: IO Material
 
--- -> HS
-foreign import javascript unsafe "require('font/text_material').hud"
+foreign import javascript unsafe "require('font/text_material').hud()"
     getTextHUDMaterialJS :: IO Material
 
 getTextHUDMaterial :: IO TextMaterial

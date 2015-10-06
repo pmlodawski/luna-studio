@@ -168,6 +168,16 @@ function newNodeAt(id, x, y, expr, widgetId) {
   $$.registry[widgetId] = node;
 }
 
+
+function createPendingNode(widgetId, expr, x, y) {
+  var pos = new THREE.Vector2(x, y);
+  var node = new GraphNode(-1, pos, nodeZOrderStart, widgetId);
+  node.label(expr);
+  node.setPending();
+  $$.scene.add(node.mesh);
+  $$.registry[widgetId] = node;
+}
+
 // -> HS
 function moveToTopZ(nodeId) {
   var nodeToTop = $$.nodes[nodeId];
@@ -280,6 +290,7 @@ module.exports = {
   removeWidget:             removeWidget,
   websocket:                $$.websocket,
   displayRejectedMessage:   displayRejectedMessage,
+  createPendingNode:        createPendingNode,
   getNode:                  function(index) { return $$.nodes[index];    },
   getNodes:                 function()      { return _.values($$.nodes); },
   nodeSearcher:             function()      { return $$.node_searcher;   },

@@ -101,3 +101,10 @@ isFocused    = flip hasSelectionValue 2
 
 foreign import javascript unsafe "$1.renderExamplePlot()"
     renderExamplePlot :: JSRef NodeJS -> IO ()
+
+
+foreign import javascript unsafe "app.createPendingNode($1, $2, $3, $4)"
+    createPendingNode' :: Int -> JSString -> Double -> Double -> IO ()
+
+createPendingNode :: Int -> Text -> Vector2 Double -> IO ()
+createPendingNode oid expr (Vector2 x y) = createPendingNode' oid (lazyTextToJSString expr) x y
