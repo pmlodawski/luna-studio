@@ -24,13 +24,13 @@ type ColorNum = Int
 
 colorVT :: ValueType -> ColorNum
 colorVT VTBool = 7
-colorVT VTInt = 10
+colorVT VTInt = 11
 colorVT VTChar = 6
 colorVT VTFloat = 3
 colorVT VTString = 4
 colorVT (VTVector _) = 9
 colorVT (VTMaybe _) = 9
-colorVT VTNumeric = 5
+colorVT VTNumeric = 10
 colorVT VTAny = 8
 
 
