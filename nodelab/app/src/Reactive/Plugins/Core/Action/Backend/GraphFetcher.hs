@@ -5,7 +5,10 @@ import           Utils.PreludePlus
 import           Object.Node
 import           Event.Event
 import           Batch.Workspace
-import qualified Event.Batch as Batch
+import qualified Event.Batch     as Batch
+import qualified Data.Map        as Map
+import           Utils.Vector    (Vector2(..))
+import           Utils.Graph.AutoLayout
 
 import           Reactive.Plugins.Core.Action
 import           Reactive.Plugins.Core.Action.State.Graph          as Graph
@@ -40,7 +43,10 @@ toAction _ _ = Nothing
 
 instance ActionStateUpdater Action where
     execSt (ShowGraph nodes edges) state = ActionUI (PerformIO action) newState where
-        (action, newState) = execCommand (renderGraph nodes edges) state
+        (newAction, newState) = execCommand (renderGraph newNodes edges) state
+        newNodes = ((\n -> n & nodePos .~ coords ^. at (n ^. nodeId) . non (Vector2 0.0 0.0))) <$> nodes
+        coords = autoLayout (view nodeId <$> nodes) ((over both (view refPortNodeId)) <$> edges) 70.0 70.0
+        action = newAction >> print coords
 
     execSt (GraphFetched nodes edges) state = execSt [ShowGraph nodes edges, PrepareValues nodes, RequestRun] state
 
