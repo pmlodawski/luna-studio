@@ -80,11 +80,11 @@ getPortByRef portRef nodesMap = port where
     port   = find (\p -> p ^. portId == portRef ^. refPortId) ports'
 
 
-getNodeByRef :: PortRef -> NodesMap -> Node
+getNodeByRef :: PortRef -> NodesMap -> Maybe Node
 getNodeByRef portRef nodesMap = node where
     nodeId  = portRef ^. refPortNodeId
     nodeErr = error $ "Node " <> show nodeId <> " not found"
-    node    = IntMap.findWithDefault nodeErr nodeId nodesMap
+    node    = IntMap.lookup nodeId nodesMap
 
 
 getPortAngle :: PortRef -> NodesMap -> Double
@@ -103,39 +103,41 @@ tryGetSrcDst portRef1 portRef2 = case (portRef1 ^. refPortType, portRef2 ^. refP
 
 
 enableTC :: Bool
-enableTC = False
+enableTC = True
 
 
 connectNodes :: PortRef -> PortRef -> Command Global.State ()
-connectNodes = connectNodesNoTc
--- connectNodes = if enableTC then connectNodesTC else connectNodesNoTc
---
---
--- connectNodesTC :: PortRef -> PortRef -> Command Global.State ()
--- connectNodesTC src dst = command $ \state -> let
---     batchConnect                 = BatchCmd.connectNodes (state ^. Global.workspace) src dst
---     oldGraph                     = state ^. Global.graph
---     oldRegistry                  = state ^. Global.uiRegistry
---     newState                     = state  & Global.graph      .~ newGraph
---                                           & Global.uiRegistry .~ newRegistry
---     valueType                    = view portValueType $ getPort oldGraph src
---     uiUpdate                     = forM_ file $ \f -> createConnectionWidget (f ^. objectId) (f ^. widget) (colorVT valueType)
---     portFrom                     = getPortByRef src oldNodesMap
---     portTo                       = getPortByRef dst oldNodesMap
---     nodeTo                       = getNodeByRef dst oldNodesMap
---     tcResult                     = MockTC.connect portFrom portTo nodeTo
---     newNodesMap                  = oldNodesMap -- case tcResult of Nothing      -> oldNodesMap
---                                                --                Just newNode -> IntMap.adjust (const newNode) (newNode ^. nodeId) oldNodesMap
---     oldNodesMap                  = Graph.getNodesMap oldGraph
---     updSourceGraph               = Graph.updateNodes newNodesMap oldGraph
---     (connId, newGraph)           = Graph.addConnection src dst updSourceGraph
---     (file, newRegistry)          = case connId of
---         Just connId             -> (Just widget, newRegistry) where
---             (widget, newRegistry)= UIRegistry.register UIRegistry.sceneGraphId uiConnection def oldRegistry
---             uiConnection         = getConnectionLine newNodesMap $ Graph.Connection connId src dst
---         Nothing                 -> (Nothing, oldRegistry)
---     in case tcResult of Just _  -> (uiUpdate >> batchConnect, newState)
---                         Nothing -> (return (), state)
+connectNodes = if enableTC then connectNodesTC else connectNodesNoTc
+
+
+connectNodesTC :: PortRef -> PortRef -> Command Global.State ()
+connectNodesTC src dst = command $ \state -> let
+    batchConnect                 = BatchCmd.connectNodes (state ^. Global.workspace) src dst
+    oldGraph                     = state ^. Global.graph
+    oldRegistry                  = state ^. Global.uiRegistry
+    newState                     = state  & Global.graph      .~ newGraph
+                                          & Global.uiRegistry .~ newRegistry
+    valueType                    = view portValueType $ getPort oldGraph src
+    uiUpdate                     = forM_ file $ \f -> createConnectionWidget (f ^. objectId) (f ^. widget) color
+    validConnection              = (isJust $ getPortByRef src oldNodesMap) && (isJust $ getPortByRef dst oldNodesMap)
+    color                        = if validConnection then (colorVT valueType) else colorError
+    
+    portFrom                     = getPortByRef src oldNodesMap
+    portTo                       = getPortByRef dst oldNodesMap
+    nodeTo                       = getNodeByRef dst oldNodesMap
+    tcResult                     = MockTC.connect <$> portFrom <*> portTo <*> nodeTo & join
+    newNodesMap                  = oldNodesMap -- case tcResult of Nothing      -> oldNodesMap
+                                               --                Just newNode -> IntMap.adjust (const newNode) (newNode ^. nodeId) oldNodesMap
+    oldNodesMap                  = Graph.getNodesMap oldGraph
+    updSourceGraph               = Graph.updateNodes newNodesMap oldGraph
+    (connId, newGraph)           = Graph.addConnection src dst updSourceGraph
+    (file, newRegistry)          = case connId of
+        Just connId             -> (Just widget, newRegistry) where
+            (widget, newRegistry)= UIRegistry.register UIRegistry.sceneGraphId uiConnection def oldRegistry
+            uiConnection         = getConnectionLine newNodesMap $ Graph.Connection connId src dst
+        Nothing                 -> (Nothing, oldRegistry)
+    in case tcResult of Just _  -> (uiUpdate >> batchConnect, newState)
+                        Nothing -> (return (), state)
 
 
 connectNodesNoTc :: PortRef -> PortRef -> Command Global.State ()
