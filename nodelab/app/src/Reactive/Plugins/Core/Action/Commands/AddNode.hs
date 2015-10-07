@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE ExistentialQuantification #-}
 
 module Reactive.Plugins.Core.Action.Commands.AddNode (addNode) where
 
@@ -61,7 +60,7 @@ registerNode node oldRegistry = flip MState.execState (oldRegistry, return ()) $
         nodeWidget = file ^. widget
         inPorts    = getPorts InputPort node
         nat        = [1..] :: [Int]
-        sliders    = makeSliderFromPort <$> nat <*> inPorts
+        sliders    = uncurry makeSliderFromPort <$> zip nat inPorts
     sliderIds <- sequence $ addSliderToNode rootId <$> sliders
     UIRegistry.updateM rootId (nodeWidget & WNode.controls .~ sliderIds)
     return file
