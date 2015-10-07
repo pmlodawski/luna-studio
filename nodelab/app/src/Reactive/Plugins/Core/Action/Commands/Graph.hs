@@ -5,6 +5,7 @@ import           Utils.PreludePlus
 import           Utils.Vector
 import           Utils.Angle
 import qualified Utils.MockTC as MockTC
+import qualified Utils.Nodes  as NodeUtils
 
 import qualified Data.IntMap.Lazy as IntMap
 import qualified Data.Map as Map
@@ -27,9 +28,22 @@ import qualified Reactive.Plugins.Core.Action.State.UIRegistry     as UIRegistry
 import qualified Reactive.Plugins.Core.Action.State.Camera         as Camera
 import qualified Reactive.Plugins.Core.Action.State.Global         as Global
 import           Reactive.Plugins.Core.Action.Commands.Command     (Command, command, pureCommand, ioCommand)
+
 import qualified Control.Monad.State                               as MState
 
 import qualified BatchConnector.Commands                           as BatchCmd
+
+
+updateConnNodes :: [NodeId] -> Command Global.State ()
+updateConnNodes nodeIds = pureCommand $ \state -> let
+    noConns nid   = not $ hasConnections nid (state ^. Global.graph)
+    changeFun     = nodeIds & filter noConns
+                            & map   (IntMap.adjust MockTC.revertNode)
+                            & foldl (.) id
+    nodesMap      = changeFun . Graph.getNodesMap . view Global.graph $ state
+    newState      = state &  Global.graph %~ Graph.updateNodes nodesMap
+    in newState
+
 
 updateConnections :: Command Global.State ()
 updateConnections = pureCommand $ \state -> let
@@ -66,40 +80,6 @@ updateConnectionWidget :: WidgetId -> UIConnection.Connection -> IO ()
 updateConnectionWidget widgetId connection = UI.updateConnection widgetId visible fromX fromY toX toY where
     UIConnection.Connection _ visible (Vector2 fromX fromY) (Vector2 toX toY) = connection
 
-getNodePos :: NodesMap -> NodeId -> Vector2 Double
-getNodePos nodesMap nodeId = node ^. nodePos where
-    node = IntMap.findWithDefault (error $ "Node " <> show nodeId <> " not found") nodeId nodesMap
-
-getPortByRef :: PortRef -> NodesMap -> Maybe Port
-getPortByRef portRef nodesMap = port where
-    nodeId = portRef ^. refPortNodeId
-    node   = IntMap.findWithDefault (error $ "Node " <> show nodeId <> " not found") nodeId nodesMap
-    ports' = case portRef ^. refPortType of
-        InputPort  -> node ^. ports . inputPorts
-        OutputPort -> node ^. ports . outputPorts
-    port   = find (\p -> p ^. portId == portRef ^. refPortId) ports'
-
-
-getNodeByRef :: PortRef -> NodesMap -> Maybe Node
-getNodeByRef portRef nodesMap = node where
-    nodeId  = portRef ^. refPortNodeId
-    nodeErr = error $ "Node " <> show nodeId <> " not found"
-    node    = IntMap.lookup nodeId nodesMap
-
-
-getPortAngle :: PortRef -> NodesMap -> Double
-getPortAngle portRef nodesMap = case getPortByRef portRef nodesMap of
-    Just port -> port ^. angle
-    Nothing   -> case portRef ^. refPortType of
-        InputPort  -> 1.3 * pi
-        OutputPort -> 1.7 * pi
-
-
-tryGetSrcDst :: PortRef -> PortRef -> Maybe (PortRef, PortRef)
-tryGetSrcDst portRef1 portRef2 = case (portRef1 ^. refPortType, portRef2 ^. refPortType) of
-    (OutputPort, InputPort)  -> Just (portRef1, portRef2)
-    (InputPort,  OutputPort) -> Just (portRef2, portRef1)
-    _                        -> Nothing
 
 
 enableTC :: Bool
@@ -119,15 +99,15 @@ connectNodesTC src dst = command $ \state -> let
                                           & Global.uiRegistry .~ newRegistry
     valueType                    = view portValueType $ getPort oldGraph src
     uiUpdate                     = forM_ file $ \f -> createConnectionWidget (f ^. objectId) (f ^. widget) color
-    validConnection              = (isJust $ getPortByRef src oldNodesMap) && (isJust $ getPortByRef dst oldNodesMap)
+    validConnection              = (isJust $ NodeUtils.getPortByRef src oldNodesMap) && (isJust $ NodeUtils.getPortByRef dst oldNodesMap)
     color                        = if validConnection then (colorVT valueType) else colorError
     
-    portFrom                     = getPortByRef src oldNodesMap
-    portTo                       = getPortByRef dst oldNodesMap
-    nodeTo                       = getNodeByRef dst oldNodesMap
+    portFrom                     = NodeUtils.getPortByRef src oldNodesMap
+    portTo                       = NodeUtils.getPortByRef dst oldNodesMap
+    nodeTo                       = NodeUtils.getNodeByRef dst oldNodesMap
     tcResult                     = MockTC.connect <$> portFrom <*> portTo <*> nodeTo & join
-    newNodesMap                  = oldNodesMap -- case tcResult of Nothing      -> oldNodesMap
-                                               --                Just newNode -> IntMap.adjust (const newNode) (newNode ^. nodeId) oldNodesMap
+    newNodesMap                  = case tcResult of Nothing      -> oldNodesMap
+                                                    Just newNode -> IntMap.adjust (const newNode) (newNode ^. nodeId) oldNodesMap
     oldNodesMap                  = Graph.getNodesMap oldGraph
     updSourceGraph               = Graph.updateNodes newNodesMap oldGraph
     (connId, newGraph)           = Graph.addConnection src dst updSourceGraph
@@ -149,7 +129,7 @@ connectNodesNoTc src dst = command $ \state -> let
                                           & Global.uiRegistry .~ newRegistry
     valueType                    = view portValueType $ getPort oldGraph src
     uiUpdate                     = forM_ file $ \f -> createConnectionWidget (f ^. objectId) (f ^. widget) color
-    validConnection              = (isJust $ getPortByRef src oldNodesMap) && (isJust $ getPortByRef dst oldNodesMap)
+    validConnection              = (isJust $ NodeUtils.getPortByRef src oldNodesMap) && (isJust $ NodeUtils.getPortByRef dst oldNodesMap)
     color                        = if validConnection then (colorVT valueType) else colorError
     newNodesMap                  = oldNodesMap
     oldNodesMap                  = Graph.getNodesMap oldGraph
@@ -166,11 +146,11 @@ connectNodesNoTc src dst = command $ \state -> let
 getConnectionLine :: NodesMap -> Connection -> UIConnection.Connection
 getConnectionLine nodesMap (Connection lineId srcPortRef dstPortRef) = UIConnection.Connection lineId visible srcWs dstWs
     where
-    srcNWs@(Vector2 xSrcN ySrcN) = getNodePos nodesMap $ srcPortRef ^. refPortNodeId
-    dstNWs@(Vector2 xDstN yDstN) = getNodePos nodesMap $ dstPortRef ^. refPortNodeId
+    srcNWs@(Vector2 xSrcN ySrcN) = NodeUtils.getNodePos nodesMap $ srcPortRef ^. refPortNodeId
+    dstNWs@(Vector2 xDstN yDstN) = NodeUtils.getNodePos nodesMap $ dstPortRef ^. refPortNodeId
     outerPos                     = portOuterBorder + distFromPort
-    angleSrc                     = getPortAngle srcPortRef nodesMap
-    angleDst                     = getPortAngle dstPortRef nodesMap
+    angleSrc                     = NodeUtils.getPortAngle srcPortRef nodesMap
+    angleDst                     = NodeUtils.getPortAngle dstPortRef nodesMap
     srcWs                        = Vector2 (xSrcN + outerPos * cos angleSrc) (ySrcN + outerPos * sin angleSrc)
     dstWs                        = Vector2 (xDstN + outerPos * cos angleDst) (yDstN + outerPos * sin angleDst)
     delta                        = dstNWs - srcNWs
@@ -181,8 +161,8 @@ sortAndGroup assocs = Map.fromListWith (++) [(k, [v]) | (k, v) <- assocs]
 
 connectionVector :: NodesMap -> PortRef -> PortRef -> Vector2 Double
 connectionVector nodesMap src dst  = explode (dstNWs - srcNWs) where
-    srcNWs@(Vector2 xSrcN ySrcN) = getNodePos nodesMap $ src ^. refPortNodeId
-    dstNWs@(Vector2 xDstN yDstN) = getNodePos nodesMap $ dst ^. refPortNodeId
+    srcNWs@(Vector2 xSrcN ySrcN) = NodeUtils.getNodePos nodesMap $ src ^. refPortNodeId
+    dstNWs@(Vector2 xDstN yDstN) = NodeUtils.getNodePos nodesMap $ dst ^. refPortNodeId
 
 
 updatePortAngles :: Command Global.State ()
@@ -220,7 +200,7 @@ displayDragLine nodesMap angle ptWs@(Vector2 cx cy) connecting = do
     let portRef              = connecting ^. Connect.sourcePortRef
         port                 = connecting ^. Connect.sourcePort
         color                = colorVT $ port ^. portValueType
-        ndWs@(Vector2 nx ny) = getNodePos nodesMap $ portRef ^. refPortNodeId
+        ndWs@(Vector2 nx ny) = NodeUtils.getNodePos nodesMap $ portRef ^. refPortNodeId
         outerPos             = portOuterBorder + distFromPort
         sy                   = ny + outerPos * sin angle
         sx                   = nx + outerPos * cos angle
@@ -235,7 +215,7 @@ displayDragLine nodesMap angle ptWs@(Vector2 cx cy) connecting = do
 -- displayDragLine nodesMap portRef ptWs@(Vector2 cx cy) = do
 --     let angle = calcAngle ptWs ndWs
 --     -- let portRef              = connecting ^. Connect.sourcePort
---         ndWs@(Vector2 nx ny) = getNodePos nodesMap $ portRef ^. refPortNodeId
+--         ndWs@(Vector2 nx ny) = NodeUtils.getNodePos nodesMap $ portRef ^. refPortNodeId
 --         outerPos             = portOuterBorder + distFromPort
 --         sy                   = ny + outerPos * sin angle
 --         sx                   = nx + outerPos * cos angle

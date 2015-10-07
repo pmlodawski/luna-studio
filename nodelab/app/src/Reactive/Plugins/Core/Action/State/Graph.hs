@@ -94,7 +94,13 @@ getConnections :: State -> [Connection]
 getConnections = IntMap.elems . getConnectionsMap
 
 getConnectionsMap :: State -> ConnectionsMap
-getConnectionsMap = (^. connectionsMap)
+getConnectionsMap = (^. connectionsMap) 
+
+getConnectionNodeIds :: ConnectionId -> State -> Maybe (NodeId, NodeId)
+getConnectionNodeIds connId state = (mapTup _refPortNodeId) <$> refs
+    where mapTup f (a,b) = (f a, f b)
+          conn = lookUpConnection state connId
+          refs = connectionToRefs <$> conn
 
 updateNodes :: NodesMap -> State -> State
 updateNodes newNodesMap state = state & nodesMap .~ newNodesMap
@@ -139,12 +145,15 @@ lookUpConnection :: State -> ConnectionId -> Maybe Connection
 lookUpConnection state connId = IntMap.lookup connId $ getConnectionsMap state
 
 endsWith :: NodeId -> Connection -> Bool
-endsWith id conn = (conn ^. source . refPortNodeId == id)
-                  || (conn ^. destination . refPortNodeId == id)
+endsWith id conn = (conn ^. source      . refPortNodeId == id)
+                || (conn ^. destination . refPortNodeId == id)
 
 connectionsEndingWith :: NodeId -> State -> [ConnectionId]
 connectionsEndingWith id state = view connId <$> filter (endsWith id) connections where
     connections = getConnections state
+
+hasConnections :: NodeId -> State -> Bool
+hasConnections nodeId state = not . null $ connectionsEndingWith nodeId state
 
 addAccessor :: PortRef -> PortRef -> State -> (Maybe ConnectionId, State)
 addAccessor sourcePortRef destPortRef state =

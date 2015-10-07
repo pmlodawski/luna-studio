@@ -3,6 +3,7 @@ module Reactive.Plugins.Core.Action.Connect where
 import           Utils.PreludePlus
 import           Utils.Vector
 import           Utils.Angle
+import qualified Utils.Nodes    as NodeUtils
 import           Debug.Trace
 
 import           JS.Camera
@@ -93,7 +94,7 @@ toAction _ _            = Nothing
 
 -- angle :: Camera.Camera -> Graph -> Maybe Connecting -> Double
 calculateAngle camera oldGraph (Just (Connecting sourceRef source destinationMay (DragHistory startPos currentPos))) = calcAngle destinPoint sourcePoint where
-    sourcePoint = getNodePos (Graph.getNodesMap oldGraph) $ sourceRef ^. refPortNodeId
+    sourcePoint = NodeUtils.getNodePos (Graph.getNodesMap oldGraph) $ sourceRef ^. refPortNodeId
     destinPoint = screenToWorkspace camera currentPos
 calculateAngle _ _ Nothing = 0.0
 
@@ -141,7 +142,7 @@ instance ActionStateUpdater Action where
 
     execSt action@(DragAction NoDrag point) oldState = ActionUI action oldState
 
-    execSt action@(DragAction (ConnectPorts port1 port2) point) oldState = case tryGetSrcDst port1 port2 of
+    execSt action@(DragAction (ConnectPorts port1 port2) point) oldState = case NodeUtils.tryGetSrcDst port1 port2 of
         Nothing                             -> ActionUI (DragAction (StopDrag port1) point) $ stopDrag port1 oldState
         Just (src, dst)                     -> ActionUI (DragAction (ConnectPortsUI src dst uiUpdate) point) newState''
             where

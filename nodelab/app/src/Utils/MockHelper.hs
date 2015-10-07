@@ -124,7 +124,7 @@ typesEq _              _              = False
 typePromote :: ValueType -> ValueType -> Maybe ValueType
 typePromote VTInt          VTNumeric      = Just VTInt
 typePromote VTFloat        VTNumeric      = Just VTFloat
-typePromote _              VTAny          = Just VTAny
+typePromote tp             VTAny          = Just tp
 typePromote (VTVector tp1) (VTVector tp2) = VTVector <$> typePromote tp1 tp2
 typePromote (VTMaybe  tp1) (VTMaybe  tp2) = VTMaybe  <$> typePromote tp1 tp2
 typePromote tp1             tp2           = if tp1 == tp2 then Just tp1 else Nothing
