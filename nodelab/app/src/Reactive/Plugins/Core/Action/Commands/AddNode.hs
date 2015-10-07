@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ExistentialQuantification #-}
 
 module Reactive.Plugins.Core.Action.Commands.AddNode (addNode) where
 
@@ -15,7 +16,7 @@ import           Object.Widget
 import           Object.UITypes        (WidgetId)
 import qualified Object.Widget.Node    as WNode
 import qualified Object.Widget.Port    as WPort
-import           Object.Widget.Slider  (Slider(..))
+import           Object.Widget.Slider
 
 import           Reactive.Plugins.Core.Action
 import qualified Reactive.Plugins.Core.Action.State.Global         as Global
@@ -60,11 +61,14 @@ registerNode node oldRegistry = flip MState.execState (oldRegistry, return ()) $
         nodeWidget = file ^. widget
         inPorts    = getPorts InputPort node
         nat        = [1..] :: [Int]
-        sliders    = (\(i, port) -> Slider (Vector2 10 (75 + (fromIntegral i) * 25)) (Vector2 180 20)
-                                           (Text.pack $ "param " <> show i) 0.0 1.0 0.2) <$> (zip nat inPorts)
+        sliders    = makeSliderFromPort <$> nat <*> inPorts
     sliderIds <- sequence $ addSliderToNode rootId <$> sliders
     UIRegistry.updateM rootId (nodeWidget & WNode.controls .~ sliderIds)
     return file
+
+makeSliderFromPort :: Int -> Port -> Slider Double
+makeSliderFromPort i port = Slider (Vector2 10 (75 + (fromIntegral i) * 25)) (Vector2 180 20)
+                                   (Text.pack $ "param " <> show i) 0.0 1.0 0.2
 
 nodeHandlers :: Node -> UIHandlers State
 nodeHandlers node = def & dblClick   .~ [const $ enterNode node]
