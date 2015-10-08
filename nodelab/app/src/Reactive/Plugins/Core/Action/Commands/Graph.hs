@@ -99,7 +99,7 @@ localConnectNodes src dst = command $ \state -> let
                                           & Global.uiRegistry .~ newRegistry
     valueType                    = view portValueType $ getPort oldGraph src
     uiUpdate                     = forM_ file $ \f -> createConnectionWidget (f ^. objectId) (f ^. widget) color
-    validConnection              = (isJust $ NodeUtils.getPortByRef src oldNodesMap) && (isJust $ NodeUtils.getPortByRef dst oldNodesMap)
+    validConnection              = (isJust $ NodeUtils.getPortByRef src oldNodesMap) && (isJust $ NodeUtils.getPortByRef dst oldNodesMap) && (isJust tcResult)
     color                        = if validConnection then (colorVT valueType) else colorError
 
     tcResult                     = MockTC.typecheck src dst oldNodesMap

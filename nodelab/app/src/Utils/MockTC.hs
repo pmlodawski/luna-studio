@@ -2,6 +2,7 @@ module Utils.MockTC where
 
 import qualified Utils.MockHelper as MockHelper
 import           Utils.MockHelper (NodeType(NodeType))
+import qualified Utils.Nodes      as NodeUtils
 import           Utils.PreludePlus
 
 import qualified Object.Port      as Port
@@ -23,7 +24,7 @@ revertNode node = node & Node.nodeType .~ newTp
 
 
 typecheck :: Node.PortRef -> Node.PortRef -> Node.NodesMap -> Maybe Node
-typecheck src dst nodesMap = MockTC.connect <$> portFrom <*> portTo <*> nodeTo & join
-    where portFrom = NodeUtils.getPortByRef src oldNodesMap
-          portTo   = NodeUtils.getPortByRef dst oldNodesMap
-          nodeTo   = NodeUtils.getNodeByRef dst oldNodesMap
+typecheck src dst nodesMap = tryConnect <$> portFrom <*> portTo <*> nodeTo & join
+    where portFrom = NodeUtils.getPortByRef src nodesMap
+          portTo   = NodeUtils.getPortByRef dst nodesMap
+          nodeTo   = NodeUtils.getNodeByRef dst nodesMap
