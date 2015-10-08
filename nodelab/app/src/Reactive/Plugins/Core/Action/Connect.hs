@@ -27,7 +27,7 @@ import           Event.WithObjects
 
 import           Reactive.Plugins.Core.Action
 import           Reactive.Plugins.Core.Action.Commands.Graph
-import           Reactive.Plugins.Core.Action.Commands.Command     (execCommand, CommandSource(GUI))
+import           Reactive.Plugins.Core.Action.Commands.Command     (execCommand)
 import           Reactive.Plugins.Core.Action.State.Connect
 import qualified Reactive.Plugins.Core.Action.State.Graph          as Graph
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry     as UIRegistry
@@ -151,7 +151,7 @@ instance ActionStateUpdater Action where
                 newState'                    = newState & Global.iteration            +~ 1
                                                         & Global.connect . connecting .~ Nothing
                 (uiUpdate, newState)         = case oldConnecting of
-                    Just (Connecting _ _ _ (DragHistory _ _)) -> execCommand (connectNodes GUI src dst) oldState
+                    Just (Connecting _ _ _ (DragHistory _ _)) -> execCommand (connectNodes src dst) oldState
                     _                                         -> (return (), oldState)
 
 stopDrag :: PortRef -> Global.State -> Global.State

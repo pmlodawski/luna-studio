@@ -27,7 +27,7 @@ import qualified Reactive.Plugins.Core.Action.State.Graph          as Graph
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry     as UIRegistry
 import qualified Reactive.Plugins.Core.Action.State.Camera         as Camera
 import qualified Reactive.Plugins.Core.Action.State.Global         as Global
-import           Reactive.Plugins.Core.Action.Commands.Command     (Command, command, pureCommand, ioCommand, CommandSource(..))
+import           Reactive.Plugins.Core.Action.Commands.Command     (Command, command, pureCommand, ioCommand)
 
 import qualified Control.Monad.State                               as MState
 
@@ -81,14 +81,18 @@ updateConnectionWidget widgetId connection = UI.updateConnection widgetId visibl
     UIConnection.Connection _ visible (Vector2 fromX fromY) (Vector2 toX toY) = connection
 
 
+connectNodes :: PortRef -> PortRef -> Command Global.State ()
+connectNodes src dst = batchConnectNodes src dst >> localConnectNodes src dst
 
-enableTC :: Bool
-enableTC = True
+
+batchConnectNodes :: PortRef -> PortRef -> Command Global.State ()
+batchConnectNodes src dst = ioCommand $ \state -> let
+    workspace = state ^. Global.workspace
+    in BatchCmd.connectNodes workspace src dst
 
 
-connectNodes :: CommandSource -> PortRef -> PortRef -> Command Global.State ()
-connectNodes cmdSrc src dst = command $ \state -> let
-    batchConnect                 = BatchCmd.connectNodes (state ^. Global.workspace) src dst
+localConnectNodes :: PortRef -> PortRef -> Command Global.State ()
+localConnectNodes src dst = command $ \state -> let
     oldGraph                     = state ^. Global.graph
     oldRegistry                  = state ^. Global.uiRegistry
     newState                     = state  & Global.graph      .~ newGraph
@@ -97,11 +101,8 @@ connectNodes cmdSrc src dst = command $ \state -> let
     uiUpdate                     = forM_ file $ \f -> createConnectionWidget (f ^. objectId) (f ^. widget) color
     validConnection              = (isJust $ NodeUtils.getPortByRef src oldNodesMap) && (isJust $ NodeUtils.getPortByRef dst oldNodesMap)
     color                        = if validConnection then (colorVT valueType) else colorError
-    
-    portFrom                     = NodeUtils.getPortByRef src oldNodesMap
-    portTo                       = NodeUtils.getPortByRef dst oldNodesMap
-    nodeTo                       = NodeUtils.getNodeByRef dst oldNodesMap
-    tcResult                     = MockTC.connect <$> portFrom <*> portTo <*> nodeTo & join
+
+    tcResult                     = MockTC.typecheck src dst oldNodesMap
     newNodesMap                  = case tcResult of Nothing      -> oldNodesMap
                                                     Just newNode -> IntMap.adjust (const newNode) (newNode ^. nodeId) oldNodesMap
     oldNodesMap                  = Graph.getNodesMap oldGraph
@@ -112,8 +113,7 @@ connectNodes cmdSrc src dst = command $ \state -> let
             (widget, newRegistry)= UIRegistry.register UIRegistry.sceneGraphId uiConnection def oldRegistry
             uiConnection         = getConnectionLine newNodesMap $ Graph.Connection connId src dst
         Nothing                 -> (Nothing, oldRegistry)
-    uiUpdate'                    = case cmdSrc of Batch -> uiUpdate; GUI -> uiUpdate >> batchConnect
-    in case tcResult of Just _  -> (uiUpdate', newState)
+    in case tcResult of Just _  -> (uiUpdate, newState)
                         Nothing -> (return (), state)
 
 

@@ -35,7 +35,7 @@ import           Reactive.Plugins.Core.Action.Commands.Graph
 import           Reactive.Plugins.Core.Action.State.Graph
 import qualified Reactive.Plugins.Core.Action.State.Global             as Global
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry         as UIRegistry
-import           Reactive.Plugins.Core.Action.Commands.Command         (execCommand, CommandSource(GUI))
+import           Reactive.Plugins.Core.Action.Commands.Command         (execCommand)
 import           Reactive.Plugins.Core.Action.Commands.DisconnectNodes (disconnectAll)
 
 import qualified Reactive.Plugins.Core.Action.State.ConnectionPen as ConnectionPen
@@ -172,7 +172,7 @@ tryAutoConnect (srcNodeId, dstNodeId) oldState = result where
                                             -- MOCK TC -- BatchCmd.connectNodes workspace srcPortRef dstPortRef
                                         , snd $ execCommand (updatePortAngles >> updateConnections) st)
                                        where
-            (connectUI, st)          = execCommand (connectNodes GUI srcPortRef dstPortRef) oldState
+            (connectUI, st)          = execCommand (connectNodes srcPortRef dstPortRef) oldState
             srcPortRef               = PortRef srcNodeId OutputPort srcPortId
             dstPortRef               = PortRef dstNodeId InputPort  dstPortId
         Nothing                     -> Nothing

@@ -8,7 +8,6 @@ import Control.Monad.Writer
 import Control.Lens.Zoom
 import Control.Lens.Internal.Zoom
 
-data CommandSource = Batch | GUI deriving (Show, Eq)
 
 newtype IOAction = IOAction { unIOAction :: IO () }
 
