@@ -42,7 +42,6 @@ import qualified Tmp.TypecheckerTest             as Typechecker -- TODO: Remove
 import           Tmp.BatchMock
 import           Reactive.Plugins.Loader.Loader
 
-import Utils.Graph.AutoLayout -- TODO: Remove
 
 makeNetworkDescription :: forall t. Frameworks t => WebSocket -> Bool -> Workspace -> Moment t ()
 makeNetworkDescription = CoreNetwork.makeNetworkDescription
