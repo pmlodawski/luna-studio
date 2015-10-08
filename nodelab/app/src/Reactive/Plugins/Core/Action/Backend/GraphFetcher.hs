@@ -45,7 +45,7 @@ instance ActionStateUpdater Action where
     execSt (ShowGraph nodes edges) state = ActionUI (PerformIO action) newState where
         (action, newState) = execCommand (renderGraph nodes edges) state
 
-    execSt (GraphFetched nodes edges) state = execSt [ShowGraph nodes edges, PrepareValues nodes, RequestRun] state
+    execSt (GraphFetched nodes edges) state = execSt [ShowGraph nodes edges, PrepareValues nodes] state
 
     execSt RequestRun state = ActionUI (PerformIO BatchCmd.runMain) state
 
@@ -53,7 +53,8 @@ instance ActionStateUpdater Action where
         workspace     = state ^. Global.workspace
         prepareValues = case workspace ^. interpreterState of
             Fresh  -> BatchCmd.insertSerializationModes workspace nodes
-            AllSet -> BatchCmd.requestValues workspace nodes
+            AllSet -> BatchCmd.runMain
+                   >> BatchCmd.requestValues workspace nodes
 
 
 instance ActionUIUpdater Reaction where

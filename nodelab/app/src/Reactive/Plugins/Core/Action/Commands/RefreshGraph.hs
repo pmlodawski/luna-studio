@@ -12,5 +12,6 @@ refreshGraph :: Command State ()
 refreshGraph = do
     unrender
     Global.workspace . Workspace.shouldLayout .= True
+    Global.workspace . Workspace.interpreterState .= Workspace.Fresh
     workspace <- use Global.workspace
     performIO $ BatchCmd.getGraph workspace

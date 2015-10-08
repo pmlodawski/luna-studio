@@ -22,6 +22,7 @@ data Event = ProjectsList [Project]
            | WorkspaceCreated Breadcrumbs
            | NodeAdded Node
            | NodeRemoved
+           | NodeModified
            | NodesConnected
            | NodesDisconnected
            | GraphViewFetched [Node] [(PortRef, PortRef)]

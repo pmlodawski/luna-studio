@@ -29,6 +29,7 @@ toAction (Batch (Batch.NodeAdded _))              = Just RequestRerun
 toAction (Batch  Batch.NodesConnected)            = Just RequestRerun
 toAction (Batch  Batch.NodesDisconnected)         = Just RequestRerun
 toAction (Batch  Batch.NodeRemoved)               = Just RequestRerun
+toAction (Batch  Batch.NodeModified)              = Just RequestRerun
 toAction (Batch (Batch.ValueUpdate nodeId value)) = Just $ UpdateValue nodeId value
 toAction _                                        = Nothing
 
