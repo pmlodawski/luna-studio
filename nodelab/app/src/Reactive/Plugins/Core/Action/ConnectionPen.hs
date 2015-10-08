@@ -169,7 +169,7 @@ tryAutoConnect (srcNodeId, dstNodeId) oldState = result where
                                             putStrLn $ "dstPorts         " <> display dstPorts
                                             putStrLn $ "dstPortsFiltered " <> display dstPortsFiltered
                                             connectUI
-                                            BatchCmd.connectNodes workspace srcPortRef dstPortRef
+                                            -- MOCK TC -- BatchCmd.connectNodes workspace srcPortRef dstPortRef
                                         , snd $ execCommand (updatePortAngles >> updateConnections) st)
                                        where
             (connectUI, st)          = execCommand (connectNodes srcPortRef dstPortRef) oldState

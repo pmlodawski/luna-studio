@@ -1,6 +1,7 @@
 module Utils.Nodes where
 
 import           Utils.PreludePlus
+import qualified Utils.MockHelper  as MockHelper
 import           Utils.Vector      (Vector2)
 
 import qualified Object.Node       as Node
@@ -10,6 +11,10 @@ import           Object.Port       (Port(Port))
 import qualified Object.Object     as Object
 
 import qualified Data.IntMap.Lazy  as IntMap
+
+
+getNodeOutType :: Node -> Port.ValueType
+getNodeOutType = head . MockHelper.getOutputType . view Node.nodeType
 
 
 getNodePos :: Node.NodesMap -> Object.NodeId -> Vector2 Double

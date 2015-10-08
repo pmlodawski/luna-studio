@@ -12,9 +12,9 @@ import           Object.Node      (Node(Node))
 import qualified Object.Object    as Object
 
 
-tryConnect :: Port -> Port -> Node -> Maybe Node
-tryConnect portFrom portTo node = Node.nodeType (MockHelper.applyType pidTo typeFrom) node
-    where typeFrom = portFrom ^. Port.portValueType
+tryConnect :: Port -> Node -> Node -> Maybe Node
+tryConnect portTo nodeFrom nodeTo = Node.nodeType (MockHelper.applyType pidTo typeFrom) nodeTo
+    where typeFrom = NodeUtils.getNodeOutType nodeFrom
           pidTo    = portTo   ^. Port.portId
 
 
@@ -24,7 +24,7 @@ revertNode node = node & Node.nodeType .~ newTp
 
 
 typecheck :: Node.PortRef -> Node.PortRef -> Node.NodesMap -> Maybe Node
-typecheck src dst nodesMap = tryConnect <$> portFrom <*> portTo <*> nodeTo & join
-    where portFrom = NodeUtils.getPortByRef src nodesMap
+typecheck src dst nodesMap = tryConnect <$> portTo <*> nodeFrom <*> nodeTo & join
+    where nodeFrom = NodeUtils.getNodeByRef src nodesMap
           portTo   = NodeUtils.getPortByRef dst nodesMap
           nodeTo   = NodeUtils.getNodeByRef dst nodesMap
