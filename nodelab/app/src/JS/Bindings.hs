@@ -79,7 +79,7 @@ foreign import javascript unsafe "require('exampleData')" getExampleData :: IO J
 foreign import javascript unsafe "app.displayRejectedMessage()"
     displayRejectedMessage :: IO ()
 
-foreign import javascript unsafe "common.term.write($1)"
+foreign import javascript unsafe "app.writeToTerminal($1)"
     writeToTerminal' :: JSString -> IO ()
 
 writeToTerminal :: String -> IO ()

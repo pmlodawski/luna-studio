@@ -78,8 +78,8 @@ function initializeGl() {
     $('#log').remove();
     $('#spinner').remove();
 
-    $('#editorContainer').append('<div id="term"></div>');
     initTerminal();
+    initUserInfo();
     $(document).unbind('keydown').bind('keydown', function (event) {
       if(event.keyCode == 8) {
         event.preventDefault();
@@ -89,15 +89,27 @@ function initializeGl() {
 
 }
 
+function initUserInfo() {
+  $('body').append('<div id="userInfo"><div>Signed in as ' + window.currentUser.name + '. <a class="logout" href="' + window.currentUser.logout + '">Logout</a><a class="tutorial" href="#">Tutorial</a></div></div>')
+  $('body').append(require('tutorial')())
+
+  if (localStorage.getItem('tutorial') == "1") $(".tutorial-box").hide();
+  $(".tutorial-box").click(function(){ $(".tutorial-box").hide(); localStorage.setItem('tutorial', "1")});
+  $(".tutorial").click(function(){ $(".tutorial-box").show() });
+}
 function initTerminal() {
+  $('body').append('<div id="termContainer"><button id="termClose">Close</button><div id="term"></div></div>');
   $$.term = new Terminal({
     useStyle: true,
-    rows: 10,
-    cols: 80
+    rows: 20,
+    cols: 40
   });
 
   $$.term.open($("#term")[0]);
   $$.term.write('\x1b[31mWelcome to NodeLab!\x1b[m\r\n');
+  $("#termClose").click(function(){
+    $('#termContainer').css({height: "0px"});
+  });
 }
 
 function initCommonWidgets() {
@@ -260,6 +272,11 @@ function removeWidget(widgetId) {
   delete $$.registry[widgetId];
 }
 
+function writeToTerminal(str) {
+  $('#termContainer').css({height: "300px"});
+  $$.term.write(str)
+}
+
 var displayRejectedMessage = function () {
   $("canvas").remove();
   $("#htmlcanvas-pan").remove();
@@ -294,7 +311,8 @@ module.exports = {
   getNode:                  function(index) { return $$.nodes[index];    },
   getNodes:                 function()      { return _.values($$.nodes); },
   nodeSearcher:             function()      { return $$.node_searcher;   },
-  shouldRender:             function()      { shouldRender = true;       }
+  shouldRender:             function()      { shouldRender = true;       },
+  writeToTerminal:          writeToTerminal
 };
 
 

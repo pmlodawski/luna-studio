@@ -33,6 +33,10 @@
   <script type="text/javascript">
     window.backendAddress = "ws://localhost:8088/";
     window.resourcesPath = "";
+    window.currentUser = {
+      name:   "Paul Graham",
+      logout: "/users/sign_out"
+    };
     require('app').start();
   </script>
 

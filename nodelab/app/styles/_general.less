@@ -2,10 +2,16 @@ html, body {
   height: 100%; padding: 0px; margin: 0px;
   overflow: hidden;
   background-color: #1a1a1a;
+  color: white;
 }
 html, body, input {
   font-family: 'LatoLatinBlack';
 }
+
+a {
+  color: white;
+}
+
 .renderer {
   width: 100%;
   height: 100%;
@@ -84,7 +90,7 @@ html, body, input {
   right: 0;
   bottom: 0;
   width: 30%;
-
+  top: 80px;
   button {
     position: absolute;
     z-index: 1001;
@@ -93,15 +99,52 @@ html, body, input {
   }
 }
 
+#userInfo {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 30%;
+  height: 80px;
+  overflow: hidden;
+  .logout {
+    float: right;
+  }
+  .tutorial {
+    clear: right;
+    margin-top: 10px;
+    float: right;
+  }
+  box-sizing: border-box;
+  padding: 10px;
+}
 #editor {
+  height: 100%;
   width:100%;
   position: absolute;
-  top: 0;
   font-family: "Consolas", monospace;
   font-size: 13px;
-  bottom: 170px;
+  bottom:0px;
 }
 
+#termContainer {
+  position: fixed;
+  width: 50%;
+  right: 0;
+  bottom: 0;
+  font-family: "Consolas", monospace;
+  font-size: 13px;
+  width: 30%;
+  height: 0px;
+  overflow: hidden;
+  button {
+    position: absolute;
+    z-index: 1002;
+    right: 10px;
+    top: 10px;
+  }
+  z-index:1001;
+  transition: height 1s ease;
+}
 
 .terminal {
   border: #000 solid 5px;
@@ -109,8 +152,8 @@ html, body, input {
   font-size: 13px;
   color: #ddd;
   background: #1a1a1a;
-  position: absolute;
-  bottom: 0;
+  width: 100%;
+  height: 100%;
   z-index: 10;
 }
 
