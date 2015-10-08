@@ -68,10 +68,8 @@ instance PrettyPrinter Action where
 
 
 toAction :: Event Node -> Global.State -> Maybe Action
-toAction (Mouse (Mouse.Event (Mouse.Wheel delta) pos button keyMods _)) _ = case keyMods of
-    Keyboard.KeyMods False True  False False -> Just $ WheelAction Zoom pos delta
-    Keyboard.KeyMods False False False False -> Just $ WheelAction Pan  pos delta
-    otherwise                                -> Nothing
+toAction (Mouse (Mouse.Event (Mouse.Wheel delta) pos button keyMods _)) _ = Just $ WheelAction action pos delta where
+    action = if keyMods ^. ctrl then Zoom else Pan
 toAction (Mouse (Mouse.Event tpe pos button keyMods _)) _ = case button of
     RightButton        -> case tpe of
         Mouse.Pressed  -> case keyMods of
