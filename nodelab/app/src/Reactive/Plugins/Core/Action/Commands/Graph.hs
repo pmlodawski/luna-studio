@@ -82,7 +82,15 @@ updateConnectionWidget widgetId connection = UI.updateConnection widgetId visibl
 
 
 connectNodes :: PortRef -> PortRef -> Command Global.State ()
-connectNodes src dst = batchConnectNodes src dst >> localConnectNodes src dst
+connectNodes src dst = do
+    nodesMap <- Graph.getNodesMap <$> use Global.graph
+    let tcResult = MockTC.typecheck src dst nodesMap
+        nodeFun  = IntMap.adjust (const newNode) (newNode ^. nodeId) nodesMap where newNode = fromJust tcResult
+
+    when (isJust tcResult) $ do
+        batchConnectNodes src dst
+        localConnectNodes src dst
+        Global.graph %= Graph.updateNodes nodeFun 
 
 
 batchConnectNodes :: PortRef -> PortRef -> Command Global.State ()
@@ -99,12 +107,10 @@ localConnectNodes src dst = command $ \state -> let
                                           & Global.uiRegistry .~ newRegistry
     valueType                    = view portValueType $ getPort oldGraph src
     uiUpdate                     = forM_ file $ \f -> createConnectionWidget (f ^. objectId) (f ^. widget) color
-    validConnection              = (isJust $ NodeUtils.getPortByRef src oldNodesMap) && (isJust $ NodeUtils.getPortByRef dst oldNodesMap) && (isJust tcResult)
+    validConnection              = (isJust $ NodeUtils.getPortByRef src oldNodesMap) && (isJust $ NodeUtils.getPortByRef dst oldNodesMap)
     color                        = if validConnection then (colorVT valueType) else colorError
-
-    tcResult                     = MockTC.typecheck src dst oldNodesMap
-    newNodesMap                  = case tcResult of Nothing      -> oldNodesMap
-                                                    Just newNode -> IntMap.adjust (const newNode) (newNode ^. nodeId) oldNodesMap
+    
+    newNodesMap                  = oldNodesMap
     oldNodesMap                  = Graph.getNodesMap oldGraph
     updSourceGraph               = Graph.updateNodes newNodesMap oldGraph
     (connId, newGraph)           = Graph.addConnection src dst updSourceGraph
@@ -113,8 +119,7 @@ localConnectNodes src dst = command $ \state -> let
             (widget, newRegistry)= UIRegistry.register UIRegistry.sceneGraphId uiConnection def oldRegistry
             uiConnection         = getConnectionLine newNodesMap $ Graph.Connection connId src dst
         Nothing                 -> (Nothing, oldRegistry)
-    in case tcResult of Just _  -> (uiUpdate, newState)
-                        Nothing -> (return (), state)
+    in (uiUpdate, newState)
 
 
 getConnectionLine :: NodesMap -> Connection -> UIConnection.Connection
