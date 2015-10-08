@@ -49,7 +49,7 @@ reactToBatchEvent project event state = case (state, event) of
 handleWorkspaceCreation :: Project -> Breadcrumbs -> Action
 handleWorkspaceCreation project crumbs = (action, InterpreterSetup workspace) where
     action    = BatchCmd.getProjectId
-    workspace = Workspace project (head $ project ^. libs) crumbs Fresh
+    workspace = Workspace project (head $ project ^. libs) crumbs Fresh False
 
 handleProjectIdResponse :: Workspace -> Maybe Int32 -> Action
 handleProjectIdResponse workspace Nothing = setupInterpreterAction workspace

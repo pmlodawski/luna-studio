@@ -13,6 +13,7 @@ data Workspace = Workspace { _project          :: Project
                            , _library          :: Library
                            , _breadcrumbs      :: Breadcrumbs
                            , _interpreterState :: InterpreterState
+                           , _shouldLayout     :: Bool
                            } deriving (Show, Eq)
 
 makeLenses ''Workspace
@@ -21,4 +22,5 @@ instance PrettyPrinter Workspace where
     display workspace = "Workspace(" <> show (workspace ^. project)
                               <> "," <> show (workspace ^. library)
                               <> "," <> show (workspace ^. breadcrumbs)
+                              <> "," <> show (workspace ^. shouldLayout)
                               <> ")"

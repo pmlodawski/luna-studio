@@ -67,6 +67,10 @@ instance PrettyPrinter State where
 connectionToRefs :: Connection -> (PortRef, PortRef)
 connectionToRefs conn = (conn ^. source, conn ^. destination)
 
+connectionToNodeIds :: Connection -> (NodeId, NodeId)
+connectionToNodeIds conn = (src ^. refPortNodeId, dst ^. refPortNodeId) where
+    (src, dst) = connectionToRefs conn
+
 genId :: IntMap a -> ID
 genId intMap = if IntMap.null intMap then 0
                                      else 1 + (fst $ IntMap.findMax intMap)

@@ -20,4 +20,4 @@ fakeCrumbs :: Breadcrumbs
 fakeCrumbs = Breadcrumbs [Module "FAKEMODULE"]
 
 fakeWorkspace :: Workspace
-fakeWorkspace = Workspace fakeProject fakeLibrary fakeCrumbs Fresh
+fakeWorkspace = Workspace fakeProject fakeLibrary fakeCrumbs Fresh False

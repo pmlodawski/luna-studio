@@ -1,6 +1,7 @@
 module Reactive.Plugins.Core.Action.Commands.RefreshGraph where
 
 import           Utils.PreludePlus
+import qualified Batch.Workspace                                     as Workspace
 import qualified BatchConnector.Commands                             as BatchCmd
 import qualified Reactive.Plugins.Core.Action.State.Global           as Global
 import           Reactive.Plugins.Core.Action.State.Global           (State)
@@ -10,5 +11,6 @@ import           Reactive.Plugins.Core.Action.Commands.UnrenderGraph (unrender)
 refreshGraph :: Command State ()
 refreshGraph = do
     unrender
+    Global.workspace . Workspace.shouldLayout .= True
     workspace <- use Global.workspace
     performIO $ BatchCmd.getGraph workspace
