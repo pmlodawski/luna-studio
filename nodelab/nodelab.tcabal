@@ -46,6 +46,7 @@ executable nodelab
                      , reactive-banana
                      , text
                      , transformers
+                     , fgl
                      , mtl
                      , MissingH
                      , split

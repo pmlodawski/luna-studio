@@ -45,7 +45,7 @@ instance ActionStateUpdater Action where
     execSt (ShowGraph nodes edges) state = ActionUI (PerformIO action) newState where
         (newAction, newState) = execCommand (renderGraph newNodes edges) state
         newNodes = ((\n -> n & nodePos .~ coords ^. at (n ^. nodeId) . non (Vector2 0.0 0.0))) <$> nodes
-        coords = autoLayout (view nodeId <$> nodes) ((over both (view refPortNodeId)) <$> edges) 70.0 70.0
+        coords = autoLayout (view nodeId <$> nodes) ((over both (view refPortNodeId)) <$> edges) 150.0 150.0
         action = newAction >> print coords
 
     execSt (GraphFetched nodes edges) state = execSt [ShowGraph nodes edges, PrepareValues nodes, RequestRun] state

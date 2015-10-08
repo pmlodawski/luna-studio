@@ -9,7 +9,6 @@ packages:
   - ../libs/data/serialization
   - ../libs/batch/plugins/project-manager-api
   - ../tools/batch/plugins/interpreter-api
-  - ../third-party/fgl
   - ../third-party/graphviz-2999.17.0.2.2
 extra-deps:
   - HUnit-1.2.5.2
@@ -90,3 +89,4 @@ extra-deps:
   - cassava-0.4.3.1
   - blaze-builder-0.4.0.1
   - data-hash-0.2.0.1
+  - fgl-5.5.2.3

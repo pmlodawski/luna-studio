@@ -1,7 +1,9 @@
 module Utils.Graph.Graph ( Graph(..)
-                         , fromEdgesList
+                         , fromConnections
                          , neighbourhood
                          , transposeGraph
+                         , getNodes
+                         , getEdges
                          ) where
 
 import           Utils.PreludePlus
@@ -13,11 +15,11 @@ import           Data.Tuple          (swap)
 data Graph a = Graph { _neighbourhood :: Map a [a] } deriving (Show, Eq)
 makeLenses ''Graph
 
-fromEdgesList :: Ord a => [a] -> [(a, a)] -> Graph a
-fromEdgesList nodes edges = Graph $ execState (addEdges edges) (initialMap nodes)
+fromConnections :: Ord a => [a] -> [(a, a)] -> Graph a
+fromConnections nodes edges = Graph $ execState (addEdges edges) (initialMap nodes)
 
-toEdgesList :: Graph a -> ([a], [(a, a)])
-toEdgesList (Graph m) = (nodes, edges) where
+toConnections :: Graph a -> ([a], [(a, a)])
+toConnections (Graph m) = (nodes, edges) where
     nodes = Map.keys m
     edges = concatMap (uncurry nodeToEdges) $ Map.toList m
 
@@ -25,11 +27,17 @@ nodeToEdges :: a -> [a] -> [(a, a)]
 nodeToEdges node neighs = zip (repeat node) neighs
 
 transposeGraph :: Ord a => Graph a -> Graph a
-transposeGraph graph = fromEdgesList nodes (swap <$> edges) where
-    (nodes, edges) = toEdgesList graph
+transposeGraph graph = fromConnections nodes (swap <$> edges) where
+    (nodes, edges) = toConnections graph
 
 initialMap :: Ord a => [a] -> Map a [a]
 initialMap nodes = fromList $ zip nodes (repeat [])
+
+getNodes :: Ord a => Graph a -> [a]
+getNodes = fst . toConnections
+
+getEdges :: Ord a => Graph a -> [(a, a)]
+getEdges = snd . toConnections
 
 addEdges :: Ord a => [(a, a)] -> State (Map a [a]) ()
 addEdges edges = mapM_ (uncurry addEdge) edges
