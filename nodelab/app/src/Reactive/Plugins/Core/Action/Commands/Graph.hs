@@ -27,7 +27,7 @@ import qualified Reactive.Plugins.Core.Action.State.Graph          as Graph
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry     as UIRegistry
 import qualified Reactive.Plugins.Core.Action.State.Camera         as Camera
 import qualified Reactive.Plugins.Core.Action.State.Global         as Global
-import           Reactive.Plugins.Core.Action.Commands.Command     (Command, command, pureCommand, ioCommand)
+import           Reactive.Plugins.Core.Action.Commands.Command     (Command, command, pureCommand, ioCommand, CommandSource(..))
 
 import qualified Control.Monad.State                               as MState
 
@@ -86,12 +86,8 @@ enableTC :: Bool
 enableTC = True
 
 
-connectNodes :: PortRef -> PortRef -> Command Global.State ()
-connectNodes = if enableTC then connectNodesTC else connectNodesNoTc
-
-
-connectNodesTC :: PortRef -> PortRef -> Command Global.State ()
-connectNodesTC src dst = command $ \state -> let
+connectNodes :: CommandSource -> PortRef -> PortRef -> Command Global.State ()
+connectNodes cmdSrc src dst = command $ \state -> let
     batchConnect                 = BatchCmd.connectNodes (state ^. Global.workspace) src dst
     oldGraph                     = state ^. Global.graph
     oldRegistry                  = state ^. Global.uiRegistry
@@ -116,31 +112,9 @@ connectNodesTC src dst = command $ \state -> let
             (widget, newRegistry)= UIRegistry.register UIRegistry.sceneGraphId uiConnection def oldRegistry
             uiConnection         = getConnectionLine newNodesMap $ Graph.Connection connId src dst
         Nothing                 -> (Nothing, oldRegistry)
-    in case tcResult of Just _  -> (uiUpdate >> batchConnect, newState)
+    uiUpdate'                    = case cmdSrc of Batch -> uiUpdate; GUI -> uiUpdate >> batchConnect
+    in case tcResult of Just _  -> (uiUpdate', newState)
                         Nothing -> (return (), state)
-
-
-connectNodesNoTc :: PortRef -> PortRef -> Command Global.State ()
-connectNodesNoTc src dst = command $ \state -> let
-    batchConnect                 = BatchCmd.connectNodes (state ^. Global.workspace) src dst
-    oldGraph                     = state ^. Global.graph
-    oldRegistry                  = state ^. Global.uiRegistry
-    newState                     = state  & Global.graph      .~ newGraph
-                                          & Global.uiRegistry .~ newRegistry
-    valueType                    = view portValueType $ getPort oldGraph src
-    uiUpdate                     = forM_ file $ \f -> createConnectionWidget (f ^. objectId) (f ^. widget) color
-    validConnection              = (isJust $ NodeUtils.getPortByRef src oldNodesMap) && (isJust $ NodeUtils.getPortByRef dst oldNodesMap)
-    color                        = if validConnection then (colorVT valueType) else colorError
-    newNodesMap                  = oldNodesMap
-    oldNodesMap                  = Graph.getNodesMap oldGraph
-    updSourceGraph               = Graph.updateNodes newNodesMap oldGraph
-    (connId, newGraph)           = Graph.addConnection src dst updSourceGraph
-    (file, newRegistry)          = case connId of
-        Just connId             -> (Just widget, newRegistry) where
-            (widget, newRegistry)= UIRegistry.register UIRegistry.sceneGraphId uiConnection def oldRegistry
-            uiConnection         = getConnectionLine newNodesMap $ Graph.Connection connId src dst
-        Nothing                 -> (Nothing, oldRegistry)
-    in (uiUpdate >> batchConnect, newState)
 
 
 getConnectionLine :: NodesMap -> Connection -> UIConnection.Connection

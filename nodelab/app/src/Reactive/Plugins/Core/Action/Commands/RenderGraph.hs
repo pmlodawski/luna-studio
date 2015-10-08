@@ -4,14 +4,14 @@ import           Utils.PreludePlus
 import           Reactive.Plugins.Core.Action.State.Global     (State)
 import qualified Reactive.Plugins.Core.Action.Commands.Graph   as Graph
 import           Reactive.Plugins.Core.Action.Commands.AddNode (addNode)
-import           Reactive.Plugins.Core.Action.Commands.Command (Command)
+import           Reactive.Plugins.Core.Action.Commands.Command (Command, CommandSource(Batch))
 
 import           Object.Node (Node, PortRef)
 
 renderGraph :: [Node] -> [(PortRef, PortRef)] -> Command State ()
 renderGraph nodes edges = do
     mapM_ addNode nodes
-    mapM_ (uncurry Graph.connectNodes) edges
+    mapM_ (uncurry $ Graph.connectNodes Batch) edges
     Graph.updatePortAngles
     Graph.updateConnections
     Graph.updatePortAnglesUI
