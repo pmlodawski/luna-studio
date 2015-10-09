@@ -25,7 +25,7 @@ removeNode node key _ = case key of
 
 performRemoval :: Node -> Command State ()
 performRemoval node = do
-    danglingConns <- uses Global.graph (Graph.connectionsEndingWith $ node ^. nodeId)
+    danglingConns <- uses Global.graph (Graph.connectionIdsContainingNode $ node ^. nodeId)
     localDisconnectAll danglingConns
     Global.graph %= Graph.removeNode (node ^. nodeId)
     Global.selection . Selection.nodeIds %= drop 1

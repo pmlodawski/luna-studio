@@ -98,7 +98,7 @@ getConnections :: State -> [Connection]
 getConnections = IntMap.elems . getConnectionsMap
 
 getConnectionsMap :: State -> ConnectionsMap
-getConnectionsMap = (^. connectionsMap) 
+getConnectionsMap = (^. connectionsMap)
 
 getConnectionNodeIds :: ConnectionId -> State -> Maybe (NodeId, NodeId)
 getConnectionNodeIds connId state = (mapTup _refPortNodeId) <$> refs
@@ -148,16 +148,30 @@ removeConnection connId state = state & connectionsMap %~ IntMap.delete connId
 lookUpConnection :: State -> ConnectionId -> Maybe Connection
 lookUpConnection state connId = IntMap.lookup connId $ getConnectionsMap state
 
-endsWith :: NodeId -> Connection -> Bool
-endsWith id conn = (conn ^. source      . refPortNodeId == id)
-                || (conn ^. destination . refPortNodeId == id)
+containsNode :: NodeId -> Connection -> Bool
+containsNode id conn = (conn ^. source      . refPortNodeId == id)
+                    || (conn ^. destination . refPortNodeId == id)
 
-connectionsEndingWith :: NodeId -> State -> [ConnectionId]
-connectionsEndingWith id state = view connId <$> filter (endsWith id) connections where
-    connections = getConnections state
+startsWithNode :: NodeId -> Connection -> Bool
+startsWithNode id conn = conn ^. source . refPortNodeId == id
+
+endsWithNode :: NodeId -> Connection -> Bool
+endsWithNode id conn = conn ^. destination . refPortNodeId == id
+
+connectionsContainingNode :: NodeId -> State -> [Connection]
+connectionsContainingNode id state = filter (containsNode id) $ getConnections state
+
+connectionIdsContainingNode :: NodeId -> State -> [ConnectionId]
+connectionIdsContainingNode id state = (^. connId) <$> connectionsContainingNode id state
+
+connectionsStartingWithNode :: NodeId -> State -> [Connection]
+connectionsStartingWithNode id state = filter (startsWithNode id) $ getConnections state
+
+connectionsEndingWithNode :: NodeId -> State -> [Connection]
+connectionsEndingWithNode id state = filter (endsWithNode id) $ getConnections state
 
 hasConnections :: NodeId -> State -> Bool
-hasConnections nodeId state = not . null $ connectionsEndingWith nodeId state
+hasConnections nodeId state = not . null $ connectionsContainingNode nodeId state
 
 addAccessor :: PortRef -> PortRef -> State -> (Maybe ConnectionId, State)
 addAccessor sourcePortRef destPortRef state =

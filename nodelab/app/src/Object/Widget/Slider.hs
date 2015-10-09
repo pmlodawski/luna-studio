@@ -21,11 +21,11 @@ data Slider a = Slider { _pos       :: Vector2 Double
 makeLenses ''Slider
 
 class (Num a, Show a, Typeable a) => IsSlider a where
-    displayValue ::         Slider a -> String
-    value        ::         Slider a -> a
-    setValue     :: a    -> Slider a -> Slider a
+    displayValue ::           Slider a -> String
+    value        ::           Slider a -> a
+    setValue     :: a      -> Slider a -> Slider a
 
-    setEnabled   :: Bool -> Slider a -> Slider a
+    setEnabled   :: Bool   -> Slider a -> Slider a
     setEnabled newEnabled = enabled .~ newEnabled
 
     setNormValue :: Double -> Slider a -> Slider a
@@ -50,7 +50,6 @@ instance IsSlider Double where
         min             = slider ^. minValue
         max             = slider ^. maxValue
         range           = max - min
-
 
 instance IsSlider Int where
     displayValue s      = show $ value s
