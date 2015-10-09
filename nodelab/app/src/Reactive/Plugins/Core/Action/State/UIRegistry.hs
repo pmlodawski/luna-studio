@@ -19,7 +19,7 @@ import qualified Control.Monad.State     as MState
 import qualified Control.Monad.Trans.RWS as RWS
 import           Control.Monad.Trans.RWS (RWS)
 
-import           Reactive.Plugins.Core.Action.Commands.Command (Command, performIO)
+import           Reactive.Plugins.Core.Action.Commands.Command (Command, performIO, pureCommand)
 
 import Debug.Trace
 
@@ -95,16 +95,10 @@ register parent a handlers state = (widgetFile, state & widgets .~ newWidgets') 
     dynamicFile   = WidgetFile newId (toCtxDynamic a) (Just parent) [] handlers
     widgetFile    = WidgetFile newId a (Just parent) [] handlers
 
-type UIState a b = MState.State (State b, IO ()) a
+registerM :: DisplayObjectClass a => WidgetId -> a -> UIHandlers b -> Command (State b) (WidgetFile b a)
+registerM = MState.state .:. register
 
-registerM :: DisplayObjectClass a => WidgetId -> a -> UIHandlers b -> UIState (WidgetFile b a) b
-registerM parent widget handlers = do
-    (st, acts) <- MState.get
-    let (widget', st') = register parent widget handlers st
-    MState.put (st', acts)
-    return widget'
-
-update :: WidgetId -> DisplayObject -> State a -> State a -- redefine in context of updateFile
+update :: WidgetId -> DisplayObject -> State b -> State b -- redefine in context of updateFile
 update oid a state  = state & widgets .~ newWidgets where
     oldFile        = IntMap.lookup oid oldWidgets
     newWidgets     = case oldFile of
@@ -120,17 +114,8 @@ updateFile oid mutator state = state & widgets .~ newWidgets where
         Nothing   -> oldWidgets
     oldWidgets = state ^. widgets
 
-updateM :: DisplayObjectClass a => WidgetId -> a -> UIState () b
-updateM oid widget = do
-    (st, acts) <- MState.get
-    let st' = update oid (toCtxDynamic widget) st
-    MState.put (st', acts)
-    return ()
-
-uiAction :: IO () -> UIState () b
-uiAction act = do
-    (st, acts) <- MState.get
-    MState.put (st, acts >> act)
+updateM :: DisplayObjectClass a => WidgetId -> a -> Command (State b) ()
+updateM id a = pureCommand $ update id (toCtxDynamic a)
 
 registerHandler :: WidgetId -> (UIHandlers a -> UIHandlers a) -> State a -> State a
 registerHandler oid mutator state = updateFile oid fileMutator state where

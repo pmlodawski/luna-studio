@@ -6,7 +6,7 @@ import           Utils.PreludePlus
 import           Utils.Vector
 
 import qualified Data.Text.Lazy        as Text
-import qualified Control.Monad.State   as MState
+import           Control.Monad.State   hiding (State)
 
 import           Object.Object
 import           Object.Node
@@ -23,7 +23,6 @@ import           Reactive.Plugins.Core.Action.State.Global         (State)
 import qualified Reactive.Plugins.Core.Action.State.Graph          as Graph
 import           Reactive.Plugins.Core.Action.State.UIRegistry     (sceneGraphId)
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry     as UIRegistry
-import           Reactive.Plugins.Core.Action.State.UIRegistry     (UIState)
 import           Reactive.Plugins.Core.Action.Commands.EnterNode   (enterNode)
 import           Reactive.Plugins.Core.Action.Commands.RemoveNode  (removeNode)
 import           Reactive.Plugins.Core.Action.Commands.Command     (Command, performIO)
@@ -37,21 +36,16 @@ import           ThreeJS.Types         (add)
 
 addNode :: Node -> Command State ()
 addNode node = do
-    graph    <- use Global.graph
-    registry <- use Global.uiRegistry
-    let newGraph              = Graph.addNode node graph
-        (newRegistry, action) = registerNode node registry
-    performIO action
-    Global.graph      .= newGraph
-    Global.uiRegistry .= newRegistry
+    zoom Global.graph $ modify (Graph.addNode node)
+    zoom Global.uiRegistry $ registerNode node
 
-registerNode :: Node -> UIRegistry.State State -> (UIRegistry.State State, IO ())
-registerNode node oldRegistry = flip MState.execState (oldRegistry, return ()) $ do
+registerNode :: Node -> Command (UIRegistry.State State) ()
+registerNode node = do
     file <- UIRegistry.registerM sceneGraphId
                                  (WNode.Node (node ^. nodeId) [] [])
                                  (nodeHandlers node)
 
-    UIRegistry.uiAction $ createNodeOnUI node file
+    performIO $ createNodeOnUI node file
 
     registerPorts (file ^. objectId) InputPort node
     registerPorts (file ^. objectId) OutputPort node
@@ -63,7 +57,6 @@ registerNode node oldRegistry = flip MState.execState (oldRegistry, return ()) $
         sliders    = uncurry makeSliderFromPort <$> zip nat inPorts
     sliderIds <- sequence $ addSliderToNode rootId <$> sliders
     UIRegistry.updateM rootId (nodeWidget & WNode.controls .~ sliderIds)
-    return file
 
 makeSliderFromPort :: Int -> Port -> Slider Double
 makeSliderFromPort i port = Slider (Vector2 10 (75 + (fromIntegral i) * 25)) (Vector2 180 20)
@@ -73,10 +66,10 @@ nodeHandlers :: Node -> UIHandlers State
 nodeHandlers node = def & dblClick   .~ [const $ enterNode node]
                         & keyDown    .~ [removeNode node]
 
-addSliderToNode :: WidgetId -> Slider Double -> UIState WidgetId b
+addSliderToNode :: WidgetId -> Slider Double -> Command (UIRegistry.State b) WidgetId
 addSliderToNode nodeId slider = do
     sliderWidget <- UIRegistry.registerM nodeId slider def
-    UIRegistry.uiAction $ addWidgetToNode nodeId sliderWidget
+    performIO $ addWidgetToNode nodeId sliderWidget
     return $ sliderWidget ^. objectId
 
 addWidgetToNode :: WidgetId -> WidgetFile a (Slider Double) -> IO ()
@@ -93,17 +86,20 @@ createNodeOnUI node file = do
         expr  = node ^. expression
     UI.createNodeAt ident pos expr (file ^. objectId)
 
+registerSinglePort :: WidgetId -> Node -> PortType -> Port -> Command (UIRegistry.State b) ()
+registerSinglePort nodeWidgetId node portType port = do
+    let portWidget = (WPort.Port $ PortRef (node ^. nodeId) portType (port ^. portId))
+    widgetFile <- UIRegistry.registerM nodeWidgetId portWidget def
+    performIO $ addPort portType
+                        (node ^. nodeId)
+                        (widgetFile ^. objectId)
+                        (port ^. portId)
+                        (colorVT $ port ^. portValueType)
+                        (port ^. angle)
 
-registerPorts :: WidgetId -> PortType -> Node -> UIRegistry.UIState () b
-registerPorts nodeWidgetId portType node = do
-    let registerPort p = do file <- UIRegistry.registerM nodeWidgetId (WPort.Port $ PortRef (node ^. nodeId) portType (p ^. portId)) def
-                            return (file, p)
-    let inPorts = getPorts portType node
-    ins  <- mapM registerPort inPorts
-
-    forM_ ins $ \(w, p) -> UIRegistry.uiAction $ (addPort portType) (node ^. nodeId) (w ^. objectId) (p ^. portId) (colorVT $ p ^. portValueType) (p ^. angle)
-
-    return ()
+registerPorts :: WidgetId -> PortType -> Node -> Command (UIRegistry.State b) ()
+registerPorts nodeWidgetId portType node = mapM_ (registerSinglePort nodeWidgetId node portType) ports where
+    ports = getPorts portType node
 
 
 addPort :: PortType -> NodeId -> WidgetId -> PortId -> ColorNum -> Double -> IO ()

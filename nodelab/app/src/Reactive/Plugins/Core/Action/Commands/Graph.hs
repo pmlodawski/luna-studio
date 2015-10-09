@@ -29,7 +29,7 @@ import qualified Reactive.Plugins.Core.Action.State.Camera         as Camera
 import qualified Reactive.Plugins.Core.Action.State.Global         as Global
 import           Reactive.Plugins.Core.Action.Commands.Command     (Command, command, pureCommand, ioCommand)
 
-import qualified Control.Monad.State                               as MState
+import           Control.Monad.State
 
 import qualified BatchConnector.Commands                           as BatchCmd
 
@@ -44,24 +44,24 @@ updateConnNodes nodeIds = pureCommand $ \state -> let
     newState      = state &  Global.graph %~ Graph.updateNodes nodesMap
     in newState
 
+updateSingleConnection :: WidgetFile Global.State UIConnection.Connection -> Command Global.State ()
+updateSingleConnection widgetFile = do
+    nodesMap       <- uses Global.graph Graph.getNodesMap
+    connectionsMap <- uses Global.graph getConnectionsMap
+    let connectionId   = widgetFile ^. widget . UIConnection.connectionId
+        connection     = IntMap.lookup connectionId connectionsMap
+        connectionLine = (getConnectionLine nodesMap) <$> connection
+    case connectionLine of
+        Just line -> zoom Global.uiRegistry $ UIRegistry.updateM (widgetFile ^. objectId) line
+        Nothing   -> return ()
+
+lookupAllConnections :: Command (UIRegistry.State b) [WidgetFile b UIConnection.Connection]
+lookupAllConnections = gets UIRegistry.lookupAll
 
 updateConnections :: Command Global.State ()
-updateConnections = pureCommand $ \state -> let
-    newState           = state & Global.uiRegistry .~ newRegistry
-    oldRegistry        = state ^. Global.uiRegistry
-    updateWidgets      = forM_ allConnections updateWidget
-    updateWidget file  = case connectionUI of
-            Just conn -> UIRegistry.updateM (file ^. objectId) conn
-            Nothing   -> return ()
-        where
-        connectionId   = file ^. widget . UIConnection.connectionId
-        connection     = IntMap.lookup connectionId connectionsMap
-        connectionUI   = (getConnectionLine nodesMap) <$> connection
-    (_, (newRegistry, _)) = MState.runState updateWidgets (oldRegistry, return ())
-    allConnections     = UIRegistry.lookupAll oldRegistry :: [WidgetFile Global.State UIConnection.Connection]
-    nodesMap           = Graph.getNodesMap       $ state ^. Global.graph
-    connectionsMap     = Graph.getConnectionsMap $ state ^. Global.graph
-    in newState
+updateConnections = do
+    allConnections <- zoom Global.uiRegistry lookupAllConnections
+    mapM_ updateSingleConnection allConnections
 
 updateConnectionsUI :: Command Global.State ()
 updateConnectionsUI = ioCommand $ \state -> let
@@ -90,7 +90,7 @@ connectNodes src dst = do
     when (isJust tcResult) $ do
         batchConnectNodes src dst
         localConnectNodes src dst
-        Global.graph %= Graph.updateNodes nodeFun 
+        Global.graph %= Graph.updateNodes nodeFun
 
 
 batchConnectNodes :: PortRef -> PortRef -> Command Global.State ()

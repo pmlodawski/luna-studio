@@ -27,7 +27,8 @@ import qualified Reactive.Plugins.Core.Action.State.Graph      as Graph
 import qualified Utils.MockHelper   as MockHelper
 import qualified BatchConnector.Commands as BatchCmd
 
-import JS.NodeGraph
+import           JS.NodeGraph
+import           JS.Node          (createPendingNode)
 import qualified Data.IntMap.Lazy as IntMap
 
 
@@ -73,7 +74,8 @@ instance ActionStateUpdater Action where
 
 instance ActionUIUpdater Reaction where
     updateUI (WithState (RegisterNodeIO node) state) = BatchCmd.addNode workspace node where
-        workspace = state ^. Global.workspace
+         workspace = state ^. Global.workspace
+
     updateUI (WithState (UpdateNodeIO node) state) = updateLabel node
                                                   >> BatchCmd.updateNodes (state ^. Global.workspace) [node]
                                                   >> BatchCmd.runMain

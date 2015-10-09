@@ -22,6 +22,7 @@ import qualified Reactive.Plugins.Core.Action.State.Global       as Global
 import qualified Reactive.Plugins.Core.Action.State.Sandbox      as Sandbox
 import           Reactive.Plugins.Core.Action.State.UIRegistry   (WidgetMap, sceneInterfaceId, sceneGraphId)
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry   as UIRegistry
+import           Reactive.Plugins.Core.Action.Commands.Command   (performIO, runCommand)
 
 import qualified Object.Widget.Button                            as Button
 import qualified Object.Widget.Slider                            as Slider
@@ -88,48 +89,46 @@ instance ActionStateUpdater Action where
                                                                & Global.uiRegistry                   .~ newRegistry
 
             oldRegistry     = oldState ^. Global.uiRegistry
-            -- registerWidgets :: UIRegistry.UIState (Button.Button, Slider.Slider Int, Slider.Slider Double, Slider.Slider Double, Slider.Slider Double, Toggle.Toggle, Chart.Chart, Number.Number Int) Global.State
             registerWidgets = do
                 button  <- UIRegistry.registerM sceneGraphId
                            (Button "Save" Button.Normal (Vector2 100 100) (Vector2 100 50))
                            def
-                UIRegistry.uiAction $ addWidget button
+                performIO $ addWidget button
 
                 slider  <- UIRegistry.registerM sceneGraphId (Slider (Vector2 100 200) (Vector2 200  25) "Cutoff"    100      20000        0.1 :: Slider Int) def
-                UIRegistry.uiAction $ addWidget slider
+                performIO $ addWidget slider
 
                 slider2 <- UIRegistry.registerM sceneGraphId (Slider (Vector2 100 230) (Vector2 200  25) "Resonance"   0.0      100.0      0.3 :: Slider Double) def
-                UIRegistry.uiAction $ addWidget slider2
+                performIO $ addWidget slider2
 
                 slider3 <- UIRegistry.registerM sceneGraphId (Slider (Vector2 100 260) (Vector2 200  25) "Noise"       0.0        1.0      0.1 :: Slider Double) def
-                UIRegistry.uiAction $ addWidget slider3
+                performIO $ addWidget slider3
 
                 slider4 <- UIRegistry.registerM sceneGraphId (Slider (Vector2 100 290) (Vector2 200  25) "Gamma"       0.0000001  0.000001 0.9 :: Slider Double) def
-                UIRegistry.uiAction $ addWidget slider4
+                performIO $ addWidget slider4
 
                 toggle  <- UIRegistry.registerM sceneGraphId (Toggle (Vector2 100 320) (Vector2 200  25) "Inverse" False) def
-                UIRegistry.uiAction $ addWidget toggle
+                performIO $ addWidget toggle
 
                 chart   <- UIRegistry.registerM sceneGraphId (Chart  (Vector2 100 380) (Vector2 300 200) Chart.Bar "Brand" Chart.Category "Unit Sales" Chart.Linear) def
-                UIRegistry.uiAction $ addChart chart
+                performIO $ addChart chart
 
                 number  <- UIRegistry.registerM sceneGraphId (Number (Vector2 100 170) (Vector2 200  25) "Count" 4096 :: Number Int) def
-                UIRegistry.uiAction $ addWidget number
+                performIO $ addWidget number
 
                 return (button, slider, slider2, slider3, slider4, toggle, chart, number)
 
-            ((button, slider, slider2, slider3, slider4, toggle, chart, number), (newRegistry, actions)) = MState.runState registerWidgets (oldRegistry, return ())
+            ((button, slider, slider2, slider3, slider4, toggle, chart, number), actions, newRegistry) = runCommand registerWidgets oldRegistry
 
             newAction             = if wasInited || not widgetSandboxEnabled then ApplyUpdates (return ()) else ApplyUpdates actions
     execSt (WidgetClicked bid) oldState = ActionUI  newAction newState where
         oldRegistry           = oldState ^. Global.uiRegistry
         widget                = UIRegistry.lookup bid oldRegistry
-        newRegistry           = oldRegistry -- tu mozna np. zrobis UIRegistry.update, etc.
+        newRegistry           = oldRegistry
         newState              = oldState & Global.uiRegistry .~ newRegistry
         wasSaveButtonClicked  = bid == oldState ^. Global.sandbox . Sandbox.button
         newAction             = if wasSaveButtonClicked then ApplyUpdates $ BatchCmd.storeProject (oldState ^. Global.workspace . Workspace.project)
-                                                            -- tu tablica Maybe (IO ()), np aktualizacja stanu widgeta
-                                                         else ApplyUpdates (return ())
+                                                        else ApplyUpdates (return ())
 
 instance ActionUIUpdater Action where
     updateUI (WithState (ApplyUpdates actions) state) = actions
