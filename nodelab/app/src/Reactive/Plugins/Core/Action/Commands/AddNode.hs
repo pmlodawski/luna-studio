@@ -26,6 +26,7 @@ import qualified Reactive.Plugins.Core.Action.State.UIRegistry     as UIRegistry
 import           Reactive.Plugins.Core.Action.Commands.EnterNode   (enterNode)
 import           Reactive.Plugins.Core.Action.Commands.RemoveNode  (removeNode)
 import           Reactive.Plugins.Core.Action.Commands.Command     (Command, performIO)
+import           Reactive.Plugins.Core.Action.Commands.PendingNode (unrenderPending)
 
 import qualified JS.NodeGraph          as UI
 
@@ -36,6 +37,7 @@ import           ThreeJS.Types         (add)
 
 addNode :: Node -> Command State ()
 addNode node = do
+    unrenderPending node
     zoom Global.graph $ modify (Graph.addNode node)
     zoom Global.uiRegistry $ registerNode node
 

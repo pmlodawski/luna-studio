@@ -133,6 +133,9 @@ unregisterRWS oid = do
 unregister :: WidgetId -> State b -> ([WidgetId], State b)
 unregister oid = swap . RWS.execRWS (unregisterRWS oid) ()
 
+unregisterM :: WidgetId -> Command (State b) [WidgetId]
+unregisterM = MState.state . unregister
+
 registerAll :: DisplayObjectClass a => WidgetId -> [a] -> State b -> ([WidgetFile b a], State b)
 registerAll parent a state = foldl reg ([], state) a where
     reg (acc, st) a = (newA:acc, newSt) where
@@ -172,6 +175,9 @@ lookupAll state = foldl process mempty objects where
         Just model -> (obj & widget .~ model):acc
         Nothing    -> acc
     objects = IntMap.elems $ state ^. widgets
+
+lookupAllM :: DisplayObjectClass a => Command (State b) [WidgetFile b a]
+lookupAllM = MState.gets lookupAll
 
 lookupTyped :: DisplayObjectClass a => WidgetId -> State b -> Maybe (WidgetFile b a)
 lookupTyped idx state = do
