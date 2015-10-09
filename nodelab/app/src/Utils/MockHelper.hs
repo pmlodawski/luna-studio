@@ -72,11 +72,51 @@ knownFunctions  = [ ("+",        twoOpNum  )
                   , (">=",       twoOpLogic)
                   , ("++",       twoOpMono VTString)
                   , ("toString", NodeType 1 [PortConstraint [AllPorts] VTString, PortConstraint [PortNum 1] VTAny])
-                  , ("truncate", oneOpMono VTFloat)
-                  , ("round",    oneOpMono VTFloat)
-                  , ("floor",    oneOpMono VTFloat)
-                  , ("ceiling",  oneOpMono VTFloat)
+                  , ("truncate", oneOpNum)
+                  , ("round",    oneOpNum)
+                  , ("floor",    oneOpNum)
+                  , ("ceiling",  oneOpNum)
+                  , ("length",    NodeType 2 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts]               VTInt,                PortConstraint [PortNum 1] (VTVector VTAny)]                                )
+                  , ("null",      NodeType 2 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts]               VTBool,               PortConstraint [PortNum 1] (VTVector VTAny)]                                )
+                  , ("!",         NodeType 3 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts]               VTNumeric,            PortConstraint [PortNum 1] (VTVector VTNumeric), PortConstraint [PortNum 2] (VTInt)])
+                  , ("head",      NodeType 2 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts]               VTNumeric,            PortConstraint [PortNum 1] (VTVector VTNumeric)                            ])
+                  , ("last",      NodeType 2 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts]               VTNumeric,            PortConstraint [PortNum 1] (VTVector VTNumeric)                            ])
+                  , ("init",      NodeType 2 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1]    (VTVector VTNumeric)                                                                     ]) 
+                  , ("tail",      NodeType 2 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1]    (VTVector VTNumeric)                                                                     ]) 
+                  , ("take",      NodeType 3 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1]    (VTVector VTNumeric), PortConstraint [PortNum 2] VTInt                                           ])
+                  , ("drop",      NodeType 3 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1]    (VTVector VTNumeric), PortConstraint [PortNum 2] VTInt                                           ])
+                  , ("empty",     constant   (VTVector VTNumeric))
+                  , ("singleton", NodeType 1 [PortConstraint [AllPorts]       VTNumeric,            PortConstraint [PortNum 0] VTNumeric                                       ])
+                  , ("replicate", NodeType 3 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts]       (VTVector VTNumeric), PortConstraint [PortNum 1] VTInt, PortConstraint [PortNum 2] VTNumeric             ])
+                  , ("cons",      NodeType 3 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1]    (VTVector VTNumeric), PortConstraint [PortNum 2] VTNumeric                                       ])
+                  , ("snoc",      NodeType 3 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1]    (VTVector VTNumeric), PortConstraint [PortNum 2] VTNumeric                                       ])
+                  , ("++",        NodeType 3 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1, PortNum 2] (VTVector VTNumeric)                                                                     ])
+                  , ("reverse",   NodeType 2 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1]    (VTVector VTNumeric)                                                                     ])
+                  , ("map",       NodeType 3 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1]    (VTVector VTNumeric)                                                                     ])
+                  , ("filter",    NodeType 3 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1]    (VTVector VTNumeric)                                                                     ])
+                  , ("maximum",   NodeType 2 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts] VTNumeric, PortConstraint [PortNum 1] (VTVector VTNumeric)])
+                  , ("minimum",   NodeType 2 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts] VTNumeric, PortConstraint [PortNum 1] (VTVector VTNumeric)])
+                  , ("cos",       NodeType 2 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1] VTNumeric])
+                  , ("acos",      NodeType 2 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1] VTNumeric])
+                  , ("cosh",      NodeType 2 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1] VTNumeric])
+                  , ("asin",      NodeType 2 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1] VTNumeric])
+                  , ("sinh",      NodeType 2 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1] VTNumeric])
+                  , ("tan",       NodeType 2 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1] VTNumeric])
+                  , ("atan",      NodeType 2 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1] VTNumeric])
+                  , ("tanh",      NodeType 2 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1] VTNumeric])
+                  , ("abs",       NodeType 2 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1] VTNumeric])
+                  , ("signum",    NodeType 2 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1] VTNumeric])
+                  , ("min",       NodeType 3 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1, PortNum 2] VTNumeric])
+                  , ("max",       NodeType 3 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1, PortNum 2] VTNumeric])
+                  , ("gcd",       NodeType 3 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1, PortNum 2] VTNumeric])
+                  , ("lcm",       NodeType 3 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1, PortNum 2] VTNumeric])
+                  , ("div",       NodeType 3 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1, PortNum 2] VTNumeric])
+                  , ("mod",       NodeType 3 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1, PortNum 2] VTNumeric])
+                  , ("pi",        NodeType 1 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts           ] VTNumeric])
+                  , ("log,",      NodeType 2 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1] VTNumeric])
+                  , ("sqrt",      NodeType 2 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1] VTNumeric])
                   ]
+
 
 
 -- yes, we do the same computation twice -- that's a workaround right here, don't mind :)
@@ -84,7 +124,6 @@ getNodeType :: Text -> NodeType
 getNodeType expr = case msum $ ($ expr) <$> [tryKnown, tryDef, tryFormat, tryVal] of
     Just portType -> portType
     Nothing       -> NodeType 0 []
-
 
 
 getInputTypes :: NodeType -> [ValueType]
@@ -104,6 +143,7 @@ getOutputType (NodeType _ constrs) = [fromMaybe VTAny outputTypeM]
 -- Type utils
 ----------------------------------------------------------------------------------------
 typesEq :: ValueType -> ValueType -> Bool
+typesEq VTObject       VTObject       = True
 typesEq VTBool         VTBool         = True
 typesEq VTChar         VTChar         = True
 typesEq VTInt          VTInt          = True
@@ -181,9 +221,49 @@ unapplyType :: PortId -> ValueType -> NodeType -> Maybe NodeType
 unapplyType _ _ = Just
 
 
+
+
+--replicate :: Int -> a -> a -> Vector a
+--replicate = undefined 
+
+--Node 
+-- + expr = "replicate"
+-- connect 0 Int
+-- [
+--     0 -> { _type = Int
+--            _eq   = []
+--            _eqs  = []
+--            _equ  = []
+--          }
+
+--     1 -> { _type = Any
+--            _eq   = []
+--            _eqs  = [2, 3]
+--            _equ  = []
+--          }
+--     2 -> { _type = Vector Any
+--            _eq   = [3]
+--            _eqs  = []
+--            _equ  = [1]
+--          }
+--     3 -> { _type = Vector Any
+--            _eq   = []
+--            _eqs  = [2]
+--            _equ  = [1]
+--          }
+-- ]
+
+
+
 ----------------------------------------------------------------------------------------
 -- Utils for reading the types:
 ----------------------------------------------------------------------------------------
+tryObject :: Text -> Maybe ValueType
+tryObject txt = if txt `elem` ["Vector", "Maybe", "Std"]
+    then Just VTObject
+    else Nothing
+
+
 tryBool :: Text -> Maybe ValueType
 tryBool txt = if txt `elem` ["True", "true"]
     then Just VTBool
@@ -205,4 +285,4 @@ tryString _ = Just VTString
 
 readType :: Text -> ValueType
 readType txt = fromJust $ msum matches  -- it's bound to return Just
-    where matches = ($ txt) <$> [tryBool, tryInt, tryFloat, tryString]
+    where matches = ($ txt) <$> [tryObject, tryBool, tryInt, tryFloat, tryString]

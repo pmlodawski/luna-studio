@@ -83,14 +83,14 @@ updateConnectionWidget widgetId connection = UI.updateConnection widgetId visibl
 
 connectNodes :: PortRef -> PortRef -> Command Global.State ()
 connectNodes src dst = do
-    nodesMap <- Graph.getNodesMap <$> use Global.graph
-    let tcResult = MockTC.typecheck src dst nodesMap
-        nodeFun  = IntMap.adjust (const newNode) (newNode ^. nodeId) nodesMap where newNode = fromJust tcResult
+    --nodesMap <- Graph.getNodesMap <$> use Global.graph
+    --let tcResult = MockTC.typecheck src dst nodesMap
+    --    nodeFun  = IntMap.adjust (const newNode) (newNode ^. nodeId) nodesMap where newNode = fromJust tcResult
 
-    when (isJust tcResult) $ do
-        batchConnectNodes src dst
-        localConnectNodes src dst
-        Global.graph %= Graph.updateNodes nodeFun
+    --when (isJust tcResult) $ do
+    batchConnectNodes src dst
+    localConnectNodes src dst
+    --    Global.graph %= Graph.updateNodes nodeFun 
 
 
 batchConnectNodes :: PortRef -> PortRef -> Command Global.State ()

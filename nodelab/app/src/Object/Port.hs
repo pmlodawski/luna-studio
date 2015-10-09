@@ -18,6 +18,7 @@ data ValueType = VTBool
                | VTMaybe ValueType
                | VTNumeric
                | VTAny
+               | VTObject
                deriving (Ord, Eq, Show)
 
 type ColorNum = Int
@@ -32,6 +33,7 @@ colorVT (VTVector _) = 9
 colorVT (VTMaybe _) = 9
 colorVT VTNumeric = 10
 colorVT VTAny = 8
+colorVT VTObject = 8
 
 colorError :: ColorNum
 colorError = 13
