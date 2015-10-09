@@ -95,6 +95,10 @@ instance ActionStateUpdater Action where
             DragAction Moving pt        -> case oldDrag of
                 Nothing                 -> Nothing
                 _                       -> Just $ DragAction Dragging pt
+            DragAction StopDrag pt      -> case oldDrag of
+                Nothing                 -> Nothing
+                Just oldDragState       -> if (oldDragState ^. dragStartPos) /= pt then Just newActionCandidate
+                                                                                   else Nothing
             _                           -> Just newActionCandidate
         newNodesMap                      = case newActionCandidate of
             DragAction tpe point        -> case tpe of
