@@ -15,14 +15,22 @@ data Slider a = Slider { _pos       :: Vector2 Double
                        , _minValue  :: a
                        , _maxValue  :: a
                        , _normValue :: Double
+                       , _enabled   :: Bool
                        } deriving (Eq, Show, Typeable)
 
 makeLenses ''Slider
 
 class (Num a, Show a, Typeable a) => IsSlider a where
-    displayValue ::      Slider a -> String
-    value        ::      Slider a -> a
-    setValue     :: a -> Slider a -> Slider a
+    displayValue ::         Slider a -> String
+    value        ::         Slider a -> a
+    setValue     :: a    -> Slider a -> Slider a
+
+    setEnabled   :: Bool -> Slider a -> Slider a
+    setEnabled newEnabled = enabled .~ newEnabled
+
+    setNormValue :: Double -> Slider a -> Slider a
+    setNormValue val slider = slider & normValue .~ boundedVal where
+        boundedVal = max 0.0 $ min 1.0 val
 
 instance IsDisplayObject (Slider a) where
     objectPosition b = b ^. pos
@@ -43,9 +51,6 @@ instance IsSlider Double where
         max             = slider ^. maxValue
         range           = max - min
 
-setNormValue :: Double -> Slider a -> Slider a
-setNormValue val slider = slider & normValue .~ boundedVal where
-    boundedVal = max 0.0 $ min 1.0 val
 
 instance IsSlider Int where
     displayValue s      = show $ value s

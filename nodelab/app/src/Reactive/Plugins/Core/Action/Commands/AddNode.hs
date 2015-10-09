@@ -62,7 +62,7 @@ registerNode node = do
 
 makeSliderFromPort :: Int -> Port -> Slider Double
 makeSliderFromPort i port = Slider (Vector2 10 (75 + (fromIntegral i) * 25)) (Vector2 180 20)
-                                   (Text.pack $ "param " <> show i) 0.0 1.0 0.2
+                                   (Text.pack $ "param " <> show i) 0.0 1.0 0.2 True
 
 nodeHandlers :: Node -> UIHandlers State
 nodeHandlers node = def & dblClick   .~ [const $ enterNode node]
