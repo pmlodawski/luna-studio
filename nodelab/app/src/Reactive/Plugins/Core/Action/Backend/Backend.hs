@@ -63,7 +63,7 @@ instance ActionStateUpdater Action where
     execSt (InsertSerializationMode node) state = ActionUI (PerformIO action) state where
         action = do
             let workspace = state ^. Global.workspace
-            BatchCmd.insertSerializationMode workspace node
+            when (not $ isModule node) $ BatchCmd.insertSerializationMode workspace node
 
     execSt RefreshGraph state = ActionUI (PerformIO action) newState where
         (action, newState) = execCommand refreshGraph state

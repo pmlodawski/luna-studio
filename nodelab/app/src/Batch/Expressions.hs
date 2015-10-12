@@ -1,15 +1,12 @@
-module Batch.Function where
+module Batch.Expressions where
 
 import           Utils.PreludePlus
 import qualified Generated.Proto.Dep.Expr.Function   as GenFunction
+import qualified Generated.Proto.Dep.Expr.Wildcard   as GenWildcard
+import qualified Generated.Proto.Dep.Expr.Import     as GenImport
+import qualified Generated.Proto.Dep.Expr.Con_       as GenCon_
 import qualified Generated.Proto.Dep.Expr.Expr.Cls   as GenCls
 import qualified Generated.Proto.Dep.Expr.Expr       as Gen
-
-import qualified Generated.Proto.Dep.Crumb.Crumb       as GenCrumb
-import qualified Generated.Proto.Dep.Crumb.Crumb.Cls   as CrumbCls
-import qualified Generated.Proto.Dep.Crumb.Module      as CrumbModule
-import qualified Generated.Proto.Dep.Crumb.Breadcrumbs as GenBreadcrumbs
-import           Batch.Breadcrumbs
 
 import qualified Generated.Proto.Dep.Type.Type       as GenType
 import qualified Generated.Proto.Dep.Type.Type.Cls   as TypeCls
@@ -34,6 +31,26 @@ emptyFunctionExpr name = putExt GenFunction.ext (Just $ emptyFunction name)
 
 wrapName :: String -> GenName.Name
 wrapName name = GenName.Name (Just $ uFromString name) Seq.empty
+
+genImport :: [String] -> String -> GenImport.Import
+genImport path target = GenImport.Import (Seq.fromList $ uFromString <$> path)
+                                  (Just $ conExpr target)
+                                  Nothing
+
+importExpr :: [String] -> String -> Gen.Expr
+importExpr path target = putExt GenImport.ext (Just $ genImport path target)
+                $ Gen.Expr GenCls.Import Nothing $ ExtField Map.empty
+
+wildcard :: Gen.Expr
+wildcard = putExt GenWildcard.ext (Just GenWildcard.Wildcard)
+         $ Gen.Expr GenCls.Wildcard Nothing $ ExtField Map.empty
+
+genCon :: String -> GenCon_.Con_
+genCon name = GenCon_.Con_ (Just $ uFromString name)
+
+conExpr :: String -> Gen.Expr
+conExpr name = putExt GenCon_.ext (Just $ genCon name)
+             $ Gen.Expr GenCls.Con_ Nothing $ ExtField Map.empty
 
 returnType :: GenType.Type
 returnType  = putExt TypeTuple.ext (Just $ TypeTuple.Tuple Seq.empty)

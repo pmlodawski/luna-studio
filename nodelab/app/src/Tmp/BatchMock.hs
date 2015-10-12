@@ -4,7 +4,7 @@ import Utils.PreludePlus
 import Batch.Workspace
 import Batch.Project
 import Batch.Breadcrumbs
-import Batch.Function
+import Batch.Expressions
 import Batch.Library
 
 fakeLibrary :: Library

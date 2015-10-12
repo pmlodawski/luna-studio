@@ -68,10 +68,11 @@ mainBreadcrumbs :: Breadcrumbs
 mainBreadcrumbs = Breadcrumbs [Module "Main", Function "main"]
 
 createMain :: Project -> IO ()
-createMain project = BatchCmd.createFunction project
-                                             (head $ project ^. libs)
-                                             (Breadcrumbs [Module "Main"])
-                                             "main"
+createMain project = do
+    let lib   = head $ project ^. libs
+        crumb = Breadcrumbs [Module "Main"]
+    BatchCmd.createFunction project lib (Breadcrumbs [Module "Main"]) "main"
+    BatchCmd.setImport project lib crumb ["Flowbox"] "Std"
 
 readyWorkspace :: State -> Maybe Workspace
 readyWorkspace (Ready workspace) = Just workspace

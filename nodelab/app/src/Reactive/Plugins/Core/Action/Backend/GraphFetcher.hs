@@ -51,8 +51,9 @@ instance ActionStateUpdater Action where
 
     execSt (PrepareValues nodes) state = ActionUI (PerformIO prepareValues) state where
         workspace     = state ^. Global.workspace
+        nonModules    = filter (not . isModule) nodes
         prepareValues = case workspace ^. interpreterState of
-            Fresh  -> BatchCmd.insertSerializationModes workspace nodes
+            Fresh  -> BatchCmd.insertSerializationModes workspace nonModules
             AllSet -> BatchCmd.runMain
                    >> BatchCmd.requestValues workspace nodes
 

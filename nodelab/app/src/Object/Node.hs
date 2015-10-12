@@ -146,6 +146,10 @@ isDef :: Node -> Bool
 isDef node = exprPrefix == "def " where
     exprPrefix = Text.unpack $ Text.take 4 $ node ^. expression
 
+isModule :: Node -> Bool
+isModule node = isUpper firstLetter where
+    firstLetter = head $ Text.unpack $ node ^. expression
+
 -- getPort :: PortId -> PortType -> Node -> Maybe Port
 -- getPort ident = find (\port -> port ^. portId == ident) .: getPorts
 

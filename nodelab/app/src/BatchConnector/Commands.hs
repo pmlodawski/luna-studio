@@ -13,7 +13,7 @@ import           Data.Map                   as Map
 import           BatchConnector.Conversion
 import           Data.Int
 
-import           Batch.Function
+import           Batch.Expressions
 import           Batch.Workspace
 import           Batch.Breadcrumbs
 import           Object.Node
@@ -36,6 +36,7 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Gra
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Add.Request           as AddNode
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Request        as RemoveNode
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.ModifyInPlace.Request as ModifyNode
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Modify.Imports.Request             as ModifyImports
 import           Generated.Proto.Dep.Version.Version
 import           Generated.Proto.Dep.Attributes.Attributes
 import           Generated.Proto.Mode.Mode
@@ -229,6 +230,15 @@ getAST proj lib crumbs = sendMessage msg where
                           (lib ^. Library.id)
                           (proj ^. Project.id)
                           uselessLegacyArgument
+
+setImport :: Project -> Library -> Breadcrumbs -> [String] -> String -> IO ()
+setImport proj lib crumbs path target = sendMessage msg where
+    msg  = WebMessage "project.library.ast.module.modify.imports.request" $ messagePut body
+    body = ModifyImports.Request (Seq.fromList $ [importExpr path target])
+                                 (encode crumbs)
+                                 (lib ^. Library.id)
+                                 (proj ^. Project.id)
+                                 uselessLegacyArgument
 
 removeNodeById :: Workspace -> Int -> IO ()
 removeNodeById workspace nodeId = sendMessage msg where
