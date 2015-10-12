@@ -28,21 +28,6 @@ sceneInterfaceId    = 1
 sceneGraphId        = 2
 currentConnectionId = 3
 
-instance Default (UIHandlers a) where def = UIHandlers [] [] [] [] [] [] [] [] [] []
-
-instance Monoid  (UIHandlers a) where
-    mempty = def
-    mappend (UIHandlers a  b  c  d  e  f  g  h  i  j )
-            (UIHandlers a' b' c' d' e' f' g' h' i' j') = UIHandlers (a <> a')
-                                                                    (b <> b')
-                                                                    (c <> c')
-                                                                    (d <> d')
-                                                                    (e <> e')
-                                                                    (f <> f')
-                                                                    (g <> g')
-                                                                    (h <> h')
-                                                                    (i <> i')
-                                                                    (j <> j')
 type WidgetMap a = IntMap (WidgetFile a DisplayObject)
 
 data State a = State { _widgets         :: WidgetMap a
@@ -184,3 +169,6 @@ lookupTyped idx state = do
     object  <- lookup idx state
     model   <- fromCtxDynamic $ object ^. widget
     return $ object & widget .~ model
+
+lookupTypedM :: DisplayObjectClass a => WidgetId -> Command (State b) (Maybe (WidgetFile b a))
+lookupTypedM ix = MState.gets $ lookupTyped ix

@@ -2,6 +2,7 @@ module Reactive.Plugins.Core.Action.Commands.RemoveNode where
 
 import           Utils.PreludePlus
 import           Event.Keyboard (KeyMods)
+import           Object.UITypes (WidgetId)
 import           Reactive.Plugins.Core.Action.State.Global             (State)
 import qualified Reactive.Plugins.Core.Action.State.Global             as Global
 import qualified Reactive.Plugins.Core.Action.State.Selection          as Selection
@@ -17,8 +18,8 @@ import qualified JS.NodeGraph            as UIGraph
 import           Object.Node             (Node, nodeId)
 import           Object.Widget.Helpers   (nodeIdToWidgetId)
 
-removeNode :: Node -> Char -> KeyMods -> Command State ()
-removeNode node key _ = case key of
+removeNode :: Node -> Char -> KeyMods -> WidgetId -> Command State ()
+removeNode node key _ _ = case key of
     '\x08' -> performRemoval node
     '\x2e' -> performRemoval node
     _         -> return ()

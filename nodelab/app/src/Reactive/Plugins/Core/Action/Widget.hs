@@ -154,11 +154,11 @@ customMouseHandlers :: Mouse.Event -> Camera.Camera -> UIRegistryState -> [Comma
 customMouseHandlers (Mouse.Event eventType absPos button _ (Just (EventWidget widgetId mat scene))) camera registry =
     case UIRegistry.lookupHandlers widgetId registry of
         Just handlers -> case eventType of
-                Mouse.Moved       -> fmap (\a -> a button pos) (handlers ^. mouseMove    )
-                Mouse.Pressed     -> fmap (\a -> a button pos) (handlers ^. mousePressed )
-                Mouse.Released    -> fmap (\a -> a button pos) (handlers ^. mouseReleased)
-                Mouse.Clicked     -> fmap (\a -> a        pos) (handlers ^. click        )
-                Mouse.DblClicked  -> fmap (\a -> a        pos) (handlers ^. dblClick     )
+                Mouse.Moved       -> fmap (\a -> a button pos widgetId) (handlers ^. mouseMove    )
+                Mouse.Pressed     -> fmap (\a -> a button pos widgetId) (handlers ^. mousePressed )
+                Mouse.Released    -> fmap (\a -> a button pos widgetId) (handlers ^. mouseReleased)
+                Mouse.Clicked     -> fmap (\a -> a        pos widgetId) (handlers ^. click        )
+                Mouse.DblClicked  -> fmap (\a -> a        pos widgetId) (handlers ^. dblClick     )
                 _                 -> []
             where pos              = absPosToRel scene camera mat (fromIntegral <$> absPos)
         Nothing -> []
@@ -168,20 +168,41 @@ customKeyboardHandlers :: Keyboard.Event -> UIRegistryState -> [Command Global.S
 customKeyboardHandlers (Keyboard.Event eventType ch mods) registry = case registry ^. UIRegistry.focusedWidget of
     Just widgetId -> case UIRegistry.lookupHandlers widgetId registry of
         Just handlers -> case eventType of
-            Keyboard.Up       -> fmap (\a -> a ch mods) (handlers ^. keyUp     )
-            Keyboard.Down     -> fmap (\a -> a ch mods) (handlers ^. keyDown   )
-            Keyboard.Press    -> fmap (\a -> a ch mods) (handlers ^. keyPressed)
+            Keyboard.Up       -> fmap (\a -> a ch mods widgetId) (handlers ^. keyUp     )
+            Keyboard.Down     -> fmap (\a -> a ch mods widgetId) (handlers ^. keyDown   )
+            Keyboard.Press    -> fmap (\a -> a ch mods widgetId) (handlers ^. keyPressed)
         Nothing -> []
     Nothing -> []
+
+customDragMoveHandlers :: Mouse.Event -> UIRegistryState -> [Command Global.State ()]
+customDragMoveHandlers (Mouse.Event Mouse.Moved _ _ _ _) registry = case (registry ^. UIRegistry.dragState) of
+    Just dragState -> let widgetId = (dragState ^. Widget.widgetId) in
+        case UIRegistry.lookupHandlers widgetId registry of
+            Just handlers -> fmap (\a -> a widgetId) (handlers ^. dragMove)
+            Nothing       -> []
+    Nothing -> []
+customDragMoveHandlers _ _ = []
+
+customDragEndHandlers :: Mouse.Event -> UIRegistryState -> [Command Global.State ()]
+customDragEndHandlers (Mouse.Event Mouse.Released _ _ _ _) registry = case (registry ^. UIRegistry.dragState) of
+    Just dragState -> let widgetId = (dragState ^. Widget.widgetId) in
+        case UIRegistry.lookupHandlers widgetId registry of
+            Just handlers -> fmap (\a -> a widgetId) (handlers ^. dragEnd)
+            Nothing       -> []
+    Nothing -> []
+customDragEndHandlers _ _ = []
 
 instance ActionStateUpdater Action where
     execSt (MouseAction mouseEvent) oldState = ActionUI newAction newState' where
         newAction                    = ApplyUpdates $ uiUpdates >> customUIUpdates
         newState                     = oldState &  Global.uiRegistry .~ newRegistry
-        (customUIUpdates, newState') = applyHandlers (customMouseHandlers mouseEvent camera newRegistry) newState
+        (customUIUpdates, newState') = applyHandlers customHandlers newState
         oldRegistry                  = oldState ^. Global.uiRegistry
         oldWidgetOver                = oldState ^. Global.uiRegistry . UIRegistry.widgetOver
         camera                       = Global.toCamera oldState
+        customHandlers               = (customMouseHandlers    mouseEvent camera newRegistry)
+                                    ++ (customDragMoveHandlers mouseEvent        newRegistry)
+                                    ++ (customDragEndHandlers  mouseEvent        oldRegistry) -- old is required, as i new dragState will be Nothing
         (uiUpdates, newRegistry)     = UIRegistry.sequenceUpdates [ Just $ setWidgetOver
                                                                   , handleMouseOut
                                                                   , handleMouseOver

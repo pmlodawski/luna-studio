@@ -143,16 +143,18 @@ screenToLocal :: JSCamera.Camera -> Vector2 Int -> [Double]  -> Vector2 Double
 screenToLocal cam mousePos widgetMatrix = sceneToLocal workspacePos widgetMatrix where
     workspacePos = JSCamera.screenToWorkspace cam mousePos
 
-type MouseMoveHandler     s = MouseButton -> Position -> Command s ()
-type MousePressedHandler  s = MouseButton -> Position -> Command s ()
-type MouseReleasedHandler s = MouseButton -> Position -> Command s ()
-type MouseOverHandler     s =                            Command s ()
-type MouseOutHandler      s =                            Command s ()
-type ClickHandler         s =                Position -> Command s ()
-type DblClickHandler      s =                Position -> Command s ()
-type KeyUpHandler         s = Char        -> KeyMods  -> Command s ()
-type KeyDownHandler       s = Char        -> KeyMods  -> Command s ()
-type KeyPressedHandler    s = Char        -> KeyMods  -> Command s ()
+type MouseMoveHandler     s = MouseButton -> Position -> WidgetId -> Command s ()
+type MousePressedHandler  s = MouseButton -> Position -> WidgetId -> Command s ()
+type MouseReleasedHandler s = MouseButton -> Position -> WidgetId -> Command s ()
+type MouseOverHandler     s =                            WidgetId -> Command s ()
+type MouseOutHandler      s =                            WidgetId -> Command s ()
+type ClickHandler         s =                Position -> WidgetId -> Command s ()
+type DblClickHandler      s =                Position -> WidgetId -> Command s ()
+type KeyUpHandler         s = Char        -> KeyMods  -> WidgetId -> Command s ()
+type KeyDownHandler       s = Char        -> KeyMods  -> WidgetId -> Command s ()
+type KeyPressedHandler    s = Char        -> KeyMods  -> WidgetId -> Command s ()
+type DragEndHandler       s =                            WidgetId -> Command s ()
+type DragMoveHandler      s =                            WidgetId -> Command s ()
 
 
 data UIHandlers a  = UIHandlers { _mouseMove     :: [MouseMoveHandler      a]
@@ -165,7 +167,28 @@ data UIHandlers a  = UIHandlers { _mouseMove     :: [MouseMoveHandler      a]
                                 , _keyUp         :: [KeyUpHandler          a]
                                 , _keyDown       :: [KeyDownHandler        a]
                                 , _keyPressed    :: [KeyPressedHandler     a]
+                                , _dragMove      :: [DragMoveHandler       a]
+                                , _dragEnd       :: [DragEndHandler        a]
                                 }
+
+instance Default (UIHandlers a) where def = UIHandlers [] [] [] [] [] [] [] [] [] [] [] []
+
+instance Monoid  (UIHandlers a) where
+    mempty = def
+    mappend (UIHandlers a  b  c  d  e  f  g  h  i  j  k  l )
+            (UIHandlers a' b' c' d' e' f' g' h' i' j' k' l') = UIHandlers (a <> a')
+                                                                          (b <> b')
+                                                                          (c <> c')
+                                                                          (d <> d')
+                                                                          (e <> e')
+                                                                          (f <> f')
+                                                                          (g <> g')
+                                                                          (h <> h')
+                                                                          (i <> i')
+                                                                          (j <> j')
+                                                                          (k <> k')
+                                                                          (l <> l')
+
 makeLenses ''DragState
 
 makeLenses ''UIHandlers

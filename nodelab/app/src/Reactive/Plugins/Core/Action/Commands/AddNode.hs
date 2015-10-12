@@ -15,7 +15,8 @@ import           Object.Widget
 import           Object.UITypes        (WidgetId)
 import qualified Object.Widget.Node    as WNode
 import qualified Object.Widget.Port    as WPort
-import           Object.Widget.Slider
+import           Object.Widget.Slider (Slider(..),IsSlider(..))
+import qualified Object.Widget.Slider
 
 import           Reactive.Plugins.Core.Action
 import qualified Reactive.Plugins.Core.Action.State.Global         as Global
@@ -57,7 +58,7 @@ registerNode node = do
         inPorts    = getPorts InputPort node
         nat        = [1..] :: [Int]
         sliders    = uncurry makeSliderFromPort <$> zip nat inPorts
-    sliderIds <- sequence $ addSliderToNode rootId <$> sliders
+    sliderIds <- sequence $ addSliderToNode rootId (node ^. nodeId) <$> sliders
     UIRegistry.updateM rootId (nodeWidget & WNode.controls .~ sliderIds)
 
 makeSliderFromPort :: Int -> Port -> Slider Double
@@ -68,10 +69,20 @@ nodeHandlers :: Node -> UIHandlers State
 nodeHandlers node = def & dblClick   .~ [const $ enterNode node]
                         & keyDown    .~ [removeNode node]
 
-addSliderToNode :: WidgetId -> Slider Double -> Command (UIRegistry.State b) WidgetId
-addSliderToNode nodeId slider = do
-    sliderWidget <- UIRegistry.registerM nodeId slider def
-    performIO $ addWidgetToNode nodeId sliderWidget
+handleValueChanged :: WidgetId -> Command Global.State ()
+handleValueChanged wid = performIO $ putStrLn $ show wid-- do
+--     file <- UIRegistry.lookupTypedM wid
+--     let value = value file ^. widget
+--     return ()
+
+sliderHandlers :: NodeId -> UIHandlers State
+sliderHandlers nodeid = def & dragMove .~ [handleValueChanged]
+                            & dragEnd  .~ [handleValueChanged]
+
+addSliderToNode :: WidgetId -> NodeId -> Slider Double -> Command (UIRegistry.State Global.State) WidgetId
+addSliderToNode widgetId nodeId slider = do
+    sliderWidget <- UIRegistry.registerM widgetId slider (sliderHandlers nodeId)
+    performIO $ addWidgetToNode widgetId sliderWidget
     return $ sliderWidget ^. objectId
 
 addWidgetToNode :: WidgetId -> WidgetFile a (Slider Double) -> IO ()
