@@ -47,6 +47,7 @@ Library
         Generated.Proto.Data.SValue.Type,
         Generated.Proto.Data.StringData,
         Generated.Proto.Data.TangentData,
+        Generated.Proto.Data.VectorData,
         Generated.Proto.Data.VertexData,
         Generated.Proto.Data.ViewData,
         Generated.Proto.Enums.Type,
@@ -67,6 +68,7 @@ Library
                   errors,
                   flowbox-utils,
                   MissingH,
+                  vector,
                   protocol-buffers,
                   protocol-buffers-descriptor
 

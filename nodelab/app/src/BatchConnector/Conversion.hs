@@ -12,6 +12,7 @@ import           Text.ProtocolBuffers.Basic       (uToString, uFromString, Utf8(
 import qualified Data.Sequence                    as Seq
 import qualified Data.Map                         as Map
 import           Data.Int
+import qualified Data.Vector                      as Vector
 import           Data.Text.Lazy.Encoding          (encodeUtf8, decodeUtf8)
 import           Utils.Vector                     (Vector2(..), x, y)
 import qualified Utils.MockHelper  as MockHelper
@@ -48,6 +49,7 @@ import qualified Generated.Proto.Data.FloatData            as FloatData
 import qualified Generated.Proto.Data.StringData           as StringData
 import qualified Generated.Proto.Data.CharData             as CharData
 import qualified Generated.Proto.Data.BoolData             as BoolData
+import qualified Generated.Proto.Data.VectorData           as VectorData
 
 import           Generated.Proto.Dep.Attributes.Attributes
 import           Generated.Proto.Dep.Version.Version
@@ -209,6 +211,10 @@ instance ProtoReadable SValue.SValue Value where
             boolData <- maybeGetExt BoolData.data' msg
             let value = BoolData.svalue boolData
             return $ BoolValue value
+        SValueType.Vector -> do
+            vectorData <- maybeGetExt VectorData.data' msg
+            let value = Vector.fromList . toList . VectorData.values $ vectorData
+            return $ VectorValue value
         _ -> Nothing
 
 instance ProtoWritable SValue.SValue Value where

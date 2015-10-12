@@ -29,6 +29,7 @@ Library
                   errors,
                   flowbox-utils,
                   MissingH,
+                  vector,
                   protocol-buffers,
                   protocol-buffers-descriptor
 

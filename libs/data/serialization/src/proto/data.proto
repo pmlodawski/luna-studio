@@ -28,6 +28,7 @@ message SValue {
         Curve       = 12;
         Error       = 13;
         ChannelData = 14;
+        Vector      = 15;
     }
 
     required Type type = 1;
@@ -199,3 +200,10 @@ message CurveData {
     repeated VertexData vertices = 1;
 }
 
+message VectorData {
+    extend SValue {
+        optional VectorData data = 115;
+    }
+
+    repeated float values = 1;
+}
