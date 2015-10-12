@@ -69,11 +69,15 @@ nodeHandlers :: Node -> UIHandlers State
 nodeHandlers node = def & dblClick   .~ [const $ enterNode node]
                         & keyDown    .~ [removeNode node]
 
+retriveSlider :: WidgetId -> Command (UIRegistry.State Global.State) (Maybe (WidgetFile Global.State (Slider Double)))
+retriveSlider wid = UIRegistry.lookupTypedM wid
+
 handleValueChanged :: WidgetId -> Command Global.State ()
-handleValueChanged wid = performIO $ putStrLn $ show wid-- do
---     file <- UIRegistry.lookupTypedM wid
---     let value = value file ^. widget
---     return ()
+handleValueChanged wid = do
+    file <- zoom Global.uiRegistry $ retriveSlider wid
+    when (isJust file) $ do
+        let val = value $ (fromJust file) ^. widget
+        performIO $ putStrLn $ show val
 
 sliderHandlers :: NodeId -> UIHandlers State
 sliderHandlers nodeid = def & dragMove .~ [handleValueChanged]
