@@ -78,6 +78,7 @@ handleValueChanged wid = performIO $ putStrLn $ show wid-- do
 sliderHandlers :: NodeId -> UIHandlers State
 sliderHandlers nodeid = def & dragMove .~ [handleValueChanged]
                             & dragEnd  .~ [handleValueChanged]
+                            & dblClick .~ [\_ -> handleValueChanged]
 
 addSliderToNode :: WidgetId -> NodeId -> Slider Double -> Command (UIRegistry.State Global.State) WidgetId
 addSliderToNode widgetId nodeId slider = do
