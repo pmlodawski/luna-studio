@@ -75,16 +75,19 @@ knownFunctions  = [ ("+",        twoOpNum  )
                   , ("round",    oneOpNum)
                   , ("floor",    oneOpNum)
                   , ("ceiling",  oneOpNum)
+                  , ("sampleData",NodeType 1 [PortConstraint [AllPorts]  (VTVector VTNumeric), PortConstraint [PortNum 0] VTObject])
+                  , ("sampleInt", NodeType 1 [PortConstraint [AllPorts]  (VTVector VTNumeric), PortConstraint [PortNum 0] VTObject])
                   , ("sort",      NodeType 1 [PortConstraint [PortNum 0, AllPorts] (VTVector VTNumeric)])
                   , ("length",    NodeType 2 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts]               VTInt,                PortConstraint [PortNum 1] (VTVector VTAny)]                                )
+                  , ("sum",       NodeType 1 [PortConstraint [AllPorts]  VTNumeric,PortConstraint [PortNum 0] (VTVector VTNumeric)])
                   , ("null",      NodeType 2 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts]               VTBool,               PortConstraint [PortNum 1] (VTVector VTAny)]                                )
                   , ("!",         NodeType 3 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts]               VTNumeric,            PortConstraint [PortNum 1] (VTVector VTNumeric), PortConstraint [PortNum 2] (VTInt)])
                   , ("head",      NodeType 2 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts]               VTNumeric,            PortConstraint [PortNum 1] (VTVector VTNumeric)                            ])
                   , ("last",      NodeType 2 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts]               VTNumeric,            PortConstraint [PortNum 1] (VTVector VTNumeric)                            ])
                   , ("init",      NodeType 2 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1]    (VTVector VTNumeric)                                                                     ]) 
                   , ("tail",      NodeType 2 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1]    (VTVector VTNumeric)                                                                     ]) 
-                  , ("take",      NodeType 3 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1]    (VTVector VTNumeric), PortConstraint [PortNum 2] VTInt                                           ])
-                  , ("drop",      NodeType 3 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1]    (VTVector VTNumeric), PortConstraint [PortNum 2] VTInt                                           ])
+                  , ("take",      NodeType 2 [PortConstraint [AllPorts, PortNum 0] (VTVector VTNumeric), PortConstraint [PortNum 1] VTInt])
+                  , ("drop",      NodeType 2 [PortConstraint [AllPorts, PortNum 0] (VTVector VTNumeric), PortConstraint [PortNum 1] VTInt])
                   , ("empty",     constant   (VTVector VTNumeric))
                   , ("singleton", NodeType 2 [PortConstraint [AllPorts]  (VTVector VTNumeric), PortConstraint [PortNum 1] VTNumeric, PortConstraint [PortNum 0] VTObject])
                   , ("replicate", NodeType 3 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts]       (VTVector VTNumeric), PortConstraint [PortNum 1] VTInt, PortConstraint [PortNum 2] VTNumeric             ])
@@ -259,7 +262,7 @@ unapplyType _ _ = Just
 -- Utils for reading the types:
 ----------------------------------------------------------------------------------------
 tryObject :: Text -> Maybe ValueType
-tryObject txt = if txt `elem` ["Vector", "Maybe", "Std"]
+tryObject txt = if txt `elem` ["Vector", "Maybe", "Std", "Playground"]
     then Just VTObject
     else Nothing
 

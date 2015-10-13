@@ -72,7 +72,9 @@ createMain project = do
     let lib   = head $ project ^. libs
         crumb = Breadcrumbs [Module "Main"]
     BatchCmd.createFunction project lib (Breadcrumbs [Module "Main"]) "main"
-    BatchCmd.setImport project lib crumb ["Flowbox"] "Std"
+    BatchCmd.setImports project lib crumb [ (["Flowbox"], "Std")
+                                          , (["Flowbox"], "Playground")
+                                          ]
 
 readyWorkspace :: State -> Maybe Workspace
 readyWorkspace (Ready workspace) = Just workspace

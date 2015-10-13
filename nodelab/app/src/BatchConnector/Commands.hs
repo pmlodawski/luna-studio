@@ -237,10 +237,10 @@ getAST proj lib crumbs = sendMessage msg where
                           (proj ^. Project.id)
                           uselessLegacyArgument
 
-setImport :: Project -> Library -> Breadcrumbs -> [String] -> String -> IO ()
-setImport proj lib crumbs path target = sendMessage msg where
+setImports :: Project -> Library -> Breadcrumbs -> [([String], String)] -> IO ()
+setImports proj lib crumbs imports = sendMessage msg where
     msg  = WebMessage "project.library.ast.module.modify.imports.request" $ messagePut body
-    body = ModifyImports.Request (Seq.fromList $ [importExpr path target])
+    body = ModifyImports.Request (Seq.fromList $ uncurry importExpr <$> imports)
                                  (encode crumbs)
                                  (lib ^. Library.id)
                                  (proj ^. Project.id)

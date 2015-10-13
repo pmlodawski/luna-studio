@@ -55,7 +55,7 @@ instance ActionStateUpdater Action where
         prepareValues = case workspace ^. interpreterState of
             Fresh  -> BatchCmd.insertSerializationModes workspace nonModules
             AllSet -> BatchCmd.runMain
-                   >> BatchCmd.requestValues workspace nodes
+                   >> BatchCmd.requestValues workspace nonModules
 
 
 instance ActionUIUpdater Reaction where
