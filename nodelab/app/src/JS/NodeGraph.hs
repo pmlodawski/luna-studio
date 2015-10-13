@@ -14,6 +14,11 @@ import           Object.UITypes
 import           Data.JSString (pack)
 import           Data.JSString.Text  (lazyTextToJSString)
 
+import           JavaScript.Array    (JSArray)
+import qualified JavaScript.Array    as JSArray
+
+import GHCJS.Marshal
+
 logAs :: PrettyPrinter a => String -> a -> IO ()
 logAs title a = putStrLn $ title <> (display a)
 
@@ -102,6 +107,13 @@ setComputedValue :: NodeId -> String -> IO ()
 setComputedValue nodeId value = do
     nodeRef <- getNode nodeId
     setValue nodeRef $ pack value
+
+
+displayNodeVector :: NodeId -> [Float] -> IO ()
+displayNodeVector nodeId vals = do
+    nodeRef <- getNode nodeId
+    valsRef <- mapM toJSRef_pure vals
+    displayVector nodeRef $ JSArray.fromList valsRef
 
 createNodeAt :: Int -> Vector2 Double -> Text -> Int -> IO ()
 createNodeAt nodeId (Vector2 px py) expr wid = do

@@ -90,7 +90,7 @@ function initializeGl() {
 }
 
 function initUserInfo() {
-  $('body').append('<div id="userInfo"><div>Signed in as ' + window.currentUser.name + '. <a class="logout" href="' + window.currentUser.logout + '">Logout</a><a class="tutorial" href="#">Tutorial</a></div></div>')
+  $('body').append('<div id="userInfo"><div>Signed in as YC. <a class="tutorial" href="#">Tutorial</a></div></div>')
   $('body').append(require('tutorial')())
 
   if (localStorage.getItem('tutorial') == "1") $(".tutorial-box").hide();
@@ -268,6 +268,11 @@ function removeWidget(widgetId) {
     console.error("RemoveWidget: widget " + widgetId + " does not exist.");
     return;
   }
+
+  if(widget.destructor) {
+    widget.destructor();
+  }
+
   widget.mesh.parent.remove(widget.mesh);
   delete $$.registry[widgetId];
 }

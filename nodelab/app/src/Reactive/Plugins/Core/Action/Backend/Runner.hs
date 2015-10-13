@@ -17,13 +17,13 @@ import qualified Event.Batch             as Batch
 import           BatchConnector.Commands as BatchCmd
 import           Batch.Workspace
 import           Batch.Value
-import           JS.NodeGraph            (setComputedValue)
+import           JS.NodeGraph            (setComputedValue, displayNodeVector)
 
 import           Reactive.Plugins.Core.Action
-import qualified Reactive.Plugins.Core.Action.State.Graph as Graph
-import           Reactive.Plugins.Core.Action.State.Graph hiding (State)
-import qualified Reactive.Plugins.Core.Action.State.UIRegistry     as UIRegistry
-import           Reactive.Plugins.Core.Action.State.Global as Global
+import qualified Reactive.Plugins.Core.Action.State.Graph       as Graph
+import           Reactive.Plugins.Core.Action.State.Graph       hiding (State)
+import qualified Reactive.Plugins.Core.Action.State.UIRegistry  as UIRegistry
+import           Reactive.Plugins.Core.Action.State.Global      as Global
 
 data Action = RequestRerun
             | UpdateValue Int Value
@@ -46,6 +46,16 @@ toAction (Batch  Batch.NodeModified)              = Just RequestRerun
 toAction (Batch (Batch.ValueUpdate nodeId value)) = Just $ UpdateValue nodeId value
 toAction _                                        = Nothing
 
+displayValue :: NodeId -> Value -> IO ()
+displayValue nodeId (VectorValue vec) = do
+    setComputedValue nodeId "Vector"
+    displayNodeVector nodeId (toList vec)
+-- displayValue nodeId (FloatValue v) = do
+--     setComputedValue nodeId "Float"
+--     displayNodeVector nodeId [v, v/2.0, v/4.0, 2.0*v]
+
+displayValue nodeId value = setComputedValue nodeId (display value)
+
 instance ActionStateUpdater Action where
     execSt RequestRerun state               = ActionUI (PerformIO BatchCmd.runMain) state
     execSt (UpdateValue nodeId value) state = ActionUI io newState where
@@ -54,8 +64,7 @@ instance ActionStateUpdater Action where
         nodeWidMay        = nodeIdToWidgetId uiRegistry nodeId
         lookupSlider :: WidgetId   -> Maybe (WidgetFile Global.State (UISlider.Slider Double))
         lookupSlider widgetId       = UIRegistry.lookupTyped widgetId uiRegistry
-        io = PerformIO $ do
-                setComputedValue nodeId (display value)
+        io = PerformIO $ displayValue nodeId value
 
 
 setFixedValues :: NodeId -> Value -> Global.State -> (Global.State, IO ())

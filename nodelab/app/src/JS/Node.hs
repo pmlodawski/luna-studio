@@ -108,3 +108,5 @@ foreign import javascript unsafe "app.createPendingNode($1, $2, $3, $4)"
 
 createPendingNode :: Int -> Text -> Vector2 Double -> IO ()
 createPendingNode oid expr (Vector2 x y) = createPendingNode' oid (lazyTextToJSString expr) x y
+
+foreign import javascript unsafe "$1.displayVector($2)" displayVector :: JSRef NodeJS -> JSArray -> IO ()

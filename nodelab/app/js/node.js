@@ -313,25 +313,25 @@ Node.prototype.showLabelEditor = function() {
   }, 50);
 };
 
-Node.prototype.renderExamplePlot = function() {
-  var svg = d3.select(this.htmlContainer[0])
-      .append("svg")
-      .attr("width", 400)
-      .attr("height", 250);
-  var i;
-  var data = [];
-  for (i = 0; i < 12; i++) {
-    data[2*i]   = { "Month": i, "Unit Sales": Math.random() * 30, "Channel": "direct" };
-    data[2*i+1] = { "Month": i, "Unit Sales": Math.random() * 30, "Channel": "web"    };
-  }
+Node.prototype.displayVector = function(values) {
+  $(this.htmlContainer).empty();
 
+  var svg = d3.select(this.htmlContainer)
+      .append("svg")
+      .attr("width", 250)
+      .attr("height", 180)
+      .attr("style", "position:absolute; top: 60px; left: -30px;");
+  var data = values.map(function(val, ix) { return {Index: ix, Value: val} });
   var myChart = new dimple.chart(svg, data);
-  var x = myChart.addCategoryAxis("x", "Month");
-  x.addOrderRule("Date");
-  myChart.addMeasureAxis("y", "Unit Sales");
-  myChart.addSeries("Channel", dimple.plot.bubble);
-  myChart.addLegend(180, 10, 360, 20, "right");
+  var x = myChart.addCategoryAxis("x", "Index");
+  myChart.addMeasureAxis("y", "Value");
+  myChart.addSeries(null, dimple.plot.bubble);
+  // myChart.addLegend(180, 10, 360, 20, "right");
   myChart.draw();
+};
+
+Node.prototype.destructor = function(){
+  this.htmlContainer.parentNode.removeChild(this.htmlContainer);
 };
 
 Node.prototype.hideLabelEditor = function() {
