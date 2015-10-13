@@ -63,7 +63,7 @@ registerNode node = do
 
 makeSliderFromPortDouble :: Int -> oPrt -> Slider Double
 makeSliderFromPortDouble i port = Slider (Vector2 10 (75 + (fromIntegral i) * 25)) (Vector2 180 20)
-                                   (Text.pack $ "paramI " <> show i) 0.0 1.0 0.2 True
+                                   (Text.pack $ "param " <> show i) 0.0 1.0 0.2 True
 
 nodeHandlers :: Node -> UIHandlers State
 nodeHandlers node = def & dblClick   .~ [const $ enterNode node]
@@ -74,11 +74,12 @@ retriveSliderDouble wid = UIRegistry.lookupTypedM wid
 
 handleValueChanged :: WidgetId -> Command Global.State ()
 handleValueChanged wid = do
-    performIO $ putStrLn "dupa jasio"
-    fileDouble <- zoom Global.uiRegistry $ retriveSliderDouble wid
-    when (isJust fileDouble) $ do
-        let val = value $ (fromJust fileDouble) ^. widget
-        performIO $ putStrLn $ show val
+    fileDoubleMay <- zoom Global.uiRegistry $ retriveSliderDouble wid
+    case fileDoubleMay of
+        Nothing         -> return ()
+        Just fileDouble -> do
+            let val = value $ fileDouble ^. widget
+            performIO $ putStrLn $ show val
 
 sliderHandlers :: NodeId -> UIHandlers State
 sliderHandlers nodeid = def & dragMove .~ [handleValueChanged]

@@ -41,30 +41,29 @@ function Node(id, position, z, widgetId) {
   this.inputPorts  = [];
   this.outputPorts = [];
 
-
   this.uniforms = {
-    selected:          { type: 'i',  value:                            0    },
-    mouseDist:         { type: 'f',  value:                       100000.0  },
+    selected:          { type: 'i',  value:                               0 },
+    mouseDist:         { type: 'f',  value:                        100000.0 },
     expanded:          { type: 'f',  value:                             0.0 },
-    nodeSize:          { type: 'v2', value: new THREE.Vector2( 2 * collapsedRadius, 2 * collapsedRadius) },
-    radiusTop:         { type: 'f',  value:                            collapsedRadius },
-    radiusBottom:      { type: 'f',  value:                            collapsedRadius },
+    nodeSize:          { type: 'v2', value: new THREE.Vector2(2 * collapsedRadius, 2 * collapsedRadius) },
+    radiusTop:         { type: 'f',  value:                 collapsedRadius },
+    radiusBottom:      { type: 'f',  value:                 collapsedRadius },
     insideColor:       { type: 'c',  value:                     insideColor },
     unselectedColor:   { type: 'c',  value:                 unselectedColor },
     selectedColor:     { type: 'c',  value:                   selectedColor },
     focusedColor:      { type: 'c',  value:                    focusedColor },
-    alpha:             { type: 'f',  value: 1.0 },
+    alpha:             { type: 'f',  value:                             1.0 },
     objectId:          { type: 'v3', value: new THREE.Vector3((widgetId % 256) / 255.0, Math.floor(Math.floor(widgetId % 65536) / 256) / 255.0, Math.floor(widgetId / 65536) / 255.0) }
   };
 
   this.expandedUniforms = {
     selected: this.uniforms.selected,
     expanded: this.uniforms.expanded,
-    nodeSize: { type: 'v2', value: new THREE.Vector2( 60.0,  60.0) },
-    expandedColor: { type: 'c', value: expandedColor},
+    nodeSize:          { type: 'v2', value: new THREE.Vector2( 60.0,  60.0) },
+    expandedColor:     { type: 'c',  value: expandedColor },
     objectId: this.uniforms.objectId,
-    radiusTop:         { type: 'f',  value:                            collapsedRadius },
-    radiusBottom:      { type: 'f',  value:                            collapsedRadius }
+    radiusTop:         { type: 'f',  value: collapsedRadius },
+    radiusBottom:      { type: 'f',  value: collapsedRadius }
   };
 
   Object.keys($$.commonUniforms).forEach(function(k) {
@@ -111,7 +110,7 @@ function Node(id, position, z, widgetId) {
   this.htmlElements = {};
   this.moveTo(position.x, position.y);
   this.zPos(z);
-  this.updateMouse(position.x, position.y);
+  this.updateMouse(position.x - 1000.0, position.y - 1000.0);
 
   this.collapsedNodeSize = new THREE.Vector2( 2 * collapsedRadius,  2 * collapsedRadius);
   this.expandedNodeSize  = new THREE.Vector2(200.0, 180.0);
@@ -185,8 +184,8 @@ Node.prototype.zPos = function(z) {
 };
 
 Node.prototype.updateMouse = function(x, y) {
-  var xd = (this.mesh.position.x - this.mesh.scale.x / 2.0)- x;
-  var yd = (this.mesh.position.y - this.mesh.scale.y / 2.0)- y;
+  var xd = (this.mesh.position.x - this.mesh.scale.x / 2.0) - x;
+  var yd = (this.mesh.position.y - this.mesh.scale.y / 2.0) - y;
   var mouseDist = Math.sqrt(xd * xd + yd * yd);
   this.uniforms.mouseDist.value = mouseDist;
   this.inputPorts.forEach(function(port) {
@@ -209,7 +208,7 @@ Node.prototype.addPort = function(ports, out, oid, id, colorId, angle) {
   var p = new Port(id, oid, colorId, angle, out);
   ports.push(p);
   this.mesh.add(p.mesh);
-  this.updateMouse(this.mesh.position.x, this.mesh.position.y);
+  this.updateMouse(this.mesh.position.x - 1000.0, this.mesh.position.y - 1000.0);
   $$.registry[oid] = p;
 };
 
