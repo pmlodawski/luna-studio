@@ -74,22 +74,21 @@ nodeHandlers node = def & dblClick   .~ [const $ enterNode node]
 retriveSliderDouble :: WidgetId -> Command (UIRegistry.State Global.State) (Maybe (WidgetFile Global.State (Slider Double)))
 retriveSliderDouble wid = UIRegistry.lookupTypedM wid
 
-handleValueChanged :: WidgetId -> Command Global.State ()
-handleValueChanged wid = do
+handleValueChanged :: NodeId -> WidgetId -> Command Global.State ()
+handleValueChanged nodeId wid = do
     fileDoubleMay <- zoom Global.uiRegistry $ retriveSliderDouble wid
     case fileDoubleMay of
         Nothing         -> return ()
         Just fileDouble -> do
-            let val = value $ fileDouble ^. widget
+            let val     = value $ fileDouble ^. widget
+                portRef = PortRef nodeId InputPort $ PortNum 0
             workspace <- use Global.workspace
             performIO $ do
-                BatchCmd.setValue workspace (PortRef 212 InputPort (PortNum 0)) $ double2Float val
-
+                BatchCmd.setValue workspace portRef $ double2Float val
 
 sliderHandlers :: NodeId -> UIHandlers State
-sliderHandlers nodeid = def & dragMove .~ [handleValueChanged]
-                            & dragEnd  .~ [handleValueChanged]
-                            & dblClick .~ [\_ -> handleValueChanged]
+sliderHandlers nodeId = def & dragEnd  .~ [handleValueChanged nodeId]
+                            & dblClick .~ [\_ -> handleValueChanged nodeId]
 
 addSliderToNode :: IsSlider a => WidgetId -> NodeId -> Slider a -> Command (UIRegistry.State Global.State) WidgetId
 addSliderToNode widgetId nodeId slider = do
