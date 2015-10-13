@@ -139,6 +139,7 @@ Node.prototype.setExpandedState = function(expanded) {
   this.expandedUniforms.radiusBottom.value = radius;
   this.expandedNodeBkg.scale.x = nodeSize.x;
   this.expandedNodeBkg.scale.y = nodeSize.y;
+  this.repositionPlot();
 };
 
 Node.prototype.setPending = function() {
@@ -313,6 +314,14 @@ Node.prototype.showLabelEditor = function() {
   }, 50);
 };
 
+Node.prototype.repositionPlot = function () {
+  var topPosition = this.expandedState > 0.0 ? 130 : 60;
+  var topCss = "top: " + topPosition + "px;";
+  d3.select(this.htmlContainer)
+    .select("svg")
+    .attr("style", "position: absolute; left: -30px;" + topCss);
+};
+
 Node.prototype.displayVector = function(values) {
   $(this.htmlContainer).empty();
 
@@ -320,10 +329,10 @@ Node.prototype.displayVector = function(values) {
       .append("svg")
       .attr("width", 250)
       .attr("height", 180)
-      .attr("style", "position:absolute; top: 60px; left: -30px;");
   var data = values.map(function(val, ix) { return {Index: ix, Value: val} });
   var myChart = new dimple.chart(svg, data);
   var x = myChart.addCategoryAxis("x", "Index");
+  this.repositionPlot();
   myChart.addMeasureAxis("y", "Value");
   myChart.addSeries(null, dimple.plot.bubble);
   // myChart.addLegend(180, 10, 360, 20, "right");
