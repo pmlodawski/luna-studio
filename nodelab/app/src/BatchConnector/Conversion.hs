@@ -161,6 +161,7 @@ instance ProtoWritable ProtoNode.Node Node where
                                  (Just $ fromIntegral $ node ^. nodeId)
                                  (Just expr)
                                  Nothing
+                                 Nothing
                                  (Just $ double2Float $ node ^. nodePos . x)
                                  (Just $ double2Float $ node ^. nodePos . y)
         where

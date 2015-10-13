@@ -20,6 +20,7 @@ message Node {
     optional int32    id   = 2 [default = -1];
     optional NodeExpr expr = 3;
     optional string   outputName = 5 [default = ""];
+    optional bool omit = 8;
     optional float    x = 6;
     optional float    y = 7;
 }

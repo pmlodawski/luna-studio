@@ -59,6 +59,7 @@ Library
         Generated.Proto.Dep.Expr.Condition,
         Generated.Proto.Dep.Expr.Data,
         Generated.Proto.Dep.Expr.DataNative,
+        Generated.Proto.Dep.Expr.Disabled,
         Generated.Proto.Dep.Expr.Expr,
         Generated.Proto.Dep.Expr.Expr.Cls,
         Generated.Proto.Dep.Expr.Field,

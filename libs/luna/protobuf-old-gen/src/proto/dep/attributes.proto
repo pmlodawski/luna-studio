@@ -12,7 +12,6 @@ import "dep/nodedefault.proto";
 
 
 message Flags {
-    optional bool     omit                 = 1 [default = false];
     optional bool     astFolded            = 2;
     optional bool     astAssignment        = 3;
     optional FoldInfo foldInfo             = 4;

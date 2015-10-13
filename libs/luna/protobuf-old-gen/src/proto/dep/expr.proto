@@ -11,7 +11,7 @@ import "dep/lit.proto";
 import "dep/name.proto";
 import "dep/pat.proto";
 import "dep/type.proto";
-// last used id = 37 / 137
+// last used id = 38 / 138
 
 message Expr {
     enum Cls {
@@ -53,6 +53,7 @@ message Expr {
         RefType      = 34;
         Case         = 29;
         Match        = 30;
+        Disabled     = 38;
     }
     required Cls cls = 1;
     optional int32 id = 2 [default = -1];
@@ -280,6 +281,11 @@ message Match {
     extend Expr { optional Match ext = 125; }
     optional generated.proto.dep.pat.Pat   pat  = 1;
     repeated generated.proto.dep.expr.Expr body = 2;
+}
+
+message Disabled {
+    extend Expr { optional Disabled ext = 138; }
+    optional generated.proto.dep.expr.Expr expr = 1;
 }
 
 
