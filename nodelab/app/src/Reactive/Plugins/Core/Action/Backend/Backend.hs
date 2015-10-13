@@ -45,7 +45,8 @@ toAction _ = Nothing
 instance ActionStateUpdater Action where
     execSt NextSerializationMode state = ActionUI (PerformIO action) newState where
         newState   = state & Global.workspace . interpreterState %~ (addSerializationMode nodesCount)
-        nodesCount = length $ state ^. Global.graph . Graph.nodes
+        nodes      = state ^. Global.graph . Graph.nodes
+        nodesCount = length $ filter (not . isModule) nodes
         action     = case newState ^. Global.workspace . interpreterState of
             AllSet -> BatchCmd.runMain
             _      -> return ()
