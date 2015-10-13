@@ -1,4 +1,4 @@
-    {-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 

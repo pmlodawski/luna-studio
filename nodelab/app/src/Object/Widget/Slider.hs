@@ -5,17 +5,19 @@ module Object.Widget.Slider where
 import           Utils.PreludePlus
 import           Utils.Vector
 import           Data.Fixed
+import           Object.Object
 import           Object.Widget
 import           Numeric
 
 
-data Slider a = Slider { _pos       :: Vector2 Double
-                       , _size      :: Vector2 Double
-                       , _label     :: Text
-                       , _minValue  :: a
-                       , _maxValue  :: a
-                       , _normValue :: Double
-                       , _enabled   :: Bool
+data Slider a = Slider { _pos          :: Vector2 Double
+                       , _size         :: Vector2 Double
+                       , _label        :: Text
+                       , _minValue     :: a
+                       , _maxValue     :: a
+                       , _normValue    :: Double
+                       , _sliderPortId :: PortId
+                       , _enabled      :: Bool
                        } deriving (Eq, Show, Typeable)
 
 makeLenses ''Slider

@@ -17,7 +17,7 @@ import           Object.UITypes        (WidgetId)
 import qualified Object.Widget.Node    as WNode
 import qualified Object.Widget.Port    as WPort
 import           Object.Widget.Slider (Slider(..),IsSlider(..))
-import qualified Object.Widget.Slider
+import qualified Object.Widget.Slider  as Slider
 
 import           Reactive.Plugins.Core.Action
 import qualified Reactive.Plugins.Core.Action.State.Global         as Global
@@ -65,7 +65,7 @@ registerNode node = do
 
 makeSliderFromPortDouble :: Int -> oPrt -> Slider Double
 makeSliderFromPortDouble i port = Slider (Vector2 10 (75 + (fromIntegral i) * 25)) (Vector2 180 20)
-                                   (Text.pack $ "param " <> show i) 0.0 1.0 0.2 True
+                                         (Text.pack $ "param " <> show i) 0.0 1.0 0.2 (PortNum i) True
 
 nodeHandlers :: Node -> UIHandlers State
 nodeHandlers node = def & dblClick   .~ [const $ enterNode node]
@@ -76,12 +76,13 @@ retriveSliderDouble wid = UIRegistry.lookupTypedM wid
 
 handleValueChanged :: NodeId -> WidgetId -> Command Global.State ()
 handleValueChanged nodeId wid = do
-    fileDoubleMay <- zoom Global.uiRegistry $ retriveSliderDouble wid
-    case fileDoubleMay of
+    sliderFileDoubleMay <- zoom Global.uiRegistry $ retriveSliderDouble wid
+    case sliderFileDoubleMay of
         Nothing         -> return ()
-        Just fileDouble -> do
-            let val     = value $ fileDouble ^. widget
-                portRef = PortRef nodeId InputPort $ PortNum 0
+        Just sliderFileDouble -> do
+            let val     = value $ sliderFileDouble ^. widget
+                portId  = sliderFileDouble ^. widget . Slider.sliderPortId
+                portRef = PortRef nodeId InputPort portId
             workspace <- use Global.workspace
             performIO $ do
                 BatchCmd.setValue workspace portRef $ double2Float val

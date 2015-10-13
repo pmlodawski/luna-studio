@@ -7,6 +7,7 @@ import           Utils.Vector
 
 import           JS.Config
 
+import           Object.Object
 import           Object.Widget
 import           Object.Node
 import           Object.UITypes
@@ -95,16 +96,16 @@ instance ActionStateUpdater Action where
                            def
                 performIO $ addWidget button
 
-                slider  <- UIRegistry.registerM sceneGraphId (Slider (Vector2 100 200) (Vector2 200  25) "Cutoff"    100      20000        0.1 True :: Slider Int) def
+                slider  <- UIRegistry.registerM sceneGraphId (Slider (Vector2 100 200) (Vector2 200  25) "Cutoff"    100      20000        0.1 (PortNum 0) True :: Slider Int) def
                 performIO $ addWidget slider
 
-                slider2 <- UIRegistry.registerM sceneGraphId (Slider (Vector2 100 230) (Vector2 200  25) "Resonance"   0.0      100.0      0.3 True :: Slider Double) def
+                slider2 <- UIRegistry.registerM sceneGraphId (Slider (Vector2 100 230) (Vector2 200  25) "Resonance"   0.0      100.0      0.3 (PortNum 1) True :: Slider Double) def
                 performIO $ addWidget slider2
 
-                slider3 <- UIRegistry.registerM sceneGraphId (Slider (Vector2 100 260) (Vector2 200  25) "Noise"       0.0        1.0      0.1 True :: Slider Double) def
+                slider3 <- UIRegistry.registerM sceneGraphId (Slider (Vector2 100 260) (Vector2 200  25) "Noise"       0.0        1.0      0.1 (PortNum 2) True :: Slider Double) def
                 performIO $ addWidget slider3
 
-                slider4 <- UIRegistry.registerM sceneGraphId (Slider (Vector2 100 290) (Vector2 200  25) "Gamma"       0.0000001  0.000001 0.9 True :: Slider Double) def
+                slider4 <- UIRegistry.registerM sceneGraphId (Slider (Vector2 100 290) (Vector2 200  25) "Gamma"       0.0000001  0.000001 0.9 (PortNum 3) True :: Slider Double) def
                 performIO $ addWidget slider4
 
                 toggle  <- UIRegistry.registerM sceneGraphId (Toggle (Vector2 100 320) (Vector2 200  25) "Inverse" False) def
