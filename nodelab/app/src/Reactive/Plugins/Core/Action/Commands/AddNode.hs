@@ -57,26 +57,27 @@ registerNode node = do
         nodeWidget = file ^. widget
         inPorts    = getPorts InputPort node
         nat        = [1..] :: [Int]
-        sliders    = uncurry makeSliderFromPort <$> zip nat inPorts
-    sliderIds <- sequence $ addSliderToNode rootId (node ^. nodeId) <$> sliders
+        slidersDouble    = uncurry makeSliderFromPortDouble <$> zip nat inPorts
+    sliderIds <- sequence $ addSliderToNode rootId (node ^. nodeId) <$> slidersDouble
     UIRegistry.updateM rootId (nodeWidget & WNode.controls .~ sliderIds)
 
-makeSliderFromPort :: Int -> Port -> Slider Double
-makeSliderFromPort i port = Slider (Vector2 10 (75 + (fromIntegral i) * 25)) (Vector2 180 20)
-                                   (Text.pack $ "param " <> show i) 0.0 1.0 0.2 True
+makeSliderFromPortDouble :: Int -> oPrt -> Slider Double
+makeSliderFromPortDouble i port = Slider (Vector2 10 (75 + (fromIntegral i) * 25)) (Vector2 180 20)
+                                   (Text.pack $ "paramI " <> show i) 0.0 1.0 0.2 True
 
 nodeHandlers :: Node -> UIHandlers State
 nodeHandlers node = def & dblClick   .~ [const $ enterNode node]
                         & keyDown    .~ [removeNode node]
 
-retriveSlider :: WidgetId -> Command (UIRegistry.State Global.State) (Maybe (WidgetFile Global.State (Slider Double)))
-retriveSlider wid = UIRegistry.lookupTypedM wid
+retriveSliderDouble :: WidgetId -> Command (UIRegistry.State Global.State) (Maybe (WidgetFile Global.State (Slider Double)))
+retriveSliderDouble wid = UIRegistry.lookupTypedM wid
 
 handleValueChanged :: WidgetId -> Command Global.State ()
 handleValueChanged wid = do
-    file <- zoom Global.uiRegistry $ retriveSlider wid
-    when (isJust file) $ do
-        let val = value $ (fromJust file) ^. widget
+    performIO $ putStrLn "dupa jasio"
+    fileDouble <- zoom Global.uiRegistry $ retriveSliderDouble wid
+    when (isJust fileDouble) $ do
+        let val = value $ (fromJust fileDouble) ^. widget
         performIO $ putStrLn $ show val
 
 sliderHandlers :: NodeId -> UIHandlers State
@@ -84,13 +85,13 @@ sliderHandlers nodeid = def & dragMove .~ [handleValueChanged]
                             & dragEnd  .~ [handleValueChanged]
                             & dblClick .~ [\_ -> handleValueChanged]
 
-addSliderToNode :: WidgetId -> NodeId -> Slider Double -> Command (UIRegistry.State Global.State) WidgetId
+addSliderToNode :: IsSlider a => WidgetId -> NodeId -> Slider a -> Command (UIRegistry.State Global.State) WidgetId
 addSliderToNode widgetId nodeId slider = do
     sliderWidget <- UIRegistry.registerM widgetId slider (sliderHandlers nodeId)
     performIO $ addWidgetToNode widgetId sliderWidget
     return $ sliderWidget ^. objectId
 
-addWidgetToNode :: WidgetId -> WidgetFile a (Slider Double) -> IO ()
+addWidgetToNode :: IsSlider a => WidgetId -> WidgetFile b (Slider a) -> IO ()
 addWidgetToNode nodeId newWidget = do
     node   <- JSRegistry.lookup nodeId :: IO UINode.Node
     widget <- JSRegistry.build (newWidget ^. objectId) (newWidget ^. widget)

@@ -49,9 +49,9 @@ toAction _                                        = Nothing
 instance ActionStateUpdater Action where
     execSt RequestRerun state               = ActionUI (PerformIO BatchCmd.runMain) state
     execSt (UpdateValue nodeId value) state = ActionUI io newState where
-        uiRegistry = state ^. Global.uiRegistry
+        uiRegistry        = state ^. Global.uiRegistry
         (newState, sio)   = setFixedValues nodeId value state
-        nodeMay    = nodeIdToWidgetId uiRegistry nodeId
+        nodeWidMay        = nodeIdToWidgetId uiRegistry nodeId
         lookupSlider :: WidgetId   -> Maybe (WidgetFile Global.State (UISlider.Slider Double))
         lookupSlider widgetId       = UIRegistry.lookupTyped widgetId uiRegistry
         io = PerformIO $ do
