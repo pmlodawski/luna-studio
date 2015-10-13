@@ -74,10 +74,6 @@ data PortRef = PortRef { _refPortNodeId :: NodeId
 
 makeLenses ''PortRef
 
-
-instance PrettyPrinter PortType where
-    display = show
-
 instance PrettyPrinter PortRef where
     display (PortRef portNodeId portType portId)
         = "n(" <> display portNodeId

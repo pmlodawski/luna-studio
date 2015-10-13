@@ -25,6 +25,7 @@ data Event = ProjectsList [Project]
            | NodeModified
            | NodesConnected
            | NodesDisconnected
+           | NodeDefaultUpdated
            | GraphViewFetched [Node] [(PortRef, PortRef)]
            | InterpreterGotProjectId (Maybe Int32)
            | SerializationModeInserted

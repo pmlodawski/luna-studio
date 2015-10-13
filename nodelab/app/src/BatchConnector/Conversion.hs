@@ -165,7 +165,7 @@ instance ProtoWritable ProtoNode.Node Node where
                                  (Just $ double2Float $ node ^. nodePos . x)
                                  (Just $ double2Float $ node ^. nodePos . y)
         where
-            expr       = ProtoExpr.NodeExpr ExprCls.String (Just $ encodedStr) Nothing
+            expr       = ProtoExpr.NodeExpr ExprCls.String (Just encodedStr) Nothing
             encodedStr = encode $ node ^. expression
 
 instance ProtoReadable ProtoEdge.EdgeView (PortRef, PortRef) where

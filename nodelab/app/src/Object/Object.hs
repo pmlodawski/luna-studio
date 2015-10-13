@@ -45,5 +45,8 @@ type PortIdCollection = [PortId]
 
 data PortType = InputPort | OutputPort deriving (Ord, Eq, Show)
 
+instance PrettyPrinter PortType where
+    display = show
+
 instance PrettyPrinter PortId where
     display portId = "pId(" <> show portId <> ")"

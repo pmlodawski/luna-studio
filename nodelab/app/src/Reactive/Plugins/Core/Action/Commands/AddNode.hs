@@ -7,6 +7,7 @@ import           Utils.Vector
 
 import qualified Data.Text.Lazy        as Text
 import           Control.Monad.State   hiding (State)
+import           GHC.Float             (double2Float)
 
 import           Object.Object
 import           Object.Node
@@ -82,7 +83,7 @@ handleValueChanged wid = do
             let val = value $ fileDouble ^. widget
             workspace <- use Global.workspace
             performIO $ do
-                BatchCmd.setValue workspace 333 val
+                BatchCmd.setValue workspace (PortRef 212 InputPort (PortNum 0)) $ double2Float val
 
 
 sliderHandlers :: NodeId -> UIHandlers State

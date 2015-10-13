@@ -1,23 +1,24 @@
 module BatchConnector.Commands where
 
-import           Data.ByteString.Lazy.Char8 (pack)
 import           Utils.PreludePlus
+
+import           Data.ByteString.Lazy.Char8 (pack)
 import qualified Data.Sequence              as Seq
-import           Text.ProtocolBuffers       (Utf8(..), messagePut)
-import           Text.ProtocolBuffers.Basic (uFromString)
-import           BatchConnector.Connection  (sendMessage, sendMany, WebMessage(..))
-import           Batch.Project              as Project
-import           Batch.Library              as Library
-import           Batch.Breadcrumbs
 import           Data.Map                   as Map
-import           BatchConnector.Conversion
 import           Data.Int
 
-import           Batch.Expressions
+import           Text.ProtocolBuffers       (Utf8(..), messagePut)
+import           Text.ProtocolBuffers.Basic (uFromString)
+
+import           Batch.Project              as Project
+import           Batch.Library              as Library
 import           Batch.Workspace
+import           Batch.Expressions
 import           Batch.Breadcrumbs
 import           Object.Node
 import           Object.Object
+import           BatchConnector.Connection  (sendMessage, sendMany, WebMessage(..))
+import           BatchConnector.Conversion
 
 import qualified Generated.Proto.ProjectManager.Project.List.Request                 as ListProjects
 import qualified Generated.Proto.ProjectManager.Project.Create.Request               as CreateProject
@@ -26,6 +27,7 @@ import qualified Generated.Proto.ProjectManager.Project.Open.Request            
 import qualified Generated.Proto.ProjectManager.Project.Library.List.Request         as ListLibraries
 import qualified Generated.Proto.ProjectManager.Project.Library.Create.Request       as CreateLibrary
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Get.Request      as GetAST
+
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Get.Request as GetCode
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Code.Set.Request as SetCode
 
@@ -36,11 +38,10 @@ import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Gra
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Add.Request           as AddNode
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Remove.Request        as RemoveNode
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.ModifyInPlace.Request as ModifyNode
+import qualified Generated.Proto.ProjectManager.Project.Library.AST.Function.Graph.Node.Default.Set.Request   as SetDefault
+
 import qualified Generated.Proto.ProjectManager.Project.Library.AST.Module.Modify.Imports.Request             as ModifyImports
-import           Generated.Proto.Dep.Version.Version
-import           Generated.Proto.Dep.Attributes.Attributes
-import           Generated.Proto.Mode.Mode
-import qualified Generated.Proto.Dep.Crumb.Breadcrumbs                        as ProtoBreadcrumbs
+
 import qualified Generated.Proto.Interpreter.Interpreter.SetProjectID.Request as SetProjectId
 import qualified Generated.Proto.Interpreter.Interpreter.GetProjectID.Request as GetProjectId
 import qualified Generated.Proto.Interpreter.Interpreter.Run.Request          as Run
@@ -56,6 +57,11 @@ import qualified Generated.Proto.Dep.Graph.Node.Cls     as NodeCls
 import qualified Generated.Proto.Dep.Graph.Node         as GenNode
 import qualified Generated.Proto.Dep.Graph.NodeExpr     as GenExpr
 import qualified Generated.Proto.Dep.Graph.NodeExpr.Cls as ExprCls
+
+import           Generated.Proto.Mode.Mode
+import           Generated.Proto.Dep.Version.Version
+import qualified Generated.Proto.Dep.Crumb.Breadcrumbs     as ProtoBreadcrumbs
+import           Generated.Proto.Dep.Attributes.Attributes
 
 uselessLegacyArgument :: Int32
 uselessLegacyArgument = 42
@@ -258,6 +264,14 @@ setCode workspace code = sendMessage msg where
                            (workspace ^. project . Project.id)
                            uselessLegacyArgument
 
-setValue :: Workspace -> Int -> Double -> IO ()
-setValue workspace portRef value = do
-    putStrLn $ "value for " <> display portRef <> " changed to " <> display value
+setValue :: Workspace -> PortRef -> Float -> IO ()
+setValue workspace portRef value = sendMessage msg where
+    msg  = WebMessage "project.library.ast.function.graph.node.default.set.request" $ messagePut body
+    body = SetDefault.Request (encode . portRefToList $ portRef ^. refPortId)
+                              (GenExpr.NodeExpr ExprCls.String (Just encodedVal) Nothing)
+                              (encode $ portRef ^. refPortNodeId)
+                              (encode $ workspace ^. breadcrumbs)
+                              (workspace ^. library . Library.id)
+                              (workspace ^. project . Project.id)
+                              uselessLegacyArgument
+    encodedVal = (uFromString . show $ value)
