@@ -257,3 +257,7 @@ setCode workspace code = sendMessage msg where
                            (workspace ^. library . Library.id)
                            (workspace ^. project . Project.id)
                            uselessLegacyArgument
+
+setValue :: Workspace -> Int -> Double -> IO ()
+setValue workspace portRef value = do
+    putStrLn $ "value for " <> display portRef <> " changed to " <> display value

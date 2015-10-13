@@ -29,6 +29,7 @@ import           Reactive.Plugins.Core.Action.Commands.RemoveNode  (removeNode)
 import           Reactive.Plugins.Core.Action.Commands.Command     (Command, performIO)
 import           Reactive.Plugins.Core.Action.Commands.PendingNode (unrenderPending)
 
+import qualified BatchConnector.Commands as BatchCmd
 import qualified JS.NodeGraph          as UI
 
 import qualified ThreeJS.Registry      as JSRegistry
@@ -79,7 +80,10 @@ handleValueChanged wid = do
         Nothing         -> return ()
         Just fileDouble -> do
             let val = value $ fileDouble ^. widget
-            performIO $ putStrLn $ show val
+            workspace <- use Global.workspace
+            performIO $ do
+                BatchCmd.setValue workspace 333 val
+
 
 sliderHandlers :: NodeId -> UIHandlers State
 sliderHandlers nodeid = def & dragMove .~ [handleValueChanged]
