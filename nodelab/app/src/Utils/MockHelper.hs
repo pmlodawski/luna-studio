@@ -84,11 +84,11 @@ knownFunctions  = [ ("+",        twoOpNum  )
                   , ("!",         NodeType 3 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts]               VTNumeric,            PortConstraint [PortNum 1] (VTVector VTNumeric), PortConstraint [PortNum 2] (VTInt)])
                   , ("head",      NodeType 2 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts]               VTNumeric,            PortConstraint [PortNum 1] (VTVector VTNumeric)                            ])
                   , ("last",      NodeType 2 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts]               VTNumeric,            PortConstraint [PortNum 1] (VTVector VTNumeric)                            ])
-                  , ("init",      NodeType 2 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1]    (VTVector VTNumeric)                                                                     ]) 
-                  , ("tail",      NodeType 2 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1]    (VTVector VTNumeric)                                                                     ]) 
+                  , ("init",      NodeType 2 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1]    (VTVector VTNumeric)                                                                     ])
+                  , ("tail",      NodeType 2 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1]    (VTVector VTNumeric)                                                                     ])
                   , ("take",      NodeType 2 [PortConstraint [AllPorts, PortNum 0] (VTVector VTNumeric), PortConstraint [PortNum 1] VTInt])
                   , ("drop",      NodeType 2 [PortConstraint [AllPorts, PortNum 0] (VTVector VTNumeric), PortConstraint [PortNum 1] VTInt])
-                  , ("empty",     NodeType 1 [PortConstraint [PortNum 0] VTObject], PortConstraint [AllPorts] (VTVector VTNumeric))
+                  , ("empty",     NodeType 1 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts] (VTVector VTNumeric)])
                   , ("singleton", NodeType 2 [PortConstraint [AllPorts]  (VTVector VTNumeric), PortConstraint [PortNum 1] VTNumeric, PortConstraint [PortNum 0] VTObject])
                   , ("replicate", NodeType 3 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts]       (VTVector VTNumeric), PortConstraint [PortNum 1] VTInt, PortConstraint [PortNum 2] VTNumeric             ])
                   , ("cons",      NodeType 3 [PortConstraint [PortNum 0] VTObject, PortConstraint [AllPorts, PortNum 1]    (VTVector VTNumeric), PortConstraint [PortNum 2] VTNumeric                                       ])
@@ -216,7 +216,7 @@ promoteConstr pid vtype pc@(PortConstraint pids pType) = if pid `elem` pids
 applyType :: PortId -> ValueType -> NodeType -> Maybe NodeType
 applyType pid vtype (NodeType pc constrs) = NodeType pc <$> newConstrs
     where newConstrs = sequence $ map (promoteConstr pid vtype) constrs
-        
+
 
 -- TODO for now this doesn't do anything but it could re-add the port to the
 -- pids list and relax constraints if necessary
@@ -227,9 +227,9 @@ unapplyType _ _ = Just
 
 
 --replicate :: Int -> a -> a -> Vector a
---replicate = undefined 
+--replicate = undefined
 
---Node 
+--Node
 -- + expr = "replicate"
 -- connect 0 Int
 -- [
