@@ -58,7 +58,7 @@ registerNode node = do
     let rootId      = file ^. objectId
         nodeWidget  = file ^. widget
         inPorts     = getPorts InputPort node
-        nat         = [1..] :: [Int]
+        nat         = [0..] :: [Int]
         portsWithId = zip nat inPorts
         filteredPortsWithId = filter (\(id, port) -> port ^. portValueType == VTFloat || port ^. portValueType == VTNumeric) portsWithId
         slidersDouble    = uncurry makeSliderFromPortDouble <$> filteredPortsWithId
@@ -66,7 +66,7 @@ registerNode node = do
     UIRegistry.updateM rootId (nodeWidget & WNode.controls .~ sliderIds)
 
 makeSliderFromPortDouble :: Int -> Port -> Slider Double
-makeSliderFromPortDouble i port = Slider (Vector2 10 (75 + (fromIntegral i) * 25)) (Vector2 180 20)
+makeSliderFromPortDouble i port = Slider (Vector2 10 (95 + (fromIntegral i) * 25)) (Vector2 180 20)
                                          (Text.pack $ "param " <> show i) 0.0 1.0 0.2 (PortNum i) True
 
 nodeHandlers :: Node -> UIHandlers State
