@@ -7,12 +7,8 @@ import           Event.Event
 import qualified Event.Batch     as Batch
 import           Batch.Workspace (interpreterState, InterpreterState(..))
 
-import           Reactive.Plugins.Core.Action
-import qualified Reactive.Plugins.Core.Action.State.Graph          as Graph
 import qualified Reactive.Plugins.Core.Action.State.Global         as Global
 import           Reactive.Plugins.Core.Action.State.Global         (State)
-import qualified Reactive.Plugins.Core.Action.State.UIRegistry     as UIRegistry
-import qualified Reactive.Plugins.Core.Action.Commands.AddNode     as AddNode
 import           Reactive.Plugins.Core.Action.Commands.Command     (Command, execCommand, performIO)
 import           Reactive.Plugins.Core.Action.Commands.RenderGraph (renderGraph)
 
