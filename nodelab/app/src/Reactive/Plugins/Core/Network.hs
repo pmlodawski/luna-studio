@@ -23,7 +23,6 @@ import qualified Reactive.Plugins.Core.Action.MultiSelection        as MultiSele
 import qualified Reactive.Plugins.Core.Action.Drag                  as Drag
 import qualified Reactive.Plugins.Core.Action.Connect               as Connect
 import qualified Reactive.Plugins.Core.Action.NodeSearcher          as NodeSearcher
-import qualified Reactive.Plugins.Core.Action.Breadcrumb            as Breadcrumb
 import qualified Reactive.Plugins.Core.Action.Widget                as Widget
 import qualified Reactive.Plugins.Core.Action.Sandbox               as Sandbox
 import qualified Reactive.Plugins.Core.Action.Backend.Backend       as Backend
@@ -98,7 +97,6 @@ makeNetworkDescription conn logging workspace = do
         nodeDragActionB               = fmap ActionST $                Drag.toAction <$> anyNodeB <*> globalStateB <*> underCursorB
         nodeConnectActionB            = fmap ActionST $             Connect.toAction <$> anyNodeB <*> globalStateB
         nodeSearcherActionB           = fmap ActionST $        NodeSearcher.toAction <$> anyNodeB
-        breadcrumbActionB             = fmap ActionST $          Breadcrumb.toAction <$> anyNodeB <*> globalStateB
         sandboxActionB                = fmap ActionST $             Sandbox.toAction <$> anyNodeB <*> globalStateB
         backendActionB                = fmap ActionST $             Backend.toAction <$> anyNodeB
         runnerActionB                 = fmap ActionST $              Runner.toAction <$> anyNodeB
@@ -116,7 +114,6 @@ makeNetworkDescription conn logging workspace = do
                                         , cameraActionB
                                         , nodeConnectActionB
                                         , nodeSearcherActionB
-                                        , breadcrumbActionB
                                         , sandboxActionB
                                         , backendActionB
                                         , runnerActionB

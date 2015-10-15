@@ -5,7 +5,6 @@ import           Utils.Vector
 
 import           JS.Bindings
 import qualified JS.NodeGraph   as UI
-import qualified JS.Camera      as Camera
 
 import           Object.Node
 import           Event.Keyboard hiding      ( Event )
@@ -17,9 +16,11 @@ import           Event.Event
 import           Event.WithObjects
 import           Reactive.Plugins.Core.Action
 import           Reactive.Plugins.Core.Action.State.Camera
+import qualified Reactive.Plugins.Core.Action.State.Camera    as Camera
 import qualified Reactive.Plugins.Core.Action.State.Graph     as Graph
 import qualified Reactive.Plugins.Core.Action.State.Global    as Global
 
+import Reactive.Plugins.Core.Action.Commands.Command (Command, ioCommand, execCommand, performIO)
 
 data DragType = StartDrag
               | Dragging
@@ -110,12 +111,14 @@ zoomFactorStep =   1.1
 
 restrictCamFactor = min maxCamFactor . max minCamFactor
 
+panCamera :: Vector2 Double -> Command Global.State ()
+panCamera delta = do
+    camFactor <- use $ Global.camera . Camera.camera . Camera.factor
+    Global.camera . Camera.camera . Camera.pan += ((/ camFactor) <$> delta)
+
 instance ActionStateUpdater Action where
     execSt action@(WheelAction Pan  pos delta) oldState = ActionUI action newState where
-        newState                       = oldState &  Global.camera . camera . pan    +~ ((/oldCamFactor) <$> delta)
-        oldCam                         = oldState ^. Global.camera
-        oldCamFactor                   = oldCam ^. camera . factor
-
+        (_, newState) = execCommand (panCamera delta) oldState
 
     execSt action@(WheelAction Zoom pos delta) oldState = ActionUI action newState where
         newState                       = oldState &  Global.camera . camera . pan    .~ zoomPan
@@ -123,7 +126,7 @@ instance ActionStateUpdater Action where
 
         camFactorDelta        = (- delta ^. x - delta ^. y) / wheelZoomSpeed
         newCamFactor          = oldCamFactor * (1.0 + camFactorDelta)
-        oldCamera             = Global.toCamera oldState
+        oldCamera             = oldState ^. Global.camera . Camera.camera
         oldCam                = oldState ^. Global.camera
         oldCamFactor          = oldCam ^. camera . factor
 
@@ -172,7 +175,7 @@ instance ActionStateUpdater Action where
         newDrag                        = case newActionCandidate of
             MouseAction act tpe point -> case tpe of
                 StartDrag             -> Just $ DragHistory point (Camera.screenToWorkspace camera point) point point where
-                    camera = Global.toCamera oldState
+                    camera = oldState ^. Global.camera . Camera.camera
                 Dragging              -> case oldDrag of
                     Just oldDragState -> Just $ oldDragState & dragPreviousPos .~ (oldDragState ^. dragCurrentPos)
                                                              & dragCurrentPos  .~ point
@@ -181,7 +184,7 @@ instance ActionStateUpdater Action where
             _                         -> Nothing
         (autoZoomPan, autoZoomFactor)  = (autoZoomPan, autoZoomFactor) where
             nodes          = oldState ^. Global.graph . Graph.nodes
-            screenSize     = fromIntegral <$> oldState ^. Global.screenSize
+            screenSize     = fromIntegral <$> oldState ^. Global.camera . Camera.camera . Camera.screenSize
             minXY          = -padding + (Vector2 (minimum $ (^. nodePos . x) <$> nodes) (minimum $ (^. nodePos . y) <$> nodes))
             maxXY          =  padding + (Vector2 (maximum $ (^. nodePos . x) <$> nodes) (maximum $ (^. nodePos . y) <$> nodes))
             spanXY         = maxXY - minXY
@@ -194,7 +197,7 @@ instance ActionStateUpdater Action where
                     camFactorDelta        = (delta ^. x + delta ^. y) / dragZoomSpeed
                     newCamFactorCandidate = oldCamFactor * (1.0 + camFactorDelta)
                     delta                 = fromIntegral <$> (negateSnd $ drag ^. dragCurrentPos - drag ^. dragPreviousPos)
-                    camera                = Global.toCamera oldState
+                    camera                = oldState ^. Global.camera . Camera.camera
                     oldScreen             = drag ^. fixedPointPosScreen
                     oldWorkspace          = drag ^. fixedPointPosWorkspace
                     newWorkspace          = Camera.screenToWorkspace nonPannedCamera oldScreen
@@ -204,7 +207,7 @@ instance ActionStateUpdater Action where
                 Nothing                  -> (oldCamPan, oldCamFactor)
         dragPan                           = case newDrag of
                 Just drag                -> prevWorkspace - currWorkspace where
-                    camera                = Global.toCamera oldState
+                    camera                = oldState ^. Global.camera . Camera.camera
                     currWorkspace         = Camera.screenToWorkspace camera $ drag ^. dragCurrentPos
                     prevWorkspace         = Camera.screenToWorkspace camera $ drag ^. dragPreviousPos
                 Nothing                  -> Vector2 0.0 0.0
@@ -214,11 +217,12 @@ instance ActionUIUpdater Action where
     updateUI (WithState _ state) = syncCamera state
 
 
+
 syncCamera :: Global.State -> IO ()
 syncCamera state = do
     let cPan         = state ^. Global.camera . camera . pan
         cFactor      = state ^. Global.camera . camera . factor
-        screenSize   = state ^. Global.screenSize
+        screenSize   = state ^. Global.camera . Camera.camera . Camera.screenSize
         hScreen      = (/ 2.0) . fromIntegral <$> screenSize
         camLeft      = appX cameraLeft
         camRight     = appX cameraRight
@@ -233,6 +237,9 @@ syncCamera state = do
     updateHtmCanvasPanPos hX hY cFactor
     updateProjectionMatrix
     updateHUDProjectionMatrix
+
+syncCameraM :: Command Global.State ()
+syncCameraM = ioCommand syncCamera
 
 
 cameraLeft, cameraRight, cameraTop, cameraBottom, htmlX, htmlY :: Double -> Double -> Double -> Double

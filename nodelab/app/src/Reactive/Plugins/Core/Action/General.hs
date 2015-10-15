@@ -4,7 +4,6 @@ import           Utils.PreludePlus
 import           Utils.Vector
 
 import           JS.Bindings
-import qualified JS.Camera      as Camera
 import           Object.Object
 import           Object.Node
 import           Event.Mouse    hiding      ( Event, WithObjects )
@@ -14,6 +13,7 @@ import           Event.Event
 import           Event.WithObjects
 import           Reactive.Plugins.Core.Action
 import qualified Reactive.Plugins.Core.Action.Camera         as Camera
+import qualified Reactive.Plugins.Core.Action.State.Camera   as Camera
 import qualified Reactive.Plugins.Core.Action.State.Global   as Global
 
 
@@ -45,13 +45,13 @@ instance ActionStateUpdater Action where
             Moving pos    -> oldState & Global.iteration  +~ 1
                                       & Global.mousePos   .~ pos
             Resizing size -> oldState & Global.iteration  +~ 1
-                                      & Global.screenSize .~ size
+                                      & Global.camera . Camera.camera . Camera.screenSize .~ size
 
 
 instance ActionUIUpdater Action where
     updateUI (WithState action state) = case action of
         Moving pos      -> updateMouse x y where
             Vector2 x y  = Camera.screenToWorkspace camera pos
-            camera       = Global.toCamera state
+            camera       = state ^. Global.camera . Camera.camera
         Resizing size   -> Camera.syncCamera state
                         >> updateScreenSize (size ^. x) (size ^. y)

@@ -14,7 +14,6 @@ import           Event.Keyboard (KeyMods)
 import           Reactive.Plugins.Core.Action.State.Camera     (Camera)
 import qualified Reactive.Plugins.Core.Action.State.Camera     as Camera
 import           Reactive.Plugins.Core.Action.Commands.Command (Command)
-import qualified JS.Camera as JSCamera
 import           Object.UITypes
 
 type DisplayObject = CtxDynamic DisplayObjectClass
@@ -139,9 +138,9 @@ sceneToLocal (Vector2 x y) [ aa, ab, ac, ad
                                x' = aa * x + ba * y + da
                                y' = ab * x + bb * y + db
 
-screenToLocal :: JSCamera.Camera -> Vector2 Int -> [Double]  -> Vector2 Double
+screenToLocal :: Camera -> Vector2 Int -> [Double]  -> Vector2 Double
 screenToLocal cam mousePos widgetMatrix = sceneToLocal workspacePos widgetMatrix where
-    workspacePos = JSCamera.screenToWorkspace cam mousePos
+    workspacePos = Camera.screenToWorkspace cam mousePos
 
 type MouseMoveHandler     s = MouseButton -> Position -> WidgetId -> Command s ()
 type MousePressedHandler  s = MouseButton -> Position -> WidgetId -> Command s ()

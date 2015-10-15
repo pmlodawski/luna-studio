@@ -6,7 +6,6 @@ import           Utils.Angle
 import qualified Utils.Nodes    as NodeUtils
 import           Debug.Trace
 
-import           JS.Camera
 import qualified JS.Bindings    as UI
 import qualified JS.NodeGraph   as UI
 import qualified JS.Connection  as UI
@@ -95,7 +94,7 @@ toAction _ _            = Nothing
 -- angle :: Camera.Camera -> Graph -> Maybe Connecting -> Double
 calculateAngle camera oldGraph (Just (Connecting sourceRef source destinationMay (DragHistory startPos currentPos))) = calcAngle destinPoint sourcePoint where
     sourcePoint = NodeUtils.getNodePos (Graph.getNodesMap oldGraph) $ sourceRef ^. refPortNodeId
-    destinPoint = screenToWorkspace camera currentPos
+    destinPoint = Camera.screenToWorkspace camera currentPos
 calculateAngle _ _ Nothing = 0.0
 
 
@@ -111,7 +110,7 @@ instance ActionStateUpdater Action where
             newNodesMap                      = updateSourcePortInNodes angle sourceRef oldNodesMap
             oldNodesMap                      = Graph.getNodesMap oldGraph
             angle                            = calculateAngle camera oldGraph newConnecting
-            camera                           = Global.toCamera oldState
+            camera                           = oldState ^. Global.camera . Camera.camera
 
     execSt action@(DragAction Moving point) oldState = case newAction of
         Just action -> ActionUI newAction newState
@@ -124,7 +123,7 @@ instance ActionStateUpdater Action where
                                                         & Global.graph                .~ newGraph
         newAction                            = (DragAction (Dragging angle) point) <$ oldConnecting
         angle                                = calculateAngle camera oldGraph newConnecting
-        camera                               = Global.toCamera oldState
+        camera                               = oldState ^. Global.camera . Camera.camera
 
         newConnecting                        = case oldConnecting of
             Just (Connecting sourceRef source _ oldHistory)
@@ -186,7 +185,7 @@ instance ActionUIUpdater Action where
         where
             nodesMap                      = Graph.getNodesMap       $ state ^. Global.graph
             connectionsMap                = Graph.getConnectionsMap $ state ^. Global.graph
-            ptWs                          = screenToWorkspace camera pt
-            camera                        = Global.toCamera state
+            ptWs                          = Camera.screenToWorkspace camera pt
+            camera                        = state ^. Global.camera . Camera.camera
             maybeConnecting               = state ^. Global.connect . connecting
             workspace                     = state ^. Global.workspace

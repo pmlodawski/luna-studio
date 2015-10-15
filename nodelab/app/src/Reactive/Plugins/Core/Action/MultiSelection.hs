@@ -7,7 +7,6 @@ import           Utils.Vector
 
 import qualified JS.Bindings    as UI
 import qualified JS.NodeGraph   as UI
-import qualified JS.Camera      as Camera
 
 import           Object.Object
 import           Object.Node
@@ -84,7 +83,7 @@ instance ActionStateUpdater Action where
                                 & Global.graph %~ (Graph.selectNodes newSelection)
         newDragHistory  = (dragCurrentPos .~ coord) <$> dragHistory
         newSelection    = case newDragHistory of
-            Just (DragHistory start current) -> getNodeIdsIn start current (Global.toCamera state) nodes
+            Just (DragHistory start current) -> getNodeIdsIn start current (state ^. Global.camera . Camera.camera) nodes
             _                                -> selection
         focusedWidgetId = (newSelection ^? ix 0) >>= (nodeIdToWidgetId $ state ^. Global.uiRegistry)
 
@@ -105,7 +104,7 @@ instance ActionUIUpdater Action where
               unselectedNodeIds = filter (\nodeId -> not $ nodeId `elem` selectedNodeIds) $ (^. nodeId) <$> nodeList
               topNodeId         = selectedNodeIds ^? ix 0
               dragState         = fromJust (state ^. Global.multiSelection . history)
-              camera            = Global.toCamera state
+              camera            = state ^. Global.camera . Camera.camera
               currWorkspace     = Camera.screenToWorkspace camera
               startSelectionBox = currWorkspace $ dragState ^. dragStartPos
               endSelectionBox   = currWorkspace $ dragState ^. dragCurrentPos

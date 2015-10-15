@@ -12,7 +12,6 @@ import qualified Utils.MockHelper as MHelper
 import           Data.Dynamic
 import           Debug.Trace
 
-import           JS.Camera
 import           Object.Dynamic
 import           Object.Object
 import           Object.Port
@@ -22,6 +21,8 @@ import qualified Data.Text.Lazy   as Text
 import           Data.Text.Lazy   (Text)
 import qualified Data.IntMap.Lazy as IntMap
 import           Data.IntMap.Lazy (IntMap)
+
+import           Reactive.Plugins.Core.Action.State.Camera (Camera, screenToWorkspace)
 
 import System.IO.Unsafe (unsafePerformIO)
 
@@ -146,12 +147,6 @@ isModule :: Node -> Bool
 isModule node = isUpper firstLetter where
     firstLetter = head $ Text.unpack $ node ^. expression
 
--- getPort :: PortId -> PortType -> Node -> Maybe Port
--- getPort ident = find (\port -> port ^. portId == ident) .: getPorts
-
--- fromPortRef :: PortRef -> Maybe Port
--- fromPortRef portRef = getPort (portRef ^. refPortId) (portRef ^. refPortType) (portRef ^. refPortNode)
-
 updatePortInPorts :: PortId -> Angle -> PortCollection -> PortCollection
 updatePortInPorts refPortId angle ports = tryUpdatePort refPortId angle <$> ports
 
@@ -175,14 +170,6 @@ updateSourcePort portRef angle node = if node ^. nodeId == portRef ^. refPortNod
 
 updateSourcePortInNodes :: Angle -> PortRef -> NodesMap -> NodesMap
 updateSourcePortInNodes angle portRef nodes = updateSourcePort portRef angle <$> nodes
-
-
--- updateNodeSelection :: NodeIdCollection -> Node -> Node
--- updateNodeSelection selNodeIds node = let selection = (node ^. nodeId) `elem` selNodeIds in
---     node & selected .~ selection
-
--- updateNodesSelection :: NodeIdCollection -> NodeCollection -> NodeCollection
--- updateNodesSelection selNodeIds nodes = fmap (updateNodeSelection selNodeIds) nodes
 
 getNodesAt :: Vector2 Int -> Camera -> NodeCollection -> NodeCollection
 getNodesAt posScr camera nodes = filter closeEnough nodes where
@@ -224,7 +211,6 @@ getPortRef posScr camera nodes = maybePortRef where
         when (null portRefs) Nothing
         let closestPort = minimumBy (compare `on` fst) portRefs
         when (closenestFactor < abs (fst closestPort)) Nothing
-        -- trace ("closest " <> display closestPort <> "\nportRefs " <> display portRefs) $
         Just $ snd closestPort
 
 

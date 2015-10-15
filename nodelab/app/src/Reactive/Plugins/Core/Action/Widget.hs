@@ -17,6 +17,7 @@ import           Reactive.Plugins.Core.Action
 import qualified Reactive.Plugins.Core.Action.State.Global       as Global
 import           Reactive.Plugins.Core.Action.State.UIRegistry   (WidgetMap)
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry   as UIRegistry
+import qualified Reactive.Plugins.Core.Action.State.Camera       as Camera
 import           Reactive.Plugins.Core.Action.Commands.Command   (Command, execCommand)
 import           ThreeJS.Widget.Button ()
 import           ThreeJS.Widget.Slider ()
@@ -24,8 +25,6 @@ import           ThreeJS.Widget.Number ()
 import           ThreeJS.Widget.Node   ()
 import           ThreeJS.Widget.Toggle ()
 import           Object.Widget.Port   ()
-import qualified JS.Camera      as Camera
-
 
 data Action = MouseAction    { _event    :: Mouse.Event    }
             | KeyboardAction { _keyEvent :: Keyboard.Event }
@@ -199,7 +198,7 @@ instance ActionStateUpdater Action where
         (customUIUpdates, newState') = applyHandlers customHandlers newState
         oldRegistry                  = oldState ^. Global.uiRegistry
         oldWidgetOver                = oldState ^. Global.uiRegistry . UIRegistry.widgetOver
-        camera                       = Global.toCamera oldState
+        camera                       = oldState ^. Global.camera . Camera.camera
         customHandlers               = (customMouseHandlers    mouseEvent camera newRegistry)
                                     ++ (customDragMoveHandlers mouseEvent        newRegistry)
                                     ++ (customDragEndHandlers  mouseEvent        oldRegistry) -- old is required, as i new dragState will be Nothing

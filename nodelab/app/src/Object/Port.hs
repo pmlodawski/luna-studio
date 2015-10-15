@@ -5,7 +5,6 @@ import           Utils.Vector
 import           Utils.Angle
 import           Data.Fixed
 
-import           JS.Camera
 import           Object.Object
 
 

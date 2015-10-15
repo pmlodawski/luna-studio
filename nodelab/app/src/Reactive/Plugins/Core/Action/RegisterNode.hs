@@ -8,8 +8,6 @@ import qualified Utils.MockHelper as MockHelper
 
 import           Data.Fixed
 
-import qualified JS.Camera      as Camera
-
 import           Object.Object
 import           Object.Port
 import           Object.Node    as Node
