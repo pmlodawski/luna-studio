@@ -11,6 +11,7 @@ import           JS.Bindings
 
 import           Reactive.Plugins.Core.Action.State.Global
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry as UIRegistry
+import           Reactive.Plugins.Core.Action.Commands.Command (Command, execCommand)
 
 data WithState act st = WithState { _action :: act
                                   , _state  :: st
@@ -47,6 +48,10 @@ instance ActionStateUpdater act => ActionStateUpdater [act] where
         ActionUI firstAct newState -> case execSt rest newState of
             ActionUI lastAct finalState -> ActionUI (SequenceUI firstAct lastAct) finalState
 
+instance ActionStateUpdater (Command State ()) where
+    execSt cmd state = ActionUI (PerformIOAction action) newState where
+        (action, newState) = execCommand cmd state
+
 
 
 
@@ -54,6 +59,14 @@ data ActionUI = forall act. (ActionUIUpdater act, PrettyPrinter act) => ActionUI
 
 data SequenceUI = forall a1 a2. (ActionUIUpdater a1, PrettyPrinter a1,
                                  ActionUIUpdater a2, PrettyPrinter a2) => SequenceUI a1 a2
+
+data PerformIOAction = PerformIOAction (IO ())
+
+instance PrettyPrinter PerformIOAction where
+    display _ = "PerformIOAction"
+
+instance ActionUIUpdater PerformIOAction where
+    updateUI (WithState (PerformIOAction act) _) = act
 
 instance PrettyPrinter SequenceUI where
     display (SequenceUI a1 a2) = "seq(" <> display a1 <> ", " <> display a2 <> ")"
