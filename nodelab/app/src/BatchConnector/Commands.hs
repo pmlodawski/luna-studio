@@ -212,8 +212,8 @@ requestValueMessage workspace node = WebMessage "interpreter.value.request" $ me
 requestValue :: Workspace -> Node -> IO ()
 requestValue = sendMessage .: requestValueMessage
 
-requestValues :: Workspace -> [Node] -> IO ()
-requestValues workspace nodes = sendMany $ (requestValueMessage workspace) <$> nodes
+requestValues :: [Node] -> Workspace -> IO ()
+requestValues nodes workspace = sendMany $ (requestValueMessage workspace) <$> nodes
 
 insertSerializationModeMessage :: Workspace -> Node -> WebMessage
 insertSerializationModeMessage workspace node = WebMessage topic $ messagePut body where
@@ -222,11 +222,11 @@ insertSerializationModeMessage workspace node = WebMessage topic $ messagePut bo
     callPointPath = nodeToCallPointPath workspace node
     mode          = Mode Seq.empty
 
-insertSerializationMode :: Workspace -> Node -> IO ()
-insertSerializationMode workspace node = sendMessage $ insertSerializationModeMessage workspace node
+insertSerializationMode :: Node -> Workspace -> IO ()
+insertSerializationMode node workspace = sendMessage $ insertSerializationModeMessage workspace node
 
-insertSerializationModes :: Workspace -> [Node] -> IO ()
-insertSerializationModes workspace nodes = sendMany $ insertSerializationModeMessage workspace <$> nodes
+insertSerializationModes :: [Node] -> Workspace -> IO ()
+insertSerializationModes nodes workspace = sendMany $ insertSerializationModeMessage workspace <$> nodes
 
 getAST :: Project -> Library -> Breadcrumbs -> IO ()
 getAST proj lib crumbs = sendMessage msg where

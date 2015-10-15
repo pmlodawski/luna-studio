@@ -2,8 +2,8 @@ module Reactive.Plugins.Core.Action.Backend.GraphFetcher where
 
 import           Utils.PreludePlus
 
-import           Object.Node
-import           Event.Event
+import           Object.Node     (Node, isModule, PortRef)
+import           Event.Event     (Event(Batch))
 import qualified Event.Batch     as Batch
 import           Batch.Workspace (interpreterState, InterpreterState(..))
 
@@ -12,7 +12,7 @@ import           Reactive.Plugins.Core.Action.State.Global         (State)
 import           Reactive.Plugins.Core.Action.Commands.Command     (Command, execCommand, performIO)
 import           Reactive.Plugins.Core.Action.Commands.RenderGraph (renderGraph)
 
-import qualified BatchConnector.Commands as BatchCmd
+import qualified BatchConnector.Monadic.Commands as BatchCmd
 
 toAction :: Event Node -> State -> Maybe (Command State ())
 toAction (Batch (Batch.GraphViewFetched nodes edges)) state = Just $ showGraph nodes edges
@@ -28,7 +28,7 @@ prepareValues nodes = do
     let nonModules = filter (not . isModule) nodes
     workspace <- use Global.workspace
     case workspace ^. interpreterState of
-        Fresh  -> performIO $ BatchCmd.insertSerializationModes workspace nonModules
-        AllSet -> performIO $ do
+        Fresh  -> zoom Global.workspace $ BatchCmd.insertSerializationModes nonModules
+        AllSet -> zoom Global.workspace $ do
             BatchCmd.runMain
-            BatchCmd.requestValues workspace nonModules
+            BatchCmd.requestValues nonModules

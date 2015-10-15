@@ -1,76 +1,38 @@
 module Reactive.Plugins.Core.Action.Backend.Backend where
 
 import           Utils.PreludePlus
-import           Object.Node
-import           Event.Event
+import           Object.Node        (Node, isModule)
+import           Event.Event        (Event(Batch))
 import qualified Event.Batch        as Batch
-import           Batch.Workspace
+import qualified Batch.Workspace    as Workspace
+import           Batch.Workspace    (InterpreterState(..))
 import           JS.Bindings        (displayRejectedMessage, writeToTerminal)
 
-import qualified BatchConnector.Commands                   as BatchCmd
-import           Reactive.Plugins.Core.Action
-import qualified Reactive.Plugins.Core.Action.State.Global as Global
-import qualified Reactive.Plugins.Core.Action.State.Graph  as Graph
-import qualified Data.Text.Lazy.IO                         as TextIO
-import           Batch.RunStatus
-import           Reactive.Plugins.Core.Action.Commands.Command      (execCommand)
+import qualified BatchConnector.Monadic.Commands as BatchCmd
+
+import           Reactive.Plugins.Core.Action.State.Global          (State)
+import qualified Reactive.Plugins.Core.Action.State.Global          as Global
+import qualified Reactive.Plugins.Core.Action.State.Graph           as Graph
+import           Reactive.Plugins.Core.Action.Commands.Command      (Command, performIO)
 import           Reactive.Plugins.Core.Action.Commands.RefreshGraph (refreshGraph)
 
-data Action = InsertSerializationMode Node
-            | RequestCode
-            | ConnectionTakeover
-            | ShowProfilingInfo RunStatus
-            | RefreshGraph
-            | DisplayError String
-            | NextSerializationMode
-            deriving (Show, Eq)
-
-data Reaction = PerformIO (IO ())
-
-instance PrettyPrinter Reaction where
-    display _ = "backend(Reaction)"
-
-instance PrettyPrinter Action where
-    display = show
-
-toAction :: Event Node -> Maybe Action
-toAction (Batch (Batch.NodeAdded node))          = Just $ InsertSerializationMode node
-toAction (Batch (Batch.RunFinished status))      = Just $ ShowProfilingInfo status
-toAction (Batch Batch.ConnectionDropped)         = Just $ ConnectionTakeover
-toAction (Batch Batch.CodeSet)                   = Just RefreshGraph
-toAction (Batch (Batch.CodeSetError msg))        = Just $ DisplayError msg
-toAction (Batch Batch.SerializationModeInserted) = Just NextSerializationMode
+toAction :: Event Node -> Maybe (Command State ())
+toAction (Batch (Batch.NodeAdded node))          = Just $ insertSerializationMode node
+toAction (Batch (Batch.RunFinished status))      = Just $ zoom Global.workspace $ BatchCmd.getCode
+toAction (Batch Batch.ConnectionDropped)         = Just $ performIO displayRejectedMessage
+toAction (Batch Batch.CodeSet)                   = Just refreshGraph
+toAction (Batch (Batch.CodeSetError msg))        = Just $ performIO $ writeToTerminal msg
+toAction (Batch Batch.SerializationModeInserted) = Just handleNextSerializationMode
 toAction _ = Nothing
 
-instance ActionStateUpdater Action where
-    execSt NextSerializationMode state = ActionUI (PerformIO action) newState where
-        newState   = state & Global.workspace . interpreterState %~ (addSerializationMode nodesCount)
-        nodes      = state ^. Global.graph . Graph.nodes
-        nodesCount = length $ filter (not . isModule) nodes
-        action     = case newState ^. Global.workspace . interpreterState of
-            AllSet -> BatchCmd.runMain
-            _      -> return ()
+insertSerializationMode :: Node -> Command State ()
+insertSerializationMode node = when (not $ isModule node)
+                                    $ zoom Global.workspace $ BatchCmd.insertSerializationMode node
 
-    execSt RequestCode state = ActionUI (PerformIO action) state where
-        action    = BatchCmd.getCode workspace
-        workspace = state ^. Global.workspace
-
-    execSt (ShowProfilingInfo status) state = ActionUI (PerformIO action) state where
-        action    = BatchCmd.getCode workspace
-        workspace = state ^. Global.workspace
-
-    execSt ConnectionTakeover state = ActionUI (PerformIO displayRejectedMessage) state
-
-    execSt (InsertSerializationMode node) state = ActionUI (PerformIO action) state where
-        action = do
-            let workspace = state ^. Global.workspace
-            when (not $ isModule node) $ BatchCmd.insertSerializationMode workspace node
-
-    execSt RefreshGraph state = ActionUI (PerformIO action) newState where
-        (action, newState) = execCommand refreshGraph state
-
-    execSt (DisplayError msg) state = ActionUI (PerformIO action) state where
-        action = writeToTerminal msg
-
-instance ActionUIUpdater Reaction where
-    updateUI (WithState (PerformIO act) st) = act
+handleNextSerializationMode :: Command State ()
+handleNextSerializationMode = do
+    nodes <- use $ Global.graph . Graph.nodes
+    let nodesCount = length $ filter (not . isModule) nodes
+    Global.workspace . Workspace.interpreterState %= (Workspace.addSerializationMode nodesCount)
+    readyState <- use $ Global.workspace . Workspace.interpreterState
+    when (readyState == AllSet) $ zoom Global.workspace BatchCmd.runMain

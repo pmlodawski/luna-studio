@@ -2,87 +2,34 @@ module Reactive.Plugins.Core.Action.Backend.Runner where
 
 import           Utils.PreludePlus
 
-import           Object.Object
-import           Object.Node
-import           Object.UITypes
-import           Object.Widget
-import qualified Object.Widget.Node       as UINode
-import qualified Object.Widget.Slider     as UISlider
-import qualified Object.Widget            as Widget
-import           Object.Widget            (WidgetFile)
-import           Object.Widget.Helpers
+import           Object.Object (NodeId)
+import           Object.Node   (Node)
+import           Event.Event   (Event(Batch))
+import qualified Event.Batch   as Batch
+import           Batch.Value   (Value(..))
+import           JS.NodeGraph  (setComputedValue, displayNodeVector)
 
-import           Event.Event
-import qualified Event.Batch             as Batch
-import           BatchConnector.Commands as BatchCmd
-import           Batch.Workspace
-import           Batch.Value
-import           JS.NodeGraph            (setComputedValue, displayNodeVector)
+import           BatchConnector.Monadic.Commands as BatchCmd
 
-import           Reactive.Plugins.Core.Action
-import qualified Reactive.Plugins.Core.Action.State.Graph       as Graph
-import           Reactive.Plugins.Core.Action.State.Graph       hiding (State)
-import qualified Reactive.Plugins.Core.Action.State.UIRegistry  as UIRegistry
-import           Reactive.Plugins.Core.Action.State.Global      as Global
+import           Reactive.Plugins.Core.Action.Commands.Command (Command, performIO)
+import           Reactive.Plugins.Core.Action.State.Global     as Global
+import           Reactive.Plugins.Core.Action.State.Global     (State)
 
-data Action = RequestRerun
-            | UpdateValue Int Value
-            deriving (Show, Eq)
-
-instance PrettyPrinter Action where
-    display = show
-
-newtype Reaction = PerformIO (IO ())
-
-instance PrettyPrinter Reaction where
-    display _ = "runner(PerfomIO)"
-
-toAction :: Event Node -> Maybe Action
-toAction (Batch (Batch.NodeAdded _))              = Just RequestRerun
-toAction (Batch  Batch.NodesConnected)            = Just RequestRerun
-toAction (Batch  Batch.NodesDisconnected)         = Just RequestRerun
-toAction (Batch  Batch.NodeRemoved)               = Just RequestRerun
-toAction (Batch  Batch.NodeModified)              = Just RequestRerun
-toAction (Batch  Batch.NodeDefaultUpdated)        = Just RequestRerun
-toAction (Batch (Batch.ValueUpdate nodeId value)) = Just $ UpdateValue nodeId value
+toAction :: Event Node -> Maybe (Command State ())
+toAction (Batch (Batch.NodeAdded _))              = Just requestRerun
+toAction (Batch  Batch.NodesConnected)            = Just requestRerun
+toAction (Batch  Batch.NodesDisconnected)         = Just requestRerun
+toAction (Batch  Batch.NodeRemoved)               = Just requestRerun
+toAction (Batch  Batch.NodeModified)              = Just requestRerun
+toAction (Batch  Batch.NodeDefaultUpdated)        = Just requestRerun
+toAction (Batch (Batch.ValueUpdate nodeId value)) = Just $ updateValue nodeId value
 toAction _                                        = Nothing
 
-displayValue :: NodeId -> Value -> IO ()
-displayValue nodeId (VectorValue vec) = do
+requestRerun :: Command State ()
+requestRerun = zoom Global.workspace $ BatchCmd.runMain
+
+updateValue :: NodeId -> Value -> Command State ()
+updateValue nodeId (VectorValue vec) = performIO $ do
     setComputedValue nodeId "Vector"
     displayNodeVector nodeId (toList vec)
--- displayValue nodeId (FloatValue v) = do
---     setComputedValue nodeId "Float"
---     displayNodeVector nodeId [v, v/2.0, v/4.0, 2.0*v]
-
-displayValue nodeId value = setComputedValue nodeId (display value)
-
-instance ActionStateUpdater Action where
-    execSt RequestRerun state               = ActionUI (PerformIO BatchCmd.runMain) state
-    execSt (UpdateValue nodeId value) state = ActionUI io newState where
-        uiRegistry        = state ^. Global.uiRegistry
-        (newState, sio)   = setFixedValues nodeId value state
-        nodeWidMay        = nodeIdToWidgetId uiRegistry nodeId
-        lookupSlider :: WidgetId   -> Maybe (WidgetFile Global.State (UISlider.Slider Double))
-        lookupSlider widgetId       = UIRegistry.lookupTyped widgetId uiRegistry
-        io = PerformIO $ displayValue nodeId value
-
-
-setFixedValues :: NodeId -> Value -> Global.State -> (Global.State, IO ())
-setFixedValues nodeId value state = (newState, io) where
-    ports = getDestinationPorts nodeId $ state ^. graph
-    newState = setFixedValue 0.5 (head ports) state
-    io = return ()
-
--- f :: PortRef -> (UINode.Node, Int)
-
-getDestinationPorts :: NodeId -> Graph.State -> [PortRef]
-getDestinationPorts nodeId graph = fmap (^. destination) $ connectionsStartingWithNode nodeId graph
-
-
-setFixedValue :: Double -> PortRef -> Global.State -> Global.State
-setFixedValue val portRef state = state
-
-
-instance ActionUIUpdater Reaction where
-    updateUI (WithState (PerformIO act) st) = act
+updateValue nodeId value = performIO $ setComputedValue nodeId (display value)
