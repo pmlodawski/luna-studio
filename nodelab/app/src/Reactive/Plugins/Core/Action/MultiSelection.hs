@@ -22,89 +22,86 @@ import           Event.Event
 import           Event.WithObjects
 
 import           Reactive.Plugins.Core.Action
-import           Reactive.Plugins.Core.Action.State.MultiSelection
-import           Reactive.Plugins.Core.Action.State.UnderCursor
+import qualified Reactive.Plugins.Core.Action.State.MultiSelection as MultiSelection
+import           Reactive.Plugins.Core.Action.State.MultiSelection (DragHistory(..))
+import qualified Reactive.Plugins.Core.Action.State.UnderCursor    as UnderCursor
 import qualified Reactive.Plugins.Core.Action.State.Graph          as Graph
 import qualified Reactive.Plugins.Core.Action.State.Selection      as Selection
 import qualified Reactive.Plugins.Core.Action.State.Camera         as Camera
 import qualified Reactive.Plugins.Core.Action.State.UIRegistry     as UIRegistry
 import qualified Reactive.Plugins.Core.Action.State.Global         as Global
+import           Reactive.Plugins.Core.Action.State.Global         (State)
 
-data DragType = StartDrag
-              | Moving
-              | StopDrag
-              deriving (Eq, Show)
+import           Reactive.Plugins.Core.Action.Commands.Command     (Command, performIO, execCommand)
 
+import           Control.Monad.State                               hiding (State)
 
-data Action = DragSelect { _actionType    :: DragType
-                         , _startPos      :: Vector2 Int
-                         }
-              deriving (Eq, Show)
+toAction :: Event Node -> Global.State -> UnderCursor.UnderCursor -> Maybe (Command State ())
+toAction (Mouse event@(Mouse.Event Mouse.Pressed _ LeftButton _ _))  state underCursor = Just $ startDrag event
+toAction (Mouse event@(Mouse.Event Mouse.Moved pos LeftButton _ _))  state underCursor = Just $ handleMove pos
+toAction (Mouse event@(Mouse.Event Mouse.Released _ LeftButton _ _)) state underCursor = Just stopDrag
+toAction _ _ _ = Nothing
 
-makeLenses ''Action
+shouldStartDrag :: Mouse.Event -> Command State Bool
+shouldStartDrag (Mouse.Event Mouse.Pressed _ LeftButton (KeyMods False False False False) Nothing) = do
+    nodesUnderCursor <- gets UnderCursor.getNodesUnderCursor
+    portUnderCursor  <- gets UnderCursor.getPortRefUnderCursor
+    return $ null nodesUnderCursor && isNothing portUnderCursor
+shouldStartDrag _ = return False
 
+startDrag :: Mouse.Event -> Command State ()
+startDrag event@(Mouse.Event _ coord _ _ _) = do
+    shouldDrag <- shouldStartDrag event
+    if shouldDrag
+        then Global.multiSelection . MultiSelection.history ?= (DragHistory coord coord)
+        else return ()
 
-instance PrettyPrinter DragType where
-    display = show
+handleMove :: Vector2 Int -> Command State ()
+handleMove coord = do
+    dragHistory <- use $ Global.multiSelection . MultiSelection.history
+    case dragHistory of
+        Nothing                          -> return ()
+        Just (DragHistory start current) -> do
+            Global.multiSelection . MultiSelection.history ?= DragHistory start coord
+            updateSelection start coord
+            updateFocusedWidget
+            updateGraphSelection
+            updateSelectionUI start coord
 
-instance PrettyPrinter Action where
-    display (DragSelect tpe point) = "msA(" <> display tpe <> " " <> display point <> ")"
+updateSelection :: Vector2 Int -> Vector2 Int -> Command State ()
+updateSelection start end = do
+    nodes  <- use $ Global.graph . Graph.nodes
+    camera <- use $ Global.camera . Camera.camera
+    Global.selection . Selection.nodeIds .= getNodeIdsIn start end camera nodes
 
+updateFocusedWidget :: Command State ()
+updateFocusedWidget = do
+    topNode <- preuse $ Global.selection . Selection.nodeIds . ix 0
+    uiRegistry <- use $ Global.uiRegistry
+    let topNodeWidget = topNode >>= (nodeIdToWidgetId uiRegistry)
+    Global.uiRegistry . UIRegistry.focusedWidget .= topNodeWidget
 
-toAction :: Event Node -> Global.State -> UnderCursor -> Maybe Action
-toAction (Mouse (Mouse.Event tpe pos button keyMods evWdgt)) state underCursor = case button of
-    LeftButton   -> case tpe of
-        Mouse.Pressed  -> if dragAllowed then case keyMods of
-                                             (KeyMods False False False False) -> Just (DragSelect StartDrag pos)
-                                             _                                 -> Nothing
-                                         else Nothing
-                        where   -- TODO: switch to our RayCaster
-                            portMay       = getPortRefUnderCursor state
-                            dragAllowed   = (null $ underCursor ^. nodesUnderCursor) && (isNothing portMay) && (isNothing evWdgt)
-        Mouse.Released -> Just (DragSelect StopDrag pos)
-        Mouse.Moved    -> Just (DragSelect Moving pos)
-        _              -> Nothing
-    _                  -> Nothing
-toAction _ _  _         = Nothing
+updateGraphSelection :: Command State ()
+updateGraphSelection = do
+    selection <- use $ Global.selection . Selection.nodeIds
+    Global.graph %= (Graph.selectNodes selection)
 
+updateSelectionUI :: Vector2 Int -> Vector2 Int -> Command State ()
+updateSelectionUI start end = do
+    camera        <- use $ Global.camera . Camera.camera
+    selectedNodes <- use $ Global.selection . Selection.nodeIds
+    allNodes      <- use $ Global.graph . Graph.nodes
+    let startSelectionBox = Camera.screenToWorkspace camera start
+        endSelectionBox   = Camera.screenToWorkspace camera end
+        unselectedNodes   = ((view nodeId) <$> allNodes) \\ selectedNodes
+        topNode           = selectedNodes ^? ix 0
+    performIO $ do
+        UI.displaySelectionBox startSelectionBox endSelectionBox
+        UI.unselectNodes unselectedNodes
+        UI.selectNodes   selectedNodes
+        mapM_ UI.setNodeFocused topNode
 
-instance ActionStateUpdater Action where
-    execSt action@(DragSelect StartDrag coord) state = ActionUI action newState where
-        newState = state & Global.multiSelection . history ?~ (DragHistory coord coord)
-
-    execSt action@(DragSelect Moving coord) state = ActionUI newAction newState where
-        dragHistory     = state ^. Global.multiSelection . history
-        nodes           = state ^. Global.graph . Graph.nodes
-        selection       = state ^. Global.selection . Selection.nodeIds
-        newAction       = action <$ dragHistory
-        newState        = state & Global.multiSelection . history                  .~ newDragHistory
-                                & Global.selection      . Selection.nodeIds        .~ newSelection
-                                & Global.uiRegistry     . UIRegistry.focusedWidget .~ focusedWidgetId
-                                & Global.graph %~ (Graph.selectNodes newSelection)
-        newDragHistory  = (dragCurrentPos .~ coord) <$> dragHistory
-        newSelection    = case newDragHistory of
-            Just (DragHistory start current) -> getNodeIdsIn start current (state ^. Global.camera . Camera.camera) nodes
-            _                                -> selection
-        focusedWidgetId = (newSelection ^? ix 0) >>= (nodeIdToWidgetId $ state ^. Global.uiRegistry)
-
-    execSt action@(DragSelect StopDrag coord) state = ActionUI action newState where
-        newState = state & Global.multiSelection . history .~ Nothing
-
-instance ActionUIUpdater Action where
-    updateUI (WithState action state) = case action of
-        DragSelect Moving   _  -> do
-                                  UI.displaySelectionBox startSelectionBox endSelectionBox
-                                  UI.unselectNodes unselectedNodeIds
-                                  UI.selectNodes     selectedNodeIds
-                                  mapM_ UI.setNodeFocused topNodeId
-        DragSelect StopDrag _  -> UI.hideSelectionBox
-        _                      -> return ()
-        where selectedNodeIds   = state ^. Global.selection . Selection.nodeIds
-              nodeList          = state ^. Global.graph . Graph.nodes
-              unselectedNodeIds = filter (\nodeId -> not $ nodeId `elem` selectedNodeIds) $ (^. nodeId) <$> nodeList
-              topNodeId         = selectedNodeIds ^? ix 0
-              dragState         = fromJust (state ^. Global.multiSelection . history)
-              camera            = state ^. Global.camera . Camera.camera
-              currWorkspace     = Camera.screenToWorkspace camera
-              startSelectionBox = currWorkspace $ dragState ^. dragStartPos
-              endSelectionBox   = currWorkspace $ dragState ^. dragCurrentPos
+stopDrag :: Command State ()
+stopDrag = do
+    Global.multiSelection . MultiSelection.history .= Nothing
+    performIO UI.hideSelectionBox

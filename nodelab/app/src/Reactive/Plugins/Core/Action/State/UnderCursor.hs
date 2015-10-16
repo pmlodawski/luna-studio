@@ -34,8 +34,6 @@ instance PrettyPrinter UnderCursor where
         <> ")"
 
 getNodesUnderCursor :: State -> NodeCollection
--- getNodesUnderCursor state = getNodesAt (state ^. mousePos) (toCamera state) (Graph.getNodes $ state ^. graph)
--- --
 getNodesUnderCursor state = maybeToList node where
     registry = state ^. uiRegistry
     nodes    = state ^. graph . Graph.nodes
@@ -56,4 +54,4 @@ getPortRefUnderCursor state = do
     return $ widget ^. WPort.portRef
 
 underCursor :: State -> UnderCursor
-underCursor state = UnderCursor (getNodesUnderCursor state) Nothing -- (getPortRefUnderCursor state)
+underCursor state = UnderCursor (getNodesUnderCursor state) Nothing
