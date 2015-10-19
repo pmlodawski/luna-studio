@@ -9,7 +9,7 @@ import           Object.Node     (Node)
 import           Object.Widget
 import qualified Object.Widget  as Widget
 import           Event.Event
-import           Event.Mouse    (EventWidget(..))
+import           Event.Mouse    (EventWidget(..), MouseButton)
 import qualified Event.Mouse    as Mouse
 import qualified Event.Keyboard as Keyboard
 import           Object.UITypes

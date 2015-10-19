@@ -21,7 +21,7 @@ registerNode expr = do
     nodeId  <- gets Global.genNodeId
     camera  <- use $ Global.camera . Camera.camera
     nodePos <- uses Global.mousePos $ Camera.screenToWorkspace camera
-    let node = Node nodeId False nodePos expr (Node.createPorts expr) (MockHelper.getNodeType expr)
+    let node = Node nodeId nodePos expr (Node.createPorts expr) (MockHelper.getNodeType expr)
     workspace <- use Global.workspace
     performIO $ BatchCmd.addNode workspace node
     renderPending node

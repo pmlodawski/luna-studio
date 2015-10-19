@@ -71,7 +71,7 @@ readMousePos = do
     y <- MouseEvent.getClientY e
     return $ Vector2 x y
 
-uiWhichButton :: (UIEvent.IsUIEvent e) => EventM t e MouseButton
+uiWhichButton :: (UIEvent.IsUIEvent e) => EventM t e Mouse.MouseButton
 uiWhichButton = uiWhich >>= return . Mouse.toMouseButton
 
 eventObject :: IO (Maybe Element)

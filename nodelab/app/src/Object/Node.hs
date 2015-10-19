@@ -32,7 +32,6 @@ data Ports = Ports { _inputPorts  :: PortCollection
                    } deriving (Eq, Show)
 
 data Node = Node { _nodeId      :: NodeId
-                 , _selected    :: Bool
                  , _nodePos     :: Vector2 Double
                  , _expression  :: Text
                  , _ports       :: Ports
@@ -49,16 +48,15 @@ instance Default Ports where
     def = Ports [] []
 
 instance Default Node where
-    def = Node (-1) False def "" def (NodeType 0 [])
+    def = Node (-1) def "" def (NodeType 0 [])
 
 instance PrettyPrinter Ports where
     display (Ports input output)
         = display input <> " " <> display output
 
 instance PrettyPrinter Node where
-    display (Node ident sel pos expr ports _)
+    display (Node ident pos expr ports _)
         = "n(" <> display ident
-        <> " " <> display sel
         <> " " <> display pos
         <> " " <> display expr
         <> " " <> display ports

@@ -15,6 +15,7 @@ import           Event.Event
 import           Event.WithObjects
 import           Reactive.Plugins.Core.Action
 import           Reactive.Plugins.Core.Action.State.Selection
+import qualified Reactive.Plugins.Core.Action.State.Selection as Selection
 import qualified Reactive.Plugins.Core.Action.State.Graph     as Graph
 import qualified Reactive.Plugins.Core.Action.State.Camera    as Camera
 import qualified Reactive.Plugins.Core.Action.State.Global    as Global
@@ -47,7 +48,7 @@ instance PrettyPrinter Action where
 
 
 toAction :: Event Node -> Global.State -> UnderCursor -> Maybe Action
-toAction (Mouse (Mouse.Event tpe pos button keyMods _)) _ underCursor = case button of
+toAction (Mouse (Mouse.Event tpe pos button keyMods _)) state underCursor = case button of
     LeftButton  -> case tpe of
         Mouse.Pressed -> if nodeUnderCursor then case keyMods of
                                         (KeyMods False False False False) -> Just (SelectAction selectActionType node)
@@ -60,10 +61,11 @@ toAction (Mouse (Mouse.Event tpe pos button keyMods _)) _ underCursor = case but
     _                 -> Nothing
     where nodeUnderCursor  = not . null $ underCursor ^. nodesUnderCursor
           node             = head       $ underCursor ^. nodesUnderCursor
-          selectActionType = if node ^. selected then Focus
-                                                 else SelectNew
-          toggleActionType = if node ^. selected then ToggleOff
-                                                 else ToggleOn
+          isSelected       = elem (node ^. nodeId) $ state ^. Global.selection . Selection.nodeIds
+          selectActionType = if isSelected then Focus
+                                           else SelectNew
+          toggleActionType = if isSelected then ToggleOff
+                                           else ToggleOn
 toAction (Keyboard (Keyboard.Event Keyboard.Press char _)) state _ = ifNoneFocused state $ case char of
     'A'     -> Just SelectAll
     _       -> Nothing
@@ -79,10 +81,8 @@ instance ActionStateUpdater Action where
         oldNodeIds                       = oldState ^. Global.selection . nodeIds
         oldGraph                         = oldState ^. Global.graph
         oldNodes                         = oldGraph ^. Graph.nodes
-        newGraph                         = Graph.selectNodes newNodeIds oldGraph
         newState                         = oldState & Global.iteration           +~ 1
                                                     & Global.selection . nodeIds .~ newNodeIds
-                                                    & Global.graph               .~ newGraph
         newNodeIds                       = case newAction of
             SelectAll                   -> (^. nodeId) <$> oldNodes
             UnselectAll                 -> []

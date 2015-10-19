@@ -148,7 +148,7 @@ instance ProtoWritable ProtoBreadcrumbs.Breadcrumbs Breadcrumbs where
     encode (Breadcrumbs crumbs) = ProtoBreadcrumbs.Breadcrumbs $ encode crumbs
 
 instance ProtoReadable ProtoNode.Node Node where
-    decode node = Node <$> id <*> pure False <*> nodePos <*> expr <*> ports <*> nodeType where
+    decode node = Node <$> id <*> nodePos <*> expr <*> ports <*> nodeType where
         id       = fromIntegral <$> ProtoNode.id node
         nodePos  = Vector2 <$> (float2Double <$> ProtoNode.x node)
                           <*> (float2Double <$> ProtoNode.y node)

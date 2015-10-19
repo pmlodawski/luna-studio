@@ -126,14 +126,6 @@ addNode newNode state  = state & nodesMap     %~ IntMap.insert (newNode ^. nodeI
 removeNode :: NodeId -> State -> State
 removeNode remNodeId state = state & nodesMap %~ IntMap.delete remNodeId
 
-updateNodeSelection :: NodeIdCollection -> Node -> Node
-updateNodeSelection selNodeIds node = node & selected .~ ((node ^. nodeId) `elem` selNodeIds)
-
--- TODO: nodeRefs and graphMeta
-selectNodes :: NodeIdCollection -> State -> State
-selectNodes selNodeIds state = state & nodesMap %~ fmap (updateNodeSelection selNodeIds)
-
-
 addConnection :: PortRef -> PortRef -> State -> (Maybe ConnectionId, State)
 addConnection srcPortRef destPortRef = if attachToSelf then addApplication1 srcPortRef destPortRef
                                                        else addAccessor     srcPortRef destPortRef

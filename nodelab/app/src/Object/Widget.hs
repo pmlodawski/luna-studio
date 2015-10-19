@@ -7,7 +7,7 @@ module Object.Widget where
 import           Utils.PreludePlus
 import           Utils.Vector
 import           Utils.CtxDynamic
-import           Event.Mouse    (MousePosition)
+import           Event.Mouse    (MousePosition, MouseButton)
 import           Object.UITypes
 import qualified Event.Keyboard as Keyboard
 import           Event.Keyboard (KeyMods)

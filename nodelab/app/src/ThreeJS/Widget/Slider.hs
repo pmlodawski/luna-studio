@@ -125,8 +125,8 @@ ifEnabled :: (Model.IsSlider a) => Model.Slider a -> WidgetUpdate -> WidgetUpdat
 ifEnabled model upd = if model ^. Model.enabled then upd else (return(), toCtxDynamic model)
 
 instance (Model.IsSlider a) => Draggable (Model.Slider a) where
-    mayDrag LeftButton _ _ _     = True
-    mayDrag _          _ _ _     = False
+    mayDrag Mouse.LeftButton _ _ _     = True
+    mayDrag _                _ _ _     = False
     onDragStart state file model = ifEnabled model (action, toCtxDynamic model) where
                           action = setCursor "pointer"
     onDragMove  state file model = ifEnabled model (action, toCtxDynamic newModel) where
