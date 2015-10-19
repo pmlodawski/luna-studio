@@ -29,6 +29,7 @@ import           Reactive.Plugins.Core.Action.Commands.EnterNode   (enterNode)
 import           Reactive.Plugins.Core.Action.Commands.RemoveNode  (removeNode)
 import           Reactive.Plugins.Core.Action.Commands.Command     (Command, performIO)
 import           Reactive.Plugins.Core.Action.Commands.PendingNode (unrenderPending)
+import           Reactive.Plugins.Core.Action.Commands.Selection   (handleSelection)
 
 import qualified BatchConnector.Commands as BatchCmd
 import qualified JS.NodeGraph          as UI
@@ -70,8 +71,9 @@ makeSliderFromPortDouble i port = Slider (Vector2 10 (95 + (fromIntegral i) * 25
                                          (Text.pack $ "param " <> show i) 0.0 1.0 0.2 (PortNum i) True
 
 nodeHandlers :: Node -> UIHandlers State
-nodeHandlers node = def & dblClick   .~ [const $ enterNode node]
-                        & keyDown    .~ [removeNode node]
+nodeHandlers node = def & dblClick     .~ [const $ enterNode node]
+                        & keyDown      .~ [removeNode node]
+                        & mousePressed .~ [\keymods _ _ _ -> handleSelection node keymods]
 
 retriveSliderDouble :: WidgetId -> Command (UIRegistry.State Global.State) (Maybe (WidgetFile Global.State (Slider Double)))
 retriveSliderDouble wid = UIRegistry.lookupTypedM wid

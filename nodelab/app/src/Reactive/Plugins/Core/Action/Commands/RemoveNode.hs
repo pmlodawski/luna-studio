@@ -12,6 +12,7 @@ import           Reactive.Plugins.Core.Action.Commands.Command         (Command,
 import           Reactive.Plugins.Core.Action.Commands.DisconnectNodes (localDisconnectAll)
 
 import           Reactive.Plugins.Core.Action.Commands.UIRegistry.RemoveWidget (removeWidgets)
+import           Reactive.Plugins.Core.Action.Commands.UIRegistry.Focus        (focusOnTopNode)
 
 import qualified BatchConnector.Commands as BatchCmd
 import qualified JS.NodeGraph            as UIGraph
@@ -32,16 +33,10 @@ performRemoval node = do
     Global.selection . Selection.nodeIds %= drop 1
 
     uiRegistry <- use Global.uiRegistry
-    topNodeId  <- preuse $ Global.selection . Selection.nodeIds . ix 0
     workspace  <- use Global.workspace
 
-    let  topWidgetId = topNodeId >>= nodeIdToWidgetId uiRegistry
     let nodeWidgetId = maybeToList $ nodeIdToWidgetId uiRegistry $ node ^. nodeId
-
     zoom Global.uiRegistry $ removeWidgets nodeWidgetId
-
-    Global.uiRegistry . UIRegistry.focusedWidget .= topWidgetId
-
+    focusOnTopNode
     performIO $ do
         BatchCmd.removeNodeById workspace (node ^. nodeId)
-        mapM_ UIGraph.setNodeFocused topNodeId
