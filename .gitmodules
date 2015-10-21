@@ -50,4 +50,4 @@
 	branch = master
 [submodule "third-party/HaskellBooster"]
 	path = third-party/HaskellBooster
-	url = git@github.com:wdanilo/HaskellBooster.git
+	url = https://github.com/wdanilo/HaskellBooster.git
