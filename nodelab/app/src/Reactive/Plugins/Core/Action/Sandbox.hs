@@ -63,15 +63,15 @@ toAction (Window (Window.Event Window.Resized width height)) _ = Just $ InitApp
 toAction (Mouse (Mouse.Event Mouse.Clicked _ LeftButton _ (Just (EventWidget bid _ _)))) state = Just $ WidgetClicked bid
 toAction _ _        = Nothing
 
-sandboxScene = Scene.scene
-
-addWidget b = do
-    w <- JSRegistry.build (b ^. objectId) (b ^. widget)
-    JSRegistry.register (b ^. objectId) w
-    sandboxScene `add` w
-
-addChart b = do
-    UIChart.displayChart (b ^. widget)
+-- sandboxScene = Scene.scene
+--
+addWidget b = return ()
+--     w <- JSRegistry.build (b ^. objectId) (b ^. widget)
+--     JSRegistry.register (b ^. objectId) w
+--     sandboxScene `add` w
+--
+addChart b = return ()
+--     UIChart.displayChart (b ^. widget)
 
 
 instance ActionStateUpdater Action where

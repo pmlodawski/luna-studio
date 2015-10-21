@@ -37,7 +37,7 @@ import qualified JS.NodeGraph          as UI
 import qualified ThreeJS.Registry      as JSRegistry
 import qualified ThreeJS.Widget.Node   as UINode
 import qualified ThreeJS.Widget.Slider as UISlider
-import           ThreeJS.Types         (add)
+-- import           ThreeJS.Types         (add)
 
 addNode :: Node -> Command State ()
 addNode node = do
@@ -102,11 +102,11 @@ addSliderToNode widgetId nodeId slider = do
     return $ sliderWidget ^. objectId
 
 addWidgetToNode :: IsSlider a => WidgetId -> WidgetFile b (Slider a) -> IO ()
-addWidgetToNode nodeId newWidget = do
-    node   <- JSRegistry.lookup nodeId :: IO UINode.Node
-    widget <- JSRegistry.build (newWidget ^. objectId) (newWidget ^. widget)
-    JSRegistry.register (newWidget ^. objectId) widget
-    node `add` widget
+addWidgetToNode nodeId newWidget = return ()
+    -- node   <- JSRegistry.lookup nodeId :: IO UINode.Node
+    -- widget <- JSRegistry.build (newWidget ^. objectId) (newWidget ^. widget)
+    -- JSRegistry.register (newWidget ^. objectId) widget
+    -- node `add` widget
 
 createNodeOnUI :: Node -> WidgetFile s WNode.Node -> IO ()
 createNodeOnUI node file = do

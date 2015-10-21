@@ -8,6 +8,7 @@ LOCAL_DB=$(stack path | awk -F ": " '/local-pkg-db:/ {print $2}')
 ghcjs  -package-db $SNAPSHOT_DB \
        -package-db $LOCAL_DB \
        -iapp/src/ \
+       -DGHCJS_BROWSER \
        --interactive \
        -package base \
        -package ghcjs-base \
