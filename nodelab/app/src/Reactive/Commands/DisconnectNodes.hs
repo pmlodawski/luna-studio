@@ -1,14 +1,14 @@
-module Reactive.Plugins.Core.Action.Commands.DisconnectNodes where
+module Reactive.Commands.DisconnectNodes where
 
 import           Utils.PreludePlus
-import           Reactive.Plugins.Core.Action.State.Global     (State)
-import qualified Reactive.Plugins.Core.Action.State.Global     as Global
-import qualified Reactive.Plugins.Core.Action.State.Graph      as Graph
-import           Reactive.Plugins.Core.Action.Commands.Command (Command, performIO)
-import qualified Reactive.Plugins.Core.Action.State.UIRegistry as UIRegistry
-import           Reactive.Plugins.Core.Action.Commands.Graph   (updateConnNodes, updateConnections, updatePortAngles, updateConnectionsUI)
+import           Reactive.State.Global     (State)
+import qualified Reactive.State.Global     as Global
+import qualified Reactive.State.Graph      as Graph
+import           Reactive.Commands.Command (Command, performIO)
+import qualified Reactive.State.UIRegistry as UIRegistry
+import           Reactive.Commands.Graph   (updateConnNodes, updateConnections, updatePortAngles, updateConnectionsUI)
 
-import           Reactive.Plugins.Core.Action.Commands.UIRegistry.RemoveWidget (removeWidgets)
+import           Reactive.Commands.UIRegistry.RemoveWidget (removeWidgets)
 
 import           Object.Object           (ConnectionId, NodeId)
 import           Object.Widget.Helpers   (connectionIdToWidgetId)

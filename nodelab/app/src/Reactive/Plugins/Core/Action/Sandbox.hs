@@ -19,11 +19,11 @@ import           Event.Event
 import           Event.WithObjects
 
 import           Reactive.Plugins.Core.Action
-import qualified Reactive.Plugins.Core.Action.State.Global       as Global
-import qualified Reactive.Plugins.Core.Action.State.Sandbox      as Sandbox
-import           Reactive.Plugins.Core.Action.State.UIRegistry   (WidgetMap, sceneInterfaceId, sceneGraphId)
-import qualified Reactive.Plugins.Core.Action.State.UIRegistry   as UIRegistry
-import           Reactive.Plugins.Core.Action.Commands.Command   (performIO, runCommand)
+import qualified Reactive.State.Global       as Global
+import qualified Reactive.State.Sandbox      as Sandbox
+import           Reactive.State.UIRegistry   (WidgetMap, sceneInterfaceId, sceneGraphId)
+import qualified Reactive.State.UIRegistry   as UIRegistry
+import           Reactive.Commands.Command   (performIO, runCommand)
 
 import qualified Object.Widget.Button                            as Button
 import qualified Object.Widget.Slider                            as Slider

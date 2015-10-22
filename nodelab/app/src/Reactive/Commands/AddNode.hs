@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Reactive.Plugins.Core.Action.Commands.AddNode (addNode) where
+module Reactive.Commands.AddNode (addNode) where
 
 import           Utils.PreludePlus
 import           Utils.Vector
@@ -20,16 +20,16 @@ import           Object.Widget.Slider (Slider(..),IsSlider(..))
 import qualified Object.Widget.Slider  as Slider
 
 import           Reactive.Plugins.Core.Action
-import qualified Reactive.Plugins.Core.Action.State.Global         as Global
-import           Reactive.Plugins.Core.Action.State.Global         (State)
-import qualified Reactive.Plugins.Core.Action.State.Graph          as Graph
-import           Reactive.Plugins.Core.Action.State.UIRegistry     (sceneGraphId)
-import qualified Reactive.Plugins.Core.Action.State.UIRegistry     as UIRegistry
-import           Reactive.Plugins.Core.Action.Commands.EnterNode   (enterNode)
-import           Reactive.Plugins.Core.Action.Commands.RemoveNode  (removeNode)
-import           Reactive.Plugins.Core.Action.Commands.Command     (Command, performIO)
-import           Reactive.Plugins.Core.Action.Commands.PendingNode (unrenderPending)
-import           Reactive.Plugins.Core.Action.Commands.Selection   (handleSelection)
+import qualified Reactive.State.Global         as Global
+import           Reactive.State.Global         (State)
+import qualified Reactive.State.Graph          as Graph
+import           Reactive.State.UIRegistry     (sceneGraphId)
+import qualified Reactive.State.UIRegistry     as UIRegistry
+import           Reactive.Commands.EnterNode   (enterNode)
+import           Reactive.Commands.RemoveNode  (removeNode)
+import           Reactive.Commands.Command     (Command, performIO)
+import           Reactive.Commands.PendingNode (unrenderPending)
+import           Reactive.Commands.Selection   (handleSelection)
 
 import qualified BatchConnector.Commands as BatchCmd
 import qualified JS.NodeGraph          as UI

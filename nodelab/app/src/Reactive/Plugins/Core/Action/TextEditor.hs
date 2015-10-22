@@ -17,8 +17,8 @@ import qualified BatchConnector.Commands as BatchCmd
 import qualified JS.TextEditor   as UI
 
 import           Reactive.Plugins.Core.Action
-import           Reactive.Plugins.Core.Action.State.Graph
-import qualified Reactive.Plugins.Core.Action.State.Global        as Global
+import           Reactive.State.Graph
+import qualified Reactive.State.Global        as Global
 
 data Action = CodeUpdate   Text
             | CodeModified Text

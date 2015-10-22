@@ -14,11 +14,11 @@ import qualified Event.Mouse    as Mouse
 import qualified Event.Keyboard as Keyboard
 import           Object.UITypes
 import           Reactive.Plugins.Core.Action
-import qualified Reactive.Plugins.Core.Action.State.Global       as Global
-import           Reactive.Plugins.Core.Action.State.UIRegistry   (WidgetMap)
-import qualified Reactive.Plugins.Core.Action.State.UIRegistry   as UIRegistry
-import qualified Reactive.Plugins.Core.Action.State.Camera       as Camera
-import           Reactive.Plugins.Core.Action.Commands.Command   (Command, execCommand)
+import qualified Reactive.State.Global       as Global
+import           Reactive.State.UIRegistry   (WidgetMap)
+import qualified Reactive.State.UIRegistry   as UIRegistry
+import qualified Reactive.State.Camera       as Camera
+import           Reactive.Commands.Command   (Command, execCommand)
 import           ThreeJS.Widget.Button ()
 import           ThreeJS.Widget.Slider ()
 import           ThreeJS.Widget.Number ()

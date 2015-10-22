@@ -7,10 +7,10 @@ import           Event.Event     (Event(Batch))
 import qualified Event.Batch     as Batch
 import           Batch.Workspace (interpreterState, InterpreterState(..))
 
-import qualified Reactive.Plugins.Core.Action.State.Global         as Global
-import           Reactive.Plugins.Core.Action.State.Global         (State)
-import           Reactive.Plugins.Core.Action.Commands.Command     (Command, execCommand, performIO)
-import           Reactive.Plugins.Core.Action.Commands.RenderGraph (renderGraph)
+import qualified Reactive.State.Global         as Global
+import           Reactive.State.Global         (State)
+import           Reactive.Commands.Command     (Command, execCommand, performIO)
+import           Reactive.Commands.RenderGraph (renderGraph)
 
 import qualified BatchConnector.Monadic.Commands as BatchCmd
 

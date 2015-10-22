@@ -1,4 +1,4 @@
-module Reactive.Plugins.Core.Action.State.Graph where
+module Reactive.State.Graph where
 
 
 import           Utils.PreludePlus

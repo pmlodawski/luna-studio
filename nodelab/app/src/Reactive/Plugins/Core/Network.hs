@@ -32,8 +32,8 @@ import qualified Reactive.Plugins.Core.Action.ConnectionPen         as Connectio
 import qualified Reactive.Plugins.Core.Action.TextEditor            as TextEditor
 import           Reactive.Plugins.Core.Executor
 
-import           Reactive.Plugins.Core.Action.State.Global
-import           Reactive.Plugins.Core.Action.State.UnderCursor
+import           Reactive.State.Global
+import           Reactive.State.UnderCursor
 
 import           JS.WebSocket (WebSocket)
 

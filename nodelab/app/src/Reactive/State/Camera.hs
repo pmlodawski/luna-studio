@@ -1,4 +1,4 @@
-module Reactive.Plugins.Core.Action.State.Camera where
+module Reactive.State.Camera where
 
 
 import           Utils.PreludePlus

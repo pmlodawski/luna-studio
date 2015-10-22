@@ -1,4 +1,4 @@
-module Reactive.Plugins.Core.Action.State.UnderCursor where
+module Reactive.State.UnderCursor where
 
 
 import           Utils.PreludePlus
@@ -10,9 +10,9 @@ import           Object.Node
 import qualified Object.Widget.Node as WNode
 import qualified Object.Widget.Port as WPort
 
-import           Reactive.Plugins.Core.Action.State.Global
-import qualified Reactive.Plugins.Core.Action.State.Graph      as Graph
-import qualified Reactive.Plugins.Core.Action.State.UIRegistry as UIRegistry
+import           Reactive.State.Global
+import qualified Reactive.State.Graph      as Graph
+import qualified Reactive.State.UIRegistry as UIRegistry
 
 import           Object.Widget
 import           Utils.CtxDynamic

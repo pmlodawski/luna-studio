@@ -22,7 +22,7 @@ import           Data.Text.Lazy   (Text)
 import qualified Data.IntMap.Lazy as IntMap
 import           Data.IntMap.Lazy (IntMap)
 
-import           Reactive.Plugins.Core.Action.State.Camera (Camera, screenToWorkspace)
+import           Reactive.State.Camera (Camera, screenToWorkspace)
 
 import System.IO.Unsafe (unsafePerformIO)
 

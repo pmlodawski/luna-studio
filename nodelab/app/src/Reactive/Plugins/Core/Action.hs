@@ -9,9 +9,9 @@ module Reactive.Plugins.Core.Action where
 import           Utils.PreludePlus
 import           JS.Bindings
 
-import           Reactive.Plugins.Core.Action.State.Global
-import qualified Reactive.Plugins.Core.Action.State.UIRegistry as UIRegistry
-import           Reactive.Plugins.Core.Action.Commands.Command (Command, execCommand)
+import           Reactive.State.Global
+import qualified Reactive.State.UIRegistry as UIRegistry
+import           Reactive.Commands.Command (Command, execCommand)
 
 data WithState act st = WithState { _action :: act
                                   , _state  :: st

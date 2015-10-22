@@ -11,9 +11,9 @@ import           Event.Mouse    (MousePosition, MouseButton)
 import           Object.UITypes
 import qualified Event.Keyboard as Keyboard
 import           Event.Keyboard (KeyMods)
-import           Reactive.Plugins.Core.Action.State.Camera     (Camera)
-import qualified Reactive.Plugins.Core.Action.State.Camera     as Camera
-import           Reactive.Plugins.Core.Action.Commands.Command (Command)
+import           Reactive.State.Camera     (Camera)
+import qualified Reactive.State.Camera     as Camera
+import           Reactive.Commands.Command (Command)
 import           Object.UITypes
 
 type DisplayObject = CtxDynamic DisplayObjectClass

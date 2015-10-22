@@ -18,10 +18,10 @@ import           Event.NodeSearcher hiding  ( Event )
 import qualified Event.NodeSearcher as NodeSearcher
 import           Event.Event
 import           Reactive.Plugins.Core.Action
-import           Reactive.Plugins.Core.Action.State.NodeSearcher
-import qualified Reactive.Plugins.Core.Action.State.Global          as Global
-import qualified Reactive.Plugins.Core.Action.State.Selection       as Selection
-import qualified Reactive.Plugins.Core.Action.State.Graph           as Graph
+import           Reactive.State.NodeSearcher
+import qualified Reactive.State.Global          as Global
+import qualified Reactive.State.Selection       as Selection
+import qualified Reactive.State.Graph           as Graph
 import qualified Reactive.Plugins.Core.Action.NodeSearcher.Mock     as Mock
 
 import qualified Data.Text.Lazy as Text

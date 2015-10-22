@@ -1,4 +1,4 @@
-module Reactive.Plugins.Core.Action.Commands.UIRegistry.Focus where
+module Reactive.Commands.UIRegistry.Focus where
 
 import           Utils.PreludePlus
 import           Control.Monad.State   hiding (State)
@@ -6,11 +6,11 @@ import           Object.Object         (NodeId)
 import           Object.Widget.Helpers (nodeIdToWidgetId)
 import qualified JS.NodeGraph          as UIGraph
 
-import qualified Reactive.Plugins.Core.Action.State.UIRegistry as UIRegistry
-import           Reactive.Plugins.Core.Action.State.UIRegistry (State)
-import qualified Reactive.Plugins.Core.Action.State.Global     as Global
-import qualified Reactive.Plugins.Core.Action.State.Selection  as Selection
-import           Reactive.Plugins.Core.Action.Commands.Command (Command, performIO)
+import qualified Reactive.State.UIRegistry as UIRegistry
+import           Reactive.State.UIRegistry (State)
+import qualified Reactive.State.Global     as Global
+import qualified Reactive.State.Selection  as Selection
+import           Reactive.Commands.Command (Command, performIO)
 
 focusOnNode :: NodeId -> Command (State a) ()
 focusOnNode nodeId = do

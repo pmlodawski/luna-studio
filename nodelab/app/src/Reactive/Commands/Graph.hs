@@ -1,4 +1,4 @@
-module Reactive.Plugins.Core.Action.Commands.Graph where
+module Reactive.Commands.Graph where
 
 
 import           Utils.PreludePlus
@@ -21,13 +21,13 @@ import qualified JS.Connection  as UI
 import qualified JS.NodeGraph   as UI
 
 
-import           Reactive.Plugins.Core.Action.State.Graph
-import qualified Reactive.Plugins.Core.Action.State.Connect        as Connect
-import qualified Reactive.Plugins.Core.Action.State.Graph          as Graph
-import qualified Reactive.Plugins.Core.Action.State.UIRegistry     as UIRegistry
-import qualified Reactive.Plugins.Core.Action.State.Camera         as Camera
-import qualified Reactive.Plugins.Core.Action.State.Global         as Global
-import           Reactive.Plugins.Core.Action.Commands.Command     (Command, command, pureCommand, ioCommand)
+import           Reactive.State.Graph
+import qualified Reactive.State.Connect        as Connect
+import qualified Reactive.State.Graph          as Graph
+import qualified Reactive.State.UIRegistry     as UIRegistry
+import qualified Reactive.State.Camera         as Camera
+import qualified Reactive.State.Global         as Global
+import           Reactive.Commands.Command     (Command, command, pureCommand, ioCommand)
 
 import           Control.Monad.State
 

@@ -1,4 +1,4 @@
-module Reactive.Plugins.Core.Action.State.Global where
+module Reactive.State.Global where
 
 
 import           Utils.PreludePlus
@@ -8,17 +8,17 @@ import           Object.Object
 
 
 import           Batch.Workspace
-import qualified Reactive.Plugins.Core.Action.State.Camera            as Camera
-import qualified Reactive.Plugins.Core.Action.State.Graph             as Graph
-import qualified Reactive.Plugins.Core.Action.State.Selection         as Selection
-import qualified Reactive.Plugins.Core.Action.State.MultiSelection    as MultiSelection
-import qualified Reactive.Plugins.Core.Action.State.Drag              as Drag
-import qualified Reactive.Plugins.Core.Action.State.Connect           as Connect
-import qualified Reactive.Plugins.Core.Action.State.NodeSearcher      as NodeSearcher
-import qualified Reactive.Plugins.Core.Action.State.UIRegistry        as UIRegistry
-import qualified Reactive.Plugins.Core.Action.State.ConnectionPen     as ConnectionPen
+import qualified Reactive.State.Camera            as Camera
+import qualified Reactive.State.Graph             as Graph
+import qualified Reactive.State.Selection         as Selection
+import qualified Reactive.State.MultiSelection    as MultiSelection
+import qualified Reactive.State.Drag              as Drag
+import qualified Reactive.State.Connect           as Connect
+import qualified Reactive.State.NodeSearcher      as NodeSearcher
+import qualified Reactive.State.UIRegistry        as UIRegistry
+import qualified Reactive.State.ConnectionPen     as ConnectionPen
 
-import qualified Reactive.Plugins.Core.Action.State.Sandbox           as Sandbox
+import qualified Reactive.State.Sandbox           as Sandbox
 
 data State = State { _iteration      :: Integer
                    , _mousePos       :: Vector2 Int

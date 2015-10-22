@@ -1,12 +1,12 @@
-module Reactive.Plugins.Core.Action.Commands.UnrenderGraph where
+module Reactive.Commands.UnrenderGraph where
 
 import           Utils.PreludePlus
-import           Reactive.Plugins.Core.Action.State.Global     (State)
-import qualified Reactive.Plugins.Core.Action.State.Global     as Global
-import qualified Reactive.Plugins.Core.Action.State.UIRegistry as UIRegistry
-import           Reactive.Plugins.Core.Action.Commands.Command (Command, performIO)
+import           Reactive.State.Global     (State)
+import qualified Reactive.State.Global     as Global
+import qualified Reactive.State.UIRegistry as UIRegistry
+import           Reactive.Commands.Command (Command, performIO)
 
-import           Reactive.Plugins.Core.Action.Commands.UIRegistry.RemoveWidget (removeWidgets)
+import           Reactive.Commands.UIRegistry.RemoveWidget (removeWidgets)
 
 import Object.Widget            (WidgetFile, objectId)
 import Object.Widget.Node       (Node)

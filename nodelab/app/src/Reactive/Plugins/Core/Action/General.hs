@@ -13,8 +13,8 @@ import           Event.Event
 import           Event.WithObjects
 import           Reactive.Plugins.Core.Action
 import qualified Reactive.Plugins.Core.Action.Camera         as Camera
-import qualified Reactive.Plugins.Core.Action.State.Camera   as Camera
-import qualified Reactive.Plugins.Core.Action.State.Global   as Global
+import qualified Reactive.State.Camera   as Camera
+import qualified Reactive.State.Global   as Global
 
 
 

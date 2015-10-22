@@ -6,7 +6,7 @@ import           Batch.Workspace         (Workspace)
 import qualified BatchConnector.Commands as BatchCmd
 import           Control.Monad.State
 
-import           Reactive.Plugins.Core.Action.Commands.Command (Command, ioCommand, performIO)
+import           Reactive.Commands.Command (Command, ioCommand, performIO)
 
 runMain :: Command Workspace ()
 runMain = performIO BatchCmd.runMain

@@ -19,14 +19,14 @@ import           Event.Event
 import           Event.WithObjects
 
 import           Reactive.Plugins.Core.Action
-import           Reactive.Plugins.Core.Action.Commands.Graph
-import           Reactive.Plugins.Core.Action.Commands.Command (execCommand)
-import           Reactive.Plugins.Core.Action.State.Drag
-import qualified Reactive.Plugins.Core.Action.State.Graph      as Graph
-import qualified Reactive.Plugins.Core.Action.State.Selection  as Selection
-import qualified Reactive.Plugins.Core.Action.State.Camera     as Camera
-import qualified Reactive.Plugins.Core.Action.State.Global     as Global
-import           Reactive.Plugins.Core.Action.State.UnderCursor
+import           Reactive.Commands.Graph
+import           Reactive.Commands.Command (execCommand)
+import           Reactive.State.Drag
+import qualified Reactive.State.Graph      as Graph
+import qualified Reactive.State.Selection  as Selection
+import qualified Reactive.State.Camera     as Camera
+import qualified Reactive.State.Global     as Global
+import           Reactive.State.UnderCursor
 
 import qualified Data.IntMap.Lazy        as IntMap
 import qualified BatchConnector.Commands as BatchCmd

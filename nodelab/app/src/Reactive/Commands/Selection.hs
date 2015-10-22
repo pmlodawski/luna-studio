@@ -1,4 +1,4 @@
-module Reactive.Plugins.Core.Action.Commands.Selection where
+module Reactive.Commands.Selection where
 
 import           Utils.PreludePlus
 import           Control.Monad.State hiding (State)
@@ -9,13 +9,13 @@ import qualified Object.Node    as Node
 import           Event.Keyboard (KeyMods(..))
 import qualified JS.NodeGraph   as UI
 
-import           Reactive.Plugins.Core.Action.State.Global     (State)
-import qualified Reactive.Plugins.Core.Action.State.Global     as Global
-import qualified Reactive.Plugins.Core.Action.State.Selection  as Selection
-import qualified Reactive.Plugins.Core.Action.State.Graph      as Graph
+import           Reactive.State.Global     (State)
+import qualified Reactive.State.Global     as Global
+import qualified Reactive.State.Selection  as Selection
+import qualified Reactive.State.Graph      as Graph
 
-import           Reactive.Plugins.Core.Action.Commands.Command          (Command, performIO)
-import           Reactive.Plugins.Core.Action.Commands.UIRegistry.Focus (focusOnNode, focusOnTopNode)
+import           Reactive.Commands.Command          (Command, performIO)
+import           Reactive.Commands.UIRegistry.Focus (focusOnNode, focusOnTopNode)
 
 handleSelection :: Node -> KeyMods -> Command State ()
 handleSelection node (KeyMods False False False False) = performSelect node
