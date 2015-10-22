@@ -1,13 +1,6 @@
-# Flowbox GUI
+[![Build Status](http://cd.newbyteorder.com/api/badge/bitbucket.org/NewByteOrder/new_byte_order/status.svg?branch=master)](http://cd.newbyteorder.com/bitbucket.org/NewByteOrder/new_byte_order)
 
-## Dev-env setup
-
-```
-# install GHCJS
-sudo npm install -g brunch bower
-bower install
-npm install
-```
+# NodeLab GUI
 
 ## Runing development server
 
@@ -19,21 +12,29 @@ To use GHCI mode with incremental linker (aka very fast rebuild) please run `bru
 
 In interactive mode, the page is reloaded upon file save, however new code is injected a couple of seconds later. In the meantime you'll see console of GHCJSi containing build log redirected to the browser.
 
-## Typeckecker integration
+
+## Dev-env setup
+
+```
+# install protobuf
+stack install alex happy hprotoc
+git clone git@bitbucket.org:NewByteOrder/new_byte_order.git
+cd new_byte_order/
+git submodule update --init --recursive
+scripts/genproto
+scripts/gencaba
+cd nodelab/
+stack setup
+sudo npm install -g brunch bower
+bower install
+npm install
+```
+
+## Building
 
 Follow instructions:
 ```
-cd ..
-git clone git@bitbucket.org:NewByteOrder/new_byte_order.git
-cd new_byte_order
-git checkout typechecker
-git submodule init
-git submodule update --recursive
-cd ../nodelab
-cabal install ../new_update_order/libs/convert --ghcjs
-cabal install ../new_update_order/libs/utils --ghcjs
-cabal install ../new_update_order/third-party/graphviz-2999.17.0.2.2 --ghcjs
-cabal install ../new_update_order/libs/luna/typechecker --ghcjs
+brunch build
 ```
 
 ## Protocol buffers
