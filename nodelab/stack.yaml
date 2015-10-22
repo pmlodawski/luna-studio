@@ -1,13 +1,6 @@
 resolver:
-  name: nbo
-  location: nbo-snapshot.yaml
-compiler: ghcjs-0.2.0.20151020_ghc-7.10.2
-compiler-check: match-exact
-setup-info:
-  ghcjs:
-    source:
-      ghcjs-0.2.0.20151020_ghc-7.10.2:
-        url: "https://s3-eu-west-1.amazonaws.com/nbo-toolchain/ghcjs/ghcjs-0.2.0.20151020.tar.gz"
+  name: nbo-gui-20151022
+  location: https://bitbucket.org/NewByteOrder/stack-snapshots/raw/master/nbo-gui-20151022.yaml
 ghc-options:
   nodelab: -DGHCJS_BROWSER
 packages:
@@ -21,6 +14,3 @@ packages:
   - ../libs/batch/plugins/project-manager-api
   - ../tools/batch/plugins/interpreter-api
   - ../third-party/graphviz-2999.17.0.2.2
-  - location:
-      git: https://github.com/ghcjs/ghcjs-dom.git
-      commit: e61354ed119e0cc5141a516e8b9342f250254e7f
