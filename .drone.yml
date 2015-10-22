@@ -1,6 +1,6 @@
 image: nbo/ghcjs-gui:20151022
 script:
-  - scripts/genproto
+  - scripts/genproto > /dev/null
   - scripts/gencabal
   - cd nodelab
   - npm install
