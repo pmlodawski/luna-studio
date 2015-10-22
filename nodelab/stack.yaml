@@ -12,7 +12,6 @@ ghc-options:
 packages:
   - .
   - ../libs/utils
-  - ../libs/convert
   - ../libs/luna/typechecker
   - ../libs/luna/protobuf-old-gen
   - ../libs/batch/batch-protobuf
