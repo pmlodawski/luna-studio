@@ -1,0 +1,8 @@
+image: nbo/ghcjs-deps:20151022
+script:
+  - scripts/genproto
+  - scripts/gencabal
+  - cd nodelab
+  - npm install
+  - bower install --allow-root
+  - brunch build
