@@ -22,7 +22,7 @@ git clone git@bitbucket.org:NewByteOrder/new_byte_order.git
 cd new_byte_order/
 git submodule update --init --recursive
 scripts/genproto
-scripts/gencaba
+scripts/gencabal
 cd nodelab/
 stack setup
 sudo npm install -g brunch bower
@@ -34,7 +34,8 @@ npm install
 
 Follow instructions:
 ```
-brunch build
+brunch build               # development build
+brunch build -e production # production build
 ```
 
 ## Protocol buffers
@@ -67,6 +68,6 @@ It's possible to override some brunch settings locally by creating file `brunch-
 
 ```coffee
 exports.transform = (config) ->
-  config.plugins.ghcjs.buildCommand = "cabal build"
+  config.plugins.ghcjs.buildCommand = "stack build"
   config.plugins.ghcjs.clearScreen  = true
 ```
