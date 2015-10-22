@@ -5,4 +5,14 @@ script:
   - cd nodelab
   - npm install
   - bower install --allow-root
-  - brunch build
+  - brunch build --env production
+publish:
+  s3:
+    acl: public-read
+    region: "us-west-1"
+    access_key: $AWS_ACCESS_KEY_ID
+    secret_key: $AWS_SECRET_ACCESS_KEY
+    bucket: "nodelab-gui.s3-website-us-east-1.amazonaws.com"
+    source: nodelab/www
+    target: /builds/
+    recursive: true
