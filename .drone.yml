@@ -5,14 +5,15 @@ script:
   - cd nodelab
   - npm install
   - bower install --allow-root
+  - mkdir -p .stack-work/install/x86_64-osx/custom-nbo-gui-20151022/ghcjs-0.2.0.20151020_ghc-7.10.2/bin/nodelab.jsexe/
+  - touch .stack-work/install/x86_64-osx/custom-nbo-gui-20151022/ghcjs-0.2.0.20151020_ghc-7.10.2/bin/nodelab.jsexe/all.js
   - brunch build --env production
-publish:
-  s3:
-    acl: public-read
-    region: "us-west-1"
-    access_key: $AWS_ACCESS_KEY_ID
-    secret_key: $AWS_SECRET_ACCESS_KEY
-    bucket: "nodelab-gui.s3-website-us-east-1.amazonaws.com"
-    source: nodelab/www
-    target: /builds/
-    recursive: true
+  - aws s3 cp nodelab/www/ s3://nodelab-gui/builds/$DRONE_COMMIT/ --recursive --acl public-read --region eu-west-1
+notify:
+  slack:
+    webhook_url: 'https://hooks.slack.com/services/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'
+    username: 'drone'
+    channel: '#cd'
+    on_started: true
+    on_success: true
+    on_failure: true
