@@ -8,7 +8,7 @@ script:
   - mkdir -p .stack-work/install/x86_64-osx/custom-nbo-gui-20151022/ghcjs-0.2.0.20151020_ghc-7.10.2/bin/nodelab.jsexe/
   - touch .stack-work/install/x86_64-osx/custom-nbo-gui-20151022/ghcjs-0.2.0.20151020_ghc-7.10.2/bin/nodelab.jsexe/all.js
   - brunch build --env production
-  - aws s3 cp nodelab/www/ s3://nodelab-gui/builds/$DRONE_COMMIT/ --recursive --acl public-read --region eu-west-1
+  - ./upload_dist.sh
 notify:
   slack:
     webhook_url: 'https://hooks.slack.com/services/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'
