@@ -2,7 +2,8 @@
 
 module AST.Meta where
 
-import           Flowbox.Prelude hiding (Cons, cons)
+import           Utils.PreludePlus
+import           Data.Repr
 
 import           Control.Monad.State
 import           Control.Lens
