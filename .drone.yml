@@ -1,6 +1,8 @@
 image: nbo/ghcjs-gui:20151022
 script:
-  - ln -s /tmp/stack-work .stack-work
+  - ln -s /tmp/stack-work       .stack-work
+  - ln -s /tmp/node_modules     node_modules
+  - ln -s /tmp/bower_components bower_components
   - scripts/genproto > /dev/null
   - scripts/gencabal
   - cd nodelab
@@ -20,3 +22,5 @@ notify:
     on_failure: true
 cache:
   - /tmp/stack-work
+  - /tmp/node_modules
+  - /tmp/bower_components
