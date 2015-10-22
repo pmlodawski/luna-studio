@@ -18,7 +18,7 @@ executable nodelab
   other-modules:       `findmodules('app/src', '.*\.hs$', exclude='(.*Main\.hs)')`
   -- other-extensions:
   --
-  -- ACHTUNG! Zmieniasz tu – zmień w interactive
+  -- ACHTUNG! Zmieniasz tu – zmien w interactive
   --
   default-extensions:   DoAndIfThenElse
                       , NoImplicitPrelude
@@ -39,7 +39,7 @@ executable nodelab
                       , ScopedTypeVariables
 
   --
-  -- ACHTUNG! Zmieniasz tu – zmień w interactive
+  -- ACHTUNG! Zmieniasz tu – zmien w interactive
   --
   build-depends:       base >= 4.8 && < 4.9
                      , bytestring

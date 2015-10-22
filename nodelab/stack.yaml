@@ -1,7 +1,6 @@
-resolver: 
+resolver:
   name: nbo
   location: nbo-snapshot.yaml
-#resolver: lts-3.10
 compiler: ghcjs-0.2.0.20151020_ghc-7.10.2
 compiler-check: match-exact
 setup-info:
@@ -23,7 +22,3 @@ packages:
   - ../tools/batch/plugins/interpreter-api
   - ../third-party/graphviz-2999.17.0.2.2
   - ../third-party/ghcjs-dom
-
-#extra-deps:
-# - reactive-banana-0.9.0.0
-# - errors-1.4.7
