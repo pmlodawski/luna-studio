@@ -1,6 +1,6 @@
 image: nbo/ghcjs-gui:20151022
 script:
-  - ln -s .stack-work /tmp/stack-work
+  - ln -s /tmp/stack-work .stack-work
   - scripts/genproto > /dev/null
   - scripts/gencabal
   - cd nodelab
