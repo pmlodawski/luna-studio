@@ -2,7 +2,6 @@
 
 echo "Gzipping build..."
 
-set -x
 set -e
 
 s3_path=s3://nodelab-gui/build/$DRONE_COMMIT/
@@ -15,7 +14,7 @@ do
 	gzip -c $i > $tmp/$i
 done
 
-echo "Uploading gzipped build to S3..."
+echo "Uploading gzipped files to S3..."
 
 aws s3 cp                          \
   --recursive                      \
@@ -32,11 +31,12 @@ aws s3 cp                          \
   --include '*.eot'                \
   --region  eu-west-1
 
+echo "Uploading non-gzipped files to S3..."
+
 aws s3 cp                          \
   --recursive                      \
   --acl=public-read                \
   --cache-control='max-age=604800' \
-  --content-encoding=gzip          \
   www/     $s3_path                \
   --exclude '*.html'               \
   --exclude '*.js'                 \
