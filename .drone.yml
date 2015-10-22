@@ -1,11 +1,11 @@
 image: nbo/ghcjs-gui:20151022
 script:
-  - ln -s /tmp/stack-work       .stack-work
-  - ln -s /tmp/node_modules     node_modules
-  - ln -s /tmp/bower_components bower_components
   - scripts/genproto > /dev/null
   - scripts/gencabal
   - cd nodelab
+  - ln -s /tmp/stack-work       .stack-work
+  - ln -s /tmp/node_modules     node_modules
+  - ln -s /tmp/bower_components bower_components
   - npm install
   - bower install --allow-root
   - mkdir -p .stack-work/install/x86_64-osx/custom-nbo-gui-20151022/ghcjs-0.2.0.20151020_ghc-7.10.2/bin/nodelab.jsexe/
