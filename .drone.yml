@@ -1,4 +1,4 @@
-image: nbo/ghcjs-deps:20151022
+image: nbo/ghcjs-gui:20151022
 script:
   - scripts/genproto
   - scripts/gencabal
