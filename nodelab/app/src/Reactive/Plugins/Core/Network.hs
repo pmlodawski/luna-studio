@@ -18,7 +18,6 @@ import           Reactive.Plugins.Core.Action
 import qualified Reactive.Plugins.Core.Action.General               as General
 import qualified Reactive.Plugins.Core.Action.Camera                as Camera
 import qualified Reactive.Plugins.Core.Action.RegisterNode          as RegisterNode
-import qualified Reactive.Plugins.Core.Action.Selection             as Selection
 import qualified Reactive.Plugins.Core.Action.MultiSelection        as MultiSelection
 import qualified Reactive.Plugins.Core.Action.Drag                  as Drag
 import qualified Reactive.Plugins.Core.Action.Connect               as Connect
@@ -33,8 +32,8 @@ import qualified Reactive.Plugins.Core.Action.ConnectionPen         as Connectio
 import qualified Reactive.Plugins.Core.Action.TextEditor            as TextEditor
 import           Reactive.Plugins.Core.Executor
 
-import           Reactive.Plugins.Core.Action.State.Global
-import           Reactive.Plugins.Core.Action.State.UnderCursor
+import           Reactive.State.Global
+import           Reactive.State.UnderCursor
 
 import           JS.WebSocket (WebSocket)
 
@@ -92,8 +91,7 @@ makeNetworkDescription conn logging workspace = do
         cameraActionB                 = fmap ActionST $              Camera.toAction <$> anyNodeB <*> globalStateB
         nodeRegisterActionB           = fmap ActionST $        RegisterNode.toAction <$> anyNodeB <*> globalStateB
         nodeAddActionB                = fmap ActionST $             AddNode.toAction <$> anyNodeB <*> globalStateB
-        nodeSelectionActionB          = fmap ActionST $           Selection.toAction <$> anyNodeB <*> globalStateB <*> underCursorB
-        nodeMultiSelectionActionB     = fmap ActionST $      MultiSelection.toAction <$> anyNodeB <*> globalStateB <*> underCursorB
+        nodeMultiSelectionActionB     = fmap ActionST $      MultiSelection.toAction <$> anyNodeB
         nodeDragActionB               = fmap ActionST $                Drag.toAction <$> anyNodeB <*> globalStateB <*> underCursorB
         nodeConnectActionB            = fmap ActionST $             Connect.toAction <$> anyNodeB <*> globalStateB
         nodeSearcherActionB           = fmap ActionST $        NodeSearcher.toAction <$> anyNodeB
@@ -108,7 +106,6 @@ makeNetworkDescription conn logging workspace = do
                                         , widgetActionB
                                         , nodeRegisterActionB
                                         , nodeAddActionB
-                                        , nodeSelectionActionB
                                         , nodeMultiSelectionActionB
                                         , nodeDragActionB
                                         , cameraActionB

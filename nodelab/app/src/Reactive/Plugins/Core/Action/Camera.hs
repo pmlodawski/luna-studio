@@ -15,12 +15,12 @@ import           Object.UITypes
 import           Event.Event
 import           Event.WithObjects
 import           Reactive.Plugins.Core.Action
-import           Reactive.Plugins.Core.Action.State.Camera
-import qualified Reactive.Plugins.Core.Action.State.Camera    as Camera
-import qualified Reactive.Plugins.Core.Action.State.Graph     as Graph
-import qualified Reactive.Plugins.Core.Action.State.Global    as Global
+import           Reactive.State.Camera
+import qualified Reactive.State.Camera    as Camera
+import qualified Reactive.State.Graph     as Graph
+import qualified Reactive.State.Global    as Global
 
-import Reactive.Plugins.Core.Action.Commands.Command (Command, ioCommand, execCommand, performIO)
+import Reactive.Commands.Command (Command, ioCommand, execCommand, performIO)
 
 data DragType = StartDrag
               | Dragging

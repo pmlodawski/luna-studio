@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Reactive.Plugins.Core.Action.Commands.AddNode (addNode) where
+module Reactive.Commands.AddNode (addNode) where
 
 import           Utils.PreludePlus
 import           Utils.Vector
@@ -20,15 +20,16 @@ import           Object.Widget.Slider (Slider(..),IsSlider(..))
 import qualified Object.Widget.Slider  as Slider
 
 import           Reactive.Plugins.Core.Action
-import qualified Reactive.Plugins.Core.Action.State.Global         as Global
-import           Reactive.Plugins.Core.Action.State.Global         (State)
-import qualified Reactive.Plugins.Core.Action.State.Graph          as Graph
-import           Reactive.Plugins.Core.Action.State.UIRegistry     (sceneGraphId)
-import qualified Reactive.Plugins.Core.Action.State.UIRegistry     as UIRegistry
-import           Reactive.Plugins.Core.Action.Commands.EnterNode   (enterNode)
-import           Reactive.Plugins.Core.Action.Commands.RemoveNode  (removeNode)
-import           Reactive.Plugins.Core.Action.Commands.Command     (Command, performIO)
-import           Reactive.Plugins.Core.Action.Commands.PendingNode (unrenderPending)
+import qualified Reactive.State.Global         as Global
+import           Reactive.State.Global         (State)
+import qualified Reactive.State.Graph          as Graph
+import           Reactive.State.UIRegistry     (sceneGraphId)
+import qualified Reactive.State.UIRegistry     as UIRegistry
+import           Reactive.Commands.EnterNode   (enterNode)
+import           Reactive.Commands.RemoveNode  (removeNode)
+import           Reactive.Commands.Command     (Command, performIO)
+import           Reactive.Commands.PendingNode (unrenderPending)
+import           Reactive.Commands.Selection   (handleSelection)
 
 import qualified BatchConnector.Commands as BatchCmd
 import qualified JS.NodeGraph          as UI
@@ -36,7 +37,7 @@ import qualified JS.NodeGraph          as UI
 import qualified ThreeJS.Registry      as JSRegistry
 import qualified ThreeJS.Widget.Node   as UINode
 import qualified ThreeJS.Widget.Slider as UISlider
-import           ThreeJS.Types         (add)
+-- import           ThreeJS.Types         (add)
 
 addNode :: Node -> Command State ()
 addNode node = do
@@ -70,8 +71,9 @@ makeSliderFromPortDouble i port = Slider (Vector2 10 (95 + (fromIntegral i) * 25
                                          (Text.pack $ "param " <> show i) 0.0 1.0 0.2 (PortNum i) True
 
 nodeHandlers :: Node -> UIHandlers State
-nodeHandlers node = def & dblClick   .~ [const $ enterNode node]
-                        & keyDown    .~ [removeNode node]
+nodeHandlers node = def & dblClick     .~ [const $ enterNode node]
+                        & keyDown      .~ [removeNode node]
+                        & mousePressed .~ [\keymods _ _ _ -> handleSelection node keymods]
 
 retriveSliderDouble :: WidgetId -> Command (UIRegistry.State Global.State) (Maybe (WidgetFile Global.State (Slider Double)))
 retriveSliderDouble wid = UIRegistry.lookupTypedM wid
@@ -100,11 +102,11 @@ addSliderToNode widgetId nodeId slider = do
     return $ sliderWidget ^. objectId
 
 addWidgetToNode :: IsSlider a => WidgetId -> WidgetFile b (Slider a) -> IO ()
-addWidgetToNode nodeId newWidget = do
-    node   <- JSRegistry.lookup nodeId :: IO UINode.Node
-    widget <- JSRegistry.build (newWidget ^. objectId) (newWidget ^. widget)
-    JSRegistry.register (newWidget ^. objectId) widget
-    node `add` widget
+addWidgetToNode nodeId newWidget = return ()
+    -- node   <- JSRegistry.lookup nodeId :: IO UINode.Node
+    -- widget <- JSRegistry.build (newWidget ^. objectId) (newWidget ^. widget)
+    -- JSRegistry.register (newWidget ^. objectId) widget
+    -- node `add` widget
 
 createNodeOnUI :: Node -> WidgetFile s WNode.Node -> IO ()
 createNodeOnUI node file = do

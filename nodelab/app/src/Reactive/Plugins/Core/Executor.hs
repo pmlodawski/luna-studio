@@ -11,7 +11,7 @@ import           Reactive.Banana
 import           Reactive.Banana.Frameworks
 
 import           Reactive.Plugins.Core.Action
-import           Reactive.Plugins.Core.Action.State.Global
+import           Reactive.State.Global
 
 
 

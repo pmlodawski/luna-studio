@@ -1,4 +1,4 @@
-module Reactive.Plugins.Core.Action.State.ConnectionPen where
+module Reactive.State.ConnectionPen where
 
 
 import           Utils.PreludePlus

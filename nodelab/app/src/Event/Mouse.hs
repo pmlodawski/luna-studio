@@ -9,6 +9,12 @@ import           Event.Keyboard  ( KeyMods(..) )
 import           Utils.Vector
 import           Object.UITypes
 
+data MouseButton = NoButton
+                 | LeftButton
+                 | MiddleButton
+                 | RightButton
+                 deriving (Show, Eq)
+
 toMouseButton :: Int -> MouseButton
 toMouseButton   1  = LeftButton
 toMouseButton   2  = MiddleButton

@@ -11,9 +11,9 @@ import           JS.NodeGraph  (setComputedValue, displayNodeVector)
 
 import           BatchConnector.Monadic.Commands as BatchCmd
 
-import           Reactive.Plugins.Core.Action.Commands.Command (Command, performIO)
-import           Reactive.Plugins.Core.Action.State.Global     as Global
-import           Reactive.Plugins.Core.Action.State.Global     (State)
+import           Reactive.Commands.Command (Command, performIO)
+import           Reactive.State.Global     as Global
+import           Reactive.State.Global     (State)
 
 toAction :: Event Node -> Maybe (Command State ())
 toAction (Batch (Batch.NodeAdded _))              = Just requestRerun

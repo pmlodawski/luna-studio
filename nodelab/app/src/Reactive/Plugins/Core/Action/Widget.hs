@@ -9,16 +9,16 @@ import           Object.Node     (Node)
 import           Object.Widget
 import qualified Object.Widget  as Widget
 import           Event.Event
-import           Event.Mouse    (EventWidget(..))
+import           Event.Mouse    (EventWidget(..), MouseButton)
 import qualified Event.Mouse    as Mouse
 import qualified Event.Keyboard as Keyboard
 import           Object.UITypes
 import           Reactive.Plugins.Core.Action
-import qualified Reactive.Plugins.Core.Action.State.Global       as Global
-import           Reactive.Plugins.Core.Action.State.UIRegistry   (WidgetMap)
-import qualified Reactive.Plugins.Core.Action.State.UIRegistry   as UIRegistry
-import qualified Reactive.Plugins.Core.Action.State.Camera       as Camera
-import           Reactive.Plugins.Core.Action.Commands.Command   (Command, execCommand)
+import qualified Reactive.State.Global       as Global
+import           Reactive.State.UIRegistry   (WidgetMap)
+import qualified Reactive.State.UIRegistry   as UIRegistry
+import qualified Reactive.State.Camera       as Camera
+import           Reactive.Commands.Command   (Command, execCommand)
 import           ThreeJS.Widget.Button ()
 import           ThreeJS.Widget.Slider ()
 import           ThreeJS.Widget.Number ()
@@ -51,16 +51,16 @@ absPosToRel Workspace camera mat pos = Widget.sceneToLocal workspacePos mat wher
 
 handleGeneric :: Mouse.Event -> Camera.Camera -> UIRegistryState -> Maybe UIRegistryUpdate
 handleGeneric (Mouse.Event (Mouse.Wheel _) _ _ _ _) _ _ = Nothing
-handleGeneric (Mouse.Event eventType absPos button _ (Just (EventWidget widgetId mat scene))) camera registry = do
+handleGeneric (Mouse.Event eventType absPos button keymods (Just (EventWidget widgetId mat scene))) camera registry = do
     file                  <- (UIRegistry.lookup widgetId registry) :: Maybe (WidgetFile Global.State DisplayObject)
     let dynamicWidget      = file ^. widget
     let pos                = absPosToRel scene camera mat (fromIntegral <$> absPos)
     (uiUpdate, newWidget) <- return $ case eventType of
-        Mouse.Moved       -> onMouseMove    button pos file dynamicWidget
-        Mouse.Pressed     -> onMousePress   button pos file dynamicWidget
-        Mouse.Released    -> onMouseRelease button pos file dynamicWidget
-        Mouse.Clicked     -> onClick               pos file dynamicWidget
-        Mouse.DblClicked  -> onDblClick            pos file dynamicWidget
+        Mouse.Moved       -> onMouseMove            button  pos file dynamicWidget
+        Mouse.Pressed     -> onMousePress   keymods button  pos file dynamicWidget
+        Mouse.Released    -> onMouseRelease         button  pos file dynamicWidget
+        Mouse.Clicked     -> onClick                        pos file dynamicWidget
+        Mouse.DblClicked  -> onDblClick                     pos file dynamicWidget
     let newRegistry = UIRegistry.update widgetId newWidget registry
     return (uiUpdate, newRegistry)
 handleGeneric _ _ _        = Nothing
@@ -150,14 +150,14 @@ applyHandlers handlers st = foldr apply (noUIUpdate, st) handlers where
     apply h (acts, st) = (acts >> act, st') where (act, st') = execCommand h st
 
 customMouseHandlers :: Mouse.Event -> Camera.Camera -> UIRegistryState -> [Command Global.State ()]
-customMouseHandlers (Mouse.Event eventType absPos button _ (Just (EventWidget widgetId mat scene))) camera registry =
+customMouseHandlers (Mouse.Event eventType absPos button keymods (Just (EventWidget widgetId mat scene))) camera registry =
     case UIRegistry.lookupHandlers widgetId registry of
         Just handlers -> case eventType of
-                Mouse.Moved       -> fmap (\a -> a button pos widgetId) (handlers ^. mouseMove    )
-                Mouse.Pressed     -> fmap (\a -> a button pos widgetId) (handlers ^. mousePressed )
-                Mouse.Released    -> fmap (\a -> a button pos widgetId) (handlers ^. mouseReleased)
-                Mouse.Clicked     -> fmap (\a -> a        pos widgetId) (handlers ^. click        )
-                Mouse.DblClicked  -> fmap (\a -> a        pos widgetId) (handlers ^. dblClick     )
+                Mouse.Moved       -> fmap (\a -> a         button  pos widgetId) (handlers ^. mouseMove    )
+                Mouse.Pressed     -> fmap (\a -> a keymods button  pos widgetId) (handlers ^. mousePressed )
+                Mouse.Released    -> fmap (\a -> a         button  pos widgetId) (handlers ^. mouseReleased)
+                Mouse.Clicked     -> fmap (\a -> a                 pos widgetId) (handlers ^. click        )
+                Mouse.DblClicked  -> fmap (\a -> a                 pos widgetId) (handlers ^. dblClick     )
                 _                 -> []
             where pos              = absPosToRel scene camera mat (fromIntegral <$> absPos)
         Nothing -> []

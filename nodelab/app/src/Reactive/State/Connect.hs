@@ -1,4 +1,4 @@
-module Reactive.Plugins.Core.Action.State.Connect where
+module Reactive.State.Connect where
 
 
 import           Utils.PreludePlus
@@ -24,7 +24,6 @@ data State = State { _connecting  :: Maybe Connecting
 makeLenses ''State
 makeLenses ''Connecting
 makeLenses ''DragHistory
-
 
 instance Default State where
     def = State def

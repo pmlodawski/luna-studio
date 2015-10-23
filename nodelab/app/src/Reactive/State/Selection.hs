@@ -1,4 +1,4 @@
-module Reactive.Plugins.Core.Action.State.Selection where
+module Reactive.State.Selection where
 
 
 import           Utils.PreludePlus

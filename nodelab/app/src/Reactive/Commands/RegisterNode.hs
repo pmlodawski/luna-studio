@@ -1,12 +1,12 @@
-module Reactive.Plugins.Core.Action.Commands.RegisterNode where
+module Reactive.Commands.RegisterNode where
 
 import           Utils.PreludePlus
 
-import           Reactive.Plugins.Core.Action.Commands.Command     (Command, performIO)
-import           Reactive.Plugins.Core.Action.Commands.PendingNode (renderPending)
-import           Reactive.Plugins.Core.Action.State.Global         (State)
-import qualified Reactive.Plugins.Core.Action.State.Global         as Global
-import qualified Reactive.Plugins.Core.Action.State.Camera         as Camera
+import           Reactive.Commands.Command     (Command, performIO)
+import           Reactive.Commands.PendingNode (renderPending)
+import           Reactive.State.Global         (State)
+import qualified Reactive.State.Global         as Global
+import qualified Reactive.State.Camera         as Camera
 
 import           Object.Node             (Node(..))
 import qualified Object.Node             as Node
@@ -21,7 +21,7 @@ registerNode expr = do
     nodeId  <- gets Global.genNodeId
     camera  <- use $ Global.camera . Camera.camera
     nodePos <- uses Global.mousePos $ Camera.screenToWorkspace camera
-    let node = Node nodeId False nodePos expr (Node.createPorts expr) (MockHelper.getNodeType expr)
+    let node = Node nodeId nodePos expr (Node.createPorts expr) (MockHelper.getNodeType expr)
     workspace <- use Global.workspace
     performIO $ BatchCmd.addNode workspace node
     renderPending node

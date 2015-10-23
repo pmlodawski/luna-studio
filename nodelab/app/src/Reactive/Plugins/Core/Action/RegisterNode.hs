@@ -19,10 +19,10 @@ import qualified Event.Keyboard     as Keyboard
 import qualified Event.NodeSearcher as NodeSearcher
 
 import           Reactive.Plugins.Core.Action
-import qualified Reactive.Plugins.Core.Action.State.Global          as Global
-import qualified Reactive.Plugins.Core.Action.State.Graph           as Graph
-import           Reactive.Plugins.Core.Action.Commands.RegisterNode (registerNode)
-import           Reactive.Plugins.Core.Action.Commands.Command      (execCommand)
+import qualified Reactive.State.Global          as Global
+import qualified Reactive.State.Graph           as Graph
+import           Reactive.Commands.RegisterNode (registerNode)
+import           Reactive.Commands.Command      (execCommand)
 
 import qualified Utils.MockHelper   as MockHelper
 import qualified BatchConnector.Commands as BatchCmd

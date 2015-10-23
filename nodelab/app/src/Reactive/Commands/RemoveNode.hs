@@ -1,17 +1,18 @@
-module Reactive.Plugins.Core.Action.Commands.RemoveNode where
+module Reactive.Commands.RemoveNode where
 
 import           Utils.PreludePlus
 import           Event.Keyboard (KeyMods)
 import           Object.UITypes (WidgetId)
-import           Reactive.Plugins.Core.Action.State.Global             (State)
-import qualified Reactive.Plugins.Core.Action.State.Global             as Global
-import qualified Reactive.Plugins.Core.Action.State.Selection          as Selection
-import qualified Reactive.Plugins.Core.Action.State.UIRegistry         as UIRegistry
-import qualified Reactive.Plugins.Core.Action.State.Graph              as Graph
-import           Reactive.Plugins.Core.Action.Commands.Command         (Command, performIO)
-import           Reactive.Plugins.Core.Action.Commands.DisconnectNodes (localDisconnectAll)
+import           Reactive.State.Global             (State)
+import qualified Reactive.State.Global             as Global
+import qualified Reactive.State.Selection          as Selection
+import qualified Reactive.State.UIRegistry         as UIRegistry
+import qualified Reactive.State.Graph              as Graph
+import           Reactive.Commands.Command         (Command, performIO)
+import           Reactive.Commands.DisconnectNodes (localDisconnectAll)
 
-import           Reactive.Plugins.Core.Action.Commands.UIRegistry.RemoveWidget (removeWidgets)
+import           Reactive.Commands.UIRegistry.RemoveWidget (removeWidgets)
+import           Reactive.Commands.UIRegistry.Focus        (focusOnTopNode)
 
 import qualified BatchConnector.Commands as BatchCmd
 import qualified JS.NodeGraph            as UIGraph
@@ -32,16 +33,10 @@ performRemoval node = do
     Global.selection . Selection.nodeIds %= drop 1
 
     uiRegistry <- use Global.uiRegistry
-    topNodeId  <- preuse $ Global.selection . Selection.nodeIds . ix 0
     workspace  <- use Global.workspace
 
-    let  topWidgetId = topNodeId >>= nodeIdToWidgetId uiRegistry
     let nodeWidgetId = maybeToList $ nodeIdToWidgetId uiRegistry $ node ^. nodeId
-
     zoom Global.uiRegistry $ removeWidgets nodeWidgetId
-
-    Global.uiRegistry . UIRegistry.focusedWidget .= topWidgetId
-
+    focusOnTopNode
     performIO $ do
         BatchCmd.removeNodeById workspace (node ^. nodeId)
-        mapM_ UIGraph.setNodeFocused topNodeId

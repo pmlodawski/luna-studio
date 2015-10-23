@@ -31,14 +31,14 @@ import qualified Event.ConnectionPen as ConnectionPen
 import           Event.WithObjects
 
 import           Reactive.Plugins.Core.Action
-import           Reactive.Plugins.Core.Action.Commands.Graph
-import           Reactive.Plugins.Core.Action.State.Graph
-import qualified Reactive.Plugins.Core.Action.State.Global             as Global
-import qualified Reactive.Plugins.Core.Action.State.UIRegistry         as UIRegistry
-import           Reactive.Plugins.Core.Action.Commands.Command         (execCommand)
-import           Reactive.Plugins.Core.Action.Commands.DisconnectNodes (disconnectAll)
+import           Reactive.Commands.Graph
+import           Reactive.State.Graph
+import qualified Reactive.State.Global             as Global
+import qualified Reactive.State.UIRegistry         as UIRegistry
+import           Reactive.Commands.Command         (execCommand)
+import           Reactive.Commands.DisconnectNodes (disconnectAll)
 
-import qualified Reactive.Plugins.Core.Action.State.ConnectionPen as ConnectionPen
+import qualified Reactive.State.ConnectionPen as ConnectionPen
 
 import qualified BatchConnector.Commands as BatchCmd
 

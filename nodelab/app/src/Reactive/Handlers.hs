@@ -71,7 +71,7 @@ readMousePos = do
     y <- MouseEvent.getClientY e
     return $ Vector2 x y
 
-uiWhichButton :: (UIEvent.IsUIEvent e) => EventM t e MouseButton
+uiWhichButton :: (UIEvent.IsUIEvent e) => EventM t e Mouse.MouseButton
 uiWhichButton = uiWhich >>= return . Mouse.toMouseButton
 
 eventObject :: IO (Maybe Element)
@@ -173,7 +173,7 @@ connectionPenHandler :: AddHandler (Event Dynamic)
 connectionPenHandler  = AddHandler $ \h -> do
     ConnectionPen.registerCallback $ \widgets -> do
         arr       <- return $ JSArray.toList (ConnectionPen.toJSArray widgets)
-        widgetIds <- mapM fromJSRefUnchecked arr :: IO [WidgetId]
+        widgetIds <- mapM fromJSValUnchecked arr :: IO [WidgetId]
         liftIO $ h $ ConnectionPen $ ConnectionPen.Segment widgetIds
 
 textEditorHandler :: AddHandler (Event Dynamic)

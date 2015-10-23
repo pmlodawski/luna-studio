@@ -1,7 +1,7 @@
 module Object.Widget.Helpers where
 
 import           Utils.PreludePlus
-import qualified Reactive.Plugins.Core.Action.State.UIRegistry as UIRegistry
+import qualified Reactive.State.UIRegistry as UIRegistry
 
 import           Object.UITypes           (WidgetId)
 import           Object.Object            (ConnectionId, NodeId)

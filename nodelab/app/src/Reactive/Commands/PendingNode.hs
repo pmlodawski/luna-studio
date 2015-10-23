@@ -1,4 +1,4 @@
-module Reactive.Plugins.Core.Action.Commands.PendingNode where
+module Reactive.Commands.PendingNode where
 
 import           Utils.PreludePlus
 import           Object.Widget.Node (PendingNode(..))
@@ -8,12 +8,12 @@ import           Object.Widget      (WidgetFile, objectId, widget)
 import           JS.Node            (createPendingNode)
 import           Utils.Vector       (Vector2, lengthSquared)
 
-import           Reactive.Plugins.Core.Action.State.Global     (State)
-import qualified Reactive.Plugins.Core.Action.State.Global     as Global
-import qualified Reactive.Plugins.Core.Action.State.UIRegistry as UIRegistry
-import           Reactive.Plugins.Core.Action.Commands.Command (Command, performIO)
+import           Reactive.State.Global     (State)
+import qualified Reactive.State.Global     as Global
+import qualified Reactive.State.UIRegistry as UIRegistry
+import           Reactive.Commands.Command (Command, performIO)
 
-import           Reactive.Plugins.Core.Action.Commands.UIRegistry.RemoveWidget (removeWidget)
+import           Reactive.Commands.UIRegistry.RemoveWidget (removeWidget)
 
 renderPending :: Node -> Command State ()
 renderPending node = do

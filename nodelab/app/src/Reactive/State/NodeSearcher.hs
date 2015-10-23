@@ -1,4 +1,4 @@
-module Reactive.Plugins.Core.Action.State.NodeSearcher where
+module Reactive.State.NodeSearcher where
 
 
 import           Utils.PreludePlus

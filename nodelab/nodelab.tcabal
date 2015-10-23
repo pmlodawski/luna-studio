@@ -17,6 +17,9 @@ executable nodelab
   main-is:             Main.hs
   other-modules:       `findmodules('app/src', '.*\.hs$', exclude='(.*Main\.hs)')`
   -- other-extensions:
+  --
+  -- ACHTUNG! Zmieniasz tu - zmien w interactive
+  --
   default-extensions:   DoAndIfThenElse
                       , NoImplicitPrelude
                       , TemplateHaskell
@@ -35,6 +38,9 @@ executable nodelab
                       , DeriveDataTypeable
                       , ScopedTypeVariables
 
+  --
+  -- ACHTUNG! Zmieniasz tu - zmien w interactive
+  --
   build-depends:       base >= 4.8 && < 4.9
                      , bytestring
                      , base64-bytestring

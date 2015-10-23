@@ -112,7 +112,7 @@ setComputedValue nodeId value = do
 displayNodeVector :: NodeId -> [Float] -> IO ()
 displayNodeVector nodeId vals = do
     nodeRef <- getNode nodeId
-    valsRef <- mapM toJSRef_pure vals
+    valsRef <- mapM toJSVal_pure vals
     displayVector nodeRef $ JSArray.fromList valsRef
 
 createNodeAt :: Int -> Vector2 Double -> Text -> Int -> IO ()

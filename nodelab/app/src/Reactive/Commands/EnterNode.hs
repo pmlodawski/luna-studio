@@ -1,9 +1,9 @@
-module Reactive.Plugins.Core.Action.Commands.EnterNode where
+module Reactive.Commands.EnterNode where
 
 import Utils.PreludePlus
-import Reactive.Plugins.Core.Action.State.Global           (State)
-import Reactive.Plugins.Core.Action.Commands.UnrenderGraph (unrender)
-import Reactive.Plugins.Core.Action.Commands.Command       (Command, performIO)
+import Reactive.State.Global           (State)
+import Reactive.Commands.UnrenderGraph (unrender)
+import Reactive.Commands.Command       (Command, performIO)
 
 import Object.Node (Node, isDef)
 import Object.UITypes (WidgetId)

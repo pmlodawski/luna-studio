@@ -19,14 +19,14 @@ import           Event.Event
 import           Event.WithObjects
 
 import           Reactive.Plugins.Core.Action
-import           Reactive.Plugins.Core.Action.Commands.Graph
-import           Reactive.Plugins.Core.Action.Commands.Command (execCommand)
-import           Reactive.Plugins.Core.Action.State.Drag
-import qualified Reactive.Plugins.Core.Action.State.Graph      as Graph
-import qualified Reactive.Plugins.Core.Action.State.Selection  as Selection
-import qualified Reactive.Plugins.Core.Action.State.Camera     as Camera
-import qualified Reactive.Plugins.Core.Action.State.Global     as Global
-import           Reactive.Plugins.Core.Action.State.UnderCursor
+import           Reactive.Commands.Graph
+import           Reactive.Commands.Command (execCommand)
+import           Reactive.State.Drag
+import qualified Reactive.State.Graph      as Graph
+import qualified Reactive.State.Selection  as Selection
+import qualified Reactive.State.Camera     as Camera
+import qualified Reactive.State.Global     as Global
+import           Reactive.State.UnderCursor
 
 import qualified Data.IntMap.Lazy        as IntMap
 import qualified BatchConnector.Commands as BatchCmd
@@ -69,8 +69,8 @@ toAction (Mouse (Mouse.Event tpe pos button keyMods _)) state underCursor = case
           isDragging    = isJust $ state ^. Global.drag . history
 toAction _ _ _ = Nothing
 
-moveNodes :: Double -> Vector2 Int -> NodesMap -> NodesMap
-moveNodes factor delta = fmap $ \node -> if node ^. selected then node & nodePos +~ deltaWs else node where
+moveNodes :: Double -> Vector2 Int -> [NodeId] -> NodesMap -> NodesMap
+moveNodes factor delta selection = fmap $ \node -> if elem (node ^. nodeId) selection then node & nodePos +~ deltaWs else node where
     deltaWs = deltaToWs factor delta
 
 deltaToWs :: Double -> Vector2 Int -> Vector2 Double
@@ -85,6 +85,7 @@ instance ActionStateUpdater Action where
         oldGraph                         = oldState ^. Global.graph
         oldNodesMap                      = Graph.getNodesMap oldGraph
         newGraph                         = Graph.updateNodes newNodesMap oldGraph
+        selection                        = oldState ^. Global.selection . Selection.nodeIds
         camFactor                        = oldState ^. Global.camera . Camera.camera . Camera.factor
         emptySelection                   = IntMap.null oldNodesMap
         newState                         = oldState & Global.iteration       +~ 1
@@ -103,10 +104,10 @@ instance ActionStateUpdater Action where
         newNodesMap                      = case newActionCandidate of
             DragAction tpe point        -> case tpe of
                 Moving                  -> case oldDrag of
-                    Just oldDragState   -> moveNodes camFactor (delta oldDragState) oldNodesMap
+                    Just oldDragState   -> moveNodes camFactor (delta oldDragState) selection oldNodesMap
                     Nothing             -> oldNodesMap
                 StopDrag                -> case oldDrag of
-                    Just oldDragState   -> moveNodes camFactor (delta oldDragState) oldNodesMap
+                    Just oldDragState   -> moveNodes camFactor (delta oldDragState) selection oldNodesMap
                     Nothing             -> oldNodesMap
                 _                       -> oldNodesMap
                 where delta oldDragState = point - (oldDragState ^. dragCurrentPos)

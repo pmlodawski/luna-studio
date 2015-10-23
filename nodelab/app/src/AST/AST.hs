@@ -6,7 +6,7 @@ module AST.AST (
 ) where
 
 
-import           Flowbox.Prelude hiding (Cons, cons)
+import           Utils.PreludePlus
 
 import           Control.Monad.State
 

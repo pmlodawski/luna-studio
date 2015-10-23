@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Reactive.Plugins.Core.Action.State.Sandbox where
+module Reactive.State.Sandbox where
 
 import           Utils.PreludePlus
 import           Utils.Vector

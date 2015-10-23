@@ -9,6 +9,7 @@ import           Data.Fixed
 
 import           Object.Widget
 import           Utils.CtxDynamic
+import           Event.Mouse      (MouseButton(..))
 
 import qualified JS.Node as UI
 

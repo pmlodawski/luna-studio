@@ -1,4 +1,4 @@
-module Reactive.Plugins.Core.Action.Commands.AutoLayout where
+module Reactive.Commands.AutoLayout where
 
 import           Utils.PreludePlus
 import           Object.Object          (NodeId)
@@ -9,11 +9,11 @@ import           Utils.Vector           (Vector2)
 import           Utils.Graph.AutoLayout (autoLayout)
 import           Control.Monad.State    hiding (State)
 
-import           Reactive.Plugins.Core.Action.Commands.Command (Command, performIO)
-import           Reactive.Plugins.Core.Action.Commands.Graph   (moveNodesUI)
-import           Reactive.Plugins.Core.Action.State.Global     (State)
-import qualified Reactive.Plugins.Core.Action.State.Global     as Global
-import qualified Reactive.Plugins.Core.Action.State.Graph      as Graph
+import           Reactive.Commands.Command (Command, performIO)
+import           Reactive.Commands.Graph   (moveNodesUI)
+import           Reactive.State.Global     (State)
+import qualified Reactive.State.Global     as Global
+import qualified Reactive.State.Graph      as Graph
 import qualified BatchConnector.Commands                       as BatchCmd
 
 layoutGraph :: Command State ()

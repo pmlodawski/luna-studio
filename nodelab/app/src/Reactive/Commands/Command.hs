@@ -1,6 +1,6 @@
 {-# LANGUAGE TypeFamilies #-}
 
-module Reactive.Plugins.Core.Action.Commands.Command where
+module Reactive.Commands.Command where
 
 import Utils.PreludePlus
 import Control.Monad.State

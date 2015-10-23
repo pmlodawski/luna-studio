@@ -10,11 +10,11 @@ import           JS.Bindings        (displayRejectedMessage, writeToTerminal)
 
 import qualified BatchConnector.Monadic.Commands as BatchCmd
 
-import           Reactive.Plugins.Core.Action.State.Global          (State)
-import qualified Reactive.Plugins.Core.Action.State.Global          as Global
-import qualified Reactive.Plugins.Core.Action.State.Graph           as Graph
-import           Reactive.Plugins.Core.Action.Commands.Command      (Command, performIO)
-import           Reactive.Plugins.Core.Action.Commands.RefreshGraph (refreshGraph)
+import           Reactive.State.Global          (State)
+import qualified Reactive.State.Global          as Global
+import qualified Reactive.State.Graph           as Graph
+import           Reactive.Commands.Command      (Command, performIO)
+import           Reactive.Commands.RefreshGraph (refreshGraph)
 
 toAction :: Event Node -> Maybe (Command State ())
 toAction (Batch (Batch.NodeAdded node))          = Just $ insertSerializationMode node
