@@ -37,13 +37,6 @@ import           Object.Widget.Toggle                            (Toggle(..))
 import           Object.Widget.Number                            (Number(..))
 import           Object.Widget.Chart                             (Chart(..))
 
-import           ThreeJS.Types
-import qualified ThreeJS.Registry                                as JSRegistry
-import qualified ThreeJS.Widget.Button                           as UIButton
-import qualified ThreeJS.Widget.Slider                           as UISlider
-import qualified ThreeJS.Widget.Toggle                           as UIToggle
-import qualified ThreeJS.Widget.Number                           as UINumber
-import qualified ThreeJS.Scene                                   as Scene
 import qualified Dimple.Render                                   as UIChart
 import qualified Control.Monad.State                             as MState
 

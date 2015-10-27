@@ -19,11 +19,6 @@ import           Reactive.State.UIRegistry   (WidgetMap)
 import qualified Reactive.State.UIRegistry   as UIRegistry
 import qualified Reactive.State.Camera       as Camera
 import           Reactive.Commands.Command   (Command, execCommand)
-import           ThreeJS.Widget.Button ()
-import           ThreeJS.Widget.Slider ()
-import           ThreeJS.Widget.Number ()
-import           ThreeJS.Widget.Node   ()
-import           ThreeJS.Widget.Toggle ()
 import           Object.Widget.Port   ()
 
 data Action = MouseAction    { _event    :: Mouse.Event    }

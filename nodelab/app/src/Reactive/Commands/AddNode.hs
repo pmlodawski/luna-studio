@@ -34,10 +34,7 @@ import           Reactive.Commands.Selection   (handleSelection)
 import qualified BatchConnector.Commands as BatchCmd
 import qualified JS.NodeGraph          as UI
 
-import qualified ThreeJS.Registry      as JSRegistry
-import qualified ThreeJS.Widget.Node   as UINode
-import qualified ThreeJS.Widget.Slider as UISlider
--- import           ThreeJS.Types         (add)
+import qualified UI.Widget.Slider as UISlider
 
 addNode :: Node -> Command State ()
 addNode node = do
@@ -102,7 +99,9 @@ addSliderToNode widgetId nodeId slider = do
     return $ sliderWidget ^. objectId
 
 addWidgetToNode :: IsSlider a => WidgetId -> WidgetFile b (Slider a) -> IO ()
-addWidgetToNode nodeId newWidget = return ()
+addWidgetToNode nodeId newWidget = do
+    slider <- UISlider.createSlider (newWidget ^. objectId) (newWidget ^. widget)
+    UISlider.addSlider nodeId slider
     -- node   <- JSRegistry.lookup nodeId :: IO UINode.Node
     -- widget <- JSRegistry.build (newWidget ^. objectId) (newWidget ^. widget)
     -- JSRegistry.register (newWidget ^. objectId) widget
