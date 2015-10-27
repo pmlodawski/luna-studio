@@ -169,6 +169,9 @@ updateNodeMessage workspace node = WebMessage topic $ messagePut body where
 updateNodes :: Workspace -> [Node] -> IO ()
 updateNodes workspace nodes = sendMany $ (updateNodeMessage workspace) <$> nodes
 
+updateNode :: Node -> Workspace -> IO ()
+updateNode node workspace = sendMessage $ updateNodeMessage workspace node
+
 portRefToList :: PortId -> [Int]
 portRefToList AllPorts     = []
 portRefToList (PortNum id) = [id]
@@ -255,8 +258,8 @@ removeNodeById workspace nodeId = sendMessage msg where
                               (workspace ^. project . Project.id)
                               uselessLegacyArgument
 
-setCode :: Workspace -> Text -> IO ()
-setCode workspace code = sendMessage msg where
+setCode :: Text -> Workspace -> IO ()
+setCode code workspace = sendMessage msg where
     msg  = WebMessage "project.library.ast.code.set.request" $ messagePut body
     body = SetCode.Request (encode code)
                            (encode $ workspace ^. breadcrumbs)

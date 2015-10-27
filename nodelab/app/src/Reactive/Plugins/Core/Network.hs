@@ -17,7 +17,6 @@ import qualified Event.Processors.Batch                             as BatchEven
 import           Reactive.Plugins.Core.Action
 import qualified Reactive.Plugins.Core.Action.General               as General
 import qualified Reactive.Plugins.Core.Action.Camera                as Camera
-import qualified Reactive.Plugins.Core.Action.RegisterNode          as RegisterNode
 import qualified Reactive.Plugins.Core.Action.MultiSelection        as MultiSelection
 import qualified Reactive.Plugins.Core.Action.Drag                  as Drag
 import qualified Reactive.Plugins.Core.Action.Connect               as Connect
@@ -89,7 +88,6 @@ makeNetworkDescription conn logging workspace = do
         widgetActionB                 = fmap ActionST $              Widget.toAction <$> anyNodeB
         nodeGeneralActionB            = fmap ActionST $             General.toAction <$> anyNodeB
         cameraActionB                 = fmap ActionST $              Camera.toAction <$> anyNodeB <*> globalStateB
-        nodeRegisterActionB           = fmap ActionST $        RegisterNode.toAction <$> anyNodeB <*> globalStateB
         nodeAddActionB                = fmap ActionST $             AddNode.toAction <$> anyNodeB <*> globalStateB
         nodeMultiSelectionActionB     = fmap ActionST $      MultiSelection.toAction <$> anyNodeB
         nodeDragActionB               = fmap ActionST $                Drag.toAction <$> anyNodeB <*> globalStateB <*> underCursorB
@@ -104,7 +102,6 @@ makeNetworkDescription conn logging workspace = do
 
         allActionsPackB               = [ nodeGeneralActionB
                                         , widgetActionB
-                                        , nodeRegisterActionB
                                         , nodeAddActionB
                                         , nodeMultiSelectionActionB
                                         , nodeDragActionB

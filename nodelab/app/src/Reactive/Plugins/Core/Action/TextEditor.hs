@@ -1,41 +1,18 @@
 module Reactive.Plugins.Core.Action.TextEditor where
 
-
 import           Utils.PreludePlus
-import           Utils.Vector
-import           Utils.Angle
 
-
-import           Event.Event
+import           Event.Event      (Event(..))
 import qualified Event.Batch      as Batch
 import qualified Event.TextEditor as TextEditor
-import           Object.Object
-import           Object.Node
-import           Object.UITypes
+import           Object.Node      (Node)
+import qualified JS.TextEditor    as UI
 
-import qualified BatchConnector.Commands as BatchCmd
-import qualified JS.TextEditor   as UI
+import qualified Reactive.State.Global           as Global
+import           Reactive.Commands.Command       (Command, performIO)
+import qualified BatchConnector.Monadic.Commands as BatchCmd
 
-import           Reactive.Plugins.Core.Action
-import           Reactive.State.Graph
-import qualified Reactive.State.Global        as Global
-
-data Action = CodeUpdate   Text
-            | CodeModified Text
-            deriving (Show, Eq)
-
-instance PrettyPrinter Action where
-    display v = "gCE(" <> show v <> ")"
-
-toAction :: Event Node -> Maybe Action
-toAction (Batch      (Batch.CodeUpdate        code)) = Just $ CodeUpdate code
-toAction (TextEditor (TextEditor.CodeModified code)) = Just $ CodeModified code
+toAction :: Event Node -> Maybe (Command Global.State ())
+toAction (Batch      (Batch.CodeUpdate        code)) = Just $ performIO $ UI.setText code
+toAction (TextEditor (TextEditor.CodeModified code)) = Just $ zoom Global.workspace $ BatchCmd.setCode code
 toAction _ = Nothing
-
-instance ActionStateUpdater Action where
-    execSt action state = ActionUI action state
-instance ActionUIUpdater Action where
-    updateUI (WithState (CodeUpdate   code) _)     = UI.setText code
-    updateUI (WithState (CodeModified code) state) = do putStrLn $ "Updating code to " <> (show code)
-                                                        BatchCmd.setCode (state ^. Global.workspace) code
-

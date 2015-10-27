@@ -85,6 +85,9 @@ genConnectionId state = genId $ state ^. connectionsMap
 getNode :: State -> NodeId -> Node
 getNode state nodeId = IntMap.findWithDefault (error $ "Node " <> show nodeId <> " not found") nodeId $ state ^. nodesMap
 
+getNodeById :: State -> NodeId -> Maybe Node
+getNodeById state nodeId = IntMap.lookup nodeId $ state ^. nodesMap
+
 nodes :: Getter State NodeCollection
 nodes = to getNodes
 

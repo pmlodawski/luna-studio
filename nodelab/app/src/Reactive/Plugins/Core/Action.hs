@@ -108,8 +108,3 @@ logAllUI ((ActionUI act st):as) = let actString = display act in case actString 
 
 getState :: ActionUI -> State
 getState (ActionUI _ st) = st
-
-ifNoneFocused :: State -> Maybe a -> Maybe a
-ifNoneFocused st a = case st ^. uiRegistry . UIRegistry.focusedWidget of
-    Just _  -> Nothing
-    Nothing -> a
