@@ -1,12 +1,9 @@
 #!/bin/bash
 
-SNAPSHOT_DB=$(stack path | awk -F ": " '/snapshot-pkg-db:/ {print $2}')
-LOCAL_DB=$(stack path | awk -F ": " '/local-pkg-db:/ {print $2}')
+export PATH=`stack path --bin-path`
 
-
-
-ghcjs  -package-db $SNAPSHOT_DB \
-       -package-db $LOCAL_DB \
+ghcjs  -package-db $(stack path --snapshot-pkg-db) \
+       -package-db $(stack path --local-pkg-db)    \
        -iapp/src/ \
        -DGHCJS_BROWSER \
        --interactive \
@@ -49,6 +46,6 @@ ghcjs  -package-db $SNAPSHOT_DB \
        -XGeneralizedNewtypeDeriving \
        -XDeriveDataTypeable \
        -XScopedTypeVariables \
-       -odir ../../dist/ghcjs \
+       -odir  ../../dist/ghcjs \
        -hidir ../../dist/ghcjs \
        Main
