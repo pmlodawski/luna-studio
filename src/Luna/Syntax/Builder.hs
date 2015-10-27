@@ -28,17 +28,17 @@ import Data.Cata
 type GraphStarBuilderT s g m = StarBuilderT (Maybe s) (GraphBuilderT g m)
 type GraphStarBuilder  s g   = GraphStarBuilderT s g Identity
 
-runGraph :: GraphStarBuilder s g a -> BldrState g -> (a, g)
+runGraph :: GraphStarBuilder s g a -> g -> (a, g)
 runGraph = runIdentity .: runGraphT
 
-runGraphT :: Monad m => GraphStarBuilderT s g m a -> BldrState g -> m (a, g)
+runGraphT :: Monad m => GraphStarBuilderT s g m a -> g -> m (a, g)
 runGraphT g gs = flip runBuilderT gs $ flip StarBuilder.evalT Nothing $ g
 
 
-buildGraph :: Maybe s -> BldrState g -> GraphStarBuilder s g a -> (a, g)
+buildGraph :: Maybe s -> g -> GraphStarBuilder s g a -> (a, g)
 buildGraph = runIdentity .:. buildGraphT
 
-buildGraphT :: Monad m => Maybe s -> BldrState g -> GraphStarBuilderT s g m a -> m (a, g)
+buildGraphT :: Monad m => Maybe s -> g -> GraphStarBuilderT s g m a -> m (a, g)
 buildGraphT s gs g = flip runBuilderT gs $ flip StarBuilder.evalT s $ g
 
 

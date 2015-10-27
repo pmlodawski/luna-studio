@@ -10,7 +10,7 @@
 
 module Luna.Syntax.AST.Term where
 
-import Flowbox.Prelude hiding (Cons, cons)
+import Flowbox.Prelude hiding (Cons, cons, Repr, repr)
 import Data.Variants   hiding (Cons)
 
 import Luna.Syntax.AST.Lit
@@ -22,6 +22,7 @@ import Data.Container.Hetero
 
 import Data.Typeable
 import Luna.Repr.Styles (HeaderOnly)
+import Data.Reprx
 
 -- === Terms ===
 

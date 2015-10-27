@@ -64,17 +64,18 @@ instance (t ~ Mu (Ref Int a), GenEdges (Draft t)) => GenEdges (Typed Draft t) wh
     genEdges (Typed t a) = [(ptrIdx . fromRef . fromMu $ t, [GV.color GVC.Red])] <> genEdges a
 
 instance t ~ Mu (Ref Int a) => GenEdges (Draft t) where
-    genEdges a = ($ inEdges) $ case checkName a of
-        Nothing -> id
-        Just  t -> fmap addColor
-            where tidx = getIdx t
-                  addColor (idx, attrs) = if idx == tidx then (idx, GV.color GVC.Blue : attrs)
-                                                         else (idx, attrs)
-        where genLabel  = GV.Label . StrLabel . fromString . show
-              ins       = inputs a
-              getIdx    = ptrIdx . view content
-              inIdxs    = getIdx <$> ins
-              inEdges   = zipWith (,) inIdxs $ fmap ((:[]) . genLabel) [0..]
+    genEdges a = undefined 
+      --($ inEdges) $ case checkName a of
+      --  Nothing -> id
+      --  Just  t -> fmap addColor
+      --      where tidx = getIdx t
+      --            addColor (idx, attrs) = if idx == tidx then (idx, GV.color GVC.Blue : attrs)
+      --                                                   else (idx, attrs)
+      --  where genLabel  = GV.Label . StrLabel . fromString . show
+      --        ins       = inputs a
+      --        getIdx    = ptrIdx . view content
+      --        inIdxs    = getIdx <$> ins
+      --        inEdges   = zipWith (,) inIdxs $ fmap ((:[]) . genLabel) [0..]
 
 
 

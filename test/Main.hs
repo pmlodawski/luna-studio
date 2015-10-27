@@ -18,7 +18,7 @@
 
 module Main where
 
-import Prologue hiding (simple, empty, Indexable, Simple, cons, lookup, index, children, Cons, Ixed)
+import Prologue hiding (simple, empty, Indexable, Simple, cons, lookup, index, children, Cons, Ixed, Repr, repr)
 --import Data.Repr
 
 import qualified Data.Map            as Map
@@ -83,7 +83,14 @@ import Data.Vector.Dynamic as VD
 
 import Data.Container.Parametrized
 import Data.Container.Auto
+import Data.Container.Weak
 import qualified Data.Container.Mods as Mods
+
+import Data.Container.Monad as Container
+
+import Data.STRef
+import Control.Monad.ST
+import Data.Reprx
 
 -- === HomoBuilder ===
 
@@ -98,15 +105,20 @@ instance (MuBuilder a m t, t ~ t') => MuBuilder a (HomoG t m) t' where
 
 -------------------------------------------------------------
 
-nytst2 :: (Arc (Labeled Int (Typed Draft)), HomoGraph ArcPtr (Labeled Int (Typed Draft)))
-nytst2 = flip runGraph def $ do
-    s    <- genTopStar
+nytst2 :: (MonadBase (ST s) m, MonadFix m, MonadIO m) => m (Arc (Labeled Int (Typed Draft)), HomoGraph ArcPtr (Labeled Int (Typed Draft)))
+--nytst2 :: IO (_, HomoGraph ArcPtr (WeakMu (Labeled Int (Typed Draft))))
+nytst2 = do
+    ref <- liftBase $ newSTRef 1
+    flip runGraphT (VectorGraph (def & finalizer .~ Just print)) $ do
+        --s    <- genTopStar
 
-    i1   <- int 1
-    i2   <- blank
-    plus <- i1 @. "+"
-    sum  <- plus @$ [arg i1, arg i2]
-    return s
+        --i1   <- (int 1 :: _)
+        i1   <- int 1
+        --i2   <- blank
+        --plus <- i1 @. "+"
+        --sum  <- plus @$ [arg i1, arg i2]
+        --return s
+        return i1
 
 --nytst3 :: Mu (Typed Draft)
 --nytst3 = flip StarBuilder.eval Nothing $ runIdentityT $ do
@@ -123,12 +135,11 @@ nytst2 = flip runGraph def $ do
 --    y  <- x @. "y"
 --    return v1
 
-viewGraph = view graph <$> GraphBuilder.get
-mapMGraph f = do
-    g   <- viewGraph
-    mapM f g
+--viewGraph = view graph <$> GraphBuilder.get
+--mapMGraph f = do
+--    g   <- viewGraph
+--    mapM f g
 
-(s, gr) = nytst2
 
 unifyLit = \case
     _ -> do
@@ -319,20 +330,64 @@ instance Repr s (VectorGraph a) where repr _ = fromString "mu"
 
 
 
-c = singleton 0 :: Auto Vector Int
+--c = singleton (0 :: Int) :: Auto (Weak Vector) Int
 
 
-xxx :: Ixed (Addable el) t => el -> t -> (IndexOf' (DataStoreOf (ContainerOf t)),t)
-xxx v = ixed add v
+--xxx :: Ixed (Addable el) t => el -> t -> (IndexOf' (DataStoreOf (ContainerOf t)),t)
+--xxx v = ixed add v
 
 --xxx :: Unchecked (Ixed Expandable) t => t -> (_,t)
 --xxx v = unchecked ixed expand v
 
+data Dt = Dt Int deriving (Show)
+
+mkAs = fromList (fmap Dt [1..1000]) :: Weak Vector Dt
+
+--c = mempty :: Auto (Weak Vector) Int
+
+c = (mempty :: Weak Vector Int) & finalizer .~ Just print
+c' = (mempty :: Weak (Auto Vector) Int) & finalizer .~ Just print
+
+d = mempty :: Vector Int
+
+--c = Weak (Just $ const $ print ("uh" :: String)) (mempty :: Vector Int) :: Weak Vector Int
+
+xxf :: Ixed (AddableM el m) t => t -> el -> m (IndexOf' (DataStoreOf (ContainerOf t)), t)
+xxf v c = ixed addM c v
+
 main = do
-    print $ fmap (+1) $ add 6 $ add 6 $ add 6 $ add 5 c
+    --print c
+    --print $ (runIdentity $ sizeM d)
+    --print =<< ixed appendM (2 :: Int) =<< appendM (2 :: Int) =<< appendM (2 :: Int) =<< appendM (2 :: Int) =<< appendM (2 :: Int) c'
 
     print "end"
 
-
 --xxx :: _ => _
 --xxx v = unchecked try index (10 :: Int) v
+
+
+checkNothing a = if (a == Nothing) then 1 else 0
+
+
+
+
+data MR = MR
+data MI = MI
+data MX = MX
+
+data Bundle a b = Bundle a b
+
+b = flip Bundle undefined
+
+class Foom mods where
+    foom :: mods -> mods
+
+
+t1 = foom (b MR, (b MI, (b MX, ())))
+
+
+class SetMod mod a query where setMod :: Bundle mod a -> query -> query
+instance {-# OVERLAPPABLE #-} (a ~ a')        => SetMod mod a (Bundle mod  a', qs) where setMod b (_, qs) = (b,qs)
+instance {-# OVERLAPPABLE #-} SetMod mod a qs => SetMod mod a (Bundle mod' a', qs) where setMod b (q, qs) = (q, setMod b qs)
+
+--class Set
