@@ -4,14 +4,10 @@ module UI.Widget.Slider where
 
 import           Utils.PreludePlus
 
-
 import           GHCJS.Foreign
-import           GHCJS.Types      ( JSRef, JSString )
-import           GHCJS.DOM.EventTargetClosures (EventName, unsafeEventName)
+import           GHCJS.Types      ( JSVal, JSString )
 import           Data.JSString.Text ( lazyTextFromJSString, lazyTextToJSString )
 import qualified Data.JSString as JSString
-
-import qualified JavaScript.Object as JSObject
 
 import qualified Data.Text.Lazy as Text
 import           Data.Text.Lazy (Text)
@@ -24,12 +20,16 @@ import           GHCJS.Prim
 import           Utils.CtxDynamic
 import           JS.Bindings (setCursor)
 import           Object.UITypes
+import           GHCJS.Marshal.Pure(PToJSVal(..), PFromJSVal(..))
 
-newtype Slider = Slider { unSlider :: JSVal }
+import           UI.Types (UIWidget(..))
+import qualified UI.Registry as UIR
 
-foreign import javascript unsafe "new Slider($1, $2, $3)"   createSlider'     :: Int    -> Double      -> Double  -> IO Slider
-foreign import javascript unsafe "common.registry[$1] = $2" registerSlider'   :: Int    -> Slider           -> IO ()
-foreign import javascript unsafe "common.registry[$1]"      getSlider         :: Int                        -> IO Slider
+newtype Slider = Slider { unSlider :: JSVal } deriving (PToJSVal, PFromJSVal)
+
+instance UIWidget Slider
+
+foreign import javascript unsafe "new Slider($1, $2, $3)"   createSlider'     :: Int    -> Double -> Double -> IO Slider
 foreign import javascript unsafe "$1.mesh.position.x = $2; $1.mesh.position.y = $3"
                                                             setPosition'      :: Slider -> Double -> Double -> IO ()
 foreign import javascript unsafe "$1.setValue($2)"          setValue'         :: Slider -> Double           -> IO ()
@@ -37,34 +37,29 @@ foreign import javascript unsafe "$1.setLabel($2)"          setLabel'         ::
 foreign import javascript unsafe "$1.setValueLabel($2)"     setValueLabel'    :: Slider -> JSString         -> IO ()
 foreign import javascript unsafe "$1.setFocus($2)"          setFocus'         :: Slider -> Bool             -> IO ()
 
-foreign import javascript unsafe "common.registry[$1].expandedNode.add($2.mesh)" addSlider :: WidgetId -> Slider -> IO ()
-
 createSlider :: (Model.IsSlider a) => WidgetId -> Model.Slider a -> IO Slider
 createSlider oid model = do
-    slider          <- createSlider' oid (model ^. Model.size . x) (model ^. Model.size . y)
-    setLabel        slider model
-    setValueLabel   slider model
-    setValue        slider model
-    setPosition     slider model
-    registerSlider' oid slider
+    slider      <- createSlider' oid (model ^. Model.size . x) (model ^. Model.size . y)
+    setLabel       model slider
+    setValueLabel  model slider
+    setValue       model slider
+    setPosition    model slider
     return slider
 
-setPosition :: (Model.IsSlider a) => Slider -> Model.Slider a -> IO ()
-setPosition slider model = setPosition' slider (model ^. Model.pos . x) (model ^. Model.pos . y)
+setPosition :: (Model.IsSlider a) => Model.Slider a -> Slider -> IO ()
+setPosition model slider = setPosition' slider (model ^. Model.pos . x) (model ^. Model.pos . y)
 
-setValueLabel :: (Model.IsSlider a) => Slider -> Model.Slider a -> IO ()
-setValueLabel slider model = do
-    let text = Model.displayValue model
-    setValueLabel' slider (JSString.pack text)
+setValueLabel :: (Model.IsSlider a) => Model.Slider a -> Slider -> IO ()
+setValueLabel model slider = setValueLabel' slider $ JSString.pack $ Model.displayValue model
 
-setLabel :: Slider -> Model.Slider a -> IO ()
-setLabel slider model = setLabel' slider $ lazyTextToJSString $ model ^. Model.label
+setLabel :: Model.Slider a -> Slider -> IO ()
+setLabel model slider = setLabel' slider $ lazyTextToJSString $ model ^. Model.label
 
-setFocus :: Slider -> Bool -> IO ()
-setFocus = setFocus'
+setFocus :: Bool -> Slider -> IO ()
+setFocus = flip setFocus'
 
-setValue :: Slider -> Model.Slider a -> IO ()
-setValue slider model = setValue' slider $ model ^. Model.normValue
+setValue :: Model.Slider a -> Slider -> IO ()
+setValue model slider = setValue' slider $ model ^. Model.normValue
 
 keyModMult :: KeyMods -> Double
 keyModMult mods = case mods of
@@ -92,33 +87,27 @@ instance (Model.IsSlider a) => Draggable (Model.Slider a) where
                     newModel     = Model.setNormValue newNormValue model
                     action       = do
                         setCursor "-webkit-grabbing"
-                        slider <- getSlider (file ^. objectId)
-                        setValue slider newModel
+                        slider  <- UIR.lookup (file ^. objectId)
+                        setValue newModel slider
     onDragEnd  state file model  = ifEnabled model (action, newModel) where
         action = do
             otherAction
             setCursor "default"
         (otherAction, newModel) = onDragMove state file model
 
-instance (Model.IsSlider a) => DblClickable   (Model.Slider a) where
+instance (Model.IsSlider a)  => DblClickable   (Model.Slider a) where
     onDblClick pos file model = ifEnabled model (action, toCtxDynamic newModel) where
                 normValue     = (pos ^. x) / (model ^. Model.size . x)
                 newModel      = Model.setNormValue normValue model
-                action        = do
-                    slider <- getSlider (file ^. objectId)
-                    setValue slider newModel
+                action        = UIR.lookup (file ^. objectId) >>= setValue newModel
 
 instance (Model.IsSlider a) => HandlesMouseOver (Model.Slider a) where
-    onMouseOver file model = ifEnabled model (action, toCtxDynamic model) where
-                 action    = do
-                     slider <- getSlider (file ^. objectId)
-                     setFocus slider True
+    onMouseOver file model   = ifEnabled model (action, toCtxDynamic model) where
+                 action      = UIR.lookup (file ^. objectId) >>= setFocus True
 
 instance (Model.IsSlider a) => HandlesMouseOut (Model.Slider a) where
-    onMouseOut  file model = ifEnabled model (action, toCtxDynamic model) where
-                 action    = do
-                     slider <- getSlider (file ^. objectId)
-                     setFocus slider False
+    onMouseOut  file model   = ifEnabled model (action, toCtxDynamic model) where
+                 action      = UIR.lookup (file ^. objectId) >>= setFocus False
 
 instance (Model.IsSlider a) => Focusable (Model.Slider a) where
     mayFocus _ _ _ _  = True
@@ -127,13 +116,9 @@ instance (Model.IsSlider a) => HandlesKeyUp (Model.Slider a) where
     onKeyUp 'W' _ file model   = ifEnabled model (action, toCtxDynamic newModel) where
                   currVal      = model ^. Model.normValue
                   newModel     = Model.setNormValue (currVal + 0.1) model
-                  action       = do
-                      slider <- getSlider (file ^. objectId)
-                      setValue slider newModel
+                  action       = UIR.lookup (file ^. objectId) >>= setValue newModel
     onKeyUp 'Q' _ file model   = ifEnabled model (action, toCtxDynamic newModel) where
                   currVal      = model ^. Model.normValue
                   newModel     = Model.setNormValue (currVal - 0.1) model
-                  action       = do
-                      slider <- getSlider (file ^. objectId)
-                      setValue slider newModel
+                  action       = UIR.lookup (file ^. objectId) >>= setValue newModel
     onKeyUp _   _ _    model   = (return (), toCtxDynamic model)

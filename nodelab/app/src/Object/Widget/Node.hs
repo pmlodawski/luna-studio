@@ -26,13 +26,9 @@ data PendingNode = PendingNode { _position   :: Vector2 Double
 
 makeLenses ''PendingNode
 
-instance IsDisplayObject Node where
-    objectPosition   = undefined
-    objectSize       = undefined
+instance IsDisplayObject Node
 
-instance IsDisplayObject PendingNode where
-    objectPosition n = n ^. position
-    objectSize _     = Vector2 60.0 60.0
+instance IsDisplayObject PendingNode 
 
 instance Focusable Node where
     mayFocus LeftButton _ _ _ = True

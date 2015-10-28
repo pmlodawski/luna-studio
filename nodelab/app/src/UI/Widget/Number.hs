@@ -1,0 +1,26 @@
+
+-- instance Focusable (Model.Number a) where
+--     mayFocus _ _ _ _ = True
+--
+-- bumpValue :: Int -> WidgetFile s DisplayObject -> Model.Number Int -> WidgetUpdate
+-- bumpValue amount file widget = (action, toCtxDynamic newWidget) where
+--                 currVal      = widget ^. Model.value
+--                 newWidget    = widget &  Model.value .~ (currVal + amount)
+--                 action       = setValueLabel (file ^. objectId) newWidget
+--
+-- instance HandlesKeyUp (Model.Number Int) where
+--     onKeyUp 'Q' _ = bumpValue  100000
+--     onKeyUp 'W' _ = bumpValue   10000
+--     onKeyUp 'E' _ = bumpValue    1000
+--     onKeyUp 'R' _ = bumpValue     100
+--     onKeyUp 'T' _ = bumpValue      10
+--     onKeyUp 'Y' _ = bumpValue       1
+--
+--     onKeyUp 'A' _ = bumpValue (-100000)
+--     onKeyUp 'S' _ = bumpValue ( -10000)
+--     onKeyUp 'D' _ = bumpValue (  -1000)
+--     onKeyUp 'F' _ = bumpValue (   -100)
+--     onKeyUp 'G' _ = bumpValue (    -10)
+--     onKeyUp 'H' _ = bumpValue (     -1)
+--
+--     onKeyUp _   _ = noUpdate

@@ -34,9 +34,7 @@ class (Num a, Show a, Typeable a) => IsSlider a where
     setNormValue val slider = slider & normValue .~ boundedVal where
         boundedVal = max 0.0 $ min 1.0 val
 
-instance IsDisplayObject (Slider a) where
-    objectPosition b = b ^. pos
-    objectSize     b = b ^. size
+instance IsDisplayObject (Slider a)
 
 instance IsSlider Double where
     displayValue slider = showFFloat (Just $ precision) val "" where

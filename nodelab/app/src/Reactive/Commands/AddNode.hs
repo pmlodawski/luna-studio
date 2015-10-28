@@ -35,6 +35,9 @@ import qualified BatchConnector.Commands as BatchCmd
 import qualified JS.NodeGraph          as UI
 
 import qualified UI.Widget.Slider as UISlider
+import qualified UI.Widget.Node   as UINode
+import qualified UI.Registry      as UIR
+import qualified UI.Types         as UIT
 
 addNode :: Node -> Command State ()
 addNode node = do
@@ -100,12 +103,11 @@ addSliderToNode widgetId nodeId slider = do
 
 addWidgetToNode :: IsSlider a => WidgetId -> WidgetFile b (Slider a) -> IO ()
 addWidgetToNode nodeId newWidget = do
-    slider <- UISlider.createSlider (newWidget ^. objectId) (newWidget ^. widget)
-    UISlider.addSlider nodeId slider
-    -- node   <- JSRegistry.lookup nodeId :: IO UINode.Node
-    -- widget <- JSRegistry.build (newWidget ^. objectId) (newWidget ^. widget)
-    -- JSRegistry.register (newWidget ^. objectId) widget
-    -- node `add` widget
+    let sliderId = newWidget ^. objectId
+    slider <- UISlider.createSlider sliderId (newWidget ^. widget)
+    node   <- UIR.lookup nodeId :: IO UINode.Node
+    UIR.register sliderId slider
+    UIT.add      slider   node
 
 createNodeOnUI :: Node -> WidgetFile s WNode.Node -> IO ()
 createNodeOnUI node file = do

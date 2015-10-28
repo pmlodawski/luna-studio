@@ -1,18 +1,15 @@
-module ThreeJS.Raycaster where
+module UI.Raycaster where
 
 import           Utils.PreludePlus
 
 import           GHCJS.Foreign
-import           GHCJS.Types      ( JSRef, JSString )
+import           GHCJS.Types         (JSRef, JSString)
 import           Utils.Vector
-import qualified Event.Mouse         as Mouse
+import qualified Event.Mouse      as Mouse
 import           JavaScript.Array    (JSArray)
-import qualified JavaScript.Array    as JSArray
-import           GHCJS.Marshal (fromJSVal   )
-import           ThreeJS.Types
+import qualified JavaScript.Array as JSArray
+import           GHCJS.Marshal       (fromJSVal)
 import           Object.UITypes
-
-
 
 foreign import javascript unsafe "raycaster.getMapPixelAt($1, $2)"
     getMapPixelAtJS :: Int -> Int -> IO JSArray
@@ -22,7 +19,6 @@ getMapPixelAt pos = getMapPixelAtJS (pos ^. x) (pos ^. y)
 
 foreign import javascript unsafe "raycaster.widgetMatrix($1)"
     widgetMatrix :: Int -> IO JSArray
-
 
 readObjectId :: Vector2 Int -> IO (Maybe WidgetId)
 readObjectId pos = do

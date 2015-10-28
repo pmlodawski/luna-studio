@@ -54,13 +54,9 @@ data WidgetFile a b = WidgetFile { _objectId :: WidgetId
 type WidgetUIUpdate = IO ()
 type WidgetUpdate   = (WidgetUIUpdate, DisplayObject)
 
-class IsDisplayObject a where
-    objectPosition :: a -> Vector2 Double
-    objectSize     :: a -> Vector2 Double
+class IsDisplayObject a
 
-instance IsDisplayObject DisplayObject where
-    objectPosition (CtxDynamic _ a) = objectPosition a
-    objectSize     (CtxDynamic _ a) = objectSize     a
+instance IsDisplayObject DisplayObject
 
 type Position = Vector2 Double
 

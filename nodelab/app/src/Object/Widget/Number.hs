@@ -20,27 +20,8 @@ data Number a =  Number { _pos       :: Vector2 Double
                         } deriving (Eq, Show, Typeable)
 
 makeLenses ''Number
-
+--
 -- class (Num a, Show a, Typeable a) => IsSlider a where
 --     displayValue ::           Slider a -> String
 --     value        ::           Slider a -> a
 --     setValue     :: a      -> Slider a -> Slider a
-
-instance IsDisplayObject (Number a) where
-    objectPosition b = b ^. pos
-    objectSize     b = b ^. size
--- instance IsSlider Double where
---     displayValue slider = showFFloat (Just $ precision) val "" where
---         val       = value slider
---         precision = sliderPrecision slider
---     value slider = min + val * range where
---             min   = slider ^. minValue
---             max   = slider ^. maxValue
---             val   = slider ^. normValue
---             range = max - min
---     setValue val slider = slider & normValue .~ newVal where
---             newVal = (val - min) / range
---             min    = slider ^. minValue
---             max    = slider ^. maxValue
---             range  = max - min
-

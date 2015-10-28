@@ -18,9 +18,7 @@ data Port = Port { _portRef :: PortRef
 
 makeLenses ''Port
 
-instance IsDisplayObject Port where
-    objectPosition   = undefined
-    objectSize       = undefined
+instance IsDisplayObject Port
 
 
 instance HandlesMouseOver Port where

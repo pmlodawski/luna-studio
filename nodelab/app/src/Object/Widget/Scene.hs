@@ -14,8 +14,4 @@ data Scene = Scene deriving (Show)
 
 makeLenses ''Scene
 
-instance IsDisplayObject Scene where
-    objectPosition = undefined
-    objectSize     = undefined
-
-instance DisplayObjectContainer Scene
+instance IsDisplayObject Scene

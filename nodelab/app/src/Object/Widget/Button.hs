@@ -19,6 +19,4 @@ data Button = Button { _label   :: Text
 
 makeLenses ''Button
 
-instance IsDisplayObject Button where
-    objectPosition b = b ^. pos
-    objectSize     b = b ^. size
+instance IsDisplayObject Button

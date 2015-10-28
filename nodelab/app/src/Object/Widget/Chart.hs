@@ -31,6 +31,4 @@ data Chart = Chart   { _pos       :: Vector2 Double
 
 makeLenses ''Chart
 
-instance IsDisplayObject Chart where
-    objectPosition b = b ^. pos
-    objectSize     b = b ^. size
+instance IsDisplayObject Chart

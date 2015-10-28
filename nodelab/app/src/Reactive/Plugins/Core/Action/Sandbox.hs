@@ -107,8 +107,8 @@ instance ActionStateUpdater Action where
                 chart   <- UIRegistry.registerM sceneGraphId (Chart  (Vector2 100 380) (Vector2 300 200) Chart.Bar "Brand" Chart.Category "Unit Sales" Chart.Linear) def
                 performIO $ addChart chart
 
-                number  <- UIRegistry.registerM sceneGraphId (Number (Vector2 100 170) (Vector2 200  25) "Count" 4096 :: Number Int) def
-                performIO $ addWidget number
+                -- number  <- UIRegistry.registerM sceneGraphId (Number (Vector2 100 170) (Vector2 200  25) "Count" 4096 :: Number Int) def
+                -- performIO $ addWidget number
 
                 return (button, slider, slider2, slider3, slider4, toggle, chart, number)
 

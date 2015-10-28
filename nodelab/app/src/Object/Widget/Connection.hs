@@ -22,19 +22,13 @@ data Connection = Connection { _connectionId :: ConnectionId
 
 makeLenses ''Connection
 
-instance IsDisplayObject Connection where
-    objectPosition   = undefined
-    objectSize       = undefined
-
-
+instance IsDisplayObject Connection
 
 data CurrentConnection = CurrentConnection deriving (Eq, Show, Typeable)
 
 makeLenses ''CurrentConnection
 
-instance IsDisplayObject CurrentConnection where
-    objectPosition   = undefined
-    objectSize       = undefined
+instance IsDisplayObject CurrentConnection
 
 instance HandlesMouseOver Connection where
     onMouseOver file model = (action, toCtxDynamic model) where

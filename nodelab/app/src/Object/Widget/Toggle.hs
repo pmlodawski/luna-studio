@@ -17,6 +17,4 @@ data Toggle = Toggle { _pos      :: Vector2 Double
 
 makeLenses ''Toggle
 
-instance IsDisplayObject Toggle where
-    objectPosition b = b ^. pos
-    objectSize     b = b ^. size
+instance IsDisplayObject Toggle

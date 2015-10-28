@@ -1,0 +1,24 @@
+-- updateState :: WidgetId -> Model.Button -> IO ()
+-- updateState oid model = do
+--     updateUniformValue State (toJSInt $ fromEnum $ model ^. Model.state) oid
+--
+-- instance HandlesMouseOver Model.Button where
+--     onMouseOver file model = (action, toCtxDynamic newModel) where
+--                   action   = updateState (file ^. objectId) newModel
+--                   newModel = model & Model.state .~ Model.Focused
+--
+-- instance HandlesMouseOut Model.Button where
+--     onMouseOut  file model = (action, toCtxDynamic newModel) where
+--                   action   = updateState (file ^. objectId) newModel
+--                   newModel = model & Model.state .~ Model.Normal
+--
+-- instance Clickable Model.Button where
+--     onClick pos file model = (action, toCtxDynamic newModel) where
+--                   action   = updateState (file ^. objectId) newModel
+--                   newModel = model & Model.state .~ Model.Pressed
+--
+-- instance DblClickable Model.Button where
+--     onDblClick pos  file model = (action, toCtxDynamic newModel) where
+--                   action   = updateState (file ^. objectId) newModel
+--                   newModel = model & Model.state .~ Model.Disabled
+--
