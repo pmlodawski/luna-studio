@@ -18,7 +18,6 @@ packages:
   - ../libs/data/serialization
   - ../libs/batch/plugins/project-manager-api
   - ../tools/batch/plugins/interpreter-api
-  - ../third-party/graphviz-2999.17.0.2.2
-  - location:
-      git: https://github.com/ghcjs/ghcjs-dom.git
-      commit: e61354ed119e0cc5141a516e8b9342f250254e7f
+extra-deps:
+  - ghcjs-dom-0.2.3.0
+  - graphviz-2999.18.0.2
