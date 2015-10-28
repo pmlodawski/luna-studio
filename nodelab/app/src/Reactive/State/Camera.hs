@@ -5,13 +5,11 @@ import           Utils.PreludePlus
 import           Utils.Vector
 
 
-data DragHistory = DragHistory { _fixedPointPosScreen    :: Vector2 Int
-                               , _fixedPointPosWorkspace :: Vector2 Double
-                               , _dragPreviousPos        :: Vector2 Int
-                               , _dragCurrentPos         :: Vector2 Int
-                               } deriving (Eq, Show)
-
-
+data DragHistory =  PanDragHistory  { _panPreviousPos         :: Vector2 Int }
+                 | ZoomDragHistory  { _zoomPreviousPos        :: Vector2 Int
+                                    , _zoomFPScreen           :: Vector2 Int
+                                    , _zoomFPWorkspace        :: Vector2 Double }
+                 deriving (Eq, Show)
 
 data Camera = Camera { _screenSize :: Vector2 Int
                      , _pan        :: Vector2 Double
@@ -44,7 +42,8 @@ instance PrettyPrinter State where
                                      " )"
 
 instance PrettyPrinter DragHistory where
-    display (DragHistory fixedS fixedW prev curr) = display fixedS <> " " <> display fixedW <> " " <> display prev <> " " <> display curr
+    display (PanDragHistory prev)  = "pan: " <> display prev
+    display (ZoomDragHistory prev fps fpw) = "zoom: " <> display prev <> " fps: " <> display fps <> " fpw: " <> display fpw
 
 glToWorkspace :: Camera -> Vector2 Double -> Vector2 Double
 glToWorkspace (Camera _ pan factor) (Vector2 xGl yGl) = Vector2

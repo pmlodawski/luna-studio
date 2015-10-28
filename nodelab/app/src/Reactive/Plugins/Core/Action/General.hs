@@ -4,6 +4,7 @@ import           Utils.PreludePlus
 import           Utils.Vector
 
 import           JS.Bindings
+import           JS.Camera
 import           Object.Object
 import           Object.Node
 import           Event.Mouse    hiding      ( Event, WithObjects )

@@ -87,7 +87,7 @@ makeNetworkDescription conn logging workspace = do
 
         widgetActionB                 = fmap ActionST $              Widget.toAction <$> anyNodeB
         nodeGeneralActionB            = fmap ActionST $             General.toAction <$> anyNodeB
-        cameraActionB                 = fmap ActionST $              Camera.toAction <$> anyNodeB <*> globalStateB
+        cameraActionB                 = fmap ActionST $              Camera.toAction <$> anyNodeB
         nodeAddActionB                = fmap ActionST $             AddNode.toAction <$> anyNodeB <*> globalStateB
         nodeMultiSelectionActionB     = fmap ActionST $      MultiSelection.toAction <$> anyNodeB
         nodeDragActionB               = fmap ActionST $                Drag.toAction <$> anyNodeB <*> globalStateB <*> underCursorB

@@ -1,106 +1,52 @@
+{-# LANGUAGE NamedFieldPuns #-}
+
 module Reactive.Plugins.Core.Action.Camera where
 
 import           Utils.PreludePlus
 import           Utils.Vector
 
-import           JS.Bindings
-import qualified JS.NodeGraph   as UI
+import           JS.Camera
 
 import           Object.Node
-import           Event.Keyboard hiding      ( Event )
+import           Event.Event (Event(Keyboard, Mouse))
+import           Event.Keyboard (KeyMods(..), ctrl)
 import qualified Event.Keyboard as Keyboard
-import           Event.Mouse    hiding      ( Event )
+import           Event.Mouse    (MouseButton(..))
 import qualified Event.Mouse    as Mouse
-import           Object.UITypes
-import           Event.Event
-import           Event.WithObjects
 import           Reactive.Plugins.Core.Action
-import           Reactive.State.Camera
+import           Reactive.State.Camera    (DragHistory(..))
 import qualified Reactive.State.Camera    as Camera
 import qualified Reactive.State.Graph     as Graph
 import qualified Reactive.State.Global    as Global
 
 import Reactive.Commands.Command (Command, ioCommand, execCommand, performIO)
 
-data DragType = StartDrag
-              | Dragging
-              | StopDrag
-              deriving (Eq, Show)
 
-data MouseActionType = Zoom | Pan deriving (Eq, Show)
+toAction :: Event Node -> Maybe (Command Global.State ())
+toAction evt = (>> syncCameraM) <$> toAction' evt
 
-data KeyActionType = ResetZoom
-                   | AutoZoom
-                   | ZoomIn
-                   | ZoomOut
-                   | PanLeft
-                   | PanRight
-                   | PanUp
-                   | PanDown
-                   deriving (Eq, Show)
+toAction' :: Event Node -> Maybe (Command Global.State ())
+toAction' (Mouse (Mouse.Event evt pos RightButton  _ _)) = Just $ zoomDrag evt pos
+toAction' (Mouse (Mouse.Event evt pos MiddleButton _ _)) = Just $ panDrag  evt pos
 
-data Action = KeyAction   { _keyActionType :: KeyActionType }
-            | MouseAction { _actionType    :: MouseActionType
-                          , _dragType      :: DragType
-                          , _zoomPos       :: Vector2 Int
-                          }
-            | WheelAction { _wheelActionType :: MouseActionType
-                          , _mousePos        :: Vector2 Int
-                          , _delta           :: Vector2 Double
-                          }
-            deriving (Eq, Show)
+toAction' (Mouse (Mouse.Event (Mouse.Wheel delta) pos _ KeyMods {_ctrl = False} _)) = Just $ panCamera delta
+toAction' (Mouse (Mouse.Event (Mouse.Wheel delta) pos _ KeyMods {_ctrl = True} _))  = Just $ wheelZoom pos delta
 
-
-makeLenses ''Action
-
-
-instance PrettyPrinter DragType where
-    display = show
-
-instance PrettyPrinter MouseActionType where
-    display = show
-
-instance PrettyPrinter KeyActionType where
-    display = show
-
-instance PrettyPrinter Action where
-    display (KeyAction tpe)           = "cA(Key "   <> display tpe <> ")"
-    display (MouseAction act tpe pos) = "cA(Mouse " <> display act <> " " <> display tpe <> " " <> display pos <> ")"
-
-
-toAction :: Event Node -> Global.State -> Maybe Action
-toAction (Mouse (Mouse.Event (Mouse.Wheel delta) pos button keyMods _)) _ = Just $ WheelAction action pos delta where
-    action = if keyMods ^. ctrl then Zoom else Pan
-toAction (Mouse (Mouse.Event tpe pos button keyMods _)) _ = case button of
-    RightButton        -> case tpe of
-        Mouse.Pressed  -> case keyMods of
-           (KeyMods False False False False) -> Just (MouseAction Zoom StartDrag pos)
-           _                                 -> Nothing
-        Mouse.Released -> Just (MouseAction Zoom StopDrag pos)
-        Mouse.Moved    -> Just (MouseAction Zoom Dragging pos)
-        _              -> Nothing
-    MiddleButton       -> case tpe of
-        Mouse.Pressed  -> case keyMods of
-           (KeyMods False False False False) -> Just (MouseAction Pan StartDrag pos)
-           _                                 -> Nothing
-        Mouse.Released -> Just (MouseAction Pan StopDrag pos)
-        Mouse.Moved    -> Just (MouseAction Pan Dragging pos)
-        _              -> Nothing
-    _                  -> Nothing
-toAction (Keyboard (Keyboard.Event Keyboard.Press char mods)) state = case char of
-    '='   -> Just $ KeyAction ZoomIn
-    '+'   -> Just $ KeyAction ZoomIn
-    '-'   -> Just $ KeyAction ZoomOut
-    '0'   -> Just $ KeyAction $ if mods ^. ctrl then ResetZoom else AutoZoom
+toAction' (Keyboard (Keyboard.Event Keyboard.Press char mods)) = case char of
+    '='   -> Just $ zoomIn
+    '+'   -> Just $ zoomIn
+    '-'   -> Just $ zoomOut
+    '0'   -> Just $ if mods ^. ctrl then resetZoom
+                                    else autoZoom
     _     -> Nothing
-toAction (Keyboard (Keyboard.Event Keyboard.Down char mods)) state = if mods ^. ctrl then action else Nothing where
-    action = case char of
-        '\37' -> Just $ KeyAction PanLeft
-        '\39' -> Just $ KeyAction PanRight
-        '\38' -> Just $ KeyAction PanUp
-        '\40' -> Just $ KeyAction PanDown
-        _     -> Nothing
-toAction _ _ = Nothing
+
+toAction' (Keyboard (Keyboard.Event Keyboard.Down char KeyMods { _ctrl = True })) = case char of
+    '\37' -> Just panLeft
+    '\39' -> Just panRight
+    '\38' -> Just panUp
+    '\40' -> Just panDown
+    _     -> Nothing
+toAction' _ = Nothing
 
 minCamFactor   =   0.2
 maxCamFactor   =   8.0
@@ -116,112 +62,108 @@ panCamera delta = do
     camFactor <- use $ Global.camera . Camera.camera . Camera.factor
     Global.camera . Camera.camera . Camera.pan += ((/ camFactor) <$> delta)
 
-instance ActionStateUpdater Action where
-    execSt action@(WheelAction Pan  pos delta) oldState = ActionUI action newState where
-        (_, newState) = execCommand (panCamera delta) oldState
+panLeft  = panCamera $ Vector2 (-panStep)         0
+panRight = panCamera $ Vector2   panStep          0
+panUp    = panCamera $ Vector2        0   (-panStep)
+panDown  = panCamera $ Vector2        0     panStep
 
-    execSt action@(WheelAction Zoom pos delta) oldState = ActionUI action newState where
-        newState                       = oldState &  Global.camera . camera . pan    .~ zoomPan
-                                                  &  Global.camera . camera . factor .~ (restrictCamFactor newCamFactor)
+setZoom :: Double -> Command Global.State ()
+setZoom newFactor = Global.camera . Camera.camera . Camera.factor .= (restrictCamFactor newFactor)
 
-        camFactorDelta        = (- delta ^. x - delta ^. y) / wheelZoomSpeed
-        newCamFactor          = oldCamFactor * (1.0 + camFactorDelta)
-        oldCamera             = oldState ^. Global.camera . Camera.camera
-        oldCam                = oldState ^. Global.camera
-        oldCamFactor          = oldCam ^. camera . factor
+resetZoom :: Command Global.State ()
+resetZoom = Global.camera . Camera.camera . Camera.factor .= 1.0
 
-        oldScreen             = pos
-        oldWorkspace          = Camera.screenToWorkspace oldCamera pos
-        newWorkspace          = Camera.screenToWorkspace nonPannedCamera oldScreen
+autoZoom :: Command Global.State ()
+autoZoom = do
+    nodes             <- use $ Global.graph  . Graph.nodes
+    screenSize'       <- use $ Global.camera . Camera.camera . Camera.screenSize
 
-        nonPannedCamera       = oldCamera & Camera.factor .~ (restrictCamFactor newCamFactor)
-                                          & Camera.pan    .~ Vector2 0.0 0.0
-        zoomPan               = -newWorkspace + oldWorkspace
+    let padding        = Vector2 80.0 80.0
+        screenSize     = fromIntegral <$> screenSize'
+        minXY          = -padding + (Vector2 (minimum $ (^. nodePos . x) <$> nodes) (minimum $ (^. nodePos . y) <$> nodes))
+        maxXY          =  padding + (Vector2 (maximum $ (^. nodePos . x) <$> nodes) (maximum $ (^. nodePos . y) <$> nodes))
+        spanXY         = maxXY - minXY
+        zoomFactorXY   = Vector2 (screenSize ^. x / spanXY ^. x) (screenSize ^. y / spanXY ^. y)
+        zoomFactor     = min (zoomFactorXY ^. x) (zoomFactorXY ^. y)
+        zoomPan        = minXY + ((/2.0) <$> spanXY)
 
-    execSt newActionCandidate oldState =
-        case newAction of
-        Just action -> ActionUI newAction newState
-        Nothing     -> ActionUI  NoAction newState
-        where
-        newState                       = oldState &  Global.camera . camera . pan    .~ newCamPan
-                                                  &  Global.camera . camera . factor .~ newCamFactor
-                                                  &  Global.camera . history         .~ newDrag
-        oldCam                         = oldState ^. Global.camera
-        oldCamPan                      = oldCam ^. camera . pan
-        oldCamFactor                   = oldCam ^. camera . factor
-        oldDrag                        = oldCam ^. history
-        newAction                      = Just newActionCandidate
-        newCamPan                      = case newActionCandidate of
-            MouseAction Zoom _ _      -> zoomPan
-            MouseAction Pan  _ _      -> oldCamPan + dragPan
-            KeyAction keyAct          -> Vector2 newCamPanX newCamPanY where
-                newCamPanX            = case keyAct of
-                    PanLeft           -> oldCamPan ^. x - panStep / oldCamFactor
-                    PanRight          -> oldCamPan ^. x + panStep / oldCamFactor
-                    AutoZoom          -> autoZoomPan ^. x
-                    _                 -> oldCamPan ^. x
-                newCamPanY             = case keyAct of
-                    PanUp             -> oldCamPan ^. y - panStep / oldCamFactor
-                    PanDown           -> oldCamPan ^. y + panStep / oldCamFactor
-                    AutoZoom          -> autoZoomPan ^. y
-                    _                 -> oldCamPan ^. y
-        newCamFactor                   = case newActionCandidate of
-            KeyAction ResetZoom       -> 1.0
-            KeyAction ZoomIn          -> max minCamFactor $ oldCamFactor * zoomFactorStep
-            KeyAction ZoomOut         -> min maxCamFactor $ oldCamFactor / zoomFactorStep
-            KeyAction AutoZoom        -> restrictCamFactor autoZoomFactor
-            MouseAction Zoom _ _      -> restrictCamFactor newCamFactorCandidate
-            _                         -> oldCamFactor
-        newDrag                        = case newActionCandidate of
-            MouseAction act tpe point -> case tpe of
-                StartDrag             -> Just $ DragHistory point (Camera.screenToWorkspace camera point) point point where
-                    camera = oldState ^. Global.camera . Camera.camera
-                Dragging              -> case oldDrag of
-                    Just oldDragState -> Just $ oldDragState & dragPreviousPos .~ (oldDragState ^. dragCurrentPos)
-                                                             & dragCurrentPos  .~ point
-                    Nothing           -> Nothing
-                StopDrag              -> Nothing
-            _                         -> Nothing
-        (autoZoomPan, autoZoomFactor)  = (autoZoomPan, autoZoomFactor) where
-            nodes          = oldState ^. Global.graph . Graph.nodes
-            screenSize     = fromIntegral <$> oldState ^. Global.camera . Camera.camera . Camera.screenSize
-            minXY          = -padding + (Vector2 (minimum $ (^. nodePos . x) <$> nodes) (minimum $ (^. nodePos . y) <$> nodes))
-            maxXY          =  padding + (Vector2 (maximum $ (^. nodePos . x) <$> nodes) (maximum $ (^. nodePos . y) <$> nodes))
-            spanXY         = maxXY - minXY
-            zoomFactorXY   = Vector2 (screenSize ^. x / spanXY ^. x) (screenSize ^. y / spanXY ^. y)
-            autoZoomFactor = min (zoomFactorXY ^. x) (zoomFactorXY ^. y)
-            autoZoomPan    = minXY + ((/2.0) <$> spanXY)
-            padding        = Vector2 80.0 80.0
-        (zoomPan, newCamFactorCandidate)  = case newDrag of
-                Just drag                -> (zoomPan, newCamFactorCandidate) where
-                    camFactorDelta        = (delta ^. x + delta ^. y) / dragZoomSpeed
-                    newCamFactorCandidate = oldCamFactor * (1.0 + camFactorDelta)
-                    delta                 = fromIntegral <$> (negateSnd $ drag ^. dragCurrentPos - drag ^. dragPreviousPos)
-                    camera                = oldState ^. Global.camera . Camera.camera
-                    oldScreen             = drag ^. fixedPointPosScreen
-                    oldWorkspace          = drag ^. fixedPointPosWorkspace
-                    newWorkspace          = Camera.screenToWorkspace nonPannedCamera oldScreen
-                    nonPannedCamera       = camera & Camera.factor .~ (restrictCamFactor newCamFactorCandidate)
-                                                   & Camera.pan    .~ Vector2 0.0 0.0
-                    zoomPan               = -newWorkspace + oldWorkspace
-                Nothing                  -> (oldCamPan, oldCamFactor)
-        dragPan                           = case newDrag of
-                Just drag                -> prevWorkspace - currWorkspace where
-                    camera                = oldState ^. Global.camera . Camera.camera
-                    currWorkspace         = Camera.screenToWorkspace camera $ drag ^. dragCurrentPos
-                    prevWorkspace         = Camera.screenToWorkspace camera $ drag ^. dragPreviousPos
-                Nothing                  -> Vector2 0.0 0.0
+    setZoom zoomFactor
+    Global.camera . Camera.camera . Camera.pan    .= zoomPan
 
+zoomIn :: Command Global.State ()
+zoomIn = do
+    factor <- use $ Global.camera . Camera.camera . Camera.factor
+    setZoom $ factor * zoomFactorStep
 
-instance ActionUIUpdater Action where
-    updateUI (WithState _ state) = syncCamera state
+zoomOut :: Command Global.State ()
+zoomOut = do
+    factor <- use $ Global.camera . Camera.camera . Camera.factor
+    setZoom $ factor / zoomFactorStep
 
+wheelZoom :: Vector2 Int -> Vector2 Double -> Command Global.State ()
+wheelZoom pos delta = do
+    camera         <- use $ Global.camera . Camera.camera
+    let delta'      = (- delta ^. x - delta ^. y) / wheelZoomSpeed
+        workspace   = Camera.screenToWorkspace camera pos
+    fixedPointZoom pos workspace delta'
 
+fixedPointZoom :: Vector2 Int -> Vector2 Double -> Double -> Command Global.State ()
+fixedPointZoom fpScreen fpWorkspace delta = do
+    oldFactor           <- use $ Global.camera . Camera.camera . Camera.factor
+
+    let newFactor        = oldFactor * (1.0 + delta)
+    setZoom newFactor
+
+    oldCamera           <- use $ Global.camera . Camera.camera
+    let nonPannedCamera  = oldCamera & Camera.factor .~ (restrictCamFactor newFactor)
+                                     & Camera.pan    .~ Vector2 0.0 0.0
+        newWorkspace     = Camera.screenToWorkspace nonPannedCamera fpScreen
+        newPan           = -newWorkspace + fpWorkspace
+
+    Global.camera . Camera.camera . Camera.pan .= newPan
+
+panDrag :: Mouse.Type -> Vector2 Int -> Command Global.State ()
+panDrag Mouse.Pressed pos = do
+    Global.camera . Camera.history ?= PanDragHistory pos
+
+panDrag Mouse.Moved   pos = do
+    history <- use $ Global.camera . Camera.history
+    case history of
+        Just (PanDragHistory prev) -> do
+            Global.camera . Camera.history ?= PanDragHistory pos
+            panCamera $ fromIntegral <$> prev - pos
+        _                          -> return ()
+
+panDrag Mouse.Released _ = do
+    Global.camera . Camera.history .= Nothing
+
+panDrag _ _ = return ()
+
+zoomDrag :: Mouse.Type -> Vector2 Int -> Command Global.State ()
+zoomDrag Mouse.Pressed screenPos = do
+    camera <- use $ Global.camera . Camera.camera
+    let workspacePos = Camera.screenToWorkspace camera screenPos
+    Global.camera . Camera.history ?= ZoomDragHistory screenPos screenPos workspacePos
+
+zoomDrag Mouse.Moved   pos = do
+    history <- use $ Global.camera . Camera.history
+    case history of
+        Just (ZoomDragHistory prev fpScreen fpWorkspace) -> do
+            Global.camera . Camera.history ?= ZoomDragHistory pos fpScreen fpWorkspace
+            let deltaV = fromIntegral <$> (prev - pos)
+                delta  = (-deltaV ^. x + deltaV ^. y) / dragZoomSpeed
+            fixedPointZoom fpScreen fpWorkspace delta
+        _                           -> return ()
+
+zoomDrag Mouse.Released _ = do
+    Global.camera . Camera.history .= Nothing
+
+zoomDrag _ _ = return ()
 
 syncCamera :: Global.State -> IO ()
 syncCamera state = do
-    let cPan         = state ^. Global.camera . camera . pan
-        cFactor      = state ^. Global.camera . camera . factor
+    let cPan         = state ^. Global.camera . Camera.camera . Camera.pan
+        cFactor      = state ^. Global.camera . Camera.camera . Camera.factor
         screenSize   = state ^. Global.camera . Camera.camera . Camera.screenSize
         hScreen      = (/ 2.0) . fromIntegral <$> screenSize
         camLeft      = appX cameraLeft
