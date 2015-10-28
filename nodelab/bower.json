@@ -15,8 +15,8 @@
   "dependencies": {
     "jquery": "~2.1.4",
     "malihu-custom-scrollbar-plugin": "~3.0.9",
-    "three.js": "https://github.com/mrdoob/three.js/archive/a6305636a3c855c64dc53c1ff67a9c46e63597ba.tar.gz",
-    "viz": "https://raw.githubusercontent.com/mdaines/viz.js/gh-pages/viz.js",
+    "three.js": "http://threejs.org/build/three.min.js",
+    "viz": "https://github.com/mdaines/viz.js/releases/download/v1.2.0/viz.js",
     "underscore": "~1.8.3",
     "d3": "~3.5.6",
     "dimple": "~2.1.6"

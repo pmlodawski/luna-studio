@@ -42,7 +42,7 @@ function getMapPixelAtCached(x, y) {
 
 function getTopParent(w) {
   var p = w;
-  while (p !== undefined) {
+  while (p !== undefined && p !== null) {
     w = p;
     p = w.parent;
   }
