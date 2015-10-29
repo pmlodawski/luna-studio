@@ -2,7 +2,7 @@ module Reactive.Plugins.Loader.ProjectManager.Actions where
 
 import           Utils.PreludePlus
 import           Data.ByteString.Lazy      (ByteString)
-import           JS.Bindings               (displayRejectedMessage)
+import           JS.UI                     (displayRejectedMessage)
 
 import qualified Event.Event               as Event
 import qualified Event.Connection          as Connection

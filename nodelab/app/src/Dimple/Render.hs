@@ -2,7 +2,6 @@ module Dimple.Render where
 
 import           Utils.PreludePlus
 import qualified Object.Widget.Chart as Widget
-import           JS.Bindings
 import           GHCJS.DOM (currentDocument)
 import           GHCJS.DOM.Document (getElementById, createElementNS)
 import           GHCJS.DOM.Element   (Element, IsElement, setAttribute, getStyle)
@@ -10,6 +9,7 @@ import           GHCJS.DOM.CSSStyleDeclaration   (setProperty)
 import           GHCJS.DOM.Node (appendChild)
 import           Data.JSString (JSString)
 import qualified Data.JSString as JSString
+import           JavaScript.Array         (JSArray)
 import           Dimple.Types
 import           Dimple.Chart
 import qualified Dimple.Plot as Plot
@@ -31,6 +31,9 @@ convertChartType Widget.Area    = Plot.area
 
 foreign import javascript unsafe "d3.select($1)" wrapD3 :: Element -> IO D3Element
 foreign import javascript unsafe "common.chart = $1" setChart :: Chart -> IO ()
+
+foreign import javascript unsafe "require('exampleData')" getExampleData :: IO JSArray
+
 
 setStyle :: Element -> [(String, String)] -> IO ()
 setStyle el styles = do

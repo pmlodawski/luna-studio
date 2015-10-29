@@ -4,7 +4,6 @@ import           Utils.PreludePlus
 import           Utils.Vector
 import           Utils.Angle
 
-import           JS.Bindings
 import           JS.Node
 import           Object.Object
 import           Object.Port
@@ -73,9 +72,6 @@ updateLabel :: Node -> IO ()
 updateLabel node = do
     nodeRef  <- getNode $ node ^. nodeId
     showLabel nodeRef (lazyTextToJSString $ node ^. expression)
-
-displaySelectionBox :: Vector2 Double -> Vector2 Double -> IO ()
-displaySelectionBox (Vector2 x0 y0) (Vector2 x1 y1) = displaySelectionBoxJS x0 y0 x1 y1
 
 addInputPort :: NodeId -> WidgetId -> PortId -> ColorNum -> Angle -> IO ()
 addInputPort nodeId widgetId portId color angle = do

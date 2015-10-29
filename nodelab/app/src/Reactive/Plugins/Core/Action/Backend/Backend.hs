@@ -6,7 +6,8 @@ import           Event.Event        (Event(Batch))
 import qualified Event.Batch        as Batch
 import qualified Batch.Workspace    as Workspace
 import           Batch.Workspace    (InterpreterState(..))
-import           JS.Bindings        (displayRejectedMessage, writeToTerminal)
+import           JS.UI              (displayRejectedMessage)
+import           JS.Terminal        (writeToTerminal)
 
 import qualified BatchConnector.Monadic.Commands as BatchCmd
 

@@ -16,7 +16,6 @@ import           Object.UITypes
 import           Object.Widget
 import qualified Object.Widget.Connection as UIConnection
 
-import qualified JS.Bindings    as UI
 import qualified JS.Connection  as UI
 import qualified JS.NodeGraph   as UI
 
@@ -90,7 +89,7 @@ connectNodes src dst = do
     --when (isJust tcResult) $ do
     batchConnectNodes src dst
     localConnectNodes src dst
-    --    Global.graph %= Graph.updateNodes nodeFun 
+    --    Global.graph %= Graph.updateNodes nodeFun
 
 
 batchConnectNodes :: PortRef -> PortRef -> Command Global.State ()
@@ -109,7 +108,7 @@ localConnectNodes src dst = command $ \state -> let
     uiUpdate                     = forM_ file $ \f -> createConnectionWidget (f ^. objectId) (f ^. widget) color
     validConnection              = (isJust $ NodeUtils.getPortByRef src oldNodesMap) && (isJust $ NodeUtils.getPortByRef dst oldNodesMap)
     color                        = if validConnection then (colorVT valueType) else colorError
-    
+
     newNodesMap                  = oldNodesMap
     oldNodesMap                  = Graph.getNodesMap oldGraph
     updSourceGraph               = Graph.updateNodes newNodesMap oldGraph

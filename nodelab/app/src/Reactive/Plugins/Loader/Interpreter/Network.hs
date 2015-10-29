@@ -8,7 +8,7 @@ import Reactive.Handlers
 
 import           Data.ByteString.Lazy    (ByteString)
 import           JS.WebSocket
-import           JS.Bindings             (displayRejectedMessage)
+import           JS.UI                   (displayRejectedMessage)
 import qualified Event.Event             as Event
 import           Event.Batch             as Batch
 import           Event.Processors.Batch  (process)

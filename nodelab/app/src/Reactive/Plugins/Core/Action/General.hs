@@ -3,18 +3,15 @@ module Reactive.Plugins.Core.Action.General where
 import           Utils.PreludePlus
 import           Utils.Vector
 
-import           JS.Bindings
+import           JS.UI (updateMouse)
 import           JS.Camera
-import           Object.Object
-import           Object.Node
-import           Event.Mouse    hiding      (Event)
-import qualified Event.Mouse    as Mouse
-import qualified Event.Window   as Window
+import           Event.Mouse    hiding      ( Event, WithObjects )
+import qualified Event.Mouse                         as Mouse
+import qualified Event.Window                        as Window
 import           Event.Event
-import           Reactive.Plugins.Core.Action
-import qualified Reactive.Plugins.Core.Action.Camera         as Camera
-import qualified Reactive.State.Camera   as Camera
-import qualified Reactive.State.Global   as Global
+import qualified Reactive.Plugins.Core.Action.Camera as Camera
+import qualified Reactive.State.Camera               as Camera
+import qualified Reactive.State.Global               as Global
 
 import Reactive.Commands.Command (Command, ioCommand, execCommand, performIO)
 
@@ -32,5 +29,4 @@ updateMousePos :: Vector2 Int -> Command Global.State ()
 updateMousePos pos = do
     Global.mousePos .= pos
     camera <- use $ Global.camera . Camera.camera
-    let Vector2 x y = Camera.screenToWorkspace camera pos
-    performIO $ updateMouse x y
+    performIO $ updateMouse $ Camera.screenToWorkspace camera pos

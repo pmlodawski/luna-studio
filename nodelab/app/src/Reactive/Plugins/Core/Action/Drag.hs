@@ -4,7 +4,6 @@ import           Utils.PreludePlus
 import           Utils.Vector
 import           Utils.Angle
 
-import qualified JS.Bindings    as UI
 import qualified JS.NodeGraph   as UI
 
 import           Object.Object

@@ -30,7 +30,7 @@ import           Utils.PreludePlus
 
 import           Reactive.Banana
 import           Reactive.Banana.Frameworks (Frameworks, actuate)
-import           JS.Bindings
+import           JS.UI (initializeGl, render, triggerWindowResize)
 import           JS.WebSocket
 import           JS.Config
 import qualified BatchConnector.Commands    as BatchCmd

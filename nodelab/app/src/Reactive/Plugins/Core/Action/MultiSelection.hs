@@ -5,7 +5,7 @@ module Reactive.Plugins.Core.Action.MultiSelection where
 import           Utils.PreludePlus
 import           Utils.Vector      (Vector2)
 
-import qualified JS.Bindings    as UI
+import           JS.MultiSelection (displaySelectionBox, hideSelectionBox)
 import qualified JS.NodeGraph   as UI
 
 import           Object.Object
@@ -90,9 +90,9 @@ drawSelectionBox start end = do
     camera        <- use $ Global.camera . Camera.camera
     let startSelectionBox = Camera.screenToWorkspace camera start
         endSelectionBox   = Camera.screenToWorkspace camera end
-    performIO $ UI.displaySelectionBox startSelectionBox endSelectionBox
+    performIO $ displaySelectionBox startSelectionBox endSelectionBox
 
 stopDrag :: Command State ()
 stopDrag = do
     Global.multiSelection . MultiSelection.history .= Nothing
-    performIO UI.hideSelectionBox
+    performIO hideSelectionBox

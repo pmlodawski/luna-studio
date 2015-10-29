@@ -5,30 +5,26 @@ module Reactive.Plugins.Core.Action.Camera where
 import           Utils.PreludePlus
 import           Utils.Vector
 
-import           JS.Camera
-
-import           Object.Node
-import           Event.Event (Event(Keyboard, Mouse))
-import           Event.Keyboard (KeyMods(..), ctrl)
-import qualified Event.Keyboard as Keyboard
-import           Event.Mouse    (MouseButton(..))
-import qualified Event.Mouse    as Mouse
-import           Reactive.Plugins.Core.Action
-import           Reactive.State.Camera    (DragHistory(..))
-import qualified Reactive.State.Camera    as Camera
-import qualified Reactive.State.Graph     as Graph
-import qualified Reactive.State.Global    as Global
+import qualified JS.Camera             as JS
+import           Object.Node             (nodePos)
+import           Event.Event             (Event(Keyboard, Mouse))
+import           Event.Keyboard          (KeyMods(..), ctrl)
+import qualified Event.Keyboard        as Keyboard
+import           Event.Mouse             (MouseButton(..))
+import qualified Event.Mouse           as Mouse
+import           Reactive.State.Camera   (DragHistory(..))
+import qualified Reactive.State.Camera as Camera
+import qualified Reactive.State.Graph  as Graph
+import qualified Reactive.State.Global as Global
 
 import Reactive.Commands.Command (Command, ioCommand, execCommand, performIO)
 
 
 toAction :: Event -> Maybe (Command Global.State ())
-
 toAction (Keyboard (Keyboard.Event Keyboard.Press '0' KeyMods {_ctrl = True})) = Just $ autoZoom >> (zoom Global.camera syncCamera)
 toAction evt = (zoom Global.camera) <$> (>> syncCamera) <$> toAction' evt
 
 toAction' :: Event -> Maybe (Command Camera.State ())
-
 toAction' (Mouse (Mouse.Event evt pos RightButton  _ _)) = Just $ zoomDrag evt pos
 toAction' (Mouse (Mouse.Event evt pos MiddleButton _ _)) = Just $ panDrag  evt pos
 
@@ -177,11 +173,11 @@ syncCamera = do
         appX      f  = f cFactor (cPan ^. x) (hScreen ^. x)
         appY      f  = f cFactor (cPan ^. y) (hScreen ^. y)
     performIO $ do
-        updateCamera cFactor camLeft camRight camTop camBottom
-        updateCameraHUD 0.0 (fromIntegral $ screenSize ^. x) 0.0 (fromIntegral $ screenSize ^. y)
-        updateHtmCanvasPanPos hX hY cFactor
-        updateProjectionMatrix
-        updateHUDProjectionMatrix
+        JS.updateCamera cFactor camLeft camRight camTop camBottom
+        JS.updateCameraHUD 0.0 (fromIntegral $ screenSize ^. x) 0.0 (fromIntegral $ screenSize ^. y)
+        JS.updateHtmCanvasPanPos hX hY cFactor
+        JS.updateProjectionMatrix
+        JS.updateHUDProjectionMatrix
 
 
 

@@ -16,9 +16,8 @@ import           Event.Keyboard (KeyMods(..))
 import           Utils.Vector
 import qualified Object.Widget.Slider as Model
 import           Object.Widget
-import           GHCJS.Prim
 import           Utils.CtxDynamic
-import           JS.Bindings (setCursor)
+import           JS.UI (setCursor)
 import           Object.UITypes
 import           GHCJS.Marshal.Pure(PToJSVal(..), PFromJSVal(..))
 

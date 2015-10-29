@@ -6,7 +6,6 @@ import           Utils.Angle
 import qualified Utils.Nodes    as NodeUtils
 import           Debug.Trace
 
-import qualified JS.Bindings    as UI
 import qualified JS.NodeGraph   as UI
 import qualified JS.Connection  as UI
 

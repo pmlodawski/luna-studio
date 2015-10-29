@@ -20,7 +20,6 @@ import qualified JS.TextEditor           as TextEditor
 
 import           Reactive.Banana.Frameworks ( AddHandler(..), liftIO )
 
-import           JS.Bindings
 import           UI.Raycaster
 import           JS.NodeSearcher     ( getAction, getExpression, getNode, nsEvent )
 import           Object.Object

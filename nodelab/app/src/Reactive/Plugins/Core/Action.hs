@@ -7,7 +7,7 @@
 module Reactive.Plugins.Core.Action where
 
 import           Utils.PreludePlus
-import           JS.Bindings
+import           JS.UI                    (shouldRender)
 
 import           Reactive.State.Global
 import qualified Reactive.State.UIRegistry as UIRegistry
