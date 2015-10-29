@@ -1,6 +1,3 @@
-TM_CABAL=/Users/kamilfigiela/Library/Haskell/bin/cabal
-
-
 projectDirectory      = "$CWD"
 windowTitle           = "$TM_DISPLAYNAME — NodeLab (git: $TM_SCM_BRANCH)"
 
