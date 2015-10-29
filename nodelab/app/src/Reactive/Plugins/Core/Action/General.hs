@@ -31,7 +31,7 @@ instance PrettyPrinter Action where
     display (Resizing size) = "rA(" <> display size  <> ")"
 
 
-toAction :: Event Node -> Maybe Action
+toAction :: Event -> Maybe Action
 toAction (Mouse (Mouse.Event tpe pos _ _ _)) = case tpe of
     Mouse.Moved     -> Just $ Moving pos
     _               -> Nothing

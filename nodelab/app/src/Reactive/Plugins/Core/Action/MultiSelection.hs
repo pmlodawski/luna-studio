@@ -34,7 +34,7 @@ import           Reactive.Commands.Selection        (unselectAll, selectAll, upd
 
 import           Control.Monad.State                               hiding (State)
 
-toAction :: Event Node -> Maybe (Command State ())
+toAction :: Event -> Maybe (Command State ())
 toAction (Mouse event@(Mouse.Event Mouse.Pressed  _   Mouse.LeftButton _ _)) = Just $ startDrag event
 toAction (Mouse event@(Mouse.Event Mouse.Moved    pos Mouse.LeftButton _ _)) = Just $ handleMove pos
 toAction (Mouse event@(Mouse.Event Mouse.Released _   Mouse.LeftButton _ _)) = Just stopDrag

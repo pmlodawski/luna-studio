@@ -4,11 +4,10 @@ import           Utils.PreludePlus
 import qualified Event.Event                as Event
 import           Event.Connection           as Connection
 import           Event.Batch                as Batch
-import           Data.Dynamic
 import           BatchConnector.Updates
 import           BatchConnector.Connection  (WebMessage(..), ControlCode(..))
 
-process :: Event.Event Dynamic -> Maybe (Event.Event Dynamic)
+process :: Event.Event -> Maybe Event.Event
 process (Event.Connection (Message msg)) = Just $ Event.Batch $ processMessage msg
 process _                                = Nothing
 

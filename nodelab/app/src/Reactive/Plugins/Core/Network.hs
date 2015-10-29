@@ -1,14 +1,12 @@
 module Reactive.Plugins.Core.Network where
 
 import           Utils.PreludePlus
-import           Data.Dynamic
 
 import           Reactive.Banana
 import           Reactive.Banana.Frameworks
 import           Reactive.Handlers
 import qualified JS.NodeGraph                                       as UI
 import           Object.Object
-import           Object.Dynamic             ( unpackDynamic )
 import           Object.Node                ( Node(..) )
 import qualified Object.Node                                        as Node
 import qualified Event.Event                                        as Event
@@ -56,10 +54,10 @@ makeNetworkDescription conn logging workspace = do
     textEditorE    <- fromAddHandler textEditorHandler
 
     let
-        batchE                       :: Event t (Event.Event Dynamic)
+        batchE                       :: Event t Event.Event
         batchE                        = filterJust $ BatchEventProcessor.process <$> webSocketE
 
-        anyE                         :: Event t (Event.Event Dynamic)
+        anyE                         :: Event t Event.Event
         anyE                          = unions [ resizeE
                                                , mouseDownE
                                                , mouseUpE
@@ -75,9 +73,8 @@ makeNetworkDescription conn logging workspace = do
                                                , connectionPenE
                                                , textEditorE
                                                ]
-        anyNodeE                     :: Event t (Event.Event Node)
-        anyNodeE                      = unpackDynamic <$> anyE
-        anyNodeB                      = stepper def anyNodeE
+
+        anyNodeB                      = stepper def anyE
 
         globalStateB                 :: Behavior t State
         globalStateB                  = stepper (initialState workspace) $ globalStateReactionB <@ anyE

@@ -60,7 +60,7 @@ data Reaction = PerformIO (IO ())
 instance PrettyPrinter Reaction where
     display _ = "ConnectionPenReaction"
 
-toAction :: Event Node -> Global.State -> Maybe Action
+toAction :: Event -> Global.State -> Maybe Action
 toAction (Mouse (Mouse.Event tpe pos LeftButton keyMods _)) state = case tpe of
     Mouse.Pressed  -> case keyMods of
         (KeyMods False True False False)  -> Just (BeginDrawing pos ConnectionPen.Connecting)

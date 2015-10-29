@@ -22,7 +22,7 @@ import           Reactive.Commands.UpdateNode   (updateNode)
 import qualified Reactive.Plugins.Core.Action.NodeSearcher.Mock as Mock
 import           Data.Text.Lazy (Text)
 
-toAction :: Event Node.Node -> Maybe (Command Global.State ())
+toAction :: Event -> Maybe (Command Global.State ())
 toAction (NodeSearcher (NodeSearcher.Event "query" expr _))           = Just $ querySearch expr
 toAction (NodeSearcher (NodeSearcher.Event "tree"  expr _))           = Just $ queryTree expr
 toAction (NodeSearcher (NodeSearcher.Event "create" expr Nothing))    = Just $ registerNode expr

@@ -22,10 +22,10 @@ import qualified Reactive.State.Global    as Global
 import Reactive.Commands.Command (Command, ioCommand, execCommand, performIO)
 
 
-toAction :: Event Node -> Maybe (Command Global.State ())
+toAction :: Event -> Maybe (Command Global.State ())
 toAction evt = (>> syncCameraM) <$> toAction' evt
 
-toAction' :: Event Node -> Maybe (Command Global.State ())
+toAction' :: Event -> Maybe (Command Global.State ())
 toAction' (Mouse (Mouse.Event evt pos RightButton  _ _)) = Just $ zoomDrag evt pos
 toAction' (Mouse (Mouse.Event evt pos MiddleButton _ _)) = Just $ panDrag  evt pos
 

@@ -11,9 +11,9 @@ import           Object.Object
 import           Object.Node
 import           Object.UITypes
 
-import           Event.Keyboard hiding      ( Event )
+import           Event.Keyboard hiding      (Event)
 import qualified Event.Keyboard as Keyboard
-import           Event.Mouse    hiding      ( Event, WithObjects )
+import           Event.Mouse    hiding      (Event, WithObjects)
 import qualified Event.Mouse    as Mouse
 import           Event.Event
 import           Event.WithObjects
@@ -54,7 +54,7 @@ instance PrettyPrinter Action where
     display (DragAction tpe point) = "dA(" <> display tpe <> " " <> display point <> ")"
 
 
-toAction :: Event Node -> Global.State -> UnderCursor -> Maybe Action
+toAction :: Event -> Global.State -> UnderCursor -> Maybe Action
 toAction (Mouse (Mouse.Event tpe pos button keyMods _)) state underCursor = case button of
     LeftButton         -> case tpe of
         Mouse.Pressed  -> if dragAllowed then case keyMods of

@@ -14,7 +14,7 @@ import           Reactive.Commands.RenderGraph (renderGraph)
 
 import qualified BatchConnector.Monadic.Commands as BatchCmd
 
-toAction :: Event Node -> State -> Maybe (Command State ())
+toAction :: Event -> State -> Maybe (Command State ())
 toAction (Batch (Batch.GraphViewFetched nodes edges)) state = Just $ showGraph nodes edges
 toAction _ _ = Nothing
 

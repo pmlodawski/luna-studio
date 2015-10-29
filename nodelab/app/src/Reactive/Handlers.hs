@@ -4,8 +4,6 @@ module Reactive.Handlers where
 import           Utils.PreludePlus hiding (on)
 import           Utils.Vector
 
-import           Data.Dynamic           (Dynamic)
-
 import           GHCJS.DOM              (currentWindow, currentDocument)
 import           GHCJS.DOM.EventM
 import           GHCJS.Prim             (fromJSString)
@@ -79,7 +77,7 @@ eventObject = do
     doc <- fromJust <$> currentDocument
     Document.getElementById doc (JSString.pack "canvas2d")
 
-mouseHandler :: EventName Element MouseEvent.MouseEvent -> Mouse.Type -> AddHandler (Event Dynamic)
+mouseHandler :: EventName Element MouseEvent.MouseEvent -> Mouse.Type -> AddHandler Event
 mouseHandler event tag =
     AddHandler $ \h -> do
         window <- fromJust <$> eventObject
@@ -102,7 +100,7 @@ mouseMovedHandler    = mouseHandler mouseMove  Mouse.Moved
 mouseClickHandler    = mouseHandler click      Mouse.Clicked
 mouseDblClickHandler = mouseHandler dblClick   Mouse.DblClicked
 
-mouseWheelHandler :: AddHandler (Event Dynamic)
+mouseWheelHandler :: AddHandler Event
 mouseWheelHandler =
     AddHandler $ \h -> do
         window <- fromJust <$> eventObject
@@ -128,7 +126,7 @@ mouseWheelHandler =
                                   return $ Mouse.EventWidget justObjectId justWidgetMatrix justScene
             liftIO . h $ Mouse $ Mouse.Event (Mouse.Wheel delta) mousePos button keyMods maybeWidget
 
-keyHandler :: EventName Element KeyboardEvent.KeyboardEvent -> EventM Element KeyboardEvent.KeyboardEvent Int -> Keyboard.Type -> AddHandler (Event Dynamic)
+keyHandler :: EventName Element KeyboardEvent.KeyboardEvent -> EventM Element KeyboardEvent.KeyboardEvent Int -> Keyboard.Type -> AddHandler Event
 keyHandler event getter tag = AddHandler $ \h -> do
     window <- fromJust <$> eventObject
     window `on` event $ do
@@ -136,12 +134,12 @@ keyHandler event getter tag = AddHandler $ \h -> do
         keyMods <- readKeyMods'
         liftIO . h $ Keyboard $ Keyboard.Event tag (chr key) keyMods
 
-keyPressedHandler :: AddHandler (Event Dynamic)
+keyPressedHandler :: AddHandler Event
 keyPressedHandler = keyHandler keyPress uiCharCode Keyboard.Press
 keyDownHandler    = keyHandler keyDown  uiKeyCode  Keyboard.Down
 keyUpHandler      = keyHandler keyUp    uiKeyCode  Keyboard.Up
 
-resizeHandler :: AddHandler (Event Dynamic)
+resizeHandler :: AddHandler Event
 resizeHandler = AddHandler $ \h -> do
     window <- fromJust <$> currentWindow
     window `on` resize $ liftIO $ do
@@ -149,7 +147,7 @@ resizeHandler = AddHandler $ \h -> do
         height <- getInnerHeight window
         h $ Window $ Window.Event Window.Resized (floor $ 0.7 * (fromIntegral width)) height
 
-nodeSearcherHander :: AddHandler (Event Dynamic)
+nodeSearcherHander :: AddHandler Event
 nodeSearcherHander = AddHandler $ \h -> do
     window <- fromJust <$> currentWindow
     window `on` nsEvent $ do
@@ -160,7 +158,7 @@ nodeSearcherHander = AddHandler $ \h -> do
         let maybeNode = if node == 0 then Nothing else Just node
         liftIO . h $ NodeSearcher $ NodeSearcher.Event action expr maybeNode
 
-webSocketHandler :: WebSocket.WebSocket -> AddHandler (Event Dynamic)
+webSocketHandler :: WebSocket.WebSocket -> AddHandler Event
 webSocketHandler conn = AddHandler $ \h -> do
     WebSocket.onOpen conn $ do
         h $ Connection Connection.Opened
@@ -169,14 +167,14 @@ webSocketHandler conn = AddHandler $ \h -> do
         let frame = Connection.deserialize $ fromJSString payload
         mapM_ (h . Connection . Connection.Message) $ frame ^. Connection.messages
 
-connectionPenHandler :: AddHandler (Event Dynamic)
+connectionPenHandler :: AddHandler Event
 connectionPenHandler  = AddHandler $ \h -> do
     ConnectionPen.registerCallback $ \widgets -> do
         arr       <- return $ JSArray.toList (ConnectionPen.toJSArray widgets)
         widgetIds <- mapM fromJSValUnchecked arr :: IO [WidgetId]
         liftIO $ h $ ConnectionPen $ ConnectionPen.Segment widgetIds
 
-textEditorHandler :: AddHandler (Event Dynamic)
+textEditorHandler :: AddHandler Event
 textEditorHandler  = AddHandler $ \h -> do
     TextEditor.registerCallback $ \code -> do
         codeStr <- return $ TextEditor.toJSString code

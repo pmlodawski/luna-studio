@@ -3,7 +3,6 @@ module Reactive.Plugins.Core.Action.Backend.Runner where
 import           Utils.PreludePlus
 
 import           Object.Object (NodeId)
-import           Object.Node   (Node)
 import           Event.Event   (Event(Batch))
 import qualified Event.Batch   as Batch
 import           Batch.Value   (Value(..))
@@ -15,7 +14,7 @@ import           Reactive.Commands.Command (Command, performIO)
 import           Reactive.State.Global     as Global
 import           Reactive.State.Global     (State)
 
-toAction :: Event Node -> Maybe (Command State ())
+toAction :: Event -> Maybe (Command State ())
 toAction (Batch (Batch.NodeAdded _))              = Just requestRerun
 toAction (Batch  Batch.NodesConnected)            = Just requestRerun
 toAction (Batch  Batch.NodesDisconnected)         = Just requestRerun

@@ -9,6 +9,6 @@ import           Reactive.State.Global      (State)
 import           Reactive.Commands.AddNode  (addNode)
 import           Reactive.Commands.Command  (Command)
 
-toAction :: Event Node -> State -> Maybe (Command State ())
+toAction :: Event -> State -> Maybe (Command State ())
 toAction (Batch (Batch.NodeAdded node)) state = Just $ addNode node
 toAction _ _ = Nothing

@@ -5,7 +5,6 @@ module Reactive.Plugins.Core.Action.Widget where
 import           Utils.PreludePlus
 import           Utils.Vector
 
-import           Object.Node     (Node)
 import           Object.Widget
 import qualified Object.Widget  as Widget
 import           Event.Event
@@ -34,7 +33,7 @@ type UIRegistryState   = UIRegistry.State Global.State
 type UIRegistryUpdate  = (WidgetUIUpdate, UIRegistryState)
 type UIRegistryHandler = (UIRegistryState -> Maybe UIRegistryUpdate)
 
-toAction :: Event Node -> Maybe Action
+toAction :: Event -> Maybe Action
 toAction (Mouse    m) = Just $ MouseAction    m
 toAction (Keyboard k) = Just $ KeyboardAction k
 toAction _            = Nothing

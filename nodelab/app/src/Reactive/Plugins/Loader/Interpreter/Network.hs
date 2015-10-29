@@ -6,7 +6,6 @@ import Reactive.Banana
 import Reactive.Banana.Frameworks
 import Reactive.Handlers
 
-import           Data.Dynamic
 import           Data.ByteString.Lazy    (ByteString)
 import           JS.WebSocket
 import           JS.Bindings             (displayRejectedMessage)
@@ -31,7 +30,7 @@ type Action = (IO (), State)
 makeReaction :: (State -> Action) -> Action -> Action
 makeReaction f (_, state) = f state
 
-react :: Project -> Event.Event Dynamic -> Maybe (Action -> Action)
+react :: Project -> Event.Event -> Maybe (Action -> Action)
 react project event = makeReaction <$> handler event where
     handler (Event.Batch event) = Just $ reactToBatchEvent project event
     handler _                   = Nothing

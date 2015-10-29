@@ -16,7 +16,7 @@ import qualified Reactive.State.Graph           as Graph
 import           Reactive.Commands.Command      (Command, performIO)
 import           Reactive.Commands.RefreshGraph (refreshGraph)
 
-toAction :: Event Node -> Maybe (Command State ())
+toAction :: Event -> Maybe (Command State ())
 toAction (Batch (Batch.NodeAdded node))          = Just $ insertSerializationMode node
 toAction (Batch (Batch.RunFinished status))      = Just $ zoom Global.workspace $ BatchCmd.getCode
 toAction (Batch Batch.ConnectionDropped)         = Just $ performIO displayRejectedMessage

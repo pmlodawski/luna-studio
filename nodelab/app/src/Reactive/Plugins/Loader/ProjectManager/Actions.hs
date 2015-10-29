@@ -1,7 +1,6 @@
 module Reactive.Plugins.Loader.ProjectManager.Actions where
 
 import           Utils.PreludePlus
-import           Data.Dynamic
 import           Data.ByteString.Lazy      (ByteString)
 import           JS.Bindings               (displayRejectedMessage)
 
@@ -20,7 +19,7 @@ type Action = (IO (), State)
 makeReaction :: (State -> Action) -> Action -> Action
 makeReaction f (_, state) = f state
 
-react :: Event.Event Dynamic -> Maybe (Action -> Action)
+react :: Event.Event -> Maybe (Action -> Action)
 react event = makeReaction <$> handler event where
     handler (Event.Batch event)                  = Just $ reactToBatchEvent event
     handler _                                    = Nothing
