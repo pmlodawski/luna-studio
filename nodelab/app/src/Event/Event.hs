@@ -6,7 +6,6 @@ import qualified Event.Keyboard      as Keyboard
 import qualified Event.Mouse         as Mouse
 import qualified Event.Window        as Window
 import qualified Event.NodeSearcher  as NodeSearcher
-import qualified Event.WithObjects   as WithObjects
 import qualified Event.Connection    as Connection
 import qualified Event.ConnectionPen as ConnectionPen
 import qualified Event.Batch         as Batch

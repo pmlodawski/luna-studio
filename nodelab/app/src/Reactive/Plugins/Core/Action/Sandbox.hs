@@ -12,11 +12,10 @@ import           Object.Widget
 import           Object.Node
 import           Object.UITypes
 
-import           Event.Mouse    hiding      (Event, WithObjects, widget)
+import           Event.Mouse    hiding      (Event, widget)
 import qualified Event.Mouse    as Mouse
 import qualified Event.Window   as Window
 import           Event.Event
-import           Event.WithObjects
 
 import           Reactive.Plugins.Core.Action
 import qualified Reactive.State.Global       as Global

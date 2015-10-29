@@ -13,10 +13,9 @@ import           Object.UITypes
 
 import           Event.Keyboard hiding      (Event)
 import qualified Event.Keyboard as Keyboard
-import           Event.Mouse    hiding      (Event, WithObjects)
+import           Event.Mouse    hiding      (Event)
 import qualified Event.Mouse    as Mouse
 import           Event.Event
-import           Event.WithObjects
 
 import           Reactive.Plugins.Core.Action
 import           Reactive.Commands.Graph

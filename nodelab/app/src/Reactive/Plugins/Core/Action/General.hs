@@ -5,11 +5,12 @@ import           Utils.Vector
 
 import           JS.Bindings
 import           JS.Camera
-import           Event.Mouse    hiding      ( Event, WithObjects )
+import           Object.Object
+import           Object.Node
+import           Event.Mouse    hiding      (Event)
 import qualified Event.Mouse    as Mouse
 import qualified Event.Window   as Window
 import           Event.Event
-import           Event.WithObjects
 import           Reactive.Plugins.Core.Action
 import qualified Reactive.Plugins.Core.Action.Camera         as Camera
 import qualified Reactive.State.Camera   as Camera

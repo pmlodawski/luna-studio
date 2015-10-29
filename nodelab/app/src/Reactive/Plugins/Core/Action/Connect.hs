@@ -17,12 +17,11 @@ import           Object.UITypes
 import           Object.Widget
 import qualified Object.Widget.Connection as UIConnection
 
-import           Event.Keyboard hiding      ( Event )
+import           Event.Keyboard hiding      (Event)
 import qualified Event.Keyboard as Keyboard
-import           Event.Mouse    hiding      ( Event, WithObjects, widget )
+import           Event.Mouse    hiding      (Event, widget)
 import qualified Event.Mouse    as Mouse
 import           Event.Event
-import           Event.WithObjects
 
 import           Reactive.Plugins.Core.Action
 import           Reactive.Commands.Graph
