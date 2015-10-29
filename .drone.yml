@@ -14,6 +14,6 @@ notify:
     webhook_url: 'https://hooks.slack.com/services/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'
     username: 'drone'
     channel: '#cd'
-    on_started: true
+    on_started: false
     on_success: true
     on_failure: true
