@@ -17,42 +17,21 @@ import qualified Reactive.Plugins.Core.Action.Camera         as Camera
 import qualified Reactive.State.Camera   as Camera
 import qualified Reactive.State.Global   as Global
 
+import Reactive.Commands.Command (Command, ioCommand, execCommand, performIO)
 
+toAction :: Event Node -> Maybe (Command Global.State ())
+toAction (Mouse (Mouse.Event Mouse.Moved pos _ _ _))         = Just $ updateMousePos pos
+toAction (Window (Window.Event Window.Resized width height)) = Just $ zoom Global.camera $ updateWindowSize (Vector2 width height)
 
-data Action = Moving   { _pos   :: Vector2 Int }
-            | Resizing { _size  :: Vector2 Int }
-            deriving (Eq, Show)
+updateWindowSize :: Vector2 Int -> Command Camera.State ()
+updateWindowSize size = do
+    Camera.camera . Camera.screenSize .= size
+    Camera.syncCamera
+    performIO $ updateScreenSize (size ^. x) (size ^. y)
 
-
-makeLenses ''Action
-
-instance PrettyPrinter Action where
-    display (Moving point)  = "mA(" <> display point <> ")"
-    display (Resizing size) = "rA(" <> display size  <> ")"
-
-
-toAction :: Event Node -> Maybe Action
-toAction (Mouse (Mouse.Event tpe pos _ _ _)) = case tpe of
-    Mouse.Moved     -> Just $ Moving pos
-    _               -> Nothing
-toAction (Window (Window.Event tpe width height)) = case tpe of
-    Window.Resized  -> Just $ Resizing $ Vector2 width height
-toAction _           = Nothing
-
-
-instance ActionStateUpdater Action where
-    execSt newAction oldState = ActionUI newAction newState where
-        newState           = case newAction of
-            Moving pos    -> oldState & Global.iteration  +~ 1
-                                      & Global.mousePos   .~ pos
-            Resizing size -> oldState & Global.iteration  +~ 1
-                                      & Global.camera . Camera.camera . Camera.screenSize .~ size
-
-
-instance ActionUIUpdater Action where
-    updateUI (WithState action state) = case action of
-        Moving pos      -> updateMouse x y where
-            Vector2 x y  = Camera.screenToWorkspace camera pos
-            camera       = state ^. Global.camera . Camera.camera
-        Resizing size   -> Camera.syncCamera state
-                        >> updateScreenSize (size ^. x) (size ^. y)
+updateMousePos :: Vector2 Int -> Command Global.State ()
+updateMousePos pos = do
+    Global.mousePos .= pos
+    camera <- use $ Global.camera . Camera.camera
+    let Vector2 x y = Camera.screenToWorkspace camera pos
+    performIO $ updateMouse x y
