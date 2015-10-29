@@ -10,17 +10,21 @@ module JS.WebSocket (WebSocket
                     ) where
 
 import Utils.PreludePlus
-import GHCJS.Types
+import GHCJS.Types (JSVal, IsJSVal)
+import GHCJS.Marshal.Pure (PToJSVal(..), PFromJSVal(..))
 import GHCJS.Foreign.Callback
 import GHCJS.Foreign
 import Data.JSString
 
 data WSRef
-type WebSocket = JSRef WSRef
-data WSMessageEvent
+newtype WebSocket      = WebSocket      { unWebSocket      :: JSVal } deriving (PFromJSVal, PToJSVal)
+newtype WSMessageEvent = WSMessageEvent { unWSMessageEvent :: JSVal } deriving (PFromJSVal, PToJSVal)
+
+instance IsJSVal WebSocket
+instance IsJSVal WSMessageEvent
 
 foreign import javascript unsafe "$1.data"
-    getData :: JSRef WSMessageEvent -> IO (JSRef ())
+    getData :: WSMessageEvent -> IO (JSVal)
 
 foreign import javascript unsafe "app.websocket"
     getWebSocket :: IO WebSocket
@@ -32,10 +36,10 @@ foreign import javascript unsafe "$1.unOnOpen($2)"
     unOnOpen' :: WebSocket -> Callback (IO ()) -> IO ()
 
 foreign import javascript unsafe "$1.onMessage($2)"
-    onMessage' :: WebSocket -> Callback (JSRef WSMessageEvent -> IO ()) -> IO ()
+    onMessage' :: WebSocket -> Callback (JSVal -> IO ()) -> IO ()
 
 foreign import javascript unsafe "$1.unOnMessage()"
-    unOnMessage' :: WebSocket -> Callback (JSRef WSMessageEvent -> IO ()) -> IO ()
+    unOnMessage' :: WebSocket -> Callback (JSVal -> IO ()) -> IO ()
 
 foreign import javascript unsafe "$1.send($2)"
     send :: WebSocket -> JSString -> IO ()
@@ -52,9 +56,9 @@ onOpen ws callback = do
     onOpen' ws wrappedCallback
     return $ unOnOpen' ws wrappedCallback >> releaseCallback wrappedCallback
 
-onMessage :: WebSocket -> (JSRef WSMessageEvent -> IO ()) -> IO (IO ())
+onMessage :: WebSocket -> (WSMessageEvent -> IO ()) -> IO (IO ())
 onMessage ws callback = do
-    wrappedCallback <- asyncCallback1 callback
+    wrappedCallback <- asyncCallback1 (callback . pFromJSVal)
     onMessage' ws wrappedCallback
     return $ unOnMessage' ws wrappedCallback >> releaseCallback wrappedCallback
 
