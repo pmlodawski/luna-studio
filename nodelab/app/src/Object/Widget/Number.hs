@@ -5,7 +5,6 @@ module Object.Widget.Number where
 import           Utils.PreludePlus
 import           Utils.Vector
 import           Data.Fixed
-import           GHCJS.Types (JSRef)
 import qualified Data.Text.Lazy as Text
 import           Data.Text.Lazy (Text)
 

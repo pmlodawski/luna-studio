@@ -3,7 +3,7 @@ module UI.Raycaster where
 import           Utils.PreludePlus
 
 import           GHCJS.Foreign
-import           GHCJS.Types         (JSRef, JSString)
+import           GHCJS.Types         (JSString)
 import           Utils.Vector
 import qualified Event.Mouse      as Mouse
 import           JavaScript.Array    (JSArray)

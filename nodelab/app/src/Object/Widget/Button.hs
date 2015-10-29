@@ -4,8 +4,6 @@ module Object.Widget.Button where
 
 import           Utils.PreludePlus
 import           Utils.Vector
-import           Data.Fixed
-import           GHCJS.Types (JSRef)
 
 import           Object.Widget
 
