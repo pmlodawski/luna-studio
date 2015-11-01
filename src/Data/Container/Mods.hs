@@ -1,21 +1,48 @@
 {-# LANGUAGE TypeFamilies         #-}
 {-# LANGUAGE KindSignatures       #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE PolyKinds            #-}
 
+-- TODO[WD]: Rename to Data.Container.Opts
 module Data.Container.Mods where
 
 import Prologue hiding (Ixed)
-import Data.TypeLevel.Bool
+import Type.Bool
 import Data.Typeable
+
+-- === Opts===
+
+
+
+
+-- === Mods ===
+
+data Ixed      = Ixed
+
+
+
+-- === Parameters ===
 
 data Safe      = Safe
 data Unchecked = Unchecked
-data Ixed      = Ixed
+data Unsafe    = Unsafe
+
+-- Formatters
+
 data Try       = Try
+data Raw       = Raw
 
 
+
+
+
+
+
+
+--- DELETE vvvvvvvvv
 type family Mutable a :: Bool
 type instance Mutable Ixed      = True
+type instance Mutable Unsafe    = False
 type instance Mutable Unchecked = False
 type instance Mutable Try       = False
 

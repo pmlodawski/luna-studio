@@ -27,7 +27,7 @@ import           Data.TypeLevel.List (In)
 import           Data.Container.TH
 import qualified Data.Container.Mods as Mods
 
-import Data.TypeLevel.Bool
+import Type.Bool
 
 import Data.Container.Poly
 import GHC.Prim
@@ -51,11 +51,16 @@ impossible = error "Impossible happened."
 type SelResult  info s     = Result (SelTags info s)
 type SelResultM info s m a = m (SelResult info s a)
 
-type QueryResultData info q t     = QueryTags (info (DataStoreOf (ContainerOf t))) (Mods.FilterMutable q)
+type QueryResultData info q t     = QueryData (info (DataStoreOf (ContainerOf t))) (Mods.FilterMutable q)
 type QueryResult     info q t     = Result (QueryResultData info q t)
-type QueryResultM    info q m t a = m (Result (QueryTags (info (DataStoreOf (ContainerOf t))) (Mods.FilterMutable q)) a)
+type QueryResultM    info q m t a = m (Result (QueryData (info (DataStoreOf (ContainerOf t))) (Mods.FilterMutable q)) a)
 
 type Func (q :: [*]) sig = FuncTrans '[] (Proxy q -> sig) f => f
+
+
+--class Constructor a
+
+--type family ConsArgs a :: [*]
 
 
 -- === Finite ===
@@ -64,9 +69,9 @@ type Func (q :: [*]) sig = FuncTrans '[] (Proxy q -> sig) f => f
 -- MinBounded
 -- MaxBounded
 
-class MeasurableQSM cont m q s where sizeQSM      :: (AssumeQuery info q s, info ~ MeasurableInfo cont) => Query q s -> info -> cont -> SelResultM info s m Int
-class MinIndexedQSM cont m q s where minIndexQSM  :: (AssumeQuery info q s, info ~ MinIndexedInfo cont) => Query q s -> info -> cont -> SelResultM info s m (IndexOf' (DataStoreOf cont))
-class MaxIndexedQSM cont m q s where maxIndexQSM  :: (AssumeQuery info q s, info ~ MaxIndexedInfo cont) => Query q s -> info -> cont -> SelResultM info s m (IndexOf' (DataStoreOf cont))
+class MeasurableQSM     cont m q s where sizeQSM      :: (AssumeQuery info q s, info ~ MeasurableInfo     cont) => Query q s -> info -> cont -> SelResultM info s m Int
+class MinIndexedQSM idx cont m q s where minIndexQSM  :: (AssumeQuery info q s, info ~ MinIndexedInfo idx cont) => Query q s -> info -> cont -> SelResultM info s m idx
+class MaxIndexedQSM idx cont m q s where maxIndexQSM  :: (AssumeQuery info q s, info ~ MaxIndexedInfo idx cont) => Query q s -> info -> cont -> SelResultM info s m idx
 
 
 class                         OpCtx MeasurableInfo q m t           => MeasurableQM q m t           where sizeQM :: Proxy q -> t -> QueryResultM MeasurableInfo q m t Int
@@ -84,27 +89,66 @@ size'  :: MeasurableQ  q   t => Func q (t -> QueryResult  MeasurableInfo q   t I
 sizeM  :: MeasurableQM q m t => (Simplify (QueryResultData MeasurableInfo q t) Int a, CheckOpM q m a m' a') => Func q (t -> m' a')
 size   :: MeasurableQM q m t => (Simplify (QueryResultData MeasurableInfo q t) Int a, CheckOp  q m a    a') => Func q (t ->    a')
 
+type family ResultQData r where ResultQData (Result d r) = d
+type family ResultData  r where ResultData  (Result d r) = r
+
+type GetResultQData f = ResultQData (GetResult f)
+type GetResultData  f = ResultData  (GetResult f)
+
+type family GetResult f where
+    GetResult (a -> b)     = GetResult b
+    GetResult (Result d r) = Result d r
+
+type family ReplaceFuncResult a f where
+    ReplaceFuncResult a (f -> g)     = (f -> ReplaceFuncResult a g)
+    ReplaceFuncResult a (Result d r) = a
+
+--QueryResult  MeasurableInfo q   t Int
+
+--type family Foo a where Foo a = (Show b => (a,b))
+
+--class Simplify2 q m rt a s | rt a -> s, s -> rt a
+--instance Simplify rt a s, CheckOpM q m a   Simplify2 q m rt a s
+
+
 sizeM' = transFunc $ optBuilder sizeQM
 size'  = withTransFunc (fmap2 runIdentity) sizeM'
 sizeM  = withTransFunc (runOperation1 . fmap3 simplify) sizeM'
 size   = withTransFunc (fmap2 runIdentity) sizeM
 
+--sizeM2 :: MeasurableQM q m t => TTT2 q m (t -> (QueryResult MeasurableInfo q t Int))
+--sizeM2 = withTransFunc (fmap3 simplify2) sizeM'
+
+--simplify2 (Result d r) = toTup $ appendRTup r d
+
+--type Foo' f = AppendedRTup (GetResultData f) (GetResultQData f)
+--type Foo f = AsTup (Foo' f)
+--type Bar f = AppendRTup (GetResultData f) (GetResultQData f)
+--type Baz f = ToTup (Foo' f)
+
+--type BCTX f = (Bar f, Baz f)
+
+--type TTT q m f = Func q (ReplaceFuncResult (m (Foo f)) f)
+--type TTT2 q m f = BCTX f => Func q (ReplaceFuncResult (m (Foo f)) f)
+
+
+
 --
 
-class                         OpCtx MinIndexedInfo q m t           => MinIndexedQM q m t           where minIndexQM :: Proxy q -> t -> QueryResultM MinIndexedInfo q m t (IndexOf' (DataStoreOf t))
-instance {-# OVERLAPPABLE #-} OpCtx MinIndexedInfo q m t           => MinIndexedQM q m t           where minIndexQM = barTy (runModsF' minIndexQSM) (Proxy :: Proxy MinIndexedQSM)
-instance {-# OVERLAPPABLE #-} OpCtx MinIndexedInfo q m Impossible  => MinIndexedQM q m Impossible  where minIndexQM = impossible
-instance {-# OVERLAPPABLE #-} OpCtx MinIndexedInfo q ImpossibleM t => MinIndexedQM q ImpossibleM t where minIndexQM = impossible
+class                         OpCtx (MinIndexedInfo idx) q m t           => MinIndexedQM idx q m t           where minIndexQM :: Proxy q -> t -> QueryResultM (MinIndexedInfo idx) q m t idx
+instance {-# OVERLAPPABLE #-} OpCtx (MinIndexedInfo idx) q m t           => MinIndexedQM idx q m t           where minIndexQM = barTy (runModsF' minIndexQSM) (Proxy :: Proxy MinIndexedQSM)
+instance {-# OVERLAPPABLE #-} OpCtx (MinIndexedInfo idx) q m Impossible  => MinIndexedQM idx q m Impossible  where minIndexQM = impossible
+instance {-# OVERLAPPABLE #-} OpCtx (MinIndexedInfo idx) q ImpossibleM t => MinIndexedQM idx q ImpossibleM t where minIndexQM = impossible
 
-type MinIndexedInfo   = RawInfo MinIndexedQSM
-type MinIndexedQ    q = MinIndexedQM q Identity
-type MinIndexedM      = MinIndexedQM '[]
-type MinIndexed       = MinIndexedM  Identity
+type MinIndexedInfo idx   = IxedInfo idx MinIndexedQSM
+type MinIndexedQ    idx q = MinIndexedQM idx q Identity
+type MinIndexedM    idx   = MinIndexedQM idx '[]
+type MinIndexed     idx   = MinIndexedM  idx Identity
 
-minIndexM' :: MinIndexedQM q m t => Func q (t -> QueryResultM MinIndexedInfo q m t (IndexOf' (DataStoreOf t)))
-minIndex'  :: MinIndexedQ  q   t => Func q (t -> QueryResult  MinIndexedInfo q   t (IndexOf' (DataStoreOf t)))
-minIndexM  :: MinIndexedQM q m t => (Simplify (QueryResultData MinIndexedInfo q t) (IndexOf' (DataStoreOf t)) a, CheckOpM q m a m' a') => Func q (t -> m' a')
-minIndex   :: MinIndexedQM q m t => (Simplify (QueryResultData MinIndexedInfo q t) (IndexOf' (DataStoreOf t)) a, CheckOp  q m a    a') => Func q (t ->    a')
+--minIndexM' :: MinIndexedQM q m t => Func q (t -> QueryResultM MinIndexedInfo q m t (IndexOf' (DataStoreOf t)))
+--minIndex'  :: MinIndexedQ  q   t => Func q (t -> QueryResult  MinIndexedInfo q   t (IndexOf' (DataStoreOf t)))
+--minIndexM  :: MinIndexedQM q m t => (Simplify (QueryResultData MinIndexedInfo q t) (IndexOf' (DataStoreOf t)) a, CheckOpM q m a m' a') => Func q (t -> m' a')
+--minIndex   :: MinIndexedQM q m t => (Simplify (QueryResultData MinIndexedInfo q t) (IndexOf' (DataStoreOf t)) a, CheckOp  q m a    a') => Func q (t ->    a')
 
 minIndexM' = transFunc $ optBuilder minIndexQM
 minIndex'  = withTransFunc (fmap2 runIdentity) minIndexM'
@@ -113,15 +157,20 @@ minIndex   = withTransFunc (fmap2 runIdentity) minIndexM
 
 --
 
-class                         OpCtx MaxIndexedInfo q m t           => MaxIndexedQM q m t           where maxIndexQM :: Proxy q -> t -> QueryResultM MaxIndexedInfo q m t (IndexOf' (DataStoreOf t))
-instance {-# OVERLAPPABLE #-} OpCtx MaxIndexedInfo q m t           => MaxIndexedQM q m t           where maxIndexQM = barTy (runModsF' maxIndexQSM) (Proxy :: Proxy MaxIndexedQSM)
-instance {-# OVERLAPPABLE #-} OpCtx MaxIndexedInfo q m Impossible  => MaxIndexedQM q m Impossible  where maxIndexQM = impossible
-instance {-# OVERLAPPABLE #-} OpCtx MaxIndexedInfo q ImpossibleM t => MaxIndexedQM q ImpossibleM t where maxIndexQM = impossible
+--class                         OpCtx MaxIndexedInfo q m t           => MaxIndexedQM q m t           where maxIndexQM :: Proxy q -> t -> QueryResultM MaxIndexedInfo q m t (IndexOf' (DataStoreOf t))
+--instance {-# OVERLAPPABLE #-} OpCtx MaxIndexedInfo q m t           => MaxIndexedQM q m t           where maxIndexQM = barTy (runModsF' maxIndexQSM) (Proxy :: Proxy MaxIndexedQSM)
+--instance {-# OVERLAPPABLE #-} OpCtx MaxIndexedInfo q m Impossible  => MaxIndexedQM q m Impossible  where maxIndexQM = impossible
+--instance {-# OVERLAPPABLE #-} OpCtx MaxIndexedInfo q ImpossibleM t => MaxIndexedQM q ImpossibleM t where maxIndexQM = impossible
 
-type MaxIndexedInfo   = RawInfo MaxIndexedQSM
-type MaxIndexedQ    q = MaxIndexedQM q Identity
-type MaxIndexedM      = MaxIndexedQM '[]
-type MaxIndexed       = MaxIndexedM  Identity
+class                         OpCtx (MaxIndexedInfo idx) q m t           => MaxIndexedQM idx q m t           where maxIndexQM :: Proxy q -> t -> QueryResultM (MaxIndexedInfo idx) q m t idx
+instance {-# OVERLAPPABLE #-} OpCtx (MaxIndexedInfo idx) q m t           => MaxIndexedQM idx q m t           where maxIndexQM = barTy (runModsF' maxIndexQSM) (Proxy :: Proxy MaxIndexedQSM)
+instance {-# OVERLAPPABLE #-} OpCtx (MaxIndexedInfo idx) q m Impossible  => MaxIndexedQM idx q m Impossible  where maxIndexQM = impossible
+instance {-# OVERLAPPABLE #-} OpCtx (MaxIndexedInfo idx) q ImpossibleM t => MaxIndexedQM idx q ImpossibleM t where maxIndexQM = impossible
+
+type MaxIndexedInfo idx   = IxedInfo idx MaxIndexedQSM
+type MaxIndexedQ    idx q = MaxIndexedQM idx q Identity
+type MaxIndexedM    idx   = MaxIndexedQM idx '[]
+type MaxIndexed     idx   = MaxIndexedM  idx Identity
 
 maxIndexM' = transFunc $ optBuilder maxIndexQM
 maxIndex'  = withTransFunc (fmap2 runIdentity) maxIndexM'
@@ -222,14 +271,18 @@ grow   = withTransFunc (fmap3 runIdentity) growM
 -- Addable
 -- Removable
 
+type ImpQ = '[Impossible]
+
 class AppendableQSM           el cont m q s where appendQSM      :: (AssumeQuery info q s, info ~ AppendableInfo     el cont) => Query q s -> info ->        el -> cont -> SelResultM info s m cont
 class AddableQSM              el cont m q s where addQSM         :: (AssumeQuery info q s, info ~ AddableInfo        el cont) => Query q s -> info ->        el -> cont -> SelResultM info s m cont
 class InsertableQSM       idx el cont m q s where insertQSM      :: (AssumeQuery info q s, info ~ InsertableInfo idx el cont) => Query q s -> info -> idx -> el -> cont -> SelResultM info s m cont
+class FreeableQSM            idx cont m q s where freeQSM        :: (AssumeQuery info q s, info ~ FreeableInfo   idx    cont) => Query q s -> info -> idx ->       cont -> SelResultM info s m cont
 
 --
 
 class                         OpCtx (AppendableInfo el) q m t           => AppendableQM el q m t           where appendQM :: Proxy q -> el -> t -> QueryResultM (AppendableInfo el) q m t t
 instance {-# OVERLAPPABLE #-} OpCtx (AppendableInfo el) q m t           => AppendableQM el q m t           where appendQM q i t = barTx (runModsF' (\q' inf -> appendQSM q' inf i)) (Proxy :: Proxy AppendableQSM) q t
+instance {-# OVERLAPPABLE #-} OpCtx (AppendableInfo el) ImpQ m t        => AppendableQM el ImpQ m t        where appendQM = impossible
 instance {-# OVERLAPPABLE #-} OpCtx (AppendableInfo el) q m Impossible  => AppendableQM el q m Impossible  where appendQM = impossible
 instance {-# OVERLAPPABLE #-} OpCtx (AppendableInfo el) q ImpossibleM t => AppendableQM el q ImpossibleM t where appendQM = impossible
 
@@ -281,30 +334,46 @@ insertM  = withTransFunc (runOperation2 . fmap5 simplify) insertM'
 insert   = withTransFunc (fmap4 runIdentity) insertM
 
 
+class                         OpCtx (FreeableInfo idx) q m t           => FreeableQM idx q m t           where freeQM :: Proxy q -> idx -> t -> QueryResultM (FreeableInfo idx) q m t t
+instance {-# OVERLAPPABLE #-} OpCtx (FreeableInfo idx) q m t           => FreeableQM idx q m t           where freeQM q idx t = barTx (runModsF' (\q' inf -> freeQSM q' inf idx)) (Proxy :: Proxy FreeableQSM) q t
+instance {-# OVERLAPPABLE #-} OpCtx (FreeableInfo idx) q m Impossible  => FreeableQM idx q m Impossible  where freeQM = impossible
+instance {-# OVERLAPPABLE #-} OpCtx (FreeableInfo idx) q ImpossibleM t => FreeableQM idx q ImpossibleM t where freeQM = impossible
+
+type FreeableInfo idx   = IxedInfo   idx FreeableQSM
+type FreeableQ    idx q = FreeableQM idx q Identity
+type FreeableM    idx   = FreeableQM idx '[]
+type Freeable     idx   = FreeableM  idx Identity
+
+freeM' = transFunc $ optBuilder freeQM
+free'  = withTransFunc (fmap3 runIdentity) freeM'
+freeM  = withTransFunc (runOperation1 . fmap4 simplify) freeM'
+free   = withTransFunc (fmap3 runIdentity) usedIxesM
 
 ---- === Indexing ===
 
 -- Indexable
--- TracksElems
+-- TracksEls
 -- TracksIxes
 -- TracksFreeIxes
 -- TracksUsedIxes
-
 
 class IndexableQSM      idx el cont m q s where indexQSM    :: (AssumeQuery info q s, info ~ IndexableInfo      idx el cont) => Query q s -> info -> idx -> cont -> SelResultM info s m el
 class TracksFreeIxesQSM idx    cont m q s where freeIxesQSM :: (AssumeQuery info q s, info ~ TracksFreeIxesInfo idx    cont) => Query q s -> info ->        cont -> SelResultM info s m [idx]
 class TracksUsedIxesQSM idx    cont m q s where usedIxesQSM :: (AssumeQuery info q s, info ~ TracksUsedIxesInfo idx    cont) => Query q s -> info ->        cont -> SelResultM info s m [idx]
 class TracksIxesQSM     idx    cont m q s where ixesQSM     :: (AssumeQuery info q s, info ~ TracksIxesInfo     idx    cont) => Query q s -> info ->        cont -> SelResultM info s m [idx]
+class TracksElemsQSM        el cont m q s where elemsQSM    :: (AssumeQuery info q s, info ~ TracksElemsInfo        el cont) => Query q s -> info ->        cont -> SelResultM info s m [el]
+
+--
 
 class                         OpCtx (TracksFreeIxesInfo idx) q m t           => TracksFreeIxesQM idx q m t           where freeIxesQM :: Proxy q -> t -> QueryResultM (TracksFreeIxesInfo idx) q m t [idx]
 instance {-# OVERLAPPABLE #-} OpCtx (TracksFreeIxesInfo idx) q m t           => TracksFreeIxesQM idx q m t           where freeIxesQM = barTy (runModsF' freeIxesQSM) (Proxy :: Proxy TracksFreeIxesQSM)
 instance {-# OVERLAPPABLE #-} OpCtx (TracksFreeIxesInfo idx) q m Impossible  => TracksFreeIxesQM idx q m Impossible  where freeIxesQM = impossible
 instance {-# OVERLAPPABLE #-} OpCtx (TracksFreeIxesInfo idx) q ImpossibleM t => TracksFreeIxesQM idx q ImpossibleM t where freeIxesQM = impossible
 
-type IndexableInfo idx el   = IxedElInfo  idx el IndexableQSM
-type IndexableQ    idx el q = IndexableQM idx el q Identity
-type IndexableM    idx el   = IndexableQM idx el '[]
-type Indexable     idx el   = IndexableM  idx el Identity
+type TracksFreeIxesInfo idx   = IxedInfo         idx TracksFreeIxesQSM
+type TracksFreeIxesQ    idx q = TracksFreeIxesQM idx q Identity
+type TracksFreeIxesM    idx   = TracksFreeIxesQM idx '[]
+type TracksFreeIxes     idx   = TracksFreeIxesM  idx Identity
 
 freeIxesM' = transFunc $ optBuilder freeIxesQM
 freeIxes'  = withTransFunc (fmap2 runIdentity) freeIxesM'
@@ -318,10 +387,10 @@ instance {-# OVERLAPPABLE #-} OpCtx (TracksUsedIxesInfo idx) q m t           => 
 instance {-# OVERLAPPABLE #-} OpCtx (TracksUsedIxesInfo idx) q m Impossible  => TracksUsedIxesQM idx q m Impossible  where usedIxesQM = impossible
 instance {-# OVERLAPPABLE #-} OpCtx (TracksUsedIxesInfo idx) q ImpossibleM t => TracksUsedIxesQM idx q ImpossibleM t where usedIxesQM = impossible
 
-type TracksFreeIxesInfo idx   = IxedInfo         idx TracksFreeIxesQSM
-type TracksFreeIxesQ    idx q = TracksFreeIxesQM idx q Identity
-type TracksFreeIxesM    idx   = TracksFreeIxesQM idx '[]
-type TracksFreeIxes     idx   = TracksFreeIxesM  idx Identity
+type TracksUsedIxesInfo idx   = IxedInfo         idx TracksUsedIxesQSM
+type TracksUsedIxesQ    idx q = TracksUsedIxesQM idx q Identity
+type TracksUsedIxesM    idx   = TracksUsedIxesQM idx '[]
+type TracksUsedIxes     idx   = TracksUsedIxesM  idx Identity
 
 usedIxesM' = transFunc $ optBuilder usedIxesQM
 usedIxes'  = withTransFunc (fmap2 runIdentity) usedIxesM'
@@ -335,10 +404,10 @@ instance {-# OVERLAPPABLE #-} OpCtx (TracksIxesInfo idx)     q m t           => 
 instance {-# OVERLAPPABLE #-} OpCtx (TracksIxesInfo idx)     q m Impossible  => TracksIxesQM     idx q m Impossible  where ixesQM     = impossible
 instance {-# OVERLAPPABLE #-} OpCtx (TracksIxesInfo idx)     q ImpossibleM t => TracksIxesQM     idx q ImpossibleM t where ixesQM     = impossible
 
-type TracksUsedIxesInfo idx   = IxedInfo         idx TracksUsedIxesQSM
-type TracksUsedIxesQ    idx q = TracksUsedIxesQM idx q Identity
-type TracksUsedIxesM    idx   = TracksUsedIxesQM idx '[]
-type TracksUsedIxes     idx   = TracksUsedIxesM  idx Identity
+type TracksIxesInfo idx   = IxedInfo     idx TracksIxesQSM
+type TracksIxesQ    idx q = TracksIxesQM idx q Identity
+type TracksIxesM    idx   = TracksIxesQM idx '[]
+type TracksIxes     idx   = TracksIxesM  idx Identity
 
 ixesM' = transFunc $ optBuilder ixesQM
 ixes'  = withTransFunc (fmap2 runIdentity) ixesM'
@@ -347,15 +416,32 @@ ixes   = withTransFunc (fmap2 runIdentity) ixesM
 
 --
 
+class                         OpCtx (TracksElemsInfo el)     q m t           => TracksElemsQM     el q m t           where elemsQM     :: Proxy q -> t -> QueryResultM (TracksElemsInfo el) q m t [el]
+instance {-# OVERLAPPABLE #-} OpCtx (TracksElemsInfo el)     q m t           => TracksElemsQM     el q m t           where elemsQM     = barTy (runModsF' elemsQSM) (Proxy :: Proxy TracksElemsQSM)
+instance {-# OVERLAPPABLE #-} OpCtx (TracksElemsInfo el)     q m Impossible  => TracksElemsQM     el q m Impossible  where elemsQM     = impossible
+instance {-# OVERLAPPABLE #-} OpCtx (TracksElemsInfo el)     q ImpossibleM t => TracksElemsQM     el q ImpossibleM t where elemsQM     = impossible
+
+type TracksElemsInfo el   = ElInfo        el TracksElemsQSM
+type TracksElemsQ    el q = TracksElemsQM el q Identity
+type TracksElemsM    el   = TracksElemsQM el '[]
+type TracksElems     el   = TracksElemsM  el Identity
+
+elemsM' = transFunc $ optBuilder elemsQM
+elems'  = withTransFunc (fmap2 runIdentity) elemsM'
+elemsM  = withTransFunc (runOperation1 . fmap3 simplify) elemsM'
+elems   = withTransFunc (fmap2 runIdentity) elemsM
+
+--
+
 class                         (SimpleRes el, OpCtx (IndexableInfo idx el) q m t          ) => IndexableQM idx el q m t           where indexQM :: Proxy q -> idx -> t -> QueryResultM (IndexableInfo idx el) q m t el
 instance {-# OVERLAPPABLE #-} (SimpleRes el, OpCtx (IndexableInfo idx el) q m t          ) => IndexableQM idx el q m t           where indexQM q i t = barTy (runModsF' (\q' inf -> indexQSM q' inf i)) (Proxy :: Proxy IndexableQSM) q t
 instance {-# OVERLAPPABLE #-} (SimpleRes el, OpCtx (IndexableInfo idx el) q m Impossible ) => IndexableQM idx el q m Impossible  where indexQM = impossible
 instance {-# OVERLAPPABLE #-} (SimpleRes el, OpCtx (IndexableInfo idx el) q ImpossibleM t) => IndexableQM idx el q ImpossibleM t where indexQM = impossible
 
-type TracksIxesInfo idx   = IxedInfo     idx TracksIxesQSM
-type TracksIxesQ    idx q = TracksIxesQM idx q Identity
-type TracksIxesM    idx   = TracksIxesQM idx '[]
-type TracksIxes     idx   = TracksIxesM  idx Identity
+type IndexableInfo idx el   = IxedElInfo  idx el IndexableQSM
+type IndexableQ    idx el q = IndexableQM idx el q Identity
+type IndexableM    idx el   = IndexableQM idx el '[]
+type Indexable     idx el   = IndexableM  idx el Identity
 
 indexM' = transFunc $ optBuilder indexQM
 index'  = withTransFunc (fmap3 runIdentity) indexM'
@@ -416,7 +502,8 @@ class OpM (try :: Bool) m a m' a' | try m -> m', try m' -> m, try a -> a', try a
 instance                    OpM False m a m  a         where runOperationM _ = id
 instance (m ~ MaybeT m') => OpM True  m a m' (Maybe a) where runOperationM _ = runMaybeT
 
-
+--type family MaybedIf bool m where MaybedIf False m = m
+--                                  MaybedIf True  m = MaybeT m
 
 -- GHC BUG [TO BE REPORTED]: The Simplify type class fixes a Haskell's type system bug. After deleting the impossible case the inferred type is to simplified resulting in a constraint of
 -- `ToTup a ~ AsTup (ToTup a)` which is cyclic and cannot be met.
@@ -428,6 +515,9 @@ instance {-# OVERLAPPABLE #-} ( AppendRTup res opts, ToTup rtup
                               , tup  ~ AsTup        rtup
                               ) => Simplify opts       res tup               where simplify (Result d r) = toTup $ appendRTup r d
 instance {-# OVERLAPPABLE #-}      Simplify Impossible res (ImpossibleM res) where simplify = impossible
+
+
+
 
 
 
@@ -467,6 +557,7 @@ setConstraint = transFunc .: setOptBuilder
 try       = transFunc $ optBuilder $ transFunc .: extendOptBuilder (Proxy :: Proxy Mods.Try)
 ixed      = transFunc $ optBuilder $ transFunc .: extendOptBuilder (Proxy :: Proxy Mods.Ixed)
 unchecked = transFunc $ optBuilder $ transFunc .: extendOptBuilder (Proxy :: Proxy Mods.Unchecked)
+unsafe    = transFunc $ optBuilder $ transFunc .: extendOptBuilder (Proxy :: Proxy Mods.Unsafe)
 
 queried :: Proxy opts -> SetConstraint opts
 queried = setConstraint
@@ -519,13 +610,20 @@ result2' = result2 . checkQuery
 
 
 
-wrappedResult :: (a ~ ResultElem i f, i ~ In Mods.Ixed q, Result2 i t f g, Wrapped t) => Proxy q -> (a' -> f) -> (t a' -> g)
-wrappedResult q = result2' q wrapped
+--wrappedResult :: (a ~ ResultElem i f, i ~ In Mods.Ixed q, Result2 i t f g, Wrapped t) => Proxy q -> (a' -> f) -> (t a' -> g)
+--wrappedResult q = result2' q wrapped
 
 
-runWrapped0 s f = wrappedResult (query s) $   f (polySpecX s)
-runWrapped1 s f = wrappedResult (query s) .   f (polySpecX s)
-runWrapped2 s f = wrappedResult (query s) .:  f (polySpecX s)
-runWrapped3 s f = wrappedResult (query s) .:. f (polySpecX s)
-runWrapped4 s f = wrappedResult (query s) .:: f (polySpecX s)
+--runWrapped0 s f = wrappedResult (query s) $   f (polySpecX s)
+--runWrapped1 s f = wrappedResult (query s) .   f (polySpecX s)
+--runWrapped2 s f = wrappedResult (query s) .:  f (polySpecX s)
+--runWrapped3 s f = wrappedResult (query s) .:. f (polySpecX s)
+--runWrapped4 s f = wrappedResult (query s) .:: f (polySpecX s)
 
+
+
+
+
+type EqQueries     info q info' q' = QueryData info q ~ QueryData info' q'
+type EqInfoQueries info info'   q  = EqQueries info q info' q
+type EqElQueries   inf el el' t q  = EqInfoQueries (inf el ( t)) (inf el' ( t)) q

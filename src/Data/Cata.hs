@@ -7,10 +7,10 @@
 
 module Data.Cata where
 
-import Prologue
+import Prologue      hiding (Repr,repr)
 import Control.Lens
 import Control.Monad (join)
-import Data.Repr
+import Data.Reprx
 import Control.Monad.Trans.Identity
 
 class    Monad m => MuBuilder a m             t | t m -> a where buildMu :: a (Mu t) -> m (Mu t)
@@ -26,8 +26,8 @@ instance (Monad m, (m ~ n)) => ToMuM (n (Mu t)) m t          where toMuM = id
 
 type MuData' a = a (Mu a)
 
-instance Content (MuData' f) (MuData' g) c c' => Content (Mu f) (Mu g) c c' where
-    content = lens fromMu (const toMu) . content
+--instance Content (MuData' f) (MuData' g) c c' => Content (Mu f) (Mu g) c c' where
+--    content = lens fromMu (const toMu) . content
 
 -- === Catamorphisms ===
 

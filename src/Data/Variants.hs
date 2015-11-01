@@ -11,7 +11,7 @@
 
 module Data.Variants where
 
-import Flowbox.Prelude hiding (cons, Index, cast, Variant, Castable)
+import Flowbox.Prelude hiding (cons, Index, cast, Variant, Castable, Repr, repr)
 
 import Flowbox.System.Types (ToMaybe, toMaybe, IsSubset, orElse, withState, ToSet, Index, In)
 
@@ -19,10 +19,11 @@ import Data.Typeable          hiding (cast)
 import Data.Maybe             (fromJust)
 import Control.Monad.State    hiding (withState)
 import Type.BaseType
-import Data.TypeLevel.Bool    ((:==))
+import Type.Bool              ((:==))
 
 import qualified Data.Vector as V
-import              Data.Vector (Vector)
+import           Data.Vector (Vector)
+import           Data.Reprx
 
 ------------------------------------------------------------------------
 -- Errors

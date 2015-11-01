@@ -27,7 +27,7 @@ module Data.TypeLevel.List (
 
 import GHC.TypeLits
 import Data.Typeable
-import Data.TypeLevel.Bool
+import Type.Bool
 import Data.TypeLevel.FlatContainers as X
 import Prelude hiding (lookup, reverse)
 

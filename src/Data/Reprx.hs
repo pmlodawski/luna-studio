@@ -2,11 +2,11 @@
 {-# LANGUAGE UndecidableInstances      #-}
 {-# LANGUAGE TypeFamilies              #-}
 
-module Data.Repr ( module Data.Repr
+module Data.Reprx ( module Data.Reprx
                  , module X
                  ) where
 
-import Prologue.Class
+import Prologue hiding (Repr, repr)
 import Data.List (intercalate)
 import Data.Monoid
 import Data.Text.CodeBuilder

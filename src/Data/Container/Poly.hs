@@ -10,13 +10,11 @@ module Data.Container.Poly where
 
 import Prologue hiding (Ixed, Indexed, Simple)
 import           Data.TypeLevel.List (In)
-import Data.TypeLevel.Bool
 import Data.Typeable
 import GHC.Prim
-import Data.TypeLevel.Bool
+import Type.Bool
 import qualified Data.Container.Mods as Mods
 import           Data.Container.Mods (FilterMutable, filterMutable)
-
 
 
 
@@ -210,7 +208,7 @@ type IndexOf' cont = IndexOf (ElementOf cont) cont
 
 
 
-type family SelTags (info :: *) (s :: [Bool]) where SelTags (Info idx el cls cont) s = QueryTags (Info idx el cls (DataStoreOf cont)) (Selected s (FilterMutable (ModsOf cls cont)))
+type family SelTags (info :: *) (s :: [Bool]) where SelTags (Info idx el cls cont) s = QueryData (Info idx el cls (DataStoreOf cont)) (Selected s (FilterMutable (ModsOf cls cont)))
 
 
 
@@ -222,12 +220,12 @@ type family SelTags (info :: *) (s :: [Bool]) where SelTags (Info idx el cls con
 
 type IxedData cls idx = If (IxedMode cls :== Single) idx [idx]
 
-type family QueryTags (info :: *) (query :: [*]) :: * where
-    QueryTags info '[]       = ()
-    QueryTags info (q ': qs) = (ModTags q info, QueryTags info qs)
+type family QueryData (info :: *) (query :: [*]) :: * where
+    QueryData info '[]       = ()
+    QueryData info (q ': qs) = (ModData q info, QueryData info qs)
 
-type family   ModTags q info
-type instance ModTags Mods.Ixed (Info idx el cls cont) = IxedData cls (
+type family   ModData mod info
+type instance ModData Mods.Ixed (Info idx el cls cont) = IxedData cls (
     If (idx :== NA) (
         --If (el :== NA)
             (IndexOf' cont)
@@ -240,7 +238,7 @@ type instance ModTags Mods.Ixed (Info idx el cls cont) = IxedData cls (
 
 
 type ComputeSelection (cls :: k) (cont :: *) (q :: [*]) = LstIn (ModsOf cls cont) q
-type AssumeQuery i q s = QueryTags (DataStoreInfo i) (FilterMutable q) ~ SelTags i s
+type AssumeQuery i q s = QueryData (DataStoreInfo i) (FilterMutable q) ~ SelTags i s
 
 
 
@@ -301,6 +299,11 @@ type family Unchecked (op :: k) :: k where Unchecked (cls q (m ::  * -> *) :: * 
 
 
 
+
+
+type family X_Ixed (op :: k) :: k where
+    X_Ixed (op (ms :: [*]) (ps :: [*])) = op (Mods.Ixed ': ms) ps
+
 -- === Concatenation ===
 
 
@@ -318,13 +321,15 @@ data IxedType = Multi
 
 
 
-
+--type family ClassOf (a :: *) :: k
 
 --------------------------------
 
 
 class HasContainer a => IsContainer a where
     fromContainer :: ContainerOf a -> a
+    default fromContainer :: (Unwrapped a ~ ContainerOf a, Wrapped a) => ContainerOf a -> a
+    fromContainer = view unwrapped'
 
 
 
@@ -333,14 +338,21 @@ newtype NestedFunctor m n a = NestedFunctor { fromNestedFunctor :: m (n a)} deri
 instance (Functor m, Functor n) => Functor (NestedFunctor m n) where fmap f = NestedFunctor . (fmap $ fmap f) . fromNestedFunctor
 
 
-nestedLens :: (Functor m, Functor n) => Lens a b c d -> (c -> m (n d)) -> (a -> m (n b))
-nestedLens l f = fromNestedFunctor . l (fmap NestedFunctor f)
+nested :: (Functor m, Functor n) => Lens a b c d -> (c -> m (n d)) -> (a -> m (n b))
+nested l f = fromNestedFunctor . l (fmap NestedFunctor f)
 
 
 
 
 
 data Result d r = Result d r deriving (Show, Functor)
+
+-- Result utils
+
+simple' = Result ()
+res     = Result . (,())
+resM    = return .: res
+simpleM = return . simple'
 
 withResData :: (d -> (out, d')) -> Result d r -> (out, Result d' r)
 withResData f (Result d r) = (out, Result d' r) where
@@ -357,11 +369,17 @@ flattenMod f = snd .: (f . fmap ((),))
 
 
 
-type Unique lst = Reverse (Unique' lst '[])
+--type Unique lst = Reverse (Unique' lst '[])
+type Unique lst = (Unique2' lst)
 
 type family Unique' (lst :: [*]) (reg :: [*]) where
   Unique' '[]       reg = reg
   Unique' (l ': ls) reg = Unique' ls (If (l `In` reg) reg (l ': reg))
+
+type family Unique2' (lst :: [*]) where
+  Unique2' '[]       = '[]
+  Unique2' (l ': ls) = l ': Unique2' (Remove l ls)
+
 
 type Reverse lst = Reverse' lst '[]
 
@@ -400,7 +418,7 @@ bar f info q t = out where
     out   = withFlipped (fmap (fillData q')) <$> tgdr'
 
 
-barTx f (cls :: Proxy (cls :: k)) (q :: Proxy (q :: [*])) (t :: t) = withFlipped (fmap (fillData (filterMutable q))) <$> nestedLens container tgdr t where
+barTx f (cls :: Proxy (cls :: k)) (q :: Proxy (q :: [*])) (t :: t) = withFlipped (fmap (fillData (filterMutable q))) <$> nested container tgdr t where
     tgdr c  = withFlipped (fmap $ taggedCont (Proxy :: Proxy (Selected (ComputeSelection cls (ContainerOf t) q) (FilterMutable (ModsOf cls (ContainerOf t)))) )) <$> f (uniqueProxy q) c
 
 
@@ -412,7 +430,7 @@ barTy f (cls :: Proxy (cls :: k)) (q :: Proxy (q :: [*])) (t :: t) = withFlipped
 
 
 
-type family AssumeRtupConv q t :: Constraint where AssumeRtupConv q t = IfCtx (Mods.FilterMutable q :== '[]) (AsRTup t ~ (t,())) ()
+type family AssumeRtupConv q t :: Constraint where AssumeRtupConv q t = If' (Mods.FilterMutable q :== '[]) (AsRTup t ~ (t,())) ()
 
 type family OpCtx info q m t where OpCtx (Info idx el cls) q m t = ((Functor m,
                                                HasContainer t,
@@ -424,7 +442,7 @@ type family OpCtx info q m t where OpCtx (Info idx el cls) q m t = ((Functor m,
                                                           (ModsOf cls (ContainerOf t)) q)
                                                        (FilterMutable
                                                           (ModsOf cls (ContainerOf t))))
-                                                    (QueryTags
+                                                    (QueryData
                                                        (Info idx el cls (DataStoreOf t))
                                                        (Selected
                                                           (LstIn
@@ -439,7 +457,7 @@ type family OpCtx info q m t where OpCtx (Info idx el cls) q m t = ((Functor m,
                                                        (ModsOf cls (ContainerOf t)) q)
                                                     (FilterMutable
                                                        (ModsOf cls (ContainerOf t))))
-                                                 (QueryTags
+                                                 (QueryData
                                                     (Info idx el cls (DataStoreOf t))
                                                     (Selected
                                                        (LstIn
@@ -448,10 +466,10 @@ type family OpCtx info q m t where OpCtx (Info idx el cls) q m t = ((Functor m,
                                                        (FilterMutable
                                                           (ModsOf
                                                              cls (ContainerOf t))))),
-                                               QueryTags
+                                               QueryData
                                                  (Info idx el cls (DataStoreOf t))
                                                  (FilterMutable (Unique q))
-                                               ~ QueryTags
+                                               ~ QueryData
                                                    (Info idx el cls (DataStoreOf t))
                                                    (Selected
                                                       (LstIn
@@ -459,7 +477,7 @@ type family OpCtx info q m t where OpCtx (Info idx el cls) q m t = ((Functor m,
                                                          (Unique q))
                                                       (FilterMutable
                                                          (ModsOf cls (ContainerOf t)))),
-                                               QueryTags
+                                               QueryData
                                                  (Info idx el cls (DataStoreOf t))
                                                  (FilterMutable q)
                                                ~ FillData
@@ -472,7 +490,7 @@ type family OpCtx info q m t where OpCtx (Info idx el cls) q m t = ((Functor m,
                                                          (FilterMutable
                                                             (ModsOf
                                                                cls (ContainerOf t))))
-                                                      (QueryTags
+                                                      (QueryData
                                                          (Info idx el cls (DataStoreOf t))
                                                          (Selected
                                                             (LstIn
@@ -490,7 +508,7 @@ type family OpCtx info q m t where OpCtx (Info idx el cls) q m t = ((Functor m,
                                                                   IsContainer t,
                                                                   InfoInst (Info idx el cls (ContainerOf t)) (Unique q) m,
                                                                   DataStoreOf (ContainerOf t) ~ DataStoreOf t,
-                                                                  (QueryTags (Info idx el cls (DataStoreOf t)) (FilterMutable q) ~ QueryTags (Info idx el cls (DataStoreOf t)) (FilterMutable q)))
+                                                                  (QueryData (Info idx el cls (DataStoreOf t)) (FilterMutable q) ~ QueryData (Info idx el cls (DataStoreOf t)) (FilterMutable q)))
 
 
 type family TransCheck q info info' t where
@@ -500,15 +518,18 @@ type family TransCheck q info info' t where
                            (Selected
                               (LstIn (ModsOf cls (ContainerOf t)) q)
                               (FilterMutable (ModsOf cls (ContainerOf t))))
-                           (QueryTags
+                           (QueryData
                               (Info idx el cls (DataStoreOf t))
                               (Selected
                                  (LstIn
                                     (ModsOf cls (ContainerOf t))
                                     (Unique q))
                                  (FilterMutable (ModsOf cls (ContainerOf t))))))
-                      ~ QueryTags
+                      ~ QueryData
                           (info' (DataStoreOf t)) (FilterMutable q))
+
+
+
 
 
 
@@ -587,3 +608,12 @@ instance ToTup (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,())))))))) where toTup (t1,(t2,(t
 instance ToTup (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,(t9,()))))))))) where toTup (t1,(t2,(t3,(t4,(t5,(t6,(t7,(t8,(t9,()))))))))) = (t1,t2,t3,t4,t5,t6,t7,t8,t9)
 
 type SimpleRes a = AsRTup a ~ (a, ())
+
+
+
+
+
+
+
+
+type X_Simple (t :: [*] -> [*] -> k) = t '[] '[]

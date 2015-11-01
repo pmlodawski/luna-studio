@@ -12,7 +12,7 @@
 
 module Data.Container.Hetero where
 
-import Flowbox.Prelude       hiding (Indexable, index)
+import Flowbox.Prelude       hiding (Indexable, index, Repr, repr)
 
 import Control.Error.Util    (hush)
 import Data.Container.Class
@@ -21,6 +21,7 @@ import Data.Convert.Errors   (TypeMismatch (TypeMismatch))
 import Data.Typeable         hiding (cast)
 import Unsafe.Coerce         (unsafeCoerce)
 import Data.Container.Poly
+import Data.Reprx
 
 --- === Unified values ===
 

@@ -15,7 +15,7 @@
 module Data.Text.CodeBuilder.Builder where
 
 import Prelude ()
-import Prologue.Class
+import Prologue
 
 import qualified Data.Text.CodeBuilder.Tok as Tok
 import           Data.Text.CodeBuilder.Tok (Tok(Tok), Prec, doc, precParens)
