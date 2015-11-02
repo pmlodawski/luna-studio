@@ -58,7 +58,10 @@ lookupAllConnections :: Command (UIRegistry.State b) [WidgetFile b UIConnection.
 lookupAllConnections = gets UIRegistry.lookupAll
 
 updateConnections :: Command Global.State ()
-updateConnections = do
+updateConnections = updateConnections' >> updateConnectionsUI
+
+updateConnections' :: Command Global.State ()
+updateConnections' = do
     allConnections <- zoom Global.uiRegistry lookupAllConnections
     mapM_ updateSingleConnection allConnections
 
@@ -142,9 +145,11 @@ connectionVector nodesMap src dst  = explode (dstNWs - srcNWs) where
     srcNWs@(Vector2 xSrcN ySrcN) = NodeUtils.getNodePos nodesMap $ src ^. refPortNodeId
     dstNWs@(Vector2 xDstN yDstN) = NodeUtils.getNodePos nodesMap $ dst ^. refPortNodeId
 
-
 updatePortAngles :: Command Global.State ()
-updatePortAngles = pureCommand $ \state -> let
+updatePortAngles = updatePortAngles' >> updatePortAnglesUI
+
+updatePortAngles' :: Command Global.State ()
+updatePortAngles' = pureCommand $ \state -> let
     newState              = state & Global.graph %~ updateNodes newNodes
     oldNodes              = getNodesMap $ state ^. Global.graph
     newNodes              = foldl processPort oldNodes angles

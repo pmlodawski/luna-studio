@@ -5,7 +5,7 @@ import           Utils.PreludePlus
 
 import           Object.Dynamic
 import           Object.Object
-import           Event.Keyboard  ( KeyMods(..) )
+import           Event.Keyboard  (KeyMods(..))
 import           Utils.Vector
 import           Object.UITypes
 
@@ -13,19 +13,28 @@ data MouseButton = NoButton
                  | LeftButton
                  | MiddleButton
                  | RightButton
-                 deriving (Show, Eq)
+                 deriving (Eq, Show)
 
 toMouseButton :: Int -> MouseButton
-toMouseButton   1  = LeftButton
-toMouseButton   2  = MiddleButton
-toMouseButton   3  = RightButton
-toMouseButton   _  = NoButton
+toMouseButton 1  = LeftButton
+toMouseButton 2  = MiddleButton
+toMouseButton 3  = RightButton
+toMouseButton _  = NoButton
 
 type MousePosition = Vector2 Int
 
-data Type = Pressed | Released | Moved | Clicked | DblClicked | Wheel (Vector2 Double) deriving (Eq, Show)
+data Type = Pressed
+          | Released
+          | Moved
+          | Clicked
+          | DblClicked
+          | Wheel (Vector2 Double)
+          deriving (Eq, Show)
 
-data EventWidget = EventWidget { _widgetId :: WidgetId, _worldMatrix :: [Double], _scene :: SceneType } deriving (Show, Eq)
+data EventWidget = EventWidget { _widgetId    :: WidgetId
+                               , _worldMatrix :: [Double]
+                               , _scene       :: SceneType
+                               } deriving (Eq, Show)
 
 makeLenses ''EventWidget
 

@@ -82,20 +82,20 @@ makeNetworkDescription conn logging workspace = do
         underCursorB                 :: Behavior t UnderCursor
         underCursorB                  = underCursor <$> globalStateB
 
-        widgetActionB                 = fmap ActionST $              Widget.toAction <$> anyNodeB
-        nodeGeneralActionB            = fmap ActionST $             General.toAction <$> anyNodeB
-        cameraActionB                 = fmap ActionST $              Camera.toAction <$> anyNodeB
-        nodeAddActionB                = fmap ActionST $             AddNode.toAction <$> anyNodeB <*> globalStateB
-        nodeMultiSelectionActionB     = fmap ActionST $      MultiSelection.toAction <$> anyNodeB
-        nodeDragActionB               = fmap ActionST $                Drag.toAction <$> anyNodeB <*> globalStateB <*> underCursorB
-        nodeConnectActionB            = fmap ActionST $             Connect.toAction <$> anyNodeB <*> globalStateB
-        nodeSearcherActionB           = fmap ActionST $        NodeSearcher.toAction <$> anyNodeB
-        sandboxActionB                = fmap ActionST $             Sandbox.toAction <$> anyNodeB <*> globalStateB
-        backendActionB                = fmap ActionST $             Backend.toAction <$> anyNodeB
-        runnerActionB                 = fmap ActionST $              Runner.toAction <$> anyNodeB
-        graphFetcherActionB           = fmap ActionST $        GraphFetcher.toAction <$> anyNodeB <*> globalStateB
-        connectionPenActionB          = fmap ActionST $       ConnectionPen.toAction <$> anyNodeB <*> globalStateB
-        textEditorActionB             = fmap ActionST $          TextEditor.toAction <$> anyNodeB
+        widgetActionB                 = fmap ActionST $         Widget.toAction <$> anyNodeB
+        nodeGeneralActionB            = fmap ActionST $        General.toAction <$> anyNodeB
+        cameraActionB                 = fmap ActionST $         Camera.toAction <$> anyNodeB
+        nodeAddActionB                = fmap ActionST $        AddNode.toAction <$> anyNodeB
+        nodeMultiSelectionActionB     = fmap ActionST $ MultiSelection.toAction <$> anyNodeB
+        nodeDragActionB               = fmap ActionST $           Drag.toAction <$> anyNodeB
+        nodeConnectActionB            = fmap ActionST $        Connect.toAction <$> anyNodeB <*> globalStateB
+        nodeSearcherActionB           = fmap ActionST $   NodeSearcher.toAction <$> anyNodeB
+        sandboxActionB                = fmap ActionST $        Sandbox.toAction <$> anyNodeB <*> globalStateB
+        backendActionB                = fmap ActionST $        Backend.toAction <$> anyNodeB
+        runnerActionB                 = fmap ActionST $         Runner.toAction <$> anyNodeB
+        graphFetcherActionB           = fmap ActionST $   GraphFetcher.toAction <$> anyNodeB <*> globalStateB
+        connectionPenActionB          = fmap ActionST $  ConnectionPen.toAction <$> anyNodeB <*> globalStateB
+        textEditorActionB             = fmap ActionST $     TextEditor.toAction <$> anyNodeB
 
         allActionsPackB               = [ nodeGeneralActionB
                                         , widgetActionB
