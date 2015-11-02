@@ -2,8 +2,8 @@
 {-# LANGUAGE TypeFamilies #-}
 
 module Data.Container (
-    module Data.Container,
-    module X
+    module Data.Container
+    --module X
 ) where
 
 import           Flowbox.Prelude hiding (Indexable, index)
@@ -22,7 +22,7 @@ import           Data.Maybe (fromJust)
 ----                                                   )
 --import qualified Data.Container.Class as Class
 import           Data.Container.Instances ()
-import           Data.Container.Interface as X
+--import           Data.Container.Interface as X
 
 
 --size :: (HasContainer a cont, Measurable cont, Integral i) => a -> i

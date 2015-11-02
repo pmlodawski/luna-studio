@@ -1,80 +1,50 @@
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeFamilies         #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE ScopedTypeVariables  #-}
+{-# LANGUAGE DeriveAnyClass       #-}
 
 module Data.Container.Reusable where
 
-import Prologue              hiding (Indexable, index, Bounded, Ixed)
-import Data.Container.Class
-import Data.Typeable
-import qualified Data.Container.Interface as I
-import           Data.Container.Poly {- x -}
-import qualified Data.Container.Mods as Mods
 
-import Data.Container.Parametrized
+import Prologue hiding (index, Indexable)
+
+import           Data.Container.Class
+import           Data.Container.Opts  (Query(..), ModsOf, ParamsOf)
+import qualified Data.Container.Opts  as M
+import           Data.Container.Proxy
 import           Data.Layer
-import           Data.List ((\\))
-
--- Types
-
-data HReusable idx a = HReusable [idx] !a deriving (Show, Functor, Traversable, Foldable)
-type Reusable  m     = Parametrized (HReusable (HomoIndexOf m)) m
+import           Data.List            ((\\))
 
 
 
-type instance ContainerOf (HReusable idx a) = HReusable idx a
+----------------------
+-- === Reusable === --
+----------------------
 
-instance IsContainer  (HReusable idx a) where fromContainer = id
-instance HasContainer (HReusable idx a) where container     = id
+data Reusable idx a = Reusable [idx] !a deriving (Show, Functor, Foldable, Traversable, Default, Monoid)
 
-type instance ElementOf        (HReusable idx a) = ElementOf       a
-type instance ElementByIx  idx (HReusable idx a) = ElementByIx idx a
-type instance IndexOf      el  (HReusable idx a) = IndexOf     el  a
+type instance IndexOf      (Reusable idx a) = IndexOf (ContainerOf a)
+type instance ContainerOf  (Reusable idx a) = Reusable idx a
+type instance DataStoreOf  (Reusable idx a) = ContainerOf a
 
+instance      HasContainer (Reusable idx a) where container     = id
+instance      IsContainer  (Reusable idx a) where fromContainer = id
 
-type instance DataStoreOf (HReusable idx a) = DataStoreOf a
-instance HasDataStore a => HasDataStore (HReusable idx a) where dataStore = layered . dataStore
-instance IsDataStore a => IsDataStore (HReusable idx a) where fromDataStore = HReusable def . fromDataStore
+type instance Unlayered (Reusable idx a) = a
+instance      Layered   (Reusable idx a) where layered = lens (\(Reusable _ a) -> a) (\(Reusable ixs _) a -> Reusable ixs a)
 
-instance Default a => Default (HReusable idx a) where def = HReusable def def
+instance      (IsContainer a, FromList (ContainerOf a)) 
+           => FromList  (Reusable idx a) where fromList = Reusable mempty . fromContainer . fromList
+type instance Item      (Reusable idx a) = Item (ContainerOf a)
 
-
--- Layers
-
-type instance Unlayered (HReusable idx a) = a
-instance Layered (HReusable idx a) where
-    layered = lens (\(HReusable ixs a) -> a) (\(HReusable ixs _) a -> HReusable ixs a)
-
---instance unlayer (HReusable idx) where unlayer (HReusable _ cont) = cont
---instance Wrap   (HReusable idx) where wrap                           = HReusable def
-
---instance layered (HReusable idx) where
---    layered = lens (\(HReusable _ a) -> a) (\(HReusable idxs _) a -> HReusable idxs a)
-
--- Instances
-
-instance Monoid a => Monoid (HReusable idx a) where
-    mempty                                          = HReusable mempty mempty
-    mappend (HReusable idxs a) (HReusable idxs' a') = HReusable (idxs <> idxs') (a <> a')
+indexes :: Lens' (Reusable idx a) [idx]
+indexes = lens (\(Reusable ixs _) -> ixs) (\(Reusable _ a) ixs -> Reusable ixs a)
 
 
-type instance Item (HReusable idx a) = Item a
-instance FromList a => FromList (HReusable idx a) where
-    fromList = HReusable mempty . fromList
 
--- Utils
-
-withIxes_ :: ([idx] -> (r, [idx'])) -> HReusable idx a -> (r, HReusable idx' a)
-withIxes_ f (HReusable ixs a) = (out, HReusable ixs' a) where
-    (out, ixs') = f ixs
-
-withIxes :: ([idx] -> [idx']) -> HReusable idx a -> HReusable idx' a
-withIxes = flattenMod withIxes_
-
-withIxes' :: ([idx] -> [idx]) -> HReusable idx a -> HReusable idx a
-withIxes' = withIxes
-
-
+------------------------
+-- === Instances === ---
+------------------------
 
 -- === Finite ===
 
@@ -82,82 +52,121 @@ withIxes' = withIxes
 -- [+] MinBounded
 -- [+] MaxBounded
 
+type instance ParamsOf MeasurableOp (Reusable idx a) = ParamsOf MeasurableOp (ContainerOf a)
+type instance ModsOf   MeasurableOp (Reusable idx a) = ModsOf   MeasurableOp (ContainerOf a)
 
-type instance ModsOf MeasurableQSM (HReusable idx a) = ModsOf MeasurableQSM a
-type instance ModsOf MinIndexedQSM (HReusable idx a) = ModsOf MinIndexedQSM a
-type instance ModsOf MaxIndexedQSM (HReusable idx a) = ModsOf MaxIndexedQSM a
+type instance ParamsOf MinBoundedOp (Reusable idx a) = ParamsOf MinBoundedOp (ContainerOf a)
+type instance ModsOf   MinBoundedOp (Reusable idx a) = ModsOf   MinBoundedOp (ContainerOf a)
 
-instance MeasurableQM q m a => MeasurableQSM (HReusable idx a) m q s where sizeQSM     _ _ = queried (Proxy :: Proxy q) sizeM'     . unlayer
-instance MinIndexedQM idx q m a => MinIndexedQSM idx (HReusable idx a) m q s where minIndexQSM _ _ = queried (Proxy :: Proxy q) minIndexM' . unlayer
-instance MaxIndexedQM idx q m a => MaxIndexedQSM idx (HReusable idx a) m q s where maxIndexQSM _ _ = queried (Proxy :: Proxy q) maxIndexM' . unlayer
+type instance ParamsOf MaxBoundedOp (Reusable idx a) = ParamsOf MaxBoundedOp (ContainerOf a)
+type instance ModsOf   MaxBoundedOp (Reusable idx a) = ModsOf   MaxBoundedOp (ContainerOf a)
+
+instance (MeasurableQM (GetOpts ms) (GetOpts ps) m     a)             => MeasurableQM_ ms ps m     (Reusable idx  a) where sizeM_     _ = sizeQM     (Query :: Query (GetOpts ms) (GetOpts ps)) . unlayer
+instance (MinBoundedQM (GetOpts ms) (GetOpts ps) m idx a, idx ~ idx') => MinBoundedQM_ ms ps m idx (Reusable idx' a) where minBoundM_ _ = minBoundQM (Query :: Query (GetOpts ms) (GetOpts ps)) . unlayer
+instance (MaxBoundedQM (GetOpts ms) (GetOpts ps) m idx a, idx ~ idx') => MaxBoundedQM_ ms ps m idx (Reusable idx' a) where maxBoundM_ _ = maxBoundQM (Query :: Query (GetOpts ms) (GetOpts ps)) . unlayer
+
 
 
 -- === Construction ===
 
 -- [+] Singleton
--- [ ] Allocable
+-- [+] Allocable
 -- [+] Expandable
 -- [+] Growable
 
-type instance ModsOf SingletonQSM  (HReusable idx a) = ModsOf SingletonQSM a
-type instance ModsOf ExpandableQSM (HReusable idx a) = ModsOf ExpandableQSM a
-type instance ModsOf GrowableQSM   (HReusable idx a) = ModsOf GrowableQSM a
+type instance ParamsOf SingletonOp  (Reusable idx a) = ParamsOf SingletonOp  (ContainerOf a)
+type instance ModsOf   SingletonOp  (Reusable idx a) = ModsOf   SingletonOp  (ContainerOf a)
 
-        --instance SingletonQM el q m a => SingletonQSM el (HReusable idx a) m q s where singletonQSM _ _    = (fmap . fmap) wrap . queried (Proxy :: Proxy q) singletonM'
+type instance ParamsOf AllocableOp  (Reusable idx a) = ParamsOf AllocableOp  (ContainerOf a)
+type instance ModsOf   AllocableOp  (Reusable idx a) = ModsOf   AllocableOp  (ContainerOf a)
 
-instance (Monad m, ExpandableQM (Mods.Ixed ': q) m a, idx ~ IndexOf' (DataStoreOf a)) => ExpandableQSM (HReusable idx a) m q s where
-    expandQSM _ _ c = do
-        (ixs, r) <- splitResData <$> nested layered ((ixed . queried (Proxy :: Proxy q)) expandM') c
-        return $ fmap (withIxes' (<> ixs)) r
+type instance ParamsOf ExpandableOp (Reusable idx a) = ParamsOf ExpandableOp (ContainerOf a)
+type instance ModsOf   ExpandableOp (Reusable idx a) = ModsOf   ExpandableOp (ContainerOf a)
 
-instance (Monad m, GrowableQM (Mods.Ixed ': q) m a, idx ~ IndexOf' (DataStoreOf a)) => GrowableQSM (HReusable idx a) m q s where
-    growQSM _ _ i c = do
-        (ixs, r) <- splitResData <$> nested layered ((ixed . queried (Proxy :: Proxy q)) growM' i) c
-        return $ fmap (withIxes' (<> ixs)) r
+type instance ParamsOf GrowableOp   (Reusable idx a) = ParamsOf GrowableOp   (ContainerOf a)
+type instance ModsOf   GrowableOp   (Reusable idx a) = ModsOf   GrowableOp   (ContainerOf a)
+
+instance ( SingletonQM (M.Ixed ': GetOpts ms) (GetOpts ps) m el a, idx ~ IndexOf (ContainerOf a)) => SingletonQM_ ms ps m el (Reusable idx a) where 
+    singletonM_ _ el = do Res (ix,ds) r <- singletonQM (Query :: Query (M.Ixed ': GetOpts ms) (GetOpts ps)) el
+                          return $ Res ds $ Reusable [ix] r
+
+instance ( AllocableQM (M.Ixed ': GetOpts ms) (GetOpts ps) m a, idx ~ IndexOf (ContainerOf a)) => AllocableQM_ ms ps m (Reusable idx a) where 
+    allocM_ _ i = do Res (ixs,ds) r <- allocQM (Query :: Query (M.Ixed ': GetOpts ms) (GetOpts ps)) i
+                     return $ Res ds $ Reusable ixs r
+
+instance ( ExpandableQM (M.Ixed ': GetOpts ms) (GetOpts ps) m a, idx ~ IndexOf (ContainerOf a)) => ExpandableQM_ ms ps m (Reusable idx a) where 
+    expandM_ _ (Reusable ixs a) = do Res (ixs',ds) r <- expandQM (Query :: Query (M.Ixed ': GetOpts ms) (GetOpts ps)) a
+                                     return $ Res ds $ Reusable (ixs <> ixs') r
+
+instance ( GrowableQM (M.Ixed ': GetOpts ms) (GetOpts ps) m a, idx ~ IndexOf (ContainerOf a)) => GrowableQM_ ms ps m (Reusable idx a) where 
+    growM_ _ i (Reusable ixs a) = do Res (ixs',ds) r <- growQM (Query :: Query (M.Ixed ': GetOpts ms) (GetOpts ps)) i a
+                                     return $ Res ds $ Reusable (ixs <> ixs') r
+
 
 
 -- === Modification ===
-
 -- [+] Appendable
--- [ ] Prependable
--- [ ] Addable
+-- [+] Prependable
+-- [+] Addable
 -- [ ] Removable
--- [+] Insertable
+-- [ ] Insertable
+-- [+] Freeable
 
-type instance ModsOf AppendableQSM (HReusable idx a) = ModsOf AppendableQSM a
-type instance ModsOf AddableQSM    (HReusable idx a) = ModsOf InsertableQSM a
+type instance ParamsOf AppendableOp   (Reusable idx a) = ParamsOf AppendableOp  (ContainerOf a)
+type instance ModsOf   AppendableOp   (Reusable idx a) = ModsOf   AppendableOp  (ContainerOf a)
 
-instance AppendableQM el q m a => AppendableQSM el (HReusable idx a) m q s where appendQSM _ _ el c = nested layered (queried (Proxy :: Proxy q) appendM' el) c
+type instance ParamsOf PrependableOp  (Reusable idx a) = ParamsOf PrependableOp  (ContainerOf a)
+type instance ModsOf   PrependableOp  (Reusable idx a) = ModsOf   PrependableOp  (ContainerOf a)
 
-instance (AddableQM el q m (HReusable idx a), InsertableQM idx el q m a, TransCheck q (InsertableInfo idx el) (AddableInfo el) a, Expandable (HReusable idx a)) => AddableQSM el (HReusable idx a) m q s where
-    addQSM q i el c@(HReusable ixs a) = case ixs of (x:xs) -> fmap2 (withIxes tail) $ nested layered (queried (Proxy :: Proxy q) insertM' x el) c
-                                                    []     -> queried (Proxy :: Proxy q) addM' el $ expand c
+type instance ParamsOf AddableOp  (Reusable idx a) = '[]
+type instance ModsOf   AddableOp  (Reusable idx a) = '[]
+
+type instance ParamsOf FreeableOp  (Reusable idx a) = ParamsOf FreeableOp  (ContainerOf a)
+type instance ModsOf   FreeableOp  (Reusable idx a) = ModsOf   FreeableOp  (ContainerOf a)
+
+
+instance (AppendableQM  (GetOpts ms) (GetOpts ps) m el a)           => AppendableQM_  ms ps m el   (Reusable idx  a) where appendM_  _      = nested layered . appendQM  (Query :: Query (GetOpts ms) (GetOpts ps))
+instance (PrependableQM (GetOpts ms) (GetOpts ps) m el a)           => PrependableQM_ ms ps m el   (Reusable idx  a) where prependM_ _      = nested layered . prependQM (Query :: Query (GetOpts ms) (GetOpts ps))
+instance (InsertableM m idx el a, ExpandableM m (Reusable idx a))   => AddableQM_    '[] ps m el   (Reusable idx  a) where addM_     q el t = case view indexes t of
+                                                                                                                               (x:xs) -> fmap2 (Reusable xs) $ insertM' x el $ unlayer t
+                                                                                                                               []     -> addM_ q el =<< expandM t
+instance (FreeableQM (GetOpts ms) (GetOpts ps) m idx a, idx ~ idx') => FreeableQM_    ms ps m idx  (Reusable idx' a) where freeM_ _ idx     = fmap2 (indexes %~ (idx:)) . nested layered (freeQM (Query :: Query (GetOpts ms) (GetOpts ps)) idx)
+
 
 
 ---- === Indexing ===
 
 -- [+] Indexable
--- [ ] TracksElems
--- [ ] TracksIxes
 -- [+] TracksFreeIxes
--- [ ] TracksUsedIxes
+-- [+] TracksUsedIxes
+-- [+] TracksIxes
+-- [+] TracksElems
+
+type instance ParamsOf IndexableOp      (Reusable idx a) = ParamsOf IndexableOp      (ContainerOf a)
+type instance ModsOf   IndexableOp      (Reusable idx a) = ModsOf   IndexableOp      (ContainerOf a)
+
+type instance ParamsOf TracksIxesOp     (Reusable idx a) = ParamsOf TracksIxesOp (ContainerOf a)
+type instance ModsOf   TracksIxesOp     (Reusable idx a) = ModsOf   TracksIxesOp (ContainerOf a)
+
+type instance ParamsOf TracksFreeIxesOp (Reusable idx a) = '[]
+type instance ModsOf   TracksFreeIxesOp (Reusable idx a) = '[]
+
+type instance ParamsOf TracksUsedIxesOp (Reusable idx a) = '[]
+type instance ModsOf   TracksUsedIxesOp (Reusable idx a) = '[]
+
+type instance ParamsOf TracksElemsOp    (Reusable idx a) = '[]
+type instance ModsOf   TracksElemsOp    (Reusable idx a) = '[]
 
 
-type instance ModsOf IndexableQSM      (HReusable idx a) = ModsOf IndexableQSM   a
-type instance ModsOf TracksElemsQSM    (HReusable idx a) = '[]
-type instance ModsOf TracksFreeIxesQSM (HReusable idx a) = '[]
-type instance ModsOf TracksIxesQSM     (HReusable idx a) = ModsOf TracksIxesQSM  a
+instance (IndexableQM      (GetOpts ms) (GetOpts ps) m idx el a, idx ~ idx') => IndexableQM_       ms ps m idx el (Reusable idx' a) where indexM_     _ idx   = indexQM    (Query :: Query (GetOpts ms) (GetOpts ps)) idx . unlayer
+instance (TracksIxesQM     (GetOpts ms) (GetOpts ps) m idx    a, idx ~ idx') => TracksIxesQM_      ms ps m idx    (Reusable idx' a) where ixesM_      _       = ixesQM     (Query :: Query (GetOpts ms) (GetOpts ps))     . unlayer
+instance (Monad m, idx ~ idx')                                               => TracksFreeIxesQM_ '[] ps m idx    (Reusable idx' a) where freeIxesM_  _       = return . Res () . view indexes
 
-instance (idx' ~ idx, IndexableQM  idx el q m a) => IndexableQSM      idx' el (HReusable idx a) m q s where indexQSM    _ _ idx = queried (Proxy :: Proxy q) indexM' idx . unlayer
-instance (idx' ~ idx, TracksIxesQM idx    q m a) => TracksIxesQSM     idx'    (HReusable idx a) m q s where ixesQSM     _ _     = queried (Proxy :: Proxy q) ixesM'      . unlayer
-instance (idx' ~ idx, Monad m)                   => TracksFreeIxesQSM idx'    (HReusable idx a) m q s where freeIxesQSM _ _ (HReusable ixs _) = return $ Result () ixs
+instance (TracksIxes idx (Reusable idx a)
+         , TracksFreeIxes idx (Reusable idx a), idx ~ idx', Monad m, Eq idx) => TracksUsedIxesQM_ '[] ps m idx    (Reusable idx' a) where usedIxesM_  _     t = return $ Res () $ ixes t \\ freeIxes t
 
-
-instance   ( TracksIxes      idx    (HReusable idx a)
-           , TracksFreeIxes  idx    (HReusable idx a)
-           , Indexable       idx el (HReusable idx a)
-           , Eq              idx
-           , Monad           m
-           ) => TracksElemsQSM el (HReusable idx a) m q s where elemsQSM _ _ c = simpleM els where
-                                                                    ixs = ixes c \\ freeIxes c :: [idx]
-                                                                    els = fmap (flip index c) ixs
+instance ( TracksUsedIxes  idx    (Reusable idx a)
+         , Indexable       idx el (Reusable idx a)
+         , Monad           m
+         , Tup2RTup el ~ (el, ()) -- TODO [WD]: Remove me, add smart constraints to super-class
+         ) => TracksElemsQM_     '[] ps m     el (Reusable idx a) where elemsM_     _   t = return $ Res () $ fmap (flip index t) (usedIxes t :: [idx]) where
