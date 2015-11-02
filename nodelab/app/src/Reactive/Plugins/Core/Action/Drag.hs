@@ -18,7 +18,7 @@ import           Event.Event
 
 import           Reactive.Plugins.Core.Action
 import           Reactive.Commands.Graph
-import           Reactive.Commands.Command    (Command, performIO, execCommand)
+import           Reactive.Commands.Command    (Command, performIO)
 import qualified Reactive.State.Drag          as Drag
 import           Reactive.State.Drag          (DragHistory(..))
 import qualified Reactive.State.Graph         as Graph

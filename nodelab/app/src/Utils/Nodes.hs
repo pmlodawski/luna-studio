@@ -47,9 +47,9 @@ getPortAngle portRef nodesMap = case getPortByRef portRef nodesMap of
         Object.OutputPort -> 1.7 * pi
 
 
-tryGetSrcDst :: Node.PortRef -> Node.PortRef -> Maybe (Node.PortRef, Node.PortRef)
-tryGetSrcDst portRef1 portRef2 = case (portRef1 ^. Node.refPortType, portRef2 ^. Node.refPortType) of
+getSrcDstMay :: Node.PortRef -> Node.PortRef -> Maybe (Node.PortRef, Node.PortRef)
+getSrcDstMay portRef1 portRef2 = case (portRef1 ^. Node.refPortType, portRef2 ^. Node.refPortType) of
     (Object.OutputPort, Object.InputPort)  -> Just (portRef1, portRef2)
     (Object.InputPort,  Object.OutputPort) -> Just (portRef2, portRef1)
-    _                        -> Nothing
+    _                                      -> Nothing
 
