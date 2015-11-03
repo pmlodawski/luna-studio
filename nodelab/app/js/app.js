@@ -28,14 +28,14 @@ var nodeZOrderStart = 0.00000;
 var shouldRender = true;
 
 function start() {
-  $(document).ready(function(){
-    $(document).bind('contextmenu', function() { return false; });
+  $(document).ready(function (){
+    $(document).bind('contextmenu', function () { return false; });
     require('env')();
   });
 }
 
 function initializeGl() {
-    if(window.already_initialized) {
+    if (window.already_initialized) {
         location.reload();
     }
 
@@ -70,7 +70,7 @@ function initializeGl() {
 
     document.body.appendChild($$.renderer.domElement);
 
-    window.displayObjectMap = function() { document.body.appendChild($$.rendererMap.domElement); };
+    window.displayObjectMap = function () { document.body.appendChild($$.rendererMap.domElement); };
 
     initCommonWidgets();
     textEditor.init();
@@ -115,7 +115,7 @@ function initTerminal() {
 
   $$.term.open($("#term")[0]);
   $$.term.write('\x1b[31mWelcome to NodeLab!\x1b[m\r\n');
-  $("#termClose").click(function(){
+  $("#termClose").click(function (){
     $('#termContainer').css({height: "0px"});
   });
 }
@@ -130,7 +130,7 @@ function initCommonWidgets() {
 }
 
 function render() {
-  if(shouldRender) {
+  if (shouldRender) {
     $$.commonUniforms.objectMap.value = 0;
     $$.commonUniforms.antialias.value = 1;
 
@@ -174,7 +174,7 @@ function updateCameraHUD(left, right, top, bottom) {
 }
 
 function updateMouse(x, y) {
-  _.values($$.nodes).forEach(function(node) {
+  _.values($$.nodes).forEach(function (node) {
     node.updateMouse(x, y);
   });
 }
@@ -203,7 +203,7 @@ function moveToTopZ(nodeId) {
   var nodeToTop = $$.nodes[nodeId];
   var nodeToTopZ = nodeToTop.zPos();
   var maxZ = nodeToTop.zPos();
-  _.values($$.nodes).forEach(function(node) {
+  _.values($$.nodes).forEach(function (node) {
     var nodeZ = node.zPos();
     if (nodeZ > nodeToTopZ) {
       node.zPos(nodeZ - nodeZOrderStep);
@@ -224,7 +224,7 @@ function createNodeSearcher(expression, nodeId, left, top) {
     $('body').append(ns.el);
     ns.init(nodeId);
     ns.el.css({left: left, top: top});
-    if(expression)
+    if (expression)
       ns.setExpression(expression);
     return ns;
   }
@@ -263,7 +263,7 @@ function createConnection(widgetId, id, colorId) {
 
 function updateConnection(widgetId, visible, x0, y0, x1, y1) {
   $$.registry[widgetId].setPos(x0, y0, x1, y1);
-  if(visible) {
+  if (visible) {
     $$.registry[widgetId].show();
   } else {
     $$.registry[widgetId].hide();
@@ -277,7 +277,7 @@ function removeWidget(widgetId) {
     return;
   }
 
-  if(widget.destructor) {
+  if (widget.destructor) {
     widget.destructor();
   }
 
@@ -321,10 +321,10 @@ module.exports = {
   websocket:                $$.websocket,
   displayRejectedMessage:   displayRejectedMessage,
   createPendingNode:        createPendingNode,
-  getNode:                  function(index) { return $$.nodes[index];    },
-  getNodes:                 function()      { return _.values($$.nodes); },
-  nodeSearcher:             function()      { return $$.node_searcher;   },
-  shouldRender:             function()      { shouldRender = true;       },
+  getNode:                  function (index) { return $$.nodes[index];    },
+  getNodes:                 function ()      { return _.values($$.nodes); },
+  nodeSearcher:             function ()      { return $$.node_searcher;   },
+  shouldRender:             function ()      { shouldRender = true;       },
   writeToTerminal:          writeToTerminal
 };
 

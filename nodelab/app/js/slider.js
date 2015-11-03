@@ -9,7 +9,7 @@ var createText   = require('bmfont').render,
     textMaterial = require('font/text_material').hud,
     layoutText   = require('bmfont').layout;
 
-var calculateTextWidth = function(txt) {
+var calculateTextWidth = function (txt) {
     return layoutText({font: font, text: txt}).width;
 };
 
@@ -24,7 +24,7 @@ function Slider(widgetId, width, height) {
     objectId:  { type: 'v3', value: new THREE.Vector3((widgetId % 256) / 255.0, Math.floor(Math.floor(widgetId % 65536) / 256) / 255.0, Math.floor(widgetId / 65536) / 255.0) }
   };
 
-  Object.keys($$.commonUniforms).forEach(function(k) {
+  Object.keys($$.commonUniforms).forEach(function (k) {
     _this.uniforms[k] = $$.commonUniforms[k];
   });
 
@@ -52,15 +52,15 @@ function Slider(widgetId, width, height) {
 }
 
 
-Slider.prototype.setValue = function(value) {
+Slider.prototype.setValue = function (value) {
   this.uniforms.value.value = value;
 };
 
-Slider.prototype.setFocus = function(value) {
+Slider.prototype.setFocus = function (value) {
   this.uniforms.focus.value = value?1:0;
 };
 
-Slider.prototype.setLabel = function(text) {
+Slider.prototype.setLabel = function (text) {
   if (this.label) this.mesh.remove(this.label);
 
   var geometry = createText({
@@ -78,7 +78,7 @@ Slider.prototype.setLabel = function(text) {
   this.mesh.add(this.label);
 };
 
-Slider.prototype.setValueLabel = function(text) {
+Slider.prototype.setValueLabel = function (text) {
   if (this.valueLabel) this.mesh.remove(this.valueLabel);
 
   var geometry = createText({

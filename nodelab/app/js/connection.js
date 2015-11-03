@@ -22,7 +22,7 @@ function Connection(widgetId, id, colorId) {
 
   };
 
-  Object.keys($$.commonUniforms).forEach(function(k) {
+  Object.keys($$.commonUniforms).forEach(function (k) {
     _this.uniforms[k] = $$.commonUniforms[k];
   });
 
@@ -43,7 +43,7 @@ function Connection(widgetId, id, colorId) {
   this.mesh.position.z = 100;
 }
 
-Connection.prototype.setPos = function(x0, y0, x1, y1) {
+Connection.prototype.setPos = function (x0, y0, x1, y1) {
   var dist = 0;
   var x = x1 - x0;
   var y = y1 - y0;
@@ -62,18 +62,18 @@ Connection.prototype.setPos = function(x0, y0, x1, y1) {
   this.mesh.position.y = (dist * y_r) + y0 + y_r * scale;
 };
 
-Connection.prototype.show = function(colorId) {
+Connection.prototype.show = function (colorId) {
   if (colorId !== undefined) {
     this.uniforms.color.value = colors[colorId];
   }
   this.mesh.material.uniforms.visible.value = 1;
 };
 
-Connection.prototype.hide = function() {
+Connection.prototype.hide = function () {
   this.mesh.material.uniforms.visible.value = 0;
 };
 
-Connection.prototype.setFocused = function(focused) {
+Connection.prototype.setFocused = function (focused) {
   this.uniforms.focused.value = focused ? 1 : 0;
 };
 

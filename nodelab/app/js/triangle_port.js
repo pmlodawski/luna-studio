@@ -24,7 +24,7 @@ function Port(id, angle, out) {
     mouseDist: { type: 'f',  value: 100000.0 }
   };
 
-  Object.keys($$.commonUniforms).forEach(function(k) {
+  Object.keys($$.commonUniforms).forEach(function (k) {
     _this.uniforms[k] = $$.commonUniforms[k];
   });
 
@@ -45,7 +45,7 @@ function Port(id, angle, out) {
   this.setAngle(angle);
 }
 
-Port.prototype.setAngle = function(angle) {
+Port.prototype.setAngle = function (angle) {
   this.angle = angle;
 
   this.mesh.position.x = Math.cos(angle) * dist;
@@ -54,11 +54,11 @@ Port.prototype.setAngle = function(angle) {
   this.mesh.rotation.z = angle;
 };
 
-Port.prototype.setColor = function(color) {
+Port.prototype.setColor = function (color) {
   this.uniforms.color.value = color;
 };
 
-Port.prototype.updateMouseDist = function(mouseDist) {
+Port.prototype.updateMouseDist = function (mouseDist) {
   this.uniforms.mouseDist.value = mouseDist;
 };
 

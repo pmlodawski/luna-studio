@@ -4,7 +4,7 @@ var release        = require('features.release');
 var brunch = require('brunch');
 var features;
 
-if(brunch.env !== "production") {
+if (brunch.env !== "production") {
   var local = {};
   var debug = require('features.debug');
   try {
@@ -13,18 +13,18 @@ if(brunch.env !== "production") {
     // no local overrides, skipping.
   }
   var browser =  _.chain(release)
-                  .mapObject(function(value, feature) { return localStorage.getItem(feature); })
-                  .pick     (function(value) { return value !== null; })
-                  .mapObject(function(value) { return value === "true"; })
+                  .mapObject(function (value, feature) { return localStorage.getItem(feature); })
+                  .pick     (function (value) { return value !== null; })
+                  .mapObject(function (value) { return value === "true"; })
                   .value();
 
   features = _({}).defaults(browser, local, debug, release);
 
-  var displayWarning = function(feature) {
+  var displayWarning = function (feature) {
     console.error("Unknown feature " + feature);
     console.error("Possible features " + Object.keys(release).join(", "));
   };
-  features.enable  = function(feature) {
+  features.enable  = function (feature) {
     if (release[feature] === undefined) {
       displayWarning(feature);
     } else {
@@ -32,7 +32,7 @@ if(brunch.env !== "production") {
       localStorage.setItem(feature, "true" );
     }
   };
-  features.disable = function(feature) {
+  features.disable = function (feature) {
     if (release[feature] === undefined) {
       displayWarning(feature);
     } else {
@@ -40,7 +40,7 @@ if(brunch.env !== "production") {
       localStorage.setItem(feature, "true" );
     }
   };
-  features.clear = function() {
+  features.clear = function () {
     console.info("Clearing feature overrides. Please reload the page.");
     localStorage.clear();
   };

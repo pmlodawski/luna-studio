@@ -34,7 +34,7 @@ function Port(id, widgetId, colorId, angle, out) {
     objectId:  { type: 'v3', value: new THREE.Vector3((widgetId % 256) / 255.0, Math.floor(Math.floor(widgetId % 65536) / 256) / 255.0, Math.floor(widgetId / 65536) / 255.0) }
   };
 
-  Object.keys($$.commonUniforms).forEach(function(k) {
+  Object.keys($$.commonUniforms).forEach(function (k) {
     _this.uniforms[k] = $$.commonUniforms[k];
   });
 
@@ -54,7 +54,7 @@ function Port(id, widgetId, colorId, angle, out) {
   this.setAngle(angle);
 }
 
-Port.prototype.setAngle = function(angle) {
+Port.prototype.setAngle = function (angle) {
   this.angle = angle;
 
   this.mesh.position.x = Math.cos(angle) * dist;
@@ -63,21 +63,21 @@ Port.prototype.setAngle = function(angle) {
   this.mesh.rotation.z = angle;
 };
 
-Port.prototype.setExpandedPosition = function(left, top) {
+Port.prototype.setExpandedPosition = function (left, top) {
   this.mesh.rotation.z = 0;
   this.mesh.position.x = left;
   this.mesh.position.y = top;
 };
 
-Port.prototype.setColor = function(color) {
+Port.prototype.setColor = function (color) {
   this.uniforms.color.value = color;
 };
 
-Port.prototype.updateMouseDist = function(mouseDist) {
+Port.prototype.updateMouseDist = function (mouseDist) {
   this.uniforms.mouseDist.value = mouseDist;
 };
 
-Port.prototype.setFocused = function(focused) {
+Port.prototype.setFocused = function (focused) {
   this.uniforms.focused.value = focused ? 1 : 0;
 };
 

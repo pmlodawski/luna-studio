@@ -30,8 +30,8 @@ var defaults = function (){
 
 
 
-module.exports = { hud:   function() { return new THREE.ShaderMaterial(defaults() ); }
-                 , graph: function() {
+module.exports = { hud:   function () { return new THREE.ShaderMaterial(defaults() ); }
+                 , graph: function () {
                      var graphOpts = defaults();
                      graphOpts.uniforms.zoomScaling.value = 1;
                      return new THREE.ShaderMaterial(graphOpts);

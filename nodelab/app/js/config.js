@@ -4,7 +4,7 @@ var release = require('config.release');
 var brunch = require('brunch');
 var config;
 
-if(brunch.env !== "production") {
+if (brunch.env !== "production") {
   var local = {};
   var debug = require('config.debug');
   try {
@@ -14,7 +14,7 @@ if(brunch.env !== "production") {
   }
 
   var browser = {};
-  if(localStorage.getItem('logging') !== null) {
+  if (localStorage.getItem('logging') !== null) {
     browser.logging = (localStorage.getItem('logging') === "true");
   }
   if (localStorage.getItem("backend") !== null) {
@@ -43,11 +43,11 @@ if(brunch.env !== "production") {
 
   console.info("Logging is " + (config.logging?"enabled":"disabled"));
 
-  window.enableLogging  = function(){
+  window.enableLogging  = function (){
     console.info("Logging enabled! Please reload the page.");
     localStorage.setItem('logging', "true" );
   };
-  window.disableLogging = function(){
+  window.disableLogging = function (){
     console.info("Logging disabled! Please reload the page.");
     localStorage.setItem('logging', "false");
   };

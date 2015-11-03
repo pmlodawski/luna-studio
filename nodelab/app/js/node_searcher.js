@@ -8,13 +8,13 @@ var $$     = require('./common')
 function highlightText(name, highlight) {
   highlight.push({start: name.length, length: 0});
 
-  return _(highlight).foldl(function(acc, el) {
-    if(acc.pos < el.start) {
+  return _(highlight).foldl(function (acc, el) {
+    if (acc.pos < el.start) {
       acc.elems.push(name.substring(acc.pos, el.start));
     }
 
     var part = name.substring(el.start, el.start+el.length);
-    if(part.length > 0) {
+    if (part.length > 0) {
       acc.elems.push($("<em/>").text(part));
     }
 
@@ -40,17 +40,17 @@ function NodeSearcher() {
   this.el = $('<div/>').addClass('node-searcher');
 }
 
-NodeSearcher.prototype.init = function(nodeId) {
+NodeSearcher.prototype.init = function (nodeId) {
   var self = this;
   this.prefix = "";
   this.nodeId = nodeId;
   this.initSearchbox();
   this.setExpression("");
   this.searchbox.focus();
-  setTimeout(function(){ self.searchbox.focus();}, 30);
+  setTimeout(function (){ self.searchbox.focus();}, 30);
 };
 
-NodeSearcher.prototype.initSearchbox = function() {
+NodeSearcher.prototype.initSearchbox = function () {
   var _this = this;
 
   var firstColumn = $('<div/>').addClass('column').addClass('current').addClass('first-column');
@@ -72,14 +72,14 @@ NodeSearcher.prototype.initSearchbox = function() {
 
   firstColumn.itemsDiv.mCustomScrollbar(config.nodeSearcher.scrollbarOptions);
 
-  this.searchbox.on('input', function() {
+  this.searchbox.on('input', function () {
     _this.onInput();
   });
-  this.searchbox.on('blur', function() {
+  this.searchbox.on('blur', function () {
     _this.searchbox.focus();
   });
 
-  this.searchbox.on('keydown', function(ev) {
+  this.searchbox.on('keydown', function (ev) {
     switch(ev.keyCode){
       case 9:  /* tab         */ _this.onTab(ev);       break;
       case 27: /* esc         */ _this.onEsc(ev);       break;
@@ -97,33 +97,33 @@ NodeSearcher.prototype.initSearchbox = function() {
     ev.stopPropagation();
   });
 
-  this.searchbox.on('keypress', function(ev) { // prevent Haskell handlers
+  this.searchbox.on('keypress', function (ev) { // prevent Haskell handlers
     ev.stopPropagation();
   });
 
-  this.searchbox.on('keyup', function(ev) { // prevent Haskell handlers
+  this.searchbox.on('keyup', function (ev) { // prevent Haskell handlers
     ev.stopPropagation();
   });
 
   var x, y;
-  this.el.on("mousemove", ".column .item", function(ev) {
-    if(x !== ev.pageX || y !== ev.pageY) {
+  this.el.on("mousemove", ".column .item", function (ev) {
+    if (x !== ev.pageX || y !== ev.pageY) {
       x = ev.pageX;
       y = ev.pageY;
       _this.select($(ev.currentTarget));
     }
   });
-  this.el.on("click", ".column ul li.result", function(ev) {
+  this.el.on("click", ".column ul li.result", function (ev) {
     _this.select($(ev.currentTarget));
     _this.onEnter(ev);
   });
 };
 
-NodeSearcher.prototype.expression = function() {
+NodeSearcher.prototype.expression = function () {
   return this.prefix + this.searchbox.val();
 };
 
-NodeSearcher.prototype.setExpression = function(expr) {
+NodeSearcher.prototype.setExpression = function (expr) {
   var split = splitExpression(expr);
   this.prefix = split.prefix;
   this.searchbox.val(split.query);
@@ -132,14 +132,14 @@ NodeSearcher.prototype.setExpression = function(expr) {
   this.performSearch();
 };
 
-NodeSearcher.prototype.appendExpression = function(expr) {
+NodeSearcher.prototype.appendExpression = function (expr) {
   this.setExpression(this.prefix + expr);
 };
 
 
-NodeSearcher.prototype.performSearch = function() {
+NodeSearcher.prototype.performSearch = function () {
   var ev;
-  if(this.prefix === "" && this.searchbox.val() === "") {
+  if (this.prefix === "" && this.searchbox.val() === "") {
     this.firstColumn.removeClass('types');
     this.clearResults();
     ev = new CustomEvent('ns_event', {
@@ -162,22 +162,22 @@ NodeSearcher.prototype.performSearch = function() {
 
 };
 
-NodeSearcher.prototype.returnSearchResult = function(results) {
+NodeSearcher.prototype.returnSearchResult = function (results) {
   this.searchrow.addClass('active');
   this.displaySearchResults(results);
 };
 
-NodeSearcher.prototype.currentSelection = function() {
+NodeSearcher.prototype.currentSelection = function () {
   return this.currentColumn.find('.item.active');
 };
 
-NodeSearcher.prototype.select = function(newSelection) {
-  if(newSelection.length === 0) return;
-  if(this.currentSelection().is(newSelection)) return;
+NodeSearcher.prototype.select = function (newSelection) {
+  if (newSelection.length === 0) return;
+  if (this.currentSelection().is(newSelection)) return;
 
   var inSameColumn = this.currentSelection().parents('.column').is(newSelection.parents('.column'));
 
-  if(!inSameColumn) {
+  if (!inSameColumn) {
     this.selectColumn(newSelection.parents('.column'));
   }
 
@@ -186,31 +186,31 @@ NodeSearcher.prototype.select = function(newSelection) {
 
   newSelection.parents(".column").nextAll().remove();
 
-  if(!this.isSearchboxActive() && newSelection.data('match').type === 'module') {
+  if (!this.isSearchboxActive() && newSelection.data('match').type === 'module') {
     this.openColumn();
   }
 };
 
-NodeSearcher.prototype.scrollToSelected = function() {
+NodeSearcher.prototype.scrollToSelected = function () {
   var currentSelection  = this.currentSelection();
 
   var selectedBottom = currentSelection.position().top + this.currentColumn.find('.mCSB_container').position().top + this.currentSelection().height();
 
-  if(selectedBottom > this.currentColumn.find(".ul-container").height()) {
+  if (selectedBottom > this.currentColumn.find(".ul-container").height()) {
     this.currentColumn.find('.ul-container').mCustomScrollbar("scrollTo", currentSelection.position().top - this.currentColumn.find('.ul-container').innerHeight() + 30, {scrollInertia: config.nodeSearcher.scrollAnimationTime});
   }
 
   var selectedTop = currentSelection.position().top + this.currentColumn.find('.mCSB_container').position().top;
-  if(selectedTop < 0) {
+  if (selectedTop < 0) {
     this.currentColumn.find('.ul-container').mCustomScrollbar("scrollTo", Math.max(0, currentSelection.position().top - currentSelection.height()), {scrollInertia: config.nodeSearcher.scrollAnimationTime});
   }
 };
 
-NodeSearcher.prototype.isSearchboxActive = function() {
+NodeSearcher.prototype.isSearchboxActive = function () {
   return this.searchrow.hasClass('active');
 };
 
-NodeSearcher.prototype.createNode = function() {
+NodeSearcher.prototype.createNode = function () {
   var ev = new CustomEvent('ns_event', {
     detail: {
       action: 'create',
@@ -222,17 +222,17 @@ NodeSearcher.prototype.createNode = function() {
   this.destroy();
 };
 
-NodeSearcher.prototype.selectColumn = function(column) {
+NodeSearcher.prototype.selectColumn = function (column) {
   this.currentColumn.removeClass('current');
   this.currentColumn = column;
   this.currentColumn.addClass('current');
   this.currentColumn.nextAll().find("li").removeClass("active");
-  if(this.currentColumn.find("li.active").length === 0) {
+  if (this.currentColumn.find("li.active").length === 0) {
     this.currentColumn.find("li:first-child").addClass("active");
   }
 };
 
-NodeSearcher.prototype.openColumn = function() {
+NodeSearcher.prototype.openColumn = function () {
   var column = $('<div/>').addClass('column');
   column.items = $('<ul/>');
   column.itemsDiv = $('<div class="ul-container"/>');
@@ -253,20 +253,20 @@ NodeSearcher.prototype.openColumn = function() {
   window.dispatchEvent(ev);
 };
 
-NodeSearcher.prototype.updatePrefixWidth = function() {
+NodeSearcher.prototype.updatePrefixWidth = function () {
   this.prefixWidth = 90+this.searchns.width();
   this.firstColumn.find('.ns').css({idth: this.prefixWidth});
 };
 
 
-NodeSearcher.prototype.clearResults = function() {
+NodeSearcher.prototype.clearResults = function () {
   this.firstColumn.nextAll().remove();
   this.currentColumn = this.firstColumn;
   this.firstColumn.find('li.result').remove();
   this.searchrow.addClass('active');
 };
 
-NodeSearcher.prototype.addResult = function(prefix, name, fullname, highlight, type) {
+NodeSearcher.prototype.addResult = function (prefix, name, fullname, highlight, type) {
   var ul = this.firstColumn.find('ul');
 
   var li = $('<li/>').addClass('result').addClass('item');
@@ -280,7 +280,7 @@ NodeSearcher.prototype.addResult = function(prefix, name, fullname, highlight, t
   li.append(ns);
   li.append(namespan);
 
-  _(highlightText(name, highlight).elems).each(function(part){
+  _(highlightText(name, highlight).elems).each(function (part){
     namespan.append(part);
   });
 };
@@ -288,18 +288,18 @@ NodeSearcher.prototype.addResult = function(prefix, name, fullname, highlight, t
 
 
 // -> HS
-NodeSearcher.prototype.displaySearchResults = function(results) {
+NodeSearcher.prototype.displaySearchResults = function (results) {
   this.firstColumn.nextAll().remove();
   this.currentColumn = this.firstColumn;
   this.displayResults(results, this.firstColumn.items);
 };
 
 // -> HS
-NodeSearcher.prototype.displayResults = function(results, ul) {
+NodeSearcher.prototype.displayResults = function (results, ul) {
   var _this = this;
   ul.find('li.result').remove();
 
-  _(results).each(function(item) { // -> inside stays in JS
+  _(results).each(function (item) { // -> inside stays in JS
     var li = $('<li/>').addClass('result').addClass('item');
     var ns = $("<span/>").addClass('ns').text(item.module).css({minWidth: _this.prefixWidth});
     var name = $("<span/>").addClass('fname');
@@ -311,7 +311,7 @@ NodeSearcher.prototype.displayResults = function(results, ul) {
     li.append(ns);
     li.append(name);
 
-    _(highlightText(item.name, item.highlight).elems).each(function(part){
+    _(highlightText(item.name, item.highlight).elems).each(function (part){
       name.append(part);
     });
   });
@@ -319,7 +319,7 @@ NodeSearcher.prototype.displayResults = function(results, ul) {
 
 
 
-NodeSearcher.prototype.addTreeResult = function(prefix, name, fullname, type) {
+NodeSearcher.prototype.addTreeResult = function (prefix, name, fullname, type) {
   var ul = this.el.find('.column:last-child ul');
 
   var li = $('<li/>').addClass('result').addClass('item');
@@ -334,20 +334,20 @@ NodeSearcher.prototype.addTreeResult = function(prefix, name, fullname, type) {
 
 // input event handlers
 
-NodeSearcher.prototype.onInput = function() {
+NodeSearcher.prototype.onInput = function () {
   var query = this.searchbox.val();
-  if(shouldSplit(query)) {
+  if (shouldSplit(query)) {
     this.appendExpression(query);
   } else {
     this.performSearch();
   }
 };
 
-NodeSearcher.prototype.onBackspace = function(event) {
+NodeSearcher.prototype.onBackspace = function (event) {
   var val = this.searchbox.val();
   var expr = this.expression();
 
-  if(val === "") {
+  if (val === "") {
     this.setExpression(expr.slice(0, expr.length-1));
     event.preventDefault();
   }
@@ -355,16 +355,16 @@ NodeSearcher.prototype.onBackspace = function(event) {
   event.stopPropagation();
 };
 
-NodeSearcher.prototype.onEnter = function(ev) {
+NodeSearcher.prototype.onEnter = function (ev) {
   var current, data;
 
-  if(this.searchrow.hasClass('active')) {
+  if (this.searchrow.hasClass('active')) {
     this.createNode(this.prefix + this.searchbox.val());
   } else {
     current = this.currentSelection();
     data    = current.data('match');
 
-    if(data.type === 'module') {
+    if (data.type === 'module') {
       this.appendExpression(data.fullname + ".");
     } else {
       this.appendExpression(data.fullname);
@@ -375,21 +375,21 @@ NodeSearcher.prototype.onEnter = function(ev) {
   ev.preventDefault();
 };
 
-NodeSearcher.prototype.onTab = function(ev) {
+NodeSearcher.prototype.onTab = function (ev) {
   var current, data;
   ev.preventDefault();
 
-  if(!this.searchrow.hasClass('active')) {
+  if (!this.searchrow.hasClass('active')) {
     current = this.currentSelection();
   } else {
     current = this.currentColumn.find("li:first-child");
   }
 
-  if(current.length === 0) return;
+  if (current.length === 0) return;
 
   data    = current.data('match');
 
-  if(data.type === 'module') {
+  if (data.type === 'module') {
     this.appendExpression(data.fullname + ".");
   } else {
     this.appendExpression(data.fullname );
@@ -397,23 +397,23 @@ NodeSearcher.prototype.onTab = function(ev) {
 
 };
 
-NodeSearcher.prototype.onEsc = function(ev) {
+NodeSearcher.prototype.onEsc = function (ev) {
   // TODO: Close searcher and send 'search-cancelled' event
   ev.preventDefault();
   this.destroy();
 };
 
-NodeSearcher.prototype.onKeyDown = function(event) {
+NodeSearcher.prototype.onKeyDown = function (event) {
   var currentSelection, nextSelection;
 
   currentSelection  = this.currentSelection();
   nextSelection = currentSelection.next();
 
-  if(this.isSearchboxActive()) {
+  if (this.isSearchboxActive()) {
     nextSelection = this.firstColumn.find('li:first-child');
   }
 
-  if(nextSelection.length > 0) {
+  if (nextSelection.length > 0) {
     this.select(nextSelection);
     this.scrollToSelected();
   }
@@ -422,18 +422,18 @@ NodeSearcher.prototype.onKeyDown = function(event) {
   event.stopPropagation();
 };
 
-NodeSearcher.prototype.onKeyUp = function(event) {
+NodeSearcher.prototype.onKeyUp = function (event) {
   var currentSelection, nextSelection, shouldSelectSearchbox;
   currentSelection  = this.currentSelection();
   nextSelection = currentSelection.prev();
 
   shouldSelectSearchbox = this.currentColumn.is(this.firstColumn) && nextSelection.length === 0;
 
-  if(shouldSelectSearchbox) {
+  if (shouldSelectSearchbox) {
     nextSelection = this.searchrow;
   }
 
-  if(nextSelection.length > 0) {
+  if (nextSelection.length > 0) {
     this.select(nextSelection);
     this.scrollToSelected();
   }
@@ -442,9 +442,9 @@ NodeSearcher.prototype.onKeyUp = function(event) {
   event.stopPropagation();
 };
 
-NodeSearcher.prototype.onKeyLeft = function(event) {
-  if(!this.isSearchboxActive()) {
-    if(!this.currentColumn.is(this.firstColumn)){
+NodeSearcher.prototype.onKeyLeft = function (event) {
+  if (!this.isSearchboxActive()) {
+    if (!this.currentColumn.is(this.firstColumn)){
       this.currentColumn.nextAll().remove();
       this.selectColumn(this.currentColumn.prev());
     }
@@ -453,11 +453,11 @@ NodeSearcher.prototype.onKeyLeft = function(event) {
   event.stopPropagation();
 };
 
-NodeSearcher.prototype.onKeyRight = function(event) {
+NodeSearcher.prototype.onKeyRight = function (event) {
   var next;
-  if(!this.isSearchboxActive()) {
+  if (!this.isSearchboxActive()) {
     next = this.currentColumn.next();
-    if(next.length > 0) {
+    if (next.length > 0) {
       this.select(next.find("li:first-child"));
     }
     event.preventDefault();
@@ -465,28 +465,28 @@ NodeSearcher.prototype.onKeyRight = function(event) {
   event.stopPropagation();
 };
 
-NodeSearcher.prototype.onKeyHome = function(ev) {
-  if(!this.searchrow.hasClass('active')) {
+NodeSearcher.prototype.onKeyHome = function (ev) {
+  if (!this.searchrow.hasClass('active')) {
     this.select(this.currentColumn.find('li:first-child'));
     this.currentColumn.find('.ul-container').mCustomScrollbar("scrollTo", 'top', {scrollInertia: config.nodeSearcher.scrollAnimationTime});
     ev.preventDefault();
   }
 };
 
-NodeSearcher.prototype.onKeyEnd = function(ev) {
-  if(!this.searchrow.hasClass('active')) {
+NodeSearcher.prototype.onKeyEnd = function (ev) {
+  if (!this.searchrow.hasClass('active')) {
     this.select(this.currentColumn.find('li:last-child'));
     this.currentColumn.find('.ul-container').mCustomScrollbar("scrollTo", 'bottom', {scrollInertia: config.nodeSearcher.scrollAnimationTime});
     ev.preventDefault();
   }
 };
 
-NodeSearcher.prototype.onKeyPgUp = function(ev) {
+NodeSearcher.prototype.onKeyPgUp = function (ev) {
   var targetScroll = this.currentSelection().position().top - this.currentColumn.find(".ul-container").height();
 
-  if(!this.searchrow.hasClass('active')) {
-    var lastVisible = _(this.currentColumn.find('li').get()).find(function(el) { return $(el).position().top >= targetScroll;});
-    if(lastVisible) {
+  if (!this.searchrow.hasClass('active')) {
+    var lastVisible = _(this.currentColumn.find('li').get()).find(function (el) { return $(el).position().top >= targetScroll;});
+    if (lastVisible) {
       this.select($(lastVisible));
     }
     this.scrollToSelected();
@@ -494,12 +494,12 @@ NodeSearcher.prototype.onKeyPgUp = function(ev) {
   }
 };
 
-NodeSearcher.prototype.onKeyPgDn = function(ev) {
+NodeSearcher.prototype.onKeyPgDn = function (ev) {
   var targetScroll = this.currentSelection().position().top + this.currentColumn.find(".ul-container").height();
 
-  if(!this.searchrow.hasClass('active')) {
-    var lastVisible = _(this.currentColumn.find('li').get().reverse()).find(function(el) { return $(el).position().top + $(el).height() <= targetScroll;});
-    if(lastVisible) {
+  if (!this.searchrow.hasClass('active')) {
+    var lastVisible = _(this.currentColumn.find('li').get().reverse()).find(function (el) { return $(el).position().top + $(el).height() <= targetScroll;});
+    if (lastVisible) {
       this.select($(lastVisible));
     }
     this.scrollToSelected();
@@ -507,7 +507,7 @@ NodeSearcher.prototype.onKeyPgDn = function(ev) {
   }
 };
 
-NodeSearcher.prototype.destroy = function() {
+NodeSearcher.prototype.destroy = function () {
   this.el.remove();
   $('#canvas2d').focus();
   $$.node_searcher = undefined;

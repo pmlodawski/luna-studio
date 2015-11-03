@@ -18,7 +18,7 @@ function SelectionBox() {
     color:   { type: 'v4', value: color }
   };
 
-  Object.keys($$.commonUniforms).forEach(function(k) {
+  Object.keys($$.commonUniforms).forEach(function (k) {
     _this.uniforms[k] = $$.commonUniforms[k];
   });
 
@@ -36,18 +36,18 @@ function SelectionBox() {
   this.mesh.position.z = 1;
 }
 
-SelectionBox.prototype.setPos = function(x0, y0, x1, y1) {
+SelectionBox.prototype.setPos = function (x0, y0, x1, y1) {
   this.mesh.position.x = x0;
   this.mesh.position.y = y0;
   this.mesh.material.uniforms.size.value.x = x1 - x0;
   this.mesh.material.uniforms.size.value.y = y1 - y0;
 };
 
-SelectionBox.prototype.show = function() {
+SelectionBox.prototype.show = function () {
   this.mesh.material.uniforms.visible.value = 1;
 };
 
-SelectionBox.prototype.hide = function() {
+SelectionBox.prototype.hide = function () {
   this.mesh.material.uniforms.visible.value = 0;
 };
 

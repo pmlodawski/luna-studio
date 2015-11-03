@@ -66,7 +66,7 @@ function Node(id, position, z, widgetId) {
     radiusBottom:      { type: 'f',  value: collapsedRadius }
   };
 
-  Object.keys($$.commonUniforms).forEach(function(k) {
+  Object.keys($$.commonUniforms).forEach(function (k) {
     _this.uniforms[k] = $$.commonUniforms[k];
   });
 
@@ -125,7 +125,7 @@ function Node(id, position, z, widgetId) {
   this.setExpandedState(0.0);
 }
 
-Node.prototype.setExpandedState = function(expanded) {
+Node.prototype.setExpandedState = function (expanded) {
   this.expandedState = expanded;
   this.expandedNode.visible = (expanded > 0.0);
 
@@ -143,10 +143,10 @@ Node.prototype.setExpandedState = function(expanded) {
   this.repositionPlot();
 };
 
-Node.prototype.setPending = function() {
+Node.prototype.setPending = function () {
   this.uniforms.alpha.value = 0.2;
 };
-Node.prototype.toggleExpandState = function() {
+Node.prototype.toggleExpandState = function () {
   if (this.expandedState === 0) {
     this.setExpandedState(1.0);
   } else {
@@ -154,11 +154,11 @@ Node.prototype.toggleExpandState = function() {
   }
 };
 
-Node.prototype.selected = function(val) {
+Node.prototype.selected = function (val) {
   if (val !== undefined) {
     this.uniforms.selected.value = val;
-    if(features.label_editor) {
-      if(val === 2) {
+    if (features.label_editor) {
+      if (val === 2) {
         this.showLabelEditor();
       }
     }
@@ -166,7 +166,7 @@ Node.prototype.selected = function(val) {
   return this.uniforms.selected.value;
 };
 
-Node.prototype.moveTo = function(a, b) {
+Node.prototype.moveTo = function (a, b) {
   var vec = new THREE.Vector2(a, b);
 
   this.position.x = vec.x;
@@ -178,35 +178,35 @@ Node.prototype.moveTo = function(a, b) {
   $(this.htmlContainer).css({left: vec.x, top: vec.y});
 };
 
-Node.prototype.zPos = function(z) {
+Node.prototype.zPos = function (z) {
   if (z !== undefined) {
     this.mesh.position.z = z;
   }
   return this.mesh.position.z;
 };
 
-Node.prototype.updateMouse = function(x, y) {
+Node.prototype.updateMouse = function (x, y) {
   var xd = (this.mesh.position.x - this.mesh.scale.x / 2.0) - x;
   var yd = (this.mesh.position.y - this.mesh.scale.y / 2.0) - y;
   var mouseDist = Math.sqrt(xd * xd + yd * yd);
   this.uniforms.mouseDist.value = mouseDist;
-  this.inputPorts.forEach(function(port) {
+  this.inputPorts.forEach(function (port) {
     port.updateMouseDist(mouseDist);
   });
-  this.outputPorts.forEach(function(port) {
+  this.outputPorts.forEach(function (port) {
     port.updateMouseDist(mouseDist);
   });
 };
 
-Node.prototype.addInputPort = function(oid, id, colorId, angle) {
+Node.prototype.addInputPort = function (oid, id, colorId, angle) {
   this.addPort(this.inputPorts, false, oid, id, colorId, angle);
 };
 
-Node.prototype.addOutputPort = function(oid, id, colorId, angle) {
+Node.prototype.addOutputPort = function (oid, id, colorId, angle) {
   this.addPort(this.outputPorts, true, oid, id, colorId, angle);
 };
 
-Node.prototype.addPort = function(ports, out, oid, id, colorId, angle) {
+Node.prototype.addPort = function (ports, out, oid, id, colorId, angle) {
   var p = new Port(id, oid, colorId, angle, out);
   ports.push(p);
   this.mesh.add(p.mesh);
@@ -214,31 +214,31 @@ Node.prototype.addPort = function(ports, out, oid, id, colorId, angle) {
   $$.registry[oid] = p;
 };
 
-Node.prototype.findInputPort = function(id) {
-  return _.find(this.inputPorts, function(port) { return port.id === id; });
+Node.prototype.findInputPort = function (id) {
+  return _.find(this.inputPorts, function (port) { return port.id === id; });
 };
 
-Node.prototype.findOutputPort = function(id) {
-  return _.find(this.outputPorts, function(port) { return port.id === id; });
+Node.prototype.findOutputPort = function (id) {
+  return _.find(this.outputPorts, function (port) { return port.id === id; });
 };
 
-Node.prototype.setInputPortAngle = function(id, angle) {
+Node.prototype.setInputPortAngle = function (id, angle) {
   this.findInputPort(id).setAngle(angle);
 };
 
-Node.prototype.setOutputPortAngle = function(id, angle) {
+Node.prototype.setOutputPortAngle = function (id, angle) {
   this.findOutputPort(id).setAngle(angle);
 };
 
-Node.prototype.setInputPortColor = function(id, r, g, b, a) {
+Node.prototype.setInputPortColor = function (id, r, g, b, a) {
   this.findInputPort(id).setColor(new THREE.Vector4(r, g, b, a));
 };
 
-Node.prototype.setOutputPortColor = function(id, r, g, b, a) {
+Node.prototype.setOutputPortColor = function (id, r, g, b, a) {
   this.findOutputPort(id).setColor(new THREE.Vector4(r, g, b, a));
 };
 
-Node.prototype.label = function(text) {
+Node.prototype.label = function (text) {
   if (text !== undefined) {
     this.labelText = text;
     this.updateLabel();
@@ -246,7 +246,7 @@ Node.prototype.label = function(text) {
   return this.labelText;
 };
 
-Node.prototype.updateLabel = function() {
+Node.prototype.updateLabel = function () {
   if (this.labelObject) this.mesh.remove(this.labelObject);
 
   var size = 150 / config.fontSize;
@@ -269,13 +269,13 @@ Node.prototype.updateLabel = function() {
   this.mesh.add(this.labelObject);
 };
 
-Node.prototype.setValue = function(text) {
+Node.prototype.setValue = function (text) {
   this.valueText = text;
   this.updateValue();
   return this.valueText;
 };
 
-Node.prototype.updateValue = function() {
+Node.prototype.updateValue = function () {
   if (this.valueObject) this.mesh.remove(this.valueObject);
 
   var size = 150 / config.fontSize;
@@ -297,7 +297,7 @@ Node.prototype.updateValue = function() {
   this.mesh.add(this.valueObject);
 };
 
-Node.prototype.showLabelEditor = function() {
+Node.prototype.showLabelEditor = function () {
   if (this.htmlElements.labelEditor) return;
   var editor = $('<input/>').css({left: -50, top: -52, width: 100, textAlign: 'center'});
   editor.val(this.labelText);
@@ -307,9 +307,9 @@ Node.prototype.showLabelEditor = function() {
   this.mesh.remove(this.labelObject);
   this.labelObject = null;
   var _this = this;
-  setTimeout(function(){
+  setTimeout(function (){
     editor.focus();
-    editor.blur(function(){
+    editor.blur(function (){
         _this.label(_this.hideLabelEditor());
     });
   }, 50);
@@ -323,7 +323,7 @@ Node.prototype.repositionPlot = function () {
     .attr("style", "position: absolute; left: -30px;" + topCss);
 };
 
-Node.prototype.displayVector = function(values) {
+Node.prototype.displayVector = function (values) {
   $(this.htmlContainer).empty();
 
   var svg = d3.select(this.htmlContainer)
@@ -345,11 +345,11 @@ Node.prototype.displayVector = function(values) {
   myChart.draw();
 };
 
-Node.prototype.destructor = function(){
+Node.prototype.destructor = function (){
   this.htmlContainer.parentNode.removeChild(this.htmlContainer);
 };
 
-Node.prototype.hideLabelEditor = function() {
+Node.prototype.hideLabelEditor = function () {
   var editor = this.htmlElements.labelEditor;
   var value = editor[0].value;
   console.log("Entered: " + value);

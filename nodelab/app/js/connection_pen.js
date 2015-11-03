@@ -130,7 +130,7 @@ module.exports = {
   getWidgetsBetween: getWidgetsBetween,
   requestWidgetsBetween: requestWidgetsBetween,
   endPath: endPath,
-  callback: function() {
+  callback: function () {
     console.error("ConnectionPen: Callback was not registered.");
   }
 };
