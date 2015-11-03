@@ -3,6 +3,7 @@
 var $$ = require('common');
 var vs = require('shaders/slider.vert')();
 var fs = require('shaders/slider.frag')();
+var config = require('config');
 
 var createText   = require('bmfont').render,
     font         = require("font/LatoBlack-sdf"),

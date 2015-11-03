@@ -11,7 +11,8 @@ var $$             = require('common'),
     SelectionBox   = require('selection_box'),
     websocket      = require('websocket'),
     textEditor     = require('text_editor'),
-    connectionPen  = require('connection_pen');
+    connectionPen  = require('connection_pen'),
+    Terminal       = window.Terminal;
 
 console.info("Current version " + brunch.env + " " + brunch.git_commit);
 console.info("Build at " + brunch.date);

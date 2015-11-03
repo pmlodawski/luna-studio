@@ -1,6 +1,7 @@
 "use strict";
 
-var $$        = require('common');
+var $$        = require('common'),
+    ace       = window.ace;
 
 var editor;
 
