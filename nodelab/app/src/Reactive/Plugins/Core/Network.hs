@@ -91,7 +91,7 @@ makeNetworkDescription conn logging workspace = do
         nodeSearcherActionB           = fmap ActionST $   NodeSearcher.toAction <$> anyNodeB
         backendActionB                = fmap ActionST $        Backend.toAction <$> anyNodeB
         runnerActionB                 = fmap ActionST $         Runner.toAction <$> anyNodeB
-        graphFetcherActionB           = fmap ActionST $   GraphFetcher.toAction <$> anyNodeB <*> globalStateB
+        graphFetcherActionB           = fmap ActionST $   GraphFetcher.toAction <$> anyNodeB
         connectionPenActionB          = fmap ActionST $  ConnectionPen.toAction <$> anyNodeB <*> globalStateB
         textEditorActionB             = fmap ActionST $     TextEditor.toAction <$> anyNodeB
 
