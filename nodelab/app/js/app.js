@@ -301,7 +301,6 @@ module.exports = {
   initializeGl:             initializeGl,
   render:                   render,
   moveToTopZ:               moveToTopZ,
-  newNodeAt:                newNodeAt,
   updateHtmCanvasPanPos:    updateHtmCanvasPanPos,
   updateScreenSize:         updateScreenSize,
   updateCamera:             updateCamera,
