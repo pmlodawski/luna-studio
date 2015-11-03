@@ -20,7 +20,6 @@ import qualified Reactive.Plugins.Core.Action.Drag                  as Drag
 import qualified Reactive.Plugins.Core.Action.Connect               as Connect
 import qualified Reactive.Plugins.Core.Action.NodeSearcher          as NodeSearcher
 import qualified Reactive.Plugins.Core.Action.Widget                as Widget
-import qualified Reactive.Plugins.Core.Action.Sandbox               as Sandbox
 import qualified Reactive.Plugins.Core.Action.Backend.Backend       as Backend
 import qualified Reactive.Plugins.Core.Action.Backend.Runner        as Runner
 import qualified Reactive.Plugins.Core.Action.Backend.GraphFetcher  as GraphFetcher
@@ -90,7 +89,6 @@ makeNetworkDescription conn logging workspace = do
         nodeDragActionB               = fmap ActionST $           Drag.toAction <$> anyNodeB
         nodeConnectActionB            = fmap ActionST $        Connect.toAction <$> anyNodeB
         nodeSearcherActionB           = fmap ActionST $   NodeSearcher.toAction <$> anyNodeB
-        sandboxActionB                = fmap ActionST $        Sandbox.toAction <$> anyNodeB <*> globalStateB
         backendActionB                = fmap ActionST $        Backend.toAction <$> anyNodeB
         runnerActionB                 = fmap ActionST $         Runner.toAction <$> anyNodeB
         graphFetcherActionB           = fmap ActionST $   GraphFetcher.toAction <$> anyNodeB <*> globalStateB
@@ -105,7 +103,6 @@ makeNetworkDescription conn logging workspace = do
                                         , cameraActionB
                                         , nodeConnectActionB
                                         , nodeSearcherActionB
-                                        , sandboxActionB
                                         , backendActionB
                                         , runnerActionB
                                         , graphFetcherActionB

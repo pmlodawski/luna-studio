@@ -17,10 +17,7 @@ import qualified Reactive.State.Connect           as Connect
 import qualified Reactive.State.UIRegistry        as UIRegistry
 import qualified Reactive.State.ConnectionPen     as ConnectionPen
 
-import qualified Reactive.State.Sandbox           as Sandbox
-
-data State = State { _iteration      :: Integer
-                   , _mousePos       :: Vector2 Int
+data State = State { _mousePos       :: Vector2 Int
                    , _graph          :: Graph.State
                    , _camera         :: Camera.State
                    , _selection      :: Selection.State
@@ -28,7 +25,6 @@ data State = State { _iteration      :: Integer
                    , _drag           :: Drag.State
                    , _connect        :: Connect.State
                    , _uiRegistry     :: UIRegistry.State State
-                   , _sandbox        :: Sandbox.State
                    , _connectionPen  :: ConnectionPen.State
                    , _workspace      :: Workspace
                    } deriving (Eq, Show)
@@ -36,12 +32,11 @@ data State = State { _iteration      :: Integer
 makeLenses ''State
 
 initialState :: Workspace -> State
-initialState workspace = State def def def def def def def def def def def workspace
+initialState workspace = State def def def def def def def def def workspace
 
 instance PrettyPrinter State where
-    display (State iteration mousePos graph camera selection multiSelection drag connect uiRegistry sandbox pen workspace)
-        = "gS(" <> display iteration
-         <> " " <> display mousePos
+    display (State mousePos graph camera selection multiSelection drag connect uiRegistry pen workspace)
+        = "gS(" <> display mousePos
          <> " " <> display graph
          <> " " <> display camera
          <> " " <> display selection
@@ -49,7 +44,6 @@ instance PrettyPrinter State where
          <> " " <> display drag
          <> " " <> display connect
          <> " " <> display uiRegistry
-         <> " " <> display sandbox
          <> " " <> display pen
          <> " " <> display workspace
          <> ")"
