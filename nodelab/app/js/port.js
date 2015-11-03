@@ -67,7 +67,7 @@ Port.prototype.setExpandedPosition = function(left, top) {
   this.mesh.rotation.z = 0;
   this.mesh.position.x = left;
   this.mesh.position.y = top;
-}
+};
 
 Port.prototype.setColor = function(color) {
   this.uniforms.color.value = color;

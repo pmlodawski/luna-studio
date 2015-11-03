@@ -24,11 +24,11 @@ var selectedColor   = new THREE.Color(0xb87410).multiplyScalar(0.8);
 var focusedColor    = new THREE.Color(0xc85808).multiplyScalar(0.8);
 
 var nodeGeometry    = new THREE.PlaneBufferGeometry(1.0, 1.0);
-nodeGeometry.applyMatrix( new THREE.Matrix4().makeTranslation(0.5, 0.5, 0.0) );
+nodeGeometry.applyMatrix(new THREE.Matrix4().makeTranslation(0.5, 0.5, 0.0));
 
 
 var expandedRadius  = 20.0;
-var collapsedRadius = 30.0
+var collapsedRadius = 30.0;
 
 function Node(id, position, z, widgetId) {
   var _this = this;
@@ -147,7 +147,7 @@ Node.prototype.setPending = function() {
   this.uniforms.alpha.value = 0.2;
 };
 Node.prototype.toggleExpandState = function() {
-  if(this.expandedState == 0) {
+  if (this.expandedState === 0) {
     this.setExpandedState(1.0);
   } else {
     this.setExpandedState(0.0);
@@ -329,10 +329,15 @@ Node.prototype.displayVector = function(values) {
   var svg = d3.select(this.htmlContainer)
       .append("svg")
       .attr("width", 250)
-      .attr("height", 180)
-  var data = values.map(function(val, ix) { return {Index: ix, Value: val} });
+      .attr("height", 180);
+  var data = values.map(function (val, ix) {
+    return {
+      Index: ix,
+      Value: val
+    };
+  });
   var myChart = new dimple.chart(svg, data);
-  var x = myChart.addCategoryAxis("x", "Index");
+  myChart.addCategoryAxis("x", "Index");
   this.repositionPlot();
   myChart.addMeasureAxis("y", "Value");
   myChart.addSeries(null, dimple.plot.bubble);

@@ -5,8 +5,6 @@ var colors = require('colors');
 var vs = require('shaders/connection.vert')();
 var fs = require('shaders/connection.frag')();
 
-var color = new THREE.Vector4(0.5, 0.5, 0.05, 0.6);
-
 function Connection(widgetId, id, colorId) {
   var _this = this;
   this.id = id;
@@ -17,7 +15,7 @@ function Connection(widgetId, id, colorId) {
   this.uniforms = {
     color:      { type: 'v4', value: color },
     visible:    { type: 'f',  value: 0 },
-    connecting: { type: 'i',  value: (widgetId == 3?1:0) },
+    connecting: { type: 'i',  value: (widgetId === 3 ? 1 : 0) },
     len:        { type: 'f',  value: 0 },
     focused:    { type: 'i',  value: 0 },
     objectId:   { type: 'v3', value: new THREE.Vector3((widgetId % 256) / 255.0, Math.floor(Math.floor(widgetId % 65536) / 256) / 255.0, Math.floor(widgetId / 65536) / 255.0) }

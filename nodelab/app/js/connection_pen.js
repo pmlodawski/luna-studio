@@ -6,22 +6,21 @@ var $$        = require('common'),
 var iterations = 0;
 var tempCanvas = document.createElement('canvas');
 var type = false;
-var map  = null;
-
 
 function clearCanvas() {
   $$.canvas2DCtx.clearRect(0, 0, $$.canvas2D.width, $$.canvas2D.height);
-};
+}
 
 function beginPath(x, y, _type) {
   type = _type;
   $$.canvas2DCtx.beginPath();
   $$.canvas2DCtx.moveTo(x, y);
-  raycaster.cacheMap()
+  raycaster.cacheMap();
   iterations = -1;
   $$.canvas2DCtx.strokeStyle = (type ? "#00ff00" : "#ff0000");
   $$.canvas2DCtx.lineCap = 'round';
-  $$.canvas2DCtx.globalAlpha = 1.0;};
+  $$.canvas2DCtx.globalAlpha = 1.0;
+}
 
 function drawSegment(x, y) {
   $$.canvas2DCtx.lineTo(x, y);
@@ -30,7 +29,7 @@ function drawSegment(x, y) {
 
 function endPath() {
   iterations = 40;
-};
+}
 
 function fadeCanvas() {
   if (iterations > 0) {
@@ -44,7 +43,7 @@ function fadeCanvas() {
 
     iterations -= 1;
   } else {
-    if (iterations == 0) {
+    if (iterations === 0) {
       clearCanvas();
       iterations = -1;
     }
@@ -52,64 +51,63 @@ function fadeCanvas() {
 }
 
 function colEq(a, b) {
-  return (a[0] == b[0]) && (a[1] == b[1]) && (a[2] == b[2]) && (a[3] == b[3]);
+  return (a[0] === b[0]) && (a[1] === b[1]) && (a[2] === b[2]) && (a[3] === b[3]);
 }
 
 function getWidgetsBetween(x1, y1, x2, y2) {
-    var points = [];
-    var apnd = function (px, py) {
-          var idAt = raycaster.getMapPixelAtCached(px, py);
-          if (points.length == 0 || !colEq(points[points.length-1], idAt))
-              points.push(idAt);
-          // points.push({"x": px, "y": py});
-    };
+  var points = [];
+  var apnd = function (px, py) {
+    var idAt = raycaster.getMapPixelAtCached(px, py);
+    if (points.length === 0 || !colEq(points[points.length-1], idAt))
+      points.push(idAt);
+  };
 
-    var dx = x2 - x1;
-    var dy = y2 - y1;
+  var dx = x2 - x1;
+  var dy = y2 - y1;
 
-    // Determine how steep the line is
-    var is_steep = Math.abs(dy) > Math.abs(dx)
+  // Determine how steep the line is
+  var is_steep = Math.abs(dy) > Math.abs(dx);
 
-    // Rotate line
-    if (is_steep) {
-        y1 = [x1, x1 = y1][0];
-        y2 = [x2, x2 = y2][0];
+  // Rotate line
+  if (is_steep) {
+    y1 = [x1, x1 = y1][0];
+    y2 = [x2, x2 = y2][0];
+  }
+
+  // Swap start and end points if necessary and store swap state
+  var swapped = false;
+  if (x1 > x2) {
+    x2 = [x1, x1 = x2][0];
+    y2 = [y1, y1 = y2][0];
+    swapped = true;
+  }
+
+  // Recalculate differentials
+  dx = x2 - x1;
+  dy = y2 - y1;
+
+  // Calculate error
+  var error = dx / 2;
+  var ystep = (y1 < y2) ? 1 : -1;
+
+  // Iterate over bounding box generating points between start and end
+  var y = y1;
+  for (var x = x1; x < x2 + 1; x += 1) {
+    var coord = (is_steep) ? [y, x] : [x, y];
+    apnd(coord[0], coord[1]);
+    error -= Math.abs(dy);
+    if (error < 0) {
+      y += ystep;
+      error += dx;
     }
+  }
 
-    // Swap start and end points if necessary and store swap state
-    var swapped = false;
-    if (x1 > x2) {
-        x2 = [x1, x1 = x2][0];
-        y2 = [y1, y1 = y2][0];
-        swapped = true;
-    }
+  // Reverse the list if the coordinates were swapped
+  if (swapped) {
+    points.reverse();
+  }
 
-    // Recalculate differentials
-    dx = x2 - x1;
-    dy = y2 - y1;
-
-    // Calculate error
-    var error = dx / 2;
-    var ystep = (y1 < y2) ? 1 : -1;
-
-    // Iterate over bounding box generating points between start and end
-    var y = y1;
-    for (var x = x1; x < x2 + 1; x += 1) {
-        var coord = (is_steep) ? [y, x] : [x, y];
-        apnd(coord[0], coord[1]);
-        error -= Math.abs(dy);
-        if (error < 0) {
-            y += ystep;
-            error += dx;
-        }
-    }
-
-    // Reverse the list if the coordinates were swapped
-    if (swapped) {
-        points.reverse();
-    }
-
-    return points;
+  return points;
 }
 
 function colorToId(col) {
@@ -125,12 +123,14 @@ function requestWidgetsBetween(x1, y1, x2, y2) {
 
 
 module.exports = {
-  clearCanvas:        clearCanvas,
-  beginPath:          beginPath,
-  drawSegment:        drawSegment,
-  fadeCanvas:         fadeCanvas,
-  getWidgetsBetween:  getWidgetsBetween,
+  clearCanvas: clearCanvas,
+  beginPath: beginPath,
+  drawSegment: drawSegment,
+  fadeCanvas: fadeCanvas,
+  getWidgetsBetween: getWidgetsBetween,
   requestWidgetsBetween: requestWidgetsBetween,
   endPath: endPath,
-  callback:           function() { console.error("ConnectionPen: Callback was not registered.") }
+  callback: function() {
+    console.error("ConnectionPen: Callback was not registered.");
+  }
 };

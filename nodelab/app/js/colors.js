@@ -22,6 +22,6 @@ var colors = [
     new THREE.Vector4(0xFF, 0xFF, 0xFF, 0xFF).divideScalar(0xFF), // white 18
     new THREE.Vector4(0xFF, 0xFF, 0xFF, 0xFF).divideScalar(0xFF), // white 19
     new THREE.Vector4(0xFF, 0xFF, 0xFF, 0xFF).divideScalar(0xFF)  // white 20
-]
+];
 
 module.exports = colors;

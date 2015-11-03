@@ -1,7 +1,6 @@
 "use strict";
 
 var $$ = require('common');
-var colors = require('colors');
 var vs = require('shaders/slider.vert')();
 var fs = require('shaders/slider.frag')();
 
@@ -77,7 +76,7 @@ Slider.prototype.setLabel = function(text) {
   this.label.position.z = 0;
 
   this.mesh.add(this.label);
-}
+};
 
 Slider.prototype.setValueLabel = function(text) {
   if (this.valueLabel) this.mesh.remove(this.valueLabel);
@@ -98,7 +97,7 @@ Slider.prototype.setValueLabel = function(text) {
   this.valueLabel.position.z = 0;
 
   this.mesh.add(this.valueLabel);
-}
+};
 
 
 module.exports = Slider;

@@ -6,7 +6,7 @@ var $$ = require('common')
 
 
 THREE.ImageUtils.crossOrigin = '';
-var fontTexture = THREE.ImageUtils.loadTexture(window.resourcesPath + '/font/LatoBlack-sdf.png')
+var fontTexture = THREE.ImageUtils.loadTexture(window.resourcesPath + '/font/LatoBlack-sdf.png');
 
 var defaults = function (){
   return {

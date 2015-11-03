@@ -70,7 +70,7 @@ function initializeGl() {
 
     document.body.appendChild($$.renderer.domElement);
 
-    window.displayObjectMap = function() { document.body.appendChild($$.rendererMap.domElement) };
+    window.displayObjectMap = function() { document.body.appendChild($$.rendererMap.domElement); };
 
     initCommonWidgets();
     textEditor.init();
@@ -81,21 +81,29 @@ function initializeGl() {
     initTerminal();
     initUserInfo();
     $(document).unbind('keydown').bind('keydown', function (event) {
-      if(event.keyCode == 8) {
+      if (event.keyCode === 8) {
         event.preventDefault();
         event.stopPropagation();
-      };
+      }
     });
 
 }
 
 function initUserInfo() {
-  $('body').append('<div id="userInfo"><div>Signed in as YC. <a class="tutorial" href="#">Tutorial</a></div></div>')
-  $('body').append(require('tutorial')())
+  $('body').append('<div id="userInfo"><div>Signed in as YC. <a class="tutorial" href="#">Tutorial</a></div></div>');
+  $('body').append(require('tutorial')());
 
-  if (localStorage.getItem('tutorial') == "1") $(".tutorial-box").hide();
-  $(".tutorial-box").click(function(){ $(".tutorial-box").hide(); localStorage.setItem('tutorial', "1")});
-  $(".tutorial").click(function(){ $(".tutorial-box").show() });
+  if (localStorage.getItem('tutorial') === "1")
+    $(".tutorial-box").hide();
+
+  $(".tutorial-box").click(function () {
+    $(".tutorial-box").hide();
+    localStorage.setItem('tutorial', "1");
+  });
+
+  $(".tutorial").click(function () {
+    $(".tutorial-box").show();
+  });
 }
 function initTerminal() {
   $('body').append('<div id="termContainer"><button id="termClose">Close</button><div id="term"></div></div>');
@@ -279,7 +287,7 @@ function removeWidget(widgetId) {
 
 function writeToTerminal(str) {
   $('#termContainer').css({height: "300px"});
-  $$.term.write(str)
+  $$.term.write(str);
 }
 
 var displayRejectedMessage = function () {
@@ -288,7 +296,7 @@ var displayRejectedMessage = function () {
   $("#spinner").remove();
   $("#editor").remove();
   $("#rejected").show();
-}
+};
 
 module.exports = {
   start:                    start,
