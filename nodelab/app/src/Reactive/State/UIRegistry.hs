@@ -102,6 +102,16 @@ updateFile oid mutator state = state & widgets .~ newWidgets where
 updateM :: DisplayObjectClass a => WidgetId -> a -> Command (State b) ()
 updateM id a = pureCommand $ update id (toCtxDynamic a)
 
+updateWidgetM :: DisplayObjectClass a => WidgetId -> (a -> a) -> Command (State b) a
+updateWidgetM id fun = do
+    maybeFile   <- lookupTypedM id
+    let file     = fromMaybe (error "updateWidgetM: invalidType") maybeFile
+        newWidget  = fun $ file ^. widget
+
+    updateM id newWidget
+
+    return newWidget
+
 registerHandler :: WidgetId -> (UIHandlers a -> UIHandlers a) -> State a -> State a
 registerHandler oid mutator state = updateFile oid fileMutator state where
     fileMutator file = file & handlers %~ mutator

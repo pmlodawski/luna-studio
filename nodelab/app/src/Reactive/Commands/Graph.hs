@@ -15,6 +15,7 @@ import           Object.Port
 import           Object.UITypes
 import           Object.Widget
 import qualified Object.Widget.Connection as UIConnection
+import qualified Object.Widget.Node       as WNode
 
 import qualified JS.Connection  as UI
 import qualified JS.NodeGraph   as UI
@@ -32,6 +33,9 @@ import           Control.Monad.State
 
 import qualified BatchConnector.Commands                           as BatchCmd
 
+import qualified UI.Widget.Node as UINode
+import qualified UI.Generic as UIGeneric
+import           Reactive.State.Camera (Camera, screenToWorkspace)
 
 updateConnNodes :: [NodeId] -> Command Global.State ()
 updateConnNodes nodeIds = pureCommand $ \state -> let
@@ -218,7 +222,32 @@ setAngle :: PortType -> NodeId -> PortId -> Angle -> IO ()
 setAngle  InputPort = UI.setInputPortAngle
 setAngle OutputPort = UI.setOutputPortAngle
 
+allNodes :: Command (UIRegistry.State a) [WidgetFile a WNode.Node]
+allNodes = UIRegistry.lookupAllM
 
-moveNodesUI :: NodesMap -> IO ()
-moveNodesUI nodesMap = mapM_ UI.moveNode $ IntMap.elems nodesMap
-                  -- >> performGC
+nodeIdToWidgetId :: NodeId -> Command (UIRegistry.State a) (Maybe WidgetId)
+nodeIdToWidgetId nodeId = do
+    files <- allNodes
+    let matching = find (\file -> (file ^. widget . WNode.nodeId) == nodeId) files
+    return (view objectId <$> matching)
+
+unselectAllNodes :: Command (UIRegistry.State a) ()
+unselectAllNodes = do
+    widgets <- allNodes
+    forM_ widgets UINode.unselectNode
+
+
+-- TODO: Clever algorithm taking radius into account
+getNodesInRect :: Vector2 Int -> Vector2 Int -> Command Global.State [WidgetId]
+getNodesInRect (Vector2 x1 y1) (Vector2 x2 y2) = do
+    widgets <- zoom Global.uiRegistry allNodes
+    camera  <- use $ Global.camera . Camera.camera
+    let leftBottom = screenToWorkspace camera (Vector2 (min x1 x2) (min y1 y2)) - Vector2 radiusShadow radiusShadow
+        rightTop   = screenToWorkspace camera (Vector2 (max x1 x2) (max y1 y2)) + Vector2 radiusShadow radiusShadow
+        isNodeInBounds file = let pos = file ^. widget . widgetPosition in
+                              leftBottom ^. x <= pos ^. x && pos ^. x <= rightTop ^. x &&
+                              leftBottom ^. y <= pos ^. y && pos ^. y <= rightTop ^. y
+        nodesInBounds = filter isNodeInBounds widgets
+    return $ (view objectId) <$> nodesInBounds
+
+

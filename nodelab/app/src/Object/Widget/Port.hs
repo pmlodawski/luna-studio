@@ -13,12 +13,14 @@ import           Utils.CtxDynamic
 
 import qualified JS.Widget as UI
 
-data Port = Port { _portRef :: PortRef
+data Port = Port { _portRef  :: PortRef
+                 , _angle    :: Double
                  } deriving (Eq, Show, Typeable)
 
 makeLenses ''Port
 
-instance IsDisplayObject Port
+instance IsDisplayObject Port where
+    widgetPosition = lens (\x -> Vector2 0.0 0.0) (error "Port has no position setter")
 
 
 instance HandlesMouseOver Port where
@@ -28,3 +30,4 @@ instance HandlesMouseOver Port where
 instance HandlesMouseOut Port where
     onMouseOut  file model = (action, toCtxDynamic model) where
                   action   = UI.setWidgetFocused (file ^. objectId) False
+

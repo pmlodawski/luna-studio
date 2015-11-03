@@ -3,14 +3,18 @@ module Reactive.Plugins.Core.Action.Backend.Runner where
 import           Utils.PreludePlus
 
 import           Object.Object (NodeId)
+import qualified Object.Widget.Node as Model
 import           Event.Event   (Event(Batch))
 import qualified Event.Batch   as Batch
 import           Batch.Value   (Value(..))
-import           JS.NodeGraph  (setComputedValue, displayNodeVector)
+import qualified Data.Text.Lazy as Text
+-- import           JS.NodeGraph  (setComputedValue, displayNodeVector)
 
 import           BatchConnector.Monadic.Commands as BatchCmd
 
 import           Reactive.Commands.Command (Command, performIO)
+import           Reactive.Commands.Graph (nodeIdToWidgetId)
+import qualified Reactive.Commands.UIRegistry as UICmd
 import           Reactive.State.Global     as Global
 import           Reactive.State.Global     (State)
 
@@ -29,6 +33,9 @@ requestRerun = zoom Global.workspace $ BatchCmd.runMain
 
 updateValue :: NodeId -> Value -> Command State ()
 updateValue nodeId (VectorValue vec) = performIO $ do
-    setComputedValue nodeId "Vector"
-    displayNodeVector nodeId (toList vec)
-updateValue nodeId value = performIO $ setComputedValue nodeId (display value)
+    putStrLn "Runner.hs: display node vector value"
+    -- setComputedValue nodeId "Vector"
+    -- displayNodeVector nodeId (toList vec)
+updateValue nodeId value = do
+    id <- zoom Global.uiRegistry $ nodeIdToWidgetId nodeId
+    forM_ id $ \id -> zoom Global.uiRegistry $ UICmd.update id $ Model.value .~ (Text.pack $ display value)

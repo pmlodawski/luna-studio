@@ -52,8 +52,8 @@ displayChart chart = do
     setStyle svg [ ("position", "absolute"                     )
                  , ("width",    toPx $ chart ^. Widget.size . x)
                  , ("height",   toPx $ chart ^. Widget.size . y)
-                 , ("left",     toPx $ chart ^. Widget.pos  . x)
-                 , ("top",      toPx $ chart ^. Widget.pos  . y)
+                 , ("left",     toPx $ chart ^. Widget.position  . x)
+                 , ("top",      toPx $ chart ^. Widget.position  . y)
                  ]
 
     appendChild container (Just svg)

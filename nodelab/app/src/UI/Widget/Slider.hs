@@ -21,16 +21,16 @@ import           JS.UI (setCursor)
 import           Object.UITypes
 import           GHCJS.Marshal.Pure(PToJSVal(..), PFromJSVal(..))
 
-import           UI.Types (UIWidget(..))
+import           UI.Widget (UIWidget(..))
+import qualified UI.Widget as Widget
 import qualified UI.Registry as UIR
+import qualified UI.Generic  as UI
 
 newtype Slider = Slider { unSlider :: JSVal } deriving (PToJSVal, PFromJSVal)
 
 instance UIWidget Slider
 
 foreign import javascript unsafe "new Slider($1, $2, $3)"   createSlider'     :: Int    -> Double -> Double -> IO Slider
-foreign import javascript unsafe "$1.mesh.position.x = $2; $1.mesh.position.y = $3"
-                                                            setPosition'      :: Slider -> Double -> Double -> IO ()
 foreign import javascript unsafe "$1.setValue($2)"          setValue'         :: Slider -> Double           -> IO ()
 foreign import javascript unsafe "$1.setLabel($2)"          setLabel'         :: Slider -> JSString         -> IO ()
 foreign import javascript unsafe "$1.setValueLabel($2)"     setValueLabel'    :: Slider -> JSString         -> IO ()
@@ -42,11 +42,8 @@ createSlider oid model = do
     setLabel       model slider
     setValueLabel  model slider
     setValue       model slider
-    setPosition    model slider
+    UI.setWidgetPosition (model ^. widgetPosition) slider
     return slider
-
-setPosition :: (Model.IsSlider a) => Model.Slider a -> Slider -> IO ()
-setPosition model slider = setPosition' slider (model ^. Model.pos . x) (model ^. Model.pos . y)
 
 setValueLabel :: (Model.IsSlider a) => Model.Slider a -> Slider -> IO ()
 setValueLabel model slider = setValueLabel' slider $ JSString.pack $ Model.displayValue model

@@ -18,12 +18,10 @@ import           Object.UITypes
 
 type DisplayObject = CtxDynamic DisplayObjectClass
 
-showObject :: DisplayObject -> String
-showObject = withCtxDynamic show
-
 type DisplayObjectCtx a =   ( Show a
                             , Typeable a
                             , IsDisplayObject a
+                            , UIDisplayObject a
                             , HandlesMouseMove a
                             , HandlesMousePressed a
                             , HandlesMouseReleased a
@@ -54,11 +52,34 @@ data WidgetFile a b = WidgetFile { _objectId :: WidgetId
 type WidgetUIUpdate = IO ()
 type WidgetUpdate   = (WidgetUIUpdate, DisplayObject)
 
-class IsDisplayObject a
-
-instance IsDisplayObject DisplayObject
-
 type Position = Vector2 Double
+
+class IsDisplayObject a where
+    widgetPosition :: Lens' a Position
+
+class UIDisplayObject a where
+    createUI :: WidgetId -> WidgetId -> a -> IO ()
+    updateUI :: WidgetId -> a        -> a -> IO ()
+
+getPosition :: DisplayObject -> Position
+getPosition obj = withCtxDynamic (^. widgetPosition) obj
+
+setPosition' :: (DisplayObjectClass a) => Position -> a -> DisplayObject
+setPosition' pos obj = toCtxDynamic $ obj & widgetPosition .~ pos
+
+setPosition :: DisplayObject -> Position -> DisplayObject
+setPosition obj pos = withCtxDynamic (setPosition' pos) obj
+
+instance IsDisplayObject DisplayObject where
+    widgetPosition = lens getPosition setPosition
+
+
+instance {-# OVERLAPPABLE #-} DisplayObjectClass a => UIDisplayObject a where
+    createUI _ _ _ = error "createUI not implemented"
+    updateUI _ _ _ = error "updateUI not implemented"
+
+instance Show DisplayObject where
+    show = withCtxDynamic show
 
 class HandlesMouseMove     a where onMouseMove     ::            MouseButton -> Position -> WidgetFile s DisplayObject -> a -> WidgetUpdate
 class HandlesMousePressed  a where onMousePress    :: KeyMods -> MouseButton -> Position -> WidgetFile s DisplayObject -> a -> WidgetUpdate
@@ -143,7 +164,7 @@ type MousePressedHandler  s = KeyMods     -> MouseButton -> Position -> WidgetId
 type MouseReleasedHandler s =                MouseButton -> Position -> WidgetId -> Command s ()
 type MouseOverHandler     s =                                           WidgetId -> Command s ()
 type MouseOutHandler      s =                                           WidgetId -> Command s ()
-type ClickHandler         s =                               Position -> WidgetId -> Command s ()
+type ClickHandler         s = KeyMods     ->                Position -> WidgetId -> Command s ()
 type DblClickHandler      s =                               Position -> WidgetId -> Command s ()
 type KeyUpHandler         s = Char        ->                KeyMods  -> WidgetId -> Command s ()
 type KeyDownHandler       s = Char        ->                KeyMods  -> WidgetId -> Command s ()

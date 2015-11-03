@@ -150,7 +150,7 @@ customMouseHandlers (Mouse.Event eventType absPos button keymods (Just (EventWid
                 Mouse.Moved       -> fmap (\a -> a         button  pos widgetId) (handlers ^. mouseMove    )
                 Mouse.Pressed     -> fmap (\a -> a keymods button  pos widgetId) (handlers ^. mousePressed )
                 Mouse.Released    -> fmap (\a -> a         button  pos widgetId) (handlers ^. mouseReleased)
-                Mouse.Clicked     -> fmap (\a -> a                 pos widgetId) (handlers ^. click        )
+                Mouse.Clicked     -> fmap (\a -> a keymods         pos widgetId) (handlers ^. click        )
                 Mouse.DblClicked  -> fmap (\a -> a                 pos widgetId) (handlers ^. dblClick     )
                 _                 -> []
             where pos              = absPosToRel scene camera mat (fromIntegral <$> absPos)

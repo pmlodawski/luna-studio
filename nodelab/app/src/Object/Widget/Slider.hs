@@ -10,7 +10,7 @@ import           Object.Widget
 import           Numeric
 
 
-data Slider a = Slider { _pos          :: Vector2 Double
+data Slider a = Slider { _position     :: Vector2 Double
                        , _size         :: Vector2 Double
                        , _label        :: Text
                        , _minValue     :: a
@@ -34,7 +34,8 @@ class (Num a, Show a, Typeable a) => IsSlider a where
     setNormValue val slider = slider & normValue .~ boundedVal where
         boundedVal = max 0.0 $ min 1.0 val
 
-instance IsDisplayObject (Slider a)
+instance IsDisplayObject (Slider a) where
+    widgetPosition = position
 
 instance IsSlider Double where
     displayValue slider = showFFloat (Just $ precision) val "" where
@@ -71,3 +72,5 @@ displayPrecision :: Double -> Double -> Int
 displayPrecision minV maxV = numDigits $ ceiling $ max (alog10 minV) (alog10 maxV) where
     alog10 n               = logBase 10 $ abs n
     numDigits n            = max (3 - n) 0 where
+
+

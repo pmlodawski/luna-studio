@@ -2,7 +2,7 @@ module Reactive.Commands.PendingNode where
 
 import           Utils.PreludePlus
 import           Object.Widget.Node (PendingNode(..))
-import qualified Object.Widget.Node as WNode
+import qualified Object.Widget.Node as Model
 import           Object.Node        (Node, nodePos, expression)
 import           Object.Widget      (WidgetFile, objectId, widget)
 import           JS.Node            (createPendingNode)
@@ -17,7 +17,7 @@ import           Reactive.Commands.UIRegistry.RemoveWidget (removeWidget)
 
 renderPending :: Node -> Command State ()
 renderPending node = do
-    let pendingNode = PendingNode (node ^. nodePos) (node ^. expression)
+    let pendingNode = PendingNode (node ^. expression) (node ^. nodePos)
     file <- zoom Global.uiRegistry $ UIRegistry.registerM UIRegistry.sceneGraphId pendingNode def
     performIO $ createPendingNode (file ^. objectId) (node ^. expression) (node ^. nodePos)
 
@@ -33,8 +33,8 @@ areCloseEnough a b = distanceDelta > (lengthSquared $ a - b)
 isRightForNode :: Node -> WidgetFile a PendingNode -> Bool
 isRightForNode node pendingFile = sameExpression && closeEnough where
     pending        = pendingFile ^. widget
-    sameExpression = node ^. expression == pending ^. WNode.expression
-    closeEnough    = areCloseEnough (node ^. nodePos) (pending ^. WNode.position)
+    sameExpression = node ^. expression == pending ^. Model.pendingExpression
+    closeEnough    = areCloseEnough (node ^. nodePos) (pending ^. Model.pendingPosition)
 
 unrenderPending :: Node -> Command State ()
 unrenderPending node = do

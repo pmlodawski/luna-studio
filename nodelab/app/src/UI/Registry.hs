@@ -12,7 +12,7 @@ import           Object.Widget
 import qualified Data.JSString as JSString
 import           Object.UITypes
 import           GHCJS.Marshal.Pure(PToJSVal(..), PFromJSVal(..))
-import           UI.Types(UIWidget(..))
+import           UI.Widget(UIWidget(..))
 
 foreign import javascript unsafe "common.registry[$1]"
     lookup' :: Int -> IO JSVal

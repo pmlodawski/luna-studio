@@ -42,6 +42,11 @@ function initializeGl() {
     window.already_initialized = true;
     $$.scene                 = new THREE.Scene();
     $$.sceneHUD              = new THREE.Scene();
+
+    $$.registry[1] = {container: $$.sceneHUD};
+    $$.registry[2] = {container: $$.scene};
+
+
     $$.camera                = new THREE.OrthographicCamera(-500, 500, -500, 500, 1, 1000);
     $$.cameraHUD             = new THREE.OrthographicCamera(-500, 500, -500, 500, 1, 1000);
     $$.camera.position.z     = 500;
@@ -123,6 +128,7 @@ function initTerminal() {
 function initCommonWidgets() {
   var colorId = 10;
   $$.currentConnection = new Connection(3, -1, colorId);
+  $$.registry[3] = {mesh: $$.currentConnection};
   $$.selectionBox      = new SelectionBox();
 
   $$.scene.add($$.currentConnection.mesh);
@@ -177,15 +183,6 @@ function updateMouse(x, y) {
   _.values($$.nodes).forEach(function (node) {
     node.updateMouse(x, y);
   });
-}
-
-function newNodeAt(id, x, y, expr, widgetId) {
-  var pos = new THREE.Vector2(x, y);
-  var node = new GraphNode(id, pos, nodeZOrderStart + id * nodeZOrderStep, widgetId);
-  $$.nodes[id] = node;
-  node.label(expr);
-  $$.scene.add(node.mesh);
-  $$.registry[widgetId] = node;
 }
 
 

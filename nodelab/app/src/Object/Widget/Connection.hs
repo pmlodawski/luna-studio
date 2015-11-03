@@ -2,7 +2,7 @@
 
 module Object.Widget.Connection where
 
-import           Utils.PreludePlus
+import           Utils.PreludePlus hiding (from)
 import           Utils.Vector
 import           Object.UITypes
 import           Data.Fixed
@@ -22,13 +22,15 @@ data Connection = Connection { _connectionId :: ConnectionId
 
 makeLenses ''Connection
 
-instance IsDisplayObject Connection
+instance IsDisplayObject Connection where
+    widgetPosition = from
 
 data CurrentConnection = CurrentConnection deriving (Eq, Show, Typeable)
 
 makeLenses ''CurrentConnection
 
-instance IsDisplayObject CurrentConnection
+instance IsDisplayObject CurrentConnection where
+    widgetPosition = error "CurrentConnection has no position yet"
 
 instance HandlesMouseOver Connection where
     onMouseOver file model = (action, toCtxDynamic model) where
@@ -37,3 +39,4 @@ instance HandlesMouseOver Connection where
 instance HandlesMouseOut Connection where
     onMouseOut  file model = (action, toCtxDynamic model) where
                   action   = UI.setWidgetFocused (file ^. objectId) False
+

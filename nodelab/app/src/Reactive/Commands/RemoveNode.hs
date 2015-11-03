@@ -30,7 +30,7 @@ performRemoval node = do
     danglingConns <- uses Global.graph (Graph.connectionIdsContainingNode $ node ^. nodeId)
     localDisconnectAll danglingConns
     Global.graph %= Graph.removeNode (node ^. nodeId)
-    Global.selection . Selection.nodeIds %= drop 1
+    -- Global.selection . Selection.nodeIds %= drop 1
 
     uiRegistry <- use Global.uiRegistry
     workspace  <- use Global.workspace

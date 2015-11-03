@@ -5,7 +5,6 @@ import           Utils.PreludePlus
 import           Reactive.Banana
 import           Reactive.Banana.Frameworks
 import           Reactive.Handlers
-import qualified JS.NodeGraph                                       as UI
 import           Object.Object
 import           Object.Node                ( Node(..) )
 import qualified Object.Node                                        as Node
@@ -29,11 +28,13 @@ import qualified Reactive.Plugins.Core.Action.TextEditor            as TextEdito
 import           Reactive.Plugins.Core.Executor
 
 import           Reactive.State.Global
-import           Reactive.State.UnderCursor
 
 import           JS.WebSocket (WebSocket)
 
 import           Batch.Workspace
+
+logAs :: PrettyPrinter a => String -> a -> IO ()
+logAs title a = putStrLn $ title <> (display a)
 
 makeNetworkDescription :: forall t. Frameworks t => WebSocket -> Bool -> Workspace -> Moment t ()
 makeNetworkDescription conn logging workspace = do
@@ -78,9 +79,6 @@ makeNetworkDescription conn logging workspace = do
         globalStateB                 :: Behavior t State
         globalStateB                  = stepper (initialState workspace) $ globalStateReactionB <@ anyE
 
-        underCursorB                 :: Behavior t UnderCursor
-        underCursorB                  = underCursor <$> globalStateB
-
         widgetActionB                 = fmap ActionST $         Widget.toAction <$> anyNodeB
         nodeGeneralActionB            = fmap ActionST $        General.toAction <$> anyNodeB
         cameraActionB                 = fmap ActionST $         Camera.toAction <$> anyNodeB
@@ -122,7 +120,7 @@ makeNetworkDescription conn logging workspace = do
     case logging of
         True  -> do
             reactimate' $ (fmap logAllUI) <$> allReactionsSeqPackF
-            reactimate  $ (UI.logAs "")   <$> anyE
+            reactimate  $ (logAs "")      <$> anyE
         False -> return ()
 
     return ()

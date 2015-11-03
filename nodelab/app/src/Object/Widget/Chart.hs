@@ -19,7 +19,7 @@ data AxisType  = Linear
                | Time
                deriving (Show, Eq)
 
-data Chart = Chart   { _pos       :: Vector2 Double
+data Chart = Chart   { _position  :: Vector2 Double
                      , _size      :: Vector2 Double
                      , _tpe       :: ChartType
                      , _xMeasure  :: Text
@@ -30,4 +30,5 @@ data Chart = Chart   { _pos       :: Vector2 Double
 
 makeLenses ''Chart
 
-instance IsDisplayObject Chart
+instance IsDisplayObject Chart where
+    widgetPosition = position

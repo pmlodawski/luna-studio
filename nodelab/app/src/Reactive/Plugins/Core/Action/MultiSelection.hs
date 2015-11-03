@@ -11,6 +11,7 @@ import qualified JS.NodeGraph   as UI
 import           Object.Object
 import           Object.Node
 import           Object.Widget
+import qualified Object.Widget.Node as NodeModel
 
 import           Event.Keyboard (KeyMods(..))
 import qualified Event.Mouse    as Mouse
@@ -30,12 +31,14 @@ import           Reactive.State.Global         (State)
 
 import           Reactive.Commands.Command          (Command, performIO)
 import           Reactive.Commands.UIRegistry.Focus (focusOnTopNode)
-import           Reactive.Commands.Selection        (unselectAll, selectAll, updateSelectionUI)
+import qualified Reactive.Commands.UIRegistry       as UICmd
+import           Reactive.Commands.Graph (getNodesInRect)
+import           Reactive.Commands.Selection        (unselectAll, selectAll)
 
 import           Control.Monad.State                               hiding (State)
 
 toAction :: Event -> Maybe (Command State ())
-toAction (Mouse event@(Mouse.Event Mouse.Pressed  _   Mouse.LeftButton _ _)) = Just $ startDrag event
+toAction (Mouse event@(Mouse.Event Mouse.Pressed  pos Mouse.LeftButton (KeyMods False False False False) Nothing)) = Just $ startDrag pos
 toAction (Mouse event@(Mouse.Event Mouse.Moved    pos Mouse.LeftButton _ _)) = Just $ handleMove pos
 toAction (Mouse event@(Mouse.Event Mouse.Released _   Mouse.LeftButton _ _)) = Just stopDrag
 
@@ -44,28 +47,19 @@ toAction (Keyboard (Keyboard.Event Keyboard.Down  '\27' _)) = Just tryUnselectAl
 toAction _ = Nothing
 
 trySelectAll :: Command State ()
-trySelectAll = do
-    focusedWidget <- use $ Global.uiRegistry . UIRegistry.focusedWidget
+trySelectAll = zoom Global.uiRegistry $ do
+    focusedWidget <- use UIRegistry.focusedWidget
     when (isNothing focusedWidget) selectAll
 
 tryUnselectAll :: Command State ()
-tryUnselectAll = do
-    focusedWidget <- use $ Global.uiRegistry . UIRegistry.focusedWidget
+tryUnselectAll = zoom Global.uiRegistry $ do
+    focusedWidget <- use UIRegistry.focusedWidget
     when (isNothing focusedWidget) unselectAll
 
-shouldStartDrag :: Mouse.Event -> Command State Bool
-shouldStartDrag (Mouse.Event Mouse.Pressed _ Mouse.LeftButton (KeyMods False False False False) Nothing) = do
-    nodesUnderCursor <- gets UnderCursor.getNodesUnderCursor
-    portUnderCursor  <- gets UnderCursor.getPortRefUnderCursor
-    return $ null nodesUnderCursor && isNothing portUnderCursor
-shouldStartDrag _ = return False
-
-startDrag :: Mouse.Event -> Command State ()
-startDrag event@(Mouse.Event _ coord _ _ _) = do
-    shouldDrag <- shouldStartDrag event
-    when shouldDrag $ do
-        Global.multiSelection . MultiSelection.history ?= (DragHistory coord coord)
-        unselectAll
+startDrag :: Vector2 Int -> Command State ()
+startDrag coord = do
+    Global.multiSelection . MultiSelection.history ?= (DragHistory coord coord)
+    zoom Global.uiRegistry $ unselectAll
 
 handleMove :: Vector2 Int -> Command State ()
 handleMove coord = do
@@ -80,10 +74,10 @@ handleMove coord = do
 
 updateSelection :: Vector2 Int -> Vector2 Int -> Command State ()
 updateSelection start end = do
-    nodes  <- use $ Global.graph . Graph.nodes
-    camera <- use $ Global.camera . Camera.camera
-    Global.selection . Selection.nodeIds .= getNodeIdsIn start end camera nodes
-    updateSelectionUI
+    ids <- getNodesInRect start end
+    zoom Global.uiRegistry unselectAll
+    forM_ ids $ \id -> do
+        zoom Global.uiRegistry $ UICmd.update id (NodeModel.isSelected .~ True)
 
 drawSelectionBox :: Vector2 Int -> Vector2 Int -> Command State ()
 drawSelectionBox start end = do

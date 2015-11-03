@@ -127,7 +127,7 @@ instance ActionStateUpdater Action where
                                                        else (fullUI, st) where
                                                             (ui, st) = autoConnectAll nodesToConnect newState
                                                             fullUI   = do ui
-                                                                          moveNodesUI $ getNodesMap $ state ^. Global.graph
+                                                                          -- fst $ execCommand (zoom Global.uiRegistry moveNodesUI) moveNodesUI st
                                                                           fst $ execCommand updatePortAnglesUI st
                                                                           fst $ execCommand updateConnectionsUI st
                                                                           putStrLn $ "connectNodes " <> show nodesToConnect

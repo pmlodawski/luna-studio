@@ -14,7 +14,7 @@ import           Object.Node
 import           Object.Port
 import           Object.Widget
 import           Object.UITypes        (WidgetId)
-import qualified Object.Widget.Node    as WNode
+import qualified Object.Widget.Node    as Model
 import qualified Object.Widget.Port    as WPort
 import           Object.Widget.Slider (Slider(..),IsSlider(..))
 import qualified Object.Widget.Slider  as Slider
@@ -30,6 +30,7 @@ import           Reactive.Commands.RemoveNode  (removeNode)
 import           Reactive.Commands.Command     (Command, performIO)
 import           Reactive.Commands.PendingNode (unrenderPending)
 import           Reactive.Commands.Selection   (handleSelection)
+import qualified  Reactive.Commands.UIRegistry as UICmd
 
 import qualified BatchConnector.Commands as BatchCmd
 import qualified JS.NodeGraph          as UI
@@ -37,7 +38,8 @@ import qualified JS.NodeGraph          as UI
 import qualified UI.Widget.Slider as UISlider
 import qualified UI.Widget.Node   as UINode
 import qualified UI.Registry      as UIR
-import qualified UI.Types         as UIT
+import qualified UI.Widget        as UIT
+import qualified UI.Scene
 
 addNode :: Node -> Command State ()
 addNode node = do
@@ -47,24 +49,22 @@ addNode node = do
 
 registerNode :: Node -> Command (UIRegistry.State State) ()
 registerNode node = do
-    file <- UIRegistry.registerM sceneGraphId
-                                 (WNode.Node (node ^. nodeId) [] [])
-                                 (nodeHandlers node)
+    let nodeWidget = Model.Node (node ^. nodeId) [] [] (node ^. nodePos) (node ^. expression) "()" False False False
+    id <- UICmd.register sceneGraphId
+                           nodeWidget
+                           (nodeHandlers node)
 
-    performIO $ createNodeOnUI node file
+    registerPorts id InputPort node
+    registerPorts id OutputPort node
 
-    registerPorts (file ^. objectId) InputPort node
-    registerPorts (file ^. objectId) OutputPort node
-
-    let rootId      = file ^. objectId
-        nodeWidget  = file ^. widget
+    let rootId      = id
         inPorts     = getPorts InputPort node
         nat         = [0..] :: [Int]
         portsWithId = zip nat inPorts
         filteredPortsWithId = filter (\(id, port) -> port ^. portValueType == VTFloat || port ^. portValueType == VTNumeric) portsWithId
         slidersDouble    = uncurry makeSliderFromPortDouble <$> filteredPortsWithId
     sliderIds <- sequence $ addSliderToNode rootId (node ^. nodeId) <$> slidersDouble
-    UIRegistry.updateM rootId (nodeWidget & WNode.controls .~ sliderIds)
+    UIRegistry.updateM rootId (nodeWidget & Model.controls .~ sliderIds)
 
 makeSliderFromPortDouble :: Int -> Port -> Slider Double
 makeSliderFromPortDouble i port = Slider (Vector2 10 (95 + (fromIntegral i) * 25)) (Vector2 180 20)
@@ -73,7 +73,7 @@ makeSliderFromPortDouble i port = Slider (Vector2 10 (95 + (fromIntegral i) * 25
 nodeHandlers :: Node -> UIHandlers State
 nodeHandlers node = def & dblClick     .~ [const $ enterNode node]
                         & keyDown      .~ [removeNode node]
-                        & mousePressed .~ [\keymods _ _ _ -> handleSelection node keymods]
+                        & mousePressed .~ [\keymods _ _ id -> handleSelection id keymods]
 
 retriveSliderDouble :: WidgetId -> Command (UIRegistry.State Global.State) (Maybe (WidgetFile Global.State (Slider Double)))
 retriveSliderDouble wid = UIRegistry.lookupTypedM wid
@@ -109,16 +109,16 @@ addWidgetToNode nodeId newWidget = do
     UIR.register sliderId slider
     UIT.add      slider   node
 
-createNodeOnUI :: Node -> WidgetFile s WNode.Node -> IO ()
-createNodeOnUI node file = do
-    let pos   = node ^. nodePos
-        ident = node ^. nodeId
-        expr  = node ^. expression
-    UI.createNodeAt ident pos expr (file ^. objectId)
+createNodeOnUI :: WidgetFile s Model.Node -> IO ()
+createNodeOnUI file = do
+    node <- UINode.createNode (file ^. objectId) (file ^. widget)
+    UIR.register (file ^. objectId) node
+    scene <- UI.Scene.scene
+    UIT.add node scene
 
 registerSinglePort :: WidgetId -> Node -> PortType -> Port -> Command (UIRegistry.State b) ()
 registerSinglePort nodeWidgetId node portType port = do
-    let portWidget = (WPort.Port $ PortRef (node ^. nodeId) portType (port ^. portId))
+    let portWidget = WPort.Port (PortRef (node ^. nodeId) portType (port ^. portId)) 0.0
     widgetFile <- UIRegistry.registerM nodeWidgetId portWidget def
     performIO $ addPort portType
                         (node ^. nodeId)
@@ -130,7 +130,6 @@ registerSinglePort nodeWidgetId node portType port = do
 registerPorts :: WidgetId -> PortType -> Node -> Command (UIRegistry.State b) ()
 registerPorts nodeWidgetId portType node = mapM_ (registerSinglePort nodeWidgetId node portType) ports where
     ports = getPorts portType node
-
 
 addPort :: PortType -> NodeId -> WidgetId -> PortId -> ColorNum -> Double -> IO ()
 addPort  InputPort = UI.addInputPort

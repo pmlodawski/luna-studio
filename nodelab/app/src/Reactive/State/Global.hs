@@ -20,7 +20,6 @@ import qualified Reactive.State.ConnectionPen     as ConnectionPen
 data State = State { _mousePos       :: Vector2 Int
                    , _graph          :: Graph.State
                    , _camera         :: Camera.State
-                   , _selection      :: Selection.State
                    , _multiSelection :: MultiSelection.State
                    , _drag           :: Drag.State
                    , _connect        :: Connect.State
@@ -32,14 +31,13 @@ data State = State { _mousePos       :: Vector2 Int
 makeLenses ''State
 
 initialState :: Workspace -> State
-initialState workspace = State def def def def def def def def def workspace
+initialState workspace = State def def def def def def def def workspace
 
 instance PrettyPrinter State where
-    display (State mousePos graph camera selection multiSelection drag connect uiRegistry pen workspace)
+    display (State mousePos graph camera multiSelection drag connect uiRegistry pen workspace)
         = "gS(" <> display mousePos
          <> " " <> display graph
          <> " " <> display camera
-         <> " " <> display selection
          <> " " <> display multiSelection
          <> " " <> display drag
          <> " " <> display connect

@@ -146,8 +146,9 @@ Node.prototype.setExpandedState = function (expanded) {
 Node.prototype.setPending = function () {
   this.uniforms.alpha.value = 0.2;
 };
-Node.prototype.toggleExpandState = function () {
-  if (this.expandedState === 0) {
+
+Node.prototype.setExpandedStateBool = function(expanded) {
+  if (expanded) {
     this.setExpandedState(1.0);
   } else {
     this.setExpandedState(0.0);

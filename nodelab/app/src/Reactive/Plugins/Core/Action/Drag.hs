@@ -9,47 +9,46 @@ import qualified JS.NodeGraph   as UI
 import           Object.Object
 import           Object.Node
 import           Object.UITypes
+import           Object.Widget
 
 import           Event.Keyboard hiding        (Event)
 import qualified Event.Keyboard as Keyboard
-import           Event.Mouse    hiding        (Event)
+import           Event.Mouse    hiding        (Event, widget)
 import qualified Event.Mouse    as Mouse
 import           Event.Event
 
 import           Reactive.Plugins.Core.Action
 import           Reactive.Commands.Graph
-import           Reactive.Commands.Command    (Command, performIO)
+import           Reactive.Commands.Command    (Command, performIO, execCommand)
+import qualified Reactive.Commands.UIRegistry as UICmd
 import qualified Reactive.State.Drag          as Drag
 import           Reactive.State.Drag          (DragHistory(..))
 import qualified Reactive.State.Graph         as Graph
 import qualified Reactive.State.Selection     as Selection
 import qualified Reactive.State.Camera        as Camera
 import qualified Reactive.State.Global        as Global
+import qualified Reactive.State.UIRegistry    as UIRegistry
 import           Reactive.State.Global        (State)
 import qualified Reactive.State.UnderCursor   as UnderCursor
 
-import qualified Data.IntMap.Lazy             as IntMap
 import qualified BatchConnector.Commands      as BatchCmd
 import           Batch.Workspace              (Workspace)
 
+import qualified Object.Widget.Node as Model
+
 import           Control.Monad.State          hiding (State)
 
+import qualified UI.Generic as UI
 
 toAction :: Event -> Maybe (Command State ())
-toAction (Mouse event@(Mouse.Event Mouse.Pressed  _   Mouse.LeftButton _ _)) = Just $ startDrag event
+toAction (Mouse event@(Mouse.Event Mouse.Pressed  pos   Mouse.LeftButton (KeyMods False False False False) (Just _))) = Just $ startDrag pos
 toAction (Mouse event@(Mouse.Event Mouse.Moved    pos Mouse.LeftButton _ _)) = Just $ handleMove pos
 toAction (Mouse event@(Mouse.Event Mouse.Released _   Mouse.LeftButton _ _)) = Just stopDrag
 toAction _                                                                   = Nothing
 
-shouldStartDrag :: Mouse.Event -> Command State Bool
-shouldStartDrag (Mouse.Event Mouse.Pressed _ Mouse.LeftButton (KeyMods False False False False) (Just _)) = do
-    nodesUnderCursor <- gets UnderCursor.getNodesUnderCursor
-    return . not . null $ nodesUnderCursor
-shouldStartDrag _ = return False
-
-startDrag :: Mouse.Event -> Command State ()
-startDrag event@(Mouse.Event _ coord _ _ _) = do
-    shouldDrag <- shouldStartDrag event
+startDrag :: Vector2 Int -> Command State ()
+startDrag coord = do
+    shouldDrag <- zoom Global.uiRegistry UnderCursor.isNodeUnderCursor
     when shouldDrag $ do
         Global.drag . Drag.history ?= (DragHistory coord coord coord)
 
@@ -62,31 +61,31 @@ handleMove coord = do
 
 moveNodes :: Vector2 Int -> Command State ()
 moveNodes delta = do
-    selection <- use $ Global.selection . Selection.nodeIds
-    camFactor <- use $ Global.camera . Camera.camera . Camera.factor
-    Global.graph . Graph.nodesMap %= changeNodesCoords camFactor delta selection
-    updatePortAngles
-    updateConnections
-    nodesMap  <- use $ Global.graph . Graph.nodesMap
-    let selNodes = IntMap.filter (\node -> node ^. nodeId `elem` selection) nodesMap
-    performIO $ do
-        moveNodesUI selNodes
+    widgets <- zoom Global.uiRegistry allNodes
+    delta'  <- scaledDelta delta
+    let selected = filter (^. widget . Model.isSelected) widgets
+        selectedIds = (^. objectId) <$> selected
+    forM_ selectedIds $ \id -> zoom Global.uiRegistry $ UICmd.moveBy id delta'
+    -- updatePortAngles
+    -- updateConnections
 
 stopDrag :: Command State ()
 stopDrag = do
     Global.drag . Drag.history .= Nothing
-    nodesMap  <- use $ Global.graph . Graph.nodesMap
-    selection <- use $ Global.selection . Selection.nodeIds
+
+    widgets <- zoom Global.uiRegistry allNodes
+    let selected = filter (^. widget . Model.isSelected) widgets
+        nodesToUpdate = (\w -> (w ^. widget . Model.nodeId, w ^. widget . widgetPosition)) <$> selected
+
+    nodes <- forM nodesToUpdate $ \(id, pos) -> do
+        Global.graph . Graph.nodesMap . ix id . nodePos .= pos
+        preuse $ Global.graph . Graph.nodesMap . ix id
+
     workspace <- use $ Global.workspace
-    let selNodes = IntMap.filter (\node -> node ^. nodeId `elem` selection) nodesMap
-    performIO $ updateNodesBatch workspace selNodes
+    performIO $ BatchCmd.updateNodes workspace (catMaybes nodes)
+    updateConnections
 
-changeNodesCoords :: Double -> Vector2 Int -> [NodeId] -> NodesMap -> NodesMap
-changeNodesCoords factor delta selection = fmap $ \node -> if elem (node ^. nodeId) selection then node & nodePos +~ deltaWs else node where
-    deltaWs = deltaToWs factor delta
-
-deltaToWs :: Double -> Vector2 Int -> Vector2 Double
-deltaToWs factor delta = (/ factor) . fromIntegral <$> delta
-
-updateNodesBatch :: Workspace -> NodesMap -> IO ()
-updateNodesBatch workspace nodesMap = BatchCmd.updateNodes workspace $ IntMap.elems nodesMap
+scaledDelta :: Vector2 Int -> Command State (Vector2 Double)
+scaledDelta delta = do
+    factor <- use $ Global.camera . Camera.camera . Camera.factor
+    return $ (/ factor) . fromIntegral <$> delta
