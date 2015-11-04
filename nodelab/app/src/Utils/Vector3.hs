@@ -1,4 +1,4 @@
-module Utils.Vector where
+module Utils.Vector3 where
 
 import           Utils.PreludePlus
 

@@ -19,12 +19,6 @@ foreign import javascript unsafe "app.initializeGl()"
 foreign import javascript unsafe "app.render()"
     render :: IO ()
 
-foreign import javascript unsafe "app.updateMouse($1, $2)"
-    updateMouse' :: Double -> Double -> IO ()
-
-updateMouse :: Vector2 Double -> IO ()
-updateMouse (Vector2 x y) = updateMouse' x y
-
 foreign import javascript unsafe "window.dispatchEvent(new Event('resize'))"
     triggerWindowResize :: IO ()
 

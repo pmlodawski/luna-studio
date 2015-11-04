@@ -3,7 +3,7 @@ module Reactive.State.Camera where
 
 import           Utils.PreludePlus
 import           Utils.Vector
-
+import           Reactive.Commands.Command (Command)
 
 data DragHistory =  PanDragHistory  { _panPreviousPos         :: Vector2 Int }
                  | ZoomDragHistory  { _zoomPreviousPos        :: Vector2 Int
@@ -58,3 +58,8 @@ screenToGl (Vector2 screenSizeX screenSizeY) (Vector2 x y) = Vector2
 screenToWorkspace :: Camera -> Vector2 Int -> Vector2 Double
 screenToWorkspace camera pos =
     glToWorkspace camera $ screenToGl (camera ^. screenSize) pos
+
+screenToWorkspaceM :: Vector2 Int -> Command State (Vector2 Double)
+screenToWorkspaceM pos = do
+    camera  <- use camera
+    return $ screenToWorkspace camera pos

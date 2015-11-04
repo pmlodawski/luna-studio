@@ -46,7 +46,6 @@ data Location = Default
 
 data Port = Port { _portId        :: PortId
                  , _portValueType :: ValueType
-                 , _angle         :: Angle
                  } deriving (Eq, Show)
 
 makeLenses ''Port
@@ -58,10 +57,9 @@ instance PrettyPrinter ValueType where
 
 
 instance PrettyPrinter Port where
-    display (Port ident tpe angle)
+    display (Port ident tpe)
          = "n(" <> display ident
          <> " " <> display tpe
-         <> " " <> display angle
          <> ")"
 
 

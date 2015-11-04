@@ -17,13 +17,12 @@ var $$             = require('common'),
 console.info("Current version " + brunch.env + " " + brunch.git_commit);
 console.info("Build at " + brunch.date);
 
-$$.nodes             = {};
 $$.currentConnection = null;
 $$.selectionBox      = null;
 $$.websocket         = websocket();
 
 
-var nodeZOrderStep  = 0.00001;
+// var nodeZOrderStep  = 0.00001;
 var nodeZOrderStart = 0.00000;
 
 var shouldRender = true;
@@ -129,7 +128,7 @@ function initTerminal() {
 function initCommonWidgets() {
   var colorId = 10;
   $$.currentConnection = new Connection(3, -1, colorId);
-  $$.registry[3] = {mesh: $$.currentConnection};
+  $$.registry[3] = $$.currentConnection;
   $$.selectionBox      = new SelectionBox();
 
   $$.scene.add($$.currentConnection.mesh);
@@ -180,13 +179,6 @@ function updateCameraHUD(left, right, top, bottom) {
   $$.cameraHUD.bottom   = bottom;
 }
 
-function updateMouse(x, y) {
-  _.values($$.nodes).forEach(function (node) {
-    node.updateMouse(x, y);
-  });
-}
-
-
 function createPendingNode(widgetId, expr, x, y) {
   var pos = new THREE.Vector2(x, y);
   var node = new GraphNode(-1, pos, nodeZOrderStart, widgetId);
@@ -195,23 +187,23 @@ function createPendingNode(widgetId, expr, x, y) {
   $$.scene.add(node.mesh);
   $$.registry[widgetId] = node;
 }
-
-// -> HS
-function moveToTopZ(nodeId) {
-  var nodeToTop = $$.nodes[nodeId];
-  var nodeToTopZ = nodeToTop.zPos();
-  var maxZ = nodeToTop.zPos();
-  _.values($$.nodes).forEach(function (node) {
-    var nodeZ = node.zPos();
-    if (nodeZ > nodeToTopZ) {
-      node.zPos(nodeZ - nodeZOrderStep);
-      if (nodeZ > maxZ) {
-        maxZ = nodeZ;
-      }
-    }
-  });
-  nodeToTop.zPos(maxZ);
-}
+//
+// // -> HS
+// function moveToTopZ(nodeId) {
+//   var nodeToTop = $$.nodes[nodeId];
+//   var nodeToTopZ = nodeToTop.zPos();
+//   var maxZ = nodeToTop.zPos();
+//   _.values($$.nodes).forEach(function (node) {
+//     var nodeZ = node.zPos();
+//     if (nodeZ > nodeToTopZ) {
+//       node.zPos(nodeZ - nodeZOrderStep);
+//       if (nodeZ > maxZ) {
+//         maxZ = nodeZ;
+//       }
+//     }
+//   });
+//   nodeToTop.zPos(maxZ);
+// }
 
 function createNodeSearcher(expression, nodeId, left, top) {
   var ns;
@@ -241,31 +233,6 @@ function displaySelectionBox(x0, y0, x1, y1) {
 
 function hideSelectionBox() {
   $$.selectionBox.hide();
-}
-
-function displayCurrentConnection(colorId, x0, y0, x1, y1) {
-  $$.currentConnection.setPos(x0, y0, x1, y1);
-  $$.currentConnection.show(colorId);
-}
-
-function removeCurrentConnection() {
-  $$.currentConnection.hide();
-}
-
-
-function createConnection(widgetId, id, colorId) {
-  var connection = new Connection(widgetId, id, colorId);
-  $$.scene.add(connection.mesh);
-  $$.registry[widgetId] = connection;
-}
-
-function updateConnection(widgetId, visible, x0, y0, x1, y1) {
-  $$.registry[widgetId].setPos(x0, y0, x1, y1);
-  if (visible) {
-    $$.registry[widgetId].show();
-  } else {
-    $$.registry[widgetId].hide();
-  }
 }
 
 function removeWidget(widgetId) {
@@ -300,26 +267,21 @@ module.exports = {
   start:                    start,
   initializeGl:             initializeGl,
   render:                   render,
-  moveToTopZ:               moveToTopZ,
+  // moveToTopZ:               moveToTopZ,
   updateHtmCanvasPanPos:    updateHtmCanvasPanPos,
   updateScreenSize:         updateScreenSize,
   updateCamera:             updateCamera,
   updateCameraHUD:          updateCameraHUD,
-  updateMouse:              updateMouse,
   createNodeSearcher:       createNodeSearcher,
   destroyNodeSearcher:      destroyNodeSearcher,
   displaySelectionBox:      displaySelectionBox,
   hideSelectionBox:         hideSelectionBox,
-  displayCurrentConnection: displayCurrentConnection,
-  removeCurrentConnection:  removeCurrentConnection,
-  createConnection:         createConnection,
-  updateConnection:         updateConnection,
   removeWidget:             removeWidget,
   websocket:                $$.websocket,
   displayRejectedMessage:   displayRejectedMessage,
   createPendingNode:        createPendingNode,
-  getNode:                  function (index) { return $$.nodes[index];    },
-  getNodes:                 function ()      { return _.values($$.nodes); },
+  // getNode:                  function (index) { return $$.nodes[index];    },
+  // getNodes:                 function ()      { return _.values($$.nodes); },
   nodeSearcher:             function ()      { return $$.node_searcher;   },
   shouldRender:             function ()      { shouldRender = true;       },
   writeToTerminal:          writeToTerminal

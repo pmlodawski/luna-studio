@@ -46,6 +46,7 @@ tryDef expr = case Text.unpack $ Text.take 4 expr of
 
 
 tryFormat :: Text -> Maybe NodeType
+tryFormat "" = Nothing
 tryFormat expr = case head suf of
     '#' -> Just $ NodeType inputPortsNum []
     _   -> Nothing

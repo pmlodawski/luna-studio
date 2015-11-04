@@ -18,60 +18,6 @@ import qualified JavaScript.Array    as JSArray
 
 import GHCJS.Marshal
 
--- unselectAllNodes :: IO ()
--- unselectAllNodes =
---     getNodes >>= mapM_ setUnselected
-
--- selectNodes :: NodeIdCollection -> IO ()
--- selectNodes nodeIds =
---     mapM_ setNodeSelected nodeIds
---
--- unfocusAllNodes :: IO ()
--- unfocusAllNodes =
---     getNodes >>= mapM_ setUnfocused
-
--- moveNode :: Node -> IO ()
--- moveNode node = do
---     let (Vector2 wx wy) = node ^. nodePos
---     nodeRef  <- getNode $ node ^. nodeId
---     moveTo nodeRef wx wy
-
--- updateLabel :: Node -> IO ()
--- updateLabel node = do
---     nodeRef  <- getNode $ node ^. nodeId
---     showLabel nodeRef (lazyTextToJSString $ node ^. expression)
-
-addInputPort :: NodeId -> WidgetId -> PortId -> ColorNum -> Angle -> IO ()
-addInputPort nodeId widgetId portId color angle = putStrLn "addInputPort"
--- do
---     nodeRef <- getNode nodeId
---     let portIdNum = portIdToNum portId
---     addInputPortJS nodeRef widgetId portIdNum color angle
-
-addOutputPort :: NodeId -> WidgetId ->  PortId -> ColorNum -> Angle -> IO ()
-addOutputPort nodeId widgetId portId color angle = putStrLn "addOutputPort"
--- do
---     nodeRef <- getNode nodeId
---     let portIdNum = portIdToNum portId
---     addOutputPortJS nodeRef widgetId portIdNum color angle
-
-setInputPortAngle :: NodeId -> PortId -> Angle -> IO ()
-setInputPortAngle nodeId portId angle = putStrLn "setInputPortAngle"
--- do
---     nodeRef <- getNode nodeId
---     let portIdNum = portIdToNum portId
---     setInputPortAngleJS nodeRef portIdNum angle
-
-setOutputPortAngle :: NodeId -> PortId -> Angle -> IO ()
-setOutputPortAngle nodeId portId angle = putStrLn "setOutputPortAngle"
-    -- nodeRef <- getNode nodeId
-    -- let portIdNum = portIdToNum portId
-    -- setOutputPortAngleJS nodeRef portIdNum angle
-
--- setComputedValue :: NodeId -> String -> IO ()
--- setComputedValue nodeId value = do
---     nodeRef <- getNode nodeId
---     setValue nodeRef $ pack value
 
 displayNodeVector :: NodeId -> [Float] -> IO ()
 displayNodeVector nodeId vals = putStrLn "displayNodeVector" -- do

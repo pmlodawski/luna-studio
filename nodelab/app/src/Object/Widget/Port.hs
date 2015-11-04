@@ -15,6 +15,7 @@ import qualified JS.Widget as UI
 
 data Port = Port { _portRef  :: PortRef
                  , _angle    :: Double
+                 , _color    :: Int
                  } deriving (Eq, Show, Typeable)
 
 makeLenses ''Port

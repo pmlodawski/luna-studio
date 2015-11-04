@@ -15,7 +15,7 @@ import           Object.Port
 import           Object.Widget
 import           Object.UITypes        (WidgetId)
 import qualified Object.Widget.Node    as Model
-import qualified Object.Widget.Port    as WPort
+import qualified Object.Widget.Port    as PortModel
 import           Object.Widget.Slider (Slider(..),IsSlider(..))
 import qualified Object.Widget.Slider  as Slider
 
@@ -30,7 +30,7 @@ import           Reactive.Commands.RemoveNode  (removeNode)
 import           Reactive.Commands.Command     (Command, performIO)
 import           Reactive.Commands.PendingNode (unrenderPending)
 import           Reactive.Commands.Selection   (handleSelection)
-import qualified  Reactive.Commands.UIRegistry as UICmd
+import qualified Reactive.Commands.UIRegistry as UICmd
 
 import qualified BatchConnector.Commands as BatchCmd
 import qualified JS.NodeGraph          as UI
@@ -109,28 +109,12 @@ addWidgetToNode nodeId newWidget = do
     UIR.register sliderId slider
     UIT.add      slider   node
 
-createNodeOnUI :: WidgetFile s Model.Node -> IO ()
-createNodeOnUI file = do
-    node <- UINode.createNode (file ^. objectId) (file ^. widget)
-    UIR.register (file ^. objectId) node
-    scene <- UI.Scene.scene
-    UIT.add node scene
-
 registerSinglePort :: WidgetId -> Node -> PortType -> Port -> Command (UIRegistry.State b) ()
 registerSinglePort nodeWidgetId node portType port = do
-    let portWidget = WPort.Port (PortRef (node ^. nodeId) portType (port ^. portId)) 0.0
-    widgetFile <- UIRegistry.registerM nodeWidgetId portWidget def
-    performIO $ addPort portType
-                        (node ^. nodeId)
-                        (widgetFile ^. objectId)
-                        (port ^. portId)
-                        (colorVT $ port ^. portValueType)
-                        (port ^. angle)
+    let offset = if portType == InputPort then 0.0 else pi/2.0
+    let portWidget = PortModel.Port (PortRef (node ^. nodeId) portType (port ^. portId)) (offset + (fromIntegral $ portIdToNum $ port ^. portId)) (colorVT $ port ^. portValueType)
+    void $ UICmd.register nodeWidgetId portWidget def
 
 registerPorts :: WidgetId -> PortType -> Node -> Command (UIRegistry.State b) ()
 registerPorts nodeWidgetId portType node = mapM_ (registerSinglePort nodeWidgetId node portType) ports where
     ports = getPorts portType node
-
-addPort :: PortType -> NodeId -> WidgetId -> PortId -> ColorNum -> Double -> IO ()
-addPort  InputPort = UI.addInputPort
-addPort OutputPort = UI.addOutputPort

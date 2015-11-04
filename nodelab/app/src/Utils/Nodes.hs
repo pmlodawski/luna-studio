@@ -39,12 +39,12 @@ getNodeByRef portRef nodesMap = node where
     node    = IntMap.lookup nodeId nodesMap
 
 
-getPortAngle :: Node.PortRef -> Node.NodesMap -> Double
-getPortAngle portRef nodesMap = case getPortByRef portRef nodesMap of
-    Just port -> port ^. Port.angle
-    Nothing   -> case portRef ^. Node.refPortType of
-        Object.InputPort  -> 1.3 * pi
-        Object.OutputPort -> 1.7 * pi
+-- getPortAngle :: Node.PortRef -> Node.NodesMap -> Double
+-- getPortAngle portRef nodesMap = case getPortByRef portRef nodesMap of
+--     Just port -> port ^. Port.angle
+--     Nothing   -> case portRef ^. Node.refPortType of
+--         Object.InputPort  -> 1.3 * pi
+--         Object.OutputPort -> 1.7 * pi
 
 
 getSrcDstMay :: Node.PortRef -> Node.PortRef -> Maybe (Node.PortRef, Node.PortRef)

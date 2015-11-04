@@ -1,3 +1,4 @@
+module UI.Widget.Button where
 -- updateState :: WidgetId -> Model.Button -> IO ()
 -- updateState oid model = do
 --     updateUniformValue State (toJSInt $ fromEnum $ model ^. Model.state) oid

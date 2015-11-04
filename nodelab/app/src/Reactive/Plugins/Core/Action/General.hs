@@ -3,7 +3,6 @@ module Reactive.Plugins.Core.Action.General where
 import           Utils.PreludePlus
 import           Utils.Vector
 
-import           JS.UI (updateMouse)
 import           JS.Camera
 import           Event.Mouse    hiding      ( Event, WithObjects )
 import qualified Event.Mouse                         as Mouse
@@ -29,5 +28,5 @@ updateWindowSize size = do
 updateMousePos :: Vector2 Int -> Command Global.State ()
 updateMousePos pos = do
     Global.mousePos .= pos
-    camera <- use $ Global.camera . Camera.camera
-    performIO $ updateMouse $ Camera.screenToWorkspace camera pos
+    -- camera <- use $ Global.camera . Camera.camera
+    -- performIO $ updateMouse $ Camera.screenToWorkspace camera pos

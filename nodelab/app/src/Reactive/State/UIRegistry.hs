@@ -50,7 +50,7 @@ defaultWidgets = [ (sceneInterfaceId,     sceneInterface)
                  ] where
     sceneInterface    = WidgetFile sceneInterfaceId    (toCtxDynamic $ Scene) Nothing [] def
     sceneGraph        = WidgetFile sceneGraphId        (toCtxDynamic $ Scene) Nothing [] def
-    currentConnection = WidgetFile currentConnectionId (toCtxDynamic $ CurrentConnection) Nothing [] def
+    currentConnection = WidgetFile currentConnectionId (toCtxDynamic $ CurrentConnection False def def def) Nothing [] def
 
 instance Default (State a) where
     def = State (fromList defaultWidgets) def def def

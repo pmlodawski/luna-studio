@@ -6,7 +6,7 @@ import qualified Reactive.State.Global     as Global
 import qualified Reactive.State.Graph      as Graph
 import           Reactive.Commands.Command (Command, performIO)
 import qualified Reactive.State.UIRegistry as UIRegistry
-import           Reactive.Commands.Graph   (updateConnNodes, updateConnections, updatePortAngles, updateConnectionsUI)
+import           Reactive.Commands.Graph   (updateConnNodes, updateConnections, updatePortAngles)
 
 import           Reactive.Commands.UIRegistry.RemoveWidget (removeWidgets)
 
@@ -36,7 +36,7 @@ localDisconnectAll connectionIds = do
     updateConnNodes changedNodes
     updatePortAngles
     updateConnections
-    updateConnectionsUI
+    -- updateConnectionsUI
 
 disconnectAll :: [ConnectionId] -> Command State ()
 disconnectAll connectionIds = do

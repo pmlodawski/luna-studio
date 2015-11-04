@@ -1,4 +1,4 @@
-
+module UI.Widget.Number where
 -- instance Focusable (Model.Number a) where
 --     mayFocus _ _ _ _ = True
 --

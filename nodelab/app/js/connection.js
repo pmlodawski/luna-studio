@@ -5,12 +5,11 @@ var colors = require('colors');
 var vs = require('shaders/connection.vert')();
 var fs = require('shaders/connection.frag')();
 
-function Connection(widgetId, id, colorId) {
+function Connection(widgetId) {
   var _this = this;
-  this.id = id;
   this.geometry = new THREE.PlaneBufferGeometry(1.0, 10.0);
 
-  var color = colors[colorId];
+  var color = colors[5];
 
   this.uniforms = {
     color:      { type: 'v4', value: color },
@@ -62,15 +61,12 @@ Connection.prototype.setPos = function (x0, y0, x1, y1) {
   this.mesh.position.y = (dist * y_r) + y0 + y_r * scale;
 };
 
-Connection.prototype.show = function (colorId) {
-  if (colorId !== undefined) {
-    this.uniforms.color.value = colors[colorId];
-  }
-  this.mesh.material.uniforms.visible.value = 1;
+Connection.prototype.setVisible = function (visible) {
+  this.mesh.material.uniforms.visible.value = visible?1:0;
 };
 
-Connection.prototype.hide = function () {
-  this.mesh.material.uniforms.visible.value = 0;
+Connection.prototype.setColor = function (colorId) {
+  this.mesh.material.uniforms.color.value = colors[colorId];
 };
 
 Connection.prototype.setFocused = function (focused) {

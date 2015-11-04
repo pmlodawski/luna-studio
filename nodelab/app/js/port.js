@@ -17,18 +17,14 @@ var dist = nodeRadius + halfWidth + margin;
 
 var nodeSize = 30.0;
 
-function Port(id, widgetId, colorId, angle, out) {
+function Port(widgetId) {
   var _this = this;
-  this.id = id;
-  this.out = out;
-
-  var color = colors[colorId];
 
   this.uniforms = {
-    color:     { type: 'v4', value: color    },
+    color:     { type: 'v4', value: new THREE.Color("red")},
     colorFar:  { type: 'v4', value: colorFar },
     focused:   { type: 'i',  value: 0        },
-    mouseDist: { type: 'f',  value: 100000.0 },
+    mouseDist: { type: 'f',  value: 0.0 },
     nodeSize:  { type: 'f',  value: nodeSize },
     portSize:  { type: 'f',  value: height   },
     objectId:  { type: 'v3', value: new THREE.Vector3((widgetId % 256) / 255.0, Math.floor(Math.floor(widgetId % 65536) / 256) / 255.0, Math.floor(widgetId / 65536) / 255.0) }
@@ -51,7 +47,7 @@ function Port(id, widgetId, colorId, angle, out) {
 	);
 
   this.mesh.position.z = 0;
-  this.setAngle(angle);
+  this.setAngle(0);
 }
 
 Port.prototype.setAngle = function (angle) {
@@ -63,14 +59,8 @@ Port.prototype.setAngle = function (angle) {
   this.mesh.rotation.z = angle;
 };
 
-Port.prototype.setExpandedPosition = function (left, top) {
-  this.mesh.rotation.z = 0;
-  this.mesh.position.x = left;
-  this.mesh.position.y = top;
-};
-
 Port.prototype.setColor = function (color) {
-  this.uniforms.color.value = color;
+  this.uniforms.color.value = colors[color];
 };
 
 Port.prototype.updateMouseDist = function (mouseDist) {
