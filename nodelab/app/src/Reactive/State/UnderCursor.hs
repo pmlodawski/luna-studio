@@ -29,10 +29,3 @@ isNodeUnderCursor = do
             return $ isJust widget
         Nothing       -> return False
 
-getPortRefUnderCursor :: Global.State -> Maybe PortRef
-getPortRefUnderCursor state = do
-    let registry = state ^. Global.uiRegistry
-    widgetId    <- registry ^. UIRegistry.widgetOver
-    maybeWidget <- UIRegistry.lookup widgetId registry
-    widget      <- (fromCtxDynamic (maybeWidget ^. widget)) :: Maybe Model.Port
-    return $ widget ^. Model.portRef

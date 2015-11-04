@@ -102,29 +102,6 @@ batchConnectNodes src dst = ioCommand $ \state -> let
     workspace = state ^. Global.workspace
     in BatchCmd.connectNodes workspace src dst
 
-
--- localConnectNodes :: PortRef -> PortRef -> Command Global.State ()
--- localConnectNodes src dst = command $ \state -> let
---     oldGraph                     = state ^. Global.graph
---     oldRegistry                  = state ^. Global.uiRegistry
---     newState                     = state  & Global.graph      .~ newGraph
---                                           & Global.uiRegistry .~ newRegistry
---     valueType                    = view portValueType $ getPort oldGraph src
---     uiUpdate                     = forM_ file $ \f -> createConnectionWidget (f ^. objectId) (f ^. widget) color
---     validConnection              = (isJust $ NodeUtils.getPortByRef src oldNodesMap) && (isJust $ NodeUtils.getPortByRef dst oldNodesMap)
---     color                        = if validConnection then (colorVT valueType) else colorError
---
---     newNodesMap                  = oldNodesMap
---     oldNodesMap                  = Graph.getNodesMap oldGraph
---     updSourceGraph               = Graph.updateNodes newNodesMap oldGraph
---     (connId, newGraph)           = Graph.addConnection src dst updSourceGraph
---     (file, newRegistry)          = case connId of
---         Just connId             -> (Just widget, newRegistry) where
---             (widget, newRegistry)= UIRegistry.register UIRegistry.sceneGraphId uiConnection def oldRegistry
---             uiConnection         = getConnectionLine newNodesMap $ Graph.Connection connId src dst
---         Nothing                 -> (Nothing, oldRegistry)
---     in (uiUpdate, newState)
-
 addConnectionM :: PortRef -> PortRef -> Command Global.State (Maybe ConnectionId)
 addConnectionM src dst = do
     graph          <- use Global.graph
@@ -138,8 +115,7 @@ localConnectNodes src dst = do
     forM_ connectionId $ \connectionId -> do
         nodePositions  <- zoom Global.uiRegistry nodePositionMap
         portAngles     <- zoom Global.uiRegistry portRefToAngleMap
-        color <- return 5
-        zoom Global.uiRegistry $ UICmd.register sceneGraphId (ConnectionModel.Connection connectionId False def def color) def
+        zoom Global.uiRegistry $ UICmd.register sceneGraphId (ConnectionModel.Connection connectionId False def def def) def
         return ()
     updatePortAngles
     updateConnections
@@ -162,11 +138,11 @@ nodePositionMap = do
     return $ IntMap.fromList $ (\file -> (file ^. widget . Model.nodeId, file ^. widget . widgetPosition)) <$> nodes
 
 connectionVector :: IntMap (Vector2 Double) -> PortRef -> PortRef -> Vector2 Double
-connectionVector map src dst = explode (dstPos - srcPos) where
+connectionVector map src dst = (dstPos - srcPos) where
     srcPos = map IntMap.! (src ^. refPortNodeId)
     dstPos = map IntMap.! (dst ^. refPortNodeId)
 
-defaultAngles :: Command Global.State (Map PortRef Double)
+defaultAngles :: Command Global.State (Map PortRef (Vector2 Double))
 defaultAngles = do
     nodes <- use $ Global.graph . Graph.nodes
 
@@ -204,7 +180,7 @@ updatePortAngles = do
                                          , (conn ^. destination, conn ^. source     ) ]
         connections                    = sortAndGroup . concat $ connectionTuples <$> connectionsMap
 
-    let calculateAngle portRef targets = toAngle . sum $ connectionVector nodePositions portRef <$> targets
+    let calculateAngle portRef targets = sum $ connectionVector nodePositions portRef <$> targets
         connectedAngles                = Map.mapWithKey calculateAngle connections
 
     defAngles <- defaultAngles
@@ -212,9 +188,9 @@ updatePortAngles = do
     let angles = Map.union connectedAngles defAngles
     portWidgets <- zoom Global.uiRegistry portRefToWidgetMap
 
-    forM_ (Map.toList angles) $ \(portRef, angle) -> do
+    forM_ (Map.toList angles) $ \(portRef, vector) -> do
         let widgetId = portWidgets ^? ix portRef
-        forM_ widgetId $ \widgetId -> zoom Global.uiRegistry $ UICmd.update widgetId (PortModel.angle .~ angle)
+        forM_ widgetId $ \widgetId -> zoom Global.uiRegistry $ UICmd.update widgetId (PortModel.angleVector .~ vector)
 
 
 -- displayDragLine :: NodesMap -> Angle -> Vector2 Double -> Connect.Connecting -> IO ()

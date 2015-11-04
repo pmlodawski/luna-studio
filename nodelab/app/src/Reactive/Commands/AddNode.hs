@@ -111,8 +111,7 @@ addWidgetToNode nodeId newWidget = do
 
 registerSinglePort :: WidgetId -> Node -> PortType -> Port -> Command (UIRegistry.State b) ()
 registerSinglePort nodeWidgetId node portType port = do
-    let offset = if portType == InputPort then 0.0 else pi/2.0
-    let portWidget = PortModel.Port (PortRef (node ^. nodeId) portType (port ^. portId)) (offset + (fromIntegral $ portIdToNum $ port ^. portId)) (colorVT $ port ^. portValueType)
+    let portWidget = PortModel.Port (PortRef (node ^. nodeId) portType (port ^. portId)) def (colorVT $ port ^. portValueType)
     void $ UICmd.register nodeWidgetId portWidget def
 
 registerPorts :: WidgetId -> PortType -> Node -> Command (UIRegistry.State b) ()

@@ -63,8 +63,9 @@ instance PrettyPrinter Port where
          <> ")"
 
 
-portDefaultAngle :: PortType -> Int -> PortId -> Angle
-portDefaultAngle portType numPorts portId = angle `mod'` (2.0 * pi) where
+portDefaultAngle :: PortType -> Int -> PortId -> Vector2 Double
+portDefaultAngle portType numPorts portId = (/ 10.0) <$> Vector2 (cos angleMod) (sin angleMod) where
+    angleMod = angle `mod'` (2.0 * pi)
     angle = (1 + fromIntegral portNum) * (pi / (fromIntegral $ numPorts + 1)) + delta
     portNum = portIdToNum portId
     delta = case portType of
