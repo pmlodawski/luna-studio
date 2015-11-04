@@ -63,7 +63,7 @@ updateConnections = do
     portTypes      <- portTypes
     connectionsMap <- uses Global.graph getConnectionsMap
 
-    let updateSingleConnection widgetFile = do
+    forM_ allConnections $ \widgetFile -> do
         let connectionId   = widgetFile ^. widget . ConnectionModel.connectionId
             connection     = IntMap.lookup connectionId connectionsMap
             connectionLine = (\conn -> getConnectionLine nodePositions portAngles portTypes (conn ^. source) (conn ^. destination)) <$> connection
@@ -73,8 +73,6 @@ updateConnections = do
                                                       . (ConnectionModel.to      .~ posTo)
                                                       . (ConnectionModel.visible .~ visible)
                                                       . (ConnectionModel.color   .~ color)
-
-    mapM_ updateSingleConnection allConnections
 
 getConnectionLine :: IntMap (Vector2 Double) -> Map PortRef Double -> Map PortRef ValueType -> PortRef  -> PortRef -> (Vector2 Double, Vector2 Double, Bool, Int)
 getConnectionLine nodePos portAngles portTypes srcPortRef dstPortRef = (srcWs, dstWs, visible, color) where
