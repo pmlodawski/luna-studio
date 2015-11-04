@@ -21,6 +21,7 @@ import           Reactive.Plugins.Core.Action
 import           Reactive.Commands.Graph
 import           Reactive.Commands.Command    (Command, performIO, execCommand)
 import qualified Reactive.Commands.UIRegistry as UICmd
+import qualified Reactive.Commands.Selection  as Selection
 import qualified Reactive.State.Drag          as Drag
 import           Reactive.State.Drag          (DragHistory(..))
 import qualified Reactive.State.Graph         as Graph
@@ -29,7 +30,6 @@ import qualified Reactive.State.Camera        as Camera
 import qualified Reactive.State.Global        as Global
 import qualified Reactive.State.UIRegistry    as UIRegistry
 import           Reactive.State.Global        (State)
-import qualified Reactive.State.UnderCursor   as UnderCursor
 
 import qualified BatchConnector.Commands      as BatchCmd
 import           Batch.Workspace              (Workspace)
@@ -46,9 +46,19 @@ toAction (Mouse event@(Mouse.Event Mouse.Moved    pos Mouse.LeftButton _ _)) = J
 toAction (Mouse event@(Mouse.Event Mouse.Released _   Mouse.LeftButton _ _)) = Just stopDrag
 toAction _                                                                   = Nothing
 
+
+isNodeUnderCursor :: Command (UIRegistry.State a) Bool
+isNodeUnderCursor = do
+    maybeOver    <- use UIRegistry.widgetOver
+    case maybeOver of
+        Just widgetId -> do
+            widget <- UIRegistry.lookupTypedM widgetId :: Command (UIRegistry.State b) (Maybe (WidgetFile b Model.Node))
+            return $ isJust widget
+        Nothing       -> return False
+
 startDrag :: Vector2 Int -> Command State ()
 startDrag coord = do
-    shouldDrag <- zoom Global.uiRegistry UnderCursor.isNodeUnderCursor
+    shouldDrag <- zoom Global.uiRegistry isNodeUnderCursor
     when shouldDrag $ do
         Global.drag . Drag.history ?= (DragHistory coord coord coord)
 
@@ -61,10 +71,9 @@ handleMove coord = do
 
 moveNodes :: Vector2 Int -> Command State ()
 moveNodes delta = do
-    widgets <- zoom Global.uiRegistry allNodes
+    widgets <- zoom Global.uiRegistry Selection.selectedNodes
     delta'  <- scaledDelta delta
-    let selected = filter (^. widget . Model.isSelected) widgets
-        selectedIds = (^. objectId) <$> selected
+    let selectedIds = (^. objectId) <$> widgets
     forM_ selectedIds $ \id -> zoom Global.uiRegistry $ UICmd.moveBy id delta'
     updatePortAngles
     updateConnections

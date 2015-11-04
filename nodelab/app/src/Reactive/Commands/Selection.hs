@@ -5,9 +5,9 @@ import           Control.Monad.State hiding (State)
 
 import           Object.Object  (NodeId)
 import           Object.Node    (Node)
-import qualified Object.Widget.Node as Model
+import qualified Object.Widget.Node as NodeModel
 import           Object.UITypes (WidgetId)
-import           Object.Widget  (objectId, widget)
+import           Object.Widget  (objectId, widget, WidgetFile(..))
 import           Event.Keyboard (KeyMods(..))
 import qualified JS.NodeGraph   as UI
 
@@ -18,7 +18,6 @@ import qualified Reactive.State.Graph      as Graph
 
 import           Reactive.Commands.Command          (Command, performIO)
 import           Reactive.Commands.Graph            (allNodes)
-import           Reactive.Commands.UIRegistry.Focus (focusOnNode, focusOnTopNode)
 import qualified Reactive.Commands.UIRegistry  as UICmd
 import           UI.Widget.Node (updateSelectedState)
 
@@ -29,23 +28,32 @@ handleSelection _ _ = return ()
 
 performSelect :: WidgetId -> Command (UIRegistry.State a) ()
 performSelect id = do
-    isSelected <- UICmd.get id Model.isSelected
+    isSelected <- UICmd.get id NodeModel.isSelected
     unless isSelected $ do
         unselectAll
-        UICmd.update id (Model.isSelected .~ True)
+        UICmd.update id (NodeModel.isSelected .~ True)
 
 toggleSelect :: WidgetId -> Command (UIRegistry.State a) ()
-toggleSelect id = UICmd.update id (Model.isSelected %~ not)
+toggleSelect id = UICmd.update id (NodeModel.isSelected %~ not)
 
 selectAll :: Command (UIRegistry.State a) ()
 selectAll = do
     widgets <- allNodes
     let widgetIds = (^. objectId) <$> widgets
-    forM_ widgetIds $ (flip UICmd.update) (Model.isSelected .~ True)
-
+    forM_ widgetIds $ (flip UICmd.update) (NodeModel.isSelected .~ True)
 
 unselectAll :: Command (UIRegistry.State a) ()
 unselectAll = do
     widgets <- allNodes
     let widgetIds = (^. objectId) <$> widgets
-    forM_ widgetIds $ (flip UICmd.update) (Model.isSelected .~ False)
+    forM_ widgetIds $ (flip UICmd.update) (NodeModel.isSelected .~ False)
+
+selectedNodes :: Command (UIRegistry.State a) [WidgetFile a NodeModel.Node]
+selectedNodes = do
+    widgets <- allNodes
+    return $ filter (^. widget . NodeModel.isSelected) widgets
+
+focusSelectedNode :: Command (UIRegistry.State a) ()
+focusSelectedNode = do
+    widgets <- selectedNodes
+    UIRegistry.focusedWidget .= (view objectId <$> widgets ^? ix 0)

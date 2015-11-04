@@ -21,7 +21,6 @@ import           Event.Event    (Event(Mouse, Keyboard))
 import           Reactive.Plugins.Core.Action
 import qualified Reactive.State.MultiSelection as MultiSelection
 import           Reactive.State.MultiSelection (DragHistory(..))
-import qualified Reactive.State.UnderCursor    as UnderCursor
 import qualified Reactive.State.Graph          as Graph
 import qualified Reactive.State.Selection      as Selection
 import qualified Reactive.State.Camera         as Camera
@@ -30,10 +29,9 @@ import qualified Reactive.State.Global         as Global
 import           Reactive.State.Global         (State)
 
 import           Reactive.Commands.Command          (Command, performIO)
-import           Reactive.Commands.UIRegistry.Focus (focusOnTopNode)
 import qualified Reactive.Commands.UIRegistry       as UICmd
 import           Reactive.Commands.Graph (getNodesInRect)
-import           Reactive.Commands.Selection        (unselectAll, selectAll)
+import           Reactive.Commands.Selection        (unselectAll, selectAll, focusSelectedNode)
 
 import           Control.Monad.State                               hiding (State)
 
@@ -70,7 +68,6 @@ handleMove coord = do
             Global.multiSelection . MultiSelection.history ?= DragHistory start coord
             updateSelection start coord
             drawSelectionBox start coord
-            focusOnTopNode
 
 updateSelection :: Vector2 Int -> Vector2 Int -> Command State ()
 updateSelection start end = do
@@ -89,4 +86,5 @@ drawSelectionBox start end = do
 stopDrag :: Command State ()
 stopDrag = do
     Global.multiSelection . MultiSelection.history .= Nothing
+    zoom Global.uiRegistry focusSelectedNode
     performIO hideSelectionBox

@@ -2,41 +2,45 @@ module Reactive.Commands.RemoveNode where
 
 import           Utils.PreludePlus
 import           Event.Keyboard (KeyMods)
+import           Object.Object  (NodeId)
 import           Object.UITypes (WidgetId)
+import           Object.Widget  (widget)
 import           Reactive.State.Global             (State)
 import qualified Reactive.State.Global             as Global
 import qualified Reactive.State.Selection          as Selection
 import qualified Reactive.State.UIRegistry         as UIRegistry
 import qualified Reactive.State.Graph              as Graph
 import           Reactive.Commands.Command         (Command, performIO)
+import           Reactive.Commands.Selection       (selectedNodes)
 import           Reactive.Commands.DisconnectNodes (localDisconnectAll)
 
 import           Reactive.Commands.UIRegistry.RemoveWidget (removeWidgets)
-import           Reactive.Commands.UIRegistry.Focus        (focusOnTopNode)
 
 import qualified BatchConnector.Commands as BatchCmd
 import qualified JS.NodeGraph            as UIGraph
 import           Object.Node             (Node, nodeId)
 import           Object.Widget.Helpers   (nodeIdToWidgetId)
+import qualified Object.Widget.Node      as NodeModel
 
-removeNode :: Node -> Char -> KeyMods -> WidgetId -> Command State ()
-removeNode node key _ _ = case key of
-    '\x08' -> performRemoval node
-    '\x2e' -> performRemoval node
-    _         -> return ()
 
-performRemoval :: Node -> Command State ()
-performRemoval node = do
-    danglingConns <- uses Global.graph (Graph.connectionIdsContainingNode $ node ^. nodeId)
+removeSelectedNodes :: Char -> KeyMods -> WidgetId -> Command State ()
+removeSelectedNodes key _ _ = do
+    when (key == '\x08' || key == '\x2e') $ do
+        selectedNodes <- zoom Global.uiRegistry selectedNodes
+        mapM_ performRemoval $ (^. widget . NodeModel.nodeId) <$> selectedNodes
+
+performRemoval :: NodeId -> Command State ()
+performRemoval nodeId = do
+    danglingConns <- uses Global.graph (Graph.connectionIdsContainingNode $ nodeId)
     localDisconnectAll danglingConns
-    Global.graph %= Graph.removeNode (node ^. nodeId)
-    -- Global.selection . Selection.nodeIds %= drop 1
+
+    Global.graph %= Graph.removeNode (nodeId)
 
     uiRegistry <- use Global.uiRegistry
     workspace  <- use Global.workspace
 
-    let nodeWidgetId = maybeToList $ nodeIdToWidgetId uiRegistry $ node ^. nodeId
+    let nodeWidgetId = maybeToList $ nodeIdToWidgetId uiRegistry nodeId
     zoom Global.uiRegistry $ removeWidgets nodeWidgetId
-    focusOnTopNode
+
     performIO $ do
-        BatchCmd.removeNodeById workspace (node ^. nodeId)
+        BatchCmd.removeNodeById workspace nodeId

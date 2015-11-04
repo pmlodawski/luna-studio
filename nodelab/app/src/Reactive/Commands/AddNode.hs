@@ -26,7 +26,7 @@ import qualified Reactive.State.Graph          as Graph
 import           Reactive.State.UIRegistry     (sceneGraphId)
 import qualified Reactive.State.UIRegistry     as UIRegistry
 import           Reactive.Commands.EnterNode   (enterNode)
-import           Reactive.Commands.RemoveNode  (removeNode)
+import           Reactive.Commands.RemoveNode  (removeSelectedNodes)
 import           Reactive.Commands.Command     (Command, performIO)
 import           Reactive.Commands.PendingNode (unrenderPending)
 import           Reactive.Commands.Selection   (handleSelection)
@@ -72,7 +72,7 @@ makeSliderFromPortDouble i port = Slider (Vector2 10 (95 + (fromIntegral i) * 25
 
 nodeHandlers :: Node -> UIHandlers State
 nodeHandlers node = def & dblClick     .~ [const $ enterNode node]
-                        & keyDown      .~ [removeNode node]
+                        & keyDown      .~ [removeSelectedNodes]
                         & mousePressed .~ [\keymods _ _ id -> handleSelection id keymods]
 
 retriveSliderDouble :: WidgetId -> Command (UIRegistry.State Global.State) (Maybe (WidgetFile Global.State (Slider Double)))

@@ -22,7 +22,6 @@ import qualified Object.Widget.Port       as PortModel
 
 import qualified JS.NodeGraph   as UI
 
-
 import           Reactive.State.Graph
 import qualified Reactive.State.Connect        as Connect
 import qualified Reactive.State.Graph          as Graph
@@ -192,47 +191,6 @@ updatePortAngles = do
         let widgetId = portWidgets ^? ix portRef
         forM_ widgetId $ \widgetId -> zoom Global.uiRegistry $ UICmd.update widgetId (PortModel.angleVector .~ vector)
 
-
--- displayDragLine :: NodesMap -> Angle -> Vector2 Double -> Connect.Connecting -> IO ()
--- displayDragLine nodesMap angle ptWs@(Vector2 cx cy) connecting = putStrLn "Graph.hs: displayDragLine" -- do
---     let portRef              = connecting ^. Connect.sourcePortRef
---         port                 = connecting ^. Connect.sourcePort
---         color                = colorVT $ port ^. portValueType
---         ndWs@(Vector2 nx ny) = NodeUtils.getNodePos nodesMap $ portRef ^. refPortNodeId
---         outerPos             = portOuterBorder + distFromPort
---         sy                   = ny + outerPos * sin angle
---         sx                   = nx + outerPos * cos angle
---         (Vector2 vx vy)      = ptWs - ndWs
---         draw                 = vx * vx + vy * vy > portOuterBorderSquared
---     setAnglePortRef angle portRef
---     if draw then UI.displayCurrentConnection color sx sy cx cy
---             else UI.removeCurrentConnection
-
-
--- displayDragLine :: NodesMap -> PortRef -> Vector2 Double -> IO ()
--- displayDragLine nodesMap portRef ptWs@(Vector2 cx cy) = do
---     let angle = calcAngle ptWs ndWs
---     -- let portRef              = connecting ^. Connect.sourcePort
---         ndWs@(Vector2 nx ny) = NodeUtils.getNodePos nodesMap $ portRef ^. refPortNodeId
---         outerPos             = portOuterBorder + distFromPort
---         sy                   = ny + outerPos * sin angle
---         sx                   = nx + outerPos * cos angle
---         (Vector2 vx vy)      = ptWs - ndWs
---         draw                 = vx * vx + vy * vy > portOuterBorderSquared
---     setAnglePortRef angle portRef
---     if draw then UI.displayCurrentConnection sx sy cx cy
---             else UI.removeCurrentConnection
-
--- setAnglePortRef :: Angle -> PortRef -> IO ()
--- setAnglePortRef refAngle portRef = setAngle (portRef ^. refPortType)
---                                             (portRef ^. refPortNodeId)
---                                             (portRef ^. refPortId)
---                                             refAngle
---
--- setAngle :: PortType -> NodeId -> PortId -> Angle -> IO ()
--- setAngle  InputPort = UI.setInputPortAngle
--- setAngle OutputPort = UI.setOutputPortAngle
-
 allNodes :: Command (UIRegistry.State a) [WidgetFile a Model.Node]
 allNodes = UIRegistry.lookupAllM
 
@@ -249,8 +207,6 @@ unselectAllNodes :: Command (UIRegistry.State a) ()
 unselectAllNodes = do
     widgets <- allNodes
     forM_ widgets UINode.unselectNode
-
-
 
 -- TODO: Clever algorithm taking radius into account
 getNodesInRect :: Vector2 Int -> Vector2 Int -> Command Global.State [WidgetId]
