@@ -1,14 +1,15 @@
-image: nbo/ghcjs-gui:20151022
-script:
-  - scripts/genproto > /dev/null
-  - scripts/gencabal
-  - cd nodelab
-  - npm install
-  - bower install --allow-root
-  - mkdir -p .stack-work/install/x86_64-osx/custom-nbo-gui-20151022/ghcjs-0.2.0.20151020_ghc-7.10.2/bin/nodelab.jsexe/
-  - touch .stack-work/install/x86_64-osx/custom-nbo-gui-20151022/ghcjs-0.2.0.20151020_ghc-7.10.2/bin/nodelab.jsexe/all.js
-  - brunch build --env production
-  - ./upload_dist.sh
+build:
+  image: nbo/ghcjs-gui:20151022
+  command:
+    - scripts/genproto > /dev/null
+    - scripts/gencabal
+    - cd nodelab
+    - npm install
+    - bower install --allow-root
+    - mkdir -p .stack-work/install/x86_64-osx/custom-nbo-gui-20151022/ghcjs-0.2.0.20151020_ghc-7.10.2/bin/nodelab.jsexe/
+    - touch .stack-work/install/x86_64-osx/custom-nbo-gui-20151022/ghcjs-0.2.0.20151020_ghc-7.10.2/bin/nodelab.jsexe/all.js
+    - brunch build --env production
+    - ./upload_dist.sh
 notify:
   slack:
     webhook_url: 'https://hooks.slack.com/services/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'
