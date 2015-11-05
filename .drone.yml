@@ -1,6 +1,10 @@
 build:
   image: nbo/ghcjs-gui:20151022
+  environment:
+    - AWS_ACCESS_KEY_ID=$$AWS_ACCESS_KEY_ID
+    - AWS_SECRET_ACCESS_KEY=$$AWS_SECRET_ACCESS_KEY
   commands:
+    - mkdir -p dist/proto
     - scripts/genproto > /dev/null
     - scripts/gencabal
     - cd nodelab
