@@ -14,9 +14,6 @@ var fs = require('shaders/node.frag')();
 var evs = require('shaders/expandedNode.vert')();
 var efs = require('shaders/expandedNode.frag')();
 
-var Port = require('port');
-// var Port = require('triangle_port');
-
 var insideColor     = new THREE.Color(0x1a1a1a);
 var unselectedColor = new THREE.Color(0x3a3a3a);
 var expandedColor   = new THREE.Color(0x202020);

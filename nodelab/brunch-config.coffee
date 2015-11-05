@@ -74,7 +74,9 @@ exports.config =
       plugins:
         ghcjs:
           interactive: true
+          autoReload: true
         build_env: env: "interactive"
+        off: ['auto-reload-brunch']
     production:
       plugins: build_env: env: "production"
 
