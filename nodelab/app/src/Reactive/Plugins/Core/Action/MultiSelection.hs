@@ -18,7 +18,6 @@ import qualified Event.Mouse    as Mouse
 import qualified Event.Keyboard as Keyboard
 import           Event.Event    (Event(Mouse, Keyboard))
 
-import           Reactive.Plugins.Core.Action
 import qualified Reactive.State.MultiSelection as MultiSelection
 import           Reactive.State.MultiSelection (DragHistory(..))
 import qualified Reactive.State.Graph          as Graph

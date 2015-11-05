@@ -19,7 +19,6 @@ import qualified Object.Widget.Port    as PortModel
 import           Object.Widget.Slider (Slider(..),IsSlider(..))
 import qualified Object.Widget.Slider  as Slider
 
-import           Reactive.Plugins.Core.Action
 import qualified Reactive.State.Global         as Global
 import           Reactive.State.Global         (State)
 import qualified Reactive.State.Graph          as Graph

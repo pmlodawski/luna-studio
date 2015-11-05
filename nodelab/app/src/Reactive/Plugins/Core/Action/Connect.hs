@@ -21,7 +21,6 @@ import           Event.Mouse                   hiding      (Event, widget)
 import qualified Event.Mouse                   as Mouse
 import           Event.Event (Event(..))
 
-import           Reactive.Plugins.Core.Action
 import           Reactive.Commands.Graph
 import           Reactive.Commands.Command     (Command, performIO, execCommand)
 import qualified Reactive.Commands.UIRegistry  as UICmd

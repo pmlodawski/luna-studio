@@ -28,7 +28,6 @@ import qualified Event.Mouse              as Mouse
 import           Event.Event
 import qualified Event.ConnectionPen      as ConnectionPen
 
-import           Reactive.Plugins.Core.Action
 import qualified Reactive.State.Graph              as Graph
 import qualified Reactive.State.Global             as Global
 import           Reactive.State.Global             (State)
