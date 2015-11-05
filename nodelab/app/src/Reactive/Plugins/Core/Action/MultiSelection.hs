@@ -78,7 +78,7 @@ updateSelection start end = do
 
 drawSelectionBox :: Vector2 Int -> Vector2 Int -> Command State ()
 drawSelectionBox start end = do
-    camera        <- use $ Global.camera . Camera.camera
+    camera <- use $ Global.camera . Camera.camera
     let startSelectionBox = Camera.screenToWorkspace camera start
         endSelectionBox   = Camera.screenToWorkspace camera end
     performIO $ displaySelectionBox startSelectionBox endSelectionBox

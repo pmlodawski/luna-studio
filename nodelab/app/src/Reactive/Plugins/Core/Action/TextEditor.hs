@@ -14,4 +14,4 @@ import qualified BatchConnector.Monadic.Commands as BatchCmd
 toAction :: Event -> Maybe (Command Global.State ())
 toAction (Batch      (Batch.CodeUpdate        code)) = Just $ performIO $ UI.setText code
 toAction (TextEditor (TextEditor.CodeModified code)) = Just $ zoom Global.workspace $ BatchCmd.setCode code
-toAction _ = Nothing
+toAction _                                            = Nothing
