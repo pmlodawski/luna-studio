@@ -1,4 +1,4 @@
-[![Build Status](http://cd.newbyteorder.com/api/badge/bitbucket.org/NewByteOrder/new_byte_order/status.svg?branch=master)](http://cd.newbyteorder.com/bitbucket.org/NewByteOrder/new_byte_order)
+[![Build Status](https://cd.newbyteorder.com/api/badges/NewByteOrder/new_byte_order/status.svg)](https://cd.newbyteorder.com/NewByteOrder/new_byte_order)
 
 # NodeLab GUI
 
