@@ -90,7 +90,7 @@ makeNetworkDescription conn logging workspace = do
         backendActionB                = fmap ActionST $        Backend.toAction <$> anyNodeB
         runnerActionB                 = fmap ActionST $         Runner.toAction <$> anyNodeB
         graphFetcherActionB           = fmap ActionST $   GraphFetcher.toAction <$> anyNodeB
-        connectionPenActionB          = fmap ActionST $  ConnectionPen.toAction <$> anyNodeB <*> globalStateB
+        connectionPenActionB          = fmap ActionST $  ConnectionPen.toAction <$> anyNodeB
         textEditorActionB             = fmap ActionST $     TextEditor.toAction <$> anyNodeB
 
         allActionsPackB               = [ nodeGeneralActionB

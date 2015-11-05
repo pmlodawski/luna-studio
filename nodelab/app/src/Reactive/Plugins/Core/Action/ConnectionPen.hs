@@ -6,88 +6,112 @@ module Reactive.Plugins.Core.Action.ConnectionPen where
 import           Utils.PreludePlus
 import           Utils.Vector
 import           Utils.Angle
-import qualified Utils.MockHelper as MockHelper
+import qualified Utils.MockHelper         as MockHelper
 
-import qualified Data.IntMap.Lazy as IntMap
+import qualified Data.IntMap.Lazy         as IntMap
 
-import qualified JS.Widget          as UI
-import qualified JS.ConnectionPen   as UI
+import qualified JS.Widget                as UI
+import qualified JS.ConnectionPen         as UI
 
 import           Object.Object
 import           Object.Port
 import           Object.Node
-import qualified Object.Widget.Node as UINode
+import qualified Object.Widget.Node       as UINode
 import qualified Object.Widget.Connection as UIConnection
 import           Object.UITypes
 import           Object.Widget
 
-import           Event.Keyboard hiding      ( Event )
-import qualified Event.Keyboard as Keyboard
-import           Event.Mouse    hiding      (Event, widget)
-import qualified Event.Mouse    as Mouse
+import           Event.Keyboard           hiding      (Event)
+import qualified Event.Keyboard           as Keyboard
+import           Event.Mouse              hiding      (Event, widget)
+import qualified Event.Mouse              as Mouse
 import           Event.Event
-import qualified Event.ConnectionPen as ConnectionPen
+import qualified Event.ConnectionPen      as ConnectionPen
 
 import           Reactive.Plugins.Core.Action
-import           Reactive.Commands.Graph
-import           Reactive.State.Graph
+import qualified Reactive.State.Graph              as Graph
 import qualified Reactive.State.Global             as Global
+import           Reactive.State.Global             (State)
 import qualified Reactive.State.UIRegistry         as UIRegistry
-import           Reactive.Commands.Command         (execCommand)
+
+import           Reactive.Commands.Graph
+import           Reactive.Commands.Command         (Command, performIO, execCommand)
 import           Reactive.Commands.DisconnectNodes (disconnectAll)
 
-import qualified Reactive.State.ConnectionPen as ConnectionPen
+import qualified Reactive.State.ConnectionPen      as ConnectionPen
 
-import qualified BatchConnector.Commands as BatchCmd
+import qualified BatchConnector.Commands           as BatchCmd
 
 import           Debug.Trace
 
+import           Control.Monad.State               hiding (State)
 
-data Action = BeginDrawing  (Vector2 Int) ConnectionPen.DrawingType
-            | NextPoint     (Vector2 Int)
-            | NextPointData [NodeId] [ConnectionId]
-            | FinishDrawing (Vector2 Int)
-            deriving (Show, Eq)
 
-instance PrettyPrinter Action where
-    display v = "gCP(" <> show v <> ")"
+toAction :: Event -> Maybe (Command State ())
+toAction (Mouse event@(Mouse.Event Mouse.Pressed  _   Mouse.LeftButton (KeyMods False True False False) _)) = Just $ startConnecting event
+toAction (Mouse event@(Mouse.Event Mouse.Pressed  _   Mouse.LeftButton (KeyMods True  True False False) _)) = Just $ startDisconnecting event
+toAction (Mouse event@(Mouse.Event Mouse.Moved    pos Mouse.LeftButton _ _)) = Just $ handleMove pos
+toAction (Mouse event@(Mouse.Event Mouse.Released _   Mouse.LeftButton _ _)) = Just stopDrag
+toAction (ConnectionPen (ConnectionPen.Segment widgets))                     = Just $ handleAction widgets
+toAction _                                                                   = Nothing
 
-data Reaction = PerformIO (IO ())
-              | NoOp
+startConnecting :: Mouse.Event -> Command State ()
+startConnecting event@(Mouse.Event _ coord _ _ _) = do
+    performIO $ UI.beginPath coord True
+    Global.connectionPen . ConnectionPen.drawing .= Just (ConnectionPen.Drawing coord ConnectionPen.Connecting Nothing [])
 
-instance PrettyPrinter Reaction where
-    display _ = "ConnectionPenReaction"
+startDisconnecting :: Mouse.Event -> Command State ()
+startDisconnecting event@(Mouse.Event _ coord _ _ _) = do
+    performIO $ UI.beginPath coord False
+    Global.connectionPen . ConnectionPen.drawing .= Just (ConnectionPen.Drawing coord ConnectionPen.Disconnecting Nothing [])
 
-toAction :: Event -> Global.State -> Maybe Action
-toAction (Mouse (Mouse.Event tpe pos LeftButton keyMods _)) state = case tpe of
-    Mouse.Pressed  -> case keyMods of
-        (KeyMods False True False False)  -> Just (BeginDrawing pos ConnectionPen.Connecting)
-        (KeyMods True  True False False)  -> Just (BeginDrawing pos ConnectionPen.Disconnecting)
-        _                                 -> Nothing
-    Mouse.Released -> if isDrawing then Just (FinishDrawing pos) else Nothing
-    Mouse.Moved    -> if isDrawing then Just (NextPoint     pos) else Nothing
-    _              -> Nothing
-    where isDrawing = isJust $ state ^. Global.connectionPen . ConnectionPen.drawing
-toAction (ConnectionPen (ConnectionPen.Segment widgets)) state = case state ^. Global.connectionPen . ConnectionPen.drawing of
-    Just drawing                     -> case drawing ^. ConnectionPen.drawingType of
-        ConnectionPen.Connecting     -> pushEvent where
-            pushEvent                 = if null nodes then Nothing
-                                                      else Just $ NextPointData nodes []
-            nodes                     = catMaybes $ fmap (^. widget . UINode.nodeId) <$> lookupNode <$> widgets
-            lookupNode :: WidgetId   -> Maybe (WidgetFile Global.State UINode.Node)
-            lookupNode widgetId       = UIRegistry.lookupTyped widgetId registry
-        ConnectionPen.Disconnecting  -> pushEvent where
-            pushEvent                 = if null connections then Nothing
-                                                            else Just $ NextPointData [] connections
-            connections               = catMaybes $ fmap (^. widget . UIConnection.connectionId) <$> lookupConnection <$> widgets
-            lookupConnection :: WidgetId -> Maybe (WidgetFile Global.State UIConnection.Connection)
-            lookupConnection widgetId = UIRegistry.lookupTyped widgetId registry
-        where
-        registry                      = state ^. Global.uiRegistry
+handleMove :: Vector2 Int -> Command State ()
+handleMove coord = do
+    drawingMay <- use $ Global.connectionPen . ConnectionPen.drawing
+    forM_ drawingMay $ \drawing -> do
+        let previousPos = drawing ^. ConnectionPen.previousPos
+        Global.connectionPen . ConnectionPen.drawing %= (fmap $ ConnectionPen.previousPos .~ coord)
+        performIO $ do
+            UI.clearCanvas
+            UI.drawSegment coord
+            UI.requestWidgetsBetween previousPos coord
 
-    Nothing -> Nothing
+stopDrag :: Command State ()
+stopDrag = do
+    drawingMay <- use $ Global.connectionPen . ConnectionPen.drawing
+    forM_ drawingMay $ \drawing -> do
+        Global.connectionPen . ConnectionPen.drawing .= Nothing
+        performIO UI.endPath
 
-toAction _ _ = Nothing
+lookupNode :: WidgetId -> Command State (Maybe (WidgetFile State UINode.Node))
+lookupNode = zoom Global.uiRegistry . UIRegistry.lookupTypedM
+
+lookupConnection :: WidgetId -> Command State (Maybe (WidgetFile State UIConnection.Connection))
+lookupConnection = zoom Global.uiRegistry . UIRegistry.lookupTypedM
+
+handleAction :: [WidgetId] -> Command State ()
+handleAction widgets = do
+    drawingMay <- use $ Global.connectionPen . ConnectionPen.drawing
+    forM_ drawingMay $ \drawing -> do
+        let drawingType = drawing ^. ConnectionPen.drawingType
+        registry <- use Global.uiRegistry
+        case drawingType of
+            ConnectionPen.Connecting -> do
+                nodesMay <- sequence $ lookupNode <$> widgets
+                let nodes = (view $ widget . UINode.nodeId) <$> catMaybes nodesMay
+                when (not . null $ nodes) $ do
+                    let path              = remdups $ (maybeToList $ drawing ^. ConnectionPen.lastNode) ++ nodes
+                    Global.connectionPen . ConnectionPen.drawing %= (fmap $ ConnectionPen.visitedNodes %~ (++ nodes))
+                    Global.connectionPen . ConnectionPen.drawing %= (fmap $ ConnectionPen.lastNode .~ (maybeLast path))
+                    let nodesToConnect    = zipAdj path
+                    state <- get
+                    let (ui, newState) = autoConnectAll nodesToConnect state
+                    put newState
+                    performIO ui
+            ConnectionPen.Disconnecting -> do
+                connectionsMay <- sequence $ lookupConnection <$> widgets
+                let connections = (view $ widget . UIConnection.connectionId) <$> catMaybes connectionsMay
+                when (not . null $ connections) $ disconnectAll connections
 
 remdups               :: (Eq a) => [a] -> [a]
 remdups (x : xx : xs) =  if x == xx then remdups (x : xs) else x : remdups (xx : xs)
@@ -98,49 +122,9 @@ zipAdj x = zip x $ tail x
 maybeLast [] = Nothing
 maybeLast xs = Just $ last xs
 
-instance ActionStateUpdater Action where
-    execSt (BeginDrawing pos tpe) state = ActionUI (PerformIO draw) newState where
-        draw     = UI.beginPath pos (tpe == ConnectionPen.Connecting)
-        newState = state & Global.connectionPen . ConnectionPen.drawing .~ Just (ConnectionPen.Drawing pos tpe Nothing [])
-
-    execSt (NextPoint pos) state = ActionUI (PerformIO requestNodesBetween) newState where
-        newState        = state  & Global.connectionPen . ConnectionPen.drawing .~ Just newPen
-        (Just oldPen)   = state ^. Global.connectionPen . ConnectionPen.drawing
-        newPen          = oldPen & ConnectionPen.previousPos  .~ pos
-
-        requestNodesBetween = do
-            UI.clearCanvas
-            UI.drawSegment pos
-            UI.requestWidgetsBetween ((fromJust $ state ^. Global.connectionPen . ConnectionPen.drawing) ^. ConnectionPen.previousPos) pos
-
-
-    execSt (NextPointData nodes connections) state = case (fromJust $ state ^. Global.connectionPen . ConnectionPen.drawing) ^. ConnectionPen.drawingType of
-        ConnectionPen.Connecting -> ActionUI (PerformIO draw) newState' where
-            newState          = state  & Global.connectionPen . ConnectionPen.drawing .~ Just newPen
-            (Just oldPen)     = state ^. Global.connectionPen . ConnectionPen.drawing
-            pos               = oldPen ^. ConnectionPen.previousPos
-            newPen            = oldPen & ConnectionPen.visitedNodes %~ (++ nodes)
-                                       & ConnectionPen.lastNode     .~ (maybeLast path)
-            path              = remdups $ (maybeToList $ oldPen ^. ConnectionPen.lastNode) ++ nodes
-            nodesToConnect    = zipAdj path
-            (draw, newState') = if null nodesToConnect then (return (), newState)
-                                                       else (fullUI, st) where
-                                                            (ui, st) = autoConnectAll nodesToConnect newState
-                                                            fullUI   = do ui
-                                                                          -- fst $ execCommand (zoom Global.uiRegistry moveNodesUI) moveNodesUI st
-                                                                          -- fst $ execCommand updatePortAnglesUI st
-                                                                          -- fst $ execCommand updateConnectionsUI st
-                                                                          putStrLn $ "connectNodes " <> show nodesToConnect
-        ConnectionPen.Disconnecting -> ActionUI (PerformIO action) newState where
-            (action, newState) = execCommand (disconnectAll connections) state
-
-    execSt (FinishDrawing _) state = ActionUI (PerformIO draw) newState where
-        newState      = state  & Global.connectionPen . ConnectionPen.drawing .~ Nothing
-        draw          = UI.endPath
-
-
 autoConnectAll :: [(Int, Int)] -> Global.State -> (IO (), Global.State)
-autoConnectAll nodes = autoConnect $ head nodes -- TODO: forall - foldr
+autoConnectAll []    state = (return (), state)
+autoConnectAll nodes state = autoConnect (head nodes) state -- TODO: forall - foldr
 
 autoConnect :: (Int, Int) -> Global.State -> (IO (), Global.State)
 autoConnect (srcNodeId, dstNodeId) oldState =
@@ -154,15 +138,15 @@ tryAutoConnect :: (Int, Int) -> Global.State -> Maybe (IO (), Global.State)
 tryAutoConnect (srcNodeId, dstNodeId) oldState = result where
     graph                            = oldState ^. Global.graph
     workspace                        = oldState ^. Global.workspace
-    srcNode                          = getNode graph srcNodeId
-    dstNode                          = getNode graph dstNodeId
+    srcNode                          = Graph.getNode graph srcNodeId
+    dstNode                          = Graph.getNode graph dstNodeId
     srcPorts                         = srcNode ^. ports . outputPorts
     dstPorts                         = dstNode ^. ports . inputPorts
     dstPortsFiltered                 = filterConnectedInputPorts graph dstNodeId $ dstNode ^. ports . inputPorts
     connection                       = findConnectionForAll dstPortsFiltered srcPorts
     result                           = case connection of
         Just (srcPortId, dstPortId) -> Just (do
-                                            putStrLn $ "connections      " <> (display $ getConnections graph)
+                                            putStrLn $ "connections      " <> (display $ Graph.getConnections graph)
                                             putStrLn $ "srcPorts         " <> display srcPorts
                                             putStrLn $ "dstPorts         " <> display dstPorts
                                             putStrLn $ "dstPortsFiltered " <> display dstPortsFiltered
@@ -176,9 +160,9 @@ tryAutoConnect (srcNodeId, dstNodeId) oldState = result where
         Nothing                     -> Nothing
 
 
-filterConnectedInputPorts :: State -> NodeId -> PortCollection -> PortCollection
+filterConnectedInputPorts :: Graph.State -> NodeId -> PortCollection -> PortCollection
 filterConnectedInputPorts state nodeId ports = filter isConnected ports where
-    destinationPortRefs = fmap (^. destination) $ getConnections state
+    destinationPortRefs = fmap (^. Graph.destination) $ Graph.getConnections state
     isConnected port = not $ PortRef nodeId InputPort (port ^. portId) `elem` destinationPortRefs
 
 findConnectionForAll :: PortCollection -> PortCollection -> Maybe (PortId, PortId)
@@ -188,12 +172,3 @@ findConnection :: PortCollection -> Port -> Maybe (PortId, PortId)
 findConnection dstPorts srcPort = (srcPort ^. portId,) <$> dstPortId where
     dstPortId = fmap (^. portId) $
         find (\port -> MockHelper.typesEq (port ^. portValueType) (srcPort ^. portValueType)) dstPorts
-
-
-instance ActionUIUpdater Reaction where
-    updateUI (WithState (PerformIO action) state) = do
-        action
-        -- moveNodesUI $ getNodesMap $ state ^. Global.graph
-        -- updatePortAnglesUI state -- TODO: does not work...
-        -- updateConnectionsUI state
-    updateUI (WithState NoOp state)               = return ()
