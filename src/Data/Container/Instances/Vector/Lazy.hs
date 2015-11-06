@@ -44,8 +44,9 @@ import Data.Container.Proxy
 type instance IndexOf       (V.Vector a) = Int
 type instance ContainerOf   (V.Vector a) = V.Vector a
 type instance DataStoreOf   (V.Vector a) = V.Vector a
-instance      HasContainer  (V.Vector a) where container     = id
-instance      IsContainer   (V.Vector a) where fromContainer = id
+instance      Monad m => IsContainerM  m (V.Vector a) where fromContainerM = return
+instance      Monad m => HasContainerM m (V.Vector a) where viewContainerM = return
+                                                            setContainerM  = const . return
 
 
 

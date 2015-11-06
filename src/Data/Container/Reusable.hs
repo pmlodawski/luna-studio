@@ -22,23 +22,26 @@ import           Data.List            ((\\))
 ----------------------
 
 data Reusable idx a = Reusable [idx] !a deriving (Show, Functor, Foldable, Traversable, Default, Monoid)
+type Reusable'    a = Reusable (IndexOf a) a
 
 type instance IndexOf      (Reusable idx a) = IndexOf (ContainerOf a)
 type instance ContainerOf  (Reusable idx a) = Reusable idx a
 type instance DataStoreOf  (Reusable idx a) = ContainerOf a
 
-instance      HasContainer (Reusable idx a) where container     = id
-instance      IsContainer  (Reusable idx a) where fromContainer = id
+instance Monad m => IsContainerM  m (Reusable idx a) where fromContainerM = return
+instance Monad m => HasContainerM m (Reusable idx a) where viewContainerM = return
+                                                           setContainerM  = const . return
 
-type instance Unlayered (Reusable idx a) = a
-instance      Layered   (Reusable idx a) where layered = lens (\(Reusable _ a) -> a) (\(Reusable ixs _) a -> Reusable ixs a)
+type instance       Unlayered  (Reusable idx a) = a
+instance            Layered    (Reusable idx a) where layered = lens (\(Reusable _ a) -> a) (\(Reusable ixs _) a -> Reusable ixs a)
+instance Monad m => LayeredM m (Reusable idx a)
 
 instance      (IsContainer a, FromList (ContainerOf a)) 
            => FromList  (Reusable idx a) where fromList = Reusable mempty . fromContainer . fromList
 type instance Item      (Reusable idx a) = Item (ContainerOf a)
 
-indexes :: Lens' (Reusable idx a) [idx]
-indexes = lens (\(Reusable ixs _) -> ixs) (\(Reusable _ a) ixs -> Reusable ixs a)
+_indexes :: Lens' (Reusable idx a) [idx]
+_indexes = lens (\(Reusable ixs _) -> ixs) (\(Reusable _ a) ixs -> Reusable ixs a)
 
 
 
@@ -127,10 +130,10 @@ type instance ModsOf   FreeableOp  (Reusable idx a) = ModsOf   FreeableOp  (Cont
 
 instance (AppendableQM  (GetOpts ms) (GetOpts ps) m el a)           => AppendableQM_  ms ps m el   (Reusable idx  a) where appendM_  _      = nested layered . appendQM  (Query :: Query (GetOpts ms) (GetOpts ps))
 instance (PrependableQM (GetOpts ms) (GetOpts ps) m el a)           => PrependableQM_ ms ps m el   (Reusable idx  a) where prependM_ _      = nested layered . prependQM (Query :: Query (GetOpts ms) (GetOpts ps))
-instance (InsertableM m idx el a, ExpandableM m (Reusable idx a))   => AddableQM_    '[] ps m el   (Reusable idx  a) where addM_     q el t = case view indexes t of
+instance (InsertableM m idx el a, ExpandableM m (Reusable idx a))   => AddableQM_    '[] ps m el   (Reusable idx  a) where addM_     q el t = case view _indexes t of
                                                                                                                                (x:xs) -> fmap2 (Reusable xs) $ insertM' x el $ unlayer t
                                                                                                                                []     -> addM_ q el =<< expandM t
-instance (FreeableQM (GetOpts ms) (GetOpts ps) m idx a, idx ~ idx') => FreeableQM_    ms ps m idx  (Reusable idx' a) where freeM_ _ idx     = fmap2 (indexes %~ (idx:)) . nested layered (freeQM (Query :: Query (GetOpts ms) (GetOpts ps)) idx)
+instance (FreeableQM (GetOpts ms) (GetOpts ps) m idx a, idx ~ idx') => FreeableQM_    ms ps m idx  (Reusable idx' a) where freeM_ _ idx     = fmap2 (_indexes %~ (idx:)) . nested layered (freeQM (Query :: Query (GetOpts ms) (GetOpts ps)) idx)
 
 
 
@@ -160,7 +163,7 @@ type instance ModsOf   TracksElemsOp    (Reusable idx a) = '[]
 
 instance (IndexableQM      (GetOpts ms) (GetOpts ps) m idx el a, idx ~ idx') => IndexableQM_       ms ps m idx el (Reusable idx' a) where indexM_     _ idx   = indexQM    (Query :: Query (GetOpts ms) (GetOpts ps)) idx . unlayer
 instance (TracksIxesQM     (GetOpts ms) (GetOpts ps) m idx    a, idx ~ idx') => TracksIxesQM_      ms ps m idx    (Reusable idx' a) where ixesM_      _       = ixesQM     (Query :: Query (GetOpts ms) (GetOpts ps))     . unlayer
-instance (Monad m, idx ~ idx')                                               => TracksFreeIxesQM_ '[] ps m idx    (Reusable idx' a) where freeIxesM_  _       = return . Res () . view indexes
+instance (Monad m, idx ~ idx')                                               => TracksFreeIxesQM_ '[] ps m idx    (Reusable idx' a) where freeIxesM_  _       = return . Res () . view _indexes
 
 instance (TracksIxes idx (Reusable idx a)
          , TracksFreeIxes idx (Reusable idx a), idx ~ idx', Monad m, Eq idx) => TracksUsedIxesQM_ '[] ps m idx    (Reusable idx' a) where usedIxesM_  _     t = return $ Res () $ ixes t \\ freeIxes t

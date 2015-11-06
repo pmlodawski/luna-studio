@@ -45,6 +45,8 @@ type ResultAxioms op info ms t = Result_ op (info t) (GetOpts ms) ~ Result_ op (
                                , GetQueryData provided ms opts                                                                 \
                            {- Query-selected result equality: -}                                                               \
                                , ResultAxioms cls info matchMs cont                                                            \
+                           {- Type prettify-}                                                                                  \
+                               , PrettyCtx ms a
 
 
 
@@ -55,8 +57,8 @@ type ResultAxioms op info ms t = Result_ op (info t) (GetOpts ms) ~ Result_ op (
 
     
 runOp (Proxy :: Proxy cls) (Proxy :: Proxy cont) f getter setter (Query :: Query ms ps) x = do 
-    Res datas c <- f (OptQuery :: OptQuery (MatchOpts (ModsOf cls cont) ms) (MatchOpts (ParamsOf cls cont) ps)) $ getter x
-    return $ Res (getQueryData (Proxy :: Proxy (GetOpts (MatchOpts (ModsOf cls cont) ms))) (Proxy :: Proxy ms) datas) $ setter c x
+    Res datas c <- f (OptQuery :: OptQuery (MatchOpts (ModsOf cls cont) ms) (MatchOpts (ParamsOf cls cont) ps)) =<< getter x
+    Res (getQueryData (Proxy :: Proxy (GetOpts (MatchOpts (ModsOf cls cont) ms))) (Proxy :: Proxy ms) datas) <$> setter c x
 
 #define RUNOP() runOp (Proxy :: Proxy cls) (Proxy :: Proxy cont)
 
@@ -74,17 +76,17 @@ type instance ConstrainCls MeasurableOp ms ps info                     m = Measu
 type instance ConstrainCls MinBoundedOp ms ps ('Info (Known idx) el) m = MinBoundedQM_ ms ps m idx
 type instance ConstrainCls MaxBoundedOp ms ps ('Info (Known idx) el) m = MaxBoundedQM_ ms ps m idx
 
-instance {-# OVERLAPPABLE #-} Monad m                                            => MeasurableQM ImpTL ps m     a          where sizeQM     = impossible
-instance {-# OVERLAPPABLE #-} Monad m                                            => MeasurableQM ms    ps m     Impossible where sizeQM     = impossible
-instance {-# OVERLAPPABLE #-} (OpCtx(MeasurableOp,PrimInfo) , HasContainer a)    => MeasurableQM ms    ps m     a          where sizeQM     = RUNOP() sizeM_ (view container) const
+instance {-# OVERLAPPABLE #-} Monad m                                              => MeasurableQM ImpTL ps m     a          where sizeQM     = impossible
+instance {-# OVERLAPPABLE #-} (Monad m, PrettyCtx ms Impossible)                   => MeasurableQM ms    ps m     Impossible where sizeQM     = impossible
+instance {-# OVERLAPPABLE #-} (HasContainerM m a, OpCtx(MeasurableOp,PrimInfo))    => MeasurableQM ms    ps m     a          where sizeQM     = RUNOP() sizeM_ viewContainerM (const . return)
 
-instance {-# OVERLAPPABLE #-} Monad m                                            => MinBoundedQM ImpTL ps m idx a          where minBoundQM = impossible
-instance {-# OVERLAPPABLE #-} Monad m                                            => MinBoundedQM ms    ps m idx Impossible where minBoundQM = impossible
-instance {-# OVERLAPPABLE #-} (OpCtx(MinBoundedOp,IdxInfo idx) , HasContainer a) => MinBoundedQM ms    ps m idx a          where minBoundQM = RUNOP() minBoundM_ (view container) const
+instance {-# OVERLAPPABLE #-} Monad m                                              => MinBoundedQM ImpTL ps m idx a          where minBoundQM = impossible
+instance {-# OVERLAPPABLE #-} (Monad m, PrettyCtx ms Impossible)                   => MinBoundedQM ms    ps m idx Impossible where minBoundQM = impossible
+instance {-# OVERLAPPABLE #-} (HasContainerM m a, OpCtx(MinBoundedOp,IdxInfo idx)) => MinBoundedQM ms    ps m idx a          where minBoundQM = RUNOP() minBoundM_ viewContainerM (const . return)
 
-instance {-# OVERLAPPABLE #-} Monad m                                            => MaxBoundedQM ImpTL ps m idx a          where maxBoundQM = impossible
-instance {-# OVERLAPPABLE #-} Monad m                                            => MaxBoundedQM ms    ps m idx Impossible where maxBoundQM = impossible
-instance {-# OVERLAPPABLE #-} (OpCtx(MaxBoundedOp,IdxInfo idx) , HasContainer a) => MaxBoundedQM ms    ps m idx a          where maxBoundQM = RUNOP() maxBoundM_ (view container) const
+instance {-# OVERLAPPABLE #-} Monad m                                              => MaxBoundedQM ImpTL ps m idx a          where maxBoundQM = impossible
+instance {-# OVERLAPPABLE #-} (Monad m, PrettyCtx ms Impossible)                   => MaxBoundedQM ms    ps m idx Impossible where maxBoundQM = impossible
+instance {-# OVERLAPPABLE #-} (HasContainerM m a, OpCtx(MaxBoundedOp,IdxInfo idx)) => MaxBoundedQM ms    ps m idx a          where maxBoundQM = RUNOP() maxBoundM_ viewContainerM (const . return)
     
 
 -- === Construction ===
@@ -105,21 +107,21 @@ type instance ConstrainCls AllocableOp  ms ps info                     m = Alloc
 type instance ConstrainCls ExpandableOp ms ps info                     m = ExpandableQM_ ms ps m
 type instance ConstrainCls GrowableOp   ms ps info                     m = GrowableQM_   ms ps m
 
-instance {-# OVERLAPPABLE #-} Monad m                                         => SingletonQM ImpTL  ps m el a          where singletonQM = impossible
-instance {-# OVERLAPPABLE #-} Monad m                                         => SingletonQM ms     ps m el Impossible where singletonQM = impossible
-instance {-# OVERLAPPABLE #-} (OpCtx(SingletonOp,ElInfo el) , IsContainer a)  => SingletonQM ms     ps m el a          where singletonQM = RUNOP() singletonM_ id (const . fromContainer)
+instance {-# OVERLAPPABLE #-} Monad m                                            => SingletonQM ImpTL  ps m el a          where singletonQM = impossible
+instance {-# OVERLAPPABLE #-} (Monad m, PrettyCtx ms Impossible)                 => SingletonQM ms     ps m el Impossible where singletonQM = impossible
+instance {-# OVERLAPPABLE #-} (IsContainerM m a, OpCtx(SingletonOp,ElInfo el))   => SingletonQM ms     ps m el a          where singletonQM = RUNOP() singletonM_ return (const . fromContainerM)
 
-instance {-# OVERLAPPABLE #-} Monad m                                         => AllocableQM ImpTL  ps m    a          where allocQM     = impossible
-instance {-# OVERLAPPABLE #-} Monad m                                         => AllocableQM ms     ps m    Impossible where allocQM     = impossible
-instance {-# OVERLAPPABLE #-} (OpCtx(AllocableOp,PrimInfo)  , IsContainer a)  => AllocableQM ms     ps m    a          where allocQM     = RUNOP() allocM_     id (const . fromContainer)
+instance {-# OVERLAPPABLE #-} Monad m                                            => AllocableQM ImpTL  ps m    a          where allocQM     = impossible
+instance {-# OVERLAPPABLE #-} (Monad m, PrettyCtx ms Impossible)                 => AllocableQM ms     ps m    Impossible where allocQM     = impossible
+instance {-# OVERLAPPABLE #-} (IsContainerM m a, OpCtx(AllocableOp,PrimInfo) )   => AllocableQM ms     ps m    a          where allocQM     = RUNOP() allocM_     return (const . fromContainerM)
 
-instance {-# OVERLAPPABLE #-} Monad m                                         => ExpandableQM ImpTL ps m    a          where expandQM    = impossible
-instance {-# OVERLAPPABLE #-} Monad m                                         => ExpandableQM ms    ps m    Impossible where expandQM    = impossible
-instance {-# OVERLAPPABLE #-} (OpCtx(ExpandableOp,PrimInfo) , HasContainer a) => ExpandableQM ms    ps m    a          where expandQM    = RUNOP() expandM_ (view container) (set container)
+instance {-# OVERLAPPABLE #-} Monad m                                            => ExpandableQM ImpTL ps m    a          where expandQM    = impossible
+instance {-# OVERLAPPABLE #-} (Monad m, PrettyCtx ms Impossible)                 => ExpandableQM ms    ps m    Impossible where expandQM    = impossible
+instance {-# OVERLAPPABLE #-} (HasContainerM m a, OpCtx(ExpandableOp,PrimInfo))  => ExpandableQM ms    ps m    a          where expandQM    = RUNOP() expandM_ viewContainerM setContainerM
 
-instance {-# OVERLAPPABLE #-} Monad m                                         => GrowableQM ImpTL ps m      a          where growQM      = impossible
-instance {-# OVERLAPPABLE #-} Monad m                                         => GrowableQM ms    ps m      Impossible where growQM      = impossible
-instance {-# OVERLAPPABLE #-} (OpCtx(GrowableOp,PrimInfo) , HasContainer a)   => GrowableQM ms    ps m      a          where growQM  q i = RUNOP() (flip growM_ i) (view container) (set container) q
+instance {-# OVERLAPPABLE #-} Monad m                                            => GrowableQM ImpTL ps m      a          where growQM      = impossible
+instance {-# OVERLAPPABLE #-} (Monad m, PrettyCtx ms Impossible)                 => GrowableQM ms    ps m      Impossible where growQM      = impossible
+instance {-# OVERLAPPABLE #-} (HasContainerM m a, OpCtx(GrowableOp,PrimInfo)  )  => GrowableQM ms    ps m      a          where growQM  q i = RUNOP() (flip growM_ i) viewContainerM setContainerM q
 
 
 -- === Modification ===
@@ -145,29 +147,29 @@ type instance ConstrainCls RemovableOp   ms ps ('Info idx          ('Known el)) 
 type instance ConstrainCls InsertableOp  ms ps ('Info ('Known idx) ('Known el)) m = InsertableQM_  ms ps m idx el
 type instance ConstrainCls FreeableOp    ms ps ('Info ('Known idx) el         ) m = FreeableQM_    ms ps m idx
 
-instance {-# OVERLAPPABLE #-} Monad m                                                => AppendableQM   ImpTL ps m     el a          where appendQM           = impossible
-instance {-# OVERLAPPABLE #-} Monad m                                                => AppendableQM   ms    ps m     el Impossible where appendQM           = impossible
-instance {-# OVERLAPPABLE #-} (HasContainer a, OpCtx(AppendableOp,ElInfo el))        => AppendableQM   ms    ps m     el a          where appendQM  q     el = RUNOP() (flip appendM_ el) (view container) (set container) q
+instance {-# OVERLAPPABLE #-} Monad m                                                   => AppendableQM   ImpTL ps m     el a          where appendQM           = impossible
+instance {-# OVERLAPPABLE #-} (Monad m, PrettyCtx ms Impossible)                        => AppendableQM   ms    ps m     el Impossible where appendQM           = impossible
+instance {-# OVERLAPPABLE #-} (HasContainerM m a, OpCtx(AppendableOp,ElInfo el))        => AppendableQM   ms    ps m     el a          where appendQM  q     el = RUNOP() (flip appendM_ el) viewContainerM setContainerM q
 
-instance {-# OVERLAPPABLE #-} Monad m                                                => PrependableQM  ImpTL ps m     el a          where prependQM          = impossible
-instance {-# OVERLAPPABLE #-} Monad m                                                => PrependableQM  ms    ps m     el Impossible where prependQM          = impossible
-instance {-# OVERLAPPABLE #-} (HasContainer a, OpCtx(PrependableOp,ElInfo el))       => PrependableQM  ms    ps m     el a          where prependQM q     el = RUNOP() (flip prependM_ el) (view container) (set container) q
+instance {-# OVERLAPPABLE #-} Monad m                                                   => PrependableQM  ImpTL ps m     el a          where prependQM          = impossible
+instance {-# OVERLAPPABLE #-} (Monad m, PrettyCtx ms Impossible)                        => PrependableQM  ms    ps m     el Impossible where prependQM          = impossible
+instance {-# OVERLAPPABLE #-} (HasContainerM m a, OpCtx(PrependableOp,ElInfo el))       => PrependableQM  ms    ps m     el a          where prependQM q     el = RUNOP() (flip prependM_ el) viewContainerM setContainerM q
 
-instance {-# OVERLAPPABLE #-} Monad m                                                => AddableQM      ImpTL ps m     el a          where addQM              = impossible
-instance {-# OVERLAPPABLE #-} Monad m                                                => AddableQM      ms    ps m     el Impossible where addQM              = impossible
-instance {-# OVERLAPPABLE #-} (HasContainer a, OpCtx(AddableOp,ElInfo el))           => AddableQM      ms    ps m     el a          where addQM     q     el = RUNOP() (flip addM_ el) (view container) (set container) q
+instance {-# OVERLAPPABLE #-} Monad m                                                   => AddableQM      ImpTL ps m     el a          where addQM              = impossible
+instance {-# OVERLAPPABLE #-} (Monad m, PrettyCtx ms Impossible)                        => AddableQM      ms    ps m     el Impossible where addQM              = impossible
+instance {-# OVERLAPPABLE #-} (HasContainerM m a, OpCtx(AddableOp,ElInfo el))           => AddableQM      ms    ps m     el a          where addQM     q     el = RUNOP() (flip addM_ el) viewContainerM setContainerM q
 
-instance {-# OVERLAPPABLE #-} Monad m                                                => RemovableQM    ImpTL ps m     el a          where removeQM           = impossible
-instance {-# OVERLAPPABLE #-} Monad m                                                => RemovableQM    ms    ps m     el Impossible where removeQM           = impossible
-instance {-# OVERLAPPABLE #-} (HasContainer a, OpCtx(RemovableOp,ElInfo el))         => RemovableQM    ms    ps m     el a          where removeQM  q     el = RUNOP() (flip removeM_ el) (view container) (set container) q
+instance {-# OVERLAPPABLE #-} Monad m                                                   => RemovableQM    ImpTL ps m     el a          where removeQM           = impossible
+instance {-# OVERLAPPABLE #-} (Monad m, PrettyCtx ms Impossible)                        => RemovableQM    ms    ps m     el Impossible where removeQM           = impossible
+instance {-# OVERLAPPABLE #-} (HasContainerM m a, OpCtx(RemovableOp,ElInfo el))         => RemovableQM    ms    ps m     el a          where removeQM  q     el = RUNOP() (flip removeM_ el) viewContainerM setContainerM q
 
-instance {-# OVERLAPPABLE #-} Monad m                                                => InsertableQM   ImpTL ps m idx el a          where insertQM           = impossible
-instance {-# OVERLAPPABLE #-} Monad m                                                => InsertableQM   ms    ps m idx el Impossible where insertQM           = impossible
-instance {-# OVERLAPPABLE #-} (HasContainer a, OpCtx(InsertableOp,IdxElInfo idx el)) => InsertableQM   ms    ps m idx el a          where insertQM  q idx el = RUNOP() (flip (flip insertM_ idx) el) (view container) (set container) q
+instance {-# OVERLAPPABLE #-} Monad m                                                   => InsertableQM   ImpTL ps m idx el a          where insertQM           = impossible
+instance {-# OVERLAPPABLE #-} (Monad m, PrettyCtx ms Impossible)                        => InsertableQM   ms    ps m idx el Impossible where insertQM           = impossible
+instance {-# OVERLAPPABLE #-} (HasContainerM m a, OpCtx(InsertableOp,IdxElInfo idx el)) => InsertableQM   ms    ps m idx el a          where insertQM  q idx el = RUNOP() (flip (flip insertM_ idx) el) viewContainerM setContainerM q
 
-instance {-# OVERLAPPABLE #-} Monad m                                                => FreeableQM     ImpTL ps m idx    a          where freeQM             = impossible
-instance {-# OVERLAPPABLE #-} Monad m                                                => FreeableQM     ms    ps m idx    Impossible where freeQM             = impossible
-instance {-# OVERLAPPABLE #-} (HasContainer a, OpCtx(FreeableOp,IdxInfo idx))        => FreeableQM     ms    ps m idx    a          where freeQM    q idx    = RUNOP() (flip freeM_ idx) (view container) (set container) q
+instance {-# OVERLAPPABLE #-} Monad m                                                   => FreeableQM     ImpTL ps m idx    a          where freeQM             = impossible
+instance {-# OVERLAPPABLE #-} (Monad m, PrettyCtx ms Impossible)                        => FreeableQM     ms    ps m idx    Impossible where freeQM             = impossible
+instance {-# OVERLAPPABLE #-} (HasContainerM m a, OpCtx(FreeableOp,IdxInfo idx))        => FreeableQM     ms    ps m idx    a          where freeQM    q idx    = RUNOP() (flip freeM_ idx) viewContainerM setContainerM q
 
 
 
@@ -192,25 +194,25 @@ type instance ConstrainCls TracksUsedIxesOp ms ps ('Info ('Known idx) el        
 type instance ConstrainCls TracksIxesOp     ms ps ('Info ('Known idx) el         ) m = TracksIxesQM_     ms ps m idx
 type instance ConstrainCls TracksElemsOp    ms ps ('Info idx          ('Known el)) m = TracksElemsQM_    ms ps m     el
 
-instance {-# OVERLAPPABLE #-} Monad m                                                => IndexableQM      ImpTL ps m idx el a          where indexQM          = impossible
-instance {-# OVERLAPPABLE #-} Monad m                                                => IndexableQM      ms    ps m idx el Impossible where indexQM          = impossible
-instance {-# OVERLAPPABLE #-} (HasContainer a, OpCtx(IndexableOp,IdxElInfo idx el))  => IndexableQM      ms    ps m idx el a          where indexQM    q idx = RUNOP() (flip indexM_ idx) (view container) const q
+instance {-# OVERLAPPABLE #-} Monad m                                                  => IndexableQM      ImpTL ps m idx el a          where indexQM          = impossible
+instance {-# OVERLAPPABLE #-} (Monad m, PrettyCtx ms Impossible)                       => IndexableQM      ms    ps m idx el Impossible where indexQM          = impossible
+instance {-# OVERLAPPABLE #-} (HasContainerM m a, OpCtx(IndexableOp,IdxElInfo idx el)) => IndexableQM      ms    ps m idx el a          where indexQM    q idx = RUNOP() (flip indexM_ idx) viewContainerM (const . return) q
 
-instance {-# OVERLAPPABLE #-} Monad m                                                => TracksFreeIxesQM ImpTL ps m idx    a          where freeIxesQM       = impossible
-instance {-# OVERLAPPABLE #-} Monad m                                                => TracksFreeIxesQM ms    ps m idx    Impossible where freeIxesQM       = impossible
-instance {-# OVERLAPPABLE #-} (HasContainer a, OpCtx(TracksFreeIxesOp,IdxInfo idx))  => TracksFreeIxesQM ms    ps m idx    a          where freeIxesQM       = RUNOP() freeIxesM_ (view container) const
+instance {-# OVERLAPPABLE #-} Monad m                                                  => TracksFreeIxesQM ImpTL ps m idx    a          where freeIxesQM       = impossible
+instance {-# OVERLAPPABLE #-} (Monad m, PrettyCtx ms Impossible)                       => TracksFreeIxesQM ms    ps m idx    Impossible where freeIxesQM       = impossible
+instance {-# OVERLAPPABLE #-} (HasContainerM m a, OpCtx(TracksFreeIxesOp,IdxInfo idx)) => TracksFreeIxesQM ms    ps m idx    a          where freeIxesQM       = RUNOP() freeIxesM_ viewContainerM (const . return)
 
-instance {-# OVERLAPPABLE #-} Monad m                                                => TracksUsedIxesQM ImpTL ps m idx    a          where usedIxesQM       = impossible
-instance {-# OVERLAPPABLE #-} Monad m                                                => TracksUsedIxesQM ms    ps m idx    Impossible where usedIxesQM       = impossible
-instance {-# OVERLAPPABLE #-} (HasContainer a, OpCtx(TracksUsedIxesOp,IdxInfo idx))  => TracksUsedIxesQM ms    ps m idx    a          where usedIxesQM       = RUNOP() usedIxesM_ (view container) const
+instance {-# OVERLAPPABLE #-} Monad m                                                  => TracksUsedIxesQM ImpTL ps m idx    a          where usedIxesQM       = impossible
+instance {-# OVERLAPPABLE #-} (Monad m, PrettyCtx ms Impossible)                       => TracksUsedIxesQM ms    ps m idx    Impossible where usedIxesQM       = impossible
+instance {-# OVERLAPPABLE #-} (HasContainerM m a, OpCtx(TracksUsedIxesOp,IdxInfo idx)) => TracksUsedIxesQM ms    ps m idx    a          where usedIxesQM       = RUNOP() usedIxesM_ viewContainerM (const . return)
 
-instance {-# OVERLAPPABLE #-} Monad m                                                => TracksIxesQM     ImpTL ps m idx    a          where ixesQM           = impossible
-instance {-# OVERLAPPABLE #-} Monad m                                                => TracksIxesQM     ms    ps m idx    Impossible where ixesQM           = impossible
-instance {-# OVERLAPPABLE #-} (HasContainer a, OpCtx(TracksIxesOp,IdxInfo idx))      => TracksIxesQM     ms    ps m idx    a          where ixesQM           = RUNOP() ixesM_ (view container) const
+instance {-# OVERLAPPABLE #-} Monad m                                                  => TracksIxesQM     ImpTL ps m idx    a          where ixesQM           = impossible
+instance {-# OVERLAPPABLE #-} (Monad m, PrettyCtx ms Impossible)                       => TracksIxesQM     ms    ps m idx    Impossible where ixesQM           = impossible
+instance {-# OVERLAPPABLE #-} (HasContainerM m a, OpCtx(TracksIxesOp,IdxInfo idx))     => TracksIxesQM     ms    ps m idx    a          where ixesQM           = RUNOP() ixesM_ viewContainerM (const . return)
 
-instance {-# OVERLAPPABLE #-} Monad m                                                => TracksElemsQM    ImpTL ps m     el a          where elemsQM          = impossible
-instance {-# OVERLAPPABLE #-} Monad m                                                => TracksElemsQM    ms    ps m     el Impossible where elemsQM          = impossible
-instance {-# OVERLAPPABLE #-} (HasContainer a, OpCtx(TracksElemsOp,ElInfo el))       => TracksElemsQM    ms    ps m     el a          where elemsQM          = RUNOP() elemsM_ (view container) const
+instance {-# OVERLAPPABLE #-} Monad m                                                  => TracksElemsQM    ImpTL ps m     el a          where elemsQM          = impossible
+instance {-# OVERLAPPABLE #-} (Monad m, PrettyCtx ms Impossible)                       => TracksElemsQM    ms    ps m     el Impossible where elemsQM          = impossible
+instance {-# OVERLAPPABLE #-} (HasContainerM m a, OpCtx(TracksElemsOp,ElInfo el))      => TracksElemsQM    ms    ps m     el a          where elemsQM          = RUNOP() elemsM_ viewContainerM (const . return)
 
 
 

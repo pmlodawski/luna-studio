@@ -5,6 +5,7 @@
 {-# LANGUAGE ScopedTypeVariables       #-}
 {-# LANGUAGE RecursiveDo               #-}
 {-# LANGUAGE DeriveAnyClass            #-}
+{-# LANGUAGE FunctionalDependencies    #-}
 
 module Data.Container.Weak where
 
@@ -12,13 +13,13 @@ module Data.Container.Weak where
 import Prologue hiding (index, Indexable)
 
 import           Data.Container.Class
-import           Data.Container.Opts  (Query(..), ModsOf, ParamsOf)
-import qualified Data.Container.Opts  as M
+import           Data.Container.Opts     (Query(..), ModsOf, ParamsOf)
+import qualified Data.Container.Opts     as M
 import           Data.Container.Proxy
 import           Data.Layer
-import qualified System.Mem.Weak      as Mem
-import           System.IO.Unsafe     (unsafePerformIO)
-
+import qualified System.Mem.Weak         as Mem
+import           System.IO.Unsafe        (unsafePerformIO)
+import           Data.Container.Immersed (withDivedM)
 
 ------------------
 -- === Weak === --
@@ -34,8 +35,9 @@ type instance ContainerOf  (Weak f a) = Weak f a
 type instance DataStoreOf  (Weak f a) = ContainerOf a
 type instance FinalizerOf  (Weak f a) = Maybe f
 
-instance      HasContainer (Weak f a) where container     = id
-instance      IsContainer  (Weak f a) where fromContainer = id
+instance      Monad m => IsContainerM  m (Weak f a) where fromContainerM = return
+instance      Monad m => HasContainerM m (Weak f a) where viewContainerM = return
+                                                          setContainerM  = const . return 
 
 type instance Unlayered (Weak f a) = a
 instance      Layered   (Weak f a) where layered = lens (\(Weak _ a) -> a) (\(Weak f _) a -> Weak f a)
@@ -49,6 +51,32 @@ newtype IdxFinalizer idx = IdxFinalizer (idx -> IO ())
 type family FinalizerOf  a
 class       HasFinalizer a where finalizer :: Lens' a (FinalizerOf a)
 
+class       HasFinalizerM a m f | a -> f where viewFinalizerM :: a -> m (Maybe f)
+                                               setFinalizerM  :: Maybe f -> a -> m a
+
+-- Basic finalizer instances 
+
+instance {-# OVERLAPPABLE #-} ( FinalizerOf (Unlayered a) ~ FinalizerOf a
+                              , HasFinalizer (Unlayered a)
+                              , Layered a)
+                           => HasFinalizer a          where finalizer = layered . finalizer  
+instance {-# OVERLAPPABLE #-} HasFinalizer (Weak f a) where finalizer = lens (\(Weak f _) -> f) (\(Weak _ a) f -> Weak f a)
+
+
+
+
+instance {-# OVERLAPPABLE #-} Monad m => HasFinalizerM (Weak f a) m f where viewFinalizerM   (Weak f _) = return f
+                                                                            setFinalizerM  f (Weak _ a) = return $ Weak f a
+
+instance {-# OVERLAPPABLE #-} ( Monad m
+                              , HasFinalizerM (ContainerOf (Unlayered a)) m f
+                              , HasContainerM m (Unlayered a)
+                              , LayeredM m a
+                              )
+      => HasFinalizerM a m f where viewFinalizerM    = viewLayeredM >=> viewContainerM >=> viewFinalizerM
+                                   setFinalizerM v a = flip withDivedM a $ setFinalizerM v
+
+
 -- Instances
 
 instance Rewrapped (IdxFinalizer idx) (IdxFinalizer idx')
@@ -56,11 +84,7 @@ instance Wrapped   (IdxFinalizer idx) where
     type Unwrapped (IdxFinalizer idx) = idx -> IO ()
     _Wrapped' = iso (\(IdxFinalizer f) -> f) IdxFinalizer
 
-instance {-# OVERLAPPABLE #-} ( FinalizerOf (Unlayered a) ~ FinalizerOf a
-                              , HasFinalizer (Unlayered a)
-                              , Layered a)
-                           => HasFinalizer a          where finalizer = layered . finalizer  
-instance {-# OVERLAPPABLE #-} HasFinalizer (Weak f a) where finalizer = lens (\(Weak f _) -> f) (\(Weak _ a) f -> Weak f a)
+
 
 instance Monoid (IdxFinalizer idx) where
     mempty = wrap' . const $ return ()
@@ -75,9 +99,10 @@ instance (WeakItemAxiom a, IsContainer a, FromList (ContainerOf a)) => FromList 
     fromList = Weak def . fromContainer . fromList . fmap (unsafePerformIO . flip Mem.mkWeakPtr Nothing)
     {-# NOINLINE fromList #-}
 
+
 ---- utils
 
---mkWeakPtr = liftIO .: Mem.mkWeakPtr
+mkWeakPtr = liftIO .: Mem.mkWeakPtr
 
 ----instance Show (Weak f a) where
 ----    showsPrec d (Weak f a) = showParen (d > app_prec) $
@@ -129,62 +154,73 @@ type instance ModsOf   ExpandableOp (Weak f a) = ModsOf   GrowableOp   (Containe
 type instance ParamsOf GrowableOp   (Weak f a) = ParamsOf GrowableOp   (ContainerOf a)
 type instance ModsOf   GrowableOp   (Weak f a) = ModsOf   GrowableOp   (ContainerOf a)
 
---instance ( MonadIO m
---         , SingletonQM  (GetOpts ms) (GetOpts ps) m (Mem.Weak el) a
---         , (Result_ SingletonOp (ElInfo (Mem.Weak el) (ContainerOf a)) (GetOpts ms) ~ Result_ SingletonOp (ElInfo el (Weak f a)) (GetOpts ms))
---         ) => SingletonQM_  ms ps m el (Weak f a) where 
---    singletonM_ _ el = (fmap2 (Weak def) . singletonQM (Query :: Query (GetOpts ms) (GetOpts ps))) =<< (liftIO . flip mkWeakPtr Nothing) el
+instance ( MonadIO m
+         , SingletonQM  (GetOpts ms) (GetOpts ps) m (Mem.Weak el) a
+         , (Result_ SingletonOp (ElInfo (Mem.Weak el) (ContainerOf a)) (GetOpts ms) ~ Result_ SingletonOp (ElInfo el (Weak f a)) (GetOpts ms))
+         ) => SingletonQM_  ms ps m el (Weak f a) where 
+    singletonM_ _ el = (fmap2 (Weak def) . singletonQM (Query :: Query (GetOpts ms) (GetOpts ps))) =<< (liftIO . flip mkWeakPtr Nothing) el
 
---instance (AllocableQM  (GetOpts ms) (GetOpts ps) m    a) => AllocableQM_  ms ps m    (Weak f a) where  allocM_     _ = fmap2 (Weak def) . allocQM     (Query :: Query (GetOpts ms) (GetOpts ps))
---instance (ExpandableQM (GetOpts ms) (GetOpts ps) m    a) => ExpandableQM_ ms ps m    (Weak f a) where  expandM_    _ = nested layered   $ expandQM    (Query :: Query (GetOpts ms) (GetOpts ps))
---instance (GrowableQM   (GetOpts ms) (GetOpts ps) m    a) => GrowableQM_   ms ps m    (Weak f a) where  growM_      _ = nested layered   . growQM      (Query :: Query (GetOpts ms) (GetOpts ps))
-
-
-
-        ---- === Modification ===
-        ---- [+] Appendable
-        ---- [+] Prependable
-        ---- [+] Addable
-        ---- [ ] Removable
-        ---- [ ] Insertable
-        ---- [+] Freeable
-
-        --type instance ParamsOf AppendableOp   (Weak f a) = ParamsOf AppendableOp  (ContainerOf a)
-        --type instance ModsOf   AppendableOp   (Weak f a) = ModsOf   AppendableOp  (ContainerOf a)
-
-        --type instance ParamsOf PrependableOp  (Weak f a) = ParamsOf PrependableOp  (ContainerOf a)
-        --type instance ModsOf   PrependableOp  (Weak f a) = ModsOf   PrependableOp  (ContainerOf a)
-
-        ----type instance ParamsOf AddableOp  (Weak f a) = '[]
-        ----type instance ModsOf   AddableOp  (Weak f a) = '[]
-
-        ----type instance ParamsOf FreeableOp  (Weak f a) = ParamsOf FreeableOp  (ContainerOf a)
-        ----type instance ModsOf   FreeableOp  (Weak f a) = ModsOf   FreeableOp  (ContainerOf a)
+instance (AllocableQM  (GetOpts ms) (GetOpts ps) m    a) => AllocableQM_  ms ps m    (Weak f a) where  allocM_     _ = fmap2 (Weak def) . allocQM     (Query :: Query (GetOpts ms) (GetOpts ps))
+instance (ExpandableQM (GetOpts ms) (GetOpts ps) m    a) => ExpandableQM_ ms ps m    (Weak f a) where  expandM_    _ = nested layered   $ expandQM    (Query :: Query (GetOpts ms) (GetOpts ps))
+instance (GrowableQM   (GetOpts ms) (GetOpts ps) m    a) => GrowableQM_   ms ps m    (Weak f a) where  growM_      _ = nested layered   . growQM      (Query :: Query (GetOpts ms) (GetOpts ps))
 
 
-        --instance (AppendableQM  (M.Ixed ': GetOpts ms) (GetOpts ps) m (Mem.Weak el) a
-        --         , Result_ AppendableOp (ElInfo (Mem.Weak el) (ContainerOf a)) (GetOpts ms) ~ Result_ AppendableOp (ElInfo el (Weak f a)) (GetOpts ms)
-        --         , idx ~ IndexOf (ContainerOf a)
-        --         , MonadIO  m
-        --         , MonadFix m
-        --         ) => AppendableQM_  ms ps m el   (Weak idx  a) where 
-        --    appendM_  _ el t@(Weak f a) = mdo
-        --        Res (ix,ds) r <- appendQM (Query :: Query (M.Ixed ': GetOpts ms) (GetOpts ps)) ref a
-        --        ref           <- mkWeakPtr el $ fmap ($ ix) f
-        --        return $ Res ds (Weak f r)
 
-        --instance (PrependableQM  (M.Ixed ': GetOpts ms) (GetOpts ps) m (Mem.Weak el) a
-        --         , Result_ PrependableOp (ElInfo (Mem.Weak el) (ContainerOf a)) (GetOpts ms) ~ Result_ PrependableOp (ElInfo el (Weak f a)) (GetOpts ms)
-        --         , idx ~ IndexOf (ContainerOf a)
-        --         , MonadIO  m
-        --         , MonadFix m
-        --         ) => PrependableQM_  ms ps m el   (Weak idx  a) where 
-        --    prependM_  _ el t@(Weak f a) = mdo
-        --        Res (ix,ds) r <- prependQM (Query :: Query (M.Ixed ': GetOpts ms) (GetOpts ps)) ref a
-        --        ref           <- mkWeakPtr el $ fmap ($ ix) f
-        --        return $ Res ds (Weak f r)
+-- === Modification ===
+-- [+] Appendable
+-- [+] Prependable
+-- [+] Addable
+-- [ ] Removable
+-- [ ] Insertable
+-- [+] Freeable
+
+type instance ParamsOf AppendableOp   (Weak f a) = ParamsOf AppendableOp  (ContainerOf a)
+type instance ModsOf   AppendableOp   (Weak f a) = ModsOf   AppendableOp  (ContainerOf a)
+
+type instance ParamsOf PrependableOp  (Weak f a) = ParamsOf PrependableOp (ContainerOf a)
+type instance ModsOf   PrependableOp  (Weak f a) = ModsOf   PrependableOp (ContainerOf a)
+
+type instance ParamsOf AddableOp      (Weak f a) = ParamsOf AddableOp     (ContainerOf a)
+type instance ModsOf   AddableOp      (Weak f a) = ModsOf   AddableOp     (ContainerOf a)
+
+type instance ParamsOf FreeableOp     (Weak f a) = ParamsOf FreeableOp    (ContainerOf a)
+type instance ModsOf   FreeableOp     (Weak f a) = ModsOf   FreeableOp    (ContainerOf a)
 
 
+instance (AppendableQM  (M.Ixed ': GetOpts ms) (GetOpts ps) m (Mem.Weak el) a
+         , Result_ AppendableOp (ElInfo (Mem.Weak el) (ContainerOf a)) (GetOpts ms) ~ Result_ AppendableOp (ElInfo el (Weak (IdxFinalizer idx) a)) (GetOpts ms)
+         , idx ~ IndexOf (ContainerOf a)
+         , MonadIO  m
+         , MonadFix m
+         ) => AppendableQM_  ms ps m el (Weak (IdxFinalizer idx) a) where 
+    appendM_  _ el t@(Weak mf a) = mdo
+        Res (ix,ds) r <- appendQM (Query :: Query (M.Ixed ': GetOpts ms) (GetOpts ps)) ref a
+        ref           <- mkWeakPtr el $ fmap (($ ix) . unwrap) mf
+        return $ Res ds (Weak mf r)
+
+instance (PrependableQM  (M.Ixed ': GetOpts ms) (GetOpts ps) m (Mem.Weak el) a
+         , Result_ PrependableOp (ElInfo (Mem.Weak el) (ContainerOf a)) (GetOpts ms) ~ Result_ PrependableOp (ElInfo el (Weak (IdxFinalizer idx) a)) (GetOpts ms)
+         , idx ~ IndexOf (ContainerOf a)
+         , MonadIO  m
+         , MonadFix m
+         ) => PrependableQM_  ms ps m el (Weak (IdxFinalizer idx) a) where 
+    prependM_  _ el t@(Weak mf a) = mdo
+        Res (ix,ds) r <- prependQM (Query :: Query (M.Ixed ': GetOpts ms) (GetOpts ps)) ref a
+        ref           <- mkWeakPtr el $ fmap (($ ix) . unwrap) mf
+        return $ Res ds (Weak mf r)
+
+instance (AddableQM  (M.Ixed ': GetOpts ms) (GetOpts ps) m (Mem.Weak el) a
+         , Result_ AddableOp (ElInfo (Mem.Weak el) (ContainerOf a)) (GetOpts ms) ~ Result_ AddableOp (ElInfo el (Weak (IdxFinalizer idx) a)) (GetOpts ms)
+         , idx ~ IndexOf (ContainerOf a)
+         , MonadIO  m
+         , MonadFix m
+         ) => AddableQM_  ms ps m el (Weak (IdxFinalizer idx) a) where 
+    addM_  _ el t@(Weak mf a) = mdo
+        Res (ix,ds) r <- addQM (Query :: Query (M.Ixed ': GetOpts ms) (GetOpts ps)) ref a
+        ref           <- mkWeakPtr el $ fmap (($ ix) . unwrap) mf
+        return $ Res ds (Weak mf r)
+
+instance (FreeableQM (GetOpts ms) (GetOpts ps) m idx a, idx ~ idx') => FreeableQM_  ms ps m idx (Weak (IdxFinalizer idx) a) where freeM_ _ = nested layered . freeQM (Query :: Query (GetOpts ms) (GetOpts ps))
 
         --flip (nested layered) t $ appendQM (Query :: Query (GetOpts ms) (GetOpts ps)) =<< liftIO (flip Mem.mkWeakPtr f el)
 --instance (PrependableQM (GetOpts ms) (GetOpts ps) m el a)           => PrependableQM_ ms ps m el   (Weak idx  a) where prependM_ _      = nested layered . prependQM (Query :: Query (GetOpts ms) (GetOpts ps))

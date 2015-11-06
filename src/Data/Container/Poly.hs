@@ -297,8 +297,11 @@ import qualified Data.Container.Opts as Mods
 
 
 
+
+
 type family Ixed (op :: k) :: k where
-    Ixed (op (ms :: [*]) (ps :: [*])) = op (Mods.Ixed ': ms) ps
+    Ixed (op (ms :: [*]) (ps :: [*]))               = op (Mods.Ixed ': ms) ps
+    Ixed (op (ms :: [*]) (ps :: [*]) (m :: * -> *)) = op (Mods.Ixed ': ms) ps m
 
 ---- === Concatenation ===
 

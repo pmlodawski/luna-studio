@@ -9,6 +9,7 @@ module Data.Container.Resizable where
 
 import Prologue hiding (index, Indexable)
 
+import           Control.Monad.Identity
 import           Data.Container.Class
 import           Data.Container.Opts  (Query(..), ModsOf, ParamsOf)
 import qualified Data.Container.Opts  as M
@@ -25,11 +26,14 @@ type instance IndexOf      (Resizable s a) = IndexOf (ContainerOf a)
 type instance ContainerOf  (Resizable s a) = Resizable s a
 type instance DataStoreOf  (Resizable s a) = ContainerOf a
 
-instance      HasContainer (Resizable s a) where container     = id
-instance      IsContainer  (Resizable s a) where fromContainer = id
+instance Monad m => IsContainerM  m (Resizable s a) where fromContainerM = return
+instance Monad m => HasContainerM m (Resizable s a) where viewContainerM = return
+                                                          setContainerM  = const . return
 
-type instance Unlayered (Resizable s a) = a
-instance      Layered   (Resizable s a) where layered = lens (\(Resizable _ a) -> a) (\(Resizable s _) a -> Resizable s a)
+
+type instance       Unlayered  (Resizable s a) = a
+instance            Layered    (Resizable s a) where layered = lens (\(Resizable _ a) -> a) (\(Resizable s _) a -> Resizable s a)
+instance Monad m => LayeredM m (Resizable s a)
 
 instance      (IsContainer a, FromList (ContainerOf a), Default s) 
            => FromList  (Resizable s a) where fromList = Resizable def . fromContainer . fromList
