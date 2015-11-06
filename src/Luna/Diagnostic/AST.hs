@@ -31,9 +31,11 @@ import Luna.Syntax.Layer.Labeled
 
 import System.Platform
 import System.Process (createProcess, shell)
+import Data.Container.Class
+
 
 toGraphViz :: _ => HomoGraph ArcPtr a -> DotGraph Int
-toGraphViz = undefined
+toGraphViz g = undefined
 --toGraphViz g = DotGraph { strictGraph     = False
 --                        , directedGraph   = True
 --                        , graphID         = Nothing
@@ -43,7 +45,7 @@ toGraphViz = undefined
 --                                                     , edgeStmts = edgeStmts
 --                                                     }
 --                        }
---    where nodes           = elems g
+    --where nodes           = elems g
 --          nodeIds         = indexes g
 --          nodeLabels      = fmap (reprStyled HeaderOnly . view ast) nodes
 --          labeledNode s a = DotNode a [GV.Label . StrLabel $ fromString s]
@@ -64,7 +66,7 @@ instance (t ~ Mu (Ref Int a), GenEdges (Draft t)) => GenEdges (Typed Draft t) wh
     genEdges (Typed t a) = [(ptrIdx . fromRef . fromMu $ t, [GV.color GVC.Red])] <> genEdges a
 
 instance t ~ Mu (Ref Int a) => GenEdges (Draft t) where
-    genEdges a = undefined 
+    genEdges a = undefined
       --($ inEdges) $ case checkName a of
       --  Nothing -> id
       --  Just  t -> fmap addColor

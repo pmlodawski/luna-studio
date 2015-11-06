@@ -18,7 +18,7 @@
 
 module Main where
 
-import Prologue hiding (simple, empty, Indexable, Simple, cons, lookup, index, children, Cons, Ixed, Repr, repr)
+import Prologue hiding (simple, empty, Indexable, Simple, cons, lookup, index, children, Cons, Ixed, Repr, repr, minBound, maxBound)
 --import Data.Repr
 
 import qualified Data.Map            as Map
@@ -84,13 +84,19 @@ import Data.Vector.Dynamic as VD
 import Data.Container.Parametrized
 import Data.Container.Auto
 import Data.Container.Weak
-import qualified Data.Container.Mods as Mods
+import qualified Data.Container.Opts as Mods
+import qualified Data.Container.Instances.Vector.Lazy as Lazy
 
 import Data.Container.Monad as Container
 
 import Data.STRef
 import Control.Monad.ST
 import Data.Reprx
+import Data.Layer
+import qualified System.Mem.Weak      as Mem
+import Data.IORef
+
+import Data.Container.Immersed
 
 -- === HomoBuilder ===
 
@@ -105,20 +111,147 @@ instance (MuBuilder a m t, t ~ t') => MuBuilder a (HomoG t m) t' where
 
 -------------------------------------------------------------
 
-nytst2 :: (MonadBase (ST s) m, MonadFix m, MonadIO m) => m (Arc (Labeled Int (Typed Draft)), HomoGraph ArcPtr (Labeled Int (Typed Draft)))
---nytst2 :: IO (_, HomoGraph ArcPtr (WeakMu (Labeled Int (Typed Draft))))
-nytst2 = do
-    ref <- liftBase $ newSTRef 1
-    flip runGraphT (VectorGraph (def & finalizer .~ Just print)) $ do
-        --s    <- genTopStar
+    --nytst2 :: IO (Arc (Labeled Int (Typed Draft)), HomoGraph ArcPtr (Labeled Int (Typed Draft)))
+    --nytst2 = do
+    --    --ref <- liftBase $ newSTRef 1
+    --    ref <- stToIO $ newSTRef 1
+    --    flip runGraphT (VectorGraph (def & finalizer .~ Nothing)) $ do
+    --    --flip runGraphT (VectorGraph (def & finalizer .~ Just print)) $ do
+    --        s    <- genTopStar
 
-        --i1   <- (int 1 :: _)
-        i1   <- int 1
-        --i2   <- blank
-        --plus <- i1 @. "+"
-        --sum  <- plus @$ [arg i1, arg i2]
-        --return s
-        return i1
+    --        --i1   <- (int 1 :: _)
+    --        i1   <- int 1
+    --        i2   <- blank
+    --        plus <- i1 @. "+"
+    --        sum  <- plus @$ [arg i1, arg i2]
+    --        --return s
+    --        return s
+
+
+--main :: IO ()
+--main = do
+--    --putStrLn $ repr y
+--    --print . repr =<< nytst2
+--    --(_, g) <- nytst2
+--    --putStrLn $ repr $ nytst3
+--    --print c'
+--    --print $ take 1000 names
+
+--    --let gv = toGraphViz g
+--    --print   gv
+--    --display gv
+
+--    --let xa = fromList [1,2,3] :: Auto (Weak Vector) Int
+--    --let xb = fromList [1,2,3] :: WeakAuto Vector Int
+--    --let xa = fromList [1,2,3] :: Weak Vector Int
+--    --xc <- addM 5 xb
+--    --print $ elems xb
+--    --print $ (elems xa :: [Int])
+--    --print $ unlayer xa
+--    --print $ elems xa
+--    Lazy.main
+--    return ()
+
+
+
+
+
+
+data L1 a = L1 a deriving (Show)
+type instance (ContainerOf (L1 a)) = ContainerOf a
+instance (HasContainerM m a, Functor m) => HasContainerM m (L1 a)
+
+instance (IsContainerM m a, Functor m) => IsContainerM m (L1 a) where fromContainerM = fmap L1 . fromContainerM
+instance Wrapped (L1 a) where
+    type Unwrapped (L1 a) = a
+    _Wrapped' = iso (\(L1 a) -> a) L1
+
+
+
+
+type instance ContainerOf (IORef a) = ContainerOf a
+instance (HasContainerM m a, MonadIO m) => HasContainerM m (IORef a) where
+    viewContainerM   ref = viewContainerM =<< liftIO (readIORef ref)
+    setContainerM  v ref = ref <$ (liftIO (readIORef ref) >>= setContainerM v >>= liftIO . writeIORef ref)
+        
+instance (IsContainerM m a, MonadIO m) => IsContainerM m (IORef a) where
+    fromContainerM a = liftIO . newIORef =<< fromContainerM a
+
+type instance Unlayered (IORef a) = a
+instance MonadIO m => LayeredM m (IORef a) where
+    viewLayeredM    = liftIO . readIORef
+    setLayeredM a l = l <$ liftIO (writeIORef l a)
+
+
+--class LayeredM m l where
+--    viewLayeredM         ::                         l -> m (Unlayered l)
+--    default viewLayeredM :: (Layered l, Monad m) => l -> m (Unlayered l)
+--    viewLayeredM = return . unlayer
+
+--    setLayeredM         ::                         Unlayered l -> l -> m l
+--    default setLayeredM :: (Layered l, Monad m) => Unlayered l -> l -> m l
+--    setLayeredM = (fmap . fmap) return $ set layered
+
+
+--xxxt :: Ixed Appendable Int a => a -> (a, IndexOf (ContainerOf a))
+xxxt :: Ixed Appendable Int a => a -> (a, IndexOf (ContainerOf a))
+xxxt v = ixed append (4 :: Int) v 
+
+xxxt2 :: Appendable Int a => a -> a
+xxxt2 v = append (4 :: Int) v 
+
+type TT = Vector Int
+main :: IO ()
+main = do
+    --(v1,i,_) <- singletonQM (Query :: Query '[M.Ixed,M.Ixed] '[]) 5 :: IO (L1 (V.Vector Int), Int, Int)
+    --print (v1,i)
+
+
+
+    print " ---------------------- "
+
+    let v2  = fromList [1,2,3] :: (Auto' Exponential (L1 (Vector (Int))))
+    v2' <- appendM 5 v2        :: IO (Auto' Exponential (L1 (Vector (Int))))
+    i1  <- indexM  0 v2'
+    print i1
+
+    tt <- viewImmersedM v2' :: IO (PrimStoreOf (Auto' Exponential (L1 (Vector (Int)))))
+    print tt
+
+    vref2 <- newIORef v2
+    ir1 <- indexM 1 vref2
+    print ir1
+
+    vref3 <- allocM 10 :: IO (IORef (Weak' (Auto' Exponential (L1 (Vector (Mem.Weak Int))))))
+    vref3' <- setFinalizerM (Just $ IdxFinalizer $ \idx -> () <$ freeM idx vref3) vref3
+    vref3_1 <- appendM 5 vref3'
+    --ttref <- viewImmersedM vref3 :: IO (Vector Int)
+
+    --print ttref
+
+    let v4 = fromList [1,2,3] :: Weak' (Auto' Exponential (L1 (Vector (Mem.Weak Int))))
+
+    --putStrLn $ "v2: "           <> show v2
+    --putStrLn $ "size: "         <> show (size     v2)
+    --putStrLn $ "min bounds: "   <> show (minBound v2)
+    --putStrLn $ "max bounds: "   <> show (maxBound v2)
+    --print $ elems (expand v2)
+    --print $ size v2'
+    --putStrLn $ "after expand: " <> show (expand   v2)
+    --putStrLn $ "after grow: "   <> show (grow 10  v2)
+ 
+    --s <- sizeM v2 
+    --print s
+
+    --print =<< ixed ixed expandM v2
+    
+    print "END"
+
+
+
+
+--(fmap . fmap . fmap) (fromJust . unsafePerformIO . Mem.deRefWeak) . queried (Proxy :: Proxy q) elemsM' . unlayer
+
 
 --nytst3 :: Mu (Typed Draft)
 --nytst3 = flip StarBuilder.eval Nothing $ runIdentityT $ do
@@ -267,38 +400,7 @@ valCons = cons
 --type AutoVector a = Reusable (Resizable Duplicate (Vector a))
 --type AutoVector a = Reusable (Resizable Duplicate (Vector a))
 
-    --main = do
-    --    --putStrLn $ repr y
-    --        --print $ repr $ nytst2
-    --    --putStrLn $ repr $ nytst3
-    --    --print c'
-    --    --print $ take 1000 names
 
-    --    --let gv = toGraphViz gr3
-    --    --print   gv
-    --    --display gv
-
-    --    VD.tst
-
-    --    --V.test
-    --    --BT.test
-    --    --print tstc
-    --    let xa  = alloc 4 :: AutoVector Int
-    --        v = mempty :: Vector Int
-    --        --i  = 600000
-    --        --xb = add (1::Int) xa
-    --        --xc = add (1::Int) xb
-    --        --xd = add (1::Int) xc
-    --        --xe = add (1::Int) xd
-    --        --xf = add (1::Int) xe
-    --        --xg = unsafeErase 2 xf
-    --        --xb = insert i 1 v
-    --    --print $ length $ freeIxs xb
-    --    --print $ freeIxs xg
-    --    --print $ xxx 2 xf
-    --    --print $ size xb
-    --    print v
-    --    print $ append2 (Mods :: Mods '[Ixed]) 1 v
 
 
 --class                          Appendable2 opts cont     el out | opts cont el -> out where append2 :: Mods opts -> el -> cont -> out
@@ -339,28 +441,28 @@ instance Repr s (VectorGraph a) where repr _ = fromString "mu"
 --xxx :: Unchecked (Ixed Expandable) t => t -> (_,t)
 --xxx v = unchecked ixed expand v
 
-data Dt = Dt Int deriving (Show)
+--data Dt = Dt Int deriving (Show)
 
-mkAs = fromList (fmap Dt [1..1000]) :: Weak Vector Dt
+--mkAs = fromList (fmap Dt [1..1000]) :: Weak Vector Dt
 
---c = mempty :: Auto (Weak Vector) Int
+----c = mempty :: Auto (Weak Vector) Int
 
-c = (mempty :: Weak Vector Int) & finalizer .~ Just print
-c' = (mempty :: Weak (Auto Vector) Int) & finalizer .~ Just print
+--c = (mempty :: Weak Vector Int) & finalizer .~ Just print
+--c' = (mempty :: Weak (Auto Vector) Int) & finalizer .~ Just print
 
-d = mempty :: Vector Int
+--d = mempty :: Vector Int
 
---c = Weak (Just $ const $ print ("uh" :: String)) (mempty :: Vector Int) :: Weak Vector Int
+----c = Weak (Just $ const $ print ("uh" :: String)) (mempty :: Vector Int) :: Weak Vector Int
 
-xxf :: Ixed (AddableM el m) t => t -> el -> m (IndexOf' (DataStoreOf (ContainerOf t)), t)
-xxf v c = ixed addM c v
+--xxf :: Ixed (AddableM el m) t => t -> el -> m (IndexOf' (DataStoreOf (ContainerOf t)), t)
+--xxf v c = ixed addM c v
 
-main = do
-    --print c
-    --print $ (runIdentity $ sizeM d)
-    --print =<< ixed appendM (2 :: Int) =<< appendM (2 :: Int) =<< appendM (2 :: Int) =<< appendM (2 :: Int) =<< appendM (2 :: Int) c'
+            --main = do
+            --    --print c
+            --    --print $ (runIdentity $ sizeM d)
+            --    --print =<< ixed appendM (2 :: Int) =<< appendM (2 :: Int) =<< appendM (2 :: Int) =<< appendM (2 :: Int) =<< appendM (2 :: Int) c'
 
-    print "end"
+            --    print "end"
 
 --xxx :: _ => _
 --xxx v = unchecked try index (10 :: Int) v

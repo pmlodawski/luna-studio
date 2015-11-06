@@ -26,14 +26,14 @@ import Luna.Syntax.AST.Decl
 --- === Graph ===
 
 --newtype HeteroVectorGraph   = HeteroVectorGraph { __hetReg :: Hetero' Vector } deriving (Show, Default)
-newtype VectorGraph       a = VectorGraph       { __homReg :: Auto (Weak Vector) a       } deriving (Show, Default) -- , Functor, Foldable, Traversable)
+newtype VectorGraph       a = VectorGraph       { __homReg :: Vector a       } deriving (Show, Default) -- , Functor, Foldable, Traversable)
 --newtype VectorGraph       a = VectorGraph       { __homReg :: Auto (Weak Vector) a       } deriving (Show, Default, Functor, Foldable, Traversable)
 
-type instance DataStoreOf (VectorGraph a) = DataStoreOf (Auto (Weak Vector) a)
-type instance ContainerOf (VectorGraph a) = ContainerOf (Auto (Weak Vector) a)
+--type instance DataStoreOf (VectorGraph a) = DataStoreOf (Auto (Weak Vector) a)
+type instance ContainerOf (VectorGraph a) = Vector a -- ContainerOf (Auto (Weak Vector) a)
 
-instance IsContainer  (VectorGraph a) where fromContainer = VectorGraph . fromContainer
-instance HasContainer (VectorGraph a) where container     = lens (\(VectorGraph a) -> a) (const VectorGraph) . container
+--instance IsContainer  (VectorGraph a) where fromContainer = VectorGraph . fromContainer
+--instance HasContainer (VectorGraph a) where container     = lens (\(VectorGraph a) -> a) (const VectorGraph) . container
 
 --makeLenses ''HeteroVectorGraph
 makeLenses ''VectorGraph
@@ -170,10 +170,10 @@ evalBuilderT = evalT
 --instance Default g => Default g where
 --    def = BldrState def def
 
-instance (t ~ Ref i a, MonadIO m, Ixed (AddableM (a (Mu t)) (GraphBuilderT g m)) g, PtrFrom idx i, idx ~ IndexOf' (DataStoreOf (ContainerOf g)))
-      => MuBuilder a (GraphBuilderT g m) t where
-    buildMu a = do print ("oh" :: String)
-                   fmap (Mu . Ref . ptrFrom) . modifyM2 $ ixed addM a
+        --instance (t ~ Ref i a, MonadIO m, Ixed (AddableM (a (Mu t)) (GraphBuilderT g m)) g, PtrFrom idx i, idx ~ IndexOf' (DataStoreOf (ContainerOf g)))
+        --      => MuBuilder a (GraphBuilderT g m) t where
+        --    buildMu a = do print ("oh" :: String)
+        --                   fmap (Mu . Ref . ptrFrom) . modifyM2 $ ixed addM a
 
 
 --instance (t ~ Ref i a, MonadIO m, Ixed (Addable (WeakMu a (Mu t))) g, PtrFrom idx i, idx ~ IndexOf' (DataStoreOf (ContainerOf g)))
