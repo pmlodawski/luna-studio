@@ -21,7 +21,7 @@ import           Data.List            ((\\))
 -- === Reusable === --
 ----------------------
 
-data Reusable idx a = Reusable [idx] !a deriving (Show, Functor, Foldable, Traversable, Default, Monoid)
+data Reusable idx a = Reusable [idx] !a deriving (Show, Functor, Foldable, Traversable, Monoid)
 type Reusable'    a = Reusable (IndexOf a) a
 
 type instance IndexOf      (Reusable idx a) = IndexOf (ContainerOf a)
@@ -39,6 +39,8 @@ instance Monad m => LayeredM m (Reusable idx a)
 instance      (IsContainer a, FromList (ContainerOf a)) 
            => FromList  (Reusable idx a) where fromList = Reusable mempty . fromContainer . fromList
 type instance Item      (Reusable idx a) = Item (ContainerOf a)
+
+instance Default a => Default (Reusable idx a) where def = Reusable def def
 
 _indexes :: Lens' (Reusable idx a) [idx]
 _indexes = lens (\(Reusable ixs _) -> ixs) (\(Reusable _ a) ixs -> Reusable ixs a)
@@ -115,24 +117,27 @@ instance ( GrowableQM (M.Ixed ': GetOpts ms) (GetOpts ps) m a, idx ~ IndexOf (Co
 -- [ ] Insertable
 -- [+] Freeable
 
-type instance ParamsOf AppendableOp   (Reusable idx a) = ParamsOf AppendableOp  (ContainerOf a)
-type instance ModsOf   AppendableOp   (Reusable idx a) = ModsOf   AppendableOp  (ContainerOf a)
+type instance ParamsOf AppendableOp   (Reusable idx a) = ParamsOf AppendableOp   (ContainerOf a)
+type instance ModsOf   AppendableOp   (Reusable idx a) = ModsOf   AppendableOp   (ContainerOf a)
 
 type instance ParamsOf PrependableOp  (Reusable idx a) = ParamsOf PrependableOp  (ContainerOf a)
 type instance ModsOf   PrependableOp  (Reusable idx a) = ModsOf   PrependableOp  (ContainerOf a)
 
-type instance ParamsOf AddableOp  (Reusable idx a) = '[]
-type instance ModsOf   AddableOp  (Reusable idx a) = '[]
+type instance ParamsOf AddableOp      (Reusable idx a) = ParamsOf AddableOp      (ContainerOf a)
+type instance ModsOf   AddableOp      (Reusable idx a) = ModsOf   AddableOp      (ContainerOf a)
 
-type instance ParamsOf FreeableOp  (Reusable idx a) = ParamsOf FreeableOp  (ContainerOf a)
-type instance ModsOf   FreeableOp  (Reusable idx a) = ModsOf   FreeableOp  (ContainerOf a)
+type instance ParamsOf FreeableOp     (Reusable idx a) = ParamsOf FreeableOp     (ContainerOf a)
+type instance ModsOf   FreeableOp     (Reusable idx a) = ModsOf   FreeableOp     (ContainerOf a)
 
 
 instance (AppendableQM  (GetOpts ms) (GetOpts ps) m el a)           => AppendableQM_  ms ps m el   (Reusable idx  a) where appendM_  _      = nested layered . appendQM  (Query :: Query (GetOpts ms) (GetOpts ps))
 instance (PrependableQM (GetOpts ms) (GetOpts ps) m el a)           => PrependableQM_ ms ps m el   (Reusable idx  a) where prependM_ _      = nested layered . prependQM (Query :: Query (GetOpts ms) (GetOpts ps))
-instance (InsertableM m idx el a, ExpandableM m (Reusable idx a))   => AddableQM_    '[] ps m el   (Reusable idx  a) where addM_     q el t = case view _indexes t of
-                                                                                                                               (x:xs) -> fmap2 (Reusable xs) $ insertM' x el $ unlayer t
-                                                                                                                               []     -> addM_ q el =<< expandM t
+instance (InsertableQM  (GetOpts ms) (GetOpts ps) m idx el a
+         , ExpandableM m (Reusable idx a)
+         , Result_ InsertableOp (IdxElInfo idx el (ContainerOf a)) (GetOpts ms) ~ Result_ AddableOp (ElInfo el (Reusable idx a)) (GetOpts ms)
+         ) => AddableQM_     ms ps m el   (Reusable idx  a) where addM_     q el t = case view _indexes t of
+                                                                                         (x:xs) -> fmap2 (Reusable xs) $ insertQM (Query :: Query (GetOpts ms) (GetOpts ps)) x el $ unlayer t
+                                                                                         []     -> addM_ q el =<< expandM t
 instance (FreeableQM (GetOpts ms) (GetOpts ps) m idx a, idx ~ idx') => FreeableQM_    ms ps m idx  (Reusable idx' a) where freeM_ _ idx     = fmap2 (_indexes %~ (idx:)) . nested layered (freeQM (Query :: Query (GetOpts ms) (GetOpts ps)) idx)
 
 

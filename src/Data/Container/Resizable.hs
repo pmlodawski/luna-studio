@@ -20,7 +20,7 @@ import           Data.Layer
 -- === Resizable === --
 ----------------------
 
-data Resizable style a = Resizable !style !a deriving (Show, Functor, Foldable, Traversable, Default, Monoid)
+data Resizable style a = Resizable !style !a deriving (Show, Functor, Foldable, Traversable, Monoid)
 
 type instance IndexOf      (Resizable s a) = IndexOf (ContainerOf a)
 type instance ContainerOf  (Resizable s a) = Resizable s a
@@ -38,6 +38,8 @@ instance Monad m => LayeredM m (Resizable s a)
 instance      (IsContainer a, FromList (ContainerOf a), Default s) 
            => FromList  (Resizable s a) where fromList = Resizable def . fromContainer . fromList
 type instance Item      (Resizable s a) = Item (ContainerOf a)
+
+instance (Default s, Default a) => Default (Resizable s a) where def = Resizable def def
 
 style :: Lens' (Resizable s a) s
 style = lens (\(Resizable s _) -> s) (\(Resizable _ a) s -> Resizable s a)

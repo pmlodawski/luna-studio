@@ -79,8 +79,8 @@ class    PtrIdx p i | p -> i    where ptrIdx :: p -> i
 instance PtrIdx (Ptr  i   a) i  where ptrIdx (Ptr i)  = i
 instance PtrIdx (HPtr i m a) i  where ptrIdx (HPtr p) = ptrIdx p
 
---instance {-# OVERLAPPABLE #-} (p ~ i) => PtrFrom p         i where ptrFrom = Ptr
---instance                                 PtrFrom (Ptr i a) i where ptrFrom (Ptr i) = Ptr i
+instance {-# OVERLAPPABLE #-} (p ~ i) => PtrFrom p         i where ptrFrom = Ptr
+instance                                 PtrFrom (Ptr i a) i where ptrFrom (Ptr i) = Ptr i
 
 
 ----- === Hetero Containers ===
