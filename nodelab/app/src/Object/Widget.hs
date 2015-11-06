@@ -1,10 +1,11 @@
 {-# LANGUAGE ExistentialQuantification #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Object.Widget where
 
-import           Utils.PreludePlus
+import           Utils.PreludePlus hiding ((.=), children)
 import           Utils.Vector
 import           Utils.CtxDynamic
 import           Event.Mouse    (MousePosition, MouseButton)
@@ -16,6 +17,7 @@ import           Reactive.State.Camera     (Camera)
 import qualified Reactive.State.Camera     as Camera
 import           Reactive.Commands.Command (Command)
 import           Object.UITypes
+import           Data.Aeson (ToJSON, toJSON, object, (.=))
 
 type DisplayObject = CtxDynamic DisplayObjectClass
 
@@ -23,6 +25,7 @@ type DisplayObjectCtx a =   ( Show a
                             , Typeable a
                             , IsDisplayObject a
                             , UIDisplayObject a
+                            , ToJSON a
                             )
 
 class    DisplayObjectCtx a => DisplayObjectClass a
@@ -36,7 +39,7 @@ data WidgetFile a b = WidgetFile { _objectId :: WidgetId
                                  , _parent   :: Maybe WidgetId
                                  , _children :: [WidgetId]
                                  , _handlers :: UIHandlers a
-                                 }
+                                 } deriving (Generic)
 
 type Position = Vector2 Double
 
@@ -62,6 +65,9 @@ instance IsDisplayObject DisplayObject where
 instance Show DisplayObject where
     show = withCtxDynamic show
 
+instance ToJSON DisplayObject where
+    toJSON = withCtxDynamic toJSON
+
 data DragState = DragState { _widgetId       :: WidgetId
                            , _widgetMatrix   :: [Double]
                            , _scene          :: SceneType
@@ -70,7 +76,9 @@ data DragState = DragState { _widgetId       :: WidgetId
                            , _startPos       :: Vector2 Double
                            , _previousPos    :: Vector2 Double
                            , _currentPos     :: Vector2 Double
-                           } deriving (Show, Eq)
+                           } deriving (Show, Eq, Generic)
+
+instance ToJSON DragState
 
 sceneToLocal :: Vector2 Double -> [Double] -> Vector2 Double
 sceneToLocal (Vector2 x y) [ aa, ab, ac, ad
@@ -132,3 +140,10 @@ makeLenses ''DragState
 makeLenses ''UIHandlers
 
 makeLenses ''WidgetFile
+
+instance ToJSON b => ToJSON (WidgetFile a b) where
+    toJSON file = object [ "_objectId" .= (toJSON $ file ^. objectId)
+                         , "_widget"   .= (toJSON $ file ^. widget  )
+                         , "_parent"   .= (toJSON $ file ^. parent  )
+                         , "_children" .= (toJSON $ file ^. children)
+                         ]

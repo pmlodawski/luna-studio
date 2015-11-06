@@ -20,6 +20,7 @@ import qualified Data.Text.Lazy   as Text
 import           Data.Text.Lazy   (Text)
 import qualified Data.IntMap.Lazy as IntMap
 import           Data.IntMap.Lazy (IntMap)
+import           Data.Aeson (ToJSON)
 
 import           Reactive.State.Camera (Camera, screenToWorkspace)
 
@@ -28,17 +29,20 @@ import System.IO.Unsafe (unsafePerformIO)
 
 data Ports = Ports { _inputPorts  :: PortCollection
                    , _outputPorts :: PortCollection
-                   } deriving (Eq, Show)
+                   } deriving (Eq, Show, Generic)
 
 data Node = Node { _nodeId      :: NodeId
                  , _nodePos     :: Vector2 Double
                  , _expression  :: Text
                  , _ports       :: Ports
                  , _nodeType    :: NodeType
-                 } deriving (Eq, Show, Typeable)
+                 } deriving (Eq, Show, Typeable, Generic)
 
 makeLenses ''Ports
 makeLenses ''Node
+
+instance ToJSON Ports
+instance ToJSON Node
 
 type NodeCollection   = [Node]
 type NodesMap         = IntMap Node
@@ -49,35 +53,13 @@ instance Default Ports where
 instance Default Node where
     def = Node (-1) def "" def (NodeType 0 [])
 
-instance PrettyPrinter Ports where
-    display (Ports input output)
-        = display input <> " " <> display output
-
-instance PrettyPrinter Node where
-    display (Node ident pos expr ports _)
-        = "n(" <> display ident
-        <> " " <> display pos
-        <> " " <> display expr
-        <> " " <> display ports
-        <> ")"
-
-isNode :: Object Dynamic -> Bool
-isNode obj = isJust (unpackDynamic obj :: Maybe Node)
-
-
 data PortRef = PortRef { _refPortNodeId :: NodeId
                        , _refPortType   :: PortType
                        , _refPortId     :: PortId
-                       } deriving (Eq, Show)
+                       } deriving (Eq, Show, Generic)
 
 makeLenses ''PortRef
-
-instance PrettyPrinter PortRef where
-    display (PortRef portNodeId portType portId)
-        = "n(" <> display portNodeId
-        <> " " <> display portType
-        <> " " <> display portId
-        <> ")"
+instance ToJSON PortRef
 
 instance Ord PortRef where
     (PortRef anid apt apid) `compare` (PortRef bnid bpt bpid)  = anid `compare` bnid

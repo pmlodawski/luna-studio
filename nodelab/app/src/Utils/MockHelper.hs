@@ -13,18 +13,20 @@ import           Data.Text.Lazy (Text)
 
 import           Object.Object (PortId(..))
 import           Object.Port
+import           Data.Aeson (ToJSON)
 
 
 data PortConstraint = PortConstraint { _portNums  :: [PortId]
                                      , _portsType :: ValueType
-                                     } deriving (Eq, Show)
+                                     } deriving (Eq, Show, Generic)
 makeLenses ''PortConstraint
-
+instance ToJSON PortConstraint
 
 data NodeType = NodeType { _portCount       :: Int
                          , _portConstraints :: [PortConstraint]
-                         } deriving (Eq, Show)
+                         } deriving (Eq, Show, Generic)
 makeLenses ''NodeType
+instance ToJSON NodeType
 
 
 portsMaxin  = 9

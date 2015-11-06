@@ -15,6 +15,7 @@ import qualified Reactive.State.Drag              as Drag
 import qualified Reactive.State.Connect           as Connect
 import qualified Reactive.State.UIRegistry        as UIRegistry
 import qualified Reactive.State.ConnectionPen     as ConnectionPen
+import Data.Aeson (ToJSON)
 
 data State = State { _mousePos       :: Vector2 Int
                    , _graph          :: Graph.State
@@ -25,25 +26,14 @@ data State = State { _mousePos       :: Vector2 Int
                    , _uiRegistry     :: UIRegistry.State State
                    , _connectionPen  :: ConnectionPen.State
                    , _workspace      :: Workspace
-                   } deriving (Eq, Show)
+                   } deriving (Eq, Show, Generic)
+
+instance ToJSON State
 
 makeLenses ''State
 
 initialState :: Workspace -> State
 initialState workspace = State def def def def def def def def workspace
-
-instance PrettyPrinter State where
-    display (State mousePos graph camera multiSelection drag connect uiRegistry pen workspace)
-        = "gS(" <> display mousePos
-         <> " " <> display graph
-         <> " " <> display camera
-         <> " " <> display multiSelection
-         <> " " <> display drag
-         <> " " <> display connect
-         <> " " <> display uiRegistry
-         <> " " <> display pen
-         <> " " <> display workspace
-         <> ")"
 
 genNodeId :: State -> NodeId
 genNodeId state = Graph.genNodeId $ state ^. graph

@@ -2,12 +2,15 @@ module Utils.Vector where
 
 import           Utils.PreludePlus
 
+import Data.Aeson (ToJSON)
 
 data Vector2 a = Vector2 { _x :: a
                          , _y :: a
-                         } deriving (Eq, Show, Functor)
+                         } deriving (Eq, Show, Functor, Generic)
 
 makeLenses ''Vector2
+
+instance ToJSON a => ToJSON (Vector2 a)
 
 instance Default a => Default (Vector2 a) where
     def = Vector2 def def

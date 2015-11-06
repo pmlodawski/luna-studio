@@ -8,6 +8,7 @@ import Data.Fixed
 import Object.Object
 import Object.Widget
 import Numeric
+import Data.Aeson (ToJSON)
 
 data Slider a = Slider { _position     :: Vector2 Double
                        , _size         :: Vector2 Double
@@ -17,11 +18,12 @@ data Slider a = Slider { _position     :: Vector2 Double
                        , _normValue    :: Double
                        , _sliderPortId :: PortId
                        , _enabled      :: Bool
-                       } deriving (Eq, Show, Typeable)
+                       } deriving (Eq, Show, Typeable, Generic)
 
 makeLenses ''Slider
+instance ToJSON a => ToJSON (Slider a)
 
-class (Num a, Show a, Typeable a) => IsSlider a where
+class (Num a, Show a, Typeable a, ToJSON a) => IsSlider a where
     displayValue ::           Slider a -> String
     value        ::           Slider a -> a
     setValue     :: a      -> Slider a -> Slider a

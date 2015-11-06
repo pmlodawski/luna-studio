@@ -47,7 +47,7 @@ executable nodelab
                      , binary
                      , data-default
                      , ghcjs-base
-                     , ghcjs-dom >=0.2 && <0.3
+                     , ghcjs-dom
                      , ghcjs-prim
                      , reactive-banana
                      , text
@@ -74,6 +74,7 @@ executable nodelab
                      , graphviz
                      , vector
                      , luna-tc
+                     , aeson
   hs-source-dirs:      app/src
   default-language:    Haskell2010
 

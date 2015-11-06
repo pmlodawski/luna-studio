@@ -19,10 +19,14 @@ import qualified Reactive.State.UIRegistry      as UIRegistry
 import           Reactive.Commands.Command      (Command, performIO)
 import           Reactive.Commands.RegisterNode (registerNode)
 import           Reactive.Commands.UpdateNode   (updateNode)
-
+import           Control.Monad.State
 
 import qualified Reactive.Plugins.Core.Action.NodeSearcher.Mock as Mock
 import           Data.Text.Lazy (Text)
+
+import Data.Aeson (encode, toJSON)
+import GHCJS.Types (JSVal)
+import GHCJS.Marshal (toJSVal)
 
 toAction :: Event -> Maybe (Command Global.State ())
 toAction (NodeSearcher (NodeSearcher.Event "query" expr _))           = Just $ querySearch expr
@@ -40,10 +44,18 @@ querySearch = performIO . UI.displayQueryResults . Mock.getItemsSearch
 queryTree :: Text -> Command a ()
 queryTree = performIO . UI.displayTreeResults . Mock.getItemsTree
 
+foreign import javascript unsafe "console.log($1)" clog :: JSVal -> IO ()
+
 openFresh :: Command Global.State ()
 openFresh = do
     mousePos <- use Global.mousePos
     performIO $ UI.initNodeSearcher "" 0 mousePos
+    st <- get
+    performIO $ do
+        let json = toJSON st
+        jv <- toJSVal json
+        clog jv
+
 
 openEdit :: Command Global.State ()
 openEdit = do

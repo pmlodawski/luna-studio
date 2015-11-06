@@ -1,9 +1,9 @@
 module Object.Object where
 
 import Utils.PreludePlus
+import Data.Aeson (ToJSON)
 
 type ID = Int
-
 
 type NodeId = ID
 type ConnectionId = ID
@@ -12,13 +12,9 @@ type NodeIdCollection = [NodeId]
 
 data PortId = AllPorts
             | PortNum ID
-            deriving (Ord, Eq, Show)
+            deriving (Ord, Eq, Show, Generic)
 
---instance Ord PortId where
---    AllPorts    `compare` AllPorts    = EQ
---    AllPorts    `compare` _           = LT
---    _           `compare` AllPorts    = GT
---    (PortNum a) `compare` (PortNum b) = a `compare` b
+instance ToJSON PortId
 
 portIdToNum :: PortId -> Int
 portIdToNum AllPorts    = 0
@@ -34,10 +30,6 @@ createOutputPortId num = PortNum (num - 1)
 
 type PortIdCollection = [PortId]
 
-data PortType = InputPort | OutputPort deriving (Ord, Eq, Show)
+data PortType = InputPort | OutputPort deriving (Ord, Eq, Show, Generic)
 
-instance PrettyPrinter PortType where
-    display = show
-
-instance PrettyPrinter PortId where
-    display portId = "pId(" <> show portId <> ")"
+instance ToJSON PortType

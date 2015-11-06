@@ -29,6 +29,7 @@ ghcjs  -package-db $(stack path --snapshot-pkg-db) \
        -package luna-protobuf-old-gen \
        -package flowbox-batch-protobuf \
        -package batch-lib-project-manager-api \
+       -package aeson \
        -XNoImplicitPrelude \
        -XDoAndIfThenElse \
        -XTemplateHaskell \

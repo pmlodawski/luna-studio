@@ -1,7 +1,8 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Reactive.State.Graph where
 
-
-import           Utils.PreludePlus
+import           Utils.PreludePlus hiding ((.=))
 import           Utils.Vector
 
 import           Data.IntMap.Lazy (IntMap)
@@ -16,6 +17,7 @@ import           Object.Node
 import           Luna.Syntax.Builder.Graph hiding (get, put)
 import           Luna.Syntax.Builder
 import           AST.AST
+import           Data.Aeson
 
 
 type NodesRefsMap = IntMap GraphRefMeta
@@ -23,46 +25,32 @@ type NodesRefsMap = IntMap GraphRefMeta
 data Connection = Connection { _connId      :: ConnectionId
                              , _source      :: PortRef
                              , _destination :: PortRef
-                             } deriving (Eq, Show)
+                             } deriving (Eq, Show, Generic)
 
 makeLenses ''Connection
+instance ToJSON Connection
 
 type ConnectionsMap = IntMap Connection
 
 data State = State { _nodesMap       :: NodesMap       -- don't access it directly
                    , _connectionsMap :: ConnectionsMap -- don't access it directly
                    , _nodesRefsMap   :: NodesRefsMap
-                   , _focusedNodeId  :: NodeId
                    , _graphMeta      :: GraphMeta
-                   } deriving (Show)
+                   } deriving (Show, Generic)
 
 makeLenses ''State
 
-
+instance ToJSON State where
+    toJSON st = object [ "_nodes"       .= (toJSON $ st ^. nodesMap)
+                       , "_connections" .= (toJSON $ st ^. connectionsMap)
+                       ]
 
 -- TODO: Implement in full
 instance Eq State where
     a == b = (a ^. nodesMap) == (b ^. nodesMap)
 
 instance Default State where
-    def = State def def def def def
-
-instance PrettyPrinter Connection where
-    display (Connection connId source destination) =
-          "conn("  <> display connId
-        <> " "     <> display source
-        <> " "     <> display destination
-        <> ")"
-
-instance PrettyPrinter State where
-    display (State nodesMap connections nodesRefsMap focusedNodeId bldrState) =
-          "graph(" <> show nodesMap
-        <> " "     <> display connections
-        <> " "     <> display nodesRefsMap
-        <> " "     <> display focusedNodeId
-        <> " "     <> show bldrState
-        <> ")"
-
+    def = State def def def def
 
 connectionToRefs :: Connection -> (PortRef, PortRef)
 connectionToRefs conn = (conn ^. source, conn ^. destination)

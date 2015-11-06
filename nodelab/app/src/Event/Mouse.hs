@@ -7,12 +7,15 @@ import Object.Object
 import Event.Keyboard  (KeyMods(..))
 import Utils.Vector
 import Object.UITypes
+import Data.Aeson (ToJSON)
 
 data MouseButton = NoButton
                  | LeftButton
                  | MiddleButton
                  | RightButton
-                 deriving (Eq, Show)
+                 deriving (Eq, Show, Generic)
+
+instance ToJSON MouseButton
 
 toMouseButton :: Int -> MouseButton
 toMouseButton 1  = LeftButton

@@ -6,6 +6,7 @@ import Utils.Angle
 import Data.Fixed
 
 import Object.Object
+import Data.Aeson (ToJSON)
 
 
 data ValueType = VTBool
@@ -18,7 +19,7 @@ data ValueType = VTBool
                | VTNumeric
                | VTAny
                | VTObject
-               deriving (Ord, Eq, Show)
+               deriving (Ord, Eq, Show, Generic)
 
 type ColorNum = Int
 
@@ -38,30 +39,22 @@ colorError :: ColorNum
 colorError = 13
 
 
-data DraggingTo = DraggingTo { _draggingTo :: Maybe (Vector2 Double) } deriving (Eq, Show)
+data DraggingTo = DraggingTo { _draggingTo :: Maybe (Vector2 Double) } deriving (Eq, Show, Generic)
 
 data Location = Default
               | Connected NodeIdCollection DraggingTo
-              deriving (Eq, Show)
+              deriving (Eq, Show, Generic)
 
 data Port = Port { _portId        :: PortId
                  , _portValueType :: ValueType
-                 } deriving (Eq, Show)
+                 } deriving (Eq, Show, Generic)
 
 makeLenses ''Port
 
+instance ToJSON Port
+instance ToJSON ValueType
+
 type PortCollection   = [Port]
-
-instance PrettyPrinter ValueType where
-    display = show
-
-
-instance PrettyPrinter Port where
-    display (Port ident tpe)
-         = "n(" <> display ident
-         <> " " <> display tpe
-         <> ")"
-
 
 portDefaultAngle :: PortType -> Int -> PortId -> Vector2 Double
 portDefaultAngle portType numPorts portId = (/ 10.0) <$> Vector2 (cos angleMod) (sin angleMod) where

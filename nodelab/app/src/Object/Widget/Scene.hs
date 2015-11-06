@@ -4,10 +4,12 @@ module Object.Widget.Scene where
 
 import Utils.PreludePlus
 import Object.Widget
+import Data.Aeson (ToJSON)
 
-data Scene = Scene deriving (Show)
+data Scene = Scene deriving (Show, Generic)
 
 makeLenses ''Scene
+instance ToJSON Scene
 
 instance IsDisplayObject Scene where
     widgetPosition = error "Scene has no position"

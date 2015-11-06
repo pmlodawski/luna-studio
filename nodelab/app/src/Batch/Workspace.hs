@@ -4,18 +4,22 @@ import Utils.PreludePlus
 import Batch.Project
 import Batch.Library
 import Batch.Breadcrumbs
+import Data.Aeson (ToJSON)
 
 data InterpreterState = Fresh
                       | InsertsInProgress Int
                       | AllSet
-                      deriving (Show, Eq)
+                      deriving (Show, Eq, Generic)
 
 data Workspace = Workspace { _project          :: Project
                            , _library          :: Library
                            , _breadcrumbs      :: Breadcrumbs
                            , _interpreterState :: InterpreterState
                            , _shouldLayout     :: Bool
-                           } deriving (Show, Eq)
+                           } deriving (Show, Eq, Generic)
+
+instance ToJSON InterpreterState
+instance ToJSON Workspace
 
 makeLenses ''Workspace
 
@@ -25,10 +29,3 @@ addSerializationMode goal current = case current of
     InsertsInProgress x | (x + 1) == goal -> AllSet
                         | otherwise       -> InsertsInProgress $ x + 1
     AllSet -> AllSet
-
-instance PrettyPrinter Workspace where
-    display workspace = "Workspace(" <> show (workspace ^. project)
-                              <> "," <> show (workspace ^. library)
-                              <> "," <> show (workspace ^. breadcrumbs)
-                              <> "," <> show (workspace ^. shouldLayout)
-                              <> ")"

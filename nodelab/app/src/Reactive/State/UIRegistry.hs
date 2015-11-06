@@ -1,7 +1,8 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Reactive.State.UIRegistry where
 
-
-import           Utils.PreludePlus hiding (children, lookup)
+import           Utils.PreludePlus hiding (children, lookup, (.=))
 import           Utils.Vector
 
 import           Object.Widget
@@ -10,6 +11,7 @@ import           Object.Widget.Connection
 import UI.Widget.Connection ()
 
 import           Data.IntMap.Lazy (IntMap)
+import qualified Data.Text.Lazy as Text
 import qualified Data.IntMap.Lazy as IntMap
 import           Data.Tuple       (swap)
 
@@ -22,6 +24,8 @@ import           Control.Monad.Trans.RWS (RWS)
 
 import           Reactive.Commands.Command (Command, performIO, pureCommand)
 
+import Data.Aeson (ToJSON, toJSON, object, (.=), Value)
+import qualified Data.HashMap.Strict as H
 
 sceneInterfaceId, sceneGraphId, currentConnectionId :: Int
 sceneInterfaceId    = 1
@@ -34,9 +38,19 @@ data State a = State { _widgets         :: WidgetMap a
                      , _widgetOver      :: Maybe WidgetId
                      , _dragState       :: Maybe DragState
                      , _focusedWidget   :: Maybe WidgetId
-                     }
+                     } deriving (Generic)
 
 makeLenses ''State
+
+intMapToJSON :: WidgetMap a -> Value
+intMapToJSON map = object $ (\(k, v) -> (Text.toStrict . Text.pack $ show k) .= (toJSON v)) <$> IntMap.toList map
+
+instance ToJSON (State a) where
+    toJSON st = object [ "_widgets"       .= (intMapToJSON $ st ^. widgets)
+                       , "_widgetOver"    .= (toJSON $ st ^. widgetOver)
+                       , "_dragState"     .= (toJSON $ st ^. dragState)
+                       , "_focusedWidget" .= (toJSON $ st ^. focusedWidget)
+                       ]
 
 instance Eq (State a) where
     a == b = (IntMap.size $ a ^. widgets) == (IntMap.size $ a ^. widgets)
@@ -55,13 +69,6 @@ defaultWidgets = [ (sceneInterfaceId,     sceneInterface)
 instance Default (State a) where
     def = State (fromList defaultWidgets) def def def
 
-instance PrettyPrinter (State a) where
-    display (State widgets _ wover focus) =
-           "dWd("        <> show (IntMap.keys widgets)
-        <> " over: "     <> show wover
-        <> " focus: "    <> show focus
-        <> ")"
-
 lookup :: WidgetId -> (State a) -> Maybe (WidgetFile a DisplayObject)
 lookup idx state = IntMap.lookup idx (state ^. widgets)
 
@@ -77,7 +84,7 @@ register parent a handlers state = (widgetFile, state & widgets .~ newWidgets') 
     newWidgets    = IntMap.insert newId  dynamicFile oldWidgets
     newId         = generateId state
     oldWidgets    = state ^. widgets
-    (Just oldParent) = trace (show parent) $ IntMap.lookup parent oldWidgets
+    (Just oldParent) = IntMap.lookup parent oldWidgets
     newParent     = oldParent & children .~ (newId:(oldParent ^. children))
     dynamicFile   = WidgetFile newId (toCtxDynamic a) (Just parent) [] handlers
     widgetFile    = WidgetFile newId a (Just parent) [] handlers

@@ -6,15 +6,17 @@ import Object.UITypes
 import Utils.Angle (toAngle)
 import Object.Widget
 import Object.Node
+import Data.Aeson (ToJSON)
 
 import qualified JS.Widget as UI
 
 data Port = Port { _portRef     :: PortRef
                  , _angleVector :: Vector2 Double
                  , _color       :: Int
-                 } deriving (Eq, Show, Typeable)
+                 } deriving (Eq, Show, Typeable, Generic)
 
 makeLenses ''Port
+instance ToJSON Port
 
 angle :: Getter Port Double
 angle = to (toAngle . view angleVector )
