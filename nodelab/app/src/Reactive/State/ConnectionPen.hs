@@ -1,10 +1,10 @@
 module Reactive.State.ConnectionPen where
 
 
-import           Utils.PreludePlus
-import           Utils.Vector
+import Utils.PreludePlus
+import Utils.Vector
+import Object.Object
 
-import           Object.Object
 
 
 data DrawingType = Connecting | Disconnecting deriving (Show, Eq)

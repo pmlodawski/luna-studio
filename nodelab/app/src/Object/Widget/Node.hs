@@ -2,16 +2,14 @@
 
 module Object.Widget.Node where
 
-import           Utils.PreludePlus
-import           Utils.Vector
-import           Object.UITypes
-import           Data.Fixed
+import Utils.PreludePlus
+import Utils.Vector
+import Object.UITypes
+import Data.Fixed
 
-import           Object.Widget
-import           Utils.CtxDynamic
-import           Event.Mouse      (MouseButton(..))
-
-import qualified JS.Node as UI
+import Object.Widget
+import Utils.CtxDynamic
+import Event.Mouse      (MouseButton(..))
 
 data Node = Node { _nodeId     :: Int
                  , _controls   :: [WidgetId]

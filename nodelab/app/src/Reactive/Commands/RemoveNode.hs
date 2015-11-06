@@ -7,7 +7,6 @@ import           Object.UITypes (WidgetId)
 import           Object.Widget  (widget)
 import           Reactive.State.Global             (State)
 import qualified Reactive.State.Global             as Global
-import qualified Reactive.State.Selection          as Selection
 import qualified Reactive.State.UIRegistry         as UIRegistry
 import qualified Reactive.State.Graph              as Graph
 import           Reactive.Commands.Command         (Command, performIO)

@@ -21,7 +21,6 @@ import           Event.Event    (Event(Mouse, Keyboard))
 import qualified Reactive.State.MultiSelection as MultiSelection
 import           Reactive.State.MultiSelection (DragHistory(..))
 import qualified Reactive.State.Graph          as Graph
-import qualified Reactive.State.Selection      as Selection
 import qualified Reactive.State.Camera         as Camera
 import qualified Reactive.State.UIRegistry     as UIRegistry
 import qualified Reactive.State.Global         as Global

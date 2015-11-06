@@ -1,16 +1,11 @@
-{-# LANGUAGE ExistentialQuantification #-}
-
 module Object.Widget.Port where
 
-import           Utils.PreludePlus
-import           Utils.Vector
-import           Object.UITypes
-import           Data.Fixed
-import           Utils.Angle (toAngle)
-
-import           Object.Widget
-import           Object.Node
-import           Utils.CtxDynamic
+import Utils.PreludePlus
+import Utils.Vector
+import Object.UITypes
+import Utils.Angle (toAngle)
+import Object.Widget
+import Object.Node
 
 import qualified JS.Widget as UI
 

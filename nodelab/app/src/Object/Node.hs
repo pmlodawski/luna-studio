@@ -12,7 +12,6 @@ import qualified Utils.MockHelper as MHelper
 import           Data.Dynamic
 import           Debug.Trace
 
-import           Object.Dynamic
 import           Object.Object
 import           Object.Port
 

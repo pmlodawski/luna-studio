@@ -22,7 +22,6 @@ import           Control.Monad.Trans.RWS (RWS)
 
 import           Reactive.Commands.Command (Command, performIO, pureCommand)
 
-import Debug.Trace
 
 sceneInterfaceId, sceneGraphId, currentConnectionId :: Int
 sceneInterfaceId    = 1

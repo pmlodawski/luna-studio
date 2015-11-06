@@ -14,7 +14,6 @@ import qualified Event.NodeSearcher as NodeSearcher
 import           Event.Event        (Event(..))
 
 import qualified Reactive.State.Global          as Global
-import qualified Reactive.State.Selection       as Selection
 import qualified Reactive.State.Graph           as Graph
 import qualified Reactive.State.UIRegistry      as UIRegistry
 import           Reactive.Commands.Command      (Command, performIO)

@@ -1,13 +1,12 @@
 module Event.Mouse where
 
 
-import           Utils.PreludePlus
+import Utils.PreludePlus
 
-import           Object.Dynamic
-import           Object.Object
-import           Event.Keyboard  (KeyMods(..))
-import           Utils.Vector
-import           Object.UITypes
+import Object.Object
+import Event.Keyboard  (KeyMods(..))
+import Utils.Vector
+import Object.UITypes
 
 data MouseButton = NoButton
                  | LeftButton

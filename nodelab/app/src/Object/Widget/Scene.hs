@@ -2,12 +2,8 @@
 
 module Object.Widget.Scene where
 
-import           Utils.PreludePlus
-import           Utils.Vector
-import           Data.Fixed
-import           Object.UITypes
-import           Object.Widget
-import           Numeric
+import Utils.PreludePlus
+import Object.Widget
 
 data Scene = Scene deriving (Show)
 

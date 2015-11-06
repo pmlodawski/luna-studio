@@ -1,12 +1,12 @@
 module Reactive.State.Connect where
 
 
-import           Utils.PreludePlus
-import           Utils.Vector
+import Utils.PreludePlus
+import Utils.Vector
 
-import           Object.Node
-import           Object.UITypes
-import           Object.Port
+import Object.Node
+import Object.UITypes
+import Object.Port
 
 data DragHistory = DragHistory { _dragStartPos    :: Vector2 Int
                                , _dragCurrentPos  :: Vector2 Int

@@ -1,11 +1,9 @@
 module Reactive.State.Drag where
 
 
-import           Utils.PreludePlus
-import           Utils.Vector
-
-import           Object.Object
-
+import Utils.PreludePlus
+import Utils.Vector
+import Object.Object
 
 data DragHistory = DragHistory { _dragStartPos    :: Vector2 Int
                                , _dragPreviousPos :: Vector2 Int

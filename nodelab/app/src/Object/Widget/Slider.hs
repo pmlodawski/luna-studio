@@ -2,13 +2,12 @@
 
 module Object.Widget.Slider where
 
-import           Utils.PreludePlus
-import           Utils.Vector
-import           Data.Fixed
-import           Object.Object
-import           Object.Widget
-import           Numeric
-
+import Utils.PreludePlus
+import Utils.Vector
+import Data.Fixed
+import Object.Object
+import Object.Widget
+import Numeric
 
 data Slider a = Slider { _position     :: Vector2 Double
                        , _size         :: Vector2 Double

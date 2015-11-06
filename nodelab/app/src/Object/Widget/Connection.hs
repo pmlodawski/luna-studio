@@ -1,17 +1,10 @@
-{-# LANGUAGE ExistentialQuantification #-}
-
 module Object.Widget.Connection where
 
-import           Utils.PreludePlus hiding (from)
-import           Utils.Vector
-import           Object.UITypes
-
-import           Object.Object
-import           Object.Widget
-import           Object.Node
-
-import qualified JS.Widget as UI
-import           Utils.CtxDynamic
+import Utils.PreludePlus hiding (from)
+import Utils.Vector
+import Object.Object
+import Object.UITypes
+import Object.Widget
 
 data Connection = Connection { _connectionId :: ConnectionId
                              , _visible      :: Bool

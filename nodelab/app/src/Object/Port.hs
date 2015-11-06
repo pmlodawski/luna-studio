@@ -1,11 +1,11 @@
 module Object.Port where
 
-import           Utils.PreludePlus
-import           Utils.Vector
-import           Utils.Angle
-import           Data.Fixed
+import Utils.PreludePlus
+import Utils.Vector
+import Utils.Angle
+import Data.Fixed
 
-import           Object.Object
+import Object.Object
 
 
 data ValueType = VTBool

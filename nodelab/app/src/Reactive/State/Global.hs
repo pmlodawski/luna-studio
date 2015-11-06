@@ -10,7 +10,6 @@ import           Object.Object
 import           Batch.Workspace
 import qualified Reactive.State.Camera            as Camera
 import qualified Reactive.State.Graph             as Graph
-import qualified Reactive.State.Selection         as Selection
 import qualified Reactive.State.MultiSelection    as MultiSelection
 import qualified Reactive.State.Drag              as Drag
 import qualified Reactive.State.Connect           as Connect

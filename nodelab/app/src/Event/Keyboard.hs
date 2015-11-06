@@ -1,7 +1,6 @@
 module Event.Keyboard where
 
-import           Utils.PreludePlus
-
+import Utils.PreludePlus
 
 data Type = Press | Down | Up deriving (Eq, Show)
 

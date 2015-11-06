@@ -24,7 +24,6 @@ import qualified Reactive.Commands.Selection  as Selection
 import qualified Reactive.State.Drag          as Drag
 import           Reactive.State.Drag          (DragHistory(..))
 import qualified Reactive.State.Graph         as Graph
-import qualified Reactive.State.Selection     as Selection
 import qualified Reactive.State.Camera        as Camera
 import qualified Reactive.State.Global        as Global
 import qualified Reactive.State.UIRegistry    as UIRegistry

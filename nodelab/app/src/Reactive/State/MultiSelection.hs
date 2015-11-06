@@ -1,11 +1,10 @@
 module Reactive.State.MultiSelection where
 
 
-import           Utils.PreludePlus
-import           Utils.Vector
+import Utils.PreludePlus
+import Utils.Vector
 
-import           Object.Object
-
+import Object.Object
 
 data DragHistory = DragHistory { _dragStartPos    :: Vector2 Int
                                , _dragCurrentPos  :: Vector2 Int

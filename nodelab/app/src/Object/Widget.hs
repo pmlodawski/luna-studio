@@ -16,7 +16,6 @@ import           Reactive.State.Camera     (Camera)
 import qualified Reactive.State.Camera     as Camera
 import           Reactive.Commands.Command (Command)
 import           Object.UITypes
-import Data.Proxy
 
 type DisplayObject = CtxDynamic DisplayObjectClass
 

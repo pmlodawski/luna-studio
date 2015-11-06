@@ -1,9 +1,9 @@
 module Reactive.State.Camera where
 
 
-import           Utils.PreludePlus
-import           Utils.Vector
-import           Reactive.Commands.Command (Command)
+import Utils.PreludePlus
+import Utils.Vector
+import Reactive.Commands.Command (Command)
 
 data DragHistory =  PanDragHistory  { _panPreviousPos         :: Vector2 Int }
                  | ZoomDragHistory  { _zoomPreviousPos        :: Vector2 Int

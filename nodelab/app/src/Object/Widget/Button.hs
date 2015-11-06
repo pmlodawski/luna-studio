@@ -2,10 +2,10 @@
 
 module Object.Widget.Button where
 
-import           Utils.PreludePlus
-import           Utils.Vector
+import Utils.PreludePlus
+import Utils.Vector
 
-import           Object.Widget
+import Object.Widget
 
 data State  = Normal | Focused | Disabled | Pressed deriving (Eq, Show, Enum)
 
