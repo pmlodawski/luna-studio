@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE TypeFamilies #-}
@@ -16,6 +17,7 @@ import Data.Container.Class
 import Data.Container.Poly
 import Data.Container.Auto
 import Data.Container.Weak
+import Data.Container.Resizable
 import Data.Reprx
 
 import qualified Control.Monad.State as State
@@ -25,12 +27,14 @@ import Luna.Syntax.AST.Decl
 
 --- === Graph ===
 
+#define GRAPH (Auto' Exponential (Vector a))
 --newtype HeteroVectorGraph   = HeteroVectorGraph { __hetReg :: Hetero' Vector } deriving (Show, Default)
-newtype VectorGraph       a = VectorGraph       { __homReg :: Vector a       } deriving (Show, Default) -- , Functor, Foldable, Traversable)
+newtype VectorGraph       a = VectorGraph       { __homReg :: GRAPH } deriving (Show, Default) -- , Functor, Foldable, Traversable)
+--newtype VectorGraph       a = VectorGraph       { __homReg :: Vector a       } deriving (Show, Default) -- , Functor, Foldable, Traversable)
 --newtype VectorGraph       a = VectorGraph       { __homReg :: Auto (Weak Vector) a       } deriving (Show, Default, Functor, Foldable, Traversable)
 
 --type instance DataStoreOf (VectorGraph a) = DataStoreOf (Auto (Weak Vector) a)
-type instance ContainerOf (VectorGraph a) = Vector a -- ContainerOf (Auto (Weak Vector) a)
+type instance ContainerOf (VectorGraph a) = ContainerOf GRAPH
 
 --instance IsContainer  (VectorGraph a) where fromContainer = VectorGraph . fromContainer
 --instance HasContainer (VectorGraph a) where container     = lens (\(VectorGraph a) -> a) (const VectorGraph) . container
@@ -39,7 +43,8 @@ type instance ContainerOf (VectorGraph a) = Vector a -- ContainerOf (Auto (Weak 
 makeLenses ''VectorGraph
 
 --instance HasContainer HeteroVectorGraph   (Hetero' Vector) where container = _hetReg
---instance HasContainer (VectorGraph a)     (Vector a)       where container = _homReg
+instance Monad m => HasContainerM m (VectorGraph a)      where viewContainerM = viewContainerM .  view _homReg
+                                                               setContainerM = _homReg . setContainerM
 
 
 ---- === Ref ===
@@ -174,6 +179,12 @@ evalBuilderT = evalT
         --      => MuBuilder a (GraphBuilderT g m) t where
         --    buildMu a = do print ("oh" :: String)
         --                   fmap (Mu . Ref . ptrFrom) . modifyM2 $ ixed addM a
+
+
+instance (t ~ Ref i a, MonadIO m, Ixed (AddableM (GraphBuilderT g m)) (a (Mu t)) g, PtrFrom (IndexOf (ContainerOf g)) i)
+      => MuBuilder a (GraphBuilderT g m) t where
+    buildMu a = fmap (Mu . Ref . ptrFrom) . modifyM $ ixed addM a
+
 
 
 --instance (t ~ Ref i a, MonadIO m, Ixed (Addable (WeakMu a (Mu t))) g, PtrFrom idx i, idx ~ IndexOf' (DataStoreOf (ContainerOf g)))

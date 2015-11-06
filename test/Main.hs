@@ -111,46 +111,64 @@ instance (MuBuilder a m t, t ~ t') => MuBuilder a (HomoG t m) t' where
 
 -------------------------------------------------------------
 
-    --nytst2 :: IO (Arc (Labeled Int (Typed Draft)), HomoGraph ArcPtr (Labeled Int (Typed Draft)))
-    --nytst2 = do
-    --    --ref <- liftBase $ newSTRef 1
-    --    ref <- stToIO $ newSTRef 1
-    --    flip runGraphT (VectorGraph (def & finalizer .~ Nothing)) $ do
-    --    --flip runGraphT (VectorGraph (def & finalizer .~ Just print)) $ do
-    --        s    <- genTopStar
+nytst2 :: IO (Arc (Labeled Int (Typed Draft)), HomoGraph ArcPtr (Labeled Int (Typed Draft)))
+nytst2 = do
+    --ref <- liftBase $ newSTRef 1
+    --ref <- stToIO $ newSTRef 1
+    flip runGraphT (VectorGraph def) $ do
+    --flip runGraphT (VectorGraph (def & finalizer .~ Just print)) $ do
+        s    <- genTopStar
 
-    --        --i1   <- (int 1 :: _)
-    --        i1   <- int 1
-    --        i2   <- blank
-    --        plus <- i1 @. "+"
-    --        sum  <- plus @$ [arg i1, arg i2]
-    --        --return s
-    --        return s
+        i1   <- int 1
+        i2   <- blank
+        plus <- i1 @. "+"
+        sum  <- plus @$ [arg i1, arg i2]
+        return s
+
+--runGraphT :: Monad m => GraphStarBuilderT s g m a -> g -> m (a, g)
+
+--GraphStarBuilderT s HomoGraph ArcPtr (Labeled Int (Typed Draft)) IO
+--xtest :: _ => _
+--xtest = flip runGraphT (VectorGraph def :: HomoGraph ArcPtr (Labeled Int (Typed Draft))) $ do
+--    --flip runGraphT (VectorGraph (def & finalizer .~ Just print)) $ do
+--        --s    <- genTopStar
+--        i1 <- int 1
+--        --i1   <- int 1
+--        --i2   <- blank
+--        --plus <- i1 @. "+"
+--        --sum  <- plus @$ [arg i1, arg i2]
+--        --return s
+--        --return i1
+--        return undefined
 
 
---main :: IO ()
---main = do
---    --putStrLn $ repr y
---    --print . repr =<< nytst2
---    --(_, g) <- nytst2
---    --putStrLn $ repr $ nytst3
---    --print c'
---    --print $ take 1000 names
+main :: IO ()
+main = do
+    --putStrLn $ repr y
+    print . repr =<< nytst2
+    (_, g) <- nytst2
+    --putStrLn $ repr $ nytst3
+    --print c'
+    --print $ take 1000 names
 
---    --let gv = toGraphViz g
---    --print   gv
---    --display gv
+    print $ ixes g
+    print $ usedIxes g
+    print $ freeIxes g
+    
+    let gv = toGraphViz g
+    --print   gv
+    display gv
 
---    --let xa = fromList [1,2,3] :: Auto (Weak Vector) Int
---    --let xb = fromList [1,2,3] :: WeakAuto Vector Int
---    --let xa = fromList [1,2,3] :: Weak Vector Int
---    --xc <- addM 5 xb
---    --print $ elems xb
---    --print $ (elems xa :: [Int])
---    --print $ unlayer xa
---    --print $ elems xa
---    Lazy.main
---    return ()
+    --let xa = fromList [1,2,3] :: Auto (Weak Vector) Int
+    --let xb = fromList [1,2,3] :: WeakAuto Vector Int
+    --let xa = fromList [1,2,3] :: Weak Vector Int
+    --xc <- addM 5 xb
+    --print $ elems xb
+    --print $ (elems xa :: [Int])
+    --print $ unlayer xa
+    --print $ elems xa
+    --Lazy.main
+    return ()
 
 
 
@@ -201,51 +219,51 @@ xxxt2 :: Appendable Int a => a -> a
 xxxt2 v = append (4 :: Int) v 
 
 type TT = Vector Int
-main :: IO ()
-main = do
-    --(v1,i,_) <- singletonQM (Query :: Query '[M.Ixed,M.Ixed] '[]) 5 :: IO (L1 (V.Vector Int), Int, Int)
-    --print (v1,i)
+--main :: IO ()
+--main = do
+--    --(v1,i,_) <- singletonQM (Query :: Query '[M.Ixed,M.Ixed] '[]) 5 :: IO (L1 (V.Vector Int), Int, Int)
+--    --print (v1,i)
 
 
 
-    print " ---------------------- "
+--    print " ---------------------- "
 
-    let v2  = fromList [1,2,3] :: (Auto' Exponential (L1 (Vector (Int))))
-    v2' <- appendM 5 v2        :: IO (Auto' Exponential (L1 (Vector (Int))))
-    i1  <- indexM  0 v2'
-    print i1
+--    let v2  = fromList [1,2,3] :: (Auto' Exponential (L1 (Vector (Int))))
+--    v2' <- appendM 5 v2        :: IO (Auto' Exponential (L1 (Vector (Int))))
+--    i1  <- indexM  0 v2'
+--    print i1
 
-    tt <- viewImmersedM v2' :: IO (PrimStoreOf (Auto' Exponential (L1 (Vector (Int)))))
-    print tt
+--    tt <- viewImmersedM v2' :: IO (PrimStoreOf (Auto' Exponential (L1 (Vector (Int)))))
+--    print tt
 
-    vref2 <- newIORef v2
-    ir1 <- indexM 1 vref2
-    print ir1
+--    vref2 <- newIORef v2
+--    ir1 <- indexM 1 vref2
+--    print ir1
 
-    vref3 <- allocM 10 :: IO (IORef (Weak' (Auto' Exponential (L1 (Vector (Mem.Weak Int))))))
-    vref3' <- setFinalizerM (Just $ IdxFinalizer $ \idx -> () <$ freeM idx vref3) vref3
-    vref3_1 <- appendM 5 vref3'
-    --ttref <- viewImmersedM vref3 :: IO (Vector Int)
+--    vref3 <- allocM 10 :: IO (IORef (Weak' (Auto' Exponential (L1 (Vector (Mem.Weak Int))))))
+--    vref3' <- setFinalizerM (Just $ IdxFinalizer $ \idx -> () <$ freeM idx vref3) vref3
+--    vref3_1 <- appendM 5 vref3'
+--    --ttref <- viewImmersedM vref3 :: IO (Vector Int)
 
-    --print ttref
+--    --print ttref
 
-    let v4 = fromList [1,2,3] :: Weak' (Auto' Exponential (L1 (Vector (Mem.Weak Int))))
+--    let v4 = fromList [1,2,3] :: Weak' (Auto' Exponential (L1 (Vector (Mem.Weak Int))))
 
-    --putStrLn $ "v2: "           <> show v2
-    --putStrLn $ "size: "         <> show (size     v2)
-    --putStrLn $ "min bounds: "   <> show (minBound v2)
-    --putStrLn $ "max bounds: "   <> show (maxBound v2)
-    --print $ elems (expand v2)
-    --print $ size v2'
-    --putStrLn $ "after expand: " <> show (expand   v2)
-    --putStrLn $ "after grow: "   <> show (grow 10  v2)
+--    --putStrLn $ "v2: "           <> show v2
+--    --putStrLn $ "size: "         <> show (size     v2)
+--    --putStrLn $ "min bounds: "   <> show (minBound v2)
+--    --putStrLn $ "max bounds: "   <> show (maxBound v2)
+--    --print $ elems (expand v2)
+--    --print $ size v2'
+--    --putStrLn $ "after expand: " <> show (expand   v2)
+--    --putStrLn $ "after grow: "   <> show (grow 10  v2)
  
-    --s <- sizeM v2 
-    --print s
+--    --s <- sizeM v2 
+--    --print s
 
-    --print =<< ixed ixed expandM v2
+--    --print =<< ixed ixed expandM v2
     
-    print "END"
+--    print "END"
 
 
 
