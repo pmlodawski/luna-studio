@@ -195,16 +195,20 @@ allNodes = UIRegistry.lookupAllM
 allPorts :: Command (UIRegistry.State a) [WidgetFile a PortModel.Port]
 allPorts = UIRegistry.lookupAllM
 
+allConnections :: Command (UIRegistry.State a) [WidgetFile a ConnectionModel.Connection]
+allConnections = UIRegistry.lookupAllM
+
 nodeIdToWidgetId :: NodeId -> Command (UIRegistry.State a) (Maybe WidgetId)
 nodeIdToWidgetId nodeId = do
     files <- allNodes
     let matching = find (\file -> (file ^. widget . Model.nodeId) == nodeId) files
     return (view objectId <$> matching)
 
-unselectAllNodes :: Command (UIRegistry.State a) ()
-unselectAllNodes = do
-    widgets <- allNodes
-    forM_ widgets UINode.unselectNode
+connectionIdToWidgetId :: ConnectionId -> Command (UIRegistry.State a) (Maybe WidgetId)
+connectionIdToWidgetId connectionId = do
+    files <- allConnections
+    let matching = find (\file -> (file ^. widget . ConnectionModel.connectionId) == connectionId) files
+    return (view objectId <$> matching)
 
 -- TODO: Clever algorithm taking radius into account
 getNodesInRect :: Vector2 Int -> Vector2 Int -> Command Global.State [WidgetId]

@@ -1,4 +1,5 @@
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module Reactive.Commands.UIRegistry where
 
 import           Utils.PreludePlus
@@ -12,7 +13,7 @@ import           Reactive.Commands.Command (Command, performIO)
 import qualified UI.Generic as UI
 
 
-register :: (DisplayObjectClass a) => WidgetId -> a -> UIHandlers st -> Command (UIRegistry.State st) WidgetId
+register :: DisplayObjectClass a => WidgetId -> a -> UIHandlers st -> Command (UIRegistry.State st) WidgetId
 register parent model handlers = do
     file <- UIRegistry.registerM parent model handlers
     performIO $ createUI parent (file ^. objectId) model

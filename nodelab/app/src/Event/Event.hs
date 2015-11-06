@@ -14,7 +14,7 @@ import qualified Event.TextEditor    as TextEditor
 data Event = Init
            | Window               Window.Event
            | Keyboard           Keyboard.Event
-           | Mouse                 Mouse.Event
+           | Mouse                 Mouse.RawEvent
            | NodeSearcher   NodeSearcher.Event
            | Connection       Connection.Event
            | ConnectionPen ConnectionPen.Event

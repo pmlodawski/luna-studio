@@ -12,6 +12,7 @@ import qualified Reactive.State.UIRegistry         as UIRegistry
 import qualified Reactive.State.Graph              as Graph
 import           Reactive.Commands.Command         (Command, performIO)
 import           Reactive.Commands.Selection       (selectedNodes)
+import           Reactive.Commands.Graph           (nodeIdToWidgetId)
 import           Reactive.Commands.DisconnectNodes (localDisconnectAll)
 
 import           Reactive.Commands.UIRegistry.RemoveWidget (removeWidgets)
@@ -19,7 +20,6 @@ import           Reactive.Commands.UIRegistry.RemoveWidget (removeWidgets)
 import qualified BatchConnector.Commands as BatchCmd
 import qualified JS.NodeGraph            as UIGraph
 import           Object.Node             (Node, nodeId)
-import           Object.Widget.Helpers   (nodeIdToWidgetId)
 import qualified Object.Widget.Node      as NodeModel
 
 
@@ -39,8 +39,8 @@ performRemoval nodeId = do
     uiRegistry <- use Global.uiRegistry
     workspace  <- use Global.workspace
 
-    let nodeWidgetId = maybeToList $ nodeIdToWidgetId uiRegistry nodeId
-    zoom Global.uiRegistry $ removeWidgets nodeWidgetId
+    nodeWidgetId <- zoom Global.uiRegistry $ nodeIdToWidgetId nodeId
+    zoom Global.uiRegistry $ removeWidgets $ maybeToList nodeWidgetId
 
     performIO $ do
         BatchCmd.removeNodeById workspace nodeId

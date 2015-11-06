@@ -7,6 +7,7 @@ import           Utils.Vector
 import           Object.Widget
 import           Object.Widget.Scene
 import           Object.Widget.Connection
+import UI.Widget.Connection ()
 
 import           Data.IntMap.Lazy (IntMap)
 import qualified Data.IntMap.Lazy as IntMap
@@ -56,15 +57,17 @@ instance Default (State a) where
     def = State (fromList defaultWidgets) def def def
 
 instance PrettyPrinter (State a) where
-    display (State widgets wover dragging focus) =
+    display (State widgets _ wover focus) =
            "dWd("        <> show (IntMap.keys widgets)
         <> " over: "     <> show wover
-        <> " dragging: " <> show dragging
         <> " focus: "    <> show focus
         <> ")"
 
 lookup :: WidgetId -> (State a) -> Maybe (WidgetFile a DisplayObject)
 lookup idx state = IntMap.lookup idx (state ^. widgets)
+
+lookupM :: WidgetId -> Command (State a) (Maybe (WidgetFile a DisplayObject))
+lookupM id = preuse $ widgets . ix id
 
 lookupHandlers :: WidgetId -> (State a) -> Maybe (UIHandlers a)
 lookupHandlers idx state = (^. handlers) <$> IntMap.lookup idx (state ^. widgets)
@@ -155,14 +158,6 @@ generateId state = if IntMap.size (state ^. widgets) == 0 then 1
 
 replaceAll :: DisplayObjectClass a => WidgetId -> [WidgetId] -> [a] -> State b -> ([WidgetFile b a], State b)
 replaceAll parent remove add state = registerAll parent add (unregisterAll_ remove state)
-
-sequenceUpdates :: [Maybe (State b -> Maybe (WidgetUIUpdate, State b))]
-                -> State b -> (WidgetUIUpdate, State b)
-sequenceUpdates ops input = foldl applyOp (return (), input) ops where
-    applyOp (updates, input) op = fromMaybe (updates, input) $ do
-        justOp           <- op
-        (update, output) <- justOp input
-        return (updates >> update, output)
 
 lookupAll :: DisplayObjectClass a => State b -> [WidgetFile b a]
 lookupAll state = foldl process mempty objects where

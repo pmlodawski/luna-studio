@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module UI.Widget.Slider where
 
@@ -20,11 +21,15 @@ import           Utils.CtxDynamic
 import           JS.UI (setCursor)
 import           Object.UITypes
 import           GHCJS.Marshal.Pure(PToJSVal(..), PFromJSVal(..))
+import qualified Reactive.Commands.UIRegistry as UICmd
+import qualified Reactive.State.Global as Global
 
 import           UI.Widget (UIWidget(..))
 import qualified UI.Widget as Widget
 import qualified UI.Registry as UIR
 import qualified UI.Generic  as UI
+import           Reactive.Commands.Command (Command, ioCommand, performIO)
+
 
 newtype Slider = Slider { unSlider :: JSVal } deriving (PToJSVal, PFromJSVal)
 
@@ -64,57 +69,67 @@ keyModMult mods = case mods of
     KeyMods True  False _ _ ->   10.0
     otherwise               ->    1.0
 
-ifEnabled :: (Model.IsSlider a) => Model.Slider a -> WidgetUpdate -> WidgetUpdate
-ifEnabled model upd = if model ^. Model.enabled then upd
-                                                else (return(), toCtxDynamic model)
+instance Model.IsSlider a => UIDisplayObject (Model.Slider a) where
+    createUI parentId id model = do
+        slider   <- createSlider id model
+        parent <- UIR.lookup parentId :: IO Widget.GenericWidget
+        UIR.register id slider
+        Widget.add slider parent
 
-instance (Model.IsSlider a) => Draggable (Model.Slider a) where
-    mayDrag Mouse.LeftButton _ _ _     = True
-    mayDrag _                _ _ _     = False
-    onDragStart state file model = ifEnabled model (action, toCtxDynamic model) where
-                          action = setCursor "pointer"
-    onDragMove  state file model = ifEnabled model (action, toCtxDynamic newModel) where
-                    delta        = if (abs $ diff ^. x) > (abs $ diff ^. y) then -diff ^. x /  divider
-                                                                            else  diff ^. y / (divider * 10.0)
-                    width        = model ^. Model.size . x
-                    divider      = width * (keyModMult $ state ^. keyMods)
-                    diff         = state ^. currentPos - state ^. previousPos
-                    newNormValue = (model ^. Model.normValue) - delta
-                    newModel     = Model.setNormValue newNormValue model
-                    action       = do
-                        setCursor "-webkit-grabbing"
-                        slider  <- UIR.lookup (file ^. objectId)
-                        setValue newModel slider
-    onDragEnd  state file model  = ifEnabled model (action, newModel) where
-        action = do
-            otherAction
-            setCursor "default"
-        (otherAction, newModel) = onDragMove state file model
+    updateUI id old model = do
+        slider <- UIR.lookup id :: IO Slider
 
-instance (Model.IsSlider a)  => DblClickable   (Model.Slider a) where
-    onDblClick pos file model = ifEnabled model (action, toCtxDynamic newModel) where
-                normValue     = (pos ^. x) / (model ^. Model.size . x)
-                newModel      = Model.setNormValue normValue model
-                action        = UIR.lookup (file ^. objectId) >>= setValue newModel
+        setLabel       model slider
+        setValueLabel  model slider
+        setValue       model slider
 
-instance (Model.IsSlider a) => HandlesMouseOver (Model.Slider a) where
-    onMouseOver file model   = ifEnabled model (action, toCtxDynamic model) where
-                 action      = UIR.lookup (file ^. objectId) >>= setFocus True
+--                           action = setCursor "pointer"
+--     onDragMove  state file model = ifEnabled model (action, toCtxDynamic newModel) where
+--                     delta        = if (abs $ diff ^. x) > (abs $ diff ^. y) then -diff ^. x /  divider
+--                                                                             else  diff ^. y / (divider * 10.0)
+--                     width        = model ^. Model.size . x
+--                     divider      = width * (keyModMult $ state ^. keyMods)
+--                     diff         = state ^. currentPos - state ^. previousPos
+--                     newNormValue = (model ^. Model.normValue) - delta
+--                     newModel     = Model.setNormValue newNormValue model
+--                     action       = do
+--                         setCursor "-webkit-grabbing"
+--                         slider  <- UIR.lookup (file ^. objectId)
+--                         setValue newModel slider
 
-instance (Model.IsSlider a) => HandlesMouseOut (Model.Slider a) where
-    onMouseOut  file model   = ifEnabled model (action, toCtxDynamic model) where
-                 action      = UIR.lookup (file ^. objectId) >>= setFocus False
+dblClickHandler :: DblClickHandler Global.State
+dblClickHandler evt id = zoom Global.uiRegistry $ do
+    enabled <- UICmd.get id (Model.enabled :: Lens' (Model.Slider Double) Bool)
+    when enabled $ do
+        width <- UICmd.get id $ (Model.size :: Lens' (Model.Slider Double) (Vector2 Double)) . x
+        let normValue = (evt ^. Mouse.position ^. x) / width
+        UICmd.update id ((Model.boundedNormValue :: Lens' (Model.Slider Double) Double) .~ normValue)
 
-instance (Model.IsSlider a) => Focusable (Model.Slider a) where
-    mayFocus _ _ _ _  = True
 
-instance (Model.IsSlider a) => HandlesKeyUp (Model.Slider a) where
-    onKeyUp 'W' _ file model   = ifEnabled model (action, toCtxDynamic newModel) where
-                  currVal      = model ^. Model.normValue
-                  newModel     = Model.setNormValue (currVal + 0.1) model
-                  action       = UIR.lookup (file ^. objectId) >>= setValue newModel
-    onKeyUp 'Q' _ file model   = ifEnabled model (action, toCtxDynamic newModel) where
-                  currVal      = model ^. Model.normValue
-                  newModel     = Model.setNormValue (currVal - 0.1) model
-                  action       = UIR.lookup (file ^. objectId) >>= setValue newModel
-    onKeyUp _   _ _    model   = (return (), toCtxDynamic model)
+keyUpHandler :: KeyUpHandler Global.State
+keyUpHandler 'W' _ id = zoom Global.uiRegistry $ do
+    enabled <- UICmd.get id (Model.enabled :: Lens' (Model.Slider Double) Bool)
+    when enabled $ UICmd.update id ((Model.boundedNormValue :: Lens' (Model.Slider Double) Double) +~ 0.1)
+
+keyUpHandler 'Q' _ id = zoom Global.uiRegistry $ do
+    enabled <- UICmd.get id (Model.enabled :: Lens' (Model.Slider Double) Bool)
+    when enabled $ UICmd.update id ((Model.boundedNormValue :: Lens' (Model.Slider Double) Double) -~ 0.1)
+
+keyUpHandler _ _ _ = return ()
+
+dragHandler :: DragMoveHandler Global.State
+dragHandler ds id = zoom Global.uiRegistry $ do
+    enabled <- UICmd.get id (Model.enabled :: Lens' (Model.Slider Double) Bool)
+    when enabled $ do
+        width <- UICmd.get id $ (Model.size :: Lens' (Model.Slider Double) (Vector2 Double)) . x
+        let normValue = (ds ^. currentPos . x) / width
+        UICmd.update id ((Model.boundedNormValue :: Lens' (Model.Slider Double) Double) .~ normValue)
+
+dragEndHandler _ _ = performIO $ putStrLn "Trigger slider event ValueChanged"
+
+widgetHandlers :: UIHandlers Global.State
+widgetHandlers = def & keyUp    .~ keyUpHandler
+                     & dblClick .~ dblClickHandler
+                     & mousePressed .~ UI.startDrag
+                     & dragMove .~ dragHandler
+                     & dragEnd .~ dragEndHandler

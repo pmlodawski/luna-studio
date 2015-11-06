@@ -28,7 +28,7 @@ import           Reactive.Commands.EnterNode   (enterNode)
 import           Reactive.Commands.RemoveNode  (removeSelectedNodes)
 import           Reactive.Commands.Command     (Command, performIO)
 import           Reactive.Commands.PendingNode (unrenderPending)
-import           Reactive.Commands.Selection   (handleSelection)
+-- import           Reactive.Commands.Selection   (handleSelection)
 import qualified Reactive.Commands.UIRegistry as UICmd
 
 import qualified BatchConnector.Commands as BatchCmd
@@ -70,9 +70,7 @@ makeSliderFromPortDouble i port = Slider (Vector2 10 (95 + (fromIntegral i) * 25
                                          (Text.pack $ "param " <> show i) 0.0 1.0 0.2 (PortNum i) True
 
 nodeHandlers :: Node -> UIHandlers State
-nodeHandlers node = def & dblClick     .~ [const $ enterNode node]
-                        & keyDown      .~ [removeSelectedNodes]
-                        & mousePressed .~ [\keymods _ _ id -> handleSelection id keymods]
+nodeHandlers node = def
 
 retriveSliderDouble :: WidgetId -> Command (UIRegistry.State Global.State) (Maybe (WidgetFile Global.State (Slider Double)))
 retriveSliderDouble wid = UIRegistry.lookupTypedM wid
@@ -91,8 +89,9 @@ handleValueChanged nodeId wid = do
                 BatchCmd.setValue workspace portRef $ double2Float val
 
 sliderHandlers :: NodeId -> UIHandlers State
-sliderHandlers nodeId = def & dragEnd  .~ [handleValueChanged nodeId]
-                            & dblClick .~ [\_ -> handleValueChanged nodeId]
+sliderHandlers nodeId = def
+ -- & dragEnd  .~ [handleValueChanged nodeId]
+ -- & dblClick .~ [\_ -> handleValueChanged nodeId]
 
 addSliderToNode :: IsSlider a => WidgetId -> NodeId -> Slider a -> Command (UIRegistry.State Global.State) WidgetId
 addSliderToNode widgetId nodeId slider = do

@@ -36,11 +36,11 @@ makeLenses ''CurrentConnection
 instance IsDisplayObject CurrentConnection where
     widgetPosition = currentFrom
 
-instance HandlesMouseOver Connection where
-    onMouseOver file model = (action, toCtxDynamic model) where
-                  action   = UI.setWidgetFocused (file ^. objectId) True
-
-instance HandlesMouseOut Connection where
-    onMouseOut  file model = (action, toCtxDynamic model) where
-                  action   = UI.setWidgetFocused (file ^. objectId) False
-
+-- instance HandlesMouseOver Connection where
+--     onMouseOver file model = (action, toCtxDynamic model) where
+--                   action   = UI.setWidgetFocused (file ^. objectId) True
+--
+-- instance HandlesMouseOut Connection where
+--     onMouseOut  file model = (action, toCtxDynamic model) where
+--                   action   = UI.setWidgetFocused (file ^. objectId) False
+--

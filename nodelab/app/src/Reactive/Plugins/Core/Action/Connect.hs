@@ -58,7 +58,7 @@ getPortWidgetUnderCursor (EventWidget widgetId _ _) = do
     file <- UIRegistry.lookupTypedM widgetId
     return file
 
-startDrag :: Mouse.Event -> Command State ()
+startDrag :: Mouse.RawEvent -> Command State ()
 startDrag event@(Mouse.Event _ coord _ _ (Just evWd)) = do
     sourcePortWd <- zoom Global.uiRegistry $ getPortWidgetUnderCursor evWd
     forM_ sourcePortWd $ \file -> do
@@ -93,7 +93,7 @@ handleMove coord (Connecting sourceRef sourceWidget sourceVector nodePos _ (Drag
         showCurrentConnection startLine current'
     updateConnections
 
-stopDrag :: Mouse.Event -> Connect.Connecting -> Command State ()
+stopDrag :: Mouse.RawEvent -> Connect.Connecting -> Command State ()
 stopDrag event@(Mouse.Event _ coord _ _ mayEvWd) (Connecting sourceRef _ _ _ _ (DragHistory start current)) = do
     graph <- use Global.graph
     Global.connect . Connect.connecting .= Nothing

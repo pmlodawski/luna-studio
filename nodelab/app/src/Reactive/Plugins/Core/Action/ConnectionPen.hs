@@ -54,12 +54,12 @@ toAction (Mouse event@(Mouse.Event Mouse.Released _   Mouse.LeftButton _ _)) = J
 toAction (ConnectionPen (ConnectionPen.Segment widgets))                     = Just $ whileDrawing $ handleAction widgets
 toAction _                                                                   = Nothing
 
-startConnecting :: Mouse.Event -> Command State ()
+startConnecting :: Mouse.RawEvent -> Command State ()
 startConnecting event@(Mouse.Event _ coord _ _ _) = do
     performIO $ UI.beginPath coord True
     Global.connectionPen . ConnectionPen.drawing .= Just (ConnectionPen.Drawing coord ConnectionPen.Connecting Nothing [])
 
-startDisconnecting :: Mouse.Event -> Command State ()
+startDisconnecting :: Mouse.RawEvent -> Command State ()
 startDisconnecting event@(Mouse.Event _ coord _ _ _) = do
     performIO $ UI.beginPath coord False
     Global.connectionPen . ConnectionPen.drawing .= Just (ConnectionPen.Drawing coord ConnectionPen.Disconnecting Nothing [])

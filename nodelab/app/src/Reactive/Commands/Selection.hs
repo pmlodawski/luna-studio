@@ -19,22 +19,12 @@ import qualified Reactive.State.Graph      as Graph
 import           Reactive.Commands.Command          (Command, performIO)
 import           Reactive.Commands.Graph            (allNodes)
 import qualified Reactive.Commands.UIRegistry  as UICmd
-import           UI.Widget.Node (updateSelectedState)
 
-handleSelection :: WidgetId -> KeyMods -> Command State ()
-handleSelection id (KeyMods False False False False) = zoom Global.uiRegistry $ performSelect id
-handleSelection id (KeyMods False False True  False) = zoom Global.uiRegistry $ toggleSelect  id
-handleSelection _ _ = return ()
-
-performSelect :: WidgetId -> Command (UIRegistry.State a) ()
-performSelect id = do
-    isSelected <- UICmd.get id NodeModel.isSelected
-    unless isSelected $ do
-        unselectAll
-        UICmd.update id (NodeModel.isSelected .~ True)
-
-toggleSelect :: WidgetId -> Command (UIRegistry.State a) ()
-toggleSelect id = UICmd.update id (NodeModel.isSelected %~ not)
+unselectAll :: Command (UIRegistry.State a) ()
+unselectAll = do
+    widgets <- allNodes
+    let widgetIds = (^. objectId) <$> widgets
+    forM_ widgetIds $ (flip UICmd.update) (NodeModel.isSelected .~ False)
 
 selectAll :: Command (UIRegistry.State a) ()
 selectAll = do
@@ -42,11 +32,6 @@ selectAll = do
     let widgetIds = (^. objectId) <$> widgets
     forM_ widgetIds $ (flip UICmd.update) (NodeModel.isSelected .~ True)
 
-unselectAll :: Command (UIRegistry.State a) ()
-unselectAll = do
-    widgets <- allNodes
-    let widgetIds = (^. objectId) <$> widgets
-    forM_ widgetIds $ (flip UICmd.update) (NodeModel.isSelected .~ False)
 
 selectedNodes :: Command (UIRegistry.State a) [WidgetFile a NodeModel.Node]
 selectedNodes = do

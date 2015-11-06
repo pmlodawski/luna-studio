@@ -14,7 +14,7 @@ import           Object.UITypes
 import           GHCJS.Marshal.Pure(PToJSVal(..), PFromJSVal(..))
 
 import           Reactive.Commands.Command (Command, ioCommand, performIO)
-import qualified Reactive.State.UIRegistry as UIRegistry
+-- import qualified Reactive.State.UIRegistry as UIRegistry
 
 
 newtype Container = Container { unContainer :: JSVal } deriving (PFromJSVal, PToJSVal)
@@ -26,6 +26,13 @@ class (UIWidget a) => UIContainer a
 foreign import javascript unsafe "$1.mesh"      getMesh'      :: JSVal -> IO Mesh
 foreign import javascript unsafe "$1.container" getContainer' :: JSVal -> IO Container
 foreign import javascript unsafe "$2.add($1)"   add'          :: Mesh  -> Container -> IO ()
+
+
+newtype GenericWidget = GenericWidget { unGenericWidget :: JSVal } deriving (PToJSVal, PFromJSVal)
+
+instance UIWidget    GenericWidget
+instance UIContainer GenericWidget
+
 
 getMesh      :: UIWidget a => a -> IO Mesh
 getMesh = getMesh' . pToJSVal

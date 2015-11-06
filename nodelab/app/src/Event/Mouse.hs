@@ -38,12 +38,15 @@ data EventWidget = EventWidget { _widgetId    :: WidgetId
 
 makeLenses ''EventWidget
 
-data Event = Event { _tpe         :: Type
-                   , _position    :: MousePosition
-                   , _button      :: MouseButton
-                   , _keyMods     :: KeyMods
-                   , _widget      :: Maybe EventWidget
-                   } deriving (Eq, Show, Typeable)
+data Event a = Event { _tpe         :: Type
+                     , _position    :: Vector2 a
+                     , _button      :: MouseButton
+                     , _keyMods     :: KeyMods
+                     , _widget      :: Maybe EventWidget
+                     } deriving (Eq, Show, Typeable)
+
+type RawEvent  = Event Int
+type Event'    = Event Double
 
 makeLenses ''Event
 
@@ -56,7 +59,7 @@ instance PrettyPrinter EventWidget where
 instance PrettyPrinter Type where
     display = show
 
-instance PrettyPrinter Event where
+instance (PrettyPrinter a) => PrettyPrinter (Event a) where
     display (Event tpe pos button keyMods widget) = "ev(" <> display tpe     <>
                                                     " "   <> display pos     <>
                                                     " "   <> display button  <>

@@ -17,7 +17,8 @@ import           Object.UITypes
 import           Event.Mouse (MouseButton(..))
 import           Utils.CtxDynamic (toCtxDynamic)
 import           Reactive.Commands.Command (Command, ioCommand, performIO)
-import           UI.Generic (GenericWidget(..))
+import qualified Reactive.State.Global as Global
+import           UI.Widget (GenericWidget(..))
 import qualified UI.Widget as UIT
 
 
@@ -48,3 +49,6 @@ instance UIDisplayObject Model.Port where
         port <- UIR.lookup id :: IO Port
         setAngle port $ model ^. Model.angle
         setColor port $ model ^. Model.color
+
+widgetHandlers :: UIHandlers Global.State
+widgetHandlers = def

@@ -11,26 +11,25 @@ import           GHCJS.Marshal.Pure (PToJSVal(..), PFromJSVal(..))
 import           GHCJS.DOM.Element  (Element)
 import           UI.Widget          (UIWidget(..), UIContainer(..))
 import qualified UI.Registry        as UIR
+import           Event.Keyboard (KeyMods(..))
 import qualified Reactive.State.UIRegistry as UIRegistry
 import qualified Object.Widget.Node as Model
 import           Object.Widget
 import           Object.UITypes
 import           Event.Mouse (MouseButton(..))
+import qualified Event.Mouse as Mouse
 import           Utils.CtxDynamic (toCtxDynamic)
 import           Reactive.Commands.Command (Command, ioCommand, performIO)
-import           UI.Generic (GenericWidget(..))
+import qualified Reactive.Commands.UIRegistry as UICmd
+import qualified Reactive.State.Global as Global
+import           UI.Widget (GenericWidget(..))
 import qualified UI.Widget as UIT
-
+import           UI.Generic (takeFocus)
 
 newtype Node = Node { unNode :: JSVal } deriving (PToJSVal, PFromJSVal)
 
 instance UIWidget    Node
 instance UIContainer Node
-
-instance Focusable Model.Node where
-    mayFocus LeftButton _ _ _ = True
-    mayFocus _          _ _ _ = False
-
 
 foreign import javascript unsafe "new GraphNode(-1, new THREE.Vector2($2, $3), 0, $1)" create' :: WidgetId -> Double -> Double -> IO Node
 foreign import javascript unsafe "$1.setExpandedStateBool($2)"     setExpandedState :: Node -> Bool     -> IO ()
@@ -56,25 +55,8 @@ selectedState = to selectedState' where
 setSelectedState :: Node -> Model.Node -> IO ()
 setSelectedState node model = setSelected node $ model ^. selectedState
 
-updateSelectedState :: WidgetId -> Model.Node -> Command (UIRegistry.State a) ()
-updateSelectedState id model = performIO $ do
-    uiWidget <- UIR.lookup id
-    setSelectedState uiWidget model
-
-unselectNode :: WidgetFile a Model.Node -> Command (UIRegistry.State a) ()
-unselectNode file = do
-    let widgetId  = file ^. objectId
-    model' <- UIRegistry.updateWidgetM widgetId $ Model.isSelected .~ False
-    updateSelectedState widgetId model'
-
-instance HandlesKeyPressed Model.Node where
-    onKeyPressed char _ file model = (action, toCtxDynamic newModel) where
-        newModel = model & Model.isExpanded %~ not
-        action   = case char of
-            '\r' -> do
-                widget <- UIR.lookup $ file ^. objectId
-                setExpandedState widget (newModel ^. Model.isExpanded)
-            _    -> return ()
+unselectNode :: WidgetId -> Command (UIRegistry.State a) ()
+unselectNode = flip UICmd.update (Model.isSelected .~ False)
 
 
 ifChanged :: (Eq b) => a -> a -> Lens' a b -> IO () -> IO ()
@@ -100,3 +82,41 @@ instance UIDisplayObject Model.Node where
         ifChanged old model Model.value $ do
             setValue node $ lazyTextToJSString $ model ^. Model.value
 
+
+keyPressedHandler :: KeyPressedHandler Global.State
+keyPressedHandler '\r' _ id = zoom Global.uiRegistry $ UICmd.update id (Model.isExpanded %~ not)
+keyPressedHandler _ _ _ = return ()
+
+handleSelection :: Mouse.Event' -> WidgetId -> Command Global.State ()
+handleSelection evt id = case evt ^. Mouse.keyMods of
+    KeyMods False False False False -> zoom Global.uiRegistry $ performSelect id
+    KeyMods False False True  False -> zoom Global.uiRegistry $ toggleSelect  id
+    otherwise                       -> return ()
+
+performSelect :: WidgetId -> Command (UIRegistry.State a) ()
+performSelect id = do
+    isSelected <- UICmd.get id Model.isSelected
+    unless isSelected $ do
+        unselectAll
+        UICmd.update id (Model.isSelected .~ True)
+
+toggleSelect :: WidgetId -> Command (UIRegistry.State a) ()
+toggleSelect id = UICmd.update id (Model.isSelected %~ not)
+
+unselectAll :: Command (UIRegistry.State a) ()
+unselectAll = do
+    widgets <- allNodes
+    let widgetIds = (^. objectId) <$> widgets
+    forM_ widgetIds $ (flip UICmd.update) (Model.isSelected .~ False)
+
+widgetHandlers :: UIHandlers Global.State
+widgetHandlers = def & keyPressed  .~ keyPressedHandler
+                     & mouseOver   .~ (\id -> performIO (putStrLn $ "Over" <> (show id)))
+                     & mouseOut    .~ (\id -> performIO (putStrLn $ "Out" <> (show id)))
+                     & click       .~ (\evt id -> do
+                         takeFocus evt id
+                         handleSelection evt id)
+
+
+allNodes :: Command (UIRegistry.State a) [WidgetFile a Model.Node]
+allNodes = UIRegistry.lookupAllM

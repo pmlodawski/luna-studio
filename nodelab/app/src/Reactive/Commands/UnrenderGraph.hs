@@ -12,6 +12,7 @@ import Object.Widget            (WidgetFile, objectId)
 import Object.Widget.Node       (Node)
 import Object.Widget.Connection (Connection)
 import JS.Widget                (removeWidget)
+import UI.Widget.Node ()
 
 unrender :: Command State ()
 unrender = do

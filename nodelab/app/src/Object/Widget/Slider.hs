@@ -74,3 +74,5 @@ displayPrecision minV maxV = numDigits $ ceiling $ max (alog10 minV) (alog10 max
     numDigits n            = max (3 - n) 0 where
 
 
+boundedNormValue :: IsSlider a => Lens' (Slider a) Double
+boundedNormValue = lens _normValue (flip setNormValue)

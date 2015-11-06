@@ -28,11 +28,11 @@ instance IsDisplayObject Port where
     widgetPosition = lens (\x -> Vector2 0.0 0.0) (error "Port has no position setter")
 
 
-instance HandlesMouseOver Port where
-    onMouseOver file model = (action, toCtxDynamic model) where
-                  action   = UI.setWidgetFocused (file ^. objectId) True
-
-instance HandlesMouseOut Port where
-    onMouseOut  file model = (action, toCtxDynamic model) where
-                  action   = UI.setWidgetFocused (file ^. objectId) False
-
+-- instance HandlesMouseOver Port where
+--     onMouseOver file model = (action, toCtxDynamic model) where
+--                   action   = UI.setWidgetFocused (file ^. objectId) True
+--
+-- instance HandlesMouseOut Port where
+--     onMouseOut  file model = (action, toCtxDynamic model) where
+--                   action   = UI.setWidgetFocused (file ^. objectId) False
+--

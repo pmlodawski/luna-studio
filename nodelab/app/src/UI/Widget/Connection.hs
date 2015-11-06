@@ -10,14 +10,13 @@ import           GHCJS.Marshal.Pure (PToJSVal(..), PFromJSVal(..))
 import           GHCJS.DOM.Element  (Element)
 import           UI.Widget          (UIWidget(..), UIContainer(..))
 import qualified UI.Registry        as UIR
-import qualified Reactive.State.UIRegistry as UIRegistry
 import qualified Object.Widget.Connection as Model
 import           Object.Widget
 import           Object.UITypes
 import           Event.Mouse (MouseButton(..))
 import           Utils.CtxDynamic (toCtxDynamic)
 import           Reactive.Commands.Command (Command, ioCommand, performIO)
-import           UI.Generic (GenericWidget(..))
+import           UI.Widget (GenericWidget(..))
 import qualified UI.Widget as UIT
 
 
@@ -58,3 +57,4 @@ instance UIDisplayObject Model.CurrentConnection where
         setPos     connection (model ^. Model.currentFrom . x)  (model ^. Model.currentFrom . y)  (model ^. Model.currentTo . x)  (model ^. Model.currentTo . y)
         setVisible connection (model ^. Model.currentVisible)
         setColor   connection (model ^. Model.currentColor)
+

@@ -4,7 +4,7 @@ import           Utils.PreludePlus
 import           Object.Widget.Node (PendingNode(..))
 import qualified Object.Widget.Node as Model
 import           Object.Node        (Node, nodePos, expression)
-import           Object.Widget      (WidgetFile, objectId, widget)
+import           Object.Widget      (WidgetFile, objectId, widget, UIDisplayObject(..))
 import           JS.Node            (createPendingNode)
 import           Utils.Vector       (Vector2, lengthSquared)
 
@@ -44,3 +44,7 @@ unrenderPending node = do
         Just pending -> zoom Global.uiRegistry $ removeWidget $ pending ^. objectId
         Nothing      -> return ()
 
+
+instance UIDisplayObject PendingNode where
+    createUI = undefined
+    updateUI = undefined
