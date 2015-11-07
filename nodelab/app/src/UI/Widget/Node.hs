@@ -110,10 +110,10 @@ unselectAll = do
     forM_ widgetIds $ (flip UICmd.update) (Model.isSelected .~ False)
 
 widgetHandlers :: UIHandlers Global.State
-widgetHandlers = def & keyPressed  .~ keyPressedHandler
-                     & mouseOver   .~ (\id -> performIO (putStrLn $ "Over" <> (show id)))
-                     & mouseOut    .~ (\id -> performIO (putStrLn $ "Out" <> (show id)))
-                     & click       .~ (\evt id -> do
+widgetHandlers = def & keyPressed   .~ keyPressedHandler
+                     & mouseOver    .~ (\id -> performIO (putStrLn $ "Over" <> (show id)))
+                     & mouseOut     .~ (\id -> performIO (putStrLn $ "Out" <> (show id)))
+                     & mousePressed .~ (\evt id -> do
                          takeFocus evt id
                          handleSelection evt id)
 
