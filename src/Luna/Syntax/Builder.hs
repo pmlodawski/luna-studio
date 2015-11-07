@@ -6,8 +6,8 @@
 
 module Luna.Syntax.Builder where
 
-import Flowbox.Prelude hiding (cons)
-import Data.Variants
+import Flowbox.Prelude hiding (cons, Cons)
+import Data.Variants   as     V
 import Control.Monad.Fix
 
 import           Luna.Syntax.Builder.Star (StarBuilder, StarBuilderT, MonadStarBuilder)
@@ -19,6 +19,7 @@ import           Luna.Syntax.AST.Arg
 import           Luna.Syntax.AST.Term
 import           Luna.Syntax.AST.Lit
 import           Luna.Syntax.AST.Decl
+import           Luna.Syntax.AST.Term
 import           Luna.Syntax.Layer
 
 import Data.Cata
@@ -35,11 +36,11 @@ runGraphT :: Monad m => GraphStarBuilderT s g m a -> g -> m (a, g)
 runGraphT g gs = flip runBuilderT gs $ flip StarBuilder.evalT Nothing $ g
 
 
-buildGraph :: Maybe s -> g -> GraphStarBuilder s g a -> (a, g)
-buildGraph = runIdentity .:. buildGraphT
+rebuildGraph :: Maybe s -> g -> GraphStarBuilder s g a -> (a, g)
+rebuildGraph = runIdentity .:. rebuildGraphT
 
-buildGraphT :: Monad m => Maybe s -> g -> GraphStarBuilderT s g m a -> m (a, g)
-buildGraphT s gs g = flip runBuilderT gs $ flip StarBuilder.evalT s $ g
+rebuildGraphT :: Monad m => Maybe s -> g -> GraphStarBuilderT s g m a -> m (a, g)
+rebuildGraphT s gs g = flip runBuilderT gs $ flip StarBuilder.evalT s $ g
 
 
 --- === Term builders ===
@@ -73,6 +74,13 @@ instance (Monad m, LayeredASTCons Lit m t) => ToMuM' Int         m t where toMuM
 
 -- Utils
 
+string2 :: forall m t. LayeredASTCons (Val (Mu t)) m t => String -> m (Mu t)
+string2 s = layeredASTCons (V.cons (String $ fromString s) :: Val (Mu t))
+
+--string2 :: LayeredASTCons Lit m t => String -> m (Mu t)
+--string2 = layeredASTCons . String . fromString
+
+
 mkASTRefWith :: (SpecificCons variant ast, MuBuilder a m t) => (ast -> m (a (Mu t))) -> variant -> m (Mu t)
 mkASTRefWith f a = buildMu =<< f (specificCons a)
 
@@ -93,6 +101,11 @@ arg = Arg Nothing . toMuM
 
 var :: forall name m t. (ToMuM' name m t, LayeredASTMuCons Var m t) => name -> m (Mu t)
 var n = layeredASTCons . Var =<< (toMuM' n :: m (Mu t))
+
+
+cons :: forall name m t. (ToMuM' name m t, LayeredASTCons (Cons (Mu t)) m t) => name -> m (Mu t)
+cons n = layeredASTCons . flip Cons [] =<< (toMuM' n :: m (Mu t))
+
 
 star :: LayeredASTCons Star m t => m (Mu t)
 star = layeredASTCons Star

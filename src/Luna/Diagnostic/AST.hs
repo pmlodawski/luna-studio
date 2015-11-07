@@ -52,7 +52,7 @@ toGraphViz g = DotGraph { strictGraph     = False
           nodeStmts       = fmap (uncurry labeledNode) $ zip nodeLabels nodeIds
           nodeInEdges   n = zip3 ([0..] :: [Int]) (genEdges $ index n g) (repeat n)
           inEdges         = concat $ fmap nodeInEdges nodeIds
-          mkEdge  (n,(a,attrs),b) = DotEdge a b attrs
+          mkEdge  (n,(a,attrs),b) = DotEdge a b attrs -- (GV.edgeEnds Back : attrs)
           edgeStmts       = fmap mkEdge inEdges
 
 

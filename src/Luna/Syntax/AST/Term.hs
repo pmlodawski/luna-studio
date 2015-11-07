@@ -132,10 +132,15 @@ instance Repr s t => Repr s (Cons     t) where repr (Cons     n t) = "Cons"     
 instance Repr s t => Repr s (Accessor t) where repr (Accessor n t) = "Accessor" <+> repr n <+> repr t
 instance Repr s t => Repr s (App      t) where repr (App      n t) = "App"      <+> repr n <+> repr t
 
-instance VariantReprs s (Val   t) => Repr s (Val   t) where repr (Val   t) = "Val"   <+> repr t
-instance VariantReprs s (Thunk t) => Repr s (Thunk t) where repr (Thunk t) = "Thunk" <+> repr t
-instance VariantReprs s (Term  t) => Repr s (Term  t) where repr (Term  t) = "Term"  <+> repr t
-instance VariantReprs s (Draft t) => Repr s (Draft t) where repr (Draft t) = "Draft" <+> repr t
+instance {-# OVERLAPPING #-} VariantReprs s (Val   t) => Repr s (Val   t) where repr (Val   t) = "Val"   <+> repr t
+instance {-# OVERLAPPING #-} VariantReprs s (Thunk t) => Repr s (Thunk t) where repr (Thunk t) = "Thunk" <+> repr t
+instance {-# OVERLAPPING #-} VariantReprs s (Term  t) => Repr s (Term  t) where repr (Term  t) = "Term"  <+> repr t
+instance {-# OVERLAPPING #-} VariantReprs s (Draft t) => Repr s (Draft t) where repr (Draft t) = "Draft" <+> repr t
+
+--instance {-# OVERLAPPING #-} VariantReprs HeaderOnly (Val   t) => Repr HeaderOnly (Val   t) where repr (Val   t) = repr t
+--instance {-# OVERLAPPING #-} VariantReprs HeaderOnly (Thunk t) => Repr HeaderOnly (Thunk t) where repr (Thunk t) = repr t
+--instance {-# OVERLAPPING #-} VariantReprs HeaderOnly (Term  t) => Repr HeaderOnly (Term  t) where repr (Term  t) = repr t
+--instance {-# OVERLAPPING #-} VariantReprs HeaderOnly (Draft t) => Repr HeaderOnly (Draft t) where repr (Draft t) = repr t
 
 -- HeaderOnly
 

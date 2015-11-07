@@ -45,7 +45,7 @@ import Data.Constraint
 import Control.Error.Util (hush)
 import Data.Convert.Errors (TypeMismatch (TypeMismatch))
 import Data.Constraint.Void
-import Data.Variants
+import Data.Variants hiding (cons)
 import qualified Data.Variants as V
 import Flowbox.System.Types hiding ((.:), insert)
 import           Control.Monad.State.Generate (newState)
@@ -97,6 +97,7 @@ import qualified System.Mem.Weak      as Mem
 import Data.IORef
 
 import Data.Container.Immersed
+import Data.Container.Hetero (Ptr(Ptr), ptrIdx)
 
 -- === HomoBuilder ===
 
@@ -111,11 +112,11 @@ instance (MuBuilder a m t, t ~ t') => MuBuilder a (HomoG t m) t' where
 
 -------------------------------------------------------------
 
-nytst2 :: IO (Arc (Labeled Int (Typed Draft)), HomoGraph ArcPtr (Labeled Int (Typed Draft)))
-nytst2 = do
+nytst2 ::(Arc (Labeled Int (Typed Draft)), HomoGraph ArcPtr (Labeled Int (Typed Draft)))
+nytst2 = 
     --ref <- liftBase $ newSTRef 1
     --ref <- stToIO $ newSTRef 1
-    flip runGraphT (VectorGraph def) $ do
+    flip runGraph (VectorGraph def) $ do
     --flip runGraphT (VectorGraph (def & finalizer .~ Just print)) $ do
         s    <- genTopStar
 
@@ -125,39 +126,73 @@ nytst2 = do
         sum  <- plus @$ [arg i1, arg i2]
         return s
 
---runGraphT :: Monad m => GraphStarBuilderT s g m a -> g -> m (a, g)
 
---GraphStarBuilderT s HomoGraph ArcPtr (Labeled Int (Typed Draft)) IO
---xtest :: _ => _
---xtest = flip runGraphT (VectorGraph def :: HomoGraph ArcPtr (Labeled Int (Typed Draft))) $ do
---    --flip runGraphT (VectorGraph (def & finalizer .~ Just print)) $ do
---        --s    <- genTopStar
---        i1 <- int 1
---        --i1   <- int 1
---        --i2   <- blank
---        --plus <- i1 @. "+"
---        --sum  <- plus @$ [arg i1, arg i2]
---        --return s
---        --return i1
---        return undefined
+typed a t = StarBuilder.with (const $ Just t) a
+
+pass2 :: Arc (Labeled Int (Typed Draft)) -> HomoGraph ArcPtr (Labeled Int (Typed Draft)) -> ([Arc (Labeled Int (Typed Draft))], HomoGraph ArcPtr (Labeled Int (Typed Draft)))
+pass2 s gr = rebuildGraph (Just s) gr $ do
+    g <- GraphBuilder.get
+    let ptrs = usedIxes g :: [Int]
+    unis <- fmap concat . flip mapM ptrs $ \ptr -> do
+        g <- GraphBuilder.get
+        let (Labeled l (Typed t ast)) = index ptr g
+        out <- case' ast $ do
+            match $ \case
+                Int i -> do
+                    name <- string2 "Int"
+                    tp   <- cons name
+                    s <- star `typed` tp
+                    u <- unify (Mu (Ref (Ptr ptr))) s
+                    return [u]
+                String s -> return []
+            match $ \ANY -> return []
+        return out
+    return unis
+
+
+pass3 :: [Arc (Labeled Int (Typed Draft))] -> Arc (Labeled Int (Typed Draft)) -> HomoGraph ArcPtr (Labeled Int (Typed Draft)) -> ((), HomoGraph ArcPtr (Labeled Int (Typed Draft)))
+pass3 unis s gr = rebuildGraph (Just s) gr $ do
+    g <- GraphBuilder.get
+    flip mapM unis $ \uni -> do
+        let cptr                     = ptrIdx . fromRef . unwrap
+            Labeled l (Typed t ast') = index (cptr uni) g
+        case' ast' $ match $ \(Unify pa pb) -> do
+            let ptra = cptr pa
+                ptrb = cptr pb
+                Labeled la (Typed ta asta) = index ptra g
+                Labeled lb (Typed tb astb) = index ptrb g
+            case' astb $ do
+                match $ \Star -> do
+                    let Labeled lta (Typed tta astta) = index (cptr ta) g
+                    case' astta $ do
+                        match $ \Star -> do
+                            let g' = free (cptr uni)
+                                   $ unchecked inplace insert ptra (Labeled la (Typed tb asta)) g
+                            GraphBuilder.put g'
+                    --string "fooooooo"
+
+            return ()
+        return ()
+    return ()
 
 
 main :: IO ()
 main = do
     --putStrLn $ repr y
-    print . repr =<< nytst2
-    (_, g) <- nytst2
-    --putStrLn $ repr $ nytst3
-    --print c'
-    --print $ take 1000 names
+    --print . repr =<< nytst2
+    let (s, g) = nytst2
 
     print $ ixes g
     print $ usedIxes g
     print $ freeIxes g
-    
+
     let gv = toGraphViz g
     --print   gv
-    display gv
+
+    let (unis2, g2) = pass2 s g
+    let (_    , g3) = pass3 unis2 s g2
+
+    display $ toGraphViz g3
 
     --let xa = fromList [1,2,3] :: Auto (Weak Vector) Int
     --let xb = fromList [1,2,3] :: WeakAuto Vector Int
@@ -300,26 +335,7 @@ unifyLit = \case
 data Constraint a = ConstraintType a a
 
 --withType t = do
-typed a t = StarBuilder.with (const $ Just t) a
 
-    --pass2 :: ([Arc (Labeled Int (Typed Draft))], HomoGraph ArcPtr (Labeled Int (Typed Draft)))
-    --pass2 = buildGraph (Just s) (BldrState [] gr) $ do
-    --    g <- viewGraph
-    --    let ptrs = indexes g :: [Int]
-    --    unis <- fmap concat . flip mapM ptrs $ \ptr -> do
-    --        g <- viewGraph
-    --        let (Labeled l (Typed t ast)) = index ptr g
-    --        out <- case' ast $ do
-    --            match $ \case
-    --                Int i -> do
-    --                    (i :: _) <- string "Int"
-    --                    s <- star `typed` i
-    --                    u <- unify (Mu (Ref (Ptr ptr))) s
-    --                    return [u]
-    --                String s -> return []
-    --            match $ \ANY -> return []
-    --        return out
-    --    return unis
 
     --(unis2, gr2) = pass2
 
@@ -353,8 +369,8 @@ typed a t = StarBuilder.with (const $ Just t) a
 
     --gr3 = snd pass3
 
-valCons :: Variant a (Val t) => a -> Val t
-valCons = cons
+--valCons :: Variant a (Val t) => a -> Val t
+--valCons = cons
 
 --val = cons . valCons
 

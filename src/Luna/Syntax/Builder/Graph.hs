@@ -181,7 +181,7 @@ evalBuilderT = evalT
         --                   fmap (Mu . Ref . ptrFrom) . modifyM2 $ ixed addM a
 
 
-instance (t ~ Ref i a, MonadIO m, Ixed (AddableM (GraphBuilderT g m)) (a (Mu t)) g, PtrFrom (IndexOf (ContainerOf g)) i)
+instance (t ~ Ref i a, Monad m, Ixed (AddableM (GraphBuilderT g m)) (a (Mu t)) g, PtrFrom (IndexOf (ContainerOf g)) i)
       => MuBuilder a (GraphBuilderT g m) t where
     buildMu a = fmap (Mu . Ref . ptrFrom) . modifyM $ ixed addM a
 
