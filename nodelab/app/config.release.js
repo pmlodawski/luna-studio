@@ -2,6 +2,7 @@ module.exports = {
   backend: true,
   backendAddress: (window.backendAddress || "wss://demo.nodelab.io/backend"),
   logging:         false,
+  exportState:     false,
   backgroundColor: 0x1a1a1a,
   fontSize:        0.45,
   nodeSearcher: {

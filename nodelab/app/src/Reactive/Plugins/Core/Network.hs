@@ -23,6 +23,7 @@ import qualified Reactive.Plugins.Core.Action.Backend.GraphFetcher  as GraphFetc
 import qualified Reactive.Plugins.Core.Action.Backend.AddNode       as AddNode
 import qualified Reactive.Plugins.Core.Action.ConnectionPen         as ConnectionPen
 import qualified Reactive.Plugins.Core.Action.TextEditor            as TextEditor
+import qualified Reactive.Plugins.Core.Action.Debug                 as Debug
 
 import           Reactive.Commands.Command (Command, execCommand)
 import           Reactive.State.Global     (State, initialState)
@@ -50,6 +51,7 @@ makeNetworkDescription conn logging workspace = do
                    , Handlers.webSocketHandler conn
                    , Handlers.connectionPenHandler
                    , Handlers.textEditorHandler
+                   , Handlers.debugHandler
                    ]
 
     primitiveE <- RB.unions <$> sequence (fromAddHandler <$> handlers)
@@ -72,6 +74,7 @@ makeNetworkDescription conn logging workspace = do
                    , GraphFetcher.toAction
                    , ConnectionPen.toAction
                    , TextEditor.toAction
+                   , Debug.toAction
                    ]
 
         commands :: Event t (Command State ())

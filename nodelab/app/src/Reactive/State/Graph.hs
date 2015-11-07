@@ -18,6 +18,7 @@ import           Luna.Syntax.Builder.Graph hiding (get, put)
 import           Luna.Syntax.Builder
 import           AST.AST
 import           Data.Aeson
+import           Utils.Aeson (intMapToJSON)
 
 
 type NodesRefsMap = IntMap GraphRefMeta
@@ -41,8 +42,8 @@ data State = State { _nodesMap       :: NodesMap       -- don't access it direct
 makeLenses ''State
 
 instance ToJSON State where
-    toJSON st = object [ "_nodes"       .= (toJSON $ st ^. nodesMap)
-                       , "_connections" .= (toJSON $ st ^. connectionsMap)
+    toJSON st = object [ "_nodes"       .= (intMapToJSON $ st ^. nodesMap)
+                       , "_connections" .= (intMapToJSON $ st ^. connectionsMap)
                        ]
 
 -- TODO: Implement in full

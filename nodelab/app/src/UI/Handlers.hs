@@ -24,7 +24,7 @@ class HasHandlers a where
     widgetHandlers :: DisplayObject -> UIHandlers a
 
 nodeType              = typeOf (undefined :: Node)
-sliderDoubleType       = typeOf (undefined :: Slider Double)
+sliderDoubleType      = typeOf (undefined :: Slider Double)
 sliderIntType         = typeOf (undefined :: Slider Int)
 connectionType        = typeOf (undefined :: Connection)
 currentConnectionType = typeOf (undefined :: CurrentConnection)

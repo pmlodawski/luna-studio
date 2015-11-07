@@ -20,6 +20,9 @@ if (brunch.env !== "production") {
   if (localStorage.getItem("backend") !== null) {
     browser.backend = (localStorage.getItem("backend") === "true");
   }
+  if (localStorage.getItem("exportState") !== null) {
+    browser.exportState = (localStorage.getItem("exportState") === "true");
+  }
   browser.backendAddress = localStorage.getItem("backendAddress") || "ws://127.0.0.1:8088";
 
   config = _({}).defaults(browser, local, debug, release);
@@ -51,6 +54,11 @@ if (brunch.env !== "production") {
     console.info("Logging disabled! Please reload the page.");
     localStorage.setItem('logging', "false");
   };
+
+  window.showState = function() {
+    window.dispatchEvent(new Event('getState'));
+  };
+
 } else {
   config = release;
 }

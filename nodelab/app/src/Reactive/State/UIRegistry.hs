@@ -25,7 +25,7 @@ import           Control.Monad.Trans.RWS (RWS)
 import           Reactive.Commands.Command (Command, performIO, pureCommand)
 
 import Data.Aeson (ToJSON, toJSON, object, (.=), Value)
-import qualified Data.HashMap.Strict as H
+import           Utils.Aeson (intMapToJSON)
 
 sceneInterfaceId, sceneGraphId, currentConnectionId :: Int
 sceneInterfaceId    = 1
@@ -41,9 +41,6 @@ data State a = State { _widgets         :: WidgetMap a
                      } deriving (Generic)
 
 makeLenses ''State
-
-intMapToJSON :: WidgetMap a -> Value
-intMapToJSON map = object $ (\(k, v) -> (Text.toStrict . Text.pack $ show k) .= (toJSON v)) <$> IntMap.toList map
 
 instance ToJSON (State a) where
     toJSON st = object [ "_widgets"       .= (intMapToJSON $ st ^. widgets)

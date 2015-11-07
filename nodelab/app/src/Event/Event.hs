@@ -10,6 +10,7 @@ import qualified Event.Connection    as Connection
 import qualified Event.ConnectionPen as ConnectionPen
 import qualified Event.Batch         as Batch
 import qualified Event.TextEditor    as TextEditor
+import qualified Event.Debug         as Debug
 
 data Event = Init
            | Window               Window.Event
@@ -20,6 +21,7 @@ data Event = Init
            | ConnectionPen ConnectionPen.Event
            | Batch                 Batch.Event
            | TextEditor       TextEditor.Event
+           | Debug                 Debug.Event
 
 makeLenses ''Event
 
@@ -36,3 +38,4 @@ instance PrettyPrinter Event where
     display (ConnectionPen  ev) = "ConPn(" <> display ev <> ")"
     display (Batch          ev) = "BchEv(" <> display ev <> ")"
     display (TextEditor     ev) = "TxtEd(" <> display ev <> ")"
+    display (Debug          ev) = "Debug(" <> display ev <> ")"

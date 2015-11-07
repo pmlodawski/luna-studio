@@ -17,6 +17,7 @@ import qualified GHCJS.DOM.UIEvent       as UIEvent
 import qualified JS.WebSocket            as WebSocket
 import qualified JS.ConnectionPen        as ConnectionPen
 import qualified JS.TextEditor           as TextEditor
+import           JS.Debug                (getState)
 
 import           Reactive.Banana.Frameworks ( AddHandler(..), liftIO )
 
@@ -28,6 +29,7 @@ import qualified Event.Keyboard      as Keyboard
 import qualified Event.Mouse         as Mouse
 import           Object.UITypes      as Mouse
 import qualified Event.Window        as Window
+import qualified Event.Debug         as Debug
 import qualified Event.NodeSearcher  as NodeSearcher
 import qualified Event.Connection    as Connection
 import qualified Event.ConnectionPen as ConnectionPen
@@ -178,3 +180,9 @@ textEditorHandler  = AddHandler $ \h -> do
     TextEditor.registerCallback $ \code -> do
         codeStr <- return $ TextEditor.toJSString code
         liftIO $ h $ TextEditor $ TextEditor.CodeModified $ lazyTextFromJSString codeStr
+
+
+debugHandler :: AddHandler Event
+debugHandler = AddHandler $ \h -> do
+    window <- fromJust <$> currentWindow
+    window `on` getState $ liftIO . h $ Debug $ Debug.GetState

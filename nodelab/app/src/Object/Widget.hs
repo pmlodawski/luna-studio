@@ -141,9 +141,13 @@ makeLenses ''UIHandlers
 
 makeLenses ''WidgetFile
 
-instance ToJSON b => ToJSON (WidgetFile a b) where
+widgetType :: DisplayObject -> String
+widgetType (CtxDynamic tpe _) = show tpe
+
+instance ToJSON (WidgetFile a DisplayObject) where
     toJSON file = object [ "_objectId" .= (toJSON $ file ^. objectId)
                          , "_widget"   .= (toJSON $ file ^. widget  )
                          , "_parent"   .= (toJSON $ file ^. parent  )
                          , "_children" .= (toJSON $ file ^. children)
+                         , "_type"     .= (toJSON $ widgetType $ file ^. widget)
                          ]
