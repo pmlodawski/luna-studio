@@ -63,7 +63,7 @@ instance GenEdges (a t) => GenEdges (Labeled l a t) where
     genEdges (Labeled _ a) = genEdges a
 
 instance (t ~ Mu (Ref Int a), GenEdges (Draft t)) => GenEdges (Typed Draft t) where
-    genEdges (Typed t a) = [(ptrIdx . fromRef . unwrap $ t, [GV.color GVC.Red])] <> genEdges a
+    genEdges (Typed t a) = [(ptrIdx . fromRef . unwrap $ t, [GV.color GVC.Red, GV.edgeEnds Back])] <> genEdges a
 
 instance t ~ Mu (Ref Int a) => GenEdges (Draft t) where
     genEdges a = ($ inEdges) $ case checkName a of
@@ -81,21 +81,27 @@ instance t ~ Mu (Ref Int a) => GenEdges (Draft t) where
 
 
 class Displayable m a where
+    render  :: String -> a -> m ()
     display :: a -> m ()
 
-class OpenPictureUtility p where
-    openPictureUtility :: p -> String
+class OpenUtility p where
+    openUtility :: p -> String
 
-instance OpenPictureUtility Windows where openPictureUtility = const "start"
-instance OpenPictureUtility Darwin  where openPictureUtility = const "open"
-instance OpenPictureUtility Linux   where openPictureUtility = const "xdg-open"
-instance OpenPictureUtility GHCJS   where openPictureUtility = const "open"
+instance OpenUtility Windows where openUtility = const "start"
+instance OpenUtility Darwin  where openUtility = const "open"
+instance OpenUtility Linux   where openUtility = const "xdg-open"
+instance OpenUtility GHCJS   where openUtility = const "open"
 
-openPicture picture = liftIO . createProcess . shell $ openPictureUtility platform <> " " <> picture
+open paths = liftIO . createProcess . shell $ openUtility platform <> " " <> mjoin " " paths
 
 instance (MonadIO m, Ord a, PrintDot a) => Displayable m (DotGraph a) where
+    render name gv = do
+        let path = "/tmp/" <> name <> ".png"
+        liftIO $ runGraphviz gv Png path
+        return ()
+
     display gv = do
-        let picture = "/tmp/out.png"
-        liftIO $ runGraphviz gv Png picture
-        openPicture picture
+        let path = "/tmp/out.png"
+        liftIO $ runGraphviz gv Png path
+        open [path]
         return ()

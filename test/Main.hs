@@ -64,7 +64,8 @@ import           Luna.Syntax.Builder.Star (MonadStarBuilder)
 import           Luna.Syntax.Builder.Star (StarBuilder, StarBuilderT)
 import qualified Luna.Syntax.Builder.Star as StarBuilder
 import Control.Monad.Trans.Identity
-import Luna.Diagnostic.AST (toGraphViz, display)
+--import Luna.Diagnostic.AST (toGraphViz, display)
+import Luna.Diagnostic.AST as Diag (toGraphViz, display, render, open)
 import Luna.Syntax.Layer.Typed
 import Luna.Syntax.Layer.Labeled
 import qualified Type.BaseType as BT
@@ -77,7 +78,7 @@ import Data.Container.Reusable
 import Data.Container.Class
 import Data.Container.Poly -- (Ixed)
 --import Data.Text.CodeBuilder.Builder
-import Data.Text.CodeBuilder.Builder as CB
+import Data.Text.CodeBuilder.Builder as CB hiding (render)
 
 import Data.Vector.Dynamic as VD
 
@@ -112,25 +113,49 @@ instance (MuBuilder a m t, t ~ t') => MuBuilder a (HomoG t m) t' where
 
 -------------------------------------------------------------
 
+--nytst2 ::(Arc (Labeled Int (Typed Draft)), HomoGraph ArcPtr (Labeled Int (Typed Draft)))
+--nytst2 = 
+--    flip runGraph (VectorGraph def) $ do
+--        s    <- genTopStar
+--        i1   <- int 1
+--        i2   <- blank
+--        plus <- i1 @. "+"
+--        sum  <- plus @$ [arg i1, arg i2]
+--        return s
+
 nytst2 ::(Arc (Labeled Int (Typed Draft)), HomoGraph ArcPtr (Labeled Int (Typed Draft)))
 nytst2 = 
-    --ref <- liftBase $ newSTRef 1
-    --ref <- stToIO $ newSTRef 1
     flip runGraph (VectorGraph def) $ do
-    --flip runGraphT (VectorGraph (def & finalizer .~ Just print)) $ do
         s    <- genTopStar
-
         i1   <- int 1
-        i2   <- blank
+        i2   <- int 2
+        --i3   <- int 3
+        --i2   <- blank
         plus <- i1 @. "+"
         sum  <- plus @$ [arg i1, arg i2]
         return s
 
+type FReg = Map String (Arc (Labeled Int (Typed Draft)))
 
 typed a t = StarBuilder.with (const $ Just t) a
 
-pass2 :: Arc (Labeled Int (Typed Draft)) -> HomoGraph ArcPtr (Labeled Int (Typed Draft)) -> ([Arc (Labeled Int (Typed Draft))], HomoGraph ArcPtr (Labeled Int (Typed Draft)))
-pass2 s gr = rebuildGraph (Just s) gr $ do
+addStdLiterals :: Arc (Labeled Int (Typed Draft)) -> HomoGraph ArcPtr (Labeled Int (Typed Draft)) -> (FReg, HomoGraph ArcPtr (Labeled Int (Typed Draft)))
+addStdLiterals s g = rebuildGraph (Just s) g $ mdo
+    strLit <- string "String" `typed` strTp
+    strTp  <- cons strLit
+
+    intLit <- string "Int" `typed` strTp
+    intTp  <- cons intLit
+
+    return $ Map.insert "String" strTp
+           $ Map.insert "Int"    intTp
+           $ Map.empty
+
+
+pass2 :: FReg -> Arc (Labeled Int (Typed Draft)) -> HomoGraph ArcPtr (Labeled Int (Typed Draft)) -> ([Arc (Labeled Int (Typed Draft))], HomoGraph ArcPtr (Labeled Int (Typed Draft)))
+pass2 freg s gr = rebuildGraph (Just s) gr $ do
+    let Just strTp = Map.lookup "String" freg
+    let Just intTp = Map.lookup "Int"    freg
     g <- GraphBuilder.get
     let ptrs = usedIxes g :: [Int]
     unis <- fmap concat . flip mapM ptrs $ \ptr -> do
@@ -139,12 +164,14 @@ pass2 s gr = rebuildGraph (Just s) gr $ do
         out <- case' ast $ do
             match $ \case
                 Int i -> do
-                    name <- string2 "Int"
-                    tp   <- cons name
-                    s <- star `typed` tp
+                    s <- star `typed` intTp
                     u <- unify (Mu (Ref (Ptr ptr))) s
                     return [u]
-                String s -> return []
+                String s -> do
+                    s <- star `typed` strTp
+                    u <- unify (Mu (Ref (Ptr ptr))) s
+                    return [u]
+                _        -> return []
             match $ \ANY -> return []
         return out
     return unis
@@ -152,8 +179,8 @@ pass2 s gr = rebuildGraph (Just s) gr $ do
 
 pass3 :: [Arc (Labeled Int (Typed Draft))] -> Arc (Labeled Int (Typed Draft)) -> HomoGraph ArcPtr (Labeled Int (Typed Draft)) -> ((), HomoGraph ArcPtr (Labeled Int (Typed Draft)))
 pass3 unis s gr = rebuildGraph (Just s) gr $ do
-    g <- GraphBuilder.get
     flip mapM unis $ \uni -> do
+        g <- GraphBuilder.get
         let cptr                     = ptrIdx . fromRef . unwrap
             Labeled l (Typed t ast') = index (cptr uni) g
         case' ast' $ match $ \(Unify pa pb) -> do
@@ -169,6 +196,7 @@ pass3 unis s gr = rebuildGraph (Just s) gr $ do
                             let g' = free (cptr uni)
                                    $ unchecked inplace insert ptra (Labeled la (Typed tb asta)) g
                             GraphBuilder.put g'
+                        match $ \ANY -> return ()
                     --string "fooooooo"
 
             return ()
@@ -186,14 +214,18 @@ main = do
     print $ usedIxes g
     print $ freeIxes g
 
-    let gv = toGraphViz g
+    let (freg, g') = addStdLiterals s g
+
     --print   gv
 
-    let (unis2, g2) = pass2 s g
+    let (unis2, g2) = pass2 freg s g'
     let (_    , g3) = pass3 unis2 s g2
 
-    display $ toGraphViz g3
+    render "t1" $ toGraphViz g'
+    render "t2" $ toGraphViz g2
+    render "t3" $ toGraphViz g3
 
+    open $ fmap (\i -> "/tmp/t" <> show i <> ".png") [1..3] 
     --let xa = fromList [1,2,3] :: Auto (Weak Vector) Int
     --let xb = fromList [1,2,3] :: WeakAuto Vector Int
     --let xa = fromList [1,2,3] :: Weak Vector Int
