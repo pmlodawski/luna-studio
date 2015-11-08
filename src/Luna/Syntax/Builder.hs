@@ -111,7 +111,7 @@ star :: LayeredASTCons Star m t => m (Mu t)
 star = layeredASTCons Star
 
 getStar :: LayeredStarBuilder m t => m (Mu t)
-getStar = do
+getStar =  do
     s <- StarBuilder.get
     case s of
         Just    ref -> return ref
