@@ -25,4 +25,4 @@ notify:
     on_failure: true
   webhook:
     urls:
-      - http://requestb.in/1c9gtvc1
+      - http://yc.nodelab.io/builds/L3EmGzBpajHukZ7cjnZzvk7aqIKJI30bzp0vgOLY4NShPTSojgvPs88APCG3mPa3
