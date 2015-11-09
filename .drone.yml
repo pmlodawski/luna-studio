@@ -23,3 +23,6 @@ notify:
     on_started: false
     on_success: true
     on_failure: true
+  webhook:
+    urls:
+      - http://requestb.in/1c9gtvc1
