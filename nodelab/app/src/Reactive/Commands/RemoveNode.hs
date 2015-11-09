@@ -14,7 +14,7 @@ import           Reactive.Commands.Selection       (selectedNodes)
 import           Reactive.Commands.Graph           (nodeIdToWidgetId)
 import           Reactive.Commands.DisconnectNodes (localDisconnectAll)
 
-import           Reactive.Commands.UIRegistry.RemoveWidget (removeWidgets)
+import           Reactive.Commands.UIRegistry (removeWidget)
 
 import qualified BatchConnector.Commands as BatchCmd
 import qualified JS.NodeGraph            as UIGraph
@@ -22,11 +22,10 @@ import           Object.Node             (Node, nodeId)
 import qualified Object.Widget.Node      as NodeModel
 
 
-removeSelectedNodes :: Char -> KeyMods -> WidgetId -> Command State ()
-removeSelectedNodes key _ _ = do
-    when (key == '\x08' || key == '\x2e') $ do
-        selectedNodes <- zoom Global.uiRegistry selectedNodes
-        mapM_ performRemoval $ (^. widget . NodeModel.nodeId) <$> selectedNodes
+removeSelectedNodes :: Command State ()
+removeSelectedNodes = do
+    selectedNodes <- zoom Global.uiRegistry selectedNodes
+    mapM_ performRemoval $ (^. widget . NodeModel.nodeId) <$> selectedNodes
 
 performRemoval :: NodeId -> Command State ()
 performRemoval nodeId = do
@@ -39,7 +38,6 @@ performRemoval nodeId = do
     workspace  <- use Global.workspace
 
     nodeWidgetId <- zoom Global.uiRegistry $ nodeIdToWidgetId nodeId
-    zoom Global.uiRegistry $ removeWidgets $ maybeToList nodeWidgetId
+    zoom Global.uiRegistry $ mapM_ removeWidget $ maybeToList nodeWidgetId
 
-    performIO $ do
-        BatchCmd.removeNodeById workspace nodeId
+    performIO $ BatchCmd.removeNodeById workspace nodeId

@@ -22,12 +22,13 @@ register parent model handlers = do
 
 update :: DisplayObjectClass a => WidgetId -> (a -> a) -> Command UIRegistry.State a
 update id fun = do
-    maybeFile     <- UIRegistry.lookupTypedM id
-    let file       = fromMaybe (error "updateWidgetM: invalidType") maybeFile
-        newWidget  = fun $ file ^. widget
-    UIRegistry.updateM id newWidget
-    performIO $ updateUI id (file ^. widget) newWidget
-    return newWidget
+    oldWidget <- UIRegistry.lookupTypedM  id
+    case oldWidget of
+        Nothing        -> error $ "Widget " <> (show id) <> " not found!"
+        Just oldWidget -> do
+            newWidget  <- UIRegistry.updateWidgetM id fun
+            performIO $ updateUI id (oldWidget ^. widget) newWidget
+            return newWidget
 
 update_ :: DisplayObjectClass a => WidgetId -> (a -> a) -> Command UIRegistry.State ()
 update_ id fun = update id fun >> return ()
@@ -55,3 +56,8 @@ handler id k = do
     case maybeFile of
         Nothing   -> return Nothing
         Just file -> return $ HMap.lookup k (file ^. handlers)
+
+removeWidget :: WidgetId -> Command UIRegistry.State ()
+removeWidget id = do
+    widgets <- UIRegistry.unregisterM id
+    forM_ widgets $ performIO . UI.removeWidget

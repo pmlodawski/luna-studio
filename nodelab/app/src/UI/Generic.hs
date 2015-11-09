@@ -25,6 +25,9 @@ import qualified UI.Registry as UIR
 foreign import javascript unsafe "$1.mesh.position.x = $2; $1.mesh.position.y = $3"
     setWidgetPosition'      :: JSVal -> Double -> Double -> IO ()
 
+foreign import javascript unsafe "app.removeWidget($1)"
+    removeWidget :: Int -> IO ()
+
 setWidgetPosition :: UIWidget a => Vector2 Double -> a -> IO ()
 setWidgetPosition (Vector2 x y) widget = setWidgetPosition' (pToJSVal widget) x y
 

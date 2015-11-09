@@ -7,8 +7,7 @@ import qualified Reactive.State.Graph      as Graph
 import           Reactive.Commands.Command (Command, performIO)
 import qualified Reactive.State.UIRegistry as UIRegistry
 import           Reactive.Commands.Graph   (updateConnNodes, updateConnections, updatePortAngles, connectionIdToWidgetId)
-
-import           Reactive.Commands.UIRegistry.RemoveWidget (removeWidgets)
+import           Reactive.Commands.UIRegistry (removeWidget)
 
 import           Object.Object           (ConnectionId, NodeId)
 
@@ -32,12 +31,11 @@ localDisconnectAll connectionIds = do
 
     let changedNodes       = getChangedNodes graph connectionIds
 
-    zoom Global.uiRegistry $ removeWidgets $ catMaybes widgetIds
+    zoom Global.uiRegistry $ mapM removeWidget $ catMaybes widgetIds
     Global.graph           %= Graph.removeConnections connectionIds
     updateConnNodes changedNodes
     updatePortAngles
     updateConnections
-    -- updateConnectionsUI
 
 disconnectAll :: [ConnectionId] -> Command State ()
 disconnectAll connectionIds = do

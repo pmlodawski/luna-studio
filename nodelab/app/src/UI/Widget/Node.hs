@@ -22,9 +22,13 @@ import           Utils.CtxDynamic (toCtxDynamic)
 import           Reactive.Commands.Command (Command, ioCommand, performIO)
 import qualified Reactive.Commands.UIRegistry as UICmd
 import qualified Reactive.State.Global as Global
+import           Reactive.State.Global (inRegistry)
 import           UI.Widget (GenericWidget(..))
 import qualified UI.Widget as UIT
 import           UI.Generic (takeFocus)
+import qualified Data.HMap.Lazy as HMap
+import           Data.HMap.Lazy (TypeKey(..))
+
 
 newtype Node = Node { unNode :: JSVal } deriving (PToJSVal, PFromJSVal)
 
@@ -82,9 +86,19 @@ instance UIDisplayObject Model.Node where
             setValue node $ lazyTextToJSString $ model ^. Model.value
 
 
-keyPressedHandler :: KeyPressedHandler Global.State
-keyPressedHandler '\r' _ id = zoom Global.uiRegistry $ UICmd.update_ id (Model.isExpanded %~ not)
-keyPressedHandler _ _ _ = return ()
+newtype RemoveNodeHandler = RemoveNodeHandler (Command Global.State ())
+removeNodeHandler = TypeKey :: TypeKey RemoveNodeHandler
+
+triggerRemoveHandler :: WidgetId -> Command Global.State ()
+triggerRemoveHandler id = do
+    maybeHandler <- inRegistry $ UICmd.handler id removeNodeHandler
+    forM_ maybeHandler $ \(RemoveNodeHandler handler) -> handler
+
+keyDownHandler :: KeyPressedHandler Global.State
+keyDownHandler '\r'   _ id = zoom Global.uiRegistry $ UICmd.update_ id (Model.isExpanded %~ not)
+keyDownHandler '\x08' _ id = triggerRemoveHandler id
+keyDownHandler '\x2e' _ id = triggerRemoveHandler id
+keyDownHandler _      _ _  = return ()
 
 handleSelection :: Mouse.Event' -> WidgetId -> Command Global.State ()
 handleSelection evt id = case evt ^. Mouse.keyMods of
@@ -109,7 +123,7 @@ unselectAll = do
     forM_ widgetIds $ (flip UICmd.update) (Model.isSelected .~ False)
 
 widgetHandlers :: UIHandlers Global.State
-widgetHandlers = def & keyPressed   .~ keyPressedHandler
+widgetHandlers = def & keyDown      .~ keyDownHandler
                      & mouseOver    .~ (\id -> performIO (putStrLn $ "Over" <> (show id)))
                      & mouseOut     .~ (\id -> performIO (putStrLn $ "Out" <> (show id)))
                      & mousePressed .~ (\evt id -> do

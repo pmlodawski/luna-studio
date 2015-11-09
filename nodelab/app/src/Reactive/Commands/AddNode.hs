@@ -22,13 +22,12 @@ import qualified Object.Widget.Slider  as Slider
 import qualified Reactive.State.Global         as Global
 import           Reactive.State.Global         (State)
 import qualified Reactive.State.Graph          as Graph
-import           Reactive.State.UIRegistry     (sceneGraphId)
+import           Reactive.State.UIRegistry     (sceneGraphId, addHandler)
 import qualified Reactive.State.UIRegistry     as UIRegistry
 import           Reactive.Commands.EnterNode   (enterNode)
 import           Reactive.Commands.RemoveNode  (removeSelectedNodes)
 import           Reactive.Commands.Command     (Command, performIO)
 import           Reactive.Commands.PendingNode (unrenderPending)
--- import           Reactive.Commands.Selection   (handleSelection)
 import qualified Reactive.Commands.UIRegistry as UICmd
 
 import qualified BatchConnector.Commands as BatchCmd
@@ -85,7 +84,8 @@ createPortControl parent port portRef = do
             return Nothing
 
 nodeHandlers :: Node -> HTMap
-nodeHandlers node = mempty
+nodeHandlers node = addHandler (UINode.RemoveNodeHandler removeSelectedNodes)
+                    mempty
 
 sliderHandleDoubleValueChanged :: PortRef -> Double -> WidgetId -> Command Global.State ()
 sliderHandleDoubleValueChanged portRef value widgetId = do
@@ -100,10 +100,12 @@ sliderHandleIntValueChanged portRef value widgetId = do
         BatchCmd.setValue workspace portRef $ double2Float $ 100.0 * value
 
 sliderDoubleHandlers :: PortRef -> HTMap
-sliderDoubleHandlers portRef = HMap.insert UISlider.valueChangedHandlerKey (UISlider.ValueChangedHandler $ sliderHandleDoubleValueChanged portRef) mempty
+sliderDoubleHandlers portRef = addHandler (UISlider.ValueChangedHandler $ sliderHandleDoubleValueChanged portRef)
+                               mempty
 
 sliderIntHandlers :: PortRef -> HTMap
-sliderIntHandlers portRef = HMap.insert UISlider.valueChangedHandlerKey (UISlider.ValueChangedHandler $ sliderHandleIntValueChanged portRef) mempty
+sliderIntHandlers portRef = addHandler (UISlider.ValueChangedHandler $ sliderHandleIntValueChanged portRef)
+                            mempty
 
 registerSinglePort :: WidgetId -> Node -> PortType -> Port -> Command UIRegistry.State ()
 registerSinglePort nodeWidgetId node portType port = do

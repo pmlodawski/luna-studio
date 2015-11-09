@@ -13,7 +13,7 @@ import qualified Reactive.State.Global     as Global
 import qualified Reactive.State.UIRegistry as UIRegistry
 import           Reactive.Commands.Command (Command, performIO)
 
-import           Reactive.Commands.UIRegistry.RemoveWidget (removeWidget)
+import           Reactive.Commands.UIRegistry (removeWidget)
 
 renderPending :: Node -> Command State ()
 renderPending node = do
