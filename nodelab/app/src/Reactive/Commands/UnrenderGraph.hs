@@ -18,8 +18,8 @@ unrender :: Command State ()
 unrender = do
     Global.graph .= def
     uiRegistry <- use Global.uiRegistry
-    let nodeWidgets  = UIRegistry.lookupAll uiRegistry :: [WidgetFile State Node]
-        connWidgets  = UIRegistry.lookupAll uiRegistry :: [WidgetFile State Connection]
+    let nodeWidgets  = UIRegistry.lookupAll uiRegistry :: [WidgetFile Node]
+        connWidgets  = UIRegistry.lookupAll uiRegistry :: [WidgetFile Connection]
         allWidgetIds = (view objectId <$> nodeWidgets) ++ (view objectId <$> connWidgets)
 
     zoom Global.uiRegistry $ removeWidgets allWidgetIds

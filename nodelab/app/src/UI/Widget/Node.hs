@@ -55,9 +55,8 @@ selectedState = to selectedState' where
 setSelectedState :: Node -> Model.Node -> IO ()
 setSelectedState node model = setSelected node $ model ^. selectedState
 
-unselectNode :: WidgetId -> Command (UIRegistry.State a) ()
-unselectNode = flip UICmd.update (Model.isSelected .~ False)
-
+unselectNode :: WidgetId -> Command UIRegistry.State ()
+unselectNode = flip UICmd.update_ (Model.isSelected .~ False)
 
 ifChanged :: (Eq b) => a -> a -> Lens' a b -> IO () -> IO ()
 ifChanged old new get action = if (old ^. get) /= (new ^. get) then action
@@ -84,7 +83,7 @@ instance UIDisplayObject Model.Node where
 
 
 keyPressedHandler :: KeyPressedHandler Global.State
-keyPressedHandler '\r' _ id = zoom Global.uiRegistry $ UICmd.update id (Model.isExpanded %~ not)
+keyPressedHandler '\r' _ id = zoom Global.uiRegistry $ UICmd.update_ id (Model.isExpanded %~ not)
 keyPressedHandler _ _ _ = return ()
 
 handleSelection :: Mouse.Event' -> WidgetId -> Command Global.State ()
@@ -93,17 +92,17 @@ handleSelection evt id = case evt ^. Mouse.keyMods of
     KeyMods False False True  False -> zoom Global.uiRegistry $ toggleSelect  id
     otherwise                       -> return ()
 
-performSelect :: WidgetId -> Command (UIRegistry.State a) ()
+performSelect :: WidgetId -> Command UIRegistry.State ()
 performSelect id = do
     isSelected <- UICmd.get id Model.isSelected
     unless isSelected $ do
         unselectAll
-        UICmd.update id (Model.isSelected .~ True)
+        UICmd.update_ id (Model.isSelected .~ True)
 
-toggleSelect :: WidgetId -> Command (UIRegistry.State a) ()
-toggleSelect id = UICmd.update id (Model.isSelected %~ not)
+toggleSelect :: WidgetId -> Command UIRegistry.State ()
+toggleSelect id = UICmd.update_ id (Model.isSelected %~ not)
 
-unselectAll :: Command (UIRegistry.State a) ()
+unselectAll :: Command UIRegistry.State ()
 unselectAll = do
     widgets <- allNodes
     let widgetIds = (^. objectId) <$> widgets
@@ -118,5 +117,5 @@ widgetHandlers = def & keyPressed   .~ keyPressedHandler
                          handleSelection evt id)
 
 
-allNodes :: Command (UIRegistry.State a) [WidgetFile a Model.Node]
+allNodes :: Command UIRegistry.State [WidgetFile Model.Node]
 allNodes = UIRegistry.lookupAllM

@@ -16,7 +16,6 @@ data Slider a = Slider { _position     :: Vector2 Double
                        , _minValue     :: a
                        , _maxValue     :: a
                        , _normValue    :: Double
-                       , _sliderPortId :: PortId
                        , _enabled      :: Bool
                        } deriving (Eq, Show, Typeable, Generic)
 

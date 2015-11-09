@@ -83,10 +83,10 @@ stopDrag drawing = do
     Global.connectionPen . ConnectionPen.drawing .= Nothing
     performIO UI.endPath
 
-lookupNode :: WidgetId -> Command State (Maybe (WidgetFile State UINode.Node))
+lookupNode :: WidgetId -> Command State (Maybe (WidgetFile UINode.Node))
 lookupNode = zoom Global.uiRegistry . UIRegistry.lookupTypedM
 
-lookupConnection :: WidgetId -> Command State (Maybe (WidgetFile State UIConnection.Connection))
+lookupConnection :: WidgetId -> Command State (Maybe (WidgetFile UIConnection.Connection))
 lookupConnection = zoom Global.uiRegistry . UIRegistry.lookupTypedM
 
 handleAction :: [WidgetId] -> ConnectionPen.Drawing -> Command State ()

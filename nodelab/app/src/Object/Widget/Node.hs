@@ -13,7 +13,7 @@ import Event.Mouse      (MouseButton(..))
 import Data.Aeson (ToJSON)
 
 data Node = Node { _nodeId     :: Int
-                 , _controls   :: [WidgetId]
+                 , _controls   :: [Maybe WidgetId]
                  , _ports      :: [WidgetId]
                  , _position   :: Position
                  , _expression :: Text

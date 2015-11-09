@@ -52,7 +52,7 @@ updateConnNodes nodeIds = pureCommand $ \state -> let
     newState      = state &  Global.graph %~ Graph.updateNodes nodesMap
     in newState
 
-lookupAllConnections :: Command (UIRegistry.State b) [WidgetFile b ConnectionModel.Connection]
+lookupAllConnections :: Command UIRegistry.State [WidgetFile ConnectionModel.Connection]
 lookupAllConnections = gets UIRegistry.lookupAll
 
 updateConnections :: Command Global.State ()
@@ -119,17 +119,17 @@ localConnectNodes src dst = do
 
 sortAndGroup assocs = Map.fromListWith (++) [(k, [v]) | (k, v) <- assocs]
 
-portRefToWidgetMap :: Command (UIRegistry.State a) (Map PortRef WidgetId)
+portRefToWidgetMap :: Command UIRegistry.State (Map PortRef WidgetId)
 portRefToWidgetMap = do
     ports <- allPorts
     return $ Map.fromList $ (\file -> (file ^. widget . PortModel.portRef, file ^. objectId)) <$> ports
 
-portRefToAngleMap :: Command (UIRegistry.State a) (Map PortRef Double)
+portRefToAngleMap :: Command UIRegistry.State (Map PortRef Double)
 portRefToAngleMap = do
     ports <- allPorts
     return $ Map.fromList $ (\file -> (file ^. widget . PortModel.portRef, file ^. widget . PortModel.angle)) <$> ports
 
-nodePositionMap :: Command (UIRegistry.State a) (IntMap (Vector2 Double))
+nodePositionMap :: Command UIRegistry.State (IntMap (Vector2 Double))
 nodePositionMap = do
     nodes <- allNodes
     return $ IntMap.fromList $ (\file -> (file ^. widget . Model.nodeId, file ^. widget . widgetPosition)) <$> nodes
@@ -189,22 +189,22 @@ updatePortAngles = do
         let widgetId = portWidgets ^? ix portRef
         forM_ widgetId $ \widgetId -> zoom Global.uiRegistry $ UICmd.update widgetId (PortModel.angleVector .~ vector)
 
-allNodes :: Command (UIRegistry.State a) [WidgetFile a Model.Node]
+allNodes :: Command UIRegistry.State [WidgetFile Model.Node]
 allNodes = UIRegistry.lookupAllM
 
-allPorts :: Command (UIRegistry.State a) [WidgetFile a PortModel.Port]
+allPorts :: Command UIRegistry.State [WidgetFile PortModel.Port]
 allPorts = UIRegistry.lookupAllM
 
-allConnections :: Command (UIRegistry.State a) [WidgetFile a ConnectionModel.Connection]
+allConnections :: Command UIRegistry.State [WidgetFile ConnectionModel.Connection]
 allConnections = UIRegistry.lookupAllM
 
-nodeIdToWidgetId :: NodeId -> Command (UIRegistry.State a) (Maybe WidgetId)
+nodeIdToWidgetId :: NodeId -> Command UIRegistry.State (Maybe WidgetId)
 nodeIdToWidgetId nodeId = do
     files <- allNodes
     let matching = find (\file -> (file ^. widget . Model.nodeId) == nodeId) files
     return (view objectId <$> matching)
 
-connectionIdToWidgetId :: ConnectionId -> Command (UIRegistry.State a) (Maybe WidgetId)
+connectionIdToWidgetId :: ConnectionId -> Command UIRegistry.State (Maybe WidgetId)
 connectionIdToWidgetId connectionId = do
     files <- allConnections
     let matching = find (\file -> (file ^. widget . ConnectionModel.connectionId) == connectionId) files

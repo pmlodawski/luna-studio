@@ -23,12 +23,16 @@ import           Object.UITypes
 import           GHCJS.Marshal.Pure(PToJSVal(..), PFromJSVal(..))
 import qualified Reactive.Commands.UIRegistry as UICmd
 import qualified Reactive.State.Global as Global
+import           Reactive.State.Global (inRegistry)
+import qualified Reactive.State.UIRegistry as UIRegistry
 
 import           UI.Widget (UIWidget(..))
 import qualified UI.Widget as Widget
 import qualified UI.Registry as UIR
 import qualified UI.Generic  as UI
 import           Reactive.Commands.Command (Command, ioCommand, performIO)
+import qualified Data.HMap.Lazy as HMap
+import           Data.HMap.Lazy (TypeKey(..))
 
 
 newtype Slider = Slider { unSlider :: JSVal } deriving (PToJSVal, PFromJSVal)
@@ -97,35 +101,55 @@ instance Model.IsSlider a => UIDisplayObject (Model.Slider a) where
 --                         slider  <- UIR.lookup (file ^. objectId)
 --                         setValue newModel slider
 
+newtype ValueChangedHandler = ValueChangedHandler (Double -> WidgetId -> Command Global.State ())
+
+valueChangedHandlerKey = TypeKey :: TypeKey ValueChangedHandler
+
+
+triggerValueChanged :: Double -> WidgetId -> Command Global.State ()
+triggerValueChanged new id = do
+    maybeHandler <- inRegistry $ UICmd.handler id valueChangedHandlerKey
+    forM_ maybeHandler $ \(ValueChangedHandler handler) -> handler new id
+
 dblClickHandler :: DblClickHandler Global.State
-dblClickHandler evt id = zoom Global.uiRegistry $ do
-    enabled <- UICmd.get id (Model.enabled :: Lens' (Model.Slider Double) Bool)
+dblClickHandler evt id = do
+    enabled <- inRegistry $ UICmd.get id (Model.enabled :: Lens' (Model.Slider Double) Bool)
     when enabled $ do
-        width <- UICmd.get id $ (Model.size :: Lens' (Model.Slider Double) (Vector2 Double)) . x
+        width <- inRegistry $ UICmd.get id $ (Model.size :: Lens' (Model.Slider Double) (Vector2 Double)) . x
         let normValue = (evt ^. Mouse.position ^. x) / width
-        UICmd.update id ((Model.boundedNormValue :: Lens' (Model.Slider Double) Double) .~ normValue)
+        inRegistry $ UICmd.update id ((Model.boundedNormValue :: Lens' (Model.Slider Double) Double) .~ normValue)
+        triggerValueChanged normValue id
 
 
 keyUpHandler :: KeyUpHandler Global.State
-keyUpHandler 'W' _ id = zoom Global.uiRegistry $ do
-    enabled <- UICmd.get id (Model.enabled :: Lens' (Model.Slider Double) Bool)
-    when enabled $ UICmd.update id ((Model.boundedNormValue :: Lens' (Model.Slider Double) Double) +~ 0.1)
+keyUpHandler 'W' _ id = do
+    enabled <- inRegistry $ UICmd.get id (Model.enabled :: Lens' (Model.Slider Double) Bool)
+    when enabled $ do
+        widget <- inRegistry $ UICmd.update id ((Model.boundedNormValue :: Lens' (Model.Slider Double) Double) +~ 0.1)
+        triggerValueChanged (widget ^. Model.boundedNormValue) id
 
-keyUpHandler 'Q' _ id = zoom Global.uiRegistry $ do
-    enabled <- UICmd.get id (Model.enabled :: Lens' (Model.Slider Double) Bool)
-    when enabled $ UICmd.update id ((Model.boundedNormValue :: Lens' (Model.Slider Double) Double) -~ 0.1)
+keyUpHandler 'Q' _ id = do
+    enabled <- inRegistry $ UICmd.get id (Model.enabled :: Lens' (Model.Slider Double) Bool)
+    when enabled $ do
+        widget <- inRegistry $  UICmd.update id ((Model.boundedNormValue :: Lens' (Model.Slider Double) Double) -~ 0.1)
+        triggerValueChanged (widget ^. Model.boundedNormValue) id
 
 keyUpHandler _ _ _ = return ()
 
 dragHandler :: DragMoveHandler Global.State
-dragHandler ds id = zoom Global.uiRegistry $ do
-    enabled <- UICmd.get id (Model.enabled :: Lens' (Model.Slider Double) Bool)
+dragHandler ds id = do
+    enabled <- inRegistry $ UICmd.get id (Model.enabled :: Lens' (Model.Slider Double) Bool)
     when enabled $ do
-        width <- UICmd.get id $ (Model.size :: Lens' (Model.Slider Double) (Vector2 Double)) . x
+        width <- inRegistry $ UICmd.get id $ (Model.size :: Lens' (Model.Slider Double) (Vector2 Double)) . x
         let normValue = (ds ^. currentPos . x) / width
-        UICmd.update id ((Model.boundedNormValue :: Lens' (Model.Slider Double) Double) .~ normValue)
+        inRegistry $ UICmd.update_ id ((Model.boundedNormValue :: Lens' (Model.Slider Double) Double) .~ normValue)
 
-dragEndHandler _ _ = performIO $ putStrLn "Trigger slider event ValueChanged"
+dragEndHandler _ id = do
+    enabled <- inRegistry $ UICmd.get id (Model.enabled :: Lens' (Model.Slider Double) Bool)
+    when enabled $ do
+        value <- inRegistry $ UICmd.get id (Model.boundedNormValue :: Lens' (Model.Slider Double) Double)
+        triggerValueChanged value id
+    performIO $ putStrLn "Trigger slider event ValueChanged"
 
 widgetHandlers :: UIHandlers Global.State
 widgetHandlers = def & keyUp    .~ keyUpHandler

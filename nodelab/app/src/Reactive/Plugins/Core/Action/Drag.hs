@@ -45,12 +45,12 @@ toAction (Mouse event@(Mouse.Event Mouse.Released _   Mouse.LeftButton _ _)) = J
 toAction _                                                                   = Nothing
 
 
-isNodeUnderCursor :: Command (UIRegistry.State a) Bool
+isNodeUnderCursor :: Command UIRegistry.State Bool
 isNodeUnderCursor = do
     maybeOver    <- use UIRegistry.widgetOver
     case maybeOver of
         Just widgetId -> do
-            widget <- UIRegistry.lookupTypedM widgetId :: Command (UIRegistry.State b) (Maybe (WidgetFile b Model.Node))
+            widget <- UIRegistry.lookupTypedM widgetId :: Command UIRegistry.State (Maybe (WidgetFile Model.Node))
             return $ isJust widget
         Nothing       -> return False
 

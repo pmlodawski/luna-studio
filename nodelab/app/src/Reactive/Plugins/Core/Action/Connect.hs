@@ -42,18 +42,18 @@ toAction (Mouse event@(Mouse.Event Mouse.Moved    pos Mouse.LeftButton _ _)) = J
 toAction (Mouse event@(Mouse.Event Mouse.Released _   Mouse.LeftButton _ _)) = Just $ whileConnecting $ stopDrag event
 toAction _                                                                   = Nothing
 
-showCurrentConnection :: Vector2 Double -> Vector2 Double -> Command (UIRegistry.State a) ()
-showCurrentConnection from to = UICmd.update UIRegistry.currentConnectionId $ (UIConnection.currentFrom    .~ from)
-                                                                            . (UIConnection.currentTo      .~ to  )
-                                                                            . (UIConnection.currentVisible .~ True)
+showCurrentConnection :: Vector2 Double -> Vector2 Double -> Command UIRegistry.State ()
+showCurrentConnection from to = UICmd.update_ UIRegistry.currentConnectionId $ (UIConnection.currentFrom    .~ from)
+                                                                             . (UIConnection.currentTo      .~ to  )
+                                                                             . (UIConnection.currentVisible .~ True)
 
-setCurrentConnectionColor :: Int -> Command (UIRegistry.State a) ()
-setCurrentConnectionColor color = UICmd.update UIRegistry.currentConnectionId $ UIConnection.currentColor .~ color
+setCurrentConnectionColor :: Int -> Command UIRegistry.State ()
+setCurrentConnectionColor color = UICmd.update_ UIRegistry.currentConnectionId $ UIConnection.currentColor .~ color
 
-hideCurrentConnection :: Command (UIRegistry.State a) ()
-hideCurrentConnection = UICmd.update UIRegistry.currentConnectionId $ UIConnection.currentVisible .~ False
+hideCurrentConnection :: Command UIRegistry.State ()
+hideCurrentConnection = UICmd.update_ UIRegistry.currentConnectionId $ UIConnection.currentVisible .~ False
 
-getPortWidgetUnderCursor :: EventWidget -> Command (UIRegistry.State a) (Maybe (WidgetFile a PortModel.Port))
+getPortWidgetUnderCursor :: EventWidget -> Command UIRegistry.State (Maybe (WidgetFile PortModel.Port))
 getPortWidgetUnderCursor (EventWidget widgetId _ _) = do
     file <- UIRegistry.lookupTypedM widgetId
     return file

@@ -15,7 +15,8 @@ import qualified Reactive.State.Drag              as Drag
 import qualified Reactive.State.Connect           as Connect
 import qualified Reactive.State.UIRegistry        as UIRegistry
 import qualified Reactive.State.ConnectionPen     as ConnectionPen
-import Data.Aeson (ToJSON)
+import           Data.Aeson (ToJSON)
+import           Reactive.Commands.Command (Command)
 
 data State = State { _mousePos       :: Vector2 Int
                    , _graph          :: Graph.State
@@ -23,7 +24,7 @@ data State = State { _mousePos       :: Vector2 Int
                    , _multiSelection :: MultiSelection.State
                    , _drag           :: Drag.State
                    , _connect        :: Connect.State
-                   , _uiRegistry     :: UIRegistry.State State
+                   , _uiRegistry     :: UIRegistry.State
                    , _connectionPen  :: ConnectionPen.State
                    , _workspace      :: Workspace
                    } deriving (Eq, Show, Generic)
@@ -37,3 +38,6 @@ initialState workspace = State def def def def def def def def workspace
 
 genNodeId :: State -> NodeId
 genNodeId state = Graph.genNodeId $ state ^. graph
+
+inRegistry :: Command UIRegistry.State a -> Command State a
+inRegistry = zoom uiRegistry

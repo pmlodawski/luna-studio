@@ -39,6 +39,8 @@ import qualified UI.Widget.Node   as UINode
 import qualified UI.Registry      as UIR
 import qualified UI.Widget        as UIT
 import qualified UI.Scene
+import qualified Data.HMap.Lazy as HMap
+import           Data.HMap.Lazy (HTMap)
 
 addNode :: Node -> Command State ()
 addNode node = do
@@ -46,72 +48,68 @@ addNode node = do
     zoom Global.graph $ modify (Graph.addNode node)
     zoom Global.uiRegistry $ registerNode node
 
-registerNode :: Node -> Command (UIRegistry.State State) ()
+registerNode :: Node -> Command UIRegistry.State ()
 registerNode node = do
-    let nodeWidget = Model.Node (node ^. nodeId) [] [] (node ^. nodePos) (node ^. expression) "()" False False False
-    id <- UICmd.register sceneGraphId
-                           nodeWidget
-                           (nodeHandlers node)
+    let nodeModel = Model.Node (node ^. nodeId) [] [] (node ^. nodePos) (node ^. expression) "()" False False False
+    nodeWidget <- UICmd.register sceneGraphId nodeModel (nodeHandlers node)
 
-    registerPorts id InputPort node
-    registerPorts id OutputPort node
+    forM_ (getPorts InputPort node) $ \port -> do
+        let portRef    = PortRef (node ^. nodeId) InputPort (port ^. portId)
+            portWidget = PortModel.Port portRef def (colorVT $ port ^. portValueType)
+        portW <- UICmd.register nodeWidget portWidget def
+        createPortControl nodeWidget port portRef
 
-    let rootId      = id
-        inPorts     = getPorts InputPort node
-        nat         = [0..] :: [Int]
-        portsWithId = zip nat inPorts
-        filteredPortsWithId = filter (\(id, port) -> port ^. portValueType == VTFloat || port ^. portValueType == VTNumeric) portsWithId
-        slidersDouble    = uncurry makeSliderFromPortDouble <$> filteredPortsWithId
-    sliderIds <- sequence $ addSliderToNode rootId (node ^. nodeId) <$> slidersDouble
-    UIRegistry.updateM rootId (nodeWidget & Model.controls .~ sliderIds)
+    registerOutputPorts nodeWidget node
 
-makeSliderFromPortDouble :: Int -> Port -> Slider Double
-makeSliderFromPortDouble i port = Slider (Vector2 10 (95 + (fromIntegral i) * 25)) (Vector2 180 20)
-                                         (Text.pack $ "param " <> show i) 0.0 1.0 0.2 (PortNum i) True
+createPortControl :: WidgetId -> Port -> PortRef -> Command UIRegistry.State (Maybe WidgetId)
+createPortControl parent port portRef = do
+    let pid = port ^. portId
+    case port ^. portValueType of
+        VTFloat -> do
+            let sliderWidget = (Slider (Vector2 10 (95 + (fromIntegral $ portIdToNum pid) * 25)) (Vector2 180 20)
+                                       (Text.pack $ "float " <> show pid) 0.0 1.0 0.2 True) :: Slider Double
+            id <- UICmd.register parent sliderWidget (sliderDoubleHandlers portRef)
+            return $ Just id
+        VTNumeric -> do
+            let sliderWidget = (Slider (Vector2 10 (95 + (fromIntegral $ portIdToNum pid) * 25)) (Vector2 180 20)
+                                       (Text.pack $ "float " <> show pid) 0.0 1.0 0.2 True) :: Slider Double
+            id <- UICmd.register parent sliderWidget (sliderDoubleHandlers portRef)
+            return $ Just id
+        VTInt -> do
+            let sliderWidget = (Slider (Vector2 10 (95 + (fromIntegral $ portIdToNum pid) * 25)) (Vector2 180 20)
+                                       (Text.pack $ "int " <> show pid) (-42) 42 0.2 True) :: Slider Int
+            id <- UICmd.register parent sliderWidget (sliderIntHandlers portRef)
+            return $ Just id
+        otherwise -> do
+            performIO $ putStrLn $ "No widget for  this type " <> (show $ port ^. portValueType)
+            return Nothing
 
-nodeHandlers :: Node -> UIHandlers State
-nodeHandlers node = def
+nodeHandlers :: Node -> HTMap
+nodeHandlers node = mempty
 
-retriveSliderDouble :: WidgetId -> Command (UIRegistry.State Global.State) (Maybe (WidgetFile Global.State (Slider Double)))
-retriveSliderDouble wid = UIRegistry.lookupTypedM wid
+sliderHandleDoubleValueChanged :: PortRef -> Double -> WidgetId -> Command Global.State ()
+sliderHandleDoubleValueChanged portRef value widgetId = do
+    workspace <- use Global.workspace
+    performIO $ do
+        BatchCmd.setValue workspace portRef $ double2Float value
 
-handleValueChanged :: NodeId -> WidgetId -> Command Global.State ()
-handleValueChanged nodeId wid = do
-    sliderFileDoubleMay <- zoom Global.uiRegistry $ retriveSliderDouble wid
-    case sliderFileDoubleMay of
-        Nothing         -> return ()
-        Just sliderFileDouble -> do
-            let val     = value $ sliderFileDouble ^. widget
-                portId  = sliderFileDouble ^. widget . Slider.sliderPortId
-                portRef = PortRef nodeId InputPort portId
-            workspace <- use Global.workspace
-            performIO $ do
-                BatchCmd.setValue workspace portRef $ double2Float val
+sliderHandleIntValueChanged :: PortRef -> Double -> WidgetId -> Command Global.State ()
+sliderHandleIntValueChanged portRef value widgetId = do
+    workspace <- use Global.workspace
+    performIO $ do
+        BatchCmd.setValue workspace portRef $ double2Float $ 100.0 * value
 
-sliderHandlers :: NodeId -> UIHandlers State
-sliderHandlers nodeId = def
- -- & dragEnd  .~ [handleValueChanged nodeId]
- -- & dblClick .~ [\_ -> handleValueChanged nodeId]
+sliderDoubleHandlers :: PortRef -> HTMap
+sliderDoubleHandlers portRef = HMap.insert UISlider.valueChangedHandlerKey (UISlider.ValueChangedHandler $ sliderHandleDoubleValueChanged portRef) mempty
 
-addSliderToNode :: IsSlider a => WidgetId -> NodeId -> Slider a -> Command (UIRegistry.State Global.State) WidgetId
-addSliderToNode widgetId nodeId slider = do
-    sliderWidget <- UIRegistry.registerM widgetId slider (sliderHandlers nodeId)
-    performIO $ addWidgetToNode widgetId sliderWidget
-    return $ sliderWidget ^. objectId
+sliderIntHandlers :: PortRef -> HTMap
+sliderIntHandlers portRef = HMap.insert UISlider.valueChangedHandlerKey (UISlider.ValueChangedHandler $ sliderHandleIntValueChanged portRef) mempty
 
-addWidgetToNode :: IsSlider a => WidgetId -> WidgetFile b (Slider a) -> IO ()
-addWidgetToNode nodeId newWidget = do
-    let sliderId = newWidget ^. objectId
-    slider <- UISlider.createSlider sliderId (newWidget ^. widget)
-    node   <- UIR.lookup nodeId :: IO UINode.Node
-    UIR.register sliderId slider
-    UIT.add      slider   node
-
-registerSinglePort :: WidgetId -> Node -> PortType -> Port -> Command (UIRegistry.State b) ()
+registerSinglePort :: WidgetId -> Node -> PortType -> Port -> Command UIRegistry.State ()
 registerSinglePort nodeWidgetId node portType port = do
     let portWidget = PortModel.Port (PortRef (node ^. nodeId) portType (port ^. portId)) def (colorVT $ port ^. portValueType)
     void $ UICmd.register nodeWidgetId portWidget def
 
-registerPorts :: WidgetId -> PortType -> Node -> Command (UIRegistry.State b) ()
-registerPorts nodeWidgetId portType node = mapM_ (registerSinglePort nodeWidgetId node portType) ports where
-    ports = getPorts portType node
+registerOutputPorts :: WidgetId -> Node -> Command UIRegistry.State ()
+registerOutputPorts nodeWidgetId node = mapM_ (registerSinglePort nodeWidgetId node OutputPort) ports where
+    ports = getPorts OutputPort node

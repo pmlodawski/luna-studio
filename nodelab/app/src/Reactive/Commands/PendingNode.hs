@@ -21,7 +21,7 @@ renderPending node = do
     file <- zoom Global.uiRegistry $ UIRegistry.registerM UIRegistry.sceneGraphId pendingNode def
     performIO $ createPendingNode (file ^. objectId) (node ^. expression) (node ^. nodePos)
 
-getAllPending :: Command (UIRegistry.State a) [WidgetFile a PendingNode]
+getAllPending :: Command UIRegistry.State [WidgetFile PendingNode]
 getAllPending = UIRegistry.lookupAllM
 
 distanceDelta :: Double
@@ -30,7 +30,7 @@ distanceDelta = 0.1
 areCloseEnough :: Vector2 Double -> Vector2 Double -> Bool
 areCloseEnough a b = distanceDelta > (lengthSquared $ a - b)
 
-isRightForNode :: Node -> WidgetFile a PendingNode -> Bool
+isRightForNode :: Node -> WidgetFile PendingNode -> Bool
 isRightForNode node pendingFile = sameExpression && closeEnough where
     pending        = pendingFile ^. widget
     sameExpression = node ^. expression == pending ^. Model.pendingExpression

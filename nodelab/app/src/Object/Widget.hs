@@ -18,6 +18,7 @@ import qualified Reactive.State.Camera     as Camera
 import           Reactive.Commands.Command (Command)
 import           Object.UITypes
 import           Data.Aeson (ToJSON, toJSON, object, (.=))
+import           Data.HMap.Lazy (HTMap)
 
 type DisplayObject = CtxDynamic DisplayObjectClass
 
@@ -34,12 +35,12 @@ instance DisplayObjectCtx a => DisplayObjectClass a
 -- class DisplayObjectClass a => DisplayObjectContainer a
 
 
-data WidgetFile a b = WidgetFile { _objectId :: WidgetId
-                                 , _widget   :: b
-                                 , _parent   :: Maybe WidgetId
-                                 , _children :: [WidgetId]
-                                 , _handlers :: UIHandlers a
-                                 } deriving (Generic)
+data WidgetFile b = WidgetFile { _objectId :: WidgetId
+                               , _widget   :: b
+                               , _parent   :: Maybe WidgetId
+                               , _children :: [WidgetId]
+                               , _handlers :: HTMap
+                               } deriving (Generic)
 
 type Position = Vector2 Double
 
@@ -144,7 +145,7 @@ makeLenses ''WidgetFile
 widgetType :: DisplayObject -> String
 widgetType (CtxDynamic tpe _) = show tpe
 
-instance ToJSON (WidgetFile a DisplayObject) where
+instance ToJSON (WidgetFile DisplayObject) where
     toJSON file = object [ "_objectId" .= (toJSON $ file ^. objectId)
                          , "_widget"   .= (toJSON $ file ^. widget  )
                          , "_parent"   .= (toJSON $ file ^. parent  )

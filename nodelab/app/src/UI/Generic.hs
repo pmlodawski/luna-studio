@@ -28,7 +28,7 @@ foreign import javascript unsafe "$1.mesh.position.x = $2; $1.mesh.position.y = 
 setWidgetPosition :: UIWidget a => Vector2 Double -> a -> IO ()
 setWidgetPosition (Vector2 x y) widget = setWidgetPosition' (pToJSVal widget) x y
 
-updatePosition :: (IsDisplayObject b) => WidgetFile a b -> Command (UIRegistry.State a) ()
+updatePosition :: (IsDisplayObject b) => WidgetFile b -> Command UIRegistry.State ()
 updatePosition file = performIO $ do
     let position = file ^. widget . widgetPosition
     w <- UIR.lookup $ file ^. objectId :: IO (GenericWidget)
