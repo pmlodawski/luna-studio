@@ -34,8 +34,9 @@ function start() {
       return;
     }
     window.already_initialized = true;
-    console.info("Starting app")
+
     require('env')();
+    window.h$errorMsg = displayAppCrashed;
   });
 }
 
@@ -271,6 +272,19 @@ var displayRejectedMessage = function () {
 var displayConnectionClosedMessage = function () {
   cleanupApp();
   $("#closed").show();
+};
+
+var displayAppCrashed = function (pat) {
+  // poor man's vprintf
+  var str = pat;
+  for(var i=1;i<arguments.length;i++) {
+    str = str.replace(/%s/, arguments[i]);
+  }
+
+  console.error('Haskell crashed', str);
+
+  $("#crashed").show();
+  $("#crashed pre").text(str);
 };
 
 module.exports = {
