@@ -124,8 +124,6 @@ unselectAll = do
 
 widgetHandlers :: UIHandlers Global.State
 widgetHandlers = def & keyDown      .~ keyDownHandler
-                     & mouseOver    .~ (\id -> performIO (putStrLn $ "Over" <> (show id)))
-                     & mouseOut     .~ (\id -> performIO (putStrLn $ "Out" <> (show id)))
                      & mousePressed .~ (\evt id -> do
                          takeFocus evt id
                          handleSelection evt id)

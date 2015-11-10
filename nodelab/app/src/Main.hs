@@ -38,7 +38,6 @@ import           Batch.Workspace
 import           Utils.URIParser
 
 import qualified Reactive.Plugins.Core.Network   as CoreNetwork
-import qualified Tmp.TypecheckerTest             as Typechecker -- TODO: Remove
 import           Tmp.BatchMock
 import           Reactive.Plugins.Loader.Loader
 
@@ -48,7 +47,7 @@ makeNetworkDescription = CoreNetwork.makeNetworkDescription
 
 runMainNetwork :: WebSocket -> Workspace -> IO ()
 runMainNetwork socket workspace = do
-    Typechecker.main  -- TODO: Remove
+    putStrLn "!!!!! Starting App"
     initializeGl
     render
     enableLogging <- isLoggerEnabled

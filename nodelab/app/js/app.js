@@ -29,17 +29,19 @@ var shouldRender = true;
 
 function start() {
   $(document).ready(function (){
-    $(document).bind('contextmenu', function () { return false; });
+    if (window.already_initialized) {
+      console.error("app already started");
+      return;
+    }
+    window.already_initialized = true;
+    console.info("Starting app")
     require('env')();
   });
 }
 
 function initializeGl() {
-    if (window.already_initialized) {
-        location.reload();
-    }
+    $(document).bind('contextmenu', function () { return false; });
 
-    window.already_initialized = true;
     $$.scene                 = new THREE.Scene();
     $$.sceneHUD              = new THREE.Scene();
 
@@ -91,7 +93,6 @@ function initializeGl() {
         event.stopPropagation();
       }
     });
-
 }
 
 function initUserInfo() {
@@ -255,12 +256,21 @@ function writeToTerminal(str) {
   $$.term.write(str);
 }
 
-var displayRejectedMessage = function () {
+var cleanupApp = function () {
   $("canvas").remove();
   $("#htmlcanvas-pan").remove();
   $("#spinner").remove();
   $("#editor").remove();
+};
+
+var displayRejectedMessage = function () {
+  cleanupApp();
   $("#rejected").show();
+};
+
+var displayConnectionClosedMessage = function () {
+  cleanupApp();
+  $("#closed").show();
 };
 
 module.exports = {
@@ -279,9 +289,8 @@ module.exports = {
   removeWidget:             removeWidget,
   websocket:                $$.websocket,
   displayRejectedMessage:   displayRejectedMessage,
+  displayConnectionClosedMessage:   displayConnectionClosedMessage,
   createPendingNode:        createPendingNode,
-  // getNode:                  function (index) { return $$.nodes[index];    },
-  // getNodes:                 function ()      { return _.values($$.nodes); },
   nodeSearcher:             function ()      { return $$.node_searcher;   },
   shouldRender:             function ()      { shouldRender = true;       },
   writeToTerminal:          writeToTerminal

@@ -33,7 +33,9 @@ module.exports = function () {
 
   var listeners = {
     onOpen: [],
-    onMessage: []
+    onMessage: [],
+    onClose: [],
+    onError: []
   };
 
   var attachListeners = function () {
@@ -42,6 +44,12 @@ module.exports = function () {
     });
     listeners.onMessage.forEach(function (listener) {
       connection.addEventListener("message", listener);
+    });
+    listeners.onClose.forEach(function (listener) {
+      connection.addEventListener("close", listener);
+    });
+    listeners.onError.forEach(function (listener) {
+      connection.addEventListener("error", listener);
     });
   };
 
@@ -61,6 +69,22 @@ module.exports = function () {
     unOnMessage: function (listener) {
       removeFromArray(listeners.onMessage, listener);
       connection.removeEventListener("message", listener);
+    },
+    onClose: function (listener) {
+      listeners.onClose.push(listener);
+      connection.addEventListener("close", listener);
+    },
+    unOnClose: function (listener) {
+      removeFromArray(listeners.onClose, listener);
+      connection.removeEventListener("close", listener);
+    },
+    onError: function (listener) {
+      listeners.onError.push(listener);
+      connection.addEventListener("error", listener);
+    },
+    unOnError: function (listener) {
+      removeFromArray(listeners.onError, listener);
+      connection.removeEventListener("error", listener);
     },
     connect: function (addr) {
       connection = new WebSocket(addr);

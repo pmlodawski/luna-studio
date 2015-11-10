@@ -15,6 +15,7 @@ function init() {
   editor = ace.edit("editor");
   editor.setTheme("ace/theme/twilight");
   editor.getSession().setMode("ace/mode/ruby");
+  editor.$blockScrolling = Infinity;
   $$.editor = editor;
 
   var saveChanges = function () {

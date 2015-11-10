@@ -85,7 +85,7 @@ require.register("bmfont", function(exports, require, module) {
           this.addAttribute('uv', this._uvs);
           if (multipage)
             this.addAttribute('page', this._pages);
-          this.addAttribute('index', this._indices);
+          this.setIndex(this._indices);
         }
         inherits(TextMesh, Base);
         TextMesh.prototype.update = function (opt) {

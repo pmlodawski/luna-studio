@@ -8,7 +8,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <link href="/stylesheets/app.css" rel="stylesheet" type="text/css">
   <link href="/font/LatoLatinBlack-Regular.css" rel="stylesheet" type="text/css">
-  <script src="http://localhost:6400/socket.io/socket.io.js" language="javascript"></script>
 </head>
 
 <body>
@@ -17,6 +16,13 @@
       <p>
          Oops. Another NodeLab instance has been started.
          <br />Using more than one instance per user is currently not supported.
+      </p>
+  </div>
+
+  <div id="closed" class="closed-container" style="display: none">
+      <p>
+         Oops. Connection was closed.
+         <br /> Please reload page to reconnect again.
       </p>
   </div>
 

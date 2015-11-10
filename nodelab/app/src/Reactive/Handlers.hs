@@ -167,6 +167,11 @@ webSocketHandler conn = AddHandler $ \h -> do
         payload <- WebSocket.getData event
         let frame = Connection.deserialize $ fromJSString payload
         mapM_ (h . Connection . Connection.Message) $ frame ^. Connection.messages
+    WebSocket.onClose conn $ \event -> do
+        code <- WebSocket.getCode event
+        h $ Connection $ Connection.Closed code
+    WebSocket.onError conn $ do
+        h $ Connection Connection.Error
 
 connectionPenHandler :: AddHandler Event
 connectionPenHandler  = AddHandler $ \h -> do
@@ -180,7 +185,6 @@ textEditorHandler  = AddHandler $ \h -> do
     TextEditor.registerCallback $ \code -> do
         codeStr <- return $ TextEditor.toJSString code
         liftIO $ h $ TextEditor $ TextEditor.CodeModified $ lazyTextFromJSString codeStr
-
 
 debugHandler :: AddHandler Event
 debugHandler = AddHandler $ \h -> do

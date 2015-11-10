@@ -45,7 +45,7 @@ var indicies = new THREE.BufferAttribute(new Uint16Array([0, 1, 2]), 1);
 inPortGeometry = new THREE.BufferGeometry();
 
 inPortGeometry.addAttribute('position', position);
-inPortGeometry.addAttribute('index', indicies );
+inPortGeometry.setIndex(indicies);
 inPortGeometry.addAttribute('posL', posL);
 inPortGeometry.addAttribute('posR', posR);
 inPortGeometry.addAttribute('posB', posB);

@@ -34,5 +34,5 @@ makeNetworkDescription callback projectName conn = do
         project  = filterJust $ readyProject <$> states
 
     reactimate $ fst <$> actions
-    reactimate $ print <$> project
+    -- reactimate $ print <$> project
     reactimate $ callback <$> project

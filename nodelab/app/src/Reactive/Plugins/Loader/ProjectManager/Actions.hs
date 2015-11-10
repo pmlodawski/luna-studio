@@ -2,7 +2,7 @@ module Reactive.Plugins.Loader.ProjectManager.Actions where
 
 import           Utils.PreludePlus
 import           Data.ByteString.Lazy      (ByteString)
-import           JS.UI                     (displayRejectedMessage)
+import           JS.UI                     (displayRejectedMessage, displayConnectionClosedMessage)
 
 import qualified Event.Event               as Event
 import qualified Event.Connection          as Connection
@@ -21,7 +21,8 @@ makeReaction f (_, state) = f state
 
 react :: Event.Event -> Maybe (Action -> Action)
 react event = makeReaction <$> handler event where
-    handler (Event.Batch event)                  = Just $ reactToBatchEvent event
+    handler (Event.Batch      event)             = Just $ reactToBatchEvent event
+    handler (Event.Connection event)             = reactToSocketEvent event
     handler _                                    = Nothing
 
 reactToBatchEvent :: Batch.Event -> State -> Action
@@ -37,6 +38,13 @@ reactToBatchEvent event state = handler state where
         (Ready _,              _)                          -> \st -> (return (), AfterInitialize)
         (_,                    ConnectionDropped)          -> \st -> (displayRejectedMessage, AfterInitialize)
         _                                                  -> \st -> (return (), st)
+
+reactToSocketEvent :: Connection.Event -> Maybe (State -> Action)
+reactToSocketEvent event = handler where
+    handler = case event of
+        Connection.Closed code   -> Just $ \st -> (displayConnectionClosedMessage, AfterInitialize)
+        Connection.Error         -> Just $ \st -> (displayConnectionClosedMessage, AfterInitialize)
+        _                        -> Nothing
 
 handleOpening :: State -> Action
 handleOpening state = (BatchCmd.listProjects, state)

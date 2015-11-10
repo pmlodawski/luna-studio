@@ -3,10 +3,13 @@
 module JS.WebSocket (WebSocket
                     , onOpen
                     , onMessage
+                    , onClose
+                    , onError
                     , getWebSocket
                     , connect
                     , send
                     , getData
+                    , getCode
                     ) where
 
 import Utils.PreludePlus
@@ -19,12 +22,16 @@ import Data.JSString
 data WSRef
 newtype WebSocket      = WebSocket      { unWebSocket      :: JSVal } deriving (PFromJSVal, PToJSVal)
 newtype WSMessageEvent = WSMessageEvent { unWSMessageEvent :: JSVal } deriving (PFromJSVal, PToJSVal)
+newtype WSClosedEvent  = WSClosedEvent  { unWSClosedEvent  :: JSVal } deriving (PFromJSVal, PToJSVal)
 
 instance IsJSVal WebSocket
 instance IsJSVal WSMessageEvent
 
 foreign import javascript unsafe "$1.data"
     getData :: WSMessageEvent -> IO (JSVal)
+
+foreign import javascript unsafe "$1.code"
+    getCode :: WSClosedEvent -> IO Int
 
 foreign import javascript unsafe "app.websocket"
     getWebSocket :: IO WebSocket
@@ -40,6 +47,18 @@ foreign import javascript unsafe "$1.onMessage($2)"
 
 foreign import javascript unsafe "$1.unOnMessage()"
     unOnMessage' :: WebSocket -> Callback (JSVal -> IO ()) -> IO ()
+
+foreign import javascript unsafe "$1.onClose($2)"
+    onClose' :: WebSocket -> Callback (JSVal -> IO ()) -> IO ()
+
+foreign import javascript unsafe "$1.unOnClose()"
+    unOnClose' :: WebSocket -> Callback (JSVal -> IO ()) -> IO ()
+
+foreign import javascript unsafe "$1.onError($2)"
+    onError' :: WebSocket -> Callback (IO ()) -> IO ()
+
+foreign import javascript unsafe "$1.unOnError()"
+    unOnError' :: WebSocket -> Callback (IO ()) -> IO ()
 
 foreign import javascript unsafe "$1.send($2)"
     send :: WebSocket -> JSString -> IO ()
@@ -61,4 +80,16 @@ onMessage ws callback = do
     wrappedCallback <- asyncCallback1 (callback . pFromJSVal)
     onMessage' ws wrappedCallback
     return $ unOnMessage' ws wrappedCallback >> releaseCallback wrappedCallback
+
+onClose :: WebSocket -> (WSClosedEvent -> IO ()) -> IO (IO ())
+onClose ws callback = do
+    wrappedCallback <- asyncCallback1 (callback . pFromJSVal)
+    onClose' ws wrappedCallback
+    return $ unOnClose' ws wrappedCallback >> releaseCallback wrappedCallback
+
+onError :: WebSocket -> IO () -> IO (IO ())
+onError ws callback = do
+    wrappedCallback <- asyncCallback callback
+    onError' ws wrappedCallback
+    return $ unOnError' ws wrappedCallback >> releaseCallback wrappedCallback
 
