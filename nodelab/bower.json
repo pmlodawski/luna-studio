@@ -16,7 +16,6 @@
     "jquery": "~2.1.4",
     "malihu-custom-scrollbar-plugin": "~3.0.9",
     "three.js": "http://threejs.org/build/three.min.js",
-    "viz": "https://github.com/mdaines/viz.js/releases/download/v1.2.0/viz.js",
     "underscore": "~1.8.3",
     "d3": "~3.5.6",
     "dimple": "~2.1.6"
