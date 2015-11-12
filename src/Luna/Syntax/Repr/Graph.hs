@@ -62,6 +62,11 @@ data SuccTracking a = SuccTracking [Int] a deriving (Show)
 type instance Unlayered (SuccTracking a) = a
 instance      Layered   (SuccTracking a) where layered = lens (\(SuccTracking _ a) -> a) (\(SuccTracking i _) a -> SuccTracking i a) 
 
+class TracksSuccs a where succs :: Lens' a [Int]
+instance {-# OVERLAPPABLE #-}                                           TracksSuccs (SuccTracking a) where succs = lens (\(SuccTracking ixs _) -> ixs) (\(SuccTracking _ a) ixs -> SuccTracking ixs a)
+instance {-# OVERLAPPABLE #-} (TracksSuccs (Unlayered a), Layered a) => TracksSuccs a                where succs = layered . succs
+
+
 
 data Graph a = Graph { _nodes :: VectorGraph a
                      , _edges :: VectorGraph DoubleArc 

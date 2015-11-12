@@ -280,8 +280,10 @@ tstx1 =
         flip StarBuilder.evalT Nothing
       $ flip Builder.runT def 
       $ do
+            --i1 <- _star
             i1 <- _int 2
-            --i2 <- _int 3
+            i2 <- _int 3
+            str <- _string "plus"
             --str <- _string "plus"
             --s <- getStar2
             --i1 <- _int 4
@@ -291,6 +293,8 @@ tstx1 =
 
 gx = snd <$> tstx1
 
+--xxs :: _ => _
+--xxs = pprint 
 main :: IO ()
 main = do
     g <- gx

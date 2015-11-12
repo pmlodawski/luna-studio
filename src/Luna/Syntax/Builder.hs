@@ -102,20 +102,20 @@ swap (a,b) = (b,a)
 
 _int :: (CoatGen (NodeBuilder.NodeBuilderT Int m) a, SpecificCons Lit (Uncoated a), BuilderMonad (Graph a) m, MonadFix m) => Int -> m Int
 _int v = mdo
-    a <- flip NodeBuilder.evalT i $ genCoat $ specificCons (Int v)
     i <- modify2 . nodes $ swap . ixed add a
+    a <- flip NodeBuilder.evalT i $ genCoat $ specificCons (Int v)
     return i
 
 _string :: (CoatGen (NodeBuilder.NodeBuilderT Int m) a, SpecificCons Lit (Uncoated a), BuilderMonad (Graph a) m, MonadFix m) => String -> m Int
 _string v = mdo
-    a <- flip NodeBuilder.evalT i $ genCoat $ specificCons (String $ fromString v)
     i <- modify2 . nodes $ swap . ixed add a
+    a <- flip NodeBuilder.evalT i $ genCoat $ specificCons (String $ fromString v)
     return i
 
 _star :: (CoatGen (NodeBuilder.NodeBuilderT Int m) a, SpecificCons Star (Uncoated a), BuilderMonad (Graph a) m, MonadFix m) => m Int
 _star = mdo
-    a <- flip NodeBuilder.evalT i $ genCoat $ specificCons Star
     i <- modify2 . nodes $ swap . ixed add a
+    a <- flip NodeBuilder.evalT i $ genCoat $ specificCons Star
     return i
 
 --_star2 :: (CoatGen m a, SpecificCons Star (Uncoated a), BuilderMonad (Graph a) m) => m Int
@@ -132,20 +132,18 @@ connection src tgt = do
 connect tgt = do
     self <- NodeBuilder.get
     g    <- Builder.get
-    --liftIO . putStrLn $ "hello: " <> show self
 
     i <- flip connection tgt =<< NodeBuilder.get
-    --liftIO . putStrLn $ "hello: " <> show (index self (g ^. nodes))
+
+
+    g    <- Builder.get
+    let tgtn = index tgt (g ^. nodes)
+        tgtn' = tgtn & succs %~ (self:)
+
+    Builder.put ( g & nodes %~ unchecked inplace insert tgt tgtn' )
+
     return i
 
-connectBase a tgt = do
-    self <- NodeBuilder.get
-    g    <- Builder.get
-    --liftIO . putStrLn $ "hello: " <> show self
-
-    i <- flip connection tgt =<< NodeBuilder.get
-    --liftIO . putStrLn $ "hello: " <> show (index self (g ^. nodes))
-    return (i, registerConnection (DoubleArc self tgt) a)
 
 
 getStar2 ::(MonadFix m, CoatGen m a, MonadStarBuilder (Maybe Int) m, SpecificCons Star (Uncoated a), BuilderMonad (Graph a) m, MonadNodeBuilder Int m) => m Int
@@ -183,14 +181,13 @@ instance {-# OVERLAPPABLE #-} RegisterConnection (Coat a)         where register
 --instance (MonadFix m, CoatGen m a, MonadStarBuilder (Maybe Int) m, SpecificCons Star (Uncoated a), BuilderMonad (Graph a) m) => LayerGen m (Typed Int a) where
 --    genLayer a = Typed <$> getStar2 <*> pure a
 
-instance ( RegisterConnection a
+instance ( MonadIO m, RegisterConnection a, Tup2RTup t ~ (t, ()), Show t, Layered t, TracksSuccs (Unlayered t)
          , Uncoated t ~ Uncoated (Unlayered t), LayerGen m t
          , MonadFix m, CoatGen m (Unlayered t), MonadStarBuilder (Maybe Int) m, BuilderMonad (Graph t) m, SpecificCons Star (Uncoated t), MonadNodeBuilder Int m
          ) => LayerGen m (Typed Int a) where
     genLayer a = do
         s <- getStar2
         c <- connect s
-        --(c,a') <- connectBase a s
         return $ Typed c a
 
 instance Monad m => LayerGen m (SuccTracking a) where
