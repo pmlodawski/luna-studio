@@ -50,9 +50,10 @@ import qualified Data.Variants as V
 import Flowbox.System.Types hiding ((.:), insert)
 import           Control.Monad.State.Generate (newState)
 import Text.Read (readMaybe)
-import           Luna.Syntax.Builder.Graph
-import qualified Luna.Syntax.Builder.Graph as GraphBuilder
+import           Luna.Syntax.Repr.Graph
+import qualified Luna.Syntax.Repr.Graph as GraphBuilder
 import           Luna.Syntax.Builder
+import qualified Luna.Syntax.Builder    as Builder
 import           Luna.Syntax.AST.Term
 import           Luna.Syntax.AST.Lit
 import           Luna.Syntax.AST
@@ -66,7 +67,7 @@ import qualified Luna.Syntax.Builder.Star as StarBuilder
 import Control.Monad.Trans.Identity
 --import Luna.Diagnostic.AST (toGraphViz, display)
 import Luna.Diagnostic.AST as Diag (toGraphViz, display, render, open)
-import Luna.Syntax.Layer.Typed
+import Luna.Syntax.AST.Typed
 import Luna.Syntax.Layer.Labeled
 import qualified Type.BaseType as BT
 --import Data.Container
@@ -99,9 +100,9 @@ import Data.IORef
 
 import Data.Container.Immersed
 import Data.Container.Hetero (Ptr(Ptr), ptrIdx)
-import Luna.Syntax.Layer
 
 import Data.Container.Hetero
+import Data.Layer.Coat
 
 -- === HomoBuilder ===
 
@@ -126,157 +127,198 @@ instance (MuBuilder a m t, t ~ t') => MuBuilder a (HomoG t m) t' where
 --        sum  <- plus @$ [arg i1, arg i2]
 --        return s
 
-nytst2 ::(Arc (Labeled Int (Typed Draft)), HomoGraph ArcPtr (Labeled Int (Typed Draft)))
-nytst2 = 
-    flip runGraph (VectorGraph def) $ do
-        s    <- genTopStar
-        i1   <- int 1
-        --i2   <- int 2
-        --i3   <- int 3
-        --i2   <- blank
-        --plus <- i1 @. "+"
-        --sum  <- plus @$ [arg i1, arg i2]
-        return s
+--type HomoGraph ref t = VectorGraph (t (Mu (ref t)))
 
-type FReg = Map String (Arc (Labeled Int (Typed Draft)))
+--VectorGraph (Labeled Int (Typed Draft) (Mu (ArcPtr (Labeled Int (Typed Draft)))))
 
-typed a t = StarBuilder.with (const $ Just t) a
+--VectorGraph (Labeled Int (Typed Draft)    Int   )
+--VectorGraph (DoubleArc   )
 
-addStdLiterals :: Arc (Labeled Int (Typed Draft)) -> HomoGraph ArcPtr (Labeled Int (Typed Draft)) -> (FReg, HomoGraph ArcPtr (Labeled Int (Typed Draft)))
-addStdLiterals s g = rebuildGraph Nothing g $ mdo
-    strLit <- string "String" `typed` strTp
-    strTp  <- cons strLit
-
-    intLit <- string "Int" `typed` strTp
-    intTp  <- cons intLit
-
-    return $ Map.insert "String" strTp
-           $ Map.insert "Int"    intTp
-           $ Map.empty
-
-
-pass2_old :: FReg -> Arc (Labeled Int (Typed Draft)) -> HomoGraph ArcPtr (Labeled Int (Typed Draft)) -> ([Arc (Labeled Int (Typed Draft))], HomoGraph ArcPtr (Labeled Int (Typed Draft)))
-pass2_old freg s gr = rebuildGraph (Just s) gr $ do
-    let Just strTp = Map.lookup "String" freg
-    let Just intTp = Map.lookup "Int"    freg
-    g <- GraphBuilder.get
-    let ptrs = usedIxes g :: [Int]
-    unis <- fmap concat . flip mapM ptrs $ \ptr -> do
-        g <- GraphBuilder.get
-        let (Labeled l (Typed t ast)) = index ptr g
-        out <- case' ast $ do
-            match $ \case
-                Int _ -> do
-                    s <- star `typed` intTp
-                    u <- unify (Mu (Ref (Ptr ptr))) s
-                    return [u]
-                String _ -> do
-                    s <- star `typed` strTp
-                    u <- unify (Mu (Ref (Ptr ptr))) s
-                    return [u]
-                _        -> return []
-            match $ \ANY -> return []
-        return out
-    return unis
-
-pass2 :: FReg -> Arc (Labeled Int (Typed Draft)) -> HomoGraph ArcPtr (Labeled Int (Typed Draft)) -> ([Arc (Labeled Int (Typed Draft))], HomoGraph ArcPtr (Labeled Int (Typed Draft)))
-pass2 freg s gr = rebuildGraph Nothing gr $ do
-    let cptr       = ptrIdx . fromRef . unwrap
-    let Just strTp = Map.lookup "String" freg
-    let Just intTp = Map.lookup "Int"    freg
-    g <- GraphBuilder.get
-    let ptrs = usedIxes g :: [Int]
-    unis <- fmap concat . flip mapM ptrs $ \ptr -> do
-        g <- GraphBuilder.get
-        let tptr                         = cptr t
-            (Labeled l  (Typed t  ast )) = index ptr g
-            (Labeled lt (Typed tt astt)) = index tptr g
-        out <- case' ast $ do
-            match $ \case
-                Int _ -> do
-                    let (g', idx') = ixed add (Labeled lt (Typed tt astt)) g
-                    GraphBuilder.put g'
-                    --s <- star `typed` intTp
-                    --u <- unify (Mu (Ref (Ptr idx'))) intTp
-                    --u <- mkASTRefWith genLayers $ Unify (Mu (Ref (Ptr idx'))) intTp
-                    --u <- mkASTRefWith genLayers $ Unify (Mu (Ref (Ptr idx'))) intTp
-
-                    u <- (fmap (Mu . Ref . ptrFrom) . modifyM . unchecked inplace ixed insertM tptr) =<< genLayers (specificCons $ Unify (Mu (Ref (Ptr idx'))) intTp)
-
-
-                    return [u]
-                --String _ -> do
-                --    s <- star `typed` strTp
-                --    u <- unify (Mu (Ref (Ptr ptr))) s
-                --    return [u]
-                _        -> return []
-            match $ \ANY -> return []
-        return out
-    return unis
+--data DoubleArc a = DoubleArc (Ref Int a) (Ref Int a)
 
 
 
-pass3 :: [Arc (Labeled Int (Typed Draft))] -> Arc (Labeled Int (Typed Draft)) -> HomoGraph ArcPtr (Labeled Int (Typed Draft)) -> ((), HomoGraph ArcPtr (Labeled Int (Typed Draft)))
-pass3 unis s gr = rebuildGraph (Just s) gr $ do
-    flip mapM unis $ \uni -> do
-        g <- GraphBuilder.get
-        let cptr                     = ptrIdx . fromRef . unwrap
-            Labeled l (Typed t ast') = index (cptr uni) g
-        case' ast' $ match $ \(Unify pa pb) -> do
-            let ptra = cptr pa
-                ptrb = cptr pb
-                Labeled la (Typed ta asta) = index ptra g
-                Labeled lb (Typed tb astb) = index ptrb g
-            case' astb $ do
-                match $ \Star -> do
-                    let Labeled lta (Typed tta astta) = index (cptr ta) g
-                    case' astta $ do
-                        match $ \Star -> do
-                            let g' = free (cptr uni)
-                                   $ unchecked inplace insert ptra (Labeled la (Typed tb asta)) g
-                            GraphBuilder.put g'
-                        match $ \ANY -> return ()
-                match $ \ANY -> return ()
-                    --string "fooooooo"
-            case' asta $ do
-                match $ \Star -> do
-                    let Labeled lta (Typed tta astta) = index (cptr ta) g
-                    case' astta $ do
-                        match $ \Star -> do
-                            let g' = free (cptr uni)
-                                   $ unchecked inplace insert ptra (Labeled la (Typed tb asta)) g
-                            GraphBuilder.put g'
-                        match $ \ANY -> return ()
-                match $ \ANY -> return ()
-                    --string "fooooooo"
 
+--modifyM2 :: MonadGraphBuilder g m => (g -> m (a, g)) -> m a
+
+
+--nytst2 :: (Arc (Labeled Int (Typed Draft)), HomoGraph ArcPtr (Labeled Int (Typed Draft)))
+--nytst2 = 
+--    flip runGraph (VectorGraph def) $ do
+--        s    <- genTopStar
+--        i1   <- int 1
+--        --i2   <- int 2
+--        --i3   <- int 3
+--        --i2   <- blank
+--        --plus <- i1 @. "+"
+--        --sum  <- plus @$ [arg i1, arg i2]
+--        return s
+
+--type FReg = Map String (Arc (Labeled Int (Typed Draft)))
+
+--typed a t = StarBuilder.with (const $ Just t) a
+
+--addStdLiterals :: Arc (Labeled Int (Typed Draft)) -> HomoGraph ArcPtr (Labeled Int (Typed Draft)) -> (FReg, HomoGraph ArcPtr (Labeled Int (Typed Draft)))
+--addStdLiterals s g = rebuildGraph Nothing g $ mdo
+--    strLit <- string "String" `typed` strTp
+--    strTp  <- cons strLit
+
+--    intLit <- string "Int" `typed` strTp
+--    intTp  <- cons intLit
+
+--    return $ Map.insert "String" strTp
+--           $ Map.insert "Int"    intTp
+--           $ Map.empty
+
+
+--pass2_old :: FReg -> Arc (Labeled Int (Typed Draft)) -> HomoGraph ArcPtr (Labeled Int (Typed Draft)) -> ([Arc (Labeled Int (Typed Draft))], HomoGraph ArcPtr (Labeled Int (Typed Draft)))
+--pass2_old freg s gr = rebuildGraph (Just s) gr $ do
+--    let Just strTp = Map.lookup "String" freg
+--    let Just intTp = Map.lookup "Int"    freg
+--    g <- GraphBuilder.get
+--    let ptrs = usedIxes g :: [Int]
+--    unis <- fmap concat . flip mapM ptrs $ \ptr -> do
+--        g <- GraphBuilder.get
+--        let (Labeled l (Typed t ast)) = index ptr g
+--        out <- case' ast $ do
+--            match $ \case
+--                Int _ -> do
+--                    s <- star `typed` intTp
+--                    u <- unify (Mu (Ref (Ptr ptr))) s
+--                    return [u]
+--                String _ -> do
+--                    s <- star `typed` strTp
+--                    u <- unify (Mu (Ref (Ptr ptr))) s
+--                    return [u]
+--                _        -> return []
+--            match $ \ANY -> return []
+--        return out
+--    return unis
+
+--pass2 :: FReg -> Arc (Labeled Int (Typed Draft)) -> HomoGraph ArcPtr (Labeled Int (Typed Draft)) -> ([Arc (Labeled Int (Typed Draft))], HomoGraph ArcPtr (Labeled Int (Typed Draft)))
+--pass2 freg s gr = rebuildGraph Nothing gr $ do
+--    let cptr       = ptrIdx . fromRef . unwrap
+--    let Just strTp = Map.lookup "String" freg
+--    let Just intTp = Map.lookup "Int"    freg
+--    g <- GraphBuilder.get
+--    let ptrs = usedIxes g :: [Int]
+--    unis <- fmap concat . flip mapM ptrs $ \ptr -> do
+--        g <- GraphBuilder.get
+--        let tptr                         = cptr t
+--            (Labeled l  (Typed t  ast )) = index ptr g
+--            (Labeled lt (Typed tt astt)) = index tptr g
+--        out <- case' ast $ do
+--            match $ \case
+--                Int _ -> do
+--                    let (g', idx') = ixed add (Labeled lt (Typed tt astt)) g
+--                    GraphBuilder.put g'
+--                    --s <- star `typed` intTp
+--                    --u <- unify (Mu (Ref (Ptr idx'))) intTp
+--                    --u <- mkASTRefWith genLayers $ Unify (Mu (Ref (Ptr idx'))) intTp
+--                    --u <- mkASTRefWith genLayers $ Unify (Mu (Ref (Ptr idx'))) intTp
+
+--                    u <- (fmap (Mu . Ref . ptrFrom) . modifyM . unchecked inplace ixed insertM tptr) =<< genLayers (specificCons $ Unify (Mu (Ref (Ptr idx'))) intTp)
+
+
+--                    return [u]
+--                --String _ -> do
+--                --    s <- star `typed` strTp
+--                --    u <- unify (Mu (Ref (Ptr ptr))) s
+--                --    return [u]
+--                _        -> return []
+--            match $ \ANY -> return []
+--        return out
+--    return unis
+
+
+
+--pass3 :: [Arc (Labeled Int (Typed Draft))] -> Arc (Labeled Int (Typed Draft)) -> HomoGraph ArcPtr (Labeled Int (Typed Draft)) -> ((), HomoGraph ArcPtr (Labeled Int (Typed Draft)))
+--pass3 unis s gr = rebuildGraph (Just s) gr $ do
+--    flip mapM unis $ \uni -> do
+--        g <- GraphBuilder.get
+--        let cptr                     = ptrIdx . fromRef . unwrap
+--            Labeled l (Typed t ast') = index (cptr uni) g
+--        case' ast' $ match $ \(Unify pa pb) -> do
+--            let ptra = cptr pa
+--                ptrb = cptr pb
+--                Labeled la (Typed ta asta) = index ptra g
+--                Labeled lb (Typed tb astb) = index ptrb g
+--            case' astb $ do
+--                match $ \Star -> do
+--                    let Labeled lta (Typed tta astta) = index (cptr ta) g
+--                    case' astta $ do
+--                        match $ \Star -> do
+--                            let g' = free (cptr uni)
+--                                   $ unchecked inplace insert ptra (Labeled la (Typed tb asta)) g
+--                            GraphBuilder.put g'
+--                        match $ \ANY -> return ()
+--                match $ \ANY -> return ()
+--                    --string "fooooooo"
+--            case' asta $ do
+--                match $ \Star -> do
+--                    let Labeled lta (Typed tta astta) = index (cptr ta) g
+--                    case' astta $ do
+--                        match $ \Star -> do
+--                            let g' = free (cptr uni)
+--                                   $ unchecked inplace insert ptra (Labeled la (Typed tb asta)) g
+--                            GraphBuilder.put g'
+--                        match $ \ANY -> return ()
+--                match $ \ANY -> return ()
+--                    --string "fooooooo"
+
+--            return ()
+--        return ()
+--    return ()
+
+--type Network = Graph (Labeled2 Int (Typed Int (Coat (Draft Int))))
+
+type Network = Graph (Labeled2 Int (Typed Int (SuccTracking (Coat (Draft Int)))))
+
+
+tstx1 :: IO ((), Network)
+tstx1 =  
+        flip StarBuilder.evalT Nothing
+      $ flip Builder.runT def 
+      $ do
+            i1 <- _int 2
+            --i2 <- _int 3
+            --str <- _string "plus"
+            --s <- getStar2
+            --i1 <- _int 4
+            --i1 <- _int 4
+            --i1 <- _star
             return ()
-        return ()
-    return ()
 
+gx = snd <$> tstx1
 
 main :: IO ()
 main = do
+    g <- gx
+    render "t1" $ toGraphViz g
+    open $ fmap (\i -> "/tmp/t" <> show i <> ".png") [1..1] 
+
+    pprint g
+
     --putStrLn $ repr y
     --print . repr =<< nytst2
-    let (s, g) = nytst2
+        --let (s, g) = nytst2
 
-    print $ ixes g
-    print $ usedIxes g
-    print $ freeIxes g
+        --print $ ixes g
+        --print $ usedIxes g
+        --print $ freeIxes g
 
-    let (freg, g') = addStdLiterals s g
+        --let (freg, g') = addStdLiterals s g
 
-    --print   gv
+        ----print   gv
 
-    let (unis2, g2) = pass2 freg s g'
-    let (_    , g3) = pass3 unis2 s g2
+        --let (unis2, g2) = pass2 freg s g'
+        --let (_    , g3) = pass3 unis2 s g2
 
-    render "t1" $ toGraphViz g'
-    render "t2" $ toGraphViz g2
-    render "t3" $ toGraphViz g3
+        --render "t1" $ toGraphViz g'
+        --render "t2" $ toGraphViz g2
+        --render "t3" $ toGraphViz g3
 
-    open $ fmap (\i -> "/tmp/t" <> show i <> ".png") [1..3] 
+        --open $ fmap (\i -> "/tmp/t" <> show i <> ".png") [1..3] 
     --let xa = fromList [1,2,3] :: Auto (Weak Vector) Int
     --let xb = fromList [1,2,3] :: WeakAuto Vector Int
     --let xa = fromList [1,2,3] :: Weak Vector Int
@@ -410,12 +452,12 @@ type TT = Vector Int
 --    mapM f g
 
 
-unifyLit = \case
-    _ -> do
-        (s :: Arc (Labeled Int (Typed Draft))) <- string "foo"
-        return ()
+--unifyLit = \case
+--    _ -> do
+--        (s :: Arc (Labeled Int (Typed Draft))) <- string "foo"
+--        return ()
 
-data Constraint a = ConstraintType a a
+--data Constraint a = ConstraintType a a
 
 --withType t = do
 

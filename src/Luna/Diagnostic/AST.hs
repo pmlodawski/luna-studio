@@ -23,10 +23,10 @@ import Data.Container
 import Data.Container.Hetero
 
 import Luna.Syntax.AST.Term
-import Luna.Syntax.Builder.Graph
+import Luna.Syntax.Repr.Graph
 import Luna.Syntax.AST
+import Luna.Syntax.AST.Typed
 import Luna.Syntax.Name
-import Luna.Syntax.Layer.Typed
 import Luna.Syntax.Layer.Labeled
 
 import System.Platform
@@ -34,39 +34,69 @@ import System.Process (createProcess, shell)
 import Data.Container.Class
 import Data.Reprx
 
-toGraphViz :: _ => HomoGraph ArcPtr a -> DotGraph Int
+import Data.Layer.Coat
+
+--toGraphViz :: _ => HomoGraph ArcPtr a -> DotGraph Int
 --toGraphViz g = undefined
-toGraphViz g = DotGraph { strictGraph     = False
-                        , directedGraph   = True
-                        , graphID         = Nothing
-                        , graphStatements = DotStmts { attrStmts = []
-                                                     , subGraphs = []
-                                                     , nodeStmts = nodeStmts
-                                                     , edgeStmts = edgeStmts
-                                                     }
-                        }
-    where nodes           = elems g
+--toGraphViz g = DotGraph { strictGraph     = False
+--                        , directedGraph   = True
+--                        , graphID         = Nothing
+--                        , graphStatements = DotStmts { attrStmts = []
+--                                                     , subGraphs = []
+--                                                     , nodeStmts = nodeStmts
+--                                                     , edgeStmts = edgeStmts
+--                                                     }
+--                        }
+--    where nodes           = elems g
+--          nodeIds         = usedIxes g
+--          nodeLabels      = fmap (reprStyled HeaderOnly . view ast) nodes
+--          labeledNode s a = DotNode a [GV.Label . StrLabel $ fromString s]
+--          nodeStmts       = fmap (uncurry labeledNode) $ zip nodeLabels nodeIds
+--          nodeInEdges   n = zip3 ([0..] :: [Int]) (genEdges $ index n g) (repeat n)
+--          inEdges         = concat $ fmap nodeInEdges nodeIds
+--          mkEdge  (n,(a,attrs),b) = DotEdge a b attrs -- (GV.edgeEnds Back : attrs)
+--          edgeStmts       = fmap mkEdge inEdges
+
+toGraphViz :: _ => Graph a -> DotGraph Int
+toGraphViz net = DotGraph { strictGraph     = False
+                          , directedGraph   = True
+                          , graphID         = Nothing
+                          , graphStatements = DotStmts { attrStmts = []
+                                                       , subGraphs = []
+                                                       , nodeStmts = nodeStmts
+                                                       , edgeStmts = edgeStmts
+                                                       }
+                          }
+    where g               = net ^. nodes
+          edges'          = net ^. edges
+          nodes'          = elems g
           nodeIds         = usedIxes g
-          nodeLabels      = fmap (reprStyled HeaderOnly . view ast) nodes
+          nodeLabels      = fmap (reprStyled HeaderOnly . uncoat) nodes'
           labeledNode s a = DotNode a [GV.Label . StrLabel $ fromString s]
           nodeStmts       = fmap (uncurry labeledNode) $ zip nodeLabels nodeIds
-          nodeInEdges   n = zip3 ([0..] :: [Int]) (genEdges $ index n g) (repeat n)
+          nodeInEdges   n = zip3 ([0..] :: [Int]) (genEdges net $ index n g) (repeat n)
           inEdges         = concat $ fmap nodeInEdges nodeIds
           mkEdge  (n,(a,attrs),b) = DotEdge a b attrs -- (GV.edgeEnds Back : attrs)
           edgeStmts       = fmap mkEdge inEdges
 
+class GenEdges g a where
+    genEdges :: Graph g -> a -> [(Int, [GV.Attribute])]
 
-class GenEdges a where
-    genEdges :: a -> [(Int, [GV.Attribute])]
+instance GenEdges g a => GenEdges g (Labeled2 l a) where
+    genEdges g (Labeled2 _ a) = genEdges g a
 
-instance GenEdges (a t) => GenEdges (Labeled l a t) where
-    genEdges (Labeled _ a) = genEdges a
+instance GenEdges g a => GenEdges g (Typed Int a) where
+    genEdges g (Typed t a) = [(tgt, [GV.color GVC.Red, GV.edgeEnds Back])] <> genEdges g a where
+        tgt = view target $ index t (g ^. edges)
 
-instance (t ~ Mu (Ref Int a), GenEdges (Draft t)) => GenEdges (Typed Draft t) where
-    genEdges (Typed t a) = [(ptrIdx . fromRef . unwrap $ t, [GV.color GVC.Red, GV.edgeEnds Back])] <> genEdges a
+instance GenEdges g a => GenEdges g (SuccTracking a) where
+    genEdges g = genEdges g . unlayer
 
-instance t ~ Mu (Ref Int a) => GenEdges (Draft t) where
-    genEdges a = ($ inEdges) $ case checkName a of
+instance GenEdges g a => GenEdges g (Coat a) where
+    genEdges g = genEdges g . unwrap
+
+instance GenEdges g (Draft Int) where
+    genEdges g a = ($ inEdges) $ case checkName a of
         Nothing -> id
         Just  t -> fmap addColor
             where tidx = getIdx t
@@ -74,9 +104,10 @@ instance t ~ Mu (Ref Int a) => GenEdges (Draft t) where
                                                          else (idx, attrs)
         where genLabel  = GV.Label . StrLabel . fromString . show
               ins       = inputs a
-              getIdx    = ptrIdx . fromRef . unwrap
+              getIdx  i = view target $ index i edges'
               inIdxs    = getIdx <$> ins
               inEdges   = zipWith (,) inIdxs $ fmap ((:[]) . genLabel) [0..]
+              edges'    = g ^. edges
 
 
 
