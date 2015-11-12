@@ -38,7 +38,6 @@ import           Batch.Workspace
 import           Utils.URIParser
 
 import qualified Reactive.Plugins.Core.Network   as CoreNetwork
-import           Tmp.BatchMock
 import           Reactive.Plugins.Loader.Loader
 
 
@@ -47,7 +46,6 @@ makeNetworkDescription = CoreNetwork.makeNetworkDescription
 
 runMainNetwork :: WebSocket -> Workspace -> IO ()
 runMainNetwork socket workspace = do
-    putStrLn "!!!!! Starting App"
     initializeGl
     render
     enableLogging <- isLoggerEnabled
@@ -62,4 +60,5 @@ main = do
     enableBackend <- isBackendEnabled
     maybeProjectName <- getProjectName
     let projectName = maybe "myFirstProject" id maybeProjectName
-    if enableBackend then runLoader projectName socket (runMainNetwork socket) else runMainNetwork socket fakeWorkspace
+    runLoader projectName socket (runMainNetwork socket)
+
