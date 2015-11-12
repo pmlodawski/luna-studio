@@ -36,8 +36,5 @@ makeLenses ''State
 initialState :: Workspace -> State
 initialState workspace = State def def def def def def def def workspace
 
-genNodeId :: State -> NodeId
-genNodeId state = Graph.genNodeId $ state ^. graph
-
 inRegistry :: Command UIRegistry.State a -> Command State a
 inRegistry = zoom uiRegistry

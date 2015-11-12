@@ -15,10 +15,11 @@ import           Data.Text.Lazy          (Text)
 import qualified Utils.MockHelper        as MockHelper
 import           Control.Monad.State     hiding (State)
 import qualified BatchConnector.Commands as BatchCmd
+import           Reactive.State.Graph (genNodeId)
 
 registerNode :: Text -> Command State ()
 registerNode expr = do
-    nodeId  <- gets Global.genNodeId
+    nodeId  <- zoom Global.graph $ gets genNodeId
     camera  <- use $ Global.camera . Camera.camera
     nodePos <- uses Global.mousePos $ Camera.screenToWorkspace camera
     let node = Node nodeId nodePos expr (Node.createPorts expr) (MockHelper.getNodeType expr)

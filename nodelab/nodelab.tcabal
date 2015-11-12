@@ -71,9 +71,7 @@ executable nodelab
                      , process
                      , constraints
                      , errors
-                     , graphviz
                      , vector
-                     , luna-tc
                      , aeson
                      , unordered-containers
   hs-source-dirs:      app/src
