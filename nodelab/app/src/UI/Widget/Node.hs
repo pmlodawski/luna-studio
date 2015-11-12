@@ -37,8 +37,9 @@ instance UIContainer Node
 
 foreign import javascript unsafe "new GraphNode(-1, new THREE.Vector2($2, $3), 0, $1)" create' :: WidgetId -> Double -> Double -> IO Node
 foreign import javascript unsafe "$1.setExpandedStateBool($2)"     setExpandedState :: Node -> Bool     -> IO ()
-foreign import javascript unsafe "$1.label($2)"                    setLabel         :: Node -> JSString -> IO ()
+foreign import javascript unsafe "$1.setLabel($2)"                 setLabel         :: Node -> JSString -> IO ()
 foreign import javascript unsafe "$1.setValue($2)"                 setValue         :: Node -> JSString -> IO ()
+foreign import javascript unsafe "$1.setZPos($2)"                  setZPos          :: Node -> Double -> IO ()
 foreign import javascript unsafe "$1.uniforms.selected.value = $2" setSelected      :: Node -> Int      -> IO ()
 
 foreign import javascript unsafe "$1.htmlContainer"                getHTMLContainer :: Node -> IO Element
@@ -77,6 +78,7 @@ instance UIDisplayObject Model.Node where
         node <- UIR.lookup id :: IO Node
 
         setSelectedState node model
+        setZPos          node (model ^. Model.zPos)
         setExpandedState node (model ^. Model.isExpanded)
 
         ifChanged old model Model.expression $ do
@@ -89,10 +91,18 @@ instance UIDisplayObject Model.Node where
 newtype RemoveNodeHandler = RemoveNodeHandler (Command Global.State ())
 removeNodeHandler = TypeKey :: TypeKey RemoveNodeHandler
 
+newtype FocusNodeHandler = FocusNodeHandler (WidgetId -> Command Global.State ())
+focusNodeHandler = TypeKey :: TypeKey FocusNodeHandler
+
 triggerRemoveHandler :: WidgetId -> Command Global.State ()
 triggerRemoveHandler id = do
     maybeHandler <- inRegistry $ UICmd.handler id removeNodeHandler
     forM_ maybeHandler $ \(RemoveNodeHandler handler) -> handler
+
+triggerFocusNodeHandler :: WidgetId -> Command Global.State ()
+triggerFocusNodeHandler id = do
+    maybeHandler <- inRegistry $ UICmd.handler id focusNodeHandler
+    forM_ maybeHandler $ \(FocusNodeHandler handler) -> handler id
 
 keyDownHandler :: KeyPressedHandler Global.State
 keyDownHandler '\r'   _ id = zoom Global.uiRegistry $ UICmd.update_ id (Model.isExpanded %~ not)
@@ -125,6 +135,7 @@ unselectAll = do
 widgetHandlers :: UIHandlers Global.State
 widgetHandlers = def & keyDown      .~ keyDownHandler
                      & mousePressed .~ (\evt id -> do
+                         triggerFocusNodeHandler id
                          takeFocus evt id
                          handleSelection evt id)
 

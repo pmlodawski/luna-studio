@@ -22,5 +22,3 @@ renderGraph nodes edges = do
 
     Graph.updatePortAngles
     Graph.updateConnections
-    -- Graph.updatePortAnglesUI
-    -- Graph.updateConnectionsUI

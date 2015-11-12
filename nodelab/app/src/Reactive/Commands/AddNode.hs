@@ -25,6 +25,7 @@ import qualified Reactive.State.Graph          as Graph
 import           Reactive.State.UIRegistry     (sceneGraphId, addHandler)
 import qualified Reactive.State.UIRegistry     as UIRegistry
 import           Reactive.Commands.EnterNode   (enterNode)
+import           Reactive.Commands.Graph       (focusNode, updatePortAngles)
 import           Reactive.Commands.RemoveNode  (removeSelectedNodes)
 import           Reactive.Commands.Command     (Command, performIO)
 import           Reactive.Commands.PendingNode (unrenderPending)
@@ -46,10 +47,11 @@ addNode node = do
     unrenderPending node
     zoom Global.graph $ modify (Graph.addNode node)
     zoom Global.uiRegistry $ registerNode node
+    updatePortAngles
 
 registerNode :: Node -> Command UIRegistry.State ()
 registerNode node = do
-    let nodeModel = Model.Node (node ^. nodeId) [] [] (node ^. nodePos) (node ^. expression) "()" False False False
+    let nodeModel = Model.node node
     nodeWidget <- UICmd.register sceneGraphId nodeModel (nodeHandlers node)
 
     forM_ (getPorts InputPort node) $ \port -> do
@@ -59,6 +61,7 @@ registerNode node = do
         createPortControl nodeWidget port portRef
 
     registerOutputPorts nodeWidget node
+    focusNode nodeWidget
 
 createPortControl :: WidgetId -> Port -> PortRef -> Command UIRegistry.State (Maybe WidgetId)
 createPortControl parent port portRef = do
@@ -85,7 +88,8 @@ createPortControl parent port portRef = do
 
 nodeHandlers :: Node -> HTMap
 nodeHandlers node = addHandler (UINode.RemoveNodeHandler removeSelectedNodes)
-                    mempty
+                  $ addHandler (UINode.FocusNodeHandler $ \id -> zoom Global.uiRegistry (focusNode id))
+                  $ mempty
 
 sliderHandleDoubleValueChanged :: PortRef -> Double -> WidgetId -> Command Global.State ()
 sliderHandleDoubleValueChanged portRef value widgetId = do

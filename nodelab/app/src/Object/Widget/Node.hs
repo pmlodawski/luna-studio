@@ -1,10 +1,12 @@
 {-# LANGUAGE ExistentialQuantification #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Object.Widget.Node where
 
 import Utils.PreludePlus
 import Utils.Vector
 import Object.UITypes
+import qualified Object.Node as N
 import Data.Fixed
 
 import Object.Widget
@@ -16,6 +18,7 @@ data Node = Node { _nodeId     :: Int
                  , _controls   :: [Maybe WidgetId]
                  , _ports      :: [WidgetId]
                  , _position   :: Position
+                 , _zPos       :: Double
                  , _expression :: Text
                  , _value      :: Text
                  , _isExpanded :: Bool
@@ -25,6 +28,9 @@ data Node = Node { _nodeId     :: Int
 
 makeLenses ''Node
 instance ToJSON Node
+
+node :: N.Node -> Node
+node n = Node (n ^. N.nodeId) [] [] (n ^. N.nodePos) 0.0 (n ^. N.expression) "()" False False False
 
 instance IsDisplayObject Node where
     widgetPosition = position

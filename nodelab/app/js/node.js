@@ -107,7 +107,6 @@ function Node(id, position, z, widgetId) {
 
   this.htmlElements = {};
   this.moveTo(position.x, position.y);
-  this.zPos(z);
   // this.updateMouse(position.x - 1000.0, position.y - 1000.0);
 
   this.collapsedNodeSize = new THREE.Vector2( 2 * collapsedRadius,  2 * collapsedRadius);
@@ -176,11 +175,8 @@ Node.prototype.moveTo = function (a, b) {
   $(this.htmlContainer).css({left: vec.x, top: vec.y});
 };
 
-Node.prototype.zPos = function (z) {
-  if (z !== undefined) {
-    this.mesh.position.z = z;
-  }
-  return this.mesh.position.z;
+Node.prototype.setZPos = function (z) {
+  this.mesh.position.z = z;
 };
 
 // Node.prototype.updateMouse = function (x, y) {
@@ -195,53 +191,10 @@ Node.prototype.zPos = function (z) {
 //     port.updateMouseDist(mouseDist);
 //   });
 // };
-//
-// Node.prototype.addInputPort = function (oid, id, colorId, angle) {
-//   this.addPort(this.inputPorts, false, oid, id, colorId, angle);
-// };
-//
-// Node.prototype.addOutputPort = function (oid, id, colorId, angle) {
-//   this.addPort(this.outputPorts, true, oid, id, colorId, angle);
-// };
-//
-// Node.prototype.addPort = function (ports, out, oid, id, colorId, angle) {
-//   var p = new Port(id, oid, colorId, angle, out);
-//   ports.push(p);
-//   this.mesh.add(p.mesh);
-//   this.updateMouse(this.mesh.position.x - 1000.0, this.mesh.position.y - 1000.0);
-//   $$.registry[oid] = p;
-// };
-//
-// Node.prototype.findInputPort = function (id) {
-//   return _.find(this.inputPorts, function (port) { return port.id === id; });
-// };
-//
-// Node.prototype.findOutputPort = function (id) {
-//   return _.find(this.outputPorts, function (port) { return port.id === id; });
-// };
-//
-// Node.prototype.setInputPortAngle = function (id, angle) {
-//   this.findInputPort(id).setAngle(angle);
-// };
-//
-// Node.prototype.setOutputPortAngle = function (id, angle) {
-//   this.findOutputPort(id).setAngle(angle);
-// };
-//
-// Node.prototype.setInputPortColor = function (id, r, g, b, a) {
-//   this.findInputPort(id).setColor(new THREE.Vector4(r, g, b, a));
-// };
-//
-// Node.prototype.setOutputPortColor = function (id, r, g, b, a) {
-//   this.findOutputPort(id).setColor(new THREE.Vector4(r, g, b, a));
-// };
 
-Node.prototype.label = function (text) {
-  if (text !== undefined) {
-    this.labelText = text;
-    this.updateLabel();
-  }
-  return this.labelText;
+Node.prototype.setLabel = function (text) {
+  this.labelText = text;
+  this.updateLabel();
 };
 
 Node.prototype.updateLabel = function () {

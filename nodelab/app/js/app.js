@@ -184,7 +184,7 @@ function updateCameraHUD(left, right, top, bottom) {
 function createPendingNode(widgetId, expr, x, y) {
   var pos = new THREE.Vector2(x, y);
   var node = new GraphNode(-1, pos, nodeZOrderStart, widgetId);
-  node.label(expr);
+  node.setLabel(expr);
   node.setPending();
   $$.scene.add(node.mesh);
   $$.registry[widgetId] = node;

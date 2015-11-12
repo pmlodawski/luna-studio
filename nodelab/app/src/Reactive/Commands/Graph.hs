@@ -11,6 +11,7 @@ import           Data.IntMap.Lazy (IntMap(..))
 import qualified Data.IntMap.Lazy as IntMap
 import           Data.Map (Map)
 import qualified Data.Map as Map
+import           Data.Ord (comparing)
 import           Object.Object
 import           Object.Node
 import           Object.Port
@@ -222,5 +223,15 @@ getNodesInRect (Vector2 x1 y1) (Vector2 x2 y2) = do
                               leftBottom ^. y <= pos ^. y && pos ^. y <= rightTop ^. y
         nodesInBounds = filter isNodeInBounds widgets
     return $ (view objectId) <$> nodesInBounds
+
+focusNode :: WidgetId -> Command UIRegistry.State ()
+focusNode id = do
+    nodes <- allNodes
+    let sortedNodes = sortBy (comparing $ negate . (view $ widget . Model.zPos)) nodes
+        sortedIds   = (view objectId) <$> sortedNodes
+        newOrder    = id : (delete id sortedIds)
+    forM_ (zip newOrder [1..]) $ \(id, ix) -> do
+        let newZPos = negate $ (fromIntegral ix) / 100.0
+        UICmd.update id $ Model.zPos .~ newZPos
 
 
