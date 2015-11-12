@@ -258,20 +258,19 @@ function writeToTerminal(str) {
 }
 
 var cleanupApp = function () {
-  $("canvas").remove();
-  $("#htmlcanvas-pan").remove();
-  $("#spinner").remove();
-  $("#editor").remove();
+  $("body > div, body > canvas").remove();
 };
 
 var displayRejectedMessage = function () {
   cleanupApp();
-  $("#rejected").show();
+  $('body').append(require('templates/rejected')());
 };
 
 var displayConnectionClosedMessage = function () {
-  cleanupApp();
-  $("#closed").show();
+  if($('#rejected').length === 0) {
+    cleanupApp();
+    $('body').append(require('templates/connection_closed')());
+  }
 };
 
 var displayAppCrashed = function (pat) {
@@ -283,8 +282,7 @@ var displayAppCrashed = function (pat) {
 
   console.error('Haskell crashed', str);
 
-  $("#crashed").show();
-  $("#crashed pre").text(str);
+  $('body').append(require('templates/bsod')({message: str}));
 };
 
 module.exports = {
