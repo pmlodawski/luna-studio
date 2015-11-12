@@ -34,10 +34,51 @@ function start() {
       return;
     }
     window.already_initialized = true;
+    loadHS();
+  });
+}
 
+function loadHS() {
+  if (brunch.env === 'production') loadHS_xhr();
+  else {
+    var script = document.createElement('script');
+    script.src = window.resourcesPath + '/javascripts/ghcjs.js';
+    script.addEventListener("load", function() {
+      startHS();
+    });
+    document.body.appendChild(script);
+  }
+}
+
+function loadHS_xhr() {
+  var oReq = new XMLHttpRequest();
+
+  $('body').append(require('templates/loader')());
+
+  oReq.addEventListener("load", function() {
+    (new Function(this.responseText))();
+    startHS();
+    $("#loader").remove();
+  });
+
+  oReq.addEventListener("progress", function(e){
+    var progress = (e.loaded / e.total);
+    $("#progressValue").css({width: (100 * progress) + "%"});
+  });
+
+  oReq.addEventListener("error", function(e){
+    console.error("Can't load HS code…", e);
+  });
+
+  oReq.open("GET", window.resourcesPath + "/javascripts/ghcjs.js");
+
+  oReq.send();
+}
+
+
+function startHS() {
     require('env')();
     window.h$errorMsg = displayAppCrashed;
-  });
 }
 
 function initializeGl() {
