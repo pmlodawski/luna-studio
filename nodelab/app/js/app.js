@@ -21,10 +21,6 @@ $$.currentConnection = null;
 $$.selectionBox      = null;
 $$.websocket         = websocket();
 
-
-// var nodeZOrderStep  = 0.00001;
-var nodeZOrderStart = 0.00000;
-
 var shouldRender = true;
 
 function start() {
@@ -183,29 +179,12 @@ function updateCameraHUD(left, right, top, bottom) {
 
 function createPendingNode(widgetId, expr, x, y) {
   var pos = new THREE.Vector2(x, y);
-  var node = new GraphNode(-1, pos, nodeZOrderStart, widgetId);
+  var node = new GraphNode(-1, pos, 0, widgetId);
   node.setLabel(expr);
   node.setPending();
   $$.scene.add(node.mesh);
   $$.registry[widgetId] = node;
 }
-//
-// // -> HS
-// function moveToTopZ(nodeId) {
-//   var nodeToTop = $$.nodes[nodeId];
-//   var nodeToTopZ = nodeToTop.zPos();
-//   var maxZ = nodeToTop.zPos();
-//   _.values($$.nodes).forEach(function (node) {
-//     var nodeZ = node.zPos();
-//     if (nodeZ > nodeToTopZ) {
-//       node.zPos(nodeZ - nodeZOrderStep);
-//       if (nodeZ > maxZ) {
-//         maxZ = nodeZ;
-//       }
-//     }
-//   });
-//   nodeToTop.zPos(maxZ);
-// }
 
 function createNodeSearcher(expression, nodeId, left, top) {
   var ns;
@@ -289,7 +268,6 @@ module.exports = {
   start:                    start,
   initializeGl:             initializeGl,
   render:                   render,
-  // moveToTopZ:               moveToTopZ,
   updateHtmCanvasPanPos:    updateHtmCanvasPanPos,
   updateScreenSize:         updateScreenSize,
   updateCamera:             updateCamera,
