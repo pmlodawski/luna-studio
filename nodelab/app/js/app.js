@@ -39,20 +39,24 @@ function start() {
 }
 
 function loadHS() {
-  if (brunch.env === 'production') loadHS_xhr();
+  var url = window.resourcesPath + "/javascripts/ghcjs.js";
+  if (brunch.env === 'production')
+     loadHS_xhr(url);
   else {
     var script = document.createElement('script');
-    script.src = window.resourcesPath + '/javascripts/ghcjs.js';
+    script.src = url;
     script.addEventListener("load", function() {
+      $('#spinner').remove();
       startHS();
     });
     document.body.appendChild(script);
   }
 }
 
-function loadHS_xhr() {
+function loadHS_xhr(url) {
   var oReq = new XMLHttpRequest();
 
+  $('#spinner').remove();
   $('body').append(require('templates/loader')());
 
   oReq.addEventListener("load", function() {
@@ -62,7 +66,9 @@ function loadHS_xhr() {
   });
 
   oReq.addEventListener("progress", function(e){
-    var progress = (e.loaded / e.total);
+    var progress;
+    if (e.lengthComputable) progress = e.loaded / e.total;
+    else                    progress = e.loaded / parseInt(e.target.getResponseHeader('x-amz-meta-uncompressed-length'));
     $("#progressValue").css({width: (100 * progress) + "%"});
   });
 
@@ -70,7 +76,7 @@ function loadHS_xhr() {
     console.error("Can't load HS code…", e);
   });
 
-  oReq.open("GET", window.resourcesPath + "/javascripts/ghcjs.js");
+  oReq.open("GET", url);
 
   oReq.send();
 }
@@ -124,8 +130,6 @@ function initializeGl() {
     initCommonWidgets();
     textEditor.init();
 
-    $('#log').remove();
-    $('#spinner').remove();
 
     initTerminal();
     initUserInfo();
