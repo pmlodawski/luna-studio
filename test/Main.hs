@@ -103,6 +103,8 @@ import Data.Container.Hetero (Ptr(Ptr), ptrIdx)
 
 import Data.Container.Hetero
 import Data.Layer.Coat
+import qualified Luna.Syntax.Builder.Node as NodeBuilder
+
 
 -- === HomoBuilder ===
 
@@ -272,18 +274,51 @@ instance (MuBuilder a m t, t ~ t') => MuBuilder a (HomoG t m) t' where
 
 --type Network = Graph (Labeled2 Int (Typed Int (Coat (Draft Int))))
 
-type Network = Graph (Labeled2 Int (Typed Int (SuccTracking (Coat (Draft Int)))))
 
 
-tstx1 :: IO ((), Network)
-tstx1 =  
-        flip StarBuilder.evalT Nothing
+type Network = Graph (Labeled2 Int (Typed (Ref Int) (SuccTracking (Coat (Draft (Ref Int))))))
+
+typed a t = StarBuilder.with (const $ Just t) a
+
+addStdLiterals :: Network -> IO ((), Network)
+addStdLiterals g = -- runIdentity
+                  flip StarBuilder.evalT Nothing
+                 $ flip NodeBuilder.evalT (Ref (0 :: Int))
+                 $ flip Builder.runT g 
+                 $ mdo
+    --d      <- _string "dupa"
+    --strTp  <- cons d
+    liftIO $ print "hello1"
+    --liftIO $ print "hello2"
+    strLit <- _string "String" `typed` strTp
+    strTp  <- cons strLit
+    liftIO $ print "hello3" 
+    return ()
+
+--    intLit <- string "Int" `typed` strTp
+--    intTp  <- cons intLit
+
+--    return $ Map.insert "String" strTp
+--           $ Map.insert "Int"    intTp
+--           $ Map.empty
+
+--tstmv = flip State.runState (Vector.fromList [1..10] :: Vector Int) $ mdo
+--    v <- State.get
+--    i <- (flip (Vector.!) j <$> State.get) <* (State.put $ (Vector.//) v [(j,j)])
+--    j <- (flip (Vector.!) i <$> State.get) <* (State.put $ (Vector.//) v [(i,i)])
+--    return ()
+
+tstx1 :: ((), Network)
+tstx1 = runIdentity
+      $ flip StarBuilder.evalT Nothing
       $ flip Builder.runT def 
+      $ flip NodeBuilder.evalT (Ref (0 :: Int))
       $ do
             --i1 <- _star
             i1 <- _int 2
             i2 <- _int 3
-            str <- _string "plus"
+            --str <- _string "plus"
+            acc <- accessor "plus" i1
             --str <- _string "plus"
             --s <- getStar2
             --i1 <- _int 4
@@ -291,17 +326,22 @@ tstx1 =
             --i1 <- _star
             return ()
 
-gx = snd <$> tstx1
 
 --xxs :: _ => _
 --xxs = pprint 
 main :: IO ()
 main = do
-    g <- gx
+    let g  = snd tstx1
+    g2 <- snd <$> addStdLiterals g
+
     render "t1" $ toGraphViz g
-    open $ fmap (\i -> "/tmp/t" <> show i <> ".png") [1..1] 
+    render "t2" $ toGraphViz g2
+
+    open $ fmap (\i -> "/tmp/t" <> show i <> ".png") $ reverse [1..2] 
 
     pprint g
+
+    --print tstmv`
 
     --putStrLn $ repr y
     --print . repr =<< nytst2

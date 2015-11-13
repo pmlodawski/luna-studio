@@ -21,7 +21,6 @@ import Data.Container.Resizable
 import Data.Reprx
 
 import Luna.Syntax.Layer.Labeled
-import Luna.Syntax.AST.Typed
 import Luna.Syntax.AST.Term
 
 import qualified Control.Monad.State as State
@@ -33,7 +32,7 @@ import Data.Layer.Coat
 --- === Graph ===
 
 #define VECTORGRAPH (Auto' Exponential (Vector a))
-newtype VectorGraph a = VectorGraph { __homReg :: VECTORGRAPH } deriving (Show, Default)
+newtype VectorGraph a = VectorGraph VECTORGRAPH deriving (Show, Default)
 
 instance Rewrapped (VectorGraph a) (VectorGraph a')
 instance Wrapped   (VectorGraph a) where
@@ -42,27 +41,35 @@ instance Wrapped   (VectorGraph a) where
 
 type instance ContainerOf (VectorGraph a) = ContainerOf VECTORGRAPH
 instance Monad m => HasContainerM m (VectorGraph a)      where viewContainerM = viewContainerM . unwrap
-                                                               setContainerM = wrapped . setContainerM
+                                                               setContainerM  = wrapped . setContainerM
+
+instance Monad m => IsContainerM  m (VectorGraph a) where
+    fromContainerM = fmap VectorGraph . fromContainerM
+
+
+
+
+newtype Ref a = Ref a deriving (Show, Monoid, Functor, Foldable, Traversable)
+
+instance Rewrapped (Ref a) (Ref a')
+instance Wrapped   (Ref a) where
+    type Unwrapped (Ref a) = a
+    _Wrapped' = iso (\(Ref a) -> a) Ref
 
 
 
 
 
 
+data DoubleArc = DoubleArc { _source :: Ref Int, _target :: Ref Int } deriving (Show)
 
 
 
-
-
-data DoubleArc = DoubleArc { _source :: Int, _target :: Int } deriving (Show)
-
-
-
-data SuccTracking a = SuccTracking [Int] a deriving (Show)
+data SuccTracking a = SuccTracking [Ref Int] a deriving (Show)
 type instance Unlayered (SuccTracking a) = a
 instance      Layered   (SuccTracking a) where layered = lens (\(SuccTracking _ a) -> a) (\(SuccTracking i _) a -> SuccTracking i a) 
 
-class TracksSuccs a where succs :: Lens' a [Int]
+class TracksSuccs a where succs :: Lens' a [Ref Int]
 instance {-# OVERLAPPABLE #-}                                           TracksSuccs (SuccTracking a) where succs = lens (\(SuccTracking ixs _) -> ixs) (\(SuccTracking _ a) ixs -> SuccTracking ixs a)
 instance {-# OVERLAPPABLE #-} (TracksSuccs (Unlayered a), Layered a) => TracksSuccs a                where succs = layered . succs
 
@@ -75,7 +82,8 @@ data Graph a = Graph { _nodes :: VectorGraph a
 makeLenses ''DoubleArc
 makeLenses ''Graph
 
-instance Default (Graph a) where def = Graph def def
+--instance Default (Graph a) where def = Graph def def
+instance Default (Graph a) where def = Graph (alloc 100) (alloc 100)
 
 
 
@@ -105,15 +113,15 @@ instance Default (Graph a) where def = Graph def def
 ---- === Ref ===
 
 --newtype WeakMu a t   = WeakMu (Weak (a t))
-type HomoGraph ref t = VectorGraph (t (Mu (ref t)))
-type ArcPtr          = Ref Int
-type Arc           a = Mu (ArcPtr a)
+--type HomoGraph ref t = VectorGraph (t (Mu (ref t)))
+--type ArcPtr          = Ref Int
+--type Arc           a = Mu (ArcPtr a)
 
-newtype Ref i a t = Ref { fromRef :: Ptr i (a t) } deriving (Show)
+--newtype Ref i a t = Ref { fromRef :: Ptr i (a t) } deriving (Show)
 
---newtype DoubleArc a t = DoubleArc {__source :: ,}
+----newtype DoubleArc a t = DoubleArc {__source :: ,}
 
-instance Repr s i => Repr s (Ref i a t) where repr = repr . fromRef
+--instance Repr s i => Repr s (Ref i a t) where repr = repr . fromRef
 
 
 

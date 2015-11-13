@@ -8,7 +8,7 @@ module Luna.Diagnostic.AST where
 import Prologue  hiding (index)
 
 import           Data.GraphViz.Types.Canonical
-import           Data.GraphViz.Attributes.Complete   hiding (Label, Int)
+import           Data.GraphViz.Attributes.Complete   hiding (Label, Int, Star)
 import qualified Data.GraphViz.Attributes.Complete   as GV
 import qualified Data.GraphViz.Attributes            as GV
 import           Data.GraphViz.Printing              (toDot)
@@ -35,6 +35,9 @@ import Data.Container.Class
 import Data.Reprx
 
 import Data.Layer.Coat
+
+import Data.Variants
+
 
 --toGraphViz :: _ => HomoGraph ArcPtr a -> DotGraph Int
 --toGraphViz g = undefined
@@ -72,12 +75,16 @@ toGraphViz net = DotGraph { strictGraph     = False
           nodes'          = elems g
           nodeIds         = usedIxes g
           nodeLabels      = fmap (reprStyled HeaderOnly . uncoat) nodes'
-          labeledNode s a = DotNode a [GV.Label . StrLabel $ fromString s]
-          nodeStmts       = fmap (uncurry labeledNode) $ zip nodeLabels nodeIds
+          labeledNode n s a = DotNode a $ (GV.Label . StrLabel $ fromString s) : (nodeColorAttrs $ uncoat n)
+          nodeStmts       = fmap (uncurry labeledNode) $ zip3 nodes' nodeLabels nodeIds
           nodeInEdges   n = zip3 ([0..] :: [Int]) (genEdges net $ index n g) (repeat n)
           inEdges         = concat $ fmap nodeInEdges nodeIds
           mkEdge  (n,(a,attrs),b) = DotEdge a b attrs -- (GV.edgeEnds Back : attrs)
           edgeStmts       = fmap mkEdge inEdges
+
+          nodeColorAttrs a = case' a $ do
+                                 match $ \(Val _ :: Val (Ref Int)) -> [GV.color GVC.Green]
+                                 match $ \ANY                      -> []
 
 class GenEdges g a where
     genEdges :: Graph g -> a -> [(Int, [GV.Attribute])]
@@ -85,9 +92,9 @@ class GenEdges g a where
 instance GenEdges g a => GenEdges g (Labeled2 l a) where
     genEdges g (Labeled2 _ a) = genEdges g a
 
-instance GenEdges g a => GenEdges g (Typed Int a) where
-    genEdges g (Typed t a) = [(tgt, [GV.color GVC.Red, GV.edgeEnds Back])] <> genEdges g a where
-        tgt = view target $ index t (g ^. edges)
+instance GenEdges g a => GenEdges g (Typed (Ref Int) a) where
+    genEdges g (Typed (Ref t) a) = [(tgt, [GV.color GVC.Red, GV.edgeEnds Back])] <> genEdges g a where
+        tgt = unwrap . view target $ index t (g ^. edges)
 
 instance GenEdges g a => GenEdges g (SuccTracking a) where
     genEdges g = genEdges g . unlayer
@@ -95,7 +102,7 @@ instance GenEdges g a => GenEdges g (SuccTracking a) where
 instance GenEdges g a => GenEdges g (Coat a) where
     genEdges g = genEdges g . unwrap
 
-instance GenEdges g (Draft Int) where
+instance GenEdges g (Draft (Ref Int)) where
     genEdges g a = ($ inEdges) $ case checkName a of
         Nothing -> id
         Just  t -> fmap addColor
@@ -104,10 +111,12 @@ instance GenEdges g (Draft Int) where
                                                          else (idx, attrs)
         where genLabel  = GV.Label . StrLabel . fromString . show
               ins       = inputs a
-              getIdx  i = view target $ index i edges'
+              getIdx  i = unwrap . view target $ index (unwrap i) edges'
               inIdxs    = getIdx <$> ins
               inEdges   = zipWith (,) inIdxs $ fmap ((:[]) . genLabel) [0..]
               edges'    = g ^. edges
+              xtt       = case' a $ do
+                              match $ \(Val _) -> 11
 
 
 

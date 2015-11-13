@@ -21,7 +21,7 @@ import           Luna.Syntax.AST.Term
 import           Luna.Syntax.AST.Lit
 import           Luna.Syntax.AST.Decl
 import           Luna.Syntax.AST.Term
-import           Luna.Syntax.AST.Typed
+--import           Luna.Syntax.AST.Typed
 
 import qualified Luna.Syntax.Builder.Class as Builder
 import           Luna.Syntax.Builder.Class as X (runT)
@@ -98,55 +98,95 @@ import Data.Layer.Coat
 
 -- Literals
 
+class                                             Monadic a      m b where monadic :: a -> m b
+instance {-# OVERLAPPABLE #-} Monad m          => Monadic a      m a where monadic = return
+instance {-# OVERLAPPABLE #-} (Monad m, m ~ n) => Monadic (n a)  m a where monadic = id
+instance {-# OVERLAPPABLE #-} (MonadNodeBuilder (Ref Int) m, CoatGen m a, SpecificCons Lit (Uncoated a), BuilderMonad (Graph a) m, MonadFix m) 
+                           => Monadic String m (Ref Int) where monadic = _string
+
 swap (a,b) = (b,a)
 
-_int :: (CoatGen (NodeBuilder.NodeBuilderT Int m) a, SpecificCons Lit (Uncoated a), BuilderMonad (Graph a) m, MonadFix m) => Int -> m Int
+--_int :: (MonadNodeBuilder (Ref Int) m, CoatGen m a, SpecificCons Lit (Uncoated a), BuilderMonad (Graph a) m, MonadFix m) => Int -> m (Ref Int)
+--_int v = mdo
+--    i <- modify2 . nodes $ swap . ixed add a
+--    a <- NodeBuilder.with (Ref i) $ genCoat $ specificCons (Int v)
+--    return $ Ref i
+
+_int :: forall m a ast t. (MonadNodeBuilder (Ref Int) m, CoatGen m a, SpecificCons (Val t) (ast t), BuilderMonad (Graph a) m, MonadFix m, Uncoated a ~ ast t) => Int -> m (Ref Int)
 _int v = mdo
     i <- modify2 . nodes $ swap . ixed add a
-    a <- flip NodeBuilder.evalT i $ genCoat $ specificCons (Int v)
-    return i
+    a <- NodeBuilder.with (Ref i) $ genCoat $ specificCons (specificCons (Int v) :: Val t)
+    return $ Ref i
 
-_string :: (CoatGen (NodeBuilder.NodeBuilderT Int m) a, SpecificCons Lit (Uncoated a), BuilderMonad (Graph a) m, MonadFix m) => String -> m Int
+_string :: (MonadNodeBuilder (Ref Int) m, CoatGen m a, SpecificCons Lit (Uncoated a), BuilderMonad (Graph a) m, MonadFix m) => String -> m (Ref Int)
 _string v = mdo
     i <- modify2 . nodes $ swap . ixed add a
-    a <- flip NodeBuilder.evalT i $ genCoat $ specificCons (String $ fromString v)
-    return i
+    a <- NodeBuilder.with (Ref i) $ genCoat $ specificCons (String $ fromString v)
+    return $ Ref i
 
-_star :: (CoatGen (NodeBuilder.NodeBuilderT Int m) a, SpecificCons Star (Uncoated a), BuilderMonad (Graph a) m, MonadFix m) => m Int
+_star :: (MonadNodeBuilder (Ref Int) m, CoatGen m a, SpecificCons Star (Uncoated a), BuilderMonad (Graph a) m, MonadFix m) => m (Ref Int)
 _star = mdo
     i <- modify2 . nodes $ swap . ixed add a
-    a <- flip NodeBuilder.evalT i $ genCoat $ specificCons Star
-    return i
+    a <- NodeBuilder.with (Ref i) $ genCoat $ specificCons Star
+    return $ Ref i
 
 --_star2 :: (CoatGen m a, SpecificCons Star (Uncoated a), BuilderMonad (Graph a) m) => m Int
 _star2 = mdo
     i <- modify2 . nodes $ swap . ixed add a
-    a <- NodeBuilder.with i $ genCoat $ specificCons Star
-    return i
+    a <- NodeBuilder.with (Ref i) $ genCoat $ specificCons Star
+    return $ Ref i
 
 
-connection src tgt = do
-    modify2 . edges $ swap . ixed add (DoubleArc src tgt)
+--cons :: forall name m t. (ToMuM' name m t, LayeredASTCons (Cons (Mu t)) m t) => name -> m (Mu t)
+--cons n = layeredASTCons . flip Cons [] =<< (toMuM' n :: m (Mu t))
+cons c = mdo
+    i <- modify2 . nodes $ swap . ixed add a
+    a <- NodeBuilder.with (Ref i) $ do
+        cc <- connect c
+        genCoat $ specificCons (flip Cons [] cc)
+    return $ Ref i
 
 
+
+connection src tgt = fmap Ref . modify2 . edges $ swap . ixed add (DoubleArc src tgt)
+
+--accessor :: _ => _
+accessor name b = mdo
+    name' <- monadic name
+    b'    <- monadic b
+    i <- modify2 . nodes $ swap . ixed add a
+    a <- NodeBuilder.with (Ref i) $ do
+        nc <- connect name'
+        bc <- connect b'
+        genCoat $ specificCons $ Accessor nc bc
+    return $ Ref i
+
+--accessor :: forall name src m t. (ToMuM' name m t, ToMuM' src m t, LayeredASTMuCons Accessor m t) => name -> src -> m (Mu t)
+--accessor n r = do
+--    mn <- toMuM' n :: m (Mu t)
+--    mr <- toMuM' r :: m (Mu t)
+--    layeredASTCons $ Accessor mn mr
+
+connect :: (MonadNodeBuilder (Ref Int) m, TracksSuccs a, BuilderMonad (Graph a) m) => Ref Int -> m (Ref Int)
 connect tgt = do
     self <- NodeBuilder.get
-    g    <- Builder.get
+    --g    <- Builder.get
 
     i <- flip connection tgt =<< NodeBuilder.get
 
 
     g    <- Builder.get
-    let tgtn = index tgt (g ^. nodes)
+    let tgtn = index_ (unwrap tgt) (g ^. nodes)
         tgtn' = tgtn & succs %~ (self:)
 
-    Builder.put ( g & nodes %~ unchecked inplace insert tgt tgtn' )
+    
+    Builder.put ( g & nodes %~ unchecked inplace insert_ (unwrap' tgt) tgtn' )
 
     return i
 
 
 
-getStar2 ::(MonadFix m, CoatGen m a, MonadStarBuilder (Maybe Int) m, SpecificCons Star (Uncoated a), BuilderMonad (Graph a) m, MonadNodeBuilder Int m) => m Int
+getStar2 ::(MonadFix m, CoatGen m a, MonadStarBuilder (Maybe (Ref Int)) m, SpecificCons Star (Uncoated a), BuilderMonad (Graph a) m, MonadNodeBuilder (Ref Int) m) => m (Ref Int)
 getStar2 =  do
     s <- StarBuilder.get
     case s of
@@ -181,14 +221,7 @@ instance {-# OVERLAPPABLE #-} RegisterConnection (Coat a)         where register
 --instance (MonadFix m, CoatGen m a, MonadStarBuilder (Maybe Int) m, SpecificCons Star (Uncoated a), BuilderMonad (Graph a) m) => LayerGen m (Typed Int a) where
 --    genLayer a = Typed <$> getStar2 <*> pure a
 
-instance ( MonadIO m, RegisterConnection a, Tup2RTup t ~ (t, ()), Show t, Layered t, TracksSuccs (Unlayered t)
-         , Uncoated t ~ Uncoated (Unlayered t), LayerGen m t
-         , MonadFix m, CoatGen m (Unlayered t), MonadStarBuilder (Maybe Int) m, BuilderMonad (Graph t) m, SpecificCons Star (Uncoated t), MonadNodeBuilder Int m
-         ) => LayerGen m (Typed Int a) where
-    genLayer a = do
-        s <- getStar2
-        c <- connect s
-        return $ Typed c a
+
 
 instance Monad m => LayerGen m (SuccTracking a) where
     genLayer a = return $ SuccTracking mempty a
