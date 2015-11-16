@@ -13,7 +13,7 @@
 
 module Data.Text.CodeBuilder.Doc where
 
-import Prologue.Class
+import Prologue hiding (Empty)
 
 import           GHC.Int (Int64)
 import           Control.Monad.State

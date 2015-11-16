@@ -11,7 +11,7 @@
 
 module Data.Variants where
 
-import Flowbox.Prelude hiding (cons, Index, cast, Variant, Castable)
+import Flowbox.Prelude hiding (cons, Index, cast, Variant, Castable, Repr, repr)
 
 import Flowbox.System.Types (ToMaybe, toMaybe, IsSubset, orElse, withState, ToSet, Index, In)
 
@@ -19,7 +19,12 @@ import Data.Typeable          hiding (cast)
 import Data.Maybe             (fromJust)
 import Control.Monad.State    hiding (withState)
 import Type.BaseType
-import Data.TypeLevel.Bool    ((:==))
+import Type.Bool              ((:==))
+import Data.Impossible
+
+import qualified Data.Vector as V
+import           Data.Vector (Vector)
+import           Data.Reprx
 
 ------------------------------------------------------------------------
 -- Errors
@@ -220,8 +225,10 @@ instance                 SafeCons 'False v NotFound vs where safeCons _ = const 
 
 -- SpecificCons
 
-class                                                          SpecificCons v rec where specificCons :: v -> rec
-instance (SpecificCons' ok v rec, ok ~ In v (Variants rec)) => SpecificCons v rec where specificCons = specificCons' (Proxy :: Proxy ok)
+class                                                          SpecificCons v          rec        where specificCons :: v -> rec
+instance (SpecificCons' ok v rec, ok ~ In v (Variants rec)) => SpecificCons v          rec        where specificCons = specificCons' (Proxy :: Proxy ok)
+instance                                                       SpecificCons Impossible rec        where specificCons = impossible
+instance                                                       SpecificCons v          Impossible where specificCons = impossible
 
 class SpecificCons' (ok :: Bool) v rec where
     specificCons' :: Proxy ok -> v -> rec
@@ -360,6 +367,8 @@ newtype Match rec out = Match { runMatch :: Rec rec -> Maybe out } deriving (Typ
 instance (Typeable rec, Typeable out) => Show (Match rec out) where show _ = show (typeOf (undefined :: Match rec out))
 
 type MatchMonad v rec out = VariantMap v rec out
+type MatchMonad'  rec out = MatchMonad out rec out
+
 
 --- === MatchSet ===
 
@@ -398,7 +407,11 @@ unsecureCase rec matches = case secureCase rec matches of
 case' :: Case a matches out => a -> matches -> out
 case' = unsecureCase . view record
 
+unsafeFrom :: (MatchMonad out (Variants a) out, HasRecord' a) => a -> out
+unsafeFrom a = case' a mid
 
+mid :: MatchMonad v rec v =>  MatchSet rec v
+mid = match id 
 
 --------------------------------------------------------------------------
 ---- Tests
@@ -416,6 +429,8 @@ type Foo1 = Rec '[A]
 type Foo2 = Rec '[A,B]
 type Foo3 = Rec '[A,B,C]
 type FooD a = Rec '[A,B,C,D a]
+type FooIS = Rec '[Int,String]
+
 
 type Foo2' = Rec '[B,A]
 
@@ -453,6 +468,8 @@ test = do
         x4 = cons (A 1) :: Maybe Foo3
         x5 = cons (C 1) :: Maybe Foo3
         x6 = cons (C 1) :: Maybe Foo1
+        x7 = cons (7 :: Int) :: FooIS
+        x8 = cons ("yo"::String) :: FooIS
 
         t1 = cons (A 1) :: X
 
@@ -523,3 +540,54 @@ test = do
 
 
 --main = test
+
+
+------------------ Przyklad --------------------
+--caseS :: Case a matches out => a -> matches -> Maybe out
+--caseS = secureCase . view record
+
+--type family VectorsOf (lst :: [*]) :: [*] where
+--    VectorsOf '[]       = '[]
+--    VectorsOf (a ': as) = (Vector a ': VectorsOf as)
+
+--data Bar types = Bar { _barData :: Rec (VectorsOf types) }
+--makeLenses ''Bar
+
+--type instance Variants (Bar types) = VectorsOf types
+--instance Record (Bar types) where mkRecord = Bar
+--instance HasRecord (Bar types) (Bar types') where record = barData
+
+--class ShowBarType' base (t :: [*]) where
+--    showBarType' :: Proxy base -> Proxy t -> Bar base -> Maybe String
+
+--instance ShowBarType' base '[] where
+--    showBarType' _ _ _ = Nothing
+
+
+--instance (Typeable t, ShowBarType' base ts, WithVariantsM (MaybeMap' (Vector t) String) (VectorsOf base) Maybe String)
+--      => ShowBarType' base (t ': ts) where
+--    showBarType' _ _ bar = undefined -- case caseRes of Just str -> Just str
+--                                           --Nothing  -> showBarType' (Proxy :: Proxy base) (Proxy :: Proxy ts) bar
+--        --where caseRes = caseS bar $ do match $ \(el :: Vector t) -> show (typeOf el)
+
+
+--showBarType :: forall types. (ShowBarType' types types) => Bar types -> Maybe String
+--showBarType bar = showBarType' (Proxy :: Proxy types) (Proxy :: Proxy types) bar
+
+
+--test2 :: IO ()
+--test2 = do
+--    let v1  = V.fromList ["ala", "ma", "kota"] :: Vector String
+--        --v2  = V.fromList [1,2,3,4,5]           :: Vector Int
+--        b1  = cons v1                          :: Bar '[Int, String]
+--        --b2  = cons v2                          :: Bar '[Int, String]
+--        tp1 = showBarType b1
+--        --tp2 = showBarType b2
+
+--    --case tp1 of Nothing -> putStrLn "Nic"
+--    --            Just t  -> putStrLn t
+
+--    --case tp2 of Nothing -> putStrLn "Nic2"
+--    --            Just t  -> putStrLn t
+
+--    return ()

@@ -79,7 +79,8 @@ Library
                     cond,
                     unix,
                     vector,
-                    convert
+                    convert,
+                    typelevel
 
   if os(windows)
     Build-Depends:  Win32
