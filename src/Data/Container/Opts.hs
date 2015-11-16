@@ -10,7 +10,7 @@
 
 module Data.Container.Opts where
 
-import Prologue hiding (Ixed)
+import Prelude
 import Type.Bool
 import Data.Typeable
 
@@ -42,6 +42,7 @@ data Ixed      = Ixed
 data Safe      = Safe
 data Unchecked = Unchecked
 data Unsafe    = Unsafe
+data Inplace   = Inplace
 
 -- Formatters
 
@@ -62,7 +63,7 @@ type family CheckIfKnown flag flags :: Opt * where
     CheckIfKnown f (f' ': fs) = CheckIfKnown f fs
     CheckIfKnown f '[]        = N  
 
-    
+
 -------------------------
 -- === Opt queries === --
 -------------------------
@@ -109,7 +110,7 @@ extendOptBuilder _ _ (OptBuilder a) = OptBuilder a
 appFunc :: (f -> g) -> OptBuilder ms ps f -> OptBuilder ms ps g
 appFunc = fmap
 
-withTransFunc = transFunc .: appFunc
+withTransFunc f = transFunc . appFunc f
 
 --------------------------------
 
@@ -154,3 +155,14 @@ class    GetQueryData (provided :: [*]) (query :: [*]) datas where getQueryData 
 instance {-# OVERLAPPABLE #-} (GetQueryData p qs datas, GetOptData p datas q)
                            => GetQueryData p (q ': qs) datas where getQueryData p q datas = (getOptData p datas (Proxy :: Proxy q), getQueryData p (Proxy :: Proxy qs) datas)
 instance {-# OVERLAPPABLE #-} GetQueryData p '[]       datas where getQueryData _ _ _     = ()
+
+
+(.:) = (.) . (.)
+
+
+ixed      = queryBuilder $ transFunc .: extendOptBuilder (Query :: Query '[ Ixed ] '[]                )
+raw       = queryBuilder $ transFunc .: extendOptBuilder (Query :: Query '[]            '[ Raw       ])
+try       = queryBuilder $ transFunc .: extendOptBuilder (Query :: Query '[]            '[ Try       ])
+unchecked = queryBuilder $ transFunc .: extendOptBuilder (Query :: Query '[]            '[ Unchecked ])
+unsafe    = queryBuilder $ transFunc .: extendOptBuilder (Query :: Query '[]            '[ Unsafe    ])
+inplace   = queryBuilder $ transFunc .: extendOptBuilder (Query :: Query '[]            '[ Inplace   ])

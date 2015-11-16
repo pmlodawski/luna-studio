@@ -22,9 +22,10 @@ import           Data.Layer
 
 data Resizable style a = Resizable !style !a deriving (Show, Functor, Foldable, Traversable, Monoid)
 
-type instance IndexOf      (Resizable s a) = IndexOf (ContainerOf a)
-type instance ContainerOf  (Resizable s a) = Resizable s a
-type instance DataStoreOf  (Resizable s a) = ContainerOf a
+type instance Index     (Resizable s a) = Index (Container a)
+type instance Item      (Resizable s a) = Item  (Container a)
+type instance Container (Resizable s a) = Resizable s a
+type instance DataStore (Resizable s a) = Container a
 
 instance Monad m => IsContainerM  m (Resizable s a) where fromContainerM = return
 instance Monad m => HasContainerM m (Resizable s a) where viewContainerM = return
@@ -35,11 +36,12 @@ type instance       Unlayered  (Resizable s a) = a
 instance            Layered    (Resizable s a) where layered = lens (\(Resizable _ a) -> a) (\(Resizable s _) a -> Resizable s a)
 instance Monad m => LayeredM m (Resizable s a)
 
-instance      (IsContainer a, FromList (ContainerOf a), Default s) 
-           => FromList  (Resizable s a) where fromList = Resizable def . fromContainer . fromList
-type instance Item      (Resizable s a) = Item (ContainerOf a)
+instance (IsContainer a, FromList (Container a), Default s) 
+      => FromList  (Resizable s a) where fromList = Resizable def . fromContainer . fromList
 
 instance (Default s, Default a) => Default (Resizable s a) where def = Resizable def def
+
+instance (ToList (Container a), HasContainer a) => ToList (Resizable s a) where toList = toList . view container . unlayer
 
 style :: Lens' (Resizable s a) s
 style = lens (\(Resizable s _) -> s) (\(Resizable _ a) s -> Resizable s a)
@@ -78,14 +80,14 @@ checkZeroSize s = if s == 0 then 1 else s
 -- [+] MinBounded
 -- [+] MaxBounded
 
-type instance ParamsOf MeasurableOp (Resizable s a) = ParamsOf MeasurableOp (ContainerOf a)
-type instance ModsOf   MeasurableOp (Resizable s a) = ModsOf   MeasurableOp (ContainerOf a)
+type instance ParamsOf MeasurableOp (Resizable s a) = ParamsOf MeasurableOp (Container a)
+type instance ModsOf   MeasurableOp (Resizable s a) = ModsOf   MeasurableOp (Container a)
 
-type instance ParamsOf MinBoundedOp (Resizable s a) = ParamsOf MinBoundedOp (ContainerOf a)
-type instance ModsOf   MinBoundedOp (Resizable s a) = ModsOf   MinBoundedOp (ContainerOf a)
+type instance ParamsOf MinBoundedOp (Resizable s a) = ParamsOf MinBoundedOp (Container a)
+type instance ModsOf   MinBoundedOp (Resizable s a) = ModsOf   MinBoundedOp (Container a)
 
-type instance ParamsOf MaxBoundedOp (Resizable s a) = ParamsOf MaxBoundedOp (ContainerOf a)
-type instance ModsOf   MaxBoundedOp (Resizable s a) = ModsOf   MaxBoundedOp (ContainerOf a)
+type instance ParamsOf MaxBoundedOp (Resizable s a) = ParamsOf MaxBoundedOp (Container a)
+type instance ModsOf   MaxBoundedOp (Resizable s a) = ModsOf   MaxBoundedOp (Container a)
 
 instance (MeasurableQM (GetOpts ms) (GetOpts ps) m     a) => MeasurableQM_ ms ps m     (Resizable s a) where sizeM_     _ = sizeQM     (Query :: Query (GetOpts ms) (GetOpts ps)) . unlayer
 instance (MinBoundedQM (GetOpts ms) (GetOpts ps) m idx a) => MinBoundedQM_ ms ps m idx (Resizable s a) where minBoundM_ _ = minBoundQM (Query :: Query (GetOpts ms) (GetOpts ps)) . unlayer
@@ -100,22 +102,22 @@ instance (MaxBoundedQM (GetOpts ms) (GetOpts ps) m idx a) => MaxBoundedQM_ ms ps
 -- [+] Expandable
 -- [+] Growable
 
-type instance ParamsOf SingletonOp  (Resizable s a) = ParamsOf SingletonOp  (ContainerOf a)
-type instance ModsOf   SingletonOp  (Resizable s a) = ModsOf   SingletonOp  (ContainerOf a)
+type instance ParamsOf SingletonOp  (Resizable s a) = ParamsOf SingletonOp  (Container a)
+type instance ModsOf   SingletonOp  (Resizable s a) = ModsOf   SingletonOp  (Container a)
 
-type instance ParamsOf AllocableOp  (Resizable s a) = ParamsOf AllocableOp  (ContainerOf a)
-type instance ModsOf   AllocableOp  (Resizable s a) = ModsOf   AllocableOp  (ContainerOf a)
+type instance ParamsOf AllocableOp  (Resizable s a) = ParamsOf AllocableOp  (Container a)
+type instance ModsOf   AllocableOp  (Resizable s a) = ModsOf   AllocableOp  (Container a)
 
-type instance ParamsOf ExpandableOp (Resizable s a) = ParamsOf GrowableOp   (ContainerOf a)
-type instance ModsOf   ExpandableOp (Resizable s a) = ModsOf   GrowableOp   (ContainerOf a)
+type instance ParamsOf ExpandableOp (Resizable s a) = ParamsOf GrowableOp   (Container a)
+type instance ModsOf   ExpandableOp (Resizable s a) = ModsOf   GrowableOp   (Container a)
 
-type instance ParamsOf GrowableOp   (Resizable s a) = ParamsOf GrowableOp   (ContainerOf a)
-type instance ModsOf   GrowableOp   (Resizable s a) = ModsOf   GrowableOp   (ContainerOf a)
+type instance ParamsOf GrowableOp   (Resizable s a) = ParamsOf GrowableOp   (Container a)
+type instance ModsOf   GrowableOp   (Resizable s a) = ModsOf   GrowableOp   (Container a)
 
 instance (SingletonQM  (GetOpts ms) (GetOpts ps) m el a, Default s) => SingletonQM_  ms ps m el (Resizable s a) where  singletonM_ _ = fmap2 (Resizable def) . singletonQM (Query :: Query (GetOpts ms) (GetOpts ps))
 instance (AllocableQM  (GetOpts ms) (GetOpts ps) m    a, Default s) => AllocableQM_  ms ps m    (Resizable s a) where  allocM_     _ = fmap2 (Resizable def) . allocQM     (Query :: Query (GetOpts ms) (GetOpts ps))
 instance ( GrowableQM  (GetOpts ms) (GetOpts ps) m    a, ResizeStep s a
-         , Result_ GrowableOp (PrimInfo (ContainerOf a)) (GetOpts ms) ~ Result_ ExpandableOp (PrimInfo (Resizable s a)) (GetOpts ms)
+         , Result_ GrowableOp (PrimInfo (Container a)) (GetOpts ms) ~ Result_ ExpandableOp (PrimInfo (Resizable s a)) (GetOpts ms)
          ) => ExpandableQM_ ms ps m    (Resizable s a) where  expandM_    _ t = nested layered (growQM (Query :: Query (GetOpts ms) (GetOpts ps)) $ resizeStep t) t
 
 
@@ -128,23 +130,23 @@ instance ( GrowableQM  (GetOpts ms) (GetOpts ps) m    a, ResizeStep s a
 -- [+] Insertable
 -- [+] Freeable
 
-type instance ParamsOf AppendableOp   (Resizable s a) = ParamsOf AppendableOp  (ContainerOf a)
-type instance ModsOf   AppendableOp   (Resizable s a) = ModsOf   AppendableOp  (ContainerOf a)
+type instance ParamsOf AppendableOp   (Resizable s a) = ParamsOf AppendableOp  (Container a)
+type instance ModsOf   AppendableOp   (Resizable s a) = ModsOf   AppendableOp  (Container a)
 
-type instance ParamsOf PrependableOp  (Resizable s a) = ParamsOf PrependableOp (ContainerOf a)
-type instance ModsOf   PrependableOp  (Resizable s a) = ModsOf   PrependableOp (ContainerOf a)
+type instance ParamsOf PrependableOp  (Resizable s a) = ParamsOf PrependableOp (Container a)
+type instance ModsOf   PrependableOp  (Resizable s a) = ModsOf   PrependableOp (Container a)
 
-type instance ParamsOf AddableOp      (Resizable s a) = ParamsOf AddableOp     (ContainerOf a)
-type instance ModsOf   AddableOp      (Resizable s a) = ModsOf   AddableOp     (ContainerOf a)
+type instance ParamsOf AddableOp      (Resizable s a) = ParamsOf AddableOp     (Container a)
+type instance ModsOf   AddableOp      (Resizable s a) = ModsOf   AddableOp     (Container a)
 
-type instance ParamsOf RemovableOp    (Resizable s a) = ParamsOf RemovableOp   (ContainerOf a)
-type instance ModsOf   RemovableOp    (Resizable s a) = ModsOf   RemovableOp   (ContainerOf a)
+type instance ParamsOf RemovableOp    (Resizable s a) = ParamsOf RemovableOp   (Container a)
+type instance ModsOf   RemovableOp    (Resizable s a) = ModsOf   RemovableOp   (Container a)
 
-type instance ParamsOf InsertableOp   (Resizable s a) = ParamsOf InsertableOp  (ContainerOf a)
-type instance ModsOf   InsertableOp   (Resizable s a) = ModsOf   InsertableOp  (ContainerOf a)
+type instance ParamsOf InsertableOp   (Resizable s a) = ParamsOf InsertableOp  (Container a)
+type instance ModsOf   InsertableOp   (Resizable s a) = ModsOf   InsertableOp  (Container a)
 
-type instance ParamsOf FreeableOp     (Resizable s a) = ParamsOf FreeableOp    (ContainerOf a)
-type instance ModsOf   FreeableOp     (Resizable s a) = ModsOf   FreeableOp    (ContainerOf a)
+type instance ParamsOf FreeableOp     (Resizable s a) = ParamsOf FreeableOp    (Container a)
+type instance ModsOf   FreeableOp     (Resizable s a) = ModsOf   FreeableOp    (Container a)
 
 instance (AppendableQM  (GetOpts ms) (GetOpts ps) m     el a) => AppendableQM_  ms ps m     el (Resizable s a) where appendM_  _ = nested layered .  appendQM  (Query :: Query (GetOpts ms) (GetOpts ps))
 instance (PrependableQM (GetOpts ms) (GetOpts ps) m     el a) => PrependableQM_ ms ps m     el (Resizable s a) where prependM_ _ = nested layered .  prependQM (Query :: Query (GetOpts ms) (GetOpts ps))
@@ -164,20 +166,20 @@ instance (FreeableQM    (GetOpts ms) (GetOpts ps) m idx    a) => FreeableQM_    
 -- [+] TracksIxes
 -- [+] TracksElems
 
-type instance ParamsOf IndexableOp      (Resizable s a) = ParamsOf IndexableOp      (ContainerOf a)
-type instance ModsOf   IndexableOp      (Resizable s a) = ModsOf   IndexableOp      (ContainerOf a)
+type instance ParamsOf IndexableOp      (Resizable s a) = ParamsOf IndexableOp      (Container a)
+type instance ModsOf   IndexableOp      (Resizable s a) = ModsOf   IndexableOp      (Container a)
 
-type instance ParamsOf TracksIxesOp     (Resizable s a) = ParamsOf TracksIxesOp     (ContainerOf a)
-type instance ModsOf   TracksIxesOp     (Resizable s a) = ModsOf   TracksIxesOp     (ContainerOf a)
+type instance ParamsOf TracksIxesOp     (Resizable s a) = ParamsOf TracksIxesOp     (Container a)
+type instance ModsOf   TracksIxesOp     (Resizable s a) = ModsOf   TracksIxesOp     (Container a)
 
-type instance ParamsOf TracksFreeIxesOp (Resizable s a) = ParamsOf TracksFreeIxesOp (ContainerOf a)
-type instance ModsOf   TracksFreeIxesOp (Resizable s a) = ModsOf   TracksFreeIxesOp (ContainerOf a)
+type instance ParamsOf TracksFreeIxesOp (Resizable s a) = ParamsOf TracksFreeIxesOp (Container a)
+type instance ModsOf   TracksFreeIxesOp (Resizable s a) = ModsOf   TracksFreeIxesOp (Container a)
 
-type instance ParamsOf TracksUsedIxesOp (Resizable s a) = ParamsOf TracksUsedIxesOp (ContainerOf a)
-type instance ModsOf   TracksUsedIxesOp (Resizable s a) = ModsOf   TracksUsedIxesOp (ContainerOf a)
+type instance ParamsOf TracksUsedIxesOp (Resizable s a) = ParamsOf TracksUsedIxesOp (Container a)
+type instance ModsOf   TracksUsedIxesOp (Resizable s a) = ModsOf   TracksUsedIxesOp (Container a)
 
-type instance ParamsOf TracksElemsOp    (Resizable s a) = ParamsOf TracksElemsOp    (ContainerOf a)
-type instance ModsOf   TracksElemsOp    (Resizable s a) = ModsOf   TracksElemsOp    (ContainerOf a)
+type instance ParamsOf TracksElemsOp    (Resizable s a) = ParamsOf TracksElemsOp    (Container a)
+type instance ModsOf   TracksElemsOp    (Resizable s a) = ModsOf   TracksElemsOp    (Container a)
 
 instance (IndexableQM      (GetOpts ms) (GetOpts ps) m idx el a) => IndexableQM_       ms ps m idx el (Resizable s a) where indexM_     _ idx   = indexQM    (Query :: Query (GetOpts ms) (GetOpts ps)) idx . unlayer
 instance (TracksIxesQM     (GetOpts ms) (GetOpts ps) m idx    a) => TracksIxesQM_      ms ps m idx    (Resizable s a) where ixesM_      _       = ixesQM     (Query :: Query (GetOpts ms) (GetOpts ps))     . unlayer
@@ -197,17 +199,17 @@ instance (TracksElemsQM    (GetOpts ms) (GetOpts ps) m     el a) => TracksElemsQ
 
 ---- === TF Instances ===
 
---type instance ContainerOf (HResizable l a) = HResizable l a
+--type instance Container (HResizable l a) = HResizable l a
 
 --instance IsContainer  (HResizable l a) where fromContainer = id
 --instance HasContainer (HResizable l a) where container     = id
 
 
---type instance ElementOf        (HResizable l a) = ElementOf       a
+--type instance Item        (HResizable l a) = Item       a
 --type instance ElementByIx  idx (HResizable l a) = ElementByIx idx a
---type instance IndexOf      el  (HResizable l a) = IndexOf     el  a
+--type instance Index      el  (HResizable l a) = Index     el  a
 
---type instance DataStoreOf (HResizable l a) = DataStoreOf a
+--type instance DataStore (HResizable l a) = DataStore a
 
 
 ---- === Finite ===
@@ -326,7 +328,7 @@ instance (TracksElemsQM    (GetOpts ms) (GetOpts ps) m     el a) => TracksElemsQ
 ---- -- Optimize following use cases:
 ----
 ---- xxx :: (MeasurableQM2 '[] Identity t, (ResultX
-----                         (Info NA NA MeasurableQSM2 (DataStoreOf t))
+----                         (Info NA NA MeasurableQSM2 (DataStore t))
 ----                         (Selected
 ----                            (LstIn (ModsOf MeasurableQSM2 t) '[])
 ----                            (FilterMutable (ModsOf MeasurableQSM2 t)))

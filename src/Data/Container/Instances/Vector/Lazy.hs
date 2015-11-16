@@ -31,7 +31,7 @@ import           Data.Maybe (fromJust)
 import GHC.Prim
 
 import qualified Data.Container.Opts as M
-import           Data.Container.Opts (Opt(..), Knowledge(..), Query(..), OptQuery(..), ModsOf, ParamsOf)
+import           Data.Container.Opts (Opt(P,N), Knowledge(..), Query(..), OptQuery(..), ModsOf, ParamsOf)
 import Data.Layer
 import Data.TypeLevel.List (In)
 
@@ -41,14 +41,16 @@ import Data.Container.Proxy
 -- === Global instances === --
 ------------------------------
 
-type instance IndexOf       (V.Vector a) = Int
-type instance ContainerOf   (V.Vector a) = V.Vector a
-type instance DataStoreOf   (V.Vector a) = V.Vector a
+type instance Index     (V.Vector a) = Int
+type instance Item      (V.Vector a) = a
+type instance Container (V.Vector a) = V.Vector a
+type instance DataStore (V.Vector a) = V.Vector a
 instance      Monad m => IsContainerM  m (V.Vector a) where fromContainerM = return
 instance      Monad m => HasContainerM m (V.Vector a) where viewContainerM = return
                                                             setContainerM  = const . return
 
 
+instance ToList (V.Vector a) where toList = V.toList
 
 ----------------------------------
 -- === Operations instances === --
@@ -154,6 +156,7 @@ instance (Monad m, Eq a, a ~ a') => RemovableQM_ '[P M.Ixed] '[P M.Try] m a' (V.
 
 instance (Monad m, a ~ a', idx ~ Int) => InsertableQM_ '[N       ] ps m idx a' (V.Vector a) where insertM_ _ idx el v = (return . Res ())       $ (V.//) v [(idx,el)]
 instance (Monad m, a ~ a', idx ~ Int) => InsertableQM_ '[P M.Ixed] ps m idx a' (V.Vector a) where insertM_ _ idx el v = (return . Res (idx,())) $ (V.//) v [(idx,el)]
+
 
 instance (Monad m, idx ~ Int) => FreeableQM_ '[] ps m idx (V.Vector a) where freeM_ _ idx v = (return . Res ())       $ (V.//) v [(idx,error $ "uninitialized element at index " <> show idx)]
 

@@ -6,13 +6,21 @@
 {-# LANGUAGE FunctionalDependencies    #-}
 
 
-module Data.Container.Class where
+module Data.Container.Class (module Data.Container.Class, module X) where
 
-import Prologue hiding (Indexable, index, Bounded, Ixed, Simple, Indexed)
+--import Prologue hiding (Indexable, index, Bounded, Ixed, Simple, Indexed)
+import Prelude hiding ((.))
+
+import Control.Lens as X (Index)
 
 import qualified Data.Container.Opts as Opts
 import           Data.Container.Opts (Query(..), Opt(..), Knowledge(..), queryBuilder, withTransFunc)
 import           Data.Container.Poly (Simple)
+import           GHC.Exts            (Constraint)
+import           Data.Functors
+import           Control.Monad.Identity
+import           Control.Lens hiding (Indexable, index, Bounded, Ixed, Simple, Indexed)
+
 
 
 data Impossible    = Impossible  deriving (Show)
@@ -27,43 +35,45 @@ impossible = error "Impossible happened."
 -- === General utilities ===
 ----------------------------
 
-type family ContainerOf a
-type family DataStoreOf a
-type family IndexOf     a
+type family Container a
+type family Item      a
+
+-- | Points to the real structure handling the data. Used mainly internally.
+type family DataStore a
 
 type  HasContainer = HasContainerM Identity
 class HasContainerM m a where
-    viewContainerM :: a -> m (ContainerOf a)
-    setContainerM  :: ContainerOf a -> a -> m a
-    default viewContainerM :: (ContainerOf a ~ ContainerOf (Unwrapped a), Wrapped a, HasContainerM m (Unwrapped a)) => a -> m (ContainerOf a)
-    viewContainerM = viewContainerM . unwrap'
-    default setContainerM :: (ContainerOf a ~ ContainerOf (Unwrapped a), Wrapped a, HasContainerM m (Unwrapped a), Functor m) => ContainerOf a -> a -> m a
-    setContainerM = wrapped' . setContainerM
+    viewContainerM :: a -> m (Container a)
+    setContainerM  :: Container a -> a -> m a
+    default viewContainerM :: (Container a ~ Container (Unwrapped a), Wrapped a, HasContainerM m (Unwrapped a)) => a -> m (Container a)
+    viewContainerM = viewContainerM . view _Wrapped'
+    default setContainerM :: (Container a ~ Container (Unwrapped a), Wrapped a, HasContainerM m (Unwrapped a), Functor m) => Container a -> a -> m a
+    setContainerM = _Wrapped' . setContainerM
 
 type                    IsContainer  = IsContainerM Identity
 class HasContainerM m a => IsContainerM m a where
-    fromContainerM :: ContainerOf a -> m a
-    default fromContainerM :: (Unwrapped a ~ ContainerOf a, Wrapped a, Monad m) => ContainerOf a -> m a
-    fromContainerM = return . view unwrapped'
+    fromContainerM :: Container a -> m a
+    --default fromContainerM :: (Monad m) => Container a -> m a
+    --fromContainerM = view unwrapped' . fromContainerM
 
 
-container :: HasContainer a => Lens' a (ContainerOf a)
+container :: HasContainer a => Lens' a (Container a)
 container = lens (runIdentity . viewContainerM) (runIdentity .: flip setContainerM)
 
-fromContainer :: IsContainer a => ContainerOf a -> a
+fromContainer :: IsContainer a => Container a -> a
 fromContainer = runIdentity . fromContainerM
 
-withContainerM :: (Monad m, HasContainerM m a) => (ContainerOf a -> m (ContainerOf a)) -> a -> m a
+withContainerM :: (Monad m, HasContainerM m a) => (Container a -> m (Container a)) -> a -> m a
 withContainerM f l = viewContainerM l >>= f >>= flip setContainerM l
 
-withContainerM' :: (Monad m, HasContainerM m a) => (ContainerOf a -> ContainerOf a) -> a -> m a
+withContainerM' :: (Monad m, HasContainerM m a) => (Container a -> Container a) -> a -> m a
 withContainerM' = withContainerM . (return .)
 
 -- Type level utilities
 
-type family PrimStoreOf    a where PrimStoreOf    a = PrimStoreOf' (DataStoreOf a) a
+type family PrimStoreOf    a where PrimStoreOf    a = PrimStoreOf' (DataStore a) a
 type family PrimStoreOf' t a where PrimStoreOf' a a = a
-                                   PrimStoreOf' t a = PrimStoreOf' (DataStoreOf (ContainerOf (DataStoreOf a))) (ContainerOf (DataStoreOf a))
+                                   PrimStoreOf' t a = PrimStoreOf' (DataStore (Container (DataStore a))) (Container (DataStore a))
 
 
 ----------------------------
@@ -114,7 +124,7 @@ type family GetOpts (m :: [Opt *]) :: [*] where
 -- === >>> Mods ===
 
 type instance ModResult op ('Info (Known idx) el cont) Opts.Ixed = IdxMod op idx
-type instance ModResult op ('Info Unknown     el cont) Opts.Ixed = IdxMod op (IndexOf cont)
+type instance ModResult op ('Info Unknown     el cont) Opts.Ixed = IdxMod op (Index cont)
 
 
 -----------------------------
@@ -127,9 +137,9 @@ type instance ModResult op ('Info Unknown     el cont) Opts.Ixed = IdxMod op (In
 -- MinBounded
 -- MaxBounded
 
-class Ctx ms m cont => MeasurableQM ms ps m     cont where sizeQM     :: Query ms ps -> cont -> m (PrimResult MeasurableOp ms     (ContainerOf cont) Int)
-class Ctx ms m cont => MinBoundedQM ms ps m idx cont where minBoundQM :: Query ms ps -> cont -> m (IdxResult  MinBoundedOp ms idx (ContainerOf cont) idx)
-class Ctx ms m cont => MaxBoundedQM ms ps m idx cont where maxBoundQM :: Query ms ps -> cont -> m (IdxResult  MaxBoundedOp ms idx (ContainerOf cont) idx)
+class Ctx ms m cont => MeasurableQM ms ps m     cont where sizeQM     :: Query ms ps -> cont -> m (PrimResult MeasurableOp ms     (Container cont) Int)
+class Ctx ms m cont => MinBoundedQM ms ps m idx cont where minBoundQM :: Query ms ps -> cont -> m (IdxResult  MinBoundedOp ms idx (Container cont) idx)
+class Ctx ms m cont => MaxBoundedQM ms ps m idx cont where maxBoundQM :: Query ms ps -> cont -> m (IdxResult  MaxBoundedOp ms idx (Container cont) idx)
 
 data MeasurableOp      = MeasurableOp
 type MeasurableM       = Simple MeasurableQM
@@ -178,10 +188,10 @@ maxBound   = withTransFunc (fmap2 runIdentity) maxBoundM
 -- Expandable
 -- Growable
 
-class Ctx ms m cont => SingletonQM  ms ps m el cont where singletonQM :: Query ms ps         -> el   -> m (ElResult   SingletonOp  ms el (ContainerOf cont) cont)
-class Ctx ms m cont => ExpandableQM ms ps m    cont where expandQM    :: Query ms ps         -> cont -> m (PrimResult ExpandableOp ms    (ContainerOf cont) cont)
-class Ctx ms m cont => AllocableQM  ms ps m    cont where allocQM     :: Query ms ps -> Int          -> m (PrimResult AllocableOp  ms    (ContainerOf cont) cont)
-class Ctx ms m cont => GrowableQM   ms ps m    cont where growQM      :: Query ms ps -> Int  -> cont -> m (PrimResult GrowableOp   ms    (ContainerOf cont) cont)
+class Ctx ms m cont => SingletonQM  ms ps m el cont where singletonQM :: Query ms ps         -> el   -> m (ElResult   SingletonOp  ms el (Container cont) cont)
+class Ctx ms m cont => ExpandableQM ms ps m    cont where expandQM    :: Query ms ps         -> cont -> m (PrimResult ExpandableOp ms    (Container cont) cont)
+class Ctx ms m cont => AllocableQM  ms ps m    cont where allocQM     :: Query ms ps -> Int          -> m (PrimResult AllocableOp  ms    (Container cont) cont)
+class Ctx ms m cont => GrowableQM   ms ps m    cont where growQM      :: Query ms ps -> Int  -> cont -> m (PrimResult GrowableOp   ms    (Container cont) cont)
 
 data  SingletonOp       = SingletonOp
 type  SingletonM        = Simple SingletonQM
@@ -242,12 +252,13 @@ grow        = withTransFunc (fmap3 runIdentity) growM
 
 
 
-class Ctx ms m cont => AppendableQM   ms ps m     el cont where appendQM  :: Query ms ps        -> el -> cont -> m (ElResult    AppendableOp    ms     el (ContainerOf cont) cont)
-class Ctx ms m cont => PrependableQM  ms ps m     el cont where prependQM :: Query ms ps        -> el -> cont -> m (ElResult    PrependableOp   ms     el (ContainerOf cont) cont)
-class Ctx ms m cont => AddableQM      ms ps m     el cont where addQM     :: Query ms ps        -> el -> cont -> m (ElResult    AddableOp       ms     el (ContainerOf cont) cont)
-class Ctx ms m cont => RemovableQM    ms ps m     el cont where removeQM  :: Query ms ps        -> el -> cont -> m (ElResult    RemovableOp     ms     el (ContainerOf cont) cont)
-class Ctx ms m cont => InsertableQM   ms ps m idx el cont where insertQM  :: Query ms ps -> idx -> el -> cont -> m (IdxElResult InsertableOp    ms idx el (ContainerOf cont) cont)
-class Ctx ms m cont => FreeableQM     ms ps m idx    cont where freeQM    :: Query ms ps -> idx       -> cont -> m (IdxResult   FreeableOp      ms idx    (ContainerOf cont) cont)
+class Ctx ms m cont => AppendableQM   ms ps m     el cont where appendQM  :: Query ms ps        -> el -> cont -> m (ElResult    AppendableOp    ms     el (Container cont) cont)
+class Ctx ms m cont => PrependableQM  ms ps m     el cont where prependQM :: Query ms ps        -> el -> cont -> m (ElResult    PrependableOp   ms     el (Container cont) cont)
+class Ctx ms m cont => AddableQM      ms ps m     el cont where addQM     :: Query ms ps        -> el -> cont -> m (ElResult    AddableOp       ms     el (Container cont) cont)
+class Ctx ms m cont => RemovableQM    ms ps m     el cont where removeQM  :: Query ms ps        -> el -> cont -> m (ElResult    RemovableOp     ms     el (Container cont) cont)
+class Ctx ms m cont => InsertableQM   ms ps m idx el cont where insertQM  :: Query ms ps -> idx -> el -> cont -> m (IdxElResult InsertableOp    ms idx el (Container cont) cont)
+class Ctx ms m cont => FreeableQM     ms ps m idx    cont where freeQM    :: Query ms ps -> idx       -> cont -> m (IdxResult   FreeableOp      ms idx    (Container cont) cont)
+class Ctx ms m cont => ReservableQM   ms ps m        cont where reserveQM :: Query ms ps              -> cont -> m (PrimResult  ReservableOp    ms        (Container cont) cont)
 
 data  AppendableOp       = AppendableOp
 type  AppendableM        = Simple AppendableQM
@@ -279,11 +290,17 @@ type  FreeableM          = Simple FreeableQM
 type  FreeableQ    ms ps = FreeableQM ms ps Identity
 type  Freeable           = Simple FreeableQM Identity
 
+data  ReservableOp       = ReservableOp
+type  ReservableM        = Simple ReservableQM
+type  ReservableQ  ms ps = ReservableQM ms ps Identity
+type  Reservable         = Simple ReservableQM Identity
+
 type instance IdxMod AppendableOp  a = a
 type instance IdxMod PrependableOp a = a
 type instance IdxMod AddableOp     a = a
 type instance IdxMod RemovableOp   a = a
 type instance IdxMod InsertableOp  a = a
+type instance IdxMod ReservableOp  a = a
 
 appendM'  = queryBuilder appendQM
 append'   = withTransFunc (fmap3 runIdentity) appendM'
@@ -299,6 +316,7 @@ addM'     = queryBuilder addQM
 add'      = withTransFunc (fmap3 runIdentity) addM'
 addM      = queryBuilder $ fmap formatResult .:. addQM
 add       = withTransFunc (fmap3 runIdentity) addM
+add_      = withTransFunc (fmap3 res_) add'
 
 removeM'  = queryBuilder removeQM
 remove'   = withTransFunc (fmap3 runIdentity) removeM'
@@ -309,11 +327,18 @@ insertM'  = queryBuilder insertQM
 insert'   = withTransFunc (fmap4 runIdentity) insertM'
 insertM   = queryBuilder $ fmap formatResult .:: insertQM
 insert    = withTransFunc (fmap4 runIdentity) insertM
+insert_   = withTransFunc (fmap4 res_) insert'
 
 freeM'    = queryBuilder freeQM
 free'     = withTransFunc (fmap3 runIdentity) freeM'
 freeM     = queryBuilder $ fmap formatResult .:. freeQM
 free      = withTransFunc (fmap3 runIdentity) freeM
+free_     = withTransFunc (fmap3 res_) free'
+
+reserveM' = queryBuilder reserveQM
+reserve'  = withTransFunc (fmap2 runIdentity) reserveM'
+reserveM  = queryBuilder $ fmap formatResult .: reserveQM
+reserve   = withTransFunc (fmap2 runIdentity) reserveM
 
 
 
@@ -325,11 +350,11 @@ free      = withTransFunc (fmap3 runIdentity) freeM
 -- TracksIxes
 -- TracksElems
 
-class Ctx ms m cont => IndexableQM      ms ps m idx el cont where indexQM    :: Query ms ps -> idx -> cont -> m (IdxElResult IndexableOp      ms idx el (ContainerOf cont) el   )
-class Ctx ms m cont => TracksFreeIxesQM ms ps m idx    cont where freeIxesQM :: Query ms ps ->        cont -> m (IdxResult   TracksFreeIxesOp ms idx    (ContainerOf cont) [idx])
-class Ctx ms m cont => TracksUsedIxesQM ms ps m idx    cont where usedIxesQM :: Query ms ps ->        cont -> m (IdxResult   TracksUsedIxesOp ms idx    (ContainerOf cont) [idx])
-class Ctx ms m cont => TracksIxesQM     ms ps m idx    cont where ixesQM     :: Query ms ps ->        cont -> m (IdxResult   TracksIxesOp     ms idx    (ContainerOf cont) [idx])
-class Ctx ms m cont => TracksElemsQM    ms ps m     el cont where elemsQM    :: Query ms ps ->        cont -> m (ElResult    TracksElemsOp    ms     el (ContainerOf cont) [el] )
+class Ctx ms m cont => IndexableQM      ms ps m idx el cont where indexQM    :: Query ms ps -> idx -> cont -> m (IdxElResult IndexableOp      ms idx el (Container cont) el   )
+class Ctx ms m cont => TracksFreeIxesQM ms ps m idx    cont where freeIxesQM :: Query ms ps ->        cont -> m (IdxResult   TracksFreeIxesOp ms idx    (Container cont) [idx])
+class Ctx ms m cont => TracksUsedIxesQM ms ps m idx    cont where usedIxesQM :: Query ms ps ->        cont -> m (IdxResult   TracksUsedIxesOp ms idx    (Container cont) [idx])
+class Ctx ms m cont => TracksIxesQM     ms ps m idx    cont where ixesQM     :: Query ms ps ->        cont -> m (IdxResult   TracksIxesOp     ms idx    (Container cont) [idx])
+class Ctx2 m => TracksElemsQM    ms ps m     el cont where elemsQM    :: Query ms ps ->        cont -> m (ElResult    TracksElemsOp    ms     el (Container cont) [el] )
 
 data  IndexableOp            = IndexableOp
 type  IndexableM             = Simple IndexableQM
@@ -363,6 +388,7 @@ indexM'    = queryBuilder indexQM
 index'     = withTransFunc (fmap3 runIdentity) indexM'
 indexM     = queryBuilder $ fmap formatResult .:. indexQM
 index      = withTransFunc (fmap3 runIdentity) indexM
+index_     = withTransFunc (fmap3 res_) index'
 
 freeIxesM' = queryBuilder freeIxesQM
 freeIxes'  = withTransFunc (fmap2 runIdentity) freeIxesM'
@@ -373,6 +399,7 @@ usedIxesM' = queryBuilder usedIxesQM
 usedIxes'  = withTransFunc (fmap2 runIdentity) usedIxesM'
 usedIxesM  = queryBuilder $ fmap formatResult .: usedIxesQM
 usedIxes   = withTransFunc (fmap2 runIdentity) usedIxesM
+usedIxes_  = withTransFunc (fmap2 res_) usedIxes'
 
 ixesM'     = queryBuilder ixesQM
 ixes'      = withTransFunc (fmap2 runIdentity) ixesM'
@@ -383,6 +410,7 @@ elemsM'    = queryBuilder elemsQM
 elems'     = withTransFunc (fmap2 runIdentity) elemsM'
 elemsM     = queryBuilder $ fmap formatResult .: elemsQM
 elems      = withTransFunc (fmap2 runIdentity) elemsM
+elems_     = withTransFunc (fmap2 res_) elems'
 
 
 
@@ -396,8 +424,31 @@ type family Tup2RTup t where
     Tup2RTup (t1, t2, t3, t4) = (t1,(t2,(t3,(t4,())))) 
     Tup2RTup a                = (a,())
 
+type family AppendedRT a rt where
+    AppendedRT a ()     = (a,())
+    AppendedRT a (r,rt) = (r, AppendedRT a rt)
+
+--class    AppendRT a rt                      where appendRT :: a -> rt -> AppendedRT a rt
+--instance AppendRT a ()                      where appendRT a _      = (a,())
+--instance AppendRT a rt => AppendRT a (r,rt) where appendRT a (r,rt) = (r,appendRT a rt)
+
+--class                         AppendRT a rt rt' | a rt -> rt', rt' -> rt a where appendRT :: a -> rt -> rt'
+--instance                      AppendRT a ()     (a,())                     where appendRT a _      = (a,())
+--instance AppendRT a rt rt' => AppendRT a (r,rt) (r,rt')                    where appendRT a (r,rt) = (r,appendRT a rt)
+
+type family InitRT rt where
+    InitRT (t,()) = ()
+    InitRT (t,ts) = (t,InitRT ts)
+
+instance ( AppendRT a rt rt'
+         , InitRT (r, rt') ~ (r, rt)
+         )               => AppendRT a (r,rt) (r,rt')                 where appendRT a (r,rt) = (r,appendRT a rt)
+instance                    AppendRT a ()     (a,())                  where appendRT a _      = (a,())
+class    rt ~ InitRT rt' => AppendRT a rt rt' | a rt -> rt', rt' -> a where appendRT :: a -> rt -> rt'
 
 resToRTup (Res ds a) = (a,ds)
+res_      (Res _  a) = a
+--resToRTup (Res ds a) = appendRT a ds
 
 formatResult = rtup2tupX . resToRTup
 
@@ -414,6 +465,7 @@ type family PrettyCtx ms a :: Constraint where
     PrettyCtx ms  a = ()
 
 type Ctx ms m cont = (Monad m, PrettyCtx ms cont)
+type Ctx2 m = (Monad m)
 
 
 
@@ -421,8 +473,8 @@ type Ctx ms m cont = (Monad m, PrettyCtx ms cont)
 
 
 
-ixed      = Opts.queryBuilder $ Opts.transFunc .: Opts.extendOptBuilder (Query :: Query '[ Opts.Ixed ] '[]                )
-raw       = Opts.queryBuilder $ Opts.transFunc .: Opts.extendOptBuilder (Query :: Query '[]            '[ Opts.Raw       ])
-try       = Opts.queryBuilder $ Opts.transFunc .: Opts.extendOptBuilder (Query :: Query '[]            '[ Opts.Try       ])
-unchecked = Opts.queryBuilder $ Opts.transFunc .: Opts.extendOptBuilder (Query :: Query '[]            '[ Opts.Unchecked ])
-unsafe    = Opts.queryBuilder $ Opts.transFunc .: Opts.extendOptBuilder (Query :: Query '[]            '[ Opts.Unsafe    ])
+
+
+
+--foog :: _ => _
+--foog a = elems a

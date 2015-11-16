@@ -14,19 +14,20 @@ import Data.Layer
 #define AUTO (Reusable idx (Resizable style a))
 
 newtype Auto idx style a = Auto AUTO deriving (Functor, Traversable, Foldable, Monoid, Default)
-type    Auto'    style a = Auto (IndexOf (ContainerOf a)) style a
+type    Auto'    style a = Auto (Index (Container a)) style a
 
-deriving instance (IsContainer a, FromList (ContainerOf a), Default style) => FromList (Auto idx style a)
+deriving instance (IsContainer a, FromList (Container a), Default style) => FromList (Auto idx style a)
 
+type instance Index (Auto idx style a) = Index   AUTO
+type instance Item  (Auto idx style a) = Item AUTO
 
-type instance Item         (Auto idx style a) = Item    AUTO
-type instance IndexOf      (Auto idx style a) = IndexOf AUTO
-
-type instance            DataStoreOf     (Auto idx style a) = DataStoreOf AUTO
-type instance            ContainerOf     (Auto idx style a) = ContainerOf AUTO
+type instance            DataStore       (Auto idx style a) = DataStore AUTO
+type instance            Container       (Auto idx style a) = Container AUTO
 instance      Monad m => IsContainerM  m (Auto idx style a) where fromContainerM = fmap Auto . fromContainerM
 instance      Monad m => HasContainerM m (Auto idx style a) where viewContainerM = viewContainerM . view layered
                                                                   setContainerM  = layered . setContainerM
+
+instance (HasContainer a, ToList (Container a)) => ToList (Auto idx s a) where toList = toList . unwrap'
 
 -- Wrappers & layers
 
@@ -38,10 +39,11 @@ instance            Wrapped    (Auto idx style a) where
     _Wrapped' = iso (\(Auto a) -> a) Auto
 
 
+deriving instance Show AUTO => Show (Auto idx style a)
 
-
-instance Show a => Show (Auto idx style a) where
-    showsPrec d (Auto a) = showParen (d > app_prec) $
-            showString "Auto " . showsPrec (succ app_prec) (view (layered . layered) a)
-        where app_prec = 10
+--instance Show a => Show (Auto idx style a) where
+--    showsPrec d (Auto a) = showParen (d > app_prec) $
+--            showString "Auto " . showsPrec (succ app_prec) (view (layered . layered) a)
+--            --showString $ "Auto " <> show (elems a :: [Item a]) -- . showsPrec (succ app_prec) (view (layered . layered) a)
+--        where app_prec = 10
 

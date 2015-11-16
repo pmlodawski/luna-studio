@@ -20,6 +20,7 @@ import Data.Maybe             (fromJust)
 import Control.Monad.State    hiding (withState)
 import Type.BaseType
 import Type.Bool              ((:==))
+import Data.Impossible
 
 import qualified Data.Vector as V
 import           Data.Vector (Vector)
@@ -224,8 +225,10 @@ instance                 SafeCons 'False v NotFound vs where safeCons _ = const 
 
 -- SpecificCons
 
-class                                                          SpecificCons v rec where specificCons :: v -> rec
-instance (SpecificCons' ok v rec, ok ~ In v (Variants rec)) => SpecificCons v rec where specificCons = specificCons' (Proxy :: Proxy ok)
+class                                                          SpecificCons v          rec        where specificCons :: v -> rec
+instance (SpecificCons' ok v rec, ok ~ In v (Variants rec)) => SpecificCons v          rec        where specificCons = specificCons' (Proxy :: Proxy ok)
+instance                                                       SpecificCons Impossible rec        where specificCons = impossible
+instance                                                       SpecificCons v          Impossible where specificCons = impossible
 
 class SpecificCons' (ok :: Bool) v rec where
     specificCons' :: Proxy ok -> v -> rec
@@ -364,6 +367,8 @@ newtype Match rec out = Match { runMatch :: Rec rec -> Maybe out } deriving (Typ
 instance (Typeable rec, Typeable out) => Show (Match rec out) where show _ = show (typeOf (undefined :: Match rec out))
 
 type MatchMonad v rec out = VariantMap v rec out
+type MatchMonad'  rec out = MatchMonad out rec out
+
 
 --- === MatchSet ===
 
@@ -402,7 +407,11 @@ unsecureCase rec matches = case secureCase rec matches of
 case' :: Case a matches out => a -> matches -> out
 case' = unsecureCase . view record
 
+unsafeFrom :: (MatchMonad out (Variants a) out, HasRecord' a) => a -> out
+unsafeFrom a = case' a mid
 
+mid :: MatchMonad v rec v =>  MatchSet rec v
+mid = match id 
 
 --------------------------------------------------------------------------
 ---- Tests

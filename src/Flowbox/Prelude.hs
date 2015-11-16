@@ -42,7 +42,7 @@ import           Data.Typeable                      as X (Typeable)
 import           GHC.Generics                       as X (Generic)
 import           Control.Conditional                as X (ifM, unless, unlessM, when, whenM)
 import           Data.Repr                          as X
-import           Prelude                            hiding (mapM, mapM_, print, putStr, putStrLn, (++), (.))
+import           Prelude                            hiding (mapM, mapM_, print, putStr, putStrLn, (++), (.), curry, uncurry)
 import qualified Prelude
 import           Text.Show.Pretty                   (ppShow)
 import           Data.Maybe                         as X (mapMaybe)

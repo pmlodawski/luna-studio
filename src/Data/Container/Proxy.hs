@@ -25,7 +25,7 @@ import Data.Container.Opts  (GetQueryData, QueryData, ParamsOf, ModsOf, MatchOpt
 type family ConstrainCls op (ms :: [Opt *]) (ps :: [Opt *]) (info :: * -> Info (Knowledge *) (Knowledge *) *) (m :: * -> *) :: * -> Constraint
 
 type OpAxioms     op info ms t = (ResultAxioms op info ms t, Functor (PrimResult op (GetOpts ms) t))
-type ResultAxioms op info ms t = Result_ op (info t) (GetOpts ms) ~ Result_ op (info (DataStoreOf t)) (GetOpts ms)
+type ResultAxioms op info ms t = Result_ op (info t) (GetOpts ms) ~ Result_ op (info (DataStore t)) (GetOpts ms)
 
 #define OpCtx(cls_, info_) {- Inputs (we need to repeat them, cause OSX cpp preprocessor expands the first occurrence only) -} \
                                  cls      ~ (cls_)                                                                             \
@@ -36,7 +36,7 @@ type ResultAxioms op info ms t = Result_ op (info t) (GetOpts ms) ~ Result_ op (
                                , matchPs  ~ MatchOpts (ParamsOf cls cont) ps                                                   \
                                , provided ~ GetOpts matchMs                                                                    \
                                , opts     ~ Result_ cls fullInfo provided                                                      \
-                               , cont     ~ ContainerOf a                                                                      \
+                               , cont     ~ Container a                                                                      \
                                , Monad m                                                                                       \
                            {- Super-class constraints: -}                                                                      \
                                , ConstrainCls cls_ matchMs matchPs info m cont                                                 \
@@ -131,6 +131,7 @@ instance {-# OVERLAPPABLE #-} (HasContainerM m a, OpCtx(GrowableOp,PrimInfo)  ) 
 -- Removable
 -- Insertable
 -- Freeable
+-- Reservable
 
 
 class Monad m => AppendableQM_  ms ps m     el cont where appendM_  :: OpAxioms AppendableOp  (ElInfo        el) ms cont => OptQuery ms ps        -> el -> cont -> m (ElResult    AppendableOp  (GetOpts ms)     el cont cont)
@@ -139,6 +140,7 @@ class Monad m => AddableQM_     ms ps m     el cont where addM_     :: OpAxioms 
 class Monad m => RemovableQM_   ms ps m     el cont where removeM_  :: OpAxioms RemovableOp   (ElInfo        el) ms cont => OptQuery ms ps        -> el -> cont -> m (ElResult    RemovableOp   (GetOpts ms)     el cont cont)
 class Monad m => InsertableQM_  ms ps m idx el cont where insertM_  :: OpAxioms InsertableOp  (IdxElInfo idx el) ms cont => OptQuery ms ps -> idx -> el -> cont -> m (IdxElResult InsertableOp  (GetOpts ms) idx el cont cont)
 class Monad m => FreeableQM_    ms ps m idx    cont where freeM_    :: OpAxioms FreeableOp    (IdxInfo   idx   ) ms cont => OptQuery ms ps -> idx       -> cont -> m (IdxResult   FreeableOp    (GetOpts ms) idx    cont cont)
+class Monad m => ReservableQM_  ms ps m        cont where reserveM_ :: OpAxioms ReservableOp  PrimInfo           ms cont => OptQuery ms ps              -> cont -> m (PrimResult  ReservableOp  (GetOpts ms)        cont cont)
 
 type instance ConstrainCls AppendableOp  ms ps ('Info idx          ('Known el)) m = AppendableQM_  ms ps m     el
 type instance ConstrainCls PrependableOp ms ps ('Info idx          ('Known el)) m = PrependableQM_ ms ps m     el
@@ -146,6 +148,7 @@ type instance ConstrainCls AddableOp     ms ps ('Info idx          ('Known el)) 
 type instance ConstrainCls RemovableOp   ms ps ('Info idx          ('Known el)) m = RemovableQM_   ms ps m     el
 type instance ConstrainCls InsertableOp  ms ps ('Info ('Known idx) ('Known el)) m = InsertableQM_  ms ps m idx el
 type instance ConstrainCls FreeableOp    ms ps ('Info ('Known idx) el         ) m = FreeableQM_    ms ps m idx
+type instance ConstrainCls ReservableOp  ms ps info                             m = ReservableQM_  ms ps m
 
 instance {-# OVERLAPPABLE #-} Monad m                                                   => AppendableQM   ImpTL ps m     el a          where appendQM           = impossible
 instance {-# OVERLAPPABLE #-} (Monad m, PrettyCtx ms Impossible)                        => AppendableQM   ms    ps m     el Impossible where appendQM           = impossible
@@ -170,6 +173,10 @@ instance {-# OVERLAPPABLE #-} (HasContainerM m a, OpCtx(InsertableOp,IdxElInfo i
 instance {-# OVERLAPPABLE #-} Monad m                                                   => FreeableQM     ImpTL ps m idx    a          where freeQM             = impossible
 instance {-# OVERLAPPABLE #-} (Monad m, PrettyCtx ms Impossible)                        => FreeableQM     ms    ps m idx    Impossible where freeQM             = impossible
 instance {-# OVERLAPPABLE #-} (HasContainerM m a, OpCtx(FreeableOp,IdxInfo idx))        => FreeableQM     ms    ps m idx    a          where freeQM    q idx    = RUNOP() (flip freeM_ idx) viewContainerM setContainerM q
+
+instance {-# OVERLAPPABLE #-} Monad m                                                   => ReservableQM   ImpTL ps m        a          where reserveQM          = impossible
+instance {-# OVERLAPPABLE #-} (Monad m, PrettyCtx ms Impossible)                        => ReservableQM   ms    ps m        Impossible where reserveQM          = impossible
+instance {-# OVERLAPPABLE #-} (HasContainerM m a, OpCtx(ReservableOp,PrimInfo))         => ReservableQM   ms    ps m        a          where reserveQM q        = RUNOP() reserveM_ viewContainerM setContainerM q
 
 
 

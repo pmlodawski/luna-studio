@@ -26,14 +26,15 @@ import           Data.Container.Immersed (withDivedM)
 ------------------
 
 data Weak f a = Weak !(Maybe f) !a deriving (Functor, Foldable, Traversable, Default, Monoid)
-type Weak'  a = Weak (IdxFinalizer (IndexOf a)) a
+type Weak'  a = Weak (IdxFinalizer (Index a)) a
 
 -- Instances
 
-type instance IndexOf      (Weak f a) = IndexOf (ContainerOf a)
-type instance ContainerOf  (Weak f a) = Weak f a
-type instance DataStoreOf  (Weak f a) = ContainerOf a
-type instance FinalizerOf  (Weak f a) = Maybe f
+type instance Index     (Weak f a) = Index (Container a)
+type instance Item      (Weak f a) = WeakData (Item (Container a))
+type instance Container (Weak f a) = Weak f a
+type instance DataStore (Weak f a) = Container a
+type instance Finalizer (Weak f a) = Maybe f
 
 instance      Monad m => IsContainerM  m (Weak f a) where fromContainerM = return
 instance      Monad m => HasContainerM m (Weak f a) where viewContainerM = return
@@ -48,15 +49,15 @@ instance      Layered   (Weak f a) where layered = lens (\(Weak _ a) -> a) (\(We
 
 newtype IdxFinalizer idx = IdxFinalizer (idx -> IO ())
 
-type family FinalizerOf  a
-class       HasFinalizer a where finalizer :: Lens' a (FinalizerOf a)
+type family Finalizer  a
+class       HasFinalizer a where finalizer :: Lens' a (Finalizer a)
 
 class       HasFinalizerM a m f | a -> f where viewFinalizerM :: a -> m (Maybe f)
                                                setFinalizerM  :: Maybe f -> a -> m a
 
 -- Basic finalizer instances 
 
-instance {-# OVERLAPPABLE #-} ( FinalizerOf (Unlayered a) ~ FinalizerOf a
+instance {-# OVERLAPPABLE #-} ( Finalizer (Unlayered a) ~ Finalizer a
                               , HasFinalizer (Unlayered a)
                               , Layered a)
                            => HasFinalizer a          where finalizer = layered . finalizer  
@@ -69,7 +70,7 @@ instance {-# OVERLAPPABLE #-} Monad m => HasFinalizerM (Weak f a) m f where view
                                                                             setFinalizerM  f (Weak _ a) = return $ Weak f a
 
 instance {-# OVERLAPPABLE #-} ( Monad m
-                              , HasFinalizerM (ContainerOf (Unlayered a)) m f
+                              , HasFinalizerM (Container (Unlayered a)) m f
                               , HasContainerM m (Unlayered a)
                               , LayeredM m a
                               )
@@ -93,9 +94,8 @@ instance Monoid (IdxFinalizer idx) where
 -- items
 
 type family WeakData a where WeakData (Mem.Weak a) = a
-type WeakItemAxiom t = Item (ContainerOf t) ~ Mem.Weak (WeakData (Item (ContainerOf t))) 
-type instance Item (Weak f a) = WeakData (Item (ContainerOf a))
-instance (WeakItemAxiom a, IsContainer a, FromList (ContainerOf a)) => FromList (Weak f a) where
+type WeakItemAxiom t = Item (Container t) ~ Mem.Weak (WeakData (Item (Container t))) 
+instance (WeakItemAxiom a, IsContainer a, FromList (Container a)) => FromList (Weak f a) where
     fromList = Weak def . fromContainer . fromList . fmap (unsafePerformIO . flip Mem.mkWeakPtr Nothing)
     {-# NOINLINE fromList #-}
 
@@ -121,14 +121,14 @@ mkWeakPtr = liftIO .: Mem.mkWeakPtr
 -- [+] MinBounded
 -- [+] MaxBounded
 
-type instance ParamsOf MeasurableOp (Weak f a) = ParamsOf MeasurableOp (ContainerOf a)
-type instance ModsOf   MeasurableOp (Weak f a) = ModsOf   MeasurableOp (ContainerOf a)
+type instance ParamsOf MeasurableOp (Weak f a) = ParamsOf MeasurableOp (Container a)
+type instance ModsOf   MeasurableOp (Weak f a) = ModsOf   MeasurableOp (Container a)
 
-type instance ParamsOf MinBoundedOp (Weak f a) = ParamsOf MinBoundedOp (ContainerOf a)
-type instance ModsOf   MinBoundedOp (Weak f a) = ModsOf   MinBoundedOp (ContainerOf a)
+type instance ParamsOf MinBoundedOp (Weak f a) = ParamsOf MinBoundedOp (Container a)
+type instance ModsOf   MinBoundedOp (Weak f a) = ModsOf   MinBoundedOp (Container a)
 
-type instance ParamsOf MaxBoundedOp (Weak f a) = ParamsOf MaxBoundedOp (ContainerOf a)
-type instance ModsOf   MaxBoundedOp (Weak f a) = ModsOf   MaxBoundedOp (ContainerOf a)
+type instance ParamsOf MaxBoundedOp (Weak f a) = ParamsOf MaxBoundedOp (Container a)
+type instance ModsOf   MaxBoundedOp (Weak f a) = ModsOf   MaxBoundedOp (Container a)
 
 instance (MeasurableQM (GetOpts ms) (GetOpts ps) m     a) => MeasurableQM_ ms ps m     (Weak f a) where sizeM_     _ = sizeQM     (Query :: Query (GetOpts ms) (GetOpts ps)) . unlayer
 instance (MinBoundedQM (GetOpts ms) (GetOpts ps) m idx a) => MinBoundedQM_ ms ps m idx (Weak f a) where minBoundM_ _ = minBoundQM (Query :: Query (GetOpts ms) (GetOpts ps)) . unlayer
@@ -142,21 +142,21 @@ instance (MaxBoundedQM (GetOpts ms) (GetOpts ps) m idx a) => MaxBoundedQM_ ms ps
 -- [+] Expandable
 -- [+] Growable
 
-type instance ParamsOf SingletonOp  (Weak f a) = ParamsOf SingletonOp  (ContainerOf a)
-type instance ModsOf   SingletonOp  (Weak f a) = ModsOf   SingletonOp  (ContainerOf a)
+type instance ParamsOf SingletonOp  (Weak f a) = ParamsOf SingletonOp  (Container a)
+type instance ModsOf   SingletonOp  (Weak f a) = ModsOf   SingletonOp  (Container a)
 
-type instance ParamsOf AllocableOp  (Weak f a) = ParamsOf AllocableOp  (ContainerOf a)
-type instance ModsOf   AllocableOp  (Weak f a) = ModsOf   AllocableOp  (ContainerOf a)
+type instance ParamsOf AllocableOp  (Weak f a) = ParamsOf AllocableOp  (Container a)
+type instance ModsOf   AllocableOp  (Weak f a) = ModsOf   AllocableOp  (Container a)
 
-type instance ParamsOf ExpandableOp (Weak f a) = ParamsOf GrowableOp   (ContainerOf a)
-type instance ModsOf   ExpandableOp (Weak f a) = ModsOf   GrowableOp   (ContainerOf a)
+type instance ParamsOf ExpandableOp (Weak f a) = ParamsOf GrowableOp   (Container a)
+type instance ModsOf   ExpandableOp (Weak f a) = ModsOf   GrowableOp   (Container a)
 
-type instance ParamsOf GrowableOp   (Weak f a) = ParamsOf GrowableOp   (ContainerOf a)
-type instance ModsOf   GrowableOp   (Weak f a) = ModsOf   GrowableOp   (ContainerOf a)
+type instance ParamsOf GrowableOp   (Weak f a) = ParamsOf GrowableOp   (Container a)
+type instance ModsOf   GrowableOp   (Weak f a) = ModsOf   GrowableOp   (Container a)
 
 instance ( MonadIO m
          , SingletonQM  (GetOpts ms) (GetOpts ps) m (Mem.Weak el) a
-         , (Result_ SingletonOp (ElInfo (Mem.Weak el) (ContainerOf a)) (GetOpts ms) ~ Result_ SingletonOp (ElInfo el (Weak f a)) (GetOpts ms))
+         , (Result_ SingletonOp (ElInfo (Mem.Weak el) (Container a)) (GetOpts ms) ~ Result_ SingletonOp (ElInfo el (Weak f a)) (GetOpts ms))
          ) => SingletonQM_  ms ps m el (Weak f a) where 
     singletonM_ _ el = (fmap2 (Weak def) . singletonQM (Query :: Query (GetOpts ms) (GetOpts ps))) =<< (liftIO . flip mkWeakPtr Nothing) el
 
@@ -174,22 +174,22 @@ instance (GrowableQM   (GetOpts ms) (GetOpts ps) m    a) => GrowableQM_   ms ps 
 -- [ ] Insertable
 -- [+] Freeable
 
-type instance ParamsOf AppendableOp   (Weak f a) = ParamsOf AppendableOp  (ContainerOf a)
-type instance ModsOf   AppendableOp   (Weak f a) = ModsOf   AppendableOp  (ContainerOf a)
+type instance ParamsOf AppendableOp   (Weak f a) = ParamsOf AppendableOp  (Container a)
+type instance ModsOf   AppendableOp   (Weak f a) = ModsOf   AppendableOp  (Container a)
 
-type instance ParamsOf PrependableOp  (Weak f a) = ParamsOf PrependableOp (ContainerOf a)
-type instance ModsOf   PrependableOp  (Weak f a) = ModsOf   PrependableOp (ContainerOf a)
+type instance ParamsOf PrependableOp  (Weak f a) = ParamsOf PrependableOp (Container a)
+type instance ModsOf   PrependableOp  (Weak f a) = ModsOf   PrependableOp (Container a)
 
-type instance ParamsOf AddableOp      (Weak f a) = ParamsOf AddableOp     (ContainerOf a)
-type instance ModsOf   AddableOp      (Weak f a) = ModsOf   AddableOp     (ContainerOf a)
+type instance ParamsOf AddableOp      (Weak f a) = ParamsOf AddableOp     (Container a)
+type instance ModsOf   AddableOp      (Weak f a) = ModsOf   AddableOp     (Container a)
 
-type instance ParamsOf FreeableOp     (Weak f a) = ParamsOf FreeableOp    (ContainerOf a)
-type instance ModsOf   FreeableOp     (Weak f a) = ModsOf   FreeableOp    (ContainerOf a)
+type instance ParamsOf FreeableOp     (Weak f a) = ParamsOf FreeableOp    (Container a)
+type instance ModsOf   FreeableOp     (Weak f a) = ModsOf   FreeableOp    (Container a)
 
 
 instance (AppendableQM  (M.Ixed ': GetOpts ms) (GetOpts ps) m (Mem.Weak el) a
-         , Result_ AppendableOp (ElInfo (Mem.Weak el) (ContainerOf a)) (GetOpts ms) ~ Result_ AppendableOp (ElInfo el (Weak (IdxFinalizer idx) a)) (GetOpts ms)
-         , idx ~ IndexOf (ContainerOf a)
+         , Result_ AppendableOp (ElInfo (Mem.Weak el) (Container a)) (GetOpts ms) ~ Result_ AppendableOp (ElInfo el (Weak (IdxFinalizer idx) a)) (GetOpts ms)
+         , idx ~ Index (Container a)
          , MonadIO  m
          , MonadFix m
          ) => AppendableQM_  ms ps m el (Weak (IdxFinalizer idx) a) where 
@@ -199,8 +199,8 @@ instance (AppendableQM  (M.Ixed ': GetOpts ms) (GetOpts ps) m (Mem.Weak el) a
         return $ Res ds (Weak mf r)
 
 instance (PrependableQM  (M.Ixed ': GetOpts ms) (GetOpts ps) m (Mem.Weak el) a
-         , Result_ PrependableOp (ElInfo (Mem.Weak el) (ContainerOf a)) (GetOpts ms) ~ Result_ PrependableOp (ElInfo el (Weak (IdxFinalizer idx) a)) (GetOpts ms)
-         , idx ~ IndexOf (ContainerOf a)
+         , Result_ PrependableOp (ElInfo (Mem.Weak el) (Container a)) (GetOpts ms) ~ Result_ PrependableOp (ElInfo el (Weak (IdxFinalizer idx) a)) (GetOpts ms)
+         , idx ~ Index (Container a)
          , MonadIO  m
          , MonadFix m
          ) => PrependableQM_  ms ps m el (Weak (IdxFinalizer idx) a) where 
@@ -210,8 +210,8 @@ instance (PrependableQM  (M.Ixed ': GetOpts ms) (GetOpts ps) m (Mem.Weak el) a
         return $ Res ds (Weak mf r)
 
 instance (AddableQM  (M.Ixed ': GetOpts ms) (GetOpts ps) m (Mem.Weak el) a
-         , Result_ AddableOp (ElInfo (Mem.Weak el) (ContainerOf a)) (GetOpts ms) ~ Result_ AddableOp (ElInfo el (Weak (IdxFinalizer idx) a)) (GetOpts ms)
-         , idx ~ IndexOf (ContainerOf a)
+         , Result_ AddableOp (ElInfo (Mem.Weak el) (Container a)) (GetOpts ms) ~ Result_ AddableOp (ElInfo el (Weak (IdxFinalizer idx) a)) (GetOpts ms)
+         , idx ~ Index (Container a)
          , MonadIO  m
          , MonadFix m
          ) => AddableQM_  ms ps m el (Weak (IdxFinalizer idx) a) where 
@@ -229,7 +229,7 @@ instance (FreeableQM (GetOpts ms) (GetOpts ps) m idx a, idx ~ idx') => FreeableQ
 --                                                                                                                               []     -> addM_ q el =<< expandM t
 --instance (FreeableQM (GetOpts ms) (GetOpts ps) m idx a, idx ~ idx') => FreeableQM_    ms ps m idx  (Weak idx' a) where freeM_ _ idx     = fmap2 (indexes %~ (idx:)) . nested layered (freeQM (Query :: Query (GetOpts ms) (GetOpts ps)) idx)
 
---instance ( GrowableQM (M.Ixed ': GetOpts ms) (GetOpts ps) m a, idx ~ IndexOf (ContainerOf a)) => GrowableQM_ ms ps m (Reusable idx a) where 
+--instance ( GrowableQM (M.Ixed ': GetOpts ms) (GetOpts ps) m a, idx ~ Index (Container a)) => GrowableQM_ ms ps m (Reusable idx a) where 
 --    growM_ _ i (Reusable ixs a) = do Res (ixs',ds) r <- growQM (Query :: Query (M.Ixed ': GetOpts ms) (GetOpts ps)) i a
 --                                     return $ Res ds $ Reusable (ixs <> ixs') r
 
@@ -244,14 +244,14 @@ instance (FreeableQM (GetOpts ms) (GetOpts ps) m idx a, idx ~ idx') => FreeableQ
 -- [+] MinBounded
 -- [+] MaxBounded
 
---type instance ParamsOf MeasurableOp (Weak f a) = ParamsOf MeasurableOp (ContainerOf a)
---type instance ModsOf   MeasurableOp (Weak f a) = ModsOf   MeasurableOp (ContainerOf a)
+--type instance ParamsOf MeasurableOp (Weak f a) = ParamsOf MeasurableOp (Container a)
+--type instance ModsOf   MeasurableOp (Weak f a) = ModsOf   MeasurableOp (Container a)
 
---type instance ParamsOf MinBoundedOp (Weak f a) = ParamsOf MinBoundedOp (ContainerOf a)
---type instance ModsOf   MinBoundedOp (Weak f a) = ModsOf   MinBoundedOp (ContainerOf a)
+--type instance ParamsOf MinBoundedOp (Weak f a) = ParamsOf MinBoundedOp (Container a)
+--type instance ModsOf   MinBoundedOp (Weak f a) = ModsOf   MinBoundedOp (Container a)
 
---type instance ParamsOf MaxBoundedOp (Weak f a) = ParamsOf MaxBoundedOp (ContainerOf a)
---type instance ModsOf   MaxBoundedOp (Weak f a) = ModsOf   MaxBoundedOp (ContainerOf a)
+--type instance ParamsOf MaxBoundedOp (Weak f a) = ParamsOf MaxBoundedOp (Container a)
+--type instance ModsOf   MaxBoundedOp (Weak f a) = ModsOf   MaxBoundedOp (Container a)
 
 --instance (MeasurableQM (GetOpts ms) (GetOpts ps) m     a)             => MeasurableQM_ ms ps m     (Weak idx  a) where sizeM_     _ = sizeQM     (Query :: Query (GetOpts ms) (GetOpts ps)) . unlayer
 --instance (MinBoundedQM (GetOpts ms) (GetOpts ps) m idx a, idx ~ idx') => MinBoundedQM_ ms ps m idx (Weak idx' a) where minBoundM_ _ = minBoundQM (Query :: Query (GetOpts ms) (GetOpts ps)) . unlayer
@@ -292,7 +292,7 @@ instance (FreeableQM (GetOpts ms) (GetOpts ps) m idx a, idx ~ idx') => FreeableQ
 --type instance ModsOf GrowableQSM   (Weak c a) = ModsOf GrowableQSM   (WeakData c a)
 
 --instance (MonadIO m, SingletonQM (Mem.Weak el) q m t, t ~ WeakData c a, cls ~ SingletonQSM,
---    EqInfoQueries (SingletonInfo el (DataStoreOf t)) (SingletonInfo (Mem.Weak el) (DataStoreOf t)) (Mods.FilterMutable q) ) => SingletonQSM el (Weak c a) m q s where
+--    EqInfoQueries (SingletonInfo el (DataStore t)) (SingletonInfo (Mem.Weak el) (DataStore t)) (Mods.FilterMutable q) ) => SingletonQSM el (Weak c a) m q s where
 --    singletonQSM _ _ el = do
 --        ptr <- liftIO $ Mem.mkWeakPtr el Nothing
 --        (fmap . fmap) (Weak Nothing) $ queried (Proxy :: Proxy q) singletonM' ptr
@@ -319,10 +319,10 @@ instance (FreeableQM (GetOpts ms) (GetOpts ps) m idx a, idx ~ idx') => FreeableQ
 --instance (MonadIO m, MonadFix m, AppendableQM wel (Mods.Ixed ': q) m t
 --         , t    ~ WeakData c a
 --         , wel  ~ Mem.Weak el
---         , ds   ~ DataStoreOf t
+--         , ds   ~ DataStore t
 --         , info ~ AppendableInfo wel ds
 --         , idx  ~ ModData Mods.Ixed info
---         , idx  ~ HomoIndexOf c
+--         , idx  ~ HomoIndex c
 --         , EqInfoQueries (AppendableInfo el ds) info (Mods.FilterMutable q)
 --         ) => AppendableQSM el (Weak c a) m q s where
 --    appendQSM _ _ el (Weak f c) = mdo
@@ -333,10 +333,10 @@ instance (FreeableQM (GetOpts ms) (GetOpts ps) m idx a, idx ~ idx') => FreeableQ
 --instance (MonadIO m, MonadFix m, InsertableQM idx wel (Mods.Ixed ': q) m t
 --         , t    ~ WeakData c a
 --         , wel  ~ Mem.Weak el
---         , ds   ~ DataStoreOf t
+--         , ds   ~ DataStore t
 --         , info ~ InsertableInfo idx wel ds
 --         , idx  ~ ModData Mods.Ixed info
---         , idx  ~ HomoIndexOf c
+--         , idx  ~ HomoIndex c
 --         , EqInfoQueries (InsertableInfo idx el ds) info (Mods.FilterMutable q)
 --         ) => InsertableQSM idx el (Weak c a) m q s where
 --    insertQSM _ _ idx el (Weak f c) = mdo
@@ -362,7 +362,7 @@ instance (FreeableQM (GetOpts ms) (GetOpts ps) m idx a, idx ~ idx') => FreeableQ
 --type instance ModsOf TracksElemsQSM (Weak c a) = ModsOf TracksElemsQSM (WeakData c a)
 
 --instance ( t    ~ WeakData c a
---         , ds   ~ DataStoreOf t
+--         , ds   ~ DataStore t
 --         , wel  ~ Mem.Weak el
 --         , info ~ TracksElemsInfo wel ds
 --         , TracksElemsQM (Mem.Weak el) q m (WeakData c a)
