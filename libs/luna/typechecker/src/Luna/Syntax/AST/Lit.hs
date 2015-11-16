@@ -1,8 +1,8 @@
 module Luna.Syntax.AST.Lit where
 
-import           Flowbox.Prelude
+import           Flowbox.Prelude hiding (Repr,repr)
 import qualified Data.Text.AutoBuilder as Text
-
+import Data.Reprx
 
 
 data Lit = Int    Int

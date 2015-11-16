@@ -10,21 +10,23 @@ import Luna.Syntax.AST.Term
 
 -- === ASTOf ===
 
-type family ASTOf (a :: * -> *) :: * -> *
+type family ASTOf a
 
-type instance ASTOf Val   = Val
-type instance ASTOf Thunk = Thunk
-type instance ASTOf Term  = Term
-type instance ASTOf Draft = Draft
+class HasAST  a where ast :: Lens' a (ASTOf a)
 
--- === HasAST ===
+-- Utils
 
-class HasAST l ast | l -> ast where
-    ast :: Lens' (l t) (ast t)
+type FromAST a = Convertible (ASTOf a) a
 
-instance HasAST Val   Val   where ast = id
-instance HasAST Thunk Thunk where ast = id
-instance HasAST Term  Term  where ast = id
-instance HasAST Draft Draft where ast = id
+fromAST :: FromAST a => ASTOf a -> a
+fromAST = convert 
+
+-- Instances
+
+type instance ASTOf (Val   t) = Val   t
+type instance ASTOf (Thunk t) = Thunk t
+type instance ASTOf (Term  t) = Term  t
+type instance ASTOf (Draft t) = Draft t
+
 
 

@@ -60,7 +60,7 @@ Library
                     convert,
                     errors,
                     constraints
-
+                    
 
 Executable tc-test
     Main-Is:        Main.hs

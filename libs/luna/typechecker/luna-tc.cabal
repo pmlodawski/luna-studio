@@ -55,19 +55,22 @@ Library
         Luna.Diagnostic.AST,
         Luna.Repr.Styles,
         Luna.Syntax.AST,
+        Luna.Syntax.Builder,
+        Luna.Syntax.Name,
         Luna.Syntax.AST.Arg,
         Luna.Syntax.AST.Decl,
         Luna.Syntax.AST.Decl.Function,
         Luna.Syntax.AST.Lit,
         Luna.Syntax.AST.Term,
-        Luna.Syntax.Builder,
-        Luna.Syntax.Builder.Graph,
+        Luna.Syntax.AST.Typed,
+        Luna.Syntax.AST.Decl.Function,
+        Luna.Syntax.Builder.Class,
+        Luna.Syntax.Builder.Node,
         Luna.Syntax.Builder.Star,
         Luna.Syntax.Layer,
         Luna.Syntax.Layer.Labeled,
-        Luna.Syntax.Layer.Typed,
-        Luna.Syntax.Name,
-        Luna.Syntax.Name.Pool
+        Luna.Syntax.Name.Pool,
+        Luna.Syntax.Repr.Graph
 
     Build-Depends:  base,
                     ghc-prim,
@@ -81,8 +84,9 @@ Library
                     text,
                     convert,
                     errors,
-                    constraints
-
+                    constraints,
+                    tuple
+                    
 
 Executable tc-test
     Main-Is:        Main.hs
@@ -128,4 +132,5 @@ Executable tc-test
                     luna-tc,
                     errors,
                     constraints,
-                    transformers
+                    transformers,
+                    tuple

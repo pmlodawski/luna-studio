@@ -1,8 +1,8 @@
 module Luna.Syntax.AST.Arg where
 
-import Prologue
+import Prologue hiding (Repr,repr)
 import Luna.Syntax.Name
-
+import Data.Reprx
 
 data Arg a = Arg { __aname :: Maybe Name , __arec :: a } deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
 
