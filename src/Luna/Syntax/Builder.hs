@@ -29,12 +29,15 @@ import           Luna.Syntax.Builder.Class (modify2, BuilderMonad)
 import qualified Luna.Syntax.Builder.Node as NodeBuilder
 import           Luna.Syntax.Builder.Node (MonadNodeBuilder)
 
-import Data.Container.Class hiding (Impossible)
+import Data.Container hiding (Impossible)
 
 
 import Data.Cata
 
 import Data.Layer.Coat
+
+import Data.IntSet (IntSet)
+import qualified Data.IntSet as IntSet
 
 --- === Graph builders ===
 
@@ -101,73 +104,89 @@ import Data.Layer.Coat
 class                                             Monadic a      m b where monadic :: a -> m b
 instance {-# OVERLAPPABLE #-} Monad m          => Monadic a      m a where monadic = return
 instance {-# OVERLAPPABLE #-} (Monad m, m ~ n) => Monadic (n a)  m a where monadic = id
-instance {-# OVERLAPPABLE #-} (MonadNodeBuilder (Ref Int) m, CoatGen m a, SpecificCons Lit (Uncoated a), BuilderMonad (Graph a) m, MonadFix m) 
-                           => Monadic String m (Ref Int) where monadic = _string
+instance {-# OVERLAPPABLE #-} (MonadNodeBuilder (Ref Node) m, CoatGen m n, SpecificCons Lit (Uncoated n), BuilderMonad (Graph n e) m, MonadFix m) 
+                           => Monadic String m (Ref Node) where monadic = _string
 
 swap (a,b) = (b,a)
 
---_int :: (MonadNodeBuilder (Ref Int) m, CoatGen m a, SpecificCons Lit (Uncoated a), BuilderMonad (Graph a) m, MonadFix m) => Int -> m (Ref Int)
+--_int :: (MonadNodeBuilder (Ref Node) m, CoatGen m a, SpecificCons Lit (Uncoated a), BuilderMonad (Graph a) m, MonadFix m) => Int -> m (Ref Node)
 --_int v = mdo
 --    i <- modify2 . nodes $ swap . ixed add a
---    a <- NodeBuilder.with (Ref i) $ genCoat $ specificCons (Int v)
---    return $ Ref i
+--    a <- NodeBuilder.with (Ref $ Node i) $ genCoat $ specificCons (Int v)
+--    return $ Ref $ Node i
 
-_int :: forall m a ast t. (MonadNodeBuilder (Ref Int) m, CoatGen m a, SpecificCons (Val t) (ast t), BuilderMonad (Graph a) m, MonadFix m, Uncoated a ~ ast t) => Int -> m (Ref Int)
+_int :: forall m n e ast t. (MonadNodeBuilder (Ref Node) m, CoatGen m n, SpecificCons (Val t) (ast t), BuilderMonad (Graph n e) m, MonadFix m, Uncoated n ~ ast t) => Int -> m (Ref Node)
 _int v = mdo
     i <- modify2 . nodes $ swap . ixed add a
-    a <- NodeBuilder.with (Ref i) $ genCoat $ specificCons (specificCons (Int v) :: Val t)
-    return $ Ref i
+    a <- NodeBuilder.with (Ref $ Node i) $ genCoat $ specificCons (specificCons (Int v) :: Val t)
+    return $ Ref $ Node i
 
-_string :: (MonadNodeBuilder (Ref Int) m, CoatGen m a, SpecificCons Lit (Uncoated a), BuilderMonad (Graph a) m, MonadFix m) => String -> m (Ref Int)
+_string :: (MonadNodeBuilder (Ref Node) m, CoatGen m n, SpecificCons Lit (Uncoated n), BuilderMonad (Graph n e) m, MonadFix m) => String -> m (Ref Node)
 _string v = mdo
     i <- modify2 . nodes $ swap . ixed add a
-    a <- NodeBuilder.with (Ref i) $ genCoat $ specificCons (String $ fromString v)
-    return $ Ref i
+    a <- NodeBuilder.with (Ref $ Node i) $ genCoat $ specificCons (String $ fromString v)
+    return $ Ref $ Node i
 
-_star :: (MonadNodeBuilder (Ref Int) m, CoatGen m a, SpecificCons Star (Uncoated a), BuilderMonad (Graph a) m, MonadFix m) => m (Ref Int)
+_string2 :: (MonadNodeBuilder (Ref Node) m, CoatGen m n, SpecificCons Lit (Uncoated n), BuilderMonad (Graph n e) m) => String -> m (Ref Node)
+_string2 v = do
+    i <- modify2 . nodes $ swap . ixed reserve
+    a <- NodeBuilder.with (Ref $ Node i) $ genCoat $ specificCons (String $ fromString v)
+    Builder.modify_ $ nodes %~ unchecked inplace insert_ i a
+    return $ Ref $ Node i
+
+_star :: (MonadNodeBuilder (Ref Node) m, CoatGen m n, SpecificCons Star (Uncoated n), BuilderMonad (Graph n e) m, MonadFix m) => m (Ref Node)
 _star = mdo
     i <- modify2 . nodes $ swap . ixed add a
-    a <- NodeBuilder.with (Ref i) $ genCoat $ specificCons Star
-    return $ Ref i
+    a <- NodeBuilder.with (Ref $ Node i) $ genCoat $ specificCons Star
+    return $ Ref $ Node i
 
 --_star2 :: (CoatGen m a, SpecificCons Star (Uncoated a), BuilderMonad (Graph a) m) => m Int
 _star2 = mdo
     i <- modify2 . nodes $ swap . ixed add a
-    a <- NodeBuilder.with (Ref i) $ genCoat $ specificCons Star
-    return $ Ref i
+    a <- NodeBuilder.with (Ref $ Node i) $ genCoat $ specificCons Star
+    return $ Ref $ Node i
 
 
 --cons :: forall name m t. (ToMuM' name m t, LayeredASTCons (Cons (Mu t)) m t) => name -> m (Mu t)
 --cons n = layeredASTCons . flip Cons [] =<< (toMuM' n :: m (Mu t))
 cons c = mdo
     i <- modify2 . nodes $ swap . ixed add a
-    a <- NodeBuilder.with (Ref i) $ do
+    a <- NodeBuilder.with (Ref $ Node i) $ do
         cc <- connect c
         genCoat $ specificCons (flip Cons [] cc)
-    return $ Ref i
+    return $ Ref $ Node i
 
 
 
-connection src tgt = fmap Ref . modify2 . edges $ swap . ixed add (DoubleArc src tgt)
+connection src tgt = fmap (Ref . Edge) . modify2 . edges $ swap . ixed add (DoubleArc src tgt)
 
 --accessor :: _ => _
 accessor name b = mdo
     name' <- monadic name
     b'    <- monadic b
     i <- modify2 . nodes $ swap . ixed add a
-    a <- NodeBuilder.with (Ref i) $ do
+    a <- NodeBuilder.with (Ref $ Node i) $ do
         nc <- connect name'
         bc <- connect b'
         genCoat $ specificCons $ Accessor nc bc
-    return $ Ref i
+    return $ Ref $ Node i
 
+unify a b = mdo
+    a' <- monadic a
+    b' <- monadic b
+    i <- modify2 . nodes $ swap . ixed add n
+    n <- NodeBuilder.with (Ref $ Node i) $ do
+        nc <- connect a'
+        bc <- connect b'
+        genCoat $ specificCons $ Unify nc bc
+    return $ Ref $ Node i
 --accessor :: forall name src m t. (ToMuM' name m t, ToMuM' src m t, LayeredASTMuCons Accessor m t) => name -> src -> m (Mu t)
 --accessor n r = do
 --    mn <- toMuM' n :: m (Mu t)
 --    mr <- toMuM' r :: m (Mu t)
 --    layeredASTCons $ Accessor mn mr
 
-connect :: (MonadNodeBuilder (Ref Int) m, TracksSuccs a, BuilderMonad (Graph a) m) => Ref Int -> m (Ref Int)
+connect :: (MonadNodeBuilder (Ref Node) m, TracksSuccs n, BuilderMonad (Graph n DoubleArc) m) => Ref Node -> m (Ref Edge)
 connect tgt = do
     self <- NodeBuilder.get
     --g    <- Builder.get
@@ -176,17 +195,19 @@ connect tgt = do
 
 
     g    <- Builder.get
-    let tgtn = index_ (unwrap tgt) (g ^. nodes)
-        tgtn' = tgtn & succs %~ (self:)
+    let tgtn = index_ (deref tgt) (g ^. nodes)
+        tgtn' = tgtn & succs %~ IntSet.insert (deref i)
 
-    
-    Builder.put ( g & nodes %~ unchecked inplace insert_ (unwrap' tgt) tgtn' )
+
+    Builder.put ( g & nodes %~ unchecked inplace insert_ (deref tgt) tgtn' )
 
     return i
 
 
 
-getStar2 ::(MonadFix m, CoatGen m a, MonadStarBuilder (Maybe (Ref Int)) m, SpecificCons Star (Uncoated a), BuilderMonad (Graph a) m, MonadNodeBuilder (Ref Int) m) => m (Ref Int)
+
+
+getStar2 ::(MonadFix m, CoatGen m n, MonadStarBuilder (Maybe (Ref Node)) m, SpecificCons Star (Uncoated n), BuilderMonad (Graph n e) m, MonadNodeBuilder (Ref Node) m) => m (Ref Node)
 getStar2 =  do
     s <- StarBuilder.get
     case s of
@@ -206,7 +227,7 @@ class RegisterConnection a where
 
 instance {-# OVERLAPPABLE #-} (RegisterConnection (Unlayered a), Layered a)
                            => RegisterConnection a                where registerConnection c                                   = layered %~ registerConnection c    
-instance {-# OVERLAPPABLE #-} RegisterConnection (SuccTracking a) where registerConnection (DoubleArc _ i) (SuccTracking is a) = SuccTracking (i : is) a
+instance {-# OVERLAPPABLE #-} RegisterConnection (SuccTracking a) where registerConnection (DoubleArc _ i) (SuccTracking is a) = SuccTracking (IntSet.insert (deref i) is) a
 instance {-# OVERLAPPABLE #-} RegisterConnection (Coat a)         where registerConnection _                                   = id
 
 

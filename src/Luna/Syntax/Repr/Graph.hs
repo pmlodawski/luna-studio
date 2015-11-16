@@ -29,6 +29,11 @@ import qualified Control.Monad.State as State
 import Luna.Syntax.AST.Decl
 import Data.Layer.Coat
 
+
+import Data.IntSet (IntSet)
+import qualified Data.IntSet as IntSet
+
+
 --- === Graph ===
 
 #define VECTORGRAPH (Auto' Exponential (Vector a))
@@ -36,10 +41,10 @@ newtype VectorGraph a = VectorGraph VECTORGRAPH deriving (Show, Default)
 
 instance Rewrapped (VectorGraph a) (VectorGraph a')
 instance Wrapped   (VectorGraph a) where
-	type Unwrapped (VectorGraph a) = VECTORGRAPH
-	_Wrapped' = iso (\(VectorGraph a) -> a) VectorGraph
+    type Unwrapped (VectorGraph a) = VECTORGRAPH
+    _Wrapped' = iso (\(VectorGraph a) -> a) VectorGraph
 
-type instance ContainerOf (VectorGraph a) = ContainerOf VECTORGRAPH
+type instance Container (VectorGraph a) = Container VECTORGRAPH
 instance Monad m => HasContainerM m (VectorGraph a)      where viewContainerM = viewContainerM . unwrap
                                                                setContainerM  = wrapped . setContainerM
 
@@ -56,34 +61,59 @@ instance Wrapped   (Ref a) where
     type Unwrapped (Ref a) = a
     _Wrapped' = iso (\(Ref a) -> a) Ref
 
+type family   Derefd a
+type instance Derefd (Ref a) = Derefd a
+
+class               Deref a       where derefd :: Lens' a (Derefd a)
+instance Deref a => Deref (Ref a) where derefd = wrapped . derefd
+
+deref = view derefd
+
+
+newtype Node = Node Int deriving (Show)
+newtype Edge = Edge Int deriving (Show)
+
+instance Rewrapped Node Node
+instance Wrapped   Node where
+    type Unwrapped Node = Int
+    _Wrapped' = iso (\(Node a) -> a) Node
+
+instance Rewrapped Edge Edge
+instance Wrapped   Edge where
+    type Unwrapped Edge = Int
+    _Wrapped' = iso (\(Edge a) -> a) Edge
+
+
+type instance Derefd Node = Int
+type instance Derefd Edge = Int
+
+instance Deref Node where derefd = wrapped
+instance Deref Edge where derefd = wrapped
+
+
+data DoubleArc = DoubleArc { _source :: Ref Node, _target :: Ref Node } deriving (Show)
 
 
 
-
-
-data DoubleArc = DoubleArc { _source :: Ref Int, _target :: Ref Int } deriving (Show)
-
-
-
-data SuccTracking a = SuccTracking [Ref Int] a deriving (Show)
+data SuccTracking a = SuccTracking IntSet a deriving (Show)
 type instance Unlayered (SuccTracking a) = a
 instance      Layered   (SuccTracking a) where layered = lens (\(SuccTracking _ a) -> a) (\(SuccTracking i _) a -> SuccTracking i a) 
 
-class TracksSuccs a where succs :: Lens' a [Ref Int]
+class TracksSuccs a where succs :: Lens' a IntSet
 instance {-# OVERLAPPABLE #-}                                           TracksSuccs (SuccTracking a) where succs = lens (\(SuccTracking ixs _) -> ixs) (\(SuccTracking _ a) ixs -> SuccTracking ixs a)
 instance {-# OVERLAPPABLE #-} (TracksSuccs (Unlayered a), Layered a) => TracksSuccs a                where succs = layered . succs
 
 
 
-data Graph a = Graph { _nodes :: VectorGraph a
-                     , _edges :: VectorGraph DoubleArc 
-                     } deriving (Show)
+data Graph node edge = Graph { _nodes :: VectorGraph node
+                             , _edges :: VectorGraph edge
+                             } deriving (Show)
 
 makeLenses ''DoubleArc
 makeLenses ''Graph
 
 --instance Default (Graph a) where def = Graph def def
-instance Default (Graph a) where def = Graph (alloc 100) (alloc 100)
+instance Default (Graph n e) where def = Graph (alloc 100) (alloc 100)
 
 
 
@@ -155,19 +185,19 @@ instance Default (Graph a) where def = Graph (alloc 100) (alloc 100)
 --instance Default g => Default g where
 --    def = BldrState def def
 
-        --instance (t ~ Ref i a, MonadIO m, Ixed (AddableM (a (Mu t)) (ASTBuilderT g m)) g, PtrFrom idx i, idx ~ IndexOf' (DataStoreOf (ContainerOf g)))
+        --instance (t ~ Ref i a, MonadIO m, Ixed (AddableM (a (Mu t)) (ASTBuilderT g m)) g, PtrFrom idx i, idx ~ IndexOf' (DataStoreOf (Container g)))
         --      => MuBuilder a (ASTBuilderT g m) t where
         --    buildMu a = do print ("oh" :: String)
         --                   fmap (Mu . Ref . ptrFrom) . modifyM2 $ ixed addM a
 
 
---instance (t ~ Ref i a, Monad m, Ixed (AddableM (ASTBuilderT g m)) (a (Mu t)) g, PtrFrom (IndexOf (ContainerOf g)) i)
+--instance (t ~ Ref i a, Monad m, Ixed (AddableM (ASTBuilderT g m)) (a (Mu t)) g, PtrFrom (IndexOf (Container g)) i)
 --      => MuBuilder a (ASTBuilderT g m) t where
 --    buildMu a = fmap (Mu . Ref . ptrFrom) . modifyM $ ixed addM a
 
 
 
---instance (t ~ Ref i a, MonadIO m, Ixed (Addable (WeakMu a (Mu t))) g, PtrFrom idx i, idx ~ IndexOf' (DataStoreOf (ContainerOf g)))
+--instance (t ~ Ref i a, MonadIO m, Ixed (Addable (WeakMu a (Mu t))) g, PtrFrom idx i, idx ~ IndexOf' (DataStoreOf (Container g)))
 --      => MuBuilder a (ASTBuilderT g m) t where
 --    buildMu a = do print ("oh" :: String)
 --                   wptr <- liftIO $ mkWeakPtr a Nothing

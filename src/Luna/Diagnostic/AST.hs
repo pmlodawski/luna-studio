@@ -60,7 +60,8 @@ import Data.Variants
 --          mkEdge  (n,(a,attrs),b) = DotEdge a b attrs -- (GV.edgeEnds Back : attrs)
 --          edgeStmts       = fmap mkEdge inEdges
 
-toGraphViz :: _ => Graph a -> DotGraph Int
+
+toGraphViz :: _ => Graph n e -> DotGraph Int
 toGraphViz net = DotGraph { strictGraph     = False
                           , directedGraph   = True
                           , graphID         = Nothing
@@ -83,26 +84,26 @@ toGraphViz net = DotGraph { strictGraph     = False
           edgeStmts       = fmap mkEdge inEdges
 
           nodeColorAttrs a = case' a $ do
-                                 match $ \(Val _ :: Val (Ref Int)) -> [GV.color GVC.Green]
-                                 match $ \ANY                      -> []
+                                 match $ \(Val _ :: Val (Ref Edge)) -> [GV.color GVC.Green]
+                                 match $ \ANY                       -> []
 
-class GenEdges g a where
-    genEdges :: Graph g -> a -> [(Int, [GV.Attribute])]
+class GenEdges n e a where
+    genEdges :: Graph n e -> a -> [(Int, [GV.Attribute])]
 
-instance GenEdges g a => GenEdges g (Labeled2 l a) where
+instance GenEdges n e a => GenEdges n e (Labeled2 l a) where
     genEdges g (Labeled2 _ a) = genEdges g a
 
-instance GenEdges g a => GenEdges g (Typed (Ref Int) a) where
-    genEdges g (Typed (Ref t) a) = [(tgt, [GV.color GVC.Red, GV.edgeEnds Back])] <> genEdges g a where
-        tgt = unwrap . view target $ index t (g ^. edges)
+instance GenEdges n DoubleArc a => GenEdges n DoubleArc (Typed (Ref Edge) a) where
+    genEdges g (Typed t a) = [(tgt, [GV.color GVC.Red, GV.edgeEnds Back])] <> genEdges g a where
+        tgt = deref . view target $ index (deref t) (g ^. edges)
 
-instance GenEdges g a => GenEdges g (SuccTracking a) where
+instance GenEdges n e a => GenEdges n e (SuccTracking a) where
     genEdges g = genEdges g . unlayer
 
-instance GenEdges g a => GenEdges g (Coat a) where
+instance GenEdges n e a => GenEdges n e (Coat a) where
     genEdges g = genEdges g . unwrap
 
-instance GenEdges g (Draft (Ref Int)) where
+instance GenEdges n DoubleArc (Draft (Ref Edge)) where
     genEdges g a = ($ inEdges) $ case checkName a of
         Nothing -> id
         Just  t -> fmap addColor
@@ -111,7 +112,7 @@ instance GenEdges g (Draft (Ref Int)) where
                                                          else (idx, attrs)
         where genLabel  = GV.Label . StrLabel . fromString . show
               ins       = inputs a
-              getIdx  i = unwrap . view target $ index (unwrap i) edges'
+              getIdx  i = deref . view target $ index (deref i) edges'
               inIdxs    = getIdx <$> ins
               inEdges   = zipWith (,) inIdxs $ fmap ((:[]) . genLabel) [0..]
               edges'    = g ^. edges

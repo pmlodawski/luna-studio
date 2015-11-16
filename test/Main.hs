@@ -14,7 +14,7 @@
 {-# LANGUAGE RecursiveDo #-}
 {-# LANGUAGE NoOverloadedStrings #-}
 
-{-# LANGUAGE PolyKinds #-}
+-- {-# LANGUAGE PolyKinds #-}
 
 module Main where
 
@@ -47,13 +47,14 @@ import Data.Convert.Errors (TypeMismatch (TypeMismatch))
 import Data.Constraint.Void
 import Data.Variants hiding (cons)
 import qualified Data.Variants as V
-import Flowbox.System.Types hiding ((.:), insert)
+import Flowbox.System.Types hiding ((.:), insert, Index)
 import           Control.Monad.State.Generate (newState)
 import Text.Read (readMaybe)
 import           Luna.Syntax.Repr.Graph
 import qualified Luna.Syntax.Repr.Graph as GraphBuilder
 import           Luna.Syntax.Builder
 import qualified Luna.Syntax.Builder    as Builder
+import qualified Luna.Syntax.Builder.Class as Builder
 import           Luna.Syntax.AST.Term
 import           Luna.Syntax.AST.Lit
 import           Luna.Syntax.AST
@@ -76,7 +77,7 @@ import Data.Container.Resizable
 import Data.Container.Reusable
 --import Data.Container.Interface
 --import           Data.Container.Poly {- x -} hiding (append)
-import Data.Container.Class
+import Data.Container
 import Data.Container.Poly -- (Ixed)
 --import Data.Text.CodeBuilder.Builder
 import Data.Text.CodeBuilder.Builder as CB hiding (render)
@@ -104,6 +105,9 @@ import Data.Container.Hetero (Ptr(Ptr), ptrIdx)
 import Data.Container.Hetero
 import Data.Layer.Coat
 import qualified Luna.Syntax.Builder.Node as NodeBuilder
+import           Luna.Syntax.Builder.Node (MonadNodeBuilder)
+import qualified Data.IntSet as IntSet
+import           Data.IntSet (IntSet)
 
 
 -- === HomoBuilder ===
@@ -274,51 +278,86 @@ instance (MuBuilder a m t, t ~ t') => MuBuilder a (HomoG t m) t' where
 
 --type Network = Graph (Labeled2 Int (Typed Int (Coat (Draft Int))))
 
+type LibMap = Map String (Ref Node)
 
-
-type Network = Graph (Labeled2 Int (Typed (Ref Int) (SuccTracking (Coat (Draft (Ref Int))))))
+type Network = Graph (Labeled2 Int (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge)))))) DoubleArc
 
 typed a t = StarBuilder.with (const $ Just t) a
 
-addStdLiterals :: Network -> IO ((), Network)
-addStdLiterals g = -- runIdentity
-                  flip StarBuilder.evalT Nothing
-                 $ flip NodeBuilder.evalT (Ref (0 :: Int))
+addStdLiterals :: Network -> (LibMap, Network)
+addStdLiterals g = runIdentity
+                 $ flip StarBuilder.evalT Nothing
+                 $ flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
                  $ flip Builder.runT g 
                  $ mdo
-    --d      <- _string "dupa"
-    --strTp  <- cons d
-    liftIO $ print "hello1"
-    --liftIO $ print "hello2"
-    strLit <- _string "String" `typed` strTp
+    strLit <- _string "String" `typed` (Ref $ Node 0)
     strTp  <- cons strLit
-    liftIO $ print "hello3" 
-    return ()
+    reconnect strLit tp strTp
 
---    intLit <- string "Int" `typed` strTp
---    intTp  <- cons intLit
+    intLit <- _string "Int" `typed` strTp
+    intTp  <- cons intLit
 
---    return $ Map.insert "String" strTp
---           $ Map.insert "Int"    intTp
---           $ Map.empty
+    return $ Map.insert "String" strTp
+           $ Map.insert "Int"    intTp
+           $ Map.empty
 
---tstmv = flip State.runState (Vector.fromList [1..10] :: Vector Int) $ mdo
---    v <- State.get
---    i <- (flip (Vector.!) j <$> State.get) <* (State.put $ (Vector.//) v [(j,j)])
---    j <- (flip (Vector.!) i <$> State.get) <* (State.put $ (Vector.//) v [(i,i)])
---    return ()
+    --g <- Builder.get
+    --let ns = g ^. nodes
+    --    n  = index_ (unwrap strLit) ns
+    --    n' = n & tp .~ i
+    --    ns' = unchecked inplace insert_ (unwrap strLit) n' ns
+    --Builder.put (g & nodes .~ ns')
+    --Builder.modify_ $ nodes %~ 
+    --strTp  <- cons strLit
+    --return ()
+
+reconnect :: (Builder.BuilderMonad (Graph n DoubleArc) m, TracksSuccs n, MonadNodeBuilder (Ref Node) m) => Ref Node -> Lens' n (Ref Edge) -> Ref Node -> m (Ref Edge)
+reconnect src lens tgt = do
+    srcNode <- readRef src
+    let oldEdgeID = srcNode ^. lens
+    oldTgt <- follow oldEdgeID
+
+    Builder.modify_ $ edges %~ free_ (deref oldEdgeID)
+
+    withRef oldTgt $ succs %~ IntSet.delete (deref src)
+
+    i <-  NodeBuilder.with src $ connect tgt
+
+    writeRef src (srcNode & lens .~ i)
+    return i
+
+
+class Monad m => RefReader ref m a | ref m -> a where readRef :: Ref ref -> m a
+instance (Monad m, Builder.BuilderMonad (Graph n e) m) => RefReader Node m n where readRef ptr = index_ (deref ptr) . view nodes <$> Builder.get
+instance (Monad m, Builder.BuilderMonad (Graph n e) m) => RefReader Edge m e where readRef ptr = index_ (deref ptr) . view edges <$> Builder.get
+
+class Monad m => RefWriter ref m a | ref m -> a where writeRef :: Ref ref -> a -> m ()
+instance (Monad m, Builder.BuilderMonad (Graph n e) m) => RefWriter Node m n where writeRef ptr a = Builder.modify_ $ nodes %~ unchecked inplace insert_ (deref ptr) a
+instance (Monad m, Builder.BuilderMonad (Graph n e) m) => RefWriter Edge m e where writeRef ptr a = Builder.modify_ $ edges %~ unchecked inplace insert_ (deref ptr) a
+
+type RefHandler ref m a = (RefReader ref m a, RefWriter ref m a)
+
+withRefM :: RefHandler ref m a => Ref ref -> (a -> m a) -> m ()
+withRefM ref f = readRef ref >>= f >>= writeRef ref
+
+withRef :: RefHandler ref m a => Ref ref -> (a -> a) -> m ()
+withRef ref = withRefM ref . fmap return
+
+follow :: RefReader ref f DoubleArc => Ref ref -> f (Ref Node)
+follow edge = view target <$> readRef edge
+
 
 tstx1 :: ((), Network)
 tstx1 = runIdentity
       $ flip StarBuilder.evalT Nothing
       $ flip Builder.runT def 
-      $ flip NodeBuilder.evalT (Ref (0 :: Int))
+      $ flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
       $ do
-            --i1 <- _star
+            topStar <- getStar2
             i1 <- _int 2
-            i2 <- _int 3
+            --i2 <- _int 3
             --str <- _string "plus"
-            acc <- accessor "plus" i1
+            --acc <- accessor "plus" i1
             --str <- _string "plus"
             --s <- getStar2
             --i1 <- _int 4
@@ -327,19 +366,135 @@ tstx1 = runIdentity
             return ()
 
 
---xxs :: _ => _
---xxs = pprint 
+--pass2 :: FReg -> Arc (Labeled Int (Typed Draft)) -> HomoGraph ArcPtr (Labeled Int (Typed Draft)) -> ([Arc (Labeled Int (Typed Draft))], HomoGraph ArcPtr (Labeled Int (Typed Draft)))
+pass2 :: LibMap -> Network -> ([Ref Node], Network)
+pass2 lmap gr = runIdentity
+              $ flip StarBuilder.evalT Nothing
+              $ flip Builder.runT gr
+              $ flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
+              $ do
+    --let cptr       = ptrIdx . fromRef . unwrap
+    let Just strTp = Map.lookup "String" lmap
+    let Just intTp = Map.lookup "Int"    lmap
+    g <- Builder.get
+    let ptrs = Ref . Node <$> usedIxes (g ^. nodes) :: [Ref Node]
+
+    let process (ref :: Ref Node) = do
+        node <- readRef ref
+        let procnod ast = case' ast $ do
+                match $ \case
+                    Int _ -> do
+                        tnode <- follow $ node ^. tp
+                        uni   <- unify tnode intTp
+                        reconnect ref tp uni
+                        return [uni]
+                        -- FIXME: poprawic wkladanie unify - unify powinno "inplace" zastepowac node, nie przepinac go
+                        
+                    _     -> return []
+                match $ \(Val a :: Val (Ref Edge)) -> procnod (V.cast $ Val a)
+                match $ \ANY -> return []
+        procnod (uncoat node)
+
+    unis <- concat <$> mapM process ptrs
+    return unis
+
+
+-- unifikacja lewo i obustronna!
+-- najlepiej chyba wprowadzc skoki zliczajace poprzednikow
+
+
+pass3 :: LibMap -> [Ref Node] -> Network -> ((), Network)
+pass3 lmap unis gr = runIdentity
+                   $ flip StarBuilder.evalT Nothing
+                   $ flip Builder.runT gr
+                   $ flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
+                   $ do
+    flip mapM_ unis $ \ uni -> do
+        node <- readRef uni
+        let Unify a b = unsafeFrom $ uncoat node
+        a' <- follow a
+        b' <- follow b
+        na <- readRef a'
+        nb <- readRef b'
+        case' (uncoat na) $ do
+            match $ \Star -> do
+                let Labeled2 _ (Typed t (SuccTracking ss (Coat ast))) = node
+                mapM_ (retarget b') (Ref . Edge <$> toList ss)
+                --destroy a'
+                --mapM_ (retarget $ Ref $ Node 0) (Ref . Edge <$> toList ss)
+                return ()
+            match $ \ANY  -> return ()
+        return ()
+    return ()
+
+
+runUniqM :: State.MonadState IntSet m => Int -> m () -> m ()
+runUniqM a f = do
+    s <- State.get
+    if IntSet.member a s then return ()
+                         else State.put (IntSet.insert a s) >> f
+
+--data CondState = CondState s (s -> )
+--exDbg1 :: ([Ref Node], Network)
+--exDbg1 = runIdentity
+--      $ flip StarBuilder.evalT Nothing
+--      $ flip Builder.runT def 
+--      $ flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
+--      $ do
+--            --topStar <- getStar2
+--            t  <- _string "type"
+--            s  <- _star
+--            i2 <- _int 2 `typed` s
+--            u  <- unify s t
+--            --i2 <- _int 3
+--            --str <- _string "plus"
+--            --acc <- accessor "plus" i1
+--            --str <- _string "plus"
+--            --s <- getStar2
+--            --i1 <- _int 4
+--            --i1 <- _int 4
+--            --i1 <- _star
+--            return [u]
+
+--type Network = Graph (Labeled2 Int (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge)))))) DoubleArc
+retarget tgt edge = withRef edge $ target .~ tgt 
+
 main :: IO ()
 main = do
     let g  = snd tstx1
-    g2 <- snd <$> addStdLiterals g
+    let (lmap, gs) = addStdLiterals g
+    let (unis, g2) = pass2 lmap gs
+    let (_   , g3) = pass3 lmap unis g2
 
-    render "t1" $ toGraphViz g
-    render "t2" $ toGraphViz g2
+    renderAndOpen [ ("g" , g)
+                  , ("gs", gs)
+                  , ("g2", g2)
+                  , ("g3", g3)
+                  ]
 
-    open $ fmap (\i -> "/tmp/t" <> show i <> ".png") $ reverse [1..2] 
+    pprint g2
 
-    pprint g
+    --let (unis, g)  = exDbg1
+    --let (_   , g3) = pass3 undefined unis g
+
+    --renderAndOpen [ 
+    --                ("g" , g)  ,
+    --                --("gs", gs) ,
+    --                --("g2", g2) ,
+    --                ("g3", g3)  
+    --              ]
+
+    --pprint (zip [0..] $ elems (g ^. nodes))
+    --pprint (zip [0..] $ elems (g ^. edges))
+
+    --render "g"  $ toGraphViz g
+    --render "gs" $ toGraphViz gs
+    --render "g2" $ toGraphViz g2
+
+    --open $ fmap (\i -> "/tmp/t" <> show i <> ".png") $ reverse [1..2] 
+
+    --pprint g2
+
 
     --print tstmv`
 
@@ -376,11 +531,14 @@ main = do
 
 
 
+renderAndOpen lst = do
+    flip mapM_ lst $ \(name, g) -> render name $ toGraphViz g
+    open $ fmap (\s -> "/tmp/" <> s <> ".png") (reverse $ fmap fst lst)
 
 
 
 data L1 a = L1 a deriving (Show)
-type instance (ContainerOf (L1 a)) = ContainerOf a
+type instance (Container (L1 a)) = Container a
 instance (HasContainerM m a, Functor m) => HasContainerM m (L1 a)
 
 instance (IsContainerM m a, Functor m) => IsContainerM m (L1 a) where fromContainerM = fmap L1 . fromContainerM
@@ -391,7 +549,7 @@ instance Wrapped (L1 a) where
 
 
 
-type instance ContainerOf (IORef a) = ContainerOf a
+type instance Container (IORef a) = Container a
 instance (HasContainerM m a, MonadIO m) => HasContainerM m (IORef a) where
     viewContainerM   ref = viewContainerM =<< liftIO (readIORef ref)
     setContainerM  v ref = ref <$ (liftIO (readIORef ref) >>= setContainerM v >>= liftIO . writeIORef ref)
@@ -415,8 +573,8 @@ instance MonadIO m => LayeredM m (IORef a) where
 --    setLayeredM = (fmap . fmap) return $ set layered
 
 
---xxxt :: Ixed Appendable Int a => a -> (a, IndexOf (ContainerOf a))
-xxxt :: Ixed Appendable Int a => a -> (a, IndexOf (ContainerOf a))
+--xxxt :: Ixed Appendable Int a => a -> (a, Index (Container a))
+xxxt :: Ixed Appendable Int a => a -> (a, Index (Container a))
 xxxt v = ixed append (4 :: Int) v 
 
 xxxt2 :: Appendable Int a => a -> a
@@ -638,7 +796,7 @@ instance Repr s (VectorGraph a) where repr _ = fromString "mu"
 --c = singleton (0 :: Int) :: Auto (Weak Vector) Int
 
 
---xxx :: Ixed (Addable el) t => el -> t -> (IndexOf' (DataStoreOf (ContainerOf t)),t)
+--xxx :: Ixed (Addable el) t => el -> t -> (Index' (DataStoreOf (Container t)),t)
 --xxx v = ixed add v
 
 --xxx :: Unchecked (Ixed Expandable) t => t -> (_,t)
@@ -657,7 +815,7 @@ instance Repr s (VectorGraph a) where repr _ = fromString "mu"
 
 ----c = Weak (Just $ const $ print ("uh" :: String)) (mempty :: Vector Int) :: Weak Vector Int
 
---xxf :: Ixed (AddableM el m) t => t -> el -> m (IndexOf' (DataStoreOf (ContainerOf t)), t)
+--xxf :: Ixed (AddableM el m) t => t -> el -> m (Index' (DataStoreOf (Container t)), t)
 --xxf v c = ixed addM c v
 
             --main = do
