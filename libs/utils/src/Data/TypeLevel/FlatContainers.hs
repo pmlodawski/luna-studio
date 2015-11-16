@@ -15,7 +15,7 @@ module Data.TypeLevel.FlatContainers where
 
 import GHC.TypeLits
 import Data.Typeable
-import Data.TypeLevel.Bool
+import Type.Bool
 import Prelude hiding (lookup)
 
 type family Contains set t where

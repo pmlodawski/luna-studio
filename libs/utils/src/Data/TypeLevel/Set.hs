@@ -88,6 +88,7 @@ instance InsertClass a xs out => InsertClass a (x,xs) (x,out) where
 
 
 
+
 --teq :: a -> a -> a
 --teq = const
 

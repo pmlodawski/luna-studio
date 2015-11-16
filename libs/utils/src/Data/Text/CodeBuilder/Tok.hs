@@ -13,7 +13,7 @@
 
 module Data.Text.CodeBuilder.Tok where
 
-import Prologue.Class
+import Prologue
 import Data.Text.CodeBuilder.Doc (Doc, between)
 
 ----------------------------------------------------------------------
