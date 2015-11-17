@@ -10,7 +10,6 @@
 
 module Flowbox.Bus.Control.Handler.ID where
 
-import           Data.Binary (Binary)
 import qualified Data.IORef  as IORef
 
 import           Flowbox.Bus.Control.BusCtx (BusCtx)

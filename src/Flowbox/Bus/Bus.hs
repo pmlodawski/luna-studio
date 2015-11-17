@@ -129,10 +129,7 @@ withTimeout action timeout = runExceptT $ do
     state' <- get
     T.trace (show timeout) $ return ()
     task <- lift3 $ ZMQ.async $ runExceptT $ runStateT action state'
-    wait <- liftIO $ Async.async $ do T.trace "asd" $ return ()
-                                      T.trace (show timeout) $ return ()
-                                      Concurrent.threadDelay timeout
-                                      T.trace "dsa" $ return ()
+    wait <- liftIO $ Async.async $ do Concurrent.threadDelay timeout
                                       return "Timeout reached"
     r <- liftIO $ Async.waitEitherCancel wait task
     (result, newState) <- hoistEither $ join r

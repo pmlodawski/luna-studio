@@ -52,7 +52,7 @@ process :: forall s m. (Catch.MonadCatch m, MonadIO m, Functor m)
 process handlerMap correlationID msg = either handleError (\message -> do
         m <- message
         logger debug $ show m
-        message
+        return m
     ) handleMessage
     where
         call :: (Catch.MonadCatch m, MonadIO m, Functor m) => HandlerMap.Callback s m

@@ -1,3 +1,9 @@
+---------------------------------------------------
+-- This is a generated cabal configuration file. --
+-- DO NOT EDIT!                                  --
+-- Use gencabal instead.                         --
+---------------------------------------------------
+
 Name:               flowbox-bus-binary
 Version:            0.1
 Cabal-Version:      >= 1.8
@@ -13,7 +19,30 @@ Library
     GHC-Options:    -Wall -O2 -threaded
     Extensions:     NoImplicitPrelude
     Other-Modules:  Paths_flowbox_bus_binary
-    Exposed-modules: `findmodules('src', '.*\.hs')`
+    Exposed-modules: 
+        Flowbox.Bus.Bus,
+        Flowbox.Bus.BusT,
+        Flowbox.Bus.EndPoint,
+        Flowbox.Bus.Env,
+        Flowbox.Bus.Server,
+        Flowbox.Bus.Util,
+        Flowbox.Bus.Control.BusCtx,
+        Flowbox.Bus.Control.Handler.Handler,
+        Flowbox.Bus.Control.Handler.ID,
+        Flowbox.Bus.Data.Flag,
+        Flowbox.Bus.Data.Message,
+        Flowbox.Bus.Data.MessageFrame,
+        Flowbox.Bus.Data.Prefix,
+        Flowbox.Bus.Data.Topic,
+        Flowbox.Bus.RPC.Client,
+        Flowbox.Bus.RPC.HandlerMap,
+        Flowbox.Bus.RPC.Pipes,
+        Flowbox.Bus.RPC.RPC,
+        Flowbox.Bus.RPC.Types,
+        Flowbox.Bus.RPC.Server.Processor,
+        Flowbox.Bus.RPC.Server.Server,
+        Reexport.Flowbox.Bus.Data.Exception,
+        Reexport.G.Proto.Bus.Exception
 
     Build-Depends:  async,
                     base,

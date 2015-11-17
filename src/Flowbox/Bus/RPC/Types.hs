@@ -4,6 +4,7 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE ConstraintKinds     #-}
 {-# LANGUAGE DeriveGeneric       #-}
 {-# LANGUAGE RankNTypes          #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -20,6 +21,7 @@ module Flowbox.Bus.RPC.Types (
     Response(..),
     Result(..),
     Value(..),
+    Serializable
 )where
 
 import Control.Exception    (SomeException)
@@ -34,6 +36,9 @@ import Flowbox.Prelude       hiding (Context, error)
 
 
 type FunctionName = String
+
+
+type Serializable val = (Binary val, Typeable val)
 
 
 data Request = Request { _requestMethod :: FunctionName
