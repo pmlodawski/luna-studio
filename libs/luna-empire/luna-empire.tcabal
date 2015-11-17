@@ -31,4 +31,5 @@ Executable luna-empire
   Extensions:     NoImplicitPrelude
 
   Build-Depends:  base,
-                  prologue
+                  prologue,
+                  transformers

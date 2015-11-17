@@ -1,0 +1,8 @@
+packages:
+- ../../../libs/luna-empire
+resolver: lts-3.14
+extra-deps:
+- prologue-1.0
+- convert-1.0
+- data-repr-1.0
+- string-qq-0.0.2
