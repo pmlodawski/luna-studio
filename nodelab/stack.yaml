@@ -12,7 +12,6 @@ ghc-options:
 packages:
   - .
   - ../libs/utils
-  - ../libs/luna/typechecker
   - ../libs/luna/protobuf-old-gen
   - ../libs/batch/batch-protobuf
   - ../libs/data/serialization
@@ -20,4 +19,3 @@ packages:
   - ../tools/batch/plugins/interpreter-api
 extra-deps:
   - ghcjs-dom-0.2.3.0
-  - graphviz-2999.18.0.2
