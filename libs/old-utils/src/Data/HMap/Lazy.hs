@@ -6,7 +6,6 @@
 {-# LANGUAGE   StandaloneDeriving #-} 
 {-# LANGUAGE   TypeFamilies #-} 
 {-# LANGUAGE   UndecidableInstances #-} 
-{-# LANGUAGE   DysfunctionalDependencies #-} 
 {-# LANGUAGE   NoMonomorphismRestriction #-} 
 {-# LANGUAGE   DeriveFunctor #-} 
 {-# LANGUAGE   DeriveTraversable #-} 

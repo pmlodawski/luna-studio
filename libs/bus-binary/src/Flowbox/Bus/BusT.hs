@@ -19,9 +19,14 @@ import Flowbox.Prelude
 -- and in other file
 newtype BusT a = BusT { runBusT :: Bus a}
 
+instance Functor BusT where
+    fmap f (BusT a) = BusT $ f <$> a
+
+instance Applicative BusT where
+    pure a = BusT $ pure a
+    (BusT f) <*> (BusT a) = BusT $ f <*> a
 
 instance Monad BusT where
-    return a = BusT $ return a
     (BusT a) >>= f = BusT $ a >>= runBusT . f
 
 

@@ -78,8 +78,10 @@ data Id5 t1 t2 t3 t4 t5 = Id5 deriving (Show, Typeable)
 --instance  (b~Id2) =>InferType2 (a :: * -> * -> *) b  
 
 
-instance  InferType a=>Num a  
-instance  InferType a =>Monad a  
+instance  InferType a => Num a  
+instance  InferType a => Functor a  
+instance  InferType a => Applicative a  
+instance  InferType a => Monad a  
 
 instance InferType Int 
 
