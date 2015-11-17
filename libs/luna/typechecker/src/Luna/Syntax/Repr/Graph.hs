@@ -19,6 +19,7 @@ import Data.Container.Auto
 import Data.Container.Weak
 import Data.Container.Resizable
 import Data.Reprx
+import Data.Construction
 
 import Luna.Syntax.Layer.Labeled
 import Luna.Syntax.AST.Term
@@ -104,6 +105,7 @@ instance {-# OVERLAPPABLE #-}                                           TracksSu
 instance {-# OVERLAPPABLE #-} (TracksSuccs (Unlayered a), Layered a) => TracksSuccs a                where succs = layered . succs
 
 
+type instance Destructed (SuccTracking a) = a
 
 data Graph node edge = Graph { _nodes :: VectorGraph node
                              , _edges :: VectorGraph edge

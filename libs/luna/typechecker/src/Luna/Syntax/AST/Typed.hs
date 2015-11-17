@@ -23,6 +23,7 @@ import           Luna.Syntax.Repr.Graph    (Graph, TracksSuccs, Ref, Node, Edge,
 
 import           Data.Layer.Coat
 import           Data.Variants             (SpecificCons)
+import           Data.Construction
 
 -- === Typed ===
 
@@ -37,15 +38,15 @@ instance {-# OVERLAPPABLE #-} HasType (Typed t a) t where tp = lens (\(Typed t _
 
 -- === Typed layer ===
 
-type instance Unlayered (Typed t a) = a
-instance      Layered   (Typed t a) where layered = lens (\(Typed _ a) -> a) (\(Typed t _) a -> Typed t a)
-
+type instance Unlayered  (Typed t a) = a
+type instance Destructed (Typed t a) = a
+instance      Layered    (Typed t a) where layered = lens (\(Typed _ a) -> a) (\(Typed t _) a -> Typed t a)
 
 instance ( TracksSuccs (Unlayered n), Layered n
-         , Uncoated n ~ Uncoated (Unlayered n), LayerGen m n
-         , MonadFix m, CoatGen m (Unlayered n), MonadStarBuilder (Maybe (Ref Node)) m, BuilderMonad (Graph n DoubleArc) m, SpecificCons Star (Uncoated n), MonadNodeBuilder (Ref Node) m
-         ) => LayerGen m (Typed (Ref Edge) a) where
-    genLayer a = do
+         , Uncoated n ~ Uncoated (Destructed n), Constructor m n
+         , MonadFix m, CoatConstructor m (Destructed n), MonadStarBuilder (Maybe (Ref Node)) m, BuilderMonad (Graph n DoubleArc) m, SpecificCons Star (Uncoated n), MonadNodeBuilder (Ref Node) m
+         ) => Constructor m (Typed (Ref Edge) a) where
+    construct a = do
         s <- getStar2
         c <- connect s
         return $ Typed c a

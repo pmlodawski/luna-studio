@@ -355,6 +355,8 @@ tstx1 = runIdentity
       $ do
             topStar <- getStar2
             i1 <- _int 2
+            --i1 <- _int 5
+            --i1 <- _int 4
             --i2 <- _int 3
             --str <- _string "plus"
             --acc <- accessor "plus" i1

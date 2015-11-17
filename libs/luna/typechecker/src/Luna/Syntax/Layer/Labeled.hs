@@ -6,6 +6,7 @@ module Luna.Syntax.Layer.Labeled where
 
 import Prologue
 import Luna.Syntax.AST
+import Data.Construction
 import Data.Variants
 
 
@@ -16,10 +17,11 @@ data Labeled2 l a = Labeled2 l a deriving (Show, Functor, Traversable, Foldable)
 
 --type instance ASTOf (Labeled2 l a) = ASTOf a
 
-type instance Unlayered (Labeled2 l a) = a
+type instance Unlayered  (Labeled2 l a) = a
+type instance Destructed (Labeled2 l a) = a
 
-instance (Monad m, LabelBuilder m l) => LayerGen m (Labeled2 l a) where
-	genLayer a = Labeled2 <$> mkLabel <*> pure a
+instance (Monad m, Maker     m l) => Constructor m (Labeled2 l a) where construct a = Labeled2 <$> make <*> pure a
+instance (Monad m, Destroyer m l) => Destructor  m (Labeled2 l a) where destruct (Labeled2 l a) = a <$ destroy l
 
 instance Layered (Labeled2 l a) where layered = lens (\(Labeled2 _ a) -> a) (\(Labeled2 l _) a -> Labeled2 l a)
 
@@ -28,8 +30,12 @@ instance Layered (Labeled2 l a) where layered = lens (\(Labeled2 _ a) -> a) (\(L
 
 --instance 
 
-class LabelBuilder m l where
-    mkLabel :: m l
+--class LabelBuilder m l where
+--    makeLabel    :: m l
+--    destroyLabel :: l -> m ()
+--    default destroyLabel :: Monad m => l -> m ()
+--    destroyLabel = const $ return ()
+
 
 class HasLabel l a | a -> l where
     label :: Lens' a l
@@ -43,8 +49,11 @@ deriving instance (Show l, Show (a t)) => Show (Labeled l a t)
 instance HasLabel l (Labeled l a t) where
     label = lens (\(Labeled l _) -> l) (\(Labeled _ a) l -> Labeled l a)
 
-instance {-# OVERLAPPABLE #-} (Monad m, Default a) => LabelBuilder m a where
-    mkLabel = return def
+--instance {-# OVERLAPPABLE #-} (Monad m, Default a) => LabelBuilder m a where
+--    makeLabel = return def
+
+-- FIXME: Remove vvv
+instance Monad m => Maker m Int where make = return 0
 
 --instance HasAST (a t) ast => HasAST (Labeled l a t) ast where ast = undefined
 --instance HasAST a ast => HasAST (Labeled l a) ast where ast = inner . ast
