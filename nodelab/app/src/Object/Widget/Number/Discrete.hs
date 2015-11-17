@@ -1,0 +1,28 @@
+module Object.Widget.Number.Discrete where
+
+import Utils.PreludePlus
+import Utils.Vector
+import Data.Fixed
+import Object.Widget
+import Numeric
+import Data.Aeson (ToJSON)
+
+data DiscreteNumber = DiscreteNumber { _position       :: Vector2 Double
+                                     , _size           :: Vector2 Double
+                                     , _label          :: Text
+                                     , _value          :: Int
+                                     , _enabled        :: Bool
+                                     , _dragStartValue :: Maybe Int
+                                     } deriving (Eq, Show, Typeable, Generic)
+
+makeLenses ''DiscreteNumber
+instance ToJSON DiscreteNumber
+
+instance IsDisplayObject DiscreteNumber where
+    widgetPosition = position
+
+displayValue' :: DiscreteNumber -> String
+displayValue' model = show $ model ^. value
+
+displayValue :: Getter DiscreteNumber String
+displayValue = to displayValue'

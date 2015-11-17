@@ -32,8 +32,10 @@ requestRerun :: Command State ()
 requestRerun = zoom Global.workspace $ BatchCmd.runMain
 
 updateValue :: NodeId -> Value -> Command State ()
-updateValue nodeId (VectorValue vec) = performIO $ do
-    putStrLn "Runner.hs: display node vector value"
+updateValue nodeId (VectorValue vec) = do
+    id <- zoom Global.uiRegistry $ nodeIdToWidgetId nodeId
+    forM_ id $ \id -> zoom Global.uiRegistry $ UICmd.update id $ Model.value .~ (Text.pack $ display $ toList vec)
+    performIO $ putStrLn "Runner.hs: display node vector value"
     -- setComputedValue nodeId "Vector"
     -- displayNodeVector nodeId (toList vec)
 updateValue nodeId value = do

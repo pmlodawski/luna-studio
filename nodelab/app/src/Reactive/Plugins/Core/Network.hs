@@ -24,6 +24,7 @@ import qualified Reactive.Plugins.Core.Action.Backend.AddNode       as AddNode
 import qualified Reactive.Plugins.Core.Action.ConnectionPen         as ConnectionPen
 import qualified Reactive.Plugins.Core.Action.TextEditor            as TextEditor
 import qualified Reactive.Plugins.Core.Action.Debug                 as Debug
+import qualified Reactive.Plugins.Core.Action.Sandbox               as Sandbox
 
 import           Reactive.Commands.Command (Command, execCommand)
 import           Reactive.State.Global     (State, initialState)
@@ -75,6 +76,7 @@ makeNetworkDescription conn logging workspace = do
                    , ConnectionPen.toAction
                    , TextEditor.toAction
                    , Debug.toAction
+                   , Sandbox.toAction
                    ]
 
         commands :: Event t (Command State ())

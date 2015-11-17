@@ -20,6 +20,9 @@ register parent model handlers = do
     performIO $ createUI parent (file ^. objectId) model
     return (file ^. objectId)
 
+register_ :: DisplayObjectClass a => WidgetId -> a -> HTMap -> Command UIRegistry.State ()
+register_ parent model handlers = register parent model handlers >> return ()
+
 update :: DisplayObjectClass a => WidgetId -> (a -> a) -> Command UIRegistry.State a
 update id fun = do
     oldWidget <- UIRegistry.lookupTypedM  id
@@ -42,13 +45,20 @@ moveBy :: WidgetId -> Vector2 Double -> Command UIRegistry.State ()
 moveBy id vec = do
     UIRegistry.widgets . ix id . widget . widgetPosition += vec
     pos <- preuse $ UIRegistry.widgets . ix id . widget . widgetPosition
-    forM_ pos $  performIO . (UI.updatePosition' id)
+    forM_ pos $ performIO . (UI.updatePosition' id)
 
 get :: DisplayObjectClass a => WidgetId -> Lens' a b -> Command UIRegistry.State b
 get id f = do
     maybeFile <- UIRegistry.lookupTypedM id
     let file     = fromMaybe (error "updateWidgetM: invalidType") maybeFile
-    return $ (file ^. widget . f)
+    return $ file ^. widget . f
+
+lookup :: DisplayObjectClass a => WidgetId -> Command UIRegistry.State a
+lookup id = do
+    maybeFile <- UIRegistry.lookupTypedM id
+    let file   = fromMaybe (error "updateWidgetM: invalidType") maybeFile
+    return $ file ^. widget
+
 
 handler :: Typeable k => WidgetId -> TypeKey k -> Command UIRegistry.State (Maybe k)
 handler id k = do

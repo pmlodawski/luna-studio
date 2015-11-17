@@ -83,6 +83,8 @@ drawSelectionBox start end = do
 
 stopDrag :: Command State ()
 stopDrag = do
-    Global.multiSelection . MultiSelection.history .= Nothing
-    zoom Global.uiRegistry focusSelectedNode
-    performIO hideSelectionBox
+    selection <- use $ Global.multiSelection . MultiSelection.history
+    forM_ selection $ \_ -> do
+        Global.multiSelection . MultiSelection.history .= Nothing
+        performIO hideSelectionBox
+        zoom Global.uiRegistry focusSelectedNode

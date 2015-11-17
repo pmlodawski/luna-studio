@@ -16,8 +16,10 @@ import           Object.Widget
 import           Object.UITypes        (WidgetId)
 import qualified Object.Widget.Node    as Model
 import qualified Object.Widget.Port    as PortModel
-import           Object.Widget.Slider (Slider(..),IsSlider(..))
-import qualified Object.Widget.Slider  as Slider
+import           Object.Widget.Number.Discrete (DiscreteNumber(..))
+import qualified UI.Handlers.Number.Discrete as DiscreteNumber
+import           Object.Widget.Number.Continuous  (ContinuousNumber(..))
+import qualified UI.Handlers.Number.Continuous as ContinuousNumber
 
 import qualified Reactive.State.Global         as Global
 import           Reactive.State.Global         (State)
@@ -34,7 +36,6 @@ import qualified Reactive.Commands.UIRegistry as UICmd
 import qualified BatchConnector.Commands as BatchCmd
 import qualified JS.NodeGraph          as UI
 
-import qualified UI.Widget.Slider as UISlider
 import qualified UI.Widget.Node   as UINode
 import qualified UI.Registry      as UIR
 import qualified UI.Widget        as UIT
@@ -68,19 +69,19 @@ createPortControl parent port portRef = do
     let pid = port ^. portId
     case port ^. portValueType of
         VTFloat -> do
-            let sliderWidget = (Slider (Vector2 10 (95 + (fromIntegral $ portIdToNum pid) * 25)) (Vector2 180 20)
-                                       (Text.pack $ "float " <> show pid) 0.0 1.0 0.2 True) :: Slider Double
-            id <- UICmd.register parent sliderWidget (sliderDoubleHandlers portRef)
+            let sliderWidget = (ContinuousNumber (Vector2 10 (95 + (fromIntegral $ portIdToNum pid) * 25)) (Vector2 180 20)
+                                       (Text.pack $ "float " <> show pid) 42.42 True Nothing)
+            id <- UICmd.register parent sliderWidget (numberDoubleHandlers portRef)
             return $ Just id
         VTNumeric -> do
-            let sliderWidget = (Slider (Vector2 10 (95 + (fromIntegral $ portIdToNum pid) * 25)) (Vector2 180 20)
-                                       (Text.pack $ "float " <> show pid) 0.0 1.0 0.2 True) :: Slider Double
-            id <- UICmd.register parent sliderWidget (sliderDoubleHandlers portRef)
+            let sliderWidget = (ContinuousNumber (Vector2 10 (95 + (fromIntegral $ portIdToNum pid) * 25)) (Vector2 180 20)
+                                       (Text.pack $ "float " <> show pid) 42.42 True Nothing)
+            id <- UICmd.register parent sliderWidget (numberDoubleHandlers portRef)
             return $ Just id
         VTInt -> do
-            let sliderWidget = (Slider (Vector2 10 (95 + (fromIntegral $ portIdToNum pid) * 25)) (Vector2 180 20)
-                                       (Text.pack $ "int " <> show pid) (-42) 42 0.2 True) :: Slider Int
-            id <- UICmd.register parent sliderWidget (sliderIntHandlers portRef)
+            let sliderWidget = (DiscreteNumber (Vector2 10 (95 + (fromIntegral $ portIdToNum pid) * 25)) (Vector2 180 20)
+                                          (Text.pack $ "int " <> show pid) 42 True Nothing)
+            id <- UICmd.register parent sliderWidget (numberIntHandlers portRef)
             return $ Just id
         otherwise -> do
             performIO $ putStrLn $ "No widget for  this type " <> (show $ port ^. portValueType)
@@ -91,25 +92,25 @@ nodeHandlers node = addHandler (UINode.RemoveNodeHandler removeSelectedNodes)
                   $ addHandler (UINode.FocusNodeHandler $ \id -> zoom Global.uiRegistry (focusNode id))
                   $ mempty
 
-sliderHandleDoubleValueChanged :: PortRef -> Double -> WidgetId -> Command Global.State ()
-sliderHandleDoubleValueChanged portRef value widgetId = do
+numberHandleDoubleValueChanged :: PortRef -> Double -> WidgetId -> Command Global.State ()
+numberHandleDoubleValueChanged portRef value widgetId = do
     workspace <- use Global.workspace
     performIO $ do
-        BatchCmd.setValue workspace portRef $ double2Float value
+        BatchCmd.setValue workspace portRef $ show value
 
-sliderHandleIntValueChanged :: PortRef -> Double -> WidgetId -> Command Global.State ()
-sliderHandleIntValueChanged portRef value widgetId = do
+numberHandleIntValueChanged :: PortRef -> Int -> WidgetId -> Command Global.State ()
+numberHandleIntValueChanged portRef value widgetId = do
     workspace <- use Global.workspace
     performIO $ do
-        BatchCmd.setValue workspace portRef $ double2Float $ 100.0 * value
+        BatchCmd.setValue workspace portRef $ show value
 
-sliderDoubleHandlers :: PortRef -> HTMap
-sliderDoubleHandlers portRef = addHandler (UISlider.ValueChangedHandler $ sliderHandleDoubleValueChanged portRef)
-                               mempty
+numberDoubleHandlers :: PortRef -> HTMap
+numberDoubleHandlers portRef = addHandler (ContinuousNumber.ValueChangedHandler $ numberHandleDoubleValueChanged portRef)
+                             $ mempty
 
-sliderIntHandlers :: PortRef -> HTMap
-sliderIntHandlers portRef = addHandler (UISlider.ValueChangedHandler $ sliderHandleIntValueChanged portRef)
-                            mempty
+numberIntHandlers :: PortRef -> HTMap
+numberIntHandlers portRef = addHandler (DiscreteNumber.ValueChangedHandler $ numberHandleIntValueChanged portRef)
+                          $ mempty
 
 registerSinglePort :: WidgetId -> Node -> PortType -> Port -> Command UIRegistry.State ()
 registerSinglePort nodeWidgetId node portType port = do

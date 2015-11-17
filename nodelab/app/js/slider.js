@@ -20,7 +20,7 @@ function Slider(widgetId, width, height) {
 
   this.uniforms = {
     size:      { type: 'v2', value: new THREE.Vector2(width, height) },
-    value:     { type: 'f',  value: 0.5 },
+    value:     { type: 'f',  value: 0.0 },
     focus:     { type: 'd',  value: 0   },
     objectId:  { type: 'v3', value: new THREE.Vector3((widgetId % 256) / 255.0, Math.floor(Math.floor(widgetId % 65536) / 256) / 255.0, Math.floor(widgetId / 65536) / 255.0) }
   };

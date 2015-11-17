@@ -1,18 +1,19 @@
-module Object.Widget.Toggle where
+module Object.Widget.Choice where
 
 import           Utils.PreludePlus
 import           Utils.Vector
 import           Object.Widget
+import           Data.Text (Text)
 
-
-data Toggle = Toggle { _position :: Vector2 Double
+data Choice = Choice { _position :: Vector2 Double
                      , _size     :: Vector2 Double
                      , _label    :: Text
-                     , _value    :: Bool
+                     , _options  :: [Text]
+                     , _value    :: Word
                      } deriving (Eq, Show, Typeable)
 
-makeLenses ''Toggle
+makeLenses ''Choice
 
-instance IsDisplayObject Toggle where
+instance IsDisplayObject Choice where
     widgetPosition = position
 
