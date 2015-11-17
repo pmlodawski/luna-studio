@@ -1,5 +1,10 @@
 packages:
 - ../../../libs/utils
 - ../../../third-party/fgl
-resolver: nightly-2015-08-24
-
+resolver: lts-3.14
+extra-deps:
+- data-repr-1.0
+- data-layer-1.0
+- typelevel-1.0.2
+- convert-1.0
+- errors-1.4.7
