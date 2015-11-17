@@ -4,34 +4,38 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE BangPatterns    #-}
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE BangPatterns     #-}
+{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TemplateHaskell  #-}
 module Flowbox.Bus.Logger.Logger where
 
-import           Control.Monad                    (forever)
-import           Control.Monad.Trans.State.Strict
-import           Data.List                        (isSuffixOf)
-import qualified Data.Map.Strict                  as Map
-import qualified Data.Maybe                       as Maybe
-import qualified Data.Time.Clock                  as Clock
+import           Control.Monad         (forever)
+import           Control.Monad.State   (StateT, evalStateT, get, put)
+import qualified Data.Binary           as Bin
+import           Data.ByteString       (ByteString)
+import           Data.ByteString.Char8 (unpack)
+import           Data.ByteString.Lazy  (fromStrict, toStrict)
+import qualified Data.Map.Strict       as Map
+import qualified Data.Maybe            as Maybe
+import qualified Data.Time.Clock       as Clock
 
-import qualified Flowbox.Bus.Bus               as Bus
-import           Flowbox.Bus.BusT              (BusT)
-import qualified Flowbox.Bus.BusT              as Bus
-import qualified Flowbox.Bus.Data.Exception    as Exception
-import qualified Flowbox.Bus.Data.Message      as Message
-import           Flowbox.Bus.Data.MessageFrame (MessageFrame (MessageFrame))
-import           Flowbox.Bus.Data.Topic        (Topic)
-import qualified Flowbox.Bus.Data.Topic        as Topic
-import           Flowbox.Bus.EndPoint          (BusEndPoints)
-import           Flowbox.Bus.Logger.Env        (Env)
-import qualified Flowbox.Bus.Logger.Env        as Env
-import           Flowbox.Control.Error         (liftIO)
+import qualified Flowbox.Bus.Bus                        as Bus
+import           Flowbox.Bus.BusT                       (BusT (..))
+import qualified Flowbox.Bus.BusT                       as Bus
+import qualified Flowbox.Bus.Data.Message               as Message
+import           Flowbox.Bus.Data.MessageFrame          (MessageFrame (MessageFrame))
+import           Flowbox.Bus.Data.Topic                 (Topic)
+import           Flowbox.Bus.EndPoint                   (BusEndPoints)
+import           Flowbox.Bus.Logger.Env                 (Env)
+import qualified Flowbox.Bus.Logger.Env                 as Env
+import           Flowbox.Bus.RPC.Types                  (Response (Response), Result (ErrorResult, Status), Value (Value))
+import           Flowbox.Control.Monad.Error            (MonadError)
 import           Flowbox.Data.Convert
-import           Flowbox.Prelude               hiding (error)
+import           Flowbox.Prelude                        hiding (error)
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.Text.ProtocolBuffers  as Proto
-import qualified Generated.Proto.Bus.Exception as Gen
+import qualified Flowbox.Text.ProtocolBuffers           as Proto
+import qualified Reexport.Flowbox.Bus.Data.Exception    as Exception
+import qualified Reexport.G.Proto.Bus.Exception         as Gen
 
 
 
@@ -45,7 +49,6 @@ run ep topics = Bus.runBus ep $ do
     mapM_ Bus.subscribe topics
     Bus.runBusT $ evalStateT (forever logMessage) def
 
-
 logMessage :: StateT Env BusT ()
 logMessage = do
     msgFrame <- lift $ Bus.BusT Bus.receive'
@@ -53,10 +56,9 @@ logMessage = do
         Left err -> logger error $ "Unparseable message: " ++ err
         Right (MessageFrame msg crlID senderID lastFrame) -> do
             time <- measureTime crlID
-            let topic  = msg ^. Message.topic
-                logMsg = show senderID
+            let topic = msg ^. Message.topic
+                logMsg =  show senderID
                        ++ " -> "
-                       ++ show crlID
                        ++ " (last = "
                        ++ show lastFrame
                        ++ ")"
@@ -66,16 +68,46 @@ logMessage = do
                 content = msg ^. Message.message
                 errorMsg = case Proto.messageGet' content of
                     Left err        -> "(cannot parse error message: " ++ err ++ ")"
-                    Right exception -> case (decodeP (exception :: Gen.Exception)) ^. Exception.msg of
-                        Nothing           -> "(exception without message)"
-                        Just exceptionMsg -> exceptionMsg
-            if Topic.error `isSuffixOf` topic
-                then do logger error logMsg
-                        logger error errorMsg
-                else logger info  logMsg
+                    Right exception -> Maybe.fromMaybe "(exception without message)"
+                                                       $ decodeP (exception :: Gen.Exception) ^. Exception.msg
+            case lastPart '.' topic of
+                "response" -> do logger info  logMsg
+                                 lift $ BusT $ lift $ ppr content
+                "status"   -> logger info  logMsg
+                "update"   -> logger info  logMsg
+                "request"  -> logger info  logMsg
+                _          -> do logger error logMsg
+                                 logger error errorMsg
 
 
-measureTime :: Message.CorrelationID -> StateT Env BusT (Maybe Clock.NominalDiffTime)
+ppr :: (MonadIO m, MonadError String m)
+    => ByteString -> m ()
+ppr msg = do
+    --Request fname (Value typeName protocol dataBytes) <- hoistEither $ RPC.messageGet' msg
+    let Response fname result _ = Bin.decode $ fromStrict msg
+    case result of
+        (Status (Value tname _ dataBytes)) -> do
+            logger info  $ unlines [ "requested method: " ++ fname
+                                   , "    content type: " ++ tname
+                                   ]
+            logger debug $ unlines [ "            data: "
+                                   , unpack $ toStrict dataBytes
+                                   ]
+        (ErrorResult err) -> 
+            logger error $ unlines [ "requested method: " ++ fname
+                                   , "  error response: " ++ err
+                                   ]
+
+
+lastPart :: Eq a => a -> [a] -> [a]
+lastPart = lastPartIntern []
+
+lastPartIntern :: Eq a => [a] -> a -> [a] -> [a]
+lastPartIntern _      b (a:as) | a == b = lastPartIntern [] b as
+lastPartIntern buffer _ []              = reverse buffer
+lastPartIntern buffer b (a:as)          = lastPartIntern (a:buffer) b as
+
+measureTime :: MonadIO m => Message.CorrelationID -> StateT Env m (Maybe Clock.NominalDiffTime)
 measureTime !crlID = do
     stop  <- liftIO Clock.getCurrentTime
     times <- get
