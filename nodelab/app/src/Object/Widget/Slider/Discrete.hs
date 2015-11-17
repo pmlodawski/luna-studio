@@ -41,7 +41,7 @@ getNormValue slider = (fromIntegral $ (slider ^. value) - (slider ^. minValue)) 
 setNormValue :: DiscreteSlider -> Double -> DiscreteSlider
 setNormValue slider val = slider & value .~ newValue where
     boundedValue = max 0.0 $ min 1.0 val
-    newValue = (floor $ boundedValue * (fromIntegral $ slider ^. range)) + (slider ^. minValue)
+    newValue = (round $ boundedValue * (fromIntegral $ slider ^. range)) + (slider ^. minValue)
 
 boundedNormValue :: Lens' DiscreteSlider Double
 boundedNormValue = lens getNormValue setNormValue

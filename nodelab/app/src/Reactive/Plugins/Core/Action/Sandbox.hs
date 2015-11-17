@@ -29,6 +29,10 @@ import           Object.Widget.Slider.Continuous  (ContinuousSlider(..))
 import qualified UI.Handlers.Slider.Continuous as ContinuousSlider
 import           UI.Widget.Slider.Continuous ()
 
+import           Object.Widget.Toggle  (Toggle(..))
+import qualified UI.Handlers.Toggle as Toggle
+import           UI.Widget.Toggle ()
+
 
 toAction :: Event -> Maybe (Command Global.State ())
 toAction (Keyboard (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.inRegistry $ do
@@ -45,6 +49,12 @@ toAction (Keyboard (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.inRe
     UICmd.register_ parent widget def
 
     let widget = DiscreteSlider (Vector2 10 90) (Vector2 180 20) ("DiscreteSlider") True (-20) 80 30 Nothing
+    UICmd.register_ parent widget def
+
+    let widget = DiscreteSlider (Vector2 10 120) (Vector2 180 20) ("DiscreteSlider") True 3 8 4 Nothing
+    UICmd.register_ parent widget def
+
+    let widget = Toggle (Vector2 10 150) (Vector2 180 20) ("Toggle") True True True
     UICmd.register_ parent widget def
 
 toAction _  = Nothing

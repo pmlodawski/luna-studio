@@ -1,6 +1,7 @@
 module UI.Handlers.Number.Continuous where
 
 import           Utils.PreludePlus
+import           Utils.Vector
 
 import           Object.Widget
 import           Object.UITypes
@@ -14,10 +15,13 @@ import           Data.HMap.Lazy (TypeKey(..))
 import qualified Object.Widget.Number.Continuous as Model
 import           UI.Widget.Number (keyModMult)
 import           UI.Widget.Number.Continuous ()
-import           UI.Generic (takeFocus)
+import           UI.Generic (takeFocus, startDrag)
 
 newtype ValueChangedHandler = ValueChangedHandler (Double -> WidgetId -> Command Global.State ())
 valueChangedHandlerKey = TypeKey :: TypeKey valueChangedHandler
+
+isEnabled :: WidgetId -> Command Global.State Bool
+isEnabled id = inRegistry $ UICmd.get id Model.enabled
 
 triggerValueChanged :: Double -> WidgetId -> Command Global.State ()
 triggerValueChanged new id = do
@@ -34,6 +38,38 @@ keyUpHandler 'Q' _ id = bumpValue (-1.0) id
 keyUpHandler 'W' _ id = bumpValue ( 1.0) id
 keyUpHandler _   _ _  = return ()
 
+startSliderDrag :: MousePressedHandler Global.State
+startSliderDrag evt id = do
+    enabled <- isEnabled id
+    when enabled $ do
+        value <- inRegistry $ UICmd.get id Model.value
+        inRegistry $ UICmd.update_ id $ Model.dragStartValue .~ (Just value)
+        startDrag evt id
+
+dragHandler :: DragMoveHandler Global.State
+dragHandler ds id = do
+    enabled <- isEnabled id
+    when enabled $ do
+        startValue <- inRegistry $ UICmd.get id Model.dragStartValue
+        forM_ startValue $ \startValue -> do
+            width <- inRegistry $ UICmd.get id $ Model.size . x
+            let diff    = ds ^. currentPos - ds ^. startPos
+                delta   = if (abs $ diff ^. x) > (abs $ diff ^. y) then  diff ^. x /  divider
+                                                                   else -diff ^. y / (divider * 10.0)
+                divider = keyModMult $ ds ^. keyMods
+            inRegistry $ UICmd.update_ id $ Model.value .~ (startValue + delta)
+
+dragEndHandler :: DragEndHandler Global.State
+dragEndHandler _ id = do
+    enabled <- isEnabled id
+    when enabled $ do
+        inRegistry $ UICmd.update_ id $ Model.dragStartValue .~ Nothing
+        value <- inRegistry $ UICmd.get id Model.value
+        triggerValueChanged value id
+
 widgetHandlers :: UIHandlers Global.State
 widgetHandlers = def & keyUp        .~ keyUpHandler
-                     & mousePressed .~ takeFocus
+                     -- & dblClick     .~ dblClickHandler
+                     & mousePressed .~ startSliderDrag
+                     & dragMove     .~ dragHandler
+                     & dragEnd      .~ dragEndHandler

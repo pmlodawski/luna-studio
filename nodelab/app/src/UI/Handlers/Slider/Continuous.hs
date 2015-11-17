@@ -34,7 +34,6 @@ triggerValueChanged new id = do
 dblClickHandler :: DblClickHandler Global.State
 dblClickHandler evt id = do
     enabled <- isEnabled id
-    performIO $ putStrLn "Dblclick"
     when enabled $ do
         width <- inRegistry $ UICmd.get id $ Model.size . x
         let normValue = (evt ^. Mouse.position ^. x) / width
@@ -51,7 +50,7 @@ keyUpHandler 'W' _ id = do
 keyUpHandler 'Q' _ id = do
     enabled <- isEnabled id
     when enabled $ do
-        widget <- inRegistry $  UICmd.update id $ Model.boundedNormValue -~ 0.1
+        widget <- inRegistry $ UICmd.update id $ Model.boundedNormValue -~ 0.1
         triggerValueChanged (widget ^. Model.value) id
 
 keyUpHandler _ _ _ = return ()
@@ -75,7 +74,6 @@ dragHandler ds id = do
                 delta   = if (abs $ diff ^. x) > (abs $ diff ^. y) then  diff ^. x /  divider
                                                                    else -diff ^. y / (divider * 10.0)
                 divider = width * (keyModMult $ ds ^. keyMods)
-            performIO $ putStrLn $ show $ startValue + delta
             inRegistry $ UICmd.update_ id $ Model.boundedNormValue .~ (startValue + delta)
 
 dragEndHandler :: DragEndHandler Global.State

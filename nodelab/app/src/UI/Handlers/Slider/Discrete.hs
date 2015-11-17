@@ -18,7 +18,6 @@ import           UI.Widget.Number (keyModMult)
 import           UI.Generic (takeFocus, startDrag)
 
 newtype ValueChangedHandler = ValueChangedHandler (Int -> WidgetId -> Command Global.State ())
-
 valueChangedHandlerKey = TypeKey :: TypeKey ValueChangedHandler
 
 isEnabled :: WidgetId -> Command Global.State Bool
@@ -32,7 +31,6 @@ triggerValueChanged new id = do
 dblClickHandler :: DblClickHandler Global.State
 dblClickHandler evt id = do
     enabled <- isEnabled id
-    performIO $ putStrLn "Dblclick"
     when enabled $ do
         width <- inRegistry $ UICmd.get id $ Model.size . x
         let normValue = (evt ^. Mouse.position ^. x) / width

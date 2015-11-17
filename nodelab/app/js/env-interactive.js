@@ -10,6 +10,7 @@ module.exports = function() {
   window.raycaster     = require('raycaster');
   window.connectionPen = require('connection_pen');
   window.Slider        = require('slider');
+  window.Toggle        = require('toggle');
   window.Connection    = require('connection');
   window.textEditor    = require('text_editor');
   window.GraphNode     = require('node');
