@@ -7,7 +7,6 @@ module Data.Reprx ( module Data.Reprx
                  ) where
 
 import Prologue hiding (Repr, repr)
-import Data.List (intercalate)
 import Data.Monoid
 import Data.Text.CodeBuilder
 import Data.Text.CodeBuilder.Tok (Tok)
@@ -59,13 +58,13 @@ instance (Repr s l, Repr s r) => Repr s (Either l r) where
         Left  a -> "Left"  <+> repr a
         Right a -> "Right" <+> repr a
 
-instance {-# OVERLAPPABLE #-} Repr s t => Repr s [t] where repr = bracked . mjoin ", " . fmap repr
+instance {-# OVERLAPPABLE #-} Repr s t => Repr s [t] where repr = bracked . intercalate ", " . fmap repr
 
-instance (Repr s t1, Repr s t2)                                                                              => Repr s (t1,t2)                      where repr (t1,t2)                      = parensed $ mjoin ", " [repr t1, repr t2]
-instance (Repr s t1, Repr s t2, Repr s t3)                                                                   => Repr s (t1,t2,t3)                   where repr (t1,t2,t3)                   = parensed $ mjoin ", " [repr t1, repr t2, repr t3]
-instance (Repr s t1, Repr s t2, Repr s t3, Repr s t4)                                                        => Repr s (t1,t2,t3,t4)                where repr (t1,t2,t3,t4)                = parensed $ mjoin ", " [repr t1, repr t2, repr t3, repr t4]
-instance (Repr s t1, Repr s t2, Repr s t3, Repr s t4, Repr s t5)                                             => Repr s (t1,t2,t3,t4,t5)             where repr (t1,t2,t3,t4,t5)             = parensed $ mjoin ", " [repr t1, repr t2, repr t3, repr t4, repr t5]
-instance (Repr s t1, Repr s t2, Repr s t3, Repr s t4, Repr s t5, Repr s t6)                                  => Repr s (t1,t2,t3,t4,t5,t6)          where repr (t1,t2,t3,t4,t5,t6)          = parensed $ mjoin ", " [repr t1, repr t2, repr t3, repr t4, repr t5, repr t6]
-instance (Repr s t1, Repr s t2, Repr s t3, Repr s t4, Repr s t5, Repr s t6, Repr s t7)                       => Repr s (t1,t2,t3,t4,t5,t6,t7)       where repr (t1,t2,t3,t4,t5,t6,t7)       = parensed $ mjoin ", " [repr t1, repr t2, repr t3, repr t4, repr t5, repr t6, repr t7]
-instance (Repr s t1, Repr s t2, Repr s t3, Repr s t4, Repr s t5, Repr s t6, Repr s t7, Repr s t8)            => Repr s (t1,t2,t3,t4,t5,t6,t7,t8)    where repr (t1,t2,t3,t4,t5,t6,t7,t8)    = parensed $ mjoin ", " [repr t1, repr t2, repr t3, repr t4, repr t5, repr t6, repr t7, repr t8]
-instance (Repr s t1, Repr s t2, Repr s t3, Repr s t4, Repr s t5, Repr s t6, Repr s t7, Repr s t8, Repr s t9) => Repr s (t1,t2,t3,t4,t5,t6,t7,t8,t9) where repr (t1,t2,t3,t4,t5,t6,t7,t8,t9) = parensed $ mjoin ", " [repr t1, repr t2, repr t3, repr t4, repr t5, repr t6, repr t7, repr t8, repr t9]
+instance (Repr s t1, Repr s t2)                                                                              => Repr s (t1,t2)                      where repr (t1,t2)                      = parensed $ intercalate ", " [repr t1, repr t2]
+instance (Repr s t1, Repr s t2, Repr s t3)                                                                   => Repr s (t1,t2,t3)                   where repr (t1,t2,t3)                   = parensed $ intercalate ", " [repr t1, repr t2, repr t3]
+instance (Repr s t1, Repr s t2, Repr s t3, Repr s t4)                                                        => Repr s (t1,t2,t3,t4)                where repr (t1,t2,t3,t4)                = parensed $ intercalate ", " [repr t1, repr t2, repr t3, repr t4]
+instance (Repr s t1, Repr s t2, Repr s t3, Repr s t4, Repr s t5)                                             => Repr s (t1,t2,t3,t4,t5)             where repr (t1,t2,t3,t4,t5)             = parensed $ intercalate ", " [repr t1, repr t2, repr t3, repr t4, repr t5]
+instance (Repr s t1, Repr s t2, Repr s t3, Repr s t4, Repr s t5, Repr s t6)                                  => Repr s (t1,t2,t3,t4,t5,t6)          where repr (t1,t2,t3,t4,t5,t6)          = parensed $ intercalate ", " [repr t1, repr t2, repr t3, repr t4, repr t5, repr t6]
+instance (Repr s t1, Repr s t2, Repr s t3, Repr s t4, Repr s t5, Repr s t6, Repr s t7)                       => Repr s (t1,t2,t3,t4,t5,t6,t7)       where repr (t1,t2,t3,t4,t5,t6,t7)       = parensed $ intercalate ", " [repr t1, repr t2, repr t3, repr t4, repr t5, repr t6, repr t7]
+instance (Repr s t1, Repr s t2, Repr s t3, Repr s t4, Repr s t5, Repr s t6, Repr s t7, Repr s t8)            => Repr s (t1,t2,t3,t4,t5,t6,t7,t8)    where repr (t1,t2,t3,t4,t5,t6,t7,t8)    = parensed $ intercalate ", " [repr t1, repr t2, repr t3, repr t4, repr t5, repr t6, repr t7, repr t8]
+instance (Repr s t1, Repr s t2, Repr s t3, Repr s t4, Repr s t5, Repr s t6, Repr s t7, Repr s t8, Repr s t9) => Repr s (t1,t2,t3,t4,t5,t6,t7,t8,t9) where repr (t1,t2,t3,t4,t5,t6,t7,t8,t9) = parensed $ intercalate ", " [repr t1, repr t2, repr t3, repr t4, repr t5, repr t6, repr t7, repr t8, repr t9]

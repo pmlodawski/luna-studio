@@ -25,7 +25,6 @@ import qualified System.IO           as IO
 import           System.Process      hiding (readProcess, readProcessWithExitCode, runProcess)
 import qualified System.Process      as Process
 
-import           Data.String.Utils                  (join)
 import           Flowbox.Prelude                    hiding (error)
 import qualified Flowbox.System.Directory.Directory as Directory
 import           Flowbox.System.Log.Logger
@@ -44,7 +43,7 @@ runProcess' = Process.runProcess
 
 runProcess :: Maybe UniPath -> String -> [String] -> IO ()
 runProcess upath command args = do
-    let commandName = command ++ " " ++ join " " args
+    let commandName = command ++ " " ++ intercalate " " args
     workingDir <- case upath of
         Nothing -> pure Nothing
         Just p  -> Just . UniPath.toUnixString <$> UniPath.expand p

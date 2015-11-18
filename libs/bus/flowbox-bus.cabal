@@ -27,15 +27,7 @@ Library
   Extensions:     NoImplicitPrelude
 
   Exposed-modules: 
-        Generated.Proto.Bus,
-        Generated.Proto.Bus.Exception,
-        Generated.Proto.Bus.ID,
-        Generated.Proto.Bus.ID.Create,
-        Generated.Proto.Bus.ID.Create.Args,
-        Generated.Proto.Bus.ID.Create.Result,
-        Generated.Proto.Bus.Message,
-        Generated.Proto.Bus.Request,
-        Generated.Proto.Bus.Request.Method, 
+        , 
                    
         Flowbox.Bus.Bus,
         Flowbox.Bus.BusT,

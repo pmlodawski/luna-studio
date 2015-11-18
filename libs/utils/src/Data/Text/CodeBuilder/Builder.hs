@@ -25,7 +25,7 @@ import qualified Data.Text.Lazy            as Text
 import qualified Data.Text.Lazy.Builder    as Text
 import           Data.Text.Lazy.Builder    (toLazyText)
 
-import Control.Monad.State
+import Control.Monad.State hiding (join)
 
 ----------------------------------------------------------------------
 -- Code Builder
@@ -105,8 +105,8 @@ ifx ma ml mr = do
     return . Tok prec $ precParens prec l <> " " <> d <> " " <> precParens prec r
 
 tuple, list :: [Builder s Tok] -> Builder s Tok
-tuple items = parensed $ fmap (mjoin ", ") $ sequence items
-list  items = bracked  $ fmap (mjoin ", ") $ sequence items
+tuple items = parensed $ fmap (intercalate ", ") $ sequence items
+list  items = bracked  $ fmap (intercalate ", ") $ sequence items
 
 (<+>) = app
 

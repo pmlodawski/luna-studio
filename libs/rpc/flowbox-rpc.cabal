@@ -25,10 +25,7 @@ Library
   Extensions:     NoImplicitPrelude
 
   Exposed-modules: 
-        Generated.Proto.Rpc,
-        Generated.Proto.Rpc.Exception,
-        Generated.Proto.Rpc.Response,
-        Generated.Proto.Rpc.Response.Type,
+        ,
                    
         Flowbox.ZMQ.RPC.Client,
         Flowbox.ZMQ.RPC.Handler,

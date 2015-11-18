@@ -55,37 +55,40 @@ Library
         Luna.Diagnostic.AST,
         Luna.Repr.Styles,
         Luna.Syntax.AST,
-        Luna.Syntax.Builder,
-        Luna.Syntax.Name,
         Luna.Syntax.AST.Arg,
         Luna.Syntax.AST.Decl,
         Luna.Syntax.AST.Decl.Function,
         Luna.Syntax.AST.Lit,
         Luna.Syntax.AST.Term,
         Luna.Syntax.AST.Typed,
-        Luna.Syntax.AST.Decl.Function,
+        Luna.Syntax.Builder,
         Luna.Syntax.Builder.Class,
         Luna.Syntax.Builder.Node,
         Luna.Syntax.Builder.Star,
-        Luna.Syntax.Layer,
         Luna.Syntax.Layer.Labeled,
+        Luna.Syntax.Name,
         Luna.Syntax.Name.Pool,
         Luna.Syntax.Repr.Graph
 
-    Build-Depends:  base,
-                    ghc-prim,
-                    flowbox-utils,
-                    containers >= 0.5.6.2,
-                    lens,
-                    process,
-                    vector,
-                    graphviz >= 2999.17.0.2.2,
-                    mtl,
-                    text,
-                    convert,
-                    errors,
-                    constraints,
-                    tuple
+    Build-Depends: base
+                 , containers >= 0.5.6.2
+                 , convert
+                 , constraints
+                 , container
+                 , data-construction
+                 , data-layer
+                 , errors
+                 , flowbox-utils
+                 , ghc-prim
+                 , graphviz >= 2999.17.0.2.2
+                 , lens
+                 , mtl
+                 , process
+                 , prologue
+                 , text
+                 , transformers
+                 , vector
+
                     
 
 Executable tc-test
@@ -118,19 +121,22 @@ Executable tc-test
                   TypeOperators
                   ViewPatterns
 
-    Build-Depends:  base,
-                    ghc-prim,
-                    flowbox-utils,
-                    containers >= 0.5.6.2,
-                    lens,
-                    process,
-                    vector,
-                    graphviz >= 2999.17.0.2.2,
-                    mtl,
-                    text,
-                    convert,
-                    luna-tc,
-                    errors,
-                    constraints,
-                    transformers,
-                    tuple
+    Build-Depends: luna-tc
+                 , base
+                 , containers >= 0.5.6.2
+                 , convert
+                 , constraints
+                 , container
+                 , data-construction
+                 , data-layer
+                 , errors
+                 , flowbox-utils
+                 , ghc-prim
+                 , graphviz >= 2999.17.0.2.2
+                 , lens
+                 , mtl
+                 , process
+                 , prologue
+                 , text
+                 , transformers
+                 , vector

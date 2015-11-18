@@ -133,7 +133,7 @@ instance OpenUtility Darwin  where openUtility = const "open"
 instance OpenUtility Linux   where openUtility = const "xdg-open"
 instance OpenUtility GHCJS   where openUtility = const "open"
 
-open paths = liftIO . createProcess . shell $ openUtility platform <> " " <> mjoin " " paths
+open paths = liftIO . createProcess . shell $ openUtility platform <> " " <> intercalate " " paths
 
 instance (MonadIO m, Ord a, PrintDot a) => Displayable m (DotGraph a) where
     render name gv = do

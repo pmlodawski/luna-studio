@@ -80,7 +80,9 @@ Library
                     unix,
                     vector,
                     convert,
-                    typelevel
+                    typelevel,
+                    prologue,
+                    data-repr
 
   if os(windows)
     Build-Depends:  Win32

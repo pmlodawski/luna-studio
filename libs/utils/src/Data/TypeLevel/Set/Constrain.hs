@@ -21,7 +21,7 @@ module Data.TypeLevel.Set.Constrain where
 import Data.TypeLevel.Set
 import GHC.TypeLits
 import Data.Typeable
-import Data.TypeLevel.Bool
+import Type.Bool
 import Prelude hiding (Bool)
 
 import Flowbox.Utils

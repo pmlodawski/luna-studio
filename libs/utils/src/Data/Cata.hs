@@ -7,7 +7,6 @@ module Data.Cata where
 
 import Prologue      hiding (Repr,repr)
 import Control.Lens
-import Control.Monad (join)
 import Data.Reprx
 import Control.Monad.Trans.Identity
 

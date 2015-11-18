@@ -1,0 +1,48 @@
+#!/usr/bin/env python2.7
+
+import argparse
+import os
+import subprocess
+from   utils.glob2 import glob
+
+parser = argparse.ArgumentParser(description='Process some integers.')
+parser.add_argument('paths', nargs='+', help='libraries paths')
+
+
+
+def main():
+    args = parser.parse_args()
+    for path in args.paths:
+        path = os.path.abspath(path)
+        os.chdir(path)
+        # print os.getcwd()
+        # print subprocess.Popen("echo Hello World", shell=True, stdout=subprocess.PIPE).stdout.read()
+        for libpath in [os.path.dirname(p) for p in glob (path + "/**/*.cabal")]:
+            print
+            print ">> " + libpath
+            os.chdir(libpath)
+            try:
+                status = subprocess.check_output("git status --porcelain", shell=True)
+                if not status:
+                    print "Everything up to date."
+                    continue
+                print status
+
+                while True:
+                    commands = ["ok", "next"]
+                    definp = "git add -A"
+                    inp = raw_input("Action {%s, <cmd>} [%s -> ok]: " % (", ".join(commands), definp))
+                    if not inp: inp = definp
+                    if inp in commands: break
+                    try:
+                        out = subprocess.check_output(inp, shell=True)
+                        print out
+                    except:
+                        print "Error occurred, continuing."
+                    # print ("you entered " + input_var) 
+                print "------------"
+                # if 
+            except subprocess.CalledProcessError:
+                print "ERROR"
+
+main ()

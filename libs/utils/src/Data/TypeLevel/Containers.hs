@@ -7,7 +7,7 @@
 
 module Data.TypeLevel.Containers where
 
-import Data.TypeLevel.Bool hiding (Bool, True, False)
+import Type.Bool hiding (Bool, True, False)
 import Prelude             (Bool(True, False))
 
 

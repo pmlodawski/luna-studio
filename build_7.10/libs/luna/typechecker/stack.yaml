@@ -1,9 +1,21 @@
+resolver: lts-3.14
 packages:
 - ../../../../libs/luna/typechecker
 - ../../../../libs/utils
-- ../../../../libs/convert
-- ../../../../third-party/graphviz-2999.17.0.2.2
-extra-deps:
-- errors-1.4.7
-resolver: nightly-2015-08-24
+- /Users/wdanilo/dev/hs/libs/prologue
+- /Users/wdanilo/dev/hs/libs/container
+- /Users/wdanilo/dev/hs/libs/functor-utils
+- /Users/wdanilo/dev/hs/libs/data-layer
+- /Users/wdanilo/dev/hs/libs/data-repr
+- /Users/wdanilo/dev/hs/libs/data-construction
+- /Users/wdanilo/dev/hs/libs/lens-utils
 
+extra-deps:
+- convert-1.0
+- graphviz-2999.18.0.2
+- data-repr-1.0
+- prologue-1.0.1
+- typelevel-1.0.2
+- string-qq-0.0.2
+
+- errors-1.4.7

@@ -90,7 +90,6 @@ import Data.Container.Weak
 import qualified Data.Container.Opts as Mods
 import qualified Data.Container.Instances.Vector.Lazy as Lazy
 
-import Data.Container.Monad as Container
 
 import Data.STRef
 import Control.Monad.ST

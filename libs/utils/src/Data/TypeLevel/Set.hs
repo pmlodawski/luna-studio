@@ -20,8 +20,8 @@ module Data.TypeLevel.Set (
 )where
 
 import GHC.TypeLits
+import Type.Bool
 import Data.Typeable
-import Data.TypeLevel.Bool
 import Data.TypeLevel.FlatContainers as X
 import Prelude hiding (lookup)
 
