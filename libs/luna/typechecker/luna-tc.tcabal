@@ -57,6 +57,7 @@ Library
                  , errors
                  , flowbox-utils
                  , ghc-prim
+                 , ghc-session
                  , graphviz >= 2999.17.0.2.2
                  , lens
                  , mtl
@@ -66,7 +67,7 @@ Library
                  , transformers
                  , vector
 
-                    
+
 
 Executable tc-test
     Main-Is:        Main.hs
