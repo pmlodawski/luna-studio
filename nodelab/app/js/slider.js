@@ -42,7 +42,8 @@ function Slider(widgetId, width, height) {
 				fragmentShader: fs,
 				transparent:    true,
 				blending:       THREE.NormalBlending,
-        side:           THREE.DoubleSide
+        side:           THREE.DoubleSide,
+        derivatives:    true
   	})
 	);
   this.bg.position.z = 0;
