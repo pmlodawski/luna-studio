@@ -2,16 +2,35 @@
 
 <html>
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8"/>
   <title>NodeLab</title>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <link href="/stylesheets/app.css" rel="stylesheet" type="text/css">
+  <link href="/font/LatoLatinBlack-Regular.css" rel="stylesheet" type="text/css">
 </head>
 
 <body>
-  <h1>Choose a project:</h1>
-  <ul>
-    <li><a href="/lab/#/projects/firstproject">First Projects</a></li>
-    <li><a href="/lab/#/projects/playground1">Playground 1</a></li>
-    <li><a href="/lab/#/projects/playground2">Playground 2</a></li>
-  </ul>
+  <div id="spinner" class="spinner-wave">
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+      <div></div>
+  </div>
+  <script src="/javascripts/vendor.js" ></script>
+  <script src="/javascripts/ghcjs.js"></script>
+  <script src="/javascripts/app.js"></script>
+  <script type="text/javascript">
+    window.backendAddress = "ws://localhost:8088/";
+    window.resourcesPath = "";
+    window.currentUser = {
+      name:   "Paul Graham",
+      logout: "/users/sign_out"
+    };
+    require('app').start();
+  </script>
+
 </body>
 </html>
+
