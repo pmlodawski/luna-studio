@@ -16,6 +16,7 @@ import qualified Flowbox.Bus.Logger.Cmd      as Cmd
 import qualified Flowbox.Bus.Logger.Logger   as Logger
 import qualified Flowbox.Bus.Logger.Version  as Version
 import qualified Flowbox.Config.Config       as Config
+import qualified Flowbox.License             as License
 import           Flowbox.Options.Applicative hiding (info)
 import qualified Flowbox.Options.Applicative as Opt
 import           Flowbox.Prelude
@@ -53,6 +54,7 @@ run cmd = case cmd of
     Cmd.Version  -> putStrLn (Version.full False) -- TODO [PM] hardcoded numeric = False
     Cmd.Run {} -> do
         rootLogger setIntLevel $ Cmd.verbose cmd
+        License.verify
         endPoints <- EP.clientFromConfig <$> Config.load
         let topics = if List.null $ Cmd.topics cmd
                         then [""]

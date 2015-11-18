@@ -1,0 +1,203 @@
+---------------------------------------------------
+-- This is a generated cabal configuration file. --
+-- DO NOT EDIT!                                  --
+-- Use gencabal instead.                         --
+---------------------------------------------------
+
+Name:           flowbox-utils
+Version:        0.1
+Cabal-Version:  >= 1.8
+--License-file:   LICENSE
+Author:         Flowbox <contact@flowbox.io>
+Maintainer:     Flowbox <contact@flowbox.io>
+Build-Type:     Simple
+
+
+Library
+    Hs-Source-Dirs: src
+
+    GHC-Options:    -Wall -O2
+
+    Extensions:   ConstraintKinds,
+                  DefaultSignatures,
+                  DeriveFoldable,
+                  DeriveFunctor,
+                  DeriveGeneric,
+                  DeriveTraversable,
+                  DoAndIfThenElse,
+                  FlexibleContexts,
+                  FlexibleInstances,
+                  GeneralizedNewtypeDeriving,
+                  MultiParamTypeClasses,
+                  NoImplicitPrelude,
+                  TemplateHaskell,
+                  OverloadedStrings,
+                  StandaloneDeriving,
+                  LambdaCase
+
+    Exposed-modules: 
+        Control.Category.Dot,
+        Control.Category.Dot.TH,
+        Control.Monad.Morph,
+        Control.Monad.Shuffle,
+        Control.PolyApplicative,
+        Control.PolyApplicative.App,
+        Control.PolyApplicative.App.TH,
+        Control.PolyMonad,
+        Data.Binary.Instances.Missing,
+        Data.Char.Class,
+        Data.Convertible.Instances.Missing,
+        Data.Default.Instances.Missing,
+        Data.HMap.Lazy,
+        Data.HMap.Weak,
+        Data.IntConvertibleMap,
+        Data.IntConvertibleMap.Strict,
+        Data.IntConvertibleSet,
+        Data.IntConvertibleSet.Strict,
+        Data.Maps,
+        Data.Packable,
+        Data.PolyTypeable,
+        Data.Proxy.Utils,
+        Data.RTuple,
+        Data.String.Class,
+        Data.String.Repr,
+        Data.Text.Builder.Poly,
+        Data.Text.Class,
+        Data.Text.CodeBuilder,
+        Data.Text.CodeBuilder.Builder,
+        Data.Text.CodeBuilder.Doc,
+        Data.Text.CodeBuilder.Tok,
+        Data.Tuple.Modify,
+        Data.TupleList,
+        Data.Type.Hide,
+        Data.TypeLevel,
+        Data.TypeLevel.Bool,
+        Data.TypeLevel.FlatContainers,
+        Data.TypeLevel.List,
+        Data.TypeLevel.Map,
+        Data.TypeLevel.Maybe,
+        Data.TypeLevel.Set,
+        Data.TypeLevel.Set.Constrain,
+        Data.Wrapper,
+        Flowbox.Control.Applicative,
+        Flowbox.Control.Concurrent,
+        Flowbox.Control.Error,
+        Flowbox.Control.Guard,
+        Flowbox.Control.Monad.Loops,
+        Flowbox.Control.Monad.State,
+        Flowbox.Control.Monad.Trans.Maybe,
+        Flowbox.Data.ByteString,
+        Flowbox.Data.Convert,
+        Flowbox.Data.Graph,
+        Flowbox.Data.IndexedSet,
+        Flowbox.Data.List,
+        Flowbox.Data.MapForest,
+        Flowbox.Data.Path,
+        Flowbox.Data.SetForest,
+        Flowbox.Data.String,
+        Flowbox.Data.Time,
+        Flowbox.Data.Version,
+        Flowbox.Debug,
+        Flowbox.Generics.Deriving.FShow,
+        Flowbox.Generics.Deriving.QShow,
+        Flowbox.Options.Applicative,
+        Flowbox.Prelude,
+        Flowbox.Source.Location,
+        Flowbox.Source.Location.TH,
+        Flowbox.System.Console.ASCIISpinner,
+        Flowbox.System.Console.StyledText.Style,
+        Flowbox.System.Console.StyledText.StyledText,
+        Flowbox.System.Directory,
+        Flowbox.System.Directory.Directory,
+        Flowbox.System.Directory.Locations,
+        Flowbox.System.Directory.Scanner,
+        Flowbox.System.Directory.Tree,
+        Flowbox.System.FilePath,
+        Flowbox.System.IO.IO,
+        Flowbox.System.IO.Serializer,
+        Flowbox.System.Log.Conf,
+        Flowbox.System.Log.LogEntry,
+        Flowbox.System.Log.Logger,
+        Flowbox.System.Log.Priority,
+        Flowbox.System.Platform,
+        Flowbox.System.Process,
+        Flowbox.System.Random,
+        Flowbox.System.UniPath,
+        Flowbox.Test.Hspec.Lifted,
+        Flowbox.Test.QuickCheck,
+        Flowbox.Text.ProtocolBuffers,
+        Flowbox.Text.Show.Hs,
+        Flowbox.Text.Show.Pretty,
+        Flowbox.Utils,
+        Type.BaseType,
+        Type.Infer,
+        Type.List
+
+    Build-Depends:  aeson >= 0.7.0.5,
+                    ansi-terminal,
+                    base,
+                    binary,
+                    bytestring,
+                    containers,
+                    convertible >= 1.1.1.0,
+                    data-default,
+                    directory,
+                    dlist,
+                    either >= 4.3.2,
+                    errors,
+                    fgl,
+                    filepath,
+                    generic-deriving,
+                    hashable,
+                    hslogger,
+                    hspec,
+                    lens,
+                    MissingH,
+                    mmorph,
+                    monad-loops,
+                    mtl,
+                    optparse-applicative,
+                    pretty,
+                    pretty-show,
+                    process,
+                    protocol-buffers,
+                    split,
+                    template-haskell,
+                    text >= 1.2,
+                    time,
+                    transformers,
+                    template-haskell,
+                    QuickCheck,
+                    unordered-containers
+
+  if os(windows)
+    Build-Depends:  Win32
+
+-- FIXME [MU] : aeson >= 0.7.0.5 fixes compilation error on Windows
+
+Executable utils-test
+  Main-Is:        Main.hs
+  Hs-Source-Dirs: test
+
+  GHC-Options:    -Wall -O2
+
+  Extensions:     DoAndIfThenElse
+                  MultiParamTypeClasses
+                  NoImplicitPrelude
+                  OverloadedStrings
+                  TypeSynonymInstances
+                  
+  Build-Depends:  base,
+                  flowbox-utils,
+                  ghc-prim
+
+
+Test-Suite tests
+  Type:           exitcode-stdio-1.0
+  Main-Is:        Spec.hs
+  Hs-Source-Dirs: test
+  GHC-Options:    -Wall -threaded -O2
+  Extensions:     NoImplicitPrelude
+  Build-Depends:  base,
+                  hspec,
+                  flowbox-utils

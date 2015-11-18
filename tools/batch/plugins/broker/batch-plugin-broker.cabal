@@ -19,7 +19,14 @@ Flag Debug
 
 Executable broker
     Hs-Source-Dirs: src
-    Other-Modules:  Paths_batch_plugin_broker
+    Other-Modules:
+        Flowbox.Broker.Cmd,
+        Flowbox.Broker.Config,
+        Flowbox.Broker.Proxy,
+        Flowbox.Broker.Version,
+        Main,
+        Paths_batch_plugin_broker
+
     Main-Is:        Main.hs
 
     GHC-Options:    -Wall -O2 -threaded
@@ -32,6 +39,7 @@ Executable broker
                     flowbox-bus,
                     flowbox-rpc,
                     flowbox-config,
+                    flowbox-license,
                     flowbox-utils,
                     transformers,
                     protocol-buffers,
