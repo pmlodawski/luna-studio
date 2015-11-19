@@ -126,14 +126,19 @@ class Displayable m a where
     display :: a -> m ()
 
 class OpenUtility p where
-    openUtility :: p -> String
+    openUtility :: MonadIO m => p -> [FilePath] -> m ()
 
-instance OpenUtility Windows where openUtility = const "start"
-instance OpenUtility Darwin  where openUtility = const "open"
-instance OpenUtility Linux   where openUtility = const "xdg-open"
-instance OpenUtility GHCJS   where openUtility = const "open"
+instance OpenUtility Windows where openUtility = const $ singleProcess "start"
+instance OpenUtility Darwin  where openUtility = const $ singleProcess "open"
+instance OpenUtility Linux   where openUtility = const $ manyProcess   "xdg-open"
+instance OpenUtility GHCJS   where openUtility = const $ singleProcess "open"
 
-open paths = liftIO . createProcess . shell $ openUtility platform <> " " <> intercalate " " paths
+singleProcess, manyProcess :: MonadIO m => String -> [FilePath] -> m ()
+singleProcess p args = liftIO $ void $ createProcess $ shell $ p <> " " <> intercalate " " args
+manyProcess   p = liftIO . mapM_ (\a -> createProcess $ shell $ p <> " " <> a)
+
+open paths = openUtility platform paths
+
 
 instance (MonadIO m, Ord a, PrintDot a) => Displayable m (DotGraph a) where
     render name gv = do
