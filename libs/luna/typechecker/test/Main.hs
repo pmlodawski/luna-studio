@@ -358,7 +358,8 @@ tstx1 = runIdentity
             namePlus <- _string "+"
             accPlus  <- accessor namePlus i2
             nameInt  <- _string "Int"
-            int2int  <- arrow nameInt nameInt
+            consInt  <- cons nameInt
+            int2int  <- arrow consInt consInt
             appPlus  <- app accPlus [arg i2, arg i3] `typed` int2int
             -- app i3 [named "ala" $ arg a, arg b, arg c]
             -- topStar <- getStar2
