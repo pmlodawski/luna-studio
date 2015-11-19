@@ -4,8 +4,7 @@ packages:
 - ../../utils
 
 extra-deps:
-- errors-1.4.7
-
+- ghc-session-0.1.1.0
 - container-1.0
 - convert-1.0
 - data-layer-1.0.2
@@ -16,3 +15,4 @@ extra-deps:
 - lens-utils-1.0
 - functor-utils-1.0
 - string-qq-0.0.2
+- data-construction-1.0

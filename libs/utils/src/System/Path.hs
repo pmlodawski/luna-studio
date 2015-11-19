@@ -47,7 +47,7 @@ import           System.IO.Error    (tryIOError)
 import           Data.Map           (Map)
 import qualified Data.Map           as Map
 import           Control.Error.Safe (justErr)
-import           Control.Error.Util
+import           Control.Error.Util hiding (hoistEither)
 import           Data.Binary        hiding (get, put)
 import           Text.Read          (readMaybe)
 --import           Flowbox.Prelude                    hiding (empty, fromList, toList)

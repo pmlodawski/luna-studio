@@ -1,0 +1,42 @@
+#!/bin.bash
+
+runhaskell                                                                                                 \
+    -XDoAndIfThenElse                                                                                      \
+    -XNoImplicitPrelude                                                                                    \
+    -XTemplateHaskell                                                                                      \
+    -XOverloadedStrings                                                                                    \
+    -XDeriveGeneric                                                                                        \
+    -XStandaloneDeriving                                                                                   \
+    -XFlexibleContexts                                                                                     \
+    -XMultiParamTypeClasses                                                                                \
+    -XDefaultSignatures                                                                                    \
+    -XDeriveFunctor                                                                                        \
+    -XDeriveTraversable                                                                                    \
+    -XDeriveFoldable                                                                                       \
+    -XFlexibleInstances                                                                                    \
+    -XLambdaCase                                                                                           \
+    -XConstraintKinds                                                                                      \
+    -XGeneralizedNewtypeDeriving                                                                           \
+    -XDeriveDataTypeable                                                                                   \
+    -XEmptyDataDecls                                                                                       \
+    -XTupleSections                                                                                        \
+    -XTypeOperators                                                                                        \
+    -XDataKinds                                                                                            \
+    -XInstanceSigs                                                                                         \
+    -XViewPatterns                                                                                         \
+    -XTypeFamilies                                                                                         \
+	-i/Users/wdanilo/dev/hs/private/nbo/libs/utils/src                                                     \
+    -i/Users/wdanilo/dev/hs/private/nbo/libs/luna/typechecker/src                                          \
+    -i/Users/wdanilo/dev/hs/public/convert/src                                                             \
+    -i/Users/wdanilo/dev/hs/public/data-repr/src                                                           \
+    -i/Users/wdanilo/dev/hs/public/data-layer/src                                                          \
+    -i/Users/wdanilo/dev/hs/public/data-rtuple/src                                                         \
+    -i/Users/wdanilo/dev/hs/public/prologue/src                                                            \
+    -i/Users/wdanilo/dev/hs/public/typelevel/src                                                           \
+    -i/Users/wdanilo/dev/hs/public/container/src                                                           \
+    -i/Users/wdanilo/dev/hs/public/functor-utils/src                                                       \
+    -i/Users/wdanilo/dev/hs/public/lens-utils/src                                                          \
+	-i/Users/wdanilo/dev/hs/public/data-construction/src                                                   \
+	-package-db=/Users/wdanilo/dev/hs/env/tc/.cabal-sandbox/x86_64-osx-ghc-7.10.2-packages.conf.d          \
+	-ddump-splices                                                                                         \
+	/Users/wdanilo/dev/nbo/libs/luna/typechecker/test/Main.hs                                              

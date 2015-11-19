@@ -157,7 +157,7 @@ Library
                     directory,
                     dlist,
                     either >= 4.3.2,
-                    errors < 2.0,
+                    errors,
                     fgl,
                     filepath,
                     generic-deriving,

@@ -476,6 +476,7 @@ main = do
 
     pprint g2
 
+    print "end"
     --let (unis, g)  = exDbg1
     --let (_   , g3) = pass3 undefined unis g
 

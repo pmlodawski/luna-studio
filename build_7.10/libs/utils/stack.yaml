@@ -2,19 +2,18 @@ resolver: lts-3.14
 packages:
 - ../../../libs/utils
 - ../../../third-party/fgl
-- /Users/wdanilo/dev/hs/libs/prologue
-- /Users/wdanilo/dev/hs/libs/container
-- /Users/wdanilo/dev/hs/libs/functor-utils
-- /Users/wdanilo/dev/hs/libs/data-layer
-- /Users/wdanilo/dev/hs/libs/data-repr
-- /Users/wdanilo/dev/hs/libs/data-construction
-- /Users/wdanilo/dev/hs/libs/lens-utils
+- /Users/wdanilo/dev/hs/public/prologue
+- /Users/wdanilo/dev/hs/public/container
+- /Users/wdanilo/dev/hs/public/functor-utils
+- /Users/wdanilo/dev/hs/public/data-layer
+- /Users/wdanilo/dev/hs/public/data-repr
+- /Users/wdanilo/dev/hs/public/data-construction
+- /Users/wdanilo/dev/hs/public/lens-utils
 extra-deps:
 - data-repr-1.0.1
 - data-layer-1.0.1
 - typelevel-1.0.2
 - convert-1.0
-- errors-1.4.7
 - string-qq-0.0.2
 - container-1.0
 - data-construction-1.0

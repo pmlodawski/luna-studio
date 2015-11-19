@@ -8,106 +8,106 @@
 
 module Flowbox.Control.Error (
   module Flowbox.Control.Error
-, module X
-, MonadIO
-, liftIO
+-- , module X
+-- , MonadIO
+-- , liftIO
 ) where
 
-import           Control.Error     as X hiding (runScript)
-import qualified Control.Exception as Exc
-import qualified Data.Maybe        as Maybe
+--import           Control.Error     as X hiding (runScript)
+--import qualified Control.Exception as Exc
+--import qualified Data.Maybe        as Maybe
 
-import Flowbox.Prelude
-
-
-
-runScript :: Script a -> IO a
-runScript s = do
-    e <- runEitherT s
-    case e of
-        Left  m -> fail m
-        Right a -> return a
-
-infixl 4 <?.>
-(<?.>) :: Monad m => Maybe b -> String -> m b
-val <?.> m = Maybe.maybe (fail m) return val
+--import Flowbox.Prelude
 
 
-infixl 4 <??&.>
-(<??&.>) :: Monad m => m (Maybe b) -> String -> m b
-val <??&.> m = Maybe.maybe (fail m) return =<< val
+
+--runScript :: Script a -> IO a
+--runScript s = do
+--    e <- runEitherT s
+--    case e of
+--        Left  m -> fail m
+--        Right a -> return a
+
+--infixl 4 <?.>
+--(<?.>) :: Monad m => Maybe b -> String -> m b
+--val <?.> m = Maybe.maybe (fail m) return val
 
 
-infixl 4 <?>
-(<?>) :: Maybe b -> a -> Either a b
-val <?> m = Maybe.maybe (Left m) Right val
+--infixl 4 <??&.>
+--(<??&.>) :: Monad m => m (Maybe b) -> String -> m b
+--val <??&.> m = Maybe.maybe (fail m) return =<< val
 
 
-infixl 4 <?&>
-(<?&>) :: Either a (Maybe b) -> a -> Either a b
-val <?&> m = Maybe.maybe (Left m) Right =<< val
+--infixl 4 <?>
+--(<?>) :: Maybe b -> a -> Either a b
+--val <?> m = Maybe.maybe (Left m) Right val
 
 
-infixl 4 <??>
-(<??>) :: Monad m => Maybe b -> a -> EitherT a m b
-val <??> m = Maybe.maybe (left m) return val
+--infixl 4 <?&>
+--(<?&>) :: Either a (Maybe b) -> a -> Either a b
+--val <?&> m = Maybe.maybe (Left m) Right =<< val
 
 
-infixl 4 <??&>
-(<??&>) :: Monad m => EitherT a m (Maybe b) -> a -> EitherT a m b
-val <??&> m = Maybe.maybe (left m) return =<< val
+--infixl 4 <??>
+--(<??>) :: Monad m => Maybe b -> a -> EitherT a m b
+--val <??> m = Maybe.maybe (left m) return val
 
 
-assertIO :: Monad m => Bool -> String -> m ()
-assertIO condition msg = unless condition $ fail msg
+--infixl 4 <??&>
+--(<??&>) :: Monad m => EitherT a m (Maybe b) -> a -> EitherT a m b
+--val <??&> m = Maybe.maybe (left m) return =<< val
 
 
-assert :: Bool -> a -> Either a ()
-assert condition msg = unless condition $ Left msg
-
-assertE :: Monad m => Bool -> a -> EitherT a m ()
-assertE condition msg = unless condition $ left msg
+--assertIO :: Monad m => Bool -> String -> m ()
+--assertIO condition msg = unless condition $ fail msg
 
 
--- FIXME [PM] : find better name
-safeLiftIO :: MonadIO m => IO b -> EitherT String m b
-safeLiftIO = safeLiftIO' show
+--assert :: Bool -> a -> Either a ()
+--assert condition msg = unless condition $ Left msg
+
+--assertE :: Monad m => Bool -> a -> EitherT a m ()
+--assertE condition msg = unless condition $ left msg
 
 
-safeLiftIO' :: MonadIO m => (Exc.SomeException -> a) -> IO b -> EitherT a m b
-safeLiftIO' excMap operation  = do
-    result <- liftIO $ Exc.try operation
-    hoistEither $ fmapL excMap result
+---- FIXME [PM] : find better name
+--safeLiftIO :: MonadIO m => IO b -> EitherT String m b
+--safeLiftIO = safeLiftIO' show
 
 
-eitherToM :: (MonadIO m, Show a) => Either a b -> m b
-eitherToM = either (fail . show) return
+--safeLiftIO' :: MonadIO m => (Exc.SomeException -> a) -> IO b -> EitherT a m b
+--safeLiftIO' excMap operation  = do
+--    result <- liftIO $ Exc.try operation
+--    hoistEither $ fmapL excMap result
 
 
-eitherToM' :: (MonadIO m, Show a) => m (Either a b) -> m b
-eitherToM' action = action >>= eitherToM
+--eitherToM :: (MonadIO m, Show a) => Either a b -> m b
+--eitherToM = either (fail . show) return
 
 
-eitherStringToM :: MonadIO m => Either String b -> m b
-eitherStringToM = either fail return
+--eitherToM' :: (MonadIO m, Show a) => m (Either a b) -> m b
+--eitherToM' action = action >>= eitherToM
 
 
-eitherStringToM' :: MonadIO m => m (Either String b) -> m b
-eitherStringToM' action = action >>= eitherStringToM
+--eitherStringToM :: MonadIO m => Either String b -> m b
+--eitherStringToM = either fail return
 
 
-catchEither :: (MonadTrans t, Monad (t m), Monad m)
-            => (e -> t m b) -> EitherT e m b -> t m b
-catchEither handler fun = do
-    result <- lift $ runEitherT fun
-    case result of
-        Left  e -> handler e
-        Right r -> return r
+--eitherStringToM' :: MonadIO m => m (Either String b) -> m b
+--eitherStringToM' action = action >>= eitherStringToM
 
 
-hoistEitherWith :: Monad m => (e1 -> e) -> Either e1 a -> EitherT e m a
-hoistEitherWith conv = hoistEither . fmapL conv
+--catchEither :: (MonadTrans t, Monad (t m), Monad m)
+--            => (e -> t m b) -> EitherT e m b -> t m b
+--catchEither handler fun = do
+--    result <- lift $ runEitherT fun
+--    case result of
+--        Left  e -> handler e
+--        Right r -> return r
 
 
-lmapEitherT :: Functor m => (e -> a) -> EitherT e m b -> EitherT a m b
-lmapEitherT conf = bimapEitherT conf id
+--hoistEitherWith :: Monad m => (e1 -> e) -> Either e1 a -> EitherT e m a
+--hoistEitherWith conv = hoistEither . fmapL conv
+
+
+--lmapEitherT :: Functor m => (e -> a) -> EitherT e m b -> EitherT a m b
+--lmapEitherT conf = bimapEitherT conf id

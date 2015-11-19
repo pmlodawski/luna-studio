@@ -8,10 +8,10 @@
 
 module Flowbox.Debug  where
 
-import Data.Time.Clock       (diffUTCTime, getCurrentTime)
-import Flowbox.Control.Error (MonadIO, liftIO)
+import Data.Time.Clock        (diffUTCTime, getCurrentTime)
+import Control.Monad.IO.Class (MonadIO, liftIO)
 import Flowbox.Prelude
-import System.CPUTime        (getCPUTime)
+import System.CPUTime         (getCPUTime)
 
 
 

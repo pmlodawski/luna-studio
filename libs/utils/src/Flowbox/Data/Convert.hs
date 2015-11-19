@@ -12,110 +12,110 @@
 
 module Flowbox.Data.Convert where
 
-import           Control.Monad.Trans.Either
-import qualified Data.Foldable              as Foldable
-import           Data.Int                   (Int32, Int64)
-import           Data.IntSet                (IntSet)
-import qualified Data.IntSet                as IntSet
-import           Data.Sequence              (Seq)
-import qualified Data.Sequence              as Sequence
-import           Data.Text                  (Text)
-import qualified Data.Text                  as Text
-import           Data.Time.Clock            (NominalDiffTime)
-import           Foreign.C.Types            (CTime)
-import           System.Posix.Types         (FileOffset)
+--import           Control.Monad.Trans.Either
+--import qualified Data.Foldable              as Foldable
+--import           Data.Int                   (Int32, Int64)
+--import           Data.IntSet                (IntSet)
+--import qualified Data.IntSet                as IntSet
+--import           Data.Sequence              (Seq)
+--import qualified Data.Sequence              as Sequence
+--import           Data.Text                  (Text)
+--import qualified Data.Text                  as Text
+--import           Data.Time.Clock            (NominalDiffTime)
+--import           Foreign.C.Types            (CTime)
+--import           System.Posix.Types         (FileOffset)
 
-import           Flowbox.Control.Error
-import           Flowbox.Prelude            hiding (Text)
-import           Flowbox.System.UniPath     (UniPath)
-import qualified Flowbox.System.UniPath     as UniPath
-import qualified Text.ProtocolBuffers.Basic as Proto
-
-
-
-type Error = String
+--import           Flowbox.Control.Error
+--import           Flowbox.Prelude            hiding (Text)
+--import           Flowbox.System.UniPath     (UniPath)
+--import qualified Flowbox.System.UniPath     as UniPath
+--import qualified Text.ProtocolBuffers.Basic as Proto
 
 
-missing :: String -> String -> Error
-missing datatype field = concat ["Failed to decode ", datatype, ": '", field, "'is missing"]
+
+--type Error = String
 
 
-class Convert a b where
-    encode :: a -> b
-    decode :: b -> Either Error a
-
-    decodeE :: Monad m => b -> EitherT Error m a
-    decodeE = hoistEither . decode
-
-    encodeJ :: a -> Maybe b
-    encodeJ = Just . encode
-
-    decodeJ :: Maybe b -> Error -> Either Error a
-    decodeJ b e = decode =<< b <?> e
-
-    decodeJE :: Monad m => Maybe b -> Error -> EitherT Error m a
-    decodeJE = hoistEither .: decodeJ
+--missing :: String -> String -> Error
+--missing datatype field = concat ["Failed to decode ", datatype, ": '", field, "'is missing"]
 
 
-class ConvertPure a b where
-    encodeP :: a -> b
-    decodeP :: b -> a
+--class Convert a b where
+--    encode :: a -> b
+--    decode :: b -> Either Error a
 
-    encodePJ :: a -> Maybe b
-    encodePJ = Just . encodeP
+--    decodeE :: Monad m => b -> EitherT Error m a
+--    decodeE = hoistEither . decode
 
-    decodePJ :: Maybe b -> Error -> Either Error a
-    decodePJ b e = decodeP <$> b <?> e
+--    encodeJ :: a -> Maybe b
+--    encodeJ = Just . encode
 
-    decodePJE :: Monad m => Maybe b -> Error -> EitherT Error m a
-    decodePJE = hoistEither .: decodePJ
+--    decodeJ :: Maybe b -> Error -> Either Error a
+--    decodeJ b e = decode =<< b <?> e
 
-
-instance ConvertPure Int Int32 where
-    encodeP = fromIntegral
-    decodeP = fromIntegral
+--    decodeJE :: Monad m => Maybe b -> Error -> EitherT Error m a
+--    decodeJE = hoistEither .: decodeJ
 
 
-instance Convert a b => Convert [a] (Seq b) where
-    encode = Sequence.fromList . map encode
-    decode = mapM decode . Foldable.toList
+--class ConvertPure a b where
+--    encodeP :: a -> b
+--    decodeP :: b -> a
+
+--    encodePJ :: a -> Maybe b
+--    encodePJ = Just . encodeP
+
+--    decodePJ :: Maybe b -> Error -> Either Error a
+--    decodePJ b e = decodeP <$> b <?> e
+
+--    decodePJE :: Monad m => Maybe b -> Error -> EitherT Error m a
+--    decodePJE = hoistEither .: decodePJ
 
 
-instance ConvertPure a b => ConvertPure [a] (Seq b) where
-    encodeP = Sequence.fromList . map encodeP
-    decodeP = map decodeP . Foldable.toList
+--instance ConvertPure Int Int32 where
+--    encodeP = fromIntegral
+--    decodeP = fromIntegral
 
 
-instance ConvertPure Int b => ConvertPure IntSet (Seq b) where
-    encodeP = encodeP . IntSet.toList
-    decodeP = IntSet.fromList . decodeP
+--instance Convert a b => Convert [a] (Seq b) where
+--    encode = Sequence.fromList . map encode
+--    decode = mapM decode . Foldable.toList
 
 
-instance ConvertPure String Proto.Utf8 where
-    encodeP = Proto.uFromString
-    decodeP = Proto.uToString
+--instance ConvertPure a b => ConvertPure [a] (Seq b) where
+--    encodeP = Sequence.fromList . map encodeP
+--    decodeP = map decodeP . Foldable.toList
 
 
-instance ConvertPure Text Proto.Utf8 where
-    encodeP = encodeP . Text.unpack
-    decodeP = Text.pack . decodeP
+--instance ConvertPure Int b => ConvertPure IntSet (Seq b) where
+--    encodeP = encodeP . IntSet.toList
+--    decodeP = IntSet.fromList . decodeP
 
 
-instance ConvertPure UniPath Proto.Utf8 where
-    encodeP = encodeP . UniPath.toUnixString
-    decodeP = UniPath.fromUnixString . decodeP
+--instance ConvertPure String Proto.Utf8 where
+--    encodeP = Proto.uFromString
+--    decodeP = Proto.uToString
 
 
-instance ConvertPure CTime Int64 where
-    encodeP = fromIntegral . fromEnum
-    decodeP = fromIntegral
+--instance ConvertPure Text Proto.Utf8 where
+--    encodeP = encodeP . Text.unpack
+--    decodeP = Text.pack . decodeP
 
 
-instance ConvertPure FileOffset Int64 where
-    encodeP = fromIntegral
-    decodeP = fromIntegral
+--instance ConvertPure UniPath Proto.Utf8 where
+--    encodeP = encodeP . UniPath.toUnixString
+--    decodeP = UniPath.fromUnixString . decodeP
 
 
-instance ConvertPure NominalDiffTime Int64 where
-    encodeP = fromIntegral . fromEnum
-    decodeP = fromIntegral
+--instance ConvertPure CTime Int64 where
+--    encodeP = fromIntegral . fromEnum
+--    decodeP = fromIntegral
+
+
+--instance ConvertPure FileOffset Int64 where
+--    encodeP = fromIntegral
+--    decodeP = fromIntegral
+
+
+--instance ConvertPure NominalDiffTime Int64 where
+--    encodeP = fromIntegral . fromEnum
+--    decodeP = fromIntegral
