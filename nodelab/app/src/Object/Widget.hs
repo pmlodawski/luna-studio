@@ -8,6 +8,7 @@ module Object.Widget where
 import           Utils.PreludePlus hiding ((.=), children)
 import           Utils.Vector
 import           Utils.CtxDynamic
+import           Event.Event    (JSState)
 import           Event.Mouse    (MousePosition, MouseButton)
 import           Object.UITypes
 import qualified Event.Keyboard as Keyboard
@@ -94,18 +95,18 @@ screenToLocal :: Camera -> Vector2 Int -> [Double]  -> Vector2 Double
 screenToLocal cam mousePos widgetMatrix = sceneToLocal workspacePos widgetMatrix where
     workspacePos = Camera.screenToWorkspace cam mousePos
 
-type MouseMoveHandler     s =        Mouse.Event' -> WidgetId -> Command s ()
-type MousePressedHandler  s =        Mouse.Event' -> WidgetId -> Command s ()
-type MouseReleasedHandler s =        Mouse.Event' -> WidgetId -> Command s ()
-type MouseOverHandler     s =                        WidgetId -> Command s ()
-type MouseOutHandler      s =                        WidgetId -> Command s ()
-type ClickHandler         s =        Mouse.Event' -> WidgetId -> Command s ()
-type DblClickHandler      s =        Mouse.Event' -> WidgetId -> Command s ()
-type KeyUpHandler         s = Char -> KeyMods     -> WidgetId -> Command s ()
-type KeyDownHandler       s = Char -> KeyMods     -> WidgetId -> Command s ()
-type KeyPressedHandler    s = Char -> KeyMods     -> WidgetId -> Command s ()
-type DragMoveHandler      s =         DragState   -> WidgetId -> Command s ()
-type DragEndHandler       s =         DragState   -> WidgetId -> Command s ()
+type MouseMoveHandler     s =        Mouse.Event' -> JSState -> WidgetId -> Command s ()
+type MousePressedHandler  s =        Mouse.Event' -> JSState -> WidgetId -> Command s ()
+type MouseReleasedHandler s =        Mouse.Event' -> JSState -> WidgetId -> Command s ()
+type MouseOverHandler     s =                        JSState -> WidgetId -> Command s ()
+type MouseOutHandler      s =                        JSState -> WidgetId -> Command s ()
+type ClickHandler         s =        Mouse.Event' -> JSState -> WidgetId -> Command s ()
+type DblClickHandler      s =        Mouse.Event' -> JSState -> WidgetId -> Command s ()
+type KeyUpHandler         s = Char -> KeyMods     -> JSState -> WidgetId -> Command s ()
+type KeyDownHandler       s = Char -> KeyMods     -> JSState -> WidgetId -> Command s ()
+type KeyPressedHandler    s = Char -> KeyMods     -> JSState -> WidgetId -> Command s ()
+type DragMoveHandler      s =         DragState   -> JSState -> WidgetId -> Command s ()
+type DragEndHandler       s =         DragState   -> JSState -> WidgetId -> Command s ()
 
 data UIHandlers a  = UIHandlers { _mouseMove     :: MouseMoveHandler      a
                                 , _mousePressed  :: MousePressedHandler   a
@@ -122,18 +123,18 @@ data UIHandlers a  = UIHandlers { _mouseMove     :: MouseMoveHandler      a
                                 }
 
 instance Default (UIHandlers a) where
-    def = UIHandlers (\     _ _ -> return ())
-                     (\     _ _ -> return ())
-                     (\     _ _ -> return ())
-                     (\       _ -> return ())
-                     (\       _ -> return ())
-                     (\     _ _ -> return ())
-                     (\     _ _ -> return ())
-                     (\ _   _ _ -> return ())
-                     (\ _   _ _ -> return ())
-                     (\ _   _ _ -> return ())
-                     (\     _ _ -> return ())
-                     (\     _ _ -> return ())
+    def = UIHandlers (\     _ _ _ -> return ())
+                     (\     _ _ _ -> return ())
+                     (\     _ _ _ -> return ())
+                     (\       _ _ -> return ())
+                     (\       _ _ -> return ())
+                     (\     _ _ _ -> return ())
+                     (\     _ _ _ -> return ())
+                     (\ _   _ _ _ -> return ())
+                     (\ _   _ _ _ -> return ())
+                     (\ _   _ _ _ -> return ())
+                     (\     _ _ _ -> return ())
+                     (\     _ _ _ -> return ())
 
 
 makeLenses ''DragState

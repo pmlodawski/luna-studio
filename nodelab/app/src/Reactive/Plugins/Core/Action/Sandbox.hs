@@ -35,7 +35,7 @@ import           UI.Widget.Toggle ()
 
 
 toAction :: Event -> Maybe (Command Global.State ())
-toAction (Keyboard (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.inRegistry $ do
+toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.inRegistry $ do
     performIO $ putStrLn "show sandbox"
     let parent = sceneGraphId
 

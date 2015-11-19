@@ -41,9 +41,10 @@ import           JavaScript.Array    ( JSArray )
 import qualified JavaScript.Array    as JSArray
 import           Data.JSString.Text ( lazyTextFromJSString, lazyTextToJSString )
 import qualified Data.JSString as JSString
-
-
 import qualified BatchConnector.Connection as Connection
+
+foreign import javascript unsafe "window.common" getJSState :: IO JSState
+
 
 readKeyMods :: (MouseEvent.IsMouseEvent e) => EventM t e Keyboard.KeyMods
 readKeyMods = do
@@ -93,7 +94,8 @@ mouseHandler event tag =
                                   justWidgetMatrix    <- widgetMatrix
                                   justScene           <- scene
                                   return $ Mouse.EventWidget justObjectId justWidgetMatrix justScene
-            liftIO . h $ Mouse $ Mouse.Event tag mousePos button keyMods maybeWidget
+            jsState <- liftIO getJSState
+            liftIO . h $ Mouse jsState $ Mouse.Event tag mousePos button keyMods maybeWidget
 
 mouseDownHandler     = mouseHandler mouseDown  Mouse.Pressed
 mouseUpHandler       = mouseHandler mouseUp    Mouse.Released
@@ -125,7 +127,8 @@ mouseWheelHandler =
                                   justWidgetMatrix    <- widgetMatrix
                                   justScene           <- scene
                                   return $ Mouse.EventWidget justObjectId justWidgetMatrix justScene
-            liftIO . h $ Mouse $ Mouse.Event (Mouse.Wheel delta) mousePos button keyMods maybeWidget
+            jsState <- liftIO getJSState
+            liftIO . h $ Mouse jsState $ Mouse.Event (Mouse.Wheel delta) mousePos button keyMods maybeWidget
 
 keyHandler :: EventName Element KeyboardEvent.KeyboardEvent -> EventM Element KeyboardEvent.KeyboardEvent Int -> Keyboard.Type -> AddHandler Event
 keyHandler event getter tag = AddHandler $ \h -> do
@@ -133,7 +136,8 @@ keyHandler event getter tag = AddHandler $ \h -> do
     window `on` event $ do
         key     <- getter
         keyMods <- readKeyMods'
-        liftIO . h $ Keyboard $ Keyboard.Event tag (chr key) keyMods
+        jsState <- liftIO getJSState
+        liftIO . h $ Keyboard jsState $ Keyboard.Event tag (chr key) keyMods
 
 keyPressedHandler :: AddHandler Event
 keyPressedHandler = keyHandler keyPress uiCharCode Keyboard.Press

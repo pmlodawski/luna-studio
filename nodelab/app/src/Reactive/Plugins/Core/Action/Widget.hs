@@ -25,15 +25,15 @@ ifJustThen (Just m) f = f m
 ifJustThen _ _ = return ()
 
 toAction :: Event -> Maybe (Command Global.State ())
-toAction (Mouse event) = Just $ do
-    handleMouseOverOut event
-    handleMouseDrag    event
-    handleMouseGeneric event
-toAction (Keyboard event) = Just $ handleKeyboardGeneric event
+toAction (Mouse jsState event) = Just $ do
+    handleMouseOverOut jsState event
+    handleMouseDrag    jsState event
+    handleMouseGeneric jsState event
+toAction (Keyboard jsState event) = Just $ handleKeyboardGeneric jsState event
 toAction _ = Nothing
 
-handleMouseGeneric :: Mouse.RawEvent -> Command Global.State ()
-handleMouseGeneric event@(Mouse.Event eventType absPos button keymods (Just (EventWidget widgetId mat scene))) = do
+handleMouseGeneric :: JSState -> Mouse.RawEvent -> Command Global.State ()
+handleMouseGeneric jsState event@(Mouse.Event eventType absPos button keymods (Just (EventWidget widgetId mat scene))) = do
     file <- zoom Global.uiRegistry $ UIRegistry.lookupM widgetId
     ifJustThen file $ \file -> do
         camera <- use $ Global.camera . Camera.camera
@@ -41,59 +41,59 @@ handleMouseGeneric event@(Mouse.Event eventType absPos button keymods (Just (Eve
         let updatedEvent = event & Mouse.position .~ pos
         let handlers = widgetHandlers (file ^. widget)
         case eventType of
-            Mouse.Moved       -> (handlers ^. mouseMove)     updatedEvent widgetId
-            Mouse.Pressed     -> (handlers ^. mousePressed)  updatedEvent widgetId
-            Mouse.Released    -> (handlers ^. mouseReleased) updatedEvent widgetId
-            Mouse.Clicked     -> (handlers ^. click)         updatedEvent widgetId
-            Mouse.DblClicked  -> (handlers ^. dblClick)      updatedEvent widgetId
+            Mouse.Moved       -> (handlers ^. mouseMove)     updatedEvent jsState widgetId
+            Mouse.Pressed     -> (handlers ^. mousePressed)  updatedEvent jsState widgetId
+            Mouse.Released    -> (handlers ^. mouseReleased) updatedEvent jsState widgetId
+            Mouse.Clicked     -> (handlers ^. click)         updatedEvent jsState widgetId
+            Mouse.DblClicked  -> (handlers ^. dblClick)      updatedEvent jsState widgetId
             otherwise         -> return ()
-handleMouseGeneric _ = return ()
+handleMouseGeneric _ _ = return ()
 
-runOverHandler :: (UIHandlers Global.State -> (WidgetId -> Command Global.State ())) -> Command Global.State ()
-runOverHandler handler = do
+runOverHandler :: JSState -> (UIHandlers Global.State -> (JSState -> WidgetId -> Command Global.State ())) -> Command Global.State ()
+runOverHandler jsState handler = do
     widgetOver <- use $  Global.uiRegistry . UIRegistry.widgetOver
 
     ifJustThen widgetOver $ \widgetOver -> do
         file <- zoom Global.uiRegistry $ UIRegistry.lookupM widgetOver
         ifJustThen file $ \file -> do
             let handlers = widgetHandlers (file ^. widget)
-            (handler handlers) widgetOver
+            (handler handlers) jsState widgetOver
 
-handleMouseOut :: Command Global.State ()
-handleMouseOut = do
-    runOverHandler $ view mouseOut
+handleMouseOut :: JSState -> Command Global.State ()
+handleMouseOut jsState = do
+    runOverHandler jsState $ view mouseOut
     Global.uiRegistry . UIRegistry.widgetOver .= Nothing
 
-handleMouseOverOut :: Mouse.RawEvent -> Command Global.State ()
-handleMouseOverOut (Mouse.Event Mouse.Moved absPos button keymods Nothing) = handleMouseOut
-handleMouseOverOut (Mouse.Event Mouse.Moved absPos button keymods (Just (EventWidget widgetId mat scene))) = do
+handleMouseOverOut ::  JSState -> Mouse.RawEvent -> Command Global.State ()
+handleMouseOverOut jsState (Mouse.Event Mouse.Moved absPos button keymods Nothing) = handleMouseOut jsState
+handleMouseOverOut jsState (Mouse.Event Mouse.Moved absPos button keymods (Just (EventWidget widgetId mat scene))) = do
     widgetOver <- use $ Global.uiRegistry . UIRegistry.widgetOver
     when (widgetOver /= Just widgetId) $ do
-        handleMouseOut
+        handleMouseOut jsState
         Global.uiRegistry . UIRegistry.widgetOver ?= widgetId
-        runOverHandler $ view mouseOver
+        runOverHandler jsState $ view mouseOver
 
-handleMouseOverOut _ = return ()
+handleMouseOverOut _ _ = return ()
 
 absPosToRel :: SceneType -> Camera.Camera -> [Double] -> Vector2 Double -> Vector2 Double
 absPosToRel HUD       _      mat pos = Widget.sceneToLocal pos          mat
 absPosToRel Workspace camera mat pos = Widget.sceneToLocal workspacePos mat where
     workspacePos = Camera.screenToWorkspace camera (round <$> pos)
 
-handleKeyboardGeneric :: Keyboard.Event -> Command Global.State ()
-handleKeyboardGeneric (Keyboard.Event eventType ch mods) = do
+handleKeyboardGeneric :: JSState -> Keyboard.Event -> Command Global.State ()
+handleKeyboardGeneric jsState (Keyboard.Event eventType ch mods) = do
     focusedWidget <- use $ Global.uiRegistry . UIRegistry.focusedWidget
     ifJustThen focusedWidget $ \focusedWidget -> do
         file <- zoom Global.uiRegistry $ UIRegistry.lookupM focusedWidget
         ifJustThen file $ \file -> do
             let handlers = widgetHandlers (file ^. widget)
             case eventType of
-                Keyboard.Up       -> (handlers ^. keyUp)       ch mods focusedWidget
-                Keyboard.Down     -> (handlers ^. keyDown)     ch mods focusedWidget
-                Keyboard.Press    -> (handlers ^. keyPressed)  ch mods focusedWidget
+                Keyboard.Up       -> (handlers ^. keyUp)       ch mods jsState focusedWidget
+                Keyboard.Down     -> (handlers ^. keyDown)     ch mods jsState focusedWidget
+                Keyboard.Press    -> (handlers ^. keyPressed)  ch mods jsState focusedWidget
 
-handleMouseDrag :: Mouse.RawEvent -> Command Global.State ()
-handleMouseDrag (Mouse.Event Mouse.Moved absPos _ keymods _) = do
+handleMouseDrag ::  JSState -> Mouse.RawEvent -> Command Global.State ()
+handleMouseDrag jsState (Mouse.Event Mouse.Moved absPos _ keymods _) = do
     dragState <- use $ Global.uiRegistry . UIRegistry.dragState
 
     ifJustThen dragState $ \dragState -> do
@@ -109,17 +109,17 @@ handleMouseDrag (Mouse.Event Mouse.Moved absPos _ keymods _) = do
 
         ifJustThen file $ \file -> do
             let handlers = widgetHandlers (file ^. widget)
-            (handlers ^. dragMove) dragState (dragState ^. Widget.widgetId)
+            (handlers ^. dragMove) dragState jsState (dragState ^. Widget.widgetId)
 
 
-handleMouseDrag (Mouse.Event Mouse.Released _ _ _ _) = do
+handleMouseDrag jsState (Mouse.Event Mouse.Released _ _ _ _) = do
     dragState <- use $ Global.uiRegistry . UIRegistry.dragState
 
     ifJustThen dragState $ \dragState -> do
         file <- zoom Global.uiRegistry $ UIRegistry.lookupM $ dragState ^. widgetId
         ifJustThen file $ \file -> do
             let handlers = widgetHandlers (file ^. widget)
-            (handlers ^. dragEnd) dragState (dragState ^. widgetId)
+            (handlers ^. dragEnd) dragState jsState (dragState ^. widgetId)
 
         Global.uiRegistry . UIRegistry.dragState .= Nothing
-handleMouseDrag _ = return ()
+handleMouseDrag _ _ = return ()

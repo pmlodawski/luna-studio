@@ -39,10 +39,10 @@ import           Control.Monad.State          hiding (State)
 import qualified UI.Generic as UI
 
 toAction :: Event -> Maybe (Command State ())
-toAction (Mouse event@(Mouse.Event Mouse.Pressed  pos   Mouse.LeftButton (KeyMods False False False False) (Just _))) = Just $ startDrag pos
-toAction (Mouse event@(Mouse.Event Mouse.Moved    pos Mouse.LeftButton _ _)) = Just $ handleMove pos
-toAction (Mouse event@(Mouse.Event Mouse.Released _   Mouse.LeftButton _ _)) = Just stopDrag
-toAction _                                                                   = Nothing
+toAction (Mouse _ event@(Mouse.Event Mouse.Pressed  pos   Mouse.LeftButton (KeyMods False False False False) (Just _))) = Just $ startDrag pos
+toAction (Mouse _ event@(Mouse.Event Mouse.Moved    pos Mouse.LeftButton _ _)) = Just $ handleMove pos
+toAction (Mouse _ event@(Mouse.Event Mouse.Released _   Mouse.LeftButton _ _)) = Just stopDrag
+toAction _                                                                     = Nothing
 
 
 isNodeUnderCursor :: Command UIRegistry.State Bool

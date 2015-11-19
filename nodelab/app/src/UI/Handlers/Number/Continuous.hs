@@ -34,12 +34,12 @@ bumpValue amount id = do
     triggerValueChanged (widget ^. Model.value) id
 
 keyUpHandler :: KeyUpHandler Global.State
-keyUpHandler 'Q' _ id = bumpValue (-1.0) id
-keyUpHandler 'W' _ id = bumpValue ( 1.0) id
-keyUpHandler _   _ _  = return ()
+keyUpHandler 'Q' _ _ id = bumpValue (-1.0) id
+keyUpHandler 'W' _ _ id = bumpValue ( 1.0) id
+keyUpHandler _   _ _ _  = return ()
 
 startSliderDrag :: MousePressedHandler Global.State
-startSliderDrag evt id = do
+startSliderDrag evt _ id = do
     enabled <- isEnabled id
     when enabled $ do
         value <- inRegistry $ UICmd.get id Model.value
@@ -47,7 +47,7 @@ startSliderDrag evt id = do
         startDrag evt id
 
 dragHandler :: DragMoveHandler Global.State
-dragHandler ds id = do
+dragHandler ds _ id = do
     enabled <- isEnabled id
     when enabled $ do
         startValue <- inRegistry $ UICmd.get id Model.dragStartValue
@@ -60,16 +60,19 @@ dragHandler ds id = do
             inRegistry $ UICmd.update_ id $ Model.value .~ (startValue + delta)
 
 dragEndHandler :: DragEndHandler Global.State
-dragEndHandler _ id = do
+dragEndHandler _ _ id = do
     enabled <- isEnabled id
     when enabled $ do
         inRegistry $ UICmd.update_ id $ Model.dragStartValue .~ Nothing
         value <- inRegistry $ UICmd.get id Model.value
         triggerValueChanged value id
 
+dblClickHandler :: DblClickHandler Global.State
+dblClickHandler ev _ id = return ()
+
 widgetHandlers :: UIHandlers Global.State
 widgetHandlers = def & keyUp        .~ keyUpHandler
-                     -- & dblClick     .~ dblClickHandler
+                     & dblClick     .~ dblClickHandler
                      & mousePressed .~ startSliderDrag
                      & dragMove     .~ dragHandler
                      & dragEnd      .~ dragEndHandler

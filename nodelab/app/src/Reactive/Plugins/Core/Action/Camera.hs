@@ -21,24 +21,24 @@ import Reactive.Commands.Command (Command, ioCommand, execCommand, performIO)
 
 
 toAction :: Event -> Maybe (Command Global.State ())
-toAction (Keyboard (Keyboard.Event Keyboard.Press '0' KeyMods {_ctrl = True})) = Just $ autoZoom >> (zoom Global.camera syncCamera)
+toAction (Keyboard _ (Keyboard.Event Keyboard.Press '0' KeyMods {_ctrl = True})) = Just $ autoZoom >> (zoom Global.camera syncCamera)
 toAction evt = (zoom Global.camera) <$> (>> syncCamera) <$> toAction' evt
 
 toAction' :: Event -> Maybe (Command Camera.State ())
-toAction' (Mouse (Mouse.Event evt pos RightButton  _ _)) = Just $ zoomDrag evt pos
-toAction' (Mouse (Mouse.Event evt pos MiddleButton _ _)) = Just $ panDrag  evt pos
+toAction' (Mouse _ (Mouse.Event evt pos RightButton  _ _)) = Just $ zoomDrag evt pos
+toAction' (Mouse _ (Mouse.Event evt pos MiddleButton _ _)) = Just $ panDrag  evt pos
 
-toAction' (Mouse (Mouse.Event (Mouse.Wheel delta) pos _ KeyMods {_ctrl = False} _)) = Just $ panCamera delta
-toAction' (Mouse (Mouse.Event (Mouse.Wheel delta) pos _ KeyMods {_ctrl = True} _))  = Just $ wheelZoom pos delta
+toAction' (Mouse _ (Mouse.Event (Mouse.Wheel delta) pos _ KeyMods {_ctrl = False} _)) = Just $ panCamera delta
+toAction' (Mouse _ (Mouse.Event (Mouse.Wheel delta) pos _ KeyMods {_ctrl = True} _))  = Just $ wheelZoom pos delta
 
-toAction' (Keyboard (Keyboard.Event Keyboard.Press char _)) = case char of
+toAction' (Keyboard _ (Keyboard.Event Keyboard.Press char _)) = case char of
     '='   -> Just $ zoomIn
     '+'   -> Just $ zoomIn
     '-'   -> Just $ zoomOut
     '0'   -> Just $ resetZoom
     _     -> Nothing
 
-toAction' (Keyboard (Keyboard.Event Keyboard.Down char KeyMods { _ctrl = True })) = case char of
+toAction' (Keyboard _ (Keyboard.Event Keyboard.Down char KeyMods { _ctrl = True })) = case char of
     '\37' -> Just panLeft
     '\39' -> Just panRight
     '\38' -> Just panUp

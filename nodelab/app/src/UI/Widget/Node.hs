@@ -105,10 +105,10 @@ triggerFocusNodeHandler id = do
     forM_ maybeHandler $ \(FocusNodeHandler handler) -> handler id
 
 keyDownHandler :: KeyPressedHandler Global.State
-keyDownHandler '\r'   _ id = zoom Global.uiRegistry $ UICmd.update_ id (Model.isExpanded %~ not)
-keyDownHandler '\x08' _ id = triggerRemoveHandler id
-keyDownHandler '\x2e' _ id = triggerRemoveHandler id
-keyDownHandler _      _ _  = return ()
+keyDownHandler '\r'   _ _ id = zoom Global.uiRegistry $ UICmd.update_ id (Model.isExpanded %~ not)
+keyDownHandler '\x08' _ _ id = triggerRemoveHandler id
+keyDownHandler '\x2e' _ _ id = triggerRemoveHandler id
+keyDownHandler _      _ _ _  = return ()
 
 handleSelection :: Mouse.Event' -> WidgetId -> Command Global.State ()
 handleSelection evt id = case evt ^. Mouse.keyMods of
@@ -134,7 +134,7 @@ unselectAll = do
 
 widgetHandlers :: UIHandlers Global.State
 widgetHandlers = def & keyDown      .~ keyDownHandler
-                     & mousePressed .~ (\evt id -> do
+                     & mousePressed .~ (\evt _ id -> do
                          triggerFocusNodeHandler id
                          takeFocus evt id
                          handleSelection evt id)

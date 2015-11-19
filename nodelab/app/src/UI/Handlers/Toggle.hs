@@ -35,11 +35,11 @@ toggleValue id = do
         triggerValueChanged (widget ^. Model.value) id
 
 clickHandler :: ClickHandler Global.State
-clickHandler _ = toggleValue
+clickHandler _ _ = toggleValue
 
 keyUpHandler :: KeyUpHandler Global.State
-keyUpHandler 'r' _ id = toggleValue id
-keyUpHandler _ _ _ = return ()
+keyUpHandler 'r' _ _ id = toggleValue id
+keyUpHandler _ _ _ _ = return ()
 
 widgetHandlers :: UIHandlers Global.State
 widgetHandlers = def & keyUp  .~ keyUpHandler

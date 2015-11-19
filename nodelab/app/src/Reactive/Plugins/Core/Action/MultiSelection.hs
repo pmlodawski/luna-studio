@@ -34,12 +34,12 @@ import           Reactive.Commands.Selection        (unselectAll, selectAll, foc
 import           Control.Monad.State                               hiding (State)
 
 toAction :: Event -> Maybe (Command State ())
-toAction (Mouse event@(Mouse.Event Mouse.Pressed  pos Mouse.LeftButton (KeyMods False False False False) Nothing)) = Just $ startDrag pos
-toAction (Mouse event@(Mouse.Event Mouse.Moved    pos Mouse.LeftButton _ _)) = Just $ handleMove pos
-toAction (Mouse event@(Mouse.Event Mouse.Released _   Mouse.LeftButton _ _)) = Just stopDrag
+toAction (Mouse _ event@(Mouse.Event Mouse.Pressed  pos Mouse.LeftButton (KeyMods False False False False) Nothing)) = Just $ startDrag pos
+toAction (Mouse _ event@(Mouse.Event Mouse.Moved    pos Mouse.LeftButton _ _)) = Just $ handleMove pos
+toAction (Mouse _ event@(Mouse.Event Mouse.Released _   Mouse.LeftButton _ _)) = Just stopDrag
 
-toAction (Keyboard (Keyboard.Event Keyboard.Press 'A'   _)) = Just trySelectAll
-toAction (Keyboard (Keyboard.Event Keyboard.Down  '\27' _)) = Just tryUnselectAll
+toAction (Keyboard _ (Keyboard.Event Keyboard.Press 'A'   _)) = Just trySelectAll
+toAction (Keyboard _ (Keyboard.Event Keyboard.Down  '\27' _)) = Just tryUnselectAll
 toAction _ = Nothing
 
 trySelectAll :: Command State ()
