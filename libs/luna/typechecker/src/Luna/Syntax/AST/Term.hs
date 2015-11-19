@@ -35,6 +35,7 @@ import Data.Reprx
 
 -- Layout                     N S A/P
 data    Star       = Star                 deriving (Show, Eq, Ord)
+data    Arrow    t = Arrow      t t       deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
 data    Cons     t = Cons     t   [t]     deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
 data    Accessor t = Accessor t t         deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
 data    App      t = App        t [Arg t] deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
@@ -58,6 +59,7 @@ type ThunkElems t = Accessor t
 type ValElems   t = Star
                  ': Lit
                  ': Cons t
+                 ': Arrow t
                  ': '[]
 
 -- Record types
@@ -126,6 +128,7 @@ instance Traversable Draft where traverse = recordTraverse
 
 instance             Repr s Blank        where repr = fromString . show
 instance             Repr s Star         where repr _              = "*"
+instance Repr s t => Repr s (Arrow    t) where repr (Arrow    l r) = "Arrow"    <+> repr l <+> repr r
 instance Repr s t => Repr s (Var      t) where repr (Var      n  ) = "Var"      <+> repr n
 instance Repr s t => Repr s (Unify    t) where repr (Unify    n t) = "Unify"    <+> repr n <+> repr t
 instance Repr s t => Repr s (Cons     t) where repr (Cons     n t) = "Cons"     <+> repr n <+> repr t
@@ -145,6 +148,7 @@ instance {-# OVERLAPPING #-} VariantReprs HeaderOnly (Draft t) => Repr HeaderOnl
 -- HeaderOnly
 
 instance {-# OVERLAPPING #-} Repr HeaderOnly Star         where repr _ = "*"
+instance {-# OVERLAPPING #-} Repr HeaderOnly (Arrow    t) where repr _ = "Arrow"
 instance {-# OVERLAPPING #-} Repr HeaderOnly Blank        where repr _ = "Blank"
 instance {-# OVERLAPPING #-} Repr HeaderOnly (App      t) where repr _ = "App"
 instance {-# OVERLAPPING #-} Repr HeaderOnly (Var      t) where repr a = "Var"
@@ -298,6 +302,3 @@ inputs = foldr (:) []
 --            -- | Tuple
 --            -- | List
 --            | Unsafe [Name] (Term h)
-
-
-

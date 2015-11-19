@@ -80,7 +80,7 @@ import Data.Container.Reusable
 import Data.Container
 import Data.Container.Poly -- (Ixed)
 --import Data.Text.CodeBuilder.Builder
-import Data.Text.CodeBuilder.Builder as CB hiding (render)
+import Data.Text.CodeBuilder.Builder as CB hiding (render, app)
 
 import Data.Vector.Dynamic as VD
 
@@ -124,7 +124,7 @@ instance (MuBuilder a m t, t ~ t') => MuBuilder a (HomoG t m) t' where
 -------------------------------------------------------------
 
 --nytst2 ::(Arc (Labeled Int (Typed Draft)), HomoGraph ArcPtr (Labeled Int (Typed Draft)))
---nytst2 = 
+--nytst2 =
 --    flip runGraph (VectorGraph def) $ do
 --        s    <- genTopStar
 --        i1   <- int 1
@@ -149,7 +149,7 @@ instance (MuBuilder a m t, t ~ t') => MuBuilder a (HomoG t m) t' where
 
 
 --nytst2 :: (Arc (Labeled Int (Typed Draft)), HomoGraph ArcPtr (Labeled Int (Typed Draft)))
---nytst2 = 
+--nytst2 =
 --    flip runGraph (VectorGraph def) $ do
 --        s    <- genTopStar
 --        i1   <- int 1
@@ -288,7 +288,7 @@ addStdLiterals :: Network -> (LibMap, Network)
 addStdLiterals g = runIdentity
                  $ flip StarBuilder.evalT Nothing
                  $ flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
-                 $ flip Builder.runT g 
+                 $ flip Builder.runT g
                  $ mdo
     strLit <- _string "String" `typed` (Ref $ Node 0)
     strTp  <- cons strLit
@@ -307,7 +307,7 @@ addStdLiterals g = runIdentity
     --    n' = n & tp .~ i
     --    ns' = unchecked inplace insert_ (unwrap strLit) n' ns
     --Builder.put (g & nodes .~ ns')
-    --Builder.modify_ $ nodes %~ 
+    --Builder.modify_ $ nodes %~
     --strTp  <- cons strLit
     --return ()
 
@@ -350,11 +350,22 @@ follow edge = view target <$> readRef edge
 tstx1 :: ((), Network)
 tstx1 = runIdentity
       $ flip StarBuilder.evalT Nothing
-      $ flip Builder.runT def 
+      $ flip Builder.runT def
       $ flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
       $ do
-            topStar <- getStar2
-            i1 <- _int 2
+            i2 <- _int 2
+            i3 <- _int 3
+            namePlus <- _string "+"
+            accPlus  <- accessor namePlus i2
+            nameInt  <- _string "Int"
+            int2int  <- arrow nameInt nameInt
+            appPlus  <- app accPlus [arg i2, arg i3] `typed` int2int
+            -- app i3 [named "ala" $ arg a, arg b, arg c]
+            -- topStar <- getStar2
+            -- i1 <- _int 2
+            -- s  <- _string "dupa"
+            -- a  <- accessor s i1 `typed` s
+
             --i1 <- _int 5
             --i1 <- _int 4
             --i2 <- _int 3
@@ -391,7 +402,7 @@ pass2 lmap gr = runIdentity
                         reconnect ref tp uni
                         return [uni]
                         -- FIXME: poprawic wkladanie unify - unify powinno "inplace" zastepowac node, nie przepinac go
-                        
+
                     _     -> return []
                 match $ \(Val a :: Val (Ref Edge)) -> procnod (V.cast $ Val a)
                 match $ \ANY -> return []
@@ -440,7 +451,7 @@ runUniqM a f = do
 --exDbg1 :: ([Ref Node], Network)
 --exDbg1 = runIdentity
 --      $ flip StarBuilder.evalT Nothing
---      $ flip Builder.runT def 
+--      $ flip Builder.runT def
 --      $ flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
 --      $ do
 --            --topStar <- getStar2
@@ -459,7 +470,7 @@ runUniqM a f = do
 --            return [u]
 
 --type Network = Graph (Labeled2 Int (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge)))))) DoubleArc
-retarget tgt edge = withRef edge $ target .~ tgt 
+retarget tgt edge = withRef edge $ target .~ tgt
 
 main :: IO ()
 main = do
@@ -469,9 +480,9 @@ main = do
     let (_   , g3) = pass3 lmap unis g2
 
     renderAndOpen [ ("g" , g)
-                  , ("gs", gs)
-                  , ("g2", g2)
-                  , ("g3", g3)
+                --   , ("gs", gs)
+                --   , ("g2", g2)
+                --   , ("g3", g3)
                   ]
 
     pprint g2
@@ -480,11 +491,11 @@ main = do
     --let (unis, g)  = exDbg1
     --let (_   , g3) = pass3 undefined unis g
 
-    --renderAndOpen [ 
+    --renderAndOpen [
     --                ("g" , g)  ,
     --                --("gs", gs) ,
     --                --("g2", g2) ,
-    --                ("g3", g3)  
+    --                ("g3", g3)
     --              ]
 
     --pprint (zip [0..] $ elems (g ^. nodes))
@@ -494,7 +505,7 @@ main = do
     --render "gs" $ toGraphViz gs
     --render "g2" $ toGraphViz g2
 
-    --open $ fmap (\i -> "/tmp/t" <> show i <> ".png") $ reverse [1..2] 
+    --open $ fmap (\i -> "/tmp/t" <> show i <> ".png") $ reverse [1..2]
 
     --pprint g2
 
@@ -520,7 +531,7 @@ main = do
         --render "t2" $ toGraphViz g2
         --render "t3" $ toGraphViz g3
 
-        --open $ fmap (\i -> "/tmp/t" <> show i <> ".png") [1..3] 
+        --open $ fmap (\i -> "/tmp/t" <> show i <> ".png") [1..3]
     --let xa = fromList [1,2,3] :: Auto (Weak Vector) Int
     --let xb = fromList [1,2,3] :: WeakAuto Vector Int
     --let xa = fromList [1,2,3] :: Weak Vector Int
@@ -556,7 +567,7 @@ type instance Container (IORef a) = Container a
 instance (HasContainerM m a, MonadIO m) => HasContainerM m (IORef a) where
     viewContainerM   ref = viewContainerM =<< liftIO (readIORef ref)
     setContainerM  v ref = ref <$ (liftIO (readIORef ref) >>= setContainerM v >>= liftIO . writeIORef ref)
-        
+
 instance (IsContainerM m a, MonadIO m) => IsContainerM m (IORef a) where
     fromContainerM a = liftIO . newIORef =<< fromContainerM a
 
@@ -578,10 +589,10 @@ instance MonadIO m => LayeredM m (IORef a) where
 
 --xxxt :: Ixed Appendable Int a => a -> (a, Index (Container a))
 xxxt :: Ixed Appendable Int a => a -> (a, Index (Container a))
-xxxt v = ixed append (4 :: Int) v 
+xxxt v = ixed append (4 :: Int) v
 
 xxxt2 :: Appendable Int a => a -> a
-xxxt2 v = append (4 :: Int) v 
+xxxt2 v = append (4 :: Int) v
 
 type TT = Vector Int
 --main :: IO ()
@@ -622,12 +633,12 @@ type TT = Vector Int
 --    --print $ size v2'
 --    --putStrLn $ "after expand: " <> show (expand   v2)
 --    --putStrLn $ "after grow: "   <> show (grow 10  v2)
- 
---    --s <- sizeM v2 
+
+--    --s <- sizeM v2
 --    --print s
 
 --    --print =<< ixed ixed expandM v2
-    
+
 --    print "END"
 
 
