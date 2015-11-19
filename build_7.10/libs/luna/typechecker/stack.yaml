@@ -2,20 +2,24 @@ resolver: lts-3.14
 packages:
 - ../../../../libs/luna/typechecker
 - ../../../../libs/utils
-- /Users/wdanilo/dev/hs/libs/prologue
-- /Users/wdanilo/dev/hs/libs/container
-- /Users/wdanilo/dev/hs/libs/functor-utils
-- /Users/wdanilo/dev/hs/libs/data-layer
-- /Users/wdanilo/dev/hs/libs/data-repr
-- /Users/wdanilo/dev/hs/libs/data-construction
-- /Users/wdanilo/dev/hs/libs/lens-utils
+# - /Users/wdanilo/dev/hs/public/prologue
+# - /Users/wdanilo/dev/hs/public/container
+# - /Users/wdanilo/dev/hs/public/functor-utils
+# - /Users/wdanilo/dev/hs/public/data-layer
+# - /Users/wdanilo/dev/hs/public/data-repr
+# - /Users/wdanilo/dev/hs/public/data-construction
+# - /Users/wdanilo/dev/hs/public/lens-utils
 
 extra-deps:
-- convert-1.0
-- graphviz-2999.18.0.2
-- data-repr-1.0
-- prologue-1.0.1
-- typelevel-1.0.2
-- string-qq-0.0.2
-
 - errors-1.4.7
+
+- container-1.0
+- convert-1.0
+- data-layer-1.0.2
+- data-repr-1.0
+- graphviz-2999.18.0.2
+- prologue-1.0.6
+- typelevel-1.0.2
+- lens-utils-1.0
+- functor-utils-1.0
+- string-qq-0.0.2

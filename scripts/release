@@ -4,28 +4,43 @@ import argparse
 import os
 import subprocess
 from   utils.glob2 import glob
+import re
+from   getpass     import getpass
 
 parser = argparse.ArgumentParser(description='Process some integers.')
-parser.add_argument('paths', nargs='+', help='libraries paths')
+parser.add_argument('paths'            , nargs='+'          , help='Libraries paths.')
+parser.add_argument('--no-hackage'     , action="store_true", help='Do not upload to hackage.')
+parser.add_argument('-m', '--msg'      , nargs="?"          , help='Unified commit message.')
+parser.add_argument('--upload-missing' , action="store_true", help='Try uploading missing packages to hackage.')
+parser.add_argument('--ask'            , action="store_true", help='Be more verbose before making any action.')
 
 
 
 def main():
     args = parser.parse_args()
+    if not args.no_hackage:
+        username = nonEmptyInput("Hackage username: ")
+        password = nonEmptyPass ("Hackage password: ")
     for path in args.paths:
         path = os.path.abspath(path)
         os.chdir(path)
-        # print os.getcwd()
-        # print subprocess.Popen("echo Hello World", shell=True, stdout=subprocess.PIPE).stdout.read()
-        for libpath in [os.path.dirname(p) for p in glob (path + "/**/*.cabal")]:
+        cabalPaths = glob (path + "/**/*.cabal")
+        for cabalPath in cabalPaths:
+            libPath = os.path.dirname(cabalPath)
             print
-            print ">> " + libpath
-            os.chdir(libpath)
+            print ">> " + libPath
+            os.chdir(libPath)
             try:
                 status = subprocess.check_output("git status --porcelain", shell=True)
-                if not status:
-                    print "Everything up to date."
-                    continue
+            except subprocess.CalledProcessError:
+                print "ERROR"
+                continue
+
+            if not status:
+                print "Everything up to date."
+                if not args.upload_missing: continue
+
+            else:
                 print status
 
                 while True:
@@ -37,12 +52,84 @@ def main():
                     try:
                         out = subprocess.check_output(inp, shell=True)
                         print out
+                        if inp == definp: break
                     except:
                         print "Error occurred, continuing."
-                    # print ("you entered " + input_var) 
-                print "------------"
-                # if 
-            except subprocess.CalledProcessError:
-                print "ERROR"
+            
+                # Updating cabal config
+                with open(cabalPath, 'r') as conf:
+                    cabal = conf.read()
+                prog = re.compile(r'(?P<header>^version:\W+)(?P<version>.*$)', re.MULTILINE)
+                match = prog.search(cabal)
+                if not match:
+                    raise Exception ('Error when parsing cabal file')
+                version = [int(i) for i in match.group('version').split('.')]
+                defNewVersion = version[:-1] + [version[-1] + 1]
+
+                newVersion = defaultInput("New package version (current: %s) [%s]: " % (showVersion(version), showVersion(defNewVersion)), showVersion(defNewVersion))
+                newCabal = cabal[:match.start()] + match.group("header") + newVersion + cabal[match.end():]
+                with open(cabalPath, 'w') as conf:
+                    conf.write(newCabal)
+
+                # tracking new config
+                subprocess.check_output("git add %s" % cabalPath, shell=True)
+
+            if checkAsk (args, 'Upload to hackage?'):
+                if (status or args.upload_missing) and not args.no_hackage:
+                    print "Generating sdist"
+                    sdist     = subprocess.check_output('stack sdist --pvp-bounds lower', stderr=subprocess.STDOUT, shell=True)
+                    sdistPath = sdist.split()[-1]
+
+                    print "Uploading to Hackage"
+                    sdist = subprocess.check_output('cabal upload -u%s -p%s %s' % (username, password, sdistPath), shell=True)
+                    print sdist
+
+            if status:
+                if checkAsk (args, 'Push the repository?'):
+                    msg = ''
+                    while not msg:
+                        pfix = '' if not args.msg else '[%s]' % args.msg
+                        msg = raw_input("Commit message%s: " % pfix)
+                        if not msg and args.msg: msg = args.msg
+
+                    print "Updating git repository"
+                    subprocess.check_output('git commit -m "%s"' % msg, shell=True)
+                    subprocess.check_output('git push', shell=True)
+                
+
+
+def showVersion(v): return ".".join([str(i) for i in v])
+
+def nonEmptyInput(s):
+    out = ''
+    inp = raw_input(s)
+    if not inp:
+        print "Input cannot be empty!"
+        return nonEmptyInput(s)
+    return inp
+
+def nonEmptyPass(s):
+    out = ''
+    inp = getpass(s)
+    if not inp:
+        print "Password cannot be empty!"
+        return nonEmptyPass(s)
+    return inp
+
+def defaultInput(s, d):
+    inp = raw_input(s)
+    if not inp: return d
+    return inp
+
+
+def checkAsk(args, s):
+    if args.ask:
+        while True:
+            out = raw_input(s + ' [N/y]')
+            if not out: out = 'N'
+            if out == 'n' or out == 'N': return False
+            if out == 'y' or out == 'Y': return True
+    return True
+
 
 main ()
