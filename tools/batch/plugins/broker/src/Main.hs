@@ -18,7 +18,6 @@ import qualified Flowbox.Bus.Control.BusCtx          as BusCtx
 import qualified Flowbox.Bus.Control.Handler.Handler as Handler
 import qualified Flowbox.Bus.EndPoint                as EP
 import qualified Flowbox.Config.Config               as Config
-import qualified Flowbox.License                     as License
 import           Flowbox.Options.Applicative         hiding (info)
 import qualified Flowbox.Options.Applicative         as Opt
 import           Flowbox.Prelude                     hiding (error)
@@ -55,7 +54,6 @@ run cmd = case cmd of
     Cmd.Version  -> putStrLn (Version.full False) -- TODO [PM] hardcoded numeric = False
     Cmd.Serve {} -> do
         rootLogger setIntLevel $ Cmd.verbose cmd
-        License.verify
         endPoints <- EP.serverFromConfig <$> Config.load
         logger info "Starting proxy service"
         _ <- Concurrent.forkIO $ Proxy.run (EP.pullEndPoint endPoints) (EP.pubEndPoint endPoints)

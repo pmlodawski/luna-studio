@@ -139,9 +139,12 @@ False ? (_ :? y) = y
 -- / trenaru operator
 
 
-($>) :: (Functor f) => a -> f b -> f b
+($>) :: Functor f => a -> f b -> f b
 ($>) =  fmap . flip const
 
+infixl 4 <$$>
+(<$$>) :: (Functor f, Functor g) => (a -> b) -> f (g a) -> f (g b)
+(<$$>) = fmap . fmap
 
 withJust :: Monad m => Maybe a -> (a -> m ()) -> m ()
 withJust = forM_

@@ -30,7 +30,6 @@ Executable bus-logger
                     errors,
                     flowbox-bus-binary,
                     flowbox-config,
-                    flowbox-license,
                     flowbox-utils,
                     mtl,
                     optparse-applicative,

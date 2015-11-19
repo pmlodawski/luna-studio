@@ -15,7 +15,7 @@ import Flowbox.Prelude
 
 
 
-type RPC a = EitherT Error IO a
+type RPC a = ExceptT Error IO a
 
 
 type Error = String
@@ -24,5 +24,5 @@ type Error = String
 
 run :: MonadIO m => RPC r -> m (Either Error r)
 run action = do
-    result <- liftIO $ (try :: IO a -> IO (Either SomeException a)) $ runEitherT action
+    result <- liftIO $ (try :: IO a -> IO (Either SomeException a)) $ runExceptT action
     return $ join $ fmapL (\exception -> "Unhandled exception: " ++ show exception) result

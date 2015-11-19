@@ -4,6 +4,7 @@
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Flowbox.System.Directory.Directory (
     module Flowbox.System.Directory.Directory,
@@ -11,6 +12,7 @@ module Flowbox.System.Directory.Directory (
 ) where
 
 import           Control.Applicative
+import qualified Control.Exception   as Exception
 import qualified Data.List           as List
 import           System.Directory    hiding (copyFile, createDirectory, createDirectoryIfMissing, doesDirectoryExist, doesFileExist, getCurrentDirectory, getDirectoryContents, getTemporaryDirectory, removeDirectoryRecursive, removeFile, renameDirectory, renameFile, setCurrentDirectory)
 import qualified System.Directory    as Directory
@@ -70,14 +72,18 @@ createDirectoryIfMissing create_parents upath = do
     Directory.createDirectoryIfMissing create_parents path
 
 
+returnFalseOnException :: IO Bool -> IO Bool
+returnFalseOnException = flip Exception.catch (\(_ :: Exception.SomeException) -> return False)
+
+
 doesDirectoryExist :: UniPath -> IO Bool
-doesDirectoryExist upath = do
+doesDirectoryExist upath = returnFalseOnException $ do
     path <- UniPath.toUnixString <$> UniPath.expand upath
     Directory.doesDirectoryExist path
 
 
 doesFileExist :: UniPath -> IO Bool
-doesFileExist upath = do
+doesFileExist upath = returnFalseOnException $ do
     path <- UniPath.toUnixString <$> UniPath.expand upath
     Directory.doesFileExist path
 

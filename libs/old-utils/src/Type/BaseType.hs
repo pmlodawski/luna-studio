@@ -14,8 +14,6 @@
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-
-
 module Type.BaseType where
 
 import Data.Typeable
@@ -40,10 +38,10 @@ class BaseType a b | a -> b where
 -- Instances
 --------------------------------------------------------------------------------
  
-instance  out~(Proxy b) =>BaseType (Proxy b) out  where
+instance out~(Proxy b) => BaseType (Proxy b) out where
     baseType _ = Proxy
 
-instance  ((BaseType (Proxy b) (Proxy x)), out~Proxy x) =>BaseType (Proxy (b t)) out  where
+instance ((BaseType (Proxy b) (Proxy x)), out~Proxy x) => BaseType (Proxy (b t)) out where
     baseType _ = Proxy
 
 -- TODO: czemu nie mozna zrefaktoryzowac tego wyzej? Wtedy nie dizala!

@@ -22,13 +22,12 @@ import           Flowbox.Prelude                   hiding (error)
 import           Flowbox.System.Log.Logger
 import           Flowbox.Text.ProtocolBuffers      (Int32, Serializable)
 import qualified Flowbox.Text.ProtocolBuffers      as Proto
-import           Flowbox.ZMQ.RPC.Handler           (RPCHandler)
+import           Flowbox.ZMQ.RPC.Handler           (RPCHandler (..))
 import qualified Flowbox.ZMQ.RPC.RPC               as RPC
 import           Generated.Proto.Rpc.Exception     (Exception (Exception))
 import qualified Generated.Proto.Rpc.Exception     as Exception
 import           Generated.Proto.Rpc.Response      (Response (Response))
 import qualified Generated.Proto.Rpc.Response.Type as ResponseType
-
 
 
 loggerIO :: LoggerIO
@@ -43,6 +42,7 @@ responseExt rspType rspId rsp rspKey = Proto.messagePut'
 
 process :: Serializable request
         => RPCHandler request -> ByteString -> Int32 -> ZMQ z ByteString
+
 process handler encodedRequest requestID = case Proto.messageGet' encodedRequest of
     Left  err     -> responseError requestID err
     Right request -> handler call request where

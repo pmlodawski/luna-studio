@@ -28,7 +28,6 @@ Executable broker
                     flowbox-bus,
                     flowbox-rpc,
                     flowbox-config,
-                    flowbox-license,
                     flowbox-utils,
                     transformers,
                     protocol-buffers,

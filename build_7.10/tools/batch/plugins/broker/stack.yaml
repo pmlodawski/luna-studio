@@ -2,8 +2,8 @@ packages:
 - ../../../../../libs/bus
 - ../../../../../libs/config
 - ../../../../../libs/rpc
-- ../../../../../libs/utils
-- ../../../../../third-party/fgl
+- ../../../../../libs/old-utils
 - ../../../../../tools/batch/plugins/broker
-resolver: nightly-2015-07-24
-
+resolver: lts-3.14
+extra-deps:
+- saltine-0.0.0.4
