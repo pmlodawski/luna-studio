@@ -55,13 +55,13 @@ import Data.Variants
 --          nodeLabels      = fmap (reprStyled HeaderOnly . view ast) nodes
 --          labeledNode s a = DotNode a [GV.Label . StrLabel $ fromString s]
 --          nodeStmts       = fmap (uncurry labeledNode) $ zip nodeLabels nodeIds
---          nodeInEdges   n = zip3 ([0..] :: [Int]) (genEdges $ index n g) (repeat n)
+--          nodeInEdges   n = zip3 ([0..] :: [Int]) (genInEdges $ index n g) (repeat n)
 --          inEdges         = concat $ fmap nodeInEdges nodeIds
 --          mkEdge  (n,(a,attrs),b) = DotEdge a b attrs -- (GV.edgeEnds Back : attrs)
 --          edgeStmts       = fmap mkEdge inEdges
 
 
-toGraphViz :: _ => Graph n e -> DotGraph Int
+toGraphViz :: _ => Graph n DoubleArc -> DotGraph String
 toGraphViz net = DotGraph { strictGraph     = False
                           , directedGraph   = True
                           , graphID         = Nothing
@@ -76,35 +76,40 @@ toGraphViz net = DotGraph { strictGraph     = False
           nodes'          = elems g
           nodeIds         = usedIxes g
           nodeLabels      = fmap (reprStyled HeaderOnly . uncoat) nodes'
-          labeledNode n s a = DotNode a $ (GV.Label . StrLabel $ fromString s) : (nodeColorAttrs $ uncoat n)
+          labeledNode n s a = DotNode (nodeRef a) $ (GV.Label . StrLabel $ fromString s) : (nodeColorAttrs $ uncoat n)
           nodeStmts       = fmap (uncurry labeledNode) $ zip3 nodes' nodeLabels nodeIds
-          nodeInEdges   n = zip3 ([0..] :: [Int]) (genEdges net $ index n g) (repeat n)
+          nodeInEdges   n = zip3 ([0..] :: [Int]) (genInEdges net $ index n g) (repeat n)
           inEdges         = concat $ fmap nodeInEdges nodeIds
-          mkEdge  (n,(a,attrs),b) = DotEdge a b attrs -- (GV.edgeEnds Back : attrs)
-          edgeStmts       = fmap mkEdge inEdges
+          mkEdge  (n,(a,attrs),b) = DotEdge (nodeRef a) (nodeRef b) attrs -- (GV.edgeEnds Back : attrs)
+          edgeStmts       = fmap mkEdge inEdges -- <> allEdges
+
+          allEdges        = drawEdge <$> elems_ edges'
 
           nodeColorAttrs a = case' a $ do
                                  match $ \(Val _ :: Val (Ref Edge)) -> [GV.color GVC.Green]
                                  match $ \ANY                       -> []
+          nodeRef        i = "<node " <> show i <> ">"
 
-class GenEdges n e a where
-    genEdges :: Graph n e -> a -> [(Int, [GV.Attribute])]
+          drawEdge (DoubleArc start end) = DotEdge (nodeRef $ deref start) (nodeRef $ deref end) []
 
-instance GenEdges n e a => GenEdges n e (Labeled2 l a) where
-    genEdges g (Labeled2 _ a) = genEdges g a
+class GenInEdges n e a where
+    genInEdges :: Graph n e -> a -> [(Int, [GV.Attribute])]
 
-instance GenEdges n DoubleArc a => GenEdges n DoubleArc (Typed (Ref Edge) a) where
-    genEdges g (Typed t a) = [(tgt, [GV.color GVC.Red, GV.edgeEnds Back])] <> genEdges g a where
+instance GenInEdges n e a => GenInEdges n e (Labeled2 l a) where
+    genInEdges g (Labeled2 _ a) = genInEdges g a
+
+instance GenInEdges n DoubleArc a => GenInEdges n DoubleArc (Typed (Ref Edge) a) where
+    genInEdges g (Typed t a) = [(tgt, [GV.color GVC.Red, GV.edgeEnds Back])] <> genInEdges g a where
         tgt = deref . view target $ index (deref t) (g ^. edges)
 
-instance GenEdges n e a => GenEdges n e (SuccTracking a) where
-    genEdges g = genEdges g . unlayer
+instance GenInEdges n e a => GenInEdges n e (SuccTracking a) where
+    genInEdges g = genInEdges g . unlayer
 
-instance GenEdges n e a => GenEdges n e (Coat a) where
-    genEdges g = genEdges g . unwrap
+instance GenInEdges n e a => GenInEdges n e (Coat a) where
+    genInEdges g = genInEdges g . unwrap
 
-instance GenEdges n DoubleArc (Draft (Ref Edge)) where
-    genEdges g a = ($ inEdges) $ case checkName a of
+instance GenInEdges n DoubleArc (Draft (Ref Edge)) where
+    genInEdges g a = ($ inEdges) $ case checkName a of
         Nothing -> id
         Just  t -> fmap addColor
             where tidx = getIdx t

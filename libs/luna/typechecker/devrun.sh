@@ -52,4 +52,4 @@ runhaskell                                                                      
     -i$HS_PUBLIC_LIBS/data-construction/src                                                        \
     -package-db=$HS_SBOX_PGS                                                                       \
     -ddump-splices                                                                                 \
-    $(realpath)/test/Main.hs                                              
+    $NBO/libs/luna/typechecker/test/Main.hs                                              

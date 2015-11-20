@@ -1,6 +1,8 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE RecursiveDo #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE GADTs #-}
 
@@ -252,6 +254,42 @@ instance Monad m => Constructor m (SuccTracking a) where
 
 --------------------------------------------------------------------
 
+
+reconnect :: (Builder.BuilderMonad (Graph n DoubleArc) m, TracksSuccs n, MonadNodeBuilder (Ref Node) m) => Ref Node -> Lens' n (Ref Edge) -> Ref Node -> m (Ref Edge)
+reconnect src lens tgt = do
+    srcNode <- readRef src
+    unregisterEdge (srcNode ^. lens)
+
+    i <-  NodeBuilder.with src $ connect tgt
+
+    writeRef src (srcNode & lens .~ i)
+    return i
+
+unregisterEdge eid = do
+    edge <- readRef eid 
+    withRef (edge ^. target) $ succs %~ IntSet.delete (deref $ edge ^. source)
+    Builder.modify_ $ edges %~ free_ (deref eid)
+
+
+
+class Monad m => RefReader ref m a | ref m -> a where readRef :: Ref ref -> m a
+instance (Monad m, Builder.BuilderMonad (Graph n e) m) => RefReader Node m n where readRef ptr = index_ (deref ptr) . view nodes <$> Builder.get
+instance (Monad m, Builder.BuilderMonad (Graph n e) m) => RefReader Edge m e where readRef ptr = index_ (deref ptr) . view edges <$> Builder.get
+
+class Monad m => RefWriter ref m a | ref m -> a where writeRef :: Ref ref -> a -> m ()
+instance (Monad m, Builder.BuilderMonad (Graph n e) m) => RefWriter Node m n where writeRef ptr a = Builder.modify_ $ nodes %~ unchecked inplace insert_ (deref ptr) a
+instance (Monad m, Builder.BuilderMonad (Graph n e) m) => RefWriter Edge m e where writeRef ptr a = Builder.modify_ $ edges %~ unchecked inplace insert_ (deref ptr) a
+
+type RefHandler ref m a = (RefReader ref m a, RefWriter ref m a)
+
+withRefM :: RefHandler ref m a => Ref ref -> (a -> m a) -> m ()
+withRefM ref f = readRef ref >>= f >>= writeRef ref
+
+withRef :: RefHandler ref m a => Ref ref -> (a -> a) -> m ()
+withRef ref = withRefM ref . fmap return
+
+follow :: RefReader ref f DoubleArc => Ref ref -> f (Ref Node)
+follow edge = view target <$> readRef edge
 
 --string :: LayeredASTCons Lit m t => String -> m (Mu t)
 --string = layeredASTCons . String . fromString

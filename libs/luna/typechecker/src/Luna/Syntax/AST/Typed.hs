@@ -9,7 +9,7 @@ import Prologue
 
 import Luna.Syntax.AST
 import Luna.Syntax.AST.Term
---import Luna.Syntax.Builder
+import Luna.Syntax.Builder
 import Data.Cata
 import Data.Layer
 
@@ -50,6 +50,14 @@ instance ( TracksSuccs (Unlayered n), Layered n
         s <- getStar2
         c <- connect s
         return $ Typed c a
+
+instance (Monad m, BuilderMonad (Graph n DoubleArc) m, Layered n, TracksSuccs (Unlayered n)) => Destructor m (Typed (Ref Edge) a) where
+	destruct (Typed t a) = do
+		unregisterEdge t
+		return a
+
+--class Destructor  m a where destruct  :: a -> m (Destructed a)
+
 
 
 

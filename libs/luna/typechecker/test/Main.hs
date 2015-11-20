@@ -108,7 +108,7 @@ import qualified Luna.Syntax.Builder.Node as NodeBuilder
 import           Luna.Syntax.Builder.Node (MonadNodeBuilder)
 import qualified Data.IntSet as IntSet
 import           Data.IntSet (IntSet)
-
+import           Data.Construction
 
 -- === HomoBuilder ===
 
@@ -311,40 +311,9 @@ addStdLiterals g = runIdentity
     --strTp  <- cons strLit
     --return ()
 
-reconnect :: (Builder.BuilderMonad (Graph n DoubleArc) m, TracksSuccs n, MonadNodeBuilder (Ref Node) m) => Ref Node -> Lens' n (Ref Edge) -> Ref Node -> m (Ref Edge)
-reconnect src lens tgt = do
-    srcNode <- readRef src
-    let oldEdgeID = srcNode ^. lens
-    oldTgt <- follow oldEdgeID
-
-    Builder.modify_ $ edges %~ free_ (deref oldEdgeID)
-
-    withRef oldTgt $ succs %~ IntSet.delete (deref src)
-
-    i <-  NodeBuilder.with src $ connect tgt
-
-    writeRef src (srcNode & lens .~ i)
-    return i
 
 
-class Monad m => RefReader ref m a | ref m -> a where readRef :: Ref ref -> m a
-instance (Monad m, Builder.BuilderMonad (Graph n e) m) => RefReader Node m n where readRef ptr = index_ (deref ptr) . view nodes <$> Builder.get
-instance (Monad m, Builder.BuilderMonad (Graph n e) m) => RefReader Edge m e where readRef ptr = index_ (deref ptr) . view edges <$> Builder.get
 
-class Monad m => RefWriter ref m a | ref m -> a where writeRef :: Ref ref -> a -> m ()
-instance (Monad m, Builder.BuilderMonad (Graph n e) m) => RefWriter Node m n where writeRef ptr a = Builder.modify_ $ nodes %~ unchecked inplace insert_ (deref ptr) a
-instance (Monad m, Builder.BuilderMonad (Graph n e) m) => RefWriter Edge m e where writeRef ptr a = Builder.modify_ $ edges %~ unchecked inplace insert_ (deref ptr) a
-
-type RefHandler ref m a = (RefReader ref m a, RefWriter ref m a)
-
-withRefM :: RefHandler ref m a => Ref ref -> (a -> m a) -> m ()
-withRefM ref f = readRef ref >>= f >>= writeRef ref
-
-withRef :: RefHandler ref m a => Ref ref -> (a -> a) -> m ()
-withRef ref = withRefM ref . fmap return
-
-follow :: RefReader ref f DoubleArc => Ref ref -> f (Ref Node)
-follow edge = view target <$> readRef edge
 
 
 tstx1 :: ((), Network)
@@ -354,7 +323,7 @@ tstx1 = runIdentity
       $ flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
       $ do
             topStar <- getStar2
-            i1 <- _int 2
+            i1 <- _int 7
             --i1 <- _int 5
             --i1 <- _int 4
             --i2 <- _int 3
@@ -418,16 +387,39 @@ pass3 lmap unis gr = runIdentity
         b' <- follow b
         na <- readRef a'
         nb <- readRef b'
+        atp' <- follow . view tp =<< readRef a'
+        --destruct atp'
         case' (uncoat na) $ do
             match $ \Star -> do
                 let Labeled2 _ (Typed t (SuccTracking ss (Coat ast))) = node
                 mapM_ (retarget b') (Ref . Edge <$> toList ss)
-                --destroy a'
+                --destruct a'
                 --mapM_ (retarget $ Ref $ Node 0) (Ref . Edge <$> toList ss)
                 return ()
             match $ \ANY  -> return ()
+        destruct uni
         return ()
     return ()
+
+type instance Destructed (Ref Node) = ()
+instance ( Builder.BuilderMonad (Graph n e) m
+         , Uncoated (Destructed n) ~ Uncoated n
+         , CoatDestructor m (Destructed n)
+         , Destructor m n
+         , Uncoated (Destructed n) ~ t (Ref Edge)
+         , Uncoated (Unlayered n) ~ Uncoated (Destructed n)
+         , Layered n
+         , Coated (Unlayered n)
+         , Foldable t
+         , Builder.BuilderMonad (Graph n DoubleArc) m
+         , TracksSuccs (Unlayered n)
+         ) => Destructor m (Ref Node) where
+    destruct ref = do
+        node <- readRef ref
+        let ii = inputs (uncoat node) :: [Ref Edge]
+        mapM_ unregisterEdge ii
+        destructCoat node
+        Builder.modify_ $ nodes %~ free (deref ref) 
 
 
 runUniqM :: State.MonadState IntSet m => Int -> m () -> m ()
