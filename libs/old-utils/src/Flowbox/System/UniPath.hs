@@ -8,8 +8,8 @@
 -- FIXME OR DELETEME [WD]
 -- moze stworzyc ogolna klase FS (isDirectory path -> Bool) etc, dla ktorego instancje beda dla amazona etc.
 
-{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE DeriveGeneric    #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Flowbox.System.UniPath where
 
@@ -36,7 +36,8 @@ data PathItem = Node String
 type UniPath = [PathItem]
 
 instance Binary PathItem
-
+instance IsString UniPath where fromString = fromUnixString
+instance ToString UniPath where toString   = toUnixString
 
 fromUnixString :: FilePath -> UniPath
 fromUnixString []           = def

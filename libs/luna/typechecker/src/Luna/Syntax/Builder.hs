@@ -106,7 +106,7 @@ import qualified Data.IntSet as IntSet
 class                                             Monadic a      m b where monadic :: a -> m b
 instance {-# OVERLAPPABLE #-} Monad m          => Monadic a      m a where monadic = return
 instance {-# OVERLAPPABLE #-} (Monad m, m ~ n) => Monadic (n a)  m a where monadic = id
-instance {-# OVERLAPPABLE #-} (MonadNodeBuilder (Ref Node) m, CoatConstructor m n, SpecificCons Lit (Uncoated n), BuilderMonad (Graph n e) m, MonadFix m) 
+instance {-# OVERLAPPABLE #-} (MonadNodeBuilder (Ref Node) m, CoatConstructor m n, SpecificCons Lit (Uncoated n), BuilderMonad (Graph n e) m, MonadFix m)
                            => Monadic String m (Ref Node) where monadic = _string
 
 swap (a,b) = (b,a)
@@ -148,6 +148,15 @@ _star2 = mdo
     a <- NodeBuilder.with (Ref $ Node i) $ constructCoat $ specificCons Star
     return $ Ref $ Node i
 
+arrow l r = mdo
+    l' <- monadic l
+    r' <- monadic r
+    i <- modify2 . nodes $ swap . ixed add a
+    a <- NodeBuilder.with (Ref $ Node i) $ do
+        lc <- connect l'
+        rc <- connect r'
+        constructCoat $ specificCons $ Arrow lc rc
+    return $ Ref $ Node i
 
 --cons :: forall name m t. (ToMuM' name m t, LayeredASTCons (Cons (Mu t)) m t) => name -> m (Mu t)
 --cons n = layeredASTCons . flip Cons [] =<< (toMuM' n :: m (Mu t))
@@ -172,6 +181,22 @@ accessor name b = mdo
         bc <- connect b'
         constructCoat $ specificCons $ Accessor nc bc
     return $ Ref $ Node i
+
+app acc args = mdo
+    acc'  <- monadic acc
+    -- let monadicArg (Arg n a) = Arg n <$> monadic a
+    args' <- mapM monadic args
+    i <- modify2 . nodes $ swap . ixed add a
+    a <- NodeBuilder.with (Ref $ Node i) $ do
+        accc <- connect acc'
+        let connectArg (Arg n a) = Arg n <$> connect a
+        argsc <- mapM connectArg args'
+        constructCoat $ specificCons $ App accc argsc
+    return $ Ref $ Node i
+
+arg = Arg Nothing
+
+named n (Arg _ a) = Arg (Just n) a --FIXME[WD] : use lens
 
 unify a b = mdo
     a' <- monadic a
@@ -228,7 +253,7 @@ class RegisterConnection a where
     registerConnection :: DoubleArc -> a -> a
 
 instance {-# OVERLAPPABLE #-} (RegisterConnection (Unlayered a), Layered a)
-                           => RegisterConnection a                where registerConnection c                                   = layered %~ registerConnection c    
+                           => RegisterConnection a                where registerConnection c                                   = layered %~ registerConnection c
 instance {-# OVERLAPPABLE #-} RegisterConnection (SuccTracking a) where registerConnection (DoubleArc _ i) (SuccTracking is a) = SuccTracking (IntSet.insert (deref i) is) a
 instance {-# OVERLAPPABLE #-} RegisterConnection (Coat a)         where registerConnection _                                   = id
 
@@ -382,7 +407,3 @@ follow edge = view target <$> readRef edge
 --evalFunctionBuilder = runIdentity .: evalFunctionBuilderT
 --execFunctionBuilder = runIdentity .: execFunctionBuilderT
 --runFunctionBuilder  = runIdentity .: runFunctionBuilderT
-
-
-
-

@@ -45,7 +45,7 @@ class Convert a b where
     encode :: a -> b
     decode :: b -> Either Error a
 
-    decodeE :: Monad m => b -> EitherT Error m a
+    decodeE :: Monad m => b -> ExceptT Error m a
     decodeE = hoistEither . decode
 
     encodeJ :: a -> Maybe b
@@ -54,8 +54,11 @@ class Convert a b where
     decodeJ :: Maybe b -> Error -> Either Error a
     decodeJ b e = decode =<< b <?> e
 
-    decodeJE :: Monad m => Maybe b -> Error -> EitherT Error m a
+    decodeJE :: Monad m => Maybe b -> Error -> ExceptT Error m a
     decodeJE = hoistEither .: decodeJ
+
+    decodeE' :: Monad m => b -> m a
+    decodeE' = eitherToM . decode
 
 
 class ConvertPure a b where
@@ -68,7 +71,7 @@ class ConvertPure a b where
     decodePJ :: Maybe b -> Error -> Either Error a
     decodePJ b e = decodeP <$> b <?> e
 
-    decodePJE :: Monad m => Maybe b -> Error -> EitherT Error m a
+    decodePJE :: Monad m => Maybe b -> Error -> ExceptT Error m a
     decodePJE = hoistEither .: decodePJ
 
 

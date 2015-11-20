@@ -18,12 +18,11 @@ import Flowbox.ZMQ.RPC.RPC          (RPC)
 import Generated.Proto.Rpc.Response (Response)
 
 
-
-type RPCHandler request =
-    forall z. (forall args result. (Show args, Show result)
-    => (args -> RPC result)
-    -> Extensions.Key Maybe request args
-    -> Extensions.Key Maybe Response result -> ZMQ z ByteString)
-    -> request -> ZMQ z ByteString
-
-
+type RPCHandler request = ( forall z. ( forall args result. (Show args, Show result)
+                                        => (args -> RPC result)
+                                        -> Extensions.Key Maybe request args
+                                        -> Extensions.Key Maybe Response result -> ZMQ z ByteString
+                                      )
+                            -> request
+                            -> ZMQ z ByteString
+                          )

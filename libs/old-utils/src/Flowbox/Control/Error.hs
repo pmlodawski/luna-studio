@@ -4,8 +4,8 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
-{-# LANGUAGE CPP              #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE CPP #-}
 
 module Flowbox.Control.Error (
   module Flowbox.Control.Error
@@ -14,27 +14,45 @@ module Flowbox.Control.Error (
 , liftIO
 ) where
 
-import           Control.Error     as X hiding (catchEither, runScript)
+#if MIN_VERSION_errors(2,0,0)
+import Control.Error as X hiding (catchEither, runScript)
+#else
+import Control.Error              as X hiding (catchEither, runScript, throwE)
+import Control.Monad.Trans.Either (bimapEitherT)
+#endif
 import qualified Control.Exception as Exc
 import qualified Data.Maybe        as Maybe
 
 import Flowbox.Prelude
 
 
-#if MIN_VERSION_transformers(0,4,0)
-type EitherT = ExceptT
-
-runEitherT :: ExceptT e m a -> m (Either e a)
-runEitherT = runExceptT
-
-left :: Monad m => e -> ExceptT e m a
-left = throwE
+mkExceptT :: Monad m => m (Either e a) -> ExceptT e m a
+#if MIN_VERSION_errors(2,0,0)
+mkExceptT = ExceptT
 #else
+mkExceptT = EitherT
+type ExceptT = EitherT
+
+runExceptT :: ExceptT e m a -> m (Either e a)
+runExceptT = runEitherT
+
+throwE :: Monad m => e -> ExceptT e m a
+throwE = left
+
+
+withExceptT :: Functor m => (e -> a) -> ExceptT e m b -> ExceptT a m b
+withExceptT = flip bimapEitherT id
+
+mapExceptT = mapEitherT
+
+exceptT :: Monad m => (a -> m c) -> (b -> m c) -> ExceptT a m b -> m c
+exceptT = eitherT
 #endif
 
+{-# DEPRECATED runScript "" #-}
 runScript :: Script a -> IO a
 runScript s = do
-    e <- runEitherT s
+    e <- runExceptT s
     case e of
         Left  m -> fail m
         Right a -> return a
@@ -60,13 +78,13 @@ val <?&> m = Maybe.maybe (Left m) Right =<< val
 
 
 infixl 4 <??>
-(<??>) :: Monad m => Maybe b -> a -> EitherT a m b
-val <??> m = Maybe.maybe (left m) return val
+(<??>) :: Monad m => Maybe b -> a -> ExceptT a m b
+val <??> m = Maybe.maybe (throwE m) return val
 
 
 infixl 4 <??&>
-(<??&>) :: Monad m => EitherT a m (Maybe b) -> a -> EitherT a m b
-val <??&> m = Maybe.maybe (left m) return =<< val
+(<??&>) :: Monad m => ExceptT a m (Maybe b) -> a -> ExceptT a m b
+val <??&> m = Maybe.maybe (throwE m) return =<< val
 
 
 assertIO :: Monad m => Bool -> String -> m ()
@@ -76,53 +94,45 @@ assertIO condition msg = unless condition $ fail msg
 assert :: Bool -> a -> Either a ()
 assert condition msg = unless condition $ Left msg
 
-assertE :: Monad m => Bool -> a -> EitherT a m ()
-assertE condition msg = unless condition $ left msg
+assertE :: Monad m => Bool -> a -> ExceptT a m ()
+assertE condition msg = unless condition $ throwE msg
 
 
 -- FIXME [PM] : find better name
-safeLiftIO :: MonadIO m => IO b -> EitherT String m b
+safeLiftIO :: MonadIO m => IO b -> ExceptT String m b
 safeLiftIO = safeLiftIO' show
 
 
-safeLiftIO' :: MonadIO m => (Exc.SomeException -> a) -> IO b -> EitherT a m b
+safeLiftIO' :: MonadIO m => (Exc.SomeException -> a) -> IO b -> ExceptT a m b
 safeLiftIO' excMap operation  = do
     result <- liftIO $ Exc.try operation
     hoistEither $ fmapL excMap result
 
 
-eitherToM :: (MonadIO m, Show a) => Either a b -> m b
+eitherToM :: (Monad m, Show a) => Either a b -> m b
 eitherToM = either (fail . show) return
 
 
-eitherToM' :: (MonadIO m, Show a) => m (Either a b) -> m b
+eitherToM' :: (Monad m, Show a) => m (Either a b) -> m b
 eitherToM' action = action >>= eitherToM
 
 
-eitherStringToM :: MonadIO m => Either String b -> m b
+eitherStringToM :: Monad m => Either String b -> m b
 eitherStringToM = either fail return
 
 
-eitherStringToM' :: MonadIO m => m (Either String b) -> m b
+eitherStringToM' :: Monad m => m (Either String b) -> m b
 eitherStringToM' action = action >>= eitherStringToM
 
---TODO[PM]L rename to catchEitherT
+--TODO[PM]L rename to catchExceptT
 catchEither :: (MonadTrans t, Monad (t m), Monad m)
-            => (e -> t m b) -> EitherT e m b -> t m b
+            => (e -> t m b) -> ExceptT e m b -> t m b
 catchEither handler fun = do
-    result <- lift $ runEitherT fun
+    result <- lift $ runExceptT fun
     case result of
         Left  e -> handler e
         Right r -> return r
 
 
-hoistEitherWith :: Monad m => (e1 -> e) -> Either e1 a -> EitherT e m a
+hoistEitherWith :: Monad m => (e1 -> e) -> Either e1 a -> ExceptT e m a
 hoistEitherWith conv = hoistEither . fmapL conv
-
-
-lmapEitherT :: Functor m => (e -> a) -> EitherT e m b -> EitherT a m b
-#if MIN_VERSION_transformers(0,4,0)
-lmapEitherT = withExceptT
-#else
-lmapEitherT conf = bimapEitherT conf id
-#endif

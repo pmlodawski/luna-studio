@@ -12,7 +12,6 @@
 
 module Flowbox.Bus.RPC.Client where
 
-import Flowbox.Control.Error
 import           Flowbox.Bus.Bus               (Bus)
 import qualified Flowbox.Bus.Bus               as Bus
 import qualified Flowbox.Bus.Data.Flag         as Flag
@@ -22,6 +21,7 @@ import           Flowbox.Bus.Data.MessageFrame (MessageFrame)
 import qualified Flowbox.Bus.Data.MessageFrame as MessageFrame
 import           Flowbox.Bus.Data.Topic        (Topic)
 import qualified Flowbox.Bus.Data.Topic        as Topic
+import           Flowbox.Control.Error
 import qualified Flowbox.Control.Monad.Loops   as Loops
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
@@ -60,8 +60,8 @@ query topic args = do
 queryRaw :: Message -> Bus [Message]
 queryRaw message = do
     let topicBase = Topic.base $ message ^. Message.topic
-    Bus.subscribe topicBase
     logger debug "Query : sending..."
+    Bus.subscribe topicBase
     correlationID <- Bus.send Flag.Enable message
     logger debug "Query : receiving responses..."
     frames <- Loops.repeatUntil Bus.receive (not . allFramesReceived correlationID)

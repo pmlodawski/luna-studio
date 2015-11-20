@@ -30,14 +30,14 @@ query :: (ZMQ.Sender t, ZMQ.Receiver t, Proto.Serializable request, Proto.Serial
       => ZMQ.Socket z t
       -> request
       -> Extensions.Key Maybe Response result
-      -> EitherT Error (ZMQ z) result
+      -> ExceptT Error (ZMQ z) result
 query socket request rspKey = do
     response <- queryRaw socket request
     hoistEither $ processResponse rspKey response
 
 
 queryRaw :: (ZMQ.Sender t, ZMQ.Receiver t, Proto.Serializable request)
-          => ZMQ.Socket z t -> request -> EitherT Error (ZMQ z) Response
+          => ZMQ.Socket z t -> request -> ExceptT Error (ZMQ z) Response
 queryRaw socket request = do
     lift $ ZMQ.send socket [] $ Proto.messagePut' request
     encoded_response <- lift $ ZMQ.receive socket

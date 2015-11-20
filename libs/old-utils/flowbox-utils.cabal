@@ -15,9 +15,7 @@ Build-Type:     Simple
 
 Library
     Hs-Source-Dirs: src
-
     GHC-Options:    -Wall -O2
-
     Extensions:   ConstraintKinds,
                   DefaultSignatures,
                   DeriveFoldable,
@@ -83,6 +81,7 @@ Library
         Flowbox.Control.Concurrent,
         Flowbox.Control.Error,
         Flowbox.Control.Guard,
+        Flowbox.Control.Monad.Error,
         Flowbox.Control.Monad.Loops,
         Flowbox.Control.Monad.State,
         Flowbox.Control.Monad.Trans.Maybe,
@@ -113,6 +112,7 @@ Library
         Flowbox.System.Directory.Scanner,
         Flowbox.System.Directory.Tree,
         Flowbox.System.FilePath,
+        Flowbox.System.FileSelector,
         Flowbox.System.IO.IO,
         Flowbox.System.IO.Serializer,
         Flowbox.System.Log.Conf,
@@ -150,7 +150,7 @@ Library
                     generic-deriving,
                     hashable,
                     hslogger,
-                    hspec,
+                    hspec >= 2.1.7,
                     lens,
                     MissingH,
                     mmorph,
@@ -168,7 +168,15 @@ Library
                     transformers,
                     template-haskell,
                     QuickCheck,
-                    unordered-containers
+                    unordered-containers,
+                    vector < 0.11
+                      -- Fix: this helps the cabal solver. The flowbox-utils
+                      -- needs vector only indirectly (i.a. via lens), but
+                      -- vector==0.11.0.0 is not compatible with older repa.
+                      -- It seems that only older repa, one that work with
+                      -- base-4.7.*, require vector < 0.11. Cabal cannot into
+                      -- this.
+                      -- Solution suggested by MMikołajczyk, thanks :)
 
   if os(windows)
     Build-Depends:  Win32
@@ -176,28 +184,28 @@ Library
 -- FIXME [MU] : aeson >= 0.7.0.5 fixes compilation error on Windows
 
 Executable utils-test
-  Main-Is:        Main.hs
-  Hs-Source-Dirs: test
+    Main-Is:        Main.hs
+    Hs-Source-Dirs: test
 
-  GHC-Options:    -Wall -O2
+    GHC-Options:    -Wall -O2
 
-  Extensions:     DoAndIfThenElse
-                  MultiParamTypeClasses
-                  NoImplicitPrelude
-                  OverloadedStrings
-                  TypeSynonymInstances
-                  
-  Build-Depends:  base,
-                  flowbox-utils,
-                  ghc-prim
+    Extensions:     DoAndIfThenElse
+                    MultiParamTypeClasses
+                    NoImplicitPrelude
+                    OverloadedStrings
+                    TypeSynonymInstances
+
+    Build-Depends:  base,
+                    flowbox-utils,
+                    ghc-prim
 
 
 Test-Suite tests
-  Type:           exitcode-stdio-1.0
-  Main-Is:        Spec.hs
-  Hs-Source-Dirs: test
-  GHC-Options:    -Wall -threaded -O2
-  Extensions:     NoImplicitPrelude
-  Build-Depends:  base,
-                  hspec,
-                  flowbox-utils
+    Type:           exitcode-stdio-1.0
+    Main-Is:        Spec.hs
+    Hs-Source-Dirs: test
+    GHC-Options:    -Wall -threaded -O2
+    Extensions:     NoImplicitPrelude
+    Build-Depends:  base,
+                    hspec,
+                    flowbox-utils

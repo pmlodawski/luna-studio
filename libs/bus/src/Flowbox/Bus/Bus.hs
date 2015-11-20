@@ -49,10 +49,11 @@ logger = getLoggerIO $moduleName
 type Error = String
 
 
-type Bus a = forall z. StateT (BusEnv z) (EitherT Error (ZMQ z)) a
+type Bus    a = forall z. Bus' z a
+type Bus' z a = StateT (BusEnv z) (ExceptT Error (ZMQ z)) a
 
 
-requestClientID :: EP.EndPoint -> EitherT Error (ZMQ z) Message.ClientID
+requestClientID :: EP.EndPoint -> ExceptT Error (ZMQ z) Message.ClientID
 requestClientID addr = do
     socket <- lift $ ZMQ.socket ZMQ.Req
     lift $ ZMQ.connect socket addr
@@ -64,7 +65,7 @@ requestClientID addr = do
 
 
 runBus :: MonadIO m => EP.BusEndPoints -> Bus a -> m (Either Error a)
-runBus endPoints fun = ZMQ.runZMQ $ runEitherT $ do
+runBus endPoints fun = ZMQ.runZMQ $ runExceptT $ do
     logger trace "Connecting to bus..."
     clientID   <- requestClientID $ EP.controlEndPoint endPoints
     subSocket  <- lift $ ZMQ.socket ZMQ.Sub
@@ -112,7 +113,6 @@ sendFrame :: MessageFrame -> Bus ()
 sendFrame = sendByteString . MessageFrame.toByteString
 
 
-
 receive :: Bus MessageFrame
 receive = receive' >>= lift . hoistEither
 
@@ -121,10 +121,10 @@ receive' :: Bus (Either Error MessageFrame)
 receive' = MessageFrame.fromByteString <$> receiveByteString
 
 
-withTimeout :: Bus a -> Int -> Bus (Either Error a)
-withTimeout action timeout = runEitherT $ do
+withTimeout :: Bus' z a -> Int -> Bus' z (Either Error a)
+withTimeout action timeout = runExceptT $ do
     state' <- get
-    task <- lift3 $ ZMQ.async $ runEitherT $ runStateT action state'
+    task <- lift3 $ ZMQ.async $ runExceptT $ runStateT action state'
     wait <- liftIO $ Async.async $ do Concurrent.threadDelay timeout
                                       return "Timeout reached"
     r <- liftIO $ Async.waitEitherCancel wait task

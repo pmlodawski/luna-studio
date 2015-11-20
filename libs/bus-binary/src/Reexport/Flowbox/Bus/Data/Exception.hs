@@ -1,5 +1,7 @@
+{-# LANGUAGE PackageImports #-}
+
 module Reexport.Flowbox.Bus.Data.Exception (
     module X
 ) where
 
-import Flowbox.Bus.Data.Exception as X
+import "flowbox-bus" Flowbox.Bus.Data.Exception as X

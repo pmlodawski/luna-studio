@@ -1,9 +1,12 @@
 packages:
 - ../../../../../libs/bus
+- ../../../../../libs/bus-binary
 - ../../../../../libs/config
 - ../../../../../libs/rpc
-- ../../../../../libs/utils
-- ../../../../../third-party/fgl
+- ../../../../../libs/old-utils
 - ../../../../../tools/batch/plugins/bus-logger
-resolver: nightly-2015-07-24
-
+resolver: lts-3.14
+extra-deps:
+- convert-1.0
+- typelevel-1.0.2
+- errors-1.4.7

@@ -60,4 +60,3 @@ run endPoints topics = do
     forkPipesThread $ produce >-> Pipes.toOutput output1
     forkPipesThread $ Pipes.fromInput input2 >-> consume
     return (input1, output2)
-

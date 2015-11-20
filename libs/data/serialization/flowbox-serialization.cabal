@@ -26,7 +26,35 @@ Library
                   NoImplicitPrelude
 
   Exposed-modules: 
-        
+        Generated.Proto.Data,
+        Generated.Proto.Data.BoolData,
+        Generated.Proto.Data.Channel,
+        Generated.Proto.Data.ChannelData,
+        Generated.Proto.Data.ChannelDescription,
+        Generated.Proto.Data.ChannelDescription.ChannelID,
+        Generated.Proto.Data.CharData,
+        Generated.Proto.Data.CurveData,
+        Generated.Proto.Data.DoubleData,
+        Generated.Proto.Data.EmptyTupleData,
+        Generated.Proto.Data.ErrorData,
+        Generated.Proto.Data.FloatData,
+        Generated.Proto.Data.IntData,
+        Generated.Proto.Data.MatrixData,
+        Generated.Proto.Data.MatrixData.Tag,
+        Generated.Proto.Data.MatrixData.Type,
+        Generated.Proto.Data.PointData,
+        Generated.Proto.Data.SValue,
+        Generated.Proto.Data.SValue.Type,
+        Generated.Proto.Data.StringData,
+        Generated.Proto.Data.TangentData,
+        Generated.Proto.Data.VectorData,
+        Generated.Proto.Data.VertexData,
+        Generated.Proto.Data.ViewData,
+        Generated.Proto.Enums.Type,
+        Generated.Proto.Enums.Type.Numeric,
+        Generated.Proto.Mode,
+        Generated.Proto.Mode.Mode,
+        Generated.Proto.Mode.ModeValue
                    
         Flowbox.Data.Error,
         Flowbox.Data.FilePath,

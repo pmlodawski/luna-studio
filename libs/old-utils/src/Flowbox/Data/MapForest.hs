@@ -4,21 +4,21 @@
 -- Proprietary and confidential
 -- Flowbox Team <contact@flowbox.io>, 2014
 ---------------------------------------------------------------------------
+{-# LANGUAGE DeriveGeneric   #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE DeriveGeneric #-}
 
 module Flowbox.Data.MapForest where
 
-import           Data.Map   (Map)
-import qualified Data.Map   as Map
-import qualified Data.Maybe as Maybe
+import           Data.Map.Strict (Map)
+import qualified Data.Map.Strict as Map
+import qualified Data.Maybe      as Maybe
 
 import Flowbox.Prelude hiding (children, lookup, toList)
 
 
 
-data Node k v = Node { _value    :: Maybe v
-                     , _children :: MapForest k v
+data Node k v = Node { _value    :: ! (Maybe v)
+                     , _children :: ! (MapForest k v)
                      } deriving (Generic, Show, Read, Eq, Ord)
 
 type Path k = [k]

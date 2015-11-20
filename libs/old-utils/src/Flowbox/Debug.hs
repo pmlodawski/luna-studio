@@ -8,10 +8,11 @@
 
 module Flowbox.Debug  where
 
-import Data.Time.Clock       (diffUTCTime, getCurrentTime)
-import Flowbox.Control.Error (MonadIO, liftIO)
-import Flowbox.Prelude
-import System.CPUTime        (getCPUTime)
+import qualified Control.Concurrent    as Concurrent
+import           Data.Time.Clock       (diffUTCTime, getCurrentTime)
+import           Flowbox.Control.Error (MonadIO, liftIO)
+import           Flowbox.Prelude
+import           System.CPUTime        (getCPUTime)
 
 
 
@@ -23,7 +24,13 @@ timeit label action = do
     r      <- action
     end    <- liftIO getCPUTime
     end'   <- liftIO getCurrentTime
-    let diff  = (fromIntegral (end - start)) / (10^12)
+    let diff  = fromIntegral (end - start) / (10^12)
         diff' = diffUTCTime end' start'
     putStrLn $ "<<<<< " ++ label ++ ": " ++ show (diff :: Double) ++ " CPU  " ++ show diff' ++ " TOTAL"
     return r
+
+
+sleep :: MonadIO m => String  -> m ()
+sleep msg = do
+    putStrLn msg
+    liftIO $ Concurrent.threadDelay 2000000

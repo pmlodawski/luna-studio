@@ -53,8 +53,8 @@ handle process = do
         Bus.reply crlID Flag.Enable $ last response
 
 
-runState :: BusEndPoints -> [Topic] -> s -> (CorrelationID -> Message -> StateT s IO [Message]) -> IO (Either Bus.Error ())
-runState endPoints topics s process = Bus.runBus endPoints $ handleLoopState topics s process
+runState :: Bus () -> BusEndPoints -> [Topic] -> s -> (CorrelationID -> Message -> StateT s IO [Message]) -> IO (Either Bus.Error ())
+runState initialize endPoints topics s process = Bus.runBus endPoints $ initialize >> handleLoopState topics s process
 
 
 handleLoopState :: [Topic] -> s -> (CorrelationID -> Message -> StateT s IO [Message]) -> Bus ()

@@ -10,25 +10,31 @@
 
 module Flowbox.Bus.RPC.Server.Server where
 
+import           Flowbox.Bus.Bus                  (Bus)
 import           Flowbox.Bus.EndPoint             (BusEndPoints)
 import           Flowbox.Bus.RPC.HandlerMap       (HandlerMap, HandlerMapWithCid)
 import qualified Flowbox.Bus.RPC.HandlerMap       as HandlerMap
 import qualified Flowbox.Bus.RPC.Server.Processor as Processor
 import qualified Flowbox.Bus.Server               as Server
+import qualified Flowbox.Bus.Util                 as Util
 import           Flowbox.Prelude                  hiding (error)
 import           Flowbox.System.Log.Logger
-
-
 
 logger :: LoggerIO
 logger = getLoggerIO $moduleName
 
 
 run :: BusEndPoints -> s -> HandlerMap s IO -> IO (Either String ())
-run endPoints s handlerMap =
-    Server.runState endPoints (HandlerMap.topics handlerMap) s $ const $ Processor.process handlerMap
+run = runWithInit (return ())
+
+runWithInit :: Bus () -> BusEndPoints -> s -> HandlerMap s IO -> IO (Either String ())
+runWithInit initialize endPoints s handlerMap =
+    Server.runState initialize endPoints (HandlerMap.topics handlerMap) s $ const (Processor.process handlerMap)
 
 runWithCid :: BusEndPoints -> s -> HandlerMapWithCid s IO -> IO (Either String ())
 runWithCid endPoints s handlerMap =
-    Server.runState endPoints (HandlerMap.topicsWithCid handlerMap) s $ Processor.processWithCid handlerMap
+    Server.runState (return ()) endPoints (HandlerMap.topicsWithCid handlerMap) s $ Processor.processWithCid handlerMap
 
+
+runDetectDuplicate :: Util.Ping -> BusEndPoints -> s -> HandlerMap s IO -> IO (Either String ())
+runDetectDuplicate ping = runWithInit (Util.quitIfExists ping)
