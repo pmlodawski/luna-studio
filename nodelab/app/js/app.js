@@ -84,12 +84,12 @@ function initializeGl() {
 
     initTerminal();
     initUserInfo();
-    $(document).unbind('keydown').bind('keydown', function (event) {
-      if (event.keyCode === 8) {
-        event.preventDefault();
-        event.stopPropagation();
-      }
-    });
+    // $(document).unbind('keydown').bind('keydown', function (event) {
+    //   if (event.keyCode === 8) {
+    //     event.preventDefault();
+    //     // event.stopPropagation();
+    //   }
+    // });
 }
 
 function initUserInfo() {

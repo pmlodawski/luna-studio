@@ -5,12 +5,13 @@ import           Utils.Vector
 
 import           Object.Widget
 import           Object.UITypes
+import           Event.Event (JSState)
 
 import qualified Reactive.Commands.UIRegistry as UICmd
 import qualified Reactive.State.Global as Global
 import           Reactive.State.Global (inRegistry)
 import qualified Reactive.State.UIRegistry as UIRegistry
-import           Reactive.Commands.Command (Command)
+import           Reactive.Commands.Command (Command, performIO)
 import           Data.HMap.Lazy (TypeKey(..))
 import qualified Object.Widget.Number.Continuous as Model
 import           UI.Widget.Number (keyModMult)
@@ -67,8 +68,14 @@ dragEndHandler _ _ id = do
         value <- inRegistry $ UICmd.get id Model.value
         triggerValueChanged value id
 
+foreign import javascript unsafe "$1.registry.length" getNoWidgets :: JSState -> Int
+
 dblClickHandler :: DblClickHandler Global.State
-dblClickHandler ev _ id = return ()
+dblClickHandler ev jsState id = do
+    let noWidgets = getNoWidgets jsState
+
+    performIO $ putStrLn $ show $ noWidgets
+
 
 widgetHandlers :: UIHandlers Global.State
 widgetHandlers = def & keyUp        .~ keyUpHandler

@@ -33,6 +33,10 @@ import           Object.Widget.Toggle  (Toggle(..))
 import qualified UI.Handlers.Toggle as Toggle
 import           UI.Widget.Toggle ()
 
+import           Object.Widget.TextBox  (TextBox(..))
+import qualified UI.Handlers.TextBox as TextBox
+import           UI.Widget.TextBox ()
+
 
 toAction :: Event -> Maybe (Command Global.State ())
 toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.inRegistry $ do
@@ -55,6 +59,9 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.in
     UICmd.register_ parent widget def
 
     let widget = Toggle (Vector2 10 150) (Vector2 180 20) ("Toggle") True True True
+    UICmd.register_ parent widget def
+
+    let widget = TextBox (Vector2 10 180) (Vector2 180 20) ("TextBox") "foo" False
     UICmd.register_ parent widget def
 
 toAction _  = Nothing

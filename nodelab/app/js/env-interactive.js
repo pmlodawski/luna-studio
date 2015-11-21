@@ -11,6 +11,7 @@ module.exports = function() {
   window.connectionPen = require('connection_pen');
   window.Slider        = require('slider');
   window.Toggle        = require('toggle');
+  window.TextBox       = require('textbox');
   window.Connection    = require('connection');
   window.textEditor    = require('text_editor');
   window.GraphNode     = require('node');
