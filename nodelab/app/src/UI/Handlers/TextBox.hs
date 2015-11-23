@@ -43,6 +43,9 @@ keyDownHandler '\r' _ jsState id = do
     let value = lazyTextFromJSString $ getValue' jsState id
     inRegistry $ UICmd.update_ id $ (Model.isEditing .~ False)
                                   . (Model.value     .~ value)
+keyDownHandler '\27' _ jsState id = do
+    let value = lazyTextFromJSString $ getValue' jsState id
+    inRegistry $ UICmd.update_ id $ (Model.isEditing .~ False)
 keyDownHandler _ _ _ _ = return ()
 
 widgetHandlers :: UIHandlers Global.State

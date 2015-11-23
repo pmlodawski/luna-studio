@@ -5,6 +5,7 @@ module UI.Widget.TextBox where
 
 import           Utils.PreludePlus
 import           Utils.Vector
+import qualified Data.Text.Lazy as Text
 
 import           GHCJS.Types        (JSVal, JSString)
 import           GHCJS.Marshal.Pure (PToJSVal(..), PFromJSVal(..))
@@ -66,8 +67,6 @@ instance UIDisplayObject Model.TextBox where
 
         ifChanged old model Model.isEditing $ do
             if old ^. Model.isEditing then doneEditing' textBox
-                                      else do
-                                          startEditing'  textBox $ lazyTextToJSString $ model ^. Model.value
-                                          setValueLabel' textBox ""
+                                      else startEditing'  textBox $ lazyTextToJSString $ model ^. Model.value
 
 
