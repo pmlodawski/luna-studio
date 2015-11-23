@@ -38,7 +38,7 @@ Executable parser
                     luna-core,
                     luna-parser2-old,
                     luna-protobuf-old,
-                    flowbox-utils,
+                    flowbox-utils-old,
                     MissingH,
                     mtl,
                     optparse-applicative,

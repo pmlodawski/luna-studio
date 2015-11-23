@@ -47,7 +47,7 @@ Library
                   luna-pass,
                   filepath,
                   flowbox-config,
-                  flowbox-utils,
+                  flowbox-utils-old,
                   MissingH,
                   mtl,
                   text,

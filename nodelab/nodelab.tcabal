@@ -60,7 +60,7 @@ executable nodelab
                      , containers
                      , random
                      , pretty-show
-                     , flowbox-utils
+                     , flowbox-utils-old
                      , flowbox-serialization
                      , protocol-buffers
                      , luna-protobuf-old-gen

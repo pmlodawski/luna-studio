@@ -1,4 +1,4 @@
-Name:           flowbox-utils
+Name:           flowbox-utils-old
 Version:        0.1
 Cabal-Version:  >= 1.8
 --License-file:   LICENSE
@@ -102,7 +102,7 @@ Executable utils-test
                   TypeSynonymInstances
 
   Build-Depends:  base,
-                  flowbox-utils,
+                  flowbox-utils-old,
                   ghc-prim
 
 
@@ -114,4 +114,4 @@ Test-Suite tests
   Extensions:     NoImplicitPrelude
   Build-Depends:  base,
                   hspec,
-                  flowbox-utils
+                  flowbox-utils-old

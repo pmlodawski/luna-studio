@@ -36,7 +36,7 @@ Executable s3-file-manager
                     flowbox-aws,
                     flowbox-bus,
                     flowbox-config,
-                    flowbox-utils,
+                    flowbox-utils-old,
                     http-conduit,
                     MissingH,
                     mtl,

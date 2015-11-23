@@ -23,7 +23,7 @@ Library
                   bytestring,
                   flowbox-bus-binary,
                   flowbox-config,
-                  flowbox-utils
+                  flowbox-utils-old
 
 Executable luna-empire
   Main-Is:        Main.hs
@@ -37,4 +37,4 @@ Executable luna-empire
                   bytestring,
                   flowbox-bus-binary,
                   flowbox-config,
-                  flowbox-utils
+                  flowbox-utils-old

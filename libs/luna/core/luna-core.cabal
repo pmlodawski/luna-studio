@@ -192,7 +192,7 @@ Library
                   directory,
                   fgl,
                   filepath,
-                  flowbox-utils,
+                  flowbox-utils-old,
                   lens,
                   MissingH,
                   parsers,

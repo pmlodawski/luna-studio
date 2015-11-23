@@ -21,4 +21,4 @@ Library
 
   Build-Depends:  base,
                   lens,
-                  flowbox-utils
+                  flowbox-utils-old

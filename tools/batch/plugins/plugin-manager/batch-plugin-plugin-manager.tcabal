@@ -29,7 +29,7 @@ Executable plugin-manager
                     errors,
                     flowbox-bus,
                     flowbox-config,
-                    flowbox-utils,
+                    flowbox-utils-old,
                     MissingH,
                     mtl,
                     optparse-applicative,

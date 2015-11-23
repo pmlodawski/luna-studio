@@ -38,7 +38,7 @@ Executable account-manager-mock
                     exceptions,
                     flowbox-aws,
                     flowbox-rpc,
-                    flowbox-utils,
+                    flowbox-utils-old,
                     network,
                     optparse-applicative < 0.10,
                     postgresql-simple,

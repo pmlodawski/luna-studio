@@ -23,7 +23,7 @@ Executable initializer
                   NoImplicitPrelude
   Build-Depends:  base,
                   flowbox-config,
-                  flowbox-utils,
+                  flowbox-utils-old,
                   luna-initializer,
                   MissingH,
                   optparse-applicative

@@ -25,7 +25,7 @@ Library
                     flowbox-bus,
                     flowbox-config,
                     flowbox-rpc,
-                    flowbox-utils,
+                    flowbox-utils-old,
                     MissingH,
                     mtl,
                     monad-loops,
@@ -46,7 +46,7 @@ Executable bus-test
                     either,
                     flowbox-bus-binary,
                     flowbox-rpc,
-                    flowbox-utils,
+                    flowbox-utils-old,
                     mtl,
                     transformers,
                     zeromq4-haskell

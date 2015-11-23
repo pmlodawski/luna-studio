@@ -37,7 +37,7 @@ Library
 
   Build-Depends:  base,
                   flowbox-config,
-                  flowbox-utils,
+                  flowbox-utils-old,
                   luna-core,
                   luna-target-ghchs,
                   MissingH,

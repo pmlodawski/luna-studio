@@ -28,7 +28,7 @@ Library
   Build-Depends:  base,
                   configurator,
                   either,
-                  flowbox-utils,
+                  flowbox-utils-old,
                   transformers
 
 
@@ -45,5 +45,5 @@ Library
 --   Build-Depends:  base,
 --                   configurator,
 --                   flowbox-config,
---                   flowbox-utils
+--                   flowbox-utils-old
 

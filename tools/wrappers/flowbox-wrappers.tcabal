@@ -10,7 +10,7 @@ executable cabal
   ghc-options:      -O2 -Wall -main-is Cabal
   build-depends:    base,
                     flowbox-config,
-                    flowbox-utils,
+                    flowbox-utils-old,
                     process,
                     system-filepath,
                     text
@@ -21,7 +21,7 @@ executable ghc
   ghc-options:      -O2 -Wall -main-is Ghc
   build-depends:    base,
                     flowbox-config,
-                    flowbox-utils,
+                    flowbox-utils-old,
                     process,
                     system-filepath,
                     text
@@ -32,7 +32,7 @@ executable ghci
   ghc-options:      -O2 -Wall -main-is Ghci
   build-depends:    base,
                     flowbox-config,
-                    flowbox-utils,
+                    flowbox-utils-old,
                     process,
                     system-filepath,
                     text
@@ -43,7 +43,7 @@ executable ghc-pkg
   ghc-options:      -O2 -Wall -main-is GhcPkg
   build-depends:    base,
                     flowbox-config,
-                    flowbox-utils,
+                    flowbox-utils-old,
                     MissingH,
                     process,
                     system-filepath,
@@ -55,7 +55,7 @@ executable hsc2hs
   ghc-options:      -O2 -Wall -main-is Hsc2Hs
   build-depends:    base,
                     flowbox-config,
-                    flowbox-utils,
+                    flowbox-utils-old,
                     process,
                     system-filepath,
                     text
