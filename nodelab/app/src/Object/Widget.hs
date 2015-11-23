@@ -44,9 +44,11 @@ data WidgetFile b = WidgetFile { _objectId :: WidgetId
                                } deriving (Generic)
 
 type Position = Vector2 Double
+type Size     = Vector2 Double
 
 class IsDisplayObject a where
-    widgetPosition :: Lens' a Position
+    widgetPosition :: Lens'  a Position
+    widgetSize     :: Getter a Size
 
 class UIDisplayObject a where
     createUI   :: WidgetId -> WidgetId -> a -> IO ()

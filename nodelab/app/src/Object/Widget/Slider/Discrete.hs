@@ -22,7 +22,8 @@ instance ToJSON DiscreteSlider
 
 instance IsDisplayObject DiscreteSlider where
     widgetPosition = position
-
+    widgetSize     = size
+    
 displayValue' :: DiscreteSlider -> String
 displayValue' slider = show $ slider ^. value
 

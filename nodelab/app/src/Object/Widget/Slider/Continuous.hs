@@ -23,7 +23,8 @@ instance ToJSON ContinuousSlider
 
 instance IsDisplayObject ContinuousSlider where
     widgetPosition = position
-
+    widgetSize     = size
+    
 displayValue' :: ContinuousSlider -> String
 displayValue' slider = showFFloat (Just $ precision) val "" where
     val             = slider ^. value

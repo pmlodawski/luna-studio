@@ -19,3 +19,4 @@ instance ToJSON Button
 
 instance IsDisplayObject Button where
     widgetPosition = position
+    widgetSize     = size

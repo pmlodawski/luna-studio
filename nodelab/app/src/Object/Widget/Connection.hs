@@ -1,11 +1,12 @@
 module Object.Widget.Connection where
 
-import Utils.PreludePlus hiding (from)
-import Utils.Vector
-import Object.Object
-import Object.UITypes
-import Object.Widget
-import Data.Aeson (ToJSON)
+import           Utils.PreludePlus hiding (from, to)
+import qualified Utils.PreludePlus as Prelude
+import           Utils.Vector
+import           Object.Object
+import           Object.UITypes
+import           Object.Widget
+import           Data.Aeson (ToJSON)
 
 data Connection = Connection { _connectionId :: ConnectionId
                              , _visible      :: Bool
@@ -19,6 +20,7 @@ instance ToJSON Connection
 
 instance IsDisplayObject Connection where
     widgetPosition = from
+    widgetSize     = Prelude.to $ \w -> abs <$> (w ^. from - w ^. to)
 
 data CurrentConnection = CurrentConnection { _currentVisible      :: Bool
                                            , _currentFrom         :: Vector2 Double
@@ -31,3 +33,4 @@ instance ToJSON CurrentConnection
 
 instance IsDisplayObject CurrentConnection where
     widgetPosition = currentFrom
+    widgetSize     = Prelude.to $ \w -> abs <$> (w ^. currentFrom - w ^. currentTo)

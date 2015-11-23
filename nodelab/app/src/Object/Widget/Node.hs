@@ -34,6 +34,7 @@ node n = Node (n ^. N.nodeId) [] [] (n ^. N.nodePos) 0.0 (n ^. N.expression) "()
 
 instance IsDisplayObject Node where
     widgetPosition = position
+    widgetSize     = to $ \_ -> Vector2 60.0 60.0
 
 data PendingNode = PendingNode { _pendingExpression :: Text
                                , _pendingPosition   :: Position
@@ -44,3 +45,4 @@ instance ToJSON PendingNode
 
 instance IsDisplayObject PendingNode where
     widgetPosition = pendingPosition
+    widgetSize     = to $ \_ -> Vector2 60.0 60.0

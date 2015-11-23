@@ -17,4 +17,5 @@ instance ToJSON TextBox
 
 instance IsDisplayObject TextBox where
     widgetPosition = position
+    widgetSize     = size
 

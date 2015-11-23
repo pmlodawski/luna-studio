@@ -18,4 +18,4 @@ makeLenses ''Toggle
 instance ToJSON Toggle
 instance IsDisplayObject Toggle where
     widgetPosition = position
-
+    widgetSize     = size

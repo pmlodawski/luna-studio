@@ -23,7 +23,7 @@ angle = to (toAngle . view angleVector )
 
 instance IsDisplayObject Port where
     widgetPosition = lens (\x -> Vector2 0.0 0.0) (error "Port has no position setter")
-
+    widgetSize     = to $ \_ -> Vector2 0.0 0.0
 
 -- instance HandlesMouseOver Port where
 --     onMouseOver file model = (action, toCtxDynamic model) where

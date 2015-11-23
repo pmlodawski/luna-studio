@@ -20,6 +20,7 @@ instance ToJSON DiscreteNumber
 
 instance IsDisplayObject DiscreteNumber where
     widgetPosition = position
+    widgetSize     = size
 
 displayValue' :: DiscreteNumber -> String
 displayValue' model = show $ model ^. value

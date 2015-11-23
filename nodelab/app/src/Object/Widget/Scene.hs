@@ -13,6 +13,7 @@ instance ToJSON Scene
 
 instance IsDisplayObject Scene where
     widgetPosition = error "Scene has no position"
+    widgetSize     = error "Scene has no size"
 
 instance UIDisplayObject Scene where
     createUI _ _ _ = error "Scene has no creator"

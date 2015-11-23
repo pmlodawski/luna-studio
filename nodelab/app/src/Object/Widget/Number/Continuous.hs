@@ -20,6 +20,7 @@ instance ToJSON ContinuousNumber
 
 instance IsDisplayObject ContinuousNumber where
     widgetPosition = position
+    widgetSize     = size
 
 displayValue' :: ContinuousNumber -> String
 displayValue' model = showGFloatAlt (Just 2) (model ^. value) ""

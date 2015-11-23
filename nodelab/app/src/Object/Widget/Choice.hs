@@ -16,4 +16,5 @@ makeLenses ''Choice
 
 instance IsDisplayObject Choice where
     widgetPosition = position
+    widgetSize     = size
 
