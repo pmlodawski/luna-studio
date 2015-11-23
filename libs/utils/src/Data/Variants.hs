@@ -408,10 +408,8 @@ case' :: Case a matches out => a -> matches -> out
 case' = unsecureCase . view record
 
 unsafeFrom :: (MatchMonad out (Variants a) out, HasRecord' a) => a -> out
-unsafeFrom a = case' a mid
+unsafeFrom a = case' a $ match id
 
-mid :: MatchMonad v rec v =>  MatchSet rec v
-mid = match id 
 
 --------------------------------------------------------------------------
 ---- Tests

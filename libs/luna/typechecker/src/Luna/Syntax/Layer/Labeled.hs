@@ -54,6 +54,8 @@ instance HasLabel l (Labeled l a t) where
 
 -- FIXME: Remove vvv
 instance Monad m => Maker m Int where make = return 0
+instance Monad m => Destroyer m Int where destroy _ = return ()
+
 
 --instance HasAST (a t) ast => HasAST (Labeled l a t) ast where ast = undefined
 --instance HasAST a ast => HasAST (Labeled l a) ast where ast = inner . ast

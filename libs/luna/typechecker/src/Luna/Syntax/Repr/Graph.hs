@@ -107,6 +107,10 @@ instance {-# OVERLAPPABLE #-} (TracksSuccs (Unlayered a), Layered a) => TracksSu
 
 type instance Destructed (SuccTracking a) = a
 
+-- FIXME [WD] - usunac wszystkie poprzednie nody - wywolujac wunkcje do usuwania powiazania wsteczniego
+instance Monad m => Destructor m (SuccTracking a) where destruct (SuccTracking s a) = return a
+
+
 data Graph node edge = Graph { _nodes :: VectorGraph node
                              , _edges :: VectorGraph edge
                              } deriving (Show)

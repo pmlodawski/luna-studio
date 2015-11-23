@@ -23,12 +23,21 @@ appArg = unsafeCoerce
 unsafeCast :: Any -> a
 unsafeCast = unsafeCoerce
 
+toAny :: a -> Any
+toAny = unsafeCoerce
+
+
+run a = liftIO $ HS.run $ HS.setImports defaultImports >> a
+
+
+defaultImports :: [HS.Import]
+defaultImports = ["Prelude"]
 
 
 
 test :: IO ()
 test = HS.run $ do
-    HS.setImports ["Prelude"]
+    HS.setImports defaultImports
     length <- findSymbol "length" "String -> Int"
     let r = appArg length (unsafeCoerce "bla")
     print (unsafeCast r :: Int)
