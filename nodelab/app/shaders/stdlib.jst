@@ -33,25 +33,21 @@ float sdf_smoothMergeDisorted(float d1, float d2, float k) {
     return mix(d2, d1, h) - k * h * (1.0-h);
 }
 
-
 float sdf_merge     (float d1,   float d2) { return min( d1, d2); }
 float sdf_subtract  (float d1,   float d2) { return max(-d1, d2); }
 float sdf_intersect (float d1,   float d2) { return max( d1, d2); }
 float sdf_grow      (float size, float d)  { return d - size; }
 float sdf_shrink    (float size, float d)  { return d + size; }
 
-
 //////////////////////////////
 // Distance field functions //
 //////////////////////////////
-
 
 float sdf_pie(vec2 p, float angle) {
     angle = radians(angle) / 2.0;
     vec2 n = vec2(cos(angle), sin(angle));
     return abs(p).x * n.x + p.y*n.y;
 }
-
 
 float sdf_ball(vec2 p, float radius) {
     return length(p) - radius;
@@ -72,7 +68,6 @@ float sdf_ellipse(vec2 p, float a, float b) {
     float py2 = p.y * p.y;
     return (b2 * px2 + a2 * py2 - a2 * b2)/(a2 * b2);
 }
-
 
 float sdf_triangle(vec2 p, float radius) {
     return max(abs(p).x * 0.866025 + p.y * 0.5, -p.y) - radius * 0.5;
@@ -124,7 +119,6 @@ float sdf_rect(vec2 p, vec2 size, vec4 corners) {
     }
 }
 
-
 float sdf_line(vec2 p, vec2 start, vec2 end, float width) {
     vec2 dir = start - end;
     float lngth = length(dir);
@@ -133,16 +127,33 @@ float sdf_line(vec2 p, vec2 start, vec2 end, float width) {
     return length( (start - p) - proj ) - (width / 2.0);
 }
 
+float sdf_halfplane(vec2 p, vec2 a) {
+    return a.x * p.x + a.y * p.y;
+}
+
+float sdf_halfplaneRight(vec2 p) {
+    return sdf_halfplane(p, vec2(1.0, 0.0));
+}
+
+float sdf_halfplaneLeft(vec2 p) {
+    return sdf_halfplane(p, vec2(-1.0, 0.0));
+}
+
+float sdf_halfplaneTop(vec2 p) {
+    return sdf_halfplane(p, vec2(0.0, 1.0));
+}
+
+float sdf_halfplaneBottom(vec2 p) {
+    return sdf_halfplane(p, vec2(0.0, -1.0));
+}
 
 ///////////////////////
 // Masks for drawing //
 ///////////////////////
 
-
 float sdf_fill(float dist) {
     return clamp(-dist, 0.0, 1.0);
 }
-
 
 // float sdf_borderOut(float width, float p) {
 //     float alpha1 = clamp(p);
@@ -164,39 +175,19 @@ float sdf_shadow(float p, float width, float exp) {
     return pow(1.0-clamp(p/width),exp);
 }
 
-
-float sdf_halfplaneRight(vec2 p) {
-    return p.x;
-}
-
-float sdf_halfplaneLeft(vec2 p) {
-    return -p.x;
-}
-
-float sdf_halfplaneTop(vec2 p) {
-    return p.y;
-}
-
-float sdf_halfplaneBottom(vec2 p) {
-    return -p.y;
-}
-
 /////////////////////
 // Transformations //
 /////////////////////
-
 
 vec2 sdf_rotateCCW(vec2 p, float a) {
     mat2 m = mat2(cos(a), sin(a), -sin(a), cos(a));
     return p * m;
 }
 
-
 vec2 sdf_rotateCW(vec2 p, float a) {
     mat2 m = mat2(cos(a), -sin(a), sin(a), cos(a));
     return p * m;
 }
-
 
 vec2 translate(vec2 p, vec2 t) {
     return p - t;
@@ -210,8 +201,6 @@ vec3 hsv2rgb(vec3 c) {
     return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
 }
 
-
-
 float sdf_aa(float d) {
     float anti = fwidth(d) * aa;
     return 1.0 - smoothstep(-anti, anti, d);
@@ -224,7 +213,6 @@ vec2 cartesian2polar (vec2 p) {
 vec3 gradient_hsv (vec2 p, float step) {
     return hsv2rgb(vec3(p.x/step,1.0,1.0));
 }
-
 
 vec2 appTrans2D (vec2 p, mat4 xform) {
     return (xform * vec4(p,0.0,1.0)).xy;
