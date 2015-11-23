@@ -1,6 +1,6 @@
 module Main where
 
-import           Flowbox.Prelude
+import           Prologue
 import qualified Flowbox.Config.Config    as Config
 import qualified Flowbox.Bus.EndPoint     as EP
 import qualified Flowbox.Bus.Bus          as Bus

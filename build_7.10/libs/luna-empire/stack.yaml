@@ -5,9 +5,16 @@ packages:
 - ../../../libs/rpc
 - ../../../libs/config
 - ../../../libs/old-utils
+- ../../../libs/utils
 resolver: lts-3.14
 extra-deps:
-- prologue-1.0
+- prologue-1.0.6
+- container-1.0
+- data-layer-1.0.3
 - convert-1.0
 - data-repr-1.0
 - string-qq-0.0.2
+- typelevel-1.0
+- functor-utils-1.0
+- lens-utils-1.0
+- data-construction-1.0
