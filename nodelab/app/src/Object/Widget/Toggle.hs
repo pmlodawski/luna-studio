@@ -1,8 +1,8 @@
 module Object.Widget.Toggle where
 
-import           Utils.PreludePlus
-import           Utils.Vector
-import           Object.Widget
+import            Utils.PreludePlus
+import            Utils.Vector
+import            Object.Widget
 import Data.Aeson (ToJSON)
 
 data Toggle = Toggle { _position :: Vector2 Double

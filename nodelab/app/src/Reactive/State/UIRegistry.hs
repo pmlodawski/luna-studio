@@ -85,7 +85,7 @@ register parent a handlers state = (widgetFile, state & widgets .~ newWidgets') 
     newId         = generateId state
     oldWidgets    = state ^. widgets
     (Just oldParent) = IntMap.lookup parent oldWidgets
-    newParent     = oldParent & children .~ (newId:(oldParent ^. children))
+    newParent     = oldParent & children .~ (oldParent ^. children) ++ [newId]
     dynamicFile   = WidgetFile newId (toCtxDynamic a) (Just parent) [] handlers
     widgetFile    = WidgetFile newId a (Just parent) [] handlers
 

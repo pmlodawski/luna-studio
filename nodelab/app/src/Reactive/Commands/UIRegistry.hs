@@ -2,7 +2,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Reactive.Commands.UIRegistry where
 
-import           Utils.PreludePlus
+import           Utils.PreludePlus hiding (children)
 import           JS.Widget         as UI
 import           Object.UITypes    (WidgetId)
 import           Object.Widget
@@ -41,6 +41,14 @@ move id vec = do
     UIRegistry.widgets . ix id . widget . widgetPosition .= vec
     performIO $ UI.updatePosition' id vec
 
+moveY :: WidgetId -> Double -> Command UIRegistry.State ()
+moveY id ny = do
+    pos <- preuse $ UIRegistry.widgets . ix id . widget . widgetPosition
+    forM_ pos $ \(Vector2 px _) -> do
+        UIRegistry.widgets . ix id . widget . widgetPosition . y .= ny
+        let vec = Vector2 px ny
+        performIO $ UI.updatePosition' id vec
+
 moveBy :: WidgetId -> Vector2 Double -> Command UIRegistry.State ()
 moveBy id vec = do
     UIRegistry.widgets . ix id . widget . widgetPosition += vec
@@ -50,7 +58,13 @@ moveBy id vec = do
 get :: DisplayObjectClass a => WidgetId -> Lens' a b -> Command UIRegistry.State b
 get id f = do
     maybeFile <- UIRegistry.lookupTypedM id
-    let file     = fromMaybe (error "updateWidgetM: invalidType") maybeFile
+    let file     = fromMaybe (error "get: invalid type or widget not exists") maybeFile
+    return $ file ^. widget . f
+
+get' :: WidgetId -> Getter DisplayObject b -> Command UIRegistry.State b
+get' id f = do
+    maybeFile <- UIRegistry.lookupM id
+    let file     = fromMaybe (error "get': widget not exists") maybeFile
     return $ file ^. widget . f
 
 lookup :: DisplayObjectClass a => WidgetId -> Command UIRegistry.State a
@@ -59,6 +73,11 @@ lookup id = do
     let file   = fromMaybe (error "updateWidgetM: invalidType") maybeFile
     return $ file ^. widget
 
+children :: WidgetId -> Command UIRegistry.State [WidgetId]
+children id = do
+    maybeFile <- UIRegistry.lookupM id
+    let file   = fromMaybe (error "children: widget not exists") maybeFile
+    return $ file ^. Object.Widget.children
 
 handler :: Typeable k => WidgetId -> TypeKey k -> Command UIRegistry.State (Maybe k)
 handler id k = do
