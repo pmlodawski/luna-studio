@@ -1,5 +1,10 @@
 packages:
 - ../../../libs/luna-empire
+- ../../../libs/bus-binary
+- ../../../libs/bus
+- ../../../libs/rpc
+- ../../../libs/config
+- ../../../libs/old-utils
 resolver: lts-3.14
 extra-deps:
 - prologue-1.0
