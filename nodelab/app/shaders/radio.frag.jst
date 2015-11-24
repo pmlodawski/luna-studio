@@ -29,6 +29,6 @@ void main(void) {
 
     gl_FragColor = mix(colorBackground, gl_FragColor, 1.0 - sdf_aa(gDisk));
     gl_FragColor = mix(colorCircle,     gl_FragColor, 1.0 - sdf_aa(gCircle));
-    gl_FragColor = mix(colorCircle,     gl_FragColor, 1.0 - (sdf_aa(gRadio) * float(1 - value)));
+    gl_FragColor = mix(colorCircle,     gl_FragColor, 1.0 - sdf_aa(gRadio) * float(1 - value));
 }
 
