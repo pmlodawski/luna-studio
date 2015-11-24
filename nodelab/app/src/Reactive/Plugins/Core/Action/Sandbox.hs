@@ -38,12 +38,14 @@ import qualified UI.Handlers.TextBox as TextBox
 import           UI.Widget.TextBox ()
 
 import           Object.Widget.Choice.RadioButton  (RadioButton(..))
-import qualified UI.Handlers.Choice.RadioButton as RadioButton
+import qualified Object.Widget.Choice.RadioButton as RadioButton
+import qualified UI.Handlers.Choice.RadioButton   as RadioButton
 import           UI.Widget.Choice.RadioButton ()
 
 import           Object.Widget.Choice  (Choice(..))
 import qualified Object.Widget.Choice  as Choice
 import qualified UI.Handlers.Choice    as Choice
+import qualified UI.Command.Choice     as Choice
 import           UI.Widget.Choice ()
 
 import           UI.Layout as Layout
@@ -81,30 +83,11 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.in
     UICmd.register_ parent widget def
 
     let widget = Choice (Vector2 10 210) (Vector2 180 20) "" ["Foo", "Bar", "Baz"] 0
-    makeChoice parent widget
+    Choice.makeChoice parent widget
 
     return ()
 
 toAction _  = Nothing
 
 
-
-radioHandlers :: WidgetId -> Word -> HTMap
-radioHandlers id ix = addHandler (RadioButton.SelectedHandler $ selectRadioButton id ix)
-                    $ mempty
-
-selectRadioButton :: WidgetId -> Word -> Command Global.State ()
-selectRadioButton id ix = inRegistry $ UICmd.update_ id $ Choice.value .~ ix
-
-makeChoice :: WidgetId -> Choice -> Command UIRegistry.State WidgetId
-makeChoice parent model = do
-    contId <- UICmd.register parent model def
-    let opts = (model ^. Choice.options) `zip` [0..]
-    forM_ opts $ \(label, ix) -> do
-        let widget = RadioButton def (Vector2 180 20) label False
-        UICmd.register_ contId widget (radioHandlers contId ix)
-
-    Layout.verticalLayout 5.0 contId
-
-    return contId
 

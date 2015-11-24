@@ -16,7 +16,6 @@ import           UI.Widget.Toggle ()
 import           UI.Generic (takeFocus, startDrag)
 
 newtype ValueChangedHandler = ValueChangedHandler (Bool -> WidgetId -> Command Global.State ())
-
 valueChangedHandlerKey = TypeKey :: TypeKey ValueChangedHandler
 
 isEnabled :: WidgetId -> Command Global.State Bool

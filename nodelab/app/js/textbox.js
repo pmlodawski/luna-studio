@@ -1,7 +1,7 @@
 "use strict";
 
 var $$ = require('common');
-var vs = require('shaders/slider.vert')();
+var vs = require('shaders/sdf.vert')();
 var fs = require('shaders/slider.frag')();
 var config = require('config');
 

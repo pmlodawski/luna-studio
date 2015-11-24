@@ -3,6 +3,7 @@ module Object.Widget.Choice where
 import           Utils.PreludePlus hiding (Choice)
 import           Utils.Vector
 import           Object.Widget
+import           Object.UITypes
 import           Data.Aeson (ToJSON)
 
 data Choice = Choice { _position :: Vector2 Double
@@ -18,4 +19,3 @@ instance ToJSON          Choice
 instance IsDisplayObject Choice where
     widgetPosition = position
     widgetSize     = size
-
