@@ -44,7 +44,7 @@ makeChoice parent model = do
         let widget = RadioButton def (Vector2 180 20) label False
         UICmd.register_ contId widget (radioHandlers contId ix)
 
-    Layout.verticalLayout 5.0 contId
+    Layout.verticalLayout 0.0 contId
 
     return contId
 

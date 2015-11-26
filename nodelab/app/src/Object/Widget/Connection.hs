@@ -20,7 +20,9 @@ instance ToJSON Connection
 
 instance IsDisplayObject Connection where
     widgetPosition = from
-    widgetSize     = Prelude.to $ \w -> abs <$> (w ^. from - w ^. to)
+    widgetSize     = lens get set where
+        get w      = abs <$> (w ^. from - w ^. to)
+        set w s    = w & to .~ ((w ^. from) + s)
 
 data CurrentConnection = CurrentConnection { _currentVisible      :: Bool
                                            , _currentFrom         :: Vector2 Double
@@ -33,4 +35,6 @@ instance ToJSON CurrentConnection
 
 instance IsDisplayObject CurrentConnection where
     widgetPosition = currentFrom
-    widgetSize     = Prelude.to $ \w -> abs <$> (w ^. currentFrom - w ^. currentTo)
+    widgetSize     = lens get set where
+        get w      = abs <$> (w ^. currentFrom - w ^. currentTo)
+        set w s    = w & currentTo .~ ((w ^. currentFrom) + s)
