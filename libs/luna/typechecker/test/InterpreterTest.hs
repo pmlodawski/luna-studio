@@ -83,13 +83,14 @@ import qualified Luna.Syntax.Builder.Node             as NodeBuilder
 import           Luna.Syntax.Builder.Star             (MonadStarBuilder)
 import           Luna.Syntax.Builder.Star             (StarBuilder, StarBuilderT)
 import qualified Luna.Syntax.Builder.Star             as StarBuilder
+import qualified Luna.Syntax.Builder.Symbol           as SymbolBuilder
 import           Luna.Syntax.Layer.Labeled
 import           Luna.Syntax.Name.Pool
 import           Luna.Syntax.Repr.Graph
 import qualified Luna.Syntax.Repr.Graph               as GraphBuilder
-import           Luna.Syntax.Symbol.Class             ()
-import           Luna.Syntax.Symbol.Map               ()
-import           Luna.Syntax.Symbol.Network
+import           Luna.Syntax.Symbol.Map               (SymbolMap)
+import qualified Luna.Syntax.Symbol.Map               as Symbol
+import           Luna.Syntax.Symbol.Network           (Network)
 import qualified System.Mem.Weak                      as Mem
 import           System.Process
 import           Text.Read                            (readMaybe)
@@ -126,10 +127,14 @@ sampleGraph = runIdentity
             return appPlus
 
 
-runGraph gr a = runIdentityT
-         $ flip StarBuilder.evalT Nothing
-         $ flip Builder.runT gr
-         $ flip NodeBuilder.evalT (Ref $ Node (0 :: Int)) a
+symbolMap :: SymbolMap t
+symbolMap = Map.fromList [(["+"], Symbol.PartiallySpecializedNetwork def def)]
+
+runGraph gr = runIdentityT
+            . flip SymbolBuilder.evalT symbolMap
+            . flip StarBuilder.evalT Nothing
+            . flip Builder.runT gr
+            . flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
 
 
 mangleName name _ = return (par name)
@@ -152,7 +157,7 @@ runNode (ref :: Ref Node) = do
             (name, s) <- getAcc acc
             args <- mapM (runNode <=< follow . Arg.__arec) (inputs p)
             mangled <- mangleName name typeNode
-            fun <- lift $ lift $ lift $ lift $ Session.findSymbol mangled typeStr -- TODO[PM] przerobic na `... => m (cos)`
+            fun <- lift $ lift $ lift $ lift $ lift $ Session.findSymbol mangled typeStr -- TODO[PM] przerobic na `... => m (cos)`
             mapM_ (\r -> print (Session.unsafeCast r :: Int)) args
             return $ foldl Session.appArg fun (args)
         match $ \(Val v) -> do

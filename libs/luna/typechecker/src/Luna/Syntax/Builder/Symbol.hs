@@ -1,7 +1,7 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE UndecidableInstances   #-}
 
-module Luna.Syntax.Symbol.Class where
+module Luna.Syntax.Builder.Symbol where
 
 import Prologue
 
