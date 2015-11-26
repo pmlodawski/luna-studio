@@ -1,4 +1,3 @@
-
 {-# LANGUAGE DataKinds                 #-}
 {-# LANGUAGE FunctionalDependencies    #-}
 {-# LANGUAGE GADTs                     #-}
@@ -13,12 +12,9 @@
 {-# LANGUAGE TypeOperators             #-}
 {-# LANGUAGE UndecidableInstances      #-}
 
--- {-# LANGUAGE PolyKinds #-}
-
 module Main where
 
 import Prologue hiding (Cons, Indexable, Ixed, Repr, Simple, children, cons, empty, index, lookup, maxBound, minBound, repr, simple)
---import Data.Repr
 
 import           Control.Error.Util                   (hush)
 import           Control.Monad.Fix
@@ -91,15 +87,16 @@ import           Luna.Syntax.Layer.Labeled
 import           Luna.Syntax.Name.Pool
 import           Luna.Syntax.Repr.Graph
 import qualified Luna.Syntax.Repr.Graph               as GraphBuilder
+import           Luna.Syntax.Symbol.Class             ()
+import           Luna.Syntax.Symbol.Map               ()
+import           Luna.Syntax.Symbol.Network
 import qualified System.Mem.Weak                      as Mem
 import           System.Process
 import           Text.Read                            (readMaybe)
 import qualified Type.BaseType                        as BT
 import           Unsafe.Coerce                        (unsafeCoerce)
 
-
 -- ====================================
-type Network = Graph (Labeled2 Int (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge)))))) DoubleArc
 
 typed a t = StarBuilder.with (const $ Just t) a
 
@@ -125,6 +122,7 @@ sampleGraph = runIdentity
             int2int  <- arrow consInt consInt
             int2int2int <- arrow int2int consInt
             appPlus  <- app accPlus [arg i2, arg i3] `typed` int2int2int
+            -- x <- app accPlus [arg appPlus, arg appPlus] `typed` int2int2int
             return appPlus
 
 
@@ -138,6 +136,10 @@ mangleName name _ = return (par name)
 
 par x = "(" <> x <> ")"
 
+-- TODO[PM]
+-- newtype MyAny = forall (Repr a) => MyAny a -- Prosze zanim to zrobisz sprawdz google -> roznica pomiedzy exystential i Any (tam gdzie jest zadeklarowane Any powinno byc napisane)
+
+-- runNode :: _ => _ -- TODO[PM] Ref Node -> t (t1 (t2 (t3 Control.Monad.Ghc.Ghc))) AnyRef Node -> t (t1 (t2 (t3 Control.Monad.Ghc.Ghc))) Any
 runNode (ref :: Ref Node) = do
     node <- readRef ref
     case' (uncoat (node :: Labeled2 Int (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge))))))) $ do
@@ -150,8 +152,8 @@ runNode (ref :: Ref Node) = do
             (name, s) <- getAcc acc
             args <- mapM (runNode <=< follow . Arg.__arec) (inputs p)
             mangled <- mangleName name typeNode
-            fun <- lift $ lift $ lift $ lift $ Session.findSymbol mangled typeStr
-            mapM_ (\r -> print (Session.unsafeCast r :: Int)) (args)
+            fun <- lift $ lift $ lift $ lift $ Session.findSymbol mangled typeStr -- TODO[PM] przerobic na `... => m (cos)`
+            mapM_ (\r -> print (Session.unsafeCast r :: Int)) args
             return $ foldl Session.appArg fun (args)
         match $ \(Val v) -> do
             case' v $ do
@@ -165,6 +167,7 @@ runNode (ref :: Ref Node) = do
             prettyPrint (uncoat node)
             return undefined
 
+-- TODO[PM] move to runNode
 getAcc (ref :: Ref Node) = do
     node <- readRef ref
     case' (uncoat (node :: Labeled2 Int (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge))))))) $ do
@@ -194,12 +197,10 @@ typeString (ref :: Ref Node) = do
 
 
 evaluateTest :: Ref Node -> Network -> IO ((), Network)
-evaluateTest i gr = Session.run $ runGraph gr $  do
+evaluateTest i gr = Session.run $ runGraph gr $ do
     r <- runNode i
     putStrLn "RESULT IS:"
     print (Session.unsafeCast r :: Int)
-    print "foo"
-    return ()
 
 
 main :: IO ()
@@ -214,8 +215,8 @@ main = do
     --             --   , ("g2", g2)
     --             --   , ("g3", g3)
     --               ]
-    renderAndOpen [ ("g" , g)]
+    -- renderAndOpen [ ("g" , g)]
 
     pprint g
     evaluateTest i g
-    print "end"
+    putStrLn "end"
