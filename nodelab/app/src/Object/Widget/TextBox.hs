@@ -15,6 +15,9 @@ data TextBox = TextBox { _position  :: Vector2 Double
 makeLenses ''TextBox
 instance ToJSON TextBox
 
+create :: Size -> Text -> Text -> TextBox
+create s l v = TextBox def s l v False
+
 instance IsDisplayObject TextBox where
     widgetPosition = position
     widgetSize     = size

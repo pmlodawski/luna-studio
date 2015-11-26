@@ -18,6 +18,9 @@ data DiscreteNumber = DiscreteNumber { _position       :: Vector2 Double
 makeLenses ''DiscreteNumber
 instance ToJSON DiscreteNumber
 
+create :: Size -> Text -> Int -> DiscreteNumber
+create s l v = DiscreteNumber def s l v True def
+
 instance IsDisplayObject DiscreteNumber where
     widgetPosition = position
     widgetSize     = size

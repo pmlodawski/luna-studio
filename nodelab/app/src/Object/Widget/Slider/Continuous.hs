@@ -21,10 +21,13 @@ data ContinuousSlider = ContinuousSlider { _position       :: Vector2 Double
 makeLenses    ''ContinuousSlider
 instance ToJSON ContinuousSlider
 
+create :: Size -> Text -> Double -> Double -> Double -> ContinuousSlider
+create s l min max v = ContinuousSlider def s l True min max v def
+
 instance IsDisplayObject ContinuousSlider where
     widgetPosition = position
     widgetSize     = size
-    
+
 displayValue' :: ContinuousSlider -> String
 displayValue' slider = showFFloat (Just $ precision) val "" where
     val             = slider ^. value

@@ -20,10 +20,13 @@ data DiscreteSlider = DiscreteSlider { _position       :: Vector2 Double
 makeLenses    ''DiscreteSlider
 instance ToJSON DiscreteSlider
 
+create :: Size -> Text -> Int -> Int -> Int -> DiscreteSlider
+create s l min max v = DiscreteSlider def s l True min max v def
+
 instance IsDisplayObject DiscreteSlider where
     widgetPosition = position
     widgetSize     = size
-    
+
 displayValue' :: DiscreteSlider -> String
 displayValue' slider = show $ slider ^. value
 

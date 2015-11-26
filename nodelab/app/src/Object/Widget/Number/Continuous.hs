@@ -18,6 +18,9 @@ data ContinuousNumber =  ContinuousNumber { _position       :: Vector2 Double
 makeLenses ''ContinuousNumber
 instance ToJSON ContinuousNumber
 
+create :: Size -> Text -> Double -> ContinuousNumber
+create s l v = ContinuousNumber def s l v True def
+
 instance IsDisplayObject ContinuousNumber where
     widgetPosition = position
     widgetSize     = size

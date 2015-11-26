@@ -15,6 +15,9 @@ data Choice = Choice { _position :: Vector2 Double
 
 makeLenses ''Choice
 
+create :: Size -> Text -> [Text] -> Word -> Choice
+create s l o v = Choice def s l o v
+
 instance ToJSON          Choice
 instance IsDisplayObject Choice where
     widgetPosition = position
