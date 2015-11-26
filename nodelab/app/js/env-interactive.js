@@ -17,5 +17,6 @@ module.exports = function() {
   window.Connection    = require('connection');
   window.textEditor    = require('text_editor');
   window.GraphNode     = require('node');
+  window.Group         = require('Widget/Group');
   window.Port          = require('port');
 };

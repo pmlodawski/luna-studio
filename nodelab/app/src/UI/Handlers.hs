@@ -16,6 +16,7 @@ import           Object.Widget.Slider.Continuous   (ContinuousSlider)
 import           Object.Widget.Toggle              (Toggle)
 import           Object.Widget.TextBox             (TextBox)
 import           Object.Widget.Choice.RadioButton  (RadioButton)
+import           Object.Widget.Group               (Group)
 
 import           UI.Widget                         (UIWidget, UIContainer, GenericWidget(..))
 import qualified UI.Widget.Node                    as Node
@@ -24,7 +25,9 @@ import qualified UI.Widget.Connection              as Connection
 import qualified UI.Widget.Port                    as Port
 import qualified UI.Widget.Toggle                  as Toggle
 import qualified UI.Widget.TextBox                 as TextBox
+import qualified UI.Widget.Choice                  as Choice
 import qualified UI.Widget.Choice.RadioButton      as RadioButton
+import qualified UI.Widget.Group                   as Group
 
 import qualified UI.Handlers.Number.Discrete       as DiscreteNumber
 import qualified UI.Handlers.Number.Continuous     as ContinuousNumber
@@ -32,8 +35,8 @@ import qualified UI.Handlers.Slider.Discrete       as DiscreteSlider
 import qualified UI.Handlers.Slider.Continuous     as ContinuousSlider
 import qualified UI.Handlers.Toggle                as Toggle
 import qualified UI.Handlers.TextBox               as TextBox
+import qualified UI.Handlers.Choice                as Choice
 import qualified UI.Handlers.Choice.RadioButton    as RadioButton
-
 
 class HasHandlers a where
     widgetHandlers :: DisplayObject -> UIHandlers a
@@ -51,20 +54,23 @@ continuousSliderType  = typeOf (undefined :: ContinuousSlider)
 toggleType            = typeOf (undefined :: Toggle)
 textBoxType           = typeOf (undefined :: TextBox)
 radioButtonType       = typeOf (undefined :: RadioButton)
+groupType             = typeOf (undefined :: Group)
 
 instance HasHandlers State where
     widgetHandlers (CtxDynamic tpe _)
-        | tpe == nodeType                =             Node.widgetHandlers
-        | tpe == connectionType          = def -- Connection.widgetHandlers
-        | tpe == currentConnectionType   = def --CurrentConnection.widgetHandlers
-        | tpe == pendingNodeType         = def
-        | tpe == portType                = def
+        | tpe == nodeType              =             Node.widgetHandlers
+        | tpe == connectionType        = def -- Connection.widgetHandlers
+        | tpe == currentConnectionType = def --CurrentConnection.widgetHandlers
+        | tpe == pendingNodeType       = def
+        | tpe == portType              = def
 
-        | tpe ==   discreteNumberType    =   DiscreteNumber.widgetHandlers
-        | tpe == continuousNumberType    = ContinuousNumber.widgetHandlers
-        | tpe ==   discreteSliderType    =   DiscreteSlider.widgetHandlers
-        | tpe == continuousSliderType    = ContinuousSlider.widgetHandlers
-        | tpe ==           toggleType    =           Toggle.widgetHandlers
-        | tpe ==          textBoxType    =          TextBox.widgetHandlers
-        | tpe ==      radioButtonType    =      RadioButton.widgetHandlers
-        | otherwise                      = error $ "Unknown widget type " <> (show tpe)
+        | tpe ==   discreteNumberType  =   DiscreteNumber.widgetHandlers
+        | tpe == continuousNumberType  = ContinuousNumber.widgetHandlers
+        | tpe ==   discreteSliderType  =   DiscreteSlider.widgetHandlers
+        | tpe == continuousSliderType  = ContinuousSlider.widgetHandlers
+        | tpe ==           toggleType  =           Toggle.widgetHandlers
+        | tpe ==          textBoxType  =          TextBox.widgetHandlers
+        | tpe ==      radioButtonType  =      RadioButton.widgetHandlers
+        | tpe ==            groupType  = def
+
+        | otherwise                    = error $ "Unknown widget type " <> (show tpe)
