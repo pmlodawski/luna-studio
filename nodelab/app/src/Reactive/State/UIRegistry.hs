@@ -128,7 +128,15 @@ unregisterRWS oid = do
     RWS.tell [oid]
 
 unregister :: WidgetId -> State -> ([WidgetId], State)
-unregister oid = swap . RWS.execRWS (unregisterRWS oid) ()
+unregister oid oldState = (outWidgets, state) where
+    widgetParent        = oldState ^? widgets . (ix oid) . parent
+    (outWidgets, state) = case widgetParent of
+        Just widgetParent -> (outWidgets, state') where
+            (state, outWidgets) = RWS.execRWS (unregisterRWS oid) () oldState
+            state' = case widgetParent of
+                Just widgetParent -> state & widgets . ix widgetParent . children %~ delete oid
+                Nothing           -> state
+        Nothing     -> ([], state)
 
 unregisterM :: WidgetId -> Command State [WidgetId]
 unregisterM = MState.state . unregister

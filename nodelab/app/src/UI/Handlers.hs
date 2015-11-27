@@ -17,6 +17,7 @@ import           Object.Widget.Toggle              (Toggle)
 import           Object.Widget.TextBox             (TextBox)
 import           Object.Widget.Choice.RadioButton  (RadioButton)
 import           Object.Widget.Group               (Group)
+import           Object.Widget.Button              (Button)
 
 import           UI.Widget                         (UIWidget, UIContainer, GenericWidget(..))
 import qualified UI.Widget.Node                    as Node
@@ -28,6 +29,7 @@ import qualified UI.Widget.TextBox                 as TextBox
 import qualified UI.Widget.Choice                  as Choice
 import qualified UI.Widget.Choice.RadioButton      as RadioButton
 import qualified UI.Widget.Group                   as Group
+import qualified UI.Widget.Button                  as Button
 
 import qualified UI.Handlers.Number.Discrete       as DiscreteNumber
 import qualified UI.Handlers.Number.Continuous     as ContinuousNumber
@@ -37,6 +39,7 @@ import qualified UI.Handlers.Toggle                as Toggle
 import qualified UI.Handlers.TextBox               as TextBox
 import qualified UI.Handlers.Choice                as Choice
 import qualified UI.Handlers.Choice.RadioButton    as RadioButton
+import qualified UI.Handlers.Button                as Button
 
 class HasHandlers a where
     widgetHandlers :: DisplayObject -> UIHandlers a
@@ -55,6 +58,7 @@ toggleType            = typeOf (undefined :: Toggle)
 textBoxType           = typeOf (undefined :: TextBox)
 radioButtonType       = typeOf (undefined :: RadioButton)
 groupType             = typeOf (undefined :: Group)
+buttonType            = typeOf (undefined :: Button)
 
 instance HasHandlers State where
     widgetHandlers (CtxDynamic tpe _)
@@ -72,5 +76,6 @@ instance HasHandlers State where
         | tpe ==          textBoxType  =          TextBox.widgetHandlers
         | tpe ==      radioButtonType  =      RadioButton.widgetHandlers
         | tpe ==            groupType  = def
+        | tpe ==           buttonType  =           Button.widgetHandlers
 
         | otherwise                    = error $ "Unknown widget type " <> (show tpe)

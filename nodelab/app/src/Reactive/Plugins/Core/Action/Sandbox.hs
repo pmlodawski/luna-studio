@@ -13,47 +13,45 @@ import           Reactive.State.UIRegistry     (sceneInterfaceId, sceneGraphId, 
 import qualified Reactive.State.UIRegistry     as UIRegistry
 import qualified Reactive.Commands.UIRegistry  as UICmd
 
+import           UI.Instances
+
 import qualified Object.Widget.Number.Discrete as DiscreteNumber
 import qualified UI.Handlers.Number.Discrete   as DiscreteNumber
-import           UI.Widget.Number.Discrete ()
 
 import qualified Object.Widget.Number.Continuous as ContinuousNumber
 import qualified UI.Handlers.Number.Continuous   as ContinuousNumber
-import           UI.Widget.Number.Continuous ()
 
 import qualified Object.Widget.Slider.Discrete as DiscreteSlider
 import qualified UI.Handlers.Slider.Discrete   as DiscreteSlider
-import           UI.Widget.Slider.Discrete ()
 
 import qualified Object.Widget.Slider.Continuous as ContinuousSlider
 import qualified UI.Handlers.Slider.Continuous   as ContinuousSlider
-import           UI.Widget.Slider.Continuous ()
 
 import qualified Object.Widget.Toggle as Toggle
 import qualified UI.Handlers.Toggle   as Toggle
-import           UI.Widget.Toggle ()
 
 import qualified Object.Widget.TextBox as TextBox
 import qualified UI.Handlers.TextBox as TextBox
-import           UI.Widget.TextBox ()
 
 import qualified Object.Widget.Group as Group
-import           UI.Widget.Group ()
+
+import qualified Object.Widget.List as List
+import qualified UI.Command.List    as List
 
 import           Object.Widget.Choice.RadioButton  (RadioButton(..))
 import qualified Object.Widget.Choice.RadioButton as RadioButton
 import qualified UI.Handlers.Choice.RadioButton   as RadioButton
-import           UI.Widget.Choice.RadioButton ()
 
 import           Object.Widget.Choice  (Choice(..))
 import qualified Object.Widget.Choice  as Choice
 import qualified UI.Handlers.Choice    as Choice
 import qualified UI.Command.Choice     as Choice
-import           UI.Widget.Choice ()
 
 import           UI.Layout as Layout
 import           Object.UITypes
 import           Object.Widget
+import           Object.LunaValue
+import           Object.LunaValue.Instances
 import           Reactive.State.Global (inRegistry)
 import qualified Data.HMap.Lazy as HMap
 import           Data.HMap.Lazy (HTMap)
@@ -64,7 +62,6 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.in
     performIO $ putStrLn "show sandbox"
     let widget = Group.create
     parent <- UICmd.register sceneGraphId widget def
-
 
     let widget = DiscreteNumber.create (Vector2 180 20) "DiscreteNumber" 42
     UICmd.register_ parent widget def
@@ -89,6 +86,10 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.in
 
     let widget = Choice.create (Vector2 180 20) "Choice" ["Foo", "Bar", "Baz"] 0
     Choice.makeChoice parent widget
+
+
+    let widget = List.create "List" (AnyLunaValue <$> ([1, 2, 3, 4, 5, 6, 7] :: [Int])) $ AnyLunaValue (-1 :: Int)
+    List.makeList parent widget
 
     Layout.verticalLayout 10.0 parent
 

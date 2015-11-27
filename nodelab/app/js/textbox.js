@@ -7,8 +7,7 @@ var config = require('config');
 
 var createText   = require('bmfont').render,
     font         = require("font/LatoBlack-sdf"),
-    textMaterial = require('font/text_material').hud,
-    layoutText   = require('bmfont').layout;
+    textMaterial = require('font/text_material').hud;
 
 function TextBox(widgetId, width, height) {
   var _this = this;

@@ -1,5 +1,3 @@
-{-# LANGUAGE ExistentialQuantification #-}
-
 module Object.Widget.Button where
 
 import Utils.PreludePlus
@@ -8,9 +6,9 @@ import Utils.Vector
 import Object.Widget
 import Data.Aeson (ToJSON)
 
-data Button = Button { _label    :: Text
-                     , _position :: Vector2 Double
+data Button = Button { _position :: Vector2 Double
                      , _size     :: Vector2 Double
+                     , _label    :: Text
                      , _enabled  :: Bool
                      } deriving (Eq, Show, Typeable, Generic)
 
@@ -20,3 +18,6 @@ instance ToJSON Button
 instance IsDisplayObject Button where
     widgetPosition = position
     widgetSize     = size
+
+create :: Size -> Text -> Button
+create s l = Button def s l True

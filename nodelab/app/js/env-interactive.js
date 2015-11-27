@@ -19,4 +19,5 @@ module.exports = function() {
   window.GraphNode     = require('node');
   window.Group         = require('Widget/Group');
   window.Port          = require('port');
+  window.Button        = require('Widget/Button');
 };

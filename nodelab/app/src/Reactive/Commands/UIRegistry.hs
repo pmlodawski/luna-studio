@@ -49,6 +49,14 @@ moveY id ny = do
         let vec = Vector2 px ny
         performIO $ UI.updatePosition' id vec
 
+moveX :: WidgetId -> Double -> Command UIRegistry.State ()
+moveX id nx = do
+    pos <- preuse $ UIRegistry.widgets . ix id . widget . widgetPosition
+    forM_ pos $ \(Vector2 _ py) -> do
+        UIRegistry.widgets . ix id . widget . widgetPosition . x .= nx
+        let vec = Vector2 nx py
+        performIO $ UI.updatePosition' id vec
+
 moveBy :: WidgetId -> Vector2 Double -> Command UIRegistry.State ()
 moveBy id vec = do
     UIRegistry.widgets . ix id . widget . widgetPosition += vec
@@ -64,7 +72,7 @@ get id f = do
 get' :: WidgetId -> Getter DisplayObject b -> Command UIRegistry.State b
 get' id f = do
     maybeFile <- UIRegistry.lookupM id
-    let file     = fromMaybe (error "get': widget not exists") maybeFile
+    let file     = fromMaybe (error $ "get': " <> (show id) <> " widget not exists") maybeFile
     return $ file ^. widget . f
 
 lookup :: DisplayObjectClass a => WidgetId -> Command UIRegistry.State a
