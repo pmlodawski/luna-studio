@@ -28,6 +28,7 @@ sampleGraph = snd $ runIdentity
                   i2       <- _int 421
                   i3       <- _int 444
                   b        <- _blank
+                  myVar    <- var "hehe"
                   _string "aa"
                   _string "bb"
                   namePlus <- _string "+"
@@ -36,7 +37,6 @@ sampleGraph = snd $ runIdentity
                   appPlus  <- app accPlus [arg i2, arg i3]
                   {-app (accessor (_string "+") (_int 2)) [arg $ _int 3]-}
                   return ()
-
 
 sg2 = runIdentity
       $ flip StarBuilder.evalT Nothing

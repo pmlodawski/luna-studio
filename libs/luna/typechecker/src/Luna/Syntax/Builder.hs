@@ -188,6 +188,14 @@ accessor name b = mdo
         constructCoat $ specificCons $ Accessor nc bc
     return $ Ref $ Node i
 
+var (name :: String) = mdo
+    name' <- monadic name
+    i <- modify2 . nodes $ swap . ixed add a
+    a <- NodeBuilder.with (Ref $ Node i) $ do
+        nc <- connect name'
+        constructCoat $ specificCons $ Var nc
+    return $ Ref $ Node i
+
 app acc args = mdo
     acc'  <- monadic acc
     -- let monadicArg (Arg n a) = Arg n <$> monadic a
