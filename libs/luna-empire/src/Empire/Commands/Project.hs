@@ -17,15 +17,6 @@ insertAtNewId project = do
     at key ?= project
     return key
 
-withProject :: ProjectId -> Empire' Project a -> Empire a
-withProject pid cmd = zoom (Empire.projectManager . at pid) $ do
-    projectMay <- get
-    case projectMay of
-        Nothing      -> throwError $ "Project " ++ (show pid) ++ "does not exist."
-        Just project -> do
-            let result = (_2 %~ Just) <$> Empire.runEmpire project cmd
-            Empire.empire $ const result
-
 createProject :: Maybe String -> Path -> Empire (ProjectId, Project)
 createProject name path = do
     let project = Project.make name path
@@ -34,3 +25,12 @@ createProject name path = do
 
 listProjects :: Empire [(ProjectId, Project)]
 listProjects = uses Empire.projectManager IntMap.toList
+
+withProject :: ProjectId -> Empire' Project a -> Empire a
+withProject pid cmd = zoom (Empire.projectManager . at pid) $ do
+    projectMay <- get
+    case projectMay of
+        Nothing      -> throwError $ "Project " ++ (show pid) ++ "does not exist."
+        Just project -> do
+            let result = (_2 %~ Just) <$> Empire.runEmpire project cmd
+            Empire.empire $ const result

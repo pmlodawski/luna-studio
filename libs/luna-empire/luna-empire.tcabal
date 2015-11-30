@@ -24,11 +24,14 @@ Library
   Build-Depends:  base,
                   bytestring,
                   containers,
+                  data-layer,
                   either,
+                  fgl,
                   flowbox-bus-binary,
                   flowbox-config,
                   flowbox-utils,
                   luna-empire-api,
+                  luna-tc,
                   mtl,
                   prologue
 

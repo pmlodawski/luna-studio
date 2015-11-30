@@ -49,6 +49,9 @@ deriving instance (Show l, Show (a t)) => Show (Labeled l a t)
 instance HasLabel l (Labeled l a t) where
     label = lens (\(Labeled l _) -> l) (\(Labeled _ a) l -> Labeled l a)
 
+instance HasLabel l (Labeled2 l a) where
+    label = lens (\(Labeled2 l _) -> l) (\(Labeled2 _ a) l -> Labeled2 l a)
+
 --instance {-# OVERLAPPABLE #-} (Monad m, Default a) => LabelBuilder m a where
 --    makeLabel = return def
 
