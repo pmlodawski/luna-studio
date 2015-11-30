@@ -142,6 +142,12 @@ _star = mdo
     a <- NodeBuilder.with (Ref $ Node i) $ constructCoat $ specificCons Star
     return $ Ref $ Node i
 
+_blank :: (MonadNodeBuilder (Ref Node) m, CoatConstructor m n, SpecificCons Blank (Uncoated n), BuilderMonad (Graph n e) m, MonadFix m) => m (Ref Node)
+_blank = mdo
+    i <- modify2 . nodes $ swap . ixed add a
+    a <- NodeBuilder.with (Ref $ Node i) $ constructCoat $ specificCons Blank
+    return $ Ref $ Node i
+
 --_star2 :: (CoatConstructor m a, SpecificCons Star (Uncoated a), BuilderMonad (Graph a) m) => m Int
 _star2 = mdo
     i <- modify2 . nodes $ swap . ixed add a

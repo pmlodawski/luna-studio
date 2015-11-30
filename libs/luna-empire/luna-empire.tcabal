@@ -15,15 +15,21 @@ Library
 
   GHC-Options:    -Wall -O2 -threaded
 
-  Extensions:     NoImplicitPrelude
+  Extensions:     NoImplicitPrelude,
+                  TemplateHaskell,
+                  RankNTypes
 
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
   Build-Depends:  base,
                   bytestring,
+                  containers,
+                  either,
                   flowbox-bus-binary,
                   flowbox-config,
                   flowbox-utils,
+                  luna-empire-api,
+                  mtl,
                   prologue
 
 Executable luna-empire
@@ -32,11 +38,31 @@ Executable luna-empire
 
   GHC-Options:    -Wall -O2 -package ghc
 
-  Extensions:     NoImplicitPrelude
+  Extensions:     NoImplicitPrelude,
+                  TemplateHaskell
 
   Build-Depends:  base,
                   bytestring,
                   flowbox-bus-binary,
                   flowbox-config,
                   flowbox-utils,
+                  luna-empire,
+                  luna-empire-api,
+                  luna-tc,
+                  prologue
+
+Executable empire-test
+  Main-Is:        Main.hs
+  Hs-Source-Dirs: test
+
+  GHC-Options:    -Wall -O2 -package ghc
+
+  Extensions:     NoImplicitPrelude,
+                  TemplateHaskell
+
+  Build-Depends:  base,
+                  luna-empire,
+                  flowbox-utils,
+                  luna-empire-api,
+                  luna-tc,
                   prologue

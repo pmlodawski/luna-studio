@@ -15,10 +15,15 @@ Library
 
   GHC-Options:    -Wall -O2 -threaded
 
-  Extensions:     NoImplicitPrelude
+  Extensions:     NoImplicitPrelude,
+                  DeriveGeneric,
+                  TemplateHaskell
 
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
   Build-Depends:  base,
+                  data-layer,
                   lens,
-                  flowbox-utils-old
+                  flowbox-utils,
+                  luna-tc,
+                  prologue
