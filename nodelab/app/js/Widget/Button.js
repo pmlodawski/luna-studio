@@ -2,7 +2,7 @@
 
 var $$           = require('common');
 var vs           = require('shaders/sdf.vert')();
-var fs           = require('shaders/slider.frag')();
+var fs           = require('shaders/generic_bg.frag')();
 var config       = require('config');
 
 var createText   = require('bmfont').render,

@@ -88,7 +88,10 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.in
     Choice.makeChoice parent widget
 
 
-    let widget = List.create "List" (AnyLunaValue <$> ([1, 2, 3, 4, 5, 6, 7] :: [Int])) $ AnyLunaValue (-1 :: Int)
+    let values = (AnyLunaValue <$> ([1, 2, 3, 4, 5, 6, 7] :: [Int]))
+              <> (AnyLunaValue <$> ([0.1, 0.2, 0.3] :: [Double]))
+              <> (AnyLunaValue <$> [True, False, True])
+        widget = List.createList "List" values $ AnyLunaValue (-1 :: Int)
     List.makeList parent widget
 
     Layout.verticalLayout 10.0 parent

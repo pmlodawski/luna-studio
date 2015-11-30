@@ -283,7 +283,8 @@ module.exports = {
   createPendingNode:        createPendingNode,
   nodeSearcher:             function ()      { return $$.node_searcher;   },
   shouldRender:             function ()      { shouldRender = true;       },
-  writeToTerminal:          writeToTerminal
+  writeToTerminal:          writeToTerminal,
+  displayAppCrashed:        displayAppCrashed
 };
 
 

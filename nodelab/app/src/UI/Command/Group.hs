@@ -16,6 +16,10 @@ import qualified Reactive.State.UIRegistry     as UIRegistry
 import qualified Reactive.Commands.UIRegistry  as UICmd
 
 
+maximum' :: [Double] -> Double
+maximum' [] = 0.0
+maximum' xs = maximum xs
+
 getFarEdge :: Getter (Vector2 Double) Double -> WidgetId -> Command UIRegistry.State Double
 getFarEdge getter id = do
     offset <- UICmd.get' id $ widgetPosition . getter
@@ -28,4 +32,4 @@ updateSize id = do
     widths  <- mapM (getFarEdge x) widgets
     heights <- mapM (getFarEdge y) widgets
 
-    UIRegistry.widgets . ix id . widget . widgetSize .= Vector2 (maximum widths) (maximum heights)
+    UIRegistry.widgets . ix id . widget . widgetSize .= Vector2 (maximum' widths) (maximum' heights)

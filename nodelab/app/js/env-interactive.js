@@ -20,4 +20,5 @@ module.exports = function() {
   window.Group         = require('Widget/Group');
   window.Port          = require('port');
   window.Button        = require('Widget/Button');
+  window.Label         = require('Widget/Label');
 };

@@ -17,7 +17,7 @@ makeLenses ''Toggle
 instance ToJSON Toggle
 
 create :: Size -> Text -> Bool -> Toggle
-create s l v = Toggle def s l v False False
+create s l v = Toggle def s l v True False
 
 instance IsDisplayObject Toggle where
     widgetPosition = position

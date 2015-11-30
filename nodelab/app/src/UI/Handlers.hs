@@ -18,6 +18,7 @@ import           Object.Widget.TextBox             (TextBox)
 import           Object.Widget.Choice.RadioButton  (RadioButton)
 import           Object.Widget.Group               (Group)
 import           Object.Widget.Button              (Button)
+import           Object.Widget.List                (List)
 
 import           UI.Widget                         (UIWidget, UIContainer, GenericWidget(..))
 import qualified UI.Widget.Node                    as Node
@@ -59,12 +60,13 @@ textBoxType           = typeOf (undefined :: TextBox)
 radioButtonType       = typeOf (undefined :: RadioButton)
 groupType             = typeOf (undefined :: Group)
 buttonType            = typeOf (undefined :: Button)
+listType              = typeOf (undefined :: List)
 
 instance HasHandlers State where
     widgetHandlers (CtxDynamic tpe _)
         | tpe == nodeType              =             Node.widgetHandlers
-        | tpe == connectionType        = def -- Connection.widgetHandlers
-        | tpe == currentConnectionType = def --CurrentConnection.widgetHandlers
+        | tpe == connectionType        = def
+        | tpe == currentConnectionType = def
         | tpe == pendingNodeType       = def
         | tpe == portType              = def
 
@@ -77,5 +79,6 @@ instance HasHandlers State where
         | tpe ==      radioButtonType  =      RadioButton.widgetHandlers
         | tpe ==            groupType  = def
         | tpe ==           buttonType  =           Button.widgetHandlers
+        | tpe ==             listType  = def
 
         | otherwise                    = error $ "Unknown widget type " <> (show tpe)

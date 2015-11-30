@@ -27,7 +27,7 @@ update :: DisplayObjectClass a => WidgetId -> (a -> a) -> Command UIRegistry.Sta
 update id fun = do
     oldWidget <- UIRegistry.lookupTypedM  id
     case oldWidget of
-        Nothing        -> error $ "Widget " <> (show id) <> " not found!"
+        Nothing        -> error $ "update: Widget " <> (show id) <> " not found or wrong type!"
         Just oldWidget -> do
             newWidget  <- UIRegistry.updateWidgetM id fun
             performIO $ updateUI id (oldWidget ^. widget) newWidget

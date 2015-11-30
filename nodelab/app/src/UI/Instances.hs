@@ -15,6 +15,7 @@ import Object.Widget.Choice.RadioButton as X (RadioButton)
 import Object.Widget.Group              as X (Group)
 import Object.Widget.List               as X (List)
 import Object.Widget.Button             as X (Button)
+import Object.Widget.Label              as X (Label)
 
 import UI.Widget.Node                   as X ()
 import UI.Widget.Slider                 as X ()
@@ -31,4 +32,5 @@ import UI.Widget.Choice.RadioButton     as X ()
 import UI.Widget.Group                  as X ()
 import UI.Widget.List                   as X ()
 import UI.Widget.Button                 as X ()
+import UI.Widget.Label                  as X ()
 

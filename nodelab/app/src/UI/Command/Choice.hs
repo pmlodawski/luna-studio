@@ -13,8 +13,11 @@ import qualified Reactive.Commands.UIRegistry as UICmd
 
 import           Object.Widget.Choice.RadioButton  (RadioButton(..))
 import qualified Object.Widget.Choice.RadioButton as RadioButton
+import qualified Object.Widget.Group              as Group
+import qualified Object.Widget.Label              as Label
 import qualified UI.Handlers.Choice.RadioButton   as RadioButton
-import           UI.Widget.Choice.RadioButton ()
+import           UI.Widget.Choice.RadioButton     ()
+import           UI.Command.Group                 as Group
 
 import           Object.Widget.Choice  (Choice(..))
 import qualified Object.Widget.Choice  as Choice
@@ -22,6 +25,7 @@ import qualified UI.Handlers.Choice    as Choice
 import           UI.Widget.Choice ()
 
 import           UI.Layout as Layout
+import           UI.Instances
 import           Object.UITypes
 import           Object.Widget
 import           Reactive.State.Global (inRegistry)
@@ -38,13 +42,19 @@ selectRadioButton = setValue
 
 makeChoice :: WidgetId -> Choice -> Command UIRegistry.State WidgetId
 makeChoice parent model = do
-    contId <- UICmd.register parent model def
+    contId  <- UICmd.register parent model def
+    groupId <- UICmd.register contId Group.create def
+    labelId <- UICmd.register contId (Label.create (model ^. Choice.label)) def
+
+    UICmd.moveX groupId 90
+
     let opts = (model ^. Choice.options) `zip` [0..]
     forM_ opts $ \(label, ix) -> do
         let widget = RadioButton def (Vector2 180 20) label False
-        UICmd.register_ contId widget (radioHandlers contId ix)
+        UICmd.register_ groupId widget (radioHandlers contId ix)
 
-    Layout.verticalLayout 0.0 contId
+    Layout.verticalLayout 0.0 groupId
+    Group.updateSize contId
 
     return contId
 
@@ -52,7 +62,8 @@ setValue :: WidgetId -> Word -> Command Global.State ()
 setValue id val = do
     inRegistry $ do
         oldVal <- UICmd.get id Choice.value
-        items  <- UICmd.children id
+        items' <- UICmd.children id
+        items  <- UICmd.children (head items')
         UICmd.update_ id $ Choice.value .~ val
 
         let oldWidget = fromMaybe (error "choice#setValue: invalid value") $ items ^? ix (fromIntegral oldVal)

@@ -18,6 +18,7 @@ import qualified Object.Widget.List   as List
 import qualified Object.Widget.Button as Button
 import qualified UI.Handlers.Button   as Button
 import qualified Object.Widget.Group  as Group
+import qualified Object.Widget.Label  as Label
 import           Object.LunaValue
 import           Object.LunaValue.Instances
 import           UI.Widget.List ()
@@ -45,25 +46,43 @@ removeItemHandlers listId groupId rowId = addHandler (Button.ClickedHandler $ re
     removeItemHandler _ = inRegistry $ removeElementByWidgetId listId groupId rowId
 
 
-makeListItem :: WidgetId -> WidgetId -> AnyLunaValue -> Int -> Command UIRegistry.State ()
-makeListItem listId listGroupId elem ix = do
-    let removeButton = Button.create (Vector2 20 20) "X"
+makeItem :: Bool -> WidgetId -> WidgetId -> AnyLunaValue -> Int -> Command UIRegistry.State ()
+makeItem isTuple listId listGroupId elem ix = do
+    let removeButton = Button.create (Vector2 20 20) "x"
     groupId <- UICmd.register listGroupId Group.create def
     createValueWidget groupId elem (Text.pack $ show ix) (listHandlers listId listGroupId groupId elem)
-    UICmd.register groupId removeButton (removeItemHandlers listId listGroupId groupId)
-    Layout.horizontalLayout 5.0 groupId
+    when (not isTuple) $ UICmd.register_ groupId removeButton (removeItemHandlers listId listGroupId groupId)
+    Layout.horizontalLayout 0.0 groupId
 
+makeListItem  = makeItem False
+makeTupleItem = makeItem True
 
 makeList :: WidgetId -> List -> Command UIRegistry.State WidgetId
 makeList parent model = do
     contId <- UICmd.register parent model def
-    let addButton    = Button.create (Vector2 180 20) "Add element"
+    let label     = Label.create "Param of list:"
+        addButton = Button.create (Vector2 20 20) "+"
 
-    groupId <- UICmd.register contId Group.create def
-    UICmd.register contId addButton (addItemHandlers contId groupId)
+    UICmd.register_ contId label def
+    groupId     <- UICmd.register contId Group.create def
+    addButtonId <- UICmd.register contId addButton (addItemHandlers contId groupId)
+    UICmd.moveX addButtonId 160
 
     let elems = (model ^. List.value) `zip` [0..]
     forM_ elems $ uncurry $ makeListItem contId groupId
+
+    Layout.verticalLayout 0.0 groupId
+    Layout.verticalLayout 0.0 contId
+
+    return contId
+
+makeTuple :: WidgetId -> List -> Command UIRegistry.State WidgetId
+makeTuple parent model = do
+    contId <- UICmd.register parent model def
+    groupId <- UICmd.register contId Group.create def
+
+    let elems = (model ^. List.value) `zip` [0..]
+    forM_ elems $ uncurry $ makeTupleItem contId groupId
 
     Layout.verticalLayout 0.0 groupId
     Layout.verticalLayout 0.0 contId
@@ -83,11 +102,9 @@ addNewElement listId groupId = do
 
 removeElementByWidgetId :: WidgetId -> WidgetId -> WidgetId -> Command UIRegistry.State ()
 removeElementByWidgetId listId groupId id = do
-    performIO $ putStrLn $ show id
     items <- UICmd.children groupId
     let ix = elemIndex id items
     forM_ ix $ \ix -> removeElement listId groupId ix
-
 
 removeElement :: WidgetId -> WidgetId -> Int -> Command UIRegistry.State ()
 removeElement listId groupId idx = do
@@ -97,11 +114,3 @@ removeElement listId groupId idx = do
 
     Layout.verticalLayout 0.0 groupId
     Layout.verticalLayout 0.0 listId
---
--- newtype ValueChangedHandler = ValueChangedHandler (Word -> WidgetId -> Command Global.State ())
--- valueChangedHandlerKey = TypeKey :: TypeKey ValueChangedHandler
---
--- triggerValueChanged :: LunaValue a => a -> WidgetId -> Command Global.State ()
--- triggerValueChanged new id = do
---     maybeHandler <- inRegistry $ UICmd.handler id valueChangedHandlerKey
---     forM_ maybeHandler $ \(ValueChangedHandler handler) -> handler new id
