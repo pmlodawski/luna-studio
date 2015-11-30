@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Main where
 
 import Prologue
@@ -9,6 +11,10 @@ import           Luna.Syntax.Repr.Graph
 import           Luna.Diagnostic.AST (toGraphViz, render)
 import           Empire.Data.AST
 import           Empire.Commands.Project
+import           Empire.Empire
+import           Empire.Commands.Project
+import           Empire.Commands.Library
+
 
 sampleGraph :: ((), AST)
 sampleGraph = runIdentity
@@ -30,5 +36,11 @@ sampleGraph = runIdentity
                   {-app (accessor (_string "+") (_int 2)) [arg $ _int 3]-}
                   return ()
 
-main = render "g" $ toGraphViz $ snd sampleGraph
+test = do
+    (id, _) <- createProject (Just "dupa") "/no/elo"
+    createLibrary id (Just "xd") "/xd/xd"
+
+main = do
+    (_, s) <- runEmpire def test
+    print s
 {-main = return ()-}

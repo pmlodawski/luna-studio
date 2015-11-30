@@ -22,6 +22,7 @@ Library
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
   Build-Depends:  base,
+                  containers,
                   data-layer,
                   lens,
                   flowbox-utils,
