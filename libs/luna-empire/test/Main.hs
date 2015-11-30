@@ -11,10 +11,11 @@ import           Luna.Syntax.Builder
 import           Luna.Syntax.Repr.Graph
 import           Luna.Diagnostic.AST (toGraphViz, render)
 import           Empire.Data.AST
-import           Empire.Commands.Project
+import           Empire.Data.Library
 import           Empire.Empire
 import           Empire.Commands.Project
 import           Empire.Commands.Library
+import           Empire.Commands.AST
 
 
 sampleGraph :: AST
@@ -50,12 +51,15 @@ sg2 = runIdentity
           return $ (n ^. label, n1 ^. label)
 
 test = do
-    (id, _) <- createProject (Just "dupa") "/no/elo"
-    createLibrary id (Just "xd") "/xd/xd"
+    (pid, _) <- createProject (Just "dupa") "/no/elo"
+    (lid, _) <- createLibrary pid (Just "xd") "/xd/xd"
+    addNode pid lid "hello"
+    withLibrary pid lid (use body)
 
 main = do
-    (_, s) <- runEmpire def test
+    (graph, s) <- runEmpire def test
     print s
-    render "g" $ toGraphViz $ snd sg2
-    print $ fst sg2
+    case graph of
+        Left err -> print err
+        Right g  -> render "g" $ toGraphViz $ g
 {-main = return ()-}

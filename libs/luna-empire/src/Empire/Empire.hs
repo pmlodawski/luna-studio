@@ -18,15 +18,15 @@ instance Default EmpireEnv where
 
 makeLenses ''EmpireEnv
 
-type Empire' s a = ErrorT Error (StateT s IO) a
+type Command s a = ErrorT Error (StateT s IO) a
 
-type Empire a = Empire' EmpireEnv a
+type Empire a = Command EmpireEnv a
 
-runEmpire :: s -> Empire' s a -> IO (Either Error a, s)
+runEmpire :: s -> Command s a -> IO (Either Error a, s)
 runEmpire st cmd = runStateT (runErrorT cmd) st
 
-execEmpire :: s -> Empire' s a -> IO (Either Error a)
+execEmpire :: s -> Command s a -> IO (Either Error a)
 execEmpire st cmd = fst <$> runEmpire st cmd
 
-empire :: (s -> IO (Either Error a, s)) -> Empire' s a
+empire :: (s -> IO (Either Error a, s)) -> Command s a
 empire = ErrorT . StateT

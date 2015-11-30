@@ -11,12 +11,12 @@ import qualified Empire.Data.Project      as Project
 import           Empire.Data.Library      (Library, LibraryId)
 import qualified Empire.Data.Library      as Library
 
-import           Empire.Empire            (Empire, Empire')
+import           Empire.Empire            (Empire, Command)
 import qualified Empire.Empire            as Empire
 import           Empire.Commands.Project  (withProject)
 
 
-insertAtNewId :: Library -> Empire' Project LibraryId
+insertAtNewId :: Library -> Command Project LibraryId
 insertAtNewId library = do
     libs <- use Project.libs
     let key = if IntMap.null libs then 0 else 1 + (fst . IntMap.findMax $ libs)
@@ -32,7 +32,7 @@ createLibrary pid name path = withProject pid $ do
 listLibraries :: ProjectId -> Empire [(LibraryId, Library)]
 listLibraries pid = withProject pid $ uses Project.libs IntMap.toList
 
-withLibrary :: ProjectId -> LibraryId -> Empire' Library a -> Empire a
+withLibrary :: ProjectId -> LibraryId -> Command Library a -> Empire a
 withLibrary pid lid cmd = withProject pid $ do
     zoom (Project.libs . at lid) $ do
         libMay <- get
