@@ -134,6 +134,7 @@ keyHandler :: EventName Element KeyboardEvent.KeyboardEvent -> EventM Element Ke
 keyHandler event getter tag = AddHandler $ \h -> do
     window <- fromJust <$> eventObject
     window `on` event $ do
+        preventDefault
         key     <- getter
         keyMods <- readKeyMods'
         jsState <- liftIO getJSState
