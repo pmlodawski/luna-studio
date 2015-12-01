@@ -2,7 +2,7 @@
 
 var $$ = require('common');
 var vs = require('shaders/sdf.vert')();
-var fs = require('shaders/slider.frag')();
+var fs = require('shaders/generic_bg.frag')();
 var config = require('config');
 
 var createText   = require('bmfont').render,
@@ -15,7 +15,6 @@ function TextBox(widgetId, width, height) {
 
   this.uniforms = {
     size:      { type: 'v2', value: new THREE.Vector2(width, height) },
-    value:     { type: 'f',  value: 0.0 },
     focus:     { type: 'i',  value: 0   },
     objectId:  { type: 'v3', value: new THREE.Vector3((widgetId % 256) / 255.0, Math.floor(Math.floor(widgetId % 65536) / 256) / 255.0, Math.floor(widgetId / 65536) / 255.0) }
   };

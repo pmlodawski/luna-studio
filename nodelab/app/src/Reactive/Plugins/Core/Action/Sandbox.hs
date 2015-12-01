@@ -30,8 +30,11 @@ import qualified UI.Handlers.Slider.Continuous   as ContinuousSlider
 import qualified Object.Widget.Toggle as Toggle
 import qualified UI.Handlers.Toggle   as Toggle
 
-import qualified Object.Widget.TextBox as TextBox
-import qualified UI.Handlers.TextBox as TextBox
+import qualified Object.Widget.TextBox        as TextBox
+import qualified UI.Handlers.TextBox          as TextBox
+
+import qualified Object.Widget.LabeledTextBox as LabeledTextBox
+import qualified UI.Handlers.LabeledTextBox   as LabeledTextBox
 
 import qualified Object.Widget.Group as Group
 
@@ -46,6 +49,7 @@ import           Object.Widget.Choice  (Choice(..))
 import qualified Object.Widget.Choice  as Choice
 import qualified UI.Handlers.Choice    as Choice
 import qualified UI.Command.Choice     as Choice
+import qualified UI.Command.Number     as Number
 
 import           UI.Layout as Layout
 import           Object.UITypes
@@ -63,8 +67,8 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.in
     let widget = Group.create
     parent <- UICmd.register sceneGraphId widget def
 
-    let widget = DiscreteNumber.create (Vector2 180 20) "DiscreteNumber" 42
-    UICmd.register_ parent widget def
+    let widget = DiscreteNumber.create (Vector2 180 20) "Int" 42
+    Number.makeDiscreteNumber parent widget def
 
     let widget = ContinuousNumber.create (Vector2 180 20) "ContinuousNumber" 42.42
     UICmd.register_ parent widget def
@@ -81,7 +85,7 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.in
     let widget = Toggle.create (Vector2 180 20) "Toggle" True
     UICmd.register_ parent widget def
 
-    let widget = TextBox.create (Vector2 180 20) "TextBox" "foo"
+    let widget = LabeledTextBox.create (Vector2 180 20) "Textbox" "foo"
     UICmd.register_ parent widget def
 
     let widget = Choice.create (Vector2 180 20) "Choice" ["Foo", "Bar", "Baz"] 0

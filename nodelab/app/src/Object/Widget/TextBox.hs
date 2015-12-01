@@ -7,7 +7,6 @@ import           Data.Aeson (ToJSON)
 
 data TextBox = TextBox { _position  :: Vector2 Double
                        , _size      :: Vector2 Double
-                       , _label     :: Text
                        , _value     :: Text
                        , _isEditing :: Bool
                        } deriving (Eq, Show, Typeable, Generic)
@@ -15,8 +14,8 @@ data TextBox = TextBox { _position  :: Vector2 Double
 makeLenses ''TextBox
 instance ToJSON TextBox
 
-create :: Size -> Text -> Text -> TextBox
-create s l v = TextBox def s l v False
+create :: Size -> Text -> TextBox
+create s v = TextBox def s v False
 
 instance IsDisplayObject TextBox where
     widgetPosition = position

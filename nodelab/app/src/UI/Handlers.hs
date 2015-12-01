@@ -15,6 +15,7 @@ import           Object.Widget.Slider.Discrete     (DiscreteSlider)
 import           Object.Widget.Slider.Continuous   (ContinuousSlider)
 import           Object.Widget.Toggle              (Toggle)
 import           Object.Widget.TextBox             (TextBox)
+import           Object.Widget.LabeledTextBox      (LabeledTextBox)
 import           Object.Widget.Choice.RadioButton  (RadioButton)
 import           Object.Widget.Group               (Group)
 import           Object.Widget.Button              (Button)
@@ -27,6 +28,7 @@ import qualified UI.Widget.Connection              as Connection
 import qualified UI.Widget.Port                    as Port
 import qualified UI.Widget.Toggle                  as Toggle
 import qualified UI.Widget.TextBox                 as TextBox
+import qualified UI.Widget.LabeledTextBox          as LabeledTextBox
 import qualified UI.Widget.Choice                  as Choice
 import qualified UI.Widget.Choice.RadioButton      as RadioButton
 import qualified UI.Widget.Group                   as Group
@@ -38,6 +40,7 @@ import qualified UI.Handlers.Slider.Discrete       as DiscreteSlider
 import qualified UI.Handlers.Slider.Continuous     as ContinuousSlider
 import qualified UI.Handlers.Toggle                as Toggle
 import qualified UI.Handlers.TextBox               as TextBox
+import qualified UI.Handlers.LabeledTextBox        as LabeledTextBox
 import qualified UI.Handlers.Choice                as Choice
 import qualified UI.Handlers.Choice.RadioButton    as RadioButton
 import qualified UI.Handlers.Button                as Button
@@ -57,6 +60,7 @@ discreteSliderType    = typeOf (undefined :: DiscreteSlider)
 continuousSliderType  = typeOf (undefined :: ContinuousSlider)
 toggleType            = typeOf (undefined :: Toggle)
 textBoxType           = typeOf (undefined :: TextBox)
+labeledTextBoxType    = typeOf (undefined :: LabeledTextBox)
 radioButtonType       = typeOf (undefined :: RadioButton)
 groupType             = typeOf (undefined :: Group)
 buttonType            = typeOf (undefined :: Button)
@@ -76,6 +80,7 @@ instance HasHandlers State where
         | tpe == continuousSliderType  = ContinuousSlider.widgetHandlers
         | tpe ==           toggleType  =           Toggle.widgetHandlers
         | tpe ==          textBoxType  =          TextBox.widgetHandlers
+        | tpe ==   labeledTextBoxType  =   LabeledTextBox.widgetHandlers
         | tpe ==      radioButtonType  =      RadioButton.widgetHandlers
         | tpe ==            groupType  = def
         | tpe ==           buttonType  =           Button.widgetHandlers

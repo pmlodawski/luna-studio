@@ -1,4 +1,4 @@
-module UI.Handlers.TextBox where
+module UI.Handlers.LabeledTextBox where
 
 import           Utils.PreludePlus
 import           Utils.Vector
@@ -14,8 +14,8 @@ import qualified Reactive.State.Global as Global
 import           Reactive.State.Global (inRegistry)
 import           Reactive.Commands.Command (Command, performIO)
 import           Data.HMap.Lazy (TypeKey(..))
-import qualified Object.Widget.TextBox as Model
-import           UI.Widget.TextBox ()
+import qualified Object.Widget.LabeledTextBox as Model
+import           UI.Widget.LabeledTextBox ()
 import           UI.Generic (takeFocus, startDrag)
 
 newtype ValueChangedHandler = ValueChangedHandler (Text -> WidgetId -> Command Global.State ())
@@ -46,5 +46,5 @@ keyDownHandler '\27' _ jsState id = do
 keyDownHandler _ _ _ _ = return ()
 
 widgetHandlers :: UIHandlers Global.State
-widgetHandlers = def & keyDown   .~ keyDownHandler
-                     & dblClick  .~ dblClickHandler
+widgetHandlers = def & keyDown  .~ keyDownHandler
+                     & dblClick .~ dblClickHandler

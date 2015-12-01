@@ -29,7 +29,7 @@ function Slider(widgetId, width, height) {
     _this.uniforms[k] = $$.commonUniforms[k];
   });
 
-  this.mesh = new THREE.Group();
+  this.container = this.mesh = new THREE.Group();
 
   var bgMesh = new THREE.PlaneBufferGeometry(1, 1);
   bgMesh.applyMatrix( new THREE.Matrix4().makeTranslation(0.5, 0.5, 0.0));

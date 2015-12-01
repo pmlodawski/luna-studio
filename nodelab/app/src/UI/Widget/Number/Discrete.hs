@@ -33,7 +33,7 @@ setLabel model slider = setLabel' slider $ lazyTextToJSString $ model ^. Model.l
 instance UIDisplayObject Model.DiscreteNumber where
     createUI parentId id model = do
         slider   <- createNumber id model
-        setValueLabel  model slider
+        -- setValueLabel  model slider
         parent <- UI.lookup parentId :: IO Widget.GenericWidget
         UI.register id slider
         Widget.add slider parent
@@ -41,6 +41,6 @@ instance UIDisplayObject Model.DiscreteNumber where
     updateUI id old model = do
         slider <- UI.lookup id :: IO Number
         setLabel       model slider
-        setValueLabel  model slider
+        -- setValueLabel  model slider
 
 
