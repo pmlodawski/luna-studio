@@ -16,11 +16,11 @@ newtype SymbolT g m a = SymbolT { fromSymbolT :: State.StateT g m a }
 
 type Builder g = SymbolT g Identity
 
-class Monad m => BuilderMonad g m | m -> g where
+class Monad m => MonadSymbolBuilder g m | m -> g where
     get :: m g
     put :: g -> m ()
 
-instance Monad m => BuilderMonad g (SymbolT g m) where
+instance Monad m => MonadSymbolBuilder g (SymbolT g m) where
     get = SymbolT State.get
     put = SymbolT . State.put
 
@@ -28,7 +28,7 @@ instance State.MonadState s m => State.MonadState s (SymbolT g m) where
     get = SymbolT (lift State.get)
     put = SymbolT . lift . State.put
 
-instance {-# OVERLAPPABLE #-} (BuilderMonad g m, MonadTrans t, Monad (t m)) => BuilderMonad g (t m) where
+instance {-# OVERLAPPABLE #-} (MonadSymbolBuilder g m, MonadTrans t, Monad (t m)) => MonadSymbolBuilder g (t m) where
     get = lift get
     put = lift . put
 
@@ -49,7 +49,7 @@ run   = runIdentity .: runT
 eval  = runIdentity .: evalT
 exec  = runIdentity .: execT
 
-with :: BuilderMonad g m => (g -> g) -> m b -> m b
+with :: MonadSymbolBuilder g m => (g -> g) -> m b -> m b
 with f m = do
     s <- get
     put $ f s
@@ -57,44 +57,44 @@ with f m = do
     put s
     return out
 
-modify :: BuilderMonad g m => (g -> (g, a)) -> m a
+modify :: MonadSymbolBuilder g m => (g -> (g, a)) -> m a
 modify = modifyM . fmap return
 
-modify2 :: BuilderMonad g m => (g -> (a, g)) -> m a
+modify2 :: MonadSymbolBuilder g m => (g -> (a, g)) -> m a
 modify2 = modifyM2 . fmap return
 
-modifyM :: BuilderMonad g m => (g -> m (g, a)) -> m a
+modifyM :: MonadSymbolBuilder g m => (g -> m (g, a)) -> m a
 modifyM f = do
     s <- get
     (s', a) <- f s
     put $ s'
     return a
 
-modifyM2 :: BuilderMonad g m => (g -> m (a, g)) -> m a
+modifyM2 :: MonadSymbolBuilder g m => (g -> m (a, g)) -> m a
 modifyM2 f = do
     s <- get
     (a, s') <- f s
     put $ s'
     return a
 
-modify_ :: BuilderMonad g m => (g -> g) -> m ()
+modify_ :: MonadSymbolBuilder g m => (g -> g) -> m ()
 modify_ = modify . fmap (,())
 
 -- <-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<
 
-withGraph :: BuilderMonad g m => (g -> (g, a)) -> m a
+withGraph :: MonadSymbolBuilder g m => (g -> (g, a)) -> m a
 withGraph = withGraphM . fmap return
 
-withGraph' :: BuilderMonad g m => (g -> (a, g)) -> m a
+withGraph' :: MonadSymbolBuilder g m => (g -> (a, g)) -> m a
 withGraph' = withGraphM . fmap (return . switch')
 
-withGraph_ :: BuilderMonad g m => (g -> g) -> m ()
+withGraph_ :: MonadSymbolBuilder g m => (g -> g) -> m ()
 withGraph_ = withGraph . fmap (,())
 
-withGraphM :: BuilderMonad g m => (g -> m (g, a)) -> m a
+withGraphM :: MonadSymbolBuilder g m => (g -> m (g, a)) -> m a
 withGraphM = modifyM
 
-withGraphM_ :: BuilderMonad g m => (g -> m g) -> m ()
+withGraphM_ :: MonadSymbolBuilder g m => (g -> m g) -> m ()
 withGraphM_ = withGraphM . (fmap . fmap) (,())
 
 runSymbolT  :: Functor m => SymbolT g m a -> g -> m (a, g)
