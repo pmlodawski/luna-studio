@@ -3,12 +3,14 @@ module Luna.Syntax.Symbol.Map where
 import Prologue
 
 import           Control.Error
+import qualified Data.List                  as List
 import           Data.Map                   (Map)
 import qualified Data.Map                   as Map
-import           Luna.Syntax.AST.Arg        (Arg)
+import qualified Data.Maybe                 as Maybe
+import           Luna.Syntax.AST.Arg        (Arg (Arg))
 import qualified Luna.Syntax.Builder.Symbol as SymbolBuilder
 import           Luna.Syntax.Symbol.Network (Network)
-import qualified Data.List as List
+
 
 
 type QualPath = [String] --TODO[PM] Use FastStrings
@@ -23,23 +25,22 @@ data SpecializationError = CouldNotSpecialize { errMsg :: String }
 
 data DefArgs t = DefArgs { _defargs :: [Arg t] }
                deriving (Eq, Show, Ord)
+makeLenses ''DefArgs
 
 data CallArgs t = CallArgs
-        { _unnamed :: [t]
-        , _named :: Map String t
+        { _positional :: [t]
+        , _named      :: Map String t
         } deriving (Eq, Show, Ord)
-
+makeLenses ''CallArgs
 
 type Specification t = Signature CallArgs t
 type Specialization t = Signature DefArgs t
 
-data Signature a t = Signature { _args :: a t
+data Signature a t = Signature { _args   :: a t
                                , _result :: t
                                } deriving (Eq, Show, Ord)
 
 makeLenses ''Signature
-makeLenses ''CallArgs
-makeLenses ''DefArgs
 
 type SpecializationMap t = Map (Specialization t) SpecializedNetwork
 
@@ -80,7 +81,18 @@ makeSpecialization specif gen = error "Luna.Syntax.Symbol.Map.makeSpecialization
 
 
 specificationMatch :: Specification t -> Specialization t -> Bool
-specificationMatch = error "Luna.Syntax.Symbol.Map.specificationMatch: not implemented"
+specificationMatch specif special = all typeMatch' (zip specifPositional (map unarg specialPositional))
+                                 && Maybe.fromMaybe False (all typeMatch' <$> namedArgs)
+                                 && typeMatch (specif ^. result) (special ^. result) where
+    specifPositional = specif ^. args . positional
+    (specialPositional, specialNamed) =  splitAt (length specifPositional) $ special ^. args . defargs
+    specifNamed = specif ^. args . named
+    namedArgs = mapM (matchArg specifNamed) specialNamed
+    unarg (Arg _ a) = a
+    matchArg namedMap (Arg (Just n) a) = (a,) <$> Map.lookup n namedMap
+    matchArg _        (Arg Nothing _ ) = Nothing
+    typeMatch' = uncurry typeMatch
+
 --
 -- argMatch ask comp = typesMatch unnamedArgs
 --                  && typesMatch namedArgs
@@ -90,4 +102,4 @@ specificationMatch = error "Luna.Syntax.Symbol.Map.specificationMatch: not imple
 --
 --
 -- --TODO[PM]
--- typeMatch t1 t2 = t1 == t2
+typeMatch t1 t2 = error "Luna.Syntax.Symbol.Map.typeMatch: not implemented"
