@@ -54,6 +54,7 @@ Library
                  , container
                  , data-construction
                  , data-layer
+                 , error-util
                  , errors
                  , flowbox-utils
                  , ghc-prim

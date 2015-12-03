@@ -1,28 +1,28 @@
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE DataKinds                 #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE TypeOperators             #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
 
 module Luna.Syntax.AST.Term where
 
-import Flowbox.Prelude hiding (Cons, cons, Repr, repr)
 import Data.Variants   hiding (Cons)
+import Flowbox.Prelude hiding (Cons, Repr, cons, repr)
 
-import Luna.Syntax.AST.Lit
 import Luna.Syntax.AST.Arg
+import Luna.Syntax.AST.Lit
 import Luna.Syntax.Name
 
 import Data.Cata
 import Data.Container.Hetero
 
+import Data.Reprx
 import Data.Typeable
 import Luna.Repr.Styles (HeaderOnly)
-import Data.Reprx
 
 -- === Terms ===
 
@@ -74,6 +74,21 @@ type instance Variants (Thunk t) = (Val t) ':                          ThunkElem
 type instance Variants (Term  t) = (Val t) ': (Thunk t) ':             TermElems  t
 type instance Variants (Draft t) = (Val t) ': (Thunk t) ': (Term t) ': DraftElems t
 
+
+-- TODO[PM]
+instance Ord (Draft t)
+instance Eq (Draft t)
+instance Enum (Draft a) where
+    fromEnum d = case' d $ do
+        match $ \(Star     {}) -> 1
+        match $ \(Arrow    {}) -> 2
+        match $ \(Cons     {}) -> 3
+        match $ \(Accessor {}) -> 4
+        match $ \(App      {}) -> 5
+        match $ \(Var      {}) -> 6
+        match $ \(Unify    {}) -> 7
+        match $ \(Blank    {}) -> 8
+-----------------------
 
 -- Record & variant instances
 

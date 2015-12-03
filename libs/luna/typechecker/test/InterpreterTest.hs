@@ -3,6 +3,7 @@
 {-# LANGUAGE GADTs                     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE NoOverloadedStrings       #-}
+{-# LANGUAGE OverloadedStrings         #-}
 {-# LANGUAGE PartialTypeSignatures     #-}
 {-# LANGUAGE RankNTypes                #-}
 {-# LANGUAGE RecursiveDo               #-}
@@ -21,6 +22,7 @@ import           Control.Monad.Fix
 import           Control.Monad.ST
 import qualified Control.Monad.State                  as State
 import           Control.Monad.State.Generate         (newState)
+import           Control.Monad.Trans.Except
 import           Control.Monad.Trans.Identity
 import           Data.Cata
 import           Data.Constraint
@@ -47,6 +49,7 @@ import qualified Data.IntSet                          as IntSet
 import           Data.IORef
 import           Data.Layer
 import           Data.Layer.Coat
+import qualified Data.List                            as List
 import           Data.Map                             (Map)
 import qualified Data.Map                             as Map
 import           Data.Maybe                           (fromJust)
@@ -91,6 +94,7 @@ import qualified Luna.Syntax.Repr.Graph               as GraphBuilder
 import           Luna.Syntax.Symbol.Map               (SymbolMap)
 import qualified Luna.Syntax.Symbol.Map               as Symbol
 import           Luna.Syntax.Symbol.Network           (Network)
+import qualified Luna.Syntax.Symbol.QualPath          as QualPath
 import qualified System.Mem.Weak                      as Mem
 import           System.Process
 import           Text.Read                            (readMaybe)
@@ -128,7 +132,7 @@ sampleGraph = runIdentity
 
 
 symbolMap :: SymbolMap t
-symbolMap = Map.fromList [(["+"], Symbol.PartiallySpecializedNetwork def def)]
+symbolMap = Map.fromList [("+", Symbol.PartiallySpecializedNetwork def def)]
 
 runGraph gr = runIdentityT
             . flip SymbolBuilder.evalT symbolMap
@@ -159,7 +163,7 @@ runNode (ref :: Ref Node) = do
             mangled <- mangleName name typeNode
             fun <- lift $ lift $ lift $ lift $ lift $ Session.findSymbol mangled typeStr -- TODO[PM] przerobic na `... => m (cos)`
             mapM_ (\r -> print (Session.unsafeCast r :: Int)) args
-            return $ foldl Session.appArg fun (args)
+            return $ foldl Session.appArg fun args
         match $ \(Val v) -> do
             case' v $ do
                 match $ \(Int i) -> do
@@ -172,13 +176,20 @@ runNode (ref :: Ref Node) = do
             prettyPrint (uncoat node)
             return undefined
 
+
 -- TODO[PM] move to runNode
 getAcc (ref :: Ref Node) = do
     node <- readRef ref
     case' (uncoat (node :: Labeled2 Int (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge))))))) $ do
         match $ \(Accessor n s) -> do
+            -- t  <- uncoat <$> readRef =<< follow s
+            n' <- getAccName =<< follow n
+            s' <- readRef =<< follow s
             name <- typeString =<< follow n
             src  <- runNode    =<< follow s
+
+            let args = Symbol.Signature (Symbol.CallArgs [uncoat s'] def) Nothing
+            runExceptT $ Symbol.getSpecialization (QualPath.mk n') args
             return (name, src)
 
 typeString (ref :: Ref Node) = do
@@ -198,6 +209,11 @@ typeString (ref :: Ref Node) = do
         match $ \ANY -> do
             prettyPrint $ uncoat node
             undefined
+
+getAccName (ref :: Ref Node) = do
+    node <- readRef ref
+    case' (uncoat (node :: Labeled2 Int (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge))))))) $
+        match $ \(String s) -> return s
 
 
 
@@ -220,7 +236,7 @@ main = do
     --             --   , ("g2", g2)
     --             --   , ("g3", g3)
     --               ]
-    -- renderAndOpen [ ("g" , g)]
+    renderAndOpen [ ("g" , g)]
 
     pprint g
     evaluateTest i g
