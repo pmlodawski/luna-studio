@@ -13,10 +13,13 @@ import           Reactive.State.Global (inRegistry)
 import qualified Reactive.State.UIRegistry as UIRegistry
 import           Reactive.Commands.Command (Command, performIO)
 import           Data.HMap.Lazy (TypeKey(..))
+import qualified Data.Text.Lazy as Text
 import qualified Object.Widget.Number.Continuous as Model
+import qualified Object.Widget.TextBox         as TextBox
 import           UI.Widget.Number (keyModMult)
 import           UI.Widget.Number.Continuous ()
 import           UI.Generic (takeFocus, startDrag)
+import           UI.Instances ()
 
 newtype ValueChangedHandler = ValueChangedHandler (Double -> WidgetId -> Command Global.State ())
 valueChangedHandlerKey = TypeKey :: TypeKey valueChangedHandler
@@ -33,6 +36,12 @@ bumpValue :: Double -> WidgetId -> Command Global.State ()
 bumpValue amount id = do
     widget <- zoom Global.uiRegistry $ UICmd.update id (Model.value +~ amount)
     triggerValueChanged (widget ^. Model.value) id
+
+setValue :: WidgetId -> Double -> Command UIRegistry.State ()
+setValue id val = do
+    UICmd.update_ id $ Model.value .~ val
+    (tbId:_) <- UICmd.children id
+    UICmd.update_ tbId $ TextBox.value .~ (Text.pack $ show $ val)
 
 keyUpHandler :: KeyUpHandler Global.State
 keyUpHandler 'Q' _ _ id = bumpValue (-1.0) id
@@ -58,7 +67,7 @@ dragHandler ds _ id = do
                 delta   = if (abs $ diff ^. x) > (abs $ diff ^. y) then  diff ^. x /  divider
                                                                    else -diff ^. y / (divider * 10.0)
                 divider = keyModMult $ ds ^. keyMods
-            inRegistry $ UICmd.update_ id $ Model.value .~ (startValue + delta)
+            inRegistry $ setValue id $ startValue + delta
 
 dragEndHandler :: DragEndHandler Global.State
 dragEndHandler _ _ id = do
@@ -68,14 +77,11 @@ dragEndHandler _ _ id = do
         value <- inRegistry $ UICmd.get id Model.value
         triggerValueChanged value id
 
-foreign import javascript unsafe "$1.registry.length" getNoWidgets :: JSState -> Int
-
 dblClickHandler :: DblClickHandler Global.State
-dblClickHandler ev jsState id = do
-    let noWidgets = getNoWidgets jsState
-
-    performIO $ putStrLn $ show $ noWidgets
-
+dblClickHandler _ _ id = do
+    (tbId:_) <- inRegistry $ UICmd.children id
+    takeFocus undefined tbId
+    inRegistry $ UICmd.update_ tbId $ TextBox.isEditing .~ True
 
 widgetHandlers :: UIHandlers Global.State
 widgetHandlers = def & keyUp        .~ keyUpHandler

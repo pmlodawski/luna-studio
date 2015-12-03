@@ -49,7 +49,8 @@ import           Object.Widget.Choice  (Choice(..))
 import qualified Object.Widget.Choice  as Choice
 import qualified UI.Handlers.Choice    as Choice
 import qualified UI.Command.Choice     as Choice
-import qualified UI.Command.Number     as Number
+import qualified UI.Command.Number.Discrete     as DiscreteNumber
+import qualified UI.Command.Number.Continuous     as ContinuousNumber
 
 import           UI.Layout as Layout
 import           Object.UITypes
@@ -67,11 +68,11 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.in
     let widget = Group.create
     parent <- UICmd.register sceneGraphId widget def
 
-    let widget = DiscreteNumber.create (Vector2 180 20) "Int" 42
-    Number.makeDiscreteNumber parent widget def
+    let widget = DiscreteNumber.create (Vector2 180 20) "Discrete" 42
+    DiscreteNumber.makeDiscreteNumber parent widget def
 
-    let widget = ContinuousNumber.create (Vector2 180 20) "ContinuousNumber" 42.42
-    UICmd.register_ parent widget def
+    let widget = ContinuousNumber.create (Vector2 180 20) "Continuous" 42.42
+    ContinuousNumber.makeContinuousNumber parent widget def
 
     let widget = ContinuousSlider.create (Vector2 180 20) "ContinuousSlider" (-2.0) 5.0 3.0
     UICmd.register_ parent widget def

@@ -24,8 +24,8 @@ createNumber oid model = do
     UI.setWidgetPosition (model ^. Model.position) slider
     return slider
 
-setValueLabel :: Model.DiscreteNumber -> Number -> IO ()
-setValueLabel model slider = setValueLabel' slider $ JSString.pack $ model ^. Model.displayValue
+-- setValueLabel :: Model.DiscreteNumber -> Number -> IO ()
+-- setValueLabel model slider = setValueLabel' slider $ JSString.pack $ model ^. Model.displayValue
 
 setLabel :: Model.DiscreteNumber-> Number -> IO ()
 setLabel model slider = setLabel' slider $ lazyTextToJSString $ model ^. Model.label

@@ -1,4 +1,4 @@
-module UI.Command.Number where
+module UI.Command.Number.Discrete where
 
 import           Utils.PreludePlus
 import           Utils.Vector
@@ -51,8 +51,9 @@ makeDiscreteNumber parent model handlers = do
 
     let tx      = (model ^. size . x) / 2.0
         ty      = (model ^. size . y)
+        sx      = tx - (model ^. size . y / 2.0)
         textVal = Text.pack $ show $ model ^. value
-        textBox = TextBox.create (Vector2 tx ty) $ textVal
+        textBox = TextBox.create (Vector2 sx ty) textVal TextBox.Right
 
     tbId <- UICmd.register widgetId textBox $ textHandlers widgetId
     UICmd.moveX tbId tx

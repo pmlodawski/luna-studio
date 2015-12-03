@@ -1,37 +1,62 @@
 "use strict";
 
-var $$ = require('common');
 var config = require('config');
 
 var createText   = require('bmfont').render,
     font         = require("font/LatoBlack-sdf"),
-    textMaterial = require('font/text_material').hud;
+    textMaterial = require('font/text_material').hud,
+    layoutText   = require('bmfont').layout;
 
 function TextBox(widgetId, width, height) {
-  var _this = this;
-  this.widgetId = widgetId;
-  this.width  = width;
-  this.height = height;
-  this.mesh = new THREE.Group();
+  this.widgetId  = widgetId;
+  this.width     = width;
+  this.height    = height;
+  this.mesh      = new THREE.Group();
+  this.value     = "";
+  this.alignment = "Left";
 }
 
 TextBox.prototype.setValueLabel = function (text) {
   if (this.valueLabel) this.mesh.remove(this.valueLabel);
 
-  var geometry = createText({
+  this.value = text;
+
+  var layout = {
     text:  text,
     font:  font,
-    align: 'left',
-    width: this.width / (0.8 * config.fontSize),
+    align: this.alignment,
     mode: "pre"
-  });
+  };
+
+  var width = layoutText(layout).width * 0.8 * config.fontSize;
+
+  var geometry = createText(layout);
 
   var material = textMaterial();
   this.valueLabel = new THREE.Mesh(geometry, material);
   this.valueLabel.scale.multiplyScalar(0.8 * config.fontSize);
   this.valueLabel.position.y = 5 + this.height / 2.0;
 
+  switch(this.alignment) {
+    case 'Left':
+      this.valueLabel.position.x = 0;
+      break;
+    case 'Right':
+      this.valueLabel.position.x = this.width - width;
+      break;
+    case 'Center':
+      this.valueLabel.position.x = (this.width - width) / 2.0;
+      break;
+    default:
+      console.error("Invalid text alignment");
+  }
+
   this.mesh.add(this.valueLabel);
+};
+
+TextBox.prototype.setAlignment = function(align) {
+  this.alignment = align;
+  this.setValueLabel(this.value);
 };
 
 TextBox.prototype.startEditing = function(value) {
@@ -41,12 +66,10 @@ TextBox.prototype.startEditing = function(value) {
   var pos = this.mesh.localToWorld(new THREE.Vector3(0, 0, 0));
 
   this.valueLabel.visible = false;
-
   this.input = input;
 
-  input.css({left: pos.x, top: pos.y, width: this.width});
+  input.css({left: pos.x, top: pos.y, width: this.width, textAlign: this.alignment});
   input.val(value);
-
 
   var saveChanges = function() {
     var evt     = new Event('keydown');
