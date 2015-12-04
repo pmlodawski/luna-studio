@@ -49,8 +49,10 @@ import           Object.Widget.Choice  (Choice(..))
 import qualified Object.Widget.Choice  as Choice
 import qualified UI.Handlers.Choice    as Choice
 import qualified UI.Command.Choice     as Choice
-import qualified UI.Command.Number.Discrete     as DiscreteNumber
+import qualified UI.Command.Number.Discrete       as DiscreteNumber
 import qualified UI.Command.Number.Continuous     as ContinuousNumber
+-- import qualified UI.Command.Slider.Discrete       as SliderNumber
+import qualified UI.Command.Slider.Continuous     as ContinuousSlider
 
 import           UI.Layout as Layout
 import           Object.UITypes
@@ -75,7 +77,7 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.in
     ContinuousNumber.makeContinuousNumber parent widget def
 
     let widget = ContinuousSlider.create (Vector2 180 20) "ContinuousSlider" (-2.0) 5.0 3.0
-    UICmd.register_ parent widget def
+    ContinuousSlider.makeContinuousSlider parent widget def
 
     let widget = DiscreteSlider.create (Vector2 180 20) "DiscreteSlider" (-20) 80 30
     UICmd.register_ parent widget def

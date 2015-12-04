@@ -22,13 +22,13 @@ createSlider :: WidgetId -> Model.ContinuousSlider -> IO Slider
 createSlider oid model = do
     slider      <- create' oid (model ^. Model.size . x) (model ^. Model.size . y)
     setLabel       model slider
-    setValueLabel  model slider
+    -- setValueLabel  model slider
     setValue       model slider
     UI.setWidgetPosition (model ^. widgetPosition) slider
     return slider
 
-setValueLabel :: Model.ContinuousSlider -> Slider -> IO ()
-setValueLabel model slider = setValueLabel' slider $ JSString.pack $ model ^. Model.displayValue
+-- setValueLabel :: Model.ContinuousSlider -> Slider -> IO ()
+-- setValueLabel model slider = setValueLabel' slider $ JSString.pack $ model ^. Model.displayValue
 
 setLabel :: Model.ContinuousSlider -> Slider -> IO ()
 setLabel model slider = setLabel' slider $ lazyTextToJSString $ model ^. Model.label
@@ -50,5 +50,5 @@ instance UIDisplayObject Model.ContinuousSlider where
         slider <- UI.lookup id :: IO Slider
 
         setLabel       model slider
-        setValueLabel  model slider
+        -- setValueLabel  model slider
         setValue       model slider
