@@ -3,7 +3,7 @@ module Empire.Empire where
 import           Prologue
 import           Empire.Data.Project (Project, ProjectId)
 import           Control.Monad.State
-import           Control.Monad.Error (ErrorT(..), runErrorT)
+import           Control.Monad.Error (ErrorT(..), runErrorT, throwError)
 import           Data.IntMap         (IntMap)
 import qualified Data.IntMap         as IntMap
 
@@ -30,3 +30,7 @@ execEmpire st cmd = fst <$> runEmpire st cmd
 
 empire :: (s -> IO (Either Error a, s)) -> Command s a
 empire = ErrorT . StateT
+
+infixr 4 <?!>
+(<?!>) :: Command s (Maybe a) -> Error -> Command s a
+(<?!>) cmd err = cmd >>= maybe (throwError err) return

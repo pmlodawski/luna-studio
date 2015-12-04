@@ -22,3 +22,4 @@ extra-deps:
 - data-construction-1.0
 - ghc-session-0.1.1.0
 - graphviz-2999.18.0.2
+- error-util-0.0.1.1

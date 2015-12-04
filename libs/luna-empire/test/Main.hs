@@ -11,11 +11,14 @@ import           Luna.Syntax.Builder
 import           Luna.Syntax.Repr.Graph
 import           Luna.Diagnostic.AST (toGraphViz, render)
 import           Empire.Data.AST
+import           Empire.Data.Graph
 import           Empire.Data.Library
+import           Empire.Data.Port
 import           Empire.Empire
 import           Empire.Commands.Project
 import           Empire.Commands.Library
 import           Empire.Commands.AST
+import           Empire.Commands.Graph as Graph
 
 
 sampleGraph :: AST
@@ -53,13 +56,19 @@ sg2 = runIdentity
 test = do
     (pid, _) <- createProject (Just "dupa") "/no/elo"
     (lid, _) <- createLibrary pid (Just "xd") "/xd/xd"
-    addNode pid lid "hello"
-    withLibrary pid lid (use body)
+    firstNode <- Graph.addNode pid lid "hello"
+    sndNode <- Graph.addNode pid lid "x"
+    trdNode <- Graph.addNode pid lid "154"
+    rthNode <- Graph.addNode pid lid "\"this is a string literal\""
+    Graph.connect pid lid sndNode All firstNode Self
+    Graph.connect pid lid trdNode All firstNode (Arg 0)
+    Graph.connect pid lid rthNode All firstNode (Arg 1)
+    withLibrary pid lid (use $ body . ast)
 
 main = do
     (graph, s) <- runEmpire def test
     print s
     case graph of
-        Left err -> print err
+        Left err -> putStrLn err
         Right g  -> render "g" $ toGraphViz $ g
 {-main = return ()-}
