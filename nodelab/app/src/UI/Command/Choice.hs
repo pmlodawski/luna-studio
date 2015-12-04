@@ -50,7 +50,8 @@ makeChoice parent model = do
 
     let opts = (model ^. Choice.options) `zip` [0..]
     forM_ opts $ \(label, ix) -> do
-        let widget = RadioButton def (Vector2 180 20) label False
+        let isSelected = ix == model ^. Choice.value
+            widget     = RadioButton def (Vector2 180 20) label isSelected
         UICmd.register_ groupId widget (radioHandlers contId ix)
 
     Layout.verticalLayout 0.0 groupId
