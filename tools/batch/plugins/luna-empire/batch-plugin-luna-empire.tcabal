@@ -1,0 +1,39 @@
+Name:               batch-plugin-luna-empire
+Version:            0.1
+Cabal-Version:      >= 1.8
+--License-file:       LICENSE
+Author:             New Byte Order <contact@newbyteorder.com>
+Maintainer:         New Byte Order <contact@newbyteorder.com>
+Build-Type:         Simple
+
+Flag Debug
+    Description:    Enable debug support
+    Default:        False
+
+
+Executable luna-empire
+    Hs-Source-Dirs: src
+    Other-Modules:  `findmodules('src', '.*\.hs')`,
+        Paths_batch_plugin_luna_empire
+
+    Main-Is:        Main.hs
+
+    GHC-Options:    -Wall -O2 -threaded
+
+    Extensions:     NoImplicitPrelude
+
+    Build-Depends:  base,
+                    binary,
+                    bytestring,
+                    containers,
+                    either,
+                    errors,
+                    flowbox-bus-binary,
+                    flowbox-config,
+                    flowbox-utils-old,
+                    mtl,
+                    optparse-applicative,
+                    protocol-buffers,
+                    time,
+                    transformers,
+                    zeromq4-haskell >= 0.4

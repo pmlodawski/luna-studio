@@ -35,7 +35,7 @@ Library
                   mtl,
                   prologue
 
-Executable luna-empire
+Executable luna-empire-main
   Main-Is:        Main.hs
   Hs-Source-Dirs: src
 
@@ -54,7 +54,7 @@ Executable luna-empire
                   luna-tc,
                   prologue
 
-Executable empire-test
+Executable luna-empire-test
   Main-Is:        Main.hs
   Hs-Source-Dirs: test
 
