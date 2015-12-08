@@ -23,19 +23,19 @@ import           UI.Handlers.Generic (triggerValueChanged)
 import           UI.Layout as Layout
 
 import           UI.Widget.Choice ()
-import           UI.Widget.Choice.RadioButton     ()
-import           UI.Widget.Group ()
-import           UI.Widget.Label ()
+import           UI.Widget.Choice.RadioButton ()
+import           UI.Widget.Group  ()
+import           UI.Widget.Label  ()
 import           UI.Widget.Toggle ()
 
 import qualified Data.HMap.Lazy as HMap
 
-import qualified Object.Widget.Choice  as Choice
+import qualified Object.Widget.Choice             as Choice
 import qualified Object.Widget.Choice.RadioButton as RadioButton
 import qualified Object.Widget.Group              as Group
 import qualified Object.Widget.Label              as Label
-import qualified Reactive.Commands.UIRegistry as UICmd
-import qualified Reactive.State.Global as Global
+import qualified Reactive.Commands.UIRegistry     as UICmd
+import qualified Reactive.State.Global            as Global
 import qualified UI.Handlers.Choice.RadioButton   as RadioButton
 
 
