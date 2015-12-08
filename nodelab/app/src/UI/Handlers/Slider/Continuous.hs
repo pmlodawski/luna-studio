@@ -21,34 +21,29 @@ import           UI.Widget.Slider.Continuous ()
 import           UI.Widget.Number (keyModMult)
 import           UI.Generic (takeFocus, startDrag)
 import           UI.Instances ()
-import           UI.Handlers.Generic (triggerValueChanged)
+import           UI.Handlers.Generic (triggerValueChanged, ValueChangedHandler(..))
+import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
+import qualified Data.HMap.Lazy as HMap
+import           Data.HMap.Lazy (HTMap)
+import qualified Object.Widget.TextBox           as TextBox
+import qualified UI.Handlers.TextBox             as TextBox
+import           Reactive.State.UIRegistry (addHandler)
+import           Data.Text.Lazy.Read (rational)
 
 isEnabled :: WidgetId -> Command Global.State Bool
 isEnabled id = inRegistry $ UICmd.get id Model.enabled
-
-setValue :: WidgetId -> Double -> Command UIRegistry.State ()
-setValue id val = do
-    widget <- UICmd.update id $ Model.boundedValue .~ val
-    updateUIValue id widget
-
-updateUIValue :: WidgetId -> Model.ContinuousSlider -> Command UIRegistry.State ()
-updateUIValue id model = do
-    (tbId:_) <- UICmd.children id
-    UICmd.update_ tbId $ TextBox.value .~ (Text.pack $ model ^. Model.displayValue)
 
 keyUpHandler :: KeyUpHandler Global.State
 keyUpHandler 'W' _ _ id = do
     enabled <- isEnabled id
     when enabled $ do
         widget <- inRegistry $ UICmd.update id $ Model.boundedNormValue +~ 0.1
-        inRegistry $ updateUIValue id widget
         triggerValueChanged (widget ^. Model.value) id
 
 keyUpHandler 'Q' _ _ id = do
     enabled <- isEnabled id
     when enabled $ do
         widget <- inRegistry $ UICmd.update id $ Model.boundedNormValue -~ 0.1
-        inRegistry $ updateUIValue id widget
         triggerValueChanged (widget ^. Model.value) id
 
 keyUpHandler _ _ _ _ = return ()
@@ -72,9 +67,7 @@ dragHandler ds _ id = do
                 delta   = if (abs $ diff ^. x) > (abs $ diff ^. y) then  diff ^. x /  divider
                                                                    else -diff ^. y / (divider * 10.0)
                 divider = width * (keyModMult $ ds ^. keyMods)
-            inRegistry $ do
-                widget <- UICmd.update id $ Model.boundedNormValue .~ (startValue + delta)
-                updateUIValue id widget
+            inRegistry $ UICmd.update_ id $ Model.boundedNormValue .~ (startValue + delta)
 
 dragEndHandler :: DragEndHandler Global.State
 dragEndHandler _ _ id = do
@@ -92,7 +85,6 @@ dblClickHandler evt _ id = do
             width <- inRegistry $ UICmd.get id $ Model.size . x
             let normValue = (evt ^. Mouse.position ^. x) / width
             widget <- inRegistry $ UICmd.update id $ Model.boundedNormValue .~ normValue
-            inRegistry $ updateUIValue id widget
             triggerValueChanged (widget ^. Model.value) id
         KeyMods False _ _ _ -> do
             (tbId:_) <- inRegistry $ UICmd.children id
@@ -105,3 +97,39 @@ widgetHandlers = def & keyUp        .~ keyUpHandler
                      & mousePressed .~ startSliderDrag
                      & dragMove     .~ dragHandler
                      & dragEnd      .~ dragEndHandler
+
+-- Constructors
+
+textHandlers :: WidgetId -> HTMap
+textHandlers id = addHandler (ValueChangedHandler $ textValueChangedHandler id)
+                $ mempty where
+
+textValueChangedHandler :: WidgetId -> Text -> WidgetId -> Command Global.State ()
+textValueChangedHandler parent val tbId = do
+    let val' = rational val
+    case val' of
+        Left err        -> inRegistry $ do
+            val <- UICmd.get parent Model.displayValue
+            UICmd.update_ tbId $ TextBox.value .~ (Text.pack $ val)
+        Right (val', _) -> do
+            inRegistry $ UICmd.update_ parent $ Model.value .~ val'
+            triggerValueChanged val' parent
+
+
+instance CompositeWidget Model.ContinuousSlider where
+    createWidget id model = do
+        let tx      = (model ^. Model.size . x) / 2.0
+            ty      = (model ^. Model.size . y)
+            sx      = tx - (model ^. Model.size . y / 2.0)
+            textVal = Text.pack $ show $ model ^. Model.value
+            textBox = TextBox.create (Vector2 sx ty) textVal TextBox.Right
+
+        tbId <- UICmd.register id textBox $ textHandlers id
+        UICmd.moveX tbId tx
+
+    updateWidget id old model = do
+        (tbId:_) <- UICmd.children id
+        UICmd.update_ tbId $ TextBox.value .~ (Text.pack $ model ^. Model.displayValue)
+
+
+

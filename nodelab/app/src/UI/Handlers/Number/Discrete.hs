@@ -18,7 +18,7 @@ import qualified Object.Widget.TextBox         as TextBox
 import           UI.Widget.Number (keyModMult)
 import           UI.Generic (takeFocus, startDrag)
 import           UI.Widget.Number.Discrete ()
-import           UI.Instances ()
+-- import           UI.Instances ()
 import           Data.Text.Lazy.Read (decimal)
 import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
 import qualified Data.HMap.Lazy as HMap

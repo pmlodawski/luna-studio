@@ -32,9 +32,15 @@ import qualified Object.Widget.Label   as Label
 import qualified Object.Widget.List    as List
 import qualified Object.Widget.List    as List
 import qualified Object.Widget.TextBox as TextBox
+import           UI.Widget.Group       ()
+import           UI.Widget.Button      ()
+import           UI.Widget.Label       ()
 import qualified UI.Handlers.Button    as Button
 import qualified UI.Handlers.TextBox   as TextBox
 import           UI.Handlers.Generic   (triggerValueChanged, ValueChangedHandler(..))
+
+
+
 
 deleteNth n xs = take n xs ++ drop (n+1) xs
 

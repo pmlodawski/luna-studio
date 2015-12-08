@@ -19,7 +19,7 @@ import qualified Object.Widget.TextBox         as TextBox
 import           UI.Widget.Number (keyModMult)
 import           UI.Widget.Number.Continuous ()
 import           UI.Generic (takeFocus, startDrag)
-import           UI.Instances ()
+-- import           UI.Instances ()
 import           Data.Text.Lazy.Read (rational)
 import           Reactive.State.UIRegistry (addHandler)
 import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)

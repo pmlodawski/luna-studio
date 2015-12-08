@@ -36,8 +36,3 @@ instance UIDisplayObject Model.Choice where
         Widget.add widget parent
 
     updateUI id old model = return ()
-
-instance CompositeWidget Model.Choice where
-    createWidget _   _ = return ()
-    updateWidget _ _ _ = return ()
-

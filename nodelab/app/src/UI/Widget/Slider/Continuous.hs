@@ -53,8 +53,3 @@ instance UIDisplayObject Model.ContinuousSlider where
         setLabel       model slider
         -- setValueLabel  model slider
         setValue       model slider
-
-instance CompositeWidget Model.ContinuousSlider where
-    createWidget _   _ = return ()
-    updateWidget _ _ _ = return ()
-

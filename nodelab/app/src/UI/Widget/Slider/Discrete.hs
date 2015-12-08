@@ -53,8 +53,3 @@ instance UIDisplayObject Model.DiscreteSlider where
         setLabel       model slider
         -- setValueLabel  model slider
         setValue       model slider
-
-instance CompositeWidget Model.DiscreteSlider where
-    createWidget _   _ = return ()
-    updateWidget _ _ _ = return ()
-

@@ -10,7 +10,6 @@ import           Object.UITypes            (WidgetId)
 import           Reactive.Commands.Command (Command)
 import           Reactive.Commands.UIRegistry as UICmd
 import           Data.HMap.Lazy (HTMap)
-import           UI.Instances
 import           Utils.Vector
 
 import           Object.LunaValue
@@ -19,14 +18,10 @@ import qualified Object.Widget.List               as List
 import qualified Object.Widget.Number.Discrete    as DiscreteNumber
 import qualified UI.Handlers.Number.Discrete      as DiscreteNumber
 import           UI.Handlers.Generic              (triggerValueChanged, ValueChangedHandler(..))
-import qualified UI.Command.Number.Discrete       as DiscreteNumber
--- import qualified UI.Handlers.List                 as List
 import qualified Object.Widget.Number.Continuous  as ContinuousNumber
 import qualified UI.Handlers.Number.Continuous    as ContinuousNumber
-import qualified UI.Command.Number.Continuous     as ContinuousNumber
 import qualified UI.Handlers.Toggle               as Toggle
 import qualified Object.Widget.Toggle             as Toggle
--- import           UI.Widget.List.Constructor ()
 
 
 controlHandler :: LunaValue a => a -> WidgetId -> Command Global.State ()

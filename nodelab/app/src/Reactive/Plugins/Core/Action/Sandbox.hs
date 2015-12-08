@@ -39,7 +39,6 @@ import qualified UI.Handlers.LabeledTextBox   as LabeledTextBox
 import qualified Object.Widget.Group as Group
 
 import qualified Object.Widget.List as List
-import qualified UI.Command.List    as List
 import qualified UI.Widget.List.Constructor    as List
 
 import           Object.Widget.Choice.RadioButton  (RadioButton(..))
@@ -49,11 +48,6 @@ import qualified UI.Handlers.Choice.RadioButton   as RadioButton
 import           Object.Widget.Choice  (Choice(..))
 import qualified Object.Widget.Choice  as Choice
 import qualified UI.Handlers.Choice    as Choice
-import qualified UI.Command.Choice     as Choice
-import qualified UI.Command.Number.Discrete       as DiscreteNumber
-import qualified UI.Command.Number.Continuous     as ContinuousNumber
-import qualified UI.Command.Slider.Discrete       as DiscreteSlider
-import qualified UI.Command.Slider.Continuous     as ContinuousSlider
 
 import           UI.Layout as Layout
 import           Object.UITypes
@@ -78,13 +72,13 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.in
     UICmd.register parent widget def
 
     let widget = ContinuousSlider.create (Vector2 180 20) "ContinuousSlider" (-2.0) 5.0 3.0
-    ContinuousSlider.makeContinuousSlider parent widget def
+    UICmd.register parent widget def
 
     let widget = DiscreteSlider.create (Vector2 180 20) "DiscreteSlider" (-20) 80 30
-    DiscreteSlider.makeDiscreteSlider parent widget def
+    UICmd.register parent widget def
 
     let widget = DiscreteSlider.create (Vector2 180 20) "DiscreteSlider" 3 8 4
-    DiscreteSlider.makeDiscreteSlider parent widget def
+    UICmd.register parent widget def
 
     let widget = Toggle.create (Vector2 180 20) "Toggle" True
     UICmd.register_ parent widget def
@@ -93,7 +87,7 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.in
     UICmd.register_ parent widget def
 
     let widget = Choice.create (Vector2 180 20) "Choice" ["Foo", "Bar", "Baz"] 0
-    Choice.makeChoice parent widget
+    UICmd.register parent widget def
 
 
     let values = (AnyLunaValue <$> ([1, 2, 3, 4, 5, 6, 7] :: [Int]))
