@@ -14,6 +14,7 @@ import qualified UI.Registry                      as UI
 import qualified UI.Generic                       as UI
 import           Object.Widget
 import           Object.UITypes
+import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
 
 newtype Button = Button JSVal deriving (PToJSVal, PFromJSVal)
 
@@ -48,3 +49,8 @@ instance UIDisplayObject Model.Button where
         widget <- UI.lookup id :: IO Button
         setLabel   model widget
         setEnabled model widget
+
+
+instance CompositeWidget Model.Button where
+    createWidget _   _ = return ()
+    updateWidget _ _ _ = return ()

@@ -32,6 +32,7 @@ import           Reactive.State.Global (inRegistry)
 import qualified Data.HMap.Lazy as HMap
 import           Data.HMap.Lazy (HTMap)
 import           Data.HMap.Lazy (TypeKey(..))
+import           UI.Handlers.Generic (triggerValueChanged)
 
 radioHandlers :: WidgetId -> Word -> HTMap
 radioHandlers id ix = addHandler (RadioButton.SelectedHandler $ selectRadioButton id ix)
@@ -74,11 +75,3 @@ setValue id val = do
         UICmd.update_ newWidget $ RadioButton.selected .~ True
 
     triggerValueChanged val id
-
-newtype ValueChangedHandler = ValueChangedHandler (Word -> WidgetId -> Command Global.State ())
-valueChangedHandlerKey = TypeKey :: TypeKey ValueChangedHandler
-
-triggerValueChanged :: Word -> WidgetId -> Command Global.State ()
-triggerValueChanged new id = do
-    maybeHandler <- inRegistry $ UICmd.handler id valueChangedHandlerKey
-    forM_ maybeHandler $ \(ValueChangedHandler handler) -> handler new id

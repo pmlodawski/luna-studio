@@ -14,17 +14,10 @@ import           Data.HMap.Lazy (TypeKey(..))
 import qualified Object.Widget.Toggle as Model
 import           UI.Widget.Toggle ()
 import           UI.Generic (takeFocus, startDrag)
-
-newtype ValueChangedHandler = ValueChangedHandler (Bool -> WidgetId -> Command Global.State ())
-valueChangedHandlerKey = TypeKey :: TypeKey ValueChangedHandler
+import           UI.Handlers.Generic (triggerValueChanged)
 
 isEnabled :: WidgetId -> Command Global.State Bool
 isEnabled id = inRegistry $ UICmd.get id Model.enabled
-
-triggerValueChanged :: Bool -> WidgetId -> Command Global.State ()
-triggerValueChanged new id = do
-    maybeHandler <- inRegistry $ UICmd.handler id valueChangedHandlerKey
-    forM_ maybeHandler $ \(ValueChangedHandler handler) -> handler new id
 
 toggleValue :: WidgetId -> Command Global.State ()
 toggleValue id = do

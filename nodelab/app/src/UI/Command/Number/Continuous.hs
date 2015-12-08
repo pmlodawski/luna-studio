@@ -11,6 +11,7 @@ import           Reactive.Commands.Command       (Command, performIO)
 
 import           Reactive.State.UIRegistry     (sceneInterfaceId, sceneGraphId, addHandler)
 import qualified Reactive.State.UIRegistry     as UIRegistry
+import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
 import qualified Reactive.Commands.UIRegistry  as UICmd
 
 import           UI.Instances
@@ -29,35 +30,34 @@ import           Data.HMap.Lazy (TypeKey(..))
 
 import           Data.Text.Lazy.Read (rational)
 import qualified Data.Text.Lazy as Text
-
-textHandlers :: WidgetId -> HTMap
-textHandlers id = addHandler (TextBox.ValueChangedHandler $ textValueChangedHandler id)
-                $ mempty where
-
-textValueChangedHandler :: WidgetId -> Text -> WidgetId -> Command Global.State ()
-textValueChangedHandler parent val tbId = do
-    let val' = rational val
-    case val' of
-        Left err        -> inRegistry $ do
-            val <- UICmd.get parent ContinuousNumber.value
-            ContinuousNumber.setValue parent val
-        Right (val', _) -> do
-            inRegistry $ ContinuousNumber.setValue parent val'
-            ContinuousNumber.triggerValueChanged val' parent
-
-makeContinuousNumber :: WidgetId -> ContinuousNumber -> HTMap -> Command UIRegistry.State WidgetId
-makeContinuousNumber parent model handlers = do
-    widgetId <- UICmd.register parent model handlers
-
-    let tx      = (model ^. size . x) / 2.0
-        ty      = (model ^. size . y)
-        sx      = tx - (model ^. size . y / 2.0)
-        textVal = Text.pack $ show $ model ^. value
-        textBox = TextBox.create (Vector2 sx ty) textVal TextBox.Right
-
-    tbId <- UICmd.register widgetId textBox $ textHandlers widgetId
-    UICmd.moveX tbId tx
-
-    return widgetId
-
-
+--
+-- textHandlers :: WidgetId -> HTMap
+-- textHandlers id = addHandler (TextBox.ValueChangedHandler $ textValueChangedHandler id)
+--                 $ mempty where
+--
+-- textValueChangedHandler :: WidgetId -> Text -> WidgetId -> Command Global.State ()
+-- textValueChangedHandler parent val tbId = do
+--     let val' = rational val
+--     case val' of
+--         Left err        -> inRegistry $ do
+--             val <- UICmd.get parent ContinuousNumber.value
+--             UICmd.update_ tbId $ TextBox.value .~ (Text.pack $ show $ val)
+--         Right (val', _) -> do
+--             inRegistry $ UICmd.update_ parent $ ContinuousNumber.value .~ val'
+--             ContinuousNumber.triggerValueChanged val' parent
+--
+--
+-- instance CompositeWidget ContinuousNumber where
+--     createWidget id model = do
+--         let tx      = (model ^. size . x) / 2.0
+--             ty      = (model ^. size . y)
+--             sx      = tx - (model ^. size . y / 2.0)
+--             textVal = Text.pack $ show $ model ^. value
+--             textBox = TextBox.create (Vector2 sx ty) textVal TextBox.Right
+--
+--         tbId <- UICmd.register id textBox $ textHandlers id
+--         UICmd.moveX tbId tx
+--
+--     updateWidget id old model = do
+--         (tbId:_) <- UICmd.children id
+--         UICmd.update_ tbId $ TextBox.value .~ (Text.pack $ show $ model ^. ContinuousNumber.value)

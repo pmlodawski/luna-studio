@@ -20,7 +20,7 @@ import           Reactive.Commands.Command (Command, ioCommand, performIO)
 import qualified Reactive.State.Global as Global
 import           UI.Widget (GenericWidget(..))
 import qualified UI.Widget as UIT
-
+import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
 
 newtype Port = Port { unPort :: JSVal } deriving (PToJSVal, PFromJSVal)
 
@@ -52,3 +52,8 @@ instance UIDisplayObject Model.Port where
 
 widgetHandlers :: UIHandlers Global.State
 widgetHandlers = def
+
+instance CompositeWidget Model.Port where
+    createWidget _   _ = return ()
+    updateWidget _ _ _ = return ()
+

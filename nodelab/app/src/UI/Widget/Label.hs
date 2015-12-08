@@ -14,6 +14,7 @@ import qualified UI.Registry                      as UI
 import qualified UI.Generic                       as UI
 import           Object.Widget
 import           Object.UITypes
+import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
 
 newtype Label = Label JSVal deriving (PToJSVal, PFromJSVal)
 
@@ -43,3 +44,8 @@ instance UIDisplayObject Model.Label where
     updateUI id old model = do
         widget <- UI.lookup id :: IO Label
         setLabel   model widget
+
+instance CompositeWidget Model.Label where
+    createWidget _   _ = return ()
+    updateWidget _ _ _ = return ()
+

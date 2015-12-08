@@ -42,6 +42,8 @@ import qualified UI.Widget.Port as UIPort
 import qualified UI.Widget.Connection as UIConnection
 import qualified UI.Generic as UIGeneric
 import           Reactive.State.Camera (Camera, screenToWorkspace)
+import           UI.Instances ()
+import           UI.Widget.Connection.Instances ()
 
 updateConnNodes :: [NodeId] -> Command Global.State ()
 updateConnNodes nodeIds = pureCommand $ \state -> let

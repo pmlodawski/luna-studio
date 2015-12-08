@@ -20,28 +20,24 @@ import           UI.Widget.Number (keyModMult)
 import           UI.Widget.Number.Continuous ()
 import           UI.Generic (takeFocus, startDrag)
 import           UI.Instances ()
+import           Data.Text.Lazy.Read (rational)
+import           Reactive.State.UIRegistry (addHandler)
+import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
+import           UI.Handlers.Generic           (triggerValueChanged)
 
-newtype ValueChangedHandler = ValueChangedHandler (Double -> WidgetId -> Command Global.State ())
-valueChangedHandlerKey = TypeKey :: TypeKey valueChangedHandler
+import qualified Data.HMap.Lazy as HMap
+import           Data.HMap.Lazy (HTMap)
+import qualified Object.Widget.TextBox           as TextBox
+import qualified UI.Handlers.TextBox             as TextBox
+import           UI.Handlers.Generic (triggerValueChanged, ValueChangedHandler(..))
 
 isEnabled :: WidgetId -> Command Global.State Bool
 isEnabled id = inRegistry $ UICmd.get id Model.enabled
-
-triggerValueChanged :: Double -> WidgetId -> Command Global.State ()
-triggerValueChanged new id = do
-    maybeHandler <- inRegistry $ UICmd.handler id valueChangedHandlerKey
-    forM_ maybeHandler $ \(ValueChangedHandler handler) -> handler new id
 
 bumpValue :: Double -> WidgetId -> Command Global.State ()
 bumpValue amount id = do
     widget <- zoom Global.uiRegistry $ UICmd.update id (Model.value +~ amount)
     triggerValueChanged (widget ^. Model.value) id
-
-setValue :: WidgetId -> Double -> Command UIRegistry.State ()
-setValue id val = do
-    UICmd.update_ id $ Model.value .~ val
-    (tbId:_) <- UICmd.children id
-    UICmd.update_ tbId $ TextBox.value .~ (Text.pack $ show $ val)
 
 keyUpHandler :: KeyUpHandler Global.State
 keyUpHandler 'Q' _ _ id = bumpValue (-1.0) id
@@ -67,7 +63,7 @@ dragHandler ds _ id = do
                 delta   = if (abs $ diff ^. x) > (abs $ diff ^. y) then  diff ^. x /  divider
                                                                    else -diff ^. y / (divider * 10.0)
                 divider = keyModMult $ ds ^. keyMods
-            inRegistry $ setValue id $ startValue + delta
+            inRegistry $ UICmd.update_ id $ Model.value .~ (startValue + delta)
 
 dragEndHandler :: DragEndHandler Global.State
 dragEndHandler _ _ id = do
@@ -89,3 +85,39 @@ widgetHandlers = def & keyUp        .~ keyUpHandler
                      & mousePressed .~ startSliderDrag
                      & dragMove     .~ dragHandler
                      & dragEnd      .~ dragEndHandler
+
+
+-- Constructors
+
+
+textHandlers :: WidgetId -> HTMap
+textHandlers id = addHandler (ValueChangedHandler $ textValueChangedHandler id)
+                $ mempty where
+
+textValueChangedHandler :: WidgetId -> Text -> WidgetId -> Command Global.State ()
+textValueChangedHandler parent val tbId = do
+    let val' = rational val
+    case val' of
+        Left err        -> inRegistry $ do
+            val <- UICmd.get parent Model.displayValue
+            UICmd.update_ tbId $ TextBox.value .~ (Text.pack $ val)
+        Right (val', _) -> do
+            inRegistry $ UICmd.update_ parent $ Model.value .~ val'
+            triggerValueChanged val' parent
+
+
+instance CompositeWidget Model.ContinuousNumber where
+    createWidget id model = do
+        let tx      = (model ^. Model.size . x) / 2.0
+            ty      = (model ^. Model.size . y)
+            sx      = tx - (model ^. Model.size . y / 2.0)
+            textVal = Text.pack $ show $ model ^. Model.value
+            textBox = TextBox.create (Vector2 sx ty) textVal TextBox.Right
+
+        tbId <- UICmd.register id textBox $ textHandlers id
+        UICmd.moveX tbId tx
+
+    updateWidget id old model = do
+        (tbId:_) <- UICmd.children id
+        UICmd.update_ tbId $ TextBox.value .~ (Text.pack $ model ^. Model.displayValue)
+

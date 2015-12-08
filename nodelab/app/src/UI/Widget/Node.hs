@@ -28,6 +28,7 @@ import qualified UI.Widget as UIT
 import           UI.Generic (takeFocus)
 import qualified Data.HMap.Lazy as HMap
 import           Data.HMap.Lazy (TypeKey(..))
+import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
 
 
 newtype Node = Node { unNode :: JSVal } deriving (PToJSVal, PFromJSVal)
@@ -142,3 +143,8 @@ widgetHandlers = def & keyDown      .~ keyDownHandler
 
 allNodes :: Command UIRegistry.State [WidgetFile Model.Node]
 allNodes = UIRegistry.lookupAllM
+
+
+instance CompositeWidget Model.Node where
+    createWidget _   _ = return ()
+    updateWidget _ _ _ = return ()

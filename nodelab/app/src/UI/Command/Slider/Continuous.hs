@@ -29,9 +29,10 @@ import           Data.HMap.Lazy (TypeKey(..))
 
 import           Data.Text.Lazy.Read (rational)
 import qualified Data.Text.Lazy as Text
+import           UI.Handlers.Generic (triggerValueChanged, ValueChangedHandler(..))
 
 textHandlers :: WidgetId -> HTMap
-textHandlers id = addHandler (TextBox.ValueChangedHandler $ textValueChangedHandler id)
+textHandlers id = addHandler (ValueChangedHandler $ textValueChangedHandler id)
                 $ mempty where
 
 textValueChangedHandler :: WidgetId -> Text -> WidgetId -> Command Global.State ()
@@ -43,7 +44,7 @@ textValueChangedHandler parent val tbId = do
             ContinuousSlider.setValue parent val
         Right (val', _) -> do
             inRegistry $ ContinuousSlider.setValue parent val'
-            ContinuousSlider.triggerValueChanged val' parent
+            triggerValueChanged val' parent
 
 makeContinuousSlider :: WidgetId -> ContinuousSlider -> HTMap -> Command UIRegistry.State WidgetId
 makeContinuousSlider parent model handlers = do

@@ -40,6 +40,7 @@ import qualified Object.Widget.Group as Group
 
 import qualified Object.Widget.List as List
 import qualified UI.Command.List    as List
+import qualified UI.Widget.List.Constructor    as List
 
 import           Object.Widget.Choice.RadioButton  (RadioButton(..))
 import qualified Object.Widget.Choice.RadioButton as RadioButton
@@ -71,10 +72,10 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.in
     parent <- UICmd.register sceneGraphId widget def
 
     let widget = DiscreteNumber.create (Vector2 180 20) "Discrete" 42
-    DiscreteNumber.makeDiscreteNumber parent widget def
+    UICmd.register parent widget def
 
     let widget = ContinuousNumber.create (Vector2 180 20) "Continuous" 42.42
-    ContinuousNumber.makeContinuousNumber parent widget def
+    UICmd.register parent widget def
 
     let widget = ContinuousSlider.create (Vector2 180 20) "ContinuousSlider" (-2.0) 5.0 3.0
     ContinuousSlider.makeContinuousSlider parent widget def
@@ -99,7 +100,7 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.in
               <> (AnyLunaValue <$> ([0.1, 0.2, 0.3] :: [Double]))
               <> (AnyLunaValue <$> [True, False, True])
         widget = List.createList "List" values $ AnyLunaValue (-1 :: Int)
-    List.makeList parent widget
+    UICmd.register_ parent widget def
 
     Layout.verticalLayout 10.0 parent
 

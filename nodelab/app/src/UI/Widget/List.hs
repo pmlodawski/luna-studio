@@ -14,6 +14,7 @@ import qualified UI.Registry          as UI
 import qualified UI.Generic           as UI
 import           Object.Widget
 import           Object.UITypes
+import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
 
 newtype List = List JSVal deriving (PToJSVal, PFromJSVal)
 

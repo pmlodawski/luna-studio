@@ -19,18 +19,17 @@ import           UI.Widget.Number (keyModMult)
 import           UI.Generic (takeFocus, startDrag)
 import           UI.Widget.Number.Discrete ()
 import           UI.Instances ()
-
-newtype ValueChangedHandler = ValueChangedHandler (Int -> WidgetId -> Command Global.State ())
-valueChangedHandlerKey = TypeKey :: TypeKey valueChangedHandler
+import           Data.Text.Lazy.Read (decimal)
+import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
+import qualified Data.HMap.Lazy as HMap
+import           Data.HMap.Lazy (HTMap)
+import           Reactive.State.UIRegistry (addHandler)
+import qualified Object.Widget.TextBox           as TextBox
+import qualified UI.Handlers.TextBox             as TextBox
+import           UI.Handlers.Generic (triggerValueChanged, ValueChangedHandler(..))
 
 isEnabled :: WidgetId -> Command Global.State Bool
 isEnabled id = inRegistry $ UICmd.get id Model.enabled
-
-
-triggerValueChanged :: Int -> WidgetId -> Command Global.State ()
-triggerValueChanged new id = do
-    maybeHandler <- inRegistry $ UICmd.handler id valueChangedHandlerKey
-    forM_ maybeHandler $ \(ValueChangedHandler handler) -> handler new id
 
 bumpValue :: Int -> WidgetId -> Command Global.State ()
 bumpValue amount id = do
@@ -91,3 +90,35 @@ widgetHandlers = def & keyUp        .~ keyUpHandler
                      & dragMove     .~ dragHandler
                      & dragEnd      .~ dragEndHandler
                      & dblClick     .~ dblClickHandler
+--
+
+textHandlers :: WidgetId -> HTMap
+textHandlers id = addHandler (ValueChangedHandler $ textValueChangedHandler id)
+                $ mempty where
+
+textValueChangedHandler :: WidgetId -> Text -> WidgetId -> Command Global.State ()
+textValueChangedHandler parent val tbId = do
+    let val' = decimal val
+    case val' of
+        Left err        -> inRegistry $ do
+            val <- UICmd.get parent $ Model.displayValue
+            UICmd.update_ tbId $ TextBox.value .~ (Text.pack $ val)
+        Right (val', _) -> do
+            inRegistry $ UICmd.update_ parent $ Model.value .~ val'
+            triggerValueChanged val' parent
+
+instance CompositeWidget Model.DiscreteNumber where
+    createWidget id model = do
+        let tx      = (model ^. Model.size . x) / 2.0
+            ty      = (model ^. Model.size . y)
+            sx      = tx - (model ^. Model.size . y / 2.0)
+            textVal = Text.pack $ show $ model ^. Model.value
+            textBox = TextBox.create (Vector2 sx ty) textVal TextBox.Right
+
+        tbId <- UICmd.register id textBox $ textHandlers id
+        UICmd.moveX tbId tx
+
+    updateWidget id old model = do
+        (tbId:_) <- UICmd.children id
+        UICmd.update_ tbId $ TextBox.value .~ (Text.pack $ model ^. Model.displayValue)
+

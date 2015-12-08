@@ -17,6 +17,7 @@ import qualified UI.Widget as Widget
 import qualified UI.Registry as UI
 import qualified UI.Generic  as UI
 import           UI.Widget.Slider (Slider, create', setValueLabel', setValue', setLabel', setFocus')
+import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
 
 createSlider :: WidgetId -> Model.ContinuousSlider -> IO Slider
 createSlider oid model = do
@@ -52,3 +53,8 @@ instance UIDisplayObject Model.ContinuousSlider where
         setLabel       model slider
         -- setValueLabel  model slider
         setValue       model slider
+
+instance CompositeWidget Model.ContinuousSlider where
+    createWidget _   _ = return ()
+    updateWidget _ _ _ = return ()
+

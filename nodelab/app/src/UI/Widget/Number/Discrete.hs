@@ -42,5 +42,3 @@ instance UIDisplayObject Model.DiscreteNumber where
         slider <- UI.lookup id :: IO Number
         setLabel       model slider
         -- setValueLabel  model slider
-
-

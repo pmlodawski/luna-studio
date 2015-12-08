@@ -14,6 +14,7 @@ import qualified UI.Registry          as UI
 import qualified UI.Generic           as UI
 import           Object.Widget
 import           Object.UITypes
+import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
 
 newtype Choice = Choice JSVal deriving (PToJSVal, PFromJSVal)
 
@@ -35,4 +36,8 @@ instance UIDisplayObject Model.Choice where
         Widget.add widget parent
 
     updateUI id old model = return ()
+
+instance CompositeWidget Model.Choice where
+    createWidget _   _ = return ()
+    updateWidget _ _ _ = return ()
 

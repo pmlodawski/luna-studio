@@ -1,4 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Reactive.State.UIRegistry where
 
@@ -8,7 +10,7 @@ import           Utils.Vector
 import           Object.Widget
 import           Object.Widget.Scene
 import           Object.Widget.Connection
-import UI.Widget.Connection ()
+import           UI.Widget.Connection ()
 
 import           Data.IntMap.Lazy (IntMap)
 import qualified Data.Text.Lazy as Text
@@ -29,6 +31,9 @@ import           Utils.Aeson (intMapToJSON)
 import           Data.HMap.Lazy (HTMap)
 import qualified Data.HMap.Lazy as HMap
 
+-- instance {-# OVERLAPPABLE #-} DisplayObjectClass a => CompositeWidget a where
+--     createWidget _   _ = return ()
+--     updateWidget _ _ _ = performIO $ putStrLn "Generic update noop"
 
 sceneInterfaceId, sceneGraphId, currentConnectionId :: Int
 sceneInterfaceId    = 1
@@ -38,10 +43,10 @@ currentConnectionId = 3
 type WidgetMap = IntMap (WidgetFile DisplayObject)
 
 data State = State { _widgets         :: WidgetMap
-                     , _widgetOver      :: Maybe WidgetId
-                     , _dragState       :: Maybe DragState
-                     , _focusedWidget   :: Maybe WidgetId
-                     } deriving (Generic)
+                   , _widgetOver      :: Maybe WidgetId
+                   , _dragState       :: Maybe DragState
+                   , _focusedWidget   :: Maybe WidgetId
+                   } deriving (Generic)
 
 makeLenses ''State
 

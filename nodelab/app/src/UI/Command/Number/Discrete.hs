@@ -27,37 +27,37 @@ import qualified Data.HMap.Lazy as HMap
 import           Data.HMap.Lazy (HTMap)
 import           Data.HMap.Lazy (TypeKey(..))
 
-import           Data.Text.Lazy.Read (decimal)
-import qualified Data.Text.Lazy as Text
-
-textHandlers :: WidgetId -> HTMap
-textHandlers id = addHandler (TextBox.ValueChangedHandler $ textValueChangedHandler id)
-                $ mempty where
-
-textValueChangedHandler :: WidgetId -> Text -> WidgetId -> Command Global.State ()
-textValueChangedHandler parent val tbId = do
-    let val' = decimal val
-    case val' of
-        Left err        -> inRegistry $ do
-            val <- UICmd.get parent DiscreteNumber.value
-            DiscreteNumber.setValue parent val
-        Right (val', _) -> do
-            inRegistry $ DiscreteNumber.setValue parent val'
-            DiscreteNumber.triggerValueChanged val' parent
-
-makeDiscreteNumber :: WidgetId -> DiscreteNumber -> HTMap -> Command UIRegistry.State WidgetId
-makeDiscreteNumber parent model handlers = do
-    widgetId <- UICmd.register parent model handlers
-
-    let tx      = (model ^. size . x) / 2.0
-        ty      = (model ^. size . y)
-        sx      = tx - (model ^. size . y / 2.0)
-        textVal = Text.pack $ show $ model ^. value
-        textBox = TextBox.create (Vector2 sx ty) textVal TextBox.Right
-
-    tbId <- UICmd.register widgetId textBox $ textHandlers widgetId
-    UICmd.moveX tbId tx
-
-    return widgetId
-
-
+-- import           Data.Text.Lazy.Read (decimal)
+-- import qualified Data.Text.Lazy as Text
+--
+-- textHandlers :: WidgetId -> HTMap
+-- textHandlers id = addHandler (TextBox.ValueChangedHandler $ textValueChangedHandler id)
+--                 $ mempty where
+--
+-- textValueChangedHandler :: WidgetId -> Text -> WidgetId -> Command Global.State ()
+-- textValueChangedHandler parent val tbId = do
+--     let val' = decimal val
+--     case val' of
+--         Left err        -> inRegistry $ do
+--             val <- UICmd.get parent DiscreteNumber.value
+--             DiscreteNumber.setValue parent val
+--         Right (val', _) -> do
+--             inRegistry $ DiscreteNumber.setValue parent val'
+--             DiscreteNumber.triggerValueChanged val' parent
+--
+-- makeDiscreteNumber :: WidgetId -> DiscreteNumber -> HTMap -> Command UIRegistry.State WidgetId
+-- makeDiscreteNumber parent model handlers = do
+--     widgetId <- UICmd.register parent model handlers
+--
+--     let tx      = (model ^. size . x) / 2.0
+--         ty      = (model ^. size . y)
+--         sx      = tx - (model ^. size . y / 2.0)
+--         textVal = Text.pack $ show $ model ^. value
+--         textBox = TextBox.create (Vector2 sx ty) textVal TextBox.Right
+--
+--     tbId <- UICmd.register widgetId textBox $ textHandlers widgetId
+--     UICmd.moveX tbId tx
+--
+--     return widgetId
+--
+--

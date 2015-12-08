@@ -19,7 +19,6 @@ import           Reactive.Commands.Command (Command, ioCommand, performIO)
 import           UI.Widget (GenericWidget(..))
 import qualified UI.Widget as UIT
 
-
 newtype Connection = Connection { unConnection :: JSVal } deriving (PToJSVal, PFromJSVal)
 
 instance UIWidget Connection
@@ -57,4 +56,5 @@ instance UIDisplayObject Model.CurrentConnection where
         setPos     connection (model ^. Model.currentFrom . x)  (model ^. Model.currentFrom . y)  (model ^. Model.currentTo . x)  (model ^. Model.currentTo . y)
         setVisible connection (model ^. Model.currentVisible)
         setColor   connection (model ^. Model.currentColor)
+
 

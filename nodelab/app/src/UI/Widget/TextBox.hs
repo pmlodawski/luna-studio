@@ -19,6 +19,8 @@ import qualified UI.Registry           as UI
 import qualified UI.Generic            as UI
 import           Object.Widget
 import           Object.UITypes
+import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
+
 
 newtype TextBox = TextBox JSVal deriving (PToJSVal, PFromJSVal)
 
@@ -65,4 +67,6 @@ instance UIDisplayObject Model.TextBox where
             if old ^. Model.isEditing then doneEditing'  textBox
                                       else startEditing' textBox $ lazyTextToJSString $ model ^. Model.value
 
-
+instance CompositeWidget Model.TextBox where
+    createWidget _   _ = return ()
+    updateWidget _ _ _ = return ()

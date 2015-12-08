@@ -14,6 +14,7 @@ import qualified UI.Registry                      as UI
 import qualified UI.Generic                       as UI
 import           Object.Widget
 import           Object.UITypes
+import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
 
 newtype RadioButton = RadioButton JSVal deriving (PToJSVal, PFromJSVal)
 
@@ -49,3 +50,8 @@ instance UIDisplayObject Model.RadioButton where
 
         setLabel model widget
         setValue model widget
+
+instance CompositeWidget Model.RadioButton where
+    createWidget _   _ = return ()
+    updateWidget _ _ _ = return ()
+

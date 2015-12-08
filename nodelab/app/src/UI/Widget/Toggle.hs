@@ -15,6 +15,9 @@ import qualified UI.Generic           as UI
 import           Object.Widget
 import           Object.UITypes
 
+import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
+
+
 newtype Toggle = Toggle JSVal deriving (PToJSVal, PFromJSVal)
 
 instance UIWidget Toggle
@@ -54,3 +57,8 @@ instance UIDisplayObject Model.Toggle where
         setLabel       model slider
         setValue       model slider
         setFocus       model slider
+
+
+instance CompositeWidget Model.Toggle where
+    createWidget _   _ = return ()
+    updateWidget _ _ _ = return ()

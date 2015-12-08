@@ -42,6 +42,7 @@ import qualified UI.Widget        as UIT
 import qualified UI.Scene
 import qualified Data.HMap.Lazy as HMap
 import           Data.HMap.Lazy (HTMap)
+import           UI.Handlers.Generic (triggerValueChanged, ValueChangedHandler(..))
 
 addNode :: Node -> Command State ()
 addNode node = do
@@ -105,11 +106,11 @@ numberHandleIntValueChanged portRef value widgetId = do
         BatchCmd.setValue workspace portRef $ show value
 
 numberDoubleHandlers :: PortRef -> HTMap
-numberDoubleHandlers portRef = addHandler (ContinuousNumber.ValueChangedHandler $ numberHandleDoubleValueChanged portRef)
+numberDoubleHandlers portRef = addHandler (ValueChangedHandler $ numberHandleDoubleValueChanged portRef)
                              $ mempty
 
 numberIntHandlers :: PortRef -> HTMap
-numberIntHandlers portRef = addHandler (DiscreteNumber.ValueChangedHandler $ numberHandleIntValueChanged portRef)
+numberIntHandlers portRef = addHandler (ValueChangedHandler $ numberHandleIntValueChanged portRef)
                           $ mempty
 
 registerSinglePort :: WidgetId -> Node -> PortType -> Port -> Command UIRegistry.State ()

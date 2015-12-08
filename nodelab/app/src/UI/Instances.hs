@@ -35,4 +35,3 @@ import UI.Widget.Group                  as X ()
 import UI.Widget.List                   as X ()
 import UI.Widget.Button                 as X ()
 import UI.Widget.Label                  as X ()
-

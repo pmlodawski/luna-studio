@@ -21,19 +21,10 @@ import           UI.Widget.Slider.Continuous ()
 import           UI.Widget.Number (keyModMult)
 import           UI.Generic (takeFocus, startDrag)
 import           UI.Instances ()
-
-
-newtype ValueChangedHandler = ValueChangedHandler (Double -> WidgetId -> Command Global.State ())
-
-valueChangedHandlerKey = TypeKey :: TypeKey ValueChangedHandler
+import           UI.Handlers.Generic (triggerValueChanged)
 
 isEnabled :: WidgetId -> Command Global.State Bool
 isEnabled id = inRegistry $ UICmd.get id Model.enabled
-
-triggerValueChanged :: Double -> WidgetId -> Command Global.State ()
-triggerValueChanged new id = do
-    maybeHandler <- inRegistry $ UICmd.handler id valueChangedHandlerKey
-    forM_ maybeHandler $ \(ValueChangedHandler handler) -> handler new id
 
 setValue :: WidgetId -> Double -> Command UIRegistry.State ()
 setValue id val = do

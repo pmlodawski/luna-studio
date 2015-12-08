@@ -17,14 +17,7 @@ import           Data.HMap.Lazy (TypeKey(..))
 import qualified Object.Widget.LabeledTextBox as Model
 import           UI.Widget.LabeledTextBox ()
 import           UI.Generic (takeFocus, startDrag)
-
-newtype ValueChangedHandler = ValueChangedHandler (Text -> WidgetId -> Command Global.State ())
-valueChangedHandlerKey = TypeKey :: TypeKey ValueChangedHandler
-
-triggerValueChanged :: Text -> WidgetId -> Command Global.State ()
-triggerValueChanged new id = do
-    maybeHandler <- inRegistry $ UICmd.handler id valueChangedHandlerKey
-    forM_ maybeHandler $ \(ValueChangedHandler handler) -> handler new id
+import           UI.Handlers.Generic (triggerValueChanged)
 
 dblClickHandler :: ClickHandler Global.State
 dblClickHandler _ _ id = do
