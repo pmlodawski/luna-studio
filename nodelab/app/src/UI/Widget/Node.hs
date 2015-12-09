@@ -1,5 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RankNTypes        #-}
+{-# LANGUAGE Rank2Types #-}
 
 module UI.Widget.Node where
 
@@ -33,7 +32,6 @@ import           UI.Widget                     (UIContainer (..), UIWidget (..))
 import           UI.Widget                     (GenericWidget (..))
 import qualified UI.Widget                     as UIT
 
-
 newtype Node = Node { unNode :: JSVal } deriving (PToJSVal, PFromJSVal)
 
 instance UIWidget    Node
@@ -45,7 +43,6 @@ foreign import javascript unsafe "$1.setLabel($2)"                 setLabel     
 foreign import javascript unsafe "$1.setValue($2)"                 setValue         :: Node -> JSString -> IO ()
 foreign import javascript unsafe "$1.setZPos($2)"                  setZPos          :: Node -> Double -> IO ()
 foreign import javascript unsafe "$1.uniforms.selected.value = $2" setSelected      :: Node -> Int      -> IO ()
-foreign import javascript unsafe "$1.htmlContainer"                getHTMLContainer :: Node -> IO Element
 
 createNode :: WidgetId -> Model.Node -> IO Node
 createNode id model = do

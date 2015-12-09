@@ -1,5 +1,3 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Reactive.Commands.AddNode (addNode) where
 
 import           Utils.PreludePlus
@@ -85,7 +83,7 @@ createPortControl parent port portRef = do
             id <- UICmd.register parent sliderWidget (numberIntHandlers portRef)
             return $ Just id
         otherwise -> do
-            performIO $ putStrLn $ "No widget for  this type " <> (show $ port ^. portValueType)
+            performIO $ putStrLn $ "No widget for this type " <> (show $ port ^. portValueType)
             return Nothing
 
 nodeHandlers :: Node -> HTMap
@@ -96,14 +94,12 @@ nodeHandlers node = addHandler (UINode.RemoveNodeHandler removeSelectedNodes)
 numberHandleDoubleValueChanged :: PortRef -> Double -> WidgetId -> Command Global.State ()
 numberHandleDoubleValueChanged portRef value widgetId = do
     workspace <- use Global.workspace
-    performIO $ do
-        BatchCmd.setValue workspace portRef $ show value
+    performIO $ BatchCmd.setValue workspace portRef $ show value
 
 numberHandleIntValueChanged :: PortRef -> Int -> WidgetId -> Command Global.State ()
 numberHandleIntValueChanged portRef value widgetId = do
     workspace <- use Global.workspace
-    performIO $ do
-        BatchCmd.setValue workspace portRef $ show value
+    performIO $ BatchCmd.setValue workspace portRef $ show value
 
 numberDoubleHandlers :: PortRef -> HTMap
 numberDoubleHandlers portRef = addHandler (ValueChangedHandler $ numberHandleDoubleValueChanged portRef)
@@ -116,7 +112,7 @@ numberIntHandlers portRef = addHandler (ValueChangedHandler $ numberHandleIntVal
 registerSinglePort :: WidgetId -> Node -> PortType -> Port -> Command UIRegistry.State ()
 registerSinglePort nodeWidgetId node portType port = do
     let portWidget = PortModel.Port (PortRef (node ^. nodeId) portType (port ^. portId)) def (colorVT $ port ^. portValueType)
-    void $ UICmd.register nodeWidgetId portWidget def
+    UICmd.register_ nodeWidgetId portWidget def
 
 registerOutputPorts :: WidgetId -> Node -> Command UIRegistry.State ()
 registerOutputPorts nodeWidgetId node = mapM_ (registerSinglePort nodeWidgetId node OutputPort) ports where
