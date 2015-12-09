@@ -17,12 +17,13 @@ import Luna.Syntax.AST.Arg
 import Luna.Syntax.AST.Lit
 import Luna.Syntax.Name
 
-import Data.Cata
-import Data.Container.Hetero
-
-import Data.Reprx
-import Data.Typeable
-import Luna.Repr.Styles (HeaderOnly)
+import           Data.Cata
+import           Data.Container.Hetero
+import           Data.Map              (Map)
+import qualified Data.Map              as Map
+import           Data.Reprx
+import           Data.Typeable
+import           Luna.Repr.Styles      (HeaderOnly)
 
 -- === Terms ===
 
@@ -34,14 +35,14 @@ import Luna.Repr.Styles (HeaderOnly)
 -- A/P - Args / Params
 
 -- Layout                     N S A/P
-data    Star       = Star                 deriving (Show, Eq, Ord)
-data    Arrow    t = Arrow      t t       deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
-data    Cons     t = Cons     t   [t]     deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
-data    Accessor t = Accessor t t         deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
-data    App      t = App        t [Arg t] deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
-newtype Var      t = Var      t           deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
-data    Unify    t = Unify      t t       deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
-data    Blank      = Blank                deriving (Show, Eq, Ord)
+data    Star       = Star                       deriving (Show, Eq, Ord)
+data    Arrow    t = Arrow   [t] (Map Name t) t deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
+data    Cons     t = Cons     t   [t]           deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
+data    Accessor t = Accessor t t               deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
+data    App      t = App        t [Arg t]       deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
+newtype Var      t = Var      t                 deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
+data    Unify    t = Unify      t t             deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
+data    Blank      = Blank                      deriving (Show, Eq, Ord)
 
 -- Type sets
 
@@ -143,7 +144,7 @@ instance Traversable Draft where traverse = recordTraverse
 
 instance             Repr s Blank        where repr = fromString . show
 instance             Repr s Star         where repr _              = "*"
-instance Repr s t => Repr s (Arrow    t) where repr (Arrow    l r) = "Arrow"    <+> repr l <+> repr r
+instance Repr s t => Repr s (Arrow    t) where repr (Arrow  p n r) = "Arrow"    <+> repr p <+> repr (Map.toList n) <+> repr r
 instance Repr s t => Repr s (Var      t) where repr (Var      n  ) = "Var"      <+> repr n
 instance Repr s t => Repr s (Unify    t) where repr (Unify    n t) = "Unify"    <+> repr n <+> repr t
 instance Repr s t => Repr s (Cons     t) where repr (Cons     n t) = "Cons"     <+> repr n <+> repr t

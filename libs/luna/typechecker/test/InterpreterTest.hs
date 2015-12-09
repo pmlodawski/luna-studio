@@ -124,9 +124,8 @@ sampleGraph = runIdentity
             accPlus  <- accessor namePlus i2
             nameInt  <- _string "Int"
             consInt  <- cons nameInt
-            int2int  <- arrow consInt consInt
-            int2int2int <- arrow int2int consInt
-            appPlus  <- app accPlus [arg i2, arg i3] `typed` int2int2int
+            arr      <- arrow [consInt, consInt] Map.empty consInt
+            appPlus  <- app accPlus [arg i2, arg i3] `typed` arr
             -- x <- app accPlus [arg appPlus, arg appPlus] `typed` int2int2int
             return appPlus
 
@@ -159,6 +158,11 @@ runNode (ref :: Ref Node) = do
             putStrLn typeStr
             acc <- follow a
             (name, s) <- getAcc acc
+            -- qual <- typeString s
+            -- let sourceQPath = QualPath.mk $ qual <> "." <> name
+            -- let args = Symbol.Signature typeNode
+            -- runExceptT $ Symbol.getSpecialization sourceQPath args
+
             args <- mapM (runNode <=< follow . Arg.__arec) (inputs p)
             mangled <- mangleName name typeNode
             fun <- lift $ lift $ lift $ lift $ lift $ Session.findSymbol mangled typeStr -- TODO[PM] przerobic na `... => m (cos)`
@@ -182,23 +186,17 @@ getAcc (ref :: Ref Node) = do
     node <- readRef ref
     case' (uncoat (node :: Labeled2 Int (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge))))))) $ do
         match $ \(Accessor n s) -> do
-            -- t  <- uncoat <$> readRef =<< follow s
-            n' <- getAccName =<< follow n
-            s' <- readRef =<< follow s
             name <- typeString =<< follow n
             src  <- runNode    =<< follow s
 
-            let args = Symbol.Signature (Symbol.CallArgs [uncoat s'] def) Nothing
-            runExceptT $ Symbol.getSpecialization (QualPath.mk n') args
             return (name, src)
 
 typeString (ref :: Ref Node) = do
     node <- readRef ref
     case' (uncoat (node :: Labeled2 Int (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge))))))) $ do
-        match $ \(Arrow l r) -> do
-            left <- typeString =<< follow l
-            right <- typeString =<< follow r
-            return $ left <> " -> " <> right
+        match $ \(Arrow p n r) -> do
+            items <- mapM typeString =<< mapM follow (p ++ (Map.elems n) ++ [r])
+            return $ intercalate " -> " items
         match $ \(Cons t a) -> do
             intercalate " " <$> mapM (typeString <=< follow) (t:a)
         match $ \(String s) -> do

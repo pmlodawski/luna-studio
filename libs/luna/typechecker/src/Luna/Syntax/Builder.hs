@@ -1,45 +1,45 @@
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE GADTs                     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE RecursiveDo #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE RankNTypes                #-}
+{-# LANGUAGE RecursiveDo               #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 module Luna.Syntax.Builder ( module Luna.Syntax.Builder, module X) where
 
 import Prologue hiding (index)
 
-import Data.Variants   as     V
 import Control.Monad.Fix
+import Data.Variants     as V
 
-import           Luna.Syntax.Builder.Star (StarBuilder, StarBuilderT, MonadStarBuilder)
-import qualified Luna.Syntax.Builder.Star as StarBuilder
-import           Luna.Syntax.Repr.Graph
-import           Luna.Syntax.Name
 import           Luna.Syntax.AST
 import           Luna.Syntax.AST.Arg
-import           Luna.Syntax.AST.Term
-import           Luna.Syntax.AST.Lit
 import           Luna.Syntax.AST.Decl
+import           Luna.Syntax.AST.Lit
 import           Luna.Syntax.AST.Term
+import           Luna.Syntax.AST.Term
+import           Luna.Syntax.Builder.Star (MonadStarBuilder, StarBuilder, StarBuilderT)
+import qualified Luna.Syntax.Builder.Star as StarBuilder
+import           Luna.Syntax.Name
+import           Luna.Syntax.Repr.Graph
 --import           Luna.Syntax.AST.Typed
 
-import qualified Luna.Syntax.Builder.Class as Builder
 import           Luna.Syntax.Builder.Class as X (runT)
-import           Luna.Syntax.Builder.Class (modify2, BuilderMonad)
-import qualified Luna.Syntax.Builder.Node as NodeBuilder
-import           Luna.Syntax.Builder.Node (MonadNodeBuilder)
-
-import Data.Container hiding (Impossible)
-import Data.Construction
+import           Luna.Syntax.Builder.Class (BuilderMonad, modify2)
+import qualified Luna.Syntax.Builder.Class as Builder
+import           Luna.Syntax.Builder.Node  (MonadNodeBuilder)
+import qualified Luna.Syntax.Builder.Node  as NodeBuilder
 
 import Data.Cata
+import Data.Construction
+import Data.Container    hiding (Impossible)
 
 import Data.Layer.Coat
 
-import Data.IntSet (IntSet)
+import           Data.IntSet (IntSet)
 import qualified Data.IntSet as IntSet
+import qualified Data.Map    as Map
 
 --- === Graph builders ===
 
@@ -154,14 +154,16 @@ _star2 = mdo
     a <- NodeBuilder.with (Ref $ Node i) $ constructCoat $ specificCons Star
     return $ Ref $ Node i
 
-arrow l r = mdo
-    l' <- monadic l
+arrow p n' r = mdo
+    p' <- mapM monadic p
     r' <- monadic r
     i <- modify2 . nodes $ swap . ixed add a
     a <- NodeBuilder.with (Ref $ Node i) $ do
-        lc <- connect l'
+        pc <- mapM connect p'
+        let connectItem (k, a) = (k,) <$> connect a
+        nc <- Map.fromList <$> mapM connectItem (Map.toList n') --(n' :: Map.Map Name a)
         rc <- connect r'
-        constructCoat $ specificCons $ Arrow lc rc
+        constructCoat $ specificCons $ Arrow pc nc rc
     return $ Ref $ Node i
 
 --cons :: forall name m t. (ToMuM' name m t, LayeredASTCons (Cons (Mu t)) m t) => name -> m (Mu t)
@@ -198,7 +200,6 @@ var (name :: String) = mdo
 
 app acc args = mdo
     acc'  <- monadic acc
-    -- let monadicArg (Arg n a) = Arg n <$> monadic a
     args' <- mapM monadic args
     i <- modify2 . nodes $ swap . ixed add a
     a <- NodeBuilder.with (Ref $ Node i) $ do
@@ -305,7 +306,7 @@ reconnect src lens tgt = do
     return i
 
 unregisterEdge eid = do
-    edge <- readRef eid 
+    edge <- readRef eid
     withRef (edge ^. target) $ succs %~ IntSet.delete (deref $ edge ^. source)
     Builder.modify_ $ edges %~ free_ (deref eid)
 
