@@ -18,7 +18,7 @@ import qualified Luna.Syntax.Builder.Node  as NodeBuilder
 import           Luna.Syntax.Builder.Class (BuilderT)
 import qualified Luna.Syntax.Builder       as Builder
 import           Luna.Syntax.Repr.Graph    (Ref(..), Node(..))
-import           Luna.Syntax.AST.Term      (Var(..), App(..))
+import           Luna.Syntax.AST.Term      (Var(..), App(..), Blank(..))
 import qualified Luna.Syntax.AST.Term      as Term
 import qualified Luna.Syntax.AST.Typed     as Typed
 import qualified Luna.Syntax.AST.Arg       as Arg
@@ -58,6 +58,13 @@ removeNode' ref = do
     destruct typeNode
     destruct ref
 
+removeIfBlank :: Ref Node -> ASTOp ()
+removeIfBlank ref = do
+    node <- Builder.readRef ref
+    case' (uncoat node) $ do
+        match $ \Blank -> removeNode' ref
+        match $ \ANY -> return ()
+
 removeNode :: Ref Node -> Command AST ()
 removeNode = runAstOp . removeNode'
 
@@ -88,9 +95,14 @@ rewireApplication fun arg pos = do
 
     let argsLength = max (pos + 1) (length oldArgs)
         argsCmd    = take argsLength $ (return <$> oldArgs) ++ (repeat Builder._blank)
+        oldArgCmd  = argsCmd !! pos
         withNewArg = argsCmd & ix pos .~ return arg
+
     args <- sequence withNewArg
+    oldArg <- oldArgCmd
+
     removeNode' fun
+    removeIfBlank oldArg
     Builder.app target (Builder.arg <$> args)
 
 applyFunction :: Ref Node -> Ref Node -> Int -> Command AST (Ref Node)
