@@ -34,8 +34,8 @@ makeAcc :: NodeId -> NodeId -> Command Graph ()
 makeAcc src dst = do
     srcAst <- use (Graph.nodeMapping . at src) <?!> "Source node does not exist"
     dstAst <- use (Graph.nodeMapping . at dst) <?!> "Destination node does not exist"
-    name <- zoom Graph.ast $ AST.getNameNode dstAst
-    -- TODO[MK]: Remove node from AST after Wojtek delivers
+    name <- zoom Graph.ast $ AST.getVarNameNode dstAst
+    zoom Graph.ast $ AST.removeNode dstAst
     newNodeRef <- zoom Graph.ast $ AST.makeAccessor srcAst name
     Graph.nodeMapping . at dst ?= newNodeRef
     return ()
@@ -44,7 +44,6 @@ makeApp :: NodeId -> NodeId -> Int -> Command Graph ()
 makeApp src dst pos = do
     srcAst <- use (Graph.nodeMapping . at src) <?!> "Source node does not exist"
     dstAst <- use (Graph.nodeMapping . at dst) <?!> "Destination node does not exist"
-    -- TODO[MK]: Use multi-arg application as soon as Wojtek allows for node removal
-    newNodeRef <- zoom Graph.ast $ AST.makeApplication dstAst [srcAst]
+    newNodeRef <- zoom Graph.ast $ AST.applyFunction dstAst srcAst pos
     Graph.nodeMapping . at dst ?= newNodeRef
     return ()

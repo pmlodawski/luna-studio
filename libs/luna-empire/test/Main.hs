@@ -56,13 +56,13 @@ sg2 = runIdentity
 test = do
     (pid, _) <- createProject (Just "dupa") "/no/elo"
     (lid, _) <- createLibrary pid (Just "xd") "/xd/xd"
-    firstNode <- Graph.addNode pid lid "hello"
-    sndNode <- Graph.addNode pid lid "x"
-    trdNode <- Graph.addNode pid lid "154"
-    rthNode <- Graph.addNode pid lid "\"this is a string literal\""
-    Graph.connect pid lid sndNode All firstNode Self
-    Graph.connect pid lid trdNode All firstNode (Arg 0)
-    Graph.connect pid lid rthNode All firstNode (Arg 1)
+    fstNode <- Graph.addNode pid lid "+"
+    sndNode <- Graph.addNode pid lid "Int"
+    trdNode <- Graph.addNode pid lid "2"
+    rthNode <- Graph.addNode pid lid "5"
+    Graph.connect pid lid sndNode All fstNode Self
+    Graph.connect pid lid rthNode All fstNode (Arg 1)
+    Graph.connect pid lid trdNode All fstNode (Arg 0)
     withLibrary pid lid (use $ body . ast)
 
 main = do

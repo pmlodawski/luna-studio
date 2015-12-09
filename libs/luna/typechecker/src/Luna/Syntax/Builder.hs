@@ -4,6 +4,7 @@
 {-# LANGUAGE RankNTypes                #-}
 {-# LANGUAGE RecursiveDo               #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE UndecidableInstances      #-}
 
 module Luna.Syntax.Builder ( module Luna.Syntax.Builder, module X) where
@@ -310,6 +311,25 @@ unregisterEdge eid = do
     withRef (edge ^. target) $ succs %~ IntSet.delete (deref $ edge ^. source)
     Builder.modify_ $ edges %~ free_ (deref eid)
 
+type instance Destructed (Ref Node) = ()
+instance ( Builder.BuilderMonad (Graph n e) m
+         , Uncoated (Destructed n) ~ Uncoated n
+         , CoatDestructor m (Destructed n)
+         , Destructor m n
+         , Uncoated (Destructed n) ~ t (Ref Edge)
+         , Uncoated (Unlayered n) ~ Uncoated (Destructed n)
+         , Layered n
+         , Coated (Unlayered n)
+         , Foldable t
+         , Builder.BuilderMonad (Graph n DoubleArc) m
+         , TracksSuccs (Unlayered n)
+         ) => Destructor m (Ref Node) where
+    destruct ref = do
+        node <- readRef ref
+        let ii = inputs (uncoat node) :: [Ref Edge]
+        mapM_ unregisterEdge ii
+        destructCoat node
+        Builder.modify_ $ nodes %~ free (deref ref) 
 
 
 class Monad m => RefReader ref m a | ref m -> a where readRef :: Ref ref -> m a

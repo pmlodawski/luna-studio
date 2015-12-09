@@ -401,27 +401,6 @@ pass3 lmap unis gr = runIdentity
         return ()
     return ()
 
-type instance Destructed (Ref Node) = ()
-instance ( Builder.BuilderMonad (Graph n e) m
-         , Uncoated (Destructed n) ~ Uncoated n
-         , CoatDestructor m (Destructed n)
-         , Destructor m n
-         , Uncoated (Destructed n) ~ t (Ref Edge)
-         , Uncoated (Unlayered n) ~ Uncoated (Destructed n)
-         , Layered n
-         , Coated (Unlayered n)
-         , Foldable t
-         , Builder.BuilderMonad (Graph n DoubleArc) m
-         , TracksSuccs (Unlayered n)
-         ) => Destructor m (Ref Node) where
-    destruct ref = do
-        node <- readRef ref
-        let ii = inputs (uncoat node) :: [Ref Edge]
-        mapM_ unregisterEdge ii
-        destructCoat node
-        Builder.modify_ $ nodes %~ free (deref ref) 
-
-
 runUniqM :: State.MonadState IntSet m => Int -> m () -> m ()
 runUniqM a f = do
     s <- State.get
