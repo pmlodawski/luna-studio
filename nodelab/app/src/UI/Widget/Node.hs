@@ -1,34 +1,37 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE RankNTypes        #-}
 
 module UI.Widget.Node where
 
 import           Utils.PreludePlus
 import           Utils.Vector
-import           Data.JSString.Text ( lazyTextFromJSString, lazyTextToJSString )
-import           GHCJS.Types        (JSVal, JSString)
-import           GHCJS.Marshal.Pure (PToJSVal(..), PFromJSVal(..))
-import           GHCJS.DOM.Element  (Element)
-import           UI.Widget          (UIWidget(..), UIContainer(..))
-import qualified UI.Registry        as UIR
-import           Event.Keyboard (KeyMods(..))
-import qualified Reactive.State.UIRegistry as UIRegistry
-import qualified Object.Widget.Node as Model
-import           Object.Widget
+import           Utils.CtxDynamic              (toCtxDynamic)
+import           Data.HMap.Lazy                (TypeKey (..))
+import qualified Data.HMap.Lazy                as HMap
+
+import           Data.JSString.Text            (lazyTextFromJSString, lazyTextToJSString)
+import           GHCJS.DOM.Element             (Element)
+import           GHCJS.Marshal.Pure            (PFromJSVal (..), PToJSVal (..))
+import           GHCJS.Types                   (JSString, JSVal)
+
+import           Event.Keyboard                (KeyMods (..))
+import           Event.Mouse                   (MouseButton (..))
+import qualified Event.Mouse                   as Mouse
 import           Object.UITypes
-import           Event.Mouse (MouseButton(..))
-import qualified Event.Mouse as Mouse
-import           Utils.CtxDynamic (toCtxDynamic)
-import           Reactive.Commands.Command (Command, ioCommand, performIO)
-import qualified Reactive.Commands.UIRegistry as UICmd
-import qualified Reactive.State.Global as Global
-import           Reactive.State.Global (inRegistry)
-import           UI.Widget (GenericWidget(..))
-import qualified UI.Widget as UIT
-import           UI.Generic (takeFocus)
-import qualified Data.HMap.Lazy as HMap
-import           Data.HMap.Lazy (TypeKey(..))
+import           Object.Widget
 import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
+import qualified Object.Widget.Node            as Model
+import           Reactive.Commands.Command     (Command, ioCommand, performIO)
+import qualified Reactive.Commands.UIRegistry  as UICmd
+import           Reactive.State.Global         (inRegistry)
+import qualified Reactive.State.Global         as Global
+import qualified Reactive.State.UIRegistry     as UIRegistry
+
+import           UI.Generic                    (takeFocus)
+import qualified UI.Registry                   as UIR
+import           UI.Widget                     (UIContainer (..), UIWidget (..))
+import           UI.Widget                     (GenericWidget (..))
+import qualified UI.Widget                     as UIT
 
 
 newtype Node = Node { unNode :: JSVal } deriving (PToJSVal, PFromJSVal)
@@ -42,7 +45,6 @@ foreign import javascript unsafe "$1.setLabel($2)"                 setLabel     
 foreign import javascript unsafe "$1.setValue($2)"                 setValue         :: Node -> JSString -> IO ()
 foreign import javascript unsafe "$1.setZPos($2)"                  setZPos          :: Node -> Double -> IO ()
 foreign import javascript unsafe "$1.uniforms.selected.value = $2" setSelected      :: Node -> Int      -> IO ()
-
 foreign import javascript unsafe "$1.htmlContainer"                getHTMLContainer :: Node -> IO Element
 
 createNode :: WidgetId -> Model.Node -> IO Node
@@ -140,10 +142,8 @@ widgetHandlers = def & keyDown      .~ keyDownHandler
                          takeFocus evt id
                          handleSelection evt id)
 
-
 allNodes :: Command UIRegistry.State [WidgetFile Model.Node]
 allNodes = UIRegistry.lookupAllM
-
 
 instance CompositeWidget Model.Node where
     createWidget _   _ = return ()

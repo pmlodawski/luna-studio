@@ -1,33 +1,32 @@
 module UI.Handlers.Slider.Discrete where
 
 import           Utils.PreludePlus
-import           Utils.Vector
-import qualified Event.Mouse as Mouse
-import           Event.Keyboard (KeyMods(..))
-import           Object.Widget
-import           Object.UITypes
 
-import qualified Reactive.Commands.UIRegistry as UICmd
-import qualified Reactive.State.Global as Global
-import           Reactive.State.Global (inRegistry)
-import qualified Reactive.State.UIRegistry as UIRegistry
-import           Reactive.Commands.Command (Command, performIO)
-import           Data.HMap.Lazy (TypeKey(..))
-import qualified Data.Text.Lazy as Text
+import           Utils.Vector
+import           Data.HMap.Lazy                (HTMap, TypeKey (..))
+import qualified Data.Text.Lazy                as Text
+import           Data.Text.Lazy.Read           (decimal)
+
+import           Event.Keyboard                (KeyMods (..))
+import qualified Event.Mouse                   as Mouse
+import           Object.UITypes                (WidgetId)
+import           Object.Widget                 (DblClickHandler, DragEndHandler, DragMoveHandler, KeyUpHandler,
+                                                MousePressedHandler, UIHandlers, currentPos, dblClick, dragEnd,
+                                                dragMove, keyMods, keyUp, mousePressed, startPos)
+import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
 import qualified Object.Widget.Slider.Discrete as Model
 import qualified Object.Widget.TextBox         as TextBox
-import           UI.Widget.Slider.Discrete ()
-import           UI.Widget.Number (keyModMult)
-import           UI.Generic (takeFocus, startDrag)
-import           UI.Instances ()
-import           UI.Handlers.Generic (triggerValueChanged, ValueChangedHandler(..))
-import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
-import qualified Data.HMap.Lazy as HMap
-import           Data.HMap.Lazy (HTMap)
-import qualified Object.Widget.TextBox           as TextBox
-import qualified UI.Handlers.TextBox             as TextBox
-import           Reactive.State.UIRegistry (addHandler)
-import           Data.Text.Lazy.Read (decimal)
+import           Reactive.Commands.Command     (Command, performIO)
+import qualified Reactive.Commands.UIRegistry  as UICmd
+import           Reactive.State.Global         (inRegistry)
+import qualified Reactive.State.Global         as Global
+import           Reactive.State.UIRegistry     (addHandler)
+
+import           UI.Generic                    (startDrag, takeFocus)
+import           UI.Handlers.Generic           (ValueChangedHandler (..), triggerValueChanged)
+import qualified UI.Handlers.TextBox           as TextBox
+import           UI.Widget.Number              (keyModMult)
+import           UI.Widget.Slider.Discrete     ()
 
 
 isEnabled :: WidgetId -> Command Global.State Bool

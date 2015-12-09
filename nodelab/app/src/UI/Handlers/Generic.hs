@@ -3,16 +3,15 @@
 module UI.Handlers.Generic where
 
 import           Utils.PreludePlus
-import           Utils.Vector
-import qualified Event.Mouse as Mouse
-import           Object.Widget
-import           Object.UITypes
 
+import           Data.HMap.Lazy               (TypeKey (..))
+import           Utils.Vector
+
+import           Object.Widget                (WidgetId)
+import           Reactive.Commands.Command    (Command)
 import qualified Reactive.Commands.UIRegistry as UICmd
-import qualified Reactive.State.Global as Global
-import           Reactive.State.Global (inRegistry)
-import           Reactive.Commands.Command (Command)
-import           Data.HMap.Lazy (TypeKey(..))
+import           Reactive.State.Global        (inRegistry)
+import qualified Reactive.State.Global        as Global
 
 newtype ValueChangedHandler a = ValueChangedHandler (a -> WidgetId -> Command Global.State ())
 

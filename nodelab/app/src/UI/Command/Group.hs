@@ -2,18 +2,16 @@
 
 module UI.Command.Group where
 
+import           Control.Monad                (foldM, forM)
 import           Utils.PreludePlus
 import           Utils.Vector
-import           Control.Monad (forM, foldM)
 
-import           Object.UITypes
-import           Object.Widget
-import qualified Reactive.State.Global           as Global
-import           Reactive.Commands.Command       (Command, performIO)
-
-import           Reactive.State.UIRegistry     (sceneInterfaceId, sceneGraphId, addHandler)
-import qualified Reactive.State.UIRegistry     as UIRegistry
-import qualified Reactive.Commands.UIRegistry  as UICmd
+import           Object.Widget                (WidgetId, widget, widgetPosition, widgetSize)
+import           Reactive.Commands.Command    (Command, performIO)
+import qualified Reactive.Commands.UIRegistry as UICmd
+import qualified Reactive.State.Global        as Global
+import           Reactive.State.UIRegistry    (addHandler, sceneGraphId, sceneInterfaceId)
+import qualified Reactive.State.UIRegistry    as UIRegistry
 
 
 maximum' :: [Double] -> Double

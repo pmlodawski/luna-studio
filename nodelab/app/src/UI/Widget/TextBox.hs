@@ -1,25 +1,26 @@
-{-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE Rank2Types        #-}
 
 module UI.Widget.TextBox where
 
 import           Utils.PreludePlus
 import           Utils.Vector
 
-import qualified Data.Text.Lazy        as Text
-import           GHCJS.Types           (JSVal, JSString)
-import           GHCJS.Marshal.Pure    (PToJSVal(..), PFromJSVal(..))
-import           Data.JSString.Text    (lazyTextToJSString)
-import qualified Data.JSString         as JSString
+import qualified Data.JSString                 as JSString
+import           Data.JSString.Text            (lazyTextToJSString)
+import qualified Data.Text.Lazy                as Text
+import           GHCJS.Marshal.Pure            (PFromJSVal (..), PToJSVal (..))
+import           GHCJS.Types                   (JSString, JSVal)
 
-import           UI.Widget             (UIWidget(..))
-import qualified Object.Widget.TextBox as Model
-import qualified UI.Widget             as Widget
-import qualified UI.Registry           as UI
-import qualified UI.Generic            as UI
-import           Object.Widget
+import qualified UI.Generic                    as UI
+import qualified UI.Registry                   as UI
+import           UI.Widget                     (UIWidget (..))
+import qualified UI.Widget                     as Widget
+
 import           Object.UITypes
+import           Object.Widget
 import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
+import qualified Object.Widget.TextBox         as Model
 
 
 newtype TextBox = TextBox JSVal deriving (PToJSVal, PFromJSVal)

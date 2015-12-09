@@ -2,14 +2,16 @@ module UI.Raycaster where
 
 import           Utils.PreludePlus
 
-import           GHCJS.Foreign
-import           GHCJS.Types         (JSString)
 import           Utils.Vector
-import qualified Event.Mouse      as Mouse
-import           JavaScript.Array    (JSArray)
-import qualified JavaScript.Array as JSArray
-import           GHCJS.Marshal       (fromJSVal)
-import           Object.UITypes
+
+import           GHCJS.Foreign
+import           GHCJS.Marshal     (fromJSVal)
+import           GHCJS.Types       (JSString)
+import           JavaScript.Array  (JSArray)
+import qualified JavaScript.Array  as JSArray
+
+import qualified Event.Mouse       as Mouse
+import           Object.Widget (WidgetId, SceneType(..))
 
 foreign import javascript unsafe "raycaster.getMapPixelAt($1, $2)"
     getMapPixelAtJS :: Int -> Int -> IO JSArray

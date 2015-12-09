@@ -1,20 +1,21 @@
 module UI.Widget.Choice where
 
-import           Utils.PreludePlus hiding (Choice)
+import           Utils.PreludePlus             hiding (Choice)
 import           Utils.Vector
 
-import           GHCJS.Types                         (JSVal, JSString)
-import           GHCJS.Marshal.Pure                  (PToJSVal(..), PFromJSVal(..))
-import           Data.JSString.Text                  (lazyTextToJSString)
+import           Data.JSString.Text            (lazyTextToJSString)
+import           GHCJS.Marshal.Pure            (PFromJSVal (..), PToJSVal (..))
+import           GHCJS.Types                   (JSString, JSVal)
 
-import           UI.Widget                           (UIWidget(..))
-import qualified Object.Widget.Choice as Model
-import qualified UI.Widget            as Widget
-import qualified UI.Registry          as UI
-import qualified UI.Generic           as UI
-import           Object.Widget
 import           Object.UITypes
+import           Object.Widget
+import qualified Object.Widget.Choice          as Model
 import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
+
+import qualified UI.Generic                    as UI
+import qualified UI.Registry                   as UI
+import           UI.Widget                     (UIWidget (..))
+import qualified UI.Widget                     as Widget
 
 newtype Choice = Choice JSVal deriving (PToJSVal, PFromJSVal)
 

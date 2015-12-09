@@ -1,20 +1,19 @@
 module UI.Handlers.Toggle where
 
 import           Utils.PreludePlus
-import           Utils.Vector
-import qualified Event.Mouse as Mouse
-import           Object.Widget
-import           Object.UITypes
 
+import           Data.HMap.Lazy               (TypeKey (..))
+import           Utils.Vector
+
+import           Object.Widget                (ClickHandler, KeyUpHandler, UIHandlers, WidgetId, click, keyUp)
+import qualified Object.Widget.Toggle         as Model
+import           Reactive.Commands.Command    (Command)
 import qualified Reactive.Commands.UIRegistry as UICmd
-import qualified Reactive.State.Global as Global
-import           Reactive.State.Global (inRegistry)
-import           Reactive.Commands.Command (Command)
-import           Data.HMap.Lazy (TypeKey(..))
-import qualified Object.Widget.Toggle as Model
-import           UI.Widget.Toggle ()
-import           UI.Generic (takeFocus, startDrag)
-import           UI.Handlers.Generic (triggerValueChanged)
+import           Reactive.State.Global        (inRegistry)
+import qualified Reactive.State.Global        as Global
+
+import           UI.Handlers.Generic          (triggerValueChanged)
+import           UI.Widget.Toggle             ()
 
 isEnabled :: WidgetId -> Command Global.State Bool
 isEnabled id = inRegistry $ UICmd.get id Model.enabled

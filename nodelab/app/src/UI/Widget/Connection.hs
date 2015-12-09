@@ -2,22 +2,25 @@
 
 module UI.Widget.Connection where
 
+import           Utils.CtxDynamic          (toCtxDynamic)
 import           Utils.PreludePlus
 import           Utils.Vector
-import           Data.JSString.Text ( lazyTextFromJSString, lazyTextToJSString )
-import           GHCJS.Types        (JSVal, JSString)
-import           GHCJS.Marshal.Pure (PToJSVal(..), PFromJSVal(..))
-import           GHCJS.DOM.Element  (Element)
-import           UI.Widget          (UIWidget(..), UIContainer(..))
-import qualified UI.Registry        as UIR
-import qualified Object.Widget.Connection as Model
-import           Object.Widget
+
+import           Data.JSString.Text        (lazyTextFromJSString, lazyTextToJSString)
+import           GHCJS.DOM.Element         (Element)
+import           GHCJS.Marshal.Pure        (PFromJSVal (..), PToJSVal (..))
+import           GHCJS.Types               (JSString, JSVal)
+
+import           Event.Mouse               (MouseButton (..))
 import           Object.UITypes
-import           Event.Mouse (MouseButton(..))
-import           Utils.CtxDynamic (toCtxDynamic)
+import           Object.Widget
+import qualified Object.Widget.Connection  as Model
 import           Reactive.Commands.Command (Command, ioCommand, performIO)
-import           UI.Widget (GenericWidget(..))
-import qualified UI.Widget as UIT
+
+import qualified UI.Registry               as UIR
+import           UI.Widget                 (UIContainer (..), UIWidget (..))
+import           UI.Widget                 (GenericWidget (..))
+import qualified UI.Widget                 as UIT
 
 newtype Connection = Connection { unConnection :: JSVal } deriving (PToJSVal, PFromJSVal)
 

@@ -1,25 +1,27 @@
 module UI.Handlers.LabeledTextBox where
 
 import           Utils.PreludePlus
+
+import           Data.HMap.Lazy               (TypeKey (..))
 import           Utils.Vector
-import           Event.Event (JSState)
-import qualified Event.Mouse as Mouse
-import           Object.Widget
-import           Object.UITypes
-import           Data.JSString.Text (lazyTextFromJSString, lazyTextToJSString)
-import           GHCJS.Types (JSString)
 
-import qualified Reactive.Commands.UIRegistry as UICmd
-import qualified Reactive.State.Global as Global
-import           Reactive.State.Global (inRegistry)
-import           Reactive.Commands.Command (Command, performIO)
-import           Data.HMap.Lazy (TypeKey(..))
+import           Data.JSString.Text           (lazyTextFromJSString, lazyTextToJSString)
+import           GHCJS.Types                  (JSString)
+
+import           Event.Event                  (JSState)
+import qualified Event.Mouse                  as Mouse
+import           Object.Widget                (DblClickHandler, KeyDownHandler, UIHandlers, WidgetId, dblClick, keyDown)
 import qualified Object.Widget.LabeledTextBox as Model
-import           UI.Widget.LabeledTextBox ()
-import           UI.Generic (takeFocus, startDrag)
-import           UI.Handlers.Generic (triggerValueChanged)
+import           Reactive.Commands.Command    (Command, performIO)
+import qualified Reactive.Commands.UIRegistry as UICmd
+import           Reactive.State.Global        (inRegistry)
+import qualified Reactive.State.Global        as Global
 
-dblClickHandler :: ClickHandler Global.State
+import           UI.Generic                   (startDrag, takeFocus)
+import           UI.Handlers.Generic          (triggerValueChanged)
+import           UI.Widget.LabeledTextBox     ()
+
+dblClickHandler :: DblClickHandler Global.State
 dblClickHandler _ _ id = do
     takeFocus undefined id
     inRegistry $ UICmd.update_ id $ Model.isEditing .~ True

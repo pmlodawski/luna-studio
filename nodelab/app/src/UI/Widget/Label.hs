@@ -1,20 +1,21 @@
 module UI.Widget.Label where
 
 import           Utils.PreludePlus
+
 import           Utils.Vector
+import           Data.JSString.Text            (lazyTextToJSString)
+import           GHCJS.Marshal.Pure            (PFromJSVal (..), PToJSVal (..))
+import           GHCJS.Types                   (JSString, JSVal)
 
-import           GHCJS.Types                         (JSVal, JSString)
-import           GHCJS.Marshal.Pure                  (PToJSVal(..), PFromJSVal(..))
-import           Data.JSString.Text                  (lazyTextToJSString)
-
-import           UI.Widget                           (UIWidget(..))
-import qualified Object.Widget.Label              as Model
-import qualified UI.Widget                        as Widget
-import qualified UI.Registry                      as UI
-import qualified UI.Generic                       as UI
-import           Object.Widget
 import           Object.UITypes
+import           Object.Widget
 import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
+import qualified Object.Widget.Label           as Model
+
+import qualified UI.Generic                    as UI
+import qualified UI.Registry                   as UI
+import           UI.Widget                     (UIWidget (..))
+import qualified UI.Widget                     as Widget
 
 newtype Label = Label JSVal deriving (PToJSVal, PFromJSVal)
 
@@ -32,7 +33,6 @@ create oid model = do
 
 setLabel :: Model.Label -> Label -> IO ()
 setLabel model widget = setLabel' widget $ lazyTextToJSString $ model ^. Model.label
-
 
 instance UIDisplayObject Model.Label where
     createUI parentId id model = do

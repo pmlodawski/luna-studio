@@ -1,8 +1,8 @@
 module UI.Widget.Connection.Instances where
 
-import Utils.PreludePlus
-import Object.Widget.Connection (Connection, CurrentConnection)
-import Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
+import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
+import           Object.Widget.Connection      (Connection, CurrentConnection)
+import           Utils.PreludePlus
 
 instance CompositeWidget Connection where
     createWidget _   _ = return ()

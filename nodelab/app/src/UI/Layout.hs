@@ -1,18 +1,18 @@
 module UI.Layout where
 
 import           Utils.PreludePlus
+
+import           Control.Monad                (foldM, forM)
 import           Utils.Vector
-import           Control.Monad (forM, foldM)
 
-import           Object.UITypes
-import           Object.Widget
-import qualified Reactive.State.Global           as Global
-import           Reactive.Commands.Command       (Command, performIO)
+import           Object.Widget                (WidgetId, widgetSize)
+import           Reactive.Commands.Command    (Command, performIO)
+import qualified Reactive.Commands.UIRegistry as UICmd
+import qualified Reactive.State.Global        as Global
+import           Reactive.State.UIRegistry    (addHandler, sceneGraphId, sceneInterfaceId)
+import qualified Reactive.State.UIRegistry    as UIRegistry
 
-import           Reactive.State.UIRegistry     (sceneInterfaceId, sceneGraphId, addHandler)
-import qualified Reactive.State.UIRegistry     as UIRegistry
-import qualified Reactive.Commands.UIRegistry  as UICmd
-import qualified UI.Command.Group              as Group
+import qualified UI.Command.Group             as Group
 
 getHeight id = do
     size <- UICmd.get' id widgetSize

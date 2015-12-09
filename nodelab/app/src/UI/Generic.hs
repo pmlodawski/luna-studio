@@ -1,26 +1,24 @@
-{-# LANGUAGE JavaScriptFFI #-}
-{-# LANGUAGE OverloadedStrings #-}
-
 module UI.Generic where
 
 import           Utils.PreludePlus
 
-import           GHCJS.Foreign
 import           Utils.Vector
-import           GHCJS.Types         (JSVal)
-import           Object.Widget hiding (setPosition)
-import qualified Data.JSString as JSString
-import qualified Event.Mouse as Mouse
-import           Object.UITypes (WidgetId)
-import           GHCJS.Marshal.Pure(PToJSVal(..), PFromJSVal(..))
 
+import qualified Data.JSString             as JSString
+import           GHCJS.Foreign
+import           GHCJS.Marshal.Pure        (PFromJSVal (..), PToJSVal (..))
+import           GHCJS.Types               (JSVal)
+
+import qualified Event.Mouse               as Mouse
+import           Object.Widget             (DragState (..), IsDisplayObject, WidgetFile, WidgetId, objectId, widget,
+                                            widgetPosition)
 import           Reactive.Commands.Command (Command, ioCommand, performIO)
+import qualified Reactive.State.Camera     as Camera
+import qualified Reactive.State.Global     as Global
 import qualified Reactive.State.UIRegistry as UIRegistry
-import qualified Reactive.State.Global as Global
-import qualified Reactive.State.Camera as Camera
-import           UI.Widget (UIWidget, UIContainer, GenericWidget(..))
-import qualified UI.Registry as UIR
 
+import qualified UI.Registry               as UIR
+import           UI.Widget                 (GenericWidget (..), UIContainer, UIWidget)
 
 foreign import javascript unsafe "$1.mesh.position.x = $2; $1.mesh.position.y = $3"
     setWidgetPosition'      :: JSVal -> Double -> Double -> IO ()

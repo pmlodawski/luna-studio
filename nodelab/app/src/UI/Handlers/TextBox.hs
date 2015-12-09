@@ -1,23 +1,22 @@
 module UI.Handlers.TextBox where
 
 import           Utils.PreludePlus
-import           Utils.Vector
-import           Event.Event (JSState)
-import qualified Event.Mouse as Mouse
-import           Object.Widget
-import           Object.UITypes
-import           Data.JSString.Text (lazyTextFromJSString, lazyTextToJSString)
-import           GHCJS.Types (JSString)
 
+import           Utils.Vector
+
+import           Data.JSString.Text           (lazyTextFromJSString, lazyTextToJSString)
+import           GHCJS.Types                  (JSString)
+
+import           Event.Event                  (JSState)
+import           Object.Widget                (WidgetId, ClickHandler, KeyDownHandler, UIHandlers, keyDown, dblClick)
+import qualified Object.Widget.TextBox        as Model
 import qualified Reactive.Commands.UIRegistry as UICmd
-import qualified Reactive.State.Global as Global
-import           Reactive.State.Global (inRegistry)
-import           Reactive.Commands.Command (Command, performIO)
-import           Data.HMap.Lazy (TypeKey(..))
-import qualified Object.Widget.TextBox as Model
-import           UI.Widget.TextBox ()
-import           UI.Generic (takeFocus, startDrag)
-import           UI.Handlers.Generic (triggerValueChanged)
+import           Reactive.State.Global        (inRegistry)
+import qualified Reactive.State.Global        as Global
+
+import           UI.Generic                   (takeFocus)
+import           UI.Handlers.Generic          (triggerValueChanged)
+import           UI.Widget.TextBox            ()
 
 dblClickHandler :: ClickHandler Global.State
 dblClickHandler _ _ id = do

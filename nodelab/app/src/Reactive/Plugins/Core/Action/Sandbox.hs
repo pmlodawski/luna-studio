@@ -1,62 +1,45 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Reactive.Plugins.Core.Action.Sandbox where
 
-import           Utils.PreludePlus hiding (Choice)
+import           Utils.PreludePlus                hiding (Choice)
 import           Utils.Vector
 
-import           Event.Event      (Event(..))
-import qualified Event.Keyboard as Keyboard
-import qualified Reactive.State.Global           as Global
-import           Reactive.Commands.Command       (Command, performIO)
+import           Event.Event                      (Event (..))
+import qualified Event.Keyboard                   as Keyboard
+import           Reactive.Commands.Command        (Command, performIO)
+import qualified Reactive.State.Global            as Global
 
-import           Reactive.State.UIRegistry     (sceneInterfaceId, sceneGraphId, addHandler)
-import qualified Reactive.State.UIRegistry     as UIRegistry
-import qualified Reactive.Commands.UIRegistry  as UICmd
+import qualified Reactive.Commands.UIRegistry     as UICmd
+import           Reactive.State.UIRegistry        (addHandler, sceneGraphId,
+                                                   sceneInterfaceId)
+import qualified Reactive.State.UIRegistry        as UIRegistry
 
 import           UI.Instances
 
-import qualified Object.Widget.Number.Discrete as DiscreteNumber
-import qualified UI.Handlers.Number.Discrete   as DiscreteNumber
+import qualified Object.Widget.Group              as Group
+import qualified Object.Widget.LabeledTextBox     as LabeledTextBox
+import qualified Object.Widget.List               as List
+import qualified Object.Widget.Number.Continuous  as ContinuousNumber
+import qualified Object.Widget.Number.Discrete    as DiscreteNumber
+import qualified Object.Widget.Slider.Continuous  as ContinuousSlider
+import qualified Object.Widget.Slider.Discrete    as DiscreteSlider
+import qualified Object.Widget.TextBox            as TextBox
+import qualified Object.Widget.Toggle             as Toggle
 
-import qualified Object.Widget.Number.Continuous as ContinuousNumber
-import qualified UI.Handlers.Number.Continuous   as ContinuousNumber
-
-import qualified Object.Widget.Slider.Discrete as DiscreteSlider
-import qualified UI.Handlers.Slider.Discrete   as DiscreteSlider
-
-import qualified Object.Widget.Slider.Continuous as ContinuousSlider
-import qualified UI.Handlers.Slider.Continuous   as ContinuousSlider
-
-import qualified Object.Widget.Toggle as Toggle
-import qualified UI.Handlers.Toggle   as Toggle
-
-import qualified Object.Widget.TextBox        as TextBox
-import qualified UI.Handlers.TextBox          as TextBox
-
-import qualified Object.Widget.LabeledTextBox as LabeledTextBox
-import qualified UI.Handlers.LabeledTextBox   as LabeledTextBox
-
-import qualified Object.Widget.Group as Group
-
-import qualified Object.Widget.List as List
-import qualified UI.Widget.List.Constructor    as List
-
-import           Object.Widget.Choice.RadioButton  (RadioButton(..))
+import           Object.Widget.Choice.RadioButton (RadioButton (..))
 import qualified Object.Widget.Choice.RadioButton as RadioButton
-import qualified UI.Handlers.Choice.RadioButton   as RadioButton
 
-import           Object.Widget.Choice  (Choice(..))
-import qualified Object.Widget.Choice  as Choice
-import qualified UI.Handlers.Choice    as Choice
+import           Object.Widget.Choice             (Choice (..))
+import qualified Object.Widget.Choice             as Choice
 
-import           UI.Layout as Layout
-import           Object.UITypes
-import           Object.Widget
+import           Data.HMap.Lazy                   (HTMap)
+import qualified Data.HMap.Lazy                   as HMap
 import           Object.LunaValue
 import           Object.LunaValue.Instances
-import           Reactive.State.Global (inRegistry)
-import qualified Data.HMap.Lazy as HMap
-import           Data.HMap.Lazy (HTMap)
+import           Object.UITypes
+import           Object.Widget
+import           Reactive.State.Global            (inRegistry)
+import           UI.Layout                        as Layout
 
 
 toAction :: Event -> Maybe (Command Global.State ())
@@ -101,6 +84,3 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.in
     return ()
 
 toAction _  = Nothing
-
-
-

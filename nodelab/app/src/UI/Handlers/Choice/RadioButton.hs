@@ -1,19 +1,20 @@
 module UI.Handlers.Choice.RadioButton where
 
 import           Utils.PreludePlus
-import           Utils.Vector
-import qualified Event.Mouse as Mouse
-import           Object.Widget
-import           Object.UITypes
 
-import qualified Reactive.Commands.UIRegistry as UICmd
-import qualified Reactive.State.Global as Global
-import           Reactive.State.Global (inRegistry)
-import           Reactive.Commands.Command (Command)
-import           Data.HMap.Lazy (TypeKey(..))
+import           Data.HMap.Lazy                   (TypeKey (..))
+
+import qualified Event.Mouse                      as Mouse
+import           Object.Widget                    (ClickHandler, UIHandlers, WidgetId, click)
+
 import qualified Object.Widget.Choice.RadioButton as Model
-import           UI.Widget.Toggle ()
-import           UI.Generic (takeFocus, startDrag)
+import           Reactive.Commands.Command        (Command)
+import qualified Reactive.Commands.UIRegistry     as UICmd
+import           Reactive.State.Global            (inRegistry)
+import qualified Reactive.State.Global            as Global
+
+import           UI.Generic                       (startDrag, takeFocus)
+import           UI.Widget.Toggle                 ()
 
 newtype SelectedHandler = SelectedHandler (Command Global.State ())
 selectedHandler = TypeKey :: TypeKey SelectedHandler

@@ -1,11 +1,13 @@
 module UI.Widget.Number where
 
 import           Utils.PreludePlus
+
 import           GHCJS.Foreign
-import           GHCJS.Types      (JSVal, JSString)
-import           GHCJS.Marshal.Pure(PToJSVal(..), PFromJSVal(..))
-import           UI.Widget (UIWidget(..))
-import           Event.Keyboard (KeyMods(..))
+import           GHCJS.Marshal.Pure (PFromJSVal (..), PToJSVal (..))
+import           GHCJS.Types        (JSString, JSVal)
+
+import           Event.Keyboard     (KeyMods (..))
+import           UI.Widget          (UIWidget (..))
 
 newtype Number = Number { unSlider :: JSVal } deriving (PToJSVal, PFromJSVal)
 

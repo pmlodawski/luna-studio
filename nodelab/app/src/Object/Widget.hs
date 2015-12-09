@@ -3,7 +3,10 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Object.Widget where
+module Object.Widget (
+    module Object.Widget,
+    module Object.UITypes
+) where
 
 import           Utils.PreludePlus hiding ((.=), children)
 import           Utils.Vector

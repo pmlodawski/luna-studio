@@ -1,34 +1,32 @@
 module UI.Handlers.Choice where
 
-import           Utils.PreludePlus hiding (Choice)
+import           Utils.PreludePlus                hiding (Choice)
+
+import           Data.HMap.Lazy                   (HTMap, TypeKey (..))
 import           Utils.Vector
-import qualified Event.Mouse as Mouse
-import           Object.Widget
-import           Object.UITypes
 
-import           Data.HMap.Lazy (HTMap, TypeKey(..))
-import           Object.UITypes
-import           Object.Widget
-import           Object.Widget.Choice  (Choice(..))
-import           Object.Widget.Choice.RadioButton  (RadioButton(..))
-import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
+import qualified Event.Mouse                      as Mouse
+import           Object.Widget                    (UIHandlers, WidgetId)
+import           Object.Widget.Choice             (Choice (..))
+import           Object.Widget.Choice.RadioButton (RadioButton (..))
+import           Object.Widget.CompositeWidget    (CompositeWidget, createWidget, updateWidget)
 
-import           Reactive.Commands.Command (Command)
-import           Reactive.State.Global (inRegistry)
-import           Reactive.State.UIRegistry    (addHandler)
+import           Reactive.Commands.Command        (Command)
+import           Reactive.State.Global            (inRegistry)
+import           Reactive.State.UIRegistry        (addHandler)
 
-import           UI.Command.Group as Group
-import           UI.Generic (takeFocus, startDrag)
-import           UI.Handlers.Generic (triggerValueChanged)
-import           UI.Layout as Layout
+import           UI.Command.Group                 as Group
+import           UI.Generic                       (startDrag, takeFocus)
+import           UI.Handlers.Generic              (triggerValueChanged)
+import           UI.Layout                        as Layout
 
-import           UI.Widget.Choice ()
-import           UI.Widget.Choice.RadioButton ()
-import           UI.Widget.Group  ()
-import           UI.Widget.Label  ()
-import           UI.Widget.Toggle ()
+import           UI.Widget.Choice                 ()
+import           UI.Widget.Choice.RadioButton     ()
+import           UI.Widget.Group                  ()
+import           UI.Widget.Label                  ()
+import           UI.Widget.Toggle                 ()
 
-import qualified Data.HMap.Lazy as HMap
+import qualified Data.HMap.Lazy                   as HMap
 
 import qualified Object.Widget.Choice             as Choice
 import qualified Object.Widget.Choice.RadioButton as RadioButton

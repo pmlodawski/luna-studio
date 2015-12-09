@@ -3,18 +3,19 @@ module UI.Widget.List where
 import           Utils.PreludePlus
 import           Utils.Vector
 
-import           GHCJS.Types        (JSVal, JSString)
-import           GHCJS.Marshal.Pure (PToJSVal(..), PFromJSVal(..))
-import           Data.JSString.Text (lazyTextToJSString)
+import           Data.JSString.Text            (lazyTextToJSString)
+import           GHCJS.Marshal.Pure            (PFromJSVal (..), PToJSVal (..))
+import           GHCJS.Types                   (JSString, JSVal)
 
-import           UI.Widget          (UIWidget(..))
-import qualified Object.Widget.List  as Model
-import qualified UI.Widget            as Widget
-import qualified UI.Registry          as UI
-import qualified UI.Generic           as UI
-import           Object.Widget
 import           Object.UITypes
+import           Object.Widget
 import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
+import qualified Object.Widget.List            as Model
+
+import qualified UI.Generic                    as UI
+import qualified UI.Registry                   as UI
+import           UI.Widget                     (UIWidget (..))
+import qualified UI.Widget                     as Widget
 
 newtype List = List JSVal deriving (PToJSVal, PFromJSVal)
 
