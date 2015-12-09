@@ -1,37 +1,37 @@
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE CPP                       #-}
+{-# LANGUAGE FunctionalDependencies    #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 
 module Luna.Syntax.Repr.Graph where
 
-import Prologue               hiding (Ixed, Repr, repr)
-import Data.Vector            hiding (convert, modify)
-import Data.Container
-import Data.Container.Hetero
-import Data.Cata
 import Control.Monad.Fix
-import Data.Container.Class
-import Data.Container.Poly
-import Data.Container.Auto
-import Data.Container.Weak
-import Data.Container.Resizable
-import Data.Reprx
+import Data.Cata
 import Data.Construction
+import Data.Container
+import Data.Container.Auto
+import Data.Container.Class
+import Data.Container.Hetero
+import Data.Container.Poly
+import Data.Container.Resizable
+import Data.Container.Weak
+import Data.Reprx
+import Data.Vector              hiding (convert, modify)
+import Prologue                 hiding (Ixed, Repr, repr)
 
-import Luna.Syntax.Layer.Labeled
 import Luna.Syntax.AST.Term
+import Luna.Syntax.Layer.Labeled
 
 import qualified Control.Monad.State as State
 --import System.Mem.Weak
 
-import Luna.Syntax.AST.Decl
 import Data.Layer.Coat
+import Luna.Syntax.AST.Decl
 
 
-import Data.IntSet (IntSet)
+import           Data.IntSet (IntSet)
 import qualified Data.IntSet as IntSet
 
 
@@ -55,7 +55,7 @@ instance Monad m => IsContainerM  m (VectorGraph a) where
 
 
 
-newtype Ref a = Ref a deriving (Show, Monoid, Functor, Foldable, Traversable)
+newtype Ref a = Ref a deriving (Show, Ord, Eq, Monoid, Functor, Foldable, Traversable)
 
 instance Rewrapped (Ref a) (Ref a')
 instance Wrapped   (Ref a) where
@@ -71,8 +71,8 @@ instance Deref a => Deref (Ref a) where derefd = wrapped . derefd
 deref = view derefd
 
 
-newtype Node = Node Int deriving (Show)
-newtype Edge = Edge Int deriving (Show)
+newtype Node = Node Int deriving (Show, Ord, Eq)
+newtype Edge = Edge Int deriving (Show, Ord, Eq)
 
 instance Rewrapped Node Node
 instance Wrapped   Node where
@@ -98,7 +98,7 @@ data DoubleArc = DoubleArc { _source :: Ref Node, _target :: Ref Node } deriving
 
 data SuccTracking a = SuccTracking IntSet a deriving (Show)
 type instance Unlayered (SuccTracking a) = a
-instance      Layered   (SuccTracking a) where layered = lens (\(SuccTracking _ a) -> a) (\(SuccTracking i _) a -> SuccTracking i a) 
+instance      Layered   (SuccTracking a) where layered = lens (\(SuccTracking _ a) -> a) (\(SuccTracking i _) a -> SuccTracking i a)
 
 class TracksSuccs a where succs :: Lens' a IntSet
 instance {-# OVERLAPPABLE #-}                                           TracksSuccs (SuccTracking a) where succs = lens (\(SuccTracking ixs _) -> ixs) (\(SuccTracking _ a) ixs -> SuccTracking ixs a)
@@ -165,7 +165,7 @@ instance Default (Graph n e) where def = Graph (alloc 100) (alloc 100)
 
 
 
-    
+
 
         --instance Content (Ref i a t) (Ref i' a' t') (Ptr i (a t)) (Ptr i' (a' t')) where
         --    content = lens fromRef (const Ref)

@@ -15,7 +15,7 @@
 
 module Main where
 
-import Prologue hiding (Cons, Indexable, Ixed, Repr, Simple, children, cons, empty, index, lookup, maxBound, minBound, repr, simple)
+import Prologue hiding (Cons, Indexable, Ixed, Repr, Simple, children, cons, empty, index, lookup, maxBound, minBound, repr, s, simple)
 
 import           Control.Error.Util                   (hush)
 import           Control.Monad.Fix
@@ -118,12 +118,12 @@ sampleGraph = runIdentity
       $ flip Builder.runT def
       $ flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
       $ do
-            i2 <- _int 2
-            i3 <- _int 3
-            namePlus <- _string "+"
-            accPlus  <- accessor namePlus i2
             nameInt  <- _string "Int"
             consInt  <- cons nameInt
+            i2 <- _int 2 `typed` consInt
+            i3 <- _int 3 `typed` consInt
+            namePlus <- _string "+"
+            accPlus  <- accessor namePlus i2
             arr      <- arrow [consInt, consInt] Map.empty consInt
             appPlus  <- app accPlus [arg i2, arg i3] `typed` arr
             -- x <- app accPlus [arg appPlus, arg appPlus] `typed` int2int2int
@@ -153,18 +153,20 @@ runNode (ref :: Ref Node) = do
     case' (uncoat (node :: Labeled2 Int (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge))))))) $ do
         match $ \(App a p) -> do
             putStrLn "App"
-            typeNode <- follow (node ^. tp)
-            typeStr <- typeString typeNode
-            putStrLn typeStr
+            typeRef <- follow (node ^. tp)
+            typeStr <- typeString typeRef
             acc <- follow a
             (name, s) <- getAcc acc
-            -- qual <- typeString s
-            -- let sourceQPath = QualPath.mk $ qual <> "." <> name
-            -- let args = Symbol.Signature typeNode
-            -- runExceptT $ Symbol.getSpecialization sourceQPath args
+            qual <- typeString s
+            let sourceQPath = QualPath.mk $ qual <> "." <> name
+            typeNode <- readRef typeRef
+            let args' = case' (uncoat typeNode) $ do
+                    match $ \a@(Arrow {}) -> Symbol.fromArrow a
+            r <- runExceptT $ Symbol.getSpecialization sourceQPath args'
+            print r
 
             args <- mapM (runNode <=< follow . Arg.__arec) (inputs p)
-            mangled <- mangleName name typeNode
+            mangled <- mangleName name typeRef
             fun <- lift $ lift $ lift $ lift $ lift $ Session.findSymbol mangled typeStr -- TODO[PM] przerobic na `... => m (cos)`
             mapM_ (\r -> print (Session.unsafeCast r :: Int)) args
             return $ foldl Session.appArg fun args
@@ -180,15 +182,14 @@ runNode (ref :: Ref Node) = do
             prettyPrint (uncoat node)
             return undefined
 
-
 -- TODO[PM] move to runNode
 getAcc (ref :: Ref Node) = do
     node <- readRef ref
     case' (uncoat (node :: Labeled2 Int (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge))))))) $ do
         match $ \(Accessor n s) -> do
             name <- typeString =<< follow n
-            src  <- runNode    =<< follow s
-
+            src  <- follow =<< (view tp <$> (readRef =<< follow s))
+            -- src  <- runNode =<< follow s
             return (name, src)
 
 typeString (ref :: Ref Node) = do
@@ -197,16 +198,14 @@ typeString (ref :: Ref Node) = do
         match $ \(Arrow p n r) -> do
             items <- mapM typeString =<< mapM follow (p ++ (Map.elems n) ++ [r])
             return $ intercalate " -> " items
-        match $ \(Cons t a) -> do
-            intercalate " " <$> mapM (typeString <=< follow) (t:a)
-        match $ \(String s) -> do
-            return $ toString $ toText s
-        match $ \(Int i) -> do
-            return $ show i
-
-        match $ \ANY -> do
-            prettyPrint $ uncoat node
-            undefined
+        match $ \(Cons t a) -> intercalate " " <$> mapM (typeString <=< follow) (t:a)
+        match $ \(String s) -> return $ toString $ toText s
+        match $ \(Int i)    -> return $ show i
+        match $ \(Val v)    -> do
+            case' v $ do
+                match $ \(Int i)    -> return $ show i
+                match $ \(String s) -> return $ toString $ toText s
+        match $ \ANY -> prettyPrint (uncoat node) >> undefined
 
 getAccName (ref :: Ref Node) = do
     node <- readRef ref
@@ -234,8 +233,8 @@ main = do
     --             --   , ("g2", g2)
     --             --   , ("g3", g3)
     --               ]
-    renderAndOpen [ ("g" , g)]
+    -- renderAndOpen [ ("g" , g)]
 
     pprint g
-    evaluateTest i g
+    _ <- evaluateTest i g
     putStrLn "end"
