@@ -7,7 +7,7 @@ import           Control.Error.Operator
 import qualified Data.List                   as List
 import           Data.Map                    (Map)
 import qualified Data.Map                    as Map
-import           Luna.Syntax.AST.Arg         (NamedArg)
+import           Luna.Syntax.AST.Arg         (NamedArg (NamedArg))
 import           Luna.Syntax.AST.Term        (Arrow (Arrow))
 import qualified Luna.Syntax.Builder.Symbol  as SymbolBuilder
 import           Luna.Syntax.Name
@@ -70,11 +70,18 @@ type SymbolMap t = Map QualPath (PartiallySpecializedNetwork t)
 type SymbolMonad t = SymbolBuilder.MonadSymbolBuilder (SymbolMap t)
 
 
-fromArrow :: Arrow t -> Signature Specified t
+fromArrow :: Arrow t -> Specification t
 fromArrow (Arrow p n r) = Signature (Args p n) (Just r)
+-- fromArrow :: Arrow t -> Signature Specified t
 
--- toArrow :: Signature Specialized t -> Arrow t
-toArrow (Signature (Args p n) r) = Arrow p n r
+fromArrow' :: Arrow t -> Specialization t
+fromArrow' (Arrow p n r) = Signature (Args p $ map mkArg $ Map.toList n) r
+    where mkArg (k, v)= NamedArg k v
+
+
+toArrow :: Signature 'Specialized t -> Arrow t
+toArrow (Signature (Args p n) r) = Arrow p (Map.fromList $ map fromNamed n) r
+    where fromNamed (NamedArg k v) = (k, v)
 
 
 symbolLookup :: SymbolMonad t m => QualPath -> m (Maybe (PartiallySpecializedNetwork t))
@@ -102,7 +109,8 @@ makeSpecialization specif gen = error "Luna.Syntax.Symbol.Map.makeSpecialization
 
 
 specificationMatch :: Specification t -> Specialization t -> Bool
-specificationMatch specif special =  error "Luna.Syntax.Symbol.Map.specificationMatch: not implemented" {-all typeMatch' (zip specifPositional (map unarg' specialPositional))
+specificationMatch specif special =  error "Luna.Syntax.Symbol.Map.specificationMatch: not implemented"
+    {-all typeMatch' (zip specifPositional (map unarg' specialPositional))
                                  && Maybe.fromMaybe False (all typeMatch' <$> namedArgs)
                                  && Maybe.fromMaybe True (flip typeMatch (runIdentity $ special ^. result) <$> (specif ^. result)) where
     specifPositional       = specif ^. args . positional
