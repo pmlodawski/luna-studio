@@ -1,0 +1,91 @@
+config       = require('config')
+createText   = require('bmfont').render
+font         = require('font/LatoBlack-sdf')
+textMaterial = require('font/text_material').hud
+layoutText   = require('bmfont').layout
+
+class TextBox
+  constructor:  (widgetId, width, height) ->
+    @widgetId  = widgetId
+    @width     = width
+    @height    = height
+    @mesh      = new (THREE.Group)
+    @value     = ''
+    @alignment = 'Left'
+
+  setValueLabel: (text) ->
+    @value = text
+    @mesh.remove @valueLabel if @valueLabel
+
+    layout =
+      text: text
+      font: font
+      align: @alignment
+      mode: 'pre'
+    width = layoutText(layout).width * 0.8 * config.fontSize
+    geometry = createText(layout)
+    material = textMaterial()
+
+    @valueLabel = new (THREE.Mesh)(geometry, material)
+    @valueLabel.scale.multiplyScalar 0.8 * config.fontSize
+    @valueLabel.position.y = 5 + @height / 2.0
+    @valueLabel.position.x = switch @alignment
+      when 'Left'   then  0
+      when 'Right'  then  @width - width
+      when 'Center' then (@width - width) / 2.0
+      else throw 'Invalid text alignment'
+
+    @mesh.add @valueLabel
+
+  setAlignment: (align) ->
+    @alignment = align
+    @setValueLabel @value
+
+  startEditing: (value) ->
+    @input.remove() if @input
+
+    input = $('<input type="text" class="widget"/>')
+
+    pos = @mesh.localToWorld(new (THREE.Vector3)(0, 0, 0))
+    @valueLabel.visible = false
+    @input = input
+    input.css
+      left: pos.x
+      top: pos.y
+      width: @width
+      textAlign: @alignment
+    input.val value
+
+    saveChanges = ->
+      evt = new Event('keydown')
+      evt.which = evt.keyCode = 13
+      document.getElementById('canvas2d').dispatchEvent evt
+
+    cancelChanges = ->
+      evt = new Event('keydown')
+      evt.which = evt.keyCode = 27
+      document.getElementById('canvas2d').dispatchEvent evt
+
+    input.on 'keydown', (ev) ->
+      switch ev.keyCode
+        when 13
+          saveChanges()
+          ev.preventDefault()
+        when 27
+          cancelChanges()
+          ev.preventDefault()
+      ev.stopPropagation()
+
+    input.on 'blur', (ev) ->
+      saveChanges()
+      ev.stopPropagation()
+
+    $('#htmlcanvas').append input
+    setTimeout (-> input.focus()), 30
+
+  doneEditing: ->
+    @input.remove() if @input
+    @valueLabel.visible = true
+    @input = null
+
+module.exports = TextBox

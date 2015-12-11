@@ -21,18 +21,18 @@ newtype Choice = Choice JSVal deriving (PToJSVal, PFromJSVal)
 
 instance UIWidget Choice
 
-foreign import javascript unsafe "new Choice($1, $2, $3)" create'   :: Int -> Double -> Double -> IO Choice
+foreign import javascript unsafe "new Group($1)" create' :: Int -> IO Choice
 
 create :: WidgetId -> Model.Choice -> IO Choice
 create oid model = do
-    widget      <- create' oid (model ^. Model.size . x) (model ^. Model.size . y)
+    widget <- create' oid
     UI.setWidgetPosition (model ^. widgetPosition) widget
     return widget
 
 instance UIDisplayObject Model.Choice where
     createUI parentId id model = do
-        widget   <- create id model
-        parent   <- UI.lookup parentId :: IO Widget.GenericWidget
+        widget <- create id model
+        parent <- UI.lookup parentId :: IO Widget.GenericWidget
         UI.register id widget
         Widget.add widget parent
 

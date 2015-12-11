@@ -2,44 +2,66 @@ module UI.Handlers.LabeledTextBox where
 
 import           Utils.PreludePlus
 
-import           Data.HMap.Lazy               (TypeKey (..))
+import           Data.HMap.Lazy                  (HTMap, TypeKey (..))
+import qualified Data.HMap.Lazy                  as HMap
+import qualified Data.Text.Lazy                  as Text
+import           Data.Text.Lazy.Read             (rational)
 import           Utils.Vector
 
-import           Data.JSString.Text           (lazyTextFromJSString, lazyTextToJSString)
-import           GHCJS.Types                  (JSString)
+import           Event.Event                     (JSState)
+import           Object.Widget                   (DblClickHandler, DragEndHandler, DragMoveHandler, KeyUpHandler,
+                                                  MousePressedHandler, UIHandlers, WidgetId, currentPos, dblClick,
+                                                  dragEnd, dragMove, keyMods, keyUp, mousePressed, startPos)
+import           Object.Widget.CompositeWidget   (CompositeWidget, createWidget, updateWidget)
+import qualified Object.Widget.LabeledTextBox    as Model
+import qualified Object.Widget.TextBox           as TextBox
+import           Reactive.Commands.Command       (Command, performIO)
+import qualified Reactive.Commands.UIRegistry    as UICmd
+import           Reactive.State.Global           (inRegistry)
+import qualified Reactive.State.Global           as Global
+import           Reactive.State.UIRegistry       (addHandler)
 
-import           Event.Event                  (JSState)
-import qualified Event.Mouse                  as Mouse
-import           Object.Widget                (DblClickHandler, KeyDownHandler, UIHandlers, WidgetId, dblClick, keyDown)
-import qualified Object.Widget.LabeledTextBox as Model
-import           Reactive.Commands.Command    (Command, performIO)
-import qualified Reactive.Commands.UIRegistry as UICmd
-import           Reactive.State.Global        (inRegistry)
-import qualified Reactive.State.Global        as Global
+import           UI.Generic                      (startDrag, takeFocus)
+import           UI.Handlers.Generic             (triggerValueChanged)
+import           UI.Widget.LabeledTextBox        ()
 
-import           UI.Generic                   (startDrag, takeFocus)
-import           UI.Handlers.Generic          (triggerValueChanged)
-import           UI.Widget.LabeledTextBox     ()
+import           UI.Handlers.Generic             (ValueChangedHandler (..), triggerValueChanged)
+import qualified UI.Handlers.TextBox             as TextBox
 
 dblClickHandler :: DblClickHandler Global.State
 dblClickHandler _ _ id = do
-    takeFocus undefined id
-    inRegistry $ UICmd.update_ id $ Model.isEditing .~ True
-
-foreign import javascript unsafe "$1.registry[$2].input.val()" getValue' :: JSState -> WidgetId -> JSString
-
-keyDownHandler :: KeyDownHandler Global.State
-keyDownHandler '\r' _ jsState id = do
-    let value = lazyTextFromJSString $ getValue' jsState id
-    inRegistry $ UICmd.update_ id $ (Model.isEditing .~ False)
-                                  . (Model.value     .~ value)
-    triggerValueChanged value id
-
-keyDownHandler '\27' _ jsState id = do
-    let value = lazyTextFromJSString $ getValue' jsState id
-    inRegistry $ UICmd.update_ id $ Model.isEditing .~ False
-keyDownHandler _ _ _ _ = return ()
+    (tbId:_) <- inRegistry $ UICmd.children id
+    takeFocus undefined tbId
+    inRegistry $ UICmd.update_ tbId $ TextBox.isEditing .~ True
 
 widgetHandlers :: UIHandlers Global.State
-widgetHandlers = def & keyDown  .~ keyDownHandler
-                     & dblClick .~ dblClickHandler
+widgetHandlers = def & dblClick     .~ dblClickHandler
+
+-- Constructors
+
+
+textHandlers :: WidgetId -> HTMap
+textHandlers id = addHandler (ValueChangedHandler $ textValueChangedHandler id)
+                $ mempty where
+
+textValueChangedHandler :: WidgetId -> Text -> WidgetId -> Command Global.State ()
+textValueChangedHandler parent val tbId = do
+    inRegistry $ UICmd.update_ parent $ Model.value .~ val
+    triggerValueChanged val parent
+
+
+instance CompositeWidget Model.LabeledTextBox where
+    createWidget id model = do
+        let tx      = (model ^. Model.size . x) / 2.0
+            ty      = (model ^. Model.size . y)
+            sx      = tx - (model ^. Model.size . y / 2.0)
+            textVal = Text.pack $ show $ model ^. Model.value
+            textBox = TextBox.create (Vector2 sx ty) textVal TextBox.Right
+
+        tbId <- UICmd.register id textBox $ textHandlers id
+        UICmd.moveX tbId tx
+
+    updateWidget id old model = do
+        (tbId:_) <- UICmd.children id
+        UICmd.update_ tbId $ TextBox.value .~ (model ^. Model.value)
+
