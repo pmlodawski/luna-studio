@@ -8,11 +8,13 @@ font         = require("font/LatoBlack-sdf")
 textMaterial = require('font/text_material').hud
 layoutText   = require('bmfont').layout
 
+BaseWidget   = require ('Widget/BaseWidget')
+
 calculateTextWidth = (txt) -> layoutText({font: font, text: txt}).width
 
-class Button
+class Button extends BaseWidget
   constructor: (widgetId, width, height) ->
-    @widgetId = widgetId
+    super widgetId, width, height
 
     @uniforms =
       enabled:   { type: 'i',  value: 1 }
@@ -21,8 +23,6 @@ class Button
       objectId:  { type: 'v3', value: new THREE.Vector3((widgetId % 256) / 255.0, Math.floor(Math.floor(widgetId % 65536) / 256) / 255.0, Math.floor(widgetId / 65536) / 255.0) }
 
     @uniforms[k] = v for k, v of $$.commonUniforms
-
-    this.mesh = new THREE.Group()
 
     bgMesh = new THREE.PlaneBufferGeometry(1, 1)
     bgMesh.applyMatrix( new THREE.Matrix4().makeTranslation(0.5, 0.5, 0.0))
@@ -36,28 +36,40 @@ class Button
         side:           THREE.DoubleSide
         derivatives:    true
 
-    @bg.scale.x    = width
-    @bg.scale.y    = height
     @mesh.add @bg
 
-   setEnabled: (value) -> @uniforms.enabled.value = value ? 1 : 0
+    @labelText = ""
+    @relayout()
 
-   setLabel: (text) ->
-      @mesh.remove @label if @label
 
-      geometry = createText
-        text:  text
-        font:  font
-        align: 'center'
+  setEnabled: (value) -> @uniforms.enabled.value = value ? 1 : 0
 
-      textWidth = calculateTextWidth(text) * config.fontSize
+  setLabel: (text) ->
+     @labelText = text
+     @mesh.remove @label if @label
 
-      material = textMaterial()
-      @label = new THREE.Mesh geometry, material
-      @label.scale.multiplyScalar config.fontSize
-      @label.position.x = this.uniforms.size.value.x / 2.0 - textWidth / 2.0
-      @label.position.y = this.uniforms.size.value.y / 2.0 + 5.0
+     geometry = createText
+       text:  text
+       font:  font
+       align: 'center'
 
-      @mesh.add(@label)
+     @labelTextWidth = calculateTextWidth(text) * config.fontSize
+
+     material = textMaterial()
+     @label = new THREE.Mesh geometry, material
+     @label.scale.multiplyScalar config.fontSize
+     @mesh.add(@label)
+
+     @relayout()
+
+  relayout: ->
+    @bg.scale.set @width, @height, 1.0
+    @uniforms.size.value.set @width, @height
+
+    if @label
+      @label.position.x = @width / 2.0 - @labelTextWidth / 2.0
+      @label.position.y = @height/ 2.0 + 5.0
+
+
 
 module.exports = Button;

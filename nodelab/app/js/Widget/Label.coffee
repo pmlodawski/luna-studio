@@ -5,18 +5,16 @@ font = require('font/LatoBlack-sdf')
 textMaterial = require('font/text_material').hud
 layoutText = require('bmfont').layout
 
+BaseWidget = require ('Widget/BaseWidget')
+
 calculateTextWidth = (txt) -> layoutText(font: font, text: txt).width
 
-class Label
+class Label extends BaseWidget
   constructor: (widgetId, width, height) ->
-    @widgetId = widgetId
-    @width  = width
-    @height = height
+    super widgetId, width, height
 
     @uniforms = {}
     @uniforms[k] = v for k, v of $$.commonUniforms
-
-    @mesh = new (THREE.Group)
 
   setLabel: (text) ->
     @mesh.remove @label if @label

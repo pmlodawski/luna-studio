@@ -5,12 +5,11 @@ config       = require('config')
 createText   = require('bmfont').render
 font         = require("font/LatoBlack-sdf")
 textMaterial = require('font/text_material').hud
+BaseWidget   = require('Widget/BaseWidget')
 
-class LabeledWidget
+class LabeledWidget extends BaseWidget
   constructor: (widgetId, width, height) ->
-    @widgetId = widgetId
-    @width    = width
-    @height   = height
+    super widgetId, width, height
 
     @bgUniforms =
       size:      { type: 'v2', value: new THREE.Vector2(width, height) }
@@ -19,7 +18,7 @@ class LabeledWidget
 
     @bgUniforms[k] = v for k, v of $$.commonUniforms
 
-    @container = @mesh = new THREE.Group()
+    @container = @mesh
 
     @createBg()
 
@@ -41,11 +40,6 @@ class LabeledWidget
     @mesh.add @bg
 
   setFocus: (value) -> @bgUniforms.focus.value = value ? 1 : 0
-
-  setSize: (width, height) ->
-    @width  = width
-    @height = height
-    @relayout()
 
   setLabel: (text)  ->
     @mesh.remove @label if @label

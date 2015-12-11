@@ -5,13 +5,11 @@ config = require('config')
 createText = require('bmfont').render
 font = require('font/LatoBlack-sdf')
 textMaterial = require('font/text_material').hud
+BaseWidget   = require ('Widget/BaseWidget')
 
-
-class RadioButton
+class RadioButton extends BaseWidget
   constructor:  (widgetId, width, height) ->
-    @widgetId = widgetId
-    @width    = width
-    @height   = height
+    super widgetId, width, height
 
     @iconUniforms =
       size:     {type: 'v2', value: new (THREE.Vector2)(height, height)}
@@ -25,8 +23,6 @@ class RadioButton
     for k, v of $$.commonUniforms
       @uniforms[k]     = v
       @iconUniforms[k] = v
-
-    @mesh = new (THREE.Group)
 
     @createBg()
     @createIcon()

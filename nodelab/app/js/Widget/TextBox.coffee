@@ -3,15 +3,17 @@ createText   = require('bmfont').render
 font         = require('font/LatoBlack-sdf')
 textMaterial = require('font/text_material').hud
 layoutText   = require('bmfont').layout
+BaseWidget   = require ('Widget/BaseWidget')
 
-class TextBox
+class TextBox extends BaseWidget
   constructor:  (widgetId, width, height) ->
-    @widgetId  = widgetId
-    @width     = width
-    @height    = height
-    @mesh      = new (THREE.Group)
+    super widgetId, width, height
+
     @value     = ''
     @alignment = 'Left'
+
+  relayout: ->
+    @setValueLabel @value
 
   setValueLabel: (text) ->
     @value = text

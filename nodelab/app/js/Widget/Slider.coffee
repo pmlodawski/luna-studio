@@ -15,8 +15,6 @@ class Slider extends LabeledWidget
 
   bgShader: require('shaders/slider.frag')()
 
-  setValue: (value) ->
-    console.log this
-    @bgUniforms.value.value = value
+  setValue: (value) -> @bgUniforms.value.value = value
 
 module.exports = Slider
