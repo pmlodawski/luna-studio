@@ -17,10 +17,11 @@ void main(void) {
     float thickness = radius * 0.3;
 
     float gHoriz    = sdf_rect(p, vec2(width, thickness));
+    float gVert     = sdf_rect(p, vec2(thickness, width));
 
-    vec4 colorSign  = vec4(0.2, 0.2, 0.2, 1.0);
-
+    vec4 colorSign  = vec4(0.5, 0.5, 0.5, 1.0);
     gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
 
     gl_FragColor = mix(colorSign, gl_FragColor, 1.0 - sdf_aa(gHoriz));
+    gl_FragColor = mix(colorSign, gl_FragColor, 1.0 - sdf_aa(gVert));
 }

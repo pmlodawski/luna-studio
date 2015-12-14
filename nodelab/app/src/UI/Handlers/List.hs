@@ -59,7 +59,7 @@ listItemHandler listWidget groupId rowId val id = do
 
 makeItem :: Bool -> WidgetId -> WidgetId -> AnyLunaValue -> Int -> Command UIRegistry.State ()
 makeItem isTuple listId listGroupId elem ix = do
-    let removeButton = Button.create (Vector2 20 20) "x"
+    let removeButton = Button.createIcon (Vector2 20 20) "shaders/icon.minus.frag"
     groupId <- UICmd.register listGroupId Group.create def
     createValueWidget groupId elem (Text.pack $ show ix) (addHandler (ValueChangedHandler $ listItemHandler listId listGroupId groupId) mempty)
     when (not isTuple) $ UICmd.register_ groupId removeButton (removeItemHandlers listId listGroupId groupId)
@@ -111,7 +111,7 @@ removeElement listId groupId idx = do
 instance CompositeWidget List where
     createWidget id model = do
         let label     = Label.create "Param of list:"
-            addButton = Button.create (Vector2 20 20) "+"
+            addButton = Button.createIcon (Vector2 20 20) "shaders/icon.plus.frag"
 
         UICmd.register_ id label def
         groupId     <- UICmd.register id Group.create def
