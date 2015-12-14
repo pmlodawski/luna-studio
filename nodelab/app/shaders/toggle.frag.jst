@@ -14,18 +14,15 @@ void main(void) {
     float width  = size.x;
     float height = size.y;
     float toggleWidth  = width * 0.5;
-    float toggleHeight = height * 0.8;
+    float toggleHeight = height;
 
-    float roundFactor = 2.0;
-    vec4 roundVector = roundFactor * vec4(1.0, 1.0, 1.0, 1.0);
+    float shift = (float(value) * (width - height)) - width / 2.0 + height / 2.0;
 
-    float shift = 0.8 * (float(value) * width / 2.0 - width / 4.0);
+    float gRect   = sdf_rect(p, vec2(width, height), height / 2.0);
+    float gToggle = sdf_ball(translate(p, vec2(shift, 0.0)), toggleHeight / 2.0);
 
-    float gRect   = sdf_rect(p, vec2(width, height), roundVector);
-    float gToggle = sdf_rect(translate(p, vec2(shift, 0.0)), vec2(toggleWidth, toggleHeight), roundVector);
-
-    vec4 colorBackground = vec4(0.6, 0.6, 0.6, 1.0);
-    vec4 colorToggle     = vec4(0.2 + float(value) * 0.3, 0.2, 0.2, 1.0);
+    vec4 colorBackground = vec4(0.3, float(value) * 0.3+0.3, 0.3, 1.0);
+    vec4 colorToggle     = vec4(0.7, 0.7, 0.7, 1.0);
 
     gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
 
