@@ -16,6 +16,7 @@ import           Object.Widget
 import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
 import qualified Object.Widget.LabeledTextBox  as Model
 
+import           UI.Generic                    (whenChanged)
 import qualified UI.Generic                    as UI
 import qualified UI.Registry                   as UI
 import           UI.Widget                     (UIWidget (..))
@@ -38,10 +39,6 @@ create oid model = do
 setLabel :: Model.LabeledTextBox -> LabeledTextBox -> IO ()
 setLabel model textBox = setLabel' textBox $ lazyTextToJSString $ model ^. Model.label
 
-ifChanged :: (Eq b) => a -> a -> Lens' a b -> IO () -> IO ()
-ifChanged old new get action = if (old ^. get) /= (new ^. get) then action
-                                                               else return ()
-
 instance UIDisplayObject Model.LabeledTextBox where
     createUI parentId id model = do
         textBox   <- create id model
@@ -51,6 +48,6 @@ instance UIDisplayObject Model.LabeledTextBox where
 
     updateUI id old model = do
         textBox <- UI.lookup id :: IO LabeledTextBox
-
-        ifChanged old model Model.label $ setLabel       model textBox
+        whenChanged old model Model.label $ setLabel   model textBox
+        whenChanged old model Model.size  $ UI.setSize id model
 

@@ -12,15 +12,16 @@ import qualified Data.Text.Lazy                as Text
 import           GHCJS.Marshal.Pure            (PFromJSVal (..), PToJSVal (..))
 import           GHCJS.Types                   (JSString, JSVal)
 
-import qualified UI.Generic                    as UI
-import qualified UI.Registry                   as UI
-import           UI.Widget                     (UIWidget (..))
-import qualified UI.Widget                     as Widget
-
 import           Object.UITypes
 import           Object.Widget
 import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
 import qualified Object.Widget.TextBox         as Model
+
+import           UI.Generic                    (whenChanged)
+import qualified UI.Generic                    as UI
+import qualified UI.Registry                   as UI
+import           UI.Widget                     (UIWidget (..))
+import qualified UI.Widget                     as Widget
 
 
 newtype TextBox = TextBox JSVal deriving (PToJSVal, PFromJSVal)
@@ -48,9 +49,6 @@ setValueLabel model textBox = setValueLabel' textBox $ lazyTextToJSString $ mode
 setAlignment :: Model.TextBox -> TextBox -> IO ()
 setAlignment model textBox = setAlignment' textBox $ JSString.pack $ show $ model ^. Model.alignment
 
-ifChanged :: (Eq b) => a -> a -> Lens' a b -> IO () -> IO ()
-ifChanged old new get action = if (old ^. get) /= (new ^. get) then action
-                                                               else return ()
 
 instance UIDisplayObject Model.TextBox where
     createUI parentId id model = do
@@ -62,11 +60,12 @@ instance UIDisplayObject Model.TextBox where
     updateUI id old model = do
         textBox <- UI.lookup id :: IO TextBox
 
-        ifChanged old model Model.alignment $ setAlignment   model textBox
-        ifChanged old model Model.value     $ setValueLabel  model textBox
-        ifChanged old model Model.isEditing $ do
+        whenChanged old model Model.alignment $ setAlignment   model textBox
+        whenChanged old model Model.value     $ setValueLabel  model textBox
+        whenChanged old model Model.isEditing $ do
             if old ^. Model.isEditing then doneEditing'  textBox
                                       else startEditing' textBox $ lazyTextToJSString $ model ^. Model.value
+        whenChanged old model Model.size  $ UI.setSize id model
 
 instance CompositeWidget Model.TextBox where
     createWidget _   _ = return ()

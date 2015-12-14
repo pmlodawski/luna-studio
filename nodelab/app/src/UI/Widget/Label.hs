@@ -12,6 +12,7 @@ import           Object.Widget
 import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
 import qualified Object.Widget.Label           as Model
 
+import           UI.Generic                    (whenChanged)
 import qualified UI.Generic                    as UI
 import qualified UI.Registry                   as UI
 import           UI.Widget                     (UIWidget (..))
@@ -44,6 +45,7 @@ instance UIDisplayObject Model.Label where
     updateUI id old model = do
         widget <- UI.lookup id :: IO Label
         setLabel   model widget
+        whenChanged old model Model.size  $ UI.setSize id model
 
 instance CompositeWidget Model.Label where
     createWidget _   _ = return ()

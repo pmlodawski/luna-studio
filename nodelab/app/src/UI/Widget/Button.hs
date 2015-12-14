@@ -12,6 +12,7 @@ import           Object.Widget
 import qualified Object.Widget.Button          as Model
 import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
 
+import           UI.Generic                    (whenChanged)
 import qualified UI.Generic                    as UI
 import qualified UI.Registry                   as UI
 import           UI.Widget                     (UIWidget (..))
@@ -48,9 +49,9 @@ instance UIDisplayObject Model.Button where
 
     updateUI id old model = do
         widget <- UI.lookup id :: IO Button
-        setLabel   model widget
-        setEnabled model widget
-
+        whenChanged old model Model.label   $ setLabel   model widget
+        whenChanged old model Model.enabled $ setEnabled model widget
+        whenChanged old model Model.size    $ UI.setSize id model
 
 instance CompositeWidget Model.Button where
     createWidget _   _ = return ()

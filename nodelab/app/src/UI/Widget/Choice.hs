@@ -12,6 +12,7 @@ import           Object.Widget
 import qualified Object.Widget.Choice          as Model
 import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
 
+import           UI.Generic                    (whenChanged)
 import qualified UI.Generic                    as UI
 import qualified UI.Registry                   as UI
 import           UI.Widget                     (UIWidget (..))
@@ -36,4 +37,5 @@ instance UIDisplayObject Model.Choice where
         UI.register id widget
         Widget.add widget parent
 
-    updateUI id old model = return ()
+    updateUI id old model = do
+        whenChanged old model Model.size  $ UI.setSize id model

@@ -12,6 +12,7 @@ import           Object.Widget
 import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
 import qualified Object.Widget.Group           as Model
 
+import           UI.Generic                    (whenChanged)
 import qualified UI.Generic                    as UI
 import qualified UI.Registry                   as UI
 import           UI.Widget                     (UIWidget (..))
@@ -36,7 +37,8 @@ instance UIDisplayObject Model.Group where
         UI.register id group
         Widget.add group parent
 
-    updateUI id old model = return ()
+    updateUI id old model = do
+        whenChanged old model Model.size  $ UI.setSize id model
 
 instance CompositeWidget Model.Group where
     createWidget _   _ = return ()

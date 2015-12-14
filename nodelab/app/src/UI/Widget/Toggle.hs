@@ -12,6 +12,7 @@ import           Object.Widget
 import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
 import qualified Object.Widget.Toggle          as Model
 
+import           UI.Generic                    (whenChanged)
 import qualified UI.Generic                    as UI
 import qualified UI.Registry                   as UI
 import           UI.Widget                     (UIWidget (..))
@@ -53,9 +54,10 @@ instance UIDisplayObject Model.Toggle where
     updateUI id old model = do
         slider <- UI.lookup id :: IO Toggle
 
-        setLabel       model slider
-        setValue       model slider
-        setFocus       model slider
+        whenChanged old model Model.label   $ setLabel model slider
+        whenChanged old model Model.value   $ setValue model slider
+        whenChanged old model Model.focused $ setFocus model slider
+        whenChanged old model Model.size    $ UI.setSize id model
 
 
 instance CompositeWidget Model.Toggle where

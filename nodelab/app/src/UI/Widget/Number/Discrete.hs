@@ -12,6 +12,7 @@ import           Object.UITypes
 import           Object.Widget
 import qualified Object.Widget.Number.Discrete as Model
 
+import           UI.Generic                    (whenChanged)
 import qualified UI.Generic                    as UI
 import qualified UI.Registry                   as UI
 import qualified UI.Widget                     as Widget
@@ -36,4 +37,5 @@ instance UIDisplayObject Model.DiscreteNumber where
 
     updateUI id old model = do
         slider <- UI.lookup id :: IO Number
-        setLabel model slider
+        whenChanged old model Model.label $ setLabel model slider
+        whenChanged old model Model.size  $ UI.setSize id model

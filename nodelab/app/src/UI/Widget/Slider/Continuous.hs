@@ -14,6 +14,7 @@ import           Object.Widget.Slider.Continuous (ContinuousSlider)
 import qualified Object.Widget.Slider.Continuous as Model
 import           Object.Widget.CompositeWidget   (CompositeWidget, createWidget, updateWidget)
 
+import           UI.Generic                    (whenChanged)
 import qualified UI.Generic                      as UI
 import qualified UI.Registry                     as UI
 import qualified UI.Widget                       as Widget
@@ -45,6 +46,6 @@ instance UIDisplayObject Model.ContinuousSlider where
 
     updateUI id old model = do
         slider <- UI.lookup id :: IO Slider
-
-        setLabel       model slider
-        setValue       model slider
+        whenChanged old model Model.label $ setLabel model slider
+        whenChanged old model Model.value $ setValue model slider
+        whenChanged old model Model.size  $ UI.setSize id model

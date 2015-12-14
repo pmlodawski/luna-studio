@@ -12,6 +12,7 @@ import           Object.Widget
 import qualified Object.Widget.Choice.RadioButton as Model
 import           Object.Widget.CompositeWidget    (CompositeWidget, createWidget, updateWidget)
 
+import           UI.Generic                    (whenChanged)
 import qualified UI.Generic                       as UI
 import qualified UI.Registry                      as UI
 import           UI.Widget                        (UIWidget (..))
@@ -49,8 +50,9 @@ instance UIDisplayObject Model.RadioButton where
     updateUI id old model = do
         widget <- UI.lookup id :: IO RadioButton
 
-        setLabel model widget
-        setValue model widget
+        whenChanged old model Model.label    $ setLabel model widget
+        whenChanged old model Model.selected $ setValue model widget
+        whenChanged old model Model.size     $ UI.setSize id model
 
 instance CompositeWidget Model.RadioButton where
     createWidget _   _ = return ()
