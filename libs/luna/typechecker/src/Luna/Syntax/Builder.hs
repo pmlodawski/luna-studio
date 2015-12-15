@@ -329,7 +329,7 @@ instance ( Builder.BuilderMonad (Graph n e) m
         let ii = inputs (uncoat node) :: [Ref Edge]
         mapM_ unregisterEdge ii
         destructCoat node
-        Builder.modify_ $ nodes %~ free (deref ref) 
+        Builder.modify_ $ nodes %~ free (deref ref)
 
 
 class Monad m => RefReader ref m a | ref m -> a where readRef :: Ref ref -> m a

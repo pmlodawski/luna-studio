@@ -1,4 +1,7 @@
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE KindSignatures       #-}
+{-# LANGUAGE TypeFamilies         #-}
+
 module Luna.Syntax.Symbol.Map where
 
 import Prologue
