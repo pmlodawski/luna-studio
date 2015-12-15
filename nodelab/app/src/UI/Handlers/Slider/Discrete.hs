@@ -2,17 +2,18 @@ module UI.Handlers.Slider.Discrete where
 
 import           Utils.PreludePlus
 
-import           Utils.Vector
+import           Utils.Vector                  (Vector2(..), x, y)
 import           Data.HMap.Lazy                (HTMap, TypeKey (..))
 import qualified Data.Text.Lazy                as Text
 import           Data.Text.Lazy.Read           (decimal)
 
-import           Event.Keyboard                (KeyMods (..))
+import           Event.Keyboard                (KeyMods (..), shift)
 import qualified Event.Mouse                   as Mouse
 import           Object.UITypes                (WidgetId)
 import           Object.Widget                 (DblClickHandler, DragEndHandler, DragMoveHandler, KeyUpHandler,
                                                 MousePressedHandler, UIHandlers, currentPos, dblClick, dragEnd,
-                                                dragMove, keyMods, keyUp, mousePressed, startPos)
+                                                dragMove, keyMods, keyUp, mousePressed, startPos, click,
+                                                ClickHandler)
 import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
 import qualified Object.Widget.Slider.Discrete as Model
 import qualified Object.Widget.TextBox         as TextBox
@@ -50,7 +51,7 @@ keyUpHandler _ _ _ _ = return ()
 startSliderDrag :: MousePressedHandler Global.State
 startSliderDrag evt _ id = do
     enabled <- isEnabled id
-    when enabled $ do
+    when (enabled && (evt ^. Mouse.button == Mouse.LeftButton)) $ do
         value <- inRegistry $ UICmd.get id Model.boundedValue
         inRegistry $ UICmd.update_ id $ Model.dragStartValue .~ (Just value)
         startDrag evt id
@@ -81,19 +82,25 @@ dragEndHandler _ _ id = do
 dblClickHandler :: DblClickHandler Global.State
 dblClickHandler evt _ id = do
     enabled <- isEnabled id
-    when enabled $ case evt ^. Mouse.keyMods of
-        KeyMods True _ _ _ -> do
-            width <- inRegistry $ UICmd.get id $ Model.size . x
-            let normValue = (evt ^. Mouse.position ^. x) / width
-            widget <- inRegistry $ UICmd.update id $ Model.boundedNormValue .~ normValue
-            triggerValueChanged (widget ^. Model.value) id
-        KeyMods False _ _ _ -> do
-            (tbId:_) <- inRegistry $ UICmd.children id
-            takeFocus undefined tbId
-            inRegistry $ UICmd.update_ tbId $ TextBox.isEditing .~ True
+    let shiftDown = evt ^. Mouse.keyMods . shift
+    when (enabled && not shiftDown) $ do
+        (tbId:_) <- inRegistry $ UICmd.children id
+        takeFocus undefined tbId
+        inRegistry $ UICmd.update_ tbId $ TextBox.isEditing .~ True
+
+clickHandler :: DblClickHandler Global.State
+clickHandler evt _ id = do
+    enabled <- isEnabled id
+    let shiftDown = evt ^. Mouse.keyMods . shift
+    when (enabled && shiftDown) $ do
+        width <- inRegistry $ UICmd.get id $ Model.size . x
+        let normValue = (evt ^. Mouse.position ^. x) / width
+        widget <- inRegistry $ UICmd.update id $ Model.boundedNormValue .~ normValue
+        triggerValueChanged (widget ^. Model.value) id
 
 widgetHandlers :: UIHandlers Global.State
 widgetHandlers = def & keyUp        .~ keyUpHandler
+                     & click        .~ clickHandler
                      & dblClick     .~ dblClickHandler
                      & mousePressed .~ startSliderDrag
                      & dragMove     .~ dragHandler

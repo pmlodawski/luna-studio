@@ -7,6 +7,7 @@ import qualified Data.Text.Lazy                as Text
 import           Data.Text.Lazy.Read           (decimal)
 import           Utils.Vector
 
+import qualified Event.Mouse                     as Mouse
 import           Object.Widget                 (DblClickHandler, DragEndHandler, DragMoveHandler, KeyUpHandler,
                                                 MousePressedHandler, UIHandlers, WidgetId, currentPos, dblClick,
                                                 dragEnd, dragMove, keyMods, keyUp, mousePressed, startPos)
@@ -48,7 +49,7 @@ keyUpHandler _   _ _ _  = return ()
 startSliderDrag :: MousePressedHandler Global.State
 startSliderDrag evt _ id = do
     enabled <- isEnabled id
-    when enabled $ do
+    when (enabled && (evt ^. Mouse.button == Mouse.LeftButton)) $ do
         value <- inRegistry $ UICmd.get id Model.value
         inRegistry $ UICmd.update_ id $ Model.dragStartValue .~ (Just value)
         startDrag evt id
