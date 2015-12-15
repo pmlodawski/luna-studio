@@ -5,7 +5,7 @@ LabeledWidget = require('Widget/LabeledWidget')
 
 class Toggle extends LabeledWidget
   constructor: (widgetId, width, height) ->
-    super widgetId, width, height
+    super widgetId, width, height, true
     @createIndicator()
     @relayout()
 

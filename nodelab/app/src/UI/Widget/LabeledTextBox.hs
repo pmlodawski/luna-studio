@@ -26,8 +26,8 @@ newtype LabeledTextBox = LabeledTextBox JSVal deriving (PToJSVal, PFromJSVal)
 
 instance UIWidget LabeledTextBox
 
-foreign import javascript unsafe "new LabeledWidget($1, $2, $3)"  create'           :: Int            -> Double -> Double -> IO LabeledTextBox
-foreign import javascript unsafe "$1.setLabel($2)"                setLabel'         :: LabeledTextBox -> JSString         -> IO ()
+foreign import javascript unsafe "new LabeledWidget($1, $2, $3, true)"  create'           :: Int            -> Double -> Double -> IO LabeledTextBox
+foreign import javascript unsafe "$1.setLabel($2)"                      setLabel'         :: LabeledTextBox -> JSString         -> IO ()
 
 create :: WidgetId -> Model.LabeledTextBox -> IO LabeledTextBox
 create oid model = do

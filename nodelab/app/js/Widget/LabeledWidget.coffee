@@ -8,7 +8,7 @@ textMaterial = require('font/text_material').hud
 BaseWidget   = require('Widget/BaseWidget')
 
 class LabeledWidget extends BaseWidget
-  constructor: (widgetId, width, height) ->
+  constructor: (widgetId, width, height, transparent = false) ->
     super widgetId, width, height
 
     @bgUniforms =
@@ -20,7 +20,11 @@ class LabeledWidget extends BaseWidget
 
     @container = @mesh
 
+    if transparent
+      @bgShader = require('shaders/transparent.frag')()
+
     @createBg()
+
 
   bgShader: require('shaders/generic_bg.frag')()
 
