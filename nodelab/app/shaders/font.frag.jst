@@ -17,7 +17,7 @@ void main() {
 
     vec4 texColor = texture2D(map, vUv);
     float dst = texColor.a;
-    float modFactor = (camFactor - 1.0) * 0.3 + 1.0;
+    float modFactor = (camFactor - 1.0) * 0.9 + 1.0;
     float afwidth = smooth/modFactor * SQRT2 / (2.0 * gl_FragCoord.w);
     float alpha = smoothstep(0.5 - afwidth, 0.5 + afwidth, dst);
 
