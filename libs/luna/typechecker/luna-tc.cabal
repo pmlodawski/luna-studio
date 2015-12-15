@@ -53,6 +53,7 @@ Library
 
     Exposed-modules: 
         Luna.Diagnostic.AST,
+        Luna.Interpreter.NodeRunner,
         Luna.Interpreter.Session,
         Luna.Repr.Styles,
         Luna.Syntax.AST,
