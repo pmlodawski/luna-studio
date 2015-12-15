@@ -98,6 +98,7 @@ Library
                  , text
                  , transformers
                  , vector
+                 , exceptions
 
 
 
