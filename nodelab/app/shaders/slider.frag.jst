@@ -1,6 +1,9 @@
 precision mediump float;
 
 uniform float value;
+uniform float ticks;
+uniform float tickSpan;
+uniform float tickOffset;
 
 <%= require('shaders/stdlib')() %>
 
@@ -21,9 +24,11 @@ void main(void) {
     float radius = height / 2.0;
     float gRect           = sdf_rect(p, vec2(width, height), vec4(radius, radius, radius, radius));
     float gRightHalfplane = sdf_halfplaneRight(translate(p, vec2(-width/2.0 + width1, 0)));
-    float gLeftHalfplane  = sdf_halfplaneLeft (translate(p, vec2(-width/2.0 + width1, 0)));
 
-    float gSliderLeft  = sdf_aa(sdf_subtract(gLeftHalfplane,  gRect));
+    vec2  tickPos    = vec2(mod(ulocal.x - tickSpan / 2.0 + tickOffset, tickSpan) - tickSpan / 2.0, p.y - (height / 2.0) + (height / 16.0));
+    vec2  tickSize   = vec2(height / 8.0, height / 8.0);
+    float gTick        = sdf_rect(tickPos, tickSize);
+    float gSlider      = sdf_aa(gRect);
     float gSliderRight = sdf_aa(sdf_subtract(gRightHalfplane, gRect));
 
     vec4 color1 = vec4(0.25, 0.25, 0.25, 1.0);
@@ -31,6 +36,7 @@ void main(void) {
 
     gl_FragColor = vec4(0.0, 0.0, 0.0, 0.0);
 
-    gl_FragColor = mix(color1, gl_FragColor, 1.0 - gSliderLeft);
+    gl_FragColor = mix(color1, gl_FragColor, 1.0 - gSlider);
     gl_FragColor = mix(color2, gl_FragColor, 1.0 - gSliderRight);
+    gl_FragColor = mix(vec4(1.0, 1.0, 1.0, 1.0), gl_FragColor, (1.0 - ticks * 0.4 * sdf_aa(sdf_intersect(gRect, gTick))));
 }

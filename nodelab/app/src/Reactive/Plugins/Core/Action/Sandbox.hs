@@ -57,7 +57,7 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.in
     let widget = ContinuousSlider.create (Vector2 180 20) "ContinuousSlider" (-2.0) 5.0 3.0
     UICmd.register parent widget def
 
-    let widget = DiscreteSlider.create (Vector2 180 20) "DiscreteSlider" (-20) 80 30
+    let widget = DiscreteSlider.create (Vector2 180 20) "DiscreteSlider" (-15) 80 30
     UICmd.register parent widget def
 
     let widget = DiscreteSlider.create (Vector2 180 20) "DiscreteSlider" 3 8 4

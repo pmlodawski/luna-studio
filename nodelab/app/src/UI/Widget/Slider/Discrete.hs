@@ -18,13 +18,14 @@ import           UI.Generic                    (whenChanged)
 import qualified UI.Generic                    as UI
 import qualified UI.Registry                   as UI
 import qualified UI.Widget                     as Widget
-import           UI.Widget.Slider              (Slider, create', setFocus', setLabel', setValue', setValueLabel')
+import           UI.Widget.Slider              (Slider, create', setFocus', setLabel', setValue', setValueLabel', setTicks', limitTicks)
 
 createSlider :: WidgetId -> Model.DiscreteSlider -> IO Slider
 createSlider oid model = do
     slider      <- create' oid (model ^. Model.size . x) (model ^. Model.size . y)
     setLabel       model slider
     setValue       model slider
+    setTicks       model slider
     UI.setWidgetPosition (model ^. widgetPosition) slider
     return slider
 
@@ -37,6 +38,10 @@ setFocus = flip setFocus'
 setValue :: Model.DiscreteSlider -> Slider -> IO ()
 setValue model slider = setValue' slider $ model ^. Model.boundedNormValue
 
+setTicks :: Model.DiscreteSlider -> Slider -> IO ()
+setTicks model slider = setTicks' slider True offset span where
+    (offset, span) = limitTicks (model ^. Model.minValue) (model ^. Model.maxValue) (model ^. Model.size . x)
+
 instance UIDisplayObject Model.DiscreteSlider where
     createUI parentId id model = do
         slider   <- createSlider id model
@@ -48,4 +53,7 @@ instance UIDisplayObject Model.DiscreteSlider where
         slider <- UI.lookup id :: IO Slider
         whenChanged old model Model.label $ setLabel model slider
         whenChanged old model Model.value $ setValue model slider
-        whenChanged old model Model.size  $ UI.setSize id model
+        whenChanged old model Model.size  $ do
+            setTicks model slider
+            UI.setSize id model
+        whenChanged old model Model.range $ setTicks model slider
