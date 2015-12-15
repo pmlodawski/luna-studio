@@ -13,13 +13,12 @@ void main(void) {
 
     float radius = min(size.x, size.y) / 2.0 * 0.8;
 
-    float border      = radius * 0.1;
     float radiusOuter = radius * 1.0;
     float radiusInner = radius * 0.6;
     float radiusRadio = radius * 0.4;
 
     float gDisk     = sdf_ball(p, radiusOuter);
-    float gCircle   = sdf_borderOut(border, sdf_sphere(p, radiusInner));
+    float gCircle   = sdf_ball(p, radiusInner);
     float gRadio    = sdf_ball(p, radiusRadio);
 
     vec4 colorBackground = vec4(0.6, 0.6, 0.6, 1.0);
@@ -29,6 +28,6 @@ void main(void) {
 
     gl_FragColor = mix(colorBackground, gl_FragColor, 1.0 - sdf_aa(gDisk));
     gl_FragColor = mix(colorCircle,     gl_FragColor, 1.0 - sdf_aa(gCircle));
-    gl_FragColor = mix(colorCircle,     gl_FragColor, 1.0 - sdf_aa(gRadio) * float(1 - value));
+    gl_FragColor = mix(colorBackground, gl_FragColor, 1.0 - sdf_aa(gRadio) * float(value));
 }
 
