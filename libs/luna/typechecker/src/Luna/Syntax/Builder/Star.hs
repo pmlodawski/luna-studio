@@ -1,17 +1,19 @@
 {-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE UndecidableInstances   #-}
 
 module Luna.Syntax.Builder.Star where
 
-import           Flowbox.Prelude
-import qualified Control.Monad.State as State
+import qualified Control.Monad.Catch      as Catch
 import           Control.Monad.Fix
+import qualified Control.Monad.State      as State
+import           Flowbox.Prelude
+import qualified Language.Haskell.Session as HS
 
 -- TODO: template haskellize
 -- >->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->
 
 newtype StarBuilderT g m a = StarBuilderT { fromStarBuilderT :: State.StateT g m a }
-                             deriving (Functor, Monad, Applicative, MonadIO, MonadPlus, MonadTrans, Alternative, MonadFix)
+                             deriving (Functor, Monad, Applicative, MonadIO, MonadPlus, MonadTrans, Alternative, MonadFix, HS.GhcMonad, HS.ExceptionMonad, HS.HasDynFlags, Catch.MonadMask, Catch.MonadCatch, Catch.MonadThrow)
 
 type StarBuilder g = StarBuilderT g Identity
 

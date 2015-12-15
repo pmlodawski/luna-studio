@@ -1,10 +1,10 @@
 module Luna.Interpreter.Session where
 
-import qualified Language.Haskell.Session as HS
-import Unsafe.Coerce
+import           GHC.Prim                           (Any)
+import qualified Language.Haskell.Session           as HS
 import qualified Language.Haskell.Session.Hint.Eval as HEval
-import Prologue
-import GHC.Prim (Any)
+import           Prologue
+import           Unsafe.Coerce
 
 
 
@@ -13,10 +13,9 @@ type Type = String
 
 
 
-findSymbol :: Name -> Type -> HS.Session Any
+findSymbol :: HS.SessionMonad m => Name -> Type -> m Any
 findSymbol n t =  unsafeCoerce <$> HEval.interpretTyped n t
--- applyStringArg :: String -> Any -> Any
--- appArg 2 f
+
 appArg :: Any -> Any -> Any
 appArg = unsafeCoerce
 
