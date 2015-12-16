@@ -23,7 +23,7 @@ import           Reactive.State.Global           (inRegistry)
 import qualified Reactive.State.Global           as Global
 import           Reactive.State.UIRegistry       (addHandler)
 
-import           UI.Generic                      (startDrag, takeFocus)
+import           UI.Generic                      (startDrag, takeFocus, whenChanged)
 import           UI.Handlers.Generic             (ValueChangedHandler (..), triggerValueChanged)
 import qualified UI.Handlers.TextBox             as TextBox
 import           UI.Widget.Number                (keyModMult)
@@ -135,6 +135,10 @@ instance CompositeWidget Model.ContinuousSlider where
     updateWidget id old model = do
         (tbId:_) <- UICmd.children id
         UICmd.update_ tbId $ TextBox.value .~ (Text.pack $ model ^. Model.displayValue)
-
-
+        whenChanged old model Model.size $ do
+            let tx      = (model ^. Model.size . x) / 2.0
+                ty      = (model ^. Model.size . y)
+                sx      = tx - (model ^. Model.size . y / 2.0)
+            UICmd.update tbId $ TextBox.size .~ (Vector2 sx ty)
+            UICmd.moveX tbId tx
 

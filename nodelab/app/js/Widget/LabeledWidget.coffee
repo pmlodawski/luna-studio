@@ -65,6 +65,7 @@ class LabeledWidget extends BaseWidget
   relayout: ->
     @bg.scale.x = @width
     @bg.scale.y = @height
+    @bgUniforms.size.value.set @width,  @height
 
     if @label
       @label.position.x = @height / 2.0
