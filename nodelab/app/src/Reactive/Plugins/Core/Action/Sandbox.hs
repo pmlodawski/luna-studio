@@ -40,7 +40,11 @@ import           Object.UITypes
 import           Object.Widget
 import           Reactive.State.Global            (inRegistry)
 import           UI.Layout                        as Layout
+import           UI.Handlers.Generic              (ValueChangedHandler(..))
 
+
+f1 = '\112'
+f2 = '\113'
 
 toAction :: Event -> Maybe (Command Global.State ())
 toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.inRegistry $ do
@@ -78,6 +82,27 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.in
               <> (AnyLunaValue <$> [True, False, True])
         widget = List.createList "List" values $ AnyLunaValue (-1 :: Int)
     UICmd.register_ parent widget def
+
+    Layout.verticalLayout 10.0 parent
+
+    return ()
+
+toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\113' _)) = Just $ Global.inRegistry $ do
+    performIO $ putStrLn "show sandbox"
+    let widget = Group.create
+    parent <- UICmd.register sceneGraphId widget def
+
+    let widget = ContinuousSlider.create (Vector2 180 20) "ContinuousSlider" (-2.0) 5.0 3.0
+    resizableWidget <- UICmd.register sceneGraphId widget def
+    UICmd.moveX resizableWidget 200
+
+    let widget = ContinuousNumber.create (Vector2 180 20) "Width" 180
+    UICmd.register parent widget $ addHandler (ValueChangedHandler $ \val _ -> inRegistry $ UICmd.update_ resizableWidget $ ContinuousSlider.size . x .~ val)
+                                 $ mempty
+
+    let widget = ContinuousNumber.create (Vector2 180 20) "Height" 20
+    UICmd.register parent widget (addHandler (ValueChangedHandler $ \val _ -> inRegistry $ UICmd.update_ resizableWidget $ ContinuousSlider.size . y .~ val) mempty)
+
 
     Layout.verticalLayout 10.0 parent
 
