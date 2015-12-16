@@ -25,10 +25,12 @@ class TextBox extends BaseWidget
       align: @alignment
       mode: 'pre'
     width = layoutText(layout).width * 0.8 * config.fontSize
-    geometry = createText(layout)
+    layout.width = @width / (0.8 * config.fontSize)
+    width = Math.min width, @width
+    geometry = createText layout
     material = textMaterial()
 
-    @valueLabel = new (THREE.Mesh)(geometry, material)
+    @valueLabel = new THREE.Mesh(geometry, material)
     @valueLabel.scale.multiplyScalar 0.8 * config.fontSize
     @valueLabel.position.y = 5 + @height / 2.0
     @valueLabel.position.x = switch @alignment
@@ -57,6 +59,7 @@ class TextBox extends BaseWidget
       width: @width
       textAlign: @alignment
     input.val value
+    setTimeout (-> input.select()), 10
 
     saveChanges = ->
       evt = new Event('keydown')

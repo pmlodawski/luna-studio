@@ -17,14 +17,16 @@ class Label extends BaseWidget
     @uniforms[k] = v for k, v of $$.commonUniforms
 
   setLabel: (text) ->
+    @text = text
     @mesh.remove @label if @label
 
     geometry = createText(
       text: text
       font: font
-      align: 'center')
+      align: 'center'
+      width: @width / config.fontSize
+      mode:  'pre')
 
-    textWidth = calculateTextWidth(text) * config.fontSize
     material = textMaterial()
 
     @label = new (THREE.Mesh)(geometry, material)
@@ -33,4 +35,7 @@ class Label extends BaseWidget
 
     @mesh.add @label
 
+  relayout: ->
+    super
+    @setLabel @text
 module.exports = Label

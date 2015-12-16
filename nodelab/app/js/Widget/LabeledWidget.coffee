@@ -52,6 +52,8 @@ class LabeledWidget extends BaseWidget
       text:  text
       font:  font
       align: 'left'
+      width: (@width / 2.0 - @height / 2.0) / config.fontSize
+      mode:  'pre'
 
     material = textMaterial()
 
