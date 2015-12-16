@@ -4,7 +4,7 @@
 {-# LANGUAGE RankNTypes                #-}
 {-# LANGUAGE RecursiveDo               #-}
 {-# LANGUAGE ScopedTypeVariables       #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeFamilies              #-}
 {-# LANGUAGE UndecidableInstances      #-}
 
 module Luna.Syntax.Builder ( module Luna.Syntax.Builder, module X) where

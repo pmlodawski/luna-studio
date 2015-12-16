@@ -54,7 +54,7 @@ runNode :: (HS.GhcMonad m,
             Catch.MonadMask m,
             MonadSymbolBuilder (Symbol.SymbolMap (Ref Edge)) m,
             BuilderMonad Network m)
-        => Ref Node -> ExceptT Symbol.SpecializationError m Any
+        => Ref Node -> ExceptT Symbol.SymbolError m Any
 runNode (ref :: Ref Node) = do
     node <- readRef ref
     case' (uncoat (node :: Labeled2 Int (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge))))))) $ do

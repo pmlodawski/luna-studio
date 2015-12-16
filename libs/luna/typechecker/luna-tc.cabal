@@ -85,10 +85,11 @@ Library
                  , data-layer
                  , error-util
                  , errors
+                 , extra
                  , flowbox-utils
                  , ghc
                  , ghc-prim
-                 , ghc-session
+                 , ghc-session >= 0.1.2.0
                  , graphviz >= 2999.17.0.2.2
                  , lens
                  , MissingH
