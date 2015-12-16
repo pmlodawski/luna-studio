@@ -8,17 +8,18 @@ import Prologue
 
 import           Control.Error.Operator
 import           Control.Monad.Extra         (allM, findM)
+import           Data.Layer.Coat
 import qualified Data.List                   as List
 import           Data.Map                    (Map)
 import qualified Data.Map                    as Map
 import           Luna.Syntax.AST.Arg         (NamedArg (NamedArg))
 import           Luna.Syntax.AST.Arg         (Arg (Arg))
 import           Luna.Syntax.AST.Term        (Arrow (Arrow))
-import           Luna.Syntax.Builder         (RefReader, readRef)
+import           Luna.Syntax.Builder         (RefReader, follow, readRef)
 import           Luna.Syntax.Builder.Class   (BuilderMonad)
 import qualified Luna.Syntax.Builder.Symbol  as SymbolBuilder
 import           Luna.Syntax.Name
-import           Luna.Syntax.Repr.Graph      (Ref)
+import           Luna.Syntax.Repr.Graph      (Edge, Ref)
 import           Luna.Syntax.Symbol.Network  (Network)
 import           Luna.Syntax.Symbol.QualPath (QualPath)
 
@@ -102,8 +103,8 @@ graph qpath' = fmap (view general) <$> symbolLookup qpath'
 specializations :: SymbolMonad t m => QualPath -> m (Maybe (SpecializationMap t))
 specializations qpath' = fmap (view specs) <$> symbolLookup qpath'
 
-getSpecialization :: (SymbolMonad (Ref t) m, Ord t, RefReader t (ExceptT Bool (ExceptT SymbolError m)) t0)
-                  => QualPath -> Specification (Ref t) -> ExceptT SymbolError m (Specialization (Ref t), SpecializedNetwork)
+getSpecialization :: (SymbolMonad (Ref Edge) m, BuilderMonad Network m)
+                  => QualPath -> Specification (Ref Edge) -> ExceptT SymbolError m (Specialization (Ref Edge), SpecializedNetwork)
 getSpecialization qpath' specif = SymbolBuilder.modifyM $ \symbolMap -> do
     part <- Map.lookup qpath' symbolMap <??> SymbolNotFound qpath'
     findM (specificationMatch specif . fst) (Map.toList $ part ^. specs) >>= \case
@@ -117,7 +118,7 @@ makeSpecialization :: SymbolMonad t m => Specification t -> GeneralizedNetwork
 makeSpecialization specif gen = error "Luna.Syntax.Symbol.Map.makeSpecialization: not implemented"
 
 
-specificationMatch :: (Monad m, RefReader t (ExceptT Bool m) t0) => Specification (Ref t) -> Specialization (Ref t) -> m Bool
+specificationMatch :: BuilderMonad Network m => Specification (Ref Edge) -> Specialization (Ref Edge) -> m Bool
 specificationMatch specif special = fmap (either id id) $ runExceptT $ do
     let
         arg    (NamedArg n a) = (n, a)
@@ -149,9 +150,8 @@ specificationMatch specif special = fmap (either id id) $ runExceptT $ do
     test $ allM argMatch $ Map.toList $ specif ^. args . named
 
 
-typeMatch :: (Monad m, RefReader t m t0) => Ref t -> Ref t -> m Bool
+typeMatch :: BuilderMonad Network m => Ref Edge -> Ref Edge -> m Bool
 typeMatch t1 t2 = do
-    t1' <- readRef t1
-    t2' <- readRef t2
-    -- return $ fromEnum t1' == fromEnum t2'
-    return $ error "Luna.Syntax.Symbol.Map.typesMatch: Not implemented" --
+    t1' <- readRef =<< follow t1
+    t2' <- readRef =<< follow t2
+    return $ fromEnum (uncoat t1') == fromEnum (uncoat t2')
