@@ -22,11 +22,11 @@ void main(void) {
     float width1 = width * value;
     float width2 = width * (1.0 - value);
     float radius = height / 2.0;
-    float gRect           = sdf_rect(p, vec2(width, height), vec4(radius, radius, radius, radius));
+    float gRect           = sdf_rect(p, vec2(width, height), radius);
     float gRightHalfplane = sdf_halfplaneRight(translate(p, vec2(-width/2.0 + width1, 0)));
 
-    vec2  tickPos    = vec2(mod(ulocal.x - tickSpan / 2.0 + tickOffset, tickSpan) - tickSpan / 2.0, p.y - (height / 2.0) + (height / 16.0));
-    vec2  tickSize   = vec2(height / 8.0, height / 8.0);
+    vec2  tickPos    = vec2(mod(ulocal.x - height / 16.0 + tickOffset, tickSpan) - tickSpan / 2.0, p.y - (height / 2.0) + (height / 16.0));
+    vec2  tickSize   = vec2(tickSpan - height / 8.0, height / 8.0);
     float gTick        = sdf_rect(tickPos, tickSize);
     float gSlider      = sdf_aa(gRect);
     float gSliderRight = sdf_aa(sdf_subtract(gRightHalfplane, gRect));
@@ -38,5 +38,5 @@ void main(void) {
 
     gl_FragColor = mix(color1, gl_FragColor, 1.0 - gSlider);
     gl_FragColor = mix(color2, gl_FragColor, 1.0 - gSliderRight);
-    gl_FragColor = mix(vec4(1.0, 1.0, 1.0, 1.0), gl_FragColor, (1.0 - ticks * 0.4 * sdf_aa(sdf_intersect(gRect, gTick))));
+    gl_FragColor = mix(vec4(1.0, 1.0, 1.0, 1.0), gl_FragColor, (1.0 - ticks * 0.1 * sdf_aa(sdf_intersect(gRect, gTick))));
 }
