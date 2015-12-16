@@ -48,7 +48,7 @@ renderAndOpen lst = do
 
 prettyPrint = putStrLn . ppShow
 
-sampleGraph :: ((Ref Node, Draft (Ref Edge)), Network)
+sampleGraph :: ((Ref Node, SymbolMap (Ref Edge)), Network)
 sampleGraph = runIdentity
       $ flip StarBuilder.evalT Nothing
       $ flip Builder.runT def
@@ -63,12 +63,26 @@ sampleGraph = runIdentity
             arr      <- arrow [consInt, consInt] Map.empty consInt
             appPlus  <- app accPlus [arg i2, arg i3] `typed` arr
 
-            arrNode <- readRef arr
-            return (appPlus, uncoat arrNode)
+            nameFloat <- _string "Float"
+            consFloat <- cons nameFloat
+            nameInt   <- _string "Int"
+            consInt   <- cons nameInt
+            arr1      <- readRef =<< arrow [consInt  , consInt  ] Map.empty consInt
+            arr2      <- readRef =<< arrow [consInt  , consFloat] Map.empty consInt
+            arr3      <- readRef =<< arrow [consInt  , consInt  ] Map.empty consFloat
+            arr4      <- readRef =<< arrow [consFloat, consInt  ] Map.empty consInt
+            arr5      <- readRef =<< arrow [consFloat, consFloat] Map.empty consInt
+
+            let mkItem arr = Symbol.PartiallySpecializedNetwork def $ Map.fromList $ map (\a -> (Symbol.fromArrow' $ matchArrow $ (uncoat a), def)) arr
+            let sm = Map.fromList $ [("Int.+", mkItem ([arr1, arr2, arr3, arr4, arr5] ))]
+
+            return (appPlus, sm)
 
 
 mkSymbolMap :: Arrow t -> SymbolMap t
 mkSymbolMap arr = Map.fromList [("Int.+", Symbol.PartiallySpecializedNetwork def $ Map.singleton (Symbol.fromArrow' arr) def )]
+
+
 
 runGraph gr sm = runIdentityT
             . flip SymbolBuilder.evalT sm
@@ -77,8 +91,8 @@ runGraph gr sm = runIdentityT
             . flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
 
 
-evaluateTest :: Ref Node -> Arrow (Ref Edge) -> Network -> IO ((), Network)
-evaluateTest i a gr = Session.run $ runGraph gr (mkSymbolMap a) $  do
+evaluateTest :: Ref Node -> SymbolMap (Ref Edge) -> Network -> IO ((), Network)
+evaluateTest i sm gr = Session.run $ runGraph gr sm $  do
     Right r <-  runExceptT $   NodeRunner.runNode i
     putStrLn "RESULT IS:"
     print (Session.unsafeCast r :: Int)
@@ -86,7 +100,7 @@ evaluateTest i a gr = Session.run $ runGraph gr (mkSymbolMap a) $  do
 
 main :: IO ()
 main = do
-    let ((i, a), g) = sampleGraph
+    let ((i, sm), g) = sampleGraph
     -- let (lmap, gs) = addStdLiterals g
     -- let (unis, g2) = pass2 lmap gs
     -- let (_   , g3) = pass3 lmap unis g2
@@ -97,7 +111,8 @@ main = do
     --             --   , ("g3", g3)
     --               ]
     -- renderAndOpen [ ("g" , g)]
-    let arr = case' a $ match $ \ar@(Arrow {}) -> ar
     pprint g
-    _ <- evaluateTest i arr g
+    _ <- evaluateTest i sm g
     putStrLn "end"
+
+matchArrow arr = case' arr $ match $ \a@(Arrow {}) -> a
