@@ -100,7 +100,6 @@ mouseHandler event tag =
 mouseDownHandler     = mouseHandler mouseDown  Mouse.Pressed
 mouseUpHandler       = mouseHandler mouseUp    Mouse.Released
 mouseMovedHandler    = mouseHandler mouseMove  Mouse.Moved
-mouseClickHandler    = mouseHandler click      Mouse.Clicked
 mouseDblClickHandler = mouseHandler dblClick   Mouse.DblClicked
 
 mouseWheelHandler :: AddHandler Event

@@ -42,7 +42,6 @@ makeNetworkDescription conn logging workspace = do
                    , Handlers.mouseDownHandler
                    , Handlers.mouseUpHandler
                    , Handlers.mouseMovedHandler
-                   , Handlers.mouseClickHandler
                    , Handlers.mouseDblClickHandler
                    , Handlers.mouseWheelHandler
                    , Handlers.keyDownHandler

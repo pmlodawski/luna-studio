@@ -29,6 +29,7 @@ toAction (Mouse jsState event) = Just $ do
     handleMouseOverOut jsState event
     handleMouseDrag    jsState event
     handleMouseGeneric jsState event
+    handleMouseClick   jsState event
 toAction (Keyboard jsState event) = Just $ handleKeyboardGeneric jsState event
 toAction _ = Nothing
 
@@ -111,7 +112,6 @@ handleMouseDrag jsState (Mouse.Event Mouse.Moved absPos _ keymods _) = do
             let handlers = widgetHandlers (file ^. widget)
             (handlers ^. dragMove) dragState jsState (dragState ^. Widget.widgetId)
 
-
 handleMouseDrag jsState (Mouse.Event Mouse.Released _ _ _ _) = do
     dragState <- use $ Global.uiRegistry . UIRegistry.dragState
 
@@ -123,3 +123,15 @@ handleMouseDrag jsState (Mouse.Event Mouse.Released _ _ _ _) = do
 
         Global.uiRegistry . UIRegistry.dragState .= Nothing
 handleMouseDrag _ _ = return ()
+
+handleMouseClick :: JSState -> Mouse.RawEvent -> Command Global.State ()
+handleMouseClick jsState (Mouse.Event Mouse.Pressed _ Mouse.LeftButton _ (Just (EventWidget widgetId _ _))) = do
+    Global.uiRegistry . UIRegistry.mouseDownWidget .= Just widgetId
+handleMouseClick jsState event@(Mouse.Event Mouse.Released _ Mouse.LeftButton _ (Just (EventWidget widgetId _ _))) = do
+    previousWidget <- use $ Global.uiRegistry . UIRegistry.mouseDownWidget
+    when (previousWidget == (Just widgetId)) $ do
+        let modEvent = event & Mouse.tpe .~ Mouse.Clicked
+        handleMouseGeneric jsState modEvent
+    Global.uiRegistry . UIRegistry.mouseDownWidget .= Nothing
+
+handleMouseClick _ _ = return ()

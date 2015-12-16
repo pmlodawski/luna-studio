@@ -46,15 +46,17 @@ data State = State { _widgets         :: WidgetMap
                    , _widgetOver      :: Maybe WidgetId
                    , _dragState       :: Maybe DragState
                    , _focusedWidget   :: Maybe WidgetId
+                   , _mouseDownWidget :: Maybe WidgetId
                    } deriving (Generic)
 
 makeLenses ''State
 
 instance ToJSON State where
-    toJSON st = object [ ("_widgets"      , intMapToJSON $ st ^. widgets)
-                       , ("_widgetOver"   , toJSON $ st ^. widgetOver   )
-                       , ("_dragState"    , toJSON $ st ^. dragState    )
-                       , ("_focusedWidget", toJSON $ st ^. focusedWidget)
+    toJSON st = object [ ("_widgets"        , intMapToJSON $ st ^. widgets  )
+                       , ("_widgetOver"     , toJSON $ st ^. widgetOver     )
+                       , ("_dragState"      , toJSON $ st ^. dragState      )
+                       , ("_focusedWidget"  , toJSON $ st ^. focusedWidget  )
+                       , ("_mouseDownWidget", toJSON $ st ^. mouseDownWidget)
                        ]
 
 instance Eq State where
@@ -72,7 +74,7 @@ defaultWidgets = [ (sceneInterfaceId,     sceneInterface)
     currentConnection = WidgetFile currentConnectionId (toCtxDynamic $ CurrentConnection False def def def) Nothing [] def
 
 instance Default State where
-    def = State (fromList defaultWidgets) def def def
+    def = State (fromList defaultWidgets) def def def def
 
 lookup :: WidgetId -> State -> Maybe (WidgetFile DisplayObject)
 lookup idx state = IntMap.lookup idx (state ^. widgets)
