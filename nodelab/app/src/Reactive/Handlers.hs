@@ -45,6 +45,7 @@ import qualified BatchConnector.Connection as Connection
 
 foreign import javascript unsafe "window.common" getJSState :: IO JSState
 
+backspace = 8
 
 readKeyMods :: (MouseEvent.IsMouseEvent e) => EventM t e Keyboard.KeyMods
 readKeyMods = do
@@ -133,8 +134,8 @@ keyHandler :: EventName Element KeyboardEvent.KeyboardEvent -> EventM Element Ke
 keyHandler event getter tag = AddHandler $ \h -> do
     window <- fromJust <$> eventObject
     window `on` event $ do
-        preventDefault
         key     <- getter
+        when (key == backspace) $ preventDefault
         keyMods <- readKeyMods'
         jsState <- liftIO getJSState
         liftIO . h $ Keyboard jsState $ Keyboard.Event tag (chr key) keyMods
