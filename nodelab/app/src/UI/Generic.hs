@@ -60,6 +60,6 @@ startDrag event@(Mouse.Event eventType pos button keymods (Just (Mouse.EventWidg
     Global.uiRegistry . UIRegistry.dragState ?= DragState widgetId mat scene button keymods pos pos pos
 
 
-whenChanged :: (Eq b) => a -> a -> Getter a b -> IO () -> IO ()
+whenChanged :: (Eq b, Monad m) => a -> a -> Getter a b -> m () -> m ()
 whenChanged old new get action = if (old ^. get) /= (new ^. get) then action
                                                                  else return ()
