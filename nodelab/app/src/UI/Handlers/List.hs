@@ -38,10 +38,10 @@ import           UI.Widget.Toggle              ()
 
 deleteNth n xs = take n xs ++ drop (n+1) xs
 
-addItemHandlers :: WidgetId -> WidgetId -> HTMap
-addItemHandlers listId groupId = addHandler (Button.ClickedHandler $ addItemHandler)
+addItemHandlers :: WidgetId -> WidgetId -> Double -> HTMap
+addItemHandlers listId groupId width = addHandler (Button.ClickedHandler $ addItemHandler)
                                $ mempty where
-              addItemHandler _ = inRegistry $ addNewElement listId groupId
+              addItemHandler _ = inRegistry $ addNewElement listId groupId width
 
 removeItemHandlers :: WidgetId -> WidgetId -> WidgetId -> HTMap
 removeItemHandlers listId groupId rowId = addHandler (Button.ClickedHandler $ removeItemHandler)
@@ -57,37 +57,37 @@ listItemHandler listWidget groupId rowId val id = do
     newContent <- inRegistry $ UICmd.get listWidget List.value
     triggerValueChanged newContent listWidget
 
-makeItem :: Bool -> WidgetId -> WidgetId -> AnyLunaValue -> Int -> Command UIRegistry.State ()
-makeItem isTuple listId listGroupId elem ix = do
+makeItem :: Bool -> WidgetId -> WidgetId -> Double -> AnyLunaValue -> Int -> Command UIRegistry.State ()
+makeItem isTuple listId listGroupId width elem ix = do
     let removeButton = Button.createIcon (Vector2 20 20) "shaders/icon.minus.frag"
     groupId <- UICmd.register listGroupId Group.create def
-    createValueWidget groupId elem (Text.pack $ show ix) (addHandler (ValueChangedHandler $ listItemHandler listId listGroupId groupId) mempty)
+    createValueWidget groupId elem (Text.pack $ show ix) width (addHandler (ValueChangedHandler $ listItemHandler listId listGroupId groupId) mempty)
     when (not isTuple) $ UICmd.register_ groupId removeButton (removeItemHandlers listId listGroupId groupId)
     Layout.horizontalLayout 0.0 groupId
 
 makeListItem  = makeItem False
 makeTupleItem = makeItem True
 
-makeTuple :: WidgetId -> List -> Command UIRegistry.State WidgetId
-makeTuple parent model = do
-    contId <- UICmd.register parent model def
-    groupId <- UICmd.register contId Group.create def
+-- makeTuple :: WidgetId -> List -> Command UIRegistry.State WidgetId
+-- makeTuple parent model = do
+--     contId <- UICmd.register parent model def
+--     groupId <- UICmd.register contId Group.create def
+--
+--     let elems = (model ^. List.value) `zip` [0..]
+--     forM_ elems $ uncurry $ makeTupleItem contId groupId
+--
+--     Layout.verticalLayout 0.0 groupId
+--     Layout.verticalLayout 0.0 contId
+--
+--     return contId
 
-    let elems = (model ^. List.value) `zip` [0..]
-    forM_ elems $ uncurry $ makeTupleItem contId groupId
-
-    Layout.verticalLayout 0.0 groupId
-    Layout.verticalLayout 0.0 contId
-
-    return contId
-
-addNewElement :: WidgetId -> WidgetId -> Command UIRegistry.State ()
-addNewElement listId groupId = do
+addNewElement :: WidgetId -> WidgetId -> Double -> Command UIRegistry.State ()
+addNewElement listId groupId width = do
     list   <- UICmd.get listId $ List.value
     let ix = length list
     elem <- UICmd.get listId $ List.empty
     UICmd.update listId $ List.value <>~ [elem]
-    makeListItem listId groupId elem ix
+    makeListItem listId groupId width elem ix
 
     Layout.verticalLayout 0.0 groupId
     Layout.verticalLayout 0.0 listId
@@ -110,16 +110,23 @@ removeElement listId groupId idx = do
 
 instance CompositeWidget List where
     createWidget id model = do
-        let label     = Label.create "Param of list:"
-            addButton = Button.createIcon (Vector2 20 20) "shaders/icon.plus.frag"
+        let label        = Label.create "Param of list:"
+            addButton    = Button.createIcon (Vector2 20 20) "shaders/icon.plus.frag"
+            width        = model ^. List.size . x
+            padding      = 10
+            itemWidth    = width - addButton ^. Button.size . x - padding
+            buttonIndent = itemWidth
 
         UICmd.register_ id label def
+
         groupId     <- UICmd.register id Group.create def
-        addButtonId <- UICmd.register id addButton (addItemHandlers id groupId)
-        UICmd.moveX addButtonId 160
+        UICmd.moveX groupId padding
+
+        addButtonId <- UICmd.register id addButton (addItemHandlers id groupId itemWidth)
+        UICmd.moveX addButtonId buttonIndent
 
         let elems = (model ^. List.value) `zip` [0..]
-        forM_ elems $ uncurry $ makeListItem id groupId
+        forM_ elems $ uncurry $ makeListItem id groupId itemWidth
 
         Layout.verticalLayout 0.0 groupId
         Layout.verticalLayout 0.0 id

@@ -27,8 +27,8 @@ instance IsDisplayObject List where
     widgetPosition = position
     widgetSize     = size
 
-createList :: Text -> [AnyLunaValue] -> AnyLunaValue -> List
-createList l v e = List def def l v e False
+createList :: Double -> Text -> [AnyLunaValue] -> AnyLunaValue -> List
+createList w l v e = List def (Vector2 w 0) l v e False
 
 createTuple :: Text -> [AnyLunaValue] -> AnyLunaValue -> List
 createTuple l v e = List def def l v e True

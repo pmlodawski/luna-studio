@@ -52,35 +52,35 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.in
     let widget = Group.create
     parent <- UICmd.register sceneGraphId widget def
 
-    let widget = DiscreteNumber.create (Vector2 180 20) "Discrete" 42
+    let widget = DiscreteNumber.create (Vector2 200 20) "Discrete" 42
     UICmd.register parent widget def
 
-    let widget = ContinuousNumber.create (Vector2 180 20) "Continuous" 42.42
+    let widget = ContinuousNumber.create (Vector2 200 20) "Continuous" 42.42
     UICmd.register parent widget def
 
-    let widget = ContinuousSlider.create (Vector2 180 20) "ContinuousSlider" (-2.0) 5.0 3.0
+    let widget = ContinuousSlider.create (Vector2 200 20) "ContinuousSlider" (-2.0) 5.0 3.0
     UICmd.register parent widget def
 
-    let widget = DiscreteSlider.create (Vector2 180 20) "DiscreteSlider" (-15) 80 30
+    let widget = DiscreteSlider.create (Vector2 200 20) "DiscreteSlider" (-15) 80 30
     UICmd.register parent widget def
 
-    let widget = DiscreteSlider.create (Vector2 180 20) "DiscreteSlider" 3 8 4
+    let widget = DiscreteSlider.create (Vector2 200 20) "DiscreteSlider" 3 8 4
     UICmd.register parent widget def
 
-    let widget = Toggle.create (Vector2 180 20) "Toggle" True
+    let widget = Toggle.create (Vector2 200 20) "Toggle" True
     UICmd.register_ parent widget def
 
-    let widget = LabeledTextBox.create (Vector2 180 20) "Textbox" "foo"
+    let widget = LabeledTextBox.create (Vector2 200 20) "Textbox" "foo"
     UICmd.register_ parent widget def
 
-    let widget = Choice.create (Vector2 180 20) "Choice" ["Foo", "Bar", "Baz"] 0
+    let widget = Choice.create (Vector2 200 20) "Choice" ["Foo", "Bar", "Baz"] 0
     UICmd.register parent widget def
 
 
     let values = (AnyLunaValue <$> ([1, 2, 3, 4, 5, 6, 7] :: [Int]))
               <> (AnyLunaValue <$> ([0.1, 0.2, 0.3] :: [Double]))
               <> (AnyLunaValue <$> [True, False, True])
-        widget = List.createList "List" values $ AnyLunaValue (-1 :: Int)
+        widget = List.createList 200 "List" values $ AnyLunaValue (-1 :: Int)
     UICmd.register_ parent widget def
 
     Layout.verticalLayout 10.0 parent
@@ -92,15 +92,15 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\113' _)) = Just $ Global.in
     let widget = Group.create
     parent <- UICmd.register sceneGraphId widget def
 
-    let widget = ContinuousSlider.create (Vector2 180 20) "ContinuousSlider" (-2.0) 5.0 3.0
+    let widget = ContinuousSlider.create (Vector2 200 20) "ContinuousSlider" (-2.0) 5.0 3.0
     resizableWidget <- UICmd.register sceneGraphId widget def
     UICmd.moveX resizableWidget 200
 
-    let widget = ContinuousNumber.create (Vector2 180 20) "Width" 180
+    let widget = ContinuousNumber.create (Vector2 200 20) "Width" 200
     UICmd.register parent widget $ addHandler (ValueChangedHandler $ \val _ -> inRegistry $ UICmd.update_ resizableWidget $ ContinuousSlider.size . x .~ val)
                                  $ mempty
 
-    let widget = ContinuousNumber.create (Vector2 180 20) "Height" 20
+    let widget = ContinuousNumber.create (Vector2 200 20) "Height" 20
     UICmd.register parent widget (addHandler (ValueChangedHandler $ \val _ -> inRegistry $ UICmd.update_ resizableWidget $ ContinuousSlider.size . y .~ val) mempty)
 
 

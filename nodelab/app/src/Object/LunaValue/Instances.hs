@@ -29,21 +29,21 @@ controlHandler val id = triggerValueChanged (AnyLunaValue val) id
 
 instance LunaValue Int    where
     asLunaExpr = LunaExpression . show
-    createValueWidget' parent val label handlers = do
-        let widget    = DiscreteNumber.create (Vector2 160 20) label val
+    createValueWidget' parent val label width handlers = do
+        let widget    = DiscreteNumber.create (Vector2 width 20) label val
             handlers' = addHandler (ValueChangedHandler $ (controlHandler :: Int -> WidgetId -> Command Global.State () )) $ handlers
         UICmd.register parent widget handlers'
 
 instance LunaValue Double where
     asLunaExpr = LunaExpression . show
-    createValueWidget' parent val label handlers = do
-        let widget    = ContinuousNumber.create (Vector2 160 20) label val
+    createValueWidget' parent val label width handlers = do
+        let widget    = ContinuousNumber.create (Vector2 width 20) label val
             handlers' = addHandler (ValueChangedHandler $ (controlHandler :: Double -> WidgetId -> Command Global.State () )) $ handlers
         UICmd.register parent widget handlers'
 
 instance LunaValue Bool   where
     asLunaExpr = LunaExpression . show
-    createValueWidget' parent val label handlers = do
-        let widget    = Toggle.create (Vector2 160 20) label val
+    createValueWidget' parent val label width handlers = do
+        let widget    = Toggle.create (Vector2 width 20) label val
             handlers' = addHandler (ValueChangedHandler $ (controlHandler :: Bool -> WidgetId -> Command Global.State () )) $ handlers
         UICmd.register parent widget handlers'
