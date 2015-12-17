@@ -284,7 +284,9 @@ module.exports = {
   nodeSearcher:             function ()      { return $$.node_searcher;   },
   shouldRender:             function ()      { shouldRender = true;       },
   writeToTerminal:          writeToTerminal,
-  displayAppCrashed:        displayAppCrashed
+  displayAppCrashed:        displayAppCrashed,
+  getJSState:				function() { return $$; }
+
 };
 
 

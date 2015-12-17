@@ -43,7 +43,7 @@ import           Data.JSString.Text ( lazyTextFromJSString, lazyTextToJSString )
 import qualified Data.JSString as JSString
 import qualified BatchConnector.Connection as Connection
 
-foreign import javascript unsafe "window.common" getJSState :: IO JSState
+foreign import javascript unsafe "app.getJSState()" getJSState :: IO JSState
 
 backspace = 8
 
