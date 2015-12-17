@@ -30,11 +30,32 @@ connect pid lid srcNodeId _ dstNodeId dstPort = withGraph pid lid $ do
         Self    -> makeAcc srcNodeId dstNodeId
         Arg num -> makeApp srcNodeId dstNodeId num
 
+disconnect :: ProjectId -> LibraryId -> NodeId -> OutPort -> NodeId -> InPort -> Empire ()
+disconnect pid lid _ _ dstNodeId dstPort = withGraph pid lid $ do
+    case dstPort of
+        Self    -> unAcc dstNodeId
+        Arg num -> unApp dstNodeId num
+
+unAcc :: NodeId -> Command Graph ()
+unAcc nodeId = do
+    dstAst <- use (Graph.nodeMapping . at nodeId) <?!> "Node does not exist"
+    nameNode <- zoom Graph.ast $ AST.getNameNode dstAst
+    zoom Graph.ast $ AST.removeNode dstAst
+    newNodeRef <- zoom Graph.ast $ AST.makeVar nameNode
+    Graph.nodeMapping . at nodeId ?= newNodeRef
+    return ()
+
+unApp :: NodeId -> Int -> Command Graph ()
+unApp nodeId pos = do
+    astNode <- use (Graph.nodeMapping . at nodeId) <?!> "Node does not exist"
+    newNodeRef <- zoom Graph.ast $ AST.removeArg astNode pos
+    Graph.nodeMapping . at nodeId ?= newNodeRef
+
 makeAcc :: NodeId -> NodeId -> Command Graph ()
 makeAcc src dst = do
     srcAst <- use (Graph.nodeMapping . at src) <?!> "Source node does not exist"
     dstAst <- use (Graph.nodeMapping . at dst) <?!> "Destination node does not exist"
-    name <- zoom Graph.ast $ AST.getVarNameNode dstAst
+    name <- zoom Graph.ast $ AST.getNameNode dstAst
     zoom Graph.ast $ AST.removeNode dstAst
     newNodeRef <- zoom Graph.ast $ AST.makeAccessor srcAst name
     Graph.nodeMapping . at dst ?= newNodeRef

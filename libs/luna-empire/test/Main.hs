@@ -21,38 +21,6 @@ import           Empire.Commands.AST
 import           Empire.Commands.Graph as Graph
 
 
-sampleGraph :: AST
-sampleGraph = snd $ runIdentity
-              $ flip StarBuilder.evalT Nothing
-              $ flip Builder.runT def
-              $ flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
-              $ do
-                  dsraka   <- _string "dupa"
-                  i1       <- _int 433
-                  i2       <- _int 421
-                  i3       <- _int 444
-                  b        <- _blank
-                  myVar    <- var "hehe"
-                  _string "aa"
-                  _string "bb"
-                  namePlus <- _string "+"
-                  dupaSrakaMethod <- accessor dsraka b
-                  accPlus  <- accessor namePlus i1
-                  appPlus  <- app accPlus [arg i2, arg i3]
-                  {-app (accessor (_string "+") (_int 2)) [arg $ _int 3]-}
-                  return ()
-
-sg2 = runIdentity
-      $ flip StarBuilder.evalT Nothing
-      $ flip Builder.runT sampleGraph
-      $ flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
-      $ do
-          s <- _string "tutaj dodalem!"
-          n <- readRef s
-          writeRef s (n & label .~ 42)
-          n1 <- readRef s
-          return $ (n ^. label, n1 ^. label)
-
 test = do
     (pid, _) <- createProject (Just "dupa") "/no/elo"
     (lid, _) <- createLibrary pid (Just "xd") "/xd/xd"
@@ -60,9 +28,12 @@ test = do
     sndNode <- Graph.addNode pid lid "Int"
     trdNode <- Graph.addNode pid lid "2"
     rthNode <- Graph.addNode pid lid "5"
-    Graph.connect pid lid sndNode All fstNode Self
-    Graph.connect pid lid rthNode All fstNode (Arg 1)
-    Graph.connect pid lid trdNode All fstNode (Arg 0)
+    Graph.connect    pid lid sndNode All fstNode Self
+    {-Graph.disconnect pid lid sndNode All fstNode Self-}
+    Graph.connect    pid lid rthNode All fstNode (Arg 1)
+    Graph.disconnect pid lid rthNode All fstNode (Arg 1)
+    Graph.connect    pid lid trdNode All fstNode (Arg 0)
+    Graph.disconnect pid lid trdNode All fstNode (Arg 0)
     withLibrary pid lid (use $ body . ast)
 
 main = do

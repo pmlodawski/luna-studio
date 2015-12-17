@@ -191,7 +191,7 @@ accessor name b = mdo
         constructCoat $ specificCons $ Accessor nc bc
     return $ Ref $ Node i
 
-var (name :: String) = mdo
+var name = mdo
     name' <- monadic name
     i <- modify2 . nodes $ swap . ixed add a
     a <- NodeBuilder.with (Ref $ Node i) $ do
