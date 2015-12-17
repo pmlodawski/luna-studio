@@ -5,7 +5,7 @@ build:
     - AWS_SECRET_ACCESS_KEY=$$AWS_SECRET_ACCESS_KEY
   commands:
     - apt-get update
-    - apt-get install libzmq3-dev
+    - apt-get -y install libzmq3-dev pkg-config
     - mkdir -p dist/proto
     - scripts/genproto > /dev/null
     - scripts/gencabal
