@@ -5,7 +5,7 @@ var config   = require('config');
 var features = require('features');
 
 var createText   = require('bmfont').render;
-var font         = require("font/LatoBlack-sdf");
+var font         = require("font/default");
 var textMaterial = require('font/text_material').graph;
 
 var vs = require('shaders/node.vert')();

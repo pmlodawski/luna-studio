@@ -4,7 +4,7 @@ fs           = require('shaders/generic_bg.frag')()
 config       = require('config')
 
 createText   = require('bmfont').render
-font         = require("font/LatoBlack-sdf")
+font         = require("font/default")
 textMaterial = require('font/text_material').hud
 layoutText   = require('bmfont').layout
 

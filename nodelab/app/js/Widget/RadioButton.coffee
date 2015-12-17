@@ -3,7 +3,7 @@ vs = require('shaders/sdf.vert')()
 fs = require('shaders/radio.frag')()
 config = require('config')
 createText = require('bmfont').render
-font = require('font/LatoBlack-sdf')
+font = require('font/default')
 textMaterial = require('font/text_material').hud
 BaseWidget   = require ('Widget/BaseWidget')
 

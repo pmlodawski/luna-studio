@@ -1,6 +1,6 @@
 "use strict";
 
-var font         = require("font/LatoBlack-sdf"),
+var font         = require("font/default"),
     layoutText   = require('bmfont').layout;
 
 module.exports.calculateTextWidth = function (txt) {
