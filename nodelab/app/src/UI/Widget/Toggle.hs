@@ -9,8 +9,8 @@ import           GHCJS.Types                   (JSString, JSVal)
 
 import           Object.UITypes
 import           Object.Widget
-import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
 import qualified Object.Widget.Toggle          as Model
+import qualified Reactive.State.UIRegistry        as UIRegistry
 
 import           UI.Generic                    (whenChanged)
 import qualified UI.Generic                    as UI
@@ -60,6 +60,4 @@ instance UIDisplayObject Model.Toggle where
         whenChanged old model Model.size    $ UI.setSize id model
 
 
-instance CompositeWidget Model.Toggle where
-    createWidget _   _ = return ()
-    updateWidget _ _ _ = return ()
+instance CompositeWidget Model.Toggle

@@ -18,7 +18,6 @@ import           Event.Mouse                   (MouseButton (..))
 import qualified Event.Mouse                   as Mouse
 import           Object.UITypes
 import           Object.Widget
-import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
 import qualified Object.Widget.Node            as Model
 import           Reactive.Commands.Command     (Command, ioCommand, performIO)
 import qualified Reactive.Commands.UIRegistry  as UICmd
@@ -142,6 +141,4 @@ widgetHandlers = def & keyDown      .~ keyDownHandler
 allNodes :: Command UIRegistry.State [WidgetFile Model.Node]
 allNodes = UIRegistry.lookupAllM
 
-instance CompositeWidget Model.Node where
-    createWidget _   _ = return ()
-    updateWidget _ _ _ = return ()
+instance CompositeWidget Model.Node

@@ -10,7 +10,7 @@ import qualified JS.NodeGraph   as UI
 
 import           Object.Object
 import           Object.Node
-import           Object.Widget
+import           Object.Widget (DisplayObject, UIHandlers)
 import qualified Object.Widget.Node as NodeModel
 
 import           Event.Keyboard (KeyMods(..))

@@ -12,7 +12,7 @@ import           Object.UITypes
 import           Object.Widget
 import           Object.Widget.Slider.Continuous (ContinuousSlider)
 import qualified Object.Widget.Slider.Continuous as Model
-import           Object.Widget.CompositeWidget   (CompositeWidget, createWidget, updateWidget)
+import qualified Reactive.State.UIRegistry       as UIRegistry
 
 import           UI.Generic                    (whenChanged)
 import qualified UI.Generic                      as UI

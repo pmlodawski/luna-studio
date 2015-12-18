@@ -11,8 +11,8 @@ import           Utils.Vector
 import           Event.Event                     (JSState)
 import           Object.Widget                   (DblClickHandler, DragEndHandler, DragMoveHandler, KeyUpHandler,
                                                   MousePressedHandler, UIHandlers, WidgetId, currentPos, dblClick,
-                                                  dragEnd, dragMove, keyMods, keyUp, mousePressed, startPos)
-import           Object.Widget.CompositeWidget   (CompositeWidget, createWidget, updateWidget)
+                                                  dragEnd, dragMove, keyMods, keyUp, mousePressed, startPos,
+                                                  CompositeWidget, createWidget, updateWidget)
 import qualified Object.Widget.LabeledTextBox    as Model
 import qualified Object.Widget.TextBox           as TextBox
 import           Reactive.Commands.Command       (Command, performIO)
@@ -20,6 +20,7 @@ import qualified Reactive.Commands.UIRegistry    as UICmd
 import           Reactive.State.Global           (inRegistry)
 import qualified Reactive.State.Global           as Global
 import           Reactive.State.UIRegistry       (addHandler)
+import qualified Reactive.State.UIRegistry       as UIRegistry
 
 import           UI.Generic                      (startDrag, takeFocus)
 import           UI.Handlers.Generic             (triggerValueChanged)

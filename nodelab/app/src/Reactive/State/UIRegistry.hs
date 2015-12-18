@@ -2,7 +2,12 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Reactive.State.UIRegistry where
+module Reactive.State.UIRegistry (
+    Object.Widget.State,
+    Object.Widget.WidgetMap,
+    module Reactive.State.UIRegistry
+)
+where
 
 import           Utils.PreludePlus hiding (children, lookup)
 import           Utils.Vector
@@ -26,7 +31,7 @@ import           Control.Monad.Trans.RWS (RWS)
 
 import           Reactive.Commands.Command (Command, performIO, pureCommand)
 
-import Data.Aeson (ToJSON, toJSON, object, Value)
+import           Data.Aeson (ToJSON, toJSON, object, Value)
 import           Utils.Aeson (intMapToJSON)
 import           Data.HMap.Lazy (HTMap)
 import qualified Data.HMap.Lazy as HMap
@@ -35,19 +40,19 @@ import qualified Data.HMap.Lazy as HMap
 --     createWidget _   _ = return ()
 --     updateWidget _ _ _ = performIO $ putStrLn "Generic update noop"
 
+instance CompositeWidget Scene where
+    createWidget _   _ = return ()
+    updateWidget _ _ _ = return ()
+
+-- instance CompositeWidget CurrentConnection where
+--     createWidget _   _ = return ()
+--     updateWidget _ _ _ = return ()
+
 sceneInterfaceId, sceneGraphId, currentConnectionId :: Int
 sceneInterfaceId    = 1
 sceneGraphId        = 2
 currentConnectionId = 3
 
-type WidgetMap = IntMap (WidgetFile DisplayObject)
-
-data State = State { _widgets         :: WidgetMap
-                   , _widgetOver      :: Maybe WidgetId
-                   , _dragState       :: Maybe DragState
-                   , _focusedWidget   :: Maybe WidgetId
-                   , _mouseDownWidget :: Maybe WidgetId
-                   } deriving (Generic)
 
 makeLenses ''State
 

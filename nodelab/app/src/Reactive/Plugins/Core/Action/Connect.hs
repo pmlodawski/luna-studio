@@ -10,7 +10,7 @@ import           Object.Object
 import           Object.Port
 import           Object.Node
 import           Object.UITypes
-import           Object.Widget
+import           Object.Widget                 (WidgetFile, widget, parent)
 import qualified Object.Widget.Connection      as UIConnection
 import qualified Object.Widget.Port            as PortModel
 import qualified Object.Widget.Node            as NodeModel

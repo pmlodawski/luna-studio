@@ -10,7 +10,7 @@ import           GHC.Float             (double2Float)
 import           Object.Object
 import           Object.Node
 import           Object.Port
-import           Object.Widget
+import           Object.Widget         ()
 import           Object.UITypes        (WidgetId)
 import qualified Object.Widget.Node    as Model
 import qualified Object.Widget.Port    as PortModel

@@ -10,8 +10,8 @@ import           Utils.Vector
 import qualified Event.Mouse                     as Mouse
 import           Object.Widget                 (DblClickHandler, DragEndHandler, DragMoveHandler, KeyUpHandler,
                                                 MousePressedHandler, UIHandlers, WidgetId, currentPos, dblClick,
-                                                dragEnd, dragMove, keyMods, keyUp, mousePressed, startPos)
-import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
+                                                dragEnd, dragMove, keyMods, keyUp, mousePressed, startPos,
+                                                CompositeWidget, createWidget, updateWidget)
 import qualified Object.Widget.Number.Discrete as Model
 import qualified Object.Widget.TextBox         as TextBox
 import           Reactive.Commands.Command     (Command)

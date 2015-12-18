@@ -6,7 +6,7 @@ import           Data.Typeable                    (typeOf)
 import           Utils.CtxDynamic
 
 import           Reactive.State.Global            (State)
-import           Object.Widget                    hiding (setPosition)
+import           Object.Widget                    (DisplayObject, UIHandlers)
 import           Object.Widget.Button             (Button)
 import           Object.Widget.Choice.RadioButton (RadioButton)
 import           Object.Widget.Connection         (Connection, CurrentConnection)

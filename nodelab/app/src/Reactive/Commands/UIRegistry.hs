@@ -9,7 +9,6 @@ import           Object.Widget
 import           Utils.Vector
 
 import qualified Reactive.State.UIRegistry as UIRegistry
-import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
 import           Reactive.Commands.Command (Command, performIO)
 import qualified UI.Generic as UI
 import qualified Data.HMap.Lazy as HMap

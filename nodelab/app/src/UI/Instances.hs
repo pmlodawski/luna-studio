@@ -40,7 +40,7 @@ import           UI.Widget.Toggle                 as X ()
 
 -- import UI.Handlers.Node                   as X ()
 -- import UI.Handlers.Slider                 as X ()
--- import UI.Handlers.Connection             as X ()
+-- import UI.W.Connection             as X ()
 -- import UI.Handlers.Port                   as X ()
 import           UI.Handlers.Choice               as X ()
 import           UI.Handlers.Choice.RadioButton   as X ()

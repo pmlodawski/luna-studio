@@ -6,14 +6,14 @@ import           Data.HMap.Lazy                   (HTMap, TypeKey (..))
 import           Utils.Vector
 
 import qualified Event.Mouse                      as Mouse
-import           Object.Widget                    (UIHandlers, WidgetId)
+import           Object.Widget                    (UIHandlers, WidgetId, CompositeWidget, createWidget, updateWidget)
 import           Object.Widget.Choice             (Choice (..))
 import           Object.Widget.Choice.RadioButton (RadioButton (..))
-import           Object.Widget.CompositeWidget    (CompositeWidget, createWidget, updateWidget)
 
 import           Reactive.Commands.Command        (Command)
 import           Reactive.State.Global            (inRegistry)
 import           Reactive.State.UIRegistry        (addHandler)
+import qualified Reactive.State.UIRegistry        as UIRegistry
 
 import           UI.Command.Group                 as Group
 import           UI.Generic                       (startDrag, takeFocus)

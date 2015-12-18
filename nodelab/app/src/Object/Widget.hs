@@ -23,6 +23,8 @@ import           Reactive.Commands.Command (Command)
 import           Object.UITypes
 import           Data.Aeson (ToJSON, toJSON, object, (.=))
 import           Data.HMap.Lazy (HTMap)
+import           Data.IntMap.Lazy (IntMap)
+
 
 type DisplayObject = CtxDynamic DisplayObjectClass
 
@@ -30,6 +32,7 @@ type DisplayObjectCtx a =   ( Show a
                             , Typeable a
                             , IsDisplayObject a
                             , UIDisplayObject a
+                            , CompositeWidget a
                             , ToJSON a
                             )
 
@@ -85,6 +88,23 @@ instance Show DisplayObject where
 instance ToJSON DisplayObject where
     toJSON = withCtxDynamic toJSON
 
+class CompositeWidget a where
+    createWidget :: WidgetId -> a      -> Command State ()
+    updateWidget :: WidgetId -> a -> a -> Command State ()
+    resizeWidget :: WidgetId -> Vector2 Double -> a -> Command State ()
+
+    default createWidget :: WidgetId -> a -> Command State ()
+    createWidget _ _   = return ()
+    default updateWidget :: WidgetId -> a -> a -> Command State()
+    updateWidget _ _ _ = return ()
+    default resizeWidget :: WidgetId -> Vector2 Double -> a -> Command State ()
+    resizeWidget _ _ _ = return ()
+
+instance CompositeWidget DisplayObject where
+    createWidget id obj = withCtxDynamic (createWidget id) obj
+    updateWidget id old new = return ()
+    resizeWidget id size obj = withCtxDynamic (resizeWidget id size) obj
+
 data DragState = DragState { _widgetId       :: WidgetId
                            , _widgetMatrix   :: [Double]
                            , _scene          :: SceneType
@@ -94,6 +114,16 @@ data DragState = DragState { _widgetId       :: WidgetId
                            , _previousPos    :: Vector2 Double
                            , _currentPos     :: Vector2 Double
                            } deriving (Show, Eq, Generic)
+
+type WidgetMap = IntMap (WidgetFile DisplayObject)
+
+data State = State { _widgets         :: WidgetMap
+                   , _widgetOver      :: Maybe WidgetId
+                   , _dragState       :: Maybe DragState
+                   , _focusedWidget   :: Maybe WidgetId
+                   , _mouseDownWidget :: Maybe WidgetId
+                   } deriving (Generic)
+
 
 instance ToJSON DragState
 
@@ -168,3 +198,4 @@ instance ToJSON (WidgetFile DisplayObject) where
                          , "_children" .= (toJSON $ file ^. children)
                          , "_type"     .= (toJSON $ widgetType $ file ^. widget)
                          ]
+

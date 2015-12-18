@@ -11,7 +11,7 @@ import           GHCJS.Nullable                (Nullable, maybeToNullable )
 import           Object.UITypes
 import           Object.Widget
 import qualified Object.Widget.Button          as Model
-import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
+import qualified Reactive.State.UIRegistry        as UIRegistry
 
 import           UI.Generic                    (whenChanged)
 import qualified UI.Generic                    as UI
@@ -60,6 +60,4 @@ instance UIDisplayObject Model.Button where
         whenChanged old model Model.enabled $ setEnabled model widget
         whenChanged old model Model.size    $ UI.setSize id model
 
-instance CompositeWidget Model.Button where
-    createWidget _   _ = return ()
-    updateWidget _ _ _ = return ()
+instance CompositeWidget Model.Button

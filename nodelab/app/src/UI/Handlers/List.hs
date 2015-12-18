@@ -9,10 +9,9 @@ import qualified Data.Text.Lazy                as Text
 import           Utils.Vector
 
 import           Object.LunaValue              (AnyLunaValue (..), createValueWidget)
-import           Object.Widget                 (WidgetId)
+import           Object.Widget                 (WidgetId, CompositeWidget, createWidget, updateWidget)
 
 import qualified Object.Widget.Button          as Button
-import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
 import qualified Object.Widget.Group           as Group
 import qualified Object.Widget.Label           as Label
 import           Object.Widget.List            (List (..))

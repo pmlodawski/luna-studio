@@ -13,8 +13,8 @@ import           GHCJS.Types                   (JSString, JSVal)
 
 import           Object.UITypes
 import           Object.Widget
-import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
 import qualified Object.Widget.LabeledTextBox  as Model
+import qualified Reactive.State.UIRegistry     as UIRegistry
 
 import           UI.Generic                    (whenChanged)
 import qualified UI.Generic                    as UI

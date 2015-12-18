@@ -9,8 +9,8 @@ import           GHCJS.Types                   (JSString, JSVal)
 
 import           Object.UITypes
 import           Object.Widget
-import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
 import qualified Object.Widget.List            as Model
+import qualified Reactive.State.UIRegistry     as UIRegistry
 
 import qualified UI.Generic                    as UI
 import qualified UI.Registry                   as UI

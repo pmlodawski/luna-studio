@@ -10,7 +10,7 @@ import           GHCJS.Types                   (JSString, JSVal)
 import           Object.UITypes
 import           Object.Widget
 import qualified Object.Widget.Choice          as Model
-import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
+import qualified Reactive.State.UIRegistry        as UIRegistry
 
 import           UI.Generic                    (whenChanged)
 import qualified UI.Generic                    as UI

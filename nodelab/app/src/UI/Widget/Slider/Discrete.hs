@@ -10,9 +10,9 @@ import           GHCJS.Foreign
 
 import           Object.UITypes
 import           Object.Widget
-import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
 import           Object.Widget.Slider.Discrete (DiscreteSlider)
 import qualified Object.Widget.Slider.Discrete as Model
+import qualified Reactive.State.UIRegistry     as UIRegistry
 
 import           UI.Generic                    (whenChanged)
 import qualified UI.Generic                    as UI

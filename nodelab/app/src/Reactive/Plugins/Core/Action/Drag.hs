@@ -9,7 +9,7 @@ import qualified JS.NodeGraph   as UI
 import           Object.Object
 import           Object.Node
 import           Object.UITypes
-import           Object.Widget
+import           Object.Widget   (WidgetFile, objectId, widget, widgetPosition)
 
 import           Event.Keyboard hiding        (Event)
 import qualified Event.Keyboard as Keyboard

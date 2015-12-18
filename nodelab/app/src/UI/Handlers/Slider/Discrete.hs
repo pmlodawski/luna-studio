@@ -13,8 +13,7 @@ import           Object.UITypes                (WidgetId)
 import           Object.Widget                 (DblClickHandler, DragEndHandler, DragMoveHandler, KeyUpHandler,
                                                 MousePressedHandler, UIHandlers, currentPos, dblClick, dragEnd,
                                                 dragMove, keyMods, keyUp, mousePressed, startPos, click,
-                                                ClickHandler)
-import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
+                                                ClickHandler, CompositeWidget, createWidget, updateWidget)
 import qualified Object.Widget.Slider.Discrete as Model
 import qualified Object.Widget.TextBox         as TextBox
 import           Reactive.Commands.Command     (Command, performIO)
@@ -22,6 +21,7 @@ import qualified Reactive.Commands.UIRegistry  as UICmd
 import           Reactive.State.Global         (inRegistry)
 import qualified Reactive.State.Global         as Global
 import           Reactive.State.UIRegistry     (addHandler)
+import qualified Reactive.State.UIRegistry     as UIRegistry
 
 import           UI.Generic                    (startDrag, takeFocus, whenChanged)
 import           UI.Handlers.Generic           (ValueChangedHandler (..), triggerValueChanged)

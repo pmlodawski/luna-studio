@@ -14,7 +14,6 @@ import           GHCJS.Types                   (JSString, JSVal)
 import           Event.Mouse                   (MouseButton (..))
 import           Object.UITypes
 import           Object.Widget
-import           Object.Widget.CompositeWidget (CompositeWidget, createWidget, updateWidget)
 import qualified Object.Widget.Port            as Model
 
 import           Reactive.Commands.Command     (Command, ioCommand, performIO)
@@ -57,7 +56,4 @@ instance UIDisplayObject Model.Port where
 widgetHandlers :: UIHandlers Global.State
 widgetHandlers = def
 
-instance CompositeWidget Model.Port where
-    createWidget _   _ = return ()
-    updateWidget _ _ _ = return ()
-
+instance CompositeWidget Model.Port

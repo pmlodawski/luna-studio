@@ -19,7 +19,7 @@ import           Object.Node
 import qualified Object.Widget.Node       as UINode
 import qualified Object.Widget.Connection as UIConnection
 import           Object.UITypes
-import           Object.Widget
+import           Object.Widget            (WidgetFile, widget)
 
 import           Event.Keyboard           hiding      (Event)
 import qualified Event.Keyboard           as Keyboard
