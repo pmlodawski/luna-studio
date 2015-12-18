@@ -60,13 +60,6 @@ instance UIDisplayObject Model.CurrentConnection where
         setVisible connection (model ^. Model.currentVisible)
         setColor   connection (model ^. Model.currentColor)
 
-instance CompositeWidget Model.Connection where
-    createWidget _   _ = return ()
-    updateWidget _ _ _ = return ()
-
-
-instance CompositeWidget Model.CurrentConnection where
-    createWidget _   _ = return ()
-    updateWidget _ _ _ = return ()
-
+instance CompositeWidget Model.Connection
+instance CompositeWidget Model.CurrentConnection
 

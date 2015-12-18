@@ -13,14 +13,12 @@ import qualified JavaScript.Array  as JSArray
 import qualified Event.Mouse       as Mouse
 import           Object.Widget (WidgetId, SceneType(..))
 
-foreign import javascript unsafe "raycaster.getMapPixelAt($1, $2)"
-    getMapPixelAtJS :: Int -> Int -> IO JSArray
+foreign import javascript unsafe "raycaster.getMapPixelAt($1, $2)" getMapPixelAtJS :: Int -> Int -> IO JSArray
 
 getMapPixelAt :: Vector2 Int -> IO JSArray
 getMapPixelAt pos = getMapPixelAtJS (pos ^. x) (pos ^. y)
 
-foreign import javascript unsafe "raycaster.widgetMatrix($1)"
-    widgetMatrix :: Int -> IO JSArray
+foreign import javascript unsafe "raycaster.widgetMatrix($1)" widgetMatrix :: Int -> IO JSArray
 
 readObjectId :: Vector2 Int -> IO (Maybe WidgetId)
 readObjectId pos = do
@@ -46,8 +44,7 @@ readWidgetMatrix (Just oid) = do
     return $ Just $ catMaybes elems
 readWidgetMatrix  Nothing   = return Nothing
 
-foreign import javascript unsafe "raycaster.isWorkspace($1)"
-    whichSceneJS :: Int -> IO Bool
+foreign import javascript unsafe "raycaster.isWorkspace($1)" whichSceneJS :: Int -> IO Bool
 
 whichScene :: Maybe WidgetId -> IO (Maybe SceneType)
 whichScene (Just oid) = do
