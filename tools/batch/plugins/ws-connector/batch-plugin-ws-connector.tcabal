@@ -1,4 +1,4 @@
-Name:               flowbox-ws-connector
+Name:               batch-plugin-ws-connector
 Version:            0.1
 Cabal-Version:      >= 1.8
 --License-file:       LICENSE
@@ -10,29 +10,21 @@ Flag Debug
   Description:      Enable debug support
   Default:          False
 
-
-Library
+Executable ws-connector
+  Main-Is:        Main.hs
   Hs-Source-Dirs: src
+  Other-Modules:  `findmodules('src', '.*\.hs')`
 
-  GHC-Options:    -Wall -O2 -threaded
+  GHC-Options:    -Wall -O2
 
   Extensions:     NoImplicitPrelude
 
-  Exposed-modules: `findmodules('src', '.*\.hs')`
-
-
-  Build-Depends:  async,
-                  base,
+  Build-Depends:  base,
                   bytestring,
-                  base64-bytestring,
-                  binary,
-                  text,
                   either,
-                  exceptions,
+                  mtl,
+                  flowbox-ws-connector,
                   flowbox-bus-binary,
                   flowbox-config,
                   flowbox-utils-old,
-                  mtl,
-                  websockets,
-                  stm,
-                  zeromq4-haskell >= 0.6
+                  zeromq4-haskell
