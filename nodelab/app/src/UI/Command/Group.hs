@@ -30,4 +30,4 @@ updateSize id = do
     widths  <- mapM (getFarEdge x) widgets
     heights <- mapM (getFarEdge y) widgets
 
-    UIRegistry.widgets . ix id . widget . widgetSize .= Vector2 (maximum' widths) (maximum' heights)
+    UICmd.resize id $ Vector2 (maximum' widths) (maximum' heights)

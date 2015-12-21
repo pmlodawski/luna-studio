@@ -30,6 +30,11 @@ moveX spacing offset (id, width) = do
     UICmd.moveX id offset
     return $ offset + spacing + width
 
+verticalLayoutHandler spacing = addHandler (UICmd.ChildrenResizedHandler $ verticalLayoutHandler' spacing) mempty
+
+verticalLayoutHandler' :: Double -> WidgetId -> WidgetId -> Command UIRegistry.State ()
+verticalLayoutHandler' spacing id _ = verticalLayout spacing id
+
 verticalLayout :: Double -> WidgetId -> Command UIRegistry.State ()
 verticalLayout spacing id = do
     widgets <- UICmd.children id
@@ -40,6 +45,11 @@ verticalLayout spacing id = do
 
     -- TODO: Update size on UI
     -- performIO $ updateUI id (oldWidget ^. widget) newWidget
+
+horizontalLayoutHandler spacing = addHandler (UICmd.ChildrenResizedHandler $ horizontalLayoutHandler' spacing) mempty
+
+horizontalLayoutHandler' :: Double -> WidgetId -> WidgetId -> Command UIRegistry.State ()
+horizontalLayoutHandler' spacing id _ = horizontalLayout spacing id
 
 horizontalLayout :: Double -> WidgetId -> Command UIRegistry.State ()
 horizontalLayout spacing id = do

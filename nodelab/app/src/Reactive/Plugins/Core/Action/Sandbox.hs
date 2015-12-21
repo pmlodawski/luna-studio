@@ -50,7 +50,7 @@ toAction :: Event -> Maybe (Command Global.State ())
 toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.inRegistry $ do
     performIO $ putStrLn "show sandbox"
     let widget = Group.create
-    parent <- UICmd.register sceneGraphId widget def
+    parent <- UICmd.register sceneGraphId widget (Layout.verticalLayoutHandler 5.0)
 
     let widget = DiscreteNumber.create (Vector2 200 20) "Discrete" 42
     UICmd.register parent widget def
@@ -83,30 +83,34 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.in
         widget = List.createList 200 "List" values $ AnyLunaValue (-1 :: Int)
     UICmd.register_ parent widget def
 
-    Layout.verticalLayout 10.0 parent
-
     return ()
 
 toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\113' _)) = Just $ Global.inRegistry $ do
     performIO $ putStrLn "show sandbox"
     let widget = Group.create
-    parent <- UICmd.register sceneGraphId widget def
+    parent'       <- UICmd.register sceneGraphId widget (Layout.horizontalLayoutHandler 5.0)
+    resizedParent <- UICmd.register parent'      widget (Layout.verticalLayoutHandler 5.0)
+    parent        <- UICmd.register parent'      widget (Layout.verticalLayoutHandler 5.0)
 
     let widget = ContinuousSlider.create (Vector2 200 20) "ContinuousSlider" (-2.0) 5.0 3.0
-    resizableWidget <- UICmd.register sceneGraphId widget def
-    UICmd.moveX resizableWidget 200
+    resizableWidget  <- UICmd.register resizedParent widget def
+    resizableWidget2 <- UICmd.register resizedParent widget def
+    resizableWidget3 <- UICmd.register resizedParent widget def
+    UICmd.moveX resizedParent 200
 
     let widget = ContinuousNumber.create (Vector2 200 20) "Width" 200
-    UICmd.register parent widget $ addHandler (ValueChangedHandler $ \val _ -> inRegistry $ UICmd.resize' resizableWidget (x .~ val))
-                                 $ mempty
+    UICmd.register parent widget $ addHandler (ValueChangedHandler $ \val _ -> inRegistry $ do
+        UICmd.resize' resizableWidget  (x .~ val)
+        UICmd.resize' resizableWidget2 (x .~ val)
+        UICmd.resize' resizableWidget3 (x .~ val)
+        ) $ mempty
 
     let widget = ContinuousNumber.create (Vector2 200 20) "Height" 20
-    UICmd.register parent widget $ addHandler (ValueChangedHandler $ \val _ -> inRegistry $ UICmd.resize' resizableWidget (y .~ val))
-                                 $ mempty
-
-
-
-    Layout.verticalLayout 10.0 parent
+    UICmd.register parent widget $ addHandler (ValueChangedHandler $ \val _ -> inRegistry $ do
+        UICmd.resize' resizableWidget  (y .~ val)
+        UICmd.resize' resizableWidget2 (y .~ val)
+        UICmd.resize' resizableWidget3 (y .~ val)
+        ) $ mempty
 
     return ()
 

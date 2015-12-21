@@ -97,7 +97,7 @@ class CompositeWidget a where
     updateWidget _ _ _ = return ()
 
 class ResizableWidget a where
-    resizeWidget :: WidgetId -> Vector2 Double -> a -> Command State ()
+    resizeWidget    :: WidgetId -> Vector2 Double -> a -> Command State ()
     default resizeWidget :: WidgetId -> Vector2 Double -> a -> Command State ()
     resizeWidget _ _ _ = return ()
 

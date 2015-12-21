@@ -14,12 +14,12 @@ import qualified UI.Generic as UI
 import qualified Data.HMap.Lazy as HMap
 import           Data.HMap.Lazy (HTMap,TypeKey(..))
 
-
 register :: (CompositeWidget a, DisplayObjectClass a) => WidgetId -> a -> HTMap -> Command UIRegistry.State WidgetId
 register parent model handlers = do
     file <- UIRegistry.registerM parent model handlers
     performIO $ createUI parent (file ^. objectId) model
     createWidget (file ^. objectId) model
+    triggerChildrenResized parent (file ^. objectId)
     return (file ^. objectId)
 
 register_ :: (CompositeWidget a, DisplayObjectClass a) => WidgetId -> a -> HTMap -> Command UIRegistry.State ()
@@ -66,17 +66,26 @@ moveBy id vec = do
     pos <- preuse $ UIRegistry.widgets . ix id . widget . widgetPosition
     forM_ pos $ performIO . (UI.updatePosition' id)
 
+
+newtype ChildrenResizedHandler = ChildrenResizedHandler (WidgetId -> WidgetId -> Command UIRegistry.State ())
+triggerChildrenResized :: WidgetId -> WidgetId -> Command UIRegistry.State ()
+triggerChildrenResized id child = do
+    let key = TypeKey :: TypeKey ChildrenResizedHandler
+    maybeHandler <- handler id key
+    forM_ maybeHandler $ \(ChildrenResizedHandler handler) -> handler id child
+
 resize :: WidgetId -> Vector2 Double -> Command UIRegistry.State ()
-resize id vec = do
-    UIRegistry.widgets . ix id . widget . widgetSize .= vec
-    widget <- preuse $ UIRegistry.widgets . ix id . widget
-    forM_ widget $ \widget -> resizeWidget id vec widget
+resize id vec = resize' id (\_ -> vec)
 
 resize' :: WidgetId -> (Vector2 Double -> Vector2 Double) -> Command UIRegistry.State ()
 resize' id f = do
     UIRegistry.widgets . ix id . widget . widgetSize %= f
-    widget <- preuse $ UIRegistry.widgets . ix id . widget
-    forM_ widget $ \widget -> resizeWidget id (widget ^. widgetSize) widget
+    widgetFile <- preuse $ UIRegistry.widgets . ix id
+    forM_ widgetFile $ \widgetFile -> do
+        let model   = widgetFile ^. widget
+            wParent = widgetFile ^. parent
+        resizeWidget id (model ^. widgetSize) model
+        forM_ wParent $ flip triggerChildrenResized id
 
 get :: DisplayObjectClass a => WidgetId -> Getter a b -> Command UIRegistry.State b
 get id f = do
