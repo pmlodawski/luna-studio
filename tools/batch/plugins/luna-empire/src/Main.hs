@@ -8,7 +8,7 @@
 
 module Main where
 
-import qualified Data.List as List
+import qualified Data.List                   as List
 
 import qualified Flowbox.Bus.EndPoint        as EP
 import           Empire.Cmd                  (Cmd)
@@ -21,36 +21,28 @@ import qualified Flowbox.Options.Applicative as Opt
 import           Flowbox.Prelude
 import           Flowbox.System.Log.Logger
 
-
-
 rootLogger :: Logger
 rootLogger = getLogger ""
-
 
 logger :: LoggerIO
 logger = getLoggerIO $moduleName
 
-
 parser :: Parser Cmd
-parser = Opt.flag' Cmd.Version (long "version" <> hidden)
+parser = Opt.flag' Cmd.Version (short 'V' <> long "version" <> help "Version information")
        <|> Cmd.Run
-           <$> many      ( strOption ( short 't' <> metavar "TOPIC" <> help "topics to log"))
-           <*> optIntFlag (Just "verbose") 'v' 2 3          "Verbose level (level range is 0-5, default level is 3)"
-           <*> switch    ( long "no-color"          <> help "Disable color output" )
-
+           <$> many       (strOption (short 't' <> metavar "TOPIC" <> help "Topic to listen"))
+           <*> optIntFlag (Just "verbose") 'v' 2 3 "Verbosity level (0-5, default 3)"
 
 opts :: ParserInfo Cmd
 opts = Opt.info (helper <*> parser)
-                (Opt.fullDesc <> Opt.header (Version.full False))
-
+                (Opt.fullDesc <> Opt.header Version.fullVersion)
 
 main :: IO ()
 main = execParser opts >>= run
 
-
 run :: Cmd -> IO ()
 run cmd = case cmd of
-    Cmd.Version  -> putStrLn (Version.full False) -- TODO [PM] hardcoded numeric = False
+    Cmd.Version  -> putStrLn Version.fullVersion
     Cmd.Run {} -> do
         rootLogger setIntLevel $ Cmd.verbose cmd
         endPoints <- EP.clientFromConfig <$> Config.load

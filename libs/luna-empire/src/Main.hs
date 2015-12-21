@@ -12,6 +12,6 @@ main :: IO ()
 main = do
     endPoints <- EP.clientFromConfig <$> Config.load
     Bus.runBus endPoints $ do
-        Bus.send Flag.Enable $ Message.Message "hello" ByteString.empty
+        Bus.send Flag.Enable $ Message.Message "empire.hello" ByteString.empty
     return ()
 
