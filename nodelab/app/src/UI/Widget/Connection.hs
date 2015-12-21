@@ -61,5 +61,8 @@ instance UIDisplayObject Model.CurrentConnection where
         setColor   connection (model ^. Model.currentColor)
 
 instance CompositeWidget Model.Connection
+instance ResizableWidget Model.Connection
+
 instance CompositeWidget Model.CurrentConnection
+instance ResizableWidget Model.CurrentConnection
 

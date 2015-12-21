@@ -45,11 +45,13 @@ updatePosition' id pos = do
         w <- UIR.lookup $ id :: IO (GenericWidget)
         setWidgetPosition pos w
 
-setSize :: (IsDisplayObject b) => WidgetId -> b -> IO ()
-setSize id model = do
-    let (Vector2 x y) = model ^. widgetSize
+setSize :: WidgetId -> Vector2 Double -> IO ()
+setSize id (Vector2 x y) = do
     w <- UIR.lookup $ id :: IO (GenericWidget)
     setSize' w x y
+
+defaultResize :: WidgetId -> Vector2 Double -> a -> Command UIRegistry.State ()
+defaultResize id size _ = performIO $ setSize id size
 
 takeFocus :: a -> WidgetId -> Command Global.State ()
 takeFocus _ id = Global.uiRegistry . UIRegistry.focusedWidget ?= id

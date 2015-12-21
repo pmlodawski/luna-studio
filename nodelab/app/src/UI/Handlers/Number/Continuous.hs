@@ -13,7 +13,7 @@ import           Event.Event                     (JSState)
 import           Object.Widget                   (DblClickHandler, DragEndHandler, DragMoveHandler, KeyUpHandler,
                                                   MousePressedHandler, UIHandlers, WidgetId, currentPos, dblClick,
                                                   dragEnd, dragMove, keyMods, keyUp, mousePressed, startPos,
-                                                  CompositeWidget, createWidget, updateWidget)
+                                                  CompositeWidget, createWidget, updateWidget, ResizableWidget, resizeWidget)
 import qualified Object.Widget.Number.Continuous as Model
 import qualified Object.Widget.TextBox           as TextBox
 import           Reactive.Commands.Command       (Command, performIO)
@@ -121,3 +121,4 @@ instance CompositeWidget Model.ContinuousNumber where
         (tbId:_) <- UICmd.children id
         UICmd.update_ tbId $ TextBox.value .~ (Text.pack $ model ^. Model.displayValue)
 
+instance ResizableWidget Model.ContinuousNumber where resizeWidget = TextBox.labeledEditableResize

@@ -38,4 +38,4 @@ instance UIDisplayObject Model.ContinuousNumber where
     updateUI id old model = do
         slider <- UI.lookup id :: IO Number
         whenChanged old model Model.label $ setLabel model slider
-        whenChanged old model Model.size  $ UI.setSize id model
+

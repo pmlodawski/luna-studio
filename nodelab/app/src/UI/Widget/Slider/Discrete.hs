@@ -53,7 +53,4 @@ instance UIDisplayObject Model.DiscreteSlider where
         slider <- UI.lookup id :: IO Slider
         whenChanged old model Model.label $ setLabel model slider
         whenChanged old model Model.value $ setValue model slider
-        whenChanged old model Model.size  $ do
-            setTicks model slider
-            UI.setSize id model
         whenChanged old model Model.range $ setTicks model slider

@@ -37,7 +37,7 @@ instance UIDisplayObject Model.Group where
         UI.register id group
         Widget.add group parent
 
-    updateUI id old model = do
-        whenChanged old model Model.size  $ UI.setSize id model
-
+    updateUI id old model = return ()
 instance CompositeWidget Model.Group
+instance ResizableWidget Model.Group where resizeWidget = UI.defaultResize
+

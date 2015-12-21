@@ -48,4 +48,3 @@ instance UIDisplayObject Model.ContinuousSlider where
         slider <- UI.lookup id :: IO Slider
         whenChanged old model Model.label $ setLabel model slider
         whenChanged old model Model.value $ setValue model slider
-        whenChanged old model Model.size  $ UI.setSize id model

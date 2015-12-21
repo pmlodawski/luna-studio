@@ -32,7 +32,7 @@ type DisplayObjectCtx a =   ( Show a
                             , Typeable a
                             , IsDisplayObject a
                             , UIDisplayObject a
-                            , CompositeWidget a
+                            , ResizableWidget a
                             , ToJSON a
                             )
 
@@ -57,8 +57,8 @@ class IsDisplayObject a where
     widgetSize     :: Lens' a Size
 
 class UIDisplayObject a where
-    createUI   :: WidgetId -> WidgetId -> a -> IO ()
-    updateUI   :: WidgetId -> a        -> a -> IO ()
+    createUI   :: WidgetId -> WidgetId       -> a -> IO ()
+    updateUI   :: WidgetId -> a              -> a -> IO ()
 
 getPosition :: DisplayObject -> Position
 getPosition obj = withCtxDynamic (^. widgetPosition) obj
@@ -91,18 +91,17 @@ instance ToJSON DisplayObject where
 class CompositeWidget a where
     createWidget :: WidgetId -> a      -> Command State ()
     updateWidget :: WidgetId -> a -> a -> Command State ()
-    resizeWidget :: WidgetId -> Vector2 Double -> a -> Command State ()
-
     default createWidget :: WidgetId -> a -> Command State ()
     createWidget _ _   = return ()
     default updateWidget :: WidgetId -> a -> a -> Command State()
     updateWidget _ _ _ = return ()
+
+class ResizableWidget a where
+    resizeWidget :: WidgetId -> Vector2 Double -> a -> Command State ()
     default resizeWidget :: WidgetId -> Vector2 Double -> a -> Command State ()
     resizeWidget _ _ _ = return ()
 
-instance CompositeWidget DisplayObject where
-    createWidget id obj = withCtxDynamic (createWidget id) obj
-    updateWidget id old new = return ()
+instance ResizableWidget DisplayObject where
     resizeWidget id size obj = withCtxDynamic (resizeWidget id size) obj
 
 data DragState = DragState { _widgetId       :: WidgetId

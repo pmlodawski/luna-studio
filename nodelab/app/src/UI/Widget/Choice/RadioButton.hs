@@ -52,6 +52,6 @@ instance UIDisplayObject Model.RadioButton where
 
         whenChanged old model Model.label    $ setLabel model widget
         whenChanged old model Model.selected $ setValue model widget
-        whenChanged old model Model.size     $ UI.setSize id model
 
 instance CompositeWidget Model.RadioButton
+instance ResizableWidget Model.RadioButton where resizeWidget = UI.defaultResize

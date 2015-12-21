@@ -13,7 +13,7 @@ import           Object.UITypes                (WidgetId)
 import           Object.Widget                 (DblClickHandler, DragEndHandler, DragMoveHandler, KeyUpHandler,
                                                 MousePressedHandler, UIHandlers, currentPos, dblClick, dragEnd,
                                                 dragMove, keyMods, keyUp, mousePressed, startPos, click,
-                                                ClickHandler, CompositeWidget, createWidget, updateWidget)
+                                                ClickHandler, CompositeWidget, createWidget, updateWidget, ResizableWidget, resizeWidget)
 import qualified Object.Widget.Slider.Discrete as Model
 import qualified Object.Widget.TextBox         as TextBox
 import           Reactive.Commands.Command     (Command, performIO)
@@ -27,7 +27,11 @@ import           UI.Generic                    (startDrag, takeFocus, whenChange
 import           UI.Handlers.Generic           (ValueChangedHandler (..), triggerValueChanged)
 import qualified UI.Handlers.TextBox           as TextBox
 import           UI.Widget.Number              (keyModMult)
-import           UI.Widget.Slider.Discrete     ()
+import           UI.Widget.Slider.Discrete     (setTicks)
+import           UI.Widget.Slider              (Slider)
+import qualified UI.Generic                    as UI
+import qualified UI.Registry                   as UI
+
 
 
 isEnabled :: WidgetId -> Command Global.State Bool
@@ -138,13 +142,12 @@ instance CompositeWidget Model.DiscreteSlider where
     updateWidget id old model = do
         (tbId:_) <- UICmd.children id
         UICmd.update_ tbId $ TextBox.value .~ (Text.pack $ model ^. Model.displayValue)
-        whenChanged old model Model.size $ do
-            let tx      = (model ^. Model.size . x) / 2.0
-                ty      = (model ^. Model.size . y)
-                sx      = tx - (model ^. Model.size . y / 2.0)
-            UICmd.update tbId $ TextBox.size .~ (Vector2 sx ty)
-            UICmd.moveX tbId tx
 
-
+instance ResizableWidget Model.DiscreteSlider where
+    resizeWidget id size model = do
+        performIO $ do
+            slider <- UI.lookup id :: IO Slider
+            setTicks model slider
+        TextBox.labeledEditableResize id size model
 
 

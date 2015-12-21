@@ -44,6 +44,8 @@ instance CompositeWidget Scene where
     createWidget _   _ = return ()
     updateWidget _ _ _ = return ()
 
+instance ResizableWidget Scene
+
 -- instance CompositeWidget CurrentConnection where
 --     createWidget _   _ = return ()
 --     updateWidget _ _ _ = return ()

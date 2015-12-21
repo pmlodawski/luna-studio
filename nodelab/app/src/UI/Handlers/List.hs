@@ -9,7 +9,7 @@ import qualified Data.Text.Lazy                as Text
 import           Utils.Vector
 
 import           Object.LunaValue              (AnyLunaValue (..), createValueWidget)
-import           Object.Widget                 (WidgetId, CompositeWidget, createWidget, updateWidget)
+import           Object.Widget                 (WidgetId, CompositeWidget, createWidget, updateWidget, ResizableWidget, resizeWidget)
 
 import qualified Object.Widget.Button          as Button
 import qualified Object.Widget.Group           as Group
@@ -23,7 +23,7 @@ import qualified Reactive.State.Global         as Global
 import           Reactive.State.UIRegistry     (addHandler)
 import qualified Reactive.State.UIRegistry     as UIRegistry
 
-import           UI.Generic                    (startDrag, takeFocus)
+import           UI.Generic                    (startDrag, takeFocus, defaultResize)
 import qualified UI.Handlers.Button            as Button
 import           UI.Handlers.Generic           (ValueChangedHandler (..), triggerValueChanged)
 import qualified UI.Handlers.TextBox           as TextBox
@@ -131,4 +131,7 @@ instance CompositeWidget List where
         Layout.verticalLayout 0.0 id
 
     updateWidget id old model = return ()
+
+instance ResizableWidget List where resizeWidget = defaultResize
+
 

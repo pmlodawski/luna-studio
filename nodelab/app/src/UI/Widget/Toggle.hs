@@ -57,7 +57,7 @@ instance UIDisplayObject Model.Toggle where
         whenChanged old model Model.label   $ setLabel model slider
         whenChanged old model Model.value   $ setValue model slider
         whenChanged old model Model.focused $ setFocus model slider
-        whenChanged old model Model.size    $ UI.setSize id model
-
 
 instance CompositeWidget Model.Toggle
+instance ResizableWidget Model.Toggle where
+    resizeWidget = UI.defaultResize

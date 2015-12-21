@@ -6,7 +6,7 @@ import           Data.HMap.Lazy                   (HTMap, TypeKey (..))
 import           Utils.Vector
 
 import qualified Event.Mouse                      as Mouse
-import           Object.Widget                    (UIHandlers, WidgetId, CompositeWidget, createWidget, updateWidget)
+import           Object.Widget                    (UIHandlers, WidgetId, CompositeWidget, createWidget, updateWidget, ResizableWidget, resizeWidget)
 import           Object.Widget.Choice             (Choice (..))
 import           Object.Widget.Choice.RadioButton (RadioButton (..))
 
@@ -16,7 +16,7 @@ import           Reactive.State.UIRegistry        (addHandler)
 import qualified Reactive.State.UIRegistry        as UIRegistry
 
 import           UI.Command.Group                 as Group
-import           UI.Generic                       (startDrag, takeFocus)
+import           UI.Generic                       (startDrag, takeFocus, defaultResize)
 import           UI.Handlers.Generic              (triggerValueChanged)
 import           UI.Layout                        as Layout
 
@@ -77,3 +77,5 @@ instance CompositeWidget Choice where
 
         UICmd.update_ oldWidget $ RadioButton.selected .~ False
         UICmd.update_ newWidget $ RadioButton.selected .~ True
+
+instance ResizableWidget Choice where resizeWidget = defaultResize

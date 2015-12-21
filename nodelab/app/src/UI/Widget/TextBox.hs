@@ -63,6 +63,7 @@ instance UIDisplayObject Model.TextBox where
         whenChanged old model Model.isEditing $ do
             if old ^. Model.isEditing then doneEditing'  textBox
                                       else startEditing' textBox $ lazyTextToJSString $ model ^. Model.value
-        whenChanged old model Model.size  $ UI.setSize id model
 
 instance CompositeWidget Model.TextBox
+instance ResizableWidget Model.TextBox where
+    resizeWidget = UI.defaultResize

@@ -12,7 +12,7 @@ import           Event.Event                     (JSState)
 import           Object.Widget                   (DblClickHandler, DragEndHandler, DragMoveHandler, KeyUpHandler,
                                                   MousePressedHandler, UIHandlers, WidgetId, currentPos, dblClick,
                                                   dragEnd, dragMove, keyMods, keyUp, mousePressed, startPos,
-                                                  CompositeWidget, createWidget, updateWidget)
+                                                  CompositeWidget, createWidget, updateWidget, ResizableWidget, resizeWidget)
 import qualified Object.Widget.LabeledTextBox    as Model
 import qualified Object.Widget.TextBox           as TextBox
 import           Reactive.Commands.Command       (Command, performIO)
@@ -22,7 +22,7 @@ import qualified Reactive.State.Global           as Global
 import           Reactive.State.UIRegistry       (addHandler)
 import qualified Reactive.State.UIRegistry       as UIRegistry
 
-import           UI.Generic                      (startDrag, takeFocus)
+import           UI.Generic                      (startDrag, takeFocus, defaultResize)
 import           UI.Handlers.Generic             (triggerValueChanged)
 import           UI.Widget.LabeledTextBox        ()
 
@@ -66,3 +66,13 @@ instance CompositeWidget Model.LabeledTextBox where
         (tbId:_) <- UICmd.children id
         UICmd.update_ tbId $ TextBox.value .~ (model ^. Model.value)
 
+instance ResizableWidget Model.LabeledTextBox where
+    resizeWidget id size model = do
+        defaultResize id size model
+
+        (tbId:_) <- UICmd.children id
+        let tx      = (model ^. Model.size . x) / 2.0
+            ty      = (model ^. Model.size . y)
+            sx      = tx - (model ^. Model.size . y / 2.0)
+        UICmd.resize tbId $ Vector2 sx ty
+        UICmd.moveX tbId tx

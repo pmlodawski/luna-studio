@@ -66,6 +66,12 @@ moveBy id vec = do
     pos <- preuse $ UIRegistry.widgets . ix id . widget . widgetPosition
     forM_ pos $ performIO . (UI.updatePosition' id)
 
+resize :: WidgetId -> Vector2 Double -> Command UIRegistry.State ()
+resize id vec = do
+    UIRegistry.widgets . ix id . widget . widgetSize .= vec
+    widget <- preuse $ UIRegistry.widgets . ix id . widget
+    forM_ widget $ \widget -> resizeWidget id vec widget
+
 get :: DisplayObjectClass a => WidgetId -> Getter a b -> Command UIRegistry.State b
 get id f = do
     maybeFile <- UIRegistry.lookupTypedM id

@@ -49,5 +49,4 @@ instance UIDisplayObject Model.LabeledTextBox where
     updateUI id old model = do
         textBox <- UI.lookup id :: IO LabeledTextBox
         whenChanged old model Model.label $ setLabel   model textBox
-        whenChanged old model Model.size  $ UI.setSize id model
 

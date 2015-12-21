@@ -57,3 +57,4 @@ widgetHandlers :: UIHandlers Global.State
 widgetHandlers = def
 
 instance CompositeWidget Model.Port
+instance ResizableWidget Model.Port

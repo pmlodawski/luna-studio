@@ -142,3 +142,4 @@ allNodes :: Command UIRegistry.State [WidgetFile Model.Node]
 allNodes = UIRegistry.lookupAllM
 
 instance CompositeWidget Model.Node
+instance ResizableWidget Model.Node

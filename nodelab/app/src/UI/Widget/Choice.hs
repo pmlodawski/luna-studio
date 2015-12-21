@@ -37,5 +37,4 @@ instance UIDisplayObject Model.Choice where
         UI.register id widget
         Widget.add widget parent
 
-    updateUI id old model = do
-        whenChanged old model Model.size  $ UI.setSize id model
+    updateUI id old model = return ()

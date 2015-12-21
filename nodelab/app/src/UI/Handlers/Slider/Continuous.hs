@@ -13,7 +13,7 @@ import           Object.UITypes                  (WidgetId)
 import           Object.Widget                   (DblClickHandler, DragEndHandler, DragMoveHandler, KeyUpHandler,
                                                   MousePressedHandler, UIHandlers, currentPos, dblClick, dragEnd,
                                                   dragMove, keyMods, keyUp, mousePressed, startPos, click,
-                                                  ClickHandler, CompositeWidget, createWidget, updateWidget)
+                                                  ClickHandler, CompositeWidget, createWidget, updateWidget, ResizableWidget, resizeWidget)
 import qualified Object.Widget.Slider.Continuous as Model
 import qualified Object.Widget.TextBox           as TextBox
 import           Reactive.Commands.Command       (Command, performIO)
@@ -135,10 +135,5 @@ instance CompositeWidget Model.ContinuousSlider where
     updateWidget id old model = do
         (tbId:_) <- UICmd.children id
         UICmd.update_ tbId $ TextBox.value .~ (Text.pack $ model ^. Model.displayValue)
-        whenChanged old model Model.size $ do
-            let tx      = (model ^. Model.size . x) / 2.0
-                ty      = (model ^. Model.size . y)
-                sx      = tx - (model ^. Model.size . y / 2.0)
-            UICmd.update tbId $ TextBox.size .~ (Vector2 sx ty)
-            UICmd.moveX tbId tx
 
+instance ResizableWidget Model.ContinuousSlider where resizeWidget = TextBox.labeledEditableResize

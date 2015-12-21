@@ -11,7 +11,7 @@ import qualified Event.Mouse                     as Mouse
 import           Object.Widget                 (DblClickHandler, DragEndHandler, DragMoveHandler, KeyUpHandler,
                                                 MousePressedHandler, UIHandlers, WidgetId, currentPos, dblClick,
                                                 dragEnd, dragMove, keyMods, keyUp, mousePressed, startPos,
-                                                CompositeWidget, createWidget, updateWidget)
+                                                CompositeWidget, createWidget, updateWidget, ResizableWidget, resizeWidget)
 import qualified Object.Widget.Number.Discrete as Model
 import qualified Object.Widget.TextBox         as TextBox
 import           Reactive.Commands.Command     (Command)
@@ -121,3 +121,5 @@ instance CompositeWidget Model.DiscreteNumber where
         (tbId:_) <- UICmd.children id
         UICmd.update_ tbId $ TextBox.value .~ (Text.pack $ model ^. Model.displayValue)
 
+
+instance ResizableWidget Model.DiscreteNumber where resizeWidget = TextBox.labeledEditableResize

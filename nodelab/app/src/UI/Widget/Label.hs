@@ -45,6 +45,6 @@ instance UIDisplayObject Model.Label where
     updateUI id old model = do
         widget <- UI.lookup id :: IO Label
         setLabel   model widget
-        whenChanged old model Model.size  $ UI.setSize id model
 
 instance CompositeWidget Model.Label
+instance ResizableWidget Model.Label where resizeWidget = UI.defaultResize

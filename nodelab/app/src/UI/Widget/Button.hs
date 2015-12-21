@@ -58,6 +58,7 @@ instance UIDisplayObject Model.Button where
         whenChanged old model Model.label   $ setLabel   model widget
         whenChanged old model Model.icon    $ setIcon    model widget
         whenChanged old model Model.enabled $ setEnabled model widget
-        whenChanged old model Model.size    $ UI.setSize id model
 
 instance CompositeWidget Model.Button
+
+instance ResizableWidget Model.Button where resizeWidget = UI.defaultResize
