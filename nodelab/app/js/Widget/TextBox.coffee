@@ -57,6 +57,7 @@ class TextBox extends BaseWidget
       left: pos.x
       top: pos.y
       width: @width
+      height: @height
       textAlign: @alignment
     input.val value
     setTimeout (-> input.select()), 10

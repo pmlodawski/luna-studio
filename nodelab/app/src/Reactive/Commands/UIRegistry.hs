@@ -72,6 +72,12 @@ resize id vec = do
     widget <- preuse $ UIRegistry.widgets . ix id . widget
     forM_ widget $ \widget -> resizeWidget id vec widget
 
+resize' :: WidgetId -> (Vector2 Double -> Vector2 Double) -> Command UIRegistry.State ()
+resize' id f = do
+    UIRegistry.widgets . ix id . widget . widgetSize %= f
+    widget <- preuse $ UIRegistry.widgets . ix id . widget
+    forM_ widget $ \widget -> resizeWidget id (widget ^. widgetSize) widget
+
 get :: DisplayObjectClass a => WidgetId -> Getter a b -> Command UIRegistry.State b
 get id f = do
     maybeFile <- UIRegistry.lookupTypedM id

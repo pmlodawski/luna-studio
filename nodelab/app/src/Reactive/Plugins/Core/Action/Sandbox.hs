@@ -97,11 +97,13 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\113' _)) = Just $ Global.in
     UICmd.moveX resizableWidget 200
 
     let widget = ContinuousNumber.create (Vector2 200 20) "Width" 200
-    UICmd.register parent widget $ addHandler (ValueChangedHandler $ \val _ -> inRegistry $ UICmd.update_ resizableWidget $ ContinuousSlider.size . x .~ val)
+    UICmd.register parent widget $ addHandler (ValueChangedHandler $ \val _ -> inRegistry $ UICmd.resize' resizableWidget (x .~ val))
                                  $ mempty
 
     let widget = ContinuousNumber.create (Vector2 200 20) "Height" 20
-    UICmd.register parent widget (addHandler (ValueChangedHandler $ \val _ -> inRegistry $ UICmd.update_ resizableWidget $ ContinuousSlider.size . y .~ val) mempty)
+    UICmd.register parent widget $ addHandler (ValueChangedHandler $ \val _ -> inRegistry $ UICmd.resize' resizableWidget (y .~ val))
+                                 $ mempty
+
 
 
     Layout.verticalLayout 10.0 parent
