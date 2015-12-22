@@ -39,5 +39,5 @@ instance UIDisplayObject Model.Group where
 
     updateUI id old model = return ()
 instance CompositeWidget Model.Group
-instance ResizableWidget Model.Group where resizeWidget = UI.defaultResize
+
 

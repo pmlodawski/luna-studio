@@ -78,14 +78,20 @@ resize :: WidgetId -> Vector2 Double -> Command UIRegistry.State ()
 resize id vec = resize' id (\_ -> vec)
 
 resize' :: WidgetId -> (Vector2 Double -> Vector2 Double) -> Command UIRegistry.State ()
-resize' id f = do
+resize' = resize'CB True
+
+resizeNoCB :: WidgetId -> (Vector2 Double -> Vector2 Double) -> Command UIRegistry.State ()
+resizeNoCB = resize'CB False
+
+resize'CB :: Bool -> WidgetId -> (Vector2 Double -> Vector2 Double) -> Command UIRegistry.State ()
+resize'CB cb id f = do
     UIRegistry.widgets . ix id . widget . widgetSize %= f
     widgetFile <- preuse $ UIRegistry.widgets . ix id
     forM_ widgetFile $ \widgetFile -> do
         let model   = widgetFile ^. widget
             wParent = widgetFile ^. parent
         resizeWidget id (model ^. widgetSize) model
-        forM_ wParent $ flip triggerChildrenResized id
+        when cb $ forM_ wParent $ flip triggerChildrenResized id
 
 get :: DisplayObjectClass a => WidgetId -> Getter a b -> Command UIRegistry.State b
 get id f = do

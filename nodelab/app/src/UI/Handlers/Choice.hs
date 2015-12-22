@@ -18,6 +18,7 @@ import qualified Reactive.State.UIRegistry        as UIRegistry
 import           UI.Command.Group                 as Group
 import           UI.Generic                       (startDrag, takeFocus, defaultResize)
 import           UI.Handlers.Generic              (triggerValueChanged)
+import           UI.Handlers.Group                ()
 import           UI.Layout                        as Layout
 
 import           UI.Widget.Choice                 ()

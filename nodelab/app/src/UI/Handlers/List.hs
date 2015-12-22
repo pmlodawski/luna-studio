@@ -24,6 +24,7 @@ import           Reactive.State.UIRegistry     (addHandler)
 import qualified Reactive.State.UIRegistry     as UIRegistry
 
 import           UI.Generic                    (startDrag, takeFocus, defaultResize)
+import           UI.Handlers.Group             ()
 import qualified UI.Handlers.Button            as Button
 import           UI.Handlers.Generic           (ValueChangedHandler (..), triggerValueChanged)
 import qualified UI.Handlers.TextBox           as TextBox

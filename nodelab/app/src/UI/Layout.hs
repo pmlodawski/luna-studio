@@ -1,3 +1,4 @@
+{-# LANGUAGE Rank2Types #-}
 module UI.Layout where
 
 import           Utils.PreludePlus
@@ -13,6 +14,7 @@ import           Reactive.State.UIRegistry    (addHandler, sceneGraphId, sceneIn
 import qualified Reactive.State.UIRegistry    as UIRegistry
 
 import qualified UI.Command.Group             as Group
+import qualified UI.Handlers.Group            as Group
 
 getHeight id = do
     size <- UICmd.get' id widgetSize
@@ -33,31 +35,39 @@ moveX spacing offset (id, width) = do
 verticalLayoutHandler spacing = addHandler (UICmd.ChildrenResizedHandler $ verticalLayoutHandler' spacing) mempty
 
 verticalLayoutHandler' :: Double -> WidgetId -> WidgetId -> Command UIRegistry.State ()
-verticalLayoutHandler' spacing id _ = verticalLayout spacing id
+verticalLayoutHandler' spacing id _ = do
+    verticalLayout spacing id
+    Group.updateSize id
 
 verticalLayout :: Double -> WidgetId -> Command UIRegistry.State ()
 verticalLayout spacing id = do
     widgets <- UICmd.children id
     heights <- mapM getHeight widgets
-    height  <- foldM (moveY spacing) 0.0 heights
-    -- UIRegistry.widgets . ix id . widget . widgetSize . y .= height
-    Group.updateSize id
-
-    -- TODO: Update size on UI
-    -- performIO $ updateUI id (oldWidget ^. widget) newWidget
+    void $ foldM (moveY spacing) 0.0 heights
 
 horizontalLayoutHandler spacing = addHandler (UICmd.ChildrenResizedHandler $ horizontalLayoutHandler' spacing) mempty
 
 horizontalLayoutHandler' :: Double -> WidgetId -> WidgetId -> Command UIRegistry.State ()
-horizontalLayoutHandler' spacing id _ = horizontalLayout spacing id
+horizontalLayoutHandler' spacing id _ = do
+    horizontalLayout spacing id
+    Group.updateSize id
 
 horizontalLayout :: Double -> WidgetId -> Command UIRegistry.State ()
 horizontalLayout spacing id = do
     widgets <- UICmd.children id
     heights <- mapM getWidth widgets
-    height  <- foldM (moveX spacing) 0.0 heights
-    Group.updateSize id
-    -- UIRegistry.widgets . ix id . widget . widgetSize . x .= height
+    void $ foldM (moveX spacing) 0.0 heights
 
-    -- TODO: Update size on UI
-    -- performIO $ updateUI id (oldWidget ^. widget) newWidget
+flexVerticalLayoutHandler   spacing = addHandler (Group.WidgetResizedHandler $ flexVerticalLayout   spacing) mempty
+flexHorizontalLayoutHandler spacing = addHandler (Group.WidgetResizedHandler $ flexHorizontalLayout spacing) mempty
+
+flexVerticalLayout   = flexLayout y
+flexHorizontalLayout = flexLayout x
+
+flexLayout :: Lens' (Vector2 Double) Double -> Double -> WidgetId -> Vector2 Double -> Command UIRegistry.State ()
+flexLayout lens spacing id size = do
+    let height = size ^. lens
+    widgets <- UICmd.children id
+    let newHeight = height / (fromIntegral $ length widgets)
+    forM_ widgets $ \id -> UICmd.resizeNoCB id (lens .~ newHeight)
+    verticalLayout spacing id
