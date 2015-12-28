@@ -267,7 +267,7 @@ setCode code workspace = sendMessage msg where
                            (workspace ^. project . Project.id)
                            uselessLegacyArgument
 
-setValue :: Workspace -> PortRef -> Float -> IO ()
+setValue :: Workspace -> PortRef -> String -> IO ()
 setValue workspace portRef value = sendMessage msg where
     msg  = WebMessage "project.library.ast.function.graph.node.default.set.request" $ messagePut body
     body = SetDefault.Request (encode . portRefToList $ portRef ^. refPortId)
@@ -277,4 +277,4 @@ setValue workspace portRef value = sendMessage msg where
                               (workspace ^. library . Library.id)
                               (workspace ^. project . Project.id)
                               uselessLegacyArgument
-    encodedVal = (uFromString . show $ value)
+    encodedVal = (uFromString value)

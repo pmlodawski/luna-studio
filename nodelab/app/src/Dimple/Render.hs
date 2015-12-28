@@ -70,7 +70,7 @@ displayChart chart = do
     tpe      <- convertChartType $ chart ^. Widget.tpe
     series   <- addSimpleSeries tpe jschart
 
-    draw jschart
+    void $ draw jschart
 
 
-    return ()
+

@@ -28,7 +28,7 @@ toAction (NodeSearcher (NodeSearcher.Event "query" expr _))           = Just $ q
 toAction (NodeSearcher (NodeSearcher.Event "tree"  expr _))           = Just $ queryTree expr
 toAction (NodeSearcher (NodeSearcher.Event "create" expr Nothing))    = Just $ registerNode expr
 toAction (NodeSearcher (NodeSearcher.Event "create" expr (Just nid))) = Just $ updateNode nid expr
-toAction (Keyboard (Keyboard.Event Keyboard.Down '\t' mods))          = Just $ if mods ^. Keyboard.shift
+toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\t' mods))        = Just $ if mods ^. Keyboard.shift
     then openEdit
     else openFresh
 toAction _ = Nothing

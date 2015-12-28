@@ -3,10 +3,8 @@ precision highp float;
 #endif
 
 uniform vec4 color;
-uniform float visible;
 uniform float camFactor;
-uniform vec3 size;
-
+uniform vec2 size;
 varying vec2 distance;
 
 uniform int antialias;
@@ -15,7 +13,6 @@ uniform int objectMap;
 
 
 void main() {
-    if (visible < 1.0) discard;
     if (objectMap == 1) discard;
 
     float width = 6.0;

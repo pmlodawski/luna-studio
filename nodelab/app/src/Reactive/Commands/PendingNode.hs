@@ -4,7 +4,7 @@ import           Utils.PreludePlus
 import           Object.Widget.Node (PendingNode(..))
 import qualified Object.Widget.Node as Model
 import           Object.Node        (Node, nodePos, expression)
-import           Object.Widget      (WidgetFile, objectId, widget, UIDisplayObject(..))
+import           Object.Widget      (WidgetFile, objectId, widget, UIDisplayObject(..), CompositeWidget, createWidget, updateWidget, ResizableWidget)
 import           JS.Node            (createPendingNode)
 import           Utils.Vector       (Vector2, lengthSquared)
 
@@ -48,3 +48,9 @@ unrenderPending node = do
 instance UIDisplayObject PendingNode where
     createUI = undefined
     updateUI = undefined
+
+instance CompositeWidget PendingNode where
+    createWidget _   _ = return ()
+    updateWidget _ _ _ = return ()
+
+instance ResizableWidget PendingNode

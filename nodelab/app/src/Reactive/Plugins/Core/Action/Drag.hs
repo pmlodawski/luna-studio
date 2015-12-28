@@ -9,7 +9,7 @@ import qualified JS.NodeGraph   as UI
 import           Object.Object
 import           Object.Node
 import           Object.UITypes
-import           Object.Widget
+import           Object.Widget   (WidgetFile, objectId, widget, widgetPosition)
 
 import           Event.Keyboard hiding        (Event)
 import qualified Event.Keyboard as Keyboard
@@ -39,10 +39,10 @@ import           Control.Monad.State          hiding (State)
 import qualified UI.Generic as UI
 
 toAction :: Event -> Maybe (Command State ())
-toAction (Mouse event@(Mouse.Event Mouse.Pressed  pos   Mouse.LeftButton (KeyMods False False False False) (Just _))) = Just $ startDrag pos
-toAction (Mouse event@(Mouse.Event Mouse.Moved    pos Mouse.LeftButton _ _)) = Just $ handleMove pos
-toAction (Mouse event@(Mouse.Event Mouse.Released _   Mouse.LeftButton _ _)) = Just stopDrag
-toAction _                                                                   = Nothing
+toAction (Mouse _ event@(Mouse.Event Mouse.Pressed  pos   Mouse.LeftButton (KeyMods False False False False) (Just _))) = Just $ startDrag pos
+toAction (Mouse _ event@(Mouse.Event Mouse.Moved    pos Mouse.LeftButton _ _)) = Just $ handleMove pos
+toAction (Mouse _ event@(Mouse.Event Mouse.Released _   Mouse.LeftButton _ _)) = Just stopDrag
+toAction _                                                                     = Nothing
 
 
 isNodeUnderCursor :: Command UIRegistry.State Bool

@@ -5,12 +5,12 @@ import           Utils.PreludePlus
 import           Utils.Vector
 import           GHCJS.Foreign
 import           GHCJS.DOM.EventM
-import           GHCJS.Types      ( JSRef, JSString )
+import           GHCJS.Types      (JSRef, JSString)
 import           GHCJS.DOM.EventTargetClosures (EventName, unsafeEventName)
-import           Data.JSString.Text ( lazyTextFromJSString, lazyTextToJSString )
+import           Data.JSString.Text (lazyTextFromJSString, lazyTextToJSString)
 import qualified Data.JSString as JSString
 
-import           JavaScript.Array ( JSArray )
+import           JavaScript.Array (JSArray)
 import qualified JavaScript.Array as JSArray
 
 import qualified Data.Text.Lazy as Text

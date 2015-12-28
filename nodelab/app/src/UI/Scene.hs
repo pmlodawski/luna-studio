@@ -1,17 +1,14 @@
-{-# LANGUAGE JavaScriptFFI #-}
-{-# LANGUAGE OverloadedStrings #-}
-
 module UI.Scene where
 
 import           Utils.PreludePlus
 
+import qualified Data.JSString      as JSString
 import           GHCJS.Foreign
-import           GHCJS.Types         (JSVal)
-import           Object.Widget
-import qualified Data.JSString as JSString
-import           Object.UITypes
-import           GHCJS.Marshal.Pure(PToJSVal(..), PFromJSVal(..))
-import           UI.Widget
+import           GHCJS.Marshal.Pure (PFromJSVal (..), PToJSVal (..))
+import           GHCJS.Types        (JSVal)
+
+import           Object.Widget      (WidgetId)
+import           UI.Widget          (UIContainer, UIWidget)
 
 newtype Scene = Scene { unScene :: JSVal } deriving (PFromJSVal, PToJSVal)
 

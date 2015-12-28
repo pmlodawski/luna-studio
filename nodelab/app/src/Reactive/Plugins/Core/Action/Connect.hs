@@ -10,7 +10,7 @@ import           Object.Object
 import           Object.Port
 import           Object.Node
 import           Object.UITypes
-import           Object.Widget
+import           Object.Widget                 (WidgetFile, widget, parent)
 import qualified Object.Widget.Connection      as UIConnection
 import qualified Object.Widget.Port            as PortModel
 import qualified Object.Widget.Node            as NodeModel
@@ -37,11 +37,11 @@ import qualified BatchConnector.Commands       as BatchCmd
 
 
 toAction :: Event -> Maybe (Command State ())
-toAction (Mouse event@(Mouse.Event Mouse.Pressed  _   Mouse.LeftButton _ (Just _))) = Just $ startDrag event
-toAction (Mouse event@(Mouse.Event Mouse.Moved    pos Mouse.LeftButton _ _)) = Just $ whileConnecting $ handleMove pos
-toAction (Mouse event@(Mouse.Event Mouse.Moved    _   _                _ _)) = Just $ whileConnecting $ stopDrag'
-toAction (Mouse event@(Mouse.Event Mouse.Released _   Mouse.LeftButton _ _)) = Just $ whileConnecting $ stopDrag event
-toAction _                                                                   = Nothing
+toAction (Mouse _ event@(Mouse.Event Mouse.Pressed  _   Mouse.LeftButton _ (Just _))) = Just $ startDrag event
+toAction (Mouse _ event@(Mouse.Event Mouse.Moved    pos Mouse.LeftButton _ _)) = Just $ whileConnecting $ handleMove pos
+toAction (Mouse _ event@(Mouse.Event Mouse.Moved    _   _                _ _)) = Just $ whileConnecting $ stopDrag'
+toAction (Mouse _ event@(Mouse.Event Mouse.Released _   Mouse.LeftButton _ _)) = Just $ whileConnecting $ stopDrag event
+toAction _                                                                     = Nothing
 
 showCurrentConnection :: Vector2 Double -> Vector2 Double -> Command UIRegistry.State ()
 showCurrentConnection from to = UICmd.update_ UIRegistry.currentConnectionId $ (UIConnection.currentFrom    .~ from)

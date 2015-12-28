@@ -1,6 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
 
-module Reactive.State.UIRegistry where
+module Reactive.State.UIRegistry (
+    Object.Widget.State,
+    Object.Widget.WidgetMap,
+    module Reactive.State.UIRegistry
+)
+where
 
 import           Utils.PreludePlus hiding (children, lookup)
 import           Utils.Vector
@@ -8,7 +15,7 @@ import           Utils.Vector
 import           Object.Widget
 import           Object.Widget.Scene
 import           Object.Widget.Connection
-import UI.Widget.Connection ()
+import           UI.Widget.Connection ()
 
 import           Data.IntMap.Lazy (IntMap)
 import qualified Data.Text.Lazy as Text
@@ -24,32 +31,39 @@ import           Control.Monad.Trans.RWS (RWS)
 
 import           Reactive.Commands.Command (Command, performIO, pureCommand)
 
-import Data.Aeson (ToJSON, toJSON, object, Value)
+import           Data.Aeson (ToJSON, toJSON, object, Value)
 import           Utils.Aeson (intMapToJSON)
 import           Data.HMap.Lazy (HTMap)
 import qualified Data.HMap.Lazy as HMap
 
+-- instance {-# OVERLAPPABLE #-} DisplayObjectClass a => CompositeWidget a where
+--     createWidget _   _ = return ()
+--     updateWidget _ _ _ = performIO $ putStrLn "Generic update noop"
+
+instance CompositeWidget Scene where
+    createWidget _   _ = return ()
+    updateWidget _ _ _ = return ()
+
+instance ResizableWidget Scene
+
+-- instance CompositeWidget CurrentConnection where
+--     createWidget _   _ = return ()
+--     updateWidget _ _ _ = return ()
 
 sceneInterfaceId, sceneGraphId, currentConnectionId :: Int
 sceneInterfaceId    = 1
 sceneGraphId        = 2
 currentConnectionId = 3
 
-type WidgetMap = IntMap (WidgetFile DisplayObject)
-
-data State = State { _widgets         :: WidgetMap
-                     , _widgetOver      :: Maybe WidgetId
-                     , _dragState       :: Maybe DragState
-                     , _focusedWidget   :: Maybe WidgetId
-                     } deriving (Generic)
 
 makeLenses ''State
 
 instance ToJSON State where
-    toJSON st = object [ ("_widgets"      , intMapToJSON $ st ^. widgets)
-                       , ("_widgetOver"   , toJSON $ st ^. widgetOver   )
-                       , ("_dragState"    , toJSON $ st ^. dragState    )
-                       , ("_focusedWidget", toJSON $ st ^. focusedWidget)
+    toJSON st = object [ ("_widgets"        , intMapToJSON $ st ^. widgets  )
+                       , ("_widgetOver"     , toJSON $ st ^. widgetOver     )
+                       , ("_dragState"      , toJSON $ st ^. dragState      )
+                       , ("_focusedWidget"  , toJSON $ st ^. focusedWidget  )
+                       , ("_mouseDownWidget", toJSON $ st ^. mouseDownWidget)
                        ]
 
 instance Eq State where
@@ -67,7 +81,7 @@ defaultWidgets = [ (sceneInterfaceId,     sceneInterface)
     currentConnection = WidgetFile currentConnectionId (toCtxDynamic $ CurrentConnection False def def def) Nothing [] def
 
 instance Default State where
-    def = State (fromList defaultWidgets) def def def
+    def = State (fromList defaultWidgets) def def def def
 
 lookup :: WidgetId -> State -> Maybe (WidgetFile DisplayObject)
 lookup idx state = IntMap.lookup idx (state ^. widgets)
@@ -85,7 +99,7 @@ register parent a handlers state = (widgetFile, state & widgets .~ newWidgets') 
     newId         = generateId state
     oldWidgets    = state ^. widgets
     (Just oldParent) = IntMap.lookup parent oldWidgets
-    newParent     = oldParent & children .~ (newId:(oldParent ^. children))
+    newParent     = oldParent & children .~ (oldParent ^. children) ++ [newId]
     dynamicFile   = WidgetFile newId (toCtxDynamic a) (Just parent) [] handlers
     widgetFile    = WidgetFile newId a (Just parent) [] handlers
 
@@ -128,7 +142,15 @@ unregisterRWS oid = do
     RWS.tell [oid]
 
 unregister :: WidgetId -> State -> ([WidgetId], State)
-unregister oid = swap . RWS.execRWS (unregisterRWS oid) ()
+unregister oid oldState = (outWidgets, state) where
+    widgetParent        = oldState ^? widgets . (ix oid) . parent
+    (outWidgets, state) = case widgetParent of
+        Just widgetParent -> (outWidgets, state') where
+            (state, outWidgets) = RWS.execRWS (unregisterRWS oid) () oldState
+            state' = case widgetParent of
+                Just widgetParent -> state & widgets . ix widgetParent . children %~ delete oid
+                Nothing           -> state
+        Nothing     -> ([], state)
 
 unregisterM :: WidgetId -> Command State [WidgetId]
 unregisterM = MState.state . unregister

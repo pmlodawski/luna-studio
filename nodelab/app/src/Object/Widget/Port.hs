@@ -23,6 +23,9 @@ angle = to (toAngle . view angleVector )
 
 instance IsDisplayObject Port where
     widgetPosition = lens (\x -> Vector2 0.0 0.0) (error "Port has no position setter")
+    widgetSize     = lens get set where
+        get _      = Vector2 0.0 0.0
+        set w _    = w
 
 
 -- instance HandlesMouseOver Port where

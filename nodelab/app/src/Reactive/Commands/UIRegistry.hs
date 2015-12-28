@@ -2,7 +2,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Reactive.Commands.UIRegistry where
 
-import           Utils.PreludePlus
+import           Utils.PreludePlus hiding (children)
 import           JS.Widget         as UI
 import           Object.UITypes    (WidgetId)
 import           Object.Widget
@@ -14,41 +14,108 @@ import qualified UI.Generic as UI
 import qualified Data.HMap.Lazy as HMap
 import           Data.HMap.Lazy (HTMap,TypeKey(..))
 
-register :: DisplayObjectClass a => WidgetId -> a -> HTMap -> Command UIRegistry.State WidgetId
+register :: (CompositeWidget a, DisplayObjectClass a) => WidgetId -> a -> HTMap -> Command UIRegistry.State WidgetId
 register parent model handlers = do
     file <- UIRegistry.registerM parent model handlers
     performIO $ createUI parent (file ^. objectId) model
+    createWidget (file ^. objectId) model
+    triggerChildrenResized parent (file ^. objectId)
     return (file ^. objectId)
 
-update :: DisplayObjectClass a => WidgetId -> (a -> a) -> Command UIRegistry.State a
+register_ :: (CompositeWidget a, DisplayObjectClass a) => WidgetId -> a -> HTMap -> Command UIRegistry.State ()
+register_ parent model handlers = void $ register parent model handlers
+
+update :: (CompositeWidget a, DisplayObjectClass a) => WidgetId -> (a -> a) -> Command UIRegistry.State a
 update id fun = do
     oldWidget <- UIRegistry.lookupTypedM  id
     case oldWidget of
-        Nothing        -> error $ "Widget " <> (show id) <> " not found!"
+        Nothing        -> error $ "update: Widget " <> (show id) <> " not found or wrong type!"
         Just oldWidget -> do
             newWidget  <- UIRegistry.updateWidgetM id fun
             performIO $ updateUI id (oldWidget ^. widget) newWidget
+            updateWidget id (oldWidget ^. widget) newWidget
             return newWidget
 
-update_ :: DisplayObjectClass a => WidgetId -> (a -> a) -> Command UIRegistry.State ()
-update_ id fun = update id fun >> return ()
+update_ :: (CompositeWidget a, DisplayObjectClass a) => WidgetId -> (a -> a) -> Command UIRegistry.State ()
+update_ id fun = void $ update id fun
 
 move :: WidgetId -> Vector2 Double -> Command UIRegistry.State ()
 move id vec = do
     UIRegistry.widgets . ix id . widget . widgetPosition .= vec
     performIO $ UI.updatePosition' id vec
 
+moveY :: WidgetId -> Double -> Command UIRegistry.State ()
+moveY id ny = do
+    pos <- preuse $ UIRegistry.widgets . ix id . widget . widgetPosition
+    forM_ pos $ \(Vector2 px _) -> do
+        UIRegistry.widgets . ix id . widget . widgetPosition . y .= ny
+        let vec = Vector2 px ny
+        performIO $ UI.updatePosition' id vec
+
+moveX :: WidgetId -> Double -> Command UIRegistry.State ()
+moveX id nx = do
+    pos <- preuse $ UIRegistry.widgets . ix id . widget . widgetPosition
+    forM_ pos $ \(Vector2 _ py) -> do
+        UIRegistry.widgets . ix id . widget . widgetPosition . x .= nx
+        let vec = Vector2 nx py
+        performIO $ UI.updatePosition' id vec
+
 moveBy :: WidgetId -> Vector2 Double -> Command UIRegistry.State ()
 moveBy id vec = do
     UIRegistry.widgets . ix id . widget . widgetPosition += vec
     pos <- preuse $ UIRegistry.widgets . ix id . widget . widgetPosition
-    forM_ pos $  performIO . (UI.updatePosition' id)
+    forM_ pos $ performIO . (UI.updatePosition' id)
 
-get :: DisplayObjectClass a => WidgetId -> Lens' a b -> Command UIRegistry.State b
+
+newtype ChildrenResizedHandler = ChildrenResizedHandler (WidgetId -> WidgetId -> Command UIRegistry.State ())
+triggerChildrenResized :: WidgetId -> WidgetId -> Command UIRegistry.State ()
+triggerChildrenResized id child = do
+    let key = TypeKey :: TypeKey ChildrenResizedHandler
+    maybeHandler <- handler id key
+    forM_ maybeHandler $ \(ChildrenResizedHandler handler) -> handler id child
+
+resize :: WidgetId -> Vector2 Double -> Command UIRegistry.State ()
+resize id vec = resize' id (\_ -> vec)
+
+resize' :: WidgetId -> (Vector2 Double -> Vector2 Double) -> Command UIRegistry.State ()
+resize' = resize'CB True
+
+resizeNoCB :: WidgetId -> (Vector2 Double -> Vector2 Double) -> Command UIRegistry.State ()
+resizeNoCB = resize'CB False
+
+resize'CB :: Bool -> WidgetId -> (Vector2 Double -> Vector2 Double) -> Command UIRegistry.State ()
+resize'CB cb id f = do
+    UIRegistry.widgets . ix id . widget . widgetSize %= f
+    widgetFile <- preuse $ UIRegistry.widgets . ix id
+    forM_ widgetFile $ \widgetFile -> do
+        let model   = widgetFile ^. widget
+            wParent = widgetFile ^. parent
+        resizeWidget id (model ^. widgetSize) model
+        when cb $ forM_ wParent $ flip triggerChildrenResized id
+
+get :: DisplayObjectClass a => WidgetId -> Getter a b -> Command UIRegistry.State b
 get id f = do
     maybeFile <- UIRegistry.lookupTypedM id
-    let file     = fromMaybe (error "updateWidgetM: invalidType") maybeFile
-    return $ (file ^. widget . f)
+    let file     = fromMaybe (error "get: invalid type or widget not exists") maybeFile
+    return $ file ^. widget . f
+
+get' :: WidgetId -> Getter DisplayObject b -> Command UIRegistry.State b
+get' id f = do
+    maybeFile <- UIRegistry.lookupM id
+    let file     = fromMaybe (error $ "get': " <> (show id) <> " widget not exists") maybeFile
+    return $ file ^. widget . f
+
+lookup :: DisplayObjectClass a => WidgetId -> Command UIRegistry.State a
+lookup id = do
+    maybeFile <- UIRegistry.lookupTypedM id
+    let file   = fromMaybe (error "updateWidgetM: invalidType") maybeFile
+    return $ file ^. widget
+
+children :: WidgetId -> Command UIRegistry.State [WidgetId]
+children id = do
+    maybeFile <- UIRegistry.lookupM id
+    let file   = fromMaybe (error "children: widget not exists") maybeFile
+    return $ file ^. Object.Widget.children
 
 handler :: Typeable k => WidgetId -> TypeKey k -> Command UIRegistry.State (Maybe k)
 handler id k = do

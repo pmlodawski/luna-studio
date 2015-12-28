@@ -24,9 +24,6 @@ import           Data.Aeson (ToJSON)
 
 import           Reactive.State.Camera (Camera, screenToWorkspace)
 
-import System.IO.Unsafe (unsafePerformIO)
-
-
 data Ports = Ports { _inputPorts  :: PortCollection
                    , _outputPorts :: PortCollection
                    } deriving (Eq, Show, Generic)

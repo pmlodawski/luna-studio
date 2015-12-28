@@ -42,6 +42,7 @@ import qualified UI.Widget.Port as UIPort
 import qualified UI.Widget.Connection as UIConnection
 import qualified UI.Generic as UIGeneric
 import           Reactive.State.Camera (Camera, screenToWorkspace)
+import           UI.Instances ()
 
 updateConnNodes :: [NodeId] -> Command Global.State ()
 updateConnNodes nodeIds = pureCommand $ \state -> let
@@ -113,8 +114,7 @@ localConnectNodes src dst = do
     forM_ connectionId $ \connectionId -> do
         nodePositions  <- zoom Global.uiRegistry nodePositionMap
         portAngles     <- zoom Global.uiRegistry portRefToAngleMap
-        zoom Global.uiRegistry $ UICmd.register sceneGraphId (ConnectionModel.Connection connectionId False def def def) def
-        return ()
+        zoom Global.uiRegistry $ UICmd.register_ sceneGraphId (ConnectionModel.Connection connectionId False def def def) def
     updatePortAngles
     updateConnections
 
