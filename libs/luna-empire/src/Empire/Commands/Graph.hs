@@ -7,8 +7,9 @@ import           Empire.Data.Project     (ProjectId)
 import           Empire.Data.Library     (LibraryId)
 import qualified Empire.Data.Library     as Library
 import qualified Empire.Data.Graph       as Graph
-import           Empire.Data.Graph       (Graph, NodeId)
+import           Empire.Data.Graph       (Graph)
 import           Empire.Data.Port        (InPort(..), OutPort(..))
+import           Empire.Data.Node        (NodeId)
 
 import           Empire.Empire
 import           Empire.Commands.Library (withLibrary)
