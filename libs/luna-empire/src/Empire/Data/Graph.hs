@@ -1,6 +1,7 @@
 module Empire.Data.Graph where
 
 import           Prologue
+import qualified Empire.Utils.IdGen     as IdGen
 import           Empire.Data.AST        (AST)
 import qualified Data.IntMap            as IntMap
 import           Data.IntMap            (IntMap)
@@ -17,5 +18,4 @@ instance Default Graph where
     def = Graph def def
 
 nextNodeId :: Graph -> NodeId
-nextNodeId graph = if IntMap.null nodesMap then 0 else 1 + (fst . IntMap.findMax $ nodesMap) where
-    nodesMap = graph ^. nodeMapping
+nextNodeId graph = IdGen.nextId $ graph ^. nodeMapping

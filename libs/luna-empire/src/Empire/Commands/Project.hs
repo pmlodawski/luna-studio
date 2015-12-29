@@ -1,4 +1,8 @@
-module Empire.Commands.Project where
+module Empire.Commands.Project
+    ( withProject
+    , listProjects
+    , createProject
+    ) where
 
 import           Prologue
 import           Control.Monad.State
@@ -9,16 +13,10 @@ import qualified Empire.Empire           as Empire
 import           Empire.Data.Project     (Project)
 import qualified Empire.Data.Project     as Project
 import           Empire.API.Data.Project (ProjectId)
+import qualified Empire.Utils.IdGen     as IdGen
 
 import           System.Path             (Path)
 import qualified Data.IntMap             as IntMap
-
-insertAtNewId :: Project -> Command ProjectManager ProjectId
-insertAtNewId project = do
-    pm <- get
-    let key = if IntMap.null pm then 0 else 1 + (fst . IntMap.findMax $ pm)
-    at key ?= project
-    return key
 
 createProject :: Maybe String -> Path -> Empire (ProjectId, Project)
 createProject name path = do
@@ -37,3 +35,12 @@ withProject pid cmd = zoom (Empire.projectManager . at pid) $ do
         Just project -> do
             let result = (_2 %~ Just) <$> Empire.runEmpire project cmd
             Empire.empire $ const result
+
+-- internal
+
+insertAtNewId :: Project -> Command ProjectManager ProjectId
+insertAtNewId project = do
+    pm <- get
+    let key = IdGen.nextId pm
+    at key ?= project
+    return key

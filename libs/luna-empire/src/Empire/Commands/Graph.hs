@@ -44,7 +44,7 @@ disconnect' pid lid _ _ dstNodeId dstPort = withGraph pid lid $ do
         Self    -> unAcc dstNodeId
         Arg num -> unApp dstNodeId num
 
--- implementation
+-- internal
 
 withGraph :: ProjectId -> LibraryId -> Command Graph a -> Empire a
 withGraph pid lid = withLibrary pid lid . zoom Library.body
