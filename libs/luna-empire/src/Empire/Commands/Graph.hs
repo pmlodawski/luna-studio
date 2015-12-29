@@ -27,14 +27,20 @@ addNode pid lid expr = withGraph pid lid $ do
     Graph.nodeMapping . at newNodeId ?= refNode
     return newNodeId
 
-connect :: ProjectId -> LibraryId -> NodeId -> OutPort -> NodeId -> InPort -> Empire ()
-connect pid lid srcNodeId _ dstNodeId dstPort = withGraph pid lid $ do
+connect :: ProjectId -> LibraryId -> NodeId -> NodeId -> InPort -> Empire ()
+connect pid lid srcNodeId dstNodeId dstPort = connect' pid lid srcNodeId undefined dstNodeId dstPort
+
+connect' :: ProjectId -> LibraryId -> NodeId -> OutPort -> NodeId -> InPort -> Empire ()
+connect' pid lid srcNodeId _ dstNodeId dstPort = withGraph pid lid $ do
     case dstPort of
         Self    -> makeAcc srcNodeId dstNodeId
         Arg num -> makeApp srcNodeId dstNodeId num
 
-disconnect :: ProjectId -> LibraryId -> NodeId -> OutPort -> NodeId -> InPort -> Empire ()
-disconnect pid lid _ _ dstNodeId dstPort = withGraph pid lid $ do
+disconnect :: ProjectId -> LibraryId -> NodeId -> InPort -> Empire ()
+disconnect pid lid dstNodeId dstPort = disconnect' pid lid undefined undefined dstNodeId dstPort
+
+disconnect' :: ProjectId -> LibraryId -> NodeId -> OutPort -> NodeId -> InPort -> Empire ()
+disconnect' pid lid _ _ dstNodeId dstPort = withGraph pid lid $ do
     case dstPort of
         Self    -> unAcc dstNodeId
         Arg num -> unApp dstNodeId num
