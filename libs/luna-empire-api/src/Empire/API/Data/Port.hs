@@ -1,5 +1,3 @@
-{-# LANGUAGE DeriveGeneric #-}
-
 module Empire.API.Data.Port where
 
 import Prologue

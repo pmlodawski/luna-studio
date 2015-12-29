@@ -1,5 +1,3 @@
-{-# LANGUAGE DeriveGeneric #-}
-
 module Empire.API.Graph.Connect where
 
 import Prologue

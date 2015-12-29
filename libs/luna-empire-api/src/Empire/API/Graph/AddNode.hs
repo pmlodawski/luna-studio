@@ -1,5 +1,3 @@
-{-# LANGUAGE DeriveGeneric #-}
-
 module Empire.API.Graph.AddNode where
 
 import Prologue
