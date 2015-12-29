@@ -5,7 +5,7 @@ import           Empire.Data.AST        (AST)
 import qualified Data.IntMap            as IntMap
 import           Data.IntMap            (IntMap)
 import           Luna.Syntax.Repr.Graph (Ref, Node)
-import           Empire.Objects.Node    (NodeId)
+import           Empire.API.Data.Node   (NodeId)
 
 data Graph = Graph { _ast         :: AST
                    , _nodeMapping :: IntMap (Ref Node)

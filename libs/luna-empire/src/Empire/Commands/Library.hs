@@ -11,8 +11,8 @@ import qualified Empire.Data.Project      as Project
 import           Empire.Data.Library      (Library)
 import qualified Empire.Data.Library      as Library
 
-import           Empire.Objects.Project  (ProjectId)
-import           Empire.Objects.Library  (LibraryId)
+import           Empire.API.Data.Project  (ProjectId)
+import           Empire.API.Data.Library  (LibraryId)
 
 import           Empire.Empire            (Empire, Command)
 import qualified Empire.Empire            as Empire

@@ -1,8 +1,8 @@
 module Empire.API.Graph.AddNode where
 
 import Prologue
-import Empire.Objects.Project (ProjectId)
-import Empire.Objects.Library (LibraryId)
+import Empire.API.Data.Project (ProjectId)
+import Empire.API.Data.Library (LibraryId)
 
 data AddNode = AddNode { _projectId :: ProjectId
                        , _libraryId :: LibraryId

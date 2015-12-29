@@ -8,7 +8,7 @@ import           Empire.Empire           (Empire, Command, ProjectManager)
 import qualified Empire.Empire           as Empire
 import           Empire.Data.Project     (Project)
 import qualified Empire.Data.Project     as Project
-import           Empire.Objects.Project  (ProjectId)
+import           Empire.API.Data.Project (ProjectId)
 
 import           System.Path             (Path)
 import qualified Data.IntMap             as IntMap

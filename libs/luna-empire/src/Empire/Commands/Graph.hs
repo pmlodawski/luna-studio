@@ -11,10 +11,10 @@ import qualified Empire.Data.Library     as Library
 import qualified Empire.Data.Graph       as Graph
 import           Empire.Data.Graph       (Graph)
 
-import           Empire.Objects.Project  (ProjectId)
-import           Empire.Objects.Library  (LibraryId)
-import           Empire.Objects.Port     (InPort(..), OutPort(..))
-import           Empire.Objects.Node     (NodeId)
+import           Empire.API.Data.Project (ProjectId)
+import           Empire.API.Data.Library (LibraryId)
+import           Empire.API.Data.Port    (InPort(..), OutPort(..))
+import           Empire.API.Data.Node    (NodeId)
 
 import           Empire.Empire
 import           Empire.Commands.Library (withLibrary)

@@ -1,10 +1,10 @@
 module Empire.API.Graph.Connect where
 
 import Prologue
-import Empire.Objects.Project (ProjectId)
-import Empire.Objects.Library (LibraryId)
-import Empire.Objects.Node    (NodeId)
-import Empire.Objects.Port    (OutPort, InPort)
+import Empire.API.Data.Project (ProjectId)
+import Empire.API.Data.Library (LibraryId)
+import Empire.API.Data.Node    (NodeId)
+import Empire.API.Data.Port    (OutPort, InPort)
 
 data Connect = Connect { _projectId :: ProjectId
                        , _libraryId :: LibraryId

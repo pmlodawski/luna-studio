@@ -2,7 +2,7 @@ module Empire.Empire where
 
 import           Prologue
 import           Empire.Data.Project     (Project)
-import           Empire.Objects.Project  (ProjectId)
+import           Empire.API.Data.Project (ProjectId)
 
 import           Control.Monad.State
 import           Control.Monad.Error     (ErrorT(..), runErrorT, throwError)

@@ -1,4 +1,4 @@
-module Empire.Objects.DefaultValue where
+module Empire.API.Data.DefaultValue where
 
 import Prologue
 

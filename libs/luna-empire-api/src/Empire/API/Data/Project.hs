@@ -1,4 +1,4 @@
-module Empire.Objects.Project where
+module Empire.API.Data.Project where
 
 import Prologue
 

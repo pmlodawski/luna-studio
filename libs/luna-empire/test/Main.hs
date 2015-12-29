@@ -13,7 +13,7 @@ import           Luna.Diagnostic.AST (toGraphViz, render)
 import           Empire.Data.AST
 import           Empire.Data.Graph
 import           Empire.Data.Library
-import           Empire.Objects.Port
+import           Empire.API.Data.Port
 import           Empire.Empire
 import           Empire.Commands.Project
 import           Empire.Commands.Library

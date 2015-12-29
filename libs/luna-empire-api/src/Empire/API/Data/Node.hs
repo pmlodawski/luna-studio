@@ -1,9 +1,9 @@
-module Empire.Objects.Node where
+module Empire.API.Data.Node where
 
 import Prologue
 import Data.Map.Lazy (Map)
 
-import Empire.Objects.Port (PortId, Port)
+import Empire.API.Data.Port (PortId, Port)
 
 type NodeId = Int
 
