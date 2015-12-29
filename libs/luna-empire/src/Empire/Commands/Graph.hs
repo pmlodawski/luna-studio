@@ -6,6 +6,7 @@ module Empire.Commands.Graph
 
 import           Prologue
 import           Control.Monad.State
+import           Control.Monad.Error     (throwError)
 
 import qualified Empire.Data.Library     as Library
 import qualified Empire.Data.Graph       as Graph
@@ -27,14 +28,12 @@ addNode pid lid expr = withGraph pid lid $ do
     Graph.nodeMapping . at newNodeId ?= refNode
     return newNodeId
 
-connect :: ProjectId -> LibraryId -> NodeId -> NodeId -> InPort -> Empire ()
-connect pid lid srcNodeId dstNodeId dstPort = connect' pid lid srcNodeId undefined dstNodeId dstPort
-
-connect' :: ProjectId -> LibraryId -> NodeId -> OutPort -> NodeId -> InPort -> Empire ()
-connect' pid lid srcNodeId _ dstNodeId dstPort = withGraph pid lid $ do
+connect :: ProjectId -> LibraryId -> NodeId -> OutPort -> NodeId -> InPort -> Empire ()
+connect pid lid srcNodeId All dstNodeId dstPort = withGraph pid lid $ do
     case dstPort of
         Self    -> makeAcc srcNodeId dstNodeId
         Arg num -> makeApp srcNodeId dstNodeId num
+connect pid lid srcNodeId _ dstNodeId dstPort = throwError "Source port should be All"
 
 disconnect :: ProjectId -> LibraryId -> NodeId -> InPort -> Empire ()
 disconnect pid lid dstNodeId dstPort = disconnect' pid lid undefined undefined dstNodeId dstPort
@@ -57,7 +56,6 @@ unAcc nodeId = do
     zoom Graph.ast $ AST.removeNode dstAst
     newNodeRef <- zoom Graph.ast $ AST.makeVar nameNode
     Graph.nodeMapping . at nodeId ?= newNodeRef
-    return ()
 
 unApp :: NodeId -> Int -> Command Graph ()
 unApp nodeId pos = do
@@ -73,7 +71,6 @@ makeAcc src dst = do
     zoom Graph.ast $ AST.removeNode dstAst
     newNodeRef <- zoom Graph.ast $ AST.makeAccessor srcAst name
     Graph.nodeMapping . at dst ?= newNodeRef
-    return ()
 
 makeApp :: NodeId -> NodeId -> Int -> Command Graph ()
 makeApp src dst pos = do
@@ -81,4 +78,3 @@ makeApp src dst pos = do
     dstAst <- use (Graph.nodeMapping . at dst) <?!> "Destination node does not exist"
     newNodeRef <- zoom Graph.ast $ AST.applyFunction dstAst srcAst pos
     Graph.nodeMapping . at dst ?= newNodeRef
-    return ()

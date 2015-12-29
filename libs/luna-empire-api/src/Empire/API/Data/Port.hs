@@ -1,10 +1,17 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module Empire.API.Data.Port where
 
 import Prologue
+import Data.Binary
+
 import Empire.API.Data.DefaultValue (PortDefault)
 
-data InPort  = Self | Arg Int        deriving (Show, Eq)
-data OutPort = All  | Projection Int deriving (Show, Eq)
+data InPort  = Self | Arg Int        deriving (Generic, Show, Eq)
+data OutPort = All  | Projection Int deriving (Generic, Show, Eq)
+
+instance Binary InPort
+instance Binary OutPort
 
 data PortId = InPortId InPort | OutPortId OutPort deriving (Show, Eq)
 
