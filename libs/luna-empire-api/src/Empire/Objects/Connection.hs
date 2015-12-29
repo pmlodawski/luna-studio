@@ -1,8 +1,8 @@
-module Empire.Data.Connection where
+module Empire.Objects.Connection where
 
 import Prologue
-import Empire.Data.Port (OutPort, InPort)
-import Empire.Data.Node (NodeId)
+import Empire.Objects.Port (OutPort, InPort)
+import Empire.Objects.Node (NodeId)
 
 data InPortRef  = InPortRef  { _dstNodeId :: NodeId
                              , _dstPortId :: InPort

@@ -1,22 +1,24 @@
-module Empire.Commands.Graph where
+module Empire.Commands.Graph
+    ( addNode
+    , connect
+    , disconnect
+    ) where
 
 import           Prologue
 import           Control.Monad.State
 
-import           Empire.Data.Project     (ProjectId)
-import           Empire.Data.Library     (LibraryId)
 import qualified Empire.Data.Library     as Library
 import qualified Empire.Data.Graph       as Graph
 import           Empire.Data.Graph       (Graph)
-import           Empire.Data.Port        (InPort(..), OutPort(..))
-import           Empire.Data.Node        (NodeId)
+
+import           Empire.Objects.Project  (ProjectId)
+import           Empire.Objects.Library  (LibraryId)
+import           Empire.Objects.Port     (InPort(..), OutPort(..))
+import           Empire.Objects.Node     (NodeId)
 
 import           Empire.Empire
 import           Empire.Commands.Library (withLibrary)
 import qualified Empire.Commands.AST     as AST
-
-withGraph :: ProjectId -> LibraryId -> Command Graph a -> Empire a
-withGraph pid lid = withLibrary pid lid . zoom Library.body
 
 addNode :: ProjectId -> LibraryId -> String -> Empire NodeId
 addNode pid lid expr = withGraph pid lid $ do
@@ -36,6 +38,11 @@ disconnect pid lid _ _ dstNodeId dstPort = withGraph pid lid $ do
     case dstPort of
         Self    -> unAcc dstNodeId
         Arg num -> unApp dstNodeId num
+
+-- implementation
+
+withGraph :: ProjectId -> LibraryId -> Command Graph a -> Empire a
+withGraph pid lid = withLibrary pid lid . zoom Library.body
 
 unAcc :: NodeId -> Command Graph ()
 unAcc nodeId = do

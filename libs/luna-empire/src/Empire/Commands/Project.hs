@@ -2,13 +2,16 @@ module Empire.Commands.Project where
 
 import           Prologue
 import           Control.Monad.State
-import           Control.Monad.Error (throwError)
-import           Empire.Empire       (Empire, Command, ProjectManager)
-import qualified Empire.Empire       as Empire
-import           Empire.Data.Project (Project, ProjectId)
-import qualified Empire.Data.Project as Project
-import           System.Path         (Path)
-import qualified Data.IntMap         as IntMap
+import           Control.Monad.Error     (throwError)
+
+import           Empire.Empire           (Empire, Command, ProjectManager)
+import qualified Empire.Empire           as Empire
+import           Empire.Data.Project     (Project)
+import qualified Empire.Data.Project     as Project
+import           Empire.Objects.Project  (ProjectId)
+
+import           System.Path             (Path)
+import qualified Data.IntMap             as IntMap
 
 insertAtNewId :: Project -> Command ProjectManager ProjectId
 insertAtNewId project = do

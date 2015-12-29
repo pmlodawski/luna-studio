@@ -6,8 +6,6 @@ import           System.Path         (Path)
 import           Data.IntMap         (IntMap)
 import qualified Data.IntMap         as IntMap
 
-type ProjectId = Int
-
 data Project = Project { _name     :: Maybe String
                        , _path     :: Path
                        , _libs     :: IntMap Library

@@ -6,10 +6,13 @@ import           Control.Monad.Error      (throwError)
 import           System.Path              (Path)
 import qualified Data.IntMap              as IntMap
 
-import           Empire.Data.Project      (Project, ProjectId)
+import           Empire.Data.Project      (Project)
 import qualified Empire.Data.Project      as Project
-import           Empire.Data.Library      (Library, LibraryId)
+import           Empire.Data.Library      (Library)
 import qualified Empire.Data.Library      as Library
+
+import           Empire.Objects.Project  (ProjectId)
+import           Empire.Objects.Library  (LibraryId)
 
 import           Empire.Empire            (Empire, Command)
 import qualified Empire.Empire            as Empire

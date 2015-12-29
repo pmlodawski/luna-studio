@@ -1,7 +1,7 @@
-module Empire.Data.Port where
+module Empire.Objects.Port where
 
 import Prologue
-import Empire.Data.DefaultValue (PortDefault)
+import Empire.Objects.DefaultValue (PortDefault)
 
 data InPort  = Self | Arg Int        deriving (Show, Eq)
 data OutPort = All  | Projection Int deriving (Show, Eq)

@@ -5,8 +5,6 @@ import System.Path        (Path)
 import Data.Version       (Version)
 import Empire.Data.Graph  (Graph)
 
-type LibraryId = Int
-
 data Library = Library { _name    :: Maybe String
                        , _path    :: Path
                        , _body    :: Graph
