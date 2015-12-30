@@ -6,17 +6,20 @@ import Data.Binary             (Binary)
 import Empire.API.Data.Project (ProjectId)
 import Empire.API.Data.Library (LibraryId)
 import Empire.API.Data.Node    (NodeId)
+import Empire.API.Response
 
 data AddNode = AddNode { _projectId :: ProjectId
                        , _libraryId :: LibraryId
                        , _expr      :: String
                        } deriving (Generic, Show, Eq)
 
-data AddNodeResponse = AddNodeResponse { _nodeId :: NodeId
-                                       } deriving (Generic, Show, Eq)
+data AddNodeResult = AddNodeResult { _nodeId :: NodeId
+                                   } deriving (Generic, Show, Eq)
+
+type AddNodeResponse = Response AddNode AddNodeResult
 
 makeLenses ''AddNode
-makeLenses ''AddNodeResponse
+makeLenses ''AddNodeResult
 
 instance Binary AddNode
-instance Binary AddNodeResponse
+instance Binary AddNodeResult
