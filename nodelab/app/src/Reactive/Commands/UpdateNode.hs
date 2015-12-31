@@ -3,10 +3,8 @@ module Reactive.Commands.UpdateNode where
 import           Utils.PreludePlus
 import           Data.Text.Lazy    (Text)
 
-import           Object.Object     (NodeId)
-import qualified Object.Node       as Node
 import qualified Object.Widget.Node as NodeModel
-import qualified JS.NodeGraph      as UI
+import qualified JS.NodeGraph       as UI
 
 import           Reactive.Commands.Command    (Command, performIO)
 import           Reactive.Commands.Graph      (nodeIdToWidgetId)
@@ -16,6 +14,9 @@ import qualified Reactive.State.Global     as Global
 import qualified Reactive.State.Graph      as Graph
 
 import qualified BatchConnector.Monadic.Commands as BatchCmd
+import           Empire.API.Data.Node (NodeId)
+import qualified Empire.API.Data.Node as Node
+
 
 updateNode :: NodeId -> Text -> Command State ()
 updateNode nodeId expr = do

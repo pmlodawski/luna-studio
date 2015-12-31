@@ -1,7 +1,6 @@
 module Reactive.Plugins.Core.Action.Backend.AddNode where
 
 import           Utils.PreludePlus
-import           Object.Node        (Node)
 import           Event.Event        (Event(Batch))
 import qualified Event.Batch        as Batch
 

@@ -3,8 +3,6 @@ module Reactive.Commands.Selection where
 import           Utils.PreludePlus
 import           Control.Monad.State hiding (State)
 
-import           Object.Object  (NodeId)
-import           Object.Node    (Node)
 import qualified Object.Widget.Node as NodeModel
 import           Object.UITypes (WidgetId)
 import           Object.Widget  (objectId, widget, WidgetFile(..))
@@ -19,6 +17,7 @@ import qualified Reactive.State.Graph      as Graph
 import           Reactive.Commands.Command          (Command, performIO)
 import           Reactive.Commands.Graph            (allNodes)
 import qualified Reactive.Commands.UIRegistry  as UICmd
+
 
 unselectAll :: Command UIRegistry.State ()
 unselectAll = do

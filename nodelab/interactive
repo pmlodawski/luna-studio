@@ -30,6 +30,7 @@ ghcjs  -package-db $(stack path --snapshot-pkg-db) \
        -package flowbox-batch-protobuf \
        -package batch-lib-project-manager-api \
        -package aeson \
+       -package luna-empire-api \
        -XNoImplicitPrelude \
        -XDoAndIfThenElse \
        -XTemplateHaskell \

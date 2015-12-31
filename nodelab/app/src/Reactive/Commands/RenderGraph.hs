@@ -8,10 +8,12 @@ import           Reactive.Commands.AddNode    (addNode)
 import           Reactive.Commands.Command    (Command)
 import           Reactive.Commands.AutoLayout (layoutGraph)
 
-import           Object.Node     (Node, PortRef)
 import qualified Batch.Workspace as Workspace
+import           Empire.API.Data.Node (Node)
+import           Empire.API.Data.Connection (OutPortRef, InPortRef)
+import Debug.Trace (trace)
 
-renderGraph :: [Node] -> [(PortRef, PortRef)] -> Command State ()
+renderGraph :: [Node] -> [(OutPortRef, InPortRef)] -> Command State ()
 renderGraph nodes edges = do
     mapM_ addNode nodes
     mapM_ (uncurry Graph.localConnectNodes) edges

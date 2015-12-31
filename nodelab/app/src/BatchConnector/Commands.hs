@@ -15,8 +15,11 @@ import           Batch.Library              as Library
 import           Batch.Workspace
 import           Batch.Expressions
 import           Batch.Breadcrumbs
-import           Object.Node
-import           Object.Object
+import           Empire.API.Data.Node (Node(..))
+import qualified Empire.API.Data.Node as Node
+import qualified Empire.API.Data.Port as Port
+import           Empire.API.Data.Connection (InPortRef(..), OutPortRef(..))
+import qualified Empire.API.Data.Connection as Connection
 import           BatchConnector.Connection  (sendMessage, sendMany, WebMessage(..))
 import           BatchConnector.Conversion
 
@@ -172,41 +175,46 @@ updateNodes workspace nodes = sendMany $ (updateNodeMessage workspace) <$> nodes
 updateNode :: Node -> Workspace -> IO ()
 updateNode node workspace = sendMessage $ updateNodeMessage workspace node
 
-portRefToList :: PortId -> [Int]
-portRefToList AllPorts     = []
-portRefToList (PortNum id) = [id]
+-- portRefToList :: PortId -> [Int]
+-- portRefToList AllPorts     = []
+-- portRefToList (PortNum id) = [id]
 
-connectNodes :: Workspace -> PortRef -> PortRef -> IO ()
+portIdToListIn  Port.Self    = []
+portIdToListIn (Port.Arg x) = [x]
+portIdToListOut  Port.All    = []
+portIdToListOut (Port.Projection x) = [x]
+
+connectNodes :: Workspace -> OutPortRef -> InPortRef -> IO ()
 connectNodes workspace src dst = sendMessage msg where
     msg  = WebMessage "project.library.ast.function.graph.connect.request" $ messagePut body
-    body = Connect.Request (encode $ src ^. refPortNodeId)
-                           (encode . portRefToList $ src ^. refPortId)
-                           (encode $ dst ^. refPortNodeId)
-                           (encode . portRefToList $ dst ^. refPortId)
+    body = Connect.Request (encode $ src ^. Connection.srcNodeId)
+                           (encode . portIdToListOut $ src ^. Connection.srcPortId)
+                           (encode $ dst ^. Connection.dstNodeId)
+                           (encode . portIdToListIn $ dst ^. Connection.dstPortId)
                            (encode $ workspace ^. breadcrumbs)
                            (workspace ^. library . Library.id)
                            (workspace ^. project . Project.id)
                            uselessLegacyArgument
 
-disconnectMessage :: Workspace -> (PortRef, PortRef) -> WebMessage
-disconnectMessage workspace (srcRef, dstRef) = WebMessage topic $ messagePut body where
+disconnectMessage :: Workspace -> (OutPortRef, InPortRef) -> WebMessage
+disconnectMessage workspace (src, dst) = WebMessage topic $ messagePut body where
     topic = "project.library.ast.function.graph.disconnect.request"
-    body  = Disconnect.Request (encode $ srcRef ^. refPortNodeId)
-                               (encode . portRefToList $ srcRef ^. refPortId)
-                               (encode $ dstRef ^. refPortNodeId)
-                               (encode . portRefToList $ dstRef ^. refPortId)
+    body  = Disconnect.Request (encode $ src ^. Connection.srcNodeId)
+                               (encode . portIdToListOut $ src ^. Connection.srcPortId)
+                               (encode $ dst ^. Connection.dstNodeId)
+                               (encode . portIdToListIn $ dst ^. Connection.dstPortId)
                                (encode $ workspace ^. breadcrumbs)
                                (workspace ^. library . Library.id)
                                (workspace ^. project . Project.id)
                                uselessLegacyArgument
 
-disconnectNodes :: Workspace -> [(PortRef, PortRef)] -> IO ()
+disconnectNodes :: Workspace -> [(OutPortRef, InPortRef)] -> IO ()
 disconnectNodes workspace connections = sendMany $ (disconnectMessage workspace) <$> connections
 
 nodeToCallPointPath :: Workspace -> Node -> CallPointPath
 nodeToCallPointPath workspace node = CallPointPath projectId (Seq.fromList [callPoint]) where
     projectId     = workspace ^. project . Project.id
-    callPoint     = CallPoint (workspace ^. library . Library.id) (encode $ node ^. nodeId)
+    callPoint     = CallPoint (workspace ^. library . Library.id) (encode $ node ^. Node.nodeId)
 
 requestValueMessage :: Workspace -> Node -> WebMessage
 requestValueMessage workspace node = WebMessage "interpreter.value.request" $ messagePut body where
@@ -267,12 +275,12 @@ setCode code workspace = sendMessage msg where
                            (workspace ^. project . Project.id)
                            uselessLegacyArgument
 
-setValue :: Workspace -> PortRef -> String -> IO ()
+setValue :: Workspace -> InPortRef -> String -> IO ()
 setValue workspace portRef value = sendMessage msg where
     msg  = WebMessage "project.library.ast.function.graph.node.default.set.request" $ messagePut body
-    body = SetDefault.Request (encode . portRefToList $ portRef ^. refPortId)
+    body = SetDefault.Request (encode . portIdToListIn $ portRef ^. Connection.dstPortId)
                               (GenExpr.NodeExpr ExprCls.String (Just encodedVal) Nothing)
-                              (encode $ portRef ^. refPortNodeId)
+                              (encode $ portRef ^. Connection.dstNodeId)
                               (encode $ workspace ^. breadcrumbs)
                               (workspace ^. library . Library.id)
                               (workspace ^. project . Project.id)

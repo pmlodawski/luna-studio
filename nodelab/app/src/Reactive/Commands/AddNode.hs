@@ -4,12 +4,10 @@ import           Utils.PreludePlus
 import           Utils.Vector
 
 import qualified Data.Text.Lazy        as Text
+import qualified Data.Map.Lazy         as Map
 import           Control.Monad.State   hiding (State)
 import           GHC.Float             (double2Float)
 
-import           Object.Object
-import           Object.Node
-import           Object.Port
 import           Object.Widget         ()
 import           Object.UITypes        (WidgetId)
 import qualified Object.Widget.Node    as Model
@@ -42,6 +40,13 @@ import qualified Data.HMap.Lazy as HMap
 import           Data.HMap.Lazy (HTMap)
 import           UI.Handlers.Generic (triggerValueChanged, ValueChangedHandler(..))
 
+import           Empire.API.Data.Node (Node)
+import qualified Empire.API.Data.Node as Node
+import           Empire.API.Data.Port (Port)
+import qualified Empire.API.Data.Port as Port
+import           Empire.API.Data.Connection (AnyPortRef(..), toAnyPortRef)
+import           Debug.Trace (trace)
+
 addNode :: Node -> Command State ()
 addNode node = do
     unrenderPending node
@@ -49,71 +54,75 @@ addNode node = do
     zoom Global.uiRegistry $ registerNode node
     updatePortAngles
 
+colorVT _ = 1
+
 registerNode :: Node -> Command UIRegistry.State ()
 registerNode node = do
     let nodeModel = Model.node node
     nodeWidget <- UICmd.register sceneGraphId nodeModel (nodeHandlers node)
 
-    forM_ (getPorts InputPort node) $ \port -> do
-        let portRef    = PortRef (node ^. nodeId) InputPort (port ^. portId)
-            portWidget = PortModel.Port portRef def (colorVT $ port ^. portValueType)
-        portW <- UICmd.register nodeWidget portWidget def
-        createPortControl nodeWidget port portRef
+    forM_ (Map.toList $ node ^. Node.ports) $ \(portId, port) -> do
+        let portRef    = toAnyPortRef (node ^. Node.nodeId) portId
+            portWidget = PortModel.Port portRef def (colorVT $ port ^. Port.valueType)
+        UICmd.register_ nodeWidget portWidget def
+
+        -- createPortControl nodeWidget port portRef
 
     registerOutputPorts nodeWidget node
     focusNode nodeWidget
 
-createPortControl :: WidgetId -> Port -> PortRef -> Command UIRegistry.State (Maybe WidgetId)
-createPortControl parent port portRef = do
-    let pid = port ^. portId
-    case port ^. portValueType of
-        VTFloat -> do
-            let sliderWidget = (ContinuousNumber (Vector2 10 (95 + (fromIntegral $ portIdToNum pid) * 25)) (Vector2 180 20)
-                                       (Text.pack $ "float " <> show pid) 42.42 True Nothing)
-            id <- UICmd.register parent sliderWidget (numberDoubleHandlers portRef)
-            return $ Just id
-        VTNumeric -> do
-            let sliderWidget = (ContinuousNumber (Vector2 10 (95 + (fromIntegral $ portIdToNum pid) * 25)) (Vector2 180 20)
-                                       (Text.pack $ "float " <> show pid) 42.42 True Nothing)
-            id <- UICmd.register parent sliderWidget (numberDoubleHandlers portRef)
-            return $ Just id
-        VTInt -> do
-            let sliderWidget = (DiscreteNumber (Vector2 10 (95 + (fromIntegral $ portIdToNum pid) * 25)) (Vector2 180 20)
-                                          (Text.pack $ "int " <> show pid) 42 True Nothing)
-            id <- UICmd.register parent sliderWidget (numberIntHandlers portRef)
-            return $ Just id
-        otherwise -> do
-            performIO $ putStrLn $ "No widget for this type " <> (show $ port ^. portValueType)
-            return Nothing
-
+-- createPortControl :: WidgetId -> Port -> InPortRef -> Command UIRegistry.State (Maybe WidgetId)
+-- createPortControl parent port portRef = return () -- TODO: expanding node
+-- do
+--     let pid = port ^. portId
+--     case port ^. portValueType of
+--         VTFloat -> do
+--             let sliderWidget = (ContinuousNumber (Vector2 10 (95 + (fromIntegral $ portIdToNum pid) * 25)) (Vector2 180 20)
+--                                        (Text.pack $ "float " <> show pid) 42.42 True Nothing)
+--             id <- UICmd.register parent sliderWidget (numberDoubleHandlers portRef)
+--             return $ Just id
+--         VTNumeric -> do
+--             let sliderWidget = (ContinuousNumber (Vector2 10 (95 + (fromIntegral $ portIdToNum pid) * 25)) (Vector2 180 20)
+--                                        (Text.pack $ "float " <> show pid) 42.42 True Nothing)
+--             id <- UICmd.register parent sliderWidget (numberDoubleHandlers portRef)
+--             return $ Just id
+--         VTInt -> do
+--             let sliderWidget = (DiscreteNumber (Vector2 10 (95 + (fromIntegral $ portIdToNum pid) * 25)) (Vector2 180 20)
+--                                           (Text.pack $ "int " <> show pid) 42 True Nothing)
+--             id <- UICmd.register parent sliderWidget (numberIntHandlers portRef)
+--             return $ Just id
+--         otherwise -> do
+--             performIO $ putStrLn $ "No widget for this type " <> (show $ port ^. portValueType)
+--             return Nothing
+--
 nodeHandlers :: Node -> HTMap
 nodeHandlers node = addHandler (UINode.RemoveNodeHandler removeSelectedNodes)
                   $ addHandler (UINode.FocusNodeHandler $ \id -> zoom Global.uiRegistry (focusNode id))
                   $ mempty
+--
+-- numberHandleDoubleValueChanged :: PortRef -> Double -> WidgetId -> Command Global.State ()
+-- numberHandleDoubleValueChanged portRef value widgetId = do
+--     workspace <- use Global.workspace
+--     performIO $ BatchCmd.setValue workspace portRef $ show value
+--
+-- numberHandleIntValueChanged :: PortRef -> Int -> WidgetId -> Command Global.State ()
+-- numberHandleIntValueChanged portRef value widgetId = do
+--     workspace <- use Global.workspace
+--     performIO $ BatchCmd.setValue workspace portRef $ show value
+--
+-- numberDoubleHandlers :: PortRef -> HTMap
+-- numberDoubleHandlers portRef = addHandler (ValueChangedHandler $ numberHandleDoubleValueChanged portRef)
+--                              $ mempty
+--
+-- numberIntHandlers :: PortRef -> HTMap
+-- numberIntHandlers portRef = addHandler (ValueChangedHandler $ numberHandleIntValueChanged portRef)
+--                           $ mempty
 
-numberHandleDoubleValueChanged :: PortRef -> Double -> WidgetId -> Command Global.State ()
-numberHandleDoubleValueChanged portRef value widgetId = do
-    workspace <- use Global.workspace
-    performIO $ BatchCmd.setValue workspace portRef $ show value
-
-numberHandleIntValueChanged :: PortRef -> Int -> WidgetId -> Command Global.State ()
-numberHandleIntValueChanged portRef value widgetId = do
-    workspace <- use Global.workspace
-    performIO $ BatchCmd.setValue workspace portRef $ show value
-
-numberDoubleHandlers :: PortRef -> HTMap
-numberDoubleHandlers portRef = addHandler (ValueChangedHandler $ numberHandleDoubleValueChanged portRef)
-                             $ mempty
-
-numberIntHandlers :: PortRef -> HTMap
-numberIntHandlers portRef = addHandler (ValueChangedHandler $ numberHandleIntValueChanged portRef)
-                          $ mempty
-
-registerSinglePort :: WidgetId -> Node -> PortType -> Port -> Command UIRegistry.State ()
-registerSinglePort nodeWidgetId node portType port = do
-    let portWidget = PortModel.Port (PortRef (node ^. nodeId) portType (port ^. portId)) def (colorVT $ port ^. portValueType)
+registerSinglePort :: WidgetId -> Node -> Port -> Command UIRegistry.State ()
+registerSinglePort nodeWidgetId node port = do
+    let portWidget = PortModel.Port (toAnyPortRef (node ^. Node.nodeId) (port ^. Port.portId)) def (colorVT $ port ^. Port.valueType)
     UICmd.register_ nodeWidgetId portWidget def
 
 registerOutputPorts :: WidgetId -> Node -> Command UIRegistry.State ()
-registerOutputPorts nodeWidgetId node = mapM_ (registerSinglePort nodeWidgetId node OutputPort) ports where
-    ports = getPorts OutputPort node
+registerOutputPorts nodeWidgetId node = mapM_ (registerSinglePort nodeWidgetId node) ports where
+    ports = node ^. Node.ports

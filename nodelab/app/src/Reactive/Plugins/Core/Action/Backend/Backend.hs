@@ -1,7 +1,7 @@
 module Reactive.Plugins.Core.Action.Backend.Backend where
 
 import           Utils.PreludePlus
-import           Object.Node        (Node, isModule)
+import           Empire.API.Data.Node (Node)
 import           Event.Event        (Event(Batch))
 import qualified Event.Batch        as Batch
 import qualified Batch.Workspace    as Workspace
@@ -25,6 +25,8 @@ toAction (Batch Batch.CodeSet)                   = Just refreshGraph
 toAction (Batch (Batch.CodeSetError msg))        = Just $ performIO $ writeToTerminal msg
 toAction (Batch Batch.SerializationModeInserted) = Just handleNextSerializationMode
 toAction _ = Nothing
+
+isModule _ = False
 
 insertSerializationMode :: Node -> Command State ()
 insertSerializationMode node = when (not $ isModule node)

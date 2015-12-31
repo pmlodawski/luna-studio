@@ -3,7 +3,6 @@ module Event.Mouse where
 
 import Utils.PreludePlus
 
-import Object.Object
 import Event.Keyboard  (KeyMods(..))
 import Utils.Vector
 import Object.UITypes

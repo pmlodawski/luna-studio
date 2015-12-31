@@ -7,7 +7,8 @@ import Batch.Library
 import Batch.Breadcrumbs
 import Batch.Value
 import Batch.RunStatus
-import Object.Node
+import Empire.API.Data.Node (Node)
+import Empire.API.Data.Connection (OutPortRef, InPortRef)
 import Data.Text.Lazy    (Text)
 import Data.Int
 
@@ -26,7 +27,7 @@ data Event = ProjectsList [Project]
            | NodesConnected
            | NodesDisconnected
            | NodeDefaultUpdated
-           | GraphViewFetched [Node] [(PortRef, PortRef)]
+           | GraphViewFetched [Node] [(OutPortRef, InPortRef)]
            | InterpreterGotProjectId (Maybe Int32)
            | SerializationModeInserted
            | ValueUpdate Int Value

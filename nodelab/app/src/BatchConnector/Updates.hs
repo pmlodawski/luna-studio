@@ -14,8 +14,8 @@ import           Batch.Library
 import           Batch.Breadcrumbs
 import           Batch.Value
 import           Batch.RunStatus
-import           Object.Node
-import           Object.Object              (PortId(..))
+import           Empire.API.Data.Node (Node)
+import           Empire.API.Data.Connection (InPortRef, OutPortRef)
 
 import           BatchConnector.Conversion  (decode)
 
@@ -64,7 +64,7 @@ parseFunctionCreateResponse :: ByteString -> Maybe Breadcrumbs
 parseFunctionCreateResponse bytes = (parseMessage bytes) >>= getBreadcrumbs where
     getBreadcrumbs = decode . FunctionCreated.bc
 
-parseGraphViewResponse :: ByteString -> Maybe ([Node], [(PortRef, PortRef)])
+parseGraphViewResponse :: ByteString -> Maybe ([Node], [(OutPortRef, InPortRef)])
 parseGraphViewResponse bytes = do
     parsed    <- parseMessage bytes
     let graph =  GraphViewResponse.graph parsed

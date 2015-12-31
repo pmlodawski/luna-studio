@@ -2,7 +2,6 @@ module Reactive.Plugins.Core.Action.Backend.Runner where
 
 import           Utils.PreludePlus
 
-import           Object.Object (NodeId)
 import qualified Object.Widget.Node as Model
 import           Event.Event   (Event(Batch))
 import qualified Event.Batch   as Batch
@@ -17,6 +16,7 @@ import           Reactive.Commands.Graph (nodeIdToWidgetId)
 import qualified Reactive.Commands.UIRegistry as UICmd
 import           Reactive.State.Global     as Global
 import           Reactive.State.Global     (State)
+import           Empire.API.Data.Node (NodeId)
 
 toAction :: Event -> Maybe (Command State ())
 toAction (Batch (Batch.NodeAdded _))              = Just requestRerun

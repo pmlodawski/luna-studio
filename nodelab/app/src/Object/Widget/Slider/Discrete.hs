@@ -2,7 +2,6 @@ module Object.Widget.Slider.Discrete where
 
 import Utils.PreludePlus
 import Utils.Vector
-import Object.Object
 import Object.Widget
 import Numeric
 import Data.Aeson (ToJSON)

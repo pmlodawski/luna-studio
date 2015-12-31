@@ -15,15 +15,17 @@ import           Data.Int
 import qualified Data.Vector                      as Vector
 import           Data.Text.Lazy.Encoding          (encodeUtf8, decodeUtf8)
 import           Utils.Vector                     (Vector2(..), x, y)
-import qualified Utils.MockHelper  as MockHelper
 
 import           Batch.Project     as Project
 import           Batch.Library     as Library
 import           Batch.Breadcrumbs
 import           Batch.Value
 import           Batch.RunStatus   hiding (nodeId)
-import           Object.Node
-import           Object.Object     (PortId(..), PortType(..))
+import           Empire.API.Data.Node (Node(..))
+import qualified Empire.API.Data.Node as Node
+import           Empire.API.Data.Port (Port(..))
+import qualified Empire.API.Data.Port as Port
+import           Empire.API.Data.Connection (InPortRef(..), OutPortRef(..))
 
 import qualified Generated.Proto.Project.Project           as ProtoProject
 import qualified Generated.Proto.Dep.Library.Library       as ProtoLibrary
@@ -58,6 +60,8 @@ import qualified Generated.Proto.Interpreter.ProfileInfo            as ProtoProf
 import qualified Generated.Proto.Interpreter.CallPoint              as ProtoCallPoint
 import qualified Generated.Proto.Interpreter.CallPointPath          as ProtoCallPointPath
 import qualified Generated.Proto.Interpreter.Interpreter.Run.Update as ProtoRunStatus
+
+import Debug.Trace (trace)
 
 maybeGetExt :: Key Maybe msg ext -> msg -> Maybe ext
 maybeGetExt key msg = case getExt key msg of
@@ -148,46 +152,49 @@ instance ProtoWritable ProtoBreadcrumbs.Breadcrumbs Breadcrumbs where
     encode (Breadcrumbs crumbs) = ProtoBreadcrumbs.Breadcrumbs $ encode crumbs
 
 instance ProtoReadable ProtoNode.Node Node where
-    decode node = Node <$> id <*> nodePos <*> expr <*> ports <*> nodeType where
+    decode node = Node <$> id <*> nodePos <*> expr <*> ports where
         id       = fromIntegral <$> ProtoNode.id node
-        nodePos  = Vector2 <$> (float2Double <$> ProtoNode.x node)
-                          <*> (float2Double <$> ProtoNode.y node)
+        nodePos  = (,) <$> (float2Double <$> ProtoNode.x node)
+                       <*> (float2Double <$> ProtoNode.y node)
         expr     = (ProtoNode.expr node) >>= ProtoExpr.str >>= decode
-        ports    = createPorts <$> expr
-        nodeType = MockHelper.getNodeType <$> expr
+        ports    = Just $ Map.fromList [(Port.OutPortId Port.All, Port (Port.OutPortId Port.All) (Port.ValueType "String") Nothing)]
 
 instance ProtoWritable ProtoNode.Node Node where
     encode node = ProtoNode.Node NodeCls.Expr
-                                 (Just $ fromIntegral $ node ^. nodeId)
+                                 (Just $ fromIntegral $ node ^. Node.nodeId)
                                  (Just expr)
                                  Nothing
                                  Nothing
-                                 (Just $ double2Float $ node ^. nodePos . x)
-                                 (Just $ double2Float $ node ^. nodePos . y)
+                                 (Just $ double2Float $ node ^. Node.position . _1)
+                                 (Just $ double2Float $ node ^. Node.position . _2)
         where
             expr       = ProtoExpr.NodeExpr ExprCls.String (Just encodedStr) Nothing
-            encodedStr = encode $ node ^. expression
+            encodedStr = encode $ node ^. Node.expression
 
-instance ProtoReadable ProtoEdge.EdgeView (PortRef, PortRef) where
+instance ProtoReadable ProtoEdge.EdgeView (OutPortRef, InPortRef) where
     decode edge = do
         sourceNodeId      <- fromIntegral   <$> ProtoEdge.nodeSrc edge
         destinationNodeId <- fromIntegral   <$> ProtoEdge.nodeDst edge
-        sourcePort        <- portIdFromList <$> (decode $ ProtoEdge.portSrc edge)
-        destinationPort   <- portIdFromList <$> (decode $ ProtoEdge.portDst edge)
-        return (PortRef sourceNodeId OutputPort sourcePort,
-                PortRef destinationNodeId InputPort destinationPort)
+        sourcePort        <- portIdFromListOut <$> (decode $ ProtoEdge.portSrc edge)
+        destinationPort   <- portIdFromListIn <$> (decode $ ProtoEdge.portDst edge)
+        return (OutPortRef sourceNodeId sourcePort,
+                InPortRef destinationNodeId destinationPort)
         where
-            portIdFromList []       = AllPorts
-            portIdFromList (x : xs) = PortNum $ fromIntegral x
+            portIdFromListIn []        = Port.Self
+            portIdFromListIn (x : xs)  = Port.Arg $ fromIntegral x
+            portIdFromListOut []       = Port.All
+            portIdFromListOut (x : xs) = Port.Projection $ fromIntegral x
 
-instance ProtoWritable ProtoEdge.EdgeView (PortRef, PortRef) where
-    encode ((PortRef srcNode _ srcPort), (PortRef dstNode _ dstPort)) = ProtoEdge.EdgeView (Just $ fromIntegral srcNode)
-                                                                                           (Just $ fromIntegral dstNode)
-                                                                                           (encode $ portIdToList srcPort)
-                                                                                           (encode $ portIdToList dstPort)
+instance ProtoWritable ProtoEdge.EdgeView (OutPortRef, InPortRef) where
+    encode ((OutPortRef srcNode srcPort), (InPortRef dstNode dstPort)) = ProtoEdge.EdgeView (Just $ fromIntegral srcNode)
+                                                                                            (Just $ fromIntegral dstNode)
+                                                                                            (encode $ portIdToListOut srcPort)
+                                                                                            (encode $ portIdToListIn  dstPort)
         where
-            portIdToList AllPorts    = []
-            portIdToList (PortNum x) = [x]
+            portIdToListIn  Port.Self    = []
+            portIdToListIn (Port.Arg x) = [x]
+            portIdToListOut  Port.All    = []
+            portIdToListOut (Port.Projection x) = [x]
 
 instance ProtoReadable SValue.SValue Value where
     decode msg@(SValue.SValue tpe _) = case tpe of

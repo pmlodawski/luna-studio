@@ -3,10 +3,10 @@ module Object.Widget.Connection where
 import           Utils.PreludePlus hiding (from, to)
 import qualified Utils.PreludePlus as Prelude
 import           Utils.Vector
-import           Object.Object
 import           Object.UITypes
 import           Object.Widget
 import           Data.Aeson (ToJSON)
+import           Empire.API.Data.Connection (ConnectionId)
 
 data Connection = Connection { _connectionId :: ConnectionId
                              , _visible      :: Bool

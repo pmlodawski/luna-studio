@@ -8,7 +8,6 @@ import           Utils.Vector      (Vector2)
 import           JS.MultiSelection (displaySelectionBox, hideSelectionBox)
 import qualified JS.NodeGraph   as UI
 
-import           Object.Object
 import           Object.Node
 import           Object.Widget (DisplayObject, UIHandlers)
 import qualified Object.Widget.Node as NodeModel

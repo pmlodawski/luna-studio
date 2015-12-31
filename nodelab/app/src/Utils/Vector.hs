@@ -58,3 +58,9 @@ negateSnd (Vector2 x y) = Vector2 x (-y)
 
 instance PrettyPrinter a => PrettyPrinter (Vector2 a) where
     display (Vector2 x y) = "(" <> display x <> "," <> display y <> ")"
+
+fromTuple :: Num a => (a, a) -> Vector2 a
+fromTuple (a, b) = Vector2 a b
+
+toTuple :: Num a => Vector2 a -> (a, a)
+toTuple (Vector2 a b) = (a, b)
