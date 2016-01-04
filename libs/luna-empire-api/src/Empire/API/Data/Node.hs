@@ -1,16 +1,20 @@
 module Empire.API.Data.Node where
 
 import Prologue
-import Data.Map.Lazy (Map)
+import Data.Binary              (Binary)
+import Data.Map.Lazy            (Map)
 
-import Empire.API.Data.Port (PortId, Port)
+import Empire.API.Data.NodeMeta (NodeMeta)
+import Empire.API.Data.Port     (PortId, Port)
 
 type NodeId = Int
 
 data Node = Node { _nodeId      :: NodeId
-                 , _position    :: (Double, Double) -- Use Vector2?
                  , _expression  :: Text
                  , _ports       :: Map PortId Port
-                 } deriving (Eq, Show, Typeable, Generic)
+                 , _nodeMeta    :: NodeMeta
+                 } deriving (Generic, Typeable, Show, Eq)
 
 makeLenses ''Node
+
+instance Binary Node
