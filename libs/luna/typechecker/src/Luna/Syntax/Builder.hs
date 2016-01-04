@@ -351,6 +351,9 @@ withRef ref = withRefM ref . fmap return
 follow :: RefReader ref f DoubleArc => Ref ref -> f (Ref Node)
 follow edge = view target <$> readRef edge
 
+unfollow :: RefReader ref f DoubleArc => Ref ref -> f (Ref Node)
+unfollow edge = view source <$> readRef edge
+
 --string :: LayeredASTCons Lit m t => String -> m (Mu t)
 --string = layeredASTCons . String . fromString
 

@@ -7,6 +7,7 @@ module Empire.Commands.Graph
 import           Prologue
 import           Control.Monad.State
 import           Control.Monad.Error     (throwError)
+import qualified Data.IntMap             as Map
 
 import qualified Empire.Data.Library     as Library
 import qualified Empire.Data.Graph       as Graph
@@ -27,6 +28,12 @@ addNode pid lid expr = withGraph pid lid $ do
     newNodeId <- gets Graph.nextNodeId
     Graph.nodeMapping . at newNodeId ?= refNode
     return newNodeId
+
+removeNode :: ProjectId -> LibraryId -> NodeId -> Empire ()
+removeNode pid lid nodeId = withGraph pid lid $ do
+    astNode <- use (Graph.nodeMapping . at nodeId) <?!> "Node does not exist"
+    Graph.nodeMapping %= Map.delete nodeId
+    zoom Graph.ast $ AST.removeGraphNode astNode
 
 connect :: ProjectId -> LibraryId -> NodeId -> OutPort -> NodeId -> InPort -> Empire ()
 connect pid lid srcNodeId All dstNodeId dstPort = withGraph pid lid $ do

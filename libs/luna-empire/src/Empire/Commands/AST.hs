@@ -17,7 +17,8 @@ import           Luna.Syntax.Builder.Node  (NodeBuilderT)
 import qualified Luna.Syntax.Builder.Node  as NodeBuilder
 import           Luna.Syntax.Builder.Class (BuilderT)
 import qualified Luna.Syntax.Builder       as Builder
-import           Luna.Syntax.Repr.Graph    (Ref(..), Node(..))
+import           Luna.Syntax.Repr.Graph    (Ref(..), Node(..), Edge(..))
+import qualified Luna.Syntax.Repr.Graph    as Graph
 import           Luna.Syntax.AST.Term      (Var(..), App(..), Blank(..), Accessor(..))
 import qualified Luna.Syntax.AST.Term      as Term
 import qualified Luna.Syntax.AST.Typed     as Typed
@@ -125,3 +126,24 @@ applyFunction fun arg pos = runAstOp $ do
     case' (uncoat funNode) $ do
         match $ \(App _ _) -> rewireApplication fun arg pos
         match $ \ANY -> newApplication fun arg pos
+
+removeGraphNode' :: Ref Node -> ASTOp ()
+removeGraphNode' nodeId = do
+    node <- Builder.readRef nodeId
+    {-putStrLn "Removing node with succs: "-}
+    {-succs <- mapM Builder.unfollow $ (Ref . Edge) <$> (toList $ node ^. Graph.succs)-}
+    {-print succs-}
+    case' (uncoat node) $ do
+        match $ \(App f args) -> do
+            removeNode' nodeId
+            Builder.follow f >>= removeGraphNode'
+        match $ \(Accessor n tg) -> do
+            Builder.follow n >>= removeNode'
+            removeNode' nodeId
+        match $ \(Var n) -> do
+            Builder.follow n >>= removeNode'
+            removeNode' nodeId
+        match $ \ANY -> throwError "Can't remove, screw you xD"
+
+removeGraphNode :: Ref Node -> Command AST ()
+removeGraphNode = runAstOp . removeGraphNode'
