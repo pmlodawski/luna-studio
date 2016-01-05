@@ -70,7 +70,9 @@ logMessage = do
                                  lift $ BusT $ lift $ ppr content
                 "status"   -> logger info  logMsg
                 "update"   -> logger info  logMsg
-                "request"  -> logger info  logMsg
+                -- "request"  -> logger info  logMsg
+                "request"  -> do logger info  logMsg
+                                 logger info  $ unpack content
                 _          -> do logger error logMsg
                                  logger error errorMsg
 

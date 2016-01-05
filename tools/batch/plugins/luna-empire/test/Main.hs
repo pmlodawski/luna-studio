@@ -2,6 +2,7 @@ module Main where
 
 import           Prologue
 import qualified Data.ByteString          as ByteString
+import qualified Data.ByteString.Char8    as Char8 (pack)
 
 import qualified Flowbox.Config.Config    as Config
 import qualified Flowbox.Bus.EndPoint     as EP
@@ -21,7 +22,7 @@ test1 :: IO ()
 test1 = do
     endPoints <- EP.clientFromConfig <$> Config.load
     Bus.runBus endPoints $ do
-        Bus.send Flag.Enable $ Message.Message "empire.hello" ByteString.empty
+        Bus.send Flag.Enable $ Message.Message "empire.hello.request" (Char8.pack "dupa")
     return ()
 
 test2 :: IO ()

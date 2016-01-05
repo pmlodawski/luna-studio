@@ -15,6 +15,9 @@ import           Flowbox.Options.Applicative hiding (info)
 import qualified Flowbox.Options.Applicative as Opt
 import           Flowbox.System.Log.Logger
 
+defaultTopic :: String
+defaultTopic = "empire."
+
 rootLogger :: Logger
 rootLogger = getLogger ""
 
@@ -41,7 +44,7 @@ run cmd = case cmd of
         rootLogger setIntLevel $ Cmd.verbose cmd
         endPoints <- EP.clientFromConfig <$> Config.load
         let topics = if List.null $ Cmd.topics cmd
-                        then [""]
+                        then [defaultTopic]
                         else Cmd.topics cmd
         r <- Logger.run endPoints topics
         case r of
