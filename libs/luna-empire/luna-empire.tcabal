@@ -36,26 +36,7 @@ Library
                   mtl,
                   prologue
 
-Executable luna-empire-main
-  Main-Is:        Main.hs
-  Hs-Source-Dirs: src
-
-  GHC-Options:    -Wall -O2 -package ghc
-
-  Extensions:     NoImplicitPrelude,
-                  TemplateHaskell
-
-  Build-Depends:  base,
-                  bytestring,
-                  flowbox-bus-binary,
-                  flowbox-config,
-                  flowbox-utils,
-                  luna-empire,
-                  luna-empire-api,
-                  luna-tc,
-                  prologue
-
-Executable luna-empire-test
+Executable luna-empire-lib-test
   Main-Is:        Main.hs
   Hs-Source-Dirs: test
 
