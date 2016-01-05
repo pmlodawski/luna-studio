@@ -93,3 +93,4 @@ build_*/**/.stack-work
 
 temp
 stack
+.bin
