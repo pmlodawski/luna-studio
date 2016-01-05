@@ -28,7 +28,6 @@ import           Flowbox.Control.Monad.Error            (MonadError)
 import           Flowbox.Data.Convert
 import           Flowbox.Prelude                        hiding (error)
 import           Flowbox.System.Log.Logger
-import qualified Flowbox.Text.ProtocolBuffers           as Proto
 import qualified Reexport.Flowbox.Bus.Data.Exception    as Exception
 import qualified Reexport.G.Proto.Bus.Exception         as Gen
 
@@ -61,10 +60,7 @@ logMessage = do
                        ++ topic
                        ++ Maybe.maybe  "" (\t -> " [" ++ show t ++ "]") time
                 content = msg ^. Message.message
-                errorMsg = case Proto.messageGet' content of
-                    Left err        -> "(cannot parse error message: " ++ err ++ ")"
-                    Right exception -> Maybe.fromMaybe "(exception without message)"
-                                                       $ decodeP (exception :: Gen.Exception) ^. Exception.msg
+                errorMsg = show content
             case lastPart '.' topic of
                 "response" -> do logger info  logMsg
                                  lift $ BusT $ lift $ ppr content

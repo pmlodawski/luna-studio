@@ -1,5 +1,6 @@
 packages:
 - ../../../../../libs/bus
+- ../../../../../libs/bus-binary
 - ../../../../../libs/config
 - ../../../../../libs/rpc
 - ../../../../../libs/old-utils

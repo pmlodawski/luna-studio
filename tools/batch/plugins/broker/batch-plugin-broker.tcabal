@@ -25,7 +25,7 @@ Executable broker
     Build-Depends:  base,
                     bytestring,
                     containers,
-                    flowbox-bus,
+                    flowbox-bus-binary,
                     flowbox-rpc,
                     flowbox-config,
                     flowbox-utils-old,
