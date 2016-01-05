@@ -93,5 +93,5 @@ build_*/**/.stack-work
 
 temp
 stack
-.bin/**
-!.bin/.keep_me
+**/.bin/**
+!**/.bin/.keep_me
