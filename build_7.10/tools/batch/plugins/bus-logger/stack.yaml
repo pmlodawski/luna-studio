@@ -16,3 +16,4 @@ extra-deps:
 - lens-utils-1.0
 - string-qq-0.0.2
 - data-construction-1.0
+local-bin-path: ../../../../.bin
