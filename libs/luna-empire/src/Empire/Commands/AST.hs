@@ -1,14 +1,16 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module Empire.Commands.AST where
 
 import           Prologue
 import           Control.Monad.State
 import           Control.Monad.Error (ErrorT, runErrorT, throwError)
-import           Data.Variants       (match, case', ANY(..))
-import           Data.Layer.Coat     (uncoat)
+import           Data.Variants       (match, case', specificCons, ANY(..))
+import           Data.Layer.Coat     (uncoat, coated)
 import           Data.Maybe          (fromMaybe)
 import           Data.Construction   (destruct)
 
-import           Empire.Data.AST (AST)
+import           Empire.Data.AST (AST, ASTNode)
 import           Empire.Empire
 
 import           Luna.Syntax.Builder.Star  (StarBuilderT)
@@ -19,7 +21,7 @@ import           Luna.Syntax.Builder.Class (BuilderT)
 import qualified Luna.Syntax.Builder       as Builder
 import           Luna.Syntax.Repr.Graph    (Ref(..), Node(..), Edge(..))
 import qualified Luna.Syntax.Repr.Graph    as Graph
-import           Luna.Syntax.AST.Term      (Var(..), App(..), Blank(..), Accessor(..))
+import           Luna.Syntax.AST.Term      (Var(..), App(..), Blank(..), Accessor(..), Unify(..), Draft)
 import qualified Luna.Syntax.AST.Term      as Term
 import qualified Luna.Syntax.AST.Typed     as Typed
 import qualified Luna.Syntax.AST.Arg       as Arg
@@ -35,22 +37,50 @@ runAstOp cmd = empire $ \g -> flip StarBuilder.evalT Nothing
              $ runErrorT
              $ cmd
 
-addNode :: String -> Command AST (Ref Node)
-addNode expr = fromMaybe (addVar expr) (whenString <|> whenInt) where
-    whenString = addString  <$> Parser.asString  expr
-    whenInt    = addInteger <$> Parser.asInteger expr
+addNode :: String -> String -> Command AST (Ref Node)
+addNode name expr = runAstOp $ fromMaybe (addExpr name expr) (whenString <|> whenInt) where
+    whenString = addString  name <$> Parser.asString  expr
+    whenInt    = addInteger name <$> Parser.asInteger expr
 
-addInteger :: Int -> Command AST (Ref Node)
-addInteger num = runAstOp $ Builder._int num
+addInteger :: String -> Int -> ASTOp (Ref Node)
+addInteger name num = Builder._int num >>= unifyWithName name
 
-addVar :: String -> Command AST (Ref Node)
-addVar = runAstOp . Builder.var
+addExpr :: String -> String -> ASTOp (Ref Node)
+addExpr name expr = Builder.var expr >>= unifyWithName name
+
+addString :: String -> String -> ASTOp (Ref Node)
+addString name lit = Builder._string lit >>= unifyWithName name
+
+unifyWithName :: String -> Ref Node -> ASTOp (Ref Node)
+unifyWithName name node = do
+    nameVar <- Builder.var name
+    Builder.unify nameVar node
+
+withUnifyNode :: Ref Node -> (Unify (Ref Edge) -> ASTOp a) -> ASTOp a
+withUnifyNode nodeRef op = do
+    node <- Builder.readRef nodeRef
+    case' (uncoat node) $ do
+        match $ \x   -> op (x :: Unify (Ref Edge))
+        match $ \ANY -> throwError "Not a unify node."
+
+getTargetNode :: Ref Node -> Command AST (Ref Node)
+getTargetNode nodeRef = runAstOp $ withUnifyNode nodeRef $ \(Unify _ r) -> Builder.follow r
+
+getVarNode :: Ref Node -> Command AST (Ref Node)
+getVarNode nodeRef = runAstOp $ withUnifyNode nodeRef $ \(Unify l _) -> Builder.follow l
+
+rightUnifyOperand :: Lens' ASTNode (Ref Edge)
+rightUnifyOperand = coated . lens rightGetter rightSetter where
+    rightGetter u   = case' u $ match $ \(Unify _ r) -> r
+    rightSetter u r = case' u $ match $ \(Unify l _) -> specificCons $ Unify l r
+
+replaceTargetNode :: Ref Node -> Ref Node -> Command AST ()
+replaceTargetNode unifyNodeId newTargetId = runAstOp $ do
+    Builder.reconnect unifyNodeId rightUnifyOperand newTargetId
+    return ()
 
 makeVar :: Ref Node -> Command AST (Ref Node)
 makeVar = runAstOp . Builder.var
-
-addString :: String -> Command AST (Ref Node)
-addString lit = runAstOp $ Builder._string lit
 
 makeAccessor :: Ref Node -> Ref Node -> Command AST (Ref Node)
 makeAccessor src dst = runAstOp $ Builder.accessor dst src

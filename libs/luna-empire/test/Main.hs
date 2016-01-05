@@ -29,11 +29,11 @@ test = do
     trdNode <- Graph.addNode pid lid "2"
     rthNode <- Graph.addNode pid lid "5"
     Graph.connect     pid lid sndNode All fstNode Self
-    -- Graph.disconnect  pid lid             fstNode Self
+    {--- Graph.disconnect  pid lid             fstNode Self-}
     Graph.connect     pid lid rthNode All fstNode (Arg 1)
-    Graph.disconnect  pid lid             fstNode (Arg 1)
+    {-[>Graph.disconnect  pid lid             fstNode (Arg 1)<]-}
     Graph.connect     pid lid trdNode All fstNode (Arg 0)
-    Graph.disconnect  pid lid             fstNode (Arg 0)
+    {-Graph.disconnect  pid lid             fstNode (Arg 0)-}
     withLibrary pid lid (use $ body . ast)
 
 main :: IO ()

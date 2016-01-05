@@ -21,11 +21,12 @@ import           Empire.API.Data.Node    (NodeId)
 import           Empire.Empire
 import           Empire.Commands.Library (withLibrary)
 import qualified Empire.Commands.AST     as AST
+import           Luna.Syntax.Repr.Graph  (Ref, Node)
 
 addNode :: ProjectId -> LibraryId -> String -> Empire NodeId
 addNode pid lid expr = withGraph pid lid $ do
-    refNode <- zoom Graph.ast $ AST.addNode expr
     newNodeId <- gets Graph.nextNodeId
+    refNode <- zoom Graph.ast $ AST.addNode ("node" ++ show newNodeId) expr
     Graph.nodeMapping . at newNodeId ?= refNode
     return newNodeId
 
@@ -70,18 +71,37 @@ unApp nodeId pos = do
     newNodeRef <- zoom Graph.ast $ AST.removeArg astNode pos
     Graph.nodeMapping . at nodeId ?= newNodeRef
 
+getASTPointer :: NodeId -> Command Graph (Ref Node)
+getASTPointer nodeId = use (Graph.nodeMapping . at nodeId) <?!> "Node does not exist"
+
+getASTTarget :: NodeId -> Command Graph (Ref Node)
+getASTTarget nodeId = do
+    unifyNode <- getASTPointer nodeId
+    zoom Graph.ast $ AST.getTargetNode unifyNode
+
+getASTVar :: NodeId -> Command Graph (Ref Node)
+getASTVar nodeId = do
+    unifyNode <- getASTPointer nodeId
+    zoom Graph.ast $ AST.getVarNode unifyNode
+
+rewireNode :: NodeId -> Ref Node -> Command Graph ()
+rewireNode nodeId newTarget = do
+    unifyNode <- getASTPointer nodeId
+    zoom Graph.ast $ AST.replaceTargetNode unifyNode newTarget
+
 makeAcc :: NodeId -> NodeId -> Command Graph ()
 makeAcc src dst = do
-    srcAst <- use (Graph.nodeMapping . at src) <?!> "Source node does not exist"
-    dstAst <- use (Graph.nodeMapping . at dst) <?!> "Destination node does not exist"
+    srcAst <- getASTVar src
+    dstAst <- getASTTarget dst
     name <- zoom Graph.ast $ AST.getNameNode dstAst
     zoom Graph.ast $ AST.removeNode dstAst
     newNodeRef <- zoom Graph.ast $ AST.makeAccessor srcAst name
-    Graph.nodeMapping . at dst ?= newNodeRef
+    rewireNode dst newNodeRef
+
 
 makeApp :: NodeId -> NodeId -> Int -> Command Graph ()
 makeApp src dst pos = do
-    srcAst <- use (Graph.nodeMapping . at src) <?!> "Source node does not exist"
-    dstAst <- use (Graph.nodeMapping . at dst) <?!> "Destination node does not exist"
+    srcAst <- getASTVar src
+    dstAst <- getASTTarget dst
     newNodeRef <- zoom Graph.ast $ AST.applyFunction dstAst srcAst pos
-    Graph.nodeMapping . at dst ?= newNodeRef
+    rewireNode dst newNodeRef
