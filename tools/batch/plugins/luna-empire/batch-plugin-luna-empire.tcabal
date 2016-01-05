@@ -36,4 +36,26 @@ Executable luna-empire
                     protocol-buffers,
                     time,
                     transformers,
+                    luna-empire,
+                    luna-empire-api,
                     zeromq4-haskell >= 0.4
+
+Executable luna-empire-test
+  Main-Is:        Main.hs
+
+  Hs-Source-Dirs: test
+
+  GHC-Options:    -Wall -O2 -package ghc
+
+  Extensions:     NoImplicitPrelude,
+                  TemplateHaskell
+
+  Build-Depends:  base,
+                  bytestring,
+                  flowbox-bus-binary,
+                  flowbox-config,
+                  flowbox-utils,
+                  luna-empire,
+                  luna-empire-api,
+                  luna-tc,
+                  prologue

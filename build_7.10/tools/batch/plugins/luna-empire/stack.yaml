@@ -3,11 +3,16 @@ packages:
 - ../../../../../libs/bus-binary
 - ../../../../../libs/config
 - ../../../../../libs/rpc
+- ../../../../../libs/utils
 - ../../../../../libs/old-utils
+- ../../../../../libs/luna/typechecker
+- ../../../../../libs/luna-empire
+- ../../../../../libs/luna-empire-api
 - ../../../../../tools/batch/plugins/luna-empire
 resolver: lts-3.14
 extra-deps:
 - convert-1.0
+- data-repr-1.0
 - typelevel-1.0.2
 - prologue-1.0.6
 - container-1.0.1
@@ -16,3 +21,6 @@ extra-deps:
 - lens-utils-1.0
 - string-qq-0.0.2
 - data-construction-1.0
+- ghc-session-0.1.2.0
+- graphviz-2999.18.0.2
+- error-util-0.0.1.1
