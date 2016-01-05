@@ -2,7 +2,6 @@ module Empire.API.Project.CreateProject where
 
 import Prologue
 import Data.Binary                      (Binary)
-import System.Path                      (Path)
 
 import Empire.API.Data.Project          (ProjectId)
 import Empire.API.Response
@@ -10,7 +9,7 @@ import Empire.API.Response
 import Empire.Binary.Instances.Missing
 
 data CreateProject = CreateProject { _projectName :: Maybe String
-                                   , _path        :: Path
+                                   , _path        :: String
                                    } deriving (Generic, Show, Eq)
 
 data CreateProjectResult = CreateProjectResult { _projectId :: ProjectId

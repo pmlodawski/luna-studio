@@ -13,15 +13,33 @@ instance Binary OutPort
 
 data PortId = InPortId InPort | OutPortId OutPort deriving (Generic, Show, Eq)
 
-instance Binary PortId
+instance Ord PortId where
+  (InPortId  _) `compare` (OutPortId _) = LT
+  (OutPortId _) `compare` (InPortId  _) = GT
+  (InPortId  a) `compare` (InPortId  b) = a `compare` b
+  (OutPortId a) `compare` (OutPortId b) = a `compare` b
 
-type ValueType = ()
+instance Ord InPort where
+  Self `compare` Self = EQ
+  Self `compare` (Arg _) = LT
+  (Arg _) `compare` Self = GT
+  (Arg a) `compare` (Arg b) = a `compare` b
 
-data Port = Port { portId       :: PortId
-                 , valueType    :: ValueType
-                 , defaultValue :: Maybe PortDefault
-                 } deriving (Generic, Show, Eq)
+instance Ord OutPort where
+  All            `compare` All            = EQ
+  All            `compare` (Projection _) = LT
+  (Projection _) `compare` All            = GT
+  (Projection a) `compare` (Projection b) = a `compare` b
+
+newtype ValueType = ValueType { _unValueType :: String } deriving (Show, Eq, Generic)
+
+data Port = Port { _portId       :: PortId
+                 , _valueType    :: ValueType
+                 , _defaultValue :: Maybe PortDefault
+                 } deriving (Show, Eq, Generic)
 
 makeLenses ''Port
 
+instance Binary ValueType
+instance Binary PortId
 instance Binary Port
