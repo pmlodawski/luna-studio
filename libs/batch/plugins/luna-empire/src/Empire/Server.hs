@@ -28,7 +28,6 @@ import           Flowbox.Data.Convert
 import           Flowbox.Prelude                        hiding (error)
 import           Flowbox.System.Log.Logger
 import qualified Reexport.Flowbox.Bus.Data.Exception    as Exception
-import qualified Reexport.G.Proto.Bus.Exception         as Gen
 import           Empire.Utils                           as Utils
 
 
