@@ -9,6 +9,7 @@ import qualified Data.Binary           as Bin
 import           Data.ByteString       (ByteString)
 import           Data.ByteString.Char8 (unpack)
 import           Data.ByteString.Lazy  (fromStrict, toStrict)
+import           Data.Map.Strict       (Map)
 import qualified Data.Map.Strict       as Map
 import qualified Data.Maybe            as Maybe
 import qualified Data.Time.Clock       as Clock
@@ -29,7 +30,7 @@ import           Flowbox.Prelude                        hiding (error)
 import           Flowbox.System.Log.Logger
 import qualified Reexport.Flowbox.Bus.Data.Exception    as Exception
 import           Empire.Utils                           as Utils
-
+import           Empire.API.Topics                      as Topics
 
 logger :: LoggerIO
 logger = getLoggerIO $moduleName
@@ -87,18 +88,44 @@ handleMessage = do
                 content = msg ^. Message.message
                 errorMsg = show content
             case Utils.lastPart '.' topic of
-                "update"   -> handleUpdate  logMsg content
-                "request"  -> handleRequest logMsg content
+                "update"   -> handleUpdate  logMsg topic content
+                "request"  -> handleRequest logMsg topic content
                 _          -> do logger error logMsg
                                  logger error errorMsg
 
-handleRequest :: String -> ByteString -> StateT Env BusT ()
-handleRequest logMsg content = do
+
+type Handler = ByteString -> StateT Env BusT ()
+
+handlersMap :: Map String Handler
+handlersMap = Map.fromList
+    [ (Topics.addNodeRequest,    handleAddNode)
+    , (Topics.removeNodeRequest, handleRemoveNode)
+    ]
+
+handleRequest :: String -> String -> ByteString -> StateT Env BusT ()
+handleRequest logMsg topic content = do
     logger info logMsg
+    let handler = Map.findWithDefault defaultHandler topic handlersMap
+    handler content
+    -- logger info $ unpack content
+
+defaultHandler :: ByteString -> StateT Env BusT ()
+defaultHandler content = do
+    logger info $ "Handling not recognized request"
     logger info $ unpack content
 
-handleUpdate :: String -> ByteString -> StateT Env BusT ()
-handleUpdate logMsg content = do
+handleAddNode :: ByteString -> StateT Env BusT ()
+handleAddNode content = do
+    logger info $ "Handling AddNodeRequest"
+    logger info $ unpack content
+
+handleRemoveNode :: ByteString -> StateT Env BusT ()
+handleRemoveNode content = do
+    logger info $ "Handling RemoveNodeRequest"
+    logger info $ unpack content
+
+handleUpdate :: String -> String -> ByteString -> StateT Env BusT ()
+handleUpdate logMsg topic content = do
     logger info logMsg
     logger info $ unpack content
 

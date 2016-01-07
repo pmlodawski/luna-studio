@@ -1,6 +1,7 @@
 module Empire.Utils where
 
 import Prologue
+
 -- similar code is duplicated in BusLogger - consider extracting somewhere
 
 lastPart :: Eq a => a -> [a] -> [a]

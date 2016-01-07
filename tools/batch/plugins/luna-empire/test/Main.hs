@@ -15,22 +15,29 @@ import           Flowbox.Options.Applicative hiding (info)
 import qualified Flowbox.Options.Applicative as Opt
 
 import qualified Empire.API.Topics           as Topics
+import qualified Empire.API.Graph.AddNode    as AddNode
+import qualified Empire.API.Graph.RemoveNode as RemoveNode
+import qualified Empire.API.Data.NodeMeta    as NodeMeta
+
 
 data Cmd = TestBasicString
          | TestBadTopic
          | TestAddNode
+         | TestRemoveNode
          deriving Show
 
 parser :: Parser Cmd
 parser = Opt.flag' TestBasicString (short 'S')
      <|> Opt.flag' TestBadTopic (short 'B')
      <|> Opt.flag' TestAddNode (short 'a')
+     <|> Opt.flag' TestRemoveNode (short 'r')
 
 run :: Cmd -> IO ()
 run cmd = case cmd of
     TestBasicString -> testBasicString
-    TestBadTopic -> testBadTopic
-    TestAddNode -> testAddNode
+    TestBadTopic    -> testBadTopic
+    TestAddNode     -> testAddNode
+    TestRemoveNode  -> testRemoveNode
 
 
 opts :: ParserInfo Cmd
@@ -58,7 +65,17 @@ testBadTopic = do
 testAddNode :: IO ()
 testAddNode = do
     endPoints <- EP.clientFromConfig <$> Config.load
-    let content = toStrict $ Bin.encode "dupa"
+    let addNodeReq = AddNode.Request 1 2 "expres" (NodeMeta.NodeMeta (1.2, 3.4)) 7
+        content    = toStrict . Bin.encode $ addNodeReq
     Bus.runBus endPoints $ do
         Bus.send Flag.Enable $ Message.Message Topics.addNodeRequest content
+    return ()
+
+testRemoveNode :: IO ()
+testRemoveNode = do
+    endPoints <- EP.clientFromConfig <$> Config.load
+    let removeNodeReq = RemoveNode.Request 1 2 3
+        content       = toStrict . Bin.encode $ removeNodeReq
+    Bus.runBus endPoints $ do
+        Bus.send Flag.Enable $ Message.Message Topics.removeNodeRequest content
     return ()
