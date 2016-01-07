@@ -13,8 +13,7 @@ Flag Debug
 
 Executable luna-empire
     Hs-Source-Dirs: src
-    Other-Modules:  `findmodules('src', '.*\.hs')`,
-        Paths_batch_plugin_luna_empire
+    Other-Modules:  `findmodules('src', '.*\.hs')`
 
     Main-Is:        Main.hs
 
@@ -24,23 +23,13 @@ Executable luna-empire
                     TemplateHaskell
 
     Build-Depends:  base,
-                    binary,
-                    bytestring,
-                    containers,
-                    either,
-                    errors,
+                    prologue,
+                    batch-lib-luna-empire,
                     flowbox-bus-binary,
                     flowbox-config,
                     flowbox-utils-old,
-                    mtl,
-                    optparse-applicative,
-                    protocol-buffers,
-                    time,
-                    transformers,
-                    prologue,
-                    luna-empire,
-                    luna-empire-api,
-                    zeromq4-haskell >= 0.4
+                    optparse-applicative
+
 
 Executable luna-empire-test
     Main-Is:        Main.hs
