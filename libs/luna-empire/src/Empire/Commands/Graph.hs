@@ -1,5 +1,6 @@
 module Empire.Commands.Graph
     ( addNode
+    , removeNode
     , connect
     , disconnect
     ) where
