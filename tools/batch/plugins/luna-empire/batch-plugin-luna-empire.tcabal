@@ -42,11 +42,12 @@ Executable luna-empire-test
                     TemplateHaskell
 
     Build-Depends:  base,
+                    prologue,
                     bytestring,
+                    binary,
                     flowbox-bus-binary,
                     flowbox-config,
                     flowbox-utils,
                     luna-empire,
                     luna-empire-api,
-                    luna-tc,
-                    prologue
+                    luna-tc

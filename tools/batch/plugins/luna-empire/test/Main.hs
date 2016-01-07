@@ -1,36 +1,36 @@
 module Main where
 
 import           Prologue
-import qualified Data.ByteString          as ByteString
-import qualified Data.ByteString.Char8    as Char8 (pack)
+import qualified Data.Binary                 as Bin
+import qualified Data.ByteString             as ByteString
+import qualified Data.ByteString.Char8       as Char8 (pack)
+import           Data.ByteString.Lazy        (fromStrict, toStrict)
 
-import qualified Flowbox.Config.Config    as Config
-import qualified Flowbox.Bus.EndPoint     as EP
-import qualified Flowbox.Bus.Bus          as Bus
-import qualified Flowbox.Bus.Data.Flag    as Flag
-import qualified Flowbox.Bus.Data.Message as Message
+import qualified Flowbox.Config.Config       as Config
+import qualified Flowbox.Bus.EndPoint        as EP
+import qualified Flowbox.Bus.Bus             as Bus
+import qualified Flowbox.Bus.Data.Flag       as Flag
+import qualified Flowbox.Bus.Data.Message    as Message
 import           Flowbox.Options.Applicative hiding (info)
 import qualified Flowbox.Options.Applicative as Opt
 
+import qualified Empire.API.Topics           as Topics
 
-data Cmd = Test1
-         | Test2
-         | Test3
-         | Test4
+data Cmd = TestBasicString
+         | TestBadTopic
+         | TestAddNode
          deriving Show
 
 parser :: Parser Cmd
-parser = Opt.flag' Test1 (short '1')
-     <|> Opt.flag' Test2 (short '2')
-     <|> Opt.flag' Test3 (short '3')
-     <|> Opt.flag' Test4 (short '4')
+parser = Opt.flag' TestBasicString (short 'S')
+     <|> Opt.flag' TestBadTopic (short 'B')
+     <|> Opt.flag' TestAddNode (short 'a')
 
 run :: Cmd -> IO ()
 run cmd = case cmd of
-    Test1  -> test1
-    Test2  -> test2
-    Test3  -> test3
-    Test4  -> test4
+    TestBasicString -> testBasicString
+    TestBadTopic -> testBadTopic
+    TestAddNode -> testAddNode
 
 
 opts :: ParserInfo Cmd
@@ -41,30 +41,24 @@ main = execParser opts >>= run
 
 -- tests
 
-test1 :: IO ()
-test1 = do
+testBasicString :: IO ()
+testBasicString = do
     endPoints <- EP.clientFromConfig <$> Config.load
     Bus.runBus endPoints $ do
-        Bus.send Flag.Enable $ Message.Message "empire.hello.request" (Char8.pack "test 1")
+        Bus.send Flag.Enable $ Message.Message "empire.hello.request" (Char8.pack "basic string")
     return ()
 
-test2 :: IO ()
-test2 = do
+testBadTopic :: IO ()
+testBadTopic = do
     endPoints <- EP.clientFromConfig <$> Config.load
     Bus.runBus endPoints $ do
         Bus.send Flag.Enable $ Message.Message "any-hello" ByteString.empty
     return ()
 
-test3 :: IO ()
-test3 = do
+testAddNode :: IO ()
+testAddNode = do
     endPoints <- EP.clientFromConfig <$> Config.load
+    let content = toStrict $ Bin.encode "dupa"
     Bus.runBus endPoints $ do
-        Bus.send Flag.Enable $ Message.Message "empire.hello.request" (Char8.pack "dupa")
-    return ()
-
-test4 :: IO ()
-test4 = do
-    endPoints <- EP.clientFromConfig <$> Config.load
-    Bus.runBus endPoints $ do
-        Bus.send Flag.Enable $ Message.Message "empire.hello.request" (Char8.pack "dupa")
+        Bus.send Flag.Enable $ Message.Message Topics.addNodeRequest content
     return ()
