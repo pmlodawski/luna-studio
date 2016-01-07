@@ -2,7 +2,6 @@ module Empire.Data.Library where
 
 import Prologue
 import System.Path        (Path)
-import Data.Version       (Version)
 import Empire.Data.Graph  (Graph)
 import qualified Empire.API.Data.Library as API
 
@@ -17,4 +16,4 @@ make name path = Library name path def
 makeLenses ''Library
 
 toAPI :: Library -> API.Library
-toAPI (Library name path _) = API.Library name path
+toAPI (Library n p _) = API.Library n (show p)
