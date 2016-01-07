@@ -2,6 +2,8 @@ module Empire.Data.Project where
 
 import           Prologue
 import           Empire.Data.Library (Library)
+import qualified Empire.Data.Library as Library
+import qualified Empire.API.Data.Library as ProjectAPI
 import           System.Path         (Path)
 import           Data.IntMap         (IntMap)
 import qualified Data.IntMap         as IntMap
@@ -15,3 +17,6 @@ make :: Maybe String -> Path -> Project
 make name path = Project name path IntMap.empty
 
 makeLenses ''Project
+
+toAPI :: Project -> API.Project
+toAPI (Project name path libs) = ProjectAPI.Project name path (Library.makeStub <$> libs)
