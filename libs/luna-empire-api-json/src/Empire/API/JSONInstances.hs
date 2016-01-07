@@ -12,15 +12,16 @@ import Empire.API.Data.Library       as Library
 import Empire.API.Data.Node          as Node
 import Empire.API.Data.NodeMeta      as NodeMeta
 import Empire.API.Data.Port          as Port
+import Empire.API.Data.PortRef       as PortRef
 import Empire.API.Data.Project       as Project
 import Empire.API.Graph.AddNode      as AddNode
 import Empire.API.Graph.Connect      as Connect
 import Empire.API.Graph.Disconnect   as Disconnect
 
 instance ToJSON Connection.Connection
-instance ToJSON Connection.AnyPortRef
-instance ToJSON Connection.OutPortRef
-instance ToJSON Connection.InPortRef
+instance ToJSON PortRef.AnyPortRef
+instance ToJSON PortRef.OutPortRef
+instance ToJSON PortRef.InPortRef
 
 instance ToJSON DefaultValue.Value
 instance ToJSON DefaultValue.PortDefault
