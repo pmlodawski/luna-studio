@@ -1,27 +1,25 @@
 module Empire.API.Library.CreateLibrary where
 
-import Prologue
-import Data.Binary                      (Binary)
+import           Prologue
+import           Data.Binary             (Binary)
 
-import Empire.API.Data.Project          (ProjectId)
-import Empire.API.Data.Library          (LibraryId)
-import Empire.API.Response
+import           Empire.API.Data.Project (ProjectId)
+import           Empire.API.Data.Library (LibraryId)
+import qualified Empire.API.Response     as Response
 
-import Empire.Binary.Instances.Missing
+data Request = Request { _projectId   :: ProjectId
+                       , _libraryName :: Maybe String
+                       , _path        :: String
+                       } deriving (Generic, Show, Eq)
 
-data CreateLibrary = CreateLibrary { _projectId   :: ProjectId
-                                   , _libraryName :: Maybe String
-                                   , _path        :: String
-                                   } deriving (Generic, Show, Eq)
+data Update = Update { _libraryId :: LibraryId
+                     -- , _library   :: Library
+                     } deriving (Generic, Show, Eq)
 
-data CreateLibraryResult = CreateLibraryResult { _libraryId :: LibraryId
-                                               -- , _library   :: Library
-                                               } deriving (Generic, Show, Eq)
+type Response = Response.Response Request Update
 
-type CreateLibraryResponse = Response CreateLibrary CreateLibraryResult
+makeLenses ''Request
+makeLenses ''Update
 
-makeLenses ''CreateLibrary
-makeLenses ''CreateLibraryResult
-
-instance Binary CreateLibrary
-instance Binary CreateLibraryResult
+instance Binary Request
+instance Binary Update

@@ -1,25 +1,23 @@
 module Empire.API.Project.CreateProject where
 
-import Prologue
-import Data.Binary                      (Binary)
+import           Prologue
+import           Data.Binary                      (Binary)
 
-import Empire.API.Data.Project          (ProjectId)
-import Empire.API.Response
+import           Empire.API.Data.Project          (ProjectId)
+import qualified Empire.API.Response              as Response
 
-import Empire.Binary.Instances.Missing
+data Request = Request { _projectName :: Maybe String
+                       , _path        :: String
+                       } deriving (Generic, Show, Eq)
 
-data CreateProject = CreateProject { _projectName :: Maybe String
-                                   , _path        :: String
-                                   } deriving (Generic, Show, Eq)
+data Update = Update { _projectId :: ProjectId
+                     -- , _project   :: Project
+                     } deriving (Generic, Show, Eq)
 
-data CreateProjectResult = CreateProjectResult { _projectId :: ProjectId
-                                               -- , _project   :: Project
-                                               } deriving (Generic, Show, Eq)
+type Response = Response.Response Request Update
 
-type CreateProjectResponse = Response CreateProject CreateProjectResult
+makeLenses ''Request
+makeLenses ''Update
 
-makeLenses ''CreateProject
-makeLenses ''CreateProjectResult
-
-instance Binary CreateProject
-instance Binary CreateProjectResult
+instance Binary Request
+instance Binary Update

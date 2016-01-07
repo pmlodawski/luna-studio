@@ -1,24 +1,24 @@
 module Empire.API.Library.ListLibraries where
 
-import Prologue
-import Data.Binary                      (Binary)
+import           Prologue
+import           Data.Binary             (Binary)
 
-import Empire.API.Data.Project          (ProjectId)
-import Empire.API.Data.Library          (LibraryId)
-import Empire.API.Response
+import           Empire.API.Data.Project (ProjectId)
+import           Empire.API.Data.Library (LibraryId)
+import qualified Empire.API.Response     as Response
 
-data ListLibraries = ListLibraries { _projectId   :: ProjectId
-                                   } deriving (Generic, Show, Eq)
+data Request = Request { _projectId   :: ProjectId
+                       } deriving (Generic, Show, Eq)
 
-data ListLibrariesResult = ListLibrariesResult { _libraryIds   :: [LibraryId]
-                                               -- , _libraries   :: [(LibraryId, Library)]
-                                               } deriving (Generic, Show, Eq)
+data Update = Update { _libraryIds   :: [LibraryId]
+                     -- , _libraries   :: [(LibraryId, Library)]
+                     } deriving (Generic, Show, Eq)
 
-data ListLibrariesResponse = Response ListLibraries ListLibrariesResult
+type Response = Response.Response Request Update
 
-makeLenses ''ListLibraries
-makeLenses ''ListLibrariesResult
+makeLenses ''Request
+makeLenses ''Update
 
-instance Binary ListLibraries
-instance Binary ListLibrariesResult
+instance Binary Request
+instance Binary Update
 

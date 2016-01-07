@@ -1,20 +1,21 @@
 module Empire.API.Project.ListProjects where
 
-import Prologue
-import Data.Binary                      (Binary)
+import           Prologue
+import           Data.Binary             (Binary)
 
-import Empire.API.Data.Project          (ProjectId)
-import Empire.API.Response
+import           Empire.API.Data.Project (ProjectId)
+import qualified Empire.API.Response     as Response
 
-data ListProjects = ListProjects deriving (Generic, Show, Eq)
+data Request = Request deriving (Generic, Show, Eq)
 
-data ListProjectsResult = ListProjectsResult { _projectIds   :: [ProjectId]
-                                             -- , _projects   :: [(ProjectId, Project)]
-                                             } deriving (Generic, Show, Eq)
+data Update = Update { _projectIds   :: [ProjectId]
+                     -- , _projects   :: [(ProjectId, Project)]
+                     } deriving (Generic, Show, Eq)
 
-data ListProjectsResponse = Response ListProjects ListProjectsResult
+type Response = Response.Response Request Update
 
-makeLenses ''ListProjectsResult
+makeLenses ''Request
+makeLenses ''Update
 
-instance Binary ListProjects
-instance Binary ListProjectsResult
+instance Binary Request
+instance Binary Update

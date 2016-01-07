@@ -1,15 +1,15 @@
 module Empire.API.Response where
 
-import Prologue
+import           Prologue
 
-import Data.Binary (Binary)
+import           Data.Binary (Binary)
 
 data ResultOk = Ok deriving (Generic, Show, Eq)
 
 instance Binary ResultOk
 
-data Response req res = Result    { _request  :: req
-                                  , _result   :: res
+data Response req upd = Update    { _request  :: req
+                                  , _update   :: upd
                                   }
                       | Exception { _request  :: req
                                   , _message  :: String
@@ -20,4 +20,4 @@ type SimpleResponse req = Response req ResultOk
 
 makeLenses ''Response
 
-instance (Binary req, Binary res) => Binary (Response req res)
+instance (Binary req, Binary upd) => Binary (Response req upd)

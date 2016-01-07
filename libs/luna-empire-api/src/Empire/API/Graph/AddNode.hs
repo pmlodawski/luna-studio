@@ -1,29 +1,29 @@
 module Empire.API.Graph.AddNode where
 
-import Prologue
-import Data.Binary              (Binary)
+import           Prologue
+import           Data.Binary              (Binary)
 
-import Empire.API.Data.Project  (ProjectId)
-import Empire.API.Data.Library  (LibraryId)
-import Empire.API.Data.Node     (Node)
-import Empire.API.Data.NodeMeta (NodeMeta)
-import Empire.API.Response
+import           Empire.API.Data.Project  (ProjectId)
+import           Empire.API.Data.Library  (LibraryId)
+import           Empire.API.Data.Node     (Node)
+import           Empire.API.Data.NodeMeta (NodeMeta)
+import qualified Empire.API.Response      as Response
 
-data AddNode = AddNode { _projectId :: ProjectId
+data Request = Request { _projectId :: ProjectId
                        , _libraryId :: LibraryId
                        , _expr      :: String
                        , _nodeMeta  :: NodeMeta
                        , _tag       :: Int
                        } deriving (Generic, Show, Eq)
 
-data AddNodeResult = AddNodeResult { _node :: Node
-                                   -- , _breadcrumb :: BreadCrumb
-                                   } deriving (Generic, Show, Eq)
+data Update = Update { _node    :: Node
+                     -- , _breadcrumb :: BreadCrumb
+                     } deriving (Generic, Show, Eq)
 
-type AddNodeResponse = Response AddNode AddNodeResult
+type Response = Response.Response Request Update
 
-makeLenses ''AddNode
-makeLenses ''AddNodeResult
+makeLenses ''Request
+makeLenses ''Update
 
-instance Binary AddNode
-instance Binary AddNodeResult
+instance Binary Request
+instance Binary Update

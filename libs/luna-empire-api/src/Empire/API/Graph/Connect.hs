@@ -1,15 +1,15 @@
 module Empire.API.Graph.Connect where
 
-import Prologue
-import Data.Binary             (Binary)
+import           Prologue
+import           Data.Binary             (Binary)
 
-import Empire.API.Data.Project (ProjectId)
-import Empire.API.Data.Library (LibraryId)
-import Empire.API.Data.Node    (NodeId)
-import Empire.API.Data.Port    (OutPort, InPort)
-import Empire.API.Response
+import           Empire.API.Data.Project (ProjectId)
+import           Empire.API.Data.Library (LibraryId)
+import           Empire.API.Data.Node    (NodeId)
+import           Empire.API.Data.Port    (OutPort, InPort)
+import qualified Empire.API.Response     as Response
 
-data Connect = Connect { _projectId :: ProjectId
+data Request = Request { _projectId :: ProjectId
                        , _libraryId :: LibraryId
                        , _srcNodeId :: NodeId
                        , _srcPort   :: OutPort
@@ -17,8 +17,8 @@ data Connect = Connect { _projectId :: ProjectId
                        , _dstPort   :: InPort
                        } deriving (Generic, Show, Eq)
 
-type ConnectResponse = SimpleResponse Connect
+type Response = Response.SimpleResponse Request
 
-makeLenses ''Connect
+makeLenses ''Request
 
-instance Binary Connect
+instance Binary Request
