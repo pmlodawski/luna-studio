@@ -1,8 +1,7 @@
-
 {-# LANGUAGE BangPatterns     #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TemplateHaskell  #-}
-module Empire.Logger where
+module Empire.Server where
 
 import           Control.Monad         (forever)
 import           Control.Monad.State   (StateT, evalStateT, get, put)
@@ -30,7 +29,7 @@ import           Flowbox.Prelude                        hiding (error)
 import           Flowbox.System.Log.Logger
 import qualified Reexport.Flowbox.Bus.Data.Exception    as Exception
 import qualified Reexport.G.Proto.Bus.Exception         as Gen
-
+import           Empire.Utils                           as Utils
 
 
 logger :: LoggerIO
@@ -41,7 +40,7 @@ run :: BusEndPoints -> [Topic] -> IO (Either Bus.Error ())
 run ep topics = Bus.runBus ep $ do
     logger info $ "Subscribing to topics: " ++ show topics
     mapM_ Bus.subscribe topics
-    Bus.runBusT $ evalStateT (forever logMessage) def
+    Bus.runBusT $ evalStateT (forever handleMessage) def
 
 logMessage :: StateT Env BusT ()
 logMessage = do
@@ -61,17 +60,48 @@ logMessage = do
                        ++ Maybe.maybe  "" (\t -> " [" ++ show t ++ "]") time
                 content = msg ^. Message.message
                 errorMsg = show content
-            case lastPart '.' topic of
+            case Utils.lastPart '.' topic of
                 "response" -> do logger info  logMsg
                                  lift $ BusT $ lift $ ppr content
                 "status"   -> logger info  logMsg
                 "update"   -> logger info  logMsg
-                -- "request"  -> logger info  logMsg
-                "request"  -> do logger info  logMsg
-                                 logger info  $ unpack content
+                "request"  -> logger info  logMsg
                 _          -> do logger error logMsg
                                  logger error errorMsg
 
+handleMessage :: StateT Env BusT ()
+handleMessage = do
+    msgFrame <- lift $ Bus.BusT Bus.receive'
+    case msgFrame of
+        Left err -> logger error $ "Unparseable message: " ++ err
+        Right (MessageFrame msg crlID senderID lastFrame) -> do
+            time <- measureTime crlID
+            let topic = msg ^. Message.topic
+                logMsg =  show senderID
+                       ++ " -> "
+                       ++ " (last = "
+                       ++ show lastFrame
+                       ++ ")"
+                       ++ "\t:: "
+                       ++ topic
+                       ++ Maybe.maybe  "" (\t -> " [" ++ show t ++ "]") time
+                content = msg ^. Message.message
+                errorMsg = show content
+            case Utils.lastPart '.' topic of
+                "update"   -> handleUpdate  logMsg content
+                "request"  -> handleRequest logMsg content
+                _          -> do logger error logMsg
+                                 logger error errorMsg
+
+handleRequest :: String -> ByteString -> StateT Env BusT ()
+handleRequest logMsg content = do
+    logger info logMsg
+    logger info $ unpack content
+
+handleUpdate :: String -> ByteString -> StateT Env BusT ()
+handleUpdate logMsg content = do
+    logger info logMsg
+    logger info $ unpack content
 
 ppr :: (MonadIO m, MonadError String m)
     => ByteString -> m ()
@@ -90,15 +120,6 @@ ppr msg = do
             logger error $ unlines [ "requested method: " ++ fname
                                    , "  error response: " ++ err
                                    ]
-
-
-lastPart :: Eq a => a -> [a] -> [a]
-lastPart = lastPartIntern []
-
-lastPartIntern :: Eq a => [a] -> a -> [a] -> [a]
-lastPartIntern _      b (a:as) | a == b = lastPartIntern [] b as
-lastPartIntern buffer _ []              = reverse buffer
-lastPartIntern buffer b (a:as)          = lastPartIntern (a:buffer) b as
 
 measureTime :: MonadIO m => Message.CorrelationID -> StateT Env m (Maybe Clock.NominalDiffTime)
 measureTime !crlID = do

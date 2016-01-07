@@ -8,7 +8,7 @@ import qualified Data.List                   as List
 import qualified Flowbox.Bus.EndPoint        as EP
 import           Empire.Cmd                  (Cmd)
 import qualified Empire.Cmd                  as Cmd
-import qualified Empire.Logger               as Logger
+import qualified Empire.Server               as Server
 import qualified Empire.Version              as Version
 import qualified Flowbox.Config.Config       as Config
 import           Flowbox.Options.Applicative hiding (info)
@@ -46,7 +46,7 @@ run cmd = case cmd of
         let topics = if List.null $ Cmd.topics cmd
                         then [defaultTopic]
                         else Cmd.topics cmd
-        r <- Logger.run endPoints topics
+        r <- Server.run endPoints topics
         case r of
             Left err -> logger criticalFail err
             _        -> return ()

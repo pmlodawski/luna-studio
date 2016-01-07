@@ -2,13 +2,13 @@ module Empire.API.Graph.Topics where
 
 import Prologue
 
-addNode        = "empire.graph.node.add" -- request update
-removeNode     = "empire.graph.node.remove" -- request simpleresponse
-updateNode     = "empire.graph.node.update" -- async, no request
-updateNodeMeta = "empire.graph.node.updateMeta" -- request update
-connect        = "empire.graph.connect" -- request simpleresponse
-disconnect     = "empire.graph.disconnect" -- request simpleresponse
-createProject  = "empire.project.create" -- request update
-listProjects   = "empire.project.list" -- request-response
-createLibrary  = "empire.library.create" -- request update
-listLibraries  = "empire.library.list" -- request-response
+addNodeRequest        = "empire.graph.node.add.request" -- request update
+removeNodeRequest     = "empire.graph.node.remove.request" -- request simpleresponse
+nodeUpdateRequest     = "empire.graph.node.update" -- async, no request
+updateNodeMetaRequest = "empire.graph.node.updateMeta.request" -- request update
+connectRequest        = "empire.graph.connec.requestt" -- request simpleresponse
+disconnectRequest     = "empire.graph.disconnect.request" -- request simpleresponse
+createProjectRequest  = "empire.project.create.request" -- request update
+listProjectsRequest   = "empire.project.list.request" -- request-response
+createLibraryRequest  = "empire.library.create.request" -- request update
+listLibrariesRequest  = "empire.library.list.request" -- request-response

@@ -1,11 +1,11 @@
-module Empire.API.Graph.UpdateNode where
+module Empire.API.Graph.NodeUpdate where
 
 import           Prologue
-import           Data.Binary              (Binary)
+import           Data.Binary             (Binary)
 
-import           Empire.API.Data.Project  (ProjectId)
-import           Empire.API.Data.Library  (LibraryId)
-import           Empire.API.Data.Node     (Node)
+import           Empire.API.Data.Project (ProjectId)
+import           Empire.API.Data.Library (LibraryId)
+import           Empire.API.Data.Node    (Node)
 
 data Update = Update { _projectId :: ProjectId
                      , _libraryId :: LibraryId
