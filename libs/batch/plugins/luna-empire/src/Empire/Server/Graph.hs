@@ -52,12 +52,13 @@ handleAddNode content = do
     logger info $ "Handling AddNodeRequest"
     let request = Bin.decode . fromStrict $ content :: AddNode.Request
     logger info $ show request
-    env <- get
-    logger info $ show env
-    (nodeIdE, st) <- liftIO $ Empire.runEmpire (env ^. Env.empire) $ addNode
+    currentEmpireEnv <- use Env.empireEnv
+    logger info $ show currentEmpireEnv
+    (nodeIdE, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ addNode
         (request ^. AddNode.projectId)
         (request ^. AddNode.libraryId)
         (request ^. AddNode.expr)
+    Env.empireEnv .= newEmpireEnv
     case nodeIdE of
         Left err -> logger info $ "Error processing request: " ++ show err
         Right nodeId -> do
