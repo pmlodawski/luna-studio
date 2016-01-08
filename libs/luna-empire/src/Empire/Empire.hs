@@ -13,16 +13,16 @@ type Error = String
 
 type ProjectManager = IntMap Project
 
-newtype EmpireEnv = EmpireEnv { _projectManager :: ProjectManager } deriving Show
+newtype Env = Env { _projectManager :: ProjectManager } deriving Show
 
-instance Default EmpireEnv where
-    def = EmpireEnv IntMap.empty
+instance Default Env where
+    def = Env IntMap.empty
 
-makeLenses ''EmpireEnv
+makeLenses ''Env
 
 type Command s a = ErrorT Error (StateT s IO) a
 
-type Empire a = Command EmpireEnv a
+type Empire a = Command Env a
 
 runEmpire :: s -> Command s a -> IO (Either Error a, s)
 runEmpire st cmd = runStateT (runErrorT cmd) st

@@ -21,6 +21,7 @@ import           Flowbox.Bus.BusT            (BusT (..))
 import qualified Flowbox.Bus.BusT            as Bus
 
 import qualified Empire.API.Data.Node        as Node
+import           Empire.API.Data.Node        (NodeId)
 import qualified Empire.API.Data.NodeMeta    as NodeMeta
 import           Empire.API.Data.Library     (LibraryId)
 import           Empire.API.Data.Project     (ProjectId)
@@ -41,26 +42,31 @@ logger :: LoggerIO
 logger = getLoggerIO $moduleName
 
 
-addNode :: ProjectId -> LibraryId -> String -> Empire ()
+addNode :: ProjectId -> LibraryId -> String -> Empire NodeId
 addNode pid lid expr = do
     nodeId <- Graph.addNode pid lid expr
-    return ()
+    return nodeId
 
 handleAddNode :: ByteString -> StateT Env BusT ()
 handleAddNode content = do
     logger info $ "Handling AddNodeRequest"
-    let req = Bin.decode . fromStrict $ content :: AddNode.Request
-    logger info $ show req
+    let request = Bin.decode . fromStrict $ content :: AddNode.Request
+    logger info $ show request
     env <- get
     logger info $ show env
-    (graph, st) <- liftIO $ Empire.runEmpire (env ^. Env.empire) (addNode (req ^. AddNode.projectId) (req ^. AddNode.libraryId) (req ^. AddNode.expr))
-    let meta     = NodeMeta.NodeMeta (20.0, 30.0)
-        request  = AddNode.Request 0 0 "dupa123" meta 1235
-        node     = Node.Node 123 "dupa123" mempty meta
-        update   = AddNode.Update  node
-        response = Response.Update request update
-    lift $ BusT $ Bus.send Flag.Enable $ Message.Message "empire.graph.node.add.update" $ toStrict $ Bin.encode response
-    return ()
+    (nodeIdE, st) <- liftIO $ Empire.runEmpire (env ^. Env.empire) $ addNode
+        (request ^. AddNode.projectId)
+        (request ^. AddNode.libraryId)
+        (request ^. AddNode.expr)
+    case nodeIdE of
+        Left err -> logger info $ "Error processing request: " ++ show err
+        Right nodeId -> do
+            let meta     = NodeMeta.NodeMeta (20.0, 30.0)
+                node     = Node.Node nodeId "dupa123" mempty meta
+                update   = AddNode.Update  node
+                response = Response.Update request update
+            lift $ BusT $ Bus.send Flag.Enable $ Message.Message "empire.graph.node.add.update" $ toStrict $ Bin.encode response
+            return ()
 
 handleRemoveNode :: ByteString -> StateT Env BusT ()
 handleRemoveNode content = do

@@ -25,6 +25,7 @@ import           Empire.Commands.Library (withLibrary)
 import qualified Empire.Commands.AST     as AST
 import           Luna.Syntax.Repr.Graph  (Ref, Node)
 
+-- TODO: change NodeId to Node
 addNode :: ProjectId -> LibraryId -> String -> Empire NodeId
 addNode pid lid expr = withGraph pid lid $ do
     newNodeId <- gets Graph.nextNodeId

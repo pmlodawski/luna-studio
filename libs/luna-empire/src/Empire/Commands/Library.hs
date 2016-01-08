@@ -37,7 +37,7 @@ withLibrary pid lid cmd = withProject pid $ do
     zoom (Project.libs . at lid) $ do
         libMay <- get
         case libMay of
-            Nothing  -> throwError $ "Library " ++ (show lid) ++ "does not exist."
+            Nothing  -> throwError $ "Library " ++ (show lid) ++ " does not exist."
             Just lib -> do
                 let result = (_2 %~ Just) <$> Empire.runEmpire lib cmd
                 Empire.empire $ const result

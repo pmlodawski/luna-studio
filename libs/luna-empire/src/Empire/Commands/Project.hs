@@ -31,7 +31,7 @@ withProject :: ProjectId -> Command Project a -> Empire a
 withProject pid cmd = zoom (Empire.projectManager . at pid) $ do
     projectMay <- get
     case projectMay of
-        Nothing      -> throwError $ "Project " ++ (show pid) ++ "does not exist."
+        Nothing      -> throwError $ "Project " ++ (show pid) ++ " does not exist."
         Just project -> do
             let result = (_2 %~ Just) <$> Empire.runEmpire project cmd
             Empire.empire $ const result
