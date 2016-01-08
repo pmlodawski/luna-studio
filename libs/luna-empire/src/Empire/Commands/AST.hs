@@ -9,6 +9,7 @@ import           Data.Variants       (match, case', specificCons, ANY(..))
 import           Data.Layer.Coat     (uncoat, coated)
 import           Data.Maybe          (fromMaybe)
 import           Data.Construction   (destruct)
+import qualified Data.Text.Lazy      as Text
 
 import           Empire.Data.AST (AST, ASTNode)
 import           Empire.Empire
@@ -21,10 +22,11 @@ import           Luna.Syntax.Builder.Class (BuilderT)
 import qualified Luna.Syntax.Builder       as Builder
 import           Luna.Syntax.Repr.Graph    (Ref(..), Node(..), Edge(..))
 import qualified Luna.Syntax.Repr.Graph    as Graph
-import           Luna.Syntax.AST.Term      (Var(..), App(..), Blank(..), Accessor(..), Unify(..), Draft)
+import           Luna.Syntax.AST.Term      (Var(..), App(..), Blank(..), Accessor(..), Unify(..), Draft, Val)
 import qualified Luna.Syntax.AST.Term      as Term
 import qualified Luna.Syntax.AST.Typed     as Typed
 import qualified Luna.Syntax.AST.Arg       as Arg
+import qualified Luna.Syntax.AST.Lit       as Lit
 
 import           Empire.Utils.ParserMock   as Parser
 
@@ -69,7 +71,7 @@ makeAccessor targetNodeRef namingNodeRef = do
             replacementRef <- makeAccessor targetNodeRef newNamingNodeRef
             Builder.reconnect namingNodeRef functionApplicationNode replacementRef
             return namingNodeRef
-        match $ \(Accessor t n) -> do
+        match $ \(Accessor n t) -> do
             oldTargetRef <- Builder.follow t
             finalNameRef <- Builder.follow n
             removeNode namingNodeRef
@@ -197,3 +199,33 @@ removeGraphNode' nodeId = do
 
 removeGraphNode :: Ref Node -> Command AST ()
 removeGraphNode = runAstOp . removeGraphNode'
+
+printIdent :: Ref Node -> ASTOp String
+printIdent nodeRef = do
+    node <- Builder.readRef nodeRef
+    case' (uncoat node) $ match $ \(Lit.String n) -> return (Text.unpack . toText $ n)
+
+prettyPrint :: Ref Node -> ASTOp String
+prettyPrint nodeRef = do
+    node <- Builder.readRef nodeRef
+    case' (uncoat node) $ do
+        match $ \(Unify l r) -> do
+            leftRep  <- Builder.follow l >>= prettyPrint
+            rightRep <- Builder.follow r >>= prettyPrint
+            return $ leftRep ++ " = " ++ rightRep
+        match $ \(Var n) -> Builder.follow n >>= printIdent
+        match $ \(Accessor n t) -> do
+            targetRep <- Builder.follow t >>= prettyPrint
+            nameRep   <- Builder.follow n >>= printIdent
+            return $ targetRep ++ "." ++ nameRep
+        match $ \(App f args) -> do
+            funRep <- Builder.follow f >>= prettyPrint
+            unpackedArgs <- mapM (Builder.follow . Arg.__arec) $ Term.inputs args
+            argsRep <- sequence $ prettyPrint <$> unpackedArgs
+            return $ funRep ++ " " ++ (intercalate " " argsRep)
+        match $ \Blank -> return "_"
+        match $ \val -> do
+            case' (val :: Val (Ref Edge)) $ do
+                match $ \(Lit.Int i)    -> return $ show i
+                match $ \(Lit.String s) -> return $ show s
+        match $ \ANY -> return ""

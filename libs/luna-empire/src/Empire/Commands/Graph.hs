@@ -3,6 +3,7 @@ module Empire.Commands.Graph
     , removeNode
     , connect
     , disconnect
+    , getCode
     ) where
 
 import           Prologue
@@ -53,7 +54,16 @@ disconnect' pid lid _ _ dstNodeId dstPort = withGraph pid lid $ do
         Self    -> unAcc dstNodeId
         Arg num -> unApp dstNodeId num
 
+getCode :: ProjectId -> LibraryId -> Empire String
+getCode pid lid = withGraph pid lid $ do
+    allNodes <- uses Graph.nodeMapping Map.keys
+    lines <- sequence $ printNodeLine <$> allNodes
+    return $ intercalate "\n" lines
+
 -- internal
+
+printNodeLine :: NodeId -> Command Graph String
+printNodeLine nid = getASTPointer nid >>= (zoom Graph.ast . AST.runAstOp . AST.prettyPrint)
 
 withGraph :: ProjectId -> LibraryId -> Command Graph a -> Empire a
 withGraph pid lid = withLibrary pid lid . zoom Library.body
