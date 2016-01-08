@@ -24,14 +24,18 @@ logger :: LoggerIO
 logger = getLoggerIO $moduleName
 
 relevantTopics :: [String]
-relevantTopics =  ["project.", "interpreter."]
+relevantTopics =  ["empire."]
 
 shouldPassToClient :: MessageFrame.MessageFrame -> Message.ClientID -> Bool
-shouldPassToClient frame clientId = isOriginalAuthor && isNotSender where
-    isOriginalAuthor = originalAuthorId == clientId
-    originalAuthorId = frame ^. MessageFrame.correlation . Message.clientID
+shouldPassToClient frame clientId = isNotSender where
     isNotSender      = senderId /= clientId
     senderId         = frame ^. MessageFrame.senderID
+
+-- shouldPassToClient frame clientId = isOriginalAuthor && isNotSender where
+--     isOriginalAuthor = originalAuthorId == clientId
+--     originalAuthorId = frame ^. MessageFrame.correlation . Message.clientID
+--     isNotSender      = senderId /= clientId
+--     senderId         = frame ^. MessageFrame.senderID
 
 fromBus :: TChan WSMessage -> TChan Message.ClientID -> Bus ()
 fromBus chan idChan = do
