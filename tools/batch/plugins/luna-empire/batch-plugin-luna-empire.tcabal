@@ -46,6 +46,8 @@ Executable luna-empire-test
                     prologue,
                     bytestring,
                     binary,
+                    containers,
+                    text,
                     flowbox-bus-binary,
                     flowbox-config,
                     flowbox-utils,
