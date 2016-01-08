@@ -1,7 +1,8 @@
-module Empire.API.Topics where
+module Empire.API.Topic where
 
 import Prologue
 
+getGraphRequest       = "empire.graph.get.request" -- request-response
 addNodeRequest        = "empire.graph.node.add.request" -- request update
 removeNodeRequest     = "empire.graph.node.remove.request" -- request simpleresponse
 nodeUpdate            = "empire.graph.node.update" -- async, no request
