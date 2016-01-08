@@ -15,8 +15,8 @@ import qualified Flowbox.Bus.Data.Message    as Message
 import           Flowbox.Options.Applicative hiding (info)
 import qualified Flowbox.Options.Applicative as Opt
 
-import qualified Empire.API.Data.Node as Node
-import qualified Empire.API.Data.NodeMeta as NodeMeta
+import qualified Empire.API.Data.Node        as Node
+import qualified Empire.API.Data.NodeMeta    as NodeMeta
 import qualified Empire.API.Topic            as Topic
 import qualified Empire.API.Graph.AddNode    as AddNode
 import qualified Empire.API.Graph.RemoveNode as RemoveNode
@@ -28,7 +28,7 @@ data Cmd = TestBasicString
          | TestBadTopic
          | TestAddNode
          | TestRemoveNode
-         | Test5
+         | TestNodeUpdate
          deriving Show
 
 parser :: Parser Cmd
@@ -36,7 +36,7 @@ parser = Opt.flag' TestBasicString (short 'S')
      <|> Opt.flag' TestBadTopic (short 'B')
      <|> Opt.flag' TestAddNode (short 'a')
      <|> Opt.flag' TestRemoveNode (short 'r')
-     <|> Opt.flag' Test5 (short '5')
+     <|> Opt.flag' TestNodeUpdate (short 'u')
 
 run :: Cmd -> IO ()
 run cmd = case cmd of
@@ -44,7 +44,7 @@ run cmd = case cmd of
     TestBadTopic    -> testBadTopic
     TestAddNode     -> testAddNode
     TestRemoveNode  -> testRemoveNode
-    Test5           -> test5
+    TestNodeUpdate  -> testNodeUpdate
 
 opts :: ParserInfo Cmd
 opts = Opt.info (helper <*> parser)
@@ -86,14 +86,14 @@ testRemoveNode = do
         Bus.send Flag.Enable $ Message.Message Topic.removeNodeRequest content
     return ()
 
-test5 :: IO ()
-test5 = do
+testNodeUpdate :: IO ()
+testNodeUpdate = do
     endPoints <- EP.clientFromConfig <$> Config.load
     Bus.runBus endPoints $ do
-      let meta     = NodeMeta.NodeMeta (20.0, 30.0)
-          request  = AddNode.Request 0 0 "dupa123" meta 1235
-          node     = Node.Node 123 "dupa123" mempty meta
-          update   = AddNode.Update  node
-          response = Response.Update request update
-      Bus.send Flag.Enable $ Message.Message "empire.graph.node.add.update" $ toStrict $ Bin.encode response
+        let meta     = NodeMeta.NodeMeta (20.0, 30.0)
+            request  = AddNode.Request 0 0 "dupa123" meta 1235
+            node     = Node.Node 123 "dupa123" mempty meta
+            update   = AddNode.Update  node
+            response = Response.Update request update
+        Bus.send Flag.Enable $ Message.Message "empire.graph.node.add.update" $ toStrict $ Bin.encode response
     return ()
