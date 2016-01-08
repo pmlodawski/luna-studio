@@ -22,7 +22,7 @@ import Empire.API.Graph.Connect        as Connect
 import Empire.API.Graph.Disconnect     as Disconnect
 import Empire.API.Graph.RemoveNode     as RemoveNode
 import Empire.API.Graph.UpdateNodeMeta as UpdateNodeMeta
-import Empire.API.Graph.UpdateNode     as UpdateNode
+import Empire.API.Graph.NodeUpdate     as NodeUpdate
 
 import Empire.API.Library.CreateLibrary as CreateLibrary
 import Empire.API.Library.ListLibraries as ListLibraries
@@ -64,7 +64,7 @@ instance ToJSON RemoveNode.Request
 instance ToJSON UpdateNodeMeta.Request
 instance ToJSON UpdateNodeMeta.Update
 
-instance ToJSON UpdateNode.Update
+instance ToJSON NodeUpdate.Update
 
 instance ToJSON CreateLibrary.Request
 instance ToJSON CreateLibrary.Update
@@ -72,4 +72,4 @@ instance ToJSON CreateLibrary.Update
 instance ToJSON ListLibraries.Request
 instance ToJSON ListLibraries.Update
 
-instamce (ToJSON req, ToJSON upd) => ToJSON (Response.Response req upd)
+instance (ToJSON req, ToJSON upd) => ToJSON (Response.Response req upd)
