@@ -95,3 +95,4 @@ temp
 stack
 **/.bin/**
 !**/.bin/.keep_me
+supervisor/tmp/*
