@@ -54,3 +54,26 @@ Executable luna-empire-test
                     luna-empire,
                     luna-empire-api,
                     luna-tc
+
+Executable luna-empire-kamiltest
+    Main-Is:        KamilTest.hs
+
+    Hs-Source-Dirs: test
+
+    GHC-Options:    -Wall -O2 -package ghc
+
+    Extensions:     NoImplicitPrelude,
+                    TemplateHaskell
+
+    Build-Depends:  base,
+                    prologue,
+                    bytestring,
+                    binary,
+                    containers,
+                    text,
+                    flowbox-bus-binary,
+                    flowbox-config,
+                    flowbox-utils,
+                    luna-empire,
+                    luna-empire-api,
+                    luna-tc
