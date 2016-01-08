@@ -24,7 +24,8 @@ toAction (Debug Debug.GetState) = Just $ do
         val <- toJSVal json
         clog val
         saveState val
-toAction _ = Just $ do
+toAction ev = Just $ do
+    logBatch ev
     when shouldExportState $ do
         state <- get
         let json = toJSON state
@@ -32,3 +33,10 @@ toAction _ = Just $ do
             val <- toJSVal json
             saveState val
 
+
+
+logBatch :: Event -> Command Global.State ()
+logBatch (Batch e) = performIO $ do
+    val <- toJSVal $ toJSON e
+    clog val
+logBatch _ = return ()

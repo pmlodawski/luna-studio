@@ -7,10 +7,12 @@ import Utils.Angle (toAngle)
 import Object.Widget
 import Object.Node
 import Data.Aeson (ToJSON)
+import Empire.API.Data.PortRef (AnyPortRef)
+import qualified Empire.API.JSONInstances ()
 
 import qualified JS.Widget as UI
 
-data Port = Port { _portRef     :: PortRef
+data Port = Port { _portRef     :: AnyPortRef
                  , _angleVector :: Vector2 Double
                  , _color       :: Int
                  } deriving (Eq, Show, Typeable, Generic)

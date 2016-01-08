@@ -6,7 +6,6 @@ import           Utils.PreludePlus
 import           Utils.Vector
 
 import qualified JS.Camera             as JS
-import           Object.Node             (nodePos)
 import           Event.Event             (Event(Keyboard, Mouse))
 import           Event.Keyboard          (KeyMods(..), ctrl)
 import qualified Event.Keyboard        as Keyboard
@@ -18,6 +17,8 @@ import qualified Reactive.State.Graph  as Graph
 import qualified Reactive.State.Global as Global
 
 import Reactive.Commands.Command (Command, ioCommand, execCommand, performIO)
+import           Empire.API.Data.Node (Node)
+import qualified Empire.API.Data.Node as Node
 
 
 toAction :: Event -> Maybe (Command Global.State ())
@@ -78,8 +79,8 @@ autoZoom = do
 
     let padding        = Vector2 80.0 80.0
         screenSize     = fromIntegral <$> screenSize'
-        minXY          = -padding + (Vector2 (minimum $ (^. nodePos . x) <$> nodes) (minimum $ (^. nodePos . y) <$> nodes))
-        maxXY          =  padding + (Vector2 (maximum $ (^. nodePos . x) <$> nodes) (maximum $ (^. nodePos . y) <$> nodes))
+        minXY          = -padding + (Vector2 (minimum $ (^. Node.position . _1) <$> nodes) (minimum $ (^. Node.position . _2) <$> nodes))
+        maxXY          =  padding + (Vector2 (maximum $ (^. Node.position . _1) <$> nodes) (maximum $ (^. Node.position . _2) <$> nodes))
         spanXY         = maxXY - minXY
         zoomFactorXY   = Vector2 (screenSize ^. x / spanXY ^. x) (screenSize ^. y / spanXY ^. y)
         zoomFactor     = min (zoomFactorXY ^. x) (zoomFactorXY ^. y)

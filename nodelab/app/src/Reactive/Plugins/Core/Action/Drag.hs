@@ -6,7 +6,6 @@ import           Utils.Angle
 
 import qualified JS.NodeGraph   as UI
 
-import           Object.Object
 import           Object.Node
 import           Object.UITypes
 import           Object.Widget   (WidgetFile, objectId, widget, widgetPosition)
@@ -37,6 +36,10 @@ import qualified Object.Widget.Node as Model
 import           Control.Monad.State          hiding (State)
 
 import qualified UI.Generic as UI
+
+import           Empire.API.Data.Node (Node)
+import qualified Empire.API.Data.Node as Node
+
 
 toAction :: Event -> Maybe (Command State ())
 toAction (Mouse _ event@(Mouse.Event Mouse.Pressed  pos   Mouse.LeftButton (KeyMods False False False False) (Just _))) = Just $ startDrag pos
@@ -85,7 +88,7 @@ stopDrag = do
         nodesToUpdate = (\w -> (w ^. widget . Model.nodeId, w ^. widget . widgetPosition)) <$> selected
 
     nodes <- forM nodesToUpdate $ \(id, pos) -> do
-        Global.graph . Graph.nodesMap . ix id . nodePos .= pos
+        Global.graph . Graph.nodesMap . ix id . Node.position .= toTuple pos
         preuse $ Global.graph . Graph.nodesMap . ix id
 
     workspace <- use $ Global.workspace

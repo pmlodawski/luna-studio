@@ -3,7 +3,6 @@ module Object.Widget.Slider.Continuous where
 import Utils.PreludePlus
 import Utils.Vector
 import Data.Fixed
-import Object.Object
 import Object.Widget
 import Numeric
 import Data.Aeson (ToJSON)

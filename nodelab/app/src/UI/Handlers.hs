@@ -21,6 +21,7 @@ import           Object.Widget.Slider.Continuous  (ContinuousSlider)
 import           Object.Widget.Slider.Discrete    (DiscreteSlider)
 import           Object.Widget.TextBox            (TextBox)
 import           Object.Widget.Toggle             (Toggle)
+import           Object.Widget.Scene              (Scene)
 
 import           UI.Widget                        (GenericWidget (..), UIContainer, UIWidget)
 import qualified UI.Widget.Button                 as Button
@@ -66,6 +67,7 @@ radioButtonType       = typeOf (undefined :: RadioButton)
 groupType             = typeOf (undefined :: Group)
 buttonType            = typeOf (undefined :: Button)
 listType              = typeOf (undefined :: List)
+sceneType             = typeOf (undefined :: Scene)
 
 instance HasHandlers State where
     widgetHandlers (CtxDynamic tpe _)
@@ -86,5 +88,6 @@ instance HasHandlers State where
         | tpe ==            groupType  = def
         | tpe ==           buttonType  =           Button.widgetHandlers
         | tpe ==             listType  = def
+        | tpe ==            sceneType  = def
 
         | otherwise                    = error $ "Unknown widget type " <> (show tpe)

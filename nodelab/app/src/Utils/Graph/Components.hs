@@ -4,7 +4,7 @@ import Utils.PreludePlus
 import Data.Graph.Inductive.PatriciaTree (UGr)
 import Data.Graph.Inductive.Query.DFS    (dff', components)
 import Data.Graph.Inductive              (subgraph, nodes, edges, mkUGraph)
-import Object.Object                     (NodeId)
+import Empire.API.Data.Node (NodeId)
 
 type Component = ([NodeId], [(NodeId, NodeId)])
 

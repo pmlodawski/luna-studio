@@ -1,57 +1,57 @@
 module Batch.Expressions where
 
 import           Utils.PreludePlus
-import qualified Generated.Proto.Dep.Expr.Function   as GenFunction
-import qualified Generated.Proto.Dep.Expr.Wildcard   as GenWildcard
-import qualified Generated.Proto.Dep.Expr.Import     as GenImport
-import qualified Generated.Proto.Dep.Expr.Con_       as GenCon_
-import qualified Generated.Proto.Dep.Expr.Expr.Cls   as GenCls
-import qualified Generated.Proto.Dep.Expr.Expr       as Gen
-
-import qualified Generated.Proto.Dep.Type.Type       as GenType
-import qualified Generated.Proto.Dep.Type.Type.Cls   as TypeCls
-import qualified Generated.Proto.Dep.Type.Tuple      as TypeTuple
-
-import qualified Generated.Proto.Dep.Name.Name       as GenName
-import           Text.ProtocolBuffers.Basic          (uFromString)
-import           Text.ProtocolBuffers.Extensions     (ExtField(..), putExt)
-import qualified Data.Sequence                       as Seq
-import qualified Data.Map                            as Map
-
-emptyFunction :: String -> GenFunction.Function
-emptyFunction name = GenFunction.Function Seq.empty
-                                          (Just $ wrapName name)
-                                          Seq.empty
-                                          (Just returnType)
-                                          Seq.empty
-
-emptyFunctionExpr :: String -> Gen.Expr
-emptyFunctionExpr name = putExt GenFunction.ext (Just $ emptyFunction name)
-                       $ Gen.Expr GenCls.Function Nothing $ ExtField Map.empty
-
-wrapName :: String -> GenName.Name
-wrapName name = GenName.Name (Just $ uFromString name) Seq.empty
-
-genImport :: [String] -> String -> GenImport.Import
-genImport path target = GenImport.Import (Seq.fromList $ uFromString <$> path)
-                                  (Just $ conExpr target)
-                                  Nothing
-
-importExpr :: [String] -> String -> Gen.Expr
-importExpr path target = putExt GenImport.ext (Just $ genImport path target)
-                $ Gen.Expr GenCls.Import Nothing $ ExtField Map.empty
-
-wildcard :: Gen.Expr
-wildcard = putExt GenWildcard.ext (Just GenWildcard.Wildcard)
-         $ Gen.Expr GenCls.Wildcard Nothing $ ExtField Map.empty
-
-genCon :: String -> GenCon_.Con_
-genCon name = GenCon_.Con_ (Just $ uFromString name)
-
-conExpr :: String -> Gen.Expr
-conExpr name = putExt GenCon_.ext (Just $ genCon name)
-             $ Gen.Expr GenCls.Con_ Nothing $ ExtField Map.empty
-
-returnType :: GenType.Type
-returnType  = putExt TypeTuple.ext (Just $ TypeTuple.Tuple Seq.empty)
-             $ GenType.Type TypeCls.Tuple Nothing $ ExtField Map.empty
+-- import qualified Generated.Proto.Dep.Expr.Function   as GenFunction
+-- import qualified Generated.Proto.Dep.Expr.Wildcard   as GenWildcard
+-- import qualified Generated.Proto.Dep.Expr.Import     as GenImport
+-- import qualified Generated.Proto.Dep.Expr.Con_       as GenCon_
+-- import qualified Generated.Proto.Dep.Expr.Expr.Cls   as GenCls
+-- import qualified Generated.Proto.Dep.Expr.Expr       as Gen
+--
+-- import qualified Generated.Proto.Dep.Type.Type       as GenType
+-- import qualified Generated.Proto.Dep.Type.Type.Cls   as TypeCls
+-- import qualified Generated.Proto.Dep.Type.Tuple      as TypeTuple
+--
+-- import qualified Generated.Proto.Dep.Name.Name       as GenName
+-- import           Text.ProtocolBuffers.Basic          (uFromString)
+-- import           Text.ProtocolBuffers.Extensions     (ExtField(..), putExt)
+-- import qualified Data.Sequence                       as Seq
+-- import qualified Data.Map                            as Map
+--
+-- emptyFunction :: String -> GenFunction.Function
+-- emptyFunction name = GenFunction.Function Seq.empty
+--                                           (Just $ wrapName name)
+--                                           Seq.empty
+--                                           (Just returnType)
+--                                           Seq.empty
+--
+-- emptyFunctionExpr :: String -> Gen.Expr
+-- emptyFunctionExpr name = putExt GenFunction.ext (Just $ emptyFunction name)
+--                        $ Gen.Expr GenCls.Function Nothing $ ExtField Map.empty
+--
+-- wrapName :: String -> GenName.Name
+-- wrapName name = GenName.Name (Just $ uFromString name) Seq.empty
+--
+-- genImport :: [String] -> String -> GenImport.Import
+-- genImport path target = GenImport.Import (Seq.fromList $ uFromString <$> path)
+--                                   (Just $ conExpr target)
+--                                   Nothing
+--
+-- importExpr :: [String] -> String -> Gen.Expr
+-- importExpr path target = putExt GenImport.ext (Just $ genImport path target)
+--                 $ Gen.Expr GenCls.Import Nothing $ ExtField Map.empty
+--
+-- wildcard :: Gen.Expr
+-- wildcard = putExt GenWildcard.ext (Just GenWildcard.Wildcard)
+--          $ Gen.Expr GenCls.Wildcard Nothing $ ExtField Map.empty
+--
+-- genCon :: String -> GenCon_.Con_
+-- genCon name = GenCon_.Con_ (Just $ uFromString name)
+--
+-- conExpr :: String -> Gen.Expr
+-- conExpr name = putExt GenCon_.ext (Just $ genCon name)
+--              $ Gen.Expr GenCls.Con_ Nothing $ ExtField Map.empty
+--
+-- returnType :: GenType.Type
+-- returnType  = putExt TypeTuple.ext (Just $ TypeTuple.Tuple Seq.empty)
+--              $ GenType.Type TypeCls.Tuple Nothing $ ExtField Map.empty

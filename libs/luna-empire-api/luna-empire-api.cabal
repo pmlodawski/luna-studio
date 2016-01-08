@@ -1,0 +1,55 @@
+---------------------------------------------------
+-- This is a generated cabal configuration file. --
+-- DO NOT EDIT!                                  --
+-- Use gencabal instead.                         --
+---------------------------------------------------
+
+Name:               luna-empire-api
+Version:            0.1
+Cabal-Version:      >= 1.8
+--License-file:       LICENSE
+Author:             New Byte Order <contact@newbyteorder.com>
+Maintainer:         New Byte Order <contact@newbyteorder.com>
+Build-Type:         Simple
+
+Flag Debug
+  Description:      Enable debug support
+  Default:          False
+
+Library
+  Hs-Source-Dirs: src
+
+  GHC-Options:    -Wall -O2 -threaded
+
+  Extensions:     NoImplicitPrelude,
+                  DeriveGeneric,
+                  TemplateHaskell
+
+  Exposed-modules: 
+        Empire.API.Data.Connection,
+        Empire.API.Data.DefaultValue,
+        Empire.API.Data.Library,
+        Empire.API.Data.Node,
+        Empire.API.Data.NodeMeta,
+        Empire.API.Data.Port,
+        Empire.API.Data.PortRef,
+        Empire.API.Data.Project,
+        Empire.API.Graph.AddNode,
+        Empire.API.Graph.Connect,
+        Empire.API.Graph.Disconnect,
+        Empire.API.Graph.GetGraph,
+        Empire.API.Graph.NodeUpdate,
+        Empire.API.Graph.RemoveNode,
+        Empire.API.Graph.UpdateNodeMeta,
+        Empire.API.Library.CreateLibrary,
+        Empire.API.Library.ListLibraries,
+        Empire.API.Project.CreateProject,
+        Empire.API.Project.ListProjects,
+        Empire.API.Response,
+        Empire.API.Topic
+
+  Build-Depends:  base,
+                  lens,
+                  prologue,
+                  binary,
+                  containers

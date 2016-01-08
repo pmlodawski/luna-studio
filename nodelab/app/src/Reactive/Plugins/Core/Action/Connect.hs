@@ -6,9 +6,6 @@ import           Utils.Angle (toAngle)
 import qualified Utils.Nodes    as NodeUtils
 import           Debug.Trace
 
-import           Object.Object
-import           Object.Port
-import           Object.Node
 import           Object.UITypes
 import           Object.Widget                 (WidgetFile, widget, parent)
 import qualified Object.Widget.Connection      as UIConnection
@@ -33,6 +30,9 @@ import qualified Reactive.State.Global         as Global
 import           Reactive.State.Global         (State)
 
 import qualified BatchConnector.Commands       as BatchCmd
+
+import           Empire.API.Data.PortRef (InPortRef(..), OutPortRef(..), AnyPortRef(..))
+import qualified Empire.API.Data.Node    as Node
 
 
 
@@ -100,6 +100,11 @@ stopDrag' _ = do
     zoom Global.uiRegistry hideCurrentConnection
     updatePortAngles
 
+toValidConnection :: AnyPortRef -> AnyPortRef -> Maybe (OutPortRef, InPortRef)
+toValidConnection (OutPortRef' a) (InPortRef' b) = Just (a, b)
+toValidConnection (InPortRef' a) (OutPortRef' b) = Just (b, a)
+toValidConnection _ _ = Nothing
+
 stopDrag :: Mouse.RawEvent -> Connect.Connecting -> Command State ()
 stopDrag event@(Mouse.Event _ coord _ _ mayEvWd) (Connecting sourceRef _ _ _ _ (DragHistory start current)) = do
     Global.connect . Connect.connecting .= Nothing
@@ -111,14 +116,8 @@ stopDrag event@(Mouse.Event _ coord _ _ mayEvWd) (Connecting sourceRef _ _ _ _ (
         destinationFile <- zoom Global.uiRegistry $ getPortWidgetUnderCursor evWd
         forM_ destinationFile $ \destinationFile -> do
             let destinationRef = destinationFile ^. widget . PortModel.portRef
-            let srcDstMay = NodeUtils.getSrcDstMay sourceRef destinationRef
+            let srcDstMay = toValidConnection sourceRef destinationRef
             forM_ srcDstMay $ \(src, dst) -> do
                 connectNodes src dst
     updatePortAngles
     updateConnections
-
-calculateAngle camera oldGraph (Just (Connecting sourceRef _ _ _ destinationMay (DragHistory startPos currentPos))) = toAngle (destinPoint - sourcePoint) where
-    sourcePoint = NodeUtils.getNodePos (Graph.getNodesMap oldGraph) $ sourceRef ^. refPortNodeId
-    destinPoint = Camera.screenToWorkspace camera currentPos
-calculateAngle _ _ Nothing = 0.0
-

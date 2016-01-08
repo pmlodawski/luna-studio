@@ -11,12 +11,14 @@ function renderMap() {
   $$.rendererMap.render($$.sceneHUD, $$.cameraHUD);
 }
 
-function getMapPixelAt(x, y) {
-  var buf = new Uint8Array(4);
-  y = $$.rendererMap.domElement.height - y;
-  $$.rendererMapCtx.readPixels(x, y, 1, 1, $$.rendererMapCtx.RGBA, $$.rendererMapCtx.UNSIGNED_BYTE, buf);
-  return buf;
-}
+// function getMapPixelAt(x, y) {
+//   var buf = new Uint8Array(4);
+//   y = $$.rendererMap.domElement.height - y;
+//   $$.rendererMapCtx.readPixels(x, y, 1, 1, $$.rendererMapCtx.RGBA, $$.rendererMapCtx.UNSIGNED_BYTE, buf);
+//   return buf;
+// }
+
+
 
 var cachedMap = null;
 var cachedWidth = 0;
@@ -32,13 +34,33 @@ function cacheMap() {
 }
 
 function getMapPixelAtCached(x, y) {
-  var offset = 4 * (cachedWidth * (cachedHeight - y) + x);
+  var offset = 4 * (cachedWidth * (cachedHeight - y - 1) + x);
   return [ cachedMap[offset + 0]
          , cachedMap[offset + 1]
          , cachedMap[offset + 2]
          , cachedMap[offset + 3]
          ];
 }
+
+var getMapPixelAt = getMapPixelAtCached;
+
+var getObjectsInRect = function(x, y, w, h) {
+  var last = -1;
+  var out = [];
+
+  for(var j = y; j < y + h; j++) {
+    for(var i = x; i < x + w; i++) {
+      var offset = 4 * (cachedWidth * (cachedHeight - j - 1) + i);
+      var id = cachedMap[offset + 0] + 256 * cachedMap[offset + 1] + 256 * 256 * cachedMap[offset + 2];
+      if(id !== last) {
+        out.push(id);
+        last = id;
+      }
+    }
+  }
+
+  return _.uniq(out);
+};
 
 function getTopParent(w) {
   var p = w;
@@ -72,8 +94,10 @@ function widgetMatrix(id) {
 module.exports = {
   renderMap:     renderMap,
   cacheMap: cacheMap,
+  getCachedMap: function() {return cachedMap; },
   getMapPixelAt: getMapPixelAt,
   getMapPixelAtCached: getMapPixelAtCached,
+  getObjectsInRect: getObjectsInRect,
   widgetMatrix:  widgetMatrix,
   isWorkspace:   isWorkspace
 };

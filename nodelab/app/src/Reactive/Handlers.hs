@@ -23,7 +23,6 @@ import           Reactive.Banana.Frameworks ( AddHandler(..), liftIO )
 
 import           UI.Raycaster
 import           JS.NodeSearcher     ( getAction, getExpression, getNode, nsEvent )
-import           Object.Object
 import qualified Object.Widget       as Widget
 import qualified Event.Keyboard      as Keyboard
 import qualified Event.Mouse         as Mouse
@@ -34,7 +33,6 @@ import qualified Event.NodeSearcher  as NodeSearcher
 import qualified Event.Connection    as Connection
 import qualified Event.ConnectionPen as ConnectionPen
 import qualified Event.TextEditor    as TextEditor
-import qualified Object.Node         ( Node )
 import           Event.Event
 import           GHCJS.Marshal
 import           JavaScript.Array    ( JSArray )

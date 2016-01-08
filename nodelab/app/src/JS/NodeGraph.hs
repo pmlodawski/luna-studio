@@ -5,9 +5,6 @@ import           Utils.Vector
 import           Utils.Angle
 
 import           JS.Node
-import           Object.Object
-import           Object.Port
-import           Object.Node
 import           Object.UITypes
 
 import           Data.JSString (pack)
@@ -15,6 +12,7 @@ import           Data.JSString.Text  (lazyTextToJSString)
 
 import           JavaScript.Array    (JSArray)
 import qualified JavaScript.Array    as JSArray
+import           Empire.API.Data.Node (NodeId)
 
 import GHCJS.Marshal
 

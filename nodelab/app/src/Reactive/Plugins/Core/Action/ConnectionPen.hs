@@ -6,16 +6,12 @@ module Reactive.Plugins.Core.Action.ConnectionPen where
 import           Utils.PreludePlus
 import           Utils.Vector
 import           Utils.Angle
-import qualified Utils.MockHelper         as MockHelper
 
 import qualified Data.IntMap.Lazy         as IntMap
 
 import qualified JS.Widget                as UI
 import qualified JS.ConnectionPen         as UI
 
-import           Object.Object
-import           Object.Port
-import           Object.Node
 import qualified Object.Widget.Node       as UINode
 import qualified Object.Widget.Connection as UIConnection
 import           Object.UITypes
@@ -131,29 +127,32 @@ autoConnectBackwards :: (Int, Int) -> Command State ()
 autoConnectBackwards (srcNodeId, dstNodeId) = autoConnect (dstNodeId, srcNodeId)
 
 autoConnect :: (Int, Int) -> Command State ()
-autoConnect (srcNodeId, dstNodeId) = do
-    graph     <- use Global.graph
-    workspace <- use Global.workspace
-    let srcNode          = Graph.getNode graph srcNodeId
-        dstNode          = Graph.getNode graph dstNodeId
-        srcPorts         = srcNode ^. ports . outputPorts
-        dstPorts         = dstNode ^. ports . inputPorts
-        dstPortsFiltered = filterConnectedInputPorts graph dstNodeId $ dstNode ^. ports . inputPorts
-        connectionMay    = findConnectionForAll dstPortsFiltered srcPorts
-    forM_ connectionMay $ \(srcPortId, dstPortId) -> do
-        let srcPortRef   = PortRef srcNodeId OutputPort srcPortId
-            dstPortRef   = PortRef dstNodeId InputPort  dstPortId
-        connectNodes srcPortRef dstPortRef
+autoConnect (srcNodeId, dstNodeId) = return ()
+    -- do
+    -- graph     <- use Global.graph
+    -- workspace <- use Global.workspace
+    --
+    -- TODO: FIXME: Port to new Graph API
+    -- let srcNode          = Graph.getNode graph srcNodeId
+    --     dstNode          = Graph.getNode graph dstNodeId
+    --     srcPorts         = srcNode ^. ports . outputPorts
+    --     dstPorts         = dstNode ^. ports . inputPorts
+    --     dstPortsFiltered = filterConnectedInputPorts graph dstNodeId $ dstNode ^. ports . inputPorts
+    --     connectionMay    = findConnectionForAll dstPortsFiltered srcPorts
+    -- forM_ connectionMay $ \(srcPortId, dstPortId) -> do
+    --     let srcPortRef   = PortRef srcNodeId OutputPort srcPortId
+    --         dstPortRef   = PortRef dstNodeId InputPort  dstPortId
+    --     connectNodes srcPortRef dstPortRef
 
-filterConnectedInputPorts :: Graph.State -> NodeId -> PortCollection -> PortCollection
-filterConnectedInputPorts state nodeId ports = filter isConnected ports where
-    destinationPortRefs = fmap (^. Graph.destination) $ Graph.getConnections state
-    isConnected port = not $ PortRef nodeId InputPort (port ^. portId) `elem` destinationPortRefs
+-- filterConnectedInputPorts :: Graph.State -> NodeId -> PortCollection -> PortCollection
+-- filterConnectedInputPorts state nodeId ports = filter isConnected ports where
+--     destinationPortRefs = fmap (^. Graph.destination) $ Graph.getConnections state
+--     isConnected port = not $ PortRef nodeId InputPort (port ^. portId) `elem` destinationPortRefs
+--
+-- findConnectionForAll :: PortCollection -> PortCollection -> Maybe (PortId, PortId)
+-- findConnectionForAll dstPorts srcPorts = listToMaybe . catMaybes $ findConnection dstPorts <$> srcPorts
 
-findConnectionForAll :: PortCollection -> PortCollection -> Maybe (PortId, PortId)
-findConnectionForAll dstPorts srcPorts = listToMaybe . catMaybes $ findConnection dstPorts <$> srcPorts
-
-findConnection :: PortCollection -> Port -> Maybe (PortId, PortId)
-findConnection dstPorts srcPort = (srcPort ^. portId,) <$> dstPortId where
-    dstPortId = fmap (^. portId) $
-        find (\port -> MockHelper.typesEq (port ^. portValueType) (srcPort ^. portValueType)) dstPorts
+-- findConnection :: PortCollection -> Port -> Maybe (PortId, PortId)
+-- findConnection dstPorts srcPort = (srcPort ^. portId,) <$> dstPortId where
+--     dstPortId = fmap (^. portId) $
+--         find (\port -> MockHelper.typesEq (port ^. portValueType) (srcPort ^. portValueType)) dstPorts

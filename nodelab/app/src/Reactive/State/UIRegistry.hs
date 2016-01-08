@@ -199,5 +199,7 @@ lookupTyped idx state = do
 lookupTypedM :: DisplayObjectClass a => WidgetId -> Command State (Maybe (WidgetFile a))
 lookupTypedM ix = MState.gets $ lookupTyped ix
 
+type LookupFor a = Command State (Maybe (WidgetFile a))
+
 addHandler :: Typeable v => v -> HTMap -> HTMap
 addHandler h m = HMap.insert (undefined :: HMap.TypeKey v) h m

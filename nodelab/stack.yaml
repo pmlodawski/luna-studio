@@ -11,11 +11,23 @@ ghc-options:
   nodelab: -DGHCJS_BROWSER
 packages:
   - .
+  - ../libs/luna-empire-api
+  - ../libs/luna-empire-api-json
   - ../libs/utils
   - ../libs/luna/protobuf-old-gen
   - ../libs/batch/batch-protobuf
   - ../libs/data/serialization
   - ../libs/batch/plugins/project-manager-api
   - ../tools/batch/plugins/interpreter-api
+  - ../../prologue
+  - ../../container
 extra-deps:
   - ghcjs-dom-0.2.3.0
+  - data-layer-1.0.3
+  - functor-utils-1.0
+  - lens-utils-1.0
+  - string-qq-0.0.2
+  - tuple-0.3.0.2
+  - typelevel-1.0.2
+  - OneTuple-0.2.1
+  - data-construction-1.0

@@ -7,7 +7,7 @@ import qualified Data.Map            as Map
 import           Data.Map            (Map)
 import           Utils.Graph.Graph   (Graph, neighbourhood, getNodes)
 import           Utils.Graph.TopSort (topsort)
-import           Object.Object       (NodeId)
+import           Empire.API.Data.Node (NodeId)
 
 initLayers :: Graph NodeId -> Map NodeId Int
 initLayers = Map.fromList . flip zip [0, 0..] . getNodes

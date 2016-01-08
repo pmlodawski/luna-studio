@@ -9,11 +9,13 @@ import qualified Reactive.State.UIRegistry as UIRegistry
 import           Reactive.Commands.Graph   (updateConnNodes, updateConnections, updatePortAngles, connectionIdToWidgetId)
 import           Reactive.Commands.UIRegistry (removeWidget)
 
-import           Object.Object           (ConnectionId, NodeId)
-
 import qualified BatchConnector.Commands as BatchCmd
 import           Control.Monad.State     hiding (State)
-
+import           Empire.API.Data.Connection (ConnectionId)
+import qualified Empire.API.Data.Connection as Connection
+import           Empire.API.Data.Node       (NodeId)
+import           Empire.API.Data.Connection (Connection, ConnectionId)
+import           Empire.API.Data.PortRef    (OutPortRef, InPortRef)
 
 getChangedNodes :: Graph.State -> [ConnectionId] -> [NodeId]
 getChangedNodes graph connIds = nIds1 ++ nIds2
@@ -37,12 +39,15 @@ localDisconnectAll connectionIds = do
     updatePortAngles
     updateConnections
 
+connectionToRefs :: Connection -> (OutPortRef, InPortRef)
+connectionToRefs conn = (conn ^. Connection.src, conn ^. Connection.dst)
+
 disconnectAll :: [ConnectionId] -> Command State ()
 disconnectAll connectionIds = do
     graph     <- use Global.graph
     workspace <- use Global.workspace
     let conns = catMaybes $ Graph.lookUpConnection graph <$> connectionIds
-        refs  = Graph.connectionToRefs <$> conns
+        refs  = connectionToRefs <$> conns
     performIO $ BatchCmd.disconnectNodes workspace refs
     localDisconnectAll connectionIds
 

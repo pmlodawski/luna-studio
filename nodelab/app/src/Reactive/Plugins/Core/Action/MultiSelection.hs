@@ -3,20 +3,19 @@
 module Reactive.Plugins.Core.Action.MultiSelection where
 
 import           Utils.PreludePlus
-import           Utils.Vector      (Vector2)
+import           Utils.Vector      (Vector2(..), x, y)
 
 import           JS.MultiSelection (displaySelectionBox, hideSelectionBox)
 import qualified JS.NodeGraph   as UI
 
-import           Object.Object
 import           Object.Node
-import           Object.Widget (DisplayObject, UIHandlers)
+import           Object.Widget (DisplayObject, UIHandlers, WidgetId, WidgetFile)
 import qualified Object.Widget.Node as NodeModel
 
 import           Event.Keyboard (KeyMods(..))
 import qualified Event.Mouse    as Mouse
 import qualified Event.Keyboard as Keyboard
-import           Event.Event    (Event(Mouse, Keyboard))
+import           Event.Event    (Event(Mouse, Keyboard), JSState)
 
 import qualified Reactive.State.MultiSelection as MultiSelection
 import           Reactive.State.MultiSelection (DragHistory(..))
@@ -28,14 +27,15 @@ import           Reactive.State.Global         (State)
 
 import           Reactive.Commands.Command          (Command, performIO)
 import qualified Reactive.Commands.UIRegistry       as UICmd
-import           Reactive.Commands.Graph (getNodesInRect)
 import           Reactive.Commands.Selection        (unselectAll, selectAll, focusSelectedNode)
 
 import           Control.Monad.State                               hiding (State)
 
+import           UI.Raycaster (getObjectsInRect)
+
 toAction :: Event -> Maybe (Command State ())
 toAction (Mouse _ event@(Mouse.Event Mouse.Pressed  pos Mouse.LeftButton (KeyMods False False False False) Nothing)) = Just $ startDrag pos
-toAction (Mouse _ event@(Mouse.Event Mouse.Moved    pos Mouse.LeftButton _ _)) = Just $ handleMove pos
+toAction (Mouse jsstate event@(Mouse.Event Mouse.Moved    pos Mouse.LeftButton _ _)) = Just $ handleMove jsstate pos
 toAction (Mouse _ event@(Mouse.Event Mouse.Released _   Mouse.LeftButton _ _)) = Just stopDrag
 
 toAction (Keyboard _ (Keyboard.Event Keyboard.Press 'A'   _)) = Just trySelectAll
@@ -57,22 +57,30 @@ startDrag coord = do
     Global.multiSelection . MultiSelection.history ?= (DragHistory coord coord)
     zoom Global.uiRegistry $ unselectAll
 
-handleMove :: Vector2 Int -> Command State ()
-handleMove coord = do
+handleMove :: JSState -> Vector2 Int -> Command State ()
+handleMove jsstate coord = do
     dragHistory <- use $ Global.multiSelection . MultiSelection.history
     case dragHistory of
         Nothing                          -> return ()
         Just (DragHistory start current) -> do
             Global.multiSelection . MultiSelection.history ?= DragHistory start coord
-            updateSelection start coord
+            updateSelection jsstate start coord
             drawSelectionBox start coord
 
-updateSelection :: Vector2 Int -> Vector2 Int -> Command State ()
-updateSelection start end = do
-    ids <- getNodesInRect start end
+
+lookupNode :: WidgetId -> Command UIRegistry.State (Maybe (WidgetFile NodeModel.Node))
+lookupNode = UIRegistry.lookupTypedM
+
+updateSelection :: JSState -> Vector2 Int -> Vector2 Int -> Command State ()
+updateSelection jsstate start end = do
+    let leftTop     = Vector2 (min (start ^. x) (end ^. x)) (min (start ^. y) (end ^. y))
+        rightBottom = Vector2 (max (start ^. x) (end ^. x)) (max (start ^. y) (end ^. y))
+        ids         = getObjectsInRect jsstate leftTop (rightBottom - leftTop)
     zoom Global.uiRegistry unselectAll
     forM_ ids $ \id -> do
-        zoom Global.uiRegistry $ UICmd.update id (NodeModel.isSelected .~ True)
+        zoom Global.uiRegistry $ do
+            w <- lookupNode id
+            when (isJust w) $ UICmd.update_ id (NodeModel.isSelected .~ True)
 
 drawSelectionBox :: Vector2 Int -> Vector2 Int -> Command State ()
 drawSelectionBox start end = do
