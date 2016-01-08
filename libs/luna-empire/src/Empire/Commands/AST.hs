@@ -51,6 +51,32 @@ addExpr name expr = Builder.var expr >>= unifyWithName name
 addString :: String -> String -> ASTOp (Ref Node)
 addString name lit = Builder._string lit >>= unifyWithName name
 
+functionApplicationNode :: Lens' ASTNode (Ref Edge)
+functionApplicationNode = coated . lens getter setter where
+    getter a   = case' a $ match $ \(App f _   ) -> f
+    setter a f = case' a $ match $ \(App _ args) -> specificCons $ App f args
+
+makeAccessor :: Ref Node -> Ref Node -> ASTOp (Ref Node)
+makeAccessor targetNodeRef namingNodeRef = do
+    namingNode <- Builder.readRef namingNodeRef
+    case' (uncoat namingNode) $ do
+        match $ \(Var n) -> do
+            stringNodeRef <- Builder.follow n
+            removeNode namingNodeRef
+            Builder.accessor stringNodeRef targetNodeRef
+        match $ \(App t _) -> do
+            newNamingNodeRef <- Builder.follow t
+            replacementRef <- makeAccessor targetNodeRef newNamingNodeRef
+            Builder.reconnect namingNodeRef functionApplicationNode replacementRef
+            return namingNodeRef
+        match $ \(Accessor t n) -> do
+            oldTargetRef <- Builder.follow t
+            finalNameRef <- Builder.follow n
+            removeNode namingNodeRef
+            intermediateTargetRef <- makeAccessor targetNodeRef oldTargetRef
+            makeAccessor intermediateTargetRef finalNameRef
+        match $ \ANY -> throwError "Invalid node type"
+
 unifyWithName :: String -> Ref Node -> ASTOp (Ref Node)
 unifyWithName name node = do
     nameVar <- Builder.var name
@@ -82,11 +108,8 @@ replaceTargetNode unifyNodeId newTargetId = runAstOp $ do
 makeVar :: Ref Node -> Command AST (Ref Node)
 makeVar = runAstOp . Builder.var
 
-makeAccessor :: Ref Node -> Ref Node -> Command AST (Ref Node)
-makeAccessor src dst = runAstOp $ Builder.accessor dst src
-
-removeNode' :: Ref Node -> ASTOp ()
-removeNode' ref = do
+removeNode :: Ref Node -> ASTOp ()
+removeNode ref = do
     node     <- Builder.readRef ref
     typeNode <- Builder.follow $ node ^. Typed.tp
     destruct typeNode
@@ -96,11 +119,8 @@ removeIfBlank :: Ref Node -> ASTOp ()
 removeIfBlank ref = do
     node <- Builder.readRef ref
     case' (uncoat node) $ do
-        match $ \Blank -> removeNode' ref
+        match $ \Blank -> removeNode ref
         match $ \ANY -> return ()
-
-removeNode :: Ref Node -> Command AST ()
-removeNode = runAstOp . removeNode'
 
 getNameNode :: Ref Node -> Command AST (Ref Node)
 getNameNode ref = runAstOp $ do
@@ -126,7 +146,7 @@ destructApp fun = do
             target <- Builder.follow tg
             return (target, unpackedArgs)
         match $ \ANY -> throwError "Expected App node, got wrong type."
-    removeNode' fun
+    removeNode fun
     return result
 
 newApplication :: Ref Node -> Ref Node -> Int -> ASTOp (Ref Node)
@@ -165,14 +185,14 @@ removeGraphNode' nodeId = do
     {-print succs-}
     case' (uncoat node) $ do
         match $ \(App f args) -> do
-            removeNode' nodeId
+            removeNode nodeId
             Builder.follow f >>= removeGraphNode'
         match $ \(Accessor n tg) -> do
-            Builder.follow n >>= removeNode'
-            removeNode' nodeId
+            Builder.follow n >>= removeNode
+            removeNode nodeId
         match $ \(Var n) -> do
-            Builder.follow n >>= removeNode'
-            removeNode' nodeId
+            Builder.follow n >>= removeNode
+            removeNode nodeId
         match $ \ANY -> throwError "Can't remove, screw you xD"
 
 removeGraphNode :: Ref Node -> Command AST ()

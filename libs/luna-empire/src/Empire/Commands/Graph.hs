@@ -62,7 +62,7 @@ unAcc :: NodeId -> Command Graph ()
 unAcc nodeId = do
     dstAst <- use (Graph.nodeMapping . at nodeId) <?!> "Node does not exist"
     nameNode <- zoom Graph.ast $ AST.getNameNode dstAst
-    zoom Graph.ast $ AST.removeNode dstAst
+    {-zoom Graph.ast $ AST.removeNode dstAst-}
     newNodeRef <- zoom Graph.ast $ AST.makeVar nameNode
     Graph.nodeMapping . at nodeId ?= newNodeRef
 
@@ -94,11 +94,8 @@ makeAcc :: NodeId -> NodeId -> Command Graph ()
 makeAcc src dst = do
     srcAst <- getASTVar src
     dstAst <- getASTTarget dst
-    name <- zoom Graph.ast $ AST.getNameNode dstAst
-    zoom Graph.ast $ AST.removeNode dstAst
-    newNodeRef <- zoom Graph.ast $ AST.makeAccessor srcAst name
+    newNodeRef <- zoom Graph.ast $ AST.runAstOp $ AST.makeAccessor srcAst dstAst
     rewireNode dst newNodeRef
-
 
 makeApp :: NodeId -> NodeId -> Int -> Command Graph ()
 makeApp src dst pos = do
