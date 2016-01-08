@@ -7,6 +7,7 @@ import           Empire.API.Data.Project (ProjectId)
 import           Empire.API.Data.Library (LibraryId)
 import           Empire.API.Data.Node    (NodeId)
 import           Empire.API.Data.Port    (OutPort, InPort)
+import           Empire.API.Data.PortRef (OutPortRef(..), InPortRef(..))
 import qualified Empire.API.Response     as Response
 
 data Request = Request { _projectId :: ProjectId
@@ -20,5 +21,17 @@ data Request = Request { _projectId :: ProjectId
 type Response = Response.SimpleResponse Request
 
 makeLenses ''Request
+
+src' :: Request -> OutPortRef
+src' r = OutPortRef (r ^. srcNodeId) (r ^. srcPort)
+
+src :: Getter Request OutPortRef
+src = to src'
+
+dst' :: Request -> InPortRef
+dst' r = InPortRef (r ^. dstNodeId) (r ^. dstPort)
+
+dst :: Getter Request InPortRef
+dst = to dst'
 
 instance Binary Request
