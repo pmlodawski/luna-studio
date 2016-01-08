@@ -10,7 +10,7 @@ import           Reactive.Commands.AutoLayout (layoutGraph)
 
 import qualified Batch.Workspace as Workspace
 import           Empire.API.Data.Node (Node)
-import           Empire.API.Data.Connection (OutPortRef, InPortRef)
+import           Empire.API.Data.PortRef (OutPortRef, InPortRef)
 import Debug.Trace (trace)
 
 renderGraph :: [Node] -> [(OutPortRef, InPortRef)] -> Command State ()

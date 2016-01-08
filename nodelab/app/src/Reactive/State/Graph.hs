@@ -12,8 +12,10 @@ import           Debug.Trace
 
 import           Data.Aeson
 import           Utils.Aeson (intMapToJSON)
-import           Empire.API.Data.Connection (Connection(..), ConnectionId, OutPortRef, InPortRef, AnyPortRef)
+import           Empire.API.Data.Connection (Connection(..), ConnectionId)
+import           Empire.API.Data.PortRef    (OutPortRef, InPortRef, AnyPortRef)
 import qualified Empire.API.Data.Connection as Connection
+import qualified Empire.API.Data.PortRef    as PortRef
 import           Empire.API.Data.Node       (Node, NodeId)
 import qualified Empire.API.Data.Node       as Node
 import           Empire.API.Data.Port       (Port)
@@ -41,8 +43,8 @@ instance Default State where
     def = State def def
 
 connectionToNodeIds :: Connection -> (NodeId, NodeId)
-connectionToNodeIds conn = ( conn ^. Connection.src . Connection.srcNodeId
-                           , conn ^. Connection.dst . Connection.dstNodeId)
+connectionToNodeIds conn = ( conn ^. Connection.src . PortRef.srcNodeId
+                           , conn ^. Connection.dst . PortRef.dstNodeId)
 
 genId :: IntMap a -> Int
 genId intMap = if IntMap.null intMap then 0
@@ -83,8 +85,8 @@ updateNodes :: NodesMap -> State -> State
 updateNodes newNodesMap state = state & nodesMap .~ newNodesMap
 
 getPort :: State -> AnyPortRef -> Port
-getPort state portRef = fromMaybe err $ node ^? Node.ports . ix (portRef ^. Connection.portId) where
-    node  = getNode state $ portRef ^. Connection.nodeId
+getPort state portRef = fromMaybe err $ node ^? Node.ports . ix (portRef ^. PortRef.portId) where
+    node  = getNode state $ portRef ^. PortRef.nodeId
     err   = error $ "Port " <> show portRef <> " not found"
 
 addNode :: Node -> State -> State
@@ -113,10 +115,10 @@ containsNode id conn = (startsWithNode id conn)
                     || (endsWithNode id conn)
 
 startsWithNode :: NodeId -> Connection -> Bool
-startsWithNode id conn = conn ^. Connection.src . Connection.srcNodeId == id
+startsWithNode id conn = conn ^. Connection.src . PortRef.srcNodeId == id
 
 endsWithNode :: NodeId -> Connection -> Bool
-endsWithNode id conn = conn ^. Connection.dst . Connection.dstNodeId == id
+endsWithNode id conn = conn ^. Connection.dst . PortRef.dstNodeId == id
 
 connectionsContainingNode :: NodeId -> State -> [Connection]
 connectionsContainingNode id state = filter (containsNode id) $ getConnections state

@@ -31,9 +31,8 @@ import           Reactive.State.Global         (State)
 
 import qualified BatchConnector.Commands       as BatchCmd
 
-import           Empire.API.Data.Connection (InPortRef(..), OutPortRef(..), AnyPortRef(..))
-import qualified Empire.API.Data.Connection as Connection
-import qualified Empire.API.Data.Node       as Node
+import           Empire.API.Data.PortRef (InPortRef(..), OutPortRef(..), AnyPortRef(..))
+import qualified Empire.API.Data.Node    as Node
 
 
 
@@ -122,10 +121,3 @@ stopDrag event@(Mouse.Event _ coord _ _ mayEvWd) (Connecting sourceRef _ _ _ _ (
                 connectNodes src dst
     updatePortAngles
     updateConnections
-
-calculateAngle camera oldGraph (Just (Connecting sourceRef _ _ _ destinationMay (DragHistory startPos currentPos))) = toAngle (destinPoint - sourcePoint) where
-    sourcePoint = fromTuple $ fromMaybe err $ (Graph.getNodesMap oldGraph) ^? ix (sourceRef ^. Connection.nodeId) . Node.position
-    destinPoint = Camera.screenToWorkspace camera currentPos
-    err = error "error: calculateAngle, node not found"
-calculateAngle _ _ Nothing = 0.0
-

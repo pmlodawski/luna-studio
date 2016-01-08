@@ -6,41 +6,50 @@ import           Event.Connection           as Connection
 import           Event.Batch                as Batch
 import           BatchConnector.Updates
 import           BatchConnector.Connection  (WebMessage(..), ControlCode(..))
+import           Data.Binary (decode)
 
 process :: Event.Event -> Maybe Event.Event
 process (Event.Connection (Message msg)) = Just $ Event.Batch $ processMessage msg
 process _                                = Nothing
 
 processMessage :: WebMessage -> Batch.Event
-processMessage (WebMessage topic bytes) = rescueParseError topic $ case topic of
-    "project.list.status"                                          -> ProjectsList <$> parseProjectsListResponse bytes
-    "project.create.update"                                        -> ProjectCreated <$> parseProjectCreateUpdate bytes
-    "project.open.update"                                          -> ProjectOpened <$> parseProjectOpenUpdate bytes
-    "project.open.error"                                           -> Just $ ProjectDoesNotExist
-    "project.library.list.status"                                  -> LibrariesList <$> parseLibrariesListResponse bytes
-    "project.library.create.update"                                -> LibraryCreated <$> parseLibraryCreateResponse bytes
-    "project.library.ast.function.add.update"                      -> WorkspaceCreated <$> parseFunctionCreateResponse bytes
-    "interpreter.value.update"                                     -> uncurry ValueUpdate <$> parseValueUpdate bytes
-    "project.library.ast.function.graph.node.add.update"           -> NodeAdded <$> parseAddNodeResponse bytes
-    "project.library.ast.function.graph.node.remove.update"        -> Just NodeRemoved
-    "project.library.ast.function.graph.node.modifyinplace.update" -> Just NodeModified
-    "project.library.ast.function.graph.node.add.fakeres"          -> NodeAdded <$> parseAddNodeFakeResponse bytes
-    "project.library.ast.function.graph.node.default.set.update"   -> Just NodeDefaultUpdated
-    "project.library.ast.code.get.status"                          -> CodeUpdate <$> parseGetCodeResponse bytes
-    "project.library.ast.code.set.update"                          -> Just CodeSet
-    "project.library.ast.code.set.error"                           -> Just $ CodeSetError $ parseErrorMsg bytes
-    "project.library.ast.function.graph.connect.update"            -> Just NodesConnected
-    "project.library.ast.function.graph.disconnect.update"         -> Just NodesDisconnected
-    "project.library.ast.get.status"                               -> Just ASTElementExists
-    "project.library.ast.get.error"                                -> Just ASTElementDoesNotExist
-    "interpreter.run.update"                                       -> RunFinished <$> parseRunStatus bytes
-    "project.library.ast.function.graph.get.status"                -> uncurry GraphViewFetched <$> parseGraphViewResponse bytes
-    "interpreter.getprojectid.status"                              -> InterpreterGotProjectId <$> parseProjectIdStatus bytes
-    "interpreter.serializationmode.insert.update"                  -> Just SerializationModeInserted
-    _                                                              -> Just $ UnknownEvent topic
+processMessage (WebMessage topic bytes) = case topic of
+    "empire.graph.node.add.update"    -> NodeAdded         $ decode bytes
+    "empire.graph.node.remove.update" -> NodeRemoved       $ decode bytes
+    "empire.graph.get.status"         -> GraphViewFetched  $ decode bytes
+    "empire.graph.connect.update"     -> NodesConnected    $ decode bytes
+    "empire.graph.disconnect.update"  -> NodesDisconnected $ decode bytes
+    -- "project.library.ast.function.graph.connect.update"            -> Just NodesConnected
+    -- "project.library.ast.function.graph.disconnect.update"         -> Just NodesDisconnected
+
+    -- "project.list.status"                                          -> ProjectsList <$> parseProjectsListResponse bytes
+    -- "project.create.update"                                        -> ProjectCreated <$> parseProjectCreateUpdate bytes
+    -- "project.open.update"                                          -> ProjectOpened <$> parseProjectOpenUpdate bytes
+    -- "project.open.error"                                           -> Just $ ProjectDoesNotExist
+    -- "project.library.list.status"                                  -> LibrariesList <$> parseLibrariesListResponse bytes
+    -- "project.library.create.update"                                -> LibraryCreated <$> parseLibraryCreateResponse bytes
+    -- "project.library.ast.function.add.update"                      -> WorkspaceCreated <$> parseFunctionCreateResponse bytes
+    -- "interpreter.value.update"                                     -> uncurry ValueUpdate <$> parseValueUpdate bytes
+    -- "project.library.ast.function.graph.node.add.update"           -> NodeAdded <$> parseAddNodeResponse bytes
+    -- "project.library.ast.function.graph.node.remove.update"        -> Just NodeRemoved
+    -- "project.library.ast.function.graph.node.modifyinplace.update" -> Just NodeModified
+    -- "project.library.ast.function.graph.node.add.fakeres"          -> NodeAdded <$> parseAddNodeFakeResponse bytes
+    -- "project.library.ast.function.graph.node.default.set.update"   -> Just NodeDefaultUpdated
+    -- "project.library.ast.code.get.status"                          -> CodeUpdate <$> parseGetCodeResponse bytes
+    -- "project.library.ast.code.set.update"                          -> Just CodeSet
+    -- "project.library.ast.code.set.error"                           -> Just $ CodeSetError $ parseErrorMsg bytes
+    -- "project.library.ast.function.graph.connect.update"            -> Just NodesConnected
+    -- "project.library.ast.function.graph.disconnect.update"         -> Just NodesDisconnected
+    -- "project.library.ast.get.status"                               -> Just ASTElementExists
+    -- "project.library.ast.get.error"                                -> Just ASTElementDoesNotExist
+    -- "interpreter.run.update"                                       -> RunFinished <$> parseRunStatus bytes
+    -- "project.library.ast.function.graph.get.status"                -> uncurry GraphViewFetched <$> parseGraphViewResponse bytes
+    -- "interpreter.getprojectid.status"                              -> InterpreterGotProjectId <$> parseProjectIdStatus bytes
+    -- "interpreter.serializationmode.insert.update"                  -> Just SerializationModeInserted
+    _                                                              -> UnknownEvent topic
 processMessage (ControlMessage ConnectionTakeover) = ConnectionDropped
 processMessage (ControlMessage Welcome)            = ConnectionOpened
-
-rescueParseError :: String -> Maybe Batch.Event -> Batch.Event
-rescueParseError _     (Just ev) = ev
-rescueParseError topic Nothing   = ParseError topic
+--
+-- rescueParseError :: String -> Maybe Batch.Event -> Batch.Event
+-- rescueParseError _     (Just ev) = ev
+-- rescueParseError topic Nothing   = ParseError topic

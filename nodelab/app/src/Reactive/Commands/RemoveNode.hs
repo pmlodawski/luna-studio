@@ -39,4 +39,4 @@ performRemoval nodeId = do
     nodeWidgetId <- zoom Global.uiRegistry $ nodeIdToWidgetId nodeId
     zoom Global.uiRegistry $ mapM_ removeWidget $ maybeToList nodeWidgetId
 
-    performIO $ BatchCmd.removeNodeById workspace nodeId
+    performIO $ BatchCmd.removeNode workspace nodeId

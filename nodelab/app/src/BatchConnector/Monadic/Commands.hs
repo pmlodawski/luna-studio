@@ -25,7 +25,7 @@ insertSerializationModes :: [Node] -> Command Workspace ()
 insertSerializationModes = ioCommand . BatchCmd.insertSerializationModes
 
 updateNode :: Node -> Command Workspace ()
-updateNode = ioCommand . BatchCmd.updateNode
+updateNode _ = return () -- ioCommand . BatchCmd.updateNode
 
 requestValues :: [Node] -> Command Workspace ()
 requestValues = ioCommand . BatchCmd.requestValues

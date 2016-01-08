@@ -7,7 +7,7 @@ import Data.Aeson (ToJSON)
 
 import Object.Node
 import Object.UITypes
-import Empire.API.Data.Connection (OutPortRef, InPortRef, AnyPortRef)
+import Empire.API.Data.PortRef (OutPortRef, InPortRef, AnyPortRef)
 import Empire.API.JSONInstances ()
 
 data DragHistory = DragHistory { _dragStartPos    :: Vector2 Int

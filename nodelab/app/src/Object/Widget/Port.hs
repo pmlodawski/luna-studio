@@ -7,7 +7,7 @@ import Utils.Angle (toAngle)
 import Object.Widget
 import Object.Node
 import Data.Aeson (ToJSON)
-import Empire.API.Data.Connection (AnyPortRef)
+import Empire.API.Data.PortRef (AnyPortRef)
 import qualified Empire.API.JSONInstances ()
 
 import qualified JS.Widget as UI

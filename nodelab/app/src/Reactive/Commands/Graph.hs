@@ -18,8 +18,6 @@ import qualified Object.Widget.Node       as Model
 import qualified Object.Widget.Connection as ConnectionModel
 import qualified Object.Widget.Port       as PortModel
 
-import qualified JS.NodeGraph   as UI
-
 import           Reactive.State.Graph
 import qualified Reactive.State.Connect        as Connect
 import qualified Reactive.State.Graph          as Graph
@@ -32,7 +30,7 @@ import           Reactive.State.UIRegistry     (sceneGraphId)
 
 import           Control.Monad.State
 
-import qualified BatchConnector.Commands                           as BatchCmd
+import qualified BatchConnector.Commands       as BatchCmd
 
 import qualified UI.Widget.Node as UINode
 import qualified UI.Widget.Port as UIPort
@@ -42,7 +40,9 @@ import           Reactive.State.Camera (Camera, screenToWorkspace)
 import           UI.Instances ()
 import           Empire.API.Data.Node (Node, NodeId)
 import qualified Empire.API.Data.Node as Node
-import           Empire.API.Data.Connection (Connection, ConnectionId, AnyPortRef(..), InPortRef(..), OutPortRef(..))
+import           Empire.API.Data.PortRef (AnyPortRef(..), InPortRef(..), OutPortRef(..))
+import qualified Empire.API.Data.PortRef as PortRef
+import           Empire.API.Data.Connection (Connection, ConnectionId)
 import qualified Empire.API.Data.Connection as Connection
 import           Empire.API.Data.Port (ValueType, PortId(..))
 import qualified Empire.API.Data.Port as Port
@@ -79,12 +79,12 @@ updateConnections = do
                                                       . (ConnectionModel.visible .~ visible)
                                                       . (ConnectionModel.color   .~ color)
 
-colorVT _ = 1
+colorVT _ = 11
 
 getConnectionLine :: IntMap (Vector2 Double) -> Map AnyPortRef Double -> Map AnyPortRef ValueType -> OutPortRef  -> InPortRef -> (Vector2 Double, Vector2 Double, Bool, Int)
 getConnectionLine nodePos portAngles portTypes srcPortRef dstPortRef = (srcWs, dstWs, visible, color) where
-    srcNWs@(Vector2 xSrcN ySrcN) = Vector2 0.0 0.0   -- nodePos IntMap.! (srcPortRef ^. Connection.srcNodeId)
-    dstNWs@(Vector2 xDstN yDstN) = Vector2 10.0 10.0 -- nodePos IntMap.! (dstPortRef ^. Connection.dstNodeId)
+    srcNWs@(Vector2 xSrcN ySrcN) = nodePos IntMap.! (srcPortRef ^. PortRef.srcNodeId)
+    dstNWs@(Vector2 xDstN yDstN) = nodePos IntMap.! (dstPortRef ^. PortRef.dstNodeId)
     outerPos                     = portOuterBorder + distFromPort
     angleSrc                     = Map.findWithDefault missingPortPos (OutPortRef' srcPortRef) portAngles
     angleDst                     = Map.findWithDefault missingPortPos (InPortRef' dstPortRef) portAngles
@@ -119,7 +119,7 @@ localConnectNodes src dst = do
     forM_ connectionId $ \connectionId -> do
         nodePositions  <- zoom Global.uiRegistry nodePositionMap
         portAngles     <- zoom Global.uiRegistry portRefToAngleMap
-        zoom Global.uiRegistry $ UICmd.register_ sceneGraphId (ConnectionModel.Connection connectionId False def def def) def
+        zoom Global.uiRegistry $ UICmd.register_ sceneGraphId (ConnectionModel.Connection connectionId True def def def) def
     updatePortAngles
     updateConnections
 
@@ -142,8 +142,8 @@ nodePositionMap = do
 
 connectionVector :: IntMap (Vector2 Double) -> AnyPortRef -> AnyPortRef -> Vector2 Double
 connectionVector map src dst = (dstPos - srcPos) where
-    srcPos = map IntMap.! (src ^. Connection.nodeId)
-    dstPos = map IntMap.! (dst ^. Connection.nodeId)
+    srcPos = map IntMap.! (src ^. PortRef.nodeId)
+    dstPos = map IntMap.! (dst ^. PortRef.nodeId)
 
 portDefaultAngle :: Int -> PortId -> Vector2 Double
 portDefaultAngle numPorts (OutPortId _) = (/ 10.0) <$> Vector2 (cos angleMod) (sin angleMod) where
@@ -163,7 +163,7 @@ defaultAngles = do
 
     let angles = calculateAngles <$> nodes where
             calculateAngles node = portAngle <$> (Map.keys $ node ^. Node.ports) where
-                portAngle portId = (Connection.toAnyPortRef nodeId portId, portDefaultAngle portNum portId) where
+                portAngle portId = (PortRef.toAnyPortRef nodeId portId, portDefaultAngle portNum portId) where
                 nodeId = node ^. Node.nodeId
                 portNum = length $ node ^. Node.ports
 
@@ -175,7 +175,7 @@ portTypes = do
 
     return $ Map.fromList $ concat $ getPortsValueType <$> nodes where
             getPortsValueType node = portVT <$> (Map.toList $ node ^. Node.ports) where
-                portVT (portId, port) = (Connection.toAnyPortRef nodeId portId, port ^. Port.valueType) where
+                portVT (portId, port) = (PortRef.toAnyPortRef nodeId portId, port ^. Port.valueType) where
                 nodeId = node ^. Node.nodeId
 
 updatePortAngles :: Command Global.State ()
@@ -230,32 +230,12 @@ distFromPort      = 0.3
 radiusSquared = nodeRadius * nodeRadius
 radiusShadow  = sqrt $ radiusSquared / 2.0
 
-
 portWidth         = 4.0
 portOuterBorder   = nodeRadius + portDistFromRim + portWidth
 
 portOuterBorderSquared = portOuterBorder * portOuterBorder
 
-
-haloOuterMargin        = 5.0
-nodeHaloInnerRadius    = nodeRadius + portDistFromRim
-nodeHaloOuterRadius    = nodeHaloInnerRadius + portWidth + haloOuterMargin
-haloInnerRadiusSquared = nodeHaloInnerRadius * nodeHaloInnerRadius
-haloOuterRadiusSquared = nodeHaloOuterRadius * nodeHaloOuterRadius
-
 closenestFactor        = 0.25
-
-getNodesInRect :: Vector2 Int -> Vector2 Int -> Command Global.State [WidgetId]
-getNodesInRect (Vector2 x1 y1) (Vector2 x2 y2) = do
-    widgets <- zoom Global.uiRegistry allNodes
-    camera  <- use $ Global.camera . Camera.camera
-    let leftBottom = screenToWorkspace camera (Vector2 (min x1 x2) (min y1 y2)) - Vector2 radiusShadow radiusShadow
-        rightTop   = screenToWorkspace camera (Vector2 (max x1 x2) (max y1 y2)) + Vector2 radiusShadow radiusShadow
-        isNodeInBounds file = let pos = file ^. widget . widgetPosition in
-                              leftBottom ^. x <= pos ^. x && pos ^. x <= rightTop ^. x &&
-                              leftBottom ^. y <= pos ^. y && pos ^. y <= rightTop ^. y
-        nodesInBounds = filter isNodeInBounds widgets
-    return $ (view objectId) <$> nodesInBounds
 
 focusNode :: WidgetId -> Command UIRegistry.State ()
 focusNode id = do

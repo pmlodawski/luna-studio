@@ -13,11 +13,11 @@ import           Reactive.Commands.RenderGraph (renderGraph)
 
 import qualified BatchConnector.Monadic.Commands as BatchCmd
 import           Empire.API.Data.Node (Node)
-import           Empire.API.Data.Connection (OutPortRef, InPortRef)
+import           Empire.API.Data.PortRef (OutPortRef, InPortRef)
 
 
 toAction :: Event -> Maybe (Command State ())
-toAction (Batch (Batch.GraphViewFetched nodes edges)) = Just $ showGraph nodes edges
+-- toAction (Batch (Batch.GraphViewFetched response)) = Just $ showGraph nodes edges
 toAction _                                            = Nothing
 
 showGraph :: [Node] -> [(OutPortRef, InPortRef)] -> Command State ()

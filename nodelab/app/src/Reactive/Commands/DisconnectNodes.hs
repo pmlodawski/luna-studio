@@ -14,7 +14,8 @@ import           Control.Monad.State     hiding (State)
 import           Empire.API.Data.Connection (ConnectionId)
 import qualified Empire.API.Data.Connection as Connection
 import           Empire.API.Data.Node       (NodeId)
-import           Empire.API.Data.Connection (Connection, ConnectionId, OutPortRef, InPortRef)
+import           Empire.API.Data.Connection (Connection, ConnectionId)
+import           Empire.API.Data.PortRef    (OutPortRef, InPortRef)
 
 getChangedNodes :: Graph.State -> [ConnectionId] -> [NodeId]
 getChangedNodes graph connIds = nIds1 ++ nIds2

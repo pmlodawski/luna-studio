@@ -7,6 +7,7 @@ import Utils.PreludePlus
 import Utils.Vector
 import Object.UITypes
 import qualified Empire.API.Data.Node as N
+import qualified Empire.API.Data.NodeMeta as NM
 import Data.Fixed
 
 import Object.Widget
@@ -30,7 +31,7 @@ makeLenses ''Node
 instance ToJSON Node
 
 node :: N.Node -> Node
-node n = Node (n ^. N.nodeId) [] [] (uncurry Vector2 $ n ^. N.position) 0.0 (n ^. N.expression) "()" False False False
+node n = Node (n ^. N.nodeId) [] [] (uncurry Vector2 $ n ^. N.nodeMeta ^. NM.position) 0.0 (n ^. N.expression) "()" False False False
 
 instance IsDisplayObject Node where
     widgetPosition = position

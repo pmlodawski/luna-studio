@@ -18,12 +18,12 @@ import           Reactive.Commands.Command      (Command, performIO)
 import           Reactive.Commands.RefreshGraph (refreshGraph)
 
 toAction :: Event -> Maybe (Command State ())
-toAction (Batch (Batch.NodeAdded node))          = Just $ insertSerializationMode node
-toAction (Batch (Batch.RunFinished status))      = Just $ zoom Global.workspace $ BatchCmd.getCode
-toAction (Batch Batch.ConnectionDropped)         = Just $ performIO displayRejectedMessage
-toAction (Batch Batch.CodeSet)                   = Just refreshGraph
-toAction (Batch (Batch.CodeSetError msg))        = Just $ performIO $ writeToTerminal msg
-toAction (Batch Batch.SerializationModeInserted) = Just handleNextSerializationMode
+-- toAction (Batch (Batch.NodeAdded node))          = Just $ insertSerializationMode node
+-- toAction (Batch (Batch.RunFinished status))      = Just $ zoom Global.workspace $ BatchCmd.getCode
+-- toAction (Batch Batch.ConnectionDropped)         = Just $ performIO displayRejectedMessage
+-- toAction (Batch Batch.CodeSet)                   = Just refreshGraph
+-- toAction (Batch (Batch.CodeSetError msg))        = Just $ performIO $ writeToTerminal msg
+-- toAction (Batch Batch.SerializationModeInserted) = Just handleNextSerializationMode
 toAction _ = Nothing
 
 isModule _ = False
