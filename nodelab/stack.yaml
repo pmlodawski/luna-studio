@@ -14,14 +14,11 @@ packages:
   - ../libs/luna-empire-api
   - ../libs/luna-empire-api-json
   - ../libs/utils
-  - ../libs/luna/protobuf-old-gen
-  - ../libs/batch/batch-protobuf
   - ../libs/data/serialization
-  - ../libs/batch/plugins/project-manager-api
-  - ../tools/batch/plugins/interpreter-api
-  - ../../prologue
-  - ../../container
 extra-deps:
+  - container-1.0.1
+  - data-repr-1.0
+  - prologue-1.0.6
   - ghcjs-dom-0.2.3.0
   - data-layer-1.0.3
   - functor-utils-1.0

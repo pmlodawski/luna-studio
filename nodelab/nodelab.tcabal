@@ -61,7 +61,6 @@ executable nodelab
                      , random
                      , pretty-show
                      , flowbox-utils-old
-                     , flowbox-serialization
                      , convert
                      , process
                      , constraints

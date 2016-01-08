@@ -1,5 +1,5 @@
 build:
-  image: nbo/ghcjs-gui:20151022
+  image: nbo/ghcjs-gui:20160108
   environment:
     - AWS_ACCESS_KEY_ID=$$AWS_ACCESS_KEY_ID
     - AWS_SECRET_ACCESS_KEY=$$AWS_SECRET_ACCESS_KEY
@@ -22,8 +22,8 @@ build:
     - bower install --allow-root
     - mkdir -p .stack-work/install/x86_64-osx/custom-nbo-gui-20151022/ghcjs-0.2.0.20151020_ghc-7.10.2/bin/nodelab.jsexe/
     - touch .stack-work/install/x86_64-osx/custom-nbo-gui-20151022/ghcjs-0.2.0.20151020_ghc-7.10.2/bin/nodelab.jsexe/all.js
-    - brunch build --env production
-    - ./upload_dist.sh
+    # - brunch build --env production
+    # - ./upload_dist.sh
 
 notify:
   slack:
