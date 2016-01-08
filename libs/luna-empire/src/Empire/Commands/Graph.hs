@@ -4,6 +4,7 @@ module Empire.Commands.Graph
     , connect
     , disconnect
     , getCode
+    , getGraph
     ) where
 
 import           Prologue
@@ -18,12 +19,16 @@ import           Empire.Data.Graph       (Graph)
 import           Empire.API.Data.Project (ProjectId)
 import           Empire.API.Data.Library (LibraryId)
 import           Empire.API.Data.Port    (InPort(..), OutPort(..))
+import           Empire.API.Data.PortRef (InPortRef(..), OutPortRef(..))
 import           Empire.API.Data.Node    (NodeId)
+import qualified Empire.API.Data.Graph   as API
 
 import           Empire.Empire
-import           Empire.Commands.Library (withLibrary)
-import qualified Empire.Commands.AST     as AST
-import           Luna.Syntax.Repr.Graph  (Ref, Node)
+import           Empire.Commands.Library      (withLibrary)
+import qualified Empire.Commands.AST          as AST
+import qualified Empire.Commands.GraphUtils   as GraphUtils
+import qualified Empire.Commands.GraphBuilder as GraphBuilder
+import           Luna.Syntax.Repr.Graph       (Ref, Node)
 
 -- TODO: change NodeId to Node
 addNode :: ProjectId -> LibraryId -> String -> Empire NodeId
@@ -61,10 +66,13 @@ getCode pid lid = withGraph pid lid $ do
     lines <- sequence $ printNodeLine <$> allNodes
     return $ intercalate "\n" lines
 
+getGraph :: ProjectId -> LibraryId -> Empire API.Graph
+getGraph pid lid = withGraph pid lid GraphBuilder.buildGraph
+
 -- internal
 
 printNodeLine :: NodeId -> Command Graph String
-printNodeLine nid = getASTPointer nid >>= (zoom Graph.ast . AST.runAstOp . AST.prettyPrint)
+printNodeLine nid = GraphUtils.getASTPointer nid >>= (zoom Graph.ast . AST.runAstOp . AST.prettyPrint)
 
 withGraph :: ProjectId -> LibraryId -> Command Graph a -> Empire a
 withGraph pid lid = withLibrary pid lid . zoom Library.body
@@ -83,34 +91,21 @@ unApp nodeId pos = do
     newNodeRef <- zoom Graph.ast $ AST.removeArg astNode pos
     Graph.nodeMapping . at nodeId ?= newNodeRef
 
-getASTPointer :: NodeId -> Command Graph (Ref Node)
-getASTPointer nodeId = use (Graph.nodeMapping . at nodeId) <?!> "Node does not exist"
-
-getASTTarget :: NodeId -> Command Graph (Ref Node)
-getASTTarget nodeId = do
-    unifyNode <- getASTPointer nodeId
-    zoom Graph.ast $ AST.getTargetNode unifyNode
-
-getASTVar :: NodeId -> Command Graph (Ref Node)
-getASTVar nodeId = do
-    unifyNode <- getASTPointer nodeId
-    zoom Graph.ast $ AST.getVarNode unifyNode
-
 rewireNode :: NodeId -> Ref Node -> Command Graph ()
 rewireNode nodeId newTarget = do
-    unifyNode <- getASTPointer nodeId
+    unifyNode <- GraphUtils.getASTPointer nodeId
     zoom Graph.ast $ AST.replaceTargetNode unifyNode newTarget
 
 makeAcc :: NodeId -> NodeId -> Command Graph ()
 makeAcc src dst = do
-    srcAst <- getASTVar src
-    dstAst <- getASTTarget dst
+    srcAst <- GraphUtils.getASTVar src
+    dstAst <- GraphUtils.getASTTarget dst
     newNodeRef <- zoom Graph.ast $ AST.runAstOp $ AST.makeAccessor srcAst dstAst
     rewireNode dst newNodeRef
 
 makeApp :: NodeId -> NodeId -> Int -> Command Graph ()
 makeApp src dst pos = do
-    srcAst <- getASTVar src
-    dstAst <- getASTTarget dst
+    srcAst <- GraphUtils.getASTVar src
+    dstAst <- GraphUtils.getASTTarget dst
     newNodeRef <- zoom Graph.ast $ AST.applyFunction dstAst srcAst pos
     rewireNode dst newNodeRef

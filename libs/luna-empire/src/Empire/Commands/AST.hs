@@ -26,6 +26,7 @@ import           Luna.Syntax.AST.Term      (Var(..), App(..), Blank(..), Accesso
 import qualified Luna.Syntax.AST.Term      as Term
 import qualified Luna.Syntax.AST.Typed     as Typed
 import qualified Luna.Syntax.AST.Arg       as Arg
+import           Luna.Syntax.AST.Arg       (Arg)
 import qualified Luna.Syntax.AST.Lit       as Lit
 
 import           Empire.Utils.ParserMock   as Parser
@@ -107,6 +108,9 @@ replaceTargetNode unifyNodeId newTargetId = runAstOp $ do
     Builder.reconnect unifyNodeId rightUnifyOperand newTargetId
     return ()
 
+unpackArguments :: [Arg (Ref Edge)] -> ASTOp [Ref Node]
+unpackArguments args = mapM (Builder.follow . Arg.__arec) $ Term.inputs args
+
 makeVar :: Ref Node -> Command AST (Ref Node)
 makeVar = runAstOp . Builder.var
 
@@ -144,7 +148,7 @@ destructApp fun = do
     app    <- Builder.readRef fun
     result <- case' (uncoat app) $ do
         match $ \(App tg args) -> do
-            unpackedArgs <- mapM (Builder.follow . Arg.__arec) $ Term.inputs args
+            unpackedArgs <- unpackArguments args
             target <- Builder.follow tg
             return (target, unpackedArgs)
         match $ \ANY -> throwError "Expected App node, got wrong type."
@@ -220,7 +224,7 @@ prettyPrint nodeRef = do
             return $ targetRep ++ "." ++ nameRep
         match $ \(App f args) -> do
             funRep <- Builder.follow f >>= prettyPrint
-            unpackedArgs <- mapM (Builder.follow . Arg.__arec) $ Term.inputs args
+            unpackedArgs <- unpackArguments args
             argsRep <- sequence $ prettyPrint <$> unpackedArgs
             return $ funRep ++ " " ++ (intercalate " " argsRep)
         match $ \Blank -> return "_"

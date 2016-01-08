@@ -28,6 +28,7 @@ Library
   Exposed-modules: 
         Empire.API.Data.Connection,
         Empire.API.Data.DefaultValue,
+        Empire.API.Data.Graph,
         Empire.API.Data.Library,
         Empire.API.Data.Node,
         Empire.API.Data.NodeMeta,

@@ -39,10 +39,13 @@ test = do
     rthNode <- Graph.addNode pid lid "5"
     Graph.connect pid lid sndNode All fstNode Self
     Graph.connect pid lid rthNode All fstNode (Arg 1)
-    {-Graph.connect pid lid trdNode All fstNode (Arg 0)-}
+    Graph.connect pid lid trdNode All fstNode (Arg 0)
 
     code <- Graph.getCode pid lid
     putStrLn code
+
+    graph <- Graph.getGraph pid lid
+    print graph
 
     withLibrary pid lid (use $ body . ast)
 
