@@ -82,7 +82,7 @@ function Node(id, position, z, widgetId) {
   this.node.position.set(-30, -30, 0);
 
   this.expandedNode = new THREE.Group();
-  this.container    = this.expandedNode;
+  this.container    = this.mesh; //this.expandedNode;
 
   this.expandedNodeBkg = new THREE.Mesh(
     nodeGeometry,

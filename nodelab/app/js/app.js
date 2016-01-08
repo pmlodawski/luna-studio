@@ -144,6 +144,7 @@ function render() {
     $$.renderer.render($$.sceneHUD, $$.cameraHUD);
 
     raycaster.renderMap();
+    raycaster.cacheMap();
     shouldRender = false;
   }
   connectionPen.fadeCanvas();
