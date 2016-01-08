@@ -25,6 +25,7 @@ Executable luna-empire
     Build-Depends:  base,
                     prologue,
                     batch-lib-luna-empire,
+                    binary,
                     flowbox-bus-binary,
                     flowbox-config,
                     flowbox-utils-old,

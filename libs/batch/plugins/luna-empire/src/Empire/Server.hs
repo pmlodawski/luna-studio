@@ -30,7 +30,7 @@ import           Flowbox.Prelude                        hiding (error)
 import           Flowbox.System.Log.Logger
 import qualified Reexport.Flowbox.Bus.Data.Exception    as Exception
 import           Empire.Utils                           as Utils
-import           Empire.API.Topics                      as Topics
+import           Empire.API.Topic                       as Topic
 
 logger :: LoggerIO
 logger = getLoggerIO $moduleName
@@ -98,8 +98,8 @@ type Handler = ByteString -> StateT Env BusT ()
 
 handlersMap :: Map String Handler
 handlersMap = Map.fromList
-    [ (Topics.addNodeRequest,    handleAddNode)
-    , (Topics.removeNodeRequest, handleRemoveNode)
+    [ (Topic.addNodeRequest,    handleAddNode)
+    , (Topic.removeNodeRequest, handleRemoveNode)
     ]
 
 handleRequest :: String -> String -> ByteString -> StateT Env BusT ()
