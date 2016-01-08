@@ -34,7 +34,8 @@ Library
                   luna-empire-api,
                   luna-tc,
                   mtl,
-                  prologue
+                  prologue,
+                  text
 
 Executable luna-empire-lib-test
   Main-Is:        Main.hs

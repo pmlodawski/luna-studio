@@ -9,6 +9,7 @@ import           Data.Variants       (match, case', specificCons, ANY(..))
 import           Data.Layer.Coat     (uncoat, coated)
 import           Data.Maybe          (fromMaybe)
 import           Data.Construction   (destruct)
+import qualified Data.Text.Lazy      as Text
 
 import           Empire.Data.AST (AST, ASTNode)
 import           Empire.Empire
@@ -21,10 +22,11 @@ import           Luna.Syntax.Builder.Class (BuilderT)
 import qualified Luna.Syntax.Builder       as Builder
 import           Luna.Syntax.Repr.Graph    (Ref(..), Node(..), Edge(..))
 import qualified Luna.Syntax.Repr.Graph    as Graph
-import           Luna.Syntax.AST.Term      (Var(..), App(..), Blank(..), Accessor(..), Unify(..), Draft)
+import           Luna.Syntax.AST.Term      (Var(..), App(..), Blank(..), Accessor(..), Unify(..), Draft, Val)
 import qualified Luna.Syntax.AST.Term      as Term
 import qualified Luna.Syntax.AST.Typed     as Typed
 import qualified Luna.Syntax.AST.Arg       as Arg
+import qualified Luna.Syntax.AST.Lit       as Lit
 
 import           Empire.Utils.ParserMock   as Parser
 
@@ -50,6 +52,32 @@ addExpr name expr = Builder.var expr >>= unifyWithName name
 
 addString :: String -> String -> ASTOp (Ref Node)
 addString name lit = Builder._string lit >>= unifyWithName name
+
+functionApplicationNode :: Lens' ASTNode (Ref Edge)
+functionApplicationNode = coated . lens getter setter where
+    getter a   = case' a $ match $ \(App f _   ) -> f
+    setter a f = case' a $ match $ \(App _ args) -> specificCons $ App f args
+
+makeAccessor :: Ref Node -> Ref Node -> ASTOp (Ref Node)
+makeAccessor targetNodeRef namingNodeRef = do
+    namingNode <- Builder.readRef namingNodeRef
+    case' (uncoat namingNode) $ do
+        match $ \(Var n) -> do
+            stringNodeRef <- Builder.follow n
+            removeNode namingNodeRef
+            Builder.accessor stringNodeRef targetNodeRef
+        match $ \(App t _) -> do
+            newNamingNodeRef <- Builder.follow t
+            replacementRef <- makeAccessor targetNodeRef newNamingNodeRef
+            Builder.reconnect namingNodeRef functionApplicationNode replacementRef
+            return namingNodeRef
+        match $ \(Accessor n t) -> do
+            oldTargetRef <- Builder.follow t
+            finalNameRef <- Builder.follow n
+            removeNode namingNodeRef
+            intermediateTargetRef <- makeAccessor targetNodeRef oldTargetRef
+            makeAccessor intermediateTargetRef finalNameRef
+        match $ \ANY -> throwError "Invalid node type"
 
 unifyWithName :: String -> Ref Node -> ASTOp (Ref Node)
 unifyWithName name node = do
@@ -82,11 +110,8 @@ replaceTargetNode unifyNodeId newTargetId = runAstOp $ do
 makeVar :: Ref Node -> Command AST (Ref Node)
 makeVar = runAstOp . Builder.var
 
-makeAccessor :: Ref Node -> Ref Node -> Command AST (Ref Node)
-makeAccessor src dst = runAstOp $ Builder.accessor dst src
-
-removeNode' :: Ref Node -> ASTOp ()
-removeNode' ref = do
+removeNode :: Ref Node -> ASTOp ()
+removeNode ref = do
     node     <- Builder.readRef ref
     typeNode <- Builder.follow $ node ^. Typed.tp
     destruct typeNode
@@ -96,11 +121,8 @@ removeIfBlank :: Ref Node -> ASTOp ()
 removeIfBlank ref = do
     node <- Builder.readRef ref
     case' (uncoat node) $ do
-        match $ \Blank -> removeNode' ref
+        match $ \Blank -> removeNode ref
         match $ \ANY -> return ()
-
-removeNode :: Ref Node -> Command AST ()
-removeNode = runAstOp . removeNode'
 
 getNameNode :: Ref Node -> Command AST (Ref Node)
 getNameNode ref = runAstOp $ do
@@ -126,7 +148,7 @@ destructApp fun = do
             target <- Builder.follow tg
             return (target, unpackedArgs)
         match $ \ANY -> throwError "Expected App node, got wrong type."
-    removeNode' fun
+    removeNode fun
     return result
 
 newApplication :: Ref Node -> Ref Node -> Int -> ASTOp (Ref Node)
@@ -165,15 +187,45 @@ removeGraphNode' nodeId = do
     {-print succs-}
     case' (uncoat node) $ do
         match $ \(App f args) -> do
-            removeNode' nodeId
+            removeNode nodeId
             Builder.follow f >>= removeGraphNode'
         match $ \(Accessor n tg) -> do
-            Builder.follow n >>= removeNode'
-            removeNode' nodeId
+            Builder.follow n >>= removeNode
+            removeNode nodeId
         match $ \(Var n) -> do
-            Builder.follow n >>= removeNode'
-            removeNode' nodeId
+            Builder.follow n >>= removeNode
+            removeNode nodeId
         match $ \ANY -> throwError "Can't remove, screw you xD"
 
 removeGraphNode :: Ref Node -> Command AST ()
 removeGraphNode = runAstOp . removeGraphNode'
+
+printIdent :: Ref Node -> ASTOp String
+printIdent nodeRef = do
+    node <- Builder.readRef nodeRef
+    case' (uncoat node) $ match $ \(Lit.String n) -> return (Text.unpack . toText $ n)
+
+prettyPrint :: Ref Node -> ASTOp String
+prettyPrint nodeRef = do
+    node <- Builder.readRef nodeRef
+    case' (uncoat node) $ do
+        match $ \(Unify l r) -> do
+            leftRep  <- Builder.follow l >>= prettyPrint
+            rightRep <- Builder.follow r >>= prettyPrint
+            return $ leftRep ++ " = " ++ rightRep
+        match $ \(Var n) -> Builder.follow n >>= printIdent
+        match $ \(Accessor n t) -> do
+            targetRep <- Builder.follow t >>= prettyPrint
+            nameRep   <- Builder.follow n >>= printIdent
+            return $ targetRep ++ "." ++ nameRep
+        match $ \(App f args) -> do
+            funRep <- Builder.follow f >>= prettyPrint
+            unpackedArgs <- mapM (Builder.follow . Arg.__arec) $ Term.inputs args
+            argsRep <- sequence $ prettyPrint <$> unpackedArgs
+            return $ funRep ++ " " ++ (intercalate " " argsRep)
+        match $ \Blank -> return "_"
+        match $ \val -> do
+            case' (val :: Val (Ref Edge)) $ do
+                match $ \(Lit.Int i)    -> return $ show i
+                match $ \(Lit.String s) -> return $ show s
+        match $ \ANY -> return ""
