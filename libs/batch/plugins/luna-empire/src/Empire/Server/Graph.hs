@@ -13,6 +13,8 @@ import           Data.Map.Strict             (Map)
 import           Data.ByteString             (ByteString)
 import           Data.ByteString.Char8       (unpack)
 import           Data.ByteString.Lazy        (fromStrict, toStrict)
+import           Data.Text.Lazy              (Text)
+import qualified Data.Text.Lazy              as Text
 
 import qualified Flowbox.Bus.Data.Flag       as Flag
 import qualified Flowbox.Bus.Data.Message    as Message
@@ -21,8 +23,9 @@ import           Flowbox.Bus.BusT            (BusT (..))
 import qualified Flowbox.Bus.BusT            as Bus
 
 import qualified Empire.API.Data.Node        as Node
-import           Empire.API.Data.Node        (NodeId)
+import           Empire.API.Data.Node        (Node)
 import qualified Empire.API.Data.NodeMeta    as NodeMeta
+import           Empire.API.Data.NodeMeta    (NodeMeta)
 import           Empire.API.Data.Library     (LibraryId)
 import           Empire.API.Data.Project     (ProjectId)
 import qualified Empire.API.Topic            as Topic
@@ -43,10 +46,10 @@ logger :: LoggerIO
 logger = getLoggerIO $moduleName
 
 
-addNode :: ProjectId -> LibraryId -> String -> Empire NodeId
-addNode pid lid expr = do
-    nodeId <- Graph.addNode pid lid expr
-    return nodeId
+addNode :: ProjectId -> LibraryId -> Text -> NodeMeta -> Empire Node
+addNode pid lid expr meta = do
+    node <- Graph.addNode pid lid expr meta
+    return node
 
 handleAddNode :: ByteString -> StateT Env BusT ()
 handleAddNode content = do
@@ -55,17 +58,16 @@ handleAddNode content = do
     logger info $ show request
     currentEmpireEnv <- use Env.empireEnv
     logger info $ show currentEmpireEnv
-    (nodeIdE, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ addNode
+    (nodeE, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ addNode
         (request ^. AddNode.projectId)
         (request ^. AddNode.libraryId)
-        (request ^. AddNode.expr)
+        (Text.pack $ request ^. AddNode.expr)
+        (request ^. AddNode.nodeMeta)
     Env.empireEnv .= newEmpireEnv
-    case nodeIdE of
+    case nodeE of
         Left err -> logger info $ "Error processing request: " ++ show err
-        Right nodeId -> do
-            let meta     = NodeMeta.NodeMeta (20.0, 30.0)
-                node     = Node.Node nodeId "dupa123" mempty meta
-                update   = AddNode.Update  node
+        Right node -> do
+            let update   = AddNode.Update  node
                 response = Response.Update request update
             lift $ BusT $ Bus.send Flag.Enable $ Message.Message "empire.graph.node.add.update" $ toStrict $ Bin.encode response
             return ()
