@@ -41,6 +41,11 @@ addNode pid lid expr meta = withGraph pid lid $ do
     Graph.nodeMapping . at newNodeId ?= refNode
     return $ Node.make newNodeId expr meta
 
+updateNodeMeta :: ProjectId -> LibraryId -> NodeId -> NodeMeta -> Empire ()
+updateNodeMeta pid lid nid meta = withGraph pid lid $ do
+    ref <- GraphUtils.getASTPointer nid
+    zoom Graph.ast $ AST.writeMeta ref $ Just meta
+
 removeNode :: ProjectId -> LibraryId -> NodeId -> Empire ()
 removeNode pid lid nodeId = withGraph pid lid $ do
     astNode <- use (Graph.nodeMapping . at nodeId) <?!> "Node does not exist"
