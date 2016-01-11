@@ -34,7 +34,7 @@ Library
                     errors,
                     flowbox-bus-binary,
                     flowbox-config,
-                    flowbox-utils-old,
+                    flowbox-utils,
                     mtl,
                     optparse-applicative,
                     time,

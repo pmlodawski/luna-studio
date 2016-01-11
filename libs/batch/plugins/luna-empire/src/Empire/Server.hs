@@ -24,7 +24,6 @@ import           Flowbox.Bus.Data.Topic                 (Topic)
 import           Flowbox.Bus.EndPoint                   (BusEndPoints)
 import           Empire.Env                             (Env)
 import qualified Empire.Env                             as Env
-import           Flowbox.Control.Monad.Error            (MonadError)
 import           Flowbox.Data.Convert
 import           Flowbox.Prelude                        hiding (error)
 import           Flowbox.System.Log.Logger

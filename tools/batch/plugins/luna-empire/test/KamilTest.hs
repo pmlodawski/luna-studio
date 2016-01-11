@@ -44,12 +44,15 @@ parser = Opt.flag' TestBasicString (short 'S')
      <|> Opt.flag' Test5 (short '5')
 
 run :: Cmd -> IO ()
-run cmd = case cmd of
-    TestBasicString -> testBasicString
-    TestBadTopic    -> testBadTopic
-    TestAddNode     -> testAddNode
-    TestRemoveNode  -> testRemoveNode
-    Test5           -> test5
+run cmd = do
+    return ()
+    -- case cmd of
+    --     TestBasicString -> testBasicString
+    --     TestBadTopic    -> testBadTopic
+    --     TestAddNode     -> testAddNode
+    --     TestRemoveNode  -> testRemoveNode
+    --     Test5           -> test5
+
 
 opts :: ParserInfo Cmd
 opts = Opt.info (helper <*> parser)
@@ -59,91 +62,93 @@ main = execParser opts >>= run
 
 -- tests
 
-testBasicString :: IO ()
-testBasicString = do
-    endPoints <- EP.clientFromConfig <$> Config.load
-    Bus.runBus endPoints $ do
-        Bus.send Flag.Enable $ Message.Message "empire.hello.request" (Char8.pack "basic string")
-    return ()
+-- TODO: make it compiling (look at test.hs)
 
-testBadTopic :: IO ()
-testBadTopic = do
-    endPoints <- EP.clientFromConfig <$> Config.load
-    Bus.runBus endPoints $ do
-        Bus.send Flag.Enable $ Message.Message "any-hello" ByteString.empty
-    return ()
+-- testBasicString :: IO ()
+-- testBasicString = do
+--     endPoints <- EP.clientFromConfig <$> Config.load
+--     Bus.runBus endPoints $ do
+--         Bus.send Flag.Enable $ Message.Message "empire.hello.request" (Char8.pack "basic string")
+--     return ()
 
-testAddNode :: IO ()
-testAddNode = do
-    endPoints <- EP.clientFromConfig <$> Config.load
-    let addNodeReq = AddNode.Request 1 2 "expres" (NodeMeta.NodeMeta (1.2, 3.4)) 7
-        content    = toStrict . Bin.encode $ addNodeReq
-    Bus.runBus endPoints $ do
-        Bus.send Flag.Enable $ Message.Message Topic.addNodeRequest content
-    return ()
+-- testBadTopic :: IO ()
+-- testBadTopic = do
+--     endPoints <- EP.clientFromConfig <$> Config.load
+--     Bus.runBus endPoints $ do
+--         Bus.send Flag.Enable $ Message.Message "any-hello" ByteString.empty
+--     return ()
 
-testRemoveNode :: IO ()
-testRemoveNode = do
-    endPoints <- EP.clientFromConfig <$> Config.load
-    let removeNodeReq = RemoveNode.Request 1 2 3
-        content       = toStrict . Bin.encode $ removeNodeReq
-    Bus.runBus endPoints $ do
-        Bus.send Flag.Enable $ Message.Message Topic.removeNodeRequest content
-    return ()
+-- testAddNode :: IO ()
+-- testAddNode = do
+--     endPoints <- EP.clientFromConfig <$> Config.load
+--     let addNodeReq = AddNode.Request 1 2 "expres" (NodeMeta.NodeMeta (1.2, 3.4)) 7
+--         content    = toStrict . Bin.encode $ addNodeReq
+--     Bus.runBus endPoints $ do
+--         Bus.send Flag.Enable $ Message.Message Topic.addNodeRequest content
+--     return ()
 
-addNode1 = do
-  let meta     = NodeMeta.NodeMeta (20.0, 30.0)
-      expr     = "2"
-      request  = AddNode.Request 0 0 expr meta 1235
-      ports    = Map.fromList [(Port.OutPortId Port.All, Port.Port (Port.OutPortId Port.All) (Port.ValueType "Int") Nothing)]
-      node     = Node.Node 1 (Text.pack expr) ports meta
-      update   = AddNode.Update  node
-      response = Response.Update request update
-  Bus.send Flag.Enable $ Message.Message "empire.graph.node.add.update" $ toStrict $ Bin.encode response
+-- testRemoveNode :: IO ()
+-- testRemoveNode = do
+--     endPoints <- EP.clientFromConfig <$> Config.load
+--     let removeNodeReq = RemoveNode.Request 1 2 3
+--         content       = toStrict . Bin.encode $ removeNodeReq
+--     Bus.runBus endPoints $ do
+--         Bus.send Flag.Enable $ Message.Message Topic.removeNodeRequest content
+--     return ()
 
-addNode2 = do
-  let meta     = NodeMeta.NodeMeta (20.0, 100.0)
-      expr     = "3"
-      request  = AddNode.Request 0 0 expr meta 1236
-      ports    = Map.fromList [(Port.OutPortId Port.All, Port.Port (Port.OutPortId Port.All) (Port.ValueType "Int") Nothing)]
-      node     = Node.Node 2 (Text.pack expr) ports meta
-      update   = AddNode.Update  node
-      response = Response.Update request update
-  Bus.send Flag.Enable $ Message.Message "empire.graph.node.add.update" $ toStrict $ Bin.encode response
+-- addNode1 = do
+--   let meta     = NodeMeta.NodeMeta (20.0, 30.0)
+--       expr     = "2"
+--       request  = AddNode.Request 0 0 expr meta 1235
+--       ports    = Map.fromList [(Port.OutPortId Port.All, Port.Port (Port.OutPortId Port.All) (Port.ValueType "Int") Nothing)]
+--       node     = Node.Node 1 (Text.pack expr) ports meta
+--       update   = AddNode.Update  node
+--       response = Response.Update request update
+--   Bus.send Flag.Enable $ Message.Message "empire.graph.node.add.update" $ toStrict $ Bin.encode response
 
-addNodePlus = do
-  let meta     = NodeMeta.NodeMeta (170.0, 60.0)
-      expr     = "+"
-      request  = AddNode.Request 0 0 expr meta 1237
-      ports    = Map.fromList [ (Port.InPortId Port.Self, Port.Port (Port.InPortId Port.Self) (Port.ValueType "Int") Nothing)
-                              , (Port.InPortId (Port.Arg 0),  Port.Port (Port.InPortId (Port.Arg 0)) (Port.ValueType "Int") Nothing)
-                              , (Port.OutPortId Port.All, Port.Port (Port.OutPortId Port.All) (Port.ValueType "Int") Nothing)
-                              ]
-      node     = Node.Node 3 (Text.pack expr) ports meta
-      update   = AddNode.Update  node
-      response = Response.Update request update
-  Bus.send Flag.Enable $ Message.Message "empire.graph.node.add.update" $ toStrict $ Bin.encode response
+-- addNode2 = do
+--   let meta     = NodeMeta.NodeMeta (20.0, 100.0)
+--       expr     = "3"
+--       request  = AddNode.Request 0 0 expr meta 1236
+--       ports    = Map.fromList [(Port.OutPortId Port.All, Port.Port (Port.OutPortId Port.All) (Port.ValueType "Int") Nothing)]
+--       node     = Node.Node 2 (Text.pack expr) ports meta
+--       update   = AddNode.Update  node
+--       response = Response.Update request update
+--   Bus.send Flag.Enable $ Message.Message "empire.graph.node.add.update" $ toStrict $ Bin.encode response
 
-connect1Plus = do
-  let request  = Connect.Request 0 0 1 Port.All 3 Port.Self
-      response = Response.Update request Response.Ok
-  Bus.send Flag.Enable $ Message.Message "empire.graph.connect.update" $ toStrict $ Bin.encode response
+-- addNodePlus = do
+--   let meta     = NodeMeta.NodeMeta (170.0, 60.0)
+--       expr     = "+"
+--       request  = AddNode.Request 0 0 expr meta 1237
+--       ports    = Map.fromList [ (Port.InPortId Port.Self, Port.Port (Port.InPortId Port.Self) (Port.ValueType "Int") Nothing)
+--                               , (Port.InPortId (Port.Arg 0),  Port.Port (Port.InPortId (Port.Arg 0)) (Port.ValueType "Int") Nothing)
+--                               , (Port.OutPortId Port.All, Port.Port (Port.OutPortId Port.All) (Port.ValueType "Int") Nothing)
+--                               ]
+--       node     = Node.Node 3 (Text.pack expr) ports meta
+--       update   = AddNode.Update  node
+--       response = Response.Update request update
+--   Bus.send Flag.Enable $ Message.Message "empire.graph.node.add.update" $ toStrict $ Bin.encode response
 
-connect2Plus = do
-  let request  = Connect.Request 0 0 2 Port.All 3 (Port.Arg 0)
-      response = Response.Update request Response.Ok
-  Bus.send Flag.Enable $ Message.Message "empire.graph.connect.update" $ toStrict $ Bin.encode response
+-- connect1Plus = do
+--   let request  = Connect.Request 0 0 1 Port.All 3 Port.Self
+--       response = Response.Update request Response.Ok
+--   Bus.send Flag.Enable $ Message.Message "empire.graph.connect.update" $ toStrict $ Bin.encode response
 
-test5 :: IO ()
-test5 = do
-    endPoints <- EP.clientFromConfig <$> Config.load
-    Bus.runBus endPoints $ do
-      addNode1
-      addNode2
-      addNodePlus
+-- connect2Plus = do
+--   let request  = Connect.Request 0 0 2 Port.All 3 (Port.Arg 0)
+--       response = Response.Update request Response.Ok
+--   Bus.send Flag.Enable $ Message.Message "empire.graph.connect.update" $ toStrict $ Bin.encode response
 
-      connect1Plus
-      connect2Plus
+-- test5 :: IO ()
+-- test5 = do
+--     endPoints <- EP.clientFromConfig <$> Config.load
+--     Bus.runBus endPoints $ do
+--       addNode1
+--       addNode2
+--       addNodePlus
+
+--       connect1Plus
+--       connect2Plus
 
 
-    return ()
+--     return ()

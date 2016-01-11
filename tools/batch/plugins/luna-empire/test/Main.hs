@@ -2,49 +2,52 @@
 module Main where
 
 import           Prologue
-import qualified Data.Binary                 as Bin
-import qualified Data.ByteString             as ByteString
-import qualified Data.ByteString.Char8       as Char8 (pack)
-import           Data.ByteString.Lazy        (fromStrict, toStrict)
+import qualified Data.Binary                   as Bin
+import qualified Data.ByteString               as ByteString
+import qualified Data.ByteString.Char8         as Char8 (pack)
+import           Data.ByteString.Lazy          (fromStrict, toStrict)
+import qualified Flowbox.Config.Config         as Config
+import qualified Flowbox.Bus.EndPoint          as EP
+import qualified Flowbox.Bus.Bus               as Bus
+import qualified Flowbox.Bus.Data.Flag         as Flag
+import qualified Flowbox.Bus.Data.Message      as Message
+import           Flowbox.Options.Applicative   hiding (info)
+import qualified Flowbox.Options.Applicative   as Opt
+import qualified Empire.API.Data.Node          as Node
+import qualified Empire.API.Data.NodeMeta      as NodeMeta
+import qualified Empire.API.Data.NodeMeta      as NodeMeta
+import qualified Empire.API.Data.GraphLocation as GraphLocation
+import qualified Empire.API.Data.Breadcrumb    as Breadcrumb
+import qualified Empire.API.Graph.AddNode      as AddNode
+import qualified Empire.API.Graph.RemoveNode   as RemoveNode
+import qualified Empire.API.Topic              as Topic
+import qualified Empire.API.Response           as Response
 
-import qualified Flowbox.Config.Config       as Config
-import qualified Flowbox.Bus.EndPoint        as EP
-import qualified Flowbox.Bus.Bus             as Bus
-import qualified Flowbox.Bus.Data.Flag       as Flag
-import qualified Flowbox.Bus.Data.Message    as Message
-import           Flowbox.Options.Applicative hiding (info)
-import qualified Flowbox.Options.Applicative as Opt
 
-import qualified Empire.API.Data.Node        as Node
-import qualified Empire.API.Data.NodeMeta    as NodeMeta
-import qualified Empire.API.Topic            as Topic
-import qualified Empire.API.Graph.AddNode    as AddNode
-import qualified Empire.API.Graph.RemoveNode as RemoveNode
-import qualified Empire.API.Data.NodeMeta    as NodeMeta
-import qualified Empire.API.Response         as Response
-
-
-data Cmd = TestBasicString
+data Cmd = TestNotRecognizedRequest
          | TestBadTopic
          | TestAddNode
          | TestRemoveNode
          | TestNodeUpdate
+         | TestAddProject
          deriving Show
 
 parser :: Parser Cmd
-parser = Opt.flag' TestBasicString (short 'S')
+parser = Opt.flag' TestNotRecognizedRequest (short 'N')
      <|> Opt.flag' TestBadTopic (short 'B')
      <|> Opt.flag' TestAddNode (short 'a')
      <|> Opt.flag' TestRemoveNode (short 'r')
      <|> Opt.flag' TestNodeUpdate (short 'u')
+     <|> Opt.flag' TestAddProject (short 'u')
 
 run :: Cmd -> IO ()
 run cmd = case cmd of
-    TestBasicString -> testBasicString
-    TestBadTopic    -> testBadTopic
-    TestAddNode     -> testAddNode
-    TestRemoveNode  -> testRemoveNode
-    TestNodeUpdate  -> testNodeUpdate
+    TestNotRecognizedRequest -> testNotRecognizedRequest
+    TestBadTopic             -> testBadTopic
+    TestAddNode              -> testAddNode
+    TestRemoveNode           -> testRemoveNode
+    TestNodeUpdate           -> testNodeUpdate
+    TestAddProject           -> testAddProject
 
 opts :: ParserInfo Cmd
 opts = Opt.info (helper <*> parser)
@@ -54,8 +57,11 @@ main = execParser opts >>= run
 
 -- tests
 
-testBasicString :: IO ()
-testBasicString = do
+gl :: Int -> Int -> GraphLocation.GraphLocation
+gl pid lid = GraphLocation.GraphLocation pid lid Breadcrumb.Breadcrumb
+
+testNotRecognizedRequest :: IO ()
+testNotRecognizedRequest = do
     endPoints <- EP.clientFromConfig <$> Config.load
     Bus.runBus endPoints $ do
         Bus.send Flag.Enable $ Message.Message "empire.hello.request" (Char8.pack "basic string")
@@ -71,7 +77,7 @@ testBadTopic = do
 testAddNode :: IO ()
 testAddNode = do
     endPoints <- EP.clientFromConfig <$> Config.load
-    let addNodeReq = AddNode.Request 1 2 "expres" (NodeMeta.NodeMeta (1.2, 3.4)) 7
+    let addNodeReq = AddNode.Request (gl 1 2) "expres" (NodeMeta.NodeMeta (1.2, 3.4)) 7
         content    = toStrict . Bin.encode $ addNodeReq
     Bus.runBus endPoints $ do
         Bus.send Flag.Enable $ Message.Message Topic.addNodeRequest content
@@ -80,7 +86,7 @@ testAddNode = do
 testRemoveNode :: IO ()
 testRemoveNode = do
     endPoints <- EP.clientFromConfig <$> Config.load
-    let removeNodeReq = RemoveNode.Request 1 2 3
+    let removeNodeReq = RemoveNode.Request (gl 1 2) 3
         content       = toStrict . Bin.encode $ removeNodeReq
     Bus.runBus endPoints $ do
         Bus.send Flag.Enable $ Message.Message Topic.removeNodeRequest content
@@ -91,9 +97,18 @@ testNodeUpdate = do
     endPoints <- EP.clientFromConfig <$> Config.load
     Bus.runBus endPoints $ do
         let meta     = NodeMeta.NodeMeta (20.0, 30.0)
-            request  = AddNode.Request 0 0 "dupa123" meta 1235
+            request  = AddNode.Request (gl 0 0) "dupa123" meta 1235
             node     = Node.Node 123 "dupa123" mempty meta
             update   = AddNode.Update  node
             response = Response.Update request update
         Bus.send Flag.Enable $ Message.Message "empire.graph.node.add.update" $ toStrict $ Bin.encode response
+    return ()
+
+testAddProject :: IO ()
+testAddProject = do
+    endPoints <- EP.clientFromConfig <$> Config.load
+    let addNodeReq = AddNode.Request (gl 1 2) "expres" (NodeMeta.NodeMeta (1.2, 3.4)) 7
+        content    = toStrict . Bin.encode $ addNodeReq
+    Bus.runBus endPoints $ do
+        Bus.send Flag.Enable $ Message.Message Topic.addNodeRequest content
     return ()

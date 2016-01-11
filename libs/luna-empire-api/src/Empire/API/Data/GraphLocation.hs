@@ -1,7 +1,7 @@
 module Empire.API.Data.GraphLocation where
 
 import           Prologue
-import           Data.Binary              (Binary)
+import           Data.Binary                (Binary)
 
 import           Empire.API.Data.Project    (ProjectId)
 import           Empire.API.Data.Library    (LibraryId)
