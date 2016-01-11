@@ -23,9 +23,6 @@ import qualified Empire.Env                       as Env
 import           Empire.Env                       (Env)
 import qualified Empire.Data.Library              as DataLibrary
 import           Empire.Data.AST                  (AST)
-import qualified Empire.API.Data.Project          as Project
--- import           Empire.API.Data.Library          (LibraryId, Library)
--- import           Empire.API.Data.Project          (ProjectId, Project)
 import qualified Empire.API.Library.CreateLibrary as CreateLibrary
 import qualified Empire.API.Library.ListLibraries as ListLibraries
 import qualified Empire.API.Response              as Response

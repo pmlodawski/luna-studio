@@ -23,8 +23,6 @@ import qualified Empire.Env                       as Env
 import           Empire.Env                       (Env)
 import qualified Empire.Data.Project              as DataProject
 import           Empire.Data.AST                  (AST)
-import qualified Empire.API.Data.Project          as Project
-import           Empire.API.Data.Project          (ProjectId, Project)
 import qualified Empire.API.Project.CreateProject as CreateProject
 import qualified Empire.API.Project.ListProjects  as ListProjects
 import qualified Empire.API.Response              as Response

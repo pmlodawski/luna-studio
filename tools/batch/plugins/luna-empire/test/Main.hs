@@ -30,15 +30,21 @@ data Cmd = TestNotRecognizedRequest
          | TestRemoveNode
          | TestNodeUpdate
          | TestAddProject
+         | TestListProjects
+         | TestAddLibrary
+         | TestListLibraries
          deriving Show
 
 parser :: Parser Cmd
-parser = Opt.flag' TestNotRecognizedRequest (short 'N')
-     <|> Opt.flag' TestBadTopic (short 'B')
-     <|> Opt.flag' TestAddNode (short 'a')
-     <|> Opt.flag' TestRemoveNode (short 'r')
-     <|> Opt.flag' TestNodeUpdate (short 'u')
-     <|> Opt.flag' TestAddProject (short 'u')
+parser = Opt.flag' TestNotRecognizedRequest (long "nrr")
+     <|> Opt.flag' TestBadTopic             (long "bt")
+     <|> Opt.flag' TestAddNode              (long "an")
+     <|> Opt.flag' TestRemoveNode           (long "rn")
+     <|> Opt.flag' TestNodeUpdate           (long "nu")
+     <|> Opt.flag' TestAddProject           (long "ap")
+     <|> Opt.flag' TestListProjects         (long "lp")
+     <|> Opt.flag' TestAddLibrary           (long "al")
+     <|> Opt.flag' TestListLibraries        (long "ll")
 
 run :: Cmd -> IO ()
 run cmd = case cmd of
@@ -48,6 +54,10 @@ run cmd = case cmd of
     TestRemoveNode           -> testRemoveNode
     TestNodeUpdate           -> testNodeUpdate
     TestAddProject           -> testAddProject
+    TestListProjects         -> testListProjects
+    TestAddLibrary           -> testAddLibrary
+    TestListLibraries        -> testListLibraries
+
 
 opts :: ParserInfo Cmd
 opts = Opt.info (helper <*> parser)
@@ -112,3 +122,7 @@ testAddProject = do
     Bus.runBus endPoints $ do
         Bus.send Flag.Enable $ Message.Message Topic.addNodeRequest content
     return ()
+
+testListProjects = return ()
+testAddLibrary = return ()
+testListLibraries = return ()
