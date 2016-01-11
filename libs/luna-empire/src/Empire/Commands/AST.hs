@@ -28,6 +28,7 @@ import qualified Luna.Syntax.AST.Typed     as Typed
 import qualified Luna.Syntax.AST.Arg       as Arg
 import           Luna.Syntax.AST.Arg       (Arg)
 import qualified Luna.Syntax.AST.Lit       as Lit
+import           Luna.Syntax.Layer.Labeled (HasLabel, label)
 
 import           Empire.Utils.ParserMock   as Parser
 
@@ -53,6 +54,14 @@ addExpr name expr = Builder.var expr >>= unifyWithName name
 
 addString :: String -> String -> ASTOp (Ref Node)
 addString name lit = Builder._string lit >>= unifyWithName name
+
+readMeta :: HasLabel a ASTNode => Ref Node -> Command AST a
+readMeta ref = runAstOp $ view label <$> Builder.readRef ref
+
+writeMeta :: HasLabel a ASTNode => Ref Node -> a -> Command AST ()
+writeMeta ref newMeta = runAstOp $ do
+    node <- Builder.readRef ref
+    Builder.writeRef ref (node & label .~ newMeta)
 
 functionApplicationNode :: Lens' ASTNode (Ref Edge)
 functionApplicationNode = coated . lens getter setter where

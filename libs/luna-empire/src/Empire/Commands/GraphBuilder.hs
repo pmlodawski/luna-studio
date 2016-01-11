@@ -6,7 +6,7 @@ import           Control.Monad.Error     (throwError)
 import           Data.Map                (Map)
 import qualified Data.Map                as Map
 import qualified Data.IntMap             as IntMap
-import           Data.Maybe              (catMaybes, maybeToList)
+import           Data.Maybe              (catMaybes, maybeToList, fromMaybe)
 import qualified Data.Text.Lazy          as Text
 
 import           Data.Variants           (match, case', ANY(..))
@@ -42,8 +42,10 @@ buildNodes = do
     allNodeIds <- uses Graph.nodeMapping IntMap.keys
     forM allNodeIds $ \id -> do
         ref  <- GraphUtils.getASTTarget id
+        uref <- GraphUtils.getASTPointer id
         expr <- zoom Graph.ast $ AST.runAstOp $ getNodeExpression ref
-        return $ API.Node id (Text.pack expr) Map.empty $ NodeMeta (0.0, 0.0)
+        meta <- zoom Graph.ast $ AST.readMeta uref
+        return $ API.Node id (Text.pack expr) Map.empty $ fromMaybe def meta
 
 buildConnections :: Command Graph [(OutPortRef, InPortRef)]
 buildConnections = do

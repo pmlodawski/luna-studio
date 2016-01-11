@@ -11,32 +11,35 @@ import           Prologue
 import           Control.Monad.State
 import           Control.Monad.Error     (throwError)
 import qualified Data.IntMap             as Map
+import           Data.Text.Lazy          (Text)
+import qualified Data.Text.Lazy          as Text
 
 import qualified Empire.Data.Library     as Library
 import qualified Empire.Data.Graph       as Graph
 import           Empire.Data.Graph       (Graph)
 
-import           Empire.API.Data.Project (ProjectId)
-import           Empire.API.Data.Library (LibraryId)
-import           Empire.API.Data.Port    (InPort(..), OutPort(..))
-import           Empire.API.Data.PortRef (InPortRef(..), OutPortRef(..))
-import           Empire.API.Data.Node    (NodeId)
-import qualified Empire.API.Data.Graph   as API
+import           Empire.API.Data.Project  (ProjectId)
+import           Empire.API.Data.Library  (LibraryId)
+import           Empire.API.Data.Port     (InPort(..), OutPort(..))
+import           Empire.API.Data.PortRef  (InPortRef(..), OutPortRef(..))
+import           Empire.API.Data.Node     (NodeId, Node(..))
+import qualified Empire.API.Data.Node     as Node
+import           Empire.API.Data.NodeMeta (NodeMeta)
+import qualified Empire.API.Data.Graph    as API
 
 import           Empire.Empire
 import           Empire.Commands.Library      (withLibrary)
 import qualified Empire.Commands.AST          as AST
 import qualified Empire.Commands.GraphUtils   as GraphUtils
 import qualified Empire.Commands.GraphBuilder as GraphBuilder
-import           Luna.Syntax.Repr.Graph       (Ref, Node)
 
--- TODO: change NodeId to Node
-addNode :: ProjectId -> LibraryId -> String -> Empire NodeId
-addNode pid lid expr = withGraph pid lid $ do
+addNode :: ProjectId -> LibraryId -> Text -> NodeMeta -> Empire Node
+addNode pid lid expr meta = withGraph pid lid $ do
     newNodeId <- gets Graph.nextNodeId
-    refNode <- zoom Graph.ast $ AST.addNode ("node" ++ show newNodeId) expr
+    refNode <- zoom Graph.ast $ AST.addNode ("node" ++ show newNodeId) (Text.unpack expr)
+    zoom Graph.ast $ AST.writeMeta refNode (Just meta)
     Graph.nodeMapping . at newNodeId ?= refNode
-    return newNodeId
+    return $ Node.make newNodeId expr meta
 
 removeNode :: ProjectId -> LibraryId -> NodeId -> Empire ()
 removeNode pid lid nodeId = withGraph pid lid $ do
@@ -91,21 +94,16 @@ unApp nodeId pos = do
     newNodeRef <- zoom Graph.ast $ AST.removeArg astNode pos
     Graph.nodeMapping . at nodeId ?= newNodeRef
 
-rewireNode :: NodeId -> Ref Node -> Command Graph ()
-rewireNode nodeId newTarget = do
-    unifyNode <- GraphUtils.getASTPointer nodeId
-    zoom Graph.ast $ AST.replaceTargetNode unifyNode newTarget
-
 makeAcc :: NodeId -> NodeId -> Command Graph ()
 makeAcc src dst = do
     srcAst <- GraphUtils.getASTVar src
     dstAst <- GraphUtils.getASTTarget dst
     newNodeRef <- zoom Graph.ast $ AST.runAstOp $ AST.makeAccessor srcAst dstAst
-    rewireNode dst newNodeRef
+    GraphUtils.rewireNode dst newNodeRef
 
 makeApp :: NodeId -> NodeId -> Int -> Command Graph ()
 makeApp src dst pos = do
     srcAst <- GraphUtils.getASTVar src
     dstAst <- GraphUtils.getASTTarget dst
     newNodeRef <- zoom Graph.ast $ AST.applyFunction dstAst srcAst pos
-    rewireNode dst newNodeRef
+    GraphUtils.rewireNode dst newNodeRef

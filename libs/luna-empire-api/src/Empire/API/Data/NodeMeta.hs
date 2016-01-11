@@ -10,4 +10,7 @@ data NodeMeta = NodeMeta { _position :: (Double, Double)
 
 makeLenses ''NodeMeta
 
+instance Default NodeMeta where
+    def = NodeMeta def
+
 instance Binary NodeMeta

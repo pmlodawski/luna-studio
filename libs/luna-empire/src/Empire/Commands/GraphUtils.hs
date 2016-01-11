@@ -26,3 +26,7 @@ getASTVar nodeId = do
     unifyNode <- getASTPointer nodeId
     zoom Graph.ast $ AST.getVarNode unifyNode
 
+rewireNode :: NodeId -> Ref Node -> Command Graph ()
+rewireNode nodeId newTarget = do
+    unifyNode <- getASTPointer nodeId
+    zoom Graph.ast $ AST.replaceTargetNode unifyNode newTarget

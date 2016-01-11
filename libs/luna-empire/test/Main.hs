@@ -14,6 +14,8 @@ import           Empire.Data.AST
 import           Empire.Data.Graph
 import           Empire.Data.Library
 import           Empire.API.Data.Port
+import           Empire.API.Data.NodeMeta
+import           Empire.API.Data.Node
 import           Empire.Empire
 import           Empire.Commands.Project
 import           Empire.Commands.Library
@@ -25,18 +27,18 @@ test = do
     (pid, _) <- createProject (Just "dupa") "/no/elo"
     (lid, _) <- createLibrary pid (Just "xd") "/xd/xd"
 
-    n1 <- Graph.addNode pid lid "1"
-    n2 <- Graph.addNode pid lid "2"
-    np <- Graph.addNode pid lid "+"
-    nf <- Graph.addNode pid lid "floor"
+    n1 <- (view nodeId) <$> Graph.addNode pid lid "1"     (NodeMeta (1.0, 4.0))
+    n2 <- (view nodeId) <$> Graph.addNode pid lid "2"     (NodeMeta (2.0, 3.0))
+    np <- (view nodeId) <$> Graph.addNode pid lid "+"     (NodeMeta (3.0, 2.0))
+    nf <- (view nodeId) <$> Graph.addNode pid lid "floor" (NodeMeta (4.0, 1.0))
     Graph.connect pid lid n2 All np (Arg 0)
     Graph.connect pid lid n1 All np Self
     Graph.connect pid lid np All nf Self
 
-    fstNode <- Graph.addNode pid lid "+"
-    sndNode <- Graph.addNode pid lid "Int"
-    trdNode <- Graph.addNode pid lid "2"
-    rthNode <- Graph.addNode pid lid "5"
+    fstNode <- (view nodeId) <$> Graph.addNode pid lid "+"   (NodeMeta (3.14, 3.14))
+    sndNode <- (view nodeId) <$> Graph.addNode pid lid "Int" (NodeMeta (4.14, 4.14))
+    trdNode <- (view nodeId) <$> Graph.addNode pid lid "2"   (NodeMeta (5.14, 5.14))
+    rthNode <- (view nodeId) <$> Graph.addNode pid lid "5"   (NodeMeta (6.14, 6.14))
     Graph.connect pid lid sndNode All fstNode Self
     Graph.connect pid lid rthNode All fstNode (Arg 1)
     Graph.connect pid lid trdNode All fstNode (Arg 0)
