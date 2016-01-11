@@ -24,6 +24,7 @@ import qualified Reactive.State.Graph          as Graph
 import qualified Reactive.State.UIRegistry     as UIRegistry
 import qualified Reactive.State.Camera         as Camera
 import qualified Reactive.State.Global         as Global
+import           Reactive.State.Global         (inRegistry)
 import           Reactive.Commands.Command     (Command, command, pureCommand, ioCommand)
 import qualified Reactive.Commands.UIRegistry  as UICmd
 import           Reactive.State.UIRegistry     (sceneGraphId)
@@ -40,6 +41,8 @@ import           Reactive.State.Camera (Camera, screenToWorkspace)
 import           UI.Instances ()
 import           Empire.API.Data.Node (Node, NodeId)
 import qualified Empire.API.Data.Node as Node
+import           Empire.API.Data.NodeMeta (NodeMeta)
+import qualified Empire.API.Data.NodeMeta as NodeMeta
 import           Empire.API.Data.PortRef (AnyPortRef(..), InPortRef(..), OutPortRef(..))
 import qualified Empire.API.Data.PortRef as PortRef
 import           Empire.API.Data.Connection (Connection, ConnectionId)
@@ -246,5 +249,19 @@ focusNode id = do
     forM_ (zip newOrder [1..]) $ \(id, ix) -> do
         let newZPos = negate $ (fromIntegral ix) / 100.0
         UICmd.update id $ Model.zPos .~ newZPos
+
+----
+
+updateNodeMeta :: NodeId -> NodeMeta -> Command Global.State ()
+updateNodeMeta nodeId meta = do
+    Global.graph . Graph.nodesMap . ix nodeId . Node.nodeMeta .= meta
+
+    inRegistry $ do
+        widgetId <- nodeIdToWidgetId nodeId
+
+        forM_ widgetId $ flip UICmd.move (fromTuple $  meta ^. NodeMeta.position)
+
+    updatePortAngles
+    updateConnections
 
 

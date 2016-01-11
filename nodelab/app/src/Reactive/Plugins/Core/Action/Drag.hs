@@ -89,10 +89,11 @@ stopDrag = do
 
     nodes <- forM nodesToUpdate $ \(id, pos) -> do
         Global.graph . Graph.nodesMap . ix id . Node.position .= toTuple pos
-        preuse $ Global.graph . Graph.nodesMap . ix id
+        newMeta <- preuse $ Global.graph . Graph.nodesMap . ix id . Node.nodeMeta
+        forM_ newMeta $ \newMeta -> do
+            workspace <- use $ Global.workspace
+            performIO $ BatchCmd.updateNodeMeta workspace id newMeta
 
-    workspace <- use $ Global.workspace
-    performIO $ BatchCmd.updateNodes workspace (catMaybes nodes)
     updateConnections
     updatePortAngles
 

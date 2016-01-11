@@ -32,6 +32,8 @@ import qualified Empire.API.Data.NodeMeta as NodeMeta
 import           Empire.API.Data.Node (NodeId)
 import           Empire.API.Data.Project (ProjectId, Project)
 import qualified Empire.API.Data.Project as Project
+import           Empire.API.Data.GraphLocation (GraphLocation)
+import qualified Empire.API.Data.GraphLocation as GraphLocation
 import           Empire.API.Data.Library (LibraryId, Library)
 import qualified Empire.API.Data.Library as Library
 import qualified Empire.API.Topic        as Topic
@@ -54,8 +56,8 @@ import Empire.API.Library.ListLibraries  as ListLibraries
 import Data.Binary (encode)
 import qualified Data.Binary as Binary
 
-withLibrary :: Workspace -> (ProjectId -> LibraryId -> a) -> a
-withLibrary w f = f (w ^. Workspace.currentProjectId) (w ^. Workspace.currentLibraryId)
+withLibrary :: Workspace -> (GraphLocation -> a) -> a
+withLibrary w f = f (w ^. Workspace.currentLocation)
 
 addNode :: Workspace -> Text -> NodeMeta -> Int -> IO ()
 addNode workspace expression meta tag = sendRequest topic body where
@@ -76,7 +78,7 @@ listProjects = sendRequest Topic.listProjectsRequest ListProjects.Request
 createLibrary :: Workspace -> Text -> Text -> IO ()
 createLibrary w name path = sendRequest topic body where
     topic = Topic.createLibraryRequest
-    body  = CreateLibrary.Request (w ^. Workspace.currentProjectId)
+    body  = CreateLibrary.Request (w ^. Workspace.currentLocation . GraphLocation.projectId)
                                   (Just $ Text.unpack name)
                                   (Text.unpack path)
 

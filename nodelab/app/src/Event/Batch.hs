@@ -20,6 +20,7 @@ import qualified Empire.API.Graph.Disconnect        as Disconnect
 import qualified Empire.API.Graph.UpdateNodeMeta    as UpdateNodeMeta
 import qualified Empire.API.Graph.UpdateNodeMeta    as UpdateNodeMeta
 import qualified Empire.API.Graph.NodeUpdate        as NodeUpdate
+import qualified Empire.API.Graph.CodeUpdate        as CodeUpdate
 import Empire.API.JSONInstances ()
 
 import Data.Text.Lazy    (Text)
@@ -29,11 +30,12 @@ import Data.Aeson (ToJSON)
 data Event = UnknownEvent String
            | NodeAdded                  AddNode.Response
            | NodeRemoved             RemoveNode.Response
-           | GraphViewFetched          GetGraph.Response
+           | GraphUpdated              GetGraph.Response
            | NodesConnected             Connect.Response
            | NodesDisconnected       Disconnect.Response
-           | NodeMetadataUpdated UpdateNodeMeta.Response
+           | NodeMetaUpdated     UpdateNodeMeta.Response
            | NodeUpdated             NodeUpdate.Update
+           | CodeUpdated             CodeUpdate.Update
            -- | ProjectsList [Project]
            -- | ProjectCreated Project
            -- | ProjectOpened Project
@@ -48,7 +50,6 @@ data Event = UnknownEvent String
            -- | InterpreterGotProjectId (Maybe Int32)
            -- | SerializationModeInserted
            -- | ValueUpdate Int Value
-           | CodeUpdate Text
            -- | CodeSet
            -- | CodeSetError String
            -- | RunFinished RunStatus
