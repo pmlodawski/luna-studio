@@ -17,4 +17,4 @@ makeLenses ''Request
 makeLenses ''Status
 
 instance Binary Request
-instance Binary Update
+instance Binary Status
