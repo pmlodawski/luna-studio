@@ -60,7 +60,7 @@ executable nodelab
                      , containers
                      , random
                      , pretty-show
-                     , flowbox-utils-old
+                     , flowbox-utils
                      , convert
                      , process
                      , constraints

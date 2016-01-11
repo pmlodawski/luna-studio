@@ -23,9 +23,7 @@ ghcjs  -package-db $(stack path --snapshot-pkg-db) \
        -package process \
        -package constraints \
        -package errors \
-       -package graphviz \
        -package vector \
-       -package luna-tc \
        -package aeson \
        -package luna-empire-api \
        -XNoImplicitPrelude \
