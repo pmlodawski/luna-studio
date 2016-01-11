@@ -56,9 +56,10 @@ application clientCounter currentClient pingTime toBusChan fromBusChan pending =
     toWeb conn fromBusListenChan
 
 isActive :: Int -> TVar Int -> STM Bool
-isActive clientId currentClient = do
-    currentClientId <- readTVar currentClient
-    return $ clientId == currentClientId
+isActive clientId currentClient = return True
+-- do
+--     currentClientId <- readTVar currentClient
+--     return $ clientId == currentClientId
 
 whileActive :: Int -> TVar Int -> IO () -> IO ()
 whileActive clientId currentClient action = do
