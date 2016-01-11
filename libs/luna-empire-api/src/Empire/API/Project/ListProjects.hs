@@ -8,7 +8,7 @@ import qualified Empire.API.Response     as Response
 
 data Request = Request deriving (Generic, Show, Eq)
 
-data Status = Status { _projects   :: [(ProjectId, Project)]
+data Status = Status { _projects :: [(ProjectId, Project)]
                      } deriving (Generic, Show, Eq)
 
 type Response = Response.Response Request Status

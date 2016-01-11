@@ -5,15 +5,10 @@
 module Empire.Server where
 
 import           Control.Monad                          (forever)
-import           Control.Monad.State                    (StateT, evalStateT, get, put)
-import qualified Data.Binary                            as Bin
+import           Control.Monad.State                    (StateT, evalStateT)
 import           Data.ByteString                        (ByteString)
 import           Data.ByteString.Char8                  (unpack)
-import           Data.ByteString.Lazy                   (fromStrict, toStrict)
-import           Data.Map.Strict                        (Map)
 import qualified Data.Map.Strict                        as Map
-import qualified Data.Maybe                             as Maybe
-import qualified Data.Time.Clock                        as Clock
 
 import qualified Flowbox.Bus.Bus                        as Bus
 import           Flowbox.Bus.BusT                       (BusT (..))
@@ -23,11 +18,9 @@ import           Flowbox.Bus.Data.MessageFrame          (MessageFrame (MessageFr
 import           Flowbox.Bus.Data.Topic                 (Topic)
 import           Flowbox.Bus.EndPoint                   (BusEndPoints)
 import           Empire.Env                             (Env)
-import qualified Empire.Env                             as Env
 import           Flowbox.Data.Convert
 import           Flowbox.Prelude                        hiding (error)
 import           Flowbox.System.Log.Logger
-import qualified Reexport.Flowbox.Bus.Data.Exception    as Exception
 import qualified Empire.Utils                           as Utils
 import qualified Empire.Handlers                        as Handlers
 

@@ -12,5 +12,6 @@ data Project = Project { _name     :: Maybe String
                        , _path     :: String
                        , _libs     :: IntMap Library
                        } deriving (Show, Eq, Generic)
+
 makeLenses ''Project
 instance Binary Project
