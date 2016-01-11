@@ -72,15 +72,15 @@ instance ToJSON UpdateNodeMeta.Update
 instance ToJSON NodeUpdate.Update
 
 instance ToJSON GetGraph.Request
-instance ToJSON GetGraph.Update
+instance ToJSON GetGraph.Status
 
-instance ToJSON SetDefaultValue.SetDefaultValue
+instance ToJSON SetDefaultValue.Request
 
 instance ToJSON CreateLibrary.Request
 instance ToJSON CreateLibrary.Update
 
 instance ToJSON ListLibraries.Request
-instance ToJSON ListLibraries.Update
+instance ToJSON ListLibraries.Status
 
 instance (ToJSON req, ToJSON upd) => ToJSON (Response.Response req upd)
 instance ToJSON Response.ResultOk
