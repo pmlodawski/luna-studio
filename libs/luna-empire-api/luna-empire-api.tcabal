@@ -25,4 +25,5 @@ Library
                   lens,
                   prologue,
                   binary,
-                  containers
+                  containers,
+                  text

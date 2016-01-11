@@ -3,7 +3,7 @@ module Empire.API.Graph.GetGraph where
 import           Prologue
 import           Data.Binary              (Binary)
 
-import           Empire.API.Data.GraphLocation (GraphLocation)
+import           Empire.API.Data.GraphLocation  (GraphLocation)
 import           Empire.API.Data.Node     (Node)
 import           Empire.API.Data.Graph    (Graph)
 import           Empire.API.Data.PortRef  (InPortRef, OutPortRef)
