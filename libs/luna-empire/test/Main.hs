@@ -43,6 +43,10 @@ test = do
     Graph.connect pid lid rthNode All fstNode (Arg 1)
     Graph.connect pid lid trdNode All fstNode (Arg 0)
 
+    {-Graph.disconnect pid lid fstNode Self-}
+    {-Graph.disconnect pid lid fstNode $ Arg 0-}
+    Graph.disconnect pid lid fstNode $ Arg 1
+
     code <- Graph.getCode pid lid
     putStrLn code
 

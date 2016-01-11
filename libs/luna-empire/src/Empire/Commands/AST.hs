@@ -89,6 +89,21 @@ makeAccessor targetNodeRef namingNodeRef = do
             makeAccessor intermediateTargetRef finalNameRef
         match $ \ANY -> throwError "Invalid node type"
 
+unAcc :: Ref Node -> ASTOp (Ref Node)
+unAcc ref = do
+    node <- Builder.readRef ref
+    case' (uncoat node) $ do
+        match $ \(Accessor n t) -> do
+            nameNode <- Builder.follow n
+            removeNode ref
+            Builder.var nameNode
+        match $ \(App t _) -> do
+            target <- Builder.follow t
+            replacementRef <- unAcc target
+            Builder.reconnect ref functionApplicationNode replacementRef
+            return ref
+        match $ \ANY -> throwError "Self port not connected"
+
 unifyWithName :: String -> Ref Node -> ASTOp (Ref Node)
 unifyWithName name node = do
     nameVar <- Builder.var name
@@ -130,12 +145,16 @@ removeNode ref = do
     destruct typeNode
     destruct ref
 
-removeIfBlank :: Ref Node -> ASTOp ()
-removeIfBlank ref = do
+isBlank :: Ref Node -> ASTOp Bool
+isBlank ref = do
     node <- Builder.readRef ref
     case' (uncoat node) $ do
-        match $ \Blank -> removeNode ref
-        match $ \ANY -> return ()
+        match $ \Blank -> return True
+        match $ \ANY   -> return False
+
+removeIfBlank :: Ref Node -> ASTOp ()
+removeIfBlank ref = do
+    whenM (isBlank ref) $ removeNode ref
 
 getNameNode :: Ref Node -> Command AST (Ref Node)
 getNameNode ref = runAstOp $ do
@@ -150,7 +169,11 @@ removeArg fun pos = runAstOp $ do
     (f, args)  <- destructApp fun
     freshBlank <- Builder._blank
     let newArgs = args & ix pos .~ freshBlank
-    Builder.app f (Builder.arg <$> newArgs)
+    allBlanks <- and <$> mapM isBlank newArgs
+
+    if allBlanks
+        then mapM removeNode newArgs >> return f
+        else Builder.app f (Builder.arg <$> newArgs)
 
 destructApp :: Ref Node -> ASTOp (Ref Node, [Ref Node])
 destructApp fun = do

@@ -60,10 +60,7 @@ connect pid lid srcNodeId All dstNodeId dstPort = withGraph pid lid $ do
 connect pid lid srcNodeId _ dstNodeId dstPort = throwError "Source port should be All"
 
 disconnect :: ProjectId -> LibraryId -> NodeId -> InPort -> Empire ()
-disconnect pid lid dstNodeId dstPort = disconnect' pid lid undefined undefined dstNodeId dstPort
-
-disconnect' :: ProjectId -> LibraryId -> NodeId -> OutPort -> NodeId -> InPort -> Empire ()
-disconnect' pid lid _ _ dstNodeId dstPort = withGraph pid lid $ do
+disconnect pid lid dstNodeId dstPort = withGraph pid lid $ do
     case dstPort of
         Self    -> unAcc dstNodeId
         Arg num -> unApp dstNodeId num
@@ -87,17 +84,15 @@ withGraph pid lid = withLibrary pid lid . zoom Library.body
 
 unAcc :: NodeId -> Command Graph ()
 unAcc nodeId = do
-    dstAst <- use (Graph.nodeMapping . at nodeId) <?!> "Node does not exist"
-    nameNode <- zoom Graph.ast $ AST.getNameNode dstAst
-    {-zoom Graph.ast $ AST.removeNode dstAst-}
-    newNodeRef <- zoom Graph.ast $ AST.makeVar nameNode
-    Graph.nodeMapping . at nodeId ?= newNodeRef
+    dstAst <- GraphUtils.getASTTarget nodeId
+    newNodeRef <- zoom Graph.ast $ AST.runAstOp $ AST.unAcc dstAst
+    GraphUtils.rewireNode nodeId newNodeRef
 
 unApp :: NodeId -> Int -> Command Graph ()
 unApp nodeId pos = do
-    astNode <- use (Graph.nodeMapping . at nodeId) <?!> "Node does not exist"
+    astNode <- GraphUtils.getASTTarget nodeId
     newNodeRef <- zoom Graph.ast $ AST.removeArg astNode pos
-    Graph.nodeMapping . at nodeId ?= newNodeRef
+    GraphUtils.rewireNode nodeId newNodeRef
 
 makeAcc :: NodeId -> NodeId -> Command Graph ()
 makeAcc src dst = do
