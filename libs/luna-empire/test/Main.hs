@@ -14,6 +14,7 @@ import           Empire.Data.AST
 import           Empire.Data.Graph
 import           Empire.Data.Library
 import           Empire.API.Data.Port
+import           Empire.API.Data.PortRef      (InPortRef(..), OutPortRef(..))
 import           Empire.API.Data.NodeMeta
 import           Empire.API.Data.Node
 import           Empire.Empire
@@ -31,21 +32,25 @@ test = do
     n2 <- (view nodeId) <$> Graph.addNode pid lid "2"     (NodeMeta (2.0, 3.0))
     np <- (view nodeId) <$> Graph.addNode pid lid "+"     (NodeMeta (3.0, 2.0))
     nf <- (view nodeId) <$> Graph.addNode pid lid "floor" (NodeMeta (4.0, 1.0))
-    Graph.connect pid lid n2 All np (Arg 0)
-    Graph.connect pid lid n1 All np Self
-    Graph.connect pid lid np All nf Self
+    Graph.connect pid lid (OutPortRef n2 All) (InPortRef np (Arg 0))
+    Graph.connect pid lid (OutPortRef n1 All) (InPortRef np Self)
+    Graph.connect pid lid (OutPortRef np All) (InPortRef nf Self)
 
     fstNode <- (view nodeId) <$> Graph.addNode pid lid "+"   (NodeMeta (3.14, 3.14))
     sndNode <- (view nodeId) <$> Graph.addNode pid lid "Int" (NodeMeta (4.14, 4.14))
     trdNode <- (view nodeId) <$> Graph.addNode pid lid "2"   (NodeMeta (5.14, 5.14))
     rthNode <- (view nodeId) <$> Graph.addNode pid lid "5"   (NodeMeta (6.14, 6.14))
-    Graph.connect pid lid sndNode All fstNode Self
-    Graph.connect pid lid rthNode All fstNode (Arg 1)
-    Graph.connect pid lid trdNode All fstNode (Arg 0)
+    Graph.connect pid lid (OutPortRef sndNode All) (InPortRef fstNode Self)
+    Graph.connect pid lid (OutPortRef rthNode All) (InPortRef fstNode (Arg 1))
+    Graph.connect pid lid (OutPortRef trdNode All) (InPortRef fstNode (Arg 0))
+
+    Graph.removeNode pid lid fstNode
+
+    Graph.removeNode pid lid np
 
     {-Graph.disconnect pid lid fstNode Self-}
     {-Graph.disconnect pid lid fstNode $ Arg 0-}
-    Graph.disconnect pid lid fstNode $ Arg 1
+    {-Graph.disconnect pid lid fstNode $ Arg 1-}
 
     code <- Graph.getCode pid lid
     putStrLn code

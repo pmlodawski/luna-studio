@@ -215,26 +215,22 @@ applyFunction fun arg pos = runAstOp $ do
         match $ \(App _ _) -> rewireApplication fun arg pos
         match $ \ANY -> newApplication fun arg pos
 
-removeGraphNode' :: Ref Node -> ASTOp ()
-removeGraphNode' nodeId = do
-    node <- Builder.readRef nodeId
-    {-putStrLn "Removing node with succs: "-}
-    {-succs <- mapM Builder.unfollow $ (Ref . Edge) <$> (toList $ node ^. Graph.succs)-}
-    {-print succs-}
-    case' (uncoat node) $ do
-        match $ \(App f args) -> do
-            removeNode nodeId
-            Builder.follow f >>= removeGraphNode'
-        match $ \(Accessor n tg) -> do
-            Builder.follow n >>= removeNode
-            removeNode nodeId
-        match $ \(Var n) -> do
-            Builder.follow n >>= removeNode
-            removeNode nodeId
-        match $ \ANY -> throwError "Can't remove, screw you xD"
+getRefCount :: Ref Node -> ASTOp Int
+getRefCount ref = (length . toList . view Graph.succs) <$> Builder.readRef ref
 
-removeGraphNode :: Ref Node -> Command AST ()
-removeGraphNode = runAstOp . removeGraphNode'
+safeRemove :: Ref Node -> ASTOp ()
+safeRemove ref = do
+    refCount <- getRefCount ref
+    if refCount > 0
+        then return ()
+        else performSafeRemoval ref
+
+performSafeRemoval :: Ref Node -> ASTOp ()
+performSafeRemoval ref = do
+    node <- Builder.readRef ref
+    toRemove <- mapM Builder.follow (Term.inputs $ uncoat node)
+    removeNode ref
+    mapM_ safeRemove toRemove
 
 printIdent :: Ref Node -> ASTOp String
 printIdent nodeRef = do

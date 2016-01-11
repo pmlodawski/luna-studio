@@ -308,7 +308,7 @@ reconnect src lens tgt = do
 
 unregisterEdge eid = do
     edge <- readRef eid
-    withRef (edge ^. target) $ succs %~ IntSet.delete (deref $ edge ^. source)
+    withRef (edge ^. target) $ succs %~ IntSet.delete (deref eid)
     Builder.modify_ $ edges %~ free_ (deref eid)
 
 type instance Destructed (Ref Node) = ()

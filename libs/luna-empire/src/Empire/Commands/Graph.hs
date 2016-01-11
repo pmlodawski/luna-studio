@@ -22,10 +22,11 @@ import           Empire.API.Data.Project  (ProjectId)
 import           Empire.API.Data.Library  (LibraryId)
 import           Empire.API.Data.Port     (InPort(..), OutPort(..))
 import           Empire.API.Data.PortRef  (InPortRef(..), OutPortRef(..))
+import qualified Empire.API.Data.PortRef  as PortRef
 import           Empire.API.Data.Node     (NodeId, Node(..))
 import qualified Empire.API.Data.Node     as Node
 import           Empire.API.Data.NodeMeta (NodeMeta)
-import qualified Empire.API.Data.Graph    as API
+import qualified Empire.API.Data.Graph    as APIGraph
 
 import           Empire.Empire
 import           Empire.Commands.Library      (withLibrary)
@@ -48,22 +49,21 @@ updateNodeMeta pid lid nid meta = withGraph pid lid $ do
 
 removeNode :: ProjectId -> LibraryId -> NodeId -> Empire ()
 removeNode pid lid nodeId = withGraph pid lid $ do
-    astNode <- use (Graph.nodeMapping . at nodeId) <?!> "Node does not exist"
+    astRef <- GraphUtils.getASTPointer nodeId
+    obsoleteEdges <- getOutEdges nodeId
+    mapM_ disconnectPort obsoleteEdges
+    zoom Graph.ast $ AST.runAstOp $ AST.safeRemove astRef
     Graph.nodeMapping %= Map.delete nodeId
-    zoom Graph.ast $ AST.removeGraphNode astNode
 
-connect :: ProjectId -> LibraryId -> NodeId -> OutPort -> NodeId -> InPort -> Empire ()
-connect pid lid srcNodeId All dstNodeId dstPort = withGraph pid lid $ do
+connect :: ProjectId -> LibraryId -> OutPortRef -> InPortRef -> Empire ()
+connect pid lid (OutPortRef srcNodeId All) (InPortRef dstNodeId dstPort) = withGraph pid lid $ do
     case dstPort of
         Self    -> makeAcc srcNodeId dstNodeId
         Arg num -> makeApp srcNodeId dstNodeId num
-connect pid lid srcNodeId _ dstNodeId dstPort = throwError "Source port should be All"
+connect _ _ _ _ = throwError "Source port should be All"
 
-disconnect :: ProjectId -> LibraryId -> NodeId -> InPort -> Empire ()
-disconnect pid lid dstNodeId dstPort = withGraph pid lid $ do
-    case dstPort of
-        Self    -> unAcc dstNodeId
-        Arg num -> unApp dstNodeId num
+disconnect :: ProjectId -> LibraryId -> InPortRef -> Empire ()
+disconnect pid lid port = withGraph pid lid $ disconnectPort port
 
 getCode :: ProjectId -> LibraryId -> Empire String
 getCode pid lid = withGraph pid lid $ do
@@ -71,7 +71,7 @@ getCode pid lid = withGraph pid lid $ do
     lines <- sequence $ printNodeLine <$> allNodes
     return $ intercalate "\n" lines
 
-getGraph :: ProjectId -> LibraryId -> Empire API.Graph
+getGraph :: ProjectId -> LibraryId -> Empire APIGraph.Graph
 getGraph pid lid = withGraph pid lid GraphBuilder.buildGraph
 
 -- internal
@@ -81,6 +81,19 @@ printNodeLine nid = GraphUtils.getASTPointer nid >>= (zoom Graph.ast . AST.runAs
 
 withGraph :: ProjectId -> LibraryId -> Command Graph a -> Empire a
 withGraph pid lid = withLibrary pid lid . zoom Library.body
+
+getOutEdges :: NodeId -> Command Graph [InPortRef]
+getOutEdges nodeId = do
+    graphRep <- GraphBuilder.buildGraph
+    let edges    = graphRep ^. APIGraph.connections
+        filtered = filter (\(opr, _) -> opr ^. PortRef.srcNodeId == nodeId) edges
+    return $ view _2 <$> filtered
+
+disconnectPort :: InPortRef -> Command Graph ()
+disconnectPort (InPortRef dstNodeId dstPort) = do
+    case dstPort of
+        Self    -> unAcc dstNodeId
+        Arg num -> unApp dstNodeId num
 
 unAcc :: NodeId -> Command Graph ()
 unAcc nodeId = do
