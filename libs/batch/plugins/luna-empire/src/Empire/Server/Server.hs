@@ -9,3 +9,6 @@ import           Empire.API.Data.Project         (ProjectId)
 withGraphLocation :: (ProjectId -> LibraryId -> a) -> GraphLocation -> a
 withGraphLocation f graphLocation = f (graphLocation ^. GraphLocation.projectId)
                                       (graphLocation ^. GraphLocation.libraryId)
+
+errorMessage :: String
+errorMessage = "Error processing request: "

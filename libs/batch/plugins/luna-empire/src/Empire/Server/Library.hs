@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Empire.Server.Project where
+module Empire.Server.Library where
 
 import           Prologue
 
@@ -21,15 +21,16 @@ import qualified Flowbox.Bus.BusT                 as Bus
 import qualified Flowbox.System.Log.Logger        as Logger
 import qualified Empire.Env                       as Env
 import           Empire.Env                       (Env)
-import qualified Empire.Data.Project              as DataProject
+import qualified Empire.Data.Library              as DataLibrary
 import           Empire.Data.AST                  (AST)
 import qualified Empire.API.Data.Project          as Project
-import           Empire.API.Data.Project          (ProjectId, Project)
-import qualified Empire.API.Project.CreateProject as CreateProject
-import qualified Empire.API.Project.ListProjects  as ListProjects
+-- import           Empire.API.Data.Library          (LibraryId, Library)
+-- import           Empire.API.Data.Project          (ProjectId, Project)
+import qualified Empire.API.Library.CreateLibrary as CreateLibrary
+import qualified Empire.API.Library.ListLibraries as ListLibraries
 import qualified Empire.API.Response              as Response
 import qualified Empire.API.Topic                 as Topic
-import qualified Empire.Commands.Project          as ProjectCmd
+import qualified Empire.Commands.Library          as LibraryCmd
 import qualified Empire.Empire                    as Empire
 import           Empire.Empire                    (Empire)
 import qualified Empire.Server.Server            as Server
@@ -37,35 +38,37 @@ import qualified Empire.Server.Server            as Server
 logger :: Logger.LoggerIO
 logger = Logger.getLoggerIO $(Logger.moduleName)
 
-handleCreateProject :: ByteString -> StateT Env BusT ()
-handleCreateProject content = do
-    let request = Bin.decode . fromStrict $ content :: CreateProject.Request
+handleCreateLibrary :: ByteString -> StateT Env BusT ()
+handleCreateLibrary content = do
+    let request = Bin.decode . fromStrict $ content :: CreateLibrary.Request
     logger Logger.info $ show request
     currentEmpireEnv <- use Env.empireEnv
     logger Logger.info $ show currentEmpireEnv
-    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ ProjectCmd.createProject
-        (request ^. CreateProject.projectName)
-        (fromString $ request ^. CreateProject.path)
+    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ LibraryCmd.createLibrary
+        (request ^. CreateLibrary.projectId)
+        (request ^. CreateLibrary.libraryName)
+        (fromString $ request ^. CreateLibrary.path)
     case result of
         Left err -> logger Logger.error $ Server.errorMessage ++ err
-        Right (projectId, project) -> do
+        Right (libraryId, library) -> do
             Env.empireEnv .= newEmpireEnv
-            let response = Response.Update request $ CreateProject.Update projectId $ DataProject.toAPI project
-            lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.createProjectResponse $ toStrict $ Bin.encode response
+            let response = Response.Update request $ CreateLibrary.Update libraryId $ DataLibrary.toAPI library
+            lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.createLibraryResponse $ toStrict $ Bin.encode response
             return ()
 
-handleListProjects :: ByteString -> StateT Env BusT ()
-handleListProjects content = do
-    let request = Bin.decode . fromStrict $ content :: ListProjects.Request
+handleListLibraries :: ByteString -> StateT Env BusT ()
+handleListLibraries content = do
+    let request = Bin.decode . fromStrict $ content :: ListLibraries.Request
     logger Logger.info $ show request
     currentEmpireEnv <- use Env.empireEnv
     logger Logger.info $ show currentEmpireEnv
-    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ ProjectCmd.listProjects
+    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ LibraryCmd.listLibraries
+        (request ^. ListLibraries.projectId)
     case result of
         Left err -> logger Logger.error $ Server.errorMessage ++ err
-        Right projectList -> do
+        Right librariesList -> do
             Env.empireEnv .= newEmpireEnv
-            let projectListAPI = fmap (\(projectId, project) -> (projectId, DataProject.toAPI project)) projectList
-                response = Response.Update request $ ListProjects.Status projectListAPI
-            lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.listProjectsResponse $ toStrict $ Bin.encode response
+            let librariesListAPI = fmap (\(libraryId, library) -> (libraryId, DataLibrary.toAPI library)) librariesList
+                response = Response.Update request $ ListLibraries.Status librariesListAPI
+            lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.listLibrariesResponse $ toStrict $ Bin.encode response
             return ()

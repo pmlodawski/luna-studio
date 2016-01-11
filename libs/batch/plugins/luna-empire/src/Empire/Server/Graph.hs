@@ -38,7 +38,7 @@ handleAddNode content = do
         (Text.pack $ request ^. AddNode.expr)
         (request ^. AddNode.nodeMeta)
     case nodeE of
-        Left err -> logger Logger.error $ "Error processing request: " ++ show err
+        Left err -> logger Logger.error $ Server.errorMessage ++ err
         Right node -> do
             Env.empireEnv .= newEmpireEnv
             let response = Response.Update request $ AddNode.Update node
