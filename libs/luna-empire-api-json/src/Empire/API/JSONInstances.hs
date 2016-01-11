@@ -10,6 +10,8 @@ import Empire.API.Response             as Response
 
 import Empire.API.Data.Project         as Project
 import Empire.API.Data.Library         as Library
+import Empire.API.Data.Breadcrumb      as Breadcrumb
+import Empire.API.Data.GraphLocation   as GraphLocation
 import Empire.API.Data.Node            as Node
 import Empire.API.Data.NodeMeta        as NodeMeta
 import Empire.API.Data.Graph           as Graph
@@ -32,6 +34,8 @@ import Empire.API.Library.ListLibraries as ListLibraries
 
 instance ToJSON Project.Project
 instance ToJSON Library.Library
+instance ToJSON Breadcrumb.Breadcrumb
+instance ToJSON GraphLocation.GraphLocation
 
 instance ToJSON Node.Node
 

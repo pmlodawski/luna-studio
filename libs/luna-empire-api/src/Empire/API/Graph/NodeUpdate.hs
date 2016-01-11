@@ -3,12 +3,10 @@ module Empire.API.Graph.NodeUpdate where
 import           Prologue
 import           Data.Binary             (Binary)
 
-import           Empire.API.Data.Project (ProjectId)
-import           Empire.API.Data.Library (LibraryId)
+import           Empire.API.Data.GraphLocation (GraphLocation)
 import           Empire.API.Data.Node    (Node)
 
-data Update = Update { _projectId :: ProjectId
-                     , _libraryId :: LibraryId
+data Update = Update { _location  :: GraphLocation
                      , _node      :: Node
                      } deriving (Generic, Show, Eq)
 
