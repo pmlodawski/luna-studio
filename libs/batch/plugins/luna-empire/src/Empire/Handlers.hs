@@ -18,4 +18,5 @@ handlersMap :: Map String Handler
 handlersMap = Map.fromList
     [ (Topic.addNodeRequest,    Graph.handleAddNode)
     , (Topic.removeNodeRequest, Graph.handleRemoveNode)
+    , (Topic.updateNodeMetaRequest, Graph.updateNodeMeta)
     ]

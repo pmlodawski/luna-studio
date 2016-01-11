@@ -28,6 +28,7 @@ import           Empire.API.Data.Project     (ProjectId)
 import qualified Empire.API.Topic            as Topic
 import qualified Empire.API.Graph.AddNode    as AddNode
 import qualified Empire.API.Graph.RemoveNode as RemoveNode
+import qualified Empire.API.Graph.UpdateNodeMeta as UpdateNodeMeta
 import qualified Empire.API.Data.NodeMeta    as NodeMeta
 import qualified Empire.API.Response         as Response
 
@@ -74,3 +75,11 @@ handleRemoveNode content = do
     logger info $ "Handling RemoveNodeRequest"
     let removeNodeRequest = Bin.decode . fromStrict $ content :: RemoveNode.Request
     logger info $ show removeNodeRequest
+
+updateNodeMeta :: ByteString -> StateT Env BusT ()
+updateNodeMeta content = do
+    logger info $ "Handling UpdateNodeMeta"
+    let request = Bin.decode . fromStrict $ content :: UpdateNodeMeta.Request
+    logger info $ show request
+    let response = Response.Update request $ UpdateNodeMeta.Update $ request ^. UpdateNodeMeta.nodeMeta
+    void $ lift $ BusT $ Bus.send Flag.Enable $ Message.Message "empire.graph.node.updateMeta.update" $ toStrict $ Bin.encode response
