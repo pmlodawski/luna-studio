@@ -11,7 +11,7 @@ import qualified Empire.Cmd                  as Cmd
 import qualified Empire.Server               as Server
 import qualified Empire.Version              as Version
 import qualified Flowbox.Config.Config       as Config
-import           Flowbox.Options.Applicative hiding (info)
+import           Flowbox.Options.Applicative (short, long, help, metavar)
 import qualified Flowbox.Options.Applicative as Opt
 import           Flowbox.System.Log.Logger
 
@@ -24,18 +24,18 @@ rootLogger = getLogger ""
 logger :: LoggerIO
 logger = getLoggerIO $moduleName
 
-parser :: Parser Cmd
+parser :: Opt.Parser Cmd
 parser = Opt.flag' Cmd.Version (short 'V' <> long "version" <> help "Version information")
        <|> Cmd.Run
-           <$> many       (strOption (short 't' <> metavar "TOPIC" <> help "Topic to listen"))
-           <*> optIntFlag (Just "verbose") 'v' 2 3 "Verbosity level (0-5, default 3)"
+           <$> Opt.many       (Opt.strOption (short 't' <> metavar "TOPIC" <> help "Topic to listen"))
+           <*> Opt.optIntFlag (Just "verbose") 'v' 2 3 "Verbosity level (0-5, default 3)"
 
-opts :: ParserInfo Cmd
-opts = Opt.info (helper <*> parser)
+opts :: Opt.ParserInfo Cmd
+opts = Opt.info (Opt.helper <*> parser)
                 (Opt.fullDesc <> Opt.header Version.fullVersion)
 
 main :: IO ()
-main = execParser opts >>= run
+main = Opt.execParser opts >>= run
 
 run :: Cmd -> IO ()
 run cmd = case cmd of

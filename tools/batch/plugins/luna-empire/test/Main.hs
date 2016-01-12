@@ -2,26 +2,30 @@
 module Main where
 
 import           Prologue
-import qualified Data.Binary                   as Bin
-import qualified Data.ByteString               as ByteString
-import qualified Data.ByteString.Char8         as Char8 (pack)
-import           Data.ByteString.Lazy          (fromStrict, toStrict)
-import qualified Flowbox.Config.Config         as Config
-import qualified Flowbox.Bus.EndPoint          as EP
-import qualified Flowbox.Bus.Bus               as Bus
-import qualified Flowbox.Bus.Data.Flag         as Flag
-import qualified Flowbox.Bus.Data.Message      as Message
-import           Flowbox.Options.Applicative   hiding (info)
-import qualified Flowbox.Options.Applicative   as Opt
-import qualified Empire.API.Data.Node          as Node
-import qualified Empire.API.Data.NodeMeta      as NodeMeta
-import qualified Empire.API.Data.NodeMeta      as NodeMeta
-import qualified Empire.API.Data.GraphLocation as GraphLocation
-import qualified Empire.API.Data.Breadcrumb    as Breadcrumb
-import qualified Empire.API.Graph.AddNode      as AddNode
-import qualified Empire.API.Graph.RemoveNode   as RemoveNode
-import qualified Empire.API.Topic              as Topic
-import qualified Empire.API.Response           as Response
+import qualified Data.Binary                      as Bin
+import qualified Data.ByteString                  as ByteString
+import qualified Data.ByteString.Char8            as Char8 (pack)
+import           Data.ByteString.Lazy             (fromStrict, toStrict)
+import qualified Flowbox.Config.Config            as Config
+import qualified Flowbox.Bus.EndPoint             as EP
+import qualified Flowbox.Bus.Bus                  as Bus
+import qualified Flowbox.Bus.Data.Flag            as Flag
+import qualified Flowbox.Bus.Data.Message         as Message
+import           Flowbox.Options.Applicative      (short, long, help, metavar)
+import qualified Flowbox.Options.Applicative      as Opt
+import qualified Empire.API.Data.Node             as Node
+import qualified Empire.API.Data.NodeMeta         as NodeMeta
+import qualified Empire.API.Data.NodeMeta         as NodeMeta
+import qualified Empire.API.Data.GraphLocation    as GraphLocation
+import qualified Empire.API.Data.Breadcrumb       as Breadcrumb
+import qualified Empire.API.Graph.AddNode         as AddNode
+import qualified Empire.API.Graph.RemoveNode      as RemoveNode
+import qualified Empire.API.Project.CreateProject as CreateProject
+import qualified Empire.API.Project.ListProjects  as ListProjects
+import qualified Empire.API.Library.CreateLibrary as CreateLibrary
+import qualified Empire.API.Library.ListLibraries as ListLibraries
+import qualified Empire.API.Topic                 as Topic
+import qualified Empire.API.Response              as Response
 
 
 data Cmd = TestNotRecognizedRequest
@@ -29,22 +33,22 @@ data Cmd = TestNotRecognizedRequest
          | TestAddNode
          | TestRemoveNode
          | TestNodeUpdate
-         | TestAddProject
+         | TestCreateProject
          | TestListProjects
-         | TestAddLibrary
-         | TestListLibraries
+         | TestCreateLibrary { pid :: Int }
+         | TestListLibraries { pid :: Int }
          deriving Show
 
-parser :: Parser Cmd
+parser :: Opt.Parser Cmd
 parser = Opt.flag' TestNotRecognizedRequest (long "nrr")
      <|> Opt.flag' TestBadTopic             (long "bt")
      <|> Opt.flag' TestAddNode              (long "an")
      <|> Opt.flag' TestRemoveNode           (long "rn")
      <|> Opt.flag' TestNodeUpdate           (long "nu")
-     <|> Opt.flag' TestAddProject           (long "ap")
+     <|> Opt.flag' TestCreateProject        (long "cp")
      <|> Opt.flag' TestListProjects         (long "lp")
-     <|> Opt.flag' TestAddLibrary           (long "al")
-     <|> Opt.flag' TestListLibraries        (long "ll")
+     <|>           TestCreateLibrary <$>    Opt.optIntFlag (Just "cLib") 'b' 2 0 "Create Library"
+     <|>           TestListLibraries <$>    Opt.optIntFlag (Just "lLib") 'l' 2 0 "List Libraries"
 
 run :: Cmd -> IO ()
 run cmd = case cmd of
@@ -53,17 +57,17 @@ run cmd = case cmd of
     TestAddNode              -> testAddNode
     TestRemoveNode           -> testRemoveNode
     TestNodeUpdate           -> testNodeUpdate
-    TestAddProject           -> testAddProject
+    TestCreateProject        -> testCreateProject
     TestListProjects         -> testListProjects
-    TestAddLibrary           -> testAddLibrary
-    TestListLibraries        -> testListLibraries
+    TestCreateLibrary pid    -> testCreateLibrary pid
+    TestListLibraries pid    -> testListLibraries pid
 
 
-opts :: ParserInfo Cmd
-opts = Opt.info (helper <*> parser)
+opts :: Opt.ParserInfo Cmd
+opts = Opt.info (Opt.helper <*> parser)
                 (Opt.fullDesc <> Opt.header "ver 0.1")
 
-main = execParser opts >>= run
+main = Opt.execParser opts >>= run
 
 -- tests
 
@@ -87,8 +91,7 @@ testBadTopic = do
 testAddNode :: IO ()
 testAddNode = do
     endPoints <- EP.clientFromConfig <$> Config.load
-    let addNodeReq = AddNode.Request (gl 1 2) "expres" (NodeMeta.NodeMeta (1.2, 3.4)) 7
-        content    = toStrict . Bin.encode $ addNodeReq
+    let content = toStrict . Bin.encode $ AddNode.Request (gl 1 2) "expres" (NodeMeta.NodeMeta (1.2, 3.4)) 7
     Bus.runBus endPoints $ do
         Bus.send Flag.Enable $ Message.Message Topic.addNodeRequest content
     return ()
@@ -96,8 +99,7 @@ testAddNode = do
 testRemoveNode :: IO ()
 testRemoveNode = do
     endPoints <- EP.clientFromConfig <$> Config.load
-    let removeNodeReq = RemoveNode.Request (gl 1 2) 3
-        content       = toStrict . Bin.encode $ removeNodeReq
+    let content = toStrict . Bin.encode $ RemoveNode.Request (gl 1 2) 3
     Bus.runBus endPoints $ do
         Bus.send Flag.Enable $ Message.Message Topic.removeNodeRequest content
     return ()
@@ -114,15 +116,34 @@ testNodeUpdate = do
         Bus.send Flag.Enable $ Message.Message "empire.graph.node.add.update" $ toStrict $ Bin.encode response
     return ()
 
-testAddProject :: IO ()
-testAddProject = do
+testCreateProject :: IO ()
+testCreateProject = do
     endPoints <- EP.clientFromConfig <$> Config.load
-    let addNodeReq = AddNode.Request (gl 1 2) "expres" (NodeMeta.NodeMeta (1.2, 3.4)) 7
-        content    = toStrict . Bin.encode $ addNodeReq
+    let content = toStrict . Bin.encode $ CreateProject.Request (Just "dupaPr") "/no/elo"
     Bus.runBus endPoints $ do
-        Bus.send Flag.Enable $ Message.Message Topic.addNodeRequest content
+        Bus.send Flag.Enable $ Message.Message Topic.createProjectRequest content
     return ()
 
-testListProjects = return ()
-testAddLibrary = return ()
-testListLibraries = return ()
+testListProjects :: IO ()
+testListProjects = do
+    endPoints <- EP.clientFromConfig <$> Config.load
+    let content = toStrict . Bin.encode $ ListProjects.Request
+    Bus.runBus endPoints $ do
+        Bus.send Flag.Enable $ Message.Message Topic.listProjectsRequest content
+    return ()
+
+testCreateLibrary :: Int -> IO ()
+testCreateLibrary pid = do
+    endPoints <- EP.clientFromConfig <$> Config.load
+    let content = toStrict . Bin.encode $ CreateLibrary.Request pid (Just "dupaLib") "/no/elo"
+    Bus.runBus endPoints $ do
+        Bus.send Flag.Enable $ Message.Message Topic.createLibraryRequest content
+    return ()
+
+testListLibraries :: Int -> IO ()
+testListLibraries pid = do
+    endPoints <- EP.clientFromConfig <$> Config.load
+    let content = toStrict . Bin.encode $ ListLibraries.Request pid
+    Bus.runBus endPoints $ do
+        Bus.send Flag.Enable $ Message.Message Topic.listLibrariesRequest content
+    return ()
