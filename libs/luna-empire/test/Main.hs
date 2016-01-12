@@ -40,13 +40,13 @@ test = do
     sndNode <- (view nodeId) <$> Graph.addNode pid lid "Int" (NodeMeta (4.14, 4.14))
     trdNode <- (view nodeId) <$> Graph.addNode pid lid "2"   (NodeMeta (5.14, 5.14))
     rthNode <- (view nodeId) <$> Graph.addNode pid lid "5"   (NodeMeta (6.14, 6.14))
-    Graph.connect pid lid (OutPortRef sndNode All) (InPortRef fstNode Self)
     Graph.connect pid lid (OutPortRef rthNode All) (InPortRef fstNode (Arg 1))
     Graph.connect pid lid (OutPortRef trdNode All) (InPortRef fstNode (Arg 0))
+    Graph.connect pid lid (OutPortRef sndNode All) (InPortRef fstNode Self)
 
-    Graph.removeNode pid lid fstNode
+    {-Graph.removeNode pid lid fstNode-}
 
-    Graph.removeNode pid lid np
+    {-Graph.removeNode pid lid np-}
 
     {-Graph.disconnect pid lid fstNode Self-}
     {-Graph.disconnect pid lid fstNode $ Arg 0-}

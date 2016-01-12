@@ -11,6 +11,7 @@ import           Empire.API.Data.Node    (NodeId)
 
 import           Empire.Empire
 import qualified Empire.Commands.AST     as AST
+import qualified Empire.ASTOp            as AST
 import           Luna.Syntax.Repr.Graph  (Ref, Node)
 
 getASTPointer :: NodeId -> Command Graph (Ref Node)

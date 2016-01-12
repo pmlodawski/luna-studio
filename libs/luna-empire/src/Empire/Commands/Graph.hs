@@ -52,7 +52,7 @@ removeNode pid lid nodeId = withGraph pid lid $ do
     astRef <- GraphUtils.getASTPointer nodeId
     obsoleteEdges <- getOutEdges nodeId
     mapM_ disconnectPort obsoleteEdges
-    zoom Graph.ast $ AST.runAstOp $ AST.safeRemove astRef
+    zoom Graph.ast $ AST.removeSubtree astRef
     Graph.nodeMapping %= Map.delete nodeId
 
 connect :: ProjectId -> LibraryId -> OutPortRef -> InPortRef -> Empire ()
@@ -77,7 +77,7 @@ getGraph pid lid = withGraph pid lid GraphBuilder.buildGraph
 -- internal
 
 printNodeLine :: NodeId -> Command Graph String
-printNodeLine nid = GraphUtils.getASTPointer nid >>= (zoom Graph.ast . AST.runAstOp . AST.prettyPrint)
+printNodeLine nid = GraphUtils.getASTPointer nid >>= (zoom Graph.ast . AST.printNodeLine)
 
 withGraph :: ProjectId -> LibraryId -> Command Graph a -> Empire a
 withGraph pid lid = withLibrary pid lid . zoom Library.body
@@ -98,20 +98,20 @@ disconnectPort (InPortRef dstNodeId dstPort) = do
 unAcc :: NodeId -> Command Graph ()
 unAcc nodeId = do
     dstAst <- GraphUtils.getASTTarget nodeId
-    newNodeRef <- zoom Graph.ast $ AST.runAstOp $ AST.unAcc dstAst
+    newNodeRef <- zoom Graph.ast $ AST.removeAccessor dstAst
     GraphUtils.rewireNode nodeId newNodeRef
 
 unApp :: NodeId -> Int -> Command Graph ()
 unApp nodeId pos = do
     astNode <- GraphUtils.getASTTarget nodeId
-    newNodeRef <- zoom Graph.ast $ AST.removeArg astNode pos
+    newNodeRef <- zoom Graph.ast $ AST.unapplyArgument astNode pos
     GraphUtils.rewireNode nodeId newNodeRef
 
 makeAcc :: NodeId -> NodeId -> Command Graph ()
 makeAcc src dst = do
     srcAst <- GraphUtils.getASTVar src
     dstAst <- GraphUtils.getASTTarget dst
-    newNodeRef <- zoom Graph.ast $ AST.runAstOp $ AST.makeAccessor srcAst dstAst
+    newNodeRef <- zoom Graph.ast $ AST.makeAccessor srcAst dstAst
     GraphUtils.rewireNode dst newNodeRef
 
 makeApp :: NodeId -> NodeId -> Int -> Command Graph ()

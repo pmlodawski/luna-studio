@@ -4,260 +4,60 @@ module Empire.Commands.AST where
 
 import           Prologue
 import           Control.Monad.State
-import           Control.Monad.Error (ErrorT, runErrorT, throwError)
+import           Control.Monad.Error (throwError)
 import           Data.Variants       (match, case', specificCons, ANY(..))
 import           Data.Layer.Coat     (uncoat, coated)
-import           Data.Maybe          (fromMaybe)
-import           Data.Construction   (destruct)
-import qualified Data.Text.Lazy      as Text
 
-import           Empire.Data.AST (AST, ASTNode)
 import           Empire.Empire
+import           Empire.Data.AST       (AST, ASTNode)
 
-import           Luna.Syntax.Builder.Star  (StarBuilderT)
-import qualified Luna.Syntax.Builder.Star  as StarBuilder
-import           Luna.Syntax.Builder.Node  (NodeBuilderT)
-import qualified Luna.Syntax.Builder.Node  as NodeBuilder
-import           Luna.Syntax.Builder.Class (BuilderT)
+import           Empire.ASTOp          (runASTOp)
+import qualified Empire.ASTOps.Parse   as Parser
+import qualified Empire.ASTOps.Print   as Printer
+import qualified Empire.ASTOps.Builder as ASTBuilder
+import           Empire.ASTOps.Remove  (safeRemove)
+
 import qualified Luna.Syntax.Builder       as Builder
-import           Luna.Syntax.Repr.Graph    (Ref(..), Node(..), Edge(..))
-import qualified Luna.Syntax.Repr.Graph    as Graph
-import           Luna.Syntax.AST.Term      (Var(..), App(..), Blank(..), Accessor(..), Unify(..), Draft, Val)
-import qualified Luna.Syntax.AST.Term      as Term
-import qualified Luna.Syntax.AST.Typed     as Typed
-import qualified Luna.Syntax.AST.Arg       as Arg
-import           Luna.Syntax.AST.Arg       (Arg)
-import qualified Luna.Syntax.AST.Lit       as Lit
+import           Luna.Syntax.Repr.Graph    (Ref(..), Node(..))
+import           Luna.Syntax.AST.Term      (Unify(..))
 import           Luna.Syntax.Layer.Labeled (HasLabel, label)
 
-import           Empire.Utils.ParserMock   as Parser
-
-type ASTOp = ErrorT Error (NodeBuilderT (Ref Node) (BuilderT AST (StarBuilderT (Maybe (Ref Node)) IO)))
-
-runAstOp :: ASTOp a -> Command AST a
-runAstOp cmd = empire $ \g -> flip StarBuilder.evalT Nothing
-             $ flip Builder.runT g
-             $ flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
-             $ runErrorT
-             $ cmd
-
 addNode :: String -> String -> Command AST (Ref Node)
-addNode name expr = runAstOp $ fromMaybe (addExpr name expr) (whenString <|> whenInt) where
-    whenString = addString  name <$> Parser.asString  expr
-    whenInt    = addInteger name <$> Parser.asInteger expr
-
-addInteger :: String -> Int -> ASTOp (Ref Node)
-addInteger name num = Builder._int num >>= unifyWithName name
-
-addExpr :: String -> String -> ASTOp (Ref Node)
-addExpr name expr = Builder.var expr >>= unifyWithName name
-
-addString :: String -> String -> ASTOp (Ref Node)
-addString name lit = Builder._string lit >>= unifyWithName name
+addNode name expr = runASTOp $ Parser.parseFragment expr >>= ASTBuilder.unifyWithName name
 
 readMeta :: HasLabel a ASTNode => Ref Node -> Command AST a
-readMeta ref = runAstOp $ view label <$> Builder.readRef ref
+readMeta ref = runASTOp $ view label <$> Builder.readRef ref
 
 writeMeta :: HasLabel a ASTNode => Ref Node -> a -> Command AST ()
-writeMeta ref newMeta = runAstOp $ do
+writeMeta ref newMeta = runASTOp $ do
     node <- Builder.readRef ref
     Builder.writeRef ref (node & label .~ newMeta)
 
-functionApplicationNode :: Lens' ASTNode (Ref Edge)
-functionApplicationNode = coated . lens getter setter where
-    getter a   = case' a $ match $ \(App f _   ) -> f
-    setter a f = case' a $ match $ \(App _ args) -> specificCons $ App f args
+removeSubtree :: Ref Node -> Command AST ()
+removeSubtree = runASTOp . safeRemove
 
-makeAccessor :: Ref Node -> Ref Node -> ASTOp (Ref Node)
-makeAccessor targetNodeRef namingNodeRef = do
-    namingNode <- Builder.readRef namingNodeRef
-    case' (uncoat namingNode) $ do
-        match $ \(Var n) -> do
-            stringNodeRef <- Builder.follow n
-            removeNode namingNodeRef
-            Builder.accessor stringNodeRef targetNodeRef
-        match $ \(App t _) -> do
-            newNamingNodeRef <- Builder.follow t
-            replacementRef <- makeAccessor targetNodeRef newNamingNodeRef
-            Builder.reconnect namingNodeRef functionApplicationNode replacementRef
-            return namingNodeRef
-        match $ \(Accessor n t) -> do
-            oldTargetRef <- Builder.follow t
-            finalNameRef <- Builder.follow n
-            removeNode namingNodeRef
-            intermediateTargetRef <- makeAccessor targetNodeRef oldTargetRef
-            makeAccessor intermediateTargetRef finalNameRef
-        match $ \ANY -> throwError "Invalid node type"
-
-unAcc :: Ref Node -> ASTOp (Ref Node)
-unAcc ref = do
-    node <- Builder.readRef ref
-    case' (uncoat node) $ do
-        match $ \(Accessor n t) -> do
-            nameNode <- Builder.follow n
-            removeNode ref
-            Builder.var nameNode
-        match $ \(App t _) -> do
-            target <- Builder.follow t
-            replacementRef <- unAcc target
-            Builder.reconnect ref functionApplicationNode replacementRef
-            return ref
-        match $ \ANY -> throwError "Self port not connected"
-
-unifyWithName :: String -> Ref Node -> ASTOp (Ref Node)
-unifyWithName name node = do
-    nameVar <- Builder.var name
-    Builder.unify nameVar node
-
-withUnifyNode :: Ref Node -> (Unify (Ref Edge) -> ASTOp a) -> ASTOp a
-withUnifyNode nodeRef op = do
-    node <- Builder.readRef nodeRef
-    case' (uncoat node) $ do
-        match $ \x   -> op (x :: Unify (Ref Edge))
-        match $ \ANY -> throwError "Not a unify node."
-
-getTargetNode :: Ref Node -> Command AST (Ref Node)
-getTargetNode nodeRef = runAstOp $ withUnifyNode nodeRef $ \(Unify _ r) -> Builder.follow r
-
-getVarNode :: Ref Node -> Command AST (Ref Node)
-getVarNode nodeRef = runAstOp $ withUnifyNode nodeRef $ \(Unify l _) -> Builder.follow l
-
-rightUnifyOperand :: Lens' ASTNode (Ref Edge)
-rightUnifyOperand = coated . lens rightGetter rightSetter where
-    rightGetter u   = case' u $ match $ \(Unify _ r) -> r
-    rightSetter u r = case' u $ match $ \(Unify l _) -> specificCons $ Unify l r
-
-replaceTargetNode :: Ref Node -> Ref Node -> Command AST ()
-replaceTargetNode unifyNodeId newTargetId = runAstOp $ do
-    Builder.reconnect unifyNodeId rightUnifyOperand newTargetId
-    return ()
-
-unpackArguments :: [Arg (Ref Edge)] -> ASTOp [Ref Node]
-unpackArguments args = mapM (Builder.follow . Arg.__arec) $ Term.inputs args
-
-makeVar :: Ref Node -> Command AST (Ref Node)
-makeVar = runAstOp . Builder.var
-
-removeNode :: Ref Node -> ASTOp ()
-removeNode ref = do
-    node     <- Builder.readRef ref
-    typeNode <- Builder.follow $ node ^. Typed.tp
-    destruct typeNode
-    destruct ref
-
-isBlank :: Ref Node -> ASTOp Bool
-isBlank ref = do
-    node <- Builder.readRef ref
-    case' (uncoat node) $ do
-        match $ \Blank -> return True
-        match $ \ANY   -> return False
-
-removeIfBlank :: Ref Node -> ASTOp ()
-removeIfBlank ref = do
-    whenM (isBlank ref) $ removeNode ref
-
-getNameNode :: Ref Node -> Command AST (Ref Node)
-getNameNode ref = runAstOp $ do
-    node <- Builder.readRef ref
-    case' (uncoat node) $ do
-        match $ \(Var n)        -> Builder.follow n
-        match $ \(Accessor n _) -> Builder.follow n
-        match $ \ANY            -> throwError "It does not have a name, you dummy!"
-
-removeArg :: Ref Node -> Int -> Command AST (Ref Node)
-removeArg fun pos = runAstOp $ do
-    (f, args)  <- destructApp fun
-    freshBlank <- Builder._blank
-    let newArgs = args & ix pos .~ freshBlank
-    allBlanks <- and <$> mapM isBlank newArgs
-
-    if allBlanks
-        then mapM removeNode newArgs >> return f
-        else Builder.app f (Builder.arg <$> newArgs)
-
-destructApp :: Ref Node -> ASTOp (Ref Node, [Ref Node])
-destructApp fun = do
-    app    <- Builder.readRef fun
-    result <- case' (uncoat app) $ do
-        match $ \(App tg args) -> do
-            unpackedArgs <- unpackArguments args
-            target <- Builder.follow tg
-            return (target, unpackedArgs)
-        match $ \ANY -> throwError "Expected App node, got wrong type."
-    removeNode fun
-    return result
-
-newApplication :: Ref Node -> Ref Node -> Int -> ASTOp (Ref Node)
-newApplication fun arg pos = do
-    blanks <- sequence $ replicate pos Builder._blank
-    let args = blanks ++ [arg]
-    Builder.app fun (Builder.arg <$> args)
-
-rewireApplication :: Ref Node -> Ref Node -> Int -> ASTOp (Ref Node)
-rewireApplication fun arg pos = do
-    (target, oldArgs) <- destructApp fun
-
-    let argsLength = max (pos + 1) (length oldArgs)
-        argsCmd    = take argsLength $ (return <$> oldArgs) ++ (repeat Builder._blank)
-        oldArgCmd  = argsCmd !! pos
-        withNewArg = argsCmd & ix pos .~ return arg
-
-    args <- sequence withNewArg
-    oldArg <- oldArgCmd
-
-    removeIfBlank oldArg
-    Builder.app target (Builder.arg <$> args)
+printNodeLine :: Ref Node -> Command AST String
+printNodeLine = runASTOp . Printer.printNodeLine
 
 applyFunction :: Ref Node -> Ref Node -> Int -> Command AST (Ref Node)
-applyFunction fun arg pos = runAstOp $ do
-    funNode <- Builder.readRef fun
-    case' (uncoat funNode) $ do
-        match $ \(App _ _) -> rewireApplication fun arg pos
-        match $ \ANY -> newApplication fun arg pos
+applyFunction = runASTOp .:. ASTBuilder.applyFunction
 
-getRefCount :: Ref Node -> ASTOp Int
-getRefCount ref = (length . toList . view Graph.succs) <$> Builder.readRef ref
+unapplyArgument :: Ref Node -> Int -> Command AST (Ref Node)
+unapplyArgument = runASTOp .: ASTBuilder.removeArg
 
-safeRemove :: Ref Node -> ASTOp ()
-safeRemove ref = do
-    refCount <- getRefCount ref
-    if refCount > 0
-        then return ()
-        else performSafeRemoval ref
+makeAccessor :: Ref Node -> Ref Node -> Command AST (Ref Node)
+makeAccessor = runASTOp .: ASTBuilder.makeAccessor
 
-performSafeRemoval :: Ref Node -> ASTOp ()
-performSafeRemoval ref = do
-    node <- Builder.readRef ref
-    toRemove <- mapM Builder.follow (Term.inputs $ uncoat node)
-    removeNode ref
-    mapM_ safeRemove toRemove
+removeAccessor :: Ref Node -> Command AST (Ref Node)
+removeAccessor = runASTOp . ASTBuilder.unAcc
 
-printIdent :: Ref Node -> ASTOp String
-printIdent nodeRef = do
-    node <- Builder.readRef nodeRef
-    case' (uncoat node) $ match $ \(Lit.String n) -> return (Text.unpack . toText $ n)
+getTargetNode :: Ref Node -> Command AST (Ref Node)
+getTargetNode nodeRef = runASTOp $ ASTBuilder.withUnifyNode nodeRef $ \(Unify _ r) -> Builder.follow r
 
-prettyPrint :: Ref Node -> ASTOp String
-prettyPrint nodeRef = do
-    node <- Builder.readRef nodeRef
-    case' (uncoat node) $ do
-        match $ \(Unify l r) -> do
-            leftRep  <- Builder.follow l >>= prettyPrint
-            rightRep <- Builder.follow r >>= prettyPrint
-            return $ leftRep ++ " = " ++ rightRep
-        match $ \(Var n) -> Builder.follow n >>= printIdent
-        match $ \(Accessor n t) -> do
-            targetRep <- Builder.follow t >>= prettyPrint
-            nameRep   <- Builder.follow n >>= printIdent
-            return $ targetRep ++ "." ++ nameRep
-        match $ \(App f args) -> do
-            funRep <- Builder.follow f >>= prettyPrint
-            unpackedArgs <- unpackArguments args
-            argsRep <- sequence $ prettyPrint <$> unpackedArgs
-            return $ funRep ++ " " ++ (intercalate " " argsRep)
-        match $ \Blank -> return "_"
-        match $ \val -> do
-            case' (val :: Val (Ref Edge)) $ do
-                match $ \(Lit.Int i)    -> return $ show i
-                match $ \(Lit.String s) -> return $ show s
-        match $ \ANY -> return ""
+getVarNode :: Ref Node -> Command AST (Ref Node)
+getVarNode nodeRef = runASTOp $ ASTBuilder.withUnifyNode nodeRef $ \(Unify l _) -> Builder.follow l
+
+replaceTargetNode :: Ref Node -> Ref Node -> Command AST ()
+replaceTargetNode unifyNodeId newTargetId = runASTOp $ do
+    Builder.reconnect unifyNodeId ASTBuilder.rightUnifyOperand newTargetId
+    return ()

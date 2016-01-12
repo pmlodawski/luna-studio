@@ -24,13 +24,14 @@ import qualified Empire.API.Data.Graph    as API
 
 import           Empire.Empire
 import qualified Empire.Commands.AST        as AST
-import           Empire.Commands.AST        (ASTOp)
+import           Empire.ASTOp               (ASTOp, runASTOp)
+import qualified Empire.ASTOps.Print        as Print
+import qualified Empire.ASTOps.Builder      as ASTBuilder
 import qualified Empire.Commands.GraphUtils as GraphUtils
 
 import qualified Luna.Syntax.Builder        as Builder
 import           Luna.Syntax.Repr.Graph     (Ref, Node, Edge)
 import           Luna.Syntax.AST.Term       (Var(..), App(..), Blank(..), Accessor(..), Unify(..), Draft, Val)
-import qualified Luna.Syntax.AST.Lit        as Lit
 
 type VarMap = Map (Ref Node) NodeId
 
@@ -43,7 +44,7 @@ buildNodes = do
     forM allNodeIds $ \id -> do
         ref  <- GraphUtils.getASTTarget id
         uref <- GraphUtils.getASTPointer id
-        expr <- zoom Graph.ast $ AST.runAstOp $ getNodeExpression ref
+        expr <- zoom Graph.ast $ runASTOp $ Print.printNodeExpression ref
         meta <- zoom Graph.ast $ AST.readMeta uref
         return $ API.Node id (Text.pack expr) Map.empty $ fromMaybe def meta
 
@@ -60,18 +61,6 @@ getVarMap = do
     vars <- mapM GraphUtils.getASTVar allNodes
     return $ Map.fromList $ zip vars allNodes
 
-getNodeExpression :: Ref Node -> ASTOp String
-getNodeExpression ref = do
-    node <- Builder.readRef ref
-    case' (uncoat node) $ do
-        match $ \(Var n) -> Builder.follow n >>= AST.printIdent
-        match $ \(Accessor n _) -> Builder.follow n >>= AST.printIdent
-        match $ \(App f _) -> Builder.follow f >>= getNodeExpression
-        match $ \val -> do
-            case' (val :: Val (Ref Edge)) $ do
-                match $ \(Lit.Int i)    -> return $ show i
-                match $ \(Lit.String s) -> return $ show s
-
 getSelfNodeRef :: Ref Node -> ASTOp (Maybe (Ref Node))
 getSelfNodeRef nodeRef = do
     node <- Builder.readRef nodeRef
@@ -84,18 +73,18 @@ getPositionalNodeRefs :: Ref Node -> ASTOp [Ref Node]
 getPositionalNodeRefs nodeRef = do
     node <- Builder.readRef nodeRef
     case' (uncoat node) $ do
-        match $ \(App _ args) -> AST.unpackArguments args
+        match $ \(App _ args) -> ASTBuilder.unpackArguments args
         match $ \ANY          -> return []
 
 getNodeInputs :: VarMap -> NodeId -> Command Graph [(OutPortRef, InPortRef)]
 getNodeInputs varMap nodeId = do
     ref     <- GraphUtils.getASTTarget nodeId
-    selfMay <- zoom Graph.ast $ AST.runAstOp $ getSelfNodeRef ref
+    selfMay <- zoom Graph.ast $ runASTOp $ getSelfNodeRef ref
     let selfNodeMay = selfMay >>= flip Map.lookup varMap
         selfConnMay = (,) <$> (OutPortRef <$> selfNodeMay <*> Just All)
                           <*> (Just $ InPortRef nodeId Self)
 
-    args <- zoom Graph.ast $ AST.runAstOp $ getPositionalNodeRefs ref
+    args <- zoom Graph.ast $ runASTOp $ getPositionalNodeRefs ref
     let nodeMays = flip Map.lookup varMap <$> args
         withInd  = zip nodeMays [0..]
         onlyExt  = catMaybes $ (\(n, i) -> (,) <$> n <*> Just i) <$> withInd
