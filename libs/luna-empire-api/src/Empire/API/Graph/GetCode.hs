@@ -1,23 +1,21 @@
-module Empire.API.Graph.RemoveNode where
+module Empire.API.Graph.GetCode where
 
 import           Prologue
 import           Data.Binary                   (Binary)
 
 import           Empire.API.Data.GraphLocation (GraphLocation)
-import           Empire.API.Data.Node          (NodeId)
 import qualified Empire.API.Response           as Response
 
 data Request = Request { _location :: GraphLocation
-                       , _nodeId   :: NodeId
                        } deriving (Generic, Show, Eq)
 
-data Update = Update { _removedNodeId :: NodeId
+data Status = Status { _code :: String
                      } deriving (Generic, Show, Eq)
 
-type Response = Response.Response Request Update
+type Response = Response.Response Request Status
 
 makeLenses ''Request
-makeLenses ''Update
+makeLenses ''Status
 
 instance Binary Request
-instance Binary Update
+instance Binary Status

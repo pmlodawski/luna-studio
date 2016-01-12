@@ -19,7 +19,11 @@ handlersMap :: Map String Handler
 handlersMap = Map.fromList
     [ (Topic.addNodeRequest,        Graph.handleAddNode)
     , (Topic.removeNodeRequest,     Graph.handleRemoveNode)
-    , (Topic.updateNodeMetaRequest, Graph.updateNodeMeta)
+    , (Topic.updateNodeMetaRequest, Graph.handleUpdateNodeMeta)
+    , (Topic.connectRequest,        Graph.handleConnect)
+    , (Topic.disconnectRequest,     Graph.handleDisconnect)
+    , (Topic.codeRequest,           Graph.handleGetCode)
+    , (Topic.graphRequest,          Graph.handleGetGraph)
     , (Topic.createProjectRequest,  Project.handleCreateProject)
     , (Topic.listProjectsRequest,   Project.handleListProjects)
     , (Topic.createLibraryRequest,  Library.handleCreateLibrary)

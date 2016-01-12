@@ -7,13 +7,13 @@ import           Empire.API.Data.Node          (Node)
 import           Empire.API.Data.NodeMeta      (NodeMeta)
 import qualified Empire.API.Response           as Response
 
-data Request = Request { _location   :: GraphLocation
-                       , _expr       :: String
-                       , _nodeMeta   :: NodeMeta
-                       , _tag        :: Int
+data Request = Request { _location :: GraphLocation
+                       , _expr     :: String
+                       , _nodeMeta :: NodeMeta
+                       , _tag      :: Int
                        } deriving (Generic, Show, Eq)
 
-data Update = Update { _node    :: Node
+data Update = Update { _node :: Node
                      } deriving (Generic, Show, Eq)
 
 type Response = Response.Response Request Update

@@ -1,6 +1,7 @@
 module Empire.Commands.Graph
     ( addNode
     , removeNode
+    , updateNodeMeta
     , connect
     , disconnect
     , getCode
@@ -42,11 +43,6 @@ addNode pid lid expr meta = withGraph pid lid $ do
     Graph.nodeMapping . at newNodeId ?= refNode
     return $ Node.make newNodeId expr meta
 
-updateNodeMeta :: ProjectId -> LibraryId -> NodeId -> NodeMeta -> Empire ()
-updateNodeMeta pid lid nid meta = withGraph pid lid $ do
-    ref <- GraphUtils.getASTPointer nid
-    zoom Graph.ast $ AST.writeMeta ref $ Just meta
-
 removeNode :: ProjectId -> LibraryId -> NodeId -> Empire ()
 removeNode pid lid nodeId = withGraph pid lid $ do
     astRef <- GraphUtils.getASTPointer nodeId
@@ -54,6 +50,11 @@ removeNode pid lid nodeId = withGraph pid lid $ do
     mapM_ disconnectPort obsoleteEdges
     zoom Graph.ast $ AST.removeSubtree astRef
     Graph.nodeMapping %= Map.delete nodeId
+
+updateNodeMeta :: ProjectId -> LibraryId -> NodeId -> NodeMeta -> Empire ()
+updateNodeMeta pid lid nid meta = withGraph pid lid $ do
+    ref <- GraphUtils.getASTPointer nid
+    zoom Graph.ast $ AST.writeMeta ref $ Just meta
 
 connect :: ProjectId -> LibraryId -> OutPortRef -> InPortRef -> Empire ()
 connect pid lid (OutPortRef srcNodeId All) (InPortRef dstNodeId dstPort) = withGraph pid lid $ do
