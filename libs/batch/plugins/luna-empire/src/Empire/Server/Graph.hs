@@ -54,18 +54,17 @@ handleAddNode content = do
 handleRemoveNode :: ByteString -> StateT Env BusT ()
 handleRemoveNode content = do
     let request = Bin.decode . fromStrict $ content :: RemoveNode.Request
-        nodeId  = request ^. RemoveNode.nodeId
     currentEmpireEnv <- use Env.empireEnv
     logger Logger.info $ show request
     logger Logger.info $ show currentEmpireEnv
     (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ Server.withGraphLocation GraphCmd.removeNode
         (request ^. RemoveNode.location)
-        nodeId
+        (request ^. RemoveNode.nodeId)
     case result of
         Left err -> logger Logger.error $ Server.errorMessage ++ err
         Right _ -> do
             Env.empireEnv .= newEmpireEnv
-            let response = Response.Update request $ RemoveNode.Update nodeId
+            let response = Response.Update request $ Response.Ok
             lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.removeNodeUpdate $ toStrict $ Bin.encode response
             return ()
 
@@ -102,7 +101,7 @@ handleConnect content = do
         Left err -> logger Logger.error $ Server.errorMessage ++ err
         Right _ -> do
             Env.empireEnv .= newEmpireEnv
-            let response = Response.Update request $ Response.Ok -- TODO: maybe update?
+            let response = Response.Update request $ Response.Ok
             lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.connectUpdate $ toStrict $ Bin.encode response
             return ()
 
@@ -119,7 +118,7 @@ handleDisconnect content = do
         Left err -> logger Logger.error $ Server.errorMessage ++ err
         Right _ -> do
             Env.empireEnv .= newEmpireEnv
-            let response = Response.Update request $ Response.Ok -- TODO: maybe update?
+            let response = Response.Update request $ Response.Ok
             lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.disconnectUpdate $ toStrict $ Bin.encode response
             return ()
 

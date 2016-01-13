@@ -11,13 +11,8 @@ data Request = Request { _location :: GraphLocation
                        , _nodeId   :: NodeId
                        } deriving (Generic, Show, Eq)
 
-data Update = Update { _removedNodeId :: NodeId
-                     } deriving (Generic, Show, Eq)
-
-type Response = Response.Response Request Update
+type Response = Response.SimpleResponse Request
 
 makeLenses ''Request
-makeLenses ''Update
 
 instance Binary Request
-instance Binary Update
