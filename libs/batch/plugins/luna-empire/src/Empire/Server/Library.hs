@@ -30,7 +30,7 @@ import qualified Empire.API.Topic                 as Topic
 import qualified Empire.Commands.Library          as LibraryCmd
 import qualified Empire.Empire                    as Empire
 import           Empire.Empire                    (Empire)
-import qualified Empire.Server.Server            as Server
+import qualified Empire.Server.Server             as Server
 
 logger :: Logger.LoggerIO
 logger = Logger.getLoggerIO $(Logger.moduleName)

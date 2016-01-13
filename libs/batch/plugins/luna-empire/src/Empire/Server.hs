@@ -10,6 +10,7 @@ import           Control.Monad.State                    (StateT, evalStateT)
 import           Data.ByteString                        (ByteString)
 import           Data.ByteString.Char8                  (unpack)
 import qualified Data.Map.Strict                        as Map
+import qualified Empire.Env                             as Env
 import           Empire.Env                             (Env)
 import qualified Flowbox.Bus.Bus                        as Bus
 import           Flowbox.Bus.BusT                       (BusT (..))
@@ -21,6 +22,10 @@ import           Flowbox.Bus.EndPoint                   (BusEndPoints)
 import qualified Flowbox.System.Log.Logger              as Logger
 import qualified Empire.Utils                           as Utils
 import qualified Empire.Handlers                        as Handlers
+import qualified Empire.Commands.Library                as Library
+import qualified Empire.Commands.Project                as Project
+import qualified Empire.Empire                          as Empire
+import qualified Empire.Server.Server                   as Server
 
 
 logger :: Logger.LoggerIO
@@ -31,7 +36,33 @@ run endPoints topics = Bus.runBus endPoints $ do
     logger Logger.info $ "Subscribing to topics: " ++ show topics
     logger Logger.info $ show endPoints
     mapM_ Bus.subscribe topics
-    Bus.runBusT $ evalStateT (forever handleMessage) def
+    Bus.runBusT $ evalStateT runBus def
+
+runBus :: StateT Env BusT ()
+runBus = do
+    createDefaultState
+    forever handleMessage
+
+createDefaultState :: StateT Env BusT ()
+createDefaultState = do
+    let projectName = Just "default project"
+        projectPath = "hello.luna"
+        libraryName = Just "default library"
+        libraryPath = "main.luna"
+    currentEmpireEnv <- use Env.empireEnv
+    (resultProject, newEmpireEnv1) <- liftIO $ Empire.runEmpire currentEmpireEnv $ Project.createProject
+        projectName (fromString projectPath)
+    case resultProject of
+        Left err -> logger Logger.error $ Server.errorMessage ++ err
+        Right (projectId, _) -> do
+            Env.empireEnv .= newEmpireEnv1
+            (resultLibrary, newEmpireEnv2) <- liftIO $ Empire.runEmpire newEmpireEnv1 $ Library.createLibrary
+                projectId libraryName (fromString libraryPath)
+            case resultLibrary of
+                Left err -> logger Logger.error $ Server.errorMessage ++ err
+                Right _ -> do
+                    Env.empireEnv .= newEmpireEnv2
+                    return ()
 
 handleMessage :: StateT Env BusT ()
 handleMessage = do
