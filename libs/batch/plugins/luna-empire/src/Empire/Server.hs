@@ -82,6 +82,7 @@ handleMessage = do
                 errorMsg = show content
             case Utils.lastPart '.' topic of
                 "update"   -> handleUpdate  logMsg topic content
+                "status"   -> handleStatus  logMsg topic content
                 "request"  -> handleRequest logMsg topic content
                 _          -> do logger Logger.error logMsg
                                  logger Logger.error errorMsg
@@ -100,4 +101,9 @@ defaultHandler content = do
 handleUpdate :: String -> String -> ByteString -> StateT Env BusT ()
 handleUpdate logMsg topic content = do
     logger Logger.info logMsg
-    -- logger Logger.info $ unpack content
+    logger Logger.info $ unpack content
+
+handleStatus :: String -> String -> ByteString -> StateT Env BusT ()
+handleStatus logMsg topic content = do
+    logger Logger.info logMsg
+    logger Logger.info $ unpack content
