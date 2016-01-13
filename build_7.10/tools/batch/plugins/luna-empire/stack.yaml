@@ -8,6 +8,7 @@ packages:
 - ../../../../../libs/luna/typechecker
 - ../../../../../libs/luna-empire
 - ../../../../../libs/luna-empire-api
+- ../../../../../libs/luna-empire-api-json
 - ../../../../../libs/batch/plugins/luna-empire
 - ../../../../../tools/batch/plugins/luna-empire
 resolver: lts-3.14
