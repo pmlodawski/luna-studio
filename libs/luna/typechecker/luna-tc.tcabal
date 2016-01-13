@@ -66,6 +66,7 @@ Library
                  , MissingH
                  , mtl
                  , process
+                 , placeholders
                  , prologue
                  , text
                  , transformers
