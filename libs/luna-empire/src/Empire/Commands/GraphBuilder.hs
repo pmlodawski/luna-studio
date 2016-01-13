@@ -46,7 +46,7 @@ buildNodes = do
         uref <- GraphUtils.getASTPointer id
         expr <- zoom Graph.ast $ runASTOp $ Print.printNodeExpression ref
         meta <- zoom Graph.ast $ AST.readMeta uref
-        return $ API.Node id (Text.pack expr) Map.empty $ fromMaybe def meta
+        return $ API.Node id (Text.pack expr) API.mockPorts $ fromMaybe def meta
 
 buildConnections :: Command Graph [(OutPortRef, InPortRef)]
 buildConnections = do
