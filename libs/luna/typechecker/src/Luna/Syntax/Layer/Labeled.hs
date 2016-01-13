@@ -1,13 +1,13 @@
 {-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeFamilies           #-}
+{-# LANGUAGE UndecidableInstances   #-}
 
 module Luna.Syntax.Layer.Labeled where
 
-import Prologue
-import Luna.Syntax.AST
 import Data.Construction
 import Data.Variants
+import Luna.Syntax.AST
+import Prologue
 
 
 data Labeled l a t = Labeled l (a t)
@@ -26,9 +26,9 @@ instance (Monad m, Destroyer m l) => Destructor  m (Labeled2 l a) where destruct
 instance Layered (Labeled2 l a) where layered = lens (\(Labeled2 _ a) -> a) (\(Labeled2 l _) a -> Labeled2 l a)
 
 --instance (Monad m, LayerStack m a, LabelBuilder m l) => LayerStack m (Labeled2 l a) where
---	genLayerStack a = Labeled2 <$> mkLabel <*> genLayerStack a
+--    genLayerStack a = Labeled2 <$> mkLabel <*> genLayerStack a
 
---instance 
+--instance
 
 --class LabelBuilder m l where
 --    makeLabel    :: m l
@@ -56,10 +56,9 @@ instance HasLabel l (Labeled2 l a) where
 --    makeLabel = return def
 
 -- FIXME: Remove vvv
-instance Monad m => Maker m Int where make = return 0
+instance (Monad m, Default a) => Maker m a where make = return def
 instance Monad m => Destroyer m Int where destroy _ = return ()
 
-instance Monad m => Maker m (Maybe a) where make = return Nothing
 instance Monad m => Destroyer m (Maybe a) where destroy _ = return ()
 
 

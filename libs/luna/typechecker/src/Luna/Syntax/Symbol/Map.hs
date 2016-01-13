@@ -25,8 +25,8 @@ import           Luna.Syntax.Symbol.QualPath (QualPath)
 
 
 
-type GeneralizedNetwork = Network
-type SpecializedNetwork = Network
+type GeneralizedNetwork l = Network l
+type SpecializedNetwork l = Network l
 
 
 data SymbolError = CouldNotSpecialize { errMsg :: String }
@@ -66,18 +66,18 @@ data Signature (x :: ArgLstType) t = Signature
     }
 makeLenses ''Signature
 
-type SpecializationMap t = Map (Specialization t) SpecializedNetwork
+type SpecializationMap l t = Map (Specialization t) (SpecializedNetwork l)
 
-data PartiallySpecializedNetwork t = PartiallySpecializedNetwork
-    { _general :: GeneralizedNetwork
-    , _specs   :: SpecializationMap t
+data PartiallySpecializedNetwork l t = PartiallySpecializedNetwork
+    { _general :: GeneralizedNetwork l
+    , _specs   :: SpecializationMap l t
     } -- deriving (Show)
 
 makeLenses ''PartiallySpecializedNetwork
 
-type SymbolMap t = Map QualPath (PartiallySpecializedNetwork t)
+type SymbolMap l t = Map QualPath (PartiallySpecializedNetwork l t)
 
-type SymbolMonad t = SymbolBuilder.MonadSymbolBuilder (SymbolMap t)
+type SymbolMonad l t = SymbolBuilder.MonadSymbolBuilder (SymbolMap l t)
 
 
 fromArrow :: Arrow t -> Specification t
@@ -94,17 +94,17 @@ toArrow (Signature (Args p n) r) = Arrow p (Map.fromList $ map fromNamed n) r
     where fromNamed (NamedArg k v) = (k, v)
 
 
-symbolLookup :: SymbolMonad t m => QualPath -> m (Maybe (PartiallySpecializedNetwork t))
+symbolLookup :: SymbolMonad l t m => QualPath -> m (Maybe (PartiallySpecializedNetwork l t))
 symbolLookup qpath' = Map.lookup qpath' <$> SymbolBuilder.get
 
-graph :: SymbolMonad t m => QualPath ->  m (Maybe GeneralizedNetwork)
+graph :: SymbolMonad l t m => QualPath ->  m (Maybe (GeneralizedNetwork l))
 graph qpath' = fmap (view general) <$> symbolLookup qpath'
 
-specializations :: SymbolMonad t m => QualPath -> m (Maybe (SpecializationMap t))
+specializations :: SymbolMonad l t m => QualPath -> m (Maybe (SpecializationMap l t))
 specializations qpath' = fmap (view specs) <$> symbolLookup qpath'
 
-getSpecialization :: (SymbolMonad (Ref Edge) m, BuilderMonad Network m)
-                  => QualPath -> Specification (Ref Edge) -> ExceptT SymbolError m (Specialization (Ref Edge), SpecializedNetwork)
+getSpecialization :: (SymbolMonad l (Ref Edge) m, BuilderMonad (Network l) m)
+                  => QualPath -> Specification (Ref Edge) -> ExceptT SymbolError m (Specialization (Ref Edge), SpecializedNetwork l)
 getSpecialization qpath' specif = SymbolBuilder.modifyM $ \symbolMap -> do
     part <- Map.lookup qpath' symbolMap <??> SymbolNotFound qpath'
     findM (specificationMatch specif . fst) (Map.toList $ part ^. specs) >>= \case
@@ -113,12 +113,12 @@ getSpecialization qpath' specif = SymbolBuilder.modifyM $ \symbolMap -> do
             r@(newSpecialization, newNetwork) <- makeSpecialization specif $ part ^. general
             return (Map.adjust (specs %~ Map.insert newSpecialization newNetwork) qpath' symbolMap, r)
 
-makeSpecialization :: SymbolMonad t m => Specification t -> GeneralizedNetwork
-                   -> ExceptT SymbolError m (Specialization t, SpecializedNetwork)
+makeSpecialization :: SymbolMonad l t m => Specification t -> GeneralizedNetwork l
+                   -> ExceptT SymbolError m (Specialization t, SpecializedNetwork l)
 makeSpecialization specif gen = error "Luna.Syntax.Symbol.Map.makeSpecialization: not implemented"
 
 
-specificationMatch :: BuilderMonad Network m => Specification (Ref Edge) -> Specialization (Ref Edge) -> m Bool
+specificationMatch :: BuilderMonad (Network l) m => Specification (Ref Edge) -> Specialization (Ref Edge) -> m Bool
 specificationMatch specif special = fmap (either id id) $ runExceptT $ do
     let
         arg    (NamedArg n a) = (n, a)
@@ -150,7 +150,7 @@ specificationMatch specif special = fmap (either id id) $ runExceptT $ do
     test $ allM argMatch $ Map.toList $ specif ^. args . named
 
 
-typeMatch :: BuilderMonad Network m => Ref Edge -> Ref Edge -> m Bool
+typeMatch :: BuilderMonad (Network l) m => Ref Edge -> Ref Edge -> m Bool
 typeMatch t1 t2 = do
     t1' <- readRef =<< follow t1
     t2' <- readRef =<< follow t2

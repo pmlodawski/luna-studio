@@ -27,6 +27,7 @@ import           GHC.Prim                   (Any)
 import qualified Language.Haskell.Session   as HS
 
 import           Data.Text.AutoBuilder       (AutoBuilder)
+import           Luna.Interpreter.Label      (Label)
 import qualified Luna.Interpreter.Session    as Session
 import qualified Luna.Syntax.AST.Arg         as Arg
 import           Luna.Syntax.AST.Lit
@@ -42,7 +43,6 @@ import           Luna.Syntax.Symbol.Network  (Network)
 import qualified Luna.Syntax.Symbol.QualPath as QualPath
 
 
-
 mangleName name _ = return (par name)
 
 par x = "(" <> x <> ")"
@@ -52,12 +52,12 @@ par x = "(" <> x <> ")"
 
 runNode :: (HS.GhcMonad m,
             Catch.MonadMask m,
-            MonadSymbolBuilder (Symbol.SymbolMap (Ref Edge)) m,
-            BuilderMonad Network m)
+            MonadSymbolBuilder (Symbol.SymbolMap Label (Ref Edge)) m,
+            BuilderMonad (Network Label) m)
         => Ref Node -> ExceptT Symbol.SymbolError m Any
 runNode (ref :: Ref Node) = do
     node <- readRef ref
-    case' (uncoat (node :: Labeled2 Int (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge))))))) $ do
+    case' (uncoat (node :: Labeled2 Label (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge))))))) $ do
         match $ \(App a p) -> do
             putStrLn "App"
             typeRef <- follow (node ^. tp)
@@ -87,19 +87,19 @@ runNode (ref :: Ref Node) = do
             print (uncoat node)
             return undefined
 
-getAcc :: (MonadIO m, BuilderMonad Network m) => Ref Node -> m (String, Ref Node)
+getAcc :: (MonadIO m, BuilderMonad (Network Label) m) => Ref Node -> m (String, Ref Node)
 getAcc (ref :: Ref Node) = do
     node <- readRef ref
-    case' (uncoat (node :: Labeled2 Int (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge))))))) $ do
+    case' (uncoat (node :: Labeled2 Label (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge))))))) $ do
         match $ \(Accessor n s) -> do
             name <- typeString =<< follow n
             src  <- follow =<< (view tp <$> (readRef =<< follow s))
             return (name, src)
 
-typeString :: (MonadIO m, BuilderMonad Network m) => Ref Node -> m String
+typeString :: (MonadIO m, BuilderMonad (Network Label) m) => Ref Node -> m String
 typeString (ref :: Ref Node) = do
     node <- readRef ref
-    case' (uncoat (node :: Labeled2 Int (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge))))))) $ do
+    case' (uncoat (node :: Labeled2 Label (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge))))))) $ do
         match $ \a@(Arrow {}) -> stringArrow a
         match $ \(Cons t a) -> intercalate " " <$> mapM (typeString <=< follow) (t:a)
         match $ \(String s) -> return $ toString $ toText s
@@ -111,13 +111,13 @@ typeString (ref :: Ref Node) = do
         match $ \ANY -> print (uncoat node) >> undefined
 
 
-stringArrow :: (MonadIO m, BuilderMonad Network m) => Arrow (Ref Edge) -> m String
+stringArrow :: (MonadIO m, BuilderMonad (Network Label) m) => Arrow (Ref Edge) -> m String
 stringArrow (Arrow p n r) = do
     items <- mapM typeString =<< mapM follow (p ++ (Map.elems n) ++ [r])
     return $ intercalate " -> " items
 
-getAccName :: BuilderMonad Network m => Ref Node -> m AutoBuilder
+getAccName :: BuilderMonad (Network Label) m => Ref Node -> m AutoBuilder
 getAccName (ref :: Ref Node) = do
     node <- readRef ref
-    case' (uncoat (node :: Labeled2 Int (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge))))))) $
+    case' (uncoat (node :: Labeled2 Label (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge))))))) $
         match $ \(String s) -> return s

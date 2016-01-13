@@ -23,7 +23,9 @@ import           Data.Layer.Coat
 import qualified Data.Map                     as Map
 import           Data.Variants                hiding (cons)
 import           Data.Vector.Mutable          ()
+import           Debug.Trace
 import           Luna.Diagnostic.AST          as Diag (open, render, toGraphViz)
+import           Luna.Interpreter.Label       (Label)
 import qualified Luna.Interpreter.NodeRunner  as NodeRunner
 import qualified Luna.Interpreter.Session     as Session
 import           Luna.Syntax.AST.Term
@@ -32,6 +34,7 @@ import qualified Luna.Syntax.Builder          as Builder
 import qualified Luna.Syntax.Builder.Node     as NodeBuilder
 import qualified Luna.Syntax.Builder.Star     as StarBuilder
 import qualified Luna.Syntax.Builder.Symbol   as SymbolBuilder
+import           Luna.Syntax.Layer.Labeled    (label)
 import           Luna.Syntax.Repr.Graph
 import           Luna.Syntax.Symbol.Map       (SymbolMap)
 import qualified Luna.Syntax.Symbol.Map       as Symbol
@@ -46,9 +49,8 @@ renderAndOpen lst = do
     open $ fmap (\s -> "/tmp/" <> s <> ".png") (reverse $ fmap fst lst)
 -- ====================================
 
-prettyPrint = putStrLn . ppShow
 
-sampleGraph :: ((Ref Node, SymbolMap (Ref Edge)), Network)
+sampleGraph :: ((Ref Node, SymbolMap Label (Ref Edge)), Network Label)
 sampleGraph = runIdentity
       $ flip StarBuilder.evalT Nothing
       $ flip Builder.runT def
@@ -79,7 +81,7 @@ sampleGraph = runIdentity
             return (appPlus, sm)
 
 
-mkSymbolMap :: Arrow t -> SymbolMap t
+mkSymbolMap :: Arrow t -> SymbolMap Label t
 mkSymbolMap arr = Map.fromList [("Int.+", Symbol.PartiallySpecializedNetwork def $ Map.singleton (Symbol.fromArrow' arr) def )]
 
 
@@ -91,7 +93,7 @@ runGraph gr sm = runIdentityT
             . flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
 
 
-evaluateTest :: Ref Node -> SymbolMap (Ref Edge) -> Network -> IO ((), Network)
+evaluateTest :: Ref Node -> SymbolMap Label (Ref Edge) -> Network Label -> IO ((), Network Label)
 evaluateTest i sm gr = Session.run $ runGraph gr sm $  do
     Right r <-  runExceptT $   NodeRunner.runNode i
     putStrLn "RESULT IS:"
