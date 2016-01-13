@@ -53,6 +53,8 @@ Library
 
     Exposed-modules: 
         Luna.Diagnostic.AST,
+        Luna.Interpreter.Label,
+        Luna.Interpreter.Location.CallPointPath,
         Luna.Interpreter.NodeRunner,
         Luna.Interpreter.Session,
         Luna.Repr.Styles,

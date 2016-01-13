@@ -49,7 +49,7 @@ handleCreateProject content = do
         Right (projectId, project) -> do
             Env.empireEnv .= newEmpireEnv
             let response = Response.Update request $ CreateProject.Update projectId $ DataProject.toAPI project
-            lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.createProjectResponse $ toStrict $ Bin.encode response
+            lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.createProjectUpdate $ toStrict $ Bin.encode response
             return ()
 
 handleListProjects :: ByteString -> StateT Env BusT ()
@@ -65,5 +65,5 @@ handleListProjects content = do
             Env.empireEnv .= newEmpireEnv
             let projectListAPI = fmap (\(projectId, project) -> (projectId, DataProject.toAPI project)) projectList
                 response = Response.Update request $ ListProjects.Status projectListAPI
-            lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.listProjectsResponse $ toStrict $ Bin.encode response
+            lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.listProjectsStatus $ toStrict $ Bin.encode response
             return ()

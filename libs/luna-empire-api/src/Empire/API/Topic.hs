@@ -1,33 +1,41 @@
 module Empire.API.Topic where
 
-addNodeRequest         = "empire.graph.node.add.request" -- request update
-addNodeUpdate          = "empire.graph.node.add.update" -- request update
-
-nodeUpdate             = "empire.graph.node.update" -- async, no request
-
-codeRequest            = "empire.graph.code.request"
-codeUpdate             = "empire.graph.code.update" -- async, no request
-
-graphRequest           = "empire.graph.graph.request"
-graphUpdate            = "empire.graph.graph.update"
+addNodeRequest         = "empire.graph.node.add.request"
+addNodeUpdate          = "empire.graph.node.add.update"
 
 removeNodeRequest      = "empire.graph.node.remove.request"
-nodeRemovedUpdate      = "empire.graph.node.remove.update"
+removeNodeUpdate       = "empire.graph.node.remove.update"
 
-updateNodeMetaRequest  = "empire.graph.node.updateMeta.request" -- request update
-updateNodeMetaResponse = "empire.graph.node.updateMeta.update" -- request
+updateNodeMetaRequest  = "empire.graph.node.updateMeta.request"
+updateNodeMetaUpdate   = "empire.graph.node.updateMeta.update"
 
-connectRequest         = "empire.graph.connect.request" -- request simpleresponse
-connectResponse        = "empire.graph.connect.update" -- request simpleresponse
-disconnectRequest      = "empire.graph.disconnect.request" -- request simpleresponse
-disconnectResponse     = "empire.graph.disconnect.update" -- request simpleresponse
+connectRequest         = "empire.graph.connect.request"
+connectUpdate          = "empire.graph.connect.update"
 
-createProjectRequest   = "empire.project.create.request" -- request update
-createProjectResponse  = "empire.project.create.response" -- request update
-listProjectsRequest    = "empire.project.list.request" -- request-response
-listProjectsResponse   = "empire.project.list.response" -- request-response
+disconnectRequest      = "empire.graph.disconnect.request"
+disconnectUpdate       = "empire.graph.disconnect.update"
 
-createLibraryRequest   = "empire.library.create.request" -- request update
-createLibraryResponse  = "empire.library.create.response" -- request update
-listLibrariesRequest   = "empire.library.list.request" -- request-response
-listLibrariesResponse  = "empire.library.list.response" -- request-response
+programRequest         = "empire.graph.program.request"
+programStatus          = "empire.graph.program.status"
+
+nodeUpdate             = "empire.graph.node.update" -- no request
+codeUpdate             = "empire.graph.code.update" -- no request
+graphUpdate            = "empire.graph.graph.update" -- no request, for future use
+
+createProjectRequest   = "empire.project.create.request"
+createProjectUpdate    = "empire.project.create.update"
+
+removeProjectRequest   = "empire.project.remove.request" -- for future use
+removeProjectUpdate    = "empire.project.remove.update"
+
+listProjectsRequest    = "empire.project.list.request"
+listProjectsStatus     = "empire.project.list.status"
+
+createLibraryRequest   = "empire.library.create.request"
+createLibraryUpdate    = "empire.library.create.update"
+
+removeLibraryRequest   = "empire.library.remove.request" -- for future use
+removeLibraryUpdate    = "empire.library.remove.update"
+
+listLibrariesRequest   = "empire.library.list.request"
+listLibrariesStatus    = "empire.library.list.status"

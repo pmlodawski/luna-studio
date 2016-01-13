@@ -27,8 +27,7 @@ import Empire.API.Graph.RemoveNode      as RemoveNode
 import Empire.API.Graph.UpdateNodeMeta  as UpdateNodeMeta
 import Empire.API.Graph.NodeUpdate      as NodeUpdate
 import Empire.API.Graph.CodeUpdate      as CodeUpdate
-import Empire.API.Graph.GetGraph        as GetGraph
-import Empire.API.Graph.GetCode        as GetCode
+import Empire.API.Graph.GetProgram      as GetProgram
 import Empire.API.Graph.SetDefaultValue as SetDefaultValue
 
 import Empire.API.Library.CreateLibrary as CreateLibrary
@@ -79,11 +78,8 @@ instance ToJSON UpdateNodeMeta.Update
 instance ToJSON NodeUpdate.Update
 instance ToJSON CodeUpdate.Update
 
-instance ToJSON GetGraph.Request
-instance ToJSON GetGraph.Status
-
-instance ToJSON GetCode.Request
-instance ToJSON GetCode.Status
+instance ToJSON GetProgram.Request
+instance ToJSON GetProgram.Status
 
 instance ToJSON SetDefaultValue.Request
 

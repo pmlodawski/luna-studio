@@ -50,7 +50,7 @@ handleCreateLibrary content = do
         Right (libraryId, library) -> do
             Env.empireEnv .= newEmpireEnv
             let response = Response.Update request $ CreateLibrary.Update libraryId $ DataLibrary.toAPI library
-            lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.createLibraryResponse $ toStrict $ Bin.encode response
+            lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.createLibraryUpdate $ toStrict $ Bin.encode response
             return ()
 
 handleListLibraries :: ByteString -> StateT Env BusT ()
@@ -67,5 +67,5 @@ handleListLibraries content = do
             Env.empireEnv .= newEmpireEnv
             let librariesListAPI = fmap (\(libraryId, library) -> (libraryId, DataLibrary.toAPI library)) librariesList
                 response = Response.Update request $ ListLibraries.Status librariesListAPI
-            lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.listLibrariesResponse $ toStrict $ Bin.encode response
+            lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.listLibrariesStatus $ toStrict $ Bin.encode response
             return ()
