@@ -33,6 +33,7 @@ toAction (Batch (Batch.GraphUpdated response)) = Just $ do
             connections = response ^. Response.update . GetGraph.graph . Graph.connections
 
         renderGraph nodes connections
+        Global.workspace . Workspace.isGraphLoaded .= True
 toAction _                                            = Nothing
 
 -- showGraph :: [Node] -> [(OutPortRef, InPortRef)] -> Command State ()

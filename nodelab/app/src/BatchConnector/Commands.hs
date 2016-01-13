@@ -45,6 +45,7 @@ import Empire.API.Graph.RemoveNode     as RemoveNode
 import Empire.API.Graph.UpdateNodeMeta as UpdateNodeMeta
 
 import Empire.API.Graph.GetGraph        as GetGraph
+import Empire.API.Graph.GetCode         as GetCode
 
 import Empire.API.Project.CreateProject as CreateProject
 import Empire.API.Project.ListProjects  as ListProjects
@@ -86,7 +87,7 @@ listLibraries :: ProjectId -> IO ()
 listLibraries projectId = sendRequest Topic.listLibrariesRequest $ ListLibraries.Request projectId
 
 getGraph :: Workspace -> IO ()
-getGraph workspace = sendRequest Topic.getGraphRequest $ withLibrary workspace GetGraph.Request
+getGraph workspace = sendRequest Topic.graphRequest $ withLibrary workspace GetGraph.Request
 
 updateNodeMeta :: Workspace -> NodeId -> NodeMeta -> IO ()
 updateNodeMeta w nid nm = sendRequest Topic.updateNodeMetaRequest $ withLibrary w UpdateNodeMeta.Request nid nm
@@ -113,7 +114,10 @@ disconnectMessage workspace (src, dst) = WebMessage Topic.disconnectRequest $ en
 disconnectNodes :: Workspace -> [(OutPortRef, InPortRef)] -> IO ()
 disconnectNodes workspace connections = sendMany $ (disconnectMessage workspace) <$> connections
 
-
+getCode :: Workspace -> IO ()
+getCode workspace = sendRequest topic body where
+    topic = Topic.codeRequest
+    body = (withLibrary workspace GetCode.Request)
 -----
 
 setProjectId :: Project -> IO ()
@@ -158,13 +162,6 @@ setMainPtr workspace = return () -- sendMessage msg where
     --                              (workspace ^. library . Library.id)
     --                              (encode $ workspace ^. breadcrumbs)
     --
-getCode :: Workspace -> IO ()
-getCode workspace = return () -- sendMessage msg where
-    -- msg  = WebMessage "project.library.ast.code.get.request" $ messagePut body
-    -- body = GetCode.Request (encode $ workspace ^. breadcrumbs)
-    --                        (workspace ^. library . Library.id)
-    --                        (workspace ^. project . Project.id)
-    --                        uselessLegacyArgument
 --
 --
 -- updateNodeMessage :: Workspace -> Node -> WebMessage

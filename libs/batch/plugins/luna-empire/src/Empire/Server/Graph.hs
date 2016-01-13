@@ -46,7 +46,7 @@ handleAddNode content = do
         Right node -> do
             Env.empireEnv .= newEmpireEnv
             let response = Response.Update request $ AddNode.Update node
-            lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.nodeUpdate $ toStrict $ Bin.encode response
+            lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.addNodeUpdate $ toStrict $ Bin.encode response
             return () -- TODO: check Message.CorrelationID issue
 
 handleRemoveNode :: ByteString -> StateT Env BusT ()
@@ -133,7 +133,7 @@ handleGetCode content = do
         Left err -> logger Logger.error $ Server.errorMessage ++ err
         Right code -> do
             Env.empireEnv .= newEmpireEnv
-            let response = Response.Update request $ GetCode.Status code
+            let response = Response.Update request $ GetCode.Status (Text.pack code)
             lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.codeUpdate $ toStrict $ Bin.encode response
             return ()
 

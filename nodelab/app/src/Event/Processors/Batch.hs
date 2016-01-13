@@ -16,11 +16,12 @@ processMessage :: WebMessage -> Batch.Event
 processMessage (WebMessage topic bytes) = case topic of
     "empire.graph.node.add.update"         -> NodeAdded         $ decode bytes
     "empire.graph.node.remove.update"      -> NodeRemoved       $ decode bytes
-    "empire.graph.get.status"              -> GraphUpdated      $ decode bytes
+    "empire.graph.graph.update"            -> GraphUpdated      $ decode bytes
     "empire.graph.connect.update"          -> NodesConnected    $ decode bytes
     "empire.graph.disconnect.update"       -> NodesDisconnected $ decode bytes
     "empire.graph.node.updateMeta.update"  -> NodeMetaUpdated   $ decode bytes
     "empire.graph.node.update.update"      -> NodeUpdated       $ decode bytes
+    -- "empire.graph.code.status"             -> CodeUpdated       $ decode bytes
     "empire.graph.code.update"             -> CodeUpdated       $ decode bytes
     -- "project.library.ast.function.graph.connect.update"            -> Just NodesConnected
     -- "project.library.ast.function.graph.disconnect.update"         -> Just NodesDisconnected

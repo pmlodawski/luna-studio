@@ -1,6 +1,8 @@
 module Reactive.Commands.DisconnectNodes where
 
 import           Utils.PreludePlus
+import qualified Data.IntMap.Lazy as IntMap
+
 import           Reactive.State.Global     (State)
 import qualified Reactive.State.Global     as Global
 import qualified Reactive.State.Graph      as Graph
@@ -11,10 +13,9 @@ import           Reactive.Commands.UIRegistry (removeWidget)
 
 import qualified BatchConnector.Commands as BatchCmd
 import           Control.Monad.State     hiding (State)
-import           Empire.API.Data.Connection (ConnectionId)
+import           Empire.API.Data.Connection (Connection, ConnectionId)
 import qualified Empire.API.Data.Connection as Connection
 import           Empire.API.Data.Node       (NodeId)
-import           Empire.API.Data.Connection (Connection, ConnectionId)
 import           Empire.API.Data.PortRef    (OutPortRef, InPortRef)
 
 getChangedNodes :: Graph.State -> [ConnectionId] -> [NodeId]
@@ -51,4 +52,9 @@ disconnectAll connectionIds = do
     performIO $ BatchCmd.disconnectNodes workspace refs
     localDisconnectAll connectionIds
 
-
+disconnect :: InPortRef -> Command State ()
+disconnect port = do
+    connections <- uses (Global.graph . Graph.connectionsMap) IntMap.elems
+    let shouldRemove c = (c ^. Connection.dst) == port
+        found = filter shouldRemove connections
+    localDisconnectAll $ (view Connection.connectionId) <$> found

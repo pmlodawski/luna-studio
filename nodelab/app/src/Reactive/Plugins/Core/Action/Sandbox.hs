@@ -46,6 +46,7 @@ import qualified BatchConnector.Connection as BC
 import           Data.Binary (encode)
 import           Empire.API.Graph.AddNode (Request(..))
 import           Empire.API.Data.NodeMeta (NodeMeta(..))
+import qualified BatchConnector.Commands as BatchCmd
 
 f1 = '\112'
 f2 = '\113'
@@ -128,8 +129,10 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\113' _)) = Just $ Global.in
 
     return ()
 
-toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\114' _)) = Just $ performIO $ do
-    putStrLn "Sending WS message"
+toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\114' _)) = Just $ do
+    performIO $ putStrLn "Sending getCode request"
+    workspace <- use Global.workspace
+    performIO $ BatchCmd.getCode workspace
     -- let request = AddNode.Request 1 42 "2 + 2" (NodeMeta (5.0, 12.0)) 63
     -- BC.sendMessage $ BC.WebMessage "empire.graph.dupa" $ "\0dupa trolololo"
     -- putStrLn "Sending WS message"

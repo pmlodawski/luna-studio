@@ -1,9 +1,8 @@
 module Empire.API.Topic where
 
-getGraphRequest        = "empire.graph.get.request" -- request-response
-getGraphResponse       = "empire.graph.get.response" -- request-response
-
 addNodeRequest         = "empire.graph.node.add.request" -- request update
+addNodeUpdate          = "empire.graph.node.add.update" -- request update
+
 nodeUpdate             = "empire.graph.node.update" -- async, no request
 
 codeRequest            = "empire.graph.code.request"
@@ -16,12 +15,12 @@ removeNodeRequest      = "empire.graph.node.remove.request"
 nodeRemovedUpdate      = "empire.graph.node.remove.update"
 
 updateNodeMetaRequest  = "empire.graph.node.updateMeta.request" -- request update
-updateNodeMetaResponse = "empire.graph.node.updateMeta.response" -- request
+updateNodeMetaResponse = "empire.graph.node.updateMeta.update" -- request
 
 connectRequest         = "empire.graph.connect.request" -- request simpleresponse
-connectResponse        = "empire.graph.connect.response" -- request simpleresponse
+connectResponse        = "empire.graph.connect.update" -- request simpleresponse
 disconnectRequest      = "empire.graph.disconnect.request" -- request simpleresponse
-disconnectResponse     = "empire.graph.disconnect.response" -- request simpleresponse
+disconnectResponse     = "empire.graph.disconnect.update" -- request simpleresponse
 
 createProjectRequest   = "empire.project.create.request" -- request update
 createProjectResponse  = "empire.project.create.response" -- request update

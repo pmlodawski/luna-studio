@@ -28,6 +28,11 @@ removeSelectedNodes = do
 
 performRemoval :: NodeId -> Command State ()
 performRemoval nodeId = do
+    workspace  <- use Global.workspace
+    performIO $ BatchCmd.removeNode workspace nodeId
+
+localRemoveNodes :: NodeId -> Command State ()
+localRemoveNodes nodeId = do
     danglingConns <- uses Global.graph (Graph.connectionIdsContainingNode $ nodeId)
     localDisconnectAll danglingConns
 
@@ -39,4 +44,3 @@ performRemoval nodeId = do
     nodeWidgetId <- zoom Global.uiRegistry $ nodeIdToWidgetId nodeId
     zoom Global.uiRegistry $ mapM_ removeWidget $ maybeToList nodeWidgetId
 
-    performIO $ BatchCmd.removeNode workspace nodeId

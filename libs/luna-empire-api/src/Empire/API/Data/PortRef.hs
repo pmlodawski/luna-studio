@@ -16,9 +16,10 @@ data OutPortRef = OutPortRef { _srcNodeId :: NodeId
 data AnyPortRef = OutPortRef' OutPortRef | InPortRef' InPortRef deriving (Show, Eq, Generic)
 
 instance Ord AnyPortRef where
-  (InPortRef'  a) <= (OutPortRef' b) = True
-  (OutPortRef' a) <= (InPortRef'  b) = False
-  _ <= _ = True
+  (InPortRef'  a)  `compare` (OutPortRef' b) = LT
+  (OutPortRef' a)  `compare` (InPortRef'  b) = GT
+  (InPortRef'  a)  `compare` (InPortRef'  b) = a `compare` b
+  (OutPortRef' a)  `compare` (OutPortRef' b) = a `compare` b
 
 nodeId' :: AnyPortRef -> NodeId
 nodeId' (OutPortRef' (OutPortRef nid _)) = nid
