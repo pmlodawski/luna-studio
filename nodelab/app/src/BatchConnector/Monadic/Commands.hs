@@ -12,9 +12,6 @@ import           Reactive.Commands.Command (Command, ioCommand, performIO)
 runMain :: Command Workspace ()
 runMain = performIO BatchCmd.runMain
 
-getCode :: Command Workspace ()
-getCode = ioCommand BatchCmd.getCode
-
 setCode :: Text -> Command Workspace ()
 setCode = ioCommand . BatchCmd.setCode
 

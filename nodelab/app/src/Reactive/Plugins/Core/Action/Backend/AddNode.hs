@@ -36,6 +36,6 @@ toAction (Batch (Batch.NodeMetaUpdated response)) = Just $ do
     when shouldProcess $ updateNodeMeta (response ^. Response.request . UpdateNodeMeta.nodeId) (response ^. Response.update ^. UpdateNodeMeta.newNodeMeta)
 toAction (Batch (Batch.NodeRemoved response)) = Just $ do
     shouldProcess <- isCurrentLocation (response ^. Response.request . RemoveNode.location)
-    when shouldProcess $ RemoveNode.localRemoveNodes $ response ^. Response.update . RemoveNode.removedNodeId
+    when shouldProcess $ RemoveNode.localRemoveNodes $ response ^. Response.request . RemoveNode.nodeId
 
 toAction _                              = Nothing

@@ -14,4 +14,4 @@ refreshGraph = do
     Global.workspace . Workspace.shouldLayout .= True
     Global.workspace . Workspace.interpreterState .= Workspace.Fresh
     workspace <- use Global.workspace
-    performIO $ BatchCmd.getGraph workspace
+    performIO $ BatchCmd.getProgram workspace

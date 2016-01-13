@@ -70,7 +70,6 @@ instance ToJSON Connect.Request
 instance ToJSON Disconnect.Request
 
 instance ToJSON RemoveNode.Request
-instance ToJSON RemoveNode.Update
 
 instance ToJSON UpdateNodeMeta.Request
 instance ToJSON UpdateNodeMeta.Update

@@ -53,7 +53,7 @@ runMainNetwork socket workspace = do
     eventNetwork  <- compile $ makeNetworkDescription socket enableLogging workspace
     actuate eventNetwork
     triggerWindowResize
-    BatchCmd.getGraph workspace
+    BatchCmd.getProgram workspace
 
 main :: IO ()
 main = do

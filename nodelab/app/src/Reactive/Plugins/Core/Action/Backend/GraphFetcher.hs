@@ -15,26 +15,28 @@ import qualified BatchConnector.Monadic.Commands as BatchCmd
 import           Empire.API.Data.Node (Node)
 import qualified Empire.API.Data.Graph as Graph
 import           Empire.API.Data.PortRef (OutPortRef, InPortRef)
-import qualified Empire.API.Graph.GetGraph as GetGraph
+import qualified Empire.API.Graph.GetProgram as GetProgram
 import qualified Empire.API.Response       as Response
 import qualified Batch.Workspace           as Workspace
 import           Reactive.Plugins.Core.Action.Backend.AddNode (isCurrentLocation)
-
+import qualified JS.TextEditor    as UI
 
 
 
 toAction :: Event -> Maybe (Command State ())
-toAction (Batch (Batch.GraphUpdated response)) = Just $ do
-    let location = response ^. Response.request . GetGraph.location
+toAction (Batch (Batch.ProgramFetched response)) = Just $ do
+    let location = response ^. Response.request . GetProgram.location
     isGraphLoaded  <- use $ Global.workspace . Workspace.isGraphLoaded
     isGoodLocation <- isCurrentLocation location
     when (isGoodLocation && not isGraphLoaded) $ do
-        let nodes       = response ^. Response.update . GetGraph.graph . Graph.nodes
-            connections = response ^. Response.update . GetGraph.graph . Graph.connections
+        let nodes       = response ^. Response.update . GetProgram.graph . Graph.nodes
+            connections = response ^. Response.update . GetProgram.graph . Graph.connections
+            code        = response ^. Response.update . GetProgram.code
 
         renderGraph nodes connections
+        performIO $ UI.setText code
         Global.workspace . Workspace.isGraphLoaded .= True
-toAction _                                            = Nothing
+toAction _                                          = Nothing
 
 -- showGraph :: [Node] -> [(OutPortRef, InPortRef)] -> Command State ()
 -- showGraph nodes edges = do

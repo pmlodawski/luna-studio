@@ -131,8 +131,8 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\113' _)) = Just $ Global.in
 
 toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\114' _)) = Just $ do
     performIO $ putStrLn "Sending getCode request"
-    workspace <- use Global.workspace
-    performIO $ BatchCmd.getCode workspace
+    -- workspace <- use Global.workspace
+    -- performIO $ BatchCmd.getCode workspace
     -- let request = AddNode.Request 1 42 "2 + 2" (NodeMeta (5.0, 12.0)) 63
     -- BC.sendMessage $ BC.WebMessage "empire.graph.dupa" $ "\0dupa trolololo"
     -- putStrLn "Sending WS message"

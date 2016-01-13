@@ -44,8 +44,7 @@ import Empire.API.Graph.Disconnect     as Disconnect
 import Empire.API.Graph.RemoveNode     as RemoveNode
 import Empire.API.Graph.UpdateNodeMeta as UpdateNodeMeta
 
-import Empire.API.Graph.GetGraph        as GetGraph
-import Empire.API.Graph.GetCode         as GetCode
+import Empire.API.Graph.GetProgram     as GetProgram
 
 import Empire.API.Project.CreateProject as CreateProject
 import Empire.API.Project.ListProjects  as ListProjects
@@ -86,8 +85,8 @@ createLibrary w name path = sendRequest topic body where
 listLibraries :: ProjectId -> IO ()
 listLibraries projectId = sendRequest Topic.listLibrariesRequest $ ListLibraries.Request projectId
 
-getGraph :: Workspace -> IO ()
-getGraph workspace = sendRequest Topic.graphRequest $ withLibrary workspace GetGraph.Request
+getProgram :: Workspace -> IO ()
+getProgram workspace = sendRequest Topic.programRequest $ withLibrary workspace GetProgram.Request
 
 updateNodeMeta :: Workspace -> NodeId -> NodeMeta -> IO ()
 updateNodeMeta w nid nm = sendRequest Topic.updateNodeMetaRequest $ withLibrary w UpdateNodeMeta.Request nid nm
@@ -114,10 +113,6 @@ disconnectMessage workspace (src, dst) = WebMessage Topic.disconnectRequest $ en
 disconnectNodes :: Workspace -> [(OutPortRef, InPortRef)] -> IO ()
 disconnectNodes workspace connections = sendMany $ (disconnectMessage workspace) <$> connections
 
-getCode :: Workspace -> IO ()
-getCode workspace = sendRequest topic body where
-    topic = Topic.codeRequest
-    body = (withLibrary workspace GetCode.Request)
 -----
 
 setProjectId :: Project -> IO ()

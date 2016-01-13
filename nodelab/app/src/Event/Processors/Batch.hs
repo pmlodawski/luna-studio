@@ -7,22 +7,23 @@ import           Event.Batch                as Batch
 import           BatchConnector.Updates
 import           BatchConnector.Connection  (WebMessage(..), ControlCode(..))
 import           Data.Binary (decode)
+import           Empire.API.Topic as Topic
 
 process :: Event.Event -> Maybe Event.Event
 process (Event.Connection (Message msg)) = Just $ Event.Batch $ processMessage msg
 process _                                = Nothing
 
 processMessage :: WebMessage -> Batch.Event
-processMessage (WebMessage topic bytes) = case topic of
-    "empire.graph.node.add.update"         -> NodeAdded         $ decode bytes
-    "empire.graph.node.remove.update"      -> NodeRemoved       $ decode bytes
-    "empire.graph.graph.update"            -> GraphUpdated      $ decode bytes
-    "empire.graph.connect.update"          -> NodesConnected    $ decode bytes
-    "empire.graph.disconnect.update"       -> NodesDisconnected $ decode bytes
-    "empire.graph.node.updateMeta.update"  -> NodeMetaUpdated   $ decode bytes
-    "empire.graph.node.update.update"      -> NodeUpdated       $ decode bytes
-    -- "empire.graph.code.status"             -> CodeUpdated       $ decode bytes
-    "empire.graph.code.update"             -> CodeUpdated       $ decode bytes
+processMessage (WebMessage topic bytes)
+    | topic == Topic.addNodeUpdate        = NodeAdded         $ decode bytes
+    | topic == Topic.removeNodeUpdate     = NodeRemoved       $ decode bytes
+    | topic == Topic.connectUpdate        = NodesConnected    $ decode bytes
+    | topic == Topic.disconnectUpdate     = NodesDisconnected $ decode bytes
+    | topic == Topic.updateNodeMetaUpdate = NodeMetaUpdated   $ decode bytes
+    | topic == Topic.nodeUpdate           = NodeUpdated       $ decode bytes
+    | topic == Topic.programStatus        = ProgramFetched    $ decode bytes
+    | topic == Topic.codeUpdate           = CodeUpdated       $ decode bytes
+    | otherwise                           = UnknownEvent topic
     -- "project.library.ast.function.graph.connect.update"            -> Just NodesConnected
     -- "project.library.ast.function.graph.disconnect.update"         -> Just NodesDisconnected
 
@@ -50,7 +51,7 @@ processMessage (WebMessage topic bytes) = case topic of
     -- "project.library.ast.function.graph.get.status"                -> uncurry GraphViewFetched <$> parseGraphViewResponse bytes
     -- "interpreter.getprojectid.status"                              -> InterpreterGotProjectId <$> parseProjectIdStatus bytes
     -- "interpreter.serializationmode.insert.update"                  -> Just SerializationModeInserted
-    _                                                              -> UnknownEvent topic
+    -- _                                                              -> UnknownEvent topic
 processMessage (ControlMessage ConnectionTakeover) = ConnectionDropped
 processMessage (ControlMessage Welcome)            = ConnectionOpened
 --

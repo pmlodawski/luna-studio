@@ -14,14 +14,13 @@ import qualified Empire.API.Data.Library as Library
 
 import qualified Empire.API.Graph.AddNode           as AddNode
 import qualified Empire.API.Graph.RemoveNode        as RemoveNode
-import qualified Empire.API.Graph.GetGraph          as GetGraph
+import qualified Empire.API.Graph.GetProgram        as GetProgram
 import qualified Empire.API.Graph.Connect           as Connect
 import qualified Empire.API.Graph.Disconnect        as Disconnect
 import qualified Empire.API.Graph.UpdateNodeMeta    as UpdateNodeMeta
 import qualified Empire.API.Graph.UpdateNodeMeta    as UpdateNodeMeta
 import qualified Empire.API.Graph.NodeUpdate        as NodeUpdate
 import qualified Empire.API.Graph.CodeUpdate        as CodeUpdate
-import qualified Empire.API.Graph.GetCode           as GetCode
 import Empire.API.JSONInstances ()
 
 import Data.Text.Lazy    (Text)
@@ -31,12 +30,12 @@ import Data.Aeson (ToJSON)
 data Event = UnknownEvent String
            | NodeAdded                  AddNode.Response
            | NodeRemoved             RemoveNode.Response
-           | GraphUpdated              GetGraph.Response
+           | ProgramFetched          GetProgram.Response
            | NodesConnected             Connect.Response
            | NodesDisconnected       Disconnect.Response
            | NodeMetaUpdated     UpdateNodeMeta.Response
            | NodeUpdated             NodeUpdate.Update
-           | CodeUpdated                GetCode.Response
+           | CodeUpdated             CodeUpdate.Update
            -- | ProjectsList [Project]
            -- | ProjectCreated Project
            -- | ProjectOpened Project
