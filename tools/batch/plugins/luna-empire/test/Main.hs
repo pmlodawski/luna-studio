@@ -40,13 +40,13 @@ data Cmd = TestNotRecognizedRequest
          deriving Show
 
 parser :: Opt.Parser Cmd
-parser = Opt.flag' TestNotRecognizedRequest (long "nrr")
-     <|> Opt.flag' TestBadTopic             (long "bt")
-     <|> Opt.flag' TestAddNode              (long "an")
-     <|> Opt.flag' TestRemoveNode           (long "rn")
-     <|> Opt.flag' TestNodeUpdate           (long "nu")
-     <|> Opt.flag' TestCreateProject        (long "cp")
-     <|> Opt.flag' TestListProjects         (long "lp")
+parser = Opt.flag' TestNotRecognizedRequest (long "nrr" <> help "Not Recognized Request")
+     <|> Opt.flag' TestBadTopic             (long "bt"  <> help "Bad Topic")
+     <|> Opt.flag' TestAddNode              (long "an"  <> help "Add Node")
+     <|> Opt.flag' TestRemoveNode           (long "rn"  <> help "Remove Node")
+     <|> Opt.flag' TestNodeUpdate           (long "nu"  <> help "Node Update")
+     <|> Opt.flag' TestCreateProject        (short 'p' <> long "cPrj" <> help "Create Project")
+     <|> Opt.flag' TestListProjects         (short 'r' <> long "lPrj" <> help "List Projects")
      <|>           TestCreateLibrary <$>    Opt.optIntFlag (Just "cLib") 'b' 2 0 "Create Library"
      <|>           TestListLibraries <$>    Opt.optIntFlag (Just "lLib") 'l' 2 0 "List Libraries"
 
@@ -91,7 +91,7 @@ testBadTopic = do
 testAddNode :: IO ()
 testAddNode = do
     endPoints <- EP.clientFromConfig <$> Config.load
-    let content = toStrict . Bin.encode $ AddNode.Request (gl 1 2) "expres" (NodeMeta.NodeMeta (1.2, 3.4)) 7
+    let content = toStrict . Bin.encode $ AddNode.Request (gl 0 0) "expres" (NodeMeta.NodeMeta (1.2, 3.4)) 7
     Bus.runBus endPoints $ do
         Bus.send Flag.Enable $ Message.Message Topic.addNodeRequest content
     return ()
@@ -99,7 +99,7 @@ testAddNode = do
 testRemoveNode :: IO ()
 testRemoveNode = do
     endPoints <- EP.clientFromConfig <$> Config.load
-    let content = toStrict . Bin.encode $ RemoveNode.Request (gl 1 2) 3
+    let content = toStrict . Bin.encode $ RemoveNode.Request (gl 0 0) 3
     Bus.runBus endPoints $ do
         Bus.send Flag.Enable $ Message.Message Topic.removeNodeRequest content
     return ()
