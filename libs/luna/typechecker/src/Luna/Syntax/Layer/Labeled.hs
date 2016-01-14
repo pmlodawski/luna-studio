@@ -13,6 +13,14 @@ import Data.Variants
 data Labeled l a t = Labeled l (a t)
 --type instance ASTOf (Labeled l a) = ASTOf a
 
+
+type instance Unlayered  (Labeled l a t) = a t
+type instance Destructed (Labeled l a t) = a t
+
+instance (Monad m, Maker     m l) => Constructor m (Labeled l a t) where construct a = Labeled <$> make <*> pure a
+--instance (Monad m, Destroyer m l) => Destructor  m (Labeled2 l a) where destruct (Labeled2 l a) = a <$ destroy l
+
+
 data Labeled2 l a = Labeled2 l a deriving (Show, Functor, Traversable, Foldable)
 
 --type instance ASTOf (Labeled2 l a) = ASTOf a

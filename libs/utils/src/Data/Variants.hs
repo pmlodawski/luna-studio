@@ -105,7 +105,7 @@ instance HasRecord (Rec vs) (Rec vs') where
     record   = lens id (flip const)
 
 
-type RecordShow rec = Show (Rec (Variants rec))
+type Recordxow rec = Show (Rec (Variants rec))
 
 instance                            Show (Rec '[]      ) where show _ = "EmptyRec"
 instance (Show t, Show (Rec ts)) => Show (Rec (t ': ts)) where

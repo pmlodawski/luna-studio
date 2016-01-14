@@ -13,7 +13,7 @@ function realpath()
     echo "$dir$base"
 }
 
-runhaskell                                                                                         \
+ghci                                                                                         \
     -XDoAndIfThenElse                                                                              \
     -XNoImplicitPrelude                                                                            \
     -XTemplateHaskell                                                                              \
@@ -50,7 +50,6 @@ runhaskell                                                                      
     -i$HS_PUBLIC_LIBS/functor-utils/src                                                            \
     -i$HS_PUBLIC_LIBS/lens-utils/src                                                               \
     -i$HS_PUBLIC_LIBS/data-construction/src                                                        \
-    -i$HS_PUBLIC_LIBS/poly-control/src                                                             \
     -package-db=$HS_SBOX_PGS                                                                       \
     -ddump-splices                                                                                 \
-    $NBO/libs/luna/typechecker/test/Main.hs                                              
+    $HS_PUBLIC_LIBS/variants/Main.hs                                              

@@ -28,8 +28,8 @@ newtype Mu f = Mu (f (Mu f))
 
 instance Rewrapped (Mu f) (Mu f')
 instance Wrapped   (Mu f) where
-	type Unwrapped (Mu f) = f (Mu f)
-	_Wrapped' = iso (\(Mu a) -> a) Mu
+    type Unwrapped (Mu f) = f (Mu f)
+    _Wrapped' = iso (\(Mu a) -> a) Mu
 
 --newtype MuH h f = MuH ( f (h (MuH h f)) )
 

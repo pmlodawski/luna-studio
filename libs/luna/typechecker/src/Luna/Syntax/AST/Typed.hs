@@ -61,3 +61,12 @@ instance (Monad m, BuilderMonad (Graph n DoubleArc) m, Layered n, TracksSuccs (U
 
 
 
+type family Param a where Param (a t) = t
+--data Typed2 l a = Typed2 (l a)
+data Typed2 l a = Typed2 (Param a) (l a)
+
+
+type instance Unlayered  (Typed2 l a) = l a
+type instance Destructed (Typed2 l a) = l a
+
+instance Monad m => Constructor m (Typed2 l a) where construct = return . Typed2 undefined

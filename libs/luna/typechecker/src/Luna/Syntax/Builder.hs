@@ -8,7 +8,7 @@
 
 module Luna.Syntax.Builder ( module Luna.Syntax.Builder, module X) where
 
-import Prologue hiding (index)
+import Prologue hiding (index, Ixed)
 
 import Data.Variants   as     V
 import Control.Monad.Fix
@@ -27,7 +27,7 @@ import           Luna.Syntax.AST.Term
 
 import qualified Luna.Syntax.Builder.Class as Builder
 import           Luna.Syntax.Builder.Class as X (runT)
-import           Luna.Syntax.Builder.Class (modify2, BuilderMonad)
+import           Luna.Syntax.Builder.Class (modify, modify2, BuilderMonad)
 import qualified Luna.Syntax.Builder.Node as NodeBuilder
 import           Luna.Syntax.Builder.Node (MonadNodeBuilder)
 
@@ -40,6 +40,7 @@ import Data.Layer.Coat
 
 import Data.IntSet (IntSet)
 import qualified Data.IntSet as IntSet
+import qualified Data.Container.Opts as Opts
 
 --- === Graph builders ===
 
@@ -106,8 +107,8 @@ import qualified Data.IntSet as IntSet
 class                                             Monadic a      m b where monadic :: a -> m b
 instance {-# OVERLAPPABLE #-} Monad m          => Monadic a      m a where monadic = return
 instance {-# OVERLAPPABLE #-} (Monad m, m ~ n) => Monadic (n a)  m a where monadic = id
-instance {-# OVERLAPPABLE #-} (MonadNodeBuilder (Ref Node) m, CoatConstructor m n, SpecificCons Lit (Uncoated n), BuilderMonad (Graph n e) m, MonadFix m)
-                           => Monadic String m (Ref Node) where monadic = _string
+--instance {-# OVERLAPPABLE #-} (MonadNodeBuilder (Ref Node) m, CoatConstructor m n, SpecificCons Lit (Uncoated n), BuilderMonad (Graph n e) m, MonadFix m)
+--                           => Monadic String m (Ref Node) where monadic = string
 
 swap (a,b) = (b,a)
 
@@ -117,36 +118,97 @@ swap (a,b) = (b,a)
 --    a <- NodeBuilder.with (Ref $ Node i) $ constructCoat $ specificCons (Int v)
 --    return $ Ref $ Node i
 
-_int :: forall m n e ast t. (MonadNodeBuilder (Ref Node) m, CoatConstructor m n, SpecificCons (Val t) (ast t), BuilderMonad (Graph n e) m, MonadFix m, Uncoated n ~ ast t) => Int -> m (Ref Node)
-_int v = mdo
-    i <- modify2 . nodes $ swap . ixed add a
-    a <- NodeBuilder.with (Ref $ Node i) $ constructCoat $ specificCons (specificCons (Int v) :: Val t)
-    return $ Ref $ Node i
+--modify :: BuilderMonad g m => (g -> (g, a)) -> m a
+--modify = modifyM . fmap return
 
-_string :: (MonadNodeBuilder (Ref Node) m, CoatConstructor m n, SpecificCons Lit (Uncoated n), BuilderMonad (Graph n e) m, MonadFix m) => String -> m (Ref Node)
-_string v = mdo
-    i <- modify2 . nodes $ swap . ixed add a
-    a <- NodeBuilder.with (Ref $ Node i) $ constructCoat $ specificCons (String $ fromString v)
-    return $ Ref $ Node i
+--modify2 :: BuilderMonad g m => (g -> (a, g)) -> m a
+--modify2 = modifyM2 . fmap return
 
-_string2 :: (MonadNodeBuilder (Ref Node) m, CoatConstructor m n, SpecificCons Lit (Uncoated n), BuilderMonad (Graph n e) m) => String -> m (Ref Node)
-_string2 v = do
-    i <- modify2 . nodes $ swap . ixed reserve
-    a <- NodeBuilder.with (Ref $ Node i) $ constructCoat $ specificCons (String $ fromString v)
-    Builder.modify_ $ nodes %~ unchecked inplace insert_ i a
-    return $ Ref $ Node i
+--tstt :: _ => _
+--tstt a = modify $ ixed rawAdd a
 
-_star :: (MonadNodeBuilder (Ref Node) m, CoatConstructor m n, SpecificCons Star (Uncoated n), BuilderMonad (Graph n e) m, MonadFix m) => m (Ref Node)
-_star = mdo
-    i <- modify2 . nodes $ swap . ixed add a
-    a <- NodeBuilder.with (Ref $ Node i) $ constructCoat $ specificCons Star
-    return $ Ref $ Node i
+type family Element idx cont
 
---_star2 :: (CoatConstructor m a, SpecificCons Star (Uncoated a), BuilderMonad (Graph a) m) => m Int
-_star2 = mdo
-    i <- modify2 . nodes $ swap . ixed add a
-    a <- NodeBuilder.with (Ref $ Node i) $ constructCoat $ specificCons Star
-    return $ Ref $ Node i
+type instance Element Node (Graph n e) = n
+type instance Element Edge (Graph n e) = e
+
+type instance Element (Node' ref) (Graph n e) = n
+type instance Element (Edge' ref) (Graph n e) = e
+
+type instance Element (Node' (HRef n)) Graph2 = n
+type instance Element (Node' (HRef2 t a)) Graph2 = t a
+
+
+class Addable_ g ref where
+    _add :: Element ref g -> g -> (g, ref)
+
+instance Addable_ (Graph n e) Node where
+    _add el = fmap Node . swap . nodes (swap . ixed add el)
+
+instance ref ~ Int => Addable_ (Graph n e) (Node' ref) where
+    _add el = fmap wrap . swap . nodes (swap . ixed add el)
+
+--
+
+
+instance Addable_ Graph2 (Node' (HRef2 t a)) where
+    _add el g = (g, Node' $ HRef2 0)
+
+
+type Builder v g m ref = ( MonadFix m
+                         , CoatConstructor m (Element ref g)
+                         , BuilderMonad g m
+                         , MonadNodeBuilder (Ref ref) m
+                         , SpecificCons v (Uncoated (Element ref g))
+                         , Addable_ g ref
+                         )
+
+type Builder2 v g m ref = ( MonadFix m
+                          , CoatConstructor m (Element ref g)
+                          , BuilderMonad g m
+                          , MonadNodeBuilder ref m
+                          , SpecificCons v (Uncoated (Element ref g))
+                          , Addable_ g ref
+                          )
+
+build :: Builder v g m ref => v -> m (Ref ref)
+build a = mdo
+    i <- modify $ _add el
+    el <- NodeBuilder.with (Ref i) $ constructCoat $ specificCons a
+    return $ Ref i
+
+build2 :: Builder2 v g m ref => v -> m ref
+build2 a = mdo
+    ref <- modify $ _add ast
+    ast <- NodeBuilder.with ref $ constructCoat $ specificCons a
+    return ref
+
+string2 :: Builder2 Lit g m (Node' ref) =>  String -> m (Node' ref)
+string2 s = build2 $ String $ fromString s
+
+int2 :: Builder2 Lit g m (Node' ref) => Int -> m (Node' ref)
+int2 i = build2 $ Int i
+
+star2 :: Builder2 Star g m (Node' ref) => m (Node' ref)
+star2 = build2 Star
+
+--string2' :: Builder2 Lit g m (Node' Int) =>  String -> m (Ref Node)
+--string2' = fmap (Ref . Node . unwrap) . string2
+
+string :: Builder Lit g m ref => String -> m (Ref ref)
+string s = build $ String $ fromString s
+
+int :: Builder Lit g m ref => Int -> m (Ref ref)
+int i = build $ Int i
+
+star :: Builder Star g m ref => m (Ref ref)
+star = build Star
+
+
+--arrow2 l r = mdo
+--    l' <- monadic l
+--    r' <- monadic r
+
 
 arrow l r = mdo
     l' <- monadic l
@@ -231,7 +293,24 @@ connect tgt = do
     return i
 
 
+--connectTo :: (MonadNodeBuilder (Ref Node) m, TracksSuccs n, BuilderMonad (Graph n DoubleArc) m) => Ref Node -> m (Ref Edge)
+connectTo src tgt = do
+    i <- connection src tgt
 
+
+    g    <- Builder.get
+    let tgtn = index_ (deref tgt) (g ^. nodes)
+        tgtn' = tgtn & succs %~ IntSet.insert (deref i)
+
+
+    Builder.put ( g & nodes %~ unchecked inplace insert_ (deref tgt) tgtn' )
+
+    return i
+
+
+type family Connection 
+class Adjacent g src tgt where
+    connect2 :: src -> tgt -> g -> (g, ref)
 
 
 getStar2 ::(MonadFix m, CoatConstructor m n, MonadStarBuilder (Maybe (Ref Node)) m, SpecificCons Star (Uncoated n), BuilderMonad (Graph n e) m, MonadNodeBuilder (Ref Node) m) => m (Ref Node)
@@ -242,8 +321,20 @@ getStar2 =  do
         Nothing     -> newStar
     where newStar = mdo oldstar <- StarBuilder.get
                         StarBuilder.put (Just ref)
-                        ref <- _star2
+                        ref <- star
                         StarBuilder.put oldstar
+                        return ref
+
+getType :: (Builder2 Star g m (Node' ref), MonadStarBuilder (Maybe (Node' ref)) m) => m (Node' ref)
+getType = do
+    s <- StarBuilder.get
+    case s of
+        Just    ref -> return ref
+        Nothing     -> newStar
+    where newStar = mdo oldType <- StarBuilder.get
+                        StarBuilder.put (Just ref)
+                        ref <- star2
+                        StarBuilder.put oldType
                         return ref
 
 

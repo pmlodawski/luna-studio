@@ -43,6 +43,16 @@ newtype Var      t = Var      t           deriving (Show, Eq, Ord, Functor, Fold
 data    Unify    t = Unify      t t       deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
 data    Blank      = Blank                deriving (Show, Eq, Ord)
 
+-- Layout                     N S A/P
+data    Star2         = Star2                 deriving (Show, Eq, Ord)
+data    Arrow2      t = Arrow2      t t       deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
+data    Cons2     n t = Cons2     n   [t]     deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
+data    Accessor2 n t = Accessor2 n t         deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
+data    App2        t = App2        t [Arg t] deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
+newtype Var2      n t = Var2      n           deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
+data    Unify2      t = Unify2      t t       deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
+data    Blank2        = Blank2                deriving (Show, Eq, Ord)
+
 -- Type sets
 
 type DraftElems t = Blank
@@ -74,6 +84,25 @@ type instance Variants (Thunk t) = (Val t) ':                          ThunkElem
 type instance Variants (Term  t) = (Val t) ': (Thunk t) ':             TermElems  t
 type instance Variants (Draft t) = (Val t) ': (Thunk t) ': (Term t) ': DraftElems t
 
+type HRecord a (h :: * -> *) = VariantRec (a h)
+
+
+newtype Val2   t = Val2   (HRecord Val2   t) -- deriving (Show)
+newtype Thunk2 t = Thunk2 (HRecord Thunk2 t) -- deriving (Show)
+newtype Term2  t = Term2  (HRecord Term2  t) -- deriving (Show)
+newtype Draft2 t = Draft2 (HRecord Draft2 t) -- deriving (Show)
+
+type instance Variants (Val2   t) =                                        ValElems   (t (Val2   t))
+type instance Variants (Thunk2 t) = (Val2 t) ':                            ThunkElems (t (Thunk2 t))
+type instance Variants (Term2  t) = (Val2 t) ': (Thunk2 t) ':              TermElems  (t (Term2  t))
+type instance Variants (Draft2 t) = (Val2 t) ': (Thunk2 t) ': (Term2 t) ': DraftElems (t (Draft2 t))
+
+
+
+--Zamiast Coat mozemy uzyc AST ktory bedzie robil to samo co COAT i bedzie pozwalal ogladac AST. Zalety tego sa dwie
+--1) ladniej i jasniej wyglada co to jest
+--2) mozna generowac takie AST w passie do generowania warstw, a co za tym idzie od razu dobrze ustalac typu Draft, Term etc, tworzac
+--   w przypadku Value wartosc dla literalow!
 
 -- Record & variant instances
 
@@ -86,6 +115,19 @@ instance HasRecord (Val   t) (Val   t') where record = lens (\(Val   a) -> a) (c
 instance HasRecord (Thunk t) (Thunk t') where record = lens (\(Thunk a) -> a) (const Thunk)
 instance HasRecord (Term  t) (Term  t') where record = lens (\(Term  a) -> a) (const Term )
 instance HasRecord (Draft t) (Draft t') where record = lens (\(Draft a) -> a) (const Draft)
+
+--
+
+instance Record (Val2   h) where mkRecord = Val2
+instance Record (Thunk2 h) where mkRecord = Thunk2
+instance Record (Term2  h) where mkRecord = Term2
+instance Record (Draft2 h) where mkRecord = Draft2
+
+instance HasRecord (Val2   t) (Val2   t') where record = lens (\(Val2   a) -> a) (const Val2  )
+instance HasRecord (Thunk2 t) (Thunk2 t') where record = lens (\(Thunk2 a) -> a) (const Thunk2)
+instance HasRecord (Term2  t) (Term2  t') where record = lens (\(Term2  a) -> a) (const Term2 )
+instance HasRecord (Draft2 t) (Draft2 t') where record = lens (\(Draft2 a) -> a) (const Draft2)
+
 
 -- Name instances
 

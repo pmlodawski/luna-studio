@@ -18,6 +18,7 @@ import Data.Container.Poly
 import Data.Container.Auto
 import Data.Container.Weak
 import Data.Container.Resizable
+import Data.Container.Opts (ParamsOf, ModsOf)
 import Data.Reprx
 import Data.Construction
 
@@ -33,7 +34,6 @@ import Data.Layer.Coat
 
 import Data.IntSet (IntSet)
 import qualified Data.IntSet as IntSet
-
 
 --- === Graph ===
 
@@ -54,8 +54,24 @@ instance Monad m => IsContainerM  m (VectorGraph a) where
 
 
 
+newtype HRef a = HRef Int deriving (Show)
+newtype HRef2 (t :: * -> *) a = HRef2 Int deriving (Show)
+
 
 newtype Ref a = Ref a deriving (Show, Monoid, Functor, Foldable, Traversable)
+newtype Node' a = Node' a deriving (Show, Monoid, Functor, Foldable, Traversable)
+newtype Edge' a = Edge' a deriving (Show, Monoid, Functor, Foldable, Traversable)
+
+instance Rewrapped (Node' a) (Node' a')
+instance Wrapped   (Node' a) where
+    type Unwrapped (Node' a) = a
+    _Wrapped' = iso (\(Node' a) -> a) Node'
+
+instance Rewrapped (Edge' a) (Edge' a')
+instance Wrapped   (Edge' a) where
+    type Unwrapped (Edge' a) = a
+    _Wrapped' = iso (\(Edge' a) -> a) Edge'
+
 
 instance Rewrapped (Ref a) (Ref a')
 instance Wrapped   (Ref a) where
@@ -111,6 +127,10 @@ type instance Destructed (SuccTracking a) = a
 instance Monad m => Destructor m (SuccTracking a) where destruct (SuccTracking s a) = return a
 
 
+
+
+
+
 data Graph node edge = Graph { _nodes :: VectorGraph node
                              , _edges :: VectorGraph edge
                              } deriving (Show)
@@ -122,16 +142,23 @@ makeLenses ''Graph
 instance Default (Graph n e) where def = Graph (alloc 100) (alloc 100)
 
 
+type instance Container (Graph n e) = Graph n e
 
 
 
 
 
 
+type instance ParamsOf AddableOp (Graph n e) = ParamsOf AddableOp (Container (VectorGraph n))
+type instance ModsOf   AddableOp (Graph n e) = ModsOf   AddableOp (Container (VectorGraph n))
 
 
 
+data Graph2 = Graph2 { _nodes2 :: VectorGraph Int
+                     , _edges2 :: VectorGraph Int
+                     } deriving (Show)
 
+instance Default Graph2 where def = Graph2 (alloc 100) (alloc 100)
 
 
 

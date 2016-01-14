@@ -290,11 +290,11 @@ addStdLiterals g = runIdentity
                  $ flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
                  $ flip Builder.runT g
                  $ mdo
-    strLit <- _string "String" `typed` (Ref $ Node 0)
+    strLit <- string "String" `typed` (Ref $ Node 0)
     strTp  <- cons strLit
     reconnect strLit tp strTp
 
-    intLit <- _string "Int" `typed` strTp
+    intLit <- string "Int" `typed` strTp
     intTp  <- cons intLit
 
     return $ Map.insert "String" strTp
@@ -312,9 +312,29 @@ addStdLiterals g = runIdentity
     --return ()
 
 
+--newtype XCoat a = XCoat a
+
+--tstx2 :: ((), Network)
+--tstx2 = runIdentity
+--      $ flip StarBuilder.evalT Nothing
+--      $ flip Builder.runT def
+--      $ flip NodeBuilder.evalT (Node' $ HRef 0 :: Node' (HRef (Draft2 XCoat)))
+--      $ do
+--            s  <- string "hello"
+--            return s
+
+type H t a = t (a t)
+--data Labeled l a t = Labeled l (a t)
 
 
 
+--tstx2 :: (Node' (HRef2 Coat (Draft2 (HRef2 Coat))), Graph2)
+tstx2 :: (Node' (H (HRef2 (Labeled Int (Typed2 Coat))) Draft2), Graph2)
+tstx2 = runIdentity
+      $ flip StarBuilder.evalT Nothing 
+      $ flip Builder.runT def
+      $ flip NodeBuilder.evalT (Node' $ HRef2 0 :: Node' (H (HRef2 (Labeled Int (Typed2 Coat))) Draft2))
+      $ string2 "hello"
 
 tstx1 :: ((), Network)
 tstx1 = runIdentity
@@ -323,7 +343,8 @@ tstx1 = runIdentity
       $ flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
       $ do
             topStar <- getStar2
-            i1 <- _int 7
+            i1 <- int 7
+            s  <- string "hello"
             --i1 <- _int 5
             --i1 <- _int 4
             --i2 <- _int 3

@@ -1,6 +1,8 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE UndecidableInstances      #-}
 {-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE PolyKinds                 #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
 
 module Data.Reprx ( module Data.Reprx
                  , module X
@@ -14,8 +16,8 @@ import Data.Text.CodeBuilder.Tok (Tok)
 import Data.Text.CodeBuilder as X ((<+>))
 import GHC.Prim (Constraint)
 
-class Repr s a where
-    repr :: a -> Builder s Tok
+class Repr  s a        where repr  ::       a -> Builder s Tok
+class ReprT s (a :: k) where reprT :: Proxy a -> Builder s Tok
 
 --instance {-# OVERLAPPABLE #-} Show a => Repr a where
     --repr = show
@@ -68,3 +70,21 @@ instance (Repr s t1, Repr s t2, Repr s t3, Repr s t4, Repr s t5, Repr s t6)     
 instance (Repr s t1, Repr s t2, Repr s t3, Repr s t4, Repr s t5, Repr s t6, Repr s t7)                       => Repr s (t1,t2,t3,t4,t5,t6,t7)       where repr (t1,t2,t3,t4,t5,t6,t7)       = parensed $ intercalate ", " [repr t1, repr t2, repr t3, repr t4, repr t5, repr t6, repr t7]
 instance (Repr s t1, Repr s t2, Repr s t3, Repr s t4, Repr s t5, Repr s t6, Repr s t7, Repr s t8)            => Repr s (t1,t2,t3,t4,t5,t6,t7,t8)    where repr (t1,t2,t3,t4,t5,t6,t7,t8)    = parensed $ intercalate ", " [repr t1, repr t2, repr t3, repr t4, repr t5, repr t6, repr t7, repr t8]
 instance (Repr s t1, Repr s t2, Repr s t3, Repr s t4, Repr s t5, Repr s t6, Repr s t7, Repr s t8, Repr s t9) => Repr s (t1,t2,t3,t4,t5,t6,t7,t8,t9) where repr (t1,t2,t3,t4,t5,t6,t7,t8,t9) = parensed $ intercalate ", " [repr t1, repr t2, repr t3, repr t4, repr t5, repr t6, repr t7, repr t8, repr t9]
+
+
+
+
+
+
+
+data LstRpr a
+
+instance ReprT s () where reprT _ = "()"
+
+instance {-# OVERLAPPABLE #-}  ReprT s (LstRpr lst) => ReprT s (lst :: [k]) where reprT _ = "[" <> reprT (Proxy :: Proxy (LstRpr lst)) <> "]"
+instance {-# OVERLAPPABLE #-}  KnownNat n           => ReprT s (n :: Nat)   where reprT _ = fromString $ show $ natVal (Proxy :: Proxy n)
+
+instance {-# OVERLAPPABLE #-}                                     ReprT s (LstRpr '[])        where reprT _ = ""
+instance {-# OVERLAPPABLE #-} (ReprT s l, ReprT s (LstRpr ls)) => ReprT s (LstRpr (l ': ls))  where reprT _ = reprT (Proxy :: Proxy l) <> ", " <> reprT (Proxy :: Proxy (LstRpr ls))
+instance {-# OVERLAPPABLE #-}  ReprT s l                       => ReprT s (LstRpr (l ': '[])) where reprT _ = reprT (Proxy :: Proxy l)
+

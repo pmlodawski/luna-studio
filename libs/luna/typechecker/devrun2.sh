@@ -13,6 +13,8 @@ function realpath()
     echo "$dir$base"
 }
 
+
+# /opt/ghc/8.0-rc1/bin/runhaskell                                                                    \
 runhaskell                                                                                         \
     -XDoAndIfThenElse                                                                              \
     -XNoImplicitPrelude                                                                            \
@@ -38,6 +40,7 @@ runhaskell                                                                      
     -XInstanceSigs                                                                                 \
     -XViewPatterns                                                                                 \
     -XTypeFamilies                                                                                 \
+    -XScopedTypeVariables                                                                                 \
     -i$NBO/libs/utils/src                                                                          \
     -i$NBO/libs/luna/typechecker/src                                                               \
     -i$HS_PUBLIC_LIBS/convert/src                                                                  \
@@ -50,7 +53,18 @@ runhaskell                                                                      
     -i$HS_PUBLIC_LIBS/functor-utils/src                                                            \
     -i$HS_PUBLIC_LIBS/lens-utils/src                                                               \
     -i$HS_PUBLIC_LIBS/data-construction/src                                                        \
+    -i$HS_PUBLIC_LIBS/dependent-state/src                                                          \
+    -i$HS_PUBLIC_LIBS/bitmask/src                                                                  \
+    -i$HS_PUBLIC_LIBS/impossible/src                                                               \
     -i$HS_PUBLIC_LIBS/poly-control/src                                                             \
+    -i$HS_PUBLIC_LIBS/relations/src                                                                \
+    -DFastCompilation \
+    -i$HS_PUBLIC_LIBS/variants/src                                                                 \
     -package-db=$HS_SBOX_PGS                                                                       \
-    -ddump-splices                                                                                 \
-    $NBO/libs/luna/typechecker/test/Main.hs                                              
+    -dshow-passes \
+    $HS_PUBLIC_LIBS/variants/Main.hs                                              
+    
+    # -fprint-explicit-kinds \
+    # -ddump-splices \
+    # -fenable-rewrite-rules       \
+    # -fspecialise \
