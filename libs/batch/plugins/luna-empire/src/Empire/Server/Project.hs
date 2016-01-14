@@ -43,7 +43,7 @@ handleCreateProject content = do
         (request ^. CreateProject.projectName)
         (fromString $ request ^. CreateProject.path)
     case result of
-        Left err -> logger Logger.error $ Server.errorMessage ++ err
+        Left err -> logger Logger.error $ Server.errorMessage <> err
         Right (projectId, project) -> do
             Env.empireEnv .= newEmpireEnv
             let update = Update.Update request $ CreateProject.Result projectId $ DataProject.toAPI project
@@ -55,7 +55,7 @@ handleListProjects content = do
     currentEmpireEnv <- use Env.empireEnv
     (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ Project.listProjects
     case result of
-        Left err -> logger Logger.error $ Server.errorMessage ++ err
+        Left err -> logger Logger.error $ Server.errorMessage <> err
         Right projectList -> do
             Env.empireEnv .= newEmpireEnv
             let projectListAPI = fmap (\(projectId, project) -> (projectId, DataProject.toAPI project)) projectList

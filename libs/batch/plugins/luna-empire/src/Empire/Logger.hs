@@ -49,7 +49,7 @@ logger = Logger.getLoggerIO $(Logger.moduleName)
 
 run :: BusEndPoints -> [Topic] -> IO (Either Bus.Error ())
 run endPoints topics = Bus.runBus endPoints $ do
-    logger Logger.info $ "Subscribing to topics: " ++ show topics
+    logger Logger.info $ "Subscribing to topics: " <> show topics
     logger Logger.info $ show endPoints
     mapM_ Bus.subscribe topics
     Bus.runBusT $ evalStateT runBus def
@@ -61,16 +61,10 @@ handleMessage :: StateT Env BusT ()
 handleMessage = do
     msgFrame <- lift $ BusT Bus.receive'
     case msgFrame of
-        Left err -> logger Logger.error $ "Unparseable message: " ++ err
+        Left err -> logger Logger.error $ "Unparseable message: " <> err
         Right (MessageFrame msg crlID senderID lastFrame) -> do
             let topic = msg ^. Message.topic
-                logMsg =  show senderID
-                       ++ " -> "
-                       ++ " (last = "
-                       ++ show lastFrame
-                       ++ ")"
-                       ++ "\t:: "
-                       ++ topic
+                logMsg =  show senderID <> " -> (last = " <> show lastFrame <> ")\t:: " <> topic
                 content = msg ^. Message.message
                 errorMsg = show content
             case Utils.lastPart '.' topic of

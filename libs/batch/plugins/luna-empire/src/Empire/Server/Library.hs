@@ -44,7 +44,7 @@ handleCreateLibrary content = do
         (request ^. CreateLibrary.libraryName)
         (fromString $ request ^. CreateLibrary.path)
     case result of
-        Left err -> logger Logger.error $ Server.errorMessage ++ err
+        Left err -> logger Logger.error $ Server.errorMessage <> err
         Right (libraryId, library) -> do
             Env.empireEnv .= newEmpireEnv
             let update = Update.Update request $ CreateLibrary.Result libraryId $ DataLibrary.toAPI library
@@ -57,7 +57,7 @@ handleListLibraries content = do
     (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ Library.listLibraries
         (request ^. ListLibraries.projectId)
     case result of
-        Left err -> logger Logger.error $ Server.errorMessage ++ err
+        Left err -> logger Logger.error $ Server.errorMessage <> err
         Right librariesList -> do
             Env.empireEnv .= newEmpireEnv
             let librariesListAPI = fmap (\(libraryId, library) -> (libraryId, DataLibrary.toAPI library)) librariesList

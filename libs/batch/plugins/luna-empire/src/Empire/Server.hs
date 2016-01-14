@@ -33,7 +33,7 @@ logger = Logger.getLoggerIO $(Logger.moduleName)
 
 run :: BusEndPoints -> [Topic] -> IO (Either Bus.Error ())
 run endPoints topics = Bus.runBus endPoints $ do
-    logger Logger.info $ "Subscribing to topics: " ++ show topics
+    logger Logger.info $ "Subscribing to topics: " <> show topics
     logger Logger.info $ show endPoints
     mapM_ Bus.subscribe topics
     Bus.runBusT $ evalStateT runBus def
@@ -53,7 +53,7 @@ createDefaultState = do
     (resultProject, newEmpireEnv1) <- liftIO $ Empire.runEmpire currentEmpireEnv $ Project.createProject
         projectName (fromString projectPath)
     case resultProject of
-        Left err -> logger Logger.error $ Server.errorMessage ++ err
+        Left err -> logger Logger.error $ Server.errorMessage <> err
         Right (projectId, project) -> do
             logger Logger.info $ "Created project " <> show projectId
             logger Logger.debug $ show project
@@ -61,7 +61,7 @@ createDefaultState = do
             (resultLibrary, newEmpireEnv2) <- liftIO $ Empire.runEmpire newEmpireEnv1 $ Library.createLibrary
                 projectId libraryName (fromString libraryPath)
             case resultLibrary of
-                Left err -> logger Logger.error $ Server.errorMessage ++ err
+                Left err -> logger Logger.error $ Server.errorMessage <> err
                 Right (libraryId, library) -> do
                     Env.empireEnv .= newEmpireEnv2
                     logger Logger.info $ "Created library " <> show libraryId
@@ -76,12 +76,7 @@ handleMessage = do
         Right (MessageFrame msg crlID senderID lastFrame) -> do
             let topic = msg ^. Message.topic
                 logMsg =  show senderID
-                       ++ " -> "
-                       ++ " (last = "
-                       ++ show lastFrame
-                       ++ ")"
-                       ++ "\t:: "
-                       ++ topic
+                       <> " -> (last = " <> show lastFrame <> ")\t:: " <> topic
                 content = msg ^. Message.message
             case Utils.lastPart '.' topic of
                 "update"   -> handleUpdate        logMsg topic content

@@ -39,7 +39,7 @@ notifyCodeUpdate location = do
     (resultCode, _) <- liftIO $ Empire.runEmpire currentEmpireEnv $ Server.withGraphLocation GraphCmd.getCode
         location
     case resultCode of
-        Left err -> logger Logger.error $ Server.errorMessage ++ err
+        Left err -> logger Logger.error $ Server.errorMessage <> err
         Right code -> do
             let update = CodeUpdate.Update location $ Text.pack code
             void . lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.codeUpdate $ toStrict $ Bin.encode update
@@ -54,7 +54,7 @@ handleAddNode content = do
         (Text.pack $ request ^. AddNode.expr)
         (request ^. AddNode.nodeMeta)
     case result of
-        Left err -> logger Logger.error $ Server.errorMessage ++ err
+        Left err -> logger Logger.error $ Server.errorMessage <> err
         Right node -> do
             Env.empireEnv .= newEmpireEnv
             let update = Update.Update request $ AddNode.Result node
@@ -70,7 +70,7 @@ handleRemoveNode content = do
         location
         (request ^. RemoveNode.nodeId)
     case result of
-        Left err -> logger Logger.error $ Server.errorMessage ++ err
+        Left err -> logger Logger.error $ Server.errorMessage <> err
         Right _ -> do
             Env.empireEnv .= newEmpireEnv
             let update = Update.Update request $ Update.Ok
@@ -87,7 +87,7 @@ handleUpdateNodeMeta content = do
         (request ^. UpdateNodeMeta.nodeId)
         nodeMeta
     case result of
-        Left err -> logger Logger.error $ Server.errorMessage ++ err
+        Left err -> logger Logger.error $ Server.errorMessage <> err
         Right _ -> do
             Env.empireEnv .= newEmpireEnv
             let update = Update.Update request $ UpdateNodeMeta.Result nodeMeta
@@ -104,7 +104,7 @@ handleConnect content = do
         (request ^. Connect.src)
         (request ^. Connect.dst)
     case result of
-        Left err -> logger Logger.error $ Server.errorMessage ++ err
+        Left err -> logger Logger.error $ Server.errorMessage <> err
         Right _ -> do
             Env.empireEnv .= newEmpireEnv
             let update = Update.Update request $ Update.Ok
@@ -120,7 +120,7 @@ handleDisconnect content = do
         location
         (request ^. Disconnect.dst)
     case result of
-        Left err -> logger Logger.error $ Server.errorMessage ++ err
+        Left err -> logger Logger.error $ Server.errorMessage <> err
         Right _ -> do
             Env.empireEnv .= newEmpireEnv
             let update = Update.Update request $ Update.Ok
@@ -136,8 +136,8 @@ handleGetProgram content = do
     (resultCode, _) <- liftIO $ Empire.runEmpire currentEmpireEnv $ Server.withGraphLocation GraphCmd.getCode
         (request ^. GetProgram.location)
     case (resultGraph, resultCode) of
-        (Left err, _) -> logger Logger.error $ Server.errorMessage ++ err
-        (_, Left err) -> logger Logger.error $ Server.errorMessage ++ err
+        (Left err, _) -> logger Logger.error $ Server.errorMessage <> err
+        (_, Left err) -> logger Logger.error $ Server.errorMessage <> err
         (Right graph, Right code) -> do
             let update = Update.Update request $ GetProgram.Status graph (Text.pack code)
             void . lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.programStatus $ toStrict $ Bin.encode update
