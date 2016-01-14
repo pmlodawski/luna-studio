@@ -16,7 +16,7 @@ import           Empire.API.Data.Node (Node)
 import qualified Empire.API.Data.Graph as Graph
 import           Empire.API.Data.PortRef (OutPortRef, InPortRef)
 import qualified Empire.API.Graph.GetProgram as GetProgram
-import qualified Empire.API.Response       as Response
+import qualified Empire.API.Update         as Update
 import qualified Batch.Workspace           as Workspace
 import           Reactive.Plugins.Core.Action.Backend.AddNode (isCurrentLocation)
 import qualified JS.TextEditor    as UI
@@ -25,13 +25,13 @@ import qualified JS.TextEditor    as UI
 
 toAction :: Event -> Maybe (Command State ())
 toAction (Batch (Batch.ProgramFetched response)) = Just $ do
-    let location = response ^. Response.request . GetProgram.location
+    let location = response ^. Update.request . GetProgram.location
     isGraphLoaded  <- use $ Global.workspace . Workspace.isGraphLoaded
     isGoodLocation <- isCurrentLocation location
     when (isGoodLocation && not isGraphLoaded) $ do
-        let nodes       = response ^. Response.update . GetProgram.graph . Graph.nodes
-            connections = response ^. Response.update . GetProgram.graph . Graph.connections
-            code        = response ^. Response.update . GetProgram.code
+        let nodes       = response ^. Update.result . GetProgram.graph . Graph.nodes
+            connections = response ^. Update.result . GetProgram.graph . Graph.connections
+            code        = response ^. Update.result . GetProgram.code
 
         renderGraph nodes connections
         performIO $ UI.setText code

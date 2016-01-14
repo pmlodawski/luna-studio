@@ -28,12 +28,12 @@ import Data.Int
 import Data.Aeson (ToJSON)
 
 data Event = UnknownEvent String
-           | NodeAdded                  AddNode.Response
-           | NodeRemoved             RemoveNode.Response
-           | ProgramFetched          GetProgram.Response
-           | NodesConnected             Connect.Response
-           | NodesDisconnected       Disconnect.Response
-           | NodeMetaUpdated     UpdateNodeMeta.Response
+           | NodeAdded                  AddNode.Update
+           | NodeRemoved             RemoveNode.Update
+           | ProgramFetched          GetProgram.Update
+           | NodesConnected             Connect.Update
+           | NodesDisconnected       Disconnect.Update
+           | NodeMetaUpdated     UpdateNodeMeta.Update
            | NodeUpdated             NodeUpdate.Update
            | CodeUpdated             CodeUpdate.Update
            -- | ProjectsList [Project]

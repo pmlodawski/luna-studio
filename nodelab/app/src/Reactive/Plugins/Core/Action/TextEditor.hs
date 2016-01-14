@@ -12,7 +12,7 @@ import           Reactive.Commands.Command       (Command, performIO)
 import qualified BatchConnector.Monadic.Commands as BatchCmd
 import qualified Empire.API.Graph.CodeUpdate as CodeUpdate
 import           Empire.API.Data.GraphLocation (GraphLocation)
-import qualified Empire.API.Response as Response
+import qualified Empire.API.Update as Update
 import qualified Batch.Workspace as Workspace
 
 isCurrentLocation :: GraphLocation -> Command Global.State Bool
