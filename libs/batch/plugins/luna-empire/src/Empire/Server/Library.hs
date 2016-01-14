@@ -60,6 +60,5 @@ handleListLibraries content = do
         Left err -> logger Logger.error $ Server.errorMessage <> err
         Right librariesList -> do
             Env.empireEnv .= newEmpireEnv
-            let librariesListAPI = fmap (\(libraryId, library) -> (libraryId, DataLibrary.toAPI library)) librariesList
-                update = Update.Update request $ ListLibraries.Status librariesListAPI
+            let update = Update.Update request $ ListLibraries.Status $ (_2 %~ DataLibrary.toAPI) <$> librariesList
             void . lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.listLibrariesStatus $ toStrict $ Bin.encode update

@@ -74,13 +74,13 @@ main = do
         path   <- args `getArgOrExit` (argument "path")
         let name = args `getArg` (longOption "name")
         createLibrary endPoints (read pid) name path
-    when (args `isPresent` (command "libraries")) $ do
-        pid    <- args `getArgOrExit` (argument "pid")
-        listLibraries endPoints $ read pid
     when (args `isPresent` (command "createProject")) $ do
         path   <- args `getArgOrExit` (argument "path")
         let name = args `getArg` (longOption "name")
         createProject endPoints Nothing path
+    when (args `isPresent` (command "libraries")) $ do
+        pid    <- args `getArgOrExit` (argument "pid")
+        listLibraries endPoints $ read pid
     when (args `isPresent` (command "projects")) $ do
         listProjects endPoints
 

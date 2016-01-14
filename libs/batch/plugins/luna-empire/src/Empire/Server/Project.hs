@@ -58,6 +58,5 @@ handleListProjects content = do
         Left err -> logger Logger.error $ Server.errorMessage <> err
         Right projectList -> do
             Env.empireEnv .= newEmpireEnv
-            let projectListAPI = fmap (\(projectId, project) -> (projectId, DataProject.toAPI project)) projectList
-                update = Update.Update request $ ListProjects.Status projectListAPI
+            let update = Update.Update request $ ListProjects.Status $ (_2 %~ DataProject.toAPI) <$> projectList
             void . lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.listProjectsStatus $ toStrict $ Bin.encode update
