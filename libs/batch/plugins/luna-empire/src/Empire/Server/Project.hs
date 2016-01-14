@@ -27,7 +27,7 @@ import qualified Empire.API.Project.CreateProject as CreateProject
 import qualified Empire.API.Project.ListProjects  as ListProjects
 import qualified Empire.API.Update                as Update
 import qualified Empire.API.Topic                 as Topic
-import qualified Empire.Commands.Project          as ProjectCmd
+import qualified Empire.Commands.Project          as Project
 import qualified Empire.Empire                    as Empire
 import           Empire.Empire                    (Empire)
 import qualified Empire.Server.Server             as Server
@@ -39,27 +39,25 @@ handleCreateProject :: ByteString -> StateT Env BusT ()
 handleCreateProject content = do
     let request = Bin.decode . fromStrict $ content :: CreateProject.Request
     currentEmpireEnv <- use Env.empireEnv
-    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ ProjectCmd.createProject
+    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ Project.createProject
         (request ^. CreateProject.projectName)
         (fromString $ request ^. CreateProject.path)
     case result of
         Left err -> logger Logger.error $ Server.errorMessage ++ err
         Right (projectId, project) -> do
             Env.empireEnv .= newEmpireEnv
-            let response = Update.Update request $ CreateProject.Result projectId $ DataProject.toAPI project
-            lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.createProjectUpdate $ toStrict $ Bin.encode response
-            return ()
+            let update = Update.Update request $ CreateProject.Result projectId $ DataProject.toAPI project
+            void . lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.createProjectUpdate $ toStrict $ Bin.encode update
 
 handleListProjects :: ByteString -> StateT Env BusT ()
 handleListProjects content = do
     let request = Bin.decode . fromStrict $ content :: ListProjects.Request
     currentEmpireEnv <- use Env.empireEnv
-    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ ProjectCmd.listProjects
+    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ Project.listProjects
     case result of
         Left err -> logger Logger.error $ Server.errorMessage ++ err
         Right projectList -> do
             Env.empireEnv .= newEmpireEnv
             let projectListAPI = fmap (\(projectId, project) -> (projectId, DataProject.toAPI project)) projectList
-                response = Update.Update request $ ListProjects.Status projectListAPI
-            lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.listProjectsStatus $ toStrict $ Bin.encode response
-            return ()
+                update = Update.Update request $ ListProjects.Status projectListAPI
+            void . lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.listProjectsStatus $ toStrict $ Bin.encode update

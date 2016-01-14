@@ -11,4 +11,5 @@ data Library = Library { _name    :: Maybe String
                        } deriving (Show, Eq, Generic)
 
 makeLenses ''Library
+
 instance Binary Library

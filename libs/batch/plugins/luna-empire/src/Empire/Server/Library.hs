@@ -27,7 +27,7 @@ import qualified Empire.API.Library.CreateLibrary as CreateLibrary
 import qualified Empire.API.Library.ListLibraries as ListLibraries
 import qualified Empire.API.Update                as Update
 import qualified Empire.API.Topic                 as Topic
-import qualified Empire.Commands.Library          as LibraryCmd
+import qualified Empire.Commands.Library          as Library
 import qualified Empire.Empire                    as Empire
 import           Empire.Empire                    (Empire)
 import qualified Empire.Server.Server             as Server
@@ -39,7 +39,7 @@ handleCreateLibrary :: ByteString -> StateT Env BusT ()
 handleCreateLibrary content = do
     let request = Bin.decode . fromStrict $ content :: CreateLibrary.Request
     currentEmpireEnv <- use Env.empireEnv
-    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ LibraryCmd.createLibrary
+    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ Library.createLibrary
         (request ^. CreateLibrary.projectId)
         (request ^. CreateLibrary.libraryName)
         (fromString $ request ^. CreateLibrary.path)
@@ -47,21 +47,21 @@ handleCreateLibrary content = do
         Left err -> logger Logger.error $ Server.errorMessage ++ err
         Right (libraryId, library) -> do
             Env.empireEnv .= newEmpireEnv
-            let response = Update.Update request $ CreateLibrary.Result libraryId $ DataLibrary.toAPI library
-            lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.createLibraryUpdate $ toStrict $ Bin.encode response
-            return ()
+            let update = Update.Update request $ CreateLibrary.Result libraryId $ DataLibrary.toAPI library
+            void . lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.createLibraryUpdate $ toStrict $ Bin.encode update
 
 handleListLibraries :: ByteString -> StateT Env BusT ()
 handleListLibraries content = do
     let request = Bin.decode . fromStrict $ content :: ListLibraries.Request
     currentEmpireEnv <- use Env.empireEnv
-    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ LibraryCmd.listLibraries
+    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ Library.listLibraries
         (request ^. ListLibraries.projectId)
     case result of
         Left err -> logger Logger.error $ Server.errorMessage ++ err
         Right librariesList -> do
             Env.empireEnv .= newEmpireEnv
             let librariesListAPI = fmap (\(libraryId, library) -> (libraryId, DataLibrary.toAPI library)) librariesList
-                response = Update.Update request $ ListLibraries.Status librariesListAPI
-            lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.listLibrariesStatus $ toStrict $ Bin.encode response
-            return ()
+                update = Update.Update request $ ListLibraries.Status librariesListAPI
+            logger Logger.info $ "librariesListAPI: " <> show librariesListAPI
+            logger Logger.info $ "update          : " <> show update
+            void . lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.listLibrariesStatus $ toStrict $ Bin.encode update

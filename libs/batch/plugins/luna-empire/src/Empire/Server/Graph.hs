@@ -41,8 +41,8 @@ notifyCodeUpdate location = do
     case resultCode of
         Left err -> logger Logger.error $ Server.errorMessage ++ err
         Right code -> do
-            let response = CodeUpdate.Update location $ Text.pack code
-            void . lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.codeUpdate $ toStrict $ Bin.encode response
+            let update = CodeUpdate.Update location $ Text.pack code
+            void . lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.codeUpdate $ toStrict $ Bin.encode update
 
 handleAddNode :: ByteString -> StateT Env BusT ()
 handleAddNode content = do
@@ -57,8 +57,8 @@ handleAddNode content = do
         Left err -> logger Logger.error $ Server.errorMessage ++ err
         Right node -> do
             Env.empireEnv .= newEmpireEnv
-            let response = Update.Update request $ AddNode.Result node
-            lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.addNodeUpdate $ toStrict $ Bin.encode response
+            let update = Update.Update request $ AddNode.Result node
+            lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.addNodeUpdate $ toStrict $ Bin.encode update
             notifyCodeUpdate location
 
 handleRemoveNode :: ByteString -> StateT Env BusT ()
@@ -73,8 +73,8 @@ handleRemoveNode content = do
         Left err -> logger Logger.error $ Server.errorMessage ++ err
         Right _ -> do
             Env.empireEnv .= newEmpireEnv
-            let response = Update.Update request $ Update.Ok
-            lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.removeNodeUpdate $ toStrict $ Bin.encode response
+            let update = Update.Update request $ Update.Ok
+            lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.removeNodeUpdate $ toStrict $ Bin.encode update
             notifyCodeUpdate location
 
 handleUpdateNodeMeta :: ByteString -> StateT Env BusT ()
@@ -90,8 +90,8 @@ handleUpdateNodeMeta content = do
         Left err -> logger Logger.error $ Server.errorMessage ++ err
         Right _ -> do
             Env.empireEnv .= newEmpireEnv
-            let response = Update.Update request $ UpdateNodeMeta.Result nodeMeta
-            lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.updateNodeMetaUpdate $ toStrict $ Bin.encode response
+            let update = Update.Update request $ UpdateNodeMeta.Result nodeMeta
+            lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.updateNodeMetaUpdate $ toStrict $ Bin.encode update
             return ()
 
 handleConnect :: ByteString -> StateT Env BusT ()
@@ -107,8 +107,8 @@ handleConnect content = do
         Left err -> logger Logger.error $ Server.errorMessage ++ err
         Right _ -> do
             Env.empireEnv .= newEmpireEnv
-            let response = Update.Update request $ Update.Ok
-            lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.connectUpdate $ toStrict $ Bin.encode response
+            let update = Update.Update request $ Update.Ok
+            lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.connectUpdate $ toStrict $ Bin.encode update
             notifyCodeUpdate location
 
 handleDisconnect :: ByteString -> StateT Env BusT ()
@@ -123,8 +123,8 @@ handleDisconnect content = do
         Left err -> logger Logger.error $ Server.errorMessage ++ err
         Right _ -> do
             Env.empireEnv .= newEmpireEnv
-            let response = Update.Update request $ Update.Ok
-            lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.disconnectUpdate $ toStrict $ Bin.encode response
+            let update = Update.Update request $ Update.Ok
+            lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.disconnectUpdate $ toStrict $ Bin.encode update
             notifyCodeUpdate location
 
 handleGetProgram :: ByteString -> StateT Env BusT ()
@@ -139,5 +139,5 @@ handleGetProgram content = do
         (Left err, _) -> logger Logger.error $ Server.errorMessage ++ err
         (_, Left err) -> logger Logger.error $ Server.errorMessage ++ err
         (Right graph, Right code) -> do
-            let response = Update.Update request $ GetProgram.Status graph (Text.pack code)
-            void . lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.programStatus $ toStrict $ Bin.encode response
+            let update = Update.Update request $ GetProgram.Status graph (Text.pack code)
+            void . lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.programStatus $ toStrict $ Bin.encode update

@@ -108,11 +108,11 @@ loggFormattersMap = Map.fromList
     , (Topic.createProjectRequest,  \content -> show (Bin.decode . fromStrict $ content :: CreateProject.Request))
     , (Topic.createProjectUpdate,   \content -> show (Bin.decode . fromStrict $ content :: CreateProject.Update))
     , (Topic.listProjectsRequest,   \content -> show (Bin.decode . fromStrict $ content :: ListProjects.Request))
-    , (Topic.listProjectsStatus,    \content -> show (Bin.decode . fromStrict $ content :: ListProjects.Status))
+    , (Topic.listProjectsStatus,    \content -> "content:\n" <> show content <> "\ndecoded:\n" <> show (Bin.decode . fromStrict $ content :: ListProjects.Status))
     , (Topic.createLibraryRequest,  \content -> show (Bin.decode . fromStrict $ content :: CreateLibrary.Request))
     , (Topic.createLibraryUpdate,   \content -> show (Bin.decode . fromStrict $ content :: CreateLibrary.Update))
     , (Topic.listLibrariesRequest,  \content -> show (Bin.decode . fromStrict $ content :: ListLibraries.Request))
-    , (Topic.listLibrariesStatus,   \content -> show (Bin.decode . fromStrict $ content :: ListLibraries.Status))
+    , (Topic.listLibrariesStatus,   \content -> "content:\n" <> show content <> "\ndecoded:\n" <> show (Bin.decode . fromStrict $ content :: ListLibraries.Status))
     ]
 
 defaultLogFormatter :: LogFormatter
