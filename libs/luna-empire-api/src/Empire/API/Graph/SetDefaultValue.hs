@@ -7,7 +7,7 @@ import           Empire.API.Data.GraphLocation (GraphLocation)
 import           Empire.API.Data.Node          (NodeId)
 import           Empire.API.Data.Port          (InPort)
 import           Empire.API.Data.DefaultValue  (PortDefault)
-import qualified Empire.API.Response           as Response
+import qualified Empire.API.Update             as Update
 
 data Request = Request { _location     :: GraphLocation
                        , _nodeId       :: NodeId
@@ -15,7 +15,7 @@ data Request = Request { _location     :: GraphLocation
                        , _defaultValue :: PortDefault
                        } deriving (Generic, Show, Eq)
 
-type Response = Response.SimpleResponse Request
+type Update = Update.SimpleUpdate Request
 
 makeLenses ''Request
 

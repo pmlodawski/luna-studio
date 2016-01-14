@@ -25,7 +25,7 @@ import qualified Empire.Data.Project              as DataProject
 import           Empire.Data.AST                  (AST)
 import qualified Empire.API.Project.CreateProject as CreateProject
 import qualified Empire.API.Project.ListProjects  as ListProjects
-import qualified Empire.API.Response              as Response
+import qualified Empire.API.Update                as Update
 import qualified Empire.API.Topic                 as Topic
 import qualified Empire.Commands.Project          as ProjectCmd
 import qualified Empire.Empire                    as Empire
@@ -48,7 +48,7 @@ handleCreateProject content = do
         Left err -> logger Logger.error $ Server.errorMessage ++ err
         Right (projectId, project) -> do
             Env.empireEnv .= newEmpireEnv
-            let response = Response.Update request $ CreateProject.Update projectId $ DataProject.toAPI project
+            let response = Update.Update request $ CreateProject.Result projectId $ DataProject.toAPI project
             lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.createProjectUpdate $ toStrict $ Bin.encode response
             return ()
 
@@ -64,6 +64,6 @@ handleListProjects content = do
         Right projectList -> do
             Env.empireEnv .= newEmpireEnv
             let projectListAPI = fmap (\(projectId, project) -> (projectId, DataProject.toAPI project)) projectList
-                response = Response.Update request $ ListProjects.Status projectListAPI
+                response = Update.Update request $ ListProjects.Status projectListAPI
             lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.listProjectsStatus $ toStrict $ Bin.encode response
             return ()

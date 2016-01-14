@@ -25,7 +25,7 @@ import qualified Empire.Data.Library              as DataLibrary
 import           Empire.Data.AST                  (AST)
 import qualified Empire.API.Library.CreateLibrary as CreateLibrary
 import qualified Empire.API.Library.ListLibraries as ListLibraries
-import qualified Empire.API.Response              as Response
+import qualified Empire.API.Update                as Update
 import qualified Empire.API.Topic                 as Topic
 import qualified Empire.Commands.Library          as LibraryCmd
 import qualified Empire.Empire                    as Empire
@@ -49,7 +49,7 @@ handleCreateLibrary content = do
         Left err -> logger Logger.error $ Server.errorMessage ++ err
         Right (libraryId, library) -> do
             Env.empireEnv .= newEmpireEnv
-            let response = Response.Update request $ CreateLibrary.Update libraryId $ DataLibrary.toAPI library
+            let response = Update.Update request $ CreateLibrary.Result libraryId $ DataLibrary.toAPI library
             lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.createLibraryUpdate $ toStrict $ Bin.encode response
             return ()
 
@@ -66,6 +66,6 @@ handleListLibraries content = do
         Right librariesList -> do
             Env.empireEnv .= newEmpireEnv
             let librariesListAPI = fmap (\(libraryId, library) -> (libraryId, DataLibrary.toAPI library)) librariesList
-                response = Response.Update request $ ListLibraries.Status librariesListAPI
+                response = Update.Update request $ ListLibraries.Status librariesListAPI
             lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.listLibrariesStatus $ toStrict $ Bin.encode response
             return ()

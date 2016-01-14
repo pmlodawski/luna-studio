@@ -4,20 +4,20 @@ import           Prologue
 import           Data.Binary                      (Binary)
 
 import           Empire.API.Data.Project          (ProjectId, Project)
-import qualified Empire.API.Response              as Response
+import qualified Empire.API.Update              as Update
 
 data Request = Request { _projectName :: Maybe String
                        , _path        :: String
                        } deriving (Generic, Show, Eq)
 
-data Update = Update { _projectId :: ProjectId
+data Result = Result { _projectId :: ProjectId
                      , _project   :: Project
                      } deriving (Generic, Show, Eq)
 
-type Response = Response.Response Request Update
+type Update = Update.Update Request Result
 
 makeLenses ''Request
-makeLenses ''Update
+makeLenses ''Result
 
 instance Binary Request
-instance Binary Update
+instance Binary Result

@@ -5,21 +5,21 @@ import           Data.Binary             (Binary)
 
 import           Empire.API.Data.Project (ProjectId)
 import           Empire.API.Data.Library (LibraryId, Library)
-import qualified Empire.API.Response     as Response
+import qualified Empire.API.Update     as Update
 
 data Request = Request { _projectId   :: ProjectId
                        , _libraryName :: Maybe String
                        , _path        :: String
                        } deriving (Generic, Show, Eq)
 
-data Update = Update { _libraryId :: LibraryId
+data Result = Result { _libraryId :: LibraryId
                      , _library   :: Library
                      } deriving (Generic, Show, Eq)
 
-type Response = Response.Response Request Update
+type Update = Update.Update Request Result
 
 makeLenses ''Request
-makeLenses ''Update
+makeLenses ''Result
 
 instance Binary Request
-instance Binary Update
+instance Binary Result

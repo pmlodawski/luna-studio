@@ -4,14 +4,14 @@ import           Prologue
 import           Data.Binary             (Binary)
 
 import           Empire.API.Data.Project (ProjectId, Project)
-import qualified Empire.API.Response     as Response
+import qualified Empire.API.Update       as Update
 
 data Request = Request deriving (Generic, Show, Eq)
 
 data Status = Status { _projects :: [(ProjectId, Project)]
                      } deriving (Generic, Show, Eq)
 
-type Response = Response.Response Request Status
+type Update = Update.Update Request Status
 
 makeLenses ''Request
 makeLenses ''Status

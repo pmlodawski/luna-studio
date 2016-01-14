@@ -5,7 +5,7 @@ import           Data.Binary             (Binary)
 
 import           Empire.API.Data.Project (ProjectId)
 import           Empire.API.Data.Library (LibraryId, Library)
-import qualified Empire.API.Response     as Response
+import qualified Empire.API.Update       as Update
 
 data Request = Request { _projectId   :: ProjectId
                        } deriving (Generic, Show, Eq)
@@ -13,7 +13,7 @@ data Request = Request { _projectId   :: ProjectId
 data Status = Status { _libraries   :: [(LibraryId, Library)]
                      } deriving (Generic, Show, Eq)
 
-type Response = Response.Response Request Status
+type Update = Update.Update Request Status
 
 makeLenses ''Request
 makeLenses ''Status

@@ -25,7 +25,7 @@ import qualified Empire.API.Project.ListProjects  as ListProjects
 import qualified Empire.API.Library.CreateLibrary as CreateLibrary
 import qualified Empire.API.Library.ListLibraries as ListLibraries
 import qualified Empire.API.Topic                 as Topic
-import qualified Empire.API.Response              as Response
+import qualified Empire.API.Update                as Update
 
 
 data Cmd = TestNotRecognizedRequest
@@ -108,12 +108,12 @@ testNodeUpdate :: IO ()
 testNodeUpdate = do
     endPoints <- EP.clientFromConfig <$> Config.load
     Bus.runBus endPoints $ do
-        let meta     = NodeMeta.NodeMeta (20.0, 30.0)
-            request  = AddNode.Request (gl 0 0) "dupa123" meta 1235
-            node     = Node.Node 123 "dupa123" mempty meta
-            update   = AddNode.Update  node
-            response = Response.Update request update
-        Bus.send Flag.Enable $ Message.Message "empire.graph.node.add.update" $ toStrict $ Bin.encode response
+        let meta    = NodeMeta.NodeMeta (20.0, 30.0)
+            request = AddNode.Request (gl 0 0) "dupa123" meta 1235
+            node    = Node.Node 123 "dupa123" mempty meta
+            result  = AddNode.Result node
+            update  = Update.Update request result
+        Bus.send Flag.Enable $ Message.Message "empire.graph.node.add.update" $ toStrict $ Bin.encode update
     return ()
 
 testCreateProject :: IO ()

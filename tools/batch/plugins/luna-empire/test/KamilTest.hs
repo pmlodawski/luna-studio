@@ -16,18 +16,18 @@ import qualified Flowbox.Bus.Data.Message    as Message
 import           Flowbox.Options.Applicative hiding (info)
 import qualified Flowbox.Options.Applicative as Opt
 
-import qualified Empire.API.Data.Node as Node
-import qualified Empire.API.Data.Port as Port
-import qualified Empire.API.Data.NodeMeta as NodeMeta
+import qualified Empire.API.Data.Node        as Node
+import qualified Empire.API.Data.Port        as Port
+import qualified Empire.API.Data.NodeMeta    as NodeMeta
 import qualified Empire.API.Topic            as Topic
 import qualified Empire.API.Graph.AddNode    as AddNode
 import qualified Empire.API.Graph.Connect    as Connect
 import qualified Empire.API.Graph.RemoveNode as RemoveNode
 import qualified Empire.API.Data.NodeMeta    as NodeMeta
-import qualified Empire.API.Response         as Response
+import qualified Empire.API.Update           as Update
 
-import           Data.Map.Lazy (Map)
-import qualified Data.Map.Lazy as Map
+import           Data.Map.Lazy               (Map)
+import qualified Data.Map.Lazy               as Map
 
 data Cmd = TestBasicString
          | TestBadTopic

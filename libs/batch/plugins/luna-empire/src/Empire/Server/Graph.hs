@@ -22,9 +22,9 @@ import qualified Empire.API.Graph.Connect        as Connect
 import qualified Empire.API.Graph.Disconnect     as Disconnect
 import qualified Empire.API.Graph.GetProgram     as GetProgram
 import qualified Empire.API.Graph.CodeUpdate     as CodeUpdate
-import qualified Empire.API.Response             as Response
+import qualified Empire.API.Update               as Update
 import qualified Empire.API.Topic                as Topic
-import           Empire.API.Data.GraphLocation  (GraphLocation)
+import           Empire.API.Data.GraphLocation   (GraphLocation)
 import qualified Empire.Commands.Graph           as GraphCmd
 import qualified Empire.Empire                   as Empire
 import qualified Empire.Server.Server            as Server
@@ -59,7 +59,7 @@ handleAddNode content = do
         Left err -> logger Logger.error $ Server.errorMessage ++ err
         Right node -> do
             Env.empireEnv .= newEmpireEnv
-            let response = Response.Update request $ AddNode.Update node
+            let response = Update.Update request $ AddNode.Result node
             lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.addNodeUpdate $ toStrict $ Bin.encode response
             notifyCodeUpdate location
 
@@ -77,7 +77,7 @@ handleRemoveNode content = do
         Left err -> logger Logger.error $ Server.errorMessage ++ err
         Right _ -> do
             Env.empireEnv .= newEmpireEnv
-            let response = Response.Update request $ Response.Ok
+            let response = Update.Update request $ Update.Ok
             lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.removeNodeUpdate $ toStrict $ Bin.encode response
             notifyCodeUpdate location
 
@@ -96,7 +96,7 @@ handleUpdateNodeMeta content = do
         Left err -> logger Logger.error $ Server.errorMessage ++ err
         Right _ -> do
             Env.empireEnv .= newEmpireEnv
-            let response = Response.Update request $ UpdateNodeMeta.Update nodeMeta
+            let response = Update.Update request $ UpdateNodeMeta.Result nodeMeta
             lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.updateNodeMetaUpdate $ toStrict $ Bin.encode response
             return ()
 
@@ -115,7 +115,7 @@ handleConnect content = do
         Left err -> logger Logger.error $ Server.errorMessage ++ err
         Right _ -> do
             Env.empireEnv .= newEmpireEnv
-            let response = Response.Update request $ Response.Ok
+            let response = Update.Update request $ Update.Ok
             lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.connectUpdate $ toStrict $ Bin.encode response
             notifyCodeUpdate location
 
@@ -133,7 +133,7 @@ handleDisconnect content = do
         Left err -> logger Logger.error $ Server.errorMessage ++ err
         Right _ -> do
             Env.empireEnv .= newEmpireEnv
-            let response = Response.Update request $ Response.Ok
+            let response = Update.Update request $ Update.Ok
             lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.disconnectUpdate $ toStrict $ Bin.encode response
             notifyCodeUpdate location
 
@@ -151,5 +151,5 @@ handleGetProgram content = do
         (Left err, _) -> logger Logger.error $ Server.errorMessage ++ err
         (_, Left err) -> logger Logger.error $ Server.errorMessage ++ err
         (Right graph, Right code) -> do
-            let response = Response.Update request $ GetProgram.Status graph (Text.pack code)
+            let response = Update.Update request $ GetProgram.Status graph (Text.pack code)
             void . lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.programStatus $ toStrict $ Bin.encode response
