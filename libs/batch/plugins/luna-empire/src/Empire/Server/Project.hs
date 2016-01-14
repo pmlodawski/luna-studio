@@ -38,9 +38,7 @@ logger = Logger.getLoggerIO $(Logger.moduleName)
 handleCreateProject :: ByteString -> StateT Env BusT ()
 handleCreateProject content = do
     let request = Bin.decode . fromStrict $ content :: CreateProject.Request
-    logger Logger.info $ show request
     currentEmpireEnv <- use Env.empireEnv
-    logger Logger.info $ show currentEmpireEnv
     (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ ProjectCmd.createProject
         (request ^. CreateProject.projectName)
         (fromString $ request ^. CreateProject.path)
@@ -55,9 +53,7 @@ handleCreateProject content = do
 handleListProjects :: ByteString -> StateT Env BusT ()
 handleListProjects content = do
     let request = Bin.decode . fromStrict $ content :: ListProjects.Request
-    logger Logger.info $ show request
     currentEmpireEnv <- use Env.empireEnv
-    logger Logger.info $ show currentEmpireEnv
     (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ ProjectCmd.listProjects
     case result of
         Left err -> logger Logger.error $ Server.errorMessage ++ err

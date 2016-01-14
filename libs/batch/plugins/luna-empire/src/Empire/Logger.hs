@@ -37,6 +37,7 @@ import qualified Empire.API.Graph.Connect               as Connect
 import qualified Empire.API.Graph.Disconnect            as Disconnect
 import qualified Empire.API.Graph.GetProgram            as GetProgram
 import qualified Empire.API.Graph.CodeUpdate            as CodeUpdate
+import qualified Empire.API.Graph.NodeUpdate            as NodeUpdate
 import qualified Empire.API.Project.CreateProject       as CreateProject
 import qualified Empire.API.Project.ListProjects        as ListProjects
 import qualified Empire.API.Library.CreateLibrary       as CreateLibrary
@@ -92,17 +93,27 @@ loggFormattersMap = Map.fromList
     [ (Topic.addNodeRequest,        \content -> show (Bin.decode . fromStrict $ content :: AddNode.Request))
     , (Topic.addNodeUpdate,         \content -> show (Bin.decode . fromStrict $ content :: AddNode.Update))
     , (Topic.removeNodeRequest,     \content -> show (Bin.decode . fromStrict $ content :: RemoveNode.Request))
-    , (Topic.removeNodeRequest,     \content -> show (Bin.decode . fromStrict $ content :: RemoveNode.Request))
+    , (Topic.removeNodeUpdate,      \content -> show (Bin.decode . fromStrict $ content :: RemoveNode.Update))
     , (Topic.updateNodeMetaRequest, \content -> show (Bin.decode . fromStrict $ content :: UpdateNodeMeta.Request))
+    , (Topic.updateNodeMetaUpdate,  \content -> show (Bin.decode . fromStrict $ content :: UpdateNodeMeta.Update))
     , (Topic.connectRequest,        \content -> show (Bin.decode . fromStrict $ content :: Connect.Request))
+    , (Topic.connectUpdate,         \content -> show (Bin.decode . fromStrict $ content :: Connect.Update))
     , (Topic.disconnectRequest,     \content -> show (Bin.decode . fromStrict $ content :: Disconnect.Request))
+    , (Topic.disconnectUpdate,      \content -> show (Bin.decode . fromStrict $ content :: Disconnect.Update))
     , (Topic.programRequest,        \content -> show (Bin.decode . fromStrict $ content :: GetProgram.Request))
+    , (Topic.programStatus,         \content -> show (Bin.decode . fromStrict $ content :: GetProgram.Status))
+    , (Topic.nodeUpdate,            \content -> show (Bin.decode . fromStrict $ content :: NodeUpdate.Update))
+    , (Topic.codeUpdate,            \content -> show (Bin.decode . fromStrict $ content :: CodeUpdate.Update))
+    , (Topic.graphUpdate,           const "graphUpdate - not implemented yet")
     , (Topic.createProjectRequest,  \content -> show (Bin.decode . fromStrict $ content :: CreateProject.Request))
+    , (Topic.createProjectUpdate,   \content -> show (Bin.decode . fromStrict $ content :: CreateProject.Update))
     , (Topic.listProjectsRequest,   \content -> show (Bin.decode . fromStrict $ content :: ListProjects.Request))
+    , (Topic.listProjectsStatus,    \content -> show (Bin.decode . fromStrict $ content :: ListProjects.Status))
     , (Topic.createLibraryRequest,  \content -> show (Bin.decode . fromStrict $ content :: CreateLibrary.Request))
+    , (Topic.createLibraryUpdate,   \content -> show (Bin.decode . fromStrict $ content :: CreateLibrary.Update))
     , (Topic.listLibrariesRequest,  \content -> show (Bin.decode . fromStrict $ content :: ListLibraries.Request))
+    , (Topic.listLibrariesStatus,   \content -> show (Bin.decode . fromStrict $ content :: ListLibraries.Status))
     ]
-
 
 defaultLogFormatter :: LogFormatter
 defaultLogFormatter = const "Not recognized message"

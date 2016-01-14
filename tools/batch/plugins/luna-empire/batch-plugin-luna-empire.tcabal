@@ -31,6 +31,26 @@ Executable luna-empire
                     flowbox-utils-old,
                     optparse-applicative
 
+Executable luna-empire-logger
+    Hs-Source-Dirs: src
+    Other-Modules:  `findmodules('src', '.*\.hs')`
+
+    Main-Is:        LoggerMain.hs
+
+    GHC-Options:    -Wall -O2 -threaded
+
+    Extensions:     NoImplicitPrelude,
+                    TemplateHaskell
+
+    Build-Depends:  base,
+                    prologue,
+                    batch-lib-luna-empire,
+                    binary,
+                    flowbox-bus-binary,
+                    flowbox-config,
+                    flowbox-utils-old,
+                    optparse-applicative
+
 
 Executable luna-empire-test
     Main-Is:        Main.hs

@@ -38,9 +38,7 @@ logger = Logger.getLoggerIO $(Logger.moduleName)
 handleCreateLibrary :: ByteString -> StateT Env BusT ()
 handleCreateLibrary content = do
     let request = Bin.decode . fromStrict $ content :: CreateLibrary.Request
-    logger Logger.info $ show request
     currentEmpireEnv <- use Env.empireEnv
-    logger Logger.info $ show currentEmpireEnv
     (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ LibraryCmd.createLibrary
         (request ^. CreateLibrary.projectId)
         (request ^. CreateLibrary.libraryName)
@@ -56,9 +54,7 @@ handleCreateLibrary content = do
 handleListLibraries :: ByteString -> StateT Env BusT ()
 handleListLibraries content = do
     let request = Bin.decode . fromStrict $ content :: ListLibraries.Request
-    logger Logger.info $ show request
     currentEmpireEnv <- use Env.empireEnv
-    logger Logger.info $ show currentEmpireEnv
     (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ LibraryCmd.listLibraries
         (request ^. ListLibraries.projectId)
     case result of

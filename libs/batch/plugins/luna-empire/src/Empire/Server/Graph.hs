@@ -49,8 +49,6 @@ handleAddNode content = do
     let request  = Bin.decode . fromStrict $ content :: AddNode.Request
         location = request ^. AddNode.location
     currentEmpireEnv <- use Env.empireEnv
-    logger Logger.info $ show request
-    logger Logger.info $ show currentEmpireEnv
     (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ Server.withGraphLocation GraphCmd.addNode
         location
         (Text.pack $ request ^. AddNode.expr)
@@ -68,8 +66,6 @@ handleRemoveNode content = do
     let request = Bin.decode . fromStrict $ content :: RemoveNode.Request
         location = request ^. RemoveNode.location
     currentEmpireEnv <- use Env.empireEnv
-    logger Logger.info $ show request
-    logger Logger.info $ show currentEmpireEnv
     (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ Server.withGraphLocation GraphCmd.removeNode
         location
         (request ^. RemoveNode.nodeId)
@@ -86,8 +82,6 @@ handleUpdateNodeMeta content = do
     let request = Bin.decode . fromStrict $ content :: UpdateNodeMeta.Request
         nodeMeta = request ^. UpdateNodeMeta.nodeMeta
     currentEmpireEnv <- use Env.empireEnv
-    logger Logger.info $ show request
-    logger Logger.info $ show currentEmpireEnv
     (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ Server.withGraphLocation GraphCmd.updateNodeMeta
         (request ^. UpdateNodeMeta.location)
         (request ^. UpdateNodeMeta.nodeId)
@@ -105,8 +99,6 @@ handleConnect content = do
     let request = Bin.decode . fromStrict $ content :: Connect.Request
         location = request ^. Connect.location
     currentEmpireEnv <- use Env.empireEnv
-    logger Logger.info $ show request
-    logger Logger.info $ show currentEmpireEnv
     (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ Server.withGraphLocation GraphCmd.connect
         location
         (request ^. Connect.src)
@@ -124,8 +116,6 @@ handleDisconnect content = do
     let request = Bin.decode . fromStrict $ content :: Disconnect.Request
         location = request ^. Disconnect.location
     currentEmpireEnv <- use Env.empireEnv
-    logger Logger.info $ show request
-    logger Logger.info $ show currentEmpireEnv
     (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ Server.withGraphLocation GraphCmd.disconnect
         location
         (request ^. Disconnect.dst)
@@ -141,8 +131,6 @@ handleGetProgram :: ByteString -> StateT Env BusT ()
 handleGetProgram content = do
     let request = Bin.decode . fromStrict $ content :: GetProgram.Request
     currentEmpireEnv <- use Env.empireEnv
-    logger Logger.info $ show request
-    logger Logger.info $ show currentEmpireEnv
     (resultGraph, _) <- liftIO $ Empire.runEmpire currentEmpireEnv $ Server.withGraphLocation GraphCmd.getGraph
         (request ^. GetProgram.location)
     (resultCode, _) <- liftIO $ Empire.runEmpire currentEmpireEnv $ Server.withGraphLocation GraphCmd.getCode

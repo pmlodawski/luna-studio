@@ -54,14 +54,18 @@ createDefaultState = do
         projectName (fromString projectPath)
     case resultProject of
         Left err -> logger Logger.error $ Server.errorMessage ++ err
-        Right (projectId, _) -> do
+        Right (projectId, project) -> do
+            logger Logger.info $ "Created project " <> show projectId
+            logger Logger.debug $ show project
             Env.empireEnv .= newEmpireEnv1
             (resultLibrary, newEmpireEnv2) <- liftIO $ Empire.runEmpire newEmpireEnv1 $ Library.createLibrary
                 projectId libraryName (fromString libraryPath)
             case resultLibrary of
                 Left err -> logger Logger.error $ Server.errorMessage ++ err
-                Right _ -> do
+                Right (libraryId, library) -> do
                     Env.empireEnv .= newEmpireEnv2
+                    logger Logger.info $ "Created library " <> show libraryId
+                    logger Logger.debug $ show library
                     return ()
 
 handleMessage :: StateT Env BusT ()
@@ -79,31 +83,35 @@ handleMessage = do
                        ++ "\t:: "
                        ++ topic
                 content = msg ^. Message.message
-                errorMsg = show content
             case Utils.lastPart '.' topic of
-                "update"   -> handleUpdate  logMsg topic content
-                "status"   -> handleStatus  logMsg topic content
-                "request"  -> handleRequest logMsg topic content
-                _          -> do logger Logger.error logMsg
-                                 logger Logger.error errorMsg
+                "update"   -> handleUpdate        logMsg topic content
+                "status"   -> handleStatus        logMsg topic content
+                "request"  -> handleRequest       logMsg topic content
+                _          -> handleNotRecognized logMsg topic content
+
+
+defaultHandler :: ByteString -> StateT Env BusT ()
+defaultHandler content = do
+    logger Logger.error $ "Not recognized request"
+    logger Logger.info $ unpack content
 
 handleRequest :: String -> String -> ByteString -> StateT Env BusT ()
 handleRequest logMsg topic content = do
     logger Logger.info logMsg
     let handler = Map.findWithDefault defaultHandler topic Handlers.handlersMap
     handler content
-
-defaultHandler :: ByteString -> StateT Env BusT ()
-defaultHandler content = do
-    logger Logger.info $ "Not recognized request"
-    logger Logger.info $ unpack content
+    currentEmpireEnv <- use Env.empireEnv
+    logger Logger.debug $ show currentEmpireEnv
 
 handleUpdate :: String -> String -> ByteString -> StateT Env BusT ()
 handleUpdate logMsg topic content = do
     logger Logger.info logMsg
-    logger Logger.info $ unpack content
 
 handleStatus :: String -> String -> ByteString -> StateT Env BusT ()
 handleStatus logMsg topic content = do
     logger Logger.info logMsg
-    logger Logger.info $ unpack content
+
+handleNotRecognized :: String -> String -> ByteString -> StateT Env BusT ()
+handleNotRecognized logMsg topic content = do
+    logger Logger.error logMsg
+    logger Logger.error $ show content
