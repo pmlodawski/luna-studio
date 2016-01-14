@@ -17,6 +17,11 @@ Library
 
   Extensions:     NoImplicitPrelude,
                   TemplateHaskell,
+                  DeriveFunctor,
+                  DeriveTraversable,
+                  FlexibleInstances,
+                  TypeFamilies,
+                  MultiParamTypeClasses,
                   RankNTypes
 
   Exposed-modules: `findmodules('src', '.*\.hs')`

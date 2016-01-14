@@ -42,10 +42,10 @@ buildNodes :: Command Graph [API.Node]
 buildNodes = do
     allNodeIds <- uses Graph.nodeMapping IntMap.keys
     forM allNodeIds $ \id -> do
-        ref  <- GraphUtils.getASTTarget id
-        uref <- GraphUtils.getASTPointer id
-        expr <- zoom Graph.ast $ runASTOp $ Print.printExpression ref
-        meta <- zoom Graph.ast $ AST.readMeta uref
+        ref   <- GraphUtils.getASTTarget id
+        uref  <- GraphUtils.getASTPointer id
+        expr  <- zoom Graph.ast $ runASTOp $ Print.printExpression ref
+        meta  <- zoom Graph.ast $ AST.readMeta uref
         return $ API.Node id (Text.pack expr) API.mockPorts $ fromMaybe def meta
 
 buildConnections :: Command Graph [(OutPortRef, InPortRef)]

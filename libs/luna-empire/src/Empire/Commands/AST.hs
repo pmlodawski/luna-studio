@@ -9,7 +9,9 @@ import           Data.Variants       (match, case', specificCons, ANY(..))
 import           Data.Layer.Coat     (uncoat, coated)
 
 import           Empire.Empire
-import           Empire.Data.AST       (AST, ASTNode)
+import           Empire.Data.AST          (AST, ASTNode)
+import           Empire.Data.WithMeta     (meta)
+import           Empire.API.Data.NodeMeta (NodeMeta)
 
 import           Empire.ASTOp          (runASTOp)
 import qualified Empire.ASTOps.Parse   as Parser
@@ -25,13 +27,13 @@ import           Luna.Syntax.Layer.Labeled (HasLabel, label)
 addNode :: String -> String -> Command AST (Ref Node)
 addNode name expr = runASTOp $ Parser.parseFragment expr >>= ASTBuilder.unifyWithName name
 
-readMeta :: HasLabel a ASTNode => Ref Node -> Command AST a
-readMeta ref = runASTOp $ view label <$> Builder.readRef ref
+readMeta :: Ref Node -> Command AST (Maybe NodeMeta)
+readMeta ref = runASTOp $ view meta <$> Builder.readRef ref
 
-writeMeta :: HasLabel a ASTNode => Ref Node -> a -> Command AST ()
+writeMeta :: Ref Node -> Maybe NodeMeta -> Command AST ()
 writeMeta ref newMeta = runASTOp $ do
     node <- Builder.readRef ref
-    Builder.writeRef ref (node & label .~ newMeta)
+    Builder.writeRef ref (node & meta .~ newMeta)
 
 removeSubtree :: Ref Node -> Command AST ()
 removeSubtree = runASTOp . safeRemove

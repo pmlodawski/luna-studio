@@ -59,8 +59,6 @@ instance HasLabel l (Labeled2 l a) where
 instance (Monad m, Default a) => Maker m a where make = return def
 instance Monad m => Destroyer m Int where destroy _ = return ()
 
-instance Monad m => Destroyer m (Maybe a) where destroy _ = return ()
-
 
 --instance HasAST (a t) ast => HasAST (Labeled l a t) ast where ast = undefined
 --instance HasAST a ast => HasAST (Labeled l a) ast where ast = inner . ast
