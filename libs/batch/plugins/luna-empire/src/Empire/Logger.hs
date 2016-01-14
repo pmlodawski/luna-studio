@@ -101,18 +101,18 @@ loggFormattersMap = Map.fromList
     , (Topic.disconnectRequest,     \content -> show (Bin.decode . fromStrict $ content :: Disconnect.Request))
     , (Topic.disconnectUpdate,      \content -> show (Bin.decode . fromStrict $ content :: Disconnect.Update))
     , (Topic.programRequest,        \content -> show (Bin.decode . fromStrict $ content :: GetProgram.Request))
-    , (Topic.programStatus,         \content -> show (Bin.decode . fromStrict $ content :: GetProgram.Status))
+    , (Topic.programStatus,         \content -> show (Bin.decode . fromStrict $ content :: GetProgram.Update))
     , (Topic.nodeUpdate,            \content -> show (Bin.decode . fromStrict $ content :: NodeUpdate.Update))
     , (Topic.codeUpdate,            \content -> show (Bin.decode . fromStrict $ content :: CodeUpdate.Update))
     , (Topic.graphUpdate,           const "graphUpdate - not implemented yet")
     , (Topic.createProjectRequest,  \content -> show (Bin.decode . fromStrict $ content :: CreateProject.Request))
     , (Topic.createProjectUpdate,   \content -> show (Bin.decode . fromStrict $ content :: CreateProject.Update))
     , (Topic.listProjectsRequest,   \content -> show (Bin.decode . fromStrict $ content :: ListProjects.Request))
-    , (Topic.listProjectsStatus,    \content -> "content:\n" <> unpack content <> "\ndecoded:\n" <> show (Bin.decode . fromStrict $ content :: ListProjects.Status))
+    , (Topic.listProjectsStatus,    \content -> show (Bin.decode . fromStrict $ content :: ListProjects.Update))
     , (Topic.createLibraryRequest,  \content -> show (Bin.decode . fromStrict $ content :: CreateLibrary.Request))
     , (Topic.createLibraryUpdate,   \content -> show (Bin.decode . fromStrict $ content :: CreateLibrary.Update))
     , (Topic.listLibrariesRequest,  \content -> show (Bin.decode . fromStrict $ content :: ListLibraries.Request))
-    , (Topic.listLibrariesStatus,   \content -> "content:\n" <> unpack content <> "\ndecoded:\n" <> show (Bin.decode . fromStrict $ content :: ListLibraries.Status))
+    , (Topic.listLibrariesStatus,   \content -> show (Bin.decode . fromStrict $ content :: ListLibraries.Update))
     ]
 
 defaultLogFormatter :: LogFormatter

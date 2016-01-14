@@ -62,6 +62,4 @@ handleListLibraries content = do
             Env.empireEnv .= newEmpireEnv
             let librariesListAPI = fmap (\(libraryId, library) -> (libraryId, DataLibrary.toAPI library)) librariesList
                 update = Update.Update request $ ListLibraries.Status librariesListAPI
-            logger Logger.info $ "librariesListAPI: " <> show librariesListAPI
-            logger Logger.info $ "update          : " <> show update
             void . lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.listLibrariesStatus $ toStrict $ Bin.encode update
