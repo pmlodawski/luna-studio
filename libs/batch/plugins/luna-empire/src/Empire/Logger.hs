@@ -86,7 +86,7 @@ logMessage :: String -> String -> ByteString -> StateT Env BusT ()
 logMessage logMsg topic content = do
     logger Logger.info logMsg
     let logFormatter = Map.findWithDefault defaultLogFormatter topic loggFormattersMap
-    logger Logger.info $ logFormatter content
+    logger Logger.debug $ logFormatter content
 
 loggFormattersMap :: Map String LogFormatter
 loggFormattersMap = Map.fromList
