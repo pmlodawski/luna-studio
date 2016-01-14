@@ -36,8 +36,8 @@ writeMeta ref newMeta = runASTOp $ do
 removeSubtree :: Ref Node -> Command AST ()
 removeSubtree = runASTOp . safeRemove
 
-printNodeLine :: Ref Node -> Command AST String
-printNodeLine = runASTOp . Printer.printNodeLine
+printExpression :: Ref Node -> Command AST String
+printExpression = runASTOp . Printer.printExpression
 
 applyFunction :: Ref Node -> Ref Node -> Int -> Command AST (Ref Node)
 applyFunction = runASTOp .:. ASTBuilder.applyFunction

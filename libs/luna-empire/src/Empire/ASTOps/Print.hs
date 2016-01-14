@@ -22,33 +22,26 @@ printVal val = case' val $ do
     match $ \(Lit.Int    i) -> show i
     match $ \(Lit.String s) -> show s
 
-printNodeLine :: Ref Node -> ASTOp String
-printNodeLine nodeRef = do
+printExpression :: Ref Node -> ASTOp String
+printExpression nodeRef = do
     node <- Builder.readRef nodeRef
     case' (uncoat node) $ do
         match $ \(Unify l r) -> do
-            leftRep  <- Builder.follow l >>= printNodeLine
-            rightRep <- Builder.follow r >>= printNodeLine
+            leftRep  <- Builder.follow l >>= printExpression
+            rightRep <- Builder.follow r >>= printExpression
             return $ leftRep ++ " = " ++ rightRep
         match $ \(Var n) -> Builder.follow n >>= printIdent
         match $ \(Accessor n t) -> do
-            targetRep <- Builder.follow t >>= printNodeLine
+            targetRep <- Builder.follow t >>= printExpression
             nameRep   <- Builder.follow n >>= printIdent
             return $ targetRep ++ "." ++ nameRep
         match $ \(App f args) -> do
-            funRep <- Builder.follow f >>= printNodeLine
+            funRep <- Builder.follow f >>= printExpression
             unpackedArgs <- ASTBuilder.unpackArguments args
-            argsRep <- sequence $ printNodeLine <$> unpackedArgs
-            return $ funRep ++ " " ++ (intercalate " " argsRep)
+            argsRep <- sequence $ printExpression <$> unpackedArgs
+            case argsRep of
+                [] -> return funRep
+                _  -> return $ funRep ++ " " ++ (intercalate " " argsRep)
         match $ \Blank -> return "_"
         match $ return . printVal
         match $ \ANY -> return ""
-
-printNodeExpression :: Ref Node -> ASTOp String
-printNodeExpression ref = do
-    node <- Builder.readRef ref
-    case' (uncoat node) $ do
-        match $ \(Var n) -> Builder.follow n >>= printIdent
-        match $ \(Accessor n _) -> Builder.follow n >>= printIdent
-        match $ \(App f _) -> Builder.follow f >>= printNodeExpression
-        match $ return . printVal

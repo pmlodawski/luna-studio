@@ -78,7 +78,7 @@ getGraph pid lid = withGraph pid lid GraphBuilder.buildGraph
 -- internal
 
 printNodeLine :: NodeId -> Command Graph String
-printNodeLine nid = GraphUtils.getASTPointer nid >>= (zoom Graph.ast . AST.printNodeLine)
+printNodeLine nid = GraphUtils.getASTPointer nid >>= (zoom Graph.ast . AST.printExpression)
 
 withGraph :: ProjectId -> LibraryId -> Command Graph a -> Empire a
 withGraph pid lid = withLibrary pid lid . zoom Library.body

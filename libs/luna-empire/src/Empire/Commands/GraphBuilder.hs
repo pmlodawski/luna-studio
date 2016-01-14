@@ -44,7 +44,7 @@ buildNodes = do
     forM allNodeIds $ \id -> do
         ref  <- GraphUtils.getASTTarget id
         uref <- GraphUtils.getASTPointer id
-        expr <- zoom Graph.ast $ runASTOp $ Print.printNodeExpression ref
+        expr <- zoom Graph.ast $ runASTOp $ Print.printExpression ref
         meta <- zoom Graph.ast $ AST.readMeta uref
         return $ API.Node id (Text.pack expr) API.mockPorts $ fromMaybe def meta
 
