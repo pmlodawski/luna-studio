@@ -14,11 +14,14 @@ packages:
   - ../libs/luna-empire-api
   - ../libs/luna-empire-api-json
   - ../libs/utils
-  - ../libs/data/serialization
+  - location:
+      git: git@github.com:wdanilo/prologue.git
+      commit: 9ba882921b6e2527923bbb0f9ba54c41b43a8135
+  - location:
+      git: git@github.com:wdanilo/container.git
+      commit: cd137cdfa6059cc267aa865d78bbbf0a17a4c657
 extra-deps:
-  - container-1.0.1
   - data-repr-1.0
-  - prologue-1.0.6
   - ghcjs-dom-0.2.3.0
   - data-layer-1.0.3
   - functor-utils-1.0
