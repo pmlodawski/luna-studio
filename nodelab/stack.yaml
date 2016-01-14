@@ -18,7 +18,7 @@ packages:
       git: https://github.com/wdanilo/prologue.git
       commit: 9ba882921b6e2527923bbb0f9ba54c41b43a8135
   - location:
-      git: https://github.com:wdanilo/container.git
+      git: https://github.com/wdanilo/container.git
       commit: cd137cdfa6059cc267aa865d78bbbf0a17a4c657
 extra-deps:
   - data-repr-1.0
