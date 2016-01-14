@@ -32,9 +32,11 @@ test = do
     n2 <- (view nodeId) <$> Graph.addNode pid lid "2"     (NodeMeta (2.0, 3.0))
     np <- (view nodeId) <$> Graph.addNode pid lid "+"     (NodeMeta (3.0, 2.0))
     nf <- (view nodeId) <$> Graph.addNode pid lid "floor" (NodeMeta (4.0, 1.0))
-    Graph.connect pid lid (OutPortRef n2 All) (InPortRef np (Arg 0))
     Graph.connect pid lid (OutPortRef n1 All) (InPortRef np Self)
     Graph.connect pid lid (OutPortRef np All) (InPortRef nf Self)
+    Graph.connect pid lid (OutPortRef n2 All) (InPortRef np (Arg 0))
+
+    Graph.disconnect pid lid (InPortRef nf Self)
 
     fstNode <- (view nodeId) <$> Graph.addNode pid lid "+"   (NodeMeta (3.14, 3.14))
     sndNode <- (view nodeId) <$> Graph.addNode pid lid "Int" (NodeMeta (4.14, 4.14))
@@ -48,9 +50,12 @@ test = do
 
     {-Graph.removeNode pid lid np-}
 
-    {-Graph.disconnect pid lid fstNode Self-}
-    {-Graph.disconnect pid lid fstNode $ Arg 0-}
-    {-Graph.disconnect pid lid fstNode $ Arg 1-}
+    Graph.disconnect pid lid (InPortRef fstNode Self)
+    Graph.disconnect pid lid (InPortRef fstNode $ Arg 0)
+    Graph.disconnect pid lid (InPortRef fstNode $ Arg 1)
+
+    Graph.addNode pid lid "1.floor.toString" $ NodeMeta (0.0, 0.0)
+    Graph.addNode pid lid "String.++ _ 1.floor.toString" $ NodeMeta (0.0, 0.0)
 
     code <- Graph.getCode pid lid
     putStrLn code

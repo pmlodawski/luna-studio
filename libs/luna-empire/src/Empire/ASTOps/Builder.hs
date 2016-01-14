@@ -84,26 +84,43 @@ applyFunction fun arg pos = do
         match $ \(App _ _) -> rewireApplication fun arg pos
         match $ \ANY -> newApplication fun arg pos
 
-makeAccessor :: Ref Node -> Ref Node -> ASTOp (Ref Node)
-makeAccessor targetNodeRef namingNodeRef = do
+reapply :: Ref Node -> [Ref Node] -> ASTOp (Ref Node)
+reapply funRef args = do
+    funNode <- Builder.readRef funRef
+    fun <- case' (uncoat funNode) $ do
+        match $ \(App t _) -> do
+            f <- Builder.follow t
+            removeNode funRef
+            return f
+        match $ \ANY -> return funRef
+    Builder.app fun $ Builder.arg <$> args
+
+makeAccessorRec :: Ref Node -> Ref Node -> Bool -> ASTOp (Ref Node)
+makeAccessorRec targetNodeRef namingNodeRef seenApp = do
     namingNode <- Builder.readRef namingNodeRef
     case' (uncoat namingNode) $ do
         match $ \(Var n) -> do
             stringNodeRef <- Builder.follow n
             removeNode namingNodeRef
-            Builder.accessor stringNodeRef targetNodeRef
+            accNode <- Builder.accessor stringNodeRef targetNodeRef
+            if seenApp
+                then return accNode
+                else Builder.app accNode ([] :: [Arg (Ref Node)])
         match $ \(App t _) -> do
             newNamingNodeRef <- Builder.follow t
-            replacementRef <- makeAccessor targetNodeRef newNamingNodeRef
+            replacementRef <- makeAccessorRec targetNodeRef newNamingNodeRef True
             Builder.reconnect namingNodeRef functionApplicationNode replacementRef
             return namingNodeRef
         match $ \(Accessor n t) -> do
             oldTargetRef <- Builder.follow t
             finalNameRef <- Builder.follow n
             removeNode namingNodeRef
-            intermediateTargetRef <- makeAccessor targetNodeRef oldTargetRef
-            makeAccessor intermediateTargetRef finalNameRef
+            intermediateTargetRef <- makeAccessorRec targetNodeRef oldTargetRef False
+            makeAccessorRec intermediateTargetRef finalNameRef seenApp
         match $ \ANY -> throwError "Invalid node type"
+
+makeAccessor :: Ref Node -> Ref Node -> ASTOp (Ref Node)
+makeAccessor targetNodeRef namingNodeRef = makeAccessorRec targetNodeRef namingNodeRef False
 
 unAcc :: Ref Node -> ASTOp (Ref Node)
 unAcc ref = do
@@ -113,11 +130,12 @@ unAcc ref = do
             nameNode <- Builder.follow n
             removeNode ref
             Builder.var nameNode
-        match $ \(App t _) -> do
+        match $ \(App t args) -> do
             target <- Builder.follow t
             replacementRef <- unAcc target
-            Builder.reconnect ref functionApplicationNode replacementRef
-            return ref
+            case args of
+                [] -> removeNode ref >> return replacementRef
+                as -> Builder.reconnect ref functionApplicationNode replacementRef >> return ref
         match $ \ANY -> throwError "Self port not connected"
 
 unifyWithName :: String -> Ref Node -> ASTOp (Ref Node)
