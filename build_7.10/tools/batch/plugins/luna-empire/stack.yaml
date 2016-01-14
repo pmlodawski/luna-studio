@@ -26,5 +26,6 @@ extra-deps:
 - ghc-session-0.1.2.0
 - graphviz-2999.18.0.2
 - error-util-0.0.1.1
+- docopt-0.7.0.4
 
 local-bin-path: ../../../../.bin
