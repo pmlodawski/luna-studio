@@ -7,7 +7,7 @@ import           Empire.API.Data.GraphLocation (GraphLocation)
 import           Empire.API.Data.Node          (NodeId)
 import           Empire.API.Data.Port          (OutPort, InPort)
 import           Empire.API.Data.PortRef       (OutPortRef(..), InPortRef(..))
-import qualified Empire.API.Update           as Update
+import qualified Empire.API.Update             as Update
 
 data Request = Request { _location  :: GraphLocation
                        , _srcNodeId :: NodeId
