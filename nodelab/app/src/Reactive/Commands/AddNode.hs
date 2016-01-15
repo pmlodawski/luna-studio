@@ -65,6 +65,8 @@ addNode node = do
     updatePortAngles
 
 colorVT _ = 11
+colorPort (Port.InPortId Port.Self) = 12
+colorPort _ = 11
 
 registerNode :: Node -> Command UIRegistry.State ()
 registerNode node = do
@@ -84,7 +86,7 @@ nodePorts id = do
 makePorts :: Node -> [PortModel.Port]
 makePorts node = makePort <$> (Map.elems $ node ^. Node.ports) where
     nodeId  = node ^. Node.nodeId
-    makePort port = PortModel.Port portRef angle (colorVT $ port ^. Port.valueType) where
+    makePort port = PortModel.Port portRef angle (colorPort $ port ^. Port.portId ) where
         portRef = toAnyPortRef nodeId (port ^. Port.portId)
         angle   = portDefaultAngle ((length $ node ^. Node.ports) - 1) (port ^. Port.portId)
 
