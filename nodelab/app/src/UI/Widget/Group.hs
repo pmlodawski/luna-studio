@@ -22,7 +22,8 @@ newtype Group = Group JSVal deriving (PToJSVal, PFromJSVal)
 
 instance UIWidget Group
 
-foreign import javascript unsafe "new Group($1)" create' :: Int    -> IO Group
+foreign import javascript unsafe "new Group($1)"        create' :: Int    -> IO Group
+foreign import javascript unsafe "$1.mesh.visible = $2" setVisible' :: Group -> Bool -> IO ()
 
 create :: WidgetId -> Model.Group -> IO Group
 create oid model = do
@@ -37,7 +38,11 @@ instance UIDisplayObject Model.Group where
         UI.register id group
         Widget.add group parent
 
-    updateUI id old model = return ()
+    updateUI id old model = do
+        group <- UI.lookup id :: IO Group
+        let vis = model ^. Model.visible
+        setVisible' group (seq vis vis)
+
 instance CompositeWidget Model.Group
 
 

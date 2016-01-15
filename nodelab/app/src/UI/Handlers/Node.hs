@@ -34,13 +34,14 @@ import           UI.Handlers.Generic             (ValueChangedHandler (..), trig
 instance CompositeWidget Model.Node where
     createWidget id model = do
         let offset = Vector2 (-30.0) 70.0
-            grp    = Group.Group offset def
+            grp    = Group.Group offset def True
         UICmd.register id grp (Layout.verticalLayoutHandler 5.0)
         let offset = Vector2 0 40.0
             label  = Label.Label offset (Vector2 100.0 20.0) "?"
         void $ UICmd.register id label def
 
     updateWidget id old model = do
-        (_:labelId:_) <- UICmd.children id
-        UICmd.update_ labelId $ Label.label .~ (model ^. Model.value)
+        (controlsId:labelId:_) <- UICmd.children id
+        UICmd.update_ controlsId $ Group.visible .~ (model ^. Model.isExpanded)
+        UICmd.update_ labelId    $ Label.label   .~ (model ^. Model.value)
 

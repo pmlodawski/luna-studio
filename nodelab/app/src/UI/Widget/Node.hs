@@ -79,7 +79,7 @@ instance UIDisplayObject Model.Node where
 
         setSelectedState node model
         setZPos          node (model ^. Model.zPos)
-        setExpandedState node (model ^. Model.isExpanded)
+        -- setExpandedState node (model ^. Model.isExpanded)
 
         ifChanged old model Model.expression $ do
             setLabel node $ lazyTextToJSString $ model ^. Model.expression
