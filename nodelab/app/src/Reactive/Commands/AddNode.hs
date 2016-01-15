@@ -93,6 +93,10 @@ displayPorts id node = do
     oldPorts <- nodePorts id
     mapM_ UICmd.removeWidget oldPorts
 
+    (groupId:_) <- UICmd.children id
+    portControls <- UICmd.children groupId
+    mapM_ UICmd.removeWidget portControls
+
     let newPorts = makePorts node
 
     gr <- nodeExpandedGroup id
