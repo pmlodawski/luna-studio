@@ -7,6 +7,7 @@ module Empire.Commands.Graph
     , getCode
     , getGraph
     , runGraph
+    , setDefaultValue
     ) where
 
 import           Prologue
@@ -24,15 +25,16 @@ import qualified Empire.Data.Library     as Library
 import qualified Empire.Data.Graph       as Graph
 import           Empire.Data.Graph       (Graph)
 
-import           Empire.API.Data.Project  (ProjectId)
-import           Empire.API.Data.Library  (LibraryId)
-import           Empire.API.Data.Port     (InPort(..), OutPort(..))
-import           Empire.API.Data.PortRef  (InPortRef(..), OutPortRef(..))
-import qualified Empire.API.Data.PortRef  as PortRef
-import           Empire.API.Data.Node     (NodeId, Node(..))
-import qualified Empire.API.Data.Node     as Node
-import           Empire.API.Data.NodeMeta (NodeMeta)
-import qualified Empire.API.Data.Graph    as APIGraph
+import           Empire.API.Data.Project      (ProjectId)
+import           Empire.API.Data.Library      (LibraryId)
+import           Empire.API.Data.Port         (InPort(..), OutPort(..))
+import           Empire.API.Data.PortRef      (InPortRef(..), OutPortRef(..))
+import qualified Empire.API.Data.PortRef      as PortRef
+import           Empire.API.Data.Node         (NodeId, Node(..))
+import qualified Empire.API.Data.Node         as Node
+import           Empire.API.Data.NodeMeta     (NodeMeta)
+import qualified Empire.API.Data.Graph        as APIGraph
+import           Empire.API.Data.DefaultValue (PortDefault)
 
 import           Empire.Empire
 import           Empire.Commands.Library      (withLibrary)
@@ -69,6 +71,16 @@ connect pid lid (OutPortRef srcNodeId All) (InPortRef dstNodeId dstPort) = withG
         Self    -> makeAcc srcNodeId dstNodeId
         Arg num -> makeApp srcNodeId dstNodeId num
 connect _ _ _ _ = throwError "Source port should be All"
+
+setDefaultValue :: ProjectId -> LibraryId -> InPortRef -> PortDefault -> Empire Node
+setDefaultValue pid lid (InPortRef nid port) val = withGraph pid lid $ do
+    ref <- GraphUtils.getASTTarget nid
+    parsed <- zoom Graph.ast $ AST.addDefault val
+    newRef <- zoom Graph.ast $ case port of
+        Self    -> AST.makeAccessor parsed ref
+        Arg num -> AST.applyFunction ref parsed num
+    GraphUtils.rewireNode nid newRef
+    GraphBuilder.buildNode nid
 
 disconnect :: ProjectId -> LibraryId -> InPortRef -> Empire ()
 disconnect pid lid port = withGraph pid lid $ disconnectPort port

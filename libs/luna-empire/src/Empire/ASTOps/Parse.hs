@@ -10,8 +10,15 @@ import           Empire.ASTOp            (ASTOp)
 import           Empire.Utils.ParserMock as Parser
 import           Empire.ASTOps.Builder   as ASTBuilder
 
+import           Empire.API.Data.DefaultValue (PortDefault(..), Value(..))
+
 import qualified Luna.Syntax.Builder     as Builder
 import           Luna.Syntax.Repr.Graph  (Ref, Node)
+
+parsePortDefault :: PortDefault -> ASTOp (Ref Node)
+parsePortDefault (Expression expr)          = parseFragment expr
+parsePortDefault (Constant (IntValue i))    = Builder._int i
+parsePortDefault (Constant (StringValue s)) = Builder._string s
 
 parseFragment :: String -> ASTOp (Ref Node)
 parseFragment = parseApp

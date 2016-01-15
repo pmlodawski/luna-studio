@@ -9,9 +9,10 @@ import           Data.Variants       (match, case', specificCons, ANY(..))
 import           Data.Layer.Coat     (uncoat, coated)
 
 import           Empire.Empire
-import           Empire.Data.AST          (AST, ASTNode)
-import           Empire.Data.WithMeta     (meta)
-import           Empire.API.Data.NodeMeta (NodeMeta)
+import           Empire.Data.AST              (AST, ASTNode)
+import           Empire.Data.WithMeta         (meta)
+import           Empire.API.Data.NodeMeta     (NodeMeta)
+import           Empire.API.Data.DefaultValue (PortDefault)
 
 import           Empire.ASTOp          (runASTOp)
 import qualified Empire.ASTOps.Parse   as Parser
@@ -26,6 +27,9 @@ import           Luna.Syntax.Layer.Labeled (HasLabel, label)
 
 addNode :: String -> String -> Command AST (Ref Node)
 addNode name expr = runASTOp $ Parser.parseFragment expr >>= ASTBuilder.unifyWithName name
+
+addDefault :: PortDefault -> Command AST (Ref Node)
+addDefault val = runASTOp $ Parser.parsePortDefault val
 
 readMeta :: Ref Node -> Command AST (Maybe NodeMeta)
 readMeta ref = runASTOp $ view meta <$> Builder.readRef ref

@@ -15,6 +15,7 @@ import           Empire.Data.Graph
 import           Empire.Data.Library
 import           Empire.API.Data.Port
 import           Empire.API.Data.PortRef      (InPortRef(..), OutPortRef(..))
+import           Empire.API.Data.DefaultValue (PortDefault(..), Value(..))
 import           Empire.API.Data.NodeMeta
 import           Empire.API.Data.Node
 import           Empire.Empire
@@ -55,7 +56,10 @@ test = do
     rn  <- view nodeId <$> Graph.addNode pid lid "+ 7 34" (NodeMeta (3.3, 4.4))
     rn1 <- view nodeId <$> Graph.addNode pid lid "7.* 4" (NodeMeta (3.3, 4.4))
 
-    Graph.addNode pid lid "7.+ _" def
+    nn <- view nodeId <$> Graph.addNode pid lid "13.+ _" def
+    nn2 <- view nodeId <$> Graph.addNode pid lid "_.+ 17" def
+    Graph.setDefaultValue pid lid (InPortRef nn (Arg 0)) (Constant $ IntValue 0)
+    Graph.setDefaultValue pid lid (InPortRef nn2 Self) (Constant $ IntValue 14)
     putStrLn "NOW RUNNING"
     putStrLn "------------------------"
 
