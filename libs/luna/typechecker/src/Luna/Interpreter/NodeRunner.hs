@@ -15,109 +15,95 @@
 
 module Luna.Interpreter.NodeRunner where
 
-import Prologue hiding (Cons, Indexable, Ixed, Repr, Simple, children, cons, empty, index, lookup, maxBound, minBound, repr, s, simple)
+import Prologue
 
-import qualified Control.Monad.Catch        as Catch
-import           Control.Monad.Trans.Except
-import           Data.Layer.Coat
-import qualified Data.Map                   as Map
-import           Data.Variants              hiding (cons)
-import           Data.Vector.Mutable        ()
-import           GHC.Prim                   (Any)
-import qualified Language.Haskell.Session   as HS
+import           Control.Monad.Catch         (MonadMask)
+import           Control.Monad               (forM)
+import           Data.Layer.Coat             (uncoat, Coat, Uncoated, Coated)
+import qualified Data.Text.Lazy              as Text
+import           Language.Haskell.Session    (GhcMonad)
+import           GHC.Prim                    (Any)
+import           Data.Variants               (match, case', ANY(..))
+import           Data.Layer                  (Unlayered)
+import           Data.Maybe                  (fromMaybe)
+import qualified Data.Map                    as Map
+import           Data.Map                    (Map)
 
-import           Data.Text.AutoBuilder       (AutoBuilder)
-import           Luna.Interpreter.Label      (Label)
-import qualified Luna.Interpreter.Session    as Session
-import qualified Luna.Syntax.AST.Arg         as Arg
-import           Luna.Syntax.AST.Lit
-import           Luna.Syntax.AST.Term
-import           Luna.Syntax.AST.Typed
-import           Luna.Syntax.Builder
 import           Luna.Syntax.Builder.Class   (BuilderMonad)
-import           Luna.Syntax.Builder.Symbol  (MonadSymbolBuilder)
-import           Luna.Syntax.Layer.Labeled
-import           Luna.Syntax.Repr.Graph
-import qualified Luna.Syntax.Symbol.Map      as Symbol
-import           Luna.Syntax.Symbol.Network  (Network)
-import qualified Luna.Syntax.Symbol.QualPath as QualPath
+import qualified Luna.Syntax.Builder         as Builder
+import           Luna.Syntax.Repr.Graph      (Graph)
 
+import qualified Luna.Syntax.Builder         as Builder
+import qualified Luna.Syntax.Builder.Node    as NodeBuilder
+import qualified Luna.Syntax.Builder.Star    as StarBuilder
+import           Luna.Syntax.Repr.Graph      (Ref(..), Node(..), Edge, DoubleArc)
+import           Luna.Syntax.AST.Term        (Var(..), App(..), Blank(..), Accessor(..), Unify(..), Val(..), Draft)
+import qualified Luna.Syntax.AST.Arg         as Arg
+import qualified Luna.Syntax.AST.Lit         as Lit
 
-mangleName name _ = return (par name)
+import qualified Luna.Interpreter.Session    as Session
 
-par x = "(" <> x <> ")"
+type NodeType a       = (Coated a, Uncoated a ~ (Draft (Ref Edge)))
+type GraphBuilder m a = (Coated a, Uncoated a ~ (Draft (Ref Edge)), BuilderMonad (Graph a DoubleArc) m)
 
--- TODO[PM]
--- newtype MyAny = forall (Repr a) => MyAny a -- Prosze zanim to zrobisz sprawdz google -> roznica pomiedzy exystential i Any (tam gdzie jest zadeklarowane Any powinno byc napisane)
+type Bindings         = Map (Ref Node) (Ref Node)
 
-runNode :: (HS.GhcMonad m,
-            Catch.MonadMask m,
-            MonadSymbolBuilder (Symbol.SymbolMap Label (Ref Edge)) m,
-            BuilderMonad (Network Label) m)
-        => Ref Node -> ExceptT Symbol.SymbolError m Any
-runNode (ref :: Ref Node) = do
-    node <- readRef ref
-    case' (uncoat (node :: Labeled2 Label (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge))))))) $ do
-        match $ \(App a p) -> do
-            putStrLn "App"
-            typeRef <- follow (node ^. tp)
-            acc <- follow a
-            (name, s) <- getAcc acc
-            qual <- typeString s
-            let sourceQPath = QualPath.mk $ qual <> "." <> name
-            typeNode <- readRef typeRef
-            let args' = case' (uncoat typeNode) $ do
-                    match $ \a@(Arrow {}) -> Symbol.fromArrow a
-            r <- Symbol.toArrow . fst <$> Symbol.getSpecialization sourceQPath args'
-            typeStr <- stringArrow r
+runInterpreterM gr = fmap fst
+                   . Session.run
+                   . flip StarBuilder.evalT Nothing
+                   . flip Builder.runT gr
+                   . flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
 
-            args <- mapM (runNode <=< follow . Arg.__arec) (inputs p)
-            mangled <- mangleName name typeRef
-            fun <- lift $ Session.findSymbol mangled typeStr -- TODO[PM] przerobic na `... => m (cos)`
-            mapM_ (\r -> print (Session.unsafeCast r :: Int)) args
+getNodeValues :: NodeType a => [Ref Node] -> Graph a DoubleArc -> IO (Map (Ref Node) Int)
+getNodeValues refs gr = runInterpreterM gr $ do
+    bindings <- prepareBindings refs
+    fmap Map.fromList $ forM refs $ \ref -> do
+        val <- evalNode bindings ref
+        return (ref, Session.unsafeCast val)
+
+prepareBindings :: GraphBuilder m a => [Ref Node] -> m Bindings
+prepareBindings refs = fmap Map.fromList $ forM refs $ \ref -> do
+    node <- Builder.readRef ref
+    case' (uncoat node) $
+        match $ \(Unify var tgt) -> (,) <$> Builder.follow var <*> Builder.follow tgt
+
+printIdent :: GraphBuilder m a => Ref Node -> m String
+printIdent ref = do
+    node <- Builder.readRef ref
+    case' (uncoat node) $ match $ \(Lit.String n) -> return (Text.unpack . toText $ n)
+
+destructFunNode :: GraphBuilder m a => Ref Node -> m (String, [Ref Node])
+destructFunNode ref = do
+    node <- Builder.readRef ref
+    case' (uncoat node) $ do
+        match $ \(Var n) -> do
+            name <- Builder.follow n >>= printIdent
+            return (name, [])
+        match $ \(Accessor n t) -> do
+            name <- Builder.follow n >>= printIdent
+            arg  <- Builder.follow t
+            return (name, [arg])
+
+mangleName :: String -> String
+mangleName name = "(" <> name <> ")"
+
+getVal :: Val a -> Any
+getVal val = case' val $ do
+    match $ \(Lit.Int i) -> Session.toAny i
+
+evalNode :: (GhcMonad m, MonadMask m, GraphBuilder m a) => Bindings -> Ref Node -> m Any
+evalNode bindings ref = runNode bindings $ fromMaybe ref $ Map.lookup ref bindings
+
+runNode :: (GhcMonad m, MonadMask m, GraphBuilder m a) => Bindings -> Ref Node -> m Any
+runNode bindings ref = do
+    node <- Builder.readRef ref
+    case' (uncoat node) $ do
+        match $ \(Unify l r) -> Builder.follow r >>= runNode bindings
+        match $ \(App f args) -> do
+            (funName, initArgs) <- Builder.follow f >>= destructFunNode
+            tailArgs <- mapM (Builder.follow . Arg.__arec) args
+            args <- mapM (evalNode bindings) $ initArgs ++ tailArgs
+            let tpe  = intercalate " -> " $ replicate (1 + length args) "Int"
+            fun <- Session.findSymbol (mangleName funName) tpe
             return $ foldl Session.appArg fun args
-        match $ \(Val v) -> do
-            case' v $ do
-                match $ \(Int i) -> do
-                    return (Session.toAny i :: Any)
-                match $ \(String s) -> do
-                    return (Session.toAny s :: Any)
-        match $ \ANY -> do
-            putStrLn "unmatched"
-            print (uncoat node)
-            return undefined
-
-getAcc :: (MonadIO m, BuilderMonad (Network Label) m) => Ref Node -> m (String, Ref Node)
-getAcc (ref :: Ref Node) = do
-    node <- readRef ref
-    case' (uncoat (node :: Labeled2 Label (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge))))))) $ do
-        match $ \(Accessor n s) -> do
-            name <- typeString =<< follow n
-            src  <- follow =<< (view tp <$> (readRef =<< follow s))
-            return (name, src)
-
-typeString :: (MonadIO m, BuilderMonad (Network Label) m) => Ref Node -> m String
-typeString (ref :: Ref Node) = do
-    node <- readRef ref
-    case' (uncoat (node :: Labeled2 Label (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge))))))) $ do
-        match $ \a@(Arrow {}) -> stringArrow a
-        match $ \(Cons t a) -> intercalate " " <$> mapM (typeString <=< follow) (t:a)
-        match $ \(String s) -> return $ toString $ toText s
-        match $ \(Int i)    -> return $ show i
-        match $ \(Val v)    -> do
-            case' v $ do
-                match $ \(Int i)    -> return $ show i
-                match $ \(String s) -> return $ toString $ toText s
-        match $ \ANY -> print (uncoat node) >> undefined
-
-
-stringArrow :: (MonadIO m, BuilderMonad (Network Label) m) => Arrow (Ref Edge) -> m String
-stringArrow (Arrow p n r) = do
-    items <- mapM typeString =<< mapM follow (p ++ (Map.elems n) ++ [r])
-    return $ intercalate " -> " items
-
-getAccName :: BuilderMonad (Network Label) m => Ref Node -> m AutoBuilder
-getAccName (ref :: Ref Node) = do
-    node <- readRef ref
-    case' (uncoat (node :: Labeled2 Label (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge))))))) $
-        match $ \(String s) -> return s
+        match $ return . getVal

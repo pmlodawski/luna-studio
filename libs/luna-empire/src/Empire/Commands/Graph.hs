@@ -6,12 +6,15 @@ module Empire.Commands.Graph
     , disconnect
     , getCode
     , getGraph
+    , runGraph
     ) where
 
 import           Prologue
 import           Control.Monad.State
 import           Control.Monad.Error     (throwError)
-import qualified Data.IntMap             as Map
+import           Data.IntMap             (IntMap)
+import qualified Data.IntMap             as IntMap
+import qualified Data.Map                as Map
 import           Data.Text.Lazy          (Text)
 import qualified Data.Text.Lazy          as Text
 
@@ -35,6 +38,8 @@ import qualified Empire.Commands.AST          as AST
 import qualified Empire.Commands.GraphUtils   as GraphUtils
 import qualified Empire.Commands.GraphBuilder as GraphBuilder
 
+import qualified Luna.Interpreter.NodeRunner  as NodeRunner
+
 addNode :: ProjectId -> LibraryId -> Text -> NodeMeta -> Empire Node
 addNode pid lid expr meta = withGraph pid lid $ do
     newNodeId <- gets Graph.nextNodeId
@@ -49,7 +54,7 @@ removeNode pid lid nodeId = withGraph pid lid $ do
     obsoleteEdges <- getOutEdges nodeId
     mapM_ disconnectPort obsoleteEdges
     zoom Graph.ast $ AST.removeSubtree astRef
-    Graph.nodeMapping %= Map.delete nodeId
+    Graph.nodeMapping %= IntMap.delete nodeId
 
 updateNodeMeta :: ProjectId -> LibraryId -> NodeId -> NodeMeta -> Empire ()
 updateNodeMeta pid lid nid meta = withGraph pid lid $ do
@@ -68,12 +73,21 @@ disconnect pid lid port = withGraph pid lid $ disconnectPort port
 
 getCode :: ProjectId -> LibraryId -> Empire String
 getCode pid lid = withGraph pid lid $ do
-    allNodes <- uses Graph.nodeMapping Map.keys
+    allNodes <- uses Graph.nodeMapping IntMap.keys
     lines <- sequence $ printNodeLine <$> allNodes
     return $ intercalate "\n" lines
 
 getGraph :: ProjectId -> LibraryId -> Empire APIGraph.Graph
 getGraph pid lid = withGraph pid lid GraphBuilder.buildGraph
+
+runGraph :: ProjectId -> LibraryId -> Empire (IntMap Int)
+runGraph pid lid = withGraph pid lid $ do
+    allNodes <- uses Graph.nodeMapping IntMap.keys
+    astNodes <- mapM GraphUtils.getASTPointer allNodes
+    ast      <- use Graph.ast
+    astVals  <- liftIO $ NodeRunner.getNodeValues astNodes ast
+
+    return $ IntMap.fromList $ fmap (\(n, ref) -> (n, Map.findWithDefault 0 ref astVals)) (zip allNodes astNodes)
 
 -- internal
 
