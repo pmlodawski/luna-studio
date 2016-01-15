@@ -164,4 +164,5 @@ handleGetProgram content = do
         (_, Left err) -> logger Logger.error $ Server.errorMessage <> err
         (Right graph, Right code) -> do
             let update = Update.Update request $ GetProgram.Status graph (Text.pack code)
-            void . lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.programStatus $ toStrict $ Bin.encode update
+            lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.programStatus $ toStrict $ Bin.encode update
+            notifyNodeResultUpdates location
