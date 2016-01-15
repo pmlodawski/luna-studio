@@ -59,7 +59,7 @@ test = do
     putStrLn "NOW RUNNING"
     putStrLn "------------------------"
 
-    {-runGraph pid lid >>= print-}
+    runGraph pid lid >>= print
 
     putStrLn "------------------------"
     putStrLn "RUN DONE"

@@ -70,7 +70,7 @@ getDefaultValue varMap ref
                 Lit.String s -> return . Just . Constant . StringValue $ Text.unpack $ toText s
                 Lit.Int    i -> return . Just . Constant . IntValue    $ i
             match $ \Blank -> return Nothing
-            match $ \ANY -> Print.printExpression ref >>= return . Just . Expression
+            match $ \ANY   -> Print.printExpression ref >>= return . Just . Expression
 
 buildPort :: VarMap -> (PortId, Ref Node) -> ASTOp Port
 buildPort varMap (portId, ref) = Port portId (ValueType "Int") <$> getDefaultValue varMap ref

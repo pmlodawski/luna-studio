@@ -12,11 +12,13 @@ module Empire.Commands.Graph
 import           Prologue
 import           Control.Monad.State
 import           Control.Monad.Error     (throwError)
+import           Control.Monad           (forM)
 import           Data.IntMap             (IntMap)
 import qualified Data.IntMap             as IntMap
 import qualified Data.Map                as Map
 import           Data.Text.Lazy          (Text)
 import qualified Data.Text.Lazy          as Text
+import           Data.Maybe              (catMaybes)
 
 import qualified Empire.Data.Library     as Library
 import qualified Empire.Data.Graph       as Graph
@@ -87,7 +89,11 @@ runGraph pid lid = withGraph pid lid $ do
     ast      <- use Graph.ast
     astVals  <- liftIO $ NodeRunner.getNodeValues astNodes ast
 
-    return $ IntMap.fromList $ fmap (\(n, ref) -> (n, Map.findWithDefault 0 ref astVals)) (zip allNodes astNodes)
+    let values = flip fmap (zip allNodes astNodes) $ \(n, ref) -> do
+        val <- Map.lookup ref astVals
+        return (n, val)
+
+    return $ IntMap.fromList $ catMaybes values
 
 -- internal
 

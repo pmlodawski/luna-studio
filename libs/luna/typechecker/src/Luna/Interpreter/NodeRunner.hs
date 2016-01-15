@@ -25,7 +25,7 @@ import           Language.Haskell.Session    (GhcMonad)
 import           GHC.Prim                    (Any)
 import           Data.Variants               (match, case', ANY(..))
 import           Data.Layer                  (Unlayered)
-import           Data.Maybe                  (fromMaybe)
+import           Data.Maybe                  (fromMaybe, catMaybes)
 import qualified Data.Map                    as Map
 import           Data.Map                    (Map)
 
@@ -57,9 +57,11 @@ runInterpreterM gr = fmap fst
 getNodeValues :: NodeType a => [Ref Node] -> Graph a DoubleArc -> IO (Map (Ref Node) Int)
 getNodeValues refs gr = runInterpreterM gr $ do
     bindings <- prepareBindings refs
-    fmap Map.fromList $ forM refs $ \ref -> do
+    fmap (Map.fromList . catMaybes) $ forM refs $ \ref -> do
         val <- evalNode bindings ref
-        return (ref, Session.unsafeCast val)
+        case val of
+            Nothing -> return Nothing
+            Just v  -> return $ Just (ref, Session.unsafeCast v)
 
 prepareBindings :: GraphBuilder m a => [Ref Node] -> m Bindings
 prepareBindings refs = fmap Map.fromList $ forM refs $ \ref -> do
@@ -91,10 +93,10 @@ getVal :: Val a -> Any
 getVal val = case' val $ do
     match $ \(Lit.Int i) -> Session.toAny i
 
-evalNode :: (GhcMonad m, MonadMask m, GraphBuilder m a) => Bindings -> Ref Node -> m Any
+evalNode :: (GhcMonad m, MonadMask m, GraphBuilder m a) => Bindings -> Ref Node -> m (Maybe Any)
 evalNode bindings ref = runNode bindings $ fromMaybe ref $ Map.lookup ref bindings
 
-runNode :: (GhcMonad m, MonadMask m, GraphBuilder m a) => Bindings -> Ref Node -> m Any
+runNode :: (GhcMonad m, MonadMask m, GraphBuilder m a) => Bindings -> Ref Node -> m (Maybe Any)
 runNode bindings ref = do
     node <- Builder.readRef ref
     case' (uncoat node) $ do
@@ -102,8 +104,12 @@ runNode bindings ref = do
         match $ \(App f args) -> do
             (funName, initArgs) <- Builder.follow f >>= destructFunNode
             tailArgs <- mapM (Builder.follow . Arg.__arec) args
-            args <- mapM (evalNode bindings) $ initArgs ++ tailArgs
-            let tpe  = intercalate " -> " $ replicate (1 + length args) "Int"
-            fun <- Session.findSymbol (mangleName funName) tpe
-            return $ foldl Session.appArg fun args
-        match $ return . getVal
+            argsMay <- fmap sequence $ mapM (evalNode bindings) $ initArgs ++ tailArgs
+            case argsMay of
+                Nothing   -> return (Nothing :: Maybe Any)
+                Just args -> do
+                      let tpe = intercalate " -> " $ replicate (1 + length args) "Int"
+                      fun <- Session.findSymbol (mangleName funName) tpe
+                      return . Just $ foldl Session.appArg fun args
+        match $ return . Just . getVal
+        match $ \ANY -> return (Nothing :: Maybe Any)
