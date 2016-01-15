@@ -8,25 +8,25 @@ import Flowbox.Prelude
 import Luna.Syntax.AST.Term
 
 
--- === ASTOf ===
+---- === ASTOf ===
 
-type family ASTOf a
+--type family ASTOf a
 
-class HasAST  a where ast :: Lens' a (ASTOf a)
+--class HasAST  a where ast :: Lens' a (ASTOf a)
 
--- Utils
+---- Utils
 
-type FromAST a = Convertible (ASTOf a) a
+--type FromAST a = Convertible (ASTOf a) a
 
-fromAST :: FromAST a => ASTOf a -> a
-fromAST = convert 
+--fromAST :: FromAST a => ASTOf a -> a
+--fromAST = convert 
 
--- Instances
+---- Instances
 
-type instance ASTOf (Val   t) = Val   t
-type instance ASTOf (Thunk t) = Thunk t
-type instance ASTOf (Term  t) = Term  t
-type instance ASTOf (Draft t) = Draft t
+--type instance ASTOf (Val   t) = Val   t
+--type instance ASTOf (Thunk t) = Thunk t
+--type instance ASTOf (Term  t) = Term  t
+--type instance ASTOf (Draft t) = Draft t
 
 
 
