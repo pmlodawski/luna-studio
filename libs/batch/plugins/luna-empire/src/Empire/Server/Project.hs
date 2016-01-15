@@ -6,13 +6,11 @@ import           Prologue
 
 import qualified Data.Binary                      as Bin
 import           System.Path                      (Path)
-import           Control.Monad.State              (StateT, get, put)
+import           Control.Monad.State              (StateT)
 import           Data.Map.Strict                  (Map)
 import           Data.ByteString                  (ByteString)
-import           Data.ByteString.Char8            (unpack)
 import           Data.ByteString.Lazy             (fromStrict, toStrict)
 import           Data.Text.Lazy                   (Text)
-import qualified Data.Text.Lazy                   as Text
 import qualified Flowbox.Bus.Data.Flag            as Flag
 import qualified Flowbox.Bus.Data.Message         as Message
 import qualified Flowbox.Bus.Bus                  as Bus
@@ -29,7 +27,6 @@ import qualified Empire.API.Update                as Update
 import qualified Empire.API.Topic                 as Topic
 import qualified Empire.Commands.Project          as Project
 import qualified Empire.Empire                    as Empire
-import           Empire.Empire                    (Empire)
 import qualified Empire.Server.Server             as Server
 
 logger :: Logger.LoggerIO

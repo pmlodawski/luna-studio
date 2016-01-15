@@ -6,8 +6,8 @@ import           Flowbox.Prelude
 
 import qualified Empire.Empire    as Empire
 
-data Env = Env { _empireEnv :: Empire.Env }
-               deriving (Show)
+data Env = Env { _empireEnv :: Empire.Env
+               } deriving (Show)
 
 makeLenses ''Env
 
