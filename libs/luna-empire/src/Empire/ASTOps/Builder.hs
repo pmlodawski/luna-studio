@@ -8,7 +8,7 @@ import           Data.Variants       (match, case', specificCons, ANY(..))
 import           Data.Layer.Coat     (uncoat, coated)
 
 import           Empire.ASTOp           (ASTOp)
-import           Empire.ASTOps.Remove   (removeNode)
+import           Empire.ASTOps.Remove   (removeNode, safeRemove)
 import           Empire.Data.AST        (ASTNode)
 
 import qualified Luna.Syntax.Builder    as Builder
@@ -113,10 +113,10 @@ makeAccessorRec targetNodeRef namingNodeRef seenApp = do
             return namingNodeRef
         match $ \(Accessor n t) -> do
             oldTargetRef <- Builder.follow t
-            finalNameRef <- Builder.follow n
+            nameRef <- Builder.follow n
             removeNode namingNodeRef
-            intermediateTargetRef <- makeAccessorRec targetNodeRef oldTargetRef False
-            makeAccessorRec intermediateTargetRef finalNameRef seenApp
+            safeRemove oldTargetRef
+            Builder.accessor nameRef targetNodeRef
         match $ \ANY -> throwError "Invalid node type"
 
 makeAccessor :: Ref Node -> Ref Node -> ASTOp (Ref Node)

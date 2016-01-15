@@ -30,7 +30,7 @@ test = do
 
     n1 <- (view nodeId) <$> Graph.addNode pid lid "1"     (NodeMeta (1.0, 4.0))
     n2 <- (view nodeId) <$> Graph.addNode pid lid "2"     (NodeMeta (2.0, 3.0))
-    np <- (view nodeId) <$> Graph.addNode pid lid "+"     (NodeMeta (3.0, 2.0))
+    np <- (view nodeId) <$> Graph.addNode pid lid "_.+ _"     (NodeMeta (3.0, 2.0))
     Graph.connect pid lid (OutPortRef n1 All) (InPortRef np Self)
     Graph.connect pid lid (OutPortRef n2 All) (InPortRef np (Arg 0))
 
