@@ -28,14 +28,14 @@ instance UIWidget Connection
 
 foreign import javascript unsafe "new Connection($1)"         create'    :: WidgetId   -> IO Connection
 foreign import javascript unsafe "$1.setPos($2, $3, $4, $5)"  setPos     :: Connection -> Double -> Double -> Double -> Double -> IO ()
-foreign import javascript unsafe "$1.setVisible($2)"          setVisible :: Connection -> Bool   -> IO ()
+foreign import javascript unsafe "$1.setVisible($2)"          setVisible :: Connection -> Int    -> IO ()
 foreign import javascript unsafe "$1.setColor($2)"            setColor   :: Connection -> Int    -> IO ()
 
 create :: WidgetId -> Model.Connection -> IO Connection
 create id model = do
     connection <- create' id
     setPos     connection (model ^. Model.from . x)  (model ^. Model.from . y)  (model ^. Model.to . x)  (model ^. Model.to . y)
-    setVisible connection (model ^. Model.visible)
+    setVisible connection $ if (model ^. Model.visible) then 1 else 0
     setColor   connection (model ^. Model.color)
     return connection
 
@@ -49,7 +49,7 @@ instance UIDisplayObject Model.Connection where
     updateUI id old model = do
         connection <- UIR.lookup id :: IO Connection
         setPos     connection (model ^. Model.from . x)  (model ^. Model.from . y)  (model ^. Model.to . x)  (model ^. Model.to . y)
-        setVisible connection (model ^. Model.visible)
+        setVisible connection $ if (model ^. Model.visible) then 1 else 0
         setColor   connection (model ^. Model.color)
 
 instance UIDisplayObject Model.CurrentConnection where
@@ -57,7 +57,7 @@ instance UIDisplayObject Model.CurrentConnection where
     updateUI id _ model = do
         connection <- UIR.lookup id :: IO Connection
         setPos     connection (model ^. Model.currentFrom . x)  (model ^. Model.currentFrom . y)  (model ^. Model.currentTo . x)  (model ^. Model.currentTo . y)
-        setVisible connection (model ^. Model.currentVisible)
+        setVisible connection $ if (model ^. Model.currentVisible) then 1 else 0
         setColor   connection (model ^. Model.currentColor)
 
 instance CompositeWidget Model.Connection
