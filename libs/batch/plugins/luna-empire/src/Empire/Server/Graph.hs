@@ -113,8 +113,7 @@ handleUpdateNodeMeta content = do
         Right _ -> do
             Env.empireEnv .= newEmpireEnv
             let update = Update.Update request $ UpdateNodeMeta.Result nodeMeta
-            lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.updateNodeMetaUpdate $ toStrict $ Bin.encode update
-            return ()
+            void . lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.updateNodeMetaUpdate $ toStrict $ Bin.encode update
 
 handleConnect :: ByteString -> StateT Env BusT ()
 handleConnect content = do
