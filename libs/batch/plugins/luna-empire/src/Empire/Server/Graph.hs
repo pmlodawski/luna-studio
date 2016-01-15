@@ -57,12 +57,12 @@ notifyNodeResultUpdates location = do
         Left err -> logger Logger.error $ Server.errorMessage <> err
         Right valuesMap -> do
             Env.empireEnv .= newEmpireEnv
-            mapM_ (notifyNodeResultUpdate location) $ IntMap.assocs valuesMap
+            mapM_ (uncurry $ notifyNodeResultUpdate location) $ IntMap.assocs valuesMap
 
-notifyNodeResultUpdate :: GraphLocation -> (NodeId, Int) -> StateT Env BusT ()
-notifyNodeResultUpdate location (nodeId, value) = do
+notifyNodeResultUpdate :: GraphLocation -> NodeId -> Int -> StateT Env BusT ()
+notifyNodeResultUpdate location nodeId value = do
     let update = NodeResultUpdate.Update location nodeId value
-    void $ lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.nodeResultUpdate $ toStrict $ Bin.encode update
+    void . lift $ BusT $ Bus.send Flag.Enable $ Message.Message Topic.nodeResultUpdate $ toStrict $ Bin.encode update
 
 handleAddNode :: ByteString -> StateT Env BusT ()
 handleAddNode content = do
