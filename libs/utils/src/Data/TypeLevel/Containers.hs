@@ -14,7 +14,7 @@ import Prelude             (Bool(True, False))
 type family Elem a (cont :: p) :: Bool
 
 type instance Elem a '[]       = 'False
-type instance Elem a (t ': ts) = If (a :== t) 'True (Elem a ts)
+type instance Elem a (t ': ts) = If (a == t) 'True (Elem a ts)
 
 
 --class AppendEl el cont cont' | el cont -> cont' where

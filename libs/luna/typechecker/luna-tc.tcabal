@@ -42,20 +42,26 @@ Library
                   StandaloneDeriving
                   TemplateHaskell
                   TupleSections
+                  TypeFamilies
                   TypeOperators
                   ViewPatterns
 
     Exposed-modules: `findmodules('src', '.*\.hs', exclude='.*/Interpreter/.*')`
 
     Build-Depends: base
-                 , containers >= 0.5.6.2
-                 , convert
+                 , bitmask
                  , constraints
                  , container
+                 , containers >= 0.5.6.2
+                 , convert
+                 , data-base
                  , data-construction
                  , data-layer
+                 , data-tagged
+                 , data-path
                  , error-util
                  , errors
+                 , exceptions
                  , extra
                  , flowbox-utils
                  , ghc
@@ -65,13 +71,17 @@ Library
                  , lens
                  , MissingH
                  , mtl
-                 , process
                  , placeholders
+                 , process
                  , prologue
+                 , relations
                  , text
                  , transformers
+                 , type-cache
+                 , type-regex
+                 , typelevel
+                 , variants
                  , vector
-                 , exceptions
 
 
 

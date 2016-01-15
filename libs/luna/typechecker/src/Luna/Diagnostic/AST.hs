@@ -34,9 +34,9 @@ import System.Process (createProcess, shell)
 import Data.Container.Class
 import Data.Reprx
 
-import Data.Layer.Coat
+--import Data.Layer.Coat
 
-import Data.Variants
+--import Data.Variants
 
 
 ----toGraphViz :: _ => HomoGraph ArcPtr a -> DotGraph Int

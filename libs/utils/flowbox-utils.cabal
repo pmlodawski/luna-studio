@@ -81,7 +81,7 @@ Library
         Data.TypeLevel.Maybe,
         Data.TypeLevel.Set,
         Data.TypeLevel.Set.Constrain,
-        Data.Variants,
+        Data.VariantsOld,
         Data.Vector.Dynamic,
         Flowbox.Control.Applicative,
         Flowbox.Control.Concurrent,

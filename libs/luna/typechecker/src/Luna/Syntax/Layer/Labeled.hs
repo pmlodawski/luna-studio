@@ -5,7 +5,7 @@
 module Luna.Syntax.Layer.Labeled where
 
 import Data.Construction
-import Data.Variants
+--import Data.Variants
 import Luna.Syntax.AST
 import Prologue
 
@@ -48,7 +48,7 @@ instance Layered (Labeled2 l a) where layered = lens (\(Labeled2 _ a) -> a) (\(L
 class HasLabel l a | a -> l where
     label :: Lens' a l
 
-type instance Variants (Labeled l a t) = Variants (a t)
+--type instance Variants (Labeled l a t) = Variants (a t)
 --instance Record (Labeled )
 -- instances
 

@@ -12,7 +12,7 @@ module Luna.Syntax.Builder ( module Luna.Syntax.Builder, module X) where
 import Prologue hiding (index, Ixed)
 
 import Control.Monad.Fix
-import Data.Variants     as V
+--import Data.Variants     as V
 
 import           Luna.Syntax.AST
 import           Luna.Syntax.AST.Arg
@@ -45,7 +45,7 @@ import qualified Luna.Syntax.Builder.Class as Builder
 import Data.Construction
 import Data.Container    hiding (Impossible)
 
-import Data.Layer.Coat
+--import Data.Layer.Coat
 
 import           Data.IntSet (IntSet)
 import qualified Data.IntSet as IntSet

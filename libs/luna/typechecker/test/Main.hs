@@ -45,8 +45,8 @@ import Data.Constraint
 import Control.Error.Util (hush)
 import Data.Convert.Errors (TypeMismatch (TypeMismatch))
 import Data.Constraint.Void
-import Data.Variants hiding (cons)
-import qualified Data.Variants as V
+--import Data.Variants hiding (cons)
+--import qualified Data.Variants as V
 import Flowbox.System.Types hiding ((.:), insert, Index)
 import           Control.Monad.State.Generate (newState)
 import Text.Read (readMaybe)
@@ -103,7 +103,7 @@ import Data.Container.Immersed
 import Data.Container.Hetero (Ptr(Ptr), ptrIdx)
 
 import Data.Container.Hetero
-import Data.Layer.Coat
+--import Data.Layer.Coat
 import qualified Luna.Syntax.Builder.Node as NodeBuilder
 import           Luna.Syntax.Builder.Node (MonadNodeBuilder)
 import qualified Data.IntSet as IntSet

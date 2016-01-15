@@ -57,11 +57,11 @@ class Tail lst els | lst -> els where
 
 type family Insert k v dict where
   Insert k v ()        = ((k,v),())
-  Insert k v (idx,x)   = If (k :== (RecKey idx)) ((k,v),x) (idx,Insert k v x)
+  Insert k v (idx,x)   = If (k == (RecKey idx)) ((k,v),x) (idx,Insert k v x)
 
 type family Remove k dict where
   Remove k ()        = ()
-  Remove k (idx,x)   = If (k :== (RecKey idx)) x (idx,Remove k x)
+  Remove k (idx,x)   = If (k == (RecKey idx)) x (idx,Remove k x)
 
 
 class InsertClass k v dict out | k v dict -> out where
@@ -93,7 +93,7 @@ instance RemoveClass k x out => RemoveClass k ((j,w),x) ((j,w),out) where
 class RemoveClass2 k dict out | k dict -> out where
     remove2 :: k -> dict -> out
 
-instance (Record idx ik iv, RemoveFirstIf matchel (idx, x) out, matchel ~ (k :== ik))
+instance (Record idx ik iv, RemoveFirstIf matchel (idx, x) out, matchel ~ (k == ik))
       => RemoveClass2 k (idx, x) out where
     remove2 key dict = removeFirstIf (Proxy :: Proxy matchel) dict
 

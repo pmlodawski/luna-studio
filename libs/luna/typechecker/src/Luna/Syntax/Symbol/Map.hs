@@ -8,7 +8,7 @@ import Prologue
 
 import           Control.Error.Operator
 import           Control.Monad.Extra         (allM, findM)
-import           Data.Layer.Coat
+--import           Data.Layer.Coat
 import qualified Data.List                   as List
 import           Data.Map                    (Map)
 import qualified Data.Map                    as Map

@@ -31,7 +31,7 @@ import Luna.Syntax.Layer.Labeled
 import qualified Control.Monad.State as State
 --import System.Mem.Weak
 
-import Data.Layer.Coat
+--import Data.Layer.Coat
 import Luna.Syntax.AST.Decl
 
 

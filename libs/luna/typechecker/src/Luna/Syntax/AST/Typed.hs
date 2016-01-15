@@ -21,8 +21,8 @@ import           Luna.Syntax.Builder.Node  (MonadNodeBuilder)
 import           Luna.Syntax.Builder.Class (modify2, BuilderMonad)
 import           Luna.Syntax.Repr.Graph    (Graph, TracksSuccs, Ref, Node, Edge, DoubleArc)
 
-import           Data.Layer.Coat
-import           Data.Variants             (SpecificCons)
+--import           Data.Layer.Coat
+--import           Data.Variants             (SpecificCons)
 import           Data.Construction
 
 ---- === Typed ===

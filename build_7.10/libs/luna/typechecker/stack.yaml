@@ -2,15 +2,27 @@ resolver: lts-4.1
 packages:
 - ../../../../libs/luna/typechecker
 - ../../../../libs/utils
-# - /Users/wdanilo/dev/hs/public/prologue
-# - /Users/wdanilo/dev/hs/public/container
-# - /Users/wdanilo/dev/hs/public/functor-utils
-# - /Users/wdanilo/dev/hs/public/data-layer
-# - /Users/wdanilo/dev/hs/public/data-repr
-# - /Users/wdanilo/dev/hs/public/data-construction
-# - /Users/wdanilo/dev/hs/public/lens-utils
+- /Users/wdanilo/dev/hs/public/prologue
+- /Users/wdanilo/dev/hs/public/container
+- /Users/wdanilo/dev/hs/public/functor-utils
+- /Users/wdanilo/dev/hs/public/data-layer
+- /Users/wdanilo/dev/hs/public/data-repr
+- /Users/wdanilo/dev/hs/public/data-construction
+- /Users/wdanilo/dev/hs/public/lens-utils
+- /Users/wdanilo/dev/hs/public/typelevel
 - /Users/wdanilo/dev/hs/public/poly-control
 - /Users/wdanilo/dev/hs/public/impossible
+- /Users/wdanilo/dev/hs/public/bitmask
+- /Users/wdanilo/dev/hs/public/typelevel
+- /Users/wdanilo/dev/hs/public/type-cache
+- /Users/wdanilo/dev/hs/public/type-regex
+- /Users/wdanilo/dev/hs/public/data-path
+- /Users/wdanilo/dev/hs/public/data-rtuple
+- /Users/wdanilo/dev/hs/public/variants
+- /Users/wdanilo/dev/hs/public/relations
+- /Users/wdanilo/dev/hs/public/data-base
+- /Users/wdanilo/dev/hs/public/data-result
+- /Users/wdanilo/dev/hs/public/data-tagged
 
 extra-deps:
 - ghc-session-0.1.2.0
@@ -20,7 +32,7 @@ extra-deps:
 - data-repr-1.0
 - graphviz-2999.18.0.2
 - prologue-1.0.6
-- typelevel-1.0.2
+- typelevel-1.0.3
 - lens-utils-1.0
 - functor-utils-1.0
 - string-qq-0.0.2
