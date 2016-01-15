@@ -10,7 +10,6 @@ import           Event.Batch               as Batch
 
 import qualified BatchConnector.Commands   as BatchCmd
 import           Batch.Project             as Project
-import           Batch.Library
 
 import           Reactive.Plugins.Loader.ProjectManager.State
 

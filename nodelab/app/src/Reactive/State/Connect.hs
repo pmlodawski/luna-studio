@@ -3,21 +3,22 @@ module Reactive.State.Connect where
 
 import Utils.PreludePlus
 import Utils.Vector
+import Data.Aeson (ToJSON)
 
 import Object.Node
 import Object.UITypes
-import Object.Port
-import Data.Aeson (ToJSON)
+import Empire.API.Data.PortRef (OutPortRef, InPortRef, AnyPortRef)
+import Empire.API.JSONInstances ()
 
 data DragHistory = DragHistory { _dragStartPos    :: Vector2 Int
                                , _dragCurrentPos  :: Vector2 Int
                                } deriving (Eq, Show, Generic)
 
-data Connecting = Connecting { _sourcePortRef      :: PortRef
+data Connecting = Connecting { _sourcePortRef      :: AnyPortRef
                              , _sourcePortWidget   :: WidgetId
                              , _sourcePortAngleVec :: Vector2 Double
                              , _sourceNodePos      :: Vector2 Double
-                             , _destinationPortMay :: Maybe PortRef
+                             , _destinationPortMay :: Maybe AnyPortRef
                              , _history            :: DragHistory
                              } deriving (Eq, Show, Generic)
 

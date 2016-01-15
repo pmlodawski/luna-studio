@@ -35,7 +35,7 @@ Library
         Luna.DEP.Lib.Manager
 
   Build-Depends:  base,
-                  flowbox-utils,
+                  flowbox-utils-old,
                   luna-core,
                   MissingH
 

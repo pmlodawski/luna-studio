@@ -9,10 +9,10 @@ import           Reactive.Banana
 import           Reactive.Banana.Frameworks
 import           Batch.Workspace
 
-runLoader :: String -> WebSocket -> (Workspace -> IO ()) -> IO ()
-runLoader projectName socket callback = do
-    backendAddr <- getBackendAddress
-    connect socket backendAddr
-    let interpreterCallback = Interpreter.run socket callback
-    loaderNetwork <- compile $ ProjectManager.makeNetworkDescription interpreterCallback projectName socket
-    actuate loaderNetwork
+-- runLoader :: String -> WebSocket -> (Workspace -> IO ()) -> IO ()
+-- runLoader projectName socket callback = do
+--     backendAddr <- getBackendAddress
+--     connect socket backendAddr
+--     let interpreterCallback = Interpreter.run socket callback
+--     loaderNetwork <- compile $ ProjectManager.makeNetworkDescription interpreterCallback projectName socket
+--     actuate loaderNetwork

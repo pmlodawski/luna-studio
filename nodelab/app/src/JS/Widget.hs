@@ -10,5 +10,5 @@ import           Data.Text.Lazy      (Text)
 
 import           GHCJS.Foreign
 
-foreign import javascript unsafe "$$.registry[$1].setFocused($2)"
+foreign import javascript unsafe "common.registry[$1].setFocused($2)"
     setWidgetFocused :: Int -> Bool -> IO ()

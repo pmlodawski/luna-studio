@@ -5,14 +5,16 @@ module Luna.Syntax.Builder.Class where
 
 import Prologue
 
-import qualified Control.Monad.State as State
+import qualified Control.Monad.Catch      as Catch
+import qualified Control.Monad.State      as State
+import qualified Language.Haskell.Session as HS
 
 
 -- TODO: template haskellize
 -- >->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->
 
 newtype BuilderT g m a = BuilderT { fromBuilderT :: State.StateT g m a }
-                             deriving (Functor, Monad, Applicative, MonadIO, MonadPlus, MonadTrans, Alternative, MonadFix)
+                             deriving (Functor, Monad, Applicative, MonadIO, MonadPlus, MonadTrans, Alternative, MonadFix, HS.GhcMonad, HS.ExceptionMonad, HS.HasDynFlags, Catch.MonadMask, Catch.MonadCatch, Catch.MonadThrow)
 
 type Builder g = BuilderT g Identity
 

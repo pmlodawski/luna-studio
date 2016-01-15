@@ -3,24 +3,27 @@
 module UI.Widget.Port where
 
 import           Utils.PreludePlus
+import           Utils.CtxDynamic              (toCtxDynamic)
 import           Utils.Vector
-import           Data.JSString.Text ( lazyTextFromJSString, lazyTextToJSString )
-import           GHCJS.Types        (JSVal, JSString)
-import           GHCJS.Marshal.Pure (PToJSVal(..), PFromJSVal(..))
-import           GHCJS.DOM.Element  (Element)
-import           UI.Widget          (UIWidget(..), UIContainer(..))
-import qualified UI.Registry        as UIR
-import qualified Reactive.State.UIRegistry as UIRegistry
-import qualified Object.Widget.Port as Model
-import           Object.Widget
-import           Object.UITypes
-import           Event.Mouse (MouseButton(..))
-import           Utils.CtxDynamic (toCtxDynamic)
-import           Reactive.Commands.Command (Command, ioCommand, performIO)
-import qualified Reactive.State.Global as Global
-import           UI.Widget (GenericWidget(..))
-import qualified UI.Widget as UIT
 
+import           Data.JSString.Text            (lazyTextFromJSString, lazyTextToJSString)
+import           GHCJS.DOM.Element             (Element)
+import           GHCJS.Marshal.Pure            (PFromJSVal (..), PToJSVal (..))
+import           GHCJS.Types                   (JSString, JSVal)
+
+import           Event.Mouse                   (MouseButton (..))
+import           Object.UITypes
+import           Object.Widget
+import qualified Object.Widget.Port            as Model
+
+import           Reactive.Commands.Command     (Command, ioCommand, performIO)
+import qualified Reactive.State.Global         as Global
+import qualified Reactive.State.UIRegistry     as UIRegistry
+
+import qualified UI.Registry                   as UIR
+import           UI.Widget                     (UIContainer (..), UIWidget (..))
+import           UI.Widget                     (GenericWidget (..))
+import qualified UI.Widget                     as UIT
 
 newtype Port = Port { unPort :: JSVal } deriving (PToJSVal, PFromJSVal)
 
@@ -52,3 +55,6 @@ instance UIDisplayObject Model.Port where
 
 widgetHandlers :: UIHandlers Global.State
 widgetHandlers = def
+
+instance CompositeWidget Model.Port
+instance ResizableWidget Model.Port

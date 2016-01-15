@@ -1,0 +1,29 @@
+Name:               luna-empire-api-json
+Version:            0.1
+Cabal-Version:      >= 1.8
+--License-file:       LICENSE
+Author:             New Byte Order <contact@newbyteorder.com>
+Maintainer:         New Byte Order <contact@newbyteorder.com>
+Build-Type:         Simple
+
+Flag Debug
+  Description:      Enable debug support
+  Default:          False
+
+Library
+  Hs-Source-Dirs: src
+
+  GHC-Options:    -Wall -O2 -threaded
+
+  Extensions:     NoImplicitPrelude,
+                  DeriveGeneric,
+                  TemplateHaskell
+
+  Exposed-modules: `findmodules('src', '.*\.hs')`
+
+  Build-Depends:  base,
+                  lens,
+                  prologue,
+                  containers,
+                  luna-empire-api,
+                  aeson

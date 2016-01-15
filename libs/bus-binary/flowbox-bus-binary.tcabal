@@ -8,8 +8,7 @@ Build-Type:         Simple
 
 
 Library
-    Hs-Source-Dirs: dist/gen,
-                    src
+    Hs-Source-Dirs: src
     GHC-Options:    -Wall -O2 -threaded
     Extensions:     NoImplicitPrelude
     Other-Modules:  Paths_flowbox_bus_binary
@@ -25,7 +24,7 @@ Library
                     flowbox-bus,
                     flowbox-config,
                     flowbox-rpc,
-                    flowbox-utils,
+                    flowbox-utils-old,
                     MissingH,
                     mtl,
                     monad-loops,
@@ -46,7 +45,7 @@ Executable bus-test
                     either,
                     flowbox-bus-binary,
                     flowbox-rpc,
-                    flowbox-utils,
+                    flowbox-utils-old,
                     mtl,
                     transformers,
                     zeromq4-haskell

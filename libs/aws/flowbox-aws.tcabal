@@ -37,7 +37,7 @@ Library
                     exceptions,
                     filepath,
                     flowbox-rpc,
-                    flowbox-utils,
+                    flowbox-utils-old,
                     http-conduit,
                     iproute,
                     MissingH,
@@ -69,7 +69,7 @@ Executable aws-test-dbpool
                     base,
                     containers,
                     flowbox-aws,
-                    flowbox-utils,
+                    flowbox-utils-old,
                     postgresql-simple,
                     text
 
@@ -85,7 +85,7 @@ Executable aws-test-querydb
     Build-Depends:  aws-sdk >= 0.12.4,
                     base,
                     flowbox-aws,
-                    flowbox-utils,
+                    flowbox-utils-old,
                     postgresql-simple,
                     time
 
@@ -101,7 +101,7 @@ Executable aws-test-s3
     Build-Depends:  aws,
                     base,
                     flowbox-aws,
-                    flowbox-utils,
+                    flowbox-utils-old,
                     transformers
 
 
@@ -116,5 +116,5 @@ Executable aws-test-simple
     Build-Depends:  aws-sdk >= 0.12.4,
                     base,
                     flowbox-aws,
-                    flowbox-utils,
+                    flowbox-utils-old,
                     text

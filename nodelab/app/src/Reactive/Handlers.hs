@@ -23,7 +23,6 @@ import           Reactive.Banana.Frameworks ( AddHandler(..), liftIO )
 
 import           UI.Raycaster
 import           JS.NodeSearcher     ( getAction, getExpression, getNode, nsEvent )
-import           Object.Object
 import qualified Object.Widget       as Widget
 import qualified Event.Keyboard      as Keyboard
 import qualified Event.Mouse         as Mouse
@@ -34,16 +33,17 @@ import qualified Event.NodeSearcher  as NodeSearcher
 import qualified Event.Connection    as Connection
 import qualified Event.ConnectionPen as ConnectionPen
 import qualified Event.TextEditor    as TextEditor
-import qualified Object.Node         ( Node )
 import           Event.Event
 import           GHCJS.Marshal
 import           JavaScript.Array    ( JSArray )
 import qualified JavaScript.Array    as JSArray
 import           Data.JSString.Text ( lazyTextFromJSString, lazyTextToJSString )
 import qualified Data.JSString as JSString
-
-
 import qualified BatchConnector.Connection as Connection
+
+foreign import javascript unsafe "app.getJSState()" getJSState :: IO JSState
+
+backspace = 8
 
 readKeyMods :: (MouseEvent.IsMouseEvent e) => EventM t e Keyboard.KeyMods
 readKeyMods = do
@@ -93,12 +93,12 @@ mouseHandler event tag =
                                   justWidgetMatrix    <- widgetMatrix
                                   justScene           <- scene
                                   return $ Mouse.EventWidget justObjectId justWidgetMatrix justScene
-            liftIO . h $ Mouse $ Mouse.Event tag mousePos button keyMods maybeWidget
+            jsState <- liftIO getJSState
+            liftIO . h $ Mouse jsState $ Mouse.Event tag mousePos button keyMods maybeWidget
 
 mouseDownHandler     = mouseHandler mouseDown  Mouse.Pressed
 mouseUpHandler       = mouseHandler mouseUp    Mouse.Released
 mouseMovedHandler    = mouseHandler mouseMove  Mouse.Moved
-mouseClickHandler    = mouseHandler click      Mouse.Clicked
 mouseDblClickHandler = mouseHandler dblClick   Mouse.DblClicked
 
 mouseWheelHandler :: AddHandler Event
@@ -125,15 +125,18 @@ mouseWheelHandler =
                                   justWidgetMatrix    <- widgetMatrix
                                   justScene           <- scene
                                   return $ Mouse.EventWidget justObjectId justWidgetMatrix justScene
-            liftIO . h $ Mouse $ Mouse.Event (Mouse.Wheel delta) mousePos button keyMods maybeWidget
+            jsState <- liftIO getJSState
+            liftIO . h $ Mouse jsState $ Mouse.Event (Mouse.Wheel delta) mousePos button keyMods maybeWidget
 
 keyHandler :: EventName Element KeyboardEvent.KeyboardEvent -> EventM Element KeyboardEvent.KeyboardEvent Int -> Keyboard.Type -> AddHandler Event
 keyHandler event getter tag = AddHandler $ \h -> do
     window <- fromJust <$> eventObject
     window `on` event $ do
         key     <- getter
+        when (key == backspace) $ preventDefault
         keyMods <- readKeyMods'
-        liftIO . h $ Keyboard $ Keyboard.Event tag (chr key) keyMods
+        jsState <- liftIO getJSState
+        liftIO . h $ Keyboard jsState $ Keyboard.Event tag (chr key) keyMods
 
 keyPressedHandler :: AddHandler Event
 keyPressedHandler = keyHandler keyPress uiCharCode Keyboard.Press

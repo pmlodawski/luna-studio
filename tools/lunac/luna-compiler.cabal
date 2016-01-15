@@ -32,7 +32,7 @@ Executable luna
   Build-Depends:  base,
                   containers,
                   flowbox-config,
-                  flowbox-utils,
+                  flowbox-utils-old,
                   luna-build,
                   luna-core,
                   luna-pass,
@@ -51,7 +51,7 @@ Test-Suite tests
   Extensions:     NoImplicitPrelude
   Build-Depends:  base,
                   flowbox-config,
-                  flowbox-utils,
+                  flowbox-utils-old,
                   hspec,
                   luna-build,
                   luna-core,

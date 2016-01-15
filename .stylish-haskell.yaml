@@ -75,3 +75,7 @@ language_extensions:
   - MultiParamTypeClasses
   - TemplateHaskell
   - QuasiQuotes
+  - TupleSections
+  - StandaloneDeriving
+  - DataKinds
+  - KindSignatures

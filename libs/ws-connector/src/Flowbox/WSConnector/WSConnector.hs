@@ -5,59 +5,99 @@
 -- Unauthorized copying of this file, via any medium is strictly prohibited
 ---------------------------------------------------------------------------
 {-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Flowbox.WSConnector.WSConnector where
 
-import           Control.Concurrent    (forkIO, threadDelay)
-import           Control.Monad         (forever)
-import qualified Data.ByteString       as B
-import qualified Data.ByteString.Char8 as BC
-import qualified Network.WebSockets    as WS
-import qualified System.ZMQ4.Monadic   as ZMQ
+import           Flowbox.Prelude
+import           Flowbox.System.Log.Logger
 
-import           Flowbox.Bus.Bus               (Bus)
-import qualified Flowbox.Bus.Bus               as Bus
-import qualified Flowbox.Bus.Data.Flag         as Flag
-import qualified Flowbox.Bus.Data.Message      as Message
-import qualified Flowbox.Bus.Data.MessageFrame as MessageFrame
-import qualified Flowbox.Bus.EndPoint          as EP
-import qualified Flowbox.Config.Config         as Config
-import qualified FlowboxData.Config.Config     as FD
-import qualified Flowbox.Network.WebSocket.Connector.Config.Config as WS
-import Flowbox.Control.Error
-import Flowbox.Prelude
+import           Control.Concurrent.STM        (atomically, STM)
+import           Control.Concurrent.STM.TChan
+import           Control.Concurrent.STM.TVar
+import           Control.Concurrent            (forkIO)
+import           Control.Monad                 (forever)
+import           Control.Exception             (catch)
+import qualified Network.WebSockets            as WS
+import qualified Data.ByteString               as ByteString
 
+import           Flowbox.Bus.EndPoint          (BusEndPoints)
 
-fromWeb :: WS.Connection -> Bus ()
-fromWeb conn = do
-    forever $ do
-        webMessage <- liftIO $ do WS.receiveData conn
-        Bus.sendByteString webMessage
+import qualified Flowbox.WSConnector.WSConfig       as WSConfig
+import           Flowbox.WSConnector.Data.WSMessage (WSMessage(..), ControlCode(..))
+import           Flowbox.WSConnector.Data.WSFrame   (WSFrame(..), deserializeFrame, serializeFrame, messages)
+import qualified Flowbox.WSConnector.Workers.BusWorker as BusWorker
 
-toWeb :: WS.Connection -> Bus ()
-toWeb  conn = do
-    Bus.subscribe mempty
-    forever $ do
-        messageBus <- Bus.receiveByteString
-        liftIO $ do WS.sendTextData conn messageBus
+logger :: LoggerIO
+logger = getLoggerIO $moduleName
 
+handleDisconnect :: WS.ConnectionException -> IO ()
+handleDisconnect _ = logger info "User disconnected"
 
-runBus :: EP.BusEndPoints -> Bus a -> IO (Either Bus.Error a)
-runBus e b = ZMQ.runZMQ $ Bus.runBus e b
+getFreshClientId :: TVar Int -> TVar Int -> STM Int
+getFreshClientId clientCounter currentClient = do
+    modifyTVar clientCounter (+ 1)
+    newId <- readTVar clientCounter
+    writeTVar currentClient newId
+    return newId
 
-application ::  Int -> EP.BusEndPoints -> WS.ServerApp
-application pingTime busEndPoints pending = do
+application :: TVar Int -> TVar Int -> Int -> TChan WSMessage -> TChan WSMessage -> WS.ServerApp
+application clientCounter currentClient pingTime toBusChan fromBusChan pending = do
+    newId <- atomically $ getFreshClientId clientCounter currentClient
     conn <- WS.acceptRequest pending
-
     WS.forkPingThread conn pingTime
 
-    _ <- forkIO $ eitherToM' $ runBus busEndPoints $ fromWeb conn
-    void $ runBus busEndPoints $ toWeb conn
+    let welcomeMessage = serializeFrame $ WSFrame [ControlMessage Welcome]
+    WS.sendTextData conn welcomeMessage
 
+    fromBusListenChan <- atomically $ dupTChan fromBusChan
 
-run :: IO ()
-run = do
-    busEndPoints <- EP.clientFromConfig <$> Config.load
-    config <- WS.readWebsocketConfig <$> FD.load
+    forkIO $ fromWeb newId clientCounter conn toBusChan
+    toWeb conn fromBusListenChan
 
-    WS.runServer (config ^. WS.host) (config ^. WS.port) $ application (config ^. WS.pingTime) busEndPoints
+isActive :: Int -> TVar Int -> STM Bool
+isActive clientId currentClient = return True
+-- do
+--     currentClientId <- readTVar currentClient
+--     return $ clientId == currentClientId
+
+whileActive :: Int -> TVar Int -> IO () -> IO ()
+whileActive clientId currentClient action = do
+    active <- atomically $ isActive clientId currentClient
+    if active
+        then do action
+                whileActive clientId currentClient action
+        else return ()
+
+fromWebLoop :: Int -> TVar Int -> WS.Connection -> TChan WSMessage -> IO ()
+fromWebLoop clientId currentClient conn chan = whileActive clientId currentClient $ do
+    webMessage <- WS.receiveData conn
+    let frame = deserializeFrame webMessage
+    active <- atomically $ isActive clientId currentClient
+    if active
+        then atomically $ mapM_ (writeTChan chan) $ frame ^. messages
+        else return ()
+
+fromWeb :: Int -> TVar Int -> WS.Connection -> TChan WSMessage -> IO ()
+fromWeb clientId currentClient conn chan = do
+    flip catch handleDisconnect $ fromWebLoop clientId currentClient conn chan
+    let takeoverMessage = serializeFrame $ WSFrame [ControlMessage ConnectionTakeover]
+    WS.sendTextData conn takeoverMessage
+    WS.sendClose conn takeoverMessage
+
+toWeb :: WS.Connection -> TChan WSMessage -> IO ()
+toWeb conn chan = flip catch handleDisconnect $ forever $ do
+    msg <- atomically $ readTChan chan
+    let webMessage = serializeFrame $ WSFrame [msg]
+    WS.sendTextData conn webMessage
+
+run :: BusEndPoints -> WSConfig.Config -> IO ()
+run busEndPoints config = do
+    toBusChan       <- atomically newTChan
+    fromBusChan     <- atomically newBroadcastTChan
+    clientCounter   <- atomically $ newTVar 0
+    currentClient   <- atomically $ newTVar 0
+
+    BusWorker.start busEndPoints fromBusChan toBusChan
+
+    WS.runServer (config ^. WSConfig.host) (config ^. WSConfig.port) $ application clientCounter currentClient (config ^. WSConfig.pingTime) toBusChan fromBusChan

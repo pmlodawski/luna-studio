@@ -1,5 +1,5 @@
 build:
-  image: nbo/ghcjs-gui:20151022
+  image: nbo/ghcjs-gui:20160108
   environment:
     - AWS_ACCESS_KEY_ID=$$AWS_ACCESS_KEY_ID
     - AWS_SECRET_ACCESS_KEY=$$AWS_SECRET_ACCESS_KEY
@@ -7,7 +7,15 @@ build:
     - mkdir -p dist/proto
     - scripts/genproto > /dev/null
     - scripts/gencabal
-    - cd nodelab
+    - cd $DRONE_DIR/build_7.10/tools/batch/plugins/luna-empire
+    - stack build --copy-bins
+    - cd $DRONE_DIR/build_7.10/tools/batch/plugins/ws-connector
+    - stack build --copy-bins
+    - cd $DRONE_DIR/build_7.10/tools/batch/plugins/broker
+    - stack build --copy-bins
+    - cd $DRONE_DIR/build_7.10/tools/batch/plugins/bus-logger
+    - stack build --copy-bins
+    - cd $DRONE_DIR/nodelab
     - npm install
     - bower install --allow-root
     - mkdir -p .stack-work/install/x86_64-osx/custom-nbo-gui-20151022/ghcjs-0.2.0.20151020_ghc-7.10.2/bin/nodelab.jsexe/
@@ -18,7 +26,7 @@ build:
 notify:
   slack:
     webhook_url: 'https://hooks.slack.com/services/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'
-    username: 'drone'
+    username: 'typechecker'
     channel: '#cd'
     on_started: false
     on_success: true

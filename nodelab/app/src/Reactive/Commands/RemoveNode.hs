@@ -2,7 +2,6 @@ module Reactive.Commands.RemoveNode where
 
 import           Utils.PreludePlus
 import           Event.Keyboard (KeyMods)
-import           Object.Object  (NodeId)
 import           Object.UITypes (WidgetId)
 import           Object.Widget  (widget)
 import           Reactive.State.Global             (State)
@@ -18,8 +17,8 @@ import           Reactive.Commands.UIRegistry (removeWidget)
 
 import qualified BatchConnector.Commands as BatchCmd
 import qualified JS.NodeGraph            as UIGraph
-import           Object.Node             (Node, nodeId)
 import qualified Object.Widget.Node      as NodeModel
+import           Empire.API.Data.Node (NodeId)
 
 
 removeSelectedNodes :: Command State ()
@@ -29,6 +28,11 @@ removeSelectedNodes = do
 
 performRemoval :: NodeId -> Command State ()
 performRemoval nodeId = do
+    workspace  <- use Global.workspace
+    performIO $ BatchCmd.removeNode workspace nodeId
+
+localRemoveNodes :: NodeId -> Command State ()
+localRemoveNodes nodeId = do
     danglingConns <- uses Global.graph (Graph.connectionIdsContainingNode $ nodeId)
     localDisconnectAll danglingConns
 
@@ -40,4 +44,3 @@ performRemoval nodeId = do
     nodeWidgetId <- zoom Global.uiRegistry $ nodeIdToWidgetId nodeId
     zoom Global.uiRegistry $ mapM_ removeWidget $ maybeToList nodeWidgetId
 
-    performIO $ BatchCmd.removeNodeById workspace nodeId

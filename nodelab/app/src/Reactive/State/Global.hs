@@ -4,9 +4,6 @@ module Reactive.State.Global where
 import           Utils.PreludePlus
 import           Utils.Vector
 
-import           Object.Object
-
-
 import           Batch.Workspace
 import qualified Reactive.State.Camera            as Camera
 import qualified Reactive.State.Graph             as Graph

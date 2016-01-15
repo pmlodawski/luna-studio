@@ -35,7 +35,7 @@ Library
                   mtl,
                   QuickCheck,
                   lens,
-                  flowbox-utils,
+                  flowbox-utils-old,
                   tuple,
                   text,
                   containers

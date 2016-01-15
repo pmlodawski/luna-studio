@@ -28,7 +28,7 @@ Library
                     containers,
                     flowbox-bus,
                     flowbox-config,
-                    flowbox-utils,
+                    flowbox-utils-old,
                     mtl,
                     optparse-applicative,
                     protocol-buffers-descriptor,

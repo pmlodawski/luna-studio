@@ -1,48 +1,47 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE Rank2Types #-}
 
 module UI.Widget.Node where
 
 import           Utils.PreludePlus
 import           Utils.Vector
-import           Data.JSString.Text ( lazyTextFromJSString, lazyTextToJSString )
-import           GHCJS.Types        (JSVal, JSString)
-import           GHCJS.Marshal.Pure (PToJSVal(..), PFromJSVal(..))
-import           GHCJS.DOM.Element  (Element)
-import           UI.Widget          (UIWidget(..), UIContainer(..))
-import qualified UI.Registry        as UIR
-import           Event.Keyboard (KeyMods(..))
-import qualified Reactive.State.UIRegistry as UIRegistry
-import qualified Object.Widget.Node as Model
-import           Object.Widget
-import           Object.UITypes
-import           Event.Mouse (MouseButton(..))
-import qualified Event.Mouse as Mouse
-import           Utils.CtxDynamic (toCtxDynamic)
-import           Reactive.Commands.Command (Command, ioCommand, performIO)
-import qualified Reactive.Commands.UIRegistry as UICmd
-import qualified Reactive.State.Global as Global
-import           Reactive.State.Global (inRegistry)
-import           UI.Widget (GenericWidget(..))
-import qualified UI.Widget as UIT
-import           UI.Generic (takeFocus)
-import qualified Data.HMap.Lazy as HMap
-import           Data.HMap.Lazy (TypeKey(..))
+import           Utils.CtxDynamic              (toCtxDynamic)
+import           Data.HMap.Lazy                (TypeKey (..))
+import qualified Data.HMap.Lazy                as HMap
 
+import           Data.JSString.Text            (lazyTextFromJSString, lazyTextToJSString)
+import           GHCJS.DOM.Element             (Element)
+import           GHCJS.Marshal.Pure            (PFromJSVal (..), PToJSVal (..))
+import           GHCJS.Types                   (JSString, JSVal)
+
+import           Event.Keyboard                (KeyMods (..))
+import           Event.Mouse                   (MouseButton (..))
+import qualified Event.Mouse                   as Mouse
+import           Object.UITypes
+import           Object.Widget
+import qualified Object.Widget.Node            as Model
+import           Reactive.Commands.Command     (Command, ioCommand, performIO)
+import qualified Reactive.Commands.UIRegistry  as UICmd
+import           Reactive.State.Global         (inRegistry)
+import qualified Reactive.State.Global         as Global
+import qualified Reactive.State.UIRegistry     as UIRegistry
+
+import           UI.Generic                    (takeFocus)
+import qualified UI.Registry                   as UIR
+import           UI.Widget                     (UIContainer (..), UIWidget (..))
+import           UI.Widget                     (GenericWidget (..))
+import qualified UI.Widget                     as UIT
 
 newtype Node = Node { unNode :: JSVal } deriving (PToJSVal, PFromJSVal)
 
 instance UIWidget    Node
 instance UIContainer Node
 
-foreign import javascript unsafe "new GraphNode(-1, new THREE.Vector2($2, $3), 0, $1)" create' :: WidgetId -> Double -> Double -> IO Node
-foreign import javascript unsafe "$1.setExpandedStateBool($2)"     setExpandedState :: Node -> Bool     -> IO ()
-foreign import javascript unsafe "$1.setLabel($2)"                 setLabel         :: Node -> JSString -> IO ()
-foreign import javascript unsafe "$1.setValue($2)"                 setValue         :: Node -> JSString -> IO ()
-foreign import javascript unsafe "$1.setZPos($2)"                  setZPos          :: Node -> Double -> IO ()
-foreign import javascript unsafe "$1.uniforms.selected.value = $2" setSelected      :: Node -> Int      -> IO ()
-
-foreign import javascript unsafe "$1.htmlContainer"                getHTMLContainer :: Node -> IO Element
+foreign import javascript unsafe "new GraphNode(-1, new THREE.Vector2($2, $3), 0, $1)" create'          :: WidgetId -> Double -> Double -> IO Node
+foreign import javascript unsafe "$1.setExpandedStateBool($2)"                         setExpandedState :: Node -> Bool     -> IO ()
+foreign import javascript unsafe "$1.setLabel($2)"                                     setLabel         :: Node -> JSString -> IO ()
+foreign import javascript unsafe "$1.setValue($2)"                                     setValue         :: Node -> JSString -> IO ()
+foreign import javascript unsafe "$1.setZPos($2)"                                      setZPos          :: Node -> Double -> IO ()
+foreign import javascript unsafe "$1.uniforms.selected.value = $2"                     setSelected      :: Node -> Int      -> IO ()
 
 createNode :: WidgetId -> Model.Node -> IO Node
 createNode id model = do
@@ -105,10 +104,10 @@ triggerFocusNodeHandler id = do
     forM_ maybeHandler $ \(FocusNodeHandler handler) -> handler id
 
 keyDownHandler :: KeyPressedHandler Global.State
-keyDownHandler '\r'   _ id = zoom Global.uiRegistry $ UICmd.update_ id (Model.isExpanded %~ not)
-keyDownHandler '\x08' _ id = triggerRemoveHandler id
-keyDownHandler '\x2e' _ id = triggerRemoveHandler id
-keyDownHandler _      _ _  = return ()
+keyDownHandler '\r'   _ _ id = zoom Global.uiRegistry $ UICmd.update_ id (Model.isExpanded %~ not)
+keyDownHandler '\x08' _ _ id = triggerRemoveHandler id
+keyDownHandler '\x2e' _ _ id = triggerRemoveHandler id
+keyDownHandler _      _ _ _  = return ()
 
 handleSelection :: Mouse.Event' -> WidgetId -> Command Global.State ()
 handleSelection evt id = case evt ^. Mouse.keyMods of
@@ -134,11 +133,13 @@ unselectAll = do
 
 widgetHandlers :: UIHandlers Global.State
 widgetHandlers = def & keyDown      .~ keyDownHandler
-                     & mousePressed .~ (\evt id -> do
+                     & mousePressed .~ (\evt _ id -> do
                          triggerFocusNodeHandler id
                          takeFocus evt id
                          handleSelection evt id)
 
-
 allNodes :: Command UIRegistry.State [WidgetFile Model.Node]
 allNodes = UIRegistry.lookupAllM
+
+instance CompositeWidget Model.Node
+instance ResizableWidget Model.Node

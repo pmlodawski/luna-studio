@@ -42,7 +42,7 @@ Executable bus-logger
                     errors,
                     flowbox-bus-binary,
                     flowbox-config,
-                    flowbox-utils,
+                    flowbox-utils-old,
                     mtl,
                     optparse-applicative,
                     protocol-buffers,

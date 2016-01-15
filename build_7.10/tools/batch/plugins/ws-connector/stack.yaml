@@ -1,0 +1,20 @@
+packages:
+- ../../../../../libs/bus-binary
+- ../../../../../libs/bus
+- ../../../../../libs/config
+- ../../../../../libs/rpc
+- ../../../../../libs/old-utils
+- ../../../../../libs/ws-connector
+- ../../../../../tools/batch/plugins/ws-connector
+resolver: lts-3.14
+extra-deps:
+- prologue-1.0.6
+- container-1.0.1
+- convert-1.0
+- data-layer-1.0.3
+- functor-utils-1.0
+- lens-utils-1.0
+- string-qq-0.0.2
+- data-construction-1.0
+- typelevel-1.0.2
+local-bin-path: ../../../../.bin

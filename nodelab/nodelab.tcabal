@@ -61,12 +61,6 @@ executable nodelab
                      , random
                      , pretty-show
                      , flowbox-utils
-                     , flowbox-serialization
-                     , protocol-buffers
-                     , luna-protobuf-old-gen
-                     , flowbox-batch-protobuf
-                     , batch-lib-project-manager-api
-                     , batch-plugin-interpreter-api
                      , convert
                      , process
                      , constraints
@@ -74,6 +68,8 @@ executable nodelab
                      , vector
                      , aeson
                      , unordered-containers
+                     , luna-empire-api
+                     , luna-empire-api-json
   hs-source-dirs:      app/src
   default-language:    Haskell2010
 

@@ -26,36 +26,25 @@ Library
 
   Exposed-modules: 
         Flowbox.Network.WebSocket.Connector.Config.Config,
-        Flowbox.WSConnector.WSConnector
+        Flowbox.WSConnector.Data.WSFrame,
+        Flowbox.WSConnector.Data.WSMessage,
+        Flowbox.WSConnector.WSConfig,
+        Flowbox.WSConnector.WSConnector,
+        Flowbox.WSConnector.Workers.BusWorker
 
 
   Build-Depends:  async,
                   base,
                   bytestring,
+                  base64-bytestring,
+                  binary,
+                  text,
                   either,
                   exceptions,
-                  flowbox-bus,
+                  flowbox-bus-binary,
                   flowbox-config,
-                  flowbox-utils,
+                  flowbox-utils-old,
                   mtl,
                   websockets,
+                  stm,
                   zeromq4-haskell >= 0.6
-
-Executable ws-connector-test
-  Main-Is:        Main.hs
-  Hs-Source-Dirs: test
-
-  GHC-Options:    -Wall -O2
-
-  Extensions:     NoImplicitPrelude
-
-  Build-Depends:  base,
-                  bytestring,
-                  either,
-                  mtl,
-                  flowbox-ws-connector,
-                  flowbox-bus,
-                  flowbox-config,
-                  flowbox-utils,
-                  zeromq4-haskell
-

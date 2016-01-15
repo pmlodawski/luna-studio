@@ -27,7 +27,7 @@ Library
                   containers,
                   data-hash,
                   errors,
-                  flowbox-utils,
+                  flowbox-utils-old,
                   MissingH,
                   vector,
                   protocol-buffers,

@@ -35,7 +35,7 @@ Library
                     flowbox-batch-protobuf,
                     flowbox-bus,
                     flowbox-config,
-                    flowbox-utils,
+                    flowbox-utils-old,
                     luna-core,
                     luna-distribution-old,
                     luna-protobuf-old,

@@ -6,7 +6,6 @@ import           Utils.PreludePlus
 import           Utils.Vector
 
 import qualified JS.Camera             as JS
-import           Object.Node             (nodePos)
 import           Event.Event             (Event(Keyboard, Mouse))
 import           Event.Keyboard          (KeyMods(..), ctrl)
 import qualified Event.Keyboard        as Keyboard
@@ -18,27 +17,29 @@ import qualified Reactive.State.Graph  as Graph
 import qualified Reactive.State.Global as Global
 
 import Reactive.Commands.Command (Command, ioCommand, execCommand, performIO)
+import           Empire.API.Data.Node (Node)
+import qualified Empire.API.Data.Node as Node
 
 
 toAction :: Event -> Maybe (Command Global.State ())
-toAction (Keyboard (Keyboard.Event Keyboard.Press '0' KeyMods {_ctrl = True})) = Just $ autoZoom >> (zoom Global.camera syncCamera)
+toAction (Keyboard _ (Keyboard.Event Keyboard.Press '0' KeyMods {_ctrl = True})) = Just $ autoZoom >> (zoom Global.camera syncCamera)
 toAction evt = (zoom Global.camera) <$> (>> syncCamera) <$> toAction' evt
 
 toAction' :: Event -> Maybe (Command Camera.State ())
-toAction' (Mouse (Mouse.Event evt pos RightButton  _ _)) = Just $ zoomDrag evt pos
-toAction' (Mouse (Mouse.Event evt pos MiddleButton _ _)) = Just $ panDrag  evt pos
+toAction' (Mouse _ (Mouse.Event evt pos RightButton  _ _)) = Just $ zoomDrag evt pos
+toAction' (Mouse _ (Mouse.Event evt pos MiddleButton _ _)) = Just $ panDrag  evt pos
 
-toAction' (Mouse (Mouse.Event (Mouse.Wheel delta) pos _ KeyMods {_ctrl = False} _)) = Just $ panCamera delta
-toAction' (Mouse (Mouse.Event (Mouse.Wheel delta) pos _ KeyMods {_ctrl = True} _))  = Just $ wheelZoom pos delta
+toAction' (Mouse _ (Mouse.Event (Mouse.Wheel delta) pos _ KeyMods {_ctrl = False} _)) = Just $ panCamera delta
+toAction' (Mouse _ (Mouse.Event (Mouse.Wheel delta) pos _ KeyMods {_ctrl = True} _))  = Just $ wheelZoom pos delta
 
-toAction' (Keyboard (Keyboard.Event Keyboard.Press char _)) = case char of
+toAction' (Keyboard _ (Keyboard.Event Keyboard.Press char _)) = case char of
     '='   -> Just $ zoomIn
     '+'   -> Just $ zoomIn
     '-'   -> Just $ zoomOut
     '0'   -> Just $ resetZoom
     _     -> Nothing
 
-toAction' (Keyboard (Keyboard.Event Keyboard.Down char KeyMods { _ctrl = True })) = case char of
+toAction' (Keyboard _ (Keyboard.Event Keyboard.Down char KeyMods { _ctrl = True })) = case char of
     '\37' -> Just panLeft
     '\39' -> Just panRight
     '\38' -> Just panUp
@@ -78,8 +79,8 @@ autoZoom = do
 
     let padding        = Vector2 80.0 80.0
         screenSize     = fromIntegral <$> screenSize'
-        minXY          = -padding + (Vector2 (minimum $ (^. nodePos . x) <$> nodes) (minimum $ (^. nodePos . y) <$> nodes))
-        maxXY          =  padding + (Vector2 (maximum $ (^. nodePos . x) <$> nodes) (maximum $ (^. nodePos . y) <$> nodes))
+        minXY          = -padding + (Vector2 (minimum $ (^. Node.position . _1) <$> nodes) (minimum $ (^. Node.position . _2) <$> nodes))
+        maxXY          =  padding + (Vector2 (maximum $ (^. Node.position . _1) <$> nodes) (maximum $ (^. Node.position . _2) <$> nodes))
         spanXY         = maxXY - minXY
         zoomFactorXY   = Vector2 (screenSize ^. x / spanXY ^. x) (screenSize ^. y / spanXY ^. y)
         zoomFactor     = min (zoomFactorXY ^. x) (zoomFactorXY ^. y)

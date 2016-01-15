@@ -1,46 +1,59 @@
+{-# LANGUAGE FunctionalDependencies    #-}
+{-# LANGUAGE GADTs                     #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
-{-# LANGUAGE RecursiveDo #-}
-{-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE FunctionalDependencies #-}
-{-# LANGUAGE RankNTypes #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE GADTs #-}
+{-# LANGUAGE RankNTypes                #-}
+{-# LANGUAGE RecursiveDo               #-}
+{-# LANGUAGE ScopedTypeVariables       #-}
+{-# LANGUAGE TypeFamilies              #-}
+{-# LANGUAGE UndecidableInstances      #-}
 
 module Luna.Syntax.Builder ( module Luna.Syntax.Builder, module X) where
 
 import Prologue hiding (index, Ixed)
 
-import Data.Variants   as     V
 import Control.Monad.Fix
+import Data.Variants     as V
 
-import           Luna.Syntax.Builder.Star (StarBuilder, StarBuilderT, MonadStarBuilder)
-import qualified Luna.Syntax.Builder.Star as StarBuilder
-import           Luna.Syntax.Repr.Graph
-import           Luna.Syntax.Name
 import           Luna.Syntax.AST
 import           Luna.Syntax.AST.Arg
-import           Luna.Syntax.AST.Term
-import           Luna.Syntax.AST.Lit
 import           Luna.Syntax.AST.Decl
+import           Luna.Syntax.AST.Lit
 import           Luna.Syntax.AST.Term
---import           Luna.Syntax.AST.Typed
+import           Luna.Syntax.AST.Term
+import           Luna.Syntax.Builder.Star (MonadStarBuilder, StarBuilder, StarBuilderT)
+import qualified Luna.Syntax.Builder.Star as StarBuilder
+import           Luna.Syntax.Name
+import           Luna.Syntax.Repr.Graph
+--import           Luna.Syntax.AST.Typed  
 
-import qualified Luna.Syntax.Builder.Class as Builder
 import           Luna.Syntax.Builder.Class as X (runT)
+-- <<<<<<< HEAD
 import           Luna.Syntax.Builder.Class (modify, modify2, BuilderMonad)
 import qualified Luna.Syntax.Builder.Node as NodeBuilder
 import           Luna.Syntax.Builder.Node (MonadNodeBuilder)
 
 import Data.Container hiding (Impossible)
 import Data.Construction
+-- =======
+--import           Luna.Syntax.Builder.Class (BuilderMonad, modify2)
+import qualified Luna.Syntax.Builder.Class as Builder
+--import           Luna.Syntax.Builder.Node  (MonadNodeBuilder)
+--import qualified Luna.Syntax.Builder.Node  as NodeBuilder
+-- >>>>>>> f8e7192c58e6718aee36b622182b5288b47cdf6 e
 
-import Data.Cata
+--import Data.Cata
+import Data.Construction
+import Data.Container    hiding (Impossible)
 
 import Data.Layer.Coat
 
-import Data.IntSet (IntSet)
+import           Data.IntSet (IntSet)
 import qualified Data.IntSet as IntSet
+-- <<<<<<< HEAD
 import qualified Data.Container.Opts as Opts
+-- =======
+import qualified Data.Map    as Map
+-- >>>>>>> f8e7192c58e6718aee36b622182b5288b47cdf6e
 
 --- === Graph builders ===
 
@@ -209,15 +222,31 @@ star = build Star
 --    l' <- monadic l
 --    r' <- monadic r
 
+-- <<<<<<< HEAD
+-- =======
+_blank :: (MonadNodeBuilder (Ref Node) m, CoatConstructor m n, SpecificCons Blank (Uncoated n), BuilderMonad (Graph n e) m, MonadFix m) => m (Ref Node)
+_blank = mdo
+    i <- modify2 . nodes $ swap . ixed add a
+    a <- NodeBuilder.with (Ref $ Node i) $ constructCoat $ specificCons Blank
+    return $ Ref $ Node i
 
-arrow l r = mdo
-    l' <- monadic l
+--_star2 :: (CoatConstructor m a, SpecificCons Star (Uncoated a), BuilderMonad (Graph a) m) => m Int
+_star2 = mdo
+    i <- modify2 . nodes $ swap . ixed add a
+    a <- NodeBuilder.with (Ref $ Node i) $ constructCoat $ specificCons Star
+    return $ Ref $ Node i
+-- >>>>>>> f8e7192c58e6718aee36b622182b5288b47cdf6e
+
+arrow p n' r = mdo
+    p' <- mapM monadic p
     r' <- monadic r
     i <- modify2 . nodes $ swap . ixed add a
     a <- NodeBuilder.with (Ref $ Node i) $ do
-        lc <- connect l'
+        pc <- mapM connect p'
+        let connectItem (k, a) = (k,) <$> connect a
+        nc <- Map.fromList <$> mapM connectItem (Map.toList n') --(n' :: Map.Map Name a)
         rc <- connect r'
-        constructCoat $ specificCons $ Arrow lc rc
+        constructCoat $ specificCons $ Arrow pc nc rc
     return $ Ref $ Node i
 
 --cons :: forall name m t. (ToMuM' name m t, LayeredASTCons (Cons (Mu t)) m t) => name -> m (Mu t)
@@ -244,9 +273,16 @@ accessor name b = mdo
         constructCoat $ specificCons $ Accessor nc bc
     return $ Ref $ Node i
 
+var name = mdo
+    name' <- monadic name
+    i <- modify2 . nodes $ swap . ixed add a
+    a <- NodeBuilder.with (Ref $ Node i) $ do
+        nc <- connect name'
+        constructCoat $ specificCons $ Var nc
+    return $ Ref $ Node i
+
 app acc args = mdo
     acc'  <- monadic acc
-    -- let monadicArg (Arg n a) = Arg n <$> monadic a
     args' <- mapM monadic args
     i <- modify2 . nodes $ swap . ixed add a
     a <- NodeBuilder.with (Ref $ Node i) $ do
@@ -382,10 +418,29 @@ reconnect src lens tgt = do
     return i
 
 unregisterEdge eid = do
-    edge <- readRef eid 
-    withRef (edge ^. target) $ succs %~ IntSet.delete (deref $ edge ^. source)
+    edge <- readRef eid
+    withRef (edge ^. target) $ succs %~ IntSet.delete (deref eid)
     Builder.modify_ $ edges %~ free_ (deref eid)
 
+type instance Destructed (Ref Node) = ()
+instance ( Builder.BuilderMonad (Graph n e) m
+         , Uncoated (Destructed n) ~ Uncoated n
+         , CoatDestructor m (Destructed n)
+         , Destructor m n
+         , Uncoated (Destructed n) ~ t (Ref Edge)
+         , Uncoated (Unlayered n) ~ Uncoated (Destructed n)
+         , Layered n
+         , Coated (Unlayered n)
+         , Foldable t
+         , Builder.BuilderMonad (Graph n DoubleArc) m
+         , TracksSuccs (Unlayered n)
+         ) => Destructor m (Ref Node) where
+    destruct ref = do
+        node <- readRef ref
+        let ii = inputs (uncoat node) :: [Ref Edge]
+        mapM_ unregisterEdge ii
+        destructCoat node
+        Builder.modify_ $ nodes %~ free (deref ref)
 
 
 class Monad m => RefReader ref m a | ref m -> a where readRef :: Ref ref -> m a
@@ -406,6 +461,9 @@ withRef ref = withRefM ref . fmap return
 
 follow :: RefReader ref f DoubleArc => Ref ref -> f (Ref Node)
 follow edge = view target <$> readRef edge
+
+unfollow :: RefReader ref f DoubleArc => Ref ref -> f (Ref Node)
+unfollow edge = view source <$> readRef edge
 
 --string :: LayeredASTCons Lit m t => String -> m (Mu t)
 --string = layeredASTCons . String . fromString

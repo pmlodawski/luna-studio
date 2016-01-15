@@ -5,11 +5,11 @@ import           Control.Monad.State
 import           Utils.Graph.Graph      (Graph, fromConnections, neighbourhood, getNodes)
 import           Utils.Graph.Components (splitComponents)
 import           Utils.Graph.Layers     (assignLayers, getTotalHeight)
-import           Object.Object          (NodeId)
 import qualified Data.Map               as Map
 import           Data.Map               (Map)
 import           Utils.Vector           (Vector2(..))
 import           Debug.Trace
+import           Empire.API.Data.Node (NodeId)
 
 autoLayout :: [NodeId] -> [(NodeId, NodeId)] -> Double -> Double -> Map NodeId (Vector2 Double)
 autoLayout nodes edges gridWidth gridHeight = Map.map (toPixels gridWidth gridHeight) organizedGraph where

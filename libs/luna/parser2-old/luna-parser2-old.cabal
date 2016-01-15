@@ -44,7 +44,7 @@ Library
                   trifecta >= 1.5.1.1,
                   data-default,
                   concatenative,
-                  flowbox-utils,
+                  flowbox-utils-old,
                   luna-core,
                   text,
                   mtl,
@@ -76,7 +76,7 @@ Executable luna-parser-test
                   NoImplicitPrelude
 
   Build-Depends:  base,
-                  flowbox-utils,
+                  flowbox-utils-old,
                   luna-parser2-old,
                   ansi-wl-pprint,
                   data-default,
@@ -92,6 +92,6 @@ Test-Suite tests
   Build-Depends:  base,
                   luna-core,
                   luna-parser2-old,
-                  flowbox-utils,
+                  flowbox-utils-old,
                   hspec,
                   raw-strings-qq

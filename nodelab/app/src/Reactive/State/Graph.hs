@@ -10,22 +10,19 @@ import qualified Data.IntMap.Lazy as IntMap
 import qualified Data.Text.Lazy   as Text
 import           Debug.Trace
 
-import           Object.Object
-import           Object.Port
-import           Object.Node
-
 import           Data.Aeson
 import           Utils.Aeson (intMapToJSON)
+import           Empire.API.Data.Connection (Connection(..), ConnectionId)
+import           Empire.API.Data.PortRef    (OutPortRef, InPortRef, AnyPortRef)
+import qualified Empire.API.Data.Connection as Connection
+import qualified Empire.API.Data.PortRef    as PortRef
+import           Empire.API.Data.Node       (Node, NodeId)
+import qualified Empire.API.Data.Node       as Node
+import           Empire.API.Data.Port       (Port)
+import qualified Empire.API.Data.Port       as Port
+import qualified Empire.API.JSONInstances ()
 
-
-data Connection = Connection { _connId      :: ConnectionId
-                             , _source      :: PortRef
-                             , _destination :: PortRef
-                             } deriving (Eq, Show, Generic)
-
-makeLenses ''Connection
-instance ToJSON Connection
-
+type NodesMap       = IntMap Node
 type ConnectionsMap = IntMap Connection
 
 data State = State { _nodesMap       :: NodesMap       -- don't access it directly
@@ -45,14 +42,11 @@ instance Eq State where
 instance Default State where
     def = State def def
 
-connectionToRefs :: Connection -> (PortRef, PortRef)
-connectionToRefs conn = (conn ^. source, conn ^. destination)
-
 connectionToNodeIds :: Connection -> (NodeId, NodeId)
-connectionToNodeIds conn = (src ^. refPortNodeId, dst ^. refPortNodeId) where
-    (src, dst) = connectionToRefs conn
+connectionToNodeIds conn = ( conn ^. Connection.src . PortRef.srcNodeId
+                           , conn ^. Connection.dst . PortRef.dstNodeId)
 
-genId :: IntMap a -> ID
+genId :: IntMap a -> Int
 genId intMap = if IntMap.null intMap then 0
                                      else 1 + (fst $ IntMap.findMax intMap)
 
@@ -68,10 +62,10 @@ getNode state nodeId = IntMap.findWithDefault (error $ "Node " <> show nodeId <>
 getNodeById :: State -> NodeId -> Maybe Node
 getNodeById state nodeId = IntMap.lookup nodeId $ state ^. nodesMap
 
-nodes :: Getter State NodeCollection
+nodes :: Getter State [Node]
 nodes = to getNodes
 
-getNodes :: State -> NodeCollection
+getNodes :: State -> [Node]
 getNodes = IntMap.elems . getNodesMap
 
 getNodesMap :: State -> NodesMap
@@ -84,29 +78,26 @@ getConnectionsMap :: State -> ConnectionsMap
 getConnectionsMap = (^. connectionsMap)
 
 getConnectionNodeIds :: ConnectionId -> State -> Maybe (NodeId, NodeId)
-getConnectionNodeIds connId state = (mapTup _refPortNodeId) <$> refs
-    where mapTup f (a,b) = (f a, f b)
-          conn = lookUpConnection state connId
-          refs = connectionToRefs <$> conn
+getConnectionNodeIds connId state = connectionToNodeIds <$> conn
+    where conn = lookUpConnection state connId
 
 updateNodes :: NodesMap -> State -> State
 updateNodes newNodesMap state = state & nodesMap .~ newNodesMap
 
-getPort :: State -> PortRef -> Port
-getPort state portRef = fromMaybe err $ find (\port -> port ^. portId == portRef ^. refPortId) ports where
-    node  = getNode state $ portRef ^. refPortNodeId
-    ports = getPorts (portRef ^. refPortType) node
-    err   = error $ "Port " <> show (portRef ^. refPortId) <> " not found"
+getPort :: State -> AnyPortRef -> Port
+getPort state portRef = fromMaybe err $ node ^? Node.ports . ix (portRef ^. PortRef.portId) where
+    node  = getNode state $ portRef ^. PortRef.nodeId
+    err   = error $ "Port " <> show portRef <> " not found"
 
 addNode :: Node -> State -> State
-addNode newNode state  = state & nodesMap     %~ IntMap.insert (newNode ^. nodeId) newNode
+addNode newNode state  = state & nodesMap     %~ IntMap.insert (newNode ^. Node.nodeId) newNode
 
 removeNode :: NodeId -> State -> State
 removeNode remNodeId state = state & nodesMap %~ IntMap.delete remNodeId
 
-addConnection :: PortRef -> PortRef -> State -> (Maybe ConnectionId, State) -- TODO: check if node/ports exist
+addConnection :: OutPortRef -> InPortRef -> State -> (Maybe ConnectionId, State) -- TODO: check if node/ports exist
 addConnection sourcePortRef destPortRef state = (Just newConnId, newState) where
-    newState      = state & connectionsMap %~ IntMap.insert (newConnection ^. connId) newConnection
+    newState      = state & connectionsMap %~ IntMap.insert (newConnection ^. Connection.connectionId) newConnection
     newConnection = Connection newConnId sourcePortRef destPortRef
     newConnId     = genConnectionId state
 
@@ -120,20 +111,20 @@ lookUpConnection :: State -> ConnectionId -> Maybe Connection
 lookUpConnection state connId = IntMap.lookup connId $ getConnectionsMap state
 
 containsNode :: NodeId -> Connection -> Bool
-containsNode id conn = (conn ^. source      . refPortNodeId == id)
-                    || (conn ^. destination . refPortNodeId == id)
+containsNode id conn = (startsWithNode id conn)
+                    || (endsWithNode id conn)
 
 startsWithNode :: NodeId -> Connection -> Bool
-startsWithNode id conn = conn ^. source . refPortNodeId == id
+startsWithNode id conn = conn ^. Connection.src . PortRef.srcNodeId == id
 
 endsWithNode :: NodeId -> Connection -> Bool
-endsWithNode id conn = conn ^. destination . refPortNodeId == id
+endsWithNode id conn = conn ^. Connection.dst . PortRef.dstNodeId == id
 
 connectionsContainingNode :: NodeId -> State -> [Connection]
 connectionsContainingNode id state = filter (containsNode id) $ getConnections state
 
 connectionIdsContainingNode :: NodeId -> State -> [ConnectionId]
-connectionIdsContainingNode id state = (^. connId) <$> connectionsContainingNode id state
+connectionIdsContainingNode id state = (^. Connection.connectionId) <$> connectionsContainingNode id state
 
 connectionsStartingWithNode :: NodeId -> State -> [Connection]
 connectionsStartingWithNode id state = filter (startsWithNode id) $ getConnections state

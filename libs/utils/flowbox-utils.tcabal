@@ -82,7 +82,9 @@ Library
                     convert,
                     typelevel,
                     prologue,
-                    data-repr
+                    data-repr,
+                    poly-control,
+                    impossible
 
   if os(windows)
     Build-Depends:  Win32

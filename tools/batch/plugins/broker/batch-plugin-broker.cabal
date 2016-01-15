@@ -36,10 +36,10 @@ Executable broker
     Build-Depends:  base,
                     bytestring,
                     containers,
-                    flowbox-bus,
+                    flowbox-bus-binary,
                     flowbox-rpc,
                     flowbox-config,
-                    flowbox-utils,
+                    flowbox-utils-old,
                     transformers,
                     protocol-buffers,
                     zeromq4-haskell >= 0.4

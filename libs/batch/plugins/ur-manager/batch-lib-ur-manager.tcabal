@@ -25,6 +25,6 @@ Library
     Build-Depends:  base,
                     flowbox-batch,
                     flowbox-bus,
-                    flowbox-utils,
+                    flowbox-utils-old,
                     protocol-buffers,
                     protocol-buffers-descriptor

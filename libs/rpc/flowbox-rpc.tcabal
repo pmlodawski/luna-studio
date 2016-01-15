@@ -22,7 +22,7 @@ Library
                     containers,
                     either,
                     errors,
-                    flowbox-utils,
+                    flowbox-utils-old,
                     mtl,
                     protocol-buffers,
                     protocol-buffers-descriptor,

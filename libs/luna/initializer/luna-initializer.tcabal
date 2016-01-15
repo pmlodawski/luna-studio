@@ -21,5 +21,5 @@ Library
                    
   Build-Depends:  base,
                   flowbox-config,
-                  flowbox-utils,
+                  flowbox-utils-old,
                   MissingH

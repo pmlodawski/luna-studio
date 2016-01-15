@@ -33,7 +33,7 @@ Library
         Luna.Interpreter
 
   Build-Depends:  base,
-                  flowbox-utils,
+                  flowbox-utils-old,
                   flowbox-config,
                   ghc,
                   luna-core

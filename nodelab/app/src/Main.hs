@@ -39,6 +39,7 @@ import           Utils.URIParser
 
 import qualified Reactive.Plugins.Core.Network   as CoreNetwork
 import           Reactive.Plugins.Loader.Loader
+import           FakeMock (fakeWorkspace)
 
 
 makeNetworkDescription :: forall t. Frameworks t => WebSocket -> Bool -> Workspace -> Moment t ()
@@ -52,13 +53,14 @@ runMainNetwork socket workspace = do
     eventNetwork  <- compile $ makeNetworkDescription socket enableLogging workspace
     actuate eventNetwork
     triggerWindowResize
-    BatchCmd.getGraph workspace
+    BatchCmd.getProgram workspace
 
 main :: IO ()
 main = do
     socket <- getWebSocket
-    enableBackend <- isBackendEnabled
+    backendAddr <- getBackendAddress
+    connect socket backendAddr
     maybeProjectName <- getProjectName
     let projectName = maybe "myFirstProject" id maybeProjectName
-    runLoader projectName socket (runMainNetwork socket)
+    runMainNetwork socket fakeWorkspace
 

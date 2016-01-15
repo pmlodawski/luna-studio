@@ -15,21 +15,45 @@ Library
 
   GHC-Options:    -Wall -O2 -threaded
 
-  Extensions:     NoImplicitPrelude
+  Extensions:     NoImplicitPrelude,
+                  TemplateHaskell,
+                  DeriveFunctor,
+                  DeriveTraversable,
+                  FlexibleInstances,
+                  TypeFamilies,
+                  MultiParamTypeClasses,
+                  RankNTypes
 
   Exposed-modules: `findmodules('src', '.*\.hs')`
 
   Build-Depends:  base,
-                  prologue
+                  bytestring,
+                  containers,
+                  data-construction,
+                  data-layer,
+                  either,
+                  fgl,
+                  flowbox-bus-binary,
+                  flowbox-config,
+                  flowbox-utils,
+                  luna-empire-api,
+                  luna-tc,
+                  mtl,
+                  prologue,
+                  text
 
-Executable luna-empire
+Executable luna-empire-lib-test
   Main-Is:        Main.hs
-  Hs-Source-Dirs: src
+  Hs-Source-Dirs: test
 
   GHC-Options:    -Wall -O2 -package ghc
 
-  Extensions:     NoImplicitPrelude
+  Extensions:     NoImplicitPrelude,
+                  TemplateHaskell
 
   Build-Depends:  base,
-                  prologue,
-                  transformers
+                  luna-empire,
+                  flowbox-utils,
+                  luna-empire-api,
+                  luna-tc,
+                  prologue

@@ -30,5 +30,5 @@ Executable project-manager
                     batch-lib-project-manager,
                     flowbox-bus,
                     flowbox-config,
-                    flowbox-utils,
+                    flowbox-utils-old,
                     optparse-applicative

@@ -58,7 +58,7 @@ import           Unsafe.Coerce (unsafeCoerce)
 import           Flowbox.Prelude hiding (expand, lookup, splitAt, repr)
 import           GHC.TypeLits
 
-import           Control.Monad.Shuffle (deepBind, (>>>=), ($>>=))
+import           Control.Monad.Shuffle (deepBind, ($>>=))
 import           Data.Foldable (fold)
 import           Data.Traversable (sequenceA)
 import           Data.Maybe (fromMaybe)

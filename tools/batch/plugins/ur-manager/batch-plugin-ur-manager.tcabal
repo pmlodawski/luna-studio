@@ -28,7 +28,7 @@ Executable urm
                   flowbox-batch,
                   flowbox-bus,
                   flowbox-config,
-                  flowbox-utils,
+                  flowbox-utils-old,
                   protocol-buffers,
                   protocol-buffers-descriptor,
                   time,

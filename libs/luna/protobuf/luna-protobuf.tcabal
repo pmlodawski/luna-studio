@@ -29,7 +29,7 @@ Library
                   bytestring,
                   containers,
                   filepath,
-                  flowbox-utils,
+                  flowbox-utils-old,
                   luna-core,
                   luna-distribution,
                   protocol-buffers,

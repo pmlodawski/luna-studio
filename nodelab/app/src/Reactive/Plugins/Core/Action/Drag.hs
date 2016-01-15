@@ -6,10 +6,9 @@ import           Utils.Angle
 
 import qualified JS.NodeGraph   as UI
 
-import           Object.Object
 import           Object.Node
 import           Object.UITypes
-import           Object.Widget
+import           Object.Widget   (WidgetFile, objectId, widget, widgetPosition)
 
 import           Event.Keyboard hiding        (Event)
 import qualified Event.Keyboard as Keyboard
@@ -38,11 +37,15 @@ import           Control.Monad.State          hiding (State)
 
 import qualified UI.Generic as UI
 
+import           Empire.API.Data.Node (Node)
+import qualified Empire.API.Data.Node as Node
+
+
 toAction :: Event -> Maybe (Command State ())
-toAction (Mouse event@(Mouse.Event Mouse.Pressed  pos   Mouse.LeftButton (KeyMods False False False False) (Just _))) = Just $ startDrag pos
-toAction (Mouse event@(Mouse.Event Mouse.Moved    pos Mouse.LeftButton _ _)) = Just $ handleMove pos
-toAction (Mouse event@(Mouse.Event Mouse.Released _   Mouse.LeftButton _ _)) = Just stopDrag
-toAction _                                                                   = Nothing
+toAction (Mouse _ event@(Mouse.Event Mouse.Pressed  pos   Mouse.LeftButton (KeyMods False False False False) (Just _))) = Just $ startDrag pos
+toAction (Mouse _ event@(Mouse.Event Mouse.Moved    pos Mouse.LeftButton _ _)) = Just $ handleMove pos
+toAction (Mouse _ event@(Mouse.Event Mouse.Released _   Mouse.LeftButton _ _)) = Just stopDrag
+toAction _                                                                     = Nothing
 
 
 isNodeUnderCursor :: Command UIRegistry.State Bool
@@ -85,11 +88,12 @@ stopDrag = do
         nodesToUpdate = (\w -> (w ^. widget . Model.nodeId, w ^. widget . widgetPosition)) <$> selected
 
     nodes <- forM nodesToUpdate $ \(id, pos) -> do
-        Global.graph . Graph.nodesMap . ix id . nodePos .= pos
-        preuse $ Global.graph . Graph.nodesMap . ix id
+        Global.graph . Graph.nodesMap . ix id . Node.position .= toTuple pos
+        newMeta <- preuse $ Global.graph . Graph.nodesMap . ix id . Node.nodeMeta
+        forM_ newMeta $ \newMeta -> do
+            workspace <- use $ Global.workspace
+            performIO $ BatchCmd.updateNodeMeta workspace id newMeta
 
-    workspace <- use $ Global.workspace
-    performIO $ BatchCmd.updateNodes workspace (catMaybes nodes)
     updateConnections
     updatePortAngles
 
