@@ -154,11 +154,12 @@ handleDisconnect content = do
 handleGetProgram :: ByteString -> StateT Env BusT ()
 handleGetProgram content = do
     let request = Bin.decode . fromStrict $ content :: GetProgram.Request
+        location = request ^. GetProgram.location
     currentEmpireEnv <- use Env.empireEnv
     (resultGraph, _) <- liftIO $ Empire.runEmpire currentEmpireEnv $ Server.withGraphLocation Graph.getGraph
-        (request ^. GetProgram.location)
+        location
     (resultCode, _) <- liftIO $ Empire.runEmpire currentEmpireEnv $ Server.withGraphLocation Graph.getCode
-        (request ^. GetProgram.location)
+        location
     case (resultGraph, resultCode) of
         (Left err, _) -> logger Logger.error $ Server.errorMessage <> err
         (_, Left err) -> logger Logger.error $ Server.errorMessage <> err
