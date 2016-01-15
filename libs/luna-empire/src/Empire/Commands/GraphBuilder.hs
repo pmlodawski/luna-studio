@@ -69,7 +69,8 @@ getDefaultValue varMap ref
             match $ \val -> case' (val :: Val (Ref Edge)) $ match $ \lit -> case lit of
                 Lit.String s -> return . Just . Constant . StringValue $ Text.unpack $ toText s
                 Lit.Int    i -> return . Just . Constant . IntValue    $ i
-            match $ \ANY -> Print.printIdent ref >>= return . Just . Expression
+            match $ \Blank -> return Nothing
+            match $ \ANY -> Print.printExpression ref >>= return . Just . Expression
 
 buildPort :: VarMap -> (PortId, Ref Node) -> ASTOp Port
 buildPort varMap (portId, ref) = Port portId (ValueType "Int") <$> getDefaultValue varMap ref

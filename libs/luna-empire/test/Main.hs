@@ -54,10 +54,12 @@ test = do
 
     rn  <- view nodeId <$> Graph.addNode pid lid "+ 7 34" (NodeMeta (3.3, 4.4))
     rn1 <- view nodeId <$> Graph.addNode pid lid "7.* 4" (NodeMeta (3.3, 4.4))
+
+    Graph.addNode pid lid "7.+ _" def
     putStrLn "NOW RUNNING"
     putStrLn "------------------------"
 
-    runGraph pid lid >>= print
+    {-runGraph pid lid >>= print-}
 
     putStrLn "------------------------"
     putStrLn "RUN DONE"
