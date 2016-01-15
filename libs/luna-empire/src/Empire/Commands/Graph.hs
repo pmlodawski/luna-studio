@@ -46,7 +46,7 @@ addNode pid lid expr meta = withGraph pid lid $ do
     refNode <- zoom Graph.ast $ AST.addNode ("node" ++ show newNodeId) (Text.unpack expr)
     zoom Graph.ast $ AST.writeMeta refNode (Just meta)
     Graph.nodeMapping . at newNodeId ?= refNode
-    return $ Node.make newNodeId expr meta
+    GraphBuilder.buildNode newNodeId
 
 removeNode :: ProjectId -> LibraryId -> NodeId -> Empire ()
 removeNode pid lid nodeId = withGraph pid lid $ do

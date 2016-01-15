@@ -18,9 +18,9 @@ printIdent nodeRef = do
     case' (uncoat node) $ match $ \(Lit.String n) -> return (Text.unpack . toText $ n)
 
 printVal :: Val a -> String
-printVal val = case' val $ do
-    match $ \(Lit.Int    i) -> show i
-    match $ \(Lit.String s) -> show s
+printVal val = case' val $ match $ \lit -> case lit of
+    Lit.String s -> show s
+    Lit.Int    i -> show i
 
 printExpression :: Ref Node -> ASTOp String
 printExpression nodeRef = do

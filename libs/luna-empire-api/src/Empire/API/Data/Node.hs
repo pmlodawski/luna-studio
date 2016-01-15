@@ -21,15 +21,6 @@ data Node = Node { _nodeId      :: NodeId
 
 makeLenses ''Node
 
-mockPorts :: Map PortId Port
-mockPorts = Map.fromList [ (Port.InPortId Port.Self,    Port.Port (Port.InPortId Port.Self)    (ValueType "Int") Nothing)
-                         , (Port.InPortId (Port.Arg 0), Port.Port (Port.InPortId (Port.Arg 0)) (ValueType "Int") Nothing)
-                         , (Port.OutPortId Port.All,    Port.Port (Port.OutPortId Port.All)    (ValueType "Int") Nothing)
-                         ]
-
-make :: NodeId -> Text -> NodeMeta -> Node
-make id expr meta = Node id expr mockPorts meta
-
 position :: Lens' Node (Double, Double)
 position = nodeMeta . NodeMeta.position
 
