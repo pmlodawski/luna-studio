@@ -97,3 +97,4 @@ stack
 !**/.bin/.keep_me
 supervisor/tmp/*
 **/.stack-work
+supervisord.log
