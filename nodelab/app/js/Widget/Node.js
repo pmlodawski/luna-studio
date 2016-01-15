@@ -226,27 +226,27 @@ Node.prototype.setValue = function (text) {
   return this.valueText;
 };
 
-Node.prototype.updateValue = function () {
-  if (this.valueObject) this.mesh.remove(this.valueObject);
-
-  var size = 150 / config.fontSize;
-
-  var geometry = createText({
-    text:  this.valueText,
-    font:  font,
-    width: size,
-    align: 'center'
-  });
-  var material = textMaterial();
-  material.uniforms.width.value = size;
-  this.valueObject = new THREE.Mesh(geometry, material);
-  this.valueObject.scale.multiplyScalar(config.fontSize);
-  this.valueObject.position.x = -45 - 30;
-  this.valueObject.position.y = 12 + 30 + 10;
-  this.valueObject.position.z = 0;
-
-  this.mesh.add(this.valueObject);
-};
+Node.prototype.updateValue = function () {}
+//   if (this.valueObject) this.mesh.remove(this.valueObject);
+//
+//   var size = 150 / config.fontSize;
+//
+//   var geometry = createText({
+//     text:  this.valueText,
+//     font:  font,
+//     width: size,
+//     align: 'center'
+//   });
+//   var material = textMaterial();
+//   material.uniforms.width.value = size;
+//   this.valueObject = new THREE.Mesh(geometry, material);
+//   this.valueObject.scale.multiplyScalar(config.fontSize);
+//   this.valueObject.position.x = -45 - 30;
+//   this.valueObject.position.y = 12 + 30 + 10;
+//   this.valueObject.position.z = 0;
+//
+//   this.mesh.add(this.valueObject);
+// };
 
 Node.prototype.showLabelEditor = function () {
   if (this.htmlElements.labelEditor) return;

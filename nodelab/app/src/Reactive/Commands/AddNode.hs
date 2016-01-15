@@ -2,6 +2,7 @@
 module Reactive.Commands.AddNode
 ( addNode
 , updateNode
+, updateNodeValue
 ) where
 
 import           Utils.PreludePlus
@@ -146,4 +147,4 @@ makePortControl parent nodeId port = case port ^. Port.portId of
 updateNodeValue :: NodeId -> Int -> Command State ()
 updateNodeValue id val = inRegistry $ do
     widgetId <- nodeIdToWidgetId id
-    UICmd.update_ id $ Model.value .~ (Text.pack $ show val)
+    forM_ widgetId $ \widgetId -> UICmd.update_ widgetId $ Model.value .~ (Text.pack $ show val)
