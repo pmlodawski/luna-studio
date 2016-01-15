@@ -38,6 +38,7 @@ import qualified Empire.API.Graph.Disconnect            as Disconnect
 import qualified Empire.API.Graph.GetProgram            as GetProgram
 import qualified Empire.API.Graph.CodeUpdate            as CodeUpdate
 import qualified Empire.API.Graph.NodeUpdate            as NodeUpdate
+import qualified Empire.API.Graph.NodeResultUpdate      as NodeResultUpdate
 import qualified Empire.API.Graph.SetDefaultValue       as SetDefaultValue
 import qualified Empire.API.Project.CreateProject       as CreateProject
 import qualified Empire.API.Project.ListProjects        as ListProjects
@@ -98,6 +99,7 @@ loggFormattersMap = Map.fromList
     , (Topic.programRequest,        \content -> show (Bin.decode . fromStrict $ content :: GetProgram.Request))
     , (Topic.programStatus,         \content -> show (Bin.decode . fromStrict $ content :: GetProgram.Update))
     , (Topic.nodeUpdate,            \content -> show (Bin.decode . fromStrict $ content :: NodeUpdate.Update))
+    , (Topic.nodeResultUpdate,      \content -> show (Bin.decode . fromStrict $ content :: NodeResultUpdate.Update))
     , (Topic.codeUpdate,            \content -> show (Bin.decode . fromStrict $ content :: CodeUpdate.Update))
     , (Topic.graphUpdate,           const "graphUpdate - not implemented yet")
     , (Topic.createProjectRequest,  \content -> show (Bin.decode . fromStrict $ content :: CreateProject.Request))
