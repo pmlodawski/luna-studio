@@ -15,8 +15,8 @@ import           Data.Layer.Coat         (uncoat, coated)
 import qualified Empire.Data.Graph       as Graph
 import           Empire.Data.Graph       (Graph)
 
-import           Empire.API.Data.Port         (InPort(..), OutPort(..), Port(..), ValueType(..),
-                                               PortId(..))
+import           Empire.API.Data.Port         (InPort(..), OutPort(..), Port(..), PortId(..))
+import           Empire.API.Data.ValueType    (ValueType(..))
 import           Empire.API.Data.PortRef      (InPortRef(..), OutPortRef(..))
 import           Empire.API.Data.Node         (NodeId)
 import           Empire.API.Data.NodeMeta     (NodeMeta(..))
