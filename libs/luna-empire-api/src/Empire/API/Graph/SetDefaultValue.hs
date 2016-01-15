@@ -12,7 +12,7 @@ import qualified Empire.API.Update             as Update
 data Request = Request { _location     :: GraphLocation
                        , _nodeId       :: NodeId
                        , _portId       :: InPort
-                       , _defaultValue :: PortDefault
+                       , _defaultValue :: Maybe PortDefault
                        } deriving (Generic, Show, Eq)
 
 type Update = Update.SimpleUpdate Request

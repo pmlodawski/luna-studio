@@ -47,7 +47,8 @@ import           Empire.API.Data.PortRef (AnyPortRef(..), InPortRef(..), OutPort
 import qualified Empire.API.Data.PortRef as PortRef
 import           Empire.API.Data.Connection (Connection, ConnectionId)
 import qualified Empire.API.Data.Connection as Connection
-import           Empire.API.Data.Port (ValueType, PortId(..))
+import           Empire.API.Data.ValueType (ValueType)
+import           Empire.API.Data.Port      (PortId(..))
 import qualified Empire.API.Data.Port as Port
 
 updateConnNodes :: [NodeId] -> Command Global.State ()

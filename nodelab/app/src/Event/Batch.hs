@@ -18,7 +18,7 @@ import qualified Empire.API.Graph.GetProgram        as GetProgram
 import qualified Empire.API.Graph.Connect           as Connect
 import qualified Empire.API.Graph.Disconnect        as Disconnect
 import qualified Empire.API.Graph.UpdateNodeMeta    as UpdateNodeMeta
-import qualified Empire.API.Graph.UpdateNodeMeta    as UpdateNodeMeta
+import qualified Empire.API.Graph.NodeResultUpdate  as NodeResultUpdate
 import qualified Empire.API.Graph.NodeUpdate        as NodeUpdate
 import qualified Empire.API.Graph.CodeUpdate        as CodeUpdate
 import Empire.API.JSONInstances ()
@@ -36,6 +36,7 @@ data Event = UnknownEvent String
            | NodeMetaUpdated     UpdateNodeMeta.Update
            | NodeUpdated             NodeUpdate.Update
            | CodeUpdated             CodeUpdate.Update
+           | NodeResultUpdated NodeResultUpdate.Update
            -- | ProjectsList [Project]
            -- | ProjectCreated Project
            -- | ProjectOpened Project

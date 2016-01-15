@@ -23,6 +23,7 @@ processMessage (WebMessage topic bytes)
     | topic == Topic.nodeUpdate           = NodeUpdated       $ decode bytes
     | topic == Topic.programStatus        = ProgramFetched    $ decode bytes
     | topic == Topic.codeUpdate           = CodeUpdated       $ decode bytes
+    | topic == Topic.nodeResultUpdate     = NodeResultUpdated $ decode bytes
     | otherwise                           = UnknownEvent topic
     -- "project.library.ast.function.graph.connect.update"            -> Just NodesConnected
     -- "project.library.ast.function.graph.disconnect.update"         -> Just NodesDisconnected

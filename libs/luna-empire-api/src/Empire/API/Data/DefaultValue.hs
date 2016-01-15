@@ -11,3 +11,6 @@ data PortDefault = Expression String | Constant Value deriving (Generic, Show, E
 
 instance Binary Value
 instance Binary PortDefault
+
+makePrisms ''Value
+makePrisms ''PortDefault

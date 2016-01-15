@@ -38,6 +38,7 @@ import qualified Empire.API.Graph.Disconnect            as Disconnect
 import qualified Empire.API.Graph.GetProgram            as GetProgram
 import qualified Empire.API.Graph.CodeUpdate            as CodeUpdate
 import qualified Empire.API.Graph.NodeUpdate            as NodeUpdate
+import qualified Empire.API.Graph.SetDefaultValue       as SetDefaultValue
 import qualified Empire.API.Project.CreateProject       as CreateProject
 import qualified Empire.API.Project.ListProjects        as ListProjects
 import qualified Empire.API.Library.CreateLibrary       as CreateLibrary
@@ -107,6 +108,7 @@ loggFormattersMap = Map.fromList
     , (Topic.createLibraryUpdate,   \content -> show (Bin.decode . fromStrict $ content :: CreateLibrary.Update))
     , (Topic.listLibrariesRequest,  \content -> show (Bin.decode . fromStrict $ content :: ListLibraries.Request))
     , (Topic.listLibrariesStatus,   \content -> show (Bin.decode . fromStrict $ content :: ListLibraries.Update))
+    , (Topic.setDefaultValueRequest,\content -> show (Bin.decode . fromStrict $ content :: SetDefaultValue.Request))
     ]
 
 defaultLogFormatter :: LogFormatter

@@ -26,3 +26,4 @@ updateNode _ = return () -- ioCommand . BatchCmd.updateNode
 
 requestValues :: [Node] -> Command Workspace ()
 requestValues = ioCommand . BatchCmd.requestValues
+

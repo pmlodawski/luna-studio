@@ -30,6 +30,7 @@ import qualified UI.Registry                   as UIR
 import           UI.Widget                     (UIContainer (..), UIWidget (..))
 import           UI.Widget                     (GenericWidget (..))
 import qualified UI.Widget                     as UIT
+import           UI.Handlers.Node ()
 
 newtype Node = Node { unNode :: JSVal } deriving (PToJSVal, PFromJSVal)
 
@@ -141,5 +142,4 @@ widgetHandlers = def & keyDown      .~ keyDownHandler
 allNodes :: Command UIRegistry.State [WidgetFile Model.Node]
 allNodes = UIRegistry.lookupAllM
 
-instance CompositeWidget Model.Node
 instance ResizableWidget Model.Node

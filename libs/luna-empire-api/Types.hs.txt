@@ -1,0 +1,18 @@
+data RunRequest { _projectId :: ProjectId}
+
+data SetMain    { _graphLocation :: GraphLocation }
+
+data GetValue   { _callPointPath ::
+--                , _graphLocation :: GraphLocation
+                , _nodeId :: NodeId}
+
+
+-- async and response
+                { _serializedValue
+                , _isCacheUpdated -- patrz stare API
+                , reason
+                }
+
+data AddSerializationMode =
+
+data InvalidateRequest

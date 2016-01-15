@@ -4,6 +4,7 @@ import Prologue
 import Data.Binary                  (Binary)
 
 import Empire.API.Data.DefaultValue (PortDefault)
+import Empire.API.Data.ValueType    (ValueType)
 
 data InPort  = Self | Arg Int        deriving (Generic, Show, Eq)
 data OutPort = All  | Projection Int deriving (Generic, Show, Eq)
@@ -47,15 +48,13 @@ instance Read OutPort where
         return (Projection v, r')
     readsPrec _ _ = []
 
-newtype ValueType = ValueType { _unValueType :: String } deriving (Show, Eq, Generic)
-
 data Port = Port { _portId       :: PortId
                  , _valueType    :: ValueType
                  , _defaultValue :: Maybe PortDefault
                  } deriving (Show, Eq, Generic)
 
 makeLenses ''Port
-
-instance Binary ValueType
 instance Binary PortId
 instance Binary Port
+
+

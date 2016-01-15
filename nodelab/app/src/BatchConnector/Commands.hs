@@ -30,19 +30,22 @@ import           BatchConnector.Connection  (sendMessage, sendMany, sendRequest,
 import           Empire.API.Data.NodeMeta (NodeMeta)
 import qualified Empire.API.Data.NodeMeta as NodeMeta
 import           Empire.API.Data.Node (NodeId)
+import           Empire.API.Data.Port (InPort(..))
 import           Empire.API.Data.Project (ProjectId, Project)
 import qualified Empire.API.Data.Project as Project
 import           Empire.API.Data.GraphLocation (GraphLocation)
 import qualified Empire.API.Data.GraphLocation as GraphLocation
 import           Empire.API.Data.Library (LibraryId, Library)
 import qualified Empire.API.Data.Library as Library
+import qualified Empire.API.Data.DefaultValue as DefaultValue
 import qualified Empire.API.Topic        as Topic
 
-import Empire.API.Graph.AddNode        as AddNode
-import Empire.API.Graph.Connect        as Connect
-import Empire.API.Graph.Disconnect     as Disconnect
-import Empire.API.Graph.RemoveNode     as RemoveNode
-import Empire.API.Graph.UpdateNodeMeta as UpdateNodeMeta
+import Empire.API.Graph.AddNode         as AddNode
+import Empire.API.Graph.Connect         as Connect
+import Empire.API.Graph.Disconnect      as Disconnect
+import Empire.API.Graph.RemoveNode      as RemoveNode
+import Empire.API.Graph.UpdateNodeMeta  as UpdateNodeMeta
+import Empire.API.Graph.SetDefaultValue as SetDefaultValue
 
 import Empire.API.Graph.GetProgram     as GetProgram
 
@@ -113,6 +116,10 @@ disconnectMessage workspace (src, dst) = WebMessage Topic.disconnectRequest $ en
 disconnectNodes :: Workspace -> [(OutPortRef, InPortRef)] -> IO ()
 disconnectNodes workspace connections = sendMany $ (disconnectMessage workspace) <$> connections
 
+setDefaultValue :: Workspace -> NodeId -> InPort -> Maybe DefaultValue.PortDefault -> IO ()
+setDefaultValue workspace nodeId portId val = sendRequest topic body where
+    topic = Topic.setDefaultValueRequest
+    body = (withLibrary workspace SetDefaultValue.Request) nodeId portId val
 -----
 
 setProjectId :: Project -> IO ()
