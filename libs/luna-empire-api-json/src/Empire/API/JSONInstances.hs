@@ -67,8 +67,10 @@ instance ToJSON AddNode.Request
 instance ToJSON AddNode.Result
 
 instance ToJSON Connect.Request
+instance ToJSON Connect.Result
 
 instance ToJSON Disconnect.Request
+instance ToJSON Disconnect.Result
 
 instance ToJSON RemoveNode.Request
 

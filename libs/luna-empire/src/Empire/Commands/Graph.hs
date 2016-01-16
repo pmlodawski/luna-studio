@@ -61,29 +61,32 @@ removeNode pid lid nodeId = withGraph pid lid $ do
     Graph.nodeMapping %= IntMap.delete nodeId
 
 updateNodeMeta :: ProjectId -> LibraryId -> NodeId -> NodeMeta -> Empire ()
-updateNodeMeta pid lid nid meta = withGraph pid lid $ do
-    ref <- GraphUtils.getASTPointer nid
+updateNodeMeta pid lid nodeId meta = withGraph pid lid $ do
+    ref <- GraphUtils.getASTPointer nodeId
     zoom Graph.ast $ AST.writeMeta ref $ Just meta
 
-connect :: ProjectId -> LibraryId -> OutPortRef -> InPortRef -> Empire ()
+connect :: ProjectId -> LibraryId -> OutPortRef -> InPortRef -> Empire Node
 connect pid lid (OutPortRef srcNodeId All) (InPortRef dstNodeId dstPort) = withGraph pid lid $ do
     case dstPort of
         Self    -> makeAcc srcNodeId dstNodeId
         Arg num -> makeApp srcNodeId dstNodeId num
+    GraphBuilder.buildNode dstNodeId
 connect _ _ _ _ = throwError "Source port should be All"
 
 setDefaultValue :: ProjectId -> LibraryId -> InPortRef -> PortDefault -> Empire Node
-setDefaultValue pid lid (InPortRef nid port) val = withGraph pid lid $ do
-    ref <- GraphUtils.getASTTarget nid
+setDefaultValue pid lid (InPortRef nodeId port) val = withGraph pid lid $ do
+    ref <- GraphUtils.getASTTarget nodeId
     parsed <- zoom Graph.ast $ AST.addDefault val
     newRef <- zoom Graph.ast $ case port of
         Self    -> AST.makeAccessor parsed ref
         Arg num -> AST.applyFunction ref parsed num
-    GraphUtils.rewireNode nid newRef
-    GraphBuilder.buildNode nid
+    GraphUtils.rewireNode nodeId newRef
+    GraphBuilder.buildNode nodeId
 
-disconnect :: ProjectId -> LibraryId -> InPortRef -> Empire ()
-disconnect pid lid port = withGraph pid lid $ disconnectPort port
+disconnect :: ProjectId -> LibraryId -> InPortRef -> Empire Node
+disconnect pid lid port@(InPortRef dstNodeId dstPort) = withGraph pid lid $ do
+    disconnectPort port
+    GraphBuilder.buildNode dstNodeId
 
 getCode :: ProjectId -> LibraryId -> Empire String
 getCode pid lid = withGraph pid lid $ do
@@ -110,7 +113,7 @@ runGraph pid lid = withGraph pid lid $ do
 -- internal
 
 printNodeLine :: NodeId -> Command Graph String
-printNodeLine nid = GraphUtils.getASTPointer nid >>= (zoom Graph.ast . AST.printExpression)
+printNodeLine nodeId = GraphUtils.getASTPointer nodeId >>= (zoom Graph.ast . AST.printExpression)
 
 withGraph :: ProjectId -> LibraryId -> Command Graph a -> Empire a
 withGraph pid lid = withLibrary pid lid . zoom Library.body

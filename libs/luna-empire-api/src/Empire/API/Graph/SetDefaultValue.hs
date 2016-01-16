@@ -5,14 +5,13 @@ import           Data.Binary                   (Binary)
 
 import           Empire.API.Data.GraphLocation (GraphLocation)
 import           Empire.API.Data.Node          (NodeId)
-import           Empire.API.Data.Port          (InPort)
+import           Empire.API.Data.PortRef       (InPortRef)
 import           Empire.API.Data.DefaultValue  (PortDefault)
 import qualified Empire.API.Update             as Update
 
 data Request = Request { _location     :: GraphLocation
-                       , _nodeId       :: NodeId
-                       , _portId       :: InPort
-                       , _defaultValue :: Maybe PortDefault
+                       , _portRef      :: InPortRef
+                       , _defaultValue :: PortDefault
                        } deriving (Generic, Show, Eq)
 
 type Update = Update.SimpleUpdate Request

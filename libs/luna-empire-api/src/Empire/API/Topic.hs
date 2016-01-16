@@ -15,15 +15,16 @@ connectUpdate          = "empire.graph.connect.update"
 disconnectRequest      = "empire.graph.disconnect.request"
 disconnectUpdate       = "empire.graph.disconnect.update"
 
+setDefaultValueRequest = "empire.graph.node.defaultValue.request"
+setDefaultValueUpdate  = "empire.graph.node.defaultValue.update"
+
 programRequest         = "empire.graph.program.request"
 programStatus          = "empire.graph.program.status"
 
-nodeUpdate             = "empire.graph.node.update" -- no request
+nodeUpdate             = "empire.graph.node.update"   -- no request
 nodeResultUpdate       = "empire.graph.result.update" -- no request
-codeUpdate             = "empire.graph.code.update" -- no request
-graphUpdate            = "empire.graph.graph.update" -- no request, for future use
-
-setDefaultValueRequest = "empire.project.node.defaultValue.request"
+codeUpdate             = "empire.graph.code.update"   -- no request
+graphUpdate            = "empire.graph.graph.update"  -- no request, for future use
 
 createProjectRequest   = "empire.project.create.request"
 createProjectUpdate    = "empire.project.create.update"

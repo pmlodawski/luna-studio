@@ -4,7 +4,7 @@ import           Prologue
 import           Data.Binary                   (Binary)
 
 import           Empire.API.Data.GraphLocation (GraphLocation)
-import           Empire.API.Data.Node          (NodeId)
+import           Empire.API.Data.Node          (Node, NodeId)
 import           Empire.API.Data.Port          (OutPort, InPort)
 import           Empire.API.Data.PortRef       (OutPortRef(..), InPortRef(..))
 import qualified Empire.API.Update             as Update
@@ -16,11 +16,16 @@ data Request = Request { _location  :: GraphLocation
                        , _dstPort   :: InPort
                        } deriving (Generic, Show, Eq)
 
-type Update = Update.SimpleUpdate Request
+data Result = Result { _node :: Node
+                     } deriving (Generic, Show, Eq)
+
+type Update = Update.Update Request Result
 
 makeLenses ''Request
+makeLenses ''Result
 
 instance Binary Request
+instance Binary Result
 
 src' :: Request -> OutPortRef
 src' r = OutPortRef (r ^. srcNodeId) (r ^. srcPort)

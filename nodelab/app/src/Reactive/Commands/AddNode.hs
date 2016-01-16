@@ -1,9 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Reactive.Commands.AddNode
-( addNode
-, updateNode
-, updateNodeValue
-) where
+    ( addNode
+    , updateNode
+    , updateNodeValue
+    ) where
 
 import           Utils.PreludePlus
 import           Utils.Vector
@@ -18,11 +18,11 @@ import           Object.UITypes        (WidgetId)
 import qualified Object.Widget.Node    as Model
 import qualified Object.Widget.Port    as PortModel
 import qualified Object.Widget.Group   as GroupModel
-import           Object.Widget.Number.Discrete (DiscreteNumber(..))
-import qualified Object.Widget.Number.Discrete as DiscreteNumber
-import qualified UI.Handlers.Number.Discrete as DiscreteNumber
-import           Object.Widget.Number.Continuous  (ContinuousNumber(..))
-import qualified UI.Handlers.Number.Continuous as ContinuousNumber
+import           Object.Widget.Number.Discrete     (DiscreteNumber(..))
+import qualified Object.Widget.Number.Discrete     as DiscreteNumber
+import qualified UI.Handlers.Number.Discrete       as DiscreteNumber
+import           Object.Widget.Number.Continuous   (ContinuousNumber(..))
+import qualified UI.Handlers.Number.Continuous     as ContinuousNumber
 
 import qualified Reactive.State.Global         as Global
 import           Reactive.State.Global         (State, inRegistry)
@@ -34,19 +34,19 @@ import           Reactive.Commands.Graph       (focusNode, updatePortAngles, por
 import           Reactive.Commands.RemoveNode  (removeSelectedNodes)
 import           Reactive.Commands.Command     (Command, performIO)
 import           Reactive.Commands.PendingNode (unrenderPending)
-import qualified Reactive.Commands.UIRegistry as UICmd
+import qualified Reactive.Commands.UIRegistry  as UICmd
 
 import qualified BatchConnector.Commands as BatchCmd
-import qualified JS.NodeGraph          as UI
+import qualified JS.NodeGraph            as UI
 
 import qualified UI.Widget.Node   as UINode
 import qualified UI.Registry      as UIR
 import qualified UI.Widget        as UIT
 import qualified UI.Scene
-import qualified Data.HMap.Lazy as HMap
-import           Data.HMap.Lazy (HTMap)
-import qualified Data.Map.Lazy as Map
-import           Data.Map.Lazy (Map)
+import qualified Data.HMap.Lazy   as HMap
+import           Data.HMap.Lazy   (HTMap)
+import qualified Data.Map.Lazy    as Map
+import           Data.Map.Lazy    (Map)
 import           UI.Handlers.Generic (triggerValueChanged, ValueChangedHandler(..))
 
 import           Empire.API.Data.Node (Node, NodeId)
@@ -54,7 +54,7 @@ import qualified Empire.API.Data.Node as Node
 import           Empire.API.Data.Port (Port(..), PortId(..))
 import qualified Empire.API.Data.Port as Port
 import qualified Empire.API.Data.DefaultValue as DefaultValue
-import           Empire.API.Data.PortRef (AnyPortRef(..), toAnyPortRef)
+import           Empire.API.Data.PortRef (AnyPortRef(..), toAnyPortRef, InPortRef(..))
 import           Debug.Trace (trace)
 
 addNode :: Node -> Command State ()
@@ -143,7 +143,7 @@ makePortControl parent nodeId port = case port ^. Port.portId of
         widget = DiscreteNumber.create (Vector2 200 20) (Text.pack $ show inPort) value
         handlers = onValueChanged $ \val _ -> do
             workspace <- use Global.workspace
-            performIO $ BatchCmd.setDefaultValue workspace nodeId inPort (Just $ DefaultValue.Constant $ DefaultValue.IntValue val)
+            performIO $ BatchCmd.setDefaultValue workspace (InPortRef nodeId inPort) (DefaultValue.Constant $ DefaultValue.IntValue val)
 
 
 updateNodeValue :: NodeId -> Int -> Command State ()

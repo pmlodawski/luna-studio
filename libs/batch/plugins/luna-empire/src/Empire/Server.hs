@@ -14,7 +14,7 @@ import qualified Empire.Env                             as Env
 import           Empire.Env                             (Env)
 import qualified Flowbox.Bus.Bus                        as Bus
 import           Flowbox.Bus.BusT                       (BusT (..))
-import qualified Flowbox.Bus.BusT                       as Bus
+import qualified Flowbox.Bus.BusT                       as BusT
 import qualified Flowbox.Bus.Data.Message               as Message
 import           Flowbox.Bus.Data.MessageFrame          (MessageFrame (MessageFrame))
 import           Flowbox.Bus.Data.Topic                 (Topic)
@@ -36,7 +36,7 @@ run endPoints topics = Bus.runBus endPoints $ do
     logger Logger.info $ "Subscribing to topics: " <> show topics
     logger Logger.info $ show endPoints
     mapM_ Bus.subscribe topics
-    Bus.runBusT $ evalStateT runBus def
+    BusT.runBusT $ evalStateT runBus def
 
 runBus :: StateT Env BusT ()
 runBus = do
