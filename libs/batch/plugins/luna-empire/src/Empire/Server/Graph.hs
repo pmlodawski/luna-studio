@@ -47,7 +47,7 @@ notifyCodeUpdate location = do
 notifyNodeUpdate :: GraphLocation -> Node -> StateT Env BusT ()
 notifyNodeUpdate location node = do
     let update = NodeUpdate.Update location node
-    void . sendToBus Topic.nodeUpdate $ toStrict $ Bin.encode update
+    sendToBus Topic.nodeUpdate update
 
 notifyNodeResultUpdates :: GraphLocation -> StateT Env BusT ()
 notifyNodeResultUpdates location = do
@@ -78,7 +78,7 @@ handleAddNode content = do
         Right node -> do
             Env.empireEnv .= newEmpireEnv
             let update = Update.Update request $ AddNode.Result node
-            sendToBus Topic.addNodeUpdate $ toStrict $ Bin.encode update
+            sendToBus Topic.addNodeUpdate update
             notifyCodeUpdate location
             notifyNodeResultUpdates location
 
@@ -128,7 +128,7 @@ handleConnect content = do
         Left err -> logger Logger.error $ errorMessage <> err
         Right node -> do
             Env.empireEnv .= newEmpireEnv
-            let update = Update.Update request $ Connect.Result node
+            let update = Update.Update request $ Update.Ok
             sendToBus Topic.connectUpdate update
             notifyNodeUpdate location node
             notifyCodeUpdate location
@@ -146,7 +146,7 @@ handleDisconnect content = do
         Left err -> logger Logger.error $ errorMessage <> err
         Right node -> do
             Env.empireEnv .= newEmpireEnv
-            let update = Update.Update request $ Disconnect.Result node
+            let update = Update.Update request $ Update.Ok
             sendToBus Topic.disconnectUpdate update
             notifyNodeUpdate location node
             notifyCodeUpdate location
