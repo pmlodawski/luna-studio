@@ -69,15 +69,17 @@ handleMessage = do
         Left err -> logger Logger.error $ "Unparseable message: " <> err
         Right (MessageFrame msg crlID senderID lastFrame) -> do
             let topic = msg ^. Message.topic
-                logMsg =  show senderID <> " -> (last = " <> show lastFrame <> ")\t:: " <> topic
+                logMsg = show (crlID ^. Message.messageID) <> ": " <> show senderID
+                         <> " -> (last = " <> show lastFrame
+                         <> ")\t:: " <> topic
                 content = msg ^. Message.message
                 errorMsg = show content
             case Utils.lastPart '.' topic of
-                "update"   -> logMessage logMsg topic content
-                "status"   -> logMessage logMsg topic content
-                "request"  -> logMessage logMsg topic content
-                _          -> do logger Logger.error logMsg
-                                 logger Logger.error errorMsg
+                "update"  -> logMessage logMsg topic content
+                "status"  -> logMessage logMsg topic content
+                "request" -> logMessage logMsg topic content
+                _         -> do logger Logger.error logMsg
+                                logger Logger.error errorMsg
 
 type LogFormatter = (forall a. Show a => a -> String) -> ByteString -> String
 

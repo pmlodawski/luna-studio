@@ -51,13 +51,14 @@ createDefaultState = do
         libraryName = Just "default library"
         libraryPath = "main.luna"
     currentEmpireEnv <- use Env.empireEnv
+    formatted        <- use Env.formatted
     (resultProject, newEmpireEnv1) <- liftIO $ Empire.runEmpire currentEmpireEnv $ Project.createProject
         projectName (fromString projectPath)
     case resultProject of
         Left err -> logger Logger.error $ Server.errorMessage <> err
         Right (projectId, project) -> do
             logger Logger.info $ "Created project " <> show projectId
-            logger Logger.debug $ show project
+            logger Logger.debug $ (Utils.display formatted) project
             Env.empireEnv .= newEmpireEnv1
             (resultLibrary, newEmpireEnv2) <- liftIO $ Empire.runEmpire newEmpireEnv1 $ Library.createLibrary
                 projectId libraryName (fromString libraryPath)
@@ -66,7 +67,7 @@ createDefaultState = do
                 Right (libraryId, library) -> do
                     Env.empireEnv .= newEmpireEnv2
                     logger Logger.info $ "Created library " <> show libraryId
-                    logger Logger.debug $ show library
+                    logger Logger.debug $ (Utils.display formatted) library
                     return ()
 
 handleMessage :: StateT Env BusT ()
@@ -76,14 +77,15 @@ handleMessage = do
         Left err -> logger Logger.error $ "Unparseable message: " ++ err
         Right (MessageFrame msg crlID senderID lastFrame) -> do
             let topic = msg ^. Message.topic
-                logMsg =  show senderID
-                       <> " -> (last = " <> show lastFrame <> ")\t:: " <> topic <> " crl: " <> show crlID
+                logMsg = show (crlID ^. Message.messageID) <> ": " <> show senderID
+                         <> " -> (last = " <> show lastFrame
+                         <> ")\t:: " <> topic
                 content = msg ^. Message.message
             case Utils.lastPart '.' topic of
-                "update"   -> handleUpdate        logMsg topic content
-                "status"   -> handleStatus        logMsg topic content
-                "request"  -> handleRequest       logMsg topic content
-                _          -> handleNotRecognized logMsg topic content
+                "update"  -> handleUpdate        logMsg topic content
+                "status"  -> handleStatus        logMsg topic content
+                "request" -> handleRequest       logMsg topic content
+                _         -> handleNotRecognized logMsg topic content
 
 
 defaultHandler :: ByteString -> StateT Env BusT ()

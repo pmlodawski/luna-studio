@@ -28,7 +28,6 @@ module Main where
 
 import           Utils.PreludePlus
 
-import           Control.Concurrent             (threadDelay)
 import           Reactive.Banana                (Moment, compile)
 import           Reactive.Banana.Frameworks     (Frameworks, actuate)
 import qualified Reactive.Plugins.Core.Network  as CoreNetwork
