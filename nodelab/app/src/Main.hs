@@ -32,6 +32,7 @@ import           Control.Concurrent             (threadDelay)
 import           Reactive.Banana                (Moment, compile)
 import           Reactive.Banana.Frameworks     (Frameworks, actuate)
 import qualified Reactive.Plugins.Core.Network  as CoreNetwork
+import qualified Reactive.Plugins.Loader.Loader as Loader
 import           JS.UI                          (initializeGl, render, triggerWindowResize)
 import           JS.WebSocket                   (WebSocket, getWebSocket, connect)
 import           JS.Config                      (isLoggerEnabled, getBackendAddress)
@@ -44,23 +45,19 @@ import           FakeMock                       (fakeWorkspace)
 makeNetworkDescription :: forall t. Frameworks t => WebSocket -> Bool -> Workspace -> Moment t ()
 makeNetworkDescription = CoreNetwork.makeNetworkDescription
 
-runMainNetwork :: WebSocket -> Workspace -> IO ()
-runMainNetwork socket workspace = do
+runMainNetwork :: Workspace -> WebSocket -> IO ()
+runMainNetwork workspace socket = do
     initializeGl
     render
     enableLogging <- isLoggerEnabled
     eventNetwork  <- compile $ makeNetworkDescription socket enableLogging workspace
-    threadDelay 1000 -- TODO: workaround to prevent Failed to execute 'send' on 'WebSocket': Still in CONNECTING state.
     actuate eventNetwork
     triggerWindowResize
     BatchCmd.getProgram workspace
 
 main :: IO ()
 main = do
-    socket <- getWebSocket
-    backendAddr <- getBackendAddress
-    connect socket backendAddr
     maybeProjectName <- getProjectName
     let projectName = maybe "myFirstProject" id maybeProjectName
-    runMainNetwork socket fakeWorkspace
+    Loader.withActiveConnection $ runMainNetwork fakeWorkspace
 
