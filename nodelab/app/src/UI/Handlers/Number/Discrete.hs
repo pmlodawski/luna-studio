@@ -73,9 +73,11 @@ dragEndHandler :: DragEndHandler Global.State
 dragEndHandler _ _ id = do
     enabled <- isEnabled id
     when enabled $ do
+        value      <- inRegistry $ UICmd.get id Model.value
+        startValue <- inRegistry $ UICmd.get id Model.dragStartValue
         inRegistry $ UICmd.update_ id $ Model.dragStartValue .~ Nothing
-        value <- inRegistry $ UICmd.get id Model.value
-        triggerValueChanged value id
+        let startVal = fromMaybe value startValue
+        when (startVal /= value) $ triggerValueChanged value id
 
 dblClickHandler :: DblClickHandler Global.State
 dblClickHandler _ _ id = do
