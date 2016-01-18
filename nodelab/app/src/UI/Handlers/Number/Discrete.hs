@@ -105,8 +105,10 @@ textValueChangedHandler parent val tbId = do
             val <- UICmd.get parent $ Model.displayValue
             UICmd.update_ tbId $ TextBox.value .~ (Text.pack $ val)
         Right (val', _) -> do
-            inRegistry $ UICmd.update_ parent $ Model.value .~ val'
-            triggerValueChanged val' parent
+            oldValue <- inRegistry $ UICmd.get parent Model.value
+            when (oldValue /= val') $ do
+                inRegistry $ UICmd.update_ parent $ Model.value .~ val'
+                triggerValueChanged val' parent
 
 instance CompositeWidget Model.DiscreteNumber where
     createWidget id model = do
