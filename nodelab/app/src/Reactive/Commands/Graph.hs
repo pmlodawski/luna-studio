@@ -4,19 +4,19 @@ module Reactive.Commands.Graph where
 import           Utils.PreludePlus
 import           Utils.Vector
 import           Utils.Angle
-import qualified Utils.Nodes  as NodeUtils
+import qualified Utils.Nodes                   as NodeUtils
 
-import           Data.IntMap.Lazy (IntMap(..))
-import qualified Data.IntMap.Lazy as IntMap
-import           Data.Map (Map)
-import qualified Data.Map as Map
-import           Data.Ord (comparing)
-import           Data.Fixed (mod')
+import           Data.IntMap.Lazy              (IntMap(..))
+import qualified Data.IntMap.Lazy              as IntMap
+import           Data.Map                      (Map)
+import qualified Data.Map                      as Map
+import           Data.Ord                      (comparing)
+import           Data.Fixed                    (mod')
 import           Object.UITypes
 import           Object.Widget
-import qualified Object.Widget.Node       as Model
-import qualified Object.Widget.Connection as ConnectionModel
-import qualified Object.Widget.Port       as PortModel
+import qualified Object.Widget.Node            as Model
+import qualified Object.Widget.Connection      as ConnectionModel
+import qualified Object.Widget.Port            as PortModel
 
 import           Reactive.State.Graph
 import qualified Reactive.State.Connect        as Connect
@@ -33,23 +33,23 @@ import           Control.Monad.State
 
 import qualified BatchConnector.Commands       as BatchCmd
 
-import qualified UI.Widget.Node as UINode
-import qualified UI.Widget.Port as UIPort
-import qualified UI.Widget.Connection as UIConnection
-import qualified UI.Generic as UIGeneric
-import           Reactive.State.Camera (Camera, screenToWorkspace)
-import           UI.Instances ()
-import           Empire.API.Data.Node (Node, NodeId)
-import qualified Empire.API.Data.Node as Node
-import           Empire.API.Data.NodeMeta (NodeMeta)
-import qualified Empire.API.Data.NodeMeta as NodeMeta
-import           Empire.API.Data.PortRef (AnyPortRef(..), InPortRef(..), OutPortRef(..))
-import qualified Empire.API.Data.PortRef as PortRef
-import           Empire.API.Data.Connection (Connection, ConnectionId)
-import qualified Empire.API.Data.Connection as Connection
-import           Empire.API.Data.ValueType (ValueType)
-import           Empire.API.Data.Port      (PortId(..))
-import qualified Empire.API.Data.Port as Port
+import qualified UI.Widget.Node                as UINode
+import qualified UI.Widget.Port                as UIPort
+import qualified UI.Widget.Connection          as UIConnection
+import qualified UI.Generic                    as UIGeneric
+import           Reactive.State.Camera         (Camera, screenToWorkspace)
+import           UI.Instances                  ()
+import           Empire.API.Data.Node          (Node, NodeId)
+import qualified Empire.API.Data.Node          as Node
+import           Empire.API.Data.NodeMeta      (NodeMeta)
+import qualified Empire.API.Data.NodeMeta      as NodeMeta
+import           Empire.API.Data.PortRef       (AnyPortRef(..), InPortRef(..), OutPortRef(..))
+import qualified Empire.API.Data.PortRef       as PortRef
+import           Empire.API.Data.Connection    (Connection, ConnectionId)
+import qualified Empire.API.Data.Connection    as Connection
+import           Empire.API.Data.ValueType     (ValueType)
+import           Empire.API.Data.Port          (PortId(..))
+import qualified Empire.API.Data.Port          as Port
 
 updateConnNodes :: [NodeId] -> Command Global.State ()
 updateConnNodes nodeIds = pureCommand $ \state -> let
