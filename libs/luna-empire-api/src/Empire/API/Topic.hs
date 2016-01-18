@@ -43,3 +43,5 @@ removeLibraryUpdate    = "empire.library.remove.update"
 
 listLibrariesRequest   = "empire.library.list.request"
 listLibrariesStatus    = "empire.library.list.status"
+
+logEnvDebug            = "empire.environment.debug"

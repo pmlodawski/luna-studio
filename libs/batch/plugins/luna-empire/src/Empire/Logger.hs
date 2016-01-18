@@ -53,7 +53,7 @@ logger = Logger.getLoggerIO $(Logger.moduleName)
 run :: BusEndPoints -> [Topic] -> Bool -> IO (Either Bus.Error ())
 run endPoints topics formatted = Bus.runBus endPoints $ do
     logger Logger.info $ "Subscribing to topics: " <> show topics
-    logger Logger.info $ show endPoints
+    logger Logger.info $ (Utils.display formatted) endPoints
     mapM_ Bus.subscribe topics
     Bus.runBusT $ evalStateT (runBus formatted) def
 
@@ -78,6 +78,7 @@ handleMessage = do
                 "update"  -> logMessage logMsg topic content
                 "status"  -> logMessage logMsg topic content
                 "request" -> logMessage logMsg topic content
+                "debug"   -> logMessage logMsg topic content
                 _         -> do logger Logger.error logMsg
                                 logger Logger.error errorMsg
 
@@ -117,6 +118,7 @@ loggFormattersMap = Map.fromList
     , (Topic.listLibrariesRequest,   \display content -> display (Bin.decode . fromStrict $ content :: ListLibraries.Request))
     , (Topic.listLibrariesStatus,    \display content -> display (Bin.decode . fromStrict $ content :: ListLibraries.Update))
     , (Topic.setDefaultValueRequest, \display content -> display (Bin.decode . fromStrict $ content :: SetDefaultValue.Request))
+    , (Topic.logEnvDebug,            \display content -> "Log environment")
     ]
 
 defaultLogFormatter :: LogFormatter

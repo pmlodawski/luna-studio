@@ -90,20 +90,22 @@ main = do
         pid       <- args `getArgOrExit` (argument "pid")
         lid       <- args `getArgOrExit` (argument "lid")
         getProgram endPoints (toGraphLocation pid lid)
+    when (args `isPresent` (command "createProject")) $ do
+        path      <- args `getArgOrExit` (argument "path")
+        let name   = args `getArg`       (argument "name")
+        createProject endPoints name path
     when (args `isPresent` (command "createLibrary")) $ do
         pid       <- args `getArgOrExit` (argument "pid")
         path      <- args `getArgOrExit` (argument "path")
         let name   = args `getArg`       (argument "name")
         createLibrary endPoints (read pid) name path
-    when (args `isPresent` (command "createProject")) $ do
-        path      <- args `getArgOrExit` (argument "path")
-        let name   = args `getArg`       (argument "name")
-        createProject endPoints name path
+    when (args `isPresent` (command "projects")) $ do
+        listProjects endPoints
     when (args `isPresent` (command "libraries")) $ do
         pid       <- args `getArgOrExit` (argument "pid")
         listLibraries endPoints $ read pid
-    when (args `isPresent` (command "projects")) $ do
-        listProjects endPoints
+    when (args `isPresent` (command "dump")) $ do
+        environmentDump endPoints
 
 addNode :: EP.BusEndPoints -> GraphLocation -> String -> Double -> Double -> Int -> IO ()
 addNode endPoints graphLocation expression x y tag = do
@@ -154,3 +156,8 @@ listLibraries :: EP.BusEndPoints -> ProjectId -> IO ()
 listLibraries endPoints pid = do
     let content = toStrict . Bin.encode $ ListLibraries.Request pid
     void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message Topic.listLibrariesRequest content
+
+environmentDump :: EP.BusEndPoints -> IO ()
+environmentDump endPoints = do
+    let content = toStrict . Bin.encode $ ("" :: String)
+    void $ Bus.runBus endPoints $ Bus.send Flag.Enable $ Message.Message Topic.logEnvDebug content

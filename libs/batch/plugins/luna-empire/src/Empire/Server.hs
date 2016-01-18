@@ -34,7 +34,7 @@ logger = Logger.getLoggerIO $(Logger.moduleName)
 run :: BusEndPoints -> [Topic] -> Bool -> IO (Either Bus.Error ())
 run endPoints topics formatted = Bus.runBus endPoints $ do
     logger Logger.info $ "Subscribing to topics: " <> show topics
-    logger Logger.info $ show endPoints
+    logger Logger.info $ (Utils.display formatted) endPoints
     mapM_ Bus.subscribe topics
     BusT.runBusT $ evalStateT (runBus formatted) def
 
@@ -85,6 +85,7 @@ handleMessage = do
                 "update"  -> handleUpdate        logMsg topic content
                 "status"  -> handleStatus        logMsg topic content
                 "request" -> handleRequest       logMsg topic content
+                "debug"   -> handleDebug         logMsg topic content
                 _         -> handleNotRecognized logMsg topic content
 
 
@@ -98,9 +99,6 @@ handleRequest logMsg topic content = do
     logger Logger.info logMsg
     let handler = Map.findWithDefault defaultHandler topic Handlers.handlersMap
     handler content
-    currentEmpireEnv <- use Env.empireEnv
-    formatted        <- use Env.formatted
-    logger Logger.debug $ Utils.display formatted currentEmpireEnv
 
 handleUpdate :: String -> String -> ByteString -> StateT Env BusT ()
 handleUpdate logMsg _ content = do
@@ -109,6 +107,13 @@ handleUpdate logMsg _ content = do
 handleStatus :: String -> String -> ByteString -> StateT Env BusT ()
 handleStatus logMsg _ content = do
     logger Logger.info logMsg
+
+handleDebug :: String -> String -> ByteString -> StateT Env BusT ()
+handleDebug logMsg _ content = do
+    logger Logger.info logMsg
+    currentEmpireEnv <- use Env.empireEnv
+    formatted        <- use Env.formatted
+    logger Logger.debug $ Utils.display formatted currentEmpireEnv
 
 handleNotRecognized :: String -> String -> ByteString -> StateT Env BusT ()
 handleNotRecognized logMsg _ content = do
