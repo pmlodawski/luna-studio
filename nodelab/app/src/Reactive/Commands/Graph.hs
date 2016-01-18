@@ -149,17 +149,19 @@ connectionVector map src dst = (dstPos - srcPos) where
     srcPos = map IntMap.! (src ^. PortRef.nodeId)
     dstPos = map IntMap.! (dst ^. PortRef.nodeId)
 
+angleToDimVec :: Double -> Vector2 Double
+angleToDimVec angle = (/ 10.0) <$> Vector2 (cos angle) (-sin angle)
+
 portDefaultAngle :: Int -> PortId -> Vector2 Double
-portDefaultAngle numPorts (OutPortId _) = (/ 10.0) <$> Vector2 (cos angleMod) (sin angleMod) where
+portDefaultAngle numPorts (OutPortId _) = angleToDimVec angleMod where
     angleMod = 0.0 -- TODO: only one out port supported for now
-portDefaultAngle numPorts (InPortId portId) = (/ 10.0) <$> Vector2 (cos angleMod) (sin angleMod) where
+portDefaultAngle numPorts (InPortId portId) = angleToDimVec angleMod where
     angleMod = angle `mod'` (2.0 * pi)
     angle = (1 + fromIntegral portNum) * (pi / (fromIntegral $ numPorts + 1)) + delta
     portNum = case portId of
         Port.Self  -> 0
         Port.Arg i -> i + 1
     delta = pi / 2.0 -- TODO: OutputPort -> 3.0 * pi / 2.0
-
 
 defaultAngles :: Command Global.State (Map AnyPortRef (Vector2 Double))
 defaultAngles = do
