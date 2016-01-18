@@ -3,8 +3,7 @@ module Empire.Server.Server where
 import           Prologue
 import           Data.Binary                     (Binary)
 import qualified Data.Binary                     as Bin
-import           Data.ByteString                 (ByteString)
-import           Data.ByteString.Lazy            (fromStrict, toStrict)
+import           Data.ByteString.Lazy            (toStrict)
 import           Control.Monad.State             (StateT)
 import           Flowbox.Bus.BusT                (BusT (..))
 import qualified Flowbox.Bus.Bus                 as Bus

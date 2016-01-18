@@ -6,7 +6,7 @@ import           Prologue
 import qualified Data.Binary                       as Bin
 import           Control.Monad.State               (StateT)
 import           Data.ByteString                   (ByteString)
-import           Data.ByteString.Lazy              (fromStrict, toStrict)
+import           Data.ByteString.Lazy              (fromStrict)
 import qualified Data.Text.Lazy                    as Text
 import qualified Data.IntMap                       as IntMap
 import qualified Flowbox.System.Log.Logger         as Logger

@@ -15,5 +15,6 @@ lastPartIntern _      b (a:as) | a == b = lastPartIntern [] b as
 lastPartIntern buffer _ []              = reverse buffer
 lastPartIntern buffer b (a:as)          = lastPartIntern (a:buffer) b as
 
-display :: Show a => a -> String
-display = Pretty.ppShow
+display :: Show a => Bool -> a -> String
+display True  = Pretty.ppShow
+display False = show

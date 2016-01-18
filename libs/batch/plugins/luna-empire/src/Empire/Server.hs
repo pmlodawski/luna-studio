@@ -20,7 +20,7 @@ import           Flowbox.Bus.Data.MessageFrame          (MessageFrame (MessageFr
 import           Flowbox.Bus.Data.Topic                 (Topic)
 import           Flowbox.Bus.EndPoint                   (BusEndPoints)
 import qualified Flowbox.System.Log.Logger              as Logger
-import           Empire.Utils                           (lastPart, display)
+import qualified Empire.Utils                           as Utils
 import qualified Empire.Handlers                        as Handlers
 import qualified Empire.Commands.Library                as Library
 import qualified Empire.Commands.Project                as Project
@@ -31,15 +31,16 @@ import qualified Empire.Server.Server                   as Server
 logger :: Logger.LoggerIO
 logger = Logger.getLoggerIO $(Logger.moduleName)
 
-run :: BusEndPoints -> [Topic] -> IO (Either Bus.Error ())
-run endPoints topics = Bus.runBus endPoints $ do
+run :: BusEndPoints -> [Topic] -> Bool -> IO (Either Bus.Error ())
+run endPoints topics formatted = Bus.runBus endPoints $ do
     logger Logger.info $ "Subscribing to topics: " <> show topics
     logger Logger.info $ show endPoints
     mapM_ Bus.subscribe topics
-    BusT.runBusT $ evalStateT runBus def
+    BusT.runBusT $ evalStateT (runBus formatted) def
 
-runBus :: StateT Env BusT ()
-runBus = do
+runBus :: Bool -> StateT Env BusT ()
+runBus formatted = do
+    Env.formatted .= formatted
     createDefaultState
     forever handleMessage
 
@@ -76,9 +77,9 @@ handleMessage = do
         Right (MessageFrame msg crlID senderID lastFrame) -> do
             let topic = msg ^. Message.topic
                 logMsg =  show senderID
-                       <> " -> (last = " <> show lastFrame <> ")\t:: " <> topic
+                       <> " -> (last = " <> show lastFrame <> ")\t:: " <> topic <> " crl: " <> show crlID
                 content = msg ^. Message.message
-            case lastPart '.' topic of
+            case Utils.lastPart '.' topic of
                 "update"   -> handleUpdate        logMsg topic content
                 "status"   -> handleStatus        logMsg topic content
                 "request"  -> handleRequest       logMsg topic content
@@ -96,17 +97,18 @@ handleRequest logMsg topic content = do
     let handler = Map.findWithDefault defaultHandler topic Handlers.handlersMap
     handler content
     currentEmpireEnv <- use Env.empireEnv
-    logger Logger.debug $ display currentEmpireEnv
+    formatted        <- use Env.formatted
+    logger Logger.debug $ Utils.display formatted currentEmpireEnv
 
 handleUpdate :: String -> String -> ByteString -> StateT Env BusT ()
-handleUpdate logMsg topic content = do
+handleUpdate logMsg _ content = do
     logger Logger.info logMsg
 
 handleStatus :: String -> String -> ByteString -> StateT Env BusT ()
-handleStatus logMsg topic content = do
+handleStatus logMsg _ content = do
     logger Logger.info logMsg
 
 handleNotRecognized :: String -> String -> ByteString -> StateT Env BusT ()
-handleNotRecognized logMsg topic content = do
+handleNotRecognized logMsg _ content = do
     logger Logger.error logMsg
     logger Logger.error $ show content

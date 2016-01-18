@@ -7,10 +7,7 @@ import           Prologue
 import qualified Data.Binary                      as Bin
 import           Control.Monad.State              (StateT)
 import           Data.ByteString                  (ByteString)
-import           Data.ByteString.Lazy             (fromStrict, toStrict)
-import qualified Flowbox.Bus.Data.Flag            as Flag
-import qualified Flowbox.Bus.Data.Message         as Message
-import qualified Flowbox.Bus.Bus                  as Bus
+import           Data.ByteString.Lazy             (fromStrict)
 import           Flowbox.Bus.BusT                 (BusT (..))
 import qualified Flowbox.System.Log.Logger        as Logger
 import qualified Empire.Env                       as Env

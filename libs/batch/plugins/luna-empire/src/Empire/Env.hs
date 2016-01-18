@@ -7,10 +7,11 @@ import           Flowbox.Prelude
 import qualified Empire.Empire    as Empire
 
 data Env = Env { _empireEnv :: Empire.Env
+               , _formatted :: Bool
                } deriving (Show)
 
 makeLenses ''Env
 
 instance Default Env where
-    def = Env def
+    def = Env def True
 
