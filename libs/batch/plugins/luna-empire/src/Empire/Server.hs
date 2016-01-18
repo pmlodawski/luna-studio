@@ -20,7 +20,7 @@ import           Flowbox.Bus.Data.MessageFrame          (MessageFrame (MessageFr
 import           Flowbox.Bus.Data.Topic                 (Topic)
 import           Flowbox.Bus.EndPoint                   (BusEndPoints)
 import qualified Flowbox.System.Log.Logger              as Logger
-import qualified Empire.Utils                           as Utils
+import           Empire.Utils                           (lastPart, display)
 import qualified Empire.Handlers                        as Handlers
 import qualified Empire.Commands.Library                as Library
 import qualified Empire.Commands.Project                as Project
@@ -78,7 +78,7 @@ handleMessage = do
                 logMsg =  show senderID
                        <> " -> (last = " <> show lastFrame <> ")\t:: " <> topic
                 content = msg ^. Message.message
-            case Utils.lastPart '.' topic of
+            case lastPart '.' topic of
                 "update"   -> handleUpdate        logMsg topic content
                 "status"   -> handleStatus        logMsg topic content
                 "request"  -> handleRequest       logMsg topic content
@@ -96,7 +96,7 @@ handleRequest logMsg topic content = do
     let handler = Map.findWithDefault defaultHandler topic Handlers.handlersMap
     handler content
     currentEmpireEnv <- use Env.empireEnv
-    logger Logger.debug $ show currentEmpireEnv
+    logger Logger.debug $ display currentEmpireEnv
 
 handleUpdate :: String -> String -> ByteString -> StateT Env BusT ()
 handleUpdate logMsg topic content = do

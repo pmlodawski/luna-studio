@@ -4,7 +4,7 @@
 
 module Empire.Logger where
 
-import           Flowbox.Prelude
+import           Prologue
 import           Control.Monad                          (forever)
 import           Control.Monad.State                    (StateT, evalStateT)
 import qualified Data.Binary                            as Bin
@@ -23,7 +23,7 @@ import           Flowbox.Bus.Data.MessageFrame          (MessageFrame (MessageFr
 import           Flowbox.Bus.Data.Topic                 (Topic)
 import           Flowbox.Bus.EndPoint                   (BusEndPoints)
 import qualified Flowbox.System.Log.Logger              as Logger
-import qualified Empire.Utils                           as Utils
+import           Empire.Utils                           (lastPart, display)
 import qualified Empire.Handlers                        as Handlers
 import qualified Empire.Commands.Library                as Library
 import qualified Empire.Commands.Project                as Project
@@ -51,8 +51,8 @@ logger = Logger.getLoggerIO $(Logger.moduleName)
 
 run :: BusEndPoints -> [Topic] -> IO (Either Bus.Error ())
 run endPoints topics = Bus.runBus endPoints $ do
-    logger Logger.info $ "Subscribing to topics: " <> show topics
-    logger Logger.info $ show endPoints
+    logger Logger.info $ "Subscribing to topics: " <> display topics
+    logger Logger.info $ display endPoints
     mapM_ Bus.subscribe topics
     Bus.runBusT $ evalStateT runBus def
 
@@ -66,10 +66,10 @@ handleMessage = do
         Left err -> logger Logger.error $ "Unparseable message: " <> err
         Right (MessageFrame msg crlID senderID lastFrame) -> do
             let topic = msg ^. Message.topic
-                logMsg =  show senderID <> " -> (last = " <> show lastFrame <> ")\t:: " <> topic
+                logMsg =  display senderID <> " -> (last = " <> display lastFrame <> ")\t:: " <> topic
                 content = msg ^. Message.message
-                errorMsg = show content
-            case Utils.lastPart '.' topic of
+                errorMsg = display content
+            case lastPart '.' topic of
                 "update"   -> logMessage logMsg topic content
                 "status"   -> logMessage logMsg topic content
                 "request"  -> logMessage logMsg topic content
@@ -86,31 +86,31 @@ logMessage logMsg topic content = do
 
 loggFormattersMap :: Map String LogFormatter
 loggFormattersMap = Map.fromList
-    [ (Topic.addNodeRequest,        \content -> show (Bin.decode . fromStrict $ content :: AddNode.Request))
-    , (Topic.addNodeUpdate,         \content -> show (Bin.decode . fromStrict $ content :: AddNode.Update))
-    , (Topic.removeNodeRequest,     \content -> show (Bin.decode . fromStrict $ content :: RemoveNode.Request))
-    , (Topic.removeNodeUpdate,      \content -> show (Bin.decode . fromStrict $ content :: RemoveNode.Update))
-    , (Topic.updateNodeMetaRequest, \content -> show (Bin.decode . fromStrict $ content :: UpdateNodeMeta.Request))
-    , (Topic.updateNodeMetaUpdate,  \content -> show (Bin.decode . fromStrict $ content :: UpdateNodeMeta.Update))
-    , (Topic.connectRequest,        \content -> show (Bin.decode . fromStrict $ content :: Connect.Request))
-    , (Topic.connectUpdate,         \content -> show (Bin.decode . fromStrict $ content :: Connect.Update))
-    , (Topic.disconnectRequest,     \content -> show (Bin.decode . fromStrict $ content :: Disconnect.Request))
-    , (Topic.disconnectUpdate,      \content -> show (Bin.decode . fromStrict $ content :: Disconnect.Update))
-    , (Topic.programRequest,        \content -> show (Bin.decode . fromStrict $ content :: GetProgram.Request))
-    , (Topic.programStatus,         \content -> show (Bin.decode . fromStrict $ content :: GetProgram.Update))
-    , (Topic.nodeUpdate,            \content -> show (Bin.decode . fromStrict $ content :: NodeUpdate.Update))
-    , (Topic.nodeResultUpdate,      \content -> show (Bin.decode . fromStrict $ content :: NodeResultUpdate.Update))
-    , (Topic.codeUpdate,            \content -> show (Bin.decode . fromStrict $ content :: CodeUpdate.Update))
+    [ (Topic.addNodeRequest,        \content -> display (Bin.decode . fromStrict $ content :: AddNode.Request))
+    , (Topic.addNodeUpdate,         \content -> display (Bin.decode . fromStrict $ content :: AddNode.Update))
+    , (Topic.removeNodeRequest,     \content -> display (Bin.decode . fromStrict $ content :: RemoveNode.Request))
+    , (Topic.removeNodeUpdate,      \content -> display (Bin.decode . fromStrict $ content :: RemoveNode.Update))
+    , (Topic.updateNodeMetaRequest, \content -> display (Bin.decode . fromStrict $ content :: UpdateNodeMeta.Request))
+    , (Topic.updateNodeMetaUpdate,  \content -> display (Bin.decode . fromStrict $ content :: UpdateNodeMeta.Update))
+    , (Topic.connectRequest,        \content -> display (Bin.decode . fromStrict $ content :: Connect.Request))
+    , (Topic.connectUpdate,         \content -> display (Bin.decode . fromStrict $ content :: Connect.Update))
+    , (Topic.disconnectRequest,     \content -> display (Bin.decode . fromStrict $ content :: Disconnect.Request))
+    , (Topic.disconnectUpdate,      \content -> display (Bin.decode . fromStrict $ content :: Disconnect.Update))
+    , (Topic.programRequest,        \content -> display (Bin.decode . fromStrict $ content :: GetProgram.Request))
+    , (Topic.programStatus,         \content -> display (Bin.decode . fromStrict $ content :: GetProgram.Update))
+    , (Topic.nodeUpdate,            \content -> display (Bin.decode . fromStrict $ content :: NodeUpdate.Update))
+    , (Topic.nodeResultUpdate,      \content -> display (Bin.decode . fromStrict $ content :: NodeResultUpdate.Update))
+    , (Topic.codeUpdate,            \content -> display (Bin.decode . fromStrict $ content :: CodeUpdate.Update))
     , (Topic.graphUpdate,           const "graphUpdate - not implemented yet")
-    , (Topic.createProjectRequest,  \content -> show (Bin.decode . fromStrict $ content :: CreateProject.Request))
-    , (Topic.createProjectUpdate,   \content -> show (Bin.decode . fromStrict $ content :: CreateProject.Update))
-    , (Topic.listProjectsRequest,   \content -> show (Bin.decode . fromStrict $ content :: ListProjects.Request))
-    , (Topic.listProjectsStatus,    \content -> show (Bin.decode . fromStrict $ content :: ListProjects.Update))
-    , (Topic.createLibraryRequest,  \content -> show (Bin.decode . fromStrict $ content :: CreateLibrary.Request))
-    , (Topic.createLibraryUpdate,   \content -> show (Bin.decode . fromStrict $ content :: CreateLibrary.Update))
-    , (Topic.listLibrariesRequest,  \content -> show (Bin.decode . fromStrict $ content :: ListLibraries.Request))
-    , (Topic.listLibrariesStatus,   \content -> show (Bin.decode . fromStrict $ content :: ListLibraries.Update))
-    , (Topic.setDefaultValueRequest,\content -> show (Bin.decode . fromStrict $ content :: SetDefaultValue.Request))
+    , (Topic.createProjectRequest,  \content -> display (Bin.decode . fromStrict $ content :: CreateProject.Request))
+    , (Topic.createProjectUpdate,   \content -> display (Bin.decode . fromStrict $ content :: CreateProject.Update))
+    , (Topic.listProjectsRequest,   \content -> display (Bin.decode . fromStrict $ content :: ListProjects.Request))
+    , (Topic.listProjectsStatus,    \content -> display (Bin.decode . fromStrict $ content :: ListProjects.Update))
+    , (Topic.createLibraryRequest,  \content -> display (Bin.decode . fromStrict $ content :: CreateLibrary.Request))
+    , (Topic.createLibraryUpdate,   \content -> display (Bin.decode . fromStrict $ content :: CreateLibrary.Update))
+    , (Topic.listLibrariesRequest,  \content -> display (Bin.decode . fromStrict $ content :: ListLibraries.Request))
+    , (Topic.listLibrariesStatus,   \content -> display (Bin.decode . fromStrict $ content :: ListLibraries.Update))
+    , (Topic.setDefaultValueRequest,\content -> display (Bin.decode . fromStrict $ content :: SetDefaultValue.Request))
     ]
 
 defaultLogFormatter :: LogFormatter
