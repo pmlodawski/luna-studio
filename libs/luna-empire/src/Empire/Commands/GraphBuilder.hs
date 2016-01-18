@@ -54,7 +54,7 @@ buildNode' :: VarMap -> NodeId -> Command Graph API.Node
 buildNode' varMap nodeId = do
     ref   <- GraphUtils.getASTTarget nodeId
     uref  <- GraphUtils.getASTPointer nodeId
-    expr  <- zoom Graph.ast $ runASTOp $ Print.printExpression ref
+    expr  <- zoom Graph.ast $ runASTOp $ Print.printNodeExpression (Map.keys varMap) ref
     meta  <- zoom Graph.ast $ AST.readMeta uref
     ports <- buildPorts varMap ref
     let portMap = Map.fromList $ flip fmap ports $ \p@(Port id _ _) -> (id, p)
