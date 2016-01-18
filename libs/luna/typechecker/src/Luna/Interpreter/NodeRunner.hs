@@ -17,7 +17,7 @@ module Luna.Interpreter.NodeRunner where
 
 import Prologue
 
-import           Control.Monad.Catch         (MonadMask)
+import           Control.Monad.Catch         (MonadMask, catchAll)
 import           Control.Monad               (forM)
 import           Data.Layer.Coat             (uncoat, Coat, Uncoated, Coated)
 import qualified Data.Text.Lazy              as Text
@@ -58,7 +58,7 @@ getNodeValues :: NodeType a => [Ref Node] -> Graph a DoubleArc -> IO (Map (Ref N
 getNodeValues refs gr = runInterpreterM gr $ do
     bindings <- prepareBindings refs
     fmap (Map.fromList . catMaybes) $ forM refs $ \ref -> do
-        val <- evalNode bindings ref
+        val <- flip catchAll (\e -> print e >> return Nothing) $ evalNode bindings ref
         case val of
             Nothing -> return Nothing
             Just v  -> return $ Just (ref, Session.unsafeCast v)
