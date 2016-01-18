@@ -166,10 +166,10 @@ handleSetDefaultValue content = do
         Right node -> do
             Env.empireEnv .= newEmpireEnv
             let update = Update.Update request $ Update.Ok
-            sendToBus Topic.setDefaultValueRequest update
+            sendToBus Topic.setDefaultValueUpdate update
             notifyNodeUpdate location node
-            -- notifyCodeUpdate location
-            -- notifyNodeResultUpdates location
+            notifyCodeUpdate location
+            notifyNodeResultUpdates location
 
 handleGetProgram :: ByteString -> StateT Env BusT ()
 handleGetProgram content = do
