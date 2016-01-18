@@ -39,10 +39,7 @@ removeArg fun pos = do
     freshBlank <- Builder._blank
     let newArgs = args & ix pos .~ freshBlank
     allBlanks <- and <$> mapM isBlank newArgs
-
-    if allBlanks
-        then mapM removeNode newArgs >> return f
-        else Builder.app f (Builder.arg <$> newArgs)
+    Builder.app f (Builder.arg <$> newArgs)
 
 destructApp :: Ref Node -> ASTOp (Ref Node, [Ref Node])
 destructApp fun = do
@@ -128,8 +125,9 @@ unAcc ref = do
     case' (uncoat node) $ do
         match $ \(Accessor n t) -> do
             nameNode <- Builder.follow n
+            freshBlank <- Builder._blank
             removeNode ref
-            Builder.var nameNode
+            Builder.accessor nameNode freshBlank
         match $ \(App t args) -> do
             target <- Builder.follow t
             replacementRef <- unAcc target
