@@ -145,7 +145,7 @@ nodePositionMap = do
     return $ IntMap.fromList $ (\file -> (file ^. widget . Model.nodeId, file ^. widget . widgetPosition)) <$> nodes
 
 connectionVector :: IntMap (Vector2 Double) -> AnyPortRef -> AnyPortRef -> Vector2 Double
-connectionVector map src dst = (dstPos - srcPos) where
+connectionVector map src dst = dstPos - srcPos where
     srcPos = map IntMap.! (src ^. PortRef.nodeId)
     dstPos = map IntMap.! (dst ^. PortRef.nodeId)
 
@@ -193,7 +193,7 @@ updatePortAngles = do
                                          , (InPortRef'  $ conn ^. Connection.dst, OutPortRef' $ conn ^. Connection.src) ]
         connections                    = sortAndGroup . concat $ connectionTuples <$> connectionsMap
 
-    let calculateAngle portRef targets = sum $ connectionVector nodePositions portRef <$> targets
+    let calculateAngle portRef targets = sum $ fmap explode $ connectionVector nodePositions portRef <$> targets
         connectedAngles                = Map.mapWithKey calculateAngle connections
 
     defAngles <- defaultAngles
