@@ -25,7 +25,8 @@ Flag Debug
 
 Library
     Hs-Source-Dirs: src
-    GHC-Options:    -Wall -O2 -threaded
+    GHC-Options:    
+                    -- -dshow-passes
                     -- -F -pgmF ./util/preprocessors/imports.py
     Extensions:   ConstraintKinds
                   DataKinds
@@ -45,6 +46,7 @@ Library
                   MultiParamTypeClasses
                   NoImplicitPrelude
                   OverloadedStrings
+                  ScopedTypeVariables
                   StandaloneDeriving
                   TemplateHaskell
                   TupleSections
@@ -60,10 +62,16 @@ Library
         Luna.Syntax.AST.Decl,
         Luna.Syntax.AST.Decl.Function,
         Luna.Syntax.AST.Layout,
-        Luna.Syntax.AST.Lit,
         Luna.Syntax.AST.Term,
         Luna.Syntax.AST.Typed,
         Luna.Syntax.Builder,
+        Luna.Syntax.Builder.Cache,
+        Luna.Syntax.Builder.Cache.Cache,
+        Luna.Syntax.Builder.Cache.Draft,
+        Luna.Syntax.Builder.Cache.Lit,
+        Luna.Syntax.Builder.Cache.Term,
+        Luna.Syntax.Builder.Cache.Thunk,
+        Luna.Syntax.Builder.Cache.Val,
         Luna.Syntax.Builder.Class,
         Luna.Syntax.Builder.Node,
         Luna.Syntax.Builder.Star,
@@ -117,7 +125,10 @@ Executable tc-test
     Main-Is:        Main.hs
     Hs-Source-Dirs: test
 
-    GHC-Options:    -Wall -O2
+    GHC-Options:    
+                  -- -dshow-passes 
+
+    -- -ddump-simpl -ddump-to-file
 
     Extensions:   ConstraintKinds
                   DataKinds
@@ -137,6 +148,7 @@ Executable tc-test
                   MultiParamTypeClasses
                   NoImplicitPrelude
                   OverloadedStrings
+                  ScopedTypeVariables
                   StandaloneDeriving
                   TemplateHaskell
                   TupleSections
@@ -145,20 +157,38 @@ Executable tc-test
 
     Build-Depends: luna-tc
                  , base
-                 , containers >= 0.5.6.2
-                 , convert
+                 , bitmask
                  , constraints
                  , container
+                 , containers >= 0.5.6.2
+                 , convert
+                 , data-base
                  , data-construction
                  , data-layer
+                 , data-tagged
+                 , data-path
+                 , error-util
                  , errors
+                 , exceptions
+                 , extra
                  , flowbox-utils
+                 , ghc
                  , ghc-prim
+                 , ghc-session >= 0.1.2.0
                  , graphviz >= 2999.17.0.2.2
                  , lens
+                 , MissingH
                  , mtl
+                 , placeholders
                  , process
                  , prologue
+                 , relations
                  , text
                  , transformers
+                 , type-cache
+                 , type-regex
+                 , typelevel
+                 , variants
                  , vector
+                 , data-result
+                 , split

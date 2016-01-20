@@ -8,7 +8,7 @@ module Luna.Syntax.AST.Typed where
 import Prologue
 
 import Luna.Syntax.AST
-import Luna.Syntax.AST.Term
+--import Luna.Syntax.AST.Term
 import Luna.Syntax.Builder
 import Data.Cata
 import Data.Layer

@@ -1,47 +1,50 @@
 resolver: lts-4.1
 packages:
-- ../../../../libs/luna/typechecker
-- ../../../../libs/utils
-- /Users/wdanilo/dev/hs/public/prologue
-- /Users/wdanilo/dev/hs/public/container
-- /Users/wdanilo/dev/hs/public/functor-utils
-- /Users/wdanilo/dev/hs/public/data-layer
-- /Users/wdanilo/dev/hs/public/data-repr
-- /Users/wdanilo/dev/hs/public/data-construction
-- /Users/wdanilo/dev/hs/public/lens-utils
-- /Users/wdanilo/dev/hs/public/typelevel
-- /Users/wdanilo/dev/hs/public/poly-control
-- /Users/wdanilo/dev/hs/public/impossible
-- /Users/wdanilo/dev/hs/public/bitmask
-- /Users/wdanilo/dev/hs/public/typelevel
-- /Users/wdanilo/dev/hs/public/type-cache
-- /Users/wdanilo/dev/hs/public/type-regex
-- /Users/wdanilo/dev/hs/public/data-path
-- /Users/wdanilo/dev/hs/public/data-rtuple
-- /Users/wdanilo/dev/hs/public/variants
-- /Users/wdanilo/dev/hs/public/relations
-- /Users/wdanilo/dev/hs/public/data-base
-- /Users/wdanilo/dev/hs/public/data-result
-- /Users/wdanilo/dev/hs/public/data-tagged
+    - ../../../../libs/luna/typechecker
+    - ../../../../libs/utils
+    - /Users/wdanilo/work/hs/libs/prologue
+    - /Users/wdanilo/work/hs/libs/container
+    - /Users/wdanilo/work/hs/libs/functor-utils
+    - /Users/wdanilo/work/hs/libs/data-layer
+    - /Users/wdanilo/work/hs/libs/data-repr
+    - /Users/wdanilo/work/hs/libs/data-construction
+    - /Users/wdanilo/work/hs/libs/lens-utils
+    - /Users/wdanilo/work/hs/libs/typelevel
+    - /Users/wdanilo/work/hs/libs/poly-control
+    - /Users/wdanilo/work/hs/libs/impossible
+    - /Users/wdanilo/work/hs/libs/bitmask
+    - /Users/wdanilo/work/hs/libs/typelevel
+    - /Users/wdanilo/work/hs/libs/type-cache
+    - /Users/wdanilo/work/hs/libs/type-regex
+    - /Users/wdanilo/work/hs/libs/data-path
+    - /Users/wdanilo/work/hs/libs/data-rtuple
+    - /Users/wdanilo/work/hs/libs/variants
+    - /Users/wdanilo/work/hs/libs/relations
+    - /Users/wdanilo/work/hs/libs/data-base
+    - /Users/wdanilo/work/hs/libs/data-result
+    - /Users/wdanilo/work/hs/libs/data-tagged
 
 extra-deps:
-- ghc-session-0.1.2.0
-- container-1.0
-- convert-1.0
-- data-layer-1.0.3
-- data-repr-1.0
-- graphviz-2999.18.0.2
-- prologue-1.0.6
-- typelevel-1.0.3
-- lens-utils-1.0
-- functor-utils-1.0
-- string-qq-0.0.2
-- data-construction-1.0
-- error-util-0.0.1.1
+    - ghc-session-0.1.2.0
+    - container-1.0
+    - convert-1.0
+    - data-layer-1.0.3
+    - data-repr-1.0
+    - graphviz-2999.18.0.2
+    - prologue-1.0.6
+    - typelevel-1.0.3
+    - lens-utils-1.0
+    - functor-utils-1.0
+    - string-qq-0.0.2
+    - data-construction-1.0
+    - error-util-0.0.1.1
 
-- cond-0.4.1.1
-- tuple-0.3.0.2
-- OneTuple-0.2.1
+    - cond-0.4.1.1
+    - tuple-0.3.0.2
+    - OneTuple-0.2.1
 
-- poly-control-1.0
-- impossible-1.0
+    - poly-control-1.0
+    - impossible-1.0
+
+ghc-options:
+    "*": -DFastCompilation -threaded -O -j8 

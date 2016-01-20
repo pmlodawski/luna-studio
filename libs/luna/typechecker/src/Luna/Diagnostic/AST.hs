@@ -22,7 +22,7 @@ import Data.Cata
 import Data.Container
 import Data.Container.Hetero
 
-import Luna.Syntax.AST.Term
+--import Luna.Syntax.AST.Term
 import Luna.Syntax.Repr.Graph
 import Luna.Syntax.AST
 import Luna.Syntax.AST.Typed

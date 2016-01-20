@@ -17,9 +17,8 @@ import Control.Monad.Fix
 import           Luna.Syntax.AST
 import           Luna.Syntax.AST.Arg
 import           Luna.Syntax.AST.Decl
-import           Luna.Syntax.AST.Lit
-import           Luna.Syntax.AST.Term
-import           Luna.Syntax.AST.Term
+--import           Luna.Syntax.AST.Term
+--import           Luna.Syntax.AST.Term
 import           Luna.Syntax.Builder.Star (MonadStarBuilder, StarBuilder, StarBuilderT)
 import qualified Luna.Syntax.Builder.Star as StarBuilder
 import           Luna.Syntax.Name

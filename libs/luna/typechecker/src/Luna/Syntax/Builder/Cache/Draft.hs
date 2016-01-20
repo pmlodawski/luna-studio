@@ -1,0 +1,135 @@
+{-# OPTIONS_GHC -fno-warn-partial-type-signatures #-}
+{-# LANGUAGE PartialTypeSignatures #-}
+
+module Luna.Syntax.Builder.Cache.Draft () where
+
+-- import Prologue                    hiding (Cons)
+-- 
+-- import Data.Variant.Patterns       (ANY, MatchSet)
+-- import Luna.Syntax.AST.Term
+-- import Luna.Syntax.Builder.Cache.Cache
+-- 
+-- import qualified Luna.Syntax.AST.Layout as Layout
+-- import qualified Data.Variant.Patterns  as Rec
+-- 
+-- 
+-- -- Cached utils
+-- 
+-- matchVariant :: _ => (x -> a) -> MatchSet (Draft l v t) a
+-- matchVariant f = Rec.matchVariant f
+-- 
+-- matchGroup :: _ => (x -> a) -> MatchSet (Draft l v t) a
+-- matchGroup f = Rec.matchGroup f
+-- 
+-- -- Any
+-- 
+-- matchAny :: (ANY -> a) -> MatchSet (Draft l v t) a
+-- matchAny = matchVariant
+-- {-# NOINLINE matchAny #-}
+-- 
+-- -- Variants
+-- 
+-- matchCons_S :: (Cons Str (t (Draft Layout.Static v t)) -> a) -> MatchSet (Draft Layout.Static v t) a
+-- matchCons_S = matchVariant
+-- {-# NOINLINE matchCons_S #-}
+-- 
+-- matchArrow_S :: (Arrow (t (Draft Layout.Static v t)) -> a) -> MatchSet (Draft Layout.Static v t) a
+-- matchArrow_S = matchVariant
+-- {-# NOINLINE matchArrow_S #-}
+-- 
+-- matchAcc_S :: (Acc Str (t (Draft Layout.Static v t)) -> a) -> MatchSet (Draft Layout.Static v t) a
+-- matchAcc_S = matchVariant
+-- {-# NOINLINE matchAcc_S #-}
+-- 
+-- matchApp_S :: (App (t (Draft Layout.Static v t)) -> a) -> MatchSet (Draft Layout.Static v t) a
+-- matchApp_S = matchVariant
+-- {-# NOINLINE matchApp_S #-}
+-- 
+-- matchVar_S :: (Var Str -> a) -> MatchSet (Draft Layout.Static v t) a
+-- matchVar_S = matchVariant
+-- {-# NOINLINE matchVar_S #-}
+-- 
+-- matchUnify_S :: (Unify (t (Draft Layout.Static v t)) -> a) -> MatchSet (Draft Layout.Static v t) a
+-- matchUnify_S = matchVariant
+-- {-# NOINLINE matchUnify_S #-}
+-- 
+-- matchCons_D :: (Cons (t (Draft Layout.Dynamic v t)) (t (Draft Layout.Dynamic v t)) -> a) -> MatchSet (Draft Layout.Dynamic v t) a
+-- matchCons_D = matchVariant
+-- {-# NOINLINE matchCons_D #-}
+-- 
+-- matchArrow_D :: (Arrow (t (Draft Layout.Dynamic v t)) -> a) -> MatchSet (Draft Layout.Dynamic v t) a
+-- matchArrow_D = matchVariant
+-- {-# NOINLINE matchArrow_D #-}
+-- 
+-- matchAcc_D :: (Acc (t (Draft Layout.Dynamic v t)) (t (Draft Layout.Dynamic v t)) -> a) -> MatchSet (Draft Layout.Dynamic v t) a
+-- matchAcc_D = matchVariant
+-- {-# NOINLINE matchAcc_D #-}
+-- 
+-- matchApp_D :: (App (t (Draft Layout.Dynamic v t)) -> a) -> MatchSet (Draft Layout.Dynamic v t) a
+-- matchApp_D = matchVariant
+-- {-# NOINLINE matchApp_D #-}
+-- 
+-- matchVar_D :: (Var (t (Draft Layout.Dynamic v t)) -> a) -> MatchSet (Draft Layout.Dynamic v t) a
+-- matchVar_D = matchVariant
+-- {-# NOINLINE matchVar_D #-}
+-- 
+-- matchUnify_D :: (Unify (t (Draft Layout.Dynamic v t)) -> a) -> MatchSet (Draft Layout.Dynamic v t) a
+-- matchUnify_D = matchVariant
+-- {-# NOINLINE matchUnify_D #-}
+-- 
+-- matchBlank_S :: (Blank -> a) -> MatchSet (Draft Layout.Static v t) a
+-- matchBlank_S = matchVariant
+-- {-# NOINLINE matchBlank_S #-}
+-- 
+-- matchBlank_D :: (Blank -> a) -> MatchSet (Draft Layout.Dynamic v t) a
+-- matchBlank_D = matchVariant
+-- {-# NOINLINE matchBlank_D #-}
+-- 
+-- -- Groups
+-- 
+-- matchSubDraft :: (Draft Layout.Static v t -> a) -> MatchSet (Draft Layout.Dynamic v t) a
+-- matchSubDraft = matchGroup
+-- {-# NOINLINE matchSubDraft #-}
+-- 
+-- matchStaticLit :: (Lit v t -> a) -> MatchSet (Draft Layout.Static v t) a
+-- matchStaticLit = matchGroup
+-- {-# NOINLINE matchStaticLit #-}
+-- 
+-- matchDynamicLit :: (Lit v t -> a) -> MatchSet (Draft Layout.Dynamic v t) a
+-- matchDynamicLit = matchGroup
+-- {-# NOINLINE matchDynamicLit #-}
+-- 
+-- matchStaticVal :: (Val Layout.Static v t -> a) -> MatchSet (Draft Layout.Static v t) a
+-- matchStaticVal = matchGroup
+-- {-# NOINLINE matchStaticVal #-}
+-- 
+-- matchDynamicVal :: (Val Layout.Dynamic v t -> a) -> MatchSet (Draft Layout.Dynamic v t) a
+-- matchDynamicVal = matchGroup
+-- {-# NOINLINE matchDynamicVal #-}
+-- 
+-- -- Instances
+-- 
+-- instance MatchCached ANY (Draft l v t) where matchCached = matchAny; {-# INLINABLE matchCached #-}
+-- 
+-- instance MatchCached (Cons  Str                             (t (Draft Layout.Static  v t))) (Draft Layout.Static  v t) where matchCached = matchCons_S  ; {-# INLINABLE matchCached #-}
+-- instance MatchCached (Arrow (t (Draft Layout.Static v t)))                                  (Draft Layout.Static  v t) where matchCached = matchArrow_S ; {-# INLINABLE matchCached #-}
+-- instance MatchCached (Acc   Str                             (t (Draft Layout.Static  v t))) (Draft Layout.Static  v t) where matchCached = matchAcc_S   ; {-# INLINABLE matchCached #-}
+-- instance MatchCached (App   (t (Draft Layout.Static v t)))                                  (Draft Layout.Static  v t) where matchCached = matchApp_S   ; {-# INLINABLE matchCached #-}
+-- instance MatchCached (Var   Str)                                                            (Draft Layout.Static  v t) where matchCached = matchVar_S   ; {-# INLINABLE matchCached #-}
+-- instance MatchCached (Unify (t (Draft Layout.Static v t)))                                  (Draft Layout.Static  v t) where matchCached = matchUnify_S ; {-# INLINABLE matchCached #-}
+-- instance MatchCached (Cons  (t (Draft Layout.Dynamic v t))  (t (Draft Layout.Dynamic v t))) (Draft Layout.Dynamic v t) where matchCached = matchCons_D  ; {-# INLINABLE matchCached #-}
+-- instance MatchCached (Arrow (t (Draft Layout.Dynamic v t)))                                 (Draft Layout.Dynamic v t) where matchCached = matchArrow_D ; {-# INLINABLE matchCached #-}
+-- instance MatchCached (Acc   (t (Draft Layout.Dynamic v t))  (t (Draft Layout.Dynamic v t))) (Draft Layout.Dynamic v t) where matchCached = matchAcc_D   ; {-# INLINABLE matchCached #-}
+-- instance MatchCached (App   (t (Draft Layout.Dynamic v t)))                                 (Draft Layout.Dynamic v t) where matchCached = matchApp_D   ; {-# INLINABLE matchCached #-}
+-- instance MatchCached (Var   (t (Draft Layout.Dynamic v t)))                                 (Draft Layout.Dynamic v t) where matchCached = matchVar_D   ; {-# INLINABLE matchCached #-}
+-- instance MatchCached (Unify (t (Draft Layout.Dynamic v t)))                                 (Draft Layout.Dynamic v t) where matchCached = matchUnify_D ; {-# INLINABLE matchCached #-}
+-- instance MatchCached Blank                                                                  (Draft Layout.Static  v t) where matchCached = matchBlank_S ; {-# INLINABLE matchCached #-}
+-- instance MatchCached Blank                                                                  (Draft Layout.Dynamic v t) where matchCached = matchBlank_D ; {-# INLINABLE matchCached #-}
+-- 
+-- instance MatchCached (Draft Layout.Static v t) (Draft Layout.Dynamic v t) where matchCached = matchSubDraft    ; {-# INLINABLE matchCached #-}
+-- instance MatchCached (Lit v t)                 (Draft Layout.Static  v t) where matchCached = matchStaticLit  ; {-# INLINABLE matchCached #-}
+-- instance MatchCached (Lit v t)                 (Draft Layout.Dynamic v t) where matchCached = matchDynamicLit ; {-# INLINABLE matchCached #-}
+-- instance MatchCached (Val Layout.Static  v t)  (Draft Layout.Static  v t) where matchCached = matchStaticVal  ; {-# INLINABLE matchCached #-}
+-- instance MatchCached (Val Layout.Dynamic v t)  (Draft Layout.Dynamic v t) where matchCached = matchDynamicVal ; {-# INLINABLE matchCached #-}
+
+

@@ -1,0 +1,116 @@
+{-# OPTIONS_GHC -fno-warn-partial-type-signatures #-}
+{-# LANGUAGE PartialTypeSignatures #-}
+
+module Luna.Syntax.Builder.Cache.Thunk () where
+
+-- import Prologue                    hiding (Cons)
+-- 
+-- import Data.Variant.Patterns       (ANY, MatchSet)
+-- import Luna.Syntax.AST.Term
+-- import Luna.Syntax.Builder.Cache.Cache
+-- 
+-- import qualified Luna.Syntax.AST.Layout as Layout
+-- import qualified Data.Variant.Patterns  as Rec
+-- 
+-- 
+-- -- Cached utils
+-- 
+-- matchVariant :: _ => (x -> a) -> MatchSet (Thunk l v t) a
+-- matchVariant f = Rec.matchVariant f
+-- 
+-- matchGroup :: _ => (x -> a) -> MatchSet (Thunk l v t) a
+-- matchGroup f = Rec.matchGroup f
+-- 
+-- -- Any
+-- 
+-- matchAny :: (ANY -> a) -> MatchSet (Thunk l v t) a
+-- matchAny = matchVariant
+-- {-# NOINLINE matchAny #-}
+-- 
+-- -- Variants
+-- 
+-- matchCons_S :: (Cons Str (t (Thunk Layout.Static v t)) -> a) -> MatchSet (Thunk Layout.Static v t) a
+-- matchCons_S = matchVariant
+-- {-# NOINLINE matchCons_S #-}
+-- 
+-- matchArrow_S :: (Arrow (t (Thunk Layout.Static v t)) -> a) -> MatchSet (Thunk Layout.Static v t) a
+-- matchArrow_S = matchVariant
+-- {-# NOINLINE matchArrow_S #-}
+-- 
+-- matchAcc_S :: (Acc Str (t (Thunk Layout.Static v t)) -> a) -> MatchSet (Thunk Layout.Static v t) a
+-- matchAcc_S = matchVariant
+-- {-# NOINLINE matchAcc_S #-}
+-- 
+-- matchApp_S :: (App (t (Thunk Layout.Static v t)) -> a) -> MatchSet (Thunk Layout.Static v t) a
+-- matchApp_S = matchVariant
+-- {-# NOINLINE matchApp_S #-}
+-- 
+-- matchCons_D :: (Cons (t (Thunk Layout.Dynamic v t)) (t (Thunk Layout.Dynamic v t)) -> a) -> MatchSet (Thunk Layout.Dynamic v t) a
+-- matchCons_D = matchVariant
+-- {-# NOINLINE matchCons_D #-}
+-- 
+-- matchArrow_D :: (Arrow (t (Thunk Layout.Dynamic v t)) -> a) -> MatchSet (Thunk Layout.Dynamic v t) a
+-- matchArrow_D = matchVariant
+-- {-# NOINLINE matchArrow_D #-}
+-- 
+-- matchAcc_D :: (Acc (t (Thunk Layout.Dynamic v t)) (t (Thunk Layout.Dynamic v t)) -> a) -> MatchSet (Thunk Layout.Dynamic v t) a
+-- matchAcc_D = matchVariant
+-- {-# NOINLINE matchAcc_D #-}
+-- 
+-- matchApp_D :: (App (t (Thunk Layout.Dynamic v t)) -> a) -> MatchSet (Thunk Layout.Dynamic v t) a
+-- matchApp_D = matchVariant
+-- {-# NOINLINE matchApp_D #-}
+-- 
+-- -- Groups
+-- 
+-- matchSubThunk :: (Thunk Layout.Static v t -> a) -> MatchSet (Thunk Layout.Dynamic v t) a
+-- matchSubThunk = matchGroup
+-- {-# NOINLINE matchSubThunk #-}
+-- 
+-- matchStaticVal :: (Val Layout.Static v t -> a) -> MatchSet (Thunk Layout.Static v t) a
+-- matchStaticVal = matchGroup
+-- {-# NOINLINE matchStaticVal #-}
+-- 
+-- matchDynamicVal :: (Val Layout.Dynamic v t -> a) -> MatchSet (Thunk Layout.Dynamic v t) a
+-- matchDynamicVal = matchGroup
+-- {-# NOINLINE matchDynamicVal #-}
+-- 
+-- matchStaticLit :: (Lit v t -> a) -> MatchSet (Thunk Layout.Static v t) a
+-- matchStaticLit = matchGroup
+-- {-# NOINLINE matchStaticLit #-}
+-- 
+-- matchDynamicLit :: (Lit v t -> a) -> MatchSet (Thunk Layout.Dynamic v t) a
+-- matchDynamicLit = matchGroup
+-- {-# NOINLINE matchDynamicLit #-}
+-- 
+-- matchStaticThunk :: (Thunk Layout.Static v t -> a) -> MatchSet (Term Layout.Static v t) a
+-- matchStaticThunk = Rec.match
+-- {-# NOINLINE matchStaticThunk #-}
+-- 
+-- matchDynamicThunk :: (Thunk Layout.Dynamic v t -> a) -> MatchSet (Term Layout.Dynamic v t) a
+-- matchDynamicThunk = Rec.match
+-- {-# NOINLINE matchDynamicThunk #-}
+-- 
+-- -- Instances
+-- 
+-- instance MatchCached ANY (Thunk l v t) where matchCached = matchAny; {-# INLINABLE matchCached #-}
+-- 
+-- instance MatchCached (Cons  Str                             (t (Thunk Layout.Static  v t))) (Thunk Layout.Static  v t) where matchCached = matchCons_S  ; {-# INLINABLE matchCached #-}
+-- instance MatchCached (Arrow (t (Thunk Layout.Static v t)))                                  (Thunk Layout.Static  v t) where matchCached = matchArrow_S ; {-# INLINABLE matchCached #-}
+-- instance MatchCached (Acc   Str                             (t (Thunk Layout.Static  v t))) (Thunk Layout.Static  v t) where matchCached = matchAcc_S   ; {-# INLINABLE matchCached #-}
+-- instance MatchCached (App   (t (Thunk Layout.Static v t)))                                  (Thunk Layout.Static  v t) where matchCached = matchApp_S   ; {-# INLINABLE matchCached #-}
+-- instance MatchCached (Cons  (t (Thunk Layout.Dynamic v t))  (t (Thunk Layout.Dynamic v t))) (Thunk Layout.Dynamic v t) where matchCached = matchCons_D  ; {-# INLINABLE matchCached #-}
+-- instance MatchCached (Arrow (t (Thunk Layout.Dynamic v t)))                                 (Thunk Layout.Dynamic v t) where matchCached = matchArrow_D ; {-# INLINABLE matchCached #-}
+-- instance MatchCached (Acc   (t (Thunk Layout.Dynamic v t))  (t (Thunk Layout.Dynamic v t))) (Thunk Layout.Dynamic v t) where matchCached = matchAcc_D   ; {-# INLINABLE matchCached #-}
+-- instance MatchCached (App   (t (Thunk Layout.Dynamic v t)))                                 (Thunk Layout.Dynamic v t) where matchCached = matchApp_D   ; {-# INLINABLE matchCached #-}
+-- 
+-- instance MatchCached (Thunk Layout.Static v t)  (Thunk Layout.Dynamic v t) where matchCached = matchSubThunk   ; {-# INLINABLE matchCached #-}
+-- instance MatchCached (Val Layout.Static  v t)   (Thunk Layout.Static  v t) where matchCached = matchStaticVal   ; {-# INLINABLE matchCached #-}
+-- instance MatchCached (Val Layout.Dynamic v t)   (Thunk Layout.Dynamic v t) where matchCached = matchDynamicVal  ; {-# INLINABLE matchCached #-}
+-- instance MatchCached (Lit v t)                  (Thunk Layout.Static  v t) where matchCached = matchStaticLit  ; {-# INLINABLE matchCached #-}
+-- instance MatchCached (Lit v t)                  (Thunk Layout.Dynamic v t) where matchCached = matchDynamicLit ; {-# INLINABLE matchCached #-}
+-- instance MatchCached (Thunk Layout.Static  v t) (Term  Layout.Static  v t) where matchCached = matchStaticThunk   ; {-# INLINABLE matchCached #-}
+-- instance MatchCached (Thunk Layout.Dynamic v t) (Term  Layout.Dynamic v t) where matchCached = matchDynamicThunk  ; {-# INLINABLE matchCached #-}
+-- 
+-- 
+-- 

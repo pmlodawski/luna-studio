@@ -19,7 +19,8 @@ Flag Debug
 
 Library
     Hs-Source-Dirs: src
-    GHC-Options:    -Wall -O2 -threaded
+    GHC-Options:    
+                    -- -dshow-passes
                     -- -F -pgmF ./util/preprocessors/imports.py
     Extensions:   ConstraintKinds
                   DataKinds
@@ -39,6 +40,7 @@ Library
                   MultiParamTypeClasses
                   NoImplicitPrelude
                   OverloadedStrings
+                  ScopedTypeVariables
                   StandaloneDeriving
                   TemplateHaskell
                   TupleSections
@@ -89,7 +91,10 @@ Executable tc-test
     Main-Is:        Main.hs
     Hs-Source-Dirs: test
 
-    GHC-Options:    -Wall -O2
+    GHC-Options:    
+                  -- -dshow-passes 
+
+    -- -ddump-simpl -ddump-to-file
 
     Extensions:   ConstraintKinds
                   DataKinds
@@ -109,6 +114,7 @@ Executable tc-test
                   MultiParamTypeClasses
                   NoImplicitPrelude
                   OverloadedStrings
+                  ScopedTypeVariables
                   StandaloneDeriving
                   TemplateHaskell
                   TupleSections
@@ -117,20 +123,38 @@ Executable tc-test
 
     Build-Depends: luna-tc
                  , base
-                 , containers >= 0.5.6.2
-                 , convert
+                 , bitmask
                  , constraints
                  , container
+                 , containers >= 0.5.6.2
+                 , convert
+                 , data-base
                  , data-construction
                  , data-layer
+                 , data-tagged
+                 , data-path
+                 , error-util
                  , errors
+                 , exceptions
+                 , extra
                  , flowbox-utils
+                 , ghc
                  , ghc-prim
+                 , ghc-session >= 0.1.2.0
                  , graphviz >= 2999.17.0.2.2
                  , lens
+                 , MissingH
                  , mtl
+                 , placeholders
                  , process
                  , prologue
+                 , relations
                  , text
                  , transformers
+                 , type-cache
+                 , type-regex
+                 , typelevel
+                 , variants
                  , vector
+                 , data-result
+                 , split
