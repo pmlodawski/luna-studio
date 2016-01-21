@@ -61,19 +61,20 @@ addNode :: Node -> Command State ()
 addNode node = do
     unrenderPending node
     zoom Global.graph $ modify (Graph.addNode node)
-    zoom Global.uiRegistry $ registerNode node
+    connectedPorts <- uses (Global.graph . Graph.connectionsMap) Map.keys
+    zoom Global.uiRegistry $ registerNode node connectedPorts
     updatePortAngles
 
 colorVT _ = 11
 colorPort (Port.InPortId Port.Self) = 12
 colorPort _ = 11
 
-registerNode :: Node -> Command UIRegistry.State ()
-registerNode node = do
+registerNode :: Node -> [InPortRef] -> Command UIRegistry.State ()
+registerNode node connectedPorts = do
     let nodeModel = Model.node node
     nodeWidget <- UICmd.register sceneGraphId nodeModel (nodeHandlers node)
 
-    displayPorts nodeWidget node
+    displayPorts nodeWidget node connectedPorts
     focusNode nodeWidget
 
 
@@ -90,8 +91,8 @@ makePorts node = makePort <$> (Map.elems $ node ^. Node.ports) where
         portRef = toAnyPortRef nodeId (port ^. Port.portId)
         angle   = portDefaultAngle ((length $ node ^. Node.ports) - 1) (port ^. Port.portId)
 
-displayPorts :: WidgetId -> Node -> Command UIRegistry.State ()
-displayPorts id node = do
+displayPorts :: WidgetId -> Node -> [InPortRef] -> Command UIRegistry.State ()
+displayPorts id node connectedPorts = do
     nodeId <- UICmd.get id Model.nodeId
     oldPorts <- nodePorts id
     mapM_ UICmd.removeWidget oldPorts
@@ -104,7 +105,7 @@ displayPorts id node = do
 
     gr <- nodeExpandedGroup id
     forM_ newPorts $ \p -> UICmd.register id p def
-    forM_ (node ^. Node.ports) $ \p -> makePortControl gr (node ^. Node.nodeId) p
+    forM_ (node ^. Node.ports) $ \p -> makePortControl gr (node ^. Node.nodeId) connectedPorts p
 
 nodeHandlers :: Node -> HTMap
 nodeHandlers node = addHandler (UINode.RemoveNodeHandler removeSelectedNodes)
@@ -117,12 +118,13 @@ updateNode node = do
     maybeWidgetId <- inRegistry $ nodeIdToWidgetId nodeId
     zoom Global.graph $ modify (Graph.addNode node)
     forM_ maybeWidgetId $ \widgetId -> do
+        connectedPorts <- uses (Global.graph . Graph.connectionsMap) Map.keys
         inRegistry $ do
-            displayPorts widgetId node
+            displayPorts widgetId node connectedPorts
             UICmd.update widgetId $ Model.expression .~ (node ^. Node.expression)
         updatePortAngles
         updateNodeMeta nodeId $ node ^. Node.nodeMeta
-        -- TODO: obsluzyc to ze moga zniknac polaczenia
+        -- TODO: obsluzyc to ze moga zniknac porty i trzeba usunac polaczenia
 
 nodeExpandedGroup :: WidgetId -> Command UIRegistry.State WidgetId
 nodeExpandedGroup id = do
@@ -134,16 +136,18 @@ nodeExpandedGroup id = do
 onValueChanged :: Typeable a => (a -> WidgetId -> Command Global.State ()) -> HTMap
 onValueChanged h = addHandler (ValueChangedHandler h) mempty
 
-makePortControl :: WidgetId -> NodeId -> Port -> Command UIRegistry.State ()
-makePortControl parent nodeId port = case port ^. Port.portId of
+makePortControl :: WidgetId -> NodeId -> [InPortRef] -> Port -> Command UIRegistry.State ()
+makePortControl parent nodeId connectedPorts port = case port ^. Port.portId of
     OutPortId _ -> return ()
     InPortId inPort -> void $ UICmd.register parent widget handlers where
         label = show inPort
         value = fromMaybe 0 $ port ^? Port.defaultValue . _Just . DefaultValue._Constant . DefaultValue._IntValue
-        widget = DiscreteNumber.create (Vector2 200 20) (Text.pack $ show inPort) value
+        widget' = DiscreteNumber.create (Vector2 200 20) (Text.pack $ show inPort) value
+        widget  = widget' & DiscreteNumber.enabled .~ (not $ elem portRef connectedPorts)
+        portRef = (InPortRef nodeId inPort)
         handlers = onValueChanged $ \val _ -> do
             workspace <- use Global.workspace
-            performIO $ BatchCmd.setDefaultValue workspace (InPortRef nodeId inPort) (DefaultValue.Constant $ DefaultValue.IntValue val)
+            performIO $ BatchCmd.setDefaultValue workspace portRef (DefaultValue.Constant $ DefaultValue.IntValue val)
 
 
 updateNodeValue :: NodeId -> Int -> Command State ()
