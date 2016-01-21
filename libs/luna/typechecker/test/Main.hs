@@ -17,7 +17,7 @@
 
 module Main where
 
-import Prologue hiding (simple, empty, Indexable, Simple, cons, lookup, index, children, Cons, Ixed, Repr, repr, minBound, maxBound, (#))
+import Prologue hiding (simple, empty, Indexable, Simple, cons, lookup, index, children, Cons, Ixed, Repr, repr, minBound, maxBound, (#), assert)
 import Type.Container
 
 import Luna.Syntax.AST.Layout (ByLayout, SubLayouts, SubSemiLayouts)
@@ -29,7 +29,7 @@ import Data.Int            (Int64)
 import Unsafe.Coerce (unsafeCoerce)
 import Data.Relation.Binary
 import qualified Data.Relation.Binary as Rel
-
+import Data.Result
 
 import Data.Bits (Bits, FiniteBits, setBit, testBit, zeroBits, finiteBitSize)
 
@@ -41,6 +41,7 @@ import Control.Monad.State hiding (when, withState)
 import Data.Maybe (isNothing, catMaybes)
 import Data.Base
 import Type.Bool
+import Type.List
 import System.Environment (getArgs)
 import Data.List.Split (chunksOf)
 
@@ -77,11 +78,11 @@ data    Blank        = Blank                deriving (Show, Eq, Ord)
 
 -- === Group definitions === --
 
-newtype Lit                 (v :: *) (t :: * -> *) = Lit   (Unlayered (Lit          v t))
-newtype Val   (layout :: *) (v :: *) (t :: * -> *) = Val   (Unlayered (Val   layout v t))
-newtype Thunk (layout :: *) (v :: *) (t :: * -> *) = Thunk (Unlayered (Thunk layout v t))
-newtype Term  (layout :: *) (v :: *) (t :: * -> *) = Term  (Unlayered (Term  layout v t))
-newtype Draft (layout :: *) (v :: *) (t :: * -> *) = Draft (Unlayered (Draft layout v t))
+newtype Lit                 (t :: * -> *) = Lit   (Unlayered (Lit          t))
+newtype Val   (layout :: *) (t :: * -> *) = Val   (Unlayered (Val   layout t))
+newtype Thunk (layout :: *) (t :: * -> *) = Thunk (Unlayered (Thunk layout t))
+newtype Term  (layout :: *) (t :: * -> *) = Term  (Unlayered (Term  layout t))
+newtype Draft (layout :: *) (t :: * -> *) = Draft (Unlayered (Draft layout t))
 
 type LitElems       = Star
                    ': Str
@@ -105,17 +106,17 @@ type DraftElems n t = Blank
 
 
 
-type LitVariants         = LitElems
-type ValVariants   l v t = ValElems   (ByLayout' l (t (Val   l v t))) (t (Val   l v t))
-type ThunkVariants l v t = ThunkElems (ByLayout' l (t (Thunk l v t))) (t (Thunk l v t))
-type TermVariants  l v t = TermElems  (ByLayout' l (t (Term  l v t))) (t (Term  l v t))
-type DraftVariants l v t = DraftElems (ByLayout' l (t (Draft l v t))) (t (Draft l v t))
+type LitVariants       = LitElems
+type ValVariants   l t = ValElems   (ByLayout' l (t (Val   l t))) (t (Val   l t))
+type ThunkVariants l t = ThunkElems (ByLayout' l (t (Thunk l t))) (t (Thunk l t))
+type TermVariants  l t = TermElems  (ByLayout' l (t (Term  l t))) (t (Term  l t))
+type DraftVariants l t = DraftElems (ByLayout' l (t (Draft l t))) (t (Draft l t))
 
-type instance Unlayered (Lit     v t) = ASTRecord '[]                                                      LitVariants          WithoutValue v t
-type instance Unlayered (Val   l v t) = ASTRecord (Lit v t ': SubGroups l v t '[Val]                    ) (ValVariants   l v t) WithValue    v t
-type instance Unlayered (Thunk l v t) = ASTRecord (Lit v t ': SubGroups l v t '[Val, Thunk]             ) (ThunkVariants l v t) WithoutValue v t
-type instance Unlayered (Term  l v t) = ASTRecord (Lit v t ': SubGroups l v t '[Val, Thunk, Term]       ) (TermVariants  l v t) WithoutValue v t
-type instance Unlayered (Draft l v t) = ASTRecord (Lit v t ': SubGroups l v t '[Val, Thunk, Term, Draft]) (DraftVariants l v t) WithoutValue v t
+type instance Unlayered (Lit     t) = ASTRecord '[]                                                  LitVariants        t Data
+type instance Unlayered (Val   l t) = ASTRecord (Lit t ': SubGroups l t '[Val]                    ) (ValVariants   l t) t Data
+type instance Unlayered (Thunk l t) = ASTRecord (Lit t ': SubGroups l t '[Val, Thunk]             ) (ThunkVariants l t) t Data
+type instance Unlayered (Term  l t) = ASTRecord (Lit t ': SubGroups l t '[Val, Thunk, Term]       ) (TermVariants  l t) t Data
+type instance Unlayered (Draft l t) = ASTRecord (Lit t ': SubGroups l t '[Val, Thunk, Term, Draft]) (DraftVariants l t) t Data
 
 
 -- === Instances ===
@@ -136,58 +137,58 @@ type instance Base Blank       = Proxy Blank
 
 -- Wrappers & Layers
 
-instance      Layered   (Lit v t)
-instance      Rewrapped (Lit v t) (Lit v' t')
-instance      Wrapped   (Lit v t) where
-    type      Unwrapped (Lit v t) = Unlayered (Lit v t)
+instance      Layered   (Lit t)
+instance      Rewrapped (Lit t) (Lit t')
+instance      Wrapped   (Lit t) where
+    type      Unwrapped (Lit t) = Unlayered (Lit t)
     _Wrapped' = iso (\(Lit a) -> a) Lit ;{-# INLINE _Wrapped' #-}
 
-instance      Layered   (Val l v t)
-instance      Rewrapped (Val l v t) (Val l' v' t')
-instance      Wrapped   (Val l v t) where
-    type      Unwrapped (Val l v t) = Unlayered (Val l v t)
+instance      Layered   (Val l t)
+instance      Rewrapped (Val l t) (Val l' t')
+instance      Wrapped   (Val l t) where
+    type      Unwrapped (Val l t) = Unlayered (Val l t)
     _Wrapped' = iso (\(Val a) -> a) Val ;{-# INLINE _Wrapped' #-}
 
-instance      Layered   (Thunk l v t)
-instance      Rewrapped (Thunk l v t) (Thunk l' v' t')
-instance      Wrapped   (Thunk l v t) where
-    type      Unwrapped (Thunk l v t) = Unlayered (Thunk l v t)
+instance      Layered   (Thunk l t)
+instance      Rewrapped (Thunk l t) (Thunk l' t')
+instance      Wrapped   (Thunk l t) where
+    type      Unwrapped (Thunk l t) = Unlayered (Thunk l t)
     _Wrapped' = iso (\(Thunk a) -> a) Thunk ;{-# INLINE _Wrapped' #-}
 
-instance      Layered   (Term l v t)
-instance      Rewrapped (Term l v t) (Term l' v' t')
-instance      Wrapped   (Term l v t) where
-    type      Unwrapped (Term l v t) = Unlayered (Term l v t)
+instance      Layered   (Term l t)
+instance      Rewrapped (Term l t) (Term l' t')
+instance      Wrapped   (Term l t) where
+    type      Unwrapped (Term l t) = Unlayered (Term l t)
     _Wrapped' = iso (\(Term a) -> a) Term ;{-# INLINE _Wrapped' #-}
 
-instance      Layered   (Draft l v t)
-instance      Rewrapped (Draft l v t) (Draft l' v' t')
-instance      Wrapped   (Draft l v t) where
-    type      Unwrapped (Draft l v t) = Unlayered (Draft l v t)
+instance      Layered   (Draft l t)
+instance      Rewrapped (Draft l t) (Draft l' t')
+instance      Wrapped   (Draft l t) where
+    type      Unwrapped (Draft l t) = Unlayered (Draft l t)
     _Wrapped' = iso (\(Draft a) -> a) Draft ;{-# INLINE _Wrapped' #-}
 
 
 -- Show
 
-deriving instance Show (Lit     v t)
-deriving instance Show (Val   l v t)
-deriving instance Show (Thunk l v t)
-deriving instance Show (Term  l v t)
-deriving instance Show (Draft l v t)
+deriving instance Show (Lit     t)
+deriving instance Show (Val   l t)
+deriving instance Show (Thunk l t)
+deriving instance Show (Term  l t)
+deriving instance Show (Draft l t)
 
 -- Record instances
 
-type instance RecordOf (Lit     v t) = RecordOf (Unlayered (Lit     v t))
-type instance RecordOf (Val   l v t) = RecordOf (Unlayered (Val   l v t))
-type instance RecordOf (Thunk l v t) = RecordOf (Unlayered (Thunk l v t))
-type instance RecordOf (Term  l v t) = RecordOf (Unlayered (Term  l v t))
-type instance RecordOf (Draft l v t) = RecordOf (Unlayered (Draft l v t))
+type instance RecordOf (Lit     t) = RecordOf (Unlayered (Lit     t))
+type instance RecordOf (Val   l t) = RecordOf (Unlayered (Val   l t))
+type instance RecordOf (Thunk l t) = RecordOf (Unlayered (Thunk l t))
+type instance RecordOf (Term  l t) = RecordOf (Unlayered (Term  l t))
+type instance RecordOf (Draft l t) = RecordOf (Unlayered (Draft l t))
 
-instance IsRecord (Lit     v t) where asRecord = wrapped' ∘ asRecord
-instance IsRecord (Val   l v t) where asRecord = wrapped' ∘ asRecord
-instance IsRecord (Thunk l v t) where asRecord = wrapped' ∘ asRecord
-instance IsRecord (Term  l v t) where asRecord = wrapped' ∘ asRecord
-instance IsRecord (Draft l v t) where asRecord = wrapped' ∘ asRecord
+instance IsRecord (Lit     t) where asRecord = wrapped' ∘ asRecord
+instance IsRecord (Val   l t) where asRecord = wrapped' ∘ asRecord
+instance IsRecord (Thunk l t) where asRecord = wrapped' ∘ asRecord
+instance IsRecord (Term  l t) where asRecord = wrapped' ∘ asRecord
+instance IsRecord (Draft l t) where asRecord = wrapped' ∘ asRecord
 
 -----------------------
 -----------------------
@@ -195,22 +196,22 @@ instance IsRecord (Draft l v t) where asRecord = wrapped' ∘ asRecord
 
 -- === Data Layouts ===
 
-type family Static  (a :: * -> * -> (* -> *) -> *) :: (* -> (* -> *) -> *) where Static  a = a Layout.Static
-type family Dynamic (a :: * -> * -> (* -> *) -> *) :: (* -> (* -> *) -> *) where Dynamic a = a Layout.Dynamic
+type family Static  (a :: * -> (* -> *) -> *) :: ((* -> *) -> *) where Static  a = a Layout.Static
+type family Dynamic (a :: * -> (* -> *) -> *) :: ((* -> *) -> *) where Dynamic a = a Layout.Dynamic
 
 type ByLayout' l d = ByLayout l Str d
 
-type family ApplyLayouts ls a v (t :: * -> *) where ApplyLayouts '[]       a v t = '[]
-                                                    ApplyLayouts (l ': ls) a v t = a l v t ': ApplyLayouts ls a v t
+type family ApplyLayouts ls a (t :: * -> *) where ApplyLayouts '[]       a t = '[]
+                                                  ApplyLayouts (l ': ls) a t = a l t ': ApplyLayouts ls a t
 
-type ApplySubLayouts     l a v (t :: * -> *) = ApplyLayouts (SubLayouts     l) a v t
-type ApplySubSemiLayouts l a v (t :: * -> *) = ApplyLayouts (SubSemiLayouts l) a v t
+type ApplySubLayouts     l a (t :: * -> *) = ApplyLayouts (SubLayouts     l) a t
+type ApplySubSemiLayouts l a (t :: * -> *) = ApplyLayouts (SubSemiLayouts l) a t
 
 
-type family SubGroups layout v (t :: * -> *) gs where
-  SubGroups l v t '[]       = '[]
-  SubGroups l v t '[g]      = ApplySubLayouts     l g v t
-  SubGroups l v t (g ': gs) = ApplySubSemiLayouts l g v t <> SubGroups l v t gs
+type family SubGroups layout (t :: * -> *) gs where
+  SubGroups l t '[]       = '[]
+  SubGroups l t '[g]      = ApplySubLayouts     l g t
+  SubGroups l t (g ': gs) = ApplySubSemiLayouts l g t <> SubGroups l t gs
 
 
 
@@ -218,115 +219,251 @@ type family SubGroups layout v (t :: * -> *) gs where
 -- === Data related type caches === --
 --------------------------------------
 
-type family GroupList    (v :: *) (t :: * -> *) where
-            GroupList    (v :: *) (t :: * -> *) = '[ Lit           v t
-                                                   , Static  Val   v t
-                                                   , Dynamic Val   v t 
-                                                   , Static  Thunk v t
-                                                   , Dynamic Thunk v t 
-                                                   , Static  Term  v t
-                                                   , Dynamic Term  v t 
-                                                   , Static  Draft v t
-                                                   , Dynamic Draft v t 
-                                                   ] -- [!] Implemented as TF because of #11375
+type family GroupList (t :: * -> *) where
+            GroupList (t :: * -> *) = '[ Lit           t
+                                       , Static  Val   t
+                                       , Dynamic Val   t 
+                                       , Static  Thunk t
+                                       , Dynamic Thunk t 
+                                       , Static  Term  t
+                                       , Dynamic Term  t 
+                                       , Static  Draft t
+                                       , Dynamic Draft t 
+                                       ] -- [!] Implemented as TF because of #11375
 
-type family VariantList (v :: *) (t :: * -> *) :: [*]
+type family VariantList (t :: * -> *) :: [*]
 --type family LayoutRelMap (v :: *) (t :: * -> *) :: Map * (Birelation Nat)
 
 --type Layout = (Map * (Birelation Nat) :: Box)
 --type family Layout a :: Map * (Birelation Nat)
 
-type instance VariantList v t = 
+type instance VariantList t = 
         '[ Star
          , Str
          , Number
-         , Cons  Str (t (Static  Val   v t))
-         , Arrow     (t (Static  Val   v t))
-         , Cons      (t (Dynamic Val   v t)) (t (Dynamic Val v t))
-         , Arrow     (t (Dynamic Val   v t))
-         , Acc   Str (t (Static  Thunk v t))
-         , App       (t (Static  Thunk v t))
-         , Cons  Str (t (Static  Thunk v t))
-         , Arrow     (t (Static  Thunk v t))
-         , Acc       (t (Dynamic Thunk v t)) (t (Dynamic Thunk v t))
-         , App       (t (Dynamic Thunk v t))
-         , Cons      (t (Dynamic Thunk v t)) (t (Dynamic Thunk v t))
-         , Arrow     (t (Dynamic Thunk v t))
+         , Cons  Str (t (Static  Val   t))
+         , Arrow     (t (Static  Val   t))
+         , Cons      (t (Dynamic Val   t)) (t (Dynamic Val t))
+         , Arrow     (t (Dynamic Val   t))
+         , Acc   Str (t (Static  Thunk t))
+         , App       (t (Static  Thunk t))
+         , Cons  Str (t (Static  Thunk t))
+         , Arrow     (t (Static  Thunk t))
+         , Acc       (t (Dynamic Thunk t)) (t (Dynamic Thunk t))
+         , App       (t (Dynamic Thunk t))
+         , Cons      (t (Dynamic Thunk t)) (t (Dynamic Thunk t))
+         , Arrow     (t (Dynamic Thunk t))
          , Var   Str
-         , Unify     (t (Static  Term v t))
-         , Acc   Str (t (Static  Term v t))
-         , App       (t (Static  Term v t))
-         , Cons  Str (t (Static  Term v t))
-         , Arrow     (t (Static  Term v t))
-         , Var       (t (Dynamic Term v t))
-         , Unify     (t (Dynamic Term v t))
-         , Acc       (t (Dynamic Term v t)) (t (Dynamic Term v t))
-         , App       (t (Dynamic Term v t))
-         , Cons      (t (Dynamic Term v t)) (t (Dynamic Term v t))
-         , Arrow     (t (Dynamic Term v t))
+         , Unify     (t (Static  Term t))
+         , Acc   Str (t (Static  Term t))
+         , App       (t (Static  Term t))
+         , Cons  Str (t (Static  Term t))
+         , Arrow     (t (Static  Term t))
+         , Var       (t (Dynamic Term t))
+         , Unify     (t (Dynamic Term t))
+         , Acc       (t (Dynamic Term t)) (t (Dynamic Term t))
+         , App       (t (Dynamic Term t))
+         , Cons      (t (Dynamic Term t)) (t (Dynamic Term t))
+         , Arrow     (t (Dynamic Term t))
          , Blank
-         , Unify     (t (Static  Draft v t))
-         , Acc   Str (t (Static  Draft v t))
-         , App       (t (Static  Draft v t))
-         , Cons  Str (t (Static  Draft v t))
-         , Arrow     (t (Static  Draft v t))
-         , Var       (t (Dynamic Draft v t))
-         , Unify     (t (Dynamic Draft v t))
-         , Acc       (t (Dynamic Draft v t)) (t (Dynamic Draft v t))
-         , App       (t (Dynamic Draft v t))
-         , Cons      (t (Dynamic Draft v t)) (t (Dynamic Draft v t))
-         , Arrow     (t (Dynamic Draft v t))
+         , Unify     (t (Static  Draft t))
+         , Acc   Str (t (Static  Draft t))
+         , App       (t (Static  Draft t))
+         , Cons  Str (t (Static  Draft t))
+         , Arrow     (t (Static  Draft t))
+         , Var       (t (Dynamic Draft t))
+         , Unify     (t (Dynamic Draft t))
+         , Acc       (t (Dynamic Draft t)) (t (Dynamic Draft t))
+         , App       (t (Dynamic Draft t))
+         , Cons      (t (Dynamic Draft t)) (t (Dynamic Draft t))
+         , Arrow     (t (Dynamic Draft t))
          ]
 
-type MyLayout v t = 
-    'Map [ {-  0 -} '( Lit           v t                                         , 'OneToMany 0  '[0     ] )
-         , {-  1 -} '( Static  Val   v t                                         , 'OneToMany 1  '[1     ] )
-         , {-  2 -} '( Dynamic Val   v t                                         , 'OneToMany 2  '[2     ] )
-         , {-  3 -} '( Static  Thunk v t                                         , 'OneToMany 3  '[3     ] )
-         , {-  4 -} '( Dynamic Thunk v t                                         , 'OneToMany 4  '[4     ] )
-         , {-  5 -} '( Static  Term  v t                                         , 'OneToMany 5  '[5     ] )
-         , {-  6 -} '( Dynamic Term  v t                                         , 'OneToMany 6  '[6     ] )
-         , {-  7 -} '( Static  Draft v t                                         , 'OneToMany 7  '[7     ] )
-         , {-  8 -} '( Dynamic Draft v t                                         , 'OneToMany 8  '[8     ] )
-         , {-  9 -} '( Star                                                      , 'OneToMany 9  '[9 ,0  ] )
-         , {- 10 -} '( Str                                                       , 'OneToMany 10 '[10,0  ] )
-         , {- 11 -} '( Number                                                    , 'OneToMany 11 '[11,0  ] )
-         , {- 12 -} '( Cons  Str (t (Static  Val   v t))                         , 'OneToMany 12 '[12,1  ] )
-         , {- 13 -} '( Arrow     (t (Static  Val   v t))                         , 'OneToMany 13 '[13,1  ] )
-         , {- 14 -} '( Cons      (t (Dynamic Val   v t)) (t (Dynamic Val v t))   , 'OneToMany 14 '[14,2  ] )
-         , {- 15 -} '( Arrow     (t (Dynamic Val   v t))                         , 'OneToMany 15 '[15,2  ] )
-         , {- 16 -} '( Acc   Str (t (Static  Thunk v t))                         , 'OneToMany 16 '[16,3  ] )
-         , {- 17 -} '( App       (t (Static  Thunk v t))                         , 'OneToMany 17 '[17,3  ] )
-         , {- 18 -} '( Cons  Str (t (Static  Thunk v t))                         , 'OneToMany 18 '[18,3  ] )
-         , {- 19 -} '( Arrow     (t (Static  Thunk v t))                         , 'OneToMany 19 '[19,3  ] )
-         , {- 20 -} '( Acc       (t (Dynamic Thunk v t)) (t (Dynamic Thunk v t)) , 'OneToMany 20 '[20,4  ] )
-         , {- 21 -} '( App       (t (Dynamic Thunk v t))                         , 'OneToMany 21 '[21,4  ] )
-         , {- 22 -} '( Cons      (t (Dynamic Thunk v t)) (t (Dynamic Thunk v t)) , 'OneToMany 22 '[22,4  ] )
-         , {- 23 -} '( Arrow     (t (Dynamic Thunk v t))                         , 'OneToMany 23 '[23,4  ] )
-         , {- 24 -} '( Var   Str                                                 , 'OneToMany 24 '[24,5,7] )
-         , {- 25 -} '( Unify     (t (Static  Term v t))                          , 'OneToMany 25 '[25,5  ] )
-         , {- 26 -} '( Acc   Str (t (Static  Term v t))                          , 'OneToMany 26 '[26,5  ] )
-         , {- 27 -} '( App       (t (Static  Term v t))                          , 'OneToMany 27 '[27,5  ] )
-         , {- 28 -} '( Cons  Str (t (Static  Term v t))                          , 'OneToMany 28 '[28,5  ] )
-         , {- 29 -} '( Arrow     (t (Static  Term v t))                          , 'OneToMany 29 '[29,5  ] )
-         , {- 30 -} '( Var       (t (Dynamic Term v t))                          , 'OneToMany 30 '[30,6  ] )
-         , {- 31 -} '( Unify     (t (Dynamic Term v t))                          , 'OneToMany 31 '[31,6  ] )
-         , {- 32 -} '( Acc       (t (Dynamic Term v t)) (t (Dynamic Term v t))   , 'OneToMany 32 '[32,6  ] )
-         , {- 33 -} '( App       (t (Dynamic Term v t))                          , 'OneToMany 33 '[33,6  ] )
-         , {- 34 -} '( Cons      (t (Dynamic Term v t)) (t (Dynamic Term v t))   , 'OneToMany 34 '[34,6  ] )
-         , {- 35 -} '( Arrow     (t (Dynamic Term v t))                          , 'OneToMany 35 '[35,6  ] )
-         , {- 36 -} '( Blank                                                     , 'OneToMany 36 '[36,7,8] )
-         , {- 37 -} '( Unify     (t (Static  Draft v t))                         , 'OneToMany 37 '[37,7  ] )
-         , {- 38 -} '( Acc   Str (t (Static  Draft v t))                         , 'OneToMany 38 '[38,7  ] )
-         , {- 39 -} '( App       (t (Static  Draft v t))                         , 'OneToMany 39 '[39,7  ] )
-         , {- 40 -} '( Cons  Str (t (Static  Draft v t))                         , 'OneToMany 40 '[40,7  ] )
-         , {- 41 -} '( Arrow     (t (Static  Draft v t))                         , 'OneToMany 41 '[41,7  ] )
-         , {- 42 -} '( Var       (t (Dynamic Draft v t))                         , 'OneToMany 42 '[42,8  ] )
-         , {- 43 -} '( Unify     (t (Dynamic Draft v t))                         , 'OneToMany 43 '[43,8  ] )
-         , {- 44 -} '( Acc       (t (Dynamic Draft v t)) (t (Dynamic Draft v t)) , 'OneToMany 44 '[44,8  ] )
-         , {- 45 -} '( App       (t (Dynamic Draft v t))                         , 'OneToMany 45 '[45,8  ] )
-         , {- 46 -} '( Cons      (t (Dynamic Draft v t)) (t (Dynamic Draft v t)) , 'OneToMany 46 '[46,8  ] )
-         , {- 47 -} '( Arrow     (t (Dynamic Draft v t))                         , 'OneToMany 47 '[47,8  ] )
+type MyLayout2 t = 
+    [ {-  0 -} Lit           t
+    , {-  1 -} Static  Val   t
+    , {-  2 -} Dynamic Val   t
+    , {-  3 -} Static  Thunk t
+    , {-  4 -} Dynamic Thunk t
+    , {-  5 -} Static  Term  t
+    , {-  6 -} Dynamic Term  t
+    , {-  7 -} Static  Draft t
+    , {-  8 -} Dynamic Draft t
+
+    , {-  9 -} Star
+    , {- 10 -} Str
+    , {- 11 -} Number
+    , {- 12 -} Cons  Str (t (Static  Val   t))
+    , {- 13 -} Arrow     (t (Static  Val   t))
+    , {- 14 -} Cons      (t (Dynamic Val   t)) (t (Dynamic Val t))
+    , {- 15 -} Arrow     (t (Dynamic Val   t))
+    , {- 16 -} Acc   Str (t (Static  Thunk t))
+    , {- 17 -} App       (t (Static  Thunk t))
+    , {- 18 -} Cons  Str (t (Static  Thunk t))
+    , {- 19 -} Arrow     (t (Static  Thunk t))
+    , {- 20 -} Acc       (t (Dynamic Thunk t)) (t (Dynamic Thunk t))
+    , {- 21 -} App       (t (Dynamic Thunk t))
+    , {- 22 -} Cons      (t (Dynamic Thunk t)) (t (Dynamic Thunk t))
+    , {- 23 -} Arrow     (t (Dynamic Thunk t))
+    , {- 24 -} Var   Str
+    , {- 25 -} Unify     (t (Static  Term t))
+    , {- 26 -} Acc   Str (t (Static  Term t))
+    , {- 27 -} App       (t (Static  Term t))
+    , {- 28 -} Cons  Str (t (Static  Term t))
+    , {- 29 -} Arrow     (t (Static  Term t))
+    , {- 30 -} Var       (t (Dynamic Term t))
+    , {- 31 -} Unify     (t (Dynamic Term t))
+    , {- 32 -} Acc       (t (Dynamic Term t)) (t (Dynamic Term t))
+    , {- 33 -} App       (t (Dynamic Term t))
+    , {- 34 -} Cons      (t (Dynamic Term t)) (t (Dynamic Term t))
+    , {- 35 -} Arrow     (t (Dynamic Term t))
+    , {- 36 -} Blank
+    , {- 37 -} Unify     (t (Static  Draft t))
+    , {- 38 -} Acc   Str (t (Static  Draft t))
+    , {- 39 -} App       (t (Static  Draft t))
+    , {- 40 -} Cons  Str (t (Static  Draft t))
+    , {- 41 -} Arrow     (t (Static  Draft t))
+    , {- 42 -} Var       (t (Dynamic Draft t))
+    , {- 43 -} Unify     (t (Dynamic Draft t))
+    , {- 44 -} Acc       (t (Dynamic Draft t)) (t (Dynamic Draft t))
+    , {- 45 -} App       (t (Dynamic Draft t))
+    , {- 46 -} Cons      (t (Dynamic Draft t)) (t (Dynamic Draft t))
+    , {- 47 -} Arrow     (t (Dynamic Draft t))
+    ]
+
+type DerivingMap t = 
+    'Map [ {-  9 -} '( Star                                                      , '[ 9  , 0,1,2,3,4,5,6,7,8 ] )
+         , {- 10 -} '( Str                                                       , '[ 10 , 0,1,2,3,4,5,6,7,8 ] )
+         , {- 11 -} '( Number                                                    , '[ 11 , 0,1,2,3,4,5,6,7,8 ] )
+         , {- 12 -} '( Cons  Str (t (Static  Val   t))                         , '[ 12 , 1,2,3,4,5,6,7,8   ] )
+         , {- 13 -} '( Arrow     (t (Static  Val   t))                         , '[ 13 , 1,2,3,4,5,6,7,8   ] )
+         , {- 14 -} '( Cons      (t (Dynamic Val   t)) (t (Dynamic Val t))   , '[ 14 , 2,4,6,8           ] )
+         , {- 15 -} '( Arrow     (t (Dynamic Val   t))                         , '[ 15 , 2,4,6,8           ] )
+         , {- 16 -} '( Acc   Str (t (Static  Thunk t))                         , '[ 16 , 3,4,5,6,7,8       ] )
+         , {- 17 -} '( App       (t (Static  Thunk t))                         , '[ 17 , 3,4,5,6,7,8       ] )
+         , {- 18 -} '( Cons  Str (t (Static  Thunk t))                         , '[ 18 , 3,4,5,6,7,8       ] )
+         , {- 19 -} '( Arrow     (t (Static  Thunk t))                         , '[ 19 , 3,4,5,6,7,8       ] )
+         , {- 20 -} '( Acc       (t (Dynamic Thunk t)) (t (Dynamic Thunk t)) , '[ 20 , 4,6,8             ] )
+         , {- 21 -} '( App       (t (Dynamic Thunk t))                         , '[ 21 , 4,6,8             ] )
+         , {- 22 -} '( Cons      (t (Dynamic Thunk t)) (t (Dynamic Thunk t)) , '[ 22 , 4,6,8             ] )
+         , {- 23 -} '( Arrow     (t (Dynamic Thunk t))                         , '[ 23 , 4,6,8             ] )
+         , {- 24 -} '( Var   Str                                                 , '[ 24 , 5,7               ] )
+         , {- 25 -} '( Unify     (t (Static  Term t))                          , '[ 25 , 5,7               ] )
+         , {- 26 -} '( Acc   Str (t (Static  Term t))                          , '[ 26 , 5,7               ] )
+         , {- 27 -} '( App       (t (Static  Term t))                          , '[ 27 , 5,7               ] )
+         , {- 28 -} '( Cons  Str (t (Static  Term t))                          , '[ 28 , 5,7               ] )
+         , {- 29 -} '( Arrow     (t (Static  Term t))                          , '[ 29 , 5,7               ] )
+         , {- 30 -} '( Var       (t (Dynamic Term t))                          , '[ 30 , 6,8               ] )
+         , {- 31 -} '( Unify     (t (Dynamic Term t))                          , '[ 31 , 6,8               ] )
+         , {- 32 -} '( Acc       (t (Dynamic Term t)) (t (Dynamic Term t))   , '[ 32 , 6,8               ] )
+         , {- 33 -} '( App       (t (Dynamic Term t))                          , '[ 33 , 6,8               ] )
+         , {- 34 -} '( Cons      (t (Dynamic Term t)) (t (Dynamic Term t))   , '[ 34 , 6,8               ] )
+         , {- 35 -} '( Arrow     (t (Dynamic Term t))                          , '[ 35 , 6,8               ] )
+         , {- 36 -} '( Blank                                                     , '[ 36 , 7,8               ] )
+         , {- 37 -} '( Unify     (t (Static  Draft t))                         , '[ 37 , 7                 ] )
+         , {- 38 -} '( Acc   Str (t (Static  Draft t))                         , '[ 38 , 7                 ] )
+         , {- 39 -} '( App       (t (Static  Draft t))                         , '[ 39 , 7                 ] )
+         , {- 40 -} '( Cons  Str (t (Static  Draft t))                         , '[ 40 , 7                 ] )
+         , {- 41 -} '( Arrow     (t (Static  Draft t))                         , '[ 41 , 7                 ] )
+         , {- 42 -} '( Var       (t (Dynamic Draft t))                         , '[ 42 , 8                 ] )
+         , {- 43 -} '( Unify     (t (Dynamic Draft t))                         , '[ 43 , 8                 ] )
+         , {- 44 -} '( Acc       (t (Dynamic Draft t)) (t (Dynamic Draft t)) , '[ 44 , 8                 ] )
+         , {- 45 -} '( App       (t (Dynamic Draft t))                         , '[ 45 , 8                 ] )
+         , {- 46 -} '( Cons      (t (Dynamic Draft t)) (t (Dynamic Draft t)) , '[ 46 , 8                 ] )
+         , {- 47 -} '( Arrow     (t (Dynamic Draft t))                         , '[ 47 , 8                 ] )
+         ]
+
+type RequestMap t = 
+    'Map [ {-  9 -} '( Star                                                      , '[ 9  ] )
+         , {- 10 -} '( Str                                                       , '[ 10 ] )
+         , {- 11 -} '( Number                                                    , '[ 11 ] )
+         , {- 12 -} '( Cons  Str (t (Static  Val   t))                         , '[ 12 ] )
+         , {- 13 -} '( Arrow     (t (Static  Val   t))                         , '[ 13 ] )
+         , {- 14 -} '( Cons      (t (Dynamic Val   t)) (t (Dynamic Val t))   , '[ 14 ] )
+         , {- 15 -} '( Arrow     (t (Dynamic Val   t))                         , '[ 15 ] )
+         , {- 16 -} '( Acc   Str (t (Static  Thunk t))                         , '[ 16 ] )
+         , {- 17 -} '( App       (t (Static  Thunk t))                         , '[ 17 ] )
+         , {- 18 -} '( Cons  Str (t (Static  Thunk t))                         , '[ 18 ] )
+         , {- 19 -} '( Arrow     (t (Static  Thunk t))                         , '[ 19 ] )
+         , {- 20 -} '( Acc       (t (Dynamic Thunk t)) (t (Dynamic Thunk t)) , '[ 20 ] )
+         , {- 21 -} '( App       (t (Dynamic Thunk t))                         , '[ 21 ] )
+         , {- 22 -} '( Cons      (t (Dynamic Thunk t)) (t (Dynamic Thunk t)) , '[ 22 ] )
+         , {- 23 -} '( Arrow     (t (Dynamic Thunk t))                         , '[ 23 ] )
+         , {- 24 -} '( Var   Str                                                 , '[ 24 ] )
+         , {- 25 -} '( Unify     (t (Static  Term t))                          , '[ 25 ] )
+         , {- 26 -} '( Acc   Str (t (Static  Term t))                          , '[ 26 ] )
+         , {- 27 -} '( App       (t (Static  Term t))                          , '[ 27 ] )
+         , {- 28 -} '( Cons  Str (t (Static  Term t))                          , '[ 28 ] )
+         , {- 29 -} '( Arrow     (t (Static  Term t))                          , '[ 29 ] )
+         , {- 30 -} '( Var       (t (Dynamic Term t))                          , '[ 30 ] )
+         , {- 31 -} '( Unify     (t (Dynamic Term t))                          , '[ 31 ] )
+         , {- 32 -} '( Acc       (t (Dynamic Term t)) (t (Dynamic Term t))   , '[ 32 ] )
+         , {- 33 -} '( App       (t (Dynamic Term t))                          , '[ 33 ] )
+         , {- 34 -} '( Cons      (t (Dynamic Term t)) (t (Dynamic Term t))   , '[ 34 ] )
+         , {- 35 -} '( Arrow     (t (Dynamic Term t))                          , '[ 35 ] )
+         , {- 36 -} '( Blank                                                     , '[ 36 ] )
+         , {- 37 -} '( Unify     (t (Static  Draft t))                         , '[ 37 ] )
+         , {- 38 -} '( Acc   Str (t (Static  Draft t))                         , '[ 38 ] )
+         , {- 39 -} '( App       (t (Static  Draft t))                         , '[ 39 ] )
+         , {- 40 -} '( Cons  Str (t (Static  Draft t))                         , '[ 40 ] )
+         , {- 41 -} '( Arrow     (t (Static  Draft t))                         , '[ 41 ] )
+         , {- 42 -} '( Var       (t (Dynamic Draft t))                         , '[ 42 ] )
+         , {- 43 -} '( Unify     (t (Dynamic Draft t))                         , '[ 43 ] )
+         , {- 44 -} '( Acc       (t (Dynamic Draft t)) (t (Dynamic Draft t)) , '[ 44 ] )
+         , {- 45 -} '( App       (t (Dynamic Draft t))                         , '[ 45 ] )
+         , {- 46 -} '( Cons      (t (Dynamic Draft t)) (t (Dynamic Draft t)) , '[ 46 ] )
+         , {- 47 -} '( Arrow     (t (Dynamic Draft t))                         , '[ 47 ] )
+         ]
+
+type MyLayout t = 
+    'Map [-- {-  0 -} '( Lit           t                                         , 'OneToMany 0  '[ 0                      ] )
+         -- , {-  1 -} '( Static  Val   t                                         , 'OneToMany 1  '[ 1                      ] )
+         -- , {-  2 -} '( Dynamic Val   t                                         , 'OneToMany 2  '[ 2                      ] )
+         -- , {-  3 -} '( Static  Thunk t                                         , 'OneToMany 3  '[ 3                      ] )
+         -- , {-  4 -} '( Dynamic Thunk t                                         , 'OneToMany 4  '[ 4                      ] )
+         -- , {-  5 -} '( Static  Term  t                                         , 'OneToMany 5  '[ 5                      ] )
+         -- , {-  6 -} '( Dynamic Term  t                                         , 'OneToMany 6  '[ 6                      ] )
+         -- , {-  7 -} '( Static  Draft t                                         , 'OneToMany 7  '[ 7                      ] )
+         -- , {-  8 -} '( Dynamic Draft t                                         , 'OneToMany 8  '[ 8                      ] )
+           {-  9 -} '( Star                                                      , 'OneToMany 9  '[ 9  , 0,1,2,3,4,5,6,7,8 ] )
+         , {- 10 -} '( Str                                                       , 'OneToMany 10 '[ 10 , 0,1,2,3,4,5,6,7,8 ] )
+         , {- 11 -} '( Number                                                    , 'OneToMany 11 '[ 11 , 0,1,2,3,4,5,6,7,8 ] )
+         , {- 12 -} '( Cons  Str (t (Static  Val   t))                         , 'OneToMany 12 '[ 12 , 1,2,3,4,5,6,7,8   ] )
+         , {- 13 -} '( Arrow     (t (Static  Val   t))                         , 'OneToMany 13 '[ 13 , 1,2,3,4,5,6,7,8   ] )
+         , {- 14 -} '( Cons      (t (Dynamic Val   t)) (t (Dynamic Val t))   , 'OneToMany 14 '[ 14 , 2,4,6,8           ] )
+         , {- 15 -} '( Arrow     (t (Dynamic Val   t))                         , 'OneToMany 15 '[ 15 , 2,4,6,8           ] )
+         , {- 16 -} '( Acc   Str (t (Static  Thunk t))                         , 'OneToMany 16 '[ 16 , 3,4,5,6,7,8       ] )
+         , {- 17 -} '( App       (t (Static  Thunk t))                         , 'OneToMany 17 '[ 17 , 3,4,5,6,7,8       ] )
+         , {- 18 -} '( Cons  Str (t (Static  Thunk t))                         , 'OneToMany 18 '[ 18 , 3,4,5,6,7,8       ] )
+         , {- 19 -} '( Arrow     (t (Static  Thunk t))                         , 'OneToMany 19 '[ 19 , 3,4,5,6,7,8       ] )
+         , {- 20 -} '( Acc       (t (Dynamic Thunk t)) (t (Dynamic Thunk t)) , 'OneToMany 20 '[ 20 , 4,6,8             ] )
+         , {- 21 -} '( App       (t (Dynamic Thunk t))                         , 'OneToMany 21 '[ 21 , 4,6,8             ] )
+         , {- 22 -} '( Cons      (t (Dynamic Thunk t)) (t (Dynamic Thunk t)) , 'OneToMany 22 '[ 22 , 4,6,8             ] )
+         , {- 23 -} '( Arrow     (t (Dynamic Thunk t))                         , 'OneToMany 23 '[ 23 , 4,6,8             ] )
+         , {- 24 -} '( Var   Str                                                 , 'OneToMany 24 '[ 24 , 5,7               ] )
+         , {- 25 -} '( Unify     (t (Static  Term t))                          , 'OneToMany 25 '[ 25 , 5,7               ] )
+         , {- 26 -} '( Acc   Str (t (Static  Term t))                          , 'OneToMany 26 '[ 26 , 5,7               ] )
+         , {- 27 -} '( App       (t (Static  Term t))                          , 'OneToMany 27 '[ 27 , 5,7               ] )
+         , {- 28 -} '( Cons  Str (t (Static  Term t))                          , 'OneToMany 28 '[ 28 , 5,7               ] )
+         , {- 29 -} '( Arrow     (t (Static  Term t))                          , 'OneToMany 29 '[ 29 , 5,7               ] )
+         , {- 30 -} '( Var       (t (Dynamic Term t))                          , 'OneToMany 30 '[ 30 , 6,8               ] )
+         , {- 31 -} '( Unify     (t (Dynamic Term t))                          , 'OneToMany 31 '[ 31 , 6,8               ] )
+         , {- 32 -} '( Acc       (t (Dynamic Term t)) (t (Dynamic Term t))   , 'OneToMany 32 '[ 32 , 6,8               ] )
+         , {- 33 -} '( App       (t (Dynamic Term t))                          , 'OneToMany 33 '[ 33 , 6,8               ] )
+         , {- 34 -} '( Cons      (t (Dynamic Term t)) (t (Dynamic Term t))   , 'OneToMany 34 '[ 34 , 6,8               ] )
+         , {- 35 -} '( Arrow     (t (Dynamic Term t))                          , 'OneToMany 35 '[ 35 , 6,8               ] )
+         , {- 36 -} '( Blank                                                     , 'OneToMany 36 '[ 36 , 7,8               ] )
+         , {- 37 -} '( Unify     (t (Static  Draft t))                         , 'OneToMany 37 '[ 37 , 7                 ] )
+         , {- 38 -} '( Acc   Str (t (Static  Draft t))                         , 'OneToMany 38 '[ 38 , 7                 ] )
+         , {- 39 -} '( App       (t (Static  Draft t))                         , 'OneToMany 39 '[ 39 , 7                 ] )
+         , {- 40 -} '( Cons  Str (t (Static  Draft t))                         , 'OneToMany 40 '[ 40 , 7                 ] )
+         , {- 41 -} '( Arrow     (t (Static  Draft t))                         , 'OneToMany 41 '[ 41 , 7                 ] )
+         , {- 42 -} '( Var       (t (Dynamic Draft t))                         , 'OneToMany 42 '[ 42 , 8                 ] )
+         , {- 43 -} '( Unify     (t (Dynamic Draft t))                         , 'OneToMany 43 '[ 43 , 8                 ] )
+         , {- 44 -} '( Acc       (t (Dynamic Draft t)) (t (Dynamic Draft t)) , 'OneToMany 44 '[ 44 , 8                 ] )
+         , {- 45 -} '( App       (t (Dynamic Draft t))                         , 'OneToMany 45 '[ 45 , 8                 ] )
+         , {- 46 -} '( Cons      (t (Dynamic Draft t)) (t (Dynamic Draft t)) , 'OneToMany 46 '[ 46 , 8                 ] )
+         , {- 47 -} '( Arrow     (t (Dynamic Draft t))                         , 'OneToMany 47 '[ 47 , 8                 ] )
          ]
 
 
@@ -380,21 +517,21 @@ instance Wrapped   Store where
 
 -- === Types === --
 
--- TODO [WD]: generalize m to PolyKinds
-newtype Modal (m :: ValueMod) a = Modal a deriving (Functor, Traversable, Foldable)
+---- TODO [WD]: generalize m to PolyKinds
+--newtype Modal (m :: ValueMod) a = Modal a deriving (Functor, Traversable, Foldable)
 
-instance Show (Modal m a) where show _ = "Modal" -- FIXME[WD]: add show when possible
+--instance Show (Modal m a) where show _ = "Modal" -- FIXME[WD]: add show when possible
 
 
--- === Basic mods === --
+---- === Basic mods === --
 
-data ValueMod = WithValue
-              | WithoutValue
-              deriving (Show)
+--data ValueMod = WithValue
+--              | WithoutValue
+--              deriving (Show)
 
-class                                   ValueReader a m             v where readValue :: a -> Modal m v
-instance                                ValueReader a 'WithoutValue v where readValue _ = Modal $ unsafeCoerce NOP ; {-# INLINE readValue #-}
-instance (HasValue a, v ~ ValueOf a) => ValueReader a 'WithValue    v where readValue   = Modal ∘ view value       ; {-# INLINE readValue #-}
+--class                                   ValueReader a m             v where readValue :: a -> Modal m v
+--instance                                ValueReader a 'WithoutValue v where readValue _ = Modal $ unsafeCoerce NOP ; {-# INLINE readValue #-}
+--instance (HasValue a, v ~ ValueOf a) => ValueReader a 'WithValue    v where readValue   = Modal ∘ view value       ; {-# INLINE readValue #-}
 
 
 
@@ -428,32 +565,13 @@ instance {-# OVERLAPPABLE #-} HasValue (Attached Value d a) where value = lens (
 -- === Record === --
 --------------------
 
-newtype Record (layout :: Map * (Birelation Nat)) (groups :: [*]) (variants :: [*]) rec = Record rec deriving (Show, Functor, Traversable, Foldable)
-
 class IsRecord a where asRecord :: forall gs vs. Iso' a (RecordOf a)
 
 type family RecordOf a :: *
 type family Variants a :: [*]
 type family Groups   a :: [*]
+type family Layout   a :: Map * (Birelation Nat)
 
-
--- === Variant Provider === --
-
-class                                                  VariantProvider a                vnt | a -> vnt where providedVariant :: a -> vnt
-instance {-# OVERLAPPABLE #-} a ~ vnt               => VariantProvider a                vnt            where providedVariant = id                        ; {-# INLINE providedVariant #-}
-instance {-# OVERLAPPABLE #-} VariantProvider a vnt => VariantProvider (Attached t d a) vnt            where providedVariant = providedVariant ∘ unlayer ; {-# INLINE providedVariant #-}
-
--- === LayoutMask Provider === --
-
-class                                                   LayoutMaskProvider l a                  where providedMask :: LayoutProxy l -> a -> Mask
-instance {-# OVERLAPPABLE #-}                           LayoutMaskProvider l a                  where providedMask _ _ = zeroBits                 ; {-# INLINE providedMask #-}
-instance {-# OVERLAPPABLE #-} LayoutMaskProvider l a => LayoutMaskProvider l (Attached t d a)   where providedMask l   = providedMask l ∘ unlayer ; {-# INLINE providedMask #-}
-
-
--- === Instances === --
-
-type instance Variants (Record l gs vs rec) = vs
-type instance Groups   (Record l gs vs rec) = gs
 
 
 
@@ -470,58 +588,62 @@ instance Show Mask where
 
 -- === Types === --
 
-data Data (m :: ValueMod) v = Data { _mask    :: !Mask
-                                   , _value   :: !(Modal m v)
-                                   , _variant :: !Store
-                                   } deriving (Show)
+data Data = Data { _mask    :: !Mask
+                 , _variant :: !Store
+                 } deriving (Show)
 
-newtype ASTRecord (groups :: [*]) (variants :: [*]) (m :: ValueMod) v (t :: * -> *) = ASTRecord (Unwrapped (ASTRecord groups variants m v t)) deriving (Show)
-type instance Unlayered (ASTRecord gs vs m v t) = Record (MyLayout v t) gs vs (Data m v)
+newtype ASTRecord (groups :: [*]) (variants :: [*]) (t :: * -> *) d = ASTRecord (Unlayered (ASTRecord groups variants t d)) deriving (Show)
+type instance Unlayered (ASTRecord gs vs t d) = d
 
 -- === Instances === --
 
-type instance Variants (ASTRecord gs vs m v t) = Variants (Unwrapped (ASTRecord gs vs m v t))
-type instance Groups   (ASTRecord gs vs m v t) = Groups   (Unwrapped (ASTRecord gs vs m v t))
-type instance RecordOf (ASTRecord gs vs m v t) = Unwrapped (ASTRecord gs vs m v t)
-instance      IsRecord (ASTRecord gs vs m v t) where asRecord = wrapped' ; {-# INLINE asRecord #-}
+type instance Variants (ASTRecord gs vs t d) = vs
+type instance Groups   (ASTRecord gs vs t d) = gs
+type instance Layout   (ASTRecord gs vs t d) = MyLayout t
+
+type instance RecordOf (ASTRecord gs vs t d) = ASTRecord gs vs t d
+instance      IsRecord (ASTRecord gs vs t d) where asRecord = id ; {-# INLINE asRecord #-}
+
 
 -- Wrappers
 
-instance Layered   (ASTRecord gs vs m v t)
-instance Rewrapped (ASTRecord gs vs m v t) (ASTRecord l' gs' vs' m' v')
-instance Wrapped   (ASTRecord gs vs m v t) where
-    type Unwrapped (ASTRecord gs vs m v t) = Unlayered (ASTRecord gs vs m v t)
+instance Layered   (ASTRecord gs vs t d)
+instance Rewrapped (ASTRecord gs vs t d) (ASTRecord gs' vs' t' d')
+instance Wrapped   (ASTRecord gs vs t d) where
+    type Unwrapped (ASTRecord gs vs t d) = d
     _Wrapped' = iso (\(ASTRecord a) -> a) ASTRecord
     {-# INLINE _Wrapped' #-}
-
--- MaskProviders
-
-instance {-# OVERLAPPABLE #-} LayoutMaskProvider l (RecordOf (Lit     v t)) => LayoutMaskProvider l (Lit     v t) where providedMask l = providedMask l ∘ view asRecord
-instance {-# OVERLAPPABLE #-} LayoutMaskProvider l (RecordOf (Val   x v t)) => LayoutMaskProvider l (Val   x v t) where providedMask l = providedMask l ∘ view asRecord
-instance {-# OVERLAPPABLE #-} LayoutMaskProvider l (RecordOf (Thunk x v t)) => LayoutMaskProvider l (Thunk x v t) where providedMask l = providedMask l ∘ view asRecord
-instance {-# OVERLAPPABLE #-} LayoutMaskProvider l (RecordOf (Term  x v t)) => LayoutMaskProvider l (Term  x v t) where providedMask l = providedMask l ∘ view asRecord
-instance {-# OVERLAPPABLE #-} LayoutMaskProvider l (RecordOf (Draft x v t)) => LayoutMaskProvider l (Draft x v t) where providedMask l = providedMask l ∘ view asRecord
-
-instance {-# OVERLAPPABLE #-} LayoutMaskProvider l (Record l gs vs (Data m v)) where providedMask _ (Record (Data m _ _)) = m ; {-# INLINE providedMask #-}
 
 
 -- === AST Data encoder === --
 
-instance ( rel  ~ MapLookup vnt layout
-         , bits ~ Rel.Targets rel
+instance ( rel    ~ MapLookup v layout
+         , bits   ~ Rel.Targets rel
+         , layout ~ Layout (rec Data)
          , KnownNats bits
-         , VariantProvider a vnt
-         , LayoutMaskProvider layout vnt
-         , ValueReader     a m v
-         ) => RecEncoder a layout gs vs (Data m v) where 
-    encodeRec v = Record $ Data mask' val $ unsafeStore v where
+         , Wrapped (rec Data)
+         , Unwrapped (rec Data) ~ Data
+         ) => VariantEncoder v Ok (rec Data) where 
+    encodeVariant v = Ok $ wrap' $ Data mask $ unsafeStore v where
         bits    = fromIntegral <$> natVals (Proxy :: Proxy bits)
-        mask    = providedMask (Proxy :: Proxy layout) vnt
-        mask'   = foldl' setBit mask bits
-        val     = readValue       v
-        vnt     = providedVariant v
-    {-# INLINE encodeRec #-}
+        mask    = foldl' setBit zeroBits bits
+    {-# INLINE encodeVariant #-}
 
+instance ( MaskRebuilder layout layout'
+         , layout  ~ Layout (rec  Data)
+         , layout' ~ Layout (rec' Data)
+         , Unwrapped (rec  Data) ~ Data
+         , Unwrapped (rec' Data) ~ Data
+         , Wrapped   (rec  Data)
+         , Wrapped   (rec' Data)
+         ) => RecordRecoder (rec Data) Ok (rec' Data) where 
+    recodeRecord (unwrap' -> (Data mask var)) = Ok $ wrap' $ Data mask' var where
+        mask'             = rebuildMask (Proxy :: Proxy layout) (Proxy :: Proxy layout') mask
+    {-# INLINE recodeRecord #-}
+
+
+class    MaskRebuilder oldLayout newLayout where rebuildMask :: LayoutProxy oldLayout -> LayoutProxy newLayout -> Mask -> Mask
+instance MaskRebuilder layout    layout    where rebuildMask _ _ = id ; {-# INLINE rebuildMask #-}
 
 
 
@@ -530,21 +652,55 @@ instance ( rel  ~ MapLookup vnt layout
 -- === Construction === --
 --------------------------
 
--- === Abstraction === --
+-- === VariantCons === --
+data InvalidVariant v
+data InvalidGroup   g
 
-class RecCons v rec where recCons :: v -> rec
-instance ( IsRecord rec
-         , RecordOf rec ~ Record layout gs vs d
-         , RecEncoder v layout gs vs d
-         ) => RecCons v rec where recCons = view (from asRecord) ∘ encodeRec ; {-# INLINE recCons #-}
-instance      RecCons I rec where recCons = impossible                       ; {-# INLINE recCons #-}
-instance      RecCons v I   where recCons = impossible                       ; {-# INLINE recCons #-}
+type InvalidVariant' v = Error (InvalidVariant v)
+type InvalidGroup'   v = Error (InvalidGroup   v)
 
+
+class VariantCons     v m rec |    v rec -> m where variantCons  ::                       v -> m rec
+class VariantCons' ok v m rec | ok v rec -> m where variantCons' :: Proxy (ok :: Bool) -> v -> m rec
+
+instance ( rec ~ RecordOf r
+         , vs  ~ Variants rec
+         , ok  ~ (v `In` vs)
+         , VariantCons' ok v m (RecordOf r)
+         , IsRecord r
+         , Functor m )         => VariantCons         v m  r where variantCons    = view (from asRecord) <∘> variantCons' (Proxy :: Proxy ok) ; {-# INLINE variantCons  #-}
+instance                          VariantCons         I IM r where variantCons    = impossible                                                ; {-# INLINE variantCons  #-}
+instance                          VariantCons         v IM I where variantCons    = impossible                                                ; {-# INLINE variantCons  #-}
+instance VariantEncoder v m r  => VariantCons' 'True  v m  r where variantCons' _ = encodeVariant                                             ; {-# INLINE variantCons' #-}
+instance m ~ InvalidVariant' v => VariantCons' 'False v m  r where variantCons' _ = const Error                                               ; {-# INLINE variantCons' #-}
+
+
+-- === GroupCons === --
+
+class GroupCons     g m rec |    g rec -> m where groupCons  ::                       g -> m rec
+class GroupCons' ok g m rec | ok g rec -> m where groupCons' :: Proxy (ok :: Bool) -> g -> m rec
+
+instance ( rec ~ RecordOf r
+         , gs  ~ Groups rec
+         , ok  ~ (g `In` gs)
+         , GroupCons' ok g m (RecordOf r)
+         , IsRecord r
+         , Functor m )        => GroupCons         g m  r where groupCons    = view (from asRecord) <∘> groupCons' (Proxy :: Proxy ok) ; {-# INLINE groupCons  #-}
+instance                         GroupCons         I IM r where groupCons    = impossible                                              ; {-# INLINE groupCons  #-}
+instance                         GroupCons         v IM I where groupCons    = impossible                                              ; {-# INLINE groupCons  #-}
+instance RecordRecoder' v m r => GroupCons' 'True  v m  r where groupCons' _ = encodeGroup                                             ; {-# INLINE groupCons' #-}
+instance m ~ InvalidGroup' v  => GroupCons' 'False v m  r where groupCons' _ = const Error                                             ; {-# INLINE groupCons' #-}
+
+
+encodeGroup = recodeRecord ∘ view asRecord
+{-# INLINE encodeGroup #-}
 
 -- === Constructions encoders === --
 
-class RecEncoder v layout gs vs rec where encodeRec :: v -> Record layout gs vs rec
+class VariantEncoder v m rec | v rec -> m where encodeVariant :: v -> m rec
+class RecordRecoder  g m rec | g rec -> m where recodeRecord  :: g -> m rec
 
+type RecordRecoder' g m rec = (IsRecord g, RecordRecoder (RecordOf g) m rec)
 
 -- - zrobic uncheckedRec i checkedRec
 -- - zrobic resolution typow przy konstruktorach i pattern matchach
@@ -552,24 +708,28 @@ class RecEncoder v layout gs vs rec where encodeRec :: v -> Record layout gs vs 
 -- - zrobic ladne typy pattern matchingu
 
 
+
 ------------------------------
 -- === Pattern matching === --
 ------------------------------
 
-class LayoutMatch layout v gs vs rec where layoutMatch :: forall a. (v -> a) -> Record layout gs vs rec -> Maybe a
+class LayoutMatch v rec where layoutMatch :: forall a. (v -> a) -> rec -> Maybe a
 
-instance ( rel ~ MapLookup a layout
-         , nat ~ Rel.Source rel
+instance ( rel    ~ MapLookup a layout
+         , nat    ~ Rel.Source rel
+         , layout ~ Layout (rec Data)
+         , Unwrapped (rec Data) ~ Data
+         , Wrapped   (rec Data)
          , KnownNat nat
-         ) => LayoutMatch layout a gs vs (Data m v) where
-    layoutMatch f (Record (Data mask val v)) = if match then Just (f val) else Nothing where
+         ) => LayoutMatch a (rec Data) where
+    layoutMatch f (unwrap' -> (Data mask v)) = if match then Just (f val) else Nothing where
         bit   = fromIntegral $ natVal (Proxy :: Proxy nat)
         match = testBit mask bit
         val   = unsafeRestore v :: a
     {-# INLINE layoutMatch #-}
 
 
-runMatch :: (LayoutMatch l v gs vs rec, IsRecord r, RecordOf r ~ Record l gs vs rec) => (v -> a) -> r -> Maybe a
+runMatch :: (LayoutMatch v (RecordOf r), IsRecord r) => (v -> a) -> r -> Maybe a
 runMatch f (rec :: rec) = layoutMatch f $ view asRecord rec
 {-# INLINE runMatch #-}
 
@@ -591,11 +751,12 @@ __case__ lib file loc t s = case catMaybes $ ($ t) <$> execState s [] of
 
 newtype IDT a = IDT a deriving (Show, Functor, Traversable, Foldable)
 
-star' :: ASTRecord '[] '[] WithValue Int IDT
-star' = recCons $ Star +> 5
+--star' :: ASTRecord '[] '[] IDT
+--star' = variantCons $ Star +> 5
 
-star :: Lit v t
-star = recCons Star
+--star :: Lit t
+--star = variantCons Star
+
 
 caseTest = __case__ "tc-test" "test/Main.hs" 0
 {-# INLINE caseTest #-}
@@ -603,18 +764,23 @@ caseTest = __case__ "tc-test" "test/Main.hs" 0
 data Test a b = Test !a !b  deriving (Show)
 
 main = do
-    let v  = star :: Lit Int IDT
-        v' = v +> (5 :: Int)
-        l  = recCons v' :: Static Thunk Int IDT
-        --l2 = recCons l  :: Dynamic Val Int IDT
-        l2 = recCons l  :: Dynamic Thunk Int IDT
+    --let v  = star :: Lit Int IDT
+    let Ok v  = variantCons Star :: Ok (Lit IDT)
+        --Ok v' = groupCons v :: Ok (Static Draft IDT)
+    --let v  = variantCons Star :: Ok (Static Draft IDT)
+    --let v  = variantCons (1 :: Int) :: Ok (Lit IDT)
+        --l  = variantCons v :: Static Thunk Int IDT
+        --l2 = variantCons l  :: Dynamic Val Int IDT
+        --l2 = variantCons l  :: Dynamic Thunk Int IDT
 
     print v
-    print l
-    print l2
+    --print v'
 
-    print $ caseTest v $ do
-        match (\Star -> (1 :: Int))
+    --print l
+    --print l2
+
+    --print $ caseTest v $ do
+    --    match (\Star -> (1 :: Int))
 
     return ()
 
