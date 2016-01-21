@@ -22,14 +22,14 @@ execute = do
     mapM_ run =<< topsort =<< Env.getReqNodes
     Env.clearReqNodes
 
-connect :: BuilderMonad (Network Label) m => Ref Node -> Ref Node -> m ()
+connect :: (InterpreterMonad Env m, BuilderMonad (Network Label) m) => Ref Node -> Ref Node -> m ()
 connect prev next = do
     isPrevDirty <- view (label . Label.dirty) <$> readRef prev
     Dirty.markSuccessors $ if isPrevDirty
         then prev
         else next
 
-markModified :: BuilderMonad (Network Label) m => Ref Node -> m ()
+markModified :: (InterpreterMonad Env m, BuilderMonad (Network Label) m) => Ref Node -> m ()
 markModified = Dirty.markSuccessors
 
 run :: BuilderMonad (Network Label) m => Ref Node -> m ()

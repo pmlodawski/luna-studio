@@ -159,3 +159,53 @@ Executable tc-test
                  , text
                  , transformers
                  , vector
+
+Executable tci-test
+    Main-Is:        InterpreterTest.hs
+    Hs-Source-Dirs: test
+
+    GHC-Options:    -Wall -O2
+
+    Extensions:   ConstraintKinds
+                  DataKinds
+                  DefaultSignatures
+                  DeriveDataTypeable
+                  DeriveFoldable
+                  DeriveFunctor
+                  DeriveGeneric
+                  DeriveTraversable
+                  DoAndIfThenElse
+                  EmptyDataDecls
+                  FlexibleContexts
+                  FlexibleInstances
+                  GeneralizedNewtypeDeriving
+                  InstanceSigs
+                  LambdaCase
+                  MultiParamTypeClasses
+                  NoImplicitPrelude
+                  OverloadedStrings
+                  StandaloneDeriving
+                  TemplateHaskell
+                  TupleSections
+                  TypeOperators
+                  ViewPatterns
+
+    Build-Depends: luna-tc
+                 , base
+                 , containers >= 0.5.6.2
+                 , convert
+                 , constraints
+                 , container
+                 , data-construction
+                 , data-layer
+                 , errors
+                 , flowbox-utils
+                 , ghc-prim
+                 , graphviz >= 2999.17.0.2.2
+                 , lens
+                 , mtl
+                 , process
+                 , prologue
+                 , text
+                 , transformers
+                 , vector

@@ -95,7 +95,7 @@ runGraph gr sm = runIdentityT
 
 evaluateTest :: Ref Node -> SymbolMap Label (Ref Edge) -> Network Label -> IO ((), Network Label)
 evaluateTest i sm gr = Session.run $ runGraph gr sm $  do
-    Right r <-  runExceptT $   NodeRunner.runNode i
+    Just r <- NodeRunner.runNode def i
     putStrLn "RESULT IS:"
     print (Session.unsafeCast r :: Int)
 
@@ -112,7 +112,7 @@ main = do
     --             --   , ("g2", g2)
     --             --   , ("g3", g3)
     --               ]
-    -- renderAndOpen [ ("g" , g)]
+    renderAndOpen [ ("g" , g)]
     pprint g
     _ <- evaluateTest i sm g
     putStrLn "end"
