@@ -118,6 +118,16 @@ data Graph node edge = Graph { _nodes :: VectorGraph node
 makeLenses ''DoubleArc
 makeLenses ''Graph
 
+ixedElems :: (Int -> b) -> VectorGraph a -> [(Ref b, a)]
+ixedElems refCons g =  fmap makeElem $ usedIxes g where
+    makeElem i = (Ref $ refCons i, index_ i g)
+
+getNodes :: Graph a b -> [(Ref Node, a)]
+getNodes = ixedElems Node . view nodes
+
+getEdges :: Graph a b -> [(Ref Edge, b)]
+getEdges = ixedElems Edge . view edges
+
 --instance Default (Graph a) where def = Graph def def
 instance Default (Graph n e) where def = Graph (alloc 100) (alloc 100)
 

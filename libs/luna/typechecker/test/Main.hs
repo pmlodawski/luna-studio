@@ -432,6 +432,26 @@ runUniqM a f = do
 --type Network = Graph (Labeled2 Int (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge)))))) DoubleArc
 retarget tgt edge = withRef edge $ target .~ tgt
 
+testGraph1 :: Network
+testGraph1 = snd $ runIdentity
+           $ flip StarBuilder.evalT Nothing
+           $ flip Builder.runT def
+           $ flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
+           $ do
+    str1 <- _string "this is in g1"
+    accessor "accessing" str1
+
+testGraph2 :: Network
+testGraph2 = snd $ runIdentity
+           $ flip StarBuilder.evalT Nothing
+           $ flip Builder.runT def
+           $ flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
+           $ do
+    str1 <- _string "this is in g2"
+    acc  <- accessor "acc2" str1
+    merge testGraph1
+
+
 main :: IO ()
 main = do
     let g  = snd tstx1
@@ -440,7 +460,7 @@ main = do
     let (_   , g3) = pass3 lmap unis g2
 
     renderAndOpen [ ("g" , g)
-                --   , ("gs", gs)
+                  , ("tg2", testGraph2)
                 --   , ("g2", g2)
                 --   , ("g3", g3)
                   ]

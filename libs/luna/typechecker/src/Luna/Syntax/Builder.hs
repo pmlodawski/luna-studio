@@ -13,6 +13,7 @@ import Prologue hiding (index)
 
 import Control.Monad.Fix
 import Data.Variants     as V
+import Control.Monad     (forM)
 
 import           Luna.Syntax.AST
 import           Luna.Syntax.AST.Arg
@@ -20,11 +21,11 @@ import           Luna.Syntax.AST.Decl
 import           Luna.Syntax.AST.Lit
 import           Luna.Syntax.AST.Term
 import           Luna.Syntax.AST.Term
+import           Luna.Syntax.AST.Typed
 import           Luna.Syntax.Builder.Star (MonadStarBuilder, StarBuilder, StarBuilderT)
 import qualified Luna.Syntax.Builder.Star as StarBuilder
 import           Luna.Syntax.Name
 import           Luna.Syntax.Repr.Graph
---import           Luna.Syntax.AST.Typed
 
 import           Luna.Syntax.Builder.Class as X (runT)
 import           Luna.Syntax.Builder.Class (BuilderMonad, modify2)
@@ -41,6 +42,7 @@ import Data.Layer.Coat
 import           Data.IntSet (IntSet)
 import qualified Data.IntSet as IntSet
 import qualified Data.Map    as Map
+import           Data.Map    (Map)
 
 --- === Graph builders ===
 
@@ -263,6 +265,20 @@ getStar2 =  do
                         return ref
 
 
+instance ( TracksSuccs (Unlayered n), Layered n
+         , Uncoated n ~ Uncoated (Destructed n), Constructor m n
+         , MonadFix m, CoatConstructor m (Destructed n), MonadStarBuilder (Maybe (Ref Node)) m, BuilderMonad (Graph n DoubleArc) m, SpecificCons Star (Uncoated n), MonadNodeBuilder (Ref Node) m
+         ) => Constructor m (Typed (Ref Edge) a) where
+    construct a = do
+        s <- getStar2
+        c <- connect s
+        return $ Typed c a
+
+instance (Monad m, BuilderMonad (Graph n DoubleArc) m, Layered n, TracksSuccs (Unlayered n)) => Destructor m (Typed (Ref Edge) a) where
+	destruct (Typed t a) = do
+		unregisterEdge t
+		return a
+
 
 
 class RegisterConnection a where
@@ -353,6 +369,33 @@ follow edge = view target <$> readRef edge
 
 unfollow :: RefReader ref f DoubleArc => Ref ref -> f (Ref Node)
 unfollow edge = view source <$> readRef edge
+
+merge :: (Coated n, Uncoated n ~ (Draft (Ref Edge)), Builder.BuilderMonad (Graph n DoubleArc) m, TracksSuccs n, HasType n (Ref Edge)) => Graph n DoubleArc -> m (Map (Ref Node) (Ref Node))
+merge g = do
+    let ns = getNodes g
+
+    newNodeRefs <- forM ns $ \(_, n) -> do
+        fmap (Ref . Node) $ modify2 . nodes $ swap . ixed add n
+
+    let nodeTrans = Map.fromList $ zip (fst <$> ns) newNodeRefs
+        translateNode i = Map.findWithDefault (Ref $ Node 0) i nodeTrans
+        es = getEdges g & over (mapped._2.source) translateNode
+                        & over (mapped._2.target) translateNode
+
+    newEdgeRefs <- forM es $ \(_, e) -> do
+        fmap (Ref . Edge) $ modify2 . edges $ swap . ixed add e
+
+    let edgeTrans = Map.fromList $ zip (fst <$> es) newEdgeRefs
+        translateEdge i = Map.findWithDefault (Ref $ Edge 0) i edgeTrans
+
+    forM newNodeRefs $ \ref -> do
+        node <- readRef ref
+        let fixedNode = node & over (coated . mapped) translateEdge
+                             & succs %~ IntSet.map (deref . translateEdge . Ref . Edge)
+                             & tp %~ translateEdge
+        writeRef ref fixedNode
+
+    return nodeTrans
 
 --string :: LayeredASTCons Lit m t => String -> m (Mu t)
 --string = layeredASTCons . String . fromString
