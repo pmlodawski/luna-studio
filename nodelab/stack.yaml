@@ -1,6 +1,6 @@
 resolver:
-  name: nbo-gui-20151022
-  location: https://bitbucket.org/NewByteOrder/stack-snapshots/raw/master/nbo-gui-20151022.yaml
+  name: nbo-gui-20160122
+  location: https://bitbucket.org/NewByteOrder/stack-snapshots/raw/master/nbo-gui-20160122.yaml
 compiler-check: match-exact
 setup-info:
   ghcjs:
@@ -25,14 +25,3 @@ packages:
       git: https://github.com/wdanilo/container.git
       commit: cd137cdfa6059cc267aa865d78bbbf0a17a4c657
     extra-dep: true
-extra-deps:
-  - data-repr-1.0
-  - ghcjs-dom-0.2.3.0
-  - data-layer-1.0.3
-  - functor-utils-1.0
-  - lens-utils-1.0
-  - string-qq-0.0.2
-  - tuple-0.3.0.2
-  - typelevel-1.0.2
-  - OneTuple-0.2.1
-  - data-construction-1.0
