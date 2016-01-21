@@ -122,11 +122,11 @@ ixedElems :: (Int -> b) -> VectorGraph a -> [(Ref b, a)]
 ixedElems refCons g =  fmap makeElem $ usedIxes g where
     makeElem i = (Ref $ refCons i, index_ i g)
 
-getNodes :: Graph a b -> [(Ref Node, a)]
-getNodes = ixedElems Node . view nodes
+getIndexedNodes :: Graph a b -> [(Ref Node, a)]
+getIndexedNodes = ixedElems Node . view nodes
 
-getEdges :: Graph a b -> [(Ref Edge, b)]
-getEdges = ixedElems Edge . view edges
+getIndexedEdges :: Graph a b -> [(Ref Edge, b)]
+getIndexedEdges = ixedElems Edge . view edges
 
 --instance Default (Graph a) where def = Graph def def
 instance Default (Graph n e) where def = Graph (alloc 100) (alloc 100)

@@ -14,6 +14,7 @@ import Prologue hiding (index)
 import Control.Monad.Fix
 import Data.Variants     as V
 import Control.Monad     (forM)
+import Data.Maybe        (fromJust)
 
 import           Luna.Syntax.AST
 import           Luna.Syntax.AST.Arg
@@ -372,28 +373,37 @@ unfollow edge = view source <$> readRef edge
 
 merge :: (Coated n, Uncoated n ~ (Draft (Ref Edge)), Builder.BuilderMonad (Graph n DoubleArc) m, TracksSuccs n, HasType n (Ref Edge)) => Graph n DoubleArc -> m (Map (Ref Node) (Ref Node))
 merge g = do
-    let ns = getNodes g
+    let ns = getIndexedNodes g
 
     newNodeRefs <- forM ns $ \(_, n) -> do
         fmap (Ref . Node) $ modify2 . nodes $ swap . ixed add n
 
     let nodeTrans = Map.fromList $ zip (fst <$> ns) newNodeRefs
-        translateNode i = Map.findWithDefault (Ref $ Node 0) i nodeTrans
-        es = getEdges g & over (mapped._2.source) translateNode
-                        & over (mapped._2.target) translateNode
+        es = getIndexedEdges g & over (mapped._2.source) unsafeTranslateNode
+                               & over (mapped._2.target) unsafeTranslateNode
+            where
+            -- FIXME [MK]: use a better fromJust, that indicates my belief in
+            --             the impossibility of the Nothing case (after Wojtek
+            --             implements it). This is essentialy guaranteed by the
+            --             fact that `nodeTrans` is created using all nodes from
+            --             the original graph.
+            unsafeTranslateNode i = fromJust $ Map.lookup i nodeTrans
 
     newEdgeRefs <- forM es $ \(_, e) -> do
         fmap (Ref . Edge) $ modify2 . edges $ swap . ixed add e
 
     let edgeTrans = Map.fromList $ zip (fst <$> es) newEdgeRefs
-        translateEdge i = Map.findWithDefault (Ref $ Edge 0) i edgeTrans
 
     forM newNodeRefs $ \ref -> do
         node <- readRef ref
-        let fixedNode = node & over (coated . mapped) translateEdge
-                             & succs %~ IntSet.map (deref . translateEdge . Ref . Edge)
-                             & tp %~ translateEdge
-        writeRef ref fixedNode
+        let nodeWithFixedEdges = node & over (coated . mapped) unsafeTranslateEdge
+                                      & succs %~ IntSet.map (deref . unsafeTranslateEdge . Ref . Edge)
+                                      & tp    %~ unsafeTranslateEdge
+                where
+                -- The comment from a few lines above, about the impossibility of
+                -- Nothing case applies here.
+                unsafeTranslateEdge i = fromJust $ Map.lookup i edgeTrans
+        writeRef ref nodeWithFixedEdges
 
     return nodeTrans
 
