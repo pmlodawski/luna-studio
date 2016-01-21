@@ -74,7 +74,7 @@ updateConnections = do
 
     forM_ allConnections $ \widgetFile -> do
         let connectionId   = widgetFile ^. widget . ConnectionModel.connectionId
-            connection     = IntMap.lookup connectionId connectionsMap
+            connection     = Map.lookup connectionId connectionsMap
             connectionLine = (\conn -> getConnectionLine nodePositions portAngles portTypes (conn ^. Connection.src) (conn ^. Connection.dst)) <$> connection
         forM_ connectionLine $ \(posFrom, posTo, visible, color) -> do
             zoom Global.uiRegistry $ do
