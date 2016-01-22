@@ -19,6 +19,8 @@ import           Luna.Syntax.Repr.Graph     (Edge (Edge), Node, Ref (Ref))
 import qualified Luna.Syntax.Repr.Graph     as G
 import           Luna.Syntax.Symbol.Network (Network)
 import qualified Luna.Syntax.Layer.Labeled as Labeled
+import qualified Luna.Syntax.AST.Typed as Typed
+
 
 
 pre :: BuilderMonad (Network Label) m => Ref Node -> m [Ref Node]
@@ -30,6 +32,12 @@ succ :: BuilderMonad (Network Label) m => Ref Node -> m [Ref Node]
 succ ref = do
     node <- B.readRef ref
     mapM (B.unfollow . Ref . Edge) $ IntSet.toList $ node ^. G.succs
+
+up :: BuilderMonad (Network Label) m => Ref Node -> m (Ref Node)
+up ref = do
+    node <- B.readRef ref
+    B.follow $ node ^. Typed.tp
+
 
 isDirty :: Labeled.HasLabel Label s => s -> Bool
 isDirty node = node ^. label . Label.dirty
@@ -53,3 +61,4 @@ markSuccessors ref = do
         when (isRequired node) $ do
             Env.addReqNode ref
         mapM_ markSuccessors =<< succ ref
+        markSuccessors =<< up ref
