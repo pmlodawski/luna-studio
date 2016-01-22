@@ -7,6 +7,7 @@ module Luna.Diagnostic.AST where
 
 import Prologue  hiding (index)
 
+import           Data.GraphViz
 import           Data.GraphViz.Types.Canonical
 import           Data.GraphViz.Attributes.Complete   hiding (Label, Int, Star)
 import qualified Data.GraphViz.Attributes.Complete   as GV
@@ -61,6 +62,55 @@ import Data.Variants
 --          edgeStmts       = fmap mkEdge inEdges
 
 
+
+-- old Skin
+-- bgClr    = GVC.White
+-- valClr   = GVC.Green
+-- nameClr  = GVC.Blue
+-- accClr   = GVC.Black
+-- arrClr   = GVC.Black
+-- typedClr = GVC.Red
+-- anyClr   = GVC.Black
+-- fontClr  = GVC.Black
+-- labelClr = GVC.Black
+
+-- new Skin
+bgClr    = GVC.Gray15
+valClr   = GVC.Green
+nameClr  = GVC.Cyan
+accClr   = GVC.YellowGreen
+arrClr   = GVC.Orange
+typedClr = GVC.Red
+anyClr   = GVC.DeepSkyBlue
+fontClr  = GVC.Moccasin
+labelClr = GVC.AntiqueWhite
+
+fontName = "verdana"
+fontSize = 10.0
+
+
+gStyle :: [GlobalAttributes]
+gStyle = [ GraphAttrs [ RankDir FromTop
+                      , Splines SplineEdges
+                      , FontName fontName
+                      , bgColor  bgClr
+                      ]
+         , NodeAttrs  [ fontColor fontClr
+                      , FontName fontName
+                      , FontSize fontSize
+                      ]
+         , EdgeAttrs  [ fontColor labelClr
+                      , FontName fontName
+                      , FontSize fontSize
+                      ]
+         ]
+
+-- gStyle = [ GraphAttrs [RankDir FromLeft, Splines SplineEdges, FontName "courier"]
+--          , NodeAttrs  [textLabel "\\N", shape PlainText, fontColor Blue]
+--          , EdgeAttrs  [color Black, style dotted]
+--          ]
+
+
 class LabelAttrs a where
     labelAttrs :: a -> [GV.Attribute]
 
@@ -71,7 +121,7 @@ toGraphViz :: _ => Graph n DoubleArc -> DotGraph String
 toGraphViz net = DotGraph { strictGraph     = False
                           , directedGraph   = True
                           , graphID         = Nothing
-                          , graphStatements = DotStmts { attrStmts = []
+                          , graphStatements = DotStmts { attrStmts = gStyle
                                                        , subGraphs = []
                                                        , nodeStmts = nodeStmts
                                                        , edgeStmts = edgeStmts
@@ -92,8 +142,8 @@ toGraphViz net = DotGraph { strictGraph     = False
           allEdges        = drawEdge <$> elems_ edges'
 
           nodeColorAttrs a = case' (uncoat a) $ do
-                                 match $ \(Val _ :: Val (Ref Edge)) -> [GV.color GVC.Green]
-                                 match $ \ANY                       -> []
+                                 match $ \(Val _ :: Val (Ref Edge)) -> [GV.color valClr]
+                                 match $ \ANY                       -> [GV.color anyClr]
           nodeRef        i = "<node " <> show i <> ">"
 
           drawEdge (DoubleArc start end) = DotEdge (nodeRef $ deref start) (nodeRef $ deref end) []
@@ -105,7 +155,7 @@ instance GenInEdges n e a => GenInEdges n e (Labeled2 l a) where
     genInEdges g (Labeled2 _ a) = genInEdges g a
 
 instance GenInEdges n DoubleArc a => GenInEdges n DoubleArc (Typed (Ref Edge) a) where
-    genInEdges g (Typed t a) = [(tgt, [GV.color GVC.Red, GV.edgeEnds Back])] <> genInEdges g a where
+    genInEdges g (Typed t a) = [(tgt, [GV.color typedClr, GV.edgeEnds Back])] <> genInEdges g a where
         tgt = deref . view target $ index (deref t) (g ^. edges)
 
 instance GenInEdges n e a => GenInEdges n e (SuccTracking a) where
@@ -116,11 +166,12 @@ instance GenInEdges n e a => GenInEdges n e (Coat a) where
 
 instance GenInEdges n DoubleArc (Draft (Ref Edge)) where
     genInEdges g a = ($ inEdges) $ case checkName a of
-        Nothing -> id
+        Nothing -> fmap addColor
+            where addColor (idx, attrs) = (idx, GV.color arrClr : attrs)
         Just  t -> fmap addColor
             where tidx = getIdx t
-                  addColor (idx, attrs) = if idx == tidx then (idx, GV.color GVC.Blue : attrs)
-                                                         else (idx, attrs)
+                  addColor (idx, attrs) = if idx == tidx then (idx, GV.color nameClr : attrs)
+                                                         else (idx, GV.color accClr  : attrs)
         where genLabel  = GV.Label . StrLabel . fromString . show
               ins       = inputs a
               getIdx  i = deref . view target $ index (deref i) edges'
