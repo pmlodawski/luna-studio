@@ -73,19 +73,20 @@ class Button extends BaseWidget
   setIcon: (icon) ->
      @iconShader = icon
      @mesh.remove @icon if @icon
-     bgMesh = new THREE.PlaneBufferGeometry(1, 1)
-     bgMesh.applyMatrix( new THREE.Matrix4().makeTranslation(0.5, 0.5, 0.0))
+     if icon
+       bgMesh = new THREE.PlaneBufferGeometry(1, 1)
+       bgMesh.applyMatrix( new THREE.Matrix4().makeTranslation(0.5, 0.5, 0.0))
 
-     @icon = new THREE.Mesh bgMesh, new THREE.ShaderMaterial
-        uniforms:       this.uniforms
-        vertexShader:   vs
-        fragmentShader: require(icon)()
-        transparent:    true
-        blending:       THREE.NormalBlending
-        side:           THREE.DoubleSide
-        derivatives:    true
+       @icon = new THREE.Mesh bgMesh, new THREE.ShaderMaterial
+          uniforms:       this.uniforms
+          vertexShader:   vs
+          fragmentShader: require(icon)()
+          transparent:    true
+          blending:       THREE.NormalBlending
+          side:           THREE.DoubleSide
+          derivatives:    true
 
-     @mesh.add @icon
+       @mesh.add @icon
 
      @relayout()
 

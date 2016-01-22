@@ -16,11 +16,14 @@ import           GHC.Float             (double2Float)
 import           Object.Widget         ()
 import           Object.UITypes        (WidgetId)
 import qualified Object.Widget.Node    as Model
+import qualified Object.Widget.Button  as Button
+import qualified Object.Widget.Label   as Label
 import qualified Object.Widget.Port    as PortModel
-import qualified Object.Widget.Group   as GroupModel
+import qualified Object.Widget.Group   as Group
 import           Object.Widget.Number.Discrete     (DiscreteNumber(..))
 import qualified Object.Widget.Number.Discrete     as DiscreteNumber
 import qualified UI.Handlers.Number.Discrete       as DiscreteNumber
+import qualified UI.Handlers.Button                as Button
 import           Object.Widget.Number.Continuous   (ContinuousNumber(..))
 import qualified UI.Handlers.Number.Continuous     as ContinuousNumber
 
@@ -48,14 +51,14 @@ import           Data.HMap.Lazy   (HTMap)
 import qualified Data.Map.Lazy    as Map
 import           Data.Map.Lazy    (Map)
 import           UI.Handlers.Generic (triggerValueChanged, ValueChangedHandler(..))
+import           UI.Layout                        as Layout
 
 import           Empire.API.Data.Node (Node, NodeId)
 import qualified Empire.API.Data.Node as Node
-import           Empire.API.Data.Port (Port(..), PortId(..))
+import           Empire.API.Data.Port (Port(..), PortId(..), InPort(..))
 import qualified Empire.API.Data.Port as Port
 import qualified Empire.API.Data.DefaultValue as DefaultValue
 import           Empire.API.Data.PortRef (AnyPortRef(..), toAnyPortRef, InPortRef(..))
-import           Debug.Trace (trace)
 
 addNode :: Node -> Command State ()
 addNode node = do
@@ -127,7 +130,7 @@ updateNode node = do
 nodeExpandedGroup :: WidgetId -> Command UIRegistry.State WidgetId
 nodeExpandedGroup id = do
     children <- UICmd.children id
-    let isPort id = (UIRegistry.lookupTypedM id :: UIRegistry.LookupFor GroupModel.Group) >>= return . isJust
+    let isPort id = (UIRegistry.lookupTypedM id :: UIRegistry.LookupFor Group.Group) >>= return . isJust
     groups <- filterM isPort children
     return $ head groups
 
@@ -137,14 +140,32 @@ onValueChanged h = addHandler (ValueChangedHandler h) mempty
 makePortControl :: WidgetId -> NodeId -> Port -> Command UIRegistry.State ()
 makePortControl parent nodeId port = case port ^. Port.portId of
     OutPortId _ -> return ()
-    InPortId inPort -> void $ UICmd.register parent widget handlers where
-        label = show inPort
-        value = fromMaybe 0 $ port ^? Port.defaultValue . _Just . DefaultValue._Constant . DefaultValue._IntValue
-        widget = DiscreteNumber.create (Vector2 200 20) (Text.pack $ show inPort) value
-        handlers = onValueChanged $ \val _ -> do
-            workspace <- use Global.workspace
-            performIO $ BatchCmd.setDefaultValue workspace (InPortRef nodeId inPort) (DefaultValue.Constant $ DefaultValue.IntValue val)
+    InPortId inPort -> makeInPortControl parent nodeId inPort port
 
+makeInPortControl :: WidgetId -> NodeId -> InPort -> Port -> Command UIRegistry.State ()
+makeInPortControl parent nodeId inPort port = case port ^. Port.state of
+    Port.NotConnected    -> do
+        groupId <- UICmd.register parent Group.create (Layout.horizontalLayoutHandler 10)
+        let label  = Label.Label def (Vector2 140 20) (Text.pack $ show inPort)
+            button = Button.create (Vector2 50 20) ("Set")
+            handlers = addHandler (Button.ClickedHandler $ \_ -> do
+                workspace <- use Global.workspace
+                performIO $ BatchCmd.setDefaultValue workspace (InPortRef nodeId inPort) (DefaultValue.Constant $ DefaultValue.IntValue def)
+                ) mempty
+
+        UICmd.register_ groupId label def
+        UICmd.register_ groupId button handlers
+    Port.Connected       -> do
+        let widget = Label.create (Text.pack $ show inPort <> " (connected)")
+        void $ UICmd.register parent widget def
+    Port.WithDefault def -> do
+        let label = show inPort
+            value = fromMaybe 0 $ def ^? DefaultValue._Constant . DefaultValue._IntValue
+            widget = DiscreteNumber.create (Vector2 200 20) (Text.pack $ show inPort) value
+            handlers = onValueChanged $ \val _ -> do
+                workspace <- use Global.workspace
+                performIO $ BatchCmd.setDefaultValue workspace (InPortRef nodeId inPort) (DefaultValue.Constant $ DefaultValue.IntValue val)
+        void $ UICmd.register parent widget handlers
 
 updateNodeValue :: NodeId -> Int -> Command State ()
 updateNodeValue id val = inRegistry $ do
