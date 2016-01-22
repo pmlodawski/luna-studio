@@ -1,4 +1,7 @@
-module Luna.Interpreter.Interpreter where
+module Luna.Interpreter.Interpreter (
+    module Luna.Interpreter.Interpreter,
+    Env.getReqNodes,
+) where
 
 import           Development.Placeholders
 import qualified Luna.Interpreter.Dirty     as Dirty

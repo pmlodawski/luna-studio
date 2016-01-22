@@ -61,6 +61,12 @@ import Data.Variants
 --          edgeStmts       = fmap mkEdge inEdges
 
 
+class LabelAttrs a where
+    labelAttrs :: a -> [GV.Attribute]
+
+instance LabelAttrs (Labeled2 Int (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge)))))) where
+    labelAttrs = const []
+
 toGraphViz :: _ => Graph n DoubleArc -> DotGraph String
 toGraphViz net = DotGraph { strictGraph     = False
                           , directedGraph   = True
@@ -76,7 +82,7 @@ toGraphViz net = DotGraph { strictGraph     = False
           nodes'          = elems g
           nodeIds         = usedIxes g
           nodeLabels      = fmap (reprStyled HeaderOnly . uncoat) nodes'
-          labeledNode n s a = DotNode (nodeRef a) $ (GV.Label . StrLabel $ fromString s) : (nodeColorAttrs $ uncoat n)
+          labeledNode n s a = DotNode (nodeRef a) $ (GV.Label . StrLabel $ fromString s) : (nodeColorAttrs n) ++ labelAttrs n
           nodeStmts       = fmap (uncurry labeledNode) $ zip3 nodes' nodeLabels nodeIds
           nodeInEdges   n = zip3 ([0..] :: [Int]) (genInEdges net $ index n g) (repeat n)
           inEdges         = concat $ fmap nodeInEdges nodeIds
@@ -85,7 +91,7 @@ toGraphViz net = DotGraph { strictGraph     = False
 
           allEdges        = drawEdge <$> elems_ edges'
 
-          nodeColorAttrs a = case' a $ do
+          nodeColorAttrs a = case' (uncoat a) $ do
                                  match $ \(Val _ :: Val (Ref Edge)) -> [GV.color GVC.Green]
                                  match $ \ANY                       -> []
           nodeRef        i = "<node " <> show i <> ">"

@@ -20,3 +20,7 @@ clearReqNodes = withEnvM_ (return . set reqNodes def)
 
 getReqNodes :: InterpreterMonad Env m => m [Ref Node]
 getReqNodes = view reqNodes <$> get
+
+
+instance Default Env where
+    def = Env def

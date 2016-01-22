@@ -204,6 +204,7 @@ Executable tci-test
                  , graphviz >= 2999.17.0.2.2
                  , lens
                  , mtl
+                 , placeholders
                  , process
                  , prologue
                  , text
