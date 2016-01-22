@@ -48,13 +48,16 @@ instance Read OutPort where
         return (Projection v, r')
     readsPrec _ _ = []
 
-data Port = Port { _portId       :: PortId
-                 , _valueType    :: ValueType
-                 , _defaultValue :: Maybe PortDefault
+data PortState = NotConnected | Connected | WithDefault PortDefault deriving (Show, Eq, Generic)
+
+data Port = Port { _portId     :: PortId
+                 , _valueType  :: ValueType
+                 , _state      :: PortState
                  } deriving (Show, Eq, Generic)
 
 makeLenses ''Port
 instance Binary PortId
 instance Binary Port
+instance Binary PortState
 
 
