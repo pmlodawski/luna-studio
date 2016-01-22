@@ -15,7 +15,7 @@ import           Data.Layer.Coat         (uncoat, coated)
 import qualified Empire.Data.Graph       as Graph
 import           Empire.Data.Graph       (Graph)
 
-import           Empire.API.Data.Port         (InPort(..), OutPort(..), Port(..), PortId(..))
+import           Empire.API.Data.Port         (InPort(..), OutPort(..), Port(..), PortId(..), PortState(..))
 import           Empire.API.Data.ValueType    (ValueType(..))
 import           Empire.API.Data.PortRef      (InPortRef(..), OutPortRef(..))
 import           Empire.API.Data.Node         (NodeId)
@@ -60,20 +60,20 @@ buildNode' varMap nodeId = do
     let portMap = Map.fromList $ flip fmap ports $ \p@(Port id _ _) -> (id, p)
     return $ API.Node nodeId (Text.pack expr) portMap $ fromMaybe def meta
 
-getDefaultValue :: VarMap -> Ref Node -> ASTOp (Maybe PortDefault)
-getDefaultValue varMap ref
-    | Map.member ref varMap = return Nothing
+getPortState :: VarMap -> Ref Node -> ASTOp PortState
+getPortState varMap ref
+    | Map.member ref varMap = return Connected
     | otherwise             = do
         node <- Builder.readRef ref
         case' (uncoat node) $ do
             match $ \val -> case' (val :: Val (Ref Edge)) $ match $ \lit -> case lit of
-                Lit.String s -> return . Just . Constant . StringValue $ Text.unpack $ toText s
-                Lit.Int    i -> return . Just . Constant . IntValue    $ i
-            match $ \Blank -> return Nothing
-            match $ \ANY   -> Print.printExpression ref >>= return . Just . Expression
+                Lit.String s -> return . WithDefault . Constant . StringValue $ Text.unpack $ toText s
+                Lit.Int    i -> return . WithDefault . Constant . IntValue    $ i
+            match $ \Blank -> return NotConnected
+            match $ \ANY   -> Print.printExpression ref >>= return . WithDefault . Expression
 
 buildPort :: VarMap -> (PortId, Ref Node) -> ASTOp Port
-buildPort varMap (portId, ref) = Port portId (ValueType "Int") <$> getDefaultValue varMap ref
+buildPort varMap (portId, ref) = Port portId (ValueType "Int") <$> getPortState varMap ref
 
 buildPorts :: VarMap -> Ref Node -> Command Graph [Port]
 buildPorts varMap ref = zoom Graph.ast $ runASTOp $ do
@@ -81,7 +81,7 @@ buildPorts varMap ref = zoom Graph.ast $ runASTOp $ do
     args     <- getPositionalNodeRefs ref
     selfPort <- mapM (buildPort varMap) $ zip [InPortId Self] selfRef
     argPorts <- mapM (buildPort varMap) $ zip (InPortId . Arg <$> [0..]) args
-    return $ selfPort ++ argPorts ++ [Port (OutPortId All) (ValueType "Int") Nothing]
+    return $ selfPort ++ argPorts ++ [Port (OutPortId All) (ValueType "Int") NotConnected]
 
 buildConnections :: Command Graph [(OutPortRef, InPortRef)]
 buildConnections = do

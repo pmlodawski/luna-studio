@@ -48,6 +48,7 @@ instance ToJSON Port.Port
 instance ToJSON Port.InPort
 instance ToJSON Port.OutPort
 instance ToJSON Port.PortId
+instance ToJSON Port.PortState
 
 instance ToJSON ValueType.ValueType
 instance ToJSON ValueType.ValueTypeEnum
