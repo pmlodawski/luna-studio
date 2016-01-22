@@ -4,6 +4,11 @@ var release = require('config.release');
 var brunch = require('brunch');
 var config;
 
+function defaultBackend(s) {
+    var l = window.location;
+    return ((l.protocol === "https:") ? "wss://" : "ws://") + l.hostname + (((l.port != 80) && (l.port != 443)) ? ":" + l.port : "") + "/ws";
+}
+
 if (brunch.env !== "production") {
   var local = {};
   var debug = require('config.debug');
@@ -23,7 +28,7 @@ if (brunch.env !== "production") {
   if (localStorage.getItem("exportState") !== null) {
     browser.exportState = (localStorage.getItem("exportState") === "true");
   }
-  browser.backendAddress = localStorage.getItem("backendAddress") || "ws://127.0.0.1:8088";
+  browser.backendAddress = localStorage.getItem("backendAddress") || defaultBackend();
 
   config = _({}).defaults(browser, local, debug, release);
 
