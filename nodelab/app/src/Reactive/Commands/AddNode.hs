@@ -23,9 +23,16 @@ import qualified Object.Widget.Group   as Group
 import           Object.Widget.Number.Discrete     (DiscreteNumber(..))
 import qualified Object.Widget.Number.Discrete     as DiscreteNumber
 import qualified UI.Handlers.Number.Discrete       as DiscreteNumber
-import qualified UI.Handlers.Button                as Button
 import           Object.Widget.Number.Continuous   (ContinuousNumber(..))
+import qualified Object.Widget.Number.Continuous   as ContinuousNumber
 import qualified UI.Handlers.Number.Continuous     as ContinuousNumber
+import           Object.Widget.LabeledTextBox      (LabeledTextBox(..))
+import qualified Object.Widget.LabeledTextBox      as LabeledTextBox
+import qualified UI.Handlers.LabeledTextBox        as LabeledTextBox
+import           Object.Widget.Toggle              (Toggle(..))
+import qualified Object.Widget.Toggle              as Toggle
+import qualified UI.Handlers.Toggle                as Toggle
+import qualified UI.Handlers.Button                as Button
 
 import qualified Reactive.State.Global         as Global
 import           Reactive.State.Global         (State, inRegistry)
@@ -58,6 +65,8 @@ import qualified Empire.API.Data.Node as Node
 import           Empire.API.Data.Port (Port(..), PortId(..), InPort(..))
 import qualified Empire.API.Data.Port as Port
 import qualified Empire.API.Data.DefaultValue as DefaultValue
+import           Empire.API.Data.ValueType (ValueType(..))
+import qualified Empire.API.Data.ValueType as ValueType
 import           Empire.API.Data.PortRef (AnyPortRef(..), toAnyPortRef, InPortRef(..))
 
 addNode :: Node -> Command State ()
@@ -158,14 +167,42 @@ makeInPortControl parent nodeId inPort port = case port ^. Port.state of
     Port.Connected       -> do
         let widget = Label.create (Text.pack $ show inPort <> " (connected)")
         void $ UICmd.register parent widget def
-    Port.WithDefault def -> do
-        let label = show inPort
-            value = fromMaybe 0 $ def ^? DefaultValue._Constant . DefaultValue._IntValue
-            widget = DiscreteNumber.create (Vector2 200 20) (Text.pack $ show inPort) value
-            handlers = onValueChanged $ \val _ -> do
-                workspace <- use Global.workspace
-                performIO $ BatchCmd.setDefaultValue workspace (InPortRef nodeId inPort) (DefaultValue.Constant $ DefaultValue.IntValue val)
-        void $ UICmd.register parent widget handlers
+    Port.WithDefault def -> void $ case port ^. Port.valueType . ValueType.toEnum of
+        ValueType.DiscreteNumber -> do
+            let label = show inPort
+                value = fromMaybe 0 $ def ^? DefaultValue._Constant . DefaultValue._IntValue
+                widget = DiscreteNumber.create (Vector2 200 20) (Text.pack $ show inPort) value
+                handlers = onValueChanged $ \val _ -> do
+                    workspace <- use Global.workspace
+                    performIO $ BatchCmd.setDefaultValue workspace (InPortRef nodeId inPort) (DefaultValue.Constant $ DefaultValue.IntValue val)
+            UICmd.register parent widget handlers
+        ValueType.ContinuousNumber -> do
+            let label = show inPort
+                value = fromMaybe 0.0 $ def ^? DefaultValue._Constant . DefaultValue._DoubleValue
+                widget = ContinuousNumber.create (Vector2 200 20) (Text.pack $ show inPort) value
+                handlers = onValueChanged $ \val _ -> do
+                    workspace <- use Global.workspace
+                    performIO $ BatchCmd.setDefaultValue workspace (InPortRef nodeId inPort) (DefaultValue.Constant $ DefaultValue.DoubleValue val)
+            UICmd.register parent widget handlers
+        ValueType.String -> do
+            let label = show inPort
+                value = fromMaybe "" $ def ^? DefaultValue._Constant . DefaultValue._StringValue
+                widget = LabeledTextBox.create (Vector2 200 20) (Text.pack $ show inPort) (Text.pack $ value)
+                handlers = onValueChanged $ \val _ -> do
+                    workspace <- use Global.workspace
+                    performIO $ BatchCmd.setDefaultValue workspace (InPortRef nodeId inPort) (DefaultValue.Constant $ DefaultValue.StringValue $ Text.unpack val)
+            UICmd.register parent widget handlers
+        ValueType.Bool -> do
+            let label = show inPort
+                value = fromMaybe True $ def ^? DefaultValue._Constant . DefaultValue._BoolValue
+                widget = Toggle.create (Vector2 200 20) (Text.pack $ show inPort) value
+                handlers = onValueChanged $ \val _ -> do
+                    workspace <- use Global.workspace
+                    performIO $ BatchCmd.setDefaultValue workspace (InPortRef nodeId inPort) (DefaultValue.Constant $ DefaultValue.BoolValue val)
+            UICmd.register parent widget handlers
+        ValueType.Other -> do
+            let widget = Label.create (Text.pack $ show inPort <> " :: " <> (show $ port ^. Port.valueType) )
+            UICmd.register parent widget mempty
 
 updateNodeValue :: NodeId -> Int -> Command State ()
 updateNodeValue id val = inRegistry $ do

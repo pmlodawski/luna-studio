@@ -4,6 +4,8 @@ import Prologue
 import Data.Binary   (Binary)
 
 data Value = IntValue    Int
+           | DoubleValue Double
+           | BoolValue   Bool
            | StringValue String
            deriving (Generic, Show, Eq)
 

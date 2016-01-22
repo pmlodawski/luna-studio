@@ -15,8 +15,8 @@ data ValueTypeEnum = DiscreteNumber
 instance Binary ValueType
 instance Binary ValueTypeEnum
 
-toEnum :: ValueType -> ValueTypeEnum
-toEnum (ValueType name) = case name of
+toEnum' :: ValueType -> ValueTypeEnum
+toEnum' (ValueType name) = case name of
   "Int"    -> DiscreteNumber
   "Long"   -> DiscreteNumber
   "Float"  -> ContinuousNumber
@@ -25,3 +25,5 @@ toEnum (ValueType name) = case name of
   "Bool"   -> Bool
   _        -> Other
 
+toEnum :: Getter ValueType ValueTypeEnum
+toEnum = to toEnum'
