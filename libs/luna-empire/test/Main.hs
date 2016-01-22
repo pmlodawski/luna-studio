@@ -1,28 +1,35 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE FlexibleInstances    #-}
+{-# LANGUAGE OverloadedStrings    #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 
 module Main where
 
-import           Prologue
-import qualified Luna.Syntax.Builder.Star     as StarBuilder
-import qualified Luna.Syntax.Builder.Node     as NodeBuilder
-import qualified Luna.Syntax.Builder          as Builder
-import           Luna.Syntax.Layer.Labeled    (label)
-import           Luna.Syntax.Builder
-import           Luna.Syntax.Repr.Graph
-import           Luna.Diagnostic.AST          (toGraphViz, render)
-import           Empire.Data.AST
-import           Empire.Data.Graph
-import           Empire.Data.Library
-import           Empire.API.Data.Port
-import           Empire.API.Data.PortRef      (InPortRef(..), OutPortRef(..))
-import           Empire.API.Data.DefaultValue (PortDefault(..), Value(..))
-import           Empire.API.Data.NodeMeta
+import           Empire.API.Data.DefaultValue (PortDefault (..), Value (..))
 import           Empire.API.Data.Node
-import           Empire.Empire
-import           Empire.Commands.Project
-import           Empire.Commands.Library
+import           Empire.API.Data.NodeMeta
+import           Empire.API.Data.Port
+import           Empire.API.Data.PortRef      (InPortRef (..), OutPortRef (..))
 import           Empire.Commands.AST
 import           Empire.Commands.Graph        as Graph
+import           Empire.Commands.Library
+import           Empire.Commands.Project
+import           Empire.Data.AST
+import           Empire.Data.AST              (ASTNode)
+import           Empire.Data.Graph
+import           Empire.Data.Library
+import           Empire.Empire
+import           Luna.Diagnostic.AST          (LabelAttrs (..), render, toGraphViz)
+import           Luna.Syntax.Builder
+import qualified Luna.Syntax.Builder          as Builder
+import qualified Luna.Syntax.Builder.Node     as NodeBuilder
+import qualified Luna.Syntax.Builder.Star     as StarBuilder
+import           Luna.Syntax.Layer.Labeled    (label)
+import           Luna.Syntax.Repr.Graph
+import           Prologue
+
+
+
+instance LabelAttrs ASTNode where labelAttrs = const []
 
 test :: Empire AST
 test = do
