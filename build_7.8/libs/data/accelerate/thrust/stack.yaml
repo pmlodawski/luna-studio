@@ -1,7 +1,0 @@
-packages:
-- ../../../../../libs/data/accelerate/thrust
-- ../../../../../third-party/accelerate
-- ../../../../../third-party/accelerate-cuda
-- ../../../../../third-party/mainland-pretty
-resolver: lts-2.18
-

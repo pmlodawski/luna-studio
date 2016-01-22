@@ -1,9 +1,0 @@
-packages:
-- ../../../libs/task-queue
-- ../../../libs/utils
-- ../../../third-party/fgl
-extra-deps:
-- protocol-buffers-2.1.3
-- psqueues-0.2.0.2
-resolver: lts-2.18
-

@@ -1,4 +1,0 @@
-packages:
-- ../../../libs/num-conversion
-resolver: lts-2.18
-
