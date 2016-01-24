@@ -36,7 +36,7 @@ publish:
     email: $$DOCKERHUB_EMAIL
     auth:  $$DOCKERHUB_AUTH
     repo: kfigiela/nodelab
-    tag: $$DRONE_BRANCH
+    tag: $$BRANCH
     file: Dockerfile
     insecure: false
     storage_driver: aufs
