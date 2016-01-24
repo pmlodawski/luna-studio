@@ -1,7 +1,9 @@
-**/.stack-work
+build_7.10
+!build_7.10/.bin
+nodelab
+!nodelab/www
 dist
 docs
-env
 get-stack.sh
 init_repo.py
 libs
