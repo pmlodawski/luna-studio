@@ -71,8 +71,12 @@ sampleGraph = runIdentity
       $ flip Builder.runT def
       $ flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
       $ do
-            nameInt  <- _string "Int"
-            consInt  <- cons nameInt
+            -- nameString <- _string "String"
+            -- consString <- cons nameString
+            nameInt    <- _string "Int"
+            consInt    <- cons nameInt
+            -- s1 <- _string "abc" `typed` consString
+            -- s2 <- _string "def"
             i2 <- _int 2
             i3 <- _int 3
             i4 <- _int 4 `typed` consInt
@@ -83,7 +87,7 @@ sampleGraph = runIdentity
 
             let sm = def
 
-            return (consInt, sm)
+            return (i3, sm)
 
 runGraph gr sm = runIdentityT
             . flip SymbolBuilder.evalT sm
@@ -109,7 +113,7 @@ main = do
     let ((i, sm), g) = sampleGraph
     ((), g')<- literalsTest i sm g
     -- pprint g'
-    renderAndOpen [ ("g" , g)]
+    renderAndOpen [ ("g" , g')]
     putStrLn "end"
 
 matchArrow arr = case' arr $ match $ \a@(Arrow {}) -> a

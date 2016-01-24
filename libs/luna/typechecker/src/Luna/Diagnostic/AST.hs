@@ -17,27 +17,28 @@ import           Data.GraphViz.Commands
 import qualified Data.GraphViz.Attributes.Colors     as GVC
 import qualified Data.GraphViz.Attributes.Colors.X11 as GVC
 import           Data.GraphViz.Printing              (PrintDot)
-import           Luna.Repr.Styles (HeaderOnly(..), Simple(..))
+import           Luna.Repr.Styles                    (HeaderOnly(..), Simple(..))
 
-import Data.Cata
-import Data.Container
-import Data.Container.Hetero
+import           Data.Cata
+import           Data.Container
+import           Data.Container.Hetero
 
-import Luna.Syntax.AST.Term
-import Luna.Syntax.Repr.Graph
-import Luna.Syntax.AST
-import Luna.Syntax.AST.Typed
-import Luna.Syntax.Name
-import Luna.Syntax.Layer.Labeled
+import           Luna.Syntax.AST.Term
+import           Luna.Syntax.Repr.Graph
+import           Luna.Syntax.AST
+import           Luna.Syntax.AST.Typed
+import qualified Luna.Syntax.AST.Lit                  as Lit
+import           Luna.Syntax.Name
+import           Luna.Syntax.Layer.Labeled
 
-import System.Platform
-import System.Process (createProcess, shell)
-import Data.Container.Class
-import Data.Reprx
+import           System.Platform
+import           System.Process                       (createProcess, shell)
+import           Data.Container.Class
+import           Data.Reprx
 
-import Data.Layer.Coat
+import           Data.Layer.Coat
 
-import Data.Variants
+import           Data.Variants
 
 
 --toGraphViz :: _ => HomoGraph ArcPtr a -> DotGraph Int
@@ -64,28 +65,37 @@ import Data.Variants
 
 
 -- old Skin
--- bgClr    = GVC.White
--- valClr   = GVC.Green
--- nameClr  = GVC.Blue
--- accClr   = GVC.Black
--- arrClr   = GVC.Black
--- typedClr = GVC.Red
--- anyClr   = GVC.Black
--- fontClr  = GVC.Black
--- labelClr = GVC.Black
+-- bgClr         = GVC.White
+
+-- typedArrClr   = GVC.Red
+-- namedArrClr   = GVC.Blue
+-- accArrClr     = GVC.Black
+-- arrClr        = GVC.Black
+
+-- nodeClr       = GVC.Black
+-- valIntNodeClr = GVC.Green
+-- valStrNodeClr = GVC.Green
+
+-- nodeLabelClr  = GVC.Black
+-- edgeLabelClr  = GVC.Black
 
 -- new Skin
-bgClr    = GVC.Gray15
-valClr   = GVC.Green
-nameClr  = GVC.Cyan
-accClr   = GVC.YellowGreen
-arrClr   = GVC.Orange
-typedClr = GVC.Red
-anyClr   = GVC.DeepSkyBlue
-fontClr  = GVC.Moccasin
-labelClr = GVC.AntiqueWhite
+bgClr        = GVC.Gray15
 
-fontName = "verdana"
+typedArrClr  = GVC.Firebrick
+namedArrClr  = GVC.DarkTurquoise
+accArrClr    = GVC.YellowGreen
+arrClr       = GVC.Orange
+
+nodeClr       = GVC.DeepSkyBlue
+valIntNodeClr = GVC.Green
+valStrNodeClr = GVC.Blue
+valNodeClr    = GVC.Red
+
+nodeLabelClr = GVC.Gray85
+edgeLabelClr = GVC.Gray40
+
+fontName = "arial"
 fontSize = 10.0
 
 
@@ -95,11 +105,11 @@ gStyle = [ GraphAttrs [ RankDir FromTop
                       , FontName fontName
                       , bgColor  bgClr
                       ]
-         , NodeAttrs  [ fontColor fontClr
+         , NodeAttrs  [ fontColor nodeLabelClr
                       , FontName fontName
                       , FontSize fontSize
                       ]
-         , EdgeAttrs  [ fontColor labelClr
+         , EdgeAttrs  [ fontColor edgeLabelClr
                       , FontName fontName
                       , FontSize fontSize
                       ]
@@ -142,8 +152,12 @@ toGraphViz net = DotGraph { strictGraph     = False
           allEdges        = drawEdge <$> elems_ edges'
 
           nodeColorAttrs a = case' (uncoat a) $ do
-                                 match $ \(Val _ :: Val (Ref Edge)) -> [GV.color valClr]
-                                 match $ \ANY                       -> [GV.color anyClr]
+                                 match $ \(Val val :: Val (Ref Edge)) -> do
+                                    case' val $ do
+                                        match $ \(Lit.Int    _) -> [GV.color valIntNodeClr]
+                                        match $ \(Lit.String _) -> [GV.color valStrNodeClr]
+                                        match $ \ANY            -> [GV.color valNodeClr]
+                                 match $ \ANY                   -> [GV.color nodeClr]
           nodeRef        i = "<node " <> show i <> ">"
 
           drawEdge (DoubleArc start end) = DotEdge (nodeRef $ deref start) (nodeRef $ deref end) []
@@ -155,7 +169,7 @@ instance GenInEdges n e a => GenInEdges n e (Labeled2 l a) where
     genInEdges g (Labeled2 _ a) = genInEdges g a
 
 instance GenInEdges n DoubleArc a => GenInEdges n DoubleArc (Typed (Ref Edge) a) where
-    genInEdges g (Typed t a) = [(tgt, [GV.color typedClr, GV.edgeEnds Back])] <> genInEdges g a where
+    genInEdges g (Typed t a) = [(tgt, [GV.color typedArrClr, GV.edgeEnds Back])] <> genInEdges g a where
         tgt = deref . view target $ index (deref t) (g ^. edges)
 
 instance GenInEdges n e a => GenInEdges n e (SuccTracking a) where
@@ -170,8 +184,8 @@ instance GenInEdges n DoubleArc (Draft (Ref Edge)) where
             where addColor (idx, attrs) = (idx, GV.color arrClr : attrs)
         Just  t -> fmap addColor
             where tidx = getIdx t
-                  addColor (idx, attrs) = if idx == tidx then (idx, GV.color nameClr : attrs)
-                                                         else (idx, GV.color accClr  : attrs)
+                  addColor (idx, attrs) = if idx == tidx then (idx, GV.color namedArrClr : attrs)
+                                                         else (idx, GV.color accArrClr   : attrs)
         where genLabel  = GV.Label . StrLabel . fromString . show
               ins       = inputs a
               getIdx  i = deref . view target $ index (deref i) edges'
