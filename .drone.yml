@@ -33,8 +33,9 @@ notify:
 
 publish:
   docker:
+    username:  $$DOCKERHUB_USER
+    password:  $$DOCKERHUB_PASS
     email: $$DOCKERHUB_EMAIL
-    auth:  $$DOCKERHUB_AUTH
     repo: kfigiela/nodelab
     tag: $$BRANCH
     file: Dockerfile
