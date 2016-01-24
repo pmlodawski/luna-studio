@@ -1,4 +1,4 @@
-FROM cd.newbyteorder.com:5000/nodelab-env:latest
+FROM kfigiela/nodelab-env:latest
 MAINTAINER kamil.figiela@gmail.com
 
 COPY build_7.10/.bin /usr/local/bin/nodelab

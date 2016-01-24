@@ -30,3 +30,13 @@ notify:
   webhook:
     urls:
       - http://yc.nodelab.io/builds/L3EmGzBpajHukZ7cjnZzvk7aqIKJI30bzp0vgOLY4NShPTSojgvPs88APCG3mPa3
+
+publish:
+  docker:
+    email: $$DOCKERHUB_EMAIL
+    auth:  $$DOCKERHUB_AUTH
+    repo: kfigiela/nodelab
+    tag: $$DRONE_BRANCH
+    file: Dockerfile
+    insecure: false
+    storage_driver: aufs
