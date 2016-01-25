@@ -31,6 +31,8 @@ import           Empire.API.Graph.GetProgram       as GetProgram
 import           Empire.API.Graph.SetDefaultValue  as SetDefaultValue
 import           Empire.API.Library.CreateLibrary  as CreateLibrary
 import           Empire.API.Library.ListLibraries  as ListLibraries
+import           Empire.API.Project.CreateProject  as CreateProject
+import           Empire.API.Project.ListProjects   as ListProjects
 
 instance ToJSON Project.Project
 instance ToJSON Library.Library
@@ -90,6 +92,12 @@ instance ToJSON CreateLibrary.Result
 
 instance ToJSON ListLibraries.Request
 instance ToJSON ListLibraries.Status
+
+instance ToJSON CreateProject.Request
+instance ToJSON CreateProject.Result
+
+instance ToJSON ListProjects.Request
+instance ToJSON ListProjects.Status
 
 instance (ToJSON req, ToJSON res) => ToJSON (Update.Update req res)
 instance ToJSON Update.ResultOk
