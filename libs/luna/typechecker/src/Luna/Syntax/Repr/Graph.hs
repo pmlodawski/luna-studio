@@ -28,8 +28,6 @@ import qualified Control.Monad.State as State
 --import System.Mem.Weak
 
 import Data.Layer.Coat
-import Luna.Syntax.AST.Decl
-
 
 import           Data.IntSet (IntSet)
 import qualified Data.IntSet as IntSet

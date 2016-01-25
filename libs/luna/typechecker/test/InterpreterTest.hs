@@ -64,7 +64,7 @@ instance LabelAttrs (Labeled2 Label (Typed (Ref Edge) (SuccTracking (Coat (Draft
 -- ====================================
 
 
-sampleGraph :: ((Ref Node, SymbolMap Label (Ref Edge)), Network Label)
+sampleGraph :: ((Ref Node, SymbolMap (Network Label)), Network Label)
 sampleGraph = runIdentity
       $ flip StarBuilder.evalT Nothing
       $ flip Builder.runT def
@@ -89,15 +89,15 @@ sampleGraph = runIdentity
             arr4      <- readRef =<< arrow [consFloat, consInt' ] Map.empty consInt'
             arr5      <- readRef =<< arrow [consFloat, consFloat] Map.empty consInt'
 
-            let mkItem arr = Symbol.PartiallySpecializedNetwork def $ Map.fromList $ map (\a -> (Symbol.fromArrow' $ matchArrow $ (uncoat a), def)) arr
-            let sm = Map.fromList $ [("Int.+", mkItem ([arr1, arr2, arr3, arr4, arr5] ))]
+            {-let mkItem arr = Symbol.PartiallySpecializedNetwork def $ Map.fromList $ map (\a -> (Symbol.fromArrow' $ matchArrow $ (uncoat a), def)) arr-}
+            {-let sm = Map.fromList $ [("Int.+", mkItem ([arr1, arr2, arr3, arr4, arr5] ))]-}
 
-            return (i3, sm)
+            return (i3, Map.empty)
             -- return (appPlus, sm)
 
 
-mkSymbolMap :: Arrow t -> SymbolMap Label t
-mkSymbolMap arr = Map.fromList [("Int.+", Symbol.PartiallySpecializedNetwork def $ Map.singleton (Symbol.fromArrow' arr) def )]
+{-mkSymbolMap :: Arrow t -> SymbolMap Label t-}
+{-mkSymbolMap arr = Map.fromList [("Int.+", Symbol.PartiallySpecializedNetwork def $ Map.singleton (Symbol.fromArrow' arr) def )]-}
 
 
 
@@ -108,14 +108,14 @@ runGraph gr sm = runIdentityT
             . flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
 
 
-evaluateTest :: Ref Node -> SymbolMap Label (Ref Edge) -> Network Label -> IO ((), Network Label)
+evaluateTest :: Ref Node -> SymbolMap (Network Label) -> Network Label -> IO ((), Network Label)
 evaluateTest i sm gr = Session.run $ runGraph gr sm $  do
     Just r <- NodeRunner.runNode def i
     putStrLn "RESULT IS:"
     print (Session.unsafeCast r :: Int)
 
 
-dirtyTest :: Ref Node -> SymbolMap Label (Ref Edge) -> Network Label -> IO ((), Network Label)
+dirtyTest :: Ref Node -> SymbolMap (Network Label) -> Network Label -> IO ((), Network Label)
 dirtyTest i sm gr = flip InterpreterMonad.evalT def $  runGraph gr sm $ do
     Interpreter.markModified i
     print =<< Interpreter.getReqNodes

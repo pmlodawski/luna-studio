@@ -67,7 +67,7 @@ instance LabelAttrs (Labeled2 Label (Typed (Ref Edge) (SuccTracking (Coat (Draft
 -- ====================================
 
 
-sampleGraph :: ((Ref Node, SymbolMap Label (Ref Edge), Ref Node, Ref Node), Network Label)
+sampleGraph :: ((Ref Node, SymbolMap (Network Label), Ref Node, Ref Node), Network Label)
 sampleGraph = runIdentity
       $ flip StarBuilder.evalT Nothing
       $ flip Builder.runT def
@@ -122,13 +122,13 @@ runGraph gr sm = runIdentityT
             . flip Builder.runT gr
             . flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
 
-evaluateTest :: Ref Node -> SymbolMap Label (Ref Edge) -> Network Label -> IO ((), Network Label)
+evaluateTest :: Ref Node -> SymbolMap (Network Label) -> Network Label -> IO ((), Network Label)
 evaluateTest i sm gr = Session.run $ runGraph gr sm $  do
     Just r <- NodeRunner.runNode def i
     putStrLn "RESULT IS:"
     print (Session.unsafeCast r :: Int)
 
-literalsTest :: Ref Node -> Ref Node -> Ref Node -> SymbolMap Label (Ref Edge) -> Network Label -> IO ((), Network Label)
+literalsTest :: Ref Node -> Ref Node -> Ref Node -> SymbolMap (Network Label) -> Network Label -> IO ((), Network Label)
 literalsTest consIntTpe consStringTpe i sm gr = runGraph gr sm $ do
     Literals.assignLiteralTypesWithTypes consIntTpe consStringTpe i
     return ()

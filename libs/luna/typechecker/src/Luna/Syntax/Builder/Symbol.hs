@@ -84,20 +84,20 @@ modify_ = modify . fmap (,())
 
 -- <-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<
 
-withGraph :: MonadSymbolBuilder g m => (g -> (g, a)) -> m a
-withGraph = withGraphM . fmap return
+withSymbols :: MonadSymbolBuilder g m => (g -> (g, a)) -> m a
+withSymbols = withSymbolsM . fmap return
 
-withGraph' :: MonadSymbolBuilder g m => (g -> (a, g)) -> m a
-withGraph' = withGraphM . fmap (return . switch')
+withSymbols' :: MonadSymbolBuilder g m => (g -> (a, g)) -> m a
+withSymbols' = withSymbolsM . fmap (return . switch')
 
-withGraph_ :: MonadSymbolBuilder g m => (g -> g) -> m ()
-withGraph_ = withGraph . fmap (,())
+withSymbols_ :: MonadSymbolBuilder g m => (g -> g) -> m ()
+withSymbols_ = withSymbols . fmap (,())
 
-withGraphM :: MonadSymbolBuilder g m => (g -> m (g, a)) -> m a
-withGraphM = modifyM
+withSymbolsM :: MonadSymbolBuilder g m => (g -> m (g, a)) -> m a
+withSymbolsM = modifyM
 
-withGraphM_ :: MonadSymbolBuilder g m => (g -> m g) -> m ()
-withGraphM_ = withGraphM . (fmap . fmap) (,())
+withSymbolsM_ :: MonadSymbolBuilder g m => (g -> m g) -> m ()
+withSymbolsM_ = withSymbolsM . (fmap . fmap) (,())
 
 runSymbolT  :: Functor m => SymbolT g m a -> g -> m (a, g)
 execSymbolT :: Monad   m => SymbolT g m a -> g -> m g
