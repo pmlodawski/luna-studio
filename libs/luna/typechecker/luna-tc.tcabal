@@ -84,6 +84,9 @@ Library
                  , typelevel
                  , variants
                  , vector
+                 , data-result
+                 , split
+                 , dependent-state
 
 
 
@@ -118,6 +121,7 @@ Executable tc-test
                   StandaloneDeriving
                   TemplateHaskell
                   TupleSections
+                  TypeFamilies
                   TypeOperators
                   ViewPatterns
 
@@ -158,3 +162,4 @@ Executable tc-test
                  , vector
                  , data-result
                  , split
+                 , dependent-state

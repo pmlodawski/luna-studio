@@ -2,26 +2,26 @@
 {-# LANGUAGE TypeFamilies         #-}
 {-# LANGUAGE UndecidableInstances #-}
 
-module Luna.Syntax.Symbol.Map where
+module Luna.Lib.Symbol.Map where
 
 import Prologue
 
-import           Control.Error.Operator
-import           Control.Monad.Extra         (allM, findM)
---import           Data.Layer.Coat
-import qualified Data.List                   as List
-import           Data.Map                    (Map)
-import qualified Data.Map                    as Map
-import           Luna.Syntax.AST.Arg         (NamedArg (NamedArg))
-import           Luna.Syntax.AST.Arg         (Arg (Arg))
---import           Luna.Syntax.AST.Term        (Arrow (Arrow))
---import           Luna.Syntax.Builder         (RefReader, follow, readRef)
-import           Luna.Syntax.Builder.Class   (BuilderMonad)
-import qualified Luna.Syntax.Builder.Symbol  as SymbolBuilder
-import           Luna.Syntax.Name
-import           Luna.Syntax.Repr.Graph      (Edge, Ref)
---import           Luna.Syntax.Symbol.Network  (Network)
-import           Luna.Syntax.Symbol.QualPath (QualPath)
+--import           Control.Error.Operator
+--import           Control.Monad.Extra         (allM, findM)
+----import           Data.Layer.Coat
+--import qualified Data.List                   as List
+--import           Data.Map                    (Map)
+--import qualified Data.Map                    as Map
+--import           Luna.Syntax.AST.Arg         (NamedArg (NamedArg))
+--import           Luna.Syntax.AST.Arg         (Arg (Arg))
+----import           Luna.Syntax.AST.Term        (Arrow (Arrow))
+----import           Luna.Syntax.Builder         (RefReader, follow, readRef)
+--import           Luna.Syntax.Builder.Class   (BuilderMonad)
+--import qualified Luna.Syntax.Builder.Symbol  as SymbolBuilder
+--import           Luna.Syntax.Name
+--import           Luna.Syntax.Repr.Graph      (Edge, Ref)
+----import           Luna.Syntax.Symbol.Network  (Network)
+--import           Luna.Syntax.Symbol.QualPath (QualPath)
 
 
 

@@ -23,6 +23,7 @@ packages:
     - /Users/wdanilo/work/hs/libs/data-base
     - /Users/wdanilo/work/hs/libs/data-result
     - /Users/wdanilo/work/hs/libs/data-tagged
+    - /Users/wdanilo/work/hs/libs/dependent-state
 
 extra-deps:
     - ghc-session-0.1.2.0

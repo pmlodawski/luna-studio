@@ -2,12 +2,13 @@
 {-# LANGUAGE TypeFamilies           #-}
 {-# LANGUAGE UndecidableInstances   #-}
 
-module Luna.Syntax.Layer.Labeled where
+module Luna.Syntax.Model.Layer.Labeled where
 
 import Data.Construction
 --import Data.Variants
 import Luna.Syntax.AST
 import Prologue
+
 
 
 data Labeled l a t = Labeled l (a t)

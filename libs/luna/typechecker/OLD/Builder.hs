@@ -7,51 +7,51 @@
 {-# LANGUAGE TypeFamilies              #-}
 {-# LANGUAGE UndecidableInstances      #-}
 
-module Luna.Syntax.Builder ( module Luna.Syntax.Builder, module X) where
+module Luna.Syntax.Builder ( module Luna.Syntax.Builder) where -- , module X) where
 
 import Prologue hiding (index, Ixed)
 
-import Control.Monad.Fix
+--import Control.Monad.Fix
 --import Data.Variants     as V
 
-import           Luna.Syntax.AST
-import           Luna.Syntax.AST.Arg
-import           Luna.Syntax.AST.Decl
---import           Luna.Syntax.AST.Term
---import           Luna.Syntax.AST.Term
-import           Luna.Syntax.Builder.Star (MonadStarBuilder, StarBuilder, StarBuilderT)
-import qualified Luna.Syntax.Builder.Star as StarBuilder
-import           Luna.Syntax.Name
-import           Luna.Syntax.Repr.Graph
---import           Luna.Syntax.AST.Typed  
+--import           Luna.Syntax.AST
+--import           Luna.Syntax.AST.Arg
+--import           Luna.Syntax.AST.Decl
+----import           Luna.Syntax.AST.Term
+----import           Luna.Syntax.AST.Term
+--import           Luna.Syntax.Builder.Star (MonadStarBuilder, StarBuilder, StarBuilderT)
+--import qualified Luna.Syntax.Builder.Star as StarBuilder
+--import           Luna.Syntax.Name
+--import           Luna.Syntax.Repr.Graph
+----import           Luna.Syntax.AST.Typed  
 
-import           Luna.Syntax.Builder.Class as X (runT)
--- <<<<<<< HEAD
-import           Luna.Syntax.Builder.Class (modify, modify2, BuilderMonad)
-import qualified Luna.Syntax.Builder.Node as NodeBuilder
-import           Luna.Syntax.Builder.Node (MonadNodeBuilder)
+--import           Luna.Syntax.Builder.Class as X (runT)
+---- <<<<<<< HEAD
+--import           Luna.Syntax.Builder.Class (modify, modify2, BuilderMonad)
+--import qualified Luna.Syntax.Builder.Node as NodeBuilder
+--import           Luna.Syntax.Builder.Node (MonadNodeBuilder)
 
-import Data.Container hiding (Impossible)
-import Data.Construction
--- =======
---import           Luna.Syntax.Builder.Class (BuilderMonad, modify2)
-import qualified Luna.Syntax.Builder.Class as Builder
---import           Luna.Syntax.Builder.Node  (MonadNodeBuilder)
---import qualified Luna.Syntax.Builder.Node  as NodeBuilder
--- >>>>>>> f8e7192c58e6718aee36b622182b5288b47cdf6 e
+--import Data.Container hiding (Impossible)
+--import Data.Construction
+---- =======
+----import           Luna.Syntax.Builder.Class (BuilderMonad, modify2)
+--import qualified Luna.Syntax.Builder.Class as Builder
+----import           Luna.Syntax.Builder.Node  (MonadNodeBuilder)
+----import qualified Luna.Syntax.Builder.Node  as NodeBuilder
+---- >>>>>>> f8e7192c58e6718aee36b622182b5288b47cdf6 e
 
---import Data.Cata
-import Data.Construction
-import Data.Container    hiding (Impossible)
+----import Data.Cata
+--import Data.Construction
+--import Data.Container    hiding (Impossible)
 
---import Data.Layer.Coat
+----import Data.Layer.Coat
 
-import           Data.IntSet (IntSet)
-import qualified Data.IntSet as IntSet
--- <<<<<<< HEAD
-import qualified Data.Container.Opts as Opts
--- =======
-import qualified Data.Map    as Map
+--import           Data.IntSet (IntSet)
+--import qualified Data.IntSet as IntSet
+---- <<<<<<< HEAD
+--import qualified Data.Container.Opts as Opts
+---- =======
+--import qualified Data.Map    as Map
 -- >>>>>>> f8e7192c58e6718aee36b622182b5288b47cdf6e
 
 ----- === Graph builders ===

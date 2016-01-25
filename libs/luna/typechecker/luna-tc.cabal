@@ -55,8 +55,10 @@ Library
                   ViewPatterns
 
     Exposed-modules: 
+        Data.Record,
         Luna.Diagnostic.AST,
-        Luna.Repr.Styles,
+        Luna.Lib.Symbol.Map,
+        Luna.Lib.Symbol.QualPath,
         Luna.Syntax.AST,
         Luna.Syntax.AST.Arg,
         Luna.Syntax.AST.Decl,
@@ -64,25 +66,11 @@ Library
         Luna.Syntax.AST.Layout,
         Luna.Syntax.AST.Term,
         Luna.Syntax.AST.Typed,
-        Luna.Syntax.Builder,
-        Luna.Syntax.Builder.Cache,
-        Luna.Syntax.Builder.Cache.Cache,
-        Luna.Syntax.Builder.Cache.Draft,
-        Luna.Syntax.Builder.Cache.Lit,
-        Luna.Syntax.Builder.Cache.Term,
-        Luna.Syntax.Builder.Cache.Thunk,
-        Luna.Syntax.Builder.Cache.Val,
-        Luna.Syntax.Builder.Class,
-        Luna.Syntax.Builder.Node,
-        Luna.Syntax.Builder.Star,
-        Luna.Syntax.Builder.Symbol,
-        Luna.Syntax.Layer.Labeled,
+        Luna.Syntax.Model.Graph,
+        Luna.Syntax.Model.Layer.Labeled,
+        Luna.Syntax.Model.Repr.Styles,
         Luna.Syntax.Name,
-        Luna.Syntax.Name.Pool,
-        Luna.Syntax.Repr.Graph,
-        Luna.Syntax.Symbol.Map,
-        Luna.Syntax.Symbol.Network,
-        Luna.Syntax.Symbol.QualPath
+        Luna.Syntax.Name.Pool
 
     Build-Depends: base
                  , bitmask
@@ -118,6 +106,9 @@ Library
                  , typelevel
                  , variants
                  , vector
+                 , data-result
+                 , split
+                 , dependent-state
 
 
 
@@ -152,6 +143,7 @@ Executable tc-test
                   StandaloneDeriving
                   TemplateHaskell
                   TupleSections
+                  TypeFamilies
                   TypeOperators
                   ViewPatterns
 
@@ -192,3 +184,4 @@ Executable tc-test
                  , vector
                  , data-result
                  , split
+                 , dependent-state

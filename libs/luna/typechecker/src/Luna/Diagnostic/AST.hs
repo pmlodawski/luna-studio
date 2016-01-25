@@ -7,32 +7,32 @@ module Luna.Diagnostic.AST where
 
 import Prologue  hiding (index)
 
-import           Data.GraphViz.Types.Canonical
-import           Data.GraphViz.Attributes.Complete   hiding (Label, Int, Star)
-import qualified Data.GraphViz.Attributes.Complete   as GV
-import qualified Data.GraphViz.Attributes            as GV
-import           Data.GraphViz.Printing              (toDot)
-import           Data.GraphViz.Commands
-import qualified Data.GraphViz.Attributes.Colors     as GVC
-import qualified Data.GraphViz.Attributes.Colors.X11 as GVC
-import           Data.GraphViz.Printing              (PrintDot)
-import           Luna.Repr.Styles (HeaderOnly(..), Simple(..))
+--import           Data.GraphViz.Types.Canonical
+--import           Data.GraphViz.Attributes.Complete   hiding (Label, Int, Star)
+--import qualified Data.GraphViz.Attributes.Complete   as GV
+--import qualified Data.GraphViz.Attributes            as GV
+--import           Data.GraphViz.Printing              (toDot)
+--import           Data.GraphViz.Commands
+--import qualified Data.GraphViz.Attributes.Colors     as GVC
+--import qualified Data.GraphViz.Attributes.Colors.X11 as GVC
+--import           Data.GraphViz.Printing              (PrintDot)
+----import           Luna.Repr.Styles (HeaderOnly(..), Simple(..))
 
-import Data.Cata
-import Data.Container
-import Data.Container.Hetero
+--import Data.Cata
+--import Data.Container
+--import Data.Container.Hetero
 
---import Luna.Syntax.AST.Term
-import Luna.Syntax.Repr.Graph
-import Luna.Syntax.AST
-import Luna.Syntax.AST.Typed
-import Luna.Syntax.Name
-import Luna.Syntax.Layer.Labeled
+----import Luna.Syntax.AST.Term
+--import Luna.Syntax.Repr.Graph
+--import Luna.Syntax.AST
+--import Luna.Syntax.AST.Typed
+--import Luna.Syntax.Name
+--import Luna.Syntax.Layer.Labeled
 
-import System.Platform
-import System.Process (createProcess, shell)
-import Data.Container.Class
-import Data.Reprx
+--import System.Platform
+--import System.Process (createProcess, shell)
+--import Data.Container.Class
+--import Data.Reprx
 
 --import Data.Layer.Coat
 
