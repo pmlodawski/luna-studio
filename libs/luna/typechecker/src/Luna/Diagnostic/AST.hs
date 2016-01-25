@@ -113,8 +113,6 @@ edgeLabelClr  = GVC.Gray40
 
 fontName = "arial"
 fontSize = 10.0
-typesDirection = Forward
--- typesDirection = Back
 
 
 gStyle :: [GlobalAttributes]
@@ -187,7 +185,7 @@ instance GenInEdges n e a => GenInEdges n e (Labeled2 l a) where
     genInEdges g (Labeled2 _ a) = genInEdges g a
 
 instance GenInEdges n DoubleArc a => GenInEdges n DoubleArc (Typed (Ref Edge) a) where
-    genInEdges g (Typed t a) = [(tgt, [GV.color typedArrClr, GV.edgeEnds typesDirection])] <> genInEdges g a where
+    genInEdges g (Typed t a) = [(tgt, [GV.color typedArrClr, ArrowHead dotArrow])] <> genInEdges g a where
         tgt = deref . view target $ index (deref t) (g ^. edges)
 
 instance GenInEdges n e a => GenInEdges n e (SuccTracking a) where
