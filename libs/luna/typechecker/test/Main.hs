@@ -20,6 +20,7 @@ import Data.Construction
 import Control.Monad.Identity
 import Data.Container
 
+import           Luna.Syntax.Model.Graph (Graph, GraphBuilder, MonadGraphBuilder, nodes, edges)
 import qualified Luna.Syntax.Model.Graph as Graph
 
 -------------------------------------------------------------------------------------------------------------------
@@ -37,10 +38,14 @@ data Attached d t = Attached d t deriving (Show)
 
 newtype Layer l t a = Layer (l (t a)) deriving (Show)
 
-data Ref a = Ref Int a
+data Ref a = Ref Int
 
 
 
+instance Coated Cover        where coated = lens (\(Cover a) -> a) (const Cover)
+instance Coated (Attached d) where coated = lens (\(Attached _ t) -> t) (\(Attached d _) t -> Attached d t)
+
+instance (Coated l, Coated t) => Coated (Layer l t) where coated = wrapped ∘ coated ∘ coated
 
 type instance        Unlayered (Layer l t a) = t a
 instance Coated l => Layered   (Layer l t a) where layered = wrapped' ∘ coated ; {-# INLINE layered #-}
@@ -53,14 +58,43 @@ instance Wrapped   (Layer l t a) where
 
 
 
-instance (CoatConstructor m l, Functor m) => LayerConstructor m (Layer l t a) where constructLayer = Layer <∘> constructCoat
+--instance (CoatConstructor m l, Functor m) => LayerConstructor m (Layer l t a) where constructLayer = Layer <∘> constructCoat
+instance (Functor m, CoatConstructor (t a) m l) => LayerConstructor m (Layer l t a) where constructLayer = Layer <∘> constructCoat
 
-instance {-# OVERLAPPABLE #-} (Default d, Monad m) => CoatConstructor m (Attached d) where constructCoat = return ∘ Attached def
+instance {-# OVERLAPPABLE #-} (Default d, Monad m) => CoatConstructor a m (Attached d) where constructCoat = return ∘ Attached def
 
 
-foo :: (Monad m, CoatConstructor m Ref) => m (Layer Ref (Layer (Attached String) Cover) (Lit (Ref :< (Attached String) :< Cover)))
+--foo :: (Monad m, MonadGraphBuilder (Layer (Attached String) Cover (ASTRecord '[] LitVariants (Layer (Ref :< Attached String) Cover) Data)) e m)
+--    => m (Layer Ref (Layer (Attached String) Cover) (Lit (Ref :< (Attached String) :< Cover)))
+
+foo :: GraphBuilder (Layer (Attached String) Cover Data) Int (Layer Ref (Layer (Attached String) Cover) (Lit (Ref :< (Attached String) :< Cover)))
 foo = constructCover star
 
+--foo :: (Monad m, CoatConstructor m Ref) => m (Layer Ref (Layer (Attached String) Cover) (Lit (Ref :< (Attached String) :< Cover)))
+--foo = constructCover star
+
+
+--instance (MonadGraphBuilder n e m, Coated l, Wrapped ast, n ~ l (Unwrapped ast)) => CoatConstructor (l ast) m Ref where
+--    constructCoat ast = do
+--        g <- Graph.get
+--        let generalizedAST = ast & coated %~ unwrap'
+--            (n', idx)      = ixed add generalizedAST (g ^. nodes)
+--        Graph.put (g & nodes .~ n')
+--        return $ Ref idx
+
+instance (MonadGraphBuilder n e m, Coated l, Wrapped ast, Wrapped (Unwrapped ast), n ~ l (Unwrapped (Unwrapped ast)))
+      => CoatConstructor (l ast) m Ref where
+    constructCoat ast = fmap Ref $ Graph.modify $ \g -> let generalizedAST = ast & coated %~ unwrap' ∘ unwrap'
+                                                            (n', idx)      = ixed add generalizedAST (g ^. nodes)
+                                                        in  (g & nodes .~ n', idx)
+    {-# INLINE constructCoat #-}
+            
+                          
+type Network = Graph (Layer (Attached String) Cover Data) Int  
+
+
+        --Graph.put (g & nodes .~ n')
+        --return $ Ref idx
 --test :: _ => _
 --test a (v :: Graph.AutoVector y) = ixed add a v
 
@@ -92,7 +126,14 @@ data Test a b = Test !a !b  deriving (Show)
 
 main = do
 
-    --print $ runIdentity foo
+    let 
+        --s = star
+        s = Graph.exec foo (def :: Network)
+        --s' = s & coated %~ unwrap' ∘ unwrap'
+
+    print $ s
+    --print $ s'
+    --print $ uncoat s
     ----let x = 
     ----let v  = star :: Lit Int IDT
     --let v  = cons Star :: Lit IDT
@@ -107,6 +148,7 @@ main = do
     --print v
     --print v'
     --print t1
+
 
 
     ----print l

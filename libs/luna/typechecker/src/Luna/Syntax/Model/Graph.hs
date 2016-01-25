@@ -27,7 +27,11 @@ import Luna.Syntax.AST.Term
 import Luna.Syntax.Model.Layer.Labeled
 
 import           Control.Monad.State.Dependent (StateT, MonadGet, MonadPut)
-import qualified Control.Monad.State.Dependent as State
+import qualified Control.Monad.State.Dependent as StateX
+
+import qualified Control.Monad.Catch      as Catch
+import qualified Control.Monad.State      as State
+import qualified Language.Haskell.Session as HS
 
 --import qualified Control.Monad.State as State
 import qualified Data.IntSet as IntSet
@@ -81,12 +85,142 @@ instance Default (Graph n e) where def = Graph (alloc 100) (alloc 100)
 -- === GraphBuilder === --
 --------------------------
 
-data GB = GB deriving (Show)
+--data GRAPH = GRAPH deriving (Show)
 
-newtype GraphBuilderT s m a = GraphBuilderT (StateT GB s m a)
-    deriving (Functor, Monad, Applicative, MonadIO, MonadPlus, Alternative, MonadGet GB s, MonadPut GB s, MonadTrans, MonadFix)
+--newtype GraphBuilderT n e m a = GraphBuilderT (StateT GRAPH (Graph n e) m a)
+--    deriving (Functor, Monad, Applicative, MonadIO, MonadPlus, Alternative, MonadGet GRAPH (Graph n e), MonadPut GRAPH (Graph n e), MonadTrans, MonadFix)
 
---deriving instance Monad m => MonadGet GB s (GraphBuilderT s m)
+--class Monad m => MonadGraph n e m | m -> n e where
+--    get :: m (Graph n e)
+--    put :: Graph n e -> m ()
+
+--instance Monad m => MonadGraph n e (GraphBuilderT n e m) where
+--    get = StateX.get GRAPH
+--    put = StateX.put GRAPH
+
+--instance (MonadGraph n e m, MonadTrans t, Monad m, Monad (t m)) => MonadGraph n e (t m) where
+--    get = lift get
+--    put = lift ∘ put
+
+----modify = StateX.modify GRAPH
+
+
+
+
+
+
+
+
+
+---- TODO: template haskellize
+---- >->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->->
+
+newtype GraphBuilderT n e m a = GraphBuilderT { fromGraphBuilderT :: State.StateT (Graph n e) m a }
+                             deriving (Functor, Monad, Applicative, MonadIO, MonadPlus, MonadTrans, Alternative, MonadFix, HS.GhcMonad, HS.ExceptionMonad, HS.HasDynFlags, Catch.MonadMask, Catch.MonadCatch, Catch.MonadThrow)
+
+type GraphBuilder n e = GraphBuilderT n e Identity
+
+class Monad m => MonadGraphBuilder n e m | m -> n e where
+    get :: m (Graph n e)
+    put :: (Graph n e) -> m ()
+
+instance Monad m => MonadGraphBuilder n e (GraphBuilderT n e m) where
+    get = GraphBuilderT State.get
+    put = GraphBuilderT . State.put
+
+instance State.MonadState s m => State.MonadState s (GraphBuilderT n e m) where
+    get = GraphBuilderT (lift State.get)
+    put = GraphBuilderT . lift . State.put
+
+--instance {-# OVERLAPPABLE #-} (MonadGraphBuilder n e m, MonadTrans t, Monad (t m)) => MonadGraphBuilder n e (t m) where
+--    get = lift get
+--    put = lift . put
+
+runT  ::            GraphBuilderT n e m a -> Graph n e -> m (a, Graph n e)
+evalT :: Monad m => GraphBuilderT n e m a -> Graph n e -> m a
+execT :: Monad m => GraphBuilderT n e m a -> Graph n e -> m (Graph n e)
+
+runT  = State.runStateT  . fromGraphBuilderT
+evalT = State.evalStateT . fromGraphBuilderT
+execT = State.execStateT . fromGraphBuilderT
+
+
+run  :: GraphBuilder n e a -> Graph n e -> (a, Graph n e)
+eval :: GraphBuilder n e a -> Graph n e -> a
+exec :: GraphBuilder n e a -> Graph n e -> Graph n e
+
+run   = runIdentity .: runT
+eval  = runIdentity .: evalT
+exec  = runIdentity .: execT
+
+with :: MonadGraphBuilder n e m => (Graph n e -> Graph n e) -> m a -> m a
+with f m = do
+    s <- get
+    put $ f s
+    out <- m
+    put s
+    return out
+
+modify :: MonadGraphBuilder n e m => (Graph n e -> (Graph n e, a)) -> m a
+modify = modifyM . fmap return
+
+modify2 :: MonadGraphBuilder n e m => (Graph n e -> (a, Graph n e)) -> m a
+modify2 = modifyM2 . fmap return
+
+modifyM :: MonadGraphBuilder n e m => (Graph n e -> m (Graph n e, a)) -> m a
+modifyM f = do
+    s <- get
+    (s', a) <- f s
+    put $ s'
+    return a
+
+modifyM2 :: MonadGraphBuilder n e m => (Graph n e -> m (a, Graph n e)) -> m a
+modifyM2 f = do
+    s <- get
+    (a, s') <- f s
+    put $ s'
+    return a
+
+modify_ :: MonadGraphBuilder n e m => (Graph n e -> Graph n e) -> m ()
+modify_ = modify . fmap (,())
+
+-- <-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<
+
+--withGraph :: MonadGraphBuilder g m => (g -> (g, a)) -> m a
+--withGraph = withGraphM . fmap return
+
+--withGraph' :: MonadGraphBuilder g m => (g -> (a, g)) -> m a
+--withGraph' = withGraphM . fmap (return . switch')
+
+--withGraph_ :: MonadGraphBuilder g m => (g -> g) -> m ()
+--withGraph_ = withGraph . fmap (,())
+
+--withGraphM :: MonadGraphBuilder g m => (g -> m (g, a)) -> m a
+--withGraphM = modifyM
+
+--withGraphM_ :: MonadGraphBuilder g m => (g -> m g) -> m ()
+--withGraphM_ = withGraphM . (fmap . fmap) (,())
+
+--runGraphBuilderT2  :: Functor m => GraphBuilderT2 g m a -> g -> m (a, g)
+--execGraphBuilderT2 :: Monad   m => GraphBuilderT2 g m a -> g -> m g
+--evalGraphBuilderT2 :: Monad   m => GraphBuilderT2 g m a -> g -> m a
+
+--runBuilderT  = runT
+--execBuilderT = execT
+--evalBuilderT = evalT
+
+
+
+
+
+
+
+--type MonadGraph g m = (MonadGet GRAPH g m, MonadPut GRAPH g m)
+
+--get :: MonadGet GRAPH g m => m g
+--get = State.get GRAPH
+
+--deriving instance Monad m => MonadGet GRAPH s (GraphBuilderT s m)
 --data GraphBuilder = GraphBuilder deriving (Show)
 
 
