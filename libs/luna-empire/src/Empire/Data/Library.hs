@@ -1,8 +1,9 @@
 module Empire.Data.Library where
 
 import Prologue
-import System.Path        (Path)
+import System.Path        (Path, native)
 import Empire.Data.Graph  (Graph)
+import qualified Data.Text.Lazy as Text
 import qualified Empire.API.Data.Library as API
 
 data Library = Library { _name    :: Maybe String
@@ -16,4 +17,4 @@ make name path = Library name path def
 makeLenses ''Library
 
 toAPI :: Library -> API.Library
-toAPI (Library n p _) = API.Library n (show p)
+toAPI (Library n p _) = API.Library n (Text.unpack $ native p)
