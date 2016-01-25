@@ -90,16 +90,16 @@ import           Data.Variants
 
 
 -- new Skin
-bgClr         = GVC.Gray15
+bgClr         = GVC.Gray12
 
 typedArrClr   = GVC.Firebrick
 namedArrClr   = GVC.Turquoise
-accArrClr     = GVC.LightSalmon
+accArrClr     = GVC.Yellow
 arrClr        = GVC.DarkOrange
 
 nodeClr       = GVC.DeepSkyBlue
 valIntNodeClr = GVC.Chartreuse
-valStrNodeClr = GVC.Yellow
+valStrNodeClr = GVC.LimeGreen
 valUnkNodeClr = GVC.Red
 dirtyClr      = GVC.MediumOrchid
 checkedClr    = GVC.MediumOrchid
