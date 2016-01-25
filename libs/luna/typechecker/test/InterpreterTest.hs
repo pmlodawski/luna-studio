@@ -28,7 +28,7 @@ import           Data.Vector.Mutable                 ()
 import           Debug.Trace
 import           Development.Placeholders
 
-import           Luna.Diagnostic.AST          as Diag (LabelAttrs (..), open, render, toGraphViz)
+import           Luna.Diagnostic.AST          as Diag (LabelAttrs (..), open, render, toGraphViz, dirtyClr)
 import qualified Luna.Interpreter.Interpreter as Interpreter
 import           Luna.Interpreter.Label       (Label)
 import qualified Luna.Interpreter.Label       as Label
@@ -59,7 +59,7 @@ renderAndOpen lst = do
 
 instance LabelAttrs (Labeled2 Label (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge)))))) where
     labelAttrs n = if n ^. label . Label.dirty
-        then [GV.color GVC.Brown]
+        then [GV.color dirtyClr]
         else []
 -- ====================================
 

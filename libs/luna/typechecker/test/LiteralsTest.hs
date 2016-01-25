@@ -59,35 +59,61 @@ renderAndOpen lst = do
     open $ fmap (\s -> "/tmp/" <> s <> ".png") (reverse $ fmap fst lst)
 
 instance LabelAttrs (Labeled2 Label (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge)))))) where
-    labelAttrs n = if n ^. label . Label.dirty
-        then [GV.color GVC.Brown]
+    labelAttrs n = if n ^. label . Label.checked
+        then [] -- [GV.color GVC.Magenta]
         else []
+
 -- ====================================
 
 
-sampleGraph :: ((Ref Node, SymbolMap Label (Ref Edge)), Network Label)
+sampleGraph :: ((Ref Node, SymbolMap Label (Ref Edge), Ref Node, Ref Node), Network Label)
 sampleGraph = runIdentity
       $ flip StarBuilder.evalT Nothing
       $ flip Builder.runT def
       $ flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
       $ do
-            nameString <- _string "String"
-            consString <- cons nameString
-            nameInt    <- _string "Int"
-            consInt    <- cons nameInt
-            s1 <- _stringVal "abc" `typed` consString
+            nameInt       <- _string "Int"
+            nameString    <- _string "String"
+            namePlus      <- _string "+"
+            nameConc      <- _string "++"
+            nameLen       <- _string "len"
+
+            consIntTpe    <- cons nameInt
+            consStringTpe <- cons nameString
+
+            arrPlusTpe    <- arrow [consIntTpe, consIntTpe] Map.empty consIntTpe
+            arrConcTpe    <- arrow [consStringTpe, consStringTpe] Map.empty consStringTpe
+            arrLenTpe     <- arrow [consStringTpe] Map.empty consIntTpe
+
+            i1 <- _int 2 -- `typed` consIntTpe
+            i2 <- _int 3
+            i3 <- _int 4
+            s1 <- _stringVal "abc" -- `typed` consStringTpe
             s2 <- _stringVal "def"
-            i2 <- _int 2
-            i3 <- _int 3
-            i4 <- _int 4 `typed` consInt
-            namePlus <- _string "+"
-            accPlus  <- accessor namePlus i2
-            arr      <- arrow [consInt, consInt] Map.empty consInt
-            appPlus  <- app accPlus [arg i2, arg i3] `typed` arr
+            s3 <- _stringVal "ghi"
+
+            accPlus1a  <- accessor namePlus i1
+            appPlus1a  <- app accPlus1a [arg i1, arg i2] `typed` arrPlusTpe
+
+            accPlus1b  <- accessor namePlus i3
+            appPlus1b  <- app accPlus1b [arg i3, arg appPlus1a] `typed` arrPlusTpe
+
+            accConc1a  <- accessor nameConc s2
+            appConc1a  <- app accConc1a [arg s2, arg s1] `typed` arrConcTpe
+
+            accConc1b  <- accessor nameConc appConc1a
+            appConc1b  <- app accConc1b [arg appConc1a, arg s3] `typed` arrConcTpe
+
+            accLen    <- accessor nameLen appConc1b
+            appLen    <- app accLen [arg appConc1b] `typed` arrLenTpe
+
+            accPlus2  <- accessor namePlus appPlus1b
+            appPlus2  <- app accPlus2 [arg appPlus1b, arg appLen] `typed` arrPlusTpe
+
 
             let sm = def
 
-            return (s2, sm)
+            return (i2, sm, consIntTpe, consStringTpe)
 
 runGraph gr sm = runIdentityT
             . flip SymbolBuilder.evalT sm
@@ -95,24 +121,24 @@ runGraph gr sm = runIdentityT
             . flip Builder.runT gr
             . flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
 
-
 evaluateTest :: Ref Node -> SymbolMap Label (Ref Edge) -> Network Label -> IO ((), Network Label)
 evaluateTest i sm gr = Session.run $ runGraph gr sm $  do
     Just r <- NodeRunner.runNode def i
     putStrLn "RESULT IS:"
     print (Session.unsafeCast r :: Int)
 
-
-literalsTest :: Ref Node -> SymbolMap Label (Ref Edge) -> Network Label -> IO ((), Network Label)
-literalsTest i sm gr = runGraph gr sm $ do
-    Literals.assignLiteralTypes i
+literalsTest :: Ref Node -> Ref Node -> Ref Node -> SymbolMap Label (Ref Edge) -> Network Label -> IO ((), Network Label)
+literalsTest consIntTpe consStringTpe i sm gr = runGraph gr sm $ do
+    Literals.assignLiteralTypesWithTypes consIntTpe consStringTpe i
     return ()
 
 main :: IO ()
 main = do
-    let ((i, sm), g) = sampleGraph
-    ((), g')<- literalsTest i sm g
+
+    let ((i, sm, consIntTpe, consStringTpe), g) = sampleGraph
+    ((), g')<- literalsTest consIntTpe consStringTpe i sm g
     -- pprint g'
+    -- renderAndOpen [ ("g" , g)]
     renderAndOpen [ ("g" , g')]
     putStrLn "end"
 

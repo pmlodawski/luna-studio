@@ -67,6 +67,7 @@ import           Data.Variants
 --          edgeStmts       = fmap mkEdge inEdges
 
 
+-- color names: https://en.wikipedia.org/wiki/X11_color_names
 
 -- old Skin
 -- bgClr         = GVC.White
@@ -79,25 +80,36 @@ import           Data.Variants
 -- nodeClr       = GVC.Black
 -- valIntNodeClr = GVC.Green
 -- valStrNodeClr = GVC.Green
+-- valUnkNodeClr = GVC.Green
+-- dirtyClr      = GVC.Brown
+-- checkedClr    = GVC.Brown
 
 -- nodeLabelClr  = GVC.Black
 -- edgeLabelClr  = GVC.Black
 
--- new Skin
-bgClr        = GVC.Gray15
 
-typedArrClr  = GVC.Firebrick
-namedArrClr  = GVC.Turquoise
-accArrClr    = GVC.YellowGreen
-arrClr       = GVC.Orange
+
+-- new Skin
+bgClr         = GVC.Gray15
+
+typedArrClr   = GVC.Firebrick
+namedArrClr   = GVC.Turquoise
+accArrClr     = GVC.YellowGreen
+arrClr        = GVC.DarkOrange
 
 nodeClr       = GVC.DeepSkyBlue
-valIntNodeClr = GVC.Green
-valStrNodeClr = GVC.Yellow -- Turquoise
-valNodeClr    = GVC.Red
+valIntNodeClr = GVC.Chartreuse
+valStrNodeClr = GVC.Yellow
+valUnkNodeClr = GVC.Red
+dirtyClr      = GVC.MediumOrchid
+checkedClr    = GVC.MediumOrchid
 
-nodeLabelClr = GVC.Gray85
-edgeLabelClr = GVC.Gray40
+nodeLabelClr  = GVC.Gray75
+edgeLabelClr  = GVC.Gray40
+
+-- Coral, Orchid, DeepPink, NavajoWhite, LightSkyBlue, LightSteelBlue, PowderBlue, Lavender, Khaki, Tan, Wheat
+-- Aquamarine, MediumVioletRed, Purple, CadetBlue
+
 
 fontName = "arial"
 fontSize = 10.0
@@ -160,7 +172,7 @@ toGraphViz net = DotGraph { strictGraph     = False
                                      case' val $ match $ \lit -> case lit of
                                         Lit.Int    i -> [GV.color valIntNodeClr]
                                         Lit.String s -> [GV.color valStrNodeClr]
-                                        _            -> [GV.color valNodeClr]
+                                        _            -> [GV.color valUnkNodeClr]
                                 match $ \ANY         -> [GV.color nodeClr]
           nodeRef        i = "<node " <> show i <> ">"
 

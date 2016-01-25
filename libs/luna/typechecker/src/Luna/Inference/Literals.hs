@@ -11,6 +11,7 @@ import           Prologue                   hiding (pre, succ, cons)
 import qualified Data.Text.Lazy             as Text
 
 import           Luna.Interpreter.Label     (Label)
+import qualified Luna.Interpreter.Label     as Label
 import           Luna.Syntax.AST.Term
 import           Luna.Syntax.AST.Lit        as Lit
 import qualified Luna.Syntax.Builder        as B
@@ -29,33 +30,24 @@ import qualified Luna.Syntax.Layer.Labeled  as Labeled
 import qualified Luna.Syntax.AST.Typed      as Typed
 
 
-succ :: BuilderMonad (Network Label) m => Ref Node -> m [Ref Node]
-succ ref = do
-    node <- B.readRef ref
-    mapM (B.unfollow . Ref . Edge) $ IntSet.toList $ node ^. G.succs
 
-
-typed a t = StarBuilder.with (const $ Just t) a
-
-getConsInt :: (StarBuilder.MonadStarBuilder (Maybe (Ref Node)) m,
+createConsInt :: (StarBuilder.MonadStarBuilder (Maybe (Ref Node)) m,
                NodeBuilder.MonadNodeBuilder (Ref Node) m,
                MonadFix m,
                MonadIO m,
                BuilderMonad (Network Label) m) => m (Ref Node)
-getConsInt = do
+createConsInt = do
     nameInt <- B._string "Int"
-    consInt <- B.cons nameInt
-    return consInt
+    B.cons nameInt
 
-getConsString :: (StarBuilder.MonadStarBuilder (Maybe (Ref Node)) m,
+createConsString :: (StarBuilder.MonadStarBuilder (Maybe (Ref Node)) m,
                   NodeBuilder.MonadNodeBuilder (Ref Node) m,
                   MonadFix m,
                   MonadIO m,
                   BuilderMonad (Network Label) m) => m (Ref Node)
-getConsString = do
+createConsString = do
     nameString <- B._string "String"
-    consString <- B.cons nameString
-    return consString
+    B.cons nameString
 
 assignLiteralTypes :: (StarBuilder.MonadStarBuilder (Maybe (Ref Node)) m,
                        NodeBuilder.MonadNodeBuilder (Ref Node) m,
@@ -63,33 +55,62 @@ assignLiteralTypes :: (StarBuilder.MonadStarBuilder (Maybe (Ref Node)) m,
                        MonadIO m,
                        BuilderMonad (Network Label) m) => Ref Node -> m ()
 assignLiteralTypes ref = do
-    consInt <- getConsInt
-    consString <- getConsString
-    assignLiteralTypesWithTypes consInt consString ref
+    consIntTpe <- createConsInt
+    consStringTpe <- createConsString
+    assignLiteralTypesWithTypes consIntTpe consStringTpe ref
+
+
+pre :: BuilderMonad (Network Label) m => Ref Node -> m [Ref Node]
+pre ref = do
+    node <- B.readRef ref
+    mapM (B.follow) $ inputs $ uncoat node
+
+succ :: BuilderMonad (Network Label) m => Ref Node -> m [Ref Node]
+succ ref = do
+    node <- B.readRef ref
+    mapM (B.unfollow . Ref . Edge) $ IntSet.toList $ node ^. G.succs
+
+up :: BuilderMonad (Network Label) m => Ref Node -> m (Ref Node)
+up ref = do
+    node <- B.readRef ref
+    B.follow $ node ^. Typed.tp
+
+isChecked :: Labeled.HasLabel Label s => s -> Bool
+isChecked node = node ^. label . Label.checked
+
 
 assignLiteralTypesWithTypes :: (StarBuilder.MonadStarBuilder (Maybe (Ref Node)) m,
                        NodeBuilder.MonadNodeBuilder (Ref Node) m,
                        MonadFix m,
                        MonadIO m,
                        BuilderMonad (Network Label) m) => Ref Node -> Ref Node -> Ref Node -> m ()
-assignLiteralTypesWithTypes consInt consString ref = do
+assignLiteralTypesWithTypes consIntTpe consStringTpe ref = do
     node <- B.readRef ref
-    case' (uncoat node) $ do
-        match $ \(Val val) -> do
-            case' val $ match $ \lit -> case lit of
-                Lit.Int    i -> do
-                    putStrLn $ "Lit.Int " <> show i <> ": " <> show node
-                    tnode <- B.follow $ node ^. Typed.tp
-                    B.reconnect ref Typed.tp consInt
-                    return ()
-                Lit.String s -> do
-                    putStrLn $ "Lit.String " <> show s <> ": " <> show node
-                    tnode <- B.follow $ node ^. Typed.tp
-                    B.reconnect ref Typed.tp consString
-                    return ()
-                _            -> do
-                    putStrLn $ "ANY?: " <> show node
-        match $ \ANY -> do
-            putStrLn $ "ANY: " <> show node
-            return ()
-    mapM_ (assignLiteralTypesWithTypes consInt consString) =<< succ ref
+    unless (isChecked node) $ do
+        B.writeRef ref (node & label . Label.checked .~ True)
+        case' (uncoat node) $ do
+            match $ \(Val val) -> do
+                case' val $ match $ \lit -> case lit of
+                    Lit.Int    i -> do
+                        putStrLn $ "Lit.Int " <> show i <> ": " <> show node
+                        tnode <- B.follow $ node ^. Typed.tp
+                        B.reconnect ref Typed.tp consIntTpe
+                        return ()
+                    Lit.String s -> do
+                        putStrLn $ "Lit.String " <> show s <> ": " <> show node
+                        tnode <- B.follow $ node ^. Typed.tp
+                        B.reconnect ref Typed.tp consStringTpe
+                        return ()
+                    _            -> do
+                        putStrLn $ "ANY?: " <> show node
+            match $ \ANY -> do
+                putStrLn $ "ANY: " <> show node
+                return ()
+
+        let nodeInputs = inputs node
+        putStrLn $ "inputs: " <> show nodeInputs
+
+        mapM_ (assignLiteralTypesWithTypes consIntTpe consStringTpe) =<< pre ref
+        mapM_ (assignLiteralTypesWithTypes consIntTpe consStringTpe) =<< succ ref
+        -- assignLiteralTypesWithTypes consIntTpe consStringTpe =<< up ref
+
