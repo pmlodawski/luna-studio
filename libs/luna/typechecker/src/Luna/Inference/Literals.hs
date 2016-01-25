@@ -9,6 +9,7 @@ import           Data.Variants              (match, case', ANY(..))
 import           Development.Placeholders
 import           Prologue                   hiding (pre, succ, cons)
 import qualified Data.Text.Lazy             as Text
+import           Data.Construction
 
 import           Luna.Interpreter.Label     (Label)
 import qualified Luna.Interpreter.Label     as Label
@@ -79,6 +80,7 @@ isChecked :: Labeled.HasLabel Label s => s -> Bool
 isChecked node = node ^. label . Label.checked
 
 
+
 assignLiteralTypesWithTypes :: (StarBuilder.MonadStarBuilder (Maybe (Ref Node)) m,
                        NodeBuilder.MonadNodeBuilder (Ref Node) m,
                        MonadFix m,
@@ -94,11 +96,13 @@ assignLiteralTypesWithTypes consIntTpe consStringTpe ref = do
                     Lit.Int    i -> do
                         putStrLn $ "Lit.Int " <> show i <> ": " <> show node
                         tnode <- B.follow $ node ^. Typed.tp
+                        destruct tnode -- czy usuwam tylko gwiazdki?
                         B.reconnect ref Typed.tp consIntTpe
                         return ()
                     Lit.String s -> do
                         putStrLn $ "Lit.String " <> show s <> ": " <> show node
                         tnode <- B.follow $ node ^. Typed.tp
+                        destruct tnode
                         B.reconnect ref Typed.tp consStringTpe
                         return ()
                     _            -> do
@@ -110,7 +114,7 @@ assignLiteralTypesWithTypes consIntTpe consStringTpe ref = do
         let nodeInputs = inputs node
         putStrLn $ "inputs: " <> show nodeInputs
 
-        mapM_ (assignLiteralTypesWithTypes consIntTpe consStringTpe) =<< pre ref
-        mapM_ (assignLiteralTypesWithTypes consIntTpe consStringTpe) =<< succ ref
+        mapM_ (assignLiteralTypesWithTypes consIntTpe consStringTpe) =<< pre ref   -- ??????????????
+        -- mapM_ (assignLiteralTypesWithTypes consIntTpe consStringTpe) =<< succ ref
         -- assignLiteralTypesWithTypes consIntTpe consStringTpe =<< up ref
 

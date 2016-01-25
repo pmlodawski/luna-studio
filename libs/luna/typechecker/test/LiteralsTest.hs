@@ -37,6 +37,7 @@ import qualified Luna.Interpreter.Monad       as InterpreterMonad
 import qualified Luna.Interpreter.NodeRunner  as NodeRunner
 import qualified Luna.Interpreter.Session     as Session
 import           Luna.Syntax.AST.Term
+import           Luna.Syntax.AST.Arg
 import           Luna.Syntax.AST.Typed        (Typed)
 import           Luna.Syntax.Builder
 import qualified Luna.Syntax.Builder          as Builder
@@ -60,7 +61,7 @@ renderAndOpen lst = do
 
 instance LabelAttrs (Labeled2 Label (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge)))))) where
     labelAttrs n = if n ^. label . Label.checked
-        then [] -- [GV.color GVC.Magenta]
+        then [GV.color GVC.Magenta]
         else []
 
 -- ====================================
@@ -81,9 +82,9 @@ sampleGraph = runIdentity
             consIntTpe    <- cons nameInt
             consStringTpe <- cons nameString
 
-            arrPlusTpe    <- arrow [consIntTpe, consIntTpe] Map.empty consIntTpe
-            arrConcTpe    <- arrow [consStringTpe, consStringTpe] Map.empty consStringTpe
-            arrLenTpe     <- arrow [consStringTpe] Map.empty consIntTpe
+            arrPlusTpe    <- arrow [consIntTpe] Map.empty consIntTpe
+            arrConcTpe    <- arrow [consStringTpe] Map.empty consStringTpe
+            arrLenTpe     <- arrow ([] :: [Ref Node]) Map.empty consIntTpe
 
             i1 <- _int 2 -- `typed` consIntTpe
             i2 <- _int 3
@@ -93,27 +94,27 @@ sampleGraph = runIdentity
             s3 <- _stringVal "ghi"
 
             accPlus1a  <- accessor namePlus i1
-            appPlus1a  <- app accPlus1a [arg i1, arg i2] `typed` arrPlusTpe
+            appPlus1a  <- app accPlus1a [arg i2] `typed` arrPlusTpe
 
             accPlus1b  <- accessor namePlus i3
-            appPlus1b  <- app accPlus1b [arg i3, arg appPlus1a] `typed` arrPlusTpe
+            appPlus1b  <- app accPlus1b [arg appPlus1a] `typed` arrPlusTpe
 
             accConc1a  <- accessor nameConc s2
-            appConc1a  <- app accConc1a [arg s2, arg s1] `typed` arrConcTpe
+            appConc1a  <- app accConc1a [arg s1] `typed` arrConcTpe
 
             accConc1b  <- accessor nameConc appConc1a
-            appConc1b  <- app accConc1b [arg appConc1a, arg s3] `typed` arrConcTpe
+            appConc1b  <- app accConc1b [arg s3] `typed` arrConcTpe
 
             accLen    <- accessor nameLen appConc1b
-            appLen    <- app accLen [arg appConc1b] `typed` arrLenTpe
+            appLen    <- app accLen ([] :: [Arg (Ref Node)]) `typed` arrLenTpe
 
             accPlus2  <- accessor namePlus appPlus1b
-            appPlus2  <- app accPlus2 [arg appPlus1b, arg appLen] `typed` arrPlusTpe
+            appPlus2  <- app accPlus2 [arg appLen] `typed` arrPlusTpe
 
 
             let sm = def
 
-            return (i2, sm, consIntTpe, consStringTpe)
+            return (accConc1b, sm, consIntTpe, consStringTpe)
 
 runGraph gr sm = runIdentityT
             . flip SymbolBuilder.evalT sm
