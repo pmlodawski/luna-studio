@@ -63,23 +63,33 @@ assignLiteralTypes :: (StarBuilder.MonadStarBuilder (Maybe (Ref Node)) m,
                        MonadIO m,
                        BuilderMonad (Network Label) m) => Ref Node -> m ()
 assignLiteralTypes ref = do
+    consInt <- getConsInt
+    consString <- getConsString
+    assignLiteralTypesWithTypes consInt consString ref
+
+assignLiteralTypesWithTypes :: (StarBuilder.MonadStarBuilder (Maybe (Ref Node)) m,
+                       NodeBuilder.MonadNodeBuilder (Ref Node) m,
+                       MonadFix m,
+                       MonadIO m,
+                       BuilderMonad (Network Label) m) => Ref Node -> Ref Node -> Ref Node -> m ()
+assignLiteralTypesWithTypes consInt consString ref = do
     node <- B.readRef ref
     case' (uncoat node) $ do
         match $ \(Val val) -> do
-            case' val $ do
-                match $ \(Lit.Int i) -> do
+            case' val $ match $ \lit -> case lit of
+                Lit.Int    i -> do
                     putStrLn $ "Lit.Int " <> show i <> ": " <> show node
-                    consInt <- getConsInt
                     tnode <- B.follow $ node ^. Typed.tp
                     B.reconnect ref Typed.tp consInt
                     return ()
-                match $ \(Lit.String s) -> do
+                Lit.String s -> do
                     putStrLn $ "Lit.String " <> show s <> ": " <> show node
-                    consString <- getConsString
                     tnode <- B.follow $ node ^. Typed.tp
                     B.reconnect ref Typed.tp consString
                     return ()
+                _            -> do
+                    putStrLn $ "ANY?: " <> show node
         match $ \ANY -> do
             putStrLn $ "ANY: " <> show node
             return ()
-    mapM_ assignLiteralTypes =<< succ ref
+    mapM_ (assignLiteralTypesWithTypes consInt consString) =<< succ ref

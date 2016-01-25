@@ -71,12 +71,12 @@ sampleGraph = runIdentity
       $ flip Builder.runT def
       $ flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
       $ do
-            -- nameString <- _string "String"
-            -- consString <- cons nameString
+            nameString <- _string "String"
+            consString <- cons nameString
             nameInt    <- _string "Int"
             consInt    <- cons nameInt
-            -- s1 <- _string "abc" `typed` consString
-            -- s2 <- _string "def"
+            s1 <- _stringVal "abc" `typed` consString
+            s2 <- _stringVal "def"
             i2 <- _int 2
             i3 <- _int 3
             i4 <- _int 4 `typed` consInt
@@ -87,7 +87,7 @@ sampleGraph = runIdentity
 
             let sm = def
 
-            return (i3, sm)
+            return (s2, sm)
 
 runGraph gr sm = runIdentityT
             . flip SymbolBuilder.evalT sm

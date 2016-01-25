@@ -133,6 +133,12 @@ _string v = mdo
     a <- NodeBuilder.with (Ref $ Node i) $ constructCoat $ specificCons (String $ fromString v)
     return $ Ref $ Node i
 
+_stringVal :: forall m n e ast t. (MonadNodeBuilder (Ref Node) m, CoatConstructor m n, SpecificCons (Val t) (ast t), BuilderMonad (Graph n e) m, MonadFix m, Uncoated n ~ ast t) => String -> m (Ref Node)
+_stringVal v = mdo
+    i <- modify2 . nodes $ swap . ixed add a
+    a <- NodeBuilder.with (Ref $ Node i) $ constructCoat $ specificCons (specificCons (String $ fromString v) :: Val t)
+    return $ Ref $ Node i
+
 _string2 :: (MonadNodeBuilder (Ref Node) m, CoatConstructor m n, SpecificCons Lit (Uncoated n), BuilderMonad (Graph n e) m) => String -> m (Ref Node)
 _string2 v = do
     i <- modify2 . nodes $ swap . ixed reserve

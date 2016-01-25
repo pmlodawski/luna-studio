@@ -30,6 +30,10 @@ import           Luna.Syntax.AST.Typed
 import qualified Luna.Syntax.AST.Lit                  as Lit
 import           Luna.Syntax.Name
 import           Luna.Syntax.Layer.Labeled
+import qualified Luna.Syntax.Builder                  as B
+import qualified Data.Variants                        as V
+
+
 
 import           System.Platform
 import           System.Process                       (createProcess, shell)
@@ -83,13 +87,13 @@ import           Data.Variants
 bgClr        = GVC.Gray15
 
 typedArrClr  = GVC.Firebrick
-namedArrClr  = GVC.DarkTurquoise
+namedArrClr  = GVC.Turquoise
 accArrClr    = GVC.YellowGreen
 arrClr       = GVC.Orange
 
 nodeClr       = GVC.DeepSkyBlue
 valIntNodeClr = GVC.Green
-valStrNodeClr = GVC.Blue
+valStrNodeClr = GVC.Yellow -- Turquoise
 valNodeClr    = GVC.Red
 
 nodeLabelClr = GVC.Gray85
@@ -151,13 +155,13 @@ toGraphViz net = DotGraph { strictGraph     = False
 
           allEdges        = drawEdge <$> elems_ edges'
 
-          nodeColorAttrs a = case' (uncoat a) $ do
-                                 match $ \(Val val :: Val (Ref Edge)) -> do
-                                    case' val $ do
-                                        match $ \(Lit.Int    _) -> [GV.color valIntNodeClr]
-                                        match $ \(Lit.String _) -> [GV.color valStrNodeClr]
-                                        match $ \ANY            -> [GV.color valNodeClr]
-                                 match $ \ANY                   -> [GV.color nodeClr]
+          nodeColorAttrs n = case' (uncoat n) $ do
+                                match $ \(Val val :: Val (Ref Edge)) ->
+                                     case' val $ match $ \lit -> case lit of
+                                        Lit.Int    i -> [GV.color valIntNodeClr]
+                                        Lit.String s -> [GV.color valStrNodeClr]
+                                        _            -> [GV.color valNodeClr]
+                                match $ \ANY         -> [GV.color nodeClr]
           nodeRef        i = "<node " <> show i <> ">"
 
           drawEdge (DoubleArc start end) = DotEdge (nodeRef $ deref start) (nodeRef $ deref end) []
