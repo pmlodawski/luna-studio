@@ -61,11 +61,16 @@ renderAndOpen lst = do
 
 instance LabelAttrs (Labeled2 Label (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge)))))) where
     labelAttrs n = if n ^. label . Label.checked
-        then [GV.color GVC.Magenta]
+        then [] -- [GV.color GVC.Magenta]
         else []
 
 -- ====================================
 
+emptyArgList :: [Arg (Ref Node)]
+emptyArgList = []
+
+emptyNodeList :: [Ref Node]
+emptyNodeList = []
 
 sampleGraph :: ((Ref Node, SymbolMap (Network Label), Ref Node, Ref Node), Network Label)
 sampleGraph = runIdentity
@@ -84,9 +89,9 @@ sampleGraph = runIdentity
 
             arrPlusTpe    <- arrow [consIntTpe] Map.empty consIntTpe
             arrConcTpe    <- arrow [consStringTpe] Map.empty consStringTpe
-            arrLenTpe     <- arrow ([] :: [Ref Node]) Map.empty consIntTpe
+            arrLenTpe     <- arrow emptyNodeList Map.empty consIntTpe
 
-            i1 <- _int 2 -- `typed` consIntTpe
+            i1 <- _int 2 -- `typed` arrLenTpe
             i2 <- _int 3
             i3 <- _int 4
             s1 <- _stringVal "abc" -- `typed` consStringTpe
@@ -106,7 +111,7 @@ sampleGraph = runIdentity
             appConc1b  <- app accConc1b [arg s3] `typed` arrConcTpe
 
             accLen    <- accessor nameLen appConc1b
-            appLen    <- app accLen ([] :: [Arg (Ref Node)]) `typed` arrLenTpe
+            appLen    <- app accLen emptyArgList `typed` arrLenTpe
 
             accPlus2  <- accessor namePlus appPlus1b
             appPlus2  <- app accPlus2 [arg appLen] `typed` arrPlusTpe
@@ -114,7 +119,7 @@ sampleGraph = runIdentity
 
             let sm = def
 
-            return (accConc1b, sm, consIntTpe, consStringTpe)
+            return (appPlus2, sm, consIntTpe, consStringTpe)
 
 runGraph gr sm = runIdentityT
             . flip SymbolBuilder.evalT sm

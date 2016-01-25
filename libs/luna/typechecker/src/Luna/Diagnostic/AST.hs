@@ -94,7 +94,7 @@ bgClr         = GVC.Gray15
 
 typedArrClr   = GVC.Firebrick
 namedArrClr   = GVC.Turquoise
-accArrClr     = GVC.YellowGreen
+accArrClr     = GVC.LightSalmon
 arrClr        = GVC.DarkOrange
 
 nodeClr       = GVC.DeepSkyBlue

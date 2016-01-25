@@ -81,40 +81,42 @@ isChecked node = node ^. label . Label.checked
 
 
 
-assignLiteralTypesWithTypes :: (StarBuilder.MonadStarBuilder (Maybe (Ref Node)) m,
-                       NodeBuilder.MonadNodeBuilder (Ref Node) m,
-                       MonadFix m,
-                       MonadIO m,
-                       BuilderMonad (Network Label) m) => Ref Node -> Ref Node -> Ref Node -> m ()
+assignLiteralTypesWithTypes :: ( StarBuilder.MonadStarBuilder (Maybe (Ref Node)) m
+                               , NodeBuilder.MonadNodeBuilder (Ref Node) m
+                               , MonadIO m
+                               , BuilderMonad (Network Label) m
+                               ) => Ref Node -> Ref Node -> Ref Node -> m ()
 assignLiteralTypesWithTypes consIntTpe consStringTpe ref = do
     node <- B.readRef ref
-    unless (isChecked node) $ do
-        B.writeRef ref (node & label . Label.checked .~ True)
-        case' (uncoat node) $ do
-            match $ \(Val val) -> do
-                case' val $ match $ \lit -> case lit of
-                    Lit.Int    i -> do
-                        putStrLn $ "Lit.Int " <> show i <> ": " <> show node
-                        tnode <- B.follow $ node ^. Typed.tp
-                        destruct tnode -- czy usuwam tylko gwiazdki?
-                        B.reconnect ref Typed.tp consIntTpe
-                        return ()
-                    Lit.String s -> do
-                        putStrLn $ "Lit.String " <> show s <> ": " <> show node
-                        tnode <- B.follow $ node ^. Typed.tp
-                        destruct tnode
-                        B.reconnect ref Typed.tp consStringTpe
-                        return ()
-                    _            -> do
-                        putStrLn $ "ANY?: " <> show node
-            match $ \ANY -> do
-                putStrLn $ "ANY: " <> show node
-                return ()
+    B.writeRef ref (node & label . Label.checked .~ True)
+    case' (uncoat node) $ do
+        match $ \(Val val) -> do
+            case' val $ match $ \lit -> case lit of
+                Lit.Int    i -> do
+                    putStrLn $ "Lit.Int " <> show i <> ": " <> show node
+                    tnodeRef <- B.follow $ node ^. Typed.tp
+                    tnode <- B.readRef tnodeRef
+                    case' (uncoat tnode) $ do
+                        match $ \Star -> do
+                            destruct tnodeRef
+                            void $ B.reconnect ref Typed.tp consIntTpe
+                        match $ \ANY -> return ()
+                Lit.String s -> do
+                    putStrLn $ "Lit.String " <> show s <> ": " <> show node
+                    tnodeRef <- B.follow $ node ^. Typed.tp
+                    tnode <- B.readRef tnodeRef
+                    case' (uncoat tnode) $ do
+                        match $ \Star -> do
+                            destruct tnodeRef
+                            void $ B.reconnect ref Typed.tp consStringTpe
+                        match $ \ANY -> return ()
+                _            -> do
+                    putStrLn $ "ANY?: " <> show node
+        match $ \ANY -> do
+            void $ putStrLn $ "ANY: " <> show node
 
-        let nodeInputs = inputs node
-        putStrLn $ "inputs: " <> show nodeInputs
+    let nodeInputs = inputs node
+    putStrLn $ "inputs: " <> show nodeInputs
 
-        mapM_ (assignLiteralTypesWithTypes consIntTpe consStringTpe) =<< pre ref   -- ??????????????
-        -- mapM_ (assignLiteralTypesWithTypes consIntTpe consStringTpe) =<< succ ref
-        -- assignLiteralTypesWithTypes consIntTpe consStringTpe =<< up ref
+    mapM_ (assignLiteralTypesWithTypes consIntTpe consStringTpe) =<< pre ref
 
