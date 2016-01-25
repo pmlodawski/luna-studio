@@ -59,7 +59,4 @@ data Event = UnknownEvent String
            | ConnectionOpened
            deriving (Eq, Show, Generic)
 
-instance PrettyPrinter Event where
-    display = show
-
 instance ToJSON Event
