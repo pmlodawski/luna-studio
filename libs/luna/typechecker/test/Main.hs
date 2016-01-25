@@ -1,3 +1,4 @@
+{-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Main where
@@ -18,6 +19,7 @@ import Data.Coat
 import Data.Construction
 
 import Control.Monad.Identity
+import Control.Monad.State
 import Data.Container
 
 import           Luna.Syntax.Model.Graph (Graph, GraphBuilder, MonadGraphBuilder, nodes, edges)
@@ -38,7 +40,16 @@ data Attached d t = Attached d t deriving (Show)
 
 newtype Layer l t a = Layer (l (t a)) deriving (Show)
 
-data Ref a = Ref Int
+data Entity = Node
+            | Edge
+            deriving (Show)
+
+
+data Ref (t :: Entity) a = Ref Int
+
+data Arc a = Arc Int Int deriving (Show)
+
+--newtype Typed a t
 
 
 
@@ -67,8 +78,19 @@ instance {-# OVERLAPPABLE #-} (Default d, Monad m) => CoatConstructor a m (Attac
 --foo :: (Monad m, MonadGraphBuilder (Layer (Attached String) Cover (ASTRecord '[] LitVariants (Layer (Ref :< Attached String) Cover) Data)) e m)
 --    => m (Layer Ref (Layer (Attached String) Cover) (Lit (Ref :< (Attached String) :< Cover)))
 
-foo :: GraphBuilder (Layer (Attached String) Cover Data) Int (Layer Ref (Layer (Attached String) Cover) (Lit (Ref :< (Attached String) :< Cover)))
-foo = constructCover star
+--foo :: GraphBuilder (Layer (Attached String) Cover Data) Int (Layer Ref (Layer (Attached String) Cover) (Lit (Ref :< (Attached String) :< Cover)))
+--foo :: GraphBuilder (Layer (Attached String) Cover Data) Int 
+--       (      Layer Ref (Layer (Attached String) Cover) 
+--        (Lit (Layer Ref (Layer (Attached String) Cover)))   
+--       )
+--foo :: (CoverConstructor m a, Uncovered a ~ Lit ((Ref :< Attached String) :< Cover)) => m a
+--foo2 :: _ => m (t (a t))
+foo2 = constructCover' star2
+
+foo = constructCover' star
+
+constructCover' :: (CoverConstructorFix m (t (a t)), Uncovered (t (a t)) ~ a t) => (a t) -> m (t (a t))
+constructCover' = constructCoverFix
 
 --foo :: (Monad m, CoatConstructor m Ref) => m (Layer Ref (Layer (Attached String) Cover) (Lit (Ref :< (Attached String) :< Cover)))
 --foo = constructCover star
@@ -83,10 +105,12 @@ foo = constructCover star
 --        return $ Ref idx
 
 instance (MonadGraphBuilder n e m, Coated l, Wrapped ast, Wrapped (Unwrapped ast), n ~ l (Unwrapped (Unwrapped ast)))
-      => CoatConstructor (l ast) m Ref where
-    constructCoat ast = fmap Ref $ Graph.modify $ \g -> let generalizedAST = ast & coated %~ unwrap' ∘ unwrap'
-                                                            (n', idx)      = ixed add generalizedAST (g ^. nodes)
-                                                        in  (g & nodes .~ n', idx)
+      => CoatConstructor (l ast) m (Ref t) where
+    constructCoat ast = do
+        idx <- Graph.modify $ \g -> let generalizedAST = ast & coated %~ unwrap' ∘ unwrap'
+                                        (n', idx)      = ixed add generalizedAST (g ^. nodes)
+                                    in  (g & nodes .~ n', idx)
+        return $ Ref idx
     {-# INLINE constructCoat #-}
             
                           
@@ -111,8 +135,18 @@ type l :< t = Layer l t
 --star :: Lit (Cover +> Int +> String)
 --star :: Lit (Attached String (Attached Int Cover))
 --star :: Lit (Layer Ref (Layer (Attached String) Cover))
-star :: Lit (Ref :< (Attached String) :< Cover)
+--star :: Lit (Ref :< (Attached String) :< Cover)
+--star :: Lit (Layer Ref (Layer (Attached String) Cover))
+--star = cons Star
+
+star :: Lit (Layer (Ref Edge) t)
 star = cons Star
+
+--star2 :: Lit (Layer Ref t)
+star2 = cons Star
+
+--star :: Lit t
+--star = cons Star
 
 cons' :: SmartCons (Cons n t) b => n -> [t] -> b
 cons' = cons ∘∘ Cons
@@ -124,14 +158,32 @@ data Test a b = Test !a !b  deriving (Show)
 
 
 
+--class IsEdge e 
+--connection src tgt = do 
+--    g <- Graph.get
+
+--    return ()
+
+
+--type family Derefd a
+--class Deref a where deref :: a -> Derefd a
+
+--instance Deref (Layer l t a) where deref = 
+
 main = do
 
-    let 
         --s = star
-        s = Graph.exec foo (def :: Network)
+    g <- flip evalStateT (0 :: Int) $ flip Graph.execT (def :: Network) $ do
+        s1 <- foo
+        s2 <- foo
+        s3 <- foo
+
+        --print $ deref s1
+        return ()
+
         --s' = s & coated %~ unwrap' ∘ unwrap'
 
-    print $ s
+    print $ g
     --print $ s'
     --print $ uncoat s
     ----let x = 
