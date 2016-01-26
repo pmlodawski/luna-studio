@@ -154,7 +154,7 @@ makePortControl parent nodeId port = case port ^. Port.portId of
 makeInPortControl :: WidgetId -> NodeId -> InPort -> Port -> Command UIRegistry.State ()
 makeInPortControl parent nodeId inPort port = case port ^. Port.state of
     Port.NotConnected    -> do
-        groupId <- UICmd.register parent Group.create (Layout.horizontalLayoutHandler 10)
+        groupId <- UICmd.register parent Group.create (Layout.horizontalLayoutHandler def 10)
         let label  = Label.Label def (Vector2 140 20) (Text.pack $ show inPort)
             button = Button.create (Vector2 50 20) ("Set")
             handlers = addHandler (Button.ClickedHandler $ \_ -> do

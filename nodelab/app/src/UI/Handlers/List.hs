@@ -63,7 +63,7 @@ makeItem isTuple listId listGroupId width elem ix = do
     groupId <- UICmd.register listGroupId Group.create def
     createValueWidget groupId elem (Text.pack $ show ix) width (addHandler (ValueChangedHandler $ listItemHandler listId listGroupId groupId) mempty)
     when (not isTuple) $ UICmd.register_ groupId removeButton (removeItemHandlers listId listGroupId groupId)
-    Layout.horizontalLayout 0.0 groupId
+    Layout.horizontalLayout def 0.0 groupId
 
 makeListItem  = makeItem False
 makeTupleItem = makeItem True
