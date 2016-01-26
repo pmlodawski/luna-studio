@@ -18,6 +18,7 @@ import qualified Empire.API.Project.ListProjects  as ListProjects
 import qualified Empire.API.Update                as Update
 import qualified Empire.API.Topic                 as Topic
 import qualified Empire.Commands.Project          as Project
+import qualified Empire.Commands.Library          as Library
 import qualified Empire.Empire                    as Empire
 import           Empire.Server.Server             (sendToBus, errorMessage)
 
@@ -28,9 +29,12 @@ handleCreateProject :: ByteString -> StateT Env BusT ()
 handleCreateProject content = do
     let request = Bin.decode . fromStrict $ content :: CreateProject.Request
     currentEmpireEnv <- use Env.empireEnv
-    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ Project.createProject
-        (request ^. CreateProject.projectName)
-        (fromString $ request ^. CreateProject.path)
+    (result, newEmpireEnv) <- liftIO $ Empire.runEmpire currentEmpireEnv $ do
+      (projectId, project) <- Project.createProject (request ^. CreateProject.projectName) (fromString $ request ^. CreateProject.path)
+      (libraryId, library) <- Library.createLibrary projectId (Just "Main") "Main.luna"
+
+      let project' = project & DataProject.libs . at libraryId ?~ library
+      return (projectId, project')
     case result of
         Left err -> logger Logger.error $ errorMessage <> err
         Right (projectId, project) -> do
