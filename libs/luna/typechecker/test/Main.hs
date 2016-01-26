@@ -27,6 +27,8 @@ import Data.Container
 import           Luna.Syntax.Model.Graph (Graph, GraphBuilder, MonadGraphBuilder, nodes, edges)
 import qualified Luna.Syntax.Model.Graph as Graph
 
+import Data.Construction
+
 -------------------------------------------------------------------------------------------------------------------
 -- TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST --
 -------------------------------------------------------------------------------------------------------------------
@@ -40,16 +42,53 @@ newtype IDT a = IDT a deriving (Show, Functor, Traversable, Foldable)
 --star :: Lit (Labeled String (Labeled Int) Cover)
 data Attached d t = Attached d t deriving (Show)
 
-newtype Layer l t a = Layer (l (t a)) deriving (Show)
+--------------------
+-- === Layers === --
+--------------------
 
-data Entity = Node
-            | Edge
-            deriving (Show)
+newtype Layer        l (t :: * -> *) a = Layer        (l (t a)) deriving (Show)
+newtype PhantomLayer l (t :: * -> *) a = PhantomLayer l         deriving (Show, Functor, Traversable, Foldable)
+
+-- === Instances === --
+
+-- Wrappers
+
+instance (Coated l, Coated t) => Coated (Layer l t) where coated = wrapped ∘ coated ∘ coated
+type instance        Unlayered (Layer l t a) = t a
+instance Coated l => Layered   (Layer l t a) where layered = wrapped' ∘ coated ; {-# INLINE layered #-}
+instance             Rewrapped (Layer l t a) (Layer l' t' a')
+instance             Wrapped   (Layer l t a) where
+    type             Unwrapped (Layer l t a) = l (t a)
+    _Wrapped' = iso (\(Layer a) -> a) Layer
+    {-# INLINE _Wrapped' #-}
+
+type instance Unlayered (PhantomLayer l t a) = t a
+instance      Rewrapped (PhantomLayer l t a) (PhantomLayer l' t' a')
+instance      Wrapped   (PhantomLayer l t a) where
+    type      Unwrapped (PhantomLayer l t a) = l
+    _Wrapped' = iso (\(PhantomLayer a) -> a) PhantomLayer
+    {-# INLINE _Wrapped' #-}
+
+-- Refs
+
+type instance RefOf (Layer        l t a) = RefOf (Unwrapped (Layer        l t a))
+type instance RefOf (PhantomLayer l t a) = RefOf (Unwrapped (PhantomLayer l t a))
+
+instance HasRef (Unwrapped (Layer        l t a)) => HasRef (Layer        l t a) where ref = wrapped' ∘ ref
+instance HasRef (Unwrapped (PhantomLayer l t a)) => HasRef (PhantomLayer l t a) where ref = wrapped' ∘ ref
 
 
-data Ref (t :: Entity) a = Ref a deriving (Show, Functor, Traversable, Foldable)
+------------------------
+-- === Properties === --
+------------------------
+
+data Node = Node deriving (Show)
+data Edge = Edge deriving (Show)
 
 newtype Typed a t = Typed a deriving (Show, Functor, Traversable, Foldable)
+
+
+-- === Instances === --
 
 instance Rewrapped (Typed a t) (Typed a' t')
 instance Wrapped   (Typed a t) where
@@ -57,13 +96,34 @@ instance Wrapped   (Typed a t) where
     _Wrapped' = iso (\(Typed a) -> a) Typed ; {-# INLINE _Wrapped' #-}
 
 
+------------------
+-- === Refs === --
+------------------
+
+data Ref r a = Ref a deriving (Show, Functor, Traversable, Foldable)
+
+type family RefOf a
+class HasRef a where ref :: Lens' a (RefOf a)
+
+
+
+
+
+--instance      Layered   (PhantomLayer l t a)
+--instance      Rewrapped (PhantomLayer l t a) (PhantomLayer l' t' a')
+--instance      Wrapped   (PhantomLayer l t a) where
+--    type      Unwrapped (PhantomLayer l t a) = Unlayered (PhantomLayer l t a)
+--    _Wrapped' = iso (\(PhantomLayer l) -> l) PhantomLayer
+
+
+
 -------------------
 -- === Edges === --
 -------------------
 
-data Arrow       tgt = Arrow                (Ref 'Node tgt) deriving (Show, Functor, Traversable, Foldable)
-data Arc     src tgt = Arc   (Ref Node src) (Ref 'Node tgt) deriving (Show, Functor, Traversable, Foldable)
-type HomoArc t       = Arc t t
+data Arrow       tgt = Arrow   tgt deriving (Show, Functor, Traversable, Foldable)
+data Arc     src tgt = Arc src tgt deriving (Show, Functor, Traversable, Foldable)
+type HomoArc t       = Arc t   t
 
 class EdgeCons src tgt edge where consEdge :: src -> tgt -> edge
 
@@ -71,28 +131,17 @@ class EdgeCons src tgt edge where consEdge :: src -> tgt -> edge
 -- === Construction === --
 
 -- Arc
-type ArcCons src tgt srcRef tgtRef = ( HaveRef '[src,tgt]
-                                     , RefOf src ~ Ref 'Node srcRef
-                                     , RefOf tgt ~ Ref 'Node tgtRef
-                                     )
-
-type HomoArcCons t tRef = ArcCons t t tRef tRef
-
-instance   ArcCons     src tgt srcRef tgtRef => EdgeCons src tgt (Arc srcRef tgtRef) where consEdge = arc ; {-# INLINE consEdge #-}
-arc     :: ArcCons     src tgt srcRef tgtRef => src -> tgt -> Arc srcRef tgtRef
-homoArc :: HomoArcCons t       tRef          => t   -> t   -> HomoArc tRef
-arc src tgt = Arc (src ^. ref) (tgt ^. ref)
-homoArc     = arc
+arc     :: HaveRef '[src,tgt] => src -> tgt -> Arc (RefOf src) (RefOf tgt)
+homoArc :: HasRef t           => t   -> t   -> HomoArc (RefOf t)
+arc src tgt = Arc (src ^. ref) (tgt ^. ref) ; {-# INLINE arc     #-}
+homoArc     = arc                           ; {-# INLINE homoArc #-}
 
 -- Arrow
-type ArrowCons tgt tgtRef = ( HasRef tgt
-                            , RefOf tgt ~ Ref 'Node tgtRef
-                            )
+arrow :: HasRef tgt => tgt -> Arrow (RefOf tgt)
+arrow tgt = Arrow (tgt ^. ref) ; {-# INLINE arrow #-}
 
-instance ArrowCons tgt tgtRef => EdgeCons src tgt (Arrow tgtRef) where consEdge = const arrow ; {-# INLINE consEdge #-}
-arrow :: ArrowCons tgt tgtRef => tgt -> Arrow tgtRef
-arrow tgt = Arrow (tgt ^. ref)
-
+-- EdgeCons
+instance (HaveRef '[src,tgt], srcRef ~ RefOf src, tgtRef ~ RefOf tgt) => EdgeCons src tgt (Arc srcRef tgtRef) where consEdge = arc ; {-# INLINE consEdge #-}
 
 
 
@@ -104,76 +153,31 @@ arrow tgt = Arrow (tgt ^. ref)
 instance Coated Cover        where coated = lens (\(Cover a) -> a) (const Cover)
 instance Coated (Attached d) where coated = lens (\(Attached _ t) -> t) (\(Attached d _) t -> Attached d t)
 
-instance (Coated l, Coated t) => Coated (Layer l t) where coated = wrapped ∘ coated ∘ coated
 
-type instance        Unlayered (Layer l t a) = t a
-instance Coated l => Layered   (Layer l t a) where layered = wrapped' ∘ coated ; {-# INLINE layered #-}
-
-instance Rewrapped (Layer l t a) (Layer l' t' a')
-instance Wrapped   (Layer l t a) where
-    type Unwrapped (Layer l t a) = l (t a)
-    _Wrapped' = iso (\(Layer a) -> a) Layer
-    {-# INLINE _Wrapped' #-}
 
 
 
 --instance (CoatConstructor m l, Functor m) => LayerConstructor m (Layer l t a) where constructLayer = Layer <∘> constructCoat
-instance (Functor m, CoatConstructor (t a) m l) => LayerConstructor m (Layer l t a) where constructLayer = Layer <∘> constructCoat
+instance (Functor m, CoatConstructor (t a) m l)           => LayerConstructor m (Layer        l t a) where constructLayer = Layer        <∘> constructCoat
+instance (Functor m, Destructed l ~ t a, Constructor m l) => LayerConstructor m (PhantomLayer l t a) where constructLayer = PhantomLayer <∘> construct
 
 instance {-# OVERLAPPABLE #-} (Default d, Monad m) => CoatConstructor a m (Attached d) where constructCoat = return ∘ Attached def
 
 
---foo :: (Monad m, MonadGraphBuilder (Layer (Attached String) Cover (ASTRecord '[] LitVariants (Layer (Ref :< Attached String) Cover) Data)) e m)
---    => m (Layer Ref (Layer (Attached String) Cover) (Lit (Ref :< (Attached String) :< Cover)))
 
---foo :: GraphBuilder (Layer (Attached String) Cover Data) Int (Layer Ref (Layer (Attached String) Cover) (Lit (Ref :< (Attached String) :< Cover)))
---foo :: GraphBuilder (Layer (Attached String) Cover Data) Int 
---       (      Layer Ref (Layer (Attached String) Cover) 
---        (Lit (Layer Ref (Layer (Attached String) Cover)))   
---       )
---foo :: (CoverConstructor m a, Uncovered a ~ Lit ((Ref :< Attached String) :< Cover)) => m a
---foo2 :: _ => m (t (a t))
---foo2 = constructCover' star2
-
---foo = constructCover' star
-
-
---foox = constructCoverFix starx
-
---Ref a 
-
---ref :: Lens a (Ref (RefData a))
-
-
---class IsEdge where
---    asEdge :: 
-
-
---Ref Node Int -> Ref Node Int -> Ref Edge Int
-
---Ref Node Int -> Ref Node Int -> Arc Int
---star :: Lit (Ref' Edge  (Attached' String Cover)  )
-
-
---constructCover' :: (CoverConstructorFix m (t (a t)), Uncovered (t (a t)) ~ a t) => (a t) -> m (t (a t))
---constructCover' :: (Uncovered (t (a (Ref' 'Edge t))) ~ a (Ref' 'Edge t), MonadFix m, CoverConstructorFix m (t (a (Ref' 'Edge t))), Wrapped (Unwrapped (a (Ref' 'Edge t))), Wrapped (a (Ref' 'Edge t)), Coated t, MonadGraphBuilder (t (Unwrapped (Unwrapped (a (Ref' 'Edge t))))) e m)
---                => (a (Ref' Edge t)) -> m (Ref' Node t (a (Ref' Edge t)))
---constructCover' = constructCoverFix
-
---foo :: (Monad m, CoatConstructor m Ref) => m (Layer Ref (Layer (Attached String) Cover) (Lit (Ref :< (Attached String) :< Cover)))
---foo = constructCover star
-
-
---instance (MonadGraphBuilder n e m, Coated l, Wrapped ast, n ~ l (Unwrapped ast)) => CoatConstructor (l ast) m Ref where
+--instance (MonadGraphBuilder n e m, Coated l, Wrapped ast, Wrapped (Unwrapped ast), n ~ l (Unwrapped (Unwrapped ast)), a ~ Int)
+--      => CoatConstructor (l ast) m (Typed (Ref Node a)) where
 --    constructCoat ast = do
---        g <- Graph.get
---        let generalizedAST = ast & coated %~ unwrap'
---            (n', idx)      = ixed add generalizedAST (g ^. nodes)
---        Graph.put (g & nodes .~ n')
---        return $ Ref idx
+--        idx <- Graph.modify $ \g -> let generalizedAST = ast & coated %~ unwrap' ∘ unwrap'
+--                                        (n', idx)      = ixed add generalizedAST (g ^. nodes)
+--                                    in  (g & nodes .~ n', idx)
+--        return $ Typed $ Ref idx
+--    {-# INLINE constructCoat #-}
+
+
 
 instance (MonadGraphBuilder n e m, Coated l, Wrapped ast, Wrapped (Unwrapped ast), n ~ l (Unwrapped (Unwrapped ast)), a ~ Int)
-      => CoatConstructor (l ast) m (Typed (Ref 'Node a)) where
+      => CoatConstructor (l ast) m (Typed (Ref Node a)) where
     constructCoat ast = do
         idx <- Graph.modify $ \g -> let generalizedAST = ast & coated %~ unwrap' ∘ unwrap'
                                         (n', idx)      = ixed add generalizedAST (g ^. nodes)
@@ -181,61 +185,59 @@ instance (MonadGraphBuilder n e m, Coated l, Wrapped ast, Wrapped (Unwrapped ast
         return $ Typed $ Ref idx
     {-# INLINE constructCoat #-}
             
-                          
+                  
+instance (a ~ Int, t ~ l ast, n ~ l (Unwrapped (Unwrapped ast)), MonadGraphBuilder n e m, Wrapped ast, Wrapped (Unwrapped ast), Coated l) => Constructor m (Ref (Typed Node t) a) where
+    construct ast = do
+        idx <- Graph.modify $ \g -> let generalizedAST = ast & coated %~ unwrap' ∘ unwrap'
+                                        (n', idx)      = ixed add generalizedAST (g ^. nodes)
+                                    in  (g & nodes .~ n', idx)
+        return $ Ref idx
 
-
-        --Graph.put (g & nodes .~ n')
-        --return $ Ref idx
---test :: _ => _
---test a (v :: Graph.AutoVector y) = ixed add a v
-
-
---instance Covered (Layer l t a) where
---    covered = lens (\(Layer ))
-
---infixl 9 +>
---type l +> d = Attached d l
 
 infixl 9 :<
 type l :< t = Layer l t
 
---star :: Lit (Cover +> Int +> String)
---star :: Lit (Attached String (Attached Int Cover))
---star :: Lit (Layer Ref (Layer (Attached String) Cover))
---star :: Lit (Ref :< (Attached String) :< Cover)
---star :: Lit (Layer Ref (Layer (Attached String) Cover))
---star = cons Star
+
 
 type Ref'      t = Layer (Typed (Ref t Int))
 type Attached' t = Layer (Attached t)
 
-newtype GRef r t a = GRef (Layer (Typed (Ref r Int)) t a)
+newtype NetRef  r t a = NetRef (Layer (Typed (Ref r Int)) t a)
+newtype NetRef2 r t a = NetRef2 (PhantomLayer (Ref (Typed r (t a)) Int) t a)
 
-type instance Unlayered (GRef r t a) = Unwrapped (GRef r t a)
-instance      Rewrapped (GRef r t a) (GRef r' t' a')
-instance      Wrapped   (GRef r t a) where
-    type      Unwrapped (GRef r t a) = Layer (Typed (Ref r Int)) t a
-    _Wrapped' = iso (\(GRef a) -> a) GRef
 
-type instance RefOf  (GRef r t a) = RefOf (Unwrapped (GRef r t a))
-instance      HasRef (GRef r t a) where ref = wrapped' ∘ ref
-
-instance Monad m => LayerConstructor m (GRef r t a) where constructLayer = return ∘ GRef
+type instance Destructed (Ref (Typed r t) a) = t
 
 
 
---star :: Lit (Layer (Typed (Ref Edge Int)) t)
---star :: Lit (Layer (Typed (Ref Edge Int))   (Layer (Attached String) Cover)  )
---star :: Lit (Ref' Edge  (Attached' String Cover)  )
---star = cons Star
+type instance Unlayered (NetRef2 r t a) = Unwrapped (NetRef2 r t a)
+instance      Rewrapped (NetRef2 r t a) (NetRef2 r' t' a')
+instance      Wrapped   (NetRef2 r t a) where
+    type      Unwrapped (NetRef2 r t a) = PhantomLayer (Ref (Typed r (t a)) Int) t a
+    _Wrapped' = iso (\(NetRef2 a) -> a) NetRef2
+
+instance Monad m => LayerConstructor m (NetRef2 r t a) where constructLayer = return ∘ NetRef2
+
+type instance RefOf  (NetRef2 r t a) = RefOf (Unwrapped (NetRef2 r t a))
+instance      HasRef (NetRef2 r t a) where ref = wrapped' ∘ ref
 
 
 
---starx :: Lit (GRef Edge  (Attached' String Cover)  )
---starx = cons Star
+type instance Unlayered (NetRef r t a) = Unwrapped (NetRef r t a)
+instance      Rewrapped (NetRef r t a) (NetRef r' t' a')
+instance      Wrapped   (NetRef r t a) where
+    type      Unwrapped (NetRef r t a) = Layer (Typed (Ref r Int)) t a
+    _Wrapped' = iso (\(NetRef a) -> a) NetRef
 
---star :: Lit t
---star = cons Star
+
+type instance RefOf  (NetRef r t a) = RefOf (Unwrapped (NetRef r t a))
+instance      HasRef (NetRef r t a) where ref = wrapped' ∘ ref
+
+instance Monad m => LayerConstructor m (NetRef r t a) where constructLayer = return ∘ NetRef
+
+
+
+
 
 cons' :: SmartCons (Cons n t) b => n -> [t] -> b
 cons' = cons ∘∘ Cons
@@ -245,8 +247,6 @@ caseTest = __case__ "tc-test" "test/Main.hs" 0
 
 data Test a b = Test !a !b  deriving (Show)
 
-type family RefOf a
-class HasRef a where ref :: Lens' a (RefOf a)
 type family HaveRef lst :: Constraint where 
     HaveRef '[]       = ()
     HaveRef (a ': as) = (HasRef a, HaveRef as)
@@ -254,10 +254,8 @@ type family HaveRef lst :: Constraint where
 type instance RefOf (Ref t a) = Ref t a
 instance HasRef (Ref t a) where ref = id
 
-type instance RefOf (Layer l t a) = RefOf (Unwrapped (Layer l t a))
 type instance RefOf (Typed a t)   = RefOf a
 
-instance HasRef (Unwrapped (Layer l t a)) => HasRef (Layer l t a) where ref = wrapped' ∘ ref
 instance HasRef (Unwrapped (Typed a t))   => HasRef (Typed a t)   where ref = wrapped' ∘ ref
 
 --class IsEdge e 
@@ -334,7 +332,7 @@ constrainCoverType (Proxy :: Proxy tp) = constrainASTType (Proxy :: Proxy (tp k)
 type Network = Graph (Layer (Attached String) Cover Data) Int  
 
 buildNetwork = rebuildNetwork def
-rebuildNetwork (net :: Network) = constrainCoverType (Proxy :: Proxy (GRef 'Node k)) -- ta linijka wystarcza do inferencji typow (!)
+rebuildNetwork (net :: Network) = constrainCoverType (Proxy :: Proxy (NetRef2 Node k)) -- ta linijka wystarcza do inferencji typow (!)
                                 ∘ flip Graph.execT net                               -- mowi ona TC ze powinien unifikowac potrzebne typy wkladane do grafu z tymi generowanymi
 
 --build
@@ -353,34 +351,27 @@ star' = registerAST $ constructCoverFix star
 
 
 
---newtype GRef r t a = GRef (Layer (Typed (Ref r Int)) t a)
+--newtype NetRef r t a = NetRef (Layer (Typed (Ref r Int)) t a)
 
-
+ --(NetRef Node (Attached' String Cover) (Lit (NetRef Edge  (Attached' String Cover))))
+ 
+ --(NetRef (Typed Node (Attached' String Cover) (Lit (NetRef Edge (Attached' String Cover))))
 
 main :: IO ()
 main = do
 
         --s = star
     --g <- flip evalStateT (0 :: Int) $ flip Graph.execT (def :: Network) $ do
-       -- $ constrainCoverType (Proxy :: Proxy (Ref' 'Node (Attached' String Cover)))
+       -- $ constrainCoverType (Proxy :: Proxy (Ref' Node (Attached' String Cover)))
 
     g <- buildNetwork $ do
-        --x <- constructCoverFix star :: _ (GRef 'Node (Attached' String Cover) (Lit (GRef Edge  (Attached' String Cover))))
-        --x <- constructCoverFix starx :: _ (Ref' 'Node (Attached' String Cover) (Lit (GRef Edge  (Attached' String Cover))))
+        --x <- constructCoverFix star :: _ (NetRef2 Node (Attached' String Cover) (Lit (NetRef2 Edge  (Attached' String Cover))))
 
         s1 <- star'
         s2 <- star'
 
-        --print (s1 :: _)
-        --s2 <- foo'
 
-                        --zastanowic sie nad tym czy nie ma lepszego rozwiazani dla problemu wyzej (inferowania typu coverow)
-                        --dorobic prawdziwe newtype nad Ref'
-                        --Network powinien przechowywac Arc dla krawedzi, tak samo jak teraz przechowuje Data dla wierzcholkow
-                        --typujemy krawedzie dokladniej przy odczycie
-
-        print $ arc s1 s2
-        --print $ (s1 ^. ref)
+        print $ arc s1 (s2 :: _)
         return ()
 
         --s' = s & coated %~ unwrap' ∘ unwrap'

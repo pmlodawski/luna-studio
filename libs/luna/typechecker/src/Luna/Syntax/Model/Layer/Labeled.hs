@@ -65,8 +65,8 @@ instance HasLabel l (Labeled2 l a) where
 --    makeLabel = return def
 
 -- FIXME: Remove vvv
-instance (Monad m, Default a) => Maker m a where make = return def
-instance Monad m => Destroyer m Int where destroy _ = return ()
+--instance (Monad m, Default a) => Maker m a where make = return def
+--instance Monad m => Destroyer m Int where destroy _ = return ()
 
 
 --instance HasAST (a t) ast => HasAST (Labeled l a t) ast where ast = undefined
