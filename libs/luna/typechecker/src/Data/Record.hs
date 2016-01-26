@@ -227,7 +227,6 @@ type instance Props Group   (ASTRecord gs vs t d) = gs
 type instance RecordOf (ASTRecord gs vs t d) = ASTRecord gs vs t d
 instance      IsRecord (ASTRecord gs vs t d) where asRecord = id ; {-# INLINE asRecord #-}
 
-
 -- Wrappers
 
 instance Layered   (ASTRecord gs vs t d)
@@ -236,6 +235,13 @@ instance Wrapped   (ASTRecord gs vs t d) where
     type Unwrapped (ASTRecord gs vs t d) = d
     _Wrapped' = iso (\(ASTRecord a) -> a) ASTRecord
     {-# INLINE _Wrapped' #-}
+
+-- Conversions
+
+instance Castable    (ASTRecord gs vs t d) d
+instance Convertible (ASTRecord gs vs t d) d where convert = unwrap'
+
+instance Castable d (ASTRecord gs vs t d) where cast = wrap'
 
 
 -- === AST Data encoder === --

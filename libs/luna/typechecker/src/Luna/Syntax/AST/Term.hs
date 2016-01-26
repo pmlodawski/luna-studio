@@ -11,6 +11,7 @@ import Luna.Syntax.AST.Layout (SubLayouts, SubSemiLayouts, ToStatic, ToDynamic)
 import Type.Container
 import Type.Cache.TH
 import Type.Map
+import Data.Abstract
 
 import qualified Luna.Syntax.AST.Layout as Layout
 
@@ -51,14 +52,14 @@ data    Number       = Number Int               deriving (Show, Eq, Ord)
 --   S   - Source
 --   A/P - Args / Params
 
--- Layout                         N  S  A/P
-data    Cons     n t = Cons      !n    ![t]     deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
-data    Arrow      t = Arrow        !t !t       deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
-data    Acc      n t = Acc       !n !t          deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
-data    App        t = App          !t ![Arg t] deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
-newtype Var      n   = Var        n             deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
-data    Unify      t = Unify        !t !t       deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
-data    Blank        = Blank                    deriving (Show, Eq, Ord)
+-- Layout                     N  S  A/P
+data    Cons     n t = Cons  !n    ![t]     deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
+data    Arrow      t = Arrow    !t !t       deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
+data    Acc      n t = Acc   !n !t          deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
+data    App        t = App      !t ![Arg t] deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
+newtype Var      n   = Var    n             deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
+data    Unify      t = Unify    !t !t       deriving (Show, Eq, Ord, Functor, Foldable, Traversable)
+data    Blank        = Blank                deriving (Show, Eq, Ord)
 
 
 -- === Group definitions === --
@@ -220,6 +221,51 @@ type instance Props p (Thunk l t) = Props p (RecordOf (Thunk l t))
 type instance Props p (Term  l t) = Props p (RecordOf (Term  l t))
 type instance Props p (Draft l t) = Props p (RecordOf (Draft l t))
 
+-- Conversions
+
+instance (ASTRecord gs vs rt d ~ Unwrapped (Lit     t)) => Convertible (Lit     t) (ASTRecord gs vs rt d) where convert = unwrap'
+instance (ASTRecord gs vs rt d ~ Unwrapped (Val   l t)) => Convertible (Val   l t) (ASTRecord gs vs rt d) where convert = unwrap'
+instance (ASTRecord gs vs rt d ~ Unwrapped (Thunk l t)) => Convertible (Thunk l t) (ASTRecord gs vs rt d) where convert = unwrap'
+instance (ASTRecord gs vs rt d ~ Unwrapped (Term  l t)) => Convertible (Term  l t) (ASTRecord gs vs rt d) where convert = unwrap'
+instance (ASTRecord gs vs rt d ~ Unwrapped (Draft l t)) => Convertible (Draft l t) (ASTRecord gs vs rt d) where convert = unwrap'
+
+instance Castable (Lit     t) Data
+instance Castable (Val   l t) Data
+instance Castable (Thunk l t) Data
+instance Castable (Term  l t) Data
+instance Castable (Draft l t) Data
+
+instance Convertible (Lit     t) Data where convert = convert ∘ unwrap'
+instance Convertible (Val   l t) Data where convert = convert ∘ unwrap'
+instance Convertible (Thunk l t) Data where convert = convert ∘ unwrap'
+instance Convertible (Term  l t) Data where convert = convert ∘ unwrap'
+instance Convertible (Draft l t) Data where convert = convert ∘ unwrap'
+
+instance Castable Data (Lit     t) where cast = wrap' ∘ cast
+instance Castable Data (Val   l t) where cast = wrap' ∘ cast
+instance Castable Data (Thunk l t) where cast = wrap' ∘ cast
+instance Castable Data (Term  l t) where cast = wrap' ∘ cast
+instance Castable Data (Draft l t) where cast = wrap' ∘ cast
+
+-- Abstractions
+
+type instance Abstract (Lit     t) = Data
+type instance Abstract (Val   l t) = Data
+type instance Abstract (Thunk l t) = Data
+type instance Abstract (Term  l t) = Data
+type instance Abstract (Draft l t) = Data
+
+instance HasAbstract (Lit     t)
+instance HasAbstract (Val   l t)
+instance HasAbstract (Thunk l t)
+instance HasAbstract (Term  l t)
+instance HasAbstract (Draft l t)
+
+instance IsAbstract (Lit     t) where abstracted = iso cast cast
+instance IsAbstract (Val   l t) where abstracted = iso cast cast
+instance IsAbstract (Thunk l t) where abstracted = iso cast cast
+instance IsAbstract (Term  l t) where abstracted = iso cast cast
+instance IsAbstract (Draft l t) where abstracted = iso cast cast
 
 
 ------------------------------------
