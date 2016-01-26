@@ -1,5 +1,6 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE FunctionalDependencies #-}
 
 module Main where
 
@@ -10,7 +11,7 @@ import Data.Record
 
 
 
-import Luna.Syntax.AST.Term
+import Luna.Syntax.AST.Term hiding (Arrow)
 import Luna.Syntax.Model.Layer.Labeled
 
 
@@ -45,11 +46,57 @@ data Entity = Node
             deriving (Show)
 
 
-data Ref (t :: Entity) a = Ref Int
+data Ref (t :: Entity) a = Ref a deriving (Show, Functor, Traversable, Foldable)
 
-data Arc a = Arc Int Int deriving (Show)
+newtype Typed a t = Typed a deriving (Show, Functor, Traversable, Foldable)
 
---newtype Typed a t
+instance Rewrapped (Typed a t) (Typed a' t')
+instance Wrapped   (Typed a t) where
+    type Unwrapped (Typed a t) = a
+    _Wrapped' = iso (\(Typed a) -> a) Typed ; {-# INLINE _Wrapped' #-}
+
+
+-------------------
+-- === Edges === --
+-------------------
+
+data Arrow       tgt = Arrow                (Ref 'Node tgt) deriving (Show, Functor, Traversable, Foldable)
+data Arc     src tgt = Arc   (Ref Node src) (Ref 'Node tgt) deriving (Show, Functor, Traversable, Foldable)
+type HomoArc t       = Arc t t
+
+class EdgeCons src tgt edge where consEdge :: src -> tgt -> edge
+
+
+-- === Construction === --
+
+-- Arc
+type ArcCons src tgt srcRef tgtRef = ( HaveRef '[src,tgt]
+                                     , RefOf src ~ Ref 'Node srcRef
+                                     , RefOf tgt ~ Ref 'Node tgtRef
+                                     )
+
+type HomoArcCons t tRef = ArcCons t t tRef tRef
+
+instance   ArcCons     src tgt srcRef tgtRef => EdgeCons src tgt (Arc srcRef tgtRef) where consEdge = arc ; {-# INLINE consEdge #-}
+arc     :: ArcCons     src tgt srcRef tgtRef => src -> tgt -> Arc srcRef tgtRef
+homoArc :: HomoArcCons t       tRef          => t   -> t   -> HomoArc tRef
+arc src tgt = Arc (src ^. ref) (tgt ^. ref)
+homoArc     = arc
+
+-- Arrow
+type ArrowCons tgt tgtRef = ( HasRef tgt
+                            , RefOf tgt ~ Ref 'Node tgtRef
+                            )
+
+instance ArrowCons tgt tgtRef => EdgeCons src tgt (Arrow tgtRef) where consEdge = const arrow ; {-# INLINE consEdge #-}
+arrow :: ArrowCons tgt tgtRef => tgt -> Arrow tgtRef
+arrow tgt = Arrow (tgt ^. ref)
+
+
+
+
+
+
 
 
 
@@ -89,7 +136,27 @@ foo2 = constructCover' star2
 
 foo = constructCover' star
 
-constructCover' :: (CoverConstructorFix m (t (a t)), Uncovered (t (a t)) ~ a t) => (a t) -> m (t (a t))
+
+foox = constructCoverFix starx
+
+--Ref a 
+
+--ref :: Lens a (Ref (RefData a))
+
+
+--class IsEdge where
+--    asEdge :: 
+
+
+--Ref Node Int -> Ref Node Int -> Ref Edge Int
+
+--Ref Node Int -> Ref Node Int -> Arc Int
+--star :: Lit (Ref' Edge  (Attached' String Cover)  )
+
+
+--constructCover' :: (CoverConstructorFix m (t (a t)), Uncovered (t (a t)) ~ a t) => (a t) -> m (t (a t))
+constructCover' :: (Uncovered (t (a (Ref' 'Edge t))) ~ a (Ref' 'Edge t), MonadFix m, CoverConstructorFix m (t (a (Ref' 'Edge t))), Wrapped (Unwrapped (a (Ref' 'Edge t))), Wrapped (a (Ref' 'Edge t)), Coated t, MonadGraphBuilder (t (Unwrapped (Unwrapped (a (Ref' 'Edge t))))) e m)
+                => (a (Ref' Edge t)) -> m (Ref' Node t (a (Ref' Edge t)))
 constructCover' = constructCoverFix
 
 --foo :: (Monad m, CoatConstructor m Ref) => m (Layer Ref (Layer (Attached String) Cover) (Lit (Ref :< (Attached String) :< Cover)))
@@ -104,13 +171,13 @@ constructCover' = constructCoverFix
 --        Graph.put (g & nodes .~ n')
 --        return $ Ref idx
 
-instance (MonadGraphBuilder n e m, Coated l, Wrapped ast, Wrapped (Unwrapped ast), n ~ l (Unwrapped (Unwrapped ast)))
-      => CoatConstructor (l ast) m (Ref t) where
+instance (MonadGraphBuilder n e m, Coated l, Wrapped ast, Wrapped (Unwrapped ast), n ~ l (Unwrapped (Unwrapped ast)), a ~ Int)
+      => CoatConstructor (l ast) m (Typed (Ref 'Node a)) where
     constructCoat ast = do
         idx <- Graph.modify $ \g -> let generalizedAST = ast & coated %~ unwrap' ∘ unwrap'
                                         (n', idx)      = ixed add generalizedAST (g ^. nodes)
                                     in  (g & nodes .~ n', idx)
-        return $ Ref idx
+        return $ Typed $ Ref idx
     {-# INLINE constructCoat #-}
             
                           
@@ -139,11 +206,21 @@ type l :< t = Layer l t
 --star :: Lit (Layer Ref (Layer (Attached String) Cover))
 --star = cons Star
 
-star :: Lit (Layer (Ref Edge) t)
+type Ref'      t = Layer (Typed (Ref t Int))
+type Attached' t = Layer (Attached t)
+
+newtype GRef r t a = GRef (Layer (Typed (Ref r Int)) t a)
+
+--star :: Lit (Layer (Typed (Ref Edge Int)) t)
+--star :: Lit (Layer (Typed (Ref Edge Int))   (Layer (Attached String) Cover)  )
+star :: Lit (Ref' Edge  (Attached' String Cover)  )
 star = cons Star
 
---star2 :: Lit (Layer Ref t)
+star2 :: Lit t
 star2 = cons Star
+
+starx :: Lit (GRef Edge  (Attached' String Cover)  )
+starx = cons Star
 
 --star :: Lit t
 --star = cons Star
@@ -156,7 +233,20 @@ caseTest = __case__ "tc-test" "test/Main.hs" 0
 
 data Test a b = Test !a !b  deriving (Show)
 
+type family RefOf a
+class HasRef a where ref :: Lens' a (RefOf a)
+type family HaveRef lst :: Constraint where 
+    HaveRef '[]       = ()
+    HaveRef (a ': as) = (HasRef a, HaveRef as)
 
+type instance RefOf (Ref t a) = Ref t a
+instance HasRef (Ref t a) where ref = id
+
+type instance RefOf (Layer l t a) = RefOf (Unwrapped (Layer l t a))
+type instance RefOf (Typed a t)   = RefOf a
+
+instance HasRef (Unwrapped (Layer l t a)) => HasRef (Layer l t a) where ref = wrapped' ∘ ref
+instance HasRef (Unwrapped (Typed a t))   => HasRef (Typed a t)   where ref = wrapped' ∘ ref
 
 --class IsEdge e 
 --connection src tgt = do 
@@ -170,15 +260,95 @@ data Test a b = Test !a !b  deriving (Show)
 
 --instance Deref (Layer l t a) where deref = 
 
+data AST = AST  deriving (Show)
+
+--class TypeResolver t m a | t m -> a where resolveType :: Proxy t -> a -> m a
+
+--tst :: _ => _
+--tst = do
+--    a1 <- resolveType (Proxy :: Proxy AST) =<< constructCover star
+--    a2 <- resolveType (Proxy :: Proxy AST) =<< constructCover star
+--    a3 <- resolveType (Proxy :: Proxy AST) =<< constructCover star
+--    return ()
+
+--instance TypeResolver AST (Graph.GraphBuilderT (t a) e m) 
+
+class Monad m => Builder t a m where register :: Proxy t -> a -> m ()
+
+instance Builder t a m => Builder t a (Graph.GraphBuilderT n e m) where register = lift ∘∘ register
+instance Builder t a m => Builder t a (StateT                s m) where register = lift ∘∘ register
+instance                  Builder t a IO                          where register _ _ = return ()
+
+newtype TypeConstraint t tp m a = TypeConstraint (m a) 
+
+constrainType :: Proxy t -> Proxy tp -> TypeConstraint t tp m a -> m a
+constrainType _ _ (TypeConstraint ma) = ma
+
+constrainType' (TypeConstraint ma) = ma
+
+instance Functor m => Functor (TypeConstraint t tp m) where
+    fmap f (TypeConstraint ma) = TypeConstraint $ fmap f ma
+
+instance Applicative m => Applicative (TypeConstraint t tp m) where
+    pure = TypeConstraint ∘ pure
+    TypeConstraint f <*> TypeConstraint ma = TypeConstraint $ f <*> ma
+
+instance Monad m => Monad (TypeConstraint t tp m) where
+    return = TypeConstraint ∘ return
+    (TypeConstraint a) >>= f = TypeConstraint $ a >>= (fmap constrainType' f)
+
+instance MonadFix m => MonadFix (TypeConstraint t tp m) where
+    mfix f = TypeConstraint $ mfix (fmap constrainType' f)
+
+instance MonadTrans (TypeConstraint t tp) where
+    lift = TypeConstraint
+
+instance MonadIO m => MonadIO (TypeConstraint t tp m) where
+    liftIO = TypeConstraint ∘ liftIO
+
+--mfix :: (a -> m a) -> m a
+
+--instance Applicative (TypeConstraint)
+
+--t (a p)
+
+instance (Monad m, tp ~ a, Builder t a m) => Builder t a (TypeConstraint t tp m) where register = lift ∘∘ register
+
+constrainASTType = constrainType (Proxy :: Proxy AST)
+constrainCoverType (Proxy :: Proxy tp) = constrainASTType (Proxy :: Proxy (tp k))
+
+
+buildNetwork = rebuildNetwork def
+rebuildNetwork (net :: Network) = constrainCoverType (Proxy :: Proxy (Ref' 'Node k)) -- ta linijka wystarcza do inferencji typow (!)
+                                ∘ flip Graph.execT net
+
+--build
+
+
+foo' = do
+    out <- constructCoverFix star2
+    register (Proxy :: Proxy AST) out
+    return out
+
+main :: IO ()
 main = do
 
         --s = star
-    g <- flip evalStateT (0 :: Int) $ flip Graph.execT (def :: Network) $ do
-        s1 <- foo
-        s2 <- foo
-        s3 <- foo
+    --g <- flip evalStateT (0 :: Int) $ flip Graph.execT (def :: Network) $ do
+       -- $ constrainCoverType (Proxy :: Proxy (Ref' 'Node (Attached' String Cover)))
 
-        --print $ deref s1
+    g <- buildNetwork $ do             -- mowi ona TC ze powinien unifikowac potrzebne typy wkladane do grafu z tymi generowanymi
+
+        s1 <- foo'
+        s2 <- foo'
+
+                        --zastanowic sie nad tym czy nie ma lepszego rozwiazani dla problemu wyzej (inferowania typu coverow)
+                        --dorobic prawdziwe newtype nad Ref'
+                        --Network powinien przechowywac Arc dla krawedzi, tak samo jak teraz przechowuje Data dla wierzcholkow
+                        --typujemy krawedzie dokladniej przy odczycie
+
+        print $ arc s1 s2
+        --print $ (s1 ^. ref)
         return ()
 
         --s' = s & coated %~ unwrap' ∘ unwrap'
