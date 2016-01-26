@@ -1,6 +1,7 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE PartialTypeSignatures #-}
 
 module Main where
 
@@ -132,12 +133,12 @@ instance {-# OVERLAPPABLE #-} (Default d, Monad m) => CoatConstructor a m (Attac
 --       )
 --foo :: (CoverConstructor m a, Uncovered a ~ Lit ((Ref :< Attached String) :< Cover)) => m a
 --foo2 :: _ => m (t (a t))
-foo2 = constructCover' star2
+--foo2 = constructCover' star2
 
-foo = constructCover' star
+--foo = constructCover' star
 
 
-foox = constructCoverFix starx
+--foox = constructCoverFix starx
 
 --Ref a 
 
@@ -155,9 +156,9 @@ foox = constructCoverFix starx
 
 
 --constructCover' :: (CoverConstructorFix m (t (a t)), Uncovered (t (a t)) ~ a t) => (a t) -> m (t (a t))
-constructCover' :: (Uncovered (t (a (Ref' 'Edge t))) ~ a (Ref' 'Edge t), MonadFix m, CoverConstructorFix m (t (a (Ref' 'Edge t))), Wrapped (Unwrapped (a (Ref' 'Edge t))), Wrapped (a (Ref' 'Edge t)), Coated t, MonadGraphBuilder (t (Unwrapped (Unwrapped (a (Ref' 'Edge t))))) e m)
-                => (a (Ref' Edge t)) -> m (Ref' Node t (a (Ref' Edge t)))
-constructCover' = constructCoverFix
+--constructCover' :: (Uncovered (t (a (Ref' 'Edge t))) ~ a (Ref' 'Edge t), MonadFix m, CoverConstructorFix m (t (a (Ref' 'Edge t))), Wrapped (Unwrapped (a (Ref' 'Edge t))), Wrapped (a (Ref' 'Edge t)), Coated t, MonadGraphBuilder (t (Unwrapped (Unwrapped (a (Ref' 'Edge t))))) e m)
+--                => (a (Ref' Edge t)) -> m (Ref' Node t (a (Ref' Edge t)))
+--constructCover' = constructCoverFix
 
 --foo :: (Monad m, CoatConstructor m Ref) => m (Layer Ref (Layer (Attached String) Cover) (Lit (Ref :< (Attached String) :< Cover)))
 --foo = constructCover star
@@ -181,7 +182,6 @@ instance (MonadGraphBuilder n e m, Coated l, Wrapped ast, Wrapped (Unwrapped ast
     {-# INLINE constructCoat #-}
             
                           
-type Network = Graph (Layer (Attached String) Cover Data) Int  
 
 
         --Graph.put (g & nodes .~ n')
@@ -211,16 +211,28 @@ type Attached' t = Layer (Attached t)
 
 newtype GRef r t a = GRef (Layer (Typed (Ref r Int)) t a)
 
+type instance Unlayered (GRef r t a) = Unwrapped (GRef r t a)
+instance      Rewrapped (GRef r t a) (GRef r' t' a')
+instance      Wrapped   (GRef r t a) where
+    type      Unwrapped (GRef r t a) = Layer (Typed (Ref r Int)) t a
+    _Wrapped' = iso (\(GRef a) -> a) GRef
+
+type instance RefOf  (GRef r t a) = RefOf (Unwrapped (GRef r t a))
+instance      HasRef (GRef r t a) where ref = wrapped' ∘ ref
+
+instance Monad m => LayerConstructor m (GRef r t a) where constructLayer = return ∘ GRef
+
+
+
 --star :: Lit (Layer (Typed (Ref Edge Int)) t)
 --star :: Lit (Layer (Typed (Ref Edge Int))   (Layer (Attached String) Cover)  )
-star :: Lit (Ref' Edge  (Attached' String Cover)  )
-star = cons Star
+--star :: Lit (Ref' Edge  (Attached' String Cover)  )
+--star = cons Star
 
-star2 :: Lit t
-star2 = cons Star
 
-starx :: Lit (GRef Edge  (Attached' String Cover)  )
-starx = cons Star
+
+--starx :: Lit (GRef Edge  (Attached' String Cover)  )
+--starx = cons Star
 
 --star :: Lit t
 --star = cons Star
@@ -318,17 +330,32 @@ constrainASTType = constrainType (Proxy :: Proxy AST)
 constrainCoverType (Proxy :: Proxy tp) = constrainASTType (Proxy :: Proxy (tp k))
 
 
+
+type Network = Graph (Layer (Attached String) Cover Data) Int  
+
 buildNetwork = rebuildNetwork def
-rebuildNetwork (net :: Network) = constrainCoverType (Proxy :: Proxy (Ref' 'Node k)) -- ta linijka wystarcza do inferencji typow (!)
-                                ∘ flip Graph.execT net
+rebuildNetwork (net :: Network) = constrainCoverType (Proxy :: Proxy (GRef 'Node k)) -- ta linijka wystarcza do inferencji typow (!)
+                                ∘ flip Graph.execT net                               -- mowi ona TC ze powinien unifikowac potrzebne typy wkladane do grafu z tymi generowanymi
 
 --build
 
-
-foo' = do
-    out <- constructCoverFix star2
+registerAST m = do 
+    out <- m
     register (Proxy :: Proxy AST) out
     return out
+
+star :: Lit t
+star = cons Star
+
+
+star' :: (CoverConstructorFix m a, Builder AST a m, Uncovered a ~ Lit t) => m a
+star' = registerAST $ constructCoverFix star
+
+
+
+--newtype GRef r t a = GRef (Layer (Typed (Ref r Int)) t a)
+
+
 
 main :: IO ()
 main = do
@@ -337,10 +364,15 @@ main = do
     --g <- flip evalStateT (0 :: Int) $ flip Graph.execT (def :: Network) $ do
        -- $ constrainCoverType (Proxy :: Proxy (Ref' 'Node (Attached' String Cover)))
 
-    g <- buildNetwork $ do             -- mowi ona TC ze powinien unifikowac potrzebne typy wkladane do grafu z tymi generowanymi
+    g <- buildNetwork $ do
+        --x <- constructCoverFix star :: _ (GRef 'Node (Attached' String Cover) (Lit (GRef Edge  (Attached' String Cover))))
+        --x <- constructCoverFix starx :: _ (Ref' 'Node (Attached' String Cover) (Lit (GRef Edge  (Attached' String Cover))))
 
-        s1 <- foo'
-        s2 <- foo'
+        s1 <- star'
+        s2 <- star'
+
+        --print (s1 :: _)
+        --s2 <- foo'
 
                         --zastanowic sie nad tym czy nie ma lepszego rozwiazani dla problemu wyzej (inferowania typu coverow)
                         --dorobic prawdziwe newtype nad Ref'
