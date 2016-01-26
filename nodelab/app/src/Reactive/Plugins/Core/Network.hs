@@ -20,7 +20,7 @@ import qualified Reactive.Plugins.Core.Action.Widget                as Widget
 import qualified Reactive.Plugins.Core.Action.Backend.Backend       as Backend
 import qualified Reactive.Plugins.Core.Action.Backend.Runner        as Runner
 import qualified Reactive.Plugins.Core.Action.Backend.GraphFetcher  as GraphFetcher
-import qualified Reactive.Plugins.Core.Action.Backend.AddNode       as AddNode
+import qualified Reactive.Plugins.Core.Action.Backend.Graph          as Graph
 import qualified Reactive.Plugins.Core.Action.ConnectionPen         as ConnectionPen
 import qualified Reactive.Plugins.Core.Action.TextEditor            as TextEditor
 import qualified Reactive.Plugins.Core.Action.Debug                 as Debug
@@ -64,7 +64,7 @@ makeNetworkDescription conn logging workspace = do
         actions =  [ Widget.toAction
                    , General.toAction
                    , Camera.toAction
-                   , AddNode.toAction
+                   , Graph.toAction
                    , MultiSelection.toAction
                    , Drag.toAction
                    , Connect.toAction

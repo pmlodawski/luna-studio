@@ -1,4 +1,4 @@
-module Reactive.Plugins.Core.Action.Backend.AddNode where
+module Reactive.Plugins.Core.Action.Backend.Graph where
 
 import           Utils.PreludePlus
 import           Event.Event        (Event(Batch))
