@@ -4,9 +4,9 @@ var release = require('config.release');
 var brunch = require('brunch');
 var config;
 
-function defaultBackend(s) {
+function defaultBackend() {
     var l = window.location;
-    return ((l.protocol === "https:") ? "wss://" : "ws://") + l.hostname + (((l.port != 80) && (l.port != 443)) ? ":" + l.port : "") + "/ws";
+    return ((l.protocol === "https:") ? "wss://" : "ws://") + l.hostname + (((l.port !== 80) && (l.port !== 443)) ? ":" + l.port : "") + "/ws";
 }
 
 if (brunch.env !== "production") {
