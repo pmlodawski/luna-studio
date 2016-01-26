@@ -37,6 +37,8 @@ loadProject projId = do
         workspace <- use Global.workspace
         performIO $ BatchCmd.getProgram workspace
 
+        displayProjectList
+
 projectChooserId :: Command State WidgetId
 projectChooserId = do
     projectChooser <- use $ Global.uiElements . UIElements.projectChooser
@@ -60,7 +62,10 @@ displayProjectList = do
 
     inRegistry $ emptyProjectChooser groupId
 
+    currentProjectId <- use $ Global.workspace . Workspace.currentLocation . GraphLocation.projectId
+
     projects <- use $ Global.workspace . Workspace.projects
     forM_ (IntMap.toList projects) $ \(id, project) -> do
-        let button = Button.create (Vector2 300 20) $ (Text.pack $ fromMaybe "" $ project ^. Project.name) <> " @ " <> (Text.pack $ project ^. Project.path)
+        let isCurrent = if (currentProjectId == id) then "* " else ""
+        let button = Button.create (Vector2 200 20) $ (isCurrent <> (Text.pack $ fromMaybe "(no name)" $ project ^. Project.name))
         inRegistry $ UICmd.register groupId button (handle $ ClickedHandler $ const (loadProject id))
