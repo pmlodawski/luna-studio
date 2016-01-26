@@ -12,6 +12,7 @@ import qualified Reactive.State.Drag              as Drag
 import qualified Reactive.State.Connect           as Connect
 import qualified Reactive.State.UIRegistry        as UIRegistry
 import qualified Reactive.State.ConnectionPen     as ConnectionPen
+import qualified Reactive.State.UIElements        as UIElements
 import           Data.Aeson (ToJSON)
 import           Reactive.Commands.Command (Command)
 
@@ -24,6 +25,7 @@ data State = State { _mousePos       :: Vector2 Int
                    , _uiRegistry     :: UIRegistry.State
                    , _connectionPen  :: ConnectionPen.State
                    , _workspace      :: Workspace
+                   , _uiElements     :: UIElements.State
                    } deriving (Eq, Show, Generic)
 
 instance ToJSON State
@@ -31,7 +33,7 @@ instance ToJSON State
 makeLenses ''State
 
 initialState :: Workspace -> State
-initialState workspace = State def def def def def def def def workspace
+initialState workspace = State def def def def def def def def workspace def
 
 inRegistry :: Command UIRegistry.State a -> Command State a
 inRegistry = zoom uiRegistry
