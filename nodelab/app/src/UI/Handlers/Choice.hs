@@ -64,8 +64,8 @@ instance CompositeWidget Choice where
                 widget     = RadioButton def (Vector2 180 20) label isSelected
             UICmd.register_ groupId widget (radioHandlers id ix)
 
-        Layout.verticalLayout 0.0 groupId
-        Group.updateSize id
+        Layout.verticalLayout def 0.0 groupId
+        Group.updateSize def id
 
     updateWidget id old model = do
         let val    = model ^. Choice.value

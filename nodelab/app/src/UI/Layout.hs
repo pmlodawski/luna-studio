@@ -32,25 +32,26 @@ moveX spacing offset (id, width) = do
     UICmd.moveX id offset
     return $ offset + spacing + width
 
-verticalLayoutHandler spacing = addHandler (UICmd.ChildrenResizedHandler $ verticalLayoutHandler' spacing) mempty
+verticalLayoutHandler padding spacing = addHandler (UICmd.ChildrenResizedHandler $ verticalLayoutHandler' padding spacing) mempty
 
-verticalLayoutHandler' :: Double -> WidgetId -> WidgetId -> Command UIRegistry.State ()
-verticalLayoutHandler' spacing id _ = do
-    verticalLayout spacing id
-    Group.updateSize id
+verticalLayoutHandler' :: Vector2 Double -> Double -> WidgetId -> WidgetId -> Command UIRegistry.State ()
+verticalLayoutHandler' padding spacing id _ = do
+    verticalLayout (padding ^. y) spacing id
+    Group.updateSize padding id
 
-verticalLayout :: Double -> WidgetId -> Command UIRegistry.State ()
-verticalLayout spacing id = do
+verticalLayout :: Double -> Double -> WidgetId -> Command UIRegistry.State ()
+verticalLayout padding spacing id = do
     widgets <- UICmd.children id
     heights <- mapM getHeight widgets
-    void $ foldM (moveY spacing) 0.0 heights
+    void $ foldM (moveY spacing) padding heights
+    forM_ widgets $ flip UICmd.moveX padding
 
 horizontalLayoutHandler spacing = addHandler (UICmd.ChildrenResizedHandler $ horizontalLayoutHandler' spacing) mempty
 
 horizontalLayoutHandler' :: Double -> WidgetId -> WidgetId -> Command UIRegistry.State ()
 horizontalLayoutHandler' spacing id _ = do
     horizontalLayout spacing id
-    Group.updateSize id
+    Group.updateSize def id
 
 horizontalLayout :: Double -> WidgetId -> Command UIRegistry.State ()
 horizontalLayout spacing id = do
@@ -70,4 +71,4 @@ flexLayout lens spacing id size = do
     widgets <- UICmd.children id
     let newHeight = height / (fromIntegral $ length widgets)
     forM_ widgets $ \id -> UICmd.resizeNoCB id (lens .~ newHeight)
-    verticalLayout spacing id
+    verticalLayout def spacing id

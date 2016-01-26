@@ -55,7 +55,7 @@ toAction :: Event -> Maybe (Command Global.State ())
 toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\112' _)) = Just $ Global.inRegistry $ do
     performIO $ putStrLn "show sandbox"
     let widget = Group.create
-    parent <- UICmd.register sceneGraphId widget (Layout.verticalLayoutHandler 5.0)
+    parent <- UICmd.register sceneGraphId widget (Layout.verticalLayoutHandler def 5.0)
 
     let widget = DiscreteNumber.create (Vector2 200 20) "Discrete" 42
     UICmd.register parent widget def
@@ -94,8 +94,8 @@ toAction (Keyboard _ (Keyboard.Event Keyboard.Down '\113' _)) = Just $ Global.in
     performIO $ putStrLn "show sandbox"
     let widget = Group.create
     parent'       <- UICmd.register sceneGraphId widget (Layout.horizontalLayoutHandler 5.0)
-    parent        <- UICmd.register parent'      widget (Layout.verticalLayoutHandler 5.0)
-    resizedParent <- UICmd.register parent'      widget (Layout.verticalLayoutHandler 5.0)
+    parent        <- UICmd.register parent'      widget (Layout.verticalLayoutHandler def 5.0)
+    resizedParent <- UICmd.register parent'      widget (Layout.verticalLayoutHandler def 5.0)
     flexParent    <- UICmd.register parent'      widget (Layout.flexVerticalLayoutHandler 5.0)
 
     let widget = ContinuousSlider.create (Vector2 200 20) "ContinuousSlider" (-2.0) 5.0 3.0

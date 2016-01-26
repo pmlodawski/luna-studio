@@ -81,6 +81,11 @@ makeTupleItem = makeItem True
 --
 --     return contId
 
+relayout :: WidgetId -> WidgetId -> Command UIRegistry.State ()
+relayout listId groupId = do
+    Layout.verticalLayout def 0.0 groupId
+    Layout.verticalLayout def 0.0 listId
+
 addNewElement :: WidgetId -> WidgetId -> Double -> Command UIRegistry.State ()
 addNewElement listId groupId width = do
     list   <- UICmd.get listId $ List.value
@@ -89,8 +94,7 @@ addNewElement listId groupId width = do
     UICmd.update listId $ List.value <>~ [elem]
     makeListItem listId groupId width elem ix
 
-    Layout.verticalLayout 0.0 groupId
-    Layout.verticalLayout 0.0 listId
+    relayout listId groupId
 
 removeElementByWidgetId :: WidgetId -> WidgetId -> WidgetId -> Command UIRegistry.State ()
 removeElementByWidgetId listId groupId id = do
@@ -104,9 +108,7 @@ removeElement listId groupId idx = do
     items <- UICmd.children groupId
     UICmd.removeWidget $ fromJust $ items ^? ix idx
 
-    Layout.verticalLayout 0.0 groupId
-    Layout.verticalLayout 0.0 listId
-
+    relayout listId groupId
 
 instance CompositeWidget List where
     createWidget id model = do
@@ -128,8 +130,7 @@ instance CompositeWidget List where
         let elems = (model ^. List.value) `zip` [0..]
         forM_ elems $ uncurry $ makeListItem id groupId itemWidth
 
-        Layout.verticalLayout 0.0 groupId
-        Layout.verticalLayout 0.0 id
+        relayout id groupId
 
     updateWidget id old model = return ()
 
