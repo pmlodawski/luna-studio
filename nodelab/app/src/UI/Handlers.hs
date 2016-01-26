@@ -22,6 +22,7 @@ import           Object.Widget.Slider.Discrete    (DiscreteSlider)
 import           Object.Widget.TextBox            (TextBox)
 import           Object.Widget.Toggle             (Toggle)
 import           Object.Widget.Scene              (Scene)
+import           Object.Widget.Label              (Label)
 
 import           UI.Widget                        (GenericWidget (..), UIContainer, UIWidget)
 import qualified UI.Widget.Button                 as Button
@@ -68,6 +69,7 @@ groupType             = typeOf (undefined :: Group)
 buttonType            = typeOf (undefined :: Button)
 listType              = typeOf (undefined :: List)
 sceneType             = typeOf (undefined :: Scene)
+labelType             = typeOf (undefined :: Label)
 
 instance HasHandlers State where
     widgetHandlers (CtxDynamic tpe _)
@@ -89,5 +91,6 @@ instance HasHandlers State where
         | tpe ==           buttonType  =           Button.widgetHandlers
         | tpe ==             listType  = def
         | tpe ==            sceneType  = def
+        | tpe ==            labelType  = def
 
         | otherwise                    = error $ "Unknown widget type " <> (show tpe)
