@@ -1,6 +1,8 @@
 {-# LANGUAGE GADTs                     #-}
 
-module Luna.Inference.Literals where
+module Luna.Inference.Literals
+    ( assignLiteralTypes
+    ) where
 
 import           Control.Monad              (forM_)
 import qualified Data.IntSet                as IntSet
@@ -31,55 +33,56 @@ import qualified Luna.Syntax.Layer.Labeled  as Labeled
 import qualified Luna.Syntax.AST.Typed      as Typed
 
 
-
-createConsInt :: (StarBuilder.MonadStarBuilder (Maybe (Ref Node)) m,
-               NodeBuilder.MonadNodeBuilder (Ref Node) m,
-               MonadFix m,
-               MonadIO m,
-               BuilderMonad (Network Label) m) => m (Ref Node)
-createConsInt = do
-    nameInt <- B._string "Int"
-    B.cons nameInt
-
-createConsString :: (StarBuilder.MonadStarBuilder (Maybe (Ref Node)) m,
-                  NodeBuilder.MonadNodeBuilder (Ref Node) m,
-                  MonadFix m,
-                  MonadIO m,
-                  BuilderMonad (Network Label) m) => m (Ref Node)
-createConsString = do
-    nameString <- B._string "String"
-    B.cons nameString
-
-assignLiteralTypes :: (StarBuilder.MonadStarBuilder (Maybe (Ref Node)) m,
-                       NodeBuilder.MonadNodeBuilder (Ref Node) m,
-                       MonadFix m,
-                       MonadIO m,
-                       BuilderMonad (Network Label) m) => Ref Node -> m ()
-assignLiteralTypes ref = do
-    consIntTpe <- createConsInt
-    consStringTpe <- createConsString
-    assignLiteralTypesWithTypes consIntTpe consStringTpe ref
-
-
 pre :: BuilderMonad (Network Label) m => Ref Node -> m [Ref Node]
 pre ref = do
     node <- B.readRef ref
     mapM (B.follow) $ inputs $ uncoat node
 
-succ :: BuilderMonad (Network Label) m => Ref Node -> m [Ref Node]
-succ ref = do
+createConsInt :: ( StarBuilder.MonadStarBuilder (Maybe (Ref Node)) m
+                 , NodeBuilder.MonadNodeBuilder (Ref Node) m
+                 , MonadFix m
+                 , MonadIO m
+                 , BuilderMonad (Network Label) m
+                 ) => m (Ref Node)
+createConsInt = do
+    nameInt <- B._string "Int"
+    B.cons nameInt
+
+createConsString :: ( StarBuilder.MonadStarBuilder (Maybe (Ref Node)) m
+                    , NodeBuilder.MonadNodeBuilder (Ref Node) m
+                    , MonadFix m
+                    , MonadIO m
+                    , BuilderMonad (Network Label) m
+                    ) => m (Ref Node)
+createConsString = do
+    nameString <- B._string "String"
+    B.cons nameString
+
+assignLiteralTypes :: ( StarBuilder.MonadStarBuilder (Maybe (Ref Node)) m
+                      , NodeBuilder.MonadNodeBuilder (Ref Node) m
+                      , MonadFix m
+                      , MonadIO m
+                      , BuilderMonad (Network Label) m
+                      ) => Ref Node -> m ()
+assignLiteralTypes ref = do
+    consIntTpe    <- createConsInt
+    consStringTpe <- createConsString
+    assignLiteralTypesWithTypes consIntTpe consStringTpe ref
+
+assignLiteralType :: ( StarBuilder.MonadStarBuilder (Maybe (Ref Node)) m
+                     , NodeBuilder.MonadNodeBuilder (Ref Node) m
+                     , MonadIO m
+                     , BuilderMonad (Network Label) m
+                     ) => Ref Node -> Ref Node -> m ()
+assignLiteralType ref tpe = do
     node <- B.readRef ref
-    mapM (B.unfollow . Ref . Edge) $ IntSet.toList $ node ^. G.succs
-
-up :: BuilderMonad (Network Label) m => Ref Node -> m (Ref Node)
-up ref = do
-    node <- B.readRef ref
-    B.follow $ node ^. Typed.tp
-
-isChecked :: Labeled.HasLabel Label s => s -> Bool
-isChecked node = node ^. label . Label.checked
-
-
+    tnodeRef <- B.follow $ node ^. Typed.tp
+    tnode <- B.readRef tnodeRef
+    case' (uncoat tnode) $ do
+        match $ \Star -> do
+            destruct tnodeRef
+            void $ B.reconnect ref Typed.tp tpe
+        match $ \ANY -> return ()
 
 assignLiteralTypesWithTypes :: ( StarBuilder.MonadStarBuilder (Maybe (Ref Node)) m
                                , NodeBuilder.MonadNodeBuilder (Ref Node) m
@@ -87,36 +90,15 @@ assignLiteralTypesWithTypes :: ( StarBuilder.MonadStarBuilder (Maybe (Ref Node))
                                , BuilderMonad (Network Label) m
                                ) => Ref Node -> Ref Node -> Ref Node -> m ()
 assignLiteralTypesWithTypes consIntTpe consStringTpe ref = do
+    a <- get
+    putStrln
     node <- B.readRef ref
-    B.writeRef ref (node & label . Label.checked .~ True)
+    -- B.writeRef ref (node & label . Label.checked .~ True)
     case' (uncoat node) $ do
         match $ \(Val val) -> do
-            case' val $ match $ \lit -> case lit of
-                Lit.Int    i -> do
-                    putStrLn $ "Lit.Int " <> show i <> ": " <> show node
-                    tnodeRef <- B.follow $ node ^. Typed.tp
-                    tnode <- B.readRef tnodeRef
-                    case' (uncoat tnode) $ do
-                        match $ \Star -> do
-                            destruct tnodeRef
-                            void $ B.reconnect ref Typed.tp consIntTpe
-                        match $ \ANY -> return ()
-                Lit.String s -> do
-                    putStrLn $ "Lit.String " <> show s <> ": " <> show node
-                    tnodeRef <- B.follow $ node ^. Typed.tp
-                    tnode <- B.readRef tnodeRef
-                    case' (uncoat tnode) $ do
-                        match $ \Star -> do
-                            destruct tnodeRef
-                            void $ B.reconnect ref Typed.tp consStringTpe
-                        match $ \ANY -> return ()
-                _            -> do
-                    putStrLn $ "ANY?: " <> show node
-        match $ \ANY -> do
-            void $ putStrLn $ "ANY: " <> show node
-
-    let nodeInputs = inputs node
-    putStrLn $ "inputs: " <> show nodeInputs
-
+            case' val $ match $ \lit -> assignLiteralType ref $ case lit of
+                Lit.Int    _ -> consIntTpe
+                Lit.String _ -> consStringTpe
+        match $ \ANY -> return ()
     mapM_ (assignLiteralTypesWithTypes consIntTpe consStringTpe) =<< pre ref
 

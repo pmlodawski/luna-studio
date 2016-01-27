@@ -72,7 +72,7 @@ emptyArgList = []
 emptyNodeList :: [Ref Node]
 emptyNodeList = []
 
-sampleGraph :: ((Ref Node, SymbolMap (Network Label), Ref Node, Ref Node), Network Label)
+sampleGraph :: ((Ref Node, SymbolMap (Network Label)), Network Label)
 sampleGraph = runIdentity
       $ flip StarBuilder.evalT Nothing
       $ flip Builder.runT def
@@ -116,10 +116,8 @@ sampleGraph = runIdentity
             accPlus2  <- accessor namePlus appPlus1b
             appPlus2  <- app accPlus2 [arg appLen] `typed` arrPlusTpe
 
-
-            let sm = def
-
-            return (appPlus2, sm, consIntTpe, consStringTpe)
+            return (appPlus1b, def)
+            -- return (appPlus2, def)
 
 runGraph gr sm = runIdentityT
             . flip SymbolBuilder.evalT sm
@@ -127,25 +125,17 @@ runGraph gr sm = runIdentityT
             . flip Builder.runT gr
             . flip NodeBuilder.evalT (Ref $ Node (0 :: Int))
 
-evaluateTest :: Ref Node -> SymbolMap (Network Label) -> Network Label -> IO ((), Network Label)
-evaluateTest i sm gr = Session.run $ runGraph gr sm $  do
-    Just r <- NodeRunner.runNode def i
-    putStrLn "RESULT IS:"
-    print (Session.unsafeCast r :: Int)
-
-literalsTest :: Ref Node -> Ref Node -> Ref Node -> SymbolMap (Network Label) -> Network Label -> IO ((), Network Label)
-literalsTest consIntTpe consStringTpe i sm gr = runGraph gr sm $ do
-    Literals.assignLiteralTypesWithTypes consIntTpe consStringTpe i
+literalsTest :: Ref Node -> SymbolMap (Network Label) -> Network Label -> IO ((), Network Label)
+literalsTest i sm gr = runGraph gr sm $ do
+    Literals.assignLiteralTypes i
     return ()
 
 main :: IO ()
 main = do
 
-    let ((i, sm, consIntTpe, consStringTpe), g) = sampleGraph
-    ((), g')<- literalsTest consIntTpe consStringTpe i sm g
+    let ((i, sm), g) = sampleGraph
+    ((), g')<- literalsTest i sm g
     -- pprint g'
     -- renderAndOpen [ ("g" , g)]
     renderAndOpen [ ("g" , g')]
     putStrLn "end"
-
-matchArrow arr = case' arr $ match $ \a@(Arrow {}) -> a
