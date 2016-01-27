@@ -151,8 +151,22 @@ instance (a ~ Int, MonadGraphBuilder n e m, Castable n t)
     getRef ref = do
         g <- Graph.get
         let d   = index_ (unwrap' ref) $ g ^. nodes
-            ast = cast d
-        return ast
+            out = cast d
+        return out
+
+instance (a ~ Int, MonadGraphBuilder n e m, Castable e t)
+      => RefGetter (Ref (Targetting Edge t) a) m where
+    getRef ref = do
+        g <- Graph.get
+        let d   = index_ (unwrap' ref) $ g ^. edges
+            out = cast d
+        return out
+
+--type NetArc     = Arc (Ref Node Int) (Ref Node Int)
+
+--type EdgeRef w e = TargetRef Edge w (e (TargetRef Edge w))
+
+
 
 instance (a ~ Int, MonadGraphBuilder n e m, Castable t n)
       => Constructor m (Ref (Targetting Node t) a) where
@@ -309,7 +323,7 @@ type Attached' t = Layer (Attached t)
 
 
 type NodeRef w n = TargetRef Node w (n (TargetRef Edge w))
-type EdgeRef w n = TargetRef Edge w (n (TargetRef Edge w))
+type EdgeRef w e = TargetRef Edge w (e (TargetRef Edge w))
 
 type NetNodeRef n = NodeRef NetWrapper n
 type NetEdgeRef e = EdgeRef NetWrapper e
@@ -437,6 +451,9 @@ instance Convertible a a' => Convertible (Ref r a) (Ref r' a') where convert (Re
 connection :: (EdgeBuilder src tgt m e, Builder Edge e m) => src -> tgt -> m e
 connection src tgt = registerEdge =<< edge src tgt
 
+connection2 :: (EdgeBuilder src tgt m e) => src -> tgt -> m e
+connection2 src tgt = edge src tgt
+
 main :: IO ()
 main = do
 
@@ -448,18 +465,23 @@ main = do
         --x <- constructCoverFix star :: _ (TargetRef Node (Attached' String Cover) (Lit (TargetRef Edge  (Attached' String Cover))))
 
         s1 <- starx'
-
         s2 <- starx'
 
-        a <- readRef (s1 :: _)
+        c <- connection s1 s2
 
-        --c <- connection s1 s2
+        --c' <- readRef c
 
 
         u <- unifyx' s1 s2
 
-        --print c
-        print u
+
+
+
+        --s1' <- readRef s1
+        --c'  <- readRef c
+
+        --print s1'
+        --print c'
 
         return ()
 
@@ -503,16 +525,16 @@ main = do
     return ()
 
 
--- time est  -  description
--------------------------------------------
---      30  [ ] readRef dla Edge
---      30  [ ] types
---      30  [ ] destructors
---      30  [ ] successors
---      30  [ ] predecessors
---      30  [ ] attach accessors
---      30  [ ] nice connect / reconnect
---      30  [ ] term construction methods
+-- time  est  -  description
+--------------------------------------------
+-- 5:30  30  [ ] readRef dla Edge
+--       30  [ ] types
+--       30  [ ] destructors
+--       30  [ ] successors
+--       30  [ ] predecessors
+--       30  [ ] attach accessors
+--       30  [ ] nice connect / reconnect
+--       30  [ ] term construction methods
 --
 -- [ ] magic monad builder
 -- [ ] pretty TH case
