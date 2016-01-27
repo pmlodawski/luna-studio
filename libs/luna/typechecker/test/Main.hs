@@ -32,7 +32,14 @@ import Data.Construction
 
 import Control.Monad.Reader
 
-newtype IDT a = IDT a deriving (Show, Functor, Traversable, Foldable)
+import qualified Luna.Syntax.Model.Builder.Type as Type
+import           Luna.Syntax.Model.Builder.Type (MonadTypeBuilder, TypeBuilder, TypeBuilderT)
+
+
+
+
+
+
 
 --star' :: ASTRecord '[] '[] IDT
 --star' = checkedVariantCons $ Star +> 5
@@ -87,16 +94,18 @@ instance HasRef (Unwrapped (PhantomLayer l t a)) => HasRef (PhantomLayer l t a) 
 
 data Node = Node deriving (Show)
 data Edge = Edge deriving (Show)
+data Type = Type deriving (Show)
+data Note = Note deriving (Show)
 
-newtype Targetting a t = Targetting a   deriving (Show, Functor, Traversable, Foldable)
-data    Attached   d t = Attached   d t deriving (Show, Functor, Traversable, Foldable)
+newtype Targetting   a t = Targetting a   deriving (Show, Functor, Traversable, Foldable)
+data    Attached   t d a = Attached   d a deriving (Show, Functor, Traversable, Foldable)
 
 
 -- === Instances === --
 
 -- Functors
 
-instance Bifunctor Attached where bimap f g (Attached d t) = Attached (f d) (g t)
+instance Bifunctor (Attached t) where bimap f g (Attached d t) = Attached (f d) (g t)
 
 -- Wrappers
 
@@ -105,14 +114,36 @@ instance Wrapped   (Targetting a t) where
     type Unwrapped (Targetting a t) = a
     _Wrapped' = iso (\(Targetting a) -> a) Targetting ; {-# INLINE _Wrapped' #-}
 
+instance Coated (Attached t d) where coated = lens (\(Attached _ t) -> t) (\(Attached d _) t -> Attached d t)
+
 -- Targets
 
 type instance Target (Targetting a t) = t
 
 -- Conversions
 
-instance (Castable d d', Castable a a') => Castable (Attached d a) (Attached d' a') where cast = bimap cast cast
+instance (Castable d d', Castable a a') => Castable (Attached t d a) (Attached t' d' a') where cast (Attached d a) = Attached (cast d) (cast a)
 
+-- Defaults
+
+instance {-# OVERLAPPABLE #-} (Default d, Monad m) => CoatConstructor a m (Attached Note d) where constructCoat = return ∘ Attached def
+
+instance {-# OVERLAPPABLE #-} 
+         ( CoverConstructorFix m t, Builder Node t m, Uncovered t ~ Static Draft x
+         , MonadTypeBuilder t m, MonadFix m
+         , Typeable d --x
+         ) => CoatConstructor a m (Attached Type d) where 
+    constructCoat a = flip Attached a <$> do
+        Type.ask >>= \case
+            Just t  -> return t
+            Nothing -> mdo
+                Type.set t
+                t <- starx' :: m t
+                return t
+
+        error (show $ typeOf (Proxy :: Proxy d))
+        ----return ∘ Attached def
+        --undefined
 
 
 ------------------
@@ -162,21 +193,17 @@ instance (a ~ Int, MonadGraphBuilder n e m, Castable e t)
             out = cast d
         return out
 
---type NetArc     = Arc (Ref Node Int) (Ref Node Int)
-
---type EdgeRef w e = TargetRef Edge w (e (TargetRef Edge w))
-
-
 
 instance (a ~ Int, MonadGraphBuilder n e m, Castable t n)
       => Constructor m (Ref (Targetting Node t) a) where
     construct ast = Ref <$> Graph.modify (nodes $ swap ∘ ixed add (cast ast))
 
-
 -- Conversions
 
 instance Castable    (Unwrapped (Layer l t a)) (Unwrapped (Layer l' t' a')) => Castable    (Layer l t a) (Layer l' t' a') where cast    = wrapped %~ cast
 instance Convertible (Unwrapped (Layer l t a)) (Unwrapped (Layer l' t' a')) => Convertible (Layer l t a) (Layer l' t' a') where convert = wrapped %~ convert
+
+
 
 -------------------
 -- === Edges === --
@@ -216,8 +243,7 @@ instance (HasRef tgt, tgtRef ~ RefOf tgt)                             => EdgeCon
 
 
 
-instance Coated Cover        where coated = lens (\(Cover a) -> a) (const Cover)
-instance Coated (Attached d) where coated = lens (\(Attached _ t) -> t) (\(Attached d _) t -> Attached d t)
+instance Coated Cover          where coated = lens (\(Cover a) -> a) (const Cover)
 
 
 
@@ -227,7 +253,6 @@ instance Coated (Attached d) where coated = lens (\(Attached _ t) -> t) (\(Attac
 instance (Functor m, CoatConstructor (t a) m l)           => LayerConstructor m (Layer        l t a) where constructLayer = Layer        <∘> constructCoat
 instance (Functor m, Destructed l ~ t a, Constructor m l) => LayerConstructor m (PhantomLayer l t a) where constructLayer = PhantomLayer <∘> construct
 
-instance {-# OVERLAPPABLE #-} (Default d, Monad m) => CoatConstructor a m (Attached d) where constructCoat = return ∘ Attached def
 
 
 
@@ -314,12 +339,13 @@ valProxy _ = Proxy
 --type NetRef     tp tgt = Ref tp tgt Int
 --type NetFreeRef tp     = NetRef tp 'Nothing
 
+
 type Network    = Graph (NetWrapper Data) NetArc
-type NetWrapper = Attached' String Cover
+type NetWrapper = Attached' Type Char (Attached' Note String Cover)
 type NetArc     = Arc (Ref Node Int) (Ref Node Int)
 type NetRef r   = Ref r Int
 
-type Attached' t = Layer (Attached t)
+type Attached' t d = Layer (Attached t d)
 
 
 type NodeRef w n = TargetRef Node w (n (TargetRef Edge w))
@@ -332,7 +358,8 @@ type NetEdgeRef e = EdgeRef NetWrapper e
 buildNetwork :: _ => _
 buildNetwork  = runIdentity ∘ buildNetworkM
 buildNetworkM = rebuildNetworkM def
-rebuildNetworkM (net :: Network) = constrainType Node (Proxy :: Proxy (NetNodeRef n))
+rebuildNetworkM (net :: Network) = flip Type.evalT Nothing
+                                 ∘ constrainType Node (Proxy :: Proxy (NetNodeRef n))
                                  ∘ constrainType Edge (Proxy :: Proxy (NetEdgeRef e))
                                  ∘ flip Graph.execT net
 {-# INLINE   buildNetworkM #-}
@@ -380,6 +407,7 @@ class Monad m => Builder t a m where
 
 instance Builder t a m => Builder t a (Graph.GraphBuilderT n e m) where register = lift ∘∘ register
 instance Builder t a m => Builder t a (StateT                s m) where register = lift ∘∘ register
+instance Builder t a m => Builder t a (TypeBuilderT          s m) where register = lift ∘∘ register
 instance                  Builder t a IO                          where register _ _ = return ()
 instance                  Builder t a Identity                    where register _ _ = return ()
 
@@ -430,6 +458,8 @@ unifyx' a b = mdo
 -- TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST --
 -------------------------------------------------------------------------------------------------------------------
 
+newtype IDT a = IDT a deriving (Show, Functor, Traversable, Foldable)
+
 
 -- TODO[WD]: Extend polymorphism, we can do exactly the same way as with AST elements
 --           returning `m a`, where `a` can be either a connection in the graph
@@ -465,14 +495,14 @@ main = do
         --x <- constructCoverFix star :: _ (TargetRef Node (Attached' String Cover) (Lit (TargetRef Edge  (Attached' String Cover))))
 
         s1 <- starx'
-        s2 <- starx'
+        --s2 <- starx'
 
-        c <- connection s1 s2
+        --c <- connection s1 s2
 
         --c' <- readRef c
 
 
-        u <- unifyx' s1 s2
+        --u <- unifyx' s1 s2
 
 
 
@@ -525,10 +555,10 @@ main = do
     return ()
 
 
--- time  est  -  description
---------------------------------------------
--- 5:30  30  [ ] readRef dla Edge
---       30  [ ] types
+-- time  est  -  description                    FIXME
+-----------------------------------------------------
+-- 5:30  30  [e] readRef dla Edge               TargetRef assumes that the target is (t a) which is incorrect when using Edges.
+-- 6:30  30  [ ] types
 --       30  [ ] destructors
 --       30  [ ] successors
 --       30  [ ] predecessors
