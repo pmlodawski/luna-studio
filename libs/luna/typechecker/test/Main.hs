@@ -53,9 +53,10 @@ newtype PhantomLayer l (t :: * -> *) a = PhantomLayer l         deriving (Show, 
 
 -- Wrappers
 
-instance (Coated l, Coated t) => Coated (Layer l t) where coated = wrapped ∘ coated ∘ coated
-type instance        Unlayered (Layer l t a) = t a
+instance (Coated l, Coated t) 
+                  => Coated    (Layer l t)   where coated  = wrapped  ∘ coated ∘ coated
 instance Coated l => Layered   (Layer l t a) where layered = wrapped' ∘ coated ; {-# INLINE layered #-}
+type instance        Unlayered (Layer l t a) = t a
 instance             Rewrapped (Layer l t a) (Layer l' t' a')
 instance             Wrapped   (Layer l t a) where
     type             Unwrapped (Layer l t a) = l (t a)
@@ -86,8 +87,8 @@ instance HasRef (Unwrapped (PhantomLayer l t a)) => HasRef (PhantomLayer l t a) 
 data Node = Node deriving (Show)
 data Edge = Edge deriving (Show)
 
-newtype Ptr      a t = Ptr      a   deriving (Show, Functor, Traversable, Foldable)
-data    Attached d t = Attached d t deriving (Show, Functor, Traversable, Foldable)
+newtype Targetting a t = Targetting a   deriving (Show, Functor, Traversable, Foldable)
+data    Attached   d t = Attached   d t deriving (Show, Functor, Traversable, Foldable)
 
 
 -- === Instances === --
@@ -98,14 +99,14 @@ instance Bifunctor Attached where bimap f g (Attached d t) = Attached (f d) (g t
 
 -- Wrappers
 
-instance Rewrapped (Ptr a t) (Ptr a' t')
-instance Wrapped   (Ptr a t) where
-    type Unwrapped (Ptr a t) = a
-    _Wrapped' = iso (\(Ptr a) -> a) Ptr ; {-# INLINE _Wrapped' #-}
+instance Rewrapped (Targetting a t) (Targetting a' t')
+instance Wrapped   (Targetting a t) where
+    type Unwrapped (Targetting a t) = a
+    _Wrapped' = iso (\(Targetting a) -> a) Targetting ; {-# INLINE _Wrapped' #-}
 
 -- Targets
 
-type instance Target (Ptr a t) = t
+type instance Target (Targetting a t) = t
 
 -- Conversions
 
@@ -131,7 +132,7 @@ readRef = getRef ∘ view ref
 -- === Instances === --
 
 type instance Target     (Ref r a)           = Target r
-type instance Destructed (Ref (Ptr r t) a) = t
+type instance Destructed (Ref (Targetting r t) a) = t
 
 type instance RefOf  (Ref t a) = Ref t a
 instance      HasRef (Ref t a) where ref = id
@@ -145,7 +146,7 @@ instance Wrapped   (Ref r a) where
 
 
 instance (a ~ Int, MonadGraphBuilder n e m, Castable n t)
-      => RefGetter (Ref (Ptr Node t) a) m where
+      => RefGetter (Ref (Targetting Node t) a) m where
     getRef ref = do
         g <- Graph.get
         let d   = index_ (unwrap' ref) $ g ^. nodes
@@ -153,11 +154,9 @@ instance (a ~ Int, MonadGraphBuilder n e m, Castable n t)
         return ast
 
 instance (a ~ Int, MonadGraphBuilder n e m, Castable t n)
-      => Constructor m (Ref (Ptr Node t) a) where
-    construct ast = do
-        idx <- Graph.modify $ \g -> let (n', idx) = ixed add (cast ast) (g ^. nodes)
-                                    in  (g & nodes .~ n', idx)
-        return $ Ref idx
+      => Constructor m (Ref (Targetting Node t) a) where
+    construct ast = Ref <$> Graph.modify (nodes $ swap ∘ ixed add (cast ast))
+
 
 -- Conversions
 
@@ -174,7 +173,6 @@ type HomoArc t       = Arc t   t
 
 class EdgeCons src tgt edge where consEdge :: src -> tgt -> edge
 
-
 -- === Construction === --
 
 arc     :: HaveRef '[src,tgt] => src -> tgt -> Arc (RefOf src) (RefOf tgt)
@@ -184,6 +182,12 @@ homoArc     = arc                           ; {-# INLINE homoArc #-}
 
 arrow :: HasRef tgt => tgt -> Arrow (RefOf tgt)
 arrow tgt = Arrow (tgt ^. ref) ; {-# INLINE arrow #-}
+
+-- === Instances === --
+
+-- Functors
+
+instance Bifunctor Arc where bimap f g (Arc a b) = Arc (f a) (g b) ; {-# INLINE bimap #-}
 
 -- EdgeCons
 
@@ -233,9 +237,9 @@ type family HaveRef lst :: Constraint where
 
 
 
-type instance RefOf (Ptr a t)   = RefOf a
+type instance RefOf (Targetting a t)   = RefOf a
 
-instance HasRef (Unwrapped (Ptr a t))   => HasRef (Ptr a t)   where ref = wrapped' ∘ ref
+instance HasRef (Unwrapped (Targetting a t))   => HasRef (Targetting a t)   where ref = wrapped' ∘ ref
 
 --class IsEdge e 
 --connection src tgt = do 
@@ -249,7 +253,7 @@ instance HasRef (Unwrapped (Ptr a t))   => HasRef (Ptr a t)   where ref = wrappe
 
 --instance Deref (Layer l t a) where deref = 
 
-data AST = AST  deriving (Show)
+--data AST = AST  deriving (Show)
 
 --class TypeResolver t m a | t m -> a where resolveType :: Proxy t -> a -> m a
 
@@ -262,11 +266,7 @@ data AST = AST  deriving (Show)
 
 --instance TypeResolver AST (Graph.GraphBuilderT (t a) e m) 
 
-class Monad m => Builder t a m where register :: Proxy t -> a -> m ()
 
-instance Builder t a m => Builder t a (Graph.GraphBuilderT n e m) where register = lift ∘∘ register
-instance Builder t a m => Builder t a (StateT                s m) where register = lift ∘∘ register
-instance                  Builder t a IO                          where register _ _ = return ()
 
 newtype TypeConstraint t tp m a = TypeConstraint (m a) 
 
@@ -301,10 +301,12 @@ instance MonadIO m => MonadIO (TypeConstraint t tp m) where
 
 --t (a p)
 
-instance (Monad m, tp ~ a, Builder t a m) => Builder t a (TypeConstraint t tp m) where register = lift ∘∘ register
+instance {-# OVERLAPPABLE #-} (Monad m, Builder t a m, tp ~ a) => Builder t a (TypeConstraint t  tp m) where register = lift ∘∘ register
+instance {-# OVERLAPPABLE #-} (Monad m, Builder t a m)         => Builder t a (TypeConstraint t' tp m) where register = lift ∘∘ register
 
-constrainASTType = constrainType (Proxy :: Proxy AST)
-constrainCoverType (Proxy :: Proxy tp) = constrainASTType (Proxy :: Proxy (tp k))
+constrainNodeType = constrainType (Proxy :: Proxy Node)
+constrainEdgeType = constrainType (Proxy :: Proxy Edge)
+constrainCoverType (Proxy :: Proxy tp) = constrainNodeType (Proxy :: Proxy (tp k))
 
 
 
@@ -314,9 +316,13 @@ constrainCoverType (Proxy :: Proxy tp) = constrainASTType (Proxy :: Proxy (tp k)
 -- === Network === --
 -- =============== --
 
-type NetworkWrapper = Attached' String Cover
+--type NetRef     tp tgt = Ref tp tgt Int
+--type NetFreeRef tp     = NetRef tp 'Nothing
 
-type Network = Graph (NetworkWrapper Data) Int  
+type Network        = Graph (NetNodeWrapper Data) NetArc
+type NetNodeWrapper = Attached' String Cover
+type NetArc         = Arc (Ref Node Int) (Ref Node Int)
+type NetRef r       = Ref r Int
 
 type Attached' t = Layer (Attached t)
 
@@ -324,57 +330,103 @@ type Attached' t = Layer (Attached t)
 -- === Construction === ---
 
 buildNetwork = rebuildNetwork def
-rebuildNetwork (net :: Network) = constrainASTType (Proxy :: Proxy (NetRef Node NetworkWrapper k)) -- ta linijka wystarcza do inferencji typow (!)
-                                ∘ flip Graph.execT net                                             -- mowi ona TC ze powinien unifikowac potrzebne typy wkladane do grafu z tymi generowanymi
+rebuildNetwork (net :: Network) = constrainNodeType (Proxy :: Proxy (TargetRef Node NetNodeWrapper k))
+                                ∘ constrainEdgeType (Proxy :: Proxy (NetRef NetArc))
+                                ∘ flip Graph.execT net
 
 
 
---------------------
--- === NetRef === --
---------------------
+-----------------------
+-- === TargetRef === --
+-----------------------
 
-newtype NetRef r t a = NetRef (PhantomLayer (Ref (Ptr r (t a)) Int) t a)
+newtype TargetRef r t a = TargetRef (PhantomLayer (Ref (Targetting r (t a)) Int) t a)
 
-type instance RefOf  (NetRef r t a) = RefOf (Unwrapped (NetRef r t a))
-instance      HasRef (NetRef r t a) where ref = wrapped' ∘ ref
+type instance RefOf  (TargetRef r t a) = RefOf (Unwrapped (TargetRef r t a))
+instance      HasRef (TargetRef r t a) where ref = wrapped' ∘ ref
 
 
 -- === Instances === --
 
 -- Wrappers
-type instance Unlayered (NetRef r t a) = Unwrapped (NetRef r t a)
-instance      Rewrapped (NetRef r t a) (NetRef r' t' a')
-instance      Wrapped   (NetRef r t a) where
-    type      Unwrapped (NetRef r t a) = PhantomLayer (Ref (Ptr r (t a)) Int) t a
-    _Wrapped' = iso (\(NetRef a) -> a) NetRef
+type instance Unlayered (TargetRef r t a) = Unwrapped (TargetRef r t a)
+instance      Rewrapped (TargetRef r t a) (TargetRef r' t' a')
+instance      Wrapped   (TargetRef r t a) where
+    type      Unwrapped (TargetRef r t a) = PhantomLayer (Ref (Targetting r (t a)) Int) t a
+    _Wrapped' = iso (\(TargetRef a) -> a) TargetRef
 
 -- Layers
-instance Monad m => LayerConstructor m (NetRef r t a) where constructLayer = return ∘ NetRef
+instance Monad m => LayerConstructor m (TargetRef r t a) where constructLayer = return ∘ TargetRef
 
 
 ------------------------------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------------------
--- ======================== --
--- === AST construction === --
--- ======================== --
+-- ========================== --
+-- === Elementary Builder === --
+-- ========================== --
 
-registerAST m = do 
-    out <- m
-    register (Proxy :: Proxy AST) out
-    return out
+
+class Monad m => Builder t a m where 
+    -- | The `register` function can be used to indicate that a particular element is "done".
+    --   It does not provide any general special meaning. In general, this information can be lost when not used explicitly.
+    --   For a specific usage look at the `Network` builder, where `register` is used to add type constrains on graph nodes and edges.
+    --   The `t` parameter is the type of registration, like `Node` or `Edge`. Please keep in mind, that `Node` indicates a "kind" of a structure.
+    --   It does not equals a graph-like node - it can be a "node" in flat AST representation, like just an ordinary term.
+    register :: Proxy t -> a -> m ()
+
+instance Builder t a m => Builder t a (Graph.GraphBuilderT n e m) where register = lift ∘∘ register
+instance Builder t a m => Builder t a (StateT                s m) where register = lift ∘∘ register
+instance                  Builder t a IO                          where register _ _ = return ()
+
+registerOverM :: Builder t a m => Proxy t -> m a -> m a
+registerOverM p ma = do
+    a <- ma
+    register p a
+    return a
+
+registerOver :: Builder t a m => Proxy t -> a -> m a
+registerOver p = registerOverM p ∘ return
+
+registerNode :: Builder Node a m => a -> m a
+registerEdge :: Builder Edge a m => a -> m a
+registerNode = registerOver (Proxy :: Proxy Node)
+registerEdge = registerOver (Proxy :: Proxy Edge)
+
+
+
+------------------------------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------------------
+-- ========================== --
+-- === AST building utils === --
+-- ========================== --
 
 star :: Lit t
 star = cons Star
 
 
-star' :: (CoverConstructorFix m a, Builder AST a m, Uncovered a ~ Lit t) => m a
-star' = registerAST $ constructCoverFix star
+star' :: (CoverConstructorFix m a, Builder Node a m, Uncovered a ~ Lit t) => m a
+star' = registerNode =<< constructCoverFix star
 
 
 
 -------------------------------------------------------------------------------------------------------------------
 -- TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST --
 -------------------------------------------------------------------------------------------------------------------
+
+
+-- TODO[WD]: Extend polymorphism, we can do exactly the same way as with AST elements
+--           returning `m a`, where `a` can be either a connection in the graph
+
+class EdgeBuilder src tgt m e where edge :: src -> tgt -> m e
+
+instance (MonadGraphBuilder n e m, Convertible (Arc (RefOf src) (RefOf tgt)) e, HaveRef '[src,tgt], a ~ Int) => EdgeBuilder src tgt m (Ref r a) where
+    edge src tgt = Ref <$> Graph.modify (edges $ swap ∘ ixed add (convert $ arc src tgt))
+
+instance (Convertible src src', Convertible tgt tgt') => Convertible (Arc src tgt) (Arc src' tgt') where convert = bimap convert convert
+instance Convertible a a' => Convertible (Ref r a) (Ref r' a') where convert (Ref a) = Ref $ convert a
+
+connection :: (EdgeBuilder src tgt m e, Builder Edge e m) => src -> tgt -> m e
+connection src tgt = registerEdge =<< edge src tgt
 
 main :: IO ()
 main = do
@@ -384,16 +436,26 @@ main = do
        -- $ constrainCoverType (Proxy :: Proxy (Ref' Node (Attached' String Cover)))
 
     g <- buildNetwork $ do
-        --x <- constructCoverFix star :: _ (NetRef Node (Attached' String Cover) (Lit (NetRef Edge  (Attached' String Cover))))
+        --x <- constructCoverFix star :: _ (TargetRef Node (Attached' String Cover) (Lit (TargetRef Edge  (Attached' String Cover))))
 
         s1 <- star'
+
         s2 <- star'
 
         a <- readRef s1
 
-        print a
+        c <- connection s1 s2
+        c <- connection s1 s2
+        c <- connection s1 s2
+        c <- connection s1 s2
+        c <- connection s1 s2
+        c <- connection s1 s2
+        c <- connection s1 s2
+        c <- connection s1 s2
+        c <- connection s1 s2
 
-        print $ arc s1 (s2 :: _)
+        print c
+
         return ()
 
         --s' = s & coated %~ unwrap' ∘ unwrap'

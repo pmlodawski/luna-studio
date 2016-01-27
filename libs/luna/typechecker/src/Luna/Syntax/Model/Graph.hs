@@ -161,28 +161,28 @@ with f m = do
     put s
     return out
 
-modify :: MonadGraphBuilder n e m => (Graph n e -> (Graph n e, a)) -> m a
+--modify :: MonadGraphBuilder n e m => (Graph n e -> (Graph n e, a)) -> m a
+--modify = modifyM . fmap return
+
+modify :: MonadGraphBuilder n e m => (Graph n e -> (a, Graph n e)) -> m a
 modify = modifyM . fmap return
 
-modify2 :: MonadGraphBuilder n e m => (Graph n e -> (a, Graph n e)) -> m a
-modify2 = modifyM2 . fmap return
+--modifyM :: MonadGraphBuilder n e m => (Graph n e -> m (Graph n e, a)) -> m a
+--modifyM f = do
+--    s <- get
+--    (s', a) <- f s
+--    put $ s'
+--    return a
 
-modifyM :: MonadGraphBuilder n e m => (Graph n e -> m (Graph n e, a)) -> m a
+modifyM :: MonadGraphBuilder n e m => (Graph n e -> m (a, Graph n e)) -> m a
 modifyM f = do
-    s <- get
-    (s', a) <- f s
-    put $ s'
-    return a
-
-modifyM2 :: MonadGraphBuilder n e m => (Graph n e -> m (a, Graph n e)) -> m a
-modifyM2 f = do
     s <- get
     (a, s') <- f s
     put $ s'
     return a
 
 modify_ :: MonadGraphBuilder n e m => (Graph n e -> Graph n e) -> m ()
-modify_ = modify . fmap (,())
+modify_ = modify . fmap ((),)
 
 -- <-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<-<
 
