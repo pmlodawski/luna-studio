@@ -90,8 +90,6 @@ assignLiteralTypesWithTypes :: ( StarBuilder.MonadStarBuilder (Maybe (Ref Node))
                                , BuilderMonad (Network Label) m
                                ) => Ref Node -> Ref Node -> Ref Node -> m ()
 assignLiteralTypesWithTypes consIntTpe consStringTpe ref = do
-    a <- get
-    putStrln
     node <- B.readRef ref
     -- B.writeRef ref (node & label . Label.checked .~ True)
     case' (uncoat node) $ do

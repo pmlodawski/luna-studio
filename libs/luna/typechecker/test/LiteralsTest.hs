@@ -60,9 +60,9 @@ renderAndOpen lst = do
     open $ fmap (\s -> "/tmp/" <> s <> ".png") (reverse $ fmap fst lst)
 
 instance LabelAttrs (Labeled2 Label (Typed (Ref Edge) (SuccTracking (Coat (Draft (Ref Edge)))))) where
-    labelAttrs n = if n ^. label . Label.checked
-        then [] -- [GV.color GVC.Magenta]
-        else []
+    labelAttrs n = []
+        -- if n ^. label . Label.checked then [GV.color GVC.Magenta]
+        --                               else []
 
 -- ====================================
 
